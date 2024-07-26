@@ -14,7 +14,7 @@
 #include <AK/Time.h>
 #include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Locking/MutexProtected.h>
-#include <Kernel/Net/IPv4Socket.h>
+#include <Kernel/Net/IPv4/Socket.h>
 #include <Kernel/Time/TimerQueue.h>
 
 namespace Kernel {

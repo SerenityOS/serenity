@@ -7,12 +7,12 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/MutexProtected.h>
-#include <Kernel/Net/ARP.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/ICMP.h>
-#include <Kernel/Net/IPv4.h>
-#include <Kernel/Net/IPv4Socket.h>
+#include <Kernel/Net/IPv4/ARP.h>
+#include <Kernel/Net/IPv4/IPv4.h>
+#include <Kernel/Net/IPv4/Socket.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
@@ -242,7 +242,7 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
     if (!adapter)
         return;
 
-    if (icmp_header.type() == ICMPType::EchoRequest) {
+    if (icmp_header.type() == ICMPv4Type::EchoRequest) {
         auto& request = reinterpret_cast<ICMPEchoPacket const&>(icmp_header);
         dbgln("handle_icmp: EchoRequest from {}: id={}, seq={}", ipv4_packet.source(), (u16)request.identifier, (u16)request.sequence_number);
         size_t icmp_packet_size = ipv4_packet.payload_size();
@@ -259,7 +259,7 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
         adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, icmp_packet_size, 0, 64);
         memset(packet->buffer->data() + ipv4_payload_offset, 0, sizeof(ICMPEchoPacket));
         auto& response = *(ICMPEchoPacket*)(packet->buffer->data() + ipv4_payload_offset);
-        response.header.set_type(ICMPType::EchoReply);
+        response.header.set_type(ICMPv4Type::EchoReply);
         response.header.set_code(0);
         response.identifier = request.identifier;
         response.sequence_number = request.sequence_number;

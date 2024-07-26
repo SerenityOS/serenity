@@ -8,7 +8,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/ByteString.h>
 #include <AK/ScopeGuard.h>
-#include <Kernel/Net/IPv4.h>
+#include <Kernel/Net/IPv4/IPv4.h>
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>

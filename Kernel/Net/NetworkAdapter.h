@@ -17,10 +17,10 @@
 #include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Library/UserOrKernelBuffer.h>
-#include <Kernel/Net/ARP.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/ICMP.h>
-#include <Kernel/Net/IPv4.h>
+#include <Kernel/Net/IPv4/ARP.h>
+#include <Kernel/Net/IPv4/IPv4.h>
 
 namespace Kernel {
 
