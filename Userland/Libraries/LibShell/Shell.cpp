@@ -7,6 +7,7 @@
 #include "Shell.h"
 #include "Execution.h"
 #include "Formatter.h"
+#include "Highlight.h"
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/Function.h>
@@ -31,7 +32,6 @@
 #include <LibFileSystem/FileSystem.h>
 #include <LibLine/Editor.h>
 #include <LibShell/PosixParser.h>
-#include <LibURL/URL.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -47,7 +47,6 @@
 #include <termios.h>
 #include <unistd.h>
 
-static bool s_disable_hyperlinks = false;
 extern char** environ;
 
 namespace Shell {
@@ -69,16 +68,6 @@ void Shell::setup_signals()
             }
         });
     }
-}
-
-void Shell::print_path(StringView path)
-{
-    if (s_disable_hyperlinks || !m_is_interactive || !isatty(STDOUT_FILENO)) {
-        out("{}", path);
-        return;
-    }
-    auto url = URL::create_with_file_scheme(path, {}, hostname);
-    out("\033]8;;{}\033\\{}\033]8;;\033\\", url.serialize(), path);
 }
 
 ByteString Shell::prompt() const
