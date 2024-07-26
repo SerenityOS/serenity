@@ -7,8 +7,8 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/StringUtils.h>
-#include <Shell/Parser.h>
-#include <Shell/PosixParser.h>
+#include <LibShell/Parser.h>
+#include <LibShell/PosixParser.h>
 
 #define TRY_OR_THROW_PARSE_ERROR_AT(expr, position) ({                                                     \
     /* Ignore -Wshadow to allow nesting the macro. */                                                      \

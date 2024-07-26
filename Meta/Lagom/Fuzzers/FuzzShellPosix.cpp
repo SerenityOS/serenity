@@ -5,8 +5,8 @@
  */
 
 #include <AK/StringView.h>
-#include <Shell/PosixParser.h>
-#include <Shell/Shell.h>
+#include <LibShell/PosixParser.h>
+#include <LibShell/Shell.h>
 #include <stddef.h>
 #include <stdint.h>
 

@@ -1,0 +1,7 @@
+if (NOT ENABLE_FUZZERS)
+    install(DIRECTORY Tests/ DESTINATION usr/Tests/Shell
+            PATTERN "Tests/*"
+            PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+            GROUP_EXECUTE GROUP_READ
+            WORLD_EXECUTE WORLD_READ)
+endif()
