@@ -5,7 +5,7 @@
  */
 
 #include <AK/CharacterTypes.h>
-#include <Shell/PosixLexer.h>
+#include <LibShell/PosixLexer.h>
 
 static bool is_operator(StringView text)
 {

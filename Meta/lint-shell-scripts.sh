@@ -10,7 +10,7 @@ if [ "$#" -eq "0" ]; then
         git ls-files -- \
             '*.sh' \
             ':!:Ports' \
-            ':!:Userland/Shell/Tests' \
+            ':!:Tests/LibShell' \
             ':!:Base/home/anon/Tests' \
             ':!:Base/root/generate_manpages.sh' \
             ':!:Base/usr/share/shell' \
