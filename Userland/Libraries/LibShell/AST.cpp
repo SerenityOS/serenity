@@ -5,6 +5,7 @@
  */
 
 #include "AST.h"
+#include "Highlight.h"
 #include "Shell.h"
 #include <AK/Find.h>
 #include <AK/MemoryStream.h>
@@ -14,7 +15,6 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/EventLoop.h>
 #include <LibFileSystem/FileSystem.h>
-#include <LibURL/URL.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -639,19 +639,15 @@ ErrorOr<RefPtr<Value>> BarewordLiteral::run(RefPtr<Shell>)
 ErrorOr<void> BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
 {
     if (metadata.is_first_in_list) {
-        auto runnable = shell.runnable_path_for(m_text);
-        if (runnable.has_value()) {
-            Line::Style bold = { Line::Style::Bold };
-            Line::Style style = bold;
+        auto posibly_runnable = shell.runnable_path_for(m_text);
+        if (posibly_runnable.has_value()) {
+            Line::Style style = Line::Style::Bold;
 
-#ifdef AK_OS_SERENITY
-            if (runnable->kind == Shell::RunnablePath::Kind::Executable || runnable->kind == Shell::RunnablePath::Kind::Alias) {
-                auto name = shell.help_path_for({}, *runnable);
-                if (name.has_value()) {
-                    auto url = URL::create_with_help_scheme(name.release_value(), shell.hostname);
-                    style = bold.unified_with(Line::Style::Hyperlink(url.to_byte_string()));
-                }
-            }
+            auto runnable = posibly_runnable.release_value();
+
+#if defined(AK_OS_SERENITY)
+            if (runnable.kind == Shell::RunnablePath::Kind::Executable || runnable.kind == Shell::RunnablePath::Kind::Alias)
+                style = highlight_runnable(shell, runnable).value_or(Line::Style::Bold);
 #endif
 
             editor.stylize({ m_position.start_offset, m_position.end_offset }, style);
@@ -679,12 +675,11 @@ ErrorOr<void> BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& 
             editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan) });
         }
     }
+
     if (FileSystem::exists(m_text)) {
-        auto realpath = shell.resolve_path(m_text.bytes_as_string_view());
-        auto url = URL::create_with_file_scheme(realpath);
-        url.set_host(TRY(String::from_byte_string(shell.hostname)));
-        editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Hyperlink(url.to_byte_string()) });
+        TRY(highlight_filesystem_path(m_text, editor, shell, m_position.start_offset, m_position.end_offset));
     }
+
     return {};
 }
 
@@ -2608,6 +2603,7 @@ ErrorOr<void> PathRedirectionNode::highlight_in_editor(Line::Editor& editor, She
     editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(0x87, 0x9b, 0xcd) }); // 25% Darkened Periwinkle
     metadata.is_first_in_list = false;
     TRY(m_path->highlight_in_editor(editor, shell, metadata));
+
     if (m_path->is_bareword()) {
         auto path_text = TRY(TRY(m_path->run(nullptr))->resolve_as_list(nullptr));
         VERIFY(path_text.size() == 1);
@@ -2616,10 +2612,9 @@ ErrorOr<void> PathRedirectionNode::highlight_in_editor(Line::Editor& editor, She
         auto& path = path_text[0];
         if (!path.starts_with('/'))
             path = TRY(String::formatted("{}/{}", shell.cwd, path));
-        auto url = URL::create_with_file_scheme(path.to_byte_string());
-        url.set_host(TRY(String::from_byte_string(shell.hostname)));
-        editor.stylize({ position.start_offset, position.end_offset }, { Line::Style::Hyperlink(url.to_byte_string()) });
+        TRY(highlight_filesystem_path_without_resolving(path, editor, shell, position.start_offset, position.end_offset));
     }
+
     return {};
 }
 
@@ -3209,10 +3204,7 @@ ErrorOr<void> Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& sh
         auto path = path_builder.to_byte_string();
 
         if (FileSystem::exists(path)) {
-            auto realpath = shell.resolve_path(path);
-            auto url = URL::create_with_file_scheme(realpath);
-            url.set_host(TRY(String::from_byte_string(shell.hostname)));
-            editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Hyperlink(url.to_byte_string()) });
+            TRY(highlight_filesystem_path(path, editor, shell, m_position.start_offset, m_position.end_offset));
         }
 
     } else {
