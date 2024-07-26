@@ -24,9 +24,9 @@ if (SERENITYOS)
     target_link_libraries(DynamicLoader_LibCoreArgsParser PUBLIC DynamicLoader_CompileOptions)
 endif()
 
+# These are the minimal set of sources needed to build LibLine and LibShellMinimal. We separate them to allow
+# LibLine and LibShellMinimal to build without LibURL being included.
 set(SOURCES
-    AnonymousBuffer.cpp
-    Command.cpp
     DateTime.cpp
     ElapsedTimer.cpp
     Event.cpp
@@ -34,11 +34,21 @@ set(SOURCES
     EventLoopImplementation.cpp
     EventLoopImplementationUnix.cpp
     EventReceiver.cpp
+    ThreadEventQueue.cpp
+    Notifier.cpp
+    Timer.cpp
+)
+
+serenity_lib(LibCoreBasic corebasic)
+target_link_libraries(LibCoreBasic PRIVATE LibCoreMinimal LibTimeZone)
+
+set(SOURCES
+    AnonymousBuffer.cpp
+    Command.cpp
     LockFile.cpp
     MappedFile.cpp
     MimeData.cpp
     NetworkJob.cpp
-    Notifier.cpp
     Process.cpp
     ProcessStatisticsReader.cpp
     Resource.cpp
@@ -49,8 +59,6 @@ set(SOURCES
     SOCKSProxyClient.cpp
     SystemServerTakeover.cpp
     TCPServer.cpp
-    ThreadEventQueue.cpp
-    Timer.cpp
     UDPServer.cpp
 )
 if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
@@ -94,7 +102,7 @@ endif()
 
 serenity_lib(LibCore core)
 target_link_libraries(LibCore PRIVATE LibCrypt LibSystem LibTimeZone LibURL)
-target_link_libraries(LibCore PUBLIC LibCoreMinimal)
+target_link_libraries(LibCore PUBLIC LibCoreMinimal LibCoreBasic)
 
 if (APPLE)
     target_link_libraries(LibCore PUBLIC "-framework CoreFoundation")
