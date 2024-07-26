@@ -246,11 +246,12 @@ bool MailWidget::is_supported_alternative(Alternative const& alternative) const
 
 void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
 {
+    if (!index.is_valid() || index == m_mailbox_index)
+        return;
+    m_mailbox_index = index;
+
     m_mailbox_model = InboxModel::create({});
     m_individual_mailbox_view->set_model(m_mailbox_model);
-
-    if (!index.is_valid())
-        return;
 
     auto& base_node = *static_cast<BaseNode*>(index.internal_data());
 

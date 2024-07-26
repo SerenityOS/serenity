@@ -40,6 +40,7 @@ private:
 
     OwnPtr<IMAP::Client> m_imap_client;
 
+    GUI::ModelIndex m_mailbox_index;
     RefPtr<GUI::TreeView> m_mailbox_list;
     RefPtr<InboxModel> m_mailbox_model;
     RefPtr<GUI::SortingProxyModel> m_mailbox_sorting_model;
