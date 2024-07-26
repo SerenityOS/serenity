@@ -12,7 +12,7 @@ set(SOURCES
 )
 
 serenity_lib(LibShellMinimal shellminimal)
-target_link_libraries(LibShellMinimal PRIVATE LibCore LibRegex LibLine LibFileSystem)
+target_link_libraries(LibShellMinimal PRIVATE LibCoreMinimal LibCoreBasic LibRegex LibLine LibFileSystem)
 target_sources(LibShellMinimal PRIVATE MinimalHighlight.cpp)
 
 serenity_lib(LibShell shell)
