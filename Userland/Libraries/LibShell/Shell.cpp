@@ -30,8 +30,8 @@
 #include <LibCore/Timer.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibLine/Editor.h>
+#include <LibShell/PosixParser.h>
 #include <LibURL/URL.h>
-#include <Shell/PosixParser.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>

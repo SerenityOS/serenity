@@ -37,13 +37,13 @@
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/SyntaxHighlighter.h>
 #include <LibSQL/AST/SyntaxHighlighter.h>
+#include <LibShell/SyntaxHighlighter.h>
 #include <LibSyntax/Language.h>
 #include <LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWebView/OutOfProcessWebView.h>
-#include <Shell/SyntaxHighlighter.h>
 #include <fcntl.h>
 
 namespace HackStudio {

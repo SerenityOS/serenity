@@ -12,7 +12,7 @@
 #include <AK/TemporaryChange.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
-#include <Shell/AST.h>
+#include <LibShell/AST.h>
 
 namespace Shell::Posix {
 
