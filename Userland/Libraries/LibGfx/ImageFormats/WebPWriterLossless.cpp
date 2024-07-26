@@ -662,13 +662,21 @@ static ErrorOr<void> write_VP8L_image_data(Stream& stream, NonnullRefPtr<Bitmap>
 
     // image-stream  = optional-transform spatially-coded-image
     // optional-transform   =  (%b1 transform optional-transform) / %b0
+    bool did_use_color_indexing_transform = false;
     if (options.allowed_transforms & (1u << COLOR_INDEXING_TRANSFORM)) {
         bool has_just_one_channel = false;
         auto new_bitmap = TRY(maybe_write_color_indexing_transform(bit_stream, bitmap, is_fully_opaque, has_just_one_channel));
-        if (new_bitmap != bitmap || has_just_one_channel)
+        did_use_color_indexing_transform = new_bitmap != bitmap;
+        if (did_use_color_indexing_transform || has_just_one_channel)
             options.color_cache_bits.clear();
         bitmap = move(new_bitmap);
     }
+
+    if (!did_use_color_indexing_transform && options.allowed_transforms & (1u << SUBTRACT_GREEN_TRANSFORM)) {
+        // FIXME: Check if subtract green transform is worth it instead of doing it unconditionally.
+        bitmap = TRY(write_subtract_green_transform(bit_stream, bitmap));
+    }
+
     TRY(bit_stream.write_bits(0u, 1u)); // No further transforms for now.
 
     dbgln_if(WEBP_DEBUG, "WebP: Writing main bitmap");
