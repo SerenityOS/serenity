@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
 
 namespace Kernel::USB {
@@ -39,7 +40,7 @@ struct [[gnu::packed]] USBDeviceDescriptor {
     u8 serial_number_descriptor_index;
     u8 num_configurations;
 };
-static_assert(sizeof(USBDeviceDescriptor) == 18);
+static_assert(AssertSize<USBDeviceDescriptor, 18>());
 
 //
 //  Configuration Descriptor
@@ -57,6 +58,7 @@ struct [[gnu::packed]] USBConfigurationDescriptor {
     u8 attributes_bitmap;
     u8 max_power_in_ma;
 };
+static_assert(AssertSize<USBConfigurationDescriptor, 9>());
 
 //
 //  Interface Descriptor
@@ -77,6 +79,7 @@ struct [[gnu::packed]] USBInterfaceDescriptor {
     u8 interface_protocol;
     u8 interface_string_descriptor_index;
 };
+static_assert(AssertSize<USBInterfaceDescriptor, 9>());
 
 //
 //  Endpoint Descriptor
@@ -94,6 +97,7 @@ struct [[gnu::packed]] USBEndpointDescriptor {
     u16 max_packet_size;
     u8 poll_interval_in_frames;
 };
+static_assert(AssertSize<USBEndpointDescriptor, 7>());
 
 struct [[gnu::packed]] USBSuperSpeedEndpointCompanionDescriptor {
     USBDescriptorCommon descriptor_header;
@@ -112,6 +116,7 @@ struct [[gnu::packed]] USBSuperSpeedEndpointCompanionDescriptor {
     } endpoint_attributes_bitmap;
     u16 bytes_per_interval;
 };
+static_assert(AssertSize<USBSuperSpeedEndpointCompanionDescriptor, 6>());
 
 //
 //  USB 1.1/2.0 Hub Descriptor
@@ -135,6 +140,7 @@ struct [[gnu::packed]] USBHubDescriptor {
     u8 hub_controller_current;
     // NOTE: This does not contain DeviceRemovable or PortPwrCtrlMask because a struct cannot have two VLAs in a row.
 };
+static_assert(AssertSize<USBHubDescriptor, 7>());
 
 //
 //  USB Human Interface Device (HID) Descriptor
@@ -148,6 +154,7 @@ struct [[gnu::packed]] USBHIDDescriptor {
     u8 following_descriptor_type;
     u16 hid_report_descriptor_size;
 };
+static_assert(AssertSize<USBHIDDescriptor, 9>());
 
 static constexpr u8 DESCRIPTOR_TYPE_DEVICE = 0x01;
 static constexpr u8 DESCRIPTOR_TYPE_CONFIGURATION = 0x02;
