@@ -12,10 +12,14 @@
 
 namespace Kernel::USB::HID {
 
+// https://www.usb.org/sites/default/files/hid1_11.pdf
+
+// 4.2 Subclass
 enum class SubclassCode : u8 {
     BootProtocol = 0x01,
 };
 
+// Appendix B.2 Protocol 2 (Mouse)
 struct [[gnu::packed]] MouseBootProtocolPacket {
     u8 buttons;
     i8 x;
@@ -37,6 +41,7 @@ constexpr StringView subclass_string(SubclassCode code)
     return "Reserved"sv;
 }
 
+// 4.3 Protocols
 enum class InterfaceProtocol : u8 {
     Mouse = 0x02,
 };
