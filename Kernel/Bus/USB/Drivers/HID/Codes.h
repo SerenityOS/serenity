@@ -46,4 +46,22 @@ enum class InterfaceProtocol : u8 {
     Mouse = 0x02,
 };
 
+// 7.2 Class-Specific Requests
+enum class Request {
+    GET_REPORT = 0x01,
+    GET_IDLE = 0x02,
+    GET_PROTOCOL = 0x03,
+    // 0x04-0x08 are reserved.
+    SET_REPORT = 0x09,
+    SET_IDLE = 0x0a,
+    SET_PROTOCOL = 0x0b,
+};
+
+// 7.2.5 Get_Protocol Request
+// 7.2.6 Set_Protocol Request
+enum class Protocol {
+    Boot = 0,
+    Report = 1,
+};
+
 }
