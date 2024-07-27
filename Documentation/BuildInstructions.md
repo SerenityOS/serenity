@@ -89,6 +89,7 @@ This is best achieved by adding `ln -sf /usr/local/bin/bash mnt/bin/sh` to your 
 There is also documentation for installing the build prerequisites for some less commonly used systems:
 
 * [Other Linux distributions and \*NIX systems](BuildInstructionsOther.md)
+* [Systems that are not described in other build instructions](BuildEnvironment.md)
 * [macOS](BuildInstructionsMacOS.md)
 
 ## Build
