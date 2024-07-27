@@ -44,12 +44,12 @@ ErrorOr<void> MouseDriver::probe(USB::Device& device)
     // FIXME: Are we guaranteed to have one USB configuration for a mouse device?
     if (device.configurations().size() != 1)
         return ENOTSUP;
-    // FIXME: If we have multiple USB configurations for a mouse device, find the appropriate one
-    // and handle multiple interfaces for it.
-    if (device.configurations()[0].interfaces().size() != 1)
-        return ENOTSUP;
 
-    TRY(checkout_interface(device, device.configurations()[0].interfaces()[0]));
+    // FIXME: If we have multiple USB configurations for a mouse device, find the appropriate one.
+    for (auto const& interface : device.configurations()[0].interfaces()) {
+        if (!checkout_interface(device, interface).is_error())
+            return {};
+    }
 
     return ENOTSUP;
 }
