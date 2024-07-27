@@ -18,9 +18,10 @@ class Device;
 class USBConfiguration {
 public:
     USBConfiguration() = delete;
-    USBConfiguration(Device& device, USBConfigurationDescriptor const descriptor)
+    USBConfiguration(Device& device, USBConfigurationDescriptor const descriptor, u8 descriptor_index)
         : m_device(device)
         , m_descriptor(descriptor)
+        , m_descriptor_index(descriptor_index)
     {
         m_interfaces.ensure_capacity(descriptor.number_of_interfaces);
     }
@@ -40,6 +41,7 @@ public:
 private:
     Device& m_device;                              // Reference to the device linked to this configuration
     USBConfigurationDescriptor const m_descriptor; // Descriptor that backs this configuration
+    u8 m_descriptor_index;                         // Descriptor index for {GET,SET}_DESCRIPTOR
     Vector<USBInterface> m_interfaces;             // Interfaces for this device
 };
 

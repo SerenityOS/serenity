@@ -339,7 +339,7 @@ ErrorOr<void> UHCIController::initialize_device(USB::Device& device)
     // Fetch the configuration descriptors from the device
     auto& configurations = device.configurations<UHCIController>({});
     configurations.ensure_capacity(dev_descriptor.num_configurations);
-    for (auto configuration = 0u; configuration < dev_descriptor.num_configurations; configuration++) {
+    for (u8 configuration = 0u; configuration < dev_descriptor.num_configurations; configuration++) {
         USBConfigurationDescriptor configuration_descriptor;
         transfer_length = TRY(device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_CONFIGURATION << 8u) | configuration, 0, sizeof(USBConfigurationDescriptor), &configuration_descriptor));
 
@@ -352,7 +352,7 @@ ErrorOr<void> UHCIController::initialize_device(USB::Device& device)
             dbgln("Maximum Power: {}mA", configuration_descriptor.max_power_in_ma * 2u); // This value is in 2mA steps
         }
 
-        USBConfiguration device_configuration(device, configuration_descriptor);
+        USBConfiguration device_configuration(device, configuration_descriptor, configuration);
         TRY(device_configuration.enumerate_interfaces());
         configurations.append(device_configuration);
     }
