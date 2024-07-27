@@ -15,6 +15,8 @@
 
 namespace Kernel::USB {
 
+// https://www.usb.org/sites/default/files/hid1_11.pdf
+
 USB_DEVICE_DRIVER(MouseDriver);
 
 void MouseDriver::init()
@@ -66,6 +68,12 @@ ErrorOr<void> MouseDriver::initialize_device(USB::Device& device, USBInterface c
 
     auto const& endpoint_descriptor = interface.endpoints()[0];
     auto interrupt_in_pipe = TRY(USB::InterruptInPipe::create(device.controller(), device, endpoint_descriptor.endpoint_address, endpoint_descriptor.max_packet_size, 10));
+
+    // We only support the boot protocol, so switch to it. By default the report protocol is used (see 7.2.6 Set_Protocol Request).
+    TRY(device.control_transfer(
+        USB_REQUEST_RECIPIENT_INTERFACE | USB_REQUEST_TYPE_CLASS | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
+        to_underlying(HID::Request::SET_PROTOCOL), to_underlying(HID::Protocol::Boot), interface.descriptor().interface_id, 0, nullptr));
+
     auto mouse_device = TRY(USBMouseDevice::try_create_instance(device, endpoint_descriptor.max_packet_size, move(interrupt_in_pipe)));
     HIDManagement::the().attach_standalone_hid_device(*mouse_device);
     m_interfaces.append(mouse_device);
