@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/StdLibExtraDetails.h>
+#include <AK/Traits.h>
 #include <AK/Types.h>
 
 namespace Kernel::USB {
@@ -166,3 +167,33 @@ static constexpr u8 DESCRIPTOR_TYPE_HUB = 0x29;
 static constexpr u8 DESCRIPTOR_TYPE_USB_SUPERSPEED_ENDPOINT_COMPANION = 0x30;
 
 }
+
+template<>
+class AK::Traits<Kernel::USB::USBDescriptorCommon> : public DefaultTraits<Kernel::USB::USBDescriptorCommon> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+class AK::Traits<Kernel::USB::USBDeviceDescriptor> : public DefaultTraits<Kernel::USB::USBDeviceDescriptor> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+class AK::Traits<Kernel::USB::USBConfigurationDescriptor> : public DefaultTraits<Kernel::USB::USBConfigurationDescriptor> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+class AK::Traits<Kernel::USB::USBInterfaceDescriptor> : public DefaultTraits<Kernel::USB::USBInterfaceDescriptor> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+class AK::Traits<Kernel::USB::USBEndpointDescriptor> : public DefaultTraits<Kernel::USB::USBEndpointDescriptor> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
