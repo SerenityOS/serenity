@@ -697,9 +697,9 @@ ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
             dbgln_if(XHCI_DEBUG, "xHCI: Did not receive enough bytes for configuration descriptor - Expected {} but got {}", sizeof(USBConfigurationDescriptor), transfer_length);
             continue;
         }
-        USBConfiguration device_configuration(device, configuration_descriptor, configuration);
-        TRY(device_configuration.enumerate_interfaces());
-        configurations.append(device_configuration);
+
+        TRY(configurations.try_empend(device, configuration_descriptor, configuration));
+        TRY(configurations.last().enumerate_interfaces());
     }
 
     return {};

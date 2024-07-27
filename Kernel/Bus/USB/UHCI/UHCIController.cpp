@@ -352,9 +352,8 @@ ErrorOr<void> UHCIController::initialize_device(USB::Device& device)
             dbgln("Maximum Power: {}mA", configuration_descriptor.max_power_in_ma * 2u); // This value is in 2mA steps
         }
 
-        USBConfiguration device_configuration(device, configuration_descriptor, configuration);
-        TRY(device_configuration.enumerate_interfaces());
-        configurations.append(device_configuration);
+        TRY(configurations.try_empend(device, configuration_descriptor, configuration));
+        TRY(configurations.last().enumerate_interfaces());
     }
 
     return {};
