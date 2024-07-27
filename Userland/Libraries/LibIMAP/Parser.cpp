@@ -270,7 +270,32 @@ ErrorOr<void> Parser::parse_untagged()
 ErrorOr<StringView> Parser::parse_quoted_string()
 {
     dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_quoted_string()", m_position);
-    auto str = consume_while([](u8 x) { return x != '"'; });
+    auto start_position = m_position;
+    while (!at_end() && m_buffer[m_position] != '"')
+        switch (m_buffer[m_position]) {
+        // https://datatracker.ietf.org/doc/html/rfc2683#section-3.4.2
+        // 3.4.2. Special Characters
+
+        //    Certain characters, currently the double-quote and the backslash, may
+        //    not be sent as-is inside a quoted string.  These characters must be
+        //    preceded by the escape character if they are in a quoted string, or
+        //    else the string must be sent as a literal.
+        case '\\':
+            ++m_position;
+            if (at_end())
+                return Error::from_string_literal("unterminated \\ escape");
+            ++m_position;
+            break;
+        default:
+            ++m_position;
+        }
+    auto str = StringView(m_buffer.data() + start_position, m_position - start_position);
+    //   The CR and LF characters may be sent ONLY in literals; they are not
+    //   allowed, even if escaped, inside quoted strings.
+    if (str.contains("\r"sv))
+        return Error::from_string_literal("CR character not allowed inside quoted string");
+    if (str.contains("\n"sv))
+        return Error::from_string_literal("LF character not allowed inside quoted string");
     TRY(consume("\""sv));
     dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", m_position, str);
     return str;
