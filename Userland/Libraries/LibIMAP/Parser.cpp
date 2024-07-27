@@ -790,11 +790,8 @@ ErrorOr<Vector<Address>> Parser::parse_address_list()
 
     auto addresses = Vector<Address>();
     TRY(consume("("sv));
-    while (!consume_if(")"sv)) {
+    while (!consume_if(")"sv))
         addresses.append(TRY(parse_address()));
-        if (!at_end() && m_buffer[m_position] != ')')
-            TRY(consume(" "sv));
-    }
     return { addresses };
 }
 
