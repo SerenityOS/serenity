@@ -10,7 +10,7 @@ You can use docker build environment, follow instructions bellow to run it
 
 Inside Build Environment run:
 ```sh
-    cd /home/ubuntu/serenity
+    cd /tmp/serenity
 ```
 
 Then simply follow [build instructions](BuildInstructions.md#build)
