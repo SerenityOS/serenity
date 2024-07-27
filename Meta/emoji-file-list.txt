@@ -904,6 +904,9 @@ U+1F686.png
 U+1F687.png
 U+1F689.png
 U+1F68A.png
+U+1F68B.png
+U+1F68C.png
+U+1F68D.png
 U+1F68E.png
 U+1F68F.png
 U+1F690.png
@@ -920,6 +923,7 @@ U+1F69A.png
 U+1F69B.png
 U+1F69C.png
 U+1F69D.png
+U+1F69F.png
 U+1F6A0.png
 U+1F6A1.png
 U+1F6A2.png
