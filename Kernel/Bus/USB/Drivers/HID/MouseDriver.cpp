@@ -29,7 +29,7 @@ ErrorOr<void> MouseDriver::checkout_interface(USB::Device& device, USBInterface 
     if (descriptor.interface_class_code == USB_CLASS_HID
         && descriptor.interface_sub_class_code == to_underlying(HID::SubclassCode::BootProtocol)
         && descriptor.interface_protocol == to_underlying(HID::InterfaceProtocol::Mouse)) {
-        dmesgln("USB HID Mouse Interface for device {:#04x}:{:#04x} found", device.device_descriptor().vendor_id, device.device_descriptor().product_id);
+        dmesgln("USB HID Mouse Interface for device {:04x}:{:04x} found", device.device_descriptor().vendor_id, device.device_descriptor().product_id);
         return initialize_device(device, interface);
     }
     return ENOTSUP;
