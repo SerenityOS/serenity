@@ -173,7 +173,7 @@ ErrorOr<void> xHCIController::initialize()
     dmesgln_pci(*this, "Registers base: {}", m_registers_mapping.paddr);
 
     auto interface_version = m_capability_registers.host_controller_interface_version_number;
-    if (interface_version < 0x0090 || interface_version > 0x0102) { // The Intel specification defines versions 0.9.0 up to 1.2.0
+    if (interface_version < 0x0090 || interface_version > 0x0120) { // The Intel specification defines versions 0.9.0 up to 1.2.0
         dmesgln_pci(*this, "Unsupported interface version: {}.{}.{}", interface_version >> 8, (interface_version >> 4) & 0xF, interface_version & 0xF);
         return ENOTSUP;
     }
