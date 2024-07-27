@@ -16,3 +16,4 @@ Inside Build Environment run:
 Then simply follow [build instructions](BuildInstructions.md#build)
 
 **NOTE:** BuildEnvironment supports grub and extlinux only.
+**NOTE:** password for sudo is builder
