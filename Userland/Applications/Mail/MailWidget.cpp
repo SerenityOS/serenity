@@ -490,6 +490,7 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
     if (selected_alternative_encoding.equals_ignoring_ascii_case("7bit"sv) || selected_alternative_encoding.equals_ignoring_ascii_case("8bit"sv)) {
         decoded_data = encoded_data;
     } else if (selected_alternative_encoding.equals_ignoring_ascii_case("base64"sv)) {
+        encoded_data = encoded_data.replace("\r"sv, ""sv).replace("\n"sv, ""sv);
         auto decoded_base64 = decode_base64(encoded_data);
         if (!decoded_base64.is_error())
             decoded_data = decoded_base64.release_value().span();
