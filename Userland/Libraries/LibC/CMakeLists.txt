@@ -318,3 +318,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         WORKING_DIRECTORY "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
     )
 endif()
+
+# ===== LibC for BuggieBox =====
+add_library(BuggieBox_LibC STATIC ${SOURCES})
+target_link_libraries(BuggieBox_LibC
+    PUBLIC StaticPIE_CompileOptions
+    PRIVATE BuggieBox_LibSystem
+)

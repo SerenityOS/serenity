@@ -669,6 +669,12 @@ EntryPointFunction ELF::DynamicLinker::linker_main(ByteString&& main_program_pat
     define_magic_function("__environ_value"sv, __environ_value);
     define_magic_function("__free_tls_region"sv, __free_tls_region);
 
+    // NOTE: Static-PIE dynamically-loaded ELF binaries (which don't depend on any other library) might generate weak references
+    // (that will be referenced later with the GOT.PLT). For example, the __cxa_guard_release function might need to call
+    // the pthread_cond_broadcast function.
+    define_magic_function("pthread_cond_broadcast"sv, pthread_cond_broadcast);
+    define_magic_function("pthread_cond_wait"sv, pthread_cond_wait);
+
     char* raw_current_directory = getcwd(nullptr, 0);
     s_cwd = raw_current_directory;
     free(raw_current_directory);
@@ -704,7 +710,7 @@ EntryPointFunction ELF::DynamicLinker::linker_main(ByteString&& main_program_pat
     // some sort of ELF packers or dynamic loaders, and there's no added
     // value in trying to run them, as they will probably crash due to trying
     // to invoke syscalls from a non-syscall memory executable (code) region.
-    if (executable->is_dynamic() && (!has_interpreter || needed_dependencies == 0) && executable->dynamic_object().is_pie()) {
+    if (executable->is_dynamic() && !has_interpreter && executable->dynamic_object().is_pie()) {
         char const message[] = R"(error: the dynamic loader can't reasonably run static-pie ELF. static-pie ELFs might run executable code that invokes syscalls
 outside of the defined syscall memory executable (code) region security measure we implement.
 Examples of static-pie ELF objects are ELF packers, and the system dynamic loader itself.)";
@@ -744,14 +750,19 @@ Examples of static-pie ELF objects are ELF packers, and the system dynamic loade
         entry_point = entry_point.offset(main_executable_loader->base_address().get());
     auto entry_point_function = reinterpret_cast<EntryPointFunction>(entry_point.as_ptr());
 
-    int rc = syscall(SC_prctl, PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS, 0, 0, nullptr);
+    int rc = syscall(SC_prctl, PR_SET_NO_TRANSITION_TO_EXECUTABLE_FROM_WRITABLE_PROT, 0, 0, nullptr);
     if (rc < 0) {
         VERIFY_NOT_REACHED();
     }
 
-    rc = syscall(SC_prctl, PR_SET_NO_TRANSITION_TO_EXECUTABLE_FROM_WRITABLE_PROT, 0, 0, nullptr);
-    if (rc < 0) {
-        VERIFY_NOT_REACHED();
+    // FIXME: It is not safe to assume that if that there's more than zero dependencies, then
+    // this program has libsystem.so as one of them so it can run syscalls from there.
+    // For now this heuristic is enough to run dynamically loaded static-PIE programs
+    if (needed_dependencies > 0) {
+        rc = syscall(SC_prctl, PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS, 0, 0, nullptr);
+        if (rc < 0) {
+            VERIFY_NOT_REACHED();
+        }
     }
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "Jumping to entry point: {:p}", entry_point_function);

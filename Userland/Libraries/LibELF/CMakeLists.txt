@@ -29,6 +29,12 @@ if (SERENITYOS)
         PUBLIC DynamicLoader_CompileOptions
         PRIVATE DynamicLoader_LibC
     )
+
+    add_library(BuggieBox_LibELF STATIC ${SOURCES})
+    target_link_libraries(BuggieBox_LibELF
+        PUBLIC StaticPIE_CompileOptions
+        PRIVATE BuggieBox_LibC
+    )
 endif()
 
 serenity_lib(LibELF elf ${SOURCES})

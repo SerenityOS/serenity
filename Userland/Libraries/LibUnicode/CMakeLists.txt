@@ -16,4 +16,11 @@ set(GENERATED_SOURCES ${CURRENT_LIB_GENERATED})
 
 serenity_lib(LibUnicode unicode)
 
+# ===== LibUnicode for BuggieBox =====
+add_library(BuggieBox_LibUnicode STATIC ${SOURCES})
+target_link_libraries(BuggieBox_LibUnicode
+    PUBLIC StaticPIE_CompileOptions
+)
+
 target_compile_definitions(LibUnicode PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)
+target_compile_definitions(BuggieBox_LibUnicode PRIVATE ENABLE_UNICODE_DATA=$<BOOL:${ENABLE_UNICODE_DATABASE_DOWNLOAD}>)

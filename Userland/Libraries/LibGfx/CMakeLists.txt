@@ -114,3 +114,12 @@ add_dependencies(LibGfx generate_tiff_files_handler)
 
 list(TRANSFORM generated_sources PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")
 install(FILES ${generated_sources} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/LibGfx/ImageFormats")
+
+# ===== LibGfx for BuggieBox =====
+add_library(BuggieBox_LibGfx STATIC ${SOURCES})
+target_link_libraries(BuggieBox_LibGfx
+    PUBLIC StaticPIE_CompileOptions
+    PRIVATE BuggieBox_LibCompress BuggieBox_LibCore BuggieBox_LibCrypto BuggieBox_LibFileSystem BuggieBox_LibRIFF
+    BuggieBox_LibTextCodec BuggieBox_LibIPC BuggieBox_LibUnicode BuggieBox_LibURL
+)
+target_sources(BuggieBox_LibGfx PRIVATE ${generated_sources})

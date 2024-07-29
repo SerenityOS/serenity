@@ -8,3 +8,6 @@ target_link_options(LibSystem PRIVATE -nostdlib)
 
 add_library(DynamicLoader_LibSystem STATIC ${SOURCES})
 target_link_libraries(DynamicLoader_LibSystem PUBLIC DynamicLoader_CompileOptions)
+
+add_library(BuggieBox_LibSystem STATIC ${SOURCES})
+target_link_libraries(BuggieBox_LibSystem PUBLIC StaticPIE_CompileOptions)

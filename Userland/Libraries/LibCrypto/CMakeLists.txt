@@ -36,3 +36,10 @@ set(SOURCES
 
 serenity_lib(LibCrypto crypto)
 target_link_libraries(LibCrypto PRIVATE LibCore)
+
+# ===== LibCrypto for BuggieBox =====
+add_library(BuggieBox_LibCrypto STATIC ${SOURCES})
+target_link_libraries(BuggieBox_LibCrypto
+    PUBLIC StaticPIE_CompileOptions
+    PRIVATE BuggieBox_LibCore
+)

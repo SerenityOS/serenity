@@ -73,3 +73,18 @@ add_subdirectory(LibWebSocket)
 add_subdirectory(LibWebView)
 add_subdirectory(LibX86)
 add_subdirectory(LibXML)
+
+add_library(StaticPIE_CompileOptions INTERFACE)
+target_compile_options(StaticPIE_CompileOptions INTERFACE -ffunction-sections -fdata-sections)
+target_compile_definitions(StaticPIE_CompileOptions INTERFACE NO_LIBC)
+target_compile_options(StaticPIE_CompileOptions INTERFACE)
+target_link_options(StaticPIE_CompileOptions INTERFACE -nolibc -pthread -nostartfiles -static-libgcc -static-libstdc++ -Wl,--gc-sections)
+add_dependencies(StaticPIE_CompileOptions install_libc_headers)
+
+add_library(LibStaticPIE)
+target_link_libraries(LibStaticPIE
+    PUBLIC StaticPIE_CompileOptions
+)
+target_sources(LibStaticPIE PRIVATE ./LibC/crt0_standalone.cpp)
+target_sources(LibStaticPIE PRIVATE ../DynamicLoader/misc.cpp)
+

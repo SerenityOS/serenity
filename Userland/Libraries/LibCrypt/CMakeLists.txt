@@ -14,3 +14,10 @@ set(SOURCES
 serenity_lib(LibCrypt crypt)
 serenity_install_headers("")
 target_link_libraries(LibCrypt PRIVATE LibCryptSHA2)
+
+# ===== LibCrypt for BuggieBox =====
+add_library(BuggieBox_LibCrypt STATIC ${SOURCES})
+target_link_libraries(BuggieBox_LibCrypt
+    PUBLIC StaticPIE_CompileOptions
+    PRIVATE LibCryptSHA2
+)
