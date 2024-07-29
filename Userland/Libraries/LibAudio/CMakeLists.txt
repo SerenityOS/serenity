@@ -37,6 +37,14 @@ endif()
 serenity_lib(LibAudio audio)
 target_link_libraries(LibAudio PRIVATE LibCore LibRIFF LibIPC LibThreading LibUnicode LibCrypto)
 
+if (SERENITYOS)
+    add_library(BuggieBox_LibAudio STATIC ${SOURCES})
+    target_link_libraries(BuggieBox_LibAudio
+        PUBLIC StaticPIE_CompileOptions
+        PRIVATE BuggieBox_LibCore BuggieBox_LibRIFF BuggieBox_LibIPC BuggieBox_LibThreading BuggieBox_LibUnicode BuggieBox_LibCrypto
+    )
+endif()
+
 if (HAVE_PULSEAUDIO)
     target_link_libraries(LibAudio PRIVATE pulse)
     target_compile_definitions(LibAudio PRIVATE HAVE_PULSEAUDIO=1)

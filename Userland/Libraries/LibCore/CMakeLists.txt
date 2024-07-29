@@ -22,10 +22,18 @@ if (NOT BUILD_LAGOM AND NOT SERENITYOS)
 endif()
 
 if (SERENITYOS)
+    add_library(BuggieBox_LibCoreMinimal STATIC ${SOURCES})
+    target_link_libraries(BuggieBox_LibCoreMinimal PRIVATE BuggieBox_LibC BuggieBox_LibSystem)
+
     add_library(DynamicLoader_LibCoreArgsParser 
         ArgsParser.cpp
         Version.cpp)
     target_link_libraries(DynamicLoader_LibCoreArgsParser PUBLIC DynamicLoader_CompileOptions)
+
+    add_library(BuggieBox_LibCoreArgsParser 
+        ArgsParser.cpp
+        Version.cpp)
+    target_link_libraries(BuggieBox_LibCoreArgsParser PUBLIC StaticPIE_CompileOptions)
 endif()
 
 # These are the minimal set of sources needed to build LibLine and LibShellMinimal. We separate them to allow
@@ -45,6 +53,11 @@ set(SOURCES
 
 serenity_lib(LibCoreBasic corebasic)
 target_link_libraries(LibCoreBasic PRIVATE LibCoreMinimal LibTimeZone)
+
+if (SERENITYOS)
+    add_library(BuggieBox_LibCoreBasic STATIC ${SOURCES})
+    target_link_libraries(BuggieBox_LibCoreBasic PRIVATE BuggieBox_LibCoreMinimal LibTimeZone)
+endif()
 
 set(SOURCES
     AnonymousBuffer.cpp
@@ -107,6 +120,11 @@ endif()
 serenity_lib(LibCore core)
 target_link_libraries(LibCore PRIVATE LibCrypt LibSystem LibTimeZone LibURL)
 target_link_libraries(LibCore PUBLIC LibCoreMinimal LibCoreBasic)
+
+if (SERENITYOS)
+    add_library(BuggieBox_LibCore STATIC ${SOURCES})
+    target_link_libraries(BuggieBox_LibCore PUBLIC StaticPIE_CompileOptions BuggieBox_LibCrypt BuggieBox_LibURL BuggieBox_LibCoreBasic BuggieBox_LibCoreMinimal)
+endif()
 
 if (APPLE)
     target_link_libraries(LibCore PUBLIC "-framework CoreFoundation")

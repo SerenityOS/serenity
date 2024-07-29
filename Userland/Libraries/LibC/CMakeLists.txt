@@ -131,3 +131,10 @@ target_link_libraries(DynamicLoader_LibC
     PUBLIC DynamicLoader_CompileOptions
     PRIVATE DynamicLoader_LibSystem
 )
+
+# ===== LibC for BuggieBox =====
+add_library(BuggieBox_LibC STATIC ${SOURCES})
+target_link_libraries(BuggieBox_LibC
+    PUBLIC StaticPIE_CompileOptions
+    PRIVATE BuggieBox_LibSystem
+)

@@ -25,7 +25,17 @@ bool __stdio_is_initialized = false;
 void* __auxiliary_vector = reinterpret_cast<void*>(explode_byte(0xe1));
 
 #ifndef _DYNAMIC_LOADER
+#    ifdef NO_LIBC
+// NOTE: For static-PIE programs that don't depend on libc, but are not dynamic loader
+// we need to wait for crt0_standalone.cpp to actually call __libc_init() to ensure
+// we actually have a proper environment set here.
+// For the time being, just declare it as an empty array.
+char* __static_environ[] = { nullptr };
+char** environ = __static_environ;
+#    else
 char** environ = reinterpret_cast<char**>(explode_byte(0xe2));
+#    endif
+
 uintptr_t __stack_chk_guard;
 #endif
 

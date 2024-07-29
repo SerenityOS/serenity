@@ -3,6 +3,10 @@ set(SOURCES
     misc.cpp
 )
 
+# ===== LibPIERuntime for Static PIE programs =====
+add_library(LibPIERuntime STATIC misc.cpp)
+target_link_libraries(LibPIERuntime PRIVATE StaticPIE_CompileOptions)
+
 add_library(DynamicLoader_CompileOptions INTERFACE)
 target_compile_definitions(DynamicLoader_CompileOptions INTERFACE NO_TLS _DYNAMIC_LOADER)
 target_compile_options(DynamicLoader_CompileOptions INTERFACE -fno-rtti -fpie -ffunction-sections -fdata-sections)
