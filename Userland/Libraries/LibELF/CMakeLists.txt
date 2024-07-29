@@ -33,6 +33,9 @@ if (SERENITYOS)
         PUBLIC DynamicLoader_CompileOptions
         PRIVATE DynamicLoader_LibC
     )
+
+    serenity_static_lib(LibELFStatic)
+    target_link_libraries(LibELFStatic PRIVATE LibCStatic)
 endif()
 
 serenity_lib(LibELF elf ${SOURCES})

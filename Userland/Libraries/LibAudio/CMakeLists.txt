@@ -37,6 +37,11 @@ endif()
 serenity_lib(LibAudio audio)
 target_link_libraries(LibAudio PRIVATE LibCore LibRIFF LibIPC LibThreading LibUnicode LibCrypto)
 
+if (SERENITYOS)
+    serenity_static_lib(LibAudioStatic)
+    target_link_libraries(LibAudioStatic PRIVATE LibCoreStatic LibRIFFStatic LibIPCStatic LibThreadingStatic LibUnicodeStatic LibCryptoStatic)
+endif()
+
 if (HAVE_PULSEAUDIO)
     target_link_libraries(LibAudio PRIVATE pulse)
     target_compile_definitions(LibAudio PRIVATE HAVE_PULSEAUDIO=1)

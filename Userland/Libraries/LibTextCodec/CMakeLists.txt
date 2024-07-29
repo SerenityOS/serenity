@@ -12,3 +12,5 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibTextCodec textcodec)
+
+serenity_static_lib(LibTextCodecStatic)

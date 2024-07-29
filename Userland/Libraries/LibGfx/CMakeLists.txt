@@ -130,3 +130,9 @@ add_dependencies(LibGfx generate_tiff_files_handler)
 
 list(TRANSFORM generated_sources PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")
 install(FILES ${generated_sources} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/LibGfx/ImageFormats")
+
+serenity_static_lib(LibGfxStatic)
+target_link_libraries(LibGfxStatic PRIVATE LibCompressStatic LibCoreStatic LibCryptoStatic LibFileSystemStatic LibRIFFStatic
+    LibTextCodecStatic LibIPCStatic LibUnicodeStatic LibURLStatic
+)
+target_sources(LibGfxStatic PRIVATE ${generated_sources})
