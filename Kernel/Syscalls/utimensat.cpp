@@ -20,9 +20,9 @@ ErrorOr<FlatPtr> Process::sys$futimens(Userspace<Syscall::SC_futimens_params con
     auto params = TRY(copy_typed_from_user(user_params));
     auto now = kgettimeofday().to_timespec();
 
-    timespec times[2];
+    auto times = Array<timespec, 2> {};
     if (params.times) {
-        TRY(copy_from_user(times, params.times, sizeof(times)));
+        TRY(copy_from_user(times.data(), params.times, times.span().size()));
         if (times[0].tv_nsec == UTIME_NOW)
             times[0] = now;
         if (times[1].tv_nsec == UTIME_NOW)

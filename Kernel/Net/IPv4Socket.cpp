@@ -722,17 +722,15 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
             return ENODEV;
         }
 
-        char namebuf[IFNAMSIZ + 1];
-        memcpy(namebuf, ifr.ifr_name, IFNAMSIZ);
-        namebuf[sizeof(namebuf) - 1] = '\0';
-
+        auto namebuf = Array<u8, IFNAMSIZ + 1> {};
+        memcpy(namebuf.data(), ifr.ifr_name, IFNAMSIZ);
+        auto adapter_name = StringView(namebuf.span().trim(strlen(bit_cast<char const*>(namebuf.data()))));
         if (request == SIOCGIFINDEX) {
-            StringView name { namebuf, strlen(namebuf) };
             size_t index = 1;
             Optional<size_t> result {};
 
-            NetworkingManagement::the().for_each([&name, &index, &result](auto& adapter) {
-                if (adapter.name() == name)
+            NetworkingManagement::the().for_each([adapter_name, &index, &result](auto& adapter) {
+                if (adapter.name() == adapter_name)
                     result = index;
                 ++index;
             });
@@ -745,7 +743,7 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
             return ENODEV;
         }
 
-        auto adapter = NetworkingManagement::the().lookup_by_name({ namebuf, strlen(namebuf) });
+        auto adapter = NetworkingManagement::the().lookup_by_name(adapter_name);
         if (!adapter)
             return ENODEV;
 

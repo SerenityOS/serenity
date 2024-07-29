@@ -164,14 +164,14 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
 
     auto builder = TRY(KBufferBuilder::try_create());
 
-    u8 buffer[512];
-    VERIFY(fs().m_device_block_size <= sizeof(buffer));
-    auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
+    Array<u8, 512> buffer {};
+    VERIFY(fs().m_device_block_size <= buffer.span().size());
+    auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer.data());
 
     for (BlockBasedFileSystem::BlockIndex block : block_list) {
         dbgln_if(FAT_DEBUG, "FATInode[{}]::read_block_list(): reading block: {}", identifier(), block);
         TRY(fs().read_block(block, &buf, sizeof(buffer)));
-        TRY(builder.append((char const*)buffer, fs().m_device_block_size));
+        TRY(builder.append(bit_cast<char const*>(buffer.data()), fs().m_device_block_size));
     }
 
     auto blocks = builder.build();
