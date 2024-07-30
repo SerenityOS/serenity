@@ -249,6 +249,8 @@ ErrorOr<void> ViewWidget::try_open_file(String const& path, Core::File& file)
         }
     }
 
+    clear();
+
     m_image = frames[0].image;
     if (is_animated && frames.size() > 1) {
         m_animation = Animation { loop_count, move(frames) };
