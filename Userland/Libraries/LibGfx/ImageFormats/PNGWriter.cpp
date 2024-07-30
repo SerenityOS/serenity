@@ -31,7 +31,7 @@ public:
 
     ErrorOr<void> add_u8(u8);
 
-    ErrorOr<void> compress_and_add(ReadonlyBytes);
+    ErrorOr<void> compress_and_add(ReadonlyBytes, Compress::ZlibCompressionLevel);
     ErrorOr<void> add(ReadonlyBytes);
 
     ErrorOr<void> store_type();
@@ -71,9 +71,9 @@ u32 PNGChunk::crc()
     return crc;
 }
 
-ErrorOr<void> PNGChunk::compress_and_add(ReadonlyBytes uncompressed_bytes)
+ErrorOr<void> PNGChunk::compress_and_add(ReadonlyBytes uncompressed_bytes, Compress::ZlibCompressionLevel compression_level)
 {
-    return add(TRY(Compress::ZlibCompressor::compress_all(uncompressed_bytes, Compress::ZlibCompressionLevel::Best)));
+    return add(TRY(Compress::ZlibCompressor::compress_all(uncompressed_bytes, compression_level)));
 }
 
 ErrorOr<void> PNGChunk::add(ReadonlyBytes bytes)
@@ -125,7 +125,7 @@ ErrorOr<void> PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG
     return {};
 }
 
-ErrorOr<void> PNGWriter::add_iCCP_chunk(ReadonlyBytes icc_data)
+ErrorOr<void> PNGWriter::add_iCCP_chunk(ReadonlyBytes icc_data, Compress::ZlibCompressionLevel compression_level)
 {
     // https://www.w3.org/TR/png/#11iCCP
     PNGChunk chunk { "iCCP"_string };
@@ -134,7 +134,7 @@ ErrorOr<void> PNGWriter::add_iCCP_chunk(ReadonlyBytes icc_data)
     TRY(chunk.add_u8(0)); // \0-terminate profile name
 
     TRY(chunk.add_u8(0)); // compression method deflate
-    TRY(chunk.compress_and_add(icc_data));
+    TRY(chunk.compress_and_add(icc_data, compression_level));
 
     TRY(add_chunk(chunk));
     return {};
@@ -165,7 +165,7 @@ union [[gnu::packed]] Pixel {
 };
 static_assert(AssertSize<Pixel, 4>());
 
-ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
+ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::ZlibCompressionLevel compression_level)
 {
     PNGChunk png_chunk { "IDAT"_string };
     TRY(png_chunk.reserve(bitmap.size_in_bytes()));
@@ -262,7 +262,7 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
         TRY(uncompressed_block_data.try_append(best_filter.buffer));
     }
 
-    TRY(png_chunk.compress_and_add(uncompressed_block_data));
+    TRY(png_chunk.compress_and_add(uncompressed_block_data, compression_level));
     TRY(add_chunk(png_chunk));
     return {};
 }
@@ -273,8 +273,8 @@ ErrorOr<ByteBuffer> PNGWriter::encode(Gfx::Bitmap const& bitmap, Options options
     TRY(writer.add_png_header());
     TRY(writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, PNG::ColorType::TruecolorWithAlpha, 0, 0, 0));
     if (options.icc_data.has_value())
-        TRY(writer.add_iCCP_chunk(options.icc_data.value()));
-    TRY(writer.add_IDAT_chunk(bitmap));
+        TRY(writer.add_iCCP_chunk(options.icc_data.value(), options.compression_level));
+    TRY(writer.add_IDAT_chunk(bitmap, options.compression_level));
     TRY(writer.add_IEND_chunk());
     return ByteBuffer::copy(writer.m_data);
 }
