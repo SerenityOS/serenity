@@ -150,7 +150,7 @@ static ErrorOr<OwnPtr<Core::MappedFile>> convert_image_profile(LoadedImage& imag
     return icc_file;
 }
 
-static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool ppm_ascii, u8 jpeg_quality, Optional<unsigned> webp_allowed_transforms, unsigned webp_color_cache_bits)
+static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool ppm_ascii, u8 jpeg_quality, Optional<unsigned> webp_allowed_transforms, unsigned webp_color_cache_bits, Compress::ZlibCompressionLevel png_compression_level)
 {
     auto stream = [out_path]() -> ErrorOr<NonnullOwnPtr<Core::OutputBufferedFile>> {
         auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
@@ -200,7 +200,7 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
     if (out_path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::BMPWriter::encode(*frame, { .icc_data = image.icc_data }));
     } else if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::PNGWriter::encode(*frame, { .icc_data = image.icc_data }));
+        bytes = TRY(Gfx::PNGWriter::encode(*frame, { .compression_level = png_compression_level, .icc_data = image.icc_data }));
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*frame));
     } else {
@@ -223,6 +223,7 @@ struct Options {
     StringView assign_color_profile_path;
     StringView convert_color_profile_path;
     bool strip_color_profile = false;
+    Compress::ZlibCompressionLevel png_compression_level { Compress::ZlibCompressionLevel::Best };
     bool ppm_ascii = false;
     u8 quality = 75;
     unsigned webp_color_cache_bits = 6;
@@ -285,6 +286,8 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     args_parser.add_option(options.assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
     args_parser.add_option(options.convert_color_profile_path, "Load color profile from file and convert output image from current profile to loaded profile", "convert-to-color-profile", {}, "FILE");
     args_parser.add_option(options.strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
+    auto png_compression_level = static_cast<unsigned>(Compress::ZlibCompressionLevel::Best);
+    args_parser.add_option(png_compression_level, "PNG compression level, in [0, 3]. Higher values take longer and produce smaller outputs. Default: 2", "png-compression-level", {}, {});
     args_parser.add_option(options.ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
     args_parser.add_option(options.quality, "Quality used for the JPEG encoder, the default value is 75 on a scale from 0 to 100", "quality", {}, {});
     args_parser.add_option(options.webp_color_cache_bits, "Size of the webp color cache (in [0, 11], higher values tend to be slower and produce smaller output, default: 6)", "webp-color-cache-bits", {}, {});
@@ -297,6 +300,11 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
 
     if (!crop_rect_string.is_empty())
         options.crop_rect = TRY(parse_rect_string(crop_rect_string));
+
+    if (png_compression_level > 3)
+        return Error::from_string_view("--png-compression-level must be in [0, 3]"sv);
+    options.png_compression_level = static_cast<Compress::ZlibCompressionLevel>(png_compression_level);
+
     if (webp_allowed_transforms != "default"sv)
         options.webp_allowed_transforms = TRY(parse_webp_allowed_transforms_string(webp_allowed_transforms));
 
@@ -341,7 +349,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (options.no_output)
         return 0;
 
-    TRY(save_image(image, options.out_path, options.ppm_ascii, options.quality, options.webp_allowed_transforms, options.webp_color_cache_bits));
+    TRY(save_image(image, options.out_path, options.ppm_ascii, options.quality, options.webp_allowed_transforms, options.webp_color_cache_bits, options.png_compression_level));
 
     return 0;
 }
