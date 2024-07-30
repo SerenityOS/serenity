@@ -126,7 +126,7 @@ static_assert(AssertSize<USBSuperSpeedEndpointCompanionDescriptor, 6>());
 struct [[gnu::packed]] USBHubDescriptor {
     USBDescriptorCommon descriptor_header;
     u8 number_of_downstream_ports;
-    union {
+    union [[gnu::packed]] {
         u16 raw;
         struct {
             u16 logical_power_switching_mode : 2;
