@@ -19,7 +19,7 @@ class PNGChunk;
 
 // This is not a nested struct to work around https://llvm.org/PR36684
 struct PNGWriterOptions {
-    Compress::ZlibCompressionLevel compression_level { Compress::ZlibCompressionLevel::Best };
+    Compress::ZlibCompressionLevel compression_level { Compress::ZlibCompressionLevel::Default };
 
     // Data for the iCCP chunk.
     // FIXME: Allow writing cICP, sRGB, or gAMA instead too.
