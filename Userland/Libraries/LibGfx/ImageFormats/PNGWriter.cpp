@@ -165,6 +165,7 @@ union [[gnu::packed]] Pixel {
 };
 static_assert(AssertSize<Pixel, 4>());
 
+template<bool include_alpha>
 ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::ZlibCompressionLevel compression_level)
 {
     PNGChunk png_chunk { "IDAT"_string };
@@ -196,7 +197,8 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
                 TRY(append(simd[0]));
                 TRY(append(simd[1]));
                 TRY(append(simd[2]));
-                TRY(append(simd[3]));
+                if constexpr (include_alpha)
+                    TRY(append(simd[3]));
                 return {};
             }
         };
@@ -267,14 +269,29 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
     return {};
 }
 
+static bool bitmap_has_transparency(Bitmap const& bitmap)
+{
+    for (auto pixel : bitmap) {
+        if (Color::from_argb(pixel).alpha() != 255)
+            return true;
+    }
+    return false;
+}
+
 ErrorOr<ByteBuffer> PNGWriter::encode(Gfx::Bitmap const& bitmap, Options options)
 {
+    bool has_transparency = bitmap_has_transparency(bitmap);
+
     PNGWriter writer;
     TRY(writer.add_png_header());
-    TRY(writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, PNG::ColorType::TruecolorWithAlpha, 0, 0, 0));
+    auto color_type = has_transparency ? PNG::ColorType::TruecolorWithAlpha : PNG::ColorType::Truecolor;
+    TRY(writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, color_type, 0, 0, 0));
     if (options.icc_data.has_value())
         TRY(writer.add_iCCP_chunk(options.icc_data.value(), options.compression_level));
-    TRY(writer.add_IDAT_chunk(bitmap, options.compression_level));
+    if (has_transparency)
+        TRY(writer.add_IDAT_chunk<true>(bitmap, options.compression_level));
+    else
+        TRY(writer.add_IDAT_chunk<false>(bitmap, options.compression_level));
     TRY(writer.add_IEND_chunk());
     return ByteBuffer::copy(writer.m_data);
 }

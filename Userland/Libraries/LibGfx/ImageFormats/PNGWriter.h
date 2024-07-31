@@ -40,6 +40,7 @@ private:
     ErrorOr<void> add_png_header();
     ErrorOr<void> add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG::ColorType color_type, u8 compression_method, u8 filter_method, u8 interlace_method);
     ErrorOr<void> add_iCCP_chunk(ReadonlyBytes icc_data, Compress::ZlibCompressionLevel);
+    template<bool include_alpha>
     ErrorOr<void> add_IDAT_chunk(Gfx::Bitmap const&, Compress::ZlibCompressionLevel);
     ErrorOr<void> add_IEND_chunk();
 };
