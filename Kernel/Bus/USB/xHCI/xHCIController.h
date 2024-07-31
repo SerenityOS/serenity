@@ -1149,6 +1149,8 @@ private:
     ErrorOr<void> enqueue_transfer(u8 slot, u8 endpoint, Pipe::Direction direction, Span<TransferRequestBlock>, PendingTransfer&);
     void handle_transfer_event(TransferRequestBlock const&);
 
+    ErrorOr<Vector<TransferRequestBlock>> prepare_normal_transfer(Transfer& transfer);
+
     Memory::TypedMapping<u8> m_registers_mapping;
     CapabilityRegisters const volatile& m_capability_registers;
     OperationalRegisters volatile& m_operational_registers;
