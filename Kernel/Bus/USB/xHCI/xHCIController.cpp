@@ -816,42 +816,32 @@ ErrorOr<size_t> xHCIController::submit_control_transfer(Transfer& transfer)
     return transfer.transfer_data_size() - pending_transfer.remainder;
 }
 
-ErrorOr<size_t> xHCIController::submit_bulk_transfer(Transfer&)
+ErrorOr<Vector<xHCIController::TransferRequestBlock>> xHCIController::prepare_normal_transfer(Transfer& transfer)
 {
-    dmesgln_pci(*this, "TODO: Support submitting bulk transfers");
-    return ENOTIMPL;
-}
-
-ErrorOr<void> xHCIController::submit_async_interrupt_transfer(NonnullLockRefPtr<Transfer> transfer, u16)
-{
-    dbgln_if(XHCI_DEBUG, "xHCI: Received async interrupt transfer for address {}", transfer->pipe().device().address());
-
-    TRY(initialize_endpoint_if_needed(transfer->pipe()));
-
-    auto const& device = transfer->pipe().device();
+    auto const& device = transfer.pipe().device();
     auto const slot = device.controller_identifier();
     u32 max_burst_payload = 0;
     {
-        auto endpoint_id = endpoint_index(transfer->pipe().endpoint_address(), transfer->pipe().direction());
+        auto endpoint_id = endpoint_index(transfer.pipe().endpoint_address(), transfer.pipe().direction());
         SpinlockLocker locker(m_slots_state[slot - 1].lock);
         max_burst_payload = m_slots_state[slot - 1].endpoint_rings[endpoint_id - 1].max_burst_payload;
     }
     VERIFY(max_burst_payload > 0);
-    u32 total_transfer_size = transfer->transfer_data_size();
+    u32 total_transfer_size = transfer.transfer_data_size();
     auto transfer_request_blocks_count = ceil_div(total_transfer_size, max_burst_payload);
     Vector<TransferRequestBlock> transfer_request_blocks;
     TRY(transfer_request_blocks.try_resize(transfer_request_blocks_count));
     auto offset = 0u;
     for (auto i = 0u; i < transfer_request_blocks_count; ++i) {
         auto& transfer_request_block = transfer_request_blocks[i];
-        auto buffer_pointer = transfer->buffer_physical().get() + offset;
+        auto buffer_pointer = transfer.buffer_physical().get() + offset;
         transfer_request_block.normal.data_buffer_pointer_low = buffer_pointer;
         transfer_request_block.normal.data_buffer_pointer_high = buffer_pointer >> 32;
         auto remaining = total_transfer_size - offset;
         auto trb_transfer_length = remaining < max_burst_payload ? remaining : max_burst_payload;
         transfer_request_block.normal.transfer_request_block_transfer_length = trb_transfer_length;
         offset += trb_transfer_length;
-        transfer_request_block.normal.transfer_descriptor_size = min(ceil_div(remaining, (u32)transfer->pipe().max_packet_size()), 31);
+        transfer_request_block.normal.transfer_descriptor_size = min(ceil_div(remaining, (u32)transfer.pipe().max_packet_size()), 31);
         transfer_request_block.normal.interrupter_target = 0;
         if (i != (transfer_request_blocks_count - 1))
             transfer_request_block.normal.chain_bit = 1;
@@ -860,8 +850,38 @@ ErrorOr<void> xHCIController::submit_async_interrupt_transfer(NonnullLockRefPtr<
         transfer_request_block.normal.transfer_request_block_type = TransferRequestBlock::TRBType::Normal;
     }
 
+    return transfer_request_blocks;
+}
+
+ErrorOr<size_t> xHCIController::submit_bulk_transfer(Transfer& transfer)
+{
+    dbgln_if(XHCI_DEBUG, "xHCI: Received bulk transfer for address {}", transfer.pipe().device().address());
+
+    TRY(initialize_endpoint_if_needed(transfer.pipe()));
+
+    auto transfer_request_blocks = TRY(prepare_normal_transfer(transfer));
+
+    SyncPendingTransfer pending_transfer;
+    TRY(enqueue_transfer(transfer.pipe().device().controller_identifier(), transfer.pipe().endpoint_address(), transfer.pipe().direction(), transfer_request_blocks, pending_transfer));
+    pending_transfer.wait_queue.wait_forever();
+    VERIFY(!pending_transfer.endpoint_list_node.is_in_list());
+
+    if (pending_transfer.completion_code != TransferRequestBlock::CompletionCode::Success)
+        return EIO;
+
+    return transfer.transfer_data_size() - pending_transfer.remainder;
+}
+
+ErrorOr<void> xHCIController::submit_async_interrupt_transfer(NonnullLockRefPtr<Transfer> transfer, u16)
+{
+    dbgln_if(XHCI_DEBUG, "xHCI: Received async interrupt transfer for address {}", transfer->pipe().device().address());
+
+    TRY(initialize_endpoint_if_needed(transfer->pipe()));
+
+    auto transfer_request_blocks = TRY(prepare_normal_transfer(transfer));
+
     NonnullOwnPtr<PeriodicPendingTransfer> pending_transfer = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PeriodicPendingTransfer({}, move(transfer_request_blocks), move(transfer))));
-    TRY(enqueue_transfer(slot, pending_transfer->original_transfer->pipe().endpoint_address(), pending_transfer->original_transfer->pipe().direction(), pending_transfer->transfer_request_blocks, *pending_transfer));
+    TRY(enqueue_transfer(pending_transfer->original_transfer->pipe().device().controller_identifier(), pending_transfer->original_transfer->pipe().endpoint_address(), pending_transfer->original_transfer->pipe().direction(), pending_transfer->transfer_request_blocks, *pending_transfer));
     TRY(m_active_periodic_transfers.try_append(move(pending_transfer)));
 
     return {};
