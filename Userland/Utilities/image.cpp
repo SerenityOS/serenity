@@ -223,7 +223,7 @@ struct Options {
     StringView assign_color_profile_path;
     StringView convert_color_profile_path;
     bool strip_color_profile = false;
-    Compress::ZlibCompressionLevel png_compression_level { Compress::ZlibCompressionLevel::Best };
+    Compress::ZlibCompressionLevel png_compression_level { Compress::ZlibCompressionLevel::Default };
     bool ppm_ascii = false;
     u8 quality = 75;
     unsigned webp_color_cache_bits = 6;
@@ -286,7 +286,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     args_parser.add_option(options.assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
     args_parser.add_option(options.convert_color_profile_path, "Load color profile from file and convert output image from current profile to loaded profile", "convert-to-color-profile", {}, "FILE");
     args_parser.add_option(options.strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
-    auto png_compression_level = static_cast<unsigned>(Compress::ZlibCompressionLevel::Best);
+    auto png_compression_level = static_cast<unsigned>(Compress::ZlibCompressionLevel::Default);
     args_parser.add_option(png_compression_level, "PNG compression level, in [0, 3]. Higher values take longer and produce smaller outputs. Default: 2", "png-compression-level", {}, {});
     args_parser.add_option(options.ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
     args_parser.add_option(options.quality, "Quality used for the JPEG encoder, the default value is 75 on a scale from 0 to 100", "quality", {}, {});
