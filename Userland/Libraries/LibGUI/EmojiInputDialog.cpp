@@ -156,12 +156,19 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
     return emojis;
 }
 
-Vector<EmojiInputDialog::Emoji> EmojiInputDialog::filter_and_rank_emojis(ByteString const& query)
+Vector<EmojiInputDialog::EmojiScore> EmojiInputDialog::filter_and_rank_emojis(ByteString const& query)
 {
     Vector<EmojiScore> emoji_scores;
-
     for (auto& emoji : m_emojis) {
         if (emoji.emoji.name.is_empty()) {
+            continue;
+        }
+
+        if (m_selected_category.has_value() && emoji.emoji.group != m_selected_category)
+            continue;
+
+        if (query.is_empty()) {
+            emoji_scores.append({ &emoji, 1 });
             continue;
         }
 
@@ -174,12 +181,7 @@ Vector<EmojiInputDialog::Emoji> EmojiInputDialog::filter_and_rank_emojis(ByteStr
         return lhs.score > rhs.score;
     });
 
-    Vector<Emoji> emojis;
-    for (auto& [emoji, _] : emoji_scores) {
-        emojis.append(*emoji);
-    }
-
-    return emojis;
+    return emoji_scores;
 }
 
 void EmojiInputDialog::update_displayed_emoji()
@@ -196,24 +198,17 @@ void EmojiInputDialog::update_displayed_emoji()
 
     auto query = m_search_box->text();
 
-    Vector<Emoji> matching_emojis = query.is_empty() ? m_emojis : filter_and_rank_emojis(query);
-
+    Vector<EmojiScore> matching_emojis = filter_and_rank_emojis(query);
     for (size_t row = 0; row < rows && index < matching_emojis.size(); ++row) {
         auto& horizontal_container = m_emojis_widget->add<Widget>();
         horizontal_container.set_preferred_height(SpecialDimension::Fit);
         horizontal_container.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 0);
 
-        for (size_t column = 0; column < columns && index < matching_emojis.size(); ++index) {
-            auto& emoji = matching_emojis[index];
-
-            if (m_selected_category.has_value() && emoji.emoji.group != m_selected_category)
-                continue;
-
-            horizontal_container.add_child(*emoji.button);
+        for (size_t column = 0; column < columns && index < matching_emojis.size(); ++index, ++column) {
+            auto& emoji = matching_emojis[index].emoji;
+            horizontal_container.add_child(*emoji->button);
             if (m_first_displayed_emoji == nullptr)
-                m_first_displayed_emoji = &emoji;
-
-            column++;
+                m_first_displayed_emoji = emoji;
         }
     }
 }
