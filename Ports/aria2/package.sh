@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='aria2'
-version='1.36.0'
+version='1.37.0'
 files=(
-    "https://github.com/aria2/aria2/releases/download/release-${version}/aria2-${version}.tar.xz#58d1e7608c12404f0229a3d9a4953d0d00c18040504498b483305bcb3de907a5"
+    "https://github.com/aria2/aria2/releases/download/release-${version}/aria2-${version}.tar.xz#60a420ad7085eb616cb6e2bdf0a7206d68ff3d37fb5a956dc44242eb2f79b66b"
 )
 depends=(
     'libssh2'
