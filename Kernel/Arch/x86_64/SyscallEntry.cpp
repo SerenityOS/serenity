@@ -80,7 +80,8 @@ extern "C" NO_SANITIZE_COVERAGE [[gnu::naked]] void syscall_entry()
         "    popq %%r15 \n"
         "    addq $8, %%rsp \n"
         "    popq %%rcx \n"
-        "    addq $16, %%rsp \n"
+        "    addq $8, %%rsp \n"
+        "    popq %%r11 \n"
 
         // Disable interrupts before we restore the user stack pointer. sysret will re-enable interrupts when it restores
         // rflags.
