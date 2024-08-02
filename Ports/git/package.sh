@@ -9,7 +9,6 @@ configopts=(
     "--target=${SERENITY_ARCH}-pc-serenity"
     "--with-lib=${SERENITY_INSTALL_ROOT}/usr/local"
     'CFLAGS=-DNO_IPV6'
-    "LDFLAGS=-L${SERENITY_INSTALL_ROOT}/usr/local/lib"
 )
 depends=(
     'curl'

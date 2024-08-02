@@ -21,8 +21,6 @@ configopts=(
 )
 
 configure() {
-    export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include"
-    export LDFLAGS="-L${SERENITY_INSTALL_ROOT}/usr/local/lib"
     run ./"${configscript}" "${configopts[@]}"
 }
 
