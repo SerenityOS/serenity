@@ -16,7 +16,6 @@
 
 namespace Gfx {
 
-enum class ColorRole;
 typedef u32 ARGB32;
 
 struct HSV {
