@@ -21,22 +21,46 @@
 
 namespace RequestServer {
 
+struct ThreadPipeFds {
+    ThreadPipeFds()
+        : fds(MUST(Core::System::pipe2(O_CLOEXEC | O_NONBLOCK)))
+    {
+    }
+
+    ~ThreadPipeFds()
+    {
+        close(fds[0]);
+        close(fds[1]);
+    }
+
+    auto& operator[](size_t x) { return fds[x]; }
+    auto const& operator[](size_t x) const { return fds[x]; }
+
+    Array<int, 2> fds { -1, -1 };
+};
+
+struct ThreadPoolEntry {
+    NonnullRefPtr<ConnectionFromClient> client;
+    ConnectionFromClient::Work work;
+};
+
 static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
 static IDAllocator s_client_ids;
+static ThreadPipeFds s_thread_pipe_fds {};
+static Threading::ThreadPool<ThreadPoolEntry, ConnectionFromClient::Looper> s_thread_pool {
+    [](ThreadPoolEntry entry) {
+        entry.client->worker_do_work(move(entry.work));
+    },
+    {}, s_thread_pipe_fds.fds[0]
+};
 
 ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionFromClient<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket), s_client_ids.allocate())
-    , m_thread_pipe_fds(MUST(Core::System::pipe2(O_CLOEXEC | O_NONBLOCK)))
-    , m_thread_pool([this](Work work) { worker_do_work(move(work)); }, {}, m_thread_pipe_fds[0])
 {
     s_connections.set(client_id(), *this);
 }
 
-ConnectionFromClient::~ConnectionFromClient()
-{
-    close(m_thread_pipe_fds[0]);
-    close(m_thread_pipe_fds[1]);
-}
+ConnectionFromClient::~ConnectionFromClient() = default;
 
 class Job : public RefCounted<Job>
     , public Weakable<Job> {
@@ -221,8 +245,8 @@ Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_
 
 void ConnectionFromClient::enqueue(Work work)
 {
-    m_thread_pool.submit(move(work));
-    auto nwritten = write(m_thread_pipe_fds[1], "x", 1); // notify the worker threads
+    s_thread_pool.submit({ *this, move(work) });
+    auto nwritten = write(s_thread_pipe_fds[1], "x", 1); // notify the worker threads
     if (nwritten < 0) {
         VERIFY_NOT_REACHED();
     }
