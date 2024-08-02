@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libpng'
-version='1.6.40'
+version='1.6.43'
 useconfigure='true'
 configopts=(
     '--disable-static'
@@ -8,7 +8,7 @@ configopts=(
 )
 use_fresh_config_sub='true'
 files=(
-    "https://download.sourceforge.net/libpng/libpng-${version}.tar.gz#8f720b363aa08683c9bf2a563236f45313af2c55d542b5481ae17dd8d183bb42"
+    "https://download.sourceforge.net/libpng/libpng-${version}.tar.gz#e804e465d4b109b5ad285a8fb71f0dd3f74f0068f91ce3cdfde618180c174925"
 )
 depends=(
     'zlib'
