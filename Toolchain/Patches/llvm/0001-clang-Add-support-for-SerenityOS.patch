@@ -180,7 +180,7 @@ new file mode 100644
 index 000000000000..2167758100bc
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,216 @@
+@@ -0,0 +1,221 @@
 +//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -343,6 +343,8 @@ index 000000000000..2167758100bc
 +    CmdArgs.push_back("--pop-state");
 +  }
 +
++  CmdArgs.push_back("-L=/usr/local/lib");
++
 +  // Silence warnings when linking C code with a C++ '-stdlib' argument.
 +  Args.ClaimAllArgs(options::OPT_stdlib_EQ);
 +
@@ -394,6 +396,9 @@ index 000000000000..2167758100bc
 +
 +  if (DriverArgs.hasArg(options::OPT_nostdlibinc))
 +    return;
++
++  addSystemInclude(
++      DriverArgs, CC1Args, concat(D.SysRoot, "/usr/local/include"));
 +
 +  addSystemInclude(DriverArgs, CC1Args, concat(D.SysRoot, "/usr/include"));
 +}

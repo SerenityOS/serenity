@@ -4,17 +4,17 @@ Date: Tue, 13 Jul 2021 21:17:44 +0200
 Subject: [PATCH] Add serenity toolchain information and makefile files
 
 ---
- build/platform.simulator.serenity.mak |  6 ++++
- build/toolchain.x86_64-pc-serenity.mak  |  4 +++
- ion/src/simulator/serenity/Makefile   | 43 +++++++++++++++++++++++++++
- 3 files changed, 53 insertions(+)
+ build/platform.simulator.serenity.mak  |  6 ++++
+ build/toolchain.x86_64-pc-serenity.mak |  1 +
+ ion/src/simulator/serenity/Makefile    | 43 ++++++++++++++++++++++++++
+ 3 files changed, 50 insertions(+)
  create mode 100644 build/platform.simulator.serenity.mak
  create mode 100644 build/toolchain.x86_64-pc-serenity.mak
  create mode 100644 ion/src/simulator/serenity/Makefile
 
 diff --git a/build/platform.simulator.serenity.mak b/build/platform.simulator.serenity.mak
 new file mode 100644
-index 0000000..ff985de
+index 0000000000000000000000000000000000000000..0ac83c0bb06554bfa3077b9c2b67516291018e3b
 --- /dev/null
 +++ b/build/platform.simulator.serenity.mak
 @@ -0,0 +1,6 @@
@@ -26,17 +26,14 @@ index 0000000..ff985de
 +SHOULD_USE_DYNAMIC_SDL = 1
 diff --git a/build/toolchain.x86_64-pc-serenity.mak b/build/toolchain.x86_64-pc-serenity.mak
 new file mode 100644
-index 0000000..d6110e2
+index 0000000000000000000000000000000000000000..bb49f4ed4dcec21891f94ec9c3c9f602d6f4cbcf
 --- /dev/null
 +++ b/build/toolchain.x86_64-pc-serenity.mak
-@@ -0,0 +1,4 @@
+@@ -0,0 +1 @@
 +TOOLCHAIN_PREFIX = x86_64-pc-serenity
-+CC = $(TOOLCHAIN_PREFIX)-gcc
-+CXX = $(TOOLCHAIN_PREFIX)-g++
-+LD = $(TOOLCHAIN_PREFIX)-g++
 diff --git a/ion/src/simulator/serenity/Makefile b/ion/src/simulator/serenity/Makefile
 new file mode 100644
-index 0000000..5d4bb13
+index 0000000000000000000000000000000000000000..5d4bb131983ba85c79042cfa790b94e400158705
 --- /dev/null
 +++ b/ion/src/simulator/serenity/Makefile
 @@ -0,0 +1,43 @@
