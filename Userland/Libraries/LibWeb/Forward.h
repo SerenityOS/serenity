@@ -584,6 +584,7 @@ class MimeType;
 }
 
 namespace Web::NavigationTiming {
+class PerformanceNavigation;
 class PerformanceTiming;
 }
 
