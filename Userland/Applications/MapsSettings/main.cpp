@@ -18,9 +18,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::create(arguments));
 
+    Config::pledge_domain("Maps");
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/usr/share/Maps", "r"));
-    TRY(Core::System::unveil("/tmp/session/%sid/portal/config", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-maps"sv);
