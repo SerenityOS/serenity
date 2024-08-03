@@ -48,10 +48,8 @@
 
 namespace TextEditor {
 
-MainWidget::MainWidget()
+ErrorOr<void> MainWidget::initialize()
 {
-    load_from_gml(text_editor_window_gml).release_value_but_fixme_should_propagate_errors();
-
     m_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
 
@@ -337,6 +335,8 @@ MainWidget::MainWidget()
 
     m_toolbar->add_action(m_editor->undo_action());
     m_toolbar->add_action(m_editor->redo_action());
+
+    return {};
 }
 
 WebView::OutOfProcessWebView& MainWidget::ensure_web_view()

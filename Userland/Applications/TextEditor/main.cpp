@@ -45,7 +45,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->restore_size_and_position("TextEditor"sv, "Window"sv, { { 640, 400 } });
     window->save_size_and_position_on_close("TextEditor"sv, "Window"sv);
 
-    auto text_widget = window->set_main_widget<MainWidget>();
+    auto text_widget = TRY(TextEditor::MainWidget::try_create());
+    window->set_main_widget(text_widget.ptr());
 
     text_widget->editor().set_focus(true);
 
