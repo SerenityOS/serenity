@@ -17,6 +17,7 @@ $ elfdeps [-r] [-f] <path>
 * `-f`, `--force-without-valid-interpreter`: Force library resolving on ELF 
     object without a valid interpreter
 * `-r`, `--max-recursion`: Max library resolving recursion
+* `-s`, `--path-only-format`: Use Path-only format printing
 
 ## Arguments
 
