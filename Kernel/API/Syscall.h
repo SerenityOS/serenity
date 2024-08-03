@@ -700,7 +700,7 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
     asm volatile("syscall"
                  : "=a"(result)
                  : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2), "b"((uintptr_t)arg3), "S"((uintptr_t)arg4)
-                 : "memory");
+                 : "rcx", "r11", "memory");
 #        elif ARCH(AARCH64)
     uintptr_t result;
     register uintptr_t x0 asm("x0");
