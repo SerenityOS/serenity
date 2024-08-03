@@ -138,11 +138,7 @@ WebContentView::WebContentView(QWidget* window, WebContentOptions const& web_con
     };
 }
 
-WebContentView::~WebContentView()
-{
-    if (m_client_state.client)
-        m_client_state.client->unregister_view(m_client_state.page_index);
-}
+WebContentView::~WebContentView() = default;
 
 static Web::UIEvents::MouseButton get_button_from_qt_event(QSinglePointEvent const& event)
 {
