@@ -16,7 +16,7 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibWebView/Forward.h>
+#include <LibWebView/OutOfProcessWebView.h>
 
 namespace TextEditor {
 
@@ -24,6 +24,9 @@ class MainWidget final : public GUI::Widget {
     C_OBJECT(MainWidget);
 
 public:
+    static ErrorOr<NonnullRefPtr<MainWidget>> try_create();
+    ErrorOr<void> initialize();
+
     virtual ~MainWidget() override = default;
     ErrorOr<void> read_file(ByteString const& filename, Core::File&);
     void open_nonexistent_file(ByteString const& path);
@@ -45,7 +48,7 @@ public:
     ErrorOr<void> initialize_menubar(GUI::Window&);
 
 private:
-    MainWidget();
+    MainWidget() = default;
     void set_path(StringView);
     void update_preview();
     void update_markdown_preview();
