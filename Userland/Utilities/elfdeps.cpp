@@ -24,7 +24,7 @@
 
 static Vector<ByteString> found_libraries;
 
-static ErrorOr<void> recusively_resolve_all_necessary_libraries(StringView interpreter_path, size_t recursive_iteration_max, size_t recursive_iteration, ELF::DynamicObject& object)
+static ErrorOr<void> recusively_resolve_all_necessary_libraries(StringView interpreter_path, bool path_only_formatting, size_t recursive_iteration_max, size_t recursive_iteration, ELF::DynamicObject& object)
 {
     if (recursive_iteration > recursive_iteration_max)
         return ELOOP;
@@ -70,10 +70,15 @@ static ErrorOr<void> recusively_resolve_all_necessary_libraries(StringView inter
             outln("Failed to map dynamic ELF object {}", library_path);
             continue;
         }
-        outln("{} => {}", library_name, library_path);
+
+        if (path_only_formatting)
+            outln("{}", library_path);
+        else
+            outln("{} => {}", library_name, library_path);
+
         recursive_iteration++;
         found_libraries.append(library_path);
-        TRY(recusively_resolve_all_necessary_libraries(interpreter_path, recursive_iteration_max, recursive_iteration, *library_object));
+        TRY(recusively_resolve_all_necessary_libraries(interpreter_path, path_only_formatting, recursive_iteration_max, recursive_iteration, *library_object));
     }
     return {};
 }
@@ -85,9 +90,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     ByteString path {};
     Optional<size_t> recursive_iteration_max;
     bool force_without_valid_interpreter = false;
+    bool path_only_formatting = false;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(recursive_iteration_max, "Max library resolving recursion", "max-recursion", 'r', "max recursion-level");
+    args_parser.add_option(path_only_formatting, "Path-only format printing", "path-only-format", 's');
     args_parser.add_option(force_without_valid_interpreter, "Force library resolving on ELF object without valid interpreter", "force-without-valid-interpreter", 'f');
     args_parser.add_positional_argument(path, "ELF path", "path");
     args_parser.parse(arguments);
@@ -144,7 +151,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("Failed to map dynamic ELF object {}", path);
             return 1;
         }
-        TRY(recusively_resolve_all_necessary_libraries(interpreter_path, recursive_iteration_max.value_or(10), 0, *object));
+        TRY(recusively_resolve_all_necessary_libraries(interpreter_path, path_only_formatting, recursive_iteration_max.value_or(10), 0, *object));
     } else {
         outln("ELF program is not dynamic loaded!");
         return 1;
