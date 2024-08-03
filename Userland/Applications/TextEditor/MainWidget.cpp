@@ -8,7 +8,6 @@
 #include "MainWidget.h"
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
-#include <Applications/TextEditor/TextEditorWindowGML.h>
 #include <LibCMake/CMakeCache/SyntaxHighlighter.h>
 #include <LibCMake/SyntaxHighlighter.h>
 #include <LibConfig/Client.h>
