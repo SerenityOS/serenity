@@ -30,6 +30,7 @@ struct DuOption {
     bool all = false;
     bool apparent_size = false;
     bool one_file_system = false;
+    bool print_total_size = false;
     TimeType time_type = TimeType::NotUsed;
     Vector<ByteString> excluded_patterns;
     u64 block_size = 1024;
@@ -68,8 +69,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(parse_args(arguments, files, du_option));
 
+    size_t total_size_count = 0;
     for (auto const& file : files)
-        print_space_usage(file, du_option, 0);
+        total_size_count += print_space_usage(file, du_option, 0);
+
+    if (du_option.print_total_size) {
+        if (du_option.human_readable) {
+            outln("{}\ttotal", human_readable_size(total_size_count));
+        } else if (du_option.human_readable_si) {
+            outln("{}\ttotal", human_readable_size(total_size_count, AK::HumanReadableBasedOn::Base10));
+        } else {
+            outln("{}\ttotal", total_size_count);
+        }
+    }
 
     return 0;
 }
@@ -120,6 +132,7 @@ ErrorOr<void> parse_args(Main::Arguments arguments, Vector<ByteString>& files, D
     args_parser.set_general_help("Display actual or apparent disk usage of files or directories.");
     args_parser.add_option(du_option.all, "Write counts for all files, not just directories", "all", 'a');
     args_parser.add_option(du_option.apparent_size, "Print apparent sizes, rather than disk usage", "apparent-size");
+    args_parser.add_option(du_option.print_total_size, "Print total count in the end", "total", 'c');
     args_parser.add_option(du_option.human_readable, "Print human-readable sizes", "human-readable", 'h');
     args_parser.add_option(du_option.human_readable_si, "Print human-readable sizes in SI units", "si");
     args_parser.add_option(du_option.max_depth, "Print the total for a directory or file only if it is N or fewer levels below the command line argument", "max-depth", 'd', "N");
