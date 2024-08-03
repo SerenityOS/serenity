@@ -16,6 +16,7 @@ $ du [files...]
 
 * `-a`, `--all`: Write counts for all files, not just directories
 * `--apparent-size`: Print apparent sizes, rather than disk usage
+* `-c`, `--total`: Print total size in the end
 * `-h` , `--human-readable`: Print human-readable sizes
 * `--si`: Print human-readable sizes in SI units
 * `-d N`, `--max-depth N`: Print the total for a directory or file only if it is N or fewer levels below the command line argument
