@@ -33,7 +33,6 @@ elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
     MD5SUM="md5 -q"
 elif [ "$SYSTEM_NAME" = "Darwin" ]; then
     MD5SUM="md5 -q"
-    REALPATH="grealpath"  # GNU coreutils
 fi
 
 NPROC=$(get_number_of_processing_units)
