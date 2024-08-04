@@ -167,6 +167,30 @@ ErrorOr<u32> CanonicalCode::read_symbol(LittleEndianInputBitStream& stream) cons
     return Error::from_string_literal("Symbol exceeds maximum symbol number");
 }
 
+ErrorOr<u32> CanonicalCode::read_symbol(BufferBitView& bit_view) const
+{
+    auto prefix = bit_view.peek_bits_possibly_past_end() & ((1 << m_max_prefixed_code_length) - 1);
+
+    if (auto [symbol_value, code_length] = m_prefix_table[prefix]; code_length != 0) {
+        TRY(bit_view.read_bits(code_length));
+        return symbol_value;
+    }
+
+    auto code_bits = TRY(bit_view.read_bits<u16>(m_max_prefixed_code_length));
+    code_bits = fast_reverse16(code_bits, m_max_prefixed_code_length);
+    code_bits |= 1 << m_max_prefixed_code_length;
+
+    for (size_t i = m_max_prefixed_code_length; i < 16; ++i) {
+        size_t index;
+        if (binary_search(m_symbol_codes.span(), code_bits, &index))
+            return m_symbol_values[index];
+
+        code_bits = code_bits << 1 | TRY(bit_view.read_bit());
+    }
+
+    return Error::from_string_literal("Symbol exceeds maximum symbol number");
+}
+
 DeflateDecompressor::CompressedBlock::CompressedBlock(DeflateDecompressor& decompressor, CanonicalCode literal_codes, Optional<CanonicalCode> distance_codes)
     : m_decompressor(decompressor)
     , m_literal_codes(literal_codes)
