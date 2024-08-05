@@ -1010,7 +1010,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (!request_close())
             return;
 
-        auto file_path = urls.first().serialize_path();
+        auto file_path = URL::percent_decode(urls.first().serialize_path());
         auto result = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), file_path);
         if (result.is_error())
             return;

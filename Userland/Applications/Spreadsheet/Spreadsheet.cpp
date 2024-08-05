@@ -265,7 +265,7 @@ Optional<Position> Sheet::position_from_url(const URL::URL& url) const
     }
 
     // FIXME: Figure out a way to do this cross-process.
-    VERIFY(url.serialize_path() == ByteString::formatted("/{}", getpid()));
+    VERIFY(URL::percent_decode(url.serialize_path()) == ByteString::formatted("/{}", getpid()));
 
     return parse_cell_name(url.fragment().value_or(String {}));
 }

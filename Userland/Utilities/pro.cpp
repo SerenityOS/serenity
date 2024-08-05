@@ -331,7 +331,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
 
                 if (output_name.is_empty())
-                    output_name = url.serialize_path();
+                    output_name = URL::percent_decode(url.serialize_path());
 
                 LexicalPath path { output_name };
                 output_name = path.basename();

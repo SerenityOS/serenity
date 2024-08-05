@@ -204,13 +204,13 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
             }
 
             // Remove leading '/' from the path.
-            auto file = ByteString::formatted("{}/Base/usr/share/man/man{}.md", m_serenity_source_directory, url.serialize_path().substring(1));
+            auto file = ByteString::formatted("{}/Base/usr/share/man/man{}.md", m_serenity_source_directory, URL::percent_decode(url.serialize_path()).substring(1));
 
             m_file_links.append({ file, ByteString(), StringCollector::from(*link_node.text) });
             return RecursionDecision::Recurse;
         }
         if (url.scheme() == "file") {
-            auto file_path = url.serialize_path();
+            auto file_path = URL::percent_decode(url.serialize_path());
             if (file_path.contains("man"sv) && file_path.ends_with(".md"sv)) {
                 warnln("Inter-manpage link without the help:// scheme: {}\nPlease use help URLs of the form 'help://man/<section>/<subsection...>/<page>'", href);
                 m_has_invalid_link = true;

@@ -164,7 +164,7 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
     if (event.mime_data().has_urls()) {
         auto urls = event.mime_data().urls();
         for (auto& url : urls) {
-            auto path = url.serialize_path();
+            auto path = URL::percent_decode(url.serialize_path());
             auto entry = QuickLaunchEntry::create_from_path(path);
             if (entry) {
                 auto entry_name = entry->name();

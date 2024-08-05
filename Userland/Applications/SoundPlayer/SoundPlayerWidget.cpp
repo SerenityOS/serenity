@@ -162,7 +162,7 @@ void SoundPlayerWidget::drop_event(GUI::DropEvent& event)
             return;
         window()->move_to_front();
         // FIXME: Add all paths from drop event to the playlist
-        play_file_path(urls.first().serialize_path());
+        play_file_path(URL::percent_decode(urls.first().serialize_path()));
     }
 }
 

@@ -889,7 +889,7 @@ void TerminalWidget::mousemove_event(GUI::MouseEvent& event)
             auto handlers = Desktop::Launcher::get_handlers_for_url(attribute.href);
             if (!handlers.is_empty()) {
                 auto url = URL::URL(attribute.href);
-                auto path = url.serialize_path();
+                auto path = URL::percent_decode(url.serialize_path());
 
                 auto app_file = Desktop::AppFile::get_for_app(LexicalPath::basename(handlers[0]));
                 auto app_name = app_file->is_valid() ? app_file->name() : LexicalPath::basename(handlers[0]);
@@ -1184,7 +1184,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
         }));
         m_context_menu_for_hyperlink->add_action(GUI::Action::create("Copy &Name", [&](auto&) {
             // file://courage/home/anon/something -> /home/anon/something
-            auto path = URL::URL(m_context_menu_href).serialize_path();
+            auto path = URL::percent_decode(URL::URL(m_context_menu_href).serialize_path());
             // /home/anon/something -> something
             auto name = LexicalPath::basename(path);
             GUI::Clipboard::the().set_plain_text(name);
@@ -1215,7 +1215,7 @@ void TerminalWidget::drop_event(GUI::DropEvent& event)
                 send_non_user_input(" "sv.bytes());
 
             if (url.scheme() == "file") {
-                auto path = url.serialize_path();
+                auto path = URL::percent_decode(url.serialize_path());
                 send_non_user_input(path.bytes());
             } else {
                 auto url_string = url.to_byte_string();

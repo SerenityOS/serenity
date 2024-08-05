@@ -143,7 +143,7 @@ bool RunWindow::run_via_launch(ByteString const& run_input)
     auto url = URL::create_with_url_or_path(run_input);
 
     if (url.scheme() == "file") {
-        auto file_path = url.serialize_path();
+        auto file_path = URL::percent_decode(url.serialize_path());
         auto real_path_or_error = FileSystem::real_path(file_path);
         if (real_path_or_error.is_error()) {
             warnln("Failed to launch '{}': {}", file_path, real_path_or_error.error());
