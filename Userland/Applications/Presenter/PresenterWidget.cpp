@@ -220,6 +220,6 @@ void PresenterWidget::drop_event(GUI::DropEvent& event)
             return;
 
         window()->move_to_front();
-        set_file(urls.first().serialize_path());
+        set_file(URL::percent_decode(urls.first().serialize_path()));
     }
 }

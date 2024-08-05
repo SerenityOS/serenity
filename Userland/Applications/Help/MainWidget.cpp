@@ -120,7 +120,7 @@ ErrorOr<void> MainWidget::initialize(GUI::Window& window)
     m_web_view->use_native_user_style_sheet();
     m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
         if (url.scheme() == "file") {
-            auto path = LexicalPath { url.serialize_path() };
+            auto path = LexicalPath { URL::percent_decode(url.serialize_path()) };
             if (!path.is_child_of(Manual::manual_base_path)) {
                 open_external(url);
                 return;
@@ -253,7 +253,7 @@ void MainWidget::open_url(URL::URL const& url)
     if (url.scheme() == "file") {
         m_web_view->load(url);
 
-        auto browse_view_index = m_manual_model->index_from_path(url.serialize_path());
+        auto browse_view_index = m_manual_model->index_from_path(URL::percent_decode(url.serialize_path()));
         if (browse_view_index.has_value()) {
             if (browse_view_index.value() != m_browse_view->selection_start_index()) {
                 m_browse_view->expand_all_parents_of(browse_view_index.value());

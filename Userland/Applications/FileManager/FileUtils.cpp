@@ -129,7 +129,7 @@ ErrorOr<bool> handle_drop(GUI::DropEvent const& event, ByteString const& destina
 
     Vector<ByteString> paths_to_copy;
     for (auto& url_to_copy : urls) {
-        auto file_path = url_to_copy.serialize_path();
+        auto file_path = URL::percent_decode(url_to_copy.serialize_path());
         if (!url_to_copy.is_valid() || file_path == target)
             continue;
         auto new_path = ByteString::formatted("{}/{}", target, LexicalPath::basename(file_path));

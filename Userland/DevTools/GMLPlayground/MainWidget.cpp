@@ -341,7 +341,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
 
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), urls.first().serialize_path());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), URL::percent_decode(urls.first().serialize_path()));
         if (response.is_error())
             return;
         load_file(response.release_value());
