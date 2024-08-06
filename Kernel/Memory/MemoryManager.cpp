@@ -640,10 +640,6 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     m_global_data.with([&](auto& global_data) {
         // We assume that the physical page range is contiguous and doesn't contain huge gaps!
         PhysicalAddress highest_physical_address;
-#if ARCH(X86_64)
-        // On x86 LAPIC is at 0xfee00000 or a similar address. Round up to 0x100000000LL to cover variations.
-        highest_physical_address = PhysicalAddress { 0x100000000LL };
-#endif
         for (auto& range : global_data.used_memory_ranges) {
             if (range.end.get() > highest_physical_address.get())
                 highest_physical_address = range.end;
