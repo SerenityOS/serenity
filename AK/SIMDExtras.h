@@ -29,44 +29,6 @@ ALWAYS_INLINE static constexpr u32x4 expand4(u32 u)
     return u32x4 { u, u, u, u };
 }
 
-// Casting
-
-template<typename TSrc>
-ALWAYS_INLINE static u8x4 to_u8x4(TSrc v)
-{
-    return __builtin_convertvector(v, u8x4);
-}
-
-template<typename TSrc>
-ALWAYS_INLINE static u16x4 to_u16x4(TSrc v)
-{
-    return __builtin_convertvector(v, u16x4);
-}
-
-template<typename TSrc>
-ALWAYS_INLINE static u32x4 to_u32x4(TSrc v)
-{
-    return __builtin_convertvector(v, u32x4);
-}
-
-template<typename TSrc>
-ALWAYS_INLINE static i8x4 to_i8x4(TSrc v)
-{
-    return __builtin_convertvector(v, i8x4);
-}
-
-template<typename TSrc>
-ALWAYS_INLINE static i32x4 to_i32x4(TSrc v)
-{
-    return __builtin_convertvector(v, i32x4);
-}
-
-template<typename TSrc>
-ALWAYS_INLINE static f32x4 to_f32x4(TSrc v)
-{
-    return __builtin_convertvector(v, f32x4);
-}
-
 // Masking
 
 ALWAYS_INLINE static i32 maskbits(i32x4 mask)

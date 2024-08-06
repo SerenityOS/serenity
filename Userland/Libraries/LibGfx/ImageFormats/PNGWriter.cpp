@@ -192,7 +192,7 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
                 TRY(buffer.try_append(simd[2]));
                 if constexpr (include_alpha)
                     TRY(buffer.try_append(simd[3]));
-                sum += AK::SIMD::to_i32x4(AK::SIMD::to_i8x4(simd));
+                sum += AK::SIMD::simd_cast<AK::SIMD::i32x4>(AK::SIMD::simd_cast<AK::SIMD::i8x4>(simd));
                 return {};
             }
 
@@ -234,8 +234,8 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
             TRY(up_filter.append(pixel - pixel_y_minus_1));
 
             // The sum Orig(a) + Orig(b) shall be performed without overflow (using at least nine-bit arithmetic).
-            auto sum = AK::SIMD::to_u16x4(pixel_x_minus_1) + AK::SIMD::to_u16x4(pixel_y_minus_1);
-            auto average = AK::SIMD::to_u8x4(sum / 2);
+            auto sum = AK::SIMD::simd_cast<AK::SIMD::u16x4>(pixel_x_minus_1) + AK::SIMD::simd_cast<AK::SIMD::u16x4>(pixel_y_minus_1);
+            auto average = AK::SIMD::simd_cast<AK::SIMD::u8x4>(sum / 2);
             TRY(average_filter.append(pixel - average));
 
             TRY(paeth_filter.append(pixel - PNG::paeth_predictor(pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));

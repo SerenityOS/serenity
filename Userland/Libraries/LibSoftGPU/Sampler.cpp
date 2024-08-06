@@ -23,9 +23,7 @@ using AK::SIMD::expand4;
 using AK::SIMD::floor_int_range;
 using AK::SIMD::frac_int_range;
 using AK::SIMD::maskbits;
-using AK::SIMD::to_f32x4;
-using AK::SIMD::to_i32x4;
-using AK::SIMD::to_u32x4;
+using AK::SIMD::simd_cast;
 
 static f32x4 wrap_repeat(f32x4 value)
 {
@@ -47,7 +45,7 @@ static f32x4 wrap_mirrored_repeat(f32x4 value, f32x4 num_texels)
 {
     f32x4 integer = floor_int_range(value);
     f32x4 frac = value - integer;
-    auto is_odd = to_i32x4(integer) & 1;
+    auto is_odd = simd_cast<i32x4>(integer) & 1;
     return wrap_clamp_to_edge(is_odd ? 1 - frac : frac, num_texels);
 }
 
@@ -141,12 +139,12 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d(Vector2<AK::SIMD::f32x4> const& uv) 
     auto lambda_xy = log2_approximate(scale_factor) * .5f + texture_lod_bias;
     auto level = clamp(lambda_xy, min_level, max_level);
 
-    auto lower_level_texel = sample_2d_lod(uv, to_u32x4(level), m_config.texture_min_filter);
+    auto lower_level_texel = sample_2d_lod(uv, simd_cast<u32x4>(level), m_config.texture_min_filter);
 
     if (m_config.mipmap_filter == GPU::MipMapFilter::Nearest)
         return lower_level_texel;
 
-    auto higher_level_texel = sample_2d_lod(uv, to_u32x4(min(level + 1.f, max_level)), m_config.texture_min_filter);
+    auto higher_level_texel = sample_2d_lod(uv, simd_cast<u32x4>(min(level + 1.f, max_level)), m_config.texture_min_filter);
 
     return mix(lower_level_texel, higher_level_texel, frac_int_range(level));
 }
@@ -168,8 +166,8 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
         image.height_at_level(level[3]),
     };
 
-    auto f_width = to_f32x4(width);
-    auto f_height = to_f32x4(height);
+    auto f_width = simd_cast<f32x4>(width);
+    auto f_height = simd_cast<f32x4>(height);
 
     u32x4 width_mask = width - 1;
     u32x4 height_mask = height - 1;
@@ -178,8 +176,8 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
     f32x4 v = wrap(uv.y(), m_config.texture_wrap_v, f_height) * f_height;
 
     if (filter == GPU::TextureFilter::Nearest) {
-        u32x4 i = to_u32x4(u);
-        u32x4 j = to_u32x4(v);
+        u32x4 i = simd_cast<u32x4>(u);
+        u32x4 j = simd_cast<u32x4>(v);
 
         i = image.width_is_power_of_two() ? i & width_mask : i % width;
         j = image.height_is_power_of_two() ? j & height_mask : j % height;
@@ -193,9 +191,9 @@ Vector4<AK::SIMD::f32x4> Sampler::sample_2d_lod(Vector2<AK::SIMD::f32x4> const& 
     f32x4 const floored_u = floor_int_range(u);
     f32x4 const floored_v = floor_int_range(v);
 
-    u32x4 i0 = to_u32x4(floored_u);
+    u32x4 i0 = simd_cast<u32x4>(floored_u);
     u32x4 i1 = i0 + 1;
-    u32x4 j0 = to_u32x4(floored_v);
+    u32x4 j0 = simd_cast<u32x4>(floored_v);
     u32x4 j1 = j0 + 1;
 
     if (m_config.texture_wrap_u == GPU::TextureWrapMode::Repeat) {

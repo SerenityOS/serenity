@@ -80,6 +80,13 @@ constexpr static size_t vector_length = sizeof(V) / sizeof(ElementOf<V>);
 static_assert(vector_length<i8x4> == 4);
 static_assert(vector_length<f32x4> == 4);
 
+template<SIMDVector T, SIMDVector U>
+requires(vector_length<T> == vector_length<U>)
+ALWAYS_INLINE constexpr T simd_cast(U v)
+{
+    return __builtin_convertvector(v, T);
+}
+
 namespace Detail {
 template<typename T>
 struct IndexVectorFor;
