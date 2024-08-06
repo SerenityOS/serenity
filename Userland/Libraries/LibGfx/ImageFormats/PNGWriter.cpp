@@ -183,12 +183,11 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
         struct Filter {
             PNG::FilterType type;
             ByteBuffer buffer {};
-            int sum = 0;
+            AK::SIMD::i32x4 sum { 0, 0, 0, 0 };
 
             ErrorOr<void> append(u8 byte)
             {
                 TRY(buffer.try_append(byte));
-                sum += static_cast<i8>(byte);
                 return {};
             }
 
@@ -199,7 +198,16 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
                 TRY(append(simd[2]));
                 if constexpr (include_alpha)
                     TRY(append(simd[3]));
+                sum += AK::SIMD::to_i32x4(AK::SIMD::to_i8x4(simd));
                 return {};
+            }
+
+            i32 sum_of_signed_values() const
+            {
+                i32 result = sum[0] + sum[1] + sum[2];
+                if constexpr (include_alpha)
+                    result += sum[3];
+                return result;
             }
         };
 
@@ -251,13 +259,13 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
         // compute the output scanline using all five filters, and select the filter that gives the smallest sum of absolute values of outputs.
         // (Consider the output bytes as signed differences for this test.)
         Filter& best_filter = none_filter;
-        if (abs(best_filter.sum) > abs(sub_filter.sum))
+        if (abs(best_filter.sum_of_signed_values()) > abs(sub_filter.sum_of_signed_values()))
             best_filter = sub_filter;
-        if (abs(best_filter.sum) > abs(up_filter.sum))
+        if (abs(best_filter.sum_of_signed_values()) > abs(up_filter.sum_of_signed_values()))
             best_filter = up_filter;
-        if (abs(best_filter.sum) > abs(average_filter.sum))
+        if (abs(best_filter.sum_of_signed_values()) > abs(average_filter.sum_of_signed_values()))
             best_filter = average_filter;
-        if (abs(best_filter.sum) > abs(paeth_filter.sum))
+        if (abs(best_filter.sum_of_signed_values()) > abs(paeth_filter.sum_of_signed_values()))
             best_filter = paeth_filter;
 
         TRY(uncompressed_block_data.try_append(to_underlying(best_filter.type)));
