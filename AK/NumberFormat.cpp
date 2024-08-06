@@ -95,7 +95,8 @@ String human_readable_time(i64 time_in_seconds)
     if (minutes > 0)
         builder.appendff("{} minute{} ", minutes, minutes == 1 ? "" : "s");
 
-    builder.appendff("{} second{}", time_in_seconds, time_in_seconds == 1 ? "" : "s");
+    if (time_in_seconds > 0 || days + hours + minutes == 0)
+        builder.appendff("{} second{}", time_in_seconds, time_in_seconds == 1 ? "" : "s");
 
     return MUST(builder.to_string());
 }
