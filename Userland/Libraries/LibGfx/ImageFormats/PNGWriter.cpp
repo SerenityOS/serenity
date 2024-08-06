@@ -185,19 +185,13 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
             ByteBuffer buffer {};
             AK::SIMD::i32x4 sum { 0, 0, 0, 0 };
 
-            ErrorOr<void> append(u8 byte)
-            {
-                TRY(buffer.try_append(byte));
-                return {};
-            }
-
             ErrorOr<void> append(AK::SIMD::u8x4 simd)
             {
-                TRY(append(simd[0]));
-                TRY(append(simd[1]));
-                TRY(append(simd[2]));
+                TRY(buffer.try_append(simd[0]));
+                TRY(buffer.try_append(simd[1]));
+                TRY(buffer.try_append(simd[2]));
                 if constexpr (include_alpha)
-                    TRY(append(simd[3]));
+                    TRY(buffer.try_append(simd[3]));
                 sum += AK::SIMD::to_i32x4(AK::SIMD::to_i8x4(simd));
                 return {};
             }
