@@ -18,7 +18,7 @@ namespace AK::SIMD {
 
 ALWAYS_INLINE static f32x4 truncate_int_range(f32x4 v)
 {
-    return to_f32x4(to_i32x4(v));
+    return simd_cast<f32x4>(simd_cast<i32x4>(v));
 }
 
 ALWAYS_INLINE static f32x4 floor_int_range(f32x4 v)
