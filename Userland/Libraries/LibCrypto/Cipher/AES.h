@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/CPUFeatures.h>
 #include <AK/Vector.h>
 #include <LibCrypto/Cipher/Cipher.h>
 #include <LibCrypto/Cipher/Mode/CBC.h>
@@ -59,8 +60,8 @@ private:
 
 struct AESCipherKey : public CipherKey {
     virtual ReadonlyBytes bytes() const override { return ReadonlyBytes { m_rd_keys, sizeof(m_rd_keys) }; }
-    virtual void expand_encrypt_key(ReadonlyBytes user_key, size_t bits) override;
-    virtual void expand_decrypt_key(ReadonlyBytes user_key, size_t bits) override;
+    virtual void expand_encrypt_key(ReadonlyBytes user_key, size_t bits) override { return (this->*expand_encrypt_key_dispatched)(user_key, bits); }
+    virtual void expand_decrypt_key(ReadonlyBytes user_key, size_t bits) override { return (this->*expand_decrypt_key_dispatched)(user_key, bits); }
     static bool is_valid_key_size(size_t bits) { return bits == 128 || bits == 192 || bits == 256; }
 
 #ifndef KERNEL
@@ -93,6 +94,14 @@ protected:
     }
 
 private:
+    template<CPUFeatures>
+    void expand_encrypt_key_impl(ReadonlyBytes user_key, size_t bits);
+    template<CPUFeatures>
+    void expand_decrypt_key_impl(ReadonlyBytes user_key, size_t bits);
+
+    static void (AESCipherKey::*const expand_encrypt_key_dispatched)(ReadonlyBytes user_key, size_t bits);
+    static void (AESCipherKey::*const expand_decrypt_key_dispatched)(ReadonlyBytes user_key, size_t bits);
+
     static constexpr size_t MAX_ROUND_COUNT = 14;
     u32 m_rd_keys[(MAX_ROUND_COUNT + 1) * 4] { 0 };
     size_t m_rounds;
@@ -116,8 +125,8 @@ public:
     virtual AESCipherKey const& key() const override { return m_key; }
     virtual AESCipherKey& key() override { return m_key; }
 
-    virtual void encrypt_block(BlockType const& in, BlockType& out) override;
-    virtual void decrypt_block(BlockType const& in, BlockType& out) override;
+    virtual void encrypt_block(BlockType const& in, BlockType& out) override { return (this->*encrypt_block_dispatched)(in, out); }
+    virtual void decrypt_block(BlockType const& in, BlockType& out) override { return (this->*decrypt_block_dispatched)(in, out); }
 
 #ifndef KERNEL
     virtual ByteString class_name() const override
@@ -128,6 +137,15 @@ public:
 
 protected:
     AESCipherKey m_key;
+
+private:
+    template<CPUFeatures>
+    void encrypt_block_impl(BlockType const& in, BlockType& out);
+    template<CPUFeatures>
+    void decrypt_block_impl(BlockType const& in, BlockType& out);
+
+    static void (AESCipher::*const encrypt_block_dispatched)(BlockType const& in, BlockType& out);
+    static void (AESCipher::*const decrypt_block_dispatched)(BlockType const& in, BlockType& out);
 };
 
 }

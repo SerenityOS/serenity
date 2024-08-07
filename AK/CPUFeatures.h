@@ -20,11 +20,15 @@ enum class CPUFeatures : u64 {
     X86_SSE42 = 1ULL << 0,
 #    define AK_CAN_CODEGEN_FOR_X86_SHA 1
     X86_SHA = 1ULL << 1,
+#    define AK_CAN_CODEGEN_FOR_X86_AES 1
+    X86_AES = 1ULL << 2,
 #else
 #    define AK_CAN_CODEGEN_FOR_X86_SSE42 0
     X86_SSE42 = Invalid,
 #    define AK_CAN_CODEGEN_FOR_X86_SHA 0
     X86_SHA = Invalid,
+#    define AK_CAN_CODEGEN_FOR_X86_AES 0
+    X86_AES = Invalid,
 #endif
 };
 

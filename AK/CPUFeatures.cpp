@@ -44,6 +44,10 @@ CPUFeatures Detail::detect_cpu_features_uncached()
     if (cpuid7.ebx >> 29 & 1)
         result |= CPUFeatures::X86_SHA;
 #        endif
+#        if AK_CAN_CODEGEN_FOR_X86_AES
+    if (cpuid1.ecx >> 25 & 1)
+        result |= CPUFeatures::X86_AES;
+#        endif
 #    endif
 
     return result;
