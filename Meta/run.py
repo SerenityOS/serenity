@@ -630,7 +630,7 @@ def set_up_boot_drive(config: Configuration):
     elif config.sd_enable:
         config.boot_drive = f"id=sd-boot-drive,if=none,format=raw,file={config.disk_image}"
         config.add_devices(["sdhci-pci", "sd-card,drive=sd-boot-drive"])
-        config.kernel_cmdline.append("root=sd2:0:0")
+        config.kernel_cmdline.append("root=sd0:0:0")
     elif config.usb_boot_enable:
         config.boot_drive = f"if=none,id=usbstick,format=raw,file={config.disk_image}"
         config.add_device("usb-storage,drive=usbstick")
@@ -754,7 +754,6 @@ def set_up_machine_devices(config: Configuration):
                 "bochs-display",
                 "nec-usb-xhci,bus=pcie.2,addr=0x11.0x0",
                 "pci-bridge,chassis_nr=1,id=bridge1,bus=pcie.4,addr=0x3.0x0",
-                "sdhci-pci,bus=bridge1,addr=0x1.0x0",
             ]
         )
         config.character_devices.append("stdio,id=stdout,mux=on")
@@ -783,9 +782,7 @@ def set_up_machine_devices(config: Configuration):
                 "virtio-rng-pci",
                 "pci-bridge,chassis_nr=1,id=bridge1",
                 "i82801b11-bridge,bus=bridge1,id=bridge2",
-                "sdhci-pci,bus=bridge2",
                 "i82801b11-bridge,id=bridge3",
-                "sdhci-pci,bus=bridge3",
                 "ich9-ahci,bus=bridge3",
             ]
         )
