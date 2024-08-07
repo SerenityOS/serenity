@@ -87,7 +87,8 @@ class MachineType(Enum):
 class BootDriveType(Enum):
     NVMe = "nvme"
     PCI_SD = "pci-sd"
-    USB = "usb"
+    USB_UHCI = "usb-uhci"
+    USB_xHCI = "usb-xhci"
     VirtIOBLK = "virtio"
 
 
@@ -634,8 +635,14 @@ def set_up_boot_drive(config: Configuration):
     elif config.boot_drive_type == BootDriveType.PCI_SD:
         config.add_devices(["sdhci-pci", "sd-card,drive=boot-drive"])
         config.kernel_cmdline.append("root=sd0:0:0")
-    elif config.boot_drive_type == BootDriveType.USB:
-        config.add_device("usb-storage,drive=boot-drive")
+    elif config.boot_drive_type == BootDriveType.USB_UHCI:
+        config.add_device("piix4-usb-uhci,id=boot-drive-uhci")
+        config.add_device("usb-storage,bus=boot-drive-uhci.0,drive=boot-drive")
+        # FIXME: Find a better way to address the usb drive
+        config.kernel_cmdline.append("root=block3:0")
+    elif config.boot_drive_type == BootDriveType.USB_xHCI:
+        config.add_device("qemu-xhci,id=boot-drive-xhci")
+        config.add_device("usb-storage,bus=boot-drive-xhci.0,drive=boot-drive")
         # FIXME: Find a better way to address the usb drive
         config.kernel_cmdline.append("root=block3:0")
     elif config.boot_drive_type == BootDriveType.VirtIOBLK:
