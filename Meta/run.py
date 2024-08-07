@@ -83,6 +83,14 @@ class MachineType(Enum):
         ]
 
 
+@unique
+class BootDriveType(Enum):
+    NVMe = "nvme"
+    PCI_SD = "pci-sd"
+    USB = "usb"
+    VirtIOBLK = "virtio"
+
+
 def arguments_generator(prefix: str) -> Any:
     """
     Construct an argument generator that returns some prefix and the member value(s) if the member value
@@ -126,15 +134,11 @@ class Configuration:
     machine_type: MachineType = MachineType.Default
     enable_gdb: bool = False
     enable_gl: bool = False
-    # FIXME: Replace these three flags by a boot drive enum, see FIXME for boot_drive below.
-    nvme_enable: bool = True
-    sd_enable: bool = False
-    usb_boot_enable: bool = False
-    virtio_block_enable: bool = False
     screen_count: int = 1
     host_ip: str = "127.0.0.1"
     ethernet_device_type: str = "e1000"
     disk_image: Path = Path("_disk_image")
+    boot_drive_type: BootDriveType = BootDriveType.NVMe
 
     # ## Low-level QEMU configuration
     # QEMU -append
@@ -165,7 +169,6 @@ class Configuration:
     # Note that often, there are other network devices in the generic device list, added by specific machine types.
     network_default_device: str | None = None
     # QEMU -drive
-    # FIXME: Make an enum for the various boot drive options to handle boot drive selection more cleanly.
     boot_drive: str | None = None
     # Each is a QEMU -chardev
     character_devices: list[str] = field(default_factory=list)
@@ -309,6 +312,17 @@ def determine_machine_type() -> MachineType:
             raise RunError(f"{provided_machine_type} is not a valid SerenityOS machine type")
         return value
     return MachineType.Default
+
+
+def determine_boot_drive_type() -> BootDriveType:
+    provided_boot_drive_type = environ.get("SERENITY_BOOT_DRIVE")
+    if provided_boot_drive_type is not None:
+        try:
+            value = BootDriveType(provided_boot_drive_type)
+        except ValueError:
+            raise RunError(f"{provided_boot_drive_type} is not a valid SerenityOS boot drive type")
+        return value
+    return BootDriveType.NVMe
 
 
 def detect_ram_size() -> str | None:
@@ -603,45 +617,30 @@ def set_up_display_device(config: Configuration):
 
 
 def set_up_boot_drive(config: Configuration):
-    provided_nvme_enable = environ.get("SERENITY_NVME_ENABLE")
-    if provided_nvme_enable is not None:
-        config.nvme_enable = provided_nvme_enable == "1"
-    provided_sdcard_enable = environ.get("SERENITY_USE_SDCARD")
-    if provided_sdcard_enable is not None:
-        config.sd_enable = provided_sdcard_enable == "1"
-    provided_usb_boot_enable = environ.get("SERENITY_USE_USBDRIVE")
-    if provided_usb_boot_enable is not None:
-        config.usb_boot_enable = provided_usb_boot_enable == "1"
-    provided_virtio_block_enable = environ.get("SERENITY_USE_VIRTIOBLOCK")
-    if provided_virtio_block_enable is not None:
-        config.virtio_block_enable = provided_virtio_block_enable == "1"
-
     if config.architecture == Arch.Aarch64:
-        config.boot_drive = f"file={config.disk_image},if=sd,format=raw,id=disk"
-    elif config.nvme_enable:
-        config.boot_drive = f"file={config.disk_image},format=raw,index=0,media=disk,if=none,id=disk"
+        config.boot_drive = f"file={config.disk_image},if=sd,format=raw,id=boot-drive"
+        return
+
+    config.boot_drive = f"file={config.disk_image},if=none,format=raw,id=boot-drive"
+
+    if config.boot_drive_type == BootDriveType.NVMe:
         config.add_devices(
             [
                 "i82801b11-bridge,id=bridge4",
-                "nvme,serial=deadbeef,drive=disk,bus=bridge4,logical_block_size=4096,physical_block_size=4096",
+                "nvme,serial=deadbeef,drive=boot-drive,bus=bridge4,logical_block_size=4096,physical_block_size=4096",
             ]
         )
         config.kernel_cmdline.append("root=nvme0:1:0")
-    elif config.sd_enable:
-        config.boot_drive = f"id=sd-boot-drive,if=none,format=raw,file={config.disk_image}"
-        config.add_devices(["sdhci-pci", "sd-card,drive=sd-boot-drive"])
+    elif config.boot_drive_type == BootDriveType.PCI_SD:
+        config.add_devices(["sdhci-pci", "sd-card,drive=boot-drive"])
         config.kernel_cmdline.append("root=sd0:0:0")
-    elif config.usb_boot_enable:
-        config.boot_drive = f"if=none,id=usbstick,format=raw,file={config.disk_image}"
-        config.add_device("usb-storage,drive=usbstick")
+    elif config.boot_drive_type == BootDriveType.USB:
+        config.add_device("usb-storage,drive=boot-drive")
         # FIXME: Find a better way to address the usb drive
         config.kernel_cmdline.append("root=block3:0")
-    elif config.virtio_block_enable:
-        config.boot_drive = f"if=none,id=virtio-root,format=raw,file={config.disk_image}"
-        config.add_device("virtio-blk-pci,drive=virtio-root")
-        config.kernel_cmdline.append("root=lun3:0:0")
-    else:
-        config.boot_drive = f"file={config.disk_image},format=raw,index=0,media=disk,id=disk"
+    elif config.boot_drive_type == BootDriveType.VirtIOBLK:
+        config.add_device("virtio-blk-pci,drive=boot-drive")
+        config.kernel_cmdline.append("root=lun2:0:0")
 
 
 def determine_host_address() -> str:
@@ -861,6 +860,7 @@ def configure_and_run():
     config.machine_type = determine_machine_type()
     config.ram_size = detect_ram_size()
     config.host_ip = determine_host_address()
+    config.boot_drive_type = determine_boot_drive_type()
 
     serenity_src = environ.get("SERENITY_SOURCE_DIR")
     if serenity_src is None:
