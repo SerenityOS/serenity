@@ -85,6 +85,7 @@ class MachineType(Enum):
 
 @unique
 class BootDriveType(Enum):
+    AHCI = "ahci"
     NVMe = "nvme"
     PCI_SD = "pci-sd"
     USB_UHCI = "usb-uhci"
@@ -624,6 +625,9 @@ def set_up_boot_drive(config: Configuration):
 
     config.boot_drive = f"file={config.disk_image},if=none,format=raw,id=boot-drive"
 
+    if config.boot_drive_type == BootDriveType.AHCI:
+        config.add_devices(["ahci,id=boot-drive-ahci", "ide-hd,drive=boot-drive,bus=boot-drive-ahci.0"])
+        config.kernel_cmdline.append("root=ahci0:0:0")
     if config.boot_drive_type == BootDriveType.NVMe:
         config.add_devices(
             [
