@@ -62,7 +62,6 @@ class MachineType(Enum):
     QEMUGrub = "qgrub"
     CI = "ci"
     Limine = "limine"
-    Bochs = "b"
     MicroVM = "microvm"
 
     def uses_grub(self) -> bool:
@@ -118,7 +117,6 @@ class Configuration:
 
     # ## Programs and environmental configuration
     virtualization_support: bool = False
-    bochs_binary: Path = Path("bochs")
     qemu_binary: Path | None = None
     qemu_kind: QEMUKind | None = None
     kvm_usable: bool | None = None
@@ -312,10 +310,6 @@ def determine_machine_type() -> MachineType:
             raise RunError(f"{provided_machine_type} is not a valid SerenityOS machine type")
         return value
     return MachineType.Default
-
-
-def detect_bochs() -> Path:
-    return Path(environ.get("SERENITY_BOCHS_BIN", "bochs"))
 
 
 def detect_ram_size() -> str | None:
@@ -828,10 +822,6 @@ def set_up_machine_devices(config: Configuration):
 
 
 def assemble_arguments(config: Configuration) -> list[str | Path]:
-    if config.machine_type == MachineType.Bochs:
-        boch_src = Path(config.serenity_src or ".", "Meta/bochsrc")
-        return [config.bochs_binary, "-q", "-f", boch_src]
-
     passed_qemu_args = shlex.split(environ.get("SERENITY_EXTRA_QEMU_ARGS", ""))
 
     return [
@@ -888,7 +878,6 @@ def configure_and_run():
     config.qemu_kind = determine_qemu_kind()
     config.architecture = determine_serenity_arch()
     config.machine_type = determine_machine_type()
-    config.bochs_binary = detect_bochs()
     config.ram_size = detect_ram_size()
     config.host_ip = determine_host_address()
 
