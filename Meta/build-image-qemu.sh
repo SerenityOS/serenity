@@ -3,6 +3,7 @@ set -e
 
 SCRIPT_DIR="$(dirname "${0}")"
 
+# shellcheck source=/dev/null
 . "${SCRIPT_DIR}/shell_include.sh"
 
 USE_FUSE2FS=0
@@ -69,7 +70,7 @@ nearest_power_of_2() {
     done
     echo $p
 }
-if [ "$SERENITY_ARCH" = "aarch64" ] || { [ -n "$SERENITY_USE_SDCARD" ] && [ "$SERENITY_USE_SDCARD" -eq 1 ]; }; then
+if [ "$SERENITY_ARCH" = "aarch64" ] || [ "$SERENITY_BOOT_DRIVE" = "pci-sd" ]; then
     # SD cards must have a size that is a power of 2. The Aarch64 port loads from an SD card.
     DISK_SIZE_BYTES=$(nearest_power_of_2 "$DISK_SIZE_BYTES")
 fi
