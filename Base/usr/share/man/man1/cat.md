@@ -5,12 +5,17 @@ cat - concatenate files to stdout
 ## Synopsis
 
 ```**sh
-$ cat [file...]
+$ cat [options...] [files...]
 ```
 
 ## Description
 
 This program passes contents of specified `files` to standard output, in the specified order. If no `file` is specified, or it is `-`, it defaults to standard input.
+
+## Options
+
+* `-n`, `--number`: Number all output lines
+* `-b`, `--number-non-blank`: Number non-blank output lines
 
 ## Arguments
 
