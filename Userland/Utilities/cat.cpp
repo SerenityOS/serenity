@@ -14,10 +14,10 @@
 struct LineTracker {
     size_t line_count = 1;
     enum state : u8 {
-        NORMAL,
+        LINE,
         NEWLINES,
     } state
-        = NORMAL;
+        = LINE;
 };
 
 static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyBytes buffer_span)
@@ -27,16 +27,23 @@ static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyB
     }
 
     size_t i = 0;
+
+    // File starts with newlines
     while (i < buffer_span.size() && buffer_span[i] == '\n') {
         out("{:c}", buffer_span[i]);
         i++;
+    }
+
+    if (i == buffer_span.size()) {
+        // File had just newlines
+        return;
     }
 
     out("{: >6}\t", line_tracker.line_count);
     line_tracker.line_count++;
 
     for ( ; i < buffer_span.size(); i++) {
-        if (line_tracker.state == LineTracker::state::NORMAL) {
+        if (line_tracker.state == LineTracker::state::LINE) {
             if (buffer_span[i] == '\n') {
                 out("{:c}", buffer_span[i]);
                 line_tracker.state = LineTracker::state::NEWLINES;
@@ -52,7 +59,7 @@ static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyB
                     out("{: >6}\t", line_tracker.line_count);
                     line_tracker.line_count++;
                 }
-                line_tracker.state = LineTracker::state::NORMAL;
+                line_tracker.state = LineTracker::state::LINE;
             }
         }
     }
