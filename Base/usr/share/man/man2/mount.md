@@ -67,6 +67,13 @@ in mount flags of the underlying file system. To "refresh" the working directory
 to use the new mount flags after remounting a filesystem, a process can call
 `chdir()` with the path to the same directory.
 
+## Immutable mounts
+
+When passing the `MS_IMMUTABLE` flag, it will set a mount as immutable.
+An immutable mount cannot change (e.g. changing flags), nor be removed, if the associated VFS root context with mount is being used by a process.
+
+Be extremely careful on setting this flag for mounts on the main VFS root context (i.e. the VFS root context the system starts with) - naturally, you will not be able to remove or change such mount until a complete reboot.
+
 ## Errors
 
 * `EINVAL`: The `flags` value contains deprecated flags such as `MS_REMOUNT` or `MS_BIND`.

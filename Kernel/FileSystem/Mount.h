@@ -41,15 +41,19 @@ public:
     ErrorOr<NonnullOwnPtr<KString>> absolute_path() const;
 
     int flags() const { return m_flags; }
-    void set_flags(int flags) { m_flags = flags; }
+    void set_flags(int flags);
 
     static void delete_mount_from_list(Mount&);
+
+    bool is_immutable() const { return m_immutable.was_set(); }
 
 private:
     NonnullRefPtr<FileSystem> const m_guest_fs;
     NonnullRefPtr<Inode> const m_guest;
     RefPtr<Custody> const m_host_custody;
     int m_flags { 0 };
+
+    SetOnce m_immutable;
 
     IntrusiveListNode<Mount> m_vfs_list_node;
 };

@@ -24,6 +24,15 @@ Mount::Mount(NonnullRefPtr<Inode> source, NonnullRefPtr<Custody> host_custody, i
     , m_host_custody(move(host_custody))
     , m_flags(flags)
 {
+    if (flags & MS_IMMUTABLE)
+        m_immutable.set();
+}
+
+void Mount::set_flags(int flags)
+{
+    if (flags & MS_IMMUTABLE)
+        m_immutable.set();
+    m_flags = flags;
 }
 
 void Mount::delete_mount_from_list(Mount& mount)
