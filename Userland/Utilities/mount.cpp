@@ -45,6 +45,8 @@ static int parse_options(StringView options)
             flags |= MS_NOREGULAR;
         else if (part == "srchidden")
             flags |= MS_SRCHIDDEN;
+        else if (part == "immutable")
+            flags |= MS_IMMUTABLE;
         else
             warnln("Ignoring invalid option: {}", part);
     }
@@ -179,6 +181,8 @@ static ErrorOr<void> print_mounts()
         else
             out("rw");
 
+        if (mount_flags & MS_IMMUTABLE)
+            out(",immutable");
         if (mount_flags & MS_NODEV)
             out(",nodev");
         if (mount_flags & MS_NOREGULAR)

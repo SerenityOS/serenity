@@ -56,6 +56,8 @@ bool check_matching_absolute_path_hierarchy(Custody const& first_custody, Custod
 
 ErrorOr<FileSystemInitializer const*> find_filesystem_type_initializer(StringView fs_type);
 
+ErrorOr<void> remove_mount(Mount& mount, FileBackedFileSystem::List& file_backed_fs_list);
+
 ErrorOr<void> mount(VFSRootContext&, MountFile&, OpenFileDescription*, Custody& mount_point, int flags);
 ErrorOr<void> pivot_root_by_copying_mounted_fs_instance(VFSRootContext&, FileSystem& fs, int root_mount_flags);
 
