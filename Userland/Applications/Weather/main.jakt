@@ -1,0 +1,292 @@
+import jakt::platform::utility { null }
+import openweathermap { OpenWeatherMap, Promise, RequestData }
+import weather { Icon, Temperature, WeatherData, Coords }
+import view { AK, Core, Gfx, GUI, Main, Weather, degree_c }
+
+import extern "LibProtocol/RequestClient.h"
+import extern "LibProtocol/Request.h"
+import extern "LibURL/URL.h"
+import extern "LibGfx/Bitmap.h"
+import extern "AK/Span.h"
+import extern "LibCore/ConfigFile.h"
+import extern "LibCore/ElapsedTimer.h"
+
+import jakt::prelude::prelude
+
+type AK::String implements(ThrowingFromStringLiteral) {
+    [[name=from_utf8]]
+    extern fn from_string_literal(anon s: StringView) throws -> AK::String
+}
+
+type AK::ByteString implements(ThrowingFromStringLiteral) {
+    [[name=from_utf8]]
+    extern fn from_string_literal(anon s: StringView) throws -> AK::ByteString
+}
+
+type AK::StringView implements(FromStringLiteral) {}
+
+fn make_an_rc() throws -> Protocol::RequestClient {
+    mut rc: Protocol::RequestClient? = None
+    unsafe { cpp { "rc = TRY(Protocol::RequestClient::try_create());" }}
+    return rc!
+}
+
+fn start_request(anon client: &mut Protocol::RequestClient, anon method: AK::ByteString, anon url: URL::URL) throws -> Protocol::Request {
+    mut request: Protocol::Request? = None
+    unsafe { cpp { "if (auto r = client->start_request(method, url)) request = *r;" }}
+    return request!
+}
+
+class ProtocolRequestData : RequestData {
+    public request: Protocol::Request
+}
+
+// FIXME: Jakt has no async support, this is a hack to get "async" functionality by letting the event loop manage the promises.
+struct AsyncContext<T> {
+    private promises: [(prelude::String?, Promise<T>)] = []
+
+    fn run(mut this, anon promise: Promise<T>, label: prelude::String? = None, rejects_labels: {prelude::String} = {}) {
+        mut new_promises: [(prelude::String?, Promise<T>)] = []
+        for x in .promises {
+            mut (label, promise) = x
+            if promise.is_resolved() {
+                try promise.await()
+            } else if label is Some(name) and rejects_labels.contains(name) {
+                promise.reject(prelude::Error::from_string_literal("Cancelled"))
+            } else {
+                new_promises.push(x)
+            }
+        }
+
+        new_promises.push((label, promise))
+        .promises = new_promises
+    }
+
+    fn event(mut this) {
+        mut new_promises: [(prelude::String?, Promise<T>)] = []
+        for x in .promises {
+            mut (label, promise) = x
+            if promise.is_resolved() {
+                try promise.await()
+            } else {
+                new_promises.push(x)
+            }
+        }
+        .promises = new_promises
+    }
+
+    fn await_all(mut this) throws {
+        for x in .promises {
+            mut (_, promise) = x
+            try promise.await()
+        }
+    }
+}
+
+[[stores_arguments(client: "return", async: "return")]] // FIXME: We should be able to infer these in pure jakt code.
+fn api(
+    async: &mut AsyncContext<bool>
+    anon key: prelude::String
+    anon client: &mut Protocol::RequestClient
+) throws -> OpenWeatherMap {
+    // FIXME: Default values for RequestClient::start_request() are not brought in by the compiler, so we have to drop down to C++ to call that function.
+    return OpenWeatherMap(
+        api_key: key
+        make_request: fn[&mut client, &mut async](anon u: prelude::String) throws -> RequestData {
+            mut request = start_request(&mut client, "GET", URL::URL(u))
+            mut promise: Promise<prelude::String> = Promise()
+
+            unsafe {
+                cpp {
+                    "request->set_buffered_request_finished_callback([promise, &async](auto ok, auto size, auto headers, auto response_code, auto payload) {"
+                    "    if (!ok) return promise->reject(Error::from_errno(ENOENT));"
+                    "    auto result = AK::ByteString::from_utf8(payload);"
+                    "    async.event();"
+                    "    if (result.is_error()) promise->reject(result.release_error());"
+                    "    promise->resolve(result.release_value());"
+                    "});"
+                }
+            }
+
+            return ProtocolRequestData(promise, request)
+        }
+    )
+}
+
+[[stores_arguments(on_results: async)]]
+fn do_incremental_search<T>(
+    api: &mut T
+    window: &GUI::Window
+    query: AK::ByteString
+    owm_key: prelude::String
+    on_results: &fn(anon results: [prelude::String:Coords]) throws -> void
+    async: &mut AsyncContext<bool>
+) {
+    try {
+        async.run(api.find(query: format("{}", query)).map(fn[&on_results](anon results: &mut [prelude::String:Coords]) -> bool {
+            try on_results(*results)
+            return true
+        }))
+    } catch e {
+        GUI::MessageBox::show_error(&raw window, format("Failed to fetch search results: {}", e))
+    }
+}
+
+fn update_entry<T>(
+    mut entry: IndividualEntryWidget
+    api: &mut T
+    window: &GUI::Window
+    query: AK::ByteString
+    first_time: bool = false
+) {
+    try {
+        entry.container!.set_section_label(ak_string(format("Searching for {}...", query)))
+
+        mut data = api.search(query: format("{}", query))
+        entry.populate_with(&data)
+        if first_time {
+            entry.container!.set_view_state(GUI::DynamicWidgetContainer::ViewState::Expanded)
+            entry.timer!.on_timeout = fn[entry, &mut api, &window, query]() {
+                update_entry(entry, api, &window, query)
+            }
+            entry.timer!.start(interval_ms: 60000)
+        }
+
+        mut forecast = api.forecast(&data)
+        entry.populate_with(&forecast)
+        entry.invalidate_layout()
+    } catch e {
+        entry.remove_from_parent()
+        GUI::MessageBox::show_error(&raw window, format("Failed to fetch weather data: {}", e))
+    }
+}
+
+fn main() {
+    let args: AK::Span<AK::StringView> = AK::Span()
+    mut app = GUI::Application::create(&Main::Arguments(0, null(), args))
+    mut async: AsyncContext<bool> = AsyncContext()
+
+    mut config = Core::ConfigFile::open_for_app(&"Weather", Core::ConfigFile::AllowWriting::Yes)
+    mut config_key = config.read_entry(group: &"OpenWeatherMap", key: &"APIKey", default_value: &"") as! prelude::String
+    let owm_key = match config_key.is_empty() {
+        true => {
+            mut key = ""
+            if GUI::PasswordInputDialog::show(
+                parent_window: null()
+                text_value: &key
+                title: "OpenWeatherMap API Key"
+                server: "api.openweathermap.org"
+                username: ""
+            ) as! GUI::Dialog::ExecResult is OK {
+                config.write_entry(group: &"OpenWeatherMap", key: &"APIKey", value: &key)
+            } else {
+                return 0
+            }
+
+            yield key as! prelude::String
+        }
+        false => config_key
+    }
+
+    mut window = GUI::Window(null())
+    window.set_title("Weather")
+    window.set_icon(GUI::Icon::default_icon("app-weather").bitmap_for_size(16))
+    mut view = window.set_main_widget<UnderlyingClassTypeOf<View>>().self()
+    window.resize(width: 800, height: 600)
+
+    view.initialize()
+    window.show()
+
+    // FIXME: We currently assume try_create() takes the exact same arguments as the constructor.
+    //        This is the case in most of the codebase, but there are some exceptions - as seen here.
+    mut client = make_an_rc()
+    mut owm_api = api(&mut async, owm_key, &mut client)
+
+    mut box = view.searchbox!
+    box.on_return_pressed = fn[box, &mut view, &mut owm_api, &window, owm_key]() {
+        mut c = view.content!
+        mut entry = c.add<UnderlyingClassTypeOf<IndividualEntryWidget>>().self()
+        entry.container!.set_view_state(GUI::DynamicWidgetContainer::ViewState::Collapsed)
+
+        try update_entry(entry, api: &mut owm_api, &window, query: box.text(), first_time: true)
+    }
+
+    mut bounce_elapsed = Core::ElapsedTimer::start_new(Core::ElapsedTimer::TimerType::Coarse)
+
+    mut on_results = fn[&mut view, &mut owm_api, &window](anon results: [prelude::String:Coords]) throws {
+        if not results.is_empty() {
+            try view.ensure_search_window(&window).show()
+        }
+
+        for (name, coord) in results {
+            mut button = view.searchview!.add<UnderlyingClassTypeOf<GUI::Button>>().self()
+            button.set_text_alignment(Gfx::TextAlignment::CenterLeft)
+            button.set_text(ak_string(name))
+            button.on_click = fn[&mut view, &window, &mut owm_api, name](anon _: u32) {
+                mut c = view.content!
+                mut entry = c.add<UnderlyingClassTypeOf<IndividualEntryWidget>>().self()
+                entry.container!.set_view_state(GUI::DynamicWidgetContainer::ViewState::Collapsed)
+                try update_entry(entry, api: &mut owm_api, &window, query: name as! ByteString, first_time: true)
+
+                view.searchbox!.set_text("", GUI::TextBox::AllowCallback::No)
+                view.searchbox!.set_focus(false, GUI::TextBox::FocusSource::Programmatic)
+                view.searchview!.remove_all_children()
+                try view.ensure_search_window(&window).hide()
+            }
+        }
+    }
+
+    mut last_query = ""
+    mut timer = Core::Timer(null())
+    let incremental_search = fn[box, &mut view, &mut last_query, &window, &mut owm_api, owm_key, &mut bounce_elapsed, &on_results, &mut async, &mut timer]() {
+        let query = box.text() as! prelude::String
+        if query == last_query {
+            return
+        }
+
+        let elapsed = bounce_elapsed.elapsed_milliseconds()
+        if elapsed < 100 {
+            timer.start((100 - elapsed) as! i32)
+            return
+        }
+
+        bounce_elapsed.start()
+        timer.stop()
+
+        try view.ensure_search_window(&window).hide()
+        mut search_view = view.searchview!
+        search_view.remove_all_children()
+        view.search_window!.resize(width: search_view.width(), height: 40)
+
+        if query.is_empty() {
+            return
+        }
+
+        last_query = query
+        do_incremental_search(
+            api: &mut owm_api
+            &window
+            query: query as! AK::ByteString
+            owm_key
+            &on_results
+            &mut async
+        )
+    }
+
+    timer.on_timeout = fn[&incremental_search]() {
+        incremental_search()
+    }
+
+    box.on_change = fn[&incremental_search]() {
+        incremental_search()
+    }
+
+    return app.exec() as! c_int
+}
+
+// FIXME: We can't call AK::String::from_byte_string() as jakt detects it as a templated function (one overload is a template, the other is not)
+//        and passes a type parameter, leading to a compile error as that function is deleted.
+fn ak_string<T>(anon s: T) throws -> AK::String {
+    unsafe { cpp { "return AK::String::from_byte_string(s);" } }
+    abort()
+}
