@@ -47,10 +47,6 @@ static ErrorOr<NonnullRefPtr<FileSystem>> create_and_initialize_filesystem_from_
 static ErrorOr<NonnullRefPtr<FileSystem>> create_and_initialize_filesystem_from_mount_file_and_description(FileBackedFileSystem::List& file_backed_fs_list, MountFile& mount_file, OpenFileDescription& source_description);
 static ErrorOr<void> verify_mount_file_and_description_requirements(MountFile& mount_file, OpenFileDescription& source_description);
 
-static ErrorOr<void> remove_mount(Mount& mount, FileBackedFileSystem::List& file_backed_fs_list);
-
-ErrorOr<void> apply_to_mount_for_host_custody(VFSRootContext&, Custody const& current_custody, Function<void(Mount&)>);
-
 struct VirtualFileSystemDetails {
     // NOTE: The FileBackedFileSystem list is protected by a mutex because we need to scan it
     // to search for existing filesystems for already used block devices and therefore when doing
@@ -266,7 +262,7 @@ ErrorOr<void> VirtualFileSystem::remount(VFSRootContext& context, Custody& mount
 {
     dbgln("VirtualFileSystem: Remounting inode {}", mount_point.inode().identifier());
 
-    TRY(apply_to_mount_for_host_custody(context, mount_point, [new_flags](auto& mount) {
+    TRY(context.apply_to_mount_for_host_custody(mount_point, [new_flags](auto& mount) {
         mount.set_flags(new_flags);
     }));
     return {};
@@ -295,7 +291,7 @@ ErrorOr<void> VirtualFileSystem::unmount(VFSRootContext& context, Custody& mount
     return unmount(context, guest_inode, custody_path->view());
 }
 
-ErrorOr<void> remove_mount(Mount& mount, FileBackedFileSystem::List& file_backed_fs_list)
+ErrorOr<void> VirtualFileSystem::remove_mount(Mount& mount, FileBackedFileSystem::List& file_backed_fs_list)
 {
     NonnullRefPtr<FileSystem> fs = mount.guest_fs();
     TRY(fs->prepare_to_unmount(mount.guest()));
@@ -325,113 +321,14 @@ ErrorOr<void> VirtualFileSystem::pivot_root_by_copying_mounted_fs_instance(VFSRo
     auto new_mount = TRY(adopt_nonnull_own_or_enomem(new (nothrow) Mount(fs.root_inode(), root_mount_flags)));
 
     return s_details->file_backed_file_systems_list.with_exclusive([&](auto& file_backed_file_systems_list) -> ErrorOr<void> {
-        return context.mounts().with([&](auto& mounts) -> ErrorOr<void> {
-            return fs.mounted_count().with([&](auto& mounted_count) -> ErrorOr<void> {
-                // NOTE: If the mounted count is 0, then this filesystem is about to be
-                // deleted, so this must be a kernel bug as we don't include such filesystem
-                // in the s_details->file_backed_file_systems_list list anymore.
-                VERIFY(mounted_count > 0);
-
-                // NOTE: The mounts table should not be empty as it always need
-                // to have at least one mount!
-                VERIFY(!mounts.is_empty());
-
-                // NOTE: If we have many mounts in the table, then simply don't allow
-                // userspace to override them but instead require to unmount everything except
-                // the root mount first.
-                if (mounts.size_slow() != 1)
-                    return EPERM;
-
-                auto& mount = *mounts.first();
-                TRY(remove_mount(mount, file_backed_file_systems_list));
-                VERIFY(mounts.is_empty());
-
-                dbgln("VFSRootContext({}): Root mount set to FileSystemID {}, Mounting {} at inode {} with flags {}",
-                    context.id(),
-                    new_mount->guest_fs().fsid(),
-                    new_mount->guest_fs().class_name(),
-                    root_mount_point->inode().identifier(),
-                    root_mount_flags);
-
-                // NOTE: Leak the mount pointer so it can be added to the mount list, but it won't be
-                // deleted after being added.
-                mounts.append(*new_mount.leak_ptr());
-
-                // NOTE: We essentially do the same thing like VFSRootContext::add_to_mounts_list_and_increment_fs_mounted_count function
-                // but because we already locked the spinlock of the attach count, we can't call that function here.
-                mounted_count++;
-                // NOTE: Now fill the root custody with a valid custody for the new root mount.
-                context.root_custody().with([&root_mount_point](auto& custody) {
-                    custody = root_mount_point;
-                });
-                return {};
-            });
-        });
+        return context.pivot_root(file_backed_file_systems_list, fs, move(new_mount), move(root_mount_point), root_mount_flags);
     });
 }
 
 ErrorOr<void> VirtualFileSystem::unmount(VFSRootContext& context, Inode& guest_inode, StringView custody_path)
 {
-    return s_details->file_backed_file_systems_list.with_exclusive([&](auto& file_backed_fs_list) -> ErrorOr<void> {
-        TRY(context.mounts().with([&](auto& mounts) -> ErrorOr<void> {
-            bool did_unmount = false;
-            for (auto& mount : mounts) {
-                if (&mount.guest() != &guest_inode)
-                    continue;
-                auto mountpoint_path = TRY(mount.absolute_path());
-                if (custody_path != mountpoint_path->view())
-                    continue;
-                dbgln("VFSRootContext({}): Unmounting {}...", context.id(), custody_path);
-                TRY(remove_mount(mount, file_backed_fs_list));
-                did_unmount = true;
-                break;
-            }
-            if (!did_unmount) {
-                dbgln("VirtualFileSystem: Nothing mounted on inode {}", guest_inode.identifier());
-                return ENODEV;
-            }
-
-            // NOTE: The VFSRootContext mount table is not empty and we
-            // successfully deleted the desired mount from it, so return
-            // a success now.
-            if (!mounts.is_empty())
-                return {};
-
-            // NOTE: If the mount table is empty, then the VFSRootContext
-            // is no longer in valid state (each VFSRootContext at least should
-            // have a root mount), so remove it now.
-            s_details->root_contexts.with([&context](auto& list) {
-                dbgln("VirtualFileSystem: Nothing mounted in VFSRootContext({}), removing it", context.id());
-                list.remove(context);
-            });
-            return {};
-        }));
-        return {};
-    });
-}
-
-ErrorOr<void> apply_to_mount_for_host_custody(VFSRootContext& context, Custody const& current_custody, Function<void(Mount&)> callback)
-{
-    return context.mounts().with([&](auto& mounts) -> ErrorOr<void> {
-        // NOTE: We either search for the root mount or for a mount that has a parent custody!
-        if (!current_custody.parent()) {
-            for (auto& mount : mounts) {
-                if (!mount.host_custody()) {
-                    callback(mount);
-                    return {};
-                }
-            }
-            // NOTE: There must be a root mount entry, so fail if we don't find it.
-            VERIFY_NOT_REACHED();
-        } else {
-            for (auto& mount : mounts) {
-                if (mount.host_custody() && VirtualFileSystem::check_matching_absolute_path_hierarchy(*mount.host_custody(), current_custody)) {
-                    callback(mount);
-                    return {};
-                }
-            }
-        }
-        return Error::from_errno(ENODEV);
+    return s_details->file_backed_file_systems_list.with_exclusive([&](auto& file_backed_file_systems_list) -> ErrorOr<void> {
+        return context.unmount(file_backed_file_systems_list, guest_inode, custody_path);
     });
 }
 
@@ -1230,11 +1127,11 @@ ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path_without_veil(VFS
 
         // See if there's something mounted on the child; in that case
         // we would need to return the guest inode, not the host inode.
-        auto found_mount_or_error = apply_to_mount_for_host_custody(const_cast<VFSRootContext&>(vfs_root_context), current_custody, [&child_inode, &mount_flags_for_child](auto& mount) {
-            child_inode = mount.guest();
-            mount_flags_for_child = mount.flags();
-        });
-        if (!found_mount_or_error.is_error()) {
+        auto found_mount_state_or_error = vfs_root_context.current_mount_state_for_host_custody(current_custody);
+        if (!found_mount_state_or_error.is_error()) {
+            auto found_mount_state = found_mount_state_or_error.release_value();
+            child_inode = found_mount_state.details.guest;
+            mount_flags_for_child = found_mount_state.flags;
             custody = TRY(Custody::try_create(&parent, part, *child_inode, mount_flags_for_child));
         } else {
             custody = current_custody;
