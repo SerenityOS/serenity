@@ -12,18 +12,31 @@
 namespace Kernel {
 
 Mount::Mount(NonnullRefPtr<Inode> source, int flags)
-    : m_guest_fs(source->fs())
-    , m_guest(move(source))
-    , m_flags(flags)
+    : m_details(Mount::Details(source->fs(), move(source)))
 {
+    set_flags(flags);
 }
 
 Mount::Mount(NonnullRefPtr<Inode> source, NonnullRefPtr<Custody> host_custody, int flags)
-    : m_guest_fs(source->fs())
-    , m_guest(move(source))
+    : m_details(Mount::Details(source->fs(), move(source)))
     , m_host_custody(move(host_custody))
-    , m_flags(flags)
 {
+    set_flags(flags);
+}
+
+void Mount::set_flags(int flags)
+{
+    // NOTE: We use a spinlock to serialize access, to protect against
+    // a case which the user requested to set the immutable flag, and
+    // there's another ongoing call to set the flags without it.
+    m_flags.with([this, flags](auto& current_flags) {
+        if (flags & MS_IMMUTABLE)
+            m_immutable.set();
+
+        current_flags = flags;
+        if (m_immutable.was_set())
+            current_flags |= MS_IMMUTABLE;
+    });
 }
 
 void Mount::delete_mount_from_list(Mount& mount)
