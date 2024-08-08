@@ -1,0 +1,4 @@
+[App]
+Name=&Weather
+Executable=/bin/Weather
+Category=&Internet

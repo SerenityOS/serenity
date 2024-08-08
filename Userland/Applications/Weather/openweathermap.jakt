@@ -1,0 +1,254 @@
+import extern "LibCore/Promise.h" {
+    namespace Core {
+        class Promise<T> {
+            [[name=try_create]]
+            public extern fn Promise() throws -> Promise<T>
+            public extern fn await(mut this) throws -> T
+            public extern fn reject(mut this, anon error: Error) -> void
+            public extern fn map<U>(mut this, anon f: fn(anon x: &mut T) -> U) -> Promise<U>
+            public extern fn is_resolved(this) -> bool
+        }
+    }
+}
+
+use Core::Promise
+
+import extern "AK/JsonObject.h"
+import extern "AK/JsonParser.h"
+import extern "AK/JsonPath.h"
+
+import jakt::prelude::prelude
+
+import weather { Coords, Forecast, Icon, Temperature, WeatherData }
+
+type AK::ByteString implements(ThrowingFromStringLiteral) {}
+// Hack!
+trait OptionalHack<T> {
+    fn value(this) -> T
+}
+type AK::Optional implements(OptionalHack<T>) {
+    extern fn value(this) -> T
+    extern fn has_value(this) -> bool
+}
+
+type AK::StringView implements(FromStringLiteral) {}
+
+// FIXME: Our StringView does not have the same semantics as AK::StringView, this function allows passing "StringViews" to functions that expect it.
+unsafe fn view(anon s: &String) -> AK::StringView {
+    unsafe { cpp { "return s.view();" } }
+    abort()
+}
+
+class RequestData {
+    public promise: Core::Promise<prelude::String>
+}
+
+struct OpenWeatherMap {
+    api_key: String
+    make_request: fn(anon url: prelude::String) throws -> RequestData
+
+    fn search(this, query: String) throws -> WeatherData {
+        let make_request = &.make_request
+
+        let url = format("https://api.openweathermap.org/data/2.5/weather?q={}&appid={}&units=metric", query, .api_key)
+        mut request = make_request(url)
+        let json = request.promise.await()
+        mut parser = unsafe AK::JsonParser(view(&json))
+        let root = parser.parse()
+        return parse_data(&root)
+    }
+
+    fn search(this, coords: Coords) throws -> WeatherData {
+        let make_request = &.make_request
+
+        let url = format("https://api.openweathermap.org/data/2.5/weather?lat={}&lon={}&appid={}&units=metric", coords.latitude, coords.longitude, .api_key)
+        mut request = make_request(url)
+        let json = request.promise.await()
+        mut parser = unsafe AK::JsonParser(view(&json))
+        let root = parser.parse()
+        return parse_data(&root)
+    }
+
+    fn forecast(this, data: &WeatherData) throws -> Forecast {
+        let make_request = &.make_request
+        let url = format(
+            "https://api.openweathermap.org/data/2.5/forecast?lat={}&lon={}&appid={}&units=metric"
+            data.coords.latitude
+            data.coords.longitude
+            .api_key
+        )
+        mut request = make_request(url)
+        let json = request.promise.await()
+        mut parser = unsafe AK::JsonParser(view(&json))
+        let root = parser.parse()
+        if not root.is_object() {
+            throw Error::from_string_literal("Expected JSON object")
+        }
+
+        mut forecast = Forecast(data: [])
+
+        let maybe_list = root.as_object().get_array("list")
+        if not maybe_list.has_value() {
+            throw Error::from_string_literal("Expected 'forecast::list' to be an array")
+        }
+
+        let list = maybe_list.value()
+        for i in 0..list.size() {
+            let data = parse_data(&list.at(i), parse_forecast: true)
+            forecast.data.push(data)
+        }
+
+        return forecast
+    }
+
+    fn find(this, query: String) throws -> Core::Promise<[String:Coords]> {
+        let make_request = &.make_request
+
+        let url = format("https://api.openweathermap.org/geo/1.0/direct?q={}&appid={}&limit=10", query, .api_key)
+        mut request = make_request(url)
+        return request.promise.map(fn[request](anon json: &mut prelude::String) -> [String:Coords] {
+            // FIXME: Can't `try{} catch{}` the whole block for some reason?
+            mut parser = unsafe AK::JsonParser(view(&json))
+            let root = try parser.parse() catch { return [:] }
+            if not root.is_array() { return [:] }
+
+            mut result: [String:Coords] = [:]
+            let root_array = root.as_array()
+
+            for i in 0..root_array.size() {
+                let object = root_array.at(i)
+                if not object.is_object() {
+                    continue
+                }
+
+                let name = try unsafe(*at_path(&object, [AK::JsonPathElement(view(&"name"))]).as_string()) as! String catch { return [:] }
+                let country = try unsafe(*at_path(&object, [AK::JsonPathElement(view(&"country"))]).as_string()) as! String catch { return [:] }
+                let latitude = try unsafe at_path(
+                    &object
+                    [AK::JsonPathElement(view(&"lat"))]
+                ).get_number_with_precision_loss<f64>().value() catch { return [:] }
+                let longitude = try unsafe at_path(
+                    &object
+                    [AK::JsonPathElement(view(&"lon"))]
+                ).get_number_with_precision_loss<f64>().value() catch { return [:] }
+                result.set(format("{}, {}", name, country), Coords(latitude, longitude))
+            }
+
+            return result
+        })
+    }
+
+    private fn parse_data<T>(anon root: &T, parse_forecast: bool = false) throws -> WeatherData {
+        mut city_name = ""
+        mut country_code = ""
+        mut latitude = 0.0
+        mut longitude = 0.0
+
+        if not parse_forecast {
+            city_name = unsafe(*at_path(
+                &root
+                [AK::JsonPathElement(view(&"name"))]
+            ).as_string()) as! String
+
+            country_code = unsafe(*at_path(
+                &root
+                [AK::JsonPathElement(view(&"sys")), AK::JsonPathElement(view(&"country"))]
+            ).as_string()) as! String
+
+            latitude = unsafe at_path(
+                &root
+                [AK::JsonPathElement(view(&"coord")), AK::JsonPathElement(view(&"lat"))]
+            ).get_number_with_precision_loss<f64>().value()
+
+            longitude = unsafe at_path(
+                &root
+                [AK::JsonPathElement(view(&"coord")), AK::JsonPathElement(view(&"lon"))]
+            ).get_number_with_precision_loss<f64>().value()
+        }
+
+        let state = unsafe (*at_path(
+            &root
+            [AK::JsonPathElement(view(&"weather")), AK::JsonPathElement(0), AK::JsonPathElement(view(&"main"))]
+        ).as_string()) as! String
+
+        let temperature = Temperature(
+            current: unsafe at_path(
+                &root
+                [AK::JsonPathElement(view(&"main")), AK::JsonPathElement(view(&"temp"))]
+            ).get_number_with_precision_loss<f64>().value(),
+            min: unsafe at_path(
+                &root
+                [AK::JsonPathElement(view(&"main")), AK::JsonPathElement(view(&"temp_min"))]
+            ).get_number_with_precision_loss<f64>().value(),
+            max: unsafe at_path(
+                &root
+                [AK::JsonPathElement(view(&"main")), AK::JsonPathElement(view(&"temp_max"))]
+            ).get_number_with_precision_loss<f64>().value(),
+            feels_like: unsafe at_path(
+                &root
+                [AK::JsonPathElement(view(&"main")), AK::JsonPathElement(view(&"feels_like"))]
+            ).get_number_with_precision_loss<f64>().value()
+        )
+
+        let icon_name = unsafe (*at_path(
+            &root
+            [AK::JsonPathElement(view(&"weather")), AK::JsonPathElement(0), AK::JsonPathElement(view(&"icon"))]
+        ).as_string()) as! String
+
+        let timestamp = unsafe at_path(
+            &root
+            [AK::JsonPathElement(view(&"dt"))]
+        ).get_number_with_precision_loss<i64>().value()
+
+        let cloudiness = unsafe at_path(
+            &root
+            [AK::JsonPathElement(view(&"clouds")), AK::JsonPathElement(view(&"all"))]
+        ).get_number_with_precision_loss<f64>().value()
+
+        let humidity = unsafe at_path(
+            &root
+            [AK::JsonPathElement(view(&"main")), AK::JsonPathElement(view(&"humidity"))]
+        ).get_number_with_precision_loss<f64>().value()
+
+        return WeatherData(
+            city_name
+            country_code
+            coords: Coords(latitude, longitude)
+            state
+            cloudiness
+            precipitation: 0f64
+            humidity
+            temperature
+            icon: match icon_name {
+                "01d" => Icon::Clear(day: true)
+                "01n" => Icon::Clear(day: false)
+                "02d" => Icon::PartiallyCloudy(day: true)
+                "02n" => Icon::PartiallyCloudy(day: false)
+                "03d" => Icon::Cloudy(day: true)
+                "03n" => Icon::Cloudy(day: false)
+                "04d" => Icon::Cloudy(day: true)
+                "04n" => Icon::Cloudy(day: false)
+                "09d" => Icon::Rainy(day: true)
+                "09n" => Icon::Rainy(day: false)
+                "10d" => Icon::Rainy(day: true)
+                "10n" => Icon::Rainy(day: false)
+                "11d" => Icon::Thunderstorm(day: true)
+                "11n" => Icon::Thunderstorm(day: false)
+                "13d" => Icon::Snowy(day: true)
+                "13n" => Icon::Snowy(day: false)
+                "50d" => Icon::Foggy(day: true)
+                "50n" => Icon::Foggy(day: false)
+                else => Icon::Unknown(day: true)
+            }
+            timestamp
+        )
+    }
+
+    private fn at_path<T>(anon object: &T, anon elements: [AK::JsonPathElement]) throws -> AK::JsonValue {
+        mut path = AK::JsonPath()
+        for element in elements {
+            path.append(element)
+        }
+        return path.try_resolve(object)
+    }
+}
