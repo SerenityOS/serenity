@@ -36,9 +36,22 @@ static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyB
         }
         if (buffer_span[i] == '\n') {
             if (show_only_non_blank_lines) {
-                while (i < buffer_span.size()-1 && buffer_span[i+1] == '\n') {
-                    out("{:c}", buffer_span[i]);
-                    i += 1;;
+                // Go until the last newline.
+                //
+                // Need to let the code outside of this for loop process the current
+                // character so we drop out if we're on the last character OR we're
+                // at the last newline.
+                while (i < buffer_span.size() && buffer_span[i+1] == '\n') {
+                    if (i == buffer_span.size()-1) {
+                        // Last character
+                        break;
+                    }
+
+                    if (buffer_span[i+1] == '\n') {
+                        // Still more newlines to go
+                        out("{:c}", buffer_span[i]);
+                        i += 1;;
+                    }
                 }
             }
             line_tracker.display_line_number = true;
