@@ -43,8 +43,9 @@ static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyB
                 // at the last newline.
                 while (i < buffer_span.size() && buffer_span[i+1] == '\n') {
                     if (i == buffer_span.size()-1) {
-                        // Last character
-                        break;
+                        // Last character - print it out and be done
+                        out("{:c}", buffer_span[i]);
+                        return;
                     }
 
                     if (buffer_span[i+1] == '\n') {
