@@ -10,7 +10,7 @@
 #include <Kernel/Devices/Generic/RandomDevice.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Locking/MutexProtected.h>
-#include <Kernel/Net/EthernetFrameHeader.h>
+#include <Kernel/Net/Ethernet/EthernetFrameHeader.h>
 #include <Kernel/Net/IPv4/IPv4.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>

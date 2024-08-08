@@ -10,7 +10,7 @@
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/Net/Realtek/RTL8168NetworkAdapter.h>
+#include <Kernel/Net/Ethernet/Realtek/RTL8168NetworkAdapter.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
