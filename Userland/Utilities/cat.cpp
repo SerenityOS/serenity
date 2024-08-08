@@ -13,20 +13,48 @@
 
 struct LineTracker {
     size_t line_count = 1;
-    bool display_line_number = true;
+    enum state : u8 {
+        NORMAL,
+        NEWLINES,
+    } state
+        = NORMAL;
 };
 
 static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyBytes buffer_span)
 {
-    for (auto const curr_value : buffer_span) {
-        if (line_tracker.display_line_number) {
-            out("{: >6}\t", line_tracker.line_count);
-            line_tracker.line_count++;
-            line_tracker.display_line_number = false;
+    if (buffer_span.size() == 0) {
+        return;
+    }
+
+    size_t i = 0;
+    while (i < buffer_span.size() && buffer_span[i] == '\n') {
+        out("{:c}", buffer_span[i]);
+        i++;
+    }
+
+    out("{: >6}\t", line_tracker.line_count);
+    line_tracker.line_count++;
+
+    for ( ; i < buffer_span.size(); i++) {
+        if (line_tracker.state == LineTracker::state::NORMAL) {
+            if (buffer_span[i] == '\n') {
+                out("{:c}", buffer_span[i]);
+                line_tracker.state = LineTracker::state::NEWLINES;
+            } else {
+                out("{:c}", buffer_span[i]);
+            }
+        } else if (line_tracker.state == LineTracker::state::NEWLINES) {
+            if (buffer_span[i] == '\n') {
+                out("{:c}", buffer_span[i]);
+            } else {
+                out("{:c}", buffer_span[i]);
+                if (i < buffer_span.size() - 1) {
+                    out("{: >6}\t", line_tracker.line_count);
+                    line_tracker.line_count++;
+                }
+                line_tracker.state = LineTracker::state::NORMAL;
+            }
         }
-        if (curr_value == '\n')
-            line_tracker.display_line_number = true;
-        out("{:c}", curr_value);
     }
 }
 
