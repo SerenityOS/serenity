@@ -74,15 +74,13 @@ bool MemoryManager::is_initialized()
 
 static UNMAP_AFTER_INIT VirtualRange kernel_virtual_range()
 {
-#if ARCH(X86_64)
-    size_t kernel_range_start = kernel_mapping_base + 2 * MiB; // The first 2 MiB are used for mapping the pre-kernel
-    return VirtualRange { VirtualAddress(kernel_range_start), KERNEL_PD_END - kernel_range_start };
-#elif ARCH(AARCH64) || ARCH(RISCV64)
-    // NOTE: This is not the same as x86_64, because the aarch64 and riscv64 kernels currently don't use the pre-kernel.
-    return VirtualRange { VirtualAddress(kernel_mapping_base), KERNEL_PD_END - kernel_mapping_base };
-#else
-#    error Unknown architecture
+#if ARCH(AARCH64) || ARCH(RISCV64)
+    if (g_boot_info.boot_method != BootMethod::EFI)
+        return VirtualRange { VirtualAddress(g_boot_info.kernel_mapping_base), KERNEL_PD_END - g_boot_info.kernel_mapping_base };
 #endif
+
+    size_t kernel_range_start = g_boot_info.kernel_mapping_base + 2 * MiB; // The first 2 MiB are used for mapping the pre-kernel
+    return VirtualRange { VirtualAddress(kernel_range_start), KERNEL_PD_END - kernel_range_start };
 }
 
 MemoryManager::GlobalData::GlobalData()
@@ -139,12 +137,18 @@ UNMAP_AFTER_INIT void MemoryManager::unmap_prekernel()
 {
     SpinlockLocker page_lock(kernel_page_directory().get_lock());
 
-    auto start = start_of_prekernel_image.page_base().get();
-    auto end = end_of_prekernel_image.page_base().get();
+    if (g_boot_info.boot_method == BootMethod::Multiboot1) {
+#if ARCH(X86_64)
+        auto start = g_boot_info.boot_method_specific.multiboot1.start_of_prekernel_image.page_base().get();
+        auto end = g_boot_info.boot_method_specific.multiboot1.end_of_prekernel_image.page_base().get();
 
-    for (auto i = start; i <= end; i += PAGE_SIZE)
-        release_pte(kernel_page_directory(), VirtualAddress(i), i == end ? IsLastPTERelease::Yes : IsLastPTERelease::No);
-    flush_tlb(&kernel_page_directory(), VirtualAddress(start), (end - start) / PAGE_SIZE);
+        for (auto i = start; i <= end; i += PAGE_SIZE)
+            release_pte(kernel_page_directory(), VirtualAddress(i), i == end ? IsLastPTERelease::Yes : IsLastPTERelease::No);
+        flush_tlb(&kernel_page_directory(), VirtualAddress(start), (end - start) / PAGE_SIZE);
+#endif
+    } else if (g_boot_info.boot_method == BootMethod::EFI) {
+        // FIXME: Unmap g_boot_info.boot_method_specific.efi.bootstrap_page_vaddr
+    }
 }
 
 UNMAP_AFTER_INIT void MemoryManager::protect_readonly_after_init_memory()
@@ -282,13 +286,17 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 #endif
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image)).release_value_but_fixme_should_propagate_errors()) });
 
+        if (g_boot_info.boot_method == BootMethod::EFI) {
+            parse_memory_map_efi(global_data);
+        } else {
 #if ARCH(RISCV64)
-        // FIXME: AARCH64 might be able to make use of this code path
-        //        Some x86 platforms also provide flattened device trees
-        parse_memory_map_fdt(global_data, s_fdt_storage);
+            // FIXME: AARCH64 might be able to make use of this code path
+            //        Some x86 platforms also provide flattened device trees
+            parse_memory_map_fdt(global_data, s_fdt_storage);
 #else
-        parse_memory_map_multiboot(global_data);
+            parse_memory_map_multiboot(global_data);
 #endif
+        }
 
         // Now we need to setup the physical regions we will use later
         struct ContiguousPhysicalVirtualRange {
@@ -381,6 +389,100 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     });
 }
 
+UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_efi(MemoryManager::GlobalData& global_data)
+{
+    VERIFY(g_boot_info.boot_method == BootMethod::EFI);
+
+    dmesgln("MM: EFI memory map:");
+    for (size_t i = 0; i < g_boot_info.boot_method_specific.efi.memory_map.descriptor_array_size; i += g_boot_info.boot_method_specific.efi.memory_map.descriptor_size) {
+        auto const* descriptor = bit_cast<EFI::MemoryDescriptor const*>(bit_cast<FlatPtr>(g_boot_info.boot_method_specific.efi.memory_map.descriptor_array) + i);
+
+        auto length = descriptor->number_of_pages * EFI::EFI_PAGE_SIZE;
+        auto start_paddr = PhysicalAddress { descriptor->physical_start };
+        auto end_paddr = PhysicalAddress { descriptor->physical_start + length };
+
+        static constexpr Array memory_type_names = {
+            "Reserved"sv,
+            "LoaderCode"sv,
+            "LoaderData"sv,
+            "BootServicesCode"sv,
+            "BootServicesData"sv,
+            "RuntimeServicesCode"sv,
+            "RuntimeServicesData"sv,
+            "Conventional"sv,
+            "Unusable"sv,
+            "ACPIReclaim"sv,
+            "ACPI_NVS"sv,
+            "MemoryMappedIO"sv,
+            "MemoryMappedIOPortSpace"sv,
+            "PALCode"sv,
+            "Persistent"sv,
+            "Unaccepted"sv,
+        };
+
+        static constexpr size_t max_memory_type_name_length = []() {
+            size_t max_length = 0;
+            for (auto name : memory_type_names)
+                max_length = max(name.length(), max_length);
+            return max_length;
+        }();
+
+        if (to_underlying(descriptor->type) < memory_type_names.size())
+            dmesgln("  {}-{}: {:<{}} attributes={:p}", start_paddr, end_paddr, memory_type_names[to_underlying(descriptor->type)], max_memory_type_name_length, to_underlying(descriptor->attribute));
+        else
+            dmesgln("  {}-{}: (unknown type {}) attributes={:#08x}", start_paddr, end_paddr, to_underlying(descriptor->type), to_underlying(descriptor->attribute));
+
+        // FIXME: Reuse (parts of) memory ranges marked as EfiLoader{Code,Data}
+        // FIXME: Parse attributes
+
+        // https://uefi.org/specs/UEFI/2.10/07_Services_Boot_Services.html#memory-type-usage-after-exitbootservices
+        switch (descriptor->type) {
+        case EFI::MemoryType::BootServicesCode:
+        case EFI::MemoryType::BootServicesData:
+        case EFI::MemoryType::Conventional:
+            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, start_paddr, length });
+            break;
+        case EFI::MemoryType::Reserved:
+        case EFI::MemoryType::LoaderCode:
+        case EFI::MemoryType::LoaderData:
+        case EFI::MemoryType::RuntimeServicesCode:
+        case EFI::MemoryType::RuntimeServicesData:
+        case EFI::MemoryType::MemoryMappedIO:
+        case EFI::MemoryType::MemoryMappedIOPortSpace:
+        case EFI::MemoryType::PALCode:
+        case EFI::MemoryType::Persistent:
+        case EFI::MemoryType::Unaccepted:
+#if ARCH(X86_64)
+            // Workaround for https://gitlab.com/qemu-project/qemu/-/commit/8504f129450b909c88e199ca44facd35d38ba4de
+            // That commit added a reserved 12GiB entry for the benefit of virtual firmware.
+            // We can safely ignore this block as it isn't actually reserved on any real hardware.
+            // From: https://lore.kernel.org/all/20220701161014.3850-1-joao.m.martins@oracle.com/
+            // "Always add the HyperTransport range into e820 even when the relocation isn't
+            // done *and* there's >= 40 phys bit that would put max phyusical boundary to 1T
+            // This should allow virtual firmware to avoid the reserved range at the
+            // 1T boundary on VFs with big bars."
+            if (start_paddr.get() != 0x000000fd00000000 || length != (0x000000ffffffffff - 0x000000fd00000000) + 1)
+#endif
+                global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, start_paddr, length });
+            break;
+        case EFI::MemoryType::ACPIReclaim:
+            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_Reclaimable, start_paddr, length });
+            break;
+        case EFI::MemoryType::ACPI_NVS:
+            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_NVS, start_paddr, length });
+            break;
+        case EFI::MemoryType::Unusable:
+            dmesgln("MM: Warning, detected bad memory range!");
+            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::BadMemory, start_paddr, length });
+            break;
+        default:
+            dbgln("MM: Unknown EFI memory type: {}", to_underlying(descriptor->type));
+            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Unknown, start_paddr, length });
+            break;
+        }
+    }
+}
+
 UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalData& global_data, u8 const* fdt_addr)
 {
     auto const& fdt_header = *reinterpret_cast<DeviceTree::FlattenedDeviceTreeHeader const*>(fdt_addr);
@@ -409,7 +511,6 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
     // https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/memory.yaml
     // -> #address-cells: /#address-cells , #size-cells: /#size-cells
 
-    // FIXME: When booting from UEFI, the /memory node may not be relied upon
     enum class State {
         Root,
         InReservedMemory,
@@ -570,15 +671,17 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
 
 UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_multiboot(MemoryManager::GlobalData& global_data)
 {
+    VERIFY(g_boot_info.boot_method == BootMethod::Multiboot1);
+
     // Register used memory regions that we know of.
-    if (multiboot_flags & 0x4 && !multiboot_module_physical_ptr.is_null()) {
-        dmesgln("MM: Multiboot module @ {}, length={}", multiboot_module_physical_ptr, multiboot_module_length);
-        VERIFY(multiboot_module_length != 0);
-        global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, multiboot_module_physical_ptr, multiboot_module_physical_ptr.offset(multiboot_module_length) });
+    if (g_boot_info.boot_method_specific.multiboot1.flags & 0x4 && !g_boot_info.boot_method_specific.multiboot1.module_physical_ptr.is_null()) {
+        dmesgln("MM: Multiboot module @ {}, length={}", g_boot_info.boot_method_specific.multiboot1.module_physical_ptr, g_boot_info.boot_method_specific.multiboot1.module_length);
+        VERIFY(g_boot_info.boot_method_specific.multiboot1.module_length != 0);
+        global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, g_boot_info.boot_method_specific.multiboot1.module_physical_ptr, g_boot_info.boot_method_specific.multiboot1.module_physical_ptr.offset(g_boot_info.boot_method_specific.multiboot1.module_length) });
     }
 
-    auto* mmap_begin = multiboot_memory_map;
-    auto* mmap_end = multiboot_memory_map + multiboot_memory_map_count;
+    auto const* mmap_begin = g_boot_info.boot_method_specific.multiboot1.memory_map;
+    auto const* mmap_end = g_boot_info.boot_method_specific.multiboot1.memory_map + g_boot_info.boot_method_specific.multiboot1.memory_map_count;
 
     struct ContiguousPhysicalVirtualRange {
         PhysicalAddress lower;
@@ -586,15 +689,11 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_multiboot(MemoryManager::G
     };
 
     Optional<ContiguousPhysicalVirtualRange> last_contiguous_physical_range;
-    for (auto* mmap = mmap_begin; mmap < mmap_end; mmap++) {
+    for (auto const* mmap = mmap_begin; mmap < mmap_end; mmap++) {
         // We have to copy these onto the stack, because we take a reference to these when printing them out,
         // and doing so on a packed struct field is UB.
-        auto address = mmap->addr;
-        auto length = mmap->len;
-        ArmedScopeGuard write_back_guard = [&]() {
-            mmap->addr = address;
-            mmap->len = length;
-        };
+        auto const address = mmap->addr;
+        auto const length = mmap->len;
 
         dmesgln("MM: Multiboot mmap: address={:p}, length={}, type={}", address, length, mmap->type);
 
@@ -654,14 +753,11 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
                 highest_physical_address = range_end;
         }
 
-#if ARCH(X86_64)
-        // Map multiboot framebuffer
-        if ((multiboot_flags & MULTIBOOT_INFO_FRAMEBUFFER_INFO) && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
-            PhysicalAddress multiboot_framebuffer_addr_end = multiboot_framebuffer_addr.offset(multiboot_framebuffer_height * multiboot_framebuffer_pitch);
-            if (multiboot_framebuffer_addr_end > highest_physical_address)
-                highest_physical_address = multiboot_framebuffer_addr_end;
+        if (!g_boot_info.boot_framebuffer.paddr.is_null() && g_boot_info.boot_framebuffer.type != BootFramebufferType::None) {
+            PhysicalAddress boot_framebuffer_paddr_end = g_boot_info.boot_framebuffer.paddr.offset(g_boot_info.boot_framebuffer.height * g_boot_info.boot_framebuffer.pitch);
+            if (boot_framebuffer_paddr_end > highest_physical_address)
+                highest_physical_address = boot_framebuffer_paddr_end;
         }
-#endif
 
         // Calculate how many total physical pages the array will have
         m_physical_page_entries_count = PhysicalAddress::physical_page_index(highest_physical_address.get()) + 1;
@@ -755,7 +851,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
 
             // Hook the page table into the kernel page directory
             u32 page_directory_index = (virtual_page_base_for_this_pt >> 21) & 0x1ff;
-            auto* pd = reinterpret_cast<PageDirectoryEntry*>(quickmap_page(boot_pd_kernel));
+            auto* pd = reinterpret_cast<PageDirectoryEntry*>(quickmap_page(g_boot_info.boot_pd_kernel));
             PageDirectoryEntry& pde = pd[page_directory_index];
 
             VERIFY(!pde.is_present()); // Nothing should be using this PD yet
@@ -1377,7 +1473,7 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
     VirtualAddress vaddr(KERNEL_QUICKMAP_PD_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
     size_t pte_index = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
 
-    auto& pte = boot_pd_kernel_pt1023[pte_index];
+    auto& pte = g_boot_info.boot_pd_kernel_pt1023[pte_index];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
     if (pte.physical_page_base() != pd_paddr.get()) {
         pte.set_physical_page_base(pd_paddr.get());
@@ -1396,7 +1492,7 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
     VirtualAddress vaddr(KERNEL_QUICKMAP_PT_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
     size_t pte_index = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
 
-    auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[pte_index];
+    auto& pte = g_boot_info.boot_pd_kernel_pt1023[pte_index];
     if (pte.physical_page_base() != pt_paddr.get()) {
         pte.set_physical_page_base(pt_paddr.get());
         pte.set_present(true);
@@ -1416,7 +1512,7 @@ u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
     VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
     u32 pte_idx = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
 
-    auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[pte_idx];
+    auto& pte = g_boot_info.boot_pd_kernel_pt1023[pte_idx];
     if (pte.physical_page_base() != physical_address.get()) {
         pte.set_physical_page_base(physical_address.get());
         pte.set_present(true);
@@ -1434,7 +1530,7 @@ void MemoryManager::unquickmap_page()
     VERIFY(mm_data.m_quickmap_in_use.is_locked());
     VirtualAddress vaddr(KERNEL_QUICKMAP_PER_CPU_BASE + Processor::current_id() * PAGE_SIZE);
     u32 pte_idx = (vaddr.get() - KERNEL_PT1024_BASE) / PAGE_SIZE;
-    auto& pte = ((PageTableEntry*)boot_pd_kernel_pt1023)[pte_idx];
+    auto& pte = g_boot_info.boot_pd_kernel_pt1023[pte_idx];
     pte.clear();
     flush_tlb_local(vaddr);
     mm_data.m_quickmap_in_use.unlock(mm_data.m_quickmap_previous_interrupts_state);

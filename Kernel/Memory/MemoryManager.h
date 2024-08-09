@@ -36,7 +36,7 @@ constexpr FlatPtr page_round_down(FlatPtr x)
 
 inline FlatPtr virtual_to_low_physical(FlatPtr virtual_)
 {
-    return virtual_ - physical_to_virtual_offset;
+    return virtual_ - g_boot_info.physical_to_virtual_offset;
 }
 
 enum class UsedMemoryRangeType {
@@ -267,6 +267,7 @@ private:
 
     void protect_kernel_image();
     void parse_memory_map();
+    void parse_memory_map_efi(GlobalData&);
     void parse_memory_map_fdt(GlobalData&, u8 const* fdt_addr);
     void parse_memory_map_multiboot(GlobalData&);
     static void flush_tlb_local(VirtualAddress, size_t page_count = 1);

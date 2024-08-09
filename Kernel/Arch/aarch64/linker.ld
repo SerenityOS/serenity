@@ -66,7 +66,7 @@ SECTIONS
     .bss ALIGN(4K) (NOLOAD) : AT (ADDR(.bss) - KERNEL_MAPPING_BASE)
     {
 	start_of_bss = .;
-        *(.bss)
+        *(.bss*)
 	end_of_bss = .;
 
         . = ALIGN(4K);

@@ -398,6 +398,10 @@ lagom_lib(LibGUI_GML gui_gml
     SOURCES ${LIBGUI_GML_SOURCES}
 )
 
+# LibELF
+# This is used by the PrekernelPEImageGenerator and therefore always needed.
+add_serenity_subdirectory(Userland/Libraries/LibELF)
+
 # Manually install AK headers
 install(
     DIRECTORY "${SERENITY_PROJECT_ROOT}/AK"
@@ -495,7 +499,7 @@ if (BUILD_LAGOM)
     endif()
 
     if (NOT EMSCRIPTEN)
-        list(APPEND lagom_standard_libraries ELF X86)
+        list(APPEND lagom_standard_libraries X86)
     endif()
 
     foreach(lib IN LISTS lagom_standard_libraries)
