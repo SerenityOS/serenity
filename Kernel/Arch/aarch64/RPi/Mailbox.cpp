@@ -8,6 +8,7 @@
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Library/Panic.h>
+#include <Kernel/Memory/MemoryManager.h>
 
 namespace Kernel::RPi {
 
@@ -91,7 +92,11 @@ bool Mailbox::send_queue(void* queue, u32 queue_size) const
     wait_until_we_can_write(mmio);
 
     // The mailbox message is 32-bit based, so this assumes that message is in the first 4 GiB.
-    u32 request = static_cast<u32>(reinterpret_cast<FlatPtr>(queue) & ~0xF) | (channel & 0xF);
+    // FIXME: Memory::virtual_to_low_physical only works for the initial kernel mappings (including the stack).
+    //        Sending mailbox messages that are on the stack (which is most of them) won't work as soon as we enter init_stage2.
+    //        We should instead use MM DMA functions to allocate memory for transferring messages.
+    u32 queue_paddr = Memory::virtual_to_low_physical(bit_cast<FlatPtr>(queue));
+    u32 request = static_cast<u32>(queue_paddr & ~0xF) | (channel & 0xF);
 
     // The queue buffer might point to normal cached memory, so flush any writes that are in cache and not visible to VideoCore.
     Aarch64::Asm::flush_data_cache((FlatPtr)queue, queue_size);
