@@ -38,7 +38,6 @@ void BulkSCSIInterface::start_request(AsyncBlockDeviceRequest& request)
 ErrorOr<void> BulkSCSIInterface::do_read(u32 block_index, u32 block_count, UserOrKernelBuffer& buffer, size_t)
 {
     // FIXME: Error Handling and proper device reset on exit
-    CommandBlockWrapper command;
     SCSI::Read10 read_command;
 
     u32 block_index_to_read = block_index;
@@ -51,16 +50,7 @@ ErrorOr<void> BulkSCSIInterface::do_read(u32 block_index, u32 block_count, UserO
 
         read_command.transfer_length = transfer_length_bytes / block_size();
 
-        command.transfer_length = transfer_length_bytes;
-        command.direction = CBWDirection::DataIn;
-        command.set_command(read_command);
-
-        TRY(m_out_pipe->submit_bulk_out_transfer(sizeof(command), &command));
-
-        TRY(m_in_pipe->submit_bulk_in_transfer(transfer_length_bytes, destination_buffer));
-
-        CommandStatusWrapper status;
-        TRY(m_in_pipe->submit_bulk_in_transfer(sizeof(status), &status));
+        auto status = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(*m_out_pipe, *m_in_pipe, read_command, destination_buffer, transfer_length_bytes));
 
         if (status.status != CSWStatus::Passed) {
             // FIXME: Actually handle the error
@@ -82,13 +72,11 @@ ErrorOr<void> BulkSCSIInterface::do_read(u32 block_index, u32 block_count, UserO
 ErrorOr<void> BulkSCSIInterface::do_write(u32 block_index, u32 block_count, UserOrKernelBuffer& buffer, size_t)
 {
     // FIXME: Error Handling and proper device reset on exit
-
-    CommandBlockWrapper command;
     SCSI::Write10 read_command;
 
     u32 block_index_to_read = block_index;
     u32 blocks_read = 0;
-    UserOrKernelBuffer destination_buffer = buffer;
+    UserOrKernelBuffer source_buffer = buffer;
     while (blocks_read < block_count) {
         read_command.logical_block_address = block_index_to_read;
 
@@ -96,16 +84,7 @@ ErrorOr<void> BulkSCSIInterface::do_write(u32 block_index, u32 block_count, User
 
         read_command.transfer_length = transfer_length_bytes / block_size();
 
-        command.transfer_length = transfer_length_bytes;
-        command.direction = CBWDirection::DataOut;
-        command.set_command(read_command);
-
-        TRY(m_out_pipe->submit_bulk_out_transfer(sizeof(command), &command));
-
-        TRY(m_out_pipe->submit_bulk_out_transfer(transfer_length_bytes, destination_buffer));
-
-        CommandStatusWrapper status;
-        TRY(m_in_pipe->submit_bulk_in_transfer(sizeof(status), &status));
+        auto status = TRY(send_scsi_command<SCSIDataDirection::DataToTarget>(*m_out_pipe, *m_in_pipe, read_command, source_buffer, transfer_length_bytes));
 
         if (status.status != CSWStatus::Passed) {
             // FIXME: Actually handle the error
