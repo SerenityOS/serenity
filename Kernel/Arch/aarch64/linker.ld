@@ -13,11 +13,11 @@ PHDRS
 
 SECTIONS
 {
-    . = KERNEL_MAPPING_BASE + 0x80000;
+    . = KERNEL_MAPPING_BASE;
 
     start_of_kernel_image = .;
 
-    .text ALIGN(4K) : AT (ADDR(.text) - KERNEL_MAPPING_BASE)
+    .text ALIGN(4K) : AT (ADDR(.text))
     {
         *(.text.first)
 
@@ -31,14 +31,14 @@ SECTIONS
         *(.text*)
     } :text
 
-    .driver_init ALIGN(4K) : AT (ADDR(.driver_init) - KERNEL_MAPPING_BASE)
+    .driver_init ALIGN(4K) : AT (ADDR(.driver_init))
     {
         driver_init_table_start = .;
         *(.driver_init)
         driver_init_table_end = .;
     } :text
 
-    .rodata ALIGN(4K) : AT (ADDR(.rodata) - KERNEL_MAPPING_BASE)
+    .rodata ALIGN(4K) : AT (ADDR(.rodata))
     {
         start_heap_ctors = .;
         *libkernel_heap.a:*(.init_array)
@@ -51,19 +51,19 @@ SECTIONS
         *(.rodata*)
     } :data
 
-    .data ALIGN(4K) : AT (ADDR(.data) - KERNEL_MAPPING_BASE)
+    .data ALIGN(4K) : AT (ADDR(.data))
     {
         *(.data*)
     } :data
 
-    .ksyms ALIGN(4K) : AT (ADDR(.ksyms) - KERNEL_MAPPING_BASE)
+    .ksyms ALIGN(4K) : AT (ADDR(.ksyms))
     {
         start_of_kernel_ksyms = .;
         *(.kernel_symbols)
         end_of_kernel_ksyms = .;
     } :ksyms
 
-    .bss ALIGN(4K) (NOLOAD) : AT (ADDR(.bss) - KERNEL_MAPPING_BASE)
+    .bss ALIGN(4K) (NOLOAD) : AT (ADDR(.bss))
     {
         start_of_bss = .;
         *(.bss*)

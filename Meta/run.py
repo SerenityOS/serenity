@@ -689,7 +689,7 @@ hostfwd=tcp:{config.host_ip}:2222-10.0.2.15:22"
 
 def set_up_kernel(config: Configuration):
     if config.architecture == Arch.Aarch64:
-        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel"]
+        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/kernel8.img"]
     elif config.architecture == Arch.RISCV64:
         config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel.bin"]
     elif config.architecture == Arch.x86_64:
