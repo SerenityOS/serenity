@@ -131,19 +131,17 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
     auto in_pipe = TRY(BulkInPipe::create(device.controller(), device, in_pipe_address, in_max_packet_size));
     auto out_pipe = TRY(BulkOutPipe::create(device.controller(), device, out_pipe_address, out_max_packet_size));
 
-    CommandBlockWrapper command_block {};
-    command_block.set_command(SCSI::ReadCapacity10 {});
-    command_block.transfer_length = sizeof(SCSI::ReadCapacity10Parameters);
-    command_block.direction = CBWDirection::DataIn;
-    TRY(out_pipe->submit_bulk_out_transfer(31, &command_block));
-
     SCSI::ReadCapacity10Parameters capacity;
-    TRY(in_pipe->submit_bulk_in_transfer(sizeof(capacity), &capacity));
-    // FIXME: Handle Stalling
-    CommandStatusWrapper status;
-    TRY(in_pipe->submit_bulk_in_transfer(sizeof(status), &status));
+    auto status = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(*out_pipe, *in_pipe, SCSI::ReadCapacity10 {}, &capacity, sizeof(capacity)));
+
+    if (status.data_residue != 0) {
+        dmesgln("SCSI/BBB: Read Capacity returned with non-zero data residue; Rejecting");
+        return EIO;
+    }
+
     if (status.status != CSWStatus::Passed) {
         dmesgln("SCSI/BBB: Failed to query USB Drive capacity; Rejecting");
+        // FIXME: More error handling
         return ENOTSUP;
     }
 
