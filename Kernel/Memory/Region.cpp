@@ -438,7 +438,8 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
             }
             return handle_cow_fault(page_index_in_region);
         }
-        if (should_dirty_on_write(page_index_in_region)) {
+        // Write faults to InodeVMObjects should always be treated as a dirty-on-write fault
+        if (vmobject().is_inode()) {
             dbgln_if(PAGE_FAULT_DEBUG, "PV(dirty_on_write) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
             return handle_dirty_on_write_fault(page_index_in_region);
         }
@@ -668,11 +669,6 @@ PageFaultResponse Region::handle_dirty_on_write_fault(size_t page_index_in_regio
 
     {
         SpinlockLocker locker(inode_vmobject.m_lock);
-
-        if (inode_vmobject.is_page_dirty(page_index_in_vmobject)) {
-            dbgln_if(PAGE_FAULT_DEBUG, "handle_dirty_on_write_fault: Page was already marked dirty by someone else.");
-            return PageFaultResponse::Continue;
-        }
 
         if (!physical_page_slot.is_null()) {
             dbgln_if(PAGE_FAULT_DEBUG, "handle_dirty_on_write_fault: Marking page dirty and remapping.");
