@@ -1,14 +1,14 @@
 # Root file system. This is a fake entry which gets ignored by `mount -a`;
 # the actual logic for mounting root is in the kernel.
-/dev/hda	/	ext2	nodev,nosuid,ro
+/dev/hda	/	ext2	immutable,nodev,nosuid,ro
 # Remount /bin, /root, and /home while adding the appropriate permissions.
-/bin	/bin	bind	bind,nodev,ro
-/etc	/etc	bind	bind,nodev,nosuid
-/home	/home	bind	bind,nodev,nosuid
-/root	/root	bind	bind,nodev,nosuid
-/var	/var	bind	bind,nodev,nosuid
-/www	/www	bind	bind,nodev,nosuid
-/usr/Tests	/usr/Tests	bind	bind,nodev,ro
-/usr/local	/usr/local	bind	bind,nodev,nosuid
-/usr/Ports	/usr/Ports	bind	bind,nodev,nosuid
+/bin	/bin	bind	immutable,bind,nodev,ro
+/etc	/etc	bind	immutable,bind,nodev,nosuid
+/home	/home	bind	immutable,bind,nodev,nosuid
+/root	/root	bind	immutable,bind,nodev,nosuid
+/var	/var	bind	immutable,bind,nodev,nosuid
+/www	/www	bind	immutable,bind,nodev,nosuid
+/usr/Tests	/usr/Tests	bind	immutable,bind,nodev,ro
+/usr/local	/usr/local	bind	immutable,bind,nodev,nosuid
+/usr/Ports	/usr/Ports	bind	immutable,bind,nodev,nosuid
 
