@@ -312,7 +312,6 @@ macro(add_serenity_subdirectory path)
     add_subdirectory("${SERENITY_PROJECT_ROOT}/${path}" "${CMAKE_CURRENT_BINARY_DIR}/${path}")
 endmacro()
 
-add_custom_target(components ALL)
 option(BUILD_EVERYTHING "Build all optional components" ON)
 
 if (NOT TARGET all_generated)

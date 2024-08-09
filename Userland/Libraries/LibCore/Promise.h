@@ -79,6 +79,35 @@ public:
         return new_promise;
     }
 
+    template<typename T>
+    NonnullRefPtr<Promise<T>> map(Function<ErrorOr<T>(Result&)> func)
+    {
+        NonnullRefPtr<Promise<T>> new_promise = Promise<T>::construct();
+
+        if (is_resolved()) {
+            auto result = func(m_result_or_rejection->value());
+            if (result.is_error())
+                new_promise->reject(result.release_error());
+            else
+                new_promise->resolve(result.release_value());
+        }
+        if (is_rejected())
+            new_promise->reject(m_result_or_rejection->release_error());
+
+        on_resolution = [new_promise, func = move(func)](Result& result) -> ErrorOr<void> {
+            auto new_result = func(result);
+            if (new_result.is_error())
+                new_promise->reject(new_result.release_error());
+            else
+                new_promise->resolve(new_result.release_value());
+            return {};
+        };
+        on_rejection = [new_promise](ErrorType& error) {
+            new_promise->reject(move(error));
+        };
+        return new_promise;
+    }
+
     template<CallableAs<void, Result&> F>
     Promise& when_resolved(F handler)
     {
