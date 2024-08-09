@@ -81,16 +81,30 @@ private:
 };
 }
 
+static UNMAP_AFTER_INIT FlatPtr calculate_physical_to_link_time_address_offset()
+{
+    FlatPtr physical_address;
+    FlatPtr link_time_address;
+
+    asm volatile(
+        "   adr %[physical_address], #0\n"
+        "1: ldr %[link_time_address], =1b\n"
+        : [physical_address] "=r"(physical_address),
+        [link_time_address] "=r"(link_time_address));
+
+    return link_time_address - physical_address - 4;
+}
+
 // NOTE: To access global variables while the MMU is not yet enabled, we need
 //       to convert the address of a global variable to a physical address by
-//       subtracting KERNEL_MAPPING_BASE. This is because the kernel is linked
+//       subtracting calculate_physical_to_link_time_address_offset(). This is because the kernel is linked
 //       for virtual memory at KERNEL_MAPPING_BASE, so a regular access to global variables
 //       will use the high virtual memory address. This does not work when the MMU is not yet
 //       enabled, so this function must be used for accessing global variables.
 template<typename T>
 inline T* adjust_by_mapping_base(T* ptr)
 {
-    return (T*)((FlatPtr)ptr - KERNEL_MAPPING_BASE);
+    return (T*)((FlatPtr)ptr - calculate_physical_to_link_time_address_offset());
 }
 
 static u64* insert_page_table(PageBumpAllocator& allocator, u64* page_table, VirtualAddress virtual_addr)
@@ -147,7 +161,7 @@ static void setup_quickmap_page_table(PageBumpAllocator& allocator, u64* root_ta
     auto kernel_pt1024_base = VirtualAddress(*adjust_by_mapping_base(&kernel_mapping_base) + KERNEL_PT1024_OFFSET);
 
     auto quickmap_page_table = PhysicalAddress((PhysicalPtr)insert_page_table(allocator, root_table, kernel_pt1024_base));
-    *adjust_by_mapping_base(&boot_pd_kernel_pt1023) = (PageTableEntry*)quickmap_page_table.offset(KERNEL_MAPPING_BASE).get();
+    *adjust_by_mapping_base(&boot_pd_kernel_pt1023) = (PageTableEntry*)quickmap_page_table.offset(calculate_physical_to_link_time_address_offset()).get();
 }
 
 static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
@@ -166,16 +180,25 @@ static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
     auto start_of_mmio_range = VirtualAddress(mmio_base + KERNEL_MAPPING_BASE);
     auto end_of_mmio_range = VirtualAddress(mmio_end + KERNEL_MAPPING_BASE);
 
-    auto start_of_physical_kernel_range = PhysicalAddress(start_of_kernel_range.get()).offset(-KERNEL_MAPPING_BASE);
-    auto start_of_physical_mmio_range = PhysicalAddress(start_of_mmio_range.get()).offset(-KERNEL_MAPPING_BASE);
+    // FIXME: don't use the memory before `start` as the initial stack
+    auto start_of_stack_range = start_of_kernel_range.offset(-128 * KiB);
+    auto end_of_stack_range = start_of_kernel_range;
+
+    auto start_of_physical_kernel_range = PhysicalAddress(start_of_kernel_range.get()).offset(-calculate_physical_to_link_time_address_offset());
+    auto start_of_physical_mmio_range = PhysicalAddress(mmio_base);
+    auto start_of_physical_stack_range = PhysicalAddress { start_of_stack_range.get() }.offset(-calculate_physical_to_link_time_address_offset());
 
     // Insert identity mappings
-    insert_entries_for_memory_range(allocator, root_table, start_of_kernel_range.offset(-KERNEL_MAPPING_BASE), end_of_kernel_range.offset(-KERNEL_MAPPING_BASE), start_of_physical_kernel_range, normal_memory_flags);
-    insert_entries_for_memory_range(allocator, root_table, start_of_mmio_range.offset(-KERNEL_MAPPING_BASE), end_of_mmio_range.offset(-KERNEL_MAPPING_BASE), start_of_physical_mmio_range, device_memory_flags);
+    insert_entries_for_memory_range(allocator, root_table, start_of_kernel_range.offset(-calculate_physical_to_link_time_address_offset()), end_of_kernel_range.offset(-calculate_physical_to_link_time_address_offset()), start_of_physical_kernel_range, normal_memory_flags);
+    insert_entries_for_memory_range(allocator, root_table, VirtualAddress(mmio_base), VirtualAddress(mmio_end), start_of_physical_mmio_range, device_memory_flags);
+    insert_entries_for_memory_range(allocator, root_table, start_of_stack_range.offset(-calculate_physical_to_link_time_address_offset()), end_of_stack_range.offset(-calculate_physical_to_link_time_address_offset()), start_of_physical_stack_range, device_memory_flags);
 
     // Map kernel and MMIO into high virtual memory
     insert_entries_for_memory_range(allocator, root_table, start_of_kernel_range, end_of_kernel_range, start_of_physical_kernel_range, normal_memory_flags);
     insert_entries_for_memory_range(allocator, root_table, start_of_mmio_range, end_of_mmio_range, start_of_physical_mmio_range, device_memory_flags);
+
+    // Map the initial stack
+    insert_entries_for_memory_range(allocator, root_table, start_of_stack_range, end_of_stack_range, start_of_physical_stack_range, normal_memory_flags);
 }
 
 static void switch_to_page_table(u8* page_table)
@@ -269,7 +292,7 @@ static void setup_kernel_page_directory(u64* root_table)
 
 void init_page_tables()
 {
-    *adjust_by_mapping_base(&physical_to_virtual_offset) = KERNEL_MAPPING_BASE;
+    *adjust_by_mapping_base(&physical_to_virtual_offset) = calculate_physical_to_link_time_address_offset();
     *adjust_by_mapping_base(&kernel_mapping_base) = KERNEL_MAPPING_BASE;
     *adjust_by_mapping_base(&kernel_load_base) = KERNEL_MAPPING_BASE;
 
@@ -297,8 +320,8 @@ void unmap_identity_map()
         panic_without_mmu("Could not find table!"sv);
 
     // NOTE: The function descriptor_to_pointer returns a physical address, but we want to unmap that range
-    //       so, the pointer must be converted to a virtual address by adding KERNEL_MAPPING_BASE.
-    level2_table += KERNEL_MAPPING_BASE;
+    //       so, the pointer must be converted to a virtual address by adding calculate_physical_to_link_time_address_offset().
+    level2_table += calculate_physical_to_link_time_address_offset();
 
     // Unmap the complete identity map
     ((u64*)level2_table)[level1_idx] = 0;
