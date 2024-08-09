@@ -57,50 +57,6 @@ void PowerStateSwitchTask::spawn(PowerStateCommand command)
     g_power_state_switch_task = move(power_state_switch_task_thread);
 }
 
-static ErrorOr<void> unmount_mounts_on_vfs_root_context(VFSRootContext& vfs_root_context)
-{
-    // NOTE: We are going to tear down the entire VFS root context from its mounts.
-    // To do this properly, we swap out the original root custody with the empty
-    // root custody for vfs root context of kernel processes.
-    vfs_root_context.root_custody().with([](auto& custody) {
-        custody = VFSRootContext::empty_context_custody_for_kernel_processes();
-    });
-
-    auto unmount_was_successful = true;
-    while (unmount_was_successful) {
-        unmount_was_successful = false;
-        Vector<Mount&, 16> mounts;
-        TRY(vfs_root_context.mounts().with([&mounts](auto& list) -> ErrorOr<void> {
-            for (auto& mount : list) {
-                TRY(mounts.try_append(const_cast<Mount&>(mount)));
-            }
-            return {};
-        }));
-        if (mounts.is_empty())
-            break;
-        auto const remaining_mounts = mounts.size();
-
-        while (!mounts.is_empty()) {
-            auto& mount = mounts.take_last();
-            TRY(mount.guest_fs().flush_writes());
-
-            auto mount_path = TRY(mount.absolute_path());
-            auto& mount_inode = mount.guest();
-            auto const result = VirtualFileSystem::unmount(vfs_root_context, mount_inode, mount_path->view());
-            if (result.is_error()) {
-                dbgln("Error during unmount of {}: {}", mount_path, result.error());
-                // FIXME: For unknown reasons the root FS stays busy even after everything else has shut down and was unmounted.
-                //        Until we find the underlying issue, allow an unclean shutdown here.
-                if (remaining_mounts <= 1)
-                    dbgln("BUG! One mount remaining; the root file system may not be unmountable at all. Shutting down anyways.");
-            } else {
-                unmount_was_successful = true;
-            }
-        }
-    }
-    return {};
-}
-
 ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReboot do_reboot)
 {
     // We assume that by this point userland has tried as much as possible to shut down everything in an orderly fashion.
@@ -146,7 +102,7 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReb
         });
         for (size_t index = 0; index < collected_contexts_count; index++) {
             VERIFY(contexts[index]);
-            TRY(unmount_mounts_on_vfs_root_context(*contexts[index]));
+            TRY(contexts[index]->do_full_teardown({}));
         }
     } while (collected_contexts_count > 0);
 

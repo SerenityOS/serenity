@@ -82,7 +82,7 @@ ErrorOr<FlatPtr> Process::sys$unshare_attach(Userspace<Syscall::SC_unshare_attac
         m_attached_vfs_root_context.with([vfs_root_context](auto& context) {
             context = vfs_root_context;
         });
-        vfs_root_context->set_attached({});
+        vfs_root_context->attach({});
         return 0;
     }
     case UnshareType::HostnameContext: {

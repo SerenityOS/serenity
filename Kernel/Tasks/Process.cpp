@@ -349,7 +349,7 @@ Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, Proces
     }
 
     m_attached_vfs_root_context.with([](auto& context) {
-        context->set_attached({});
+        context->attach({});
     });
 
     m_attached_hostname_context.with([](auto& context) {
@@ -885,6 +885,11 @@ void Process::finalize()
     m_environment.clear();
 
     m_attached_hostname_context.with([](auto& context) {
+        context->detach({});
+        context = nullptr;
+    });
+
+    m_attached_vfs_root_context.with([](auto& context) {
         context->detach({});
         context = nullptr;
     });
