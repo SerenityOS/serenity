@@ -38,6 +38,19 @@ ALWAYS_INLINE static f32x4 frac_int_range(f32x4 v)
     return v - floor_int_range(v);
 }
 
+template<SIMDVector T>
+ALWAYS_INLINE T bitselect(T v1, T v2, T control_mask)
+{
+    return (v1 & control_mask) | (v2 & ~control_mask);
+}
+
+template<SIMDVector T>
+requires(IsIntegral<ElementOf<T>>)
+ALWAYS_INLINE T abs(T x)
+{
+    return bitselect(x, -x, x > 0);
+}
+
 ALWAYS_INLINE static f32x4 clamp(f32x4 v, f32x4 min, f32x4 max)
 {
     return v < min ? min : (v > max ? max : v);
