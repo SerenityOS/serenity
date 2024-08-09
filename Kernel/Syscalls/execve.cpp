@@ -31,17 +31,9 @@ namespace Kernel {
 
 extern Memory::Region* g_signal_trampoline_region;
 
-struct LoadResult {
-    FlatPtr load_base { 0 };
-    FlatPtr entry_eip { 0 };
-    size_t size { 0 };
-    LockWeakPtr<Memory::Region> stack_region;
-};
-
-static constexpr size_t auxiliary_vector_size = 15;
 static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation);
 
-static bool validate_stack_size(Vector<NonnullOwnPtr<KString>> const& arguments, Vector<NonnullOwnPtr<KString>>& environment, Array<ELF::AuxiliaryValue, auxiliary_vector_size> const& auxiliary)
+static bool validate_stack_size(Vector<NonnullOwnPtr<KString>> const& arguments, Vector<NonnullOwnPtr<KString>> const& environment, Array<ELF::AuxiliaryValue, auxiliary_vector_size> const& auxiliary)
 {
     size_t total_arguments_size = 0;
     size_t total_environment_size = 0;
@@ -75,7 +67,7 @@ static bool validate_stack_size(Vector<NonnullOwnPtr<KString>> const& arguments,
     return true;
 }
 
-static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] ThreadRegisters& regs, Memory::Region& region, Vector<NonnullOwnPtr<KString>> const& arguments,
+ErrorOr<Process::BaseThreadContext> Process::make_userspace_context_for_new_main_thread(Memory::Region& region, Vector<NonnullOwnPtr<KString>> const& arguments,
     Vector<NonnullOwnPtr<KString>> const& environment, Array<ELF::AuxiliaryValue, auxiliary_vector_size> auxiliary_values)
 {
     FlatPtr new_sp = region.range().end().get();
@@ -147,26 +139,10 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
     // NOTE: The stack needs to be 16-byte aligned.
     new_sp -= new_sp % 16;
 
-#if ARCH(X86_64)
-    regs.rdi = argv_entries.size();
-    regs.rsi = argv;
-    regs.rdx = envp;
-#elif ARCH(AARCH64)
-    regs.x[0] = argv_entries.size();
-    regs.x[1] = argv;
-    regs.x[2] = envp;
-#elif ARCH(RISCV64)
-    regs.x[9] = argv_entries.size();
-    regs.x[10] = argv;
-    regs.x[11] = envp;
-#else
-#    error Unknown architecture
-#endif
-
     VERIFY(new_sp % 16 == 0);
 
     // FIXME: The way we're setting up the stack and passing arguments to the entry point isn't ABI-compliant
-    return new_sp;
+    return BaseThreadContext { new_sp, argv, envp, argv_entries.size() };
 }
 
 struct RequiredLoadRange {
@@ -208,7 +184,7 @@ static ErrorOr<RequiredLoadRange> get_required_load_range(OpenFileDescription& p
     return range;
 }
 
-static ErrorOr<FlatPtr> get_load_offset(Elf_Ehdr const& main_program_header, OpenFileDescription& main_program_description, OpenFileDescription* interpreter_description)
+static ErrorOr<FlatPtr> get_load_offset(Elf_Ehdr const& main_program_header, OpenFileDescription& main_program_description, Optional<Process::ELFIntrepreterDescription> const& interpreter_description)
 {
     constexpr FlatPtr load_range_start = 0x08000000;
     constexpr FlatPtr load_range_size = 65536 * PAGE_SIZE; // 2**16 * PAGE_SIZE = 256MB
@@ -229,8 +205,8 @@ static ErrorOr<FlatPtr> get_load_offset(Elf_Ehdr const& main_program_header, Ope
 
     RequiredLoadRange selected_range {};
 
-    if (interpreter_description) {
-        auto interpreter_load_range = TRY(get_required_load_range(*interpreter_description));
+    if (interpreter_description.has_value()) {
+        auto interpreter_load_range = TRY(get_required_load_range(*interpreter_description.value().description));
 
         auto interpreter_size_in_memory = interpreter_load_range.end - interpreter_load_range.start;
         auto interpreter_load_range_end = load_range_start + load_range_size - interpreter_size_in_memory;
@@ -257,13 +233,8 @@ static ErrorOr<FlatPtr> get_load_offset(Elf_Ehdr const& main_program_header, Ope
     return random_load_offset_in_range(selected_range.start, selected_range.end - selected_range.start);
 }
 
-enum class ShouldAllowSyscalls {
-    No,
-    Yes,
-};
-
-static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, OpenFileDescription& object_description,
-    FlatPtr load_offset, ShouldAllowSyscalls should_allow_syscalls, Optional<size_t> minimum_stack_size = {})
+ErrorOr<Process::LoadResult> Process::load_elf_object(Memory::AddressSpace& new_space, OpenFileDescription& object_description,
+    FlatPtr load_offset, ShouldAllowSyscalls should_allow_syscalls, Optional<size_t> const& minimum_stack_size)
 {
     auto& inode = *(object_description.inode());
     auto vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode));
@@ -384,24 +355,12 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
     auto* stack_region = TRY(new_space.allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, stack_size, PAGE_SIZE, "Stack (Main thread)"sv, PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
     stack_region->set_stack(true);
 
-    return LoadResult {
+    return Process::LoadResult {
         load_base_address,
         elf_image.entry().offset(load_offset).get(),
         executable_size,
         TRY(stack_region->try_make_weak_ptr())
     };
-}
-
-ErrorOr<LoadResult>
-Process::load(Memory::AddressSpace& new_space, NonnullRefPtr<OpenFileDescription> main_program_description,
-    RefPtr<OpenFileDescription> interpreter_description, Elf_Ehdr const& main_program_header, Optional<size_t> minimum_stack_size)
-{
-    auto load_offset = TRY(get_load_offset(main_program_header, main_program_description, interpreter_description));
-
-    if (interpreter_description.is_null())
-        return TRY(load_elf_object(new_space, main_program_description, load_offset, ShouldAllowSyscalls::No, minimum_stack_size));
-
-    return TRY(load_elf_object(new_space, *interpreter_description, load_offset, ShouldAllowSyscalls::Yes, minimum_stack_size));
 }
 
 void Process::clear_signal_handlers_for_exec()
@@ -423,95 +382,38 @@ void Process::clear_signal_handlers_for_exec()
     }
 }
 
-ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment,
-    RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, Elf_Ehdr const& main_program_header, Optional<size_t> minimum_stack_size)
+ErrorOr<Process::LoadResult> Process::parse_and_load_elf_object(Memory::AddressSpace& new_space,
+    Elf_Ehdr const& main_program_header, NonnullRefPtr<OpenFileDescription> main_program_description,
+    Optional<Process::ELFIntrepreterDescription> const& interpreter_description, Optional<size_t> const& minimum_stack_size)
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
-    auto main_program_metadata = main_program_description->metadata();
-    // NOTE: Don't allow running SUID binaries at all if we are in a jail.
-    if (Process::current().is_jailed() && (main_program_metadata.is_setuid() || main_program_metadata.is_setgid()))
-        return Error::from_errno(EPERM);
-
     // Although we *could* handle a pseudo_path here, trying to execute something that doesn't have
     // a custody (e.g. BlockDevice or RandomDevice) is pretty suspicious anyway.
     auto path = TRY(main_program_description->original_absolute_path());
 
-    dbgln_if(EXEC_DEBUG, "do_exec: {}", path);
+    auto interpreter_path = TRY(KString::try_create(""sv));
+    if (interpreter_description.has_value())
+        interpreter_path = TRY(interpreter_description.value().path->try_clone());
 
-    auto last_part = path->view().find_last_split_view('/');
+    dbgln_if(EXEC_DEBUG, "parse_and_load_elf_object: {}", path);
 
-    auto allocated_space = TRY(Memory::AddressSpace::try_create(*this, nullptr));
-    OwnPtr<Memory::AddressSpace> old_space;
-    auto& new_space = m_space.with([&](auto& space) -> Memory::AddressSpace& {
-        old_space = move(space);
-        space = move(allocated_space);
-        return *space;
-    });
-    ArmedScopeGuard space_guard([&]() {
-        // If we failed at any point from now on we have to revert back to the old address space
-        m_space.with([&](auto& space) {
-            space = old_space.release_nonnull();
-        });
-        Memory::MemoryManager::enter_process_address_space(*this);
-    });
+    auto load_offset = TRY(get_load_offset(main_program_header, main_program_description, interpreter_description));
 
-    auto load_result = TRY(load(new_space, main_program_description, interpreter_description, main_program_header, minimum_stack_size));
+    if (!interpreter_description.has_value())
+        return TRY(load_elf_object(new_space, main_program_description, load_offset, ShouldAllowSyscalls::No, minimum_stack_size));
+    return TRY(load_elf_object(new_space, interpreter_description.value().description, load_offset, ShouldAllowSyscalls::Yes, minimum_stack_size));
+}
 
-    // NOTE: We don't need the interpreter executable description after this point.
-    //       We destroy it here to prevent it from getting destroyed when we return from this function.
-    //       That's important because when we're returning from this function, we're in a very delicate
-    //       state where we can't block (e.g by trying to acquire a mutex in description teardown.)
-    bool has_interpreter = interpreter_description;
-    interpreter_description = nullptr;
+void Process::commit_exec(NonnullRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtr<KString> main_program_path,
+    Vector<NonnullOwnPtr<KString>> arguments, NonnullRefPtr<Credentials> new_credentials, bool executable_is_setid,
+    Memory::Region& signal_trampoline_region, Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread,
+    InterruptsState& previous_interrupts_state, ELFLoadParameters load_parameters)
+{
+    VERIFY(is_user_process());
+    VERIFY(!Processor::in_critical());
 
-    auto* signal_trampoline_region = TRY(new_space.allocate_region_with_vmobject(Memory::RandomizeVirtualAddress::Yes, {}, PAGE_SIZE, PAGE_SIZE, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline"sv, PROT_READ | PROT_EXEC, true));
-    signal_trampoline_region->set_syscall_region(true);
-
-    // (For dynamically linked executable) Allocate an FD for passing the main executable to the dynamic loader.
-    Optional<ScopedDescriptionAllocation> main_program_fd_allocation;
-    if (has_interpreter)
-        main_program_fd_allocation = TRY(allocate_fd());
-
-    auto old_credentials = this->credentials();
-    auto new_credentials = old_credentials;
     auto old_scoped_list = m_scoped_process_list.with([&](auto& list) -> RefPtr<ScopedProcessList> { return list; });
-
-    bool executable_is_setid = false;
-
-    if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
-        auto new_euid = old_credentials->euid();
-        auto new_egid = old_credentials->egid();
-        auto new_suid = old_credentials->suid();
-        auto new_sgid = old_credentials->sgid();
-
-        if (main_program_metadata.is_setuid()) {
-            executable_is_setid = true;
-            new_euid = main_program_metadata.uid;
-            new_suid = main_program_metadata.uid;
-        }
-        if (main_program_metadata.is_setgid()) {
-            executable_is_setid = true;
-            new_egid = main_program_metadata.gid;
-            new_sgid = main_program_metadata.gid;
-        }
-
-        if (executable_is_setid) {
-            new_credentials = TRY(Credentials::create(
-                old_credentials->uid(),
-                old_credentials->gid(),
-                new_euid,
-                new_egid,
-                new_suid,
-                new_sgid,
-                old_credentials->extra_gids(),
-                old_credentials->sid(),
-                old_credentials->pgid()));
-        }
-    }
-
-    // We commit to the new executable at this point. There is no turning back!
-    space_guard.disarm();
 
     // Prevent other processes from attaching to us with ptrace while we're doing this.
     MutexLocker ptrace_locker(ptrace_lock());
@@ -536,28 +438,6 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     m_environment = move(environment);
 
-    TRY(m_unveil_data.with([&](auto& unveil_data) -> ErrorOr<void> {
-        TRY(m_exec_unveil_data.with([&](auto& exec_unveil_data) -> ErrorOr<void> {
-            // Note: If we have exec unveil data being waiting to be dispatched
-            // to the current execve'd program, then we apply the unveil data and
-            // ensure it is locked in the new program.
-            if (exec_unveil_data.state == VeilState::Dropped) {
-                unveil_data.state = VeilState::LockedInherited;
-                exec_unveil_data.state = VeilState::None;
-                unveil_data.paths = TRY(exec_unveil_data.paths.deep_copy());
-            } else {
-                unveil_data.state = VeilState::None;
-                exec_unveil_data.state = VeilState::None;
-                unveil_data.paths.clear();
-                unveil_data.paths.set_metadata({ TRY(KString::try_create("/"sv)), UnveilAccess::None, false });
-            }
-            exec_unveil_data.paths.clear();
-            exec_unveil_data.paths.set_metadata({ TRY(KString::try_create("/"sv)), UnveilAccess::None, false });
-            return {};
-        }));
-        return {};
-    }));
-
     m_coredump_properties.for_each([](auto& property) {
         property = {};
     });
@@ -576,9 +456,9 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
         });
     });
 
-    if (main_program_fd_allocation.has_value()) {
+    if (load_parameters.main_program_fd_allocation.has_value()) {
         main_program_description->set_readable(true);
-        m_fds.with_exclusive([&](auto& fds) { fds[main_program_fd_allocation->fd].set(move(main_program_description), FD_CLOEXEC); });
+        m_fds.with_exclusive([&](auto& fds) { fds[load_parameters.main_program_fd_allocation->fd].set(move(main_program_description), FD_CLOEXEC); });
     }
 
     new_main_thread = nullptr;
@@ -592,18 +472,25 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     }
     VERIFY(new_main_thread);
 
-    auto credentials = this->credentials();
-    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, credentials->uid(), credentials->euid(), credentials->gid(), credentials->egid(), path->view(), main_program_fd_allocation);
-
-    // FIXME: How much stack space does process startup need?
-    if (!validate_stack_size(m_arguments, m_environment, auxv))
-        return E2BIG;
-
-    // NOTE: We create the new stack before disabling interrupts since it will zero-fault
-    //       and we don't want to deal with faults after this point.
-    auto new_userspace_sp = TRY(make_userspace_context_for_main_thread(new_main_thread->regs(), *load_result.stack_region.unsafe_ptr(), m_arguments, m_environment, move(auxv)));
+    auto& regs = new_main_thread->m_regs;
+#if ARCH(X86_64)
+    regs.rdi = load_parameters.new_userspace_thread_context.argv_entries_size;
+    regs.rsi = load_parameters.new_userspace_thread_context.argv;
+    regs.rdx = load_parameters.new_userspace_thread_context.envp;
+#elif ARCH(AARCH64)
+    regs.x[0] = load_parameters.new_userspace_thread_context.argv_entries_size;
+    regs.x[1] = load_parameters.new_userspace_thread_context.argv;
+    regs.x[2] = load_parameters.new_userspace_thread_context.envp;
+#elif ARCH(RISCV64)
+    regs.x[9] = load_parameters.new_userspace_thread_context.argv_entries_size;
+    regs.x[10] = load_parameters.new_userspace_thread_context.argv;
+    regs.x[11] = load_parameters.new_userspace_thread_context.envp;
+#else
+#    error Unknown architecture
+#endif
 
     // NOTE: The Process and its first thread share the same name.
+    auto last_part = main_program_path->view().find_last_split_view('/');
     set_name(last_part);
     new_main_thread->set_name(last_part);
 
@@ -633,7 +520,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
         protected_data.execpromises = 0;
         protected_data.has_execpromises = false;
 
-        protected_data.signal_trampoline = signal_trampoline_region->vaddr();
+        protected_data.signal_trampoline = signal_trampoline_region.vaddr();
 
         // FIXME: PID/TID ISSUE
         protected_data.pid = new_main_thread->tid().value();
@@ -641,9 +528,8 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     new_main_thread->reset_fpu_state();
 
-    auto& regs = new_main_thread->m_regs;
     address_space().with([&](auto& space) {
-        regs.set_exec_state(load_result.entry_eip, new_userspace_sp, *space);
+        regs.set_exec_state(load_parameters.entry_eip, load_parameters.new_userspace_thread_context.stack_pointer, *space);
     });
 
     {
@@ -655,7 +541,6 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     [[maybe_unused]] auto rc = big_lock().force_unlock_exclusive_if_locked(lock_count_to_restore);
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(Processor::in_critical());
-    return {};
 }
 
 static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation)
@@ -750,11 +635,11 @@ static ErrorOr<Vector<NonnullOwnPtr<KString>>> find_shebang_interpreter_for_exec
     return ENOEXEC;
 }
 
-static ErrorOr<FixedArray<u8>> read_elf_buffer_including_program_headers(OpenFileDescription& elf_file, Elf_Ehdr const& main_executable_header)
+static ErrorOr<FixedArray<u8>> read_elf_buffer_including_program_headers(OpenFileDescription& elf_file, Elf_Ehdr const& main_program_header)
 {
-    auto program_header_offset = static_cast<size_t>(main_executable_header.e_phoff);
-    auto program_header_entry_size = static_cast<size_t>(main_executable_header.e_phentsize);
-    auto program_header_entries_count = static_cast<size_t>(main_executable_header.e_phnum);
+    auto program_header_offset = static_cast<size_t>(main_program_header.e_phoff);
+    auto program_header_entry_size = static_cast<size_t>(main_program_header.e_phentsize);
+    auto program_header_entries_count = static_cast<size_t>(main_program_header.e_phnum);
 
     if (Checked<size_t>::multiplication_would_overflow(program_header_entry_size, program_header_entries_count))
         return EOVERFLOW;
@@ -776,20 +661,20 @@ static ErrorOr<FixedArray<u8>> read_elf_buffer_including_program_headers(OpenFil
     return elf_buffer;
 }
 
-ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(OpenFileDescription& elf_file, StringView path, Elf_Ehdr const& main_executable_header, size_t file_size, Optional<size_t>& minimum_stack_size)
+ErrorOr<Optional<Process::ELFIntrepreterDescription>> Process::find_elf_interpreter_for_executable(OpenFileDescription& elf_file, StringView path, Elf_Ehdr const& main_program_header, size_t file_size, Optional<size_t>& minimum_stack_size)
 {
     // We can't exec an ET_REL, as that's just an object file from the compiler,
     // and we can't exec an ET_CORE as it's just a coredump.
     // The only allowed ELF files on execve are executables or shared object files
     // which are dynamically linked programs (or static-pie programs like the dynamic loader).
-    if (main_executable_header.e_type != ET_EXEC && main_executable_header.e_type != ET_DYN)
+    if (main_program_header.e_type != ET_EXEC && main_program_header.e_type != ET_DYN)
         return ENOEXEC;
 
-    auto main_program_with_program_headers_buffer = TRY(read_elf_buffer_including_program_headers(elf_file, main_executable_header));
+    auto main_program_with_program_headers_buffer = TRY(read_elf_buffer_including_program_headers(elf_file, main_program_header));
 
     Optional<size_t> main_executable_requested_stack_size {};
     Optional<Elf_Phdr> maybe_interpreter_path_program_header {};
-    if (!ELF::validate_program_headers(main_executable_header, file_size, main_program_with_program_headers_buffer.span(), maybe_interpreter_path_program_header, &main_executable_requested_stack_size)) {
+    if (!ELF::validate_program_headers(main_program_header, file_size, main_program_with_program_headers_buffer.span(), maybe_interpreter_path_program_header, &main_executable_requested_stack_size)) {
         dbgln("exec({}): File has invalid ELF Program headers", path);
         return ENOEXEC;
     }
@@ -801,7 +686,7 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
     // case we can't do anything and therefore we should just continue
     // without loading any interpreter.
     if (!maybe_interpreter_path_program_header.has_value())
-        return nullptr;
+        return Optional<Process::ELFIntrepreterDescription> {};
 
     auto interpreter_path_program_header = maybe_interpreter_path_program_header.release_value();
 
@@ -814,9 +699,10 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
     }
 
     auto interpreter_path = StringView(buffer->bytes());
+    auto interpreter_path_kstring = TRY(KString::try_create(interpreter_path));
     if (interpreter_path.is_empty()) {
         dbgln("exec({}): WARNING: File has an INTERP program header, but the interpreter path is empty", path);
-        return nullptr;
+        return Optional<Process::ELFIntrepreterDescription> {};
     }
 
     dbgln_if(EXEC_DEBUG, "exec({}): Using program interpreter {}", path, interpreter_path);
@@ -865,7 +751,7 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
     if (interpreter_requested_stack_size.has_value() && (!minimum_stack_size.has_value() || *minimum_stack_size < *interpreter_requested_stack_size))
         minimum_stack_size = interpreter_requested_stack_size;
 
-    return interpreter_description;
+    return Process::ELFIntrepreterDescription { interpreter_description, move(interpreter_path_kstring) };
 }
 
 ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, int recursion_depth)
@@ -926,9 +812,151 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
         return ENOEXEC;
     }
 
+    return do_exec(move(description), move(arguments), move(environment), new_main_thread, previous_interrupts_state, *main_program_header);
+}
+
+ErrorOr<Process::ELFLoadParameters> Process::prepare_memory_space_for_execve(Memory::AddressSpace& new_space, Elf_Ehdr const& main_program_header,
+    NonnullRefPtr<OpenFileDescription> main_program_description, StringView main_program_path, Vector<NonnullOwnPtr<KString>> const& arguments,
+    Vector<NonnullOwnPtr<KString>> const& environment)
+{
     Optional<size_t> minimum_stack_size {};
-    auto interpreter_description = TRY(find_elf_interpreter_for_executable(*description, path->view(), *main_program_header, metadata.size, minimum_stack_size));
-    return do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, previous_interrupts_state, *main_program_header, minimum_stack_size);
+    auto main_program_metadata = main_program_description->metadata();
+
+    // NOTE: The interpreter executable description is not saved after exiting this method.
+    //       We destroy it by getting out of the method scope to prevent it from getting destroyed before we actually
+    //       commit to execute the new program.
+    //       That's important because when we're returning from commit_exec function, we're in a very delicate
+    //       state where we can't block (e.g by trying to acquire a mutex in description teardown.)
+    auto interpreter_description = TRY(find_elf_interpreter_for_executable(*main_program_description, main_program_path, main_program_header, main_program_metadata.size, minimum_stack_size));
+
+    Optional<ScopedDescriptionAllocation> main_program_fd_allocation;
+    if (interpreter_description.has_value())
+        main_program_fd_allocation = TRY(allocate_fd());
+
+    auto load_result = TRY(parse_and_load_elf_object(new_space, main_program_header, main_program_description, interpreter_description, minimum_stack_size));
+
+    auto credentials = this->credentials();
+    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, credentials->uid(), credentials->euid(), credentials->gid(), credentials->egid(), main_program_path, main_program_fd_allocation);
+
+    // FIXME: How much stack space does process startup need?
+    if (!validate_stack_size(arguments, environment, auxv))
+        return E2BIG;
+
+    // NOTE: We create the new stack before disabling interrupts when committing to exec since it will zero-fault
+    //       and we don't want to deal with faults after this point.
+    auto new_userspace_thread_context = TRY(make_userspace_context_for_new_main_thread(*load_result.stack_region.unsafe_ptr(), arguments, environment, move(auxv)));
+
+    return ELFLoadParameters { new_userspace_thread_context, load_result.entry_eip, move(main_program_fd_allocation) };
+}
+
+ErrorOr<NonnullRefPtr<Credentials>> Process::generate_new_credentials_for_execve(NonnullRefPtr<OpenFileDescription> main_program_description, bool& executable_is_setid)
+{
+    VERIFY(executable_is_setid == false);
+
+    auto main_program_metadata = main_program_description->metadata();
+    auto old_credentials = this->credentials();
+    auto new_credentials = old_credentials;
+
+    if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
+        auto new_euid = old_credentials->euid();
+        auto new_egid = old_credentials->egid();
+        auto new_suid = old_credentials->suid();
+        auto new_sgid = old_credentials->sgid();
+
+        if (main_program_metadata.is_setuid()) {
+            executable_is_setid = true;
+            new_euid = main_program_metadata.uid;
+            new_suid = main_program_metadata.uid;
+        }
+        if (main_program_metadata.is_setgid()) {
+            executable_is_setid = true;
+            new_egid = main_program_metadata.gid;
+            new_sgid = main_program_metadata.gid;
+        }
+
+        if (executable_is_setid) {
+            new_credentials = TRY(Credentials::create(
+                old_credentials->uid(),
+                old_credentials->gid(),
+                new_euid,
+                new_egid,
+                new_suid,
+                new_sgid,
+                old_credentials->extra_gids(),
+                old_credentials->sid(),
+                old_credentials->pgid()));
+        }
+    }
+
+    return new_credentials;
+}
+
+ErrorOr<void> Process::apply_unveil_exec_data()
+{
+    return m_unveil_data.with([&](auto& unveil_data) -> ErrorOr<void> {
+        TRY(m_exec_unveil_data.with([&](auto& exec_unveil_data) -> ErrorOr<void> {
+            // Note: If we have exec unveil data being waiting to be dispatched
+            // to the current execve'd program, then we apply the unveil data and
+            // ensure it is locked in the new program.
+            if (exec_unveil_data.state == VeilState::Dropped) {
+                unveil_data.state = VeilState::LockedInherited;
+                exec_unveil_data.state = VeilState::None;
+                unveil_data.paths = MUST(exec_unveil_data.paths.deep_copy());
+            } else {
+                unveil_data.state = VeilState::None;
+                exec_unveil_data.state = VeilState::None;
+                unveil_data.paths.clear();
+                unveil_data.paths.set_metadata({ MUST(KString::try_create("/"sv)), UnveilAccess::None, false });
+            }
+            exec_unveil_data.paths.clear();
+            exec_unveil_data.paths.set_metadata({ MUST(KString::try_create("/"sv)), UnveilAccess::None, false });
+            return {};
+        }));
+        return {};
+    });
+}
+
+ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, Elf_Ehdr const& main_program_header)
+{
+    auto main_program_metadata = main_program_description->metadata();
+    // NOTE: Don't allow running SUID binaries at all if we are in a jail.
+    if (Process::current().is_jailed() && (main_program_metadata.is_setuid() || main_program_metadata.is_setgid()))
+        return Error::from_errno(EPERM);
+
+    auto main_program_path = TRY(main_program_description->original_absolute_path());
+
+    auto allocated_space = TRY(Memory::AddressSpace::try_create(*this, nullptr));
+    OwnPtr<Memory::AddressSpace> old_space;
+    auto& new_space = m_space.with([&](auto& space) -> Memory::AddressSpace& {
+        old_space = move(space);
+        space = move(allocated_space);
+        return *space;
+    });
+
+    ArmedScopeGuard space_guard([&]() {
+        // If we failed at any point from now on we have to revert back to the old address space
+        m_space.with([&](auto& space) {
+            space = old_space.release_nonnull();
+        });
+        Memory::MemoryManager::enter_process_address_space(*this);
+    });
+
+    auto load_parameters = TRY(prepare_memory_space_for_execve(new_space, main_program_header, main_program_description, main_program_path->view(), arguments, environment));
+
+    bool executable_is_setid = false;
+    auto new_credentials = TRY(generate_new_credentials_for_execve(main_program_description, executable_is_setid));
+
+    TRY(apply_unveil_exec_data());
+
+    auto* signal_trampoline_region = TRY(new_space.allocate_region_with_vmobject(Memory::RandomizeVirtualAddress::Yes, {}, PAGE_SIZE, PAGE_SIZE, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline"sv, PROT_READ | PROT_EXEC, true));
+    signal_trampoline_region->set_syscall_region(true);
+
+    // We commit to the new executable at this point. There is no turning back!
+    space_guard.disarm();
+    commit_exec(move(main_program_description), move(main_program_path), move(arguments), new_credentials, executable_is_setid, *signal_trampoline_region,
+        move(environment), new_main_thread, previous_interrupts_state, move(load_parameters));
+
+    return {};
 }
 
 ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*> user_params)

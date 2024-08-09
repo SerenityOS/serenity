@@ -43,6 +43,7 @@
 #include <Kernel/Tasks/ProcessGroup.h>
 #include <Kernel/Tasks/Thread.h>
 #include <Kernel/UnixTypes.h>
+#include <LibELF/AuxiliaryVector.h>
 #include <LibELF/ELFABI.h>
 
 namespace Kernel {
@@ -118,6 +119,8 @@ union GlobalFutexKey {
 };
 static_assert(sizeof(GlobalFutexKey) == (sizeof(FlatPtr) * 2));
 
+static constexpr size_t auxiliary_vector_size = 15;
+
 struct LoadResult;
 
 class Process final
@@ -148,6 +151,13 @@ class Process final
     };
 
 public:
+    class ScopedDescriptionAllocation;
+
+    struct ELFIntrepreterDescription {
+        NonnullRefPtr<OpenFileDescription> description;
+        NonnullOwnPtr<KString> path;
+    };
+
     AK_MAKE_NONCOPYABLE(Process);
     AK_MAKE_NONMOVABLE(Process);
 
@@ -540,8 +550,6 @@ public:
 
     ErrorOr<void> exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, int recursion_depth = 0);
 
-    ErrorOr<LoadResult> load(Memory::AddressSpace& new_space, NonnullRefPtr<OpenFileDescription> main_program_description, RefPtr<OpenFileDescription> interpreter_description, Elf_Ehdr const& main_program_header, Optional<size_t> minimum_stack_size = {});
-
     void terminate_due_to_signal(u8 signal);
     ErrorOr<void> send_signal(u8 signal, Process* sender);
 
@@ -708,12 +716,11 @@ private:
     bool create_perf_events_buffer_if_needed();
     void delete_perf_events_buffer();
 
-    ErrorOr<void> do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, Elf_Ehdr const& main_program_header, Optional<size_t> minimum_stack_size = {});
     ErrorOr<FlatPtr> do_write(OpenFileDescription&, UserOrKernelBuffer const&, size_t, Optional<off_t> = {});
 
     ErrorOr<FlatPtr> do_statvfs(FileSystem const& path, Custody const*, statvfs* buf);
 
-    ErrorOr<RefPtr<OpenFileDescription>> find_elf_interpreter_for_executable(OpenFileDescription&, StringView path, Elf_Ehdr const& main_executable_header, size_t file_size, Optional<size_t>& minimum_stack_size);
+    ErrorOr<Optional<ELFIntrepreterDescription>> find_elf_interpreter_for_executable(OpenFileDescription&, StringView path, Elf_Ehdr const& main_program_header, size_t file_size, Optional<size_t>& minimum_stack_size);
 
     ErrorOr<void> do_kill(Process&, int signal);
     ErrorOr<void> do_killpg(ProcessGroupID pgrp, int signal);
@@ -815,7 +822,6 @@ public:
         u32 m_flags { 0 };
     };
 
-    class ScopedDescriptionAllocation;
     class OpenFileDescriptions {
         AK_MAKE_NONCOPYABLE(OpenFileDescriptions);
         AK_MAKE_NONMOVABLE(OpenFileDescriptions);
@@ -961,6 +967,55 @@ private:
 
     ErrorOr<NonnullRefPtr<Thread>> get_thread_from_pid_or_tid(pid_t pid_or_tid, Syscall::SchedulerParametersMode mode);
     ErrorOr<NonnullRefPtr<Thread>> get_thread_from_thread_list(pid_t tid);
+
+    struct LoadResult {
+        FlatPtr load_base { 0 };
+        FlatPtr entry_eip { 0 };
+        size_t size { 0 };
+        LockWeakPtr<Memory::Region> stack_region;
+    };
+
+    enum class ShouldAllowSyscalls {
+        No,
+        Yes,
+    };
+    static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, OpenFileDescription& object_description,
+        FlatPtr load_offset, ShouldAllowSyscalls should_allow_syscalls, Optional<size_t> const& minimum_stack_size);
+
+    ErrorOr<LoadResult> parse_and_load_elf_object(Memory::AddressSpace& new_space, Elf_Ehdr const& main_program_header,
+        NonnullRefPtr<OpenFileDescription> main_program_description, Optional<Process::ELFIntrepreterDescription> const& interpreter_description,
+        Optional<size_t> const& minimum_stack_size);
+
+    struct BaseThreadContext {
+        FlatPtr stack_pointer { 0 };
+        FlatPtr argv { 0 };
+        FlatPtr envp { 0 };
+        size_t argv_entries_size { 0 };
+    };
+    struct ELFLoadParameters {
+        BaseThreadContext new_userspace_thread_context {};
+        FlatPtr entry_eip { 0 };
+        Optional<ScopedDescriptionAllocation> main_program_fd_allocation;
+    };
+
+    static ErrorOr<BaseThreadContext> make_userspace_context_for_new_main_thread(Memory::Region& region, Vector<NonnullOwnPtr<KString>> const& arguments,
+        Vector<NonnullOwnPtr<KString>> const& environment, Array<ELF::AuxiliaryValue, auxiliary_vector_size> auxiliary_values);
+    ErrorOr<ELFLoadParameters> prepare_memory_space_for_execve(Memory::AddressSpace& new_space, Elf_Ehdr const& main_program_header,
+        NonnullRefPtr<OpenFileDescription> main_program_description, StringView main_program_path, Vector<NonnullOwnPtr<KString>> const& arguments,
+        Vector<NonnullOwnPtr<KString>> const& environment);
+
+    ErrorOr<NonnullRefPtr<Credentials>> generate_new_credentials_for_execve(NonnullRefPtr<OpenFileDescription> main_program_description, bool& executable_is_setid);
+
+    ErrorOr<void> apply_unveil_exec_data();
+
+    ErrorOr<void> do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments,
+        Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread,
+        InterruptsState& previous_interrupts_state, Elf_Ehdr const& main_program_header);
+
+    void commit_exec(NonnullRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtr<KString> main_program_path,
+        Vector<NonnullOwnPtr<KString>> arguments, NonnullRefPtr<Credentials> new_credentials, bool executable_is_setid, Memory::Region& signal_trampoline_region,
+        Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state,
+        ELFLoadParameters load_parameters);
 
     SpinlockProtected<Thread::ListInProcess, LockRank::None> m_thread_list {};
 
