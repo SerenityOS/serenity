@@ -23,6 +23,8 @@ import shlex
 QEMU_MINIMUM_REQUIRED_MAJOR_VERSION = 6
 QEMU_MINIMUM_REQUIRED_MINOR_VERSION = 2
 
+BUILD_DIRECTORY = Path(environ.get("SERENITY_BUILD_DIR") or Path.cwd())
+
 
 class RunError(Exception):
     pass
@@ -689,7 +691,7 @@ hostfwd=tcp:{config.host_ip}:2222-10.0.2.15:22"
 
 def set_up_kernel(config: Configuration):
     if config.architecture == Arch.Aarch64:
-        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel"]
+        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/kernel8.img"]
     elif config.architecture == Arch.RISCV64:
         config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel.bin"]
     elif config.architecture == Arch.x86_64:
@@ -715,7 +717,12 @@ def set_up_machine_devices(config: Configuration):
             # FIXME: Windows QEMU crashes when we set the same display as usual here.
             config.display_backend = None
             config.audio_devices = []
-            config.extra_arguments.extend(["-serial", "stdio"])
+            config.extra_arguments.extend(
+                [
+                    "-serial", "stdio",
+                    "-dtb", str(BUILD_DIRECTORY.parent / "caches" / "bcm2710-rpi-3-b.dtb")
+                ]
+            )
             config.qemu_cpu = None
             return
 
@@ -898,8 +905,7 @@ def configure_and_run():
 
     arguments = assemble_arguments(config)
 
-    build_directory = environ.get("SERENITY_BUILD", ".")
-    os.chdir(build_directory)
+    os.chdir(BUILD_DIRECTORY)
 
     with TapController(config.machine_type):
         run(arguments)
