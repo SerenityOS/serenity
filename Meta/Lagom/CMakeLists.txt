@@ -539,6 +539,7 @@ if (BUILD_LAGOM)
         lagom_utility(base64 SOURCES ../../Userland/Utilities/base64.cpp LIBS LibMain)
 
         if (NOT EMSCRIPTEN)
+            lagom_utility(set-elf-jailed SOURCES ../../Userland/Utilities/set-elf-jailed.cpp LIBS LibELF LibMain)
             lagom_utility(disasm SOURCES ../../Userland/Utilities/disasm.cpp LIBS LibELF LibX86 LibMain)
             lagom_utility(file SOURCES ../../Userland/Utilities/file.cpp LIBS LibAudio LibArchive LibCompress LibELF LibGfx LibIPC LibMain)
         endif()
