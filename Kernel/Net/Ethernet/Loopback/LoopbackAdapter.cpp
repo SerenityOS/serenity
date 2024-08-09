@@ -5,7 +5,7 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/Net/LoopbackAdapter.h>
+#include <Kernel/Net/Ethernet/Loopback/LoopbackAdapter.h>
 
 namespace Kernel {
 
