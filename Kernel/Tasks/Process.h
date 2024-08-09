@@ -119,7 +119,7 @@ union GlobalFutexKey {
 };
 static_assert(sizeof(GlobalFutexKey) == (sizeof(FlatPtr) * 2));
 
-static constexpr size_t auxiliary_vector_size = 15;
+static constexpr size_t auxiliary_vector_size = 16;
 
 struct LoadResult;
 
