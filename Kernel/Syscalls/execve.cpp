@@ -31,7 +31,7 @@ namespace Kernel {
 
 extern Memory::Region* g_signal_trampoline_region;
 
-static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation);
+static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, StringView interpreter_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation);
 
 static bool validate_stack_size(Vector<NonnullOwnPtr<KString>> const& arguments, Vector<NonnullOwnPtr<KString>> const& environment, Array<ELF::AuxiliaryValue, auxiliary_vector_size> const& auxiliary)
 {
@@ -543,7 +543,7 @@ void Process::commit_exec(NonnullRefPtr<OpenFileDescription> main_program_descri
     VERIFY(Processor::in_critical());
 }
 
-static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation)
+static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, StringView interpreter_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation)
 {
     return { {
         // PHDR/EXECFD
@@ -578,6 +578,8 @@ static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vect
         { ELF::AuxiliaryValue::Random, nullptr },
 
         { ELF::AuxiliaryValue::ExecFilename, executable_path },
+
+        { ELF::AuxiliaryValue::InterpreterFilename, interpreter_path },
 
         main_program_fd_allocation.has_value() ? ELF::AuxiliaryValue { ELF::AuxiliaryValue::ExecFileDescriptor, main_program_fd_allocation->fd } : ELF::AuxiliaryValue { ELF::AuxiliaryValue::Ignore, 0L },
 
@@ -836,7 +838,9 @@ ErrorOr<Process::ELFLoadParameters> Process::prepare_memory_space_for_execve(Mem
     auto load_result = TRY(parse_and_load_elf_object(new_space, main_program_header, main_program_description, interpreter_description, minimum_stack_size));
 
     auto credentials = this->credentials();
-    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, credentials->uid(), credentials->euid(), credentials->gid(), credentials->egid(), main_program_path, main_program_fd_allocation);
+
+    auto interpreter_path = interpreter_description.has_value() ? interpreter_description.value().path->view() : ""sv;
+    auto auxv = generate_auxiliary_vector(load_result.load_base, load_result.entry_eip, credentials->uid(), credentials->euid(), credentials->gid(), credentials->egid(), main_program_path, interpreter_path, main_program_fd_allocation);
 
     // FIXME: How much stack space does process startup need?
     if (!validate_stack_size(arguments, environment, auxv))

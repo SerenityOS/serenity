@@ -40,7 +40,8 @@ struct AuxiliaryValue {
         HwCap2 = AT_HWCAP2,
         ExecFilename = AT_EXECFN,
         ExeBaseAddress = AT_EXE_BASE,
-        ExeSize = AT_EXE_SIZE
+        ExeSize = AT_EXE_SIZE,
+        InterpreterFilename = AT_INTERPFN,
     };
 
     AuxiliaryValue(Type type, long val)
