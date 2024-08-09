@@ -23,45 +23,6 @@ static void run_cat(Vector<char const*>&& arguments, StringView standard_input, 
         FAIL(ByteString::formatted("cat didn't exit cleanly: status: {}, stdout:{}, stderr: {}", static_cast<int>(status), StringView { stdout.bytes() }, StringView { stderr.bytes() }));
     }
 
-    // // Print out stdout as raw bytes
-    // out("Raw stdout         : "sv);
-    // for (auto& c : StringView { stdout.bytes() }) {
-    //     out("{:02x} "sv, c);
-    // }
-    // out("\n"sv);
-    //
-    // // Print out stdout as raw bytes
-    // out("Raw expected stdout: "sv);
-    // for (auto& c : StringView { expected_stdout.bytes() }) {
-    //     out("{:02x} "sv, c);
-    // }
-    // out("\n"sv);
-
-    // // Convert stdout to a stringview and print it out
-    // out("stdout:\n"sv);
-    // for (char c : StringView(stdout)) {
-    //     if (c == '\t') {
-    //         out("\\t"sv);
-    //     } else if (c == '\n') {
-    //         out("\\n"sv);
-    //     } else {
-    //         out("{}", StringView { &c, 1 });
-    //     }
-    // }
-    // out("\n\n"sv);
-    //
-    // out("Expected stdout:\n"sv);
-    // for (char c : expected_stdout) {
-    //     if (c == '\t') {
-    //         out("\\t"sv);
-    //     } else if (c == '\n') {
-    //         out("\\n"sv);
-    //     } else {
-    //         out("{}", StringView { &c, 1 });
-    //     }
-    // }
-    // out("\n"sv);
-
     EXPECT_EQ(StringView { expected_stdout.bytes() }, StringView { stdout.bytes() });
 }
 
