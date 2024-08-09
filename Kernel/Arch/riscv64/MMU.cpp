@@ -226,8 +226,11 @@ static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
     if (RISCV64::CSR::SATP::read().MODE != RISCV64::CSR::SATP::Mode::Bare)
         panic_without_mmu("Kernel booted with MMU enabled"sv);
 
-    // Copy the FDT to a known location
     ::DeviceTree::FlattenedDeviceTreeHeader* fdt_header = bit_cast<::DeviceTree::FlattenedDeviceTreeHeader*>(fdt_phys_addr);
+    if (fdt_header->magic != 0xd00dfeed)
+        panic_without_mmu("Invalid FDT passed"sv);
+
+    // Copy the FDT to a known location
     u8* fdt_storage = bit_cast<u8*>(fdt_phys_addr);
     if (fdt_header->totalsize > DeviceTree::fdt_storage_size)
         panic_without_mmu("Passed FDT is bigger than the internal storage"sv);
