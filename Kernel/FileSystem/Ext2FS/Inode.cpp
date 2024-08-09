@@ -294,11 +294,11 @@ ErrorOr<Ext2FS::BlockList> Ext2FSInode::compute_block_list_impl(Vector<Ext2FS::B
         return {};
     };
 
-    auto process_block_array = [&](auto current_logical_index, unsigned level, auto array_block_index, auto&& callback) -> ErrorOr<void> {
+    auto process_block_array = [&](auto current_logical_index, unsigned level, auto array_block_index, ByteBuffer& array_storage, auto&& callback) -> ErrorOr<void> {
         if (meta_blocks)
             TRY(meta_blocks->try_append(array_block_index));
 
-        auto array_storage = TRY(ByteBuffer::create_uninitialized(block_size));
+        TRY(array_storage.try_resize(block_size));
         auto* array = (u32*)array_storage.data();
         auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)array);
         TRY(fs().read_block(array_block_index, &buffer, block_size, 0));
@@ -314,24 +314,26 @@ ErrorOr<Ext2FS::BlockList> Ext2FSInode::compute_block_list_impl(Vector<Ext2FS::B
             TRY(set_block(i, m_raw_inode.i_block[i]));
     }
 
+    ByteBuffer block_storage[3] = {};
+
     if (m_raw_inode.i_block[EXT2_IND_BLOCK]) {
-        TRY(process_block_array(EXT2_NDIR_BLOCKS, 1, m_raw_inode.i_block[EXT2_IND_BLOCK], [&](auto logical_block_index, auto on_disk_index) -> ErrorOr<void> {
+        TRY(process_block_array(EXT2_NDIR_BLOCKS, 1, m_raw_inode.i_block[EXT2_IND_BLOCK], block_storage[0], [&](auto logical_block_index, auto on_disk_index) -> ErrorOr<void> {
             return set_block(logical_block_index, on_disk_index);
         }));
     }
 
     if (m_raw_inode.i_block[EXT2_DIND_BLOCK]) {
-        TRY(process_block_array(singly_indirect_block_capacity(), 2, m_raw_inode.i_block[EXT2_DIND_BLOCK], [&](auto logical_block_index, auto on_disk_index) -> ErrorOr<void> {
-            return process_block_array(logical_block_index, 1, on_disk_index, [&](auto logical_block_index2, auto on_disk_index2) -> ErrorOr<void> {
+        TRY(process_block_array(singly_indirect_block_capacity(), 2, m_raw_inode.i_block[EXT2_DIND_BLOCK], block_storage[1], [&](auto logical_block_index, auto on_disk_index) -> ErrorOr<void> {
+            return process_block_array(logical_block_index, 1, on_disk_index, block_storage[0], [&](auto logical_block_index2, auto on_disk_index2) -> ErrorOr<void> {
                 return set_block(logical_block_index2, on_disk_index2);
             });
         }));
     }
 
     if (m_raw_inode.i_block[EXT2_TIND_BLOCK]) {
-        TRY(process_block_array(doubly_indirect_block_capacity(), 3, m_raw_inode.i_block[EXT2_TIND_BLOCK], [&](auto logical_block_index, auto on_disk_index) -> ErrorOr<void> {
-            return process_block_array(logical_block_index, 2, on_disk_index, [&](auto logical_block_index2, auto on_disk_index2) -> ErrorOr<void> {
-                return process_block_array(logical_block_index2, 1, on_disk_index2, [&](auto logical_block_index3, auto on_disk_index3) -> ErrorOr<void> {
+        TRY(process_block_array(doubly_indirect_block_capacity(), 3, m_raw_inode.i_block[EXT2_TIND_BLOCK], block_storage[2], [&](auto logical_block_index, auto on_disk_index) -> ErrorOr<void> {
+            return process_block_array(logical_block_index, 2, on_disk_index, block_storage[1], [&](auto logical_block_index2, auto on_disk_index2) -> ErrorOr<void> {
+                return process_block_array(logical_block_index2, 1, on_disk_index2, block_storage[0], [&](auto logical_block_index3, auto on_disk_index3) -> ErrorOr<void> {
                     return set_block(logical_block_index3, on_disk_index3);
                 });
             });
