@@ -136,6 +136,7 @@ class Configuration:
     machine_type: MachineType = MachineType.Default
     enable_gdb: bool = False
     enable_gl: bool = False
+    enable_tpm: bool = False
     screen_count: int = 1
     host_ip: str = "127.0.0.1"
     ethernet_device_type: str = "e1000"
@@ -167,6 +168,8 @@ class Configuration:
     display_device: str | None = "VGA,vgamem_mb=64"
     # QEMU -netdev
     network_backend: str | None = None
+
+    tpm_arguments = []
     # A QEMU -device for networking.
     # Note that often, there are other network devices in the generic device list, added by specific machine types.
     network_default_device: str | None = None
@@ -687,6 +690,19 @@ hostfwd=tcp:{config.host_ip}:2222-10.0.2.15:22"
         config.network_default_device = f"{config.ethernet_device_type},netdev=breh"
 
 
+def set_up_tpm(config: Configuration):
+    config.enable_tpm = environ.get("SERENITY_ENABLE_TPM_EMULATION") == "1"
+
+    if config.enable_tpm:
+        print("Enabling TPM")
+        config.tpm_arguments = [
+            "-chardev", "socket,id=chrtpm,path=/tmp/swtpm-sock",
+            "-tpmdev", "emulator,id=tpm0,chardev=chrtpm",
+            "-device", "tpm-tis,tpmdev=tpm0",
+        ]
+        config.kernel_cmdline.append("tpm=on")
+
+
 def set_up_kernel(config: Configuration):
     if config.architecture == Arch.Aarch64:
         config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel"]
@@ -823,6 +839,7 @@ def assemble_arguments(config: Configuration) -> list[str | Path]:
         *config.kernel_and_initrd_arguments,
         *config.packet_logging_arguments,
         *config.spice_arguments,
+        *config.tpm_arguments,
         *config.extra_arguments,
         *config.accelerator_arguments,
         *config.kernel_cmdline_arguments,
@@ -895,6 +912,7 @@ def configure_and_run():
     set_up_network_hardware(config)
     set_up_kernel(config)
     set_up_machine_devices(config)
+    set_up_tpm(config)
 
     arguments = assemble_arguments(config)
 
