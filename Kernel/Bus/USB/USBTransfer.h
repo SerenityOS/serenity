@@ -29,8 +29,8 @@ public:
     void set_complete() { m_complete = true; }
     void set_error_occurred() { m_error_occurred = true; }
 
-    ErrorOr<void> write_buffer(u16 len, void* data);
-    ErrorOr<void> write_buffer(u16 len, UserOrKernelBuffer data);
+    ErrorOr<void> write_buffer(u16 len, void const* data);
+    ErrorOr<void> write_buffer(u16 len, UserOrKernelBuffer const data);
 
     // `const` here makes sure we don't blow up by writing to a physical address
     USBRequestData const& request() const { return m_request; }

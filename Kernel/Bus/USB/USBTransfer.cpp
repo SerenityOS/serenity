@@ -43,7 +43,7 @@ void Transfer::set_setup_packet(USBRequestData const& request)
     m_request = request;
 }
 
-ErrorOr<void> Transfer::write_buffer(u16 len, void* data)
+ErrorOr<void> Transfer::write_buffer(u16 len, void const* data)
 {
     VERIFY(len <= m_dma_buffer.size());
     m_transfer_data_size = len;
@@ -52,7 +52,7 @@ ErrorOr<void> Transfer::write_buffer(u16 len, void* data)
     return {};
 }
 
-ErrorOr<void> Transfer::write_buffer(u16 len, UserOrKernelBuffer data)
+ErrorOr<void> Transfer::write_buffer(u16 len, UserOrKernelBuffer const data)
 {
     VERIFY(len <= m_dma_buffer.size());
     m_transfer_data_size = len;
