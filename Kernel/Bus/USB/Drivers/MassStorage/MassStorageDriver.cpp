@@ -131,6 +131,60 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
     auto in_pipe = TRY(BulkInPipe::create(device.controller(), device, in_pipe_address, in_max_packet_size));
     auto out_pipe = TRY(BulkOutPipe::create(device.controller(), device, out_pipe_address, out_max_packet_size));
 
+    SCSI::Inquiry inquiry_command {};
+    inquiry_command.allocation_length = sizeof(SCSI::StandardInquiryData);
+
+    SCSI::StandardInquiryData inquiry_data;
+
+    auto inquiry_response = TRY(send_scsi_command<SCSIDataDirection::DataToHost>(*out_pipe, *in_pipe, inquiry_command, &inquiry_data, sizeof(inquiry_data)));
+
+    if (inquiry_response.status != CSWStatus::Passed) {
+        dmesgln("SCSI/BBB: Inquiry failed with code {}", to_underlying(inquiry_response.status));
+    } else {
+        dbgln("SCSI/BBB: Inquiry succeeded");
+        dbgln("    Device Type: {}", inquiry_data.device_type_string());
+        dbgln("    Removable: {}", (inquiry_data.removable & 0x80) == 0x80);
+        dbgln("    Version: {:#02x}", inquiry_data.version);
+        dbgln("    Vendor: {}", StringView { inquiry_data.vendor_id, 8 });
+        dbgln("    Product: {}", StringView { inquiry_data.product_id, 16 });
+        dbgln("    Revision: {}", StringView { inquiry_data.product_revision_level, 4 });
+    }
+
+    size_t tries = 0;
+    constexpr size_t max_tries = 5;
+    while (tries < max_tries) {
+        SCSI::TestUnitReady test_unit_ready_command {};
+        auto test_unit_ready_response = TRY(send_scsi_command<SCSIDataDirection::NoData>(*out_pipe, *in_pipe, test_unit_ready_command));
+
+        if (test_unit_ready_response.status == CSWStatus::Passed) {
+            break;
+        }
+
+        SCSI::RequestSense request_sense_command {};
+        SCSI::FixedFormatSenseData sense_data;
+
+        request_sense_command.allocation_length = sizeof(sense_data);
+
+        auto request_sense_response = TRY(send_scsi_command<SCSIDataDirection::DataToHost>(*out_pipe, *in_pipe, request_sense_command, &sense_data, sizeof(sense_data)));
+
+        if (request_sense_response.status != CSWStatus::Passed) {
+            dmesgln("SCSI/BBB: Request Sense failed with code {}, possibly unimplemented", to_underlying(request_sense_response.status));
+            return EIO;
+        }
+        // FIXME: Maybe hide this behind a debug flag
+        dbgln("SCSI/BBB: TestUnitReady Failed:");
+        // FIXME: to_string() these
+        dbgln("    Sense Key: {:#02x}", (u8)sense_data.sense_key);
+        dbgln("    Additional Sense Code: {:#02x}", (u8)sense_data.additional_sense_code);
+        dbgln("    Additional Sense Code Qualifier: {:#02x}", (u8)sense_data.additional_sense_code_qualifier);
+
+        ++tries;
+    }
+    if (tries == max_tries) {
+        dmesgln("SCSI/BBB: TestUnitReady failed too many times");
+        return EIO;
+    }
+
     SCSI::ReadCapacity10Parameters capacity;
     auto status = TRY(send_scsi_command<SCSIDataDirection::DataToHost>(*out_pipe, *in_pipe, SCSI::ReadCapacity10 {}, &capacity, sizeof(capacity)));
     if (status.status != CSWStatus::Passed) {
