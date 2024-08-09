@@ -9,10 +9,10 @@
 #include <AK/TemporaryChange.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Palette.h>
+#include <LibShell/NodeVisitor.h>
+#include <LibShell/Parser.h>
+#include <LibShell/SyntaxHighlighter.h>
 #include <LibSyntax/Document.h>
-#include <Shell/NodeVisitor.h>
-#include <Shell/Parser.h>
-#include <Shell/SyntaxHighlighter.h>
 
 namespace Shell {
 

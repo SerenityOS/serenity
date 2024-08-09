@@ -7,7 +7,7 @@
 #pragma once
 
 #include <LibCodeComprehension/CodeComprehensionEngine.h>
-#include <Shell/Shell.h>
+#include <LibShell/Shell.h>
 
 namespace CodeComprehension::Shell {
 
