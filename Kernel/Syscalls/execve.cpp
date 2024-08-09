@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/FixedArray.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <Kernel/Arch/CPU.h>
@@ -699,45 +700,83 @@ static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vect
     } };
 }
 
-static ErrorOr<Vector<NonnullOwnPtr<KString>>> find_shebang_interpreter_for_executable(char const first_page[], size_t nread)
+static bool is_executable_starting_with_shebang(Span<u8> const& preliminary_buffer)
 {
+    return preliminary_buffer.size() > 2 && preliminary_buffer[0] == '#' && preliminary_buffer[1] == '!';
+}
+
+static ErrorOr<Vector<NonnullOwnPtr<KString>>> find_shebang_interpreter_for_executable(Span<u8> const& line_buffer)
+{
+    VERIFY(is_executable_starting_with_shebang(line_buffer));
     int word_start = 2;
     size_t word_length = 0;
-    if (nread > 2 && first_page[0] == '#' && first_page[1] == '!') {
-        Vector<NonnullOwnPtr<KString>> interpreter_words;
+    Vector<NonnullOwnPtr<KString>> interpreter_words;
 
-        for (size_t i = 2; i < nread; ++i) {
-            if (first_page[i] == '\n') {
-                break;
-            }
+    bool found_line_break = false;
 
-            if (first_page[i] != ' ') {
-                ++word_length;
-            }
-
-            if (first_page[i] == ' ') {
-                if (word_length > 0) {
-                    auto word = TRY(KString::try_create(StringView { &first_page[word_start], word_length }));
-                    TRY(interpreter_words.try_append(move(word)));
-                }
-                word_length = 0;
-                word_start = i + 1;
-            }
+    for (size_t i = 2; i < line_buffer.size(); ++i) {
+        if (line_buffer[i] == '\n') {
+            found_line_break = true;
+            break;
         }
 
-        if (word_length > 0) {
-            auto word = TRY(KString::try_create(StringView { &first_page[word_start], word_length }));
-            TRY(interpreter_words.try_append(move(word)));
+        if (line_buffer[i] != ' ') {
+            ++word_length;
         }
 
-        if (!interpreter_words.is_empty())
-            return interpreter_words;
+        if (line_buffer[i] == ' ') {
+            if (word_length > 0) {
+                auto word = TRY(KString::try_create(StringView { line_buffer.slice(word_start, word_length) }));
+                TRY(interpreter_words.try_append(move(word)));
+            }
+            word_length = 0;
+            word_start = i + 1;
+        }
     }
+
+    // This is an indication that the provided buffer has not sufficient data
+    // within it to find the entire interpreter path.
+    if (!found_line_break)
+        return ENOBUFS;
+
+    if (word_length > 0) {
+        auto word = TRY(KString::try_create(StringView { line_buffer.slice(word_start, word_length) }));
+        TRY(interpreter_words.try_append(move(word)));
+    }
+
+    if (!interpreter_words.is_empty())
+        return interpreter_words;
 
     return ENOEXEC;
 }
 
-ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(OpenFileDescription& elf_file, StringView path, Elf_Ehdr const& main_executable_header, size_t main_executable_header_size, size_t file_size, Optional<size_t>& minimum_stack_size)
+static ErrorOr<FixedArray<u8>> read_elf_buffer_including_program_headers(OpenFileDescription& elf_file, Elf_Ehdr const& main_executable_header)
+{
+    auto program_header_offset = static_cast<size_t>(main_executable_header.e_phoff);
+    auto program_header_entry_size = static_cast<size_t>(main_executable_header.e_phentsize);
+    auto program_header_entries_count = static_cast<size_t>(main_executable_header.e_phnum);
+
+    if (Checked<size_t>::multiplication_would_overflow(program_header_entry_size, program_header_entries_count))
+        return EOVERFLOW;
+
+    if (Checked<size_t>::addition_would_overflow(program_header_offset, (program_header_entry_size * program_header_entries_count)))
+        return EOVERFLOW;
+
+    auto last_needed_byte_offset_on_program_header_list = program_header_offset + (program_header_entry_size * program_header_entries_count);
+    if (last_needed_byte_offset_on_program_header_list < sizeof(Elf_Ehdr))
+        return EINVAL;
+
+    auto elf_buffer = TRY(FixedArray<u8>::create(last_needed_byte_offset_on_program_header_list));
+    auto elf_read_buffer = UserOrKernelBuffer::for_kernel_buffer(elf_buffer.data());
+    {
+        auto nread = TRY(elf_file.read(elf_read_buffer, 0, elf_buffer.span().size()));
+        if (nread < elf_buffer.span().size())
+            return EIO;
+    }
+    return elf_buffer;
+}
+
+ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(OpenFileDescription& elf_file, StringView path, Elf_Ehdr const& main_executable_header, size_t file_size, Optional<size_t>& minimum_stack_size)
 {
     // We can't exec an ET_REL, as that's just an object file from the compiler,
     // and we can't exec an ET_CORE as it's just a coredump.
@@ -746,9 +785,11 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
     if (main_executable_header.e_type != ET_EXEC && main_executable_header.e_type != ET_DYN)
         return ENOEXEC;
 
+    auto main_program_with_program_headers_buffer = TRY(read_elf_buffer_including_program_headers(elf_file, main_executable_header));
+
     Optional<size_t> main_executable_requested_stack_size {};
     Optional<Elf_Phdr> maybe_interpreter_path_program_header {};
-    if (!ELF::validate_program_headers(main_executable_header, file_size, { &main_executable_header, main_executable_header_size }, maybe_interpreter_path_program_header, &main_executable_requested_stack_size)) {
+    if (!ELF::validate_program_headers(main_executable_header, file_size, main_program_with_program_headers_buffer.span(), maybe_interpreter_path_program_header, &main_executable_requested_stack_size)) {
         dbgln("exec({}): File has invalid ELF Program headers", path);
         return ENOEXEC;
     }
@@ -793,21 +834,23 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
         return ENOEXEC;
 
     static_assert(sizeof(Elf_Ehdr) < PAGE_SIZE);
-    auto first_page = Array<u8, PAGE_SIZE>::from_repeated_value(0);
-    auto first_page_buffer = UserOrKernelBuffer::for_kernel_buffer(first_page.data());
-    auto nread = TRY(interpreter_description->read(first_page_buffer, first_page.size()));
+    auto elf_interpreter_buffer = Array<u8, sizeof(Elf_Ehdr)>::from_repeated_value(0);
+    auto elf_interpreter_read_buffer = UserOrKernelBuffer::for_kernel_buffer(elf_interpreter_buffer.data());
+    auto nread = TRY(interpreter_description->read(elf_interpreter_read_buffer, elf_interpreter_buffer.span().size()));
     if (nread < sizeof(Elf_Ehdr))
         return ENOEXEC;
 
-    auto const* elf_header = bit_cast<Elf_Ehdr const*>(first_page.data());
-    if (!ELF::validate_elf_header(*elf_header, interp_metadata.size)) {
+    auto const* interpreter_executable_header = bit_cast<Elf_Ehdr const*>(elf_interpreter_buffer.data());
+    if (!ELF::validate_elf_header(*interpreter_executable_header, interp_metadata.size)) {
         dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_path);
         return ENOEXEC;
     }
 
+    auto elf_interpreter_with_program_headers_buffer = TRY(read_elf_buffer_including_program_headers(*interpreter_description, *interpreter_executable_header));
+
     Optional<size_t> interpreter_requested_stack_size {};
     Optional<Elf_Phdr> maybe_interpreter_interpreter_path_program_header {};
-    if (!ELF::validate_program_headers(*elf_header, interp_metadata.size, first_page.span().trim(nread), maybe_interpreter_interpreter_path_program_header, &interpreter_requested_stack_size)) {
+    if (!ELF::validate_program_headers(*interpreter_executable_header, interp_metadata.size, elf_interpreter_with_program_headers_buffer.span(), maybe_interpreter_interpreter_path_program_header, &interpreter_requested_stack_size)) {
         dbgln("exec({}): Interpreter ({}) has invalid ELF Program headers", path, interpreter_path);
         return ENOEXEC;
     }
@@ -851,15 +894,21 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
 
     VERIFY(description->inode());
 
-    // Read the first page of the program into memory so we can validate the binfmt of it
-    char first_page[PAGE_SIZE];
-    auto first_page_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&first_page);
-    auto nread = TRY(description->read(first_page_buffer, sizeof(first_page)));
+    // Read just the size of ELF header of the program into memory so we can start parsing it.
+    // The size of a ELF header should suffice to find the shebang sign (known as #! sign) if the file has it
+    // in the start.
+    auto preliminary_buffer = Array<u8, sizeof(Elf_Ehdr)>::from_repeated_value(0);
+    auto preliminary_read_buffer = UserOrKernelBuffer::for_kernel_buffer(preliminary_buffer.data());
+    auto nread = TRY(description->read(preliminary_read_buffer, 0, preliminary_buffer.span().size()));
 
     // 1) #! interpreted file
-    auto shebang_result = find_shebang_interpreter_for_executable(first_page, nread);
-    if (!shebang_result.is_error()) {
-        auto shebang_words = shebang_result.release_value();
+    if (is_executable_starting_with_shebang(preliminary_buffer)) {
+        // FIXME: PAGE_SIZE seems like enough for specifying an interpreter for now.
+        // We might need to re-evaluate this but to avoid further allocations, this is how it is for now.
+        auto shebang_line_buffer = Array<u8, PAGE_SIZE>::from_repeated_value(0);
+        auto shebang_line_read_buffer = UserOrKernelBuffer::for_kernel_buffer(shebang_line_buffer.data());
+        TRY(description->read(shebang_line_read_buffer, 0, shebang_line_buffer.span().size()));
+        auto shebang_words = TRY(find_shebang_interpreter_for_executable(shebang_line_buffer));
         auto shebang_path = TRY(shebang_words.first()->try_clone());
         arguments[0] = move(path);
         TRY(arguments.try_prepend(move(shebang_words)));
@@ -870,7 +919,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
 
     if (nread < sizeof(Elf_Ehdr))
         return ENOEXEC;
-    auto const* main_program_header = (Elf_Ehdr*)first_page;
+    auto const* main_program_header = bit_cast<Elf_Ehdr const*>(preliminary_buffer.data());
 
     if (!ELF::validate_elf_header(*main_program_header, metadata.size)) {
         dbgln("exec({}): File has invalid ELF header", path);
@@ -878,7 +927,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
     }
 
     Optional<size_t> minimum_stack_size {};
-    auto interpreter_description = TRY(find_elf_interpreter_for_executable(*description, path->view(), *main_program_header, nread, metadata.size, minimum_stack_size));
+    auto interpreter_description = TRY(find_elf_interpreter_for_executable(*description, path->view(), *main_program_header, metadata.size, minimum_stack_size));
     return do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, previous_interrupts_state, *main_program_header, minimum_stack_size);
 }
 
