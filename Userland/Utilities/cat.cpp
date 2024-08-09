@@ -18,10 +18,14 @@ struct LineTracker {
 
 static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyBytes buffer_span, bool show_only_non_blank_lines = false)
 {
+    if (buffer_span.size() == 0) {
+        return;
+    }
+
     size_t i = 0;
 
+    // Handle special case where file starts with newlines
     if (show_only_non_blank_lines) {
-        // Handle special case where file starts with newlines
         while (i < buffer_span.size() && buffer_span[i] == '\n') {
             out("{:c}", buffer_span[i]);
             i += 1;
@@ -36,23 +40,24 @@ static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyB
         }
         if (buffer_span[i] == '\n') {
             if (show_only_non_blank_lines) {
-                // Go until the last newline.
+                // Suck up all the newlines until we're looking at the last newline.
                 //
-                // Need to let the code outside of this for loop process the current
+                // Then let the code outside of this for loop process the current
                 // character so we drop out if we're on the last character OR we're
                 // at the last newline.
-                while (i < buffer_span.size() && buffer_span[i+1] == '\n') {
-                    if (i == buffer_span.size()-1) {
+                while (i < buffer_span.size()) {
+                    if (i == buffer_span.size() - 1) {
                         // Last character - print it out and be done
                         out("{:c}", buffer_span[i]);
                         return;
                     }
-
-                    if (buffer_span[i+1] == '\n') {
-                        // Still more newlines to go
-                        out("{:c}", buffer_span[i]);
-                        i += 1;;
+                    if (buffer_span[i+1] != '\n') {
+                        // We're at the last newline
+                        break;
                     }
+                    // Still more newlines to go
+                    out("{:c}", buffer_span[i]);
+                    i += 1;
                 }
             }
             line_tracker.display_line_number = true;
