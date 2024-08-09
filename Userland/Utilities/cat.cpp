@@ -38,11 +38,6 @@ static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyB
         i++;
     }
 
-    if (i == buffer_span.size()) {
-        // File had just newlines
-        return;
-    }
-
     out("{: >6}\t", line_tracker.line_count);
     line_tracker.line_count++;
 
