@@ -11,6 +11,8 @@
 
 #pragma GCC diagnostic ignored "-Warray-bounds"
 
+namespace Kernel {
+
 class [[gnu::packed]] EthernetFrameHeader {
 public:
     EthernetFrameHeader() = default;
@@ -36,3 +38,11 @@ private:
 };
 
 static_assert(sizeof(EthernetFrameHeader) == 14);
+
+enum EtherType : u16 {
+    ARP = 0x0806,
+    IPv4 = 0x0800,
+    IPv6 = 0x86DD,
+};
+
+}
