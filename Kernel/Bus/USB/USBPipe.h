@@ -99,8 +99,8 @@ class BulkOutPipe : public Pipe {
 public:
     static ErrorOr<NonnullOwnPtr<BulkOutPipe>> create(USBController const& controller, Device const& device, u8 endpoint_address, u16 max_packet_size, size_t buffer_size = PAGE_SIZE);
 
-    ErrorOr<size_t> submit_bulk_out_transfer(size_t length, void* data);
-    ErrorOr<size_t> submit_bulk_out_transfer(size_t length, UserOrKernelBuffer data);
+    ErrorOr<size_t> submit_bulk_out_transfer(size_t length, void const* data);
+    ErrorOr<size_t> submit_bulk_out_transfer(size_t length, UserOrKernelBuffer const data);
 
 private:
     BulkOutPipe(USBController const& controller, Device const& device, u8 endpoint_address, u16 max_packet_size, NonnullOwnPtr<Memory::Region> dma_buffer);

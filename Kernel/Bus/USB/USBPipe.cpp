@@ -123,7 +123,7 @@ BulkOutPipe::BulkOutPipe(USBController const& controller, Device const& device, 
 {
 }
 
-ErrorOr<size_t> BulkOutPipe::submit_bulk_out_transfer(size_t length, void* data)
+ErrorOr<size_t> BulkOutPipe::submit_bulk_out_transfer(size_t length, void const* data)
 {
     VERIFY(length <= m_dma_buffer->size());
 
@@ -140,7 +140,7 @@ ErrorOr<size_t> BulkOutPipe::submit_bulk_out_transfer(size_t length, void* data)
     return transfer_length;
 }
 
-ErrorOr<size_t> BulkOutPipe::submit_bulk_out_transfer(size_t length, UserOrKernelBuffer data)
+ErrorOr<size_t> BulkOutPipe::submit_bulk_out_transfer(size_t length, UserOrKernelBuffer const data)
 {
     VERIFY(length <= m_dma_buffer->size());
 
