@@ -58,6 +58,75 @@ struct CommandStatusWrapper {
 };
 static_assert(AssertSize<CommandStatusWrapper, 13>());
 
+enum class SCSIDataDirection {
+    DataToDevice,
+    DataToHost,
+    NoData
+};
+
+template<SCSIDataDirection Direction, typename Command, typename CommandData = void>
+static ErrorOr<CommandStatusWrapper> send_scsi_command(
+    USB::BulkOutPipe& out_pipe, USB::BulkInPipe& in_pipe,
+    Command const& command,
+    Conditional<Direction == SCSIDataDirection::DataToHost, CommandData, CommandData const>* data = nullptr, size_t data_size = 0)
+{
+    CommandBlockWrapper command_block {};
+    command_block.transfer_length = data_size;
+    if constexpr (Direction == SCSIDataDirection::DataToHost)
+        command_block.direction = CBWDirection::DataIn;
+    else
+        command_block.direction = CBWDirection::DataOut;
+
+    command_block.set_command(command);
+
+    TRY(out_pipe.submit_bulk_out_transfer(sizeof(command_block), &command_block));
+
+    if constexpr (Direction == SCSIDataDirection::DataToHost) {
+        TRY(in_pipe.submit_bulk_in_transfer(data_size, data));
+    } else if constexpr (Direction == SCSIDataDirection::DataToDevice) {
+        TRY(out_pipe.submit_bulk_out_transfer(data_size, data));
+    } else {
+        static_assert(IsSame<CommandData, void>);
+        VERIFY(data_size == 0);
+        VERIFY(data == nullptr);
+    }
+
+    CommandStatusWrapper status;
+    TRY(in_pipe.submit_bulk_in_transfer(sizeof(status), &status));
+
+    return status;
+}
+
+template<SCSIDataDirection Direction, typename Command>
+requires(Direction != SCSIDataDirection::NoData)
+static ErrorOr<CommandStatusWrapper> send_scsi_command(
+    USB::BulkOutPipe& out_pipe, USB::BulkInPipe& in_pipe,
+    Command const& command,
+    Conditional<Direction == SCSIDataDirection::DataToHost, UserOrKernelBuffer, UserOrKernelBuffer const> data, size_t data_size)
+{
+    CommandBlockWrapper command_block {};
+    command_block.transfer_length = data_size;
+    if constexpr (Direction == SCSIDataDirection::DataToHost)
+        command_block.direction = CBWDirection::DataIn;
+    else
+        command_block.direction = CBWDirection::DataOut;
+
+    command_block.set_command(command);
+
+    TRY(out_pipe.submit_bulk_out_transfer(sizeof(command_block), &command_block));
+
+    if constexpr (Direction == SCSIDataDirection::DataToHost) {
+        TRY(in_pipe.submit_bulk_in_transfer(data_size, data));
+    } else if constexpr (Direction == SCSIDataDirection::DataToDevice) {
+        TRY(out_pipe.submit_bulk_out_transfer(data_size, data));
+    }
+
+    CommandStatusWrapper status;
+    TRY(in_pipe.submit_bulk_in_transfer(sizeof(status), &status));
+
+    return status;
+}
+
 class BulkSCSIInterface : public StorageDevice {
     // https://www.usb.org/sites/default/files/usbmassbulk_10.pdf
 public:
