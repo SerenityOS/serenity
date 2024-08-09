@@ -5,9 +5,9 @@
  */
 
 #include <AK/Format.h>
-#include <Kernel/Arch/riscv64/CPU.h>
 #include <Kernel/Arch/riscv64/SBI.h>
 #include <Kernel/Arch/riscv64/Timer.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 
 namespace Kernel::RISCV64 {
 

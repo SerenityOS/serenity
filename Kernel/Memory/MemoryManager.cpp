@@ -15,6 +15,7 @@
 #include <Kernel/Boot/BootInfo.h>
 #include <Kernel/Boot/Multiboot.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
@@ -285,7 +286,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 #if ARCH(RISCV64)
         // FIXME: AARCH64 might be able to make use of this code path
         //        Some x86 platforms also provide flattened device trees
-        parse_memory_map_fdt(global_data, s_fdt_storage);
+        parse_memory_map_fdt(global_data, DeviceTree::s_fdt_storage);
 #else
         parse_memory_map_multiboot(global_data);
 #endif
@@ -383,19 +384,19 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 
 UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalData& global_data, u8 const* fdt_addr)
 {
-    auto const& fdt_header = *reinterpret_cast<DeviceTree::FlattenedDeviceTreeHeader const*>(fdt_addr);
+    auto const& fdt_header = *reinterpret_cast<::DeviceTree::FlattenedDeviceTreeHeader const*>(fdt_addr);
     auto fdt_buffer = ReadonlyBytes(fdt_addr, fdt_header.totalsize);
 
-    auto const* mem_reserve_block = reinterpret_cast<DeviceTree::FlattenedDeviceTreeReserveEntry const*>(&fdt_buffer[fdt_header.off_mem_rsvmap]);
+    auto const* mem_reserve_block = reinterpret_cast<::DeviceTree::FlattenedDeviceTreeReserveEntry const*>(&fdt_buffer[fdt_header.off_mem_rsvmap]);
 
-    u64 next_block_offset = fdt_header.off_mem_rsvmap + sizeof(DeviceTree::FlattenedDeviceTreeReserveEntry);
-    while ((next_block_offset < fdt_header.off_dt_struct) && (*mem_reserve_block != DeviceTree::FlattenedDeviceTreeReserveEntry {})) {
+    u64 next_block_offset = fdt_header.off_mem_rsvmap + sizeof(::DeviceTree::FlattenedDeviceTreeReserveEntry);
+    while ((next_block_offset < fdt_header.off_dt_struct) && (*mem_reserve_block != ::DeviceTree::FlattenedDeviceTreeReserveEntry {})) {
         dbgln("MM: Reserved Range /memreserve/: address: {} size {:#x}", PhysicalAddress { mem_reserve_block->address }, mem_reserve_block->size);
         global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, PhysicalAddress { mem_reserve_block->address }, mem_reserve_block->size });
         // FIXME: Not all of these are "used", only those in "memory" are actually "used"
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress { mem_reserve_block->address }, PhysicalAddress { mem_reserve_block->address + mem_reserve_block->size } });
         ++mem_reserve_block;
-        next_block_offset += sizeof(DeviceTree::FlattenedDeviceTreeReserveEntry);
+        next_block_offset += sizeof(::DeviceTree::FlattenedDeviceTreeReserveEntry);
     }
 
     // Schema:
@@ -431,9 +432,9 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
         u32 size_cells = 0;
     } state;
 
-    MUST(DeviceTree::walk_device_tree(
+    MUST(::DeviceTree::walk_device_tree(
         fdt_header, fdt_buffer,
-        DeviceTree::DeviceTreeCallbacks {
+        ::DeviceTree::DeviceTreeCallbacks {
             .on_node_begin = [&state](StringView node_name) -> ErrorOr<IterationDecision> {
                 switch (state.state) {
                 case State::Root:

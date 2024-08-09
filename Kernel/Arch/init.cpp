@@ -47,6 +47,7 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Library/Panic.h>
@@ -219,7 +220,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     // FIXME: Read the /chosen/bootargs property.
     kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
 #elif ARCH(RISCV64)
-    auto maybe_command_line = get_command_line_from_fdt();
+    auto maybe_command_line = DeviceTree::get_command_line_from_fdt();
     if (maybe_command_line.is_error())
         kernel_cmdline = "serial_debug"sv;
     else
@@ -286,10 +287,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
         (*ctor)();
 
 #if ARCH(RISCV64)
-    MUST(unflatten_fdt());
+    MUST(DeviceTree::unflatten_fdt());
 
     if (kernel_command_line().contains("dump_fdt"sv))
-        dump_fdt();
+        DeviceTree::dump_fdt();
 
     init_delay_loop();
 #endif
