@@ -9,6 +9,7 @@
 #include <AK/Array.h>
 #include <AK/Error.h>
 #include <AK/SIMD.h>
+#include <AK/SIMDMath.h>
 
 namespace Gfx::PNG {
 
@@ -56,12 +57,21 @@ ALWAYS_INLINE u8 paeth_predictor(u8 a, u8 b, u8 c)
 
 ALWAYS_INLINE AK::SIMD::u8x4 paeth_predictor(AK::SIMD::u8x4 a, AK::SIMD::u8x4 b, AK::SIMD::u8x4 c)
 {
-    return AK::SIMD::u8x4 {
-        paeth_predictor(a[0], b[0], c[0]),
-        paeth_predictor(a[1], b[1], c[1]),
-        paeth_predictor(a[2], b[2], c[2]),
-        paeth_predictor(a[3], b[3], c[3]),
-    };
+    using namespace AK::SIMD;
+    auto a16 = simd_cast<i16x4>(a);
+    auto b16 = simd_cast<i16x4>(b);
+    auto c16 = simd_cast<i16x4>(c);
+
+    auto p16 = a16 + b16 - c16;
+    auto pa16 = abs(p16 - a16);
+    auto pb16 = abs(p16 - b16);
+    auto pc16 = abs(p16 - c16);
+
+    auto mask_a = simd_cast<u8x4>((pa16 <= pb16) & (pa16 <= pc16));
+    auto mask_b = ~mask_a & simd_cast<u8x4>(pb16 <= pc16);
+    auto mask_c = ~(mask_a | mask_b);
+
+    return (a & mask_a) | (b & mask_b) | (c & mask_c);
 }
 
 };
