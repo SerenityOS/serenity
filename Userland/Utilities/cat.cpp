@@ -62,11 +62,9 @@ static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyB
                 }
                 out("{:c}", buffer_span[i]);
             } else {
+                out("{: >6}\t", line_tracker.line_count);
+                line_tracker.line_count++;
                 out("{:c}", buffer_span[i]);
-                if (i < buffer_span.size() - 1) {
-                    out("{: >6}\t", line_tracker.line_count);
-                    line_tracker.line_count++;
-                }
                 line_tracker.state = LineTracker::state::LINE;
             }
         }
