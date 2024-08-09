@@ -7,8 +7,9 @@
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Library/StdLib.h>
-#include <Kernel/Net/Ethernet/EtherType.h>
+#include <Kernel/Net/Ethernet/Ethernet.h>
 #include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Tasks/Process.h>
 
@@ -44,7 +45,7 @@ void NetworkAdapter::send(MACAddress const& destination, ARPPacket const& packet
     send_packet({ (u8 const*)eth, size_in_bytes });
 }
 
-void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Address const& source_ipv4, MACAddress const& destination_mac, IPv4Address const& destination_ipv4, IPv4Protocol protocol, size_t payload_size, u8 type_of_service, u8 ttl)
+void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Address const& source_ipv4, MACAddress const& destination_mac, IPv4Address const& destination_ipv4, INetProtocol protocol, size_t payload_size, u8 type_of_service, u8 ttl)
 {
     size_t ipv4_packet_size = sizeof(IPv4Packet) + payload_size;
     VERIFY(ipv4_packet_size <= mtu());

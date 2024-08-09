@@ -13,9 +13,9 @@
 #include <Kernel/Net/Ethernet/Intel/E1000ENetworkAdapter.h>
 #include <Kernel/Net/Ethernet/Intel/E1000NetworkAdapter.h>
 #include <Kernel/Net/Ethernet/Loopback/LoopbackAdapter.h>
-#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Ethernet/Realtek/RTL8168NetworkAdapter.h>
 #include <Kernel/Net/Ethernet/VirtIO/VirtIONetworkAdapter.h>
+#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

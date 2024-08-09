@@ -102,7 +102,7 @@ ErrorOr<size_t> UDPSocket::protocol_send(UserOrKernelBuffer const& data, size_t 
     udp_packet.set_length(udp_buffer_size);
     SOCKET_TRY(data.read(udp_packet.payload(), data_length));
     routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(), routing_decision.next_hop,
-        peer_address(), IPv4Protocol::UDP, udp_buffer_size, type_of_service(), ttl());
+        peer_address(), INetProtocol::UDP, udp_buffer_size, type_of_service(), ttl());
     routing_decision.adapter->send_packet(packet->bytes());
     return data_length;
 }

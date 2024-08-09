@@ -7,8 +7,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/MutexProtected.h>
-#include <Kernel/Net/Ethernet/EtherType.h>
-#include <Kernel/Net/Ethernet/EthernetFrameHeader.h>
+#include <Kernel/Net/Ethernet/Ethernet.h>
 #include <Kernel/Net/Ethernet/Loopback/LoopbackAdapter.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4/ARP.h>
@@ -27,7 +26,7 @@ namespace Kernel {
 
 static void handle_arp(EthernetFrameHeader const&, size_t frame_size);
 static void handle_ipv4(EthernetFrameHeader const&, size_t frame_size, UnixDateTime const& packet_timestamp);
-static void handle_icmp(EthernetFrameHeader const&, IPv4Packet const&, UnixDateTime const& packet_timestamp);
+static void handle_icmpv4(EthernetFrameHeader const&, IPv4Packet const&, UnixDateTime const& packet_timestamp);
 static void handle_udp(IPv4Packet const&, UnixDateTime const& packet_timestamp);
 static void handle_tcp(IPv4Packet const&, UnixDateTime const& packet_timestamp);
 static void send_delayed_tcp_ack(TCPSocket& socket);
@@ -208,12 +207,12 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, UnixDateTime
             update_arp_table(packet.source(), eth.source(), UpdateTable::Set);
     });
 
-    switch ((IPv4Protocol)packet.protocol()) {
-    case IPv4Protocol::ICMP:
-        return handle_icmp(eth, packet, packet_timestamp);
-    case IPv4Protocol::UDP:
+    switch (static_cast<INetProtocol>(packet.protocol())) {
+    case INetProtocol::ICMPv4:
+        return handle_icmpv4(eth, packet, packet_timestamp);
+    case INetProtocol::UDP:
         return handle_udp(packet, packet_timestamp);
-    case IPv4Protocol::TCP:
+    case INetProtocol::TCP:
         return handle_tcp(packet, packet_timestamp);
     default:
         dbgln_if(IPV4_DEBUG, "handle_ipv4: Unhandled protocol {:#02x}", packet.protocol());
@@ -221,16 +220,16 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, UnixDateTime
     }
 }
 
-void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timestamp)
+void handle_icmpv4(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timestamp)
 {
     auto& icmp_header = *static_cast<ICMPHeader const*>(ipv4_packet.payload());
-    dbgln_if(ICMP_DEBUG, "handle_icmp: source={}, destination={}, type={:#02x}, code={:#02x}", ipv4_packet.source().to_string(), ipv4_packet.destination().to_string(), icmp_header.type(), icmp_header.code());
+    dbgln_if(ICMP_DEBUG, "handle_icmpv4: source={}, destination={}, type={:#02x}, code={:#02x}", ipv4_packet.source().to_string(), ipv4_packet.destination().to_string(), icmp_header.type(), icmp_header.code());
 
     {
         Vector<NonnullRefPtr<IPv4Socket>> icmp_sockets;
         IPv4Socket::all_sockets().with_exclusive([&](auto& sockets) {
             for (auto& socket : sockets) {
-                if (socket.protocol() == (unsigned)IPv4Protocol::ICMP)
+                if (socket.protocol() == (unsigned)INetProtocol::ICMPv4)
                     icmp_sockets.append(socket);
             }
         });
@@ -244,10 +243,10 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
 
     if (icmp_header.type() == ICMPv4Type::EchoRequest) {
         auto& request = reinterpret_cast<ICMPEchoPacket const&>(icmp_header);
-        dbgln("handle_icmp: EchoRequest from {}: id={}, seq={}", ipv4_packet.source(), (u16)request.identifier, (u16)request.sequence_number);
+        dbgln("handle_icmpv4: EchoRequest from {}: id={}, seq={}", ipv4_packet.source(), (u16)request.identifier, (u16)request.sequence_number);
         size_t icmp_packet_size = ipv4_packet.payload_size();
         if (icmp_packet_size < sizeof(ICMPEchoPacket)) {
-            dbgln("handle_icmp: EchoRequest packet is too small, ignoring.");
+            dbgln("handle_icmpv4: EchoRequest packet is too small, ignoring.");
             return;
         }
         auto ipv4_payload_offset = adapter->ipv4_payload_offset();
@@ -256,7 +255,7 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
             dbgln("Could not allocate packet buffer while sending ICMP packet");
             return;
         }
-        adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, icmp_packet_size, 0, 64);
+        adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), INetProtocol::ICMPv4, icmp_packet_size, 0, 64);
         memset(packet->buffer->data() + ipv4_payload_offset, 0, sizeof(ICMPEchoPacket));
         auto& response = *(ICMPEchoPacket*)(packet->buffer->data() + ipv4_payload_offset);
         response.header.set_type(ICMPv4Type::EchoReply);
@@ -348,7 +347,7 @@ void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, Re
     if (!packet)
         return;
     routing_decision.adapter->fill_in_ipv4_header(*packet, ipv4_packet.destination(),
-        routing_decision.next_hop, ipv4_packet.source(), IPv4Protocol::TCP,
+        routing_decision.next_hop, ipv4_packet.source(), INetProtocol::TCP,
         buffer_size - ipv4_payload_offset, 0, 64);
 
     auto& rst_packet = *(TCPPacket*)(packet->buffer->data() + ipv4_payload_offset);
