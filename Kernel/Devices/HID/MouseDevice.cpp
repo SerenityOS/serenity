@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/HID/Management.h>
 #include <Kernel/Devices/HID/MouseDevice.h>
 
@@ -13,7 +13,7 @@ namespace Kernel {
 
 ErrorOr<NonnullRefPtr<MouseDevice>> MouseDevice::try_to_initialize()
 {
-    return *TRY(DeviceManagement::try_create_device<MouseDevice>());
+    return TRY(Device::try_create_device<MouseDevice>());
 }
 
 MouseDevice::MouseDevice()

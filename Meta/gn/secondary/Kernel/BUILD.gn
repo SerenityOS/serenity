@@ -508,7 +508,6 @@ executable("Kernel_bin") {
     "Devices/BlockDevice.cpp",
     "Devices/CharacterDevice.cpp",
     "Devices/Device.cpp",
-    "Devices/DeviceManagement.cpp",
     "Devices/GPU/Bochs/GraphicsAdapter.cpp",
     "Devices/GPU/Bochs/QEMUDisplayConnector.cpp",
     "Devices/GPU/Console/BootFramebufferConsole.cpp",

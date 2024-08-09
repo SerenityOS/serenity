@@ -18,7 +18,7 @@
 namespace Kernel {
 
 class MouseDevice : public HIDDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static ErrorOr<NonnullRefPtr<MouseDevice>> try_to_initialize();

@@ -65,7 +65,6 @@ set(KERNEL_SOURCES
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
     Devices/Device.cpp
-    Devices/DeviceManagement.cpp
     Devices/FUSEDevice.cpp
     Devices/PCISerialDevice.cpp
     Devices/SerialDevice.cpp

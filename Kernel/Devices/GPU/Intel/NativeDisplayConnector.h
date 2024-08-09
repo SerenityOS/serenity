@@ -20,7 +20,7 @@ class IntelDisplayConnectorGroup;
 class IntelNativeDisplayConnector final
     : public DisplayConnector {
     friend class IntelDisplayConnectorGroup;
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     enum class Type {
@@ -46,7 +46,7 @@ public:
         PortI = 8,
     };
 
-    static ErrorOr<NonnullLockRefPtr<IntelNativeDisplayConnector>> try_create_with_display_connector_group(IntelDisplayConnectorGroup const&, ConnectorIndex, Type, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
+    static ErrorOr<NonnullRefPtr<IntelNativeDisplayConnector>> try_create_with_display_connector_group(IntelDisplayConnectorGroup const&, ConnectorIndex, Type, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
 
     void set_edid_bytes(Badge<IntelDisplayConnectorGroup>, Array<u8, 128> const& edid_bytes);
     ErrorOr<void> create_attached_framebuffer_console(Badge<IntelDisplayConnectorGroup>);

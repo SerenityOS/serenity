@@ -11,10 +11,10 @@
 
 namespace Kernel {
 class KCOVDevice final : public BlockDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
-    static NonnullLockRefPtr<KCOVDevice> must_create();
+    static NonnullRefPtr<KCOVDevice> must_create();
     static void free_thread();
     static void free_process();
 

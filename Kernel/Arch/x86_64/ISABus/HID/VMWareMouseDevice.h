@@ -16,7 +16,7 @@ namespace Kernel {
 
 class VMWareMouseDevice final : public PS2MouseDevice {
 public:
-    friend class DeviceManagement;
+    friend class Device;
     static ErrorOr<NonnullOwnPtr<VMWareMouseDevice>> try_to_initialize(SerialIOController const&, SerialIOController::PortIndex, MouseDevice const&);
     virtual ~VMWareMouseDevice() override;
 

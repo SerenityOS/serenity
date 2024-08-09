@@ -20,10 +20,10 @@ class VMWareFramebufferConsole;
 class VMWareDisplayConnector : public DisplayConnector {
     friend class VMWareGraphicsAdapter;
     friend class VMWareFramebufferConsole;
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
-    static NonnullLockRefPtr<VMWareDisplayConnector> must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
+    static ErrorOr<NonnullRefPtr<VMWareDisplayConnector>> create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
 
 private:
     VMWareDisplayConnector(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);

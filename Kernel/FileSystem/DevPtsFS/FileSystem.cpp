@@ -6,7 +6,7 @@
  */
 
 #include <Kernel/API/DeviceFileTypes.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/TTY/SlavePTY.h>
 #include <Kernel/FileSystem/DevPtsFS/FileSystem.h>
 #include <Kernel/FileSystem/DevPtsFS/Inode.h>
@@ -56,7 +56,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) cons
         return *m_root_inode;
 
     unsigned pty_index = inode_index_to_pty_index(inode_id.index());
-    auto device = DeviceManagement::the().get_device(DeviceNodeType::Character, 201, pty_index);
+    auto device = Device::acquire_by_type_and_major_minor_numbers(DeviceNodeType::Character, 201, pty_index);
     VERIFY(device);
 
     auto& pts_device = static_cast<SlavePTY&>(*device);

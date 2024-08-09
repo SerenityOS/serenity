@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/BaseDevices.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/ConsoleDevice.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Log.h>
 #include <Kernel/Sections.h>
@@ -28,9 +29,10 @@ mode_t SysFSKernelLog::permissions() const
 
 ErrorOr<void> SysFSKernelLog::try_generate(KBufferBuilder& builder)
 {
-    VERIFY(DeviceManagement::the().is_console_device_attached());
+    // NOTE: If Device::base_devices() is returning nullptr, it means the console device is not attached which is a bug.
+    VERIFY(Device::base_devices() != nullptr);
     SpinlockLocker lock(g_console_lock);
-    for (char ch : DeviceManagement::the().console_device().logbuffer()) {
+    for (char ch : Device::base_devices()->console_device->logbuffer()) {
         TRY(builder.append(ch));
     }
     return {};

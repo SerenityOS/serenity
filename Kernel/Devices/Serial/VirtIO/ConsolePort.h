@@ -23,8 +23,10 @@ class Console;
 
 class ConsolePort
     : public CharacterDevice {
+    friend class Device;
+
 public:
-    static ErrorOr<NonnullLockRefPtr<ConsolePort>> try_create(unsigned port, VirtIO::Console&);
+    static ErrorOr<NonnullRefPtr<ConsolePort>> create(unsigned port, VirtIO::Console&);
 
     void handle_queue_update(Badge<VirtIO::Console>, u16 queue_index);
 

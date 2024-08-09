@@ -15,7 +15,7 @@
 
 namespace Kernel {
 class PS2MouseDevice : public SerialIODevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static ErrorOr<NonnullOwnPtr<PS2MouseDevice>> try_to_initialize(SerialIOController const&, SerialIOController::PortIndex, MouseDevice const&);

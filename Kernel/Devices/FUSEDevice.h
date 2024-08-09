@@ -23,10 +23,10 @@ struct FUSEInstance {
 };
 
 class FUSEDevice final : public CharacterDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
-    static NonnullLockRefPtr<FUSEDevice> must_create();
+    static NonnullRefPtr<FUSEDevice> must_create();
     virtual ~FUSEDevice() override;
 
     ErrorOr<void> initialize_instance(OpenFileDescription const&);

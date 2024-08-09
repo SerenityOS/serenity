@@ -17,10 +17,10 @@ namespace Kernel {
 
 class GenericDisplayConnector
     : public DisplayConnector {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
-    static NonnullLockRefPtr<GenericDisplayConnector> must_create_with_preset_resolution(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch);
+    static ErrorOr<NonnullRefPtr<GenericDisplayConnector>> create_with_preset_resolution(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch);
 
 protected:
     ErrorOr<void> create_attached_framebuffer_console();

@@ -15,10 +15,10 @@ namespace Kernel {
 extern Spinlock<LockRank::None> g_console_lock;
 
 class ConsoleDevice final : public CharacterDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
-    static NonnullLockRefPtr<ConsoleDevice> must_create();
+    static NonnullRefPtr<ConsoleDevice> must_create();
 
     virtual ~ConsoleDevice() override;
 

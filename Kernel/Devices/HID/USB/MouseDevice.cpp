@@ -11,7 +11,7 @@
 #include <Kernel/Bus/USB/USBDescriptors.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/Bus/USB/USBTransfer.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/HID/USB/MouseDevice.h>
 #include <Kernel/Library/KString.h>
 
@@ -21,7 +21,7 @@ ErrorOr<NonnullRefPtr<USBMouseDevice>> USBMouseDevice::try_create_instance(USB::
 {
     if (max_packet_size < 4)
         return Error::from_errno(ENOTSUP);
-    auto device = TRY(DeviceManagement::try_create_device<USBMouseDevice>(usb_device, move(pipe)));
+    auto device = TRY(Device::try_create_device<USBMouseDevice>(usb_device, move(pipe)));
     TRY(device->create_and_start_polling_process(max_packet_size));
     return *device;
 }
