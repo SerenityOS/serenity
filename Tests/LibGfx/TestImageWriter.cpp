@@ -175,6 +175,27 @@ TEST_CASE(test_png)
     TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
+TEST_CASE(test_png_paeth_simd)
+{
+    for (int a = 0; a < 256; ++a) {
+        for (int b = 0; b < 256; ++b) {
+            for (int c = 0; c < 256; ++c) {
+                u8 expected = Gfx::PNG::paeth_predictor(a, b, c);
+
+                AK::SIMD::u8x4 va { (u8)a, (u8)a, (u8)a, (u8)a };
+                AK::SIMD::u8x4 vb { (u8)b, (u8)b, (u8)b, (u8)b };
+                AK::SIMD::u8x4 vc { (u8)c, (u8)c, (u8)c, (u8)c };
+                AK::SIMD::u8x4 actual = Gfx::PNG::paeth_predictor(va, vb, vc);
+
+                EXPECT_EQ(actual[0], expected);
+                EXPECT_EQ(actual[1], expected);
+                EXPECT_EQ(actual[2], expected);
+                EXPECT_EQ(actual[3], expected);
+            }
+        }
+    }
+}
+
 TEST_CASE(test_qoi)
 {
     TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
