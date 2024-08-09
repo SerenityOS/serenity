@@ -5,10 +5,10 @@
  */
 
 #include <Kernel/Arch/Interrupts.h>
-#include <Kernel/Arch/riscv64/CPU.h>
 #include <Kernel/Arch/riscv64/IRQController.h>
 #include <Kernel/Arch/riscv64/InterruptManagement.h>
 #include <Kernel/Arch/riscv64/Interrupts/PLIC.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 
 namespace Kernel {

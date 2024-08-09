@@ -6,9 +6,9 @@
 
 #include <AK/Assertions.h>
 #include <Kernel/Arch/Processor.h>
-#include <Kernel/Arch/riscv64/CPU.h>
 #include <Kernel/Arch/riscv64/CSR.h>
 #include <Kernel/Arch/riscv64/Delay.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 
 namespace Kernel {
 
