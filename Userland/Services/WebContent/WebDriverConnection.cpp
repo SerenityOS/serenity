@@ -2347,6 +2347,7 @@ ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::wait_for_navigation_to
     auto timer = Core::Timer::create_single_shot(m_timeouts_configuration.page_load_timeout, [&] {
         page_load_timeout_fired = true;
     });
+    timer->start();
 
     // 4. If there is an ongoing attempt to navigate the current browsing context that has not yet matured, wait for navigation to mature.
     Web::Platform::EventLoopPlugin::the().spin_until([&] {
@@ -2391,6 +2392,7 @@ void WebDriverConnection::restore_the_window()
     auto timer = Core::Timer::create_single_shot(m_timeouts_configuration.page_load_timeout, [&] {
         page_load_timeout_fired = true;
     });
+    timer->start();
 
     Web::Platform::EventLoopPlugin::the().spin_until([&]() {
         auto state = m_page_client->page().top_level_traversable()->system_visibility_state();
@@ -2420,6 +2422,7 @@ Gfx::IntRect WebDriverConnection::iconify_the_window()
     auto timer = Core::Timer::create_single_shot(m_timeouts_configuration.page_load_timeout, [&] {
         page_load_timeout_fired = true;
     });
+    timer->start();
 
     Web::Platform::EventLoopPlugin::the().spin_until([&]() {
         auto state = m_page_client->page().top_level_traversable()->system_visibility_state();
