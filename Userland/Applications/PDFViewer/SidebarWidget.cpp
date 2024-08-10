@@ -35,5 +35,10 @@ SidebarWidget::SidebarWidget()
     auto& thumbnails_container = tab_bar.add_tab<GUI::Widget>("Thumbnails"_string);
     thumbnails_container.set_layout<GUI::VerticalBoxLayout>(4);
 
-    // FIXME: Add thumbnail previews
+    m_thumbnails_list_view = thumbnails_container.add<ThumbnailsListView>();
+    m_thumbnails_list_view->set_fill_with_background_color(false);
+    m_thumbnails_list_view->set_item_height(128);
+    m_thumbnails_list_view->set_alternating_row_colors(false);
+    m_thumbnails_list_view->set_should_hide_unnecessary_scrollbars(false);
+    m_thumbnails_list_view->horizontal_scrollbar().set_visible(false);
 }
