@@ -185,6 +185,27 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
             ByteBuffer buffer {};
             AK::SIMD::i32x4 sum { 0, 0, 0, 0 };
 
+            AK::SIMD::u8x4 predict(AK::SIMD::u8x4 pixel, AK::SIMD::u8x4 pixel_x_minus_1, AK::SIMD::u8x4 pixel_y_minus_1, AK::SIMD::u8x4 pixel_xy_minus_1)
+            {
+                switch (type) {
+                case PNG::FilterType::None:
+                    return pixel;
+                case PNG::FilterType::Sub:
+                    return pixel - pixel_x_minus_1;
+                case PNG::FilterType::Up:
+                    return pixel - pixel_y_minus_1;
+                case PNG::FilterType::Average: {
+                    // The sum Orig(a) + Orig(b) shall be performed without overflow (using at least nine-bit arithmetic).
+                    auto sum = AK::SIMD::simd_cast<AK::SIMD::u16x4>(pixel_x_minus_1) + AK::SIMD::simd_cast<AK::SIMD::u16x4>(pixel_y_minus_1);
+                    auto average = AK::SIMD::simd_cast<AK::SIMD::u8x4>(sum / 2);
+                    return pixel - average;
+                }
+                case PNG::FilterType::Paeth:
+                    return pixel - PNG::paeth_predictor(pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1);
+                }
+                VERIFY_NOT_REACHED();
+            }
+
             ErrorOr<void> append(AK::SIMD::u8x4 simd)
             {
                 TRY(buffer.try_append(simd[0]));
@@ -227,18 +248,11 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
             auto pixel = Pixel::gfx_to_png(scanline[x]);
             auto pixel_y_minus_1 = Pixel::gfx_to_png(scanline_minus_1[x]);
 
-            TRY(none_filter.append(pixel));
-
-            TRY(sub_filter.append(pixel - pixel_x_minus_1));
-
-            TRY(up_filter.append(pixel - pixel_y_minus_1));
-
-            // The sum Orig(a) + Orig(b) shall be performed without overflow (using at least nine-bit arithmetic).
-            auto sum = AK::SIMD::simd_cast<AK::SIMD::u16x4>(pixel_x_minus_1) + AK::SIMD::simd_cast<AK::SIMD::u16x4>(pixel_y_minus_1);
-            auto average = AK::SIMD::simd_cast<AK::SIMD::u8x4>(sum / 2);
-            TRY(average_filter.append(pixel - average));
-
-            TRY(paeth_filter.append(pixel - PNG::paeth_predictor(pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
+            TRY(none_filter.append(none_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
+            TRY(sub_filter.append(sub_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
+            TRY(up_filter.append(up_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
+            TRY(average_filter.append(average_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
+            TRY(paeth_filter.append(paeth_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
 
             pixel_x_minus_1 = pixel;
             pixel_xy_minus_1 = pixel_y_minus_1;
