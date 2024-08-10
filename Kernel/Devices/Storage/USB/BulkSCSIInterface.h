@@ -160,8 +160,16 @@ private:
     NonnullOwnPtr<BulkInPipe> m_in_pipe;
     NonnullOwnPtr<BulkOutPipe> m_out_pipe;
 
+    Optional<u16> m_optimal_transfer_length;
+    Optional<u32> m_optimal_transfer_length_granularity;
+    Optional<u32> m_maximum_transfer_length;
+
+    u32 optimal_block_count(u32 blocks);
+
     ErrorOr<void> do_read(u32 block_index, u32 block_count, UserOrKernelBuffer& buffer, size_t buffer_size);
     ErrorOr<void> do_write(u32 block_index, u32 block_count, UserOrKernelBuffer& buffer, size_t buffer_size);
+
+    ErrorOr<void> query_characteristics();
 
     IntrusiveListNode<BulkSCSIInterface, NonnullLockRefPtr<BulkSCSIInterface>> m_list_node;
 

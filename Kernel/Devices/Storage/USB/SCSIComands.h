@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "SCSIVitalProductData.h"
+
 #include <AK/Endian.h>
 #include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
@@ -39,7 +41,7 @@ static_assert(AssertSize<FixedFormatSenseData, 18>());
 struct Inquiry {
     u8 opcode { 0x12 };
     u8 enable_vital_product_data { 0 }; // EVPD, Also CMDDT in the second bit, but thats obsolete
-    u8 page_code { 0 };
+    VitalProductDataPageCode page_code { VitalProductDataPageCode::SupportedVitalProductDataPages };
     BigEndian<u16> allocation_length;
     u8 control { 0 };
 };
