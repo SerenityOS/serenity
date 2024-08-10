@@ -7,6 +7,7 @@
 #pragma once
 
 #include "OutlineModel.h"
+#include "ThumbnailsListView.h"
 #include <LibGUI/ModelIndex.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
@@ -32,9 +33,12 @@ public:
         return {};
     }
 
+    RefPtr<ThumbnailsListView> thumbnails_list_view() { return m_thumbnails_list_view; }
+
 private:
     SidebarWidget();
 
     RefPtr<OutlineModel> m_model;
     RefPtr<GUI::TreeView> m_outline_tree_view;
+    RefPtr<ThumbnailsListView> m_thumbnails_list_view;
 };

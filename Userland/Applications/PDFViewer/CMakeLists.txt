@@ -8,6 +8,8 @@ set(SOURCES
     PDFViewer.cpp
     PDFViewerWidget.cpp
     SidebarWidget.cpp
+    ThumbnailsListView.cpp
+    ThumbnailsModel.cpp
     main.cpp
     )
 

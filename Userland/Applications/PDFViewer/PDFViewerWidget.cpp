@@ -6,6 +6,7 @@
  */
 
 #include "PDFViewerWidget.h"
+#include "ThumbnailsModel.h"
 #include <AK/Assertions.h>
 #include <AK/ByteString.h>
 #include <AK/Format.h>
@@ -28,6 +29,8 @@
 #include <LibGUI/TableView.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Color.h>
 #include <LibPDF/Document.h>
 
 class PagedErrorsModel : public GUI::Model {
@@ -180,6 +183,7 @@ PDFViewerWidget::PDFViewerWidget()
             return;
         auto page = maybe_page.release_value();
         m_viewer->set_current_page(page);
+        m_page_text_box->set_value(m_viewer->current_page() + 1);
     };
 
     m_vertical_splitter = h_splitter.add<GUI::VerticalSplitter>();
@@ -298,6 +302,41 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
     return {};
 }
 
+NonnullRefPtr<Gfx::Bitmap const> PDFViewerWidget::render_thumbnail_for_rendered_page(u32 page_index)
+{
+    int rect_square_size = 96;
+    Gfx::IntSize thumbnail_size(0, 0);
+    auto rendered_page = m_viewer->get_rendered_page(page_index).value();
+
+    float width_mult = rect_square_size / float(rendered_page->width());
+    float height_mult = rect_square_size / float(rendered_page->height());
+    float resolved_mult = rendered_page->width() < rendered_page->height() ? height_mult : width_mult;
+
+    thumbnail_size.set_width(rendered_page->width() * resolved_mult);
+    thumbnail_size.set_height(rendered_page->height() * resolved_mult);
+
+    return rendered_page->scaled_to_size(thumbnail_size).release_value_but_fixme_should_propagate_errors();
+}
+
+void PDFViewerWidget::reset_thumbnails()
+{
+    auto model = m_sidebar->thumbnails_list_view()->model();
+    (void)static_cast<ThumbnailsModel*>(model)->reset_thumbnails(m_viewer->document()->get_page_count());
+}
+
+void PDFViewerWidget::select_thumbnail(u32 page_index)
+{
+    m_sidebar->thumbnails_list_view()->select_list_item(page_index);
+}
+
+NonnullRefPtr<Gfx::Bitmap const> PDFViewerWidget::update_thumbnail_for_page(u32 page_index)
+{
+    auto model = m_sidebar->thumbnails_list_view()->model();
+    auto thumbnail = render_thumbnail_for_rendered_page(page_index);
+    static_cast<ThumbnailsModel*>(model)->update_thumbnail(page_index, thumbnail);
+    return thumbnail;
+}
+
 void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
 {
     auto open_outline_action = GUI::Action::create(
@@ -339,6 +378,7 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
         m_viewer->set_current_page(new_page_number - 1);
         m_go_to_prev_page_action->set_enabled(new_page_number > 1);
         m_go_to_next_page_action->set_enabled(new_page_number < page_count);
+        select_thumbnail(m_viewer->current_page());
     };
 
     m_total_page_label = toolbar.add<GUI::Label>();
@@ -359,10 +399,12 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
 
     m_rotate_counterclockwise_action = GUI::CommonActions::make_rotate_counterclockwise_action([&](auto&) {
         m_viewer->rotate(-90);
+        reset_thumbnails();
     });
 
     m_rotate_clockwise_action = GUI::CommonActions::make_rotate_clockwise_action([&](auto&) {
         m_viewer->rotate(90);
+        reset_thumbnails();
     });
 
     m_zoom_in_action->set_enabled(false);
@@ -459,6 +501,20 @@ PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwn
         m_sidebar->set_visible(false);
         m_sidebar_open = false;
     }
+
+    auto thumbnails_model = ThumbnailsModel::create();
+    m_sidebar->thumbnails_list_view()->set_model(thumbnails_model);
+    reset_thumbnails();
+
+    m_sidebar->thumbnails_list_view()->on_selection_change = [this] {
+        auto page_index = m_sidebar->thumbnails_list_view()->selection().first().row();
+        if (page_index >= 0) {
+            m_viewer->set_current_page(page_index);
+            m_page_text_box->set_value(page_index + 1);
+        }
+    };
+
+    select_thumbnail(m_viewer->current_page());
 
     GUI::Application::the()->set_most_recently_open_file(path);
 

@@ -28,6 +28,7 @@ public:
 
     ErrorOr<void> initialize_menubar(GUI::Window&);
     void open_file(StringView path, NonnullOwnPtr<Core::File> file);
+    NonnullRefPtr<Gfx::Bitmap const> update_thumbnail_for_page(u32 page_index);
 
 private:
     PDFViewerWidget();
@@ -35,6 +36,11 @@ private:
     virtual void drop_event(GUI::DropEvent&) override;
 
     void initialize_toolbar(GUI::Toolbar&);
+
+    NonnullRefPtr<Gfx::Bitmap const> render_thumbnail_for_rendered_page(u32 page_index);
+    void reset_thumbnails();
+    void select_thumbnail(u32 page_index);
+
     PDF::PDFErrorOr<void> try_open_file(StringView path, NonnullOwnPtr<Core::File> file);
 
     RefPtr<PDFViewer> m_viewer;
