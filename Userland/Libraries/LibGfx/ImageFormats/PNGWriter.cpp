@@ -258,8 +258,7 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
         if (abs(best_filter.sum_of_signed_values()) > abs(paeth_filter.sum_of_signed_values()))
             best_filter = paeth_filter;
 
-        ByteBuffer buffer {};
-        TRY(buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.width()));
+        TRY(uncompressed_block_data.try_append(to_underlying(best_filter.type)));
 
         pixel_x_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
         pixel_xy_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
@@ -269,18 +268,15 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
             auto pixel_y_minus_1 = Pixel::gfx_to_png(scanline_minus_1[x]);
 
             auto predicted_pixel = best_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1);
-            TRY(buffer.try_append(predicted_pixel[0]));
-            TRY(buffer.try_append(predicted_pixel[1]));
-            TRY(buffer.try_append(predicted_pixel[2]));
+            TRY(uncompressed_block_data.try_append(predicted_pixel[0]));
+            TRY(uncompressed_block_data.try_append(predicted_pixel[1]));
+            TRY(uncompressed_block_data.try_append(predicted_pixel[2]));
             if constexpr (include_alpha)
-                TRY(buffer.try_append(predicted_pixel[3]));
+                TRY(uncompressed_block_data.try_append(predicted_pixel[3]));
 
             pixel_x_minus_1 = pixel;
             pixel_xy_minus_1 = pixel_y_minus_1;
         }
-
-        TRY(uncompressed_block_data.try_append(to_underlying(best_filter.type)));
-        TRY(uncompressed_block_data.try_append(buffer));
 
         scanline_minus_1 = scanline;
     }
