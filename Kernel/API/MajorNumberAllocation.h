@@ -32,6 +32,7 @@ enum class CharacterDeviceFamily : unsigned {
     SlavePTY = 201,
     GPU = 226,
     VirtIOConsole = 229,
+    TPM = 230
 };
 
 static constexpr CharacterDeviceFamily s_character_device_numbers[] = {
@@ -49,6 +50,7 @@ static constexpr CharacterDeviceFamily s_character_device_numbers[] = {
     CharacterDeviceFamily::SlavePTY,
     CharacterDeviceFamily::GPU,
     CharacterDeviceFamily::VirtIOConsole,
+    CharacterDeviceFamily::TPM
 };
 
 constexpr bool assert_character_device_numbers_are_in_order()
@@ -99,6 +101,8 @@ ALWAYS_INLINE StringView character_device_family_to_string_view(CharacterDeviceF
         return "gpu"sv;
     case CharacterDeviceFamily::VirtIOConsole:
         return "virtio-console"sv;
+    case CharacterDeviceFamily::TPM:
+        return "tpm"sv;
     }
 
     VERIFY_NOT_REACHED();

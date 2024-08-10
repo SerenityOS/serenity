@@ -77,6 +77,7 @@ public:
     [[nodiscard]] bool is_smp_enabled() const;
     [[nodiscard]] bool is_physical_networking_disabled() const;
     [[nodiscard]] bool is_vmmouse_enabled() const;
+    [[nodiscard]] bool is_TPM_enabled() const;
     [[nodiscard]] PCIAccessLevel pci_access_level() const;
     [[nodiscard]] bool is_pci_disabled() const;
     [[nodiscard]] bool is_legacy_time_enabled() const;

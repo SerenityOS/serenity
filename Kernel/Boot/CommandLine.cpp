@@ -106,6 +106,11 @@ UNMAP_AFTER_INIT bool CommandLine::is_smp_enabled_without_ioapic_enabled() const
     return smp_enabled && !is_ioapic_enabled();
 }
 
+UNMAP_AFTER_INIT bool CommandLine::is_TPM_enabled() const
+{
+    return lookup("tpm"sv).value_or("off"sv) == "on"sv;
+}
+
 UNMAP_AFTER_INIT bool CommandLine::is_ioapic_enabled() const
 {
     auto value = lookup("enable_ioapic"sv).value_or("on"sv);

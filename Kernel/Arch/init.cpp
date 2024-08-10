@@ -40,6 +40,7 @@
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
+#include <Kernel/Devices/TPM/TPM12.h>
 #include <Kernel/Devices/TTY/PTYMultiplexer.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
@@ -397,6 +398,7 @@ void init_stage2(void*)
     (void)SerialDevice::must_create(1).leak_ref();
     (void)SerialDevice::must_create(2).leak_ref();
     (void)SerialDevice::must_create(3).leak_ref();
+    (void)TPMDevice::create().leak_ref();
 #elif ARCH(AARCH64)
     (void)MUST(RPi::MiniUART::create()).leak_ref();
 #endif

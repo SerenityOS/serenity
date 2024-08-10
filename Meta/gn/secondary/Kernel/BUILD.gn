@@ -569,6 +569,7 @@ executable("Kernel_bin") {
     "Devices/Storage/StorageController.cpp",
     "Devices/Storage/StorageDevice.cpp",
     "Devices/Storage/StorageManagement.cpp",
+    "Devices/TPM/TPM12.cpp",
     "FileSystem/AnonymousFile.cpp",
     "FileSystem/BlockBasedFileSystem.cpp",
     "FileSystem/Custody.cpp",
