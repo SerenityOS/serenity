@@ -79,7 +79,7 @@ GUI::Variant OutlineModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         case Columns::Page: {
             auto maybe_page_number = outline_item->dest.page;
             if (maybe_page_number.has_value()) {
-                return maybe_page_number.release_value();
+                return maybe_page_number.release_value() + 1;
             }
             return {};
         }
