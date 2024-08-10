@@ -182,7 +182,6 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
 
         struct Filter {
             PNG::FilterType type;
-            ByteBuffer buffer {};
             AK::SIMD::i32x4 sum { 0, 0, 0, 0 };
 
             AK::SIMD::u8x4 predict(AK::SIMD::u8x4 pixel, AK::SIMD::u8x4 pixel_x_minus_1, AK::SIMD::u8x4 pixel_y_minus_1, AK::SIMD::u8x4 pixel_xy_minus_1)
@@ -206,15 +205,9 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
                 VERIFY_NOT_REACHED();
             }
 
-            ErrorOr<void> append(AK::SIMD::u8x4 simd)
+            void append(AK::SIMD::u8x4 simd)
             {
-                TRY(buffer.try_append(simd[0]));
-                TRY(buffer.try_append(simd[1]));
-                TRY(buffer.try_append(simd[2]));
-                if constexpr (include_alpha)
-                    TRY(buffer.try_append(simd[3]));
                 sum += AK::SIMD::simd_cast<AK::SIMD::i32x4>(AK::SIMD::simd_cast<AK::SIMD::i8x4>(simd));
-                return {};
             }
 
             i32 sum_of_signed_values() const
@@ -227,19 +220,10 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
         };
 
         Filter none_filter { .type = PNG::FilterType::None };
-        TRY(none_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.width()));
-
         Filter sub_filter { .type = PNG::FilterType::Sub };
-        TRY(sub_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.width()));
-
         Filter up_filter { .type = PNG::FilterType::Up };
-        TRY(up_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.width()));
-
         Filter average_filter { .type = PNG::FilterType::Average };
-        TRY(average_filter.buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.width()));
-
         Filter paeth_filter { .type = PNG::FilterType::Paeth };
-        TRY(paeth_filter.buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.width()));
 
         auto pixel_x_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
         auto pixel_xy_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
@@ -248,17 +232,15 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
             auto pixel = Pixel::gfx_to_png(scanline[x]);
             auto pixel_y_minus_1 = Pixel::gfx_to_png(scanline_minus_1[x]);
 
-            TRY(none_filter.append(none_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
-            TRY(sub_filter.append(sub_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
-            TRY(up_filter.append(up_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
-            TRY(average_filter.append(average_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
-            TRY(paeth_filter.append(paeth_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
+            none_filter.append(none_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
+            sub_filter.append(sub_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
+            up_filter.append(up_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
+            average_filter.append(average_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
+            paeth_filter.append(paeth_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
 
             pixel_x_minus_1 = pixel;
             pixel_xy_minus_1 = pixel_y_minus_1;
         }
-
-        scanline_minus_1 = scanline;
 
         // 12.8 Filter selection: https://www.w3.org/TR/PNG/#12Filter-selection
         // For best compression of truecolour and greyscale images, the recommended approach
@@ -276,8 +258,31 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
         if (abs(best_filter.sum_of_signed_values()) > abs(paeth_filter.sum_of_signed_values()))
             best_filter = paeth_filter;
 
+        ByteBuffer buffer {};
+        TRY(buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.width()));
+
+        pixel_x_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
+        pixel_xy_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
+
+        for (int x = 0; x < bitmap.width(); ++x) {
+            auto pixel = Pixel::gfx_to_png(scanline[x]);
+            auto pixel_y_minus_1 = Pixel::gfx_to_png(scanline_minus_1[x]);
+
+            auto predicted_pixel = best_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1);
+            TRY(buffer.try_append(predicted_pixel[0]));
+            TRY(buffer.try_append(predicted_pixel[1]));
+            TRY(buffer.try_append(predicted_pixel[2]));
+            if constexpr (include_alpha)
+                TRY(buffer.try_append(predicted_pixel[3]));
+
+            pixel_x_minus_1 = pixel;
+            pixel_xy_minus_1 = pixel_y_minus_1;
+        }
+
         TRY(uncompressed_block_data.try_append(to_underlying(best_filter.type)));
-        TRY(uncompressed_block_data.try_append(best_filter.buffer));
+        TRY(uncompressed_block_data.try_append(buffer));
+
+        scanline_minus_1 = scanline;
     }
 
     TRY(png_chunk.compress_and_add(uncompressed_block_data, compression_level));
