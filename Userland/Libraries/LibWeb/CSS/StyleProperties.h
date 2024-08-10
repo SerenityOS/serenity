@@ -129,6 +129,7 @@ public:
     Optional<CSS::ObjectFit> object_fit() const;
     CSS::ObjectPosition object_position() const;
     Optional<CSS::TableLayout> table_layout() const;
+    Optional<CSS::Direction> direction() const;
 
     static Vector<CSS::Transformation> transformations_for_style_value(StyleValue const& value);
     Vector<CSS::Transformation> transformations() const;
