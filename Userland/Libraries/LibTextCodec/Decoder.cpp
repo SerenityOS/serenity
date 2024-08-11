@@ -366,16 +366,7 @@ bool UTF8Decoder::validate(StringView input)
 
 ErrorOr<String> UTF8Decoder::to_utf8(StringView input)
 {
-    // Discard the BOM
-    auto bomless_input = input;
-    if (auto bytes = input.bytes(); bytes.size() >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) {
-        bomless_input = input.substring_view(3);
-    }
-
-    if (Utf8View(bomless_input).validate())
-        return String::from_utf8_without_validation(bomless_input.bytes());
-
-    return Decoder::to_utf8(bomless_input);
+    return String::from_utf8_with_replacement_character(input);
 }
 
 ErrorOr<void> UTF16BEDecoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
