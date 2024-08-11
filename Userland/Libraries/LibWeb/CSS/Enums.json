@@ -386,6 +386,8 @@
   "text-align": [
     "center",
     "justify",
+    "start",
+    "end",
     "left",
     "right",
     "-libweb-center",
