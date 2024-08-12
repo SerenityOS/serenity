@@ -8,6 +8,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/FixedArray.h>
+#include <AK/MemoryStream.h>
 #include <AK/SIMDExtras.h>
 #include <AK/String.h>
 #include <LibCompress/Zlib.h>
@@ -96,18 +97,23 @@ ErrorOr<void> PNGChunk::add_u8(u8 data)
     return {};
 }
 
+PNGWriter::PNGWriter(Stream& stream)
+    : m_stream(stream)
+{
+}
+
 ErrorOr<void> PNGWriter::add_chunk(PNGChunk& png_chunk)
 {
     png_chunk.store_data_length();
     u32 crc = png_chunk.crc();
     TRY(png_chunk.add_as_big_endian(crc));
-    TRY(m_data.try_append(png_chunk.data().data(), png_chunk.data().size()));
+    TRY(m_stream.write_until_depleted(png_chunk.data()));
     return {};
 }
 
 ErrorOr<void> PNGWriter::add_png_header()
 {
-    TRY(m_data.try_append(PNG::header.data(), PNG::header.size()));
+    TRY(m_stream.write_until_depleted(PNG::header));
     return {};
 }
 
@@ -295,11 +301,11 @@ static bool bitmap_has_transparency(Bitmap const& bitmap)
     return false;
 }
 
-ErrorOr<ByteBuffer> PNGWriter::encode(Gfx::Bitmap const& bitmap, Options options)
+ErrorOr<void> PNGWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
 {
     bool has_transparency = bitmap_has_transparency(bitmap);
 
-    PNGWriter writer;
+    PNGWriter writer { stream };
     TRY(writer.add_png_header());
     auto color_type = has_transparency ? PNG::ColorType::TruecolorWithAlpha : PNG::ColorType::Truecolor;
     TRY(writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, color_type, 0, 0, 0));
@@ -310,7 +316,14 @@ ErrorOr<ByteBuffer> PNGWriter::encode(Gfx::Bitmap const& bitmap, Options options
     else
         TRY(writer.add_IDAT_chunk<false>(bitmap, options.compression_level));
     TRY(writer.add_IEND_chunk());
-    return ByteBuffer::copy(writer.m_data);
+    return {};
+}
+
+ErrorOr<ByteBuffer> PNGWriter::encode(Gfx::Bitmap const& bitmap, Options options)
+{
+    AllocatingMemoryStream stream;
+    TRY(encode(stream, bitmap, options));
+    return stream.read_until_eof();
 }
 
 }
