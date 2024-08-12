@@ -158,6 +158,14 @@ ErrorOr<void> enter_jail_mode_until_exit()
     return {};
 }
 
+ErrorOr<void> enter_jail_mode_until_exec()
+{
+    auto rc = prctl(PR_SET_JAILED_UNTIL_EXEC, 0, 0, 0);
+    if (rc != 0)
+        return Error::from_syscall("prctl"sv, -rc);
+    return {};
+}
+
 ErrorOr<void> beep(u16 tone, u16 milliseconds_duration)
 {
     static Optional<int> beep_fd;

@@ -53,6 +53,7 @@ namespace Core::System {
 
 #ifdef AK_OS_SERENITY
 ErrorOr<void> enter_jail_mode_until_exit();
+ErrorOr<void> enter_jail_mode_until_exec();
 ErrorOr<void> beep(u16 tone = 440, u16 milliseconds_duration = 200);
 ErrorOr<void> pledge(StringView promises, StringView execpromises = {});
 ErrorOr<void> unveil(StringView path, StringView permissions);
