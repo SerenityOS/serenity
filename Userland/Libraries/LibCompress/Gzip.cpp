@@ -177,9 +177,7 @@ ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
         TRY(output_stream.write_until_depleted(data));
     }
 
-    auto output_buffer = TRY(ByteBuffer::create_uninitialized(output_stream.used_buffer_size()));
-    TRY(output_stream.read_until_filled(output_buffer));
-    return output_buffer;
+    return output_stream.read_until_eof();
 }
 
 bool GzipDecompressor::is_eof() const { return m_input_stream->is_eof(); }
@@ -241,9 +239,7 @@ ErrorOr<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
 
     TRY(gzip_stream.write_until_depleted(bytes));
 
-    auto buffer = TRY(ByteBuffer::create_uninitialized(output_stream->used_buffer_size()));
-    TRY(output_stream->read_until_filled(buffer.bytes()));
-    return buffer;
+    return output_stream->read_until_eof();
 }
 
 }

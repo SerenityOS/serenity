@@ -967,10 +967,7 @@ ErrorOr<ByteBuffer> DeflateCompressor::compress_all(ReadonlyBytes bytes, Compres
     TRY(deflate_stream->write_until_depleted(bytes));
     TRY(deflate_stream->final_flush());
 
-    auto buffer = TRY(ByteBuffer::create_uninitialized(output_stream->used_buffer_size()));
-    TRY(output_stream->read_until_filled(buffer));
-
-    return buffer;
+    return output_stream->read_until_eof();
 }
 
 }
