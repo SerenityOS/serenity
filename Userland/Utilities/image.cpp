@@ -178,6 +178,10 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
         TRY(Gfx::JPEGWriter::encode(*TRY(stream()), *frame, { .icc_data = image.icc_data, .quality = jpeg_quality }));
         return {};
     }
+    if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
+        TRY(Gfx::PNGWriter::encode(*TRY(stream()), *frame, { .compression_level = png_compression_level, .icc_data = image.icc_data }));
+        return {};
+    }
     if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
         auto const format = ppm_ascii ? Gfx::PortableFormatWriter::Options::Format::ASCII : Gfx::PortableFormatWriter::Options::Format::Raw;
         TRY(Gfx::PortableFormatWriter::encode(*TRY(stream()), *frame, { .format = format }));
@@ -199,8 +203,6 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
     ByteBuffer bytes;
     if (out_path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::BMPWriter::encode(*frame, { .icc_data = image.icc_data }));
-    } else if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::PNGWriter::encode(*frame, { .compression_level = png_compression_level, .icc_data = image.icc_data }));
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*frame));
     } else {
