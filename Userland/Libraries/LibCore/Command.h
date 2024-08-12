@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
  * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2024, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,7 +36,7 @@ public:
         ByteBuffer standard_error;
     };
 
-    static ErrorOr<OwnPtr<Command>> create(StringView command, char const* const arguments[]);
+    static ErrorOr<NonnullOwnPtr<Command>> create(StringView command, char const* const arguments[]);
 
     Command(pid_t pid, NonnullOwnPtr<Core::File> stdin_file, NonnullOwnPtr<Core::File> stdout_file, NonnullOwnPtr<Core::File> stderr_file);
 
