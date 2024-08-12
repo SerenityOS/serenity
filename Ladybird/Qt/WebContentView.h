@@ -62,6 +62,8 @@ public:
     virtual void dropEvent(QDropEvent*) override;
     virtual void keyPressEvent(QKeyEvent* event) override;
     virtual void keyReleaseEvent(QKeyEvent* event) override;
+    virtual void inputMethodEvent(QInputMethodEvent*) override;
+    virtual QVariant inputMethodQuery(Qt::InputMethodQuery) const override;
     virtual void showEvent(QShowEvent*) override;
     virtual void hideEvent(QHideEvent*) override;
     virtual void focusInEvent(QFocusEvent*) override;
