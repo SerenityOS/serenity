@@ -61,7 +61,7 @@ There are 2 main syscalls to handle resource isolation:
 
 ## Jails as a security mechanism
 
-When the user process is jailed, it can't create or attach to other resources.
+When the user process is jailed **until exit**, it can't create or attach to other resources.
 This makes jails as an effective mechanism to create secure (sandboxed) containers,
 so a user program and its descendants will always use the same resources that
 were chosen upon the creation of the container.

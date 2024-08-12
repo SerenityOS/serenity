@@ -69,8 +69,11 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
             child_protected_data.dumpable = my_protected_data.dumpable;
             child_protected_data.process_group = my_protected_data.process_group;
             // NOTE: Propagate jailed_until_exit property to child processes.
+            // The jailed_until_exec property is also propagated, but will be
+            // set to false once the child process is calling the execve syscall.
             if (my_protected_data.jailed_until_exit.was_set())
                 child_protected_data.jailed_until_exit.set();
+            child_protected_data.jailed_until_exec = my_protected_data.jailed_until_exec;
         });
     });
 
