@@ -89,9 +89,6 @@ void xHCIController::take_exclusive_control_from_bios()
     usb_legacy_support_extended_capability->usb_legacy_support_control_status.smi_on_os_ownership_change = 1;
     usb_legacy_support_extended_capability->usb_legacy_support_control_status.smi_on_pci_command = 1;
     usb_legacy_support_extended_capability->usb_legacy_support_control_status.smi_on_bar = 1;
-
-    if (device_identifier().hardware_id().vendor_id == PCI::VendorID::Intel)
-        intel_quirk_enable_xhci_ports();
 }
 
 void xHCIController::intel_quirk_enable_xhci_ports()
@@ -193,6 +190,10 @@ ErrorOr<void> xHCIController::initialize()
     m_using_message_signalled_interrupts = interrupt_type != PCI::InterruptType::PIN;
 
     take_exclusive_control_from_bios();
+
+    if (device_identifier().hardware_id().vendor_id == PCI::VendorID::Intel)
+        intel_quirk_enable_xhci_ports();
+
     TRY(find_port_max_speeds());
 
     TRY(reset());
