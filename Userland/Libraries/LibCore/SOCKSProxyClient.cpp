@@ -181,8 +181,8 @@ Coroutine<ErrorOr<Reply>> send_connect_request_message(Core::Socket& socket, Cor
 
     CO_TRY(stream.write_value(trailer));
 
-    auto buffer = CO_TRY(ByteBuffer::create_uninitialized(stream.used_buffer_size()));
-    CO_TRY(stream.read_until_filled(buffer.bytes()));
+    // FIXME: Why does this read the whole stream into memory, instead of streaming blocks to the socket?
+    auto buffer = CO_TRY(stream.read_until_eof());
     CO_TRY(socket.write_until_depleted(buffer));
 
     auto response_header = CO_TRY(socket.read_value<Socks5ConnectResponseHeader>());
@@ -231,9 +231,8 @@ Coroutine<ErrorOr<u8>> send_username_password_authentication_message(Core::Socke
 
     CO_TRY(stream.write_until_depleted({ auth_data.password.characters(), auth_data.password.length() }));
 
-    auto buffer = CO_TRY(ByteBuffer::create_uninitialized(stream.used_buffer_size()));
-    CO_TRY(stream.read_until_filled(buffer.bytes()));
-
+    // FIXME: Why does this read the whole stream into memory, instead of streaming blocks to the socket?
+    auto buffer = CO_TRY(stream.read_until_eof());
     CO_TRY(socket.write_until_depleted(buffer));
 
     auto response = CO_TRY(socket.read_value<Socks5UsernamePasswordResponse>());

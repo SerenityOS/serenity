@@ -54,8 +54,7 @@ void Request::set_buffered_request_finished_callback(BufferedRequestFinished on_
     };
 
     on_finish = [this, on_buffered_request_finished = move(on_buffered_request_finished)](auto success, auto total_size) {
-        auto output_buffer = ByteBuffer::create_uninitialized(m_internal_buffered_data->payload_stream.used_buffer_size()).release_value_but_fixme_should_propagate_errors();
-        m_internal_buffered_data->payload_stream.read_until_filled(output_buffer).release_value_but_fixme_should_propagate_errors();
+        auto output_buffer = m_internal_buffered_data->payload_stream.read_until_eof().release_value_but_fixme_should_propagate_errors();
 
         on_buffered_request_finished(
             success,
