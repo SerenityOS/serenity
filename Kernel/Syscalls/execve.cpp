@@ -526,6 +526,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
         protected_data.credentials = move(new_credentials);
         protected_data.dumpable = !executable_is_setid;
         protected_data.executable_is_setid = executable_is_setid;
+        protected_data.jailed_until_exec = false;
     });
 
     m_executable.with([&](auto& executable) { executable = main_program_description->custody(); });
