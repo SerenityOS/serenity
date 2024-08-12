@@ -78,8 +78,7 @@ static PDF::PDFErrorOr<void> save_rendered_page(NonnullRefPtr<Gfx::Bitmap> bitma
 
     auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
     auto buffered_stream = TRY(Core::OutputBufferedFile::create(move(output_stream)));
-    ByteBuffer bytes = TRY(Gfx::PNGWriter::encode(*bitmap));
-    TRY(buffered_stream->write_until_depleted(bytes));
+    TRY(Gfx::PNGWriter::encode(*buffered_stream, *bitmap));
 
     return {};
 }
