@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
  * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2024, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,7 @@
 
 namespace Core {
 
-ErrorOr<OwnPtr<Command>> Command::create(StringView command, char const* const arguments[])
+ErrorOr<NonnullOwnPtr<Command>> Command::create(StringView command, char const* const arguments[])
 {
     auto stdin_fds = TRY(Core::System::pipe2(O_CLOEXEC));
     auto stdout_fds = TRY(Core::System::pipe2(O_CLOEXEC));
@@ -46,7 +47,7 @@ ErrorOr<OwnPtr<Command>> Command::create(StringView command, char const* const a
 
     runner_kill.disarm();
 
-    return make<Command>(pid, move(stdin_file), move(stdout_file), move(stderr_file));
+    return adopt_nonnull_own_or_enomem(new (nothrow) Command(pid, move(stdin_file), move(stdout_file), move(stderr_file)));
 }
 
 Command::Command(pid_t pid, NonnullOwnPtr<Core::File> stdin_file, NonnullOwnPtr<Core::File> stdout_file, NonnullOwnPtr<Core::File> stderr_file)
