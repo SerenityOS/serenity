@@ -2,6 +2,7 @@
  * Copyright (c) 2021, Pierre Hoffmeister
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Aziz Berkay Yesilyurt <abyesilyurt@gmail.com>
+ * Copyright (c) 2024, Torben Jonas Virtmann
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -117,6 +118,55 @@ ErrorOr<void> PNGWriter::add_png_header()
     return {};
 }
 
+ErrorOr<void> PNGWriter::add_acTL_chunk(u32 num_frames, u32 loop_count)
+{
+    // https://www.w3.org/TR/png/#acTL-chunk
+    PNGChunk png_chunk { "acTL"_string };
+    TRY(png_chunk.add_as_big_endian(num_frames));
+    TRY(png_chunk.add_as_big_endian(loop_count));
+    TRY(add_chunk(png_chunk));
+    return {};
+}
+
+struct fcTLData {
+    u32 sequence_number { 0 };
+    u32 width { 0 };
+    u32 height { 0 };
+    u32 x_offset { 0 };
+    u32 y_offset { 0 };
+    u16 delay_numerator { 0 };
+    u16 delay_denominator { 1 };
+    // dispose_op values
+    // 0           APNG_DISPOSE_OP_NONE
+    // 1           APNG_DISPOSE_OP_BACKGROUND
+    // 2           APNG_DISPOSE_OP_PREVIOUS
+    u8 dispose_operation { 0 };
+    // blend_op values
+    // value
+    // 0       APNG_BLEND_OP_SOURCE
+    // 1       APNG_BLEND_OP_OVER
+    u8 blend_operation { 0 };
+};
+
+ErrorOr<void> PNGWriter::add_fcTL_chunk(fcTLData const& data)
+{
+    // https://www.w3.org/TR/png/#fcTL-chunk
+
+    // TODO: Constraints on frame regions
+    PNGChunk png_chunk { "fcTL"_string };
+    TRY(png_chunk.add_as_big_endian(data.sequence_number));
+    TRY(png_chunk.add_as_big_endian(data.width));
+    TRY(png_chunk.add_as_big_endian(data.height));
+    TRY(png_chunk.add_as_big_endian(data.x_offset));
+    TRY(png_chunk.add_as_big_endian(data.y_offset));
+    TRY(png_chunk.add_as_big_endian(data.delay_numerator));
+    TRY(png_chunk.add_as_big_endian(data.delay_denominator));
+    TRY(png_chunk.add_u8(data.dispose_operation));
+    TRY(png_chunk.add_u8(data.blend_operation));
+    TRY(add_chunk(png_chunk));
+    return {};
+}
+
 ErrorOr<void> PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG::ColorType color_type, u8 compression_method, u8 filter_method, u8 interlace_method)
 {
     PNGChunk png_chunk { "IHDR"_string };
@@ -172,11 +222,8 @@ union [[gnu::packed]] Pixel {
 static_assert(AssertSize<Pixel, 4>());
 
 template<bool include_alpha>
-ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::ZlibCompressionLevel compression_level)
+static ErrorOr<void> add_image_data_to_chunk(Gfx::Bitmap const& bitmap, PNGChunk& png_chunk, Compress::ZlibCompressionLevel compression_level)
 {
-    PNGChunk png_chunk { "IDAT"_string };
-    TRY(png_chunk.reserve(bitmap.size_in_bytes()));
-
     ByteBuffer uncompressed_block_data;
     TRY(uncompressed_block_data.try_ensure_capacity(bitmap.size_in_bytes() + bitmap.height()));
 
@@ -287,9 +334,27 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::Zli
         scanline_minus_1 = scanline;
     }
 
-    TRY(png_chunk.compress_and_add(uncompressed_block_data, compression_level));
-    TRY(add_chunk(png_chunk));
-    return {};
+    return png_chunk.compress_and_add(uncompressed_block_data, compression_level);
+}
+
+template<bool include_alpha>
+ErrorOr<void> PNGWriter::add_fdAT_chunk(Gfx::Bitmap const& bitmap, u32 sequence_number, Compress::ZlibCompressionLevel compression_level)
+{
+    // https://www.w3.org/TR/png/#fdAT-chunk
+    PNGChunk png_chunk { "fdAT"_string };
+    TRY(png_chunk.reserve(bitmap.size_in_bytes() + 4));
+    TRY(png_chunk.add_as_big_endian(sequence_number));
+    TRY(add_image_data_to_chunk<include_alpha>(bitmap, png_chunk, compression_level));
+    return add_chunk(png_chunk);
+}
+
+template<bool include_alpha>
+ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::ZlibCompressionLevel compression_level)
+{
+    PNGChunk png_chunk { "IDAT"_string };
+    TRY(png_chunk.reserve(bitmap.size_in_bytes()));
+    TRY(add_image_data_to_chunk<include_alpha>(bitmap, png_chunk, compression_level));
+    return add_chunk(png_chunk);
 }
 
 static bool bitmap_has_transparency(Bitmap const& bitmap)
@@ -324,6 +389,101 @@ ErrorOr<ByteBuffer> PNGWriter::encode(Gfx::Bitmap const& bitmap, Options options
     AllocatingMemoryStream stream;
     TRY(encode(stream, bitmap, options));
     return stream.read_until_eof();
+}
+
+class PNGAnimationWriter : public AnimationWriter {
+public:
+    PNGAnimationWriter(SeekableStream& stream, IntSize dimensions, int loop_count, PNGWriter::Options const& options)
+        : m_writer(stream)
+        , m_stream(stream)
+        , m_dimensions(dimensions)
+        , m_loop_count(loop_count)
+        , m_options(options)
+    {
+    }
+
+    virtual ErrorOr<void> add_frame(Bitmap&, int, IntPoint, BlendMode) override;
+
+private:
+    PNGWriter m_writer;
+    SeekableStream& m_stream;
+
+    IntSize const m_dimensions;
+    int const m_loop_count { 0 };
+
+    bool m_is_first_frame { true };
+
+    u32 m_sequence_number { 0 };
+    u32 m_number_of_frames { 0 };
+    size_t m_acTL_offset { 0 };
+    PNGWriter::Options const m_options;
+};
+
+ErrorOr<void> PNGAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at, BlendMode)
+{
+    ++m_number_of_frames;
+    bool const is_first_frame = m_number_of_frames == 1;
+
+    if (is_first_frame) {
+        // "The fcTL chunk corresponding to the default image, if it exists, has these restrictions:
+        //  * The x_offset and y_offset fields must be 0.
+        //  * The width and height fields must equal the corresponding fields from the IHDR chunk."
+        // FIXME: If this ends up happening in practice, we should composite `bitmap` to a temporary bitmap and store that as first frame.
+        if (at != IntPoint {})
+            return Error::from_string_literal("First APNG frame must have x_offset and y_offset set to 0");
+        if (bitmap.size() != m_dimensions)
+            return Error::from_string_literal("First APNG frame must have the same dimensions as the APNG itself");
+
+        // All frames in an APNG use the same IHDR chunk, which means they all have the same color type.
+        // To decide if we should write RGB or RGBA, we'd really have to check all frames, but that needs a
+        // lot of memory and makes streaming impossible.
+        // Instead, we always include an alpha channel. In practice, inter-frame compression means that
+        // even for animations without transparency, all but the first frame will have transparent pixels.
+        // The APNG format doesn't give us super great options here.
+        TRY(m_writer.add_png_header());
+        TRY(m_writer.add_IHDR_chunk(m_dimensions.width(), m_dimensions.height(), 8, PNG::ColorType::TruecolorWithAlpha, 0, 0, 0));
+        if (m_options.icc_data.has_value())
+            TRY(m_writer.add_iCCP_chunk(m_options.icc_data.value(), m_options.compression_level));
+        m_acTL_offset = TRY(m_stream.tell());
+        TRY(m_writer.add_acTL_chunk(m_number_of_frames, m_loop_count));
+    } else {
+        // Overwrite previous acTL chunk to update its num_frames. Use add_acTL_chunk to make sure the chunk's crc is updated too.
+        auto current_offset = TRY(m_stream.tell());
+        TRY(m_stream.seek(m_acTL_offset, SeekMode::SetPosition));
+        TRY(m_writer.add_acTL_chunk(m_number_of_frames, m_loop_count));
+        TRY(m_stream.seek(current_offset, SeekMode::SetPosition));
+
+        // Overwrite previous IEND marker.
+        TRY(m_stream.seek(-12, SeekMode::FromCurrentPosition));
+    }
+
+    fcTLData fcTL_data;
+    fcTL_data.sequence_number = m_sequence_number;
+    fcTL_data.width = bitmap.width();
+    fcTL_data.height = bitmap.height();
+    fcTL_data.delay_numerator = duration_ms;
+    fcTL_data.delay_denominator = 1000;
+    fcTL_data.x_offset = at.x();
+    fcTL_data.y_offset = at.y();
+    TRY(m_writer.add_fcTL_chunk(fcTL_data));
+    m_sequence_number++;
+
+    if (is_first_frame) {
+        TRY(m_writer.add_IDAT_chunk<true>(bitmap, m_options.compression_level));
+    } else {
+        TRY(m_writer.add_fdAT_chunk<true>(bitmap, m_sequence_number, m_options.compression_level));
+        m_sequence_number++;
+    }
+
+    TRY(m_writer.add_IEND_chunk());
+
+    return {};
+}
+
+ErrorOr<NonnullOwnPtr<AnimationWriter>> PNGWriter::start_encoding_animation(SeekableStream& stream, IntSize dimensions, int loop_count, Options const& options)
+{
+    auto writer = make<PNGAnimationWriter>(stream, dimensions, loop_count, options);
+    return writer;
 }
 
 }
