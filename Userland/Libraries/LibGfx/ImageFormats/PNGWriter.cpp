@@ -403,6 +403,7 @@ public:
     }
 
     virtual ErrorOr<void> add_frame(Bitmap&, int, IntPoint, BlendMode) override;
+    virtual bool can_blend_frames() const override { return true; }
 
 private:
     PNGWriter m_writer;
@@ -419,7 +420,7 @@ private:
     PNGWriter::Options const m_options;
 };
 
-ErrorOr<void> PNGAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at, BlendMode)
+ErrorOr<void> PNGAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at, BlendMode blend_mode)
 {
     ++m_number_of_frames;
     bool const is_first_frame = m_number_of_frames == 1;
@@ -465,6 +466,8 @@ ErrorOr<void> PNGAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, Int
     fcTL_data.delay_denominator = 1000;
     fcTL_data.x_offset = at.x();
     fcTL_data.y_offset = at.y();
+    if (blend_mode == BlendMode::Blend)
+        fcTL_data.blend_operation = 1;
     TRY(m_writer.add_fcTL_chunk(fcTL_data));
     m_sequence_number++;
 
