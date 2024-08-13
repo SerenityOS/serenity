@@ -16,6 +16,27 @@ struct LineTracker {
     bool display_line_number = true;
 };
 
+static void out_visible(unsigned char c)
+{
+    if (c == 012) {
+        // newline
+        out("{:c}", c);
+    } else if (c < 040) {
+        // control character
+        out("^X");
+    } else if (c == 0177) {
+        // delete character
+        out("^?");
+    } else if (c > 0177) {
+        // high bit is set - mask it off
+        out("M-");
+        out_visible(c & 0x7f);
+    } else {
+        // normal ascii
+        out("{:c}", c);
+    }
+}
+
 static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyBytes buffer_span)
 {
     for (auto const curr_value : buffer_span) {
@@ -26,7 +47,7 @@ static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyB
         }
         if (curr_value == '\n')
             line_tracker.display_line_number = true;
-        out("{:c}", curr_value);
+        out_visible(curr_value);
     }
 }
 
