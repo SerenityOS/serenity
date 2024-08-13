@@ -227,6 +227,40 @@ TEST_CASE(test_png_animation)
     expect_bitmaps_equal(*frame1.image, *rgba_bitmap);
 }
 
+TEST_CASE(test_png_incremental_animation)
+{
+    auto rgb_bitmap_1 = TRY_OR_FAIL(create_test_rgb_bitmap());
+
+    auto rgb_bitmap_2 = TRY_OR_FAIL(create_test_rgb_bitmap());
+
+    rgb_bitmap_2->scanline(3)[3] = Gfx::Color(Color::Red).value();
+
+    // 20 kiB is enough for two 47x33 frames.
+    auto stream_buffer = TRY_OR_FAIL(ByteBuffer::create_uninitialized(20 * 1024));
+    FixedMemoryStream stream { Bytes { stream_buffer } };
+
+    auto animation_writer = TRY_OR_FAIL(Gfx::PNGWriter::start_encoding_animation(stream, rgb_bitmap_1->size()));
+
+    TRY_OR_FAIL(animation_writer->add_frame(*rgb_bitmap_1, 100));
+    TRY_OR_FAIL(animation_writer->add_frame_relative_to_last_frame(*rgb_bitmap_2, 200, *rgb_bitmap_1));
+
+    auto encoded_animation = ReadonlyBytes { stream_buffer.data(), stream.offset() };
+
+    auto decoded_animation_plugin = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(encoded_animation));
+    EXPECT(decoded_animation_plugin->is_animated());
+    EXPECT_EQ(decoded_animation_plugin->frame_count(), 2u);
+    EXPECT_EQ(decoded_animation_plugin->loop_count(), 0u);
+    EXPECT_EQ(decoded_animation_plugin->size(), rgb_bitmap_1->size());
+
+    auto frame0 = TRY_OR_FAIL(decoded_animation_plugin->frame(0));
+    EXPECT_EQ(frame0.duration, 100);
+    expect_bitmaps_equal(*frame0.image, *rgb_bitmap_1);
+
+    auto frame1 = TRY_OR_FAIL(decoded_animation_plugin->frame(1));
+    EXPECT_EQ(frame1.duration, 200);
+    expect_bitmaps_equal(*frame1.image, *rgb_bitmap_2);
+}
+
 TEST_CASE(test_qoi)
 {
     TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
