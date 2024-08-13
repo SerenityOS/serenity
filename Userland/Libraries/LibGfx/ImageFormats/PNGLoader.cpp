@@ -625,6 +625,8 @@ static bool decode_png_image_data_chunk(PNGLoadingContext& context)
     while (!streamer.at_end() && !context.has_seen_iend) {
         if (auto result = process_chunk(streamer, context); result.is_error()) {
             context.state = PNGLoadingContext::State::Error;
+            // FIXME: Return this to caller instead of logging it.
+            dbgln("PNGLoader: Error processing chunk: {}", result.error());
             return false;
         }
 
@@ -653,6 +655,8 @@ static bool decode_png_animation_data_chunks(PNGLoadingContext& context, u32 req
     Streamer streamer(context.data_current_ptr, data_remaining);
     while (!streamer.at_end() && !context.has_seen_iend) {
         if (auto result = process_chunk(streamer, context); result.is_error()) {
+            // FIXME: Return this to caller instead of logging it.
+            dbgln("PNGLoader: Error processing chunk: {}", result.error());
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
