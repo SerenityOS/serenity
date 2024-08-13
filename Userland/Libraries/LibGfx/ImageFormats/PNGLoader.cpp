@@ -1126,8 +1126,10 @@ static ErrorOr<void> process_fcTL(ReadonlyBytes data, PNGLoadingContext& context
         return Error::from_string_literal("fcTL chunk has an abnormal size");
 
     auto const& fcTL = *bit_cast<fcTL_Chunk* const>(data.data());
-    if (fcTL.sequence_number != context.animation_next_expected_seq)
+    if (fcTL.sequence_number != context.animation_next_expected_seq) {
+        dbgln_if(PNG_DEBUG, "Expected fcTL sequence number: {}, got: {}", context.animation_next_expected_seq, fcTL.sequence_number);
         return Error::from_string_literal("Unexpected sequence number");
+    }
 
     context.animation_next_expected_seq++;
 
@@ -1164,8 +1166,10 @@ static ErrorOr<void> process_fdAT(ReadonlyBytes data, PNGLoadingContext& context
         return Error::from_string_literal("fdAT chunk has an abnormal size");
 
     u32 sequence_number = *bit_cast<NetworkOrdered<u32> const*>(data.data());
-    if (sequence_number != context.animation_next_expected_seq)
+    if (sequence_number != context.animation_next_expected_seq) {
+        dbgln_if(PNG_DEBUG, "Expected fdAT sequence number: {}, got: {}", context.animation_next_expected_seq, sequence_number);
         return Error::from_string_literal("Unexpected sequence number");
+    }
     context.animation_next_expected_seq++;
 
     if (context.animation_frames.is_empty())
