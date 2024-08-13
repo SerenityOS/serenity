@@ -320,6 +320,7 @@ ShadowRoot
 SharedArrayBuffer
 StaticRange
 Storage
+StorageManager
 String
 StyleSheet
 StyleSheetList
