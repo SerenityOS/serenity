@@ -619,6 +619,7 @@ set(SOURCES
     ResizeObserver/ResizeObserverSize.cpp
     SecureContexts/AbstractOperations.cpp
     SRI/SRI.cpp
+    StorageAPI/NavigatorStorage.cpp
     StorageAPI/StorageManager.cpp
     Streams/AbstractOperations.cpp
     Streams/ByteLengthQueuingStrategy.cpp
