@@ -669,6 +669,7 @@ struct UnderlyingSource;
 }
 
 namespace Web::StorageAPI {
+class NavigatorStorage;
 class StorageManager;
 }
 
