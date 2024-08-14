@@ -80,7 +80,7 @@ The cascade origin determines the processing order for rules. The "user-agent" s
 
 Note: the user-agent style is a built-in CSS style sheet that lives in the LibWeb source code [here](https://github.com/SerenityOS/serenity/blob/master/Userland/Libraries/LibWeb/CSS/Default.css).
 
-The end product of style computation is a fully populated StyleProperties object. It has a StyleValue for each CSS::PropertyID. In spec parlance, these are the _computed_ values. (Note that these are not the same as you get from `getComputedStyle()`, that API returns the _resolved_ values.)
+The end product of style computation is a fully populated StyleProperties object. It has a CSSStyleValue for each CSS::PropertyID. In spec parlance, these are the _computed_ values. (Note that these are not the same as you get from `getComputedStyle()`, that API returns the _resolved_ values.)
 
 #### Resolving CSS custom properties ("variables")
 
