@@ -283,6 +283,7 @@ set(SOURCES
     HTML/CustomElements/CustomElementRegistry.cpp
     HTML/DataTransfer.cpp
     HTML/DataTransferItem.cpp
+    HTML/DataTransferItemList.cpp
     HTML/Dates.cpp
     HTML/DecodedImageData.cpp
     HTML/DedicatedWorkerGlobalScope.cpp
