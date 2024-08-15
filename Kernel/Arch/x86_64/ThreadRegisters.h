@@ -52,6 +52,11 @@ struct ThreadRegisters {
         return rsp;
     }
 
+    FlatPtr frame_pointer() const
+    {
+        return rbp;
+    }
+
     void set_initial_state(bool is_kernel_process, Memory::AddressSpace& space, FlatPtr kernel_stack_top)
     {
         // Only IF is set when a process boots.

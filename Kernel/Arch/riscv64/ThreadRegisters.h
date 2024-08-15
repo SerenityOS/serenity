@@ -30,6 +30,8 @@ struct ThreadRegisters {
     FlatPtr sp() const { return x[1]; }
     void set_sp(FlatPtr value) { x[1] = value; }
 
+    FlatPtr frame_pointer() const { return x[7]; }
+
     void set_initial_state(bool is_kernel_process, Memory::AddressSpace& space, FlatPtr kernel_stack_top)
     {
         set_sp(kernel_stack_top);
