@@ -205,17 +205,10 @@ ErrorOr<void> PNGWriter::add_IEND_chunk()
 
 union [[gnu::packed]] Pixel {
     ARGB32 rgba { 0 };
-    struct {
-        u8 red;
-        u8 green;
-        u8 blue;
-        u8 alpha;
-    };
     AK::SIMD::u8x4 simd;
 
-    ALWAYS_INLINE static AK::SIMD::u8x4 gfx_to_png(Pixel pixel)
+    ALWAYS_INLINE static AK::SIMD::u8x4 argb32_to_simd(Pixel pixel)
     {
-        swap(pixel.red, pixel.blue);
         return pixel.simd;
     }
 };
@@ -278,12 +271,12 @@ static ErrorOr<void> add_image_data_to_chunk(Gfx::Bitmap const& bitmap, PNGChunk
         Filter average_filter { .type = PNG::FilterType::Average };
         Filter paeth_filter { .type = PNG::FilterType::Paeth };
 
-        auto pixel_x_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
-        auto pixel_xy_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
+        auto pixel_x_minus_1 = Pixel::argb32_to_simd(dummy_scanline[0]);
+        auto pixel_xy_minus_1 = Pixel::argb32_to_simd(dummy_scanline[0]);
 
         for (int x = 0; x < bitmap.width(); ++x) {
-            auto pixel = Pixel::gfx_to_png(scanline[x]);
-            auto pixel_y_minus_1 = Pixel::gfx_to_png(scanline_minus_1[x]);
+            auto pixel = Pixel::argb32_to_simd(scanline[x]);
+            auto pixel_y_minus_1 = Pixel::argb32_to_simd(scanline_minus_1[x]);
 
             none_filter.append(none_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
             sub_filter.append(sub_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
@@ -313,17 +306,17 @@ static ErrorOr<void> add_image_data_to_chunk(Gfx::Bitmap const& bitmap, PNGChunk
 
         TRY(uncompressed_block_data.try_append(to_underlying(best_filter.type)));
 
-        pixel_x_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
-        pixel_xy_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
+        pixel_x_minus_1 = Pixel::argb32_to_simd(dummy_scanline[0]);
+        pixel_xy_minus_1 = Pixel::argb32_to_simd(dummy_scanline[0]);
 
         for (int x = 0; x < bitmap.width(); ++x) {
-            auto pixel = Pixel::gfx_to_png(scanline[x]);
-            auto pixel_y_minus_1 = Pixel::gfx_to_png(scanline_minus_1[x]);
+            auto pixel = Pixel::argb32_to_simd(scanline[x]);
+            auto pixel_y_minus_1 = Pixel::argb32_to_simd(scanline_minus_1[x]);
 
             auto predicted_pixel = best_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1);
-            TRY(uncompressed_block_data.try_append(predicted_pixel[0]));
-            TRY(uncompressed_block_data.try_append(predicted_pixel[1]));
             TRY(uncompressed_block_data.try_append(predicted_pixel[2]));
+            TRY(uncompressed_block_data.try_append(predicted_pixel[1]));
+            TRY(uncompressed_block_data.try_append(predicted_pixel[0]));
             if constexpr (include_alpha)
                 TRY(uncompressed_block_data.try_append(predicted_pixel[3]));
 
