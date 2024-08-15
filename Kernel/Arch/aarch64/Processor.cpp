@@ -165,6 +165,7 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
         "str x30,        [sp, #(30 * 8)] \n"
         "mov x0, sp \n"
         "str x0, %[from_sp] \n"
+        "str fp, %[from_fp] \n"
         "ldr x0, =1f \n"
         "str x0, %[from_ip] \n"
 
@@ -213,6 +214,7 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
         :
         [from_ip] "=m"(from_thread->regs().elr_el1),
         [from_sp] "=m"(from_thread->regs().sp_el0),
+        [from_fp] "=m"(from_thread->regs().x[29]),
         "=m"(from_thread),
         "=m"(to_thread)
 
@@ -362,15 +364,6 @@ void ProcessorBase<T>::exit_trap(TrapFrame& trap)
     m_in_critical = m_in_critical - 1;
     if (!m_in_irq && !m_in_critical)
         check_invoke_scheduler();
-}
-
-template<typename T>
-ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<T>::capture_stack_trace(Thread& thread, size_t max_frames)
-{
-    (void)thread;
-    (void)max_frames;
-    dbgln("FIXME: Implement Processor::capture_stack_trace() for AArch64");
-    return Vector<FlatPtr, 32> {};
 }
 
 NAKED void thread_context_first_enter(void)
