@@ -136,8 +136,6 @@ public:
     ALWAYS_INLINE static void disable_interrupts();
     ALWAYS_INLINE static FlatPtr current_in_irq();
 
-    ALWAYS_INLINE static bool is_kernel_mode();
-
     ALWAYS_INLINE void set_idle_thread(Thread& idle_thread)
     {
         m_idle_thread = &idle_thread;

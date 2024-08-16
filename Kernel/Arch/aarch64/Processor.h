@@ -154,13 +154,6 @@ ALWAYS_INLINE void ProcessorBase<T>::disable_interrupts()
 }
 
 template<typename T>
-ALWAYS_INLINE bool ProcessorBase<T>::is_kernel_mode()
-{
-    // FIXME: Implement this correctly.
-    return true;
-}
-
-template<typename T>
 ALWAYS_INLINE bool ProcessorBase<T>::current_in_scheduler()
 {
     return current().m_in_scheduler;
