@@ -291,6 +291,7 @@ set(SOURCES
     HTML/DOMParser.cpp
     HTML/DOMStringList.cpp
     HTML/DOMStringMap.cpp
+    HTML/DragDataStore.cpp
     HTML/DragEvent.cpp
     HTML/ElementInternals.cpp
     HTML/EmbedderPolicy.cpp
