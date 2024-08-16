@@ -359,6 +359,7 @@ class CloseWatcher;
 class CloseWatcherManager;
 class CustomElementDefinition;
 class CustomElementRegistry;
+class DataTransfer;
 class DataTransferItem;
 class DataTransferItemList;
 class DecodedImageData;
