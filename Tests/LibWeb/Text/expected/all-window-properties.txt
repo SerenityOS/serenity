@@ -293,6 +293,7 @@ SVGLineElement
 SVGLinearGradientElement
 SVGMaskElement
 SVGMatrix
+SVGMetadataElement
 SVGPathElement
 SVGPoint
 SVGPolygonElement
