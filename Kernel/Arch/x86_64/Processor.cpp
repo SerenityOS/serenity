@@ -1492,7 +1492,6 @@ StringView ProcessorBase<T>::platform_string()
 template<typename T>
 FlatPtr ProcessorBase<T>::init_context(Thread& thread, bool leave_crit)
 {
-    VERIFY(is_kernel_mode());
     VERIFY(g_scheduler_lock.is_locked());
     if (leave_crit) {
         // Leave the critical section we set up in in Process::exec,
@@ -1599,7 +1598,6 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
     VERIFY(!m_in_irq);
     VERIFY(m_in_critical == 1);
-    VERIFY(is_kernel_mode());
     auto* self = static_cast<Processor*>(this);
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);

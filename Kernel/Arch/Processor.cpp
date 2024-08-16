@@ -112,7 +112,6 @@ void exit_kernel_thread(void)
 void do_context_first_init(Thread* from_thread, Thread* to_thread)
 {
     VERIFY(!Processor::are_interrupts_enabled());
-    VERIFY(Processor::is_kernel_mode());
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
