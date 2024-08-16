@@ -673,6 +673,7 @@ set(SOURCES
     SVG/SVGLineElement.cpp
     SVG/SVGLinearGradientElement.cpp
     SVG/SVGMaskElement.cpp
+    SVG/SVGMetadataElement.cpp
     SVG/SVGPolygonElement.cpp
     SVG/SVGPolylineElement.cpp
     SVG/SVGRectElement.cpp

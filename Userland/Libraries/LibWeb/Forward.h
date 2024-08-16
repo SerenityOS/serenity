@@ -696,6 +696,7 @@ class SVGGraphicsElement;
 class SVGLength;
 class SVGLineElement;
 class SVGMaskElement;
+class SVGMetadataElement;
 class SVGPathElement;
 class SVGPolygonElement;
 class SVGPolylineElement;
