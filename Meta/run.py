@@ -898,7 +898,7 @@ def configure_and_run():
 
     arguments = assemble_arguments(config)
 
-    build_directory = environ.get("SERENITY_BUILD", ".")
+    build_directory = environ.get("SERENITY_BUILD_DIR", ".")
     os.chdir(build_directory)
 
     with TapController(config.machine_type):
