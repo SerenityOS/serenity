@@ -100,13 +100,23 @@ using DrawGlyphOrEmoji = Variant<DrawGlyph, DrawEmoji>;
 
 class GlyphRun : public RefCounted<GlyphRun> {
 public:
-    GlyphRun(Vector<Gfx::DrawGlyphOrEmoji>&& glyphs, NonnullRefPtr<Font> font)
+    enum class TextType {
+        Common,
+        ContextDependent,
+        EndPadding,
+        Ltr,
+        Rtl,
+    };
+
+    GlyphRun(Vector<Gfx::DrawGlyphOrEmoji>&& glyphs, NonnullRefPtr<Font> font, TextType text_type)
         : m_glyphs(move(glyphs))
         , m_font(move(font))
+        , m_text_type(text_type)
     {
     }
 
     [[nodiscard]] Font const& font() const { return m_font; }
+    [[nodiscard]] TextType text_type() const { return m_text_type; }
     [[nodiscard]] Vector<Gfx::DrawGlyphOrEmoji> const& glyphs() const { return m_glyphs; }
     [[nodiscard]] Vector<Gfx::DrawGlyphOrEmoji>& glyphs() { return m_glyphs; }
     [[nodiscard]] bool is_empty() const { return m_glyphs.is_empty(); }
@@ -116,6 +126,7 @@ public:
 private:
     Vector<Gfx::DrawGlyphOrEmoji> m_glyphs;
     NonnullRefPtr<Font> m_font;
+    TextType m_text_type;
 };
 
 Variant<DrawGlyph, DrawEmoji> prepare_draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, Font const& font);
