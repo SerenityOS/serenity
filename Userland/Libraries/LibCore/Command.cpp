@@ -22,6 +22,8 @@ namespace Core {
 
 ErrorOr<NonnullOwnPtr<Command>> Command::create(StringView command, char const* const arguments[])
 {
+    // FIXME: Close pipes in every branch, probably with something nicer than 6 (Armed)ScopeGuards
+    //        (maybe introduce some new variant/api of Core::File that doesn't allocate, just returns RAII owner?).
     auto stdin_fds = TRY(Core::System::pipe2(O_CLOEXEC));
     auto stdout_fds = TRY(Core::System::pipe2(O_CLOEXEC));
     auto stderr_fds = TRY(Core::System::pipe2(O_CLOEXEC));
