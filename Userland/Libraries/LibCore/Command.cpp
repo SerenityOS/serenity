@@ -32,9 +32,10 @@ ErrorOr<NonnullOwnPtr<Command>> Command::create(StringView command, char const* 
     posix_spawn_file_actions_adddup2(&file_actions, stdout_fds[1], STDOUT_FILENO);
     posix_spawn_file_actions_adddup2(&file_actions, stderr_fds[1], STDERR_FILENO);
 
+    ScopeGuard destroy_file_actions { [&file_actions] { posix_spawn_file_actions_destroy(&file_actions); } };
+
     auto pid = TRY(Core::System::posix_spawnp(command, &file_actions, nullptr, const_cast<char**>(arguments), Core::Environment::raw_environ()));
 
-    posix_spawn_file_actions_destroy(&file_actions);
     ArmedScopeGuard runner_kill { [&pid] { kill(pid, SIGKILL); } };
 
     TRY(Core::System::close(stdin_fds[0]));
