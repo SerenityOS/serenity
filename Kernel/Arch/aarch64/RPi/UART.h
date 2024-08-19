@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel::RPi {
 
@@ -17,6 +18,7 @@ struct UARTRegisters;
 // (The BCM2711 on a Raspberry Pi 4 has five PL011 UARTs; this is always the first of those.)
 class UART {
 public:
+    UART();
     static UART& the();
 
     void send(u32 c);
@@ -25,13 +27,11 @@ public:
     void print_str(char const*, size_t);
 
 private:
-    UART();
-
     void set_baud_rate(int baud_rate, int uart_frequency_in_hz);
     void wait_until_we_can_send();
     void wait_until_we_can_receive();
 
-    UARTRegisters volatile* m_registers;
+    Memory::TypedMapping<UARTRegisters volatile> m_registers;
 };
 
 }

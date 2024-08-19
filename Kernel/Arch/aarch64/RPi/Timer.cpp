@@ -32,7 +32,7 @@ enum FlagBits {
 
 Timer::Timer()
     : HardwareTimer(1)
-    , m_registers(MMIO::the().peripheral<TimerRegisters>(0x3000))
+    , m_registers(MMIO::the().peripheral<TimerRegisters>(0x3000).release_value_but_fixme_should_propagate_errors())
 {
     // FIXME: Actually query the frequency of the timer. By default it is 100MHz.
     m_frequency = 1e6;
