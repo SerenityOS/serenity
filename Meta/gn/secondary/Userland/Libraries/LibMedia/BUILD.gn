@@ -1,5 +1,5 @@
-shared_library("LibVideo") {
-  output_name = "video"
+shared_library("LibMedia") {
+  output_name = "media"
   include_dirs = [ "//Userland/Libraries" ]
 
   deps = [
@@ -17,11 +17,11 @@ shared_library("LibVideo") {
     "Containers/Matroska/MatroskaDemuxer.cpp",
     "Containers/Matroska/Reader.cpp",
     "PlaybackManager.cpp",
-    "VP9/Decoder.cpp",
-    "VP9/Parser.cpp",
-    "VP9/ProbabilityTables.cpp",
-    "VP9/SyntaxElementCounter.cpp",
-    "VP9/TreeParser.cpp",
+    "Video/VP9/Decoder.cpp",
+    "Video/VP9/Parser.cpp",
+    "Video/VP9/ProbabilityTables.cpp",
+    "Video/VP9/SyntaxElementCounter.cpp",
+    "Video/VP9/TreeParser.cpp",
     "VideoFrame.cpp",
   ]
 }

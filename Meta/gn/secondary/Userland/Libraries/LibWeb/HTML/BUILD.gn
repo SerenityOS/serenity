@@ -31,6 +31,7 @@ source_set("HTML") {
     "DataTransfer.cpp",
     "Dates.cpp",
     "DecodedImageData.cpp",
+    "DedicatedWorkerGlobalScope.cpp",
     "DocumentState.cpp",
     "ElementInternals.cpp",
     "EmbedderPolicy.cpp",
