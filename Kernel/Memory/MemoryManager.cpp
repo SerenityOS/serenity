@@ -62,6 +62,7 @@ ErrorOr<FlatPtr> page_round_up(FlatPtr x)
 // run. If we do, then Singleton would get re-initialized, causing
 // the memory manager to be initialized twice!
 static MemoryManager* s_the;
+static SetOnce s_mm_initialized;
 
 MemoryManager& MemoryManager::the()
 {
@@ -70,7 +71,7 @@ MemoryManager& MemoryManager::the()
 
 bool MemoryManager::is_initialized()
 {
-    return s_the != nullptr;
+    return s_mm_initialized.was_set();
 }
 
 static UNMAP_AFTER_INIT VirtualRange kernel_virtual_range()
@@ -942,6 +943,8 @@ UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
     if (cpu == 0) {
         new MemoryManager;
         kmalloc_enable_expand();
+
+        s_mm_initialized.set();
     }
 }
 
