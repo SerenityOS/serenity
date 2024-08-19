@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Watchdog.h>
 
@@ -21,13 +22,13 @@ constexpr u32 RSTC_WRCFG_MASK = 0xffffffcf;
 constexpr u32 RSTC_WRCFG_FULL_RESET = 0x00000020;
 
 Watchdog::Watchdog()
-    : m_registers(MMIO::the().peripheral<WatchdogRegisters>(0x10'001c))
+    : m_registers(MMIO::the().peripheral<WatchdogRegisters>(0x10'001c).release_value_but_fixme_should_propagate_errors())
 {
 }
 
 Watchdog& Watchdog::the()
 {
-    static Watchdog watchdog;
+    static Singleton<Watchdog> watchdog;
     return watchdog;
 }
 

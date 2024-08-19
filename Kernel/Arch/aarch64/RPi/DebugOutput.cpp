@@ -11,6 +11,9 @@ namespace Kernel {
 
 void debug_output(char ch)
 {
+    if (!Memory::MemoryManager::is_initialized())
+        return;
+
     RPi::UART::the().send(ch);
 }
 

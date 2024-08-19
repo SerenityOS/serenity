@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Arch/aarch64/RPi/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
@@ -90,7 +91,7 @@ enum ControlBits {
 };
 
 UART::UART()
-    : m_registers(MMIO::the().peripheral<UARTRegisters>(0x20'1000))
+    : m_registers(MMIO::the().peripheral<UARTRegisters>(0x20'1000).release_value_but_fixme_should_propagate_errors())
 {
     // Disable UART while changing configuration.
     m_registers->control = 0;
@@ -118,7 +119,7 @@ UART::UART()
 
 UART& UART::the()
 {
-    static UART instance;
+    static Singleton<UART> instance;
     return instance;
 }
 

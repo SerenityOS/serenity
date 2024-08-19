@@ -33,7 +33,7 @@ SDHostController::SDHostController()
     gpio.set_pin_function(26, GPIO::PinFunction::Alternate3); // SD1_DAT2
     gpio.set_pin_function(27, GPIO::PinFunction::Alternate3); // SD1_DAT3
 
-    m_registers = MMIO::the().peripheral<SD::HostControlRegisterMap>(0x30'0000);
+    m_registers = MMIO::the().peripheral<SD::HostControlRegisterMap>(0x30'0000).release_value_but_fixme_should_propagate_errors();
 }
 
 }
