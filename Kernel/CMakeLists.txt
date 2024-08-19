@@ -488,6 +488,8 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         ${RPI_SOURCES}
         ${SOURCES_RUNNING_WITHOUT_MMU}
 
+        kprintf.cpp
+
         Arch/aarch64/Firmware/ACPI/StaticParsing.cpp
 
         Arch/aarch64/archctl.cpp
@@ -498,7 +500,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/FPUState.S
         Arch/aarch64/InterruptManagement.cpp
         Arch/aarch64/Interrupts.cpp
-        Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/PageDirectory.cpp
         Arch/aarch64/Panic.cpp
