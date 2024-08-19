@@ -171,33 +171,23 @@ static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
     u64 normal_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | INNER_SHAREABLE | NORMAL_MEMORY;
     u64 device_memory_flags = ACCESS_FLAG | PAGE_DESCRIPTOR | OUTER_SHAREABLE | DEVICE_MEMORY;
 
-    // TODO: We should change the RPi drivers to use the MemoryManager to map physical memory,
-    //       instead of mapping the complete MMIO region beforehand.
-    auto mmio_base = RPi::MMIO::the().peripheral_base_address().get();
-    auto mmio_end = RPi::MMIO::the().peripheral_end_address().get();
-
     // Align the identity mapping of the kernel image to 2 MiB, the rest of the memory is initially not mapped.
     auto start_of_kernel_range = VirtualAddress((FlatPtr)start_of_kernel_image & ~(FlatPtr)0x1fffff);
     auto end_of_kernel_range = VirtualAddress(((FlatPtr)end_of_kernel_image & ~(FlatPtr)0x1fffff) + 0x200000 - 1);
-    auto start_of_mmio_range = VirtualAddress(mmio_base + KERNEL_MAPPING_BASE);
-    auto end_of_mmio_range = VirtualAddress(mmio_end + KERNEL_MAPPING_BASE);
 
     // FIXME: don't use the memory before `start` as the initial stack
     auto start_of_stack_range = start_of_kernel_range.offset(-128 * KiB);
     auto end_of_stack_range = start_of_kernel_range;
 
     auto start_of_physical_kernel_range = PhysicalAddress(start_of_kernel_range.get()).offset(-calculate_physical_to_link_time_address_offset());
-    auto start_of_physical_mmio_range = PhysicalAddress(mmio_base);
     auto start_of_physical_stack_range = PhysicalAddress { start_of_stack_range.get() }.offset(-calculate_physical_to_link_time_address_offset());
 
     // Insert identity mappings
     insert_entries_for_memory_range(allocator, root_table, start_of_kernel_range.offset(-calculate_physical_to_link_time_address_offset()), end_of_kernel_range.offset(-calculate_physical_to_link_time_address_offset()), start_of_physical_kernel_range, normal_memory_flags);
-    insert_entries_for_memory_range(allocator, root_table, VirtualAddress(mmio_base), VirtualAddress(mmio_end), start_of_physical_mmio_range, device_memory_flags);
     insert_entries_for_memory_range(allocator, root_table, start_of_stack_range.offset(-calculate_physical_to_link_time_address_offset()), end_of_stack_range.offset(-calculate_physical_to_link_time_address_offset()), start_of_physical_stack_range, device_memory_flags);
 
     // Map kernel and MMIO into high virtual memory
     insert_entries_for_memory_range(allocator, root_table, start_of_kernel_range, end_of_kernel_range, start_of_physical_kernel_range, normal_memory_flags);
-    insert_entries_for_memory_range(allocator, root_table, start_of_mmio_range, end_of_mmio_range, start_of_physical_mmio_range, device_memory_flags);
 
     // Map the initial stack
     insert_entries_for_memory_range(allocator, root_table, start_of_stack_range, end_of_stack_range, start_of_physical_stack_range, normal_memory_flags);

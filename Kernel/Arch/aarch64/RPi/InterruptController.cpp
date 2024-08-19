@@ -28,7 +28,7 @@ struct InterruptControllerRegisters {
 };
 
 InterruptController::InterruptController()
-    : m_registers(MMIO::the().peripheral<InterruptControllerRegisters>(0xB200))
+    : m_registers(MMIO::the().peripheral<InterruptControllerRegisters>(0xB200).release_value_but_fixme_should_propagate_errors())
 {
 }
 
