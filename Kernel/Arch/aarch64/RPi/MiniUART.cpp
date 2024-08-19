@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/API/MajorNumberAllocation.h>
+#include <Kernel/Arch/aarch64/RPi/AUX.h>
 #include <Kernel/Arch/aarch64/RPi/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/MiniUART.h>
@@ -24,13 +25,6 @@ struct MiniUARTRegisters {
     u32 extra_control;
     u32 extra_status;
     u32 baud_rate;
-};
-
-// "Table 4. AUX_ENABLES Register"
-enum AuxControlBits {
-    MiniUARTEnable = 1,
-    SPI1Enable = 1 << 1,
-    SPI2Enable = 1 << 2,
 };
 
 // "Table 8. AUX_MU_LCR_REG Register"
@@ -54,8 +48,6 @@ enum LineStatus {
     TransmitterIdle = 1 << 6,
 };
 
-constexpr FlatPtr AUX_ENABLES = 0x21'5000;
-
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<MiniUART>> MiniUART::create()
 {
     return Device::try_create_device<MiniUART>();
@@ -64,7 +56,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<MiniUART>> MiniUART::create()
 // FIXME: Consider not hardcoding the minor number and allocate it dynamically.
 UNMAP_AFTER_INIT MiniUART::MiniUART()
     : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Serial, 0)
-    , m_registers(MMIO::the().peripheral<MiniUARTRegisters>(0x21'5040))
+    , m_registers(MMIO::the().peripheral<MiniUARTRegisters>(0x21'5040).release_value_but_fixme_should_propagate_errors())
 {
     auto& gpio = GPIO::the();
     gpio.set_pin_function(40, GPIO::PinFunction::Alternate5); // TXD1
@@ -72,7 +64,7 @@ UNMAP_AFTER_INIT MiniUART::MiniUART()
     gpio.set_pin_pull_up_down_state(Array { 40, 41 }, GPIO::PullUpDownState::Disable);
 
     // The mini UART peripheral needs to be enabled before we can configure it.
-    MMIO::the().write(AUX_ENABLES, MMIO::the().read(AUX_ENABLES) | MiniUARTEnable);
+    AUX::set_peripheral_enabled(AUX::Peripheral::MiniUART, true);
 
     set_baud_rate(115'200);
     m_registers->line_control = DataSize8Bits;

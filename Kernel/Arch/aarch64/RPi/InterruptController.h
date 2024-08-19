@@ -9,6 +9,7 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/aarch64/IRQController.h>
+#include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel::RPi {
 
@@ -34,7 +35,7 @@ private:
         return "Raspberry Pi Interrupt Controller"sv;
     }
 
-    InterruptControllerRegisters volatile* m_registers;
+    Memory::TypedMapping<InterruptControllerRegisters volatile> m_registers;
 };
 
 }

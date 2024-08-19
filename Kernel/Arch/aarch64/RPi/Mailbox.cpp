@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
@@ -15,18 +16,19 @@ namespace Kernel::RPi {
 // There's one mailbox at MBOX_BASE_OFFSET for reading responses from VideoCore, and one at MBOX_BASE_OFFSET + 0x20 for sending requests.
 // Each has its own status word.
 
-constexpr u32 MBOX_BASE_OFFSET = 0xB880;
-constexpr u32 MBOX_0 = MBOX_BASE_OFFSET;
-constexpr u32 MBOX_1 = MBOX_BASE_OFFSET + 0x20;
+struct MailboxRegisters {
+    u32 read_data;
+    u32 reserved0[3];
+    u32 read_poll;
+    u32 read_sender;
+    u32 read_status;
+    u32 read_config;
 
-constexpr u32 MBOX_READ_DATA = MBOX_0;
-constexpr u32 MBOX_READ_POLL = MBOX_0 + 0x10;
-constexpr u32 MBOX_READ_SENDER = MBOX_0 + 0x14;
-constexpr u32 MBOX_READ_STATUS = MBOX_0 + 0x18;
-constexpr u32 MBOX_READ_CONFIG = MBOX_0 + 0x1C;
-
-constexpr u32 MBOX_WRITE_DATA = MBOX_1;
-constexpr u32 MBOX_WRITE_STATUS = MBOX_1 + 0x18;
+    u32 write_data;
+    u32 reserved1[5];
+    u32 write_status;
+};
+static_assert(AssertSize<MailboxRegisters, 60>());
 
 constexpr u32 MBOX_RESPONSE_SUCCESS = 0x8000'0000;
 constexpr u32 MBOX_RESPONSE_PARTIAL = 0x8000'0001;
@@ -35,6 +37,11 @@ constexpr u32 MBOX_FULL = 0x8000'0000;
 constexpr u32 MBOX_EMPTY = 0x4000'0000;
 
 constexpr int ARM_TO_VIDEOCORE_CHANNEL = 8;
+
+Mailbox::Mailbox()
+    : m_registers(MMIO::the().peripheral<MailboxRegisters>(0xb880).release_value_but_fixme_should_propagate_errors())
+{
+}
 
 Mailbox::Message::Message(u32 tag, u32 arguments_size)
 {
@@ -56,25 +63,25 @@ bool Mailbox::MessageHeader::success() const
 
 Mailbox& Mailbox::the()
 {
-    static Mailbox instance;
+    static Singleton<Mailbox> instance;
     return instance;
 }
 
-static void wait_until_we_can_write(MMIO& mmio)
+void Mailbox::wait_until_we_can_write() const
 {
     // Since nothing else writes to the mailbox, this wait is mostly cargo-culted.
     // Most baremetal tutorials on the internet query MBOX_READ_STATUS here, which I think is incorrect and only works because this wait really isn't needed.
-    while (mmio.read(MBOX_WRITE_STATUS) & MBOX_FULL)
+    while ((m_registers->write_status & MBOX_FULL) != 0)
         Processor::wait_check();
 }
 
-static void wait_for_reply(MMIO& mmio)
+void Mailbox::wait_for_reply() const
 {
-    while (mmio.read(MBOX_READ_STATUS) & MBOX_EMPTY)
+    while ((m_registers->read_status & MBOX_EMPTY) != 0)
         Processor::wait_check();
 }
 
-bool Mailbox::send_queue(void* queue, u32 queue_size) const
+bool Mailbox::send_queue(void* queue, u32 queue_size)
 {
     // According to Raspberry Pi specs this is the only channel implemented.
     u32 const channel = ARM_TO_VIDEOCORE_CHANNEL;
@@ -82,14 +89,12 @@ bool Mailbox::send_queue(void* queue, u32 queue_size) const
     auto message_header = reinterpret_cast<MessageHeader*>(queue);
     message_header->set_queue_size(queue_size);
 
-    auto& mmio = MMIO::the();
-
     // The mailbox interface has a FIFO for message delivery in both directions.
     // Responses can be delivered out of order to requests, but we currently ever only send on request at once.
     // It'd be nice to have an async interface here where we send a message, then return immediately, and read the response when an interrupt arrives.
     // But for now, this is synchronous.
 
-    wait_until_we_can_write(mmio);
+    wait_until_we_can_write();
 
     // The mailbox message is 32-bit based, so this assumes that message is in the first 4 GiB.
     // FIXME: Memory::virtual_to_low_physical only works for the initial kernel mappings (including the stack).
@@ -101,12 +106,12 @@ bool Mailbox::send_queue(void* queue, u32 queue_size) const
     // The queue buffer might point to normal cached memory, so flush any writes that are in cache and not visible to VideoCore.
     Aarch64::Asm::flush_data_cache((FlatPtr)queue, queue_size);
 
-    mmio.write(MBOX_WRITE_DATA, request);
+    m_registers->write_data = request;
 
     for (;;) {
-        wait_for_reply(mmio);
+        wait_for_reply();
 
-        u32 response = mmio.read(MBOX_READ_DATA);
+        u32 response = m_registers->read_data;
         // We keep at most one message in flight and do synchronous communication, so response will always be == request for us.
         if (response == request)
             return message_header->success();

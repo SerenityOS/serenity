@@ -8,6 +8,7 @@
 
 #include <AK/Array.h>
 #include <AK/Types.h>
+#include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel::RPi {
 
@@ -16,6 +17,8 @@ struct GPIOControlRegisters;
 // Can configure the general-purpose I/O registers on a Raspberry Pi.
 class GPIO {
 public:
+    GPIO();
+
     enum class PinFunction {
         Input = 0,
         Output = 1,
@@ -53,10 +56,9 @@ public:
     void set_pin_high_detect_enable(unsigned pin_number, bool enable);
 
 private:
-    GPIO();
     void internal_enable_pins(u32 enable[2], PullUpDownState state);
 
-    GPIOControlRegisters volatile* m_registers;
+    Memory::TypedMapping<GPIOControlRegisters volatile> m_registers;
 };
 
 }
