@@ -29,6 +29,7 @@ source_set("CSS") {
     "CSSTransition.cpp",
     "CalculatedOr.cpp",
     "Clip.cpp",
+    "CountersSet.cpp",
     "Display.cpp",
     "EdgeRect.cpp",
     "Flex.cpp",

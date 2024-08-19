@@ -277,6 +277,7 @@ source_set("all_generated") {
 config("configs") {
   include_dirs = [
     "//Userland/Libraries",
+    "//Userland/Services",
     "$target_gen_dir/..",
   ]
   configs = [ "//AK:ak_headers" ]
@@ -357,6 +358,7 @@ shared_library("LibWeb") {
            "//Userland/Libraries/LibJS",
            "//Userland/Libraries/LibLocale",
            "//Userland/Libraries/LibMarkdown",
+           "//Userland/Libraries/LibMedia",
            "//Userland/Libraries/LibRegex",
            "//Userland/Libraries/LibSoftGPU",
            "//Userland/Libraries/LibSyntax",
@@ -364,7 +366,6 @@ shared_library("LibWeb") {
            "//Userland/Libraries/LibTextCodec",
            "//Userland/Libraries/LibURL",
            "//Userland/Libraries/LibUnicode",
-           "//Userland/Libraries/LibVideo",
            "//Userland/Libraries/LibWasm",
            "//Userland/Libraries/LibXML",
          ] + idl_sources_targets
