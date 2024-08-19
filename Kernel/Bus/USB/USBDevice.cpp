@@ -31,7 +31,7 @@ ErrorOr<NonnullLockRefPtr<Device>> Device::try_create(USBController& controller,
     // "probe" function, which initialises the local state for the device driver.
     // It is currently the driver's responsibility to search the configuration/interface
     // and take the appropriate action.
-    for (auto& driver : USBManagement::the().available_drivers()) {
+    for (auto& driver : USBManagement::available_drivers()) {
         // FIXME: Some devices have multiple configurations, for which we may have a better driver,
         //        than the first we find, or we have a vendor specific driver for the device,
         //        so we want a prioritization mechanism here
