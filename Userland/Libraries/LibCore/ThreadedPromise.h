@@ -3,6 +3,7 @@
  * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  * Copyright (c) 2021-2023, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2023, Gregory Bertilson <zaggy1024@gmail.com>
+ * Copyright (c) 2024, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -125,7 +126,7 @@ public:
         auto new_promise = ThreadedPromise<T, ErrorType>::create();
         when_resolved([=, chained_resolution = move(chained_resolution)](ResultType&& result) mutable -> ErrorOr<void> {
             chained_resolution(forward<ResultType>(result))
-                ->when_resolved([=](auto&& new_result) { new_promise->resolve(move(new_result)); })
+                ->when_resolved([=](auto&& new_result) { new_promise->resolve(forward(new_result)); })
                 .when_rejected([=](ErrorType&& error) { new_promise->reject(move(error)); });
             return {};
         });
