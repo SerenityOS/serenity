@@ -147,7 +147,7 @@ WebContentView::WebContentView(QWidget* window, WebContentOptions const& web_con
 
 WebContentView::~WebContentView() = default;
 
-static Web::UIEvents::MouseButton get_button_from_qt_event(Qt::MouseButton button)
+static Web::UIEvents::MouseButton get_button_from_qt_mouse_button(Qt::MouseButton button)
 {
     if (button == Qt::MouseButton::LeftButton)
         return Web::UIEvents::MouseButton::Primary;
@@ -162,7 +162,7 @@ static Web::UIEvents::MouseButton get_button_from_qt_event(Qt::MouseButton butto
     return Web::UIEvents::MouseButton::None;
 }
 
-static Web::UIEvents::MouseButton get_buttons_from_qt_event(Qt::MouseButtons buttons)
+static Web::UIEvents::MouseButton get_buttons_from_qt_mouse_buttons(Qt::MouseButtons buttons)
 {
     auto result = Web::UIEvents::MouseButton::None;
     if (buttons.testFlag(Qt::MouseButton::LeftButton))
@@ -178,7 +178,7 @@ static Web::UIEvents::MouseButton get_buttons_from_qt_event(Qt::MouseButtons but
     return result;
 }
 
-static Web::UIEvents::KeyModifier get_modifiers_from_qt_mouse_event(Qt::KeyboardModifiers modifiers)
+static Web::UIEvents::KeyModifier get_modifiers_from_qt_keyboard_modifiers(Qt::KeyboardModifiers modifiers)
 {
     auto result = Web::UIEvents::KeyModifier::Mod_None;
     if (modifiers.testFlag(Qt::AltModifier))
@@ -190,7 +190,7 @@ static Web::UIEvents::KeyModifier get_modifiers_from_qt_mouse_event(Qt::Keyboard
     return result;
 }
 
-static Web::UIEvents::KeyModifier get_modifiers_from_qt_keyboard_event(QKeyEvent const& event)
+static Web::UIEvents::KeyModifier get_modifiers_from_qt_key_event(QKeyEvent const& event)
 {
     auto modifiers = Web::UIEvents::KeyModifier::Mod_None;
     if (event.modifiers().testFlag(Qt::AltModifier))
@@ -208,7 +208,7 @@ static Web::UIEvents::KeyModifier get_modifiers_from_qt_keyboard_event(QKeyEvent
     return modifiers;
 }
 
-static Web::UIEvents::KeyCode get_keycode_from_qt_keyboard_event(QKeyEvent const& event)
+static Web::UIEvents::KeyCode get_keycode_from_qt_key_event(QKeyEvent const& event)
 {
     struct Mapping {
         constexpr Mapping(Qt::Key q, Web::UIEvents::KeyCode s)
@@ -755,9 +755,9 @@ void WebContentView::enqueue_native_event(Web::MouseEvent::Type type, QSinglePoi
     Web::DevicePixelPoint position = { event.position().x() * m_device_pixel_ratio, event.position().y() * m_device_pixel_ratio };
     auto screen_position = Gfx::IntPoint { event.globalPosition().x() * m_device_pixel_ratio, event.globalPosition().y() * m_device_pixel_ratio };
 
-    auto button = get_button_from_qt_event(event.button());
-    auto buttons = get_buttons_from_qt_event(event.buttons());
-    auto modifiers = get_modifiers_from_qt_mouse_event(event.modifiers());
+    auto button = get_button_from_qt_mouse_button(event.button());
+    auto buttons = get_buttons_from_qt_mouse_buttons(event.buttons());
+    auto modifiers = get_modifiers_from_qt_keyboard_modifiers(event.modifiers());
 
     if (button == 0 && (type == Web::MouseEvent::Type::MouseDown || type == Web::MouseEvent::Type::MouseUp)) {
         // We could not convert Qt buttons to something that LibWeb can recognize - don't even bother propagating this
@@ -807,9 +807,9 @@ void WebContentView::enqueue_native_event(Web::DragEvent::Type type, QDropEvent 
     auto global_position = mapToGlobal(event.position());
     auto screen_position = Gfx::IntPoint { global_position.x() * m_device_pixel_ratio, global_position.y() * m_device_pixel_ratio };
 
-    auto button = get_button_from_qt_event(Qt::LeftButton);
-    auto buttons = get_buttons_from_qt_event(event.buttons());
-    auto modifiers = get_modifiers_from_qt_mouse_event(event.modifiers());
+    auto button = get_button_from_qt_mouse_button(Qt::LeftButton);
+    auto buttons = get_buttons_from_qt_mouse_buttons(event.buttons());
+    auto modifiers = get_modifiers_from_qt_keyboard_modifiers(event.modifiers());
 
     Vector<Web::HTML::SelectedFile> files;
     OwnPtr<DragData> chrome_data;
@@ -852,8 +852,8 @@ struct KeyData : Web::ChromeInputData {
 
 void WebContentView::enqueue_native_event(Web::KeyEvent::Type type, QKeyEvent const& event)
 {
-    auto keycode = get_keycode_from_qt_keyboard_event(event);
-    auto modifiers = get_modifiers_from_qt_keyboard_event(event);
+    auto keycode = get_keycode_from_qt_key_event(event);
+    auto modifiers = get_modifiers_from_qt_key_event(event);
 
     auto text = event.text();
     auto code_point = text.isEmpty() ? 0u : event.text()[0].unicode();
