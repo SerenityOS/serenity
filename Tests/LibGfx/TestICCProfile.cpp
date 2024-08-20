@@ -288,3 +288,10 @@ TEST_CASE(malformed_profile)
         EXPECT(profile_or_error.is_error());
     }
 }
+
+TEST_CASE(v2_pcs_illuminant)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("icc/pcs-v2.icc"sv)));
+    auto icc_profile = MUST(Gfx::ICC::Profile::try_load_from_externally_owned_memory(file->bytes()));
+    EXPECT(icc_profile->is_v2());
+}
