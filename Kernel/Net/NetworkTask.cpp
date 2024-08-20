@@ -62,6 +62,8 @@ void NetworkTask_main(void*)
         if (adapter.class_name() == "LoopbackAdapter"sv) {
             adapter.set_ipv4_address({ 127, 0, 0, 1 });
             adapter.set_ipv4_netmask({ 255, 0, 0, 0 });
+            adapter.set_ipv6_address(IPv6Address::loopback());
+            adapter.set_ipv6_prefixlen(128);
         }
 
         adapter.on_receive = [&]() {
