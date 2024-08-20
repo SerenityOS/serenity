@@ -5,6 +5,7 @@
  */
 
 #include <AK/JsonObjectSerializer.h>
+#include <AK/String.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Network/Adapters.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Sections.h>
@@ -35,6 +36,11 @@ ErrorOr<void> SysFSNetworkAdaptersStats::try_generate(KBufferBuilder& builder)
             TRY(obj.add("ipv4_address"sv, ipv4_address->view()));
             auto ipv4_netmask = TRY(adapter.ipv4_netmask().to_string());
             TRY(obj.add("ipv4_netmask"sv, ipv4_netmask->view()));
+        }
+        if (!adapter.ipv6_address().is_zero()) {
+            auto ipv6_address = TRY(adapter.ipv6_address().to_string());
+            TRY(obj.add("ipv6_address"sv, ipv6_address->view()));
+            TRY(obj.add("ipv6_prefixlen"sv, adapter.ipv6_prefixlen()));
         }
         TRY(obj.add("packets_in"sv, adapter.packets_in()));
         TRY(obj.add("bytes_in"sv, adapter.bytes_in()));

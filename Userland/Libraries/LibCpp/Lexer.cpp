@@ -146,6 +146,7 @@ constexpr StringView s_known_types[] = {
     "HashMap"sv,
     "HashTable"sv,
     "IPv4Address"sv,
+    "IPv6Address"sv,
     "IntrusiveList"sv,
     "IntrusiveList"sv,
     "JsonArray"sv,

@@ -43,6 +43,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto mac_address = if_object.get_byte_string("mac_address"sv).value_or({});
             auto ipv4_address = if_object.get_byte_string("ipv4_address"sv).value_or({});
             auto netmask = if_object.get_byte_string("ipv4_netmask"sv).value_or({});
+            auto ipv6_address = if_object.get_byte_string("ipv6_address"sv).value_or({});
+            auto ipv6_prefixlen = if_object.get_u32("ipv6_prefixlen"sv).value_or({});
             auto packets_in = if_object.get_u32("packets_in"sv).value_or(0);
             auto bytes_in = if_object.get_u32("bytes_in"sv).value_or(0);
             auto packets_out = if_object.get_u32("packets_out"sv).value_or(0);
@@ -51,8 +53,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             outln("{}:", name);
             outln("\tmac: {}", mac_address);
-            outln("\tipv4: {}", ipv4_address);
-            outln("\tnetmask: {}", netmask);
+            if (ipv4_address != ByteString {}) {
+                outln("\tipv4: {}", ipv4_address);
+                outln("\tipv4_netmask: {}", netmask);
+            }
+            if (ipv6_address != ByteString {}) {
+                outln("\tipv6: {}", ipv6_address);
+                outln("\tipv6_prefixlen: {}", ipv6_prefixlen);
+            }
             outln("\tclass: {}", class_name);
             outln("\tRX: {} packets {} bytes ({})", packets_in, bytes_in, human_readable_size(bytes_in));
             outln("\tTX: {} packets {} bytes ({})", packets_out, bytes_out, human_readable_size(bytes_out));
