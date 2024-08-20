@@ -23,11 +23,22 @@ endif()
 
 set(JAKT_COMPILER "${SerenityOS_SOURCE_DIR}/Toolchain/Local/jakt/bin/jakt")
 set(JAKT_TARGET_TRIPLE ${arch}-${vendor}-${os}-unknown)
-set(JAKT_LIBRARY_BASE "${CMAKE_SYSROOT}/usr/local/lib")
+if(${PROJECT_NAME} STREQUAL "Lagom")
+    set(JAKT_TARGET_TRIPLE ${arch}-unknown-${os}-unknown)
+    set(JAKT_LIBRARY_BASE "${SerenityOS_SOURCE_DIR}/Toolchain/Local/jakt/lib")
+else()
+    set(JAKT_LIBRARY_BASE "${CMAKE_SYSROOT}/usr/local/lib")
+endif()
 set(JAKT_LIBRARY_DIR "${JAKT_LIBRARY_BASE}/${JAKT_TARGET_TRIPLE}")
 set(JAKT_INCLUDE_DIR "${CMAKE_SYSROOT}/usr/local/include/runtime")
 cmake_host_system_information(RESULT JAKT_PROCESSOR_COUNT QUERY NUMBER_OF_PHYSICAL_CORES)
 set_property(GLOBAL PROPERTY JOB_POOLS jakt_pool=1)
+
+set(JAKT_COMPILER ${JAKT_COMPILER} CACHE PATH "Path to the jakt compiler" FORCE)
+set(JAKT_TARGET_TRIPLE ${JAKT_TARGET_TRIPLE} CACHE STRING "Target triple for the jakt compiler" FORCE)
+set(JAKT_LIBRARY_DIR ${JAKT_LIBRARY_DIR} CACHE PATH "Path to the jakt library directory" FORCE)
+set(JAKT_INCLUDE_DIR ${JAKT_INCLUDE_DIR} CACHE PATH "Path to the jakt include directory" FORCE)
+set(JAKT_PROCESSOR_COUNT ${JAKT_PROCESSOR_COUNT} CACHE STRING "Number of physical cores" FORCE)
 
 message(STATUS "Using jakt compiler at ${JAKT_COMPILER}")
 message(STATUS "Using jakt target triple ${JAKT_TARGET_TRIPLE}")
@@ -62,6 +73,20 @@ function(add_jakt_executable target source)
         OUTPUT_VARIABLE source_abs
     )
 
+    add_executable(${JAKT_EXECUTABLE_NAME} ${EMPTY_SOURCE_FILE})
+    get_property(compile_flags TARGET ${JAKT_EXECUTABLE_NAME} PROPERTY COMPILE_OPTIONS)
+
+    set(extra_cpp_flags "--extra-cpp-flag-std=c++2b") # FIXME: CMake should be setting this, but sometimes (e.g. macOS /usr/bin/c++ for lagom) it doesn't;
+                                                      #        Passing it here allows us to build on AppleClang 15, and if CMake starts setting it, it will be overridden by later flags.
+    foreach(flag IN LISTS compile_flags)
+        list(APPEND extra_cpp_flags "--extra-cpp-flag${flag}")
+    endforeach()
+
+    set(sysroot_arg)
+    if (CMAKE_SYSROOT)
+        set(sysroot_arg "--extra-cpp-flag--sysroot=${CMAKE_SYSROOT}")
+    endif()
+
     add_custom_command(
         OUTPUT ${main_output}
         COMMAND ${JAKT_COMPILER}
@@ -75,7 +100,11 @@ function(add_jakt_executable target source)
             --link-archive ${main_output_name}
             --runtime-library-path ${JAKT_LIBRARY_BASE}
             --dep-file ${depfile}
-            --extra-cpp-flag --sysroot=${CMAKE_SYSROOT}
+            ${sysroot_arg}
+            ${extra_cpp_flags}
+            --extra-cpp-flag-Wno-unused-parameter
+            --extra-cpp-flag-Wno-unused-variable
+            --extra-cpp-flag-Wno-unused-value
             ${configs}
             ${includes}
             ${extra_cpp_sources}
@@ -95,7 +124,6 @@ function(add_jakt_executable target source)
         COMMAND ${CMAKE_COMMAND} -E touch ${EMPTY_SOURCE_FILE}
     )
 
-    add_executable(${JAKT_EXECUTABLE_NAME} ${EMPTY_SOURCE_FILE})
     add_dependencies(${JAKT_EXECUTABLE_NAME} ${JAKT_EXECUTABLE_NAME}.t)
 
     add_library(${JAKT_EXECUTABLE_NAME}.lib STATIC IMPORTED)

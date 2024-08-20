@@ -6,6 +6,9 @@ set -eo pipefail
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# serenity | lagom
+FINAL_TARGET="${1:-serenity}"
+
 # shellcheck source=/dev/null
 . "${DIR}/../Meta/shell_include.sh"
 
@@ -50,7 +53,7 @@ for ARCH in "${ARCHES[@]}"; do
   fi
 done
 
-if [ "${#VALID_TOOLCHAINS}" -eq 0 ]; then
+if [ "$FINAL_TARGET" = serenity ] && [ "${#VALID_TOOLCHAINS}" -eq 0 ]; then
     die "Need to build at least one C++ toolchain (either GNU or Clang) before BuildJakt.sh can succeed"
 fi
 
@@ -152,6 +155,11 @@ pushd "$DIR/Build/jakt"
     echo "XXX install jakt"
     buildstep_ninja "jakt/install" ninja install
 popd
+
+if ! [ "$FINAL_TARGET" = serenity ]; then
+    echo "Done creating jakt toolchain for host"
+    exit 0
+fi
 
 build_for() {
     TOOLCHAIN="$1"

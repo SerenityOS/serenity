@@ -79,6 +79,11 @@ jobs:
         if: ${{ inputs.os == 'macos-14' }}
         run: sqlite3 $HOME/Library/Application\ Support/com.apple.TCC/TCC.db "INSERT OR IGNORE INTO access VALUES ('kTCCServiceMicrophone','/usr/local/opt/runner/provisioner/provisioner',1,2,4,1,NULL,NULL,0,'UNUSED',NULL,0,1687786159,NULL,NULL,'UNUSED',1687786159);"
 
+      - name: Build jakt toolchain
+        if: ${{ !steps.cache-restore.output.jakt_prebuilt_hit }}
+        run: "ARCH=\"${{ matrix.arch }}\" CXX=g++-13 ${{ github.workspace }}/Toolchain/BuildJakt.sh lagom"
+
+
       - name: Create Build Environment
         if: ${{ inputs.fuzzer == 'NO_FUZZ' }}
         working-directory: ${{ github.workspace }}/Meta/Lagom
@@ -144,6 +149,8 @@ jobs:
           arch: 'Lagom'
           serenity_ccache_path: ${{ env.CCACHE_DIR }}
           serenity_ccache_primary_key: ${{ steps.cache-restore.outputs.serenity_ccache_primary_key }}
+          jakt_prebuilt_primary_key: ${{ steps.cache-restore.outputs.jakt_prebuilt_primary_key }}
+          jakt_prebuilt_hit: ${{ steps.cache-restore.outputs.jakt_prebuilt_hit }}
 
       # === TEST ===
 
