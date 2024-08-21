@@ -84,39 +84,138 @@ GHash::TagType GHash::process(ReadonlyBytes aad, ReadonlyBytes cipher)
     return digest;
 }
 
-/// Galois Field multiplication using <x^127 + x^7 + x^2 + x + 1>.
-/// Note that x, y, and z are strictly BE.
 void galois_multiply(u32 (&_z)[4], u32 const (&_x)[4], u32 const (&_y)[4])
 {
-    // Note: Copied upfront to stack to avoid memory access in the loop.
-    u32 x[4] { _x[0], _x[1], _x[2], _x[3] };
-    u32 const y[4] { _y[0], _y[1], _y[2], _y[3] };
-    u32 z[4] { 0, 0, 0, 0 };
+    static auto const mul_32_x_32_64 = [](u32 const& a, u32 const& b) -> u64 {
+        return static_cast<u64>(a) * static_cast<u64>(b);
+    };
 
-    // Unrolled by 32, the access in y[3-(i/32)] can be cached throughout the loop.
-#pragma GCC unroll 32
-    for (ssize_t i = 127, j = 0; i > -1; --i, j++) {
-        auto r = -((y[j / 32] >> (i % 32)) & 1);
-        z[0] ^= x[0] & r;
-        z[1] ^= x[1] & r;
-        z[2] ^= x[2] & r;
-        z[3] ^= x[3] & r;
-        auto a0 = x[0] & 1;
-        x[0] >>= 1;
-        auto a1 = x[1] & 1;
-        x[1] >>= 1;
-        x[1] |= a0 << 31;
-        auto a2 = x[2] & 1;
-        x[2] >>= 1;
-        x[2] |= a1 << 31;
-        auto a3 = x[3] & 1;
-        x[3] >>= 1;
-        x[3] |= a2 << 31;
+    static auto const clmul_32_x_32_64 = [](u32 const& a, u32 const& b, u32& lo, u32& hi) -> void {
+        u32 ta[4];
+        u32 tb[4];
+        u64 tu64[4];
+        u64 tc[4];
+        u64 cc;
 
-        x[0] ^= 0xe1000000 & -a3;
+        ta[0] = a & static_cast<u32>(0x11111111ul);
+        ta[1] = a & static_cast<u32>(0x22222222ul);
+        ta[2] = a & static_cast<u32>(0x44444444ul);
+        ta[3] = a & static_cast<u32>(0x88888888ul);
+        tb[0] = b & static_cast<u32>(0x11111111ul);
+        tb[1] = b & static_cast<u32>(0x22222222ul);
+        tb[2] = b & static_cast<u32>(0x44444444ul);
+        tb[3] = b & static_cast<u32>(0x88888888ul);
+        tu64[0] = mul_32_x_32_64(ta[0], tb[0]);
+        tu64[1] = mul_32_x_32_64(ta[1], tb[3]);
+        tu64[2] = mul_32_x_32_64(ta[2], tb[2]);
+        tu64[3] = mul_32_x_32_64(ta[3], tb[1]);
+        tc[0] = tu64[0] ^ tu64[1] ^ tu64[2] ^ tu64[3];
+        tu64[0] = mul_32_x_32_64(ta[0], tb[1]);
+        tu64[1] = mul_32_x_32_64(ta[1], tb[0]);
+        tu64[2] = mul_32_x_32_64(ta[2], tb[3]);
+        tu64[3] = mul_32_x_32_64(ta[3], tb[2]);
+        tc[1] = tu64[0] ^ tu64[1] ^ tu64[2] ^ tu64[3];
+        tu64[0] = mul_32_x_32_64(ta[0], tb[2]);
+        tu64[1] = mul_32_x_32_64(ta[1], tb[1]);
+        tu64[2] = mul_32_x_32_64(ta[2], tb[0]);
+        tu64[3] = mul_32_x_32_64(ta[3], tb[3]);
+        tc[2] = tu64[0] ^ tu64[1] ^ tu64[2] ^ tu64[3];
+        tu64[0] = mul_32_x_32_64(ta[0], tb[3]);
+        tu64[1] = mul_32_x_32_64(ta[1], tb[2]);
+        tu64[2] = mul_32_x_32_64(ta[2], tb[1]);
+        tu64[3] = mul_32_x_32_64(ta[3], tb[0]);
+        tc[3] = tu64[0] ^ tu64[1] ^ tu64[2] ^ tu64[3];
+        tc[0] &= static_cast<u64>(0x1111111111111111ull);
+        tc[1] &= static_cast<u64>(0x2222222222222222ull);
+        tc[2] &= static_cast<u64>(0x4444444444444444ull);
+        tc[3] &= static_cast<u64>(0x8888888888888888ull);
+        cc = tc[0] | tc[1] | tc[2] | tc[3];
+        lo = static_cast<u32>((cc >> (0 * 32)) & 0xfffffffful);
+        hi = static_cast<u32>((cc >> (1 * 32)) & 0xfffffffful);
+    };
+
+    u32 aa[4];
+    u32 bb[4];
+    u32 ta[9];
+    u32 tb[9];
+    u32 tc[4];
+    u32 tu32[4];
+    u32 td[4];
+    u32 te[4];
+    u32 z[8];
+
+    aa[3] = _x[0];
+    aa[2] = _x[1];
+    aa[1] = _x[2];
+    aa[0] = _x[3];
+    bb[3] = _y[0];
+    bb[2] = _y[1];
+    bb[1] = _y[2];
+    bb[0] = _y[3];
+    ta[0] = aa[0];
+    ta[1] = aa[1];
+    ta[2] = ta[0] ^ ta[1];
+    ta[3] = aa[2];
+    ta[4] = aa[3];
+    ta[5] = ta[3] ^ ta[4];
+    ta[6] = ta[0] ^ ta[3];
+    ta[7] = ta[1] ^ ta[4];
+    ta[8] = ta[6] ^ ta[7];
+    tb[0] = bb[0];
+    tb[1] = bb[1];
+    tb[2] = tb[0] ^ tb[1];
+    tb[3] = bb[2];
+    tb[4] = bb[3];
+    tb[5] = tb[3] ^ tb[4];
+    tb[6] = tb[0] ^ tb[3];
+    tb[7] = tb[1] ^ tb[4];
+    tb[8] = tb[6] ^ tb[7];
+    for (int i = 0; i != 9; ++i) {
+        clmul_32_x_32_64(ta[i], tb[i], ta[i], tb[i]);
     }
-
-    memcpy(_z, z, sizeof(z));
+    tc[0] = ta[0];
+    tc[1] = ta[0] ^ ta[1] ^ ta[2] ^ tb[0];
+    tc[2] = ta[1] ^ tb[0] ^ tb[1] ^ tb[2];
+    tc[3] = tb[1];
+    td[0] = ta[3];
+    td[1] = ta[3] ^ ta[4] ^ ta[5] ^ tb[3];
+    td[2] = ta[4] ^ tb[3] ^ tb[4] ^ tb[5];
+    td[3] = tb[4];
+    te[0] = ta[6];
+    te[1] = ta[6] ^ ta[7] ^ ta[8] ^ tb[6];
+    te[2] = ta[7] ^ tb[6] ^ tb[7] ^ tb[8];
+    te[3] = tb[7];
+    te[0] ^= (tc[0] ^ td[0]);
+    te[1] ^= (tc[1] ^ td[1]);
+    te[2] ^= (tc[2] ^ td[2]);
+    te[3] ^= (tc[3] ^ td[3]);
+    tc[2] ^= te[0];
+    tc[3] ^= te[1];
+    td[0] ^= te[2];
+    td[1] ^= te[3];
+    z[0] = tc[0] << 1;
+    z[1] = (tc[1] << 1) | (tc[0] >> 31);
+    z[2] = (tc[2] << 1) | (tc[1] >> 31);
+    z[3] = (tc[3] << 1) | (tc[2] >> 31);
+    z[4] = (td[0] << 1) | (tc[3] >> 31);
+    z[5] = (td[1] << 1) | (td[0] >> 31);
+    z[6] = (td[2] << 1) | (td[1] >> 31);
+    z[7] = (td[3] << 1) | (td[2] >> 31);
+    for (int i = 0; i != 4; ++i) {
+        tu32[0] = z[i] << 31;
+        tu32[1] = z[i] << 30;
+        tu32[2] = z[i] << 25;
+        z[i + 3] ^= (tu32[0] ^ tu32[1] ^ tu32[2]);
+        tu32[0] = z[i] >> 0;
+        tu32[1] = z[i] >> 1;
+        tu32[2] = z[i] >> 2;
+        tu32[3] = z[i] >> 7;
+        z[i + 4] ^= (tu32[0] ^ tu32[1] ^ tu32[2] ^ tu32[3]);
+    }
+    _z[0] = z[7];
+    _z[1] = z[6];
+    _z[2] = z[5];
+    _z[3] = z[4];
 }
 
 }
