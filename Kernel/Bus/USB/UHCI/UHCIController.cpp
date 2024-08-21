@@ -722,7 +722,7 @@ ErrorOr<void> UHCIController::spawn_async_poll_process()
     return {};
 }
 
-bool UHCIController::handle_irq(RegisterState const&)
+bool UHCIController::handle_irq()
 {
     u32 status = read_usbsts();
 

@@ -34,7 +34,7 @@ public:
     virtual size_t calculate_nearest_possible_frequency(size_t) const override { TODO_RISCV64(); }
 
     virtual void will_be_destroyed() override { }
-    virtual Function<void(RegisterState const&)> set_callback(Function<void(RegisterState const&)> callback) override
+    virtual Function<void()> set_callback(Function<void()> callback) override
     {
         auto previous_callback = move(m_callback);
         m_callback = move(callback);
@@ -43,7 +43,7 @@ public:
 
     // FIXME: Share code with HPET::update_time
     u64 update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only);
-    void handle_interrupt(RegisterState const&);
+    void handle_interrupt();
 
 private:
     Timer();
@@ -51,7 +51,7 @@ private:
     static u64 current_ticks();
     static void set_compare(u64 compare);
 
-    Function<void(RegisterState const&)> m_callback;
+    Function<void()> m_callback;
     u64 m_frequency { 0 };
     u32 m_interrupt_interval { 0 };
 

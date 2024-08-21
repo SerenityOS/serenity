@@ -129,7 +129,7 @@ extern "C" void handle_interrupt(TrapFrame& trap_frame)
             auto* handler = s_interrupt_handlers[irq];
             VERIFY(handler);
             handler->increment_call_count();
-            handler->handle_interrupt(*trap_frame.regs);
+            handler->handle_interrupt();
             handler->eoi();
 
             irq += 1;

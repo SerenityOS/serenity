@@ -311,7 +311,7 @@ void handle_interrupt(TrapFrame* trap)
     }
     VERIFY(handler);
     handler->increment_call_count();
-    handler->handle_interrupt(regs);
+    handler->handle_interrupt();
     handler->eoi();
 }
 

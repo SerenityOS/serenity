@@ -59,9 +59,9 @@ u64 Timer::microseconds_since_boot()
     return (static_cast<u64>(high) << 32) | low;
 }
 
-bool Timer::handle_irq(RegisterState const& regs)
+bool Timer::handle_irq()
 {
-    auto result = HardwareTimer::handle_irq(regs);
+    auto result = HardwareTimer::handle_irq();
 
     set_compare(TimerID::Timer1, microseconds_since_boot() + m_interrupt_interval);
     clear_interrupt(TimerID::Timer1);

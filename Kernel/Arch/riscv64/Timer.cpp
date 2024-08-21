@@ -42,10 +42,10 @@ u64 Timer::current_ticks()
     return RISCV64::CSR::read(RISCV64::CSR::Address::TIME);
 }
 
-void Timer::handle_interrupt(RegisterState const& regs)
+void Timer::handle_interrupt()
 {
     if (m_callback)
-        m_callback(regs);
+        m_callback();
     set_compare(current_ticks() + m_interrupt_interval);
 }
 

@@ -243,7 +243,7 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(StringView interface_n
 
 UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter() = default;
 
-bool E1000NetworkAdapter::handle_irq(RegisterState const&)
+bool E1000NetworkAdapter::handle_irq()
 {
     u32 status = in32(REG_INTERRUPT_CAUSE_READ);
 

@@ -77,7 +77,7 @@ private:
     void clear_interrupt(TimerID);
 
     //^ IRQHandler
-    virtual bool handle_irq(RegisterState const&) override;
+    virtual bool handle_irq() override;
 
     TimerRegisters volatile* m_registers;
     u32 m_interrupt_interval { 0 };

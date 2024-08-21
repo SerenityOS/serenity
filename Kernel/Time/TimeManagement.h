@@ -14,7 +14,6 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/API/TimePage.h>
-#include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/UnixTypes.h>
@@ -85,7 +84,7 @@ private:
     bool probe_and_set_x86_legacy_hardware_timers();
     bool probe_and_set_x86_non_legacy_hardware_timers();
     void increment_time_since_boot_hpet();
-    static void update_time(RegisterState const&);
+    static void update_time();
 #elif ARCH(AARCH64)
     bool probe_and_set_aarch64_hardware_timers();
 #elif ARCH(RISCV64)
@@ -97,7 +96,7 @@ private:
     Vector<HardwareTimerBase*> scan_for_non_periodic_timers();
     Vector<NonnullLockRefPtr<HardwareTimerBase>> m_hardware_timers;
     void set_system_timer(HardwareTimerBase&);
-    static void system_timer_tick(RegisterState const&);
+    static void system_timer_tick();
 
     // Variables between m_update1 and m_update2 are synchronized
     // FIXME: Replace m_update1 and m_update2 with a SpinlockLocker

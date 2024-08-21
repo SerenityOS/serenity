@@ -22,7 +22,7 @@ public:
 private:
     xHCIInterrupter(xHCIController& controller, u16 interrupter_id, u16 irq);
 
-    virtual bool handle_irq(RegisterState const&) override;
+    virtual bool handle_irq() override;
 
     xHCIController& m_controller;
     u16 m_interrupter_id { 0 };

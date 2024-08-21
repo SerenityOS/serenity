@@ -82,7 +82,7 @@ private:
     void write_portsc1(u16 value) { m_registers_io_window->write16(0x10, value); }
     void write_portsc2(u16 value) { m_registers_io_window->write16(0x12, value); }
 
-    virtual bool handle_irq(RegisterState const&) override;
+    virtual bool handle_irq() override;
 
     ErrorOr<void> create_structures();
     void setup_schedule();

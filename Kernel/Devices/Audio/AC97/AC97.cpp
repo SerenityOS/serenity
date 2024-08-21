@@ -64,7 +64,7 @@ UNMAP_AFTER_INIT AC97::AC97(PCI::DeviceIdentifier const& pci_device_identifier, 
 
 UNMAP_AFTER_INIT AC97::~AC97() = default;
 
-bool AC97::handle_irq(RegisterState const&)
+bool AC97::handle_irq()
 {
     auto pcm_out_status = m_pcm_out_channel->io_window().read16(AC97Channel::Register::Status);
     dbgln_if(AC97_DEBUG, "AC97 @ {}: interrupt received - status: {:#05b}", device_identifier().address(), pcm_out_status);

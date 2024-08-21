@@ -24,7 +24,7 @@ UNMAP_AFTER_INIT APICTimer* APICTimer::initialize(u8 interrupt_number, HardwareT
     return &timer.leak_ref();
 }
 
-UNMAP_AFTER_INIT APICTimer::APICTimer(u8 interrupt_number, Function<void(RegisterState const&)> callback)
+UNMAP_AFTER_INIT APICTimer::APICTimer(u8 interrupt_number, Function<void()> callback)
     : HardwareTimer<GenericInterruptHandler>(interrupt_number, move(callback))
 {
     disable_remap();
@@ -55,7 +55,7 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
     state.query_reference = calibration_source.can_query_raw();
 
     // temporarily replace the timer callbacks
-    auto original_source_callback = calibration_source.set_callback([&state, &calibration_source](RegisterState const&) {
+    auto original_source_callback = calibration_source.set_callback([&state, &calibration_source]() {
         u32 current_timer_count = state.apic.get_timer_current_count();
 #ifdef APIC_TIMER_MEASURE_CPU_CLOCK
         u64 current_tsc = state.supports_tsc ? read_tsc() : 0;
@@ -82,7 +82,7 @@ UNMAP_AFTER_INIT bool APICTimer::calibrate(HardwareTimerBase& calibration_source
     // We don't want the APIC timer to actually fire. We do however want the
     // calbibration_source timer to fire so that we can read the current
     // tick count from the APIC timer
-    auto original_callback = set_callback([&](RegisterState const&) {
+    auto original_callback = set_callback([&]() {
         // TODO: How should we handle this?
         PANIC("APICTimer: Timer fired during calibration!");
     });

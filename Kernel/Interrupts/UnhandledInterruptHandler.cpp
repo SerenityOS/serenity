@@ -13,7 +13,7 @@ UnhandledInterruptHandler::UnhandledInterruptHandler(u8 interrupt_vector)
 {
 }
 
-bool UnhandledInterruptHandler::handle_interrupt(RegisterState const&)
+bool UnhandledInterruptHandler::handle_interrupt()
 {
     PANIC("Interrupt: Unhandled vector {} was invoked for handle_interrupt(RegisterState&).", interrupt_number());
 }
