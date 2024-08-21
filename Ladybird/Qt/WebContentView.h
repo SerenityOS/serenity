@@ -23,6 +23,7 @@
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWebView/ViewImplementation.h>
 #include <QAbstractScrollArea>
+#include <QMenu>
 #include <QTimer>
 #include <QUrl>
 
@@ -89,6 +90,9 @@ public:
 
     WebContentOptions const& web_content_options() const { return m_web_content_options; }
 
+public slots:
+    void select_dropdown_action();
+
 signals:
     void urls_dropped(QList<QUrl> const&);
 
@@ -123,6 +127,8 @@ private:
 
     WebContentOptions m_web_content_options;
     StringView m_webdriver_content_ipc_path;
+
+    QMenu* m_select_dropdown { nullptr };
 };
 
 }
