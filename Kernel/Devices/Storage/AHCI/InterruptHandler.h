@@ -42,7 +42,7 @@ private:
     void allocate_resources_and_initialize_ports();
 
     //^ IRQHandler
-    virtual bool handle_irq(RegisterState const&) override;
+    virtual bool handle_irq() override;
 
     enum class Direction : u8 {
         Read,

@@ -25,6 +25,6 @@ protected:
 
 private:
     virtual void complete_current_request(u16 cmdid, u16 status) override;
-    bool handle_irq(RegisterState const&) override;
+    bool handle_irq() override;
 };
 }

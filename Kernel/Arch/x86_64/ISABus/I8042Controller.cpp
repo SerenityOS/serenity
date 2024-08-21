@@ -27,7 +27,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<I8042ControllerIRQHandler>> I8042Controll
     return adopt_nonnull_own_or_enomem(new I8042ControllerIRQHandler(controller, irq_number));
 }
 
-bool I8042ControllerIRQHandler::handle_irq(RegisterState const&)
+bool I8042ControllerIRQHandler::handle_irq()
 {
     return m_controller->handle_irq({}, interrupt_number());
 }

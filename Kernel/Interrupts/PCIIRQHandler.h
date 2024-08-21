@@ -18,8 +18,8 @@ class IRQHandler : public GenericInterruptHandler {
 public:
     virtual ~IRQHandler() = default;
 
-    virtual bool handle_interrupt(RegisterState const& regs) override;
-    virtual bool handle_irq(RegisterState const&) = 0;
+    virtual bool handle_interrupt() override;
+    virtual bool handle_irq() = 0;
 
     void enable_irq();
     void disable_irq();

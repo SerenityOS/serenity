@@ -34,7 +34,7 @@ public:
     static void initialize();
     static Thread* create_ap_idle_thread(u32 cpu);
     static void set_idle_thread(Thread* idle_thread);
-    static void timer_tick(RegisterState const&);
+    static void timer_tick();
     [[noreturn]] static void start();
     static void pick_next();
     static void yield();

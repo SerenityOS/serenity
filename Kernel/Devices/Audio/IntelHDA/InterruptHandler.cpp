@@ -16,7 +16,7 @@ InterruptHandler::InterruptHandler(Controller& controller)
     enable_irq();
 }
 
-bool InterruptHandler::handle_irq(RegisterState const&)
+bool InterruptHandler::handle_irq()
 {
     auto result_or_error = m_controller.handle_interrupt({});
     if (result_or_error.is_error()) {

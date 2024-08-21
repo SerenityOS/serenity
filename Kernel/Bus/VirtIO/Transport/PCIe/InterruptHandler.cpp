@@ -19,7 +19,7 @@ PCIeTransportInterruptHandler::PCIeTransportInterruptHandler(PCIeTransportLink& 
 {
 }
 
-bool PCIeTransportInterruptHandler::handle_irq(RegisterState const&)
+bool PCIeTransportInterruptHandler::handle_irq()
 {
     return notify_parent_device_on_interrupt();
 }

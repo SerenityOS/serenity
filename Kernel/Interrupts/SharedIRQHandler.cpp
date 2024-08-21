@@ -61,7 +61,7 @@ SharedIRQHandler::~SharedIRQHandler()
     disable_interrupt_vector();
 }
 
-bool SharedIRQHandler::handle_interrupt(RegisterState const& regs)
+bool SharedIRQHandler::handle_interrupt()
 {
     VERIFY_INTERRUPTS_DISABLED();
 
@@ -73,7 +73,7 @@ bool SharedIRQHandler::handle_interrupt(RegisterState const& regs)
     bool was_handled = false;
     m_handlers.for_each([&](auto& handler) {
         dbgln_if(INTERRUPT_DEBUG, "Going for Interrupt Handling @ {}, Shared Interrupt {}", i, interrupt_number());
-        if (handler.handle_interrupt(regs)) {
+        if (handler.handle_interrupt()) {
             handler.increment_call_count();
             was_handled = true;
         }

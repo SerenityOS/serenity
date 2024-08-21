@@ -29,7 +29,7 @@ void NVMeInterruptQueue::initialize_interrupt_queue()
     enable_irq();
 }
 
-bool NVMeInterruptQueue::handle_irq(RegisterState const&)
+bool NVMeInterruptQueue::handle_irq()
 {
     return process_cq() ? true : false;
 }

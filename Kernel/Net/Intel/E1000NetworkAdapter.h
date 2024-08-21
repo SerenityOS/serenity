@@ -48,7 +48,7 @@ protected:
         NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,
         NonnullOwnPtr<Memory::Region> tx_descriptors_region);
 
-    virtual bool handle_irq(RegisterState const&) override;
+    virtual bool handle_irq() override;
     virtual StringView class_name() const override { return "E1000NetworkAdapter"sv; }
 
     struct [[gnu::packed]] e1000_rx_desc {

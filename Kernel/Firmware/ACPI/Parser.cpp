@@ -148,7 +148,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> Parser::find_table(StringView signatu
     return {};
 }
 
-bool Parser::handle_irq(RegisterState const&)
+bool Parser::handle_irq()
 {
     TODO();
 }

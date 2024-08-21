@@ -63,9 +63,9 @@ void IRQHandler::disable_irq()
         device.disable_interrupt(interrupt_number());
 }
 
-bool IRQHandler::handle_interrupt(RegisterState const& regs)
+bool IRQHandler::handle_interrupt()
 {
-    return handle_irq(regs);
+    return handle_irq();
 }
 
 }

@@ -29,7 +29,7 @@ private:
     InterruptHandler(Controller& controller);
 
     // ^PCI::IRQHandler
-    virtual bool handle_irq(RegisterState const&) override;
+    virtual bool handle_irq() override;
 
     Controller& m_controller;
 };

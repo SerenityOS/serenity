@@ -19,7 +19,7 @@ public:
     static void initialize_for_disabled_master_pic();
     static void initialize_for_disabled_slave_pic();
     virtual ~SpuriousInterruptHandler();
-    virtual bool handle_interrupt(RegisterState const& regs) override;
+    virtual bool handle_interrupt() override;
 
     void register_handler(GenericInterruptHandler&);
     void unregister_handler(GenericInterruptHandler&);

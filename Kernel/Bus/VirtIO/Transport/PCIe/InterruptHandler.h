@@ -26,6 +26,6 @@ private:
     PCIeTransportInterruptHandler(PCIeTransportLink&, VirtIO::Device&, u8 irq);
 
     //^ IRQHandler
-    virtual bool handle_irq(RegisterState const&) override;
+    virtual bool handle_irq() override;
 };
 }

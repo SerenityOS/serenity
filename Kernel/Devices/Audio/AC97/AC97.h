@@ -161,7 +161,7 @@ private:
     AC97(PCI::DeviceIdentifier const&, NonnullOwnPtr<AC97Channel> pcm_out_channel, NonnullOwnPtr<IOWindow> mixer_io_window, NonnullOwnPtr<IOWindow> bus_io_window);
 
     // ^IRQHandler
-    virtual bool handle_irq(RegisterState const&) override;
+    virtual bool handle_irq() override;
 
     void set_master_output_volume(u8, u8, Muted);
     u32 read_pcm_output_sample_rate();

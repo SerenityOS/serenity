@@ -1286,7 +1286,7 @@ UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_tx_descriptors()
 
 UNMAP_AFTER_INIT RTL8168NetworkAdapter::~RTL8168NetworkAdapter() = default;
 
-bool RTL8168NetworkAdapter::handle_irq(RegisterState const&)
+bool RTL8168NetworkAdapter::handle_irq()
 {
     bool was_handled = false;
     for (;;) {

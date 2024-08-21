@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Thread.h>
@@ -129,7 +130,7 @@ public:
         }
     }
 
-    static void timer_tick(RegisterState const& regs)
+    static void timer_tick()
     {
         static UnixDateTime last_wakeup;
         auto now = kgettimeofday();
@@ -144,7 +145,7 @@ public:
             return;
 
         auto lost_samples = delay.to_microseconds() / ideal_interval.to_microseconds();
-        PerformanceManager::add_cpu_sample_event(*current_thread, regs, lost_samples);
+        PerformanceManager::add_cpu_sample_event(*current_thread, *current_thread->current_trap()->regs, lost_samples);
     }
 };
 

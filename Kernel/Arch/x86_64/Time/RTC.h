@@ -13,7 +13,7 @@
 namespace Kernel {
 class RealTimeClock final : public HardwareTimer<IRQHandler> {
 public:
-    static NonnullLockRefPtr<RealTimeClock> create(Function<void(RegisterState const&)> callback);
+    static NonnullLockRefPtr<RealTimeClock> create(Function<void()> callback);
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RTC; }
     virtual StringView model() const override { return "Real Time Clock"sv; }
 
@@ -29,7 +29,7 @@ public:
     virtual size_t calculate_nearest_possible_frequency(size_t frequency) const override;
 
 private:
-    explicit RealTimeClock(Function<void(RegisterState const&)> callback);
-    virtual bool handle_irq(RegisterState const&) override;
+    explicit RealTimeClock(Function<void()> callback);
+    virtual bool handle_irq() override;
 };
 }

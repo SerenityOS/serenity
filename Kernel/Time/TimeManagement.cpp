@@ -365,7 +365,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_time
         taken_non_periodic_timers_count += 1;
     }
 
-    m_system_timer->set_callback([this](RegisterState const& regs) {
+    m_system_timer->set_callback([this]() {
         // Update the time. We don't really care too much about the
         // frequency of the interrupt because we'll query the main
         // counter to get an accurate time.
@@ -374,7 +374,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_time
             increment_time_since_boot_hpet();
         }
 
-        system_timer_tick(regs);
+        system_timer_tick();
     });
 
     // Use the HPET main counter frequency for time purposes. This is likely
@@ -426,7 +426,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_legacy_hardware_timers()
     return true;
 }
 
-void TimeManagement::update_time(RegisterState const&)
+void TimeManagement::update_time()
 {
     TimeManagement::the().increment_time_since_boot();
 }
@@ -463,7 +463,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
     m_system_timer = m_hardware_timers[0];
     m_time_ticks_per_second = m_system_timer->ticks_per_second();
 
-    m_system_timer->set_callback([this](RegisterState const& regs) {
+    m_system_timer->set_callback([this]() {
         auto seconds_since_boot = m_seconds_since_boot;
         auto ticks_this_second = m_ticks_this_second;
         auto delta_ns = static_cast<RPi::Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
@@ -478,7 +478,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
 
         update_time_page();
 
-        system_timer_tick(regs);
+        system_timer_tick();
     });
 
     m_time_keeper_timer = m_system_timer;
@@ -492,7 +492,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_riscv64_hardware_timers()
     m_system_timer = m_hardware_timers[0];
     m_time_ticks_per_second = m_system_timer->ticks_per_second();
 
-    m_system_timer->set_callback([this](RegisterState const& regs) {
+    m_system_timer->set_callback([this]() {
         auto seconds_since_boot = m_seconds_since_boot;
         auto ticks_this_second = m_ticks_this_second;
         auto delta_ns = static_cast<RISCV64::Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
@@ -507,7 +507,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_riscv64_hardware_timers()
 
         update_time_page();
 
-        system_timer_tick(regs);
+        system_timer_tick();
     });
 
     m_time_keeper_timer = m_system_timer;
@@ -547,13 +547,13 @@ void TimeManagement::increment_time_since_boot()
     update_time_page();
 }
 
-void TimeManagement::system_timer_tick(RegisterState const& regs)
+void TimeManagement::system_timer_tick()
 {
     if (Processor::current_in_irq() <= 1) {
         // Don't expire timers while handling IRQs
         TimerQueue::the().fire();
     }
-    Scheduler::timer_tick(regs);
+    Scheduler::timer_tick();
 }
 
 bool TimeManagement::enable_profile_timer()

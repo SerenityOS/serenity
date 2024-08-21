@@ -80,7 +80,7 @@ private:
     I8042ControllerIRQHandler(I8042Controller const& controller, u8 irq_number);
 
     // ^IRQHandler
-    virtual bool handle_irq(RegisterState const&) override;
+    virtual bool handle_irq() override;
     virtual StringView purpose() const override { return "I8042ControllerIRQHandler"sv; }
 
     NonnullRefPtr<I8042Controller> const m_controller;

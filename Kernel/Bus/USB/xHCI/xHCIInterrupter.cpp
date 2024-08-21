@@ -22,7 +22,7 @@ xHCIInterrupter::xHCIInterrupter(xHCIController& controller, u16 interrupter_id,
     enable_irq();
 }
 
-bool xHCIInterrupter::handle_irq(RegisterState const&)
+bool xHCIInterrupter::handle_irq()
 {
     m_controller.handle_interrupt({}, m_interrupter_id);
     return true;

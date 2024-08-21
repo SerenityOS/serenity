@@ -44,7 +44,7 @@ private:
 
     RTL8168NetworkAdapter(StringView, PCI::DeviceIdentifier const&, u8 irq, NonnullOwnPtr<IOWindow> registers_io_window);
 
-    virtual bool handle_irq(RegisterState const&) override;
+    virtual bool handle_irq() override;
     virtual StringView class_name() const override { return "RTL8168NetworkAdapter"sv; }
 
     bool determine_supported_version() const;

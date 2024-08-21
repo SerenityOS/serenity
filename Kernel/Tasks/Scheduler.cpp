@@ -413,7 +413,7 @@ void Scheduler::add_time_scheduled(u64 time_to_add, bool is_kernel)
     });
 }
 
-void Scheduler::timer_tick(RegisterState const& regs)
+void Scheduler::timer_tick()
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(Processor::current_in_irq());
@@ -424,7 +424,6 @@ void Scheduler::timer_tick(RegisterState const& regs)
 
     // Sanity checks
     VERIFY(current_thread->current_trap());
-    VERIFY(current_thread->current_trap()->regs == &regs);
 
     if (current_thread->process().is_kernel_process()) {
         // Because the previous mode when entering/exiting kernel threads never changes

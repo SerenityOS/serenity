@@ -38,7 +38,7 @@ AHCI::MaskedBitField AHCIInterruptHandler::create_pending_ports_interrupts_bitfi
 
 AHCIInterruptHandler::~AHCIInterruptHandler() = default;
 
-bool AHCIInterruptHandler::handle_irq(RegisterState const&)
+bool AHCIInterruptHandler::handle_irq()
 {
     dbgln_if(AHCI_DEBUG, "AHCI Port Handler: IRQ received");
     if (m_pending_ports_interrupts.is_zeroed())
