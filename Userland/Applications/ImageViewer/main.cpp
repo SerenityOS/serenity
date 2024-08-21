@@ -256,7 +256,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto nearest_neighbor_action = GUI::Action::create_checkable("&Nearest Neighbor", [&](auto&) {
         widget.set_scaling_mode(Gfx::Painter::ScalingMode::NearestNeighbor);
     });
-    nearest_neighbor_action->set_checked(true);
 
     auto smooth_pixels_action = GUI::Action::create_checkable("&Smooth Pixels", [&](auto&) {
         widget.set_scaling_mode(Gfx::Painter::ScalingMode::SmoothPixels);
@@ -269,6 +268,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto box_sampling_action = GUI::Action::create_checkable("B&ox Sampling", [&](auto&) {
         widget.set_scaling_mode(Gfx::Painter::ScalingMode::BoxSampling);
     });
+    box_sampling_action->set_checked(true);
 
     widget.on_image_change = [&](Image const* image) {
         bool should_enable_image_actions = (image != nullptr);

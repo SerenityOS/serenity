@@ -166,7 +166,7 @@ private:
     bool m_scaled_for_first_image { false };
     Vector<ByteString> m_files_in_same_dir;
     Optional<size_t> m_current_index;
-    Gfx::Painter::ScalingMode m_scaling_mode { Gfx::Painter::ScalingMode::NearestNeighbor };
+    Gfx::Painter::ScalingMode m_scaling_mode { Gfx::Painter::ScalingMode::BoxSampling };
 };
 
 }
