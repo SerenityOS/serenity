@@ -22,7 +22,7 @@ static constexpr int LEADING_LETTER_PENALTY = -5;      // penalty applied for ev
 static constexpr int MAX_LEADING_LETTER_PENALTY = -15; // maximum penalty for leading letters
 static constexpr int UNMATCHED_LETTER_PENALTY = -1;    // penalty for every letter that doesn't matter
 
-static int calculate_score(StringView string, u8* index_points, size_t index_points_size)
+static int calculate_score(StringView string, u8 const* index_points, size_t index_points_size)
 {
     int out_score = 100;
 
