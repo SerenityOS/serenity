@@ -20,9 +20,9 @@ TEST_CASE(is_leading_letter_penalty_correctly_applied)
 TEST_CASE(is_first_letter_bonus_applied_correctly)
 {
     // First letter bonus is +15 if the first letter matches.
-    EXPECT_EQ(fuzzy_match("a"sv, "a"sv).score, 115);
-    EXPECT_EQ(fuzzy_match("a"sv, "A"sv).score, 115);
-    EXPECT_EQ(fuzzy_match(" "sv, " "sv).score, 115);
+    EXPECT_EQ(fuzzy_match("a"sv, "ab"sv).score, 114);
+    EXPECT_EQ(fuzzy_match("a"sv, "Ab"sv).score, 114);
+    EXPECT_EQ(fuzzy_match(" "sv, " b"sv).score, 114);
 }
 
 TEST_CASE(is_sequential_bonus_applied_correctly)
@@ -41,17 +41,15 @@ TEST_CASE(is_camel_case_bonus_applied_correctly)
     // Camel case bonus is +30 if the matching character is uppercase and the preceding character is lowercase.
     // These cases get no camel case bonus.
     EXPECT_EQ(fuzzy_match("b"sv, "Ab"sv).score, 94);
-    EXPECT_EQ(fuzzy_match("abc"sv, "ABc"sv).score, 145);
-    EXPECT_EQ(fuzzy_match("abc"sv, "ABC"sv).score, 145);
-    EXPECT_EQ(fuzzy_match("abc"sv, "Abc"sv).score, 145);
-    EXPECT_EQ(fuzzy_match("abcd"sv, "abcd"sv).score, 160);
+    EXPECT_EQ(fuzzy_match("abc"sv, "ABcd"sv).score, 144);
+    EXPECT_EQ(fuzzy_match("abc"sv, "ABCd"sv).score, 144);
+    EXPECT_EQ(fuzzy_match("abc"sv, "Abcd"sv).score, 144);
+    EXPECT_EQ(fuzzy_match("abcd"sv, "abcde"sv).score, 159);
 
     // These cases get a camel case bonus.
     EXPECT_EQ(fuzzy_match("b"sv, "aB"sv).score, 124);
-    EXPECT_EQ(fuzzy_match("abc"sv, "aBc"sv).score, 175);
-    EXPECT_EQ(fuzzy_match("abc"sv, "aBC"sv).score, 175);
+    EXPECT_EQ(fuzzy_match("abc"sv, "aBcd"sv).score, 174);
     EXPECT_EQ(fuzzy_match("abc"sv, "aBC-"sv).score, 174);
-    EXPECT_EQ(fuzzy_match("abcd"sv, "aBcD"sv).score, 220);
     EXPECT_EQ(fuzzy_match("abcd"sv, "aBcD-"sv).score, 219);
 }
 
@@ -60,11 +58,14 @@ TEST_CASE(is_separator_bonus_applied_correctly)
     // Separator bonus is +30 if the character preceding the matching character is a space or an underscore.
     EXPECT_EQ(fuzzy_match("b"sv, "a b"sv).score, 118);
     EXPECT_EQ(fuzzy_match("bc"sv, "a b c"sv).score, 147);
-    EXPECT_EQ(fuzzy_match("ab cd"sv, "ab cd"sv).score, 205);
-    EXPECT_EQ(fuzzy_match("ab_cd"sv, "ab_cd"sv).score, 205);
     EXPECT_EQ(fuzzy_match("abcd"sv, "a b c d"sv).score, 202);
     EXPECT_EQ(fuzzy_match("abcd"sv, "a_b_c_d"sv).score, 202);
     EXPECT_EQ(fuzzy_match("b c"sv, "ab cd"sv).score, 153);
     EXPECT_EQ(fuzzy_match("b_c"sv, "ab_cd"sv).score, 153);
     EXPECT_EQ(fuzzy_match("bc"sv, "ab cd"sv).score, 122);
+}
+
+TEST_CASE(equality)
+{
+    EXPECT(fuzzy_match("abc"sv, "abc"sv).score > fuzzy_match("abc"sv, "a b c"sv).score);
 }
