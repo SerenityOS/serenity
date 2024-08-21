@@ -253,6 +253,40 @@ ALWAYS_INLINE static T elementwise_byte_reverse_impl(T a, IndexSequence<Idx...>)
     }
 }
 
+template<SIMDVector T, size_t... Idx>
+ALWAYS_INLINE static ElementOf<T> reduce_or_impl(T const& a, IndexSequence<Idx...> const&)
+{
+    static_assert(is_power_of_two(vector_length<T>));
+    static_assert(vector_length<T> == sizeof...(Idx) * 2);
+
+    using E = ElementOf<T>;
+
+    constexpr size_t N = sizeof...(Idx);
+
+    if constexpr (N == 1) {
+        return a[0] | a[1];
+    } else {
+        return reduce_or_impl(MakeVector<E, N> { (a[Idx])... }, MakeIndexSequence<N / 2>()) | reduce_or_impl(MakeVector<E, N> { (a[N + Idx])... }, MakeIndexSequence<N / 2>());
+    }
+}
+
+template<SIMDVector T, size_t... Idx>
+ALWAYS_INLINE static ElementOf<T> reduce_xor_impl(T const& a, IndexSequence<Idx...> const&)
+{
+    static_assert(is_power_of_two(vector_length<T>));
+    static_assert(vector_length<T> == sizeof...(Idx) * 2);
+
+    using E = ElementOf<T>;
+
+    constexpr size_t N = sizeof...(Idx);
+
+    if constexpr (N == 1) {
+        return a[0] ^ a[1];
+    } else {
+        return reduce_xor_impl(MakeVector<E, N> { (a[Idx])... }, MakeIndexSequence<N / 2>()) ^ reduce_xor_impl(MakeVector<E, N> { (a[N + Idx])... }, MakeIndexSequence<N / 2>());
+    }
+}
+
 }
 
 // FIXME: Shuffles only work with integral types for now
@@ -284,6 +318,42 @@ template<SIMDVector T>
 ALWAYS_INLINE static T elementwise_byte_reverse(T a)
 {
     return Detail::elementwise_byte_reverse_impl(a, MakeIndexSequence<vector_length<T>>());
+}
+
+template<SIMDVector T>
+ALWAYS_INLINE static ElementOf<T> reduce_or(T const& a)
+{
+    static_assert(is_power_of_two(vector_length<T>));
+    static_assert(IsUnsigned<ElementOf<T>>);
+
+#if defined __has_builtin
+#    if __has_builtin(__builtin_reduce_or)
+    if (true) {
+        return __builtin_reduce_or(a);
+    } else
+#    endif
+#endif
+    {
+        return Detail::reduce_or_impl(a, MakeIndexSequence<vector_length<T> / 2>());
+    }
+}
+
+template<SIMDVector T>
+ALWAYS_INLINE static ElementOf<T> reduce_xor(T const& a)
+{
+    static_assert(is_power_of_two(vector_length<T>));
+    static_assert(IsUnsigned<ElementOf<T>>);
+
+#if defined __has_builtin
+#    if __has_builtin(__builtin_reduce_xor)
+    if (true) {
+        return __builtin_reduce_xor(a);
+    } else
+#    endif
+#endif
+    {
+        return Detail::reduce_xor_impl(a, MakeIndexSequence<vector_length<T> / 2>());
+    }
 }
 
 }

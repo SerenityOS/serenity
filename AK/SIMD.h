@@ -108,10 +108,18 @@ struct IndexVectorFor<T> {
 };
 #endif
 
+template<typename T, size_t element_count>
+struct MakeVectorImpl {
+    using Type __attribute__((vector_size(sizeof(T) * element_count))) = T;
+};
+
 }
 
 template<SIMDVector T>
 using IndexVectorFor = typename Detail::IndexVectorFor<T>::Type;
+
+template<typename T, size_t element_count>
+using MakeVector = typename Detail::MakeVectorImpl<T, element_count>::Type;
 
 static_assert(IsSame<IndexVectorFor<i8x16>, i8x16>);
 static_assert(IsSame<IndexVectorFor<u32x4>, u32x4>);
