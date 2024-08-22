@@ -63,9 +63,12 @@ public:
     {
         VERIFY(!ivec.is_empty());
 
-        static ByteBuffer dummy = MUST(ByteBuffer::create_uninitialized(out.size()));
+        static ByteBuffer dummy = MUST(ByteBuffer::create_uninitialized(T::BlockSizeInBits / 8));
 
-        encrypt(in, out, ivec, dummy, dummy);
+        // FIXME: Taking `out` by reference suggests that we should modify its length to match the
+        //        ciphertext size. In practice, however, noone does that and I don't want to be the
+        //        person who fixes this.
+        encrypt(in, out.slice(0, in.size()), ivec, dummy, dummy);
     }
     virtual void decrypt(ReadonlyBytes in, Bytes& out, ReadonlyBytes ivec = {}) override
     {
