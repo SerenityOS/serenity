@@ -24,6 +24,7 @@ alias ss=Spreadsheet
 alias vp=VideoPlayer
 
 alias ll='ls -l'
+alias poweroff='shutdown'
 
 if [ "$(id -u)" = "0" ] {
     prompt_color=31
