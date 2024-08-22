@@ -88,6 +88,9 @@ GHash::TagType GHash::process(ReadonlyBytes aad, ReadonlyBytes cipher)
 
 void galois_multiply(u32 (&_z)[4], u32 const (&_x)[4], u32 const (&_y)[4])
 {
+    /** This function computes 128bit x 128bit unsigned integer multiplication inside Galois finite field, producing 128bit result.
+     *   It uses 9 32bit x 32bit to 64bit carry-less multiplications in Karatsuba decomposition.
+     */
     using namespace AK::SIMD;
 
     static auto const rotate_left = [](u32x4 const& x) -> u32x4 {
@@ -95,6 +98,9 @@ void galois_multiply(u32 (&_z)[4], u32 const (&_x)[4], u32 const (&_y)[4])
     };
 
     static auto const mul_32_x_32_64 = [](u32x4 const& a, u32x4 const& b) -> u64x4 {
+        /** This function computes 32bit x 32bit unsigned integer multiplication, producing 64bit result.
+         *  It does this for 4 32bit integers x 4 32bit integers at a time, producing 4 64bit integers result.
+         */
         u64x2 r1;
         u64x2 r2;
 
@@ -114,6 +120,14 @@ void galois_multiply(u32 (&_z)[4], u32 const (&_x)[4], u32 const (&_y)[4])
     };
 
     static auto const clmul_32_x_32_64 = [](u32 const& a, u32 const& b, u32& lo, u32& hi) -> void {
+        /** This function computes 32bit x 32bit unsigned integer carry-less multiplication, producing 64bit result.
+         *  It does this by extracting 4 bits from each integer at a time and multiplying those.
+         *  Those 4 bits are packed into 32bit integers with holes, 1 significant bit plus 3 holes, repeated 4 times.
+         *  Repeating previous logic 4 times, we are able to multiply all of the input 32 bits.
+         *  The holes are there to prevent the carry spill to more significant bits. Respectively, allowing the carry
+         *  to spill into holes, the holes are later discarded.
+         *  https://www.bearssl.org/constanttime.html#ghash-for-gcm
+         */
         constexpr u32x4 mask32 = { 0x11111111, 0x22222222, 0x44444444, 0x88888888 };
         constexpr u64x4 mask64 = { 0x1111111111111111ull, 0x2222222222222222ull, 0x4444444444444444ull, 0x8888888888888888ull };
 
