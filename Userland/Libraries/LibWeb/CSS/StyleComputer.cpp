@@ -224,7 +224,7 @@ static CSSStyleSheet& default_stylesheet(DOM::Document const& document)
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
-        extern StringView default_stylesheet_source;
+        extern String default_stylesheet_source;
         sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), default_stylesheet_source));
     }
     return *sheet;
@@ -234,7 +234,7 @@ static CSSStyleSheet& quirks_mode_stylesheet(DOM::Document const& document)
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
-        extern StringView quirks_mode_stylesheet_source;
+        extern String quirks_mode_stylesheet_source;
         sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), quirks_mode_stylesheet_source));
     }
     return *sheet;
@@ -244,7 +244,7 @@ static CSSStyleSheet& mathml_stylesheet(DOM::Document const& document)
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
-        extern StringView mathml_stylesheet_source;
+        extern String mathml_stylesheet_source;
         sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), mathml_stylesheet_source));
     }
     return *sheet;
@@ -254,7 +254,7 @@ static CSSStyleSheet& svg_stylesheet(DOM::Document const& document)
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
-        extern StringView svg_stylesheet_source;
+        extern String svg_stylesheet_source;
         sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), svg_stylesheet_source));
     }
     return *sheet;
