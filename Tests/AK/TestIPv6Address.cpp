@@ -123,3 +123,47 @@ TEST_CASE(should_only_compare_bytes_from_address)
     EXPECT(addr_a == addr_a);
     EXPECT(addr_b == addr_c);
 }
+
+TEST_CASE(subnets)
+{
+    constexpr IPv6Address loopback({ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 });
+    constexpr IPv6Address lla({ 0xfe, 0x80, 0, 0, 0, 0, 0, 0, 0xab, 0xcd, 0xef, 0x8b, 0xcd, 0xaf, 0xf2, 0xd0 });
+    constexpr IPv6Address ula({ 0xfd, 0x00, 0, 0, 0, 0, 0, 0, 0x65, 0xc9, 0xae, 0x8b, 0xcd, 0xaf, 0xf2, 0xd0 });
+    constexpr IPv6Address documentation({ 0x20, 0x01, 0xdb, 0x08, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x42 });
+    constexpr IPv6Address broadcast({ 0xff, 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 });
+    constexpr IPv6Address all_routers({ 0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2 });
+
+    EXPECT(loopback.is_loopback());
+    EXPECT(!all_routers.is_loopback());
+
+    EXPECT(lla.is_link_local());
+    EXPECT(ula.is_unique_local());
+    EXPECT(!lla.is_unique_local());
+    EXPECT(!ula.is_link_local());
+    EXPECT(!documentation.is_unique_local());
+    EXPECT(!documentation.is_link_local());
+    EXPECT(!broadcast.is_unique_local());
+    EXPECT(!broadcast.is_link_local());
+    EXPECT(!all_routers.is_unique_local());
+    EXPECT(!all_routers.is_link_local());
+
+    EXPECT(lla.is_unicast());
+    EXPECT(ula.is_unicast());
+    EXPECT(loopback.is_unicast());
+    EXPECT(documentation.is_unicast());
+    EXPECT(broadcast.is_multicast());
+    EXPECT(all_routers.is_multicast());
+
+    EXPECT(!loopback.is_in_subnet(lla, 64));
+    EXPECT(lla.is_in_subnet(lla.network(64), 64));
+    EXPECT(ula.is_in_subnet(ula.network(128), 128));
+    EXPECT(loopback.is_in_subnet(loopback, 128));
+    EXPECT(documentation.is_in_subnet(documentation, 128));
+    EXPECT(broadcast.is_in_subnet(broadcast, 128));
+    EXPECT(all_routers.is_in_subnet(all_routers, 128));
+    EXPECT(!ula.is_in_subnet(lla, 64));
+    // Not sensible networks per IETF!
+    EXPECT(lla.is_in_subnet(ula.network(4), 4));
+    EXPECT(broadcast.is_in_subnet(all_routers.network(12), 12));
+    EXPECT(!documentation.is_in_subnet(lla, 4));
+}
