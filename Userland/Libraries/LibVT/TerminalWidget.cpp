@@ -428,6 +428,10 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             if (code_point == ' ')
                 continue;
 
+            if (has_flag(attribute.flags, VT::Attribute::Flags::Concealed)) {
+                continue;
+            }
+
             auto character_rect = glyph_rect(visual_row, column);
 
             if (m_hovered_href_id.has_value() && attribute.href_id == m_hovered_href_id) {

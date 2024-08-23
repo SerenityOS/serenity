@@ -49,6 +49,7 @@ struct Attribute {
         Negative = 0x08,
         Blink = 0x10,
         Touched = 0x20,
+        Concealed = 0x40,
     };
     AK_ENUM_BITWISE_FRIEND_OPERATORS(Flags);
 
