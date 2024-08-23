@@ -18,19 +18,19 @@ struct LineTracker {
 
 static void out_visible(unsigned char c)
 {
-    if (c == 012) {
+    if (c == '\n') {
         // newline
         out("{:c}", c);
-    } else if (c < 040) {
+    } else if (c < 0x20) {
         // control character
-        out("^X");
-    } else if (c == 0177) {
+        out("^{}", c + 0x40);
+    } else if (c == 0x7F) {
         // delete character
         out("^?");
-    } else if (c > 0177) {
+    } else if (c > 0x7F) {
         // high bit is set - mask it off
         out("M-");
-        out_visible(c & 0x7f);
+        out_visible(c & 0x7F);
     } else {
         // normal ascii
         out("{:c}", c);
@@ -78,7 +78,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(files.try_ensure_capacity(paths.size()));
 
     for (auto const& path : paths) {
-        if (auto result = Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read); result.is_error())
+        auto result = Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read);
+        if (result.is_error())
             warnln("Failed to open {}: {}", path, result.release_error());
         else
             files.unchecked_append(result.release_value());
@@ -86,10 +87,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio"));
 
-    // used only if we are using the -n option
     LineTracker line_tracker;
-
     Array<u8, 32768> buffer;
+
     for (auto const& file : files) {
         while (!file->is_eof()) {
             auto const buffer_span = TRY(file->read_some(buffer));
@@ -101,5 +101,5 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    return files.size() != paths.size();
+    return files.size() != paths.size() ? 1 : 0;
 }
