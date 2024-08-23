@@ -326,6 +326,10 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         m_window->new_tab_from_content(html, Web::HTML::ActivateTab::Yes);
     };
 
+    view().on_inspector_requested_style_sheet_source = [this](auto const& identifier) {
+        view().request_style_sheet_source(identifier);
+    };
+
     view().on_navigate_back = [this]() {
         back();
     };
