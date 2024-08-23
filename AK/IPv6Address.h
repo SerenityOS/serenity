@@ -10,6 +10,7 @@
 #include <AK/Format.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
+#include <AK/UFixedBigInt.h>
 #include <AK/Vector.h>
 
 #ifdef KERNEL
@@ -255,6 +256,53 @@ public:
     {
         return IPv6Address({ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 });
     }
+
+    [[nodiscard]] constexpr bool is_loopback() const
+    {
+        return *this == loopback();
+    }
+
+    [[nodiscard]] constexpr bool is_in_subnet(IPv6Address subnet, u16 network_size) const
+    {
+        VERIFY(network_size <= 128);
+        return this->network(network_size) == subnet;
+    }
+
+    [[nodiscard]] constexpr IPv6Address network(u16 network_size) const
+    {
+        VERIFY(network_size <= 128);
+        IPv6Address net;
+        for (int i = 0; i < 16; ++i) {
+            if (network_size >= 8) {
+                net.m_data[i] = m_data[i];
+                network_size -= 8;
+            } else {
+                u8 mask = ((1 << network_size) - 1) << (8 - network_size);
+                net.m_data[i] = m_data[i] & mask;
+                break;
+            }
+        }
+        return net;
+    }
+
+    // https://datatracker.ietf.org/doc/html/rfc4291#section-2.5.6
+    [[nodiscard]] constexpr bool is_link_local() const
+    {
+        return is_in_subnet({ { 0xfe, 0x80, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } }, 10);
+    }
+
+    // https://datatracker.ietf.org/doc/html/rfc4193
+    [[nodiscard]] constexpr bool is_unique_local() const
+    {
+        return is_in_subnet({ { 0xfc, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } }, 7);
+    }
+
+    // https://datatracker.ietf.org/doc/html/rfc2373#section-2.7
+    [[nodiscard]] constexpr bool is_multicast() const
+    {
+        return is_in_subnet({ { 0xff, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } }, 8);
+    }
+    [[nodiscard]] constexpr bool is_unicast() const { return !is_multicast(); }
 
 private:
     constexpr u16 group(unsigned i) const
