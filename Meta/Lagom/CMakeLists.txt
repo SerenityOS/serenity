@@ -589,6 +589,7 @@ if (BUILD_LAGOM)
         lagom_utility(sql SOURCES ../../Userland/Utilities/sql.cpp LIBS LibFileSystem LibIPC LibLine LibMain LibSQL)
         lagom_utility(tar SOURCES ../../Userland/Utilities/tar.cpp LIBS LibArchive LibCompress LibFileSystem LibMain)
         lagom_utility(test262-runner SOURCES ../../Tests/LibJS/test262-runner.cpp LIBS LibJS LibFileSystem)
+        lagom_utility(unzip SOURCES ../../Userland/Utilities/unzip.cpp LIBS LibArchive LibCompress LibCrypto LibFileSystem LibMain)
 
         if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
             include(CheckCSourceCompiles)
