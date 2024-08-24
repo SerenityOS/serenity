@@ -11,6 +11,7 @@
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4/ARP.h>
+#include <Kernel/Net/IPv4/IP.h>
 #include <Kernel/Net/IPv4/IPv4.h>
 #include <Kernel/Net/IPv4/Socket.h>
 #include <Kernel/Net/LoopbackAdapter.h>
@@ -208,12 +209,12 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, UnixDateTime
             update_arp_table(packet.source(), eth.source(), UpdateTable::Set);
     });
 
-    switch ((IPv4Protocol)packet.protocol()) {
-    case IPv4Protocol::ICMP:
+    switch ((TransportProtocol)packet.protocol()) {
+    case TransportProtocol::ICMP:
         return handle_icmp(eth, packet, packet_timestamp);
-    case IPv4Protocol::UDP:
+    case TransportProtocol::UDP:
         return handle_udp(packet, packet_timestamp);
-    case IPv4Protocol::TCP:
+    case TransportProtocol::TCP:
         return handle_tcp(packet, packet_timestamp);
     default:
         dbgln_if(IPV4_DEBUG, "handle_ipv4: Unhandled protocol {:#02x}", packet.protocol());
@@ -232,7 +233,7 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
         Vector<NonnullRefPtr<IPv4Socket>> icmp_sockets;
         IPv4Socket::all_sockets().with_exclusive([&](auto& sockets) {
             for (auto& socket : sockets) {
-                if (socket.protocol() == (unsigned)IPv4Protocol::ICMP)
+                if (socket.protocol() == (unsigned)TransportProtocol::ICMP)
                     icmp_sockets.append(socket);
             }
         });
@@ -260,11 +261,12 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
             return;
         }
 
-        adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, icmp_packet_size, 0, 64);
+        adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), TransportProtocol::ICMP, icmp_packet_size, 0, 64);
         memset(packet->buffer->data() + ipv4_payload_offset, 0, icmp_header_size);
 
         auto& response = *reinterpret_cast<ICMPEchoPacket*>(packet->buffer->data() + ipv4_payload_offset);
         response.header.type = ICMPType::EchoReply;
+
         response.identifier = request.identifier;
         response.sequence_number = request.sequence_number;
 
@@ -354,7 +356,7 @@ void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, Re
     if (!packet)
         return;
     routing_decision.adapter->fill_in_ipv4_header(*packet, ipv4_packet.destination(),
-        routing_decision.next_hop, ipv4_packet.source(), IPv4Protocol::TCP,
+        routing_decision.next_hop, ipv4_packet.source(), TransportProtocol::TCP,
         buffer_size - ipv4_payload_offset, 0, 64);
 
     auto& rst_packet = *(TCPPacket*)(packet->buffer->data() + ipv4_payload_offset);
