@@ -86,7 +86,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("[SEARCH] Number of results: {}", search_results.size());
 
     response = TRY(client->status("INBOX"sv, { IMAP::StatusItemType::Recent, IMAP::StatusItemType::Messages })->await());
-    outln("[STATUS] Recent items: {}", response.data().status_item().get(IMAP::StatusItemType::Recent));
+    if (response.data().status_items().size() > 0)
+        outln("[STATUS] Recent items: {}", response.data().status_items()[0].get(IMAP::StatusItemType::Recent));
 
     for (auto item : search_results) {
         // clang-format off
