@@ -58,6 +58,7 @@ public:
     AccountNode const& associated_account() const { return m_associated_account; }
     ByteString const& select_name() const { return m_mailbox.name; }
     ByteString const& display_name() const { return m_display_name; }
+    ByteString const& display_name_with_unseen_count() const { return m_display_name_with_unseen_count; }
     IMAP::ListItem const& mailbox() const { return m_mailbox; }
 
     bool has_parent() const { return m_parent; }
@@ -68,6 +69,11 @@ public:
     Vector<NonnullRefPtr<MailboxNode>> const& children() const { return m_children; }
     void add_child(NonnullRefPtr<MailboxNode> child) { m_children.append(child); }
 
+    unsigned unseen_count() const { return m_unseen_count; }
+    void decrement_unseen_count();
+    void increment_unseen_count();
+    void set_unseen_count(unsigned unseen_count);
+
 private:
     MailboxNode(AccountNode const& associated_account, IMAP::ListItem const& mailbox, ByteString display_name)
         : m_associated_account(associated_account)
@@ -76,9 +82,13 @@ private:
     {
     }
 
+    void update_display_name_with_unseen_count();
+
     AccountNode const& m_associated_account;
     IMAP::ListItem m_mailbox;
     ByteString m_display_name;
+    ByteString m_display_name_with_unseen_count;
+    unsigned m_unseen_count;
 
     Vector<NonnullRefPtr<MailboxNode>> m_children;
     RefPtr<MailboxNode> m_parent;

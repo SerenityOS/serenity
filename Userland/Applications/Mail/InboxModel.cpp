@@ -13,9 +13,14 @@ InboxModel::InboxModel(Vector<InboxEntry> entries)
 {
 }
 
-void InboxModel::set_seen(int row, bool seen)
+MailStatus InboxModel::mail_status(int row)
 {
-    m_entries[row].seen = seen;
+    return m_entries[row].status;
+}
+
+void InboxModel::set_mail_status(int row, MailStatus status)
+{
+    m_entries[row].status = status;
     did_update(DontInvalidateIndices);
 }
 
@@ -53,10 +58,8 @@ GUI::Variant InboxModel::data(GUI::ModelIndex const& index, GUI::ModelRole role)
         if (index.column() == Column::Date)
             return Gfx::TextAlignment::CenterRight;
     }
-    if (role == GUI::ModelRole::Font) {
-        if (!value.seen)
-            return Gfx::FontDatabase::default_font().bold_variant();
-    }
+    if (role == GUI::ModelRole::Font && value.status == MailStatus::Unseen)
+        return Gfx::FontDatabase::default_font().bold_variant();
     if (role == static_cast<GUI::ModelRole>(InboxModelCustomRole::Sequence))
         return value.sequence_number;
     return {};

@@ -34,7 +34,7 @@ public:
     NonnullRefPtr<Promise<Response>> send_simple_command(CommandType);
     ErrorOr<void> send_raw(StringView data);
     NonnullRefPtr<Promise<SolidResponse>> login(StringView username, StringView password);
-    NonnullRefPtr<Promise<SolidResponse>> list(StringView reference_name, StringView mailbox_name);
+    NonnullRefPtr<Promise<SolidResponse>> list(StringView reference_name, StringView mailbox_name, bool unseen = false);
     NonnullRefPtr<Promise<SolidResponse>> lsub(StringView reference_name, StringView mailbox_name);
     NonnullRefPtr<Promise<SolidResponse>> select(StringView string);
     NonnullRefPtr<Promise<SolidResponse>> examine(StringView string);

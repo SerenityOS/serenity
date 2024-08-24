@@ -7,6 +7,7 @@
 
 #include "MailboxTreeModel.h"
 #include "AccountHolder.h"
+#include <LibGfx/Font/FontDatabase.h>
 
 MailboxTreeModel::MailboxTreeModel(AccountHolder const& account_holder)
     : m_account_holder(account_holder)
@@ -95,7 +96,13 @@ GUI::Variant MailboxTreeModel::data(GUI::ModelIndex const& index, GUI::ModelRole
         }
 
         auto& mailbox_node = verify_cast<MailboxNode>(base_node);
-        return mailbox_node.display_name();
+        return mailbox_node.unseen_count() ? mailbox_node.display_name_with_unseen_count() : mailbox_node.display_name();
+    }
+
+    if (role == GUI::ModelRole::Font && is<MailboxNode>(base_node)) {
+        auto& mailbox_node = verify_cast<MailboxNode>(base_node);
+        if (mailbox_node.unseen_count())
+            return Gfx::FontDatabase::default_font().bold_variant();
     }
 
     if (role == GUI::ModelRole::Icon) {

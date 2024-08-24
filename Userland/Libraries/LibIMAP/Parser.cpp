@@ -255,7 +255,7 @@ ErrorOr<void> Parser::parse_untagged()
             if (!at_end() && m_buffer[m_position] != ')')
                 TRY(consume(" "sv));
         }
-        m_response.data().set_status(move(status_item));
+        m_response.data().add_status_item(move(status_item));
         consume_if(" "sv); // Not in the spec but the Outlook server sends a space for some reason.
         TRY(consume("\r\n"sv));
     } else {

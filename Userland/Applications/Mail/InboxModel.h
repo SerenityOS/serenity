@@ -10,12 +10,17 @@
 #include <LibGUI/Model.h>
 #include <LibIMAP/Objects.h>
 
+enum class MailStatus {
+    Unseen,
+    Seen,
+};
+
 struct InboxEntry {
     u32 sequence_number;
     ByteString date;
     ByteString from;
     ByteString subject;
-    bool seen;
+    MailStatus status;
 };
 
 enum class InboxModelCustomRole {
@@ -39,7 +44,8 @@ public:
 
     virtual ~InboxModel() override = default;
 
-    void set_seen(int row, bool);
+    MailStatus mail_status(int row);
+    void set_mail_status(int row, MailStatus status);
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
