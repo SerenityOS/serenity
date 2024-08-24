@@ -331,6 +331,9 @@ private:
         auto const segment_per_rows = m_metadata.tile_width().map([&](u32 w) { return ceil_div(m_image_width, w); }).value_or(1);
 
         Variant<ExifOrientedBitmap, ExifOrientedCMYKBitmap> oriented_bitmap = TRY(([&]() -> ErrorOr<Variant<ExifOrientedBitmap, ExifOrientedCMYKBitmap>> {
+            if (m_image_width > NumericLimits<int>::max() || *metadata().image_length() > NumericLimits<int>::max())
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Image dimensions are bigger than the int range");
+
             if (m_photometric_interpretation == PhotometricInterpretation::CMYK)
                 return ExifOrientedCMYKBitmap::create(*metadata().orientation(), { m_image_width, *metadata().image_length() });
             return ExifOrientedBitmap::create(*metadata().orientation(), { m_image_width, *metadata().image_length() }, BitmapFormat::BGRA8888);
