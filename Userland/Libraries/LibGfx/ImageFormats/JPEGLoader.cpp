@@ -1331,6 +1331,11 @@ static ErrorOr<void> read_start_of_frame(JPEGStream& stream, JPEGLoadingContext&
 
         dbgln_if(JPEG_DEBUG, "Component subsampling: {}, {}", component.sampling_factors.horizontal, component.sampling_factors.vertical);
 
+        if (component.sampling_factors.horizontal == 0 || component.sampling_factors.horizontal > 4
+            || component.sampling_factors.vertical == 0 || component.sampling_factors.vertical > 4) {
+            return Error::from_string_literal("Invalid subsampling factor values");
+        }
+
         if (i == 0) {
             // By convention, downsampling is applied only on chroma components. So we should
             //  hope to see the maximum sampling factor in the luma component.
