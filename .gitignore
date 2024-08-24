@@ -43,6 +43,10 @@ Tests/LibWeb/WPT/wpt
 Tests/LibWeb/WPT/metadata
 Tests/LibWeb/WPT/MANIFEST.json
 
+#Some stuff from builds, this should never be committed
+_disk_image
+Meta/gn/secondary/Userland/Libraries/LibVideo/BUILD.gn
+
 # Ensure that all files in /Base can be tracked, even if they match one of the above rules
 !/Base/**
 
