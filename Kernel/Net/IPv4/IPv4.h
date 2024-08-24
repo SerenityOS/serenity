@@ -13,12 +13,6 @@
 
 namespace Kernel {
 
-enum class IPv4Protocol : u16 {
-    ICMP = 1,
-    TCP = 6,
-    UDP = 17,
-};
-
 enum class IPv4PacketFlags : u16 {
     DontFragment = 0x4000,
     MoreFragments = 0x2000,

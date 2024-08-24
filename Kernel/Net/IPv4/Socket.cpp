@@ -13,6 +13,7 @@
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4/ARP.h>
+#include <Kernel/Net/IPv4/IP.h>
 #include <Kernel/Net/IPv4/IPv4.h>
 #include <Kernel/Net/IPv4/Socket.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -234,7 +235,7 @@ ErrorOr<size_t> IPv4Socket::sendto(OpenFileDescription&, UserOrKernelBuffer cons
         if (!packet)
             return set_so_error(ENOMEM);
         routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(), routing_decision.next_hop,
-            m_peer_address, (IPv4Protocol)protocol(), data_length, m_type_of_service, m_ttl);
+            m_peer_address, (TransportProtocol)protocol(), data_length, m_type_of_service, m_ttl);
         if (auto result = data.read(packet->buffer->data() + ipv4_payload_offset, data_length); result.is_error()) {
             routing_decision.adapter->release_packet_buffer(*packet);
             return set_so_error(result.release_error());
