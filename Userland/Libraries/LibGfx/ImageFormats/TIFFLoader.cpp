@@ -121,7 +121,7 @@ public:
             if (m_metadata.bits_per_sample()->size() != m_metadata.samples_per_pixel())
                 return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid number of values in BitsPerSample");
 
-            if (*m_metadata.samples_per_pixel() < samples_for_photometric_interpretation())
+            if (*m_metadata.samples_per_pixel() < samples_for_photometric_interpretation(*m_metadata.photometric_interpretation()))
                 return Error::from_string_literal("TIFFImageDecoderPlugin: Not enough values in BitsPerSample for given PhotometricInterpretation");
         } else {
             if (m_metadata.bits_per_sample().has_value() && any_of(*m_metadata.bits_per_sample(), [](auto bit_depth) { return bit_depth == 0 || bit_depth > 32; }))
@@ -203,9 +203,9 @@ private:
         return NumericLimits<u8>::max() * value / ((1 << bits) - 1);
     }
 
-    u8 samples_for_photometric_interpretation() const
+    static u8 samples_for_photometric_interpretation(PhotometricInterpretation photometric_interpretation)
     {
-        switch (m_photometric_interpretation) {
+        switch (photometric_interpretation) {
         case PhotometricInterpretation::WhiteIsZero:
         case PhotometricInterpretation::BlackIsZero:
         case PhotometricInterpretation::RGBPalette:
@@ -225,7 +225,7 @@ private:
             auto const extra_samples = m_metadata.extra_samples().value();
             for (u8 i = 0; i < extra_samples.size(); ++i) {
                 if (extra_samples[i] == ExtraSample::UnassociatedAlpha)
-                    return i + samples_for_photometric_interpretation();
+                    return i + samples_for_photometric_interpretation(m_photometric_interpretation);
             }
         }
         return OptionalNone {};
@@ -240,7 +240,7 @@ private:
         // Both unknown and alpha channels are considered as extra channels, so let's iterate over
         // them, conserve the alpha value (if any) and discard everything else.
 
-        auto const number_base_channels = samples_for_photometric_interpretation();
+        auto const number_base_channels = samples_for_photometric_interpretation(m_photometric_interpretation);
 
         Optional<u8> alpha {};
 
