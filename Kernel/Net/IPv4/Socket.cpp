@@ -755,17 +755,22 @@ ErrorOr<void> IPv4Socket::ioctl(OpenFileDescription&, unsigned request, Userspac
         case SIOCSIFADDR:
             if (!current_process_credentials->is_superuser())
                 return EPERM;
-            if (ifr.ifr_addr.sa_family != AF_INET)
+            if (ifr.ifr_addr.sa_family == AF_INET) {
+                adapter->set_ipv4_address(IPv4Address(bit_cast<sockaddr_in*>(&ifr.ifr_addr)->sin_addr.s_addr));
+                return {};
+            } else if (ifr.ifr_addr.sa_family == AF_INET6) {
+                adapter->set_ipv6_address(IPv6Address(bit_cast<sockaddr_in6*>(&ifr.ifr_addr)->sin6_addr.s6_addr));
+                return {};
+            } else {
                 return EAFNOSUPPORT;
-            adapter->set_ipv4_address(IPv4Address(((sockaddr_in&)ifr.ifr_addr).sin_addr.s_addr));
-            return {};
+            }
 
         case SIOCSIFNETMASK:
             if (!current_process_credentials->is_superuser())
                 return EPERM;
             if (ifr.ifr_addr.sa_family != AF_INET)
                 return EAFNOSUPPORT;
-            adapter->set_ipv4_netmask(IPv4Address(((sockaddr_in&)ifr.ifr_netmask).sin_addr.s_addr));
+            adapter->set_ipv4_netmask(IPv4Address(bit_cast<sockaddr_in*>(&ifr.ifr_netmask)->sin_addr.s_addr));
             return {};
 
         case SIOCGIFADDR: {
