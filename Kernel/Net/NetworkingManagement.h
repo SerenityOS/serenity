@@ -34,6 +34,7 @@ public:
     ErrorOr<void> try_for_each(Function<ErrorOr<void>(NetworkAdapter&)>);
 
     RefPtr<NetworkAdapter> from_ipv4_address(IPv4Address const&) const;
+    RefPtr<NetworkAdapter> from_ipv6_address(IPv6Address const&) const;
     RefPtr<NetworkAdapter> lookup_by_name(StringView) const;
 
     NonnullRefPtr<NetworkAdapter> loopback_adapter() const;

@@ -9,6 +9,7 @@
 #include <AK/AtomicRefCounted.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Function.h>
+#include <AK/IPv6Address.h>
 #include <AK/IntrusiveList.h>
 #include <AK/MACAddress.h>
 #include <AK/Types.h>
@@ -65,6 +66,12 @@ public:
     IPv4Address ipv4_address() const { return m_ipv4_address; }
     IPv4Address ipv4_netmask() const { return m_ipv4_netmask; }
     IPv4Address ipv4_broadcast() const { return IPv4Address { (m_ipv4_address.to_u32() & m_ipv4_netmask.to_u32()) | ~m_ipv4_netmask.to_u32() }; }
+
+    IPv6Address ipv6_address() const { return m_ipv6_address; }
+    IPv6Address ipv6_netmask() const { return m_ipv6_netmask; }
+    // TODO: implement other multicast addresses
+    IPv6Address ipv6_multicast() const { return IPv6Address({ 0xff, 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }); }
+
     virtual bool link_up() { return false; }
     virtual i32 link_speed()
     {
@@ -75,6 +82,9 @@ public:
 
     void set_ipv4_address(IPv4Address const&);
     void set_ipv4_netmask(IPv4Address const&);
+
+    void set_ipv6_address(IPv6Address const&);
+    void set_ipv6_netmask(IPv6Address const&);
 
     void send(MACAddress const&, ARPPacket const&);
     void fill_in_ipv4_header(PacketWithTimestamp&, IPv4Address const&, MACAddress const&, IPv4Address const&, IPv4Protocol, size_t, u8 type_of_service, u8 ttl);
@@ -110,8 +120,11 @@ protected:
 
 private:
     MACAddress m_mac_address;
+    // FIXME: Allow for more than one IPv4/IPv6 address each.
     IPv4Address m_ipv4_address;
     IPv4Address m_ipv4_netmask;
+    IPv6Address m_ipv6_address;
+    IPv6Address m_ipv6_netmask;
 
     // FIXME: Make this configurable
     static constexpr size_t max_packet_buffers = 1024;
