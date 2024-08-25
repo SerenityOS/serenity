@@ -7,6 +7,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/IPv4Address.h>
+#include <AK/IPv6Address.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
@@ -20,12 +21,14 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView value_ipv4 {};
+    StringView value_ipv6 {};
     StringView value_adapter {};
     StringView value_mask {};
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display or modify the configuration of each network interface.");
-    args_parser.add_option(value_ipv4, "Set the IP address of the selected network", "ipv4", 'i', "ip");
+    args_parser.add_option(value_ipv4, "Set the IPv4 address of the selected network", "ipv4", 0, "ipv4");
+    args_parser.add_option(value_ipv6, "Set the IPv6 address of the selected network", "ipv6", 0, "ipv6");
     args_parser.add_option(value_adapter, "Select a specific network adapter to configure", "adapter", 'a', "adapter");
     args_parser.add_option(value_mask, "Set the network mask of the selected network", "mask", 'm', "mask");
     args_parser.parse(arguments);
@@ -88,6 +91,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             ifr.ifr_addr.sa_family = AF_INET;
             ((sockaddr_in&)ifr.ifr_addr).sin_addr.s_addr = address.value().to_in_addr_t();
+
+            TRY(Core::System::ioctl(fd, SIOCSIFADDR, &ifr));
+        }
+
+        if (!value_ipv6.is_empty()) {
+            auto address = IPv6Address::from_string(value_ipv6);
+
+            if (!address.has_value()) {
+                warnln("Invalid IPv6 address: '{}'", value_ipv6);
+                return 1;
+            }
+
+            // FIXME: should be an AF_INET6 socket (once we support it), but the Kernel doesn't care either way.
+            auto fd = TRY(Core::System::socket(AF_INET, SOCK_DGRAM, IPPROTO_IP));
+
+            struct ifreq ifr;
+            memset(&ifr, 0, sizeof(ifr));
+
+            bool fits = ifname.copy_characters_to_buffer(ifr.ifr_name, IFNAMSIZ);
+            if (!fits) {
+                warnln("Interface name '{}' is too long", ifname);
+                return 1;
+            }
+            ifr.ifr_addr.sa_family = AF_INET6;
+            AK::TypedTransfer<u8>::copy(((sockaddr_in6&)ifr.ifr_addr).sin6_addr.s6_addr, address.value().to_in6_addr_t(), sizeof(in6_addr));
 
             TRY(Core::System::ioctl(fd, SIOCSIFADDR, &ifr));
         }

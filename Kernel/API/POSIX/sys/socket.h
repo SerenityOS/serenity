@@ -109,7 +109,8 @@ static inline void* CMSG_DATA(struct cmsghdr* cmsg)
 
 struct sockaddr {
     sa_family_t sa_family;
-    char sa_data[14];
+    // For network interface ioctl(), this needs to fit all sockaddr_* structures (excluding Unix domain sockets).
+    char sa_data[26];
 };
 
 struct ucred {
