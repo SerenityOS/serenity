@@ -81,11 +81,100 @@ u8 FATInode::lfn_entry_checksum(FATEntry const& entry)
     return checksum;
 }
 
-void FATInode::create_83_filename_for(FATEntry& entry, StringView name)
+static constexpr auto valid_misc_sfn_chars = to_array<char>({ '$', '%', '\'', '-', '_', '@', ' ', '~', '`', '!', '(', ')' });
+
+static bool is_valid_sfn_char(char c)
 {
-    // FIXME: Implement the correct algorithm based on 3.2.4 from http://www.osdever.net/documents/LongFileName.pdf
-    for (size_t i = 0; i < min(name.length(), normal_filename_length); i++)
-        entry.filename[i] = to_ascii_uppercase(name[i]);
+    if (c >= 'A' && c <= 'Z')
+        return true;
+    if (c >= '0' && c <= '9')
+        return true;
+
+    return valid_misc_sfn_chars.contains_slow(c);
+}
+
+// http://www.osdever.net/documents/LongFileName.pdf
+static ErrorOr<NonnullRefPtr<SFN>> create_sfn_from_lfn(StringView lfn)
+{
+    ByteBuffer out;
+
+    // 1. Remove all spaces.
+    // 2. Initial periods, trailing periods, and extra periods prior to the last embedded period are removed.
+    lfn = lfn.trim("."sv);
+    auto last_dot_index = lfn.find_last('.');
+    for (size_t i = 0; i < lfn.length(); ++i) {
+        if (lfn[i] == ' ')
+            continue;
+        if (lfn[i] == '.' && i != last_dot_index.value())
+            continue;
+
+        TRY(out.try_append(to_ascii_uppercase(lfn[i])));
+    }
+
+    // 3. Translate all illegal 8.3 characters into "_".
+    for (size_t i = 0; i < out.size(); ++i) {
+        if (!is_valid_sfn_char(out[i]) && out[i] != '.')
+            out[i] = '_';
+    }
+
+    // 4. If the name does not contain an extension then truncate it to 6 characters.
+    // If the names does contain an extension, then truncate the first part to 6 characters and the extension to 3 characters.
+    auto last_period = StringView(out).find_last('.');
+    if (!last_period.has_value()) {
+        auto name = TRY(out.slice(0, min(out.size(), 6)));
+        return SFN::try_create(move(name), {}, 1);
+    } else {
+        auto name = TRY(out.slice(0, min(last_period.value(), 6)));
+        size_t extension_length = min(out.size() - last_period.value(), 3);
+        auto extension = TRY(out.slice(last_period.value() + 1, extension_length));
+        return SFN::try_create(move(name), move(extension), 1);
+    }
+}
+
+ErrorOr<Vector<ByteBuffer>> FATInode::collect_sfns()
+{
+    MutexLocker locker(m_inode_lock);
+
+    VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
+
+    Vector<ByteBuffer> sfns = {};
+
+    (void)TRY(traverse([&sfns](auto inode) -> ErrorOr<bool> {
+        auto sfn = TRY(ByteBuffer::create_uninitialized(12));
+
+        memcpy(sfn.data(), inode->m_entry.filename, 8);
+        sfn[8] = '.';
+        memcpy(sfn.data() + 9, inode->m_entry.extension, 3);
+
+        TRY(sfns.try_append(move(sfn)));
+        return false;
+    }));
+
+    return sfns;
+}
+
+ErrorOr<void> FATInode::create_unique_sfn_for(FATEntry& entry, NonnullRefPtr<SFN> sfn, Vector<ByteBuffer> existing_sfns)
+{
+    auto is_sfn_unique = [existing_sfns](SFN const& sfn) -> ErrorOr<bool> {
+        auto serialized_name = TRY(sfn.serialize_name());
+        auto serialized_extension = TRY(sfn.serialize_extension());
+        for (auto const& current_sfn : existing_sfns) {
+            if (current_sfn.bytes().slice(0, 8) == serialized_name && current_sfn.bytes().slice(9, 3) == serialized_extension)
+                return false;
+        }
+        return true;
+    };
+
+    while (!TRY(is_sfn_unique(*sfn)))
+        ++sfn->unique();
+
+    auto serialized_name = TRY(sfn->serialize_name());
+    auto serialized_extension = TRY(sfn->serialize_extension());
+
+    memcpy(entry.filename, serialized_name.data(), serialized_name.size());
+    memcpy(entry.extension, serialized_extension.data(), serialized_extension.size());
+
+    return {};
 }
 
 ErrorOr<Vector<FATLongFileNameEntry>> FATInode::create_lfn_entries(StringView name, u8 checksum)
@@ -553,7 +642,9 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
     dbgln_if(FAT_DEBUG, "FATInode[{}]::create_child(): creating inode \"{}\"", identifier(), name);
 
     FATEntry entry {};
-    create_83_filename_for(entry, name);
+    auto sfn = TRY(create_sfn_from_lfn(name));
+    auto existing_sfns = TRY(collect_sfns());
+    TRY(create_unique_sfn_for(entry, move(sfn), move(existing_sfns)));
 
     // TODO: We should set the hidden attribute if the file starts with a dot or read only (the same way Linux does this).
     if (mode & S_IFDIR)
@@ -619,7 +710,9 @@ ErrorOr<void> FATInode::add_child(Inode& inode, StringView name, mode_t mode)
     dbgln_if(FAT_DEBUG, "FATInode[{}]::add_child(): appending inode {} as \"{}\"", identifier(), inode.identifier(), name);
 
     auto entry = bit_cast<FATInode*>(&inode)->m_entry;
-    create_83_filename_for(entry, name);
+    auto sfn = TRY(create_sfn_from_lfn(name));
+    auto existing_sfns = TRY(collect_sfns());
+    TRY(create_unique_sfn_for(entry, move(sfn), move(existing_sfns)));
 
     // TODO: We should set the hidden attribute if the file starts with a dot or read only (the same way Linux does this).
     if (mode & S_IFDIR)
