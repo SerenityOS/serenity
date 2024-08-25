@@ -25,6 +25,11 @@ jobs:
 
           - toolchain: 'GNU'
             os: ubuntu-22.04
+            arch: 'riscv64'
+            debug_options: 'NORMAL_DEBUG'
+
+          - toolchain: 'GNU'
+            os: ubuntu-22.04
             arch: 'x86_64'
             debug_options: 'ALL_DEBUG'
 
