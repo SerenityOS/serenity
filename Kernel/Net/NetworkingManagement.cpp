@@ -72,6 +72,19 @@ RefPtr<NetworkAdapter> NetworkingManagement::from_ipv4_address(IPv4Address const
     });
 }
 
+RefPtr<NetworkAdapter> NetworkingManagement::from_ipv6_address(IPv6Address const& address) const
+{
+    if (address.is_loopback())
+        return m_loopback_adapter;
+    return m_adapters.with([&](auto& adapters) -> RefPtr<NetworkAdapter> {
+        for (auto& adapter : adapters) {
+            if (adapter->ipv6_address() == address || adapter->ipv6_multicast() == address)
+                return adapter;
+        }
+        return nullptr;
+    });
+}
+
 RefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(StringView name) const
 {
     return m_adapters.with([&](auto& adapters) -> RefPtr<NetworkAdapter> {
