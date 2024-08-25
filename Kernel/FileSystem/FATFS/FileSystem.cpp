@@ -506,10 +506,13 @@ ErrorOr<void> FATFS::fat_write(u32 cluster, u32 value)
     }
     }
 
-    if (need_extra_block)
-        TRY(write_blocks(fat_sector_index, 2, fat_sector_buffer));
-    else
-        TRY(write_block(fat_sector_index, fat_sector_buffer, m_device_block_size));
+    for (size_t i = 0; i < m_parameter_block->common_bpb()->fat_count; ++i) {
+        u32 target_sector_index = fat_sector_index + i * m_parameter_block->sectors_per_fat();
+        if (need_extra_block)
+            TRY(write_blocks(target_sector_index, 2, fat_sector_buffer));
+        else
+            TRY(write_block(target_sector_index, fat_sector_buffer, m_device_block_size));
+    }
 
     return {};
 }
