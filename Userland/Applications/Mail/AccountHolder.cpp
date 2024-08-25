@@ -10,22 +10,68 @@
 AccountHolder::AccountHolder()
 {
     m_mailbox_tree_model = MailboxTreeModel::create(*this);
+
+    // Mailboxes with these names will be given priority in the display order.
+    // Some of these mailboxes are defined per RFC 6154 as Special-Use Mailboxes,
+    // however the ordering is primarily an arbitrary decision intended to match
+    // the behavior of other email clients such as Thunderbird.
+    append_mailbox_default_display_setting("INBOX", "Inbox");
+    append_mailbox_default_display_setting("Drafts", "", "/res/icons/16x16/new.png");
+    append_mailbox_default_display_setting("Sent", "", "/res/icons/16x16/sent.png");
+    append_mailbox_default_display_setting("Archive", "", "/res/icons/16x16/filetype-archive.png");
+    append_mailbox_default_display_setting("Junk", "", "/res/icons/16x16/spam.png");
+    append_mailbox_default_display_setting("Spam", "", "/res/icons/16x16/spam.png");
+    append_mailbox_default_display_setting("Trash", "", "/res/icons/16x16/trash-can.png");
 }
 
-void AccountHolder::add_account_with_name_and_mailboxes(ByteString name, Vector<IMAP::ListItem> const& mailboxes)
+void AccountHolder::append_mailbox_default_display_setting(ByteString select_name, ByteString display_name, ByteString path_to_display_icon)
+{
+    m_mailbox_default_display_settings.append(HashMap<ByteString, ByteString>());
+    auto index = m_mailbox_default_display_settings.size() - 1;
+    m_mailbox_default_display_settings[index].set(select_name, display_name == "" ? select_name : display_name);
+    if (path_to_display_icon != "")
+        m_mailbox_default_display_settings[index].set("path_to_display_icon", path_to_display_icon);
+}
+
+void AccountHolder::add_account_with_name_and_mailboxes(ByteString name, Vector<IMAP::ListItem> mailboxes)
 {
     auto account = AccountNode::create(move(name));
 
     // This holds all of the ancestors of the current leaf folder.
     Vector<NonnullRefPtr<MailboxNode>> folder_stack;
 
-    for (auto& mailbox : mailboxes) {
+    // Sort default mailboxes by arbitrary display name order.
+    Vector<IMAP::ListItem> arbitrarily_ordered_mailboxes;
+    for (auto& default_display_name : m_mailbox_default_display_settings) {
+        for (size_t i = 0; i < mailboxes.size(); i++) {
+            if (default_display_name.get(mailboxes[i].name).has_value()) {
+                arbitrarily_ordered_mailboxes.append(mailboxes[i]);
+                mailboxes.remove(i);
+            }
+        }
+    }
+    arbitrarily_ordered_mailboxes.extend(mailboxes);
+    mailboxes.clear();
+
+    for (auto& mailbox : arbitrarily_ordered_mailboxes) {
         // mailbox.name is converted to StringView to get access to split by string.
         auto subfolders = StringView(mailbox.name).split_view(mailbox.reference);
 
         // Use the last part of the path as the display name.
         // For example: "[Mail]/Subfolder" will be displayed as "Subfolder"
-        auto mailbox_node = MailboxNode::create(account, mailbox, subfolders.last());
+        auto display_name = subfolders.last();
+        ByteString path_to_display_icon = "";
+        for (auto& default_display_setting : m_mailbox_default_display_settings) {
+            if (default_display_setting.get(mailbox.name).has_value()) {
+                display_name = default_display_setting.get(mailbox.name).value();
+                if (default_display_setting.get("path_to_display_icon").has_value())
+                    path_to_display_icon = default_display_setting.get("path_to_display_icon").value();
+            }
+        }
+        auto mailbox_node = MailboxNode::create(account, mailbox, display_name);
+
+        if (path_to_display_icon != "")
+            mailbox_node->set_display_icon(path_to_display_icon);
 
         if (subfolders.size() > 1) {
             VERIFY(!folder_stack.is_empty());
@@ -95,4 +141,10 @@ void MailboxNode::set_unseen_count(unsigned unseen_count)
 {
     m_unseen_count = unseen_count;
     update_display_name_with_unseen_count();
+}
+
+void MailboxNode::set_display_icon(ByteString path_to_display_icon)
+{
+    if (path_to_display_icon != "")
+        m_display_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file(path_to_display_icon).release_value_but_fixme_should_propagate_errors());
 }

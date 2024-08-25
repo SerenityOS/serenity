@@ -110,6 +110,8 @@ GUI::Variant MailboxTreeModel::data(GUI::ModelIndex const& index, GUI::ModelRole
             return m_account_icon;
 
         auto& mailbox_node = verify_cast<MailboxNode>(base_node);
+        if (mailbox_node.display_icon().bitmap_for_size(16))
+            return mailbox_node.display_icon();
         if (!mailbox_node.children().is_empty())
             return m_folder_icon;
         return m_mail_icon;

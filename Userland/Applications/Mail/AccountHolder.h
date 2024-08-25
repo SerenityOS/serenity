@@ -57,6 +57,8 @@ public:
 
     AccountNode const& associated_account() const { return m_associated_account; }
     ByteString const& select_name() const { return m_mailbox.name; }
+    GUI::Icon const& display_icon() const { return m_display_icon; }
+    void set_display_icon(ByteString path_to_display_icon);
     ByteString const& display_name() const { return m_display_name; }
     ByteString const& display_name_with_unseen_count() const { return m_display_name_with_unseen_count; }
     IMAP::ListItem const& mailbox() const { return m_mailbox; }
@@ -86,6 +88,7 @@ private:
 
     AccountNode const& m_associated_account;
     IMAP::ListItem m_mailbox;
+    GUI::Icon m_display_icon;
     ByteString m_display_name;
     ByteString m_display_name_with_unseen_count;
     unsigned m_unseen_count;
@@ -103,7 +106,7 @@ public:
         return adopt_own(*new AccountHolder());
     }
 
-    void add_account_with_name_and_mailboxes(ByteString, Vector<IMAP::ListItem> const&);
+    void add_account_with_name_and_mailboxes(ByteString, Vector<IMAP::ListItem>);
 
     Vector<NonnullRefPtr<AccountNode>> const& accounts() const { return m_accounts; }
     MailboxTreeModel& mailbox_tree_model() { return *m_mailbox_tree_model; }
@@ -111,8 +114,10 @@ public:
 private:
     AccountHolder();
 
+    void append_mailbox_default_display_setting(ByteString select_name, ByteString display_name = "", ByteString path_to_display_icon = "");
     void rebuild_tree();
 
     Vector<NonnullRefPtr<AccountNode>> m_accounts;
+    Vector<HashMap<ByteString, ByteString>> m_mailbox_default_display_settings;
     RefPtr<MailboxTreeModel> m_mailbox_tree_model;
 };
