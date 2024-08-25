@@ -356,7 +356,6 @@ source_set("arch_sources") {
     deps = [ ":aarch64_no_mmu" ]
     sources = [
       "Arch/Processor.cpp",
-      "Arch/aarch64/BootPPMParser.cpp",
       "Arch/aarch64/CPUID.cpp",
       "Arch/aarch64/CurrentTime.cpp",
       "Arch/aarch64/Dummy.cpp",

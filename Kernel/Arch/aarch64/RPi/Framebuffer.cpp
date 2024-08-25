@@ -5,7 +5,6 @@
  */
 
 #include <AK/Format.h>
-#include <Kernel/Arch/aarch64/BootPPMParser.h>
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/FramebufferMailboxMessages.h>
 #include <Kernel/Boot/BootInfo.h>
