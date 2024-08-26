@@ -165,7 +165,10 @@
 #ifdef AK_COMPILER_GCC
 // FIXME: Undefine once https://gcc.gnu.org/bugzilla/show_bug.cgi?id=115851 is fixed.
 #    define AK_COROUTINE_STATEMENT_EXPRS_BROKEN
-// FIXME: Undefine once https://gcc.gnu.org/bugzilla/show_bug.cgi?id=112341 is fixed.
+#endif
+
+#if defined(AK_COMPILER_GCC) && __GNUC__ < 15
+// Workaround for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=112341 . See AK/Coroutine.h for more details.
 #    define AK_COROUTINE_TYPE_DEDUCTION_BROKEN
 #endif
 
