@@ -8,6 +8,7 @@ RE_INVALID_CHAR = re.compile('[^A-FU0-9+_]')
 RE_MISSING_UNDERSCORE = re.compile('[^_]U')
 RE_MISSING_LETTER_U = re.compile('_(?!U)')
 RE_MISSING_SIGN_PLUS = re.compile('U(?!\\+)')
+RE_MULTIPLE_UNDERSCORES = re.compile('__+')
 
 
 def any_problems_here():
@@ -49,6 +50,14 @@ def any_problems_here():
         if 'U+FE0F' in filename:
             print(f'Filename {filename}.png should not include any emoji presentation selectors. U+FE0F codepoints'
                   ' should be removed from the filename.')
+            found_invalid_filenames = True
+            break
+        if RE_MULTIPLE_UNDERSCORES.search(filename):
+            print(f'Filename {filename}.png contains consecutive underscores "__", revise filename.')
+            found_invalid_filenames = True
+            break
+        if filename.endswith('_'):
+            print(f'Filename {filename}.png ends with an underscore "_", revise filename.')
             found_invalid_filenames = True
             break
 
