@@ -93,6 +93,41 @@ static bool is_valid_sfn_char(char c)
     return valid_misc_sfn_chars.contains_slow(c);
 }
 
+static bool is_valid_sfn(StringView sfn)
+{
+    StringView name = {};
+    StringView extension = {};
+
+    auto dot = sfn.find('.');
+    if (!dot.has_value()) {
+        name = sfn;
+    } else {
+        if (*dot + 1 >= sfn.length())
+            return false;
+
+        name = sfn.substring_view(0, *dot);
+        extension = sfn.substring_view(*dot + 1, sfn.length() - *dot - 1);
+    }
+
+    if (name.length() > 8 || extension.length() > 3)
+        return false;
+
+    for (char c : name) {
+        if (!is_valid_sfn_char(c))
+            return false;
+    }
+
+    for (char c : extension) {
+        if (!is_valid_sfn_char(c))
+            return false;
+    }
+
+    if (name.length() == 0 || name[0] == ' ')
+        return false;
+
+    return true;
+}
+
 // http://www.osdever.net/documents/LongFileName.pdf
 static ErrorOr<NonnullRefPtr<SFN>> create_sfn_from_lfn(StringView lfn)
 {
@@ -173,6 +208,27 @@ ErrorOr<void> FATInode::create_unique_sfn_for(FATEntry& entry, NonnullRefPtr<SFN
 
     memcpy(entry.filename, serialized_name.data(), serialized_name.size());
     memcpy(entry.extension, serialized_extension.data(), serialized_extension.size());
+
+    return {};
+}
+
+ErrorOr<void> FATInode::encode_known_good_sfn_for(FATEntry& entry, StringView name)
+{
+    memset(entry.filename, ' ', 8);
+    memset(entry.extension, ' ', 3);
+    auto dot = name.find('.');
+    if (dot.has_value()) {
+        auto extension_length = name.length() - dot.value() - 1;
+
+        VERIFY(dot.value() <= 8);
+        VERIFY(extension_length <= 3);
+
+        memcpy(entry.filename, name.bytes().data(), dot.value());
+        memcpy(entry.extension, name.bytes().data() + dot.value() + 1, extension_length);
+    } else {
+        VERIFY(name.bytes().size() <= 8);
+        memcpy(entry.filename, name.bytes().data(), name.bytes().size());
+    }
 
     return {};
 }
@@ -642,9 +698,16 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
     dbgln_if(FAT_DEBUG, "FATInode[{}]::create_child(): creating inode \"{}\"", identifier(), name);
 
     FATEntry entry {};
-    auto sfn = TRY(create_sfn_from_lfn(name));
-    auto existing_sfns = TRY(collect_sfns());
-    TRY(create_unique_sfn_for(entry, move(sfn), move(existing_sfns)));
+
+    bool valid_sfn = is_valid_sfn(name);
+
+    if (valid_sfn) {
+        TRY(encode_known_good_sfn_for(entry, name));
+    } else {
+        auto sfn = TRY(create_sfn_from_lfn(name));
+        auto existing_sfns = TRY(collect_sfns());
+        TRY(create_unique_sfn_for(entry, move(sfn), move(existing_sfns)));
+    }
 
     // TODO: We should set the hidden attribute if the file starts with a dot or read only (the same way Linux does this).
     if (mode & S_IFDIR)
@@ -652,8 +715,9 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
 
     // FIXME: Set the dates
 
-    // FIXME: For some filenames lfn entries are not necessary
-    auto lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
+    Vector<FATLongFileNameEntry> lfn_entries = {};
+    if (!valid_sfn)
+        lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
 
     MutexLocker locker(m_inode_lock);
 
@@ -710,9 +774,16 @@ ErrorOr<void> FATInode::add_child(Inode& inode, StringView name, mode_t mode)
     dbgln_if(FAT_DEBUG, "FATInode[{}]::add_child(): appending inode {} as \"{}\"", identifier(), inode.identifier(), name);
 
     auto entry = bit_cast<FATInode*>(&inode)->m_entry;
-    auto sfn = TRY(create_sfn_from_lfn(name));
-    auto existing_sfns = TRY(collect_sfns());
-    TRY(create_unique_sfn_for(entry, move(sfn), move(existing_sfns)));
+
+    bool valid_sfn = is_valid_sfn(name);
+
+    if (valid_sfn) {
+        TRY(encode_known_good_sfn_for(entry, name));
+    } else {
+        NonnullRefPtr<SFN> sfn = TRY(create_sfn_from_lfn(name));
+        Vector<ByteBuffer> existing_sfns = TRY(collect_sfns());
+        TRY(create_unique_sfn_for(entry, move(sfn), move(existing_sfns)));
+    }
 
     // TODO: We should set the hidden attribute if the file starts with a dot or read only (the same way Linux does this).
     if (mode & S_IFDIR)
@@ -720,8 +791,9 @@ ErrorOr<void> FATInode::add_child(Inode& inode, StringView name, mode_t mode)
 
     // FIXME: Set the dates
 
-    // FIXME: For some filenames lfn entries are not necessary
-    auto lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
+    Vector<FATLongFileNameEntry> lfn_entries = {};
+    if (!valid_sfn)
+        auto lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
 
     MutexLocker locker(m_inode_lock);
 
