@@ -118,6 +118,7 @@ private:
     static StringView byte_terminated_string(StringView, u8);
     static u8 lfn_entry_checksum(FATEntry const& entry);
     static ErrorOr<void> create_unique_sfn_for(FATEntry& entry, NonnullRefPtr<SFN> sfn, Vector<ByteBuffer> existing_sfns);
+    static ErrorOr<void> encode_known_good_sfn_for(FATEntry& entry, StringView name);
     static ErrorOr<Vector<FATLongFileNameEntry>> create_lfn_entries(StringView name, u8 checksum);
 
     ErrorOr<Vector<u32>> compute_cluster_list(FATFS&, u32 first_cluster);
