@@ -54,8 +54,8 @@ private:
 
 ALWAYS_INLINE ErrorOr<void> CanonicalCode::write_symbol(LittleEndianOutputBitStream& stream, u32 symbol) const
 {
-    auto code = symbol < m_bit_codes.size() ? m_bit_codes[symbol] : 0u;
-    auto length = symbol < m_bit_code_lengths.size() ? m_bit_code_lengths[symbol] : 0u;
+    auto code = m_bit_codes[symbol];
+    auto length = m_bit_code_lengths[symbol];
     TRY(stream.write_bits(code, length));
     return {};
 }
