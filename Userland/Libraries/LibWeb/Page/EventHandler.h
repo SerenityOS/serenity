@@ -12,6 +12,7 @@
 #include <LibGfx/Forward.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/GCPtr.h>
+#include <LibLocale/Forward.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Page/EventResult.h>
 #include <LibWeb/Page/InputEvent.h>
@@ -41,6 +42,8 @@ public:
     void handle_paste(String const& text);
 
     void visit_edges(JS::Cell::Visitor& visitor) const;
+
+    Locale::Segmenter& word_segmenter();
 
 private:
     bool focus_next_element();
@@ -75,6 +78,8 @@ private:
     WeakPtr<DOM::EventTarget> m_mousedown_target;
 
     Optional<CSSPixelPoint> m_mousemove_previous_screen_position;
+
+    OwnPtr<Locale::Segmenter> m_word_segmenter;
 };
 
 }
