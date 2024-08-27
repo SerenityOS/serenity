@@ -36,6 +36,12 @@ ErrorOr<void> SysFSNetworkAdaptersStats::try_generate(KBufferBuilder& builder)
             auto ipv4_netmask = TRY(adapter.ipv4_netmask().to_string());
             TRY(obj.add("ipv4_netmask"sv, ipv4_netmask->view()));
         }
+        if (!adapter.ipv6_address().is_zero()) {
+            auto ipv6_address = TRY(adapter.ipv6_address().to_string());
+            TRY(obj.add("ipv6_address"sv, ipv6_address->view()));
+            auto ipv6_netmask = TRY(adapter.ipv6_netmask().to_string());
+            TRY(obj.add("ipv6_netmask"sv, ipv6_netmask->view()));
+        }
         TRY(obj.add("packets_in"sv, adapter.packets_in()));
         TRY(obj.add("bytes_in"sv, adapter.bytes_in()));
         TRY(obj.add("packets_out"sv, adapter.packets_out()));
