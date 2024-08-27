@@ -65,6 +65,10 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
             [](JsonObject const& object) -> ByteString {
                 return object.get_byte_string("ipv4_address"sv).value_or(""sv);
             });
+        net_adapters_fields.empend("IPv6"_string, Gfx::TextAlignment::CenterLeft,
+            [](JsonObject const& object) -> ByteString {
+                return object.get_byte_string("ipv6_address"sv).value_or(""sv);
+            });
         net_adapters_fields.empend("packets_in", "Pkt In"_string, Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("packets_out", "Pkt Out"_string, Gfx::TextAlignment::CenterRight);
         net_adapters_fields.empend("bytes_in", "Bytes In"_string, Gfx::TextAlignment::CenterRight);
