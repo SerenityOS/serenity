@@ -4,6 +4,8 @@ CLion can integrate with CMake to provide code comprehension features.
 
 After opening the `serenity` repository in CLion as a new project, the "`Open Project Wizard`" window will open, from here set the following fields:
 
+*If you already have the project open, you can go to `File -> Settings -> Build, Execution, Deployment -> CMake` to find these options.*
+
 (Assuming you use `Ninja` as the build system and configured the CMake build directory to `Build/x86_64`)
 
 `Build type`: `Default`
@@ -27,8 +29,6 @@ After opening the `serenity` repository in CLion as a new project, the "`Open Pr
 > _If you have not built the Toolchain at this point, please do so: `./Toolchain/BuildGNU.sh`_
 
 > _If you have not built host tools from Lagom at this point, please do so: `./Meta/serenity.sh build` or `ninja -C Build/superbuild-x86_64` after running `cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-x86_64`_
-
-If you already have the project open, you can go to `File -> Settings -> Build, Execution, Deployment -> CMake` to find these options.
 
 ## Excluding Build Artifacts
 
