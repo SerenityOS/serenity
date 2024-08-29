@@ -148,6 +148,8 @@ private:
             return { m_awaiter };
         }
 
+        void unhandled_exception() = delete;
+
         std::coroutine_handle<> m_awaiter;
         Coroutine* m_coroutine { nullptr };
     };
