@@ -117,6 +117,7 @@ protected:
     void set_mac_address(MACAddress const& mac_address) { m_mac_address = mac_address; }
     void did_receive(ReadonlyBytes);
     virtual void send_raw(ReadonlyBytes) = 0;
+    void autoconfigure_link_local_ipv6();
 
 private:
     MACAddress m_mac_address;

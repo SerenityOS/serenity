@@ -169,4 +169,34 @@ void NetworkAdapter::set_ipv6_netmask(IPv6Address const& netmask)
     m_ipv6_netmask = netmask;
 }
 
+void NetworkAdapter::autoconfigure_link_local_ipv6()
+{
+    auto mac = mac_address();
+    if (mac.is_zero() || !link_up())
+        return;
+
+    // TODO: other IPv6 autoconf modes
+    // TODO: duplicate address detection as mandated by RFC 4862, this is only a very naive implementation of autoconf
+    auto ipv6_ll = IPv6Address({ 0xfe,
+        0x80,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        static_cast<u8>(mac[0] ^ 0b00000010),
+        mac[1],
+        mac[2],
+        0xff,
+        0xfe,
+        mac[3],
+        mac[4],
+        mac[5] });
+    auto netmask = IPv6Address({ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 0 });
+    set_ipv6_address(ipv6_ll);
+    set_ipv6_netmask(netmask);
+    dbgln("autoconfigured link-local address {}", ipv6_ll.to_string());
+}
+
 }

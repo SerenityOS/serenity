@@ -189,6 +189,7 @@ ErrorOr<void> VirtIONetworkAdapter::handle_device_config_change()
             m_link_duplex = duplex == 0x01;
         }
     });
+    autoconfigure_link_local_ipv6();
     return {};
 }
 
