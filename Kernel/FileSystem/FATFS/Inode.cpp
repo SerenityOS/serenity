@@ -427,14 +427,19 @@ ErrorOr<Vector<FATEntryLocation>> FATInode::allocate_entries(u32 count)
     return locations;
 }
 
-ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
-    dbgln_if(FAT_DEBUG, "FATInode[{}]::read_bytes_locked(): Reading {} bytes at offset {}", identifier(), size, offset);
     VERIFY(offset >= 0);
     if (offset >= m_entry.file_size)
         return 0;
 
     auto block_list = TRY(const_cast<FATInode&>(*this).get_block_list());
+
+    off_t size = min(static_cast<off_t>(count), static_cast<off_t>(m_entry.file_size) - offset);
+    if (size < 0)
+        return 0;
+
+    dbgln_if(FAT_DEBUG, "FATInode[{}]::read_bytes_locked(): Reading {} bytes at offset {}", identifier(), size, offset);
 
     u32 first_block_index = offset / fs().m_device_block_size;
     u32 last_block_index = (offset + size - 1) / fs().m_device_block_size;
@@ -442,7 +447,7 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t size, UserOrKer
     size_t offset_into_first_block = offset - first_block_index * fs().m_device_block_size;
 
     size_t nread = 0;
-    size_t remaining_count = size;
+    off_t remaining_count = size;
     for (u32 block_index = first_block_index; block_index <= last_block_index; ++block_index) {
         size_t offset_into_block = block_index == first_block_index ? offset_into_first_block : 0;
         size_t to_read = min(fs().m_device_block_size - offset_into_block, remaining_count);
