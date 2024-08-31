@@ -269,3 +269,8 @@ TEST_CASE(comparison_reference)
     EXPECT_EQ(opt1, opt2);
     EXPECT_NE(opt1, opt3);
 }
+
+TEST_CASE(constexpr_usable)
+{
+    static_assert(Optional<int>(5).value() == 5);
+}
