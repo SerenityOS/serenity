@@ -73,4 +73,6 @@ ErrorOr<E> read_enum(LittleEndianInputBitStream& stream)
 }
 ///
 
+ErrorOr<ByteBuffer> read_icc(LittleEndianInputBitStream& stream);
+
 }

@@ -1971,6 +1971,14 @@ public:
         return {};
     }
 
+    ErrorOr<void> decode_icc()
+    {
+        if (m_metadata.colour_encoding.want_icc && m_icc_profile.size() == 0)
+            m_icc_profile = TRY(read_icc(m_stream));
+        m_state = State::ICCProfileDecoded;
+        return {};
+    }
+
     ErrorOr<void> decode_frame()
     {
         auto frame = TRY(read_frame(m_stream, m_header, m_metadata, m_entropy_decoder));
@@ -1999,8 +2007,7 @@ public:
 
             // The header is already decoded in JPEGXLImageDecoderPlugin::create()
 
-            if (m_metadata.colour_encoding.want_icc)
-                TODO();
+            TRY(decode_icc());
 
             if (m_metadata.preview.has_value())
                 TODO();
@@ -2022,6 +2029,7 @@ public:
         NotDecoded = 0,
         Error,
         HeaderDecoded,
+        ICCProfileDecoded,
         FrameDecoded,
     };
 
@@ -2040,6 +2048,11 @@ public:
         return m_bitmap;
     }
 
+    ByteBuffer const& icc_profile() const
+    {
+        return m_icc_profile;
+    }
+
 private:
     State m_state { State::NotDecoded };
 
@@ -2054,6 +2067,8 @@ private:
 
     SizeHeader m_header;
     ImageMetadata m_metadata;
+
+    ByteBuffer m_icc_profile;
 };
 
 JPEGXLImageDecoderPlugin::JPEGXLImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream> stream)
@@ -2119,6 +2134,10 @@ ErrorOr<ImageFrameDescriptor> JPEGXLImageDecoderPlugin::frame(size_t index, Opti
 
 ErrorOr<Optional<ReadonlyBytes>> JPEGXLImageDecoderPlugin::icc_data()
 {
-    return OptionalNone {};
+    if (m_context->state() < JPEGXLLoadingContext::State::ICCProfileDecoded)
+        TRY(m_context->decode_icc());
+    if (m_context->icc_profile().size() == 0)
+        return OptionalNone {};
+    return m_context->icc_profile();
 }
 }

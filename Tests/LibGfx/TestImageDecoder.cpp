@@ -1481,6 +1481,19 @@ TEST_CASE(test_jxl_modular_property_8)
     }
 }
 
+TEST_CASE(test_jxl_icc)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jxl/icc.jxl"sv)));
+    EXPECT(Gfx::JPEGXLImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEGXLImageDecoderPlugin::create(file->bytes()));
+    EXPECT(TRY_OR_FAIL(plugin_decoder->icc_data()).has_value());
+    EXPECT_EQ(TRY_OR_FAIL(plugin_decoder->icc_data()).value().size(), 2644u);
+
+    // FIXME: Also make sure we can decode the image. I unfortunately was unable to create an image
+    //        with both an ICC profile and only features that we support.
+    // TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 32, 32 }));
+}
+
 TEST_CASE(test_dds)
 {
     Array file_names = {
