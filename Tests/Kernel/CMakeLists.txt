@@ -52,7 +52,6 @@ set(LIBTEST_BASED_SOURCES
     TestKernelPledge.cpp
     TestKernelUnveil.cpp
     TestLoopDevice.cpp
-    TestMemoryDeviceMmap.cpp
     TestMunMap.cpp
     TestProcFS.cpp
     TestProcFSWrite.cpp
@@ -66,6 +65,11 @@ if (ENABLE_KERNEL_COVERAGE_COLLECTION)
     list(APPEND LIBTEST_BASED_SOURCES TestKCOV.cpp)
 endif()
 
+if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    list(APPEND LIBTEST_BASED_SOURCES TestMemoryDeviceMmap.cpp)
+endif()
+
+# FIXME: Don't panic on SafeMem access faults on aarch64
 if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
     list(APPEND LIBTEST_BASED_SOURCES TestEFault.cpp)
 endif()
