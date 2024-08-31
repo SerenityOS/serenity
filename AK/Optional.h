@@ -58,10 +58,16 @@ requires(!IsLvalueReference<T>) class [[nodiscard]] Optional<T> {
 public:
     using ValueType = T;
 
-    ALWAYS_INLINE Optional() = default;
+    ALWAYS_INLINE Optional()
+        : m_null()
+    {
+    }
 
     template<SameAs<OptionalNone> V>
-    Optional(V) { }
+    Optional(V)
+        : m_null()
+    {
+    }
 
     template<SameAs<OptionalNone> V>
     Optional& operator=(V)
@@ -95,42 +101,47 @@ public:
 
     ALWAYS_INLINE Optional(Optional const& other)
     requires(!IsTriviallyCopyConstructible<T>)
-        : m_has_value(other.m_has_value)
+        : m_null()
+        , m_has_value(other.m_has_value)
     {
         if (other.has_value())
-            new (&m_storage) T(other.value());
+            construct_at(&m_storage, other.value());
     }
 
     ALWAYS_INLINE Optional(Optional&& other)
-        : m_has_value(other.m_has_value)
+        : m_null()
+        , m_has_value(other.m_has_value)
     {
         if (other.has_value())
-            new (&m_storage) T(other.release_value());
+            construct_at(&m_storage, other.release_value());
     }
 
     template<typename U>
     requires(IsConstructible<T, U const&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional>) ALWAYS_INLINE explicit Optional(Optional<U> const& other)
-        : m_has_value(other.m_has_value)
+        : m_null()
+        , m_has_value(other.m_has_value)
     {
         if (other.has_value())
-            new (&m_storage) T(other.value());
+            construct_at(&m_storage, other.value());
     }
 
     template<typename U>
     requires(IsConstructible<T, U &&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional>) ALWAYS_INLINE explicit Optional(Optional<U>&& other)
-        : m_has_value(other.m_has_value)
+        : m_null()
+        , m_has_value(other.m_has_value)
     {
         if (other.has_value())
-            new (&m_storage) T(other.release_value());
+            construct_at(&m_storage, other.release_value());
     }
 
     template<typename U = T>
     requires(!IsSame<OptionalNone, RemoveCVReference<U>>)
     ALWAYS_INLINE explicit(!IsConvertible<U&&, T>) Optional(U&& value)
     requires(!IsSame<RemoveCVReference<U>, Optional<T>> && IsConstructible<T, U &&>)
-        : m_has_value(true)
+        : m_null()
+        , m_has_value(true)
     {
-        new (&m_storage) T(forward<U>(value));
+        construct_at(&m_storage, forward<U>(value));
     }
 
     ALWAYS_INLINE Optional& operator=(Optional const& other)
@@ -140,7 +151,7 @@ public:
             clear();
             m_has_value = other.m_has_value;
             if (other.has_value()) {
-                new (&m_storage) T(other.value());
+                construct_at(&m_storage, other.value());
             }
         }
         return *this;
@@ -152,7 +163,7 @@ public:
             clear();
             m_has_value = other.m_has_value;
             if (other.has_value()) {
-                new (&m_storage) T(other.release_value());
+                construct_at(&m_storage, other.release_value());
             }
         }
         return *this;
@@ -189,7 +200,7 @@ public:
     {
         clear();
         m_has_value = true;
-        new (&m_storage) T(forward<Parameters>(parameters)...);
+        construct_at(&m_storage, forward<Parameters>(parameters)...);
     }
 
     template<typename Callable>
@@ -197,7 +208,7 @@ public:
     {
         clear();
         m_has_value = true;
-        new (&m_storage) T { callable() };
+        construct_at(&m_storage, callable());
     }
 
     [[nodiscard]] ALWAYS_INLINE bool has_value() const { return m_has_value; }
@@ -205,13 +216,13 @@ public:
     [[nodiscard]] ALWAYS_INLINE T& value() &
     {
         VERIFY(m_has_value);
-        return *__builtin_launder(reinterpret_cast<T*>(&m_storage));
+        return m_storage;
     }
 
     [[nodiscard]] ALWAYS_INLINE T const& value() const&
     {
         VERIFY(m_has_value);
-        return *__builtin_launder(reinterpret_cast<T const*>(&m_storage));
+        return m_storage;
     }
 
     [[nodiscard]] ALWAYS_INLINE T value() &&
@@ -311,7 +322,10 @@ public:
     }
 
 private:
-    alignas(T) u8 m_storage[sizeof(T)];
+    union {
+        char m_null;
+        T m_storage;
+    };
     bool m_has_value { false };
 };
 
