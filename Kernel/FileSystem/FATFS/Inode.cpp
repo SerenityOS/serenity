@@ -651,7 +651,7 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::lookup(StringView name)
     VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
 
     auto inode = TRY(traverse([name](auto child) -> ErrorOr<bool> {
-        return child->m_filename->view() == name;
+        return child->m_filename->view().equals_ignoring_ascii_case(name);
     }));
 
     if (inode.is_null())
