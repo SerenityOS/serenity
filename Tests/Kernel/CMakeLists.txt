@@ -75,5 +75,5 @@ if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
 endif()
 
 foreach(libtest_source IN LISTS LIBTEST_BASED_SOURCES)
-    serenity_test("${libtest_source}" Kernel)
+    serenity_test("${libtest_source}" Kernel LIBS LibSystem)
 endforeach()
