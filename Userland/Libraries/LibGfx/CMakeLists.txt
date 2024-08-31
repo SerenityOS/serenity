@@ -53,6 +53,7 @@ set(SOURCES
     ImageFormats/JBIG2Loader.cpp
     ImageFormats/JPEG2000Loader.cpp
     ImageFormats/JPEGLoader.cpp
+    ImageFormats/JPEGXLEntropyDecoder.cpp
     ImageFormats/JPEGXLLoader.cpp
     ImageFormats/JPEGWriter.cpp
     ImageFormats/PBMLoader.cpp
