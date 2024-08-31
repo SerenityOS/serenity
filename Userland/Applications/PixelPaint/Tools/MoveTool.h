@@ -47,7 +47,7 @@ private:
     static Array<Gfx::IntRect, 4> resize_anchor_rects(Gfx::IntRect layer_rect_in_frame_coordinates, int resize_anchor_size);
     virtual StringView tool_name() const override { return "Move Tool"sv; }
     ErrorOr<void> update_cached_preview_bitmap(Layer const* layer);
-    Optional<ResizeAnchorLocation const> resize_anchor_location_from_cursor_position(Layer const*, MouseEvent&);
+    Optional<ResizeAnchorLocation> resize_anchor_location_from_cursor_position(Layer const*, MouseEvent&);
     void toggle_selection_mode();
 
     LayerSelectionMode m_layer_selection_mode { LayerSelectionMode::ForegroundLayer };
@@ -56,7 +56,7 @@ private:
     Gfx::IntPoint m_layer_origin;
     Gfx::IntRect m_new_layer_rect;
     bool m_scaling { false };
-    Optional<ResizeAnchorLocation const> m_resize_anchor_location {};
+    Optional<ResizeAnchorLocation> m_resize_anchor_location {};
     bool m_keep_aspect_ratio { false };
     RefPtr<GUI::Widget> m_properties_widget;
     RefPtr<GUI::RadioButton> m_selection_mode_foreground;

@@ -253,7 +253,7 @@ ErrorOr<void> MoveTool::update_cached_preview_bitmap(Layer const* layer)
     return {};
 }
 
-Optional<ResizeAnchorLocation const> MoveTool::resize_anchor_location_from_cursor_position(Layer const* layer, MouseEvent& event)
+Optional<ResizeAnchorLocation> MoveTool::resize_anchor_location_from_cursor_position(Layer const* layer, MouseEvent& event)
 {
     auto layer_rect = m_editor->content_to_frame_rect(layer->relative_rect()).to_type<int>();
     auto size = max(resize_anchor_min_size, resize_anchor_size(layer_rect));
