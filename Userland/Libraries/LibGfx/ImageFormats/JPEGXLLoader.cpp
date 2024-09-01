@@ -7,6 +7,7 @@
 #include <AK/BitStream.h>
 #include <AK/Endian.h>
 #include <AK/FixedArray.h>
+#include <AK/IntegralMath.h>
 #include <AK/String.h>
 #include <LibCompress/Brotli.h>
 #include <LibGfx/ImageFormats/ExifOrientedBitmap.h>
@@ -1281,11 +1282,11 @@ private:
     {
         // C.2.3 - Hybrid integer configuration
         HybridUint config {};
-        config.split_exponent = TRY(stream.read_bits(ceil(log2(log_alphabet_size + 1))));
+        config.split_exponent = TRY(stream.read_bits(AK::ceil_log2(log_alphabet_size + 1)));
         if (config.split_exponent != log_alphabet_size) {
-            auto nbits = ceil(log2(config.split_exponent + 1));
+            auto nbits = AK::ceil_log2(config.split_exponent + 1);
             config.msb_in_token = TRY(stream.read_bits(nbits));
-            nbits = ceil(log2(config.split_exponent - config.msb_in_token + 1));
+            nbits = AK::ceil_log2(config.split_exponent - config.msb_in_token + 1);
             config.lsb_in_token = TRY(stream.read_bits(nbits));
         } else {
             config.msb_in_token = 0;
