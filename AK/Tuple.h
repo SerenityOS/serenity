@@ -219,8 +219,24 @@ private:
 template<class... Args>
 Tuple(Args... args) -> Tuple<Args...>;
 
+template<size_t I, typename T>
+struct TupleElement;
+
+template<size_t I, typename... Ts>
+struct TupleElement<I, Tuple<Ts...>> {
+    using Type = TypeListElement<I, typename Tuple<Ts...>::Types>::Type;
+};
+
+template<typename T>
+struct TupleSize;
+
+template<typename... Ts>
+struct TupleSize<Tuple<Ts...>> : Detail::IntegralConstant<size_t, sizeof...(Ts)> { };
+
 }
 
 #if USING_AK_GLOBALLY
 using AK::Tuple;
+using AK::TupleElement;
+using AK::TupleSize;
 #endif
