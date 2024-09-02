@@ -183,14 +183,15 @@ public:
     }
 #endif
 
-    T& value()
-    {
-        return m_value_or_error.template get<T>();
-    }
-    T const& value() const { return m_value_or_error.template get<T>(); }
+    T& value() & { return m_value_or_error.template get<T>(); }
+    T const& value() const& { return m_value_or_error.template get<T>(); }
+    T&& value() && { return move(m_value_or_error.template get<T>()); }
+    T const&& value() const&& { return move(m_value_or_error.template get<T>()); }
 
-    ErrorType& error() { return m_value_or_error.template get<ErrorType>(); }
-    ErrorType const& error() const { return m_value_or_error.template get<ErrorType>(); }
+    ErrorType& error() & { return m_value_or_error.template get<ErrorType>(); }
+    ErrorType const& error() const& { return m_value_or_error.template get<ErrorType>(); }
+    ErrorType&& error() && { return move(m_value_or_error.template get<ErrorType>()); }
+    ErrorType const&& error() const&& { return move(m_value_or_error.template get<ErrorType>()); }
 
     bool is_error() const { return m_value_or_error.template has<ErrorType>(); }
 
