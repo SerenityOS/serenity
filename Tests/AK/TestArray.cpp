@@ -55,3 +55,13 @@ TEST_CASE(to_array)
     static_assert(array[1] == 2);
     static_assert(array[2] == 1);
 }
+
+TEST_CASE(structured_binding)
+{
+    Array<int, 4> array = { 2, 3, 5, 7 };
+    auto const& [a, b, c, d] = array;
+    EXPECT_EQ(a, 2);
+    EXPECT_EQ(b, 3);
+    EXPECT_EQ(c, 5);
+    EXPECT_EQ(d, 7);
+}
