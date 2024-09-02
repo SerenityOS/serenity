@@ -235,6 +235,16 @@ struct TupleSize<Tuple<Ts...>> : Detail::IntegralConstant<size_t, sizeof...(Ts)>
 
 }
 
+namespace std {
+template<size_t I, typename... Ts>
+struct tuple_element<I, AK::Tuple<Ts...>> {
+    using type = AK::TupleElement<I, AK::Tuple<Ts...>>::Type;
+};
+
+template<typename... Ts>
+struct tuple_size<AK::Tuple<Ts...>> : AK::TupleSize<AK::Tuple<Ts...>> { };
+}
+
 #if USING_AK_GLOBALLY
 using AK::Tuple;
 using AK::TupleElement;

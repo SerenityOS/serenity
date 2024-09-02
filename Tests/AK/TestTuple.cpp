@@ -107,3 +107,12 @@ TEST_CASE(apply)
         EXPECT(was_called);
     }
 }
+
+TEST_CASE(structured_binding)
+{
+    Tuple<int, int, ByteString> tuple { 1, 2, "foo" };
+    auto const& [a, b, c] = tuple;
+    EXPECT_EQ(a, 1);
+    EXPECT_EQ(b, 2);
+    EXPECT_EQ(c, "foo");
+}
