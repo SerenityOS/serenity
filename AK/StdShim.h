@@ -53,6 +53,41 @@ constexpr T* construct_at(T* location, Args&&... args) noexcept
     return ::new (static_cast<void*>(location)) T(forward<Args>(args)...);
 }
 
+template<size_t I, class T>
+struct tuple_element;
+
+template<size_t I, class T>
+struct tuple_element<I, T volatile> {
+    using type = typename tuple_element<I, T>::type volatile;
+};
+
+template<size_t I, class T>
+struct tuple_element<I, T const volatile> {
+    using type = typename tuple_element<I, T>::type const volatile;
+};
+
+template<size_t I, class T>
+struct tuple_element<I, T const> {
+    using type = typename tuple_element<I, T>::type const;
+};
+
+template<class T>
+struct tuple_size;
+
+template<class T, class...>
+using tuple_size_implementation = T;
+
+template<class T>
+requires(!IsVolatile<T>)
+struct tuple_size<tuple_size_implementation<T const, decltype(tuple_size<T>::value)>> : public AK::Detail::IntegralConstant<size_t, tuple_size<T>::value> { };
+
+template<class T>
+requires(!IsConst<T>)
+struct tuple_size<tuple_size_implementation<T volatile, decltype(tuple_size<T>::value)>> : public AK::Detail::IntegralConstant<size_t, tuple_size<T>::value> { };
+
+template<class T>
+struct tuple_size<tuple_size_implementation<T const volatile, decltype(tuple_size<T>::value)>> : public AK::Detail::IntegralConstant<size_t, tuple_size<T>::value> { };
+
 }
 
 #else
@@ -61,15 +96,19 @@ constexpr T* construct_at(T* location, Args&&... args) noexcept
 //       GLIBC LIBSTDC++
 #        include <bits/move.h>
 #        include <bits/stl_construct.h>
+#        include <bits/utility.h> // tuple_{element,size}
 #    elif __has_include(<__utility/forward.h>) && __has_include(<__memory/construct_at.h>)
 //       LLVM LIBCXX
 #        include <__memory/construct_at.h>
+#        include <__tuple/tuple_element.h>
+#        include <__tuple/tuple_size.h>
 #        include <__utility/forward.h>
 #        include <__utility/move.h>
 #    else
 // FIXME: Find a smaller header to include in these cases
-#        warning "Using <utility> and <memory> for move, forward and construct_at"
+#        warning "Using <utility>, <memory> and <tuple> for move, forward, construct_at and tuple_{element,size}"
 #        include <memory>
+#        include <tuple>
 #        include <utility>
 #    endif
 
@@ -79,4 +118,6 @@ namespace AK {
 using std::construct_at;
 using std::forward;
 using std::move;
+using std::tuple_element;
+using std::tuple_size;
 }
