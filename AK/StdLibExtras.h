@@ -68,11 +68,19 @@ constexpr T&& move(T& arg)
     return static_cast<T&&>(arg);
 }
 
+template<size_t I, typename T>
+struct tuple_element;
+
+template<typename T>
+struct tuple_size;
+
 }
 
 namespace AK {
 using AK_REPLACED_STD_NAMESPACE::forward;
 using AK_REPLACED_STD_NAMESPACE::move;
+using AK_REPLACED_STD_NAMESPACE::tuple_element;
+using AK_REPLACED_STD_NAMESPACE::tuple_size;
 }
 
 namespace AK::Detail {
@@ -227,4 +235,6 @@ using AK::RawPtr;
 using AK::round_up_to_power_of_two;
 using AK::swap;
 using AK::to_underlying;
+using AK::tuple_element;
+using AK::tuple_size;
 #endif
