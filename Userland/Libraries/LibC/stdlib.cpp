@@ -377,7 +377,7 @@ int atexit(void (*handler)())
 void _abort()
 {
     // According to the GCC manual __builtin_trap() can call abort() so using it here might not seem safe at first. However,
-    // on all the platforms we support GCC emits an undefined instruction instead of a call.
+    // on all the platforms we support GCC emits a trapping instruction instead of a call.
     __builtin_trap();
 }
 
