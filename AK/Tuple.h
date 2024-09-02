@@ -141,27 +141,51 @@ struct Tuple : Detail::Tuple<Ts...> {
     }
 
     template<typename T>
-    auto& get()
+    auto& get() &
     {
         return Detail::Tuple<Ts...>::template get<T>();
-    }
-
-    template<size_t index>
-    auto& get()
-    {
-        return Detail::Tuple<Ts...>::template get_with_index<typename Types::template Type<index>, index>();
     }
 
     template<typename T>
-    auto& get() const
+    auto&& get() &&
+    {
+        return move(Detail::Tuple<Ts...>::template get<T>());
+    }
+
+    template<size_t index>
+    auto& get() &
+    {
+        return Detail::Tuple<Ts...>::template get_with_index<typename Types::template Type<index>, index>();
+    }
+
+    template<size_t index>
+    auto&& get() &&
+    {
+        return move(Detail::Tuple<Ts...>::template get_with_index<typename Types::template Type<index>, index>());
+    }
+
+    template<typename T>
+    auto& get() const&
     {
         return Detail::Tuple<Ts...>::template get<T>();
     }
 
+    template<typename T>
+    auto&& get() const&&
+    {
+        return move(Detail::Tuple<Ts...>::template get<T>());
+    }
+
     template<size_t index>
-    auto& get() const
+    auto& get() const&
     {
         return Detail::Tuple<Ts...>::template get_with_index<typename Types::template Type<index>, index>();
+    }
+
+    template<size_t index>
+    auto&& get() const&&
+    {
+        return move(Detail::Tuple<Ts...>::template get_with_index<typename Types::template Type<index>, index>());
     }
 
     template<typename F>
