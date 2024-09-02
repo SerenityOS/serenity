@@ -109,6 +109,8 @@ class CSSImportRule;
 class CSSKeyframeRule;
 class CSSKeyframesRule;
 class CSSKeywordValue;
+class CSSLayerBlockRule;
+class CSSLayerStatementRule;
 class CSSMediaRule;
 class CSSOKLab;
 class CSSOKLCH;
