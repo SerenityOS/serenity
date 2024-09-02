@@ -10,6 +10,7 @@
 #include <AK/Optional.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Tuple.h>
 #include <AK/TypedTransfer.h>
 
 namespace AK {
@@ -61,6 +62,30 @@ struct Array {
     {
         VERIFY(index < size());
         return __data[index];
+    }
+
+    template<size_t S>
+    [[nodiscard]] constexpr T& get() &
+    {
+        return at(S);
+    }
+
+    template<size_t S>
+    [[nodiscard]] constexpr T const& get() const&
+    {
+        return at(S);
+    }
+
+    template<size_t S>
+    [[nodiscard]] constexpr T&& get() &&
+    {
+        return move(at(S));
+    }
+
+    template<size_t S>
+    [[nodiscard]] constexpr T const&& get() const&&
+    {
+        return move(at(S));
     }
 
     [[nodiscard]] constexpr T const& first() const { return at(0); }
@@ -182,6 +207,16 @@ constexpr auto to_array(Array<T, 0>)
     return Array<T, 0> {};
 }
 
+}
+
+namespace std {
+template<size_t I, typename T, size_t N>
+struct tuple_element<I, AK::Array<T, N>> {
+    using type = T;
+};
+
+template<typename T, size_t N>
+struct tuple_size<AK::Array<T, N>> : AK::Detail::IntegralConstant<size_t, N> { };
 }
 
 #if USING_AK_GLOBALLY
