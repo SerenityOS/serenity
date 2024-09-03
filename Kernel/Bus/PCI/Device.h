@@ -73,12 +73,13 @@ template<typename... Parameters>
 void dmesgln_pci(Device const& device, AK::CheckedFormatString<Parameters...>&& fmt, Parameters const&... parameters)
 {
     AK::StringBuilder builder;
-    if (builder.try_append("{}: {}: "sv).is_error())
-        return;
-    if (builder.try_append(fmt.view()).is_error())
-        return;
-    AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::Yes, StringView, Address, Parameters...> variadic_format_params { device.device_name(), device.device_identifier().address(), parameters... };
-    vdmesgln(builder.string_view(), variadic_format_params);
+
+    builder.appendff("{}: {}: ", device.device_name(), device.device_identifier().address());
+
+    AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::Yes, Parameters...> variadic_format_params { parameters... };
+    MUST(AK::vformat(builder, fmt.view(), variadic_format_params));
+
+    dmesgln("{}", builder.string_view());
 }
 
 }
