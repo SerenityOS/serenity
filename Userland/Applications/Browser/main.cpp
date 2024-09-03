@@ -180,7 +180,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/Browser", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    TRY(Core::System::enter_jail_mode());
+    TRY(Core::System::enter_jail_mode_until_exit());
 
     auto chrome_process = TRY(WebView::ChromeProcess::create());
     if (TRY(chrome_process.connect(specified_urls, new_window)) == WebView::ChromeProcess::ProcessDisposition::ExitProcess) {
