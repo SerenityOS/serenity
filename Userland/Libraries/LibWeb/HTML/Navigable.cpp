@@ -1991,7 +1991,7 @@ void Navigable::set_viewport_size(CSSPixelSize size)
     m_size = size;
     if (auto document = active_document()) {
         // NOTE: Resizing the viewport changes the reference value for viewport-relative CSS lengths.
-        document->invalidate_style();
+        document->invalidate_style(DOM::StyleInvalidationReason::NavigableSetViewportSize);
         document->set_needs_layout();
     }
     m_needs_repaint = true;
