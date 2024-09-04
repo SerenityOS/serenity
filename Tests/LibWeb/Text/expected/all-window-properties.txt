@@ -207,6 +207,7 @@ KeyframeEffect
 Location
 Map
 MathMLElement
+MediaCapabilities
 MediaError
 MediaList
 MediaQueryList
