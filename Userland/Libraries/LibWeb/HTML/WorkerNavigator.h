@@ -13,6 +13,7 @@
 #include <LibWeb/HTML/NavigatorID.h>
 #include <LibWeb/HTML/NavigatorLanguage.h>
 #include <LibWeb/HTML/NavigatorOnLine.h>
+#include <LibWeb/HTML/ServiceWorkerContainer.h>
 #include <LibWeb/MediaCapabilitiesAPI/MediaCapabilities.h>
 #include <LibWeb/StorageAPI/NavigatorStorage.h>
 
@@ -31,6 +32,8 @@ class WorkerNavigator : public Bindings::PlatformObject
 public:
     [[nodiscard]] static JS::NonnullGCPtr<WorkerNavigator> create(WorkerGlobalScope&);
 
+    JS::NonnullGCPtr<ServiceWorkerContainer> service_worker();
+
     virtual ~WorkerNavigator() override;
 
     JS::NonnullGCPtr<MediaCapabilitiesAPI::MediaCapabilities> media_capabilities();
@@ -46,6 +49,8 @@ private:
 
     // https://w3c.github.io/media-capabilities/#dom-workernavigator-mediacapabilities
     JS::GCPtr<MediaCapabilitiesAPI::MediaCapabilities> m_media_capabilities;
+
+    JS::GCPtr<ServiceWorkerContainer> m_service_worker_container;
 };
 
 }
