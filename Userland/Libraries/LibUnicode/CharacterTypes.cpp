@@ -160,6 +160,24 @@ bool code_point_has_control_general_category(u32 code_point)
 #endif
 }
 
+bool code_point_has_punctuation_general_category(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_general_category(code_point, Unicode::GeneralCategory::Punctuation);
+#else
+    return false;
+#endif
+}
+
+bool code_point_has_separator_general_category(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_general_category(code_point, Unicode::GeneralCategory::Separator);
+#else
+    return is_ascii_space(code_point);
+#endif
+}
+
 bool code_point_has_space_separator_general_category(u32 code_point)
 {
 #if ENABLE_UNICODE_DATA
