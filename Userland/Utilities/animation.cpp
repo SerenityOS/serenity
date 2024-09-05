@@ -39,7 +39,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (options.out_path.is_empty())
-        return Error::from_string_view("-o is required "sv);
+        return Error::from_string_literal("-o is required ");
 
     if (inter_frame_compression_full + inter_frame_compression_clip + inter_frame_compression_none > 1)
         return Error::from_string_view("Only one of --inter-frame-compression=full, --inter-frame-compression=clip-rect, --inter-frame-compression=none can be specified"sv);
@@ -60,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file = TRY(Core::MappedFile::map(options.in_path));
     auto decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes()));
     if (!decoder)
-        return Error::from_string_view("Could not find decoder for input file"sv);
+        return Error::from_string_literal("Could not find decoder for input file");
 
     auto output_file = TRY(Core::File::open(options.out_path, Core::File::OpenMode::Write));
     auto output_stream = TRY(Core::OutputBufferedFile::create(move(output_file)));

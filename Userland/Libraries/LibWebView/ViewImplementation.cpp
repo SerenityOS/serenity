@@ -505,7 +505,7 @@ void ViewImplementation::handle_web_content_process_crash()
 static ErrorOr<LexicalPath> save_screenshot(Gfx::ShareableBitmap const& bitmap)
 {
     if (!bitmap.is_valid())
-        return Error::from_string_view("Failed to take a screenshot"sv);
+        return Error::from_string_literal("Failed to take a screenshot");
 
     LexicalPath path { Core::StandardPaths::downloads_directory() };
     path = path.append(TRY(Core::DateTime::now().to_string("screenshot-%Y-%m-%d-%H-%M-%S.png"sv)));
