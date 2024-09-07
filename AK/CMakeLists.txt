@@ -7,7 +7,7 @@ set(AK_SOURCES
     ConstrainedStream.cpp
     CountingStream.cpp
     DOSPackedTime.cpp
-    DeprecatedFlyString.cpp
+    FlyString.cpp
     Error.cpp
     FloatingPointStringConversions.cpp
     FlyString.cpp

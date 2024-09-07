@@ -5,7 +5,7 @@
  */
 
 #include <AK/ByteString.h>
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyString.h>
 #include <AK/HashTable.h>
 #include <AK/Optional.h>
 #include <AK/Singleton.h>
@@ -14,7 +14,7 @@
 
 namespace AK {
 
-struct DeprecatedFlyStringImplTraits : public Traits<StringImpl const*> {
+struct FlyStringImplTraits : public Traits<StringImpl const*> {
     static unsigned hash(StringImpl const* s) { return s->hash(); }
     static bool equals(StringImpl const* a, StringImpl const* b)
     {
@@ -22,19 +22,19 @@ struct DeprecatedFlyStringImplTraits : public Traits<StringImpl const*> {
     }
 };
 
-static Singleton<HashTable<StringImpl const*, DeprecatedFlyStringImplTraits>> s_table;
+static Singleton<HashTable<StringImpl const*, FlyStringImplTraits>> s_table;
 
-static HashTable<StringImpl const*, DeprecatedFlyStringImplTraits>& fly_impls()
+static HashTable<StringImpl const*, FlyStringImplTraits>& fly_impls()
 {
     return *s_table;
 }
 
-void DeprecatedFlyString::did_destroy_impl(Badge<StringImpl>, StringImpl& impl)
+void FlyString::did_destroy_impl(Badge<StringImpl>, StringImpl& impl)
 {
     fly_impls().remove(&impl);
 }
 
-DeprecatedFlyString::DeprecatedFlyString(ByteString const& string)
+FlyString::FlyString(ByteString const& string)
     : m_impl(string.impl())
 {
     if (string.impl()->is_fly())
@@ -51,7 +51,7 @@ DeprecatedFlyString::DeprecatedFlyString(ByteString const& string)
     }
 }
 
-DeprecatedFlyString::DeprecatedFlyString(StringView string)
+FlyString::FlyString(StringView string)
     : m_impl(StringImpl::the_empty_stringimpl())
 {
     if (string.is_null())
@@ -70,37 +70,37 @@ DeprecatedFlyString::DeprecatedFlyString(StringView string)
     }
 }
 
-bool DeprecatedFlyString::equals_ignoring_ascii_case(StringView other) const
+bool FlyString::equals_ignoring_ascii_case(StringView other) const
 {
     return StringUtils::equals_ignoring_ascii_case(view(), other);
 }
 
-bool DeprecatedFlyString::starts_with(StringView str, CaseSensitivity case_sensitivity) const
+bool FlyString::starts_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::starts_with(view(), str, case_sensitivity);
 }
 
-bool DeprecatedFlyString::ends_with(StringView str, CaseSensitivity case_sensitivity) const
+bool FlyString::ends_with(StringView str, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::ends_with(view(), str, case_sensitivity);
 }
 
-DeprecatedFlyString DeprecatedFlyString::to_lowercase() const
+FlyString FlyString::to_lowercase() const
 {
     return ByteString(*m_impl).to_lowercase();
 }
 
-bool DeprecatedFlyString::operator==(ByteString const& other) const
+bool FlyString::operator==(ByteString const& other) const
 {
     return m_impl == other.impl() || view() == other.view();
 }
 
-bool DeprecatedFlyString::operator==(StringView string) const
+bool FlyString::operator==(StringView string) const
 {
     return view() == string;
 }
 
-bool DeprecatedFlyString::operator==(char const* string) const
+bool FlyString::operator==(char const* string) const
 {
     return view() == string;
 }
