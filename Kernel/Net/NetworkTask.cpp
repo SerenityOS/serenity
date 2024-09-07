@@ -30,7 +30,7 @@
 
 namespace Kernel {
 
-static void handle_arp(EthernetFrameHeader const&, size_t frame_size);
+static void handle_arp(EthernetFrameHeader const&, size_t frame_size, RefPtr<NetworkAdapter> adapter);
 static void handle_ipv4(EthernetFrameHeader const&, size_t frame_size, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter);
 static void handle_icmp(EthernetFrameHeader const&, IPv4Packet const&, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter);
 static void handle_ipv6(EthernetFrameHeader const&, size_t frame_size, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter);
@@ -121,7 +121,7 @@ void NetworkTask_main(void*)
 
         switch (eth.ether_type()) {
         case EtherType::ARP:
-            handle_arp(eth, packet_size);
+            handle_arp(eth, packet_size, meta.adapter);
             break;
         case EtherType::IPv4:
             handle_ipv4(eth, packet_size, meta.packet_timestamp, meta.adapter);
@@ -137,7 +137,7 @@ void NetworkTask_main(void*)
     VERIFY_NOT_REACHED();
 }
 
-void handle_arp(EthernetFrameHeader const& eth, size_t frame_size)
+void handle_arp(EthernetFrameHeader const& eth, size_t frame_size, RefPtr<NetworkAdapter> adapter)
 {
     constexpr size_t minimum_arp_frame_size = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
     if (frame_size < minimum_arp_frame_size) {
@@ -145,14 +145,6 @@ void handle_arp(EthernetFrameHeader const& eth, size_t frame_size)
         return;
     }
     auto& packet = *static_cast<ARPPacket const*>(eth.payload());
-    if (packet.hardware_type() != 1 || packet.hardware_address_length() != sizeof(MACAddress)) {
-        dbgln("handle_arp: Hardware type not ethernet ({:#04x}, len={})", packet.hardware_type(), packet.hardware_address_length());
-        return;
-    }
-    if (packet.protocol_type() != EtherType::IPv4 || packet.protocol_address_length() != sizeof(IPv4Address)) {
-        dbgln("handle_arp: Protocol type not IPv4 ({:#04x}, len={})", packet.protocol_type(), packet.protocol_address_length());
-        return;
-    }
 
     dbgln_if(ARP_DEBUG, "handle_arp: operation={:#04x}, sender={}/{}, target={}/{}",
         packet.operation(),
@@ -167,20 +159,23 @@ void handle_arp(EthernetFrameHeader const& eth, size_t frame_size)
         update_arp_table(packet.sender_protocol_address(), packet.sender_hardware_address(), UpdateTable::Set);
     }
 
-    if (packet.operation() == ARPOperation::Request) {
-        // Who has this IP address?
-        if (auto adapter = NetworkingManagement::the().from_ipv4_address(packet.target_protocol_address())) {
-            // We do!
-            dbgln("handle_arp: Responding to ARP request for my IPv4 address ({})", adapter->ipv4_address());
-            ARPPacket response;
-            response.set_operation(ARPOperation::Response);
-            response.set_target_hardware_address(packet.sender_hardware_address());
-            response.set_target_protocol_address(packet.sender_protocol_address());
-            response.set_sender_hardware_address(adapter->mac_address());
-            response.set_sender_protocol_address(adapter->ipv4_address());
+    if (packet.target_protocol_address() != adapter->ipv4_address()) {
+        dbgln_if(ARP_DEBUG, "handle_arp: Received a packet for {} on {}, discarding",
+            packet.target_protocol_address(),
+            adapter->name());
+        return;
+    }
 
-            adapter->send(packet.sender_hardware_address(), response);
-        }
+    if (packet.operation() == ARPOperation::Request) {
+        dbgln("handle_arp: Responding to ARP request for my IPv4 address ({})", adapter->ipv4_address());
+        ARPPacket response;
+        response.set_operation(ARPOperation::Response);
+        response.set_target_hardware_address(packet.sender_hardware_address());
+        response.set_target_protocol_address(packet.sender_protocol_address());
+        response.set_sender_hardware_address(adapter->mac_address());
+        response.set_sender_protocol_address(adapter->ipv4_address());
+
+        adapter->send(packet.sender_hardware_address(), response);
         return;
     }
 }

@@ -34,12 +34,6 @@ public:
     u16 protocol_type() const { return m_protocol_type; }
     void set_protocol_type(u16 w) { m_protocol_type = w; }
 
-    u8 hardware_address_length() const { return m_hardware_address_length; }
-    void set_hardware_address_length(u8 b) { m_hardware_address_length = b; }
-
-    u8 protocol_address_length() const { return m_protocol_address_length; }
-    void set_protocol_address_length(u8 b) { m_protocol_address_length = b; }
-
     u16 operation() const { return m_operation; }
     void set_operation(u16 w) { m_operation = w; }
 
