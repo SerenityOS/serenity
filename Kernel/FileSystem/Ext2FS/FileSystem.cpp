@@ -593,20 +593,7 @@ ErrorOr<void> Ext2FS::free_inode(Ext2FSInode& inode)
     VERIFY(inode.m_raw_inode.i_links_count == 0);
     dbgln_if(EXT2_DEBUG, "Ext2FS[{}]::free_inode(): Inode {} has no more links, time to delete!", fsid(), inode.index());
 
-    // Mark all blocks used by this inode as free.
-    {
-        auto blocks = TRY(inode.compute_block_list());
-        for (auto const& [_, block_index] : blocks) {
-            VERIFY(block_index <= super_block().s_blocks_count && block_index != 0);
-            TRY(set_block_allocation_state(block_index, false));
-        }
-
-        auto meta_blocks = TRY(inode.compute_meta_blocks());
-        for (auto const& block : meta_blocks) {
-            VERIFY(block <= super_block().s_blocks_count && block != 0);
-            TRY(set_block_allocation_state(block, false));
-        }
-    }
+    TRY(inode.free_all_blocks());
 
     // If the inode being freed is a directory, update block group directory counter.
     if (inode.is_directory()) {
