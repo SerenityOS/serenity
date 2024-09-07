@@ -27,10 +27,10 @@
 namespace Kernel {
 
 static void handle_arp(EthernetFrameHeader const&, size_t frame_size);
-static void handle_ipv4(EthernetFrameHeader const&, size_t frame_size, UnixDateTime const& packet_timestamp);
-static void handle_icmp(EthernetFrameHeader const&, IPv4Packet const&, UnixDateTime const& packet_timestamp);
+static void handle_ipv4(EthernetFrameHeader const&, size_t frame_size, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter);
+static void handle_icmp(EthernetFrameHeader const&, IPv4Packet const&, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter);
 static void handle_udp(IPv4Packet const&, UnixDateTime const& packet_timestamp);
-static void handle_tcp(IPv4Packet const&, UnixDateTime const& packet_timestamp);
+static void handle_tcp(IPv4Packet const&, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter);
 static void send_delayed_tcp_ack(TCPSocket& socket);
 static void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, RefPtr<NetworkAdapter> adapter);
 static void flush_delayed_tcp_acks();
@@ -72,43 +72,45 @@ void NetworkTask_main(void*)
         };
     });
 
-    auto dequeue_packet = [&pending_packets](u8* buffer, size_t buffer_size, UnixDateTime& packet_timestamp) -> size_t {
-        if (pending_packets == 0)
-            return 0;
-        size_t packet_size = 0;
-        NetworkingManagement::the().for_each([&](auto& adapter) {
-            if (packet_size || !adapter.has_queued_packets())
-                return;
-            packet_size = adapter.dequeue_packet(buffer, buffer_size, packet_timestamp);
-            pending_packets--;
-            dbgln_if(NETWORK_TASK_DEBUG, "NetworkTask: Dequeued packet from {} ({} bytes)", adapter.name(), packet_size);
-        });
-        return packet_size;
-    };
-
     size_t buffer_size = 64 * KiB;
     auto region_or_error = MM.allocate_kernel_region(buffer_size, "Kernel Packet Buffer"sv, Memory::Region::Access::ReadWrite);
     if (region_or_error.is_error())
         TODO();
     auto buffer_region = region_or_error.release_value();
-    auto buffer = (u8*)buffer_region->vaddr().get();
-    UnixDateTime packet_timestamp;
+
+    struct {
+        u8* buffer;
+        UnixDateTime packet_timestamp;
+        RefPtr<NetworkAdapter> adapter;
+    } meta;
+
+    meta.buffer = (u8*)buffer_region->vaddr().get();
 
     while (!Process::current().is_dying()) {
         flush_delayed_tcp_acks();
         retransmit_tcp_packets();
-        size_t packet_size = dequeue_packet(buffer, buffer_size, packet_timestamp);
-        if (!packet_size) {
+        size_t packet_size = 0;
+        if (!pending_packets) {
             auto timeout_time = Duration::from_milliseconds(500);
             auto timeout = Thread::BlockTimeout { false, &timeout_time };
             [[maybe_unused]] auto result = packet_wait_queue.wait_on(timeout, "NetworkTask"sv);
             continue;
+        } else {
+            NetworkingManagement::the().for_each([&](auto& adapter) {
+                if (packet_size || !adapter.has_queued_packets()) {
+                    return;
+                }
+                packet_size = adapter.dequeue_packet(meta.buffer, buffer_size, meta.packet_timestamp);
+                pending_packets--;
+                dbgln_if(NETWORK_TASK_DEBUG, "NetworkTask: Dequeued packet from {} ({} bytes)", adapter.name(), packet_size);
+                meta.adapter = adapter;
+            });
         }
         if (packet_size < sizeof(EthernetFrameHeader)) {
             dbgln("NetworkTask: Packet is too small to be an Ethernet packet! ({})", packet_size);
             continue;
         }
-        auto& eth = *(EthernetFrameHeader const*)buffer;
+        auto& eth = *(EthernetFrameHeader const*)meta.buffer;
         dbgln_if(ETHERNET_DEBUG, "NetworkTask: From {} to {}, ether_type={:#04x}, packet_size={}", eth.source().to_string(), eth.destination().to_string(), eth.ether_type(), packet_size);
 
         switch (eth.ether_type()) {
@@ -116,7 +118,7 @@ void NetworkTask_main(void*)
             handle_arp(eth, packet_size);
             break;
         case EtherType::IPv4:
-            handle_ipv4(eth, packet_size, packet_timestamp);
+            handle_ipv4(eth, packet_size, meta.packet_timestamp, meta.adapter);
             break;
         case EtherType::IPv6:
             // ignore
@@ -177,7 +179,7 @@ void handle_arp(EthernetFrameHeader const& eth, size_t frame_size)
     }
 }
 
-void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, UnixDateTime const& packet_timestamp)
+void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter)
 {
     constexpr size_t minimum_ipv4_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet);
     if (frame_size < minimum_ipv4_frame_size) {
@@ -197,32 +199,33 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, UnixDateTime
         return;
     }
 
+    if (adapter->ipv4_address() != packet.destination() && adapter->ipv4_broadcast() != packet.destination()) {
+        dbgln_if(IPV4_DEBUG, "handle_ipv4: Received a packet for {}, discarding", packet.destination());
+        return;
+    }
+
     dbgln_if(IPV4_DEBUG, "handle_ipv4: source={}, destination={}", packet.source(), packet.destination());
 
-    NetworkingManagement::the().for_each([&](auto& adapter) {
-        if (adapter.ipv4_address().is_zero() || !adapter.link_up())
-            return;
-
-        auto my_net = adapter.ipv4_address().to_u32() & adapter.ipv4_netmask().to_u32();
-        auto their_net = packet.source().to_u32() & adapter.ipv4_netmask().to_u32();
-        if (my_net == their_net)
-            update_arp_table(packet.source(), eth.source(), UpdateTable::Set);
-    });
+    auto my_net = adapter->ipv4_address().to_u32() & adapter->ipv4_netmask().to_u32();
+    auto their_net = packet.source().to_u32() & adapter->ipv4_netmask().to_u32();
+    // FIXME: we probably shouldn't update the ARP table on every received packet...
+    if (my_net == their_net)
+        update_arp_table(packet.source(), eth.source(), UpdateTable::Set);
 
     switch ((TransportProtocol)packet.protocol()) {
     case TransportProtocol::ICMP:
-        return handle_icmp(eth, packet, packet_timestamp);
+        return handle_icmp(eth, packet, packet_timestamp, adapter);
     case TransportProtocol::UDP:
         return handle_udp(packet, packet_timestamp);
     case TransportProtocol::TCP:
-        return handle_tcp(packet, packet_timestamp);
+        return handle_tcp(packet, packet_timestamp, adapter);
     default:
         dbgln_if(IPV4_DEBUG, "handle_ipv4: Unhandled protocol {:#02x}", packet.protocol());
         break;
     }
 }
 
-void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timestamp)
+void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter)
 {
     auto& icmp_header = *static_cast<ICMPHeader const*>(ipv4_packet.payload());
     size_t const icmp_packet_size = ipv4_packet.payload_size();
@@ -240,10 +243,6 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
         for (auto& socket : icmp_sockets)
             socket->did_receive(ipv4_packet.source(), 0, { &ipv4_packet, sizeof(IPv4Packet) + icmp_packet_size }, packet_timestamp);
     }
-
-    auto adapter = NetworkingManagement::the().from_ipv4_address(ipv4_packet.destination());
-    if (!adapter)
-        return;
 
     if (icmp_header.type == ICMPType::EchoRequest) {
         auto& request = reinterpret_cast<ICMPEchoPacket const&>(icmp_header);
@@ -376,7 +375,7 @@ void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, Re
     routing_decision.adapter->release_packet_buffer(*packet);
 }
 
-void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timestamp)
+void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter)
 {
     if (ipv4_packet.payload_size() < sizeof(TCPPacket)) {
         dbgln("handle_tcp: IPv4 payload is too small to be a TCP packet ({}, need {})", ipv4_packet.payload_size(), sizeof(TCPPacket));
@@ -412,12 +411,6 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
         tcp_packet.has_rst() ? "RST " : "",
         tcp_packet.window_size(),
         payload_size);
-
-    auto adapter = NetworkingManagement::the().from_ipv4_address(ipv4_packet.destination());
-    if (!adapter) {
-        dbgln("handle_tcp: this packet is not for me, it's for {}", ipv4_packet.destination());
-        return;
-    }
 
     IPv4SocketTuple tuple(ipv4_packet.destination(), tcp_packet.destination_port(), ipv4_packet.source(), tcp_packet.source_port());
 
