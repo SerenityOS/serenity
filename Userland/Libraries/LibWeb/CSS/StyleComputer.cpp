@@ -892,7 +892,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
     }
 }
 
-static void cascade_custom_properties(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, Vector<MatchingRule> const& matching_rules)
+static void cascade_custom_properties(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, Vector<MatchingRule> const& matching_rules, HashMap<FlyString, StyleProperty>& custom_properties)
 {
     size_t needed_capacity = 0;
     for (auto const& matching_rule : matching_rules)
@@ -903,8 +903,7 @@ static void cascade_custom_properties(DOM::Element& element, Optional<CSS::Selec
             needed_capacity += inline_style->custom_properties().size();
     }
 
-    HashMap<FlyString, StyleProperty> custom_properties;
-    custom_properties.ensure_capacity(needed_capacity);
+    custom_properties.ensure_capacity(custom_properties.size() + needed_capacity);
 
     for (auto const& matching_rule : matching_rules) {
         for (auto const& it : matching_rule.rule->declaration().custom_properties()) {
@@ -921,8 +920,6 @@ static void cascade_custom_properties(DOM::Element& element, Optional<CSS::Selec
                 custom_properties.set(it.key, it.value);
         }
     }
-
-    element.set_custom_properties(pseudo_element, move(custom_properties));
 }
 
 void StyleComputer::collect_animation_into(DOM::Element& element, Optional<CSS::Selector::PseudoElement::Type> pseudo_element, JS::NonnullGCPtr<Animations::KeyframeEffect> effect, StyleProperties& style_properties, AnimationRefresh refresh) const
@@ -1417,9 +1414,12 @@ void StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element
 
     // Then we resolve all the CSS custom properties ("variables") for this element:
     // FIXME: Also resolve !important custom properties, in a second cascade.
+
+    HashMap<FlyString, CSS::StyleProperty> custom_properties;
     for (auto& layer : matching_rule_set.author_rules) {
-        cascade_custom_properties(element, pseudo_element, layer.rules);
+        cascade_custom_properties(element, pseudo_element, layer.rules, custom_properties);
     }
+    element.set_custom_properties(pseudo_element, move(custom_properties));
 
     // Then we apply the declarations from the matched rules in cascade order:
 
