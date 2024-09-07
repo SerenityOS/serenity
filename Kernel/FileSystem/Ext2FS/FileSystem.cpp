@@ -104,6 +104,8 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
 
     VERIFY(logical_block_size() <= (int)max_block_size);
 
+    m_i_blocks_increment = logical_block_size() / 512;
+
     m_block_group_count = ceil_div(super_block.s_blocks_count, super_block.s_blocks_per_group);
 
     if (m_block_group_count == 0) {
