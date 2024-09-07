@@ -63,6 +63,8 @@ private:
     ErrorOr<Ext2FS::BlockList> compute_block_list_impl(Vector<Ext2FS::BlockIndex>* meta_blocks = nullptr) const;
     ErrorOr<Vector<Ext2FS::BlockIndex>> compute_meta_blocks() const;
 
+    ErrorOr<void> free_all_blocks();
+
     u64 singly_indirect_block_capacity() const
     {
         auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());

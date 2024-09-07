@@ -343,6 +343,72 @@ ErrorOr<Ext2FS::BlockList> Ext2FSInode::compute_block_list_impl(Vector<Ext2FS::B
     return list;
 }
 
+ErrorOr<void> Ext2FSInode::free_all_blocks()
+{
+    MutexLocker locker(m_inode_lock);
+
+    dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::free_all_blocks(): i_size={}, i_blocks={}", identifier(), m_raw_inode.i_size, m_raw_inode.i_blocks);
+
+    if (Kernel::is_symlink(m_raw_inode.i_mode) && m_raw_inode.i_blocks == 0)
+        return {};
+
+    unsigned const block_size = fs().logical_block_size();
+    unsigned const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
+
+    auto deallocate_block = [&](auto on_disk_block_index) -> ErrorOr<void> {
+        TRY(fs().set_block_allocation_state(on_disk_block_index, false));
+        return {};
+    };
+
+    auto process_block_array = [&](auto current_logical_index, unsigned level, auto array_block_index, ByteBuffer& array_storage, auto&& callback) -> ErrorOr<void> {
+        TRY(array_storage.try_resize(block_size));
+
+        auto* array = bit_cast<u32*>(array_storage.data());
+        auto buffer = UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(array));
+        TRY(fs().read_block(array_block_index, &buffer, block_size, 0));
+
+        for (unsigned i = 0; i < block_size / sizeof(u32); ++i) {
+            if (array[i] != 0)
+                TRY(callback(current_logical_index + i * AK::pow(entries_per_block, level - 1), array[i]));
+        }
+
+        return deallocate_block(array_block_index);
+    };
+
+    for (size_t i = 0; i < EXT2_NDIR_BLOCKS; ++i) {
+        if (m_raw_inode.i_block[i] != 0)
+            TRY(deallocate_block(m_raw_inode.i_block[i]));
+    }
+
+    ByteBuffer block_storage[3] = {};
+
+    if (m_raw_inode.i_block[EXT2_IND_BLOCK]) {
+        TRY(process_block_array(EXT2_NDIR_BLOCKS, 1, m_raw_inode.i_block[EXT2_IND_BLOCK], block_storage[0], [&]([[maybe_unused]] auto logical_block_index, auto on_disk_index) -> ErrorOr<void> {
+            return deallocate_block(on_disk_index);
+        }));
+    }
+
+    if (m_raw_inode.i_block[EXT2_DIND_BLOCK]) {
+        TRY(process_block_array(singly_indirect_block_capacity(), 2, m_raw_inode.i_block[EXT2_DIND_BLOCK], block_storage[1], [&](auto logical_block_index, auto on_disk_index) -> ErrorOr<void> {
+            return process_block_array(logical_block_index, 1, on_disk_index, block_storage[0], [&]([[maybe_unused]] auto logical_block_index2, auto on_disk_index2) -> ErrorOr<void> {
+                return deallocate_block(on_disk_index2);
+            });
+        }));
+    }
+
+    if (m_raw_inode.i_block[EXT2_TIND_BLOCK]) {
+        TRY(process_block_array(doubly_indirect_block_capacity(), 3, m_raw_inode.i_block[EXT2_TIND_BLOCK], block_storage[2], [&](auto logical_block_index, auto on_disk_index) -> ErrorOr<void> {
+            return process_block_array(logical_block_index, 2, on_disk_index, block_storage[1], [&](auto logical_block_index2, auto on_disk_index2) -> ErrorOr<void> {
+                return process_block_array(logical_block_index2, 1, on_disk_index2, block_storage[0], [&]([[maybe_unused]] auto logical_block_index3, auto on_disk_index3) -> ErrorOr<void> {
+                    return deallocate_block(on_disk_index3);
+                });
+            });
+        }));
+    }
+
+    return {};
+}
+
 Ext2FSInode::Ext2FSInode(Ext2FS& fs, InodeIndex index)
     : Inode(fs, index)
 {
