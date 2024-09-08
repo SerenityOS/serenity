@@ -101,9 +101,9 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
     if (max_luns != 0)
         dmesgln("SCSI/BBB: WARNING: USB Mass Storage Device supports multiple LUNs ({}) only targetting first LUN", max_luns);
 
-    u8 in_pipe_address = 0xff;
+    u8 in_pipe_endpoint_number = 0xff;
     u16 in_max_packet_size;
-    u8 out_pipe_address = 0xff;
+    u8 out_pipe_endpoint_number = 0xff;
     u16 out_max_packet_size;
 
     if (interface.descriptor().number_of_endpoints < 2) {
@@ -116,20 +116,20 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
             continue;
         // The upper bit of the Endpoint address is set to 1, iff it is the Bulk-In Endpoint
         if (endpoint.endpoint_address & 0x80) {
-            in_pipe_address = endpoint.endpoint_address & 0b1111;
+            in_pipe_endpoint_number = endpoint.endpoint_address & 0b1111;
             in_max_packet_size = endpoint.max_packet_size;
         } else {
-            out_pipe_address = endpoint.endpoint_address & 0b1111;
+            out_pipe_endpoint_number = endpoint.endpoint_address & 0b1111;
             out_max_packet_size = endpoint.max_packet_size;
         }
     }
-    if (in_pipe_address == 0xff || out_pipe_address == 0xff) {
+    if (in_pipe_endpoint_number == 0xff || out_pipe_endpoint_number == 0xff) {
         dmesgln("SCSI/BBB: Interface did not advertise two Bulk Endpoints; Rejecting");
         return ENOTSUP;
     }
 
-    auto in_pipe = TRY(BulkInPipe::create(device.controller(), device, in_pipe_address, in_max_packet_size));
-    auto out_pipe = TRY(BulkOutPipe::create(device.controller(), device, out_pipe_address, out_max_packet_size));
+    auto in_pipe = TRY(BulkInPipe::create(device.controller(), device, in_pipe_endpoint_number, in_max_packet_size));
+    auto out_pipe = TRY(BulkOutPipe::create(device.controller(), device, out_pipe_endpoint_number, out_max_packet_size));
 
     SCSI::Inquiry inquiry_command {};
     inquiry_command.allocation_length = sizeof(SCSI::StandardInquiryData);
