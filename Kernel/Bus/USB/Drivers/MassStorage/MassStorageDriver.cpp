@@ -152,7 +152,7 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
         dmesgln("SCSI/BBB: Device is not a Direct Access Block device; Rejecting");
         return ENOTSUP;
     }
-    if (inquiry_data.version < 3 || inquiry_data.version > 7) {
+    if ((inquiry_data.version < 3 || inquiry_data.version > 7) && inquiry_data.version != 0) {
         dmesgln("SCSI/BBB: Device SCSI version not supported ({:#02x}); Rejecting", inquiry_data.version);
         return ENOTSUP;
     }
