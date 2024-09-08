@@ -915,6 +915,9 @@ ErrorOr<size_t> xHCIController::submit_bulk_transfer(Transfer& transfer)
     pending_transfer.wait_queue.wait_forever();
     VERIFY(!pending_transfer.endpoint_list_node.is_in_list());
 
+    if (pending_transfer.completion_code == TransferRequestBlock::CompletionCode::Stall_Error)
+        return ESHUTDOWN;
+
     if (pending_transfer.completion_code != TransferRequestBlock::CompletionCode::Success
         && pending_transfer.completion_code != TransferRequestBlock::CompletionCode::Short_Packet)
         return EIO;
