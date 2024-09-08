@@ -224,7 +224,9 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, UnixDateTime
 void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timestamp)
 {
     auto& icmp_header = *static_cast<ICMPHeader const*>(ipv4_packet.payload());
-    dbgln_if(ICMP_DEBUG, "handle_icmp: source={}, destination={}, type={:#02x}, code={:#02x}", ipv4_packet.source().to_string(), ipv4_packet.destination().to_string(), icmp_header.type(), icmp_header.code());
+    size_t const icmp_packet_size = ipv4_packet.payload_size();
+    size_t const icmp_header_size = sizeof(ICMPEchoPacket);
+    dbgln_if(ICMP_DEBUG, "handle_icmp: source={}, destination={}, type={:#02x}, code={:#02x}", ipv4_packet.source().to_string(), ipv4_packet.destination().to_string(), static_cast<u8>(icmp_header.type), icmp_header.code);
 
     {
         Vector<NonnullRefPtr<IPv4Socket>> icmp_sockets;
@@ -235,38 +237,42 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
             }
         });
         for (auto& socket : icmp_sockets)
-            socket->did_receive(ipv4_packet.source(), 0, { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
+            socket->did_receive(ipv4_packet.source(), 0, { &ipv4_packet, sizeof(IPv4Packet) + icmp_packet_size }, packet_timestamp);
     }
 
     auto adapter = NetworkingManagement::the().from_ipv4_address(ipv4_packet.destination());
     if (!adapter)
         return;
 
-    if (icmp_header.type() == ICMPv4Type::EchoRequest) {
+    if (icmp_header.type == ICMPType::EchoRequest) {
         auto& request = reinterpret_cast<ICMPEchoPacket const&>(icmp_header);
-        dbgln("handle_icmp: EchoRequest from {}: id={}, seq={}", ipv4_packet.source(), (u16)request.identifier, (u16)request.sequence_number);
-        size_t icmp_packet_size = ipv4_packet.payload_size();
-        if (icmp_packet_size < sizeof(ICMPEchoPacket)) {
-            dbgln("handle_icmp: EchoRequest packet is too small, ignoring.");
+
+        dbgln_if(ICMP_DEBUG, "handle_icmp: EchoRequest from {}: id={}, seq={}", ipv4_packet.source(), request.identifier, request.sequence_number);
+        if (icmp_packet_size < icmp_header_size) {
+            dbgln_if(ICMP_DEBUG, "handle_icmp: EchoRequest packet is too small, ignoring.");
             return;
         }
+
         auto ipv4_payload_offset = adapter->ipv4_payload_offset();
         auto packet = adapter->acquire_packet_buffer(ipv4_payload_offset + icmp_packet_size);
         if (!packet) {
             dbgln("Could not allocate packet buffer while sending ICMP packet");
             return;
         }
+
         adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, icmp_packet_size, 0, 64);
-        memset(packet->buffer->data() + ipv4_payload_offset, 0, sizeof(ICMPEchoPacket));
-        auto& response = *(ICMPEchoPacket*)(packet->buffer->data() + ipv4_payload_offset);
-        response.header.set_type(ICMPv4Type::EchoReply);
-        response.header.set_code(0);
+        memset(packet->buffer->data() + ipv4_payload_offset, 0, icmp_header_size);
+
+        auto& response = *reinterpret_cast<ICMPEchoPacket*>(packet->buffer->data() + ipv4_payload_offset);
+        response.header.type = ICMPType::EchoReply;
         response.identifier = request.identifier;
         response.sequence_number = request.sequence_number;
-        if (size_t icmp_payload_size = icmp_packet_size - sizeof(ICMPEchoPacket))
-            memcpy(response.payload(), request.payload(), icmp_payload_size);
-        response.header.set_checksum(internet_checksum(&response, icmp_packet_size));
-        // FIXME: What is the right TTL value here? Is 64 ok? Should we use the same TTL as the echo request?
+
+        if (icmp_packet_size > icmp_header_size)
+            memcpy(response.payload, request.payload, icmp_packet_size - icmp_header_size);
+
+        response.header.checksum = internet_checksum(&response, icmp_packet_size);
+
         adapter->send_packet(packet->bytes());
         adapter->release_packet_buffer(*packet);
     }
