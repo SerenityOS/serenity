@@ -867,7 +867,8 @@ ErrorOr<size_t> xHCIController::submit_bulk_transfer(Transfer& transfer)
     pending_transfer.wait_queue.wait_forever();
     VERIFY(!pending_transfer.endpoint_list_node.is_in_list());
 
-    if (pending_transfer.completion_code != TransferRequestBlock::CompletionCode::Success)
+    if (pending_transfer.completion_code != TransferRequestBlock::CompletionCode::Success
+        && pending_transfer.completion_code != TransferRequestBlock::CompletionCode::Short_Packet)
         return EIO;
 
     return transfer.transfer_data_size() - pending_transfer.remainder;
@@ -1360,7 +1361,8 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
     auto& endpoint_ring = slot_state.endpoint_rings[endpoint - 1];
     VERIFY(endpoint_ring.region);
 
-    if (transfer_request_block.transfer_event.completion_code != TransferRequestBlock::CompletionCode::Success)
+    if (transfer_request_block.transfer_event.completion_code != TransferRequestBlock::CompletionCode::Success
+        && transfer_request_block.transfer_event.completion_code != TransferRequestBlock::CompletionCode::Short_Packet)
         dmesgln_pci(*this, "Transfer error on slot {} endpoint {}: {}", slot, endpoint, enum_to_string(transfer_request_block.transfer_event.completion_code));
 
     VERIFY(transfer_request_block.transfer_event.event_data == 0); // The Pointer points to the interrupting TRB
