@@ -823,7 +823,7 @@ ErrorOr<Vector<xHCIController::TransferRequestBlock>> xHCIController::prepare_no
     auto const slot = device.controller_identifier();
     u32 max_burst_payload = 0;
     {
-        auto endpoint_id = endpoint_index(transfer.pipe().endpoint_address(), transfer.pipe().direction());
+        auto endpoint_id = endpoint_index(transfer.pipe().endpoint_number(), transfer.pipe().direction());
         SpinlockLocker locker(m_slots_state[slot - 1].lock);
         max_burst_payload = m_slots_state[slot - 1].endpoint_rings[endpoint_id - 1].max_burst_payload;
     }
@@ -863,7 +863,7 @@ ErrorOr<size_t> xHCIController::submit_bulk_transfer(Transfer& transfer)
     auto transfer_request_blocks = TRY(prepare_normal_transfer(transfer));
 
     SyncPendingTransfer pending_transfer;
-    TRY(enqueue_transfer(transfer.pipe().device().controller_identifier(), transfer.pipe().endpoint_address(), transfer.pipe().direction(), transfer_request_blocks, pending_transfer));
+    TRY(enqueue_transfer(transfer.pipe().device().controller_identifier(), transfer.pipe().endpoint_number(), transfer.pipe().direction(), transfer_request_blocks, pending_transfer));
     pending_transfer.wait_queue.wait_forever();
     VERIFY(!pending_transfer.endpoint_list_node.is_in_list());
 
@@ -882,7 +882,7 @@ ErrorOr<void> xHCIController::submit_async_interrupt_transfer(NonnullLockRefPtr<
     auto transfer_request_blocks = TRY(prepare_normal_transfer(transfer));
 
     NonnullOwnPtr<PeriodicPendingTransfer> pending_transfer = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PeriodicPendingTransfer({}, move(transfer_request_blocks), move(transfer))));
-    TRY(enqueue_transfer(pending_transfer->original_transfer->pipe().device().controller_identifier(), pending_transfer->original_transfer->pipe().endpoint_address(), pending_transfer->original_transfer->pipe().direction(), pending_transfer->transfer_request_blocks, *pending_transfer));
+    TRY(enqueue_transfer(pending_transfer->original_transfer->pipe().device().controller_identifier(), pending_transfer->original_transfer->pipe().endpoint_number(), pending_transfer->original_transfer->pipe().direction(), pending_transfer->transfer_request_blocks, *pending_transfer));
     TRY(m_active_periodic_transfers.try_append(move(pending_transfer)));
 
     return {};
@@ -890,12 +890,12 @@ ErrorOr<void> xHCIController::submit_async_interrupt_transfer(NonnullLockRefPtr<
 
 ErrorOr<void> xHCIController::initialize_endpoint_if_needed(Pipe const& pipe)
 {
-    VERIFY(pipe.endpoint_address() != 0); // Endpoint 0 is manually initialized during device initialization
+    VERIFY(pipe.endpoint_number() != 0); // Endpoint 0 is manually initialized during device initialization
     auto const slot = pipe.device().controller_identifier();
     auto& slot_state = m_slots_state[slot - 1];
     SpinlockLocker locker(slot_state.lock);
     VERIFY(slot_state.input_context_region);
-    auto endpoint_id = endpoint_index(pipe.endpoint_address(), pipe.direction());
+    auto endpoint_id = endpoint_index(pipe.endpoint_number(), pipe.direction());
     auto& endpoint_ring = slot_state.endpoint_rings[endpoint_id - 1];
     if (endpoint_ring.region)
         return {}; // Already initialized
@@ -922,7 +922,7 @@ ErrorOr<void> xHCIController::initialize_endpoint_if_needed(Pipe const& pipe)
     control_context->drop_contexts = 0;
     control_context->add_contexts = (1 << 0) | (1 << endpoint_id);
 
-    auto* endpoint_context = input_endpoint_context(slot, pipe.endpoint_address(), pipe.direction());
+    auto* endpoint_context = input_endpoint_context(slot, pipe.endpoint_number(), pipe.direction());
     switch (pipe.type()) {
     case Pipe::Type::Isochronous:
         if (pipe.direction() == Pipe::Direction::In)
@@ -1394,7 +1394,7 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
             auto& periodic_pending_transfer = static_cast<PeriodicPendingTransfer&>(pending_transfer);
             periodic_pending_transfer.original_transfer->invoke_async_callback();
             // Reschedule the periodic transfer (NOTE: We MUST() here since a re-enqueue should never fail)
-            MUST(enqueue_transfer(slot, periodic_pending_transfer.original_transfer->pipe().endpoint_address(), periodic_pending_transfer.original_transfer->pipe().direction(), periodic_pending_transfer.transfer_request_blocks, periodic_pending_transfer));
+            MUST(enqueue_transfer(slot, periodic_pending_transfer.original_transfer->pipe().endpoint_number(), periodic_pending_transfer.original_transfer->pipe().direction(), periodic_pending_transfer.transfer_request_blocks, periodic_pending_transfer));
         }
         return;
     }
