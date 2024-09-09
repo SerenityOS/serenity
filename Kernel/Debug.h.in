@@ -111,6 +111,10 @@
 #cmakedefine01 ICMP_DEBUG
 #endif
 
+#ifndef ICMPV6_DEBUG
+#cmakedefine01 ICMPV6_DEBUG
+#endif
+
 #ifndef INTEL_GRAPHICS_DEBUG
 #cmakedefine01 INTEL_GRAPHICS_DEBUG
 #endif
