@@ -44,6 +44,7 @@ set(AK_TEST_SOURCES
     TestIPv4Address.cpp
     TestIPv4AddressCidr.cpp
     TestIPv6Address.cpp
+    TestIPv6AddressCidr.cpp
     TestIndexSequence.cpp
     TestInsertionSort.cpp
     TestIntegerMath.cpp
