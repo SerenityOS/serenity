@@ -253,7 +253,9 @@
     "space-between",
     "space-around",
     "space-evenly",
-    "stretch"
+    "stretch",
+    "left",
+    "right"
   ],
   "justify-items": [
     "baseline",
@@ -268,7 +270,9 @@
     "self-start",
     "start",
     "stretch",
-    "unsafe"
+    "unsafe",
+    "left",
+    "right"
   ],
   "justify-self": [
     "auto",
@@ -283,7 +287,9 @@
     "self-start",
     "start",
     "stretch",
-    "unsafe"
+    "unsafe",
+    "left",
+    "right"
   ],
   "line-style": [
     "none",
