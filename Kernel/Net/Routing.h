@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/IPv4Address.h>
+#include <AK/IPv6Address.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/NetworkAdapter.h>
