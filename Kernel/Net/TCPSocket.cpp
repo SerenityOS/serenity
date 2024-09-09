@@ -11,8 +11,8 @@
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
-#include <Kernel/Net/IPv4/IP.h>
-#include <Kernel/Net/IPv4/IPv4.h>
+#include <Kernel/Net/IP/IP.h>
+#include <Kernel/Net/IP/IPv4.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Routing.h>

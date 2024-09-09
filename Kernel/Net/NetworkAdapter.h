@@ -20,9 +20,9 @@
 #include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/ICMP.h>
-#include <Kernel/Net/IPv4/ARP.h>
-#include <Kernel/Net/IPv4/IP.h>
-#include <Kernel/Net/IPv4/IPv4.h>
+#include <Kernel/Net/IP/ARP.h>
+#include <Kernel/Net/IP/IP.h>
+#include <Kernel/Net/IP/IPv4.h>
 
 namespace Kernel {
 
