@@ -42,6 +42,7 @@ set(AK_TEST_SOURCES
     TestHashTable.cpp
     TestHex.cpp
     TestIPv4Address.cpp
+    TestIPv4AddressCidr.cpp
     TestIPv6Address.cpp
     TestIndexSequence.cpp
     TestInsertionSort.cpp

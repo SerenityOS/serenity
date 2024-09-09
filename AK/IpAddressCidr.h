@@ -110,9 +110,89 @@ private:
     u8 m_length;
 };
 
+template<>
+class AddressTraits<IPv4AddressCidr> {
+public:
+    using IPAddress = IPv4Address;
+};
+
 }
+
+class IPv4AddressCidr : public Details::IPAddressCidr<IPv4AddressCidr> {
+public:
+    constexpr IPv4AddressCidr(IPv4Address address, u8 length)
+        : IPAddressCidr(address, length)
+    {
+    }
+
+    constexpr IPv4Address netmask() const
+    {
+        IPv4Address netmask;
+        u8 free_bits = MAX_LENGTH - length();
+
+        if (free_bits == 32) {
+            netmask = IPv4Address(0, 0, 0, 0);
+        } else {
+            NetworkOrdered<u32> mask = NumericLimits<u32>::max() << free_bits;
+
+            auto address = bit_cast<Array<u8, 4>>(mask);
+            netmask = IPv4Address(address.data());
+        }
+
+        return netmask;
+    }
+
+    constexpr IPv4Address first_address_of_subnet() const
+    {
+        u32 mask = netmask().to_u32();
+        return IPv4Address(ip_address().to_u32() & mask);
+    }
+
+    constexpr IPv4Address last_address_of_subnet() const
+    {
+        u32 mask = netmask().to_u32();
+        u32 first = ip_address().to_u32() & mask;
+        return IPv4Address(first | ~mask);
+    }
+
+    bool contains(IPv4Address other) const
+    {
+        IPv4AddressCidr other_cidr = MUST(IPv4AddressCidr::create(other, length()));
+        return first_address_of_subnet() == other_cidr.first_address_of_subnet();
+    }
+
+    static u8 const MAX_LENGTH = 32;
+};
+
+template<>
+struct Traits<IPv4AddressCidr> : public DefaultTraits<IPv4AddressCidr> {
+    static unsigned hash(IPv4AddressCidr const& address)
+    {
+        IPv4Address ip_address = address.ip_address();
+        return sip_hash_bytes<4, 8>({ &ip_address, address.length() });
+    }
+};
+
+#ifdef KERNEL
+template<>
+struct Formatter<IPv4AddressCidr> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, IPv4AddressCidr value)
+    {
+        return Formatter<StringView>::format(builder, TRY(value.to_string())->view());
+    }
+};
+#else
+template<>
+struct Formatter<IPv4AddressCidr> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, IPv4AddressCidr value)
+    {
+        return Formatter<StringView>::format(builder, TRY(value.to_string()));
+    }
+};
+#endif
 
 }
 
 #if USING_AK_GLOBALLY
+using AK::IPv4AddressCidr;
 #endif
