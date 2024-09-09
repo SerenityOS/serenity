@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Net/IPv4/IPv4.h>
+#include <Kernel/Net/IP/IPv4.h>
 
 namespace Kernel {
 

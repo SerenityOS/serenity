@@ -11,10 +11,10 @@
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/Net/ICMP.h>
-#include <Kernel/Net/IPv4/ARP.h>
-#include <Kernel/Net/IPv4/IPv4.h>
-#include <Kernel/Net/IPv4/Socket.h>
+#include <Kernel/Net/IP/ARP.h>
+#include <Kernel/Net/IP/ICMP.h>
+#include <Kernel/Net/IP/IPv4.h>
+#include <Kernel/Net/IP/IPv4Socket.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Routing.h>
