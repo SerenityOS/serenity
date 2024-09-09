@@ -1,5 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, sdomi <ja@sdomi.pl>
+ * Copyright (c) 2024, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +15,7 @@
 #include <Kernel/Net/IP/ARP.h>
 #include <Kernel/Net/IP/IP.h>
 #include <Kernel/Net/IP/IPv4.h>
+#include <Kernel/Net/IP/IPv6.h>
 #include <Kernel/Net/IP/Socket.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
@@ -29,6 +32,7 @@ namespace Kernel {
 static void handle_arp(EthernetFrameHeader const&, size_t frame_size);
 static void handle_ipv4(EthernetFrameHeader const&, size_t frame_size, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter);
 static void handle_icmp(EthernetFrameHeader const&, IPv4Packet const&, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter);
+static void handle_ipv6(EthernetFrameHeader const&, size_t frame_size, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter);
 static void handle_udp(IPv4Packet const&, UnixDateTime const& packet_timestamp);
 static void handle_tcp(IPv4Packet const&, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter);
 static void send_delayed_tcp_ack(TCPSocket& socket);
@@ -121,7 +125,7 @@ void NetworkTask_main(void*)
             handle_ipv4(eth, packet_size, meta.packet_timestamp, meta.adapter);
             break;
         case EtherType::IPv6:
-            // ignore
+            handle_ipv6(eth, packet_size, meta.packet_timestamp, meta.adapter);
             break;
         default:
             dbgln_if(ETHERNET_DEBUG, "NetworkTask: Unknown ethernet type {:#04x}", eth.ether_type());
@@ -221,6 +225,48 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, UnixDateTime
         return handle_tcp(packet, packet_timestamp, adapter);
     default:
         dbgln_if(IPV4_DEBUG, "handle_ipv4: Unhandled protocol {:#02x}", packet.protocol());
+        break;
+    }
+}
+
+void handle_ipv6(EthernetFrameHeader const& eth, size_t frame_size, UnixDateTime const& packet_timestamp, RefPtr<NetworkAdapter> adapter)
+{
+    (void)packet_timestamp;
+
+    constexpr size_t minimum_ipv6_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv6PacketHeader);
+    if (frame_size < minimum_ipv6_frame_size) {
+        dbgln("handle_ipv6: Frame too small ({}, need {})", frame_size, minimum_ipv6_frame_size);
+        return;
+    }
+    auto& packet = *static_cast<IPv6PacketHeader const*>(eth.payload());
+    size_t const actual_ipv6_packet_length = frame_size - adapter->layer3_payload_offset();
+    size_t const payload_length = frame_size - adapter->ipv6_payload_offset();
+
+    if (packet.length() < payload_length) {
+        dbgln("handle_ipv6: IPv6 packet too short ({}, need {})", packet.length(), sizeof(IPv6PacketHeader));
+        return;
+    }
+
+    if (packet.length() > payload_length) {
+        dbgln("handle_ipv6: IPv6 packet claims to be longer than it is ({}, actually {})", packet.length(), actual_ipv6_packet_length);
+        return;
+    }
+
+    dbgln_if(IPV6_DEBUG, "handle_ipv6: source={}, destination={}", packet.source(), packet.destination());
+
+    // TODO: Update ARP tables.
+
+    // TODO: skip or handle next headers that are not the next layer protocol header.
+
+    switch (static_cast<TransportProtocol>(packet.next_header())) {
+    case TransportProtocol::UDP:
+        dbgln_if(IPV6_DEBUG, "handle_ipv6: TODO: got UDP packet, what to do with it?");
+        break;
+    case TransportProtocol::TCP:
+        dbgln_if(IPV6_DEBUG, "handle_ipv6: TODO: got TCP packet, what to do with it?");
+        break;
+    default:
+        dbgln_if(IPV6_DEBUG, "handle_ipv6: Unhandled protocol {:#02x}", packet.next_header());
         break;
     }
 }

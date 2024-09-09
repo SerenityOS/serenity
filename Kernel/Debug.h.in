@@ -143,6 +143,10 @@
 #cmakedefine01 IPV4_DEBUG
 #endif
 
+#ifndef IPV6_DEBUG
+#cmakedefine01 IPV6_DEBUG
+#endif
+
 #ifndef IPV4_SOCKET_DEBUG
 #cmakedefine01 IPV4_SOCKET_DEBUG
 #endif

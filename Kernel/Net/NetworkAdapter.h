@@ -23,6 +23,7 @@
 #include <Kernel/Net/IP/ARP.h>
 #include <Kernel/Net/IP/IP.h>
 #include <Kernel/Net/IP/IPv4.h>
+#include <Kernel/Net/IP/IPv6.h>
 
 namespace Kernel {
 
@@ -108,6 +109,7 @@ public:
 
     constexpr size_t layer3_payload_offset() const { return sizeof(EthernetFrameHeader); }
     constexpr size_t ipv4_payload_offset() const { return layer3_payload_offset() + sizeof(IPv4Packet); }
+    constexpr size_t ipv6_payload_offset() const { return layer3_payload_offset() + sizeof(IPv6PacketHeader); }
 
     Function<void()> on_receive;
 
