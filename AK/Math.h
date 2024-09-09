@@ -984,11 +984,25 @@ using Hyperbolic::cosh;
 using Hyperbolic::sinh;
 using Hyperbolic::tanh;
 
+// Calculate x^y with fast exponentiation when the power is a natural number.
+template<FloatingPoint F, Unsigned U>
+constexpr F pow_int(F x, U y)
+{
+    auto result = static_cast<F>(1);
+    while (y > 0) {
+        if (y % 2 == 1) {
+            result *= x;
+        }
+        x = x * x;
+        y >>= 1;
+    }
+    return result;
+}
+
 template<FloatingPoint T>
 constexpr T pow(T x, T y)
 {
     CONSTEXPR_STATE(pow, x, y);
-    // FIXME: I am naive
     if (__builtin_isnan(y))
         return y;
     if (y == 0)
@@ -1002,15 +1016,14 @@ constexpr T pow(T x, T y)
     if (y >= static_cast<T>(NumericLimits<i64>::min()) && y < static_cast<T>(NumericLimits<i64>::max())) {
         i64 y_as_int = static_cast<i64>(y);
         if (y == static_cast<T>(y_as_int)) {
-            T result = x;
-            for (u64 i = 0; i < static_cast<u64>(fabs<T>(y) - 1); ++i)
-                result *= x;
+            T result = pow_int(x, static_cast<u64>(fabs<T>(y)));
             if (y < 0)
                 result = static_cast<T>(1.0l) / result;
             return result;
         }
     }
 
+    // FIXME: This formula suffers from error magnification.
     return exp2<T>(y * log2<T>(x));
 }
 
