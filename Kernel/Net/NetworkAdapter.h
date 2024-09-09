@@ -90,6 +90,7 @@ public:
 
     void send(MACAddress const&, ARPPacket const&);
     void fill_in_ipv4_header(PacketWithTimestamp&, IPv4Address const&, MACAddress const&, IPv4Address const&, TransportProtocol, size_t, u8 type_of_service, u8 ttl);
+    void fill_in_ipv6_header(PacketWithTimestamp&, IPv6Address const&, MACAddress const&, IPv6Address const&, TransportProtocol, size_t, u8 hop_limit);
 
     size_t dequeue_packet(u8* buffer, size_t buffer_size, UnixDateTime& packet_timestamp);
 
