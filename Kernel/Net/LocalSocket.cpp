@@ -405,15 +405,19 @@ ErrorOr<void> LocalSocket::getsockopt(OpenFileDescription& description, int leve
 
     switch (option) {
     case SO_SNDBUF:
-        buffer_size = sizeof(*m_for_server.leak_ptr());
-        TRY(copy_to_user(static_ptr_cast<int*>(value), static_cast<int>(buffer_size)));
-        size = sizeof(buffer_size);
+        if (size < sizeof(size_t))
+            return EINVAL;
+        buffer_size = m_for_server.ptr()->space_for_writing();
+        TRY(copy_to_user(static_ptr_cast<int*>(value), bit_cast<int*>(&buffer_size)));
+        size = sizeof(size_t);
         TRY(copy_to_user(value_size, &size));
         return {};
     case SO_RCVBUF:
-        buffer_size = sizeof(*m_for_client.leak_ptr());
-        TRY(copy_to_user(static_ptr_cast<int*>(value), static_cast<int>(buffer_size)));
-        size = sizeof(buffer_size); static
+        if (size < sizeof(size_t))
+            return EINVAL;
+        buffer_size = m_for_client.ptr()->space_for_writing();
+        TRY(copy_to_user(static_ptr_cast<int*>(value), bit_cast<int*>(&buffer_size)));
+        size = sizeof(size_t);
         TRY(copy_to_user(value_size, &size));
         return {};
     case SO_PEERCRED: {
@@ -441,7 +445,6 @@ ErrorOr<void> LocalSocket::getsockopt(OpenFileDescription& description, int leve
         return Socket::getsockopt(description, level, option, value, value_size);
     }
 }
-
 ErrorOr<void> LocalSocket::ioctl(OpenFileDescription& description, unsigned request, Userspace<void*> arg)
 {
     switch (request) {
