@@ -273,7 +273,9 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
         if (icmp_packet_size > icmp_header_size)
             memcpy(response.payload, request.payload, icmp_packet_size - icmp_header_size);
 
-        response.header.checksum = internet_checksum(&response, icmp_packet_size);
+        InternetChecksum checksum;
+        checksum.add({ &response, icmp_packet_size });
+        response.header.checksum = checksum.finish();
 
         adapter->send_packet(packet->bytes());
         adapter->release_packet_buffer(*packet);
