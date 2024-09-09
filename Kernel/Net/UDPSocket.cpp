@@ -6,7 +6,7 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Devices/Generic/RandomDevice.h>
-#include <Kernel/Net/IPv4/IP.h>
+#include <Kernel/Net/IP/IP.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/UDP.h>

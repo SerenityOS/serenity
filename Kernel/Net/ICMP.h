@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/MACAddress.h>
-#include <Kernel/Net/IPv4/IPv4.h>
+#include <Kernel/Net/IP/IPv4.h>
 
 enum class ICMPType : u8 {
     EchoReply = 0,
