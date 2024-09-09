@@ -7,8 +7,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/MutexProtected.h>
-#include <Kernel/Net/EtherType.h>
-#include <Kernel/Net/EthernetFrameHeader.h>
+#include <Kernel/Net/Ethernet.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4/ARP.h>
 #include <Kernel/Net/IPv4/IPv4.h>

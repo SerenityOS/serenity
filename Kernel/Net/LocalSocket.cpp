@@ -399,14 +399,23 @@ ErrorOr<void> LocalSocket::getsockopt(OpenFileDescription& description, int leve
 
     MutexLocker locker(mutex());
 
+    size_t buffer_size;
     socklen_t size;
     TRY(copy_from_user(&size, value_size.unsafe_userspace_ptr()));
 
     switch (option) {
     case SO_SNDBUF:
-        return ENOTSUP;
+        buffer_size = sizeof(*m_for_server.leak_ptr());
+        TRY(copy_to_user(static_ptr_cast<int*>(value), static_cast<int>(buffer_size)));
+        size = sizeof(buffer_size);
+        TRY(copy_to_user(value_size, &size));
+        return {};
     case SO_RCVBUF:
-        return ENOTSUP;
+        buffer_size = sizeof(*m_for_client.leak_ptr());
+        TRY(copy_to_user(static_ptr_cast<int*>(value), static_cast<int>(buffer_size)));
+        size = sizeof(buffer_size); static
+        TRY(copy_to_user(value_size, &size));
+        return {};
     case SO_PEERCRED: {
         if (size < sizeof(ucred))
             return EINVAL;

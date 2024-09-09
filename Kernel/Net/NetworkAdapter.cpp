@@ -7,7 +7,7 @@
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Library/StdLib.h>
-#include <Kernel/Net/EtherType.h>
+#include <Kernel/Net/Ethernet.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Tasks/Process.h>
