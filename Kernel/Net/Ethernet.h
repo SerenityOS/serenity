@@ -20,8 +20,6 @@ struct EtherType {
     };
 };
 
-#pragma GCC diagnostic ignored "-Warray-bounds"
-
 class [[gnu::packed]] EthernetFrameHeader {
 public:
     EthernetFrameHeader() = default;
