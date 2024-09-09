@@ -86,10 +86,16 @@ ErrorOr<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
     Array<PrefixCode, 1 << CanonicalCode::max_allowed_prefixed_code_length> prefix_codes;
     size_t number_of_prefix_codes = 0;
 
+    code.m_first_symbol_of_length_after.append(0);
+    code.m_offset_to_first_symbol_index.append(0);
+
     auto next_code = 0;
     for (size_t code_length = 1; code_length <= 15; ++code_length) {
         next_code <<= 1;
         auto start_bit = 1 << code_length;
+
+        auto first_code_at_length = next_code;
+        auto first_symbol_index_at_length = code.m_symbol_values.size();
 
         for (size_t symbol = 0; symbol < bytes.size(); ++symbol) {
             if (bytes[symbol] != code_length)
@@ -97,6 +103,8 @@ ErrorOr<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
 
             if (next_code > start_bit)
                 return Error::from_string_literal("Failed to decode code lengths");
+
+            code.m_symbol_values.append(symbol);
 
             if (code_length <= CanonicalCode::max_allowed_prefixed_code_length) {
                 if (number_of_prefix_codes >= prefix_codes.size())
@@ -108,9 +116,6 @@ ErrorOr<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
                 prefix_code.code_length = code_length;
 
                 code.m_max_prefixed_code_length = code_length;
-            } else {
-                code.m_symbol_codes.append(start_bit | next_code);
-                code.m_symbol_values.append(symbol);
             }
 
             if (code.m_bit_codes.size() < symbol + 1) {
@@ -122,6 +127,15 @@ ErrorOr<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
 
             next_code++;
         }
+
+        u32 sentinel = next_code;
+        code.m_first_symbol_of_length_after.append(sentinel);
+        VERIFY(code.m_first_symbol_of_length_after[code_length] == sentinel);
+
+        if (code.m_symbol_values.size() > first_symbol_index_at_length)
+            code.m_offset_to_first_symbol_index.append(first_symbol_index_at_length - first_code_at_length);
+        else
+            code.m_offset_to_first_symbol_index.append(0); // Never evaluated.
     }
 
     if (next_code != (1 << 15))
@@ -152,15 +166,14 @@ ErrorOr<u32> CanonicalCode::read_symbol(LittleEndianInputBitStream& stream) cons
         return symbol_value;
     }
 
-    auto code_bits = TRY(stream.read_bits<u16>(m_max_prefixed_code_length));
-    code_bits = fast_reverse16(code_bits, m_max_prefixed_code_length);
-    code_bits |= 1 << m_max_prefixed_code_length;
+    auto code_bits = TRY(stream.read_bits<u16>(m_max_prefixed_code_length + 1));
+    code_bits = fast_reverse16(code_bits, m_max_prefixed_code_length + 1);
 
-    for (size_t i = m_max_prefixed_code_length; i < 16; ++i) {
-        size_t index;
-        if (binary_search(m_symbol_codes.span(), code_bits, &index))
-            return m_symbol_values[index];
-
+    for (size_t i = m_max_prefixed_code_length + 1; i <= 15; ++i) {
+        if (code_bits < m_first_symbol_of_length_after[i]) {
+            auto symbol_index = (uint16_t)(m_offset_to_first_symbol_index[i] + code_bits);
+            return m_symbol_values[symbol_index];
+        }
         code_bits = code_bits << 1 | TRY(stream.read_bit());
     }
 
