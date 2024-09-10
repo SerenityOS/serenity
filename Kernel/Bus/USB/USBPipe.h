@@ -43,6 +43,7 @@ public:
     };
 
     Device const& device() const { return m_device; }
+    Device& device() { return m_device; }
 
     Type type() const { return m_type; }
     Direction direction() const { return m_direction; }
@@ -57,10 +58,10 @@ public:
 protected:
     friend class Device;
 
-    Pipe(USBController const& controller, Device const& device, Type type, Direction direction, u8 endpoint_number, u16 max_packet_size, NonnullOwnPtr<Memory::Region> dma_buffer);
+    Pipe(USBController const& controller, Device& device, Type type, Direction direction, u8 endpoint_number, u16 max_packet_size, NonnullOwnPtr<Memory::Region> dma_buffer);
 
     NonnullLockRefPtr<USBController> m_controller;
-    Device const& m_device;
+    Device& m_device;
 
     Type m_type;
     Direction m_direction;
@@ -76,58 +77,58 @@ protected:
 
 class ControlPipe : public Pipe {
 public:
-    static ErrorOr<NonnullOwnPtr<ControlPipe>> create(USBController const& controller, Device const& device, u8 endpoint_number, u16 max_packet_size, size_t buffer_size = PAGE_SIZE);
+    static ErrorOr<NonnullOwnPtr<ControlPipe>> create(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, size_t buffer_size = PAGE_SIZE);
 
     ErrorOr<size_t> submit_control_transfer(u8 request_type, u8 request, u16 value, u16 index, size_t length, void* data);
 
 private:
-    ControlPipe(USBController const& controller, Device const& device, u8 endpoint_number, u16 max_packet_size, NonnullOwnPtr<Memory::Region> dma_buffer);
+    ControlPipe(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, NonnullOwnPtr<Memory::Region> dma_buffer);
 };
 
 class BulkInPipe : public Pipe {
 public:
-    static ErrorOr<NonnullOwnPtr<BulkInPipe>> create(USBController const& controller, Device const& device, u8 endpoint_number, u16 max_packet_size, size_t buffer_size = PAGE_SIZE);
+    static ErrorOr<NonnullOwnPtr<BulkInPipe>> create(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, size_t buffer_size = PAGE_SIZE);
 
     ErrorOr<size_t> submit_bulk_in_transfer(size_t length, void* data);
     ErrorOr<size_t> submit_bulk_in_transfer(size_t length, UserOrKernelBuffer data);
 
 private:
-    BulkInPipe(USBController const& controller, Device const& device, u8 endpoint_number, u16 max_packet_size, NonnullOwnPtr<Memory::Region> dma_buffer);
+    BulkInPipe(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, NonnullOwnPtr<Memory::Region> dma_buffer);
 };
 
 class BulkOutPipe : public Pipe {
 public:
-    static ErrorOr<NonnullOwnPtr<BulkOutPipe>> create(USBController const& controller, Device const& device, u8 endpoint_number, u16 max_packet_size, size_t buffer_size = PAGE_SIZE);
+    static ErrorOr<NonnullOwnPtr<BulkOutPipe>> create(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, size_t buffer_size = PAGE_SIZE);
 
     ErrorOr<size_t> submit_bulk_out_transfer(size_t length, void const* data);
     ErrorOr<size_t> submit_bulk_out_transfer(size_t length, UserOrKernelBuffer const data);
 
 private:
-    BulkOutPipe(USBController const& controller, Device const& device, u8 endpoint_number, u16 max_packet_size, NonnullOwnPtr<Memory::Region> dma_buffer);
+    BulkOutPipe(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, NonnullOwnPtr<Memory::Region> dma_buffer);
 };
 
 class InterruptInPipe : public Pipe {
 public:
-    static ErrorOr<NonnullOwnPtr<InterruptInPipe>> create(USBController const& controller, Device const& device, u8 endpoint_number, u16 max_packet_size, u16 poll_interval, size_t buffer_size = PAGE_SIZE);
+    static ErrorOr<NonnullOwnPtr<InterruptInPipe>> create(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, u16 poll_interval, size_t buffer_size = PAGE_SIZE);
 
     ErrorOr<NonnullLockRefPtr<Transfer>> submit_interrupt_in_transfer(size_t length, u16 ms_interval, USBAsyncCallback callback);
 
     u16 poll_interval() const { return m_poll_interval; }
 
 private:
-    InterruptInPipe(USBController const& controller, Device const& device, u8 endpoint_number, u16 max_packet_size, u16 poll_interval, NonnullOwnPtr<Memory::Region> dma_pool);
+    InterruptInPipe(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, u16 poll_interval, NonnullOwnPtr<Memory::Region> dma_pool);
 
     u16 m_poll_interval;
 };
 
 class InterruptOutPipe : public Pipe {
 public:
-    static ErrorOr<NonnullOwnPtr<InterruptOutPipe>> create(USBController const& controller, Device const& device, u8 endpoint_number, u16 max_packet_size, u16 poll_interval, size_t buffer_size = PAGE_SIZE);
+    static ErrorOr<NonnullOwnPtr<InterruptOutPipe>> create(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, u16 poll_interval, size_t buffer_size = PAGE_SIZE);
 
     u16 poll_interval() const { return m_poll_interval; }
 
 private:
-    InterruptOutPipe(USBController const& controller, Device const& device, u8 endpoint_number, u16 max_packet_size, u16 poll_interval, NonnullOwnPtr<Memory::Region> dma_pool);
+    InterruptOutPipe(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, u16 poll_interval, NonnullOwnPtr<Memory::Region> dma_pool);
 
     u16 m_poll_interval;
 };
