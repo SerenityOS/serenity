@@ -113,6 +113,8 @@ public:
 
 class IPv4AddressCidr : public Details::IPAddressCidr<IPv4AddressCidr> {
 public:
+    constexpr static u8 MAX_LENGTH = 32;
+
     constexpr IPv4AddressCidr(IPv4Address address, u8 length)
         : IPAddressCidr(address, length)
     {
@@ -153,8 +155,6 @@ public:
         IPv4AddressCidr other_cidr = MUST(IPv4AddressCidr::create(other, length()));
         return first_address_of_subnet() == other_cidr.first_address_of_subnet();
     }
-
-    static u8 const MAX_LENGTH = 32;
 };
 
 template<>
