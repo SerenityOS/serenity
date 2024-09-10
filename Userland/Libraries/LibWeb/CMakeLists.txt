@@ -448,6 +448,7 @@ set(SOURCES
     HTML/Scripting/SerializedEnvironmentSettingsObject.cpp
     HTML/SelectedFile.cpp
     HTML/SelectItem.cpp
+    HTML/ServiceWorker.cpp
     HTML/ServiceWorkerContainer.cpp
     HTML/ServiceWorkerRegistration.cpp
     HTML/SessionHistoryEntry.cpp
