@@ -107,7 +107,28 @@ public:
         }
 
         CommandStatusWrapper status;
-        TRY(m_in_pipe->submit_bulk_in_transfer(sizeof(status), &status));
+        auto status_stage_result = m_in_pipe->submit_bulk_in_transfer(sizeof(status), &status);
+        if (status_stage_result.is_error()) {
+            auto error = status_stage_result.release_error();
+            if (error.code() == ESHUTDOWN) {
+                // Sequence diagram in usbmassbulk 5.3 and 6.7.* "On a STALL condition when receiving the CSW [...]"
+                TRY(m_in_pipe->clear_halt());
+
+                status_stage_result = m_in_pipe->submit_bulk_in_transfer(sizeof(status), &status);
+                if (status_stage_result.is_error()) {
+                    auto error = status_stage_result.release_error();
+                    if (error.code() == ESHUTDOWN) {
+                        // TODO: Perform reset recovery
+                        return EIO;
+                    }
+
+                    return error;
+                }
+            } else {
+                return error;
+            }
+        }
+
         if (status.signature != 0x53425355) {
             dmesgln("SCSI: Command status signature mismatch, expected 0x53425355, got {:#x}", status.signature);
             return EIO;
