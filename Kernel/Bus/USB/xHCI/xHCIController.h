@@ -35,6 +35,8 @@ public:
     virtual ErrorOr<size_t> submit_bulk_transfer(Transfer& transfer) override;
     virtual ErrorOr<void> submit_async_interrupt_transfer(NonnullLockRefPtr<Transfer> transfer, u16 ms_interval) override;
 
+    virtual ErrorOr<void> reset_pipe(USB::Device&, USB::Pipe&) override;
+
     virtual ErrorOr<void> initialize_device(USB::Device&) override;
 
     ErrorOr<void> initialize_endpoint_if_needed(Pipe const&);
@@ -1145,6 +1147,14 @@ private:
     ErrorOr<void> address_device(u8 slot, u64 input_context_address);
     ErrorOr<void> evaluate_context(u8 slot, u64 input_context_address);
     ErrorOr<void> configure_endpoint(u8 slot, u64 input_context_address);
+
+    enum class TransferStatePreserve {
+        No,
+        Yes,
+    };
+    ErrorOr<void> reset_endpoint(u8 slot, u8 endpoint, TransferStatePreserve);
+
+    ErrorOr<void> set_tr_dequeue_pointer(u8 slot, u8 endpoint, u8 stream_context_type, u16 stream, u64 new_tr_dequeue_pointer, u8 dequeue_cycle_state);
 
     ErrorOr<void> enqueue_transfer(u8 slot, u8 endpoint, Pipe::Direction direction, Span<TransferRequestBlock>, PendingTransfer&);
     void handle_transfer_event(TransferRequestBlock const&);

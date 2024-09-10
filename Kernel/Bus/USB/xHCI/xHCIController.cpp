@@ -483,6 +483,54 @@ ErrorOr<void> xHCIController::configure_endpoint(u8 slot, u64 input_context_addr
     return {};
 }
 
+ErrorOr<void> xHCIController::reset_endpoint(u8 slot, u8 endpoint, TransferStatePreserve transfer_state_preserve)
+{
+    // 4.6.8 Reset Endpoint
+    // Insert a Reset Endpoint Command TRB on the Command Ring and initialize the following fields:
+    // * TRB Type = Reset Endpoint Command (r refer to Table 6-91).
+    // * Transfer State Preserve (TSP) = Desired Transfer State result.
+    // * Endpoint ID = ID of the target endpoint.
+    // * Slot ID = ID of the target Device Slot.
+    TransferRequestBlock transfer_request_block {};
+    transfer_request_block.reset_endpoint_command.transfer_request_block_type = TransferRequestBlock::TRBType::Reset_Endpoint_Command;
+    transfer_request_block.reset_endpoint_command.transfer_state_preserve = transfer_state_preserve == TransferStatePreserve::Yes ? 1 : 0;
+    transfer_request_block.reset_endpoint_command.endpoint_id = endpoint;
+    transfer_request_block.reset_endpoint_command.slot_id = slot;
+    execute_command(transfer_request_block);
+    if (transfer_request_block.command_completion_event.completion_code != TransferRequestBlock::CompletionCode::Success) {
+        dmesgln_pci(*this, "Reset Endpoint command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
+        return EINVAL;
+    }
+    return {};
+}
+
+ErrorOr<void> xHCIController::set_tr_dequeue_pointer(u8 slot, u8 endpoint, u8 stream_context_type, u16 stream, u64 new_tr_dequeue_pointer, u8 dequeue_cycle_state)
+{
+    // 4.6.10 Set TR Dequeue Pointer
+    // Insert a Set TR Dequeue Pointer Command on the Command Ring and initialize the following fields:
+    // * TRB Type = Set TR Dequeue Pointer Command (refer to Table 6-91).
+    // * Endpoint ID = ID of the target endpoint.
+    // * Stream ID = ID of the target Stream Context or ‘0’ if MaxPStreams = ‘0’.
+    // * Slot ID = ID of the target Device Slot.
+    // * New TR Dequeue Pointer = The new TR Dequeue Pointer field value for the target endpoint.
+    // * Dequeue Cycle State (DCS) = The state of the xHCI CCS flag for the TRB pointed to by the TR Dequeue Pointer field.
+    TransferRequestBlock transfer_request_block {};
+    transfer_request_block.set_tr_dequeue_pointer_command.transfer_request_block_type = TransferRequestBlock::TRBType::Set_TR_Dequeue_Pointer_Command;
+    transfer_request_block.set_tr_dequeue_pointer_command.endpoint_id = endpoint;
+    transfer_request_block.set_tr_dequeue_pointer_command.stream_id = stream;
+    transfer_request_block.set_tr_dequeue_pointer_command.slot_id = slot;
+    transfer_request_block.set_tr_dequeue_pointer_command.new_tr_dequeue_pointer_low = new_tr_dequeue_pointer >> 4;
+    transfer_request_block.set_tr_dequeue_pointer_command.new_tr_dequeue_pointer_high = new_tr_dequeue_pointer >> 32;
+    transfer_request_block.set_tr_dequeue_pointer_command.dequeue_cycle_state = dequeue_cycle_state;
+    transfer_request_block.set_tr_dequeue_pointer_command.stream_context_type = stream_context_type;
+    execute_command(transfer_request_block);
+    if (transfer_request_block.command_completion_event.completion_code != TransferRequestBlock::CompletionCode::Success) {
+        dmesgln_pci(*this, "Set TR Dequeue Pointer command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
+        return EINVAL;
+    }
+    return {};
+}
+
 ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
 {
     // 4. After the port successfully reaches the Enabled state, system software shall obtain a Device Slot for the newly attached device using an Enable Slot Command,
@@ -885,6 +933,47 @@ ErrorOr<void> xHCIController::submit_async_interrupt_transfer(NonnullLockRefPtr<
     NonnullOwnPtr<PeriodicPendingTransfer> pending_transfer = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PeriodicPendingTransfer({}, move(transfer_request_blocks), move(transfer))));
     TRY(enqueue_transfer(pending_transfer->original_transfer->pipe().device().controller_identifier(), pending_transfer->original_transfer->pipe().endpoint_number(), pending_transfer->original_transfer->pipe().direction(), pending_transfer->transfer_request_blocks, *pending_transfer));
     TRY(m_active_periodic_transfers.try_append(move(pending_transfer)));
+
+    return {};
+}
+
+ErrorOr<void> xHCIController::reset_pipe(USB::Device& device, USB::Pipe& pipe)
+{
+    u8 slot = device.controller_identifier();
+    u8 endpoint_id = endpoint_index(pipe.endpoint_number(), pipe.direction());
+
+    // 3rd "Note:" in 4.6.8 Reset Endpoint
+
+    // Reset Endpoint Command (TSP = ‘0’).
+    TRY(reset_endpoint(slot, endpoint_id, TransferStatePreserve::No));
+
+    // If the device was behind a TT and it is a Control or Bulk endpoint:
+    //   * TODO: Issue a ClearFeature(CLEAR_TT_BUFFER) request to the hub.
+
+    // If not a Control endpoint:
+    //   * Issue a ClearFeature(ENDPOINT_HALT) request to device.
+    if (pipe.type() != Pipe::Type::Control) {
+        TRY(device.control_transfer(USB_REQUEST_TYPE_STANDARD | USB_REQUEST_RECIPIENT_ENDPOINT | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
+            USB_REQUEST_CLEAR_FEATURE, USB_FEATURE_ENDPOINT_HALT, pipe.endpoint_address(), 0, nullptr));
+    }
+
+    auto& slot_state = m_slots_state[slot - 1];
+    auto& endpoint_ring = slot_state.endpoint_rings[endpoint_id - 1];
+
+    // Issue a Set TR Dequeue Pointer Command, clear the endpoint state and reference the TRB to start.
+
+    // TODO: Set the Stream ID and Stream Context Type if streams are enabled for the endpoint once we support streams.
+    TRY(set_tr_dequeue_pointer(slot, endpoint_id, 0, 0, endpoint_ring.ring_paddr(), 1));
+
+    endpoint_ring.enqueue_index = 0;
+    endpoint_ring.pending_transfers.clear();
+    endpoint_ring.producer_cycle_state = 1;
+    endpoint_ring.free_transfer_request_blocks = endpoint_ring_size - 1; // -1 to exclude the Link TRB
+    for (size_t i = 0; i < endpoint_ring_size - 1; i++)
+        endpoint_ring.ring_vaddr()[i] = {};
+
+    // Ring Doorbell to restart the pipe.
+    ring_endpoint_doorbell(slot, pipe.endpoint_number(), pipe.direction());
 
     return {};
 }

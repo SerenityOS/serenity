@@ -48,12 +48,15 @@ public:
     Type type() const { return m_type; }
     Direction direction() const { return m_direction; }
 
+    u8 endpoint_address() const { return (direction() == Direction::In ? 0x80 : 0) | m_endpoint_number; }
     u8 endpoint_number() const { return m_endpoint_number; }
     u16 max_packet_size() const { return m_max_packet_size; }
     bool data_toggle() const { return m_data_toggle; }
 
     void set_max_packet_size(u16 max_size) { m_max_packet_size = max_size; }
     void set_toggle(bool toggle) { m_data_toggle = toggle; }
+
+    ErrorOr<void> clear_halt();
 
 protected:
     friend class Device;

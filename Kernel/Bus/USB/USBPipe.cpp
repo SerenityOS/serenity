@@ -25,6 +25,11 @@ Pipe::Pipe(USBController const& controller, Device& device, Type type, Direction
 {
 }
 
+ErrorOr<void> Pipe::clear_halt()
+{
+    return m_controller->reset_pipe(m_device, *this);
+}
+
 ErrorOr<NonnullOwnPtr<ControlPipe>> ControlPipe::create(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, size_t buffer_size)
 {
     auto dma_buffer = TRY(MM.allocate_dma_buffer_pages(TRY(Memory::page_round_up(buffer_size)), "USB device DMA buffer"sv, Memory::Region::Access::ReadWrite));
