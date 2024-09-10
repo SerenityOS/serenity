@@ -1161,7 +1161,7 @@ void Document::update_layout()
     Layout::LayoutState layout_state;
 
     {
-        Layout::BlockFormattingContext root_formatting_context(layout_state, *m_layout_root, nullptr);
+        Layout::BlockFormattingContext root_formatting_context(layout_state, Layout::LayoutMode::Normal, *m_layout_root, nullptr);
 
         auto& viewport = static_cast<Layout::Viewport&>(*m_layout_root);
         auto& viewport_state = layout_state.get_mutable(viewport);
@@ -1174,7 +1174,6 @@ void Document::update_layout()
         }
 
         root_formatting_context.run(
-            Layout::LayoutMode::Normal,
             Layout::AvailableSpace(
                 Layout::AvailableSize::make_definite(viewport_rect.width()),
                 Layout::AvailableSize::make_definite(viewport_rect.height())));
