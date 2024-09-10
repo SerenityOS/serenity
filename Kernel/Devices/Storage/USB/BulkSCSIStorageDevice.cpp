@@ -11,11 +11,9 @@
 
 namespace Kernel::USB {
 
-BulkSCSIStorageDevice::BulkSCSIStorageDevice(BulkSCSIInterface& interface, BulkOutPipe& out_pipe, BulkInPipe& in_pipe, LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, size_t sector_size, u64 max_addressable_block)
+BulkSCSIStorageDevice::BulkSCSIStorageDevice(BulkSCSIInterface& interface, LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, size_t sector_size, u64 max_addressable_block)
     : StorageDevice(logical_unit_number_address, hardware_relative_controller_id, sector_size, max_addressable_block)
     , m_interface(interface)
-    , m_out_pipe(out_pipe)
-    , m_in_pipe(in_pipe)
 {
     // Note: If this fails, it only means that we may be inefficient in our way
     //       of talking to the device.
@@ -32,7 +30,7 @@ ErrorOr<void> BulkSCSIStorageDevice::query_characteristics()
     inquiry_command.page_code = SCSI::VitalProductDataPageCode::SupportedVitalProductDataPages;
     inquiry_command.allocation_length = sizeof(vital_product_page_buffer);
 
-    auto status = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(m_out_pipe, m_in_pipe, inquiry_command, &vital_product_page, sizeof(vital_product_page_buffer)));
+    auto status = TRY(m_interface.send_scsi_command<SCSIDataDirection::DataToInitiator>(inquiry_command, &vital_product_page, sizeof(vital_product_page_buffer)));
 
     if (status.status != CSWStatus::Passed) {
         dbgln("SCSI/BBB: Inquiry failed to inquire supported vital product data pages with code {}", to_underlying(status.status));
@@ -75,7 +73,7 @@ ErrorOr<void> BulkSCSIStorageDevice::query_characteristics()
     inquiry_command.page_code = SCSI::VitalProductDataPageCode::BlockLimits;
     SCSI::BlockLimitsPage block_limits_page {};
     inquiry_command.allocation_length = sizeof(SCSI::BlockLimitsPage);
-    status = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(m_out_pipe, m_in_pipe, inquiry_command, &block_limits_page, sizeof(SCSI::BlockLimitsPage)));
+    status = TRY(m_interface.send_scsi_command<SCSIDataDirection::DataToInitiator>(inquiry_command, &block_limits_page, sizeof(SCSI::BlockLimitsPage)));
     if (status.status != CSWStatus::Passed) {
         dbgln("SCSI/BBB: Inquiry failed to inquire block limits with code {}", to_underlying(status.status));
         // FIXME: Maybe request sense here
@@ -164,7 +162,7 @@ ErrorOr<void> BulkSCSIStorageDevice::do_read(u32 block_index, u32 block_count, U
 
         read_command.transfer_length = transfer_length_bytes / block_size();
 
-        auto status = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(m_out_pipe, m_in_pipe, read_command, destination_buffer, transfer_length_bytes));
+        auto status = TRY(m_interface.send_scsi_command<SCSIDataDirection::DataToInitiator>(read_command, destination_buffer, transfer_length_bytes));
 
         if (status.status != CSWStatus::Passed) {
             // FIXME: Actually handle the error
@@ -200,7 +198,7 @@ ErrorOr<void> BulkSCSIStorageDevice::do_write(u32 block_index, u32 block_count, 
 
         read_command.transfer_length = transfer_length_bytes / block_size();
 
-        auto status = TRY(send_scsi_command<SCSIDataDirection::DataToTarget>(m_out_pipe, m_in_pipe, read_command, source_buffer, transfer_length_bytes));
+        auto status = TRY(m_interface.send_scsi_command<SCSIDataDirection::DataToTarget>(read_command, source_buffer, transfer_length_bytes));
 
         if (status.status != CSWStatus::Passed) {
             // FIXME: Actually handle the error

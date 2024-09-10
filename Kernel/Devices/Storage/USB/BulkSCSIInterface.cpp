@@ -21,12 +21,17 @@ BulkSCSIInterface::BulkSCSIInterface(USB::Device& device, NonnullOwnPtr<BulkInPi
 
 ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> BulkSCSIInterface::initialize(USB::Device& device, NonnullOwnPtr<BulkInPipe> in_pipe, NonnullOwnPtr<BulkOutPipe> out_pipe)
 {
+    auto bulk_scsi_interface = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) BulkSCSIInterface(
+        device,
+        move(in_pipe),
+        move(out_pipe))));
+
     SCSI::Inquiry inquiry_command {};
     inquiry_command.allocation_length = sizeof(SCSI::StandardInquiryData);
 
     SCSI::StandardInquiryData inquiry_data;
 
-    auto inquiry_response = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(*out_pipe, *in_pipe, inquiry_command, &inquiry_data, sizeof(inquiry_data)));
+    auto inquiry_response = TRY(bulk_scsi_interface->send_scsi_command<SCSIDataDirection::DataToInitiator>(inquiry_command, &inquiry_data, sizeof(inquiry_data)));
     if (inquiry_response.status != CSWStatus::Passed) {
         dmesgln("SCSI/BBB: Inquiry failed with code {}", to_underlying(inquiry_response.status));
         return EIO;
@@ -61,7 +66,7 @@ ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> BulkSCSIInterface::initialize(USB:
     constexpr size_t max_tries = 5;
     while (tries < max_tries) {
         SCSI::TestUnitReady test_unit_ready_command {};
-        auto test_unit_ready_response = TRY(send_scsi_command<SCSIDataDirection::NoData>(*out_pipe, *in_pipe, test_unit_ready_command));
+        auto test_unit_ready_response = TRY(bulk_scsi_interface->send_scsi_command<SCSIDataDirection::NoData>(test_unit_ready_command));
 
         if (test_unit_ready_response.status == CSWStatus::Passed)
             break;
@@ -71,7 +76,7 @@ ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> BulkSCSIInterface::initialize(USB:
 
         request_sense_command.allocation_length = sizeof(sense_data);
 
-        auto request_sense_response = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(*out_pipe, *in_pipe, request_sense_command, &sense_data, sizeof(sense_data)));
+        auto request_sense_response = TRY(bulk_scsi_interface->send_scsi_command<SCSIDataDirection::DataToInitiator>(request_sense_command, &sense_data, sizeof(sense_data)));
         if (request_sense_response.status != CSWStatus::Passed) {
             dmesgln("SCSI/BBB: Request Sense failed with code {}, possibly unimplemented", to_underlying(request_sense_response.status));
             return EIO;
@@ -91,7 +96,7 @@ ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> BulkSCSIInterface::initialize(USB:
     }
 
     SCSI::ReadCapacity10Parameters capacity;
-    auto status = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(*out_pipe, *in_pipe, SCSI::ReadCapacity10 {}, &capacity, sizeof(capacity)));
+    auto status = TRY(bulk_scsi_interface->send_scsi_command<SCSIDataDirection::DataToInitiator>(SCSI::ReadCapacity10 {}, &capacity, sizeof(capacity)));
 
     if (status.data_residue != 0) {
         dmesgln("SCSI/BBB: Read Capacity returned with non-zero data residue; Rejecting");
@@ -108,11 +113,6 @@ ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> BulkSCSIInterface::initialize(USB:
     dmesgln("    Block Count: {}", capacity.block_count);
     dmesgln("    Total Size: {}MiB", (u64)capacity.block_size * capacity.block_count / MiB);
 
-    auto bulk_scsi_interface = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) BulkSCSIInterface(
-        device,
-        move(in_pipe),
-        move(out_pipe))));
-
     StorageDevice::LUNAddress lun = {
         device.controller().storage_controller_id(),
         device.address(),
@@ -122,8 +122,6 @@ ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> BulkSCSIInterface::initialize(USB:
 
     auto storage_device = TRY(DeviceManagement::try_create_device<BulkSCSIStorageDevice>(
         *bulk_scsi_interface,
-        *bulk_scsi_interface->m_out_pipe,
-        *bulk_scsi_interface->m_in_pipe,
         lun,
         device.address(), // FIXME: Figure out a better ID to put here
         capacity.block_size,
