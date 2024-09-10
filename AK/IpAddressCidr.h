@@ -63,7 +63,7 @@ public:
         if (!ip_address.has_value())
             return IPAddressCidrError::StringParsingFailed;
 
-        Optional<u8> length = parts[1].to_number<u8>();
+        auto length = parts[1].to_number<u8>();
         if (!length.has_value())
             return IPAddressCidrError::StringParsingFailed;
 
@@ -72,29 +72,15 @@ public:
 
 #ifdef KERNEL
     ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const
+    {
+        return Kernel::KString::formatted("{}/{}", m_address, m_length);
+    }
 #else
     ErrorOr<String> to_string() const
-#endif
     {
-        StringBuilder builder;
-
-        auto address_string = TRY(m_address.to_string());
-
-#ifdef KERNEL
-        TRY(builder.try_append(address_string->view()));
-#else
-        TRY(builder.try_append(address_string));
-#endif
-
-        TRY(builder.try_append('/'));
-        TRY(builder.try_appendff("{}", m_length));
-
-#ifdef KERNEL
-        return Kernel::KString::try_create(builder.string_view());
-#else
-        return builder.to_string();
-#endif
+        return String::formatted("{}/{}", m_address, m_length);
     }
+#endif
 
     constexpr bool operator==(IPAddressCidr const& other) const = default;
     constexpr bool operator!=(IPAddressCidr const& other) const = default;
