@@ -67,7 +67,7 @@ public:
         if (!length.has_value())
             return IPAddressCidrError::StringParsingFailed;
 
-        return IPAddressCidr::create(ip_address.value(), length.release_value());
+        return IPAddressCidr::create(ip_address.release_value(), length.release_value());
     }
 
 #ifdef KERNEL
