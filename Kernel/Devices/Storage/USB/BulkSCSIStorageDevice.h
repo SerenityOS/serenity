@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <Kernel/Bus/USB/USBPipe.h>
 #include <Kernel/Devices/Storage/StorageDevice.h>
 
 namespace Kernel::USB {
@@ -16,12 +15,10 @@ class BulkSCSIInterface;
 
 class BulkSCSIStorageDevice : public StorageDevice {
 public:
-    BulkSCSIStorageDevice(BulkSCSIInterface&, BulkOutPipe&, BulkInPipe&, LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, size_t sector_size, u64 max_addressable_block);
+    BulkSCSIStorageDevice(BulkSCSIInterface&, LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, size_t sector_size, u64 max_addressable_block);
 
 private:
     BulkSCSIInterface& m_interface;
-    BulkOutPipe& m_out_pipe;
-    BulkInPipe& m_in_pipe;
 
     virtual void start_request(AsyncBlockDeviceRequest&) override;
     virtual CommandSet command_set() const override { return CommandSet::SCSI; }
