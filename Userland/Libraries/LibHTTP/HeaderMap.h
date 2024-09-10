@@ -28,7 +28,7 @@ public:
 
     [[nodiscard]] Optional<ByteString> get(ByteString const& name) const
     {
-        return m_map.get(name);
+        return m_map.get(name).copy();
     }
 
     [[nodiscard]] Vector<Header> const& headers() const

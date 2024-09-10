@@ -559,7 +559,7 @@ void CookieJar::TransientStorage::set_cookie(CookieStorageKey key, Web::Cookie::
 
 Optional<Web::Cookie::Cookie> CookieJar::TransientStorage::get_cookie(CookieStorageKey const& key)
 {
-    return m_cookies.get(key);
+    return m_cookies.get(key).copy();
 }
 
 UnixDateTime CookieJar::TransientStorage::purge_expired_cookies()

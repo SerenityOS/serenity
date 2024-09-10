@@ -586,7 +586,7 @@ Shell::Frame::~Frame()
 
 Optional<ByteString> Shell::resolve_alias(StringView name) const
 {
-    return m_aliases.get(name);
+    return m_aliases.get(name).copy();
 }
 
 Optional<Shell::RunnablePath> Shell::runnable_path_for(StringView name)

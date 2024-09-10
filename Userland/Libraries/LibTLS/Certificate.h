@@ -201,17 +201,17 @@ public:
 
     Optional<String> get(StringView key) const
     {
-        return m_members.get(key);
+        return m_members.get(key).copy();
     }
 
     Optional<String> get(AttributeType key) const
     {
-        return m_members.get(enum_value(key));
+        return m_members.get(enum_value(key)).copy();
     }
 
     Optional<String> get(ObjectClass key) const
     {
-        return m_members.get(enum_value(key));
+        return m_members.get(enum_value(key)).copy();
     }
 
     String common_name() const

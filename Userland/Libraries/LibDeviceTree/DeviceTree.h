@@ -104,7 +104,7 @@ public:
     bool has_child(StringView child) const { return m_children.contains(child); }
     bool child(StringView name) const { return has_property(name) || has_child(name); }
 
-    Optional<DeviceTreeProperty> get_property(StringView prop) const { return m_properties.get(prop); }
+    Optional<DeviceTreeProperty> get_property(StringView prop) const { return m_properties.get(prop).copy(); }
 
     // FIXME: The spec says that @address parts of the name should be ignored when looking up nodes
     //        when they do not appear in the queried name, and all nodes with the same name should be returned

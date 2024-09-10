@@ -28,7 +28,7 @@ Optional<OpCode> instruction_from_name(StringView name)
             Names::instructions_by_name.set(entry.value, entry.key);
     }
 
-    return Names::instructions_by_name.get(name);
+    return Names::instructions_by_name.get(name).copy();
 }
 
 void Printer::print_indent()

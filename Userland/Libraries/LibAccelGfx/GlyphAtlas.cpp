@@ -80,7 +80,7 @@ void GlyphAtlas::update(HashMap<Gfx::Font const*, HashTable<u32>> const& unique_
 Optional<Gfx::IntRect> GlyphAtlas::get_glyph_rect(Gfx::Font const* font, u32 code_point) const
 {
     auto atlas_key = GlyphsTextureKey { font, code_point };
-    return m_glyphs_texture_map.get(atlas_key);
+    return m_glyphs_texture_map.get(atlas_key).copy();
 }
 
 }

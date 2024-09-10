@@ -248,6 +248,37 @@ TEST_CASE(move_optional_reference)
     EXPECT_EQ(x.has_value(), false);
 }
 
+TEST_CASE(optional_reference_to_optional)
+{
+    Optional<int&> x;
+    EXPECT_EQ(x.has_value(), false);
+    int c = 3;
+    x = c;
+    EXPECT_EQ(x.has_value(), true);
+    EXPECT_EQ(x.value(), 3);
+
+    auto y = x.copy();
+    EXPECT_EQ(y.has_value(), true);
+    EXPECT_EQ(y.value(), 3);
+
+    y = 4;
+    EXPECT_EQ(x.value(), 3);
+    EXPECT_EQ(y.value(), 4);
+    c = 5;
+    EXPECT_EQ(x.value(), 5);
+    EXPECT_EQ(y.value(), 4);
+
+    Optional<int> z = *x;
+    EXPECT_EQ(z.has_value(), true);
+    EXPECT_EQ(z.value(), 5);
+    z = 6;
+    EXPECT_EQ(x.value(), 5);
+    EXPECT_EQ(z.value(), 6);
+    c = 7;
+    EXPECT_EQ(x.value(), 7);
+    EXPECT_EQ(z.value(), 6);
+}
+
 TEST_CASE(short_notation_reference)
 {
     StringView test = "foo"sv;
