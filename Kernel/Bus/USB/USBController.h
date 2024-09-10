@@ -28,6 +28,8 @@ public:
     virtual ErrorOr<size_t> submit_bulk_transfer(Transfer& transfer) = 0;
     virtual ErrorOr<void> submit_async_interrupt_transfer(NonnullLockRefPtr<Transfer> transfer, u16 ms_interval) = 0;
 
+    virtual ErrorOr<void> reset_pipe(Device&, Pipe&);
+
     virtual ErrorOr<void> initialize_device(Device&) = 0;
 
     u32 storage_controller_id() const { return m_storage_controller_id; }
