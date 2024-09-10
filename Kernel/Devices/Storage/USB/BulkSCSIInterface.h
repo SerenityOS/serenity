@@ -64,11 +64,15 @@ enum class SCSIDataDirection {
     NoData
 };
 
-template<SCSIDataDirection Direction, typename Command, typename CommandData = void>
+template<SCSIDataDirection Direction, typename Command, typename Data = nullptr_t>
+requires(IsNullPointer<Data>
+    || IsPointer<Data>
+    || (Direction == SCSIDataDirection::DataToInitiator && IsSame<Data, UserOrKernelBuffer>)
+    || (Direction == SCSIDataDirection::DataToTarget && IsSameIgnoringCV<Data, UserOrKernelBuffer>))
 static ErrorOr<CommandStatusWrapper> send_scsi_command(
     USB::BulkOutPipe& out_pipe, USB::BulkInPipe& in_pipe,
     Command const& command,
-    Conditional<Direction == SCSIDataDirection::DataToInitiator, CommandData, CommandData const>* data = nullptr, size_t data_size = 0)
+    Data data = nullptr, size_t data_size = 0)
 {
     CommandBlockWrapper command_block {};
     command_block.transfer_length = data_size;
@@ -82,52 +86,16 @@ static ErrorOr<CommandStatusWrapper> send_scsi_command(
     TRY(out_pipe.submit_bulk_out_transfer(sizeof(command_block), &command_block));
 
     if constexpr (Direction == SCSIDataDirection::DataToInitiator) {
+        static_assert(!IsNullPointer<Data>);
+        VERIFY(data_size != 0);
         TRY(in_pipe.submit_bulk_in_transfer(data_size, data));
     } else if constexpr (Direction == SCSIDataDirection::DataToTarget) {
+        static_assert(!IsNullPointer<Data>);
+        VERIFY(data_size != 0);
         TRY(out_pipe.submit_bulk_out_transfer(data_size, data));
     } else {
-        static_assert(IsSame<CommandData, void>);
+        static_assert(IsNullPointer<Data>);
         VERIFY(data_size == 0);
-        VERIFY(data == nullptr);
-    }
-
-    CommandStatusWrapper status;
-    TRY(in_pipe.submit_bulk_in_transfer(sizeof(status), &status));
-    if (status.signature != 0x53425355) {
-        dmesgln("SCSI: Command status signature mismatch, expected 0x53425355, got {:#x}", status.signature);
-        return EIO;
-    }
-
-    if (status.tag != command_block.tag) {
-        dmesgln("SCSI: Command tag mismatch, expected {}, got {}", command_block.tag, status.tag);
-        return EIO;
-    }
-
-    return status;
-}
-
-template<SCSIDataDirection Direction, typename Command>
-requires(Direction != SCSIDataDirection::NoData)
-static ErrorOr<CommandStatusWrapper> send_scsi_command(
-    USB::BulkOutPipe& out_pipe, USB::BulkInPipe& in_pipe,
-    Command const& command,
-    Conditional<Direction == SCSIDataDirection::DataToInitiator, UserOrKernelBuffer, UserOrKernelBuffer const> data, size_t data_size)
-{
-    CommandBlockWrapper command_block {};
-    command_block.transfer_length = data_size;
-    if constexpr (Direction == SCSIDataDirection::DataToInitiator)
-        command_block.direction = CBWDirection::DataIn;
-    else
-        command_block.direction = CBWDirection::DataOut;
-
-    command_block.set_command(command);
-
-    TRY(out_pipe.submit_bulk_out_transfer(sizeof(command_block), &command_block));
-
-    if constexpr (Direction == SCSIDataDirection::DataToInitiator) {
-        TRY(in_pipe.submit_bulk_in_transfer(data_size, data));
-    } else if constexpr (Direction == SCSIDataDirection::DataToTarget) {
-        TRY(out_pipe.submit_bulk_out_transfer(data_size, data));
     }
 
     CommandStatusWrapper status;
