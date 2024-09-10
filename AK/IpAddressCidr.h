@@ -186,6 +186,8 @@ struct Formatter<IPv4AddressCidr> : Formatter<StringView> {
 
 class IPv6AddressCidr : public Details::IPAddressCidr<IPv6AddressCidr> {
 public:
+    constexpr static u8 MAX_LENGTH = 128;
+
     constexpr IPv6AddressCidr(IPv6Address address, u8 length)
         : IPAddressCidr(address, length)
     {
@@ -206,7 +208,7 @@ public:
             }
         }
 
-        return address;
+        return IPv6Address(address);
     }
 
     constexpr IPv6Address last_address_of_subnet() const
@@ -232,7 +234,7 @@ public:
             address[i] = address[i] | inverse_address_mask[i];
         }
 
-        return address;
+        return IPv6Address(address);
     }
 
     bool contains(IPv6Address other) const
@@ -240,8 +242,6 @@ public:
         IPv6AddressCidr other_cidr = IPv6AddressCidr::create(other, length()).value();
         return first_address_of_subnet() == other_cidr.first_address_of_subnet();
     }
-
-    static u8 const MAX_LENGTH = 128;
 };
 
 template<>
