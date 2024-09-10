@@ -1,4 +1,5 @@
 set(AK_TEST_SOURCES
+    TestAKMath.cpp
     TestAllOf.cpp
     TestAnyOf.cpp
     TestArbitrarySizedEnum.cpp
