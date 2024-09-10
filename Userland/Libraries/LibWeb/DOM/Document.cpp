@@ -1174,7 +1174,6 @@ void Document::update_layout()
         }
 
         root_formatting_context.run(
-            *m_layout_root,
             Layout::LayoutMode::Normal,
             Layout::AvailableSpace(
                 Layout::AvailableSize::make_definite(viewport_rect.width()),
