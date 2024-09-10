@@ -109,7 +109,7 @@ public:
     }
 
     template<typename U>
-    requires(IsConstructible<T, U const&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional>) ALWAYS_INLINE explicit Optional(Optional<U> const& other)
+    requires(IsConstructible<T, U const&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional> && !IsLvalueReference<U>) ALWAYS_INLINE explicit Optional(Optional<U> const& other)
         : m_has_value(other.m_has_value)
     {
         if (other.has_value())
@@ -117,7 +117,7 @@ public:
     }
 
     template<typename U>
-    requires(IsConstructible<T, U &&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional>) ALWAYS_INLINE explicit Optional(Optional<U>&& other)
+    requires(IsConstructible<T, U &&> && !IsSpecializationOf<T, Optional> && !IsSpecializationOf<U, Optional> && !IsLvalueReference<U>) ALWAYS_INLINE explicit Optional(Optional<U>&& other)
         : m_has_value(other.m_has_value)
     {
         if (other.has_value())
@@ -475,11 +475,15 @@ public:
     ALWAYS_INLINE RawPtr<RemoveReference<T>> operator->() { return &value(); }
 
     // Conversion operators from Optional<T&> -> Optional<T>
-    ALWAYS_INLINE operator Optional<RemoveCVReference<T>>() const
+    ALWAYS_INLINE explicit operator Optional<RemoveCVReference<T>>() const
     {
         if (has_value())
             return Optional<RemoveCVReference<T>>(value());
         return {};
+    }
+    ALWAYS_INLINE constexpr Optional<RemoveCVReference<T>> copy() const
+    {
+        return static_cast<Optional<RemoveCVReference<T>>>(*this);
     }
 
     template<typename Callback>

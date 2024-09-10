@@ -102,7 +102,7 @@ void ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediate
     SpinlockLocker lock(m_lock);
     if (!m_did_unblock) {
         m_did_unblock = true;
-        m_mac_address = move(addr);
+        m_mac_address = addr.copy();
     }
 }
 

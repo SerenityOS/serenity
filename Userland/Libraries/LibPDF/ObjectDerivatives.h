@@ -121,7 +121,7 @@ public:
     template<typename... Args>
     bool contains_any_of(Args&&... keys) const { return (m_map.contains(keys) || ...); }
 
-    ALWAYS_INLINE Optional<Value> get(DeprecatedFlyString const& key) const { return m_map.get(key); }
+    ALWAYS_INLINE Optional<Value> get(DeprecatedFlyString const& key) const { return m_map.get(key).copy(); }
 
     Value get_value(DeprecatedFlyString const& key) const
     {

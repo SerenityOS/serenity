@@ -468,7 +468,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     // 38. Let inputOrInitBody be initBody if it is non-null; otherwise inputBody.
     Optional<Infrastructure::Request::BodyType> input_or_init_body = init_body
         ? Infrastructure::Request::BodyType { *init_body }
-        : input_body;
+        : input_body.copy();
 
     // 39. If inputOrInitBody is non-null and inputOrInitBody’s source is null, then:
     // FIXME: The spec doesn't check if inputOrInitBody is a body before accessing source.

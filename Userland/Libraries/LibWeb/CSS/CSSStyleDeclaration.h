@@ -73,7 +73,7 @@ public:
 
     Vector<StyleProperty> const& properties() const { return m_properties; }
     HashMap<FlyString, StyleProperty> const& custom_properties() const { return m_custom_properties; }
-    Optional<StyleProperty> custom_property(FlyString const& custom_property_name) const { return m_custom_properties.get(custom_property_name); }
+    Optional<StyleProperty> custom_property(FlyString const& custom_property_name) const { return m_custom_properties.get(custom_property_name).copy(); }
     size_t custom_property_count() const { return m_custom_properties.size(); }
 
     virtual String serialized() const final override;

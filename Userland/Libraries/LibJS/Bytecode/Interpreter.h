@@ -76,7 +76,7 @@ public:
 
     Executable& current_executable() { return *m_current_executable; }
     Executable const& current_executable() const { return *m_current_executable; }
-    Optional<size_t> program_counter() const { return m_program_counter; }
+    Optional<size_t> program_counter() const { return m_program_counter.copy(); }
 
     ExecutionContext& running_execution_context() { return *m_running_execution_context; }
 

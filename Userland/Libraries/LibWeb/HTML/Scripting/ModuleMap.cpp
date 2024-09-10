@@ -41,7 +41,7 @@ bool ModuleMap::is(URL::URL const& url, ByteString const& type, EntryType entry_
 
 Optional<ModuleMap::Entry> ModuleMap::get(URL::URL const& url, ByteString const& type) const
 {
-    return m_values.get({ url, type });
+    return m_values.get({ url, type }).copy();
 }
 
 AK::HashSetResult ModuleMap::set(URL::URL const& url, ByteString const& type, Entry entry)
