@@ -51,8 +51,8 @@ public:
     IPv4Address const& destination() const { return m_destination; }
     void set_destination(IPv4Address const& address) { m_destination = address; }
 
-    void* payload() { return this + 1; }
-    void const* payload() const { return this + 1; }
+    void* payload() { return &m_payload[0]; }
+    void const* payload() const { return &m_payload[0]; }
 
     u16 flags_and_fragment() const { return m_flags_and_fragment; }
     u16 fragment_offset() const { return ((u16)m_flags_and_fragment & 0x1fff); }
@@ -97,6 +97,7 @@ private:
     NetworkOrdered<u16> m_checksum;
     IPv4Address m_source;
     IPv4Address m_destination;
+    u8 m_payload[0];
 };
 
 static_assert(AssertSize<IPv4Packet, 20>());
