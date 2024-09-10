@@ -239,7 +239,7 @@ public:
 
     bool contains(IPv6Address other) const
     {
-        IPv6AddressCidr other_cidr = IPv6AddressCidr::create(other, length()).value();
+        IPv6AddressCidr other_cidr = IPv6AddressCidr::create(other, length()).release_value();
         return first_address_of_subnet() == other_cidr.first_address_of_subnet();
     }
 };
