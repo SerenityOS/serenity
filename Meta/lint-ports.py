@@ -12,7 +12,7 @@ from tempfile import NamedTemporaryFile
 # and captures "bash" in group 1, "bash/" in group 2, "<spaces>" in group 3, "GNU Bash" in group 4, "5.0" in group 5
 # and "https://www.gnu.org/software/bash/" in group 6.
 PORT_TABLE_REGEX = re.compile(
-    r'^\| \[`([^`]+)`\]\(([^\)]+)\)([^\|]+) \| ([^\|]+) \| ([^\|]+?) \| ([^\|]+) \|+$', re.MULTILINE
+    r'^\| \[`([^`]+)`\]\(([^\)]+)\)([^\|]+)\| ([^\|]+) \| ([^\|]+?) \| ([^\|]+) \|+$', re.MULTILINE
 )
 
 # Matches non-abbreviated git hashes
