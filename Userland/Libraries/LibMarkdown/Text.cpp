@@ -439,6 +439,10 @@ Vector<Text::Token> Text::tokenize(StringView str)
             expect("]("sv);
         } else if (has(")"sv)) {
             expect(")"sv);
+        } else if (has(">"sv)) {
+            expect(">"sv);
+        } else if (has("<"sv)) {
+            expect("<"sv);
         } else {
             current_token.append(ch);
         }
@@ -663,12 +667,24 @@ NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
     };
 
     StringBuilder address;
+
+    bool is_escaped = *(tokens + 1) == "<"sv;
+    // Don't add the angle bracket to the address.
+    if (is_escaped)
+        tokens++;
+
     for (auto iterator = tokens + 1; !iterator.is_end(); ++iterator) {
         // FIXME: What to do if there's multiple dimension tokens?
         if (is_image && !address.is_empty() && parse_image_dimensions(iterator->data))
             continue;
 
-        if (*iterator == ")"sv) {
+        if (is_escaped && *iterator == ">"sv) {
+            // Will match the below statement in the next iteration.
+            is_escaped = false;
+            continue;
+        }
+
+        if (!is_escaped && *iterator == ")"sv) {
             tokens = iterator;
 
             ByteString href = address.to_byte_string().trim_whitespace();
