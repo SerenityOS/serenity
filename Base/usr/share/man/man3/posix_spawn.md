@@ -1,6 +1,6 @@
 ## Name
 
-posix\_spawn - launch a new process
+posix_spawn - launch a new process
 
 ## Synopsis
 
@@ -35,7 +35,7 @@ The new process is started as if the following steps are executed in this order:
 ## Return value
 
 If the process is successfully forked, returns 0.
-Otherwise, returns an error number. This function does *not* return -1 on error and does *not* set `errno` like most other functions, it instead returns what other functions set `errno` to as result.
+Otherwise, returns an error number. This function does _not_ return -1 on error and does _not_ set `errno` like most other functions, it instead returns what other functions set `errno` to as result.
 
 If the process forks successfully but spawnattr or file action processing or exec fail, `posix_spawn` returns 0 and the child exits with exit code `127`.
 
@@ -62,5 +62,5 @@ int main()
 
 ## See also
 
-* [`posix_spawnattr`(2)](help://man/3/posix_spawnattr_init)
-* [`posix_spawn_file_actions`(2)](help://man/3/posix_spawn_file_actions_init)
+-   [`posix_spawnattr`(2)](help://man/3/posix_spawnattr_init)
+-   [`posix_spawn_file_actions`(2)](help://man/3/posix_spawn_file_actions_init)

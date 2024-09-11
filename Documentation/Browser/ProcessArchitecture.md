@@ -1,6 +1,6 @@
 # SerenityOS Browser process architecture
 
-*NOTE: This document is partly aspirational, in that the state of the code does not yet fully reflect what's described here. Implementation is underway.*
+_NOTE: This document is partly aspirational, in that the state of the code does not yet fully reflect what's described here. Implementation is underway._
 
 The SerenityOS web browser (**"Browser"**) uses a multi-process architecture to improve stability and security in the face of arbitrary (and possibly hostile) web content.
 
@@ -10,7 +10,7 @@ The SerenityOS web browser (**"Browser"**) uses a multi-process architecture to 
 
 Every instance of the **Browser** application can have one or more tabs open. Each tab has a unique **WebContent** service process spawned on its behalf.
 
-Two important aspects of web browsing are further separated from the **WebContent** process: *network requests* and *image decoding*, segregated to the **RequestServer** and **ImageDecoder** processes respectively.
+Two important aspects of web browsing are further separated from the **WebContent** process: _network requests_ and _image decoding_, segregated to the **RequestServer** and **ImageDecoder** processes respectively.
 
 All processes are aggressively sandboxed using the `pledge()` and `unveil()` mechanisms. Furthermore, all processes except **Browser** run as an unprivileged user, separate from the primary logged-in desktop user.
 

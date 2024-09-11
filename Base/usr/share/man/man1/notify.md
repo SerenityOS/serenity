@@ -10,9 +10,9 @@ $ notify <title> <message> [icon-path]
 
 ## Arguments
 
-* `title`: The title of notification
-* `message`: The message of notification
-* `icon-path`: Path to icon image file
+-   `title`: The title of notification
+-   `message`: The message of notification
+-   `icon-path`: Path to icon image file
 
 ## Description
 

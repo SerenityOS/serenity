@@ -14,18 +14,18 @@ $ watchfs [options...] [path...]
 
 ## Options
 
-* `--help`: Display this message
-* `-E`, `--exit-after-change`: Wait for first change and exit
-* `-a`, `--watch-all-events`: Watch all types of events
-* `-d`, `--watch-delete-events`: Watch file deletion events
-* `-m`, `--watch-file-modify-events`: Watch file content being modified
-* `-M`, `--watch-file-metadata-events`: Watch file metadata being modified
-* `-c`, `--watch-directory-child-creation-events`: Watch directory child creation events
-* `-D`, `--watch-directory-child-deletion-events`: Watch directory child deletion events
+-   `--help`: Display this message
+-   `-E`, `--exit-after-change`: Wait for first change and exit
+-   `-a`, `--watch-all-events`: Watch all types of events
+-   `-d`, `--watch-delete-events`: Watch file deletion events
+-   `-m`, `--watch-file-modify-events`: Watch file content being modified
+-   `-M`, `--watch-file-metadata-events`: Watch file metadata being modified
+-   `-c`, `--watch-directory-child-creation-events`: Watch directory child creation events
+-   `-D`, `--watch-directory-child-deletion-events`: Watch directory child deletion events
 
 ## Arguments
 
-* `path`: Files and/or directories to watch
+-   `path`: Files and/or directories to watch
 
 ## Examples
 
@@ -51,5 +51,6 @@ $ watchfs -m /tmp/test_file
 ```
 
 ## See also
-* [`listdir`(1)](help://man/1/listdir) to list directory entries
-* [`ls`(1)](help://man/1/ls) to list directory contents
+
+-   [`listdir`(1)](help://man/1/listdir) to list directory entries
+-   [`ls`(1)](help://man/1/ls) to list directory contents

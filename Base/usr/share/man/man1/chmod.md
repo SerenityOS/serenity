@@ -25,7 +25,7 @@ A numeric mode is combination of 1 to 4 numbers. Omitted digits are assumed to b
 
 ## Options
 
-* `-R`, `--recursive`: Change file modes recursively
+-   `-R`, `--recursive`: Change file modes recursively
 
 ## Examples
 
@@ -48,5 +48,5 @@ $ chmod g=r script.sh
 
 ## See also
 
-* [`chgrp`(1)](help://man/1/chgrp)
-* [`chown`(1)](help://man/1/chown)
+-   [`chgrp`(1)](help://man/1/chgrp)
+-   [`chown`(1)](help://man/1/chown)

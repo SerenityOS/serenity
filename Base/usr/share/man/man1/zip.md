@@ -16,8 +16,8 @@ The program is compatible with the PKZIP file format specification.
 
 ## Options
 
-* `-r`, `--recurse-paths`: Travel the directory structure recursively
-* `-f`, `--force`: Overwrite existing zip file
+-   `-r`, `--recurse-paths`: Travel the directory structure recursively
+-   `-f`, `--force`: Overwrite existing zip file
 
 ## Examples
 
@@ -30,6 +30,7 @@ Archive: archive.zip
 ```
 
 ## See also
-* [`unzip`(1)](help://man/1/unzip)
-* [`gzip`(1)](help://man/1/gzip)
-* [`tar`(1)](help://man/1/tar)
+
+-   [`unzip`(1)](help://man/1/unzip)
+-   [`gzip`(1)](help://man/1/gzip)
+-   [`tar`(1)](help://man/1/tar)

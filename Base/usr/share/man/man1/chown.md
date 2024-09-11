@@ -17,9 +17,9 @@ group.
 
 ## Options
 
-* `-h`, `--no-dereference`: Don't follow symlinks
-* `-R`, `--recursive`: Change file ownership recursively
-* `-L`: Follow symlinks while recursing into directories
+-   `-h`, `--no-dereference`: Don't follow symlinks
+-   `-R`, `--recursive`: Change file ownership recursively
+-   `-L`: Follow symlinks while recursing into directories
 
 ## Examples
 
@@ -33,5 +33,5 @@ $ chown anon:anon file
 
 ## See also
 
-* [`chgrp`(1)](help://man/1/chgrp)
-* [`chmod`(1)](help://man/1/chmod)
+-   [`chgrp`(1)](help://man/1/chgrp)
+-   [`chmod`(1)](help://man/1/chmod)

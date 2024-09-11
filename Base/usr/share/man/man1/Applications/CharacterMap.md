@@ -18,15 +18,17 @@ Character Map is a GUI application for viewing, searching for, and copying Unico
 ## Examples
 
 To open Character Map:
+
 ```sh
 $ CharacterMap
 ```
 
 To view a list of all characters that have "yak" in their name:
+
 ```sh
 $ CharacterMap --search "yak"
 ```
 
 ## See Also
 
-* [`FontEditor`(1)](help://man/1/Applications/FontEditor) To edit the fonts instead of just viewing them.
+-   [`FontEditor`(1)](help://man/1/Applications/FontEditor) To edit the fonts instead of just viewing them.

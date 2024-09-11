@@ -1,6 +1,6 @@
 ## Name
 
-posix\_openpt - open a pseudo-terminal device
+posix_openpt - open a pseudo-terminal device
 
 ## Synopsis
 
@@ -13,13 +13,13 @@ int posix_openpt(int flags);
 
 ## Description
 
-Open a pseudo-terminal master using the given *flags*.
+Open a pseudo-terminal master using the given _flags_.
 
-The *flags* argument accepts a bitmask of the following flags:
+The _flags_ argument accepts a bitmask of the following flags:
 
-* `O_RDWR`: Open for both reading and writing.
-* `O_NOCTTY`: The opened pseudo-terminal will not be made the controlling TTY for the process.
-* `O_CLOEXEC`: The opened fd shall be closed on [`exec`(2)](help://man/2/exec).
+-   `O_RDWR`: Open for both reading and writing.
+-   `O_NOCTTY`: The opened pseudo-terminal will not be made the controlling TTY for the process.
+-   `O_CLOEXEC`: The opened fd shall be closed on [`exec`(2)](help://man/2/exec).
 
 ## Return value
 
@@ -31,4 +31,4 @@ Returns the same errors as [`open`(2)](help://man/2/open).
 
 ## See also
 
-* [`open`(2)](help://man/2/open)
+-   [`open`(2)](help://man/2/open)

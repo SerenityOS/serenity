@@ -9,6 +9,7 @@ Make sure you have all the dependencies installed:
 ```console
 sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-gui qemu-system-x86 qemu-utils ccache rsync unzip texinfo libssl-dev
 ```
+
 Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
 
 #### GCC 13 or Clang 17+
@@ -61,10 +62,10 @@ attempt to build CMake from source if the version on your path is older than 3.2
 
 If you have previously compiled SerenityOS with an older or distribution-provided version of CMake,
 you will need to manually remove the CMakeCache.txt files, as these files reference the older CMake version and path.
+
 ```console
 rm Build/*/CMakeCache.txt
 ```
-
 
 ### Windows
 
@@ -76,6 +77,7 @@ for details.
 ```console
 sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu-desktop qemu-system-aarch64 ccache rsync unzip
 ```
+
 Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224), and `clang llvm llvm-libs` for building with Clang.
 
 ### SerenityOS
@@ -96,8 +98,8 @@ This is best achieved by adding `ln -sf /usr/local/bin/bash mnt/bin/sh` to your 
 
 There is also documentation for installing the build prerequisites for some less commonly used systems:
 
-* [Other Linux distributions and \*NIX systems](BuildInstructionsOther.md)
-* [macOS](BuildInstructionsMacOS.md)
+-   [Other Linux distributions and \*NIX systems](BuildInstructionsOther.md)
+-   [macOS](BuildInstructionsMacOS.md)
 
 ## Build
 
@@ -138,11 +140,12 @@ Ports might also have additional dependencies. Most prominently, you may need:
 `rename`, `zip`.
 
 For select ports you might need slightly more exotic dependencies such as:
-- `file` (version 5.44 exactly, for file)
-- `libpython3-dev` (most prominently for boost)
-- `lua` (for luarocks)
-- `openjdk-17-jdk` (to compile OpenJDK)
-- `rake` (to build mruby).
+
+-   `file` (version 5.44 exactly, for file)
+-   `libpython3-dev` (most prominently for boost)
+-   `lua` (for luarocks)
+-   `openjdk-17-jdk` (to compile OpenJDK)
+-   `rake` (to build mruby).
 
 You may also need a symlink from "/usr/bin/python" to "/usr/bin/python3"; some ports depend on "python" existing, most notably ninja.
 

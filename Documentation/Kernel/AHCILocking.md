@@ -34,6 +34,7 @@ return true;
 ### Why do we need soft and hard locking in the AHCI code?
 
 First of all, the proper way of taking a `SpinLock` and `Lock` is to:
+
 ```c++
 Locker locker(m_soft_lock);
 ScopedSpinLock lock(m_spinlock);
@@ -45,7 +46,7 @@ return true;
 ```
 
 This sequence is relevant for any pattern of taking a soft and hard lock together in the kernel.
-The reason for this order is that `SpinLock` will disable interrupts, while `Lock` will still allow the system to yield execution 
+The reason for this order is that `SpinLock` will disable interrupts, while `Lock` will still allow the system to yield execution
 to another thread if we can't lock the soft lock, because interrupts are not disabled. Taking a `SpinLock` and then a `Lock` is considered a bug, because we already disabled interrupts so yielding from this section is not possible anymore.
 
 We need both types of locking to implement hardware access safely.

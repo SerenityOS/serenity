@@ -16,11 +16,11 @@ While `abench` is running, it doesn't report anything to make measurements more 
 
 ## Options
 
-* `-s`, `--sample-count`: How many samples to load at maximum. This allows you to only benchmark some initial chunk of the file, which is useful when testing on quirky files that happen to be large.
+-   `-s`, `--sample-count`: How many samples to load at maximum. This allows you to only benchmark some initial chunk of the file, which is useful when testing on quirky files that happen to be large.
 
 ## Arguments
 
-* `path`: Path to audio file. As usual, the file type is determined automatically.
+-   `path`: Path to audio file. As usual, the file type is determined automatically.
 
 ## Examples
 

@@ -15,7 +15,7 @@ $ chgrp <name> <path...>
 
 ## Options
 
-* `-h`, `--no-dereference`: Don't follow symlinks
+-   `-h`, `--no-dereference`: Don't follow symlinks
 
 ## Examples
 
@@ -29,5 +29,5 @@ $ chgrp <name> <path...>
 
 ## See also
 
-* [`chmod`(1)](help://man/1/chmod)
-* [`chown`(1)](help://man/1/chown)
+-   [`chmod`(1)](help://man/1/chmod)
+-   [`chown`(1)](help://man/1/chown)

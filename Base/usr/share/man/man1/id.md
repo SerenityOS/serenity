@@ -14,10 +14,10 @@ $ id [options...]
 
 ## Options
 
-* `-u`: Print only real UID.
-* `-g`: Print only real GID.
-* `-G`: Print only all GIDs.
-* `-n`: If `-u`, `-g` or `-G` is specified, print full names instead of IDs.
+-   `-u`: Print only real UID.
+-   `-g`: Print only real GID.
+-   `-G`: Print only all GIDs.
+-   `-n`: If `-u`, `-g` or `-G` is specified, print full names instead of IDs.
 
 ## Examples
 
@@ -36,6 +36,6 @@ $ id -G
 
 ## See also
 
-* [`whoami`(1)](help://man/1/whoami)
-* [`groups`(1)](help://man/1/groups)
-* [`usermod`(8)](help://man/8/usermod)
+-   [`whoami`(1)](help://man/1/whoami)
+-   [`groups`(1)](help://man/1/groups)
+-   [`usermod`(8)](help://man/8/usermod)

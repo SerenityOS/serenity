@@ -17,11 +17,12 @@ then `rev` will read from standard input. If the file `-` is specified then
 
 ## Arguments
 
-* `file`: Files to print
+-   `file`: Files to print
 
 ## Examples
 
 To print two files 'foo' and 'bar' in reverse:
+
 ```sh
 $ cat foo bar
 foo 1
@@ -36,6 +37,7 @@ $ rev foo bar
 ```
 
 To list files with their names in reverse:
+
 ```sh
 $ ls
 foo
@@ -46,6 +48,7 @@ rab
 ```
 
 To print a file 'foo' in reverse followed by the output of `ls` in reverse:
+
 ```sh
 $ cat foo
 foo 1

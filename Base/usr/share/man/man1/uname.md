@@ -15,12 +15,12 @@ system call.
 
 ## Options
 
-* `-s`: Print the system name
-* `-n`: Print the node name (hostname)
-* `-r`: Print the system release version
-* `-v`: Print the version of the release
-* `-m`: Print the machine type
-* `-a`: Print all of the above
+-   `-s`: Print the system name
+-   `-n`: Print the node name (hostname)
+-   `-r`: Print the system release version
+-   `-v`: Print the version of the release
+-   `-m`: Print the machine type
+-   `-a`: Print all of the above
 
 ## Examples
 
@@ -31,4 +31,4 @@ Serenity x86_64
 
 ## See also
 
-* [`uname`(2)](help://man/2/uname)
+-   [`uname`(2)](help://man/2/uname)

@@ -28,16 +28,19 @@ sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayl
 ```
 
 On Fedora or derivatives:
+
 ```
 sudo dnf install cmake libglvnd-devel ninja-build qt6-qtbase-devel qt6-qttools-devel qt6-qtwayland-devel qt6-qtmultimedia-devel ccache
 ```
 
 On openSUSE:
+
 ```
 sudo zypper install cmake libglvnd-devel ninja qt6-base-devel qt6-multimedia-devel qt6-tools-devel qt6-wayland-devel ccache
 ```
 
 On NixOS or with Nix:
+
 ```console
 nix develop .#ladybird
 
@@ -46,6 +49,7 @@ nix develop .#ladybird --command bash
 ```
 
 On NixOS or with Nix using your host `nixpkgs` and the legacy `nix-shell` tool:
+
 ```console
 nix-shell Ladybird
 
@@ -63,6 +67,7 @@ brew install cmake ninja ccache
 ```
 
 If you also plan to use the Qt chrome on macOS:
+
 ```
 brew install qt
 ```
@@ -76,6 +81,7 @@ pfexec pkg install cmake ninja clang-17 libglvnd qt6
 ```
 
 On Haiku:
+
 ```
 pkgman install cmake ninja cmd:python3 qt6_base_devel qt6_multimedia_devel qt6_tools_devel openal_devel
 ```
@@ -98,8 +104,9 @@ The simplest way to build and run ladybird is via the serenity.sh script:
 ```
 
 The above commands will build Ladybird with one of the following browser chromes, depending on the platform:
-* [AppKit](https://developer.apple.com/documentation/appkit?language=objc) - The native chrome on macOS.
-* [Qt](https://doc.qt.io/qt-6/) - The chrome used on all other platforms.
+
+-   [AppKit](https://developer.apple.com/documentation/appkit?language=objc) - The native chrome on macOS.
+-   [Qt](https://doc.qt.io/qt-6/) - The chrome used on all other platforms.
 
 The Qt chrome is available on platforms where it is not the default as well. To build the
 Qt chrome, install the Qt dependencies for your platform, and enable the Qt chrome via CMake:
@@ -130,7 +137,7 @@ Ladybird requires resource files from the serenity/Base/res directory in order t
 icons, fonts, and other theming information. The serenity.sh script calls into custom CMake targets
 that set these variables, and ensure that the $PWD is set properly to allow execution from the build
 directory. To run the built binary without using the script, one can either directly invoke the
-ninja rules or install ladybird  using the provided CMake install rules. See the ``Custom CMake build directory``
+ninja rules or install ladybird using the provided CMake install rules. See the `Custom CMake build directory`
 section below for details.
 
 ### Custom CMake build directory
@@ -141,7 +148,7 @@ CMakeLists.txt, or via the CMakeLists.txt found in the Ladybird directory. For d
 Ladybird as the source directory will give the desired results.
 
 The install rules in Ladybird/cmake/InstallRules.cmake define which binaries and libraries will be
-installed into the configured CMAKE_PREFIX_PATH or path passed to ``cmake --install``.
+installed into the configured CMAKE_PREFIX_PATH or path passed to `cmake --install`.
 
 Note that when using a custom build directory rather than Meta/serenity.sh, the user may need to provide
 a suitable C++ compiler (g++ >= 13, clang >= 14, Apple Clang >= 14.3) via the CMAKE_CXX_COMPILER and
@@ -155,16 +162,19 @@ ninja -C Build/ladybird run
 ```
 
 To automatically run in gdb:
+
 ```
 ninja -C Build/ladybird debug
 ```
 
 To run without ninja rule on non-macOS systems:
+
 ```
 ./Build/ladybird/bin/Ladybird
 ```
 
 To run without ninja rule on macOS:
+
 ```
 open -W --stdout $(tty) --stderr $(tty) ./Build/ladybird/bin/Ladybird.app
 

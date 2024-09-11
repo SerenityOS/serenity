@@ -47,4 +47,4 @@ If the effect of a file action fails, the child will exit with exit code 127 bef
 
 ## See also
 
-* [`posix_spawn`(2)](help://man/3/posix_spawn)
+-   [`posix_spawn`(2)](help://man/3/posix_spawn)

@@ -14,7 +14,7 @@ $ yes [string]
 
 ## Options
 
-* `string`: String to print; defaults to "yes".
+-   `string`: String to print; defaults to "yes".
 
 ## Examples
 
@@ -41,4 +41,5 @@ t^C
 ```
 
 ## See also
-* [`cat`(1)](help://man/1/cat)
+
+-   [`cat`(1)](help://man/1/cat)

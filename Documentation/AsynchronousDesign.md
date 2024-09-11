@@ -7,6 +7,7 @@
 When working with AsyncResource, the only thing you should pay attention to is not leaving the resource open when you are done with it. This is important both for consistency and for not signaling spurious end-of-data errors to the other party. This close/reset hygiene is not hard to achieve in practice: every AsyncResource is automatically reset during destruction and some resources reset on any error returned by any of their interfaces.
 
 The above means that the following snippet is correct:
+
 ```cpp
 Coroutine<ErrorOr<void>> do_very_meaningful_work()
 {
@@ -19,9 +20,11 @@ Coroutine<ErrorOr<void>> do_very_meaningful_work()
     CO_TRY(co_await socket.close());
 }
 ```
+
 and will send a TCP RST if any of the functions (including `process_object`) fails and will close the socket gracefully if everything goes well.
 
 Of course, automatic-reset-on-destruction does not always get rid of explicit resets. If asynchronous resource is not local to a fallible function, you will have to call reset manually in case of errors, i. e.
+
 ```cpp
 Coroutine<ErrorOr<void>> do_very_meaningful_work_second_time(AsyncStream& stream)
 {
@@ -35,7 +38,7 @@ Coroutine<ErrorOr<void>> do_very_meaningful_work_second_time(AsyncStream& stream
 }
 ```
 
-It might be tempting to just do nothing with a stream in this situation. However, this will leave the  stream in an unknown state if the function fails, which would necessitate `stream->is_open()` checks later on in the caller (because doing pretty much anything with a closed stream asserts).
+It might be tempting to just do nothing with a stream in this situation. However, this will leave the stream in an unknown state if the function fails, which would necessitate `stream->is_open()` checks later on in the caller (because doing pretty much anything with a closed stream asserts).
 
 As mentioned in the previous paragraph, in addition to `close` and `reset` methods, resources have an `is_open` method which checks if the resource has already been closed or reset (either explicitly or implicitly by a failed method). `is_open` state cannot change by itself with time (i. e. if a server sends RST when nobody is listening the socket)&mdash;one has to call a method on a resource for `open` state to change.
 
@@ -48,6 +51,7 @@ Every AsyncInputStream is effectively buffered by design. This means that all in
 Typical workflow with AsyncInputStream consists of a number of peeks (until the caller finds what they are looking for in the stream) followed by a read that removes just-peeked object from the buffer.
 
 The following example reads an object of an unknown size from the stream:
+
 ```cpp
 Coroutine<ErrorOr<VeryImportantObject>> read_some_very_important_object(AsyncInputStream& stream)
 {
@@ -88,6 +92,7 @@ If your use-case doesn't require the knowledge of EOF location (i. e. you know h
 For the EOF-aware applications, AsyncInputStream provides `peek_or_eof`. In contrast to `peek`, `peek_or_eof` returns an additional flag indicating if EOF has been reached. Note that the EOF detection is similar to POSIX streams: first, `peek_or_eof` returns data up to EOF without `is_eof` flag being set, and then, on the next call, it returns the same data with `is_eof` flag set.
 
 As an example, let us abuse the said functionality of `peek_or_eof` to implement a completely reliable `is_eof` for an asynchronous stream:
+
 ```cpp
 Coroutine<ErrorOr<bool>> accurate_is_eof(AsyncInputStream& stream) {
     auto [_, is_eof] = CO_TRY(co_await stream.peek_or_eof());
@@ -99,6 +104,7 @@ Coroutine<ErrorOr<bool>> accurate_is_eof(AsyncInputStream& stream) {
 You might notice a seemingly useless read of 0 bytes here. Why do we need it? Well, let us remove it and consider the case when we have a stream with an empty buffer and a single byte left overall. `peek_or_eof` will return that byte without `is_eof` flag set, so `accurate_is_eof` returns false. Next, someone tries to peek that byte with a plain `peek` that will in turn call `peek_or_eof`, which now _will_ set the `is_eof` flag. The flag will then be checked by `peek` and the stream will error out with EIO.
 
 Therefore,
+
 > [!IMPORTANT]
 > If you peek something from a stream, you should read it.
 

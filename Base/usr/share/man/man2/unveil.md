@@ -24,11 +24,11 @@ Calling `unveil()` allows the process to access the given `path`, which must be
 an absolute path, according to the given `permissions` string, which may
 include the following characters:
 
-* `r`: May read a file at this path
-* `w`: May write to a file at this path
-* `x`: May execute a program image at this path
-* `c`: May create or remove a file at this path
-* `b`: May browse directories at this path
+-   `r`: May read a file at this path
+-   `w`: May write to a file at this path
+-   `x`: May execute a program image at this path
+-   `c`: May create or remove a file at this path
+-   `b`: May browse directories at this path
 
 A single `unveil()` call may specify multiple permission characters at once.
 Subsequent `unveil()` calls may take away permissions from the ones allowed
@@ -63,12 +63,12 @@ the error.
 
 ## Errors
 
-* `EFAULT`: `path` and/or `permissions` are not null and not in readable
-  memory.
-* `EPERM`: The veil is locked, or an attempt to add more permissions for an
-  already unveiled path was rejected.
-* `EINVAL`: `path` is not an absolute path, or `permissions` are malformed.
-* `E2BIG`: `permissions` string is longer than 5 characters.
+-   `EFAULT`: `path` and/or `permissions` are not null and not in readable
+    memory.
+-   `EPERM`: The veil is locked, or an attempt to add more permissions for an
+    already unveiled path was rejected.
+-   `EINVAL`: `path` is not an absolute path, or `permissions` are malformed.
+-   `E2BIG`: `permissions` string is longer than 5 characters.
 
 All of the usual path resolution errors may also occur.
 
@@ -97,6 +97,6 @@ unveil(nullptr, nullptr);
 
 ## See also
 
-* [`unveil`(1)](help://man/1/unveil)
-* [`pledge`(2)](help://man/2/pledge)
-* [`Mitigations`(7)](help://man/7/Mitigations)
+-   [`unveil`(1)](help://man/1/unveil)
+-   [`pledge`(2)](help://man/2/pledge)
+-   [`Mitigations`(7)](help://man/7/Mitigations)

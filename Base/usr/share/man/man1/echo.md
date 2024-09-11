@@ -42,8 +42,8 @@ Character escape sequences and their meanings are as follows:
 
 ## Options
 
-* `-n`: Do not output a trailing newline
-* `-e`: Interpret backslash escapes
+-   `-n`: Do not output a trailing newline
+-   `-e`: Interpret backslash escapes
 
 ## Examples
 

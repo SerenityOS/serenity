@@ -14,7 +14,7 @@ $ chres <width> <height> [scale factor]
 
 ## Options
 
-* `-s`, `--screen`: Screen
+-   `-s`, `--screen`: Screen
 
 ## Examples
 
@@ -25,4 +25,4 @@ $ chres 1920 1080 2
 
 ## Files
 
-* `/tmp/portal/window` to communicate with WindowServer
+-   `/tmp/portal/window` to communicate with WindowServer

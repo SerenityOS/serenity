@@ -1,6 +1,7 @@
 # Transferring files from QEMU to your host machine
 
 ## Method 1: WebServer
+
 Serenity has a built-in web server which extends to your host machine.
 
 Open a new terminal and use the following command to start a WebServer instance for the current working directory:
@@ -17,7 +18,7 @@ Then we just open `localhost:8000` on our host machine :^)
 
 ## Method 2: Mount the disk image
 
-Another way is to mount Serenity's `_disk_image` to your host machine by using the following command on *nix systems (or inside WSL):
+Another way is to mount Serenity's `_disk_image` to your host machine by using the following command on \*nix systems (or inside WSL):
 
 ```console
 cd "Build/${SERENITY_ARCH}"
@@ -33,14 +34,16 @@ For WSL users: If you have the image on your native WSL drive (recommended), thi
 
 ## Method 4: Enable OpenSSH on host and use sftp client on SerenityOS
 
-- Setup OpenSSH server on your host.
-For windows: Google is your friend (https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse)
-For linux: Google is your friend.
-- Ensure that you already have a working SerenityOS working build.
+-   Setup OpenSSH server on your host.
+    For windows: Google is your friend (https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse)
+    For linux: Google is your friend.
+-   Ensure that you already have a working SerenityOS working build.
+
 ```console
 $ Meta/serenity.sh rebuild-world
 ```
-- To enable OpenSSH package from SerenityOS: (initial directory is SerenityOS ROOT_DIR)
+
+-   To enable OpenSSH package from SerenityOS: (initial directory is SerenityOS ROOT_DIR)
 
 ```console
 cd Ports
@@ -49,11 +52,13 @@ cd openssh
 cd ../..
 Meta/serenity.sh run
 ```
-- From within SerenityOS, check that you have a working sftp app:
+
+-   From within SerenityOS, check that you have a working sftp app:
 
 ```console
 courage:~ $ sftp
 ```
+
 The expected response will be:
 
 ```console
@@ -64,15 +69,16 @@ usage: sftp [-46aCfNpqrv] [-B buffer_size] [-b batchfile] [-c cipher]
           [-R num_requests] [-S program] [-s subsystem | sftp_server]
           destination
 ```
-- Assume that you have a working OpenSSH server as mentioned earlier, with an IP address of 192.168.0.11.
-- Assume that you have a valid user on that host with account name user1.
-- Assume that you are currently inside the folder from which you want to transfer the file(s) from.
-- Local
+
+-   Assume that you have a working OpenSSH server as mentioned earlier, with an IP address of 192.168.0.11.
+-   Assume that you have a valid user on that host with account name user1.
+-   Assume that you are currently inside the folder from which you want to transfer the file(s) from.
+-   Local
     User: anon
-- Remote
+-   Remote
     User: user1
     IP Address: 192.168.0.11
-- Connect to remote server via sftp
+-   Connect to remote server via sftp
 
 ```console
 courage:~ $ sftp user1@192.168.0.11
@@ -84,8 +90,9 @@ user1@'s password:
 Connected to 192.168.0.11
 
 ```
-- By this time, you have successfully connected and logged on to the remote host.
-- You can get more information by typing ` help `.
-- The most often used (simplified) sftp commands are ` ls `, ` cd `, ` put [filename] `, ` get [filename] `, and ` quit `. I said simplified since the actual commands have many more options. 
-- Be aware that there will be a time you would think that nothing is happening since the cursor just stares back at you. It is always waiting for your next instruction. Typing ` quit ` or ` bye ` will close the program.
-- Congratulations. Pat yourself at the back.
+
+-   By this time, you have successfully connected and logged on to the remote host.
+-   You can get more information by typing `help`.
+-   The most often used (simplified) sftp commands are `ls`, `cd`, `put [filename]`, `get [filename]`, and `quit`. I said simplified since the actual commands have many more options.
+-   Be aware that there will be a time you would think that nothing is happening since the cursor just stares back at you. It is always waiting for your next instruction. Typing `quit` or `bye` will close the program.
+-   Congratulations. Pat yourself at the back.

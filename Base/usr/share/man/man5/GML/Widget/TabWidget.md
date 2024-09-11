@@ -15,7 +15,7 @@ Defines a GUI tab widget.
 ```gml
 @GUI::TabWidget {
   uniform_tabs: true
-  
+
   @GUI::Widget {
     title: "First tab"
   }
@@ -28,7 +28,7 @@ Defines a GUI tab widget.
 ## Registered Properties
 
 | Property           | Type           | Possible values                                                             | Description                          |
-|--------------------|----------------|-----------------------------------------------------------------------------|--------------------------------------|
+| ------------------ | -------------- | --------------------------------------------------------------------------- | ------------------------------------ |
 | container_margins  | margins        |                                                                             | Margins for the tab content          |
 | reorder_allowed    | bool           | true or false                                                               | Allow changing the order of the tabs |
 | show_close_buttons | bool           | true or false                                                               | Show a close button on each tab      |

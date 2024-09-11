@@ -12,17 +12,17 @@ $ json [options...] [path...]
 
 `json` pretty-prints a JSON file with syntax-coloring and indentation.
 
-If no *path* argument is provided stdin is used.
+If no _path_ argument is provided stdin is used.
 
 ## Options
 
-* `--help`: Display this message
-* `-i`, `--indent-size`: Size of indentations in spaces
-* `-q`, `--query`: Dotted query key
+-   `--help`: Display this message
+-   `-i`, `--indent-size`: Size of indentations in spaces
+-   `-q`, `--query`: Dotted query key
 
 ## Arguments
 
-* `path`: file to pretty-print
+-   `path`: file to pretty-print
 
 ## Examples
 

@@ -23,18 +23,19 @@ effects of the disadvantages of each design.
 
 ### The layout of the segmented index
 
-Since it was decided that heap allocations for ProcFS are *mostly* bad, the new
+Since it was decided that heap allocations for ProcFS are _mostly_ bad, the new
 design layout tries to achieve most of the principle of "Don't allocate anything
 until actually needed". For that to happen, `InodeIndex` (u64 value) is split
 into 3 Segments:
-- The primary segment: value 0 is reserved for all non-PID inodes in the procfs.
-All values from 1 to 0xFFFFFFF are valid PID indices, which represents all PIDs from 0 to 0xFFFFFFE
 
-- The Sub-directory segment: value 0 is reserved for parent PID directory. All other values are
-available for usage of sub-directories in the PID directory.
+-   The primary segment: value 0 is reserved for all non-PID inodes in the procfs.
+    All values from 1 to 0xFFFFFFF are valid PID indices, which represents all PIDs from 0 to 0xFFFFFFE
 
-- The property segment: value 0 is reserved for parent PID directory. All other values are
-available for usage of components in the PID directory or in sub-directories of the PID directory.
+-   The Sub-directory segment: value 0 is reserved for parent PID directory. All other values are
+    available for usage of sub-directories in the PID directory.
+
+-   The property segment: value 0 is reserved for parent PID directory. All other values are
+    available for usage of components in the PID directory or in sub-directories of the PID directory.
 
 So, the final layout of the 64 bit index is:
 
@@ -55,17 +56,16 @@ to allocate global objects, so it's somewhat a compromise between two conflictin
 To do that we need to ensure that:
 
 1. If the primary segment value equals to 0, then the sub-directory and property segmentation
-is not applied, but a sequential indexing is determined instead. This is needed so ProcFS can still
-use global components that were pre-allocated beforehand. This means that there might be up to 
-68719476735 global components (including global sub-directories objects) in the ProcFS.
-Otherwise, for every primary segment value > 0, then the sub-directory and property segmentation
-is applied. This means that there might be up to 65534 sub-directories in a PID directory, and
-up to 1048575 (1048574 for PID directory) properties (objects) in each sub-directory.
+   is not applied, but a sequential indexing is determined instead. This is needed so ProcFS can still
+   use global components that were pre-allocated beforehand. This means that there might be up to
+   68719476735 global components (including global sub-directories objects) in the ProcFS.
+   Otherwise, for every primary segment value > 0, then the sub-directory and property segmentation
+   is applied. This means that there might be up to 65534 sub-directories in a PID directory, and
+   up to 1048575 (1048574 for PID directory) properties (objects) in each sub-directory.
 
-2. If the primary segment value equals to 0, then value 0 in both artificial sub-directory 
-and property segments represents the root ProcFS folder.
-Otherwise, for every primary segment value > 0, value 0 in both sub-directory and
-property segments are reserved to represent the root PID directory.
-Please note that if the sub-directory segment > 0, and property segment = 0 is a valid
-index, and represents a valid property object in that sub-directory.
-
+2. If the primary segment value equals to 0, then value 0 in both artificial sub-directory
+   and property segments represents the root ProcFS folder.
+   Otherwise, for every primary segment value > 0, value 0 in both sub-directory and
+   property segments are reserved to represent the root PID directory.
+   Please note that if the sub-directory segment > 0, and property segment = 0 is a valid
+   index, and represents a valid property object in that sub-directory.

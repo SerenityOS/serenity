@@ -21,5 +21,5 @@ Defines a GUI slider widget.
 ## Registered Properties
 
 | Property       | Type | Possible values     | Description               |
-|----------------|------|---------------------|---------------------------|
+| -------------- | ---- | ------------------- | ------------------------- |
 | knob_size_mode | enum | Fixed, Proportional | Sets the slider knob size |

@@ -16,8 +16,8 @@ family name per allocation.
 
 ## Files
 
-* `/sys/kernel/chardev_major_allocs` - list of the major number allocations for character devices.
-* `/sys/kernel/blockdev_major_allocs` - list of the major number allocations for block devices.
+-   `/sys/kernel/chardev_major_allocs` - list of the major number allocations for character devices.
+-   `/sys/kernel/blockdev_major_allocs` - list of the major number allocations for block devices.
 
 ## Examples
 

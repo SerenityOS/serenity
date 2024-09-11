@@ -14,9 +14,9 @@ Display file status and provide more information about that file.
 
 ## Options
 
-* `-L`: Follow links to files
-* `--help`: Display help message and exit
-* `--version`: Print version
+-   `-L`: Follow links to files
+-   `--help`: Display help message and exit
+-   `--version`: Print version
 
 ## Examples
 

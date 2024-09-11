@@ -11,11 +11,12 @@ $ CertificateSettings
 ```
 
 ## Description
+
 `Certificate Settings` is an application for managing digital certificates in SerenityOS.
 
 Certificates are used for establishing a user's credentials when trying to create secure connection between a client and server by matching a public and private key.
 
-The *Certificate Store* lists all of the certificates currently stored in the system, the Trusted Root Certification Authorities (CAs) they were issued by and their expiration dates.
+The _Certificate Store_ lists all of the certificates currently stored in the system, the Trusted Root Certification Authorities (CAs) they were issued by and their expiration dates.
 
 ### Features
 

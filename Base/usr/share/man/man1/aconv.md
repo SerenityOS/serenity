@@ -22,31 +22,31 @@ By specifying `--audio-format`, `aconv` will use a different sample format for t
 
 ### Supported Codecs and Containers
 
-Note that `aconv` currently only supports codecs which have their own bespoke container. Therefore, the distinction does not currently matter. The names given below are the only recognized names for this codec for the command line options `--audio-codec` and `--input-audio-codec`. Some codecs can only be decoded or both encoded and decoded. 
+Note that `aconv` currently only supports codecs which have their own bespoke container. Therefore, the distinction does not currently matter. The names given below are the only recognized names for this codec for the command line options `--audio-codec` and `--input-audio-codec`. Some codecs can only be decoded or both encoded and decoded.
 
-* `mp3` (decode): MPEG Layer III audio codec and container.
-* `wav` (decode, encode): RIFF WAVE audio codec and container. Supports sample formats `u8` and `s16le` for writing.
-* `flac` (decode, encode): Free Lossless Audio Codec and container. Supports all integer sample formats for writing.
-* `qoa` (decode): Quite Okay Audio codec and container.
+-   `mp3` (decode): MPEG Layer III audio codec and container.
+-   `wav` (decode, encode): RIFF WAVE audio codec and container. Supports sample formats `u8` and `s16le` for writing.
+-   `flac` (decode, encode): Free Lossless Audio Codec and container. Supports all integer sample formats for writing.
+-   `qoa` (decode): Quite Okay Audio codec and container.
 
 ### Supported Sample Formats
 
-* `u8`: Unsigned 8-bit integer
-* `s16le`: Signed 16-bit integer, little endian
-* `s24le`: Signed 24-bit integer, little endian
-* `s32le`: Signed 32-bit integer, little endian
-* `f32le`: 32-bit IEEE 754 floating-point number (normalized to the range [-1, 1]), little endian
-* `f64le`: 64-bit IEEE 754 floating-point number (normalized to the range [-1, 1]), little endian
+-   `u8`: Unsigned 8-bit integer
+-   `s16le`: Signed 16-bit integer, little endian
+-   `s24le`: Signed 24-bit integer, little endian
+-   `s32le`: Signed 32-bit integer, little endian
+-   `f32le`: 32-bit IEEE 754 floating-point number (normalized to the range [-1, 1]), little endian
+-   `f64le`: 64-bit IEEE 754 floating-point number (normalized to the range [-1, 1]), little endian
 
 ## Options
 
 The option format follows this general pattern: `--input_or_output-stream-parameter`, where `input_or_output` is either `input` when concerning the input stream, or omitted for the output stream (since this is the more common use case), `stream` currently is always `audio`, and `parameter` is the parameter of the stream that is changed.
 
-* `-i`, `--input`: The input file to convert from. Use `-` to read from standard input.
-* `-o`, `--output`: The output file to write to. Use `-` to write to standard output.
-* `--input-audio-codec`: Overwrite the used codec and/or sample format of the input file.
-* `--audio-codec`: The codec to use for the output file.
-* `--audio-format`: The sample format to use for the output file.
+-   `-i`, `--input`: The input file to convert from. Use `-` to read from standard input.
+-   `-o`, `--output`: The output file to write to. Use `-` to write to standard output.
+-   `--input-audio-codec`: Overwrite the used codec and/or sample format of the input file.
+-   `--audio-codec`: The codec to use for the output file.
+-   `--audio-format`: The sample format to use for the output file.
 
 ## Examples
 
@@ -63,5 +63,5 @@ $ aconv -i ~/music.wav --audio-format u8 -o -
 
 ## See Also
 
-* [`abench`(1)](help://man/1/abench) to test audio decoders and measure their performance
-* [`aplay`(1)](help://man/1/aplay) to play audio files from the command line
+-   [`abench`(1)](help://man/1/abench) to test audio decoders and measure their performance
+-   [`aplay`(1)](help://man/1/aplay) to play audio files from the command line

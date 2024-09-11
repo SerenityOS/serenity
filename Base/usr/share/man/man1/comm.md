@@ -16,18 +16,18 @@ With no options, `comm` produces a three column output, indented by tabs, of lin
 
 ## Options
 
-* `-1`: Suppress the output of column 1 (lines unique to `file1`)
-* `-2`: Suppress the output of column 2 (lines unique to `file2`)
-* `-3`: Suppress the output of column 3 (lines common to `file1` and `file2`)
-* `-i`: Use case insensitive comparison of lines
-* `-c`, `--color`: Always print colored output even if the standard output is not a tty
-* `--no-color`: Do not print colored output
-* `-t`, `--total`: Print a summary
+-   `-1`: Suppress the output of column 1 (lines unique to `file1`)
+-   `-2`: Suppress the output of column 2 (lines unique to `file2`)
+-   `-3`: Suppress the output of column 3 (lines common to `file1` and `file2`)
+-   `-i`: Use case insensitive comparison of lines
+-   `-c`, `--color`: Always print colored output even if the standard output is not a tty
+-   `--no-color`: Do not print colored output
+-   `-t`, `--total`: Print a summary
 
 ## Arguments
 
-* `file1`: First file to compare. (`-` for the standard input)
-* `file2`: Second file to compare. (`-` for the standard input)
+-   `file1`: First file to compare. (`-` for the standard input)
+-   `file2`: Second file to compare. (`-` for the standard input)
 
 ## Examples
 
@@ -50,4 +50,5 @@ $ comm -123it file1_sorted file2_sorted
 ```
 
 ## See also
-* [`cmp`(1)](help://man/1/cmp)
+
+-   [`cmp`(1)](help://man/1/cmp)

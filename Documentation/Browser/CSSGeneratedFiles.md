@@ -18,7 +18,7 @@ The file is organized as a single JSON object, with keys being property names, a
 Each property will have some set of these fields on it:
 
 | Field                      | Required | Default | Description                                                                                                                               | Generated functions                                                           |
-|----------------------------|----------|---------|-------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| -------------------------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | `affects-layout`           | No       | `true`  | Boolean. Whether changing this property will invalidate the element's layout.                                                             | `bool property_affects_layout(PropertyID)`                                    |
 | `affects-stacking-context` | No       | `false` | Boolean. Whether this property can cause a new stacking context for the element.                                                          | `bool property_affects_stacking_context(PropertyID)`                          |
 | `animation-type`           | Yes      |         | String. How the property should be animated. Defined by the spec. See below.                                                              | `AnimationType animation_type_from_longhand_property(PropertyID)`             |
@@ -37,7 +37,7 @@ Each property will have some set of these fields on it:
 The [Web Animations spec](https://www.w3.org/TR/web-animations/#animation-type) defines the valid values here:
 
 | Spec term         | JSON value          |
-|-------------------|---------------------|
+| ----------------- | ------------------- |
 | not animatable    | `none`              |
 | discrete          | `discrete`          |
 | by computed value | `by-computed-value` |
@@ -49,7 +49,7 @@ The [Web Animations spec](https://www.w3.org/TR/web-animations/#animation-type) 
 The [Quirks spec](https://quirks.spec.whatwg.org/#css) defines these.
 
 | Spec term                    | JSON value           |
-|------------------------------|----------------------|
+| ---------------------------- | -------------------- |
 | The hashless hex color quirk | `hashless-hex-color` |
 | The unitless length quirk    | `unitless-length`    |
 
@@ -67,10 +67,11 @@ This generates `Keyword.h` and `Keyword.cpp`.
 All keyword values used by any property or media-feature need to be defined here.
 
 The generated code provides:
-- A `Keyword` enum as used by `CSSKeywordValue`
-- `Optional<Keyword> keyword_from_string(StringView)` to attempt to convert a string into a Keyword
-- `StringView string_from_keyword(Keyword)` to convert a Keyword back into a string
-- `bool is_css_wide_keyword(StringView)` which returns whether the string is one of the special "CSS-wide keywords"
+
+-   A `Keyword` enum as used by `CSSKeywordValue`
+-   `Optional<Keyword> keyword_from_string(StringView)` to attempt to convert a string into a Keyword
+-   `StringView string_from_keyword(Keyword)` to convert a Keyword back into a string
+-   `bool is_css_wide_keyword(StringView)` which returns whether the string is one of the special "CSS-wide keywords"
 
 ## Enums.json
 
@@ -85,10 +86,11 @@ This helps reduce repetition, for example the `border-*-style` properties all ac
 are implemented as a `line-style` enum.
 
 The generated code provides these for each enum, using "foo" as an example:
-- A `Foo` enum for its values
-- `Optional<Foo> keyword_to_foo(Keyword)` to convert a `Keyword` to a `Foo`
-- `Keyword to_keyword(Foo)` to convert the `Foo` back to a `Keyword`
-- `StringView to_string(Foo)` to convert the `Foo` directly to a string
+
+-   A `Foo` enum for its values
+-   `Optional<Foo> keyword_to_foo(Keyword)` to convert a `Keyword` to a `Foo`
+-   `Keyword to_keyword(Foo)` to convert the `Foo` back to a `Keyword`
+-   `StringView to_string(Foo)` to convert the `Foo` directly to a string
 
 ## PseudoClasses.json
 
@@ -100,11 +102,12 @@ function parameters - for identifier-style pseudo-classes it is left blank.
 The grammar is taken directly from the spec.
 
 The generated code provides:
-- A `PseudoClass` enum listing every pseudo-class name
-- `Optional<PseudoClass> pseudo_class_from_string(StringView)` to parse a string as a `PseudoClass` name
-- `StringView pseudo_class_name(PseudoClass)` to convert a `PseudoClass` back into a string
-- The `PseudoClassMetadata` struct which holds a representation of the data from the JSON file
-- `PseudoClassMetadata pseudo_class_metadata(PseudoClass)` to retrieve that data
+
+-   A `PseudoClass` enum listing every pseudo-class name
+-   `Optional<PseudoClass> pseudo_class_from_string(StringView)` to parse a string as a `PseudoClass` name
+-   `StringView pseudo_class_name(PseudoClass)` to convert a `PseudoClass` back into a string
+-   The `PseudoClassMetadata` struct which holds a representation of the data from the JSON file
+-   `PseudoClassMetadata pseudo_class_metadata(PseudoClass)` to retrieve that data
 
 ## MediaFeatures.json
 
@@ -117,18 +120,19 @@ They are listed in the [`@media` descriptor table](https://www.w3.org/TR/mediaqu
 The definitions here are like a simplified version of the `Properties.json` definitions.
 
 | Field    | Description                                                                                                                                                                                       |
-|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `type`   | String. How the media-feature is evaluated, either `discrete` or `range`.                                                                                                                         |
 | `values` | Array of strings. These are directly taken from the spec, with keywords as they are, and `<>` around type names. Types may be `<boolean>`, `<integer>`, `<length>`, `<ratio>`, or `<resolution>`. |
 
 The generated code provides:
-- A `MediaFeatureValueType` enum listing the possible value types
-- A `MediaFeatureID` enum, listing each media-feature
-- `Optional<MediaFeatureID> media_feature_id_from_string(StringView)` to convert a string to a `MediaFeatureID`
-- `StringView string_from_media_feature_id(MediaFeatureID)` to convert a `MediaFeatureID` back to a string
-- `bool media_feature_type_is_range(MediaFeatureID)` returns whether the media feature is a `range` type, as opposed to a `discrete` type
-- `bool media_feature_accepts_type(MediaFeatureID, MediaFeatureValueType)` returns whether the media feature will accept values of this type
-- `bool media_feature_accepts_keyword(MediaFeatureID, Keyword)` returns whether the media feature accepts this keyword
+
+-   A `MediaFeatureValueType` enum listing the possible value types
+-   A `MediaFeatureID` enum, listing each media-feature
+-   `Optional<MediaFeatureID> media_feature_id_from_string(StringView)` to convert a string to a `MediaFeatureID`
+-   `StringView string_from_media_feature_id(MediaFeatureID)` to convert a `MediaFeatureID` back to a string
+-   `bool media_feature_type_is_range(MediaFeatureID)` returns whether the media feature is a `range` type, as opposed to a `discrete` type
+-   `bool media_feature_accepts_type(MediaFeatureID, MediaFeatureValueType)` returns whether the media feature will accept values of this type
+-   `bool media_feature_accepts_keyword(MediaFeatureID, Keyword)` returns whether the media feature accepts this keyword
 
 ## MathFunctions.json
 
@@ -140,14 +144,15 @@ Each entry currently has a single property, `parameters`, which is an array of p
 Parameter definitions have the following properties:
 
 | Field      | Description                                                                      |
-|------------|----------------------------------------------------------------------------------|
+| ---------- | -------------------------------------------------------------------------------- |
 | `name`     | String. Name of the parameter, as given in the spec.                             |
 | `type`     | String. Accepted types for the parameter, as a single string, separated by `\|`. |
 | `required` | Boolean. Whether this parameter is required.                                     |
 
 The generated code provides:
-- A `MathFunction` enum listing the math functions
-- The implementation of the CSS Parser's `parse_math_function()` method
+
+-   A `MathFunction` enum listing the math functions
+-   The implementation of the CSS Parser's `parse_math_function()` method
 
 ## TransformFunctions.json
 
@@ -159,12 +164,13 @@ Each entry currently has a single property, `parameters`, which is an array of p
 Parameter definitions have the following properties:
 
 | Field      | Description                                  |
-|------------|----------------------------------------------|
-| `type`     | String. Accepted type for the parameter.     | 
+| ---------- | -------------------------------------------- |
+| `type`     | String. Accepted type for the parameter.     |
 | `required` | Boolean. Whether this parameter is required. |
 
 The generated code provides:
-- A `TransformFunction` enum listing the transform functions
-- `Optional<TransformFunction> transform_function_from_string(StringView)` to parse a string as a `TransformFunction`
-- `StringView to_string(TransformFunction)` to convert a `TransformFunction` back to a string
-- `TransformFunctionMetadata transform_function_metadata(TransformFunction)` to obtain metadata about the transform function, such as its parameter list
+
+-   A `TransformFunction` enum listing the transform functions
+-   `Optional<TransformFunction> transform_function_from_string(StringView)` to parse a string as a `TransformFunction`
+-   `StringView to_string(TransformFunction)` to convert a `TransformFunction` back to a string
+-   `TransformFunctionMetadata transform_function_metadata(TransformFunction)` to obtain metadata about the transform function, such as its parameter list

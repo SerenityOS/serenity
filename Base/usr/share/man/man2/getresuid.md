@@ -22,13 +22,13 @@ Otherwise, returns -1 and sets `errno` to describe the error.
 
 ## Errors
 
-* `EFAULT`: One of the passed pointers is not valid, writeable pointer in the current process.
+-   `EFAULT`: One of the passed pointers is not valid, writeable pointer in the current process.
 
 ## See also
 
-* [`setuid_overview`(7)](help://man/7/setuid_overview)
-* [`geteuid`(2) / `getegid`(2)](help://man/2/geteuid)
-* [`getuid`(2) / `getgid`(2)](help://man/2/getuid)
-* [`seteuid`(2) / `setegid`(2)](help://man/2/seteuid)
-* [`setuid`(2) / `setgid`(2)](help://man/2/setuid)
-* [`setresuid`(2) / `setresgid`(2)](help://man/2/setresuid)
+-   [`setuid_overview`(7)](help://man/7/setuid_overview)
+-   [`geteuid`(2) / `getegid`(2)](help://man/2/geteuid)
+-   [`getuid`(2) / `getgid`(2)](help://man/2/getuid)
+-   [`seteuid`(2) / `setegid`(2)](help://man/2/seteuid)
+-   [`setuid`(2) / `setgid`(2)](help://man/2/setuid)
+-   [`setresuid`(2) / `setresgid`(2)](help://man/2/setresuid)

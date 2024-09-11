@@ -16,10 +16,10 @@ If a directory is specified in `path`, the `-r` (recursive) flag is required. Ot
 
 ## Options
 
-* `-r`, `--recursive`: Remove files and directories recursively
-* `-f`, `--force`: Do not prompt before removing
-* `-v`, `--verbose`: Display what files are removed
-* `--no-preserve-root`: Do not treat '/' specially
+-   `-r`, `--recursive`: Remove files and directories recursively
+-   `-f`, `--force`: Do not prompt before removing
+-   `-v`, `--verbose`: Display what files are removed
+-   `--no-preserve-root`: Do not treat '/' specially
 
 ## Examples
 
@@ -32,4 +32,5 @@ $ rm -r Tests
 ```
 
 ## See also
-* [`rmdir`(1)](help://man/1/rmdir) to just delete empty directories
+
+-   [`rmdir`(1)](help://man/1/rmdir) to just delete empty directories

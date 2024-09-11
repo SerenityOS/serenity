@@ -14,7 +14,7 @@ $ CatDog
 
 `CatDog` is an animated screenmate application in the form of a virtual pet.
 
-It was inspired by [Neko](https://en.wikipedia.org/wiki/Neko_(software)). The name derives from its ambiguous appearance: is it a cat, a dog, or a hybrid?
+It was inspired by [Neko](<https://en.wikipedia.org/wiki/Neko_(software)>). The name derives from its ambiguous appearance: is it a cat, a dog, or a hybrid?
 
 Its helpful suggestions evoke the animated assistants popular at the turn of the millennium, such as [Clippy](https://en.wikipedia.org/wiki/Office_Assistant).
 
@@ -28,10 +28,10 @@ Additionally, CatDog offers helpful suggestions depending on the currently activ
 
 CatDog has multiple states:
 
-- *Sleeping* if the mouse cursor hasn’t moved in some time
-- *Alert* if woken by the mouse cursor or speaking after being idle
-- *Dressed as an Artist* if [Pixel Paint](help://man/1/Applications/PixelPaint) or [Font Editor](help://man/1/Applications/FontEditor) are open
-- *Dressed as an Inspector* if [Profiler](help://man/1/Applications/Profiler) or System Monitor are open
+-   _Sleeping_ if the mouse cursor hasn’t moved in some time
+-   _Alert_ if woken by the mouse cursor or speaking after being idle
+-   _Dressed as an Artist_ if [Pixel Paint](help://man/1/Applications/PixelPaint) or [Font Editor](help://man/1/Applications/FontEditor) are open
+-   _Dressed as an Inspector_ if [Profiler](help://man/1/Applications/Profiler) or System Monitor are open
 
 To exit, right-click on CatDog and select `Quit` or, if active, press `Alt+F4`.
 

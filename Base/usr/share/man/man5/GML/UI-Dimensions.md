@@ -19,11 +19,10 @@ Special Values carry size information that would otherwise not be intuitively po
 
 Importantly, while any "regular" (i.e. int ≥0) UI Dimension values might (by convention) be assigned to any UI Dimension property, many properties only allow a subset of the "special" values to be assigned to them.
 
-| Name              | c++ name                                   | GML/JSON representation | General meaning                                 |
-|-------------------|--------------------------------------------|-------------------------|-------------------------------------------------|
-| Regular           | `GUI::SpecialDimension::Regular` (mock)    | int ≥0                  | This is a regular integer value specifying a specific size |
-| Grow              | `GUI::SpecialDimension::Grow`              | `"grow"`                | Grow to the maximum size the surrounding allows |
+| Name              | c++ name                                   | GML/JSON representation | General meaning                                                                                                                                                       |
+| ----------------- | ------------------------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Regular           | `GUI::SpecialDimension::Regular` (mock)    | int ≥0                  | This is a regular integer value specifying a specific size                                                                                                            |
+| Grow              | `GUI::SpecialDimension::Grow`              | `"grow"`                | Grow to the maximum size the surrounding allows                                                                                                                       |
 | OpportunisticGrow | `GUI::SpecialDimension::OpportunisticGrow` | `"opportunistic_grow"`  | Grow when the opportunity arises, meaning — only when all other widgets have already grown to their maximum size, and only opportunistically growing widgets are left |
-| Fit               | `GUI::SpecialDimension::Fit`               | `"fit"`                 | Grow exactly to the size of the surrounding as determined by other factors, but do not call for e.g. expansion of the parent container itself |
-| Shrink            | `GUI::SpecialDimension::Shrink`            | `"shrink"`              | Shrink to the smallest size possible |
-
+| Fit               | `GUI::SpecialDimension::Fit`               | `"fit"`                 | Grow exactly to the size of the surrounding as determined by other factors, but do not call for e.g. expansion of the parent container itself                         |
+| Shrink            | `GUI::SpecialDimension::Shrink`            | `"shrink"`              | Shrink to the smallest size possible                                                                                                                                  |

@@ -12,36 +12,36 @@ $ ls [options...] [path...]
 
 `ls` lists directory contents and attributes.
 
-If no *path* argument is provided the current working directory is used.
+If no _path_ argument is provided the current working directory is used.
 
 ## Options
 
-* `--help`: Display this message
-* `-a`, `--all`: Show dotfiles
-* `-A`: Do not list implied . and .. directories
-* `-B`, `--ignore-backups`: Do not list implied entries ending with ~
-* `-F`, `--classify`: Append a file type indicator to entries
-* `-p`: Append a '/' indicator to directories
-* `-d`, `--directory`: List directories themselves, not their contents
-* `-l`, `--long`: Display long info
-* `-t`: Sort files by timestamp (newest first)
-* `-S`: Sort files by size (largest first)
-* `-r`, `--reverse`: Reverse sort order
-* `-G`: Use pretty colors
-* `-i`, `--inode`: Show inode ids
-* `-I`, `--raw-inode`: Show raw inode ids if possible (see Notes to understand when this will not work)
-* `-n`, `--numeric-uid-gid`: In long format, display numeric UID/GID. Implies `-l`
-* `-o`: In long format, do not show group information. Implies `-l`
-* `-g`: In long format, do not show owner information. Implies `-l`
-* `-h`, `--human-readable`: Print human-readable sizes
-* `--si`: Print human-readable sizes in SI units
-* `-K`, `--no-hyperlinks`: Disable hyperlinks
-* `-R`, `--recursive`: List subdirectories recursively
-* `-1`: List one file per line
+-   `--help`: Display this message
+-   `-a`, `--all`: Show dotfiles
+-   `-A`: Do not list implied . and .. directories
+-   `-B`, `--ignore-backups`: Do not list implied entries ending with ~
+-   `-F`, `--classify`: Append a file type indicator to entries
+-   `-p`: Append a '/' indicator to directories
+-   `-d`, `--directory`: List directories themselves, not their contents
+-   `-l`, `--long`: Display long info
+-   `-t`: Sort files by timestamp (newest first)
+-   `-S`: Sort files by size (largest first)
+-   `-r`, `--reverse`: Reverse sort order
+-   `-G`: Use pretty colors
+-   `-i`, `--inode`: Show inode ids
+-   `-I`, `--raw-inode`: Show raw inode ids if possible (see Notes to understand when this will not work)
+-   `-n`, `--numeric-uid-gid`: In long format, display numeric UID/GID. Implies `-l`
+-   `-o`: In long format, do not show group information. Implies `-l`
+-   `-g`: In long format, do not show owner information. Implies `-l`
+-   `-h`, `--human-readable`: Print human-readable sizes
+-   `--si`: Print human-readable sizes in SI units
+-   `-K`, `--no-hyperlinks`: Disable hyperlinks
+-   `-R`, `--recursive`: List subdirectories recursively
+-   `-1`: List one file per line
 
 ## Arguments
 
-* `path`: Directory to list
+-   `path`: Directory to list
 
 ## Examples
 
@@ -69,4 +69,5 @@ is a mounted filesystem on a directory entry, `lstat` will give the root
 inode number for that filesystem.
 
 ## See also
-* [`tree`(1)](help://man/1/tree) to show the contents of the directory and subdirectories in a tree visualization
+
+-   [`tree`(1)](help://man/1/tree) to show the contents of the directory and subdirectories in a tree visualization

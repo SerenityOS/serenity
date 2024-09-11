@@ -9,7 +9,8 @@ $ umount <mountpoint>
 ```
 
 ## Arguments
-* `mountpoint`: File system path to unmount
+
+-   `mountpoint`: File system path to unmount
 
 ## Description
 
@@ -23,4 +24,4 @@ $ umount <mountpoint>
 
 ## See also
 
-* [`mount`(8)](help://man/8/mount)
+-   [`mount`(8)](help://man/8/mount)

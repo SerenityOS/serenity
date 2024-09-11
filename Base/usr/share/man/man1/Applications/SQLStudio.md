@@ -17,8 +17,8 @@ SQL scripts.
 
 ## Arguments
 
-* `script.sql`: SQL script to open, edit or run
-* `database.db`: SQL database to open and run scripts against
+-   `script.sql`: SQL script to open, edit or run
+-   `database.db`: SQL database to open and run scripts against
 
 ## Examples
 

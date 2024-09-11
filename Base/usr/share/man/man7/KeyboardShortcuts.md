@@ -1,24 +1,29 @@
 ![Keyboard Icon](/res/icons/32x32/app-keyboard-settings.png)
 
 ## Name
+
 Keyboard Shortcuts
 
 ## Description
+
 This is a collection of common keyboard shortcuts in SerenityOS.
 
 ### Keywords
-* `Super` means the ⊞ Windows or ⌘ Command key (and is sometimes called 'Meta' on Linux)
-* `Alt` is equivalent to ⌥ Option on macOS
+
+-   `Super` means the ⊞ Windows or ⌘ Command key (and is sometimes called 'Meta' on Linux)
+-   `Alt` is equivalent to ⌥ Option on macOS
 
 ## General
+
 | Shortcut      | Action                                                                                         |
-|---------------|------------------------------------------------------------------------------------------------|
+| ------------- | ---------------------------------------------------------------------------------------------- |
 | `Super`       | Open the System Menu (navigate via arrow keys)                                                 |
 | `Super+Space` | Open [Assistant](help://man/1/Applications/Assistant) (system search and application launcher) |
 
 ### Window Management
+
 | Shortcut                 | Action                                                                |
-|--------------------------|-----------------------------------------------------------------------|
+| ------------------------ | --------------------------------------------------------------------- |
 | `Super+Up`               | Maximize the window                                                   |
 | `Super+Down`             | Minimize the window (or un-maximize)                                  |
 | `Super+Left`             | Snap window to left half of the screen                                |
@@ -34,8 +39,9 @@ This is a collection of common keyboard shortcuts in SerenityOS.
 | `Shift+Ctrl+Alt+Arrows`  | Move Workspace with the active window                                 |
 
 ### Common within Applications
+
 | Shortcut       | Action                                                        |
-|----------------|---------------------------------------------------------------|
+| -------------- | ------------------------------------------------------------- |
 | `Ctrl+Z`       | Undo                                                          |
 | `Ctrl+Shift+Z` | Redo                                                          |
 | `Ctrl+A`       | Select All                                                    |
@@ -55,15 +61,18 @@ This is a collection of common keyboard shortcuts in SerenityOS.
 | `Alt+F4`       | Quit                                                          |
 
 ### Text Input
+
 | Shortcut         | Action                                                |
-|------------------|-------------------------------------------------------|
+| ---------------- | ----------------------------------------------------- |
 | `Ctrl+Alt+Space` | Emoji Picker                                          |
 | `Shift+Alt`      | Hold `Shift` and press `Alt` to cycle through keymaps |
 
 ### Accessibility
+
 | Shortcut  | Action           |
-|-----------|------------------|
+| --------- | ---------------- |
 | `Super+H` | Highlight Cursor |
 
 ## See also
-* [Tips and Tricks](help://man/7/Tips-and-Tricks)
+
+-   [Tips and Tricks](help://man/7/Tips-and-Tricks)

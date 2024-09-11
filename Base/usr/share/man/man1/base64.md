@@ -15,8 +15,8 @@ file is not specified or file is `-`.
 
 ## Options
 
-* `-d`, `--decode`: Decode data
-* `-w column`, `--wrap column`: When encoding, wrap output after `column` characters
+-   `-d`, `--decode`: Decode data
+-   `-w column`, `--wrap column`: When encoding, wrap output after `column` characters
 
 ## Examples
 

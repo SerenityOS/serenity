@@ -20,6 +20,5 @@ In pledged programs, the `proc` promise is required for this system call.
 
 ## Errors
 
-* `ESRCH`: No process with PID `pid` was found.
-* `ECHILD`: The target process is not a child of the calling process.
-
+-   `ESRCH`: No process with PID `pid` was found.
+-   `ECHILD`: The target process is not a child of the calling process.
