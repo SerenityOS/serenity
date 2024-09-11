@@ -18,9 +18,9 @@ If a directory is specified in `source`, the `-R` (recursive) flag is required. 
 
 ## Options
 
-* `-l`, `--link`: Create hard links instead of copying
-* `-R`, `-r`, `--recursive`: Copy directories recursively
-* `-v`, `--verbose`: Display what files are copied
+-   `-l`, `--link`: Create hard links instead of copying
+-   `-R`, `-r`, `--recursive`: Copy directories recursively
+-   `-v`, `--verbose`: Display what files are copied
 
 ## Examples
 
@@ -36,4 +36,5 @@ $ cp test root
 ```
 
 ## See also
-* [`mv`(1)](help://man/1/mv)
+
+-   [`mv`(1)](help://man/1/mv)

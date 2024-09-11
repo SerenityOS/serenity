@@ -14,12 +14,12 @@ This program is used to send control signals to the AudioServer and the sound ha
 
 ## Options
 
-* `-h`, `--human-readable`: Print human-readable output. If this option is not given, the output of `get` will be machine-readable and only consist of one line.
+-   `-h`, `--human-readable`: Print human-readable output. If this option is not given, the output of `get` will be machine-readable and only consist of one line.
 
 ## Arguments
 
-* `command`: The command to execute, either `get` or `set`.
-* `args`: The arguments to the command.
+-   `command`: The command to execute, either `get` or `set`.
+-   `args`: The arguments to the command.
 
 There are two commands available: `get` reports the state of audio variables, and `set` changes these variables.
 
@@ -28,9 +28,10 @@ There are two commands available: `get` reports the state of audio variables, an
 `set` expects one or more variables followed by a value to set them to, and will set the variables to the given values. A variable can be given multiple times and the last specified value will remain with the audio server.
 
 The available variables are:
-* `(v)olume`: Audio server volume, in percent. Integer value.
-* `(m)ute`: Mute state. Boolean value, may be set with `0`, `false` or `1`, `true`.
-* `sample(r)ate`: Sample rate of the sound card. Integer value.
+
+-   `(v)olume`: Audio server volume, in percent. Integer value.
+-   `(m)ute`: Mute state. Boolean value, may be set with `0`, `false` or `1`, `true`.
+-   `sample(r)ate`: Sample rate of the sound card. Integer value.
 
 Both commands and arguments can be abbreviated: Commands by their first letter, arguments by the letter in parenthesis.
 

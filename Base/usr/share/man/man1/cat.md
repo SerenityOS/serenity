@@ -14,7 +14,7 @@ This program passes contents of specified `files` to standard output, in the spe
 
 ## Arguments
 
-* `file`: Files to print
+-   `file`: Files to print
 
 ## Examples
 
@@ -53,6 +53,7 @@ cat test.txt test2.txt
 ```
 
 ## See Also
-* [`head`(1)](help://man/1/head)
-* [`tail`(1)](help://man/1/tail)
-* [`cut`(1)](help://man/1/cut)
+
+-   [`head`(1)](help://man/1/head)
+-   [`tail`(1)](help://man/1/tail)
+-   [`cut`(1)](help://man/1/cut)

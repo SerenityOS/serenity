@@ -22,8 +22,8 @@ Defines a GUI text box that only allows integers within a specified range.
 
 ## Registered Properties
 
-| Property | Type  | Possible values    | Description                            |
-|----------|-------|--------------------|----------------------------------------|
-| min      | int   | Any 64 bit integer | Minimum number the input can be set to |
-| max      | int   | Any 64 bit integer | Maximum number the input can be set to |
-| value    | int   | Any 64 bit integer | Initial value                          |
+| Property | Type | Possible values    | Description                            |
+| -------- | ---- | ------------------ | -------------------------------------- |
+| min      | int  | Any 64 bit integer | Minimum number the input can be set to |
+| max      | int  | Any 64 bit integer | Maximum number the input can be set to |
+| value    | int  | Any 64 bit integer | Initial value                          |

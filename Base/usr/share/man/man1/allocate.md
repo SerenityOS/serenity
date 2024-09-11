@@ -18,8 +18,8 @@ It is primarily used to test the kernel's memory management capabilities.
 
 ## Options
 
-* `-u`, `--size-unit`: Allocation's Size Unit (Base 2 units - B, KiB, MiB or GiB)
-* `-n`, `--sleep-time`: Number of seconds to sleep before freeing memory
+-   `-u`, `--size-unit`: Allocation's Size Unit (Base 2 units - B, KiB, MiB or GiB)
+-   `-n`, `--sleep-time`: Number of seconds to sleep before freeing memory
 
 ## Examples
 

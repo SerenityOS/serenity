@@ -10,7 +10,7 @@ Reading from `/dev/zero` returns '\0' bytes and exits with status 0.
 
 ## Files
 
-* /dev/zero
+-   /dev/zero
 
 ## Examples
 
@@ -21,6 +21,5 @@ $ head -c 8 /dev/zero | hexdump
 
 ## See also
 
-* [`null`(4)](help://man/4/null)
-* [`full`(4)](help://man/4/full)
-
+-   [`null`(4)](help://man/4/null)
+-   [`full`(4)](help://man/4/full)

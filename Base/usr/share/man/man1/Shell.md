@@ -24,12 +24,12 @@ The `Shell` utility does not promise POSIX `sh` interoperability.
 
 ## Options
 
-* `-c`, `--command-string`: Executes the given string as a command and exits
-* `--skip-shellrc`: Skips running the initialization file (at `~/.shellrc`)
-* `--format`: Format shell code from the given file and print the result to standard output
-* `-f`, `--live-formatting`: Enable live formatting of the line editor buffer (in REPL mode)
-* `--keep-open`: Keep the shell open after running the specified command or file
-* `--posix`: Behave like a POSIX-compatible shell
+-   `-c`, `--command-string`: Executes the given string as a command and exits
+-   `--skip-shellrc`: Skips running the initialization file (at `~/.shellrc`)
+-   `--format`: Format shell code from the given file and print the result to standard output
+-   `-f`, `--live-formatting`: Enable live formatting of the line editor buffer (in REPL mode)
+-   `--keep-open`: Keep the shell open after running the specified command or file
+-   `--posix`: Behave like a POSIX-compatible shell
 
 ## Examples
 
@@ -46,4 +46,4 @@ Shell foo a b c
 
 ## See also
 
-* [`Shell-vars`(7)](help://man/7/Shell-vars) For details on local and environment variables used by the shell
+-   [`Shell-vars`(7)](help://man/7/Shell-vars) For details on local and environment variables used by the shell

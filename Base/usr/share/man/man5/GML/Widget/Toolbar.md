@@ -27,6 +27,6 @@ To keep groups (i.e. Buttons/items separated by Separators) together, and move t
 ## Registered Properties
 
 | Property    | Type | Possible values | Description                                                                           |
-|-------------|------|-----------------|---------------------------------------------------------------------------------------|
+| ----------- | ---- | --------------- | ------------------------------------------------------------------------------------- |
 | collapsible | bool | true or false   | If items that do not fit should be placed in an overflow menu                         |
 | grouped     | bool | true or false   | If items should be moved to the overflow menu in groups, separated by Separator items |

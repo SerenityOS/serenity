@@ -15,7 +15,7 @@ It shows a brief list of these devices.
 
 ## Files
 
-* `/sys/devices/storage` - source of the storage devices list.
+-   `/sys/devices/storage` - source of the storage devices list.
 
 ## Examples
 

@@ -18,11 +18,11 @@ The output may be redirected to another file or utility for further processing.
 
 ## Options
 
-* `-b`, `--block-size`: Base block size [in KiB] to be used during the utility operation, default is 256 KiB
+-   `-b`, `--block-size`: Base block size [in KiB] to be used during the utility operation, default is 256 KiB
 
 ## Arguments
 
-* `file`: File to be read
+-   `file`: File to be read
 
 ## Warning
 

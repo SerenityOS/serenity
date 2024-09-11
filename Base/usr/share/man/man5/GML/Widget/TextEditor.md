@@ -22,7 +22,7 @@ Defines a GUI text editor widget.
 ## Registered Properties
 
 | Property    | Type   | Possible values                 | Description     |
-|-------------|--------|---------------------------------|-----------------|
+| ----------- | ------ | ------------------------------- | --------------- |
 | text        | string | Any string                      | Set text        |
 | placeholder | string | Any string                      | Set placeholder |
 | mode        | enum   | Editable, ReadOnly, DisplayOnly | Set editor mode |

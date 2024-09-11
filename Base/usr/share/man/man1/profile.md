@@ -14,13 +14,13 @@ $ profile [-p PID] [-a] [-e] [-d] [-f] [-w] [-t event_type] [COMMAND_TO_PROFILE]
 
 ## Options
 
-* `-p PID`: Target PID
-* `-a`: Profile all processes (super-user only), result at /sys/kernel/profile
-* `-e`: Enable
-* `-d`: Disable
-* `-f`: Free the profiling buffer for the associated process(es).
-* `-w`: Enable profiling and wait for user input to disable.
-* `-t event_type`: Enable tracking specific event type
+-   `-p PID`: Target PID
+-   `-a`: Profile all processes (super-user only), result at /sys/kernel/profile
+-   `-e`: Enable
+-   `-d`: Disable
+-   `-f`: Free the profiling buffer for the associated process(es).
+-   `-w`: Enable profiling and wait for user input to disable.
+-   `-t event_type`: Enable tracking specific event type
 
 Event type can be one of: sample, context_switch, page_fault, syscall, read, kmalloc and kfree.
 
@@ -41,5 +41,5 @@ $ profile -t syscall -- echo "Hello friends!"
 
 ## See also
 
-* [`Profiler`(1)](help://man/1/Applications/Profiler) GUI for viewing profiling data produced by `profile`.
-* [`strace`(1)](help://man/1/strace)
+-   [`Profiler`(1)](help://man/1/Applications/Profiler) GUI for viewing profiling data produced by `profile`.
+-   [`strace`(1)](help://man/1/strace)

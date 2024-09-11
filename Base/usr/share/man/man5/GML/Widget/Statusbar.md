@@ -21,6 +21,6 @@ Defines a GUI status bar widget.
 ## Registered Properties
 
 | Property    | Type   | Possible values    | Description                     |
-|-------------|--------|--------------------|---------------------------------|
+| ----------- | ------ | ------------------ | ------------------------------- |
 | text        | string | Any string         | Sets the text of the status bar |
 | label_count | int    | Any 64 bit integer | Sets the label count            |

@@ -17,10 +17,10 @@ as long as it contains at least 3 consecutive 'X's.
 
 ## Options
 
-* `-d`, `--directory`: Create a temporary directory instead of a file
-* `-u`, `--dry-run`: Do not create anything, just print a unique name
-* `-q`, `--quiet`: Do not print diagnostics about file/directory creation failure
-* `-p`, `--tmpdir`: Create temporary files relative to this directory
+-   `-d`, `--directory`: Create a temporary directory instead of a file
+-   `-u`, `--dry-run`: Do not create anything, just print a unique name
+-   `-q`, `--quiet`: Do not print diagnostics about file/directory creation failure
+-   `-p`, `--tmpdir`: Create temporary files relative to this directory
 
 ## Examples
 
@@ -34,5 +34,6 @@ $ mktemp -d serenity.XXXXX
 ```
 
 ## See also
-* [`mkdir`(1)](help://man/1/mkdir) to create a regular directory
-* [`touch`(1)](help://man/1/touch) to create a regular file
+
+-   [`mkdir`(1)](help://man/1/mkdir) to create a regular directory
+-   [`touch`(1)](help://man/1/touch) to create a regular file

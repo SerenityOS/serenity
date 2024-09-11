@@ -7,6 +7,7 @@ TelnetServer - Serenity telnet server
 ```sh
 $ TelnetServer [-p port] [-c command]
 ```
+
 ## Description
 
 TelnetServer is a basic telnet server for Serenity. By default, it
@@ -15,10 +16,10 @@ must be run as root.
 
 ## Options
 
-* `--help`: Display help message and exit
-* `--version`: Print version
-* `-p port`: Port to listen on
-* `-c command`: Program to run on connection
+-   `--help`: Display help message and exit
+-   `--version`: Print version
+-   `-p port`: Port to listen on
+-   `-c command`: Program to run on connection
 
 ## Examples
 

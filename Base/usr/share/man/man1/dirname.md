@@ -10,9 +10,8 @@ $ dirname [--zero] <path...>
 
 ## Options
 
-* `-z`, `--zero`: End each output line with \0, rather than \n
+-   `-z`, `--zero`: End each output line with \0, rather than \n
 
 ## Arguments
 
-* `path`: Path
-
+-   `path`: Path

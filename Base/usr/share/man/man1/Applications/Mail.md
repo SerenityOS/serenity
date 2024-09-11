@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-mail.png)  Mail - Serenity e-mail client
+![Icon](/res/icons/16x16/app-mail.png) Mail - Serenity e-mail client
 
 [Open](file:///bin/Mail)
 
@@ -19,6 +19,7 @@ See the Examples section for an example configuration file.
 ## Examples
 
 `~/.config/Mail.ini`:
+
 ```ini
 [Connection]
 Server=email.example.com

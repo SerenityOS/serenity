@@ -20,6 +20,6 @@ If `fd` refers to a TTY device, returns 1. Otherwise, returns 0 and `errno` is s
 
 ## Errors
 
-* `EBADF`: `fd` is not an open file descriptor.
-* `ENOTTY`: `fd` refers to something that's not a TTY device.
-* `EINVAL`: `fd` refers to something that supports `ioctl()`, but is still not a TTY device.
+-   `EBADF`: `fd` is not an open file descriptor.
+-   `ENOTTY`: `fd` refers to something that's not a TTY device.
+-   `EINVAL`: `fd` refers to something that supports `ioctl()`, but is still not a TTY device.

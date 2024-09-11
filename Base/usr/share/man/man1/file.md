@@ -16,13 +16,13 @@ First, an attempt is made to identify a given file based on predetermined binary
 
 ## Options
 
-* `--help`: Display this message
-* `-b`, `--brief`: Do not prepend file names to output lines
-* `-I`, `--mime-type`: Only show mime type.
+-   `--help`: Display this message
+-   `-b`, `--brief`: Do not prepend file names to output lines
+-   `-I`, `--mime-type`: Only show mime type.
 
 ## Arguments
 
-* `files`: Files to identify
+-   `files`: Files to identify
 
 ## Examples
 
@@ -33,4 +33,3 @@ Buggie.png: PNG image data, 64 x 138
 # Identify all files in the current directory, and show only the mime type.
 $ file -I *
 ```
-

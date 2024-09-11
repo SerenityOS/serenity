@@ -7,14 +7,14 @@ manage all graphics devices, framebuffers, hardware 3D acceleration, memory mapp
 
 ## Responsibilities
 
-* Provide a convenient interface to all supported video hardware in the Kernel.
-* Manage 3D rendering on supported hardware.
+-   Provide a convenient interface to all supported video hardware in the Kernel.
+-   Manage 3D rendering on supported hardware.
 
 ## Current Limitations and Future features?
 
-* No locking on who can do `mmap` on DisplayConnector devices currently, which can
-lead to malicious applications "fighting" with WindowServer on what is shown to the user
-from the framebuffer.
+-   No locking on who can do `mmap` on DisplayConnector devices currently, which can
+    lead to malicious applications "fighting" with WindowServer on what is shown to the user
+    from the framebuffer.
 
 # DisplayConnector Devices
 
@@ -74,7 +74,7 @@ To try to cope with the dire situation, the VBE (Video BIOS extensions) standard
 help BIOS and operating system vendors to be able to get high resolution framebuffer from
 any hardware that complied to the standard. When UEFI came along, the vendors agreed
 to create the Graphics output protocol (known as UEFI GOP), to provide the same set of features
-that VBE had, but now is usable from 64-bit kernel code as long as the kernel didn't shutdown 
+that VBE had, but now is usable from 64-bit kernel code as long as the kernel didn't shutdown
 the UEFI services (which it really should do) after completing the boot process.
 
 ## Then how does it all apply to the subsystem?
@@ -104,15 +104,15 @@ device, while keeping the control to the Kernel to decide who accesses the actua
 at a given time. This works by working with the following assumptions:
 
 1. Current usage of `mmap` is only for direct framebuffer manipulation. This means
-that if we add support for batch buffers or other objects that should reside in VRAM, this trick
-can lead to catastrophic incidents with the underlying hardware. This happens to be this way, due to
-the fact that we essentially can take VRAM access from the WindowServer at anytime we want,
-without the WindowServer being aware of this so it can still function in the background.
+   that if we add support for batch buffers or other objects that should reside in VRAM, this trick
+   can lead to catastrophic incidents with the underlying hardware. This happens to be this way, due to
+   the fact that we essentially can take VRAM access from the WindowServer at anytime we want,
+   without the WindowServer being aware of this so it can still function in the background.
 2. We need to know the maximum dimensions of the framebuffers when initializing the device
-and creating the DisplayConnector device at runtime. This happens because we map all the possible
-pages of VRAM framebuffer at that time, and also reserve the same amount of pages in usable
-physical memory space, so we could reserve the contents of VRAM between the switch
-from graphics mode to console mode and vice-versa.
+   and creating the DisplayConnector device at runtime. This happens because we map all the possible
+   pages of VRAM framebuffer at that time, and also reserve the same amount of pages in usable
+   physical memory space, so we could reserve the contents of VRAM between the switch
+   from graphics mode to console mode and vice-versa.
 
 The actual implementation is quite simple, yet powerful enough to let everyone
 live comfortably - each DisplayConnector device is backed by a special VMObject (VMObject is
@@ -120,7 +120,7 @@ the base class for managing virtual memory scenarios easily) that is created whe
 DisplayConnector device is initialized - we need to find the physical address of the
 start of the framebuffer and the maximum resource size (this is where PCI BARs play their role,
 as we can determine with them the physical address by reading their values and also
-the maximum resource size, by doing a very simple write 1s-and-read trick that was introduced 
+the maximum resource size, by doing a very simple write 1s-and-read trick that was introduced
 with the PCI bus when it was created). Then when the object is created, the code ensures
 we reserve for later usage the same amount of pages somewhere else to ensure we preserve
 the contents of VRAM between the switch from console and graphics mode and vice-versa.
@@ -132,21 +132,21 @@ to the framebuffer in the background.
 ## Do you plan supporting old VGA adapters?
 
 Given the nature of the user experience SerenityOS strives to deliver to the users,
-a core requirement from the first day of this project was to only support 32 bit-per-pixel 
-(also known as True-color framebuffer) hardware framebuffers. We do support hardware 
-framebuffers that neglect the alpha-channel (essentially it's a 24 bit-per-pixel), 
-as long as each pixel is aligned to 4 bytes. The QEMU std-vga (bochs-display with 
+a core requirement from the first day of this project was to only support 32 bit-per-pixel
+(also known as True-color framebuffer) hardware framebuffers. We do support hardware
+framebuffers that neglect the alpha-channel (essentially it's a 24 bit-per-pixel),
+as long as each pixel is aligned to 4 bytes. The QEMU std-vga (bochs-display with
 VGA capabilities) device was chosen as the first device to be supported in the project,
 and that was an excellent choice for that time to put up with the said requirement.
 
 This hard requirement is due to the fact that supporting anything besides True-color
-framebuffers is a *waste of time* for a new modern kernel. Not only that, but relying
-on VGA with modern monitors is essentially settling for blurry, badly-shaped graphics 
+framebuffers is a _waste of time_ for a new modern kernel. Not only that, but relying
+on VGA with modern monitors is essentially settling for blurry, badly-shaped graphics
 on a computer monitor, due to unoptimized resolution scaling with modern screen ratios.
 
 Old VGA adapters are certainly not capable of using high resolution framebuffers
 when operating in pure native VGA mode (i.e. not operating in an extension mode
-of the video adapter), therefore, if the Kernel cannot find a suitable framebuffer 
+of the video adapter), therefore, if the Kernel cannot find a suitable framebuffer
 to work with or a video adapter it has a driver for, then the last resort is to use the old VGA text mode
 console. Therefore, the SerenityOS kernel will probably never support pure VGA functionality.
 That technology was good for operating systems in the 90s, but is not usable anymore.
@@ -158,6 +158,7 @@ helps keeping the Graphics subsystem lean and flexible to future changes.
 
 As for using Video BIOS extensions - this requires us to be able to call to BIOS 16-bit real mode
 code. The solutions for these are:
+
 1. Drop to real mode, invoke the BIOS interrupt and return to our kernel.
 2. Writing a Real-Mode 16-bit emulator, either in Kernel space or userspace.
 3. Use Intel VT-x extensions to simulate a processor running in Real mode.
@@ -169,27 +170,29 @@ take a not negligible amount of effort to get something usable and correct. Usin
 such as Intel VT-x or the v8086 mode are almost equally equivalent to writing an emulator.
 
 We will probably never support using the Video BIOS extensions because of these reasons:
+
 1. Major part of this project is to maximize usability and fun on what we do, and turning into legacy-cruft to
-temporarily solve a solution is not the right thing to do.
+   temporarily solve a solution is not the right thing to do.
 2. VBE is not usable on machines that lack support of BIOS. As of 2022, this increasingly becomes a problem
-because many PC vendors dropped support for BIOS (known as CSM [Compatibility Support Module] in UEFI terms).
+   because many PC vendors dropped support for BIOS (known as CSM [Compatibility Support Module] in UEFI terms).
 3. VBE is limited to whatever the vendor decided to hardcode in the OptionROM of the video adapter, which means
-it can limit us to a small set of resolutions and bits-per-pixel settings,
-some of these settings are not convenient for us, nor suitable for our needs.
+   it can limit us to a small set of resolutions and bits-per-pixel settings,
+   some of these settings are not convenient for us, nor suitable for our needs.
 4. VBE lacks the support of detecting if the screen actually supports the resolution settings,
-which means that the operating system has to use other methods to determine if screen output is
-working properly (e.g. waiting for a couple of seconds for user confirmation on the selected settings).
-This is because VBE lacks support of getting the screen EDID because most of the time, 
-the EDID resides in a ROM in the computer screen, which is inaccessible without using specific
-methods to extract it (via the Display Data Channel), which are not encoded or implemented in
-the PCI OptionROM of the device.
-This is in contrast to native drivers which are able to do this, and VGA, that never relied on
-such methods and instead relied on all video adapters and computer screen to use an well-known
-specification-defined display modes.
+   which means that the operating system has to use other methods to determine if screen output is
+   working properly (e.g. waiting for a couple of seconds for user confirmation on the selected settings).
+   This is because VBE lacks support of getting the screen EDID because most of the time,
+   the EDID resides in a ROM in the computer screen, which is inaccessible without using specific
+   methods to extract it (via the Display Data Channel), which are not encoded or implemented in
+   the PCI OptionROM of the device.
+   This is in contrast to native drivers which are able to do this, and VGA, that never relied on
+   such methods and instead relied on all video adapters and computer screen to use an well-known
+   specification-defined display modes.
 
 ## What are the native drivers that are included in the kernel? what type of configurations are supported?
 
 The kernel can be configured to operate in the following conditions:
+
 1. Fully-enable the graphics subsystem, initialize every device being supported.
 2. Only use the pre-initialized framebuffer from the bootloader, don't initialize anything else.
 3. Don't use any framebuffer, don't initialize any device.

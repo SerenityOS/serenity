@@ -14,12 +14,12 @@ Compare `files` line by line.
 
 ## Arguments
 
-* `files`: files to compare ex: `file1 file2`
+-   `files`: files to compare ex: `file1 file2`
 
 ## Options
 
-* `-u`, `-U <context>`, `--unified <context>`: Write diff in unified format with `<unified>` number of surrounding context lines (default 3).
-* `-c`, `-C <context>`, `--context <context>`: Write diff in context format with `<context>` number of surrounding context lines (default 3).
+-   `-u`, `-U <context>`, `--unified <context>`: Write diff in unified format with `<unified>` number of surrounding context lines (default 3).
+-   `-c`, `-C <context>`, `--context <context>`: Write diff in context format with `<context>` number of surrounding context lines (default 3).
 
 ## Examples
 

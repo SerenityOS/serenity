@@ -1,30 +1,26 @@
-HighDPI design
-==============
+# HighDPI design
 
-Background
-----------
+## Background
 
-- macOS: Only integer scale factors at app level. Can stretch final composited framebuffer at very end for non-integer display scales.
-  - advantages: simple programming model, still fairly flexible; scaling at end produces coherent final image
-  - disadvantages: needs 4x memory even for 1.5x scale; scaling at very makes final image less detailed than it could be
+-   macOS: Only integer scale factors at app level. Can stretch final composited framebuffer at very end for non-integer display scales.
 
-- Android: Many (but discrete) scale levels (ldpi (0.75x), mdpi, hdpi (1.5x), xhdpi (2x), xxhdpi (3x), xxhdpi (4x))
+    -   advantages: simple programming model, still fairly flexible; scaling at end produces coherent final image
+    -   disadvantages: needs 4x memory even for 1.5x scale; scaling at very makes final image less detailed than it could be
 
-- Windows: has "not recommended" free form text entry for scale factor between 100% and 500%.
+-   Android: Many (but discrete) scale levels (ldpi (0.75x), mdpi, hdpi (1.5x), xhdpi (2x), xxhdpi (3x), xxhdpi (4x))
+
+-   Windows: has "not recommended" free form text entry for scale factor between 100% and 500%.
 
 Integer scale factors are needed in any case so let's get that working first. Actually, let's focus on just 2x for now.
 
+## Desired end state
 
-Desired end state
------------------
+-   All rects (Window and Widget rects, mouse cursor, even bitmap sizes) are in "logical" coordinates, which is the same as pixels at 1x scale, as much as possible.
+-   If something needs to be in pixels, its name starts with `physical_`. Physical coordinates should as much as possible not cross API boundaries.
+-   Jury's still out if logical coordinates should stay ints. Probably, but it means mouse cursor etc only have point resolution, not pixel resolution
+-   We should have something that can store a collection of (lazily-loaded?) bitmaps and fonts that each represent a single image / font at different scale levels, and at paint time the right representation is picked for the current scale
 
-- All rects  (Window and Widget rects, mouse cursor, even bitmap sizes) are in "logical" coordinates, which is the same as pixels at 1x scale, as much as possible.
-- If something needs to be in pixels, its name starts with `physical_`. Physical coordinates should as much as possible not cross API boundaries.
-- Jury's still out if logical coordinates should stay ints. Probably, but it means mouse cursor etc only have point resolution, not pixel resolution
-- We should have something that can store a collection of (lazily-loaded?) bitmaps and fonts that each represent a single image / font at different scale levels, and at paint time the right representation is picked for the current scale
-
-Resource loading
-----------------
+## Resource loading
 
 Resources such as icons, cursors, bitmap fonts are scale-dependent: In HighDPI modes, different resources need to be loaded.
 
@@ -74,58 +70,58 @@ Possible new structures:
 
 1. Have "1x", "2x" folders right inside res and then mirror folder structures inside them:
 
-       res/
-         1x/
-           cursors/
-             16x16/
-           emoji/
-           ...
-         2x/
-           cursors/
-             16x16/
-           emoji/
-           ...
+    res/
+    1x/
+    cursors/
+    16x16/
+    emoji/
+    ...
+    2x/
+    cursors/
+    16x16/
+    emoji/
+    ...
 
 2. Instead of having the 1x/2x fork at the root, have it at each leaf:
 
-       res/
-         cursors/
-           1x/
-             arrowx2y2.png
-             ...
-           2x/
-             arrowx2y2.png
-             ...
-         emoji/
-           1/
-             U+1F346.png
-             ...
-           2/
-             U+1F346.png
-             ...
-         ...
+    res/
+    cursors/
+    1x/
+    arrowx2y2.png
+    ...
+    2x/
+    arrowx2y2.png
+    ...
+    emoji/
+    1/
+    U+1F346.png
+    ...
+    2/
+    U+1F346.png
+    ...
+    ...
 
 3. Use filename suffixes instead of directories (similar to macOS):
 
-       res/
-         cursors/
-           arrowx2y2.png
-           arrowx2y2@2x.png
-           ...
-         emoji/
-           U+1F346.png
-           U+1F346@2x.png
-           ...
+    res/
+    cursors/
+    arrowx2y2.png
+    arrowx2y2@2x.png
+    ...
+    emoji/
+    U+1F346.png
+    U+1F346@2x.png
+    ...
 
 4. Use suffixes on directory instead of subdirectory:
 
-       res/
-         cursors/
-           arrowx2y2.png
-           ...
-         cursors-2x/
-           arrowx2y2.png
-           ...
+    res/
+    cursors/
+    arrowx2y2.png
+    ...
+    cursors-2x/
+    arrowx2y2.png
+    ...
 
 Root-level split makes it easy to see which scale factors exist and is subjectively aesthetically pleasing.
 
@@ -139,24 +135,28 @@ For now, we're going with a "-2x" suffix on the file name.
 
 ### Resource loading strategy tradeoffs
 
-- eagerly load one scale, reload at new scale on scale factor change events
-  - needs explicit code
-  - random code in LibGfx currently loads icons, and scale factor change events would be more a LibGUI level concept, not clear how to plumb the event to there
-  + memory efficient -- only have one copy of each resource in memory
-  + easy to understand: Bitmap stays Bitmap, Font stays Font, no need for collections
+-   eagerly load one scale, reload at new scale on scale factor change events
 
-- have BitmapCollection that stores high-res and low-res path and load lazily when needed
-  - need to do synchronous disk access at first paint on UI thread
-    - or load compressed data at each scale eagerly and decompress lazily. still a blocking decode on UI thread then, and needs more memory -- 2x compressed resources in memory even if they might never be needed
-  + puts complexity in framework, app doesn't have to care
-  + can transparently paint UI at both 1x and 2x into different backbuffers (eg for multiple screens that have different scale factors)
+    -   needs explicit code
+    -   random code in LibGfx currently loads icons, and scale factor change events would be more a LibGUI level concept, not clear how to plumb the event to there
 
-- eagerly load both and use the right one at paint time
-  - similar to GUI::Icon
-  - 400% memory overhead in 1x mode (but most icons are small)
-  + conceptually easy to understand, but still need some collection class
-  + puts (less) complexity in framework, app doesn't have to care
-  + can transparently paint UI at both 1x and 2x into different backbuffers (eg for multiple screens that have different scale factors)
+    *   memory efficient -- only have one copy of each resource in memory
+    *   easy to understand: Bitmap stays Bitmap, Font stays Font, no need for collections
+
+-   have BitmapCollection that stores high-res and low-res path and load lazily when needed
+
+    -   need to do synchronous disk access at first paint on UI thread
+        -   or load compressed data at each scale eagerly and decompress lazily. still a blocking decode on UI thread then, and needs more memory -- 2x compressed resources in memory even if they might never be needed
+
+    *   puts complexity in framework, app doesn't have to care
+    *   can transparently paint UI at both 1x and 2x into different backbuffers (eg for multiple screens that have different scale factors)
+
+-   eagerly load both and use the right one at paint time
+    -   similar to GUI::Icon
+    -   400% memory overhead in 1x mode (but most icons are small)
+    *   conceptually easy to understand, but still need some collection class
+    *   puts (less) complexity in framework, app doesn't have to care
+    *   can transparently paint UI at both 1x and 2x into different backbuffers (eg for multiple screens that have different scale factors)
 
 This isn't figured out yet, for now we're doing the first approach in select places in the window server.
 
@@ -178,8 +178,7 @@ Going forward:
 
     FIXME (depends on loading strategy decision a bit?)
 
-Implementation plan
--------------------
+## Implementation plan
 
 The plan is to have all applications use highdpi backbuffers eventually. It'll take some time to get there though, so here's a plan for getting there incrementally.
 

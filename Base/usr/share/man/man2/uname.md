@@ -31,8 +31,8 @@ If successful, returns 0. Otherwise, returns -1 and sets `errno` to describe the
 
 ## Errors
 
-* `EFAULT`: `buf` is not a writable address.
+-   `EFAULT`: `buf` is not a writable address.
 
 ## See also
 
-* [`uname`(1)](help://man/1/uname)
+-   [`uname`(1)](help://man/1/uname)

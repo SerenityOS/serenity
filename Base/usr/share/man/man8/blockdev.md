@@ -14,8 +14,8 @@ The `blockdev` command call ioctls on the given block device.
 
 ## Options
 
-* `-s`, `--size`: Get disk size in bytes
-* `-b`, `--block-size`: Get block size in bytes
+-   `-s`, `--size`: Get disk size in bytes
+-   `-b`, `--block-size`: Get block size in bytes
 
 ## Examples
 

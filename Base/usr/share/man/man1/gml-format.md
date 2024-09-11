@@ -14,7 +14,7 @@ $ gml-format [--inplace] [path...]
 
 ## Options
 
-* `-i`, `--inplace`: Write formatted contents back to file rather than standard output
+-   `-i`, `--inplace`: Write formatted contents back to file rather than standard output
 
 ## Examples
 
@@ -23,4 +23,5 @@ $ gml-format -i /home/anon/example.gml
 ```
 
 ## See Also
-* [`GML`(5)](help://man/5/GML)
+
+-   [`GML`(5)](help://man/5/GML)

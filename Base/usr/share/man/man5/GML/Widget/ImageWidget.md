@@ -21,6 +21,6 @@ Defines a GUI image widget.
 ## Registered Properties
 
 | Property       | Type | Possible values | Description                         |
-|----------------|------|-----------------|-------------------------------------|
+| -------------- | ---- | --------------- | ----------------------------------- |
 | auto_resize    | bool | true or false   | Set if the image should auto-resize |
 | should_stretch | bool | true or false   | Set if the image should stretch     |

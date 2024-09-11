@@ -4,14 +4,15 @@ installed.db - Package database format
 
 ## Description
 
-`/usr/Ports/installed.db` is a file keeping track of installed packages (or ports, respectively). It is a simple text-based format suitable for editing by the port system shell scripts. 
+`/usr/Ports/installed.db` is a file keeping track of installed packages (or ports, respectively). It is a simple text-based format suitable for editing by the port system shell scripts.
 
 Each line of installed.db consists of several space-separated fields. A line may also be empty and therefore ignored.
 
 The first field specifies what kind of entry the line contains:
-- `auto` specifies a port that is installed automatically, i.e. as a dependency of another port.
-- `manual` specifies a port that was installed manually.
-- `dependency` does not specify a new port, but the dependencies of a port. The port also has a `manual` or `auto` line somewhere else in the file.
+
+-   `auto` specifies a port that is installed automatically, i.e. as a dependency of another port.
+-   `manual` specifies a port that was installed manually.
+-   `dependency` does not specify a new port, but the dependencies of a port. The port also has a `manual` or `auto` line somewhere else in the file.
 
 The second field always specifies the port's name.
 

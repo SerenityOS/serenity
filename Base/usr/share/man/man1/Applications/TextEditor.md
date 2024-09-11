@@ -17,11 +17,11 @@ which allows automatic live rendering of HTML and Markdown documents.
 
 ## Options
 
-* `--preview-mode mode`: Preview mode, one of 'none', 'html', 'markdown', 'auto'
+-   `--preview-mode mode`: Preview mode, one of 'none', 'html', 'markdown', 'auto'
 
 ## Arguments
 
-* `file[:line[:column]]`: File to edit, with optional starting line and column number
+-   `file[:line[:column]]`: File to edit, with optional starting line and column number
 
 ## Examples
 

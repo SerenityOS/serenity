@@ -13,7 +13,6 @@ IOAddress io(0x3f0)
 u8 ide_status = io.offset(0).in<u8>()
 ```
 
-
 ### Memory-mapped IO
 
 Memory mapped IO is a platform-agnostic method to access hardware registers. It uses a
@@ -42,13 +41,14 @@ mapped registers as being defined in the SATA AHCI HBA specification.
 
 The general rule in kernel driver programming is to know that there are only two valid
 cases on whether to use the `IOWindow` structure or not:
+
 1. The device is known to either use the IO space, memory space or both, taking into
-consideration that variants of the device can disable either of the options. In this case,
-we need to use the `IOWindow` structure as it will help us to correctly use the IO window
-in either case.
+   consideration that variants of the device can disable either of the options. In this case,
+   we need to use the `IOWindow` structure as it will help us to correctly use the IO window
+   in either case.
 2. The device is known to use only the memory space, therefore we can ignore the `IOWindow`
-structure and instead use the `Memory::TypedMapping` structure to help navigating in
-the memory-mapped registers of the device.
+   structure and instead use the `Memory::TypedMapping` structure to help navigating in
+   the memory-mapped registers of the device.
 
 # A note about 64 bit access for memory mapped IO
 

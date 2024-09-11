@@ -12,7 +12,7 @@ int mkdir(const char* path, mode_t mode);
 
 ## Description
 
-Create a new empty directory at the given *path* using the given *mode*.
+Create a new empty directory at the given _path_ using the given _mode_.
 
 ## Return value
 
@@ -21,4 +21,4 @@ it returns -1 and sets `errno` to describe the error.
 
 ## See also
 
-* [`mkdir`(1)](help://man/1/mkdir)
+-   [`mkdir`(1)](help://man/1/mkdir)

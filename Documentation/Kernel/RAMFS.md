@@ -29,7 +29,7 @@ Other programs rely on `/tmp` for placing their temporary files to properly func
 To understand why `RAMFS` works reliably when mounted on `/dev`, we must understand
 first what we did in the past and how `RAMFS` solves many of the issues with the previous design.
 
-At first, we didn't have any special filesystem mounted in `/dev` as the image build 
+At first, we didn't have any special filesystem mounted in `/dev` as the image build
 script generated all the required device nodes in `/dev`. This was quite sufficient in
 the early days of the project, where hardware support was extremely limited and of course
 hotplugging any kind of hardware was not even a consideration.

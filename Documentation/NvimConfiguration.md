@@ -41,7 +41,7 @@ This will install a separate version of clangd just for neovim.
 Use the following settings to ensure that coc-clangd works out of the box.
 
 > **Note**: You might want to adjust the `clangd.fallbackFlags` depending on your build
-system and customize the `inlayHints.sep` based on your preference.
+> system and customize the `inlayHints.sep` based on your preference.
 
 ```json
 {
@@ -58,22 +58,27 @@ To change the coc-settings.json go to the file `~/.config/nvim/coc-settings.json
 or type `:CocConfig` in the command line.
 
 > **Note**: In case you already had another c++ language server configured in the
-`coc-settings.json` you might want to nuke it first and
-work towards your desired config by adding the other parts back in to avoid
-conflicts.
+> `coc-settings.json` you might want to nuke it first and
+> work towards your desired config by adding the other parts back in to avoid
+> conflicts.
 
 > **Note**: If you have configured `clangd` as a languageServer in
-`coc-settings.json`, you should remove it to avoid running clangd twice!
+> `coc-settings.json`, you should remove it to avoid running clangd twice!
 
 > **Note**: `clangd.inlayHints.sep` breaks on `clangd 15.0.6`.
 
 # Formatting
+
 For code formatting the formatter plugin can be used.
+
 ```vim
 Plug 'mhartington/formatter.nvim'
 ```
+
 ### Configuration
+
 To use the formatter plugin one needs to opt-in to specific formatters. An example lua configuration which uses clang-format for cpp files:
+
 ```lua
 require("formatter").setup{
     filetype = {
@@ -179,7 +184,7 @@ nmap <silent>gs :CocCommand clangd.switchSourceHeader vsplit<CR>
 # Configure .clangd
 
 > **Note**: Every time a new source is added or the compilation commands get adjusted
-(through CMake) you need to rerun `./Meta/serenity.sh rebuild`.
+> (through CMake) you need to rerun `./Meta/serenity.sh rebuild`.
 
 Link `ln -s /path/to/serenity/Build/x86_64/compile_commands.json /path/to/serenity/compile_commands.json`.
 
@@ -188,4 +193,4 @@ with your SerenityOS directory) with content of the clangd section in the
 [VSCodeConfiguration.md](./VSCodeConfiguration.md).
 
 > **Note**: You can add a `Remove` part, where you can remove unwanted flags
-such as those that aren't supported by the current version of clang.
+> such as those that aren't supported by the current version of clang.

@@ -10,7 +10,7 @@ $ realpath [options] <paths>
 
 ## Options
 
-* `-q`, `--quiet`: Suppress error messages.
+-   `-q`, `--quiet`: Suppress error messages.
 
 ## Description
 
@@ -18,4 +18,4 @@ Show the 'real' path of a file, by resolving all symbolic links along the way.
 
 ## Arguments
 
-* `paths`: Paths to resolve
+-   `paths`: Paths to resolve

@@ -51,4 +51,3 @@ Defines a GUI widget.
 | fill_width_background_color | bool          |                                                       | Whether to fill the widget's background with the background color                                  |
 | layout                      | layout object |                                                       | Layout object for layouting this widget's children                                                 |
 | relative_rect               | rect          |                                                       | Rectangle for relatively positioning the widget to the parent                                      |
-

@@ -10,14 +10,15 @@ $ pidof [-s] [-o pid] [-S separator] <process-name>
 
 ## Options
 
-* `-o pid`: Omit the given pid, or the parent process if the special value %PPID is passed
-* `-s`: Only return one pid
-* `-S separator`: Use `separator` to separate multiple pids
+-   `-o pid`: Omit the given pid, or the parent process if the special value %PPID is passed
+-   `-s`: Only return one pid
+-   `-S separator`: Use `separator` to separate multiple pids
 
 ## Arguments
 
-* `process-name`: Process name to search for
+-   `process-name`: Process name to search for
 
 ## See also
-* [`pgrep`(1)](help://man/1/pgrep)
-* [`ps`(1)](help://man/1/ps)
+
+-   [`pgrep`(1)](help://man/1/pgrep)
+-   [`ps`(1)](help://man/1/ps)

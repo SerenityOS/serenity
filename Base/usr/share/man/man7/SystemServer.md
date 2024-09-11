@@ -8,15 +8,15 @@ SystemServer is the first userspace process to be started by the kernel on boot.
 Its main responsibility is spawning all the other servers and other programs
 that need to be autostarted (referred to as **services**).
 
-A service can be configured to be *kept alive*, in which case SystemServer will
-respawn it if it exits or crashes. A service may also be configured as *lazy*,
+A service can be configured to be _kept alive_, in which case SystemServer will
+respawn it if it exits or crashes. A service may also be configured as _lazy_,
 in which case SystemServer won't spawn it immediately, but only once a client
 connects to its socket (see **Socket takeover** below).
 
 ## Socket takeover
 
 SystemServer can be configured to set up a socket on behalf of a service
-(typically, an *IPC portal* socket inside `/tmp/portal/`). SystemServer sets up
+(typically, an _IPC portal_ socket inside `/tmp/portal/`). SystemServer sets up
 the configured sockets before spawning any services, preventing any races
 between socket creation and the client trying to connect to those sockets.
 
@@ -34,11 +34,11 @@ children.
 LibCore provides `Core::LocalServer::take_over_from_system_server()` method that
 performs the service side of the socket takeover automatically.
 
-If a service is configured as *lazy*, SystemServer will actually listen on the
+If a service is configured as _lazy_, SystemServer will actually listen on the
 socket it sets up for the service, and only spawn the service once a client
 tries to connect to the socket. The service should then start up and accept the
 connection. This all happens transparently to the client. If a lazy service is
-configured to be *kept alive*, it can even exit after some period of inactivity;
+configured to be _kept alive_, it can even exit after some period of inactivity;
 in this case SystemServer will respawn it again once there is a new connection
 to its socket.
 
@@ -48,4 +48,4 @@ the accepted socket to the service process.
 
 ## See also
 
-* [`SystemServer`(5)](help://man/5/SystemServer)
+-   [`SystemServer`(5)](help://man/5/SystemServer)

@@ -25,7 +25,7 @@ Defines a GUI progress bar widget.
 ## Registered Properties
 
 | Property | Type   | Possible values                   | Description                                |
-|----------|--------|-----------------------------------|--------------------------------------------|
+| -------- | ------ | --------------------------------- | ------------------------------------------ |
 | text     | string | Any string                        | Sets progress text                         |
 | format   | enum   | NoText, Percentage, ValueSlashMax | Sets the format of the progress indication |
 | min      | int    | Any 64 bit integer                | Sets the minimum progress value            |

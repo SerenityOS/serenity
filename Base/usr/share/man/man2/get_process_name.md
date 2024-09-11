@@ -1,6 +1,6 @@
 ## Name
 
-get\_process\_name - get the process name
+get_process_name - get the process name
 
 ## Synopsis
 
@@ -20,9 +20,9 @@ In pledged programs, the `stdio` promise is required for this system call.
 
 ## Errors
 
-* `EFAULT`: the process name could not be copied into the buffer.
-* `ENAMETOOLONG`: `buffer_length` is too short.
+-   `EFAULT`: the process name could not be copied into the buffer.
+-   `ENAMETOOLONG`: `buffer_length` is too short.
 
 ## See also
 
-* [`set_process_name`(2)](help://man/2/set_process_name)
+-   [`set_process_name`(2)](help://man/2/set_process_name)

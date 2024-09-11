@@ -15,8 +15,8 @@ This information includes when the system came online and how long it has been u
 
 ## Options
 
-* `-p`, `--pretty`: Output only the uptime, in human-readable format.
-* `-s`, `--since`: Output only the datetime when the system came online.
+-   `-p`, `--pretty`: Output only the uptime, in human-readable format.
+-   `-s`, `--since`: Output only the datetime when the system came online.
 
 ## Examples
 

@@ -14,12 +14,12 @@ Modify an account password.
 
 ## Options
 
-* `-d`, `--delete`: Delete password
-* `-l`, `--lock`: Lock password
-* `-u`, `--unlock`: Unlock password
+-   `-d`, `--delete`: Delete password
+-   `-l`, `--lock`: Lock password
+-   `-u`, `--unlock`: Unlock password
 
 ## Arguments
 
-* `username`: Username
+-   `username`: Username
 
 <!-- Auto-generated through ArgsParser -->

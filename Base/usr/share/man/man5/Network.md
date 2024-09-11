@@ -16,11 +16,11 @@ The interface that is not listed in this config file has DHCP enabled by default
 
 ## Options
 
-* `Enabled` (default: `true`) - Whether the interface is enabled.
-* `DHCP` (default: `false`) - Whether the DHCP client should be run on this interface. This overrides static IP settings.
-* `IPv4Address` (default: `0.0.0.0`) - The static IPv4 address for the interface. Used only when `DHCP` is `false`.
-* `IPv4Netmask` (default: `0.0.0.0`) - The static IPv4 netmask for the interface. Used only when `DHCP` is `false`.
-* `IPv4Gateway` (default: `0.0.0.0`) - The static IPv4 default gateway for the interface. Used only when `DHCP` is `false`.
+-   `Enabled` (default: `true`) - Whether the interface is enabled.
+-   `DHCP` (default: `false`) - Whether the DHCP client should be run on this interface. This overrides static IP settings.
+-   `IPv4Address` (default: `0.0.0.0`) - The static IPv4 address for the interface. Used only when `DHCP` is `false`.
+-   `IPv4Netmask` (default: `0.0.0.0`) - The static IPv4 netmask for the interface. Used only when `DHCP` is `false`.
+-   `IPv4Gateway` (default: `0.0.0.0`) - The static IPv4 default gateway for the interface. Used only when `DHCP` is `false`.
 
 ## Example
 
@@ -41,4 +41,5 @@ Enabled=false
 ```
 
 ## See Also
-* [`ifconfig`(1)](help://man/1/ifconfig)
+
+-   [`ifconfig`(1)](help://man/1/ifconfig)

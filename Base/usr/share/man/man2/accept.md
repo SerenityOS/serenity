@@ -19,8 +19,9 @@ When `accept(2)` is successful, a new socket with a unique file descriptor is cr
 ## Return value
 
 If the return value is positive, it represents the file descriptor of the new socket connected to the client that was accepted. If the return value is -1, the error can be found in `errno`, where the most important errors are:
-- `EBADFD`: The file descriptor `sockfd` is invalid.
-- `ENOTSOCK`: The given file descriptor `sockfd` is valid, but does not point to a socket.
-- `EMFILE`: No more file descriptors are available for the new socket.
-- `EAGAIN`: The socket was specified to be non-blocking, and there is no client in the queue. The user should try to `accept(2)` again at a later point.
-- `EINTR`: A signal interrupted the blocking.
+
+-   `EBADFD`: The file descriptor `sockfd` is invalid.
+-   `ENOTSOCK`: The given file descriptor `sockfd` is valid, but does not point to a socket.
+-   `EMFILE`: No more file descriptors are available for the new socket.
+-   `EAGAIN`: The socket was specified to be non-blocking, and there is no client in the queue. The user should try to `accept(2)` again at a later point.
+-   `EINTR`: A signal interrupted the blocking.

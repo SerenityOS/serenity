@@ -29,13 +29,13 @@ its dependencies, the required files that will be downloaded as well as
 configuration/compilation options, and some other things (see
 [Writing ports scripts](#writing-ports-scripts) for details).
 
-- To install a certain port, `cd` into its directory and run `./package.sh`
-- To install all available ports, run the `build_all.sh` script in this
-  directory. Pass `clean` as first argument to remove old build files
-  beforehand.
-- To reinstall all currently installed ports, run the `build_installed.sh`
-  script in this directory. This is sometimes required when LibC changes, for
-  example. Pass `clean` as first argument to remove old build files beforehand.
+-   To install a certain port, `cd` into its directory and run `./package.sh`
+-   To install all available ports, run the `build_all.sh` script in this
+    directory. Pass `clean` as first argument to remove old build files
+    beforehand.
+-   To reinstall all currently installed ports, run the `build_installed.sh`
+    script in this directory. This is sometimes required when LibC changes, for
+    example. Pass `clean` as first argument to remove old build files beforehand.
 
 Installed ports are being tracked in `Build/x86_64/Root/usr/Ports/installed.db` (a simple text file).
 You can delete this file at any time, in fact it must be edited or removed
@@ -104,12 +104,12 @@ file.
 Start a development session with guided patch importing.
 This mode has a bunch of nice features:
 
-- Drops the user in a git repository backed by another (local) git repository
-  that acts as the "clean", patched version of the port that is ready to be built
-- The "remote" repository can be pushed to, pulled from and generally anything that
-  you'd want to do with a remote repo.
-- After leaving the dev shell, all patches are updated and the user will be prompted
-  whether they wish to generate a new patch readme file.
+-   Drops the user in a git repository backed by another (local) git repository
+    that acts as the "clean", patched version of the port that is ready to be built
+-   The "remote" repository can be pushed to, pulled from and generally anything that
+    you'd want to do with a remote repo.
+-   After leaving the dev shell, all patches are updated and the user will be prompted
+    whether they wish to generate a new patch readme file.
 
 This mode takes an extra `--no-depends` option, that if given, will cause the dependency
 fetch and build steps to be skipped.
@@ -304,19 +304,19 @@ build() {
 The following can be overridden, the names should be self-explanatory as they
 mostly match the [available options](#options):
 
-- `pre_fetch`
-- `post_fetch`
-- `pre_patch`
-- `pre_configure`
-- `configure`
-- `post_configure`
-- `build`
-- `pre_install`
-- `install`
-- `post_install`
-- `clean`
-- `clean_dist`
-- `clean_all`
+-   `pre_fetch`
+-   `post_fetch`
+-   `pre_patch`
+-   `pre_configure`
+-   `configure`
+-   `post_configure`
+-   `build`
+-   `pre_install`
+-   `install`
+-   `post_install`
+-   `clean`
+-   `clean_dist`
+-   `clean_all`
 
 A few (non-overridable) util functions are available as well:
 
@@ -341,20 +341,20 @@ run_replace_in_file "s/define FOO 1/undef FOO/" config.h
 
 You can either:
 
-- Add new ports - just get the software to build and add the necessary patches
-  and `package.sh` script
-- Update an existing port: bumping its version, getting functionality to work
-  that wasn't available so far etc. Make sure to update the patches
-  accordingly.
+-   Add new ports - just get the software to build and add the necessary patches
+    and `package.sh` script
+-   Update an existing port: bumping its version, getting functionality to work
+    that wasn't available so far etc. Make sure to update the patches
+    accordingly.
 
 Some videos of Andreas adding new ports can be found on YouTube, they might
 help you understand how this usually works:
 
-- [OS hacking: Porting the Bash shell](https://www.youtube.com/watch?v=QNK8vK-nkkg)
-  (2019-05-20)
-- [OS hacking: Porting DOOM to Serenity](https://www.youtube.com/watch?v=a0P_bB6wjhY)
-  (2019-09-09)
-- [OS hacking: Let's port git to SerenityOS!](https://www.youtube.com/watch?v=1-7VQwWo2Tg)
-  (2020-02-19)
-- [OS hacking: Fixing a resize bug with the vim port](https://www.youtube.com/watch?v=d4uVnawzHdQ)
-  (2020-06-03)
+-   [OS hacking: Porting the Bash shell](https://www.youtube.com/watch?v=QNK8vK-nkkg)
+    (2019-05-20)
+-   [OS hacking: Porting DOOM to Serenity](https://www.youtube.com/watch?v=a0P_bB6wjhY)
+    (2019-09-09)
+-   [OS hacking: Let's port git to SerenityOS!](https://www.youtube.com/watch?v=1-7VQwWo2Tg)
+    (2020-02-19)
+-   [OS hacking: Fixing a resize bug with the vim port](https://www.youtube.com/watch?v=d4uVnawzHdQ)
+    (2020-06-03)

@@ -14,8 +14,8 @@ $ which [options] executable
 
 ## Options
 
-* `--help`: Display help message and exit
-* `--version`: Print version
+-   `--help`: Display help message and exit
+-   `--version`: Print version
 
 ## Examples
 

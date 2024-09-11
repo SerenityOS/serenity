@@ -14,7 +14,7 @@ Print the memory map of a specified process.
 
 ## Options
 
-* `-x`: Extended output
+-   `-x`: Extended output
 
 ## Examples
 
@@ -23,5 +23,6 @@ $ pmap $$
 ```
 
 ## See also
-* [`lsof`(1)](help://man/1/lsof)
-* [`ps`(1)](help://man/1/ps)
+
+-   [`lsof`(1)](help://man/1/lsof)
+-   [`ps`(1)](help://man/1/ps)

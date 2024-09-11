@@ -23,4 +23,4 @@ $ more
 
 ## See Also
 
-* [`less`(1)](help://man/1/less) For the more advanced terminal pager that implements more.
+-   [`less`(1)](help://man/1/less) For the more advanced terminal pager that implements more.

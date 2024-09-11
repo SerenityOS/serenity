@@ -6,44 +6,47 @@ The Serenity C++ libraries, for other Operating Systems.
 
 If you want to bring the comfortable Serenity classes with you to another system, look no further. This is basically a "port" of the `AK` and `LibCore` libraries to generic \*nix systems.
 
-*Lagom* is a Swedish word that means "just the right amount." ([Wikipedia](https://en.wikipedia.org/wiki/Lagom))
+_Lagom_ is a Swedish word that means "just the right amount." ([Wikipedia](https://en.wikipedia.org/wiki/Lagom))
 
 Lagom is used by the Serenity project in the following ways:
 
-- [Build tools](./Tools) required to build Serenity itself using Serenity's own C++ libraries are in Lagom.
-- [Unit tests](../../Documentation/RunningTests.md) in CI are built using the Lagom build for host systems to ensure portability.
-- [Continuous fuzzing](#fuzzing-on-oss-fuzz) is done with the help of OSS-fuzz using the Lagom build.
-- [The Ladybird browser](../../Ladybird/README.md) uses Lagom to provide LibWeb and LibJS for non-Serenity systems.
-- [ECMA 262 spec tests](https://serenityos.github.io/libjs-website/test262) for LibJS are run per-commit and tracked on [LibJS website](https://serenityos.github.io/libjs-website/).
-- [Wasm spec tests](https://serenityos.github.io/libjs-website/wasm) for LibWasm are run per-commit and tracked on [LibJS website](https://serenityos.github.io/libjs-website/).
-- [A Wasm LibJS Repl](https://serenityos.github.io/libjs-website/repl) using an Emscripten build of Lagom is hosted on [LibJS website](https://serenityos.github.io/libjs-website/).
+-   [Build tools](./Tools) required to build Serenity itself using Serenity's own C++ libraries are in Lagom.
+-   [Unit tests](../../Documentation/RunningTests.md) in CI are built using the Lagom build for host systems to ensure portability.
+-   [Continuous fuzzing](#fuzzing-on-oss-fuzz) is done with the help of OSS-fuzz using the Lagom build.
+-   [The Ladybird browser](../../Ladybird/README.md) uses Lagom to provide LibWeb and LibJS for non-Serenity systems.
+-   [ECMA 262 spec tests](https://serenityos.github.io/libjs-website/test262) for LibJS are run per-commit and tracked on [LibJS website](https://serenityos.github.io/libjs-website/).
+-   [Wasm spec tests](https://serenityos.github.io/libjs-website/wasm) for LibWasm are run per-commit and tracked on [LibJS website](https://serenityos.github.io/libjs-website/).
+-   [A Wasm LibJS Repl](https://serenityos.github.io/libjs-website/repl) using an Emscripten build of Lagom is hosted on [LibJS website](https://serenityos.github.io/libjs-website/).
 
 ## Using Lagom in an External Project
+
 It is possible to use Lagom for your own projects outside of Serenity too!
 
 An example of this in use can be found in the [LibJS test262 runner](https://github.com/SerenityOS/libjs-test262).
 
 To implement this yourself:
-- Download a copy of [SerenityOS/libjs-test262/cmake/FetchLagom.cmake](https://github.com/SerenityOS/libjs-test262/blob/7832c333c1504eecf1c5f9e4247aa6b34a52a3be/cmake/FetchLagom.cmake) and place it wherever you wish
-- In your root `CMakeLists.txt`, add the following commands:
-  ```cmake
-  include(FetchContent)
-  include(cmake/FetchLagom.cmake) # If you've placed the file downloaded above differently, be sure to reflect that in this command :^)
-  ```
-- In addition, you will need to also add some compile options that Serenity uses to ensure no warnings or errors:
-  ```cmake
-  add_compile_options(-Wno-literal-suffix) # AK::StringView defines operator""sv, which GCC complains does not have an underscore.
-  add_compile_options(-fno-gnu-keywords)   # JS::Value has a method named typeof, which also happens to be a GNU keyword.
-  ```
+
+-   Download a copy of [SerenityOS/libjs-test262/cmake/FetchLagom.cmake](https://github.com/SerenityOS/libjs-test262/blob/7832c333c1504eecf1c5f9e4247aa6b34a52a3be/cmake/FetchLagom.cmake) and place it wherever you wish
+-   In your root `CMakeLists.txt`, add the following commands:
+    ```cmake
+    include(FetchContent)
+    include(cmake/FetchLagom.cmake) # If you've placed the file downloaded above differently, be sure to reflect that in this command :^)
+    ```
+-   In addition, you will need to also add some compile options that Serenity uses to ensure no warnings or errors:
+    ```cmake
+    add_compile_options(-Wno-literal-suffix) # AK::StringView defines operator""sv, which GCC complains does not have an underscore.
+    add_compile_options(-fno-gnu-keywords)   # JS::Value has a method named typeof, which also happens to be a GNU keyword.
+    ```
 
 Now, you can link against Lagom libraries.
 
 Things to keep in mind:
-- You should prefer to use a library's `Lagom::` alias when linking
-  - Example: `Lagom::Core` vs `LibCore`
-- If you still _need_ to use the C++ standard library, you may have to compile with the `AK_DONT_REPLACE_STD` macro.
-  - Serenity defines its own `move` and `forward` functions inside of `AK/StdLibExtras.h` that will clash with the standard library's definitions. This macro will make Serenity use the standard library's `move` and `forward` instead.
-- If your application has name clashes with any names in AK, you may have to define `USING_AK_GLOBALLY=0` for the files that have visibility to both sets of headers.
+
+-   You should prefer to use a library's `Lagom::` alias when linking
+    -   Example: `Lagom::Core` vs `LibCore`
+-   If you still _need_ to use the C++ standard library, you may have to compile with the `AK_DONT_REPLACE_STD` macro.
+    -   Serenity defines its own `move` and `forward` functions inside of `AK/StdLibExtras.h` that will clash with the standard library's definitions. This macro will make Serenity use the standard library's `move` and `forward` instead.
+-   If your application has name clashes with any names in AK, you may have to define `USING_AK_GLOBALLY=0` for the files that have visibility to both sets of headers.
 
 ## Fuzzing
 
@@ -53,7 +56,7 @@ Lagom can be used to fuzz parts of SerenityOS's code base. Fuzzers can be run lo
 
 Lagom can be used to fuzz parts of SerenityOS's code base. This requires building with `clang`, so it's convenient to use a different build directory for that. Fuzzers work best with Address Sanitizer enabled. The fuzzer build requires code generators to be pre-built without fuzzing in a two stage build.
 
-To build with LLVM's libFuzzer, invoke the ``BuildFuzzers.sh`` script with no arguments.
+To build with LLVM's libFuzzer, invoke the `BuildFuzzers.sh` script with no arguments.
 
 ```sh
 ./BuildFuzzers.sh
@@ -62,7 +65,7 @@ To build with LLVM's libFuzzer, invoke the ``BuildFuzzers.sh`` script with no ar
 
 (Note that we require clang >= 14, see the pick_clang() function in the script for the paths that are searched)
 
-To build fuzzers without any kind of default instrumentation, pass the ``--standalone`` flag to ``BuildFuzzers.sh``:
+To build fuzzers without any kind of default instrumentation, pass the `--standalone` flag to `BuildFuzzers.sh`:
 
 ```sh
 ./BuildFuzzers.sh --standalone
@@ -107,10 +110,10 @@ Feel free to upload lots and lots files there, or use them for great good!
 
 https://oss-fuzz.com/ automatically runs all fuzzers in the Fuzzers/ subdirectory whose name starts with "Fuzz" and which are added to the build in `Fuzzers/CMakeLists.txt` if `ENABLE_FUZZERS_OSSFUZZ` is set. Looking for "serenity" on oss-fuzz.com finds interesting links, in particular:
 
-* [known open bugs found by fuzzers](https://oss-fuzz.com/testcases?project=serenity&open=yes)
-  * [oss-fuzz bug tracker for these](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:serenity)
-* [coverage report](https://oss-fuzz.com/coverage-report/job/libfuzzer_asan_serenity/latest)
-* [build logs](https://oss-fuzz-build-logs.storage.googleapis.com/index.html#serenity)
+-   [known open bugs found by fuzzers](https://oss-fuzz.com/testcases?project=serenity&open=yes)
+    -   [oss-fuzz bug tracker for these](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:serenity)
+-   [coverage report](https://oss-fuzz.com/coverage-report/job/libfuzzer_asan_serenity/latest)
+-   [build logs](https://oss-fuzz-build-logs.storage.googleapis.com/index.html#serenity)
 
 Here's [Serenity's OSS-Fuzz Config](https://github.com/google/oss-fuzz/tree/master/projects/serenity). The configuration runs the `BuildFuzzers.sh` script with the `--oss-fuzz` argument inside the OSS-Fuzz docker container.
 

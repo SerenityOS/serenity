@@ -27,6 +27,6 @@ Defines a GUI combo box widget. Another name for this would be a dropdown or sel
 ## Registered Properties
 
 | Property    | Type   | Possible values | Description                  |
-|-------------|--------|-----------------|------------------------------|
+| ----------- | ------ | --------------- | ---------------------------- |
 | placeholder | string | Any string      | Editor placeholder           |
 | model_only  | bool   | true or false   | Only allow values from model |

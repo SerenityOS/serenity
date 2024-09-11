@@ -10,7 +10,7 @@ $ sleep <seconds>
 
 ## Arguments
 
-* `seconds`: Number of seconds to sleep
+-   `seconds`: Number of seconds to sleep
 
 ## Description
 

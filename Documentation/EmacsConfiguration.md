@@ -9,16 +9,16 @@ can use the following `.clangd` file placed in the project root:
 
 ```yaml
 CompileFlags:
-  CompilationDatabase: Build/x86_64
-  Add:
-    - "-D__serenity__"
-    - "-UNO_TLS"
-    - "-I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/13.1.0"
-    - "-I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/13.1.0/x86_64-pc-serenity"
+    CompilationDatabase: Build/x86_64
+    Add:
+        - "-D__serenity__"
+        - "-UNO_TLS"
+        - "-I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/13.1.0"
+        - "-I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/13.1.0/x86_64-pc-serenity"
 
 Diagnostics:
-  UnusedIncludes: None
-  MissingIncludes: None
+    UnusedIncludes: None
+    MissingIncludes: None
 ```
 
 You will need to change `/path/to/serenity` and change `13.1.0` to
@@ -45,18 +45,18 @@ that is needed by `clangd`.
 
 There are a few different ways to specify which clangd to use:
 
-- By default, without configuration `lsp-mode` will try to find and use your system `clangd`. This is the easiest solution, but your system clangd might be out of date.
-- You can manually specify any `clangd` binary with `lsp-clangd-binary-path`, as shown in the use-package example above.
-- You can have `lsp-mode` manage your `clangd` installation with emacs' `lsp-install-server`. This will install a `clangd` binary for you.
-- You can build the LLVM toolchain, including `clangd`, from Serenity's repository. This is an advanced option that is not currently documented.
+-   By default, without configuration `lsp-mode` will try to find and use your system `clangd`. This is the easiest solution, but your system clangd might be out of date.
+-   You can manually specify any `clangd` binary with `lsp-clangd-binary-path`, as shown in the use-package example above.
+-   You can have `lsp-mode` manage your `clangd` installation with emacs' `lsp-install-server`. This will install a `clangd` binary for you.
+-   You can build the LLVM toolchain, including `clangd`, from Serenity's repository. This is an advanced option that is not currently documented.
 
 ### clang-format
 
 There are multiple packages to handle auto formatting with
 `clang-format`, within emacs. Choose what works best for your setup:
 
-- [format-all-mode](https://github.com/lassik/emacs-format-all-the-code)
-- [clang-format-plus](https://github.com/SavchenkoValeriy/emacs-clang-format-plus)
+-   [format-all-mode](https://github.com/lassik/emacs-format-all-the-code)
+-   [clang-format-plus](https://github.com/SavchenkoValeriy/emacs-clang-format-plus)
 
 Alternatively, this can be done without additional packages, using `lsp-mode`.
 You can use the following `.dir-locals.el` file placed in the project root:

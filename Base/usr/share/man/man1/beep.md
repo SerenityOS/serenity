@@ -14,8 +14,8 @@ beep allows the user to beep the PC speaker.
 
 ## Options
 
-* `-f frequency`, `--beep-tone frequency`: Beep tone (frequency in Hz)
-* `-n N`, `--duration N`: Duration (N in milliseconds)
+-   `-f frequency`, `--beep-tone frequency`: Beep tone (frequency in Hz)
+-   `-n N`, `--duration N`: Duration (N in milliseconds)
 
 ## Notes
 
@@ -35,4 +35,4 @@ $ beep -f 1000 -n 1000
 
 ## See also
 
-* [`boot_parameters`(7)](help://man/7/boot_parameters)
+-   [`boot_parameters`(7)](help://man/7/boot_parameters)

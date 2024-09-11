@@ -24,5 +24,5 @@ None.
 
 ## See also
 
-* [`getppid`(2)](help://man/2/getppid)
-* [`gettid`(2)](help://man/2/gettid)
+-   [`getppid`(2)](help://man/2/getppid)
+-   [`gettid`(2)](help://man/2/gettid)

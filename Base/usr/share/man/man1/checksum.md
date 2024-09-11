@@ -7,10 +7,10 @@ checksum - helper program for calculating checksums
 ```**sh
 $ b2sum [options...] <file...>
 $ md5sum [options...] <file...>
-$ sha1sum [options...] <file...>  
-$ sha256sum [options...] <file...>  
+$ sha1sum [options...] <file...>
+$ sha256sum [options...] <file...>
 $ sha512sum [options...] <file...>
-```  
+```
 
 ## Description
 
@@ -21,4 +21,4 @@ if the checksums cannot be verified.
 
 ## Options
 
-* `-c`, `--check`: Verify checksums against `file` or stdin.
+-   `-c`, `--check`: Verify checksums against `file` or stdin.

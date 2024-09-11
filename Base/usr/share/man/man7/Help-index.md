@@ -13,9 +13,10 @@ There's also a full-text search option under the **Search** tab.
 If you want more information on the structure of the manual system, take a look at [`man(7)`](help://man/7/man).
 
 ### Getting Started
-* [Keyboard Shortcuts](help://man/7/KeyboardShortcuts)
-* [Tips and Tricks](help://man/7/Tips-and-Tricks)
+
+-   [Keyboard Shortcuts](help://man/7/KeyboardShortcuts)
+-   [Tips and Tricks](help://man/7/Tips-and-Tricks)
 
 ---
 
-Thank you for using ***SerenityOS Help!***
+Thank you for using **_SerenityOS Help!_**

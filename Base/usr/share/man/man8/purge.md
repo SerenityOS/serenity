@@ -15,8 +15,8 @@ be released without interacting with its userspace owner(s).
 
 ## Options
 
-* `-c`: Release all clean inode-backed memory.
-* `-v`: Release all purgeable memory currently marked volatile.
+-   `-c`: Release all clean inode-backed memory.
+-   `-v`: Release all purgeable memory currently marked volatile.
 
 If no options are specified, all possible memory is released.
 

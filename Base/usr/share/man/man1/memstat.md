@@ -10,7 +10,7 @@ $ memstat
 
 ## Options
 
-* `-h` , `--human-readable`: Print human-readable sizes
+-   `-h` , `--human-readable`: Print human-readable sizes
 
 ## Examples
 

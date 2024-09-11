@@ -21,14 +21,14 @@ The value of this variable is used to join lists or split strings into lists, it
 
 The value of this variable is used to determine which entries are kept in the Shell's history, both regarding the current active session and when writing the history to disk on exit.
 
-- `ignorespace`: Entries starting with one or more space characters are ignored
-- `ignoredups`: Consecutive duplicate entries are ignored
-- `ignoreboth`: The behavior of `ignorespace` and `ignoredups` is combined
-- If the variable is unset (this is the default) or has any other value than the above, no entries will be excluded from history.
+-   `ignorespace`: Entries starting with one or more space characters are ignored
+-   `ignoredups`: Consecutive duplicate entries are ignored
+-   `ignoreboth`: The behavior of `ignorespace` and `ignoredups` is combined
+-   If the variable is unset (this is the default) or has any other value than the above, no entries will be excluded from history.
 
 Note: This variable is respected by every program using `Line::Editor`, e.g. [`js`(1)](help://man/1/js).
 
-`HISTFILE`  (environment)
+`HISTFILE` (environment)
 
 The value of this variable is used as the Shell's history file path, both for reading history at startup and writing history on exit.
 Its default value is `~/.history`.
@@ -56,20 +56,21 @@ Also note that the line editor will re-evaluate the keybindings and sync them wh
 `PROMPT` (environment)
 
 The value of this variable is used to generate a prompt, the following escape sequences can be used literally inside the value, and they would expand to their respective values:
-- `\\a`: bell character (behavior depends on terminal)
-- `\\e`: escape character (`0x1b`)
-- `\\h`: the current hostname
-- `\\p`: the string '$' (or '#' if the user is 'root')
-- `\\u`: the current username
-- `\\w`, `\\W`: a collapsed path (relative to home) to the current directory. If an integer follows the `\\`, it specifies the number of trailing components of the path to show; if 'w' is used instead of 'W', removed components are shown with ellipsis ("...")
-- `\\X`: reset style (foreground and background color, etc)
-- `\\t`: current time in the 24-hour format HH:MM:SS
-- `\\T`: current time in the 12-hour format HH:MM
-- `\\@`: current time in the 12-hour format HH:MM AM/PM
-- `\\D{format}`: current time, where the string _format_ is passed on to `Core::DateTime::to_string`. If _format_ is empty, a default format string is chosen.
-- `\\j`: the number of jobs currently managed by the shell
-- `\\!`: the history number of the next command to be run
-- `\\\\`: a backslash
+
+-   `\\a`: bell character (behavior depends on terminal)
+-   `\\e`: escape character (`0x1b`)
+-   `\\h`: the current hostname
+-   `\\p`: the string '$' (or '#' if the user is 'root')
+-   `\\u`: the current username
+-   `\\w`, `\\W`: a collapsed path (relative to home) to the current directory. If an integer follows the `\\`, it specifies the number of trailing components of the path to show; if 'w' is used instead of 'W', removed components are shown with ellipsis ("...")
+-   `\\X`: reset style (foreground and background color, etc)
+-   `\\t`: current time in the 24-hour format HH:MM:SS
+-   `\\T`: current time in the 12-hour format HH:MM
+-   `\\@`: current time in the 12-hour format HH:MM AM/PM
+-   `\\D{format}`: current time, where the string _format_ is passed on to `Core::DateTime::to_string`. If _format_ is empty, a default format string is chosen.
+-   `\\j`: the number of jobs currently managed by the shell
+-   `\\!`: the history number of the next command to be run
+-   `\\\\`: a backslash
 
 Any other escaped character shall be ignored.
 

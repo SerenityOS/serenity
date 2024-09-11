@@ -21,6 +21,7 @@ You also need to make sure `ninjatracing` is marked as executable, and available
 ### Usage
 
 First, we need to clean the build (and `ccache` if present) to make sure every file gets compiled and gives a meaningful time reading.
+
 ```console
 ninja clean
 
@@ -28,6 +29,7 @@ ccache --clear
 ```
 
 Then, execute ninja as normal:
+
 ```console
 ninja
 ```
