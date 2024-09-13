@@ -1790,6 +1790,9 @@ Messages::WebDriverClient::ExecuteScriptResponse WebDriverConnection::execute_sc
         case Web::WebDriver::ExecuteScriptResultType::BrowsingContextDiscarded:
             response = Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::StaleElementReference, "Browsing context has been discarded", move(result.value));
             break;
+        case Web::WebDriver::ExecuteScriptResultType::StaleElement:
+            response = Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::StaleElementReference, "Referenced element has become stale", move(result.value));
+            break;
         }
 
         async_script_executed(move(response));
@@ -1837,6 +1840,9 @@ Messages::WebDriverClient::ExecuteAsyncScriptResponse WebDriverConnection::execu
             break;
         case Web::WebDriver::ExecuteScriptResultType::BrowsingContextDiscarded:
             response = Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::StaleElementReference, "Browsing context has been discarded", move(result.value));
+            break;
+        case Web::WebDriver::ExecuteScriptResultType::StaleElement:
+            response = Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::StaleElementReference, "Referenced element has become stale", move(result.value));
             break;
         }
 
