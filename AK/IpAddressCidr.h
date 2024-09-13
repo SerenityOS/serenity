@@ -195,44 +195,21 @@ public:
 
     constexpr IPv6Address first_address_of_subnet() const
     {
-        u8 address[16] = { 0 };
-        u8 free_bits = MAX_LENGTH - length();
+        auto address = ip_address().to_u128();
+        auto mask = address_mask();
 
-        if (free_bits != 128) {
-            NetworkOrdered<u128> mask = NumericLimits<u128>::max() << free_bits;
-            auto address_mask = bit_cast<Array<u8, 16>>(mask);
-
-            auto const* original_address = ip_address().to_in6_addr_t();
-            for (int i = 0; i < 16; i++) {
-                address[i] = original_address[i] & address_mask[i];
-            }
-        }
+        address = bit_cast<NetworkOrdered<u128>>(bit_cast<u128>(address) & bit_cast<u128>(mask));
 
         return IPv6Address(address);
     }
 
     constexpr IPv6Address last_address_of_subnet() const
     {
-        u8 address[16] = { 0 };
-        u8 free_bits = MAX_LENGTH - length();
+        auto address = ip_address().to_u128();
+        auto mask = address_mask();
 
-        NetworkOrdered<u128> inverse_mask = NumericLimits<u128>::max() >> (128 - free_bits);
-
-        if (free_bits != 128) {
-            NetworkOrdered<u128> mask = NumericLimits<u128>::max() << free_bits;
-            auto address_mask = bit_cast<Array<u8, 16>>(mask);
-
-            auto const* original_address = ip_address().to_in6_addr_t();
-            for (int i = 0; i < 16; i++) {
-                address[i] = original_address[i] & address_mask[i];
-            }
-        }
-
-        auto inverse_address_mask = bit_cast<Array<u8, 16>>(inverse_mask);
-
-        for (int i = 0; i < 16; i++) {
-            address[i] = address[i] | inverse_address_mask[i];
-        }
+        address = bit_cast<NetworkOrdered<u128>>(bit_cast<u128>(address) & bit_cast<u128>(mask));
+        address = bit_cast<NetworkOrdered<u128>>(bit_cast<u128>(address) | ~bit_cast<u128>(mask));
 
         return IPv6Address(address);
     }
@@ -241,6 +218,19 @@ public:
     {
         IPv6AddressCidr other_cidr = IPv6AddressCidr::create(other, length()).release_value();
         return first_address_of_subnet() == other_cidr.first_address_of_subnet();
+    }
+
+private:
+    constexpr NetworkOrdered<u128> address_mask() const
+    {
+        u8 const free_bits = MAX_LENGTH - length();
+        NetworkOrdered<u128> mask = (u128)0;
+
+        if (free_bits != 128) {
+            mask = NumericLimits<u128>::max() << free_bits;
+        }
+
+        return mask;
     }
 };
 
