@@ -124,7 +124,7 @@ static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/mem"sv, 0600, 1, 1));
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/null"sv, 0666, 1, 3));
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/full"sv, 0666, 1, 7));
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/random"sv, 0666, 1, 8));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/random"sv, 0644, 1, 8));
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/console"sv, 0666, 5, 1));
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/ptmx"sv, 0666, 5, 2));
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/tty"sv, 0666, 5, 0));
@@ -134,7 +134,7 @@ static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
 #endif
     umask(old_mask);
     TRY(Core::System::symlink("/dev/random"sv, "/dev/urandom"sv));
-    TRY(Core::System::chmod("/dev/urandom"sv, 0666));
+    TRY(Core::System::chmod("/dev/urandom"sv, 0644));
     return {};
 }
 
