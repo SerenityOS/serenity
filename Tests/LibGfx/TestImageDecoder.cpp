@@ -841,6 +841,15 @@ TEST_CASE(test_targa_top_left_compressed)
     TRY_OR_FAIL(expect_single_frame(*plugin_decoder));
 }
 
+TEST_CASE(test_targa_black_and_white_uncompressed)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("tga/buggie-black-and-white-uncompressed.tga"sv)));
+    EXPECT(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
+
+    TRY_OR_FAIL(expect_single_frame(*plugin_decoder));
+}
+
 TEST_CASE(test_tiff_uncompressed)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("tiff/uncompressed.tiff"sv)));

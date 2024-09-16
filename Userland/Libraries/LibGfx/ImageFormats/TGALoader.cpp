@@ -111,8 +111,13 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> TGAImageDecoderPlugin::create(Readonl
 
 static ErrorOr<ARGB32> read_pixel_from_stream(Stream& stream, size_t bytes_size)
 {
-    // NOTE: We support 24-bit color pixels and 32-bit color pixels
-    VERIFY(bytes_size == 3 || bytes_size == 4);
+    // NOTE: We support 8-bit, 24-bit and 32-bit color pixels
+    VERIFY(bytes_size == 1 || bytes_size == 3 || bytes_size == 4);
+
+    if (bytes_size == 1) {
+        auto raw = TRY(stream.read_value<u8>());
+        return Color(raw, raw, raw).value();
+    }
     if (bytes_size == 3) {
         Array<u8, 3> raw;
         TRY(stream.read_until_filled(raw.span()));
@@ -159,6 +164,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
 
     RefPtr<Gfx::Bitmap> bitmap;
     switch (bits_per_pixel) {
+    case 8:
     case 24:
         bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { m_context->header.width, m_context->header.height }));
         break;
@@ -169,7 +175,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
 
     default:
         // FIXME: Implement other TGA bit depths
-        return Error::from_string_literal("TGAImageDecoderPlugin: Can only handle 24 and 32 bits per pixel");
+        return Error::from_string_literal("TGAImageDecoderPlugin: Can only handle 8, 24 and 32 bits per pixel");
     }
 
     // FIXME: Try to understand the Image origin (instead of X and Y origin coordinates)
@@ -189,6 +195,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
     auto bytes_per_pixel = bits_per_pixel / 8;
 
     switch (data_type) {
+    case TGADataType::UncompressedBlackAndWhite:
     case TGADataType::UncompressedRGB: {
         for (int row = 0; row < height; ++row) {
             for (int col = 0; col < width; ++col) {
@@ -232,7 +239,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
     }
     default:
         // FIXME: Implement other TGA data types
-        return Error::from_string_literal("TGAImageDecoderPlugin: Can currently only handle the UncompressedRGB or CompressedRGB data type");
+        return Error::from_string_literal("TGAImageDecoderPlugin: Can currently only handle the UncompressedRGB, CompressedRGB or UncompressedBlackAndWhite data type");
     }
 
     m_context->bitmap = bitmap;
