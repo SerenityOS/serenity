@@ -37,7 +37,7 @@ public:
 
     virtual void parent_context_did_dimension_child_root_box() override;
 
-    void compute_height(Box const&, AvailableSpace const&);
+    void compute_height(Box const&, AvailableSpace const&, FormattingContext const* box_formatting_context = nullptr);
 
     void add_absolutely_positioned_box(Box const& box) { m_absolutely_positioned_boxes.append(box); }
 
