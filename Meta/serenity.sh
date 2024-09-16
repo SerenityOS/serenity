@@ -101,6 +101,7 @@ if [ "$TARGET" != "lagom" ] && [ -n "$1" ]; then
 else
     TOOLCHAIN_TYPE="${SERENITY_TOOLCHAIN:-"GNU"}"
 fi
+[[ "${TOOLCHAIN_TYPE}" = "clang" ]] && TOOLCHAIN_TYPE='Clang'
 if ! [[ "${TOOLCHAIN_TYPE}" =~ ^(GNU|Clang)$ ]]; then
     >&2 echo "ERROR: unknown toolchain '${TOOLCHAIN_TYPE}'."
     exit 1
