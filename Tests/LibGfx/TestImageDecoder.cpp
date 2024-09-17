@@ -850,6 +850,29 @@ TEST_CASE(test_targa_black_and_white_uncompressed)
     TRY_OR_FAIL(expect_single_frame(*plugin_decoder));
 }
 
+TEST_CASE(test_targa_image_descriptor)
+{
+    Array test_inputs = {
+        TEST_INPUT("tga/square-bottom-left.tga"sv),
+        TEST_INPUT("tga/square-bottom-right.tga"sv),
+        TEST_INPUT("tga/square-top-left.tga"sv),
+        TEST_INPUT("tga/square-top-right.tga"sv),
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = TRY_OR_FAIL(Core::MappedFile::map(test_input));
+        EXPECT(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes()));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
+
+        auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 2, 2 }));
+
+        EXPECT_EQ(frame.image->get_pixel(0, 0), Gfx::Color::NamedColor::Red);
+        EXPECT_EQ(frame.image->get_pixel(1, 0), Gfx::Color::NamedColor::Green);
+        EXPECT_EQ(frame.image->get_pixel(0, 1), Gfx::Color::NamedColor::Blue);
+        EXPECT_EQ(frame.image->get_pixel(1, 1), Gfx::Color::NamedColor::Magenta);
+    }
+}
+
 TEST_CASE(test_tiff_uncompressed)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("tiff/uncompressed.tiff"sv)));

@@ -150,8 +150,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
     auto data_type = m_context->header.data_type_code;
     auto width = m_context->header.width;
     auto height = m_context->header.height;
-    auto x_origin = m_context->header.x_origin;
-    auto y_origin = m_context->header.y_origin;
+    auto image_descriptior = m_context->header.image_descriptor;
 
     if (index != 0)
         return Error::from_string_literal("TGAImageDecoderPlugin: frame index must be 0");
@@ -178,18 +177,8 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
         return Error::from_string_literal("TGAImageDecoderPlugin: Can only handle 8, 24 and 32 bits per pixel");
     }
 
-    // FIXME: Try to understand the Image origin (instead of X and Y origin coordinates)
-    // based on the Image descriptor, Field 5.6, bits 4 and 5.
-
-    // NOTE: If Y origin is set to a negative number, just assume the generating software
-    // meant that we start with Y origin at the top height of the picture.
-    // At least this is the observed behavior when generating some pictures in GIMP.
-    if (y_origin < 0)
-        y_origin = height;
-    if (y_origin != 0 && y_origin != height)
-        return Error::from_string_literal("TGAImageDecoderPlugin: Can only handle Y origin which is 0 or the entire height");
-    if (x_origin != 0 && x_origin != width)
-        return Error::from_string_literal("TGAImageDecoderPlugin: Can only handle X origin which is 0 or the entire width");
+    auto is_top_to_bottom = (image_descriptior & 1 << 5) == 0;
+    auto is_left_to_right = (image_descriptior & 1 << 4) == 0;
 
     VERIFY((bits_per_pixel % 8) == 0);
     auto bytes_per_pixel = bits_per_pixel / 8;
@@ -200,10 +189,10 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
         for (int row = 0; row < height; ++row) {
             for (int col = 0; col < width; ++col) {
                 auto actual_row = row;
-                if (y_origin < height)
+                if (is_top_to_bottom)
                     actual_row = height - 1 - row;
                 auto actual_col = col;
-                if (x_origin > width)
+                if (!is_left_to_right)
                     actual_col = width - 1 - col;
                 bitmap->scanline(actual_row)[actual_col] = TRY(read_pixel_from_stream(m_context->stream, bytes_per_pixel));
             }
@@ -224,10 +213,10 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
                 int row = current_pixel_index / width;
                 int col = current_pixel_index % width;
                 auto actual_row = row;
-                if (y_origin < height)
+                if (is_top_to_bottom)
                     actual_row = height - 1 - row;
                 auto actual_col = col;
-                if (x_origin > width)
+                if (!is_left_to_right)
                     actual_col = width - 1 - col;
                 bitmap->scanline(actual_row)[actual_col] = pixel;
                 if (pixel_packet_header.raw && (current_pixel_index + 1) < max_pixel_index)
