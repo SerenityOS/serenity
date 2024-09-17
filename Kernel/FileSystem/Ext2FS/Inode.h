@@ -14,6 +14,7 @@
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
+using namespace Ext2;
 
 class Ext2FSInode final : public Inode {
     friend class Ext2FS;
@@ -65,19 +66,19 @@ private:
 
     u64 singly_indirect_block_capacity() const
     {
-        auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
-        return EXT2_NDIR_BLOCKS + entries_per_block;
+        auto const entries_per_block = address_per_block(fs().super_block());
+        return number_of_direct_blocks + entries_per_block;
     }
 
     u64 doubly_indirect_block_capacity() const
     {
-        auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
+        auto const entries_per_block = address_per_block(fs().super_block());
         return singly_indirect_block_capacity() + entries_per_block * entries_per_block;
     }
 
     u64 triply_indirect_block_capacity() const
     {
-        auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
+        auto const entries_per_block = address_per_block(fs().super_block());
         return doubly_indirect_block_capacity() + entries_per_block * entries_per_block * entries_per_block;
     }
 
@@ -87,7 +88,7 @@ private:
 
     Ext2FS::BlockList m_block_list;
     HashMap<NonnullOwnPtr<KString>, InodeIndex> m_lookup_cache;
-    ext2_inode m_raw_inode {};
+    Ext2Inode m_raw_inode {};
 
     Mutex m_block_list_lock { "BlockList"sv };
 };

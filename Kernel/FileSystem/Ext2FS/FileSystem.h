@@ -16,28 +16,13 @@
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
-
 class Ext2FSInode;
+using namespace Ext2;
 
 class Ext2FS final : public BlockBasedFileSystem {
     friend class Ext2FSInode;
 
 public:
-    // s_feature_compat
-    enum class FeaturesOptional : u32 {
-        None = 0,
-        ExtendedAttributes = EXT2_FEATURE_COMPAT_EXT_ATTR,
-    };
-    AK_ENUM_BITWISE_FRIEND_OPERATORS(FeaturesOptional);
-
-    // s_feature_ro_compat
-    enum class FeaturesReadOnly : u32 {
-        None = 0,
-        SparseSuperblock = EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER,
-        FileSize64bits = EXT2_FEATURE_RO_COMPAT_LARGE_FILE,
-    };
-    AK_ENUM_BITWISE_FRIEND_OPERATORS(FeaturesReadOnly);
-
     static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, FileSystemSpecificOptions const&);
 
     virtual ~Ext2FS() override;
@@ -63,10 +48,10 @@ private:
 
     explicit Ext2FS(OpenFileDescription&);
 
-    ext2_super_block const& super_block() const { return m_super_block; }
-    ext2_group_desc const& group_descriptor(GroupIndex) const;
-    ext2_group_desc* block_group_descriptors() { return (ext2_group_desc*)m_cached_group_descriptor_table->data(); }
-    ext2_group_desc const* block_group_descriptors() const { return (ext2_group_desc const*)m_cached_group_descriptor_table->data(); }
+    SuperBlock const& super_block() const { return m_super_block; }
+    GroupDescriptor const& group_descriptor(GroupIndex) const;
+    GroupDescriptor* block_group_descriptors() { return reinterpret_cast<GroupDescriptor*>(m_cached_group_descriptor_table->data()); }
+    GroupDescriptor const* block_group_descriptors() const { return reinterpret_cast<GroupDescriptor const*>(m_cached_group_descriptor_table->data()); }
     void flush_block_group_descriptor_table();
     u64 inodes_per_block() const;
     u64 inodes_per_group() const;
@@ -75,7 +60,7 @@ private:
 
     ErrorOr<NonnullRefPtr<Ext2FSInode>> build_root_inode() const;
 
-    ErrorOr<void> write_ext2_inode(InodeIndex, ext2_inode const&);
+    ErrorOr<void> write_ext2_inode(InodeIndex, Ext2Inode const&);
     bool find_block_containing_inode(InodeIndex, BlockIndex& block_index, unsigned& offset) const;
 
     ErrorOr<void> flush_super_block();
@@ -108,7 +93,7 @@ private:
 
     u64 m_block_group_count { 0 };
 
-    mutable ext2_super_block m_super_block {};
+    mutable SuperBlock m_super_block {};
     mutable OwnPtr<KBuffer> m_cached_group_descriptor_table;
 
     mutable HashMap<InodeIndex, RefPtr<Ext2FSInode>> m_inode_cache;
