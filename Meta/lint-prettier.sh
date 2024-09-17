@@ -10,12 +10,12 @@ if [ "$#" -eq "0" ]; then
         git ls-files \
             --exclude-from .prettierignore \
             -- \
-            '*.js' '*.mjs'
+            '*.js' '*.mjs' '*.md'
     )
 else
     files=()
     for file in "$@"; do
-        if [[ "${file}" == *".js" ]] || [[ "${file}" == *".mjs" ]]; then
+        if [[ "${file}" == *".js" || "${file}" == *".mjs" || "${file}" == *".md" ]]; then
             files+=("${file}")
         fi
     done
@@ -23,7 +23,7 @@ fi
 
 if (( ${#files[@]} )); then
     if ! command -v prettier >/dev/null 2>&1 ; then
-        echo "prettier is not available, but JS files need linting! Either skip this script, or install prettier."
+        echo "prettier is not available, but JS or Markdown files need linting! Either skip this script, or install prettier."
         exit 1
     fi
 
@@ -34,5 +34,5 @@ if (( ${#files[@]} )); then
 
     prettier --check "${files[@]}"
 else
-    echo "No .js or .mjs files to check."
+    echo "No .js, .mjs, or .md files to check."
 fi
