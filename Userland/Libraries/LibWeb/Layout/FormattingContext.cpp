@@ -1220,6 +1220,11 @@ CSSPixelPoint FormattingContext::calculate_static_position(Box const& box) const
 
 void FormattingContext::layout_absolutely_positioned_element(Box const& box, AvailableSpace const& available_space)
 {
+    if (box.is_svg_box()) {
+        dbgln("FIXME: Implement support for absolutely positioned SVG elements.");
+        return;
+    }
+
     auto& containing_block_state = m_state.get_mutable(*box.containing_block());
 
     // The size of the containing block of an abspos box is always definite from the perspective of the abspos box.
