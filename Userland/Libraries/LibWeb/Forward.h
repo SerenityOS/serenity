@@ -528,8 +528,8 @@ enum class AllowMultipleFiles;
 enum class MediaSeekMode;
 enum class SandboxingFlagSet;
 
-struct CrossOriginOpenerPolicy;
-struct CrossOriginOpenerPolicyEnforcementResult;
+struct OpenerPolicy;
+struct OpenerPolicyEnforcementResult;
 struct Environment;
 struct EnvironmentSettingsObject;
 struct NavigationParams;
