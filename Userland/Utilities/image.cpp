@@ -7,6 +7,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibCore/MimeData.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/ImageFormats/GIFWriter.h>
@@ -318,7 +319,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Options options = TRY(parse_options(arguments));
 
     auto file = TRY(Core::MappedFile::map(options.in_path));
-    auto decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes()));
+    auto guessed_mime_type = Core::guess_mime_type_based_on_filename(options.in_path);
+    auto decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes(), guessed_mime_type));
     if (!decoder)
         return Error::from_string_view("Could not find decoder for input file"sv);
 
