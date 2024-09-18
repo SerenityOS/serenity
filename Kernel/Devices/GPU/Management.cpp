@@ -163,11 +163,17 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         return true;
     }
 
+    bool boot_framebuffer_usable = !multiboot_framebuffer_addr.is_null()
+        && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB;
+
+    bool use_boot_framebuffer = graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited
+        && boot_framebuffer_usable;
+
     // Note: Don't try to initialize an ISA Bochs VGA adapter if PCI hardware is
     // present but the user decided to disable its usage nevertheless.
     // Otherwise we risk using the Bochs VBE driver on a wrong physical address
     // for the framebuffer.
-    if (PCI::Access::is_hardware_disabled() && !(graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB)) {
+    if (PCI::Access::is_hardware_disabled() && !use_boot_framebuffer) {
 #if ARCH(X86_64)
         auto vga_isa_bochs_display_connector_or_error = BochsDisplayConnector::try_create_for_vga_isa_connector();
         if (!vga_isa_bochs_display_connector_or_error.is_error()) {
@@ -181,7 +187,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
 #endif
     }
 
-    if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+    if (use_boot_framebuffer) {
         initialize_preset_resolution_generic_display_connector();
         return true;
     }
@@ -210,7 +216,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     // is not present, as there is likely never a valid framebuffer at this physical address.
     // Note: We only support RGB framebuffers. Any other format besides RGBX (and RGBA) or BGRX (and BGRA) is obsolete
     // and is not useful for us.
-    if (m_graphics_devices.is_empty() && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+    if (m_graphics_devices.is_empty() && boot_framebuffer_usable) {
         initialize_preset_resolution_generic_display_connector();
         return true;
     }
