@@ -14,6 +14,6 @@ VALIDATE_IS_RISCV64()
 
 namespace Kernel::Memory {
 
-[[noreturn]] void init_page_tables_and_jump_to_init(FlatPtr mhartid, PhysicalPtr fdt_phys_addr);
+[[noreturn]] void init_page_tables_and_jump_to_init(FlatPtr boot_hart_id, PhysicalPtr flattened_devicetree_paddr);
 
 }
