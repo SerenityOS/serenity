@@ -1,4 +1,7 @@
-{ pkgs ? import <nixpkgs> { } }: with pkgs;
+{
+  pkgs ? import <nixpkgs> { },
+}:
+with pkgs;
 
 mkShell.override { stdenv = gcc13Stdenv; } {
   packages = [
