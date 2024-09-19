@@ -233,6 +233,17 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
     TRY(blocks.try_ensure_capacity(count));
 
     MutexLocker locker(m_lock);
+
+    size_t free_blocks = 0;
+    for (GroupIndex i = 1; i <= m_block_group_count; i = GroupIndex { i.value() + 1 }) {
+        free_blocks += group_descriptor(i).bg_free_blocks_count;
+        if (free_blocks >= count)
+            break;
+    }
+
+    if (free_blocks < count)
+        return Error::from_errno(ENOSPC);
+
     auto group_index = preferred_group_index;
 
     if (!group_descriptor(preferred_group_index).bg_free_blocks_count) {
