@@ -98,7 +98,7 @@ static bool kasan_initialized = false;
 void init(FlatPtr shadow_base)
 {
     kasan_shadow_base = shadow_base;
-    kasan_shadow_offset = shadow_base - (kernel_mapping_base >> kasan_shadow_scale_offset);
+    kasan_shadow_offset = shadow_base - (g_boot_info.kernel_mapping_base >> kasan_shadow_scale_offset);
     kasan_initialized = true;
 }
 
@@ -215,7 +215,7 @@ static void shadow_va_check(FlatPtr address, size_t size, AccessType access_type
         return;
     if (!kasan_initialized) [[unlikely]]
         return;
-    if (address < kernel_mapping_base || address >= kasan_shadow_base) [[unlikely]]
+    if (address < g_boot_info.kernel_mapping_base || address >= kasan_shadow_base) [[unlikely]]
         return;
 
     bool valid = false;
