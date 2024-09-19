@@ -55,7 +55,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SysFSGlobalKernelStatsDirectory> SysFSGlobalKerne
 
         {
             auto builder = TRY(KBufferBuilder::try_create());
-            MUST(builder.appendff("{}", kernel_load_base));
+            MUST(builder.appendff("{}", g_boot_info.kernel_load_base));
             auto load_base_buffer = builder.build();
             VERIFY(load_base_buffer);
             list.append(SysFSSystemConstantInformation::must_create(*global_kernel_stats_directory, load_base_buffer.release_nonnull(), S_IRUSR, SysFSSystemConstantInformation::ReadableByJailedProcesses::No, SysFSSystemConstantInformation::NodeName::LoadBase));

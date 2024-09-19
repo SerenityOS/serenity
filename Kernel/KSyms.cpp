@@ -88,9 +88,9 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(Bytes buffer)
 
         // FIXME: Remove this ifdef once the aarch64 kernel is loaded by the Prekernel.
         //        Currently, the aarch64 kernel is linked at a high virtual memory address, instead
-        //        of zero, so the address of a symbol does not need to be offset by the kernel_load_base.
+        //        of zero, so the address of a symbol does not need to be offset by the g_boot_info.kernel_load_base.
 #if ARCH(X86_64)
-        ksym.address = kernel_load_base + address;
+        ksym.address = g_boot_info.kernel_load_base + address;
 #elif ARCH(AARCH64) || ARCH(RISCV64)
         ksym.address = address;
 #else
@@ -137,7 +137,7 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksy
     MUST(AK::unwind_stack_from_frame_pointer(
         frame_pointer,
         [](FlatPtr address) -> ErrorOr<FlatPtr> {
-            if (address < kernel_mapping_base)
+            if (address < g_boot_info.kernel_mapping_base)
                 return EINVAL;
 
             FlatPtr value;
@@ -168,14 +168,14 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksy
         if (!symbol.address)
             break;
         if (!symbol.symbol) {
-            PRINT_LINE("Kernel + {:p}", symbol.address - kernel_load_base);
+            PRINT_LINE("Kernel + {:p}", symbol.address - g_boot_info.kernel_load_base);
             continue;
         }
         size_t offset = symbol.address - symbol.symbol->address;
         if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096)
-            PRINT_LINE("Kernel + {:p}", symbol.address - kernel_load_base);
+            PRINT_LINE("Kernel + {:p}", symbol.address - g_boot_info.kernel_load_base);
         else
-            PRINT_LINE("Kernel + {:p}  {} +{:#x}", symbol.address - kernel_load_base, symbol.symbol->name, offset);
+            PRINT_LINE("Kernel + {:p}  {} +{:#x}", symbol.address - g_boot_info.kernel_load_base, symbol.symbol->name, offset);
     }
 }
 

@@ -45,7 +45,7 @@ extern "C" [[noreturn]] void pre_init(PhysicalPtr fdt_ptr)
     // in high virtual memory.
     asm volatile(
         "mov x0, %[base] \n"
-        "add sp, sp, x0 \n" ::[base] "r"(physical_to_virtual_offset)
+        "add sp, sp, x0 \n" ::[base] "r"(g_boot_info.physical_to_virtual_offset)
         : "x0");
 
     // We can now unmap the identity map as everything is running in high virtual memory at this point.

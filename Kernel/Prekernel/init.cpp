@@ -175,22 +175,30 @@ extern "C" [[noreturn]] void init()
         return (decltype(ptr))((FlatPtr)ptr + kernel_mapping_base);
     };
 
-    info.multiboot_flags = multiboot_info_ptr->flags;
-    info.multiboot_memory_map = adjust_by_mapping_base((FlatPtr)multiboot_info_ptr->mmap_addr);
-    info.multiboot_memory_map_count = multiboot_info_ptr->mmap_length / sizeof(multiboot_memory_map_t);
+    info.boot_method = BootMethod::Multiboot1;
+    info.boot_method_specific.pre_init.~PreInitBootInfo();
+    new (&info.boot_method_specific.multiboot1) Multiboot1BootInfo;
+
+    info.boot_method_specific.multiboot1.flags = multiboot_info_ptr->flags;
+    info.boot_method_specific.multiboot1.memory_map = bit_cast<multiboot_memory_map_t const*>(adjust_by_mapping_base((FlatPtr)multiboot_info_ptr->mmap_addr));
+    info.boot_method_specific.multiboot1.memory_map_count = multiboot_info_ptr->mmap_length / sizeof(multiboot_memory_map_t);
 
     if (initrd_module_start != 0 && initrd_module_end != 0) {
-        info.multiboot_module_physical_ptr = initrd_module_start;
-        info.multiboot_module_length = initrd_module_end - initrd_module_start;
+        info.boot_method_specific.multiboot1.module_physical_ptr = PhysicalAddress { initrd_module_start };
+        info.boot_method_specific.multiboot1.module_length = initrd_module_end - initrd_module_start;
     }
 
     if ((multiboot_info_ptr->flags & MULTIBOOT_INFO_FRAMEBUFFER_INFO) != 0) {
-        info.multiboot_framebuffer_addr = multiboot_info_ptr->framebuffer_addr;
-        info.multiboot_framebuffer_pitch = multiboot_info_ptr->framebuffer_pitch;
-        info.multiboot_framebuffer_width = multiboot_info_ptr->framebuffer_width;
-        info.multiboot_framebuffer_height = multiboot_info_ptr->framebuffer_height;
-        info.multiboot_framebuffer_bpp = multiboot_info_ptr->framebuffer_bpp;
-        info.multiboot_framebuffer_type = multiboot_info_ptr->framebuffer_type;
+        info.boot_framebuffer.paddr = PhysicalAddress { multiboot_info_ptr->framebuffer_addr };
+        info.boot_framebuffer.pitch = multiboot_info_ptr->framebuffer_pitch;
+        info.boot_framebuffer.width = multiboot_info_ptr->framebuffer_width;
+        info.boot_framebuffer.height = multiboot_info_ptr->framebuffer_height;
+        info.boot_framebuffer.bpp = multiboot_info_ptr->framebuffer_bpp;
+
+        if (multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB)
+            info.boot_framebuffer.type = BootFramebufferType::BGRx8888;
+        else
+            info.boot_framebuffer.type = BootFramebufferType::None;
     }
 
     reload_cr3();
@@ -213,21 +221,23 @@ extern "C" [[noreturn]] void init()
         __builtin_memset((u8*)kernel_load_base + kernel_program_header.p_vaddr + kernel_program_header.p_filesz, 0, kernel_program_header.p_memsz - kernel_program_header.p_filesz);
     }
 
-    info.start_of_prekernel_image = (PhysicalPtr)start_of_prekernel_image;
-    info.end_of_prekernel_image = (PhysicalPtr)end_of_prekernel_image;
+    info.boot_method_specific.multiboot1.start_of_prekernel_image = PhysicalAddress { bit_cast<PhysicalPtr>(+start_of_prekernel_image) };
+    info.boot_method_specific.multiboot1.end_of_prekernel_image = PhysicalAddress { bit_cast<PhysicalPtr>(+end_of_prekernel_image) };
     info.physical_to_virtual_offset = kernel_load_base - kernel_physical_base;
     info.kernel_mapping_base = kernel_mapping_base;
     info.kernel_load_base = kernel_load_base;
 #if ARCH(X86_64)
-    info.gdt64ptr = (PhysicalPtr)gdt64ptr;
-    info.code64_sel = code64_sel;
-    info.boot_pml4t = (PhysicalPtr)boot_pml4t;
+    info.arch_specific.gdt64ptr = (PhysicalPtr)gdt64ptr;
+    info.arch_specific.code64_sel = code64_sel;
+    info.boot_pml4t = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pml4t) };
 #endif
-    info.boot_pdpt = (PhysicalPtr)boot_pdpt;
-    info.boot_pd0 = (PhysicalPtr)boot_pd0;
-    info.boot_pd_kernel = (PhysicalPtr)boot_pd_kernel;
-    info.boot_pd_kernel_pt1023 = (FlatPtr)adjust_by_mapping_base(boot_pd_kernel_pt1023);
-    info.kernel_cmdline = (FlatPtr)adjust_by_mapping_base(kernel_cmdline);
+    info.boot_pdpt = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pdpt) };
+    info.boot_method_specific.multiboot1.boot_pd0 = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pd0) };
+    info.boot_pd_kernel = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pd_kernel) };
+    info.boot_pd_kernel_pt1023 = bit_cast<Memory::PageTableEntry*>(adjust_by_mapping_base(boot_pd_kernel_pt1023));
+
+    char const* cmdline_ptr = bit_cast<char const*>(adjust_by_mapping_base(kernel_cmdline));
+    info.cmdline = StringView { cmdline_ptr, __builtin_strlen(cmdline_ptr) };
 
     asm(
         "mov %0, %%rax\n"
