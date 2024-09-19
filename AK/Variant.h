@@ -44,22 +44,48 @@ union VariantStorage;
 
 template<typename T, typename... Rest>
 union VariantStorage<T, Rest...> {
+    // Note: This has to be a union, as type laundering via reinterpret_cast is
+    //       not allowed in constexpr contexts, but changing the active member
+    //       of a union is.
+    // Note: On construction of this class:
+    //       initially no member is active
+    //       to set a member as active you should use `construct_at`
+    //       or once c++26 is available, placement new,
+    //       to abstract this away VariantHelper should be used
+    // Note: The default copy/move constructors and assignment operators
+    //       are to allow Variant to leverage them itself, iff the types allow that trivially
+    //       otherwise they are deleted
+    // Note: Proper destruction is handled by the Variant itself
+    //       But all possible destructors need to be declared to make the compiler happy
+
     constexpr VariantStorage() = default;
     constexpr VariantStorage()
     requires(!IsTriviallyConstructible<T> || (!IsTriviallyConstructible<Rest> || ...)) {};
 
     constexpr VariantStorage(VariantStorage&&) = default;
+    constexpr VariantStorage(VariantStorage&&)
+    requires(!IsTriviallyMoveConstructible<T> || (!IsTriviallyMoveConstructible<Rest> || ...))
+    = delete;
     constexpr VariantStorage(VariantStorage const&) = default;
+    constexpr VariantStorage(VariantStorage const&)
+    requires(!IsTriviallyCopyConstructible<T> || (!IsTriviallyCopyConstructible<Rest> || ...))
+    = delete;
 
     constexpr VariantStorage& operator=(VariantStorage&&) = default;
+    constexpr VariantStorage& operator=(VariantStorage&&)
+    requires(!IsTriviallyMoveAssignable<T> || (!IsTriviallyMoveAssignable<Rest> || ...))
+    = delete;
     constexpr VariantStorage& operator=(VariantStorage const&) = default;
+    constexpr VariantStorage& operator=(VariantStorage const&)
+    requires(!IsTriviallyCopyAssignable<T> || (!IsTriviallyCopyAssignable<Rest> || ...))
+    = delete;
 
     // Note: Actual destruction is handled by the Variant itself
     constexpr ~VariantStorage() = default;
     constexpr ~VariantStorage()
-    requires(!IsTriviallyDestructible<T> || !(IsTriviallyDestructible<Rest> && ...)) {};
+    requires(!IsTriviallyDestructible<T> || (!IsTriviallyDestructible<Rest> || ...)) {};
     ~VariantStorage()
-    requires(!IsDestructible<T> || !(IsDestructible<Rest> && ...))
+    requires(!IsDestructible<T> || (!IsDestructible<Rest> || ...))
     = delete;
 
     VariantStorage<Rest...> rest;
@@ -76,6 +102,12 @@ struct VariantHelper;
 template<typename IndexType, IndexType InitialIndex, typename F, typename... Ts>
 struct VariantHelper<IndexType, InitialIndex, F, Ts...> {
     static constexpr auto current_index = VariantIndexOf<F, IndexType, InitialIndex, F, Ts...> {}();
+
+    ALWAYS_INLINE constexpr static void reset(VariantStorage<F, Ts...>& storage)
+    {
+        storage.~VariantStorage<F, Ts...>();
+        construct_at(&storage);
+    }
 
     ALWAYS_INLINE constexpr static void delete_(IndexType state, VariantStorage<F, Ts...>& storage)
     {
@@ -216,7 +248,7 @@ struct VariantConstructTag {
 
 template<typename T, typename Base>
 struct VariantConstructors {
-    // This is mainly used to get proper Value decay for calling the constructors
+    // This class is mainly used to get proper Value decay for calling the constructors
 
     // The pointless `typename Base` constraints are a workaround for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109683
     ALWAYS_INLINE constexpr VariantConstructors(Base& self, T&& t)
@@ -232,14 +264,6 @@ struct VariantConstructors {
     }
 
     ALWAYS_INLINE constexpr VariantConstructors() = default;
-
-private:
-    [[nodiscard]] ALWAYS_INLINE constexpr Base& internal_cast()
-    {
-        // Warning: Internal type shenanigans - VariantsConstructors<T, Base> <- Base
-        //          Not the other way around, so be _really_ careful not to cause issues.
-        return *static_cast<Base*>(this);
-    }
 };
 
 // Type list deduplication
@@ -310,8 +334,7 @@ template<typename T>
 concept NotLvalueReference = !IsLvalueReference<T>;
 
 template<NotLvalueReference... Ts>
-struct Variant
-    : public Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...> {
+struct Variant {
 public:
     using IndexType = Conditional<(sizeof...(Ts) < 255), u8, size_t>; // Note: size+1 reserved for internal value checks
 private:
@@ -328,13 +351,15 @@ public:
     }
 
     template<typename T>
-    requires(requires(Variant v, T&& a) { Detail::VariantConstructors<Ts, Variant<Ts...>>(v, forward<T>(a)); } || ...)
+    requires(!IsSame<T, Variant<Ts...>>
+                && (requires(Variant v, T&& a) { Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>(v, forward<T>(a)); }))
     constexpr Variant(T&& value)
         : m_storage()
         , m_index(invalid_index)
     {
-        // This constructor is delayed, so that m_storage and m_index are "live" once
-        // this accesses them.
+        // This is technically abusing the side effects of the constructor.
+        // Getting the compiler to pick the right constructor seems a lot simpler than doing the same
+        // with a free-/member-function
         Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>(*this, forward<T>(value));
     }
 
@@ -391,8 +416,7 @@ public:
 
     ALWAYS_INLINE constexpr Variant(Variant const& old)
     requires(!(IsTriviallyCopyConstructible<Ts> && ...))
-        : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
-        , m_storage {}
+        : m_storage {}
         , m_index(old.m_index)
     {
         Helper::copy(old.m_index, old.m_storage, m_storage);
@@ -404,8 +428,7 @@ public:
     //       but it will still contain the "moved-from" state of the object it previously contained.
     ALWAYS_INLINE constexpr Variant(Variant&& old)
     requires(!(IsTriviallyMoveConstructible<Ts> && ...))
-        : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
-        , m_index(old.m_index)
+        : m_index(old.m_index)
     {
         Helper::move_(old.m_index, old.m_storage, m_storage);
     }
@@ -422,6 +445,7 @@ public:
         if (this != &other) {
             if constexpr (!(IsTriviallyDestructible<Ts> && ...)) {
                 Helper::delete_(m_index, m_storage);
+                Helper::reset(m_storage);
             }
             m_index = other.m_index;
             Helper::copy(other.m_index, other.m_storage, m_storage);
@@ -435,6 +459,7 @@ public:
         if (this != &other) {
             if constexpr (!(IsTriviallyDestructible<Ts> && ...)) {
                 Helper::delete_(m_index, m_storage);
+                Helper::reset(m_storage);
             }
             m_index = other.m_index;
             Helper::move_(other.m_index, other.m_storage, m_storage);
@@ -448,9 +473,7 @@ public:
     {
         constexpr auto new_index = index_of<StrippedT>();
         Helper::delete_(m_index, m_storage);
-        // We need to clear the storage before setting the new value
-        // otherwise the "active member" is wrong, despite its destruction
-        m_storage = {};
+        Helper::reset(m_storage);
         Helper::set(m_storage, forward<T>(t), new_index);
         m_index = new_index;
     }
@@ -584,8 +607,7 @@ private:
     friend struct Detail::VariantConstructors;
 
     explicit constexpr Variant(IndexType index, Detail::VariantConstructTag)
-        : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
-        , m_index(index)
+        : m_index(index)
     {
     }
 
