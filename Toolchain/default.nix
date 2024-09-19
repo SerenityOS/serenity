@@ -29,6 +29,12 @@ mkShell.override { stdenv = gcc13Stdenv; } {
     parted
     qemu
     python3
+    # For clangd and clang-format
+    clang-tools
+    # For LibWeb-related formatting
+    nodePackages.prettier
+    # For the pre-commit hooks
+    pre-commit
   ];
   hardeningDisable = [ "format" ];
 }
