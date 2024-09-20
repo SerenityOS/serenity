@@ -494,6 +494,7 @@ class SubmitEvent;
 class TextMetrics;
 class TextTrack;
 class TextTrackCue;
+class TextTrackCueList;
 class TextTrackList;
 class Timer;
 class TimeRanges;
