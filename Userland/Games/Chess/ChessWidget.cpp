@@ -233,6 +233,8 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     if (!square.has_value())
         return;
 
+    set_focus(true);
+
     auto piece = board().get_piece(square.value());
     if (drag_enabled() && piece.color == board().turn() && !m_playback) {
         m_dragging_piece = true;

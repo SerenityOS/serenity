@@ -29,8 +29,7 @@
 
             @GUI::TextEditor {
                 name: "move_display_widget"
-                mode: "DisplayOnly"
-                focus_policy: "NoFocus"
+                mode: "ReadOnly"
             }
 
             @GUI::Label {
