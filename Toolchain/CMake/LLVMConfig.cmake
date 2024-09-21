@@ -5,10 +5,6 @@ if (CMAKE_VERSION VERSION_EQUAL "3.29.0" OR CMAKE_VERSION VERSION_EQUAL "3.29.1"
                         "Please either downgrade CMake or update it to 3.29.2+.")
 endif()
 
-# Note: We force the cmake module path for all dependent projects to include our custom directory
-# That has the Platform/SerenityOS.cmake definition
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${SERENITY_MODULE_PATH}" CACHE STRING "Modules for CMake")
-
 set(CMAKE_BUILD_TYPE Release CACHE STRING "")
 
 set(LLVM_TARGETS_TO_BUILD "X86;AArch64;RISCV" CACHE STRING "")
