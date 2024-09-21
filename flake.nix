@@ -20,6 +20,7 @@
       {
         devShells.default = import ./Toolchain { inherit pkgs; };
         devShells.ladybird = import ./Ladybird { inherit pkgs; };
+        formatter = pkgs.nixfmt-rfc-style;
       }
     );
 }
