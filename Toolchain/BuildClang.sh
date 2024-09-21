@@ -248,7 +248,6 @@ pushd "$DIR/Build/clang"
             -DSERENITY_aarch64-pc-serenity_STUBS="$DIR/Stubs/aarch64" \
             -DSERENITY_riscv64-pc-serenity_STUBS="$DIR/Stubs/riscv64" \
             -DCMAKE_INSTALL_PREFIX="$PREFIX" \
-            -DSERENITY_MODULE_PATH="$DIR/CMake" \
             -C "$DIR/CMake/LLVMConfig.cmake" \
             ${link_lld:+"-DLLVM_ENABLE_LLD=ON"} \
             ${dev:+"-DLLVM_CCACHE_BUILD=ON"} \
