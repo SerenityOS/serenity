@@ -209,7 +209,7 @@ void FileProvider::build_filesystem_cache()
             while (!m_work_queue.is_empty()) {
                 auto base_directory = m_work_queue.dequeue();
 
-                if (base_directory.template is_one_of("/dev"sv, "/proc"sv, "/sys"sv))
+                if (base_directory.is_one_of("/dev"sv, "/proc"sv, "/sys"sv))
                     continue;
 
                 // FIXME: Propagate errors.

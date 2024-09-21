@@ -361,7 +361,7 @@ public:
             bool did_unblock_any = false;
             for (size_t i = 0; i < m_blockers.size() && !stop_iterating;) {
                 auto& info = m_blockers[i];
-                if (bool did_unblock = try_to_unblock_one(*info.blocker, info.data, stop_iterating)) {
+                if (try_to_unblock_one(*info.blocker, info.data, stop_iterating)) {
                     m_blockers.remove(i);
                     did_unblock_any = true;
                     continue;

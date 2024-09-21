@@ -223,7 +223,7 @@ public:
     template<typename Callback>
     void for_each_used_memory_range(Callback callback)
     {
-        m_global_data.template with([&](auto& global_data) {
+        m_global_data.with([&](auto& global_data) {
             for (auto& range : global_data.used_memory_ranges)
                 callback(range);
         });
