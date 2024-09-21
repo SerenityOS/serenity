@@ -2,7 +2,9 @@
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {}
 
-    @GUI::HorizontalSplitter {
+    @GUI::Frame {
+        layout: @GUI::HorizontalBoxLayout {}
+
         @GUI::Frame {
             name: "chess_widget_frame"
             min_width: 508
