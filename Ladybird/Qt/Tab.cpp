@@ -588,8 +588,8 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     });
 
     m_link_context_menu = new QMenu("Link context menu", this);
-    m_link_context_menu->addAction(open_link_action);
     m_link_context_menu->addAction(open_link_in_new_tab_action);
+    m_link_context_menu->addAction(open_link_action);
     m_link_context_menu->addSeparator();
     m_link_context_menu->addAction(m_link_context_menu_copy_url_action);
     m_link_context_menu->addSeparator();
