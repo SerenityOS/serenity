@@ -403,10 +403,22 @@ ErrorOr<void> LocalSocket::getsockopt(OpenFileDescription& description, int leve
     TRY(copy_from_user(&size, value_size.unsafe_userspace_ptr()));
 
     switch (option) {
-    case SO_SNDBUF:
-        return ENOTSUP;
-    case SO_RCVBUF:
-        return ENOTSUP;
+    case SO_SNDBUF: {
+        if (size != sizeof(int))
+            return EINVAL;
+        int snd_buffer_size = static_cast<int>(m_for_server->space_for_writing() + m_for_server->immediately_readable());
+        TRY(copy_to_user(static_ptr_cast<int*>(value), &snd_buffer_size));
+        TRY(copy_to_user(value_size, &size));
+        return {};
+    }
+    case SO_RCVBUF: {
+        if (size != sizeof(int))
+            return EINVAL;
+        int rcv_buffer_size = static_cast<int>(m_for_client->space_for_writing() + m_for_client->immediately_readable());
+        TRY(copy_to_user(static_ptr_cast<int*>(value), &rcv_buffer_size));
+        TRY(copy_to_user(value_size, &size));
+        return {};
+    }
     case SO_PEERCRED: {
         if (size < sizeof(ucred))
             return EINVAL;
