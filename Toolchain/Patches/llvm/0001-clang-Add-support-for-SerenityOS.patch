@@ -21,33 +21,29 @@ Co-authored-by: Dan Klishch <danilklishch@gmail.com>
  clang/lib/Driver/CMakeLists.txt               |   1 +
  clang/lib/Driver/Driver.cpp                   |   4 +
  clang/lib/Driver/ToolChain.cpp                |   5 +-
- clang/lib/Driver/ToolChains/Serenity.cpp      | 216 ++++++++++++++++++
+ clang/lib/Driver/ToolChains/Serenity.cpp      | 208 ++++++++++++++++++
  clang/lib/Driver/ToolChains/Serenity.h        |  84 +++++++
  clang/lib/Lex/InitHeaderSearch.cpp            |   1 +
  .../usr/include/c++/v1/.keep                  |   0
  .../include/x86_64-pc-serenity/c++/v1/.keep   |   0
  .../serenity_x86_64_tree/usr/lib/crt0.o       |   0
  .../usr/lib/crt0_shared.o                     |   0
- .../serenity_x86_64_tree/usr/lib/crti.o       |   0
- .../serenity_x86_64_tree/usr/lib/crtn.o       |   0
  .../serenity_x86_64_tree/usr/local/.keep      |   0
  clang/test/Driver/pic.c                       |   6 +
  clang/test/Driver/save-stats.c                |   2 +
- clang/test/Driver/serenity.cpp                | 196 ++++++++++++++++
- 18 files changed, 543 insertions(+), 1 deletion(-)
+ clang/test/Driver/serenity.cpp                | 199 +++++++++++++++++
+ 16 files changed, 538 insertions(+), 1 deletion(-)
  create mode 100644 clang/lib/Driver/ToolChains/Serenity.cpp
  create mode 100644 clang/lib/Driver/ToolChains/Serenity.h
  create mode 100644 clang/test/Driver/Inputs/serenity_x86_64_tree/usr/include/c++/v1/.keep
  create mode 100644 clang/test/Driver/Inputs/serenity_x86_64_tree/usr/include/x86_64-pc-serenity/c++/v1/.keep
  create mode 100644 clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crt0.o
  create mode 100644 clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crt0_shared.o
- create mode 100644 clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crti.o
- create mode 100644 clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crtn.o
  create mode 100644 clang/test/Driver/Inputs/serenity_x86_64_tree/usr/local/.keep
  create mode 100644 clang/test/Driver/serenity.cpp
 
 diff --git a/clang/lib/Basic/Targets.cpp b/clang/lib/Basic/Targets.cpp
-index e3283510c6aa..8cf3fc4fb346 100644
+index 29133f9ee8fc..a2c48ce382f2 100644
 --- a/clang/lib/Basic/Targets.cpp
 +++ b/clang/lib/Basic/Targets.cpp
 @@ -166,6 +166,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
@@ -91,10 +87,10 @@ index e3283510c6aa..8cf3fc4fb346 100644
        return std::make_unique<X86_64TargetInfo>(Triple, Opts);
      }
 diff --git a/clang/lib/Basic/Targets/OSTargets.h b/clang/lib/Basic/Targets/OSTargets.h
-index 4366c1149e40..3528e16d8690 100644
+index 5f27c3469f86..854fd14cb39b 100644
 --- a/clang/lib/Basic/Targets/OSTargets.h
 +++ b/clang/lib/Basic/Targets/OSTargets.h
-@@ -1000,6 +1000,23 @@ public:
+@@ -1001,6 +1001,23 @@ public:
    }
  };
  
@@ -119,7 +115,7 @@ index 4366c1149e40..3528e16d8690 100644
  } // namespace clang
  #endif // LLVM_CLANG_LIB_BASIC_TARGETS_OSTARGETS_H
 diff --git a/clang/lib/Driver/CMakeLists.txt b/clang/lib/Driver/CMakeLists.txt
-index 58427e3f83c4..e8a081bbf728 100644
+index 32a4378ab499..7aab8da3b0e4 100644
 --- a/clang/lib/Driver/CMakeLists.txt
 +++ b/clang/lib/Driver/CMakeLists.txt
 @@ -75,6 +75,7 @@ add_clang_library(clangDriver
@@ -131,7 +127,7 @@ index 58427e3f83c4..e8a081bbf728 100644
    ToolChains/SPIRV.cpp
    ToolChains/TCE.cpp
 diff --git a/clang/lib/Driver/Driver.cpp b/clang/lib/Driver/Driver.cpp
-index 93cddf742d52..8a821456ce28 100644
+index 8e44d5afa40e..1cea1f1138d1 100644
 --- a/clang/lib/Driver/Driver.cpp
 +++ b/clang/lib/Driver/Driver.cpp
 @@ -43,6 +43,7 @@
@@ -142,7 +138,7 @@ index 93cddf742d52..8a821456ce28 100644
  #include "ToolChains/Solaris.h"
  #include "ToolChains/TCE.h"
  #include "ToolChains/VEToolchain.h"
-@@ -6272,6 +6273,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
+@@ -6398,6 +6399,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
      case llvm::Triple::Fuchsia:
        TC = std::make_unique<toolchains::Fuchsia>(*this, Target, Args);
        break;
@@ -153,10 +149,10 @@ index 93cddf742d52..8a821456ce28 100644
        TC = std::make_unique<toolchains::Solaris>(*this, Target, Args);
        break;
 diff --git a/clang/lib/Driver/ToolChain.cpp b/clang/lib/Driver/ToolChain.cpp
-index 388030592b48..02a706da75a4 100644
+index 20a555afb809..0f9c4694e7c7 100644
 --- a/clang/lib/Driver/ToolChain.cpp
 +++ b/clang/lib/Driver/ToolChain.cpp
-@@ -589,6 +589,8 @@ StringRef ToolChain::getOSLibName() const {
+@@ -613,6 +613,8 @@ StringRef ToolChain::getOSLibName() const {
      return "sunos";
    case llvm::Triple::AIX:
      return "aix";
@@ -165,7 +161,7 @@ index 388030592b48..02a706da75a4 100644
    default:
      return getOS();
    }
-@@ -1081,7 +1083,8 @@ ToolChain::UnwindLibType ToolChain::GetUnwindLibType(
+@@ -1128,7 +1130,8 @@ ToolChain::UnwindLibType ToolChain::GetUnwindLibType(
    else if (LibName == "platform" || LibName == "") {
      ToolChain::RuntimeLibType RtLibType = GetRuntimeLibType(Args);
      if (RtLibType == ToolChain::RLT_CompilerRT) {
@@ -177,10 +173,10 @@ index 388030592b48..02a706da75a4 100644
          unwindLibType = ToolChain::UNW_None;
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
 new file mode 100644
-index 000000000000..2167758100bc
+index 000000000000..7d95fe55a0fd
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,221 @@
+@@ -0,0 +1,208 @@
 +//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -205,14 +201,6 @@ index 000000000000..2167758100bc
 +using namespace clang;
 +using namespace llvm::opt;
 +
-+static bool getPIE(const ArgList &Args, const ToolChain &TC) {
-+  if (Args.hasArg(options::OPT_static, options::OPT_shared,
-+                  options::OPT_static_pie))
-+    return false;
-+  Arg *Last = Args.getLastArg(options::OPT_pie, options::OPT_no_pie);
-+  return Last ? Last->getOption().matches(options::OPT_pie) : true;
-+}
-+
 +void tools::serenity::Linker::ConstructJob(Compilation &C, const JobAction &JA,
 +                                           const InputInfo &Output,
 +                                           const InputInfoList &Inputs,
@@ -223,34 +211,35 @@ index 000000000000..2167758100bc
 +  const bool IsShared = Args.hasArg(options::OPT_shared);
 +  const bool IsStatic =
 +      Args.hasArg(options::OPT_static) && !Args.hasArg(options::OPT_static_pie);
-+  const bool IsRdynamic = Args.hasArg(options::OPT_rdynamic);
 +  const bool IsStaticPIE = Args.hasArg(options::OPT_static_pie);
-+  const bool IsPIE = getPIE(Args, TC);
 +  ArgStringList CmdArgs;
 +
 +  if (!D.SysRoot.empty())
 +    CmdArgs.push_back(Args.MakeArgString("--sysroot=" + D.SysRoot));
 +
-+  if (IsPIE || IsStaticPIE)
-+    CmdArgs.push_back("-pie");
-+
 +  if (IsShared)
 +    CmdArgs.push_back("-shared");
 +
-+  if (IsStatic || IsStaticPIE)
-+    CmdArgs.push_back("-static");
-+
 +  if (IsStaticPIE) {
++    CmdArgs.push_back("-static");
++    CmdArgs.push_back("-pie");
 +    CmdArgs.push_back("--no-dynamic-linker");
 +    CmdArgs.push_back("-z");
 +    CmdArgs.push_back("text");
-+  }
-+
-+  if (!IsStatic && !IsStaticPIE) {
-+    if (IsRdynamic)
++  } else if (IsStatic) {
++    CmdArgs.push_back("-static");
++  } else if (!Args.hasArg(options::OPT_r)) {
++    if (Args.hasArg(options::OPT_rdynamic))
 +      CmdArgs.push_back("-export-dynamic");
-+    CmdArgs.push_back("-dynamic-linker");
-+    CmdArgs.push_back("/usr/lib/Loader.so");
++    if (!IsShared) {
++      Arg *A = Args.getLastArg(options::OPT_pie, options::OPT_no_pie,
++                               options::OPT_nopie);
++      bool IsPIE = A ? A->getOption().matches(options::OPT_pie) : true;
++      if (IsPIE)
++        CmdArgs.push_back("-pie");
++      CmdArgs.push_back("-dynamic-linker");
++      CmdArgs.push_back("/usr/lib/Loader.so");
++    }
 +  }
 +
 +  CmdArgs.push_back("--eh-frame-hdr");
@@ -273,12 +262,12 @@ index 000000000000..2167758100bc
 +  bool ShouldLinkStartFiles = !HasNoStartFiles && !HasNoStdLib;
 +  bool ShouldLinkCompilerRuntime = !HasNoDefaultLibs && !HasNoStdLib;
 +  bool ShouldLinkLibC = !HasNoLibC && !HasNoStdLib && !HasNoDefaultLibs;
-+  bool ShouldLinkLibCXX = D.CCCIsCXX() && !HasNoStdLibXX && !HasNoStdLib && !HasNoDefaultLibs;
++  bool ShouldLinkLibCXX =
++      D.CCCIsCXX() && !HasNoStdLibXX && !HasNoStdLib && !HasNoDefaultLibs;
 +
 +  if (ShouldLinkStartFiles) {
-+    CmdArgs.push_back(Args.MakeArgString(
-+        TC.GetFilePath((IsShared) ? "crt0_shared.o" : "crt0.o")));
-+    CmdArgs.push_back(Args.MakeArgString(TC.GetFilePath("crti.o")));
++    if (!IsShared)
++      CmdArgs.push_back(Args.MakeArgString(TC.GetFilePath("crt0.o")));
 +
 +    std::string crtbegin_path;
 +    if (TC.GetRuntimeLibType(Args) == ToolChain::RLT_CompilerRT) {
@@ -287,10 +276,8 @@ index 000000000000..2167758100bc
 +      if (TC.getVFS().exists(crtbegin))
 +        crtbegin_path = crtbegin;
 +    }
-+    if (crtbegin_path.empty()) {
-+      const char *crtbegin = (IsShared || IsPIE) ? "crtbeginS.o" : "crtbegin.o";
-+      crtbegin_path = TC.GetFilePath(crtbegin);
-+    }
++    if (crtbegin_path.empty())
++      crtbegin_path = TC.GetFilePath("crtbeginS.o");
 +    CmdArgs.push_back(Args.MakeArgString(crtbegin_path));
 +  }
 +
@@ -301,7 +288,7 @@ index 000000000000..2167758100bc
 +  if (D.isUsingLTO()) {
 +    assert(!Inputs.empty() && "Must have at least one input.");
 +    // Find the first filename InputInfo object.
-+    auto const* Input = llvm::find_if(
++    auto const *Input = llvm::find_if(
 +        Inputs, [](const InputInfo &II) -> bool { return II.isFilename(); });
 +    if (Input == Inputs.end())
 +      // For a very rare case, all of the inputs to the linker are
@@ -349,7 +336,7 @@ index 000000000000..2167758100bc
 +  Args.ClaimAllArgs(options::OPT_stdlib_EQ);
 +
 +  if (ShouldLinkLibC)
-+      CmdArgs.push_back("-lc");
++    CmdArgs.push_back("-lc");
 +
 +  if (ShouldLinkStartFiles) {
 +    std::string crtend_path;
@@ -359,13 +346,9 @@ index 000000000000..2167758100bc
 +      if (TC.getVFS().exists(crtend))
 +        crtend_path = crtend;
 +    }
-+    if (crtend_path.empty()) {
-+      const char *crtend = (IsShared || IsPIE) ? "crtendS.o" : "crtend.o";
-+      crtend_path = TC.GetFilePath(crtend);
-+    }
++    if (crtend_path.empty())
++      crtend_path = TC.GetFilePath("crtendS.o");
 +    CmdArgs.push_back(Args.MakeArgString(crtend_path));
-+
-+    CmdArgs.push_back(Args.MakeArgString(TC.GetFilePath("crtn.o")));
 +  }
 +
 +  const char *Exec = Args.MakeArgString(TC.GetLinkerPath());
@@ -397,8 +380,8 @@ index 000000000000..2167758100bc
 +  if (DriverArgs.hasArg(options::OPT_nostdlibinc))
 +    return;
 +
-+  addSystemInclude(
-+      DriverArgs, CC1Args, concat(D.SysRoot, "/usr/local/include"));
++  addSystemInclude(DriverArgs, CC1Args,
++                   concat(D.SysRoot, "/usr/local/include"));
 +
 +  addSystemInclude(DriverArgs, CC1Args, concat(D.SysRoot, "/usr/include"));
 +}
@@ -516,20 +499,14 @@ index 000000000000..e69de29bb2d1
 diff --git a/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crt0_shared.o b/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crt0_shared.o
 new file mode 100644
 index 000000000000..e69de29bb2d1
-diff --git a/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crti.o b/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crti.o
-new file mode 100644
-index 000000000000..e69de29bb2d1
-diff --git a/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crtn.o b/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crtn.o
-new file mode 100644
-index 000000000000..e69de29bb2d1
 diff --git a/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/local/.keep b/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/local/.keep
 new file mode 100644
 index 000000000000..e69de29bb2d1
 diff --git a/clang/test/Driver/pic.c b/clang/test/Driver/pic.c
-index aeddead6dbf8..57ef930b7848 100644
+index f5d074542279..0438ef621ef5 100644
 --- a/clang/test/Driver/pic.c
 +++ b/clang/test/Driver/pic.c
-@@ -330,3 +330,9 @@
+@@ -329,3 +329,9 @@
  // RUN:   | FileCheck %s --check-prefix=CHECK-PIC2
  // RUN: %clang -c %s --target=i586-pc-haiku -### 2>&1 \
  // RUN:   | FileCheck %s --check-prefix=CHECK-PIC2
@@ -554,10 +531,10 @@ index ad7867a99168..94d93dc23920 100644
  // CHECK-LTO: "-plugin-opt=stats-file=save-stats.stats"
 diff --git a/clang/test/Driver/serenity.cpp b/clang/test/Driver/serenity.cpp
 new file mode 100644
-index 000000000000..48de4c0eb6ec
+index 000000000000..c36370f0d22e
 --- /dev/null
 +++ b/clang/test/Driver/serenity.cpp
-@@ -0,0 +1,196 @@
+@@ -0,0 +1,199 @@
 +// UNSUPPORTED: system-windows
 +
 +/// Check default header and linker paths
@@ -569,6 +546,7 @@ index 000000000000..48de4c0eb6ec
 +// PATHS_X86_64-SAME: {{^}} "[[SYSROOT:[^"]+]]/usr/include/x86_64-pc-serenity/c++/v1"
 +// PATHS_X86_64-SAME: {{^}} "-internal-isystem" "[[SYSROOT:[^"]+]]/usr/include/c++/v1"
 +// PATHS_X86_64-SAME: {{^}} "-internal-isystem" "[[RESOURCE]]/include"
++// PATHS_X86_64-SAME: {{^}} "-internal-isystem" "[[SYSROOT:[^"]+]]/usr/local/include"
 +// PATHS_X86_64-SAME: {{^}} "-internal-isystem" "[[SYSROOT:[^"]+]]/usr/include"
 +// PATHS_X86_64:      "-L
 +// PATHS_X86_64-SAME: {{^}}[[SYSROOT]]/usr/lib"
@@ -581,8 +559,8 @@ index 000000000000..48de4c0eb6ec
 +// SERENITY_X86_64: "-dynamic-linker" "/usr/lib/Loader.so" "--eh-frame-hdr"
 +// SERENITY_X86_64: "-o" "a.out"
 +// SERENITY_X86_64: "-z" "pack-relative-relocs"
-+// SERENITY_X86_64: "crt0.o" "crti.o" "crtbeginS.o"
-+// SERENITY_X86_64: "-lc" "crtendS.o" "crtn.o"
++// SERENITY_X86_64: "crt0.o" "crtbeginS.o"
++// SERENITY_X86_64: "-lc" "crtendS.o"
 +
 +// RUN: %clang -### %s --target=aarch64-pc-serenity --sysroot= 2>&1 | FileCheck %s --check-prefix=SERENITY_AARCH64
 +// SERENITY_AARCH64: "-cc1" "-triple" "aarch64-pc-serenity"
@@ -591,8 +569,8 @@ index 000000000000..48de4c0eb6ec
 +// SERENITY_AARCH64: "-dynamic-linker" "/usr/lib/Loader.so" "--eh-frame-hdr"
 +// SERENITY_AARCH64: "-o" "a.out"
 +// SERENITY_AARCH64: "-z" "pack-relative-relocs"
-+// SERENITY_AARCH64: "crt0.o" "crti.o" "crtbeginS.o"
-+// SERENITY_AARCH64: "-lc" "crtendS.o" "crtn.o"
++// SERENITY_AARCH64: "crt0.o" "crtbeginS.o"
++// SERENITY_AARCH64: "-lc" "crtendS.o"
 +
 +// RUN: %clang -### %s --target=riscv64-pc-serenity --sysroot= 2>&1 | FileCheck %s --check-prefix=SERENITY_RISCV64
 +// SERENITY_RISCV64: "-cc1" "-triple" "riscv64-pc-serenity"
@@ -601,54 +579,57 @@ index 000000000000..48de4c0eb6ec
 +// SERENITY_RISCV64: "-dynamic-linker" "/usr/lib/Loader.so" "--eh-frame-hdr"
 +// SERENITY_RISCV64: "-o" "a.out"
 +// SERENITY_RISCV64: "-z" "pack-relative-relocs"
-+// SERENITY_RISCV64: "crt0.o" "crti.o" "crtbeginS.o"
-+// SERENITY_RISCV64: "-lc" "crtendS.o" "crtn.o"
++// SERENITY_RISCV64: "crt0.o" "crtbeginS.o"
++// SERENITY_RISCV64: "-lc" "crtendS.o"
 +
 +/// -static-pie suppresses -dynamic-linker
 +// RUN: %clang -### %s --target=x86_64-pc-serenity --sysroot= \
-+//      -static-pie 2>&1 | FileCheck %s --check-prefix=STATIC_PIE
-+// STATIC_PIE: "-pie" "-static"
++// RUN:   -static-pie 2>&1 | FileCheck %s --check-prefix=STATIC_PIE
++// STATIC_PIE: "-static" "-pie"
 +// STATIC_PIE-NOT: "-dynamic-linker"
 +// STATIC_PIE: "--no-dynamic-linker" "-z" "text"
-+// STATIC_PIE:  "--eh-frame-hdr" "-z" "pack-relative-relocs"
-+// STATIC_PIE: "crt0.o" "crti.o" "crtbeginS.o"
-+// STATIC_PIE: "-lc" "crtendS.o" "crtn.o"
++// STATIC_PIE: "--eh-frame-hdr"
++// STATIC_PIE: "-z" "pack-relative-relocs"
++// STATIC_PIE: "crt0.o" "crtbeginS.o"
++// STATIC_PIE: "-lc" "crtendS.o"
 +
 +/// -shared forces use of shared crt files
 +// RUN: %clang -### %s --target=x86_64-pc-serenity --sysroot= \
-+//      -shared 2>&1 | FileCheck %s --check-prefix=SHARED
++// RUN:   -shared 2>&1 | FileCheck %s --check-prefix=SHARED
 +// SHARED: "-shared"
-+// SHARED:  "--eh-frame-hdr" "-z" "pack-relative-relocs"
-+// SHARED: "crt0_shared.o" "crti.o" "crtbeginS.o"
-+// SHARED: "-lc" "crtendS.o" "crtn.o"
++// SHARED: "--eh-frame-hdr"
++// SHARED: "-z" "pack-relative-relocs"
++// SHARED: "crtbeginS.o"
++// SHARED: "-lc" "crtendS.o"
 +
 +/// -static forces use of static crt files
 +// RUN: %clang -### %s --target=x86_64-pc-serenity --sysroot= \
-+//      -static 2>&1 | FileCheck %s --check-prefix=STATIC
++// RUN:   -static 2>&1 | FileCheck %s --check-prefix=STATIC
 +// STATIC: "-static"
-+// STATIC:  "--eh-frame-hdr" "-z" "pack-relative-relocs"
-+// STATIC: "crt0.o" "crti.o" "crtbegin.o"
-+// STATIC: "-lc" "crtend.o" "crtn.o"
++// STATIC: "--eh-frame-hdr"
++// STATIC: "-z" "pack-relative-relocs"
++// STATIC: "crt0.o" "crtbeginS.o"
++// STATIC: "-lc" "crtendS.o"
 +
 +/// -rdynamic passes -export-dynamic
 +// RUN: %clang -### %s --target=x86_64-pc-serenity --sysroot= \
-+//      -rdynamic 2>&1 | FileCheck %s --check-prefix=RDYNAMIC
-+// RDYNAMIC: "-pie" "-export-dynamic"
++// RUN:   -rdynamic 2>&1 | FileCheck %s --check-prefix=RDYNAMIC
++// RDYNAMIC: "-export-dynamic" "-pie"
 +// RDYNAMIC: "-dynamic-linker" "/usr/lib/Loader.so" "--eh-frame-hdr"
 +// RDYNAMIC: "-o" "a.out"
 +// RDYNAMIC: "-z" "pack-relative-relocs"
-+// RDYNAMIC: "crt0.o" "crti.o" "crtbeginS.o"
-+// RDYNAMIC: "-lc" "crtendS.o" "crtn.o"
++// RDYNAMIC: "crt0.o" "crtbeginS.o"
++// RDYNAMIC: "-lc" "crtendS.o"
 +
 +// RUN: %clang -### %s --target=x86_64-pc-serenity --sysroot= \
-+//      -no-pie -rdynamic 2>&1 | FileCheck %s --check-prefix=RDYNAMIC_NOPIE
-+// RDYNAMIC_NOPIE-NOT: "-pie"
++// RUN:   -no-pie -rdynamic 2>&1 | FileCheck %s --check-prefix=RDYNAMIC_NOPIE
 +// RDYNAMIC_NOPIE: "-export-dynamic"
++// RDYNAMIC_NOPIE-NOT: "-pie"
 +// RDYNAMIC_NOPIE: "-dynamic-linker" "/usr/lib/Loader.so" "--eh-frame-hdr"
 +// RDYNAMIC_NOPIE: "-o" "a.out"
 +// RDYNAMIC_NOPIE: "-z" "pack-relative-relocs"
-+// RDYNAMIC_NOPIE: "crt0.o" "crti.o" "crtbeginS.o"
-+// RDYNAMIC_NOPIE: "-lc" "crtendS.o" "crtn.o"
++// RDYNAMIC_NOPIE: "crt0.o" "crtbeginS.o"
++// RDYNAMIC_NOPIE: "-lc" "crtendS.o"
 +
 +/// -nostdlib suppresses default -l and crt*.o
 +// RUN: %clang -### %s --target=x86_64-pc-serenity --sysroot=%S/Inputs/serenity_x86_64_tree \
@@ -672,7 +653,7 @@ index 000000000000..48de4c0eb6ec
 +// NOSTARTFILES-NOT:  crt{{[^./]+}}.o
 +// NOSTARTFILES:      "-L
 +// NOSTARTFILES-SAME: {{^}}[[SYSROOT]]/usr/lib"
-+// NOSTARTFILES:      "[[RESOURCE:[^"]+]]/lib/serenity/libclang_rt.builtins-x86_64.a"
++// NOSTARTFILES:      "[[RESOURCE:[^"]+]]/lib/x86_64-pc-serenity/libclang_rt.builtins.a"
 +// NOSTARTFILES:      "-lc"
 +// NOSTARTFILES-NOT:  crt{{[^./]+}}.o
 +
@@ -696,12 +677,12 @@ index 000000000000..48de4c0eb6ec
 +// RUN:   -nolibc --rtlib=compiler-rt 2>&1 | FileCheck %s --check-prefix=NOLIBC
 +// NOLIBC:      "-internal-isystem"
 +// NOLIBC-SAME: {{^}} "[[SYSROOT:[^"]+]]/usr/include/x86_64-pc-serenity/c++/v1"
-+// NOLIBC:      "[[SYSROOT:[^"]+]]/usr/lib/crt0.o" "[[SYSROOT:[^"]+]]/usr/lib/crti.o" "crtbeginS.o"
++// NOLIBC:      "[[SYSROOT:[^"]+]]/usr/lib/crt0.o" "crtbeginS.o"
 +// NOLIBC:      "-L
 +// NOLIBC-SAME: {{^}}[[SYSROOT]]/usr/lib"
 +// NOLIBC-NOT:  "-lc"
-+// NOLIBC:      "[[RESOURCE:[^"]+]]/lib/serenity/libclang_rt.builtins-x86_64.a"
-+// NOLIBC:      "crtendS.o" "[[SYSROOT:[^"]+]]/usr/lib/crtn.o"
++// NOLIBC:      "[[RESOURCE:[^"]+]]/lib/x86_64-pc-serenity/libclang_rt.builtins.a"
++// NOLIBC:      "crtendS.o"
 +
 +/// -fsanitize=undefined redirects to Serenity-custom UBSAN runtime
 +// RUN: %clang -### %s --target=x86_64-pc-serenity --sysroot=%S/Inputs/serenity_x86_64_tree \
@@ -716,44 +697,40 @@ index 000000000000..48de4c0eb6ec
 +// RUN:   2>&1 | FileCheck %s --check-prefix=DEFAULT_LIBCXX
 +// DEFAULT_LIBCXX: "-dynamic-linker" "/usr/lib/Loader.so" "--eh-frame-hdr"
 +// DEFAULT_LIBCXX: "-z" "pack-relative-relocs"
-+// DEFAULT_LIBCXX: "crt0.o" "crti.o" "crtbeginS.o"
++// DEFAULT_LIBCXX: "crt0.o" "crtbeginS.o"
 +// DEFAULT_LIBCXX: "--push-state"
 +// DEFAULT_LIBCXX: "--as-needed"
 +// DEFAULT_LIBCXX: "-lc++"
 +// DEFAULT_LIBCXX: "--pop-state"
-+// DEFAULT_LIBCXX: "-lc" "crtendS.o" "crtn.o"
++// DEFAULT_LIBCXX: "-lc" "crtendS.o"
 +
 +// RUN: %clangxx -### %s --target=x86_64-pc-serenity --sysroot="" \
-+// RUN:  -static 2>&1 | FileCheck %s --check-prefix=STATIC_LIBCXX
++// RUN:   -static 2>&1 | FileCheck %s --check-prefix=STATIC_LIBCXX
 +// STATIC_LIBCXX: "-z" "pack-relative-relocs"
-+// STATIC_LIBCXX: "crt0.o" "crti.o" "crtbegin.o"
++// STATIC_LIBCXX: "crt0.o" "crtbeginS.o"
 +// STATIC_LIBCXX: "--push-state"
 +// STATIC_LIBCXX: "--as-needed"
 +// STATIC_LIBCXX: "-lc++"
 +// STATIC_LIBCXX: "--pop-state"
-+// STATIC_LIBCXX: "-lc" "crtend.o" "crtn.o"
++// STATIC_LIBCXX: "-lc" "crtendS.o"
 +
 +// RUN: %clangxx -### %s --target=x86_64-pc-serenity --sysroot="" \
-+// RUN:  -static-libstdc++ 2>&1 | FileCheck %s --check-prefix=STATIC_LIBSTDCXX
++// RUN:   -static-libstdc++ 2>&1 | FileCheck %s --check-prefix=STATIC_LIBSTDCXX
 +// STATIC_LIBSTDCXX: "-z" "pack-relative-relocs"
-+// STATIC_LIBSTDCXX: "crt0.o" "crti.o" "crtbeginS.o"
++// STATIC_LIBSTDCXX: "crt0.o" "crtbeginS.o"
 +// STATIC_LIBSTDCXX: "--push-state"
 +// STATIC_LIBSTDCXX: "--as-needed"
 +// STATIC_LIBSTDCXX: "-Bstatic"
 +// STATIC_LIBSTDCXX: "-lc++"
 +// STATIC_LIBSTDCXX: "-Bdynamic"
 +// STATIC_LIBSTDCXX: "--pop-state"
-+// STATIC_LIBSTDCXX: "-lc" "crtendS.o" "crtn.o"
++// STATIC_LIBSTDCXX: "-lc" "crtendS.o"
 +
 +// RUN: %clangxx -### %s --target=x86_64-pc-serenity --sysroot="" \
 +// RUN:   -nostdlib++ 2>&1 | FileCheck %s --check-prefix=NO_LIBCXX
 +// NO_LIBCXX: "-z" "pack-relative-relocs"
-+// NO_LIBCXX: "crt0.o" "crti.o" "crtbeginS.o"
-+// NO_LIBCXX-NOT: "--push-state"
-+// NO_LIBCXX-NOT: "--as-needed"
++// NO_LIBCXX: "crt0.o" "crtbeginS.o"
++// NO_LIBCXX: "--as-needed"
++// NO_LIBCXX: "-lunwind"
 +// NO_LIBCXX-NOT: "-lc++"
-+// NO_LIBCXX-NOT: "--pop-state"
-+// NO_LIBCXX: "-lc" "crtendS.o" "crtn.o"
--- 
-2.44.0
-
++// NO_LIBCXX: "-lc" "crtendS.o"
