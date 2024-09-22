@@ -39,7 +39,7 @@ public:
 
     class ChunkIterator {
     public:
-        ChunkIterator(String const& text, bool wrap_lines, bool respect_linebreaks, Gfx::FontCascadeList const&);
+        ChunkIterator(TextNode const&, bool wrap_lines, bool respect_linebreaks);
 
         Optional<Chunk> next();
         Optional<Chunk> peek(size_t);
@@ -53,7 +53,7 @@ public:
         Utf8View m_utf8_view;
         Gfx::FontCascadeList const& m_font_cascade_list;
 
-        NonnullOwnPtr<Locale::Segmenter> m_segmenter;
+        Locale::Segmenter& m_grapheme_segmenter;
         size_t m_current_index { 0 };
 
         Vector<Chunk> m_peek_queue;
@@ -62,12 +62,15 @@ public:
     void invalidate_text_for_rendering();
     void compute_text_for_rendering();
 
+    Locale::Segmenter& grapheme_segmenter() const;
+
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
 private:
     virtual bool is_text_node() const final { return true; }
 
     Optional<String> m_text_for_rendering;
+    mutable OwnPtr<Locale::Segmenter> m_grapheme_segmenter;
 };
 
 template<>

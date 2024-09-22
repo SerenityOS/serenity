@@ -20,6 +20,7 @@
 #include <LibJS/Forward.h>
 #include <LibURL/Origin.h>
 #include <LibURL/URL.h>
+#include <LibUnicode/Forward.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/CSS/StyleSheetList.h>
 #include <LibWeb/Cookie/Cookie.h>
@@ -709,6 +710,9 @@ public:
     JS::GCPtr<HTML::Navigable> cached_navigable();
     void set_cached_navigable(JS::GCPtr<HTML::Navigable>);
 
+    Locale::Segmenter& grapheme_segmenter() const;
+    Locale::Segmenter& word_segmenter() const;
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -986,6 +990,9 @@ private:
 
     // NOTE: This is WeakPtr, not GCPtr, on purpose. We don't want the document to keep some old detached navigable alive.
     WeakPtr<HTML::Navigable> m_cached_navigable;
+
+    mutable OwnPtr<Locale::Segmenter> m_grapheme_segmenter;
+    mutable OwnPtr<Locale::Segmenter> m_word_segmenter;
 };
 
 template<>

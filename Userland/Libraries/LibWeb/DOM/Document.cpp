@@ -18,6 +18,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibLocale/Segmenter.h>
 #include <LibURL/Origin.h>
 #include <LibURL/Parser.h>
 #include <LibWeb/Animations/Animation.h>
@@ -5554,6 +5555,20 @@ JS::GCPtr<HTML::Navigable> Document::cached_navigable()
 void Document::set_cached_navigable(JS::GCPtr<HTML::Navigable> navigable)
 {
     m_cached_navigable = navigable.ptr();
+}
+
+Locale::Segmenter& Document::grapheme_segmenter() const
+{
+    if (!m_grapheme_segmenter)
+        m_grapheme_segmenter = Locale::Segmenter::create(Locale::SegmenterGranularity::Grapheme);
+    return *m_grapheme_segmenter;
+}
+
+Locale::Segmenter& Document::word_segmenter() const
+{
+    if (!m_word_segmenter)
+        m_word_segmenter = Locale::Segmenter::create(Locale::SegmenterGranularity::Word);
+    return *m_word_segmenter;
 }
 
 }
