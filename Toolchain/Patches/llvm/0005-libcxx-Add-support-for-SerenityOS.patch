@@ -14,32 +14,32 @@ LibC, namely:
   by LibC as there's a lot of extra porting work to convince the rest of
   locale.cpp to use our character type table properly.
 ---
- libcxx/include/CMakeLists.txt               |  1 +
- libcxx/include/__config                     |  5 +++--
- libcxx/include/__locale                     |  2 ++
- libcxx/include/__support/serenity/xlocale.h | 24 +++++++++++++++++++++
- libcxx/include/locale                       |  2 +-
- libcxx/src/include/config_elast.h           |  2 ++
- 6 files changed, 33 insertions(+), 3 deletions(-)
- create mode 100644 libcxx/include/__support/serenity/xlocale.h
+ libcxx/include/CMakeLists.txt                 |  1 +
+ libcxx/include/__config                       |  5 +++--
+ libcxx/include/__locale_dir/locale_base_api.h |  2 ++
+ .../__locale_dir/locale_base_api/serenity.h   | 22 +++++++++++++++++++
+ libcxx/include/locale                         |  2 +-
+ libcxx/src/include/config_elast.h             |  2 ++
+ 6 files changed, 31 insertions(+), 3 deletions(-)
+ create mode 100644 libcxx/include/__locale_dir/locale_base_api/serenity.h
 
 diff --git a/libcxx/include/CMakeLists.txt b/libcxx/include/CMakeLists.txt
-index ed721d467e94..5641e32b1343 100644
+index 32579272858a..016163984660 100644
 --- a/libcxx/include/CMakeLists.txt
 +++ b/libcxx/include/CMakeLists.txt
-@@ -675,6 +675,7 @@ set(files
-   __support/musl/xlocale.h
-   __support/newlib/xlocale.h
-   __support/openbsd/xlocale.h
-+  __support/serenity/xlocale.h
-   __support/win32/locale_win32.h
-   __support/xlocale/__nop_locale_mgmt.h
-   __support/xlocale/__posix_l_fallback.h
+@@ -491,6 +491,7 @@ set(files
+   __locale_dir/locale_base_api/musl.h
+   __locale_dir/locale_base_api/newlib.h
+   __locale_dir/locale_base_api/openbsd.h
++  __locale_dir/locale_base_api/serenity.h
+   __locale_dir/locale_base_api/win32.h
+   __math/abs.h
+   __math/copysign.h
 diff --git a/libcxx/include/__config b/libcxx/include/__config
-index 8b2eaf69d170..53a09f46eaf7 100644
+index 661af5be3c22..634cabbbbefd 100644
 --- a/libcxx/include/__config
 +++ b/libcxx/include/__config
-@@ -1103,7 +1103,8 @@ __sanitizer_verify_double_ended_contiguous_container(const void*, const void*, c
+@@ -817,7 +817,8 @@ typedef __char32_t char32_t;
          defined(__APPLE__) ||                                                                                          \
          defined(__MVS__) ||                                                                                            \
          defined(_AIX) ||                                                                                               \
@@ -49,7 +49,7 @@ index 8b2eaf69d170..53a09f46eaf7 100644
  // clang-format on
  #      define _LIBCPP_HAS_THREAD_API_PTHREAD
  #    elif defined(__Fuchsia__)
-@@ -1176,7 +1177,7 @@ __sanitizer_verify_double_ended_contiguous_container(const void*, const void*, c
+@@ -890,7 +891,7 @@ typedef __char32_t char32_t;
  #  endif
  
  #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
@@ -58,25 +58,25 @@ index 8b2eaf69d170..53a09f46eaf7 100644
  #    define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE
  #  endif
  
-diff --git a/libcxx/include/__locale b/libcxx/include/__locale
-index 3ba7ac18b0b3..9a68dade7fef 100644
---- a/libcxx/include/__locale
-+++ b/libcxx/include/__locale
-@@ -51,6 +51,8 @@
- #  include <__support/musl/xlocale.h>
- #elif defined(_LIBCPP_HAS_MUSL_LIBC)
- #  include <__support/musl/xlocale.h>
+diff --git a/libcxx/include/__locale_dir/locale_base_api.h b/libcxx/include/__locale_dir/locale_base_api.h
+index 8c000c558c52..bb5745019fc5 100644
+--- a/libcxx/include/__locale_dir/locale_base_api.h
++++ b/libcxx/include/__locale_dir/locale_base_api.h
+@@ -25,6 +25,8 @@
+ #  include <__locale_dir/locale_base_api/fuchsia.h>
+ #elif defined(__wasi__) || defined(_LIBCPP_HAS_MUSL_LIBC)
+ #  include <__locale_dir/locale_base_api/musl.h>
 +#elif defined(__serenity__)
-+#  include <__support/serenity/xlocale.h>
++#  include <__locale_dir/locale_base_api/serenity.h>
+ #elif defined(__APPLE__) || defined(__FreeBSD__)
+ #  include <xlocale.h>
  #endif
- 
- #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-diff --git a/libcxx/include/__support/serenity/xlocale.h b/libcxx/include/__support/serenity/xlocale.h
+diff --git a/libcxx/include/__locale_dir/locale_base_api/serenity.h b/libcxx/include/__locale_dir/locale_base_api/serenity.h
 new file mode 100644
-index 000000000000..67c85bf641e2
+index 000000000000..4644fca4ae95
 --- /dev/null
-+++ b/libcxx/include/__support/serenity/xlocale.h
-@@ -0,0 +1,24 @@
++++ b/libcxx/include/__locale_dir/locale_base_api/serenity.h
+@@ -0,0 +1,22 @@
 +//===----------------------------------------------------------------------===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -85,35 +85,33 @@ index 000000000000..67c85bf641e2
 +//
 +//===----------------------------------------------------------------------===//
 +
-+#ifndef _LIBCPP_SUPPORT_SERENITY_XLOCALE_H
-+#define _LIBCPP_SUPPORT_SERENITY_XLOCALE_H
++#ifndef _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
++#define _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
 +
-+#if defined(__serenity__)
++#include <stddef.h>
 +
-+#  include <__support/xlocale/__nop_locale_mgmt.h>
-+#  include <__support/xlocale/__posix_l_fallback.h>
-+#  include <__support/xlocale/__strtonum_fallback.h>
-+#  include <clocale>
-+#  include <cstdlib>
-+#  include <ctype.h>
-+#  include <cwctype>
++#include <__support/xlocale/__nop_locale_mgmt.h>
++#include <__support/xlocale/__posix_l_fallback.h>
++#include <__support/xlocale/__strtonum_fallback.h>
++#include <clocale>
++#include <cstdlib>
++#include <ctype.h>
++#include <cwctype>
 +
-+#endif // __serenity__
-+
-+#endif
++#endif // _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
 diff --git a/libcxx/include/locale b/libcxx/include/locale
-index 9e97eb9f3395..4bcdc13c1967 100644
+index 573910a85bef..ae19777a5346 100644
 --- a/libcxx/include/locale
 +++ b/libcxx/include/locale
-@@ -217,7 +217,7 @@ template <class charT> class messages_byname;
+@@ -220,7 +220,7 @@ template <class charT> class messages_byname;
  
- #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+ #  if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
  // Most unix variants have catopen.  These are the specific ones that don't.
--#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__)
-+#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
- #    define _LIBCPP_HAS_CATOPEN 1
- #    include <nl_types.h>
- #  endif
+-#    if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__)
++#    if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
+ #      define _LIBCPP_HAS_CATOPEN 1
+ #      include <nl_types.h>
+ #    endif
 diff --git a/libcxx/src/include/config_elast.h b/libcxx/src/include/config_elast.h
 index 899e124ad261..11d930bc8a3c 100644
 --- a/libcxx/src/include/config_elast.h
@@ -127,6 +125,3 @@ index 899e124ad261..11d930bc8a3c 100644
  #elif defined(__MVS__)
  #  define _LIBCPP_ELAST 1160
  #elif defined(_LIBCPP_MSVCRT_LIKE)
--- 
-2.44.0
-

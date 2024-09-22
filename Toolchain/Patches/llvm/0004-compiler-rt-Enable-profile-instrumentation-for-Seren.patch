@@ -14,11 +14,11 @@ enough to linux to use the pre-canned InstrProfiling implementation.
  5 files changed, 27 insertions(+), 3 deletions(-)
 
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
-index 2167758100bc..c132e5c41185 100644
+index 7d95fe55a0fd..a5660cbf9e52 100644
 --- a/clang/lib/Driver/ToolChains/Serenity.cpp
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -183,6 +183,9 @@ void tools::serenity::Linker::ConstructJob(Compilation &C, const JobAction &JA,
-     CmdArgs.push_back(Args.MakeArgString(TC.GetFilePath("crtn.o")));
+@@ -172,6 +172,9 @@ void tools::serenity::Linker::ConstructJob(Compilation &C, const JobAction &JA,
+     CmdArgs.push_back(Args.MakeArgString(crtend_path));
    }
  
 +  if (ShouldLinkCompilerRuntime)
@@ -28,12 +28,12 @@ index 2167758100bc..c132e5c41185 100644
    C.addCommand(std::make_unique<Command>(JA, *this,
                                           ResponseFileSupport::AtFileCurCP(),
 diff --git a/clang/test/Driver/instrprof-ld.c b/clang/test/Driver/instrprof-ld.c
-index 9a58cd3a0be7..d37de48b9d83 100644
+index a96bba4a1e76..4b099da9e2d2 100644
 --- a/clang/test/Driver/instrprof-ld.c
 +++ b/clang/test/Driver/instrprof-ld.c
 @@ -54,6 +54,15 @@
  // CHECK-OPENBSD-X86-64: "{{(.*[^-.0-9A-Z_a-z])?}}ld{{(.exe)?}}"
- // CHECK-OPENBSD-X86-64: "{{.*}}/Inputs/resource_dir{{/|\\\\}}lib{{/|\\\\}}openbsd{{/|\\\\}}libclang_rt.profile-x86_64.a"
+ // CHECK-OPENBSD-X86-64: "{{.*}}/Inputs/resource_dir{{/|\\\\}}lib{{/|\\\\}}x86_64-unknown-openbsd{{/|\\\\}}libclang_rt.profile.a"
  
 +// RUN: %clang -### %s 2>&1 \
 +// RUN:     --target=x86_64-pc-serenity -fprofile-instr-generate -fuse-ld=ld \
@@ -42,14 +42,14 @@ index 9a58cd3a0be7..d37de48b9d83 100644
 +// RUN:   | FileCheck --check-prefix=CHECK-SERENITY-X86-64 %s
 +
 +// CHECK-SERENITY-X86-64: "{{(.*[^-.0-9A-Z_a-z])?}}ld.lld{{(.exe)?}}"
-+// CHECK-SERENITY-X86-64: "{{.*}}/Inputs/resource_dir{{/|\\\\}}lib{{/|\\\\}}serenity{{/|\\\\}}libclang_rt.profile-x86_64.a"
++// CHECK-SERENITY-X86-64: "{{.*}}/Inputs/resource_dir{{/|\\\\}}lib{{/|\\\\}}x86_64-pc-serenity{{/|\\\\}}libclang_rt.profile.a"
 +
  // RUN: %clang -### %s 2>&1 \
  // RUN:     -shared \
  // RUN:     --target=i386-unknown-linux -fprofile-instr-generate -fuse-ld=ld \
 @@ -104,6 +113,17 @@
  // CHECK-OPENBSD-X86-64-SHARED: "{{(.*[^-.0-9A-Z_a-z])?}}ld{{(.exe)?}}"
- // CHECK-OPENBSD-X86-64-SHARED: "{{.*}}/Inputs/resource_dir{{/|\\\\}}lib{{/|\\\\}}openbsd{{/|\\\\}}libclang_rt.profile-x86_64.a"
+ // CHECK-OPENBSD-X86-64-SHARED: "{{.*}}/Inputs/resource_dir{{/|\\\\}}lib{{/|\\\\}}x86_64-unknown-openbsd{{/|\\\\}}libclang_rt.profile.a"
  
 +// RUN: %clang -### %s 2>&1 \
 +// RUN:     -shared \
@@ -59,17 +59,17 @@ index 9a58cd3a0be7..d37de48b9d83 100644
 +// RUN:   | FileCheck --check-prefix=CHECK-SERENITY-X86-64-SHARED %s
 +
 +// CHECK-SERENITY-X86-64-SHARED: "{{(.*[^-.0-9A-Z_a-z])?}}ld.lld{{(.exe)?}}"
-+// CHECK-SERENITY-X86-64-SHARED: "{{.*}}/Inputs/resource_dir{{/|\\\\}}lib{{/|\\\\}}serenity{{/|\\\\}}libclang_rt.profile-x86_64.a"
++// CHECK-SERENITY-X86-64-SHARED: "{{.*}}/Inputs/resource_dir{{/|\\\\}}lib{{/|\\\\}}x86_64-pc-serenity{{/|\\\\}}libclang_rt.profile.a"
 +
 +
  // RUN: %clang -### %s 2>&1 \
  // RUN:     --target=x86_64-apple-darwin14 -fprofile-instr-generate -fuse-ld=ld \
  // RUN:     -resource-dir=%S/Inputs/resource_dir \
 diff --git a/compiler-rt/cmake/config-ix.cmake b/compiler-rt/cmake/config-ix.cmake
-index 2ca18ebb4ad4..e9e00e6fec5c 100644
+index dad557af2ae8..b3c46ae85554 100644
 --- a/compiler-rt/cmake/config-ix.cmake
 +++ b/compiler-rt/cmake/config-ix.cmake
-@@ -795,7 +795,7 @@ else()
+@@ -816,7 +816,7 @@ else()
  endif()
  
  if (PROFILE_SUPPORTED_ARCH AND NOT LLVM_USE_SANITIZER AND
@@ -79,7 +79,7 @@ index 2ca18ebb4ad4..e9e00e6fec5c 100644
  else()
    set(COMPILER_RT_HAS_PROFILE FALSE)
 diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
-index 19266ab6c6fb..ee7200730f86 100644
+index b766436497b7..848df63fe0b8 100644
 --- a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 +++ b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 @@ -8,7 +8,7 @@
@@ -92,7 +92,7 @@ index 19266ab6c6fb..ee7200730f86 100644
  #if !defined(_AIX)
  #include <elf.h>
 diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
-index 5319ca813b43..40ff14b75e7c 100644
+index aa79a5641cec..e07284e06427 100644
 --- a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
 +++ b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
 @@ -8,7 +8,8 @@
@@ -105,6 +105,3 @@ index 5319ca813b43..40ff14b75e7c 100644
  
  #include <stdlib.h>
  #include <stdio.h>
--- 
-2.44.0
-

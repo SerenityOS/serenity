@@ -14,8 +14,7 @@ echo "$DIR"
 
 PREFIX="$DIR/Local/clang/"
 BUILD="$DIR/../Build/"
-USERLAND_ARCHS="x86_64"
-ARCHS="$USERLAND_ARCHS aarch64 riscv64"
+ARCHS="x86_64 aarch64 riscv64"
 
 MD5SUM="md5sum"
 REALPATH="realpath"
@@ -65,8 +64,8 @@ echo PREFIX is "$PREFIX"
 
 mkdir -p "$DIR/Tarballs"
 
-LLVM_VERSION="18.1.3"
-LLVM_MD5SUM="4f2cbf1e35f9c9377c6c89e67364c3fd"
+LLVM_VERSION="19.1.0"
+LLVM_MD5SUM="cfecaf29f50dce67836d32ca6b927e1d"
 LLVM_NAME="llvm-project-$LLVM_VERSION.src"
 LLVM_PKG="$LLVM_NAME.tar.xz"
 LLVM_URL="https://github.com/llvm/llvm-project/releases/download/llvmorg-$LLVM_VERSION/$LLVM_PKG"

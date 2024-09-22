@@ -25,10 +25,10 @@ Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
  6 files changed, 20 insertions(+), 5 deletions(-)
 
 diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
-index 0699a8586fcc..29d0d46fdcb4 100644
+index 5ca580fbb59c..a7fe41b0ab06 100644
 --- a/llvm/cmake/modules/HandleLLVMOptions.cmake
 +++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
-@@ -503,6 +503,9 @@ elseif(MINGW OR CYGWIN)
+@@ -534,6 +534,9 @@ elseif(MINGW OR CYGWIN)
    if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
      append("-Wa,-mbig-obj" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
    endif()
@@ -52,10 +52,10 @@ index c42b5e686bdc..ad4ad534f40c 100644
  #elif defined(_AIX)
  #include <sys/machine.h>
 diff --git a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
-index 9cfe547c84c3..f43a317064f5 100644
+index bba3329e8cc2..81455916a546 100644
 --- a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
 +++ b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
-@@ -215,7 +215,8 @@ SharedMemoryMapper::Create(ExecutorProcessControl &EPC, SymbolAddrs SAs) {
+@@ -219,7 +219,8 @@ SharedMemoryMapper::Create(ExecutorProcessControl &EPC, SymbolAddrs SAs) {
  
  void SharedMemoryMapper::reserve(size_t NumBytes,
                                   OnReservedFunction OnReserved) {
@@ -66,10 +66,10 @@ index 9cfe547c84c3..f43a317064f5 100644
    EPC.callSPSWrapperAsync<
        rt::SPSExecutorSharedMemoryMapperServiceReserveSignature>(
 diff --git a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
-index e8b0e240ac1f..fcc7bfe1c1cc 100644
+index f5118c0f2bfa..426497a45a47 100644
 --- a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
 +++ b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
-@@ -47,7 +47,8 @@ static DWORD getWindowsProtectionFlags(MemProt MP) {
+@@ -51,7 +51,8 @@ static DWORD getWindowsProtectionFlags(MemProt MP) {
  
  Expected<std::pair<ExecutorAddr, std::string>>
  ExecutorSharedMemoryMapperService::reserve(uint64_t Size) {
@@ -80,7 +80,7 @@ index e8b0e240ac1f..fcc7bfe1c1cc 100644
  #if defined(LLVM_ON_UNIX)
  
 diff --git a/llvm/lib/Support/Unix/Path.inc b/llvm/lib/Support/Unix/Path.inc
-index 9f89d63bb0fd..5035b1b05f4d 100644
+index cf05db546e02..7f60a5d56789 100644
 --- a/llvm/lib/Support/Unix/Path.inc
 +++ b/llvm/lib/Support/Unix/Path.inc
 @@ -112,7 +112,7 @@ typedef uint_t uint;
@@ -103,10 +103,10 @@ index 9f89d63bb0fd..5035b1b05f4d 100644
    // statvfs::f_basetype contains a null-terminated FSType name of the mounted
    // target
 diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.inc
-index 5d9757bcc51b..18295dc2229c 100644
+index 2742734bb11e..a5fd340a452b 100644
 --- a/llvm/lib/Support/Unix/Program.inc
 +++ b/llvm/lib/Support/Unix/Program.inc
-@@ -342,7 +342,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
+@@ -352,7 +352,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
  namespace llvm {
  namespace sys {
  
@@ -115,7 +115,7 @@ index 5d9757bcc51b..18295dc2229c 100644
  static pid_t(wait4)(pid_t pid, int *status, int options, struct rusage *usage);
  #elif !defined(__Fuchsia__)
  using ::wait4;
-@@ -385,6 +385,13 @@ pid_t(llvm::sys::wait4)(pid_t pid, int *status, int options,
+@@ -395,6 +395,13 @@ pid_t(llvm::sys::wait4)(pid_t pid, int *status, int options,
  }
  #endif
  
@@ -129,6 +129,3 @@ index 5d9757bcc51b..18295dc2229c 100644
  ProcessInfo llvm::sys::Wait(const ProcessInfo &PI,
                              std::optional<unsigned> SecondsToWait,
                              std::string *ErrMsg,
--- 
-2.44.0
-

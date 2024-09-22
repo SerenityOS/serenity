@@ -16,10 +16,10 @@ it, and the ELF sections that store version data would just waste space.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
-index 29d0d46fdcb4..df8d63902dfd 100644
+index a7fe41b0ab06..b7dd800003c0 100644
 --- a/llvm/cmake/modules/HandleLLVMOptions.cmake
 +++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
-@@ -181,7 +181,7 @@ if(WIN32)
+@@ -212,7 +212,7 @@ if(WIN32)
  elseif(FUCHSIA OR UNIX)
    set(LLVM_ON_WIN32 0)
    set(LLVM_ON_UNIX 1)
@@ -41,6 +41,3 @@ index b20ac318e768..d3df0de2f694 100644
        # Solaris ld does not accept global: *; so there is no way to version *all* global symbols
        set(LIB_NAMES -Wl,--version-script,${LLVM_LIBRARY_DIR}/tools/llvm-shlib/simple_version_script.map ${LIB_NAMES})
      endif()
--- 
-2.44.0
-
