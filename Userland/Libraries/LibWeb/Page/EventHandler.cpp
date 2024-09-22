@@ -1229,7 +1229,7 @@ void EventHandler::update_selection_range_for_input_or_textarea()
 Locale::Segmenter& EventHandler::word_segmenter()
 {
     if (!m_word_segmenter)
-        m_word_segmenter = Locale::Segmenter::create(Locale::SegmenterGranularity::Word);
+        m_word_segmenter = m_navigable->active_document()->word_segmenter().clone();
     return *m_word_segmenter;
 }
 

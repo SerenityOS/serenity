@@ -40,8 +40,8 @@ public:
     WebIDL::ExceptionOr<void> delete_data(size_t offset_in_utf16_code_units, size_t count_in_utf16_code_units);
     WebIDL::ExceptionOr<void> replace_data(size_t offset_in_utf16_code_units, size_t count_in_utf16_code_units, String const&);
 
-    Locale::Segmenter& grapheme_segmenter();
-    Locale::Segmenter& word_segmenter();
+    Locale::Segmenter& grapheme_segmenter() const;
+    Locale::Segmenter& word_segmenter() const;
 
 protected:
     CharacterData(Document&, NodeType, String const&);
@@ -51,8 +51,8 @@ protected:
 private:
     String m_data;
 
-    OwnPtr<Locale::Segmenter> m_grapheme_segmenter;
-    OwnPtr<Locale::Segmenter> m_word_segmenter;
+    mutable OwnPtr<Locale::Segmenter> m_grapheme_segmenter;
+    mutable OwnPtr<Locale::Segmenter> m_word_segmenter;
 };
 
 }
