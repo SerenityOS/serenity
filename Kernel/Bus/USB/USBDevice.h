@@ -31,6 +31,13 @@ class USBConfiguration;
 // https://www.ftdichip.com/Support/Documents/TechnicalNotes/TN_113_Simplified%20Description%20of%20USB%20Device%20Enumeration.pdf
 class Hub;
 class Device : public AtomicRefCounted<Device> {
+    friend class Hub;
+    // Note: This constructor is only used by the USB::Hub class
+    //       As that class inherits from Device, but is usually initialized with a Device object
+    //       needing a copy constructor,
+    // FIXME: Ideally Hub should not inherit from Device, but instead have a Device member
+    Device(Device const& device);
+
 public:
     enum class DeviceSpeed : u8 {
         LowSpeed = 0,
@@ -43,7 +50,6 @@ public:
 
     Device(USBController const&, Hub const*, u8 port, DeviceSpeed);
     Device(USBController const&, Hub const*, u8 port, DeviceSpeed, u8 address, USBDeviceDescriptor const& descriptor);
-    Device(Device const& device);
     virtual ~Device();
 
     u8 port() const { return m_device_port; }
