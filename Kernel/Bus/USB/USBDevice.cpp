@@ -71,10 +71,17 @@ Device::Device(Device const& device)
     , m_address(device.address())
     , m_controller_identifier(device.controller_identifier())
     , m_device_descriptor(device.device_descriptor())
-    , m_configurations(device.configurations())
     , m_controller(device.controller())
     , m_hub(device.hub())
 {
+    // FIXME: This can definitely OOM
+    m_configurations.ensure_capacity(device.configurations().size());
+    for (auto const& configuration : device.configurations()) {
+        m_configurations.unchecked_append(configuration.copy());
+        m_configurations.last().set_device({}, *this);
+    }
+
+    // FIXME: Do we need to enter our selves into the hubs children list or sysfs list?
 }
 
 Device::~Device() = default;
