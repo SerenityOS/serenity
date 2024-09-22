@@ -21,12 +21,12 @@ ErrorOr<NonnullLockRefPtr<Device>> Device::try_create(USBController& controller,
 {
     auto device = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Device(controller, &hub, port, speed)));
     device->set_default_pipe(TRY(ControlPipe::create(controller, device, 0, 8)));
+    TRY(controller.initialize_device(*device));
+
     auto sysfs_node = TRY(SysFSUSBDeviceInformation::create(*device));
     device->m_sysfs_device_info_node.with([&](auto& node) {
         node = move(sysfs_node);
     });
-    TRY(controller.initialize_device(*device));
-
     // Attempt to find a driver for this device. If one is found, we call the driver's
     // "probe" function, which initialises the local state for the device driver.
     // It is currently the driver's responsibility to search the configuration/interface
