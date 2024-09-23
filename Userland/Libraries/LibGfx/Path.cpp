@@ -464,28 +464,8 @@ private:
     ReadonlySpan<T> m_span;
 };
 
-Path Path::stroke_to_fill(float thickness) const
+static Vector<FloatPoint, 128> make_pen(float thickness)
 {
-    // Note: This convolves a polygon with the path using the algorithm described
-    // in https://keithp.com/~keithp/talks/cairo2003.pdf (3.1 Stroking Splines via Convolution)
-
-    VERIFY(thickness > 0);
-
-    auto lines = split_lines();
-    if (lines.is_empty())
-        return Path {};
-
-    // Paths can be disconnected, which a pain to deal with, so split it up.
-    Vector<Vector<FloatPoint>> segments;
-    segments.append({ lines.first().a() });
-    for (auto& line : lines) {
-        if (line.a() == segments.last().last()) {
-            segments.last().append(line.b());
-        } else {
-            segments.append({ line.a(), line.b() });
-        }
-    }
-
     constexpr auto flatness = 0.15f;
     auto pen_vertex_count = 4;
     if (thickness > flatness) {
@@ -513,6 +493,33 @@ Path Path::stroke_to_fill(float thickness) const
         theta -= theta_delta;
     }
 
+    return pen_vertices;
+}
+
+Path Path::stroke_to_fill(float thickness) const
+{
+    // Note: This convolves a polygon with the path using the algorithm described
+    // in https://keithp.com/~keithp/talks/cairo2003.pdf (3.1 Stroking Splines via Convolution)
+
+    VERIFY(thickness > 0);
+
+    auto lines = split_lines();
+    if (lines.is_empty())
+        return Path {};
+
+    // Paths can be disconnected, which a pain to deal with, so split it up.
+    Vector<Vector<FloatPoint>> segments;
+    segments.append({ lines.first().a() });
+    for (auto& line : lines) {
+        if (line.a() == segments.last().last()) {
+            segments.last().append(line.b());
+        } else {
+            segments.append({ line.a(), line.b() });
+        }
+    }
+
+    Vector<FloatPoint, 128> pen_vertices = make_pen(thickness);
+
     auto wrapping_index = [](auto& vertices, auto index) {
         return vertices[(index + vertices.size()) % vertices.size()];
     };
@@ -537,7 +544,7 @@ Path Path::stroke_to_fill(float thickness) const
 
     Vector<ActiveRange, 128> active_ranges;
     active_ranges.ensure_capacity(pen_vertices.size());
-    for (auto i = 0; i < pen_vertex_count; i++) {
+    for (int i = 0; i < (int)pen_vertices.size(); i++) {
         active_ranges.unchecked_append({ angle_between(wrapping_index(pen_vertices, i - 1), pen_vertices[i]),
             angle_between(pen_vertices[i], wrapping_index(pen_vertices, i + 1)) });
     }
@@ -595,13 +602,13 @@ Path Path::stroke_to_fill(float thickness) const
                 shape_idx++;
             } else {
                 if (clockwise(slope_now, range.end)) {
-                    if (active == static_cast<size_t>(pen_vertex_count - 1))
+                    if (active == static_cast<size_t>(pen_vertices.size() - 1))
                         active = 0;
                     else
                         active++;
                 } else {
                     if (active == 0)
-                        active = pen_vertex_count - 1;
+                        active = pen_vertices.size() - 1;
                     else
                         active--;
                 }
