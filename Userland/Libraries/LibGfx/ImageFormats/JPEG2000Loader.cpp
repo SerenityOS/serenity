@@ -28,7 +28,7 @@ namespace Gfx {
 // A JPEG2000 image can be stored in a codestream with markers, similar to a JPEG image,
 // or in a JP2 file, which is a container format based on boxes similar to ISOBMFF.
 
-// This is the marker for the codestream version. We don't support this yet.
+// This is the marker for the codestream version.
 // T.800 Annex A, Codestream syntax, A.2 Information in the marker segments and A.3 Construction of the codestream
 static constexpr u8 marker_id_string[] = { 0xFF, 0x4F, 0xFF, 0x51 };
 
