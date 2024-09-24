@@ -52,7 +52,6 @@ them.
 * **`profile`** - This node exports statistics on profiling data.
 * **`stats`** - This node exports statistics on scheduler timing data.
 * **`uptime`** - This node exports the uptime data.
-* **`jails`** - This node exports information about existing jails (only if the current process is not in jail).
 * **`power_state`** - This node only responds to write requests on it. A written value of `1` results
 in system reboot. A written value of `2` results in system shutdown.
 * **`load_base`** - This node reveals the loading address of the kernel.

@@ -90,6 +90,7 @@
     E(ECANCELED, "Operation cancelled")                               \
     E(EPROMISEVIOLATION, "The process has a promise violation")       \
     E(ESTALE, "Stale network file handle")                            \
+    E(ESRCNOTFOUND, "System resource not found")                      \
     E(EMAXERRNO, "The highest errno +1 :^)")
 
 enum ErrnoCode {

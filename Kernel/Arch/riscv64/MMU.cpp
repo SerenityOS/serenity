@@ -11,6 +11,7 @@
 #include <Kernel/Arch/riscv64/PageDirectory.h>
 #include <Kernel/Arch/riscv64/SBI.h>
 #include <Kernel/Arch/riscv64/pre_init.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Sections.h>
 #include <LibDeviceTree/FlattenedDeviceTree.h>
@@ -225,14 +226,17 @@ static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
     if (RISCV64::CSR::SATP::read().MODE != RISCV64::CSR::SATP::Mode::Bare)
         panic_without_mmu("Kernel booted with MMU enabled"sv);
 
+    ::DeviceTree::FlattenedDeviceTreeHeader* fdt_header = bit_cast<::DeviceTree::FlattenedDeviceTreeHeader*>(fdt_phys_addr);
+    if (fdt_header->magic != 0xd00dfeed)
+        panic_without_mmu("Invalid FDT passed"sv);
+
     // Copy the FDT to a known location
-    DeviceTree::FlattenedDeviceTreeHeader* fdt_header = bit_cast<DeviceTree::FlattenedDeviceTreeHeader*>(fdt_phys_addr);
     u8* fdt_storage = bit_cast<u8*>(fdt_phys_addr);
-    if (fdt_header->totalsize > fdt_storage_size)
+    if (fdt_header->totalsize > DeviceTree::fdt_storage_size)
         panic_without_mmu("Passed FDT is bigger than the internal storage"sv);
     for (size_t o = 0; o < fdt_header->totalsize; o += 1) {
         // FIXME: Maybe increase the IO size here
-        adjust_by_mapping_base(s_fdt_storage)[o] = fdt_storage[o];
+        adjust_by_mapping_base(DeviceTree::s_fdt_storage)[o] = fdt_storage[o];
     }
 
     *adjust_by_mapping_base(&physical_to_virtual_offset) = calculate_physical_to_link_time_address_offset();

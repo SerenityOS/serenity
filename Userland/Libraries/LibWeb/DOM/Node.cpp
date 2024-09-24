@@ -25,6 +25,7 @@
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/LiveNodeList.h>
 #include <LibWeb/DOM/MutationType.h>
+#include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/NodeIterator.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
@@ -43,6 +44,7 @@
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
+#include <LibWeb/Namespace.h>
 #include <LibWeb/Painting/Paintable.h>
 #include <LibWeb/Painting/PaintableBox.h>
 
@@ -210,6 +212,114 @@ void Node::set_text_content(Optional<String> const& maybe_content)
     }
 
     document().bump_dom_tree_version();
+}
+
+// https://dom.spec.whatwg.org/#dom-node-normalize
+WebIDL::ExceptionOr<void> Node::normalize()
+{
+    auto contiguous_exclusive_text_nodes_excluding_self = [](Node& node) {
+        // https://dom.spec.whatwg.org/#contiguous-exclusive-text-nodes
+        // The contiguous exclusive Text nodes of a node node are node, node’s previous sibling exclusive Text node, if any,
+        // and its contiguous exclusive Text nodes, and node’s next sibling exclusive Text node, if any,
+        // and its contiguous exclusive Text nodes, avoiding any duplicates.
+        // NOTE: The callers of this method require node itself to be excluded.
+        Vector<Text*> nodes;
+
+        auto* current_node = node.previous_sibling();
+        while (current_node) {
+            if (!current_node->is_text())
+                break;
+
+            nodes.append(static_cast<Text*>(current_node));
+            current_node = current_node->previous_sibling();
+        }
+
+        // Reverse the order of the nodes so that they are in tree order.
+        nodes.reverse();
+
+        current_node = node.next_sibling();
+        while (current_node) {
+            if (!current_node->is_text())
+                break;
+
+            nodes.append(static_cast<Text*>(current_node));
+            current_node = current_node->next_sibling();
+        }
+
+        return nodes;
+    };
+
+    // The normalize() method steps are to run these steps for each descendant exclusive Text node node of this
+    Vector<Text&> descendant_exclusive_text_nodes;
+    for_each_in_inclusive_subtree_of_type<Text>([&](Text const& node) {
+        if (!node.is_cdata_section())
+            descendant_exclusive_text_nodes.append(const_cast<Text&>(node));
+
+        return TraversalDecision::Continue;
+    });
+
+    for (auto& node : descendant_exclusive_text_nodes) {
+        // 1. Let length be node’s length.
+        auto& character_data = static_cast<CharacterData&>(node);
+        auto length = character_data.length_in_utf16_code_units();
+
+        // 2. If length is zero, then remove node and continue with the next exclusive Text node, if any.
+        if (length == 0) {
+            if (node.parent())
+                node.remove();
+            continue;
+        }
+
+        // 3. Let data be the concatenation of the data of node’s contiguous exclusive Text nodes (excluding itself), in tree order.
+        StringBuilder data;
+        for (auto const& text_node : contiguous_exclusive_text_nodes_excluding_self(node))
+            data.append(text_node->data());
+
+        // 4. Replace data with node node, offset length, count 0, and data data.
+        TRY(character_data.replace_data(length, 0, MUST(data.to_string())));
+
+        // 5. Let currentNode be node’s next sibling.
+        auto* current_node = node.next_sibling();
+
+        // 6. While currentNode is an exclusive Text node:
+        while (current_node && is<Text>(*current_node)) {
+            // 1. For each live range whose start node is currentNode, add length to its start offset and set its start node to node.
+            for (auto& range : Range::live_ranges()) {
+                if (range->start_container() == current_node)
+                    TRY(range->set_start(node, range->start_offset() + length));
+            }
+
+            // 2. For each live range whose end node is currentNode, add length to its end offset and set its end node to node.
+            for (auto& range : Range::live_ranges()) {
+                if (range->end_container() == current_node)
+                    TRY(range->set_end(node, range->end_offset() + length));
+            }
+
+            // 3. For each live range whose start node is currentNode’s parent and start offset is currentNode’s index, set its start node to node and its start offset to length.
+            for (auto& range : Range::live_ranges()) {
+                if (range->start_container() == current_node->parent() && range->start_offset() == current_node->index())
+                    TRY(range->set_start(node, length));
+            }
+
+            // 4. For each live range whose end node is currentNode’s parent and end offset is currentNode’s index, set its end node to node and its end offset to length.
+            for (auto& range : Range::live_ranges()) {
+                if (range->end_container() == current_node->parent() && range->end_offset() == current_node->index())
+                    TRY(range->set_end(node, length));
+            }
+
+            // 5. Add currentNode’s length to length.
+            length += static_cast<Text&>(*current_node).length();
+
+            // 6. Set currentNode to its next sibling.
+            current_node = current_node->next_sibling();
+        }
+
+        // 7. Remove node’s contiguous exclusive Text nodes (excluding itself), in tree order.
+        for (auto const& text_node : contiguous_exclusive_text_nodes_excluding_self(node))
+            text_node->remove();
+    }
+
+    return {};
 }
 
 // https://dom.spec.whatwg.org/#dom-node-nodevalue
@@ -868,12 +978,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::clone_node(Document* document,
         // Set copy’s namespace, namespace prefix, local name, and value to those of node.
         auto& attr = static_cast<Attr&>(*this);
         copy = attr.clone(*document);
-    } else if (is<Text>(this)) {
+    }
+    // NOTE: is<Text>() currently returns true only for text nodes, not for descendant types of Text.
+    else if (is<Text>(this) || is<CDATASection>(this)) {
         // Text
-        auto text = verify_cast<Text>(this);
+        auto& text = static_cast<Text&>(*this);
 
         // Set copy’s data to that of node.
-        auto text_copy = heap().allocate<Text>(realm(), *document, text->data());
+        auto text_copy = heap().allocate<Text>(realm(), *document, text.data());
         copy = move(text_copy);
     } else if (is<Comment>(this)) {
         // Comment
@@ -928,6 +1040,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::clone_node(Document* document,
     }
 
     // 7. Return copy.
+    VERIFY(copy);
     return JS::NonnullGCPtr { *copy };
 }
 
@@ -1385,6 +1498,26 @@ WebIDL::ExceptionOr<String> Node::serialize_fragment(DOMParsing::RequireWellForm
     return DOMParsing::serialize_node_to_xml_string(*this, require_well_formed);
 }
 
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#unsafely-set-html
+WebIDL::ExceptionOr<void> Node::unsafely_set_html(Element& context_element, StringView html)
+{
+    // 1. Let newChildren be the result of the HTML fragment parsing algorithm given contextElement, html, and true.
+    auto new_children = HTML::HTMLParser::parse_html_fragment(context_element, html, HTML::HTMLParser::AllowDeclarativeShadowRoots::Yes);
+
+    // 2. Let fragment be a new DocumentFragment whose node document is contextElement’s node document.
+    auto fragment = heap().allocate<DocumentFragment>(realm(), context_element.document());
+
+    // 3. For each node in newChildren, append node to fragment.
+    for (auto& child : new_children)
+        // I don't know if this can throw here, but let's be safe.
+        (void)TRY(fragment->append_child(*child));
+
+    // 4. Replace all with fragment within contextElement.
+    replace_all(fragment);
+
+    return {};
+}
+
 // https://dom.spec.whatwg.org/#dom-node-issamenode
 bool Node::is_same_node(Node const* other_node) const
 {
@@ -1406,7 +1539,7 @@ bool Node::is_equal_node(Node const* other_node) const
     // A node A equals a node B if all of the following conditions are true:
 
     // A and B implement the same interfaces.
-    if (node_name() != other_node->node_name())
+    if (!node_name().equals_ignoring_ascii_case(other_node->node_name()))
         return false;
 
     // The following are equal, switching on the interface A implements:
@@ -1432,8 +1565,8 @@ bool Node::is_equal_node(Node const* other_node) const
             return false;
         // If A is an element, each attribute in its attribute list has an attribute that equals an attribute in B’s attribute list.
         bool has_same_attributes = true;
-        this_element.for_each_attribute([&](auto& name, auto& value) {
-            if (other_element.get_attribute(name) != value)
+        this_element.for_each_attribute([&](auto const& attribute) {
+            if (other_element.get_attribute_ns(attribute.namespace_uri(), attribute.local_name()) != attribute.value())
                 has_same_attributes = false;
         });
         if (!has_same_attributes)
@@ -1493,6 +1626,117 @@ bool Node::is_equal_node(Node const* other_node) const
     }
 
     return true;
+}
+
+// https://dom.spec.whatwg.org/#locate-a-namespace
+Optional<String> Node::locate_a_namespace(Optional<String> const& prefix) const
+{
+    // To locate a namespace for a node using prefix, switch on the interface node implements:
+
+    // Element
+    if (is<Element>(*this)) {
+        // 1. If prefix is "xml", then return the XML namespace.
+        if (prefix == "xml")
+            return Web::Namespace::XML.to_string();
+
+        // 2. If prefix is "xmlns", then return the XMLNS namespace.
+        if (prefix == "xmlns")
+            return Web::Namespace::XMLNS.to_string();
+
+        // 3. If its namespace is non-null and its namespace prefix is prefix, then return namespace.
+        auto& element = verify_cast<Element>(*this);
+        if (element.namespace_uri().has_value() && element.prefix() == prefix)
+            return element.namespace_uri()->to_string();
+
+        // 4. If it has an attribute whose namespace is the XMLNS namespace, namespace prefix is "xmlns", and local name is prefix,
+        //    or if prefix is null and it has an attribute whose namespace is the XMLNS namespace, namespace prefix is null,
+        //    and local name is "xmlns", then return its value if it is not the empty string, and null otherwise.
+        if (auto* attributes = element.attributes()) {
+            for (size_t i = 0; i < attributes->length(); ++i) {
+                auto& attr = *attributes->item(i);
+                if (attr.namespace_uri() == Web::Namespace::XMLNS) {
+                    if ((attr.prefix() == "xmlns" && attr.local_name() == prefix) || (!prefix.has_value() && !attr.prefix().has_value() && attr.local_name() == "xmlns")) {
+                        auto value = attr.value();
+                        if (!value.is_empty())
+                            return value;
+
+                        return {};
+                    }
+                }
+            }
+        }
+
+        // 5. If its parent element is null, then return null.
+        auto* parent_element = element.parent_element();
+        if (!element.parent_element())
+            return {};
+
+        // 6. Return the result of running locate a namespace on its parent element using prefix.
+        return parent_element->locate_a_namespace(prefix);
+    }
+
+    // Document
+    if (is<Document>(*this)) {
+        // 1. If its document element is null, then return null.
+        auto* document_element = verify_cast<Document>(*this).document_element();
+        if (!document_element)
+            return {};
+
+        // 2. Return the result of running locate a namespace on its document element using prefix.
+        return document_element->locate_a_namespace(prefix);
+    }
+
+    // DocumentType
+    // DocumentFragment
+    if (is<DocumentType>(*this) || is<DocumentFragment>(*this)) {
+        // Return null.
+        return {};
+    }
+
+    // Attr
+    if (is<Attr>(*this)) {
+        // 1. If its element is null, then return null.
+        auto* element = verify_cast<Attr>(*this).owner_element();
+        if (!element)
+            return {};
+
+        // 2. Return the result of running locate a namespace on its element using prefix.
+        return element->locate_a_namespace(prefix);
+    }
+
+    // Otherwise
+    // 1. If its parent element is null, then return null.
+    auto* parent_element = this->parent_element();
+    if (!parent_element)
+        return {};
+
+    // 2. Return the result of running locate a namespace on its parent element using prefix.
+    return parent_element->locate_a_namespace(prefix);
+}
+
+// https://dom.spec.whatwg.org/#dom-node-lookupnamespaceuri
+Optional<String> Node::lookup_namespace_uri(Optional<String> prefix) const
+{
+    // 1. If prefix is the empty string, then set it to null.
+    if (prefix.has_value() && prefix->is_empty())
+        prefix = {};
+
+    // 2. Return the result of running locate a namespace for this using prefix.
+    return locate_a_namespace(prefix);
+}
+
+// https://dom.spec.whatwg.org/#dom-node-isdefaultnamespace
+bool Node::is_default_namespace(Optional<String> namespace_) const
+{
+    // 1. If namespace is the empty string, then set it to null.
+    if (namespace_.has_value() && namespace_->is_empty())
+        namespace_ = {};
+
+    // 2. Let defaultNamespace be the result of running locate a namespace for this using null.
+    auto default_namespace = locate_a_namespace({});
+
+    // 3. Return true if defaultNamespace is the same as namespace; otherwise false.
+    return default_namespace == namespace_;
 }
 
 // https://dom.spec.whatwg.org/#in-a-document-tree

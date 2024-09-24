@@ -233,16 +233,6 @@ ALWAYS_INLINE NO_SANITIZE_COVERAGE bool ProcessorBase<T>::are_interrupts_enabled
 }
 
 template<typename T>
-ALWAYS_INLINE bool ProcessorBase<T>::is_kernel_mode()
-{
-    u16 cs;
-    asm volatile(
-        "mov %%cs, %[cs] \n"
-        : [cs] "=g"(cs));
-    return (cs & 3) == 0;
-}
-
-template<typename T>
 ALWAYS_INLINE bool ProcessorBase<T>::current_in_scheduler()
 {
     auto value = read_gs_ptr(__builtin_offsetof(ProcessorBase<T>, m_in_scheduler));

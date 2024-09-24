@@ -12,7 +12,6 @@
 #include <Kernel/Devices/HID/Management.h>
 #include <Kernel/Devices/HID/PS2/KeyboardDevice.h>
 #include <Kernel/Devices/HID/ScanCodeEvent.h>
-#include <Kernel/Devices/TTY/ConsoleManagement.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/WorkQueue.h>

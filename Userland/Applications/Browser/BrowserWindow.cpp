@@ -160,9 +160,11 @@ void BrowserWindow::build_menus(StringView const man_file)
     file_menu->add_action(close_tab_action);
 
     file_menu->add_separator();
-    file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        GUI::Application::the()->quit();
-    }));
+    file_menu->add_action(GUI::CommonActions::make_quit_action(
+        [](auto&) {
+            GUI::Application::the()->quit();
+        },
+        GUI::CommonActions::QuitAltShortcut::None));
 
     auto view_menu = add_menu("&View"_string);
     view_menu->add_action(WindowActions::the().show_bookmarks_bar_action());

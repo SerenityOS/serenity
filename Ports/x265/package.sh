@@ -1,11 +1,11 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=x265
-version=3.5
+port='x265'
+version='3.6'
 workdir="${port}_${version}"
 files=(
-    "https://bitbucket.org/multicoreware/x265_git/downloads/x265_${version}.tar.gz#e70a3335cacacbba0b3a20ec6fecd6783932288ebc8163ad74bcc9606477cae8"
+    "https://bitbucket.org/multicoreware/x265_git/downloads/x265_${version}.tar.gz#663531f341c5389f460d730e62e10a4fcca3428ca2ca109693867bc5fe2e2807"
 )
-useconfigure=true
+useconfigure='true'
 
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"

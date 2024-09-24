@@ -34,7 +34,7 @@ ErrorOr<NonnullLockRefPtr<VMObject>> AnonymousVMObject::try_clone()
     // non-volatile memory available.
     size_t new_cow_pages_needed = 0;
     for (auto const& page : m_physical_pages) {
-        if (!page->is_shared_zero_page())
+        if (!page->is_shared_zero_page() && !page->is_lazy_committed_page())
             ++new_cow_pages_needed;
     }
 
@@ -99,14 +99,7 @@ ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_phys
 
 ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_purgeable_with_size(size_t size, AllocationStrategy strategy)
 {
-    Optional<CommittedPhysicalPageSet> committed_pages;
-    if (strategy == AllocationStrategy::Reserve || strategy == AllocationStrategy::AllocateNow) {
-        committed_pages = TRY(MM.commit_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))));
-    }
-
-    auto new_physical_pages = TRY(VMObject::try_create_physical_pages(size));
-
-    auto vmobject = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) AnonymousVMObject(move(new_physical_pages), strategy, move(committed_pages))));
+    auto vmobject = TRY(try_create_with_size(size, strategy));
     vmobject->m_purgeable = true;
     return vmobject;
 }
@@ -274,10 +267,21 @@ NonnullRefPtr<PhysicalRAMPage> AnonymousVMObject::allocate_committed_page(Badge<
     return m_unused_committed_pages->take_one();
 }
 
+void AnonymousVMObject::reset_cow_map()
+{
+    for (size_t i = 0; i < page_count(); ++i) {
+        auto& page = physical_pages()[i];
+        bool should_cow = !page->is_shared_zero_page() && !page->is_lazy_committed_page();
+        m_cow_map.set(i, should_cow);
+    }
+}
+
 ErrorOr<void> AnonymousVMObject::ensure_cow_map()
 {
-    if (m_cow_map.is_null())
+    if (m_cow_map.is_null()) {
         m_cow_map = TRY(Bitmap::create(page_count(), true));
+        reset_cow_map();
+    }
     return {};
 }
 
@@ -286,7 +290,7 @@ ErrorOr<void> AnonymousVMObject::ensure_or_reset_cow_map()
     if (m_cow_map.is_null())
         TRY(ensure_cow_map());
     else
-        m_cow_map.fill(true);
+        reset_cow_map();
     return {};
 }
 

@@ -5,6 +5,7 @@
  */
 
 #include <AK/Optional.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FUSEDevice.h>
 #include <Kernel/FileSystem/FUSE/Definitions.h>
@@ -18,7 +19,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<FUSEDevice> FUSEDevice::must_create()
 }
 
 UNMAP_AFTER_INIT FUSEDevice::FUSEDevice()
-    : CharacterDevice(10, 229)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::FUSE, 229)
 {
 }
 

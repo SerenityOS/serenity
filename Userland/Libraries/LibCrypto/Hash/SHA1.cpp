@@ -5,8 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CPUFeatures.h>
 #include <AK/Endian.h>
 #include <AK/Memory.h>
+#include <AK/Platform.h>
+#include <AK/SIMD.h>
+#include <AK/SIMDExtras.h>
 #include <AK/Types.h>
 #include <LibCrypto/Hash/SHA1.h>
 
@@ -17,8 +21,11 @@ static constexpr auto ROTATE_LEFT(u32 value, size_t bits)
     return (value << bits) | (value >> (32 - bits));
 }
 
-inline void SHA1::transform(u8 const* data)
+template<>
+void SHA1::transform_impl<CPUFeatures::None>()
 {
+    auto& data = m_data_buffer;
+
     u32 blocks[80];
     for (size_t i = 0; i < 16; ++i)
         blocks[i] = AK::convert_between_host_and_network_endian(((u32 const*)data)[i]);
@@ -67,6 +74,86 @@ inline void SHA1::transform(u8 const* data)
     secure_zero(blocks, 16 * sizeof(u32));
 }
 
+// Note: The SHA extension was introduced with
+//       Intel Goldmont (SSE4.2), Ice Lake (AVX512), Rocket Lake (AVX512), and AMD Zen (AVX2)
+//       So it's safe to assume that if we have SHA we have at least SSE4.2
+//      ~https://en.wikipedia.org/wiki/Intel_SHA_extensions
+#if AK_CAN_CODEGEN_FOR_X86_SHA && AK_CAN_CODEGEN_FOR_X86_SSE42
+template<>
+[[gnu::target("sha,sse4.2")]] void SHA1::transform_impl<CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42>()
+{
+#    define SHA_TARGET gnu::target("sha"), gnu::always_inline
+
+    auto& state = m_state;
+    auto& data = m_data_buffer;
+
+    using AK::SIMD::u32x4, AK::SIMD::i32x4;
+    // Note: These need to be unsigned, as we add to them and expect them to wrap around,
+    //       and signed overflow is UB;
+    //  BUT: GCC -for some reason- expects the input types to the SHA intrinsics to be signed
+    //       and there does not seem to be a way to temporarily enable -flax-vector-conversions
+    //       so this leads to a few bit_casts further down
+    u32x4 abcd[2] {};
+    u32x4 msgs[4] {};
+
+    abcd[0] = AK::SIMD::load_unaligned<u32x4>(&state[0]);
+    abcd[0] = AK::SIMD::item_reverse(abcd[0]);
+    u32x4 e { 0, 0, 0, state[4] };
+
+    auto sha_msg1 = [] [[SHA_TARGET]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1msg1(bit_cast<i32x4>(a), bit_cast<i32x4>(b))); };
+    auto sha_msg2 = [] [[SHA_TARGET]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1msg2(bit_cast<i32x4>(a), bit_cast<i32x4>(b))); };
+    auto sha_next_e = [] [[SHA_TARGET]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1nexte(bit_cast<i32x4>(a), bit_cast<i32x4>(b))); };
+    auto sha_rnds4 = []<int i> [[SHA_TARGET]] (u32x4 a, u32x4 b) { return bit_cast<u32x4>(__builtin_ia32_sha1rnds4(bit_cast<i32x4>(a), bit_cast<i32x4>(b), i)); };
+
+    auto group = [&]<int i_group> [[SHA_TARGET]] () {
+        for (size_t i_pack = 0; i_pack != 5; ++i_pack) {
+            size_t i_msg = i_group * 5 + i_pack;
+            if (i_msg < 4) {
+                msgs[i_msg] = AK::SIMD::load_unaligned<u32x4>(&data[i_msg * 16]);
+                msgs[i_msg] = AK::SIMD::byte_reverse(msgs[i_msg]);
+            } else {
+                msgs[i_msg % 4] = sha_msg1(msgs[i_msg % 4], msgs[(i_msg + 1) % 4]);
+                msgs[i_msg % 4] ^= msgs[(i_msg + 2) % 4];
+                msgs[i_msg % 4] = sha_msg2(msgs[i_msg % 4], msgs[(i_msg + 3) % 4]);
+            }
+            if (i_msg == 0) {
+                e += msgs[0];
+            } else {
+                e = sha_next_e(abcd[(i_msg + 1) % 2], msgs[(i_msg + 0) % 4]);
+            }
+            abcd[(i_msg + 1) % 2] = sha_rnds4.operator()<i_group>(abcd[(i_msg + 0) % 2], e);
+        }
+    };
+
+    auto old_abcd = abcd[0];
+    auto old_e = e;
+    group.operator()<0>();
+    group.operator()<1>();
+    group.operator()<2>();
+    group.operator()<3>();
+    e = sha_next_e(abcd[1], u32x4 {});
+    abcd[0] += old_abcd;
+    e += old_e;
+
+    abcd[0] = AK::SIMD::item_reverse(abcd[0]);
+    AK::SIMD::store_unaligned(&state[0], abcd[0]);
+    state[4] = e[3];
+
+#    undef SHA_TARGET
+}
+#endif
+
+decltype(SHA1::transform_dispatched) SHA1::transform_dispatched = [] {
+    CPUFeatures features = detect_cpu_features();
+
+    if constexpr (is_valid_feature(CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42)) {
+        if (has_flag(features, CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42))
+            return &SHA1::transform_impl<CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42>;
+    }
+
+    return &SHA1::transform_impl<CPUFeatures::None>;
+}();
+
 void SHA1::update(u8 const* message, size_t length)
 {
     while (length > 0) {
@@ -76,7 +163,7 @@ void SHA1::update(u8 const* message, size_t length)
         length -= copy_bytes;
         m_data_length += copy_bytes;
         if (m_data_length == BlockSize) {
-            transform(m_data_buffer);
+            transform();
             m_bit_length += BlockSize * 8;
             m_data_length = 0;
         }
@@ -111,7 +198,7 @@ SHA1::DigestType SHA1::peek()
         m_data_buffer[i++] = 0x80;
         while (i < BlockSize)
             m_data_buffer[i++] = 0x00;
-        transform(m_data_buffer);
+        transform();
 
         // Then start another block with BlockSize - 8 bytes of zeros
         __builtin_memset(m_data_buffer, 0, FinalBlockDataSize);
@@ -128,7 +215,7 @@ SHA1::DigestType SHA1::peek()
     m_data_buffer[BlockSize - 7] = m_bit_length >> 48;
     m_data_buffer[BlockSize - 8] = m_bit_length >> 56;
 
-    transform(m_data_buffer);
+    transform();
 
     for (i = 0; i < 4; ++i) {
         digest.data[i + 0] = (m_state[0] >> (24 - i * 8)) & 0x000000ff;

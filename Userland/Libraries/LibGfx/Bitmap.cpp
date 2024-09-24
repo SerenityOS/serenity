@@ -22,6 +22,9 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/ShareableBitmap.h>
+#include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
+#include <LibIPC/File.h>
 #include <errno.h>
 #include <stdio.h>
 
@@ -91,14 +94,16 @@ Bitmap::Bitmap(BitmapFormat format, IntSize size, int scale_factor, BackingStore
     VERIFY(!size_would_overflow(format, size, scale_factor));
     VERIFY(m_data);
     VERIFY(backing_store.size_in_bytes == size_in_bytes());
-    m_data_is_malloced = true;
+    m_destruction_callback = [data = m_data, size_in_bytes = this->size_in_bytes()] {
+        kfree_sized(data, size_in_bytes);
+    };
 }
 
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_wrapper(BitmapFormat format, IntSize size, int scale_factor, size_t pitch, void* data)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create_wrapper(BitmapFormat format, IntSize size, int scale_factor, size_t pitch, void* data, Function<void()>&& destruction_callback)
 {
     if (size_would_overflow(format, size, scale_factor))
         return Error::from_string_literal("Gfx::Bitmap::create_wrapper size overflow");
-    return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data));
+    return adopt_ref(*new Bitmap(format, size, scale_factor, pitch, data, move(destruction_callback)));
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(StringView path, int scale_factor, Optional<IntSize> ideal_size)
@@ -154,12 +159,13 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_bytes(ReadonlyBytes bytes, Opti
     return Error::from_string_literal("Gfx::Bitmap unable to load from file");
 }
 
-Bitmap::Bitmap(BitmapFormat format, IntSize size, int scale_factor, size_t pitch, void* data)
+Bitmap::Bitmap(BitmapFormat format, IntSize size, int scale_factor, size_t pitch, void* data, Function<void()>&& destruction_callback)
     : m_size(size)
     , m_scale(scale_factor)
     , m_data(data)
     , m_pitch(pitch)
     , m_format(format)
+    , m_destruction_callback(move(destruction_callback))
 {
     VERIFY(pitch >= minimum_pitch(size.width() * scale_factor, format));
     VERIFY(!size_would_overflow(format, size, scale_factor));
@@ -548,9 +554,8 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::inverted() const
 
 Bitmap::~Bitmap()
 {
-    if (m_data_is_malloced) {
-        kfree_sized(m_data, size_in_bytes());
-    }
+    if (m_destruction_callback)
+        m_destruction_callback();
     m_data = nullptr;
 }
 
@@ -673,6 +678,47 @@ void Bitmap::flood_visit_from_point(Gfx::IntPoint start_point, int threshold,
             flood_mask.set(flood_mask_index, true);
         }
     }
+}
+
+}
+
+namespace IPC {
+
+template<>
+ErrorOr<void> encode(Encoder& encoder, AK::NonnullRefPtr<Gfx::Bitmap> const& bitmap)
+{
+    Core::AnonymousBuffer buffer;
+    if (bitmap->anonymous_buffer().is_valid()) {
+        buffer = bitmap->anonymous_buffer();
+    } else {
+        buffer = MUST(Core::AnonymousBuffer::create_with_size(bitmap->size_in_bytes()));
+        memcpy(buffer.data<void>(), bitmap->scanline(0), bitmap->size_in_bytes());
+    }
+    TRY(encoder.encode(TRY(IPC::File::clone_fd(buffer.fd()))));
+    TRY(encoder.encode(static_cast<u32>(bitmap->format())));
+    TRY(encoder.encode(bitmap->size_in_bytes()));
+    TRY(encoder.encode(bitmap->pitch()));
+    TRY(encoder.encode(bitmap->size()));
+    TRY(encoder.encode(bitmap->scale()));
+    return {};
+}
+
+template<>
+ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> decode(Decoder& decoder)
+{
+    auto anon_file = TRY(decoder.decode<IPC::File>());
+    auto raw_bitmap_format = TRY(decoder.decode<u32>());
+    if (!Gfx::is_valid_bitmap_format(raw_bitmap_format))
+        return Error::from_string_literal("IPC: Invalid Gfx::ShareableBitmap format");
+    auto bitmap_format = static_cast<Gfx::BitmapFormat>(raw_bitmap_format);
+    auto size_in_bytes = TRY(decoder.decode<size_t>());
+    auto pitch = TRY(decoder.decode<size_t>());
+    auto size = TRY(decoder.decode<Gfx::IntSize>());
+    auto scale = TRY(decoder.decode<int>());
+    auto* data = TRY(Core::System::mmap(nullptr, round_up_to_power_of_two(size_in_bytes, PAGE_SIZE), PROT_READ | PROT_WRITE, MAP_SHARED, anon_file.fd(), 0));
+    return Gfx::Bitmap::create_wrapper(bitmap_format, size, scale, pitch, data, [data, size_in_bytes] {
+        MUST(Core::System::munmap(data, size_in_bytes));
+    });
 }
 
 }

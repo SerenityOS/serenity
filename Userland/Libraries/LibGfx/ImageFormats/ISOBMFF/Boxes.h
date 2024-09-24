@@ -11,7 +11,7 @@
 #include <AK/String.h>
 #include <AK/Traits.h>
 #include <AK/Vector.h>
-#include <LibVideo/DecoderError.h>
+#include <LibMedia/DecoderError.h>
 
 #include "BoxStream.h"
 #include "Enums.h"

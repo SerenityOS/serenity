@@ -74,9 +74,13 @@ ErrorOr<void, ValidationError> Validator::validate(Module& module)
         return result;
     }
 
-    module.for_each_section_of_type<FunctionSection>([this, &result](FunctionSection const& section) {
-        if (result.is_error())
+    CodeSection const* code_section { nullptr };
+    module.for_each_section_of_type<CodeSection>([&](auto& section) { code_section = &section; });
+    module.for_each_section_of_type<FunctionSection>([&](FunctionSection const& section) {
+        if ((!code_section && !section.types().is_empty()) || (code_section && code_section->functions().size() != section.types().size())) {
+            result = Errors::invalid("FunctionSection"sv);
             return;
+        }
         m_context.functions.ensure_capacity(section.types().size() + m_context.functions.size());
         for (auto& index : section.types()) {
             if (m_context.types.size() > index.value()) {
@@ -118,21 +122,26 @@ ErrorOr<void, ValidationError> Validator::validate(Module& module)
         m_context.datas.resize(section.data().size());
     });
 
-    // FIXME: C.refs is the set funcidx(module with funcs=ϵ with start=ϵ),
-    //        i.e., the set of function indices occurring in the module, except in its functions or start function.
-    // This is rather weird, it seems to ultimately be checking that `ref.func` uses a specific set of predetermined functions:
-    // The only place where this is accessed is in validate_instruction<ref_func>(), but we *populate* this from the ref.func instructions occurring outside regular functions,
-    // which limits it to only functions referenced from the elements section.
-    // so the only reason for this (as I see) is to ensure that ref.func only hands out references that occur within the elements and global sections
-    // _if_ that is indeed the case, then this should be much more specific about where the "valid" references are, and about the actual purpose of this field.
-    //
-    // For now, we simply assume that we need to scan the aforementioned section initializers for (ref.func f).
+    // We need to build the set of declared functions to check that `ref.func` uses a specific set of predetermined functions, found in:
+    // - Element initializer expressions
+    // - Global initializer expressions
+    // - Exports
     auto scan_expression_for_function_indices = [&](auto& expression) {
         for (auto& instruction : expression.instructions()) {
-            if (instruction.opcode() == Instructions::ref_func)
-                m_context.references.set(instruction.arguments().template get<FunctionIndex>());
+            if (instruction.opcode() == Instructions::ref_func) {
+                auto index = instruction.arguments().template get<FunctionIndex>();
+                m_context.references->tree.insert(index.value(), index);
+            }
         }
     };
+    module.for_each_section_of_type<ExportSection>([&](ExportSection const& section) {
+        for (auto& export_ : section.entries()) {
+            if (!export_.description().has<FunctionIndex>())
+                continue;
+            auto index = export_.description().get<FunctionIndex>();
+            m_context.references->tree.insert(index.value(), index);
+        }
+    });
     module.for_each_section_of_type<ElementSection>([&](ElementSection const& section) {
         for (auto& segment : section.segments()) {
             for (auto& expression : segment.init)
@@ -224,6 +233,9 @@ ErrorOr<void, ValidationError> Validator::validate(ElementSection const& section
             [](ElementSection::Passive const&) -> ErrorOr<void, ValidationError> { return {}; },
             [&](ElementSection::Active const& active) -> ErrorOr<void, ValidationError> {
                 TRY(validate(active.index));
+                auto table = m_context.tables[active.index.value()];
+                if (table.element_type() != segment.type)
+                    return Errors::invalid("active element reference type"sv);
                 auto expression_result = TRY(validate(active.expression, { ValueType(ValueType::I32) }));
                 if (!expression_result.is_constant)
                     return Errors::invalid("active element initializer"sv);
@@ -1308,7 +1320,7 @@ VALIDATE_INSTRUCTION(ref_func)
     auto index = instruction.arguments().get<FunctionIndex>();
     TRY(validate(index));
 
-    if (!m_context.references.contains(index))
+    if (m_context.references->tree.find(index.value()) == nullptr)
         return Errors::invalid("function reference"sv);
 
     is_constant = true;
@@ -1933,6 +1945,13 @@ VALIDATE_INSTRUCTION(structured_end)
         return Errors::invalid("usage of structured end"sv);
 
     auto& last_frame = m_frames.last();
+
+    // If this is true, then the `if` had no else. In that case, validate that the
+    // empty else block produces the correct type.
+    if (last_frame.kind == FrameKind::If) {
+        bool is_constant = false;
+        TRY(validate(Instruction(Instructions::structured_else), stack, is_constant));
+    }
 
     auto& results = last_frame.type.results();
     for (size_t i = 1; i <= results.size(); ++i)
@@ -2835,7 +2854,7 @@ VALIDATE_INSTRUCTION(v128_load8_lane)
     constexpr auto max_lane = 128 / N;
     constexpr auto max_alignment = N / 8;
 
-    if (arg.lane > max_lane)
+    if (arg.lane >= max_lane)
         return Errors::out_of_bounds("lane index"sv, arg.lane, 0u, max_lane);
 
     TRY(validate(arg.memory.memory_index));
@@ -2894,7 +2913,7 @@ VALIDATE_INSTRUCTION(v128_load64_lane)
 
     TRY(validate(arg.memory.memory_index));
 
-    if (arg.memory.align > max_alignment)
+    if ((1 << arg.memory.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
 
     return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
@@ -2915,7 +2934,7 @@ VALIDATE_INSTRUCTION(v128_store8_lane)
     if ((1 << arg.memory.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
 
-    return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
+    return stack.take<ValueType::V128, ValueType::I32>();
 }
 
 VALIDATE_INSTRUCTION(v128_store16_lane)
@@ -2933,7 +2952,7 @@ VALIDATE_INSTRUCTION(v128_store16_lane)
     if ((1 << arg.memory.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
 
-    return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
+    return stack.take<ValueType::V128, ValueType::I32>();
 }
 
 VALIDATE_INSTRUCTION(v128_store32_lane)
@@ -2951,7 +2970,7 @@ VALIDATE_INSTRUCTION(v128_store32_lane)
     if ((1 << arg.memory.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
 
-    return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
+    return stack.take<ValueType::V128, ValueType::I32>();
 }
 
 VALIDATE_INSTRUCTION(v128_store64_lane)
@@ -2969,7 +2988,7 @@ VALIDATE_INSTRUCTION(v128_store64_lane)
     if ((1 << arg.memory.align) > max_alignment)
         return Errors::out_of_bounds("memory op alignment"sv, 1 << arg.memory.align, 0u, max_alignment);
 
-    return stack.take_and_put<ValueType::V128, ValueType::I32>(ValueType::V128);
+    return stack.take<ValueType::V128, ValueType::I32>();
 }
 
 VALIDATE_INSTRUCTION(v128_load32_zero)

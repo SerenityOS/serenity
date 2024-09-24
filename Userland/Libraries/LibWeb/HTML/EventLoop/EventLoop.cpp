@@ -23,7 +23,8 @@ namespace Web::HTML {
 
 JS_DEFINE_ALLOCATOR(EventLoop);
 
-EventLoop::EventLoop()
+EventLoop::EventLoop(Type type)
+    : m_type(type)
 {
     m_task_queue = heap().allocate_without_realm<TaskQueue>(*this);
     m_microtask_queue = heap().allocate_without_realm<TaskQueue>(*this);
@@ -207,6 +208,8 @@ void EventLoop::process()
     //         loop processing.
     for_each_fully_active_document_in_docs([&](DOM::Document& document) {
         auto navigable = document.navigable();
+        if (navigable && !navigable->has_a_rendering_opportunity() && navigable->needs_repaint())
+            schedule();
         if (navigable && navigable->has_a_rendering_opportunity())
             return;
         auto* browsing_context = document.browsing_context();
@@ -389,7 +392,7 @@ int queue_a_task(HTML::Task::Source source, JS::GCPtr<EventLoop> event_loop, JS:
     auto task = HTML::Task::create(event_loop->vm(), source, document, steps);
 
     // 8. Let queue be the task queue to which source is associated on event loop.
-    auto& queue = event_loop->task_queue();
+    auto& queue = source == HTML::Task::Source::Microtask ? event_loop->microtask_queue() : event_loop->task_queue();
 
     // 9. Append task to queue.
     queue.add(task);

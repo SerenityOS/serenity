@@ -9,7 +9,6 @@ set(SOURCES
     Animations/AnimationTimeline.cpp
     Animations/DocumentTimeline.cpp
     Animations/KeyframeEffect.cpp
-    Animations/TimingFunction.cpp
     ARIA/AriaData.cpp
     ARIA/ARIAMixin.cpp
     ARIA/Roles.cpp
@@ -34,6 +33,7 @@ set(SOURCES
     CSS/AnimationEvent.cpp
     CSS/CalculatedOr.cpp
     CSS/Clip.cpp
+    CSS/CountersSet.cpp
     CSS/CSS.cpp
     CSS/CSSAnimation.cpp
     CSS/CSSConditionRule.cpp
@@ -108,6 +108,8 @@ set(SOURCES
     CSS/StyleValues/ColorStyleValue.cpp
     CSS/StyleValues/ConicGradientStyleValue.cpp
     CSS/StyleValues/ContentStyleValue.cpp
+    CSS/StyleValues/CounterDefinitionsStyleValue.cpp
+    CSS/StyleValues/CounterStyleValue.cpp
     CSS/StyleValues/DisplayStyleValue.cpp
     CSS/StyleValues/EasingStyleValue.cpp
     CSS/StyleValues/EdgeStyleValue.cpp
@@ -191,8 +193,8 @@ set(SOURCES
     DOM/StyleElementUtils.cpp
     DOM/Text.cpp
     DOM/TreeWalker.cpp
+    DOM/Utils.cpp
     DOM/XMLDocument.cpp
-    DOMParsing/InnerHTML.cpp
     DOMParsing/XMLSerializer.cpp
     DOMURL/DOMURL.cpp
     DOMURL/URLSearchParams.cpp
@@ -214,6 +216,7 @@ set(SOURCES
     Fetch/Infrastructure/ConnectionTimingInfo.cpp
     Fetch/Infrastructure/FetchAlgorithms.cpp
     Fetch/Infrastructure/FetchController.cpp
+    Fetch/Infrastructure/FetchRecord.cpp
     Fetch/Infrastructure/FetchParams.cpp
     Fetch/Infrastructure/FetchTimingInfo.cpp
     Fetch/Infrastructure/HTTP.cpp
@@ -249,6 +252,7 @@ set(SOURCES
     HTML/AttributeNames.cpp
     HTML/AudioTrack.cpp
     HTML/AudioTrackList.cpp
+    HTML/BroadcastChannel.cpp
     HTML/BrowsingContext.cpp
     HTML/BrowsingContextGroup.cpp
     HTML/Canvas/CanvasDrawImage.cpp
@@ -258,6 +262,8 @@ set(SOURCES
     HTML/CanvasPattern.cpp
     HTML/CanvasRenderingContext2D.cpp
     HTML/CloseEvent.cpp
+    HTML/CloseWatcher.cpp
+    HTML/CloseWatcherManager.cpp
     HTML/CORSSettingAttribute.cpp
     HTML/CrossOrigin/AbstractOperations.cpp
     HTML/CrossOrigin/Reporting.cpp
@@ -265,12 +271,17 @@ set(SOURCES
     HTML/CustomElements/CustomElementName.cpp
     HTML/CustomElements/CustomElementReactionNames.cpp
     HTML/CustomElements/CustomElementRegistry.cpp
+    HTML/DataTransfer.cpp
     HTML/Dates.cpp
     HTML/DecodedImageData.cpp
+    HTML/DedicatedWorkerGlobalScope.cpp
     HTML/DocumentState.cpp
     HTML/DOMParser.cpp
+    HTML/DOMStringList.cpp
     HTML/DOMStringMap.cpp
-    HTML/DataTransfer.cpp
+    HTML/DragEvent.cpp
+    HTML/ElementInternals.cpp
+    HTML/EmbedderPolicy.cpp
     HTML/ErrorEvent.cpp
     HTML/EventHandler.cpp
     HTML/EventSource.cpp
@@ -428,6 +439,8 @@ set(SOURCES
     HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
     HTML/TextMetrics.cpp
+    HTML/TextTrack.cpp
+    HTML/TextTrackList.cpp
     HTML/Timer.cpp
     HTML/TimeRanges.cpp
     HTML/ToggleEvent.cpp
@@ -448,6 +461,7 @@ set(SOURCES
     HTML/WorkerGlobalScope.cpp
     HTML/WorkerLocation.cpp
     HTML/WorkerNavigator.cpp
+    HTML/ValidityState.cpp
     HighResolutionTime/Performance.cpp
     HighResolutionTime/TimeOrigin.cpp
     Infra/Base64.cpp
@@ -469,7 +483,6 @@ set(SOURCES
     Layout/Box.cpp
     Layout/BoxModelMetrics.cpp
     Layout/BreakNode.cpp
-    Layout/ButtonBox.cpp
     Layout/CanvasBox.cpp
     Layout/CheckBox.cpp
     Layout/FlexFormattingContext.cpp
@@ -535,7 +548,6 @@ set(SOURCES
     Painting/BorderPainting.cpp
     Painting/BorderRadiusCornerClipper.cpp
     Painting/BordersData.cpp
-    Painting/ButtonPaintable.cpp
     Painting/CanvasPaintable.cpp
     Painting/Command.cpp
     Painting/CommandExecutorCPU.cpp
@@ -673,11 +685,14 @@ set(SOURCES
     WebAssembly/Table.cpp
     WebAssembly/WebAssembly.cpp
     WebAudio/AudioBuffer.cpp
+    WebAudio/AudioBufferSourceNode.cpp
     WebAudio/AudioContext.cpp
+    WebAudio/AudioDestinationNode.cpp
     WebAudio/AudioNode.cpp
     WebAudio/AudioParam.cpp
     WebAudio/AudioScheduledSourceNode.cpp
     WebAudio/BaseAudioContext.cpp
+    WebAudio/BiquadFilterNode.cpp
     WebAudio/DynamicsCompressorNode.cpp
     WebAudio/GainNode.cpp
     WebAudio/OfflineAudioContext.cpp
@@ -736,7 +751,6 @@ generate_css_implementation()
 set(GENERATED_SOURCES
     ARIA/AriaRoles.cpp
     CSS/DefaultStyleSheetSource.cpp
-    CSS/EasingFunctions.cpp
     CSS/Enums.cpp
     CSS/MathFunctions.cpp
     CSS/MediaFeatureID.cpp
@@ -754,7 +768,7 @@ set(GENERATED_SOURCES
 serenity_lib(LibWeb web)
 
 # NOTE: We link with LibSoftGPU here instead of lazy loading it via dlopen() so that we do not have to unveil the library and pledge prot_exec.
-target_link_libraries(LibWeb PRIVATE LibCore LibCrypto LibJS LibMarkdown LibHTTP LibGemini LibGfx LibIPC LibLocale LibRegex LibSoftGPU LibSyntax LibTextCodec LibUnicode LibAudio LibVideo LibWasm LibXML LibIDL LibURL LibTLS)
+target_link_libraries(LibWeb PRIVATE LibCore LibCrypto LibJS LibMarkdown LibHTTP LibGemini LibGfx LibIPC LibLocale LibRegex LibSoftGPU LibSyntax LibTextCodec LibUnicode LibAudio LibMedia LibWasm LibXML LibIDL LibURL LibTLS)
 
 if (HAS_ACCELERATED_GRAPHICS)
     target_link_libraries(LibWeb PRIVATE ${ACCEL_GFX_LIBS})

@@ -75,7 +75,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto quit_action = GUI::CommonActions::make_quit_action(
         [&](auto&) {
             app->quit();
-        });
+        },
+        GUI::CommonActions::QuitAltShortcut::None);
 
     auto auto_modifier_action = GUI::Action::create("Auto-Modifier", [&](auto& act) {
         keyboard_mapper_widget->set_automatic_modifier(act.is_checked());

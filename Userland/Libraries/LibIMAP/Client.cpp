@@ -204,11 +204,12 @@ NonnullRefPtr<Promise<SolidResponse>> Client::login(StringView username, StringV
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
-NonnullRefPtr<Promise<SolidResponse>> Client::list(StringView reference_name, StringView mailbox)
+NonnullRefPtr<Promise<SolidResponse>> Client::list(StringView reference_name, StringView mailbox, bool unseen)
 {
     auto command = Command { CommandType::List, m_current_command,
         { ByteString::formatted("\"{}\"", reference_name),
-            ByteString::formatted("\"{}\"", mailbox) } };
+            ByteString::formatted("\"{}\"", mailbox),
+            unseen ? "RETURN (STATUS (UNSEEN))" : "" } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
@@ -276,8 +277,10 @@ ErrorOr<void> Client::send_next_command()
     buffer.append(command_type.data(), command_type.size());
 
     for (auto& arg : command.args) {
-        buffer.append(" ", 1);
-        buffer.append(arg.bytes().data(), arg.length());
+        if (arg.length()) {
+            buffer.append(" ", 1);
+            buffer.append(arg.bytes().data(), arg.length());
+        }
     }
 
     TRY(send_raw(buffer));

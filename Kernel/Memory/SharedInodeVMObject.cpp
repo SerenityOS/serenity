@@ -51,18 +51,46 @@ SharedInodeVMObject::SharedInodeVMObject(SharedInodeVMObject const& other, Fixed
 
 ErrorOr<void> SharedInodeVMObject::sync(off_t offset_in_pages, size_t pages)
 {
+    return TRY(sync_impl(offset_in_pages, pages, true));
+}
+
+ErrorOr<void> SharedInodeVMObject::sync_before_destroying()
+{
+    return TRY(sync_impl(0, page_count(), false));
+}
+
+ErrorOr<void> SharedInodeVMObject::sync_impl(off_t offset_in_pages, size_t pages, bool should_remap)
+{
     SpinlockLocker locker(m_lock);
 
     size_t highest_page_to_flush = min(page_count(), offset_in_pages + pages);
 
+    AK::Vector<size_t> pages_to_flush = {};
+    TRY(pages_to_flush.try_ensure_capacity(highest_page_to_flush - offset_in_pages));
+
     for (size_t page_index = offset_in_pages; page_index < highest_page_to_flush; ++page_index) {
         auto& physical_page = m_physical_pages[page_index];
-        if (!physical_page)
-            continue;
+        if (physical_page && is_page_dirty(page_index))
+            pages_to_flush.append(page_index);
+    }
 
+    if (pages_to_flush.size() == 0)
+        return {};
+
+    // Mark pages as clean and remap regions before writing the pages to disk.
+    // This makes the pages read-only while we are flushing them to disk. Any writes will page-fault and block until we release the lock.
+    if (should_remap) {
+        for (auto it = pages_to_flush.begin(); it != pages_to_flush.end(); ++it)
+            set_page_dirty(*it, false);
+        remap_regions();
+    }
+
+    for (auto it = pages_to_flush.begin(); it != pages_to_flush.end(); ++it) {
+        size_t page_index = *it;
+        auto& physical_page = m_physical_pages[page_index];
         u8 page_buffer[PAGE_SIZE];
-        MM.copy_physical_page(*physical_page, page_buffer);
 
+        MM.copy_physical_page(*physical_page, page_buffer);
         TRY(m_inode->write_bytes(page_index * PAGE_SIZE, PAGE_SIZE, UserOrKernelBuffer::for_kernel_buffer(page_buffer), nullptr));
     }
 

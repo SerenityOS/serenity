@@ -46,9 +46,8 @@ using AK::SIMD::i32x4;
 using AK::SIMD::load4_masked;
 using AK::SIMD::maskbits;
 using AK::SIMD::maskcount;
+using AK::SIMD::simd_cast;
 using AK::SIMD::store4_masked;
-using AK::SIMD::to_f32x4;
-using AK::SIMD::to_u32x4;
 using AK::SIMD::u32x4;
 
 static constexpr int subpixel_factor = 1 << SUBPIXEL_BITS;
@@ -84,10 +83,10 @@ static GPU::ColorType to_argb32(FloatVector4 const& color)
 ALWAYS_INLINE static u32x4 to_argb32(Vector4<f32x4> const& color)
 {
     auto clamped = color.clamped(expand4(0.0f), expand4(1.0f));
-    auto r = to_u32x4(clamped.x() * 255);
-    auto g = to_u32x4(clamped.y() * 255);
-    auto b = to_u32x4(clamped.z() * 255);
-    auto a = to_u32x4(clamped.w() * 255);
+    auto r = simd_cast<u32x4>(clamped.x() * 255);
+    auto g = simd_cast<u32x4>(clamped.y() * 255);
+    auto b = simd_cast<u32x4>(clamped.z() * 255);
+    auto a = simd_cast<u32x4>(clamped.w() * 255);
 
     return a << 24 | r << 16 | g << 8 | b;
 }
@@ -96,10 +95,10 @@ static Vector4<f32x4> to_vec4(u32x4 bgra)
 {
     auto constexpr one_over_255 = expand4(1.0f / 255);
     return {
-        to_f32x4((bgra >> 16) & 0xff) * one_over_255,
-        to_f32x4((bgra >> 8) & 0xff) * one_over_255,
-        to_f32x4(bgra & 0xff) * one_over_255,
-        to_f32x4((bgra >> 24) & 0xff) * one_over_255,
+        simd_cast<f32x4>((bgra >> 16) & 0xff) * one_over_255,
+        simd_cast<f32x4>((bgra >> 8) & 0xff) * one_over_255,
+        simd_cast<f32x4>(bgra & 0xff) * one_over_255,
+        simd_cast<f32x4>((bgra >> 24) & 0xff) * one_over_255,
     };
 }
 
@@ -779,9 +778,9 @@ void Device::rasterize_triangle(Triangle& triangle)
             quad.mask = test_point4(edge_values);
 
             quad.barycentrics = {
-                to_f32x4(edge_values.x()),
-                to_f32x4(edge_values.y()),
-                to_f32x4(edge_values.z()),
+                simd_cast<f32x4>(edge_values.x()),
+                simd_cast<f32x4>(edge_values.y()),
+                simd_cast<f32x4>(edge_values.z()),
             };
         },
         [&](auto& quad) {

@@ -59,14 +59,6 @@ Vector<FlyString> PluginArray::supported_property_names() const
     return plugin_names;
 }
 
-// https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewing-support:supports-indexed-properties
-bool PluginArray::is_supported_property_index(u32 index) const
-{
-    // The PluginArray interface supports indexed properties. The supported property indices are the indices of this's relevant global object's PDF viewer plugin objects.
-    auto& window = verify_cast<HTML::Window>(HTML::relevant_global_object(*this));
-    return index < window.pdf_viewer_plugin_objects().size();
-}
-
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-pluginarray-length
 size_t PluginArray::length() const
 {
@@ -106,15 +98,15 @@ JS::GCPtr<Plugin> PluginArray::named_item(FlyString const& name) const
     return nullptr;
 }
 
-WebIDL::ExceptionOr<JS::Value> PluginArray::item_value(size_t index) const
+Optional<JS::Value> PluginArray::item_value(size_t index) const
 {
     auto return_value = item(index);
     if (!return_value)
-        return JS::js_null();
+        return {};
     return return_value.ptr();
 }
 
-WebIDL::ExceptionOr<JS::Value> PluginArray::named_item_value(FlyString const& name) const
+JS::Value PluginArray::named_item_value(FlyString const& name) const
 {
     auto return_value = named_item(name);
     if (!return_value)

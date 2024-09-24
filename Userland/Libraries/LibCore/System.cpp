@@ -33,6 +33,7 @@
 #    include <LibCore/Account.h>
 #    include <LibSystem/syscall.h>
 #    include <serenity.h>
+#    include <sys/prctl.h>
 #    include <sys/ptrace.h>
 #    include <sys/sysmacros.h>
 #endif
@@ -149,6 +150,14 @@ namespace Core::System {
 
 #ifdef AK_OS_SERENITY
 
+ErrorOr<void> enter_jail_mode()
+{
+    auto rc = prctl(PR_SET_JAILED, 0, 0, 0);
+    if (rc != 0)
+        return Error::from_syscall("prctl"sv, -rc);
+    return {};
+}
+
 ErrorOr<void> beep(u16 tone, u16 milliseconds_duration)
 {
     static Optional<int> beep_fd;
@@ -261,12 +270,29 @@ ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destinati
     HANDLE_SYSCALL_RETURN_VALUE("ptrace_peekbuf", rc, {});
 }
 
-ErrorOr<void> bindmount(int source_fd, StringView target, int flags)
+ErrorOr<void> copy_mount(Optional<i32> original_vfs_context_id, Optional<i32> target_vfs_context_id, StringView original_mountpoint, StringView target_mountpoint, int flags)
+{
+    if (target_mountpoint.is_null() || original_mountpoint.is_null())
+        return Error::from_errno(EFAULT);
+
+    Syscall::SC_copy_mount_params params {
+        original_vfs_context_id.value_or(-1),
+        target_vfs_context_id.value_or(-1),
+        { original_mountpoint.characters_without_null_termination(), original_mountpoint.length() },
+        { target_mountpoint.characters_without_null_termination(), target_mountpoint.length() },
+        flags,
+    };
+    int rc = syscall(SC_copy_mount, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("copy_mount", rc, {});
+}
+
+ErrorOr<void> bindmount(Optional<i32> vfs_context_id, int source_fd, StringView target, int flags)
 {
     if (target.is_null())
         return Error::from_errno(EFAULT);
 
     Syscall::SC_bindmount_params params {
+        vfs_context_id.value_or(-1),
         { target.characters_without_null_termination(), target.length() },
         source_fd,
         flags,
@@ -275,12 +301,13 @@ ErrorOr<void> bindmount(int source_fd, StringView target, int flags)
     HANDLE_SYSCALL_RETURN_VALUE("bindmount", rc, {});
 }
 
-ErrorOr<void> remount(StringView target, int flags)
+ErrorOr<void> remount(Optional<i32> vfs_context_id, StringView target, int flags)
 {
     if (target.is_null())
         return Error::from_errno(EFAULT);
 
     Syscall::SC_remount_params params {
+        vfs_context_id.value_or(-1),
         { target.characters_without_null_termination(), target.length() },
         flags
     };
@@ -288,21 +315,21 @@ ErrorOr<void> remount(StringView target, int flags)
     HANDLE_SYSCALL_RETURN_VALUE("remount", rc, {});
 }
 
-ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int flags)
+ErrorOr<void> mount(Optional<i32> vfs_context_id, int source_fd, StringView target, StringView fs_type, int flags)
 {
     if (target.is_null() || fs_type.is_null())
         return Error::from_errno(EFAULT);
 
     if (flags & MS_REMOUNT) {
-        TRY(remount(target, flags));
+        TRY(remount(vfs_context_id, target, flags));
         return {};
     }
     if (flags & MS_BIND) {
-        TRY(bindmount(source_fd, target, flags));
+        TRY(bindmount(vfs_context_id, source_fd, target, flags));
         return {};
     }
     int mount_fd = TRY(fsopen(fs_type, flags));
-    return fsmount(mount_fd, source_fd, target);
+    return fsmount(vfs_context_id, mount_fd, source_fd, target);
 }
 
 ErrorOr<int> fsopen(StringView fs_type, int flags)
@@ -318,12 +345,13 @@ ErrorOr<int> fsopen(StringView fs_type, int flags)
     HANDLE_SYSCALL_RETURN_VALUE("fsopen", rc, rc);
 }
 
-ErrorOr<void> fsmount(int mount_fd, int source_fd, StringView target)
+ErrorOr<void> fsmount(Optional<i32> vfs_context_id, int mount_fd, int source_fd, StringView target)
 {
     if (target.is_null())
         return Error::from_errno(EFAULT);
 
     Syscall::SC_fsmount_params params {
+        vfs_context_id.value_or(-1),
         mount_fd,
         { target.characters_without_null_termination(), target.length() },
         source_fd,
@@ -332,12 +360,16 @@ ErrorOr<void> fsmount(int mount_fd, int source_fd, StringView target)
     HANDLE_SYSCALL_RETURN_VALUE("fsmount", rc, {});
 }
 
-ErrorOr<void> umount(StringView mount_point)
+ErrorOr<void> umount(Optional<i32> vfs_context_id, StringView mount_point)
 {
     if (mount_point.is_null())
         return Error::from_errno(EFAULT);
 
-    int rc = syscall(SC_umount, mount_point.characters_without_null_termination(), mount_point.length());
+    Syscall::SC_umount_params params {
+        vfs_context_id.value_or(-1),
+        { mount_point.characters_without_null_termination(), mount_point.length() },
+    };
+    int rc = syscall(SC_umount, &params);
     HANDLE_SYSCALL_RETURN_VALUE("umount", rc, {});
 }
 
@@ -1279,6 +1311,26 @@ ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
 #endif
 
 #ifdef AK_OS_SERENITY
+ErrorOr<u32> unshare_create(Kernel::UnshareType type, unsigned flags)
+{
+    Syscall::SC_unshare_create_params params {
+        static_cast<int>(type),
+        static_cast<int>(flags),
+    };
+    int rc = syscall(SC_unshare_create, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("unshare_create", rc, rc);
+}
+
+ErrorOr<void> unshare_attach(Kernel::UnshareType type, unsigned index)
+{
+    Syscall::SC_unshare_attach_params params {
+        static_cast<int>(type),
+        static_cast<int>(index),
+    };
+    int rc = syscall(SC_unshare_attach, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("unshare_attach", rc, {});
+}
+
 ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env)
 {
     Vector<StringView> exec_environment;
@@ -1292,20 +1344,6 @@ ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env)
 
     TRY(Core::System::exec(command.at(0), command, Core::System::SearchInPath::Yes, exec_environment));
     return {};
-}
-
-ErrorOr<void> join_jail(u64 jail_index)
-{
-    Syscall::SC_jail_attach_params params { jail_index };
-    int rc = syscall(SC_jail_attach, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("jail_attach", rc, {});
-}
-
-ErrorOr<u64> create_jail(StringView jail_name, JailIsolationFlags flags)
-{
-    Syscall::SC_jail_create_params params { 0, { jail_name.characters_without_null_termination(), jail_name.length() }, static_cast<int>(flags) };
-    int rc = syscall(SC_jail_create, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("jail_create", rc, static_cast<u64>(params.index));
 }
 #endif
 
@@ -1846,6 +1884,27 @@ ErrorOr<Bytes> allocate(size_t count, size_t size)
     if (!data)
         return Error::from_errno(errno);
     return Bytes { data, size * count };
+}
+
+ErrorOr<rlimit> get_resource_limits(int resource)
+{
+    rlimit limits;
+
+    if (::getrlimit(resource, &limits) != 0)
+        return Error::from_syscall("getrlimit"sv, -errno);
+
+    return limits;
+}
+
+ErrorOr<void> set_resource_limits(int resource, rlim_t limit)
+{
+    auto limits = TRY(get_resource_limits(resource));
+    limits.rlim_cur = limit;
+
+    if (::setrlimit(resource, &limits) != 0)
+        return Error::from_syscall("setrlimit"sv, -errno);
+
+    return {};
 }
 
 }

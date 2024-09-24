@@ -685,15 +685,16 @@ public:
         return m_bye_message;
     }
 
-    void set_status(StatusItem&& status_item)
+    void add_status_item(StatusItem&& item)
     {
         add_response_type(ResponseType::Status);
-        m_status_item = move(status_item);
+        m_status_items.append(move(item));
     }
 
-    StatusItem& status_item()
+    Vector<StatusItem>& status_items()
     {
-        return m_status_item;
+        VERIFY(contains_response_type(ResponseType::Status));
+        return m_status_items;
     }
 
 private:
@@ -702,6 +703,7 @@ private:
     Vector<ByteString> m_capabilities;
     Vector<ListItem> m_list_items;
     Vector<ListItem> m_lsub_items;
+    Vector<StatusItem> m_status_items;
     Vector<unsigned> m_expunged;
 
     unsigned m_recent {};
@@ -715,7 +717,6 @@ private:
     Vector<Tuple<unsigned, FetchResponseData>> m_fetch_responses;
     Vector<unsigned> m_search_results;
     Optional<ByteString> m_bye_message;
-    StatusItem m_status_item;
 };
 
 enum class StoreMethod {

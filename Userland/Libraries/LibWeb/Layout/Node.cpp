@@ -613,6 +613,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (overflow_y.has_value())
         computed_values.set_overflow_y(overflow_y.value());
 
+    auto content_visibility = computed_style.content_visibility();
+    if (content_visibility.has_value())
+        computed_values.set_content_visibility(content_visibility.value());
+
     auto cursor = computed_style.cursor();
     if (cursor.has_value())
         computed_values.set_cursor(cursor.value());
@@ -653,6 +657,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     computed_values.set_text_decoration_color(computed_style.color_or_fallback(CSS::PropertyID::TextDecorationColor, *this, computed_values.color()));
     if (auto maybe_text_decoration_thickness = computed_style.length_percentage(CSS::PropertyID::TextDecorationThickness); maybe_text_decoration_thickness.has_value())
         computed_values.set_text_decoration_thickness(maybe_text_decoration_thickness.release_value());
+
+    computed_values.set_webkit_text_fill_color(computed_style.color_or_fallback(CSS::PropertyID::WebkitTextFillColor, *this, computed_values.color()));
 
     computed_values.set_text_shadow(computed_style.text_shadow(*this));
 
@@ -745,8 +751,6 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     if (auto outline_width = computed_style.property(CSS::PropertyID::OutlineWidth); outline_width->is_length())
         computed_values.set_outline_width(outline_width->as_length().length());
 
-    // FIXME: Stop generating the content twice. (First time is in TreeBuilder.)
-    computed_values.set_content(computed_style.content(initial_quote_nesting_level()).content_data);
     computed_values.set_grid_auto_columns(computed_style.grid_auto_columns());
     computed_values.set_grid_auto_rows(computed_style.grid_auto_rows());
     computed_values.set_grid_template_columns(computed_style.grid_template_columns());
@@ -856,6 +860,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
 
     computed_values.set_math_depth(computed_style.math_depth());
     computed_values.set_quotes(computed_style.quotes());
+    computed_values.set_counter_increment(computed_style.counter_data(CSS::PropertyID::CounterIncrement));
+    computed_values.set_counter_reset(computed_style.counter_data(CSS::PropertyID::CounterReset));
+    computed_values.set_counter_set(computed_style.counter_data(CSS::PropertyID::CounterSet));
 
     if (auto object_fit = computed_style.object_fit(); object_fit.has_value())
         computed_values.set_object_fit(object_fit.value());

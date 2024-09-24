@@ -38,7 +38,10 @@ int main(int argc, char** argv)
 
     bool do_all_crash_types = false;
     bool do_segmentation_violation = false;
+    // RISC-V does not trap divisions by zero, see M extension version 2.0, subsection 2 and table 1.
+#if !ARCH(RISCV64)
     bool do_division_by_zero = false;
+#endif
     bool do_illegal_instruction = false;
     bool do_abort = false;
     bool do_write_to_uninitialized_malloc_memory = false;
@@ -51,7 +54,7 @@ int main(int argc, char** argv)
     bool do_syscall_from_writeable_memory = false;
     bool do_legitimate_syscall = false;
     bool do_execute_non_executable_memory = false;
-    bool do_trigger_user_mode_instruction_prevention = false;
+    bool do_use_priviledged_instruction = false;
 #if ARCH(X86_64)
     bool do_use_io_instruction = false;
 #endif
@@ -65,7 +68,9 @@ int main(int argc, char** argv)
         "(i.e., Kernel or UE) by crashing in many different ways.");
     args_parser.add_option(do_all_crash_types, "Test that all (except -U) of the following crash types crash as expected (default behavior)", nullptr, 'A');
     args_parser.add_option(do_segmentation_violation, "Perform a segmentation violation by dereferencing an invalid pointer", nullptr, 's');
+#if !ARCH(RISCV64)
     args_parser.add_option(do_division_by_zero, "Perform a division by zero", nullptr, 'd');
+#endif
     args_parser.add_option(do_illegal_instruction, "Execute an illegal CPU instruction", nullptr, 'i');
     args_parser.add_option(do_abort, "Call `abort()`", nullptr, 'a');
     args_parser.add_option(do_read_from_uninitialized_malloc_memory, "Read a pointer from uninitialized malloc memory, then read from it", nullptr, 'm');
@@ -78,7 +83,7 @@ int main(int argc, char** argv)
     args_parser.add_option(do_syscall_from_writeable_memory, "Make a syscall from writeable memory", nullptr, 'S');
     args_parser.add_option(do_legitimate_syscall, "Make a syscall from legitimate memory (but outside syscall-code mapped region)", nullptr, 'y');
     args_parser.add_option(do_execute_non_executable_memory, "Attempt to execute non-executable memory (not mapped with PROT_EXEC)", nullptr, 'X');
-    args_parser.add_option(do_trigger_user_mode_instruction_prevention, "Attempt to trigger an x86 User Mode Instruction Prevention fault. WARNING: This test runs only when invoked manually, see #10042.", nullptr, 'U');
+    args_parser.add_option(do_use_priviledged_instruction, "Attempt to use a priviledged instruction in user mode. WARNING: This test runs only when invoked manually, see #10042.", nullptr, 'U');
 #if ARCH(X86_64)
     args_parser.add_option(do_use_io_instruction, "Use an x86 I/O instruction in userspace", nullptr, 'I');
 #endif
@@ -107,6 +112,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
+#if !ARCH(RISCV64)
     if (do_division_by_zero || do_all_crash_types) {
         any_failures |= !Crash("Division by zero", []() {
             int volatile lala = 10;
@@ -115,6 +121,7 @@ int main(int argc, char** argv)
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
+#endif
 
     if (do_illegal_instruction || do_all_crash_types) {
         any_failures |= !Crash("Illegal instruction", []() {
@@ -204,15 +211,14 @@ int main(int argc, char** argv)
             if (!makeshift_stack)
                 return Crash::Failure::UnexpectedError;
 
-            u8* makeshift_esp = makeshift_stack + 2048;
+            u8* makeshift_stack_pointer = makeshift_stack + 2048;
 #if ARCH(X86_64)
-            asm volatile("mov %%eax, %%esp" ::"a"(makeshift_esp));
+            asm volatile("mov %%eax, %%esp" ::"a"(makeshift_stack_pointer));
 #elif ARCH(AARCH64)
-            (void)makeshift_esp;
+            (void)makeshift_stack_pointer;
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            (void)makeshift_esp;
-            TODO_RISCV64();
+            asm volatile("mv sp, %0" :: "r"(makeshift_stack_pointer));
 #else
 #    error Unknown architecture
 #endif
@@ -223,15 +229,14 @@ int main(int argc, char** argv)
             if (!bad_stack)
                 return Crash::Failure::UnexpectedError;
 
-            u8* bad_esp = bad_stack + 2048;
+            u8* bad_stack_pointer = bad_stack + 2048;
 #if ARCH(X86_64)
-            asm volatile("mov %%eax, %%esp" ::"a"(bad_esp));
+            asm volatile("mov %%eax, %%esp" ::"a"(bad_stack_pointer));
 #elif ARCH(AARCH64)
-            (void)bad_esp;
+            (void)bad_stack_pointer;
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            (void)bad_esp;
-            TODO_RISCV64();
+            asm volatile("mv sp, %0" :: "r"(bad_stack_pointer));
 #else
 #    error Unknown architecture
 #endif
@@ -246,16 +251,16 @@ int main(int argc, char** argv)
             if (!bad_stack)
                 return Crash::Failure::UnexpectedError;
 
-            u8* bad_esp = bad_stack + 2048;
+            u8* bad_stack_pointer = bad_stack + 2048;
 #if ARCH(X86_64)
-            asm volatile("movq %%rax, %%rsp" ::"a"(bad_esp));
+            asm volatile("movq %%rax, %%rsp" ::"a"(bad_stack_pointer));
             asm volatile("pushq $0");
 #elif ARCH(AARCH64)
-            (void)bad_esp;
+            (void)bad_stack_pointer;
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            (void)bad_esp;
-            TODO_RISCV64();
+            asm volatile("mv sp, %0" :: "r"(bad_stack_pointer));
+            asm volatile("sd zero, (sp)");
 #else
 #    error Unknown architecture
 #endif
@@ -286,21 +291,34 @@ int main(int argc, char** argv)
             if (ptr == MAP_FAILED)
                 return Crash::Failure::UnexpectedError;
 
+#if ARCH(X86_64)
             ptr[0] = 0xc3; // ret
+#elif ARCH(AARCH64)
+            (void)ptr;
+            TODO_AARCH64();
+#elif ARCH(RISCV64)
+            // ret / jalr x0, 0(x1)
+            ptr[0] = 0x67;
+            ptr[1] = 0x80;
+            ptr[2] = 0x00;
+            ptr[3] = 0x00;
+#else
+#    error Unknown architecture
+#endif
             typedef void* (*CrashyFunctionPtr)();
             ((CrashyFunctionPtr)ptr)();
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
 
-    if (do_trigger_user_mode_instruction_prevention) {
-        any_failures |= !Crash("Trigger x86 User Mode Instruction Prevention", []() {
+    if (do_use_priviledged_instruction) {
+        any_failures |= !Crash("Use a priviledged instruction in user mode", []() {
 #if ARCH(X86_64)
             asm volatile("str %eax");
 #elif ARCH(AARCH64)
             TODO_AARCH64();
 #elif ARCH(RISCV64)
-            TODO_RISCV64();
+            asm volatile("sret");
 #else
 #    error Unknown architecture
 #endif

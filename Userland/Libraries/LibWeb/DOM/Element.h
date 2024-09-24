@@ -11,6 +11,7 @@
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
+#include <LibWeb/CSS/CountersSet.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleInvalidation.h>
 #include <LibWeb/CSS/StyleProperty.h>
@@ -46,6 +47,15 @@ struct GetHTMLOptions {
 struct ScrollIntoViewOptions : public HTML::ScrollOptions {
     Bindings::ScrollLogicalPosition block { Bindings::ScrollLogicalPosition::Start };
     Bindings::ScrollLogicalPosition inline_ { Bindings::ScrollLogicalPosition::Nearest };
+};
+
+// https://drafts.csswg.org/cssom-view-1/#dictdef-checkvisibilityoptions
+struct CheckVisibilityOptions {
+    bool check_opacity = false;
+    bool check_visibility_css = false;
+    bool content_visibility_auto = false;
+    bool opacity_property = false;
+    bool visibility_property = false;
 };
 
 // https://html.spec.whatwg.org/multipage/custom-elements.html#upgrade-reaction
@@ -161,7 +171,7 @@ public:
     virtual void attribute_change_steps(FlyString const& local_name, Optional<String> const& old_value, Optional<String> const& value, Optional<FlyString> const& namespace_);
 
     void run_attribute_change_steps(FlyString const& local_name, Optional<String> const& old_value, Optional<String> const& value, Optional<FlyString> const& namespace_);
-    virtual void attribute_changed(FlyString const& name, Optional<String> const& value);
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& old_value, Optional<String> const& value);
 
     CSS::RequiredInvalidationAfterStyleChange recompute_style();
 
@@ -184,8 +194,12 @@ public:
 
     CSS::StyleSheetList& document_or_shadow_root_style_sheets();
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> parse_fragment(StringView markup);
+
     WebIDL::ExceptionOr<String> inner_html() const;
     WebIDL::ExceptionOr<void> set_inner_html(StringView);
+
+    WebIDL::ExceptionOr<void> set_html_unsafe(StringView);
 
     WebIDL::ExceptionOr<String> get_html(GetHTMLOptions const&) const;
 
@@ -198,8 +212,6 @@ public:
     bool is_active() const;
     bool is_target() const;
     bool is_document_element() const;
-
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(StringView);
 
     bool is_shadow_host() const;
     JS::GCPtr<ShadowRoot> shadow_root() { return m_shadow_root; }
@@ -350,6 +362,8 @@ public:
     void scroll_by(HTML::ScrollToOptions);
     void scroll_by(double x, double y);
 
+    bool check_visibility(Optional<CheckVisibilityOptions>);
+
     void register_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, IntersectionObserver::IntersectionObserverRegistration);
     void unregister_intersection_observer(Badge<IntersectionObserver::IntersectionObserver>, JS::NonnullGCPtr<IntersectionObserver::IntersectionObserver>);
     IntersectionObserver::IntersectionObserverRegistration& get_intersection_observer_registration(Badge<DOM::Document>, IntersectionObserver::IntersectionObserver const&);
@@ -386,6 +400,12 @@ public:
     void set_in_top_layer(bool in_top_layer) { m_in_top_layer = in_top_layer; }
     bool in_top_layer() const { return m_in_top_layer; }
 
+    bool has_non_empty_counters_set() const { return m_counters_set; }
+    Optional<CSS::CountersSet const&> counters_set();
+    CSS::CountersSet& ensure_counters_set();
+    void resolve_counters(CSS::StyleProperties&);
+    void inherit_counters();
+
 protected:
     Element(Document&, DOM::QualifiedName);
     virtual void initialize(JS::Realm&) override;
@@ -400,6 +420,8 @@ protected:
     virtual void visit_edges(Cell::Visitor&) override;
 
     virtual bool id_reference_exists(String const&) const override;
+
+    CustomElementState custom_element_state() const { return m_custom_element_state; }
 
 private:
     void make_html_uppercased_qualified_name();
@@ -461,6 +483,8 @@ private:
     Array<CSSPixelPoint, 3> m_scroll_offset;
 
     bool m_in_top_layer { false };
+
+    OwnPtr<CSS::CountersSet> m_counters_set;
 };
 
 template<>

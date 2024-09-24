@@ -19,7 +19,6 @@ ARCHS="$USERLAND_ARCHS aarch64 riscv64"
 
 MD5SUM="md5sum"
 REALPATH="realpath"
-INSTALL="install"
 SED="sed"
 
 SYSTEM_NAME="$(uname -s)"
@@ -34,8 +33,6 @@ elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
     MD5SUM="md5 -q"
 elif [ "$SYSTEM_NAME" = "Darwin" ]; then
     MD5SUM="md5 -q"
-    REALPATH="grealpath"  # GNU coreutils
-    INSTALL="ginstall"    # GNU coreutils
 fi
 
 NPROC=$(get_number_of_processing_units)
@@ -219,14 +216,14 @@ FILES=$(find \
 for arch in $ARCHS; do
     mkdir -p "$BUILD/${arch}clang"
     pushd "$BUILD/${arch}clang"
-        mkdir -p Root/usr/include/
         for header in $FILES; do
             target=$(echo "$header" | "$SED" \
                 -e "s|$SRC_ROOT/Kernel/|Kernel/|" \
                 -e "s|$SRC_ROOT/Userland/Libraries/LibC||" \
                 -e "s|$SRC_ROOT/Userland/Libraries/LibELF/|LibELF/|" \
                 -e "s|$SRC_ROOT/Userland/Libraries/LibRegex/|LibRegex/|")
-            buildstep "system_headers" "$INSTALL" -D "$header" "Root/usr/include/$target"
+            mkdir -p "$(dirname "Root/usr/include/$target")"
+            buildstep "system_headers" cp "$header" "Root/usr/include/$target"
         done
     popd
 done

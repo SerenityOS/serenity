@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Library/IOWindow.h>
@@ -13,7 +14,7 @@
 namespace Kernel {
 
 SerialDevice::SerialDevice(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor)
-    : CharacterDevice(4, minor)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Serial, minor)
     , m_registers_io_window(move(registers_io_window))
 {
     set_interrupts(false);

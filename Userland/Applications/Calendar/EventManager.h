@@ -47,8 +47,16 @@ public:
 private:
     explicit EventManager();
 
+    enum class ICalendarParserState {
+        Idle = 0,
+        InVEvent
+    };
+
     ErrorOr<JsonArray> serialize_events();
     ErrorOr<Vector<Event>> deserialize_events(JsonArray const& json);
+    ErrorOr<Vector<Event>> parse_events(ByteBuffer const& content);
+    ErrorOr<Vector<Event>> parse_icalendar_vevents(ByteBuffer const& content);
+    Core::DateTime format_icalendar_vevent_datetime(String const& parameter);
 
     Vector<Event> m_events;
 

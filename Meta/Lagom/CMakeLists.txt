@@ -466,6 +466,7 @@ if (BUILD_LAGOM)
         Manual
         Markdown
         PDF
+        Media
         Protocol
         Regex
         RIFF
@@ -475,7 +476,6 @@ if (BUILD_LAGOM)
         TextCodec
         Threading
         TLS
-        Video
         Wasm
         WebSocket
         XML
@@ -571,8 +571,8 @@ if (BUILD_LAGOM)
         if (EMSCRIPTEN)
             lagom_utility(libjs SOURCES Wasm/js_repl.cpp LIBS LibJS LibLocale LibTimeZone LibUnicode)
             target_link_options(libjs PRIVATE
-                    -sEXPORTED_FUNCTIONS=_initialize_repl,_execute
-                    -sEXPORTED_RUNTIME_METHODS=allocateUTF8
+                    -sEXPORTED_FUNCTIONS=_initialize_repl,_execute,_free
+                    -sEXPORTED_RUNTIME_METHODS=stringToNewUTF8
                     -sERROR_ON_UNDEFINED_SYMBOLS=0
                     -sENVIRONMENT=web)
         endif()
@@ -589,6 +589,7 @@ if (BUILD_LAGOM)
         lagom_utility(sql SOURCES ../../Userland/Utilities/sql.cpp LIBS LibFileSystem LibIPC LibLine LibMain LibSQL)
         lagom_utility(tar SOURCES ../../Userland/Utilities/tar.cpp LIBS LibArchive LibCompress LibFileSystem LibMain)
         lagom_utility(test262-runner SOURCES ../../Tests/LibJS/test262-runner.cpp LIBS LibJS LibFileSystem)
+        lagom_utility(unzip SOURCES ../../Userland/Utilities/unzip.cpp LIBS LibArchive LibCompress LibCrypto LibFileSystem LibMain)
 
         if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
             include(CheckCSourceCompiles)
@@ -645,13 +646,14 @@ if (BUILD_LAGOM)
             LibMarkdown
             LibPDF
             LibSQL
-            LibTest
+            LibMedia
+        LibTest
             LibTextCodec
             LibTTF
             LibTimeZone
             LibUnicode
-            LibVideo
-            LibXML
+            LibURL
+                LibXML
         )
         if (ENABLE_LAGOM_LIBWEB)
             list(APPEND TEST_DIRECTORIES LibWeb)

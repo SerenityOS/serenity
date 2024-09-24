@@ -25,6 +25,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(alt)                        \
     __ENUMERATE_HTML_ATTRIBUTE(archive)                    \
     __ENUMERATE_HTML_ATTRIBUTE(async)                      \
+    __ENUMERATE_HTML_ATTRIBUTE(as)                         \
     __ENUMERATE_HTML_ATTRIBUTE(autocomplete)               \
     __ENUMERATE_HTML_ATTRIBUTE(autofocus)                  \
     __ENUMERATE_HTML_ATTRIBUTE(autoplay)                   \
@@ -93,6 +94,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(is)                         \
     __ENUMERATE_HTML_ATTRIBUTE(ismap)                      \
     __ENUMERATE_HTML_ATTRIBUTE(itemscope)                  \
+    __ENUMERATE_HTML_ATTRIBUTE(kind)                       \
     __ENUMERATE_HTML_ATTRIBUTE(label)                      \
     __ENUMERATE_HTML_ATTRIBUTE(lang)                       \
     __ENUMERATE_HTML_ATTRIBUTE(language)                   \
@@ -221,6 +223,8 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(rowspan)                    \
     __ENUMERATE_HTML_ATTRIBUTE(rules)                      \
     __ENUMERATE_HTML_ATTRIBUTE(scheme)                     \
+    __ENUMERATE_HTML_ATTRIBUTE(scrollamount)               \
+    __ENUMERATE_HTML_ATTRIBUTE(scrolldelay)                \
     __ENUMERATE_HTML_ATTRIBUTE(scrolling)                  \
     __ENUMERATE_HTML_ATTRIBUTE(selected)                   \
     __ENUMERATE_HTML_ATTRIBUTE(shadowrootclonable)         \
@@ -245,6 +249,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(target)                     \
     __ENUMERATE_HTML_ATTRIBUTE(text)                       \
     __ENUMERATE_HTML_ATTRIBUTE(title)                      \
+    __ENUMERATE_HTML_ATTRIBUTE(truespeed)                  \
     __ENUMERATE_HTML_ATTRIBUTE(type)                       \
     __ENUMERATE_HTML_ATTRIBUTE(usemap)                     \
     __ENUMERATE_HTML_ATTRIBUTE(valign)                     \

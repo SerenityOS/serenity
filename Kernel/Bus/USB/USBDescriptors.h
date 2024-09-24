@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/StdLibExtraDetails.h>
+#include <AK/Traits.h>
 #include <AK/Types.h>
 
 namespace Kernel::USB {
@@ -39,7 +41,7 @@ struct [[gnu::packed]] USBDeviceDescriptor {
     u8 serial_number_descriptor_index;
     u8 num_configurations;
 };
-static_assert(sizeof(USBDeviceDescriptor) == 18);
+static_assert(AssertSize<USBDeviceDescriptor, 18>());
 
 //
 //  Configuration Descriptor
@@ -57,6 +59,7 @@ struct [[gnu::packed]] USBConfigurationDescriptor {
     u8 attributes_bitmap;
     u8 max_power_in_ma;
 };
+static_assert(AssertSize<USBConfigurationDescriptor, 9>());
 
 //
 //  Interface Descriptor
@@ -77,6 +80,7 @@ struct [[gnu::packed]] USBInterfaceDescriptor {
     u8 interface_protocol;
     u8 interface_string_descriptor_index;
 };
+static_assert(AssertSize<USBInterfaceDescriptor, 9>());
 
 //
 //  Endpoint Descriptor
@@ -94,6 +98,26 @@ struct [[gnu::packed]] USBEndpointDescriptor {
     u16 max_packet_size;
     u8 poll_interval_in_frames;
 };
+static_assert(AssertSize<USBEndpointDescriptor, 7>());
+
+struct [[gnu::packed]] USBSuperSpeedEndpointCompanionDescriptor {
+    USBDescriptorCommon descriptor_header;
+    u8 max_burst;
+    union {
+        u8 raw;
+        struct {
+            u8 max_streams : 5;
+            u8 reserved0 : 3;
+        } bulk;
+        struct {
+            u8 mult : 2;
+            u8 reserved0 : 5;
+            u8 super_speed_plus_companion : 1;
+        } isoch;
+    } endpoint_attributes_bitmap;
+    u16 bytes_per_interval;
+};
+static_assert(AssertSize<USBSuperSpeedEndpointCompanionDescriptor, 6>());
 
 //
 //  USB 1.1/2.0 Hub Descriptor
@@ -102,11 +126,22 @@ struct [[gnu::packed]] USBEndpointDescriptor {
 struct [[gnu::packed]] USBHubDescriptor {
     USBDescriptorCommon descriptor_header;
     u8 number_of_downstream_ports;
-    u16 hub_characteristics;
+    union [[gnu::packed]] {
+        u16 raw;
+        struct {
+            u16 logical_power_switching_mode : 2;
+            u16 compound_device : 1;
+            u16 over_current_protection_mode : 2;
+            u16 transaction_translator_think_time : 2;
+            u16 port_indicators_supported : 1;
+            u16 reserved0 : 8;
+        } usb2;
+    } hub_characteristics;
     u8 power_on_to_power_good_time;
     u8 hub_controller_current;
     // NOTE: This does not contain DeviceRemovable or PortPwrCtrlMask because a struct cannot have two VLAs in a row.
 };
+static_assert(AssertSize<USBHubDescriptor, 7>());
 
 //
 //  USB Human Interface Device (HID) Descriptor
@@ -120,6 +155,7 @@ struct [[gnu::packed]] USBHIDDescriptor {
     u8 following_descriptor_type;
     u16 hid_report_descriptor_size;
 };
+static_assert(AssertSize<USBHIDDescriptor, 9>());
 
 static constexpr u8 DESCRIPTOR_TYPE_DEVICE = 0x01;
 static constexpr u8 DESCRIPTOR_TYPE_CONFIGURATION = 0x02;
@@ -128,5 +164,36 @@ static constexpr u8 DESCRIPTOR_TYPE_INTERFACE = 0x04;
 static constexpr u8 DESCRIPTOR_TYPE_ENDPOINT = 0x05;
 static constexpr u8 DESCRIPTOR_TYPE_DEVICE_QUALIFIER = 0x06;
 static constexpr u8 DESCRIPTOR_TYPE_HUB = 0x29;
+static constexpr u8 DESCRIPTOR_TYPE_USB_SUPERSPEED_ENDPOINT_COMPANION = 0x30;
 
 }
+
+template<>
+class AK::Traits<Kernel::USB::USBDescriptorCommon> : public DefaultTraits<Kernel::USB::USBDescriptorCommon> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+class AK::Traits<Kernel::USB::USBDeviceDescriptor> : public DefaultTraits<Kernel::USB::USBDeviceDescriptor> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+class AK::Traits<Kernel::USB::USBConfigurationDescriptor> : public DefaultTraits<Kernel::USB::USBConfigurationDescriptor> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+class AK::Traits<Kernel::USB::USBInterfaceDescriptor> : public DefaultTraits<Kernel::USB::USBInterfaceDescriptor> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
+template<>
+class AK::Traits<Kernel::USB::USBEndpointDescriptor> : public DefaultTraits<Kernel::USB::USBEndpointDescriptor> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
+};

@@ -24,6 +24,7 @@
 #include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
 #include <LibWeb/Fetch/Infrastructure/FetchController.h>
 #include <LibWeb/Fetch/Infrastructure/FetchParams.h>
+#include <LibWeb/Fetch/Infrastructure/FetchRecord.h>
 #include <LibWeb/Fetch/Infrastructure/FetchTimingInfo.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Headers.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Methods.h>
@@ -206,8 +207,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
 
     // 16. If request is a subresource request, then:
     if (request.is_subresource_request()) {
-        // FIXME: 1. Let record be a new fetch record whose request is request and controller is fetchParams’s controller.
-        // FIXME: 2. Append record to request’s client’s fetch group list of fetch records.
+        // 1. Let record be a new fetch record whose request is request and controller is fetchParams’s controller.
+        auto record = Infrastructure::FetchRecord::create(vm, request, fetch_params->controller());
+
+        // 2. Append record to request’s client’s fetch group list of fetch records.
+        request.client()->fetch_group().append(record);
     }
 
     // 17. Run main fetch given fetchParams.
@@ -798,7 +802,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         // 8. If request’s header list does not contain `Range`:
         if (!request->header_list()->contains("Range"sv.bytes())) {
             // 1. Let bodyWithType be the result of safely extracting blob.
-            auto body_with_type = TRY(safely_extract_body(realm, blob->bytes()));
+            auto body_with_type = TRY(safely_extract_body(realm, blob->raw_bytes()));
 
             // 2. Set response’s status message to `OK`.
             response->set_status_message(MUST(ByteBuffer::copy("OK"sv.bytes())));
@@ -869,19 +873,19 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         return PendingResponse::create(vm, request, response);
     }
     // -> "file"
-    else if (request->current_url().scheme() == "file"sv) {
+    // AD-HOC: "resource"
+    else if (request->current_url().scheme() == "file"sv || request->current_url().scheme() == "resource"sv) {
         // For now, unfortunate as it is, file: URLs are left as an exercise for the reader.
         // When in doubt, return a network error.
-        return TRY(nonstandard_resource_loader_file_or_http_network_fetch(realm, fetch_params));
+        if (request->origin().has<HTML::Origin>() && (request->origin().get<HTML::Origin>().is_opaque() || request->origin().get<HTML::Origin>().scheme() == "file"sv || request->origin().get<HTML::Origin>().scheme() == "resource"sv))
+            return TRY(nonstandard_resource_loader_file_or_http_network_fetch(realm, fetch_params));
+        else
+            return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request with 'file:' or 'resource:' URL blocked"sv));
     }
     // -> HTTP(S) scheme
     else if (Infrastructure::is_http_or_https_scheme(request->current_url().scheme())) {
         // Return the result of running HTTP fetch given fetchParams.
         return http_fetch(realm, fetch_params);
-    }
-    // AD-HOC: "resource"
-    else if (request->current_url().scheme() == "resource"sv) {
-        return TRY(nonstandard_resource_loader_file_or_http_network_fetch(realm, fetch_params));
     }
 
     // 4. Return a network error.
@@ -1432,9 +1436,39 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             http_request->header_list()->append(move(header));
         }
 
-        // FIXME: 10. If contentLength is non-null and httpRequest’s keepalive is true, then:
+        // 10. If contentLength is non-null and httpRequest’s keepalive is true, then:
         if (content_length.has_value() && http_request->keepalive()) {
-            // FIXME: 1-5., requires 'fetch records' and 'fetch group' concepts.
+            // 1. Let inflightKeepaliveBytes be 0.
+            u64 inflight_keep_alive_bytes = 0;
+
+            // 2. Let group be httpRequest’s client’s fetch group.
+            auto& group = http_request->client()->fetch_group();
+
+            // 3. Let inflightRecords be the set of fetch records in group whose request’s keepalive is true and done flag is unset.
+            Vector<JS::NonnullGCPtr<Infrastructure::FetchRecord>> in_flight_records;
+            for (auto const& fetch_record : group) {
+                if (fetch_record->request()->keepalive() && !fetch_record->request()->done())
+                    in_flight_records.append(fetch_record);
+            }
+
+            // 4. For each fetchRecord of inflightRecords:
+            for (auto const& fetch_record : in_flight_records) {
+                // 1. Let inflightRequest be fetchRecord’s request.
+                auto const& in_flight_request = fetch_record->request();
+
+                // 2. Increment inflightKeepaliveBytes by inflightRequest’s body’s length.
+                inflight_keep_alive_bytes += in_flight_request->body().visit(
+                    [](Empty) -> u64 { return 0; },
+                    [](ByteBuffer const& buffer) -> u64 { return buffer.size(); },
+                    [](JS::NonnullGCPtr<Infrastructure::Body> body) -> u64 {
+                        return body->length().has_value() ? body->length().value() : 0;
+                    });
+            }
+
+            // 5. If the sum of contentLength and inflightKeepaliveBytes is greater than 64 kibibytes, then return a network error.
+            if ((content_length.value() + inflight_keep_alive_bytes) > 65536)
+                return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Keepalive request exceeded maximum allowed size of 64 KiB"sv));
+
             // NOTE: The above limit ensures that requests that are allowed to outlive the environment settings object
             //       and contain a body, have a bounded size and are not allowed to stay alive indefinitely.
         }
@@ -1918,7 +1952,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
                 return {};
             },
             [&](JS::Handle<FileAPI::Blob> const& blob_handle) -> WebIDL::ExceptionOr<void> {
-                load_request.set_body(TRY_OR_THROW_OOM(vm, ByteBuffer::copy(blob_handle->bytes())));
+                load_request.set_body(TRY_OR_THROW_OOM(vm, ByteBuffer::copy(blob_handle->raw_bytes())));
                 return {};
             },
             [](Empty) -> WebIDL::ExceptionOr<void> {
@@ -2065,7 +2099,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
             auto response = Infrastructure::Response::create(vm);
             // FIXME: This is ugly, ResourceLoader should tell us.
             if (status_code.value_or(0) == 0) {
-                response = Infrastructure::Response::network_error(vm, "HTTP request failed"_string);
+                response = Infrastructure::Response::network_error(vm, TRY_OR_IGNORE(String::from_byte_string(error)));
             } else {
                 response->set_type(Infrastructure::Response::Type::Error);
                 response->set_status(status_code.value_or(400));

@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2024, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Time.h>
 #include <LibCore/EventLoopImplementation.h>
 

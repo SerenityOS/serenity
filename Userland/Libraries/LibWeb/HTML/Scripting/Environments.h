@@ -9,6 +9,7 @@
 
 #include <LibJS/Forward.h>
 #include <LibURL/URL.h>
+#include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Scripting/ModuleMap.h>
@@ -90,6 +91,9 @@ public:
     JS::Object& global_object();
     EventLoop& responsible_event_loop();
 
+    // https://fetch.spec.whatwg.org/#concept-fetch-group
+    Vector<JS::NonnullGCPtr<Fetch::Infrastructure::FetchRecord>>& fetch_group() { return m_fetch_group; }
+
     RunScriptDecision can_run_script();
     void prepare_to_run_script();
     void clean_up_after_running_script();
@@ -135,6 +139,10 @@ private:
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#about-to-be-notified-rejected-promises-list
     Vector<JS::Handle<JS::Promise>> m_about_to_be_notified_rejected_promises_list;
+
+    // https://fetch.spec.whatwg.org/#concept-fetch-record
+    // A fetch group holds an ordered list of fetch records
+    Vector<JS::NonnullGCPtr<Fetch::Infrastructure::FetchRecord>> m_fetch_group;
 };
 
 EnvironmentSettingsObject& incumbent_settings_object();

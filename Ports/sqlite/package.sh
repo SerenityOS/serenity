@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='sqlite'
-version='3430000'
+version='3460000'
 files=(
-    "https://www.sqlite.org/2023/sqlite-autoconf-${version}.tar.gz#49008dbf3afc04d4edc8ecfc34e4ead196973034293c997adad2f63f01762ae1"
+    "https://www.sqlite.org/2024/sqlite-autoconf-${version}.tar.gz#6f8e6a7b335273748816f9b3b62bbdc372a889de8782d7f048c653a447417a7d"
 )
 useconfigure='true'
 use_fresh_config_sub='true'

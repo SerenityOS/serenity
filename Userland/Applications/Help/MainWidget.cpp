@@ -252,7 +252,6 @@ void MainWidget::open_url(URL::URL const& url)
 
     if (url.scheme() == "file") {
         m_web_view->load(url);
-        m_web_view->scroll_to_top();
 
         auto browse_view_index = m_manual_model->index_from_path(url.serialize_path());
         if (browse_view_index.has_value()) {

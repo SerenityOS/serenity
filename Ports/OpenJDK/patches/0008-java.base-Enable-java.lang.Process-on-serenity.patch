@@ -25,7 +25,7 @@ index 700ddefda49e891ac1a2cfd8602fb8a9409ad1d4..78c884dae8271aea4431976823a0f185
        NAME := jspawnhelper, \
        SRC := $(TOPDIR)/src/$(MODULE)/unix/native/jspawnhelper, \
 diff --git a/make/modules/java.base/lib/CoreLibraries.gmk b/make/modules/java.base/lib/CoreLibraries.gmk
-index e29f9d5ad78d6da367579dfda7b8e9c0d09be2c9..769c2fd8b5a7e0000c85d6d44ec30f6451e90cd5 100644
+index e29f9d5ad78d6da367579dfda7b8e9c0d09be2c9..6054e584b13928cecf4ef0547bf32f5a9d830050 100644
 --- a/make/modules/java.base/lib/CoreLibraries.gmk
 +++ b/make/modules/java.base/lib/CoreLibraries.gmk
 @@ -90,6 +90,8 @@ $(eval $(call SetupJdkLibrary, BUILD_LIBJAVA, \
@@ -33,7 +33,7 @@ index e29f9d5ad78d6da367579dfda7b8e9c0d09be2c9..769c2fd8b5a7e0000c85d6d44ec30f64
      CFLAGS := $(CFLAGS_JDKLIB) \
          $(LIBJAVA_CFLAGS), \
 +    CXXFLAGS := $(CXXFLAGS_JDKLIB) \
-+        $(LIBJAVA_CXXFLAGS), \
++        $(LIBJAVA_CXXFLAGS) -fno-exceptions, \
      jdk_util.c_CFLAGS := $(VERSION_CFLAGS), \
      EXTRA_HEADER_DIRS := libfdlibm, \
      WARNINGS_AS_ERRORS_xlc := false, \
@@ -47,7 +47,7 @@ index e29f9d5ad78d6da367579dfda7b8e9c0d09be2c9..769c2fd8b5a7e0000c85d6d44ec30f64
          -framework SystemConfiguration, \
 diff --git a/src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp b/src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..9f4410816af68b2a1912255807fbbe4b982bd72c
+index 0000000000000000000000000000000000000000..a3d5cdc94f59d38f7dd216f9661592cde746bb02
 --- /dev/null
 +++ b/src/java.base/serenity/native/libjava/ProcessHandleImpl_serenity.cpp
 @@ -0,0 +1,163 @@

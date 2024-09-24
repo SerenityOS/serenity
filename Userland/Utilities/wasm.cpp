@@ -695,7 +695,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                             result.append(Wasm::Value { result_type, 0ull });
                         return Wasm::Result { move(result) };
                     },
-                    type));
+                    type,
+                    entry.name));
                 exports.set(entry, *address);
             }
 
@@ -803,6 +804,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 launch_repl();
 
             if (result.is_trap()) {
+                if (result.trap().reason.starts_with("exit:"sv))
+                    return -result.trap().reason.substring_view(5).to_number<i32>().value_or(-1);
                 warnln("Execution trapped: {}", result.trap().reason);
             } else {
                 if (!result.values().is_empty())

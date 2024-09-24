@@ -17,6 +17,13 @@ GridFormattingContext::GridTrack GridFormattingContext::GridTrack::create_from_d
     // NOTE: repeat() is expected to be expanded beforehand.
     VERIFY(!definition.is_repeat());
 
+    if (definition.is_fit_content()) {
+        return GridTrack {
+            .min_track_sizing_function = CSS::GridSize::make_auto(),
+            .max_track_sizing_function = definition.fit_content().max_grid_size(),
+        };
+    }
+
     if (definition.is_minmax()) {
         return GridTrack {
             .min_track_sizing_function = definition.minmax().min_grid_size(),
@@ -24,9 +31,19 @@ GridFormattingContext::GridTrack GridFormattingContext::GridTrack::create_from_d
         };
     }
 
+    // https://drafts.csswg.org/css-grid-2/#algo-terms
+    // min track sizing function:
+    // If the track was sized with a minmax() function, this is the first argument to that function.
+    // If the track was sized with a <flex> value or fit-content() function, auto. Otherwise, the track’s sizing function.
+    auto min_track_sizing_function = definition.grid_size();
+    if (min_track_sizing_function.is_flexible_length()) {
+        min_track_sizing_function = CSS::GridSize::make_auto();
+    }
+    auto max_track_sizing_function = definition.grid_size();
+
     return GridTrack {
-        .min_track_sizing_function = definition.grid_size(),
-        .max_track_sizing_function = definition.grid_size(),
+        .min_track_sizing_function = min_track_sizing_function,
+        .max_track_sizing_function = max_track_sizing_function,
     };
 }
 
@@ -174,8 +191,9 @@ GridFormattingContext::PlacementPosition GridFormattingContext::resolve_grid_pos
     }
 
     if (placement_end.has_identifier()) {
-        if (auto maybe_grid_area = m_grid_areas.get(placement_end.identifier()); maybe_grid_area.has_value()) {
-            result.end = dimension == GridDimension::Row ? maybe_grid_area->row_end : maybe_grid_area->column_end;
+        auto area_end_line_name = MUST(String::formatted("{}-end", placement_end.identifier()));
+        if (auto area_end_line_index = get_line_index_by_line_name(dimension, area_end_line_name); area_end_line_index.has_value()) {
+            result.end = area_end_line_index.value();
         } else if (auto line_name_index = get_line_index_by_line_name(dimension, placement_end.identifier()); line_name_index.has_value()) {
             result.end = line_name_index.value();
         } else {
@@ -185,8 +203,9 @@ GridFormattingContext::PlacementPosition GridFormattingContext::resolve_grid_pos
     }
 
     if (placement_start.has_identifier()) {
-        if (auto maybe_grid_area = m_grid_areas.get(placement_start.identifier()); maybe_grid_area.has_value()) {
-            result.start = dimension == GridDimension::Row ? maybe_grid_area->row_start : maybe_grid_area->column_start;
+        auto area_start_line_name = MUST(String::formatted("{}-start", placement_start.identifier()));
+        if (auto area_start_line_index = get_line_index_by_line_name(dimension, area_start_line_name); area_start_line_index.has_value()) {
+            result.start = area_start_line_index.value();
         } else if (auto line_name_index = get_line_index_by_line_name(dimension, placement_start.identifier()); line_name_index.has_value()) {
             result.start = line_name_index.value();
         } else {
@@ -410,6 +429,7 @@ void GridFormattingContext::initialize_grid_tracks_from_definition(GridDimension
         for (auto _ = 0; _ < repeat_count; _++) {
             switch (track_definition.type()) {
             case CSS::ExplicitGridTrack::Type::Default:
+            case CSS::ExplicitGridTrack::Type::FitContent:
             case CSS::ExplicitGridTrack::Type::MinMax:
                 tracks.append(GridTrack::create_from_definition(track_definition));
                 break;
@@ -766,7 +786,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         });
 
         auto item_spans_tracks_with_flexible_sizing_function = any_of(spanned_tracks, [](auto& track) {
-            return track.min_track_sizing_function.is_flexible_length() || track.max_track_sizing_function.is_flexible_length();
+            return track.max_track_sizing_function.is_flexible_length();
         });
         if (item_spans_tracks_with_flexible_sizing_function)
             continue;
@@ -840,13 +860,18 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
 
         // 6. For max-content maximums: Lastly continue to increase the growth limit of tracks with a max track
         //    sizing function of max-content by distributing extra space as needed to account for these items' max-
-        //    content contributions.
+        //    content contributions. However, limit the growth of any fit-content() tracks by their fit-content() argument.
         auto item_max_content_contribution = calculate_max_content_contribution(item, dimension);
         distribute_extra_space_across_spanned_tracks_growth_limit(item_max_content_contribution, spanned_tracks, [&](GridTrack const& track) {
-            return track.max_track_sizing_function.is_max_content() || track.max_track_sizing_function.is_auto(available_size);
+            return track.max_track_sizing_function.is_max_content() || track.max_track_sizing_function.is_auto(available_size) || track.max_track_sizing_function.is_fit_content();
         });
         for (auto& track : spanned_tracks) {
-            if (!track.growth_limit.has_value()) {
+            if (track.max_track_sizing_function.is_fit_content()) {
+                track.growth_limit = css_clamp(
+                    track.planned_increase,
+                    track.base_size,
+                    track.max_track_sizing_function.css_size().to_px(grid_container(), available_size.to_px_or_zero()));
+            } else if (!track.growth_limit.has_value()) {
                 // If the affected size is an infinite growth limit, set it to the track’s base size plus the planned increase.
                 track.growth_limit = track.base_size + track.planned_increase;
             } else {
@@ -867,7 +892,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         });
 
         auto item_spans_tracks_with_flexible_sizing_function = any_of(spanned_tracks, [](auto& track) {
-            return track.min_track_sizing_function.is_flexible_length() || track.max_track_sizing_function.is_flexible_length();
+            return track.max_track_sizing_function.is_flexible_length();
         });
         if (!item_spans_tracks_with_flexible_sizing_function)
             continue;
@@ -877,7 +902,7 @@ void GridFormattingContext::increase_sizes_to_accommodate_spanning_items_crossin
         auto item_minimum_contribution = calculate_minimum_contribution(item, dimension);
         distribute_extra_space_across_spanned_tracks_base_size(dimension,
             item_minimum_contribution, SpaceDistributionPhase::AccommodateMinimumContribution, spanned_tracks, [&](GridTrack const& track) {
-                return track.min_track_sizing_function.is_flexible_length();
+                return track.max_track_sizing_function.is_flexible_length();
             });
 
         for (auto& track : spanned_tracks) {
@@ -1149,6 +1174,8 @@ void GridFormattingContext::build_grid_areas()
     // filled-in rectangle, the declaration is invalid.
     auto const& rows = grid_container().computed_values().grid_template_areas();
 
+    HashMap<String, GridArea> grid_areas;
+
     auto find_area_rectangle = [&](size_t x_start, size_t y_start, String const& name) {
         bool invalid = false;
         size_t x_end = x_start;
@@ -1166,13 +1193,13 @@ void GridFormattingContext::build_grid_areas()
                 }
             }
         }
-        m_grid_areas.set(name, { name, y_start, y_end, x_start, x_end, invalid });
+        grid_areas.set(name, { name, y_start, y_end, x_start, x_end, invalid });
     };
 
     for (size_t y = 0; y < rows.size(); y++) {
         for (size_t x = 0; x < rows[y].size(); x++) {
             auto name = rows[y][x];
-            if (auto grid_area = m_grid_areas.get(name); grid_area.has_value())
+            if (auto grid_area = grid_areas.get(name); grid_area.has_value())
                 continue;
             find_area_rectangle(x, y, name);
         }
@@ -1180,7 +1207,7 @@ void GridFormattingContext::build_grid_areas()
 
     size_t max_column_line_index_of_area = 0;
     size_t max_row_line_index_of_area = 0;
-    for (auto const& grid_area : m_grid_areas) {
+    for (auto const& grid_area : grid_areas) {
         max_column_line_index_of_area = max(max_column_line_index_of_area, grid_area.value.column_end);
         max_row_line_index_of_area = max(max_row_line_index_of_area, grid_area.value.row_end);
     }
@@ -1196,7 +1223,7 @@ void GridFormattingContext::build_grid_areas()
     // template. For each named grid area foo, four implicitly-assigned line names are created: two named foo-start,
     // naming the row-start and column-start lines of the named grid area, and two named foo-end, naming the row-end
     // and column-end lines of the named grid area.
-    for (auto const& it : m_grid_areas) {
+    for (auto const& it : grid_areas) {
         auto const& grid_area = it.value;
         m_column_lines[grid_area.column_start].names.append(MUST(String::formatted("{}-start", grid_area.name)));
         m_column_lines[grid_area.column_end].names.append(MUST(String::formatted("{}-end", grid_area.name)));
@@ -2025,7 +2052,7 @@ void GridFormattingContext::init_grid_lines(GridDimension dimension)
                 line_names.extend(item.get<CSS::GridLineNames>().names);
             } else if (item.has<CSS::ExplicitGridTrack>()) {
                 auto const& explicit_track = item.get<CSS::ExplicitGridTrack>();
-                if (explicit_track.is_default() || explicit_track.is_minmax()) {
+                if (explicit_track.is_default() || explicit_track.is_minmax() || explicit_track.is_fit_content()) {
                     lines.append({ .names = line_names });
                     line_names.clear();
                 } else if (explicit_track.is_repeat()) {
@@ -2286,14 +2313,23 @@ CSSPixels GridFormattingContext::automatic_minimum_size(GridItem const& item, Gr
     // in a given axis is the content-based minimum size if all of the following are true:
     // - it is not a scroll container
     // - it spans at least one track in that axis whose min track sizing function is auto
-    // FIXME: - if it spans more than one track in that axis, none of those tracks are flexible
+    // - if it spans more than one track in that axis, none of those tracks are flexible
     auto const& tracks = dimension == GridDimension::Column ? m_grid_columns : m_grid_rows;
     auto item_track_index = item.raw_position(dimension);
+    auto item_track_span = item.span(dimension);
 
-    // FIXME: Check all tracks spanned by an item
     AvailableSize const& available_size = dimension == GridDimension::Column ? m_available_space->width : m_available_space->height;
-    auto item_spans_auto_tracks = tracks[item_track_index].min_track_sizing_function.is_auto(available_size);
-    if (item_spans_auto_tracks && !item.box->is_scroll_container()) {
+
+    bool spans_auto_tracks = false;
+    bool spans_flexible_tracks = false;
+    for (size_t index = 0; index < item_track_span; index++) {
+        auto const& track = tracks[item_track_index + index];
+        if (track.max_track_sizing_function.is_flexible_length())
+            spans_flexible_tracks = true;
+        if (track.min_track_sizing_function.is_auto(available_size))
+            spans_auto_tracks = true;
+    }
+    if (spans_auto_tracks && !item.box->is_scroll_container() && (item_track_span == 1 || !spans_flexible_tracks)) {
         return content_based_minimum_size(item, dimension);
     }
 

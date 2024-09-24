@@ -25,14 +25,9 @@ namespace WebView {
 
 OutOfProcessWebView::OutOfProcessWebView()
 {
-    set_should_hide_unnecessary_scrollbars(true);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 
     initialize_client(CreateNewClient::Yes);
-
-    on_did_layout = [this](auto content_size) {
-        set_content_size(content_size);
-    };
 
     on_ready_to_paint = [this]() {
         update();
@@ -45,16 +40,6 @@ OutOfProcessWebView::OutOfProcessWebView()
             client().async_handle_file_return(m_client_state.page_index, file.error().code(), {}, request_id);
         else
             client().async_handle_file_return(m_client_state.page_index, 0, IPC::File::adopt_file(file.release_value().release_stream()), request_id);
-    };
-
-    on_scroll_by_delta = [this](auto x_delta, auto y_delta) {
-        horizontal_scrollbar().increase_slider_by(x_delta);
-        vertical_scrollbar().increase_slider_by(y_delta);
-    };
-
-    on_scroll_to_point = [this](auto position) {
-        horizontal_scrollbar().set_value(position.x());
-        vertical_scrollbar().set_value(position.y());
     };
 
     on_cursor_change = [this](auto cursor) {
@@ -111,8 +96,8 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
 {
     Super::paint_event(event);
 
-    // If the available size is empty, we don't have a front or back bitmap to draw.
-    if (available_size().is_empty())
+    // If the content size is empty, we don't have a front or back bitmap to draw.
+    if (content_size().is_empty())
         return;
 
     GUI::Painter painter(*this);
@@ -141,23 +126,23 @@ void OutOfProcessWebView::paint_event(GUI::PaintEvent& event)
 void OutOfProcessWebView::resize_event(GUI::ResizeEvent& event)
 {
     Super::resize_event(event);
-    client().async_set_viewport_rect(m_client_state.page_index, Web::DevicePixelRect({ horizontal_scrollbar().value(), vertical_scrollbar().value() }, available_size()));
+    client().async_set_viewport_size(m_client_state.page_index, content_size().to_type<Web::DevicePixels>());
     handle_resize();
 }
 
-Web::DevicePixelRect OutOfProcessWebView::viewport_rect() const
+Web::DevicePixelSize OutOfProcessWebView::viewport_size() const
 {
-    return visible_content_rect().to_type<Web::DevicePixels>();
+    return content_size().to_type<Web::DevicePixels>();
 }
 
 Gfx::IntPoint OutOfProcessWebView::to_content_position(Gfx::IntPoint widget_position) const
 {
-    return GUI::AbstractScrollableWidget::to_content_position(widget_position);
+    return widget_position;
 }
 
 Gfx::IntPoint OutOfProcessWebView::to_widget_position(Gfx::IntPoint content_position) const
 {
-    return GUI::AbstractScrollableWidget::to_widget_position(content_position);
+    return content_position;
 }
 
 void OutOfProcessWebView::update_zoom()
@@ -223,11 +208,6 @@ void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent&
         screen_rects.append(screen_rect.to_type<Web::DevicePixels>());
     }
     client().async_update_screen_rects(m_client_state.page_index, screen_rects, event.main_screen_index());
-}
-
-void OutOfProcessWebView::did_scroll()
-{
-    client().async_set_viewport_rect(m_client_state.page_index, visible_content_rect().to_type<Web::DevicePixels>());
 }
 
 ByteString OutOfProcessWebView::dump_layout_tree()

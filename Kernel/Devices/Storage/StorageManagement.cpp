@@ -12,6 +12,7 @@
 #if ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/SDHostController.h>
 #endif
+#include <Kernel/API/DeviceFileTypes.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
@@ -25,6 +26,7 @@
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Devices/Storage/VirtIO/VirtIOBlockController.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
+#include <Kernel/FileSystem/MountFile.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Library/Panic.h>
 #include <LibPartition/EBRPartitionTable.h>
@@ -41,6 +43,8 @@ static Atomic<u32> s_controller_id;
 static Atomic<u32> s_relative_ahci_controller_id;
 static Atomic<u32> s_relative_nvme_controller_id;
 static Atomic<u32> s_relative_sd_controller_id;
+
+static constexpr int root_mount_flags = 0;
 
 static constexpr StringView partition_uuid_prefix = "PARTUUID:"sv;
 
@@ -342,7 +346,7 @@ UNMAP_AFTER_INIT void StorageManagement::determine_block_boot_device()
     // Note: We simply fetch the corresponding BlockDevice with the major and minor parameters.
     // We don't try to accept and resolve a partition number as it will make this code much more
     // complicated. This rule is also explained in the boot_device_addressing(7) manual page.
-    auto device = DeviceManagement::the().get_device(parameters_view[0], parameters_view[1]);
+    auto device = DeviceManagement::the().get_device(DeviceNodeType::Block, parameters_view[0], parameters_view[1]);
     if (device && device->is_block_device())
         m_boot_block_device = *static_ptr_cast<BlockDevice>(device);
 }
@@ -430,10 +434,6 @@ LockRefPtr<BlockDevice> StorageManagement::boot_block_device() const
     return m_boot_block_device.strong_ref();
 }
 
-MajorNumber StorageManagement::storage_type_major_number()
-{
-    return 3;
-}
 MinorNumber StorageManagement::generate_storage_minor_number()
 {
     return s_storage_device_minor_number.fetch_add(1);
@@ -449,25 +449,35 @@ u32 StorageManagement::generate_controller_id()
     return s_controller_id.fetch_add(1);
 }
 
-NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
+ErrorOr<NonnullRefPtr<VFSRootContext>> StorageManagement::create_first_vfs_root_context() const
 {
+    auto vfs_root_context = TRY(VFSRootContext::create_with_empty_ramfs());
+
+    auto const* fs_type_initializer = TRY(VirtualFileSystem::find_filesystem_type_initializer("ext2"sv));
+    VERIFY(fs_type_initializer);
+    auto mount_file = TRY(MountFile::create(*fs_type_initializer, root_mount_flags));
+
     auto boot_device_description = boot_block_device();
     if (!boot_device_description) {
         dump_storage_devices_and_partitions();
         PANIC("StorageManagement: Couldn't find a suitable device to boot from");
     }
-    auto description_or_error = OpenFileDescription::try_create(boot_device_description.release_nonnull());
-    VERIFY(!description_or_error.is_error());
+    auto description = TRY(OpenFileDescription::try_create(boot_device_description.release_nonnull()));
 
-    Array<u8, PAGE_SIZE> mount_specific_data;
-    mount_specific_data.fill(0);
-    auto file_system = Ext2FS::try_create(description_or_error.release_value(), mount_specific_data.span()).release_value();
+    auto fs = TRY(FileBackedFileSystem::create_and_append_filesystems_list_from_mount_file_and_description(mount_file, description));
 
-    if (auto result = file_system->initialize(); result.is_error()) {
-        dump_storage_devices_and_partitions();
-        PANIC("StorageManagement: Couldn't open root filesystem: {}", result.error());
-    }
-    return file_system;
+    // NOTE: Fake a mounted count of 1 so the called VirtualFileSystem function in the
+    // next pivot_root logic block thinks everything is OK.
+    fs->mounted_count().with([](auto& mounted_count) {
+        mounted_count++;
+    });
+
+    TRY(VirtualFileSystem::pivot_root_by_copying_mounted_fs_instance(*vfs_root_context, *fs, root_mount_flags));
+    // NOTE: Return the mounted count to normal now we have it really mounted.
+    fs->mounted_count().with([](auto& mounted_count) {
+        mounted_count--;
+    });
+    return vfs_root_context;
 }
 
 UNMAP_AFTER_INIT void StorageManagement::initialize(bool poll)
@@ -494,5 +504,4 @@ StorageManagement& StorageManagement::the()
 {
     return *s_the;
 }
-
 }

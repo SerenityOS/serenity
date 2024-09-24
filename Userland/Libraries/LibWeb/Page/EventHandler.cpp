@@ -8,6 +8,7 @@
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/CloseWatcherManager.h>
 #include <LibWeb/HTML/Focus.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
@@ -46,6 +47,13 @@ static JS::GCPtr<DOM::Node> dom_node_for_event_dispatch(Painting::Paintable& pai
 
 static bool parent_element_for_event_dispatch(Painting::Paintable& paintable, JS::GCPtr<DOM::Node>& node, Layout::Node*& layout_node)
 {
+    auto* current_ancestor_node = node.ptr();
+    do {
+        if (is<HTML::FormAssociatedElement>(current_ancestor_node) && !dynamic_cast<HTML::FormAssociatedElement*>(current_ancestor_node)->enabled()) {
+            return false;
+        }
+    } while ((current_ancestor_node = current_ancestor_node->parent()));
+
     layout_node = &paintable.layout_node();
     while (layout_node && node && !node->is_element() && layout_node->parent()) {
         layout_node = layout_node->parent();
@@ -151,12 +159,15 @@ Painting::PaintableBox const* EventHandler::paint_root() const
     return m_navigable->active_document()->paintable_box();
 }
 
-bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint screen_position, u32 button, u32 buttons, u32 modifiers, int wheel_delta_x, int wheel_delta_y)
+bool EventHandler::handle_mousewheel(CSSPixelPoint viewport_position, CSSPixelPoint screen_position, u32 button, u32 buttons, u32 modifiers, int wheel_delta_x, int wheel_delta_y)
 {
     if (!m_navigable->active_document())
         return false;
     if (!m_navigable->active_document()->is_fully_active())
         return false;
+
+    auto scroll_offset = m_navigable->active_document()->navigable()->viewport_scroll_offset();
+    auto position = viewport_position.translated(scroll_offset);
 
     m_navigable->active_document()->update_layout();
 
@@ -214,12 +225,15 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, CSSPixelPoint scree
     return handled_event;
 }
 
-bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
+bool EventHandler::handle_mouseup(CSSPixelPoint viewport_position, CSSPixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
 {
     if (!m_navigable->active_document())
         return false;
     if (!m_navigable->active_document()->is_fully_active())
         return false;
+
+    auto scroll_offset = m_navigable->active_document()->navigable()->viewport_scroll_offset();
+    auto position = viewport_position.translated(scroll_offset);
 
     m_navigable->active_document()->update_layout();
 
@@ -272,6 +286,8 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
             if (node.ptr() == m_mousedown_target) {
                 if (button == UIEvents::MouseButton::Primary) {
                     run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::click, screen_position, page_offset, client_offset, offset, {}, 1, button, modifiers).release_value_but_fixme_should_propagate_errors());
+                } else if (button == UIEvents::MouseButton::Middle) {
+                    run_activation_behavior = node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::auxclick, screen_position, page_offset, client_offset, offset, {}, 1, button, modifiers).release_value_but_fixme_should_propagate_errors());
                 } else if (button == UIEvents::MouseButton::Secondary) {
                     // Allow the user to bypass custom context menus by holding shift, like Firefox.
                     if ((modifiers & Mod_Shift) == 0)
@@ -292,8 +308,6 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                 //
                 //        https://html.spec.whatwg.org/multipage/document-sequences.html#the-rules-for-choosing-a-navigable
 
-                auto top_level_position = m_navigable->active_document()->navigable()->to_top_level_position(position);
-
                 if (JS::GCPtr<HTML::HTMLAnchorElement const> link = node->enclosing_link_element()) {
                     JS::NonnullGCPtr<DOM::Document> document = *m_navigable->active_document();
                     auto href = link->href();
@@ -302,13 +316,13 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                     if (button == UIEvents::MouseButton::Middle) {
                         m_navigable->page().client().page_did_middle_click_link(url, link->target().to_byte_string(), modifiers);
                     } else if (button == UIEvents::MouseButton::Secondary) {
-                        m_navigable->page().client().page_did_request_link_context_menu(top_level_position, url, link->target().to_byte_string(), modifiers);
+                        m_navigable->page().client().page_did_request_link_context_menu(viewport_position, url, link->target().to_byte_string(), modifiers);
                     }
                 } else if (button == UIEvents::MouseButton::Secondary) {
                     if (is<HTML::HTMLImageElement>(*node)) {
                         auto& image_element = verify_cast<HTML::HTMLImageElement>(*node);
                         auto image_url = image_element.document().parse_url(image_element.src());
-                        m_navigable->page().client().page_did_request_image_context_menu(top_level_position, image_url, "", modifiers, image_element.bitmap());
+                        m_navigable->page().client().page_did_request_image_context_menu(viewport_position, image_url, "", modifiers, image_element.bitmap());
                     } else if (is<HTML::HTMLMediaElement>(*node)) {
                         auto& media_element = verify_cast<HTML::HTMLMediaElement>(*node);
 
@@ -321,9 +335,9 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, CSSPixelPoint screen_p
                             .is_looping = media_element.has_attribute(HTML::AttributeNames::loop),
                         };
 
-                        m_navigable->page().did_request_media_context_menu(media_element.unique_id(), top_level_position, "", modifiers, move(menu));
+                        m_navigable->page().did_request_media_context_menu(media_element.unique_id(), viewport_position, "", modifiers, move(menu));
                     } else {
-                        m_navigable->page().client().page_did_request_context_menu(top_level_position);
+                        m_navigable->page().client().page_did_request_context_menu(viewport_position);
                     }
                 }
             }
@@ -336,12 +350,15 @@ after_node_use:
     return handled_event;
 }
 
-bool EventHandler::handle_mousedown(CSSPixelPoint position, CSSPixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
+bool EventHandler::handle_mousedown(CSSPixelPoint viewport_position, CSSPixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
 {
     if (!m_navigable->active_document())
         return false;
     if (!m_navigable->active_document()->is_fully_active())
         return false;
+
+    auto scroll_offset = m_navigable->active_document()->navigable()->viewport_scroll_offset();
+    auto position = viewport_position.translated(scroll_offset);
 
     m_navigable->active_document()->update_layout();
 
@@ -436,12 +453,15 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, CSSPixelPoint screen
     return true;
 }
 
-bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen_position, u32 buttons, u32 modifiers)
+bool EventHandler::handle_mousemove(CSSPixelPoint viewport_position, CSSPixelPoint screen_position, u32 buttons, u32 modifiers)
 {
     if (!m_navigable->active_document())
         return false;
     if (!m_navigable->active_document()->is_fully_active())
         return false;
+
+    auto scroll_offset = m_navigable->active_document()->navigable()->viewport_scroll_offset();
+    auto position = viewport_position.translated(scroll_offset);
 
     m_navigable->active_document()->update_layout();
 
@@ -528,15 +548,22 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
         }
         if (m_in_mouse_selection) {
             auto hit = paint_root()->hit_test(position, Painting::HitTestType::TextCursor);
+            auto should_set_cursor_position = true;
             if (start_index.has_value() && hit.has_value() && hit->dom_node()) {
-                m_navigable->set_cursor_position(DOM::Position::create(realm, *hit->dom_node(), *start_index));
                 if (auto selection = document.get_selection()) {
                     auto anchor_node = selection->anchor_node();
-                    if (anchor_node)
-                        (void)selection->set_base_and_extent(*anchor_node, selection->anchor_offset(), *hit->paintable->dom_node(), hit->index_in_node);
-                    else
+                    if (anchor_node) {
+                        if (&anchor_node->root() == &hit->dom_node()->root())
+                            (void)selection->set_base_and_extent(*anchor_node, selection->anchor_offset(), *hit->paintable->dom_node(), hit->index_in_node);
+                        else
+                            should_set_cursor_position = false;
+                    } else {
                         (void)selection->set_base_and_extent(*hit->paintable->dom_node(), hit->index_in_node, *hit->paintable->dom_node(), hit->index_in_node);
+                    }
                 }
+                if (should_set_cursor_position)
+                    m_navigable->set_cursor_position(DOM::Position::create(realm, *hit->dom_node(), *start_index));
+
                 document.navigable()->set_needs_display();
             }
         }
@@ -549,7 +576,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
     if (hovered_node_changed) {
         JS::GCPtr<HTML::HTMLElement const> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element_with_attribute(HTML::AttributeNames::title) : nullptr;
         if (hovered_html_element && hovered_html_element->title().has_value()) {
-            page.client().page_did_enter_tooltip_area(m_navigable->active_document()->navigable()->to_top_level_position(position), hovered_html_element->title()->to_byte_string());
+            page.client().page_did_enter_tooltip_area(viewport_position, hovered_html_element->title()->to_byte_string());
         } else {
             page.client().page_did_leave_tooltip_area();
         }
@@ -562,12 +589,15 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, CSSPixelPoint screen
     return true;
 }
 
-bool EventHandler::handle_doubleclick(CSSPixelPoint position, CSSPixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
+bool EventHandler::handle_doubleclick(CSSPixelPoint viewport_position, CSSPixelPoint screen_position, u32 button, u32 buttons, u32 modifiers)
 {
     if (!m_navigable->active_document())
         return false;
     if (!m_navigable->active_document()->is_fully_active())
         return false;
+
+    auto scroll_offset = m_navigable->active_document()->navigable()->viewport_scroll_offset();
+    auto position = viewport_position.translated(scroll_offset);
 
     m_navigable->active_document()->update_layout();
 
@@ -758,6 +788,9 @@ bool EventHandler::handle_keydown(KeyCode key, u32 modifiers, u32 code_point)
         return focus_next_element();
     }
 
+    if (key == KeyCode::Key_Escape)
+        return document->window()->close_watcher_manager()->process_close_watchers();
+
     auto& realm = document->realm();
 
     if (auto selection = document->get_selection()) {
@@ -882,6 +915,8 @@ void EventHandler::handle_paste(String const& text)
         return;
 
     if (auto cursor_position = m_navigable->cursor_position()) {
+        if (!cursor_position->node()->is_editable())
+            return;
         active_document->update_layout();
         m_edit_event_handler->handle_insert(*cursor_position, text);
         cursor_position->set_offset(cursor_position->offset() + text.code_points().length());

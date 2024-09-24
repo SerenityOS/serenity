@@ -9,6 +9,8 @@
 
 #include <LibWeb/Bindings/BaseAudioContextPrototype.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/WebAudio/AudioDestinationNode.h>
+#include <LibWeb/WebAudio/BiquadFilterNode.h>
 #include <LibWeb/WebIDL/Types.h>
 
 namespace Web::WebAudio {
@@ -31,6 +33,7 @@ public:
     static constexpr float MIN_SAMPLE_RATE { 8000 };
     static constexpr float MAX_SAMPLE_RATE { 192000 };
 
+    JS::NonnullGCPtr<AudioDestinationNode> destination() const { return m_destination; }
     float sample_rate() const { return m_sample_rate; }
     double current_time() const { return m_current_time; }
     Bindings::AudioContextState state() const { return m_control_thread_state; }
@@ -47,7 +50,9 @@ public:
 
     static WebIDL::ExceptionOr<void> verify_audio_options_inside_nominal_range(JS::Realm&, WebIDL::UnsignedLong number_of_channels, WebIDL::UnsignedLong length, float sample_rate);
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<BiquadFilterNode>> create_biquad_filter();
     WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioBuffer>> create_buffer(WebIDL::UnsignedLong number_of_channels, WebIDL::UnsignedLong length, float sample_rate);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<AudioBufferSourceNode>> create_buffer_source();
     WebIDL::ExceptionOr<JS::NonnullGCPtr<OscillatorNode>> create_oscillator();
     WebIDL::ExceptionOr<JS::NonnullGCPtr<DynamicsCompressorNode>> create_dynamics_compressor();
     JS::NonnullGCPtr<GainNode> create_gain();
@@ -55,7 +60,10 @@ public:
 protected:
     explicit BaseAudioContext(JS::Realm&, float m_sample_rate = 0);
 
+    JS::NonnullGCPtr<AudioDestinationNode> m_destination;
+
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
 
 private:
     float m_sample_rate { 0 };

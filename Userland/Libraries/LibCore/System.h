@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <spawn.h>
 #include <sys/ioctl.h>
+#include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -30,10 +31,6 @@
 #include <termios.h>
 #include <time.h>
 #include <utime.h>
-
-#ifdef AK_OS_SERENITY
-#    include <Kernel/API/Jail.h>
-#endif
 
 #if !defined(AK_OS_BSD_GENERIC)
 #    include <shadow.h>
@@ -48,9 +45,14 @@
 #    include <ucred.h>
 #endif
 
+#ifdef AK_OS_SERENITY
+#    include <Kernel/API/Unshare.h>
+#endif
+
 namespace Core::System {
 
 #ifdef AK_OS_SERENITY
+ErrorOr<void> enter_jail_mode();
 ErrorOr<void> beep(u16 tone = 440, u16 milliseconds_duration = 200);
 ErrorOr<void> pledge(StringView promises, StringView execpromises = {});
 ErrorOr<void> unveil(StringView path, StringView permissions);
@@ -58,12 +60,13 @@ ErrorOr<void> unveil_after_exec(StringView path, StringView permissions);
 ErrorOr<void> sendfd(int sockfd, int fd);
 ErrorOr<int> recvfd(int sockfd, int options);
 ErrorOr<void> ptrace_peekbuf(pid_t tid, void const* tracee_addr, Bytes destination_buf);
-ErrorOr<void> mount(int source_fd, StringView target, StringView fs_type, int flags);
-ErrorOr<void> bindmount(int source_fd, StringView target, int flags);
+ErrorOr<void> mount(Optional<i32> vfs_context_id, int source_fd, StringView target, StringView fs_type, int flags);
+ErrorOr<void> bindmount(Optional<i32> vfs_context_id, int source_fd, StringView target, int flags);
+ErrorOr<void> copy_mount(Optional<i32> original_vfs_context_id, Optional<i32> target_vfs_context_id, StringView original_mountpoint, StringView target_mountpoint, int flags);
 ErrorOr<int> fsopen(StringView fs_type, int flags);
-ErrorOr<void> fsmount(int mount_fd, int source_fd, StringView target_path);
-ErrorOr<void> remount(StringView target, int flags);
-ErrorOr<void> umount(StringView mount_point);
+ErrorOr<void> fsmount(Optional<i32> vfs_context_id, int mount_fd, int source_fd, StringView target_path);
+ErrorOr<void> remount(Optional<i32> vfs_context_id, StringView target, int flags);
+ErrorOr<void> umount(Optional<i32> vfs_context_id, StringView mount_point);
 ErrorOr<long> ptrace(int request, pid_t tid, void* address, void* data);
 ErrorOr<void> disown(pid_t pid);
 ErrorOr<void> profiling_enable(pid_t, u64 event_mask);
@@ -208,8 +211,8 @@ ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env);
 ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, SearchInPath, Optional<ReadonlySpan<StringView>> environment = {});
 
 #ifdef AK_OS_SERENITY
-ErrorOr<void> join_jail(u64 jail_index);
-ErrorOr<u64> create_jail(StringView jail_name, JailIsolationFlags);
+ErrorOr<u32> unshare_create(Kernel::UnshareType type, unsigned flags);
+ErrorOr<void> unshare_attach(Kernel::UnshareType type, unsigned index);
 #endif
 
 ErrorOr<int> socket(int domain, int type, int protocol);
@@ -288,5 +291,8 @@ ErrorOr<String> resolve_executable_from_environment(StringView filename, int fla
 ErrorOr<ByteString> current_executable_path();
 
 ErrorOr<Bytes> allocate(size_t count, size_t size);
+
+ErrorOr<rlimit> get_resource_limits(int resource);
+ErrorOr<void> set_resource_limits(int resource, rlim_t limit);
 
 }

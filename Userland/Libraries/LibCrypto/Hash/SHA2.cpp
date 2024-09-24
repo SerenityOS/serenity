@@ -5,6 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CPUFeatures.h>
+#include <AK/Platform.h>
+#include <AK/SIMD.h>
+#include <AK/SIMDExtras.h>
 #include <AK/Types.h>
 #include <LibCrypto/Hash/SHA2.h>
 
@@ -25,9 +29,12 @@ constexpr static auto EP1(u64 x) { return ROTRIGHT(x, 14) ^ ROTRIGHT(x, 18) ^ RO
 constexpr static auto SIGN0(u64 x) { return ROTRIGHT(x, 1) ^ ROTRIGHT(x, 8) ^ (x >> 7); }
 constexpr static auto SIGN1(u64 x) { return ROTRIGHT(x, 19) ^ ROTRIGHT(x, 61) ^ (x >> 6); }
 
-inline void SHA256::transform(u8 const* data)
+template<>
+void SHA256::transform_impl<CPUFeatures::None>()
 {
-    u32 m[64];
+    auto& data = m_data_buffer;
+
+    u32 m[BlockSize];
 
     size_t i = 0;
     for (size_t j = 0; i < 16; ++i, j += 4) {
@@ -66,6 +73,71 @@ inline void SHA256::transform(u8 const* data)
     m_state[7] += h;
 }
 
+// Note: The SHA extension was introduced with
+//       Intel Goldmont (SSE4.2), Ice Lake (AVX512), Rocket Lake (AVX512), and AMD Zen (AVX2)
+//       So it's safe to assume that if we have SHA we have at least SSE4.2
+//      ~https://en.wikipedia.org/wiki/Intel_SHA_extensions
+#if AK_CAN_CODEGEN_FOR_X86_SHA && AK_CAN_CODEGEN_FOR_X86_SSE42
+template<>
+[[gnu::target("sha,sse4.2")]] void SHA256::transform_impl<CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42>()
+{
+    using AK::SIMD::i32x4, AK::SIMD::u32x4;
+
+    auto& state = m_state;
+    auto& data = m_data_buffer;
+
+    u32x4 states[2] {};
+    states[0] = AK::SIMD::load_unaligned<u32x4>(&state[0]);
+    states[1] = AK::SIMD::load_unaligned<u32x4>(&state[4]);
+    auto tmp = u32x4 { states[0][1], states[0][0], states[0][3], states[0][2] };
+    states[1] = u32x4 { states[1][3], states[1][2], states[1][1], states[1][0] };
+    states[0] = u32x4 { states[1][2], states[1][3], tmp[0], tmp[1] };
+    states[1] = u32x4 { states[1][0], states[1][1], tmp[2], tmp[3] };
+
+    u32x4 msgs[4] {};
+    u32x4 old[2] { states[0], states[1] };
+    for (int i = 0; i != 16; ++i) {
+        u32x4 msg {};
+        if (i < 4) {
+            msgs[i] = AK::SIMD::load_unaligned<u32x4>(&data[i * 16]);
+            msgs[i] = AK::SIMD::elementwise_byte_reverse(msgs[i]);
+            tmp = AK::SIMD::load_unaligned<u32x4>(&SHA256Constants::RoundConstants[i * 4]);
+            msg = msgs[i] + tmp;
+        } else {
+            msgs[(i + 0) % 4] = bit_cast<u32x4>(__builtin_ia32_sha256msg1(bit_cast<i32x4>(msgs[(i + 0) % 4]), bit_cast<i32x4>(msgs[(i + 1) % 4])));
+            tmp = u32x4 { msgs[(i + 2) % 4][1], msgs[(i + 2) % 4][2], msgs[(i + 2) % 4][3], msgs[(i + 3) % 4][0] };
+            msgs[(i + 0) % 4] += tmp;
+            msgs[(i + 0) % 4] = bit_cast<u32x4>(__builtin_ia32_sha256msg2(bit_cast<i32x4>(msgs[(i + 0) % 4]), bit_cast<i32x4>(msgs[(i + 3) % 4])));
+            tmp = AK::SIMD::load_unaligned<u32x4>(&SHA256Constants::RoundConstants[i * 4]);
+            msg = msgs[(i + 0) % 4] + tmp;
+        }
+        states[1] = bit_cast<u32x4>(__builtin_ia32_sha256rnds2(bit_cast<i32x4>(states[1]), bit_cast<i32x4>(states[0]), bit_cast<i32x4>(msg)));
+        msg = u32x4 { msg[2], msg[3], 0, 0 };
+        states[0] = bit_cast<u32x4>(__builtin_ia32_sha256rnds2(bit_cast<i32x4>(states[0]), bit_cast<i32x4>(states[1]), bit_cast<i32x4>(msg)));
+    }
+    states[0] += old[0];
+    states[1] += old[1];
+
+    tmp = u32x4 { states[0][3], states[0][2], states[0][1], states[0][0] };
+    states[1] = u32x4 { states[1][1], states[1][0], states[1][3], states[1][2] };
+    states[0] = u32x4 { tmp[0], tmp[1], states[1][2], states[1][3] };
+    states[1] = u32x4 { tmp[2], tmp[3], states[1][0], states[1][1] };
+    AK::SIMD::store_unaligned(&state[0], states[0]);
+    AK::SIMD::store_unaligned(&state[4], states[1]);
+}
+#endif
+
+decltype(SHA256::transform_dispatched) SHA256::transform_dispatched = [] {
+    CPUFeatures features = detect_cpu_features();
+
+    if constexpr (is_valid_feature(CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42)) {
+        if (has_flag(features, CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42))
+            return &SHA256::transform_impl<CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42>;
+    }
+
+    return &SHA256::transform_impl<CPUFeatures::None>;
+}();
+
 template<size_t BlockSize, typename Callback>
 void update_buffer(u8* buffer, u8 const* input, size_t length, size_t& data_length, Callback callback)
 {
@@ -85,7 +157,7 @@ void update_buffer(u8* buffer, u8 const* input, size_t length, size_t& data_leng
 void SHA256::update(u8 const* message, size_t length)
 {
     update_buffer<BlockSize>(m_data_buffer, message, length, m_data_length, [&]() {
-        transform(m_data_buffer);
+        transform();
         m_bit_length += BlockSize * 8;
     });
 }
@@ -111,7 +183,7 @@ SHA256::DigestType SHA256::peek()
         m_data_buffer[i++] = 0x80;
         while (i < BlockSize)
             m_data_buffer[i++] = 0x00;
-        transform(m_data_buffer);
+        transform();
 
         // Then start another block with BlockSize - 8 bytes of zeros
         __builtin_memset(m_data_buffer, 0, FinalBlockDataSize);
@@ -128,7 +200,7 @@ SHA256::DigestType SHA256::peek()
     m_data_buffer[BlockSize - 7] = m_bit_length >> 48;
     m_data_buffer[BlockSize - 8] = m_bit_length >> 56;
 
-    transform(m_data_buffer);
+    transform();
 
     // SHA uses big-endian and we assume little-endian
     // FIXME: looks like a thing for AK::NetworkOrdered,

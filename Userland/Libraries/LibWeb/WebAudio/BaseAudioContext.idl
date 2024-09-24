@@ -1,6 +1,8 @@
 #import <DOM/EventTarget.idl>
 #import <DOM/EventHandler.idl>
 #import <WebAudio/AudioBuffer.idl>
+#import <WebAudio/AudioBufferSourceNode.idl>
+#import <WebAudio/AudioDestinationNode.idl>
 #import <WebAudio/DynamicsCompressorNode.idl>
 #import <WebAudio/GainNode.idl>
 #import <WebAudio/OscillatorNode.idl>
@@ -15,7 +17,7 @@ enum AudioContextState { "suspended", "running", "closed" };
 // https://webaudio.github.io/web-audio-api/#BaseAudioContext
 [Exposed=Window]
 interface BaseAudioContext : EventTarget {
-    [FIXME] readonly attribute AudioDestinationNode destination;
+    readonly attribute AudioDestinationNode destination;
     readonly attribute float sampleRate;
     readonly attribute double currentTime;
     [FIXME] readonly attribute AudioListener listener;
@@ -25,9 +27,9 @@ interface BaseAudioContext : EventTarget {
     attribute EventHandler onstatechange;
 
     [FIXME] AnalyserNode createAnalyser ();
-    [FIXME] BiquadFilterNode createBiquadFilter ();
+    BiquadFilterNode createBiquadFilter ();
     AudioBuffer createBuffer(unsigned long numberOfChannels, unsigned long length, float sampleRate);
-    [FIXME] AudioBufferSourceNode createBufferSource ();
+    AudioBufferSourceNode createBufferSource ();
     [FIXME] ChannelMergerNode createChannelMerger (optional unsigned long numberOfInputs = 6);
     [FIXME] ChannelSplitterNode createChannelSplitter (optional unsigned long numberOfOutputs = 6);
     [FIXME] ConstantSourceNode createConstantSource ();

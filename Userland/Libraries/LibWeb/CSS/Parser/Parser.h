@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2024, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,7 +40,7 @@ class PropertyDependencyNode;
 
 class Parser {
 public:
-    static ErrorOr<Parser> create(ParsingContext const&, StringView input, StringView encoding = "utf-8"sv);
+    static Parser create(ParsingContext const&, StringView input, StringView encoding = "utf-8"sv);
 
     Parser(Parser&&);
 
@@ -74,6 +74,56 @@ public:
     static NonnullRefPtr<StyleValue> resolve_unresolved_style_value(ParsingContext const&, DOM::Element&, Optional<CSS::Selector::PseudoElement::Type>, PropertyID, UnresolvedStyleValue const&);
 
     [[nodiscard]] LengthOrCalculated parse_as_sizes_attribute();
+
+    // https://html.spec.whatwg.org/multipage/semantics-other.html#case-sensitivity-of-selectors
+    static constexpr Array case_insensitive_html_attributes = {
+        "accept"sv,
+        "accept-charset"sv,
+        "align"sv,
+        "alink"sv,
+        "axis"sv,
+        "bgcolor"sv,
+        "charset"sv,
+        "checked"sv,
+        "clear"sv,
+        "codetype"sv,
+        "color"sv,
+        "compact"sv,
+        "declare"sv,
+        "defer"sv,
+        "dir"sv,
+        "direction"sv,
+        "disabled"sv,
+        "enctype"sv,
+        "face"sv,
+        "frame"sv,
+        "hreflang"sv,
+        "http-equiv"sv,
+        "lang"sv,
+        "language"sv,
+        "link"sv,
+        "media"sv,
+        "method"sv,
+        "multiple"sv,
+        "nohref"sv,
+        "noresize"sv,
+        "noshade"sv,
+        "nowrap"sv,
+        "readonly"sv,
+        "rel"sv,
+        "rev"sv,
+        "rules"sv,
+        "scope"sv,
+        "scrolling"sv,
+        "selected"sv,
+        "shape"sv,
+        "target"sv,
+        "text"sv,
+        "type"sv,
+        "valign"sv,
+        "valuetype"sv,
+        "vlink"sv,
+    };
 
 private:
     Parser(ParsingContext const&, Vector<Token>);
@@ -188,7 +238,11 @@ private:
     Optional<TimeOrCalculated> parse_time(TokenStream<ComponentValue>&);
     Optional<TimePercentage> parse_time_percentage(TokenStream<ComponentValue>&);
 
-    Optional<Color> parse_rgb_or_hsl_color(StringView function_name, Vector<ComponentValue> const&);
+    Optional<Color> parse_rgb_color(Vector<ComponentValue> const&);
+    Optional<Color> parse_hsl_color(Vector<ComponentValue> const&);
+    Optional<Color> parse_hwb_color(Vector<ComponentValue> const&);
+    Optional<Color> parse_oklab_color(Vector<ComponentValue> const&);
+    Optional<Color> parse_oklch_color(Vector<ComponentValue> const&);
     Optional<Color> parse_color(ComponentValue const&);
     Optional<LengthOrCalculated> parse_source_size_value(TokenStream<ComponentValue>&);
     Optional<Ratio> parse_ratio(TokenStream<ComponentValue>&);
@@ -196,6 +250,7 @@ private:
     Optional<Gfx::UnicodeRange> parse_unicode_range(StringView);
     Vector<Gfx::UnicodeRange> parse_unicode_ranges(TokenStream<ComponentValue>&);
     Optional<GridSize> parse_grid_size(ComponentValue const&);
+    Optional<GridFitContent> parse_fit_content(Vector<ComponentValue> const&);
     Optional<GridMinMax> parse_min_max(Vector<ComponentValue> const&);
     Optional<GridRepeat> parse_repeat(Vector<ComponentValue> const&);
     Optional<ExplicitGridTrack> parse_track_sizing_function(ComponentValue const&);
@@ -224,6 +279,7 @@ private:
     Optional<PropertyAndValue> parse_css_value_for_properties(ReadonlySpan<PropertyID>, TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_builtin_value(ComponentValue const&);
     RefPtr<CalculatedStyleValue> parse_calculated_value(ComponentValue const&);
+    RefPtr<CustomIdentStyleValue> parse_custom_ident_value(TokenStream<ComponentValue>&, std::initializer_list<StringView> blacklist);
     // NOTE: Implemented in generated code. (GenerateCSSMathFunctions.cpp)
     OwnPtr<CalculationNode> parse_math_function(PropertyID, Function const&);
     OwnPtr<CalculationNode> parse_a_calc_function_node(Function const&);
@@ -233,6 +289,12 @@ private:
     RefPtr<StyleValue> parse_number_or_percentage_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_identifier_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_color_value(TokenStream<ComponentValue>&);
+    RefPtr<StyleValue> parse_counter_value(TokenStream<ComponentValue>&);
+    enum class AllowReversed {
+        No,
+        Yes,
+    };
+    RefPtr<StyleValue> parse_counter_definitions_value(TokenStream<ComponentValue>&, AllowReversed, i32 default_value_if_not_reversed);
     RefPtr<StyleValue> parse_rect_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_ratio_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_string_value(TokenStream<ComponentValue>&);
@@ -248,6 +310,7 @@ private:
     template<typename ParseFunction>
     RefPtr<StyleValue> parse_comma_separated_value_list(TokenStream<ComponentValue>&, ParseFunction);
     RefPtr<StyleValue> parse_simple_comma_separated_value_list(PropertyID, TokenStream<ComponentValue>&);
+    RefPtr<StyleValue> parse_all_as_single_none_value(TokenStream<ComponentValue>&);
 
     RefPtr<StyleValue> parse_aspect_ratio_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_background_value(TokenStream<ComponentValue>&);
@@ -258,6 +321,9 @@ private:
     RefPtr<StyleValue> parse_border_radius_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_border_radius_shorthand_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_content_value(TokenStream<ComponentValue>&);
+    RefPtr<StyleValue> parse_counter_increment_value(TokenStream<ComponentValue>&);
+    RefPtr<StyleValue> parse_counter_reset_value(TokenStream<ComponentValue>&);
+    RefPtr<StyleValue> parse_counter_set_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_display_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_flex_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_flex_flow_value(TokenStream<ComponentValue>&);
@@ -270,6 +336,7 @@ private:
     RefPtr<StyleValue> parse_place_items_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_place_self_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_quotes_value(TokenStream<ComponentValue>&);
+    RefPtr<StyleValue> parse_scrollbar_gutter_value(TokenStream<ComponentValue>&);
     enum class AllowInsetKeyword {
         No,
         Yes,

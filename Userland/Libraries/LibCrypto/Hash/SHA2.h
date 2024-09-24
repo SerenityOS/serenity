@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/CPUFeatures.h>
 #include <AK/StringBuilder.h>
 #include <LibCrypto/Hash/HashFunction.h>
 
@@ -115,7 +116,11 @@ public:
     }
 
 private:
-    inline void transform(u8 const*);
+    template<CPUFeatures>
+    void transform_impl();
+
+    static void (SHA256::*const transform_dispatched)();
+    void transform() { return (this->*transform_dispatched)(); }
 
     u8 m_data_buffer[BlockSize] {};
     size_t m_data_length { 0 };

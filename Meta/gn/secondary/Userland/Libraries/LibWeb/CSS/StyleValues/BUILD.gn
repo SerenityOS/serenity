@@ -11,6 +11,8 @@ source_set("StyleValues") {
     "ColorStyleValue.cpp",
     "ConicGradientStyleValue.cpp",
     "ContentStyleValue.cpp",
+    "CounterDefinitionsStyleValue.cpp",
+    "CounterStyleValue.cpp",
     "DisplayStyleValue.cpp",
     "EasingStyleValue.cpp",
     "EdgeStyleValue.cpp",

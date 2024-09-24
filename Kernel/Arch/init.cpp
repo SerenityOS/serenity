@@ -22,6 +22,7 @@
 #include <Kernel/Devices/Audio/Management.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FUSEDevice.h>
+#include <Kernel/Devices/GPU/Console/BootDummyConsole.h>
 #include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/Generic/DeviceControlDevice.h>
@@ -39,7 +40,6 @@
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
-#include <Kernel/Devices/TTY/ConsoleManagement.h>
 #include <Kernel/Devices/TTY/PTYMultiplexer.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
@@ -47,6 +47,7 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Library/Panic.h>
@@ -57,6 +58,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/FinalizerTask.h>
+#include <Kernel/Tasks/HostnameContext.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/SyncTask.h>
@@ -68,7 +70,6 @@
 #    include <Kernel/Arch/x86_64/Hypervisor/VMWareBackdoor.h>
 #    include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #    include <Kernel/Arch/x86_64/Interrupts/PIC.h>
-#    include <Kernel/Arch/x86_64/VGA/TextModeConsole.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #    include <Kernel/Arch/aarch64/RPi/Mailbox.h>
@@ -161,10 +162,6 @@ READONLY_AFTER_INIT size_t multiboot_module_length;
 
 Atomic<Graphics::Console*> g_boot_console;
 
-#if ARCH(AARCH64)
-READONLY_AFTER_INIT static u8 s_command_line_buffer[512];
-#endif
-
 extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_unused]] BootInfo const& boot_info)
 {
 #if ARCH(X86_64)
@@ -193,33 +190,12 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     multiboot_framebuffer_height = boot_info.multiboot_framebuffer_height;
     multiboot_framebuffer_bpp = boot_info.multiboot_framebuffer_bpp;
     multiboot_framebuffer_type = boot_info.multiboot_framebuffer_type;
-#elif ARCH(AARCH64)
-    // FIXME: For the aarch64 platforms, we should get the information by parsing a device tree instead of using multiboot.
-    auto [ram_base, ram_size] = RPi::Mailbox::the().query_lower_arm_memory_range();
-    auto [vcmem_base, vcmem_size] = RPi::Mailbox::the().query_videocore_memory_range();
-    multiboot_memory_map_t mmap[] = {
-        {
-            sizeof(struct multiboot_mmap_entry) - sizeof(u32),
-            (u64)ram_base,
-            (u64)ram_size,
-            MULTIBOOT_MEMORY_AVAILABLE,
-        },
-        {
-            sizeof(struct multiboot_mmap_entry) - sizeof(u32),
-            (u64)vcmem_base,
-            (u64)vcmem_size,
-            MULTIBOOT_MEMORY_RESERVED,
-        },
-        // FIXME: VideoCore only reports the first 1GB of RAM, the rest only shows up in the device tree.
-    };
-    multiboot_memory_map = mmap;
-    multiboot_memory_map_count = 2;
+#elif ARCH(AARCH64) || ARCH(RISCV64)
+    if (!DeviceTree::verify_fdt())
+        // We are too early in the boot process to print anything, so just hang if the FDT is invalid.
+        Processor::halt();
 
-    multiboot_module_length = 0;
-    // FIXME: Read the /chosen/bootargs property.
-    kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
-#elif ARCH(RISCV64)
-    auto maybe_command_line = get_command_line_from_fdt();
+    auto maybe_command_line = DeviceTree::get_command_line_from_fdt();
     if (maybe_command_line.is_error())
         kernel_cmdline = "serial_debug"sv;
     else
@@ -266,11 +242,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
         if ((multiboot_flags & MULTIBOOT_INFO_FRAMEBUFFER_INFO) && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
             g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
         } else {
-#if ARCH(X86_64)
-            g_boot_console = &Graphics::VGATextModeConsole::initialize().leak_ref();
-#else
-            dbgln("No early framebuffer console available");
-#endif
+            dbgln("No early framebuffer console available, initializing dummy console");
+            g_boot_console = &try_make_lock_ref_counted<Graphics::BootDummyConsole>().value().leak_ref();
         }
     }
     dmesgln("Starting SerenityOS...");
@@ -288,12 +261,14 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
         (*ctor)();
 
-#if ARCH(RISCV64)
-    MUST(unflatten_fdt());
+#if ARCH(AARCH64) || ARCH(RISCV64)
+    MUST(DeviceTree::unflatten_fdt());
 
     if (kernel_command_line().contains("dump_fdt"sv))
-        dump_fdt();
+        DeviceTree::dump_fdt();
+#endif
 
+#if ARCH(RISCV64)
     init_delay_loop();
 #endif
 
@@ -310,6 +285,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     DeviceManagement::the().attach_device_control_device(*DeviceControlDevice::must_create());
 
     __stack_chk_guard = get_fast_random<uintptr_t>();
+
+    // NOTE: Initialize the empty VFS root context just before we need to create
+    // kernel processes.
+    VFSRootContext::initialize_empty_ramfs_root_context_for_kernel_processes();
 
     Process::initialize();
 
@@ -390,8 +369,6 @@ void init_stage2(void*)
         PCISerialDevice::detect();
     }
 
-    VirtualFileSystem::initialize();
-
 #if ARCH(X86_64)
     if (!is_serial_debug_enabled())
         (void)SerialDevice::must_create(0).leak_ref();
@@ -410,7 +387,7 @@ void init_stage2(void*)
     MUST(HIDManagement::initialize());
 
     GraphicsManagement::the().initialize();
-    ConsoleManagement::the().initialize();
+    VirtualConsole::initialize_consoles();
 
     SyncTask::spawn();
     FinalizerTask::spawn();
@@ -452,9 +429,13 @@ void init_stage2(void*)
         dbgln_if(STORAGE_DEVICE_DEBUG, "Boot device {} not found, sleeping 2 seconds", kernel_command_line().root_device());
         (void)Thread::current()->sleep(Duration::from_seconds(2));
     }
-    if (VirtualFileSystem::the().mount_root(StorageManagement::the().root_filesystem()).is_error()) {
-        PANIC("VirtualFileSystem::mount_root failed");
+
+    auto first_process_vfs_context_or_error = StorageManagement::the().create_first_vfs_root_context();
+    if (first_process_vfs_context_or_error.is_error()) {
+        PANIC("StorageManagement::create_first_vfs_root_context failed");
     }
+
+    auto first_process_vfs_context = first_process_vfs_context_or_error.release_value();
 
     // Switch out of early boot mode.
     g_not_in_early_boot.set();
@@ -465,6 +446,11 @@ void init_stage2(void*)
     // NOTE: Everything in the .ksyms section becomes read-only after this point.
     MM.protect_ksyms_after_init();
 
+    auto hostname_context_or_error = HostnameContext::create_initial();
+    if (hostname_context_or_error.is_error())
+        PANIC("init_stage2: Error creating initial hostname context: {}", hostname_context_or_error.error());
+    auto hostname_context = hostname_context_or_error.release_value();
+
     // NOTE: Everything marked UNMAP_AFTER_INIT becomes inaccessible after this point.
     MM.unmap_text_after_init();
 
@@ -473,7 +459,8 @@ void init_stage2(void*)
 
     dmesgln("Running first user process: {}", userspace_init);
     dmesgln("Init (first) process args: {}", init_args);
-    auto init_or_error = Process::create_user_process(userspace_init, UserID(0), GroupID(0), move(init_args), {}, tty0);
+
+    auto init_or_error = Process::create_user_process(userspace_init, UserID(0), GroupID(0), move(init_args), {}, move(first_process_vfs_context), move(hostname_context), tty0);
     if (init_or_error.is_error())
         PANIC("init_stage2: Error spawning init process: {}", init_or_error.error());
 

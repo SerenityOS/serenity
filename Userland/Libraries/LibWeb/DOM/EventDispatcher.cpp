@@ -19,6 +19,7 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Slottable.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/DOM/Utils.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLSlotElement.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
@@ -27,33 +28,6 @@
 #include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::DOM {
-
-// FIXME: This shouldn't be here, as retargeting is not only used by the event dispatcher.
-//        When moving this function, it needs to be generalized. https://dom.spec.whatwg.org/#retarget
-static EventTarget* retarget(EventTarget* left, EventTarget* right)
-{
-    // To retarget an object A against an object B, repeat these steps until they return an object:
-    for (;;) {
-        // 1. If one of the following is true then return A.
-        // - A is not a node
-        if (!is<Node>(left))
-            return left;
-
-        // - A’s root is not a shadow root
-        auto* left_node = verify_cast<Node>(left);
-        auto& left_root = left_node->root();
-        if (!is<ShadowRoot>(left_root))
-            return left;
-
-        // - B is a node and A’s root is a shadow-including inclusive ancestor of B
-        if (is<Node>(right) && left_root.is_shadow_including_inclusive_ancestor_of(verify_cast<Node>(*right)))
-            return left;
-
-        // 2. Set A to A’s root’s host.
-        auto& left_shadow_root = verify_cast<ShadowRoot>(left_root);
-        left = left_shadow_root.host();
-    }
-}
 
 // https://dom.spec.whatwg.org/#concept-event-listener-inner-invoke
 bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEventListener>>& listeners, Event::Phase phase, bool invocation_target_in_shadow_tree)

@@ -35,6 +35,8 @@ public:
     virtual ErrorOr<size_t> submit_bulk_transfer(Transfer&) override { return ENOTSUP; }
     virtual ErrorOr<void> submit_async_interrupt_transfer(NonnullLockRefPtr<Transfer>, u16) override { return ENOTSUP; }
 
+    virtual ErrorOr<void> initialize_device(USB::Device&) override { return ENOTSUP; }
+
 private:
     EHCIController(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<Memory::Region> register_region, VirtualAddress register_base_address);
 

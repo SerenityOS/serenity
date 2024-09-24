@@ -8,7 +8,7 @@
 #include <AK/Function.h>
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
-#include <LibVideo/Containers/Matroska/Reader.h>
+#include <LibMedia/Containers/Matroska/Reader.h>
 
 #define TRY_PARSE(expression)                                                                        \
     ({                                                                                               \
@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(filename, "The video file to display.", "filename", Core::ArgsParser::Required::Yes);
     args_parser.parse(arguments);
 
-    auto reader = TRY_PARSE(Video::Matroska::Reader::from_file(filename));
+    auto reader = TRY_PARSE(Media::Matroska::Reader::from_file(filename));
 
     outln("DocType is {}", reader.header().doc_type.characters());
     outln("DocTypeVersion is {}", reader.header().doc_type_version);
@@ -46,7 +46,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("Writing app is \"{}\"", segment_information.writing_app().as_string().to_byte_string().characters());
 
     outln("Document has {} tracks", TRY_PARSE(reader.track_count()));
-    TRY_PARSE(reader.for_each_track([&](Video::Matroska::TrackEntry const& track_entry) -> Video::DecoderErrorOr<IterationDecision> {
+    TRY_PARSE(reader.for_each_track([&](Media::Matroska::TrackEntry const& track_entry) -> Media::DecoderErrorOr<IterationDecision> {
         if (track_number != 0 && track_entry.track_number() != track_number)
             return IterationDecision::Continue;
 
@@ -57,10 +57,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         outln("\tTrack has TrackTimestampScale {}", track_entry.timestamp_scale());
         outln("\tTrack has CodecDelay {}", track_entry.codec_delay());
 
-        if (track_entry.track_type() == Video::Matroska::TrackEntry::TrackType::Video) {
+        if (track_entry.track_type() == Media::Matroska::TrackEntry::TrackType::Video) {
             auto const video_track = track_entry.video_track().value();
             outln("\t\tVideo is {} pixels wide by {} pixels tall", video_track.pixel_width, video_track.pixel_height);
-        } else if (track_entry.track_type() == Video::Matroska::TrackEntry::TrackType::Audio) {
+        } else if (track_entry.track_type() == Media::Matroska::TrackEntry::TrackType::Audio) {
             auto const audio_track = track_entry.audio_track().value();
             outln("\t\tAudio has {} channels with a bit depth of {}", audio_track.channels, audio_track.bit_depth);
         }
@@ -94,7 +94,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             while (true) {
                 auto block_result = iterator.next_block();
                 if (block_result.is_error()) {
-                    if (block_result.error().category() == Video::DecoderErrorCategory::EndOfStream)
+                    if (block_result.error().category() == Media::DecoderErrorCategory::EndOfStream)
                         break;
                     return block_result.release_error();
                 }

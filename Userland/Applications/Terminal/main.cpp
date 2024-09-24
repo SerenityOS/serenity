@@ -384,11 +384,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return GUI::MessageBox::ExecResult::OK;
     };
 
-    file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
-        dbgln("Terminal: Quit menu activated!");
-        if (check_terminal_quit() == GUI::MessageBox::ExecResult::OK)
-            GUI::Application::the()->quit();
-    }));
+    file_menu->add_action(GUI::CommonActions::make_quit_action(
+        [&](auto&) {
+            dbgln("Terminal: Quit menu activated!");
+            if (check_terminal_quit() == GUI::MessageBox::ExecResult::OK)
+                GUI::Application::the()->quit();
+        },
+        GUI::CommonActions::QuitAltShortcut::None));
 
     auto edit_menu = window->add_menu("&Edit"_string);
     edit_menu->add_action(terminal->copy_action());
@@ -450,7 +452,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/utmpupdate", "x"));
     TRY(Core::System::unveil("/etc/FileIconProvider.ini", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
-    TRY(Core::System::unveil("/tmp/session/%sid/portal/config", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto modified_state_check_timer = Core::Timer::create_repeating(500, [&] {

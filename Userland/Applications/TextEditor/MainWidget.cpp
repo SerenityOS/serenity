@@ -8,7 +8,6 @@
 #include "MainWidget.h"
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
-#include <Applications/TextEditor/TextEditorWindowGML.h>
 #include <LibCMake/CMakeCache/SyntaxHighlighter.h>
 #include <LibCMake/SyntaxHighlighter.h>
 #include <LibConfig/Client.h>
@@ -48,10 +47,8 @@
 
 namespace TextEditor {
 
-MainWidget::MainWidget()
+ErrorOr<void> MainWidget::initialize()
 {
-    load_from_gml(text_editor_window_gml).release_value_but_fixme_should_propagate_errors();
-
     m_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
 
@@ -337,6 +334,8 @@ MainWidget::MainWidget()
 
     m_toolbar->add_action(m_editor->undo_action());
     m_toolbar->add_action(m_editor->redo_action());
+
+    return {};
 }
 
 WebView::OutOfProcessWebView& MainWidget::ensure_web_view()
@@ -912,18 +911,16 @@ void MainWidget::update_markdown_preview()
 {
     auto document = Markdown::Document::parse(m_editor->text());
     if (document) {
+        // FIXME: Retain original scroll after loading new preview
         auto html = document->render_to_html();
-        auto current_scroll_pos = m_page_view->visible_content_rect();
         m_page_view->load_html(html);
-        m_page_view->scroll_into_view(current_scroll_pos, true, true);
     }
 }
 
 void MainWidget::update_html_preview()
 {
-    auto current_scroll_pos = m_page_view->visible_content_rect();
+    // FIXME: Retain original scroll after loading new preview
     m_page_view->load_html(m_editor->text());
-    m_page_view->scroll_into_view(current_scroll_pos, true, true);
 }
 
 void MainWidget::update_statusbar()

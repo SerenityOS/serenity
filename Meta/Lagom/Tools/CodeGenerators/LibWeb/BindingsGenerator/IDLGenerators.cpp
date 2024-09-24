@@ -33,6 +33,7 @@ static bool is_platform_object(Type const& type)
         "AnimationEffect"sv,
         "AnimationTimeline"sv,
         "Attr"sv,
+        "AudioBuffer"sv,
         "AudioNode"sv,
         "AudioParam"sv,
         "AudioScheduledSourceNode"sv,
@@ -42,11 +43,14 @@ static bool is_platform_object(Type const& type)
         "CanvasGradient"sv,
         "CanvasPattern"sv,
         "CanvasRenderingContext2D"sv,
+        "CloseWatcher"sv,
         "CryptoKey"sv,
+        "DataTransfer"sv,
         "Document"sv,
         "DocumentType"sv,
         "DOMRectReadOnly"sv,
         "DynamicsCompressorNode"sv,
+        "ElementInternals"sv,
         "EventTarget"sv,
         "FileList"sv,
         "FontFace"sv,
@@ -83,6 +87,7 @@ static bool is_platform_object(Type const& type)
         "Table"sv,
         "Text"sv,
         "TextMetrics"sv,
+        "TextTrack"sv,
         "URLSearchParams"sv,
         "VideoTrack"sv,
         "VideoTrackList"sv,
@@ -268,11 +273,8 @@ static void generate_include_for_iterator(auto& generator, auto& iterator_path)
 {
     auto iterator_generator = generator.fork();
     iterator_generator.set("iterator_class.path", iterator_path);
-    // FIXME: These may or may not exist, because REASONS.
     iterator_generator.append(R"~~~(
-//#if __has_include(<LibWeb/@iterator_class.path@.h>)
 #   include <LibWeb/@iterator_class.path@.h>
-//#endif
 )~~~");
 }
 
@@ -1947,15 +1949,6 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@@overload_suffi
     [[maybe_unused]] auto& realm = *vm.current_realm();
 )~~~");
 
-    if (function.extended_attributes.contains("FIXME")) {
-        function_generator.append(R"~~~(
-            dbgln("FIXME: Unimplemented IDL interface '@namespaced_name@.@function.name@'");
-            return JS::js_undefined();
-}
-)~~~");
-        return;
-    }
-
     if (is_static_function == StaticFunction::No) {
         function_generator.append(R"~~~(
     auto* impl = TRY(impl_from(vm));
@@ -2520,6 +2513,26 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
     if (is_html_constructor) {
         generate_html_constructor(generator, constructor, interface);
     } else {
+        generator.append(R"~~~(
+    // To internally create a new object implementing the interface @name@:
+
+    // 3.2. Let prototype be ? Get(newTarget, "prototype").
+    auto prototype = TRY(new_target.get(vm.names.prototype));
+
+    // 3.3. If Type(prototype) is not Object, then:
+    if (!prototype.is_object()) {
+        // 1. Let targetRealm be ? GetFunctionRealm(newTarget).
+        auto* target_realm = TRY(JS::get_function_realm(vm, new_target));
+
+        // 2. Set prototype to the interface prototype object for interface in targetRealm.
+        VERIFY(target_realm);
+        prototype = &Bindings::ensure_web_prototype<@prototype_class@>(*target_realm, "@name@"_fly_string);
+    }
+
+    // 4. Let instance be MakeBasicObject( « [[Prototype]], [[Extensible]], [[Realm]], [[PrimaryInterface]] »).
+    // 5. Set instance.[[Realm]] to realm.
+    // 6. Set instance.[[PrimaryInterface]] to interface.
+)~~~");
         if (!constructor.parameters.is_empty()) {
             generate_argument_count_check(generator, constructor.name, constructor.shortest_length());
 
@@ -2537,6 +2550,34 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
         }
 
         constructor_generator.append(R"~~~(
+    // 7. Set instance.[[Prototype]] to prototype.
+    VERIFY(prototype.is_object());
+    impl->set_prototype(&prototype.as_object());
+
+    // FIXME: Steps 8...11. of the "internally create a new object implementing the interface @name@" algorithm
+    // (https://webidl.spec.whatwg.org/#js-platform-objects) are currently not handled, or are handled within @fully_qualified_name@::construct_impl().
+    //  8. Let interfaces be the inclusive inherited interfaces of interface.
+    //  9. For every interface ancestor interface in interfaces:
+    //    9.1. Let unforgeables be the value of the [[Unforgeables]] slot of the interface object of ancestor interface in realm.
+    //    9.2. Let keys be ! unforgeables.[[OwnPropertyKeys]]().
+    //    9.3. For each element key of keys:
+    //      9.3.1. Let descriptor be ! unforgeables.[[GetOwnProperty]](key).
+    //      9.3.2. Perform ! DefinePropertyOrThrow(instance, key, descriptor).
+    //  10. If interface is declared with the [Global] extended attribute, then:
+    //    10.1. Define the regular operations of interface on instance, given realm.
+    //    10.2. Define the regular attributes of interface on instance, given realm.
+    //    10.3. Define the iteration methods of interface on instance given realm.
+    //    10.4. Define the asynchronous iteration methods of interface on instance given realm.
+    //    10.5. Define the global property references on instance, given realm.
+    //    10.6. Set instance.[[SetPrototypeOf]] as defined in § 3.8.1 [[SetPrototypeOf]].
+    //  11. Otherwise, if interfaces contains an interface which supports indexed properties, named properties, or both:
+    //    11.1. Set instance.[[GetOwnProperty]] as defined in § 3.9.1 [[GetOwnProperty]].
+    //    11.2. Set instance.[[Set]] as defined in § 3.9.2 [[Set]].
+    //    11.3. Set instance.[[DefineOwnProperty]] as defined in § 3.9.3 [[DefineOwnProperty]].
+    //    11.4. Set instance.[[Delete]] as defined in § 3.9.4 [[Delete]].
+    //    11.5. Set instance.[[PreventExtensions]] as defined in § 3.9.5 [[PreventExtensions]].
+    //    11.6. Set instance.[[OwnPropertyKeys]] as defined in § 3.9.6 [[OwnPropertyKeys]].
+
     return *impl;
 }
 )~~~");
@@ -2697,6 +2738,8 @@ static void generate_prototype_or_global_mixin_declarations(IDL::Interface const
     }
 
     for (auto& attribute : interface.attributes) {
+        if (attribute.extended_attributes.contains("FIXME"))
+            continue;
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
         attribute_generator.append(R"~~~(
@@ -2741,6 +2784,8 @@ static Vector<Interface const&> create_an_inheritance_stack(IDL::Interface const
 
         // 2. Push I onto stack.
         inheritance_chain.append(*imported_interface_iterator);
+
+        current_interface = &*imported_interface_iterator;
     }
 
     // 4. Return stack.
@@ -2778,6 +2823,8 @@ static void collect_attribute_values_of_an_inheritance_stack(SourceGenerator& fu
         // NOTE: Functions, constructors and static functions cannot be JSON types, so they're not checked here.
 
         for (auto& attribute : interface_in_chain.attributes) {
+            if (attribute.extended_attributes.contains("FIXME"))
+                continue;
             if (!attribute.type->is_json(interface_in_chain))
                 continue;
 
@@ -2964,7 +3011,6 @@ void @named_properties_class@::initialize(JS::Realm& realm)
 // https://webidl.spec.whatwg.org/#named-properties-object-getownproperty
 JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @named_properties_class@::internal_get_own_property(JS::PropertyKey const& property_name) const
 {
-    auto& vm = this->vm();
     auto& realm = this->realm();
 
     // 1. Let A be the interface for the named properties object O.
@@ -2982,7 +3028,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> @named_properties_class@
         // 2. Let value be an uninitialized variable.
         // 3. If operation was defined without an identifier, then set value to the result of performing the steps listed in the interface description to determine the value of a named property with P as the name.
         // 4. Otherwise, operation was defined with an identifier. Set value to the result of performing the method steps of operation with « P » as the only argument value.
-        auto value = TRY(throw_dom_exception_if_needed(vm, [&] { return object.named_item_value(property_name_string); }));
+        auto value = object.named_item_value(property_name_string);
 
         // 5. Let desc be a newly created Property Descriptor with no fields.
         JS::PropertyDescriptor descriptor;
@@ -3131,6 +3177,15 @@ void @class_name@::initialize(JS::Realm& realm)
 
     // https://webidl.spec.whatwg.org/#es-attributes
     for (auto& attribute : interface.attributes) {
+        if (attribute.extended_attributes.contains("FIXME")) {
+            auto fixme_attribute_generator = generator.fork();
+            fixme_attribute_generator.set("attribute.name", attribute.name);
+            fixme_attribute_generator.append(R"~~~(
+    define_direct_property("@attribute.name@", JS::js_undefined(), default_attributes | JS::Attribute::Unimplemented);
+            )~~~");
+            continue;
+        }
+
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.name", attribute.name);
         attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
@@ -3149,6 +3204,16 @@ void @class_name@::initialize(JS::Realm& realm)
         attribute_generator.append(R"~~~(
     define_native_accessor(realm, "@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
 )~~~");
+    }
+
+    for (auto& function : interface.functions) {
+        if (function.extended_attributes.contains("FIXME")) {
+            auto fixme_function_generator = generator.fork();
+            fixme_function_generator.set("function.name", function.name);
+            fixme_function_generator.append(R"~~~(
+        define_direct_property("@function.name@", JS::js_undefined(), default_attributes | JS::Attribute::Unimplemented);
+            )~~~");
+        }
     }
 
     // https://webidl.spec.whatwg.org/#es-constants
@@ -3310,6 +3375,8 @@ void @class_name@::initialize(JS::Realm& realm)
     }
 
     for (auto& attribute : interface.attributes) {
+        if (attribute.extended_attributes.contains("FIXME"))
+            continue;
         auto attribute_generator = generator.fork();
         attribute_generator.set("attribute.name", attribute.name);
         attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
@@ -3342,26 +3409,6 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
     [[maybe_unused]] auto& realm = *vm.current_realm();
     [[maybe_unused]] auto* impl = TRY(impl_from(vm));
 )~~~");
-        if (attribute.extended_attributes.contains("FIXME")) {
-            attribute_generator.append(R"~~~(
-    dbgln("FIXME: Unimplemented IDL interface '@namespaced_name@.@attribute.name@'");
-    return JS::js_undefined();
-}
-)~~~");
-            if (!attribute.readonly || attribute.extended_attributes.contains("PutForwards"sv)) {
-                attribute_generator.append(R"~~~(
-JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
-{
-    WebIDL::log_trace(vm, "@class_name@::@attribute.setter_callback@");
-    dbgln("FIXME: Unimplemented IDL interface '@namespaced_name@.@attribute.name@'");
-    return JS::js_undefined();
-}
-)~~~");
-            }
-
-            continue;
-        }
-
         if (attribute.extended_attributes.contains("CEReactions")) {
             // 1. Push a new element queue onto this object's relevant agent's custom element reactions stack.
             attribute_generator.append(R"~~~(
@@ -3757,6 +3804,8 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 
     // Implementation: Functions
     for (auto& function : interface.functions) {
+        if (function.extended_attributes.contains("FIXME"))
+            continue;
         if (function.extended_attributes.contains("Default")) {
             if (function.name == "toJSON"sv && function.return_type->name() == "object"sv) {
                 generate_default_to_json_function(generator, class_name, interface);
@@ -4192,8 +4241,11 @@ void @namespace_class@::finalize()
 )~~~");
     }
 
-    for (auto const& function : interface.functions)
+    for (auto const& function : interface.functions) {
+        if (function.extended_attributes.contains("FIXME"))
+            continue;
         generate_function(generator, function, StaticFunction::Yes, interface.namespace_class, interface.name, interface);
+    }
     for (auto const& overload_set : interface.overload_sets) {
         if (overload_set.value.size() == 1)
             continue;
@@ -4305,47 +4357,6 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
-#if __has_include(<LibWeb/Animations/@name@.h>)
-#    include <LibWeb/Animations/@name@.h>
-#elif __has_include(<LibWeb/Crypto/@name@.h>)
-#    include <LibWeb/Crypto/@name@.h>
-#elif __has_include(<LibWeb/CSS/@name@.h>)
-#    include <LibWeb/CSS/@name@.h>
-#elif __has_include(<LibWeb/DOM/@name@.h>)
-#    include <LibWeb/DOM/@name@.h>
-#elif __has_include(<LibWeb/Encoding/@name@.h>)
-#    include <LibWeb/Encoding/@name@.h>
-#elif __has_include(<LibWeb/Fetch/@name@.h>)
-#    include <LibWeb/Fetch/@name@.h>
-#elif __has_include(<LibWeb/FileAPI/@name@.h>)
-#    include <LibWeb/FileAPI/@name@.h>
-#elif __has_include(<LibWeb/Geometry/@name@.h>)
-#    include <LibWeb/Geometry/@name@.h>
-#elif __has_include(<LibWeb/HTML/@name@.h>)
-#    include <LibWeb/HTML/@name@.h>
-#elif __has_include(<LibWeb/UIEvents/@name@.h>)
-#    include <LibWeb/UIEvents/@name@.h>
-#elif __has_include(<LibWeb/HighResolutionTime/@name@.h>)
-#    include <LibWeb/HighResolutionTime/@name@.h>
-#elif __has_include(<LibWeb/IntersectionObserver/@name@.h>)
-#    include <LibWeb/IntersectionObserver/@name@.h>
-#elif __has_include(<LibWeb/NavigationTiming/@name@.h>)
-#    include <LibWeb/NavigationTiming/@name@.h>
-#elif __has_include(<LibWeb/RequestIdleCallback/@name@.h>)
-#    include <LibWeb/RequestIdleCallback/@name@.h>
-#elif __has_include(<LibWeb/ResizeObserver/@name@.h>)
-#    include <LibWeb/ResizeObserver/@name@.h>
-#elif __has_include(<LibWeb/SVG/@name@.h>)
-#    include <LibWeb/SVG/@name@.h>
-#elif __has_include(<LibWeb/Selection/@name@.h>)
-#    include <LibWeb/Selection/@name@.h>
-#elif __has_include(<LibWeb/WebSockets/@name@.h>)
-#    include <LibWeb/WebSockets/@name@.h>
-#elif __has_include(<LibWeb/XHR/@name@.h>)
-#    include <LibWeb/XHR/@name@.h>
-#elif __has_include(<LibWeb/DOMURL/@name@.h>)
-#    include <LibWeb/DOMURL/@name@.h>
-#endif
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
@@ -4484,8 +4495,11 @@ JS_DEFINE_NATIVE_FUNCTION(@constructor_class@::@attribute.getter_callback@)
     }
 
     // Implementation: Static Functions
-    for (auto& function : interface.static_functions)
+    for (auto& function : interface.static_functions) {
+        if (function.extended_attributes.contains("FIXME"))
+            continue;
         generate_function(generator, function, StaticFunction::Yes, interface.constructor_class, interface.fully_qualified_name, interface);
+    }
     for (auto const& overload_set : interface.static_overload_sets) {
         if (overload_set.value.size() == 1)
             continue;
@@ -4586,6 +4600,8 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 
     bool has_ce_reactions = false;
     for (auto const& function : interface.functions) {
+        if (function.extended_attributes.contains("FIXME"))
+            continue;
         if (function.extended_attributes.contains("CEReactions")) {
             has_ce_reactions = true;
             break;
@@ -4735,10 +4751,6 @@ void generate_iterator_prototype_implementation(IDL::Interface const& interface,
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebIDL/Tracing.h>
-
-#if __has_include(<LibWeb/@possible_include_path@.h>)
-#    include <LibWeb/@possible_include_path@.h>
-#endif
 )~~~");
 
     emit_includes_for_all_imports(interface, generator, true);

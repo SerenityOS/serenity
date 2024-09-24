@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2024, Liav A. <liavalb@hotmail.co.il>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,14 +10,12 @@
 #include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/VirtualAddress.h>
+#include <Kernel/Prekernel/DebugOutput.h>
 #include <Kernel/Prekernel/Prekernel.h>
+#include <Kernel/Prekernel/Random.h>
+#include <Kernel/Prekernel/Runtime.h>
 #include <LibELF/ELFABI.h>
 #include <LibELF/Relocation.h>
-
-#if ARCH(X86_64)
-#    include <Kernel/Arch/x86_64/ASM_wrapper.h>
-#    include <Kernel/Arch/x86_64/CPUID.h>
-#endif
 
 // Defined in the linker script
 extern uintptr_t __stack_chk_guard;
@@ -48,18 +46,7 @@ extern "C" {
 multiboot_info_t* multiboot_info_ptr;
 }
 
-[[noreturn]] static void halt()
-{
-    asm volatile("hlt");
-    __builtin_unreachable();
-}
-
 void __stack_chk_fail()
-{
-    halt();
-}
-
-void __assertion_failed(char const*, char const*, unsigned int, char const*)
 {
     halt();
 }
@@ -74,8 +61,6 @@ extern "C" [[noreturn]] void init();
 //
 // This is where C++ execution begins, after boot.S transfers control here.
 //
-
-u64 generate_secure_seed();
 
 static void memmove_virt(void* dest_virt, FlatPtr dest_phys, void* src, size_t n)
 {
@@ -101,8 +86,7 @@ extern "C" [[noreturn]] void init()
         // We only consider the first specified multiboot module, and ignore
         // the rest of the modules.
         multiboot_module_entry_t* initrd_module = (multiboot_module_entry_t*)(FlatPtr)multiboot_info_ptr->mods_addr;
-        if (initrd_module->start > initrd_module->end)
-            halt();
+        VERIFY(initrd_module->start < initrd_module->end);
 
         initrd_module_start = initrd_module->start;
         initrd_module_end = initrd_module->end;
@@ -112,8 +96,7 @@ extern "C" [[noreturn]] void init()
     // copy the ELF header and program headers because we might end up overwriting them
     Elf_Ehdr kernel_elf_header = *(Elf_Ehdr*)kernel_image;
     Elf_Phdr kernel_program_headers[16];
-    if (kernel_elf_header.e_phnum > array_size(kernel_program_headers))
-        halt();
+    VERIFY(kernel_elf_header.e_phnum < array_size(kernel_program_headers));
     __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(Elf_Phdr) * kernel_elf_header.e_phnum);
 
     FlatPtr kernel_physical_base = (FlatPtr)0x200000;
@@ -141,10 +124,8 @@ extern "C" [[noreturn]] void init()
             continue;
         auto start = kernel_load_base + kernel_program_header.p_vaddr;
         auto end = start + kernel_program_header.p_memsz;
-        if (start < (FlatPtr)end_of_prekernel_image)
-            halt();
-        if (kernel_physical_base + kernel_program_header.p_paddr < (FlatPtr)end_of_prekernel_image)
-            halt();
+        VERIFY(start > (FlatPtr)end_of_prekernel_image);
+        VERIFY(kernel_physical_base + kernel_program_header.p_paddr > (FlatPtr)end_of_prekernel_image);
         if (end > kernel_load_end)
             kernel_load_end = end;
     }
@@ -269,31 +250,6 @@ extern "C" [[noreturn]] void init()
     entry(*adjust_by_mapping_base(&info));
 
     __builtin_unreachable();
-}
-
-u64 generate_secure_seed()
-{
-    u32 seed = 0xFEEBDAED;
-
-#if ARCH(X86_64)
-    CPUID processor_info(0x1);
-    if (processor_info.edx() & (1 << 4)) // TSC
-        seed ^= read_tsc();
-
-    if (processor_info.ecx() & (1 << 30)) // RDRAND
-        seed ^= read_rdrand();
-
-    CPUID extended_features(0x7);
-    if (extended_features.ebx() & (1 << 18)) // RDSEED
-        seed ^= read_rdseed();
-#else
-#    warning No native randomness source available for this architecture
-#endif
-
-    seed ^= multiboot_info_ptr->mods_addr;
-    seed ^= multiboot_info_ptr->framebuffer_addr;
-
-    return seed;
 }
 
 // Define some Itanium C++ ABI methods to stop the linker from complaining.

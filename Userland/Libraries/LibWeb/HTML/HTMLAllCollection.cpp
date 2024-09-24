@@ -214,17 +214,14 @@ Variant<JS::NonnullGCPtr<DOM::HTMLCollection>, JS::NonnullGCPtr<DOM::Element>, E
     return get_the_all_named_elements(MUST(FlyString::from_deprecated_fly_string(name_or_index.as_string())));
 }
 
-bool HTMLAllCollection::is_supported_property_index(u32 index) const
+Optional<JS::Value> HTMLAllCollection::item_value(size_t index) const
 {
-    return index < collect_matching_elements().size();
+    if (auto value = get_the_all_indexed_element(index))
+        return value;
+    return {};
 }
 
-WebIDL::ExceptionOr<JS::Value> HTMLAllCollection::item_value(size_t index) const
-{
-    return get_the_all_indexed_element(index);
-}
-
-WebIDL::ExceptionOr<JS::Value> HTMLAllCollection::named_item_value(FlyString const& name) const
+JS::Value HTMLAllCollection::named_item_value(FlyString const& name) const
 {
     return named_item(name).visit(
         [](Empty) -> JS::Value { return JS::js_undefined(); },

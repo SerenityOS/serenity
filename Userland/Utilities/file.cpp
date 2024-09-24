@@ -128,10 +128,13 @@ static ErrorOr<Optional<String>> elf_details(StringView description, StringView 
     if (!elf_image.is_valid())
         return OptionalNone {};
 
-    StringBuilder interpreter_path_builder;
-    auto result_or_error = ELF::validate_program_headers(*(Elf_Ehdr const*)elf_data.data(), elf_data.size(), elf_data, &interpreter_path_builder);
-    if (result_or_error.is_error() || !result_or_error.value())
+    Optional<Elf_Phdr> interpreter_path_program_header {};
+    if (!ELF::validate_program_headers(*bit_cast<Elf_Ehdr const*>(elf_data.data()), elf_data.size(), elf_data, interpreter_path_program_header))
         return OptionalNone {};
+
+    StringBuilder interpreter_path_builder;
+    if (interpreter_path_program_header.has_value())
+        TRY(interpreter_path_builder.try_append({ elf_data.offset(interpreter_path_program_header.value().p_offset), static_cast<size_t>(interpreter_path_program_header.value().p_filesz) - 1 }));
     auto interpreter_path = interpreter_path_builder.string_view();
 
     auto& header = *reinterpret_cast<Elf_Ehdr const*>(elf_data.data());

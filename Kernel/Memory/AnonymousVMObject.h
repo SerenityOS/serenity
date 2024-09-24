@@ -58,6 +58,7 @@ private:
 
     ErrorOr<void> ensure_cow_map();
     ErrorOr<void> ensure_or_reset_cow_map();
+    void reset_cow_map();
 
     Optional<CommittedPhysicalPageSet> m_unused_committed_pages;
     Bitmap m_cow_map;

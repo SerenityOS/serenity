@@ -120,7 +120,7 @@ ALWAYS_INLINE static AK::SIMD::f32x4 log2_approximate(AK::SIMD::f32x4 v)
     } u { v };
 
     // Extract just the exponent minus 1, giving a lower integral bound for log2.
-    auto log = AK::SIMD::to_f32x4(((u.int_val >> 23) & 255) - 128);
+    auto log = AK::SIMD::simd_cast<AK::SIMD::f32x4>(((u.int_val >> 23) & 255) - 128);
 
     // Replace the exponent with 0, giving a value between 1 and 2.
     u.int_val &= ~(255 << 23);
@@ -134,8 +134,8 @@ ALWAYS_INLINE static AK::SIMD::f32x4 log2_approximate(AK::SIMD::f32x4 v)
 ALWAYS_INLINE static Vector2<AK::SIMD::f32x4> to_vec2_f32x4(Vector2<AK::SIMD::i32x4> const& v)
 {
     return {
-        AK::SIMD::to_f32x4(v.x()),
-        AK::SIMD::to_f32x4(v.y()),
+        AK::SIMD::simd_cast<AK::SIMD::f32x4>(v.x()),
+        AK::SIMD::simd_cast<AK::SIMD::f32x4>(v.y()),
     };
 }
 

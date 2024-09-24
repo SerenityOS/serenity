@@ -21,6 +21,7 @@
 #include <LibGfx/ImageFormats/QOILoader.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
+#include <LibGfx/ImageFormats/WebPSharedLossless.h>
 #include <LibGfx/ImageFormats/WebPWriter.h>
 #include <LibTest/TestCase.h>
 
@@ -174,6 +175,92 @@ TEST_CASE(test_png)
     TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
+TEST_CASE(test_png_paeth_simd)
+{
+    for (int a = 0; a < 256; ++a) {
+        for (int b = 0; b < 256; ++b) {
+            for (int c = 0; c < 256; ++c) {
+                u8 expected = Gfx::PNG::paeth_predictor(a, b, c);
+
+                AK::SIMD::u8x4 va { (u8)a, (u8)a, (u8)a, (u8)a };
+                AK::SIMD::u8x4 vb { (u8)b, (u8)b, (u8)b, (u8)b };
+                AK::SIMD::u8x4 vc { (u8)c, (u8)c, (u8)c, (u8)c };
+                AK::SIMD::u8x4 actual = Gfx::PNG::paeth_predictor(va, vb, vc);
+
+                EXPECT_EQ(actual[0], expected);
+                EXPECT_EQ(actual[1], expected);
+                EXPECT_EQ(actual[2], expected);
+                EXPECT_EQ(actual[3], expected);
+            }
+        }
+    }
+}
+
+TEST_CASE(test_png_animation)
+{
+    auto rgb_bitmap = TRY_OR_FAIL(create_test_rgb_bitmap());
+    auto rgba_bitmap = TRY_OR_FAIL(create_test_rgba_bitmap());
+
+    // 20 kiB is enough for two 47x33 frames.
+    auto stream_buffer = TRY_OR_FAIL(ByteBuffer::create_uninitialized(20 * 1024));
+    FixedMemoryStream stream { Bytes { stream_buffer } };
+
+    auto animation_writer = TRY_OR_FAIL(Gfx::PNGWriter::start_encoding_animation(stream, rgb_bitmap->size()));
+
+    TRY_OR_FAIL(animation_writer->add_frame(*rgb_bitmap, 100));
+    TRY_OR_FAIL(animation_writer->add_frame(*rgba_bitmap, 200));
+
+    auto encoded_animation = ReadonlyBytes { stream_buffer.data(), stream.offset() };
+
+    auto decoded_animation_plugin = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(encoded_animation));
+    EXPECT(decoded_animation_plugin->is_animated());
+    EXPECT_EQ(decoded_animation_plugin->frame_count(), 2u);
+    EXPECT_EQ(decoded_animation_plugin->loop_count(), 0u);
+    EXPECT_EQ(decoded_animation_plugin->size(), rgb_bitmap->size());
+
+    auto frame0 = TRY_OR_FAIL(decoded_animation_plugin->frame(0));
+    EXPECT_EQ(frame0.duration, 100);
+    expect_bitmaps_equal(*frame0.image, *rgb_bitmap);
+
+    auto frame1 = TRY_OR_FAIL(decoded_animation_plugin->frame(1));
+    EXPECT_EQ(frame1.duration, 200);
+    expect_bitmaps_equal(*frame1.image, *rgba_bitmap);
+}
+
+TEST_CASE(test_png_incremental_animation)
+{
+    auto rgb_bitmap_1 = TRY_OR_FAIL(create_test_rgb_bitmap());
+
+    auto rgb_bitmap_2 = TRY_OR_FAIL(create_test_rgb_bitmap());
+
+    rgb_bitmap_2->scanline(3)[3] = Gfx::Color(Color::Red).value();
+
+    // 20 kiB is enough for two 47x33 frames.
+    auto stream_buffer = TRY_OR_FAIL(ByteBuffer::create_uninitialized(20 * 1024));
+    FixedMemoryStream stream { Bytes { stream_buffer } };
+
+    auto animation_writer = TRY_OR_FAIL(Gfx::PNGWriter::start_encoding_animation(stream, rgb_bitmap_1->size()));
+
+    TRY_OR_FAIL(animation_writer->add_frame(*rgb_bitmap_1, 100));
+    TRY_OR_FAIL(animation_writer->add_frame_relative_to_last_frame(*rgb_bitmap_2, 200, *rgb_bitmap_1));
+
+    auto encoded_animation = ReadonlyBytes { stream_buffer.data(), stream.offset() };
+
+    auto decoded_animation_plugin = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(encoded_animation));
+    EXPECT(decoded_animation_plugin->is_animated());
+    EXPECT_EQ(decoded_animation_plugin->frame_count(), 2u);
+    EXPECT_EQ(decoded_animation_plugin->loop_count(), 0u);
+    EXPECT_EQ(decoded_animation_plugin->size(), rgb_bitmap_1->size());
+
+    auto frame0 = TRY_OR_FAIL(decoded_animation_plugin->frame(0));
+    EXPECT_EQ(frame0.duration, 100);
+    expect_bitmaps_equal(*frame0.image, *rgb_bitmap_1);
+
+    auto frame1 = TRY_OR_FAIL(decoded_animation_plugin->frame(1));
+    EXPECT_EQ(frame1.duration, 200);
+    expect_bitmaps_equal(*frame1.image, *rgb_bitmap_2);
+}
+
 TEST_CASE(test_qoi)
 {
     TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
@@ -238,7 +325,7 @@ TEST_CASE(test_webp_color_indexing_transform_single_channel)
         expect_bitmaps_equal(*decoded_bitmap, *bitmap);
 
         Gfx::WebPEncoderOptions options;
-        options.vp8l_options.allowed_transforms = 0;
+        options.vp8l_options.allowed_transforms = options.vp8l_options.allowed_transforms & ~((1u << Gfx::COLOR_INDEXING_TRANSFORM) | (1u << Gfx::PREDICTOR_TRANSFORM));
         auto encoded_data_without_color_indexing = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap, options));
         if (bits_per_pixel == 8)
             EXPECT(encoded_data.size() <= encoded_data_without_color_indexing.size());
@@ -246,6 +333,69 @@ TEST_CASE(test_webp_color_indexing_transform_single_channel)
             EXPECT(encoded_data.size() < encoded_data_without_color_indexing.size());
         auto decoded_bitmap_without_color_indexing = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
         expect_bitmaps_equal(*decoded_bitmap_without_color_indexing, *decoded_bitmap);
+    }
+}
+
+TEST_CASE(test_webp_grayscale)
+{
+    Array<Color, 256> colors;
+    for (size_t i = 0; i < colors.size(); ++i) {
+        colors[i].set_red(i);
+        colors[i].set_green(255 - i);
+        colors[i].set_blue(128);
+        colors[i].set_alpha(255 - i / 16);
+    }
+    Array<Color, 256> grays;
+    for (size_t i = 0; i < grays.size(); ++i) {
+        // `255 - i` because:
+        // * webpwriter sorts palette colors by luminance
+        // * luminance is mostly green and `colors` uses `255 - i` for green
+        // * and palette order should match for compressed size comparisons to be meaningful
+        grays[i].set_red(255 - i);
+        grays[i].set_green(255 - i);
+        grays[i].set_blue(255 - i);
+        grays[i].set_alpha(255);
+    }
+    Array<Color, 256> grays_with_alpha = grays;
+    for (size_t i = 0; i < grays_with_alpha.size(); ++i)
+        grays_with_alpha[i].set_alpha(255 - i / 16);
+
+    auto make_bitmap = [](Array<Color, 256> const& palette) -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
+        auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 47, 33 }));
+        for (int y = 0; y < bitmap->height(); ++y)
+            for (int x = 0; x < bitmap->width(); ++x)
+                bitmap->set_pixel(x, y, palette[(x * bitmap->width() + y) % palette.size()]);
+        return bitmap;
+    };
+    auto colors_bitmap = TRY_OR_FAIL(make_bitmap(colors));
+    auto grays_bitmap = TRY_OR_FAIL(make_bitmap(grays));
+    auto grays_with_alpha_bitmap = TRY_OR_FAIL(make_bitmap(grays_with_alpha));
+
+    auto encoded_grays = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(grays_bitmap));
+    auto decoded_grays = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_grays)), grays_bitmap->size()));
+    expect_bitmaps_equal(*decoded_grays, *grays_bitmap);
+
+    auto encoded_colors = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(colors_bitmap));
+    EXPECT(encoded_grays.size() < encoded_colors.size());
+
+    auto encoded_grays_with_alpha = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(grays_with_alpha_bitmap));
+    EXPECT(encoded_grays_with_alpha.size() <= encoded_colors.size());
+    EXPECT(encoded_grays.size() < encoded_grays_with_alpha.size());
+}
+
+TEST_CASE(test_webp_color_cache)
+{
+    auto bitmap = TRY_OR_FAIL(create_test_rgba_bitmap());
+    for (int color_cache_bits = 0; color_cache_bits <= 11; ++color_cache_bits) {
+        Gfx::WebPEncoderOptions options;
+        if (color_cache_bits == 0)
+            options.vp8l_options.color_cache_bits = {};
+        else
+            options.vp8l_options.color_cache_bits = color_cache_bits;
+
+        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap));
+        auto decoded_bitmap = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
+        expect_bitmaps_equal(*decoded_bitmap, *bitmap);
     }
 }
 

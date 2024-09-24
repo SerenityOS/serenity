@@ -293,7 +293,6 @@ void Window::set_minimizable(bool minimizable)
         return;
     m_minimizable = minimizable;
     update_window_menu_items();
-    // TODO: Hide/show (or alternatively change enabled state of) window minimize button dynamically depending on value of m_minimizable
 }
 
 void Window::set_closeable(bool closeable)
@@ -443,7 +442,6 @@ void Window::set_resizable(bool resizable)
         return;
     m_resizable = resizable;
     update_window_menu_items();
-    // TODO: Hide/show (or alternatively change enabled state of) window maximize button dynamically depending on value of is_resizable()
 }
 
 void Window::event(Core::Event& event)

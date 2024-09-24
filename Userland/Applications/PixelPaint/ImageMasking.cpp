@@ -226,7 +226,7 @@ void ImageMasking::generate_new_mask()
         Gfx::Color reference_mask_pixel;
         Gfx::HSV content_pixel_hsv;
 
-        for (int y = m_masked_area->top(); y <= m_masked_area->bottom(); y++) {
+        for (int y = m_masked_area->top(); y < m_masked_area->bottom(); y++) {
             auto reference_scanline = m_reference_mask->scanline(y);
             auto content_scanline = m_editor->active_layer()->content_bitmap().scanline(y);
             auto mask_scanline = m_editor->active_layer()->mask_bitmap()->scanline(y);
@@ -437,8 +437,8 @@ double ColorWheelWidget::hue()
 void ColorWheelWidget::calc_hue(Gfx::IntPoint const& position)
 {
     auto center = Gfx::IntPoint(width() / 2, height() / 2);
+    auto angle = AK::to_degrees(AK::atan2(static_cast<float>(position.y() - center.y()), static_cast<float>(position.x() - center.x())));
 
-    auto angle = AK::atan2(static_cast<float>(position.y() - center.y()), AK::to_degrees(static_cast<float>(position.x() - center.x())));
     set_hue(angle + 90);
 }
 

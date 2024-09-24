@@ -512,20 +512,20 @@ void dump_thread_list(bool with_stack_traces)
 {
     dbgln("Scheduler thread list for processor {}:", Processor::current_id());
 
-    auto get_eip = [](Thread& thread) -> u32 {
+    auto get_pc = [](Thread& thread) -> FlatPtr {
         if (!thread.current_trap())
             return thread.regs().ip();
         return thread.get_register_dump_from_stack().ip();
     };
 
-    Thread::for_each_ignoring_jails([&](Thread& thread) {
+    Thread::for_each_ignoring_process_lists([&](Thread& thread) {
         auto color = thread.process().is_kernel_process() ? "\x1b[34;1m"sv : "\x1b[33;1m"sv;
         switch (thread.state()) {
         case Thread::State::Dying:
             dmesgln("  {}{:30}\x1b[0m @ {:08x} is {:14} (Finalizable: {}, nsched: {})",
                 color,
                 thread,
-                get_eip(thread),
+                get_pc(thread),
                 thread.state_string(),
                 thread.is_finalizable(),
                 thread.times_scheduled());
@@ -534,7 +534,7 @@ void dump_thread_list(bool with_stack_traces)
             dmesgln("  {}{:30}\x1b[0m @ {:08x} is {:14} (Pr:{:2}, nsched: {})",
                 color,
                 thread,
-                get_eip(thread),
+                get_pc(thread),
                 thread.state_string(),
                 thread.priority(),
                 thread.times_scheduled());

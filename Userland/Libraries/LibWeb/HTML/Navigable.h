@@ -52,6 +52,9 @@ class Navigable : public JS::Cell {
 public:
     virtual ~Navigable() override;
 
+    using NullWithError = StringView;
+    using NavigationParamsVariant = Variant<Empty, NullWithError, JS::NonnullGCPtr<NavigationParams>, JS::NonnullGCPtr<NonFetchSchemeNavigationParams>>;
+
     ErrorOr<void> initialize_navigable(JS::NonnullGCPtr<DocumentState> document_state, JS::GCPtr<Navigable> parent);
 
     Vector<JS::Handle<Navigable>> child_navigables() const;
@@ -123,7 +126,7 @@ public:
         SourceSnapshotParams const& source_snapshot_params,
         TargetSnapshotParams const& target_snapshot_params,
         Optional<String> navigation_id = {},
-        Variant<Empty, JS::NonnullGCPtr<NavigationParams>, JS::NonnullGCPtr<NonFetchSchemeNavigationParams>> navigation_params = Empty {},
+        NavigationParamsVariant navigation_params = Empty {},
         CSPNavigationType csp_navigation_type = CSPNavigationType::Other,
         bool allow_POST = false,
         JS::SafeFunction<void()> completion_steps = [] {});
@@ -160,11 +163,10 @@ public:
     CSSPixelRect to_top_level_rect(CSSPixelRect const&);
 
     CSSPixelSize size() const { return m_size; }
-    void set_size(CSSPixelSize);
 
     CSSPixelPoint viewport_scroll_offset() const { return m_viewport_scroll_offset; }
     CSSPixelRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
-    void set_viewport_rect(CSSPixelRect const&);
+    void set_viewport_size(CSSPixelSize);
     void perform_scroll_of_viewport(CSSPixelPoint position);
 
     void set_needs_display();

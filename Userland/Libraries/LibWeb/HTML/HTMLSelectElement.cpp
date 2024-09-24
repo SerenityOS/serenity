@@ -20,6 +20,7 @@
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/HTML/Numbers.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Namespace.h>
@@ -70,15 +71,22 @@ void HTMLSelectElement::adjust_computed_style(CSS::StyleProperties& style)
         style.set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::InlineBlock)));
 }
 
-// https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-size
+// https://html.spec.whatwg.org/multipage/form-elements.html#concept-select-size
 WebIDL::UnsignedLong HTMLSelectElement::size() const
 {
     // The size IDL attribute must reflect the respective content attributes of the same name. The size IDL attribute has a default value of 0.
     if (auto size_string = get_attribute(HTML::AttributeNames::size); size_string.has_value()) {
+        // The display size of a select element is the result of applying the rules for parsing non-negative integers
+        // to the value of element's size attribute, if it has one and parsing it is successful.
         if (auto size = parse_non_negative_integer(*size_string); size.has_value())
             return *size;
     }
-    return 0;
+
+    // If applying those rules to the attribute's value is not successful or if the size attribute is absent,
+    // then the element's display size is 4 if the element's multiple content attribute is present, and 1 otherwise.
+    if (has_attribute(AttributeNames::multiple))
+        return 4;
+    return 1;
 }
 
 WebIDL::ExceptionOr<void> HTMLSelectElement::set_size(WebIDL::UnsignedLong size)
@@ -132,7 +140,11 @@ HTMLOptionElement* HTMLSelectElement::named_item(FlyString const& name)
 WebIDL::ExceptionOr<void> HTMLSelectElement::add(HTMLOptionOrOptGroupElement element, Optional<HTMLElementOrElementIndex> before)
 {
     // Similarly, the add(element, before) method must act like its namesake method on that same options collection.
-    return const_cast<HTMLOptionsCollection&>(*options()).add(move(element), move(before));
+    TRY(const_cast<HTMLOptionsCollection&>(*options()).add(move(element), move(before)));
+
+    update_selectedness(); // Not in spec
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-select-remove
@@ -336,8 +348,37 @@ static String strip_newlines(Optional<String> string)
     return MUST(Infra::strip_and_collapse_whitespace(MUST(builder.to_string())));
 }
 
-void HTMLSelectElement::activation_behavior(DOM::Event const&)
+// https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
+void HTMLSelectElement::show_the_picker_if_applicable()
 {
+    // FIXME: Deduplicate with HTMLInputElement
+    // To show the picker, if applicable for a select element:
+
+    // 1. If element's relevant global object does not have transient activation, then return.
+    auto& global_object = relevant_global_object(*this);
+    if (!is<HTML::Window>(global_object))
+        return;
+    auto& relevant_global_object = static_cast<HTML::Window&>(global_object);
+    if (!relevant_global_object.has_transient_activation())
+        return;
+
+    // 2. If element is not mutable, then return.
+    if (!enabled())
+        return;
+
+    // 3. Consume user activation given element's relevant global object.
+    relevant_global_object.consume_user_activation();
+
+    // 4. If element's type attribute is in the File Upload state, then run these steps in parallel:
+    // Not Applicable to select elements
+
+    // 5. Otherwise, the user agent should show any relevant user interface for selecting a value for element,
+    //    in the way it normally would when the user interacts with the control. (If no such UI applies to element, then this step does nothing.)
+    //    If such a user interface is shown, it must respect the requirements stated in the relevant parts of the specification for how element
+    //    behaves given its type attribute state. (For example, various sections describe restrictions on the resulting value string.)
+    //    This step can have side effects, such as closing other pickers that were previously shown by this algorithm.
+    //    (If this closes a file selection picker, then per the above that will lead to firing either input and change events, or a cancel event.)
+
     // Populate select items
     m_select_items.clear();
     u32 id_counter = 1;
@@ -369,6 +410,42 @@ void HTMLSelectElement::activation_behavior(DOM::Event const&)
     auto position = document().navigable()->to_top_level_position(Web::CSSPixelPoint { rect->x(), rect->y() });
     document().page().did_request_select_dropdown(weak_element, position, CSSPixels(rect->width()), m_select_items);
     set_is_open(true);
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#dom-select-showpicker
+WebIDL::ExceptionOr<void> HTMLSelectElement::show_picker()
+{
+    // FIXME: Deduplicate with HTMLInputElement
+    // The showPicker() method steps are:
+
+    // 1. If this is not mutable, then throw an "InvalidStateError" DOMException.
+    if (!enabled())
+        return WebIDL::InvalidStateError::create(realm(), "Element is not mutable"_fly_string);
+
+    // 2. If this's relevant settings object's origin is not same origin with this's relevant settings object's top-level origin,
+    // and this is a select element, then throw a "SecurityError" DOMException.
+    if (!relevant_settings_object(*this).origin().is_same_origin(relevant_settings_object(*this).top_level_origin)) {
+        return WebIDL::SecurityError::create(realm(), "Cross origin pickers are not allowed"_fly_string);
+    }
+
+    // 3. If this's relevant global object does not have transient activation, then throw a "NotAllowedError" DOMException.
+    // FIXME: The global object we get here should probably not need casted to Window to check for transient activation
+    auto& global_object = relevant_global_object(*this);
+    if (!is<HTML::Window>(global_object) || !static_cast<HTML::Window&>(global_object).has_transient_activation()) {
+        return WebIDL::NotAllowedError::create(realm(), "Too long since user activation to show picker"_fly_string);
+    }
+
+    // FIXME: 4. If this is a select element, and this is not being rendered, then throw a "NotSupportedError" DOMException.
+
+    // 5. Show the picker, if applicable, for this.
+    show_the_picker_if_applicable();
+    return {};
+}
+
+void HTMLSelectElement::activation_behavior(DOM::Event const& event)
+{
+    if (event.is_trusted())
+        show_the_picker_if_applicable();
 }
 
 void HTMLSelectElement::did_select_item(Optional<u32> const& id)
@@ -406,14 +483,7 @@ void HTMLSelectElement::form_associated_element_was_inserted()
 
     // Wait until children are ready
     queue_an_element_task(HTML::Task::Source::Microtask, [this] {
-        // Select first option when no other option is selected
-        if (selected_index() == -1) {
-            auto options = list_of_options();
-            if (options.size() > 0) {
-                options.at(0)->set_selected(true);
-            }
-        }
-        update_inner_text_element();
+        update_selectedness();
     });
 }
 
@@ -482,5 +552,59 @@ void HTMLSelectElement::update_inner_text_element()
             return;
         }
     }
+}
+
+// https://html.spec.whatwg.org/multipage/form-elements.html#selectedness-setting-algorithm
+void HTMLSelectElement::update_selectedness()
+{
+    if (has_attribute(AttributeNames::multiple))
+        return;
+
+    // If element's multiple attribute is absent, and element's display size is 1,
+    if (size() == 1) {
+        bool has_selected_elements = false;
+        for (auto const& option_element : list_of_options()) {
+            if (option_element->selected()) {
+                has_selected_elements = true;
+                break;
+            }
+        }
+
+        // and no option elements in the element's list of options have their selectedness set to true,
+        if (!has_selected_elements) {
+            // then set the selectedness of the first option element in the list of options in tree order
+            // that is not disabled, if any, to true, and return.
+            for (auto const& option_element : list_of_options()) {
+                if (!option_element->disabled()) {
+                    option_element->set_selected_internal(true);
+                    update_inner_text_element();
+                    return;
+                }
+            }
+        }
+    }
+
+    // If element's multiple attribute is absent,
+    // and two or more option elements in element's list of options have their selectedness set to true,
+    // then set the selectedness of all but the last option element with its selectedness set to true
+    // in the list of options in tree order to false.
+    int number_of_selected = 0;
+    for (auto const& option_element : list_of_options()) {
+        if (option_element->selected())
+            ++number_of_selected;
+    }
+    // and two or more option elements in element's list of options have their selectedness set to true,
+    if (number_of_selected >= 2) {
+        // then set the selectedness of all but the last option element with its selectedness set to true
+        // in the list of options in tree order to false.
+        for (auto const& option_element : list_of_options()) {
+            if (number_of_selected == 1) {
+                break;
+            }
+            option_element->set_selected_internal(false);
+            --number_of_selected;
+        }
+    }
+    update_inner_text_element();
 }
 }

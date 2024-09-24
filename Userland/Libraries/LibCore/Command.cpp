@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * Copyright (c) 2022, David Tuin <davidot@serenityos.org>
  * Copyright (c) 2023, Shannon Booth <shannon@serenityos.org>
+ * Copyright (c) 2024, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,8 +20,10 @@
 
 namespace Core {
 
-ErrorOr<OwnPtr<Command>> Command::create(StringView command, char const* const arguments[])
+ErrorOr<NonnullOwnPtr<Command>> Command::create(StringView command, char const* const arguments[])
 {
+    // FIXME: Close pipes in every branch, probably with something nicer than 6 (Armed)ScopeGuards
+    //        (maybe introduce some new variant/api of Core::File that doesn't allocate, just returns RAII owner?).
     auto stdin_fds = TRY(Core::System::pipe2(O_CLOEXEC));
     auto stdout_fds = TRY(Core::System::pipe2(O_CLOEXEC));
     auto stderr_fds = TRY(Core::System::pipe2(O_CLOEXEC));
@@ -31,9 +34,10 @@ ErrorOr<OwnPtr<Command>> Command::create(StringView command, char const* const a
     posix_spawn_file_actions_adddup2(&file_actions, stdout_fds[1], STDOUT_FILENO);
     posix_spawn_file_actions_adddup2(&file_actions, stderr_fds[1], STDERR_FILENO);
 
+    ScopeGuard destroy_file_actions { [&file_actions] { posix_spawn_file_actions_destroy(&file_actions); } };
+
     auto pid = TRY(Core::System::posix_spawnp(command, &file_actions, nullptr, const_cast<char**>(arguments), Core::Environment::raw_environ()));
 
-    posix_spawn_file_actions_destroy(&file_actions);
     ArmedScopeGuard runner_kill { [&pid] { kill(pid, SIGKILL); } };
 
     TRY(Core::System::close(stdin_fds[0]));
@@ -46,7 +50,7 @@ ErrorOr<OwnPtr<Command>> Command::create(StringView command, char const* const a
 
     runner_kill.disarm();
 
-    return make<Command>(pid, move(stdin_file), move(stdout_file), move(stderr_file));
+    return adopt_nonnull_own_or_enomem(new (nothrow) Command(pid, move(stdin_file), move(stdout_file), move(stderr_file)));
 }
 
 Command::Command(pid_t pid, NonnullOwnPtr<Core::File> stdin_file, NonnullOwnPtr<Core::File> stdout_file, NonnullOwnPtr<Core::File> stderr_file)

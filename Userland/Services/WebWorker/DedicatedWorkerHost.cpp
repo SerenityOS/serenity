@@ -8,20 +8,23 @@
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibWeb/Fetch/Fetching/Fetching.h>
 #include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
+#include <LibWeb/HTML/DedicatedWorkerGlobalScope.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/EnvironmentSettingsSnapshot.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
 #include <LibWeb/HTML/Scripting/WorkerEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>
 #include <LibWeb/HTML/WorkerGlobalScope.h>
+#include <LibWeb/HighResolutionTime/TimeOrigin.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <WebWorker/DedicatedWorkerHost.h>
 
 namespace WebWorker {
 
-DedicatedWorkerHost::DedicatedWorkerHost(URL::URL url, String type)
+DedicatedWorkerHost::DedicatedWorkerHost(URL::URL url, String type, String name)
     : m_url(move(url))
     , m_type(move(type))
+    , m_name(move(name))
 {
 }
 
@@ -33,6 +36,9 @@ void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::Trans
 {
     bool const is_shared = false;
 
+    // 3. Let unsafeWorkerCreationTime be the unsafe shared current time.
+    auto unsafe_worker_creation_time = Web::HighResolutionTime::unsafe_shared_current_time();
+
     // 7. Let realm execution context be the result of creating a new JavaScript realm given agent and the following customizations:
     auto realm_execution_context = Web::Bindings::create_a_new_javascript_realm(
         Web::Bindings::main_thread_vm(),
@@ -42,7 +48,7 @@ void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::Trans
             // FIXME: Proper support for both SharedWorkerGlobalScope and DedicatedWorkerGlobalScope
             if (is_shared)
                 TODO();
-            return Web::Bindings::main_thread_vm().heap().allocate_without_realm<Web::HTML::WorkerGlobalScope>(realm, page);
+            return Web::Bindings::main_thread_vm().heap().allocate_without_realm<Web::HTML::DedicatedWorkerGlobalScope>(realm, page);
         },
         nullptr);
 
@@ -52,7 +58,7 @@ void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::Trans
 
     // 9. Set up a worker environment settings object with realm execution context,
     //    outside settings, and unsafeWorkerCreationTime, and let inside settings be the result.
-    auto inner_settings = Web::HTML::WorkerEnvironmentSettingsObject::setup(page, move(realm_execution_context));
+    auto inner_settings = Web::HTML::WorkerEnvironmentSettingsObject::setup(page, move(realm_execution_context), outside_settings_snapshot, unsafe_worker_creation_time);
 
     auto& console_object = *inner_settings->realm().intrinsics().console_object();
     m_console = console_object.heap().allocate_without_realm<Web::HTML::WorkerDebugConsoleClient>(console_object.console());
@@ -60,7 +66,10 @@ void DedicatedWorkerHost::run(JS::NonnullGCPtr<Web::Page> page, Web::HTML::Trans
     console_object.console().set_client(*m_console);
 
     // 10. Set worker global scope's name to the value of options's name member.
-    // FIXME: name property requires the SharedWorkerGlobalScope or DedicatedWorkerGlobalScope child class to be used
+    if (is_shared)
+        TODO();
+    else
+        static_cast<Web::HTML::DedicatedWorkerGlobalScope&>(*worker_global_scope).set_name(m_name);
 
     // 11. Append owner to worker global scope's owner set.
     // FIXME: support for 'owner' set on WorkerGlobalScope

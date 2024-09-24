@@ -8,6 +8,7 @@
 
 #include <AK/Badge.h>
 #include <AK/FlyString.h>
+#include <AK/GenericShorthands.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/RefPtr.h>
 #include <AK/TypeCasts.h>
@@ -69,7 +70,7 @@ public:
     bool is_document() const { return type() == NodeType::DOCUMENT_NODE; }
     bool is_document_type() const { return type() == NodeType::DOCUMENT_TYPE_NODE; }
     bool is_comment() const { return type() == NodeType::COMMENT_NODE; }
-    bool is_character_data() const { return type() == NodeType::TEXT_NODE || type() == NodeType::COMMENT_NODE; }
+    bool is_character_data() const { return first_is_one_of(type(), NodeType::TEXT_NODE, NodeType::COMMENT_NODE, NodeType::CDATA_SECTION_NODE, NodeType::PROCESSING_INSTRUCTION_NODE); }
     bool is_document_fragment() const { return type() == NodeType::DOCUMENT_FRAGMENT_NODE; }
     bool is_parent_node() const { return is_element() || is_document() || is_document_fragment(); }
     bool is_slottable() const { return is_element() || is_text() || is_cdata_section(); }
@@ -155,6 +156,8 @@ public:
     String descendant_text_content() const;
     Optional<String> text_content() const;
     void set_text_content(Optional<String> const&);
+
+    WebIDL::ExceptionOr<void> normalize();
 
     Optional<String> node_value() const;
     void set_node_value(Optional<String> const&);
@@ -251,6 +254,8 @@ public:
     static Node* from_unique_id(i32);
 
     WebIDL::ExceptionOr<String> serialize_fragment(DOMParsing::RequireWellFormed, FragmentSerializationMode = FragmentSerializationMode::Inner) const;
+
+    WebIDL::ExceptionOr<void> unsafely_set_html(Element&, StringView);
 
     void replace_all(JS::GCPtr<Node>);
     void string_replace_all(String const&);
@@ -690,6 +695,10 @@ public:
 
     ErrorOr<String> accessible_name(Document const&) const;
     ErrorOr<String> accessible_description(Document const&) const;
+
+    Optional<String> locate_a_namespace(Optional<String> const& prefix) const;
+    Optional<String> lookup_namespace_uri(Optional<String> prefix) const;
+    bool is_default_namespace(Optional<String> namespace_) const;
 
 protected:
     Node(JS::Realm&, Document&, NodeType);

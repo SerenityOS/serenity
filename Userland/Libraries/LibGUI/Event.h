@@ -503,7 +503,7 @@ class DropEvent final : public Event {
 public:
     DropEvent(Gfx::IntPoint, ByteString const& text, NonnullRefPtr<Core::MimeData const> mime_data);
 
-    ~DropEvent() = default;
+    ~DropEvent();
 
     Gfx::IntPoint position() const { return m_position; }
     ByteString const& text() const { return m_text; }
@@ -579,7 +579,7 @@ private:
 class ActionEvent final : public Event {
 public:
     ActionEvent(Type, Action&);
-    ~ActionEvent() = default;
+    ~ActionEvent();
 
     Action const& action() const { return *m_action; }
     Action& action() { return *m_action; }

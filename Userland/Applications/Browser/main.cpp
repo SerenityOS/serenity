@@ -180,7 +180,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/bin/Browser", "x"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    WebView::ChromeProcess chrome_process;
+    TRY(Core::System::enter_jail_mode());
+
+    auto chrome_process = TRY(WebView::ChromeProcess::create());
     if (TRY(chrome_process.connect(specified_urls, new_window)) == WebView::ChromeProcess::ProcessDisposition::ExitProcess) {
         outln("Opening in existing process");
         return 0;

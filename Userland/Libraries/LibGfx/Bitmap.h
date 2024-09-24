@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2024, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -15,6 +15,7 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
+#include <LibIPC/Forward.h>
 
 #define ENUMERATE_IMAGE_FORMATS                \
     __ENUMERATE_IMAGE_FORMAT(bmp, ".bmp")      \
@@ -98,7 +99,7 @@ class Bitmap : public RefCounted<Bitmap> {
 public:
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create(BitmapFormat, IntSize, int intrinsic_scale = 1);
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_shareable(BitmapFormat, IntSize, int intrinsic_scale = 1);
-    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_wrapper(BitmapFormat, IntSize, int intrinsic_scale, size_t pitch, void*);
+    [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> create_wrapper(BitmapFormat, IntSize, int intrinsic_scale, size_t pitch, void*, Function<void()>&& destruction_callback = {});
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_file(StringView path, int scale_factor = 1, Optional<IntSize> ideal_size = {});
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_file(NonnullOwnPtr<Core::File>, StringView path, Optional<IntSize> ideal_size = {});
     [[nodiscard]] static ErrorOr<NonnullRefPtr<Bitmap>> load_from_bytes(ReadonlyBytes, Optional<IntSize> ideal_size = {}, Optional<ByteString> mine_type = {});
@@ -236,7 +237,7 @@ public:
 
 private:
     Bitmap(BitmapFormat, IntSize, int, BackingStore const&);
-    Bitmap(BitmapFormat, IntSize, int, size_t pitch, void*);
+    Bitmap(BitmapFormat, IntSize, int, size_t pitch, void*, Function<void()>&& destruction_callback);
     Bitmap(BitmapFormat, Core::AnonymousBuffer, IntSize, int);
 
     static ErrorOr<BackingStore> allocate_backing_store(BitmapFormat format, IntSize size, int scale_factor);
@@ -246,8 +247,8 @@ private:
     void* m_data { nullptr };
     size_t m_pitch { 0 };
     BitmapFormat m_format { BitmapFormat::Invalid };
-    bool m_data_is_malloced { false };
     Core::AnonymousBuffer m_buffer;
+    Function<void()> m_destruction_callback;
 };
 
 ALWAYS_INLINE u8* Bitmap::scanline_u8(int y)
@@ -370,5 +371,15 @@ ALWAYS_INLINE void Bitmap::set_pixel(int x, int y, Color color)
         VERIFY_NOT_REACHED();
     }
 }
+
+}
+
+namespace IPC {
+
+template<>
+ErrorOr<void> encode(Encoder&, AK::NonnullRefPtr<Gfx::Bitmap> const&);
+
+template<>
+ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> decode(Decoder&);
 
 }

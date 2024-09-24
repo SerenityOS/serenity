@@ -106,6 +106,7 @@ write_cmake_config("kernel_debug_gen") {
     "VIRTUAL_CONSOLE_DEBUG=",
     "WAITBLOCK_DEBUG=",
     "WAITQUEUE_DEBUG=",
+    "XHCI_DEBUG=",
   ]
 }
 
@@ -345,7 +346,6 @@ source_set("arch_sources") {
       "Arch/x86_64/Time/PIT.cpp",
       "Arch/x86_64/Time/RTC.cpp",
       "Arch/x86_64/TrapFrame.cpp",
-      "Arch/x86_64/VGA/IOArbiter.cpp",
 
       # TODO: Share these with the aarch64 build
       "Interrupts/SpuriousInterruptHandler.cpp",
@@ -635,7 +635,6 @@ executable("Kernel_bin") {
     "FileSystem/SysFS/Subsystems/Kernel/DiskUsage.cpp",
     "FileSystem/SysFS/Subsystems/Kernel/GlobalInformation.cpp",
     "FileSystem/SysFS/Subsystems/Kernel/Interrupts.cpp",
-    "FileSystem/SysFS/Subsystems/Kernel/Jails.cpp",
     "FileSystem/SysFS/Subsystems/Kernel/Keymap.cpp",
     "FileSystem/SysFS/Subsystems/Kernel/Log.cpp",
     "FileSystem/SysFS/Subsystems/Kernel/MemoryStatus.cpp",
@@ -697,7 +696,7 @@ executable("Kernel_bin") {
     "Memory/SharedInodeVMObject.cpp",
     "Memory/VMObject.cpp",
     "Memory/VirtualRange.cpp",
-    "Net/IPv4Socket.cpp",
+    "Net/IPv4/Socket.cpp",
     "Net/Intel/E1000ENetworkAdapter.cpp",
     "Net/Intel/E1000NetworkAdapter.cpp",
     "Net/LocalSocket.cpp",
@@ -714,7 +713,6 @@ executable("Kernel_bin") {
     "SanCov.cpp",
     "Security/AddressSanitizer.cpp",
     "Security/Credentials.cpp",
-    "Security/Jail.cpp",
     "Security/Random.cpp",
     "Security/Random/VirtIO/RNG.cpp",
     "Security/UBSanitizer.cpp",
@@ -746,7 +744,6 @@ executable("Kernel_bin") {
     "Syscalls/hostname.cpp",
     "Syscalls/inode_watcher.cpp",
     "Syscalls/ioctl.cpp",
-    "Syscalls/jail.cpp",
     "Syscalls/keymap.cpp",
     "Syscalls/kill.cpp",
     "Syscalls/link.cpp",
@@ -791,7 +788,6 @@ executable("Kernel_bin") {
     "Syscalls/utimensat.cpp",
     "Syscalls/waitid.cpp",
     "Syscalls/write.cpp",
-    "TTY/ConsoleManagement.cpp",
     "TTY/MasterPTY.cpp",
     "TTY/PTYMultiplexer.cpp",
     "TTY/SlavePTY.cpp",
@@ -805,8 +801,8 @@ executable("Kernel_bin") {
     "Tasks/PowerStateSwitchTask.cpp",
     "Tasks/Process.cpp",
     "Tasks/ProcessGroup.cpp",
-    "Tasks/ProcessList.cpp",
     "Tasks/Scheduler.cpp",
+    "Tasks/ScopedProcessList.cpp",
     "Tasks/SyncTask.cpp",
     "Tasks/Thread.cpp",
     "Tasks/ThreadBlockers.cpp",

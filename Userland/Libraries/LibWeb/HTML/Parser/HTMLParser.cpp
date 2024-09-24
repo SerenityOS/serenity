@@ -138,7 +138,7 @@ static bool is_html_integration_point(DOM::Element const& element)
 HTMLParser::HTMLParser(DOM::Document& document, StringView input, StringView encoding)
     : m_tokenizer(input, encoding)
     , m_scripting_enabled(document.is_scripting_enabled())
-    , m_document(JS::make_handle(document))
+    , m_document(document)
 {
     m_tokenizer.set_parser({}, *this);
     m_document->set_parser({}, *this);
@@ -149,7 +149,7 @@ HTMLParser::HTMLParser(DOM::Document& document, StringView input, StringView enc
 
 HTMLParser::HTMLParser(DOM::Document& document)
     : m_scripting_enabled(document.is_scripting_enabled())
-    , m_document(JS::make_handle(document))
+    , m_document(document)
 {
     m_document->set_parser({}, *this);
     m_tokenizer.set_parser({}, *this);
@@ -664,7 +664,7 @@ HTMLParser::AdjustedInsertionLocation HTMLParser::find_appropriate_place_for_ins
     // 3. If the adjusted insertion location is inside a template element,
     //    let it instead be inside the template element's template contents, after its last child (if any).
     if (is<HTMLTemplateElement>(*adjusted_insertion_location.parent))
-        adjusted_insertion_location = { verify_cast<HTMLTemplateElement>(*adjusted_insertion_location.parent).content().ptr(), nullptr };
+        adjusted_insertion_location = { static_cast<HTMLTemplateElement const&>(*adjusted_insertion_location.parent).content().ptr(), nullptr };
 
     // 4. Return the adjusted insertion location.
     return adjusted_insertion_location;
@@ -810,7 +810,7 @@ void HTMLParser::handle_before_head(HTMLToken& token)
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::head) {
         auto element = insert_html_element(token);
-        m_head_element = JS::make_handle(verify_cast<HTMLHeadElement>(*element));
+        m_head_element = verify_cast<HTMLHeadElement>(*element);
         m_insertion_mode = InsertionMode::InHead;
         return;
     }
@@ -825,7 +825,7 @@ void HTMLParser::handle_before_head(HTMLToken& token)
     }
 
 AnythingElse:
-    m_head_element = JS::make_handle(verify_cast<HTMLHeadElement>(*insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::head))));
+    m_head_element = verify_cast<HTMLHeadElement>(*insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::head)));
     m_insertion_mode = InsertionMode::InHead;
     process_using_the_rules_for(InsertionMode::InHead, token);
     return;
@@ -1155,17 +1155,17 @@ void HTMLParser::insert_character(u32 data)
 {
     auto node = find_character_insertion_node();
     if (node == m_character_insertion_node.ptr()) {
-        m_character_insertion_builder.append(Utf32View { &data, 1 });
+        m_character_insertion_builder.append_code_point(data);
         return;
     }
     if (!m_character_insertion_node.ptr()) {
-        m_character_insertion_node = JS::make_handle(node);
-        m_character_insertion_builder.append(Utf32View { &data, 1 });
+        m_character_insertion_node = node;
+        m_character_insertion_builder.append_code_point(data);
         return;
     }
     flush_character_insertions();
-    m_character_insertion_node = JS::make_handle(node);
-    m_character_insertion_builder.append(Utf32View { &data, 1 });
+    m_character_insertion_node = node;
+    m_character_insertion_builder.append_code_point(data);
 }
 
 void HTMLParser::handle_after_head(HTMLToken& token)
@@ -1366,7 +1366,7 @@ Create:
     auto new_element = insert_html_element(HTMLToken::make_start_tag(entry->element->local_name()));
 
     // 9. Replace the entry for entry in the list with an entry for new element.
-    m_list_of_active_formatting_elements.entries().at(index).element = JS::make_handle(new_element);
+    m_list_of_active_formatting_elements.entries().at(index).element = new_element;
 
     // 10. If the entry for new element in the list of active formatting elements is not the last entry in the list, return to the step labeled advance.
     if (index != m_list_of_active_formatting_elements.entries().size() - 1)
@@ -1934,7 +1934,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         // Insert an HTML element for the token, and, if there is no template element on the stack of open elements, set the form element pointer to point to the element created.
         auto element = insert_html_element(token);
         if (!m_stack_of_open_elements.contains(HTML::TagNames::template_))
-            m_form_element = JS::make_handle(verify_cast<HTMLFormElement>(*element));
+            m_form_element = verify_cast<HTMLFormElement>(*element);
         return;
     }
 
@@ -3461,7 +3461,7 @@ void HTMLParser::handle_in_table(HTMLToken& token)
 
         // Otherwise:
         // Insert an HTML element for the token, and set the form element pointer to point to the element created.
-        m_form_element = JS::make_handle(verify_cast<HTMLFormElement>(*insert_html_element(token)));
+        m_form_element = verify_cast<HTMLFormElement>(*insert_html_element(token));
 
         // Pop that form element off the stack of open elements.
         (void)m_stack_of_open_elements.pop();
@@ -4266,25 +4266,27 @@ DOM::Document& HTMLParser::document()
 }
 
 // https://html.spec.whatwg.org/multipage/parsing.html#parsing-html-fragments
-Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& context_element, StringView markup)
+Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& context_element, StringView markup, AllowDeclarativeShadowRoots allow_declarative_shadow_roots)
 {
     // 1. Create a new Document node, and mark it as being an HTML document.
-    auto temp_document = DOM::Document::create(context_element.realm());
+    auto temp_document = DOM::Document::create_for_fragment_parsing(context_element.realm());
     temp_document->set_document_type(DOM::Document::Type::HTML);
-
-    temp_document->set_is_temporary_document_for_fragment_parsing({});
 
     // 2. If the node document of the context element is in quirks mode, then let the Document be in quirks mode.
     //    Otherwise, the node document of the context element is in limited-quirks mode, then let the Document be in limited-quirks mode.
     //    Otherwise, leave the Document in no-quirks mode.
     temp_document->set_quirks_mode(context_element.document().mode());
 
-    // 3. Create a new HTML parser, and associate it with the just created Document node.
+    // 3. If allowDeclarativeShadowRoots is true, then set Document's allow declarative shadow roots to true.
+    if (allow_declarative_shadow_roots == AllowDeclarativeShadowRoots::Yes)
+        temp_document->set_allow_declarative_shadow_roots(true);
+
+    // 4. Create a new HTML parser, and associate it with the just created Document node.
     auto parser = HTMLParser::create(*temp_document, markup, "utf-8"sv);
-    parser->m_context_element = JS::make_handle(context_element);
+    parser->m_context_element = context_element;
     parser->m_parsing_fragment = true;
 
-    // 4. Set the state of the HTML parser's tokenization stage as follows, switching on the context element:
+    // 5. Set the state of the HTML parser's tokenization stage as follows, switching on the context element:
     // - title
     // - textarea
     if (context_element.local_name().is_one_of(HTML::TagNames::title, HTML::TagNames::textarea)) {
@@ -4321,37 +4323,37 @@ Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& cont
         // Leave the tokenizer in the data state.
     }
 
-    // 5. Let root be a new html element with no attributes.
+    // 6. Let root be a new html element with no attributes.
     auto root = create_element(context_element.document(), HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
 
-    // 6. Append the element root to the Document node created above.
+    // 7. Append the element root to the Document node created above.
     MUST(temp_document->append_child(root));
 
-    // 7. Set up the parser's stack of open elements so that it contains just the single element root.
+    // 8. Set up the parser's stack of open elements so that it contains just the single element root.
     parser->m_stack_of_open_elements.push(root);
 
-    // 8. If the context element is a template element,
+    // 9. If the context element is a template element,
     if (context_element.local_name() == HTML::TagNames::template_) {
         // push "in template" onto the stack of template insertion modes so that it is the new current template insertion mode.
         parser->m_stack_of_template_insertion_modes.append(InsertionMode::InTemplate);
     }
 
-    // FIXME: 9. Create a start tag token whose name is the local name of context and whose attributes are the attributes of context.
+    // FIXME: 10. Create a start tag token whose name is the local name of context and whose attributes are the attributes of context.
     //           Let this start tag token be the start tag token of the context node, e.g. for the purposes of determining if it is an HTML integration point.
 
-    // 10. Reset the parser's insertion mode appropriately.
+    // 11. Reset the parser's insertion mode appropriately.
     parser->reset_the_insertion_mode_appropriately();
 
-    // 11. Set the parser's form element pointer to the nearest node to the context element that is a form element
+    // 12. Set the parser's form element pointer to the nearest node to the context element that is a form element
     //     (going straight up the ancestor chain, and including the element itself, if it is a form element), if any.
     //     (If there is no such form element, the form element pointer keeps its initial value, null.)
     parser->m_form_element = context_element.first_ancestor_of_type<HTMLFormElement>();
 
-    // 12. Place the input into the input stream for the HTML parser just created. The encoding confidence is irrelevant.
-    // 13. Start the parser and let it run until it has consumed all the characters just inserted into the input stream.
+    // 13. Place the input into the input stream for the HTML parser just created. The encoding confidence is irrelevant.
+    // 14. Start the parser and let it run until it has consumed all the characters just inserted into the input stream.
     parser->run(context_element.document().url());
 
-    // 14. Return the child nodes of root, in tree order.
+    // 15. Return the child nodes of root, in tree order.
     Vector<JS::Handle<DOM::Node>> children;
     while (JS::GCPtr<DOM::Node> child = root->first_child()) {
         MUST(root->remove_child(*child));
@@ -4687,13 +4689,16 @@ RefPtr<CSS::StyleValue> parse_dimension_value(StringView string)
         number_string.append(*position);
         ++position;
     }
-    auto integer_value = number_string.string_view().to_number<int>();
+    auto integer_value = number_string.string_view().to_number<double>();
+
+    // NOTE: This is apparently the largest value allowed by Firefox.
+    static float max_dimension_value = 17895700;
+
+    float value = min(*integer_value, max_dimension_value);
 
     // 6. If position is past the end of input, then return value as a length.
     if (position == input.end())
-        return CSS::LengthStyleValue::create(CSS::Length::make_px(*integer_value));
-
-    float value = *integer_value;
+        return CSS::LengthStyleValue::create(CSS::Length::make_px(CSSPixels(value)));
 
     // 7. If the code point at position within input is U+002E (.), then:
     if (*position == '.') {
@@ -4875,6 +4880,9 @@ Optional<Color> parse_legacy_color_value(StringView string)
     }
 
     auto to_hex = [&](StringView string) -> u8 {
+        if (length == 1) {
+            return hex_nibble_to_u8(string[0]);
+        }
         auto nib1 = hex_nibble_to_u8(string[0]);
         auto nib2 = hex_nibble_to_u8(string[1]);
         return nib1 << 4 | nib2;

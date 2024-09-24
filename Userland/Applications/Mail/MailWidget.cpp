@@ -7,6 +7,7 @@
  */
 
 #include "MailWidget.h"
+#include "InboxModel.h"
 #include <AK/Base64.h>
 #include <AK/GenericLexer.h>
 #include <Applications/Mail/MailWindowGML.h>
@@ -100,6 +101,31 @@ MailWidget::MailWidget()
     };
 }
 
+MailboxNode* MailWidget::get_mailbox_by_name(ByteString const& username, ByteString const& mailbox_name)
+{
+    for (auto& account : m_account_holder->accounts()) {
+        if (account->name() == username) {
+            for (auto& mailbox : account->mailboxes()) {
+                if (mailbox->select_name() == mailbox_name)
+                    return mailbox;
+            }
+        }
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<void> MailWidget::refresh_unseen_count_for_mailbox(MailboxNode* mailbox)
+{
+    auto response = TRY(m_imap_client->status(mailbox->select_name(), { IMAP::StatusItemType::Unseen, IMAP::StatusItemType::Messages })->await());
+    if (response.status() != IMAP::ResponseStatus::OK) {
+        dbgln("Failed to get mailbox status. The server says: '{}'", response.response_text());
+        return {};
+    }
+    if (response.data().status_items().size() > 0)
+        mailbox->set_unseen_count(response.data().status_items()[0].get(IMAP::StatusItemType::Unseen));
+    return {};
+}
+
 ErrorOr<bool> MailWidget::connect_and_login()
 {
     auto server = Config::read_string("Mail"sv, "Connection"sv, "Server"sv, {});
@@ -150,7 +176,7 @@ ErrorOr<bool> MailWidget::connect_and_login()
     }
 
     m_statusbar->set_text("Logged in. Loading mailboxes..."_string);
-    response = TRY(m_imap_client->list(""sv, "*"sv)->await());
+    response = TRY(m_imap_client->list(""sv, "*"sv, true)->await());
 
     if (response.status() != IMAP::ResponseStatus::OK) {
         dbgln("Failed to retrieve mailboxes. The server says: '{}'", response.response_text());
@@ -160,13 +186,20 @@ ErrorOr<bool> MailWidget::connect_and_login()
 
     auto& list_items = response.data().list_items();
 
-    m_statusbar->set_text(MUST(String::formatted("Loaded {} mailboxes", list_items.size())));
-
     m_account_holder = AccountHolder::create();
     m_account_holder->add_account_with_name_and_mailboxes(username, move(list_items));
 
+    m_statusbar->set_text(MUST(String::formatted("Loaded {} mailboxes", list_items.size())));
+
     m_mailbox_list->set_model(m_account_holder->mailbox_tree_model());
     m_mailbox_list->expand_tree();
+
+    auto& status_items = response.data().status_items();
+
+    for (auto& status_item : status_items) {
+        auto mailbox = get_mailbox_by_name(username, status_item.mailbox());
+        mailbox->set_unseen_count(status_item.get(IMAP::StatusItemType::Unseen));
+    }
 
     return true;
 }
@@ -246,11 +279,12 @@ bool MailWidget::is_supported_alternative(Alternative const& alternative) const
 
 void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
 {
+    if (!index.is_valid() || index == m_mailbox_index)
+        return;
+    m_mailbox_index = index;
+
     m_mailbox_model = InboxModel::create({});
     m_individual_mailbox_view->set_model(m_mailbox_model);
-
-    if (!index.is_valid())
-        return;
 
     auto& base_node = *static_cast<BaseNode*>(index.internal_data());
 
@@ -261,6 +295,8 @@ void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
 
     auto& mailbox_node = verify_cast<MailboxNode>(base_node);
     auto& mailbox = mailbox_node.mailbox();
+
+    m_selected_mailbox_node = mailbox_node;
 
     // FIXME: It would be better if we didn't allow the user to click on this mailbox node at all.
     if (mailbox.flags & (unsigned)IMAP::MailboxFlag::NoSelect)
@@ -349,11 +385,13 @@ void MailWidget::selected_mailbox(GUI::ModelIndex const& index)
         }
         ByteString from = sender_builder.to_byte_string();
 
-        InboxEntry inbox_entry { sequence_number, date, from, subject, seen };
+        InboxEntry inbox_entry { sequence_number, date, from, subject, seen ? MailStatus::Seen : MailStatus::Unseen };
         m_statusbar->set_text(String::formatted("[{}]: Loading entry {}", mailbox.name, ++i).release_value_but_fixme_should_propagate_errors());
 
         active_inbox_entries.append(inbox_entry);
     }
+
+    (void)refresh_unseen_count_for_mailbox(m_selected_mailbox_node);
 
     m_statusbar->set_text(String::formatted("[{}]: Loaded {} entries", mailbox.name, i).release_value_but_fixme_should_propagate_errors());
     m_mailbox_model = InboxModel::create(move(active_inbox_entries));
@@ -466,7 +504,11 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
     auto& fetch_response_data = fetch_data.last().get<IMAP::FetchResponseData>();
 
     auto seen = !fetch_response_data.flags().find_if([](StringView value) { return value.equals_ignoring_ascii_case("\\Seen"sv); }).is_end();
-    m_mailbox_model->set_seen(index.row(), seen);
+    if (m_mailbox_model->mail_status(index.row()) != (seen ? MailStatus::Seen : MailStatus::Unseen)) {
+        seen ? m_selected_mailbox_node->decrement_unseen_count() : m_selected_mailbox_node->increment_unseen_count();
+        m_mailbox_list->repaint();
+    }
+    m_mailbox_model->set_mail_status(index.row(), seen ? MailStatus::Seen : MailStatus::Unseen);
 
     if (!fetch_response_data.contains_response_type(IMAP::FetchResponseType::Body)) {
         GUI::MessageBox::show_error(window(), "The server sent no body."sv);
@@ -489,6 +531,7 @@ void MailWidget::selected_email_to_load(GUI::ModelIndex const& index)
     if (selected_alternative_encoding.equals_ignoring_ascii_case("7bit"sv) || selected_alternative_encoding.equals_ignoring_ascii_case("8bit"sv)) {
         decoded_data = encoded_data;
     } else if (selected_alternative_encoding.equals_ignoring_ascii_case("base64"sv)) {
+        encoded_data = encoded_data.replace("\r"sv, ""sv).replace("\n"sv, ""sv);
         auto decoded_base64 = decode_base64(encoded_data);
         if (!decoded_base64.is_error())
             decoded_data = decoded_base64.release_value().span();

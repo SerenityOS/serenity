@@ -56,8 +56,6 @@ enum class ParseError {
     OutOfMemory,
     SectionSizeMismatch,
     InvalidUtf8,
-    // FIXME: This should not exist!
-    NotImplemented,
 };
 
 ByteString parse_error_to_byte_string(ParseError);
@@ -82,7 +80,7 @@ template<typename T>
 struct GenericIndexParser {
     static ParseResult<T> parse(Stream& stream)
     {
-        auto value_or_error = stream.read_value<LEB128<size_t>>();
+        auto value_or_error = stream.read_value<LEB128<u32>>();
         if (value_or_error.is_error())
             return with_eof_check(stream, ParseError::ExpectedIndex);
         size_t value = value_or_error.release_value();
@@ -165,8 +163,6 @@ public:
         V128,
         FunctionReference,
         ExternReference,
-        NullFunctionReference,
-        NullExternReference,
     };
 
     explicit ValueType(Kind kind)
@@ -176,7 +172,7 @@ public:
 
     bool operator==(ValueType const&) const = default;
 
-    auto is_reference() const { return m_kind == ExternReference || m_kind == FunctionReference || m_kind == NullExternReference || m_kind == NullFunctionReference; }
+    auto is_reference() const { return m_kind == ExternReference || m_kind == FunctionReference; }
     auto is_vector() const { return m_kind == V128; }
     auto is_numeric() const { return !is_reference() && !is_vector(); }
     auto kind() const { return m_kind; }
@@ -200,10 +196,6 @@ public:
             return "funcref";
         case ExternReference:
             return "externref";
-        case NullFunctionReference:
-            return "ref.null externref";
-        case NullExternReference:
-            return "ref.null funcref";
         }
         VERIFY_NOT_REACHED();
     }
@@ -466,10 +458,11 @@ public:
     {
     }
 
-    static ParseResult<Vector<Instruction>> parse(Stream& stream, InstructionPointer& ip);
+    static ParseResult<Instruction> parse(Stream& stream);
 
     auto& opcode() const { return m_opcode; }
     auto& arguments() const { return m_arguments; }
+    auto& arguments() { return m_arguments; }
 
 private:
     OpCode m_opcode { 0 };
@@ -681,7 +674,7 @@ public:
 
     auto& instructions() const { return m_instructions; }
 
-    static ParseResult<Expression> parse(Stream& stream);
+    static ParseResult<Expression> parse(Stream& stream, Optional<size_t> size_hint = {});
 
 private:
     Vector<Instruction> m_instructions;
@@ -860,7 +853,7 @@ public:
         auto& locals() const { return m_locals; }
         auto& body() const { return m_body; }
 
-        static ParseResult<Func> parse(Stream& stream);
+        static ParseResult<Func> parse(Stream& stream, size_t size_hint);
 
     private:
         Vector<Locals> m_locals;
@@ -966,25 +959,6 @@ public:
         Valid,
     };
 
-    class Function {
-    public:
-        explicit Function(TypeIndex type, Vector<ValueType> local_types, Expression body)
-            : m_type(type)
-            , m_local_types(move(local_types))
-            , m_body(move(body))
-        {
-        }
-
-        auto& type() const { return m_type; }
-        auto& locals() const { return m_local_types; }
-        auto& body() const { return m_body; }
-
-    private:
-        TypeIndex m_type;
-        Vector<ValueType> m_local_types;
-        Expression m_body;
-    };
-
     using AnySection = Variant<
         CustomSection,
         TypeSection,
@@ -1006,14 +980,9 @@ public:
     explicit Module(Vector<AnySection> sections)
         : m_sections(move(sections))
     {
-        if (!populate_sections()) {
-            m_validation_status = ValidationStatus::Invalid;
-            m_validation_error = "Failed to populate module sections"sv;
-        }
     }
 
     auto& sections() const { return m_sections; }
-    auto& functions() const { return m_functions; }
     auto& type(TypeIndex index) const
     {
         FunctionType const* type = nullptr;
@@ -1050,11 +1019,9 @@ public:
     static ParseResult<Module> parse(Stream& stream);
 
 private:
-    bool populate_sections();
     void set_validation_status(ValidationStatus status) { m_validation_status = status; }
 
     Vector<AnySection> m_sections;
-    Vector<Function> m_functions;
     ValidationStatus m_validation_status { ValidationStatus::Unchecked };
     Optional<ByteString> m_validation_error;
 };

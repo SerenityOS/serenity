@@ -15,6 +15,7 @@
 #include <Kernel/Boot/BootInfo.h>
 #include <Kernel/Boot/Multiboot.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
@@ -282,10 +283,8 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 #endif
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image)).release_value_but_fixme_should_propagate_errors()) });
 
-#if ARCH(RISCV64)
-        // FIXME: AARCH64 might be able to make use of this code path
-        //        Some x86 platforms also provide flattened device trees
-        parse_memory_map_fdt(global_data, s_fdt_storage);
+#if ARCH(AARCH64) || ARCH(RISCV64)
+        parse_memory_map_fdt(global_data, DeviceTree::s_fdt_storage);
 #else
         parse_memory_map_multiboot(global_data);
 #endif
@@ -383,19 +382,19 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 
 UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalData& global_data, u8 const* fdt_addr)
 {
-    auto const& fdt_header = *reinterpret_cast<DeviceTree::FlattenedDeviceTreeHeader const*>(fdt_addr);
+    auto const& fdt_header = *reinterpret_cast<::DeviceTree::FlattenedDeviceTreeHeader const*>(fdt_addr);
     auto fdt_buffer = ReadonlyBytes(fdt_addr, fdt_header.totalsize);
 
-    auto const* mem_reserve_block = reinterpret_cast<DeviceTree::FlattenedDeviceTreeReserveEntry const*>(&fdt_buffer[fdt_header.off_mem_rsvmap]);
+    auto const* mem_reserve_block = reinterpret_cast<::DeviceTree::FlattenedDeviceTreeReserveEntry const*>(&fdt_buffer[fdt_header.off_mem_rsvmap]);
 
-    u64 next_block_offset = fdt_header.off_mem_rsvmap + sizeof(DeviceTree::FlattenedDeviceTreeReserveEntry);
-    while ((next_block_offset < fdt_header.off_dt_struct) && (*mem_reserve_block != DeviceTree::FlattenedDeviceTreeReserveEntry {})) {
+    u64 next_block_offset = fdt_header.off_mem_rsvmap + sizeof(::DeviceTree::FlattenedDeviceTreeReserveEntry);
+    while ((next_block_offset < fdt_header.off_dt_struct) && (*mem_reserve_block != ::DeviceTree::FlattenedDeviceTreeReserveEntry {})) {
         dbgln("MM: Reserved Range /memreserve/: address: {} size {:#x}", PhysicalAddress { mem_reserve_block->address }, mem_reserve_block->size);
         global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, PhysicalAddress { mem_reserve_block->address }, mem_reserve_block->size });
         // FIXME: Not all of these are "used", only those in "memory" are actually "used"
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress { mem_reserve_block->address }, PhysicalAddress { mem_reserve_block->address + mem_reserve_block->size } });
         ++mem_reserve_block;
-        next_block_offset += sizeof(DeviceTree::FlattenedDeviceTreeReserveEntry);
+        next_block_offset += sizeof(::DeviceTree::FlattenedDeviceTreeReserveEntry);
     }
 
     // Schema:
@@ -418,18 +417,22 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
         InMemory
     };
 
+    struct RegEntry {
+        PhysicalPtr start_addr;
+        size_t size;
+    };
+
     struct {
         u32 depth = 0;
         State state = State::Root;
-        Optional<u64> start {};
-        Optional<u64> size {};
+        Vector<RegEntry, 2> reg;
         u32 address_cells = 0;
         u32 size_cells = 0;
     } state;
 
-    MUST(DeviceTree::walk_device_tree(
+    MUST(::DeviceTree::walk_device_tree(
         fdt_header, fdt_buffer,
-        DeviceTree::DeviceTreeCallbacks {
+        ::DeviceTree::DeviceTreeCallbacks {
             .on_node_begin = [&state](StringView node_name) -> ErrorOr<IterationDecision> {
                 switch (state.state) {
                 case State::Root:
@@ -441,10 +444,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
                         state.state = State::InMemory;
                     break;
                 case State::InReservedMemory:
-                    // FIXME: The node names may hint to the purpose
                     state.state = State::InReservedMemoryChild;
-                    state.start = {};
-                    state.size = {};
                     break;
                 case State::InReservedMemoryChild:
                 case State::InMemory:
@@ -462,26 +462,35 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
                     state.state = State::Root;
                     break;
                 case State::InMemory:
-                    VERIFY(state.start.has_value() && state.size.has_value());
-                    dbgln("MM: Memory Range {}: address: {} size {:#x}", node_name, PhysicalAddress { state.start.value() }, state.size.value());
-                    global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, PhysicalAddress { state.start.value() }, state.size.value() });
+                    global_data.physical_memory_ranges.grow_capacity(global_data.physical_memory_ranges.size() + state.reg.size());
+
+                    for (auto const& reg_entry : state.reg) {
+                        dbgln("MM: Memory Range {}: address: {} size {:#x}", node_name, PhysicalAddress { reg_entry.start_addr }, reg_entry.size);
+                        global_data.physical_memory_ranges.unchecked_append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, PhysicalAddress { reg_entry.start_addr }, reg_entry.size });
+                    }
+
+                    state.reg.clear();
                     state.state = State::Root;
+
                     break;
                 case State::InReservedMemoryChild:
-                    // FIXME: Handle non static allocations,
-                    if (!state.start.has_value()) {
-                        VERIFY(state.size.has_value());
-                        dbgln("MM: Non static reserved memory range {} of size {:#x}, skipping for now", node_name, state.size.value());
-                        state.state = State::InReservedMemory;
-                        break;
+                    if (state.reg.is_empty())
+                        dbgln("MM: Skipping dynamically allocated reserved memory region {}", node_name);
+
+                    global_data.physical_memory_ranges.grow_capacity(global_data.physical_memory_ranges.size() + state.reg.size());
+                    global_data.used_memory_ranges.grow_capacity(global_data.used_memory_ranges.size() + state.reg.size());
+
+                    for (auto const& reg_entry : state.reg) {
+                        dbgln("MM: Reserved Range {}: address: {} size {:#x}", node_name, PhysicalAddress { reg_entry.start_addr }, reg_entry.size);
+                        global_data.physical_memory_ranges.unchecked_append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, PhysicalAddress { reg_entry.start_addr }, reg_entry.size });
+                        // FIXME: Not all of these are "used", only those in "memory" are actually "used"
+                        //        There might be for example debug DMA control registers, which are marked as reserved
+                        global_data.used_memory_ranges.unchecked_append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress { reg_entry.start_addr }, PhysicalAddress { reg_entry.start_addr + reg_entry.size } });
                     }
-                    VERIFY(state.start.has_value() && state.size.has_value());
-                    dbgln("MM: Reserved Range {}: address: {} size {:#x}", node_name, PhysicalAddress { state.start.value() }, state.size.value());
-                    global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, PhysicalAddress { state.start.value() }, state.size.value() });
-                    // FIXME: Not all of these are "used", only those in "memory" are actually "used"
-                    //        There might be for example debug DMA control registers, which are marked as reserved
-                    global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress { state.start.value() }, PhysicalAddress { state.start.value() + state.size.value() } });
+
+                    state.reg.clear();
                     state.state = State::InReservedMemory;
+
                     break;
                 }
                 state.depth--;
@@ -518,31 +527,29 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
                     if (property_name == "reg"sv) {
                         VERIFY(state.address_cells);
                         VERIFY(state.size_cells);
-                        // FIXME: We may get more than one range here
-                        if (data.size() > (state.address_cells + state.size_cells) * sizeof(u32))
-                            TODO();
-                        if (state.address_cells == 1) {
-                            BigEndian<u32> data_as_int;
-                            __builtin_memcpy(&data_as_int, data.data(), sizeof(u32));
-                            state.start = data_as_int;
-                            data = data.slice(sizeof(u32));
-                        } else {
-                            BigEndian<u64> data_as_int;
-                            __builtin_memcpy(&data_as_int, data.data(), sizeof(u64));
-                            state.start = data_as_int;
-                            data = data.slice(sizeof(u64));
-                        }
 
-                        if (state.size_cells == 1) {
-                            BigEndian<u32> data_as_int;
-                            __builtin_memcpy(&data_as_int, data.data(), sizeof(u32));
-                            state.size = data_as_int;
-                            data = data.slice(sizeof(u32));
-                        } else {
-                            BigEndian<u64> data_as_int;
-                            __builtin_memcpy(&data_as_int, data.data(), sizeof(u64));
-                            state.size = data_as_int;
-                            data = data.slice(sizeof(u64));
+                        state.reg.ensure_capacity(data.size() / ((state.address_cells + state.size_cells) * sizeof(u32)));
+
+                        FixedMemoryStream reg_stream { data };
+
+                        while (!reg_stream.is_eof()) {
+                            RegEntry reg_entry;
+
+                            if (state.address_cells == 1)
+                                reg_entry.start_addr = MUST(reg_stream.read_value<BigEndian<u32>>());
+                            else if (state.address_cells == 2)
+                                reg_entry.start_addr = MUST(reg_stream.read_value<BigEndian<u64>>());
+                            else
+                                VERIFY_NOT_REACHED();
+
+                            if (state.size_cells == 1)
+                                reg_entry.size = MUST(reg_stream.read_value<BigEndian<u32>>());
+                            else if (state.size_cells == 2)
+                                reg_entry.size = MUST(reg_stream.read_value<BigEndian<u64>>());
+                            else
+                                VERIFY_NOT_REACHED();
+
+                            state.reg.unchecked_append(reg_entry);
                         }
                     } else {
                         // Reserved Memory:
@@ -640,9 +647,11 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
     m_global_data.with([&](auto& global_data) {
         // We assume that the physical page range is contiguous and doesn't contain huge gaps!
         PhysicalAddress highest_physical_address;
-#if ARCH(X86_64)
-        // On x86 LAPIC is at 0xfee00000 or a similar address. Round up to 0x100000000LL to cover variations.
-        highest_physical_address = PhysicalAddress { 0x100000000LL };
+#if ARCH(AARCH64)
+        // FIXME: The BCM2711/BCM2835 Raspberry Pi VideoCore region ends at 0x4000'0000.
+        //        Either make MMIO usable before MM is fully initialized and use the RPi mailbox to get this address
+        //        or make the physical page array dynamically resizable and possibly non-contiguos.
+        highest_physical_address = PhysicalAddress { 0x4000'0000 };
 #endif
         for (auto& range : global_data.used_memory_ranges) {
             if (range.end.get() > highest_physical_address.get())
@@ -1162,7 +1171,7 @@ ErrorOr<CommittedPhysicalPageSet> MemoryManager::commit_physical_pages(size_t pa
         return CommittedPhysicalPageSet { {}, page_count };
     });
     if (result.is_error()) {
-        Process::for_each_ignoring_jails([&](Process const& process) {
+        Process::for_each_ignoring_process_lists([&](Process const& process) {
             size_t amount_resident = 0;
             size_t amount_shared = 0;
             size_t amount_virtual = 0;

@@ -231,11 +231,11 @@ u64 print_space_usage(ByteString const& path, DuOption const& du_option, size_t 
         return size;
 
     if (du_option.human_readable) {
-        out("{}", human_readable_size(size));
+        out("{:10s}", human_readable_size(size));
     } else if (du_option.human_readable_si) {
-        out("{}", human_readable_size(size, AK::HumanReadableBasedOn::Base10));
+        out("{:10s}", human_readable_size(size, AK::HumanReadableBasedOn::Base10));
     } else {
-        out("{}", ceil_div(size, du_option.block_size));
+        out("{:06d}", ceil_div(size, du_option.block_size));
     }
 
     if (du_option.time_type == DuOption::TimeType::NotUsed) {

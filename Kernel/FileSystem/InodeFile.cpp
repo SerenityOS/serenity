@@ -10,6 +10,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeFile.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/FileSystem/VFSRootContext.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
@@ -112,14 +113,14 @@ ErrorOr<void> InodeFile::chown(Credentials const& credentials, OpenFileDescripti
 {
     VERIFY(description.inode() == m_inode);
     VERIFY(description.custody());
-    return VirtualFileSystem::the().chown(credentials, *description.custody(), uid, gid);
+    return VirtualFileSystem::chown(credentials, *description.custody(), uid, gid);
 }
 
 ErrorOr<void> InodeFile::chmod(Credentials const& credentials, OpenFileDescription& description, mode_t mode)
 {
     VERIFY(description.inode() == m_inode);
     VERIFY(description.custody());
-    return VirtualFileSystem::the().chmod(credentials, *description.custody(), mode);
+    return VirtualFileSystem::chmod(credentials, *description.custody(), mode);
 }
 
 bool InodeFile::is_regular_file() const

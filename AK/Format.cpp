@@ -6,6 +6,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/Format.h>
+#include <AK/FormatParser.h>
 #include <AK/GenericLexer.h>
 #include <AK/IntegralMath.h>
 #include <AK/String.h>
@@ -16,7 +17,8 @@
 #    include <serenity.h>
 #endif
 
-#ifdef KERNEL
+#if defined(PREKERNEL)
+#elif defined(KERNEL)
 #    include <Kernel/Tasks/Process.h>
 #    include <Kernel/Tasks/Thread.h>
 #    include <Kernel/Time/TimeManagement.h>
@@ -33,21 +35,6 @@
 #endif
 
 namespace AK {
-
-class FormatParser : public GenericLexer {
-public:
-    struct FormatSpecifier {
-        StringView flags;
-        size_t index;
-    };
-
-    explicit FormatParser(StringView input);
-
-    StringView consume_literal();
-    bool consume_number(size_t& value);
-    bool consume_specifier(FormatSpecifier& specifier);
-    bool consume_replacement_field(size_t& index);
-};
 
 namespace {
 
@@ -892,13 +879,17 @@ template<Integral T>
 ErrorOr<void> Formatter<T>::format(FormatBuilder& builder, T value)
 {
     if (m_mode == Mode::Character) {
-        // FIXME: We just support ASCII for now, in the future maybe unicode?
-        //        VERIFY(value >= 0 && value <= 127);
-
         m_mode = Mode::String;
 
         Formatter<StringView> formatter { *this };
-        return formatter.format(builder, StringView { reinterpret_cast<char const*>(&value), 1 });
+
+        // FIXME: We just support ASCII for now, in the future maybe unicode?
+        VERIFY(value >= 0 && value <= 127);
+
+        // Convert value to a single byte. This is important for big-endian systems, because the LSB is stored in the last byte.
+        char const c = (value & 0x7f);
+
+        return formatter.format(builder, StringView { &c, 1 });
     }
 
     if (m_precision.has_value())
@@ -1152,7 +1143,9 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
     StringBuilder builder;
 
     if (is_rich_debug_enabled) {
-#ifdef KERNEL
+#if defined(PREKERNEL)
+        ;
+#elif defined(KERNEL)
         if (Kernel::Processor::is_initialized() && TimeManagement::is_initialized()) {
             auto time = TimeManagement::the().monotonic_time(TimePrecision::Coarse);
             if (Kernel::Thread::current()) {
@@ -1195,7 +1188,7 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
     auto const string = builder.string_view();
 
 #ifdef AK_OS_SERENITY
-#    ifdef KERNEL
+#    if defined(KERNEL) && !defined(PREKERNEL)
     if (!Kernel::Processor::is_initialized()) {
         kernelearlyputstr(string.characters_without_null_termination(), string.length());
         return;
@@ -1205,7 +1198,7 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
     dbgputstr(string.characters_without_null_termination(), string.length());
 }
 
-#ifdef KERNEL
+#if defined(KERNEL) && !defined(PREKERNEL)
 void vdmesgln(StringView fmtstr, TypeErasedFormatParams& params)
 {
     StringBuilder builder;

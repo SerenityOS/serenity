@@ -20,6 +20,7 @@ public:
 
     bool selected() const { return m_selected; }
     void set_selected(bool);
+    void set_selected_internal(bool);
 
     String value() const;
     WebIDL::ExceptionOr<void> set_value(String const&);
@@ -43,7 +44,7 @@ private:
 
     virtual void initialize(JS::Realm&) override;
 
-    void attribute_changed(FlyString const& name, Optional<String> const& value) override;
+    void attribute_changed(FlyString const& name, Optional<String> const& old_value, Optional<String> const& value) override;
 
     void ask_for_a_reset();
 

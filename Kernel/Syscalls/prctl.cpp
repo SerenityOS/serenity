@@ -99,6 +99,13 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, FlatPtr arg2, Flat
             });
             return 0;
         }
+        case PR_SET_JAILED: {
+            TRY(require_promise(Pledge::proc));
+            with_mutable_protected_data([](auto& protected_values) {
+                protected_values.jailed.set();
+            });
+            return 0;
+        }
         }
 
         return EINVAL;

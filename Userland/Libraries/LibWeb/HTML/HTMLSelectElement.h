@@ -53,6 +53,8 @@ public:
     bool is_open() const { return m_is_open; }
     void set_is_open(bool);
 
+    WebIDL::ExceptionOr<void> show_picker();
+
     Vector<JS::Handle<HTMLOptionElement>> list_of_options() const;
 
     // ^EventTarget
@@ -90,6 +92,8 @@ public:
 
     void did_select_item(Optional<u32> const& id);
 
+    void update_selectedness();
+
 private:
     HTMLSelectElement(DOM::Document&, DOM::QualifiedName);
 
@@ -100,6 +104,8 @@ private:
     virtual i32 default_tab_index_value() const override;
 
     virtual void computed_css_values_changed() override;
+
+    void show_the_picker_if_applicable();
 
     void create_shadow_tree_if_needed();
     void update_inner_text_element();

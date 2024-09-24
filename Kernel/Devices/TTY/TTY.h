@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/CircularDeque.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Library/DoubleBuffer.h>
 #include <Kernel/Library/LockWeakPtr.h>
@@ -51,7 +52,7 @@ protected:
     virtual ErrorOr<size_t> on_tty_write(UserOrKernelBuffer const&, size_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);
 
-    TTY(MajorNumber major, MinorNumber minor);
+    TTY(MajorAllocation::CharacterDeviceFamily, MinorNumber minor);
     void emit(u8, bool do_evaluate_block_conditions = false);
     void echo_with_processing(u8);
 

@@ -56,11 +56,10 @@ OpenFileDescription::~OpenFileDescription()
     m_file->detach(*this);
     // FIXME: Should this error path be observed somehow?
     (void)m_file->close();
-    if (m_inode)
+    if (m_inode) {
         m_inode->detach(*this);
-
-    if (m_inode)
         m_inode->remove_flocks_for_description(*this);
+    }
 }
 
 ErrorOr<void> OpenFileDescription::attach()
@@ -70,7 +69,7 @@ ErrorOr<void> OpenFileDescription::attach()
     return m_file->attach(*this);
 }
 
-void OpenFileDescription::set_original_custody(Badge<VirtualFileSystem>, Custody& custody)
+void OpenFileDescription::set_original_custody(Custody& custody)
 {
     m_state.with([&](auto& state) { state.custody = custody; });
 }
@@ -231,7 +230,7 @@ ErrorOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& output_
         return {};
     };
 
-    ErrorOr<void> result = VirtualFileSystem::the().traverse_directory_inode(*m_inode, [&flush_stream_to_output_buffer, &stream, this](auto& entry) -> ErrorOr<void> {
+    ErrorOr<void> result = m_inode->traverse_as_directory([&flush_stream_to_output_buffer, &stream, this](auto& entry) -> ErrorOr<void> {
         // FIXME: Double check the calculation, at least the type for the name length mismatches.
         size_t serialized_size = sizeof(ino_t) + sizeof(u8) + sizeof(size_t) + sizeof(char) * entry.name.length();
         if (serialized_size > TRY(stream.size()) - TRY(stream.tell()))
@@ -281,11 +280,11 @@ bool OpenFileDescription::is_tty() const
     return m_file->is_tty();
 }
 
-const TTY* OpenFileDescription::tty() const
+TTY const* OpenFileDescription::tty() const
 {
     if (!is_tty())
         return nullptr;
-    return static_cast<const TTY*>(m_file.ptr());
+    return static_cast<TTY const*>(m_file.ptr());
 }
 
 TTY* OpenFileDescription::tty()

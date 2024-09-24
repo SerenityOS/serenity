@@ -15,10 +15,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-namespace {
-constexpr u32 ctrl(char c) { return c & 0x3f; }
-}
-
 namespace Line {
 
 Function<bool(Editor&)> Editor::find_internal_function(StringView name)
@@ -367,7 +363,7 @@ void Editor::enter_search()
 
         // ^L - This is a source of issues, as the search editor refreshes first,
         // and we end up with the wrong order of prompts, so we will first refresh
-        // ourselves, then refresh the search editor, and then tell him not to process
+        // ourselves, then refresh the search editor, and then tell it not to process
         // this event.
         m_search_editor->register_key_input_callback(ctrl('L'), [this](auto& search_editor) {
             fprintf(stderr, "\033[3J\033[H\033[2J"); // Clear screen.

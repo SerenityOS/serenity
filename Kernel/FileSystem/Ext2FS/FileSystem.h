@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include <Kernel/FileSystem/BlockBasedFileSystem.h>
 #include <Kernel/FileSystem/Ext2FS/Definitions.h>
+#include <Kernel/FileSystem/FileSystemSpecificOption.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Library/KBuffer.h>
 #include <Kernel/UnixTypes.h>
@@ -37,7 +38,7 @@ public:
     };
     AK_ENUM_BITWISE_FRIEND_OPERATORS(FeaturesReadOnly);
 
-    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, ReadonlyBytes);
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create(OpenFileDescription&, FileSystemSpecificOptions const&);
 
     virtual ~Ext2FS() override;
 
@@ -103,15 +104,7 @@ private:
     void uncache_inode(InodeIndex);
     ErrorOr<void> free_inode(Ext2FSInode&);
 
-    struct BlockListShape {
-        unsigned direct_blocks { 0 };
-        unsigned indirect_blocks { 0 };
-        unsigned doubly_indirect_blocks { 0 };
-        unsigned triply_indirect_blocks { 0 };
-        unsigned meta_blocks { 0 };
-    };
-
-    BlockListShape compute_block_list_shape(unsigned blocks) const;
+    using BlockList = HashMap<BlockBasedFileSystem::BlockIndex, BlockBasedFileSystem::BlockIndex>;
 
     u64 m_block_group_count { 0 };
 

@@ -50,8 +50,14 @@ protected:
     void load_and_push(Configuration&, Instruction const&);
     template<typename PopT, typename StoreT>
     void pop_and_store(Configuration&, Instruction const&);
+    template<size_t N>
+    void pop_and_store_lane_n(Configuration&, Instruction const&);
     template<size_t M, size_t N, template<typename> typename SetSign>
     void load_and_push_mxn(Configuration&, Instruction const&);
+    template<size_t N>
+    void load_and_push_lane_n(Configuration&, Instruction const&);
+    template<size_t N>
+    void load_and_push_zero_n(Configuration&, Instruction const&);
     template<size_t M>
     void load_and_push_m_splat(Configuration&, Instruction const&);
     template<size_t M, template<size_t> typename NativeType>
@@ -59,10 +65,8 @@ protected:
     template<size_t M, template<size_t> typename NativeType>
     void pop_and_push_m_splat(Configuration&, Instruction const&);
     template<typename M, template<typename> typename SetSign, typename VectorType = Native128ByteVectorOf<M, SetSign>>
-    Optional<VectorType> pop_vector(Configuration&);
-    template<typename M, template<typename> typename SetSign, typename VectorType = Native128ByteVectorOf<M, SetSign>>
-    Optional<VectorType> peek_vector(Configuration&);
-    void store_to_memory(Configuration&, Instruction const&, ReadonlyBytes data, u32 base);
+    VectorType pop_vector(Configuration&);
+    void store_to_memory(Configuration&, Instruction::MemoryArgument const&, ReadonlyBytes data, u32 base);
     void call_address(Configuration&, FunctionAddress);
 
     template<typename PopTypeLHS, typename PushType, typename Operator, typename PopTypeRHS = PopTypeLHS, typename... Args>
@@ -70,12 +74,6 @@ protected:
 
     template<typename PopType, typename PushType, typename Operator, typename... Args>
     void unary_operation(Configuration&, Args&&...);
-
-    template<typename V, typename T>
-    MakeUnsigned<T> checked_unsigned_truncate(V);
-
-    template<typename V, typename T>
-    MakeSigned<T> checked_signed_truncate(V);
 
     template<typename T>
     T read_value(ReadonlyBytes data);

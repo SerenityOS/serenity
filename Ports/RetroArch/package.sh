@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=RetroArch
 useconfigure="true"
-version="1.12.0"
-archive_hash="c912e32a0300f16ade827d48a4a948d5dab40b764cd1169f61108c6f5803649a"
+version="1.19.1"
+archive_hash="504a3a8a6e5861eb43a61be8339f61183e7ea940c1ff68ac2a2f57d35c67f8ff"
 files=(
     "https://github.com/libretro/${port}/archive/refs/tags/v${version}.tar.gz#$archive_hash"
 )

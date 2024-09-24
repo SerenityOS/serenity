@@ -15,7 +15,10 @@ namespace_idl_files = [
   "//Userland/Libraries/LibWeb/WebAssembly/WebAssembly.idl",
 ]
 
-global_idl_files = [ "//Userland/Libraries/LibWeb/HTML/Window.idl" ]
+global_idl_files = [
+  "//Userland/Libraries/LibWeb/HTML/DedicatedWorkerGlobalScope.idl",
+  "//Userland/Libraries/LibWeb/HTML/Window.idl",
+]
 
 # Standard idl files are neither iterable, namespaces, or global
 standard_idl_files = [
@@ -110,14 +113,18 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/HighResolutionTime/Performance.idl",
   "//Userland/Libraries/LibWeb/HTML/AudioTrack.idl",
   "//Userland/Libraries/LibWeb/HTML/AudioTrackList.idl",
+  "//Userland/Libraries/LibWeb/HTML/BroadcastChannel.idl",
   "//Userland/Libraries/LibWeb/HTML/CanvasGradient.idl",
   "//Userland/Libraries/LibWeb/HTML/CanvasPattern.idl",
   "//Userland/Libraries/LibWeb/HTML/CanvasRenderingContext2D.idl",
   "//Userland/Libraries/LibWeb/HTML/CloseEvent.idl",
+  "//Userland/Libraries/LibWeb/HTML/CloseWatcher.idl",
   "//Userland/Libraries/LibWeb/HTML/CustomElements/CustomElementRegistry.idl",
   "//Userland/Libraries/LibWeb/HTML/DataTransfer.idl",
   "//Userland/Libraries/LibWeb/HTML/DOMParser.idl",
+  "//Userland/Libraries/LibWeb/HTML/DOMStringList.idl",
   "//Userland/Libraries/LibWeb/HTML/DOMStringMap.idl",
+  "//Userland/Libraries/LibWeb/HTML/ElementInternals.idl",
   "//Userland/Libraries/LibWeb/HTML/ErrorEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/EventSource.idl",
   "//Userland/Libraries/LibWeb/HTML/FormDataEvent.idl",
@@ -222,10 +229,13 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/HTML/Storage.idl",
   "//Userland/Libraries/LibWeb/HTML/SubmitEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/TextMetrics.idl",
+  "//Userland/Libraries/LibWeb/HTML/TextTrack.idl",
+  "//Userland/Libraries/LibWeb/HTML/TextTrackList.idl",
   "//Userland/Libraries/LibWeb/HTML/TimeRanges.idl",
   "//Userland/Libraries/LibWeb/HTML/ToggleEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/TrackEvent.idl",
   "//Userland/Libraries/LibWeb/HTML/UserActivation.idl",
+  "//Userland/Libraries/LibWeb/HTML/ValidityState.idl",
   "//Userland/Libraries/LibWeb/HTML/VideoTrack.idl",
   "//Userland/Libraries/LibWeb/HTML/VideoTrackList.idl",
   "//Userland/Libraries/LibWeb/HTML/Worker.idl",
@@ -263,6 +273,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/Streams/WritableStream.idl",
   "//Userland/Libraries/LibWeb/Streams/WritableStreamDefaultController.idl",
   "//Userland/Libraries/LibWeb/Streams/WritableStreamDefaultWriter.idl",
+  "//Userland/Libraries/LibWeb/SVG/SVGAElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGAnimatedLength.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGAnimatedNumber.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGAnimatedRect.idl",
@@ -314,11 +325,14 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/WebAssembly/Module.idl",
   "//Userland/Libraries/LibWeb/WebAssembly/Table.idl",
   "//Userland/Libraries/LibWeb/WebAudio/AudioBuffer.idl",
+  "//Userland/Libraries/LibWeb/WebAudio/AudioBufferSourceNode.idl",
   "//Userland/Libraries/LibWeb/WebAudio/AudioContext.idl",
+  "//Userland/Libraries/LibWeb/WebAudio/AudioDestinationNode.idl",
   "//Userland/Libraries/LibWeb/WebAudio/AudioNode.idl",
   "//Userland/Libraries/LibWeb/WebAudio/AudioParam.idl",
   "//Userland/Libraries/LibWeb/WebAudio/AudioScheduledSourceNode.idl",
   "//Userland/Libraries/LibWeb/WebAudio/BaseAudioContext.idl",
+  "//Userland/Libraries/LibWeb/WebAudio/BiquadFilterNode.idl",
   "//Userland/Libraries/LibWeb/WebAudio/DynamicsCompressorNode.idl",
   "//Userland/Libraries/LibWeb/WebAudio/GainNode.idl",
   "//Userland/Libraries/LibWeb/WebAudio/OfflineAudioContext.idl",

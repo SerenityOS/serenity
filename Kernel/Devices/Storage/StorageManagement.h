@@ -8,6 +8,7 @@
 
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/Storage/SD/SDHostController.h>
 #include <Kernel/Devices/Storage/StorageController.h>
 #include <Kernel/Devices/Storage/StorageDevice.h>
@@ -28,9 +29,8 @@ public:
     static StorageManagement& the();
 
     bool determine_boot_device(StringView boot_argument);
-    NonnullRefPtr<FileSystem> root_filesystem() const;
+    ErrorOr<NonnullRefPtr<VFSRootContext>> create_first_vfs_root_context() const;
 
-    static MajorNumber storage_type_major_number();
     static MinorNumber generate_storage_minor_number();
 
     static MinorNumber generate_partition_minor_number();

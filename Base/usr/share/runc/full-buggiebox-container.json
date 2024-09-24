@@ -1,0 +1,130 @@
+{
+    "jail": true,
+    "pid-isolation": true,
+    "command": "/bin/sh",
+    "hostname": null,
+    "layout": [
+        {
+            "type": "mount",
+            "source": null,
+            "target": "/",
+            "fs_type": "RAMFS"
+        },
+        {
+            "type": "directory",
+            "target": "/tmp"
+        },
+        {
+            "type": "directory",
+            "target": "/bin"
+        },
+        {
+            "type": "directory",
+            "target": "/usr/"
+        },
+        {
+            "type": "directory",
+            "target": "/usr/lib/"
+        },
+        {
+            "type": "copy_custom",
+            "source": "/bin/BuggieBox",
+            "target": "/bin/BuggieBox"
+        },
+        {
+            "type": "copy_original",
+            "sources": [
+                "/usr/lib/Loader.so",
+                "/usr/lib/libc.so",
+                "/usr/lib/libgcc_s.so",
+                "/usr/lib/libsystem.so",
+                "/usr/lib/libshell.so.serenity",
+                "/usr/lib/libshell.so",
+                "/usr/lib/libarchive.so.serenity",
+                "/usr/lib/libarchive.so",
+                "/usr/lib/libelf.so.serenity",
+                "/usr/lib/libelf.so",
+                "/usr/lib/libgfx.so.serenity",
+                "/usr/lib/libgfx.so",
+                "/usr/lib/libline.so.serenity",
+                "/usr/lib/libline.so",
+                "/usr/lib/libregex.so.serenity",
+                "/usr/lib/libregex.so",
+                "/usr/lib/libaudio.so.serenity",
+                "/usr/lib/libaudio.so",
+                "/usr/lib/libcompress.so.serenity",
+                "/usr/lib/libcompress.so",
+                "/usr/lib/libfilesystem.so.serenity",
+                "/usr/lib/libfilesystem.so",
+                "/usr/lib/libcrypto.so.serenity",
+                "/usr/lib/libcrypto.so",
+                "/usr/lib/libcrypt.so.serenity",
+                "/usr/lib/libcrypt.so",
+                "/usr/lib/libcore.so",
+                "/usr/lib/libcore.so.serenity",
+                "/usr/lib/libcoreminimal.so",
+                "/usr/lib/libcoreminimal.so.serenity",
+                "/usr/lib/libunicode.so.serenity",
+                "/usr/lib/libunicode.so",
+                "/usr/lib/libsyntax.so.serenity",
+                "/usr/lib/libsyntax.so",
+                "/usr/lib/libcodecomprehension.so.serenity",
+                "/usr/lib/libcodecomprehension.so",
+                "/usr/lib/libriff.so.serenity",
+                "/usr/lib/libriff.so",
+                "/usr/lib/libipc.so.serenity",
+                "/usr/lib/libipc.so",
+                "/usr/lib/libthreading.so.serenity",
+                "/usr/lib/libthreading.so",
+                "/usr/lib/libtextcodec.so.serenity",
+                "/usr/lib/libtextcodec.so",
+                "/usr/lib/liburl.so.serenity",
+                "/usr/lib/liburl.so"
+            ]
+        },
+        {
+            "type": "directory",
+            "target": "/etc/"
+        },
+        {
+            "type": "copy_original",
+            "sources": [
+                "/etc/passwd"
+            ]
+        },
+        {
+            "type": "symlink",
+            "path": "/bin/sh",
+            "target": "/bin/BuggieBox"
+        },
+        {
+            "type": "symlink",
+            "path": "/bin/ls",
+            "target": "/bin/BuggieBox"
+        },
+        {
+            "type": "directory",
+            "target": "/lib/"
+        },
+        {
+            "type": "directory",
+            "target": "/proc/"
+        },
+        {
+            "type": "mount",
+            "source": null,
+            "target": "/proc",
+            "fs_type": "ProcFS"
+        },
+        {
+            "type": "directory",
+            "target": "/sys/"
+        },
+        {
+            "type": "mount",
+            "source": null,
+            "target": "/sys",
+            "fs_type": "SysFS"
+        }
+    ]
+}

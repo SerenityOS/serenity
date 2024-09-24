@@ -165,7 +165,7 @@ WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(String c
     // FIXME: 4. If name does not match the XML Name production, throw an "InvalidCharacterError" DOMException.
 
     // 5. Set an attribute value for the DOMStringMap's associated element using name and value.
-    MUST(m_associated_element->set_attribute(data_name, value));
+    TRY(m_associated_element->set_attribute(data_name, value));
 
     return {};
 }
@@ -204,7 +204,7 @@ WebIDL::ExceptionOr<Bindings::PlatformObject::DidDeletionFail> DOMStringMap::del
     return DidDeletionFail::No;
 }
 
-WebIDL::ExceptionOr<JS::Value> DOMStringMap::named_item_value(FlyString const& name) const
+JS::Value DOMStringMap::named_item_value(FlyString const& name) const
 {
     return JS::PrimitiveString::create(vm(), determine_value_of_named_property(name));
 }

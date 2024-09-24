@@ -31,7 +31,6 @@ enum class ShouldBlock {
 
 class Inode : public ListedRefCounted<Inode, LockType::Spinlock>
     , public LockWeakable<Inode> {
-    friend class VirtualFileSystem;
     friend class FileSystem;
     friend class InodeFile;
 
@@ -73,7 +72,7 @@ public:
     virtual ErrorOr<void> chmod(mode_t) = 0;
     virtual ErrorOr<void> chown(UserID, GroupID) = 0;
 
-    ErrorOr<NonnullRefPtr<Custody>> resolve_as_link(Credentials const&, CustodyBase const& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
+    ErrorOr<NonnullRefPtr<Custody>> resolve_as_link(VFSRootContext const&, Credentials const&, CustodyBase const& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
 
     virtual ErrorOr<int> get_block_address(int) { return ENOTSUP; }
 

@@ -148,6 +148,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd rpath cpath unix proc exec thread map_fixed"));
 
+    TRY(Core::System::enter_jail_mode());
+
     Core::LockFile lockfile("/tmp/lock/assistant.lock");
 
     if (!lockfile.is_held()) {

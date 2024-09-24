@@ -354,3 +354,7 @@
 #ifndef WAITQUEUE_DEBUG
 #cmakedefine01 WAITQUEUE_DEBUG
 #endif
+
+#ifndef XHCI_DEBUG
+#cmakedefine01 XHCI_DEBUG
+#endif

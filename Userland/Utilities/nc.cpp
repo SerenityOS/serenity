@@ -51,6 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool should_close = false;
     bool udp_mode = false;
     bool numeric_mode = false;
+    bool test_listening_daemons = false;
     ByteString target;
     u16 port = 0;
     u16 local_port = 0;
@@ -60,6 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.set_general_help("Network cat: Connect to network sockets as if it were a file.");
     args_parser.add_option(maximum_tcp_receive_buffer_size_input, "Set maximum tcp receive buffer size", "length", 'I', nullptr);
     args_parser.add_option(should_listen, "Listen instead of connecting", "listen", 'l');
+    args_parser.add_option(test_listening_daemons, "Test a TCP-listening service", "test-listening-service", 'z');
     args_parser.add_option(should_close, "Close connection after reading stdin to the end", nullptr, 'N');
     args_parser.add_option(numeric_mode, "Suppress name resolution", nullptr, 'n');
     args_parser.add_option(udp_mode, "UDP mode", "udp", 'u');
@@ -68,6 +70,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(target, "Address to listen on, or the address or hostname to connect to", "target", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(port, "Port to connect to or listen on", "port", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
+
+    if (test_listening_daemons && (udp_mode || should_listen)) {
+        warnln("listening/udp-mode while testing TCP services is not supported");
+        return 1;
+    }
 
     if (udp_mode) {
         if (should_listen) {
@@ -151,12 +158,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         dst_addr.sin_port = htons(port);
 
         if (!numeric_mode) {
-            auto* hostent = gethostbyname(target.characters());
-            if (!hostent) {
+            auto address_or_error = Core::Socket::resolve_host(target, Core::Socket::SocketType::Stream);
+            if (address_or_error.is_error()) {
                 warnln("nc: Unable to resolve '{}'", target);
                 return 1;
             }
-            dst_addr.sin_addr.s_addr = *(in_addr_t const*)hostent->h_addr_list[0];
+            dst_addr.sin_addr.s_addr = address_or_error.release_value().to_u32();
         } else {
             if (inet_pton(AF_INET, target.characters(), &dst_addr.sin_addr) <= 0) {
                 perror("inet_pton");
@@ -169,6 +176,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (verbose) {
             char addr_str[INET_ADDRSTRLEN];
             warnln("connecting to {}:{}", inet_ntop(dst_addr.sin_family, &dst_addr.sin_addr, addr_str, sizeof(addr_str)), ntohs(dst_addr.sin_port));
+        }
+
+        if (test_listening_daemons) {
+            auto connect_or_error = Core::System::connect(fd, (struct sockaddr*)&dst_addr, sizeof(dst_addr));
+            char addr_str[INET_ADDRSTRLEN];
+            if (connect_or_error.is_error()) {
+                warnln("connection to {}:{} has failed due to {}", inet_ntop(dst_addr.sin_family, &dst_addr.sin_addr, addr_str, sizeof(addr_str)), ntohs(dst_addr.sin_port), strerror(connect_or_error.error().code()));
+                return 1;
+            }
+            warnln("connection to {}:{} has succeeded", inet_ntop(dst_addr.sin_family, &dst_addr.sin_addr, addr_str, sizeof(addr_str)), ntohs(dst_addr.sin_port));
+            return 0;
         }
 
         TRY(Core::System::connect(fd, (struct sockaddr*)&dst_addr, sizeof(dst_addr)));

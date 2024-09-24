@@ -226,6 +226,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_attribute_simple_se
         dbgln_if(CSS_PARSER_DEBUG, "Expected qualified-name for attribute name, got: '{}'", attribute_tokens.peek_token().to_debug_string());
         return ParseError::SyntaxError;
     }
+    auto qualified_name = maybe_qualified_name.release_value();
 
     Selector::SimpleSelector simple_selector {
         .type = Selector::SimpleSelector::Type::Attribute,
@@ -236,8 +237,10 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_attribute_simple_se
             // they are converted to lowercase, so we do that here too. If we want to be
             // correct with XML later, we'll need to keep the original case and then do
             // a case-insensitive compare later.
-            .qualified_name = maybe_qualified_name.release_value(),
-            .case_type = Selector::SimpleSelector::Attribute::CaseType::DefaultMatch,
+            .qualified_name = qualified_name,
+            .case_type = case_insensitive_html_attributes.contains_slow(qualified_name.name.lowercase_name)
+                ? Selector::SimpleSelector::Attribute::CaseType::CaseInsensitiveMatch
+                : Selector::SimpleSelector::Attribute::CaseType::DefaultMatch,
         }
     };
 
@@ -503,7 +506,10 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
                 return ParseError::SyntaxError;
             }
 
-            Vector compound_selectors { compound_selector_or_error.release_value().release_value() };
+            auto compound_selector = compound_selector_or_error.release_value().release_value();
+            compound_selector.combinator = Selector::Combinator::None;
+
+            Vector compound_selectors { move(compound_selector) };
             auto selector = Selector::create(move(compound_selectors));
 
             return Selector::SimpleSelector {
@@ -513,10 +519,14 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
                     .argument_selector_list = { move(selector) } }
             };
         }
+        case PseudoClassMetadata::ParameterType::ForgivingRelativeSelectorList:
         case PseudoClassMetadata::ParameterType::ForgivingSelectorList: {
             auto function_token_stream = TokenStream(pseudo_function.values());
+            auto selector_type = metadata.parameter_type == PseudoClassMetadata::ParameterType::ForgivingSelectorList
+                ? SelectorType::Standalone
+                : SelectorType::Relative;
             // NOTE: Because it's forgiving, even complete garbage will parse OK as an empty selector-list.
-            auto argument_selector_list = MUST(parse_a_selector_list(function_token_stream, SelectorType::Standalone, SelectorParsingMode::Forgiving));
+            auto argument_selector_list = MUST(parse_a_selector_list(function_token_stream, selector_type, SelectorParsingMode::Forgiving));
 
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoClass,

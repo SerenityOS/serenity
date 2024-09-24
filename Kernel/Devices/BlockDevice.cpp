@@ -25,6 +25,16 @@ void AsyncBlockDeviceRequest::start()
     m_block_device.start_request(*this);
 }
 
+BlockDevice::BlockDevice(MajorAllocation::BlockDeviceFamily block_device_family, MinorNumber minor, size_t block_size)
+    : Device(MajorAllocation::block_device_family_to_major_number(block_device_family), minor)
+    , m_block_size(block_size)
+{
+    // 512 is the minimum sector size in most block devices
+    VERIFY(m_block_size >= 512);
+    VERIFY(is_power_of_two(m_block_size));
+    m_block_size_log = AK::log2(m_block_size);
+}
+
 BlockDevice::~BlockDevice() = default;
 
 void BlockDevice::after_inserting_add_symlink_to_device_identifier_directory()

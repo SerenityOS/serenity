@@ -102,9 +102,9 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
         dmesgln("SCSI/BBB: WARNING: USB Mass Storage Device supports multiple LUNs ({}) only targetting first LUN", max_luns);
 
     u8 in_pipe_address = 0xff;
-    u8 in_max_packet_size;
+    u16 in_max_packet_size;
     u8 out_pipe_address = 0xff;
-    u8 out_max_packet_size;
+    u16 out_max_packet_size;
 
     if (interface.descriptor().number_of_endpoints < 2) {
         dmesgln("SCSI/BBB: Interface does not provide enough endpoints for advertised Bulk-only transfer protocol; Rejecting");
@@ -128,22 +128,89 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
         return ENOTSUP;
     }
 
-    auto in_pipe = TRY(BulkInPipe::create(device.controller(), in_pipe_address, in_max_packet_size, device.address()));
-    auto out_pipe = TRY(BulkOutPipe::create(device.controller(), out_pipe_address, out_max_packet_size, device.address()));
+    auto in_pipe = TRY(BulkInPipe::create(device.controller(), device, in_pipe_address, in_max_packet_size));
+    auto out_pipe = TRY(BulkOutPipe::create(device.controller(), device, out_pipe_address, out_max_packet_size));
 
-    CommandBlockWrapper command_block {};
-    command_block.set_command(SCSI::ReadCapacity10 {});
-    command_block.transfer_length = sizeof(SCSI::ReadCapacity10Parameters);
-    command_block.direction = CBWDirection::DataIn;
-    TRY(out_pipe->submit_bulk_out_transfer(31, &command_block));
+    SCSI::Inquiry inquiry_command {};
+    inquiry_command.allocation_length = sizeof(SCSI::StandardInquiryData);
+
+    SCSI::StandardInquiryData inquiry_data;
+
+    auto inquiry_response = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(*out_pipe, *in_pipe, inquiry_command, &inquiry_data, sizeof(inquiry_data)));
+    if (inquiry_response.status != CSWStatus::Passed) {
+        dmesgln("SCSI/BBB: Inquiry failed with code {}", to_underlying(inquiry_response.status));
+        return EIO;
+    }
+    dmesgln("    Device Type: {}", inquiry_data.device_type_string());
+    dmesgln("    Peripheral Qualifier: {:#03b}", (u8)inquiry_data.peripheral_info.qualifier);
+    dmesgln("    Removable: {}", (inquiry_data.removable & 0x80) == 0x80);
+    dmesgln("    Version: {:#02x}", inquiry_data.version);
+    dmesgln("    Vendor: {}", StringView { inquiry_data.vendor_id, 8 });
+    dmesgln("    Product: {}", StringView { inquiry_data.product_id, 16 });
+    dmesgln("    Revision: {}", StringView { inquiry_data.product_revision_level, 4 });
+    if (inquiry_data.peripheral_info.device_type != SCSI::StandardInquiryData::DeviceType::DirectAccessBlockDevice) {
+        dmesgln("SCSI/BBB: Device is not a Direct Access Block device; Rejecting");
+        return ENOTSUP;
+    }
+    if (inquiry_data.version < 3 || inquiry_data.version > 7) {
+        dmesgln("SCSI/BBB: Device SCSI version not supported ({:#02x}); Rejecting", inquiry_data.version);
+        return ENOTSUP;
+    }
+    if (inquiry_data.response_data.response_data_format != 2) {
+        // SCSI Commands Reference Manual, Rev. J states that only format 2 is valid,
+        // and that format 1 is obsolete, but does not actually specify what format 1 would have been
+        // so ENOTSUP to be safe
+        dmesgln("SCSI/BBB: Device does not support response data format 2 (got {} instead); Rejecting", (u8)inquiry_data.response_data.response_data_format);
+        return ENOTSUP;
+    }
+
+    // FIXME: Re-query INQUIRY if the DRIVE SERIAL NUMBER field is present (see the ADDITIONAL LENGTH field), to record it
+    //        (bytes 36-43 ~ 8 bytes)
+
+    size_t tries = 0;
+    constexpr size_t max_tries = 5;
+    while (tries < max_tries) {
+        SCSI::TestUnitReady test_unit_ready_command {};
+        auto test_unit_ready_response = TRY(send_scsi_command<SCSIDataDirection::NoData>(*out_pipe, *in_pipe, test_unit_ready_command));
+
+        if (test_unit_ready_response.status == CSWStatus::Passed)
+            break;
+
+        SCSI::RequestSense request_sense_command {};
+        SCSI::FixedFormatSenseData sense_data;
+
+        request_sense_command.allocation_length = sizeof(sense_data);
+
+        auto request_sense_response = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(*out_pipe, *in_pipe, request_sense_command, &sense_data, sizeof(sense_data)));
+        if (request_sense_response.status != CSWStatus::Passed) {
+            dmesgln("SCSI/BBB: Request Sense failed with code {}, possibly unimplemented", to_underlying(request_sense_response.status));
+            return EIO;
+        }
+        // FIXME: Maybe hide this behind a debug flag, as some hardware fails once after startup
+        dbgln("SCSI/BBB: TestUnitReady Failed:");
+        // FIXME: to_string() these
+        dbgln("    Sense Key: {:#02x}", (u8)sense_data.sense_key);
+        dbgln("    Additional Sense Code: {:#02x}", (u8)sense_data.additional_sense_code);
+        dbgln("    Additional Sense Code Qualifier: {:#02x}", (u8)sense_data.additional_sense_code_qualifier);
+
+        ++tries;
+    }
+    if (tries == max_tries) {
+        dmesgln("SCSI/BBB: TestUnitReady failed too many times");
+        return EIO;
+    }
 
     SCSI::ReadCapacity10Parameters capacity;
-    TRY(in_pipe->submit_bulk_in_transfer(sizeof(capacity), &capacity));
-    // FIXME: Handle Stalling
-    CommandStatusWrapper status;
-    TRY(in_pipe->submit_bulk_in_transfer(sizeof(status), &status));
+    auto status = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(*out_pipe, *in_pipe, SCSI::ReadCapacity10 {}, &capacity, sizeof(capacity)));
+
+    if (status.data_residue != 0) {
+        dmesgln("SCSI/BBB: Read Capacity returned with non-zero data residue; Rejecting");
+        return EIO;
+    }
+
     if (status.status != CSWStatus::Passed) {
         dmesgln("SCSI/BBB: Failed to query USB Drive capacity; Rejecting");
+        // FIXME: More error handling
         return ENOTSUP;
     }
 

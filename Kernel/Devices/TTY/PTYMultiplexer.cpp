@@ -5,6 +5,7 @@
  */
 
 #include <AK/Singleton.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/TTY/MasterPTY.h>
@@ -22,7 +23,7 @@ PTYMultiplexer& PTYMultiplexer::the()
 }
 
 UNMAP_AFTER_INIT PTYMultiplexer::PTYMultiplexer()
-    : CharacterDevice(5, 2)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Console, 2)
 {
     m_freelist.with([&](auto& freelist) {
         freelist.ensure_capacity(max_pty_pairs);

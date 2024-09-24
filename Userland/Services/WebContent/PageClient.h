@@ -46,7 +46,7 @@ public:
     virtual void paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap&, Web::PaintOptions = {}) override;
 
     void set_palette_impl(Gfx::PaletteImpl&);
-    void set_viewport_rect(Web::DevicePixelRect const&);
+    void set_viewport_size(Web::DevicePixelSize const&);
     void set_screen_rects(Vector<Web::DevicePixelRect, 4> const& rects, size_t main_screen_index) { m_screen_rect = rects[main_screen_index]; }
     void set_device_pixels_per_css_pixel(float device_pixels_per_css_pixel) { m_device_pixels_per_css_pixel = device_pixels_per_css_pixel; }
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
@@ -76,7 +76,6 @@ public:
     void add_backing_store(i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap);
 
     void initialize_js_console(Web::DOM::Document& document);
-    void destroy_js_console(Web::DOM::Document& document);
     void js_console_input(ByteString const& js_source);
     void run_javascript(ByteString const& js_source);
     void js_console_request_messages(i32 start_index);
@@ -109,8 +108,6 @@ private:
     virtual Gfx::IntRect page_did_request_maximize_window() override;
     virtual Gfx::IntRect page_did_request_minimize_window() override;
     virtual Gfx::IntRect page_did_request_fullscreen_window() override;
-    virtual void page_did_request_scroll(i32, i32) override;
-    virtual void page_did_request_scroll_to(Web::CSSPixelPoint) override;
     virtual void page_did_enter_tooltip_area(Web::CSSPixelPoint, ByteString const&) override;
     virtual void page_did_leave_tooltip_area() override;
     virtual void page_did_hover_link(URL::URL const&) override;
@@ -123,7 +120,6 @@ private:
     virtual void page_did_start_loading(URL::URL const&, bool) override;
     virtual void page_did_create_new_document(Web::DOM::Document&) override;
     virtual void page_did_change_active_document_in_top_level_browsing_context(Web::DOM::Document&) override;
-    virtual void page_did_destroy_document(Web::DOM::Document&) override;
     virtual void page_did_finish_loading(URL::URL const&) override;
     virtual void page_did_request_alert(String const&) override;
     virtual void page_did_request_confirm(String const&) override;
@@ -198,8 +194,6 @@ private:
     };
     BackingStores m_backing_stores;
 
-    // NOTE: These documents are not visited, but manually removed from the map on document finalization.
-    HashMap<JS::RawGCPtr<Web::DOM::Document>, JS::NonnullGCPtr<WebContentConsoleClient>> m_console_clients;
     WeakPtr<WebContentConsoleClient> m_top_level_document_console_client;
 
     JS::Handle<JS::GlobalObject> m_console_global_object;

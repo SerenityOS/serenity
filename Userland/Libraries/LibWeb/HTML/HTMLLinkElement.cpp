@@ -90,6 +90,29 @@ void HTMLLinkElement::inserted()
     }
 }
 
+// https://html.spec.whatwg.org/multipage/semantics.html#dom-link-as
+String HTMLLinkElement::as() const
+{
+    String attribute_value = get_attribute_value(HTML::AttributeNames::as);
+
+    if (attribute_value.equals_ignoring_ascii_case("fetch"sv)
+        || attribute_value.equals_ignoring_ascii_case("image"sv)
+        || attribute_value.equals_ignoring_ascii_case("script"sv)
+        || attribute_value.equals_ignoring_ascii_case("style"sv)
+        || attribute_value.equals_ignoring_ascii_case("video"sv)
+        || attribute_value.equals_ignoring_ascii_case("audio"sv)
+        || attribute_value.equals_ignoring_ascii_case("track"sv)
+        || attribute_value.equals_ignoring_ascii_case("font"sv))
+        return attribute_value.to_lowercase().release_value();
+
+    return String {};
+}
+
+WebIDL::ExceptionOr<void> HTMLLinkElement::set_as(String const& value)
+{
+    return set_attribute(HTML::AttributeNames::as, move(value));
+}
+
 // https://html.spec.whatwg.org/multipage/semantics.html#dom-link-rellist
 JS::NonnullGCPtr<DOM::DOMTokenList> HTMLLinkElement::rel_list()
 {
@@ -104,9 +127,9 @@ bool HTMLLinkElement::has_loaded_icon() const
     return m_relationship & Relationship::Icon && resource() && resource()->is_loaded() && resource()->has_encoded_data();
 }
 
-void HTMLLinkElement::attribute_changed(FlyString const& name, Optional<String> const& value)
+void HTMLLinkElement::attribute_changed(FlyString const& name, Optional<String> const& old_value, Optional<String> const& value)
 {
-    HTMLElement::attribute_changed(name, value);
+    HTMLElement::attribute_changed(name, old_value, value);
 
     // 4.6.7 Link types - https://html.spec.whatwg.org/multipage/links.html#linkTypes
     if (name == HTML::AttributeNames::rel) {
@@ -559,6 +582,11 @@ WebIDL::ExceptionOr<void> HTMLLinkElement::load_fallback_favicon_if_needed(JS::N
         });
         auto process_body_error = JS::create_heap_function(realm.heap(), [](JS::Value) {
         });
+
+        // Check for failed favicon response
+        if (!Fetch::Infrastructure::is_ok_status(response->status()) || !response->body()) {
+            return;
+        }
 
         // 3. Use response's unsafe response as an icon as if it had been declared using the icon keyword.
         if (auto body = response->unsafe_response()->body())

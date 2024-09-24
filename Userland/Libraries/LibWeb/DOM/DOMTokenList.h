@@ -30,8 +30,7 @@ public:
 
     void associated_attribute_changed(StringView value);
 
-    virtual bool is_supported_property_index(u32 index) const override;
-    virtual WebIDL::ExceptionOr<JS::Value> item_value(size_t index) const override;
+    virtual Optional<JS::Value> item_value(size_t index) const override;
 
     size_t length() const { return m_token_set.size(); }
     Optional<String> item(size_t index) const;
@@ -51,7 +50,11 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     WebIDL::ExceptionOr<void> validate_token(StringView token) const;
+    WebIDL::ExceptionOr<void> validate_token_not_empty(StringView token) const;
+    WebIDL::ExceptionOr<void> validate_token_not_whitespace(StringView token) const;
     void run_update_steps();
+
+    String serialize_ordered_set() const;
 
     JS::NonnullGCPtr<Element> m_associated_element;
     FlyString m_associated_attribute;

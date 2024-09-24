@@ -64,6 +64,7 @@ public:
     using WindowOrWorkerGlobalScopeMixin::create_image_bitmap;
     using WindowOrWorkerGlobalScopeMixin::fetch;
     using WindowOrWorkerGlobalScopeMixin::queue_microtask;
+    using WindowOrWorkerGlobalScopeMixin::report_error;
     using WindowOrWorkerGlobalScopeMixin::set_interval;
     using WindowOrWorkerGlobalScopeMixin::set_timeout;
     using WindowOrWorkerGlobalScopeMixin::structured_clone;
@@ -162,6 +163,7 @@ public:
     WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> open(Optional<String> const& url, Optional<String> const& target, Optional<String> const& features);
 
     [[nodiscard]] JS::NonnullGCPtr<Navigator> navigator();
+    [[nodiscard]] JS::NonnullGCPtr<CloseWatcherManager> close_watcher_manager();
 
     void alert(String const& message = {});
     bool confirm(Optional<String> const& message);
@@ -230,7 +232,7 @@ public:
     [[nodiscard]] OrderedHashMap<FlyString, JS::NonnullGCPtr<Navigable>> document_tree_child_navigable_target_name_property_set();
 
     [[nodiscard]] Vector<FlyString> supported_property_names() const override;
-    [[nodiscard]] WebIDL::ExceptionOr<JS::Value> named_item_value(FlyString const&) const override;
+    [[nodiscard]] JS::Value named_item_value(FlyString const&) const override;
 
 private:
     explicit Window(JS::Realm&);
@@ -269,6 +271,7 @@ private:
     JS::GCPtr<CSS::Screen> m_screen;
     JS::GCPtr<Navigator> m_navigator;
     JS::GCPtr<Location> m_location;
+    JS::GCPtr<CloseWatcherManager> m_close_watcher_manager;
 
     // https://html.spec.whatwg.org/multipage/nav-history-apis.html#window-navigation-api
     JS::GCPtr<Navigation> m_navigation;

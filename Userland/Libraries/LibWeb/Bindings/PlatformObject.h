@@ -72,10 +72,11 @@ protected:
     };
     JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> legacy_platform_object_get_own_property(JS::PropertyKey const&, IgnoreNamedProps ignore_named_props) const;
 
-    virtual WebIDL::ExceptionOr<JS::Value> item_value(size_t index) const;
-    virtual WebIDL::ExceptionOr<JS::Value> named_item_value(FlyString const& name) const;
+    virtual Optional<JS::Value> item_value(size_t index) const;
+    virtual JS::Value named_item_value(FlyString const& name) const;
     virtual Vector<FlyString> supported_property_names() const;
-    virtual bool is_supported_property_index(u32) const;
+    virtual bool is_supported_property_name(FlyString const&) const;
+    bool is_supported_property_index(u32) const;
 
     // NOTE: These will crash if you make has_named_property_setter return true but do not override these methods.
     // NOTE: This is only used if named_property_setter_has_identifier returns false, otherwise set_value_of_named_property is used instead.
@@ -108,7 +109,7 @@ protected:
 
 private:
     WebIDL::ExceptionOr<void> invoke_indexed_property_setter(JS::PropertyKey const&, JS::Value);
-    WebIDL::ExceptionOr<void> invoke_named_property_setter(String const&, JS::Value);
+    WebIDL::ExceptionOr<void> invoke_named_property_setter(FlyString const&, JS::Value);
 };
 
 }

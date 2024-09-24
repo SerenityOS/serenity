@@ -51,6 +51,7 @@ public:
 
     ALWAYS_INLINE RefPtr<PDF::Document> const& document() const { return m_document; }
     PDF::PDFErrorOr<void> set_document(RefPtr<PDF::Document>);
+    PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_rendered_page(u32 index);
 
     Function<void(u32 new_page)> on_page_change;
     Function<void(u32 page, PDF::Errors const& errors)> on_render_errors;
@@ -94,7 +95,6 @@ private:
         int rotation;
     };
 
-    PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_rendered_page(u32 index);
     PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page(u32 page_index);
     PDF::PDFErrorOr<void> cache_page_dimensions(bool recalculate_fixed_info = false);
     void change_page(u32 new_page);

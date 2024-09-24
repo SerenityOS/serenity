@@ -113,7 +113,6 @@ void PageClient::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_page);
-    visitor.ignore(m_console_clients);
 }
 
 ConnectionFromClient& PageClient::client() const
@@ -235,9 +234,9 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
     }
 }
 
-void PageClient::set_viewport_rect(Web::DevicePixelRect const& rect)
+void PageClient::set_viewport_size(Web::DevicePixelSize const& size)
 {
-    page().top_level_traversable()->set_viewport_rect(page().device_to_css_rect(rect));
+    page().top_level_traversable()->set_viewport_size(page().device_to_css_size(size));
 }
 
 void PageClient::page_did_request_cursor_change(Gfx::StandardCursor cursor)
@@ -311,24 +310,6 @@ Gfx::IntRect PageClient::page_did_request_fullscreen_window()
     return client().did_request_fullscreen_window(m_id);
 }
 
-void PageClient::page_did_request_scroll(i32 x_delta, i32 y_delta)
-{
-    client().async_did_request_scroll(m_id, x_delta, y_delta);
-}
-
-void PageClient::page_did_request_scroll_to(Web::CSSPixelPoint scroll_position)
-{
-    // NOTE: The viewport scroll position is updated preemptively, so that subsequent
-    //       viewport offset calculation could use new offset even before actual
-    //       scroll on browser side happens.
-    auto viewport = page().top_level_traversable()->viewport_rect();
-    viewport.set_location(scroll_position);
-    page().top_level_traversable()->set_viewport_rect(viewport);
-
-    auto device_scroll_position = page().css_to_device_point(scroll_position);
-    client().async_did_request_scroll_to(m_id, device_scroll_position.to_type<int>());
-}
-
 void PageClient::page_did_enter_tooltip_area(Web::CSSPixelPoint content_position, ByteString const& title)
 {
     auto device_position = page().css_to_device_point(content_position);
@@ -367,13 +348,15 @@ void PageClient::page_did_create_new_document(Web::DOM::Document& document)
 
 void PageClient::page_did_change_active_document_in_top_level_browsing_context(Web::DOM::Document& document)
 {
-    VERIFY(m_console_clients.contains(document));
-    m_top_level_document_console_client = *m_console_clients.get(document).value();
-}
+    auto& realm = document.realm();
 
-void PageClient::page_did_destroy_document(Web::DOM::Document& document)
-{
-    destroy_js_console(document);
+    if (auto console_client = document.console_client()) {
+        auto& web_content_console_client = verify_cast<WebContentConsoleClient>(*console_client);
+        m_top_level_document_console_client = web_content_console_client;
+
+        auto console_object = realm.intrinsics().console_object();
+        console_object->console().set_client(*console_client);
+    }
 }
 
 void PageClient::page_did_finish_loading(URL::URL const& url)
@@ -686,17 +669,15 @@ ErrorOr<void> PageClient::connect_to_webdriver(ByteString const& webdriver_ipc_p
 
 void PageClient::initialize_js_console(Web::DOM::Document& document)
 {
+    if (document.is_temporary_document_for_fragment_parsing())
+        return;
+
     auto& realm = document.realm();
+
     auto console_object = realm.intrinsics().console_object();
     auto console_client = heap().allocate_without_realm<WebContentConsoleClient>(console_object->console(), document.realm(), *this);
-    console_object->console().set_client(*console_client);
 
-    m_console_clients.set(document, console_client);
-}
-
-void PageClient::destroy_js_console(Web::DOM::Document& document)
-{
-    m_console_clients.remove(document);
+    document.set_console_client(console_client);
 }
 
 void PageClient::js_console_input(ByteString const& js_source)

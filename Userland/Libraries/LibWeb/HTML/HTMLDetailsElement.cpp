@@ -53,9 +53,9 @@ void HTMLDetailsElement::removed_from(DOM::Node*)
     set_shadow_root(nullptr);
 }
 
-void HTMLDetailsElement::attribute_changed(FlyString const& name, Optional<String> const& value)
+void HTMLDetailsElement::attribute_changed(FlyString const& name, Optional<String> const& old_value, Optional<String> const& value)
 {
-    Base::attribute_changed(name, value);
+    Base::attribute_changed(name, old_value, value);
 
     // https://html.spec.whatwg.org/multipage/interactive-elements.html#details-notification-task-steps
     if (name == HTML::AttributeNames::open) {
@@ -185,9 +185,8 @@ void HTMLDetailsElement::update_shadow_tree_style()
             display: block;
         )~~~"_string));
     } else {
-        // FIXME: Should be `display: block` but we do not support `content-visibility: hidden`.
         MUST(m_descendants_slot->set_attribute(HTML::AttributeNames::style, R"~~~(
-            display: none;
+            display: block;
             content-visibility: hidden;
         )~~~"_string));
     }

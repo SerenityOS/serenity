@@ -20,6 +20,8 @@ DropEvent::DropEvent(Gfx::IntPoint position, ByteString const& text, NonnullRefP
 {
 }
 
+DropEvent::~DropEvent() = default;
+
 ByteString KeyEvent::to_byte_string() const
 {
     Vector<ByteString, 8> parts;
@@ -52,5 +54,7 @@ ActionEvent::ActionEvent(Type type, Action& action)
     , m_action(action)
 {
 }
+
+ActionEvent::~ActionEvent() = default;
 
 }

@@ -313,6 +313,8 @@ static ErrorOr<size_t> copy_string_excluding_terminating_null(Configuration& con
 }
 
 static Errno errno_value_from_errno(int value);
+static FileType file_type_of(struct stat const& buf);
+static FDFlags fd_flags_of(struct stat const& buf);
 
 Vector<AK::String> const& Implementation::arguments() const
 {
@@ -426,9 +428,9 @@ ErrorOr<Result<EnvironSizes>> Implementation::impl$environ_sizes_get(Configurati
     });
 }
 
-ErrorOr<Result<void>> Implementation::impl$proc_exit(Configuration&, ExitCode exit_code)
+ErrorOr<void> Implementation::impl$proc_exit(Configuration&, ExitCode exit_code)
 {
-    exit(exit_code);
+    return Error::from_errno(-static_cast<i32>(exit_code + 1));
 }
 
 ErrorOr<Result<void>> Implementation::impl$fd_close(Configuration&, FD fd)
@@ -778,6 +780,51 @@ ErrorOr<Result<Size>> Implementation::impl$fd_read(Configuration& configuration,
     return bytes_read;
 }
 
+ErrorOr<Result<FDStat>> Implementation::impl$fd_fdstat_get(Configuration&, FD fd)
+{
+    auto mapped_fd = map_fd(fd);
+    auto resolved_fd = -1;
+    mapped_fd.visit(
+        [&](PreopenedDirectoryDescriptor descriptor) {
+            auto& entry = preopened_directories()[descriptor.value()];
+            resolved_fd = entry.opened_fd.value_or_lazy_evaluated([&] {
+                ByteString path = entry.host_path.string();
+                return open(path.characters(), O_DIRECTORY, 0);
+            });
+            entry.opened_fd = resolved_fd;
+        },
+        [&](u32 fd) {
+            resolved_fd = fd;
+        },
+        [](UnmappedDescriptor) {});
+    if (resolved_fd < 0)
+        return errno_value_from_errno(errno);
+
+    struct stat stat_buf;
+    if (fstat(resolved_fd, &stat_buf) < 0)
+        return errno_value_from_errno(errno);
+
+    return FDStat {
+        .fs_filetype = file_type_of(stat_buf),
+        .fs_flags = fd_flags_of(stat_buf),
+        .fs_rights_base = Rights { .data = 0 },
+        .fs_rights_inheriting = Rights { .data = 0 },
+    };
+}
+
+ErrorOr<Result<FileSize>> Implementation::impl$fd_seek(Configuration&, FD fd, FileDelta offset, Whence whence)
+{
+    auto mapped_fd = map_fd(fd);
+    if (!mapped_fd.has<u32>())
+        return errno_value_from_errno(EBADF);
+
+    u32 fd_value = mapped_fd.get<u32>();
+    auto result = lseek(fd_value, offset, static_cast<int>(whence));
+    if (result < 0)
+        return errno_value_from_errno(errno);
+    return FileSize(result);
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
@@ -788,7 +835,6 @@ ErrorOr<Result<Timestamp>> Implementation::impl$clock_res_get(Configuration&, Cl
 ErrorOr<Result<void>> Implementation::impl$fd_advise(Configuration&, FD, FileSize offset, FileSize len, Advice) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_allocate(Configuration&, FD, FileSize offset, FileSize len) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_datasync(Configuration&, FD) { return Errno::NoSys; }
-ErrorOr<Result<FDStat>> Implementation::impl$fd_fdstat_get(Configuration&, FD) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_fdstat_set_flags(Configuration&, FD, FDFlags) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_fdstat_set_rights(Configuration&, FD, Rights fs_rights_base, Rights fs_rights_inheriting) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_filestat_set_size(Configuration&, FD, FileSize) { return Errno::NoSys; }
@@ -797,7 +843,6 @@ ErrorOr<Result<Size>> Implementation::impl$fd_pread(Configuration&, FD, Pointer<
 ErrorOr<Result<Size>> Implementation::impl$fd_pwrite(Configuration&, FD, Pointer<CIOVec> iovs, Size iovs_len, FileSize offset) { return Errno::NoSys; }
 ErrorOr<Result<Size>> Implementation::impl$fd_readdir(Configuration&, FD, Pointer<u8> buf, Size buf_len, DirCookie cookie) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_renumber(Configuration&, FD from, FD to) { return Errno::NoSys; }
-ErrorOr<Result<FileSize>> Implementation::impl$fd_seek(Configuration&, FD, FileDelta offset, Whence whence) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$fd_sync(Configuration&, FD) { return Errno::NoSys; }
 ErrorOr<Result<FileSize>> Implementation::impl$fd_tell(Configuration&, FD) { return Errno::NoSys; }
 ErrorOr<Result<void>> Implementation::impl$path_filestat_set_times(Configuration&, FD, LookupFlags, Pointer<u8> path, Size path_len, Timestamp atim, Timestamp mtim, FSTFlags) { return Errno::NoSys; }
@@ -909,14 +954,46 @@ ErrorOr<HostFunction> Implementation::function_by_name(StringView name)
 namespace ABI {
 
 template<typename T>
-auto CompatibleValueType = IsOneOf<T, i8, i16, i32>
+struct HostTypeImpl {
+    using Type = T;
+};
+
+template<Enum T>
+struct HostTypeImpl<T> {
+    using Type = UnderlyingType<T>;
+};
+
+template<typename T>
+struct HostTypeImpl<LittleEndian<T>> {
+    using Type = typename HostTypeImpl<T>::Type;
+};
+
+template<typename T, typename t, typename... Fs>
+struct HostTypeImpl<DistinctNumeric<T, t, Fs...>> {
+    using Type = typename HostTypeImpl<T>::Type;
+};
+
+template<typename T>
+using HostType = typename HostTypeImpl<T>::Type;
+
+template<typename T>
+auto CompatibleValueType = IsOneOf<HostType<T>, char, i8, i16, i32, u8, u16>
     ? Wasm::ValueType(Wasm::ValueType::I32)
     : Wasm::ValueType(Wasm::ValueType::I64);
 
-template<typename R, typename... Args, ErrorOr<Result<R>> (Implementation::*impl)(Configuration&, Args...)>
+template<typename RV, typename... Args, ErrorOr<RV> (Implementation::*impl)(Configuration&, Args...)>
 struct InvocationOf<impl> {
     HostFunction operator()(Implementation& self, StringView function_name)
     {
+        using R = typename decltype([] {
+            if constexpr (IsSame<RV, Result<void>>)
+                return TypeWrapper<void> {};
+            else if constexpr (IsSpecializationOf<RV, Result>)
+                return TypeWrapper<RemoveCVReference<decltype(*declval<RV>().result())>> {};
+            else
+                return TypeWrapper<RV> {};
+        }())::Type;
+
         Vector<ValueType> arguments_types { CompatibleValueType<typename ABI::ToCompatibleValue<Args>::Type>... };
         if constexpr (!IsVoid<R>) {
             if constexpr (requires { declval<typename R::SerializationComponents>(); }) {
@@ -928,6 +1005,10 @@ struct InvocationOf<impl> {
             }
         }
 
+        Vector<ValueType> return_ty;
+        if constexpr (IsSpecializationOf<RV, Result>)
+            return_ty.append(ValueType(ValueType::I32));
+
         return HostFunction(
             [&self, function_name](Configuration& configuration, Vector<Value>& arguments) -> Wasm::Result {
                 Tuple args = [&]<typename... Ts, auto... Is>(IndexSequence<Is...>) {
@@ -936,12 +1017,18 @@ struct InvocationOf<impl> {
 
                 auto result = args.apply_as_args([&](auto&&... impl_args) { return (self.*impl)(configuration, impl_args...); });
                 dbgln_if(WASI_DEBUG, "WASI: {}({}) = {}", function_name, arguments, result);
-                if (result.is_error())
-                    return Wasm::Trap { ByteString::formatted("Invalid call to {}() = {}", function_name, result.error()) };
+                if (result.is_error()) {
+                    auto error = result.release_error();
+                    if (error.is_errno())
+                        return Wasm::Trap { ByteString::formatted("exit:{}", error.code() + 1) };
+                    return Wasm::Trap { ByteString::formatted("Invalid call to {}() = {}", function_name, error) };
+                }
 
                 auto value = result.release_value();
-                if (value.is_error())
-                    return Wasm::Result { Vector { Value { ValueType(ValueType::I32), static_cast<u64>(to_underlying(value.error().value())) } } };
+                if constexpr (IsSpecializationOf<RV, Result>) {
+                    if (value.is_error())
+                        return Wasm::Result { Vector { Value { ValueType(ValueType::I32), static_cast<u64>(to_underlying(value.error().value())) } } };
+                }
 
                 if constexpr (!IsVoid<R>) {
                     // Return values are passed as pointers, after the arguments
@@ -957,8 +1044,9 @@ struct InvocationOf<impl> {
             },
             FunctionType {
                 move(arguments_types),
-                { ValueType(ValueType::I32) },
-            });
+                return_ty,
+            },
+            function_name);
     }
 };
 
@@ -1108,6 +1196,33 @@ Errno errno_value_from_errno(int value)
     default:
         return Errno::Invalid;
     }
+}
+
+FileType file_type_of(struct stat const& buf)
+{
+    switch (buf.st_mode & S_IFMT) {
+    case S_IFDIR:
+        return FileType::Directory;
+    case S_IFCHR:
+        return FileType::CharacterDevice;
+    case S_IFBLK:
+        return FileType::BlockDevice;
+    case S_IFREG:
+        return FileType::RegularFile;
+    case S_IFIFO:
+        return FileType::Unknown; // FIXME: FileType::Pipe is currently not present in WASI (but it should be) so we use Unknown for now.
+    case S_IFLNK:
+        return FileType::SymbolicLink;
+    case S_IFSOCK:
+        return FileType::SocketStream;
+    default:
+        return FileType::Unknown;
+    }
+}
+FDFlags fd_flags_of(struct stat const&)
+{
+    FDFlags::Bits result {};
+    return FDFlags { result };
 }
 }
 

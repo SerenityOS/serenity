@@ -268,6 +268,97 @@ ErrorOr<void> UHCIController::start()
     return {};
 }
 
+u8 UHCIController::allocate_address()
+{
+    // FIXME: This can be smarter.
+    return m_next_device_index++;
+}
+
+ErrorOr<void> UHCIController::initialize_device(USB::Device& device)
+{
+    USBDeviceDescriptor dev_descriptor {};
+
+    // Send 8-bytes to get at least the `max_packet_size` from the device
+    constexpr u8 short_device_descriptor_length = 8;
+    auto transfer_length = TRY(device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, short_device_descriptor_length, &dev_descriptor));
+
+    // FIXME: This be "not equal to" instead of "less than", but control transfers report a higher transfer length than expected.
+    if (transfer_length < short_device_descriptor_length) {
+        dbgln("USB Device: Not enough bytes for short device descriptor. Expected {}, got {}.", short_device_descriptor_length, transfer_length);
+        return EIO;
+    }
+
+    if constexpr (UHCI_DEBUG) {
+        dbgln("USB Short Device Descriptor:");
+        dbgln("Descriptor length: {}", dev_descriptor.descriptor_header.length);
+        dbgln("Descriptor type: {}", dev_descriptor.descriptor_header.descriptor_type);
+
+        dbgln("Device Class: {:02x}", dev_descriptor.device_class);
+        dbgln("Device Sub-Class: {:02x}", dev_descriptor.device_sub_class);
+        dbgln("Device Protocol: {:02x}", dev_descriptor.device_protocol);
+        dbgln("Max Packet Size: {:02x} bytes", dev_descriptor.max_packet_size);
+    }
+
+    // Ensure that this is actually a valid device descriptor...
+    VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
+    device.set_max_packet_size<UHCIController>({}, dev_descriptor.max_packet_size);
+
+    transfer_length = TRY(device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, sizeof(USBDeviceDescriptor), &dev_descriptor));
+
+    // FIXME: This be "not equal to" instead of "less than", but control transfers report a higher transfer length than expected.
+    if (transfer_length < sizeof(USBDeviceDescriptor)) {
+        dbgln("USB Device: Unexpected device descriptor length. Expected {}, got {}.", sizeof(USBDeviceDescriptor), transfer_length);
+        return EIO;
+    }
+
+    // Ensure that this is actually a valid device descriptor...
+    VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
+
+    if constexpr (UHCI_DEBUG) {
+        dbgln("USB Device Descriptor for {:04x}:{:04x}", dev_descriptor.vendor_id, dev_descriptor.product_id);
+        dbgln("Device Class: {:02x}", dev_descriptor.device_class);
+        dbgln("Device Sub-Class: {:02x}", dev_descriptor.device_sub_class);
+        dbgln("Device Protocol: {:02x}", dev_descriptor.device_protocol);
+        dbgln("Max Packet Size: {:02x} bytes", dev_descriptor.max_packet_size);
+        dbgln("Number of configurations: {:02x}", dev_descriptor.num_configurations);
+    }
+
+    auto new_address = allocate_address();
+
+    // Attempt to set devices address on the bus
+    transfer_length = TRY(device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE, USB_REQUEST_SET_ADDRESS, new_address, 0, 0, nullptr));
+
+    // This has to be set after we send out the "Set Address" request because it might be sent to the root hub.
+    // The root hub uses the address to intercept requests to itself.
+    device.set_address<UHCIController>({}, new_address);
+
+    dbgln_if(USB_DEBUG, "USB Device: Set address to {}", new_address);
+
+    device.set_descriptor<UHCIController>({}, dev_descriptor);
+
+    // Fetch the configuration descriptors from the device
+    auto& configurations = device.configurations<UHCIController>({});
+    configurations.ensure_capacity(dev_descriptor.num_configurations);
+    for (u8 configuration = 0u; configuration < dev_descriptor.num_configurations; configuration++) {
+        USBConfigurationDescriptor configuration_descriptor;
+        transfer_length = TRY(device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_CONFIGURATION << 8u) | configuration, 0, sizeof(USBConfigurationDescriptor), &configuration_descriptor));
+
+        if constexpr (UHCI_DEBUG) {
+            dbgln("USB Configuration Descriptor {}", configuration);
+            dbgln("Total Length: {}", configuration_descriptor.total_length);
+            dbgln("Number of interfaces: {}", configuration_descriptor.number_of_interfaces);
+            dbgln("Configuration Value: {}", configuration_descriptor.configuration_value);
+            dbgln("Attributes Bitmap: {:08b}", configuration_descriptor.attributes_bitmap);
+            dbgln("Maximum Power: {}mA", configuration_descriptor.max_power_in_ma * 2u); // This value is in 2mA steps
+        }
+
+        TRY(configurations.try_empend(device, configuration_descriptor, configuration));
+        TRY(configurations.last().enumerate_interfaces());
+    }
+
+    return {};
+}
+
 TransferDescriptor* UHCIController::create_transfer_descriptor(Pipe& pipe, PacketID direction, size_t data_len)
 {
     TransferDescriptor* td = allocate_transfer_descriptor();
@@ -278,7 +369,7 @@ TransferDescriptor* UHCIController::create_transfer_descriptor(Pipe& pipe, Packe
     u16 max_len = (data_len > 0) ? (data_len - 1) : 0x7ff;
     VERIFY(max_len <= 0x4FF || max_len == 0x7FF); // According to the datasheet, anything in the range of 0x500 to 0x7FE are illegal
 
-    td->set_token((max_len << TD_TOKEN_MAXLEN_SHIFT) | ((pipe.data_toggle() ? 1 : 0) << TD_TOKEN_DATA_TOGGLE_SHIFT) | (pipe.endpoint_address() << TD_TOKEN_ENDPOINT_SHIFT) | (pipe.device_address() << TD_TOKEN_DEVICE_ADDR_SHIFT) | (static_cast<u8>(direction)));
+    td->set_token((max_len << TD_TOKEN_MAXLEN_SHIFT) | ((pipe.data_toggle() ? 1 : 0) << TD_TOKEN_DATA_TOGGLE_SHIFT) | (pipe.endpoint_address() << TD_TOKEN_ENDPOINT_SHIFT) | (pipe.device().address() << TD_TOKEN_DEVICE_ADDR_SHIFT) | (static_cast<u8>(direction)));
     pipe.set_toggle(!pipe.data_toggle());
 
     if (pipe.type() == Pipe::Type::Isochronous) {
@@ -290,7 +381,7 @@ TransferDescriptor* UHCIController::create_transfer_descriptor(Pipe& pipe, Packe
     }
 
     // Set low-speed bit if the device connected to port is a low=speed device (probably unlikely...)
-    if (pipe.device_speed() == Pipe::DeviceSpeed::LowSpeed) {
+    if (pipe.device().speed() == USB::Device::DeviceSpeed::LowSpeed) {
         td->set_lowspeed();
     }
 
@@ -442,10 +533,10 @@ ErrorOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
     Pipe& pipe = transfer.pipe(); // Short circuit the pipe related to this transfer
     bool direction_in = (transfer.request().request_type & USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST) == USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST;
 
-    dbgln_if(UHCI_DEBUG, "UHCI: Received control transfer for address {}. Root Hub is at address {}.", pipe.device_address(), m_root_hub->device_address());
+    dbgln_if(UHCI_DEBUG, "UHCI: Received control transfer for address {}. Root Hub is at address {}.", pipe.device().address(), m_root_hub->device_address());
 
     // Short-circuit the root hub.
-    if (pipe.device_address() == m_root_hub->device_address())
+    if (pipe.device().address() == m_root_hub->device_address())
         return m_root_hub->handle_control_transfer(transfer);
 
     TransferDescriptor* setup_td = create_transfer_descriptor(pipe, PacketID::SETUP, sizeof(USBRequestData));
@@ -520,7 +611,7 @@ ErrorOr<size_t> UHCIController::submit_bulk_transfer(Transfer& transfer)
     auto transfer_queue = TRY(create_transfer_queue(transfer));
     enqueue_qh(transfer_queue, m_bulk_qh_anchor);
 
-    dbgln_if(UHCI_DEBUG, "UHCI: Received bulk transfer for address {}. Root Hub is at address {}.", transfer.pipe().device_address(), m_root_hub->device_address());
+    dbgln_if(UHCI_DEBUG, "UHCI: Received bulk transfer for address {}. Root Hub is at address {}.", transfer.pipe().device().address(), m_root_hub->device_address());
 
     size_t transfer_size = 0;
     while (!transfer.complete()) {
@@ -538,7 +629,7 @@ ErrorOr<size_t> UHCIController::submit_bulk_transfer(Transfer& transfer)
 
 ErrorOr<void> UHCIController::submit_async_interrupt_transfer(NonnullLockRefPtr<Transfer> transfer, u16 ms_interval)
 {
-    dbgln_if(UHCI_DEBUG, "UHCI: Received interrupt transfer for address {}. Root Hub is at address {}.", transfer->pipe().device_address(), m_root_hub->device_address());
+    dbgln_if(UHCI_DEBUG, "UHCI: Received interrupt transfer for address {}. Root Hub is at address {}.", transfer->pipe().device().address(), m_root_hub->device_address());
 
     if (ms_interval == 0) {
         return EINVAL;

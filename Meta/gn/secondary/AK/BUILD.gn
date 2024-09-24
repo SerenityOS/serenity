@@ -41,6 +41,8 @@ shared_library("AK") {
     "ByteReader.h",
     "ByteString.cpp",
     "ByteString.h",
+    "CPUFeatures.cpp",
+    "CPUFeatures.h",
     "CharacterTypes.h",
     "Checked.h",
     "CheckedFormatString.h",

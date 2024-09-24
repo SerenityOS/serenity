@@ -225,7 +225,10 @@ ErrorOr<NonnullRefPtr<GUI::Action>> CalendarWidget::create_new_calendar_action()
 NonnullRefPtr<GUI::Action> CalendarWidget::create_open_calendar_action()
 {
     return GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().open_file(window());
+        GUI::FileTypeFilter calendar_files;
+        calendar_files.name = "Calendar Files";
+        calendar_files.extensions = Vector<ByteString> { "cal", "ics" };
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), { .allowed_file_types = Vector { calendar_files, GUI::FileTypeFilter::all_files() } });
         if (response.is_error())
             return;
         (void)load_file(response.release_value());

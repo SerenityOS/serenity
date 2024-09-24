@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> Ext2FS::try_create(OpenFileDescription& file_description, ReadonlyBytes)
+ErrorOr<NonnullRefPtr<FileSystem>> Ext2FS::try_create(OpenFileDescription& file_description, FileSystemSpecificOptions const&)
 {
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Ext2FS(file_description)));
 }
@@ -34,8 +34,7 @@ ErrorOr<void> Ext2FS::flush_super_block()
 
     // FIXME: We currently have no ability of writing within a device block, but the ability to do so would allow us to use device block sizes larger than 1024.
     VERIFY((sizeof(ext2_super_block) % device_block_size()) == 0);
-    // First superblock is always at offset 1024 (physical block index 2).
-    TRY(raw_write_blocks(1024 / device_block_size(), superblock_physical_block_count, super_block_buffer));
+    TRY(raw_write_blocks(super_block_offset_on_device / device_block_size(), superblock_physical_block_count, super_block_buffer));
 
     auto is_sparse = has_flag(get_features_readonly(), FeaturesReadOnly::SparseSuperblock);
 
@@ -72,7 +71,7 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
 
     VERIFY((sizeof(ext2_super_block) % device_block_size()) == 0);
     auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
-    TRY(raw_read_blocks(1024 / device_block_size(), (sizeof(ext2_super_block) / device_block_size()), super_block_buffer));
+    TRY(raw_read_blocks(super_block_offset_on_device / device_block_size(), (sizeof(ext2_super_block) / device_block_size()), super_block_buffer));
 
     auto const& super_block = this->super_block();
     if constexpr (EXT2_DEBUG) {
@@ -157,39 +156,6 @@ bool Ext2FS::find_block_containing_inode(InodeIndex inode, BlockIndex& block_ind
     offset = full_offset & (logical_block_size() - 1);
 
     return true;
-}
-
-Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks) const
-{
-    BlockListShape shape;
-    unsigned const entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
-    unsigned blocks_remaining = blocks;
-
-    shape.direct_blocks = min((unsigned)EXT2_NDIR_BLOCKS, blocks_remaining);
-    blocks_remaining -= shape.direct_blocks;
-    if (!blocks_remaining)
-        return shape;
-
-    shape.indirect_blocks = min(blocks_remaining, entries_per_block);
-    shape.meta_blocks += 1;
-    blocks_remaining -= shape.indirect_blocks;
-    if (!blocks_remaining)
-        return shape;
-
-    shape.doubly_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block);
-    shape.meta_blocks += 1;
-    shape.meta_blocks += ceil_div(shape.doubly_indirect_blocks, entries_per_block);
-    blocks_remaining -= shape.doubly_indirect_blocks;
-    if (!blocks_remaining)
-        return shape;
-
-    shape.triply_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block * entries_per_block);
-    shape.meta_blocks += 1;
-    shape.meta_blocks += ceil_div(shape.triply_indirect_blocks, entries_per_block * entries_per_block);
-    shape.meta_blocks += ceil_div(shape.triply_indirect_blocks, entries_per_block);
-    blocks_remaining -= shape.triply_indirect_blocks;
-    VERIFY(blocks_remaining == 0);
-    return shape;
 }
 
 u8 Ext2FS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
@@ -618,11 +584,16 @@ ErrorOr<void> Ext2FS::free_inode(Ext2FSInode& inode)
 
     // Mark all blocks used by this inode as free.
     {
-        auto blocks = TRY(inode.compute_block_list_with_meta_blocks());
-        for (auto block_index : blocks) {
-            VERIFY(block_index <= super_block().s_blocks_count);
-            if (block_index.value())
-                TRY(set_block_allocation_state(block_index, false));
+        auto blocks = TRY(inode.compute_block_list());
+        for (auto const& [_, block_index] : blocks) {
+            VERIFY(block_index <= super_block().s_blocks_count && block_index != 0);
+            TRY(set_block_allocation_state(block_index, false));
+        }
+
+        auto meta_blocks = TRY(inode.compute_meta_blocks());
+        for (auto const& block : meta_blocks) {
+            VERIFY(block <= super_block().s_blocks_count && block != 0);
+            TRY(set_block_allocation_state(block, false));
         }
     }
 

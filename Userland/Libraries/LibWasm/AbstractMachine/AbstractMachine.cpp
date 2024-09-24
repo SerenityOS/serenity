@@ -14,14 +14,14 @@
 
 namespace Wasm {
 
-Optional<FunctionAddress> Store::allocate(ModuleInstance& module, Module::Function const& function)
+Optional<FunctionAddress> Store::allocate(ModuleInstance& module, CodeSection::Code const& code, TypeIndex type_index)
 {
     FunctionAddress address { m_functions.size() };
-    if (function.type().value() > module.types().size())
+    if (type_index.value() > module.types().size())
         return {};
 
-    auto& type = module.types()[function.type().value()];
-    m_functions.empend(WasmFunction { type, module, function });
+    auto& type = module.types()[type_index.value()];
+    m_functions.empend(WasmFunction { type, module, code });
     return address;
 }
 
@@ -159,44 +159,57 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
     module.for_each_section_of_type<ImportSection>([&](ImportSection const& section) {
         for (auto [i, import_] : enumerate(section.imports())) {
             auto extern_ = externs.at(i);
-            auto is_valid = import_.description().visit(
-                [&](MemoryType const& mem_type) -> bool {
+            auto invalid = import_.description().visit(
+                [&](MemoryType const& mem_type) -> Optional<ByteString> {
                     if (!extern_.has<MemoryAddress>())
-                        return false;
+                        return "Expected memory import"sv;
                     auto other_mem_type = m_store.get(extern_.get<MemoryAddress>())->type();
-                    return other_mem_type.limits().is_subset_of(mem_type.limits());
+                    if (other_mem_type.limits().is_subset_of(mem_type.limits()))
+                        return {};
+                    return ByteString::formatted("Memory import and extern do not match: {}-{} vs {}-{}", mem_type.limits().min(), mem_type.limits().max(), other_mem_type.limits().min(), other_mem_type.limits().max());
                 },
-                [&](TableType const& table_type) -> bool {
+                [&](TableType const& table_type) -> Optional<ByteString> {
                     if (!extern_.has<TableAddress>())
-                        return false;
+                        return "Expected table import"sv;
                     auto other_table_type = m_store.get(extern_.get<TableAddress>())->type();
-                    return table_type.element_type() == other_table_type.element_type()
-                        && other_table_type.limits().is_subset_of(table_type.limits());
+                    if (table_type.element_type() == other_table_type.element_type()
+                        && other_table_type.limits().is_subset_of(table_type.limits()))
+                        return {};
+
+                    return ByteString::formatted("Table import and extern do not match: {}-{} vs {}-{}", table_type.limits().min(), table_type.limits().max(), other_table_type.limits().min(), other_table_type.limits().max());
                 },
-                [&](GlobalType const& global_type) -> bool {
+                [&](GlobalType const& global_type) -> Optional<ByteString> {
                     if (!extern_.has<GlobalAddress>())
-                        return false;
+                        return "Expected global import"sv;
                     auto other_global_type = m_store.get(extern_.get<GlobalAddress>())->type();
-                    return global_type.type() == other_global_type.type()
-                        && global_type.is_mutable() == other_global_type.is_mutable();
+                    if (global_type.type() == other_global_type.type()
+                        && global_type.is_mutable() == other_global_type.is_mutable())
+                        return {};
+                    return "Global import and extern do not match"sv;
                 },
-                [&](FunctionType const& type) -> bool {
+                [&](FunctionType const& type) -> Optional<ByteString> {
                     if (!extern_.has<FunctionAddress>())
-                        return false;
+                        return "Expected function import"sv;
                     auto other_type = m_store.get(extern_.get<FunctionAddress>())->visit([&](WasmFunction const& wasm_func) { return wasm_func.type(); }, [&](HostFunction const& host_func) { return host_func.type(); });
-                    return type.results() == other_type.results()
-                        && type.parameters() == other_type.parameters();
+                    if (type.results() != other_type.results())
+                        return ByteString::formatted("Function import and extern do not match, results: {} vs {}", type.results(), other_type.results());
+                    if (type.parameters() != other_type.parameters())
+                        return ByteString::formatted("Function import and extern do not match, parameters: {} vs {}", type.parameters(), other_type.parameters());
+                    return {};
                 },
-                [&](TypeIndex type_index) -> bool {
+                [&](TypeIndex type_index) -> Optional<ByteString> {
                     if (!extern_.has<FunctionAddress>())
-                        return false;
+                        return "Expected function import"sv;
                     auto other_type = m_store.get(extern_.get<FunctionAddress>())->visit([&](WasmFunction const& wasm_func) { return wasm_func.type(); }, [&](HostFunction const& host_func) { return host_func.type(); });
                     auto& type = module.type(type_index);
-                    return type.results() == other_type.results()
-                        && type.parameters() == other_type.parameters();
+                    if (type.results() != other_type.results())
+                        return ByteString::formatted("Function import and extern do not match, results: {} vs {}", type.results(), other_type.results());
+                    if (type.parameters() != other_type.parameters())
+                        return ByteString::formatted("Function import and extern do not match, parameters: {} vs {}", type.parameters(), other_type.parameters());
+                    return {};
                 });
-            if (!is_valid)
-                instantiation_result = InstantiationError { "Import and extern do not match" };
+            if (invalid.has_value())
+                instantiation_result = InstantiationError { ByteString::formatted("{}::{}: {}", import_.module(), import_.name(), invalid.release_value()) };
         }
     });
 
@@ -206,17 +219,28 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
     for (auto& entry : externs) {
         if (auto* ptr = entry.get_pointer<GlobalAddress>())
             auxiliary_instance.globals().append(*ptr);
+        else if (auto* ptr = entry.get_pointer<FunctionAddress>())
+            auxiliary_instance.functions().append(*ptr);
     }
+
+    FunctionSection const* function_section { nullptr };
+    module.for_each_section_of_type<FunctionSection>([&](FunctionSection const& section) { function_section = &section; });
 
     Vector<FunctionAddress> module_functions;
-    module_functions.ensure_capacity(module.functions().size());
+    if (function_section)
+        module_functions.ensure_capacity(function_section->types().size());
 
-    for (auto& func : module.functions()) {
-        auto address = m_store.allocate(main_module_instance, func);
-        VERIFY(address.has_value());
-        auxiliary_instance.functions().append(*address);
-        module_functions.append(*address);
-    }
+    module.for_each_section_of_type<CodeSection>([&](auto& code_section) {
+        size_t i = 0;
+        for (auto& code : code_section.functions()) {
+            auto type_index = function_section->types()[i];
+            auto address = m_store.allocate(main_module_instance, code, type_index);
+            VERIFY(address.has_value());
+            auxiliary_instance.functions().append(*address);
+            module_functions.append(*address);
+            ++i;
+        }
+    });
 
     BytecodeInterpreter interpreter(m_stack_info);
 
@@ -253,7 +277,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                 if (m_should_limit_instruction_count)
                     config.enable_instruction_count_limit();
                 config.set_frame(Frame {
-                    main_module_instance,
+                    auxiliary_instance,
                     Vector<Value> {},
                     entry,
                     entry.instructions().size(),
@@ -275,7 +299,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                         return IterationDecision::Continue;
                     }
                     // FIXME: type-check the reference.
-                    references.prepend(reference.release_value());
+                    references.append(reference.release_value());
                 }
             }
             elements.append(move(references));
@@ -296,13 +320,17 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
             auto current_index = index;
             ++index;
             auto active_ptr = segment.mode.get_pointer<ElementSection::Active>();
-            if (!active_ptr)
+            auto elem_instance = m_store.get(main_module_instance.elements()[current_index]);
+            if (!active_ptr) {
+                if (segment.mode.has<ElementSection::Declarative>())
+                    *elem_instance = ElementInstance(elem_instance->type(), {});
                 continue;
+            }
             Configuration config { m_store };
             if (m_should_limit_instruction_count)
                 config.enable_instruction_count_limit();
             config.set_frame(Frame {
-                main_module_instance,
+                auxiliary_instance,
                 Vector<Value> {},
                 active_ptr->expression,
                 1,
@@ -322,7 +350,6 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                 instantiation_result = InstantiationError { "Invalid element referenced by active element segment" };
                 return IterationDecision::Break;
             }
-            auto elem_instance = m_store.get(main_module_instance.elements()[current_index]);
             if (!table_instance || !elem_instance) {
                 instantiation_result = InstantiationError { "Invalid element referenced by active element segment" };
                 return IterationDecision::Break;
@@ -340,6 +367,8 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
             for (auto it = elem_instance->references().begin(); it < elem_instance->references().end(); ++i, ++it) {
                 table_instance->elements()[i + d.value()] = *it;
             }
+            // Drop element
+            *m_store.get(main_module_instance.elements()[current_index]) = ElementInstance(elem_instance->type(), {});
         }
 
         return IterationDecision::Continue;
@@ -356,7 +385,7 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                     if (m_should_limit_instruction_count)
                         config.enable_instruction_count_limit();
                     config.set_frame(Frame {
-                        main_module_instance,
+                        auxiliary_instance,
                         Vector<Value> {},
                         data.offset,
                         1,
@@ -387,8 +416,6 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                     }
                     main_module_instance.datas().append(*maybe_data_address);
 
-                    if (data.init.is_empty())
-                        return;
                     auto address = main_module_instance.memories()[data.index.value()];
                     auto instance = m_store.get(address);
                     Checked<size_t> checked_offset = data.init.size();
@@ -400,6 +427,8 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
                         };
                         return;
                     }
+                    if (data.init.is_empty())
+                        return;
                     instance->data().overwrite(offset, data.init.data(), data.init.size());
                 },
                 [&](DataSection::Data::Passive const& passive) {
@@ -420,7 +449,9 @@ InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<Ex
             instantiation_result = InstantiationError { ByteString::formatted("Start section function referenced invalid index {} of max {} entries", index.value(), functions.size()) };
             return;
         }
-        invoke(functions[index.value()], {});
+        auto result = invoke(functions[index.value()], {});
+        if (result.is_trap())
+            instantiation_result = InstantiationError { ByteString::formatted("Start function trapped: {}", result.trap().reason) };
     });
 
     if (instantiation_result.has_value())

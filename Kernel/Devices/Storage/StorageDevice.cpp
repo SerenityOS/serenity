@@ -6,6 +6,7 @@
 
 #include <AK/StringView.h>
 #include <Kernel/API/Ioctl.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Storage/StorageDevice.h>
@@ -19,7 +20,7 @@
 namespace Kernel {
 
 StorageDevice::StorageDevice(LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, size_t sector_size, u64 max_addressable_block)
-    : BlockDevice(StorageManagement::storage_type_major_number(), StorageManagement::generate_storage_minor_number(), sector_size)
+    : BlockDevice(MajorAllocation::BlockDeviceFamily::Storage, StorageManagement::generate_storage_minor_number(), sector_size)
     , m_logical_unit_number_address(logical_unit_number_address)
     , m_hardware_relative_controller_id(hardware_relative_controller_id)
     , m_max_addressable_block(max_addressable_block)

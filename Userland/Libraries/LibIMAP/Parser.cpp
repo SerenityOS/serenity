@@ -255,7 +255,7 @@ ErrorOr<void> Parser::parse_untagged()
             if (!at_end() && m_buffer[m_position] != ')')
                 TRY(consume(" "sv));
         }
-        m_response.data().set_status(move(status_item));
+        m_response.data().add_status_item(move(status_item));
         consume_if(" "sv); // Not in the spec but the Outlook server sends a space for some reason.
         TRY(consume("\r\n"sv));
     } else {
@@ -270,7 +270,32 @@ ErrorOr<void> Parser::parse_untagged()
 ErrorOr<StringView> Parser::parse_quoted_string()
 {
     dbgln_if(IMAP_PARSER_DEBUG, "p: {}, parse_quoted_string()", m_position);
-    auto str = consume_while([](u8 x) { return x != '"'; });
+    auto start_position = m_position;
+    while (!at_end() && m_buffer[m_position] != '"')
+        switch (m_buffer[m_position]) {
+        // https://datatracker.ietf.org/doc/html/rfc2683#section-3.4.2
+        // 3.4.2. Special Characters
+
+        //    Certain characters, currently the double-quote and the backslash, may
+        //    not be sent as-is inside a quoted string.  These characters must be
+        //    preceded by the escape character if they are in a quoted string, or
+        //    else the string must be sent as a literal.
+        case '\\':
+            ++m_position;
+            if (at_end())
+                return Error::from_string_literal("unterminated \\ escape");
+            ++m_position;
+            break;
+        default:
+            ++m_position;
+        }
+    auto str = StringView(m_buffer.data() + start_position, m_position - start_position);
+    //   The CR and LF characters may be sent ONLY in literals; they are not
+    //   allowed, even if escaped, inside quoted strings.
+    if (str.contains("\r"sv))
+        return Error::from_string_literal("CR character not allowed inside quoted string");
+    if (str.contains("\n"sv))
+        return Error::from_string_literal("LF character not allowed inside quoted string");
     TRY(consume("\""sv));
     dbgln_if(IMAP_PARSER_DEBUG, "p: {}, ret \"{}\"", m_position, str);
     return str;
@@ -790,11 +815,8 @@ ErrorOr<Vector<Address>> Parser::parse_address_list()
 
     auto addresses = Vector<Address>();
     TRY(consume("("sv));
-    while (!consume_if(")"sv)) {
+    while (!consume_if(")"sv))
         addresses.append(TRY(parse_address()));
-        if (!at_end() && m_buffer[m_position] != ')')
-            TRY(consume(" "sv));
-    }
     return { addresses };
 }
 
@@ -814,6 +836,19 @@ ErrorOr<Address> Parser::parse_address()
     auto host = TRY(parse_nstring());
     address.host = host;
     TRY(consume(")"sv));
+    // [RFC-2822] group syntax is indicated by a special form of
+    //          address structure in which the host name field is NIL.  If the
+    //          mailbox name field is also NIL, this is an end of group marker
+    //          (semi-colon in RFC 822 syntax).  If the mailbox name field is
+    //          non-NIL, this is a start of group marker, and the mailbox name
+    //          field holds the group name phrase.
+    if (!address.mailbox.is_empty() && address.host.is_empty()) {
+        // FIXME: Implement Group addresses per RFC-2822. For now, we just consume the group
+        // members, and return an Address object with the group name phrase in the mailbox field.
+        auto group_address = TRY(parse_address());
+        while (!group_address.mailbox.is_empty() && !group_address.host.is_empty())
+            group_address = TRY(parse_address());
+    }
     return address;
 }
 

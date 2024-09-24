@@ -981,6 +981,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ForStatement::generate_
     Bytecode::BasicBlock* update_block_ptr { nullptr };
 
     bool has_lexical_environment = false;
+    Vector<IdentifierTableIndex> per_iteration_bindings;
 
     if (m_init) {
         if (m_init->is_variable_declaration()) {
@@ -994,8 +995,7 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ForStatement::generate_
 
             if (variable_declaration.is_lexical_declaration() && has_non_local_variables) {
                 has_lexical_environment = true;
-
-                // FIXME: Is Block correct?
+                // Setup variable scope for bound identifiers
                 generator.begin_variable_scope();
 
                 bool is_const = variable_declaration.is_constant_declaration();
@@ -1005,11 +1005,47 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ForStatement::generate_
                         return;
                     auto index = generator.intern_identifier(identifier.string());
                     generator.emit<Bytecode::Op::CreateVariable>(index, Bytecode::Op::EnvironmentMode::Lexical, is_const);
+                    if (!is_const) {
+                        per_iteration_bindings.append(index);
+                    }
                 }));
             }
         }
 
         (void)TRY(m_init->generate_bytecode(generator));
+    }
+
+    // CreatePerIterationEnvironment (https://tc39.es/ecma262/multipage/ecmascript-language-statements-and-declarations.html#sec-createperiterationenvironment)
+    auto generate_per_iteration_bindings = [&per_iteration_bindings = static_cast<Vector<IdentifierTableIndex> const&>(per_iteration_bindings),
+                                               &generator]() {
+        if (per_iteration_bindings.is_empty()) {
+            return;
+        }
+
+        // Copy all the last values into registers for use in step 1.e.iii
+        // Register copies of bindings are required since the changing of the
+        // running execution context in the final step requires leaving the
+        // current variable scope before creating "thisIterationEnv"
+        Vector<ScopedOperand> registers;
+        for (auto const& binding : per_iteration_bindings) {
+            auto reg = generator.allocate_register();
+            generator.emit<Bytecode::Op::GetBinding>(reg, binding);
+            registers.append(reg);
+        }
+
+        generator.end_variable_scope();
+        generator.begin_variable_scope();
+
+        for (size_t i = 0; i < per_iteration_bindings.size(); ++i) {
+            generator.emit<Bytecode::Op::CreateVariable>(per_iteration_bindings[i], Bytecode::Op::EnvironmentMode::Lexical, false);
+            generator.emit<Bytecode::Op::InitializeLexicalBinding>(per_iteration_bindings[i], registers[i]);
+        }
+    };
+
+    if (m_init) {
+        // CreatePerIterationEnvironment where lastIterationEnv is the variable
+        // scope created above for bound identifiers
+        generate_per_iteration_bindings();
     }
 
     body_block_ptr = &generator.make_block();
@@ -1050,6 +1086,10 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ForStatement::generate_
     generator.end_continuable_scope();
 
     if (!generator.is_current_block_terminated()) {
+        // CreatePerIterationEnvironment where lastIterationEnv is the environment
+        // created by the previous CreatePerIterationEnvironment setup
+        generate_per_iteration_bindings();
+
         if (m_update) {
             generator.emit<Bytecode::Op::Jump>(Bytecode::Label { *update_block_ptr });
         } else {
@@ -1059,6 +1099,9 @@ Bytecode::CodeGenerationErrorOr<Optional<ScopedOperand>> ForStatement::generate_
 
     generator.switch_to_basic_block(end_block);
 
+    // Leave the environment setup by CreatePerIterationEnvironment or if there
+    // are no perIterationBindings the variable scope created for bound
+    // identifiers
     if (has_lexical_environment)
         generator.end_variable_scope();
 

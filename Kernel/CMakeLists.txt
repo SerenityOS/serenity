@@ -34,6 +34,9 @@ set(KERNEL_SOURCES
     Bus/USB/EHCI/EHCIController.cpp
     Bus/USB/UHCI/UHCIController.cpp
     Bus/USB/UHCI/UHCIRootHub.cpp
+    Bus/USB/xHCI/xHCIController.cpp
+    Bus/USB/xHCI/xHCIInterrupter.cpp
+    Bus/USB/xHCI/xHCIRootHub.cpp
     Bus/USB/Drivers/HID/MouseDriver.cpp
     Bus/USB/Drivers/MassStorage/MassStorageDriver.cpp
     Bus/USB/USBConfiguration.cpp
@@ -66,7 +69,6 @@ set(KERNEL_SOURCES
     Devices/FUSEDevice.cpp
     Devices/PCISerialDevice.cpp
     Devices/SerialDevice.cpp
-    Devices/HID/AllMiceDevice.cpp
     Devices/HID/KeyboardDevice.cpp
     Devices/HID/Management.cpp
     Devices/HID/MouseDevice.cpp
@@ -148,6 +150,7 @@ set(KERNEL_SOURCES
     FileSystem/File.cpp
     FileSystem/FileBackedFileSystem.cpp
     FileSystem/FileSystem.cpp
+    FileSystem/FileSystemSpecificOption.cpp
     FileSystem/FUSE/FileSystem.cpp
     FileSystem/FUSE/Inode.cpp
     FileSystem/Inode.cpp
@@ -198,9 +201,9 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Firmware/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Interrupts.cpp
     FileSystem/SysFS/Subsystems/Kernel/Processes.cpp
+    FileSystem/SysFS/Subsystems/Kernel/DeviceMajorNumberAllocations.cpp
     FileSystem/SysFS/Subsystems/Kernel/CPUInfo.cpp
     FileSystem/SysFS/Subsystems/Kernel/ConstantInformation.cpp
-    FileSystem/SysFS/Subsystems/Kernel/Jails.cpp
     FileSystem/SysFS/Subsystems/Kernel/Keymap.cpp
     FileSystem/SysFS/Subsystems/Kernel/Profile.cpp
     FileSystem/SysFS/Subsystems/Kernel/Directory.cpp
@@ -226,10 +229,12 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Configuration/DumpKmallocStack.cpp
     FileSystem/SysFS/Subsystems/Kernel/Configuration/StringVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Configuration/UBSANDeadly.cpp
+    FileSystem/VFSRootContext.cpp
     FileSystem/VirtualFileSystem.cpp
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/ACPI/StaticParsing.cpp
+    Firmware/DeviceTree/DeviceTree.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IRQHandler.cpp
     Interrupts/PCIIRQHandler.cpp
@@ -270,7 +275,7 @@ set(KERNEL_SOURCES
     Net/Intel/E1000NetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
     Net/VirtIO/VirtIONetworkAdapter.cpp
-    Net/IPv4Socket.cpp
+    Net/IPv4/Socket.cpp
     Net/LocalSocket.cpp
     Net/LoopbackAdapter.cpp
     Net/NetworkAdapter.cpp
@@ -284,7 +289,6 @@ set(KERNEL_SOURCES
     Security/AddressSanitizer.cpp
     Security/Credentials.cpp
     Security/Random.cpp
-    Security/Jail.cpp
     Security/UBSanitizer.cpp
     Syscalls/anon_create.cpp
     Syscalls/alarm.cpp
@@ -311,7 +315,6 @@ set(KERNEL_SOURCES
     Syscalls/getuid.cpp
     Syscalls/hostname.cpp
     Syscalls/ioctl.cpp
-    Syscalls/jail.cpp
     Syscalls/keymap.cpp
     Syscalls/kill.cpp
     Syscalls/link.cpp
@@ -353,13 +356,13 @@ set(KERNEL_SOURCES
     Syscalls/umask.cpp
     Syscalls/uname.cpp
     Syscalls/unlink.cpp
+    Syscalls/unshare.cpp
     Syscalls/unveil.cpp
     Syscalls/utime.cpp
     Syscalls/utimensat.cpp
     Syscalls/waitid.cpp
     Syscalls/inode_watcher.cpp
     Syscalls/write.cpp
-    Devices/TTY/ConsoleManagement.cpp
     Devices/TTY/MasterPTY.cpp
     Devices/TTY/PTYMultiplexer.cpp
     Devices/TTY/SlavePTY.cpp
@@ -369,11 +372,12 @@ set(KERNEL_SOURCES
     Tasks/CrashHandler.cpp
     Tasks/FinalizerTask.cpp
     Tasks/FutexQueue.cpp
+    Tasks/HostnameContext.cpp
     Tasks/PerformanceEventBuffer.cpp
     Tasks/PowerStateSwitchTask.cpp
     Tasks/Process.cpp
     Tasks/ProcessGroup.cpp
-    Tasks/ProcessList.cpp
+    Tasks/ScopedProcessList.cpp
     Tasks/Scheduler.cpp
     Tasks/SyncTask.cpp
     Tasks/Thread.cpp
@@ -423,9 +427,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/PCI/Controller/PIIX4HostBridge.cpp
         Arch/x86_64/PCI/Initializer.cpp
         Arch/x86_64/PCI/MSI.cpp
-
-        Arch/x86_64/VGA/IOArbiter.cpp
-        Arch/x86_64/VGA/TextModeConsole.cpp
 
         Arch/x86_64/PowerState.cpp
         Arch/x86_64/RTC.cpp
@@ -681,6 +682,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # Prevent naively implemented string functions (like strlen) from being "optimized" into a call to themselves.
     set_source_files_properties(Library/MiniStdLib.cpp
         PROPERTIES COMPILE_FLAGS "-fno-tree-loop-distribution -fno-tree-loop-distribute-patterns")
+
+    # Prevent volatile bitfield accesses from being optimized into smaller load/stores
+    set_source_files_properties(Bus/USB/xHCI/xHCIController.cpp PROPERTIES COMPILE_FLAGS "-fstrict-volatile-bitfields")
 
     if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         # The BFD linker only supports RELR relocations on x86 and POWER.

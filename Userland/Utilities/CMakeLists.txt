@@ -2,12 +2,12 @@ file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
 list(APPEND SPECIAL_TARGETS test install)
 list(APPEND REQUIRED_TARGETS
     arp base64 basename cat chmod chown clear comm cp cut date dd df diff dirname dmesg du echo env expr false
-    file find grep groups head host hostname id ifconfig kill killall ln logout ls mkdir mount mv network-settings nproc
+    file find grep groups head host hostname id ifconfig init kill killall ln logout ls mkdir mount mv network-settings nproc
     patch pgrep pidof ping pkill pmap ps readlink realpath reboot rm rmdir sed route seq shutdown sleep sort stat stty su tail test
-    touch tr true umount uname uniq uptime w wc which whoami xargs yes
+    touch tr true umount uname uniq uptime w watchfs wc which whoami xargs yes
 )
 list(APPEND RECOMMENDED_TARGETS
-    aconv adjtime aplay abench asctl bt checksum chres cksum copy fortune gzip init install keymap lsirq lsof lspci lzcat man mkfs.fat mknod mktemp
+    aconv adjtime aplay abench asctl bt checksum chres cksum copy fortune gzip install keymap lsdev lsirq lsof lspci lzcat man mkfs.fat mknod mktemp
     nc netstat notify ntpquery open passwd pixelflut pls printf pro shot strings tar tt unzip wallpaper xzcat zip
 )
 
@@ -105,7 +105,7 @@ target_link_libraries(gml-format PRIVATE LibGUI)
 target_link_libraries(grep PRIVATE LibFileSystem LibRegex LibURL)
 target_link_libraries(gzip PRIVATE LibCompress)
 target_link_libraries(headless-browser PRIVATE LibCrypto LibFileSystem LibGemini LibGfx LibHTTP LibImageDecoderClient LibTLS LibWeb LibWebView LibWebSocket LibIPC LibJS LibDiff LibURL)
-target_link_libraries(icc PRIVATE LibGfx LibVideo LibURL)
+target_link_libraries(icc PRIVATE LibGfx LibMedia LibURL)
 target_link_libraries(image PRIVATE LibGfx)
 target_link_libraries(image2bin PRIVATE LibGfx)
 target_link_libraries(ini PRIVATE LibFileSystem)
@@ -120,7 +120,7 @@ target_link_libraries(lsusb PRIVATE LibUSBDB)
 target_link_libraries(lzcat PRIVATE LibCompress)
 target_link_libraries(man PRIVATE LibMarkdown LibManual)
 target_link_libraries(markdown-check PRIVATE LibFileSystem LibMarkdown LibManual LibURL)
-target_link_libraries(matroska PRIVATE LibVideo)
+target_link_libraries(matroska PRIVATE LibMedia)
 target_link_libraries(md PRIVATE LibMarkdown)
 target_link_libraries(mkfs.fat PRIVATE LibFileSystem)
 target_link_libraries(mktemp PRIVATE LibFileSystem)
@@ -184,3 +184,4 @@ foreach(name IN LISTS FUZZER_TARGETS)
 endforeach()
 
 add_subdirectory(pkg)
+add_subdirectory(runc)

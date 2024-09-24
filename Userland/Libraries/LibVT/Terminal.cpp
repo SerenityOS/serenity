@@ -300,6 +300,9 @@ void Terminal::SGR(Parameters params)
             case 7:
                 m_current_state.attribute.flags |= Attribute::Flags::Negative;
                 break;
+            case 8:
+                m_current_state.attribute.flags |= Attribute::Flags::Concealed;
+                break;
             case 22:
                 m_current_state.attribute.flags &= ~Attribute::Flags::Bold;
                 break;
@@ -314,6 +317,9 @@ void Terminal::SGR(Parameters params)
                 break;
             case 27:
                 m_current_state.attribute.flags &= ~Attribute::Flags::Negative;
+                break;
+            case 28:
+                m_current_state.attribute.flags &= ~Attribute::Flags::Concealed;
                 break;
             case 30:
             case 31:

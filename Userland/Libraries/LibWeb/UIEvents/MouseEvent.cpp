@@ -47,7 +47,6 @@ MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEvent
     , m_buttons(event_init.buttons)
     , m_related_target(event_init.related_target)
 {
-    set_event_characteristics();
 }
 
 MouseEvent::~MouseEvent() = default;
@@ -95,6 +94,33 @@ bool MouseEvent::get_modifier_state(String const& key_arg) const
     if (key_arg == "SymbolLock")
         return m_modifier_symbol_lock;
     return false;
+}
+
+// https://w3c.github.io/uievents/#dom-mouseevent-initmouseevent
+void MouseEvent::init_mouse_event(String const& type, bool bubbles, bool cancelable, HTML::Window* view, WebIDL::Long detail, WebIDL::Long screen_x, WebIDL::Long screen_y, WebIDL::Long client_x, WebIDL::Long client_y, bool ctrl_key, bool alt_key, bool shift_key, bool meta_key, WebIDL::Short button, DOM::EventTarget* related_target)
+{
+    // Initializes attributes of a MouseEvent object. This method has the same behavior as UIEvent.initUIEvent().
+
+    // 1. If this’s dispatch flag is set, then return.
+    if (dispatched())
+        return;
+
+    // 2. Initialize this with type, bubbles, and cancelable.
+    initialize_event(type, bubbles, cancelable);
+
+    // Implementation Defined: Initialise other values.
+    m_view = view;
+    m_detail = detail;
+    m_screen_x = screen_x;
+    m_screen_y = screen_y;
+    m_client_x = client_x;
+    m_client_y = client_y;
+    m_ctrl_key = ctrl_key;
+    m_shift_key = shift_key;
+    m_alt_key = alt_key;
+    m_meta_key = meta_key;
+    m_button = button;
+    m_related_target = related_target;
 }
 
 // https://www.w3.org/TR/uievents/#dom-mouseevent-button
@@ -145,16 +171,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platfo
     event_init.buttons = buttons;
     auto event = MouseEvent::create(realm, event_name, event_init, page.x().to_double(), page.y().to_double(), offset.x().to_double(), offset.y().to_double());
     event->set_is_trusted(true);
+    event->set_bubbles(true);
+    event->set_cancelable(true);
+    event->set_composed(true);
     return event;
-}
-
-void MouseEvent::set_event_characteristics()
-{
-    if (type().is_one_of(EventNames::mousedown, EventNames::mousemove, EventNames::mouseout, EventNames::mouseover, EventNames::mouseup, HTML::EventNames::click, EventNames::dblclick, EventNames::contextmenu)) {
-        set_bubbles(true);
-        set_cancelable(true);
-        set_composed(true);
-    }
 }
 
 }

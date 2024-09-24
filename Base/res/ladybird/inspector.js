@@ -7,6 +7,8 @@ let selectedBottomTabButton = null;
 let selectedDOMNode = null;
 let pendingEditDOMNode = null;
 
+let visibleDOMNodes = [];
+
 let consoleGroupStack = [];
 let consoleGroupNextID = 0;
 
@@ -123,6 +125,16 @@ inspector.loadDOMTree = tree => {
             event.preventDefault();
         });
     }
+
+    domNodes = domTree.querySelectorAll("details");
+
+    for (let domNode of domNodes) {
+        domNode.addEventListener("toggle", event => {
+            updateVisibleDOMNodes();
+        });
+    }
+
+    updateVisibleDOMNodes();
 };
 
 inspector.loadAccessibilityTree = tree => {
@@ -183,7 +195,20 @@ inspector.createPropertyTables = (computedStyle, resolvedStyle, customProperties
         newTable.setAttribute("id", tableID);
 
         Object.keys(properties)
-            .sort()
+            .sort((a, b) => {
+                let baseResult = a.localeCompare(b);
+                // Manually move vendor-prefixed items after non-prefixed ones.
+                if (a[0] === "-") {
+                    if (b[0] === "-") {
+                        return baseResult;
+                    }
+                    return 1;
+                }
+                if (b[0] === "-") {
+                    return -1;
+                }
+                return baseResult;
+            })
             .forEach(name => {
                 let row = newTable.insertRow();
 
@@ -341,6 +366,30 @@ const addAttributeToDOMNode = domNode => {
     container.appendChild(editor);
 
     domNode.parentNode.insertBefore(container, domNode.parentNode.lastChild);
+};
+
+const updateVisibleDOMNodes = () => {
+    let domTree = document.getElementById("dom-tree");
+
+    visibleDOMNodes = [];
+
+    function recurseDOMNodes(node) {
+        for (let child of node.children) {
+            if (child.classList.contains("hoverable")) {
+                visibleDOMNodes.push(child);
+            }
+
+            if (child.tagName === "DIV") {
+                if (node.open) {
+                    recurseDOMNodes(child);
+                }
+            } else {
+                recurseDOMNodes(child);
+            }
+        }
+    }
+
+    recurseDOMNodes(domTree);
 };
 
 const requestContextMenu = (clientX, clientY, domNode) => {
@@ -514,6 +563,38 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("contextmenu", event => {
         requestContextMenu(event.clientX, event.clientY, event.target);
         event.preventDefault();
+    });
+
+    document.addEventListener("keydown", event => {
+        const UP_ARROW_KEYCODE = 38;
+        const DOWN_ARROW_KEYCODE = 40;
+        const RETURN_KEYCODE = 13;
+        const SPACE_KEYCODE = 32;
+
+        if (document.activeElement.tagName !== "INPUT") {
+            if (event.keyCode == UP_ARROW_KEYCODE || event.keyCode == DOWN_ARROW_KEYCODE) {
+                let selectedIndex = visibleDOMNodes.indexOf(selectedDOMNode);
+                if (selectedIndex < 0) {
+                    return;
+                }
+
+                let newIndex;
+
+                if (event.keyCode == UP_ARROW_KEYCODE) {
+                    newIndex = selectedIndex - 1;
+                } else if (event.keyCode == DOWN_ARROW_KEYCODE) {
+                    newIndex = selectedIndex + 1;
+                }
+
+                if (visibleDOMNodes[newIndex]) {
+                    inspectDOMNode(visibleDOMNodes[newIndex]);
+                }
+            } else if (event.keyCode == RETURN_KEYCODE || event.keyCode == SPACE_KEYCODE) {
+                if (selectedDOMNode.parentNode.tagName === "SUMMARY") {
+                    selectedDOMNode.parentNode.click();
+                }
+            }
+        }
     });
 
     inspector.inspectorLoaded();

@@ -349,6 +349,10 @@ extern "C" {
 
 void exit(int status)
 {
+#ifndef _DYNAMIC_LOADER
+    __pthread_key_destroy_for_current_thread();
+#endif
+
     __cxa_finalize(nullptr);
 
     if (secure_getenv("LIBC_DUMP_MALLOC_STATS"))
@@ -356,10 +360,6 @@ void exit(int status)
 
     __call_fini_functions();
     fflush(nullptr);
-
-#ifndef _DYNAMIC_LOADER
-    __pthread_key_destroy_for_current_thread();
-#endif
 
     _exit(status);
 }

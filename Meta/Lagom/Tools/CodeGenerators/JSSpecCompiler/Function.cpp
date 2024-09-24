@@ -88,6 +88,8 @@ FunctionDefinition::FunctionDefinition(Declaration&& declaration, Location locat
 {
 }
 
+FunctionDefinition::~FunctionDefinition() = default;
+
 void FunctionDefinition::reindex_ssa_variables()
 {
     size_t index = 0;

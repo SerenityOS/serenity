@@ -76,18 +76,21 @@ HTML::Script* active_script()
         });
 }
 
-ErrorOr<void> initialize_main_thread_vm()
+ErrorOr<void> initialize_main_thread_vm(HTML::EventLoop::Type type)
 {
     VERIFY(!s_main_thread_vm);
 
     s_main_thread_vm = TRY(JS::VM::create(make<WebEngineCustomData>()));
+    s_main_thread_vm->on_unimplemented_property_access = [](auto const& object, auto const& property_key) {
+        dbgln("FIXME: Unimplemented IDL interface: '{}.{}'", object.class_name(), property_key.to_string());
+    };
 
     // NOTE: We intentionally leak the main thread JavaScript VM.
     //       This avoids doing an exhaustive garbage collection on process exit.
     s_main_thread_vm->ref();
 
     auto& custom_data = verify_cast<WebEngineCustomData>(*s_main_thread_vm->custom_data());
-    custom_data.event_loop = s_main_thread_vm->heap().allocate_without_realm<HTML::EventLoop>();
+    custom_data.event_loop = s_main_thread_vm->heap().allocate_without_realm<HTML::EventLoop>(type);
 
     // These strings could potentially live on the VM similar to CommonPropertyNames.
     DOM::MutationType::initialize_strings();

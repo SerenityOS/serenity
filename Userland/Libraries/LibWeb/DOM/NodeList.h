@@ -21,8 +21,7 @@ public:
     virtual u32 length() const = 0;
     virtual Node const* item(u32 index) const = 0;
 
-    virtual WebIDL::ExceptionOr<JS::Value> item_value(size_t index) const override;
-    virtual bool is_supported_property_index(u32) const override;
+    virtual Optional<JS::Value> item_value(size_t index) const override;
 
 protected:
     explicit NodeList(JS::Realm&);

@@ -33,6 +33,8 @@ public:
     String rel() const { return get_attribute_value(HTML::AttributeNames::rel); }
     String type() const { return get_attribute_value(HTML::AttributeNames::type); }
     String href() const { return get_attribute_value(HTML::AttributeNames::href); }
+    String as() const;
+    WebIDL::ExceptionOr<void> set_as(String const&);
 
     JS::NonnullGCPtr<DOM::DOMTokenList> rel_list();
 
@@ -45,7 +47,7 @@ private:
     HTMLLinkElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
-    virtual void attribute_changed(FlyString const&, Optional<String> const&) override;
+    virtual void attribute_changed(FlyString const&, Optional<String> const& old_value, Optional<String> const&) override;
 
     // ^ResourceClient
     virtual void resource_did_fail() override;

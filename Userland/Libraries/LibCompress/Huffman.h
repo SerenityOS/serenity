@@ -12,35 +12,34 @@
 
 namespace Compress {
 
-template<size_t Size>
-void generate_huffman_lengths(Array<u8, Size>& lengths, Array<u16, Size> const& frequencies, size_t max_bit_length, u16 shift = 0)
+inline void generate_huffman_lengths(Bytes lengths, ReadonlySpan<u16> frequencies, size_t max_bit_length, u16 shift = 0)
 {
-    VERIFY((1u << max_bit_length) >= Size);
-    u16 heap_keys[Size]; // Used for O(n) heap construction
-    u16 heap_values[Size];
+    VERIFY(lengths.size() == frequencies.size());
+    auto const size = lengths.size();
+    VERIFY((1u << max_bit_length) >= size);
+    u16 heap_keys[size]; // Used for O(n) heap construction
+    u16 heap_values[size];
 
-    u16 huffman_links[Size * 2] = { 0 };
+    u16 huffman_links[size * 2];
     size_t non_zero_freqs = 0;
-    for (size_t i = 0; i < Size; i++) {
-        auto frequency = frequencies[i];
+    for (auto frequency : frequencies) {
         if (frequency == 0)
             continue;
 
         frequency = max(1, frequency >> shift);
-
         heap_keys[non_zero_freqs] = frequency;               // sort symbols by frequency
-        heap_values[non_zero_freqs] = Size + non_zero_freqs; // huffman_links "links"
+        heap_values[non_zero_freqs] = size + non_zero_freqs; // huffman_links "links"
         non_zero_freqs++;
     }
 
     // special case for only 1 used symbol
     if (non_zero_freqs < 2) {
-        for (size_t i = 0; i < Size; i++)
+        for (size_t i = 0; i < size; i++)
             lengths[i] = (frequencies[i] == 0) ? 0 : 1;
         return;
     }
 
-    BinaryHeap<u16, u16, Size> heap { heap_keys, heap_values, non_zero_freqs };
+    BinaryHeap<u16, u16, 288> heap { heap_keys, heap_values, non_zero_freqs };
 
     // build the huffman tree - binary heap is used for efficient frequency comparisons
     while (heap.size() > 1) {
@@ -60,13 +59,13 @@ void generate_huffman_lengths(Array<u8, Size>& lengths, Array<u16, Size> const& 
     }
 
     non_zero_freqs = 0;
-    for (size_t i = 0; i < Size; i++) {
+    for (size_t i = 0; i < size; i++) {
         if (frequencies[i] == 0) {
             lengths[i] = 0;
             continue;
         }
 
-        u16 link = huffman_links[Size + non_zero_freqs];
+        u16 link = huffman_links[size + non_zero_freqs];
         non_zero_freqs++;
 
         size_t bit_length = 1;

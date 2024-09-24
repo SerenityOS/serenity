@@ -47,7 +47,7 @@ ErrorOr<FlatPtr> Process::sys$statvfs(Userspace<Syscall::SC_statvfs_params const
 
     auto path = TRY(get_syscall_path_argument(params.path));
 
-    auto custody = TRY(VirtualFileSystem::the().resolve_path(credentials(), path->view(), current_directory(), nullptr, 0));
+    auto custody = TRY(VirtualFileSystem::resolve_path(vfs_root_context(), credentials(), path->view(), current_directory(), nullptr, 0));
     auto& inode = custody->inode();
     auto const& fs = inode.fs();
 

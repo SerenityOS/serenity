@@ -827,6 +827,9 @@ struct Implementation {
         Function<Vector<AK::String>()> provide_arguments;
         Function<Vector<AK::String>()> provide_environment;
         Function<Vector<MappedPath>()> provide_preopened_directories;
+        int stdin_fd { 0 };
+        int stdout_fd { 1 };
+        int stderr_fd { 2 };
     };
 
     explicit Implementation(Details&& details)
@@ -835,9 +838,9 @@ struct Implementation {
         , provide_preopened_directories(move(details.provide_preopened_directories))
     {
         // Map all of std{in,out,err} by default.
-        m_fd_map.insert(0, 0);
-        m_fd_map.insert(1, 1);
-        m_fd_map.insert(2, 2);
+        m_fd_map.insert(0, details.stdin_fd);
+        m_fd_map.insert(1, details.stdout_fd);
+        m_fd_map.insert(2, details.stderr_fd);
     }
 
     ErrorOr<HostFunction> function_by_name(StringView);
@@ -884,7 +887,7 @@ private:
     ErrorOr<Result<void>> impl$path_symlink(Configuration&, Pointer<u8> old_path, Size old_path_len, FD, Pointer<u8> new_path, Size new_path_len);
     ErrorOr<Result<void>> impl$path_unlink_file(Configuration&, FD, Pointer<u8> path, Size path_len);
     ErrorOr<Result<Size>> impl$poll_oneoff(Configuration&, ConstPointer<Subscription> in, Pointer<Event> out, Size nsubscriptions);
-    ErrorOr<Result<void>> impl$proc_exit(Configuration&, ExitCode); // Note: noreturn.
+    ErrorOr<void> impl$proc_exit(Configuration&, ExitCode);
     ErrorOr<Result<void>> impl$proc_raise(Configuration&, Signal);
     ErrorOr<Result<void>> impl$sched_yield(Configuration&);
     ErrorOr<Result<void>> impl$random_get(Configuration&, Pointer<u8> buf, Size buf_len);

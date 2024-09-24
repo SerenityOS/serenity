@@ -258,6 +258,10 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
         // Store current sp as from_thread's sp.
         "sd sp, %[from_sp] \n"
 
+        // Store current fp as from_thread's sp.
+        // This is needed to make capture_stack_trace() work.
+        "sd fp, %[from_fp] \n"
+
         // Set from_thread's pc to label "1"
         "la t0, 1f \n"
         "sd t0, %[from_ip] \n"
@@ -327,6 +331,7 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
         :
         [from_ip] "=m"(from_thread->regs().pc),
         [from_sp] "=m"(from_thread->regs().x[1]),
+        [from_fp] "=m"(from_thread->regs().x[7]),
         "=m"(from_thread),
         "=m"(to_thread)
 
@@ -471,13 +476,6 @@ void ProcessorBase<T>::exit_trap(TrapFrame& trap)
     m_in_critical = m_in_critical - 1;
     if (!m_in_irq && !m_in_critical)
         check_invoke_scheduler();
-}
-
-template<typename T>
-ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<T>::capture_stack_trace(Thread&, size_t)
-{
-    dbgln("FIXME: Implement Processor::capture_stack_trace() for riscv64");
-    return Vector<FlatPtr, 32> {};
 }
 
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread);

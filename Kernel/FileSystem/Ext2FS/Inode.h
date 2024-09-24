@@ -45,27 +45,47 @@ private:
     virtual ErrorOr<void> truncate_locked(u64) override;
     virtual ErrorOr<int> get_block_address(int) override;
 
+    ErrorOr<BlockBasedFileSystem::BlockIndex> get_or_allocate_block(BlockBasedFileSystem::BlockIndex, bool zero_newly_allocated_block, bool allow_cache);
+    BlockBasedFileSystem::BlockIndex get_block(BlockBasedFileSystem::BlockIndex) const;
+    ErrorOr<u32> allocate_and_zero_block();
+
     ErrorOr<void> write_directory(Vector<Ext2FSDirectoryEntry>&);
     ErrorOr<void> populate_lookup_cache();
     ErrorOr<void> resize(u64);
-    ErrorOr<void> write_indirect_block(BlockBasedFileSystem::BlockIndex, Span<BlockBasedFileSystem::BlockIndex>);
-    ErrorOr<void> grow_doubly_indirect_block(BlockBasedFileSystem::BlockIndex, size_t, Span<BlockBasedFileSystem::BlockIndex>, Vector<BlockBasedFileSystem::BlockIndex>&, unsigned&);
-    ErrorOr<void> shrink_doubly_indirect_block(BlockBasedFileSystem::BlockIndex, size_t, size_t, unsigned&);
-    ErrorOr<void> grow_triply_indirect_block(BlockBasedFileSystem::BlockIndex, size_t, Span<BlockBasedFileSystem::BlockIndex>, Vector<BlockBasedFileSystem::BlockIndex>&, unsigned&);
-    ErrorOr<void> shrink_triply_indirect_block(BlockBasedFileSystem::BlockIndex, size_t, size_t, unsigned&);
-    ErrorOr<void> flush_block_list();
+    ErrorOr<void> write_singly_indirect_block_pointer(BlockBasedFileSystem::BlockIndex logical_block_index, BlockBasedFileSystem::BlockIndex on_disk_index);
+    ErrorOr<void> write_doubly_indirect_block_pointer(BlockBasedFileSystem::BlockIndex logical_block_index, BlockBasedFileSystem::BlockIndex on_disk_index);
+    ErrorOr<void> write_triply_indirect_block_pointer(BlockBasedFileSystem::BlockIndex logical_block_index, BlockBasedFileSystem::BlockIndex on_disk_index);
+    ErrorOr<void> write_block_pointer(BlockBasedFileSystem::BlockIndex logical_block_index, BlockBasedFileSystem::BlockIndex on_disk_index);
+    ErrorOr<void> flush_block_list(Ext2FS::BlockList const& old_block_list);
 
     ErrorOr<void> compute_block_list_with_exclusive_locking();
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list() const;
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_with_meta_blocks() const;
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_impl(bool include_block_list_blocks) const;
-    ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list_impl_internal(ext2_inode const&, bool include_block_list_blocks) const;
+    ErrorOr<Ext2FS::BlockList> compute_block_list() const;
+    ErrorOr<Ext2FS::BlockList> compute_block_list_impl(Vector<Ext2FS::BlockIndex>* meta_blocks = nullptr) const;
+    ErrorOr<Vector<Ext2FS::BlockIndex>> compute_meta_blocks() const;
+
+    u64 singly_indirect_block_capacity() const
+    {
+        auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
+        return EXT2_NDIR_BLOCKS + entries_per_block;
+    }
+
+    u64 doubly_indirect_block_capacity() const
+    {
+        auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
+        return singly_indirect_block_capacity() + entries_per_block * entries_per_block;
+    }
+
+    u64 triply_indirect_block_capacity() const
+    {
+        auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
+        return doubly_indirect_block_capacity() + entries_per_block * entries_per_block * entries_per_block;
+    }
 
     Ext2FS& fs();
     Ext2FS const& fs() const;
     Ext2FSInode(Ext2FS&, InodeIndex);
 
-    Vector<BlockBasedFileSystem::BlockIndex> m_block_list;
+    Ext2FS::BlockList m_block_list;
     HashMap<NonnullOwnPtr<KString>, InodeIndex> m_lookup_cache;
     ext2_inode m_raw_inode {};
 

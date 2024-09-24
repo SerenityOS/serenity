@@ -61,11 +61,8 @@ ErrorOr<NonnullOwnPtr<KString>> Device::pseudo_path(OpenFileDescription const&) 
 
 ErrorOr<NonnullRefPtr<OpenFileDescription>> Device::open(int options)
 {
-    TRY(Process::current().jail().with([&](auto const& my_jail) -> ErrorOr<void> {
-        if (my_jail && !is_openable_by_jailed_processes())
-            return Error::from_errno(EPERM);
-        return {};
-    }));
+    if (Process::current().is_jailed() && !is_openable_by_jailed_processes())
+        return Error::from_errno(EPERM);
     return File::open(options);
 }
 

@@ -139,6 +139,7 @@ private:
 class FunctionDefinition : public FunctionDeclaration {
 public:
     FunctionDefinition(Declaration&& declaration, Location location, Tree ast);
+    ~FunctionDefinition();
 
     void reindex_ssa_variables();
 

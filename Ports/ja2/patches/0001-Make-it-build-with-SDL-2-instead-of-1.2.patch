@@ -176,7 +176,7 @@ index 6db811f..53103d3 100644
 +# using Serenity SDL2 library
 +ifdef SERENITY
 +CFLAGS_SDL= -I${SERENITY_BUILD_DIR}/Root/usr/local/include/SDL2 -D_REENTRANT
-+LDFLAGS_SDL= -L${SERENITY_BUILD_DIR}/Root/usr/local/lib -lSDL2
++LDFLAGS_SDL= -lSDL2
 +endif
 +
  # using system SDL library

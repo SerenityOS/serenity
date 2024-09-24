@@ -18,44 +18,35 @@ namespace DeviceMapper {
 
 class DeviceEventLoop {
 public:
-    enum class MinorNumberAllocationType {
-        SequentialUnlimited,
-        SequentialLimited,
-    };
-
-    enum class UnixDeviceType {
-        BlockDevice,
-        CharacterDevice,
-    };
-
     struct DeviceNodeMatch {
-        StringView permission_group;
-        StringView family_type_literal;
-        StringView path_pattern;
-        DeviceNodeFamily::Type unix_device_type;
+        String permission_group;
+        String family_type_literal;
+        String path_pattern;
+        DeviceNodeType device_node_type;
         MajorNumber major_number;
-        MinorNumberAllocationType minor_number_allocation_type;
-        MinorNumber minor_number_start;
-        size_t minor_number_range_size;
+        Optional<MinorNumber> specific_minor_number;
         mode_t create_mode;
     };
 
-    DeviceEventLoop(NonnullOwnPtr<Core::File>);
+    DeviceEventLoop(Vector<DeviceNodeMatch>, NonnullOwnPtr<Core::File>);
     virtual ~DeviceEventLoop() = default;
 
     ErrorOr<void> drain_events_from_devctl();
 
 private:
-    Optional<DeviceNodeFamily&> find_device_node_family(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number) const;
-    ErrorOr<NonnullRefPtr<DeviceNodeFamily>> find_or_register_new_device_node_family(DeviceNodeMatch const& match, DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number);
+    Optional<DeviceEventLoop::DeviceNodeMatch const&> device_node_family_to_match_type(DeviceNodeType device_node_type, MajorNumber major_number, MinorNumber minor_number);
 
-    ErrorOr<void> register_new_device(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number);
-    ErrorOr<void> unregister_device(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number);
+    Optional<DeviceNodeFamily&> find_device_node_family(DeviceNodeType, MajorNumber major_number) const;
+    ErrorOr<NonnullRefPtr<DeviceNodeFamily>> find_or_register_new_device_node_family(DeviceNodeMatch const& match, DeviceNodeType, MajorNumber major_number);
+
+    ErrorOr<void> register_new_device(DeviceNodeType, MajorNumber major_number, MinorNumber minor_number);
+    ErrorOr<void> unregister_device(DeviceNodeType, MajorNumber major_number, MinorNumber minor_number);
 
     ErrorOr<void> read_one_or_eof(DeviceEvent& event);
 
     Vector<NonnullRefPtr<DeviceNodeFamily>> m_device_node_families;
     NonnullOwnPtr<Core::File> const m_devctl_file;
+    Vector<DeviceNodeMatch> m_matches;
 };
 
 }

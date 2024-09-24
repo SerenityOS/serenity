@@ -22,6 +22,9 @@ public:
 private:
     IteratorPrototype(Realm&);
 
+    JS_DECLARE_NATIVE_FUNCTION(constructor_getter);
+    JS_DECLARE_NATIVE_FUNCTION(constructor_setter);
+
     JS_DECLARE_NATIVE_FUNCTION(symbol_iterator);
     JS_DECLARE_NATIVE_FUNCTION(map);
     JS_DECLARE_NATIVE_FUNCTION(filter);
@@ -34,6 +37,9 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(some);
     JS_DECLARE_NATIVE_FUNCTION(every);
     JS_DECLARE_NATIVE_FUNCTION(find);
+
+    JS_DECLARE_NATIVE_FUNCTION(to_string_tag_getter);
+    JS_DECLARE_NATIVE_FUNCTION(to_string_tag_setter);
 };
 
 }

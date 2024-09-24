@@ -23,6 +23,7 @@
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Library/KBufferBuilder.h>
+#include <Kernel/Library/KLexicalPath.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -30,10 +31,12 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Credentials.h>
 #include <Kernel/Tasks/Coredump.h>
+#include <Kernel/Tasks/HostnameContext.h>
 #include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/ScopedProcessList.h>
 #include <Kernel/Tasks/Thread.h>
 #include <Kernel/Tasks/ThreadTracer.h>
 #include <Kernel/Time/TimerQueue.h>
@@ -52,21 +55,16 @@ static Atomic<pid_t> next_pid;
 static Singleton<SpinlockProtected<Process::AllProcessesList, LockRank::None>> s_all_instances;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
-static Singleton<MutexProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>>> s_hostname;
-
-MutexProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>>& hostname()
-{
-    return *s_hostname;
-}
+static RawPtr<HostnameContext> s_empty_kernel_hostname_context;
 
 SpinlockProtected<Process::AllProcessesList, LockRank::None>& Process::all_instances()
 {
     return *s_all_instances;
 }
 
-ErrorOr<void> Process::for_each_in_same_jail(Function<ErrorOr<void>(Process&)> callback)
+ErrorOr<void> Process::for_each_in_same_process_list(Function<ErrorOr<void>(Process&)> callback)
 {
-    return Process::current().m_jail_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
+    return Process::current().m_scoped_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
         ErrorOr<void> result {};
         if (list_ptr) {
             list_ptr->attached_processes().with([&](auto const& list) {
@@ -89,10 +87,10 @@ ErrorOr<void> Process::for_each_in_same_jail(Function<ErrorOr<void>(Process&)> c
     });
 }
 
-ErrorOr<void> Process::for_each_child_in_same_jail(Function<ErrorOr<void>(Process&)> callback)
+ErrorOr<void> Process::for_each_child_in_same_process_list(Function<ErrorOr<void>(Process&)> callback)
 {
     ProcessID my_pid = pid();
-    return m_jail_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
+    return m_scoped_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
         ErrorOr<void> result {};
         if (list_ptr) {
             list_ptr->attached_processes().with([&](auto const& list) {
@@ -117,9 +115,9 @@ ErrorOr<void> Process::for_each_child_in_same_jail(Function<ErrorOr<void>(Proces
     });
 }
 
-ErrorOr<void> Process::for_each_in_pgrp_in_same_jail(ProcessGroupID pgid, Function<ErrorOr<void>(Process&)> callback)
+ErrorOr<void> Process::for_each_in_pgrp_in_same_process_list(ProcessGroupID pgid, Function<ErrorOr<void>(Process&)> callback)
 {
-    return m_jail_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
+    return m_scoped_process_list.with([&](auto const& list_ptr) -> ErrorOr<void> {
         ErrorOr<void> result {};
         if (list_ptr) {
             list_ptr->attached_processes().with([&](auto const& list) {
@@ -158,9 +156,9 @@ UNMAP_AFTER_INIT void Process::initialize()
 {
     next_pid.store(0, AK::MemoryOrder::memory_order_release);
 
-    // Note: This is called before scheduling is initialized, and before APs are booted.
-    //       So we can "safely" bypass the lock here.
-    reinterpret_cast<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>&>(hostname()).store_characters("courage"sv);
+    // NOTE: Initialize an empty hostname context for all kernel processes.
+    s_empty_kernel_hostname_context = &MUST(HostnameContext::create_with_name(""sv)).leak_ref();
+
     // NOTE: Just allocate the kernel version string here so we never have to worry
     // about OOM conditions in the uname syscall.
     g_version_string = MUST(KString::formatted("{}.{}-dev", SERENITY_MAJOR_REVISION, SERENITY_MINOR_REVISION)).leak_ptr();
@@ -212,7 +210,7 @@ void Process::register_new(Process& process)
     });
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, RefPtr<TTY> tty)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<TTY> tty)
 {
     auto parts = path.split_view('/');
     if (arguments.is_empty()) {
@@ -221,7 +219,11 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView 
     }
 
     auto path_string = TRY(KString::try_create(path));
-    auto [process, first_thread] = TRY(Process::create(parts.last(), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty));
+
+    auto vfs_root_context_root_custody = vfs_root_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
+        return custody;
+    });
+    auto [process, first_thread] = TRY(Process::create(parts.last(), uid, gid, ProcessID(0), false, vfs_root_context, hostname_context, vfs_root_context_root_custody, nullptr, tty));
 
     TRY(process->m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         TRY(fds.try_resize(Process::OpenFileDescriptions::max_open()));
@@ -258,7 +260,8 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView 
 
 ErrorOr<Process::ProcessAndFirstThread> Process::create_kernel_process(StringView name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
 {
-    auto process_and_first_thread = TRY(Process::create(name, UserID(0), GroupID(0), ProcessID(0), true));
+    VERIFY(s_empty_kernel_hostname_context);
+    auto process_and_first_thread = TRY(Process::create(name, UserID(0), GroupID(0), ProcessID(0), true, VFSRootContext::empty_context_for_kernel_processes(), *s_empty_kernel_hostname_context));
     auto& process = *process_and_first_thread.process;
     auto& thread = *process_and_first_thread.first_thread;
 
@@ -287,22 +290,22 @@ void Process::unprotect_data()
     });
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create_with_forked_name(UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_with_forked_name(UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
 {
     Process::Name name {};
     Process::current().name().with([&name](auto& process_name) {
         name.store_characters(process_name.representable_view());
     });
-    return TRY(Process::create(name.representable_view(), uid, gid, ppid, is_kernel_process, current_directory, executable, tty, fork_parent));
+    return TRY(Process::create(name.representable_view(), uid, gid, ppid, is_kernel_process, move(vfs_root_context), move(hostname_context), current_directory, executable, tty, fork_parent));
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create(StringView name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
+ErrorOr<Process::ProcessAndFirstThread> Process::create(StringView name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
 {
     auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto exec_unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto credentials = TRY(Credentials::create(uid, gid, uid, gid, uid, gid, {}, fork_parent ? fork_parent->sid() : 0, fork_parent ? fork_parent->pgid() : 0));
 
-    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(name, move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree), kgettimeofday())));
+    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(name, move(credentials), ppid, is_kernel_process, move(vfs_root_context), move(hostname_context), move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree), kgettimeofday())));
 
     OwnPtr<Memory::AddressSpace> new_address_space;
     if (fork_parent) {
@@ -319,11 +322,13 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create(StringView name, UserID 
     return ProcessAndFirstThread { move(process), move(first_thread) };
 }
 
-Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
+Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
     : m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
     , m_current_directory(move(current_directory))
     , m_creation_time(creation_time)
+    , m_attached_vfs_root_context(move(vfs_root_context))
+    , m_attached_hostname_context(move(hostname_context))
     , m_unveil_data(move(unveil_tree))
     , m_exec_unveil_data(move(exec_unveil_tree))
     , m_wait_blocker_set(*this)
@@ -342,6 +347,14 @@ Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, Proces
             dbgln("Created new process {}({})", process_name.representable_view(), this->pid().value());
         });
     }
+
+    m_attached_vfs_root_context.with([](auto& context) {
+        context->set_attached({});
+    });
+
+    m_attached_hostname_context.with([](auto& context) {
+        context->set_attached({});
+    });
 }
 
 ErrorOr<NonnullRefPtr<Thread>> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& preallocated_space, Process* fork_parent)
@@ -573,9 +586,9 @@ bool Process::is_kcov_busy()
 }
 #endif
 
-RefPtr<Process> Process::from_pid_in_same_jail(ProcessID pid)
+RefPtr<Process> Process::from_pid_in_same_process_list(ProcessID pid)
 {
-    return Process::current().m_jail_process_list.with([&](auto const& list_ptr) -> RefPtr<Process> {
+    return Process::current().m_scoped_process_list.with([&](auto const& list_ptr) -> RefPtr<Process> {
         if (list_ptr) {
             return list_ptr->attached_processes().with([&](auto const& list) -> RefPtr<Process> {
                 for (auto& process : list) {
@@ -597,7 +610,7 @@ RefPtr<Process> Process::from_pid_in_same_jail(ProcessID pid)
     });
 }
 
-RefPtr<Process> Process::from_pid_ignoring_jails(ProcessID pid)
+RefPtr<Process> Process::from_pid_ignoring_process_lists(ProcessID pid)
 {
     return all_instances().with([&](auto const& list) -> RefPtr<Process> {
         for (auto const& process : list) {
@@ -737,9 +750,13 @@ siginfo_t Process::wait_info() const
 NonnullRefPtr<Custody> Process::current_directory()
 {
     return m_current_directory.with([&](auto& current_directory) -> NonnullRefPtr<Custody> {
-        if (!current_directory)
-            current_directory = VirtualFileSystem::the().root_custody();
-        return *current_directory;
+        return m_attached_vfs_root_context.with([&](auto& context) -> NonnullRefPtr<Custody> {
+            return context->root_custody().with([&](auto& custody) -> NonnullRefPtr<Custody> {
+                if (!current_directory)
+                    current_directory = custody;
+                return *current_directory;
+            });
+        });
     });
 }
 
@@ -793,7 +810,7 @@ ErrorOr<void> Process::dump_perfcore()
     RefPtr<OpenFileDescription> description;
     auto credentials = this->credentials();
     for (size_t attempt = 1; attempt <= 10; ++attempt) {
-        auto description_or_error = VirtualFileSystem::the().open(*this, credentials, perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
+        auto description_or_error = VirtualFileSystem::open(*this, vfs_root_context(), credentials, perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
         if (!description_or_error.is_error()) {
             description = description_or_error.release_value();
             break;
@@ -864,25 +881,25 @@ void Process::finalize()
     m_fds.with_exclusive([](auto& fds) { fds.clear(); });
     with_mutable_protected_data([&](auto& protected_data) { protected_data.tty = nullptr; });
     m_executable.with([](auto& executable) { executable = nullptr; });
-    m_attached_jail.with([](auto& jail) {
-        if (jail)
-            jail->detach({});
-        jail = nullptr;
-    });
     m_arguments.clear();
     m_environment.clear();
+
+    m_attached_hostname_context.with([](auto& context) {
+        context->detach({});
+        context = nullptr;
+    });
 
     m_state.store(State::Dead, AK::MemoryOrder::memory_order_release);
 
     {
-        if (auto parent_process = Process::from_pid_ignoring_jails(ppid())) {
+        if (auto parent_process = Process::from_pid_ignoring_process_lists(ppid())) {
             if (parent_process->is_user_process() && (parent_process->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
                 (void)parent_process->send_signal(SIGCHLD, this);
         }
     }
 
     if (!!ppid()) {
-        if (auto parent = Process::from_pid_ignoring_jails(ppid())) {
+        if (auto parent = Process::from_pid_ignoring_process_lists(ppid())) {
             parent->m_ticks_in_user_for_dead_children += m_ticks_in_user + m_ticks_in_user_for_dead_children;
             parent->m_ticks_in_kernel_for_dead_children += m_ticks_in_kernel + m_ticks_in_kernel_for_dead_children;
         }
@@ -909,9 +926,9 @@ void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal
 {
     RefPtr<Process> waiter_process;
     if (auto* my_tracer = tracer())
-        waiter_process = Process::from_pid_ignoring_jails(my_tracer->tracer_pid());
+        waiter_process = Process::from_pid_ignoring_process_lists(my_tracer->tracer_pid());
     else
-        waiter_process = Process::from_pid_ignoring_jails(ppid());
+        waiter_process = Process::from_pid_ignoring_process_lists(ppid());
 
     if (waiter_process)
         waiter_process->m_wait_blocker_set.unblock(*this, flags, signal);
@@ -919,11 +936,12 @@ void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal
 
 void Process::remove_from_secondary_lists()
 {
-    m_jail_process_list.with([this](auto& list_ptr) {
+    m_scoped_process_list.with([this](auto& list_ptr) {
         if (list_ptr) {
             list_ptr->attached_processes().with([&](auto& list) {
                 list.remove(*this);
             });
+            list_ptr->detach({});
         }
     });
 }
@@ -995,7 +1013,7 @@ ErrorOr<void> Process::send_signal(u8 signal, Process* sender)
 {
     VERIFY(is_user_process());
     // Try to send it to the "obvious" main thread:
-    auto receiver_thread = Thread::from_tid_in_same_jail(pid().value());
+    auto receiver_thread = Thread::from_tid_in_same_process_list(pid().value());
     // If the main thread has died, there may still be other threads:
     if (!receiver_thread) {
         // The first one should be good enough.
@@ -1025,9 +1043,7 @@ ErrorOr<NonnullRefPtr<Thread>> Process::create_kernel_thread(void (*entry)(void*
     if (!joinable)
         thread->detach();
 
-    auto& regs = thread->regs();
-    regs.set_ip((FlatPtr)entry);
-    regs.set_sp((FlatPtr)entry_data); // entry function argument is expected to be in the SP register
+    thread->regs().set_entry_function((FlatPtr)entry, (FlatPtr)entry_data);
 
     SpinlockLocker lock(g_scheduler_lock);
     thread->set_state(Thread::State::Runnable);
@@ -1193,6 +1209,67 @@ RefPtr<Custody> Process::executable()
 RefPtr<Custody const> Process::executable() const
 {
     return m_executable.with([](auto& executable) { return executable; });
+}
+
+ErrorOr<NonnullRefPtr<VFSRootContext>> Process::vfs_root_context_for_id(int id)
+{
+    if (id == -1)
+        return vfs_root_context();
+
+    // NOTE: ID 0 is reserved for the kernel VFS root context and is not
+    // addressable via the vfs root contexts list anyway.
+    // Because we checked for the special ID (-1), anything not above it
+    // is also considered illegal.
+    if (id == 0 || id < 0)
+        return EINVAL;
+
+    // NOTE: Jailed processes should not be able to specify any vfs root context
+    // besides their currently attached contexts.
+    // This is a security measure to prevent jailed processes from enumerating
+    // the list of VFSRootContexts.
+    if (is_jailed() && id != -1)
+        return EPERM;
+
+    return VFSRootContext::all_root_contexts_list(Badge<Process> {}).with([id](auto& list) -> ErrorOr<NonnullRefPtr<VFSRootContext>> {
+        for (auto& context : list) {
+            if (context.id() == static_cast<u64>(id))
+                return context;
+        }
+        return Error::from_errno(EDOM);
+    });
+}
+
+ErrorOr<NonnullRefPtr<VFSRootContext>> Process::acquire_vfs_root_context_for_id_and_validate_path(bool& different_vfs_root_context, int id, StringView path)
+{
+    // NOTE: We don't support mount operations in different VFSRootContext(s) other
+    // than the Process::current VFSRootContext when the target path
+    // is not absolute, as the path probably doesn't correlate to anything
+    // meaningful on the other VFSRootContext.
+    auto context = TRY(vfs_root_context_for_id(id));
+    return m_attached_vfs_root_context.with([&different_vfs_root_context, path, context](auto& current_context) -> ErrorOr<NonnullRefPtr<VFSRootContext>> {
+        VERIFY(current_context);
+        different_vfs_root_context = (current_context.ptr() != context.ptr());
+        if (!KLexicalPath::is_absolute(path) && different_vfs_root_context)
+            return Error::from_errno(EINVAL);
+        return context;
+    });
+}
+
+ErrorOr<Process::MountTargetContext> Process::context_for_mount_operation(int vfs_root_context_id, StringView path)
+{
+    bool different_vfs_root_context = false;
+    auto vfs_root_context = TRY(acquire_vfs_root_context_for_id_and_validate_path(different_vfs_root_context, vfs_root_context_id, path));
+    RefPtr<Custody> target_custody;
+    if (different_vfs_root_context) {
+        VERIFY(KLexicalPath::is_canonical(path));
+        auto vfs_root_context_custody = vfs_root_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
+            return custody;
+        });
+        target_custody = TRY(VirtualFileSystem::resolve_path(vfs_root_context, credentials(), path, vfs_root_context_custody));
+    } else {
+        target_custody = TRY(VirtualFileSystem::resolve_path(vfs_root_context, credentials(), path, current_directory()));
+    }
+    return MountTargetContext { *target_custody.release_nonnull(), *vfs_root_context };
 }
 
 ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(Badge<CustodyBase>, int dirfd)

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/DeviceFileTypes.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Loop/LoopDevice.h>
 #include <Kernel/FileSystem/DevLoopFS/FileSystem.h>
@@ -13,7 +14,7 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullRefPtr<FileSystem>> DevLoopFS::try_create(ReadonlyBytes)
+ErrorOr<NonnullRefPtr<FileSystem>> DevLoopFS::try_create(FileSystemSpecificOptions const&)
 {
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevLoopFS));
 }
@@ -57,7 +58,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevLoopFS::get_inode(InodeIdentifier inode_id) con
         return *m_root_inode;
 
     unsigned loop_index = inode_index_to_loop_index(inode_id.index());
-    auto device = DeviceManagement::the().get_device(20, loop_index);
+    auto device = DeviceManagement::the().get_device(DeviceNodeType::Block, 20, loop_index);
     VERIFY(device);
 
     auto& loop_device = static_cast<LoopDevice&>(*device);
@@ -66,7 +67,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevLoopFS::get_inode(InodeIdentifier inode_id) con
     inode->m_metadata.size = 0;
     inode->m_metadata.uid = 0;
     inode->m_metadata.gid = 0;
-    inode->m_metadata.mode = S_IFCHR | S_IRUSR | S_IWUSR;
+    inode->m_metadata.mode = S_IFBLK | S_IRUSR | S_IWUSR;
     inode->m_metadata.major_device = device->major();
     inode->m_metadata.minor_device = device->minor();
     inode->m_metadata.mtime = TimeManagement::boot_time();

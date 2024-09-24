@@ -758,129 +758,6 @@ DescriptorTablePointer const& Processor::get_gdtr()
     return m_gdtr;
 }
 
-template<typename T>
-ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<T>::capture_stack_trace(Thread& thread, size_t max_frames)
-{
-    FlatPtr frame_ptr = 0, ip = 0;
-    Vector<FlatPtr, 32> stack_trace;
-
-    auto walk_stack = [&](FlatPtr frame_ptr) -> ErrorOr<void> {
-        constexpr size_t max_stack_frames = 4096;
-        bool is_walking_userspace_stack = false;
-        TRY(stack_trace.try_append(ip));
-
-        TRY(AK::unwind_stack_from_frame_pointer(
-            frame_ptr,
-            [&is_walking_userspace_stack](FlatPtr address) -> ErrorOr<FlatPtr> {
-                if (!Memory::is_user_address(VirtualAddress { address })) {
-                    if (is_walking_userspace_stack) {
-                        dbgln("SHENANIGANS! Userspace stack points back into kernel memory");
-                        return EFAULT;
-                    }
-                } else {
-                    is_walking_userspace_stack = true;
-                }
-
-                FlatPtr value;
-
-                if (Memory::is_user_range(VirtualAddress { address }, sizeof(FlatPtr))) {
-                    TRY(copy_from_user(&value, bit_cast<FlatPtr*>(address)));
-                } else {
-                    void* fault_at;
-                    if (!safe_memcpy(&value, bit_cast<FlatPtr*>(address), sizeof(FlatPtr), fault_at))
-                        return EFAULT;
-                }
-
-                return value;
-            },
-            [&stack_trace, max_frames](AK::StackFrame stack_frame) -> ErrorOr<IterationDecision> {
-                if (stack_trace.size() >= max_stack_frames || (max_frames != 0 && stack_trace.size() >= max_frames))
-                    return IterationDecision::Break;
-
-                TRY(stack_trace.try_append(stack_frame.return_address));
-
-                return IterationDecision::Continue;
-            }));
-
-        return {};
-    };
-
-    auto capture_current_thread = [&]() {
-        frame_ptr = (FlatPtr)__builtin_frame_address(0);
-        ip = (FlatPtr)__builtin_return_address(0);
-
-        return walk_stack(frame_ptr);
-    };
-
-    // Since the thread may be running on another processor, there
-    // is a chance a context switch may happen while we're trying
-    // to get it. It also won't be entirely accurate and merely
-    // reflect the status at the last context switch.
-    SpinlockLocker lock(g_scheduler_lock);
-    if (&thread == Processor::current_thread()) {
-        VERIFY(thread.state() == Thread::State::Running);
-        // Leave the scheduler lock. If we trigger page faults we may
-        // need to be preempted. Since this is our own thread it won't
-        // cause any problems as the stack won't change below this frame.
-        lock.unlock();
-        TRY(capture_current_thread());
-    } else if (thread.is_active()) {
-        VERIFY(thread.cpu() != Processor::current_id());
-        // If this is the case, the thread is currently running
-        // on another processor. We can't trust the kernel stack as
-        // it may be changing at any time. We need to probably send
-        // an IPI to that processor, have it walk the stack and wait
-        // until it returns the data back to us
-        auto& proc = Processor::current();
-        ErrorOr<void> result;
-        Processor::smp_unicast(
-            thread.cpu(),
-            [&]() {
-                dbgln("CPU[{}] getting stack for cpu #{}", Processor::current_id(), proc.id());
-                ScopedAddressSpaceSwitcher switcher(thread.process());
-                VERIFY(&Processor::current() != &proc);
-                VERIFY(&thread == Processor::current_thread());
-                // NOTE: Because the other processor is still holding the
-                // scheduler lock while waiting for this callback to finish,
-                // the current thread on the target processor cannot change
-
-                // TODO: What to do about page faults here? We might deadlock
-                //       because the other processor is still holding the
-                //       scheduler lock...
-                result = capture_current_thread();
-            },
-            false);
-        TRY(result);
-    } else {
-        switch (thread.state()) {
-        case Thread::State::Running:
-            VERIFY_NOT_REACHED(); // should have been handled above
-        case Thread::State::Runnable:
-        case Thread::State::Stopped:
-        case Thread::State::Blocked:
-        case Thread::State::Dying:
-        case Thread::State::Dead: {
-            ScopedAddressSpaceSwitcher switcher(thread.process());
-            auto& regs = thread.regs();
-
-            ip = regs.ip();
-            frame_ptr = regs.rbp;
-
-            // TODO: We need to leave the scheduler lock here, but we also
-            //       need to prevent the target thread from being run while
-            //       we walk the stack
-            lock.unlock();
-            TRY(walk_stack(frame_ptr));
-            break;
-        }
-        default:
-            dbgln("Cannot capture stack trace for thread {} in state {}", thread, thread.state_string());
-            break;
-        }
-    }
-    return stack_trace;
-}
-
 ProcessorContainer& Processor::processors()
 {
     return s_processors;
@@ -1492,7 +1369,6 @@ StringView ProcessorBase<T>::platform_string()
 template<typename T>
 FlatPtr ProcessorBase<T>::init_context(Thread& thread, bool leave_crit)
 {
-    VERIFY(is_kernel_mode());
     VERIFY(g_scheduler_lock.is_locked());
     if (leave_crit) {
         // Leave the critical section we set up in in Process::exec,
@@ -1599,7 +1475,6 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
     VERIFY(!m_in_irq);
     VERIFY(m_in_critical == 1);
-    VERIFY(is_kernel_mode());
     auto* self = static_cast<Processor*>(this);
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);

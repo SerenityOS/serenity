@@ -30,10 +30,13 @@ public:
     // https://www.w3.org/TR/html-aria/#el-dialog
     virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::dialog; }
 
+    bool is_modal() const { return m_is_modal; }
+
 private:
     HTMLDialogElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
 
     void close_the_dialog(Optional<String> result);
 
@@ -41,6 +44,7 @@ private:
 
     String m_return_value;
     bool m_is_modal { false };
+    JS::GCPtr<CloseWatcher> m_close_watcher;
 };
 
 }

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/Optional.h>
 #include <LibGfx/FontCascadeList.h>
 #include <LibGfx/Painter.h>
@@ -13,6 +14,7 @@
 #include <LibWeb/CSS/CalculatedOr.h>
 #include <LibWeb/CSS/Clip.h>
 #include <LibWeb/CSS/ColumnCount.h>
+#include <LibWeb/CSS/CountersSet.h>
 #include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/GridTrackPlacement.h>
 #include <LibWeb/CSS/GridTrackSize.h>
@@ -49,7 +51,7 @@ struct QuotesData {
         Auto,
         Specified,
     } type;
-    Vector<Array<String, 2>> strings {};
+    Vector<Array<FlyString, 2>> strings {};
 };
 
 struct ResolvedBackdropFilter {
@@ -99,6 +101,7 @@ public:
     static CSS::CaptionSide caption_side() { return CSS::CaptionSide::Top; }
     static CSS::Clear clear() { return CSS::Clear::None; }
     static CSS::Clip clip() { return CSS::Clip::make_auto(); }
+    static CSS::ContentVisibility content_visibility() { return CSS::ContentVisibility::Visible; }
     static CSS::Cursor cursor() { return CSS::Cursor::Auto; }
     static CSS::WhiteSpace white_space() { return CSS::WhiteSpace::Normal; }
     static CSS::TextAlign text_align() { return CSS::TextAlign::Left; }
@@ -313,6 +316,12 @@ struct ContentData {
     String alt_text {};
 };
 
+struct CounterData {
+    FlyString name;
+    bool is_reversed;
+    Optional<CounterValue> value;
+};
+
 struct BorderRadiusData {
     CSS::LengthPercentage horizontal_radius { InitialValues::border_radius() };
     CSS::LengthPercentage vertical_radius { InitialValues::border_radius() };
@@ -351,6 +360,7 @@ public:
     CSS::CaptionSide caption_side() const { return m_inherited.caption_side; }
     CSS::Clear clear() const { return m_noninherited.clear; }
     CSS::Clip clip() const { return m_noninherited.clip; }
+    CSS::ContentVisibility content_visibility() const { return m_inherited.content_visibility; }
     CSS::Cursor cursor() const { return m_inherited.cursor; }
     CSS::ContentData content() const { return m_noninherited.content; }
     CSS::PointerEvents pointer_events() const { return m_inherited.pointer_events; }
@@ -432,6 +442,8 @@ public:
     Color background_color() const { return m_noninherited.background_color; }
     Vector<BackgroundLayerData> const& background_layers() const { return m_noninherited.background_layers; }
 
+    Color webkit_text_fill_color() const { return m_inherited.webkit_text_fill_color; }
+
     CSS::ListStyleType list_style_type() const { return m_inherited.list_style_type; }
     CSS::ListStylePosition list_style_position() const { return m_inherited.list_style_position; }
 
@@ -503,6 +515,8 @@ protected:
         CSS::CaptionSide caption_side { InitialValues::caption_side() };
         Color color { InitialValues::color() };
         Optional<Color> accent_color {};
+        Color webkit_text_fill_color { InitialValues::color() };
+        CSS::ContentVisibility content_visibility { InitialValues::content_visibility() };
         CSS::Cursor cursor { InitialValues::cursor() };
         CSS::ImageRendering image_rendering { InitialValues::image_rendering() };
         CSS::PointerEvents pointer_events { InitialValues::pointer_events() };
@@ -625,6 +639,9 @@ protected:
         LengthPercentage y { InitialValues::x() };
 
         CSS::ScrollbarWidth scrollbar_width { InitialValues::scrollbar_width() };
+        Vector<CounterData, 0> counter_increment;
+        Vector<CounterData, 0> counter_reset;
+        Vector<CounterData, 0> counter_set;
     } m_noninherited;
 };
 
@@ -650,6 +667,7 @@ public:
     void set_color(Color color) { m_inherited.color = color; }
     void set_clip(CSS::Clip const& clip) { m_noninherited.clip = clip; }
     void set_content(ContentData const& content) { m_noninherited.content = content; }
+    void set_content_visibility(CSS::ContentVisibility content_visibility) { m_inherited.content_visibility = content_visibility; }
     void set_cursor(CSS::Cursor cursor) { m_inherited.cursor = cursor; }
     void set_image_rendering(CSS::ImageRendering value) { m_inherited.image_rendering = value; }
     void set_pointer_events(CSS::PointerEvents value) { m_inherited.pointer_events = value; }
@@ -667,6 +685,7 @@ public:
     void set_text_transform(CSS::TextTransform value) { m_inherited.text_transform = value; }
     void set_text_shadow(Vector<ShadowData>&& value) { m_inherited.text_shadow = move(value); }
     void set_text_indent(CSS::LengthPercentage value) { m_inherited.text_indent = move(value); }
+    void set_webkit_text_fill_color(Color value) { m_inherited.webkit_text_fill_color = value; }
     void set_position(CSS::Positioning position) { m_noninherited.position = position; }
     void set_white_space(CSS::WhiteSpace value) { m_inherited.white_space = value; }
     void set_width(CSS::Size const& width) { m_noninherited.width = width; }
@@ -765,6 +784,10 @@ public:
     void set_math_depth(int value) { m_inherited.math_depth = value; }
 
     void set_scrollbar_width(CSS::ScrollbarWidth value) { m_noninherited.scrollbar_width = value; }
+
+    void set_counter_increment(Vector<CounterData> value) { m_noninherited.counter_increment = move(value); }
+    void set_counter_reset(Vector<CounterData> value) { m_noninherited.counter_reset = move(value); }
+    void set_counter_set(Vector<CounterData> value) { m_noninherited.counter_set = move(value); }
 };
 
 }

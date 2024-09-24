@@ -20,7 +20,7 @@
 
 namespace AudioServer {
 
-Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config, NonnullOwnPtr<Core::File> device)
+Mixer::Mixer(NonnullRefPtr<Core::ConfigFile> config, OwnPtr<Core::File> device)
     : m_device(move(device))
     , m_sound_thread(Threading::Thread::construct(
           [this] {
@@ -95,7 +95,8 @@ void Mixer::mix()
 
         // Even though it's not realistic, the user expects no sound at 0%.
         if (m_muted || m_main_volume < 0.01) {
-            m_device->write_until_depleted(m_zero_filled_buffer).release_value_but_fixme_should_propagate_errors();
+            if (m_device)
+                m_device->write_until_depleted(m_zero_filled_buffer).release_value_but_fixme_should_propagate_errors();
         } else {
             FixedMemoryStream stream { m_stream_buffer.span() };
 
@@ -113,8 +114,9 @@ void Mixer::mix()
 
             auto buffered_bytes = MUST(stream.tell());
             VERIFY(buffered_bytes == m_stream_buffer.size());
-            m_device->write_until_depleted({ m_stream_buffer.data(), buffered_bytes })
-                .release_value_but_fixme_should_propagate_errors();
+            if (m_device)
+                m_device->write_until_depleted({ m_stream_buffer.data(), buffered_bytes })
+                    .release_value_but_fixme_should_propagate_errors();
         }
     }
 }
@@ -152,6 +154,9 @@ void Mixer::set_muted(bool muted)
 
 int Mixer::audiodevice_set_sample_rate(u32 sample_rate)
 {
+    if (!m_device)
+        return ENOENT;
+
     int code = ioctl(m_device->fd(), SOUNDCARD_IOCTL_SET_SAMPLE_RATE, sample_rate);
     if (code != 0)
         dbgln("Error while setting sample rate to {}: ioctl error: {}", sample_rate, strerror(errno));
@@ -165,6 +170,11 @@ u32 Mixer::audiodevice_get_sample_rate() const
 {
     if (m_cached_sample_rate.has_value())
         return m_cached_sample_rate.value();
+
+    // We pretend that a non-existent device has a common sample rate (instead of returning something like 0 that would break clients).
+    if (!m_device)
+        return 44100;
+
     u32 sample_rate = 0;
     int code = ioctl(m_device->fd(), SOUNDCARD_IOCTL_GET_SAMPLE_RATE, &sample_rate);
     if (code != 0)

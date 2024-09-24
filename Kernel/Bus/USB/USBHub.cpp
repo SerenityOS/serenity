@@ -18,26 +18,39 @@ namespace Kernel::USB {
 ErrorOr<NonnullLockRefPtr<Hub>> Hub::try_create_root_hub(NonnullLockRefPtr<USBController> controller, DeviceSpeed device_speed)
 {
     // NOTE: Enumeration does not happen here, as the controller must know what the device address is at all times during enumeration to intercept requests.
-    auto pipe = TRY(ControlPipe::create(controller, 0, 8, 0));
-    auto hub = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Hub(controller, device_speed, move(pipe))));
+    auto hub = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Hub(controller, device_speed)));
+    hub->set_default_pipe(TRY(ControlPipe::create(move(controller), hub, 0, 8)));
+    return hub;
+}
+
+ErrorOr<NonnullLockRefPtr<Hub>> Hub::try_create_root_hub(NonnullLockRefPtr<USBController> controller, DeviceSpeed device_speed, u8 address, USBDeviceDescriptor const& descriptor)
+{
+    // NOTE: Enumeration does not happen here, as the controller must know what the device address is at all times during enumeration to intercept requests.
+    auto hub = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Hub(controller, device_speed, address, descriptor)));
+    hub->set_default_pipe(TRY(ControlPipe::create(controller, hub, 0, 8)));
     return hub;
 }
 
 ErrorOr<NonnullLockRefPtr<Hub>> Hub::try_create_from_device(Device const& device)
 {
-    auto pipe = TRY(ControlPipe::create(device.controller(), 0, device.device_descriptor().max_packet_size, device.address()));
-    auto hub = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Hub(device, move(pipe))));
+    auto hub = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Hub(device)));
+    hub->set_default_pipe(TRY(ControlPipe::create(device.controller(), hub, 0, device.device_descriptor().max_packet_size)));
     TRY(hub->enumerate_and_power_on_hub());
     return hub;
 }
 
-Hub::Hub(NonnullLockRefPtr<USBController> controller, DeviceSpeed device_speed, NonnullOwnPtr<ControlPipe> default_pipe)
-    : Device(move(controller), 1 /* Port 1 */, device_speed, move(default_pipe))
+Hub::Hub(NonnullLockRefPtr<USBController> controller, DeviceSpeed device_speed)
+    : Device(move(controller), nullptr, 1 /* Port 1 */, device_speed)
 {
 }
 
-Hub::Hub(Device const& device, NonnullOwnPtr<ControlPipe> default_pipe)
-    : Device(device, move(default_pipe))
+Hub::Hub(NonnullLockRefPtr<USBController> controller, DeviceSpeed device_speed, u8 address, USBDeviceDescriptor const& descriptor)
+    : Device(move(controller), nullptr, 1 /* Port 1 */, device_speed, address, descriptor)
+{
+}
+
+Hub::Hub(Device const& device)
+    : Device(device)
 {
 }
 
@@ -58,6 +71,16 @@ ErrorOr<void> Hub::enumerate_and_power_on_hub()
 
     dbgln_if(USB_DEBUG, "USB Hub: Enumerating and powering on for address {}", m_address);
 
+    // Before the hub can be used, it must first be configured via a SET_CONFIGURATION request.
+    // We don't need to set the configuration for the root hub (which has a null m_hub) as we would just ignore that request during root hub emulation anyway.
+    if (m_hub != nullptr) {
+        if (m_configurations.size() < 1)
+            return EINVAL;
+
+        // FIXME: Which configuration should we choose if there is more than one?
+        TRY(control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_RECIPIENT_DEVICE, USB_REQUEST_SET_CONFIGURATION, m_configurations[0].configuration_id(), 0, 0, nullptr));
+    }
+
     USBHubDescriptor descriptor {};
 
     // Get the first hub descriptor. All hubs are required to have a hub descriptor at index 0. USB 2.0 Specification Section 11.24.2.5.
@@ -72,7 +95,7 @@ ErrorOr<void> Hub::enumerate_and_power_on_hub()
     if constexpr (USB_DEBUG) {
         dbgln("USB Hub Descriptor for {:04x}:{:04x}", m_vendor_id, m_product_id);
         dbgln("Number of Downstream Ports: {}", descriptor.number_of_downstream_ports);
-        dbgln("Hub Characteristics: {:#04x}", static_cast<u16>(descriptor.hub_characteristics));
+        dbgln("Hub Characteristics: {:#04x}", static_cast<u16>(descriptor.hub_characteristics.raw));
         dbgln("Power On to Power Good Time: {} ms ({} * 2ms)", descriptor.power_on_to_power_good_time * 2, descriptor.power_on_to_power_good_time);
         dbgln("Hub Controller Current: {} mA", descriptor.hub_controller_current);
     }
@@ -243,10 +266,20 @@ void Hub::check_for_port_updates()
                     return;
                 }
 
-                // FIXME: Check for high speed.
-                auto speed = port_status.status & PORT_STATUS_LOW_SPEED_DEVICE_ATTACHED ? USB::Device::DeviceSpeed::LowSpeed : USB::Device::DeviceSpeed::FullSpeed;
+                USB::Device::DeviceSpeed speed;
+                if (port_status.status & PORT_STATUS_PORT_POWER) {
+                    if (port_status.status & PORT_STATUS_LOW_SPEED_DEVICE_ATTACHED)
+                        speed = Device::DeviceSpeed::LowSpeed;
+                    else if (port_status.status & PORT_STATUS_HIGH_SPEED_DEVICE_ATTACHED)
+                        speed = Device::DeviceSpeed::HighSpeed;
+                    else
+                        speed = Device::DeviceSpeed::FullSpeed;
+                } else {
+                    // SuperSpeed (USB3) uses a different bit for port power (and the old bit is Reserved-Zero)
+                    speed = Device::DeviceSpeed::SuperSpeed;
+                }
 
-                auto device_or_error = USB::Device::try_create(m_controller, port_number, speed);
+                auto device_or_error = USB::Device::try_create(m_controller, *this, port_number, speed);
                 if (device_or_error.is_error()) {
                     dbgln("USB Hub: Failed to create device for port {}: {}", port_number, device_or_error.error());
                     return;

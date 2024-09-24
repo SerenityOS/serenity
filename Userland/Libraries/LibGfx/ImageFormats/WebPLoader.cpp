@@ -538,7 +538,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_image_data(WebPLoadingContext&
     return bitmap;
 }
 
-// https://developers.google.com/speed/webp/docs/riff_container#assembling_the_canvas_from_frames
+// https://developers.google.com/speed/webp/docs/riff_container#canvas_assembly_from_frames
 static ErrorOr<ImageFrameDescriptor> decode_webp_animation_frame(WebPLoadingContext& context, size_t frame_index)
 {
     if (frame_index >= context.animation_frame_chunks_data->size())
@@ -547,7 +547,15 @@ static ErrorOr<ImageFrameDescriptor> decode_webp_animation_frame(WebPLoadingCont
     VERIFY(context.first_chunk->id() == "VP8X"sv);
     VERIFY(context.vp8x_header.has_animation);
 
-    Color clear_color = Color::from_argb(context.animation_header_chunk_data->background_color);
+    // The spec says
+    // "canvas ← new image of size VP8X.canvasWidth x VP8X.canvasHeight with
+    //     background color ANIM.background_color."
+    // But:
+    // * libwebp always fills with transparent black (#00000000)
+    // * some images (e.g. images written by Aseprite) set the background color to fully opaque white
+    // These images then end up with a nice transparent background in libwebp-based decoders (i.e. basically everywhere)
+    // but show a silly opaque border in ours. So don't use context.animation_header_chunk_data->background_color here.
+    Color clear_color(Color::Transparent);
 
     size_t start_frame = context.current_frame + 1;
     dbgln_if(WEBP_DEBUG, "start_frame {} context.current_frame {}", start_frame, context.current_frame);
@@ -555,7 +563,8 @@ static ErrorOr<ImageFrameDescriptor> decode_webp_animation_frame(WebPLoadingCont
         start_frame = 0;
         auto format = context.vp8x_header.has_alpha ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
         context.bitmap = TRY(Bitmap::create(format, { context.vp8x_header.width, context.vp8x_header.height }));
-        context.bitmap->fill(clear_color);
+        if (clear_color != Color(Color::Transparent)) // Bitmaps start out transparent, so only fill if not transparent.
+            context.bitmap->fill(clear_color);
     } else if (frame_index < context.current_frame) {
         start_frame = 0;
     }

@@ -154,8 +154,6 @@ public:
     Function<void()> on_navigate_forward;
     Function<void()> on_refresh;
     Function<void(Gfx::Bitmap const&)> on_favicon_change;
-    Function<void(i32, i32)> on_scroll_by_delta;
-    Function<void(Gfx::IntPoint)> on_scroll_to_point;
     Function<void(Gfx::StandardCursor)> on_cursor_change;
     Function<void(Gfx::IntPoint, ByteString const&)> on_enter_tooltip_area;
     Function<void()> on_leave_tooltip_area;
@@ -205,7 +203,7 @@ public:
     Function<void(String const&)> on_inspector_executed_console_script;
     Function<IPC::File()> on_request_worker_agent;
 
-    virtual Web::DevicePixelRect viewport_rect() const = 0;
+    virtual Web::DevicePixelSize viewport_size() const = 0;
     virtual Gfx::IntPoint to_content_position(Gfx::IntPoint widget_position) const = 0;
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const = 0;
 

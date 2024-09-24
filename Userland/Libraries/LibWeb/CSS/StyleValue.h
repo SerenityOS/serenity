@@ -92,6 +92,8 @@ using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
     __ENUMERATE_STYLE_VALUE_TYPE(Color, color)                             \
     __ENUMERATE_STYLE_VALUE_TYPE(ConicGradient, conic_gradient)            \
     __ENUMERATE_STYLE_VALUE_TYPE(Content, content)                         \
+    __ENUMERATE_STYLE_VALUE_TYPE(Counter, counter)                         \
+    __ENUMERATE_STYLE_VALUE_TYPE(CounterDefinitions, counter_definitions)  \
     __ENUMERATE_STYLE_VALUE_TYPE(CustomIdent, custom_ident)                \
     __ENUMERATE_STYLE_VALUE_TYPE(Display, display)                         \
     __ENUMERATE_STYLE_VALUE_TYPE(Easing, easing)                           \
@@ -119,6 +121,7 @@ using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
     __ENUMERATE_STYLE_VALUE_TYPE(Rect, rect)                               \
     __ENUMERATE_STYLE_VALUE_TYPE(Resolution, resolution)                   \
     __ENUMERATE_STYLE_VALUE_TYPE(Revert, revert)                           \
+    __ENUMERATE_STYLE_VALUE_TYPE(ScrollbarGutter, scrollbar_gutter)        \
     __ENUMERATE_STYLE_VALUE_TYPE(Shadow, shadow)                           \
     __ENUMERATE_STYLE_VALUE_TYPE(Shorthand, shorthand)                     \
     __ENUMERATE_STYLE_VALUE_TYPE(String, string)                           \

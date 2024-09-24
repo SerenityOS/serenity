@@ -681,7 +681,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<NavigationParams>> create_navigation
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#create-navigation-params-by-fetching
-static WebIDL::ExceptionOr<Variant<Empty, JS::NonnullGCPtr<NavigationParams>, JS::NonnullGCPtr<NonFetchSchemeNavigationParams>>> create_navigation_params_by_fetching(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, SourceSnapshotParams const& source_snapshot_params, TargetSnapshotParams const& target_snapshot_params, CSPNavigationType csp_navigation_type, Optional<String> navigation_id)
+static WebIDL::ExceptionOr<Navigable::NavigationParamsVariant> create_navigation_params_by_fetching(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, SourceSnapshotParams const& source_snapshot_params, TargetSnapshotParams const& target_snapshot_params, CSPNavigationType csp_navigation_type, Optional<String> navigation_id)
 {
     auto& vm = navigable->vm();
     auto& realm = navigable->active_window()->realm();
@@ -982,9 +982,14 @@ static WebIDL::ExceptionOr<Variant<Empty, JS::NonnullGCPtr<NavigationParams>, JS
     //       - locationURL is failure; or
     //       - locationURL is a URL whose scheme is a fetch scheme
     //     then return null.
-    if (response_holder->response()->is_network_error() || location_url.is_error() || (location_url.value().has_value() && Fetch::Infrastructure::is_fetch_scheme(location_url.value().value().scheme()))) {
+    if (response_holder->response()->is_network_error()) {
+        // AD-HOC: We pass the error message if we have one in NullWithError
+        if (response_holder->response()->network_error_message().has_value() && !response_holder->response()->network_error_message().value().is_null())
+            return response_holder->response()->network_error_message().value();
+        else
+            return Empty {};
+    } else if (location_url.is_error() || (location_url.value().has_value() && Fetch::Infrastructure::is_fetch_scheme(location_url.value().value().scheme())))
         return Empty {};
-    }
 
     // 22. Assert: locationURL is null and response is not a network error.
     VERIFY(!location_url.value().has_value());
@@ -1039,7 +1044,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
     SourceSnapshotParams const& source_snapshot_params,
     TargetSnapshotParams const& target_snapshot_params,
     Optional<String> navigation_id,
-    Variant<Empty, JS::NonnullGCPtr<NavigationParams>, JS::NonnullGCPtr<NonFetchSchemeNavigationParams>> navigation_params,
+    Navigable::NavigationParamsVariant navigation_params,
     CSPNavigationType csp_navigation_type,
     bool allow_POST,
     JS::SafeFunction<void()> completion_steps)
@@ -1124,7 +1129,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
         }
 
         // 4. Otherwise, if navigationParams is null, then set failure to true.
-        if (navigation_params.has<Empty>()) {
+        if (navigation_params.has<Empty>() || navigation_params.has<NullWithError>()) {
             failure = true;
         }
 
@@ -1141,8 +1146,9 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
         if (failure) {
             // 1. Set entry's document state's document to the result of creating a document for inline content that doesn't have a DOM, given navigable, null, and navTimingType.
             //    The inline content should indicate to the user the sort of error that occurred.
-            // FIXME: Add error message to generated error page
-            auto error_html = load_error_page(entry->url()).release_value_but_fixme_should_propagate_errors();
+            auto error_message = navigation_params.has<NullWithError>() ? navigation_params.get<NullWithError>() : "Unknown error"sv;
+
+            auto error_html = load_error_page(entry->url(), error_message).release_value_but_fixme_should_propagate_errors();
             entry->document_state()->set_document(create_document_for_inline_content(this, navigation_id, [error_html](auto& document) {
                 auto parser = HTML::HTMLParser::create(document, error_html, "utf-8"sv);
                 document.set_url(URL::URL("about:error"));
@@ -1427,7 +1433,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(NavigateParams params)
         history_entry->set_document_state(document_state);
 
         // 7. Let navigationParams be null.
-        Variant<Empty, JS::NonnullGCPtr<NavigationParams>, JS::NonnullGCPtr<NonFetchSchemeNavigationParams>> navigation_params = Empty {};
+        NavigationParamsVariant navigation_params = Empty {};
 
         // FIXME: 8. If response is non-null:
         if (response) {
@@ -1519,7 +1525,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_fragment(URL::URL const& url,
 
     // 13. Update document for history step application given navigable's active document, historyEntry, true, scriptHistoryIndex, and scriptHistoryLength.
     // AD HOC: Skip updating the navigation api entries twice here
-    active_document()->update_for_history_step_application(*history_entry, true, script_history_length, script_history_index, {}, false);
+    active_document()->update_for_history_step_application(*history_entry, true, script_history_length, script_history_index, navigation_type, {}, {}, false);
 
     // 14. Update the navigation API entries for a same-document navigation given navigation, historyEntry, and historyHandling.
     navigation->update_the_navigation_api_entries_for_a_same_document_navigation(history_entry, navigation_type);
@@ -1993,60 +1999,36 @@ CSSPixelPoint Navigable::to_top_level_position(CSSPixelPoint a_position)
     return position;
 }
 
-void Navigable::set_viewport_rect(CSSPixelRect const& rect)
-{
-    bool did_change = false;
-
-    if (m_size != rect.size()) {
-        m_size = rect.size();
-        if (auto document = active_document()) {
-            // NOTE: Resizing the viewport changes the reference value for viewport-relative CSS lengths.
-            document->invalidate_style();
-            document->set_needs_layout();
-        }
-        did_change = true;
-        m_needs_repaint = true;
-    }
-
-    if (m_viewport_scroll_offset != rect.location()) {
-        m_viewport_scroll_offset = rect.location();
-        scroll_offset_did_change();
-        did_change = true;
-        m_needs_repaint = true;
-    }
-
-    if (did_change && active_document()) {
-        active_document()->inform_all_viewport_clients_about_the_current_viewport_rect();
-    }
-
-    // Schedule the HTML event loop to ensure that a `resize` event gets fired.
-    HTML::main_thread_event_loop().schedule();
-}
-
-void Navigable::perform_scroll_of_viewport(CSSPixelPoint position)
-{
-    auto viewport_rect = this->viewport_rect();
-    viewport_rect.set_location(position);
-    set_viewport_rect(viewport_rect);
-    set_needs_display();
-
-    if (is_traversable() && active_browsing_context())
-        active_browsing_context()->page().client().page_did_request_scroll_to(position);
-}
-
-void Navigable::set_size(CSSPixelSize size)
+void Navigable::set_viewport_size(CSSPixelSize size)
 {
     if (m_size == size)
         return;
-    m_size = size;
 
+    m_size = size;
     if (auto document = active_document()) {
+        // NOTE: Resizing the viewport changes the reference value for viewport-relative CSS lengths.
         document->invalidate_style();
         document->set_needs_layout();
     }
+    m_needs_repaint = true;
 
     if (auto document = active_document()) {
         document->inform_all_viewport_clients_about_the_current_viewport_rect();
+
+        // Schedule the HTML event loop to ensure that a `resize` event gets fired.
+        HTML::main_thread_event_loop().schedule();
+    }
+}
+
+void Navigable::perform_scroll_of_viewport(CSSPixelPoint new_position)
+{
+    if (m_viewport_scroll_offset != new_position) {
+        m_viewport_scroll_offset = new_position;
+        scroll_offset_did_change();
+        m_needs_repaint = true;
+
+        if (auto document = active_document())
+            document->inform_all_viewport_clients_about_the_current_viewport_rect();
     }
 
     // Schedule the HTML event loop to ensure that a `resize` event gets fired.

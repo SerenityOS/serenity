@@ -7,6 +7,7 @@
 #include <AK/Assertions.h>
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/API/Ioctl.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Devices/KCOVInstance.h>
@@ -25,7 +26,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<KCOVDevice> KCOVDevice::must_create()
 }
 
 UNMAP_AFTER_INIT KCOVDevice::KCOVDevice()
-    : BlockDevice(30, 0)
+    : BlockDevice(MajorAllocation::BlockDeviceFamily::KCOV, 0)
 {
     dbgln("KCOVDevice created");
 }

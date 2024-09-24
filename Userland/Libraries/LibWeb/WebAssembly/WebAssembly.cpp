@@ -45,6 +45,7 @@ void visit_edges(JS::Object& object, JS::Cell::Visitor& visitor)
     if (auto maybe_cache = Detail::s_caches.get(global_object); maybe_cache.has_value()) {
         auto& cache = maybe_cache.release_value();
         visitor.visit(cache.function_instances());
+        visitor.visit(cache.imported_objects());
     }
 }
 
@@ -186,6 +187,7 @@ JS::ThrowCompletionOr<NonnullOwnPtr<Wasm::ModuleInstance>> instantiate_module(JS
                     if (!import_.is_function())
                         return {};
                     auto& function = import_.as_function();
+                    cache.add_imported_object(function);
                     // FIXME: If this is a function created by create_native_function(),
                     //        just extract its address and resolve to that.
                     Wasm::HostFunction host_function {
@@ -219,7 +221,8 @@ JS::ThrowCompletionOr<NonnullOwnPtr<Wasm::ModuleInstance>> instantiate_module(JS
 
                             return Wasm::Result { move(wasm_values) };
                         },
-                        type
+                        type,
+                        ByteString::formatted("func{}", resolved_imports.size()),
                     };
                     auto address = cache.abstract_machine().store().allocate(move(host_function));
                     dbgln("Resolved to {}", address->value());
@@ -412,10 +415,9 @@ JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::VM& vm, JS::Value va
         auto number = TRY(value.to_double(vm));
         return Wasm::Value { static_cast<float>(number) };
     }
-    case Wasm::ValueType::FunctionReference:
-    case Wasm::ValueType::NullFunctionReference: {
+    case Wasm::ValueType::FunctionReference: {
         if (value.is_null())
-            return Wasm::Value { Wasm::ValueType(Wasm::ValueType::NullExternReference), 0ull };
+            return Wasm::Value { Wasm::ValueType(Wasm::ValueType::FunctionReference), 0ull };
 
         if (value.is_function()) {
             auto& function = value.as_function();
@@ -429,7 +431,6 @@ JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::VM& vm, JS::Value va
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Exported function");
     }
     case Wasm::ValueType::ExternReference:
-    case Wasm::ValueType::NullExternReference:
         TODO();
     case Wasm::ValueType::V128:
         return vm.throw_completion<JS::TypeError>("Cannot convert a vector value to a javascript value"sv);
@@ -450,14 +451,25 @@ JS::Value to_js_value(JS::VM& vm, Wasm::Value& wasm_value)
         return JS::Value(wasm_value.to<double>().value());
     case Wasm::ValueType::F32:
         return JS::Value(static_cast<double>(wasm_value.to<float>().value()));
-    case Wasm::ValueType::FunctionReference:
-        // FIXME: What's the name of a function reference that isn't exported?
-        return create_native_function(vm, wasm_value.to<Wasm::Reference::Func>().value().address, "FIXME_IHaveNoIdeaWhatThisShouldBeCalled");
-    case Wasm::ValueType::NullFunctionReference:
-        return JS::js_null();
+    case Wasm::ValueType::FunctionReference: {
+        auto ref_ = *wasm_value.to<Wasm::Reference>();
+        if (ref_.ref().has<Wasm::Reference::Null>())
+            return JS::js_null();
+        auto address = ref_.ref().get<Wasm::Reference::Func>().address;
+        auto& cache = get_cache(realm);
+        auto* function = cache.abstract_machine().store().get(address);
+        auto name = function->visit(
+            [&](Wasm::WasmFunction& wasm_function) {
+                auto index = *wasm_function.module().functions().find_first_index(address);
+                return ByteString::formatted("func{}", index);
+            },
+            [](Wasm::HostFunction& host_function) {
+                return host_function.name();
+            });
+        return create_native_function(vm, address, name);
+    }
     case Wasm::ValueType::V128:
     case Wasm::ValueType::ExternReference:
-    case Wasm::ValueType::NullExternReference:
         TODO();
     }
     VERIFY_NOT_REACHED();

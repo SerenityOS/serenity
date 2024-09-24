@@ -198,10 +198,16 @@ public:
         return JS::throw_completion(completion);
     }
 
+    template<typename T>
+    Completion throw_completion(ErrorType type)
+    {
+        return throw_completion<T>(String::from_utf8_without_validation(type.message().bytes()));
+    }
+
     template<typename T, typename... Args>
     Completion throw_completion(ErrorType type, Args&&... args)
     {
-        return throw_completion<T>(ByteString::formatted(type.message(), forward<Args>(args)...));
+        return throw_completion<T>(MUST(String::formatted(type.message(), forward<Args>(args)...)));
     }
 
     Value get_new_target();
@@ -211,6 +217,16 @@ public:
     Object& get_global_object();
 
     CommonPropertyNames names;
+    struct {
+        GCPtr<PrimitiveString> number;
+        GCPtr<PrimitiveString> undefined;
+        GCPtr<PrimitiveString> object;
+        GCPtr<PrimitiveString> string;
+        GCPtr<PrimitiveString> symbol;
+        GCPtr<PrimitiveString> boolean;
+        GCPtr<PrimitiveString> bigint;
+        GCPtr<PrimitiveString> function;
+    } typeof_strings;
 
     void run_queued_promise_jobs();
     void enqueue_promise_job(NonnullGCPtr<HeapFunction<ThrowCompletionOr<Value>()>> job, Realm*);
@@ -223,6 +239,7 @@ public:
     Function<void()> on_call_stack_emptied;
     Function<void(Promise&)> on_promise_unhandled_rejection;
     Function<void(Promise&)> on_promise_rejection_handled;
+    Function<void(Object const&, PropertyKey const&)> on_unimplemented_property_access;
 
     CustomData* custom_data() { return m_custom_data; }
 

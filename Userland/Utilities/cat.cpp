@@ -11,15 +11,36 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
+struct LineTracker {
+    size_t line_count = 1;
+    bool display_line_number = true;
+};
+
+static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyBytes buffer_span)
+{
+    for (auto const curr_value : buffer_span) {
+        if (line_tracker.display_line_number) {
+            out("{: >6}\t", line_tracker.line_count);
+            line_tracker.line_count++;
+            line_tracker.display_line_number = false;
+        }
+        if (curr_value == '\n')
+            line_tracker.display_line_number = true;
+        out("{:c}", curr_value);
+    }
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
     Vector<StringView> paths;
+    bool show_lines = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Concatenate files or pipes to stdout.");
     args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No);
+    args_parser.add_option(show_lines, "Number all output lines", "number", 'n');
     args_parser.parse(arguments);
 
     if (paths.is_empty())
@@ -37,11 +58,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio"));
 
+    // used only if we are using the -n option
+    LineTracker line_tracker;
+
     Array<u8, 32768> buffer;
     for (auto const& file : files) {
         while (!file->is_eof()) {
             auto const buffer_span = TRY(file->read_some(buffer));
-            out("{:s}", buffer_span);
+            if (show_lines) {
+                output_buffer_with_line_numbers(line_tracker, buffer_span);
+            } else {
+                out("{:s}", buffer_span);
+            }
         }
     }
 

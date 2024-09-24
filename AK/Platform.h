@@ -158,6 +158,20 @@
 #    define AK_BUILTIN_SUBC_BROKEN
 #endif
 
+#if defined(AK_COMPILER_CLANG) && __clang_major__ < 19
+#    define AK_COROUTINE_DESTRUCTION_BROKEN
+#endif
+
+#ifdef AK_COMPILER_GCC
+// FIXME: Undefine once https://gcc.gnu.org/bugzilla/show_bug.cgi?id=115851 is fixed.
+#    define AK_COROUTINE_STATEMENT_EXPRS_BROKEN
+#endif
+
+#if defined(AK_COMPILER_GCC) && __GNUC__ < 15
+// Workaround for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=112341 . See AK/Coroutine.h for more details.
+#    define AK_COROUTINE_TYPE_DEDUCTION_BROKEN
+#endif
+
 #ifdef ALWAYS_INLINE
 #    undef ALWAYS_INLINE
 #endif

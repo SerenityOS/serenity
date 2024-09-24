@@ -310,6 +310,8 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
         auto resource = Core::Resource::load_from_uri(url.serialize());
         if (resource.is_error()) {
             log_failure(request, resource.error());
+            if (error_callback)
+                error_callback(ByteString::formatted("{}", resource.error()), {}, {}, {});
             return;
         }
 
@@ -344,10 +346,8 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
 
             if (file_or_error.is_error()) {
                 log_failure(request, file_or_error.error());
-                if (error_callback) {
-                    auto status = file_or_error.error().code() == ENOENT ? 404u : 500u;
-                    error_callback(ByteString::formatted("{}", file_or_error.error()), status, {}, {});
-                }
+                if (error_callback)
+                    error_callback(ByteString::formatted("{}", file_or_error.error()), {}, {}, {});
                 return;
             }
 
@@ -364,7 +364,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
             if (st_or_error.is_error()) {
                 log_failure(request, st_or_error.error());
                 if (error_callback)
-                    error_callback(ByteString::formatted("{}", st_or_error.error()), 500u, {}, {});
+                    error_callback(ByteString::formatted("{}", st_or_error.error()), {}, {}, {});
                 return;
             }
 
@@ -373,7 +373,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
             if (maybe_file.is_error()) {
                 log_failure(request, maybe_file.error());
                 if (error_callback)
-                    error_callback(ByteString::formatted("{}", maybe_file.error()), 500u, {}, {});
+                    error_callback(ByteString::formatted("{}", maybe_file.error()), {}, {}, {});
                 return;
             }
 
@@ -382,7 +382,7 @@ void ResourceLoader::load(LoadRequest& request, SuccessCallback success_callback
             if (maybe_data.is_error()) {
                 log_failure(request, maybe_data.error());
                 if (error_callback)
-                    error_callback(ByteString::formatted("{}", maybe_data.error()), 500u, {}, {});
+                    error_callback(ByteString::formatted("{}", maybe_data.error()), {}, {}, {});
                 return;
             }
 
@@ -503,12 +503,13 @@ RefPtr<ResourceLoaderConnectorRequest> ResourceLoader::start_network_request(Loa
     auto proxy = ProxyMappings::the().proxy_for_url(request.url());
 
     HTTP::HeaderMap headers;
-    headers.set("User-Agent", m_user_agent.to_byte_string());
-    headers.set("Accept-Encoding", "gzip, deflate, br");
 
     for (auto const& it : request.headers()) {
         headers.set(it.key, it.value);
     }
+
+    if (!headers.contains("User-Agent"))
+        headers.set("User-Agent", m_user_agent.to_byte_string());
 
     auto protocol_request = m_connector->start_request(request.method(), request.url(), headers, request.body(), proxy);
     if (!protocol_request) {

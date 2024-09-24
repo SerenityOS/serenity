@@ -36,7 +36,7 @@ hotplugging any kind of hardware was not even a consideration.
 
 As the project grew larger and more hardware support was introduced, it became obvious
 that this "solution" was not future-proof. For example, if one user has two SATA drives
-connected to his computer, and another user has just one old IDE drive being used,
+connected to their computer, and another user has just one old IDE drive being used,
 then how should we support both cases? The answer was that each user could simply invoke
 the `mknod` utility to create device nodes. This solution meant that user interaction as well
 as a deep understanding of kernel internals was required to achieve a proper setup.

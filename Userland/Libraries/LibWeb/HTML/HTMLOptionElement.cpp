@@ -34,9 +34,9 @@ void HTMLOptionElement::initialize(JS::Realm& realm)
     WEB_SET_PROTOTYPE_FOR_INTERFACE(HTMLOptionElement);
 }
 
-void HTMLOptionElement::attribute_changed(FlyString const& name, Optional<String> const& value)
+void HTMLOptionElement::attribute_changed(FlyString const& name, Optional<String> const& old_value, Optional<String> const& value)
 {
-    HTMLElement::attribute_changed(name, value);
+    HTMLElement::attribute_changed(name, old_value, value);
 
     if (name == HTML::AttributeNames::selected) {
         if (!value.has_value()) {
@@ -57,9 +57,14 @@ void HTMLOptionElement::attribute_changed(FlyString const& name, Optional<String
 void HTMLOptionElement::set_selected(bool selected)
 {
     // On setting, it must set the element's selectedness to the new value, set its dirtiness to true, and then cause the element to ask for a reset.
-    m_selected = selected;
+    set_selected_internal(selected);
     m_dirty = true;
     ask_for_a_reset();
+}
+
+void HTMLOptionElement::set_selected_internal(bool selected)
+{
+    m_selected = selected;
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-value
@@ -132,7 +137,10 @@ int HTMLOptionElement::index() const
 // https://html.spec.whatwg.org/multipage/form-elements.html#ask-for-a-reset
 void HTMLOptionElement::ask_for_a_reset()
 {
-    // FIXME: Implement this operation.
+    // If an option element in the list of options asks for a reset, then run that select element's selectedness setting algorithm.
+    if (is<HTMLSelectElement>(parent_element())) {
+        static_cast<HTMLSelectElement*>(parent())->update_selectedness();
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#concept-option-disabled

@@ -50,14 +50,6 @@ Vector<FlyString> MimeTypeArray::supported_property_names() const
     return mime_types;
 }
 
-// https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewing-support:supports-indexed-properties-2
-bool MimeTypeArray::is_supported_property_index(u32 index) const
-{
-    // The MimeTypeArray interface supports indexed properties. The supported property indices are the indices of this's relevant global object's PDF viewer mime type objects.
-    auto& window = verify_cast<HTML::Window>(HTML::relevant_global_object(*this));
-    return index < window.pdf_viewer_mime_type_objects().size();
-}
-
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-mimetypearray-length
 size_t MimeTypeArray::length() const
 {
@@ -97,15 +89,15 @@ JS::GCPtr<MimeType> MimeTypeArray::named_item(FlyString const& name) const
     return nullptr;
 }
 
-WebIDL::ExceptionOr<JS::Value> MimeTypeArray::item_value(size_t index) const
+Optional<JS::Value> MimeTypeArray::item_value(size_t index) const
 {
     auto return_value = item(index);
     if (!return_value)
-        return JS::js_null();
+        return {};
     return return_value.ptr();
 }
 
-WebIDL::ExceptionOr<JS::Value> MimeTypeArray::named_item_value(FlyString const& name) const
+JS::Value MimeTypeArray::named_item_value(FlyString const& name) const
 {
     auto return_value = named_item(name);
     if (!return_value)

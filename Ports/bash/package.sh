@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='bash'
-version='5.2.15'
+version='5.2.32'
 useconfigure='true'
 use_fresh_config_sub='true'
 use_fresh_config_guess='true'
@@ -8,7 +8,7 @@ config_sub_paths=("support/config.sub")
 config_guess_paths=("support/config.guess")
 configopts=("--disable-nls" "--without-bash-malloc")
 files=(
-    "https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz#13720965b5f4fc3a0d4b61dd37e7565c741da9a5be24edc2ae00182fc1b3588c"
+    "https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz#d3ef80d2b67d8cbbe4d3265c63a72c46f9b278ead6e0e06d61801b58f23f50b5"
 )
 
 build() {

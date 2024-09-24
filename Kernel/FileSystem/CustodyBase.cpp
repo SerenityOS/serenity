@@ -15,8 +15,11 @@ ErrorOr<NonnullRefPtr<Custody>> CustodyBase::resolve() const
 {
     if (m_base)
         return *m_base;
-    if (KLexicalPath::is_absolute(m_path))
-        return VirtualFileSystem::the().root_custody();
+    if (KLexicalPath::is_absolute(m_path)) {
+        return Process::current().vfs_root_context()->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
+            return custody;
+        });
+    }
     return Process::current().custody_for_dirfd({}, m_dirfd);
 }
 

@@ -98,12 +98,6 @@ void DOMTokenList::associated_attribute_changed(StringView value)
         append_to_ordered_set(m_token_set, String::from_utf8(split_value).release_value_but_fixme_should_propagate_errors());
 }
 
-// https://dom.spec.whatwg.org/#ref-for-dfn-supported-property-indices%E2%91%A3
-bool DOMTokenList::is_supported_property_index(u32 index) const
-{
-    return index < m_token_set.size();
-}
-
 // https://dom.spec.whatwg.org/#dom-domtokenlist-item
 Optional<String> DOMTokenList::item(size_t index) const
 {
@@ -192,9 +186,12 @@ WebIDL::ExceptionOr<bool> DOMTokenList::toggle(String const& token, Optional<boo
 WebIDL::ExceptionOr<bool> DOMTokenList::replace(String const& token, String const& new_token)
 {
     // 1. If either token or newToken is the empty string, then throw a "SyntaxError" DOMException.
+    TRY(validate_token_not_empty(token));
+    TRY(validate_token_not_empty(new_token));
+
     // 2. If either token or newToken contains any ASCII whitespace, then throw an "InvalidCharacterError" DOMException.
-    TRY(validate_token(token));
-    TRY(validate_token(new_token));
+    TRY(validate_token_not_whitespace(token));
+    TRY(validate_token_not_whitespace(new_token));
 
     // 3. If this’s token set does not contain token, then return false.
     if (!contains(token))
@@ -239,12 +236,18 @@ WebIDL::ExceptionOr<bool> DOMTokenList::supports(StringView token)
     return false;
 }
 
-// https://dom.spec.whatwg.org/#dom-domtokenlist-value
-String DOMTokenList::value() const
+// https://dom.spec.whatwg.org/#concept-ordered-set-serializer
+String DOMTokenList::serialize_ordered_set() const
 {
     StringBuilder builder;
     builder.join(' ', m_token_set);
     return MUST(builder.to_string());
+}
+
+// https://dom.spec.whatwg.org/#dom-domtokenlist-value
+String DOMTokenList::value() const
+{
+    return m_associated_element->get_attribute_value(m_associated_attribute);
 }
 
 // https://dom.spec.whatwg.org/#ref-for-concept-element-attributes-set-value%E2%91%A2
@@ -259,8 +262,20 @@ void DOMTokenList::set_value(String const& value)
 
 WebIDL::ExceptionOr<void> DOMTokenList::validate_token(StringView token) const
 {
+    TRY(validate_token_not_empty(token));
+    TRY(validate_token_not_whitespace(token));
+    return {};
+}
+
+WebIDL::ExceptionOr<void> DOMTokenList::validate_token_not_empty(StringView token) const
+{
     if (token.is_empty())
         return WebIDL::SyntaxError::create(realm(), "Non-empty DOM tokens are not allowed"_fly_string);
+    return {};
+}
+
+WebIDL::ExceptionOr<void> DOMTokenList::validate_token_not_whitespace(StringView token) const
+{
     if (any_of(token, Infra::is_ascii_whitespace))
         return WebIDL::InvalidCharacterError::create(realm(), "DOM tokens containing ASCII whitespace are not allowed"_fly_string);
     return {};
@@ -278,14 +293,14 @@ void DOMTokenList::run_update_steps()
         return;
 
     // 2. Set an attribute value for the associated element using associated attribute’s local name and the result of running the ordered set serializer for token set.
-    MUST(associated_element->set_attribute(m_associated_attribute, value()));
+    MUST(associated_element->set_attribute(m_associated_attribute, serialize_ordered_set()));
 }
 
-WebIDL::ExceptionOr<JS::Value> DOMTokenList::item_value(size_t index) const
+Optional<JS::Value> DOMTokenList::item_value(size_t index) const
 {
     auto string = item(index);
     if (!string.has_value())
-        return JS::js_undefined();
+        return {};
     return JS::PrimitiveString::create(vm(), string.release_value());
 }
 

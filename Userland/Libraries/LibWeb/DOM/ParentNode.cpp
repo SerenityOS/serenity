@@ -12,8 +12,10 @@
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/NodeOperations.h>
 #include <LibWeb/DOM/ParentNode.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/StaticNodeList.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Namespace.h>
 
@@ -43,7 +45,7 @@ WebIDL::ExceptionOr<JS::GCPtr<Element>> ParentNode::query_selector(StringView se
     // FIXME: This should be shadow-including. https://drafts.csswg.org/selectors-4/#match-a-selector-against-a-tree
     for_each_in_subtree_of_type<Element>([&](auto& element) {
         for (auto& selector : selectors) {
-            if (SelectorEngine::matches(selector, {}, element, {}, this)) {
+            if (SelectorEngine::matches(selector, {}, element, nullptr, {}, this)) {
                 result = &element;
                 return TraversalDecision::Break;
             }
@@ -75,7 +77,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> ParentNode::query_selector_all(S
     // FIXME: This should be shadow-including. https://drafts.csswg.org/selectors-4/#match-a-selector-against-a-tree
     for_each_in_subtree_of_type<Element>([&](auto& element) {
         for (auto& selector : selectors) {
-            if (SelectorEngine::matches(selector, {}, element, {}, this)) {
+            if (SelectorEngine::matches(selector, {}, element, nullptr, {}, this)) {
                 elements.append(&element);
             }
         }
@@ -223,6 +225,21 @@ WebIDL::ExceptionOr<void> ParentNode::replace_children(Vector<Variant<JS::Handle
     // 3. Replace all with node within this.
     replace_all(*node);
     return {};
+}
+
+JS::NonnullGCPtr<HTMLCollection> ParentNode::get_elements_by_class_name(StringView class_names)
+{
+    Vector<FlyString> list_of_class_names;
+    for (auto& name : class_names.split_view_if(Infra::is_ascii_whitespace)) {
+        list_of_class_names.append(FlyString::from_utf8(name).release_value_but_fixme_should_propagate_errors());
+    }
+    return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
+        for (auto& name : list_of_class_names) {
+            if (element.has_class(name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
+                return true;
+        }
+        return false;
+    });
 }
 
 }

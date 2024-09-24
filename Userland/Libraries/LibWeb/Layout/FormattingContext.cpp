@@ -726,7 +726,7 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
             // If both margin-left and margin-right are auto,
             // solve the equation under the extra constraint that the two margins get equal values
             // FIXME: unless this would make them negative, in which case when direction of the containing block is ltr (rtl), set margin-left (margin-right) to 0 and solve for margin-right (margin-left).
-            auto size_available_for_margins = width_of_containing_block - border_left - padding_left - width.to_px(box) - padding_right - border_right - right;
+            auto size_available_for_margins = width_of_containing_block - border_left - padding_left - width.to_px(box) - padding_right - border_right - left - right;
             if (margin_left.is_auto() && margin_right.is_auto()) {
                 margin_left = CSS::Length::make_px(size_available_for_margins / 2);
                 margin_right = CSS::Length::make_px(size_available_for_margins / 2);
@@ -974,7 +974,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
                 - margin_top.to_px(box, width_of_containing_block)
                 - box.computed_values().border_top().width
                 - box.computed_values().padding().top().to_px(box, width_of_containing_block)
-                - height.to_px(box)
+                - apply_min_max_height_constraints(height).to_px(box)
                 - box.computed_values().padding().bottom().to_px(box, width_of_containing_block)
                 - box.computed_values().border_bottom().width
                 - margin_bottom.to_px(box, width_of_containing_block)
@@ -1886,7 +1886,7 @@ CSSPixels FormattingContext::box_baseline(Box const& box) const
     if (!box_state.line_boxes.is_empty())
         return box_state.margin_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline();
     if (auto const* child_box = box_child_to_derive_baseline_from(box)) {
-        return box_baseline(*child_box);
+        return box_state.margin_box_top() + box_state.offset.y() + box_baseline(*child_box);
     }
     // If none of the children have a baseline set, the bottom margin edge of the box is used.
     return box_state.margin_box_height();

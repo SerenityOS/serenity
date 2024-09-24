@@ -166,11 +166,15 @@ private:
         V value;
     };
 
-    IntrusiveBinaryHeap<
-        Node,
-        decltype([](Node const& a, Node const& b) { return a.key < b.key; }),
-        decltype([](Node&, size_t) {})>
-        m_heap;
+    struct NodeComparator {
+        bool operator()(Node const& a, Node const& b) const { return a.key < b.key; }
+    };
+
+    struct NodeIndexSetter {
+        void operator()(Node&, size_t) const { }
+    };
+
+    IntrusiveBinaryHeap<Node, NodeComparator, NodeIndexSetter> m_heap;
 };
 
 }

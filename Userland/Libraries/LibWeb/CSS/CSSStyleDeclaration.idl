@@ -13,7 +13,10 @@ interface CSSStyleDeclaration {
     [CEReactions] undefined setProperty(CSSOMString property, [LegacyNullToEmptyString] CSSOMString value, optional [LegacyNullToEmptyString] CSSOMString priority = "");
     [CEReactions] CSSOMString removeProperty(CSSOMString property);
 
-    [FIXME] readonly attribute CSSRule? parentRule;
-    [FIXME, CEReactions, LegacyNullToEmptyString] attribute CSSOMString cssFloat;
+    readonly attribute CSSRule? parentRule;
+
+    // NOTE: cssFloat is implemented manually in the bindings code, along with the other property accessors.
+    //       Hence, this does not need to be implemented.
+    // [CEReactions, LegacyNullToEmptyString] attribute CSSOMString cssFloat;
 
 };

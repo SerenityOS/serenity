@@ -16,6 +16,7 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/Forward.h>
+#include <LibJS/Console.h>
 #include <LibJS/Forward.h>
 #include <LibURL/URL.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
@@ -29,6 +30,7 @@
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/History.h>
 #include <LibWeb/HTML/LazyLoadingElement.h>
+#include <LibWeb/HTML/NavigationType.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -92,9 +94,15 @@ public:
         HTML
     };
 
+    enum class TemporaryDocumentForFragmentParsing {
+        No,
+        Yes,
+    };
+
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> create_and_initialize(Type, String content_type, HTML::NavigationParams const&);
 
     [[nodiscard]] static JS::NonnullGCPtr<Document> create(JS::Realm&, URL::URL const& url = "about:blank"sv);
+    [[nodiscard]] static JS::NonnullGCPtr<Document> create_for_fragment_parsing(JS::Realm&);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> construct_impl(JS::Realm&);
     virtual ~Document() override;
 
@@ -247,8 +255,7 @@ public:
     void schedule_style_update();
     void schedule_layout_update();
 
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_name(FlyString const&);
-    JS::NonnullGCPtr<HTMLCollection> get_elements_by_class_name(StringView);
+    JS::NonnullGCPtr<NodeList> get_elements_by_name(FlyString const&);
 
     JS::NonnullGCPtr<HTMLCollection> applets();
     JS::NonnullGCPtr<HTMLCollection> anchors();
@@ -286,7 +293,7 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> create_event(StringView interface);
     JS::NonnullGCPtr<Range> create_range();
 
-    void set_pending_parsing_blocking_script(Badge<HTML::HTMLScriptElement>, HTML::HTMLScriptElement*);
+    void set_pending_parsing_blocking_script(HTML::HTMLScriptElement*);
     HTML::HTMLScriptElement* pending_parsing_blocking_script() { return m_pending_parsing_blocking_script.ptr(); }
     JS::NonnullGCPtr<HTML::HTMLScriptElement> take_pending_parsing_blocking_script(Badge<HTML::HTMLParser>);
 
@@ -447,8 +454,7 @@ public:
     void set_parser(Badge<HTML::HTMLParser>, HTML::HTMLParser&);
     void detach_parser(Badge<HTML::HTMLParser>);
 
-    void set_is_temporary_document_for_fragment_parsing(Badge<HTML::HTMLParser>) { m_temporary_document_for_fragment_parsing = true; }
-    [[nodiscard]] bool is_temporary_document_for_fragment_parsing() const { return m_temporary_document_for_fragment_parsing; }
+    [[nodiscard]] bool is_temporary_document_for_fragment_parsing() const { return m_temporary_document_for_fragment_parsing == TemporaryDocumentForFragmentParsing::Yes; }
 
     static bool is_valid_name(String const&);
 
@@ -593,7 +599,7 @@ public:
 
     HTML::SourceSnapshotParams snapshot_source_snapshot_params() const;
 
-    void update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry>, bool do_not_reactivate, size_t script_history_length, size_t script_history_index, Optional<Vector<JS::NonnullGCPtr<HTML::SessionHistoryEntry>>> entries_for_navigation_api = {}, bool update_navigation_api = true);
+    void update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry>, bool do_not_reactivate, size_t script_history_length, size_t script_history_index, Optional<Bindings::NavigationType> navigation_type, Optional<Vector<JS::NonnullGCPtr<HTML::SessionHistoryEntry>>> entries_for_navigation_api = {}, Optional<JS::NonnullGCPtr<HTML::SessionHistoryEntry>> previous_entry_for_activation = {}, bool update_navigation_api = true);
 
     HashMap<URL::URL, JS::GCPtr<HTML::SharedImageRequest>>& shared_image_requests();
 
@@ -646,7 +652,7 @@ public:
     void set_needs_to_resolve_paint_only_properties() { m_needs_to_resolve_paint_only_properties = true; }
     void set_needs_animated_style_update() { m_needs_animated_style_update = true; }
 
-    virtual WebIDL::ExceptionOr<JS::Value> named_item_value(FlyString const& name) const override;
+    virtual JS::Value named_item_value(FlyString const& name) const override;
     virtual Vector<FlyString> supported_property_names() const override;
     Vector<JS::NonnullGCPtr<DOM::Element>> const& potentially_named_elements() const { return m_potentially_named_elements; }
 
@@ -676,18 +682,25 @@ public:
 
     Vector<JS::Handle<DOM::Range>> find_matching_text(String const&, CaseSensitivity);
 
+    void parse_html_from_a_string(StringView);
+    static JS::NonnullGCPtr<Document> parse_html_unsafe(JS::VM&, StringView);
+
+    void set_console_client(JS::GCPtr<JS::ConsoleClient> console_client) { m_console_client = console_client; }
+    JS::GCPtr<JS::ConsoleClient> console_client() const { return m_console_client; }
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
-    virtual void finalize() override;
 
-    Document(JS::Realm&, URL::URL const&);
+    Document(JS::Realm&, URL::URL const&, TemporaryDocumentForFragmentParsing = TemporaryDocumentForFragmentParsing::No);
 
 private:
     // ^HTML::GlobalEventHandlers
     virtual JS::GCPtr<EventTarget> global_event_handlers_to_event_target(FlyString const&) final { return *this; }
 
     void tear_down_layout_tree();
+
+    void update_active_element();
 
     void run_unloading_cleanup_steps();
 
@@ -783,7 +796,7 @@ private:
     bool m_page_showing { false };
 
     // Used by run_the_resize_steps().
-    Gfx::IntSize m_last_viewport_size;
+    Optional<Gfx::IntSize> m_last_viewport_size;
 
     HashTable<ViewportClient*> m_viewport_clients;
 
@@ -884,7 +897,7 @@ private:
 
     RefPtr<Core::Timer> m_active_refresh_timer;
 
-    bool m_temporary_document_for_fragment_parsing { false };
+    TemporaryDocumentForFragmentParsing m_temporary_document_for_fragment_parsing { TemporaryDocumentForFragmentParsing::No };
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#latest-entry
     JS::GCPtr<HTML::SessionHistoryEntry> m_latest_entry;
@@ -935,6 +948,8 @@ private:
 
     // https://dom.spec.whatwg.org/#document-allow-declarative-shadow-roots
     bool m_allow_declarative_shadow_roots { false };
+
+    JS::GCPtr<JS::ConsoleClient> m_console_client;
 };
 
 template<>

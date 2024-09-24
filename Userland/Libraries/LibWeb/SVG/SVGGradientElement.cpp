@@ -18,9 +18,9 @@ SVGGradientElement::SVGGradientElement(DOM::Document& document, DOM::QualifiedNa
 {
 }
 
-void SVGGradientElement::attribute_changed(FlyString const& name, Optional<String> const& value)
+void SVGGradientElement::attribute_changed(FlyString const& name, Optional<String> const& old_value, Optional<String> const& value)
 {
-    SVGElement::attribute_changed(name, value);
+    SVGElement::attribute_changed(name, old_value, value);
     if (name == AttributeNames::gradientUnits) {
         m_gradient_units = AttributeParser::parse_units(value.value_or(String {}));
     } else if (name == AttributeNames::spreadMethod) {
@@ -137,6 +137,12 @@ void SVGGradientElement::initialize(JS::Realm& realm)
 {
     Base::initialize(realm);
     WEB_SET_PROTOTYPE_FOR_INTERFACE(SVGGradientElement);
+}
+
+void SVGGradientElement::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    SVGURIReferenceMixin::visit_edges(visitor);
 }
 
 }

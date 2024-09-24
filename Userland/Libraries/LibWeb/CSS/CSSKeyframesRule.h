@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2023, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2024, Andreas Kling <andreas@ladybird.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +14,7 @@
 #include <LibWeb/CSS/CSSRule.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::CSS {
 
@@ -22,33 +24,27 @@ class CSSKeyframesRule final : public CSSRule {
     JS_DECLARE_ALLOCATOR(CSSKeyframesRule);
 
 public:
-    [[nodiscard]] static JS::NonnullGCPtr<CSSKeyframesRule> create(JS::Realm&, FlyString name, JS::MarkedVector<JS::NonnullGCPtr<CSSKeyframeRule>>);
+    [[nodiscard]] static JS::NonnullGCPtr<CSSKeyframesRule> create(JS::Realm&, FlyString name, JS::NonnullGCPtr<CSSRuleList>);
 
     virtual ~CSSKeyframesRule() = default;
 
     virtual Type type() const override { return Type::Keyframes; }
 
-    Vector<JS::NonnullGCPtr<CSSKeyframeRule>> const& keyframes() const { return m_keyframes; }
+    auto const& css_rules() const { return m_rules; }
     FlyString const& name() const { return m_name; }
-    size_t length() { return m_keyframes.size(); }
+    [[nodiscard]] WebIDL::UnsignedLong length() const;
 
     void set_name(String const& name) { m_name = name; }
 
 private:
-    CSSKeyframesRule(JS::Realm& realm, FlyString name, JS::MarkedVector<JS::NonnullGCPtr<CSSKeyframeRule>> keyframes)
-        : CSSRule(realm)
-        , m_name(move(name))
-        , m_keyframes(move(keyframes))
-    {
-    }
-
+    CSSKeyframesRule(JS::Realm&, FlyString name, JS::NonnullGCPtr<CSSRuleList> keyframes);
     virtual void visit_edges(Visitor&) override;
 
     virtual void initialize(JS::Realm&) override;
     virtual String serialized() const override;
 
     FlyString m_name;
-    Vector<JS::NonnullGCPtr<CSSKeyframeRule>> m_keyframes;
+    JS::NonnullGCPtr<CSSRuleList> m_rules;
 };
 
 template<>

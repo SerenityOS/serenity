@@ -101,6 +101,11 @@
     "right",
     "both"
   ],
+  "content-visibility": [
+    "visible",
+    "auto",
+    "hidden"
+  ],
   "cursor": [
     "auto",
     "default",
@@ -195,7 +200,9 @@
   "float": [
     "none",
     "left",
-    "right"
+    "right",
+    "inline-start",
+    "inline-end"
   ],
   "font-variant": [
     "normal",
@@ -361,6 +368,11 @@
     "start",
     "middle",
     "end"
+  ],
+  "scrollbar-gutter": [
+    "auto",
+    "stable",
+    "both-edges"
   ],
   "scrollbar-width": [
     "auto",

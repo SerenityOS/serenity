@@ -28,10 +28,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::create(arguments));
 
+    Config::pledge_domain("Maps");
     TRY(Core::System::unveil("/bin/MapsSettings", "x"));
     TRY(Core::System::unveil("/home", "rwc"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp/session/%sid/portal/config", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));

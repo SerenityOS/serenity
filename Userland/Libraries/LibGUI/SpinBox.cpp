@@ -24,8 +24,8 @@ SpinBox::SpinBox()
         if (!weak_this)
             return;
 
-        auto value = m_editor->text().to_number<unsigned>();
-        if (!value.has_value() && m_editor->text().length() > 0)
+        auto value = m_editor->text().to_number<signed>();
+        if (!value.has_value() && m_editor->text().length() > 0 && m_editor->text() != "-")
             m_editor->do_delete();
     };
     m_editor->on_focusout = [this] {
@@ -84,6 +84,8 @@ void SpinBox::set_value_from_current_text()
     auto value = m_editor->text().to_number<int>();
     if (value.has_value())
         set_value(value.value());
+    else if (m_editor->text() == "-")
+        set_value(-1 * abs(m_value));
     else
         set_value(min());
 }

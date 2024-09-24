@@ -6,6 +6,7 @@
 
 #include "DeviceEventLoop.h"
 #include <AK/Debug.h>
+#include <AK/LexicalPath.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibIPC/MultiServer.h>
@@ -15,71 +16,57 @@
 
 namespace DeviceMapper {
 
-DeviceEventLoop::DeviceEventLoop(NonnullOwnPtr<Core::File> devctl_file)
+DeviceEventLoop::DeviceEventLoop(Vector<DeviceNodeMatch> matches, NonnullOwnPtr<Core::File> devctl_file)
     : m_devctl_file(move(devctl_file))
+    , m_matches(move(matches))
 {
 }
 
-using MinorNumberAllocationType = DeviceEventLoop::MinorNumberAllocationType;
+static constexpr StringView digit_pattern = "%d"sv;
+static constexpr StringView letter_char_pattern = "%c"sv;
 
-static constexpr DeviceEventLoop::DeviceNodeMatch s_matchers[] = {
-    { "audio"sv, "audio"sv, "audio/%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 116, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0220 },
-    { {}, "render"sv, "gpu/render%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 28, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0666 },
-    { "window"sv, "gpu-connector"sv, "gpu/connector%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 226, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0660 },
-    { {}, "virtio-console"sv, "hvc0p%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 229, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0666 },
-    { "phys"sv, "hid-mouse"sv, "input/mouse/%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 10, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0666 },
-    { "phys"sv, "hid-keyboard"sv, "input/keyboard/%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 85, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0666 },
-    { {}, "storage"sv, "hd%letter"sv, DeviceNodeFamily::Type::BlockDevice, 3, MinorNumberAllocationType::SequentialUnlimited, 0, 0, 0600 },
-    { "tty"sv, "console"sv, "tty%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 4, MinorNumberAllocationType::SequentialLimited, 0, 63, 0620 },
-    { "tty"sv, "console"sv, "ttyS%digit"sv, DeviceNodeFamily::Type::CharacterDevice, 4, MinorNumberAllocationType::SequentialLimited, 64, 127, 0620 },
-};
-
-static bool is_in_minor_number_range(DeviceEventLoop::DeviceNodeMatch const& matcher, MinorNumber minor_number)
+Optional<DeviceEventLoop::DeviceNodeMatch const&> DeviceEventLoop::device_node_family_to_match_type(DeviceNodeType device_node_type, MajorNumber major_number, MinorNumber minor_number)
 {
-    if (matcher.minor_number_allocation_type == MinorNumberAllocationType::SequentialUnlimited)
-        return true;
-
-    return matcher.minor_number_start <= minor_number && static_cast<MinorNumber>(matcher.minor_number_start.value() + matcher.minor_number_range_size) >= minor_number;
-}
-
-static Optional<DeviceEventLoop::DeviceNodeMatch const&> device_node_family_to_match_type(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number)
-{
-    for (auto& matcher : s_matchers) {
-        if (matcher.major_number == major_number
-            && unix_device_type == matcher.unix_device_type
-            && is_in_minor_number_range(matcher, minor_number))
-            return matcher;
+    Optional<DeviceEventLoop::DeviceNodeMatch const&> match {};
+    for (auto& matcher : m_matches) {
+        auto basic_match = matcher.major_number == major_number && device_node_type == matcher.device_node_type;
+        if (basic_match) {
+            if (matcher.specific_minor_number.has_value()) {
+                if (minor_number == matcher.specific_minor_number.value())
+                    return matcher;
+                continue;
+            }
+            match = matcher;
+        }
     }
-    return {};
+    return match;
 }
 
-static bool is_in_family_minor_number_range(DeviceNodeFamily const& family, MinorNumber minor_number)
-{
-    return family.base_minor_number() <= minor_number && static_cast<MinorNumber>(family.base_minor_number().value() + family.devices_symbol_suffix_allocation_map().size()) >= minor_number;
-}
-
-Optional<DeviceNodeFamily&> DeviceEventLoop::find_device_node_family(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number) const
+Optional<DeviceNodeFamily&> DeviceEventLoop::find_device_node_family(DeviceNodeType device_node_type, MajorNumber major_number) const
 {
     for (auto const& family : m_device_node_families) {
-        if (family->major_number() == major_number && family->type() == unix_device_type && is_in_family_minor_number_range(*family, minor_number))
+        if (family->major_number() == major_number && family->device_node_type() == device_node_type)
             return *family.ptr();
     }
     return {};
 }
 
-ErrorOr<NonnullRefPtr<DeviceNodeFamily>> DeviceEventLoop::find_or_register_new_device_node_family(DeviceNodeMatch const& match, DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number)
+ErrorOr<NonnullRefPtr<DeviceNodeFamily>> DeviceEventLoop::find_or_register_new_device_node_family(DeviceNodeMatch const& match, DeviceNodeType device_node_type, MajorNumber major_number)
 {
-    if (auto possible_family = find_device_node_family(unix_device_type, major_number, minor_number); possible_family.has_value())
+    VERIFY(device_node_type == DeviceNodeType::Block
+        || device_node_type == DeviceNodeType::Character);
+
+    if (auto possible_family = find_device_node_family(device_node_type, major_number); possible_family.has_value())
         return possible_family.release_value();
+
+    // FIXME: Is 1024 enough nodes for allocated device nodes? or should
+    // we exapnd it?
     unsigned allocation_map_size = 1024;
-    if (match.minor_number_allocation_type == MinorNumberAllocationType::SequentialLimited)
-        allocation_map_size = match.minor_number_range_size;
     auto bitmap = TRY(Bitmap::create(allocation_map_size, false));
     auto node = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DeviceNodeFamily(move(bitmap),
         match.family_type_literal,
-        unix_device_type,
-        major_number,
-        minor_number)));
+        device_node_type,
+        major_number)));
     TRY(m_device_node_families.try_append(node));
 
     return node;
@@ -105,8 +92,6 @@ static ErrorOr<String> build_suffix_with_numbers(size_t allocation_index)
 
 static ErrorOr<void> prepare_permissions_after_populating_devtmpfs(StringView path, DeviceEventLoop::DeviceNodeMatch const& match)
 {
-    if (match.permission_group.is_null())
-        return {};
     auto group = TRY(Core::System::getgrnam(match.permission_group));
     VERIFY(group.has_value());
     TRY(Core::System::endgrent());
@@ -114,15 +99,43 @@ static ErrorOr<void> prepare_permissions_after_populating_devtmpfs(StringView pa
     return {};
 }
 
-ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number)
+ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeType device_node_type, MajorNumber major_number, MinorNumber minor_number)
 {
-    auto possible_match = device_node_family_to_match_type(unix_device_type, major_number, minor_number);
+    VERIFY(device_node_type == DeviceNodeType::Block
+        || device_node_type == DeviceNodeType::Character);
+
+    auto possible_match = device_node_family_to_match_type(device_node_type, major_number, minor_number);
     if (!possible_match.has_value())
         return {};
     auto const& match = possible_match.release_value();
-    auto device_node_family = TRY(find_or_register_new_device_node_family(match, unix_device_type, major_number, minor_number));
+
+    auto path_pattern = match.path_pattern;
+    if (path_pattern.is_empty())
+        return Error::from_string_literal("Device node family path pattern is empty");
+
     static constexpr StringView devtmpfs_base_path = "/dev/"sv;
-    auto path_pattern = TRY(String::from_utf8(match.path_pattern));
+
+    // NOTE: If the match has specific minor number, then it's for a specific
+    // device node (for example, /dev/beep). In such case, just create a device node
+    // and don't attempt to create (or find) a device node family, as there's no actual
+    // family (i.e. that matches its path pattern or permissions) for such device.
+    if (match.specific_minor_number.has_value()) {
+        auto path = match.path_pattern;
+        if (path.contains(digit_pattern) || path.contains(letter_char_pattern))
+            return Error::from_string_literal("Path pattern for specific device contains replacement specifiers");
+        path = TRY(String::formatted("{}{}", devtmpfs_base_path, path));
+        mode_t old_mask = umask(0);
+        if (device_node_type == DeviceNodeType::Block)
+            TRY(Core::System::create_block_device(path.bytes_as_string_view(), match.create_mode, major_number.value(), minor_number.value()));
+        else
+            TRY(Core::System::create_char_device(path.bytes_as_string_view(), match.create_mode, major_number.value(), minor_number.value()));
+        umask(old_mask);
+        TRY(prepare_permissions_after_populating_devtmpfs(path.bytes_as_string_view(), match));
+        return {};
+    }
+
+    auto device_node_family = TRY(find_or_register_new_device_node_family(match, device_node_type, major_number));
+
     auto& allocation_map = device_node_family->devices_symbol_suffix_allocation_map();
     auto possible_allocated_suffix_index = allocation_map.find_first_unset();
     if (!possible_allocated_suffix_index.has_value()) {
@@ -131,24 +144,31 @@ ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeFamily::Type unix_d
     }
     auto allocated_suffix_index = possible_allocated_suffix_index.release_value();
 
-    auto path = path_pattern;
-    if (match.path_pattern.contains("%digit"sv)) {
+    auto path = match.path_pattern;
+    if (path.contains(digit_pattern)) {
         auto replacement = TRY(build_suffix_with_numbers(allocated_suffix_index));
-        path = TRY(path.replace("%digit"sv, replacement, ReplaceMode::All));
+        path = TRY(path.replace(digit_pattern, replacement, ReplaceMode::All));
     }
-    if (match.path_pattern.contains("%letter"sv)) {
+    if (path.contains(letter_char_pattern)) {
         auto replacement = TRY(build_suffix_with_letters(allocated_suffix_index));
-        path = TRY(path.replace("%letter"sv, replacement, ReplaceMode::All));
+        path = TRY(path.replace(letter_char_pattern, replacement, ReplaceMode::All));
     }
     VERIFY(!path.is_empty());
     path = TRY(String::formatted("{}{}", devtmpfs_base_path, path));
     mode_t old_mask = umask(0);
-    if (unix_device_type == DeviceNodeFamily::Type::BlockDevice)
+    if (device_node_type == DeviceNodeType::Block)
         TRY(Core::System::create_block_device(path.bytes_as_string_view(), match.create_mode, major_number.value(), minor_number.value()));
     else
         TRY(Core::System::create_char_device(path.bytes_as_string_view(), match.create_mode, major_number.value(), minor_number.value()));
     umask(old_mask);
     TRY(prepare_permissions_after_populating_devtmpfs(path.bytes_as_string_view(), match));
+
+    auto symlink_path = LexicalPath("/tmp/system/devicemap/nodes/")
+                            .append(device_node_type == DeviceNodeType::Block ? "block"sv : "char"sv)
+                            .append(MUST(String::number(major_number.value())))
+                            .append(MUST(String::number(minor_number.value())));
+
+    TRY(Core::System::symlink(path.bytes_as_string_view(), symlink_path.string()));
 
     auto result = TRY(device_node_family->registered_nodes().try_set(RegisteredDeviceNode { move(path), minor_number }, AK::HashSetExistingEntryBehavior::Keep));
     VERIFY(result != HashSetResult::ReplacedExistingEntry);
@@ -160,11 +180,14 @@ ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeFamily::Type unix_d
     return {};
 }
 
-ErrorOr<void> DeviceEventLoop::unregister_device(DeviceNodeFamily::Type unix_device_type, MajorNumber major_number, MinorNumber minor_number)
+ErrorOr<void> DeviceEventLoop::unregister_device(DeviceNodeType device_node_type, MajorNumber major_number, MinorNumber minor_number)
 {
-    if (!device_node_family_to_match_type(unix_device_type, major_number, minor_number).has_value())
+    VERIFY(device_node_type == DeviceNodeType::Block
+        || device_node_type == DeviceNodeType::Character);
+
+    if (!device_node_family_to_match_type(device_node_type, major_number, minor_number).has_value())
         return {};
-    auto possible_family = find_device_node_family(unix_device_type, major_number, minor_number);
+    auto possible_family = find_device_node_family(device_node_type, major_number);
     if (!possible_family.has_value()) {
         // FIXME: Handle cases where we can't remove a device node.
         // This could happen when the DeviceMapper program was restarted
@@ -176,6 +199,14 @@ ErrorOr<void> DeviceEventLoop::unregister_device(DeviceNodeFamily::Type unix_dev
         if (node.minor_number() == minor_number)
             TRY(Core::System::unlink(node.device_path()));
     }
+
+    auto symlink_path = LexicalPath("/tmp/system/devicemap/nodes/")
+                            .append(device_node_type == DeviceNodeType::Block ? "block"sv : "char"sv)
+                            .append(MUST(String::number(major_number.value())))
+                            .append(MUST(String::number(minor_number.value())));
+
+    TRY(Core::System::unlink(symlink_path.string()));
+
     auto removed_anything = family.registered_nodes().remove_all_matching([minor_number](auto& device) { return device.minor_number() == minor_number; });
     if (!removed_anything) {
         // FIXME: Handle cases where we can't remove a device node.
@@ -183,25 +214,6 @@ ErrorOr<void> DeviceEventLoop::unregister_device(DeviceNodeFamily::Type unix_dev
         // so the previous state was not preserved and a device was removed.
         return Error::from_errno(ENODEV);
     }
-    return {};
-}
-
-struct PluggableOnceCharacterDeviceNodeMatch {
-    StringView path;
-    mode_t mode;
-    MajorNumber major;
-    MinorNumber minor;
-};
-
-static constexpr PluggableOnceCharacterDeviceNodeMatch s_simple_matchers[] = {
-    { "/dev/beep"sv, 0666, 1, 10 },
-};
-
-static ErrorOr<void> create_pluggable_once_char_device_node(PluggableOnceCharacterDeviceNodeMatch const& match)
-{
-    mode_t old_mask = umask(0);
-    ScopeGuard umask_guard([old_mask] { umask(old_mask); });
-    TRY(Core::System::create_char_device(match.path, match.mode, match.major.value(), match.minor.value()));
     return {};
 }
 
@@ -227,30 +239,10 @@ ErrorOr<void> DeviceEventLoop::drain_events_from_devctl()
             continue;
 
         if (event.state == DeviceEvent::State::Inserted) {
-            if (!event.is_block_device) {
-                // NOTE: We have a special handling for the pluggable-once devices, etc,
-                // as these device (if they appear) should only "hotplug" (being inserted)
-                // once during the OS runtime.
-                // Therefore, we don't want to create a new MinorNumberAllocationType (e.g. SingleInstance).
-                // Instead, just blindly create such device node and assume we will never
-                // have to worry about it, so we don't need to register that!
-                auto possible_pluggable_once_char_device_match = ([](DeviceEvent& event) -> Optional<PluggableOnceCharacterDeviceNodeMatch const&> {
-                    for (auto const& match : s_simple_matchers) {
-                        if (event.major_number == match.major.value() && event.minor_number == match.minor.value())
-                            return match;
-                    }
-                    return Optional<PluggableOnceCharacterDeviceNodeMatch const&> {};
-                })(event);
-                if (possible_pluggable_once_char_device_match.has_value()) {
-                    TRY(create_pluggable_once_char_device_node(possible_pluggable_once_char_device_match.value()));
-                    continue;
-                }
-            }
-
             VERIFY(event.is_block_device == 1 || event.is_block_device == 0);
-            TRY(register_new_device(event.is_block_device ? DeviceNodeFamily::Type::BlockDevice : DeviceNodeFamily::Type::CharacterDevice, event.major_number, event.minor_number));
+            TRY(register_new_device(event.is_block_device ? DeviceNodeType::Block : DeviceNodeType::Character, event.major_number, event.minor_number));
         } else if (event.state == DeviceEvent::State::Removed) {
-            if (auto error_or_void = unregister_device(event.is_block_device ? DeviceNodeFamily::Type::BlockDevice : DeviceNodeFamily::Type::CharacterDevice, event.major_number, event.minor_number); error_or_void.is_error())
+            if (auto error_or_void = unregister_device(event.is_block_device ? DeviceNodeType::Block : DeviceNodeType::Character, event.major_number, event.minor_number); error_or_void.is_error())
                 dbgln("DeviceMapper: unregistering device failed: {}", error_or_void.error());
         } else {
             dbgln("DeviceMapper: Unhandled device event ({:x})!", event.state);

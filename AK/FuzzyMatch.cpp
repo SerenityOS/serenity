@@ -10,19 +10,20 @@
 
 namespace AK {
 
-static constexpr int const RECURSION_LIMIT = 10;
-static constexpr int const MAX_MATCHES = 256;
+static constexpr int RECURSION_LIMIT = 10;
+static constexpr int MAX_MATCHES = 256;
 
 // Bonuses and penalties are used to build up a final score for the match.
-static constexpr int const SEQUENTIAL_BONUS = 15;            // bonus for adjacent matches (needle: 'ca', haystack: 'cat')
-static constexpr int const SEPARATOR_BONUS = 30;             // bonus if match occurs after a separator ('_' or ' ')
-static constexpr int const CAMEL_BONUS = 30;                 // bonus if match is uppercase and prev is lower (needle: 'myF' haystack: '/path/to/myFile.txt')
-static constexpr int const FIRST_LETTER_BONUS = 15;          // bonus if the first letter is matched (needle: 'c' haystack: 'cat')
-static constexpr int const LEADING_LETTER_PENALTY = -5;      // penalty applied for every letter in str before the first match
-static constexpr int const MAX_LEADING_LETTER_PENALTY = -15; // maximum penalty for leading letters
-static constexpr int const UNMATCHED_LETTER_PENALTY = -1;    // penalty for every letter that doesn't matter
+static constexpr int SEQUENTIAL_BONUS = 15;                      // bonus for adjacent matches (needle: 'ca', haystack: 'cat')
+static constexpr int SEPARATOR_BONUS = 30;                       // bonus if match occurs after a separator ('_' or ' ')
+static constexpr int CAMEL_BONUS = 30;                           // bonus if match is uppercase and prev is lower (needle: 'myF' haystack: '/path/to/myFile.txt')
+static constexpr int FIRST_LETTER_BONUS = 15;                    // bonus if the first letter is matched (needle: 'c' haystack: 'cat')
+static constexpr int LEADING_LETTER_PENALTY = -5;                // penalty applied for every letter in str before the first match
+static constexpr int MAX_LEADING_LETTER_PENALTY = -15;           // maximum penalty for leading letters
+static constexpr int UNMATCHED_LETTER_PENALTY = -1;              // penalty for every letter that doesn't matter
+static constexpr int EQUALITY_SCORE = NumericLimits<int>::max(); // Score set on perfect equality
 
-static int calculate_score(StringView string, u8* index_points, size_t index_points_size)
+static int calculate_score(StringView string, u8 const* index_points, size_t index_points_size)
 {
     int out_score = 100;
 
@@ -33,6 +34,9 @@ static int calculate_score(StringView string, u8* index_points, size_t index_poi
 
     int unmatched = string.length() - index_points_size;
     out_score += UNMATCHED_LETTER_PENALTY * unmatched;
+
+    if (unmatched == 0)
+        return EQUALITY_SCORE;
 
     for (size_t i = 0; i < index_points_size; i++) {
         u8 current_idx = index_points[i];

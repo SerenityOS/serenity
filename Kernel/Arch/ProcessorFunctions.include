@@ -30,6 +30,5 @@ template void ProcessorBase<Processor>::initialize_context_switching(Thread& ini
 template void ProcessorBase<Processor>::switch_context(Thread*& from_thread, Thread*& to_thread);
 template void ProcessorBase<Processor>::assume_context(Thread& thread, InterruptsState new_interrupts_state);
 template FlatPtr ProcessorBase<Processor>::init_context(Thread& thread, bool leave_crit);
-template ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<Processor>::capture_stack_trace(Thread& thread, size_t max_frames);
 template u32 ProcessorBase<Processor>::smp_wake_n_idle_processors(u32 wake_count);
 }

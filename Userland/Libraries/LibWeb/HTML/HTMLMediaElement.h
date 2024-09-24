@@ -105,6 +105,9 @@ public:
 
     JS::NonnullGCPtr<AudioTrackList> audio_tracks() const { return *m_audio_tracks; }
     JS::NonnullGCPtr<VideoTrackList> video_tracks() const { return *m_video_tracks; }
+    JS::NonnullGCPtr<TextTrackList> text_tracks() const { return *m_text_tracks; }
+
+    JS::NonnullGCPtr<TextTrack> add_text_track(Bindings::TextTrackKind kind, String const& label, String const& language);
 
     WebIDL::ExceptionOr<void> handle_keydown(Badge<Web::EventHandler>, KeyCode);
 
@@ -138,7 +141,7 @@ protected:
     virtual void finalize() override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& old_value, Optional<String> const& value) override;
     virtual void removed_from(DOM::Node*) override;
     virtual void children_changed() override;
 
@@ -259,6 +262,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-videotracks
     JS::GCPtr<VideoTrackList> m_video_tracks;
+
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-texttracks
+    JS::GCPtr<TextTrackList> m_text_tracks;
 
     // https://html.spec.whatwg.org/multipage/media.html#media-data
     ByteBuffer m_media_data;

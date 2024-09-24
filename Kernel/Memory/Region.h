@@ -36,6 +36,8 @@ class Region final
     friend class AddressSpace;
     friend class MemoryManager;
     friend class RegionTree;
+    friend class AnonymousVMObject;
+    friend class VMObject;
 
 public:
     enum Access : u8 {
@@ -181,9 +183,10 @@ public:
     [[nodiscard]] size_t amount_dirty() const;
 
     [[nodiscard]] bool should_cow(size_t page_index) const;
-    ErrorOr<void> set_should_cow(size_t page_index, bool);
 
     [[nodiscard]] size_t cow_pages() const;
+
+    [[nodiscard]] bool should_dirty_on_write(size_t page_index) const;
 
     void set_readable(bool b)
     {
@@ -243,8 +246,9 @@ private:
     }
 
     [[nodiscard]] PageFaultResponse handle_cow_fault(size_t page_index);
-    [[nodiscard]] PageFaultResponse handle_inode_fault(size_t page_index);
+    [[nodiscard]] PageFaultResponse handle_inode_fault(size_t page_index, bool mark_page_dirty = false);
     [[nodiscard]] PageFaultResponse handle_zero_fault(size_t page_index, PhysicalRAMPage& page_in_slot_at_time_of_fault);
+    [[nodiscard]] PageFaultResponse handle_dirty_on_write_fault(size_t page_index);
 
     [[nodiscard]] bool map_individual_page_impl(size_t page_index);
     [[nodiscard]] bool map_individual_page_impl(size_t page_index, RefPtr<PhysicalRAMPage>);

@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='openssl'
-version='3.1.2'
+version='3.3.1'
 useconfigure='true'
 configscript='Configure'
 files=(
-    "https://www.openssl.org/source/openssl-${version}.tar.gz#a0ce69b8b97ea6a35b96875235aa453b966ba3cba8af2de23657d8b6767d6539"
+    "https://www.openssl.org/source/openssl-${version}.tar.gz#777cd596284c883375a2a7a11bf5d2786fc5413255efab20c50d6ffe6d020b7e"
 )
 depends=(
     'zlib'
@@ -21,7 +21,6 @@ configopts=(
 )
 
 configure() {
-    export LDFLAGS="-L${SERENITY_INSTALL_ROOT}/usr/local/lib"
     run ./"${configscript}" "${configopts[@]}"
 }
 

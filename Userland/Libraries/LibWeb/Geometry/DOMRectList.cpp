@@ -61,15 +61,10 @@ DOMRect const* DOMRectList::item(u32 index) const
     return m_rects[index];
 }
 
-bool DOMRectList::is_supported_property_index(u32 index) const
-{
-    return index < m_rects.size();
-}
-
-WebIDL::ExceptionOr<JS::Value> DOMRectList::item_value(size_t index) const
+Optional<JS::Value> DOMRectList::item_value(size_t index) const
 {
     if (index >= m_rects.size())
-        return JS::js_undefined();
+        return {};
 
     return m_rects[index].ptr();
 }

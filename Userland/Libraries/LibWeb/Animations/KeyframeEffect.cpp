@@ -100,16 +100,15 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
         return keyframe_output;
 
     auto& keyframe_object = keyframe_input.as_object();
-    auto offset = TRY(keyframe_object.get("offset"));
-    auto easing = TRY(keyframe_object.get("easing"));
-    if (easing.is_undefined())
-        easing = JS::PrimitiveString::create(vm, "linear"_string);
     auto composite = TRY(keyframe_object.get("composite"));
     if (composite.is_undefined())
         composite = JS::PrimitiveString::create(vm, "auto"_string);
+    auto easing = TRY(keyframe_object.get("easing"));
+    if (easing.is_undefined())
+        easing = JS::PrimitiveString::create(vm, "linear"_string);
+    auto offset = TRY(keyframe_object.get("offset"));
 
     if constexpr (AL == AllowLists::Yes) {
-        keyframe_output.offset = TRY(convert_value_to_maybe_list(realm, offset, to_offset));
         keyframe_output.composite = TRY(convert_value_to_maybe_list(realm, composite, to_composite_operation));
 
         auto easing_maybe_list = TRY(convert_value_to_maybe_list(realm, easing, to_string));
@@ -123,10 +122,12 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
                     easing_values.append(easing_value);
                 keyframe_output.easing = move(easing_values);
             });
+
+        keyframe_output.offset = TRY(convert_value_to_maybe_list(realm, offset, to_offset));
     } else {
-        keyframe_output.offset = TRY(to_offset(offset));
-        keyframe_output.easing = TRY(to_string(easing));
         keyframe_output.composite = TRY(to_composite_operation(composite));
+        keyframe_output.easing = TRY(to_string(easing));
+        keyframe_output.offset = TRY(to_offset(offset));
     }
 
     // 2. Build up a list of animatable properties as follows:
@@ -142,7 +143,7 @@ static WebIDL::ExceptionOr<KeyframeType<AL>> process_a_keyframe_like_object(JS::
     // 4. Make up a new list animation properties that consists of all of the properties that are in both input
     //    properties and animatable properties, or which are in input properties and conform to the
     //    <custom-property-name> production.
-    auto input_properties = TRY(keyframe_object.internal_own_property_keys());
+    auto input_properties = TRY(keyframe_object.enumerable_own_property_names(JS::Object::PropertyKind::Key));
 
     Vector<String> animation_properties;
     Optional<JS::Value> all_value;
@@ -539,11 +540,9 @@ static WebIDL::ExceptionOr<Vector<BaseKeyframe>> process_a_keyframes_argument(JS
             if (!property_id.has_value())
                 continue;
 
-            auto maybe_parser = CSS::Parser::Parser::create(CSS::Parser::ParsingContext(realm), value_string);
-            if (maybe_parser.is_error())
-                continue;
+            auto parser = CSS::Parser::Parser::create(CSS::Parser::ParsingContext(realm), value_string);
 
-            if (auto style_value = maybe_parser.release_value().parse_as_css_value(*property_id)) {
+            if (auto style_value = parser.parse_as_css_value(*property_id)) {
                 // Handle 'initial' here so we don't have to get the default value of the property every frame in StyleComputer
                 if (style_value->is_initial())
                     style_value = CSS::property_initial_value(realm, *property_id);
@@ -761,7 +760,6 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyframeEffect>> KeyframeEffect::construct_
     effect->m_playback_direction = source->m_playback_direction;
 
     //     - timing function.
-    effect->m_easing_function = source->m_easing_function;
     effect->m_timing_function = source->m_timing_function;
 
     return effect;
@@ -980,7 +978,7 @@ void KeyframeEffect::update_style_properties()
         for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
             if (element_style->is_property_inherited(static_cast<CSS::PropertyID>(i))) {
                 auto new_value = CSS::StyleComputer::get_inherit_value(document.realm(), static_cast<CSS::PropertyID>(i), &element);
-                element_style->set_property(static_cast<CSS::PropertyID>(i), *new_value, nullptr, CSS::StyleProperties::Inherited::Yes);
+                element_style->set_property(static_cast<CSS::PropertyID>(i), *new_value, CSS::StyleProperties::Inherited::Yes);
             }
         }
 

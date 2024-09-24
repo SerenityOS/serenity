@@ -23,7 +23,6 @@ WheelEvent::WheelEvent(JS::Realm& realm, FlyString const& event_name, WheelEvent
     , m_delta_z(event_init.delta_z)
     , m_delta_mode(event_init.delta_mode)
 {
-    set_event_characteristics();
 }
 
 WheelEvent::~WheelEvent() = default;
@@ -62,14 +61,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WheelEvent>> WheelEvent::create_from_platfo
     event_init.delta_mode = WheelDeltaMode::DOM_DELTA_PIXEL;
     auto event = WheelEvent::create(realm, event_name, event_init, page.x().to_double(), page.y().to_double(), offset.x().to_double(), offset.y().to_double());
     event->set_is_trusted(true);
+    event->set_bubbles(true);
+    event->set_cancelable(true);
+    event->set_composed(true);
     return event;
-}
-
-void WheelEvent::set_event_characteristics()
-{
-    set_bubbles(true);
-    set_cancelable(true);
-    set_composed(true);
 }
 
 }

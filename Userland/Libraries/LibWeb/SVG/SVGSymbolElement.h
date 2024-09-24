@@ -28,18 +28,23 @@ public:
         return {};
     }
 
+    JS::NonnullGCPtr<SVGAnimatedRect> view_box_for_bindings() { return *m_view_box_for_bindings; }
+
 private:
     SVGSymbolElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     bool is_direct_child_of_use_shadow_tree() const;
 
-    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& old_value, Optional<String> const& value) override;
 
     Optional<ViewBox> m_view_box;
+
+    JS::GCPtr<SVGAnimatedRect> m_view_box_for_bindings;
 };
 
 }

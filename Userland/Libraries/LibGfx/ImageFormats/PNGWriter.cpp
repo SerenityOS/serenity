@@ -2,20 +2,20 @@
  * Copyright (c) 2021, Pierre Hoffmeister
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Aziz Berkay Yesilyurt <abyesilyurt@gmail.com>
+ * Copyright (c) 2024, Torben Jonas Virtmann
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Concepts.h>
 #include <AK/FixedArray.h>
+#include <AK/MemoryStream.h>
 #include <AK/SIMDExtras.h>
 #include <AK/String.h>
 #include <LibCompress/Zlib.h>
 #include <LibCrypto/Checksum/CRC32.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
-
-#pragma GCC diagnostic ignored "-Wpsabi"
 
 namespace Gfx {
 
@@ -33,7 +33,7 @@ public:
 
     ErrorOr<void> add_u8(u8);
 
-    ErrorOr<void> compress_and_add(ReadonlyBytes);
+    ErrorOr<void> compress_and_add(ReadonlyBytes, Compress::ZlibCompressionLevel);
     ErrorOr<void> add(ReadonlyBytes);
 
     ErrorOr<void> store_type();
@@ -73,9 +73,9 @@ u32 PNGChunk::crc()
     return crc;
 }
 
-ErrorOr<void> PNGChunk::compress_and_add(ReadonlyBytes uncompressed_bytes)
+ErrorOr<void> PNGChunk::compress_and_add(ReadonlyBytes uncompressed_bytes, Compress::ZlibCompressionLevel compression_level)
 {
-    return add(TRY(Compress::ZlibCompressor::compress_all(uncompressed_bytes, Compress::ZlibCompressionLevel::Best)));
+    return add(TRY(Compress::ZlibCompressor::compress_all(uncompressed_bytes, compression_level)));
 }
 
 ErrorOr<void> PNGChunk::add(ReadonlyBytes bytes)
@@ -98,18 +98,72 @@ ErrorOr<void> PNGChunk::add_u8(u8 data)
     return {};
 }
 
+PNGWriter::PNGWriter(Stream& stream)
+    : m_stream(stream)
+{
+}
+
 ErrorOr<void> PNGWriter::add_chunk(PNGChunk& png_chunk)
 {
     png_chunk.store_data_length();
     u32 crc = png_chunk.crc();
     TRY(png_chunk.add_as_big_endian(crc));
-    TRY(m_data.try_append(png_chunk.data().data(), png_chunk.data().size()));
+    TRY(m_stream.write_until_depleted(png_chunk.data()));
     return {};
 }
 
 ErrorOr<void> PNGWriter::add_png_header()
 {
-    TRY(m_data.try_append(PNG::header.data(), PNG::header.size()));
+    TRY(m_stream.write_until_depleted(PNG::header));
+    return {};
+}
+
+ErrorOr<void> PNGWriter::add_acTL_chunk(u32 num_frames, u32 loop_count)
+{
+    // https://www.w3.org/TR/png/#acTL-chunk
+    PNGChunk png_chunk { "acTL"_string };
+    TRY(png_chunk.add_as_big_endian(num_frames));
+    TRY(png_chunk.add_as_big_endian(loop_count));
+    TRY(add_chunk(png_chunk));
+    return {};
+}
+
+struct fcTLData {
+    u32 sequence_number { 0 };
+    u32 width { 0 };
+    u32 height { 0 };
+    u32 x_offset { 0 };
+    u32 y_offset { 0 };
+    u16 delay_numerator { 0 };
+    u16 delay_denominator { 1 };
+    // dispose_op values
+    // 0           APNG_DISPOSE_OP_NONE
+    // 1           APNG_DISPOSE_OP_BACKGROUND
+    // 2           APNG_DISPOSE_OP_PREVIOUS
+    u8 dispose_operation { 0 };
+    // blend_op values
+    // value
+    // 0       APNG_BLEND_OP_SOURCE
+    // 1       APNG_BLEND_OP_OVER
+    u8 blend_operation { 0 };
+};
+
+ErrorOr<void> PNGWriter::add_fcTL_chunk(fcTLData const& data)
+{
+    // https://www.w3.org/TR/png/#fcTL-chunk
+
+    // TODO: Constraints on frame regions
+    PNGChunk png_chunk { "fcTL"_string };
+    TRY(png_chunk.add_as_big_endian(data.sequence_number));
+    TRY(png_chunk.add_as_big_endian(data.width));
+    TRY(png_chunk.add_as_big_endian(data.height));
+    TRY(png_chunk.add_as_big_endian(data.x_offset));
+    TRY(png_chunk.add_as_big_endian(data.y_offset));
+    TRY(png_chunk.add_as_big_endian(data.delay_numerator));
+    TRY(png_chunk.add_as_big_endian(data.delay_denominator));
+    TRY(png_chunk.add_u8(data.dispose_operation));
+    TRY(png_chunk.add_u8(data.blend_operation));
+    TRY(add_chunk(png_chunk));
     return {};
 }
 
@@ -127,7 +181,7 @@ ErrorOr<void> PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG
     return {};
 }
 
-ErrorOr<void> PNGWriter::add_iCCP_chunk(ReadonlyBytes icc_data)
+ErrorOr<void> PNGWriter::add_iCCP_chunk(ReadonlyBytes icc_data, Compress::ZlibCompressionLevel compression_level)
 {
     // https://www.w3.org/TR/png/#11iCCP
     PNGChunk chunk { "iCCP"_string };
@@ -136,7 +190,7 @@ ErrorOr<void> PNGWriter::add_iCCP_chunk(ReadonlyBytes icc_data)
     TRY(chunk.add_u8(0)); // \0-terminate profile name
 
     TRY(chunk.add_u8(0)); // compression method deflate
-    TRY(chunk.compress_and_add(icc_data));
+    TRY(chunk.compress_and_add(icc_data, compression_level));
 
     TRY(add_chunk(chunk));
     return {};
@@ -151,27 +205,18 @@ ErrorOr<void> PNGWriter::add_IEND_chunk()
 
 union [[gnu::packed]] Pixel {
     ARGB32 rgba { 0 };
-    struct {
-        u8 red;
-        u8 green;
-        u8 blue;
-        u8 alpha;
-    };
     AK::SIMD::u8x4 simd;
 
-    ALWAYS_INLINE static AK::SIMD::u8x4 gfx_to_png(Pixel pixel)
+    ALWAYS_INLINE static AK::SIMD::u8x4 argb32_to_simd(Pixel pixel)
     {
-        swap(pixel.red, pixel.blue);
         return pixel.simd;
     }
 };
 static_assert(AssertSize<Pixel, 4>());
 
-ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
+template<bool include_alpha>
+static ErrorOr<void> add_image_data_to_chunk(Gfx::Bitmap const& bitmap, PNGChunk& png_chunk, Compress::ZlibCompressionLevel compression_level)
 {
-    PNGChunk png_chunk { "IDAT"_string };
-    TRY(png_chunk.reserve(bitmap.size_in_bytes()));
-
     ByteBuffer uncompressed_block_data;
     TRY(uncompressed_block_data.try_ensure_capacity(bitmap.size_in_bytes() + bitmap.height()));
 
@@ -183,66 +228,66 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
 
         struct Filter {
             PNG::FilterType type;
-            ByteBuffer buffer {};
-            int sum = 0;
+            AK::SIMD::u32x4 sum { 0, 0, 0, 0 };
 
-            ErrorOr<void> append(u8 byte)
+            AK::SIMD::u8x4 predict(AK::SIMD::u8x4 pixel, AK::SIMD::u8x4 pixel_x_minus_1, AK::SIMD::u8x4 pixel_y_minus_1, AK::SIMD::u8x4 pixel_xy_minus_1)
             {
-                TRY(buffer.try_append(byte));
-                sum += static_cast<i8>(byte);
-                return {};
+                switch (type) {
+                case PNG::FilterType::None:
+                    return pixel;
+                case PNG::FilterType::Sub:
+                    return pixel - pixel_x_minus_1;
+                case PNG::FilterType::Up:
+                    return pixel - pixel_y_minus_1;
+                case PNG::FilterType::Average: {
+                    // The sum Orig(a) + Orig(b) shall be performed without overflow (using at least nine-bit arithmetic).
+                    auto sum = AK::SIMD::simd_cast<AK::SIMD::u16x4>(pixel_x_minus_1) + AK::SIMD::simd_cast<AK::SIMD::u16x4>(pixel_y_minus_1);
+                    auto average = AK::SIMD::simd_cast<AK::SIMD::u8x4>(sum / 2);
+                    return pixel - average;
+                }
+                case PNG::FilterType::Paeth:
+                    return pixel - PNG::paeth_predictor(pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1);
+                }
+                VERIFY_NOT_REACHED();
             }
 
-            ErrorOr<void> append(AK::SIMD::u8x4 simd)
+            void append(AK::SIMD::u8x4 simd)
             {
-                TRY(append(simd[0]));
-                TRY(append(simd[1]));
-                TRY(append(simd[2]));
-                TRY(append(simd[3]));
-                return {};
+                using namespace AK::SIMD;
+                sum += simd_cast<u32x4>(abs(simd_cast<i32x4>(simd_cast<i8x4>(simd))));
+            }
+
+            u32 sum_of_abs_values() const
+            {
+                u32 result = sum[0] + sum[1] + sum[2];
+                if constexpr (include_alpha)
+                    result += sum[3];
+                return result;
             }
         };
 
         Filter none_filter { .type = PNG::FilterType::None };
-        TRY(none_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.width()));
-
         Filter sub_filter { .type = PNG::FilterType::Sub };
-        TRY(sub_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.width()));
-
         Filter up_filter { .type = PNG::FilterType::Up };
-        TRY(up_filter.buffer.try_ensure_capacity(sizeof(Pixel) * bitmap.width()));
-
         Filter average_filter { .type = PNG::FilterType::Average };
-        TRY(average_filter.buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.width()));
-
         Filter paeth_filter { .type = PNG::FilterType::Paeth };
-        TRY(paeth_filter.buffer.try_ensure_capacity(sizeof(ARGB32) * bitmap.width()));
 
-        auto pixel_x_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
-        auto pixel_xy_minus_1 = Pixel::gfx_to_png(dummy_scanline[0]);
+        auto pixel_x_minus_1 = Pixel::argb32_to_simd(dummy_scanline[0]);
+        auto pixel_xy_minus_1 = Pixel::argb32_to_simd(dummy_scanline[0]);
 
         for (int x = 0; x < bitmap.width(); ++x) {
-            auto pixel = Pixel::gfx_to_png(scanline[x]);
-            auto pixel_y_minus_1 = Pixel::gfx_to_png(scanline_minus_1[x]);
+            auto pixel = Pixel::argb32_to_simd(scanline[x]);
+            auto pixel_y_minus_1 = Pixel::argb32_to_simd(scanline_minus_1[x]);
 
-            TRY(none_filter.append(pixel));
-
-            TRY(sub_filter.append(pixel - pixel_x_minus_1));
-
-            TRY(up_filter.append(pixel - pixel_y_minus_1));
-
-            // The sum Orig(a) + Orig(b) shall be performed without overflow (using at least nine-bit arithmetic).
-            auto sum = AK::SIMD::to_u16x4(pixel_x_minus_1) + AK::SIMD::to_u16x4(pixel_y_minus_1);
-            auto average = AK::SIMD::to_u8x4(sum / 2);
-            TRY(average_filter.append(pixel - average));
-
-            TRY(paeth_filter.append(pixel - PNG::paeth_predictor(pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1)));
+            none_filter.append(none_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
+            sub_filter.append(sub_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
+            up_filter.append(up_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
+            average_filter.append(average_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
+            paeth_filter.append(paeth_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1));
 
             pixel_x_minus_1 = pixel;
             pixel_xy_minus_1 = pixel_y_minus_1;
         }
-
-        scanline_minus_1 = scanline;
 
         // 12.8 Filter selection: https://www.w3.org/TR/PNG/#12Filter-selection
         // For best compression of truecolour and greyscale images, the recommended approach
@@ -251,34 +296,191 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
         // compute the output scanline using all five filters, and select the filter that gives the smallest sum of absolute values of outputs.
         // (Consider the output bytes as signed differences for this test.)
         Filter& best_filter = none_filter;
-        if (abs(best_filter.sum) > abs(sub_filter.sum))
+        if (best_filter.sum_of_abs_values() > sub_filter.sum_of_abs_values())
             best_filter = sub_filter;
-        if (abs(best_filter.sum) > abs(up_filter.sum))
+        if (best_filter.sum_of_abs_values() > up_filter.sum_of_abs_values())
             best_filter = up_filter;
-        if (abs(best_filter.sum) > abs(average_filter.sum))
+        if (best_filter.sum_of_abs_values() > average_filter.sum_of_abs_values())
             best_filter = average_filter;
-        if (abs(best_filter.sum) > abs(paeth_filter.sum))
+        if (best_filter.sum_of_abs_values() > paeth_filter.sum_of_abs_values())
             best_filter = paeth_filter;
 
         TRY(uncompressed_block_data.try_append(to_underlying(best_filter.type)));
-        TRY(uncompressed_block_data.try_append(best_filter.buffer));
+
+        pixel_x_minus_1 = Pixel::argb32_to_simd(dummy_scanline[0]);
+        pixel_xy_minus_1 = Pixel::argb32_to_simd(dummy_scanline[0]);
+
+        for (int x = 0; x < bitmap.width(); ++x) {
+            auto pixel = Pixel::argb32_to_simd(scanline[x]);
+            auto pixel_y_minus_1 = Pixel::argb32_to_simd(scanline_minus_1[x]);
+
+            auto predicted_pixel = best_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1);
+            TRY(uncompressed_block_data.try_append(predicted_pixel[2]));
+            TRY(uncompressed_block_data.try_append(predicted_pixel[1]));
+            TRY(uncompressed_block_data.try_append(predicted_pixel[0]));
+            if constexpr (include_alpha)
+                TRY(uncompressed_block_data.try_append(predicted_pixel[3]));
+
+            pixel_x_minus_1 = pixel;
+            pixel_xy_minus_1 = pixel_y_minus_1;
+        }
+
+        scanline_minus_1 = scanline;
     }
 
-    TRY(png_chunk.compress_and_add(uncompressed_block_data));
-    TRY(add_chunk(png_chunk));
+    return png_chunk.compress_and_add(uncompressed_block_data, compression_level);
+}
+
+template<bool include_alpha>
+ErrorOr<void> PNGWriter::add_fdAT_chunk(Gfx::Bitmap const& bitmap, u32 sequence_number, Compress::ZlibCompressionLevel compression_level)
+{
+    // https://www.w3.org/TR/png/#fdAT-chunk
+    PNGChunk png_chunk { "fdAT"_string };
+    TRY(png_chunk.reserve(bitmap.size_in_bytes() + 4));
+    TRY(png_chunk.add_as_big_endian(sequence_number));
+    TRY(add_image_data_to_chunk<include_alpha>(bitmap, png_chunk, compression_level));
+    return add_chunk(png_chunk);
+}
+
+template<bool include_alpha>
+ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::ZlibCompressionLevel compression_level)
+{
+    PNGChunk png_chunk { "IDAT"_string };
+    TRY(png_chunk.reserve(bitmap.size_in_bytes()));
+    TRY(add_image_data_to_chunk<include_alpha>(bitmap, png_chunk, compression_level));
+    return add_chunk(png_chunk);
+}
+
+static bool bitmap_has_transparency(Bitmap const& bitmap)
+{
+    for (auto pixel : bitmap) {
+        if (Color::from_argb(pixel).alpha() != 255)
+            return true;
+    }
+    return false;
+}
+
+ErrorOr<void> PNGWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
+{
+    bool has_transparency = bitmap_has_transparency(bitmap);
+
+    PNGWriter writer { stream };
+    TRY(writer.add_png_header());
+    auto color_type = has_transparency ? PNG::ColorType::TruecolorWithAlpha : PNG::ColorType::Truecolor;
+    TRY(writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, color_type, 0, 0, 0));
+    if (options.icc_data.has_value())
+        TRY(writer.add_iCCP_chunk(options.icc_data.value(), options.compression_level));
+    if (has_transparency)
+        TRY(writer.add_IDAT_chunk<true>(bitmap, options.compression_level));
+    else
+        TRY(writer.add_IDAT_chunk<false>(bitmap, options.compression_level));
+    TRY(writer.add_IEND_chunk());
     return {};
 }
 
 ErrorOr<ByteBuffer> PNGWriter::encode(Gfx::Bitmap const& bitmap, Options options)
 {
-    PNGWriter writer;
-    TRY(writer.add_png_header());
-    TRY(writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, PNG::ColorType::TruecolorWithAlpha, 0, 0, 0));
-    if (options.icc_data.has_value())
-        TRY(writer.add_iCCP_chunk(options.icc_data.value()));
-    TRY(writer.add_IDAT_chunk(bitmap));
-    TRY(writer.add_IEND_chunk());
-    return ByteBuffer::copy(writer.m_data);
+    AllocatingMemoryStream stream;
+    TRY(encode(stream, bitmap, options));
+    return stream.read_until_eof();
+}
+
+class PNGAnimationWriter : public AnimationWriter {
+public:
+    PNGAnimationWriter(SeekableStream& stream, IntSize dimensions, int loop_count, PNGWriter::Options const& options)
+        : m_writer(stream)
+        , m_stream(stream)
+        , m_dimensions(dimensions)
+        , m_loop_count(loop_count)
+        , m_options(options)
+    {
+    }
+
+    virtual ErrorOr<void> add_frame(Bitmap&, int, IntPoint, BlendMode) override;
+    virtual bool can_blend_frames() const override { return true; }
+
+private:
+    PNGWriter m_writer;
+    SeekableStream& m_stream;
+
+    IntSize const m_dimensions;
+    int const m_loop_count { 0 };
+
+    bool m_is_first_frame { true };
+
+    u32 m_sequence_number { 0 };
+    u32 m_number_of_frames { 0 };
+    size_t m_acTL_offset { 0 };
+    PNGWriter::Options const m_options;
+};
+
+ErrorOr<void> PNGAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, IntPoint at, BlendMode blend_mode)
+{
+    ++m_number_of_frames;
+    bool const is_first_frame = m_number_of_frames == 1;
+
+    if (is_first_frame) {
+        // "The fcTL chunk corresponding to the default image, if it exists, has these restrictions:
+        //  * The x_offset and y_offset fields must be 0.
+        //  * The width and height fields must equal the corresponding fields from the IHDR chunk."
+        // FIXME: If this ends up happening in practice, we should composite `bitmap` to a temporary bitmap and store that as first frame.
+        if (at != IntPoint {})
+            return Error::from_string_literal("First APNG frame must have x_offset and y_offset set to 0");
+        if (bitmap.size() != m_dimensions)
+            return Error::from_string_literal("First APNG frame must have the same dimensions as the APNG itself");
+
+        // All frames in an APNG use the same IHDR chunk, which means they all have the same color type.
+        // To decide if we should write RGB or RGBA, we'd really have to check all frames, but that needs a
+        // lot of memory and makes streaming impossible.
+        // Instead, we always include an alpha channel. In practice, inter-frame compression means that
+        // even for animations without transparency, all but the first frame will have transparent pixels.
+        // The APNG format doesn't give us super great options here.
+        TRY(m_writer.add_png_header());
+        TRY(m_writer.add_IHDR_chunk(m_dimensions.width(), m_dimensions.height(), 8, PNG::ColorType::TruecolorWithAlpha, 0, 0, 0));
+        if (m_options.icc_data.has_value())
+            TRY(m_writer.add_iCCP_chunk(m_options.icc_data.value(), m_options.compression_level));
+        m_acTL_offset = TRY(m_stream.tell());
+        TRY(m_writer.add_acTL_chunk(m_number_of_frames, m_loop_count));
+    } else {
+        // Overwrite previous acTL chunk to update its num_frames. Use add_acTL_chunk to make sure the chunk's crc is updated too.
+        auto current_offset = TRY(m_stream.tell());
+        TRY(m_stream.seek(m_acTL_offset, SeekMode::SetPosition));
+        TRY(m_writer.add_acTL_chunk(m_number_of_frames, m_loop_count));
+        TRY(m_stream.seek(current_offset, SeekMode::SetPosition));
+
+        // Overwrite previous IEND marker.
+        TRY(m_stream.seek(-12, SeekMode::FromCurrentPosition));
+    }
+
+    fcTLData fcTL_data;
+    fcTL_data.sequence_number = m_sequence_number;
+    fcTL_data.width = bitmap.width();
+    fcTL_data.height = bitmap.height();
+    fcTL_data.delay_numerator = duration_ms;
+    fcTL_data.delay_denominator = 1000;
+    fcTL_data.x_offset = at.x();
+    fcTL_data.y_offset = at.y();
+    if (blend_mode == BlendMode::Blend)
+        fcTL_data.blend_operation = 1;
+    TRY(m_writer.add_fcTL_chunk(fcTL_data));
+    m_sequence_number++;
+
+    if (is_first_frame) {
+        TRY(m_writer.add_IDAT_chunk<true>(bitmap, m_options.compression_level));
+    } else {
+        TRY(m_writer.add_fdAT_chunk<true>(bitmap, m_sequence_number, m_options.compression_level));
+        m_sequence_number++;
+    }
+
+    TRY(m_writer.add_IEND_chunk());
+
+    return {};
+}
+
+ErrorOr<NonnullOwnPtr<AnimationWriter>> PNGWriter::start_encoding_animation(SeekableStream& stream, IntSize dimensions, int loop_count, Options const& options)
+{
+    auto writer = make<PNGAnimationWriter>(stream, dimensions, loop_count, options);
+    return writer;
 }
 
 }

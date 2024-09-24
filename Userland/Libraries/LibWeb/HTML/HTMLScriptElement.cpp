@@ -50,14 +50,22 @@ void HTMLScriptElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_preparation_time_document);
 }
 
-void HTMLScriptElement::attribute_changed(FlyString const& name, Optional<String> const& value)
+void HTMLScriptElement::attribute_changed(FlyString const& name, Optional<String> const& old_value, Optional<String> const& value)
 {
-    Base::attribute_changed(name, value);
+    Base::attribute_changed(name, old_value, value);
 
     if (name == HTML::AttributeNames::crossorigin) {
         m_crossorigin = cors_setting_attribute_from_keyword(value);
     } else if (name == HTML::AttributeNames::referrerpolicy) {
         m_referrer_policy = ReferrerPolicy::from_string(value.value_or(""_string)).value_or(ReferrerPolicy::ReferrerPolicy::EmptyString);
+    } else if (name == HTML::AttributeNames::src) {
+        // https://html.spec.whatwg.org/multipage/scripting.html#script-processing-model
+        // When a script element el that is not parser-inserted experiences one of the events listed in the following list, the user agent must immediately prepare the script element el:
+        // - [...]
+        // - The script element is connected and has a src attribute set where previously the element had no such attribute.
+        if (!is_parser_inserted() && is_connected() && value.has_value() && !old_value.has_value()) {
+            prepare_script();
+        }
     }
 }
 
@@ -528,7 +536,7 @@ void HTMLScriptElement::prepare_script()
         // 5. Otherwise:
         else {
             // 1. Set el's parser document's pending parsing-blocking script to el.
-            m_parser_document->set_pending_parsing_blocking_script({}, this);
+            m_parser_document->set_pending_parsing_blocking_script(this);
 
             // FIXME: 2. Block rendering on el.
 
@@ -555,7 +563,7 @@ void HTMLScriptElement::prepare_script()
             && is_parser_inserted()
             && m_parser_document->has_a_style_sheet_that_is_blocking_scripts()) {
             // 1. Set el's parser document's pending parsing-blocking script to el.
-            m_parser_document->set_pending_parsing_blocking_script({}, this);
+            m_parser_document->set_pending_parsing_blocking_script(this);
 
             // 2. Set el's ready to be parser-executed to true. (The parser will handle executing the script.)
             m_ready_to_be_parser_executed = true;

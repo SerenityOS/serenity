@@ -82,7 +82,7 @@ static NSString* const TOOLBAR_TAB_OVERVIEW_IDENTIFIER = @"ToolbarTabOverviewIde
 @synthesize new_tab_toolbar_item = _new_tab_toolbar_item;
 @synthesize tab_overview_toolbar_item = _tab_overview_toolbar_item;
 
-- (instancetype)init
+- (instancetype)init:(BOOL)block_popups
 {
     if (self = [super init]) {
         self.toolbar = [[NSToolbar alloc] initWithIdentifier:TOOLBAR_IDENTIFIER];
@@ -91,7 +91,7 @@ static NSString* const TOOLBAR_TAB_OVERVIEW_IDENTIFIER = @"ToolbarTabOverviewIde
         [self.toolbar setAllowsUserCustomization:NO];
         [self.toolbar setSizeMode:NSToolbarSizeModeRegular];
 
-        m_settings = {};
+        m_settings = { .block_popups = block_popups };
         m_can_navigate_back = false;
         m_can_navigate_forward = false;
     }
@@ -379,7 +379,8 @@ static NSString* const TOOLBAR_TAB_OVERVIEW_IDENTIFIER = @"ToolbarTabOverviewIde
     if (tooltip) {
         [button setToolTip:tooltip];
     }
-    [button setBordered:NO];
+
+    [button setBordered:YES];
 
     return button;
 }
@@ -420,7 +421,7 @@ static NSString* const TOOLBAR_TAB_OVERVIEW_IDENTIFIER = @"ToolbarTabOverviewIde
         auto* button = [self create_button:NSImageNameRefreshTemplate
                                with_action:@selector(reload:)
                               with_tooltip:@"Reload page"];
-        [button setEnabled:NO];
+        [button setEnabled:YES];
 
         _reload_toolbar_item = [[NSToolbarItem alloc] initWithItemIdentifier:TOOLBAR_RELOAD_IDENTIFIER];
         [_reload_toolbar_item setView:button];

@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/API/Ioctl.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/API/VirGL.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/GPU/VirtIO/Console.h>
@@ -35,7 +36,7 @@ ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::try_create(Virt
 }
 
 VirtIOGPU3DDevice::VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region, Graphics::VirtIOGPU::ContextID kernel_context_id)
-    : CharacterDevice(28, 0)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::GPURender, 0)
     , m_graphics_adapter(graphics_adapter)
     , m_kernel_context_id(kernel_context_id)
     , m_transfer_buffer_region(move(transfer_buffer_region))

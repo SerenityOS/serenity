@@ -38,6 +38,7 @@ target_link_libraries(fuzz-syscalls PRIVATE LibSystem)
 serenity_test("crash.cpp" Kernel MAIN_ALREADY_DEFINED)
 
 set(LIBTEST_BASED_SOURCES
+    TestAnonymousMmap.cpp
     TestEmptyPrivateInodeVMObject.cpp
     TestEmptySharedInodeVMObject.cpp
     TestExt2FS.cpp

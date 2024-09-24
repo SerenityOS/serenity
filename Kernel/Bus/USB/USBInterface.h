@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/USB/USBDescriptors.h>
 
@@ -16,13 +17,13 @@ class USBConfiguration;
 class USBInterface final {
 public:
     USBInterface() = delete;
-    USBInterface(USBConfiguration const& configuration, USBInterfaceDescriptor const descriptor, Vector<USBEndpointDescriptor> endpoint_descriptors)
+    USBInterface(USBConfiguration const& configuration, USBInterfaceDescriptor const descriptor)
         : m_configuration(configuration)
         , m_descriptor(descriptor)
-        , m_endpoint_descriptors(move(endpoint_descriptors))
     {
-        m_endpoint_descriptors.ensure_capacity(descriptor.number_of_endpoints);
     }
+
+    ErrorOr<void> add_endpoint_descriptor(Badge<USBConfiguration>, USBEndpointDescriptor endpoint_descriptor) { return m_endpoint_descriptors.try_empend(endpoint_descriptor); }
 
     Vector<USBEndpointDescriptor> const& endpoints() const { return m_endpoint_descriptors; }
 

@@ -13,6 +13,35 @@
 
 namespace Kernel {
 
+ErrorOr<FlatPtr> Process::sys$copy_mount(Userspace<Syscall::SC_copy_mount_params const*> user_params)
+{
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
+    TRY(require_promise(Pledge::mount));
+    auto credentials = this->credentials();
+    if (!credentials->is_superuser())
+        return EPERM;
+
+    auto params = TRY(copy_typed_from_user(user_params));
+
+    // NOTE: If some userspace program uses MS_REMOUNT, return EINVAL to indicate that we never want this
+    // flag to appear in the mount table...
+    if (params.flags & MS_REMOUNT || params.flags & MS_BIND)
+        return Error::from_errno(EINVAL);
+
+    auto original_path = TRY(try_copy_kstring_from_user(params.original_path));
+    auto target_path = TRY(try_copy_kstring_from_user(params.target_path));
+
+    auto mount_original_context = TRY(context_for_mount_operation(params.original_vfs_root_context_id, original_path->view()));
+    auto mount_target_context = TRY(context_for_mount_operation(params.target_vfs_root_context_id, target_path->view()));
+
+    TRY(VirtualFileSystem::copy_mount(
+        mount_original_context.custody,
+        mount_target_context.vfs_root_context,
+        mount_target_context.custody,
+        params.flags));
+    return 0;
+}
+
 ErrorOr<FlatPtr> Process::sys$fsopen(Userspace<Syscall::SC_fsopen_params const*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
@@ -55,9 +84,9 @@ ErrorOr<FlatPtr> Process::sys$fsmount(Userspace<Syscall::SC_fsmount_params const
 
     RefPtr<OpenFileDescription> source_description = TRY(open_file_description_ignoring_negative(params.source_fd));
     auto target = TRY(try_copy_kstring_from_user(params.target));
-    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(credentials, target->view(), current_directory()));
+    auto mount_target_context = TRY(context_for_mount_operation(params.vfs_root_context_id, target->view()));
     auto flags = mount_description->mount_file()->mount_flags();
-    TRY(VirtualFileSystem::the().mount(*mount_description->mount_file(), source_description.ptr(), target_custody, flags));
+    TRY(VirtualFileSystem::mount(mount_target_context.vfs_root_context, *mount_description->mount_file(), source_description.ptr(), mount_target_context.custody, flags));
     return 0;
 }
 
@@ -76,8 +105,9 @@ ErrorOr<FlatPtr> Process::sys$remount(Userspace<Syscall::SC_remount_params const
         return EINVAL;
 
     auto target = TRY(try_copy_kstring_from_user(params.target));
-    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(credentials, target->view(), current_directory()));
-    TRY(VirtualFileSystem::the().remount(target_custody, params.flags));
+    auto current_vfs_root_context = Process::current().vfs_root_context();
+    auto mount_target_context = TRY(context_for_mount_operation(params.vfs_root_context_id, target->view()));
+    TRY(VirtualFileSystem::remount(mount_target_context.vfs_root_context, mount_target_context.custody, params.flags));
     return 0;
 }
 
@@ -97,7 +127,7 @@ ErrorOr<FlatPtr> Process::sys$bindmount(Userspace<Syscall::SC_bindmount_params c
 
     auto source_fd = params.source_fd;
     auto target = TRY(try_copy_kstring_from_user(params.target));
-    auto target_custody = TRY(VirtualFileSystem::the().resolve_path(credentials, target->view(), current_directory()));
+    auto mount_target_context = TRY(context_for_mount_operation(params.vfs_root_context_id, target->view()));
 
     auto description = TRY(open_file_description(source_fd));
     if (!description->custody()) {
@@ -105,11 +135,11 @@ ErrorOr<FlatPtr> Process::sys$bindmount(Userspace<Syscall::SC_bindmount_params c
         return ENODEV;
     }
 
-    TRY(VirtualFileSystem::the().bind_mount(*description->custody(), target_custody, params.flags));
+    TRY(VirtualFileSystem::bind_mount(mount_target_context.vfs_root_context, *description->custody(), mount_target_context.custody, params.flags));
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$umount(Userspace<char const*> user_mountpoint, size_t mountpoint_length)
+ErrorOr<FlatPtr> Process::sys$umount(Userspace<Syscall::SC_umount_params const*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     auto credentials = this->credentials();
@@ -118,9 +148,10 @@ ErrorOr<FlatPtr> Process::sys$umount(Userspace<char const*> user_mountpoint, siz
 
     TRY(require_promise(Pledge::mount));
 
-    auto mountpoint = TRY(get_syscall_path_argument(user_mountpoint, mountpoint_length));
-    auto custody = TRY(VirtualFileSystem::the().resolve_path(credentials, mountpoint->view(), current_directory()));
-    TRY(VirtualFileSystem::the().unmount(*custody));
+    auto params = TRY(copy_typed_from_user(user_params));
+    auto target = TRY(try_copy_kstring_from_user(params.target));
+    auto mount_target_context = TRY(context_for_mount_operation(params.vfs_root_context_id, target->view()));
+    TRY(VirtualFileSystem::unmount(mount_target_context.vfs_root_context, mount_target_context.custody));
     return 0;
 }
 

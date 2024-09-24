@@ -17,6 +17,7 @@
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleComputer.h>
+#include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/DOM/Attr.h>
@@ -28,7 +29,6 @@
 #include <LibWeb/DOM/NamedNodeMap.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
-#include <LibWeb/DOMParsing/InnerHTML.h>
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/Geometry/DOMRectList.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -49,6 +49,7 @@
 #include <LibWeb/HTML/HTMLSlotElement.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
 #include <LibWeb/HTML/HTMLTableElement.h>
+#include <LibWeb/HTML/HTMLTemplateElement.h>
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/HTML/Numbers.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
@@ -337,9 +338,8 @@ bool Element::has_attribute_ns(Optional<FlyString> const& namespace_, FlyString 
 WebIDL::ExceptionOr<bool> Element::toggle_attribute(FlyString const& name, Optional<bool> force)
 {
     // 1. If qualifiedName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
-    // FIXME: Proper name validation
-    if (name.is_empty())
-        return WebIDL::InvalidCharacterError::create(realm(), "Attribute name must not be empty"_fly_string);
+    if (!Document::is_valid_name(name.to_string()))
+        return WebIDL::InvalidCharacterError::create(realm(), "Attribute name must not be empty or contain invalid characters"_fly_string);
 
     // 2. If this is in the HTML namespace and its node document is an HTML document, then set qualifiedName to qualifiedName in ASCII lowercase.
     bool insert_as_lowercase = namespace_uri() == Namespace::HTML && document().document_type() == Document::Type::HTML;
@@ -445,36 +445,40 @@ void Element::run_attribute_change_steps(FlyString const& local_name, Optional<S
     attribute_change_steps(local_name, old_value, value, namespace_);
 
     // AD-HOC: Run our own internal attribute change handler.
-    attribute_changed(local_name, value);
+    attribute_changed(local_name, old_value, value);
     invalidate_style_after_attribute_change(local_name);
 
     document().bump_dom_tree_version();
 }
 
-void Element::attribute_changed(FlyString const& name, Optional<String> const& value)
+void Element::attribute_changed(FlyString const& name, Optional<String> const&, Optional<String> const& value)
 {
     auto value_or_empty = value.value_or(String {});
 
     if (name == HTML::AttributeNames::id) {
-        if (!value.has_value())
+        if (value_or_empty.is_empty())
             m_id = {};
         else
             m_id = value_or_empty;
 
         document().element_id_changed({}, *this);
     } else if (name == HTML::AttributeNames::name) {
-        if (!value.has_value())
+        if (value_or_empty.is_empty())
             m_name = {};
         else
             m_name = value_or_empty;
 
         document().element_name_changed({}, *this);
     } else if (name == HTML::AttributeNames::class_) {
-        auto new_classes = value_or_empty.bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
-        m_classes.clear();
-        m_classes.ensure_capacity(new_classes.size());
-        for (auto& new_class : new_classes) {
-            m_classes.unchecked_append(FlyString::from_utf8(new_class).release_value_but_fixme_should_propagate_errors());
+        if (value_or_empty.is_empty()) {
+            m_classes.clear();
+        } else {
+            auto new_classes = value_or_empty.bytes_as_string_view().split_view_if(Infra::is_ascii_whitespace);
+            m_classes.clear();
+            m_classes.ensure_capacity(new_classes.size());
+            for (auto& new_class : new_classes) {
+                m_classes.unchecked_append(FlyString::from_utf8(new_class).release_value_but_fixme_should_propagate_errors());
+            }
         }
         if (m_class_list)
             m_class_list->associated_attribute_changed(value_or_empty);
@@ -573,7 +577,7 @@ NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
         auto maybe_value = element_computed_style->property(property_id);
         if (!maybe_value.has_value())
             continue;
-        properties->set_property(property_id, maybe_value.release_value().value, nullptr);
+        properties->set_property(property_id, maybe_value.release_value().value);
     }
 
     return properties;
@@ -715,7 +719,7 @@ WebIDL::ExceptionOr<bool> Element::matches(StringView selectors) const
     // 3. If the result of match a selector against an element, using s, this, and scoping root this, returns success, then return true; otherwise, return false.
     auto sel = maybe_selectors.value();
     for (auto& s : sel) {
-        if (SelectorEngine::matches(s, {}, *this, {}, static_cast<ParentNode const*>(this)))
+        if (SelectorEngine::matches(s, {}, *this, nullptr, {}, static_cast<ParentNode const*>(this)))
             return true;
     }
     return false;
@@ -734,7 +738,7 @@ WebIDL::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) 
     auto matches_selectors = [this](CSS::SelectorList const& selector_list, Element const* element) {
         // 4. For each element in elements, if match a selector against an element, using s, element, and scoping root this, returns success, return element.
         for (auto const& selector : selector_list) {
-            if (SelectorEngine::matches(selector, {}, *element, {}, this))
+            if (SelectorEngine::matches(selector, {}, *element, nullptr, {}, this))
                 return true;
         }
         return false;
@@ -754,13 +758,38 @@ WebIDL::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) 
     return nullptr;
 }
 
-WebIDL::ExceptionOr<void> Element::set_inner_html(StringView markup)
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-element-innerhtml
+WebIDL::ExceptionOr<void> Element::set_inner_html(StringView value)
 {
-    TRY(DOMParsing::inner_html_setter(*this, markup));
+    // FIXME: 1. Let compliantString be the result of invoking the Get Trusted Type compliant string algorithm with TrustedHTML, this's relevant global object, the given value, "Element innerHTML", and "script".
+
+    // 2. Let context be this.
+    DOM::Node* context = this;
+
+    // 3. Let fragment be the result of invoking the fragment parsing algorithm steps with context and compliantString. FIXME: Use compliantString.
+    auto fragment = TRY(verify_cast<Element>(*context).parse_fragment(value));
+
+    // 4. If context is a template element, then set context to the template element's template contents (a DocumentFragment).
+    if (is<HTML::HTMLTemplateElement>(*context))
+        context = verify_cast<HTML::HTMLTemplateElement>(*context).content();
+
+    // 5. Replace all with fragment within context.
+    context->replace_all(fragment);
+
+    // NOTE: We don't invalidate style & layout for <template> elements since they don't affect rendering.
+    if (!is<HTML::HTMLTemplateElement>(*context)) {
+        context->set_needs_style_update(true);
+
+        if (context->is_connected()) {
+            // NOTE: Since the DOM has changed, we have to rebuild the layout tree.
+            context->document().invalidate_layout();
+        }
+    }
+
     return {};
 }
 
-// https://w3c.github.io/DOM-Parsing/#dom-innerhtml-innerhtml
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-element-innerhtml
 WebIDL::ExceptionOr<String> Element::inner_html() const
 {
     return serialize_fragment(DOMParsing::RequireWellFormed::Yes);
@@ -786,21 +815,6 @@ bool Element::is_document_element() const
 {
     // The document element of a document is the element whose parent is that document, if it exists; otherwise null.
     return parent() == &document();
-}
-
-JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(StringView class_names)
-{
-    Vector<FlyString> list_of_class_names;
-    for (auto& name : class_names.split_view_if(Infra::is_ascii_whitespace)) {
-        list_of_class_names.append(FlyString::from_utf8(name).release_value_but_fixme_should_propagate_errors());
-    }
-    return HTMLCollection::create(*this, HTMLCollection::Scope::Descendants, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
-        for (auto& name : list_of_class_names) {
-            if (!element.has_class(name, quirks_mode ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive))
-                return false;
-        }
-        return true;
-    });
 }
 
 // https://dom.spec.whatwg.org/#element-shadow-host
@@ -842,12 +856,7 @@ void Element::make_html_uppercased_qualified_name()
 // https://html.spec.whatwg.org/multipage/webappapis.html#queue-an-element-task
 int Element::queue_an_element_task(HTML::Task::Source source, Function<void()> steps)
 {
-    auto task = HTML::Task::create(vm(), source, &document(), JS::create_heap_function(heap(), move(steps)));
-    auto id = task->id();
-
-    HTML::main_thread_event_loop().task_queue().add(move(task));
-
-    return id;
+    return queue_a_task(source, HTML::main_thread_event_loop(), document(), JS::create_heap_function(heap(), move(steps)));
 }
 
 // https://html.spec.whatwg.org/multipage/syntax.html#void-elements
@@ -935,7 +944,7 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
     if (auto const* paintable_box = this->paintable_box()) {
         transform = Gfx::extract_2d_affine_transform(paintable_box->transform());
-        for (auto const* containing_block = paintable->containing_block(); containing_block; containing_block = containing_block->containing_block()) {
+        for (auto const* containing_block = paintable->containing_block(); !containing_block->is_viewport(); containing_block = containing_block->containing_block()) {
             transform = Gfx::extract_2d_affine_transform(containing_block->transform()).multiply(transform);
             scroll_offset.translate_by(containing_block->scroll_offset());
         }
@@ -1462,6 +1471,32 @@ bool Element::is_actually_disabled() const
     return false;
 }
 
+// https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#fragment-parsing-algorithm-steps
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::DocumentFragment>> Element::parse_fragment(StringView markup)
+{
+    // 1. Let algorithm be the HTML fragment parsing algorithm.
+    auto algorithm = HTML::HTMLParser::parse_html_fragment;
+
+    // FIXME: 2. If context's node document is an XML document, then set algorithm to the XML fragment parsing algorithm.
+    if (document().is_xml_document()) {
+        dbgln("FIXME: Handle fragment parsing of XML documents");
+    }
+
+    // 3. Let new children be the result of invoking algorithm given markup, with context set to context.
+    auto new_children = algorithm(*this, markup, HTML::HTMLParser::AllowDeclarativeShadowRoots::No);
+
+    // 4. Let fragment be a new DocumentFragment whose node document is context's node document.
+    auto fragment = realm().heap().allocate<DOM::DocumentFragment>(realm(), document());
+
+    // 5. Append each Node in new children to fragment (in tree order).
+    for (auto& child : new_children) {
+        // I don't know if this can throw here, but let's be safe.
+        (void)TRY(fragment->append_child(*child));
+    }
+
+    return fragment;
+}
+
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-element-outerhtml
 WebIDL::ExceptionOr<String> Element::outer_html() const
 {
@@ -1471,23 +1506,25 @@ WebIDL::ExceptionOr<String> Element::outer_html() const
 // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-element-outerhtml
 WebIDL::ExceptionOr<void> Element::set_outer_html(String const& value)
 {
-    // 1. Let parent be this's parent.
+    // 1. FIXME: Let compliantString be the result of invoking the Get Trusted Type compliant string algorithm with TrustedHTML, this's relevant global object, the given value, "Element outerHTML", and "script".
+
+    // 2. Let parent be this's parent.
     auto* parent = this->parent();
 
-    // 2. If parent is null, return. There would be no way to obtain a reference to the nodes created even if the remaining steps were run.
+    // 3. If parent is null, return. There would be no way to obtain a reference to the nodes created even if the remaining steps were run.
     if (!parent)
         return {};
 
-    // 3. If parent is a Document, throw a "NoModificationAllowedError" DOMException.
+    // 4. If parent is a Document, throw a "NoModificationAllowedError" DOMException.
     if (parent->is_document())
         return WebIDL::NoModificationAllowedError::create(realm(), "Cannot set outer HTML on document"_fly_string);
 
-    // 4. If parent is a DocumentFragment, set parent to the result of creating an element given this's node document, body, and the HTML namespace.
+    // 5. If parent is a DocumentFragment, set parent to the result of creating an element given this's node document, body, and the HTML namespace.
     if (parent->is_document_fragment())
         parent = TRY(create_element(document(), HTML::TagNames::body, Namespace::HTML));
 
-    // 5. Let fragment be the result of invoking the fragment parsing algorithm steps given parent and the given value.
-    auto fragment = TRY(DOMParsing::parse_fragment(value, verify_cast<Element>(*parent)));
+    // 6. Let fragment be the result of invoking the fragment parsing algorithm steps given parent and compliantString. FIXME: Use compliantString.
+    auto fragment = TRY(verify_cast<Element>(*parent).parse_fragment(value));
 
     // 6. Replace this with fragment within this's parent.
     TRY(parent->replace_child(fragment, *this));
@@ -1538,7 +1575,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(String const& position, 
     }
 
     // 4. Let fragment be the result of invoking the fragment parsing algorithm steps with context and string.
-    auto fragment = TRY(DOMParsing::parse_fragment(string, verify_cast<Element>(*context)));
+    auto fragment = TRY(verify_cast<Element>(*context).parse_fragment(string));
 
     // 5. Use the first matching item from this list:
 
@@ -2290,6 +2327,54 @@ void Element::scroll_by(HTML::ScrollToOptions options)
     scroll(options);
 }
 
+// https://drafts.csswg.org/cssom-view-1/#dom-element-checkvisibility
+bool Element::check_visibility(Optional<CheckVisibilityOptions> options)
+{
+    // NOTE: Ensure that layout is up-to-date before looking at metrics.
+    document().update_layout();
+
+    // 1. If this does not have an associated box, return false.
+    if (!paintable_box())
+        return false;
+
+    // 2. If an ancestor of this in the flat tree has content-visibility: hidden, return false.
+    for (auto* element = parent_element(); element; element = element->parent_element()) {
+        if (element->computed_css_values()->content_visibility() == CSS::ContentVisibility::Hidden)
+            return false;
+    }
+
+    // AD-HOC: Since the rest of the steps use the options, we can return early if we haven't been given any options.
+    if (!options.has_value())
+        return true;
+
+    // 3. If either the opacityProperty or the checkOpacity dictionary members of options are true, and this, or an ancestor of this in the flat tree, has a computed opacity value of 0, return false.
+    if (options->opacity_property || options->check_opacity) {
+        for (auto* element = this; element; element = element->parent_element()) {
+            if (element->computed_css_values()->opacity() == 0.0f)
+                return false;
+        }
+    }
+
+    // 4. If either the visibilityProperty or the checkVisibilityCSS dictionary members of options are true, and this is invisible, return false.
+    if (options->visibility_property || options->check_visibility_css) {
+        if (computed_css_values()->visibility() == CSS::Visibility::Hidden)
+            return false;
+    }
+
+    // 5. If the contentVisibilityAuto dictionary member of options is true and an ancestor of this in the flat tree skips its contents due to content-visibility: auto, return false.
+    // FIXME: Currently we do not skip any content if content-visibility is auto: https://drafts.csswg.org/css-contain-2/#proximity-to-the-viewport
+    auto const skipped_contents_due_to_content_visibility_auto = false;
+    if (options->content_visibility_auto && skipped_contents_due_to_content_visibility_auto) {
+        for (auto* element = this; element; element = element->parent_element()) {
+            if (element->computed_css_values()->content_visibility() == CSS::ContentVisibility::Auto)
+                return false;
+        }
+    }
+
+    // 6. Return true.
+    return true;
+}
+
 bool Element::id_reference_exists(String const& id_reference) const
 {
     return document().get_element_by_id(id_reference);
@@ -2601,6 +2686,128 @@ WebIDL::ExceptionOr<String> Element::get_html(GetHTMLOptions const& options) con
         *this,
         options.serializable_shadow_roots ? HTML::HTMLParser::SerializableShadowRoots::Yes : HTML::HTMLParser::SerializableShadowRoots::No,
         options.shadow_roots);
+}
+
+// https://html.spec.whatwg.org/#dom-element-sethtmlunsafe
+WebIDL::ExceptionOr<void> Element::set_html_unsafe(StringView html)
+{
+    // FIXME: 1. Let compliantHTML be the result of invoking the Get Trusted Type compliant string algorithm with TrustedHTML, this's relevant global object, html, "Element setHTMLUnsafe", and "script".
+
+    // 2. Let target be this's template contents if this is a template element; otherwise this.
+    DOM::Node* target = this;
+    if (is<HTML::HTMLTemplateElement>(*this))
+        target = verify_cast<HTML::HTMLTemplateElement>(*this).content().ptr();
+
+    // 3. Unsafe set HTML given target, this, and compliantHTML. FIXME: Use compliantHTML.
+    TRY(target->unsafely_set_html(*this, html));
+
+    return {};
+}
+
+Optional<CSS::CountersSet const&> Element::counters_set()
+{
+    if (!m_counters_set)
+        return {};
+    return *m_counters_set;
+}
+
+CSS::CountersSet& Element::ensure_counters_set()
+{
+    if (!m_counters_set)
+        m_counters_set = make<CSS::CountersSet>();
+    return *m_counters_set;
+}
+
+// https://drafts.csswg.org/css-lists-3/#auto-numbering
+void Element::resolve_counters(CSS::StyleProperties& style)
+{
+    // Resolving counter values on a given element is a multi-step process:
+
+    // 1. Existing counters are inherited from previous elements.
+    inherit_counters();
+
+    // https://drafts.csswg.org/css-lists-3/#counters-without-boxes
+    // An element that does not generate a box (for example, an element with display set to none,
+    // or a pseudo-element with content set to none) cannot set, reset, or increment a counter.
+    // The counter properties are still valid on such an element, but they must have no effect.
+    if (style.display().is_none())
+        return;
+
+    // 2. New counters are instantiated (counter-reset).
+    auto counter_reset = style.counter_data(CSS::PropertyID::CounterReset);
+    for (auto const& counter : counter_reset)
+        ensure_counters_set().instantiate_a_counter(counter.name, unique_id(), counter.is_reversed, counter.value);
+
+    // 3. Counter values are incremented (counter-increment).
+    auto counter_increment = style.counter_data(CSS::PropertyID::CounterIncrement);
+    for (auto const& counter : counter_increment)
+        ensure_counters_set().increment_a_counter(counter.name, unique_id(), *counter.value);
+
+    // 4. Counter values are explicitly set (counter-set).
+    auto counter_set = style.counter_data(CSS::PropertyID::CounterSet);
+    for (auto const& counter : counter_set)
+        ensure_counters_set().set_a_counter(counter.name, unique_id(), *counter.value);
+
+    // 5. Counter values are used (counter()/counters()).
+    // NOTE: This happens when we process the `content` property.
+}
+
+// https://drafts.csswg.org/css-lists-3/#inherit-counters
+void Element::inherit_counters()
+{
+    // 1. If element is the root of its document tree, the element has an initially-empty CSS counters set.
+    //    Return.
+    auto* parent = parent_element();
+    if (parent == nullptr) {
+        // NOTE: We represent an empty counters set with `m_counters_set = nullptr`.
+        m_counters_set = nullptr;
+        return;
+    }
+
+    // 2. Let element counters, representing element’s own CSS counters set, be a copy of the CSS counters
+    //    set of element’s parent element.
+    OwnPtr<CSS::CountersSet> element_counters;
+    // OPTIMIZATION: If parent has a set, we create a copy. Otherwise, we avoid allocating one until we need
+    // to add something to it.
+    auto ensure_element_counters = [&]() {
+        if (!element_counters)
+            element_counters = make<CSS::CountersSet>();
+    };
+    if (parent->has_non_empty_counters_set()) {
+        element_counters = make<CSS::CountersSet>();
+        *element_counters = *parent_element()->counters_set();
+    }
+
+    // 3. Let sibling counters be the CSS counters set of element’s preceding sibling (if it has one),
+    //    or an empty CSS counters set otherwise.
+    //    For each counter of sibling counters, if element counters does not already contain a counter with
+    //    the same name, append a copy of counter to element counters.
+    if (auto* const sibling = previous_sibling_of_type<Element>(); sibling && sibling->has_non_empty_counters_set()) {
+        auto& sibling_counters = sibling->counters_set().release_value();
+        ensure_element_counters();
+        for (auto const& counter : sibling_counters.counters()) {
+            if (!element_counters->last_counter_with_name(counter.name).has_value())
+                element_counters->append_copy(counter);
+        }
+    }
+
+    // 4. Let value source be the CSS counters set of the element immediately preceding element in tree order.
+    //    For each source counter of value source, if element counters contains a counter with the same name
+    //    and creator, then set the value of that counter to source counter’s value.
+    if (auto* const previous = previous_element_in_pre_order(); previous && previous->has_non_empty_counters_set()) {
+        // NOTE: If element_counters is empty (AKA null) then we can skip this since nothing will match.
+        if (element_counters) {
+            auto& value_source = previous->counters_set().release_value();
+            for (auto const& source_counter : value_source.counters()) {
+                auto maybe_existing_counter = element_counters->counter_with_same_name_and_creator(source_counter.name, source_counter.originating_element_id);
+                if (maybe_existing_counter.has_value())
+                    maybe_existing_counter->value = source_counter.value;
+            }
+        }
+    }
+
+    VERIFY(!element_counters || !element_counters->is_empty());
+    m_counters_set = move(element_counters);
 }
 
 }

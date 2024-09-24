@@ -22,8 +22,9 @@ Co-Authored-By: kleines Filmröllchen <filmroellchen@serenityos.org>
 Co-Authored-By: Linus Groh <mail@linusgroh.de>
 Co-Authored-By: Tim Ledbetter <timledbetter@gmail.com>
 Co-Authored-By: Refrag <R3FR4GYT@gmail.com>
+Co-Authored-By: sdomi <ja@sdomi.pl>
 ---
- CMakeLists.txt                                |  25 +-
+ CMakeLists.txt                                |  26 +-
  build-scripts/config.sub                      |   3 +
  cmake/sdlchecks.cmake                         |  20 +
  include/SDL_config.h.cmake                    |   2 +
@@ -35,16 +36,16 @@ Co-Authored-By: Refrag <R3FR4GYT@gmail.com>
  src/audio/serenity/SDL_serenityaudio.h        |  38 +
  src/stdlib/SDL_stdlib.c                       |   2 +-
  src/video/SDL_sysvideo.h                      |   1 +
- src/video/SDL_video.c                         |  13 +
+ src/video/SDL_video.c                         |   7 +
  src/video/serenity/SDL_serenityevents.cpp     |  52 ++
  src/video/serenity/SDL_serenityevents_c.h     |  33 +
  src/video/serenity/SDL_serenitymessagebox.cpp |  47 ++
  src/video/serenity/SDL_serenitymessagebox.h   |  38 +
- src/video/serenity/SDL_serenitymouse.cpp      | 169 +++++
+ src/video/serenity/SDL_serenitymouse.cpp      | 157 +++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
  src/video/serenity/SDL_serenityvideo.cpp      | 655 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 21 files changed, 1392 insertions(+), 26 deletions(-)
+ 21 files changed, 1374 insertions(+), 27 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -57,10 +58,10 @@ Co-Authored-By: Refrag <R3FR4GYT@gmail.com>
  create mode 100644 src/video/serenity/SDL_serenityvideo.h
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 00cf9b43fb496c339c2f1968862f9a1dd0ff7ee2..20164e2761d8848df6eb6c9736a4bd14d53c816b 100644
+index 47b3dca6c2e09a9dcbef7bd497fc7f01fa6e4c20..e99899acef07c32a2f701b1a2bf51eeee748a6e6 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -29,6 +29,9 @@ set(PKGCONFIG_DEPENDS)
+@@ -32,6 +32,9 @@ set(PKGCONFIG_DEPENDS)
  #  etc. See https://github.com/libsdl-org/SDL/issues/4150
  add_library(sdl-build-options INTERFACE)
  
@@ -70,7 +71,7 @@ index 00cf9b43fb496c339c2f1968862f9a1dd0ff7ee2..20164e2761d8848df6eb6c9736a4bd14
  if(WINDOWS_STORE)
    target_compile_definitions(sdl-build-options INTERFACE "-DSDL_BUILDING_WINRT=1")
    target_compile_options(sdl-build-options INTERFACE "-ZW")
-@@ -416,7 +419,7 @@ set_option(SDL_SYSTEM_ICONV        "Use iconv() from system-installed libraries"
+@@ -430,7 +433,7 @@ set_option(SDL_LIBICONV            "Prefer iconv() from libiconv, if available,
  set_option(SDL_OPENGL              "Include OpenGL support" ON)
  set_option(SDL_OPENGLES            "Include OpenGL ES support" ON)
  set_option(SDL_PTHREADS            "Use POSIX threads for multi-threading" ${SDL_PTHREADS_ENABLED_BY_DEFAULT})
@@ -79,7 +80,7 @@ index 00cf9b43fb496c339c2f1968862f9a1dd0ff7ee2..20164e2761d8848df6eb6c9736a4bd14
  dep_option(SDL_OSS                 "Support the OSS audio API" ON "UNIX_SYS OR RISCOS" OFF)
  set_option(SDL_ALSA                "Support the ALSA audio API" ${UNIX_SYS})
  dep_option(SDL_ALSA_SHARED         "Dynamically load ALSA audio support" ON "SDL_ALSA" OFF)
-@@ -1435,25 +1438,7 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
+@@ -1488,26 +1491,7 @@ elseif(UNIX AND NOT APPLE AND NOT RISCOS AND NOT HAIKU)
      CheckFusionSound()
    endif()
  
@@ -101,16 +102,17 @@ index 00cf9b43fb496c339c2f1968862f9a1dd0ff7ee2..20164e2761d8848df6eb6c9736a4bd14
 -      set(SDL_VIDEO_VULKAN 1)
 -      set(HAVE_VULKAN TRUE)
 -    endif()
+-    CheckQNXScreen()
 -  endif()
 +  CheckSerenity()
  
    if(UNIX)
      file(GLOB CORE_UNIX_SOURCES ${SDL2_SOURCE_DIR}/src/core/unix/*.c)
 diff --git a/build-scripts/config.sub b/build-scripts/config.sub
-index 312ad817c61e0dd18b57ecb8e1cd3be6edc924d7..c2582352995fafe32e0431b290390ee4c2c22598 100755
+index 2c6a07ab3c34eabed8318ec0a37c0cc23b77a63f..25b92feb2967f63c4d08d0cc563c1f382030cb68 100755
 --- a/build-scripts/config.sub
 +++ b/build-scripts/config.sub
-@@ -1427,6 +1427,9 @@ case $os in
+@@ -1413,6 +1413,9 @@ case $os in
  	os400*)
  		os=os400
  		;;
@@ -121,10 +123,10 @@ index 312ad817c61e0dd18b57ecb8e1cd3be6edc924d7..c2582352995fafe32e0431b290390ee4
  		os=`echo "$os" | sed -e 's|sunos5|solaris2|'`
  		;;
 diff --git a/cmake/sdlchecks.cmake b/cmake/sdlchecks.cmake
-index c4aec174e35ee653c4c4e0449939054e0f68ad9d..2f88b7f8790df95838e7de7a45789804e1eb9fde 100644
+index 815665364785ca6e6eb679ed345ff5581ffe235a..9c52ab96fc0694c7400092ef5c513d56bd2c9c76 100644
 --- a/cmake/sdlchecks.cmake
 +++ b/cmake/sdlchecks.cmake
-@@ -801,6 +801,26 @@ macro(CheckDirectFB)
+@@ -809,6 +809,26 @@ macro(CheckDirectFB)
    endif()
  endmacro()
  
@@ -137,7 +139,7 @@ index c4aec174e35ee653c4c4e0449939054e0f68ad9d..2f88b7f8790df95838e7de7a45789804
 +    set(HAVE_SDL_VIDEO TRUE)
 +    set(HAVE_SDL_AUDIO TRUE)
 +
-+    set(CMAKE_CXX_FLAGS "-std=c++23 ${CMAKE_CXX_FLAGS}")
++    set(CMAKE_CXX_FLAGS "-std=c++23 -fno-exceptions ${CMAKE_CXX_FLAGS}")
 +    file(GLOB SERENITY_SOURCES ${SDL2_SOURCE_DIR}/src/video/serenity/*.cpp ${SDL2_SOURCE_DIR}/src/audio/serenity/*.cpp)
 +    set(SOURCE_FILES ${SOURCE_FILES} ${SERENITY_SOURCES})
 +    set(SDL_VIDEO_DRIVER_SERENITY 1)
@@ -152,10 +154,10 @@ index c4aec174e35ee653c4c4e0449939054e0f68ad9d..2f88b7f8790df95838e7de7a45789804
  # - n/a
  macro(CheckVivante)
 diff --git a/include/SDL_config.h.cmake b/include/SDL_config.h.cmake
-index 7512bb1cc51e67350f63ed0f2074f7f44b6a1113..57e2a70937c3faf39b29e4ffe9dc08d97388e392 100644
+index ffcafd895ce8a1cd392b4f14728745a89dc688f7..2bade07c3eae14bdaf28183c8fd9be25bfa4415f 100644
 --- a/include/SDL_config.h.cmake
 +++ b/include/SDL_config.h.cmake
-@@ -317,6 +317,7 @@
+@@ -319,6 +319,7 @@
  #cmakedefine SDL_AUDIO_DRIVER_PULSEAUDIO @SDL_AUDIO_DRIVER_PULSEAUDIO@
  #cmakedefine SDL_AUDIO_DRIVER_PULSEAUDIO_DYNAMIC @SDL_AUDIO_DRIVER_PULSEAUDIO_DYNAMIC@
  #cmakedefine SDL_AUDIO_DRIVER_QSA @SDL_AUDIO_DRIVER_QSA@
@@ -163,7 +165,7 @@ index 7512bb1cc51e67350f63ed0f2074f7f44b6a1113..57e2a70937c3faf39b29e4ffe9dc08d9
  #cmakedefine SDL_AUDIO_DRIVER_SNDIO @SDL_AUDIO_DRIVER_SNDIO@
  #cmakedefine SDL_AUDIO_DRIVER_SNDIO_DYNAMIC @SDL_AUDIO_DRIVER_SNDIO_DYNAMIC@
  #cmakedefine SDL_AUDIO_DRIVER_SUNAUDIO @SDL_AUDIO_DRIVER_SUNAUDIO@
-@@ -410,6 +411,7 @@
+@@ -412,6 +413,7 @@
  #cmakedefine SDL_VIDEO_DRIVER_DIRECTFB_DYNAMIC @SDL_VIDEO_DRIVER_DIRECTFB_DYNAMIC@
  #cmakedefine SDL_VIDEO_DRIVER_DUMMY @SDL_VIDEO_DRIVER_DUMMY@
  #cmakedefine SDL_VIDEO_DRIVER_OFFSCREEN @SDL_VIDEO_DRIVER_OFFSCREEN@
@@ -172,7 +174,7 @@ index 7512bb1cc51e67350f63ed0f2074f7f44b6a1113..57e2a70937c3faf39b29e4ffe9dc08d9
  #cmakedefine SDL_VIDEO_DRIVER_WINRT @SDL_VIDEO_DRIVER_WINRT@
  #cmakedefine SDL_VIDEO_DRIVER_WAYLAND @SDL_VIDEO_DRIVER_WAYLAND@
 diff --git a/include/SDL_syswm.h b/include/SDL_syswm.h
-index b35734deb334508c6fbfcc0b635417a9d2841052..65a0c8173b376a94ee8650af44ab57dce55d3cb1 100644
+index 7b8bd6ef996571bbba2e5f1e139a0c9292c88146..efa065e3ba7df855590aa5eb8b9fbdf254bfa1dd 100644
 --- a/include/SDL_syswm.h
 +++ b/include/SDL_syswm.h
 @@ -148,7 +148,8 @@ typedef enum
@@ -186,7 +188,7 @@ index b35734deb334508c6fbfcc0b635417a9d2841052..65a0c8173b376a94ee8650af44ab57dc
  
  /**
 diff --git a/src/SDL_error.c b/src/SDL_error.c
-index 501d3958457de93f75a8c68e1329964247319054..797267c8e24abc6b65f453c93f447e7239f4f8d7 100644
+index d5c45fb6c4df6592f8588eb55661d23551a02add..888e952a4a9425a0dd7c011af8b16b3ae500edf6 100644
 --- a/src/SDL_error.c
 +++ b/src/SDL_error.c
 @@ -51,10 +51,9 @@ int SDL_SetError(SDL_PRINTF_FORMAT_STRING const char *fmt, ...)
@@ -204,21 +206,21 @@ index 501d3958457de93f75a8c68e1329964247319054..797267c8e24abc6b65f453c93f447e72
  
      return -1;
 diff --git a/src/audio/SDL_audio.c b/src/audio/SDL_audio.c
-index 60242e60a06de322281cc0b32b7d3dbc913a80b3..46ec7f9ef0375058e9f95cfea5c213a39b61346e 100644
+index 96586fe77318eb4a62dc9e6dfc0d6b0009bc36ae..fff50b0b7b9355260f10d4d66148c9c8f94051fd 100644
 --- a/src/audio/SDL_audio.c
 +++ b/src/audio/SDL_audio.c
-@@ -36,6 +36,9 @@ static SDL_AudioDevice *open_devices[16];
+@@ -42,6 +42,9 @@ static SDL_AudioDevice *open_devices[16];
  
  /* Available audio drivers */
  static const AudioBootStrap *const bootstrap[] = {
 +#if SDL_AUDIO_DRIVER_SERENITY
 +    &SERENITYAUDIO_bootstrap,
 +#endif
- #if SDL_AUDIO_DRIVER_PULSEAUDIO
+ #ifdef SDL_AUDIO_DRIVER_PULSEAUDIO
      &PULSEAUDIO_bootstrap,
  #endif
 diff --git a/src/audio/SDL_sysaudio.h b/src/audio/SDL_sysaudio.h
-index c755d4341521104d369b4d5ff731617680c70215..3ee517796ab467ad5ac3debca738d1cb1cc54f1c 100644
+index d569ba76a8730f784c0cc8c9a9bc410de6c28248..1066ca0b74cb589e4a2aeb3762823ef8b56ba111 100644
 --- a/src/audio/SDL_sysaudio.h
 +++ b/src/audio/SDL_sysaudio.h
 @@ -209,6 +209,7 @@ extern AudioBootStrap VITAAUD_bootstrap;
@@ -446,7 +448,7 @@ index 0000000000000000000000000000000000000000..8d152ca843e732d2d5a8127fc191ca22
 +    size_t mixlen { 0 };
 +};
 diff --git a/src/stdlib/SDL_stdlib.c b/src/stdlib/SDL_stdlib.c
-index 8c9d196ac27cbb9db35faa03d29b9b301bf08622..3ab89a91506d6522f5dcd5a58cc77312a50f03e7 100644
+index a90f09f7c11284ee9b91c371e57f06bc534b6d53..d079883d9ff4c7ea3a9891dea86dd300ae3f9321 100644
 --- a/src/stdlib/SDL_stdlib.c
 +++ b/src/stdlib/SDL_stdlib.c
 @@ -618,7 +618,7 @@ void *SDL_memset(SDL_OUT_BYTECAP(len) void *dst, int c, size_t len)
@@ -459,10 +461,10 @@ index 8c9d196ac27cbb9db35faa03d29b9b301bf08622..3ab89a91506d6522f5dcd5a58cc77312
  {
      return isblank(x);
 diff --git a/src/video/SDL_sysvideo.h b/src/video/SDL_sysvideo.h
-index d7a42cc64d905cd1f8b3a03bf8ffd894c0c9b7ac..26e3b457f6fbb5d811d55254d1fb486aa6aa79e7 100644
+index 344efec489de223f4dd1895251ccb1baa2a0bd91..8428261a419141be04fab94f6f8885fe87be2ea4 100644
 --- a/src/video/SDL_sysvideo.h
 +++ b/src/video/SDL_sysvideo.h
-@@ -482,6 +482,7 @@ extern VideoBootStrap OFFSCREEN_bootstrap;
+@@ -484,6 +484,7 @@ extern VideoBootStrap OFFSCREEN_bootstrap;
  extern VideoBootStrap NGAGE_bootstrap;
  extern VideoBootStrap OS2DIVE_bootstrap;
  extern VideoBootStrap OS2VMAN_bootstrap;
@@ -471,20 +473,20 @@ index d7a42cc64d905cd1f8b3a03bf8ffd894c0c9b7ac..26e3b457f6fbb5d811d55254d1fb486a
  /* Use SDL_OnVideoThread() sparingly, to avoid regressions in use cases that currently happen to work */
  extern SDL_bool SDL_OnVideoThread(void);
 diff --git a/src/video/SDL_video.c b/src/video/SDL_video.c
-index 8065a0b8cfc71e8d4dadd7d40fbe15303ce7e05d..fdebdac17e72e280fbe55fbb6e8bc7f42e0fc154 100644
+index c1a2dbdd6a1d9ec6867d6ffb7dbe3cf3b639984e..c1ebca5577a93724373c7daa3e01948dae8ed4eb 100644
 --- a/src/video/SDL_video.c
 +++ b/src/video/SDL_video.c
-@@ -65,6 +65,9 @@
+@@ -66,6 +66,9 @@
  
  /* Available video drivers */
  static VideoBootStrap *bootstrap[] = {
 +#if SDL_VIDEO_DRIVER_SERENITY
 +    &SERENITYVIDEO_bootstrap,
 +#endif
- #if SDL_VIDEO_DRIVER_COCOA
+ #ifdef SDL_VIDEO_DRIVER_COCOA
      &COCOA_bootstrap,
  #endif
-@@ -4240,6 +4243,10 @@ void SDL_WM_SetIcon(SDL_Surface * icon, Uint8 * mask)
+@@ -4324,6 +4327,10 @@ void SDL_WM_SetIcon(SDL_Surface * icon, Uint8 * mask)
      }
  }
  #endif
@@ -495,19 +497,6 @@ index 8065a0b8cfc71e8d4dadd7d40fbe15303ce7e05d..fdebdac17e72e280fbe55fbb6e8bc7f4
  
  SDL_bool SDL_GetWindowWMInfo(SDL_Window * window, struct SDL_SysWMinfo *info)
  {
-@@ -4522,6 +4529,12 @@ int SDL_ShowMessageBox(const SDL_MessageBoxData *messageboxdata, int *buttonid)
-         VITA_ShowMessageBox(messageboxdata, buttonid) == 0) {
-         retval = 0;
-     }
-+#endif
-+#if SDL_VIDEO_DRIVER_SERENITY
-+    if (retval == -1 &&
-+        SERENITY_ShowMessageBox(messageboxdata, buttonid) == 0) {
-+        retval = 0;
-+    }
- #endif
-     if (retval == -1) {
-         const char *error = SDL_GetError();
 diff --git a/src/video/serenity/SDL_serenityevents.cpp b/src/video/serenity/SDL_serenityevents.cpp
 new file mode 100644
 index 0000000000000000000000000000000000000000..04cbf21ce74fb11e6713ba3a4beaad808751e80b
@@ -704,7 +693,7 @@ index 0000000000000000000000000000000000000000..34e607783310310ac8956bccf584b5ab
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenitymouse.cpp b/src/video/serenity/SDL_serenitymouse.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..c603fe8cedaae61ab8ae84407734d1c89f99ff06
+index 0000000000000000000000000000000000000000..842ff899792544e5190efa738a31ccbd31e33b08
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenitymouse.cpp
 @@ -0,0 +1,157 @@

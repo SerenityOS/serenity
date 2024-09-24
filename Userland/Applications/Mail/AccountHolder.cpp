@@ -74,3 +74,25 @@ void AccountHolder::rebuild_tree()
 {
     m_mailbox_tree_model->invalidate();
 }
+
+void MailboxNode::update_display_name_with_unseen_count()
+{
+    m_display_name_with_unseen_count = ByteString::formatted("{} ({})", m_display_name, m_unseen_count);
+}
+
+void MailboxNode::decrement_unseen_count()
+{
+    if (m_unseen_count)
+        set_unseen_count(m_unseen_count - 1);
+}
+
+void MailboxNode::increment_unseen_count()
+{
+    set_unseen_count(m_unseen_count + 1);
+}
+
+void MailboxNode::set_unseen_count(unsigned unseen_count)
+{
+    m_unseen_count = unseen_count;
+    update_display_name_with_unseen_count();
+}

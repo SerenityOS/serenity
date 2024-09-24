@@ -24,22 +24,22 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<SerialDevice> SerialDevice::must_create(size_
     switch (com_number) {
     case 0: {
         auto io_window = IOWindow::create_for_io_space(IOAddress(SERIAL_COM1_ADDR), 16).release_value_but_fixme_should_propagate_errors();
-        serial_device = DeviceManagement::try_create_device<SerialDevice>(move(io_window), 64).release_value();
+        serial_device = DeviceManagement::try_create_device<SerialDevice>(move(io_window), 0).release_value();
         break;
     }
     case 1: {
         auto io_window = IOWindow::create_for_io_space(IOAddress(SERIAL_COM2_ADDR), 16).release_value_but_fixme_should_propagate_errors();
-        serial_device = DeviceManagement::try_create_device<SerialDevice>(move(io_window), 65).release_value();
+        serial_device = DeviceManagement::try_create_device<SerialDevice>(move(io_window), 1).release_value();
         break;
     }
     case 2: {
         auto io_window = IOWindow::create_for_io_space(IOAddress(SERIAL_COM3_ADDR), 16).release_value_but_fixme_should_propagate_errors();
-        serial_device = DeviceManagement::try_create_device<SerialDevice>(move(io_window), 66).release_value();
+        serial_device = DeviceManagement::try_create_device<SerialDevice>(move(io_window), 2).release_value();
         break;
     }
     case 3: {
         auto io_window = IOWindow::create_for_io_space(IOAddress(SERIAL_COM4_ADDR), 16).release_value_but_fixme_should_propagate_errors();
-        serial_device = DeviceManagement::try_create_device<SerialDevice>(move(io_window), 67).release_value();
+        serial_device = DeviceManagement::try_create_device<SerialDevice>(move(io_window), 3).release_value();
         break;
     }
     default:

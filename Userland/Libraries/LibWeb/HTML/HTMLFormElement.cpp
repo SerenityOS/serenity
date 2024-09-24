@@ -622,9 +622,9 @@ WebIDL::ExceptionOr<void> HTMLFormElement::set_action(String const& value)
     return set_attribute(AttributeNames::action, value);
 }
 
-void HTMLFormElement::attribute_changed(FlyString const& name, Optional<String> const& value)
+void HTMLFormElement::attribute_changed(FlyString const& name, Optional<String> const& old_value, Optional<String> const& value)
 {
-    HTMLElement::attribute_changed(name, value);
+    HTMLElement::attribute_changed(name, old_value, value);
     if (name == HTML::AttributeNames::rel) {
         if (m_rel_list)
             m_rel_list->associated_attribute_changed(value.value_or(String {}));
@@ -927,19 +927,14 @@ void HTMLFormElement::plan_to_navigate_to(URL::URL url, Variant<Empty, String, P
     VERIFY(m_planned_navigation);
 }
 
-// https://html.spec.whatwg.org/multipage/forms.html#the-form-element:supported-property-indices
-bool HTMLFormElement::is_supported_property_index(u32 index) const
-{
-    // The supported property indices at any instant are the indices supported by the object returned by the elements attribute at that instant.
-    return index < elements()->length();
-}
-
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-item
-WebIDL::ExceptionOr<JS::Value> HTMLFormElement::item_value(size_t index) const
+Optional<JS::Value> HTMLFormElement::item_value(size_t index) const
 {
     // To determine the value of an indexed property for a form element, the user agent must return the value returned by
     // the item method on the elements collection, when invoked with the given index as its argument.
-    return elements()->item(index);
+    if (auto value = elements()->item(index))
+        return value;
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#the-form-element:supported-property-names
@@ -1036,7 +1031,7 @@ Vector<FlyString> HTMLFormElement::supported_property_names() const
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-nameditem
-WebIDL::ExceptionOr<JS::Value> HTMLFormElement::named_item_value(FlyString const& name) const
+JS::Value HTMLFormElement::named_item_value(FlyString const& name) const
 {
     auto& realm = this->realm();
     auto& root = verify_cast<ParentNode>(this->root());

@@ -11,6 +11,7 @@
 #include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/SVGStopElement.h>
+#include <LibWeb/SVG/SVGURIReference.h>
 
 namespace Web::SVG {
 
@@ -34,13 +35,15 @@ inline Gfx::SVGGradientPaintStyle::SpreadMethod to_gfx_spread_method(SpreadMetho
     }
 }
 
-class SVGGradientElement : public SVGElement {
+class SVGGradientElement
+    : public SVGElement
+    , public SVGURIReferenceMixin<SupportsXLinkHref::Yes> {
     WEB_PLATFORM_OBJECT(SVGGradientElement, SVGElement);
 
 public:
     virtual ~SVGGradientElement() override = default;
 
-    virtual void attribute_changed(FlyString const& name, Optional<String> const& value) override;
+    virtual void attribute_changed(FlyString const& name, Optional<String> const& old_value, Optional<String> const& value) override;
 
     virtual Optional<Gfx::PaintStyle const&> to_gfx_paint_style(SVGPaintContext const&) const = 0;
 
@@ -54,6 +57,7 @@ protected:
     SVGGradientElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void initialize(JS::Realm&) override;
+    virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<SVGGradientElement const> linked_gradient(HashTable<SVGGradientElement const*>& seen_gradients) const;
 

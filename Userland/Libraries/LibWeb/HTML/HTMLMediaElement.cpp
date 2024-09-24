@@ -7,7 +7,7 @@
 
 #include <LibAudio/Loader.h>
 #include <LibJS/Runtime/Promise.h>
-#include <LibVideo/PlaybackManager.h>
+#include <LibMedia/PlaybackManager.h>
 #include <LibWeb/Bindings/HTMLMediaElementPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
@@ -30,6 +30,8 @@
 #include <LibWeb/HTML/PotentialCORSRequest.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
+#include <LibWeb/HTML/TextTrack.h>
+#include <LibWeb/HTML/TextTrackList.h>
 #include <LibWeb/HTML/TimeRanges.h>
 #include <LibWeb/HTML/TrackEvent.h>
 #include <LibWeb/HTML/VideoTrack.h>
@@ -56,6 +58,7 @@ void HTMLMediaElement::initialize(JS::Realm& realm)
 
     m_audio_tracks = realm.heap().allocate<AudioTrackList>(realm, realm);
     m_video_tracks = realm.heap().allocate<VideoTrackList>(realm, realm);
+    m_text_tracks = realm.heap().allocate<TextTrackList>(realm, realm);
     m_document_observer = realm.heap().allocate<DOM::DocumentObserver>(realm, realm, document());
 
     // https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:media-element-82
@@ -88,15 +91,16 @@ void HTMLMediaElement::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_error);
     visitor.visit(m_audio_tracks);
     visitor.visit(m_video_tracks);
+    visitor.visit(m_text_tracks);
     visitor.visit(m_document_observer);
     visitor.visit(m_source_element_selector);
     visitor.visit(m_fetch_controller);
     visitor.visit(m_pending_play_promises);
 }
 
-void HTMLMediaElement::attribute_changed(FlyString const& name, Optional<String> const& value)
+void HTMLMediaElement::attribute_changed(FlyString const& name, Optional<String> const& old_value, Optional<String> const& value)
 {
-    Base::attribute_changed(name, value);
+    Base::attribute_changed(name, old_value, value);
 
     if (name == HTML::AttributeNames::src) {
         load_element().release_value_but_fixme_should_propagate_errors();
@@ -459,6 +463,42 @@ double HTMLMediaElement::effective_media_volume() const
     //    setting, values in between increasing in loudness. The range need not be linear. The loudest setting may be
     //    lower than the system's loudest possible setting; for example the user could have set a maximum volume.
     return volume;
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#dom-media-addtexttrack
+JS::NonnullGCPtr<TextTrack> HTMLMediaElement::add_text_track(Bindings::TextTrackKind kind, String const& label, String const& language)
+{
+    // 1. Create a new TextTrack object.
+    auto text_track = TextTrack::create(this->realm());
+
+    // 2. Create a new text track corresponding to the new object, and set its text track kind to kind, its text track
+    //    label to label, its text track language to language, its text track readiness state to the text track loaded
+    //    state, its text track mode to the text track hidden mode, and its text track list of cues to an empty list.
+    text_track->set_kind(kind);
+    text_track->set_label(label);
+    text_track->set_language(language);
+    text_track->set_readiness_state(TextTrack::ReadinessState::Loaded);
+    text_track->set_mode(Bindings::TextTrackMode::Hidden);
+    // FIXME: set text track list of cues to an empty list
+
+    // FIXME: 3. Initially, the text track list of cues is not associated with any rules for updating the text track rendering.
+    //    When a text track cue is added to it, the text track list of cues has its rules permanently set accordingly.
+
+    // FIXME: 4. Add the new text track to the media element's list of text tracks.
+
+    // 5. Queue a media element task given the media element to fire an event named addtrack at the media element's
+    //    textTracks attribute's TextTrackList object, using TrackEvent, with the track attribute initialized to the new
+    //    text track's TextTrack object.
+    queue_a_media_element_task([this, text_track] {
+        TrackEventInit event_init {};
+        event_init.track = JS::make_handle(text_track);
+
+        auto event = TrackEvent::create(this->realm(), HTML::EventNames::addtrack, move(event_init));
+        m_text_tracks->dispatch_event(event);
+    });
+
+    // 6. Return the new TextTrack object.
+    return text_track;
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#media-element-load-algorithm
@@ -1068,7 +1108,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
     auto& vm = realm.vm();
 
     auto audio_loader = Audio::Loader::create(m_media_data.bytes());
-    auto playback_manager = Video::PlaybackManager::from_data(m_media_data);
+    auto playback_manager = Media::PlaybackManager::from_data(m_media_data);
 
     // -> If the media data cannot be fetched at all, due to network errors, causing the user agent to give up trying to fetch the resource
     // -> If the media data can be fetched but is found by inspection to be in an unsupported format, or can otherwise not be rendered at all
