@@ -95,6 +95,7 @@ void DisplayListRecorder::stroke_path(StrokePathUsingColorParams params)
     if (path_bounding_rect.is_empty())
         return;
     append(StrokePathUsingColor {
+        .cap_style = params.cap_style,
         .path_bounding_rect = path_bounding_rect,
         .path = params.path,
         .color = params.color,
@@ -112,6 +113,7 @@ void DisplayListRecorder::stroke_path(StrokePathUsingPaintStyleParams params)
     if (path_bounding_rect.is_empty())
         return;
     append(StrokePathUsingPaintStyle {
+        .cap_style = params.cap_style,
         .path_bounding_rect = path_bounding_rect,
         .path = params.path,
         .paint_style = params.paint_style,

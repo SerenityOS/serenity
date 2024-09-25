@@ -65,6 +65,7 @@ public:
     void fill_path(FillPathUsingPaintStyleParams params);
 
     struct StrokePathUsingColorParams {
+        Gfx::Path::CapStyle cap_style;
         Gfx::Path path;
         Gfx::Color color;
         float thickness;
@@ -73,6 +74,7 @@ public:
     void stroke_path(StrokePathUsingColorParams params);
 
     struct StrokePathUsingPaintStyleParams {
+        Gfx::Path::CapStyle cap_style;
         Gfx::Path path;
         PaintStyle paint_style;
         float thickness;
