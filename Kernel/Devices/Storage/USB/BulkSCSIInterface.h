@@ -148,12 +148,17 @@ static ErrorOr<CommandStatusWrapper> send_scsi_command(
 class BulkSCSIInterface : public RefCounted<BulkSCSIInterface> {
     // https://www.usb.org/sites/default/files/usbmassbulk_10.pdf
 public:
-    BulkSCSIInterface(StorageDevice::LUNAddress logical_unit_number_address, size_t sector_size, u64 max_addressable_block, USB::Device& device, NonnullOwnPtr<BulkInPipe> in_pipe, NonnullOwnPtr<BulkOutPipe> out_pipe);
+    static ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> initialize(USB::Device&, NonnullOwnPtr<BulkInPipe>, NonnullOwnPtr<BulkOutPipe>);
+
     ~BulkSCSIInterface();
 
     USB::Device const& device() const { return m_device; }
 
 private:
+    BulkSCSIInterface(USB::Device& device, NonnullOwnPtr<BulkInPipe> in_pipe, NonnullOwnPtr<BulkOutPipe> out_pipe);
+
+    void add_storage_device(NonnullLockRefPtr<BulkSCSIStorageDevice> storage_device) { m_storage_devices.append(storage_device); }
+
     BulkSCSIStorageDevice::List m_storage_devices;
 
     USB::Device& m_device;
