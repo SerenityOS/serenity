@@ -93,7 +93,17 @@ public:
 
         command_block.set_command(command);
 
-        TRY(m_out_pipe->submit_bulk_out_transfer(sizeof(command_block), &command_block));
+        auto command_stage_result = m_out_pipe->submit_bulk_out_transfer(sizeof(command_block), &command_block);
+        if (command_stage_result.is_error()) {
+            auto error = command_stage_result.release_error();
+            if (error.code() == ESHUTDOWN) {
+                // usbmassbulk 5.3.1/6.6.1
+                TRY(perform_reset_recovery());
+                return EIO;
+            }
+
+            return error;
+        }
 
         if constexpr (Direction == SCSIDataDirection::DataToInitiator) {
             static_assert(!IsNullPointer<Data>);
