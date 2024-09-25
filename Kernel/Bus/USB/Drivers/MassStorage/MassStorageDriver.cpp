@@ -9,8 +9,6 @@
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBEndpoint.h>
 #include <Kernel/Bus/USB/USBRequest.h>
-#include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Devices/Storage/USB/BulkSCSIInterface.h>
 #include <Kernel/Devices/Storage/USB/Codes.h>
 #include <Kernel/Devices/Storage/USB/SCSIComands.h>
@@ -225,17 +223,15 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
         0
     };
 
-    auto bulk_scsi_interface = TRY(DeviceManagement::try_create_device<BulkSCSIInterface>(
+    auto bulk_scsi_interface = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) BulkSCSIInterface(
         lun,
-        device.address(), // FIXME: Figure out a better ID to put here
         capacity.block_size,
         capacity.block_count,
         device,
         move(in_pipe),
-        move(out_pipe)));
+        move(out_pipe))));
 
     m_interfaces.append(bulk_scsi_interface);
-    StorageManagement::the().add_device(bulk_scsi_interface);
 
     return {};
 }
@@ -244,7 +240,6 @@ void MassStorageDriver::detach(USB::Device& device)
 {
     auto&& interface = AK::find_if(m_interfaces.begin(), m_interfaces.end(), [&device](auto& interface) { return &interface.device() == &device; });
 
-    StorageManagement::the().remove_device(*interface);
     m_interfaces.remove(*interface);
 }
 
