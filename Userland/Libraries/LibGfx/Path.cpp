@@ -601,17 +601,11 @@ Path Path::stroke_to_fill(float thickness) const
             if (range.in_range(slope_now)) {
                 shape_idx++;
             } else {
-                if (clockwise(slope_now, range.end)) {
-                    if (active == static_cast<size_t>(pen_vertices.size() - 1))
-                        active = 0;
-                    else
-                        active++;
-                } else {
-                    if (active == 0)
-                        active = pen_vertices.size() - 1;
-                    else
-                        active--;
-                }
+                size_t increment = 1;
+
+                if (!clockwise(slope_now, range.end))
+                    increment = pen_vertices.size() - increment;
+                active = (active + increment) % pen_vertices.size();
             }
         }
     }
