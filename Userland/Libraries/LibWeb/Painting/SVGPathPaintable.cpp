@@ -132,8 +132,18 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
         });
     }
 
-    auto stroke_linecap = graphics_element.stroke_linecap().value_or(CSS::StrokeLinecap::Butt);
-    (void)stroke_linecap; // FIXME: Use
+    Gfx::Path::CapStyle cap_style;
+    switch (graphics_element.stroke_linecap().value_or(CSS::StrokeLinecap::Butt)) {
+    case CSS::StrokeLinecap::Butt:
+        cap_style = Gfx::Path::CapStyle::Butt;
+        break;
+    case CSS::StrokeLinecap::Round:
+        cap_style = Gfx::Path::CapStyle::Round;
+        break;
+    case CSS::StrokeLinecap::Square:
+        cap_style = Gfx::Path::CapStyle::Square;
+        break;
+    }
 
     auto stroke_opacity = graphics_element.stroke_opacity().value_or(1);
 
@@ -142,6 +152,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     if (auto paint_style = graphics_element.stroke_paint_style(paint_context); paint_style.has_value()) {
         context.display_list_recorder().stroke_path({
+            .cap_style = cap_style,
             .path = path,
             .paint_style = *paint_style,
             .thickness = stroke_thickness,
@@ -150,6 +161,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
         });
     } else if (auto stroke_color = graphics_element.stroke_color(); stroke_color.has_value()) {
         context.display_list_recorder().stroke_path({
+            .cap_style = cap_style,
             .path = path,
             .color = stroke_color->with_opacity(stroke_opacity),
             .thickness = stroke_thickness,
