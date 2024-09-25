@@ -496,7 +496,7 @@ static Vector<FloatPoint, 128> make_pen(float thickness)
     return pen_vertices;
 }
 
-Path Path::stroke_to_fill(float thickness) const
+Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 {
     // Note: This convolves a polygon with the path using the algorithm described
     // in https://keithp.com/~keithp/talks/cairo2003.pdf (3.1 Stroking Splines via Convolution)
@@ -602,6 +602,9 @@ Path Path::stroke_to_fill(float thickness) const
                 shape_idx++;
             } else {
                 size_t increment = 1;
+                bool is_at_either_end_of_segment = shape_idx == segment.size() - 1 || shape_idx == 2 * segment.size() - 2;
+                if (cap_style == CapStyle::Butt && is_at_either_end_of_segment)
+                    increment = pen_vertices.size() / 2;
 
                 if (!clockwise(slope_now, range.end))
                     increment = pen_vertices.size() - increment;
