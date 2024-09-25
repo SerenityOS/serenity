@@ -107,6 +107,7 @@ write_cmake_config("kernel_debug_gen") {
     "WAITBLOCK_DEBUG=",
     "WAITQUEUE_DEBUG=",
     "XHCI_DEBUG=",
+    "USB_MASS_STORAGE_DEBUG=",
   ]
 }
 
