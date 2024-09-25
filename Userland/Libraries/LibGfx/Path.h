@@ -206,7 +206,13 @@ public:
     void close();
     void close_all_subpaths();
 
-    Path stroke_to_fill(float thickness) const;
+    enum class CapStyle {
+        Butt,
+        Round,
+        // FIMXE: Square,
+    };
+
+    Path stroke_to_fill(float thickness, CapStyle cap_style = CapStyle::Round) const;
 
     Path place_text_along(Utf8View text, Font const&) const;
 
