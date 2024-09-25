@@ -31,7 +31,7 @@ ErrorOr<void> MassStorageDriver::checkout_interface(USB::Device& device, USBInte
     if (descriptor.interface_class_code != USB_CLASS_MASS_STORAGE)
         return ENOTSUP;
 
-    dmesgln("USB MassStorage Interface for device {}:{} found:", device.device_descriptor().vendor_id, device.device_descriptor().product_id);
+    dmesgln("USB MassStorage Interface for device {:04x}:{:04x} found:", device.device_descriptor().vendor_id, device.device_descriptor().product_id);
     dmesgln("    Subclass: {} [{:#02x}]", MassStorage::subclass_string((SubclassCode)descriptor.interface_sub_class_code), descriptor.interface_sub_class_code);
     dmesgln("    Protocol: {} [{:#02x}]", MassStorage::transport_protocol_string((TransportProtocol)descriptor.interface_protocol), descriptor.interface_protocol);
 
