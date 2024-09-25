@@ -54,8 +54,8 @@ set(SOURCES
     ImageFormats/JPEG2000Loader.cpp
     ImageFormats/JPEGLoader.cpp
     ImageFormats/JPEGXLEntropyDecoder.cpp
-    ImageFormats/JPEGXLLoader.cpp
     ImageFormats/JPEGXLICC.cpp
+    ImageFormats/JPEGXLLoader.cpp
     ImageFormats/JPEGWriter.cpp
     ImageFormats/PBMLoader.cpp
     ImageFormats/PGMLoader.cpp

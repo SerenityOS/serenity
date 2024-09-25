@@ -27,6 +27,7 @@ source_set("Painting") {
     "MediaPaintable.cpp",
     "NestedBrowsingContextPaintable.cpp",
     "PaintContext.cpp",
+    "PaintStyle.cpp",
     "Paintable.cpp",
     "PaintableBox.cpp",
     "PaintableFragment.cpp",
