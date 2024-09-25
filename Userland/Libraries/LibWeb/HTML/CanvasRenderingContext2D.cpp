@@ -319,10 +319,22 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
 {
     draw_clipped([&](auto& painter) {
         auto& drawing_state = this->drawing_state();
+        Gfx::Path::CapStyle line_cap = [](Bindings::CanvasLineCap cap) {
+            switch (cap) {
+            case Bindings::CanvasLineCap::Butt:
+                return Gfx::Path::CapStyle::Butt;
+            case Bindings::CanvasLineCap::Round:
+                return Gfx::Path::CapStyle::Round;
+            case Bindings::CanvasLineCap::Square:
+                // FIXME: Use LineCapStyle::Square once implemented.
+                return Gfx::Path::CapStyle::Round;
+            }
+            VERIFY_NOT_REACHED();
+        }(drawing_state.line_cap);
         if (auto color = drawing_state.stroke_style.as_color(); color.has_value()) {
-            painter.stroke_path(path, color->with_opacity(drawing_state.global_alpha), drawing_state.line_width);
+            painter.stroke_path(path, color->with_opacity(drawing_state.global_alpha), drawing_state.line_width, line_cap);
         } else {
-            painter.stroke_path(path, drawing_state.stroke_style.to_gfx_paint_style(), drawing_state.line_width, drawing_state.global_alpha);
+            painter.stroke_path(path, drawing_state.stroke_style.to_gfx_paint_style(), drawing_state.line_width, drawing_state.global_alpha, line_cap);
         }
         return path.bounding_box();
     });

@@ -31,6 +31,18 @@ public:
         return my_drawing_state().line_width;
     }
 
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-linecap
+    void set_line_cap(Bindings::CanvasLineCap line_cap)
+    {
+        // On setting, the current value must be changed to the new value.
+        my_drawing_state().line_cap = line_cap;
+    }
+    Bindings::CanvasLineCap line_cap() const
+    {
+        // On getting, it must return the current value.
+        return my_drawing_state().line_cap;
+    }
+
 protected:
     CanvasPathDrawingStyles() = default;
 
