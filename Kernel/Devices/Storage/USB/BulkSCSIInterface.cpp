@@ -5,24 +5,28 @@
  */
 
 #include <Kernel/Bus/USB/USBController.h>
+#include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Devices/Storage/USB/BulkSCSIInterface.h>
+#include <Kernel/Devices/Storage/USB/Codes.h>
 #include <Kernel/Devices/Storage/USB/SCSIComands.h>
 
 namespace Kernel::USB {
 
-BulkSCSIInterface::BulkSCSIInterface(USB::Device& device, NonnullOwnPtr<BulkInPipe> in_pipe, NonnullOwnPtr<BulkOutPipe> out_pipe)
+BulkSCSIInterface::BulkSCSIInterface(USB::Device& device, USBInterface const& interface, NonnullOwnPtr<BulkInPipe> in_pipe, NonnullOwnPtr<BulkOutPipe> out_pipe)
     : m_device(device)
+    , m_interface(interface)
     , m_in_pipe(move(in_pipe))
     , m_out_pipe(move(out_pipe))
 {
 }
 
-ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> BulkSCSIInterface::initialize(USB::Device& device, NonnullOwnPtr<BulkInPipe> in_pipe, NonnullOwnPtr<BulkOutPipe> out_pipe)
+ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> BulkSCSIInterface::initialize(USB::Device& device, USBInterface const& interface, NonnullOwnPtr<BulkInPipe> in_pipe, NonnullOwnPtr<BulkOutPipe> out_pipe)
 {
     auto bulk_scsi_interface = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) BulkSCSIInterface(
         device,
+        interface,
         move(in_pipe),
         move(out_pipe))));
 
@@ -132,6 +136,25 @@ ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> BulkSCSIInterface::initialize(USB:
     StorageManagement::the().add_device(storage_device);
 
     return bulk_scsi_interface;
+}
+
+ErrorOr<void> BulkSCSIInterface::perform_reset_recovery()
+{
+    // 5.3.4 Reset Recovery
+
+    TRY(m_device.control_transfer(
+        USB_REQUEST_TYPE_CLASS | USB_REQUEST_RECIPIENT_INTERFACE | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
+        to_underlying(MassStorage::RequestCodes::BulkOnlyMassStorageReset), 0, m_interface.descriptor().interface_id, 0, nullptr));
+
+    TRY(m_device.control_transfer(
+        USB_REQUEST_TYPE_CLASS | USB_REQUEST_RECIPIENT_ENDPOINT | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
+        USB_REQUEST_CLEAR_FEATURE, USB_FEATURE_ENDPOINT_HALT, m_in_pipe->endpoint_address(), 0, nullptr));
+
+    TRY(m_device.control_transfer(
+        USB_REQUEST_TYPE_CLASS | USB_REQUEST_RECIPIENT_ENDPOINT | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
+        USB_REQUEST_CLEAR_FEATURE, USB_FEATURE_ENDPOINT_HALT, m_out_pipe->endpoint_address(), 0, nullptr));
+
+    return {};
 }
 
 BulkSCSIInterface::~BulkSCSIInterface()

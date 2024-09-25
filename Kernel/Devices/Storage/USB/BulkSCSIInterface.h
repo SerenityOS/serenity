@@ -67,11 +67,13 @@ enum class SCSIDataDirection {
 class BulkSCSIInterface : public RefCounted<BulkSCSIInterface> {
     // https://www.usb.org/sites/default/files/usbmassbulk_10.pdf
 public:
-    static ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> initialize(USB::Device&, NonnullOwnPtr<BulkInPipe>, NonnullOwnPtr<BulkOutPipe>);
+    static ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> initialize(USB::Device&, USBInterface const&, NonnullOwnPtr<BulkInPipe>, NonnullOwnPtr<BulkOutPipe>);
 
     ~BulkSCSIInterface();
 
     USB::Device const& device() const { return m_device; }
+
+    ErrorOr<void> perform_reset_recovery();
 
     template<SCSIDataDirection Direction, typename Command, typename Data = nullptr_t>
     requires(IsNullPointer<Data>
@@ -118,7 +120,7 @@ public:
                 if (status_stage_result.is_error()) {
                     auto error = status_stage_result.release_error();
                     if (error.code() == ESHUTDOWN) {
-                        // TODO: Perform reset recovery
+                        TRY(perform_reset_recovery());
                         return EIO;
                     }
 
@@ -143,13 +145,14 @@ public:
     }
 
 private:
-    BulkSCSIInterface(USB::Device& device, NonnullOwnPtr<BulkInPipe> in_pipe, NonnullOwnPtr<BulkOutPipe> out_pipe);
+    BulkSCSIInterface(USB::Device&, USBInterface const&, NonnullOwnPtr<BulkInPipe>, NonnullOwnPtr<BulkOutPipe>);
 
     void add_storage_device(NonnullLockRefPtr<BulkSCSIStorageDevice> storage_device) { m_storage_devices.append(storage_device); }
 
     BulkSCSIStorageDevice::List m_storage_devices;
 
     USB::Device& m_device;
+    USBInterface const& m_interface;
     NonnullOwnPtr<BulkInPipe> m_in_pipe;
     NonnullOwnPtr<BulkOutPipe> m_out_pipe;
 
