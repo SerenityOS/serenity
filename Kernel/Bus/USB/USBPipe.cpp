@@ -23,6 +23,8 @@ Pipe::Pipe(USBController const& controller, Device& device, Type type, Direction
     , m_data_toggle(false)
     , m_dma_buffer(move(dma_buffer))
 {
+    // Valid endpoint numbers are between 0x0 and 0xf, inclusive.
+    VERIFY(endpoint_number <= 0xf);
 }
 
 ErrorOr<void> Pipe::clear_halt()
