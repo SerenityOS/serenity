@@ -9,7 +9,7 @@
 #include <AK/IntrusiveList.h>
 #include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/Bus/USB/USBPipe.h>
-#include <Kernel/Devices/Storage/StorageDevice.h>
+#include <Kernel/Devices/Storage/USB/BulkSCSIStorageDevice.h>
 
 namespace Kernel::USB {
 
@@ -145,31 +145,20 @@ static ErrorOr<CommandStatusWrapper> send_scsi_command(
     return status;
 }
 
-class BulkSCSIInterface : public StorageDevice {
+class BulkSCSIInterface : public RefCounted<BulkSCSIInterface> {
     // https://www.usb.org/sites/default/files/usbmassbulk_10.pdf
 public:
-    BulkSCSIInterface(LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, size_t sector_size, u64 max_addressable_block, USB::Device& device, NonnullOwnPtr<BulkInPipe> in_pipe, NonnullOwnPtr<BulkOutPipe> out_pipe);
+    BulkSCSIInterface(StorageDevice::LUNAddress logical_unit_number_address, size_t sector_size, u64 max_addressable_block, USB::Device& device, NonnullOwnPtr<BulkInPipe> in_pipe, NonnullOwnPtr<BulkOutPipe> out_pipe);
+    ~BulkSCSIInterface();
 
     USB::Device const& device() const { return m_device; }
 
-    virtual void start_request(AsyncBlockDeviceRequest&) override;
-    virtual CommandSet command_set() const override { return CommandSet::SCSI; }
-
 private:
+    BulkSCSIStorageDevice::List m_storage_devices;
+
     USB::Device& m_device;
     NonnullOwnPtr<BulkInPipe> m_in_pipe;
     NonnullOwnPtr<BulkOutPipe> m_out_pipe;
-
-    Optional<u16> m_optimal_transfer_length;
-    Optional<u32> m_optimal_transfer_length_granularity;
-    Optional<u32> m_maximum_transfer_length;
-
-    u32 optimal_block_count(u32 blocks);
-
-    ErrorOr<void> do_read(u32 block_index, u32 block_count, UserOrKernelBuffer& buffer, size_t buffer_size);
-    ErrorOr<void> do_write(u32 block_index, u32 block_count, UserOrKernelBuffer& buffer, size_t buffer_size);
-
-    ErrorOr<void> query_characteristics();
 
     IntrusiveListNode<BulkSCSIInterface, NonnullLockRefPtr<BulkSCSIInterface>> m_list_node;
 
