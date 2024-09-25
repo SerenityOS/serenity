@@ -108,11 +108,31 @@ public:
         if constexpr (Direction == SCSIDataDirection::DataToInitiator) {
             static_assert(!IsNullPointer<Data>);
             VERIFY(data_size != 0);
-            TRY(m_in_pipe->submit_bulk_in_transfer(data_size, data));
+
+            auto data_stage_result = m_in_pipe->submit_bulk_in_transfer(data_size, data);
+            if (data_stage_result.is_error()) {
+                auto error = data_stage_result.release_error();
+                if (error.code() == ESHUTDOWN) {
+                    // usbmassbulk 6.7.2 "On a STALL condition receiving data [...]"
+                    TRY(m_in_pipe->clear_halt());
+                } else {
+                    return error;
+                }
+            }
         } else if constexpr (Direction == SCSIDataDirection::DataToTarget) {
             static_assert(!IsNullPointer<Data>);
             VERIFY(data_size != 0);
-            TRY(m_out_pipe->submit_bulk_out_transfer(data_size, data));
+
+            auto data_stage_result = m_out_pipe->submit_bulk_out_transfer(data_size, data);
+            if (data_stage_result.is_error()) {
+                auto error = data_stage_result.release_error();
+                if (error.code() == ESHUTDOWN) {
+                    // usbmassbulk 6.7.3 "On a STALL condition sending data [...]"
+                    TRY(m_out_pipe->clear_halt());
+                } else {
+                    return error;
+                }
+            }
         } else {
             static_assert(IsNullPointer<Data>);
             VERIFY(data_size == 0);
