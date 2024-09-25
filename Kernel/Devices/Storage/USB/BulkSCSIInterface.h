@@ -84,6 +84,8 @@ public:
         Command const& command,
         Data data = nullptr, size_t data_size = 0)
     {
+        static_assert(sizeof(Command) >= 1);
+
         CommandBlockWrapper command_block {};
         command_block.transfer_length = data_size;
         if constexpr (Direction == SCSIDataDirection::DataToInitiator)
@@ -93,9 +95,15 @@ public:
 
         command_block.set_command(command);
 
+        dbgln_if(USB_MASS_STORAGE_DEBUG, "send_scsi_command (opcode {:#x}):", *bit_cast<u8 const*>(&command));
+
+        dbgln_if(USB_MASS_STORAGE_DEBUG, "  -> CBW: {:hex-dump}", ReadonlyBytes { &command_block, sizeof(command_block) });
+        dbgln_if(USB_MASS_STORAGE_DEBUG, "     CDB: {:hex-dump}", ReadonlyBytes { &command, sizeof(command) });
+
         auto command_stage_result = m_out_pipe->submit_bulk_out_transfer(sizeof(command_block), &command_block);
         if (command_stage_result.is_error()) {
             auto error = command_stage_result.release_error();
+            dbgln_if(USB_MASS_STORAGE_DEBUG, "     [Command Error: {}]", error);
             if (error.code() == ESHUTDOWN) {
                 // usbmassbulk 5.3.1/6.6.1
                 TRY(perform_reset_recovery());
@@ -104,6 +112,7 @@ public:
 
             return error;
         }
+        dbgln_if(USB_MASS_STORAGE_DEBUG, "     [Transferred: {} bytes]", command_stage_result.release_value());
 
         if constexpr (Direction == SCSIDataDirection::DataToInitiator) {
             static_assert(!IsNullPointer<Data>);
@@ -112,6 +121,7 @@ public:
             auto data_stage_result = m_in_pipe->submit_bulk_in_transfer(data_size, data);
             if (data_stage_result.is_error()) {
                 auto error = data_stage_result.release_error();
+                dbgln_if(USB_MASS_STORAGE_DEBUG, "     [Data Error: {}]", error);
                 if (error.code() == ESHUTDOWN) {
                     // usbmassbulk 6.7.2 "On a STALL condition receiving data [...]"
                     TRY(m_in_pipe->clear_halt());
@@ -119,13 +129,27 @@ public:
                     return error;
                 }
             }
+
+            if (!data_stage_result.is_error()) {
+                if constexpr (IsPointer<Data>)
+                    dbgln_if(USB_MASS_STORAGE_DEBUG, "  <- Data: {:hex-dump}", ReadonlyBytes { data, data_size });
+                else
+                    dbgln_if(USB_MASS_STORAGE_DEBUG, "  <- Data");
+                dbgln_if(USB_MASS_STORAGE_DEBUG, "     [Transferred: {} bytes]", data_stage_result.release_value());
+            }
         } else if constexpr (Direction == SCSIDataDirection::DataToTarget) {
             static_assert(!IsNullPointer<Data>);
             VERIFY(data_size != 0);
 
+            if constexpr (IsPointer<Data>)
+                dbgln_if(USB_MASS_STORAGE_DEBUG, "  -> Data: {:hex-dump}", ReadonlyBytes { data, data_size });
+            else
+                dbgln_if(USB_MASS_STORAGE_DEBUG, "  -> Data");
+
             auto data_stage_result = m_out_pipe->submit_bulk_out_transfer(data_size, data);
             if (data_stage_result.is_error()) {
                 auto error = data_stage_result.release_error();
+                dbgln_if(USB_MASS_STORAGE_DEBUG, "     [Data Error: {}]", error);
                 if (error.code() == ESHUTDOWN) {
                     // usbmassbulk 6.7.3 "On a STALL condition sending data [...]"
                     TRY(m_out_pipe->clear_halt());
@@ -133,6 +157,9 @@ public:
                     return error;
                 }
             }
+
+            if (!data_stage_result.is_error())
+                dbgln_if(USB_MASS_STORAGE_DEBUG, "     [Transferred: {} bytes]", data_stage_result.release_value());
         } else {
             static_assert(IsNullPointer<Data>);
             VERIFY(data_size == 0);
@@ -142,12 +169,18 @@ public:
         auto status_stage_result = m_in_pipe->submit_bulk_in_transfer(sizeof(status), &status);
         if (status_stage_result.is_error()) {
             auto error = status_stage_result.release_error();
+            dbgln_if(USB_MASS_STORAGE_DEBUG, "  [Status Error: {}]", error);
             if (error.code() == ESHUTDOWN) {
                 // Sequence diagram in usbmassbulk 5.3 and 6.7.* "On a STALL condition when receiving the CSW [...]"
-                TRY(m_in_pipe->clear_halt());
+                auto clear_halt_result = m_in_pipe->clear_halt();
+                if (clear_halt_result.is_error()) {
+                    dbgln_if(USB_MASS_STORAGE_DEBUG, "  [Clear Halt Error: {}]", clear_halt_result.error());
+                    return clear_halt_result.release_error();
+                }
 
                 status_stage_result = m_in_pipe->submit_bulk_in_transfer(sizeof(status), &status);
                 if (status_stage_result.is_error()) {
+                    dbgln_if(USB_MASS_STORAGE_DEBUG, "  [Status x2 Error: {}]", error);
                     auto error = status_stage_result.release_error();
                     if (error.code() == ESHUTDOWN) {
                         TRY(perform_reset_recovery());
@@ -160,6 +193,9 @@ public:
                 return error;
             }
         }
+        dbgln_if(USB_MASS_STORAGE_DEBUG, "  <- CSW: {:hex-dump}", ReadonlyBytes { &status, sizeof(status) });
+        dbgln_if(USB_MASS_STORAGE_DEBUG, "     signature: {:#x}, data_residue: {:#x}, status: {:#x}", (u32)status.signature, (u32)status.data_residue, to_underlying(status.status));
+        dbgln_if(USB_MASS_STORAGE_DEBUG, "     [Transferred: {} bytes]", status_stage_result.release_value());
 
         if (status.signature != 0x53425355) {
             dmesgln("SCSI: Command status signature mismatch, expected 0x53425355, got {:#x}", status.signature);

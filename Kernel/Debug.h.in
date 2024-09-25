@@ -358,3 +358,7 @@
 #ifndef XHCI_DEBUG
 #cmakedefine01 XHCI_DEBUG
 #endif
+
+#ifndef USB_MASS_STORAGE_DEBUG
+#cmakedefine01 USB_MASS_STORAGE_DEBUG
+#endif
