@@ -130,6 +130,7 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
 
     auto bulk_scsi_interface = TRY(BulkSCSIInterface::initialize(
         device,
+        interface,
         move(in_pipe),
         move(out_pipe)));
 
