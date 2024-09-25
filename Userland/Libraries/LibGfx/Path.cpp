@@ -549,7 +549,16 @@ Path Path::stroke_to_fill(float thickness) const
             current_angle += AK::Pi<float> * 2;
         if (target_angle < current_angle)
             target_angle += AK::Pi<float> * 2;
-        return (target_angle - current_angle) <= AK::Pi<float>;
+
+        auto angle = target_angle - current_angle;
+
+        // If the end of the range is antiparallel to where we want to go,
+        // we have to keep moving clockwise: In that case, the _next_ range
+        // is what we want.
+        if (fabs(angle - AK::Pi<float>) < 0.0001f)
+            return true;
+
+        return angle <= AK::Pi<float>;
     };
 
     Path convolution;
