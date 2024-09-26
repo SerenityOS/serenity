@@ -751,6 +751,8 @@ set(SOURCES
     WebDriver/ElementReference.cpp
     WebDriver/Error.cpp
     WebDriver/ExecuteScript.cpp
+    WebDriver/InputSource.cpp
+    WebDriver/InputState.cpp
     WebDriver/Response.cpp
     WebDriver/Screenshot.cpp
     WebDriver/TimeoutsConfiguration.cpp
