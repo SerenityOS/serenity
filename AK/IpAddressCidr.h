@@ -117,12 +117,12 @@ struct Formatter<Details::IPAddressCidrError> : Formatter<StringView> {
     {
         StringView value;
         switch (error) {
-            case Details::IPAddressCidrError::StringParsingFailed:
-                value = "String parsing failed"sv;
-                break;
-            case Details::IPAddressCidrError::CidrTooLong:
-                value = "CIDR too long"sv;
-                break;
+        case Details::IPAddressCidrError::StringParsingFailed:
+            value = "String parsing failed"sv;
+            break;
+        case Details::IPAddressCidrError::CidrTooLong:
+            value = "CIDR too long"sv;
+            break;
         }
 
         return Formatter<StringView>::format(builder, value);
