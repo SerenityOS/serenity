@@ -21,14 +21,14 @@ namespace Details {
 template<typename Address>
 class AddressTraits;
 
+enum class IPAddressCidrError {
+    CidrTooLong,
+    StringParsingFailed,
+};
+
 template<OneOf<IPv4AddressCidr, IPv6AddressCidr> AddressFamily>
 class IPAddressCidr {
 public:
-    enum class IPAddressCidrError {
-        CidrTooLong,
-        StringParsingFailed,
-    };
-
     using IPAddress = Details::AddressTraits<AddressFamily>::IPAddress;
 
     static constexpr ErrorOr<AddressFamily, IPAddressCidrError> create(IPAddress address, u8 length)
@@ -110,6 +110,24 @@ public:
 };
 
 }
+
+template<>
+struct Formatter<Details::IPAddressCidrError> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Details::IPAddressCidrError error)
+    {
+        StringView value;
+        switch (error) {
+            case Details::IPAddressCidrError::StringParsingFailed:
+                value = "String parsing failed"sv;
+                break;
+            case Details::IPAddressCidrError::CidrTooLong:
+                value = "CIDR too long"sv;
+                break;
+        }
+
+        return Formatter<StringView>::format(builder, value);
+    }
+};
 
 class IPv4AddressCidr : public Details::IPAddressCidr<IPv4AddressCidr> {
 public:
