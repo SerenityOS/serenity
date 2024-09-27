@@ -895,7 +895,7 @@ ErrorOr<Vector<xHCIController::TransferRequestBlock>> xHCIController::prepare_no
         transfer_request_block.normal.transfer_request_block_transfer_length = trb_transfer_length;
         offset += trb_transfer_length;
 
-        transfer_request_block.normal.transfer_descriptor_size = min(ceil_div(remaining, (u32)transfer.pipe().max_packet_size()), 31);
+        transfer_request_block.normal.transfer_descriptor_size = min(transfer_request_blocks_count - i - 1, 31);
         transfer_request_block.normal.interrupter_target = 0;
 
         if (i != (transfer_request_blocks_count - 1))
