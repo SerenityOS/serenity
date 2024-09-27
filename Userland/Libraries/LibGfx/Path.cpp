@@ -520,8 +520,13 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 
     Vector<FloatPoint, 128> pen_vertices = make_pen(thickness);
 
+    static constexpr auto mod = [](int a, int b) {
+        VERIFY(b > 0);
+        VERIFY(a + b >= 0);
+        return (a + b) % b;
+    };
     auto wrapping_index = [](auto& vertices, auto index) {
-        return vertices[(index + vertices.size()) % vertices.size()];
+        return vertices[mod(index, vertices.size())];
     };
 
     auto angle_between = [](auto p1, auto p2) {
@@ -590,7 +595,7 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 
         auto start_slope = slope();
         // Note: At least one range must be active.
-        auto active = *active_ranges.find_first_index_if([&](auto& range) {
+        int active = *active_ranges.find_first_index_if([&](auto& range) {
             return range.in_range(start_slope);
         });
 
@@ -601,14 +606,24 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
             if (range.in_range(slope_now)) {
                 shape_idx++;
             } else {
-                size_t increment = 1;
                 bool is_at_either_end_of_segment = shape_idx == segment.size() - 1 || shape_idx == 2 * segment.size() - 2;
-                if (cap_style == CapStyle::Butt && is_at_either_end_of_segment)
-                    increment = pen_vertices.size() / 2;
+                if (cap_style == CapStyle::Butt && is_at_either_end_of_segment) {
+                    active = mod(active + pen_vertices.size() / 2, pen_vertices.size());
+                    if (!active_ranges[active].in_range(slope_now)) {
+                        if (wrapping_index(active_ranges, active + 1).in_range(slope_now))
+                            active = mod(active + 1, pen_vertices.size());
+                        else if (wrapping_index(active_ranges, active - 1).in_range(slope_now))
+                            active = mod(active - 1, pen_vertices.size());
+                        else
+                            VERIFY_NOT_REACHED();
+                    }
+                    continue;
+                }
 
+                int increment = 1;
                 if (!clockwise(slope_now, range.end))
-                    increment = pen_vertices.size() - increment;
-                active = (active + increment) % pen_vertices.size();
+                    increment = -increment;
+                active = mod(active + increment, pen_vertices.size());
             }
         }
     }
