@@ -183,6 +183,7 @@ private:
     Gfx::Path map(Gfx::Path const&) const;
 
     float line_width() const;
+    Gfx::Path::CapStyle line_cap_style() const;
 
     Gfx::AffineTransform calculate_image_space_transformation(Gfx::IntSize);
 
