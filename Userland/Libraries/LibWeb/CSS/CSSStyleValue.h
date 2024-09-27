@@ -343,7 +343,7 @@ public:
 
     [[nodiscard]] int to_font_weight() const;
     [[nodiscard]] int to_font_slope() const;
-    [[nodiscard]] int to_font_stretch_width() const;
+    [[nodiscard]] int to_font_width() const;
 
     virtual bool equals(CSSStyleValue const& other) const = 0;
 
