@@ -13,11 +13,9 @@ TEST_CASE(sanity_check)
 {
     auto address_result = IPv6AddressCidr::create(IPv6Address({ 0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }), 128);
 
-    EXPECT(!address_result.is_error());
+    IPv6AddressCidr address = TRY_OR_FAIL(address_result);
 
-    IPv6AddressCidr address = address_result.release_value();
-
-    EXPECT_EQ(address.length(), (u32)128);
+    EXPECT_EQ(address.length(), 128l);
     EXPECT_EQ(address.ip_address(), IPv6Address({ 0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }));
     EXPECT_EQ(address.first_address_of_subnet(), IPv6Address({ 0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }));
     EXPECT_EQ(address.last_address_of_subnet(), IPv6Address({ 0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }));
@@ -27,7 +25,7 @@ TEST_CASE(should_fail_on_invalid_length)
 {
     auto address_result = IPv6AddressCidr::create(IPv6Address({ 0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }), 129);
     EXPECT(address_result.is_error());
-    EXPECT_EQ(address_result.error(), IPv6AddressCidr::IPAddressCidrError::CidrTooLong);
+    EXPECT_EQ(address_result.error(), AK::Details::IPAddressCidrError::CidrTooLong);
 }
 
 TEST_CASE(should_find_first_in_subnet)
@@ -60,10 +58,10 @@ TEST_CASE(should_set_address)
 TEST_CASE(should_set_length)
 {
     IPv6AddressCidr address = IPv6AddressCidr::create(IPv6Address({ 0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }), 48).release_value();
-    EXPECT_EQ(address.length(), (u32)48);
+    EXPECT_EQ(address.length(), 48l);
 
     EXPECT(!address.set_length(64).is_error());
-    EXPECT_EQ(address.length(), (u32)64);
+    EXPECT_EQ(address.length(), 64l);
 }
 
 TEST_CASE(should_not_set_invalid_length)
@@ -95,21 +93,21 @@ TEST_CASE(should_not_parse_invalid_address)
 {
     auto address = IPv6AddressCidr::from_string("200f:db8:::1/48"sv);
     EXPECT(address.is_error());
-    EXPECT_EQ(address.error(), IPv6AddressCidr::IPAddressCidrError::StringParsingFailed);
+    EXPECT_EQ(address.error(), AK::Details::IPAddressCidrError::StringParsingFailed);
 }
 
 TEST_CASE(should_not_parse_invalid_length)
 {
     auto address = IPv6AddressCidr::from_string("2001:db8::1/129"sv);
     EXPECT(address.is_error());
-    EXPECT_EQ(address.error(), IPv6AddressCidr::IPAddressCidrError::CidrTooLong);
+    EXPECT_EQ(address.error(), AK::Details::IPAddressCidrError::CidrTooLong);
 }
 
 TEST_CASE(should_not_parse_invalid_cidr_format)
 {
     auto address = IPv6AddressCidr::from_string("2001:db8::1"sv);
     EXPECT(address.is_error());
-    EXPECT_EQ(address.error(), IPv6AddressCidr::IPAddressCidrError::StringParsingFailed);
+    EXPECT_EQ(address.error(), AK::Details::IPAddressCidrError::StringParsingFailed);
 }
 
 TEST_CASE(should_format_cidr)

@@ -242,7 +242,7 @@ private:
     constexpr NetworkOrdered<u128> address_mask() const
     {
         u8 const free_bits = MAX_LENGTH - length();
-        NetworkOrdered<u128> mask = (u128)0;
+        NetworkOrdered<u128> mask = static_cast<u128>(0);
 
         if (free_bits != 128) {
             mask = NumericLimits<u128>::max() << free_bits;
