@@ -176,5 +176,5 @@ TEST_CASE(should_convert_to_u128)
 
     auto expected = bit_cast<NetworkOrdered<u128>>(array_address);
 
-    EXPECT_EQ((u128)addr_u128, (u128)expected);
+    EXPECT_EQ(static_cast<u128>(addr_u128), static_cast<u128>(expected));
 }
