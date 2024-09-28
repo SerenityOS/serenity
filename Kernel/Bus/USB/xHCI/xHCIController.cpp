@@ -869,6 +869,7 @@ ErrorOr<Vector<xHCIController::TransferRequestBlock>> xHCIController::prepare_no
 {
     auto const& device = transfer.pipe().device();
     auto const slot = device.controller_identifier();
+
     u32 max_burst_payload = 0;
     {
         auto endpoint_id = endpoint_index(transfer.pipe().endpoint_number(), transfer.pipe().direction());
@@ -876,26 +877,32 @@ ErrorOr<Vector<xHCIController::TransferRequestBlock>> xHCIController::prepare_no
         max_burst_payload = m_slots_state[slot - 1].endpoint_rings[endpoint_id - 1].max_burst_payload;
     }
     VERIFY(max_burst_payload > 0);
+
     u32 total_transfer_size = transfer.transfer_data_size();
     auto transfer_request_blocks_count = ceil_div(total_transfer_size, max_burst_payload);
     Vector<TransferRequestBlock> transfer_request_blocks;
     TRY(transfer_request_blocks.try_resize(transfer_request_blocks_count));
+
     auto offset = 0u;
     for (auto i = 0u; i < transfer_request_blocks_count; ++i) {
         auto& transfer_request_block = transfer_request_blocks[i];
         auto buffer_pointer = transfer.buffer_physical().get() + offset;
         transfer_request_block.normal.data_buffer_pointer_low = buffer_pointer;
         transfer_request_block.normal.data_buffer_pointer_high = buffer_pointer >> 32;
+
         auto remaining = total_transfer_size - offset;
         auto trb_transfer_length = remaining < max_burst_payload ? remaining : max_burst_payload;
         transfer_request_block.normal.transfer_request_block_transfer_length = trb_transfer_length;
         offset += trb_transfer_length;
+
         transfer_request_block.normal.transfer_descriptor_size = min(ceil_div(remaining, (u32)transfer.pipe().max_packet_size()), 31);
         transfer_request_block.normal.interrupter_target = 0;
+
         if (i != (transfer_request_blocks_count - 1))
             transfer_request_block.normal.chain_bit = 1;
         else
             transfer_request_block.normal.interrupt_on_completion = 1;
+
         transfer_request_block.normal.transfer_request_block_type = TransferRequestBlock::TRBType::Normal;
     }
 
