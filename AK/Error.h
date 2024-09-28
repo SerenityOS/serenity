@@ -149,7 +149,7 @@ public:
     using ResultType = T;
     using ErrorType = E;
 
-    ErrorOr()
+    constexpr ErrorOr()
     requires(IsSame<T, Empty>)
         : m_value_or_error(Empty {})
     {
