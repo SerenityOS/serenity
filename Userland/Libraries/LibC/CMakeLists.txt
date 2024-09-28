@@ -66,7 +66,6 @@ set(SOURCES
     sys/uio.cpp
     sys/wait.cpp
     syslog.cpp
-    termcap.cpp
     termios.cpp
     time.cpp
     times.cpp
@@ -204,7 +203,6 @@ set(HEADERS
     strings.h
     sysexits.h
     syslog.h
-    termcap.h
     termios.h
     time.h
     ucontext.h
