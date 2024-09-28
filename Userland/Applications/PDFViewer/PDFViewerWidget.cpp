@@ -196,7 +196,7 @@ PDFViewerWidget::PDFViewerWidget()
         m_go_to_next_page_action->set_enabled(new_page < m_viewer->document()->get_page_count() - 1);
     };
     m_viewer->on_render_errors = [&](u32 page, PDF::Errors const& errors) {
-        verify_cast<PagedErrorsModel>(m_paged_errors_model.ptr())->add_errors(page, errors);
+        m_paged_errors_model->add_errors(page, errors);
     };
 
     m_errors_tree_view = GUI::TreeView::construct();
