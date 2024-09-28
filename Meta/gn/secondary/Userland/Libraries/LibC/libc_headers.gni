@@ -3,7 +3,6 @@ libc_headers = [
   "semaphore.h",
   "pwd.h",
   "utime.h",
-  "termcap.h",
   "pty.h",
   "inttypes.h",
   "resolv.h",
