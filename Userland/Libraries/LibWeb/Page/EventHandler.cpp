@@ -793,7 +793,7 @@ bool EventHandler::handle_keydown(UIEvents::KeyCode key, u32 modifiers, u32 code
         return focus_next_element();
     }
 
-    if (key == KeyCode::Key_Escape)
+    if (key == UIEvents::KeyCode::Key_Escape)
         return document->window()->close_watcher_manager()->process_close_watchers();
 
     auto& realm = document->realm();
