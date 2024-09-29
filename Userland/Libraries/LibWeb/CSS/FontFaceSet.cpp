@@ -37,9 +37,6 @@ JS::NonnullGCPtr<FontFaceSet> FontFaceSet::construct_impl(JS::Realm& realm, Vect
     for (auto const& face : initial_faces)
         set_entries->set_add(face);
 
-    if (set_entries->set_size() == 0)
-        WebIDL::resolve_promise(realm, *ready_promise);
-
     return realm.heap().allocate<FontFaceSet>(realm, realm, ready_promise, set_entries);
 }
 
@@ -52,9 +49,8 @@ FontFaceSet::FontFaceSet(JS::Realm& realm, JS::NonnullGCPtr<WebIDL::Promise> rea
     : DOM::EventTarget(realm)
     , m_set_entries(set_entries)
     , m_ready_promise(ready_promise)
+    , m_status(Bindings::FontFaceSetLoadStatus::Loaded)
 {
-    bool const is_ready = ready()->state() == JS::Promise::State::Fulfilled;
-    m_status = is_ready ? Bindings::FontFaceSetLoadStatus::Loaded : Bindings::FontFaceSetLoadStatus::Loading;
 }
 
 void FontFaceSet::initialize(JS::Realm& realm)
@@ -289,6 +285,11 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Promise>> FontFaceSet::load(String co
 JS::NonnullGCPtr<JS::Promise> FontFaceSet::ready() const
 {
     return verify_cast<JS::Promise>(*m_ready_promise->promise());
+}
+
+void FontFaceSet::resolve_ready_promise()
+{
+    WebIDL::resolve_promise(realm(), *m_ready_promise);
 }
 
 }

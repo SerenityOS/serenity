@@ -164,6 +164,8 @@ public:
 
     [[nodiscard]] bool has_has_selectors() const { return m_has_has_selectors; }
 
+    size_t number_of_css_font_faces_with_loading_in_progress() const;
+
 private:
     enum class ComputeStyleMode {
         Normal,
@@ -268,6 +270,8 @@ public:
 
     RefPtr<Gfx::Font> font_with_point_size(float point_size);
     void start_loading_next_url();
+
+    bool is_loading() const { return resource() && resource()->is_pending(); }
 
 private:
     ErrorOr<NonnullRefPtr<Gfx::VectorFont>> try_load_font();
