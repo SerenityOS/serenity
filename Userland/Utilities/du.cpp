@@ -228,11 +228,12 @@ u64 print_space_usage(ByteString const& path, DuOption const& du_option, size_t 
             return 0;
     }
 
-    if (!du_option.apparent_size) {
+    // If the underlying FS reports 0 used blocks, apparent size may be more accurate
+    if (du_option.apparent_size || path_stat.st_blocks == 0) {
+        size += path_stat.st_size;
+    } else {
         constexpr auto block_size = 512;
         size += path_stat.st_blocks * block_size;
-    } else {
-        size += path_stat.st_size;
     }
 
     bool is_beyond_depth = current_depth > du_option.max_depth;
