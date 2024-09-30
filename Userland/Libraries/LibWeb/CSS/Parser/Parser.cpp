@@ -3863,18 +3863,18 @@ RefPtr<CSSStyleValue> Parser::parse_simple_comma_separated_value_list(PropertyID
     });
 }
 
-RefPtr<CSSStyleValue> Parser::parse_all_as_single_none_value(TokenStream<ComponentValue>& tokens)
+RefPtr<CSSStyleValue> Parser::parse_all_as_single_keyword_value(TokenStream<ComponentValue>& tokens, Keyword keyword)
 {
     auto transaction = tokens.begin_transaction();
     tokens.skip_whitespace();
-    auto maybe_none = tokens.next_token();
+    auto keyword_value = parse_keyword_value(tokens);
     tokens.skip_whitespace();
 
-    if (tokens.has_next_token() || !maybe_none.is_ident("none"sv))
+    if (tokens.has_next_token() || !keyword_value || keyword_value->to_keyword() != keyword)
         return {};
 
     transaction.commit();
-    return CSSKeywordValue::create(Keyword::None);
+    return keyword_value;
 }
 
 static void remove_property(Vector<PropertyID>& properties, PropertyID property_to_remove)
@@ -4588,7 +4588,7 @@ RefPtr<CSSStyleValue> Parser::parse_columns_value(TokenStream<ComponentValue>& t
 RefPtr<CSSStyleValue> Parser::parse_shadow_value(TokenStream<ComponentValue>& tokens, AllowInsetKeyword allow_inset_keyword)
 {
     // "none"
-    if (auto none = parse_all_as_single_none_value(tokens))
+    if (auto none = parse_all_as_single_keyword_value(tokens, Keyword::None))
         return none;
 
     return parse_comma_separated_value_list(tokens, [this, allow_inset_keyword](auto& tokens) {
@@ -4769,7 +4769,7 @@ RefPtr<CSSStyleValue> Parser::parse_content_value(TokenStream<ComponentValue>& t
 RefPtr<CSSStyleValue> Parser::parse_counter_increment_value(TokenStream<ComponentValue>& tokens)
 {
     // [ <counter-name> <integer>? ]+ | none
-    if (auto none = parse_all_as_single_none_value(tokens))
+    if (auto none = parse_all_as_single_keyword_value(tokens, Keyword::None))
         return none;
 
     return parse_counter_definitions_value(tokens, AllowReversed::No, 1);
@@ -4779,7 +4779,7 @@ RefPtr<CSSStyleValue> Parser::parse_counter_increment_value(TokenStream<Componen
 RefPtr<CSSStyleValue> Parser::parse_counter_reset_value(TokenStream<ComponentValue>& tokens)
 {
     // [ <counter-name> <integer>? | <reversed-counter-name> <integer>? ]+ | none
-    if (auto none = parse_all_as_single_none_value(tokens))
+    if (auto none = parse_all_as_single_keyword_value(tokens, Keyword::None))
         return none;
 
     return parse_counter_definitions_value(tokens, AllowReversed::Yes, 0);
@@ -4789,7 +4789,7 @@ RefPtr<CSSStyleValue> Parser::parse_counter_reset_value(TokenStream<ComponentVal
 RefPtr<CSSStyleValue> Parser::parse_counter_set_value(TokenStream<ComponentValue>& tokens)
 {
     // [ <counter-name> <integer>? ]+ | none
-    if (auto none = parse_all_as_single_none_value(tokens))
+    if (auto none = parse_all_as_single_keyword_value(tokens, Keyword::None))
         return none;
 
     return parse_counter_definitions_value(tokens, AllowReversed::No, 0);
@@ -4928,7 +4928,7 @@ RefPtr<CSSStyleValue> Parser::parse_display_value(TokenStream<ComponentValue>& t
 
 RefPtr<CSSStyleValue> Parser::parse_filter_value_list_value(TokenStream<ComponentValue>& tokens)
 {
-    if (auto none = parse_all_as_single_none_value(tokens))
+    if (auto none = parse_all_as_single_keyword_value(tokens, Keyword::None))
         return none;
 
     auto transaction = tokens.begin_transaction();
@@ -5448,40 +5448,27 @@ RefPtr<CSSStyleValue> Parser::parse_font_language_override_value(TokenStream<Com
     // This is `normal | <string>` but with the constraint that the string has to be 4 characters long:
     // Shorter strings are right-padded with spaces, and longer strings are invalid.
 
-    {
-        auto transaction = tokens.begin_transaction();
-        tokens.skip_whitespace();
-        if (auto keyword = parse_keyword_value(tokens); keyword->to_keyword() == Keyword::Normal) {
-            tokens.skip_whitespace();
-            if (tokens.has_next_token()) {
-                dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Failed to parse font-language-override: unexpected trailing tokens");
-                return nullptr;
-            }
-            transaction.commit();
-            return keyword;
-        }
-    }
+    if (auto normal = parse_all_as_single_keyword_value(tokens, Keyword::Normal))
+        return normal;
 
-    {
-        auto transaction = tokens.begin_transaction();
+    auto transaction = tokens.begin_transaction();
+    tokens.skip_whitespace();
+    if (auto string = parse_string_value(tokens)) {
+        auto string_value = string->string_value();
         tokens.skip_whitespace();
-        if (auto string = parse_string_value(tokens)) {
-            auto string_value = string->string_value();
-            tokens.skip_whitespace();
-            if (tokens.has_next_token()) {
-                dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Failed to parse font-language-override: unexpected trailing tokens");
-                return nullptr;
-            }
-            auto length = string_value.code_points().length();
-            if (length > 4) {
-                dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Failed to parse font-language-override: <string> value \"{}\" is too long", string_value);
-                return nullptr;
-            }
-            transaction.commit();
-            if (length < 4)
-                return StringStyleValue::create(MUST(String::formatted("{<4}", string_value)));
-            return string;
+        if (tokens.has_next_token()) {
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Failed to parse font-language-override: unexpected trailing tokens");
+            return nullptr;
         }
+        auto length = string_value.code_points().length();
+        if (length > 4) {
+            dbgln_if(CSS_PARSER_DEBUG, "CSSParser: Failed to parse font-language-override: <string> value \"{}\" is too long", string_value);
+            return nullptr;
+        }
+        transaction.commit();
+        if (length < 4)
+            return StringStyleValue::create(MUST(String::formatted("{<4}", string_value)));
+        return string;
     }
 
     return nullptr;
@@ -6338,7 +6325,7 @@ RefPtr<CSSStyleValue> Parser::parse_transform_value(TokenStream<ComponentValue>&
     // <transform> = none | <transform-list>
     // <transform-list> = <transform-function>+
 
-    if (auto none = parse_all_as_single_none_value(tokens))
+    if (auto none = parse_all_as_single_keyword_value(tokens, Keyword::None))
         return none;
 
     StyleValueVector transformations;
@@ -6590,7 +6577,7 @@ RefPtr<CSSStyleValue> Parser::parse_transform_origin_value(TokenStream<Component
 
 RefPtr<CSSStyleValue> Parser::parse_transition_value(TokenStream<ComponentValue>& tokens)
 {
-    if (auto none = parse_all_as_single_none_value(tokens))
+    if (auto none = parse_all_as_single_keyword_value(tokens, Keyword::None))
         return none;
 
     Vector<TransitionStyleValue::Transition> transitions;
@@ -6896,7 +6883,7 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
 
 RefPtr<CSSStyleValue> Parser::parse_grid_track_size_list(TokenStream<ComponentValue>& tokens, bool allow_separate_line_name_blocks)
 {
-    if (auto none = parse_all_as_single_none_value(tokens))
+    if (auto none = parse_all_as_single_keyword_value(tokens, Keyword::None))
         return GridTrackSizeListStyleValue::make_none();
 
     auto transaction = tokens.begin_transaction();
@@ -7392,7 +7379,7 @@ RefPtr<CSSStyleValue> Parser::parse_grid_template_areas_value(TokenStream<Compon
     // none | <string>+
     Vector<Vector<String>> grid_area_rows;
 
-    if (auto none = parse_all_as_single_none_value(tokens))
+    if (auto none = parse_all_as_single_keyword_value(tokens, Keyword::None))
         return GridTemplateAreaStyleValue::create(move(grid_area_rows));
 
     auto transaction = tokens.begin_transaction();
