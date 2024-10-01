@@ -12,11 +12,3 @@ work in cpp, assume that it exists.
 Adapt to the Serenity thread name interface
 
 
-## `0003-avcodec-x86-mathops-clip-constants-used-with-shift-i.patch`
-
-avcodec/x86/mathops: clip constants used with shift instructions within inline assembly
-
-Fixes assembling with binutil as >= 2.41
-
-Signed-off-by: James Almer <jamrial@gmail.com>
-
