@@ -12,6 +12,7 @@ files=(
 )
 depends=(
     'glib'
+    'SDL2'
 )
 
 configure() {
