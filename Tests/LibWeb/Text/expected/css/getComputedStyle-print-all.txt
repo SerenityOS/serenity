@@ -32,6 +32,7 @@ stroke: none
 stroke-linecap: butt
 stroke-opacity: 1
 stroke-width: 1px
+tab-size: 8
 text-align: start
 text-anchor: start
 text-decoration-line: none
@@ -118,7 +119,7 @@ grid-row-start: auto
 grid-template-areas: 
 grid-template-columns: 
 grid-template-rows: 
-height: 2040px
+height: 2057px
 inline-size: auto
 inset-block-end: auto
 inset-block-start: auto
