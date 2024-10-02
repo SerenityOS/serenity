@@ -35,6 +35,7 @@ configopts=(
     '--without-ensurepip'
     'ac_cv_file__dev_ptmx=no'
     'ac_cv_file__dev_ptc=no'
+    'ac_cv_header_libintl_h=no'
 )
 
 export BLDSHARED="${CC} -shared"
