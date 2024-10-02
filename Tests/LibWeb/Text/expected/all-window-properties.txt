@@ -22,6 +22,7 @@ AudioScheduledSourceNode
 AudioTrack
 AudioTrackList
 BaseAudioContext
+BeforeUnloadEvent
 BigInt
 BigInt64Array
 BigUint64Array
