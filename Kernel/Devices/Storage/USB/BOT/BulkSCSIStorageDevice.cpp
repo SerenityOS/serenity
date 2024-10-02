@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/Storage/USB/BulkSCSIInterface.h>
-#include <Kernel/Devices/Storage/USB/BulkSCSIStorageDevice.h>
+#include <Kernel/Devices/Storage/USB/BOT/BulkSCSIInterface.h>
+#include <Kernel/Devices/Storage/USB/BOT/BulkSCSIStorageDevice.h>
 #include <Kernel/Devices/Storage/USB/SCSIComands.h>
 
 namespace Kernel::USB {
