@@ -292,9 +292,8 @@ static ErrorOr<TestResult> run_dump_test(HeadlessWebContentView& view, StringVie
                 loop.quit(0);
         };
 
-        view.on_text_test_finish = [&]() {
-            auto promise = view.request_internal_page_info(WebView::PageInfoType::Text);
-            result = MUST(promise->await());
+        view.on_text_test_finish = [&](auto const& text) {
+            result = text;
 
             did_finish_test = true;
             if (did_finish_loading)
@@ -369,7 +368,7 @@ static ErrorOr<TestResult> run_ref_test(HeadlessWebContentView& view, StringView
             view.debug_request("load-reference-page");
         }
     };
-    view.on_text_test_finish = [&] {
+    view.on_text_test_finish = [&](auto const&) {
         dbgln("Unexpected text test finished during ref test for {}", input_path);
     };
 

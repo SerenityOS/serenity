@@ -1,4 +1,4 @@
-Well, hello friends  animation-delay: 'calc(2s)' -> 'calc(2s)'
+animation-delay: 'calc(2s)' -> 'calc(2s)'
 animation-delay: 'calc(2s * var(--n))' -> '4s'
 animation-duration: 'calc(2s)' -> 'calc(2s)'
 animation-duration: 'calc(2s * var(--n))' -> '4s'
