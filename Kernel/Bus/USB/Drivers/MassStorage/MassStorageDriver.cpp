@@ -9,8 +9,8 @@
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBEndpoint.h>
 #include <Kernel/Bus/USB/USBRequest.h>
-#include <Kernel/Devices/Storage/USB/BulkSCSIInterface.h>
-#include <Kernel/Devices/Storage/USB/Codes.h>
+#include <Kernel/Devices/Storage/USB/BOT/BulkSCSIInterface.h>
+#include <Kernel/Devices/Storage/USB/BOT/Codes.h>
 
 namespace Kernel::USB {
 

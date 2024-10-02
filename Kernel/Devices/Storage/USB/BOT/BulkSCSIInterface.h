@@ -9,7 +9,8 @@
 #include <AK/IntrusiveList.h>
 #include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/Bus/USB/USBPipe.h>
-#include <Kernel/Devices/Storage/USB/BulkSCSIStorageDevice.h>
+#include <Kernel/Devices/Storage/USB/BOT/BulkSCSIStorageDevice.h>
+#include <Kernel/Devices/Storage/USB/SCSIInterface.h>
 
 namespace Kernel::USB {
 
@@ -58,13 +59,7 @@ struct CommandStatusWrapper {
 };
 static_assert(AssertSize<CommandStatusWrapper, 13>());
 
-enum class SCSIDataDirection {
-    DataToTarget,
-    DataToInitiator,
-    NoData
-};
-
-class BulkSCSIInterface : public RefCounted<BulkSCSIInterface> {
+class BulkSCSIInterface : public AK::RefCounted<BulkSCSIInterface> {
     // https://www.usb.org/sites/default/files/usbmassbulk_10.pdf
 public:
     static ErrorOr<NonnullLockRefPtr<BulkSCSIInterface>> initialize(USB::Device&, USBInterface const&, NonnullOwnPtr<BulkInPipe>, NonnullOwnPtr<BulkOutPipe>);

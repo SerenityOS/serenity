@@ -9,7 +9,7 @@
 #include <Kernel/Bus/USB/Drivers/USBDriver.h>
 #include <Kernel/Bus/USB/USBInterface.h>
 #include <Kernel/Bus/USB/USBManagement.h>
-#include <Kernel/Devices/Storage/USB/BulkSCSIInterface.h>
+#include <Kernel/Devices/Storage/USB/BOT/BulkSCSIInterface.h>
 
 namespace Kernel::USB {
 
