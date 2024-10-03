@@ -260,7 +260,7 @@ build_jakt() {
 
 ensure_jakt() {
     if ! [ -d "$JAKT_TOOLCHAIN_DIR" ] || ! [ -d "$JAKT_LIB_DIR" ]; then
-        build_jakt
+        build_jakt || true # CMake can handle the failure.
     fi
 }
 
