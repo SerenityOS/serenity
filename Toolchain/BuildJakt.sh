@@ -94,7 +94,7 @@ echo PREFIX is "$PREFIX"
 
 mkdir -p "$DIR/Tarballs"
 
-JAKT_COMMIT_HASH="714b634cf1de81e38a99608c3310157688cd9125"
+JAKT_COMMIT_HASH="d65f014cc54b986f629fe676d914af01d442b9f7"
 JAKT_NAME="jakt-${JAKT_COMMIT_HASH}"
 JAKT_TARBALL="${JAKT_NAME}.tar.gz"
 JAKT_GIT_URL="https://github.com/serenityos/jakt"

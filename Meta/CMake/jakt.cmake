@@ -1,7 +1,3 @@
-if (NOT ENABLE_JAKT)
-    return()
-endif()
-
 set(arch ${CMAKE_SYSTEM_PROCESSOR})
 if (arch STREQUAL "x86")
     set(arch "i686")
@@ -31,6 +27,55 @@ else()
 endif()
 set(JAKT_LIBRARY_DIR "${JAKT_LIBRARY_BASE}/${JAKT_TARGET_TRIPLE}")
 set(JAKT_INCLUDE_DIR "${CMAKE_SYSROOT}/usr/local/include/runtime")
+
+# Make sure the jakt compiler:
+# - exists
+# - can do C++ interop
+# Otherwise, complain and just disable jakt for the project.
+if (ENABLE_JAKT)
+    if (NOT EXISTS ${JAKT_COMPILER})
+        message(WARNING "Jakt compiler not found at ${JAKT_COMPILER}, disabling jakt")
+        set(ENABLE_JAKT OFF CACHE BOOL "Enable jakt" FORCE)
+    else()
+        file(WRITE ${CMAKE_BINARY_DIR}/jakt_test.jakt "import extern \"LibMain/Main.h\"\nfn main() { }\n")
+        set(include_args)
+        set(all_includes
+            ${INCLUDE_DIRECTORIES}
+            ${SerenityOS_SOURCE_DIR}
+            ${SerenityOS_SOURCE_DIR}/Userland/Libraries
+            ${SerenityOS_SOURCE_DIR}/Userland/Libraries/LibCrypt
+            ${SerenityOS_SOURCE_DIR}/Userland/Libraries/LibSystem
+            ${SerenityOS_SOURCE_DIR}/Userland/Services
+            ${SerenityOS_SOURCE_DIR}/Userland
+        )
+        foreach(include IN LISTS all_includes)
+            list(APPEND include_args "-I" "${include}")
+        endforeach()
+
+        execute_process(
+            COMMAND ${JAKT_COMPILER}
+                -S
+                --ak-is-my-only-stdlib
+                -T ${JAKT_TARGET_TRIPLE}
+                --binary-dir ${CMAKE_BINARY_DIR}
+                ${include_args}
+                ${CMAKE_BINARY_DIR}/jakt_test.jakt
+            RESULT_VARIABLE JAKT_COMPILER_RESULT
+            OUTPUT_QUIET
+            ERROR_QUIET
+        )
+
+        if (NOT JAKT_COMPILER_RESULT EQUAL 0)
+            message(WARNING "Jakt compiler at ${JAKT_COMPILER} does not support C++ interop, disabling jakt")
+            set(ENABLE_JAKT OFF CACHE BOOL "Enable jakt" FORCE)
+        endif()
+    endif()
+endif()
+
+if (NOT ENABLE_JAKT)
+    return()
+endif()
+
 cmake_host_system_information(RESULT JAKT_PROCESSOR_COUNT QUERY NUMBER_OF_PHYSICAL_CORES)
 set_property(GLOBAL PROPERTY JOB_POOLS jakt_pool=1)
 
