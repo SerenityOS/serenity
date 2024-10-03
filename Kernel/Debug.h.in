@@ -151,8 +151,8 @@
 #cmakedefine01 IPV6_DEBUG
 #endif
 
-#ifndef IPV4_SOCKET_DEBUG
-#cmakedefine01 IPV4_SOCKET_DEBUG
+#ifndef IP_SOCKET_DEBUG
+#cmakedefine01 IP_SOCKET_DEBUG
 #endif
 
 #ifndef IRQ_DEBUG

@@ -12,9 +12,9 @@
 
 namespace Kernel {
 
-class UDPSocket final : public IPv4Socket {
+class UDPSocket final : public IPSocket {
 public:
-    static ErrorOr<NonnullRefPtr<UDPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
+    static ErrorOr<NonnullRefPtr<UDPSocket>> try_create(int protocol, NonnullOwnPtr<IPSocketDelegate> delegate, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~UDPSocket() override;
 
     static RefPtr<UDPSocket> from_port(u16);
@@ -22,7 +22,7 @@ public:
     static ErrorOr<void> try_for_each(Function<ErrorOr<void>(UDPSocket const&)>);
 
 private:
-    explicit UDPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
+    explicit UDPSocket(int protocol, NonnullOwnPtr<IPSocketDelegate> delegate, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual StringView class_name() const override { return "UDPSocket"sv; }
     static MutexProtected<HashMap<u16, UDPSocket*>>& sockets_by_port();
 
