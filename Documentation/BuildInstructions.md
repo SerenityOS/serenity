@@ -11,15 +11,17 @@ sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2
 ```
 Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
 
-#### GCC 13 or Clang 17
+#### GCC 13 or Clang 17+
 
-A host compiler that supports C++23 features is required for building host tools, the newer the better. Tested versions include gcc-13 and clang-17.
+A host compiler that supports C++23 features is required for building host tools, the newer the better. Tested versions include gcc-13 and Clang 17 through 19.
 
 On Ubuntu gcc-13 is available in the repositories of 24.04 (Noble) and later.
 If you are running an older version, you will either need to upgrade, or find an alternative installation source
 (i.e. from the [ubuntu-toolchain-r/test PPA](https://launchpad.net/~ubuntu-toolchain-r/+archive/ubuntu/test)).
 
-Next, update your local package information from this repository:
+On both Ubuntu and Debian, recent versions of Clang are available in the [LLVM apt repositories](https://apt.llvm.org/).
+
+Next, update your local package information from the new repositories:
 
 ```console
 sudo apt update
@@ -29,6 +31,12 @@ Now on Ubuntu or Debian you can install gcc-13 with apt like this:
 
 ```console
 sudo apt install gcc-13 g++-13
+```
+
+For Clang, the following packages are required (for example Clang 19). Note that the `-dev` packages are only necessary when jakt is enabled.
+
+```
+sudo apt install libclang-19-dev clang-19 llvm-19 llvm-19-dev
 ```
 
 #### QEMU 6.2 or later
@@ -68,7 +76,7 @@ for details.
 ```console
 sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu-desktop qemu-system-aarch64 ccache rsync unzip
 ```
-Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
+Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224), and `clang llvm llvm-libs` for building with Clang.
 
 ### SerenityOS
 
