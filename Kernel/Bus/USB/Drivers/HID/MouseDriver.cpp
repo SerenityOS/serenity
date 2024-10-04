@@ -60,11 +60,8 @@ ErrorOr<void> MouseDriver::initialize_device(USB::Device& device, USBInterface c
 {
     if (interface.endpoints().size() != 1)
         return ENOTSUP;
-    auto const& configuration = interface.configuration();
     // FIXME: Should we check other configurations?
-    TRY(device.control_transfer(
-        USB_REQUEST_RECIPIENT_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
-        USB_REQUEST_SET_CONFIGURATION, configuration.configuration_id(), 0, 0, nullptr));
+    TRY(device.set_configuration_and_interface(interface));
 
     auto const& endpoint_descriptor = interface.endpoints()[0];
     auto interrupt_in_pipe = TRY(USB::InterruptInPipe::create(device.controller(), device, endpoint_descriptor.endpoint_address & 0xf, endpoint_descriptor.max_packet_size, 10));
