@@ -718,6 +718,7 @@ class SVGEllipseElement;
 class SVGForeignObjectElement;
 class SVGGeometryElement;
 class SVGGraphicsElement;
+class SVGImageElement;
 class SVGLength;
 class SVGLineElement;
 class SVGMaskElement;

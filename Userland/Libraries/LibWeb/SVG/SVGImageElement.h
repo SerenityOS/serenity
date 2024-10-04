@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibGfx/ImmutableBitmap.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Layout/ImageProvider.h>
 #include <LibWeb/SVG/SVGAnimatedLength.h>
@@ -28,6 +29,15 @@ public:
     JS::NonnullGCPtr<SVG::SVGAnimatedLength> height();
 
     Gfx::Rect<CSSPixels> bounding_box() const;
+
+    // FIXME: This is a hack for images used as CanvasImageSource. Do something more elegant.
+    RefPtr<Gfx::Bitmap> bitmap() const
+    {
+        auto bitmap = current_image_bitmap();
+        if (!bitmap)
+            return nullptr;
+        return bitmap->bitmap();
+    }
 
     // ^Layout::ImageProvider
     virtual bool is_image_available() const override;
