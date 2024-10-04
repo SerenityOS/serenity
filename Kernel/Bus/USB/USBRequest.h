@@ -41,6 +41,7 @@ static constexpr u8 USB_REQUEST_GET_DESCRIPTOR = 0x06;
 static constexpr u8 USB_REQUEST_SET_DESCRIPTOR = 0x07;
 static constexpr u8 USB_REQUEST_GET_CONFIGURATION = 0x08;
 static constexpr u8 USB_REQUEST_SET_CONFIGURATION = 0x09;
+static constexpr u8 USB_REQUEST_SET_INTERFACE = 0x0B;
 
 // Table 9-6
 static constexpr u16 USB_FEATURE_DEVICE_REMOTE_WAKEUP = 1;

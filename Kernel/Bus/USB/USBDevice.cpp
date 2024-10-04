@@ -97,4 +97,37 @@ ErrorOr<size_t> Device::control_transfer(u8 request_type, u8 request, u16 value,
     return TRY(m_default_pipe->submit_control_transfer(request_type, request, value, index, length, data));
 }
 
+ErrorOr<void> Device::set_configuration(USBConfiguration const& configuration)
+{
+    if (m_was_configured.was_set() && m_current_configuration != configuration.configuration_id())
+        return EALREADY;
+
+    if (!m_was_configured.was_set()) {
+        m_was_configured.set();
+        m_current_configuration = configuration.configuration_id();
+
+        TRY(control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_RECIPIENT_DEVICE, USB_REQUEST_SET_CONFIGURATION,
+            m_current_configuration, 0, 0, nullptr));
+
+        // FIXME: On xHCI we should set up the all endpoints for the configuration here
+        //        Currently we set them up on the first transfer, which works good enough for now
+    }
+
+    return {};
+}
+
+ErrorOr<void> Device::set_configuration_and_interface(USBInterface const& interface)
+{
+    auto const& configuration = interface.configuration();
+    TRY(set_configuration(configuration));
+
+    // FIXME: When we use the default alternate_setting of interface/the current alternate setting, we don't need to SET_INTERFACE it
+    //        but that gets a bit difficult to track
+    TRY(control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_RECIPIENT_INTERFACE, USB_REQUEST_SET_INTERFACE,
+        interface.descriptor().alternate_setting, interface.descriptor().interface_id, 0, nullptr));
+    // FIXME: As in activate_configuration, we should set up changed endpoints on xHCI here
+
+    return {};
+}
+
 }

@@ -84,14 +84,11 @@ ErrorOr<void> MassStorageDriver::probe(USB::Device& device)
 ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device, USBInterface const& interface)
 {
     auto const& descriptor = interface.descriptor();
-    auto const& configuration = interface.configuration();
 
     if (descriptor.interface_sub_class_code != to_underlying(MassStorage::SubclassCode::SCSI_transparent))
         return ENOTSUP;
 
-    TRY(device.control_transfer(
-        USB_REQUEST_RECIPIENT_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
-        USB_REQUEST_SET_CONFIGURATION, configuration.configuration_id(), 0, 0, nullptr));
+    TRY(device.set_configuration_and_interface(interface));
 
     u8 max_luns;
     TRY(device.control_transfer(
@@ -151,9 +148,7 @@ ErrorOr<void> MassStorageDriver::initialise_uas_device(USB::Device& device, USBI
     if (descriptor.interface_sub_class_code != to_underlying(MassStorage::SubclassCode::SCSI_transparent))
         return ENOTSUP;
 
-    TRY(device.control_transfer(
-        USB_REQUEST_RECIPIENT_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
-        USB_REQUEST_SET_CONFIGURATION, configuration.configuration_id(), 0, 0, nullptr));
+    TRY(device.set_configuration_and_interface(interface));
 
     Optional<u8> command_pipe_endpoint_number;
     u16 command_max_packet_size;
