@@ -37,3 +37,25 @@ TEST_CASE(path_to_fill_short_wide_line_with_butt_linecap)
         // EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 0, 0 }, { width, height }));
     }
 }
+
+TEST_CASE(path_to_string)
+{
+    {
+        Gfx::Path path;
+        path.move_to({ 10, 10 });
+        path.line_to({ 20, 20 });
+        path.quadratic_bezier_curve_to({ 30, 30 }, { 40, 40 });
+        path.cubic_bezier_curve_to({ 50, 50 }, { 60, 60 }, { 10, 10 });
+        path.close();
+        EXPECT_EQ(path.to_byte_string(), "M 10,10 L 20,20 Q 30,30 40,40 C 50,50 60,60 10,10 Z");
+    }
+
+    {
+        Gfx::Path path;
+        path.move_to({ 10, 10 });
+        path.line_to({ 20, 20 });
+        path.quadratic_bezier_curve_to({ 30, 30 }, { 40, 40 });
+        path.cubic_bezier_curve_to({ 50, 50 }, { 60, 60 }, { 10, 10 });
+        EXPECT_EQ(path.to_byte_string(), "M 10,10 L 20,20 Q 30,30 40,40 C 50,50 60,60 10,10");
+    }
+}
