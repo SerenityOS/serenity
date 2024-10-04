@@ -51,7 +51,7 @@ Qt Creator should be set up correctly now, go ahead and explore the project and 
 
 ## Auto-Formatting
 
-You can use `clang-format` to help you with the [style guide](CodingStyle.md). Before you proceed, check that you're actually using clang-format version 18, as some OSes will ship older clang-format versions by default.
+You can use `clang-format` to help you with the [style guide](CodingStyle.md). Before you proceed, check that you're actually using clang-format version 19, as some OSes will ship older clang-format versions by default.
 
 -   In QtCreator, go to "Help > About Plugins…"
 -   Find the `Beautifier (experimental)` row (for example, by typing `beau` into the search)
@@ -63,9 +63,6 @@ You can use `clang-format` to help you with the [style guide](CodingStyle.md). B
 -   Paste the entire content of the file `.clang-format` into the "value" box, and click "OK"
 -   In the "Beautifier > General" tab, check "Enable auto format on file save"
 -   Select the tool "ClangFormat" if not already selected, and click "OK"
-
-Note that not the entire project is clang-format-clean (yet), so sometimes you will see large diffs.
-Use your own judgement whether you want to include such changes. Generally speaking, if it's a few lines then it's a good idea; if it's the entire file then maybe there's a better way to do it, like doing a separate commit, or just ignoring the clang-format changes.
 
 You may want to read up what `git add -p` does (or `git checkout -p`, to undo).
 
