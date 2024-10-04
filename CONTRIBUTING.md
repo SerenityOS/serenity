@@ -90,7 +90,6 @@ Ping them right away if it's something urgent! If it's less urgent, advertise yo
 - [@ADKaster](https://github.com/ADKaster)
 - [@alimpfard](https://github.com/alimpfard)
 - [@AtkinsSJ](https://github.com/AtkinsSJ)
-- [@awesomekling](https://github.com/awesomekling)
 - [@BertalanD](https://github.com/BertalanD)
 - [@GMTA](https://github.com/gmta)
 - [@kalenikaliaksandr](https://github.com/kalenikaliaksandr)
