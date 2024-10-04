@@ -203,7 +203,7 @@ WebIDL::ExceptionOr<void> HTMLVideoElement::determine_element_poster_frame(Optio
         });
 
         VERIFY(response->body());
-        auto empty_algorithm = JS::create_heap_function(heap(), [](JS::Value) {});
+        auto empty_algorithm = JS::create_heap_function(heap(), [](JS::Value) { });
 
         response->body()->fully_read(realm, on_image_data_read, empty_algorithm, JS::NonnullGCPtr { global });
     };

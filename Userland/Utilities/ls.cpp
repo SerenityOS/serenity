@@ -39,8 +39,7 @@ struct FileMetadata {
     ByteString name;
     ByteString path;
     ino_t raw_inode_number;
-    struct stat stat {
-    };
+    struct stat stat {};
 };
 
 enum class FieldToSortBy {
@@ -429,8 +428,7 @@ static bool print_filesystem_metadata_object(FileMetadata const& file)
 static int do_file_system_object_long(ByteString const& path)
 {
     if (flag_list_directories_only) {
-        struct stat stat {
-        };
+        struct stat stat {};
         int rc = lstat(path.characters(), &stat);
         if (rc < 0)
             perror("lstat");
@@ -452,8 +450,7 @@ static int do_file_system_object_long(ByteString const& path)
     if (di.has_error()) {
         auto error = di.error();
         if (error.code() == ENOTDIR) {
-            struct stat stat {
-            };
+            struct stat stat {};
             int rc = lstat(path.characters(), &stat);
             if (rc < 0)
                 perror("lstat");

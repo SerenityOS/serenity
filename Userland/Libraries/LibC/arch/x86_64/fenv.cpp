@@ -14,7 +14,7 @@ static u16 read_status_register()
 {
     u16 status_register;
     asm volatile("fnstsw %0"
-                 : "=m"(status_register));
+        : "=m"(status_register));
     return status_register;
 }
 
@@ -22,7 +22,7 @@ static u16 read_control_word()
 {
     u16 control_word;
     asm volatile("fnstcw %0"
-                 : "=m"(control_word));
+        : "=m"(control_word));
     return control_word;
 }
 
@@ -35,7 +35,7 @@ static u32 read_mxcsr()
 {
     u32 mxcsr;
     asm volatile("stmxcsr %0"
-                 : "=m"(mxcsr));
+        : "=m"(mxcsr));
     return mxcsr;
 }
 
@@ -54,7 +54,7 @@ int fegetenv(fenv_t* env)
         return 1;
 
     asm volatile("fnstenv %0"
-                 : "=m"(env->__x87_fpu_env)::"memory");
+        : "=m"(env->__x87_fpu_env)::"memory");
 
     env->__mxcsr = read_mxcsr();
     return 0;
@@ -72,7 +72,7 @@ int fesetenv(fenv_t const* env)
     }
 
     asm volatile("fldenv %0" ::"m"(env->__x87_fpu_env)
-                 : "memory");
+        : "memory");
 
     set_mxcsr(env->__mxcsr);
     return 0;

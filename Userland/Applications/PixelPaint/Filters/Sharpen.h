@@ -16,7 +16,9 @@ public:
     virtual StringView filter_name() const override { return "Sharpen"sv; }
 
     Sharpen(ImageEditor* editor)
-        : Filter(editor) {};
+        : Filter(editor)
+    {
+    }
 };
 
 }

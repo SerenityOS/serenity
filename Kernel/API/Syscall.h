@@ -570,25 +570,25 @@ inline uintptr_t invoke(Function function)
 #        if ARCH(X86_64)
     uintptr_t result;
     asm volatile("syscall"
-                 : "=a"(result)
-                 : "a"(function)
-                 : "rcx", "r11", "memory");
+        : "=a"(result)
+        : "a"(function)
+        : "rcx", "r11", "memory");
 #        elif ARCH(AARCH64)
     uintptr_t result;
     register uintptr_t x0 asm("x0");
     register uintptr_t x8 asm("x8") = function;
     asm volatile("svc #0"
-                 : "=r"(x0)
-                 : "r"(x8)
-                 : "memory");
+        : "=r"(x0)
+        : "r"(x8)
+        : "memory");
     result = x0;
 #        elif ARCH(RISCV64)
     register uintptr_t a7 asm("a7") = function;
     register uintptr_t result asm("a0");
     asm volatile("ecall"
-                 : "=r"(result)
-                 : "r"(a7)
-                 : "memory");
+        : "=r"(result)
+        : "r"(a7)
+        : "memory");
 #        endif
     return result;
 }
@@ -599,27 +599,27 @@ inline uintptr_t invoke(Function function, T1 arg1)
 #        if ARCH(X86_64)
     uintptr_t result;
     asm volatile("syscall"
-                 : "=a"(result)
-                 : "a"(function), "d"((uintptr_t)arg1)
-                 : "rcx", "r11", "memory");
+        : "=a"(result)
+        : "a"(function), "d"((uintptr_t)arg1)
+        : "rcx", "r11", "memory");
 #        elif ARCH(AARCH64)
     uintptr_t result;
     register uintptr_t x0 asm("x0");
     register uintptr_t x1 asm("x1") = arg1;
     register uintptr_t x8 asm("x8") = function;
     asm volatile("svc #0"
-                 : "=r"(x0)
-                 : "r"(x1), "r"(x8)
-                 : "memory");
+        : "=r"(x0)
+        : "r"(x1), "r"(x8)
+        : "memory");
     result = x0;
 #        elif ARCH(RISCV64)
     register uintptr_t a0 asm("a0") = arg1;
     register uintptr_t a7 asm("a7") = function;
     register uintptr_t result asm("a0");
     asm volatile("ecall"
-                 : "=r"(result)
-                 : "0"(a0), "r"(a7)
-                 : "memory");
+        : "=r"(result)
+        : "0"(a0), "r"(a7)
+        : "memory");
 #        endif
     return result;
 }
@@ -630,9 +630,9 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2)
 #        if ARCH(X86_64)
     uintptr_t result;
     asm volatile("syscall"
-                 : "=a"(result)
-                 : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2)
-                 : "rcx", "r11", "memory");
+        : "=a"(result)
+        : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2)
+        : "rcx", "r11", "memory");
 #        elif ARCH(AARCH64)
     uintptr_t result;
     register uintptr_t x0 asm("x0");
@@ -640,9 +640,9 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2)
     register uintptr_t x2 asm("x2") = arg2;
     register uintptr_t x8 asm("x8") = function;
     asm volatile("svc #0"
-                 : "=r"(x0)
-                 : "r"(x1), "r"(x2), "r"(x8)
-                 : "memory");
+        : "=r"(x0)
+        : "r"(x1), "r"(x2), "r"(x8)
+        : "memory");
     result = x0;
 #        elif ARCH(RISCV64)
     register uintptr_t a0 asm("a0") = arg1;
@@ -650,9 +650,9 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2)
     register uintptr_t a7 asm("a7") = function;
     register uintptr_t result asm("a0");
     asm volatile("ecall"
-                 : "=r"(result)
-                 : "0"(a0), "r"(a1), "r"(a7)
-                 : "memory");
+        : "=r"(result)
+        : "0"(a0), "r"(a1), "r"(a7)
+        : "memory");
 #        endif
     return result;
 }
@@ -663,9 +663,9 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
 #        if ARCH(X86_64)
     uintptr_t result;
     asm volatile("syscall"
-                 : "=a"(result)
-                 : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2), "b"((uintptr_t)arg3)
-                 : "rcx", "r11", "memory");
+        : "=a"(result)
+        : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2), "b"((uintptr_t)arg3)
+        : "rcx", "r11", "memory");
 #        elif ARCH(AARCH64)
     uintptr_t result;
     register uintptr_t x0 asm("x0");
@@ -674,9 +674,9 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
     register uintptr_t x3 asm("x3") = arg3;
     register uintptr_t x8 asm("x8") = function;
     asm volatile("svc #0"
-                 : "=r"(x0)
-                 : "r"(x1), "r"(x2), "r"(x3), "r"(x8)
-                 : "memory");
+        : "=r"(x0)
+        : "r"(x1), "r"(x2), "r"(x3), "r"(x8)
+        : "memory");
     result = x0;
 #        elif ARCH(RISCV64)
     register uintptr_t a0 asm("a0") = arg1;
@@ -685,9 +685,9 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
     register uintptr_t a7 asm("a7") = function;
     register uintptr_t result asm("a0");
     asm volatile("ecall"
-                 : "=r"(result)
-                 : "0"(a0), "r"(a1), "r"(a2), "r"(a7)
-                 : "memory");
+        : "=r"(result)
+        : "0"(a0), "r"(a1), "r"(a2), "r"(a7)
+        : "memory");
 #        endif
     return result;
 }
@@ -698,9 +698,9 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
 #        if ARCH(X86_64)
     uintptr_t result;
     asm volatile("syscall"
-                 : "=a"(result)
-                 : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2), "b"((uintptr_t)arg3), "S"((uintptr_t)arg4)
-                 : "rcx", "r11", "memory");
+        : "=a"(result)
+        : "a"(function), "d"((uintptr_t)arg1), "D"((uintptr_t)arg2), "b"((uintptr_t)arg3), "S"((uintptr_t)arg4)
+        : "rcx", "r11", "memory");
 #        elif ARCH(AARCH64)
     uintptr_t result;
     register uintptr_t x0 asm("x0");
@@ -710,9 +710,9 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
     register uintptr_t x4 asm("x4") = arg4;
     register uintptr_t x8 asm("x8") = function;
     asm volatile("svc #0"
-                 : "=r"(x0)
-                 : "r"(x1), "r"(x2), "r"(x3), "r"(x4), "r"(x8)
-                 : "memory");
+        : "=r"(x0)
+        : "r"(x1), "r"(x2), "r"(x3), "r"(x4), "r"(x8)
+        : "memory");
     result = x0;
 #        elif ARCH(RISCV64)
     register uintptr_t a0 asm("a0") = arg1;
@@ -722,9 +722,9 @@ inline uintptr_t invoke(Function function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
     register uintptr_t a7 asm("a7") = function;
     register uintptr_t result asm("a0");
     asm volatile("ecall"
-                 : "=r"(result)
-                 : "0"(a0), "r"(a1), "r"(a2), "r"(a3), "r"(a7)
-                 : "memory");
+        : "=r"(result)
+        : "0"(a0), "r"(a1), "r"(a2), "r"(a3), "r"(a7)
+        : "memory");
 #        endif
     return result;
 }

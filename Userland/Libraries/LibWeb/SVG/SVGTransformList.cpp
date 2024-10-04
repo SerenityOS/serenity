@@ -21,7 +21,9 @@ JS::NonnullGCPtr<SVGTransformList> SVGTransformList::create(JS::Realm& realm)
 SVGTransformList::~SVGTransformList() = default;
 
 SVGTransformList::SVGTransformList(JS::Realm& realm)
-    : PlatformObject(realm) {};
+    : PlatformObject(realm)
+{
+}
 
 // https://svgwg.org/svg2-draft/single-page.html#types-__svg__SVGNameList__length
 WebIDL::UnsignedLong SVGTransformList::length()

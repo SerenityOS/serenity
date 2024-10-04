@@ -40,7 +40,7 @@ struct nothrow_t {
 
 extern nothrow_t const nothrow;
 
-enum class align_val_t : size_t {};
+enum class align_val_t : size_t { };
 };
 
 void kmalloc_init();

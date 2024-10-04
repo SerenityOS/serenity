@@ -27,8 +27,8 @@ public:
     virtual Vector<AutocompleteResultEntry> get_suggestions(ByteString const& file, GUI::TextPosition const& autocomplete_position) = 0;
 
     // TODO: In the future we can pass the range that was edited and only re-parse what we have to.
-    virtual void on_edit([[maybe_unused]] ByteString const& file) {};
-    virtual void file_opened([[maybe_unused]] ByteString const& file) {};
+    virtual void on_edit([[maybe_unused]] ByteString const& file) { }
+    virtual void file_opened([[maybe_unused]] ByteString const& file) { }
 
     virtual Optional<ProjectLocation> find_declaration_of(ByteString const&, GUI::TextPosition const&) { return {}; }
 

@@ -32,8 +32,8 @@ public:
         return {};
     }
 
-    virtual void load_any_resources(DOM::Document&) {};
-    virtual void resolve_for_size(Layout::NodeWithStyleAndBoxModelMetrics const&, CSSPixelSize) const {};
+    virtual void load_any_resources(DOM::Document&) { }
+    virtual void resolve_for_size(Layout::NodeWithStyleAndBoxModelMetrics const&, CSSPixelSize) const { }
 
     virtual bool is_paintable() const = 0;
     virtual void paint(PaintContext& context, DevicePixelRect const& dest_rect, ImageRendering, Vector<Gfx::Path> const& clip_paths = {}) const = 0;

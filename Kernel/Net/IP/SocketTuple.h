@@ -22,7 +22,9 @@ public:
         : m_local_address(local_address)
         , m_local_port(local_port)
         , m_peer_address(peer_address)
-        , m_peer_port(peer_port) {};
+        , m_peer_port(peer_port)
+    {
+    }
 
     IPv4Address local_address() const { return m_local_address; }
     u16 local_port() const { return m_local_port; }

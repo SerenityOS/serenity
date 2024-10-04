@@ -16,7 +16,9 @@ class BackdropFilter {
 public:
     BackdropFilter() = default;
     BackdropFilter(FilterValueListStyleValue const& filter_value_list)
-        : m_filter_value_list { filter_value_list } {};
+        : m_filter_value_list { filter_value_list }
+    {
+    }
 
     static inline BackdropFilter make_none()
     {

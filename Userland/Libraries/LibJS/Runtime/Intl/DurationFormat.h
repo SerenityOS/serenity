@@ -189,7 +189,7 @@ private:
 };
 
 struct DurationInstanceComponent {
-    double Temporal::DurationRecord::*value_slot;
+    double Temporal::DurationRecord::* value_slot;
     DurationFormat::ValueStyle (DurationFormat::*get_style_slot)() const;
     void (DurationFormat::*set_style_slot)(StringView);
     DurationFormat::Display (DurationFormat::*get_display_slot)() const;

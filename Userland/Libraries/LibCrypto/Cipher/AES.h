@@ -99,8 +99,8 @@ private:
     template<CPUFeatures>
     void expand_decrypt_key_impl(ReadonlyBytes user_key, size_t bits);
 
-    static void (AESCipherKey::*const expand_encrypt_key_dispatched)(ReadonlyBytes user_key, size_t bits);
-    static void (AESCipherKey::*const expand_decrypt_key_dispatched)(ReadonlyBytes user_key, size_t bits);
+    static void (AESCipherKey::* const expand_encrypt_key_dispatched)(ReadonlyBytes user_key, size_t bits);
+    static void (AESCipherKey::* const expand_decrypt_key_dispatched)(ReadonlyBytes user_key, size_t bits);
 
     static constexpr size_t MAX_ROUND_COUNT = 14;
     u32 m_rd_keys[(MAX_ROUND_COUNT + 1) * 4] { 0 };
@@ -144,8 +144,8 @@ private:
     template<CPUFeatures>
     void decrypt_block_impl(BlockType const& in, BlockType& out);
 
-    static void (AESCipher::*const encrypt_block_dispatched)(BlockType const& in, BlockType& out);
-    static void (AESCipher::*const decrypt_block_dispatched)(BlockType const& in, BlockType& out);
+    static void (AESCipher::* const encrypt_block_dispatched)(BlockType const& in, BlockType& out);
+    static void (AESCipher::* const decrypt_block_dispatched)(BlockType const& in, BlockType& out);
 };
 
 }

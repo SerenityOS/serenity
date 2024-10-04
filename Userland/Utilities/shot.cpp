@@ -27,7 +27,7 @@
 class SelectableLayover final : public GUI::Widget {
     C_OBJECT(SelectableLayover)
 public:
-    virtual ~SelectableLayover() override {};
+    virtual ~SelectableLayover() override { }
 
     Gfx::IntRect region() const
     {

@@ -49,7 +49,7 @@ public:
     virtual ErrorOr<size_t> write_some(ReadonlyBytes) override;
     virtual bool is_eof() const override;
     virtual bool is_open() const override { return true; }
-    virtual void close() override {};
+    virtual void close() override { }
 
     static ErrorOr<ByteBuffer> decompress_all(ReadonlyBytes);
 

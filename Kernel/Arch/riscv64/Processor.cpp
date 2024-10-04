@@ -142,9 +142,9 @@ void ProcessorBase<T>::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
     auto addr = vaddr.get();
     while (page_count > 0) {
         asm volatile("sfence.vma %0"
-                     :
-                     : "r"(addr)
-                     : "memory");
+            :
+            : "r"(addr)
+            : "memory");
         addr += PAGE_SIZE;
         page_count--;
     }

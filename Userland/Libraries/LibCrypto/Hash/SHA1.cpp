@@ -146,10 +146,12 @@ template<>
 decltype(SHA1::transform_dispatched) SHA1::transform_dispatched = [] {
     CPUFeatures features = detect_cpu_features();
 
+    // clang-format off
     if constexpr (is_valid_feature(CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42)) {
         if (has_flag(features, CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42))
             return &SHA1::transform_impl<CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42>;
     }
+    // clang-format on
 
     return &SHA1::transform_impl<CPUFeatures::None>;
 }();

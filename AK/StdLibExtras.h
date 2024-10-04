@@ -171,8 +171,7 @@ ALWAYS_INLINE constexpr void taint_for_optimizer(T& value)
 requires(IsIntegral<T>)
 {
     if (!is_constant_evaluated()) {
-        asm volatile(""
-                     : "+r"(value));
+        asm volatile("" : "+r"(value));
     }
 }
 
@@ -182,9 +181,9 @@ requires(!IsIntegral<T>)
 {
     if (!is_constant_evaluated()) {
         asm volatile(""
-                     :
-                     : "m"(value)
-                     : "memory");
+            :
+            : "m"(value)
+            : "memory");
     }
 }
 

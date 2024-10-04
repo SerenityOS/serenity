@@ -75,7 +75,7 @@ public:
     {
     }
 
-    virtual ~ValueExpression() {};
+    virtual ~ValueExpression() { }
 
 private:
     virtual bool truth() const override

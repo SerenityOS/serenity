@@ -12,7 +12,7 @@ MainIdRegister::MainIdRegister()
 {
     unsigned int mrs;
     asm volatile("mrs %x0, MIDR_EL1"
-                 : "=r"(mrs));
+        : "=r"(mrs));
     m_value = mrs;
 }
 

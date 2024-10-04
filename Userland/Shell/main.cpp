@@ -32,8 +32,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         s_shell->kill_job(s_shell->current_job(), SIGWINCH);
     });
 
-    Core::EventLoop::register_signal(SIGTTIN, [](int) {});
-    Core::EventLoop::register_signal(SIGTTOU, [](int) {});
+    Core::EventLoop::register_signal(SIGTTIN, [](int) { });
+    Core::EventLoop::register_signal(SIGTTOU, [](int) { });
 
     Core::EventLoop::register_signal(SIGHUP, [](int) {
         for (auto& it : s_shell->jobs)

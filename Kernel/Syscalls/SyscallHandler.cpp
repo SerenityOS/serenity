@@ -140,7 +140,7 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 
     auto* ptr = (char*)__builtin_alloca(lsw & 0xff);
     asm volatile(""
-                 : "=m"(*ptr));
+        : "=m"(*ptr));
 
     constexpr FlatPtr iopl_mask = 3u << 12;
 

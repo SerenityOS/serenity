@@ -38,8 +38,8 @@ ALWAYS_INLINE FlatPtr read(Address address)
 {
     FlatPtr ret;
     asm volatile("csrr %0, %1"
-                 : "=r"(ret)
-                 : "i"(address));
+        : "=r"(ret)
+        : "i"(address));
     return ret;
 }
 
@@ -52,8 +52,8 @@ ALWAYS_INLINE FlatPtr read_and_set_bits(Address address, FlatPtr bit_mask)
 {
     FlatPtr ret;
     asm volatile("csrrs %0, %1, %2"
-                 : "=r"(ret)
-                 : "i"(address), "Kr"(bit_mask));
+        : "=r"(ret)
+        : "i"(address), "Kr"(bit_mask));
     return ret;
 }
 

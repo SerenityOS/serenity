@@ -37,8 +37,8 @@ public:
     {
         u32 low, high;
         asm volatile("rdmsr"
-                     : "=a"(low), "=d"(high)
-                     : "c"(m_msr));
+            : "=a"(low), "=d"(high)
+            : "c"(m_msr));
         return ((u64)high << 32) | low;
     }
 

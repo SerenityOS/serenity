@@ -53,7 +53,9 @@ public:
 private:
     FileEventNode(ByteString const& path, FileEventNode* parent = nullptr)
         : m_path(path)
-        , m_parent(parent) {};
+        , m_parent(parent)
+    {
+    }
 
     ByteString m_path;
 

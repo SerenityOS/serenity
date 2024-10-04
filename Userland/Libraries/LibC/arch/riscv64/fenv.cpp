@@ -74,7 +74,7 @@ static RoundingMode get_rounding_mode()
 {
     size_t rounding_mode;
     asm volatile("frrm %0"
-                 : "=r"(rounding_mode));
+        : "=r"(rounding_mode));
     return static_cast<RoundingMode>(rounding_mode);
 }
 
@@ -84,8 +84,8 @@ static RoundingMode set_rounding_mode(RoundingMode frm)
     size_t old_rounding_mode;
     size_t const new_rounding_mode = to_underlying(frm);
     asm volatile("fsrm %0, %1"
-                 : "=r"(old_rounding_mode)
-                 : "r"(new_rounding_mode));
+        : "=r"(old_rounding_mode)
+        : "r"(new_rounding_mode));
     return static_cast<RoundingMode>(old_rounding_mode);
 }
 
@@ -145,7 +145,7 @@ static AccruedExceptions get_accrued_exceptions()
 {
     size_t fflags;
     asm volatile("frflags %0"
-                 : "=r"(fflags));
+        : "=r"(fflags));
     return static_cast<AccruedExceptions>(fflags);
 }
 
@@ -155,8 +155,8 @@ static AccruedExceptions set_accrued_exceptions(AccruedExceptions exceptions)
     size_t old_exceptions;
     size_t const new_exceptions = to_underlying(exceptions);
     asm volatile("fsflags %0, %1"
-                 : "=r"(old_exceptions)
-                 : "r"(new_exceptions));
+        : "=r"(old_exceptions)
+        : "r"(new_exceptions));
     return static_cast<AccruedExceptions>(old_exceptions);
 }
 
@@ -174,7 +174,7 @@ int fegetenv(fenv_t* env)
 
     FlatPtr fcsr;
     asm volatile("csrr %0, fcsr"
-                 : "=r"(fcsr));
+        : "=r"(fcsr));
     env->fcsr = fcsr;
 
     return 0;

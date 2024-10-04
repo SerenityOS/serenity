@@ -20,7 +20,9 @@ public:
     virtual StringView filter_name() const override { return "Fast Box Blur (& Gauss)"sv; }
 
     FastBoxBlur(ImageEditor* editor)
-        : InplaceFilter(editor) {};
+        : InplaceFilter(editor)
+    {
+    }
 
 private:
     size_t m_radius { 5 };

@@ -19,7 +19,9 @@ JS::NonnullGCPtr<SVGTransform> SVGTransform::create(JS::Realm& realm)
 }
 
 SVGTransform::SVGTransform(JS::Realm& realm)
-    : PlatformObject(realm) {};
+    : PlatformObject(realm)
+{
+}
 
 SVGTransform::~SVGTransform() = default;
 

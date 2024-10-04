@@ -130,10 +130,12 @@ template<>
 decltype(SHA256::transform_dispatched) SHA256::transform_dispatched = [] {
     CPUFeatures features = detect_cpu_features();
 
+    // clang-format off
     if constexpr (is_valid_feature(CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42)) {
         if (has_flag(features, CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42))
             return &SHA256::transform_impl<CPUFeatures::X86_SHA | CPUFeatures::X86_SSE42>;
     }
+    // clang-format on
 
     return &SHA256::transform_impl<CPUFeatures::None>;
 }();
