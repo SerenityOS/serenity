@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Enumerate.h>
 #include <AK/Math.h>
 #include <AK/StringBuilder.h>
 #include <AK/TypeCasts.h>
@@ -307,10 +308,12 @@ void Path::close()
     }
     if (first_point_in_subpath != last_point())
         line_to(first_point_in_subpath);
+    append_segment<PathSegment::ClosePath>();
 }
 
 void Path::close_all_subpaths()
 {
+    // This is only called before filling, not before stroking, so this doesn't have to insert ClosePath segments.
     auto it = begin();
     // Note: Get the end outside the loop as closing subpaths will move the end.
     auto end = this->end();
@@ -324,12 +327,13 @@ void Path::close_all_subpaths()
         }
         // Find the end of the current subpath.
         FloatPoint cursor = first_point_in_subpath;
-        while (it < end) {
+        for (; it < end; ++it) {
             auto segment = *it;
+            if (segment.command() == PathSegment::ClosePath)
+                continue;
             if (segment.command() == PathSegment::MoveTo)
                 break;
             cursor = segment.point();
-            ++it;
         }
         // Close the subpath.
         if (first_point_in_subpath != cursor) {
@@ -361,6 +365,9 @@ ByteString Path::to_byte_string() const
         case PathSegment::CubicBezierCurveTo:
             builder.append('C');
             break;
+        case PathSegment::ClosePath:
+            builder.append('Z');
+            break;
         }
         for (auto point : segment.points())
             builder.appendff(" {},{}", point.x(), point.y());
@@ -372,6 +379,7 @@ void Path::segmentize_path()
 {
     Vector<FloatLine> segments;
     FloatBoundingBox bounding_box;
+    Vector<size_t> subpath_end_indices;
 
     auto add_line = [&](auto const& p0, auto const& p1) {
         segments.append({ p0, p1 });
@@ -400,11 +408,16 @@ void Path::segmentize_path()
             });
             break;
         }
+        case PathSegment::ClosePath: {
+            subpath_end_indices.append(segments.size() - 1);
+            break;
         }
-        cursor = segment.point();
+        }
+        if (segment.command() != PathSegment::ClosePath)
+            cursor = segment.point();
     }
 
-    m_split_lines = SplitLines { move(segments), bounding_box };
+    m_split_lines = SplitLines { move(segments), bounding_box, move(subpath_end_indices) };
 }
 
 Path Path::copy_transformed(Gfx::AffineTransform const& transform) const
@@ -507,15 +520,29 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
     if (lines.is_empty())
         return Path {};
 
+    auto subpath_end_indices = split_lines_subbpath_end_indices();
+
     // Paths can be disconnected, which a pain to deal with, so split it up.
     Vector<Vector<FloatPoint>> segments;
+    Vector<bool> segment_is_closed;
     segments.append({ lines.first().a() });
-    for (auto& line : lines) {
+    for (auto const& [line_index, line] : enumerate(lines)) {
         if (line.a() == segments.last().last()) {
             segments.last().append(line.b());
         } else {
+            if (subpath_end_indices.size() >= segments.size())
+                segment_is_closed.append(subpath_end_indices[segments.size() - 1] == line_index);
+            else
+                segment_is_closed.append(false);
             segments.append({ line.a(), line.b() });
         }
+    }
+    if (segment_is_closed.size() < segments.size()) {
+        if (subpath_end_indices.size() >= segments.size())
+            segment_is_closed.append(subpath_end_indices[segments.size() - 1] == lines.size() - 1);
+        else
+            segment_is_closed.append(false);
+        VERIFY(segment_is_closed.size() == segments.size());
     }
 
     Vector<FloatPoint, 128> pen_vertices = make_pen(thickness);
@@ -574,7 +601,7 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
     };
 
     Path convolution;
-    for (auto& segment : segments) {
+    for (auto const& [segment_index, segment] : enumerate(segments)) {
         RoundTrip<FloatPoint> shape { segment };
 
         bool first = true;
@@ -607,7 +634,8 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
                 shape_idx++;
             } else {
                 bool is_at_either_end_of_segment = shape_idx == segment.size() - 1 || shape_idx == 2 * segment.size() - 2;
-                if (cap_style == CapStyle::Butt && is_at_either_end_of_segment) {
+                bool current_segment_is_closed = segment_is_closed[segment_index];
+                if (!current_segment_is_closed && cap_style == CapStyle::Butt && is_at_either_end_of_segment) {
                     active = mod(active + pen_vertices.size() / 2, pen_vertices.size());
                     if (!active_ranges[active].in_range(slope_now)) {
                         if (wrapping_index(active_ranges, active + 1).in_range(slope_now))

@@ -27,6 +27,7 @@ public:
         LineTo,
         QuadraticBezierCurveTo,
         CubicBezierCurveTo,
+        ClosePath,
     };
 
     ALWAYS_INLINE Command command() const { return m_command; }
@@ -58,6 +59,8 @@ public:
             return 2; // Control point + point.
         case Command::CubicBezierCurveTo:
             return 3; // Two control points + point.
+        case Command::ClosePath:
+            return 0;
         }
         VERIFY_NOT_REACHED();
     }
@@ -229,6 +232,15 @@ public:
         return m_split_lines->lines;
     }
 
+    ReadonlySpan<size_t> split_lines_subbpath_end_indices() const
+    {
+        if (!m_split_lines.has_value()) {
+            const_cast<Path*>(this)->segmentize_path();
+            VERIFY(m_split_lines.has_value());
+        }
+        return m_split_lines->subpath_end_indices;
+    }
+
     Gfx::FloatRect const& bounding_box() const
     {
         (void)split_lines();
@@ -290,6 +302,7 @@ private:
     struct SplitLines {
         Vector<FloatLine> lines;
         Gfx::FloatRect bounding_box;
+        Vector<size_t> subpath_end_indices;
     };
 
     Optional<SplitLines> m_split_lines {};
