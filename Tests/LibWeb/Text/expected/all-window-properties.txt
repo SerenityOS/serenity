@@ -344,6 +344,7 @@ SyntaxError
 Text
 TextDecoder
 TextEncoder
+TextEvent
 TextMetrics
 TextTrack
 TextTrackCue
