@@ -1457,7 +1457,6 @@ CSSPixels FormattingContext::calculate_min_content_width(Layout::Box const& box)
     auto& box_state = throwaway_state.get_mutable(box);
     box_state.width_constraint = SizeConstraint::MinContent;
     box_state.set_indefinite_content_width();
-    box_state.set_indefinite_content_height();
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, LayoutMode::IntrinsicSizing, box);
     if (!context) {
@@ -1465,7 +1464,10 @@ CSSPixels FormattingContext::calculate_min_content_width(Layout::Box const& box)
     }
 
     auto available_width = AvailableSize::make_min_content();
-    auto available_height = AvailableSize::make_indefinite();
+    auto available_height = box_state.has_definite_height()
+        ? AvailableSize::make_definite(box_state.content_height())
+        : AvailableSize::make_indefinite();
+
     context->run(AvailableSpace(available_width, available_height));
 
     cache.min_content_width = context->automatic_content_width();
@@ -1495,7 +1497,6 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
     auto& box_state = throwaway_state.get_mutable(box);
     box_state.width_constraint = SizeConstraint::MaxContent;
     box_state.set_indefinite_content_width();
-    box_state.set_indefinite_content_height();
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, LayoutMode::IntrinsicSizing, box);
     if (!context) {
@@ -1503,7 +1504,10 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
     }
 
     auto available_width = AvailableSize::make_max_content();
-    auto available_height = AvailableSize::make_indefinite();
+    auto available_height = box_state.has_definite_height()
+        ? AvailableSize::make_definite(box_state.content_height())
+        : AvailableSize::make_indefinite();
+
     context->run(AvailableSpace(available_width, available_height));
 
     cache.max_content_width = context->automatic_content_width();
