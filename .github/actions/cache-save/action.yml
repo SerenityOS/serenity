@@ -43,10 +43,6 @@ inputs:
     description: 'Whether the jakt prebuilt cache was hit'
     required: false
     default: false
-  jakt_prebuilt_path:
-    description: 'Path to the prebuilt jakt toolchain'
-    required: false
-    default: ''
 
 runs:
   using: "composite"

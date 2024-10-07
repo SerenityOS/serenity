@@ -57,7 +57,6 @@ jobs:
           cache_key_extra: ${{ inputs.fuzzer }}
           serenity_ccache_path: ${{ env.CCACHE_DIR }}
           download_cache_path: ${{ github.workspace }}/Build/caches
-          jakt_toolchain_cache_path: ${{ github.workspace }}/Toolchain/Local/jakt
 
       - name: Assign Build Parameters
         id: 'build-parameters'
@@ -152,7 +151,6 @@ jobs:
           serenity_ccache_primary_key: ${{ steps.cache-restore.outputs.serenity_ccache_primary_key }}
           jakt_prebuilt_primary_key: ${{ steps.cache-restore.outputs.jakt_prebuilt_primary_key }}
           jakt_prebuilt_hit: ${{ steps.cache-restore.outputs.jakt_prebuilt_hit }}
-          jakt_toolchain_cache_path: ${{ github.workspace }}/Toolchain/Local/jakt
 
       # === TEST ===
 

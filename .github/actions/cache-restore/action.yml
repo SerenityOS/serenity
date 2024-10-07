@@ -35,10 +35,6 @@ inputs:
     description: 'Path to the download cache directory'
     required: false
     default: 'caches'
-  jakt_toolchain_cache_path:
-    description: 'Path to the prebuilt jakt toolchain cache'
-    required: false
-    default: ''
 
 outputs:
   serenity_ccache_primary_key:
@@ -107,8 +103,8 @@ runs:
       uses: actions/cache/restore@v4
       id: 'jakt-prebuilt'
       with:
-        path: ${{ inputs.jakt_toolchain_cache_path }}
-        key: toolchain-${{ runner.os }}-jakt-toolchain-${{ matrix.arch }}-${{ steps.toolchain-stamps.outputs.toolchain_stamp }}
+        path: ${{ github.workspace }}/Toolchain/Local/jakt
+        key: toolchain-${{ runner.os }}"-jakt-toolchain-${{ matrix.arch }}-${{ steps.toolchain-stamps.outputs.toolchain_stamp }}"
 
     - name: 'Toolchain Compiler Cache'
       uses: actions/cache/restore@v4

@@ -66,7 +66,6 @@ jobs:
           serenity_ccache_path: ${{ env.SERENITY_CCACHE_DIR }}
           toolchain_ccache_path: ${{ env.TOOLCHAIN_CCACHE_DIR }}
           download_cache_path: ${{ github.workspace }}/Build/caches
-          jakt_toolchain_cache_path: ${{ github.workspace }}/Toolchain/Local/jakt
 
       - name: Assign Build Parameters
         id: 'build-parameters'
@@ -149,7 +148,6 @@ jobs:
           toolchain_prebuilt_hit: ${{ steps.cache-restore.outputs.toolchain_prebuilt_hit }}
           jakt_prebuilt_primary_key: ${{ steps.cache-restore.outputs.jakt_prebuilt_primary_key }}
           jakt_prebuilt_hit: ${{ steps.cache-restore.outputs.jakt_prebuilt_hit }}
-          jakt_toolchain_cache_path: ${{ github.workspace }}/Toolchain/Local/jakt
 
       # === TEST ===
 
