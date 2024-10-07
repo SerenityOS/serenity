@@ -106,6 +106,10 @@ Gfx::Path SVGRectElement::get_path(CSSPixelSize)
     if (rx > 0 && ry > 0)
         path.elliptical_arc_to({ x + rx, y }, corner_radii, x_axis_rotation, large_arc_flag, sweep_flag);
 
+    // Spec bug: the path needs to be closed independent of if rx and ry are greater than zero,
+    // https://github.com/w3c/svgwg/issues/753#issuecomment-567199686
+    path.close();
+
     return path;
 }
 
