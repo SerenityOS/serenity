@@ -82,7 +82,7 @@ jobs:
 
       - name: Build jakt toolchain
         if: ${{ steps.cache-restore.output.jakt_prebuilt_hit != 'true' }}
-        run: "ARCH=\"${{ matrix.arch }}\" CXX=g++-13 ${{ github.workspace }}/Toolchain/BuildJakt.sh lagom"
+        run: "ARCH=\"${{ inputs.arch }}\" CXX=g++-13 ${{ github.workspace }}/Toolchain/BuildJakt.sh lagom"
 
 
       - name: Create Build Environment

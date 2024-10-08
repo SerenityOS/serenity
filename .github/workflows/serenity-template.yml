@@ -87,7 +87,7 @@ jobs:
 
       - name: Build jakt toolchain
         if: ${{ steps.cache-restore.output.jakt_prebuilt_hit != 'true' }}
-        run: ARCH="${{ matrix.arch }}" CXX=g++-13 ${{ github.workspace }}/Toolchain/BuildJakt.sh
+        run: ARCH="${{ inputs.arch }}" CXX=g++-13 ${{ github.workspace }}/Toolchain/BuildJakt.sh
 
       - name: Create Build Environment
         if: ${{ inputs.debug_options == 'ALL_DEBUG' }}
@@ -195,8 +195,8 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: ./Meta/analyze-qemu-coverage.sh
         env:
-          SERENITY_TOOLCHAIN: ${{ matrix.toolchain }}
-          SERENITY_ARCH: ${{ matrix.arch }}
+          SERENITY_TOOLCHAIN: ${{ inputs.toolchain }}
+          SERENITY_ARCH: ${{ inputs.arch }}
 
       # FIXME: Deploy the static html pages somewhere
       # FIXME: Alter script to also (instead?) produce a raw coverage.txt file for ingestion into sonar cloud
