@@ -160,6 +160,24 @@ bool code_point_has_control_general_category(u32 code_point)
 #endif
 }
 
+bool code_point_has_letter_general_category(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_general_category(code_point, Unicode::GeneralCategory::Letter);
+#else
+    return is_ascii_alpha(code_point);
+#endif
+}
+
+bool code_point_has_number_general_category(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_general_category(code_point, Unicode::GeneralCategory::Number);
+#else
+    return is_ascii_digit(code_point);
+#endif
+}
+
 bool code_point_has_punctuation_general_category(u32 code_point)
 {
 #if ENABLE_UNICODE_DATA
@@ -184,6 +202,15 @@ bool code_point_has_space_separator_general_category(u32 code_point)
     return code_point_has_general_category(code_point, Unicode::GeneralCategory::Space_Separator);
 #else
     return is_ascii_space(code_point);
+#endif
+}
+
+bool code_point_has_symbol_general_category(u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    return code_point_has_general_category(code_point, Unicode::GeneralCategory::Symbol);
+#else
+    return false;
 #endif
 }
 
