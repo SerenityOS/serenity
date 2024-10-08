@@ -317,25 +317,47 @@
     },
     "typedef": {
       "name": "meta.definition.typedef.idl",
-      "match": "\\b(typedef)\\s+(.*)\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)(;)",
-      "captures": {
+      "begin": "\\b(typedef)\\s+",
+      "end":"\\s+([_-]?[A-Za-z][0-9A-Z_a-z-]*)(;)",
+      "beginCaptures": {
         "1": {
           "name": "keyword.other.typedef.idl"
+        }
+      },
+      "endCaptures":{
+        "1": {
+          "name": "entity.name.type.typedef.idl"
         },
         "2": {
+          "name": "punctuation.terminator.idl"
+        }
+      },
+      "patterns": [
+          {
+          "begin": "(?=\\()",
+          "end": "(?<=\\))", 
           "patterns": [
+            {
+              "include": "#comment"
+            },
+            {
+              "name": "meta.definition.typedef.idl.multi-line",
+              "match": "\\s+(or)\\s+",
+              "captures": {
+                "1": { 
+                  "name": "keyword.control.or.idl"
+                }
+              }
+            },
             {
               "include": "#type-with-extended-attributes"
             }
           ]
         },
-        "3": {
-          "name": "entity.name.type.typedef.idl"
-        },
-        "4": {
-          "name": "punctuation.terminator.idl"
+        {
+          "include": "#type-with-extended-attributes"
         }
-      }
+      ]
     },
     "includes-statement": {
       "name": "meta.include-statement",
