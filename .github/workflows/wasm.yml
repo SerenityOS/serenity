@@ -87,7 +87,7 @@ jobs:
           serenity_ccache_primary_key: ${{ steps.cache-restore.outputs.serenity_ccache_primary_key }}
           jakt_prebuilt_primary_key: ${{ steps.cache-restore.outputs.jakt_prebuilt_primary_key }}
           jakt_prebuilt_hit: ${{ steps.cache-restore.outputs.jakt_prebuilt_hit }}
-          jakt_toolchain_cache_path: ${{ github.workspace }}/Toolchain/Local/jakt
+          jakt_prebuilt_path: ${{ github.workspace }}/Toolchain/Local/jakt
 
       - name: "Prepare files"
         run: |
