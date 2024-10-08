@@ -136,6 +136,14 @@ ErrorOr<void> Socket::setsockopt(int level, int option, Userspace<void const*> u
         m_broadcast_allowed = TRY(copy_typed_from_user(static_ptr_cast<int const*>(user_value))) != 0;
         return {};
     }
+    case SO_LINGER: {
+        if (user_value_size != sizeof(linger))
+            return EINVAL;
+        m_linger = TRY(copy_typed_from_user(static_ptr_cast<linger const*>(user_value)));
+        if (m_linger.l_onoff == 0)
+            m_linger.l_linger = 0;
+        return {};
+    }
     default:
         dbgln("setsockopt({}) at SOL_SOCKET not implemented.", option);
         return ENOPROTOOPT;
@@ -255,6 +263,13 @@ ErrorOr<void> Socket::getsockopt(OpenFileDescription&, int level, int option, Us
             return EINVAL;
         TRY(copy_to_user(static_ptr_cast<int*>(value), &broadcast_allowed));
         size = sizeof(broadcast_allowed);
+        return copy_to_user(value_size, &size);
+    }
+    case SO_LINGER: {
+        if (size < sizeof(linger))
+            return EINVAL;
+        TRY(copy_to_user(static_ptr_cast<linger*>(value), &m_linger));
+        size = sizeof(linger);
         return copy_to_user(value_size, &size);
     }
     default:

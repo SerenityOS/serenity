@@ -157,6 +157,7 @@ protected:
     ucred m_acceptor { 0, 0, 0 };
     bool m_routing_disabled { false };
     bool m_broadcast_allowed { false };
+    linger m_linger { 0, 0 };
 
 private:
     virtual bool is_socket() const final { return true; }
