@@ -81,7 +81,7 @@ jobs:
         run: sqlite3 $HOME/Library/Application\ Support/com.apple.TCC/TCC.db "INSERT OR IGNORE INTO access VALUES ('kTCCServiceMicrophone','/usr/local/opt/runner/provisioner/provisioner',1,2,4,1,NULL,NULL,0,'UNUSED',NULL,0,1687786159,NULL,NULL,'UNUSED',1687786159);"
 
       - name: Build jakt toolchain
-        if: ${{ !steps.cache-restore.output.jakt_prebuilt_hit }}
+        if: ${{ steps.cache-restore.output.jakt_prebuilt_hit != 'true' }}
         run: "ARCH=\"${{ matrix.arch }}\" CXX=g++-13 ${{ github.workspace }}/Toolchain/BuildJakt.sh lagom"
 
 

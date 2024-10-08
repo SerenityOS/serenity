@@ -78,7 +78,7 @@ jobs:
           fi
 
       - name: Build Toolchain
-        if: ${{ !steps.cache-restore.outputs.toolchain_prebuilt_hit }}
+        if: ${{ steps.cache-restore.outputs.toolchain_prebuilt_hit != 'true' }}
         run: |
           ${{ github.workspace }}/Toolchain/Build${{ inputs.toolchain }}.sh --ci
         env:
@@ -86,7 +86,7 @@ jobs:
           CCACHE_DIR: ${{ env.TOOLCHAIN_CCACHE_DIR }}
 
       - name: Build jakt toolchain
-        if: ${{ !steps.cache-restore.output.jakt_prebuilt_hit }}
+        if: ${{ steps.cache-restore.output.jakt_prebuilt_hit != 'true' }}
         run: ARCH="${{ matrix.arch }}" CXX=g++-13 ${{ github.workspace }}/Toolchain/BuildJakt.sh
 
       - name: Create Build Environment
