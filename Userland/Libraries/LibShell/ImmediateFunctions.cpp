@@ -585,10 +585,10 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_null_if_unset_or_alternative(AST::Im
     }
 
     auto name = TRY(TRY(const_cast<AST::Node&>(*arguments.first()).run(*this))->resolve_as_string(*this));
-    if (!find_frame_containing_local_variable(name))
+    if (find_frame_containing_local_variable(name))
         return arguments.last();
 
-    return make_ref_counted<AST::SimpleVariable>(invoking_node.position(), name);
+    return AST::make_ref_counted<AST::ListConcatenate>(invoking_node.position(), Vector<NonnullRefPtr<AST::Node>>());
 }
 
 ErrorOr<RefPtr<AST::Node>> Shell::immediate_reexpand(AST::ImmediateExpression& invoking_node, Vector<NonnullRefPtr<AST::Node>> const& arguments)
