@@ -825,8 +825,8 @@ bool VimEditingEngine::on_key_in_normal_mode(KeyEvent const& event)
     // Ignore auxiliary keypress events.
     if (event.key() == KeyCode::Key_LeftShift
         || event.key() == KeyCode::Key_RightShift
-        || event.key() == KeyCode::Key_Control
-        || event.key() == KeyCode::Key_Alt) {
+        || event.key() == KeyCode::Key_LeftControl
+        || event.key() == KeyCode::Key_LeftAlt) {
         return false;
     }
 

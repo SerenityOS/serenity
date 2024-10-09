@@ -74,7 +74,7 @@ static constexpr auto unshifted_evdev_key_map = to_array<KeyCodeEntry const>({
     { Key_Q, 0x10 },                 { Key_W, 0x11 },                 { Key_E, 0x12 },                 { Key_R, 0x13 },
     { Key_T, 0x14 },                 { Key_Y, 0x15 },                 { Key_U, 0x16 },                 { Key_I, 0x17 },
     { Key_O, 0x18 },                 { Key_P, 0x19 },                 { Key_LeftBracket, 0x1a },       { Key_RightBracket, 0x1b },
-    { Key_Return, 0x1c },            { Key_Control, 0x1d },           { Key_A, 0x1e },                 { Key_S, 0x1f },
+    { Key_Return, 0x1c },            { Key_LeftControl, 0x1d },       { Key_A, 0x1e },                 { Key_S, 0x1f },
 
     // 0x20-0x2f
     { Key_D, 0x20 },                 { Key_F, 0x21 },                 { Key_G, 0x22 },                 { Key_H, 0x23 },
@@ -85,7 +85,7 @@ static constexpr auto unshifted_evdev_key_map = to_array<KeyCodeEntry const>({
     // 0x30-0x3f
     { Key_B, 0x30 },                 { Key_N, 0x31 },                 { Key_M, 0x32 },                 { Key_Comma, 0x33 },
     { Key_Period, 0x34 },            { Key_Slash, 0x35 },             { Key_RightShift, 0xff },        { Key_Asterisk, 0x37 },
-    { Key_Alt, 0xff },               { Key_Space, 0x39 },             { Key_CapsLock, 0xff },          { Key_F1, 0xff },
+    { Key_LeftAlt, 0xff },           { Key_Space, 0x39 },             { Key_CapsLock, 0xff },          { Key_F1, 0xff },
     { Key_F2, 0xff },                { Key_F3, 0xff },                { Key_F4, 0xff },                { Key_F5, 0xff },
 
     // 0x40-0x4f
@@ -111,7 +111,7 @@ static constexpr auto unshifted_evdev_key_map = to_array<KeyCodeEntry const>({
     { Key_Invalid, 0xff },           { Key_Mute, 0xff },              { Key_VolumeDown, 0xff },        { Key_VolumeUp, 0xff },
     { Key_Power, 0xff },             { Key_Equal, 0xff },             { Key_Invalid, 0xff },           { Key_PauseBreak, 0xff },
     { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
-    { Key_Invalid, 0xff },           { Key_Super, 0xff },             { Key_Super, 0xff },             { Key_Menu, 0xff },
+    { Key_Invalid, 0xff },           { Key_LeftSuper, 0xff },         { Key_LeftSuper, 0xff },         { Key_Menu, 0xff },
 
     // 0x80-0x8f
     { Key_Stop, 0xff },              { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
@@ -133,7 +133,7 @@ static constexpr auto shifted_evdev_key_map = to_array<KeyCodeEntry const>({
     { Key_Q, 0x10 },                 { Key_W, 0x11 },                 { Key_E, 0x12 },                 { Key_R, 0x13 },
     { Key_T, 0x14 },                 { Key_Y, 0x15 },                 { Key_U, 0x16 },                 { Key_I, 0x17 },
     { Key_O, 0x18 },                 { Key_P, 0x19 },                 { Key_LeftBrace, 0x1a },         { Key_RightBrace, 0x1b },
-    { Key_Return, 0x1c },            { Key_Control, 0x1d },           { Key_A, 0x1e },                 { Key_S, 0x1f },
+    { Key_Return, 0x1c },            { Key_LeftControl, 0x1d },       { Key_A, 0x1e },                 { Key_S, 0x1f },
 
     // 0x20-0x2f
     { Key_D, 0x20 },                 { Key_F, 0x21 },                 { Key_G, 0x22 },                 { Key_H, 0x23 },
@@ -144,7 +144,7 @@ static constexpr auto shifted_evdev_key_map = to_array<KeyCodeEntry const>({
     // 0x30-0x3f
     { Key_B, 0x30 },                 { Key_N, 0x31 },                 { Key_M, 0x32 },                 { Key_LessThan, 0x33 },
     { Key_GreaterThan, 0x34 },       { Key_QuestionMark, 0x35 },      { Key_RightShift, 0xff },        { Key_Asterisk, 0x37 },
-    { Key_Alt, 0xff },               { Key_Space, 0x39 },             { Key_CapsLock, 0xff },          { Key_F1, 0xff },
+    { Key_LeftAlt, 0xff },           { Key_Space, 0x39 },             { Key_CapsLock, 0xff },          { Key_F1, 0xff },
     { Key_F2, 0xff },                { Key_F3, 0xff },                { Key_F4, 0xff },                { Key_F5, 0xff },
 
     // 0x40-0x4f

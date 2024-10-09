@@ -248,7 +248,7 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
         m_scrollbar->increase_slider_by(m_terminal.rows());
         return;
     }
-    if (event.key() == KeyCode::Key_Alt) {
+    if (event.key() == KeyCode::Key_LeftAlt) {
         m_alt_key_held = true;
         return;
     }
@@ -266,14 +266,14 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
 
     m_terminal.handle_key_press(event.key(), event.code_point(), event.modifiers());
 
-    if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_LeftShift && event.key() != Key_RightShift && event.key() != Key_Super)
+    if (event.key() != Key_LeftControl && event.key() != Key_LeftAlt && event.key() != Key_LeftShift && event.key() != Key_RightShift && event.key() != Key_LeftSuper)
         scroll_to_bottom();
 }
 
 void TerminalWidget::keyup_event(GUI::KeyEvent& event)
 {
     switch (event.key()) {
-    case KeyCode::Key_Alt:
+    case KeyCode::Key_LeftAlt:
         m_alt_key_held = false;
         return;
     default:

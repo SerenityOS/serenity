@@ -110,7 +110,7 @@ bool RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)
         m_moving_mode = MovingMode::MovingOrigin;
         return true;
     }
-    if (key_event.key() == KeyCode::Key_Control) {
+    if (key_event.key() == KeyCode::Key_LeftControl) {
         m_moving_mode = MovingMode::AroundCenter;
         return true;
     }
@@ -130,7 +130,7 @@ void RectangleSelectTool::on_keyup(GUI::KeyEvent& key_event)
 {
     if (key_event.key() == KeyCode::Key_Space && m_moving_mode == MovingMode::MovingOrigin)
         m_moving_mode = MovingMode::None;
-    else if (key_event.key() == KeyCode::Key_Control && m_moving_mode == MovingMode::AroundCenter)
+    else if (key_event.key() == KeyCode::Key_LeftControl && m_moving_mode == MovingMode::AroundCenter)
         m_moving_mode = MovingMode::None;
 }
 
