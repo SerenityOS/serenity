@@ -485,7 +485,7 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
     if (!m_active_tool)
         return;
 
-    if (!m_active_tool->is_overriding_alt() && event.key() == Key_Alt)
+    if (!m_active_tool->is_overriding_alt() && event.key() == Key_LeftAlt)
         set_override_cursor(Gfx::StandardCursor::Eyedropper);
 
     if (m_active_tool->on_keydown(event))
@@ -505,7 +505,7 @@ void ImageEditor::keyup_event(GUI::KeyEvent& event)
     if (!m_active_tool)
         return;
 
-    if (!m_active_tool->is_overriding_alt() && event.key() == Key_Alt)
+    if (!m_active_tool->is_overriding_alt() && event.key() == Key_LeftAlt)
         update_tool_cursor();
 
     m_active_tool->on_keyup(event);

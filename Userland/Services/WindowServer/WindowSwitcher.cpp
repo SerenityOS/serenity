@@ -88,7 +88,7 @@ void WindowSwitcher::event(Core::Event& event)
 void WindowSwitcher::on_key_event(KeyEvent const& event)
 {
     if (event.type() == Event::KeyUp) {
-        if (event.key() == (m_mode == Mode::ShowAllWindows ? Key_Super : Key_Alt)) {
+        if (event.key() == (m_mode == Mode::ShowAllWindows ? Key_LeftSuper : Key_LeftAlt)) {
             if (auto* window = selected_window()) {
                 WindowManager::the().move_to_front_and_make_active(*window);
             }

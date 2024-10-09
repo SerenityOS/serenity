@@ -20,29 +20,29 @@ namespace Kernel {
 
 // clang-format off
 static constexpr KeyCodeEntry unshifted_scan_code_set1_key_map[0x80] = {
-    { Key_Invalid, 0xFF },    { Key_Escape, 1 },        { Key_1, 2 },                 { Key_2, 3 },
-    { Key_3, 4 },             { Key_4, 5 },             { Key_5, 6 },                 { Key_6, 7 },
-    { Key_7, 8 },             { Key_8, 9 },             { Key_9, 0x0A },              { Key_0, 0x0B },
-    { Key_Minus, 0x0C },      { Key_Equal, 0x0D },      { Key_Backspace, 0x0E },      { Key_Tab, 0x0F },
-    { Key_Q, 0x10 },          { Key_W, 0x11 },          { Key_E, 0x12 },              { Key_R, 0x13 },
-    { Key_T, 0x14 },          { Key_Y, 0x15 },          { Key_U, 0x16 },              { Key_I, 0x17 },
-    { Key_O, 0x18 },          { Key_P, 0x19 },          { Key_LeftBracket, 0x1A },    { Key_RightBracket, 0x1B },
-    { Key_Return, 0x1C },     { Key_Control, 0x1D },    { Key_A, 0x1E },              { Key_S, 0x1F },
-    { Key_D, 0x20 },          { Key_F, 0x21 },          { Key_G, 0x22 },              { Key_H, 0x23 },
-    { Key_J, 0x24 },          { Key_K, 0x25 },          { Key_L, 0x26 },              { Key_Semicolon, 0x27 },
-    { Key_Apostrophe, 0x28 }, { Key_Backtick, 0x29 },   { Key_LeftShift, 0xFF },      { Key_Backslash, 0x2B },
-    { Key_Z, 0x2C },          { Key_X, 0x2D },          { Key_C, 0x2E },              { Key_V, 0x2F },
-    { Key_B, 0x30 },          { Key_N, 0x31 },          { Key_M, 0x32 },              { Key_Comma, 0x33 },
-    { Key_Period, 0x34 },     { Key_Slash, 0x35 },      { Key_RightShift, 0xFF },     { Key_Asterisk, 0x37 },
-    { Key_Alt, 0xFF },        { Key_Space, 0x39 },      { Key_CapsLock, 0xFF },       { Key_F1, 0xFF },
-    { Key_F2, 0xFF },         { Key_F3, 0xFF },         { Key_F4, 0xFF },             { Key_F5, 0xFF },
-    { Key_F6, 0xFF },         { Key_F7, 0xFF },         { Key_F8, 0xFF },             { Key_F9, 0xFF },
-    { Key_F10, 0xFF },        { Key_NumLock, 0x45 },    { Key_ScrollLock, 0xFF },     { Key_Home, 0xFF },
-    { Key_Up, 0xFF },         { Key_PageUp, 0xFF },     { Key_Minus, 0x4A },          { Key_Left, 0xFF },
-    { Key_Invalid, 0xFF },    { Key_Right, 0xFF },      { Key_Plus, 0x4E },           { Key_End, 0xFF },
-    { Key_Down, 0xFF },       { Key_PageDown, 0xFF },   { Key_Insert, 0xFF },         { Key_Delete, 0xFF },
-    { Key_Invalid, 0xFF },    { Key_Invalid, 0xFF },    { Key_Backslash, 0x56 },      { Key_F11, 0xFF },
-    { Key_F12, 0xFF },        { Key_Invalid, 0xFF },    { Key_Invalid, 0xFF },        { Key_Super, 0xFF },
+    { Key_Invalid, 0xFF },    { Key_Escape, 1 },         { Key_1, 2 },                 { Key_2, 3 },
+    { Key_3, 4 },             { Key_4, 5 },              { Key_5, 6 },                 { Key_6, 7 },
+    { Key_7, 8 },             { Key_8, 9 },              { Key_9, 0x0A },              { Key_0, 0x0B },
+    { Key_Minus, 0x0C },      { Key_Equal, 0x0D },       { Key_Backspace, 0x0E },      { Key_Tab, 0x0F },
+    { Key_Q, 0x10 },          { Key_W, 0x11 },           { Key_E, 0x12 },              { Key_R, 0x13 },
+    { Key_T, 0x14 },          { Key_Y, 0x15 },           { Key_U, 0x16 },              { Key_I, 0x17 },
+    { Key_O, 0x18 },          { Key_P, 0x19 },           { Key_LeftBracket, 0x1A },    { Key_RightBracket, 0x1B },
+    { Key_Return, 0x1C },     { Key_LeftControl, 0x1D }, { Key_A, 0x1E },              { Key_S, 0x1F },
+    { Key_D, 0x20 },          { Key_F, 0x21 },           { Key_G, 0x22 },              { Key_H, 0x23 },
+    { Key_J, 0x24 },          { Key_K, 0x25 },           { Key_L, 0x26 },              { Key_Semicolon, 0x27 },
+    { Key_Apostrophe, 0x28 }, { Key_Backtick, 0x29 },    { Key_LeftShift, 0xFF },      { Key_Backslash, 0x2B },
+    { Key_Z, 0x2C },          { Key_X, 0x2D },           { Key_C, 0x2E },              { Key_V, 0x2F },
+    { Key_B, 0x30 },          { Key_N, 0x31 },           { Key_M, 0x32 },              { Key_Comma, 0x33 },
+    { Key_Period, 0x34 },     { Key_Slash, 0x35 },       { Key_RightShift, 0xFF },     { Key_Asterisk, 0x37 },
+    { Key_LeftAlt, 0xFF },    { Key_Space, 0x39 },       { Key_CapsLock, 0xFF },       { Key_F1, 0xFF },
+    { Key_F2, 0xFF },         { Key_F3, 0xFF },          { Key_F4, 0xFF },             { Key_F5, 0xFF },
+    { Key_F6, 0xFF },         { Key_F7, 0xFF },          { Key_F8, 0xFF },             { Key_F9, 0xFF },
+    { Key_F10, 0xFF },        { Key_NumLock, 0x45 },     { Key_ScrollLock, 0xFF },     { Key_Home, 0xFF },
+    { Key_Up, 0xFF },         { Key_PageUp, 0xFF },      { Key_Minus, 0x4A },          { Key_Left, 0xFF },
+    { Key_Invalid, 0xFF },    { Key_Right, 0xFF },       { Key_Plus, 0x4E },           { Key_End, 0xFF },
+    { Key_Down, 0xFF },       { Key_PageDown, 0xFF },    { Key_Insert, 0xFF },         { Key_Delete, 0xFF },
+    { Key_Invalid, 0xFF },    { Key_Invalid, 0xFF },     { Key_Backslash, 0x56 },      { Key_F11, 0xFF },
+    { Key_F12, 0xFF },        { Key_Invalid, 0xFF },     { Key_Invalid, 0xFF },        { Key_LeftSuper, 0xFF },
     { Key_Invalid, 0xFF },    { Key_Menu, 0xFF },
 };
 // clang-format on
@@ -56,14 +56,14 @@ static constexpr KeyCodeEntry shifted_scan_code_set1_key_map[0x100] = {
     { Key_Q, 0x10 },              { Key_W, 0x11 },                      { Key_E, 0x12 },                  { Key_R, 0x13 },
     { Key_T, 0x14 },              { Key_Y, 0x15 },                      { Key_U, 0x16 },                  { Key_I, 0x17 },
     { Key_O, 0x18 },              { Key_P, 0x19 },                      { Key_LeftBrace, 0x1A },          { Key_RightBrace, 0x1B },
-    { Key_Return, 0x1C },         { Key_Control, 0x1D },                { Key_A, 0x1E },                  { Key_S, 0x1F },
+    { Key_Return, 0x1C },         { Key_LeftControl, 0x1D },            { Key_A, 0x1E },                  { Key_S, 0x1F },
     { Key_D, 0x20 },              { Key_F, 0x21 },                      { Key_G, 0x22 },                  { Key_H, 0x23 },
     { Key_J, 0x24 },              { Key_K, 0x25 },                      { Key_L, 0x26 },                  { Key_Colon, 0x27 },
     { Key_DoubleQuote, 0x28 },    { Key_Tilde, 0x29 },                  { Key_LeftShift, 0xFF },          { Key_Pipe, 0x2B },
     { Key_Z, 0x2C },              { Key_X, 0x2D },                      { Key_C, 0x2E },                  { Key_V, 0x2F },
     { Key_B, 0x30 },              { Key_N, 0x31 },                      { Key_M, 0x32 },                  { Key_LessThan, 0x33 },
     { Key_GreaterThan, 0x34 },    { Key_QuestionMark, 0x35 },           { Key_RightShift, 0xFF },         { Key_Asterisk, 0x37 },
-    { Key_Alt, 0xFF },            { Key_Space, 0x39 },                  { Key_CapsLock, 0xFF },           { Key_F1, 0xFF },
+    { Key_LeftAlt, 0xFF },        { Key_Space, 0x39 },                  { Key_CapsLock, 0xFF },           { Key_F1, 0xFF },
     { Key_F2, 0xFF },             { Key_F3, 0xFF },                     { Key_F4, 0xFF },                 { Key_F5, 0xFF },
     { Key_F6, 0xFF },             { Key_F7, 0xFF },                     { Key_F8, 0xFF },                 { Key_F9, 0xFF },
     { Key_F10, 0xFF },            { Key_NumLock, 0xFF },                { Key_ScrollLock, 0xFF },         { Key_Home, 0xFF },
@@ -71,7 +71,7 @@ static constexpr KeyCodeEntry shifted_scan_code_set1_key_map[0x100] = {
     { Key_Invalid, 0xFF },        { Key_Right, 0xFF },                  { Key_Plus, 0x4E },               { Key_End, 0xFF },
     { Key_Down, 0xFF },           { Key_PageDown, 0xFF },               { Key_Insert, 0xFF },             { Key_Delete, 0xFF },
     { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },                { Key_Pipe, 0x56 },               { Key_F11, 0xFF },
-    { Key_F12, 0xFF },            { Key_Invalid, 0xFF },                { Key_Invalid, 0xFF },            { Key_Super, 0xFF },
+    { Key_F12, 0xFF },            { Key_Invalid, 0xFF },                { Key_Invalid, 0xFF },            { Key_LeftSuper, 0xFF },
     { Key_Invalid, 0xFF },        { Key_Menu, 0xFF },
 };
 // clang-format on
@@ -82,8 +82,8 @@ static constexpr KeyCodeEntry unshifted_simple_scan_code_set2_key_map_with_key_n
     { Key_F3, 0x3D },             { Key_F1, 0x3B },             { Key_F2, 0x3C },               { Key_F12, 0xFF },
     { Key_Invalid, 0xFF },        { Key_F10, 0x44 },            { Key_F8, 0x42 },               { Key_F6, 0x40 },
     { Key_F4, 0x3E },             { Key_Tab, 0x0F },            { Key_Backtick, 0x29 },         { Key_Invalid, 0xFF },
-    { Key_Invalid, 0xFF },        { Key_Alt, 0x38 },            { Key_LeftShift, 0x2A },        { Key_Invalid, 0xFF },
-    { Key_Control, 0x1D },        { Key_Q, 0x10 },              { Key_1, 2 },                   { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_LeftAlt, 0x38 },        { Key_LeftShift, 0x2A },        { Key_Invalid, 0xFF },
+    { Key_LeftControl, 0x1D },    { Key_Q, 0x10 },              { Key_1, 2 },                   { Key_Invalid, 0xFF },
     { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Z, 0x2C },                { Key_S, 0x1F },
     { Key_A, 0x1E },              { Key_W, 0x11 },              { Key_2, 3 },                   { Key_Invalid, 0xFF },
     { Key_Invalid, 0xFF },        { Key_C, 0x2E },              { Key_X, 0x2D },                { Key_D, 0x20 },
@@ -121,8 +121,8 @@ static constexpr KeyCodeEntry unshifted_simple_scan_code_set2_key_map_with_disab
     { Key_F3, 0x3D },             { Key_F1, 0x3B },             { Key_F2, 0x3C },             { Key_F12, 0xFF },
     { Key_Invalid, 0xFF },        { Key_F10, 0x44 },            { Key_F8, 0x42 },             { Key_F6, 0x40 },
     { Key_F4, 0x3E },             { Key_Tab, 0x0F },            { Key_Backtick, 0x29 },       { Key_Invalid, 0xFF },
-    { Key_Invalid, 0xFF },        { Key_Alt, 0x38 },            { Key_LeftShift, 0x2A },      { Key_Invalid, 0xFF },
-    { Key_Control, 0x1D },        { Key_Q, 0x10 },              { Key_1, 2 },                 { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_LeftAlt, 0x38 },        { Key_LeftShift, 0x2A },      { Key_Invalid, 0xFF },
+    { Key_LeftControl, 0x1D },    { Key_Q, 0x10 },              { Key_1, 2 },                 { Key_Invalid, 0xFF },
     { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Z, 0x2C },              { Key_S, 0x1F },
     { Key_A, 0x1E },              { Key_W, 0x11 },              { Key_2, 3 },                 { Key_Invalid, 0xFF },
     { Key_Invalid, 0xFF },        { Key_C, 0x2E },              { Key_X, 0x2D },              { Key_D, 0x20 },
@@ -160,8 +160,8 @@ static constexpr KeyCodeEntry shifted_simple_scan_code_set2_key_map_with_key_num
     { Key_F3, 0x3D },             { Key_F1, 0x3B },             { Key_F2, 0x3C },                 { Key_F12, 0xFF },
     { Key_Invalid, 0xFF },        { Key_F10, 0x44 },            { Key_F8, 0x42 },                 { Key_F6, 0x40 },
     { Key_F4, 0x3E },             { Key_Tab, 0x0F },            { Key_Backtick, 0x29 },           { Key_Invalid, 0xFF },
-    { Key_Invalid, 0xFF },        { Key_Alt, 0x38 },            { Key_LeftShift, 0x2A },          { Key_Invalid, 0xFF },
-    { Key_Control, 0x1D },        { Key_Q, 0x10 },              { Key_Escape, 2 },                { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_LeftAlt, 0x38 },        { Key_LeftShift, 0x2A },          { Key_Invalid, 0xFF },
+    { Key_LeftControl, 0x1D },    { Key_Q, 0x10 },              { Key_Escape, 2 },                { Key_Invalid, 0xFF },
     { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Z, 0x2C },                  { Key_S, 0x1F },
     { Key_A, 0x1E },              { Key_W, 0x11 },              { Key_AtSign, 3 },                { Key_Invalid, 0xFF },
     { Key_Invalid, 0xFF },        { Key_C, 0x2E },              { Key_X, 0x2D },                  { Key_D, 0x20 },
@@ -199,8 +199,8 @@ static constexpr KeyCodeEntry shifted_simple_scan_code_set2_key_map_with_disable
     { Key_F3, 0x3D },             { Key_F1, 0x3B },             { Key_F2, 0x3C },                   { Key_F12, 0xFF },
     { Key_Invalid, 0xFF },        { Key_F10, 0x44 },            { Key_F8, 0x42 },                   { Key_F6, 0x40 },
     { Key_F4, 0x3E },             { Key_Tab, 0x0F },            { Key_Backtick, 0x29 },             { Key_Invalid, 0xFF },
-    { Key_Invalid, 0xFF },        { Key_Alt, 0x38 },            { Key_LeftShift, 0x2A },            { Key_Invalid, 0xFF },
-    { Key_Control, 0x1D },        { Key_Q, 0x10 },              { Key_Escape, 2 },                  { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_LeftAlt, 0x38 },        { Key_LeftShift, 0x2A },            { Key_Invalid, 0xFF },
+    { Key_LeftControl, 0x1D },    { Key_Q, 0x10 },              { Key_Escape, 2 },                  { Key_Invalid, 0xFF },
     { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Z, 0x2C },                    { Key_S, 0x1F },
     { Key_A, 0x1E },              { Key_W, 0x11 },              { Key_AtSign, 3 },                  { Key_Invalid, 0xFF },
     { Key_Invalid, 0xFF },        { Key_C, 0x2E },              { Key_X, 0x2D },                    { Key_D, 0x20 },
@@ -451,13 +451,13 @@ Optional<RawKeyEvent> PS2KeyboardDevice::generate_raw_key_event_input_from_set2(
     case Key_RightAlt:
         m_keyboard_device->update_modifier(Mod_AltGr, key_event.is_press());
         break;
-    case Key_Alt:
+    case Key_LeftAlt:
         m_keyboard_device->update_modifier(Mod_Alt, key_event.is_press());
         break;
-    case Key_Control:
+    case Key_LeftControl:
         m_keyboard_device->update_modifier(Mod_Ctrl, key_event.is_press());
         break;
-    case Key_Super:
+    case Key_LeftSuper:
         m_left_super_pressed = key_event.is_press();
         m_keyboard_device->update_modifier(Mod_Super, m_left_super_pressed || m_right_super_pressed);
         break;

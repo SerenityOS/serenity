@@ -1690,11 +1690,11 @@ void WindowManager::process_key_event(KeyEvent& event)
         return;
     }
 
-    if (event.type() == Event::KeyDown && event.key() == Key_Super) {
+    if (event.type() == Event::KeyDown && event.key() == Key_LeftSuper) {
         m_previous_event_was_super_keydown = true;
     } else if (m_previous_event_was_super_keydown) {
         m_previous_event_was_super_keydown = false;
-        if (!m_dnd_client && !automatic_cursor_tracking_window() && event.type() == Event::KeyUp && event.key() == Key_Super) {
+        if (!m_dnd_client && !automatic_cursor_tracking_window() && event.type() == Event::KeyUp && event.key() == Key_LeftSuper) {
             tell_wms_super_key_pressed();
             return;
         }
@@ -1716,7 +1716,7 @@ void WindowManager::process_key_event(KeyEvent& event)
         }
     }
 
-    if (MenuManager::the().current_menu() && event.key() != Key_Super) {
+    if (MenuManager::the().current_menu() && event.key() != Key_LeftSuper) {
         MenuManager::the().dispatch_event(event);
         return;
     }
@@ -1733,7 +1733,7 @@ void WindowManager::process_key_event(KeyEvent& event)
         return;
     }
 
-    if (event.type() == Event::KeyDown && (event.modifiers() == (Mod_Alt | Mod_Shift) && (event.key() == Key_Shift || event.key() == Key_Alt))) {
+    if (event.type() == Event::KeyDown && (event.modifiers() == (Mod_Alt | Mod_Shift) && (event.key() == Key_LeftShift || event.key() == Key_LeftAlt))) {
         m_keymap_switcher->next_keymap();
         return;
     }

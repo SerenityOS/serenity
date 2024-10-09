@@ -31,10 +31,11 @@
     __ENUMERATE_KEY_CODE(PageDown, "PageDown")                 \
     __ENUMERATE_KEY_CODE(LeftShift, "LeftShift")               \
     __ENUMERATE_KEY_CODE(RightShift, "RightShift")             \
-    __ENUMERATE_KEY_CODE(Control, "Ctrl")                      \
-    __ENUMERATE_KEY_CODE(RightControl, "RightCtrl")            \
-    __ENUMERATE_KEY_CODE(Alt, "Alt")                           \
-    __ENUMERATE_KEY_CODE(RightAlt, "Alt")                      \
+    __ENUMERATE_KEY_CODE(LeftControl, "LeftControl")           \
+    __ENUMERATE_KEY_CODE(RightControl, "RightControl")         \
+    __ENUMERATE_KEY_CODE(LeftAlt, "LeftAlt")                   \
+    __ENUMERATE_KEY_CODE(RightAlt, "RightAlt")                 \
+    __ENUMERATE_KEY_CODE(AltGr, "AltGr")                       \
     __ENUMERATE_KEY_CODE(CapsLock, "CapsLock")                 \
     __ENUMERATE_KEY_CODE(NumLock, "NumLock")                   \
     __ENUMERATE_KEY_CODE(ScrollLock, "ScrollLock")             \
@@ -119,7 +120,8 @@
     __ENUMERATE_KEY_CODE(Pipe, "|")                            \
     __ENUMERATE_KEY_CODE(Tilde, "~")                           \
     __ENUMERATE_KEY_CODE(Backtick, "`")                        \
-    __ENUMERATE_KEY_CODE(Super, "Super")                       \
+    __ENUMERATE_KEY_CODE(LeftSuper, "LeftSuper")               \
+    __ENUMERATE_KEY_CODE(RightSuper, "RightSuper")             \
     __ENUMERATE_KEY_CODE(BrowserSearch, "BrowserSearch")       \
     __ENUMERATE_KEY_CODE(BrowserFavorites, "BrowserFavorites") \
     __ENUMERATE_KEY_CODE(BrowserHome, "BrowserHome")           \
