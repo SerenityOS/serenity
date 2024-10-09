@@ -1519,10 +1519,10 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
 
     Vector<StringView> descriptors;
     Variant<Core::ArgsParser::Option, Core::ArgsParser::Arg, Empty> current;
-    ByteString help_string_storage;
-    ByteString long_name_storage;
-    ByteString value_name_storage;
-    ByteString name_storage;
+    Vector<ByteString> help_string_storage;
+    Vector<ByteString> long_name_storage;
+    Vector<ByteString> value_name_storage;
+    Vector<ByteString> name_storage;
     ByteString current_variable;
     // if max > 1 or min < 1, or explicit `--list`.
     bool treat_arg_as_list = false;
@@ -1743,8 +1743,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                     return false;
                 },
                 [&](auto& option) {
-                    help_string_storage = value;
-                    option.help_string = help_string_storage.characters();
+                    help_string_storage.append(value);
+                    option.help_string = help_string_storage.last().characters();
                     return true;
                 });
         },
@@ -1765,8 +1765,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                 return false;
             }
 
-            long_name_storage = value;
-            option->long_name = long_name_storage.characters();
+            long_name_storage.append(value);
+            option->long_name = long_name_storage.last().characters();
             return true;
         },
     });
@@ -1814,8 +1814,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                         return false;
                     }
 
-                    value_name_storage = value;
-                    option.value_name = value_name_storage.characters();
+                    value_name_storage.append(value);
+                    option.value_name = value_name_storage.last().characters();
                     return true;
                 },
                 [&](Core::ArgsParser::Arg& arg) {
@@ -1824,8 +1824,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                         return false;
                     }
 
-                    name_storage = value;
-                    arg.name = name_storage.characters();
+                    name_storage.append(value);
+                    arg.name = name_storage.last().characters();
                     return true;
                 });
         },
