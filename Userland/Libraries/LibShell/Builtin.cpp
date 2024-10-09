@@ -1704,6 +1704,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                         warnln("Type 'bool' does not apply to options with a value (value name is set to {})", option->value_name);
                         return false;
                     }
+
+                    option->argument_mode = Core::ArgsParser::OptionArgumentMode::None;
                 }
                 type = Type::Bool;
             } else if (ty == "string") {
