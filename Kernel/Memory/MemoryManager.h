@@ -174,7 +174,7 @@ public:
     ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_pages(size_t size, StringView name, Region::Access access, Vector<NonnullRefPtr<PhysicalRAMPage>>& dma_buffer_pages);
     ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_pages(size_t size, StringView name, Region::Access access);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region(size_t, StringView name, Region::Access access, AllocationStrategy strategy = AllocationStrategy::Reserve, Region::Cacheable = Region::Cacheable::Yes);
-    ErrorOr<NonnullOwnPtr<Region>> allocate_mmio_kernel_region(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
+    ErrorOr<NonnullOwnPtr<Region>> allocate_mmio_kernel_region(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::No);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region_with_physical_pages(Span<NonnullRefPtr<PhysicalRAMPage>>, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region_with_vmobject(VMObject&, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     ErrorOr<NonnullOwnPtr<Region>> allocate_unbacked_region_anywhere(size_t size, size_t alignment);
