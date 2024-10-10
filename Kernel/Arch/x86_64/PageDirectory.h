@@ -59,9 +59,6 @@ public:
     bool is_writable() const { return (raw() & ReadWrite) == ReadWrite; }
     void set_writable(bool b) { set_bit(ReadWrite, b); }
 
-    bool is_write_through() const { return (raw() & WriteThrough) == WriteThrough; }
-    void set_write_through(bool b) { set_bit(WriteThrough, b); }
-
     void set_memory_type(MemoryType t) { set_bit(CacheDisabled, t != MemoryType::Normal); }
 
     bool is_global() const { return (raw() & Global) == Global; }
@@ -113,9 +110,6 @@ public:
 
     bool is_writable() const { return (raw() & ReadWrite) == ReadWrite; }
     void set_writable(bool b) { set_bit(ReadWrite, b); }
-
-    bool is_write_through() const { return (raw() & WriteThrough) == WriteThrough; }
-    void set_write_through(bool b) { set_bit(WriteThrough, b); }
 
     void set_memory_type(MemoryType t)
     {

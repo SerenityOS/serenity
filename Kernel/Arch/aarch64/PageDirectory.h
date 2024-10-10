@@ -80,9 +80,6 @@ public:
     bool is_writable() const { TODO_AARCH64(); }
     void set_writable(bool) { }
 
-    bool is_write_through() const { TODO_AARCH64(); }
-    void set_write_through(bool) { }
-
     void set_memory_type(MemoryType) { }
 
     bool is_global() const { TODO_AARCH64(); }
@@ -131,9 +128,6 @@ public:
 
     bool is_writable() const { return !((raw() & ACCESS_PERMISSION_READONLY) == ACCESS_PERMISSION_READONLY); }
     void set_writable(bool b) { set_bit(ACCESS_PERMISSION_READONLY, !b); }
-
-    bool is_write_through() const { TODO_AARCH64(); }
-    void set_write_through(bool) { }
 
     void set_memory_type(MemoryType) { }
 
