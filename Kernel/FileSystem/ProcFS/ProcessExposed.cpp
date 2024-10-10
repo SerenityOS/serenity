@@ -311,7 +311,7 @@ ErrorOr<void> Process::procfs_get_virtual_memory_stats(KBufferBuilder& builder) 
             if (region.vmobject().is_anonymous()) {
                 TRY(region_object.add("volatile"sv, static_cast<Memory::AnonymousVMObject const&>(region.vmobject()).is_volatile()));
             }
-            TRY(region_object.add("cacheable"sv, region.is_cacheable()));
+            TRY(region_object.add("memory_type"sv, Memory::memory_type_to_string(region.memory_type())));
             TRY(region_object.add("address"sv, region.vaddr().get()));
             TRY(region_object.add("size"sv, region.size()));
             TRY(region_object.add("amount_resident"sv, region.amount_resident()));

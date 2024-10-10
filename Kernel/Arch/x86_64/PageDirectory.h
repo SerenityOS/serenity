@@ -15,6 +15,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/LockRank.h>
 #include <Kernel/Locking/Spinlock.h>
+#include <Kernel/Memory/MemoryType.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/PhysicalRAMPage.h>
 
@@ -61,8 +62,7 @@ public:
     bool is_write_through() const { return (raw() & WriteThrough) == WriteThrough; }
     void set_write_through(bool b) { set_bit(WriteThrough, b); }
 
-    bool is_cache_disabled() const { return (raw() & CacheDisabled) == CacheDisabled; }
-    void set_cache_disabled(bool b) { set_bit(CacheDisabled, b); }
+    void set_memory_type(MemoryType t) { set_bit(CacheDisabled, t != MemoryType::Normal); }
 
     bool is_global() const { return (raw() & Global) == Global; }
     void set_global(bool b) { set_bit(Global, b); }
@@ -117,8 +117,7 @@ public:
     bool is_write_through() const { return (raw() & WriteThrough) == WriteThrough; }
     void set_write_through(bool b) { set_bit(WriteThrough, b); }
 
-    bool is_cache_disabled() const { return (raw() & CacheDisabled) == CacheDisabled; }
-    void set_cache_disabled(bool b) { set_bit(CacheDisabled, b); }
+    void set_memory_type(MemoryType t) { set_bit(CacheDisabled, t != MemoryType::Normal); }
 
     bool is_global() const { return (raw() & Global) == Global; }
     void set_global(bool b) { set_bit(Global, b); }
