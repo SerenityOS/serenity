@@ -214,6 +214,7 @@ static void activate_mmu()
     Aarch64::MAIR_EL1 mair_el1 = {};
     mair_el1.Attr[0] = 0xFF;       // Normal memory
     mair_el1.Attr[1] = 0b00000100; // Device-nGnRE memory (non-cacheble)
+    mair_el1.Attr[2] = 0b01000100; // Normal (non-cacheable)
     Aarch64::MAIR_EL1::write(mair_el1);
 
     // Configure cacheability attributes for memory associated with translation table walks
