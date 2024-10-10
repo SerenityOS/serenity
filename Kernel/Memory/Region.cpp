@@ -27,26 +27,26 @@ Region::Region()
 {
 }
 
-Region::Region(NonnullLockRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
+Region::Region(NonnullLockRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, MemoryType memory_type, bool shared)
     : m_range(VirtualRange({}, 0))
     , m_offset_in_vmobject(offset_in_vmobject)
     , m_vmobject(move(vmobject))
     , m_name(move(name))
     , m_access(access | ((access & 0x7) << 4))
     , m_shared(shared)
-    , m_cacheable(cacheable == Cacheable::Yes)
+    , m_memory_type(memory_type)
 {
     m_vmobject->add_region(*this);
 }
 
-Region::Region(VirtualRange const& range, NonnullLockRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
+Region::Region(VirtualRange const& range, NonnullLockRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, MemoryType memory_type, bool shared)
     : m_range(range)
     , m_offset_in_vmobject(offset_in_vmobject)
     , m_vmobject(move(vmobject))
     , m_name(move(name))
     , m_access(access | ((access & 0x7) << 4))
     , m_shared(shared)
-    , m_cacheable(cacheable == Cacheable::Yes)
+    , m_memory_type(memory_type)
 {
     VERIFY(m_range.base().is_page_aligned());
     VERIFY(m_range.size());
@@ -91,9 +91,9 @@ ErrorOr<NonnullOwnPtr<Region>> Region::create_unbacked()
     return adopt_nonnull_own_or_enomem(new (nothrow) Region);
 }
 
-ErrorOr<NonnullOwnPtr<Region>> Region::create_unplaced(NonnullLockRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
+ErrorOr<NonnullOwnPtr<Region>> Region::create_unplaced(NonnullLockRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, MemoryType memory_type, bool shared)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) Region(move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
+    return adopt_nonnull_own_or_enomem(new (nothrow) Region(move(vmobject), offset_in_vmobject, move(name), access, memory_type, shared));
 }
 
 ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
@@ -112,7 +112,7 @@ ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
             region_name = TRY(m_name->try_clone());
 
         auto region = TRY(Region::try_create_user_accessible(
-            m_range, vmobject(), m_offset_in_vmobject, move(region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
+            m_range, vmobject(), m_offset_in_vmobject, move(region_name), access(), m_memory_type, m_shared));
         region->set_mmap(m_mmap, m_mmapped_from_readable, m_mmapped_from_writable);
         region->set_shared(m_shared);
         region->set_syscall_region(is_syscall_region());
@@ -133,7 +133,7 @@ ErrorOr<NonnullOwnPtr<Region>> Region::try_clone()
         clone_region_name = TRY(m_name->try_clone());
 
     auto clone_region = TRY(Region::try_create_user_accessible(
-        m_range, move(vmobject_clone), m_offset_in_vmobject, move(clone_region_name), access(), m_cacheable ? Cacheable::Yes : Cacheable::No, m_shared));
+        m_range, move(vmobject_clone), m_offset_in_vmobject, move(clone_region_name), access(), m_memory_type, m_shared));
 
     if (m_stack) {
         VERIFY(vmobject().is_anonymous());
@@ -189,9 +189,9 @@ size_t Region::amount_shared() const
     return bytes;
 }
 
-ErrorOr<NonnullOwnPtr<Region>> Region::try_create_user_accessible(VirtualRange const& range, NonnullLockRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
+ErrorOr<NonnullOwnPtr<Region>> Region::try_create_user_accessible(VirtualRange const& range, NonnullLockRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, MemoryType memory_type, bool shared)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
+    return adopt_nonnull_own_or_enomem(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, memory_type, shared));
 }
 
 bool Region::should_cow(size_t page_index) const
@@ -243,7 +243,7 @@ bool Region::map_individual_page_impl(size_t page_index, PhysicalAddress paddr, 
 
     bool is_writable = writable && !(should_cow(page_index) || should_dirty_on_write(page_index));
 
-    pte->set_cache_disabled(!m_cacheable);
+    pte->set_memory_type(m_memory_type);
     pte->set_physical_page_base(paddr.get());
     pte->set_present(true);
     pte->set_writable(is_writable);

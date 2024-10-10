@@ -53,7 +53,7 @@ ErrorOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, String
     if (!name.is_null())
         region_name = TRY(KString::try_create(name));
     auto vmobject = TRY(AnonymousVMObject::try_create_with_size(range.size(), strategy));
-    auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), 0, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, false));
+    auto region = TRY(Region::try_create_user_accessible(range, move(vmobject), 0, move(region_name), prot_to_region_access_flags(prot), MemoryType::Normal, false));
     TRY(region->map(page_directory()));
     return add_region(move(region));
 }
