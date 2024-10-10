@@ -518,18 +518,23 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
     auto subpath_end_indices = split_lines_subbpath_end_indices();
 
     // Paths can be disconnected, which a pain to deal with, so split it up.
+    // Also filter out duplicate points here (but keep one-point paths around
+    // since we draw round and square caps for them).
     Vector<Vector<FloatPoint>> segments;
     Vector<bool> segment_is_closed;
     segments.append({ lines.first().a() });
     for (auto const& [line_index, line] : enumerate(lines)) {
         if (line.a() == segments.last().last()) {
-            segments.last().append(line.b());
+            if (line.a() != line.b())
+                segments.last().append(line.b());
         } else {
             if (subpath_end_indices.size() >= segments.size())
                 segment_is_closed.append(subpath_end_indices[segments.size() - 1] == line_index);
             else
                 segment_is_closed.append(false);
-            segments.append({ line.a(), line.b() });
+            segments.append({ line.a() });
+            if (line.a() != line.b())
+                segments.last().append(line.b());
         }
     }
     if (segment_is_closed.size() < segments.size()) {
@@ -597,6 +602,9 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 
     Path convolution;
     for (auto const& [segment_index, segment] : enumerate(segments)) {
+        if (segment.size() < 2)
+            continue;
+
         RoundTrip<FloatPoint> shape { segment };
 
         bool first = true;
@@ -621,34 +629,64 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
             return range.in_range(start_slope);
         });
 
-        while (shape_idx < shape.size()) {
-            add_vertex(shape[shape_idx] + pen_vertices[active]);
-            auto slope_now = slope();
-            auto range = active_ranges[active];
-            if (range.in_range(slope_now)) {
+        shape_idx = 1;
+
+        auto trace_path_until_index = [&](size_t index) {
+            while (shape_idx < index) {
+                add_vertex(shape[shape_idx] + pen_vertices[active]);
+                auto slope_now = slope();
+                auto range = active_ranges[active];
+                if (range.in_range(slope_now))
+                    shape_idx++;
+                else
+                    active = mod(active + (clockwise(slope_now, range.end) ? 1 : -1), pen_vertices.size());
+            }
+        };
+
+        auto add_linecap = [&]() {
+            bool current_segment_is_closed = segment_is_closed[segment_index];
+            if (!current_segment_is_closed && cap_style == CapStyle::Butt) {
+                add_vertex(shape[shape_idx] + pen_vertices[active]);
+                auto slope_now = slope();
+                active = mod(active + pen_vertices.size() / 2, pen_vertices.size());
+                if (!active_ranges[active].in_range(slope_now)) {
+                    if (wrapping_index(active_ranges, active + 1).in_range(slope_now))
+                        active = mod(active + 1, pen_vertices.size());
+                    else if (wrapping_index(active_ranges, active - 1).in_range(slope_now))
+                        active = mod(active - 1, pen_vertices.size());
+                    else
+                        VERIFY_NOT_REACHED();
+                }
+                add_vertex(shape[shape_idx] + pen_vertices[active]);
                 shape_idx++;
             } else {
-                bool is_at_either_end_of_segment = shape_idx == segment.size() - 1 || shape_idx == 2 * segment.size() - 2;
-                bool current_segment_is_closed = segment_is_closed[segment_index];
-                if (!current_segment_is_closed && cap_style == CapStyle::Butt && is_at_either_end_of_segment) {
-                    active = mod(active + pen_vertices.size() / 2, pen_vertices.size());
-                    if (!active_ranges[active].in_range(slope_now)) {
-                        if (wrapping_index(active_ranges, active + 1).in_range(slope_now))
-                            active = mod(active + 1, pen_vertices.size());
-                        else if (wrapping_index(active_ranges, active - 1).in_range(slope_now))
-                            active = mod(active - 1, pen_vertices.size());
-                        else
-                            VERIFY_NOT_REACHED();
-                    }
-                    continue;
+                // Round linecap.
+                add_vertex(shape[shape_idx] + pen_vertices[active]);
+                auto slope_now = slope();
+                auto range = active_ranges[active];
+                while (!range.in_range(slope_now)) {
+                    active = mod(active + (clockwise(slope_now, range.end) ? 1 : -1), pen_vertices.size());
+                    add_vertex(shape[shape_idx] + pen_vertices[active]);
+                    range = active_ranges[active];
                 }
-
-                int increment = 1;
-                if (!clockwise(slope_now, range.end))
-                    increment = -increment;
-                active = mod(active + increment, pen_vertices.size());
             }
-        }
+        };
+
+        // Outer stroke.
+        trace_path_until_index(segment.size() - 1);
+
+        // Cap 1.
+        VERIFY(shape_idx == segment.size() - 1);
+        add_linecap();
+
+        // Inner stroke.
+        trace_path_until_index(2 * (segment.size() - 1));
+
+        // Cap 2.
+        VERIFY(shape_idx == 2 * (segment.size() - 1));
+        add_linecap();
+
+        convolution.close();
     }
 
     return convolution;
