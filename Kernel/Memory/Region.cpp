@@ -249,8 +249,6 @@ bool Region::map_individual_page_impl(size_t page_index, PhysicalAddress paddr, 
     pte->set_writable(is_writable);
     if (Processor::current().has_nx())
         pte->set_execute_disabled(!is_executable());
-    if (Processor::current().has_pat())
-        pte->set_pat(is_write_combine());
     pte->set_user_allowed(user_allowed);
 
     return true;
@@ -363,18 +361,6 @@ void Region::remap()
         result = map(*m_page_directory);
     if (result.is_error())
         TODO();
-}
-
-ErrorOr<void> Region::set_write_combine(bool enable)
-{
-    if (enable && !Processor::current().has_pat()) {
-        dbgln("PAT is not supported, implement MTRR fallback if available");
-        return Error::from_errno(ENOTSUP);
-    }
-
-    m_write_combine = enable;
-    remap();
-    return {};
 }
 
 void Region::clear_to_zero()
