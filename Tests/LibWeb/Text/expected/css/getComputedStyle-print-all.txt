@@ -191,6 +191,7 @@ scrollbar-width: auto
 stop-color: rgb(0, 0, 0)
 stop-opacity: 1
 stroke: none
+stroke-linecap: butt
 stroke-opacity: 1
 stroke-width: 1px
 table-layout: auto
