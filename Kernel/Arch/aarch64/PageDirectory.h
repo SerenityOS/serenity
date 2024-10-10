@@ -16,6 +16,7 @@
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
+#include <Kernel/Memory/MemoryType.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/PhysicalRAMPage.h>
 
@@ -82,8 +83,7 @@ public:
     bool is_write_through() const { TODO_AARCH64(); }
     void set_write_through(bool) { }
 
-    bool is_cache_disabled() const { TODO_AARCH64(); }
-    void set_cache_disabled(bool) { }
+    void set_memory_type(MemoryType) { }
 
     bool is_global() const { TODO_AARCH64(); }
     void set_global(bool) { }
@@ -135,8 +135,7 @@ public:
     bool is_write_through() const { TODO_AARCH64(); }
     void set_write_through(bool) { }
 
-    bool is_cache_disabled() const { TODO_AARCH64(); }
-    void set_cache_disabled(bool) { }
+    void set_memory_type(MemoryType) { }
 
     bool is_global() const { TODO_AARCH64(); }
     void set_global(bool) { }

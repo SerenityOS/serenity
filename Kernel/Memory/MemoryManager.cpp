@@ -1061,14 +1061,14 @@ PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
     return response;
 }
 
-ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(size_t size, StringView name, Region::Access access, MemoryType memory_type)
 {
     VERIFY(!(size % PAGE_SIZE));
     OwnPtr<KString> name_kstring;
     if (!name.is_null())
         name_kstring = TRY(KString::try_create(name));
     auto vmobject = TRY(AnonymousVMObject::try_create_physically_contiguous_with_size(size));
-    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, cacheable));
+    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, memory_type));
     TRY(m_global_data.with([&](auto& global_data) { return global_data.region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size); }));
     TRY(region->map(kernel_page_directory()));
     return region;
@@ -1079,7 +1079,7 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(S
     auto page = TRY(allocate_physical_page());
     dma_buffer_page = page;
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behavior by default)
-    return allocate_kernel_region_with_physical_pages({ &page, 1 }, name, access, Region::Cacheable::No);
+    return allocate_kernel_region_with_physical_pages({ &page, 1 }, name, access, MemoryType::NonCacheable);
 }
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access)
@@ -1094,7 +1094,7 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(
     VERIFY(!(size % PAGE_SIZE));
     dma_buffer_pages = TRY(allocate_contiguous_physical_pages(size));
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behavior by default)
-    return allocate_kernel_region_with_physical_pages(dma_buffer_pages, name, access, Region::Cacheable::No);
+    return allocate_kernel_region_with_physical_pages(dma_buffer_pages, name, access, MemoryType::NonCacheable);
 }
 
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access)
@@ -1105,45 +1105,45 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(
     return allocate_dma_buffer_pages(size, name, access, dma_buffer_pages);
 }
 
-ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, MemoryType memory_type)
 {
     VERIFY(!(size % PAGE_SIZE));
     OwnPtr<KString> name_kstring;
     if (!name.is_null())
         name_kstring = TRY(KString::try_create(name));
     auto vmobject = TRY(AnonymousVMObject::try_create_with_size(size, strategy));
-    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, cacheable));
+    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, memory_type));
     TRY(m_global_data.with([&](auto& global_data) { return global_data.region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size); }));
     TRY(region->map(kernel_page_directory()));
     return region;
 }
 
-ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_physical_pages(Span<NonnullRefPtr<PhysicalRAMPage>> pages, StringView name, Region::Access access, Region::Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_physical_pages(Span<NonnullRefPtr<PhysicalRAMPage>> pages, StringView name, Region::Access access, MemoryType memory_type)
 {
     auto vmobject = TRY(AnonymousVMObject::try_create_with_physical_pages(pages));
     OwnPtr<KString> name_kstring;
     if (!name.is_null())
         name_kstring = TRY(KString::try_create(name));
-    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, cacheable));
+    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, memory_type));
     TRY(m_global_data.with([&](auto& global_data) { return global_data.region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, pages.size() * PAGE_SIZE, PAGE_SIZE); }));
     TRY(region->map(kernel_page_directory()));
     return region;
 }
 
-ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_mmio_kernel_region(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_mmio_kernel_region(PhysicalAddress paddr, size_t size, StringView name, Region::Access access, MemoryType memory_type)
 {
     VERIFY(!(size % PAGE_SIZE));
     auto vmobject = TRY(MMIOVMObject::try_create_for_physical_range(paddr, size));
     OwnPtr<KString> name_kstring;
     if (!name.is_null())
         name_kstring = TRY(KString::try_create(name));
-    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, cacheable));
+    auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, memory_type));
     TRY(m_global_data.with([&](auto& global_data) { return global_data.region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size, PAGE_SIZE); }));
     TRY(region->map(kernel_page_directory(), paddr));
     return region;
 }
 
-ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
+ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, StringView name, Region::Access access, MemoryType memory_type)
 {
     VERIFY(!(size % PAGE_SIZE));
 
@@ -1151,7 +1151,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobje
     if (!name.is_null())
         name_kstring = TRY(KString::try_create(name));
 
-    auto region = TRY(Region::create_unplaced(vmobject, 0, move(name_kstring), access, cacheable));
+    auto region = TRY(Region::create_unplaced(vmobject, 0, move(name_kstring), access, memory_type));
     TRY(m_global_data.with([&](auto& global_data) { return global_data.region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size); }));
     TRY(region->map(kernel_page_directory()));
     return region;
