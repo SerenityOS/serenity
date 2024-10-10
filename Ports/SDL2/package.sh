@@ -11,7 +11,7 @@ configopts=(
     "-DPULSEAUDIO=OFF"
     "-DJACK=OFF"
     "-DSDL_LIBSAMPLERATE=OFF" # Disabled to prevent potential collision with host libsamplerate
-    "-DEXTRA_LDFLAGS=-laudio;-liconv;-ldl"
+    "-DEXTRA_LDFLAGS=-lcorebasic;-laudio;-liconv"
 )
 depends=("libiconv")
 
