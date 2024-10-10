@@ -143,9 +143,6 @@ public:
     bool is_execute_disabled() const { TODO_AARCH64(); }
     void set_execute_disabled(bool) { }
 
-    bool is_pat() const { TODO_AARCH64(); }
-    void set_pat(bool) { }
-
     bool is_null() const { return m_raw == 0; }
     void clear() { m_raw = 0; }
 

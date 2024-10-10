@@ -129,9 +129,6 @@ public:
     bool is_execute_disabled() const { TODO_RISCV64(); }
     void set_execute_disabled(bool b) { set_bit(PageTableEntryBits::Executable, !b); }
 
-    bool is_pat() const { TODO_RISCV64(); }
-    void set_pat(bool) { }
-
     bool is_null() const { return m_raw == 0; }
     void clear() { m_raw = 0; }
 

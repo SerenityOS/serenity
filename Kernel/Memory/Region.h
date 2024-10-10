@@ -100,9 +100,6 @@ public:
     [[nodiscard]] bool is_initially_loaded_executable_segment() const { return m_initially_loaded_executable_segment.was_set(); }
     void set_initially_loaded_executable_segment() { m_initially_loaded_executable_segment.set(); }
 
-    [[nodiscard]] bool is_write_combine() const { return m_write_combine; }
-    ErrorOr<void> set_write_combine(bool);
-
     [[nodiscard]] bool is_user() const { return !is_kernel(); }
     [[nodiscard]] bool is_kernel() const { return vaddr().get() < USER_RANGE_BASE || vaddr().get() >= kernel_mapping_base; }
 
@@ -262,7 +259,6 @@ private:
     bool m_stack : 1 { false };
     bool m_mmap : 1 { false };
     bool m_syscall_region : 1 { false };
-    bool m_write_combine : 1 { false };
     bool m_mmapped_from_readable : 1 { false };
     bool m_mmapped_from_writable : 1 { false };
 
