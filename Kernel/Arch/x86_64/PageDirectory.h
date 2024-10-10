@@ -84,7 +84,6 @@ public:
     PhysicalPtr physical_page_base() const { return PhysicalAddress::physical_page_base(m_raw); }
     void set_physical_page_base(PhysicalPtr value)
     {
-        // FIXME: IS THIS PLATFORM SPECIFIC?
         m_raw &= 0x8000000000000fffULL;
         m_raw |= PhysicalAddress::physical_page_base(value);
     }
