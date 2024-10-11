@@ -33,18 +33,18 @@ def create_text_test(test_name: str, is_async: bool = False) -> None:
     path_to_include_js = "../" * num_sub_levels + "include.js"
 
     # Create input and expected files
-    input_file.write_text(fR"""<!DOCTYPE html>
+    input_file.write_text(f"""<!DOCTYPE html>
 <script src="{path_to_include_js}"></script>
 <script>
     {f"asyncTest(async (done)" if is_async else "test(()"} => {{
         println("Expected println() output");
-    {f"    done();" if is_async else ""}
+        {f"done();" if is_async else ""}
     }});
 </script>
 """)
     expected_file.write_text("Expected println() output\n")
 
-    print(f"Text test '{Path(test_name).with_suffix('.html')}' created successfully.")
+    print(f"Text test '{input_file}' created successfully.")
 
 
 def main():
