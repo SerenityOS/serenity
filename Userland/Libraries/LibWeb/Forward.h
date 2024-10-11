@@ -224,13 +224,13 @@ struct BackgroundLayerData;
 }
 
 namespace Web::CSS::Parser {
-class Block;
+struct AtRule;
 class ComponentValue;
-class Declaration;
-class DeclarationOrAtRule;
-class Function;
+struct Declaration;
+struct Function;
 class Parser;
-class Rule;
+struct QualifiedRule;
+struct SimpleBlock;
 class Token;
 class Tokenizer;
 }
