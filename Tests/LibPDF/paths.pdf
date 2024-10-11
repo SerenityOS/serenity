@@ -14,12 +14,13 @@ endobj
 endobj
 
 4 0 obj
-<</Length 334>>
+<</Length 1645>>
 stream
 /DeviceRGB CS
 
 20 w
 
+% Horizontal lines.
 0 J
 1 0 0 SC
 20 280 m
@@ -38,29 +39,168 @@ S
 60 220 l
 S
 
+% Vertical lines.
 0 J
 1 0 0 SC
-100 280 m
-160 280 l
-130 240 l
-100 280 l
+20 50 m
+20 90 l
 S
+
+1 J
+1 1 0 SC
+50 50 m
+50 90 l
+S
+
+2 J
+0 0 1 SC
+80 50 m
+80 90 l
+S
+
+% Degenerate lines.
+% Different PDF engines disagree what to do here for butt and
+% square caps (but all except LibPDF draw a cicle for round caps, and all
+% except LibPDF draw a square for square caps, even if engines don't agree on
+% orientation).
+0 J
+1 0 0 SC
+95 280 m
+95 280 l
+S
+
+1 J
+1 1 0 SC
+95 250 m
+95 250 l
+S
+
+2 J
+0 0 1 SC
+95 220 m
+95 220 l
+S
+
+% Degenerate line ends, but actual path.
+q
+1 j
 
 0 J
 1 0 0 SC
-180 240 m
-240 240 l
-210 280 l
-180 240 l
+130 280 m
+130 280 l
+150 290 l
+150 290 l
+S
+
+1 J
+1 1 0 SC
+130 250 m
+130 250 l
+150 260 l
+150 260 l
+S
+
+2 J
+0 0 1 SC
+130 220 m
+130 220 l
+150 230 l
+150 230 l
+S
+
+Q
+
+% Weird line ends.
+q
+1 j
+
+0 J
+1 0 0 SC
+190 279 m
+190 280 l
+210 290 l
+210 291 l
+S
+
+1 J
+1 1 0 SC
+190 249 m
+190 250 l
+210 260 l
+210 261 l
+S
+
+2 J
+0 0 1 SC
+190 219 m
+190 220 l
+210 230 l
+210 231 l
+S
+
+Q
+
+% Open triangle, facing down.
+0 J
+1 0 0 SC
+200 170 m
+260 170 l
+230 130 l
+200 170 l
+S
+
+% Open triangle, facing down, opposite winding order.
+0 J
+1 0 0 SC
+200 90 m
+230 50 l
+260 90 l
+200 90 l
+S
+
+% Closed triangle, facing up.
+0 J
+1 0 0 SC
+280 130 m
+340 130 l
+310 170 l
+280 130 l
 h
 S
 
+% Very short and wide line.
+
+q
+200 w
+0 J
+1 0 0 SC
+370 150 m
+372 150 l
+S
+Q
+
+% Very short and wide line with very thin caps.
+
+q
+200 w
+0 J
+0 0 1 SC
+375    150 m
+375.01 150 l
+376.99 150 l
+377    150 l
+S
+Q
+
+% Closed rect (using `re`).
 0 J
 1 j
 0 1 0 SC
 20 130 50 50 re
 S
 
+% Open rect.
 0 1 0 SC
 110 130 m
 160 130 l
@@ -83,5 +223,5 @@ xref
 trailer
 <</Size 5/Root 2 0 R>>
 startxref
-588
+1900
 %%EOF
