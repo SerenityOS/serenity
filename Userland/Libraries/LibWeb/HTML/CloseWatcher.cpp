@@ -51,7 +51,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CloseWatcher>> CloseWatcher::construct_impl
 
     // 1. If this's relevant global object's associated Document is not fully active, then return an "InvalidStateError" DOMException.
     if (!window.associated_document().is_fully_active())
-        return WebIDL::InvalidStateError::create(realm, "The document is not fully active."_fly_string);
+        return WebIDL::InvalidStateError::create(realm, "The document is not fully active."_string);
 
     // 2. Let close_watcher be the result of establishing a close watcher
     auto close_watcher = establish(window);
