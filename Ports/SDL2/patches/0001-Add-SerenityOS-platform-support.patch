@@ -43,9 +43,9 @@ Co-Authored-By: sdomi <ja@sdomi.pl>
  src/video/serenity/SDL_serenitymessagebox.h   |  38 +
  src/video/serenity/SDL_serenitymouse.cpp      | 157 +++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
- src/video/serenity/SDL_serenityvideo.cpp      | 655 ++++++++++++++++++
+ src/video/serenity/SDL_serenityvideo.cpp      | 657 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 21 files changed, 1374 insertions(+), 27 deletions(-)
+ 21 files changed, 1376 insertions(+), 27 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -901,10 +901,10 @@ index 0000000000000000000000000000000000000000..039f0361b3d1b248e218ea69495f58e5
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..26ff18b1c878f7a14c32554859bd088522806b91
+index 0000000000000000000000000000000000000000..72ddc99149b8debcb46a03b157a924e12d439512
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,655 @@
+@@ -0,0 +1,657 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -1475,6 +1475,8 @@ index 0000000000000000000000000000000000000000..26ff18b1c878f7a14c32554859bd0885
 +void Serenity_DestroyWindowFramebuffer(_THIS, SDL_Window* window)
 +{
 +    auto widget = SerenityPlatformWindow::from_sdl_window(window)->widget();
++    if (!widget->m_buffer)
++        return;
 +    dbgln("{}: Destroy framebuffer {}", __FUNCTION__, widget->m_buffer->size());
 +    widget->m_buffer = nullptr;
 +}
