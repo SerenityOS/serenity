@@ -14,8 +14,6 @@ FINAL_TARGET="${1:-serenity}"
 
 exit_if_running_as_root "Do not run BuildJakt.sh as root, your Build directory will become root-owned"
 
-echo "$DIR"
-
 ARCHES=("x86_64" "aarch64" "riscv64")
 PREFIX="$DIR/Local/jakt"
 
@@ -90,14 +88,44 @@ buildstep_ninja() {
     env NINJA_STATUS=$'\e[34m['"${NAME}"$']\e[39m [%f/%t] ' "$@"
 }
 
-echo PREFIX is "$PREFIX"
-
 mkdir -p "$DIR/Tarballs"
 
 JAKT_COMMIT_HASH="d65f014cc54b986f629fe676d914af01d442b9f7"
 JAKT_NAME="jakt-${JAKT_COMMIT_HASH}"
 JAKT_TARBALL="${JAKT_NAME}.tar.gz"
 JAKT_GIT_URL="https://github.com/serenityos/jakt"
+
+function already_available() {
+    local TOOLCHAIN="$1"; shift
+    local ARCH="$1"; shift
+
+    HASH_FILE="${PREFIX}/.jakt-${TOOLCHAIN}-${ARCH}.hash"
+    if [ -f "$HASH_FILE" ] && [ "$JAKT_COMMIT_HASH" = "$(<"$HASH_FILE")" ]; then
+        # Make sure we have a binary.
+        if ! [ -e "$PREFIX/bin/jakt" ]; then
+            # We don't actually have anything, the file lied.
+            echo "$HASH_FILE exists and says we have $JAKT_COMMIT_HASH, but there's no associated binary; rebuilding!"
+            rm "$HASH_FILE"
+        fi
+    fi
+
+    if [ -f "$HASH_FILE" ] && [ "$JAKT_COMMIT_HASH" = "$(<"$HASH_FILE")" ]; then
+        echo "Already have the latest compiler built; remove $HASH_FILE to force-rebuild."
+        return 0
+    elif [ -f "$HASH_FILE" ]; then
+        echo "Expected $JAKT_COMMIT_HASH but found $(<"$HASH_FILE")"
+        return 1
+    else
+        echo "Expected $JAKT_COMMIT_HASH but found none (for $TOOLCHAIN $ARCH)"
+        return 1
+    fi
+}
+
+function stamp() {
+    local TOOLCHAIN="$1"; shift
+    local ARCH="$1"; shift
+    echo "$JAKT_COMMIT_HASH" > "${PREFIX}/.jakt-$TOOLCHAIN-$ARCH.hash"
+}
 
 # === DEPENDENCIES ===
 buildstep dependencies echo "Checking whether 'ninja' is available..."
@@ -136,25 +164,28 @@ pushd "$DIR/Tarballs"
 popd
 
 # === COMPILE AND INSTALL ===
-rm -rf "$PREFIX"
-mkdir -p "$PREFIX"
+if ! already_available local host; then
+    rm -rf "$PREFIX"
+    mkdir -p "$PREFIX"
 
-rm -rf "$DIR/Build/jakt"
-mkdir -p "$DIR/Build/jakt"
-pushd "$DIR/Build/jakt"
-    echo "XXX configure jakt"
-    buildstep "jakt/configure" cmake -S "$DIR/Tarballs/${JAKT_NAME}" -B . \
-                                        -DSERENITY_SOURCE_DIR="$DIR/.."   \
-                                        -DCMAKE_INSTALL_PREFIX="$PREFIX"  \
-                                        -DCMAKE_BUILD_TYPE=Release        \
-                                        -GNinja                           \
-            || exit 1
+    rm -rf "$DIR/Build/jakt"
+    mkdir -p "$DIR/Build/jakt"
+    pushd "$DIR/Build/jakt"
+        echo "XXX configure jakt"
+        buildstep "jakt/configure" cmake -S "$DIR/Tarballs/${JAKT_NAME}" -B . \
+                                            -DSERENITY_SOURCE_DIR="$DIR/.."   \
+                                            -DCMAKE_INSTALL_PREFIX="$PREFIX"  \
+                                            -DCMAKE_BUILD_TYPE=Release        \
+                                            -GNinja                           \
+                || exit 1
 
-    echo "XXX build jakt"
-    buildstep_ninja "jakt/build" ninja jakt_stage1
-    echo "XXX install jakt"
-    buildstep_ninja "jakt/install" ninja install
-popd
+        echo "XXX build jakt"
+        buildstep_ninja "jakt/build" ninja jakt_stage1
+        echo "XXX install jakt"
+        buildstep_ninja "jakt/install" ninja install
+    popd
+fi
+stamp local host
 
 if ! [ "$FINAL_TARGET" = serenity ]; then
     echo "Done creating jakt toolchain for host"
@@ -175,6 +206,10 @@ build_for() {
     BUILD="${!current_build}"
     TARGET_CXX="${!current_cxx}"
     TARGET_RANLIB="${!current_ranlib}"
+
+    if already_available "$TOOLCHAIN" "$ARCH"; then
+        return 0
+    fi
 
     # On at least OpenBSD, the path must exist to call realpath(3) on it
     if [ ! -d "$BUILD" ]; then
@@ -235,6 +270,11 @@ build_for() {
 for TOOLCHAIN_AND_ARCH in "${VALID_TOOLCHAINS[@]}"; do
     IFS=';' read -r TOOLCHAIN ARCH <<< "$TOOLCHAIN_AND_ARCH"
     buildstep "build/$TOOLCHAIN/$ARCH" build_for "$TOOLCHAIN" "$ARCH"
+done
+
+for TOOLCHAIN_AND_ARCH in "${VALID_TOOLCHAINS[@]}"; do
+    IFS=';' read -r TOOLCHAIN ARCH <<< "$TOOLCHAIN_AND_ARCH"
+    stamp "$TOOLCHAIN" "$ARCH"
 done
 
 echo "Done creating jakt toolchain for targets " "${VALID_TOOLCHAINS[@]}"
