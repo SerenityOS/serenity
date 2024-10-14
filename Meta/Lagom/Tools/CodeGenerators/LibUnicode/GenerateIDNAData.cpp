@@ -119,7 +119,7 @@ static ErrorOr<void> generate_idna_data_implementation(Core::InputBufferedFile& 
     StringBuilder builder;
     SourceGenerator generator { builder };
 
-    generator.set("idna_table_size", TRY(String::number(idna_data.mapping_table.size())));
+    generator.set("idna_table_size", String::number(idna_data.mapping_table.size()));
 
     generator.append(R"~~~(
 #include <AK/BinarySearch.h>
@@ -152,8 +152,8 @@ static constexpr Array<MappingEntry, @idna_table_size@> s_idna_mapping_table { {
                 generator.set("mapping_offset", "0"sv);
                 generator.set("mapping_length", "0"sv);
             } else {
-                generator.set("mapping_offset", TRY(String::number(mapping_offset)));
-                generator.set("mapping_length", TRY(String::number(mapping.mapped_to.size())));
+                generator.set("mapping_offset", String::number(mapping_offset));
+                generator.set("mapping_length", String::number(mapping.mapped_to.size()));
                 mapping_offset += mapping.mapped_to.size();
             }
 
@@ -161,7 +161,7 @@ static constexpr Array<MappingEntry, @idna_table_size@> s_idna_mapping_table { {
     { { @code_points@ }, MappingStatus::@status@, IDNA2008Status::@idna_2008_status@, @mapping_offset@, @mapping_length@ },)~~~");
         }
 
-        generator.set("mapping_length_total", TRY(String::number(mapping_offset)));
+        generator.set("mapping_length_total", String::number(mapping_offset));
     }
 
     generator.append(R"~~~(

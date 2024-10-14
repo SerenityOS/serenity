@@ -68,7 +68,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_length_impl(AST::ImmediateExpression
     }
 
     auto value_with_number = [&](auto number) -> ErrorOr<NonnullRefPtr<AST::Node>> {
-        return AST::make_ref_counted<AST::BarewordLiteral>(invoking_node.position(), TRY(String::number(number)));
+        return AST::make_ref_counted<AST::BarewordLiteral>(invoking_node.position(), String::number(number));
     };
 
     auto do_across = [&](StringView mode_name, auto& values) -> ErrorOr<RefPtr<AST::Node>> {
@@ -1296,7 +1296,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_math(AST::ImmediateExpression& invok
                         }));
                     }
 
-                    set_local_variable(name->to_byte_string(), make_ref_counted<AST::StringValue>(TRY(String::number(rhs))));
+                    set_local_variable(name->to_byte_string(), make_ref_counted<AST::StringValue>(String::number(rhs)));
                     return rhs;
                 }
 
@@ -1379,7 +1379,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_math(AST::ImmediateExpression& invok
 
     auto result = TRY(interpret(ast));
 
-    return make_ref_counted<AST::StringLiteral>(arguments.first()->position(), TRY(String::number(result)), AST::StringLiteral::EnclosureType::None);
+    return make_ref_counted<AST::StringLiteral>(arguments.first()->position(), String::number(result), AST::StringLiteral::EnclosureType::None);
 }
 
 ErrorOr<RefPtr<AST::Node>> Shell::run_immediate_function(StringView str, AST::ImmediateExpression& invoking_node, Vector<NonnullRefPtr<AST::Node>> const& arguments)

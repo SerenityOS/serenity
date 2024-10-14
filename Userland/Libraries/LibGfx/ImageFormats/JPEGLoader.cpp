@@ -965,7 +965,7 @@ static ErrorOr<void> read_start_of_scan(JPEGStream& stream, JPEGLoadingContext& 
         StringBuilder builder;
         TRY(builder.try_append("Components in scan: "sv));
         for (auto const& scan_component : current_scan.components) {
-            TRY(builder.try_append(TRY(String::number(scan_component.component.id))));
+            TRY(builder.try_append(String::number(scan_component.component.id)));
             TRY(builder.try_append(' '));
         }
         dbgln(builder.string_view());

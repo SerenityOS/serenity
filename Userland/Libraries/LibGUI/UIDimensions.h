@@ -154,7 +154,7 @@ public:
     {
         String value_source = {};
         if (is_int())
-            value_source = TRY(String::number(m_value));
+            value_source = String::number(m_value);
         else if (is_shrink())
             value_source = "GUI::SpecialDimension::Shrink"_string;
         else if (is_grow())

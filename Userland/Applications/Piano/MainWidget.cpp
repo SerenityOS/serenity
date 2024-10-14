@@ -63,7 +63,7 @@ ErrorOr<void> MainWidget::initialize()
     m_octave_container->set_layout<GUI::VerticalBoxLayout>();
     auto& octave_label = m_octave_container->add<GUI::Label>("Octave"_string);
     octave_label.set_preferred_width(GUI::SpecialDimension::Fit);
-    m_octave_value = m_octave_container->add<GUI::Label>(TRY(String::number(m_track_manager.keyboard()->virtual_keyboard_octave())));
+    m_octave_value = m_octave_container->add<GUI::Label>(String::number(m_track_manager.keyboard()->virtual_keyboard_octave()));
     m_octave_value->set_preferred_width(GUI::SpecialDimension::Fit);
 
     // FIXME: Implement vertical flipping in GUI::Slider, not here.
@@ -77,7 +77,7 @@ ErrorOr<void> MainWidget::initialize()
         int new_octave = octave_max - value;
         set_octave_via_slider(new_octave);
         VERIFY(new_octave == m_track_manager.keyboard()->virtual_keyboard_octave());
-        m_octave_value->set_text(String::number(new_octave).release_value_but_fixme_should_propagate_errors());
+        m_octave_value->set_text(String::number(new_octave));
     };
 
     m_knobs_widget = m_keys_and_knobs_container->add<GUI::StackWidget>();

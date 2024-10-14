@@ -664,7 +664,7 @@ ThrowCompletionOr<Vector<PatternPartition>> format_date_time_pattern(VM& vm, Dat
                 if (symbol.has_value())
                     formatted_value = MUST(String::from_utf8(*symbol));
                 else
-                    formatted_value = MUST(String::number(value));
+                    formatted_value = String::number(value);
 
                 break;
             }

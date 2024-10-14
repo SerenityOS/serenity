@@ -32,7 +32,7 @@ GUI::Dialog::ExecResult GoToOffsetDialog::show(GUI::Window* parent_window, int& 
         dialog->set_icon(parent_window->icon());
 
     if (history_offset)
-        dialog->m_text_editor->set_text(String::number(history_offset).release_value_but_fixme_should_propagate_errors());
+        dialog->m_text_editor->set_text(String::number(history_offset));
 
     auto result = dialog->exec();
 

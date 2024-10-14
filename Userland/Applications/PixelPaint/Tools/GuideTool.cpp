@@ -74,7 +74,7 @@ void GuideTool::on_mousedown(Layer*, MouseEvent& event)
 
     if (m_selected_guide) {
         m_guide_origin = m_selected_guide->offset();
-        GUI::Application::the()->show_tooltip_immediately(MUST(String::number(m_guide_origin)), GUI::Application::the()->tooltip_source_widget());
+        GUI::Application::the()->show_tooltip_immediately(String::number(m_guide_origin), GUI::Application::the()->tooltip_source_widget());
     }
 }
 
@@ -120,7 +120,7 @@ void GuideTool::on_mousemove(Layer*, MouseEvent& event)
 
     m_selected_guide->set_offset(new_offset);
 
-    GUI::Application::the()->show_tooltip_immediately(MUST(String::number(new_offset)), GUI::Application::the()->tooltip_source_widget());
+    GUI::Application::the()->show_tooltip_immediately(String::number(new_offset), GUI::Application::the()->tooltip_source_widget());
 
     editor()->update();
 }

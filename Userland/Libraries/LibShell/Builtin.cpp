@@ -1500,7 +1500,7 @@ ErrorOr<int> Shell::builtin_kill(Main::Arguments arguments)
         if (auto job_id = resolve_job_spec(arguments.strings[i]); job_id.has_value()) {
             auto job = find_job(job_id.value());
             if (job) {
-                replaced_values.append(TRY(String::number(job->pid())));
+                replaced_values.append(String::number(job->pid()));
             } else {
                 warnln("kill: Job with pid {} not found", job_id.value());
                 return 1;
@@ -1625,14 +1625,14 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             return AST::make_ref_counted<AST::StringValue>(TRY(String::from_utf8(value)));
         case Type::I32:
             if (auto number = value.to_number<int>(); number.has_value())
-                return AST::make_ref_counted<AST::StringValue>(TRY(String::number(*number)));
+                return AST::make_ref_counted<AST::StringValue>(String::number(*number));
 
             warnln("Invalid value for type i32: {}", value);
             return OptionalNone {};
         case Type::U32:
         case Type::Size:
             if (auto number = value.to_number<unsigned>(); number.has_value())
-                return AST::make_ref_counted<AST::StringValue>(TRY(String::number(*number)));
+                return AST::make_ref_counted<AST::StringValue>(String::number(*number));
 
             warnln("Invalid value for type u32|size: {}", value);
             return OptionalNone {};
@@ -1645,7 +1645,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                 return OptionalNone {};
             }
 
-            return AST::make_ref_counted<AST::StringValue>(TRY(String::number(number)));
+            return AST::make_ref_counted<AST::StringValue>(String::number(number));
         }
         default:
             VERIFY_NOT_REACHED();

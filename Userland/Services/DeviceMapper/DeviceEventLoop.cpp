@@ -85,7 +85,7 @@ static ErrorOr<String> build_suffix_with_letters(size_t allocation_index)
     return base_string;
 }
 
-static ErrorOr<String> build_suffix_with_numbers(size_t allocation_index)
+static String build_suffix_with_numbers(size_t allocation_index)
 {
     return String::number(allocation_index);
 }
@@ -146,7 +146,7 @@ ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeType device_node_ty
 
     auto path = match.path_pattern;
     if (path.contains(digit_pattern)) {
-        auto replacement = TRY(build_suffix_with_numbers(allocated_suffix_index));
+        auto replacement = build_suffix_with_numbers(allocated_suffix_index);
         path = TRY(path.replace(digit_pattern, replacement, ReplaceMode::All));
     }
     if (path.contains(letter_char_pattern)) {
@@ -165,8 +165,8 @@ ErrorOr<void> DeviceEventLoop::register_new_device(DeviceNodeType device_node_ty
 
     auto symlink_path = LexicalPath("/tmp/system/devicemap/nodes/")
                             .append(device_node_type == DeviceNodeType::Block ? "block"sv : "char"sv)
-                            .append(MUST(String::number(major_number.value())))
-                            .append(MUST(String::number(minor_number.value())));
+                            .append(String::number(major_number.value()))
+                            .append(String::number(minor_number.value()));
 
     TRY(Core::System::symlink(path.bytes_as_string_view(), symlink_path.string()));
 
@@ -202,8 +202,8 @@ ErrorOr<void> DeviceEventLoop::unregister_device(DeviceNodeType device_node_type
 
     auto symlink_path = LexicalPath("/tmp/system/devicemap/nodes/")
                             .append(device_node_type == DeviceNodeType::Block ? "block"sv : "char"sv)
-                            .append(MUST(String::number(major_number.value())))
-                            .append(MUST(String::number(minor_number.value())));
+                            .append(String::number(major_number.value()))
+                            .append(String::number(minor_number.value()));
 
     TRY(Core::System::unlink(symlink_path.string()));
 

@@ -37,8 +37,8 @@ static ErrorOr<void> populate_device_node_with_symlink(DeviceNodeType device_nod
         TRY(Core::System::create_char_device(path, mode, major, minor));
     auto symlink_path = LexicalPath("/tmp/system/devicemap/nodes/")
                             .append(device_node_type == DeviceNodeType::Block ? "block"sv : "char"sv)
-                            .append(MUST(String::number(major)))
-                            .append(MUST(String::number(minor)));
+                            .append(String::number(major))
+                            .append(String::number(minor));
     TRY(Core::System::symlink(path, symlink_path.string()));
     return {};
 }
@@ -64,7 +64,7 @@ static ErrorOr<void> prepare_tmpfs_system_devicemap_directory()
 
     auto build_tmp_system_devicemap_directory = [](StringView node_type_directory, JsonObject const& major_number_allocation_object) -> ErrorOr<void> {
         auto allocated_number = major_number_allocation_object.get_u64("allocated_number"sv).value_or(0);
-        auto path = LexicalPath("/tmp/system/devicemap/nodes/").append(node_type_directory).append(MUST(String::number(allocated_number)));
+        auto path = LexicalPath("/tmp/system/devicemap/nodes/").append(node_type_directory).append(String::number(allocated_number));
         TRY(Core::System::mkdir(path.string(), 0755));
 
         auto possible_family_name = major_number_allocation_object.get_byte_string("family_name"sv);
