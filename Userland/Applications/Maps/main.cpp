@@ -244,8 +244,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Config::remove_key("Maps"sv, "Panel"sv, "Width"sv);
     }
 
-    Config::write_string("Maps"sv, "MapView"sv, "CenterLatitude"sv, TRY(String::number(map_widget.center().latitude)));
-    Config::write_string("Maps"sv, "MapView"sv, "CenterLongitude"sv, TRY(String::number(map_widget.center().longitude)));
+    Config::write_string("Maps"sv, "MapView"sv, "CenterLatitude"sv, String::number(map_widget.center().latitude));
+    Config::write_string("Maps"sv, "MapView"sv, "CenterLongitude"sv, String::number(map_widget.center().longitude));
     Config::write_i32("Maps"sv, "MapView"sv, "Zoom"sv, map_widget.zoom());
     Config::write_bool("Maps"sv, "MapView"sv, "ShowUsers"sv, map_widget.show_users());
     return exec;

@@ -226,8 +226,8 @@ ErrorOr<String> Value::to_string() const
 
     return m_value->visit(
         [](ByteString const& value) { return String::from_byte_string(value); },
-        [](Integer auto value) { return String::number(value); },
-        [](double value) { return String::number(value); },
+        [](Integer auto value) -> ErrorOr<String> { return String::number(value); },
+        [](double value) -> ErrorOr<String> { return String::number(value); },
         [](bool value) { return String::from_utf8(value ? "true"sv : "false"sv); },
         [](TupleValue const& value) {
             StringBuilder builder;

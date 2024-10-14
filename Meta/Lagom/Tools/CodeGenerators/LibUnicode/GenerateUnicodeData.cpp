@@ -910,7 +910,7 @@ static ErrorOr<void> generate_unicode_data_implementation(Core::InputBufferedFil
     generator.set("special_casing_size", ByteString::number(unicode_data.special_casing.size()));
     generator.set("case_folding_size", ByteString::number(unicode_data.case_folding.size()));
 
-    generator.set("CODE_POINT_TABLES_LSB_COUNT", TRY(String::number(CODE_POINT_TABLES_LSB_COUNT)));
+    generator.set("CODE_POINT_TABLES_LSB_COUNT", String::number(CODE_POINT_TABLES_LSB_COUNT));
     generator.set("CODE_POINT_TABLES_LSB_MASK", TRY(String::formatted("{:#x}", CODE_POINT_TABLES_LSB_MASK)));
 
     generator.append(R"~~~(
@@ -1143,14 +1143,14 @@ static constexpr Array<CodePointCompositionRaw, @composition_mappings_size@> s_c
 
     auto append_casing_table = [&](auto collection_snake, auto const& unique_properties) -> ErrorOr<void> {
         generator.set("name", TRY(String::formatted("{}_unique_properties", collection_snake)));
-        generator.set("size", TRY(String::number(unique_properties.size())));
+        generator.set("size", String::number(unique_properties.size()));
 
-        auto optional_code_point_to_string = [](auto const& code_point) -> ErrorOr<String> {
+        auto optional_code_point_to_string = [](auto const& code_point) -> String {
             if (!code_point.has_value())
                 return "-1"_string;
             return String::number(*code_point);
         };
-        auto first_index_to_string = [](auto const& list) -> ErrorOr<String> {
+        auto first_index_to_string = [](auto const& list) -> String {
             if (list.is_empty())
                 return "0"_string;
             return String::number(list.first());
@@ -1160,14 +1160,14 @@ static constexpr Array<CodePointCompositionRaw, @composition_mappings_size@> s_c
 static constexpr Array<CasingTable, @size@> @name@ { {)~~~");
 
         for (auto const& casing : unique_properties) {
-            generator.set("canonical_combining_class", TRY(String::number(casing.canonical_combining_class)));
-            generator.set("simple_uppercase_mapping", TRY(optional_code_point_to_string(casing.simple_uppercase_mapping)));
-            generator.set("simple_lowercase_mapping", TRY(optional_code_point_to_string(casing.simple_lowercase_mapping)));
-            generator.set("simple_titlecase_mapping", TRY(optional_code_point_to_string(casing.simple_titlecase_mapping)));
-            generator.set("special_casing_start_index", TRY(first_index_to_string(casing.special_casing_indices)));
-            generator.set("special_casing_size", TRY(String::number(casing.special_casing_indices.size())));
-            generator.set("case_folding_start_index", TRY(first_index_to_string(casing.case_folding_indices)));
-            generator.set("case_folding_size", TRY(String::number(casing.case_folding_indices.size())));
+            generator.set("canonical_combining_class", String::number(casing.canonical_combining_class));
+            generator.set("simple_uppercase_mapping", optional_code_point_to_string(casing.simple_uppercase_mapping));
+            generator.set("simple_lowercase_mapping", optional_code_point_to_string(casing.simple_lowercase_mapping));
+            generator.set("simple_titlecase_mapping", optional_code_point_to_string(casing.simple_titlecase_mapping));
+            generator.set("special_casing_start_index", first_index_to_string(casing.special_casing_indices));
+            generator.set("special_casing_size", String::number(casing.special_casing_indices.size()));
+            generator.set("case_folding_start_index", first_index_to_string(casing.case_folding_indices));
+            generator.set("case_folding_size", String::number(casing.case_folding_indices.size()));
 
             generator.append(R"~~~(
     { @canonical_combining_class@, @simple_uppercase_mapping@, @simple_lowercase_mapping@, @simple_titlecase_mapping@, @special_casing_start_index@, @special_casing_size@, @case_folding_start_index@, @case_folding_size@ },)~~~");
@@ -1182,8 +1182,8 @@ static constexpr Array<CasingTable, @size@> @name@ { {)~~~");
 
     auto append_property_table = [&](auto collection_snake, auto const& unique_properties) -> ErrorOr<void> {
         generator.set("name", TRY(String::formatted("{}_unique_properties", collection_snake)));
-        generator.set("outer_size", TRY(String::number(unique_properties.size())));
-        generator.set("inner_size", TRY(String::number(unique_properties[0].size())));
+        generator.set("outer_size", String::number(unique_properties.size()));
+        generator.set("inner_size", String::number(unique_properties[0].size()));
 
         generator.append(R"~~~(
 static constexpr Array<Array<bool, @inner_size@>, @outer_size@> @name@ { {)~~~");
@@ -1210,7 +1210,7 @@ static constexpr Array<Array<bool, @inner_size@>, @outer_size@> @name@ { {)~~~")
     auto append_code_point_tables = [&](StringView collection_snake, auto const& tables, auto& append_unique_properties) -> ErrorOr<void> {
         auto append_stage = [&](auto const& stage, auto name, auto type) -> ErrorOr<void> {
             generator.set("name", TRY(String::formatted("{}_{}", collection_snake, name)));
-            generator.set("size", TRY(String::number(stage.size())));
+            generator.set("size", String::number(stage.size()));
             generator.set("type", type);
 
             generator.append(R"~~~(
@@ -1224,7 +1224,7 @@ static constexpr Array<@type@, @size@> @name@ { {
                 if (values_in_current_row++ > 0)
                     generator.append(", ");
 
-                generator.set("value", TRY(String::number(value)));
+                generator.set("value", String::number(value));
                 generator.append("@value@");
 
                 if (values_in_current_row == max_values_per_row) {

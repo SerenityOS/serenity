@@ -121,9 +121,9 @@ static constexpr PnpIDData s_pnp_ids[] = {)~~~");
     for (auto& pnp_id_data : pnp_ids) {
         generator.set("manufacturer_id", pnp_id_data.key);
         generator.set("manufacturer_name", pnp_id_data.value.manufacturer_name);
-        generator.set("approval_year", MUST(String::number(pnp_id_data.value.approval_date.year)));
-        generator.set("approval_month", MUST(String::number(pnp_id_data.value.approval_date.month)));
-        generator.set("approval_day", MUST(String::number(pnp_id_data.value.approval_date.day)));
+        generator.set("approval_year", String::number(pnp_id_data.value.approval_date.year));
+        generator.set("approval_month", String::number(pnp_id_data.value.approval_date.month));
+        generator.set("approval_day", String::number(pnp_id_data.value.approval_date.day));
 
         generator.append(R"~~~(
     { "@manufacturer_id@"sv, "@manufacturer_name@"sv, { @approval_year@, @approval_month@, @approval_day@ } },)~~~");

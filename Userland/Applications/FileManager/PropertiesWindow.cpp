@@ -263,9 +263,9 @@ ErrorOr<void> PropertiesWindow::create_archive_tab(GUI::TabWidget& tab_widget, N
 
     auto statistics = TRY(zip.calculate_statistics());
 
-    tab.find_descendant_of_type_named<GUI::Label>("archive_file_count")->set_text(TRY(String::number(statistics.file_count())));
+    tab.find_descendant_of_type_named<GUI::Label>("archive_file_count")->set_text(String::number(statistics.file_count()));
     tab.find_descendant_of_type_named<GUI::Label>("archive_format")->set_text("ZIP"_string);
-    tab.find_descendant_of_type_named<GUI::Label>("archive_directory_count")->set_text(TRY(String::number(statistics.directory_count())));
+    tab.find_descendant_of_type_named<GUI::Label>("archive_directory_count")->set_text(String::number(statistics.directory_count()));
     tab.find_descendant_of_type_named<GUI::Label>("archive_uncompressed_size")->set_text(human_readable_size(statistics.total_uncompressed_bytes()));
 
     return {};
@@ -294,7 +294,7 @@ ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, Non
     if (channel_count == 1 || channel_count == 2) {
         channels_string = TRY(String::formatted("{} ({})", channel_count, channel_count == 1 ? "Mono"sv : "Stereo"sv));
     } else {
-        channels_string = TRY(String::number(channel_count));
+        channels_string = String::number(channel_count);
     }
     tab.find_descendant_of_type_named<GUI::Label>("audio_channels")->set_text(channels_string);
 
@@ -302,7 +302,7 @@ ErrorOr<void> PropertiesWindow::create_audio_tab(GUI::TabWidget& tab_widget, Non
     tab.find_descendant_of_type_named<GUI::Label>("audio_artists")->set_text(TRY(loader->metadata().all_artists()).value_or({}));
     tab.find_descendant_of_type_named<GUI::Label>("audio_album")->set_text(loader->metadata().album.value_or({}));
     tab.find_descendant_of_type_named<GUI::Label>("audio_track_number")
-        ->set_text(TRY(loader->metadata().track_number.map([](auto number) { return String::number(number); })).value_or({}));
+        ->set_text(loader->metadata().track_number.map([](auto number) { return String::number(number); }).value_or({}));
     tab.find_descendant_of_type_named<GUI::Label>("audio_genre")->set_text(loader->metadata().genre.value_or({}));
     tab.find_descendant_of_type_named<GUI::Label>("audio_comment")->set_text(loader->metadata().comment.value_or({}));
 
@@ -503,7 +503,7 @@ ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, Nonnu
     TRY(tab.load_from_gml(properties_window_pdf_tab_gml));
 
     tab.find_descendant_of_type_named<GUI::Label>("pdf_version")->set_text(TRY(String::formatted("{}.{}", document->version().major, document->version().minor)));
-    tab.find_descendant_of_type_named<GUI::Label>("pdf_page_count")->set_text(TRY(String::number(document->get_page_count())));
+    tab.find_descendant_of_type_named<GUI::Label>("pdf_page_count")->set_text(String::number(document->get_page_count()));
 
     auto maybe_info_dict = document->info_dict();
     if (maybe_info_dict.is_error()) {

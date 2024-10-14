@@ -136,7 +136,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return ByteString::formatted("{}/{}", pid, program.value());
     };
 
-    auto get_formatted_user = [&](i32 uid) -> ErrorOr<String> {
+    auto get_formatted_user = [&](i32 uid) {
         if (uid == -1)
             return "-"_string;
 
@@ -197,7 +197,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_port = TRY(String::number(if_object.get_u32("peer_port"sv).value_or({})));
+            auto peer_port = String::number(if_object.get_u32("peer_port"sv).value_or({}));
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get_u32("peer_port"sv).value_or(0)), "tcp");
                 if (service != nullptr) {
@@ -219,7 +219,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_port = TRY(String::number(if_object.get_u32("local_port"sv).value_or({})));
+            auto local_port = String::number(if_object.get_u32("local_port"sv).value_or({}));
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get_u32("local_port"sv).value_or(0)), "tcp");
                 if (service != nullptr) {
@@ -239,9 +239,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (protocol_column != -1)
                 columns[protocol_column].buffer = "tcp";
             if (bytes_in_column != -1)
-                columns[bytes_in_column].buffer = TRY(String::number(bytes_in)).to_byte_string();
+                columns[bytes_in_column].buffer = String::number(bytes_in).to_byte_string();
             if (bytes_out_column != -1)
-                columns[bytes_out_column].buffer = TRY(String::number(bytes_out)).to_byte_string();
+                columns[bytes_out_column].buffer = String::number(bytes_out).to_byte_string();
             if (local_address_column != -1)
                 columns[local_address_column].buffer = get_formatted_address(local_address, local_port);
             if (peer_address_column != -1)
@@ -249,7 +249,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (state_column != -1)
                 columns[state_column].buffer = state;
             if (flag_extend && user_column != -1)
-                columns[user_column].buffer = TRY(get_formatted_user(origin_uid)).to_byte_string();
+                columns[user_column].buffer = get_formatted_user(origin_uid).to_byte_string();
             if (flag_program && program_column != -1)
                 columns[program_column].buffer = get_formatted_program(origin_pid);
 
@@ -284,7 +284,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_port = TRY(String::number(if_object.get_u32("local_port"sv).value_or({})));
+            auto local_port = String::number(if_object.get_u32("local_port"sv).value_or({}));
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get_u32("local_port"sv).value_or(0)), "udp");
                 if (service != nullptr) {
@@ -306,7 +306,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_port = TRY(String::number(if_object.get_u32("peer_port"sv).value_or({})));
+            auto peer_port = String::number(if_object.get_u32("peer_port"sv).value_or({}));
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get_u32("peer_port"sv).value_or(0)), "udp");
                 if (service != nullptr) {
@@ -332,7 +332,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (state_column != -1)
                 columns[state_column].buffer = "-";
             if (flag_extend && user_column != -1)
-                columns[user_column].buffer = TRY(get_formatted_user(origin_uid)).to_byte_string();
+                columns[user_column].buffer = get_formatted_user(origin_uid).to_byte_string();
             if (flag_program && program_column != -1)
                 columns[program_column].buffer = get_formatted_program(origin_pid);
 

@@ -102,7 +102,7 @@ private:
 
 static ErrorOr<void> utmp_update(StringView tty, pid_t pid, bool create)
 {
-    auto pid_string = TRY(String::number(pid));
+    auto pid_string = String::number(pid);
     Array utmp_update_command {
         "-f"sv,
         "Terminal"sv,

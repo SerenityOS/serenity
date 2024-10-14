@@ -814,7 +814,7 @@ Vector<StringView> time_zones_in_region(StringView region)
         return lhs.name < rhs.name;
     });
 
-    generator.set("time_zones_and_links_size", MUST(String::number(time_zone_data.time_zones_and_links.size())));
+    generator.set("time_zones_and_links_size", String::number(time_zone_data.time_zones_and_links.size()));
 
     generator.append(R"~~~(
 ReadonlySpan<TimeZoneIdentifier> all_time_zones()

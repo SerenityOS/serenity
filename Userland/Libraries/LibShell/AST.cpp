@@ -1279,7 +1279,7 @@ ErrorOr<RefPtr<Value>> ForLoop::run(RefPtr<Shell> shell)
                 shell->set_local_variable(variable_name.bytes_as_string_view(), value, true);
 
                 if (index_name.has_value())
-                    shell->set_local_variable(index_name.value(), make_ref_counted<AST::StringValue>(TRY(String::number(i))), true);
+                    shell->set_local_variable(index_name.value(), make_ref_counted<AST::StringValue>(String::number(i)), true);
 
                 ++i;
 
@@ -2690,9 +2690,9 @@ ErrorOr<RefPtr<Value>> Range::run(RefPtr<Shell> shell)
                         auto end = end_int.value();
                         auto step = start > end ? -1 : 1;
                         for (int value = start; value != end; value += step)
-                            values.append(make_ref_counted<StringValue>(TRY(String::number(value))));
+                            values.append(make_ref_counted<StringValue>(String::number(value)));
                         // Append the range end too, most shells treat this as inclusive.
-                        values.append(make_ref_counted<StringValue>(TRY(String::number(end))));
+                        values.append(make_ref_counted<StringValue>(String::number(end)));
                     } else {
                         goto yield_start_end;
                     }
@@ -3869,9 +3869,9 @@ ErrorOr<Vector<String>> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shel
 
     switch (m_name) {
     case '?':
-        return { resolve_slices(shell, Vector { TRY(String::number(shell->last_return_code.value_or(0))) }, m_slices) };
+        return { resolve_slices(shell, Vector { String::number(shell->last_return_code.value_or(0)) }, m_slices) };
     case '$':
-        return { resolve_slices(shell, Vector { TRY(String::number(getpid())) }, m_slices) };
+        return { resolve_slices(shell, Vector { String::number(getpid()) }, m_slices) };
     case '*':
         if (auto argv = TRY(shell->look_up_local_variable("ARGV"sv)))
             return resolve_slices(shell, TRY(const_cast<Value&>(*argv).resolve_as_list(shell)), m_slices);
@@ -3880,7 +3880,7 @@ ErrorOr<Vector<String>> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shel
         if (auto argv = TRY(shell->look_up_local_variable("ARGV"sv))) {
             if (argv->is_list()) {
                 auto list_argv = static_cast<AST::ListValue const*>(argv.ptr());
-                return { resolve_slices(shell, Vector { TRY(String::number(list_argv->values().size())) }, m_slices) };
+                return { resolve_slices(shell, Vector { String::number(list_argv->values().size()) }, m_slices) };
             }
             return { resolve_slices(shell, Vector { "1"_string }, m_slices) };
         }

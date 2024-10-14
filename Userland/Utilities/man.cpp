@@ -80,7 +80,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto page = TRY(Manual::Node::try_create_from_query(query_parameters));
     auto page_name = TRY(page->name());
-    auto section_number = TRY(String::number(page->section_number()));
+    auto section_number = String::number(page->section_number());
 
     if (pager.is_empty())
         pager = TRY(String::formatted("less -P 'Manual Page {}({}) line %l?e (END):.'",
