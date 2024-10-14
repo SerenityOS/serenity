@@ -13,6 +13,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibGfx/TextLayout.h>
+#include <LibGfx/Vector2.h>
 
 namespace Gfx {
 
@@ -508,6 +509,8 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 {
     // Note: This convolves a polygon with the path using the algorithm described
     // in https://keithp.com/~keithp/talks/cairo2003.pdf (3.1 Stroking Splines via Convolution)
+    // Cap style handling is done by replacing the convolution with an explicit shape
+    // at the path's ends, but we still maintain a position on the pen and pretend we're convolving.
 
     VERIFY(thickness > 0);
 
@@ -646,7 +649,14 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
         auto add_linecap = [&]() {
             bool current_segment_is_closed = segment_is_closed[segment_index];
             if (!current_segment_is_closed && cap_style == CapStyle::Butt) {
-                add_vertex(shape[shape_idx] + pen_vertices[active]);
+                auto segment = shape[shape_idx] - shape[shape_idx - 1];
+                auto segment_vector = FloatVector2(segment.x(), segment.y()).normalized();
+                auto normal = FloatVector2(-segment_vector.y(), segment_vector.x());
+                auto offset = FloatPoint(normal.x() * (thickness / 2), normal.y() * (thickness / 2));
+                auto p1 = shape[shape_idx] + offset;
+                auto p2 = shape[shape_idx] - offset;
+
+                add_vertex(p1);
                 auto slope_now = slope();
                 active = mod(active + pen_vertices.size() / 2, pen_vertices.size());
                 if (!active_ranges[active].in_range(slope_now)) {
@@ -657,7 +667,7 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
                     else
                         VERIFY_NOT_REACHED();
                 }
-                add_vertex(shape[shape_idx] + pen_vertices[active]);
+                add_vertex(p2);
                 shape_idx++;
             } else {
                 // Round linecap.
