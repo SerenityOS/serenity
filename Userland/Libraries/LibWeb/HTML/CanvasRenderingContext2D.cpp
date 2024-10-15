@@ -326,8 +326,7 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
             case Bindings::CanvasLineCap::Round:
                 return Gfx::Path::CapStyle::Round;
             case Bindings::CanvasLineCap::Square:
-                // FIXME: Use LineCapStyle::Square once implemented.
-                return Gfx::Path::CapStyle::Round;
+                return Gfx::Path::CapStyle::Square;
             }
             VERIFY_NOT_REACHED();
         }(drawing_state.line_cap);
