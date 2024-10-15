@@ -16,6 +16,67 @@
 
 namespace Kernel {
 
+class SFN : public RefCounted<SFN> {
+public:
+    static ErrorOr<NonnullRefPtr<SFN>> try_create(ByteBuffer name, ByteBuffer extension, size_t unique)
+    {
+        VERIFY(name.size() > 0);
+        auto new_name = TRY(name.slice(0, min(name.size(), 6)));
+        auto new_extension = TRY(extension.slice(0, min(extension.size(), 3)));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) SFN(move(new_name), move(new_extension), unique));
+    }
+
+    size_t digits() const
+    {
+        size_t digits = 0;
+        size_t w = m_unique;
+        while (w /= 10)
+            ++digits;
+        return digits;
+    }
+
+    ErrorOr<ByteBuffer> serialize_name() const
+    {
+        auto name = TRY(ByteBuffer::copy(m_name.data(), m_name.size() - digits()));
+        TRY(name.try_ensure_capacity(8));
+        auto suffix = TRY(KString::formatted("~{}", m_unique));
+        name.append(suffix->bytes());
+
+        while (name.size() < 8)
+            name.append(' ');
+
+        return name;
+    }
+
+    ErrorOr<ByteBuffer> serialize_extension() const
+    {
+        auto extension = TRY(ByteBuffer::copy(m_extension));
+        TRY(extension.try_ensure_capacity(3));
+
+        while (extension.size() < 3)
+            extension.append(' ');
+
+        return extension;
+    }
+
+    size_t& unique()
+    {
+        return m_unique;
+    }
+
+private:
+    SFN(ByteBuffer name, ByteBuffer extension, size_t unique)
+        : m_name(move(name))
+        , m_extension(move(extension))
+        , m_unique(unique)
+    {
+    }
+
+    ByteBuffer m_name;
+    ByteBuffer m_extension;
+    size_t m_unique;
+};
+
 struct FATEntryLocation {
     BlockBasedFileSystem::BlockIndex block;
     u32 entry;
@@ -56,7 +117,8 @@ private:
     static ErrorOr<NonnullOwnPtr<KString>> compute_filename(FATEntry&, Vector<FATLongFileNameEntry> const& = {});
     static StringView byte_terminated_string(StringView, u8);
     static u8 lfn_entry_checksum(FATEntry const& entry);
-    static void create_83_filename_for(FATEntry& entry, StringView name);
+    static ErrorOr<void> create_unique_sfn_for(FATEntry& entry, NonnullRefPtr<SFN> sfn, Vector<ByteBuffer> existing_sfns);
+    static ErrorOr<void> encode_known_good_sfn_for(FATEntry& entry, StringView name);
     static ErrorOr<Vector<FATLongFileNameEntry>> create_lfn_entries(StringView name, u8 checksum);
 
     ErrorOr<Vector<u32>> compute_cluster_list(FATFS&, u32 first_cluster);
@@ -73,6 +135,8 @@ private:
     ErrorOr<Vector<FATEntryLocation>> allocate_entries(u32 count);
 
     ErrorOr<void> resize(u64 size);
+
+    ErrorOr<Vector<ByteBuffer>> collect_sfns();
 
     // ^Inode
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*) override;
