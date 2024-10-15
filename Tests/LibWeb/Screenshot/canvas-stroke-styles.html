@@ -24,6 +24,12 @@ ctx.moveTo(20, 30);
 ctx.lineTo(100, 30);
 ctx.stroke();
 
+// Butt cap, zero length path
+ctx.beginPath();
+ctx.moveTo(120, 30);
+ctx.lineTo(120, 30);
+ctx.stroke();
+
 // Round cap
 ctx.lineCap = 'round';
 ctx.beginPath();
@@ -31,11 +37,23 @@ ctx.moveTo(20, 75);
 ctx.lineTo(100, 75);
 ctx.stroke();
 
+// Round cap, zero length path
+ctx.beginPath();
+ctx.moveTo(120, 75);
+ctx.lineTo(120, 75);
+ctx.stroke();
+
 // Square cap
 ctx.lineCap = 'square';
 ctx.beginPath();
 ctx.moveTo(20, 120);
 ctx.lineTo(100, 120);
+ctx.stroke();
+
+// Square cap, zero length path
+ctx.beginPath();
+ctx.moveTo(120, 120);
+ctx.lineTo(120, 120);
 ctx.stroke();
 
 // Open path

@@ -605,8 +605,20 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 
     Path convolution;
     for (auto const& [segment_index, segment] : enumerate(segments)) {
-        if (segment.size() < 2)
+        if (segment.size() < 2) {
+            // Draw round and square caps for single-point segments.
+            // FIXME: THis is is a bit ad-hoc. It matches what most PDF engines do,
+            // and matches what Chrome and Firefox (but not WebKit) do for canvas paths.
+            if (cap_style == CapStyle::Round) {
+                convolution.move_to(segment[0] + pen_vertices[0]);
+                for (int i = 1; i < (int)pen_vertices.size(); i++)
+                    convolution.line_to(segment[0] + pen_vertices[i]);
+                convolution.close();
+            } else if (cap_style == CapStyle::Square) {
+                convolution.rect({ segment[0].translated(-thickness / 2, -thickness / 2), { thickness, thickness } });
+            }
             continue;
+        }
 
         RoundTrip<FloatPoint> shape { segment };
 
