@@ -43,6 +43,52 @@ TEST_CASE(path_to_fill_square_linecap)
     EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 0, 0 }, { width, line_width }));
 }
 
+TEST_CASE(path_to_fill_single_point)
+{
+    Gfx::Path path;
+    path.move_to({ 10, 10 });
+    path.line_to({ 10, 10 });
+
+    {
+        auto fill = path.stroke_to_fill(8, Gfx::Path::CapStyle::Butt);
+        EXPECT(fill.is_empty());
+    }
+
+    {
+        auto fill = path.stroke_to_fill(8, Gfx::Path::CapStyle::Round);
+        EXPECT(!fill.is_empty());
+    }
+
+    {
+        auto fill = path.stroke_to_fill(8, Gfx::Path::CapStyle::Square);
+        EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 6, 6 }, { 8, 8 }));
+    }
+}
+
+TEST_CASE(path_to_fill_two_single_points)
+{
+    Gfx::Path path;
+    path.move_to({ 10, 10 });
+    path.line_to({ 10, 10 });
+    path.move_to({ 20, 20 });
+    path.line_to({ 20, 20 });
+
+    {
+        auto fill = path.stroke_to_fill(8, Gfx::Path::CapStyle::Butt);
+        EXPECT(fill.is_empty());
+    }
+
+    {
+        auto fill = path.stroke_to_fill(8, Gfx::Path::CapStyle::Round);
+        EXPECT(!fill.is_empty());
+    }
+
+    {
+        auto fill = path.stroke_to_fill(8, Gfx::Path::CapStyle::Square);
+        EXPECT(!fill.is_empty());
+    }
+}
+
 TEST_CASE(path_to_string)
 {
     {
