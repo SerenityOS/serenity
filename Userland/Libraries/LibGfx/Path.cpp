@@ -648,13 +648,18 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 
         auto add_linecap = [&]() {
             bool current_segment_is_closed = segment_is_closed[segment_index];
-            if (!current_segment_is_closed && cap_style == CapStyle::Butt) {
+            if (!current_segment_is_closed && (cap_style == CapStyle::Butt || cap_style == CapStyle::Square)) {
                 auto segment = shape[shape_idx] - shape[shape_idx - 1];
                 auto segment_vector = FloatVector2(segment.x(), segment.y()).normalized();
                 auto normal = FloatVector2(-segment_vector.y(), segment_vector.x());
                 auto offset = FloatPoint(normal.x() * (thickness / 2), normal.y() * (thickness / 2));
                 auto p1 = shape[shape_idx] + offset;
                 auto p2 = shape[shape_idx] - offset;
+                if (cap_style == CapStyle::Square) {
+                    auto square_cap_offset = segment_vector * (thickness / 2);
+                    p1.translate_by(square_cap_offset.x(), square_cap_offset.y());
+                    p2.translate_by(square_cap_offset.x(), square_cap_offset.y());
+                }
 
                 add_vertex(p1);
                 auto slope_now = slope();

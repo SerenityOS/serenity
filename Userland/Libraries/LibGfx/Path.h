@@ -212,7 +212,7 @@ public:
     enum class CapStyle {
         Butt,
         Round,
-        // FIMXE: Square,
+        Square,
     };
 
     Path stroke_to_fill(float thickness, CapStyle cap_style = CapStyle::Round) const;

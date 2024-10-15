@@ -32,6 +32,16 @@ TEST_CASE(path_to_fill_short_wide_line_with_butt_linecap)
         EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 0, 0 }, { width, height }));
     }
 }
+TEST_CASE(path_to_fill_square_linecap)
+{
+    int line_width = 10;
+    int width = 100;
+    Gfx::Path path;
+    path.move_to({ line_width / 2, line_width / 2 });
+    path.line_to({ width - line_width / 2, line_width / 2 });
+    auto fill = path.stroke_to_fill(line_width, Gfx::Path::CapStyle::Square);
+    EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 0, 0 }, { width, line_width }));
+}
 
 TEST_CASE(path_to_string)
 {
