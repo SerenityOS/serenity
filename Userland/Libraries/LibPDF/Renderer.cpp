@@ -1010,8 +1010,7 @@ Gfx::Path::CapStyle Renderer::line_cap_style() const
     case LineCapStyle::RoundCap:
         return Gfx::Path::CapStyle::Round;
     case LineCapStyle::SquareCap:
-        // FIXME: Use Square once implemented.
-        return Gfx::Path::CapStyle::Round;
+        return Gfx::Path::CapStyle::Square;
     }
     VERIFY_NOT_REACHED();
 }
