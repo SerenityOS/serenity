@@ -108,7 +108,7 @@ runs:
       id: 'jakt-prebuilt'
       with:
         path: ${{ inputs.jakt_toolchain_cache_path }}
-        key: toolchain-${{ runner.os }}-jakt-toolchain-${{ inputs.arch }}-${{ steps.toolchain-stamps.outputs.toolchain_stamp }}
+        key: toolchain-${{ runner.os }}-jakt-toolchain-${{ inputs.arch }}-${{ steps.toolchain-stamps.outputs.toolchain_stamp }}-${{ hashFiles('Toolchain/BuildJakt.sh') }}
 
     - name: 'Toolchain Compiler Cache'
       uses: actions/cache/restore@v4
