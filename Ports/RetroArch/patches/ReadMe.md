@@ -31,3 +31,9 @@ The libretro core won't keep running in the background when we are in the menu.
 Don't pause gameplay when window focus is lost
 Set some config paths to home directory
 
+## `0006-Enable-unix-platform.patch`
+
+Enable unix platform
+
+This will make arguments from shell (like `--help`) work
+
