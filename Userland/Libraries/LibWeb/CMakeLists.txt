@@ -46,6 +46,7 @@ set(SOURCES
     CSS/CSSLayerBlockRule.cpp
     CSS/CSSLayerStatementRule.cpp
     CSS/CSSMediaRule.cpp
+    CSS/CSSNestedDeclarations.cpp
     CSS/CSSNumericType.cpp
     CSS/CSSNamespaceRule.cpp
     CSS/CSSRule.cpp
