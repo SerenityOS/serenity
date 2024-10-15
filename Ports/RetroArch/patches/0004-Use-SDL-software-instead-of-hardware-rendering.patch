@@ -8,10 +8,10 @@ Subject: [PATCH] Use SDL software instead of hardware rendering
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gfx/drivers/sdl2_gfx.c b/gfx/drivers/sdl2_gfx.c
-index 4dbe33f446815aa212daf0dbb58c3d2e183e88ec..dd67b4aaec550cf375ea3da088363e266dc5aa31 100644
+index 9168a0e77d38f2f6dda991a6f15df294ceba4ba5..4f11b7a3e727f4d632c0dd77ef67c719b740c637 100644
 --- a/gfx/drivers/sdl2_gfx.c
 +++ b/gfx/drivers/sdl2_gfx.c
-@@ -182,7 +182,7 @@ static void sdl2_render_msg(sdl2_video_t *vid, const char *msg)
+@@ -186,7 +186,7 @@ static void sdl2_render_msg(sdl2_video_t *vid, const char *msg)
  
  static void sdl2_init_renderer(sdl2_video_t *vid)
  {

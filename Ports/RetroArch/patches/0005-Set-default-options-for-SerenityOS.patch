@@ -16,17 +16,17 @@ Set some config paths to home directory
  create mode 100644 pkg/serenityos/retroarch.cfg
 
 diff --git a/Makefile b/Makefile
-index 63c7eda4aa9ac2acf7ec7dfe9c04fcd5d8919a74..2aed29f89cf3709186fcd7c13400e34f1c90c299 100644
+index c0c3a6c1d3f6351235a1cdc0afa0e17b1328465b..f7ab2104baa8a41b4243d685acb76d75dc3518c4 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -235,7 +235,7 @@ install: $(TARGET)
+@@ -238,7 +238,7 @@ install: $(TARGET)
  	mkdir -p $(DESTDIR)$(DATA_DIR)/pixmaps 2>/dev/null || /bin/true
  	cp $(TARGET) $(DESTDIR)$(BIN_DIR)
  	cp tools/cg2glsl.py $(DESTDIR)$(BIN_DIR)/retroarch-cg2glsl
 -	cp retroarch.cfg $(DESTDIR)$(GLOBAL_CONFIG_DIR)
 +	cp pkg/serenityos/retroarch.cfg $(DESTDIR)$(GLOBAL_CONFIG_DIR)
  	cp com.libretro.RetroArch.appdata.xml $(DESTDIR)$(DATA_DIR)/metainfo
- 	cp retroarch.desktop $(DESTDIR)$(DATA_DIR)/applications
+ 	cp org.libretro.RetroArch.desktop $(DESTDIR)$(DATA_DIR)/applications
  	cp docs/retroarch.6 $(DESTDIR)$(MAN_DIR)/man6
 diff --git a/pkg/serenityos/retroarch.cfg b/pkg/serenityos/retroarch.cfg
 new file mode 100644
