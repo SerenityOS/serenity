@@ -77,18 +77,18 @@ PDFErrorOr<Optional<ByteString>> InfoDict::modification_date() const
 
 PDFErrorOr<Optional<String>> InfoDict::get_text(DeprecatedFlyString const& name) const
 {
-    return TRY(get(name)).map(Document::text_string_to_utf8);
+    return TRY(TRY(get(name)).map(Document::text_string_to_utf8));
 }
 
-String Document::text_string_to_utf8(ByteString const& text_string)
+ErrorOr<String> Document::text_string_to_utf8(ByteString const& text_string)
 {
     if (text_string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff }))
-        return TextCodec::decoder_for("utf-16be"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors();
+        return TRY(TextCodec::decoder_for("utf-16be"sv)->to_utf8(text_string));
 
     if (text_string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 }))
-        return TextCodec::decoder_for("utf-8"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors();
+        return TRY(TextCodec::decoder_for("utf-8"sv)->to_utf8(text_string));
 
-    return TextCodec::decoder_for("PDFDocEncoding"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors();
+    return TRY(TextCodec::decoder_for("PDFDocEncoding"sv)->to_utf8(text_string));
 }
 
 PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
@@ -571,7 +571,7 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
         outline_item->children = move(children);
     }
 
-    outline_item->title = text_string_to_utf8(TRY(outline_item_dict->get_string(this, CommonNames::Title))->string());
+    outline_item->title = TRY(text_string_to_utf8(TRY(outline_item_dict->get_string(this, CommonNames::Title))->string()));
 
     if (outline_item_dict->contains(CommonNames::Count))
         outline_item->count = outline_item_dict->get_value(CommonNames::Count).get<int>();
