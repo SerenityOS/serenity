@@ -103,7 +103,7 @@ class Document final
     , public Weakable<Document> {
 public:
     // Converts a text string (PDF 1.7 spec, 3.8.1. "String Types") to UTF-8.
-    static String text_string_to_utf8(ByteString const&);
+    static ErrorOr<String> text_string_to_utf8(ByteString const&);
 
     static PDFErrorOr<NonnullRefPtr<Document>> create(ReadonlyBytes bytes);
 
