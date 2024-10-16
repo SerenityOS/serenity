@@ -35,32 +35,32 @@ ByteString OutlineItem::to_byte_string(int indent) const
     return builder.to_byte_string();
 }
 
-PDFErrorOr<Optional<ByteString>> InfoDict::title() const
+PDFErrorOr<Optional<String>> InfoDict::title() const
 {
     return get_text(CommonNames::Title);
 }
 
-PDFErrorOr<Optional<ByteString>> InfoDict::author() const
+PDFErrorOr<Optional<String>> InfoDict::author() const
 {
     return get_text(CommonNames::Author);
 }
 
-PDFErrorOr<Optional<ByteString>> InfoDict::subject() const
+PDFErrorOr<Optional<String>> InfoDict::subject() const
 {
     return get_text(CommonNames::Subject);
 }
 
-PDFErrorOr<Optional<ByteString>> InfoDict::keywords() const
+PDFErrorOr<Optional<String>> InfoDict::keywords() const
 {
     return get_text(CommonNames::Keywords);
 }
 
-PDFErrorOr<Optional<ByteString>> InfoDict::creator() const
+PDFErrorOr<Optional<String>> InfoDict::creator() const
 {
     return get_text(CommonNames::Creator);
 }
 
-PDFErrorOr<Optional<ByteString>> InfoDict::producer() const
+PDFErrorOr<Optional<String>> InfoDict::producer() const
 {
     return get_text(CommonNames::Producer);
 }
@@ -75,24 +75,20 @@ PDFErrorOr<Optional<ByteString>> InfoDict::modification_date() const
     return get(CommonNames::ModDate);
 }
 
-PDFErrorOr<Optional<ByteString>> InfoDict::get_text(DeprecatedFlyString const& name) const
+PDFErrorOr<Optional<String>> InfoDict::get_text(DeprecatedFlyString const& name) const
 {
     return TRY(get(name)).map(Document::text_string_to_utf8);
 }
 
-ByteString Document::text_string_to_utf8(ByteString const& text_string)
+String Document::text_string_to_utf8(ByteString const& text_string)
 {
-    if (text_string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff })) {
-        // The string is encoded in UTF16-BE
-        return TextCodec::decoder_for("utf-16be"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors().to_byte_string();
-    }
+    if (text_string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff }))
+        return TextCodec::decoder_for("utf-16be"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors();
 
-    if (text_string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 })) {
-        // The string is encoded in UTF-8.
-        return text_string.substring(3);
-    }
+    if (text_string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 }))
+        return TextCodec::decoder_for("utf-8"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors();
 
-    return TextCodec::decoder_for("PDFDocEncoding"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors().to_byte_string();
+    return TextCodec::decoder_for("PDFDocEncoding"sv)->to_utf8(text_string).release_value_but_fixme_should_propagate_errors();
 }
 
 PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)

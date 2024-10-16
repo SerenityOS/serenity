@@ -509,23 +509,21 @@ ErrorOr<void> PropertiesWindow::create_pdf_tab(GUI::TabWidget& tab_widget, Nonnu
     if (maybe_info_dict.is_error()) {
         warnln("Failed to read InfoDict from '{}': {}", m_path, maybe_info_dict.error().message());
     } else if (maybe_info_dict.value().has_value()) {
-        auto get_info_string = [](PDF::PDFErrorOr<Optional<ByteString>> input) -> ErrorOr<String> {
+        auto get_info_string = []<typename T>(PDF::PDFErrorOr<Optional<T>> input) -> T {
             if (input.is_error())
-                return String {};
-            if (!input.value().has_value())
-                return String {};
-            return String::from_byte_string(input.value().value());
+                return T {};
+            return input.value().value_or({});
         };
 
         auto info_dict = maybe_info_dict.release_value().release_value();
-        tab.find_descendant_of_type_named<GUI::Label>("pdf_title")->set_text(TRY(get_info_string(info_dict.title())));
-        tab.find_descendant_of_type_named<GUI::Label>("pdf_author")->set_text(TRY(get_info_string(info_dict.author())));
-        tab.find_descendant_of_type_named<GUI::Label>("pdf_subject")->set_text(TRY(get_info_string(info_dict.subject())));
-        tab.find_descendant_of_type_named<GUI::Label>("pdf_keywords")->set_text(TRY(get_info_string(info_dict.keywords())));
-        tab.find_descendant_of_type_named<GUI::Label>("pdf_creator")->set_text(TRY(get_info_string(info_dict.creator())));
-        tab.find_descendant_of_type_named<GUI::Label>("pdf_producer")->set_text(TRY(get_info_string(info_dict.producer())));
-        tab.find_descendant_of_type_named<GUI::Label>("pdf_creation_date")->set_text(TRY(get_info_string(info_dict.creation_date())));
-        tab.find_descendant_of_type_named<GUI::Label>("pdf_modification_date")->set_text(TRY(get_info_string(info_dict.modification_date())));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_title")->set_text(get_info_string(info_dict.title()));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_author")->set_text(get_info_string(info_dict.author()));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_subject")->set_text(get_info_string(info_dict.subject()));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_keywords")->set_text(get_info_string(info_dict.keywords()));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_creator")->set_text(get_info_string(info_dict.creator()));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_producer")->set_text(get_info_string(info_dict.producer()));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_creation_date")->set_text(TRY(String::from_byte_string((get_info_string(info_dict.creation_date())))));
+        tab.find_descendant_of_type_named<GUI::Label>("pdf_modification_date")->set_text(TRY(String::from_byte_string(get_info_string(info_dict.modification_date()))));
     }
 
     return {};
