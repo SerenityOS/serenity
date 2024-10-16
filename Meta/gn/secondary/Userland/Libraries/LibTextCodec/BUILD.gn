@@ -30,6 +30,9 @@ shared_library("LibTextCodec") {
     "//AK",
     "//Userland/Libraries/LibUnicode",
   ]
-  sources = [ "Decoder.cpp" ]
+  sources = [
+    "Decoder.cpp",
+    "Encoder.cpp",
+  ]
   sources += get_target_outputs(":generate_encoding_indexes")
 }
