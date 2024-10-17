@@ -88,13 +88,13 @@ ErrorOr<NonnullRefPtr<GUI::TextDocument>> FileDB::create_from_fd(int fd) const
 class DefaultDocumentClient final : public GUI::TextDocument::Client {
 public:
     virtual ~DefaultDocumentClient() override = default;
-    virtual void document_did_append_line() override {};
-    virtual void document_did_insert_line(size_t) override {};
-    virtual void document_did_remove_line(size_t) override {};
-    virtual void document_did_remove_all_lines() override {};
+    virtual void document_did_append_line() override { }
+    virtual void document_did_insert_line(size_t) override { }
+    virtual void document_did_remove_line(size_t) override { }
+    virtual void document_did_remove_all_lines() override { }
     virtual void document_did_change(GUI::AllowCallback) override {};
     virtual void document_did_set_text(GUI::AllowCallback) override {};
-    virtual void document_did_set_cursor(const GUI::TextPosition&) override {};
+    virtual void document_did_set_cursor(const GUI::TextPosition&) override { }
     virtual void document_did_update_undo_stack() override { }
 
     virtual bool is_automatic_indentation_enabled() const override { return false; }

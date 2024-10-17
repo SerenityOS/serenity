@@ -20,7 +20,9 @@ JS::NonnullGCPtr<SVGAnimatedTransformList> SVGAnimatedTransformList::create(JS::
 SVGAnimatedTransformList::SVGAnimatedTransformList(JS::Realm& realm, JS::NonnullGCPtr<SVGTransformList> base_val, JS::NonnullGCPtr<SVGTransformList> anim_val)
     : PlatformObject(realm)
     , m_base_val(base_val)
-    , m_anim_val(anim_val) {};
+    , m_anim_val(anim_val)
+{
+}
 
 SVGAnimatedTransformList::~SVGAnimatedTransformList() = default;
 

@@ -71,7 +71,7 @@ private:
     template<CPUFeatures>
     void transform_impl();
 
-    static void (SHA1::*const transform_dispatched)();
+    static void (SHA1::* const transform_dispatched)();
     void transform() { return (this->*transform_dispatched)(); }
 
     u8 m_data_buffer[BlockSize] {};

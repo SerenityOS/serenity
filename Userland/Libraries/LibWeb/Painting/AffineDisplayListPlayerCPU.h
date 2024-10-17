@@ -45,12 +45,12 @@ public:
     bool would_be_fully_clipped_by_painter(Gfx::IntRect) const override;
 
     bool needs_prepare_glyphs_texture() const override { return false; }
-    void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const&) override {};
+    void prepare_glyph_texture(HashMap<Gfx::Font const*, HashTable<u32>> const&) override { }
 
     virtual void prepare_to_execute(size_t) override { }
 
     bool needs_update_immutable_bitmap_texture_cache() const override { return false; }
-    void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) override {};
+    void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) override { }
 
     AffineDisplayListPlayerCPU(Gfx::Bitmap& bitmap, Gfx::AffineTransform transform, Gfx::IntRect clip);
     virtual ~AffineDisplayListPlayerCPU() override = default;

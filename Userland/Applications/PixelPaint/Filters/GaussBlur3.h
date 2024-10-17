@@ -17,7 +17,9 @@ public:
     virtual StringView filter_name() const override { return "Gaussian Blur (3x3)"sv; }
 
     GaussBlur3(ImageEditor* editor)
-        : Filter(editor) {};
+        : Filter(editor)
+    {
+    }
 };
 
 }
