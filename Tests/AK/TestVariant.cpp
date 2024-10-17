@@ -302,3 +302,24 @@ TEST_CASE(variant_equality)
         EXPECT_EQ(variant1, variant2);
     }
 }
+
+consteval bool constexpr_variant_test()
+{
+    Variant<int, bool> my_variant { false };
+    my_variant = true;
+    my_variant = 0;
+    VERIFY(my_variant.get<int>() == 0);
+
+    my_variant.set(1);
+    VERIFY(my_variant == 1);
+    VERIFY(my_variant.has<int>());
+    VERIFY(!my_variant.has<bool>());
+
+    my_variant.set(false);
+    VERIFY(my_variant.has<bool>());
+    VERIFY(my_variant == false);
+    VERIFY(my_variant.get<bool>() == false);
+
+    return true;
+}
+static_assert(constexpr_variant_test());

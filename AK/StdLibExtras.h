@@ -68,9 +68,16 @@ constexpr T&& move(T& arg)
     return static_cast<T&&>(arg);
 }
 
+template<typename T, typename... Args>
+constexpr T* construct_at(T* p, Args&&... args)
+{
+    return new (const_cast<void*>(static_cast<void const*>(p))) T(forward<Args>(args)...);
+}
+
 }
 
 namespace AK {
+using AK_REPLACED_STD_NAMESPACE::construct_at;
 using AK_REPLACED_STD_NAMESPACE::forward;
 using AK_REPLACED_STD_NAMESPACE::move;
 }
@@ -215,6 +222,7 @@ __DEFINE_GENERIC_ABS(long double, 0.0L, fabsl);
 using AK::array_size;
 using AK::ceil_div;
 using AK::clamp;
+using AK::construct_at;
 using AK::exchange;
 using AK::forward;
 using AK::is_constant_evaluated;
