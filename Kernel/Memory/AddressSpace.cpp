@@ -144,7 +144,7 @@ ErrorOr<Region*> AddressSpace::try_allocate_split_region(Region const& source_re
         region_name = TRY(KString::try_create(source_region.name()));
 
     auto new_region = TRY(Region::create_unplaced(
-        source_region.vmobject(), offset_in_vmobject, move(region_name), source_region.access(), source_region.is_cacheable() ? Region::Cacheable::Yes : Region::Cacheable::No, source_region.is_shared()));
+        source_region.vmobject(), offset_in_vmobject, move(region_name), source_region.access(), source_region.memory_type(), source_region.is_shared()));
     new_region->set_syscall_region(source_region.is_syscall_region());
     new_region->set_mmap(source_region.is_mmap(), source_region.mmapped_from_readable(), source_region.mmapped_from_writable());
     new_region->set_stack(source_region.is_stack());
@@ -201,7 +201,7 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(RandomizeVirtualAdd
     if (!name.is_null())
         region_name = TRY(KString::try_create(name));
 
-    auto region = TRY(Region::create_unplaced(move(vmobject), offset_in_vmobject, move(region_name), prot_to_region_access_flags(prot), Region::Cacheable::Yes, shared));
+    auto region = TRY(Region::create_unplaced(move(vmobject), offset_in_vmobject, move(region_name), prot_to_region_access_flags(prot), MemoryType::Normal, shared));
 
     if (requested_address.is_null())
         TRY(m_region_tree.place_anywhere(*region, randomize_virtual_address, size, alignment));
