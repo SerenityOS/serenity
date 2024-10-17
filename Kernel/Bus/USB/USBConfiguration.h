@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
+#include <AK/MemoryStream.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/USB/USBDescriptors.h>
 #include <Kernel/Bus/USB/USBDevice.h>
@@ -44,6 +46,31 @@ public:
 
     Vector<USBInterface> const& interfaces() const { return m_interfaces; }
 
+    template<CallableAs<ErrorOr<void>, ReadonlyBytes> Callback>
+    ErrorOr<void> for_each_descriptor_in_interface(USBInterface const& interface, Callback&& callback) const
+    {
+        auto stream = FixedMemoryStream(m_descriptor_hierarchy_buffer.span());
+        TRY(stream.seek(interface.descriptor_offset({}), SeekMode::SetPosition));
+
+        auto const interface_descriptor = TRY(stream.read_value<USBInterfaceDescriptor>());
+
+        VERIFY(__builtin_memcmp(&interface_descriptor, &interface.descriptor(), sizeof(USBInterfaceDescriptor)) == 0);
+
+        while (!stream.is_eof()) {
+            auto const descriptor_header = TRY(stream.read_value<USBDescriptorCommon>());
+
+            if (descriptor_header.descriptor_type == DESCRIPTOR_TYPE_INTERFACE)
+                break;
+
+            ReadonlyBytes descriptor_data { m_descriptor_hierarchy_buffer.span().slice(stream.offset() - sizeof(USBDescriptorCommon), descriptor_header.length) };
+            TRY(callback(descriptor_data));
+
+            TRY(stream.seek(descriptor_header.length - sizeof(USBDescriptorCommon), SeekMode::FromCurrentPosition));
+        }
+
+        return {};
+    }
+
     ErrorOr<void> enumerate_interfaces();
 
 private:
@@ -51,6 +78,8 @@ private:
     USBConfigurationDescriptor const m_descriptor; // Descriptor that backs this configuration
     u8 m_descriptor_index;                         // Descriptor index for {GET,SET}_DESCRIPTOR
     Vector<USBInterface> m_interfaces;             // Interfaces for this device
+
+    FixedArray<u8> m_descriptor_hierarchy_buffer; // Buffer for us to store the entire hierarchy into
 };
 
 }

@@ -189,6 +189,24 @@ struct ReadCapacity10Parameters {
 };
 static_assert(AssertSize<ReadCapacity10Parameters, 8>());
 
+// 3.33
+struct ReportLUNs {
+    u8 opcode { 0xA0 };
+    u8 reserved { 0 };
+    u8 select_report { 0 }; // FIXME: Support this
+    u8 reserved2[3] { 0 };
+    BigEndian<u32> allocation_length;
+    u8 reserved3 { 0 };
+    u8 control { 0 };
+};
+static_assert(AssertSize<ReportLUNs, 12>());
+
+struct ReportLUNsParameterData {
+    BigEndian<u32> lun_list_length;
+    u8 reserved[4] { 0 };
+    BigEndian<u64> lun_list[];
+};
+
 // 3.37
 struct RequestSense {
     u8 opcode { 0x03 };
