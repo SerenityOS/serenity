@@ -15,11 +15,17 @@ extern "C" {
 
 static void print_location(SourceLocation const&)
 {
-#if ARCH(X86_64)
-    asm volatile("cli; hlt");
+    for (;;) {
+#if ARCH(AARCH64)
+        asm volatile("msr daifset, #2; wfi");
+#elif ARCH(RISCV64)
+        asm volatile("csrw sie, zero; wfi");
+#elif ARCH(X86_64)
+        asm volatile("cli; hlt");
 #else
-    for (;;) { }
+#    error Unknown architecture
 #endif
+    }
 }
 
 void __ubsan_handle_load_invalid_value(InvalidValueData const&, ValueHandle) __attribute__((used));
