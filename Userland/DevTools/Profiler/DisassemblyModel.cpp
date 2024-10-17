@@ -12,10 +12,11 @@
 #include "Profile.h"
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
+#include <LibDisassembly/Architecture.h>
+#include <LibDisassembly/Disassembler.h>
+#include <LibDisassembly/ELFSymbolProvider.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
-#include <LibX86/Disassembler.h>
-#include <LibX86/ELFSymbolProvider.h>
 #include <stdio.h>
 
 namespace Profiler {
@@ -93,9 +94,9 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
     auto symbol_offset_from_function_start = node.address() - base_address - symbol->value();
     auto view = symbol.value().raw_data().substring_view(symbol_offset_from_function_start);
 
-    X86::ELFSymbolProvider symbol_provider(*elf, base_address);
-    X86::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
-    X86::Disassembler disassembler(stream);
+    Disassembly::ELFSymbolProvider symbol_provider(*elf, base_address);
+    Disassembly::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
+    Disassembly::Disassembler disassembler(stream, Disassembly::architecture_from_elf_machine(elf->machine()).value_or(Disassembly::host_architecture()));
 
     size_t offset_into_symbol = 0;
     FlatPtr last_instruction_offset = 0;
@@ -114,16 +115,17 @@ DisassemblyModel::DisassemblyModel(Profile& profile, ProfileNode& node)
             break;
         FlatPtr address_in_profiled_program = node.address() + offset_into_symbol;
 
-        auto disassembly = insn.value().to_byte_string(address_in_profiled_program, &symbol_provider);
+        auto disassembly = insn.value()->to_byte_string(address_in_profiled_program, symbol_provider);
 
-        StringView instruction_bytes = view.substring_view(offset_into_symbol, insn.value().length());
+        auto length = insn.value()->length();
+        StringView instruction_bytes = view.substring_view(offset_into_symbol, length);
         u32 samples_at_this_instruction = m_node.events_per_address().get(address_in_profiled_program).value_or(0);
         float percent = ((float)samples_at_this_instruction / (float)m_node.event_count()) * 100.0f;
         auto source_position = debug_info->get_source_position_with_inlines(address_in_profiled_program - base_address).release_value_but_fixme_should_propagate_errors();
 
-        m_instructions.append({ insn.value(), disassembly, instruction_bytes, address_in_profiled_program, samples_at_this_instruction, percent, source_position });
+        m_instructions.append({ insn.release_value(), disassembly, instruction_bytes, address_in_profiled_program, samples_at_this_instruction, percent, source_position });
 
-        offset_into_symbol += insn.value().length();
+        offset_into_symbol += length;
     }
 }
 

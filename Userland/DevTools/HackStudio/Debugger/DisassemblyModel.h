@@ -8,8 +8,8 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <LibDisassembly/x86/Instruction.h>
 #include <LibGUI/Model.h>
-#include <LibX86/Instruction.h>
 #include <sys/arch/regs.h>
 
 namespace Debug {
@@ -21,7 +21,7 @@ class DebugSession;
 namespace HackStudio {
 
 struct InstructionData {
-    X86::Instruction insn;
+    NonnullOwnPtr<Disassembly::Instruction> insn;
     ByteString disassembly;
     StringView bytes;
     FlatPtr address { 0 };
