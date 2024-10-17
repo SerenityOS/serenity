@@ -1,0 +1,30 @@
+<link rel="match" href="reference/svg-stroke-styles.html" />
+<style>
+path {
+  stroke-width: 20;
+}
+path:nth-of-type(1) {
+  stroke-linecap: butt;
+}
+path:nth-of-type(2) {
+  stroke-linecap: round;
+}
+path:nth-of-type(3) {
+  stroke-linecap: square;
+}
+</style>
+<svg width="400" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+  <path d="M100,20 h40" stroke="orange" />
+  <path d="M100,50 h40" stroke="green" />
+  <path d="M100,80 h40" stroke="purple" />
+
+  <path d="M20,20 h40" stroke="red" stroke-linecap="butt" />
+  <path d="M20,50 h40" stroke="yellow" stroke-linecap="round" />
+  <path d="M20,80 h40" stroke="blue" stroke-linecap="square" />
+
+  <path d="M180,20 h60 L210,60 L180,20" stroke="red"
+        stroke-linecap="butt" style="filL: none" />
+
+  <path d="M260,60 h60 L290,20 Z" stroke="red"
+        stroke-linecap="butt" style="filL: none" />
+</svg>
