@@ -20,8 +20,10 @@ class PageClient;
 class PaintContext;
 class Resource;
 class ResourceLoader;
-enum class TraversalDecision;
 class XMLDocumentBuilder;
+
+enum class InvalidateDisplayList;
+enum class TraversalDecision;
 }
 
 namespace Web::Painting {
@@ -43,6 +45,7 @@ class KeyframeEffect;
 namespace Web::ARIA {
 class AriaData;
 class ARIAMixin;
+
 enum class StateAndProperties;
 }
 
@@ -99,6 +102,11 @@ class BackgroundRepeatStyleValue;
 class BackgroundSizeStyleValue;
 class BasicShapeStyleValue;
 class BorderRadiusStyleValue;
+class Clip;
+class ConicGradientStyleValue;
+class ContentStyleValue;
+class CounterDefinitionsStyleValue;
+class CounterStyleValue;
 class CSSAnimation;
 class CSSColorValue;
 class CSSConditionRule;
@@ -123,14 +131,8 @@ class CSSRuleList;
 class CSSStyleDeclaration;
 class CSSStyleRule;
 class CSSStyleSheet;
-struct CSSStyleSheetInit;
 class CSSStyleValue;
 class CSSSupportsRule;
-class Clip;
-class ConicGradientStyleValue;
-class ContentStyleValue;
-class CounterStyleValue;
-class CounterDefinitionsStyleValue;
 class CustomIdentStyleValue;
 class Display;
 class DisplayStyleValue;
@@ -202,7 +204,6 @@ class StringStyleValue;
 class StyleComputer;
 class StyleProperties;
 class StyleSheet;
-struct StyleSheetIdentifier;
 class StyleSheetList;
 class StyleValueList;
 class Supports;
@@ -214,8 +215,8 @@ class TimeStyleValue;
 class Transformation;
 class TransformationStyleValue;
 class TransitionStyleValue;
-class URLStyleValue;
 class UnresolvedStyleValue;
+class URLStyleValue;
 class VisualViewport;
 
 enum class Keyword;
@@ -223,18 +224,21 @@ enum class MediaFeatureID;
 enum class PropertyID;
 
 struct BackgroundLayerData;
+struct CSSStyleSheetInit;
+struct StyleSheetIdentifier;
 }
 
 namespace Web::CSS::Parser {
-struct AtRule;
 class ComponentValue;
-struct Declaration;
-struct Function;
 class Parser;
-struct QualifiedRule;
-struct SimpleBlock;
 class Token;
 class Tokenizer;
+
+struct AtRule;
+struct Declaration;
+struct Function;
+struct QualifiedRule;
+struct SimpleBlock;
 }
 
 namespace Web::DOM {
@@ -273,8 +277,8 @@ class NodeList;
 class ParentNode;
 class Position;
 class ProcessingInstruction;
-class Range;
 class RadioNodeList;
+class Range;
 class RegisteredObserver;
 class ShadowRoot;
 class StaticNodeList;
@@ -294,10 +298,11 @@ class XMLSerializer;
 }
 
 namespace Web::Encoding {
-struct TextDecodeOptions;
 class TextDecoder;
-struct TextDecoderOptions;
 class TextEncoder;
+
+struct TextDecodeOptions;
+struct TextDecoderOptions;
 struct TextEncoderEncodeIntoResult;
 }
 
@@ -328,8 +333,8 @@ class ConnectionTimingInfo;
 class FetchAlgorithms;
 class FetchController;
 class FetchParams;
-class FetchTimingInfo;
 class FetchRecord;
+class FetchTimingInfo;
 class HeaderList;
 class IncrementalReadLoopReadRequest;
 class Request;
@@ -347,16 +352,17 @@ class FileList;
 
 namespace Web::Geometry {
 class DOMMatrix;
-struct DOMMatrix2DInit;
-struct DOMMatrixInit;
 class DOMMatrixReadOnly;
 class DOMPoint;
-struct DOMPointInit;
 class DOMPointReadOnly;
 class DOMQuad;
 class DOMRect;
 class DOMRectList;
 class DOMRectReadOnly;
+
+struct DOMMatrix2DInit;
+struct DOMMatrixInit;
+struct DOMPointInit;
 }
 
 namespace Web::HTML {
@@ -383,7 +389,6 @@ class DOMStringMap;
 class DragDataStore;
 class DragEvent;
 class ElementInternals;
-struct EmbedderPolicy;
 class ErrorEvent;
 class EventHandler;
 class EventLoop;
@@ -495,6 +500,7 @@ class PromiseRejectionEvent;
 class SelectedFile;
 class ServiceWorkerContainer;
 class ServiceWorkerRegistration;
+class SessionHistoryEntry;
 class SharedResourceRequest;
 class Storage;
 class SubmitEvent;
@@ -507,7 +513,6 @@ class Timer;
 class TimeRanges;
 class ToggleEvent;
 class TrackEvent;
-struct TransferDataHolder;
 class TraversableNavigable;
 class UserActivation;
 class ValidityState;
@@ -528,18 +533,19 @@ enum class AllowMultipleFiles;
 enum class MediaSeekMode;
 enum class SandboxingFlagSet;
 
-struct OpenerPolicy;
-struct OpenerPolicyEnforcementResult;
+struct EmbedderPolicy;
 struct Environment;
 struct EnvironmentSettingsObject;
 struct NavigationParams;
+struct OpenerPolicy;
+struct OpenerPolicyEnforcementResult;
 struct PolicyContainer;
 struct POSTResource;
 struct ScrollOptions;
 struct ScrollToOptions;
 struct SerializedFormData;
-class SessionHistoryEntry;
 struct ToggleTaskTracker;
+struct TransferDataHolder;
 }
 
 namespace Web::HighResolutionTime {
@@ -560,6 +566,7 @@ class Internals;
 namespace Web::IntersectionObserver {
 class IntersectionObserver;
 class IntersectionObserverEntry;
+
 struct IntersectionObserverRegistration;
 }
 
@@ -574,6 +581,7 @@ class FlexFormattingContext;
 class FormattingContext;
 class ImageBox;
 class InlineFormattingContext;
+class InlineNode;
 class Label;
 class LabelableNode;
 class LineBox;
@@ -648,6 +656,7 @@ namespace Web::PerformanceTimeline {
 class PerformanceEntry;
 class PerformanceObserver;
 class PerformanceObserverEntryList;
+
 struct PerformanceObserverInit;
 }
 
@@ -765,7 +774,6 @@ class Table;
 namespace Web::WebAudio {
 class AudioBuffer;
 class AudioBufferSourceNode;
-class AudioDestinationNode;
 class AudioContext;
 class AudioDestinationNode;
 class AudioListener;
@@ -821,5 +829,6 @@ class ProgressEvent;
 class XMLHttpRequest;
 class XMLHttpRequestEventTarget;
 class XMLHttpRequestUpload;
+
 struct FormDataEntry;
 }
