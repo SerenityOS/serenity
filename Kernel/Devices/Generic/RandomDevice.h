@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/Security/Random.h>
 
 namespace Kernel {
 
@@ -29,6 +30,8 @@ private:
     virtual bool can_read(OpenFileDescription const&, u64) const override;
     virtual bool can_write(OpenFileDescription const&, u64) const override { return true; }
     virtual StringView class_name() const override { return "RandomDevice"sv; }
+
+    EntropySource m_entropy_source;
 };
 
 }
