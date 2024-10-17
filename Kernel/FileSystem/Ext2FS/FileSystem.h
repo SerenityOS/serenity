@@ -55,8 +55,12 @@ public:
     FeaturesOptional get_features_optional() const;
     FeaturesReadOnly get_features_readonly() const;
 
+    u32 i_blocks_increment() { return m_i_blocks_increment; }
+
     virtual StringView class_name() const override { return "Ext2FS"sv; }
     virtual Inode& root_inode() override;
+
+    using BlockList = HashMap<BlockBasedFileSystem::BlockIndex, BlockBasedFileSystem::BlockIndex>;
 
 private:
     AK_TYPEDEF_DISTINCT_ORDERED_ID(unsigned, GroupIndex);
@@ -104,9 +108,8 @@ private:
     void uncache_inode(InodeIndex);
     ErrorOr<void> free_inode(Ext2FSInode&);
 
-    using BlockList = HashMap<BlockBasedFileSystem::BlockIndex, BlockBasedFileSystem::BlockIndex>;
-
     u64 m_block_group_count { 0 };
+    u32 m_i_blocks_increment { 0 };
 
     mutable ext2_super_block m_super_block {};
     mutable OwnPtr<KBuffer> m_cached_group_descriptor_table;
