@@ -518,6 +518,7 @@ set(SOURCES
     Layout/SVGForeignObjectBox.cpp
     Layout/SVGGeometryBox.cpp
     Layout/SVGGraphicsBox.cpp
+    Layout/SVGImageBox.cpp
     Layout/SVGSVGBox.cpp
     Layout/SVGMaskBox.cpp
     Layout/SVGClipBox.cpp
@@ -649,6 +650,7 @@ set(SOURCES
     SVG/SVGGeometryElement.cpp
     SVG/SVGGraphicsElement.cpp
     SVG/SVGGradientElement.cpp
+    SVG/SVGImageElement.cpp
     SVG/SVGPathElement.cpp
     SVG/SVGCircleElement.cpp
     SVG/SVGEllipseElement.cpp
