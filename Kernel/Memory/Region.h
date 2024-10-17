@@ -108,7 +108,7 @@ public:
     ErrorOr<void> set_write_combine(bool);
 
     [[nodiscard]] bool is_user() const { return !is_kernel(); }
-    [[nodiscard]] bool is_kernel() const { return vaddr().get() < USER_RANGE_BASE || vaddr().get() >= kernel_mapping_base; }
+    [[nodiscard]] bool is_kernel() const { return vaddr().get() < USER_RANGE_BASE || vaddr().get() >= g_boot_info.kernel_mapping_base; }
 
     PageFaultResponse handle_fault(PageFault const&);
 
