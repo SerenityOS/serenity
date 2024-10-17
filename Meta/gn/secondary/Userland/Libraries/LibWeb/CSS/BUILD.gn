@@ -23,6 +23,7 @@ source_set("CSS") {
     "CSSNamespaceRule.cpp",
     "CSSNestedDeclarations.cpp",
     "CSSNumericType.cpp",
+    "CSSPropertyRule.cpp",
     "CSSRule.cpp",
     "CSSRuleList.cpp",
     "CSSStyleDeclaration.cpp",
