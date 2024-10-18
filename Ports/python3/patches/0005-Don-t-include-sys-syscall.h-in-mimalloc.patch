@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Fri, 18 Oct 2024 22:02:36 +0100
+Subject: [PATCH] Don't include `sys/syscall.h` in mimalloc
+
+---
+ Objects/mimalloc/prim/unix/prim.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Objects/mimalloc/prim/unix/prim.c b/Objects/mimalloc/prim/unix/prim.c
+index 4d3fb65e954407d9cafff16e188d919c5f818397..50080aaeb3f6ea84d52897727b6d2527335b5f34 100644
+--- a/Objects/mimalloc/prim/unix/prim.c
++++ b/Objects/mimalloc/prim/unix/prim.c
+@@ -51,7 +51,7 @@ terms of the MIT license. A copy of the license can be found in the file
+   #include <sys/sysctl.h>
+ #endif
+ 
+-#if !defined(__HAIKU__) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_AIX) && !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__sun) && !defined(__NetBSD__)
++#if !defined(__HAIKU__) && !defined(__APPLE__) && !defined(__CYGWIN__) && !defined(_AIX) && !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__sun) && !defined(__NetBSD__) && !defined(__serenity__)
+   #define MI_HAS_SYSCALL_H
+   #include <sys/syscall.h>
+ #endif
