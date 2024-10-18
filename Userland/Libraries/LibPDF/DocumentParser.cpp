@@ -372,7 +372,7 @@ PDFErrorOr<void> DocumentParser::validate_xref_table_and_fix_if_necessary()
        Like most other PDF parsers seem to do, we still try to salvage the situation.
        NOTE: This is probably not spec-compliant behavior.*/
     size_t first_valid_index = 0;
-    while (m_xref_table->byte_offset_for_object(first_valid_index) == invalid_byte_offset)
+    while (!m_xref_table->has_object(first_valid_index))
         first_valid_index++;
 
     if (first_valid_index) {
