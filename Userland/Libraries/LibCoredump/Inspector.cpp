@@ -68,7 +68,7 @@ PtraceRegisters Inspector::get_registers() const
     return registers;
 }
 
-void Inspector::set_registers(PtraceRegisters const&) {};
+void Inspector::set_registers(PtraceRegisters const&) { }
 
 void Inspector::for_each_loaded_library(Function<IterationDecision(Debug::LoadedLibrary const&)> func) const
 {

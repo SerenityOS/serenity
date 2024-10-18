@@ -16,7 +16,9 @@ public:
     virtual StringView filter_name() const override { return "Invert"sv; }
 
     Invert(ImageEditor* editor)
-        : Filter(editor) {};
+        : Filter(editor)
+    {
+    }
 };
 
 }

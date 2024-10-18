@@ -13,10 +13,10 @@
 #define TRY_OR_THROW_PARSE_ERROR_AT(expr, position) ({                                                     \
     /* Ignore -Wshadow to allow nesting the macro. */                                                      \
     AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                                       \
-                         auto&& _value_or_error = expr;)                                                   \
+        auto&& _value_or_error = expr;)                                                                    \
     if (_value_or_error.is_error()) {                                                                      \
         AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                                   \
-                             auto _error = _value_or_error.release_error();)                               \
+            auto _error = _value_or_error.release_error();)                                                \
         if (_error.is_errno() && _error.code() == ENOMEM)                                                  \
             return make_ref_counted<AST::SyntaxError>(position, "OOM"_string);                             \
         return make_ref_counted<AST::SyntaxError>(position, MUST(String::formatted("Error: {}", _error))); \
