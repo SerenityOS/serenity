@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Fri, 18 Oct 2024 22:14:10 +0100
+Subject: [PATCH] Include `sys/time.h in `pycore_time.h`
+
+Our version/configuration of GCC also complains about this, and various
+other things end up complaining about the size of `struct timeval` being
+unknown.
+---
+ Include/internal/pycore_time.h | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/Include/internal/pycore_time.h b/Include/internal/pycore_time.h
+index 205ac5d3781ddd6c6b70ae4f86c8901a1b064737..af78e330be58537dab0483c7a0eba8015f6f829d 100644
+--- a/Include/internal/pycore_time.h
++++ b/Include/internal/pycore_time.h
+@@ -57,10 +57,7 @@ extern "C" {
+ #  error "this header requires Py_BUILD_CORE define"
+ #endif
+ 
+-
+-#ifdef __clang__
+-struct timeval;
+-#endif
++#include <sys/time.h>
+ 
+ #define _SIZEOF_PYTIME_T 8
+ 
