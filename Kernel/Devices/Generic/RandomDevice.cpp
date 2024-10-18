@@ -37,10 +37,13 @@ ErrorOr<size_t> RandomDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer
     });
 }
 
-ErrorOr<size_t> RandomDevice::write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t size)
+ErrorOr<size_t> RandomDevice::write(OpenFileDescription&, u64, UserOrKernelBuffer const& buffer, size_t size)
 {
-    // FIXME: Use input for entropy? I guess that could be a neat feature?
-    return size;
+    return buffer.read_buffered<128>(size, [&](ReadonlyBytes bytes) {
+        for (auto const& byte : bytes)
+            m_entropy_source.add_random_event(byte);
+        return bytes.size();
+    });
 }
 
 }
