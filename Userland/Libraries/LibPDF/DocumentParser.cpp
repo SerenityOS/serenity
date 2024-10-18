@@ -495,9 +495,9 @@ PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
                 byte_index += field_size;
             }
 
-            u8 type = fields[0];
-            if (field_sizes->at(0).get_u32() == 0)
-                type = 1;
+            u8 type = 1;
+            if (field_sizes->at(0).get_u32() != 0)
+                type = fields[0];
 
             entries.append({ fields[1], static_cast<u16>(fields[2]), type != 0, type == 2 });
         }
