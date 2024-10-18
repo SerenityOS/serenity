@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Fri, 25 Oct 2024 20:20:07 +0100
+Subject: [PATCH] Force-disable pyrepl
+
+We are lacking termios support for this leading to a non-functional
+modern REPL. Force-disable it in the source instead of requiring users
+to set PYTHON_BASIC_REPL=1 to work around the issue.
+---
+ Lib/_pyrepl/main.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Lib/_pyrepl/main.py b/Lib/_pyrepl/main.py
+index a6f824dcc4ad14043a0fb4b10cd57e6c83c01cdc..fcec734d1216e59e2dd598ac87be58acdde79b54 100644
+--- a/Lib/_pyrepl/main.py
++++ b/Lib/_pyrepl/main.py
+@@ -17,7 +17,7 @@ except Exception as e:
+     CAN_USE_PYREPL = False
+     FAIL_REASON = f"warning: can't use pyrepl: {e}"
+ else:
+-    CAN_USE_PYREPL = True
++    CAN_USE_PYREPL = False
+     FAIL_REASON = ""
+ 
+ 
