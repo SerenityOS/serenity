@@ -36,6 +36,13 @@ public:
             m_data[i] = data[i];
     }
 
+    constexpr IPv6Address(NetworkOrdered<u128> const& data)
+    {
+        auto array = bit_cast<Array<u8, 16>>(data);
+        for (size_t i = 0; i < 16; i++)
+            m_data[i] = array[i];
+    }
+
     constexpr IPv6Address(IPv4Address const& ipv4_address)
     {
         // IPv4 mapped IPv6 address
@@ -233,6 +240,11 @@ public:
                 return false;
         }
         return true;
+    }
+
+    constexpr NetworkOrdered<u128> to_u128() const
+    {
+        return bit_cast<NetworkOrdered<u128>>(m_data);
     }
 
     constexpr bool is_ipv4_mapped() const
