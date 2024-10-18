@@ -428,6 +428,7 @@ static PDFErrorOr<NonnullRefPtr<StreamObject>> indirect_value_as_stream(NonnullR
 
 PDFErrorOr<NonnullRefPtr<XRefTable>> DocumentParser::parse_xref_stream()
 {
+    // PDF 1.7 spec, 3.4.7 "Cross-Reference Streams"
     auto xref_stream = TRY(parse_indirect_value());
     auto stream = TRY(indirect_value_as_stream(xref_stream));
 
