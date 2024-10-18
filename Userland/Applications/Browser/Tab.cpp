@@ -69,7 +69,7 @@ void Tab::start_download(const URL::URL& url)
     window->show();
 }
 
-void Tab::view_source(const URL::URL& url, ByteString const& source)
+void Tab::view_source(const URL::URL& url, StringView source)
 {
     auto window = GUI::Window::construct(&this->window());
     auto editor = window->set_main_widget<GUI::TextEditor>();
@@ -657,7 +657,9 @@ Tab::Tab(BrowserWindow& window)
         m_select_dropdown->popup(view().screen_relative_rect().location().translated(content_position));
     };
 
-    view().on_received_source = [this](auto& url, auto& source) {
+    view().on_received_source = [this](auto& url, auto const& base_url, auto const& source) {
+        // FIXME: Use base_url?
+        (void)base_url;
         view_source(url, source);
     };
 

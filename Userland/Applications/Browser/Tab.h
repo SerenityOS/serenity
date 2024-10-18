@@ -99,7 +99,7 @@ private:
     ErrorOr<void> bookmark_current_url();
     void update_bookmark_button(StringView url);
     void start_download(const URL::URL& url);
-    void view_source(const URL::URL& url, ByteString const& source);
+    void view_source(const URL::URL& url, StringView source);
     void update_status(Optional<String> text_override = {}, i32 count_waiting = 0);
     void close_sub_widgets();
 
