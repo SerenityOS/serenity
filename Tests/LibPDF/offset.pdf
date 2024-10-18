@@ -1,0 +1,45 @@
+%PDF-1.3
+%µ¶
+
+1 0 obj
+<</Type/Catalog/Pages 2 0 R>>
+endobj
+
+2 0 obj
+<</Type/Pages/Kids[3 0 R]/Count 1>>
+endobj
+
+3 0 obj
+<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 300]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>
+endobj
+
+4 0 obj
+<</Length 55>>
+stream
+BT
+/F1 25 Tf
+40 200 Td
+[ (Should not crash) ] TJ T*
+ET
+
+endstream
+endobj
+
+5 0 obj
+<</Type/Font/Subtype/Type1/Name/F1/BaseFont/Helvetica/Encoding/MacRomanEncoding>>
+endobj
+
+xref
+1 6
+0000000016 00000 n 
+0000000062 00000 n 
+0000000114 00000 n 
+0000000227 00000 n 
+0000000331 00000 n 
+0000000000 00000 f 
+
+trailer
+<</Size 6/Root 1 0 R>>
+startxref
+429
+%%EOF
