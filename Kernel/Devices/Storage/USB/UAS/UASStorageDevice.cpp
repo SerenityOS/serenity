@@ -5,13 +5,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/Storage/USB/BulkSCSIInterface.h>
-#include <Kernel/Devices/Storage/USB/BulkSCSIStorageDevice.h>
 #include <Kernel/Devices/Storage/USB/SCSIComands.h>
+#include <Kernel/Devices/Storage/USB/UAS/UASInterface.h>
+#include <Kernel/Devices/Storage/USB/UAS/UASStorageDevice.h>
 
 namespace Kernel::USB {
 
-BulkSCSIStorageDevice::BulkSCSIStorageDevice(BulkSCSIInterface& interface, LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, size_t sector_size, u64 max_addressable_block)
+UASStorageDevice::UASStorageDevice(UASInterface& interface, LUNAddress logical_unit_number_address, u32 hardware_relative_controller_id, size_t sector_size, u64 max_addressable_block)
     : StorageDevice(logical_unit_number_address, hardware_relative_controller_id, sector_size, max_addressable_block)
     , m_interface(interface)
 {
@@ -20,7 +20,7 @@ BulkSCSIStorageDevice::BulkSCSIStorageDevice(BulkSCSIInterface& interface, LUNAd
     (void)query_characteristics();
 }
 
-ErrorOr<void> BulkSCSIStorageDevice::query_characteristics()
+ErrorOr<void> UASStorageDevice::query_characteristics()
 {
     SCSI::Inquiry inquiry_command {};
     inquiry_command.enable_vital_product_data = 1;
@@ -32,21 +32,27 @@ ErrorOr<void> BulkSCSIStorageDevice::query_characteristics()
 
     auto status = TRY(m_interface.send_scsi_command<SCSIDataDirection::DataToInitiator>(inquiry_command, &vital_product_page, sizeof(vital_product_page_buffer)));
 
-    if (status.status != CSWStatus::Passed) {
-        dbgln("SCSI/BBB: Inquiry failed to inquire supported vital product data pages with code {}", to_underlying(status.status));
+    if (!status.is_sense()) {
+        dmesgln("SCSI/UAS: Expected Sense IU, got ID {:02x} instead", static_cast<u8>(status.response.header.iu_id));
+        return EIO;
+    }
+
+    if (auto& sense = status.as_sense(); sense.status != SCSI::StatusCode::Good) {
+        dbgln("SCSI/UAS: Inquiry failed to inquire supported vital product data pages with code {}", sense.status);
         // FIXME: Maybe request sense here
         // FIXME: Treating this as an error for now
         // Some HW seems to stall this and/or send garbage...
         return EIO;
     }
+
     if (vital_product_page.page_code != SCSI::VitalProductDataPageCode::SupportedVitalProductDataPages) {
-        dmesgln("SCSI/BBB: Returned wrong page code for supported vital product data pages: {:#02x}", to_underlying(vital_product_page.page_code));
+        dmesgln("SCSI/UAS: Returned wrong page code for supported vital product data pages: {:#02x}", to_underlying(vital_product_page.page_code));
         return EIO;
     }
 
     if ((vital_product_page.page_length + 4uz) > sizeof(vital_product_page_buffer)) {
         // Note: This should not be possible, as there are less than 253 page codes allocated
-        dmesgln("SCSI/BBB: Warning: Returned page length for supported vital product data pages is bigger than the allocated buffer, we might be missing some supported pages");
+        dmesgln("SCSI/UAS: Warning: Returned page length for supported vital product data pages is bigger than the allocated buffer, we might be missing some supported pages");
     }
 
     // FIXME: Maybe check status.residual_data here
@@ -65,7 +71,7 @@ ErrorOr<void> BulkSCSIStorageDevice::query_characteristics()
     }
 
     if (!found_block_limits) {
-        dmesgln("SCSI/BBB: Device does not support block limits page");
+        dmesgln("SCSI/UAS: Device does not support block limits page");
         // This is not an error, we just won't be able to optimize our transfers
         return {};
     }
@@ -74,18 +80,23 @@ ErrorOr<void> BulkSCSIStorageDevice::query_characteristics()
     SCSI::BlockLimitsPage block_limits_page {};
     inquiry_command.allocation_length = sizeof(SCSI::BlockLimitsPage);
     status = TRY(m_interface.send_scsi_command<SCSIDataDirection::DataToInitiator>(inquiry_command, &block_limits_page, sizeof(SCSI::BlockLimitsPage)));
-    if (status.status != CSWStatus::Passed) {
-        dbgln("SCSI/BBB: Inquiry failed to inquire block limits with code {}", to_underlying(status.status));
+
+    if (!status.is_sense()) {
+        dmesgln("SCSI/UAS: Expected Sense IU, got ID {:02x} instead", static_cast<u8>(status.response.header.iu_id));
+        return EIO;
+    }
+    if (auto sense = status.as_sense(); sense.status != SCSI::StatusCode::Good) {
+        dbgln("SCSI/UAS: Inquiry failed to inquire block limits with code {}", sense.status);
         // FIXME: Maybe request sense here
     }
 
     if (block_limits_page.page_code != SCSI::VitalProductDataPageCode::BlockLimits) {
-        dmesgln("SCSI/BBB: Returned wrong page code for block limits {:#02x}", to_underlying(block_limits_page.page_code));
+        dmesgln("SCSI/UAS: Returned wrong page code for block limits {:#02x}", to_underlying(block_limits_page.page_code));
         return EIO;
     }
 
     if (block_limits_page.page_length != sizeof(SCSI::BlockLimitsPage) - 4) {
-        dmesgln("SCSI/BBB: Returned wrong page length for block limits {}", block_limits_page.page_length);
+        dmesgln("SCSI/UAS: Returned wrong page length for block limits {}", block_limits_page.page_length);
         return EIO;
     }
 
@@ -96,14 +107,14 @@ ErrorOr<void> BulkSCSIStorageDevice::query_characteristics()
     if (block_limits_page.optimal_transfer_length_granularity != 0)
         m_optimal_transfer_length_granularity = block_limits_page.optimal_transfer_length_granularity;
 
-    dbgln("SCSI/BBB: Maximum transfer length: {}", m_maximum_transfer_length);
-    dbgln("SCSI/BBB: Optimal transfer length: {}", m_optimal_transfer_length);
-    dbgln("SCSI/BBB: Optimal transfer length granularity: {}", m_optimal_transfer_length_granularity);
+    dbgln("SCSI/UAS: Maximum transfer length: {}", m_maximum_transfer_length);
+    dbgln("SCSI/UAS: Optimal transfer length: {}", m_optimal_transfer_length);
+    dbgln("SCSI/UAS: Optimal transfer length granularity: {}", m_optimal_transfer_length_granularity);
 
     return {};
 }
 
-u32 BulkSCSIStorageDevice::optimal_block_count(u32 blocks)
+u32 UASStorageDevice::optimal_block_count(u32 blocks)
 {
     if (m_maximum_transfer_length.has_value() && blocks > m_maximum_transfer_length.value())
         return m_maximum_transfer_length.value();
@@ -128,7 +139,7 @@ u32 BulkSCSIStorageDevice::optimal_block_count(u32 blocks)
     return blocks - (blocks % m_optimal_transfer_length_granularity.value());
 }
 
-void BulkSCSIStorageDevice::start_request(AsyncBlockDeviceRequest& request)
+void UASStorageDevice::start_request(AsyncBlockDeviceRequest& request)
 {
     if (request.request_type() == AsyncBlockDeviceRequest::RequestType::Read) {
         if (do_read(request.block_index(), request.block_count(), request.buffer(), request.buffer_size()).is_error()) {
@@ -145,7 +156,7 @@ void BulkSCSIStorageDevice::start_request(AsyncBlockDeviceRequest& request)
     }
 }
 
-ErrorOr<void> BulkSCSIStorageDevice::do_read(u32 block_index, u32 block_count, UserOrKernelBuffer& buffer, size_t)
+ErrorOr<void> UASStorageDevice::do_read(u32 block_index, u32 block_count, UserOrKernelBuffer& buffer, size_t)
 {
     // FIXME: Error Handling and proper device reset on exit
     SCSI::Read10 read_command;
@@ -164,14 +175,18 @@ ErrorOr<void> BulkSCSIStorageDevice::do_read(u32 block_index, u32 block_count, U
 
         auto status = TRY(m_interface.send_scsi_command<SCSIDataDirection::DataToInitiator>(read_command, destination_buffer, transfer_length_bytes));
 
-        if (status.status != CSWStatus::Passed) {
-            // FIXME: Actually handle the error
-            //        See usbmassbulk 5.3, 6.4 and 6.5
-            dmesgln("SCSI/BBB: Read failed with code {}", to_underlying(status.status));
+        if (!status.is_sense()) {
+            dmesgln("SCSI/UAS: Read did not return Sense IU, aborting");
             return EIO;
         }
 
-        u32 bytes_transferred = transfer_length_bytes - status.data_residue;
+        if (auto sense = status.as_sense(); sense.status != SCSI::StatusCode::Good) {
+            // FIXME: Actually handle the error
+            dmesgln("SCSI/UAS: Read failed with status {}", sense.status);
+            return EIO;
+        }
+
+        u32 bytes_transferred = status.transfer_size;
         u32 blocks_read_in_transfer = bytes_transferred / block_size();
 
         blocks_read += blocks_read_in_transfer;
@@ -181,7 +196,7 @@ ErrorOr<void> BulkSCSIStorageDevice::do_read(u32 block_index, u32 block_count, U
     return {};
 }
 
-ErrorOr<void> BulkSCSIStorageDevice::do_write(u32 block_index, u32 block_count, UserOrKernelBuffer& buffer, size_t)
+ErrorOr<void> UASStorageDevice::do_write(u32 block_index, u32 block_count, UserOrKernelBuffer& buffer, size_t)
 {
     // FIXME: Error Handling and proper device reset on exit
     SCSI::Write10 read_command;
@@ -200,14 +215,18 @@ ErrorOr<void> BulkSCSIStorageDevice::do_write(u32 block_index, u32 block_count, 
 
         auto status = TRY(m_interface.send_scsi_command<SCSIDataDirection::DataToTarget>(read_command, source_buffer, transfer_length_bytes));
 
-        if (status.status != CSWStatus::Passed) {
-            // FIXME: Actually handle the error
-            //        See usbmassbulk 5.3, 6.4 and 6.5
-            dmesgln("SCSI/BBB: Write failed with code {}", to_underlying(status.status));
+        if (!status.is_sense()) {
+            dmesgln("SCSI/UAS: Write did not return Sense IU, aborting");
             return EIO;
         }
 
-        u32 bytes_transferred = transfer_length_bytes - status.data_residue;
+        if (auto sense = status.as_sense(); sense.status != SCSI::StatusCode::Good) {
+            // FIXME: Actually handle the error
+            dmesgln("SCSI/UAS: Write failed with status {}", sense.status);
+            return EIO;
+        }
+
+        u32 bytes_transferred = status.transfer_size;
         u32 blocks_read_in_transfer = bytes_transferred / block_size();
         blocks_read += blocks_read_in_transfer;
         block_index_to_read += blocks_read_in_transfer;
