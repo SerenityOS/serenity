@@ -15,6 +15,7 @@ set(TEST_FILES
     jbig2-globals.pdf
     linearized.pdf
     non-linearized.pdf
+    offset.pdf
     oss-fuzz-testcase-62065.pdf
     password-is-sup.pdf
     pattern.pdf

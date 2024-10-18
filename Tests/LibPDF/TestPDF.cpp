@@ -89,6 +89,14 @@ TEST_CASE(encoding)
     EXPECT_EQ(outline_dict->children[2]->title, (char const*)u8"Titlè 3");
 }
 
+TEST_CASE(offset)
+{
+    auto file = MUST(Core::MappedFile::map("offset.pdf"sv));
+    auto document = MUST(PDF::Document::create(file->bytes()));
+    MUST(document->initialize());
+    EXPECT_EQ(document->get_page_count(), 1U);
+}
+
 TEST_CASE(truncated_pdf_header_issue_10717)
 {
     AK::ByteString string { "%PDF-2.11%" };
