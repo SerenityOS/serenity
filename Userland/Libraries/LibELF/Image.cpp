@@ -237,22 +237,9 @@ Image::ProgramHeader Image::program_header(unsigned index) const
 Image::Relocation Image::RelocationSection::relocation(unsigned index) const
 {
     VERIFY(index < relocation_count());
-    auto* rels = reinterpret_cast<Elf_Rel const*>(m_image.raw_data(offset()));
-    return Relocation(m_image, rels[index]);
-}
-
-Optional<Image::RelocationSection> Image::Section::relocations() const
-{
-    StringBuilder builder;
-    builder.append(".rel"sv);
-    builder.append(name());
-
-    auto relocation_section = m_image.lookup_section(builder.string_view());
-    if (!relocation_section.has_value())
-        return {};
-
-    dbgln_if(ELF_IMAGE_DEBUG, "Found relocations for {} in {}", name(), relocation_section.value().name());
-    return static_cast<RelocationSection>(relocation_section.value());
+    unsigned offset_in_section = index * entry_size();
+    auto relocation_address = bit_cast<Elf_Rela*>(m_image.raw_data(offset() + offset_in_section));
+    return Relocation(m_image, *relocation_address, addend_used());
 }
 
 Optional<Image::Section> Image::lookup_section(StringView name) const
