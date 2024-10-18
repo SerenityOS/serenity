@@ -70,7 +70,7 @@ TEST_CASE(empty_file_issue_10702)
     EXPECT(document.is_error());
 }
 
-TEST_CASE(encodig)
+TEST_CASE(encoding)
 {
     auto file = MUST(Core::MappedFile::map("encoding.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
