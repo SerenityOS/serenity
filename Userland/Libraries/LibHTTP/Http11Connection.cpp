@@ -8,6 +8,7 @@
 #include <AK/AsyncStreamTransform.h>
 #include <AK/GenericLexer.h>
 #include <AK/StreamBuffer.h>
+#include <LibCompress/AsyncZlib.h>
 #include <LibHTTP/Http11Connection.h>
 
 namespace HTTP {
@@ -171,11 +172,15 @@ Coroutine<ErrorOr<NonnullOwnPtr<Http11Response>>> Http11Response::create(Badge<H
 
     Optional<size_t> content_length;
     Optional<StringView> transfer_encoding;
+    Optional<StringView> content_encoding;
+
     for (auto const& header : headers) {
         if (header.header.equals_ignoring_ascii_case("Content-Length"sv)) {
             content_length = header.value.to_number<size_t>();
         } else if (header.header.equals_ignoring_ascii_case("Transfer-Encoding"sv)) {
             transfer_encoding = header.value;
+        } else if (header.header.equals_ignoring_ascii_case("Content-Encoding"sv)) {
+            content_encoding = header.value;
         }
     }
 
@@ -192,6 +197,19 @@ Coroutine<ErrorOr<NonnullOwnPtr<Http11Response>>> Http11Response::create(Badge<H
             co_return Error::from_string_literal("'Content-Length' must be provided");
         }
         body = make<AsyncInputStreamSlice>(stream, content_length.value());
+    }
+
+    if (content_encoding.has_value()) {
+        auto encodings = content_encoding.value().split_view(',', SplitBehavior::KeepEmpty | SplitBehavior::KeepTrailingSeparator);
+        for (auto encoding : encodings.in_reverse()) {
+            encoding = encoding.trim_whitespace();
+            if (encoding.equals_ignoring_ascii_case("deflate"sv)) {
+                body = make<Compress::Async::ZlibDecompressor>(body.release_nonnull());
+            } else {
+                body->reset();
+                co_return Error::from_string_literal("Unsupported 'Content-Encoding'");
+            }
+        }
     }
 
     co_return adopt_own(*new (nothrow) Http11Response(body.release_nonnull(), status_code, move(headers)));

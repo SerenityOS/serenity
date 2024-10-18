@@ -1,4 +1,6 @@
 set(TEST_SOURCES
+    TestAsyncDeflate.cpp
+    TestAsyncZlib.cpp
     TestBrotli.cpp
     TestDeflate.cpp
     TestGzip.cpp

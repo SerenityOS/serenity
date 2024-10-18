@@ -8,6 +8,7 @@
 
 #include <AK/Coroutine.h>
 #include <AK/Error.h>
+#include <AK/FixedArray.h>
 
 namespace AK {
 
@@ -124,8 +125,113 @@ private:
     u8* m_data { nullptr };
 };
 
+class StreamSeekbackBuffer {
+public:
+    StreamSeekbackBuffer(size_t max_seekback_distance, size_t max_back_reference_length, double optimization_factor = 2.0)
+        : m_seekback(MUST(FixedArray<u8>::create((max_seekback_distance + max_back_reference_length) * optimization_factor)))
+        , m_max_seekback_distance(max_seekback_distance)
+    {
+    }
+
+    ReadonlyBytes data() const
+    {
+        return m_buffer.data();
+    }
+
+    void dequeue(size_t bytes)
+    {
+        m_buffer.dequeue(bytes);
+    }
+
+    void write(ReadonlyBytes bytes)
+    {
+        m_buffer.append(bytes);
+        write_to_seekback(bytes);
+    }
+
+    void write(u8 byte)
+    {
+        m_buffer.append(byte);
+        write_to_seekback(byte);
+    }
+
+    void copy_from_seekback(size_t distance, size_t length)
+    {
+        VERIFY(distance <= max_seekback_distance());
+
+        auto buffer_bytes = m_buffer.get_bytes_for_writing(length);
+
+        while (length > 0) {
+            auto write = [&](ReadonlyBytes bytes) {
+                write_to_seekback(bytes, false);
+                buffer_bytes = buffer_bytes.slice(bytes.copy_to(buffer_bytes));
+            };
+
+            size_t to_copy = min(distance, length);
+            if (distance <= m_head) {
+                write(m_seekback.span().slice(m_head - distance, to_copy));
+            } else if (distance - to_copy > m_head) {
+                write(m_seekback.span().slice(m_seekback.size() - (distance - m_head), to_copy));
+            } else {
+                auto first_part = m_seekback.span().slice_from_end(distance - m_head);
+                auto second_part = m_seekback.span().slice(0, to_copy - distance + m_head);
+                write(first_part);
+                write(second_part);
+            }
+
+            distance += to_copy;
+            length -= to_copy;
+        }
+
+        VERIFY(buffer_bytes.is_empty());
+    }
+
+    size_t max_seekback_distance() const
+    {
+        return min(m_max_seekback_distance, m_seekback_length);
+    }
+
+private:
+    void write_to_seekback(ReadonlyBytes bytes, bool may_discard_prefix = true)
+    {
+        if (may_discard_prefix && bytes.size() > m_max_seekback_distance) {
+            bytes = bytes.slice_from_end(m_max_seekback_distance);
+            m_head = 0;
+        }
+
+        if (m_head + bytes.size() > m_seekback.size()) {
+            size_t first_part_size = m_seekback.size() - m_head;
+            size_t new_head = bytes.size() - first_part_size;
+
+            memcpy(m_seekback.data() + m_head, bytes.data(), first_part_size);
+            memcpy(m_seekback.data(), bytes.slice(first_part_size).data(), new_head);
+            m_head = new_head;
+        } else {
+            memcpy(m_seekback.data() + m_head, bytes.data(), bytes.size());
+            m_head += bytes.size();
+            if (m_head == m_seekback.size())
+                m_head = 0;
+        }
+        m_seekback_length += bytes.size();
+    }
+
+    void write_to_seekback(u8 byte)
+    {
+        m_seekback[m_head] = byte;
+        m_head = (m_head + 1 == m_seekback.size() ? 0 : m_head + 1);
+        ++m_seekback_length;
+    }
+
+    StreamBuffer m_buffer;
+    FixedArray<u8> m_seekback;
+    size_t m_head { 0 };
+    u64 m_seekback_length { 0 };
+    size_t m_max_seekback_distance { 0 };
+};
+
 }
 
 #ifdef USING_AK_GLOBALLY
 using AK::StreamBuffer;
+using AK::StreamSeekbackBuffer;
 #endif
