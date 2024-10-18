@@ -28,10 +28,10 @@ ErrorOr<void> SysFSNetworkTCPStats::try_generate(KBufferBuilder& builder)
     auto array = TRY(JsonArraySerializer<>::try_create(builder));
     TRY(TCPSocket::try_for_each([&array](auto& socket) -> ErrorOr<void> {
         auto obj = TRY(array.add_object());
-        auto local_address = TRY(socket.local_address().to_string());
+        auto local_address = TRY(KString::formatted("{}", socket.local_address()));
         TRY(obj.add("local_address"sv, local_address->view()));
         TRY(obj.add("local_port"sv, socket.local_port()));
-        auto peer_address = TRY(socket.peer_address().to_string());
+        auto peer_address = TRY(KString::formatted("{}", socket.peer_address()));
         TRY(obj.add("peer_address"sv, peer_address->view()));
         TRY(obj.add("peer_port"sv, socket.peer_port()));
         TRY(obj.add("state"sv, TCPSocket::to_string(socket.state())));

@@ -54,7 +54,7 @@ write_cmake_config("kernel_debug_gen") {
     "ISO9660_DEBUG=",
     "ISO9660_VERY_DEBUG=",
     "IPV4_DEBUG=",
-    "IPV4_SOCKET_DEBUG=",
+    "IP_SOCKET_DEBUG=",
     "IRQ_DEBUG=",
     "KEYBOARD_DEBUG=",
     "KMALLOC_DEBUG=",

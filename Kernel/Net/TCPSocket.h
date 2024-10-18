@@ -19,11 +19,11 @@
 
 namespace Kernel {
 
-class TCPSocket final : public IPv4Socket {
+class TCPSocket final : public IPSocket {
 public:
     static void for_each(Function<void(TCPSocket const&)>);
     static ErrorOr<void> try_for_each(Function<ErrorOr<void>(TCPSocket const&)>);
-    static ErrorOr<NonnullRefPtr<TCPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
+    static ErrorOr<NonnullRefPtr<TCPSocket>> try_create(int protocol, NonnullOwnPtr<IPSocketDelegate> delegate, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~TCPSocket() override;
 
     virtual bool unref() const override;
@@ -180,7 +180,7 @@ protected:
     void set_direction(Direction direction) { m_direction = direction; }
 
 private:
-    explicit TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer, NonnullRefPtr<Timer> timer);
+    explicit TCPSocket(int protocol, NonnullOwnPtr<IPSocketDelegate> delegate, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer, NonnullRefPtr<Timer> timer);
     virtual StringView class_name() const override { return "TCPSocket"sv; }
 
     virtual void shut_down_for_writing() override;

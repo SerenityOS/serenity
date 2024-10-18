@@ -45,7 +45,9 @@ bool TCPSocket::unref() const
     bool did_hit_zero = sockets_by_tuple().with_exclusive([&](auto& table) {
         if (deref_base())
             return false;
-        table.remove(tuple());
+        // TODO: Support IPv6
+        if (ip_version() == IPVersion::IPv4)
+            table.remove(ipv4_tuple());
         const_cast<TCPSocket&>(*this).revoke_weak_ptrs();
         return true;
     });
@@ -104,9 +106,11 @@ void TCPSocket::do_state_closed()
     if (m_originator)
         release_to_originator();
 
-    closing_sockets().with_exclusive([&](auto& table) {
-        table.remove(tuple());
-    });
+    if (ip_version() == IPVersion::IPv4) {
+        closing_sockets().with_exclusive([&](auto& table) {
+            table.remove(ipv4_tuple());
+        });
+    }
 }
 
 static Singleton<MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>> s_socket_closing;
@@ -151,17 +155,18 @@ ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create_client(IPv4Address const
             return EEXIST;
 
         auto receive_buffer = TRY(try_create_receive_buffer());
-        auto client = TRY(TCPSocket::try_create(protocol(), move(receive_buffer)));
+        auto client = TRY(TCPSocket::try_create(protocol(), TRY(adopt_nonnull_own_or_enomem(new (nothrow) IPv4Socket)), move(receive_buffer)));
 
         client->set_setup_state(SetupState::InProgress);
-        client->set_local_address(new_local_address);
+        TRY(client->m_delegate->set_local_address(new_local_address));
         client->set_local_port(new_local_port);
-        client->set_peer_address(new_peer_address);
+        TRY(client->m_delegate->set_peer_address(new_peer_address));
         client->set_peer_port(new_peer_port);
         client->set_bound();
         client->set_direction(Direction::Incoming);
         client->set_originator(*this);
 
+        dbgln("TCPSocket({}) setting pending {} for accept in {}", this, tuple.to_string(), client->m_delegate->peer_address());
         m_pending_release_for_accept.set(tuple, client);
         client->m_registered_socket_tuple = tuple;
         table.set(tuple, client);
@@ -179,14 +184,19 @@ void TCPSocket::release_to_originator()
 
 void TCPSocket::release_for_accept(NonnullRefPtr<TCPSocket> socket)
 {
-    VERIFY(m_pending_release_for_accept.contains(socket->tuple()));
-    m_pending_release_for_accept.remove(socket->tuple());
+    // TODO: Support IPv6
+    if (ip_version() == IPVersion::IPv4) {
+        auto tuple = socket->ipv4_tuple();
+        dbgln("TCPSocket({}) got tuple {}", this, tuple.to_string());
+        VERIFY(m_pending_release_for_accept.contains(tuple));
+        m_pending_release_for_accept.remove(tuple);
+    }
     // FIXME: Should we observe this error somehow?
     [[maybe_unused]] auto rc = queue_connection_from(move(socket));
 }
 
-TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer, NonnullRefPtr<Timer> timer)
-    : IPv4Socket(SOCK_STREAM, protocol, move(receive_buffer), move(scratch_buffer))
+TCPSocket::TCPSocket(int protocol, NonnullOwnPtr<IPSocketDelegate> delegate, NonnullOwnPtr<DoubleBuffer> receive_buffer, NonnullOwnPtr<KBuffer> scratch_buffer, NonnullRefPtr<Timer> timer)
+    : IPSocket(SOCK_STREAM, protocol, move(delegate), move(receive_buffer), move(scratch_buffer))
     , m_last_ack_sent_time(TimeManagement::the().monotonic_time())
     , m_last_retransmit_time(TimeManagement::the().monotonic_time())
     , m_timer(timer)
@@ -200,12 +210,12 @@ TCPSocket::~TCPSocket()
     dbgln_if(TCP_SOCKET_DEBUG, "~TCPSocket in state {}", to_string(state()));
 }
 
-ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
+ErrorOr<NonnullRefPtr<TCPSocket>> TCPSocket::try_create(int protocol, NonnullOwnPtr<IPSocketDelegate> delegate, NonnullOwnPtr<DoubleBuffer> receive_buffer)
 {
     // Note: Scratch buffer is only used for SOCK_STREAM sockets.
     auto scratch_buffer = TRY(KBuffer::try_create_with_size("TCPSocket: Scratch buffer"sv, 65536));
     auto timer = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Timer));
-    return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(receive_buffer), move(scratch_buffer), timer));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) TCPSocket(protocol, move(delegate), move(receive_buffer), move(scratch_buffer), timer));
 }
 
 ErrorOr<size_t> TCPSocket::protocol_size(ReadonlyBytes raw_ipv4_packet)
@@ -229,7 +239,10 @@ ErrorOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserO
 ErrorOr<size_t> TCPSocket::protocol_send(UserOrKernelBuffer const& data, size_t data_length)
 {
     auto adapter = bound_interface().with([](auto& bound_device) -> RefPtr<NetworkAdapter> { return bound_device; });
-    RoutingDecision routing_decision = route_to(peer_address(), local_address(), adapter);
+    RoutingDecision routing_decision;
+    // TODO: Make this IPv6-capable once the routing supports it.
+    if (ip_version() == IPVersion::IPv4)
+        routing_decision = route_to(peer_address().as_v4(), local_address().as_v4(), adapter);
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
     size_t mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
@@ -260,8 +273,13 @@ ErrorOr<void> TCPSocket::send_ack(bool allow_duplicate)
 
 ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, UserOrKernelBuffer const* payload, size_t payload_size, RoutingDecision* user_routing_decision)
 {
+    // TODO: Support IPv6.
+    if (ip_version() != IPVersion::IPv4)
+        return set_so_error(ENOTSUP);
+
     auto adapter = bound_interface().with([](auto& bound_device) -> RefPtr<NetworkAdapter> { return bound_device; });
-    RoutingDecision routing_decision = user_routing_decision ? *user_routing_decision : route_to(peer_address(), local_address(), adapter);
+    RoutingDecision routing_decision;
+    routing_decision = user_routing_decision ? *user_routing_decision : route_to(peer_address().as_v4(), local_address().as_v4(), adapter);
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
 
@@ -275,8 +293,8 @@ ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, UserOrKernelBuffer const* pa
     auto packet = routing_decision.adapter->acquire_packet_buffer(buffer_size);
     if (!packet)
         return set_so_error(ENOMEM);
-    routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(),
-        routing_decision.next_hop, peer_address(), TransportProtocol::TCP,
+    routing_decision.adapter->fill_in_ipv4_header(*packet, local_address().as_v4(),
+        routing_decision.next_hop, peer_address().as_v4(), TransportProtocol::TCP,
         buffer_size - ipv4_payload_offset, type_of_service(), ttl());
     memset(packet->buffer->data() + ipv4_payload_offset, 0, sizeof(TCPPacket));
     auto& tcp_packet = *(TCPPacket*)(packet->buffer->data() + ipv4_payload_offset);
@@ -325,7 +343,7 @@ ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, UserOrKernelBuffer const* pa
     if ((options_size % 4) != 0)
         *next_option = to_underlying(TCPOptionKind::End);
 
-    tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
+    tcp_packet.set_checksum(compute_tcp_checksum(local_address().as_v4(), peer_address().as_v4(), tcp_packet, payload_size));
 
     bool expect_ack { tcp_packet.has_syn() || payload_size > 0 };
     if (expect_ack) {
@@ -466,7 +484,7 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(IPv4Address const& source, I
 ErrorOr<void> TCPSocket::setsockopt(int level, int option, Userspace<void const*> user_value, socklen_t user_value_size)
 {
     if (level != IPPROTO_TCP)
-        return IPv4Socket::setsockopt(level, option, user_value, user_value_size);
+        return IPSocket::setsockopt(level, option, user_value, user_value_size);
 
     MutexLocker locker(mutex());
 
@@ -489,7 +507,7 @@ ErrorOr<void> TCPSocket::setsockopt(int level, int option, Userspace<void const*
 ErrorOr<void> TCPSocket::getsockopt(OpenFileDescription& description, int level, int option, Userspace<void*> value, Userspace<socklen_t*> value_size)
 {
     if (level != IPPROTO_TCP)
-        return IPv4Socket::getsockopt(description, level, option, value, value_size);
+        return IPSocket::getsockopt(description, level, option, value, value_size);
 
     MutexLocker locker(mutex());
 
@@ -513,11 +531,15 @@ ErrorOr<void> TCPSocket::getsockopt(OpenFileDescription& description, int level,
 
 ErrorOr<void> TCPSocket::protocol_bind()
 {
+    // TODO: Support IPv6.
+    if (ip_version() != IPVersion::IPv4)
+        return set_so_error(ENOTSUP);
+
     dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket::protocol_bind(), local_port() is {}", local_port());
     // Check that we do have the address we're trying to bind to.
     TRY(m_adapter.with([this](auto& adapter) -> ErrorOr<void> {
         if (has_specific_local_address() && !adapter) {
-            adapter = NetworkingManagement::the().from_ipv4_address(local_address());
+            adapter = NetworkingManagement::the().from_ipv4_address(local_address().as_v4());
             if (!adapter)
                 return set_so_error(EADDRNOTAVAIL);
         }
@@ -534,7 +556,7 @@ ErrorOr<void> TCPSocket::protocol_bind()
         return sockets_by_tuple().with_exclusive([&](auto& table) -> ErrorOr<void> {
             u16 port = first_scan_port;
             while (true) {
-                IPv4SocketTuple proposed_tuple(local_address(), port, peer_address(), peer_port());
+                IPv4SocketTuple proposed_tuple(local_address().as_v4(), port, peer_address().as_v4(), peer_port());
 
                 auto it = table.find(proposed_tuple);
                 if (it == table.end()) {
@@ -555,9 +577,9 @@ ErrorOr<void> TCPSocket::protocol_bind()
     } else {
         // Verify that the user-supplied port is not already used by someone else.
         bool ok = sockets_by_tuple().with_exclusive([&](auto& table) -> bool {
-            if (table.contains(tuple()))
+            if (table.contains(ipv4_tuple()))
                 return false;
-            auto socket_tuple = tuple();
+            auto socket_tuple = ipv4_tuple();
             m_registered_socket_tuple = socket_tuple;
             table.set(socket_tuple, this);
             return true;
@@ -580,27 +602,28 @@ ErrorOr<void> TCPSocket::protocol_connect(OpenFileDescription& description)
 {
     MutexLocker locker(mutex());
 
-    auto routing_decision = route_to(peer_address(), local_address());
+    auto routing_decision = route_to(peer_address().as_v4(), local_address().as_v4());
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
     if (!has_specific_local_address())
-        set_local_address(routing_decision.adapter->ipv4_address());
+        TRY(m_delegate->set_local_address(routing_decision.adapter->ipv4_address()));
 
     TRY(ensure_bound());
-    if (m_registered_socket_tuple.has_value() && m_registered_socket_tuple != tuple()) {
+    auto socket_tuple = ipv4_tuple();
+    if (m_registered_socket_tuple.has_value() && m_registered_socket_tuple != socket_tuple) {
         // If the socket was manually bound (using bind(2)) instead of implicitly using connect,
         // it will already be registered in the TCPSocket sockets_by_tuple table, under the previous
         // socket tuple. We replace the entry in the table to ensure it is also properly removed on
         // socket deletion, to prevent a dangling reference.
-        TRY(sockets_by_tuple().with_exclusive([this](auto& table) -> ErrorOr<void> {
+        TRY(sockets_by_tuple().with_exclusive([this, &socket_tuple](auto& table) -> ErrorOr<void> {
             auto removed = table.remove(*m_registered_socket_tuple);
             VERIFY(removed);
-            if (table.contains(tuple()))
+            if (table.contains(socket_tuple))
                 return set_so_error(EADDRINUSE);
-            table.set(tuple(), this);
+            table.set(socket_tuple, this);
             return {};
         }));
-        m_registered_socket_tuple = tuple();
+        m_registered_socket_tuple = socket_tuple;
     }
 
     m_sequence_number = get_good_random<u32>();
@@ -664,16 +687,16 @@ void TCPSocket::shut_down_for_writing()
 ErrorOr<void> TCPSocket::close()
 {
     MutexLocker locker(mutex());
-    auto result = IPv4Socket::close();
+    auto result = IPSocket::close();
     if (state() == State::CloseWait) {
         dbgln_if(TCP_SOCKET_DEBUG, " Sending FIN from CloseWait and moving into LastAck");
         [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
         set_state(State::LastAck);
     }
 
-    if (state() != State::Closed && state() != State::Listen)
+    if (state() != State::Closed && state() != State::Listen && ip_version() == IPVersion::IPv4)
         closing_sockets().with_exclusive([&](auto& table) {
-            table.set(tuple(), *this);
+            table.set(ipv4_tuple(), *this);
         });
     return result;
 }
@@ -725,7 +748,7 @@ void TCPSocket::retransmit_packets()
     }
 
     auto adapter = bound_interface().with([](auto& bound_device) -> RefPtr<NetworkAdapter> { return bound_device; });
-    auto routing_decision = route_to(peer_address(), local_address(), adapter);
+    auto routing_decision = route_to(peer_address().as_v4(), local_address().as_v4(), adapter);
     if (routing_decision.is_zero())
         return;
 
@@ -758,7 +781,7 @@ void TCPSocket::retransmit_packets()
             auto packet_buffer = packet.buffer->bytes();
 
             routing_decision.adapter->fill_in_ipv4_header(*packet.buffer,
-                local_address(), routing_decision.next_hop, peer_address(),
+                local_address().as_v4(), routing_decision.next_hop, peer_address().as_v4(),
                 TransportProtocol::TCP, packet_buffer.size() - ipv4_payload_offset, type_of_service(), ttl());
             routing_decision.adapter->send_packet(packet_buffer);
             m_packets_out++;
@@ -769,7 +792,7 @@ void TCPSocket::retransmit_packets()
 
 bool TCPSocket::can_write(OpenFileDescription const& file_description, u64 size) const
 {
-    if (!IPv4Socket::can_write(file_description, size))
+    if (!IPSocket::can_write(file_description, size))
         return false;
 
     if (m_state == State::SynSent || m_state == State::SynReceived)
