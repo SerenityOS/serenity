@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
+#include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Time/HardwareTimer.h>
 
 namespace Kernel::RPi {
@@ -79,7 +80,7 @@ private:
     //^ IRQHandler
     virtual bool handle_irq() override;
 
-    TimerRegisters volatile* m_registers;
+    Memory::TypedMapping<TimerRegisters volatile> m_registers;
     u32 m_interrupt_interval { 0 };
 
     u64 m_main_counter_last_read { 0 };

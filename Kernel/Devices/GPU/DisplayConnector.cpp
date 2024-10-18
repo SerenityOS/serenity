@@ -81,10 +81,10 @@ ErrorOr<void> DisplayConnector::allocate_framebuffer_resources(size_t rounded_si
     if (!m_framebuffer_at_arbitrary_physical_range) {
         VERIFY(m_framebuffer_address.value().page_base() == m_framebuffer_address.value());
         m_shared_framebuffer_vmobject = TRY(Memory::SharedFramebufferVMObject::try_create_for_physical_range(m_framebuffer_address.value(), rounded_size));
-        m_framebuffer_region = TRY(MM.allocate_mmio_kernel_region(m_framebuffer_address.value().page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+        m_framebuffer_region = TRY(MM.allocate_mmio_kernel_region(m_framebuffer_address.value().page_base(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite, m_enable_write_combine_optimization ? Memory::MemoryType::NonCacheable : Memory::MemoryType::IO));
     } else {
         m_shared_framebuffer_vmobject = TRY(Memory::SharedFramebufferVMObject::try_create_at_arbitrary_physical_range(rounded_size));
-        m_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->real_writes_framebuffer_vmobject(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite));
+        m_framebuffer_region = TRY(MM.allocate_kernel_region_with_vmobject(m_shared_framebuffer_vmobject->real_writes_framebuffer_vmobject(), rounded_size, "Framebuffer"sv, Memory::Region::Access::ReadWrite, m_enable_write_combine_optimization ? Memory::MemoryType::NonCacheable : Memory::MemoryType::IO));
     }
 
     m_framebuffer_data = m_framebuffer_region->vaddr().as_ptr();
@@ -134,9 +134,6 @@ ErrorOr<void> DisplayConnector::after_inserting()
     clean_symlink_to_device_identifier_directory.disarm();
 
     GraphicsManagement::the().attach_new_display_connector({}, *this);
-    if (m_enable_write_combine_optimization) {
-        [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
-    }
     after_inserting_add_to_device_management();
     return {};
 }

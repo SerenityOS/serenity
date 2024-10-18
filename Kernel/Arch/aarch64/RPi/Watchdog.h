@@ -6,19 +6,20 @@
 
 #pragma once
 
+#include <Kernel/Memory/TypedMapping.h>
+
 namespace Kernel::RPi {
 
 struct WatchdogRegisters;
 
 class Watchdog {
 public:
+    Watchdog();
     static Watchdog& the();
 
     void system_shutdown();
 
 private:
-    Watchdog();
-
-    WatchdogRegisters volatile* m_registers;
+    Memory::TypedMapping<WatchdogRegisters volatile> m_registers;
 };
 }

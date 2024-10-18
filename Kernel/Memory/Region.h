@@ -15,6 +15,7 @@
 #include <Kernel/Library/KString.h>
 #include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Locking/LockRank.h>
+#include <Kernel/Memory/MemoryType.h>
 #include <Kernel/Memory/PageFaultResponse.h>
 #include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/Sections.h>
@@ -50,14 +51,9 @@ public:
         ReadWriteExecute = Read | Write | Execute,
     };
 
-    enum class Cacheable {
-        No = 0,
-        Yes,
-    };
-
-    static ErrorOr<NonnullOwnPtr<Region>> try_create_user_accessible(VirtualRange const&, NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
+    static ErrorOr<NonnullOwnPtr<Region>> try_create_user_accessible(VirtualRange const&, NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, MemoryType, bool shared);
     static ErrorOr<NonnullOwnPtr<Region>> create_unbacked();
-    static ErrorOr<NonnullOwnPtr<Region>> create_unplaced(NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes, bool shared = false);
+    static ErrorOr<NonnullOwnPtr<Region>> create_unplaced(NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, MemoryType = MemoryType::Normal, bool shared = false);
 
     ~Region();
 
@@ -72,7 +68,7 @@ public:
     [[nodiscard]] bool has_been_writable() const { return m_has_been_writable.was_set(); }
     [[nodiscard]] bool has_been_executable() const { return m_has_been_executable.was_set(); }
 
-    [[nodiscard]] bool is_cacheable() const { return m_cacheable; }
+    [[nodiscard]] MemoryType memory_type() const { return m_memory_type; }
     [[nodiscard]] StringView name() const { return m_name ? m_name->view() : StringView {}; }
     [[nodiscard]] OwnPtr<KString> take_name() { return move(m_name); }
     [[nodiscard]] Region::Access access() const { return static_cast<Region::Access>(m_access); }
@@ -103,9 +99,6 @@ public:
 
     [[nodiscard]] bool is_initially_loaded_executable_segment() const { return m_initially_loaded_executable_segment.was_set(); }
     void set_initially_loaded_executable_segment() { m_initially_loaded_executable_segment.set(); }
-
-    [[nodiscard]] bool is_write_combine() const { return m_write_combine; }
-    ErrorOr<void> set_write_combine(bool);
 
     [[nodiscard]] bool is_user() const { return !is_kernel(); }
     [[nodiscard]] bool is_kernel() const { return vaddr().get() < USER_RANGE_BASE || vaddr().get() >= kernel_mapping_base; }
@@ -232,8 +225,8 @@ public:
 
 private:
     Region();
-    Region(NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
-    Region(VirtualRange const&, NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
+    Region(NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, MemoryType, bool shared);
+    Region(VirtualRange const&, NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, MemoryType, bool shared);
 
     [[nodiscard]] bool remap_vmobject_page(size_t page_index, NonnullRefPtr<PhysicalRAMPage>);
 
@@ -263,13 +256,13 @@ private:
     Atomic<u32> m_in_progress_page_faults;
     u8 m_access { Region::None };
     bool m_shared : 1 { false };
-    bool m_cacheable : 1 { false };
     bool m_stack : 1 { false };
     bool m_mmap : 1 { false };
     bool m_syscall_region : 1 { false };
-    bool m_write_combine : 1 { false };
     bool m_mmapped_from_readable : 1 { false };
     bool m_mmapped_from_writable : 1 { false };
+
+    MemoryType m_memory_type;
 
     SetOnce m_immutable;
     SetOnce m_initially_loaded_executable_segment;

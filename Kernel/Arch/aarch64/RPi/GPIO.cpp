@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Singleton.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/RPi/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
@@ -38,13 +39,13 @@ struct GPIOControlRegisters {
 };
 
 GPIO::GPIO()
-    : m_registers(MMIO::the().peripheral<GPIOControlRegisters>(0x20'0000))
+    : m_registers(MMIO::the().peripheral<GPIOControlRegisters>(0x20'0000).release_value_but_fixme_should_propagate_errors())
 {
 }
 
 GPIO& GPIO::the()
 {
-    static GPIO instance;
+    static Singleton<GPIO> instance;
     return instance;
 }
 

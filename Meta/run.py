@@ -713,6 +713,7 @@ def set_up_machine_devices(config: Configuration):
         config.ram_size = "1G"  # The raspi3b machine only accepts 1G as a valid RAM size.
         config.vga_type = None
         config.display_device = None
+        config.kernel_cmdline.append("serial_debug")
         if config.machine_type != MachineType.CI:
             # FIXME: Windows QEMU crashes when we set the same display as usual here.
             config.display_backend = None

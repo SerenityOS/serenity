@@ -16,6 +16,7 @@
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
+#include <Kernel/Memory/MemoryType.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/PhysicalRAMPage.h>
 
@@ -40,6 +41,8 @@ constexpr u32 INNER_SHAREABLE = (3 << 8);
 // these index into the MAIR attribute table
 constexpr u32 NORMAL_MEMORY = (0 << 2);
 constexpr u32 DEVICE_MEMORY = (1 << 2);
+constexpr u32 NORMAL_NONCACHEABLE_MEMORY = (2 << 2);
+constexpr u32 ATTR_INDX_MASK = (0b111 << 2);
 
 constexpr u32 ACCESS_PERMISSION_EL0 = (1 << 6);
 constexpr u32 ACCESS_PERMISSION_READONLY = (1 << 7);
@@ -79,11 +82,7 @@ public:
     bool is_writable() const { TODO_AARCH64(); }
     void set_writable(bool) { }
 
-    bool is_write_through() const { TODO_AARCH64(); }
-    void set_write_through(bool) { }
-
-    bool is_cache_disabled() const { TODO_AARCH64(); }
-    void set_cache_disabled(bool) { }
+    void set_memory_type(MemoryType) { }
 
     bool is_global() const { TODO_AARCH64(); }
     void set_global(bool) { }
@@ -132,20 +131,22 @@ public:
     bool is_writable() const { return !((raw() & ACCESS_PERMISSION_READONLY) == ACCESS_PERMISSION_READONLY); }
     void set_writable(bool b) { set_bit(ACCESS_PERMISSION_READONLY, !b); }
 
-    bool is_write_through() const { TODO_AARCH64(); }
-    void set_write_through(bool) { }
-
-    bool is_cache_disabled() const { TODO_AARCH64(); }
-    void set_cache_disabled(bool) { }
+    void set_memory_type(MemoryType t)
+    {
+        m_raw &= ~ATTR_INDX_MASK;
+        if (t == MemoryType::Normal)
+            m_raw |= NORMAL_MEMORY;
+        else if (t == MemoryType::NonCacheable)
+            m_raw |= NORMAL_NONCACHEABLE_MEMORY;
+        else if (t == MemoryType::IO)
+            m_raw |= DEVICE_MEMORY;
+    }
 
     bool is_global() const { TODO_AARCH64(); }
     void set_global(bool) { }
 
     bool is_execute_disabled() const { TODO_AARCH64(); }
     void set_execute_disabled(bool) { }
-
-    bool is_pat() const { TODO_AARCH64(); }
-    void set_pat(bool) { }
 
     bool is_null() const { return m_raw == 0; }
     void clear() { m_raw = 0; }
