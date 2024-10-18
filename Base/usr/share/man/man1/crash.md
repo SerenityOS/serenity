@@ -57,3 +57,7 @@ $ crash -F
 Testing: "Write to freed memory"
 Shell: Job 1 (crash -F) Segmentation violation
 ```
+
+## See Also
+
+-   [`dump_backtrace`(2)](help://man/2/dump_backtrace)
