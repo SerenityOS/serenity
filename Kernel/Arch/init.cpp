@@ -135,61 +135,24 @@ ALWAYS_INLINE static Processor& bsp_processor()
 // Once multi-tasking is ready, we spawn a new thread that starts in the
 // init_stage2() function. Initialization continues there.
 
-extern "C" {
-READONLY_AFTER_INIT PhysicalAddress start_of_prekernel_image;
-READONLY_AFTER_INIT PhysicalAddress end_of_prekernel_image;
-READONLY_AFTER_INIT size_t physical_to_virtual_offset;
-READONLY_AFTER_INIT FlatPtr kernel_mapping_base;
-READONLY_AFTER_INIT FlatPtr kernel_load_base;
-READONLY_AFTER_INIT PhysicalAddress boot_pml4t;
-READONLY_AFTER_INIT PhysicalAddress boot_pdpt;
-READONLY_AFTER_INIT PhysicalAddress boot_pd0;
-READONLY_AFTER_INIT PhysicalAddress boot_pd_kernel;
-READONLY_AFTER_INIT Memory::PageTableEntry* boot_pd_kernel_pt1023;
-READONLY_AFTER_INIT StringView kernel_cmdline;
-READONLY_AFTER_INIT u32 multiboot_flags;
-READONLY_AFTER_INIT multiboot_memory_map_t* multiboot_memory_map;
-READONLY_AFTER_INIT size_t multiboot_memory_map_count;
-READONLY_AFTER_INIT PhysicalAddress multiboot_framebuffer_addr;
-READONLY_AFTER_INIT u32 multiboot_framebuffer_pitch;
-READONLY_AFTER_INIT u32 multiboot_framebuffer_width;
-READONLY_AFTER_INIT u32 multiboot_framebuffer_height;
-READONLY_AFTER_INIT u8 multiboot_framebuffer_bpp;
-READONLY_AFTER_INIT u8 multiboot_framebuffer_type;
-READONLY_AFTER_INIT PhysicalAddress multiboot_module_physical_ptr;
-READONLY_AFTER_INIT size_t multiboot_module_length;
-}
-
 Atomic<Graphics::Console*> g_boot_console;
+
+#if ARCH(X86_64)
+extern "C" u32 gdt64ptr;
+extern "C" u16 code64_sel;
+#endif
+
+READONLY_AFTER_INIT static StringView s_kernel_cmdline;
+
+READONLY_AFTER_INIT constinit BootInfo g_boot_info;
 
 extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_unused]] BootInfo const& boot_info)
 {
 #if ARCH(X86_64)
-    start_of_prekernel_image = PhysicalAddress { boot_info.start_of_prekernel_image };
-    end_of_prekernel_image = PhysicalAddress { boot_info.end_of_prekernel_image };
-    physical_to_virtual_offset = boot_info.physical_to_virtual_offset;
-    kernel_mapping_base = boot_info.kernel_mapping_base;
-    kernel_load_base = boot_info.kernel_load_base;
-    gdt64ptr = boot_info.gdt64ptr;
-    code64_sel = boot_info.code64_sel;
-    boot_pml4t = PhysicalAddress { boot_info.boot_pml4t };
-    boot_pdpt = PhysicalAddress { boot_info.boot_pdpt };
-    boot_pd0 = PhysicalAddress { boot_info.boot_pd0 };
-    boot_pd_kernel = PhysicalAddress { boot_info.boot_pd_kernel };
-    boot_pd_kernel_pt1023 = (Memory::PageTableEntry*)boot_info.boot_pd_kernel_pt1023;
-    char const* cmdline = (char const*)boot_info.kernel_cmdline;
-    kernel_cmdline = StringView { cmdline, strlen(cmdline) };
-    multiboot_flags = boot_info.multiboot_flags;
-    multiboot_memory_map = (multiboot_memory_map_t*)boot_info.multiboot_memory_map;
-    multiboot_memory_map_count = boot_info.multiboot_memory_map_count;
-    multiboot_module_physical_ptr = PhysicalAddress { boot_info.multiboot_module_physical_ptr };
-    multiboot_module_length = boot_info.multiboot_module_length;
-    multiboot_framebuffer_addr = PhysicalAddress { boot_info.multiboot_framebuffer_addr };
-    multiboot_framebuffer_pitch = boot_info.multiboot_framebuffer_pitch;
-    multiboot_framebuffer_width = boot_info.multiboot_framebuffer_width;
-    multiboot_framebuffer_height = boot_info.multiboot_framebuffer_height;
-    multiboot_framebuffer_bpp = boot_info.multiboot_framebuffer_bpp;
-    multiboot_framebuffer_type = boot_info.multiboot_framebuffer_type;
+    g_boot_info = boot_info;
+    gdt64ptr = boot_info.arch_specific.gdt64ptr;
+    code64_sel = boot_info.arch_specific.code64_sel;
+    s_kernel_cmdline = boot_info.cmdline;
 #elif ARCH(AARCH64) || ARCH(RISCV64)
     if (!DeviceTree::verify_fdt())
         // We are too early in the boot process to print anything, so just hang if the FDT is invalid.
@@ -197,23 +160,23 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
 
     auto maybe_command_line = DeviceTree::get_command_line_from_fdt();
     if (maybe_command_line.is_error())
-        kernel_cmdline = "serial_debug"sv;
+        s_kernel_cmdline = "serial_debug"sv;
     else
-        kernel_cmdline = maybe_command_line.value();
+        s_kernel_cmdline = maybe_command_line.value();
 #endif
 
     setup_serial_debug();
 
     // We need to copy the command line before kmalloc is initialized,
     // as it may overwrite parts of multiboot!
-    CommandLine::early_initialize(kernel_cmdline);
+    CommandLine::early_initialize(s_kernel_cmdline);
 
     new (&bsp_processor()) Processor();
     bsp_processor().early_initialize(0);
 
 #if ARCH(RISCV64)
     // We implicitly assume the boot hart is hart 0 above and below
-    VERIFY(boot_info.mhartid == 0);
+    VERIFY(boot_info.arch_specific.boot_hart_id == 0);
 #endif
 
     // Invoke the constructors needed for the kernel heap
@@ -239,8 +202,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     // If the bootloader didn't provide a framebuffer, then set up an initial text console.
     // We do so we can see the output on the screen as soon as possible.
     if (!kernel_command_line().is_early_boot_console_disabled()) {
-        if ((multiboot_flags & MULTIBOOT_INFO_FRAMEBUFFER_INFO) && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
-            g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
+        if (!g_boot_info.boot_framebuffer.paddr.is_null() && g_boot_info.boot_framebuffer.type == BootFramebufferType::BGRx8888) {
+            g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(g_boot_info.boot_framebuffer.paddr, g_boot_info.boot_framebuffer.width, g_boot_info.boot_framebuffer.height, g_boot_info.boot_framebuffer.pitch).value().leak_ref();
         } else {
             dbgln("No early framebuffer console available, initializing dummy console");
             g_boot_console = &try_make_lock_ref_counted<Graphics::BootDummyConsole>().value().leak_ref();
@@ -488,7 +451,7 @@ UNMAP_AFTER_INIT void setup_serial_debug()
     // serial_debug will output all the dbgln() data to COM1 at
     // 8-N-1 57600 baud. this is particularly useful for debugging the boot
     // process on live hardware.
-    if (kernel_cmdline.contains("serial_debug"sv)) {
+    if (s_kernel_cmdline.contains("serial_debug"sv)) {
         set_serial_debug_enabled(true);
     }
 }

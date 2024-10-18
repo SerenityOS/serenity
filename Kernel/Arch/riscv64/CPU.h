@@ -6,13 +6,5 @@
 
 #pragma once
 
-#include <Kernel/Prekernel/Prekernel.h>
-
 #include <AK/Platform.h>
 VALIDATE_IS_RISCV64()
-
-namespace Kernel {
-
-extern BootInfo s_boot_info;
-
-}
