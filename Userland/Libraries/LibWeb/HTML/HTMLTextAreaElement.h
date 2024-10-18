@@ -37,7 +37,7 @@ public:
     }
 
     // ^DOM::EditableTextNodeOwner
-    virtual void did_edit_text_node(Badge<Navigable>) override;
+    virtual void did_edit_text_node(Badge<DOM::Document>) override;
 
     // ^EventTarget
     // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-textarea-element
@@ -83,12 +83,6 @@ public:
     bool check_validity();
     bool report_validity();
     void set_custom_validity(String const& error);
-
-    WebIDL::UnsignedLong selection_start() const;
-    WebIDL::ExceptionOr<void> set_selection_start(WebIDL::UnsignedLong);
-
-    WebIDL::UnsignedLong selection_end() const;
-    WebIDL::ExceptionOr<void> set_selection_end(WebIDL::UnsignedLong);
 
     WebIDL::Long max_length() const;
     WebIDL::ExceptionOr<void> set_max_length(WebIDL::Long);

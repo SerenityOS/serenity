@@ -29,7 +29,7 @@ void FormAssociatedElement::set_form(HTMLFormElement* form)
 bool FormAssociatedElement::enabled() const
 {
     // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-fe-disabled
-    auto const& html_element = const_cast<FormAssociatedElement&>(*this).form_associated_element_to_html_element();
+    auto const& html_element = form_associated_element_to_html_element();
 
     // A form control is disabled if any of the following conditions are met:
     // 1. The element is a button, input, select, textarea, or form-associated custom element, and the disabled attribute is specified on this element (regardless of its value).
@@ -150,6 +150,63 @@ void FormAssociatedElement::reset_form_owner()
         if (form_ancestor)
             set_form(form_ancestor);
     }
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-textarea/input-selectionstart
+WebIDL::UnsignedLong FormAssociatedElement::selection_start() const
+{
+    // 1. If this element is an input element, and selectionStart does not apply to this element, return null.
+    // NOTE: This is done by HTMLInputElement before calling this function
+
+    // 2. If there is no selection, return the code unit offset within the relevant value to the character that
+    //    immediately follows the text entry cursor.
+    if (auto cursor = form_associated_element_to_html_element().document().cursor_position())
+        return cursor->offset();
+
+    // FIXME: 3. Return the code unit offset within the relevant value to the character that immediately follows the start of
+    //           the selection.
+    return 0;
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#textFieldSelection:dom-textarea/input-selectionstart-2
+WebIDL::ExceptionOr<void> FormAssociatedElement::set_selection_start(Optional<WebIDL::UnsignedLong> const&)
+{
+    // 1. If this element is an input element, and selectionStart does not apply to this element, throw an
+    //    "InvalidStateError" DOMException.
+    // NOTE: This is done by HTMLInputElement before calling this function
+
+    // FIXME: 2. Let end be the value of this element's selectionEnd attribute.
+    // FIXME: 3. If end is less than the given value, set end to the given value.
+    // FIXME: 4. Set the selection range with the given value, end, and the value of this element's selectionDirection attribute.
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-textarea/input-selectionend
+WebIDL::UnsignedLong FormAssociatedElement::selection_end() const
+{
+    // 1. If this element is an input element, and selectionEnd does not apply to this element, return null.
+    // NOTE: This is done by HTMLInputElement before calling this function
+
+    // 2. If there is no selection, return the code unit offset within the relevant value to the character that
+    //    immediately follows the text entry cursor.
+    if (auto cursor = form_associated_element_to_html_element().document().cursor_position())
+        return cursor->offset();
+
+    // FIXME: 3. Return the code unit offset within the relevant value to the character that immediately follows the end of
+    //           the selection.
+    return 0;
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#textFieldSelection:dom-textarea/input-selectionend-3
+WebIDL::ExceptionOr<void> FormAssociatedElement::set_selection_end(Optional<WebIDL::UnsignedLong> const&)
+{
+    // 1. If this element is an input element, and selectionEnd does not apply to this element, throw an
+    //    "InvalidStateError" DOMException.
+    // NOTE: This is done by HTMLInputElement before calling this function
+
+    // FIXME: 2. Set the selection range with the value of this element's selectionStart attribute, the given value, and the
+    //           value of this element's selectionDirection attribute.
+    return {};
 }
 
 }

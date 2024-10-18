@@ -71,11 +71,8 @@ void HTMLTextAreaElement::did_receive_focus()
     if (!m_text_node)
         return;
     m_text_node->invalidate_style();
-    auto navigable = document().navigable();
-    if (!navigable) {
-        return;
-    }
-    navigable->set_cursor_position(DOM::Position::create(realm(), *m_text_node, 0));
+
+    document().set_cursor_position(DOM::Position::create(realm(), *m_text_node, 0));
 }
 
 void HTMLTextAreaElement::did_lose_focus()
@@ -165,8 +162,7 @@ void HTMLTextAreaElement::set_value(String const& value)
             m_text_node->set_data(m_raw_value);
             update_placeholder_visibility();
 
-            if (auto navigable = document().navigable())
-                navigable->set_cursor_position(DOM::Position::create(realm, *m_text_node, m_text_node->data().bytes().size()));
+            document().set_cursor_position(DOM::Position::create(realm, *m_text_node, m_text_node->data().bytes().size()));
         }
     }
 }
@@ -211,63 +207,6 @@ bool HTMLTextAreaElement::report_validity()
 void HTMLTextAreaElement::set_custom_validity(String const& error)
 {
     dbgln("(STUBBED) HTMLTextAreaElement::set_custom_validity(\"{}\"). Called on: {}", error, debug_description());
-}
-
-// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-textarea/input-selectionstart
-WebIDL::UnsignedLong HTMLTextAreaElement::selection_start() const
-{
-    // 1. If this element is an input element, and selectionStart does not apply to this element, return null.
-
-    // 2. If there is no selection, return the code unit offset within the relevant value to the character that
-    //    immediately follows the text entry cursor.
-    if (auto navigable = document().navigable()) {
-        if (auto cursor = navigable->cursor_position())
-            return cursor->offset();
-    }
-
-    // FIXME: 3. Return the code unit offset within the relevant value to the character that immediately follows the start of
-    //           the selection.
-    return 0;
-}
-
-// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#textFieldSelection:dom-textarea/input-selectionstart-2
-WebIDL::ExceptionOr<void> HTMLTextAreaElement::set_selection_start(WebIDL::UnsignedLong)
-{
-    // 1. If this element is an input element, and selectionStart does not apply to this element, throw an
-    //    "InvalidStateError" DOMException.
-
-    // FIXME: 2. Let end be the value of this element's selectionEnd attribute.
-    // FIXME: 3. If end is less than the given value, set end to the given value.
-    // FIXME: 4. Set the selection range with the given value, end, and the value of this element's selectionDirection attribute.
-    return {};
-}
-
-// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-textarea/input-selectionend
-WebIDL::UnsignedLong HTMLTextAreaElement::selection_end() const
-{
-    // 1. If this element is an input element, and selectionEnd does not apply to this element, return null.
-
-    // 2. If there is no selection, return the code unit offset within the relevant value to the character that
-    //    immediately follows the text entry cursor.
-    if (auto navigable = document().navigable()) {
-        if (auto cursor = navigable->cursor_position())
-            return cursor->offset();
-    }
-
-    // FIXME: 3. Return the code unit offset within the relevant value to the character that immediately follows the end of
-    //           the selection.
-    return 0;
-}
-
-// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#textFieldSelection:dom-textarea/input-selectionend-3
-WebIDL::ExceptionOr<void> HTMLTextAreaElement::set_selection_end(WebIDL::UnsignedLong)
-{
-    // 1. If this element is an input element, and selectionEnd does not apply to this element, throw an
-    //    "InvalidStateError" DOMException.
-
-    // FIXME: 2. Set the selection range with the value of this element's selectionStart attribute, the given value, and the
-    //           value of this element's selectionDirection attribute.
-    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-textarea-maxlength
@@ -435,7 +374,7 @@ void HTMLTextAreaElement::form_associated_element_attribute_changed(FlyString co
     }
 }
 
-void HTMLTextAreaElement::did_edit_text_node(Badge<Navigable>)
+void HTMLTextAreaElement::did_edit_text_node(Badge<DOM::Document>)
 {
     VERIFY(m_text_node);
     set_raw_value(m_text_node->data());

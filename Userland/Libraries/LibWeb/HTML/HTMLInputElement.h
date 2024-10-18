@@ -143,7 +143,7 @@ public:
     WebIDL::ExceptionOr<void> show_picker();
 
     // ^DOM::EditableTextNodeOwner
-    virtual void did_edit_text_node(Badge<Navigable>) override;
+    virtual void did_edit_text_node(Badge<DOM::Document>) override;
 
     // ^EventTarget
     // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-input-element
@@ -196,6 +196,13 @@ public:
     bool value_as_number_applies() const;
     bool step_applies() const;
     bool step_up_or_down_applies() const;
+    bool selection_or_range_applies() const;
+
+    WebIDL::ExceptionOr<void> set_selection_start_for_bindings(Optional<WebIDL::UnsignedLong> const&);
+    Optional<WebIDL::UnsignedLong> selection_start_for_bindings() const;
+
+    WebIDL::ExceptionOr<void> set_selection_end_for_bindings(Optional<WebIDL::UnsignedLong> const&);
+    Optional<WebIDL::UnsignedLong> selection_end_for_bindings() const;
 
 private:
     HTMLInputElement(DOM::Document&, DOM::QualifiedName);
