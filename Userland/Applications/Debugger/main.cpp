@@ -15,10 +15,11 @@
 #include <LibCore/System.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibDebug/DebugSession.h>
+#include <LibDisassembly/Architecture.h>
+#include <LibDisassembly/Disassembler.h>
+#include <LibDisassembly/x86/Instruction.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
-#include <LibX86/Disassembler.h>
-#include <LibX86/Instruction.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -79,8 +80,8 @@ static bool handle_disassemble_command(ByteString const& command, FlatPtr first_
             break;
     }
 
-    X86::SimpleInstructionStream stream(code.data(), code.size());
-    X86::Disassembler disassembler(stream);
+    Disassembly::SimpleInstructionStream stream(code.data(), code.size());
+    Disassembly::Disassembler disassembler(stream, Disassembly::host_architecture());
 
     for (size_t i = 0; i < number_of_instructions_to_disassemble; ++i) {
         auto offset = stream.offset();
@@ -88,7 +89,7 @@ static bool handle_disassemble_command(ByteString const& command, FlatPtr first_
         if (!insn.has_value())
             break;
 
-        outln("    {:p} <+{}>:\t{}", offset + first_instruction, offset, insn.value().to_byte_string(offset));
+        outln("    {:p} <+{}>:\t{}", offset + first_instruction, offset, insn.value()->to_byte_string(offset));
     }
 
     return true;

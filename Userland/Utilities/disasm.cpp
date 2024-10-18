@@ -15,10 +15,12 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
+#include <LibDisassembly/Architecture.h>
+#include <LibDisassembly/Disassembler.h>
+#include <LibDisassembly/ELFSymbolProvider.h>
 #include <LibELF/Image.h>
 #include <LibMain/Main.h>
-#include <LibX86/Disassembler.h>
-#include <LibX86/ELFSymbolProvider.h>
+#include <string.h>
 
 struct Symbol {
     size_t value { 0 };
@@ -66,12 +68,16 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     Vector<Symbol> zero_size_symbols;
 
     size_t file_offset = 0;
-    OwnPtr<X86::ELFSymbolProvider> symbol_provider; // nullptr for non-ELF disassembly.
+    OwnPtr<Disassembly::ELFSymbolProvider> symbol_provider; // nullptr for non-ELF disassembly.
     OwnPtr<ELF::Image> elf;
+    auto architecture = Disassembly::host_architecture();
     if (asm_size >= 4 && strncmp(reinterpret_cast<char const*>(asm_data), "\u007fELF", 4) == 0) {
         elf = make<ELF::Image>(asm_data, asm_size);
         if (elf->is_valid()) {
-            symbol_provider = make<X86::ELFSymbolProvider>(*elf);
+            if (auto elf_architecture = Disassembly::architecture_from_elf_machine(elf->machine()); elf_architecture.has_value())
+                architecture = elf_architecture.release_value();
+
+            symbol_provider = make<Disassembly::ELFSymbolProvider>(*elf);
             elf->for_each_section_of_type(SHT_PROGBITS, [&](ELF::Image::Section const& section) {
                 // FIXME: Disassemble all SHT_PROGBITS sections, not just .text.
                 if (section.name() != ".text")
@@ -115,8 +121,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         }
     }
 
-    X86::SimpleInstructionStream stream(asm_data, asm_size);
-    X86::Disassembler disassembler(stream);
+    Disassembly::SimpleInstructionStream stream(asm_data, asm_size);
+    Disassembly::Disassembler disassembler(stream, architecture);
 
     Vector<Symbol>::Iterator current_ranged_symbol = ranged_symbols.begin();
     Vector<Symbol>::Iterator current_zero_size_symbol = zero_size_symbols.begin();
@@ -203,7 +209,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         if (auto instruction_symbols_text = TRY(instruction_symbols.to_string()); !instruction_symbols_text.is_empty())
             out("{}", instruction_symbols_text);
 
-        size_t length = insn.value().length();
+        size_t length = insn.value()->length();
         StringBuilder builder;
         builder.appendff("{:p}  ", virtual_offset);
         for (size_t i = 0; i < 7; i++) {
@@ -213,7 +219,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 builder.append("   "sv);
         }
         builder.append(" "sv);
-        builder.append(insn.value().to_byte_string(virtual_offset, symbol_provider));
+        builder.append(insn.value()->to_byte_string(virtual_offset, *symbol_provider));
         outln("{}", builder.string_view());
 
         for (size_t bytes_printed = 7; bytes_printed < length; bytes_printed += 7) {
