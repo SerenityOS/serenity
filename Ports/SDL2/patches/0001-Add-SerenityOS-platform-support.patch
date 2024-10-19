@@ -43,9 +43,9 @@ Co-Authored-By: sdomi <ja@sdomi.pl>
  src/video/serenity/SDL_serenitymessagebox.h   |  38 +
  src/video/serenity/SDL_serenitymouse.cpp      | 157 +++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
- src/video/serenity/SDL_serenityvideo.cpp      | 657 ++++++++++++++++++
+ src/video/serenity/SDL_serenityvideo.cpp      | 658 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 21 files changed, 1376 insertions(+), 27 deletions(-)
+ 21 files changed, 1377 insertions(+), 27 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -901,10 +901,10 @@ index 0000000000000000000000000000000000000000..039f0361b3d1b248e218ea69495f58e5
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..72ddc99149b8debcb46a03b157a924e12d439512
+index 0000000000000000000000000000000000000000..dff132dec6ac8d139db10dbc4b0a7e56c365275c
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,657 @@
+@@ -0,0 +1,658 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -941,6 +941,7 @@ index 0000000000000000000000000000000000000000..72ddc99149b8debcb46a03b157a924e1
 +}
 +
 +#    include "SDL_serenityevents_c.h"
++#    include "SDL_serenitymessagebox.h"
 +#    include "SDL_serenitymouse.h"
 +#    include "SDL_serenityvideo.h"
 +
@@ -1187,7 +1188,7 @@ index 0000000000000000000000000000000000000000..72ddc99149b8debcb46a03b157a924e1
 +    return device;
 +}
 +
-+VideoBootStrap SERENITYVIDEO_bootstrap = { "serenity", "SDL serenity video driver", SERENITY_CreateDevice };
++VideoBootStrap SERENITYVIDEO_bootstrap = { "serenity", "SDL serenity video driver", SERENITY_CreateDevice, SERENITY_ShowMessageBox };
 +
 +static RefPtr<GUI::Application> g_app;
 +
