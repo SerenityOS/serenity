@@ -189,10 +189,10 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
         for (auto& guide : m_guides) {
             if (guide->orientation() == Guide::Orientation::Horizontal) {
                 int y_coordinate = (int)content_to_frame_position({ 0.0f, guide->offset() }).y();
-                painter.draw_line({ 0, y_coordinate }, { rect().width(), y_coordinate }, Color::Cyan, 1, Gfx::Painter::LineStyle::Dashed, Color::LightGray);
+                painter.draw_line({ 0, y_coordinate }, { rect().width(), y_coordinate }, Color::Cyan, 1, Gfx::LineStyle::Dashed, Color::LightGray);
             } else if (guide->orientation() == Guide::Orientation::Vertical) {
                 int x_coordinate = (int)content_to_frame_position({ guide->offset(), 0.0f }).x();
-                painter.draw_line({ x_coordinate, 0 }, { x_coordinate, rect().height() }, Color::Cyan, 1, Gfx::Painter::LineStyle::Dashed, Color::LightGray);
+                painter.draw_line({ x_coordinate, 0 }, { x_coordinate, rect().height() }, Color::Cyan, 1, Gfx::LineStyle::Dashed, Color::LightGray);
             }
         }
     }

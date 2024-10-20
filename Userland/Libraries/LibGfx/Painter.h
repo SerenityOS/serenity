@@ -50,9 +50,6 @@ public:
     explicit Painter(Gfx::Bitmap&);
     ~Painter() = default;
 
-    // FIXME: Remove this after replacing all uses with Gfx::LineStyle.
-    using LineStyle = ::Gfx::LineStyle;
-
     // FIXME: Remove this after replacing all uses with Gfx::ScalingMode.
     using ScalingMode = ::Gfx::ScalingMode;
 
