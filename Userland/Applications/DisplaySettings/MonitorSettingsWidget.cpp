@@ -112,7 +112,7 @@ ErrorOr<void> MonitorSettingsWidget::create_frame()
     m_screen_combo->set_model(*GUI::ItemListModel<String>::create(m_screens));
     m_screen_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         m_selected_screen_index = index.row();
-        auto result = selected_screen_index_or_resolution_changed();
+        auto result = selected_screen_index_or_resolution_changed(DidScreenIndexChange::Yes);
         if (result.is_error())
             GUI::MessageBox::show_error(window(), "Screen info could not be updated"sv);
     };
@@ -125,7 +125,7 @@ ErrorOr<void> MonitorSettingsWidget::create_frame()
         selected_screen.resolution = m_resolutions.at(index.row());
         // Try to auto re-arrange things if there are overlaps or disconnected screens
         m_screen_layout.normalize();
-        auto result = selected_screen_index_or_resolution_changed();
+        auto result = selected_screen_index_or_resolution_changed(DidScreenIndexChange::No);
         if (result.is_error()) {
             GUI::MessageBox::show_error(window(), "Screen info could not be updated"sv);
             return;
@@ -161,7 +161,7 @@ ErrorOr<void> MonitorSettingsWidget::create_frame()
     m_dpi_label = *find_descendant_of_type_named<GUI::Label>("display_dpi");
 
     m_screen_combo->set_selected_index(m_selected_screen_index);
-    TRY(selected_screen_index_or_resolution_changed());
+    TRY(selected_screen_index_or_resolution_changed(DidScreenIndexChange::Yes));
     return {};
 }
 
@@ -217,14 +217,16 @@ ErrorOr<void> MonitorSettingsWidget::load_current_settings()
 
     if (!m_screen_combo.is_null()) {
         m_screen_combo->set_selected_index(m_selected_screen_index);
-        TRY(selected_screen_index_or_resolution_changed());
+        TRY(selected_screen_index_or_resolution_changed(DidScreenIndexChange::Yes));
     }
     return {};
 }
 
-ErrorOr<void> MonitorSettingsWidget::selected_screen_index_or_resolution_changed()
+ErrorOr<void> MonitorSettingsWidget::selected_screen_index_or_resolution_changed(DidScreenIndexChange screen_index_changed)
 {
-    TRY(create_resolution_list());
+    // Generate new resolution list only when changing monitors
+    if (screen_index_changed == DidScreenIndexChange::Yes)
+        TRY(create_resolution_list());
 
     auto& screen = m_screen_layout.screens[m_selected_screen_index];
 
