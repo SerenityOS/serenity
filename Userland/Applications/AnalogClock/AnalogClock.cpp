@@ -80,7 +80,7 @@ void AnalogClock::draw_hand(GUI::Painter& painter, double angle, double length, 
     hand_fill.line_to(static_cast<Gfx::FloatPoint>(right_wing_point));
     hand_fill.close();
 
-    painter.fill_path(hand_fill, hand_color, Gfx::Painter::WindingRule::Nonzero);
+    painter.fill_path(hand_fill, hand_color, Gfx::WindingRule::Nonzero);
 
     // Draw highlight depending on the angle, this creates a subtle 3d effect.
     // remember the angle value is offset by half pi.

@@ -148,7 +148,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
         path.line_to(A);
         path.close();
 
-        painter.fill_path(path, color, Gfx::Painter::WindingRule::EvenOdd);
+        painter.fill_path(path, color, Gfx::WindingRule::EvenOdd);
     };
 
     for (auto& m : m_board_markings) {
