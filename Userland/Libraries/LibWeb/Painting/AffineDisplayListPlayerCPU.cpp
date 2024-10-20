@@ -45,7 +45,7 @@ void AffineDisplayListPlayerCPU::prepare_clipping(Gfx::IntRect bounding_rect)
     set_target(clip_bounds.top_left(), *m_expensive_clipping_mask);
     Gfx::Path clip_path;
     clip_path.quad(current_stacking_context.clip.quad);
-    aa_painter().fill_path(clip_path, Gfx::Color::Black, Gfx::Painter::WindingRule::EvenOdd);
+    aa_painter().fill_path(clip_path, Gfx::Color::Black, Gfx::WindingRule::EvenOdd);
 
     // Prepare painter:
     set_target(clip_bounds.top_left(), *m_expensive_clipping_target);

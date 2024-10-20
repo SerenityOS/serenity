@@ -360,9 +360,9 @@ RENDERER_HANDLER(path_fill_nonzero)
     begin_path_paint();
     m_current_path.close_all_subpaths();
     if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::Painter::WindingRule::Nonzero);
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::WindingRule::Nonzero);
     } else {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::Painter::WindingRule::Nonzero);
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::WindingRule::Nonzero);
     }
     end_path_paint();
     return {};
@@ -378,9 +378,9 @@ RENDERER_HANDLER(path_fill_evenodd)
     begin_path_paint();
     m_current_path.close_all_subpaths();
     if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::Painter::WindingRule::EvenOdd);
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::WindingRule::EvenOdd);
     } else {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::Painter::WindingRule::EvenOdd);
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::WindingRule::EvenOdd);
     }
     end_path_paint();
     return {};
@@ -396,9 +396,9 @@ RENDERER_HANDLER(path_fill_stroke_nonzero)
     }
     m_current_path.close_all_subpaths();
     if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::Painter::WindingRule::Nonzero);
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::WindingRule::Nonzero);
     } else {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::Painter::WindingRule::Nonzero);
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::WindingRule::Nonzero);
     }
     end_path_paint();
     return {};
@@ -414,9 +414,9 @@ RENDERER_HANDLER(path_fill_stroke_evenodd)
     }
     m_current_path.close_all_subpaths();
     if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::Painter::WindingRule::EvenOdd);
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::WindingRule::EvenOdd);
     } else {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::Painter::WindingRule::EvenOdd);
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::WindingRule::EvenOdd);
     }
     end_path_paint();
     return {};

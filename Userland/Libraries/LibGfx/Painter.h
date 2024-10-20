@@ -146,9 +146,6 @@ public:
 
     void stroke_path(Path const&, Color, int thickness);
 
-    // FIXME: Remove this after replacing all uses with Gfx::WindingRule.
-    using WindingRule = ::Gfx::WindingRule;
-
     void fill_path(Path const&, Color, WindingRule rule = WindingRule::Nonzero);
     void fill_path(Path const&, PaintStyle const& paint_style, float opacity = 1.0f, WindingRule rule = WindingRule::Nonzero);
 

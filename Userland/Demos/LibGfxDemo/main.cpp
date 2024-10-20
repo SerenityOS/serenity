@@ -126,7 +126,7 @@ void Canvas::draw()
     path.line_to({ 90, 460 });
     path.elliptical_arc_to({ 260, 540 }, { 40, 30 }, 0, true, false);
     path.close();
-    painter.fill_path(path, Color::Yellow, Gfx::Painter::WindingRule::EvenOdd);
+    painter.fill_path(path, Color::Yellow, Gfx::WindingRule::EvenOdd);
 
     auto buggie = Gfx::Bitmap::load_from_file("/res/graphics/buggie.png"sv).release_value_but_fixme_should_propagate_errors();
     painter.blit({ 280, 280 }, *buggie, buggie->rect(), 0.5);
