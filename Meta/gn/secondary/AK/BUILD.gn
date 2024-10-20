@@ -341,6 +341,7 @@ write_cmake_config("ak_debug_gen") {
     "SPICE_AGENT_DEBUG=",
     "SQLSERVER_DEBUG=",
     "SQL_DEBUG=",
+    "STYLE_INVALIDATION_DEBUG=",
     "SYNTAX_HIGHLIGHTING_DEBUG=",
     "SYSCALL_1_DEBUG=",
     "SYSTEMSERVER_DEBUG=",
