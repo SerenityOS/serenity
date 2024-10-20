@@ -50,6 +50,13 @@ ErrorOr<void> MonitorSettingsWidget::create_resolution_list()
     TRY(m_resolutions.try_append({ 2560, 1440 }));
     TRY(m_resolutions.try_append({ 3440, 1440 }));
 
+    TRY(generate_resolution_strings());
+
+    return {};
+}
+
+ErrorOr<void> MonitorSettingsWidget::generate_resolution_strings()
+{
     for (auto resolution : m_resolutions) {
         // Use Euclid's Algorithm to calculate greatest common factor
         i32 a = resolution.width();

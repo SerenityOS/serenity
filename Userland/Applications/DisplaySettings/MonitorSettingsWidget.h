@@ -42,6 +42,7 @@ private:
     ErrorOr<void> create_frame();
     ErrorOr<void> create_resolution_list();
     ErrorOr<void> load_current_settings();
+    ErrorOr<void> generate_resolution_strings();
     ErrorOr<void> selected_screen_index_or_resolution_changed();
 
     size_t m_selected_screen_index { 0 };
