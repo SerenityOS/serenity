@@ -143,9 +143,24 @@ Window::~Window() = default;
 // https://html.spec.whatwg.org/multipage/window-object.html#window-open-steps
 WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::window_open_steps(StringView url, StringView target, StringView features)
 {
+    auto [target_navigable, no_opener, window_type] = TRY(window_open_steps_internal(url, target, features));
+    if (target_navigable == nullptr)
+        return nullptr;
+
+    // 14. If noopener is true or windowType is "new with no opener", then return null.
+    if (no_opener == TokenizedFeature::NoOpener::Yes || window_type == Navigable::WindowType::NewWithNoOpener)
+        return nullptr;
+
+    // 15. Return targetNavigable's active WindowProxy.
+    return target_navigable->active_window_proxy();
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#window-open-steps
+WebIDL::ExceptionOr<Window::OpenedWindow> Window::window_open_steps_internal(StringView url, StringView target, StringView features)
+{
     // 1. If the event loop's termination nesting level is nonzero, return null.
     if (main_thread_event_loop().termination_nesting_level() != 0)
-        return nullptr;
+        return OpenedWindow {};
 
     // 2. Let sourceDocument be the entry global object's associated Document.
     auto& source_document = verify_cast<Window>(entry_global_object()).associated_document();
@@ -207,7 +222,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::window_open_steps(StringView
 
     // 13. If targetNavigable is null, then return null.
     if (target_navigable == nullptr)
-        return nullptr;
+        return OpenedWindow {};
 
     // 14. If windowType is either "new and unrestricted" or "new with no opener", then:
     if (window_type == Navigable::WindowType::NewAndUnrestricted || window_type == Navigable::WindowType::NewWithNoOpener) {
@@ -246,12 +261,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::window_open_steps(StringView
             target_navigable->active_browsing_context()->set_opener_browsing_context(source_document.browsing_context());
     }
 
-    // 14. If noopener is true or windowType is "new with no opener", then return null.
-    if (no_opener == TokenizedFeature::NoOpener::Yes || window_type == Navigable::WindowType::NewWithNoOpener)
-        return nullptr;
-
-    // 15. Return targetNavigable's active WindowProxy.
-    return target_navigable->active_window_proxy();
+    return OpenedWindow { target_navigable, no_opener, window_type };
 }
 
 bool Window::dispatch_event(DOM::Event& event)
