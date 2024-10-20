@@ -491,13 +491,13 @@ def set_up_spice(config: Configuration):
             capture_output=True,
             encoding="utf-8",
         ).stdout.lower()
-        if "qemu-vdagent" in chardev_info:
+        if "spicevmc" in chardev_info:
+            config.spice_arguments = ["-chardev", "spicevmc,id=vdagent,name=vdagent"]
+        elif "qemu-vdagent" in chardev_info:
             config.spice_arguments = [
                 "-chardev",
                 "qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent",
             ]
-        elif "spicevmc" in chardev_info:
-            config.spice_arguments = ["-chardev", "spicevmc,id=vdagent,name=vdagent"]
         else:
             raise RunError("No compatible SPICE character device was found")
 
