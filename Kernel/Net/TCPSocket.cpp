@@ -665,6 +665,30 @@ ErrorOr<void> TCPSocket::close()
 {
     MutexLocker locker(mutex());
     auto result = IPv4Socket::close();
+    if (m_linger.l_onoff != 0) {
+        auto has_unacked_data = m_unacked_packets.with_shared([&](auto const& packets) { return packets.size > 0; });
+        if (m_linger.l_linger > 0) {
+            dbgln_if(TCP_SOCKET_DEBUG, "SO_LINGER enabled. Lingering for {} seconds", m_linger.l_linger);
+            auto deadline = TimeManagement::the().monotonic_time(TimePrecision::Precise) + Duration::from_seconds(m_linger.l_linger);
+            do {
+                has_unacked_data = m_unacked_packets.with_shared([&](auto const& packets) { return packets.size > 0; });
+                (void)Thread::current()->sleep(Duration::from_milliseconds(1));
+            } while (has_unacked_data && TimeManagement::the().monotonic_time(TimePrecision::Precise) < deadline);
+
+            if (has_unacked_data) {
+                dbgln_if(TCP_SOCKET_DEBUG, "SO_LINGER timeout. Some data couldn't make it :(");
+                (void)send_tcp_packet(TCPFlags::RST);
+                set_state(State::Closed);
+                return set_so_error(ETIMEDOUT);
+            }
+        } else {
+            dbgln_if(TCP_SOCKET_DEBUG, "SO_LINGER without timeout, closing immediately");
+            (void)send_tcp_packet(TCPFlags::RST);
+            set_state(State::Closed);
+            return {};
+        }
+    }
+
     if (state() == State::CloseWait) {
         dbgln_if(TCP_SOCKET_DEBUG, " Sending FIN from CloseWait and moving into LastAck");
         [[maybe_unused]] auto rc = send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
