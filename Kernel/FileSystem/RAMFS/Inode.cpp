@@ -122,6 +122,7 @@ ErrorOr<void> RAMFSInode::ensure_allocated_blocks(size_t offset, size_t io_size)
         }
     }
     clean_allocated_blocks_on_failure.disarm();
+    m_metadata.block_count = m_blocks.size();
     return {};
 }
 
