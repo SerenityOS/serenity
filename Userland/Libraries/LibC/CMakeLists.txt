@@ -112,10 +112,12 @@ set(HEADERS
     net/if.h
     net/if_arp.h
     net/route.h
+    netinet/icmp6.h
     netinet/if_ether.h
     netinet/in.h
     netinet/in_systm.h
     netinet/ip.h
+    netinet/ip6.h
     netinet/ip_icmp.h
     netinet/tcp.h
     sys/arch/${SERENITY_ARCH}/regs.h
