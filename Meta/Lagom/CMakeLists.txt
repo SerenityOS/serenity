@@ -529,7 +529,7 @@ if (BUILD_LAGOM)
     endif()
 
     if (NOT EMSCRIPTEN)
-        list(APPEND lagom_standard_libraries ELF X86)
+        list(APPEND lagom_standard_libraries ELF Disassembly)
     endif()
 
     foreach(lib IN LISTS lagom_standard_libraries)
@@ -573,7 +573,7 @@ if (BUILD_LAGOM)
         lagom_utility(base64 SOURCES ../../Userland/Utilities/base64.cpp LIBS LibMain)
 
         if (NOT EMSCRIPTEN)
-            lagom_utility(disasm SOURCES ../../Userland/Utilities/disasm.cpp LIBS LibELF LibX86 LibMain)
+            lagom_utility(disasm SOURCES ../../Userland/Utilities/disasm.cpp LIBS LibELF LibDisassembly LibMain)
             lagom_utility(file SOURCES ../../Userland/Utilities/file.cpp LIBS LibAudio LibArchive LibCompress LibELF LibGfx LibIPC LibMain)
         endif()
 

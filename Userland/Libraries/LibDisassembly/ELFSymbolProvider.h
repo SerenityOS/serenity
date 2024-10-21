@@ -6,10 +6,11 @@
 
 #pragma once
 
+#include <LibDisassembly/SymbolProvider.h>
+#include <LibDisassembly/x86/Instruction.h>
 #include <LibELF/Image.h>
-#include <LibX86/Instruction.h>
 
-namespace X86 {
+namespace Disassembly {
 
 class ELFSymbolProvider final : public SymbolProvider {
 public:

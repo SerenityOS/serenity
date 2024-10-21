@@ -11,21 +11,15 @@
 #include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
+#include <LibDisassembly/Instruction.h>
+#include <LibDisassembly/SymbolProvider.h>
 #include <stdio.h>
 
-namespace X86 {
+namespace Disassembly::X86 {
 
 class Instruction;
 class Interpreter;
 typedef void (Interpreter::*InstructionHandler)(Instruction const&);
-
-class SymbolProvider {
-public:
-    virtual ByteString symbolicate(FlatPtr, u32* offset = nullptr) const = 0;
-
-protected:
-    virtual ~SymbolProvider() = default;
-};
 
 template<typename T>
 struct TypeTrivia {
@@ -459,62 +453,6 @@ private:
     FlatPtr m_offset { 0 };
 };
 
-class InstructionStream {
-public:
-    virtual bool can_read() = 0;
-    virtual u8 read8() = 0;
-    virtual u16 read16() = 0;
-    virtual u32 read32() = 0;
-    virtual u64 read64() = 0;
-
-protected:
-    virtual ~InstructionStream() = default;
-};
-
-class SimpleInstructionStream final : public InstructionStream {
-public:
-    SimpleInstructionStream(u8 const* data, size_t size)
-        : m_data(data)
-        , m_size(size)
-    {
-    }
-
-    virtual bool can_read() override { return m_offset < m_size; }
-
-    virtual u8 read8() override
-    {
-        if (!can_read())
-            return 0;
-        return m_data[m_offset++];
-    }
-    virtual u16 read16() override
-    {
-        u8 lsb = read8();
-        u8 msb = read8();
-        return ((u16)msb << 8) | (u16)lsb;
-    }
-
-    virtual u32 read32() override
-    {
-        u16 lsw = read16();
-        u16 msw = read16();
-        return ((u32)msw << 16) | (u32)lsw;
-    }
-
-    virtual u64 read64() override
-    {
-        u32 lsw = read32();
-        u32 msw = read32();
-        return ((u64)msw << 32) | (u64)lsw;
-    }
-    size_t offset() const { return m_offset; }
-
-private:
-    u8 const* m_data { nullptr };
-    size_t m_offset { 0 };
-    size_t m_size { 0 };
-};
-
 class MemoryOrRegisterReference {
     friend class Instruction;
 
@@ -618,11 +556,11 @@ private:
     bool m_has_sib : 1 { false };
 };
 
-class Instruction {
+class Instruction : public Disassembly::Instruction {
 public:
     template<typename InstructionStreamType>
     static Instruction from_stream(InstructionStreamType&, ProcessorMode);
-    ~Instruction() = default;
+    virtual ~Instruction() = default;
 
     ALWAYS_INLINE MemoryOrRegisterReference& modrm() const { return m_modrm; }
 
@@ -644,9 +582,9 @@ public:
 
     bool is_valid() const { return m_descriptor; }
 
-    unsigned length() const;
+    virtual size_t length() const override;
 
-    ByteString mnemonic() const;
+    virtual ByteString mnemonic() const override;
 
     u8 op() const { return m_op; }
     u8 modrm_byte() const { return m_modrm.modrm_byte(); }
@@ -698,13 +636,13 @@ public:
     OperandSize operand_size() const { return m_operand_size; }
     ProcessorMode mode() const { return m_mode; }
 
-    ByteString to_byte_string(u32 origin, SymbolProvider const* = nullptr, bool x32 = true) const;
+    virtual ByteString to_byte_string(u32 origin, Optional<SymbolProvider const&> = {}) const override;
 
 private:
     template<typename InstructionStreamType>
     Instruction(InstructionStreamType&, ProcessorMode);
 
-    void to_byte_string_internal(StringBuilder&, u32 origin, SymbolProvider const*, bool x32) const;
+    void to_byte_string_internal(StringBuilder&, u32 origin, Optional<SymbolProvider const&>, bool x32) const;
 
     StringView reg8_name() const;
     StringView reg16_name() const;
@@ -969,9 +907,9 @@ ALWAYS_INLINE Instruction Instruction::from_stream(InstructionStreamType& stream
     return Instruction(stream, mode);
 }
 
-ALWAYS_INLINE unsigned Instruction::length() const
+ALWAYS_INLINE size_t Instruction::length() const
 {
-    unsigned len = 1;
+    size_t len = 1;
     if (has_sub_op())
         ++len;
     if (m_descriptor && m_descriptor->has_rm) {
