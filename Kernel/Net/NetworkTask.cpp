@@ -392,10 +392,10 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
     dbgln_if(ICMP_DEBUG, "handle_icmp: source={}, destination={}, type={:#02x}, code={:#02x}", ipv4_packet.source().to_string(), ipv4_packet.destination().to_string(), static_cast<u8>(icmp_header.type), icmp_header.code);
 
     {
-        Vector<NonnullRefPtr<IPv4Socket>> icmp_sockets;
-        IPv4Socket::all_sockets().with_exclusive([&](auto& sockets) {
+        Vector<NonnullRefPtr<IPSocket>> icmp_sockets;
+        IPSocket::all_sockets().with_exclusive([&](auto& sockets) {
             for (auto& socket : sockets) {
-                if (socket.protocol() == (unsigned)TransportProtocol::ICMP)
+                if (socket.protocol() == (unsigned)TransportProtocol::ICMP && socket.ip_version() == IPVersion::IPv4)
                     icmp_sockets.append(socket);
             }
         });
@@ -464,7 +464,7 @@ void handle_udp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
 
     auto& destination = ipv4_packet.destination();
 
-    if (destination == IPv4Address(255, 255, 255, 255) || NetworkingManagement::the().from_ipv4_address(destination) || socket->multicast_memberships().contains_slow(destination))
+    if (destination == IPv4Address(255, 255, 255, 255) || NetworkingManagement::the().from_ipv4_address(destination) || socket->is_in_multicast_group(destination))
         socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
 }
 
@@ -589,7 +589,7 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
     VERIFY(socket->type() == SOCK_STREAM);
     VERIFY(socket->local_port() == tcp_packet.destination_port());
 
-    dbgln_if(TCP_DEBUG, "handle_tcp: got socket {}; state={}", socket->tuple().to_string(), TCPSocket::to_string(socket->state()));
+    dbgln_if(TCP_DEBUG, "handle_tcp: got socket {}; state={}", socket->tuple_string(), TCPSocket::to_string(socket->state()));
 
     socket->receive_tcp_packet(tcp_packet, ipv4_packet.payload_size());
     Optional<u8> send_window_scale;
@@ -634,7 +634,8 @@ void handle_tcp(IPv4Packet const& ipv4_packet, UnixDateTime const& packet_timest
             }
             auto client = client_or_error.release_value();
             MutexLocker locker(client->mutex());
-            dbgln_if(TCP_DEBUG, "handle_tcp: created new client socket with tuple {}", client->tuple().to_string());
+            // NOTE: Intentionally do not handle allocation failure, we don’t care for a debug message.
+            dbgln_if(TCP_DEBUG, "handle_tcp: created new client socket with tuple {}", client->tuple_string());
             client->set_sequence_number(1000);
             client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             [[maybe_unused]] auto rc2 = client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);

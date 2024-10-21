@@ -926,6 +926,7 @@ public:
         m_unix_socket_write_bytes += bytes;
     }
 
+    // TODO: These should either have a generic name or be split between IP versions.
     u64 ipv4_socket_read_bytes() const { return m_ipv4_socket_read_bytes; }
     u64 ipv4_socket_write_bytes() const { return m_ipv4_socket_write_bytes; }
 

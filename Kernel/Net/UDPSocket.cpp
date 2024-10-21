@@ -49,8 +49,8 @@ RefPtr<UDPSocket> UDPSocket::from_port(u16 port)
     });
 }
 
-UDPSocket::UDPSocket(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
-    : IPv4Socket(SOCK_DGRAM, protocol, move(receive_buffer), {})
+UDPSocket::UDPSocket(int protocol, NonnullOwnPtr<IPSocketDelegate> delegate, NonnullOwnPtr<DoubleBuffer> receive_buffer)
+    : IPSocket(SOCK_DGRAM, protocol, move(delegate), move(receive_buffer), {})
 {
 }
 
@@ -61,9 +61,9 @@ UDPSocket::~UDPSocket()
     });
 }
 
-ErrorOr<NonnullRefPtr<UDPSocket>> UDPSocket::try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer)
+ErrorOr<NonnullRefPtr<UDPSocket>> UDPSocket::try_create(int protocol, NonnullOwnPtr<IPSocketDelegate> delegate, NonnullOwnPtr<DoubleBuffer> receive_buffer)
 {
-    return adopt_nonnull_ref_or_enomem(new (nothrow) UDPSocket(protocol, move(receive_buffer)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) UDPSocket(protocol, move(delegate), move(receive_buffer)));
 }
 
 ErrorOr<size_t> UDPSocket::protocol_size(ReadonlyBytes raw_ipv4_packet)
@@ -87,7 +87,8 @@ ErrorOr<size_t> UDPSocket::protocol_send(UserOrKernelBuffer const& data, size_t 
 {
     auto adapter = bound_interface().with([](auto& bound_device) -> RefPtr<NetworkAdapter> { return bound_device; });
     auto allow_broadcast = m_broadcast_allowed ? AllowBroadcast::Yes : AllowBroadcast::No;
-    auto routing_decision = route_to(peer_address(), local_address(), adapter, allow_broadcast);
+    // TODO: support IPv6
+    auto routing_decision = route_to(peer_address().as_v4(), local_address().as_v4(), adapter, allow_broadcast);
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
     auto ipv4_payload_offset = routing_decision.adapter->ipv4_payload_offset();
@@ -102,8 +103,8 @@ ErrorOr<size_t> UDPSocket::protocol_send(UserOrKernelBuffer const& data, size_t 
     udp_packet.set_destination_port(peer_port());
     udp_packet.set_length(udp_buffer_size);
     SOCKET_TRY(data.read(udp_packet.payload(), data_length));
-    routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(), routing_decision.next_hop,
-        peer_address(), TransportProtocol::UDP, udp_buffer_size, type_of_service(), ttl());
+    routing_decision.adapter->fill_in_ipv4_header(*packet, local_address().as_v4(), routing_decision.next_hop,
+        peer_address().as_v4(), TransportProtocol::UDP, udp_buffer_size, type_of_service(), ttl());
     routing_decision.adapter->send_packet(packet->bytes());
     return data_length;
 }

@@ -23,7 +23,8 @@ ErrorOr<NonnullRefPtr<Socket>> Socket::create(int domain, int type, int protocol
     case AF_LOCAL:
         return TRY(LocalSocket::try_create(type & SOCK_TYPE_MASK));
     case AF_INET:
-        return IPv4Socket::create(type & SOCK_TYPE_MASK, protocol);
+    case AF_INET6:
+        return IPSocket::create(domain, type & SOCK_TYPE_MASK, protocol);
     default:
         return EAFNOSUPPORT;
     }
