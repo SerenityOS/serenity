@@ -22,34 +22,62 @@ namespace DisplaySettings {
 ErrorOr<NonnullRefPtr<MonitorSettingsWidget>> MonitorSettingsWidget::try_create()
 {
     auto monitor_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MonitorSettingsWidget()));
+
+    TRY(monitor_settings_widget->load_current_settings());
     TRY(monitor_settings_widget->create_resolution_list());
     TRY(monitor_settings_widget->create_frame());
-    TRY(monitor_settings_widget->load_current_settings());
+
     return monitor_settings_widget;
 }
 
 ErrorOr<void> MonitorSettingsWidget::create_resolution_list()
 {
-    // TODO: Find a better way to get the default resolution
-    TRY(m_resolutions.try_append({ 640, 480 }));
-    TRY(m_resolutions.try_append({ 800, 600 }));
-    TRY(m_resolutions.try_append({ 1024, 768 }));
-    TRY(m_resolutions.try_append({ 1280, 720 }));
-    TRY(m_resolutions.try_append({ 1280, 768 }));
-    TRY(m_resolutions.try_append({ 1280, 960 }));
-    TRY(m_resolutions.try_append({ 1280, 1024 }));
-    TRY(m_resolutions.try_append({ 1360, 768 }));
-    TRY(m_resolutions.try_append({ 1368, 768 }));
-    TRY(m_resolutions.try_append({ 1440, 900 }));
-    TRY(m_resolutions.try_append({ 1600, 900 }));
-    TRY(m_resolutions.try_append({ 1600, 1200 }));
-    TRY(m_resolutions.try_append({ 1920, 1080 }));
-    TRY(m_resolutions.try_append({ 2048, 1152 }));
-    TRY(m_resolutions.try_append({ 2256, 1504 }));
-    TRY(m_resolutions.try_append({ 2560, 1080 }));
-    TRY(m_resolutions.try_append({ 2560, 1440 }));
-    TRY(m_resolutions.try_append({ 3440, 1440 }));
+    m_resolutions.clear();
+    m_resolution_strings.clear();
 
+    auto edid = m_screen_edids[m_selected_screen_index];
+    if (edid.has_value()) {
+        // Try to collect all supported resolutions for the main screen
+        auto resolutions = TRY(edid.value().supported_resolutions());
+        for (auto& resolution : resolutions) {
+            dbgln("Adding EDID supported resolution: {}x{}", resolution.width, resolution.height);
+            TRY(m_resolutions.try_append({ resolution.width, resolution.height }));
+        }
+
+        // Manually create resolution list if no resolutions were collected
+        if (m_resolutions.is_empty())
+            edid = {};
+    }
+
+    if (!edid.has_value()) {
+        // Manually create resolutions list, as the device has failed to provide valid EDID data
+        TRY(m_resolutions.try_append({ 640, 480 }));
+        TRY(m_resolutions.try_append({ 800, 600 }));
+        TRY(m_resolutions.try_append({ 1024, 768 }));
+        TRY(m_resolutions.try_append({ 1280, 720 }));
+        TRY(m_resolutions.try_append({ 1280, 768 }));
+        TRY(m_resolutions.try_append({ 1280, 960 }));
+        TRY(m_resolutions.try_append({ 1280, 1024 }));
+        TRY(m_resolutions.try_append({ 1360, 768 }));
+        TRY(m_resolutions.try_append({ 1368, 768 }));
+        TRY(m_resolutions.try_append({ 1440, 900 }));
+        TRY(m_resolutions.try_append({ 1600, 900 }));
+        TRY(m_resolutions.try_append({ 1600, 1200 }));
+        TRY(m_resolutions.try_append({ 1920, 1080 }));
+        TRY(m_resolutions.try_append({ 2048, 1152 }));
+        TRY(m_resolutions.try_append({ 2256, 1504 }));
+        TRY(m_resolutions.try_append({ 2560, 1080 }));
+        TRY(m_resolutions.try_append({ 2560, 1440 }));
+        TRY(m_resolutions.try_append({ 3440, 1440 }));
+        dbgln("EDID unavailable; Adding resolutions manually");
+    }
+
+    TRY(generate_resolution_strings());
+    return {};
+}
+
+ErrorOr<void> MonitorSettingsWidget::generate_resolution_strings()
+{
     for (auto resolution : m_resolutions) {
         // Use Euclid's Algorithm to calculate greatest common factor
         i32 a = resolution.width();
@@ -84,7 +112,7 @@ ErrorOr<void> MonitorSettingsWidget::create_frame()
     m_screen_combo->set_model(*GUI::ItemListModel<String>::create(m_screens));
     m_screen_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         m_selected_screen_index = index.row();
-        auto result = selected_screen_index_or_resolution_changed();
+        auto result = selected_screen_index_or_resolution_changed(true);
         if (result.is_error())
             GUI::MessageBox::show_error(window(), "Screen info could not be updated"sv);
     };
@@ -97,7 +125,7 @@ ErrorOr<void> MonitorSettingsWidget::create_frame()
         selected_screen.resolution = m_resolutions.at(index.row());
         // Try to auto re-arrange things if there are overlaps or disconnected screens
         m_screen_layout.normalize();
-        auto result = selected_screen_index_or_resolution_changed();
+        auto result = selected_screen_index_or_resolution_changed(false);
         if (result.is_error()) {
             GUI::MessageBox::show_error(window(), "Screen info could not be updated"sv);
             return;
@@ -132,6 +160,8 @@ ErrorOr<void> MonitorSettingsWidget::create_frame()
 
     m_dpi_label = *find_descendant_of_type_named<GUI::Label>("display_dpi");
 
+    m_screen_combo->set_selected_index(m_selected_screen_index);
+    TRY(selected_screen_index_or_resolution_changed(true));
     return {};
 }
 
@@ -184,14 +214,20 @@ ErrorOr<void> MonitorSettingsWidget::load_current_settings()
             TRY(m_screens.try_append(TRY(String::formatted("{}: {}", i + 1, screen_display_name))));
     }
     m_selected_screen_index = m_screen_layout.main_screen_index;
-    m_screen_combo->set_selected_index(m_selected_screen_index);
-    TRY(selected_screen_index_or_resolution_changed());
 
+    if (!m_screen_combo.is_null()) {
+        m_screen_combo->set_selected_index(m_selected_screen_index);
+        TRY(selected_screen_index_or_resolution_changed(true));
+    }
     return {};
 }
 
-ErrorOr<void> MonitorSettingsWidget::selected_screen_index_or_resolution_changed()
+ErrorOr<void> MonitorSettingsWidget::selected_screen_index_or_resolution_changed(bool screen_index_changed)
 {
+    // Generate new resolution list only when changing monitors
+    if (screen_index_changed)
+        TRY(create_resolution_list());
+
     auto& screen = m_screen_layout.screens[m_selected_screen_index];
 
     // Let's attempt to find the current resolution based on the screen layout settings
