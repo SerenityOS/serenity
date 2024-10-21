@@ -10,11 +10,11 @@ we can enforce UTF-8 as the encoding.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Include/pyport.h b/Include/pyport.h
-index 35eca7234ca0949fa552e05c60f9e33d8eb36d1d..d8c01355af15dc0abd6fa588e892603d0bf55fd5 100644
+index 2ba81a4be42822655aaae94d675eae59a80d150f..d2d7d5486c2c48ab94152c2601e9cae3f2a634da 100644
 --- a/Include/pyport.h
 +++ b/Include/pyport.h
-@@ -684,7 +684,7 @@ extern char * _getpty(int *, int, mode_t, int);
- #  error "Py_TRACE_REFS ABI is not compatible with release and debug ABI"
+@@ -499,7 +499,7 @@ extern "C" {
+ #  endif
  #endif
  
 -#if defined(__ANDROID__) || defined(__VXWORKS__)
