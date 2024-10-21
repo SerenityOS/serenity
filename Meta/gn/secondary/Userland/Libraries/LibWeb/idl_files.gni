@@ -291,6 +291,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/SVG/SVGGeometryElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGGradientElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGGraphicsElement.idl",
+  "//Userland/Libraries/LibWeb/SVG/SVGImageElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGLength.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGLinearGradientElement.idl",
   "//Userland/Libraries/LibWeb/SVG/SVGLineElement.idl",
