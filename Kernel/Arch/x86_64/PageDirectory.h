@@ -15,6 +15,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/LockRank.h>
 #include <Kernel/Locking/Spinlock.h>
+#include <Kernel/Memory/MemoryType.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/PhysicalRAMPage.h>
 
@@ -58,11 +59,7 @@ public:
     bool is_writable() const { return (raw() & ReadWrite) == ReadWrite; }
     void set_writable(bool b) { set_bit(ReadWrite, b); }
 
-    bool is_write_through() const { return (raw() & WriteThrough) == WriteThrough; }
-    void set_write_through(bool b) { set_bit(WriteThrough, b); }
-
-    bool is_cache_disabled() const { return (raw() & CacheDisabled) == CacheDisabled; }
-    void set_cache_disabled(bool b) { set_bit(CacheDisabled, b); }
+    void set_memory_type(MemoryType t) { set_bit(CacheDisabled, t != MemoryType::Normal); }
 
     bool is_global() const { return (raw() & Global) == Global; }
     void set_global(bool b) { set_bit(Global, b); }
@@ -87,7 +84,6 @@ public:
     PhysicalPtr physical_page_base() const { return PhysicalAddress::physical_page_base(m_raw); }
     void set_physical_page_base(PhysicalPtr value)
     {
-        // FIXME: IS THIS PLATFORM SPECIFIC?
         m_raw &= 0x8000000000000fffULL;
         m_raw |= PhysicalAddress::physical_page_base(value);
     }
@@ -114,20 +110,36 @@ public:
     bool is_writable() const { return (raw() & ReadWrite) == ReadWrite; }
     void set_writable(bool b) { set_bit(ReadWrite, b); }
 
-    bool is_write_through() const { return (raw() & WriteThrough) == WriteThrough; }
-    void set_write_through(bool b) { set_bit(WriteThrough, b); }
+    void set_memory_type(MemoryType t)
+    {
+        // The PAT is indexed through the PWT (as bit 0), PCD (as bit 1), and PAT (as bit 2) bits.
+        m_raw &= ~(WriteThrough | CacheDisabled | PAT);
 
-    bool is_cache_disabled() const { return (raw() & CacheDisabled) == CacheDisabled; }
-    void set_cache_disabled(bool b) { set_bit(CacheDisabled, b); }
+        // We use the default PAT entries combined with a custom entry for PAT=b100, which maps to WC.
+        // The default entries are backwards-compatible with systems without PAT (which only use the PWT and PCD bits for their original purpose).
+
+        switch (t) {
+        case MemoryType::Normal: // WB (write back) => PAT=0b000
+            break;
+        case MemoryType::NonCacheable: // WC (write combining) => PAT=0b100
+            if (Processor::current().has_pat()) {
+                m_raw |= PAT;
+                break;
+            }
+
+            // Fall back to MemoryType::IO if PAT is not supported.
+            // TODO: Implement a MTRR fallback?
+            [[fallthrough]];
+        case MemoryType::IO: // UC- (uncacheable, can be overriden by WC in MTRRs) => PAT=0b010
+            m_raw |= CacheDisabled;
+        }
+    }
 
     bool is_global() const { return (raw() & Global) == Global; }
     void set_global(bool b) { set_bit(Global, b); }
 
     bool is_execute_disabled() const { return (raw() & NoExecute) == NoExecute; }
     void set_execute_disabled(bool b) { set_bit(NoExecute, b); }
-
-    bool is_pat() const { return (raw() & PAT) == PAT; }
-    void set_pat(bool b) { set_bit(PAT, b); }
 
     bool is_null() const { return m_raw == 0; }
     void clear() { m_raw = 0; }
