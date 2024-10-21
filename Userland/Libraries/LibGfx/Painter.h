@@ -50,9 +50,6 @@ public:
     explicit Painter(Gfx::Bitmap&);
     ~Painter() = default;
 
-    // FIXME: Remove this after replacing all uses with Gfx::ScalingMode.
-    using ScalingMode = ::Gfx::ScalingMode;
-
     void clear_rect(IntRect const&, Color);
     void fill_rect(IntRect const&, Color);
     void fill_rect(IntRect const&, PaintStyle const&);

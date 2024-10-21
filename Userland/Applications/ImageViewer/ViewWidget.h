@@ -27,7 +27,7 @@ public:
     virtual void flip(Gfx::Orientation) = 0;
     virtual void rotate(Gfx::RotationDirection) = 0;
 
-    virtual void draw_into(Gfx::Painter&, Gfx::IntRect const& dest, Gfx::Painter::ScalingMode) const = 0;
+    virtual void draw_into(Gfx::Painter&, Gfx::IntRect const& dest, Gfx::ScalingMode) const = 0;
 
     virtual ErrorOr<NonnullRefPtr<Gfx::Bitmap>> bitmap(Optional<Gfx::IntSize> ideal_size) const = 0;
 
@@ -43,7 +43,7 @@ public:
     virtual void flip(Gfx::Orientation) override;
     virtual void rotate(Gfx::RotationDirection) override;
 
-    virtual void draw_into(Gfx::Painter&, Gfx::IntRect const& dest, Gfx::Painter::ScalingMode) const override;
+    virtual void draw_into(Gfx::Painter&, Gfx::IntRect const& dest, Gfx::ScalingMode) const override;
 
     virtual ErrorOr<NonnullRefPtr<Gfx::Bitmap>> bitmap(Optional<Gfx::IntSize> ideal_size) const override;
 
@@ -73,7 +73,7 @@ public:
     virtual void flip(Gfx::Orientation) override;
     virtual void rotate(Gfx::RotationDirection) override;
 
-    virtual void draw_into(Gfx::Painter&, Gfx::IntRect const& dest, Gfx::Painter::ScalingMode) const override;
+    virtual void draw_into(Gfx::Painter&, Gfx::IntRect const& dest, Gfx::ScalingMode) const override;
 
     virtual ErrorOr<NonnullRefPtr<Gfx::Bitmap>> bitmap(Optional<Gfx::IntSize>) const override
     {
@@ -112,7 +112,7 @@ public:
     void set_path(String const& path);
     void resize_window();
     void scale_image_for_window();
-    void set_scaling_mode(Gfx::Painter::ScalingMode);
+    void set_scaling_mode(Gfx::ScalingMode);
 
     bool is_next_available() const;
     bool is_previous_available() const;
@@ -166,7 +166,7 @@ private:
     bool m_scaled_for_first_image { false };
     Vector<ByteString> m_files_in_same_dir;
     Optional<size_t> m_current_index;
-    Gfx::Painter::ScalingMode m_scaling_mode { Gfx::Painter::ScalingMode::BoxSampling };
+    Gfx::ScalingMode m_scaling_mode { Gfx::ScalingMode::BoxSampling };
 };
 
 }

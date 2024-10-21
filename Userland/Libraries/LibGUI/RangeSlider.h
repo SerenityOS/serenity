@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibGUI/AbstractSlider.h>
+#include <LibGfx/Gradients.h>
 
 namespace GUI {
 
