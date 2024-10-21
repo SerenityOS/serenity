@@ -70,12 +70,12 @@ ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspac
     directory->m_pml4t = TRY(MM.allocate_physical_page());
 
     directory->m_directory_table = TRY(MM.allocate_physical_page());
-    auto kernel_pd_index = (kernel_mapping_base >> 30) & 0x1ffu;
+    auto kernel_pd_index = (g_boot_info.kernel_mapping_base >> 30) & 0x1ffu;
     for (size_t i = 0; i < kernel_pd_index; i++) {
         directory->m_directory_pages[i] = TRY(MM.allocate_physical_page());
     }
 
-    // Share the top 1 GiB of kernel-only mappings (>=kernel_mapping_base)
+    // Share the top 1 GiB of kernel-only mappings (>=g_boot_info.kernel_mapping_base)
     directory->m_directory_pages[kernel_pd_index] = MM.kernel_page_directory().m_directory_pages[kernel_pd_index];
 
     {
@@ -128,15 +128,17 @@ PageDirectory::PageDirectory() = default;
 
 UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
 {
+    VERIFY(g_boot_info.boot_method == BootMethod::Multiboot1);
+
     // Adopt the page tables already set up by boot.S
-    dmesgln("MM: boot_pml4t @ {}", boot_pml4t);
-    m_pml4t = PhysicalRAMPage::create(boot_pml4t, MayReturnToFreeList::No);
-    dmesgln("MM: boot_pdpt @ {}", boot_pdpt);
-    dmesgln("MM: boot_pd0 @ {}", boot_pd0);
-    dmesgln("MM: boot_pd_kernel @ {}", boot_pd_kernel);
-    m_directory_table = PhysicalRAMPage::create(boot_pdpt, MayReturnToFreeList::No);
-    m_directory_pages[0] = PhysicalRAMPage::create(boot_pd0, MayReturnToFreeList::No);
-    m_directory_pages[(kernel_mapping_base >> 30) & 0x1ff] = PhysicalRAMPage::create(boot_pd_kernel, MayReturnToFreeList::No);
+    dmesgln("MM: boot_pml4t @ {}", g_boot_info.boot_pml4t);
+    m_pml4t = PhysicalRAMPage::create(g_boot_info.boot_pml4t, MayReturnToFreeList::No);
+    dmesgln("MM: boot_pdpt @ {}", g_boot_info.boot_pdpt);
+    dmesgln("MM: boot_pd0 @ {}", g_boot_info.boot_method_specific.multiboot1.boot_pd0);
+    dmesgln("MM: boot_pd_kernel @ {}", g_boot_info.boot_pd_kernel);
+    m_directory_table = PhysicalRAMPage::create(g_boot_info.boot_pdpt, MayReturnToFreeList::No);
+    m_directory_pages[0] = PhysicalRAMPage::create(g_boot_info.boot_method_specific.multiboot1.boot_pd0, MayReturnToFreeList::No);
+    m_directory_pages[(g_boot_info.kernel_mapping_base >> 30) & 0x1ff] = PhysicalRAMPage::create(g_boot_info.boot_pd_kernel, MayReturnToFreeList::No);
 }
 
 PageDirectory::~PageDirectory()

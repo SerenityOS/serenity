@@ -43,13 +43,12 @@ UNMAP_AFTER_INIT void dbgln_without_mmu(StringView message)
     panic_without_mmu("Unexpected trap"sv);
 }
 
-extern "C" [[noreturn]] UNMAP_AFTER_INIT void pre_init(FlatPtr mhartid, PhysicalPtr fdt_phys_addr)
+extern "C" [[noreturn]] UNMAP_AFTER_INIT void pre_init(FlatPtr boot_hart_id, PhysicalPtr flattened_devicetree_paddr)
 {
-
     // Catch traps in pre_init
     RISCV64::CSR::write(RISCV64::CSR::Address::STVEC, bit_cast<FlatPtr>(&early_trap_handler));
 
-    Memory::init_page_tables_and_jump_to_init(mhartid, fdt_phys_addr);
+    Memory::init_page_tables_and_jump_to_init(boot_hart_id, flattened_devicetree_paddr);
 }
 
 }

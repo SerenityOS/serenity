@@ -43,7 +43,7 @@ ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspac
     directory->m_process = &process;
 
     directory->m_directory_table = TRY(MM.allocate_physical_page());
-    auto kernel_pd_index = (kernel_mapping_base >> VPN_2_OFFSET) & PAGE_TABLE_INDEX_MASK;
+    auto kernel_pd_index = (g_boot_info.kernel_mapping_base >> VPN_2_OFFSET) & PAGE_TABLE_INDEX_MASK;
     for (size_t i = 0; i < kernel_pd_index; i++) {
         directory->m_directory_pages[i] = TRY(MM.allocate_physical_page());
     }
@@ -97,10 +97,10 @@ PageDirectory::PageDirectory() = default;
 
 UNMAP_AFTER_INIT void PageDirectory::allocate_kernel_directory()
 {
-    dmesgln("MM: boot_pdpt @ {}", boot_pdpt);
-    dmesgln("MM: boot_pd_kernel @ {}", boot_pd_kernel);
-    m_directory_table = PhysicalRAMPage::create(boot_pdpt, MayReturnToFreeList::No);
-    m_directory_pages[(kernel_mapping_base >> VPN_2_OFFSET) & PAGE_TABLE_INDEX_MASK] = PhysicalRAMPage::create(boot_pd_kernel, MayReturnToFreeList::No);
+    dmesgln("MM: boot_pdpt @ {}", g_boot_info.boot_pdpt);
+    dmesgln("MM: boot_pd_kernel @ {}", g_boot_info.boot_pd_kernel);
+    m_directory_table = PhysicalRAMPage::create(g_boot_info.boot_pdpt, MayReturnToFreeList::No);
+    m_directory_pages[(g_boot_info.kernel_mapping_base >> VPN_2_OFFSET) & PAGE_TABLE_INDEX_MASK] = PhysicalRAMPage::create(g_boot_info.boot_pd_kernel, MayReturnToFreeList::No);
 }
 
 PageDirectory::~PageDirectory()
