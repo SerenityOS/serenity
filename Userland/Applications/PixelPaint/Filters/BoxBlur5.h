@@ -16,7 +16,9 @@ public:
     virtual StringView filter_name() const override { return "Box Blur (5x5)"sv; }
 
     BoxBlur5(ImageEditor* editor)
-        : Filter(editor) {};
+        : Filter(editor)
+    {
+    }
 };
 
 }

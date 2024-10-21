@@ -129,7 +129,7 @@ public:
         NavigationParamsVariant navigation_params = Empty {},
         CSPNavigationType csp_navigation_type = CSPNavigationType::Other,
         bool allow_POST = false,
-        JS::SafeFunction<void()> completion_steps = [] {});
+        JS::SafeFunction<void()> completion_steps = [] { });
 
     struct NavigateParams {
         URL::URL const& url;
