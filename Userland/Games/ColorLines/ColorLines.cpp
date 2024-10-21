@@ -194,7 +194,7 @@ void ColorLines::paint_event(GUI::PaintEvent& event)
         if (color >= 0 && color < Marble::number_of_colors) {
             auto const source_rect = Gfx::IntRect { animation_frame * marble_pixel_size, 0, marble_pixel_size, marble_pixel_size };
             painter.draw_scaled_bitmap(rect, *m_marble_bitmaps[color], source_rect,
-                1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+                1.0f, Gfx::ScalingMode::BilinearBlend);
         }
     };
 
@@ -320,7 +320,7 @@ void ColorLines::paint_event(GUI::PaintEvent& event)
                 return 2;
             };
             painter.draw_scaled_bitmap(destination_rect, *m_trace_bitmaps[get_direction_bitmap_index()], source_rect,
-                1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+                1.0f, Gfx::ScalingMode::BilinearBlend);
         }
     }
 }

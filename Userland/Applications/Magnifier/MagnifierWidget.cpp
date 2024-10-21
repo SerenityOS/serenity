@@ -108,7 +108,7 @@ void MagnifierWidget::paint_event(GUI::PaintEvent& event)
         painter.fill_rect(frame_inner_rect, Gfx::Color::Black);
 
     if (m_grabbed_bitmap)
-        painter.draw_scaled_bitmap(bitmap_rect, *m_grabbed_bitmap, m_grabbed_bitmap->rect(), 1.0, Gfx::Painter::ScalingMode::NearestNeighbor);
+        painter.draw_scaled_bitmap(bitmap_rect, *m_grabbed_bitmap, m_grabbed_bitmap->rect(), 1.0, Gfx::ScalingMode::NearestNeighbor);
 
     if (m_show_grid) {
         int start_y = bitmap_rect.top();

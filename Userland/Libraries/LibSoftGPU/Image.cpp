@@ -190,7 +190,7 @@ void Image::regenerate_mipmaps()
             higher_level_bitmap,
             higher_level_bitmap->rect(),
             1.f,
-            Gfx::Painter::ScalingMode::BilinearBlend);
+            Gfx::ScalingMode::BilinearBlend);
 
         copy_bitmap_into_level(current_level_bitmap, level);
     }

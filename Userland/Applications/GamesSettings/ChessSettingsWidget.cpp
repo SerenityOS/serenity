@@ -224,7 +224,7 @@ void ChessGamePreview::paint_event(GUI::PaintEvent& event)
             bitmap,
             bitmap.rect(),
             1.0f,
-            Gfx::Painter::ScalingMode::BilinearBlend);
+            Gfx::ScalingMode::BilinearBlend);
     };
 
     draw_piece({ Chess::Color::White, Chess::Type::King }, { 0, 0 });

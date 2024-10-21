@@ -198,7 +198,7 @@ void WindowSwitcher::draw()
         item_rect.shrink(item_padding(), 0);
         Gfx::IntRect thumbnail_rect = { item_rect.location().translated(0, 5), { thumbnail_width(), thumbnail_height() } };
         if (window.backing_store())
-            painter.draw_scaled_bitmap(thumbnail_rect, *window.backing_store(), window.backing_store()->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+            painter.draw_scaled_bitmap(thumbnail_rect, *window.backing_store(), window.backing_store()->rect(), 1.0f, Gfx::ScalingMode::BilinearBlend);
         Gfx::IntRect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width() - 1, -window.icon().height() - 1), { window.icon().width(), window.icon().height() } };
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
         painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0).translated(1), window.computed_title(), WindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color.inverted());

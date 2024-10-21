@@ -19,8 +19,8 @@
 #include <LibGUI/Forward.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Forward.h>
-#include <LibGfx/Painter.h>
 #include <LibGfx/Rect.h>
+#include <LibGfx/ScalingMode.h>
 #include <LibGfx/Size.h>
 
 namespace PixelPaint {
@@ -100,7 +100,7 @@ public:
     ErrorOr<void> flip(Gfx::Orientation orientation);
     ErrorOr<void> rotate(Gfx::RotationDirection direction);
     ErrorOr<void> crop(Gfx::IntRect const& rect);
-    ErrorOr<void> resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode);
+    ErrorOr<void> resize(Gfx::IntSize new_size, Gfx::ScalingMode scaling_mode);
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
 

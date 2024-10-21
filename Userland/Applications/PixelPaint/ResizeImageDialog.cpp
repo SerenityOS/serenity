@@ -78,29 +78,29 @@ ResizeImageDialog::ResizeImageDialog(Gfx::IntSize suggested_size, GUI::Window* p
     VERIFY(box_sampling_radio);
     VERIFY(resize_canvas_radio);
 
-    m_scaling_mode = Gfx::Painter::ScalingMode::NearestNeighbor;
+    m_scaling_mode = Gfx::ScalingMode::NearestNeighbor;
     if (bilinear_radio->is_checked())
-        m_scaling_mode = Gfx::Painter::ScalingMode::BilinearBlend;
+        m_scaling_mode = Gfx::ScalingMode::BilinearBlend;
 
     nearest_neighbor_radio->on_checked = [this](bool is_checked) {
         if (is_checked)
-            m_scaling_mode = Gfx::Painter::ScalingMode::NearestNeighbor;
+            m_scaling_mode = Gfx::ScalingMode::NearestNeighbor;
     };
     smooth_pixels_radio->on_checked = [this](bool is_checked) {
         if (is_checked)
-            m_scaling_mode = Gfx::Painter::ScalingMode::SmoothPixels;
+            m_scaling_mode = Gfx::ScalingMode::SmoothPixels;
     };
     bilinear_radio->on_checked = [this](bool is_checked) {
         if (is_checked)
-            m_scaling_mode = Gfx::Painter::ScalingMode::BilinearBlend;
+            m_scaling_mode = Gfx::ScalingMode::BilinearBlend;
     };
     box_sampling_radio->on_checked = [this](bool is_checked) {
         if (is_checked)
-            m_scaling_mode = Gfx::Painter::ScalingMode::BoxSampling;
+            m_scaling_mode = Gfx::ScalingMode::BoxSampling;
     };
     resize_canvas_radio->on_checked = [this](bool is_checked) {
         if (is_checked)
-            m_scaling_mode = Gfx::Painter::ScalingMode::None;
+            m_scaling_mode = Gfx::ScalingMode::None;
     };
 
     auto ok_button = main_widget->find_descendant_of_type_named<GUI::Button>("ok_button");
