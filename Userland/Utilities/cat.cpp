@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Lucas Chollet <lucas.chollet@free.fr>
+ * Copyright (c) 2024, Perrin Smith <bobstlt40@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,22 +13,29 @@
 #include <LibMain/Main.h>
 
 struct LineTracker {
-    size_t line_count = 1;
-    bool display_line_number = true;
+    size_t line_count { 1 };
+    bool display_line_number { true };
 };
 
 static void output_buffer_with_line_numbers(LineTracker& line_tracker, ReadonlyBytes buffer_span)
 {
+    size_t span_index = 0;
+    size_t span_index_of_last_write = 0;
     for (auto const curr_value : buffer_span) {
         if (line_tracker.display_line_number) {
+            out("{:s}", buffer_span.slice(span_index_of_last_write, span_index - span_index_of_last_write));
             out("{: >6}\t", line_tracker.line_count);
+            span_index_of_last_write = span_index;
             line_tracker.line_count++;
             line_tracker.display_line_number = false;
         }
         if (curr_value == '\n')
             line_tracker.display_line_number = true;
-        out("{:c}", curr_value);
+        span_index++;
     }
+
+    if (span_index - span_index_of_last_write > 0)
+        out("{:s}", buffer_span.slice(span_index_of_last_write));
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
