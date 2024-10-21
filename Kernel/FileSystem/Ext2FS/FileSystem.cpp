@@ -104,6 +104,8 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
 
     VERIFY(logical_block_size() <= (int)max_block_size);
 
+    m_i_blocks_increment = logical_block_size() / 512;
+
     m_block_group_count = ceil_div(super_block.s_blocks_count, super_block.s_blocks_per_group);
 
     if (m_block_group_count == 0) {
@@ -233,6 +235,17 @@ auto Ext2FS::allocate_blocks(GroupIndex preferred_group_index, size_t count) -> 
     TRY(blocks.try_ensure_capacity(count));
 
     MutexLocker locker(m_lock);
+
+    size_t free_blocks = 0;
+    for (GroupIndex i = 1; i <= m_block_group_count; i = GroupIndex { i.value() + 1 }) {
+        free_blocks += group_descriptor(i).bg_free_blocks_count;
+        if (free_blocks >= count)
+            break;
+    }
+
+    if (free_blocks < count)
+        return Error::from_errno(ENOSPC);
+
     auto group_index = preferred_group_index;
 
     if (!group_descriptor(preferred_group_index).bg_free_blocks_count) {
@@ -582,20 +595,7 @@ ErrorOr<void> Ext2FS::free_inode(Ext2FSInode& inode)
     VERIFY(inode.m_raw_inode.i_links_count == 0);
     dbgln_if(EXT2_DEBUG, "Ext2FS[{}]::free_inode(): Inode {} has no more links, time to delete!", fsid(), inode.index());
 
-    // Mark all blocks used by this inode as free.
-    {
-        auto blocks = TRY(inode.compute_block_list());
-        for (auto const& [_, block_index] : blocks) {
-            VERIFY(block_index <= super_block().s_blocks_count && block_index != 0);
-            TRY(set_block_allocation_state(block_index, false));
-        }
-
-        auto meta_blocks = TRY(inode.compute_meta_blocks());
-        for (auto const& block : meta_blocks) {
-            VERIFY(block <= super_block().s_blocks_count && block != 0);
-            TRY(set_block_allocation_state(block, false));
-        }
-    }
+    TRY(inode.free_all_blocks());
 
     // If the inode being freed is a directory, update block group directory counter.
     if (inode.is_directory()) {
