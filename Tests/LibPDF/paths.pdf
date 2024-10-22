@@ -14,7 +14,7 @@ endobj
 endobj
 
 4 0 obj
-<</Length 1645>>
+<</Length 2117>>
 stream
 /DeviceRGB CS
 
@@ -141,6 +141,60 @@ S
 
 Q
 
+% Half-open lines.
+q
+1 j
+
+0 J
+1 0 0 SC
+240 280 m
+260 280 l
+240 280 l
+S
+
+1 J
+1 1 0 SC
+240 250 m
+260 250 l
+240 250 l
+S
+
+2 J
+0 0 1 SC
+240 220 m
+260 220 l
+240 220 l
+S
+
+Q
+
+% Closed lines.
+q
+1 j
+
+0 J
+1 0 0 SC
+290 280 m
+310 280 l
+h
+S
+
+1 J
+1 1 0 SC
+290 250 m
+310 250 l
+h
+S
+
+2 J
+0 0 1 SC
+290 220 m
+310 220 l
+h
+S
+
+Q
+
 % Open triangle, facing down.
 0 J
 1 0 0 SC
@@ -209,12 +263,32 @@ S
 110 130 l
 S
 
+% Small closed rects with line width becoming wider than rect size.
+q
+0 J
+0 1 0 SC
+8 w
+
+100 80 20 20 re
+S
+
+130 85 15 15 re
+S
+
+155 90 10 10 re
+S
+
+175 95 5 5 re
+S
+
+Q
+
 endstream
 endobj
 
 xref
 0 5
-0000000000 65536 f 
+0000000000 00003 f 
 0000000016 00000 n 
 0000000068 00000 n 
 0000000114 00000 n 
@@ -223,5 +297,5 @@ xref
 trailer
 <</Size 5/Root 2 0 R>>
 startxref
-1900
+2372
 %%EOF
