@@ -18,11 +18,9 @@ start:
   and x13, x13, 0xff
   cbnz x13, halt
 
-  // Let stack start before .text for now.
-  // 512 kiB (0x80000) of stack are probably not sufficient, especially once we give the other cores some stack too,
-  // but for now it's ok.
-  adrp x14, start
-  add x14, x14, :lo12:start
+  // Set the stack pointer register to the location defined in the linker script.
+  adrp x14, end_of_initial_stack
+  add x14, x14, :lo12:end_of_initial_stack
   mov sp, x14
 
   // Clear BSS.
