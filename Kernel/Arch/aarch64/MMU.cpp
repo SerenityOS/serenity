@@ -182,25 +182,16 @@ static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
     auto start_of_mmio_range = VirtualAddress(mmio_base + KERNEL_MAPPING_BASE);
     auto end_of_mmio_range = VirtualAddress(mmio_end + KERNEL_MAPPING_BASE);
 
-    // FIXME: don't use the memory before `start` as the initial stack
-    auto start_of_stack_range = start_of_kernel_range.offset(-128 * KiB);
-    auto end_of_stack_range = start_of_kernel_range;
-
     auto start_of_physical_kernel_range = PhysicalAddress(start_of_kernel_range.get()).offset(-calculate_physical_to_link_time_address_offset());
     auto start_of_physical_mmio_range = PhysicalAddress(mmio_base);
-    auto start_of_physical_stack_range = PhysicalAddress { start_of_stack_range.get() }.offset(-calculate_physical_to_link_time_address_offset());
 
     // Insert identity mappings
     insert_entries_for_memory_range(allocator, root_table, start_of_kernel_range.offset(-calculate_physical_to_link_time_address_offset()), end_of_kernel_range.offset(-calculate_physical_to_link_time_address_offset()), start_of_physical_kernel_range, normal_memory_flags);
     insert_entries_for_memory_range(allocator, root_table, VirtualAddress(mmio_base), VirtualAddress(mmio_end), start_of_physical_mmio_range, device_memory_flags);
-    insert_entries_for_memory_range(allocator, root_table, start_of_stack_range.offset(-calculate_physical_to_link_time_address_offset()), end_of_stack_range.offset(-calculate_physical_to_link_time_address_offset()), start_of_physical_stack_range, device_memory_flags);
 
     // Map kernel and MMIO into high virtual memory
     insert_entries_for_memory_range(allocator, root_table, start_of_kernel_range, end_of_kernel_range, start_of_physical_kernel_range, normal_memory_flags);
     insert_entries_for_memory_range(allocator, root_table, start_of_mmio_range, end_of_mmio_range, start_of_physical_mmio_range, device_memory_flags);
-
-    // Map the initial stack
-    insert_entries_for_memory_range(allocator, root_table, start_of_stack_range, end_of_stack_range, start_of_physical_stack_range, normal_memory_flags);
 }
 
 static void switch_to_page_table(u8* page_table)
