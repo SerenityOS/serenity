@@ -665,8 +665,7 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
         };
 
         auto add_linecap = [&]() {
-            bool current_segment_is_closed = segment_is_closed[segment_index];
-            if (!current_segment_is_closed && (cap_style == CapStyle::Butt || cap_style == CapStyle::Square)) {
+            if (cap_style == CapStyle::Butt || cap_style == CapStyle::Square) {
                 auto segment = shape[shape_idx] - shape[shape_idx - 1];
                 auto segment_vector = FloatVector2(segment.x(), segment.y()).normalized();
                 auto normal = FloatVector2(-segment_vector.y(), segment_vector.x());
@@ -698,19 +697,41 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
             }
         };
 
+        bool current_segment_is_closed = segment_is_closed[segment_index];
+
         // Outer stroke.
         trace_path_until_index(segment.size() - 1);
-
-        // Cap 1.
         VERIFY(shape_idx == segment.size() - 1);
-        add_linecap();
+
+        // Close outer stroke for closed paths, or draw cap 1 for open paths.
+        if (current_segment_is_closed) {
+            add_round_join(1);
+
+            // Start an independent path for the inner stroke.
+            convolution.close();
+            first = true;
+
+            auto start_slope = slope();
+            active = *active_ranges.find_first_index_if([&](auto& range) {
+                return range.in_range(start_slope);
+            });
+
+            ++shape_idx;
+            VERIFY(shape_idx == segment.size());
+        } else {
+            add_linecap();
+        }
 
         // Inner stroke.
         trace_path_until_index(2 * (segment.size() - 1));
-
-        // Cap 2.
         VERIFY(shape_idx == 2 * (segment.size() - 1));
-        add_linecap();
+
+        // Close inner stroke for closed paths, or draw cap 2 for open paths.
+        if (current_segment_is_closed) {
+            add_round_join(segment.size());
+        } else {
+            add_linecap();
+        }
 
         convolution.close();
     }
