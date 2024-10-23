@@ -659,13 +659,8 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 
         auto trace_path_until_index = [&](size_t index) {
             while (shape_idx < index) {
-                add_vertex(shape[shape_idx] + pen_vertices[active]);
-                auto slope_now = slope();
-                auto range = active_ranges[active];
-                if (range.in_range(slope_now))
-                    shape_idx++;
-                else
-                    active = mod(active + (clockwise(slope_now, range.end) ? 1 : -1), pen_vertices.size());
+                add_round_join();
+                shape_idx++;
             }
         };
 
