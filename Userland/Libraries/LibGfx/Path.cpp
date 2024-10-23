@@ -692,7 +692,7 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
                 add_vertex(p2);
                 shape_idx++;
             } else {
-                // Round linecap.
+                VERIFY(cap_style == CapStyle::Round);
                 add_round_join(shape_idx + 1);
             }
         };
