@@ -646,9 +646,9 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 
         shape_idx = 1;
 
-        auto add_round_join = [&] {
+        auto add_round_join = [&](unsigned next_index) {
             add_vertex(shape[shape_idx] + pen_vertices[active]);
-            auto slope_now = angle_between(shape[shape_idx], shape[shape_idx + 1]);
+            auto slope_now = angle_between(shape[shape_idx], shape[next_index]);
             auto range = active_ranges[active];
             while (!range.in_range(slope_now)) {
                 active = mod(active + (clockwise(slope_now, range.end) ? 1 : -1), pen_vertices.size());
@@ -659,7 +659,7 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 
         auto trace_path_until_index = [&](size_t index) {
             while (shape_idx < index) {
-                add_round_join();
+                add_round_join(shape_idx + 1);
                 shape_idx++;
             }
         };
@@ -694,7 +694,7 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
                 shape_idx++;
             } else {
                 // Round linecap.
-                add_round_join();
+                add_round_join(shape_idx + 1);
             }
         };
 
