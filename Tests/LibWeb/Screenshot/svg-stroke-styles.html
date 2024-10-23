@@ -39,6 +39,22 @@ path:nth-of-type(3) {
   <path d="M190,51 l0,-1 l20,-10 l0,-1" stroke="yellow" stroke-linecap="round" />
   <path d="M190,81 l0,-1 l20,-10 l0,-1" stroke="blue" stroke-linecap="square" />
 
+  <!-- Half-open lines. -->
+  <path d="M240,20 h20 h-20" stroke="red" stroke-linecap="butt"
+        stroke-linejoin="round" />
+  <path d="M240,50 h20 h-20" stroke="yellow"  stroke-linecap="round"
+        stroke-linejoin="round" />
+  <path d="M240,80 h20 h-20" stroke="blue"  stroke-linecap="square"
+        stroke-linejoin="round" />
+
+  <!-- Closed lines. -->
+  <path d="M290,20 h20 z" stroke="red" stroke-linecap="butt"
+        stroke-linejoin="round" />
+  <path d="M290,50 h20 z" stroke="yellow"  stroke-linecap="round"
+        stroke-linejoin="round" />
+  <path d="M290,80 h20 z" stroke="blue"  stroke-linecap="square"
+        stroke-linejoin="round" />
+
   <!-- Open triangle, facing down. -->
   <path d="M200,130 h60 L230,170 L200,130" stroke="red"
         stroke-linecap="butt" fill="none" />
@@ -60,11 +76,22 @@ path:nth-of-type(3) {
         stroke-linecap="butt" style="stroke-width: 200" fill="none" />
 
   <!-- Closed rect (using <rect>) -->
-  <rect x="20" y="120" width="50" height="50" stroke="green"
-        stroke-linecap="butt" stroke-width="20" fill="none" />
+  <rect x="20" y="120" width="50" height="50" stroke="green" fill="none"
+        stroke-linecap="butt" stroke-linejoin="round" stroke-width="20" />
 
   <!-- Open rect. -->
-  <path d="M110,170 h50 v-50 h-50 v50" stroke="green"
-        stroke-linecap="butt" fill="none" />
+  <path d="M110,170 h50 v-50 h-50 v50" stroke="green" fill="none"
+        stroke-linecap="butt" stroke-linejoin="round" />
+
+  <!-- Small closed rects with line width becoming wider than rect size. -->
+  <rect x="100" y="200" width="20" height="20" stroke="green"
+        stroke-linejoin="round" stroke-width="8" fill="none" />
+  <rect x="130" y="200" width="15" height="15" stroke="green"
+        stroke-linejoin="round" stroke-width="8" fill="none" />
+  <rect x="155" y="200" width="10" height="10" stroke="green"
+        stroke-linejoin="round" stroke-width="8" fill="none" />
+  <!-- FIXME: Figure out why this is missing the center pixel on mac/arm64
+  <rect x="175" y="200" width="5" height="5" stroke="green"
+        stroke-linejoin="round" stroke-width="8" fill="none" /> -->
 
 </svg>
