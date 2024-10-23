@@ -648,7 +648,7 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 
         auto add_round_join = [&] {
             add_vertex(shape[shape_idx] + pen_vertices[active]);
-            auto slope_now = slope();
+            auto slope_now = angle_between(shape[shape_idx], shape[shape_idx + 1]);
             auto range = active_ranges[active];
             while (!range.in_range(slope_now)) {
                 active = mod(active + (clockwise(slope_now, range.end) ? 1 : -1), pen_vertices.size());
