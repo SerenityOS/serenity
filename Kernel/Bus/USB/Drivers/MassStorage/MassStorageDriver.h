@@ -9,7 +9,8 @@
 #include <Kernel/Bus/USB/Drivers/USBDriver.h>
 #include <Kernel/Bus/USB/USBInterface.h>
 #include <Kernel/Bus/USB/USBManagement.h>
-#include <Kernel/Devices/Storage/USB/BulkSCSIInterface.h>
+#include <Kernel/Devices/Storage/USB/BOT/BulkSCSIInterface.h>
+#include <Kernel/Devices/Storage/USB/UAS/UASInterface.h>
 
 namespace Kernel::USB {
 
@@ -28,11 +29,11 @@ public:
     virtual void detach(USB::Device&) override;
 
 private:
-    BulkSCSIInterface::List m_interfaces;
-
-    ErrorOr<void> checkout_interface(USB::Device&, USBInterface const&);
+    BulkSCSIInterface::List m_bot_interfaces;
+    UASInterface::List m_uas_interfaces;
 
     ErrorOr<void> initialise_bulk_only_device(USB::Device&, USBInterface const&);
+    ErrorOr<void> initialise_uas_device(USB::Device&, USBInterface const&);
 };
 
 }
