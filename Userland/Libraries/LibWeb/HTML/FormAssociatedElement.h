@@ -87,7 +87,7 @@ public:
     HTMLElement const& form_associated_element_to_html_element() const { return const_cast<FormAssociatedElement&>(*this).form_associated_element_to_html_element(); }
 
     // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-reset-control
-    virtual void reset_algorithm() {};
+    virtual void reset_algorithm() { }
 
     WebIDL::UnsignedLong selection_start() const;
     WebIDL::ExceptionOr<void> set_selection_start(Optional<WebIDL::UnsignedLong> const&);

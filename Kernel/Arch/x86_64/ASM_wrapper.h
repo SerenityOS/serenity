@@ -15,13 +15,11 @@ namespace Kernel {
 
 ALWAYS_INLINE void cli()
 {
-    asm volatile("cli" ::
-                     : "memory");
+    asm volatile("cli" ::: "memory");
 }
 ALWAYS_INLINE void sti()
 {
-    asm volatile("sti" ::
-                     : "memory");
+    asm volatile("sti" ::: "memory");
 }
 ALWAYS_INLINE NO_SANITIZE_COVERAGE FlatPtr cpu_flags()
 {
@@ -108,7 +106,7 @@ void write_dr7(FlatPtr);
 ALWAYS_INLINE void read_tsc(u32& lsw, u32& msw)
 {
     asm volatile("rdtsc"
-                 : "=d"(msw), "=a"(lsw));
+        : "=d"(msw), "=a"(lsw));
 }
 
 ALWAYS_INLINE u64 read_tsc()

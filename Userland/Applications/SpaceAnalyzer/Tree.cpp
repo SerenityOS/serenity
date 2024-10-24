@@ -42,7 +42,9 @@ void TreeNode::sort_children_by_area() const
 struct QueueEntry {
     QueueEntry(ByteString path, TreeNode* node)
         : path(move(path))
-        , node(node) {};
+        , node(node)
+    {
+    }
     ByteString path;
     TreeNode* node { nullptr };
 };
