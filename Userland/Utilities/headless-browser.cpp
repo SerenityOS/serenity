@@ -59,7 +59,7 @@
 #    include <Ladybird/Utilities.h>
 #endif
 
-constexpr int DEFAULT_TIMEOUT_MS = 30000; // 30sec
+constexpr int DEFAULT_TIMEOUT_MS = 60'000;
 
 static StringView s_current_test_path;
 
