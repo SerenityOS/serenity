@@ -142,6 +142,7 @@ set(KERNEL_SOURCES
     FileSystem/DevLoopFS/Inode.cpp
     FileSystem/DevPtsFS/FileSystem.cpp
     FileSystem/DevPtsFS/Inode.cpp
+    FileSystem/Ext2FS/BlockView.cpp
     FileSystem/Ext2FS/FileSystem.cpp
     FileSystem/Ext2FS/Inode.cpp
     FileSystem/FATFS/FileSystem.cpp

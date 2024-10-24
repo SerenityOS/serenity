@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <Kernel/FileSystem/Ext2FS/BlockView.h>
 #include <Kernel/FileSystem/Ext2FS/Definitions.h>
 #include <Kernel/FileSystem/Ext2FS/DirectoryEntry.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
@@ -17,6 +18,7 @@ namespace Kernel {
 
 class Ext2FSInode final : public Inode {
     friend class Ext2FS;
+    friend class Ext2FSBlockView;
 
 public:
     virtual ~Ext2FSInode() override;
@@ -45,8 +47,7 @@ private:
     virtual ErrorOr<void> truncate_locked(u64) override;
     virtual ErrorOr<int> get_block_address(int) override;
 
-    ErrorOr<BlockBasedFileSystem::BlockIndex> get_or_allocate_block(BlockBasedFileSystem::BlockIndex, bool zero_newly_allocated_block, bool allow_cache);
-    BlockBasedFileSystem::BlockIndex get_block(BlockBasedFileSystem::BlockIndex) const;
+    ErrorOr<BlockBasedFileSystem::BlockIndex> allocate_block(BlockBasedFileSystem::BlockIndex, bool zero_newly_allocated_block, bool allow_cache);
     ErrorOr<u32> allocate_and_zero_block();
 
     ErrorOr<void> write_directory(Vector<Ext2FSDirectoryEntry>&);
@@ -56,12 +57,10 @@ private:
     ErrorOr<void> write_doubly_indirect_block_pointer(BlockBasedFileSystem::BlockIndex logical_block_index, BlockBasedFileSystem::BlockIndex on_disk_index);
     ErrorOr<void> write_triply_indirect_block_pointer(BlockBasedFileSystem::BlockIndex logical_block_index, BlockBasedFileSystem::BlockIndex on_disk_index);
     ErrorOr<void> write_block_pointer(BlockBasedFileSystem::BlockIndex logical_block_index, BlockBasedFileSystem::BlockIndex on_disk_index);
-    ErrorOr<void> flush_block_list(Ext2FS::BlockList const& old_block_list);
 
-    ErrorOr<void> compute_block_list_with_exclusive_locking();
-    ErrorOr<Ext2FS::BlockList> compute_block_list() const;
-    ErrorOr<Ext2FS::BlockList> compute_block_list_impl(Vector<Ext2FS::BlockIndex>* meta_blocks = nullptr) const;
-    ErrorOr<Vector<Ext2FS::BlockIndex>> compute_meta_blocks() const;
+    ErrorOr<Ext2FS::BlockList> compute_block_list(BlockBasedFileSystem::BlockIndex, BlockBasedFileSystem::BlockIndex) const;
+
+    ErrorOr<void> free_all_blocks();
 
     u64 singly_indirect_block_capacity() const
     {
@@ -85,11 +84,9 @@ private:
     Ext2FS const& fs() const;
     Ext2FSInode(Ext2FS&, InodeIndex);
 
-    Ext2FS::BlockList m_block_list;
+    Ext2FSBlockView m_block_view;
     HashMap<NonnullOwnPtr<KString>, InodeIndex> m_lookup_cache;
     ext2_inode m_raw_inode {};
-
-    Mutex m_block_list_lock { "BlockList"sv };
 };
 
 inline Ext2FS& Ext2FSInode::fs()
