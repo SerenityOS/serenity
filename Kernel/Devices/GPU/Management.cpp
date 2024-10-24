@@ -119,14 +119,14 @@ UNMAP_AFTER_INIT ErrorOr<void> GraphicsManagement::determine_and_initialize_grap
 
 UNMAP_AFTER_INIT void GraphicsManagement::initialize_preset_resolution_generic_display_connector()
 {
-    VERIFY(!multiboot_framebuffer_addr.is_null());
-    VERIFY(multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB);
+    VERIFY(!g_boot_info.boot_framebuffer.paddr.is_null());
+    VERIFY(g_boot_info.boot_framebuffer.type == BootFramebufferType::BGRx8888);
     dmesgln("Graphics: Using a preset resolution from the bootloader, without knowing the PCI device");
     m_preset_resolution_generic_display_connector = MUST(GenericDisplayConnector::create_with_preset_resolution(
-        multiboot_framebuffer_addr,
-        multiboot_framebuffer_width,
-        multiboot_framebuffer_height,
-        multiboot_framebuffer_pitch));
+        g_boot_info.boot_framebuffer.paddr,
+        g_boot_info.boot_framebuffer.width,
+        g_boot_info.boot_framebuffer.height,
+        g_boot_info.boot_framebuffer.pitch));
 }
 
 UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
@@ -163,11 +163,17 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         return true;
     }
 
+    bool boot_framebuffer_usable = !g_boot_info.boot_framebuffer.paddr.is_null()
+        && g_boot_info.boot_framebuffer.type == BootFramebufferType::BGRx8888;
+
+    bool use_boot_framebuffer = graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited
+        && boot_framebuffer_usable;
+
     // Note: Don't try to initialize an ISA Bochs VGA adapter if PCI hardware is
     // present but the user decided to disable its usage nevertheless.
     // Otherwise we risk using the Bochs VBE driver on a wrong physical address
     // for the framebuffer.
-    if (PCI::Access::is_hardware_disabled() && !(graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB)) {
+    if (PCI::Access::is_hardware_disabled() && !use_boot_framebuffer) {
 #if ARCH(X86_64)
         auto vga_isa_bochs_display_connector_or_error = BochsDisplayConnector::try_create_for_vga_isa_connector();
         if (!vga_isa_bochs_display_connector_or_error.is_error()) {
@@ -181,7 +187,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
 #endif
     }
 
-    if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+    if (use_boot_framebuffer) {
         initialize_preset_resolution_generic_display_connector();
         return true;
     }
@@ -206,11 +212,11 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     // Note: If we failed to find any graphics device to be used natively, but the
     // bootloader prepared a framebuffer for us to use, then just create a DisplayConnector
     // for it so the user can still use the system in graphics mode.
-    // Prekernel sets the framebuffer address to 0 if MULTIBOOT_INFO_FRAMEBUFFER_INFO
-    // is not present, as there is likely never a valid framebuffer at this physical address.
+    // Prekernel sets the framebuffer address to 0 if no framebuffer is present,
+    // as there is likely never a valid framebuffer at this physical address.
     // Note: We only support RGB framebuffers. Any other format besides RGBX (and RGBA) or BGRX (and BGRA) is obsolete
     // and is not useful for us.
-    if (m_graphics_devices.is_empty() && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+    if (m_graphics_devices.is_empty() && boot_framebuffer_usable) {
         initialize_preset_resolution_generic_display_connector();
         return true;
     }

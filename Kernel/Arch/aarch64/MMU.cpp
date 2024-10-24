@@ -160,10 +160,10 @@ static void setup_quickmap_page_table(PageBumpAllocator& allocator, u64* root_ta
 {
     // FIXME: Rename boot_pd_kernel_pt1023 to quickmap_page_table
     // FIXME: Rename KERNEL_PT1024_BASE to quickmap_page_table_address
-    auto kernel_pt1024_base = VirtualAddress(*adjust_by_mapping_base(&kernel_mapping_base) + KERNEL_PT1024_OFFSET);
+    auto kernel_pt1024_base = VirtualAddress(*adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) + KERNEL_PT1024_OFFSET);
 
     auto quickmap_page_table = PhysicalAddress((PhysicalPtr)insert_page_table(allocator, root_table, kernel_pt1024_base));
-    *adjust_by_mapping_base(&boot_pd_kernel_pt1023) = (PageTableEntry*)quickmap_page_table.offset(calculate_physical_to_link_time_address_offset()).get();
+    *adjust_by_mapping_base(&g_boot_info.boot_pd_kernel_pt1023) = (PageTableEntry*)quickmap_page_table.offset(calculate_physical_to_link_time_address_offset()).get();
 }
 
 static void build_mappings(PageBumpAllocator& allocator, u64* root_table)
@@ -279,27 +279,27 @@ static u64* get_page_directory_table(u64* root_table, VirtualAddress virtual_add
 
 static void setup_kernel_page_directory(u64* root_table)
 {
-    auto kernel_page_directory = (PhysicalPtr)get_page_directory(root_table, VirtualAddress { *adjust_by_mapping_base(&kernel_mapping_base) });
+    auto kernel_page_directory = (PhysicalPtr)get_page_directory(root_table, VirtualAddress { *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) });
     if (!kernel_page_directory)
         panic_without_mmu("Could not find kernel page directory!"sv);
 
-    *adjust_by_mapping_base(&boot_pd_kernel) = PhysicalAddress(kernel_page_directory);
+    *adjust_by_mapping_base(&g_boot_info.boot_pd_kernel) = PhysicalAddress(kernel_page_directory);
 
     // FIXME: Rename boot_pml4t to something architecture agnostic.
-    *adjust_by_mapping_base(&boot_pml4t) = PhysicalAddress((PhysicalPtr)root_table);
+    *adjust_by_mapping_base(&g_boot_info.boot_pml4t) = PhysicalAddress((PhysicalPtr)root_table);
 
     // FIXME: Rename to directory_table or similar
-    *adjust_by_mapping_base(&boot_pdpt) = PhysicalAddress((PhysicalPtr)get_page_directory_table(root_table, VirtualAddress { *adjust_by_mapping_base(&kernel_mapping_base) }));
+    *adjust_by_mapping_base(&g_boot_info.boot_pdpt) = PhysicalAddress((PhysicalPtr)get_page_directory_table(root_table, VirtualAddress { *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) }));
 }
 
-void init_page_tables(PhysicalPtr fdt_ptr)
+void init_page_tables(PhysicalPtr flattened_devicetree_paddr)
 {
-    ::DeviceTree::FlattenedDeviceTreeHeader* fdt_header = bit_cast<::DeviceTree::FlattenedDeviceTreeHeader*>(fdt_ptr);
+    ::DeviceTree::FlattenedDeviceTreeHeader* fdt_header = bit_cast<::DeviceTree::FlattenedDeviceTreeHeader*>(flattened_devicetree_paddr);
     if (fdt_header->magic != 0xd00dfeed)
         panic_without_mmu("Invalid FDT passed"sv);
 
     // Copy the FDT to a known location
-    u8* fdt_storage = bit_cast<u8*>(fdt_ptr);
+    u8* fdt_storage = bit_cast<u8*>(flattened_devicetree_paddr);
     if (fdt_header->totalsize > DeviceTree::fdt_storage_size)
         panic_without_mmu("Passed FDT is bigger than the internal storage"sv);
     for (size_t o = 0; o < fdt_header->totalsize; o += 1) {
@@ -307,9 +307,14 @@ void init_page_tables(PhysicalPtr fdt_ptr)
         adjust_by_mapping_base(DeviceTree::s_fdt_storage)[o] = fdt_storage[o];
     }
 
-    *adjust_by_mapping_base(&physical_to_virtual_offset) = calculate_physical_to_link_time_address_offset();
-    *adjust_by_mapping_base(&kernel_mapping_base) = KERNEL_MAPPING_BASE;
-    *adjust_by_mapping_base(&kernel_load_base) = KERNEL_MAPPING_BASE;
+    *adjust_by_mapping_base(&g_boot_info.boot_method) = BootMethod::Multiboot1;
+    adjust_by_mapping_base(&g_boot_info.boot_method_specific)->pre_init.~PreInitBootInfo();
+    new (adjust_by_mapping_base(&g_boot_info.boot_method_specific.multiboot1)) Multiboot1BootInfo;
+
+    *adjust_by_mapping_base(&g_boot_info.flattened_devicetree_paddr) = PhysicalAddress { flattened_devicetree_paddr };
+    *adjust_by_mapping_base(&g_boot_info.physical_to_virtual_offset) = calculate_physical_to_link_time_address_offset();
+    *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) = KERNEL_MAPPING_BASE;
+    *adjust_by_mapping_base(&g_boot_info.kernel_load_base) = KERNEL_MAPPING_BASE;
 
     PageBumpAllocator allocator(adjust_by_mapping_base((u64*)page_tables_phys_start), adjust_by_mapping_base((u64*)page_tables_phys_end));
     auto root_table = allocator.take_page();

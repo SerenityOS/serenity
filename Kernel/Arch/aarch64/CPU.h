@@ -18,7 +18,7 @@ void dbgln_without_mmu(StringView);
 
 namespace Memory {
 
-void init_page_tables(PhysicalPtr fdt_ptr);
+void init_page_tables(PhysicalPtr flattened_devicetree_paddr);
 void unmap_identity_map();
 
 }
