@@ -12,6 +12,7 @@
 
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
+#include <Kernel/Memory/MemoryType.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <Kernel/Memory/PhysicalRAMPage.h>
 
@@ -120,17 +121,13 @@ public:
     bool is_writable() const { return (m_raw & to_underlying(PageTableEntryBits::Writeable)) != 0; }
     void set_writable(bool b) { set_bit(PageTableEntryBits::Writeable, b); }
 
-    bool is_cache_disabled() const { TODO_RISCV64(); }
-    void set_cache_disabled(bool) { }
+    void set_memory_type(MemoryType) { }
 
     bool is_global() const { TODO_RISCV64(); }
     void set_global(bool b) { set_bit(PageTableEntryBits::Global, b); }
 
     bool is_execute_disabled() const { TODO_RISCV64(); }
     void set_execute_disabled(bool b) { set_bit(PageTableEntryBits::Executable, !b); }
-
-    bool is_pat() const { TODO_RISCV64(); }
-    void set_pat(bool) { }
 
     bool is_null() const { return m_raw == 0; }
     void clear() { m_raw = 0; }

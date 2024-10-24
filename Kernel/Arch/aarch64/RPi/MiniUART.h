@@ -9,6 +9,7 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Locking/Spinlock.h>
+#include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel::RPi {
 
@@ -42,6 +43,6 @@ private:
 
     bool m_last_put_char_was_carriage_return { false };
     Spinlock<LockRank::None> m_serial_lock {};
-    MiniUARTRegisters volatile* m_registers;
+    Memory::TypedMapping<MiniUARTRegisters volatile> m_registers;
 };
 }
