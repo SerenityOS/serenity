@@ -7,13 +7,13 @@
 #pragma once
 
 #include <LibGfx/Forward.h>
-#include <LibWeb/CSS/BackdropFilter.h>
+#include <LibWeb/CSS/Filter.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Painting {
 
-void apply_filter_list(Gfx::Bitmap& target_bitmap, ReadonlySpan<CSS::ResolvedBackdropFilter::FilterFunction> filter_list);
+void apply_filter_list(Gfx::Bitmap& target_bitmap, ReadonlySpan<CSS::ResolvedFilter::FilterFunction> filter_list);
 
-void apply_backdrop_filter(PaintContext&, CSSPixelRect const&, BorderRadiiData const&, CSS::ResolvedBackdropFilter const&);
+void apply_backdrop_filter(PaintContext&, CSSPixelRect const&, BorderRadiiData const&, CSS::ResolvedFilter const&);
 
 }
