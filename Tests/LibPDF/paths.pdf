@@ -14,7 +14,7 @@ endobj
 endobj
 
 4 0 obj
-<</Length 2149>>
+<</Length 2313>>
 stream
 /DeviceRGB CS
 
@@ -287,6 +287,26 @@ S
 
 Q
 
+% Lines with sharp angles, miter linejoins, and differing miter limits.
+0 0 1 SC
+
+4 w
+0 J
+0 j
+
+300 10 m
+305 65 l
+310 10 l
+S
+
+q
+20 M
+320 10 m
+325 65 l
+330 10 l
+S
+Q
+
 endstream
 endobj
 
@@ -301,5 +321,5 @@ xref
 trailer
 <</Size 5/Root 2 0 R>>
 startxref
-2404
+2568
 %%EOF
