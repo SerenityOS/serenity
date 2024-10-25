@@ -657,9 +657,13 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
             }
         };
 
+        auto add_linejoin = [&](unsigned next_index) {
+            add_round_join(next_index);
+        };
+
         auto trace_path_until_index = [&](size_t index) {
             while (shape_idx < index) {
-                add_round_join(shape_idx + 1);
+                add_linejoin(shape_idx + 1);
                 shape_idx++;
             }
         };
@@ -705,7 +709,7 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 
         // Close outer stroke for closed paths, or draw cap 1 for open paths.
         if (current_segment_is_closed) {
-            add_round_join(1);
+            add_linejoin(1);
 
             // Start an independent path for the inner stroke.
             convolution.close();
@@ -728,7 +732,7 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
 
         // Close inner stroke for closed paths, or draw cap 2 for open paths.
         if (current_segment_is_closed) {
-            add_round_join(segment.size());
+            add_linejoin(segment.size());
         } else {
             add_linecap();
         }
