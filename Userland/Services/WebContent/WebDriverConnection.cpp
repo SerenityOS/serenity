@@ -2147,7 +2147,9 @@ Messages::WebDriverClient::DismissAlertResponse WebDriverConnection::dismiss_ale
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchAlert, "No user dialog is currently open"sv);
 
     // 3. Dismiss the current user prompt.
-    current_browsing_context().page().dismiss_dialog();
+    current_browsing_context().page().dismiss_dialog(JS::create_heap_function(current_browsing_context().heap(), [this]() {
+        async_dialog_closed(JsonValue {});
+    }));
 
     // 4. Return success with data null.
     return JsonValue {};
@@ -2164,7 +2166,9 @@ Messages::WebDriverClient::AcceptAlertResponse WebDriverConnection::accept_alert
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchAlert, "No user dialog is currently open"sv);
 
     // 3. Accept the current user prompt.
-    current_browsing_context().page().accept_dialog();
+    current_browsing_context().page().accept_dialog(JS::create_heap_function(current_browsing_context().heap(), [this]() {
+        async_dialog_closed(JsonValue {});
+    }));
 
     // 4. Return success with data null.
     return JsonValue {};
