@@ -41,8 +41,8 @@ public:
     void fill_path(Path const&, Color, WindingRule rule = WindingRule::Nonzero);
     void fill_path(Path const&, PaintStyle const& paint_style, float opacity = 1.0f, WindingRule rule = WindingRule::Nonzero);
 
-    void stroke_path(Path const&, Color, float thickness, Path::CapStyle cap_style = Path::CapStyle::Round);
-    void stroke_path(Path const&, PaintStyle const& paint_style, float thickness, float opacity = 1.0f, Path::CapStyle cap_style = Path::CapStyle::Round);
+    void stroke_path(Path const&, Color, float thickness, Path::CapStyle cap_style = Path::CapStyle::Round, Path::JoinStyle join_style = Path::JoinStyle::Round);
+    void stroke_path(Path const&, PaintStyle const& paint_style, float thickness, float opacity = 1.0f, Path::CapStyle cap_style = Path::CapStyle::Round, Path::JoinStyle join_style = Path::JoinStyle::Round);
 
     void translate(float dx, float dy) { m_transform.translate(dx, dy); }
     void translate(FloatPoint delta) { m_transform.translate(delta); }
