@@ -271,7 +271,8 @@ CommandResult AffineDisplayListPlayerCPU::stroke_path_using_color(StrokePathUsin
 {
     prepare_clipping(command.bounding_rect());
     auto path_transform = Gfx::AffineTransform(stacking_context().transform).multiply(Gfx::AffineTransform {}.set_translation(command.aa_translation));
-    aa_painter().stroke_path(command.path.copy_transformed(path_transform), command.color, command.thickness);
+    // FIXME: Pass command.cap_style here!
+    aa_painter().stroke_path(command.path.copy_transformed(path_transform), command.color, { command.thickness });
     return CommandResult::Continue;
 }
 
@@ -300,7 +301,8 @@ CommandResult AffineDisplayListPlayerCPU::draw_line(DrawLine const& command)
     Gfx::Path path;
     path.move_to(command.from.to_type<float>());
     path.line_to(command.to.to_type<float>());
-    aa_painter().stroke_path(path, command.color, command.thickness);
+    // FIXME: Probably want to use butt linecaps here?
+    aa_painter().stroke_path(path, command.color, { static_cast<float>(command.thickness) });
     return CommandResult::Continue;
 }
 
@@ -315,7 +317,8 @@ CommandResult AffineDisplayListPlayerCPU::draw_rect(DrawRect const& command)
     prepare_clipping(command.bounding_rect());
     Gfx::Path path;
     path.rect(command.rect.to_type<float>());
-    aa_painter().stroke_path(path.copy_transformed(stacking_context().transform), command.color, 1);
+    // FIXME: Probably want to use miter linejoins here?
+    aa_painter().stroke_path(path.copy_transformed(stacking_context().transform), command.color, { 1 });
     return CommandResult::Continue;
 }
 

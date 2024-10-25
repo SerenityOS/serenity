@@ -505,12 +505,16 @@ static Vector<FloatPoint, 128> make_pen(float thickness)
     return pen_vertices;
 }
 
-Path Path::stroke_to_fill(float thickness, CapStyle cap_style, JoinStyle join_style) const
+Path Path::stroke_to_fill(StrokeStyle const& style) const
 {
     // Note: This convolves a polygon with the path using the algorithm described
     // in https://keithp.com/~keithp/talks/cairo2003.pdf (3.1 Stroking Splines via Convolution)
     // Cap style handling is done by replacing the convolution with an explicit shape
     // at the path's ends, but we still maintain a position on the pen and pretend we're convolving.
+
+    auto thickness = style.thickness;
+    auto cap_style = style.cap_style;
+    auto join_style = style.join_style;
 
     VERIFY(thickness > 0);
 

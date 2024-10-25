@@ -331,9 +331,9 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
             VERIFY_NOT_REACHED();
         }(drawing_state.line_cap);
         if (auto color = drawing_state.stroke_style.as_color(); color.has_value()) {
-            painter.stroke_path(path, color->with_opacity(drawing_state.global_alpha), drawing_state.line_width, line_cap);
+            painter.stroke_path(path, color->with_opacity(drawing_state.global_alpha), { drawing_state.line_width, line_cap });
         } else {
-            painter.stroke_path(path, drawing_state.stroke_style.to_gfx_paint_style(), drawing_state.line_width, drawing_state.global_alpha, line_cap);
+            painter.stroke_path(path, drawing_state.stroke_style.to_gfx_paint_style(), { drawing_state.line_width, line_cap }, drawing_state.global_alpha);
         }
         return path.bounding_box();
     });

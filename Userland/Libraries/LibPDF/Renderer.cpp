@@ -340,9 +340,9 @@ RENDERER_HANDLER(path_stroke)
 {
     begin_path_paint();
     if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), line_width(), 1.0f, line_cap_style(), line_join_style());
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style());
     } else {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), line_width(), line_cap_style(), line_join_style());
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), stroke_style());
     }
     end_path_paint();
     return {};
@@ -390,9 +390,9 @@ RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
     begin_path_paint();
     if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), line_width(), 1.0f, line_cap_style(), line_join_style());
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style());
     } else {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), line_width(), line_cap_style(), line_join_style());
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), stroke_style());
     }
     m_current_path.close_all_subpaths();
     if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
@@ -408,9 +408,9 @@ RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
     begin_path_paint();
     if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), line_width(), 1.0f, line_cap_style(), line_join_style());
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style());
     } else {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), line_width(), line_cap_style(), line_join_style());
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), stroke_style());
     }
     m_current_path.close_all_subpaths();
     if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
@@ -1026,6 +1026,11 @@ Gfx::Path::JoinStyle Renderer::line_join_style() const
         return Gfx::Path::JoinStyle::Bevel;
     }
     VERIFY_NOT_REACHED();
+}
+
+Gfx::Path::StrokeStyle Renderer::stroke_style() const
+{
+    return { line_width(), line_cap_style(), line_join_style() };
 }
 
 PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)
