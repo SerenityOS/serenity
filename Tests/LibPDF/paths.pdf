@@ -14,7 +14,7 @@ endobj
 endobj
 
 4 0 obj
-<</Length 2117>>
+<</Length 2149>>
 stream
 /DeviceRGB CS
 
@@ -170,8 +170,7 @@ Q
 
 % Closed lines.
 q
-1 j
-
+0 j
 0 J
 1 0 0 SC
 290 280 m
@@ -179,6 +178,7 @@ q
 h
 S
 
+1 j
 1 J
 1 1 0 SC
 290 250 m
@@ -186,6 +186,7 @@ S
 h
 S
 
+2 j
 2 J
 0 0 1 SC
 290 220 m
@@ -204,14 +205,17 @@ Q
 200 170 l
 S
 
-% Open triangle, facing down, opposite winding order.
+% Open triangle, facing down, opposite winding order. Bevel linejoins.
+q
 0 J
+2 j
 1 0 0 SC
 200 90 m
 230 50 l
 260 90 l
 200 90 l
 S
+Q
 
 % Closed triangle, facing up.
 0 J
@@ -288,7 +292,7 @@ endobj
 
 xref
 0 5
-0000000000 00003 f 
+0000000000 65536 f 
 0000000016 00000 n 
 0000000068 00000 n 
 0000000114 00000 n 
@@ -297,5 +301,5 @@ xref
 trailer
 <</Size 5/Root 2 0 R>>
 startxref
-2372
+2404
 %%EOF
