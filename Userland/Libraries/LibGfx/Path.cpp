@@ -671,8 +671,44 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style, JoinStyle join_st
                 add_vertex(shape[shape_idx] + pen_vertices[active]);
         };
 
+        auto add_miter_join = [&](unsigned next_index) {
+            auto cross_product = [](FloatPoint const& p1, FloatPoint const& p2) {
+                return p1.x() * p2.y() - p1.y() * p2.x();
+            };
+
+            auto segment1 = shape[shape_idx] - shape[shape_idx - 1];
+            auto normal1 = FloatVector2(-segment1.y(), segment1.x()).normalized();
+            auto offset1 = FloatPoint(normal1.x(), normal1.y()) * (thickness / 2);
+            auto p1 = shape[shape_idx - 1] + offset1;
+
+            auto segment2 = shape[next_index] - shape[shape_idx];
+            auto normal2 = FloatVector2(-segment2.y(), segment2.x()).normalized();
+            auto offset2 = FloatPoint(normal2.x(), normal2.y()) * (thickness / 2);
+            auto p2 = shape[shape_idx] + offset2;
+
+            auto denominator = cross_product(segment1, segment2);
+            if (denominator == 0)
+                return add_bevel_join(next_index);
+
+            auto intersection = p1 + segment1 * cross_product(p2 - p1, segment2) / denominator;
+            float const miter_limit = 10; // FIXME: Pass in.
+            if (intersection.distance_from(shape[shape_idx]) / (thickness / 2) > miter_limit)
+                return add_bevel_join(next_index);
+
+            add_vertex(intersection);
+            auto slope_now = angle_between(shape[shape_idx], shape[next_index]);
+            auto range = active_ranges[active];
+            while (!range.in_range(slope_now)) {
+                active = mod(active + (clockwise(slope_now, range.end) ? 1 : -1), pen_vertices.size());
+                range = active_ranges[active];
+            }
+        };
+
         auto add_linejoin = [&](unsigned next_index) {
             switch (join_style) {
+            case JoinStyle::Miter:
+                add_miter_join(next_index);
+                break;
             case JoinStyle::Round:
                 add_round_join(next_index);
                 break;

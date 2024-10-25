@@ -89,6 +89,32 @@ TEST_CASE(path_to_fill_two_single_points)
     }
 }
 
+TEST_CASE(path_to_fill_miter_linejoin)
+{
+    float line_width = 2;
+    {
+        Gfx::Path path;
+        path.move_to({ 0, 0 });
+        path.line_to({ 2, 0 });
+        path.line_to({ 2, 2 });
+        auto fill = path.stroke_to_fill(line_width, Gfx::Path::CapStyle::Butt, Gfx::Path::JoinStyle::Miter);
+        EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 0, -1 }, { 3, 3 }));
+        EXPECT_EQ(fill.to_byte_string(), "M 1,1 L 1,2 L 3,2 L 3,-1 L 0,-1 L 0,1 L 1,1 Z");
+    }
+
+    {
+        Gfx::Path path;
+        path.move_to({ 1, 1 });
+        path.line_to({ 4, 1 });
+        path.line_to({ 4, 4 });
+        path.line_to({ 1, 4 });
+        path.close();
+        auto fill = path.stroke_to_fill(line_width, Gfx::Path::CapStyle::Butt, Gfx::Path::JoinStyle::Miter);
+        EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 0, 0 }, { 5, 5 }));
+        EXPECT_EQ(fill.to_byte_string(), "M 3,2 L 3,3 L 2,3 L 2,2 L 3,2 Z M 0,5 L 5,5 L 5,0 L 0,0 L 0,5 Z");
+    }
+}
+
 TEST_CASE(path_to_string)
 {
     {

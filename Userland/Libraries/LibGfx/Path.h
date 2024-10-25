@@ -216,7 +216,7 @@ public:
     };
 
     enum class JoinStyle {
-        // FIXME: Miter,
+        Miter,
         Round,
         Bevel,
     };
