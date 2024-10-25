@@ -1019,8 +1019,7 @@ Gfx::Path::JoinStyle Renderer::line_join_style() const
 {
     switch (state().line_join_style) {
     case LineJoinStyle::Miter:
-        // FIXME: JoinStyle::Miter once it exists
-        return Gfx::Path::JoinStyle::Round;
+        return Gfx::Path::JoinStyle::Miter;
     case LineJoinStyle::Round:
         return Gfx::Path::JoinStyle::Round;
     case LineJoinStyle::Bevel:
