@@ -319,7 +319,11 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
 {
     draw_clipped([&](auto& painter) {
         auto& drawing_state = this->drawing_state();
-        Gfx::Path::CapStyle line_cap = [](Bindings::CanvasLineCap cap) {
+
+        Gfx::Path::StrokeStyle stroke_style;
+        stroke_style.thickness = drawing_state.line_width;
+
+        stroke_style.cap_style = [](Bindings::CanvasLineCap cap) {
             switch (cap) {
             case Bindings::CanvasLineCap::Butt:
                 return Gfx::Path::CapStyle::Butt;
@@ -330,10 +334,25 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
             }
             VERIFY_NOT_REACHED();
         }(drawing_state.line_cap);
+
+        stroke_style.join_style = [](Bindings::CanvasLineJoin join) {
+            switch (join) {
+            case Bindings::CanvasLineJoin::Bevel:
+                return Gfx::Path::JoinStyle::Bevel;
+            case Bindings::CanvasLineJoin::Round:
+                return Gfx::Path::JoinStyle::Round;
+            case Bindings::CanvasLineJoin::Miter:
+                return Gfx::Path::JoinStyle::Miter;
+            }
+            VERIFY_NOT_REACHED();
+        }(drawing_state.line_join);
+
+        stroke_style.miter_limit = drawing_state.miter_limit;
+
         if (auto color = drawing_state.stroke_style.as_color(); color.has_value()) {
-            painter.stroke_path(path, color->with_opacity(drawing_state.global_alpha), { drawing_state.line_width, line_cap });
+            painter.stroke_path(path, color->with_opacity(drawing_state.global_alpha), stroke_style);
         } else {
-            painter.stroke_path(path, drawing_state.stroke_style.to_gfx_paint_style(), { drawing_state.line_width, line_cap }, drawing_state.global_alpha);
+            painter.stroke_path(path, drawing_state.stroke_style.to_gfx_paint_style(), stroke_style, drawing_state.global_alpha);
         }
         return path.bounding_box();
     });

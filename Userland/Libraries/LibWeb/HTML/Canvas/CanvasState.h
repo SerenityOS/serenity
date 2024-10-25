@@ -78,6 +78,8 @@ public:
         FillOrStrokeStyle stroke_style { Gfx::Color::Black };
         float line_width { 1 };
         Bindings::CanvasLineCap line_cap { Bindings::CanvasLineCap::Butt };
+        Bindings::CanvasLineJoin line_join { Bindings::CanvasLineJoin::Miter };
+        float miter_limit { 10 };
         bool image_smoothing_enabled { true };
         Bindings::ImageSmoothingQuality image_smoothing_quality { Bindings::ImageSmoothingQuality::Low };
         float global_alpha = { 1 };
