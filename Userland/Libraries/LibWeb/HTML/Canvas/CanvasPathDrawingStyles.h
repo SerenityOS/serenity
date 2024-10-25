@@ -43,6 +43,33 @@ public:
         return my_drawing_state().line_cap;
     }
 
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-linejoin
+    void set_line_join(Bindings::CanvasLineJoin line_join)
+    {
+        // On setting, the current value must be changed to the new value.
+        my_drawing_state().line_join = line_join;
+    }
+    Bindings::CanvasLineJoin line_join() const
+    {
+        // On getting, it must return the current value.
+        return my_drawing_state().line_join;
+    }
+
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-miterlimit
+    void set_miter_limit(float miter_limit)
+    {
+        // On setting, zero, negative, infinite, and NaN values must be ignored, leaving the value unchanged;
+        if (miter_limit <= 0 || !isfinite(miter_limit))
+            return;
+        // other values must change the current value to the new value.
+        my_drawing_state().miter_limit = miter_limit;
+    }
+    float miter_limit() const
+    {
+        // On getting, it must return the current value.
+        return my_drawing_state().miter_limit;
+    }
+
 protected:
     CanvasPathDrawingStyles() = default;
 
