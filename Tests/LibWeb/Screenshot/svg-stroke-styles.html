@@ -49,19 +49,19 @@ path:nth-of-type(3) {
 
   <!-- Closed lines. -->
   <path d="M290,20 h20 z" stroke="red" stroke-linecap="butt"
-        stroke-linejoin="round" />
+        stroke-linejoin="miter" />
   <path d="M290,50 h20 z" stroke="yellow"  stroke-linecap="round"
         stroke-linejoin="round" />
   <path d="M290,80 h20 z" stroke="blue"  stroke-linecap="square"
-        stroke-linejoin="round" />
+        stroke-linejoin="bevel" />
 
   <!-- Open triangle, facing down. -->
   <path d="M200,130 h60 L230,170 L200,130" stroke="red"
         stroke-linecap="butt" fill="none" />
 
-  <!-- Open triangle, facing down, opposite winding order. -->
+  <!-- Open triangle, facing down, opposite winding order. Bevel linejoins. -->
   <path d="M200,210 L230,250 L260,210 h-60" stroke="red"
-        stroke-linecap="butt" fill="none" />
+        stroke-linecap="butt" fill="none" stroke-linejoin="bevel" />
 
   <!-- Closed triangle, facing up. -->
   <path d="M280,170 h60 L310,130 L280,170 Z" stroke="red"
@@ -94,4 +94,11 @@ path:nth-of-type(3) {
   <rect x="175" y="200" width="5" height="5" stroke="green"
         stroke-linejoin="round" stroke-width="8" fill="none" /> -->
 
+
+  <!-- Lines with sharp angles, miter linejoins, and differing miter limits. -->
+  <path d="M300,290 l 5,-55 l5,55" stroke="blue" stroke-linecap="butt"
+        stroke-linejoin="miter" fill="none" style="stroke-width: 4" />
+  <path d="M320,290 l 5,-55 l5,55" stroke="blue" stroke-linecap="butt"
+        stroke-linejoin="miter" fill="none" stroke-miterlimit="20"
+        style="stroke-width: 4; stroke-miterlimit: -5" />
 </svg>
