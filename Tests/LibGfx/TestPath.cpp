@@ -12,34 +12,34 @@ TEST_CASE(path_to_fill_short_wide_line_with_butt_linecap)
 {
     // Test drawing a horizontal rect by stroking a vertical short wide line.
     {
-        int width = 100;
-        int height = 1;
+        float width = 100;
+        float height = 1;
         Gfx::Path path;
         path.move_to({ width / 2, 0 });
         path.line_to({ width / 2, height });
-        auto fill = path.stroke_to_fill(width, Gfx::Path::CapStyle::Butt);
+        auto fill = path.stroke_to_fill({ width, Gfx::Path::CapStyle::Butt });
         EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 0, 0 }, { width, height }));
     }
 
     // Test drawing a vertical rect by stroking a horizontal short wide line.
     {
-        int width = 1;
-        int height = 100;
+        float width = 1;
+        float height = 100;
         Gfx::Path path;
         path.move_to({ 0, height / 2 });
         path.line_to({ width, height / 2 });
-        auto fill = path.stroke_to_fill(height, Gfx::Path::CapStyle::Butt);
+        auto fill = path.stroke_to_fill({ height, Gfx::Path::CapStyle::Butt });
         EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 0, 0 }, { width, height }));
     }
 }
 TEST_CASE(path_to_fill_square_linecap)
 {
-    int line_width = 10;
-    int width = 100;
+    float line_width = 10;
+    float width = 100;
     Gfx::Path path;
     path.move_to({ line_width / 2, line_width / 2 });
     path.line_to({ width - line_width / 2, line_width / 2 });
-    auto fill = path.stroke_to_fill(line_width, Gfx::Path::CapStyle::Square);
+    auto fill = path.stroke_to_fill({ line_width, Gfx::Path::CapStyle::Square });
     EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 0, 0 }, { width, line_width }));
 }
 
@@ -50,17 +50,17 @@ TEST_CASE(path_to_fill_single_point)
     path.line_to({ 10, 10 });
 
     {
-        auto fill = path.stroke_to_fill(8, Gfx::Path::CapStyle::Butt);
+        auto fill = path.stroke_to_fill({ 8, Gfx::Path::CapStyle::Butt });
         EXPECT(fill.is_empty());
     }
 
     {
-        auto fill = path.stroke_to_fill(8, Gfx::Path::CapStyle::Round);
+        auto fill = path.stroke_to_fill({ 8, Gfx::Path::CapStyle::Round });
         EXPECT(!fill.is_empty());
     }
 
     {
-        auto fill = path.stroke_to_fill(8, Gfx::Path::CapStyle::Square);
+        auto fill = path.stroke_to_fill({ 8, Gfx::Path::CapStyle::Square });
         EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 6, 6 }, { 8, 8 }));
     }
 }
@@ -74,17 +74,17 @@ TEST_CASE(path_to_fill_two_single_points)
     path.line_to({ 20, 20 });
 
     {
-        auto fill = path.stroke_to_fill(8, Gfx::Path::CapStyle::Butt);
+        auto fill = path.stroke_to_fill({ 8, Gfx::Path::CapStyle::Butt });
         EXPECT(fill.is_empty());
     }
 
     {
-        auto fill = path.stroke_to_fill(8, Gfx::Path::CapStyle::Round);
+        auto fill = path.stroke_to_fill({ 8, Gfx::Path::CapStyle::Round });
         EXPECT(!fill.is_empty());
     }
 
     {
-        auto fill = path.stroke_to_fill(8, Gfx::Path::CapStyle::Square);
+        auto fill = path.stroke_to_fill({ 8, Gfx::Path::CapStyle::Square });
         EXPECT(!fill.is_empty());
     }
 }
@@ -97,7 +97,7 @@ TEST_CASE(path_to_fill_miter_linejoin)
         path.move_to({ 0, 0 });
         path.line_to({ 2, 0 });
         path.line_to({ 2, 2 });
-        auto fill = path.stroke_to_fill(line_width, Gfx::Path::CapStyle::Butt, Gfx::Path::JoinStyle::Miter);
+        auto fill = path.stroke_to_fill({ line_width, Gfx::Path::CapStyle::Butt, Gfx::Path::JoinStyle::Miter });
         EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 0, -1 }, { 3, 3 }));
         EXPECT_EQ(fill.to_byte_string(), "M 1,1 L 1,2 L 3,2 L 3,-1 L 0,-1 L 0,1 L 1,1 Z");
     }
@@ -109,7 +109,7 @@ TEST_CASE(path_to_fill_miter_linejoin)
         path.line_to({ 4, 4 });
         path.line_to({ 1, 4 });
         path.close();
-        auto fill = path.stroke_to_fill(line_width, Gfx::Path::CapStyle::Butt, Gfx::Path::JoinStyle::Miter);
+        auto fill = path.stroke_to_fill({ line_width, Gfx::Path::CapStyle::Butt, Gfx::Path::JoinStyle::Miter });
         EXPECT_EQ(fill.bounding_box(), Gfx::FloatRect({ 0, 0 }, { 5, 5 }));
         EXPECT_EQ(fill.to_byte_string(), "M 3,2 L 3,3 L 2,3 L 2,2 L 3,2 Z M 0,5 L 5,5 L 5,0 L 0,0 L 0,5 Z");
     }

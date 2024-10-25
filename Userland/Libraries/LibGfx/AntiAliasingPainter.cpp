@@ -193,20 +193,20 @@ void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to
     draw_anti_aliased_line(actual_from, actual_to, color, thickness, style, alternate_color, line_length_mode);
 }
 
-void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thickness, Path::CapStyle cap_style, Path::JoinStyle join_style)
+void AntiAliasingPainter::stroke_path(Path const& path, Color color, Path::StrokeStyle const& stroke_style)
 {
-    if (thickness <= 0)
+    if (stroke_style.thickness <= 0)
         return;
     // FIXME: Cache this? Probably at a higher level such as in LibWeb?
-    fill_path(path.stroke_to_fill(thickness, cap_style, join_style), color);
+    fill_path(path.stroke_to_fill(stroke_style), color);
 }
 
-void AntiAliasingPainter::stroke_path(Path const& path, Gfx::PaintStyle const& paint_style, float thickness, float opacity, Path::CapStyle cap_style, Path::JoinStyle join_style)
+void AntiAliasingPainter::stroke_path(Path const& path, Gfx::PaintStyle const& paint_style, Path::StrokeStyle const& stroke_style, float opacity)
 {
-    if (thickness <= 0)
+    if (stroke_style.thickness <= 0)
         return;
     // FIXME: Cache this? Probably at a higher level such as in LibWeb?
-    fill_path(path.stroke_to_fill(thickness, cap_style, join_style), paint_style, opacity);
+    fill_path(path.stroke_to_fill(stroke_style), paint_style, opacity);
 }
 
 void AntiAliasingPainter::fill_rect(FloatRect const& float_rect, Color color)

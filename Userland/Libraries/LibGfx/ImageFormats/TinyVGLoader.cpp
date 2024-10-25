@@ -491,10 +491,10 @@ void TinyVGDecodedImageData::draw_transformed(Painter& painter, AffineTransform 
         }
         if (command.stroke.has_value()) {
             command.stroke->visit(
-                [&](Color color) { aa_painter.stroke_path(draw_path, color, command.stroke_width * scale); },
+                [&](Color color) { aa_painter.stroke_path(draw_path, color, { command.stroke_width * scale }); },
                 [&](NonnullRefPtr<SVGGradientPaintStyle> style) {
                     const_cast<SVGGradientPaintStyle&>(*style).set_gradient_transform(transform);
-                    aa_painter.stroke_path(draw_path, style, command.stroke_width * scale);
+                    aa_painter.stroke_path(draw_path, style, { command.stroke_width * scale });
                 });
         }
     }

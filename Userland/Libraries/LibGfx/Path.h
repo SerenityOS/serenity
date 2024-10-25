@@ -221,7 +221,13 @@ public:
         Bevel,
     };
 
-    Path stroke_to_fill(float thickness, CapStyle cap_style = CapStyle::Round, JoinStyle join_style = JoinStyle::Round) const;
+    struct StrokeStyle {
+        float thickness { 1 };
+        CapStyle cap_style { CapStyle::Round };
+        JoinStyle join_style { JoinStyle::Round };
+    };
+
+    Path stroke_to_fill(StrokeStyle const&) const;
 
     Path place_text_along(Utf8View text, Font const&) const;
 
