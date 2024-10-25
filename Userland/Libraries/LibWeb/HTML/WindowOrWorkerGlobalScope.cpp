@@ -927,7 +927,7 @@ void WindowOrWorkerGlobalScopeMixin::notify_about_rejected_promises(Badge<EventL
                     .composed = false,
                 },
                 // Sadly we can't use .promise and .reason here, as we can't use the designator on the initialization of DOM::EventInit above.
-                /* .promise = */ JS::make_handle(*promise),
+                /* .promise = */ *promise,
                 /* .reason = */ promise->result(),
             };
 
