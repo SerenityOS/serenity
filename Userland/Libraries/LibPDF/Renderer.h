@@ -184,6 +184,7 @@ private:
 
     float line_width() const;
     Gfx::Path::CapStyle line_cap_style() const;
+    Gfx::Path::JoinStyle line_join_style() const;
 
     Gfx::AffineTransform calculate_image_space_transformation(Gfx::IntSize);
 
