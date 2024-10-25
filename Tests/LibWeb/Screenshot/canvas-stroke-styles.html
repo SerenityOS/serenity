@@ -65,14 +65,31 @@ ctx.lineTo(200, 100);
 ctx.lineTo(150, 50);
 ctx.stroke();
 
-// Closed path
+// Closed path with round lineJoin
 ctx.lineCap = 'butt';
+ctx.lineJoin = 'round';
 ctx.beginPath();
 ctx.moveTo(300, 50);
 ctx.lineTo(350, 100);
 ctx.lineTo(250, 100);
 ctx.lineTo(300, 50);
 ctx.closePath();
+ctx.stroke();
+
+// Miter limit test.
+ctx.lineWidth = 5;
+ctx.lineJoin = 'miter';
+ctx.beginPath();
+ctx.moveTo(380, 100);
+ctx.lineTo(385, 20);
+ctx.lineTo(390, 100);
+ctx.stroke();
+
+ctx.miterLimit = 20;
+ctx.beginPath();
+ctx.moveTo(380, 230);
+ctx.lineTo(385, 150);
+ctx.lineTo(390, 230);
 ctx.stroke();
 
 // Different angles
