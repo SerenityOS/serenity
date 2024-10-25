@@ -225,8 +225,14 @@ public:
         float thickness { 1 };
         CapStyle cap_style { CapStyle::Round };
         JoinStyle join_style { JoinStyle::Round };
-    };
 
+        // Only used for JoinStyle::Miter.
+        // The miter limit ratio is the maximum allowed ratio of the miter length to the stroke width. If the ratio is exceeded, the join is converted to a bevel join.
+        // The minimum angle at which this happens is 2 * arcsin(1 / miter_limit).
+        // The default value of 10 matches the PDF and <canvas> default value, which corresponds to 11.48 degrees.
+        // (SVG uses a default of 4, which corresponds to 28.96 degrees.)
+        float miter_limit { 10 };
+    };
     Path stroke_to_fill(StrokeStyle const&) const;
 
     Path place_text_along(Utf8View text, Font const&) const;
