@@ -104,7 +104,7 @@ AudioTimestamp AudioContext::get_output_timestamp()
 }
 
 // https://www.w3.org/TR/webaudio/#dom-audiocontext-resume
-WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::resume()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> AudioContext::resume()
 {
     auto& realm = this->realm();
 
@@ -119,7 +119,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::resume()
     // 3. If the [[control thread state]] on the AudioContext is closed reject the promise with InvalidStateError, abort these steps, returning promise.
     if (state() == Bindings::AudioContextState::Closed) {
         WebIDL::reject_promise(realm, promise, WebIDL::InvalidStateError::create(realm, "Audio context is already closed."_string));
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise->promise()) };
+        return promise;
     }
 
     // 4. Set [[suspended by user]] to true.
@@ -192,11 +192,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::resume()
     }));
 
     // 8. Return promise.
-    return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise->promise()) };
+    return promise;
 }
 
 // https://www.w3.org/TR/webaudio/#dom-audiocontext-suspend
-WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::suspend()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> AudioContext::suspend()
 {
     auto& realm = this->realm();
 
@@ -211,7 +211,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::suspend()
     // 3. If the [[control thread state]] on the AudioContext is closed reject the promise with InvalidStateError, abort these steps, returning promise.
     if (state() == Bindings::AudioContextState::Closed) {
         WebIDL::reject_promise(realm, promise, WebIDL::InvalidStateError::create(realm, "Audio context is already closed."_string));
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise->promise()) };
+        return promise;
     }
 
     // 4. Append promise to [[pending promises]].
@@ -251,11 +251,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::suspend()
     }));
 
     // 8. Return promise.
-    return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise->promise()) };
+    return promise;
 }
 
 // https://www.w3.org/TR/webaudio/#dom-audiocontext-close
-WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::close()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> AudioContext::close()
 {
     auto& realm = this->realm();
 
@@ -270,7 +270,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::close()
     // 3. If the [[control thread state]] flag on the AudioContext is closed reject the promise with InvalidStateError, abort these steps, returning promise.
     if (state() == Bindings::AudioContextState::Closed) {
         WebIDL::reject_promise(realm, promise, WebIDL::InvalidStateError::create(realm, "Audio context is already closed."_string));
-        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise->promise()) };
+        return promise;
     }
 
     // 4. Set the [[control thread state]] flag on the AudioContext to closed.
@@ -305,7 +305,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> AudioContext::close()
     }));
 
     // 6. Return promise
-    return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise->promise()) };
+    return promise;
 }
 
 // FIXME: Actually implement the rendering thread
