@@ -695,8 +695,7 @@ Path Path::stroke_to_fill(StrokeStyle const& style) const
                 return add_bevel_join(next_index);
 
             auto intersection = p1 + segment1 * cross_product(p2 - p1, segment2) / denominator;
-            float const miter_limit = 10; // FIXME: Pass in.
-            if (intersection.distance_from(shape[shape_idx]) / (thickness / 2) > miter_limit)
+            if (intersection.distance_from(shape[shape_idx]) / (thickness / 2) > style.miter_limit)
                 return add_bevel_join(next_index);
 
             add_vertex(intersection);
