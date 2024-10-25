@@ -1030,7 +1030,7 @@ Gfx::Path::JoinStyle Renderer::line_join_style() const
 
 Gfx::Path::StrokeStyle Renderer::stroke_style() const
 {
-    return { line_width(), line_cap_style(), line_join_style() };
+    return { line_width(), line_cap_style(), line_join_style(), state().miter_limit };
 }
 
 PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)
