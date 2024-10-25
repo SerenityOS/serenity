@@ -19,6 +19,7 @@ list(TRANSFORM FONTS PREPEND "${SERENITY_SOURCE_DIR}/Base/res/fonts/")
 set(16x16_ICONS
     app-browser.png
     app-system-monitor.png
+    box.png
     audio-volume-high.png
     audio-volume-muted.png
     close-tab.png
