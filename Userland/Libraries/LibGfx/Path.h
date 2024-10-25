@@ -215,7 +215,13 @@ public:
         Square,
     };
 
-    Path stroke_to_fill(float thickness, CapStyle cap_style = CapStyle::Round) const;
+    enum class JoinStyle {
+        // FIXME: Miter,
+        Round,
+        Bevel,
+    };
+
+    Path stroke_to_fill(float thickness, CapStyle cap_style = CapStyle::Round, JoinStyle join_style = JoinStyle::Round) const;
 
     Path place_text_along(Utf8View text, Font const&) const;
 

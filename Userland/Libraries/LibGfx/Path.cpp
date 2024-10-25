@@ -505,7 +505,7 @@ static Vector<FloatPoint, 128> make_pen(float thickness)
     return pen_vertices;
 }
 
-Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
+Path Path::stroke_to_fill(float thickness, CapStyle cap_style, JoinStyle join_style) const
 {
     // Note: This convolves a polygon with the path using the algorithm described
     // in https://keithp.com/~keithp/talks/cairo2003.pdf (3.1 Stroking Splines via Convolution)
@@ -657,8 +657,29 @@ Path Path::stroke_to_fill(float thickness, CapStyle cap_style) const
             }
         };
 
+        auto add_bevel_join = [&](unsigned next_index) {
+            add_vertex(shape[shape_idx] + pen_vertices[active]);
+            auto slope_now = angle_between(shape[shape_idx], shape[next_index]);
+            auto range = active_ranges[active];
+            auto last_active = active;
+            while (!range.in_range(slope_now)) {
+                last_active = active;
+                active = mod(active + (clockwise(slope_now, range.end) ? 1 : -1), pen_vertices.size());
+                range = active_ranges[active];
+            }
+            if (last_active != active)
+                add_vertex(shape[shape_idx] + pen_vertices[active]);
+        };
+
         auto add_linejoin = [&](unsigned next_index) {
-            add_round_join(next_index);
+            switch (join_style) {
+            case JoinStyle::Round:
+                add_round_join(next_index);
+                break;
+            case JoinStyle::Bevel:
+                add_bevel_join(next_index);
+                break;
+            }
         };
 
         auto trace_path_until_index = [&](size_t index) {
