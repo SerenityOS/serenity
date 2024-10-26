@@ -115,8 +115,8 @@ set(SOURCES
     CSS/StyleValues/CSSHSL.cpp
     CSS/StyleValues/CSSHWB.cpp
     CSS/StyleValues/CSSKeywordValue.cpp
+    CSS/StyleValues/CSSLabLike.cpp
     CSS/StyleValues/CSSMathValue.cpp
-    CSS/StyleValues/CSSOKLab.cpp
     CSS/StyleValues/CSSOKLCH.cpp
     CSS/StyleValues/CSSRGB.cpp
     CSS/StyleValues/DisplayStyleValue.cpp
