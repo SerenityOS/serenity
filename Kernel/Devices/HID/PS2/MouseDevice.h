@@ -36,6 +36,7 @@ protected:
         };
     };
 
+    ErrorOr<int> reset_device();
     ErrorOr<u8> read_from_device();
     ErrorOr<void> send_command(SerialIOController::DeviceCommand command);
     ErrorOr<void> send_command(SerialIOController::DeviceCommand command, u8 data);
