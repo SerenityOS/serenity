@@ -145,6 +145,21 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
         break;
     }
 
+    Gfx::Path::JoinStyle join_style;
+    switch (graphics_element.stroke_linejoin().value_or(CSS::InitialValues::stroke_linejoin())) {
+    case CSS::StrokeLinejoin::Miter:
+        join_style = Gfx::Path::JoinStyle::Miter;
+        break;
+    case CSS::StrokeLinejoin::Round:
+        join_style = Gfx::Path::JoinStyle::Round;
+        break;
+    case CSS::StrokeLinejoin::Bevel:
+        join_style = Gfx::Path::JoinStyle::Bevel;
+        break;
+    }
+
+    auto miter_limit = graphics_element.stroke_miterlimit().value_or(CSS::InitialValues::stroke_miterlimit()).resolved(layout_node());
+
     auto stroke_opacity = graphics_element.stroke_opacity().value_or(1);
 
     // Note: This is assuming .x_scale() == .y_scale() (which it does currently).
@@ -153,6 +168,8 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (auto paint_style = graphics_element.stroke_paint_style(paint_context); paint_style.has_value()) {
         context.display_list_recorder().stroke_path({
             .cap_style = cap_style,
+            .join_style = join_style,
+            .miter_limit = static_cast<float>(miter_limit),
             .path = path,
             .paint_style = *paint_style,
             .thickness = stroke_thickness,
@@ -162,6 +179,8 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
     } else if (auto stroke_color = graphics_element.stroke_color(); stroke_color.has_value()) {
         context.display_list_recorder().stroke_path({
             .cap_style = cap_style,
+            .join_style = join_style,
+            .miter_limit = static_cast<float>(miter_limit),
             .path = path,
             .color = stroke_color->with_opacity(stroke_opacity),
             .thickness = stroke_thickness,

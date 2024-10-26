@@ -66,6 +66,8 @@ public:
 
     struct StrokePathUsingColorParams {
         Gfx::Path::CapStyle cap_style;
+        Gfx::Path::JoinStyle join_style;
+        float miter_limit;
         Gfx::Path path;
         Gfx::Color color;
         float thickness;
@@ -75,6 +77,8 @@ public:
 
     struct StrokePathUsingPaintStyleParams {
         Gfx::Path::CapStyle cap_style;
+        Gfx::Path::JoinStyle join_style;
+        float miter_limit;
         Gfx::Path path;
         PaintStyle paint_style;
         float thickness;

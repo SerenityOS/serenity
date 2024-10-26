@@ -271,7 +271,7 @@ CommandResult AffineDisplayListPlayerCPU::stroke_path_using_color(StrokePathUsin
 {
     prepare_clipping(command.bounding_rect());
     auto path_transform = Gfx::AffineTransform(stacking_context().transform).multiply(Gfx::AffineTransform {}.set_translation(command.aa_translation));
-    // FIXME: Pass command.cap_style here!
+    // FIXME: Pass command.cap_style, command.join_style, command.miter_limit here!
     aa_painter().stroke_path(command.path.copy_transformed(path_transform), command.color, { command.thickness });
     return CommandResult::Continue;
 }

@@ -203,6 +203,8 @@ struct FillPathUsingPaintStyle {
 
 struct StrokePathUsingColor {
     Gfx::Path::CapStyle cap_style;
+    Gfx::Path::JoinStyle join_style;
+    float miter_limit;
     Gfx::IntRect path_bounding_rect;
     Gfx::Path path;
     Color color;
@@ -220,6 +222,8 @@ struct StrokePathUsingColor {
 
 struct StrokePathUsingPaintStyle {
     Gfx::Path::CapStyle cap_style;
+    Gfx::Path::JoinStyle join_style;
+    float miter_limit;
     Gfx::IntRect path_bounding_rect;
     Gfx::Path path;
     PaintStyle paint_style;

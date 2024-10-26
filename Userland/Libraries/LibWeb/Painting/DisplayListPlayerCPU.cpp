@@ -345,7 +345,7 @@ CommandResult DisplayListPlayerCPU::stroke_path_using_color(StrokePathUsingColor
 {
     Gfx::AntiAliasingPainter aa_painter(painter());
     aa_painter.translate(command.aa_translation);
-    aa_painter.stroke_path(command.path, command.color, { command.thickness, command.cap_style });
+    aa_painter.stroke_path(command.path, command.color, { command.thickness, command.cap_style, command.join_style, command.miter_limit });
     return CommandResult::Continue;
 }
 
@@ -354,7 +354,7 @@ CommandResult DisplayListPlayerCPU::stroke_path_using_paint_style(StrokePathUsin
     Gfx::AntiAliasingPainter aa_painter(painter());
     auto gfx_paint_style = command.paint_style->create_gfx_paint_style();
     aa_painter.translate(command.aa_translation);
-    aa_painter.stroke_path(command.path, gfx_paint_style, { command.thickness, command.cap_style }, command.opacity);
+    aa_painter.stroke_path(command.path, gfx_paint_style, { command.thickness, command.cap_style, command.join_style, command.miter_limit }, command.opacity);
     return CommandResult::Continue;
 }
 
