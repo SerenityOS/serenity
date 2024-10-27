@@ -1,0 +1,34 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sun, 27 Oct 2024 02:13:48 +0000
+Subject: [PATCH] Replace lockf(fd, F_LOCK, 0) with flock(fd, LOCK_EX)
+
+We don't have the former implemented.
+---
+ lib/jobs-unix.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib/jobs-unix.cc b/lib/jobs-unix.cc
+index 9912ab52c451bb7eacd8a40f5d9cadbbbb49260e..03de0b59ea8d8b95930b10df9550e28fe3b37d0c 100644
+--- a/lib/jobs-unix.cc
++++ b/lib/jobs-unix.cc
+@@ -14,9 +14,9 @@
+ #include <fcntl.h>
+ #include <pwd.h>
+ #include <stdlib.h>
++#include <sys/file.h>
+ #include <sys/stat.h>
+ #include <sys/types.h>
+-#include <unistd.h>
+ 
+ namespace mold {
+ 
+@@ -37,7 +37,7 @@ void acquire_global_lock() {
+   if (fd == -1)
+     return;
+ 
+-  if (lockf(fd, F_LOCK, 0) == -1)
++  if (flock(fd, LOCK_EX) == -1)
+     return;
+   lock_fd = fd;
+ }

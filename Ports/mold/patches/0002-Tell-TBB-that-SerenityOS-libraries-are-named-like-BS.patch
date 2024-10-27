@@ -11,26 +11,26 @@ library for mold, but the OS detection logic still needs updated.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/third-party/tbb/src/tbb/allocator.cpp b/third-party/tbb/src/tbb/allocator.cpp
-index f30ded675f1372d572f4156489b15655cd302b2e..0acccef4b2521eee061e4df0aa8dd055e57f41c3 100644
+index 888f43fd3302d6fd1b17130ed6cfaea06b8608d9..7d77bc1bf8412c3b52ff77c7a0c42442aa4d9df2 100644
 --- a/third-party/tbb/src/tbb/allocator.cpp
 +++ b/third-party/tbb/src/tbb/allocator.cpp
-@@ -101,7 +101,7 @@ static const dynamic_link_descriptor MallocLinkTable[] = {
+@@ -119,7 +119,7 @@ static const dynamic_link_descriptor MallocLinkTable[] = {
  #define MALLOCLIB_NAME "tbbmalloc" DEBUG_SUFFIX ".dll"
  #elif __APPLE__
- #define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".dylib"
+ #define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".2.dylib"
 -#elif __FreeBSD__ || __NetBSD__ || __OpenBSD__ || __sun || _AIX || __ANDROID__
 +#elif __FreeBSD__ || __NetBSD__ || __OpenBSD__ || __sun || _AIX || __ANDROID__ || __serenity__
  #define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".so"
  #elif __unix__  // Note that order of these #elif's is important!
  #define MALLOCLIB_NAME "libtbbmalloc" DEBUG_SUFFIX ".so.2"
 diff --git a/third-party/tbb/src/tbb/rml_tbb.cpp b/third-party/tbb/src/tbb/rml_tbb.cpp
-index d31a77fb6ff25ef86557daf946aeefe8fe9db5ca..fb676bc90ec22c624b13835f77b5dda1c8d99d93 100644
+index d1cd285c1ae4e98488c4ae07cdebe6749d405945..4d4507c3c1c54a97d6a56e0342959fec295140fc 100644
 --- a/third-party/tbb/src/tbb/rml_tbb.cpp
 +++ b/third-party/tbb/src/tbb/rml_tbb.cpp
 @@ -50,7 +50,7 @@ namespace rml {
  #define RML_SERVER_NAME "irml" DEBUG_SUFFIX ".dll"
  #elif __APPLE__
- #define RML_SERVER_NAME "libirml" DEBUG_SUFFIX ".dylib"
+ #define RML_SERVER_NAME "libirml" DEBUG_SUFFIX ".1.dylib"
 -#elif __FreeBSD__ || __NetBSD__ || __OpenBSD__ || __sun || _AIX
 +#elif __FreeBSD__ || __NetBSD__ || __OpenBSD__ || __sun || _AIX || __serenity__
  #define RML_SERVER_NAME "libirml" DEBUG_SUFFIX ".so"

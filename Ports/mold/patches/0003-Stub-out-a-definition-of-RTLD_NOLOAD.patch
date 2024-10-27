@@ -12,10 +12,10 @@ use it will never be used.
  1 file changed, 1 insertion(+)
 
 diff --git a/third-party/tbb/src/tbb/dynamic_link.cpp b/third-party/tbb/src/tbb/dynamic_link.cpp
-index 91941adab7d4a73699784aed0d896ff32125b8e0..dddbbe128dd92c860527ae7f8befb105690a81f2 100644
+index a21beb5aeb0205ce5f4013b2115515155fad6940..f7353c521b94b2534494bdd77111b5f89a4af318 100644
 --- a/third-party/tbb/src/tbb/dynamic_link.cpp
 +++ b/third-party/tbb/src/tbb/dynamic_link.cpp
-@@ -53,6 +53,7 @@
+@@ -55,6 +55,7 @@
      #pragma weak dlclose
  #endif /* __TBB_WEAK_SYMBOLS_PRESENT && !__TBB_DYNAMIC_LOAD_ENABLED */
  
