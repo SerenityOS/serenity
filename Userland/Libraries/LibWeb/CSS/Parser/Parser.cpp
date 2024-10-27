@@ -3209,7 +3209,7 @@ RefPtr<CSSStyleValue> Parser::parse_lab_color_value(TokenStream<ComponentValue>&
 
     auto& color_values = *maybe_color_values;
 
-    return CSSLab::create(color_values[0].release_nonnull(),
+    return CSSLabLike::create<CSSLab>(color_values[0].release_nonnull(),
         color_values[1].release_nonnull(),
         color_values[2].release_nonnull(),
         color_values[3].release_nonnull());
@@ -3229,7 +3229,7 @@ RefPtr<CSSStyleValue> Parser::parse_oklab_color_value(TokenStream<ComponentValue
 
     auto& color_values = *maybe_color_values;
 
-    return CSSOKLab::create(color_values[0].release_nonnull(),
+    return CSSLabLike::create<CSSOKLab>(color_values[0].release_nonnull(),
         color_values[1].release_nonnull(),
         color_values[2].release_nonnull(),
         color_values[3].release_nonnull());
