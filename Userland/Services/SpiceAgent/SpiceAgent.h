@@ -73,6 +73,18 @@ private:
 
     bool m_clipboard_dirty { false };
 
+    struct {
+        Optional<MessageHeader> header;
+        size_t recv_offset { 0 };
+        ByteBuffer buffer;
+    } m_message;
+
+    struct {
+        u8 header[sizeof(ChunkHeader)] = {};
+        size_t recv_offset { 0 };
+        ByteBuffer buffer;
+    } m_chunk;
+
     // Fired when we receive clipboard data from the spice server.
     ErrorOr<void> did_receive_clipboard_message(ClipboardMessage& message);
 
@@ -82,7 +94,10 @@ private:
     // Sends the GUI::Clipboard's current contents to the spice server
     ErrorOr<void> send_clipboard_contents(ClipboardDataType data_type);
 
-    ErrorOr<void> on_message_received();
-    ErrorOr<ByteBuffer> read_message_buffer();
+    ErrorOr<void> on_message_received(MessageHeader const& header, Bytes data_buffer);
+
+    ErrorOr<void> on_chunk_received(Bytes chunk_buffer);
+
+    ErrorOr<void> read_chunks();
 };
 }
