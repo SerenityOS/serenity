@@ -8,10 +8,10 @@ Subject: [PATCH] Add serenity to the configure list of pthread unixes
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/configure.ac b/configure.ac
-index 0a62826167e403d794c517ec590dd3f2ff50a6da..f494dbe013b5ecc0a5b626a48f37b6d87cb0b0c0 100644
+index c8deb0840660c292258d2d043dedda4b1c37fc00..3399c06939b04eb50aaaf9e9c23e78a089055bc4 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -214,7 +214,7 @@ case "$THREADS" in
+@@ -213,7 +213,7 @@ case "$THREADS" in
        *-*-aix* | *-*-android* | *-*-cygwin* | *-*-darwin* | *-*-dragonfly* | \
        *-*-freebsd* | *-*-haiku* | *-*-hpux11* | *-*-irix* | \
        *-*-kfreebsd*-gnu | *-*-gnu* | *-*-*linux* | *-*-msys* | *-*-nacl* | \
