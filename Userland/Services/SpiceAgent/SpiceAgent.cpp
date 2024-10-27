@@ -109,7 +109,7 @@ ErrorOr<void> SpiceAgent::on_chunk_received(Bytes chunk_buffer)
     if (!m_message.header.has_value()) {
         // Read the header (the chunk must at least contain the header).
         m_message.header = MUST(stream.read_value<MessageHeader>());
-        m_message.buffer = MUST(ByteBuffer::create_uninitialized(m_message.header->data_size()));
+        m_message.buffer.resize(m_message.header->data_size());
         m_message.recv_offset = 0;
     }
 
@@ -308,7 +308,7 @@ ErrorOr<void> SpiceAgent::read_chunks()
             if (m_chunk.recv_offset < sizeof(ChunkHeader))
                 return {};
             auto header = bit_cast<ChunkHeader>(m_chunk.header);
-            m_chunk.buffer = MUST(ByteBuffer::create_uninitialized(header.size()));
+            m_chunk.buffer.resize(header.size());
             m_chunk.recv_offset = 0;
         }
 
