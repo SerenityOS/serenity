@@ -12,8 +12,6 @@ mkShell.override { stdenv = gcc13Stdenv; } {
     fuse2fs
     gcc13
     gmp
-    # To create port launcher icons
-    imagemagick
     libmpc
     mpfr
     ninja
@@ -29,6 +27,12 @@ mkShell.override { stdenv = gcc13Stdenv; } {
     parted
     qemu
     python3
+    # For building and installing ports
+    autoconf
+    automake
+    gperf
+    imagemagick
+    libtool
     # For clangd and clang-format
     clang-tools
     # For LibWeb-related formatting
