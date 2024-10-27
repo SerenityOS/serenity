@@ -12,7 +12,7 @@ SIGXFSZ instead.
  3 files changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/include/gc_config_macros.h b/include/gc_config_macros.h
-index 3bbc5fe..da783ce 100644
+index ec452c68d275737d045c9ddcbf1d5806ce42427c..d1058022111998f4e8ce6d76496d902a3b24d1ec 100644
 --- a/include/gc_config_macros.h
 +++ b/include/gc_config_macros.h
 @@ -73,7 +73,7 @@
@@ -34,10 +34,10 @@ index 3bbc5fe..da783ce 100644
  #   define GC_OPENBSD_THREADS
  # elif defined(_PA_RISC1_1) || defined(_PA_RISC2_0) || defined(hppa) \
 diff --git a/include/private/gc_priv.h b/include/private/gc_priv.h
-index b26543e..23e911e 100644
+index a398e48d57f0660495c1085237cb0ca5f2465e92..903c4a06b9e99f925c7baf95d7ec6d30092228db 100644
 --- a/include/private/gc_priv.h
 +++ b/include/private/gc_priv.h
-@@ -2985,7 +2985,7 @@ GC_INNER void *GC_store_debug_info_inner(void *p, word sz, const char *str,
+@@ -3057,7 +3057,7 @@ GC_INNER void *GC_store_debug_info_inner(void *p, word sz, const char *str,
         && !defined(GC_USESIGRT_SIGNALS)
  #   define SIG_SUSPEND SIGUSR1
          /* SIGTSTP and SIGCONT could be used alternatively on FreeBSD.  */
@@ -47,10 +47,10 @@ index b26543e..23e911e 100644
  #     define SIG_SUSPEND SIGXFSZ
  #   endif
 diff --git a/pthread_stop_world.c b/pthread_stop_world.c
-index b865d30..f0cf1a6 100644
+index f903f6fe2c88e18e97b478209e1ba53a2e4a789d..c582033386129e803e031ca041565bb45ff25ea4 100644
 --- a/pthread_stop_world.c
 +++ b/pthread_stop_world.c
-@@ -165,7 +165,9 @@ STATIC volatile AO_t GC_world_is_stopped = FALSE;
+@@ -167,7 +167,9 @@ STATIC volatile AO_t GC_world_is_stopped = FALSE;
   * pointer(s) and acknowledge.
   */
  #ifndef SIG_THR_RESTART
