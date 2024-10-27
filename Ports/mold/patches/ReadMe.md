@@ -30,3 +30,9 @@ use it will never be used.
 Disable mold-wrapper.so on SerenityOS
 
 
+## `0005-Replace-lockf-fd-F_LOCK-0-with-flock-fd-LOCK_EX.patch`
+
+Replace lockf(fd, F_LOCK, 0) with flock(fd, LOCK_EX)
+
+We don't have the former implemented.
+
