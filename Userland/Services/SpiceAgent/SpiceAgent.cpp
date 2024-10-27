@@ -121,9 +121,9 @@ ErrorOr<void> SpiceAgent::on_chunk_received(Bytes chunk_buffer)
         return {};
 
     ScopeGuard cleanup_message = [&] {
+        m_message.buffer.trim(0, true);
         m_message.recv_offset = 0;
         m_message.header = {};
-        m_message.buffer.trim(0, false);
     };
     TRY(on_message_received(*m_message.header, m_message.buffer));
     return {};
@@ -319,7 +319,7 @@ ErrorOr<void> SpiceAgent::read_chunks()
             return {};
 
         ScopeGuard cleanup_chunk = [&] {
-            m_chunk.buffer.trim(0, false);
+            m_chunk.buffer.trim(0, true);
             m_chunk.recv_offset = 0;
         };
         TRY(on_chunk_received(m_chunk.buffer));
