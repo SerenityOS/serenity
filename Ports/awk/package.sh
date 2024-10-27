@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=awk
-version=20220122
+version=20240728
 useconfigure="false"
 files=(
-    "https://github.com/onetrueawk/awk/archive/refs/tags/${version}.tar.gz#720a06ff8dcc12686a5176e8a4c74b1295753df816e38468a6cf077562d54042"
+    "https://github.com/onetrueawk/awk/archive/refs/tags/${version}.tar.gz#2d479817f95d5997fc4348ecebb1d8a1b25c81cebedb46ca4f59434247e08543"
 )
 patchlevel=1
 
