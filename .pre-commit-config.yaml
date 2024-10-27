@@ -5,7 +5,7 @@ repos:
         name: Running Meta/lint-ci.sh to ensure changes will pass linting on CI
         entry: bash Meta/lint-ci.sh
         args: [ --no-ports ]
-        stages: [ commit ]
+        stages: [ pre-commit ]
         language: system
 
       - id: meta-lint-ports
@@ -13,7 +13,7 @@ repos:
         entry: Meta/lint-ports.py
         pass_filenames: false
         files: ^Ports/
-        stages: [ commit ]
+        stages: [ pre-commit ]
         language: system
 
       - id: meta-lint-commit
