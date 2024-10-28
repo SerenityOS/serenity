@@ -130,6 +130,16 @@ class NonnullOwnPtr;
 template<typename T>
 class Optional;
 
+#ifndef KERNEL
+
+template<>
+class Optional<String>;
+
+template<>
+class Optional<FlyString>;
+
+#endif
+
 #ifdef KERNEL
 template<typename T>
 class NonnullLockRefPtr;

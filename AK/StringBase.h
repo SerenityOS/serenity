@@ -72,6 +72,8 @@ public:
     [[nodiscard]] ALWAYS_INLINE FlatPtr raw(Badge<FlyString>) const { return bit_cast<FlatPtr>(m_data); }
 
 protected:
+    bool is_invalid() const { return m_invalid_tag == UINTPTR_MAX; }
+
     template<typename Func>
     ErrorOr<void> replace_with_new_string(size_t byte_count, Func&& callback)
     {
@@ -104,6 +106,11 @@ private:
 
     explicit StringBase(NonnullRefPtr<Detail::StringData const>);
 
+    explicit constexpr StringBase(nullptr_t)
+        : m_invalid_tag(UINTPTR_MAX)
+    {
+    }
+
     explicit constexpr StringBase(ShortString short_string)
         : m_short_string(short_string)
     {
@@ -126,6 +133,7 @@ private:
     union {
         ShortString m_short_string;
         Detail::StringData const* m_data { nullptr };
+        uintptr_t m_invalid_tag;
     };
 };
 
