@@ -46,7 +46,7 @@ Serenity will not be able to boot with the default configuration. There are a co
 
 There are a couple of settings to check:
 
--   In **Storage**, click on the **Controller**. Make sure the controller type is PIIX4. PIIX3 and ICH6 are untested. Anything else is guaranteed not to work, as Serenity does not currently support them.
+-   In **Storage**, click on the **Controller**. Make sure the controller type is AHCI(SATA) or NVMe. Anything else is guaranteed not to work, as Serenity does not currently support them.
 -   In **Network** and in the **Advanced** drop down, make sure the **Adapter Type** is anything but **Intel PRO/1000 MT Desktop (82540EM)**. While it is the only adapter type Serenity currently supports, it does not currently work in VirtualBox.
 
 Please note that at the time of writing, audio and networking do not work in VirtualBox.
