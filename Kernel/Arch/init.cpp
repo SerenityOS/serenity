@@ -78,6 +78,10 @@
 #    include <Kernel/Arch/riscv64/Delay.h>
 #endif
 
+#if ARCH(AARCH64) || ARCH(RISCV64)
+#    include <Kernel/Firmware/DeviceTree/Management.h>
+#endif
+
 // Defined in the linker script
 typedef void (*ctor_func_t)();
 extern ctor_func_t start_heap_ctors[];
@@ -224,11 +228,16 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
         (*ctor)();
 
+    for (auto* init_function = driver_init_table_start; init_function != driver_init_table_end; init_function++)
+        (*init_function)();
+
 #if ARCH(AARCH64) || ARCH(RISCV64)
     MUST(DeviceTree::unflatten_fdt());
 
     if (kernel_command_line().contains("dump_fdt"sv))
         DeviceTree::dump_fdt();
+
+    DeviceTree::Management::initialize();
 #endif
 
 #if ARCH(RISCV64)
@@ -378,10 +387,6 @@ void init_stage2(void*)
     PTYMultiplexer::initialize();
 
     AudioManagement::the().initialize();
-
-    // Initialize all USB Drivers
-    for (auto* init_function = driver_init_table_start; init_function != driver_init_table_end; init_function++)
-        (*init_function)();
 
     StorageManagement::the().initialize(kernel_command_line().is_nvme_polling_enabled());
     for (int i = 0; i < 5; ++i) {
