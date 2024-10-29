@@ -133,7 +133,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
     }
 
     Gfx::Path::CapStyle cap_style;
-    switch (graphics_element.stroke_linecap().value_or(CSS::StrokeLinecap::Butt)) {
+    switch (graphics_element.stroke_linecap().value_or(CSS::InitialValues::stroke_linecap())) {
     case CSS::StrokeLinecap::Butt:
         cap_style = Gfx::Path::CapStyle::Butt;
         break;
