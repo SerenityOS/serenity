@@ -8,6 +8,7 @@
 
 #include <AK/Vector.h>
 #include <Kernel/Arch/aarch64/IRQController.h>
+#include <Kernel/Firmware/DeviceTree/DeviceRecipe.h>
 #include <Kernel/Library/LockRefPtr.h>
 
 namespace Kernel {
@@ -17,6 +18,8 @@ public:
     static InterruptManagement& the();
     static void initialize();
     static bool initialized();
+
+    static void add_recipe(DeviceTree::DeviceRecipe<NonnullLockRefPtr<IRQController>>);
 
     static u8 acquire_mapped_interrupt_number(u8 original_irq);
 

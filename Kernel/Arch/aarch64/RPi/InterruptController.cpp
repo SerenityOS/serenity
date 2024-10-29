@@ -4,8 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/aarch64/InterruptManagement.h>
 #include <Kernel/Arch/aarch64/RPi/InterruptController.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
+#include <Kernel/Firmware/DeviceTree/Driver.h>
+#include <Kernel/Firmware/DeviceTree/Management.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 
 namespace Kernel::RPi {
@@ -63,6 +67,27 @@ void InterruptController::eoi(GenericInterruptHandler const&) const
 u64 InterruptController::pending_interrupts() const
 {
     return ((u64)m_registers->irq_pending_2 << 32) | (u64)m_registers->irq_pending_1;
+}
+
+static constinit Array const compatibles_array = {
+    "brcm,bcm2836-armctrl-ic"sv,
+};
+
+DEVICETREE_DRIVER(BCM2836InterruptControllerDriver, compatibles_array);
+
+ErrorOr<void> BCM2836InterruptControllerDriver::probe(DeviceTree::Device const& device, StringView) const
+{
+    DeviceTree::DeviceRecipe<NonnullLockRefPtr<IRQController>> recipe {
+        name(),
+        device.node_name(),
+        []() {
+            return adopt_nonnull_lock_ref_or_enomem(new (nothrow) InterruptController());
+        },
+    };
+
+    InterruptManagement::add_recipe(move(recipe));
+
+    return {};
 }
 
 }
