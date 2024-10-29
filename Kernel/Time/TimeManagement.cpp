@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NeverDestroyed.h>
 #include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Time.h>
@@ -28,6 +29,7 @@
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Scheduler.h>
@@ -37,6 +39,7 @@
 
 namespace Kernel {
 
+static NeverDestroyed<Vector<DeviceTree::DeviceRecipe<NonnullLockRefPtr<HardwareTimerBase>>>> s_recipes;
 static Singleton<TimeManagement> s_the;
 
 bool TimeManagement::is_initialized()
@@ -47,6 +50,15 @@ bool TimeManagement::is_initialized()
 TimeManagement& TimeManagement::the()
 {
     return *s_the;
+}
+
+void TimeManagement::add_recipe(DeviceTree::DeviceRecipe<NonnullLockRefPtr<HardwareTimerBase>> recipe)
+{
+    // This function has to be called before TimeManagement is initialized,
+    // as we do not support dynamic registration of timers.
+    VERIFY(!is_initialized());
+
+    s_recipes->append(move(recipe));
 }
 
 // The s_scheduler_specific_current_time function provides a current time for scheduling purposes,
@@ -459,14 +471,34 @@ void TimeManagement::increment_time_since_boot_hpet()
 #elif ARCH(AARCH64)
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
 {
-    m_hardware_timers.append(RPi::Timer::initialize());
-    m_system_timer = m_hardware_timers[0];
+    for (auto& recipe : *s_recipes) {
+        auto device_or_error = recipe.create_device();
+        if (device_or_error.is_error()) {
+            dmesgln("TimeManagement: Failed to create timer for device \"{}\" with driver {}: {}", recipe.node_name, recipe.driver_name, device_or_error.release_error());
+            continue;
+        }
+
+        m_hardware_timers.append(device_or_error.release_value());
+    }
+
+    if (m_hardware_timers.is_empty())
+        PANIC("TimeManagement: No supported timer found in devicetree");
+
+    // TODO: Use some kind of heuristic to decide which timer to use.
+    m_system_timer = m_hardware_timers.last();
+    dbgln("TimeManagement: System timer: {}", m_system_timer->model());
+
     m_time_ticks_per_second = m_system_timer->ticks_per_second();
 
     m_system_timer->set_callback([this]() {
         auto seconds_since_boot = m_seconds_since_boot;
         auto ticks_this_second = m_ticks_this_second;
-        auto delta_ns = static_cast<RPi::Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
+
+        u64 delta_ns;
+        if (m_system_timer->timer_type() == HardwareTimerType::RPiTimer)
+            delta_ns = static_cast<RPi::Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
+        else
+            VERIFY_NOT_REACHED();
 
         u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
         m_seconds_since_boot = seconds_since_boot;

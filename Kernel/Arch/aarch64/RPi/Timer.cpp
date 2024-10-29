@@ -10,6 +10,9 @@
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
+#include <Kernel/Firmware/DeviceTree/Driver.h>
+#include <Kernel/Firmware/DeviceTree/Management.h>
 
 namespace Kernel::RPi {
 
@@ -42,11 +45,6 @@ Timer::Timer()
 }
 
 Timer::~Timer() = default;
-
-NonnullLockRefPtr<Timer> Timer::initialize()
-{
-    return adopt_lock_ref(*new Timer);
-}
 
 u64 Timer::microseconds_since_boot()
 {
@@ -180,6 +178,27 @@ u32 Timer::get_clock_rate(ClockID clock_id)
     }
 
     return message_queue.get_clock_rate.rate_hz;
+}
+
+static constinit Array const compatibles_array = {
+    "brcm,bcm2835-system-timer"sv,
+};
+
+DEVICETREE_DRIVER(BCM2835TimerDriver, compatibles_array);
+
+ErrorOr<void> BCM2835TimerDriver::probe(DeviceTree::Device const& device, StringView) const
+{
+    DeviceTree::DeviceRecipe<NonnullLockRefPtr<HardwareTimerBase>> recipe {
+        name(),
+        device.node_name(),
+        []() {
+            return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Timer());
+        },
+    };
+
+    TimeManagement::add_recipe(move(recipe));
+
+    return {};
 }
 
 }
