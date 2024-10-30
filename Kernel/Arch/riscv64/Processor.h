@@ -189,6 +189,8 @@ ALWAYS_INLINE Thread* ProcessorBase<T>::current_thread()
 template<typename T>
 ALWAYS_INLINE void ProcessorBase<T>::pause()
 {
+    // PAUSE is a HINT defined by the Zihintpause extension.
+    // We don't have to check if that extension is supported, since HINTs effectively behave like NOPs if they are not implemented.
     asm volatile(R"(
         .option push
         .option arch, +zihintpause
