@@ -11,7 +11,7 @@
 // Booting via booti causes U-Boot to pass us the boot hart ID and a flattened devicetree (https://www.kernel.org/doc/html/latest/arch/riscv/boot.html).
 linux_header:
 .option push
-.option norvc
+.option arch, -c
   j start                                   // u32 code0
   j start                                   // u32 code1
 .option pop
