@@ -35,9 +35,3 @@ NO_SANITIZE_COVERAGE void __assertion_failed(char const* msg, char const* file, 
 
     PANIC("Aborted");
 }
-
-[[noreturn]] void _abort()
-{
-    asm volatile("ud2");
-    __builtin_unreachable();
-}
