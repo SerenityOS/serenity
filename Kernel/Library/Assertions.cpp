@@ -4,17 +4,19 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
-#include <AK/Platform.h>
-#include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/Processor.h>
+#include <Kernel/Library/Assertions.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Thread.h>
 
+// Note: This is required here, since __assertion_failed should be out of the Kernel namespace,
+//       but the PANIC macro uses functions that require the Kernel namespace.
 using namespace Kernel;
 
 NO_SANITIZE_COVERAGE void __assertion_failed(char const* msg, char const* file, unsigned line, char const* func)
 {
-    asm volatile("cli");
+    Processor::disable_interrupts();
     critical_dmesgln("ASSERTION FAILED: {}", msg);
     critical_dmesgln("{}:{} in {}", file, line, func);
 
