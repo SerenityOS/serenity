@@ -261,6 +261,7 @@ set(KERNEL_SOURCES
     Memory/VirtualRange.cpp
     Locking/LockRank.cpp
     Locking/Mutex.cpp
+    Library/Assertions.cpp
     Library/DoubleBuffer.cpp
     Library/IOWindow.cpp
     Library/MiniStdLib.cpp
@@ -448,7 +449,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         ${KERNEL_SOURCES}
         
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/ASM_wrapper.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPU.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPUID.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/InterruptManagement.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/Interrupts.cpp
@@ -501,7 +501,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/PageDirectory.cpp
-        Arch/aarch64/Panic.cpp
         Arch/aarch64/Processor.cpp
         Arch/aarch64/PowerState.cpp
         Arch/aarch64/SafeMem.cpp
@@ -545,7 +544,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         Arch/riscv64/Interrupts/PLIC.cpp
         Arch/riscv64/MMU.cpp
         Arch/riscv64/PageDirectory.cpp
-        Arch/riscv64/Panic.cpp
         Arch/riscv64/PCI/Initializer.cpp
         Arch/riscv64/PowerState.cpp
         Arch/riscv64/pre_init.cpp
