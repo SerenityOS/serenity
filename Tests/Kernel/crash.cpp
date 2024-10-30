@@ -135,7 +135,7 @@ int main(int argc, char** argv)
             // gets expanded to, is required to cause an illegal-instruction exception.
             asm volatile(R"(
                 .option push
-                .option norvc
+                .option arch, -c
                     unimp
                 .option pop
             )" :);
