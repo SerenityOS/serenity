@@ -41,6 +41,7 @@ source_set("CSS") {
     "Frequency.cpp",
     "GridTrackPlacement.cpp",
     "GridTrackSize.cpp",
+    "Interpolation.cpp",
     "Length.cpp",
     "LengthBox.cpp",
     "MediaList.cpp",
