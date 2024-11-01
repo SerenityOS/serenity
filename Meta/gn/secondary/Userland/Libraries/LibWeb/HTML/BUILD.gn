@@ -33,6 +33,7 @@ source_set("HTML") {
     "DecodedImageData.cpp",
     "DedicatedWorkerGlobalScope.cpp",
     "DocumentState.cpp",
+    "DragEvent.cpp",
     "ElementInternals.cpp",
     "EmbedderPolicy.cpp",
     "ErrorEvent.cpp",
