@@ -95,9 +95,9 @@ struct Property {
     ValueStream as_stream() const { return ValueStream { raw_data }; }
 };
 
-class DeviceTreeNodeView {
-    AK_MAKE_NONCOPYABLE(DeviceTreeNodeView);
-    AK_MAKE_DEFAULT_MOVABLE(DeviceTreeNodeView);
+class Node {
+    AK_MAKE_NONCOPYABLE(Node);
+    AK_MAKE_DEFAULT_MOVABLE(Node);
 
 public:
     bool has_property(StringView prop) const { return m_properties.contains(prop); }
@@ -107,12 +107,12 @@ public:
 
     // FIXME: The spec says that @address parts of the name should be ignored when looking up nodes
     //        when they do not appear in the queried name, and all nodes with the same name should be returned
-    Optional<DeviceTreeNodeView const&> get_child(StringView child) const { return m_children.get(child); }
+    Optional<Node const&> get_child(StringView child) const { return m_children.get(child); }
 
-    HashMap<StringView, DeviceTreeNodeView> const& children() const { return m_children; }
+    HashMap<StringView, Node> const& children() const { return m_children; }
     HashMap<StringView, Property> const& properties() const { return m_properties; }
 
-    DeviceTreeNodeView const* parent() const { return m_parent; }
+    Node const* parent() const { return m_parent; }
 
     // NOTE: When checking for multiple drivers, prefer iterating over the string array instead,
     //       as the compatible strings are sorted by preference, which this function cannot account for.
@@ -130,25 +130,25 @@ public:
     // Note: That we dont have a oder of children and properties in this view
 protected:
     friend class DeviceTree;
-    DeviceTreeNodeView(DeviceTreeNodeView* parent)
+    Node(Node* parent)
         : m_parent(parent)
     {
     }
-    HashMap<StringView, DeviceTreeNodeView>& children() { return m_children; }
+    HashMap<StringView, Node>& children() { return m_children; }
     HashMap<StringView, Property>& properties() { return m_properties; }
-    DeviceTreeNodeView* parent() { return m_parent; }
+    Node* parent() { return m_parent; }
 
 private:
-    DeviceTreeNodeView* m_parent;
-    HashMap<StringView, DeviceTreeNodeView> m_children;
+    Node* m_parent;
+    HashMap<StringView, Node> m_children;
     HashMap<StringView, Property> m_properties;
 };
 
-class DeviceTree : public DeviceTreeNodeView {
+class DeviceTree : public Node {
 public:
     static ErrorOr<NonnullOwnPtr<DeviceTree>> parse(ReadonlyBytes);
 
-    DeviceTreeNodeView const* resolve_node(StringView path) const
+    Node const* resolve_node(StringView path) const
     {
         // FIXME: May children of aliases be referenced?
         // Note: Aliases may not contain a '/' in their name
@@ -165,7 +165,7 @@ public:
             }
         }
 
-        DeviceTreeNodeView const* node = this;
+        Node const* node = this;
         path.for_each_split_view('/', SplitBehavior::Nothing, [&](auto const& part) {
             if (auto child = node->get_child(part); child.has_value()) {
                 node = &child.value();
@@ -194,9 +194,9 @@ public:
     //        bonus points if it could automatically recurse in the tree under some conditions,
     //        like "simple-bus" or "pci-bridge" nodes
 
-    auto for_each_node(CallableAs<ErrorOr<RecursionDecision>, StringView, DeviceTreeNodeView const&> auto callback) const
+    auto for_each_node(CallableAs<ErrorOr<RecursionDecision>, StringView, Node const&> auto callback) const
     {
-        auto iterate = [&](auto self, StringView name, DeviceTreeNodeView const& node) -> ErrorOr<RecursionDecision> {
+        auto iterate = [&](auto self, StringView name, Node const& node) -> ErrorOr<RecursionDecision> {
             auto result = TRY(callback(name, node));
 
             if (result == RecursionDecision::Recurse) {
@@ -216,7 +216,7 @@ public:
         return iterate(iterate, "/"sv, *this);
     }
 
-    DeviceTreeNodeView const* phandle(u32 phandle) const
+    Node const* phandle(u32 phandle) const
     {
         if (phandle >= m_phandles.size())
             return nullptr;
@@ -227,14 +227,14 @@ public:
 
 private:
     DeviceTree(ReadonlyBytes flattened_device_tree)
-        : DeviceTreeNodeView(nullptr)
+        : Node(nullptr)
         , m_flattened_device_tree(flattened_device_tree)
     {
     }
 
-    auto for_each_node(CallableAs<ErrorOr<RecursionDecision>, StringView, DeviceTreeNodeView&> auto callback)
+    auto for_each_node(CallableAs<ErrorOr<RecursionDecision>, StringView, Node&> auto callback)
     {
-        auto iterate = [&](auto self, StringView name, DeviceTreeNodeView& node) -> ErrorOr<RecursionDecision> {
+        auto iterate = [&](auto self, StringView name, Node& node) -> ErrorOr<RecursionDecision> {
             auto result = TRY(callback(name, node));
 
             if (result == RecursionDecision::Recurse) {
@@ -254,7 +254,7 @@ private:
         return iterate(iterate, "/"sv, *this);
     }
 
-    ErrorOr<void> set_phandle(u32 phandle, DeviceTreeNodeView* node)
+    ErrorOr<void> set_phandle(u32 phandle, Node* node)
     {
         if (m_phandles.size() > phandle && m_phandles[phandle] != nullptr)
             return Error::from_string_view_or_print_error_and_return_errno("Duplicate phandle entry in DeviceTree"sv, EINVAL);
@@ -265,7 +265,7 @@ private:
     }
 
     ReadonlyBytes m_flattened_device_tree;
-    Vector<DeviceTreeNodeView*> m_phandles;
+    Vector<Node*> m_phandles;
 };
 
 }
