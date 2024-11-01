@@ -18,7 +18,7 @@ ErrorOr<NonnullOwnPtr<DeviceTree>> DeviceTree::parse(ReadonlyBytes flattened_dev
         return Error::from_errno(EINVAL);
 
     auto device_tree = TRY(adopt_nonnull_own_or_enomem(new (nothrow) DeviceTree { flattened_device_tree }));
-    DeviceTreeNodeView* current_node = device_tree.ptr();
+    Node* current_node = device_tree.ptr();
 
     auto const& header = *reinterpret_cast<FlattenedDeviceTreeHeader const*>(flattened_device_tree.data());
 
@@ -30,7 +30,7 @@ ErrorOr<NonnullOwnPtr<DeviceTree>> DeviceTree::parse(ReadonlyBytes flattened_dev
                     return IterationDecision::Continue;
 
                 // FIXME: Use something like children.emplace
-                TRY(current_node->children().try_set(name, DeviceTreeNodeView { current_node }));
+                TRY(current_node->children().try_set(name, Node { current_node }));
                 auto& new_node = current_node->children().get(name).value();
                 current_node = &new_node;
                 return IterationDecision::Continue;
@@ -53,7 +53,7 @@ ErrorOr<NonnullOwnPtr<DeviceTree>> DeviceTree::parse(ReadonlyBytes flattened_dev
 
     // FIXME: While growing the a nodes children map, we might have reallocated it's storage
     //        breaking the parent pointers of the children, so we need to fix them here
-    auto fix_parent = [](auto self, DeviceTreeNodeView& node) -> void {
+    auto fix_parent = [](auto self, Node& node) -> void {
         for (auto& [name, child] : node.children()) {
             child.m_parent = &node;
             self(self, child);
@@ -62,7 +62,7 @@ ErrorOr<NonnullOwnPtr<DeviceTree>> DeviceTree::parse(ReadonlyBytes flattened_dev
 
     fix_parent(fix_parent, *device_tree);
     // Note: For the same reason as above, we need to postpone setting the phandles until the tree is fully built
-    TRY(device_tree->for_each_node([&device_tree]([[maybe_unused]] StringView name, DeviceTreeNodeView& node) -> ErrorOr<RecursionDecision> {
+    TRY(device_tree->for_each_node([&device_tree]([[maybe_unused]] StringView name, Node& node) -> ErrorOr<RecursionDecision> {
         if (auto phandle = node.get_property("phandle"sv); phandle.has_value()) {
             auto phandle_value = phandle.value().as<u32>();
             TRY(device_tree->set_phandle(phandle_value, &node));
@@ -73,7 +73,7 @@ ErrorOr<NonnullOwnPtr<DeviceTree>> DeviceTree::parse(ReadonlyBytes flattened_dev
     return device_tree;
 }
 
-bool DeviceTreeNodeView::is_compatible_with(StringView wanted_compatible_string) const
+bool Node::is_compatible_with(StringView wanted_compatible_string) const
 {
     auto maybe_compatible = get_property("compatible"sv);
     if (!maybe_compatible.has_value())

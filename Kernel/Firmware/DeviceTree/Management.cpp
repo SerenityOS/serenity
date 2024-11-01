@@ -36,7 +36,7 @@ ErrorOr<void> Management::register_driver(NonnullOwnPtr<DeviceTree::Driver>&& dr
     return {};
 }
 
-ErrorOr<void> Management::scan_node_for_devices(::DeviceTree::DeviceTreeNodeView const& node)
+ErrorOr<void> Management::scan_node_for_devices(::DeviceTree::Node const& node)
 {
     for (auto const& [child_name, child] : node.children()) {
         if (TRY(m_devices.try_set(&child, Device { child, child_name })) != HashSetResult::InsertedNewEntry)
