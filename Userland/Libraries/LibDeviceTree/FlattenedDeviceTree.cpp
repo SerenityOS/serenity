@@ -35,13 +35,14 @@ ErrorOr<void> walk_device_tree(FlattenedDeviceTreeHeader const& header, Readonly
     FixedMemoryStream stream(struct_bytes);
     char const* begin_strings_block = reinterpret_cast<char const*>(raw_device_tree.data() + header.off_dt_strings);
 
-    FlattenedDeviceTreeTokenType prev_token = EndNode;
+    auto prev_token = FlattenedDeviceTreeTokenType::EndNode;
     StringView current_node_name;
 
     while (!stream.is_eof()) {
-        auto current_token = TRY(stream.read_value<BigEndian<u32>>());
+        u32 current_token = TRY(stream.read_value<BigEndian<u32>>());
 
-        switch (current_token) {
+        using enum FlattenedDeviceTreeTokenType;
+        switch (static_cast<FlattenedDeviceTreeTokenType>(current_token)) {
         case BeginNode: {
             current_node_name = TRY(read_string_view(struct_bytes.slice(stream.offset()), "Non-null terminated name for FDT_BEGIN_NODE token!"sv));
             size_t const consume_len = round_up_to_power_of_two(current_node_name.length() + 1, 4);
