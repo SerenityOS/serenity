@@ -172,9 +172,9 @@ static ErrorOr<ReadonlyBytes> slow_get_property_raw(StringView name, FlattenedDe
     return found_property_value;
 }
 
-ErrorOr<DeviceTreeProperty> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree)
+ErrorOr<Property> slow_get_property(StringView name, FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree)
 {
-    return DeviceTreeProperty { TRY(slow_get_property_raw(name, header, raw_device_tree)) };
+    return Property { TRY(slow_get_property_raw(name, header, raw_device_tree)) };
 }
 
 } // namespace DeviceTree
