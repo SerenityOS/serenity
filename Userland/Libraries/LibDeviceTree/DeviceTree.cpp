@@ -40,7 +40,7 @@ ErrorOr<NonnullOwnPtr<DeviceTree>> DeviceTree::parse(ReadonlyBytes flattened_dev
                 return IterationDecision::Continue;
             },
             .on_property = [&current_node](StringView name, ReadonlyBytes value) -> ErrorOr<IterationDecision> {
-                TRY(current_node->properties().try_set(name, DeviceTreeProperty { value }));
+                TRY(current_node->properties().try_set(name, Property { value }));
                 return IterationDecision::Continue;
             },
             .on_noop = []() -> ErrorOr<IterationDecision> {

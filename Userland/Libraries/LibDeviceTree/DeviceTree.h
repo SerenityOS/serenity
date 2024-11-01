@@ -18,7 +18,7 @@
 
 namespace DeviceTree {
 
-struct DeviceTreeProperty {
+struct Property {
     class ValueStream : public FixedMemoryStream {
     public:
         using AK::FixedMemoryStream::FixedMemoryStream;
@@ -82,7 +82,7 @@ struct DeviceTreeProperty {
         size_t count = raw_data.size() / sizeof(T);
         size_t offset = 0;
         for (size_t i = 0; i < count; ++i, offset += sizeof(T)) {
-            auto sub_property = DeviceTreeProperty { raw_data.slice(offset, sizeof(T)) };
+            auto sub_property = Property { raw_data.slice(offset, sizeof(T)) };
             auto result = callback(sub_property.as<T>());
             if (result.is_error())
                 return result;
@@ -103,14 +103,14 @@ public:
     bool has_property(StringView prop) const { return m_properties.contains(prop); }
     bool has_child(StringView child) const { return m_children.contains(child); }
 
-    Optional<DeviceTreeProperty> get_property(StringView prop) const { return m_properties.get(prop).copy(); }
+    Optional<Property> get_property(StringView prop) const { return m_properties.get(prop).copy(); }
 
     // FIXME: The spec says that @address parts of the name should be ignored when looking up nodes
     //        when they do not appear in the queried name, and all nodes with the same name should be returned
     Optional<DeviceTreeNodeView const&> get_child(StringView child) const { return m_children.get(child); }
 
     HashMap<StringView, DeviceTreeNodeView> const& children() const { return m_children; }
-    HashMap<StringView, DeviceTreeProperty> const& properties() const { return m_properties; }
+    HashMap<StringView, Property> const& properties() const { return m_properties; }
 
     DeviceTreeNodeView const* parent() const { return m_parent; }
 
@@ -135,13 +135,13 @@ protected:
     {
     }
     HashMap<StringView, DeviceTreeNodeView>& children() { return m_children; }
-    HashMap<StringView, DeviceTreeProperty>& properties() { return m_properties; }
+    HashMap<StringView, Property>& properties() { return m_properties; }
     DeviceTreeNodeView* parent() { return m_parent; }
 
 private:
     DeviceTreeNodeView* m_parent;
     HashMap<StringView, DeviceTreeNodeView> m_children;
-    HashMap<StringView, DeviceTreeProperty> m_properties;
+    HashMap<StringView, Property> m_properties;
 };
 
 class DeviceTree : public DeviceTreeNodeView {
@@ -179,7 +179,7 @@ public:
         return node;
     }
 
-    Optional<DeviceTreeProperty> resolve_property(StringView path) const
+    Optional<Property> resolve_property(StringView path) const
     {
         auto property_name = path.find_last_split_view('/');
         auto node_path = path.substring_view(0, path.length() - property_name.length() - 1);

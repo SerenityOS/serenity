@@ -62,6 +62,6 @@ struct DeviceTreeCallbacks {
 
 ErrorOr<void> walk_device_tree(FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree, DeviceTreeCallbacks);
 
-ErrorOr<DeviceTreeProperty> slow_get_property(StringView name, FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree);
+ErrorOr<Property> slow_get_property(StringView name, FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree);
 
 } // namespace DeviceTree
