@@ -102,7 +102,6 @@ class DeviceTreeNodeView {
 public:
     bool has_property(StringView prop) const { return m_properties.contains(prop); }
     bool has_child(StringView child) const { return m_children.contains(child); }
-    bool child(StringView name) const { return has_property(name) || has_child(name); }
 
     Optional<DeviceTreeProperty> get_property(StringView prop) const { return m_properties.get(prop).copy(); }
 
