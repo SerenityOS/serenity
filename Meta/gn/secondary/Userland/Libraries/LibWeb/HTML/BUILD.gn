@@ -162,6 +162,8 @@ source_set("HTML") {
     "PromiseRejectionEvent.cpp",
     "SelectItem.cpp",
     "SelectedFile.cpp",
+    "ServiceWorkerContainer.cpp",
+    "ServiceWorkerRegistration.cpp",
     "SessionHistoryEntry.cpp",
     "SessionHistoryTraversalQueue.cpp",
     "SharedResourceRequest.cpp",
