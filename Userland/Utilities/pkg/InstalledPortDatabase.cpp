@@ -49,8 +49,7 @@ ErrorOr<NonnullOwnPtr<InstalledPortDatabase>> InstalledPortDatabase::instantiate
         auto parts = line.split_view(' ');
         if (parts.size() < 2) {
             dbgln("Invalid database entry {} (only {} parts)", line, parts.size());
-            // FIXME: Skip over invalid entries instead?
-            return Error::from_string_view("Database entry too short"sv);
+            continue;
         }
         auto install_type_string = parts[0];
         auto port_name = TRY(String::from_utf8(parts[1]));
