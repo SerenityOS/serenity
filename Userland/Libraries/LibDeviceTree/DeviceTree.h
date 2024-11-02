@@ -115,6 +115,10 @@ public:
 
     DeviceTreeNodeView const* parent() const { return m_parent; }
 
+    // NOTE: When checking for multiple drivers, prefer iterating over the string array instead,
+    //       as the compatible strings are sorted by preference, which this function cannot account for.
+    bool is_compatible_with(StringView) const;
+
     // FIXME: Add convenience functions for common properties like "reg" and "compatible"
     // Note: The "reg" property is a list of address and size pairs, but the address is not always a u32 or u64
     //       In pci devices the #address-size is 3 cells: (phys.lo phys.mid phys.hi)

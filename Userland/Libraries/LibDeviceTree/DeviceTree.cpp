@@ -73,4 +73,24 @@ ErrorOr<NonnullOwnPtr<DeviceTree>> DeviceTree::parse(ReadonlyBytes flattened_dev
     return device_tree;
 }
 
+bool DeviceTreeNodeView::is_compatible_with(StringView wanted_compatible_string) const
+{
+    auto maybe_compatible = get_property("compatible"sv);
+    if (!maybe_compatible.has_value())
+        return false;
+
+    bool is_compatible = false;
+
+    maybe_compatible->for_each_string([&is_compatible, wanted_compatible_string](StringView compatible_entry) {
+        if (compatible_entry == wanted_compatible_string) {
+            is_compatible = true;
+            return IterationDecision::Break;
+        }
+
+        return IterationDecision::Continue;
+    });
+
+    return is_compatible;
+}
+
 }
