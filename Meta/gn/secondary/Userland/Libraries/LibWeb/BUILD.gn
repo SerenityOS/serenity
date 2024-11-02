@@ -331,6 +331,7 @@ shared_library("LibWeb") {
            "SVG",
            "SecureContexts",
            "Selection",
+           "StorageAPI",
            "Streams",
            "UIEvents",
            "UserTiming",
