@@ -4,5 +4,6 @@ source_set("Clipboard") {
   sources = [
     "Clipboard.cpp",
     "Clipboard.h",
+    "ClipboardEvent.cpp",
   ]
 }
