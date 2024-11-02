@@ -248,6 +248,7 @@ write_cmake_config("ak_debug_gen") {
     "CSS_LOADER_DEBUG=",
     "CSS_PARSER_DEBUG=",
     "CSS_TOKENIZER_DEBUG=",
+    "CSS_TRANSITIONS_DEBUG=",
     "DDS_DEBUG=",
     "DHCPV4CLIENT_DEBUG=",
     "DHCPV4_DEBUG=",
