@@ -60,6 +60,8 @@ then
     EXTRA_ARGS="--disable-sdl"
 else
     UI_LIB=gtk
+    # Allows copy pasting between Serenity and the host.
+    EXTRA_ARGS="--enable-gtk-clipboard"
 fi
 
 echo Using $UI_LIB based UI
