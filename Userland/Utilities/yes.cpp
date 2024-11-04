@@ -13,12 +13,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio"));
 
-    StringView string = "yes"sv;
+    Vector<StringView> strings;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(string, "String to output (defaults to 'yes')", "string", Core::ArgsParser::Required::No);
+    args_parser.set_general_help("Repeatedly output a line with all specified strings separated by spaces. If none are specified, output 'yes'.");
+    args_parser.add_positional_argument(strings, "String to output (default 'yes')", "string", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    for (;;)
-        outln("{}", string);
+    if (strings.is_empty())
+        strings.append("yes"sv);
+
+    for (;;) {
+        for (size_t i = 0; i < strings.size(); i += 1) {
+            out("{}", strings[i]);
+            if (i < strings.size() - 1)
+                putchar(' ');
+        }
+        outln();
+    }
 }
