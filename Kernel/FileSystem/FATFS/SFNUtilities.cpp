@@ -147,7 +147,7 @@ ErrorOr<NonnullRefPtr<SFN>> create_sfn_from_lfn(StringView lfn)
         return SFNUtils::SFN::try_create(move(name), {}, 1);
     } else {
         auto name = TRY(out.slice(0, min(last_period.value(), 6)));
-        size_t extension_length = min(out.size() - last_period.value(), 3);
+        size_t extension_length = min(out.size() - last_period.value() - 1, 3);
         auto extension = TRY(out.slice(last_period.value() + 1, extension_length));
         return SFNUtils::SFN::try_create(move(name), move(extension), 1);
     }

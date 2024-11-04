@@ -39,12 +39,14 @@ TEST_CASE(test_create_sfn_from_lfn)
 
     EXPECT_EQ(convert_to_serialized_sfn("foo.txt"sv), "FOO~1   .TXT"sv);
     EXPECT_EQ(convert_to_serialized_sfn("FOO.TXT"sv), "FOO~1   .TXT"sv);
+    EXPECT_EQ(convert_to_serialized_sfn("main.c.o"sv), "MAINC~1 .O  "sv);
     EXPECT_EQ(convert_to_serialized_sfn("longname.txt"sv), "LONGNA~1.TXT"sv);
     EXPECT_EQ(convert_to_serialized_sfn("verylongname.txt"sv), "VERYLO~1.TXT"sv);
     EXPECT_EQ(convert_to_serialized_sfn("longext.html"sv), "LONGEX~1.HTM"sv);
     EXPECT_EQ(convert_to_serialized_sfn("foo."sv), "FOO~1   .   "sv);
     EXPECT_EQ(convert_to_serialized_sfn("foo.."sv), "FOO~1   .   "sv);
     EXPECT_EQ(convert_to_serialized_sfn("foo..."sv), "FOO~1   .   "sv);
+    EXPECT_EQ(convert_to_serialized_sfn("foo.bar.txt"sv), "FOOBAR~1.TXT");
     EXPECT_EQ(convert_to_serialized_sfn("foo bar.txt"sv), "FOOBAR~1.TXT");
     EXPECT_EQ(convert_to_serialized_sfn("foo@bar.txt"sv), "FOO@BA~1.TXT");
 }
