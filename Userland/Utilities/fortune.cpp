@@ -77,6 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView path = "/res/fortunes.json"sv;
 
     Optional<bool> force_color;
+    size_t count = 1;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Open a fortune cookie, receive a free quote for the day!");
@@ -99,6 +100,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         },
     });
     args_parser.add_positional_argument(path, "Path to JSON file with quotes (/res/fortunes.json by default)", "path", Core::ArgsParser::Required::No);
+    args_parser.add_option(count, "Total number of fortune cookies to print (default 1)", "count", 'c', "number");
     args_parser.parse(arguments);
 
     auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
@@ -119,37 +121,44 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    u32 i = get_random_uniform(quotes.size());
-    auto const& chosen_quote = quotes[i];
-    auto datetime = Core::DateTime::from_timestamp(chosen_quote.utc_time());
-    auto stdout_is_tty = TRY(Core::System::isatty(STDOUT_FILENO));
-    auto show_color = force_color.has_value() ? force_color.value() : stdout_is_tty;
-
-    if (stdout_is_tty) {
-        outln();                                     // Tasteful spacing
-        out("\033]8;;{}\033\\", chosen_quote.url()); // Begin link
+    if (count == 0) {
+        warnln("Count cannot be zero");
+        return 1;
     }
 
-    if (show_color) {
-        out("\033[34m({})\033[m", datetime.to_byte_string());
-        out(" \033[34;1m<{}>\033[m", chosen_quote.author());
-        out(" \033[32m{}\033[m", chosen_quote.quote());
-    } else {
-        out("({})", datetime.to_byte_string());
-        out(" <{}>", chosen_quote.author());
-        out(" {}", chosen_quote.quote());
+    for (size_t idx = 0; idx < count; idx += 1) {
+
+        u32 i = get_random_uniform(quotes.size());
+        auto const& chosen_quote = quotes[i];
+        auto datetime = Core::DateTime::from_timestamp(chosen_quote.utc_time());
+        auto stdout_is_tty = TRY(Core::System::isatty(STDOUT_FILENO));
+        auto show_color = force_color.has_value() ? force_color.value() : stdout_is_tty;
+
+        if (stdout_is_tty) {
+            outln();                                     // Tasteful spacing
+            out("\033]8;;{}\033\\", chosen_quote.url()); // Begin link
+        }
+
+        if (show_color) {
+            out("\033[34m({})\033[m", datetime.to_byte_string());
+            out(" \033[34;1m<{}>\033[m", chosen_quote.author());
+            out(" \033[32m{}\033[m", chosen_quote.quote());
+        } else {
+            out("({})", datetime.to_byte_string());
+            out(" <{}>", chosen_quote.author());
+            out(" {}", chosen_quote.quote());
+        }
+
+        if (stdout_is_tty)
+            out("\033]8;;\033\\"); // End link
+
+        outln();
+
+        if (chosen_quote.context().has_value())
+            outln("{}", chosen_quote.context().value());
+
+        if (stdout_is_tty || (count > 1 && idx < count - 1))
+            outln(); // Tasteful spacing
     }
-
-    if (stdout_is_tty)
-        out("\033]8;;\033\\"); // End link
-
-    outln();
-
-    if (chosen_quote.context().has_value())
-        outln("{}", chosen_quote.context().value());
-
-    if (stdout_is_tty)
-        outln(); // Tasteful spacing
-
     return 0;
 }
