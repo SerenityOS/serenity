@@ -56,7 +56,7 @@ ErrorOr<Vector<u32>> FATInode::compute_cluster_list(FATFS& fs, u32 first_cluster
         // which is a signal to read the root directory region blocks on FAT12/16
         // file systems. (`fs().first_block_of_cluster` will return the appropriate
         // block/sectors to read given cluster == 0).
-        // Therefore, we read one set of sectors for these invalud cluster numbers,
+        // Therefore, we read one set of sectors for these invalid cluster numbers,
         // and then terminate the loop becuase the FAT entry at `cluster` for these
         // values does not represent the next step in the chain (because there is
         // nothing else to read).
