@@ -149,6 +149,7 @@ set(KERNEL_SOURCES
     FileSystem/Ext2FS/Inode.cpp
     FileSystem/FATFS/FileSystem.cpp
     FileSystem/FATFS/Inode.cpp
+    FileSystem/FATFS/SFNUtilities.cpp
     FileSystem/FIFO.cpp
     FileSystem/File.cpp
     FileSystem/FileBackedFileSystem.cpp

@@ -81,91 +81,6 @@ u8 FATInode::lfn_entry_checksum(FATEntry const& entry)
     return checksum;
 }
 
-static constexpr auto valid_misc_sfn_chars = to_array<char>({ '$', '%', '\'', '-', '_', '@', ' ', '~', '`', '!', '(', ')' });
-
-static bool is_valid_sfn_char(char c)
-{
-    if (c >= 'A' && c <= 'Z')
-        return true;
-    if (c >= '0' && c <= '9')
-        return true;
-
-    return valid_misc_sfn_chars.contains_slow(c);
-}
-
-static bool is_valid_sfn(StringView sfn)
-{
-    StringView name = {};
-    StringView extension = {};
-
-    auto dot = sfn.find('.');
-    if (!dot.has_value()) {
-        name = sfn;
-    } else {
-        if (*dot + 1 >= sfn.length())
-            return false;
-
-        name = sfn.substring_view(0, *dot);
-        extension = sfn.substring_view(*dot + 1, sfn.length() - *dot - 1);
-    }
-
-    if (name.length() > 8 || extension.length() > 3)
-        return false;
-
-    for (char c : name) {
-        if (!is_valid_sfn_char(c))
-            return false;
-    }
-
-    for (char c : extension) {
-        if (!is_valid_sfn_char(c))
-            return false;
-    }
-
-    if (name.length() == 0 || name[0] == ' ')
-        return false;
-
-    return true;
-}
-
-// http://www.osdever.net/documents/LongFileName.pdf
-static ErrorOr<NonnullRefPtr<SFN>> create_sfn_from_lfn(StringView lfn)
-{
-    ByteBuffer out;
-
-    // 1. Remove all spaces.
-    // 2. Initial periods, trailing periods, and extra periods prior to the last embedded period are removed.
-    lfn = lfn.trim("."sv);
-    auto last_dot_index = lfn.find_last('.');
-    for (size_t i = 0; i < lfn.length(); ++i) {
-        if (lfn[i] == ' ')
-            continue;
-        if (lfn[i] == '.' && i != last_dot_index.value())
-            continue;
-
-        TRY(out.try_append(to_ascii_uppercase(lfn[i])));
-    }
-
-    // 3. Translate all illegal 8.3 characters into "_".
-    for (size_t i = 0; i < out.size(); ++i) {
-        if (!is_valid_sfn_char(out[i]) && out[i] != '.')
-            out[i] = '_';
-    }
-
-    // 4. If the name does not contain an extension then truncate it to 6 characters.
-    // If the names does contain an extension, then truncate the first part to 6 characters and the extension to 3 characters.
-    auto last_period = StringView(out).find_last('.');
-    if (!last_period.has_value()) {
-        auto name = TRY(out.slice(0, min(out.size(), 6)));
-        return SFN::try_create(move(name), {}, 1);
-    } else {
-        auto name = TRY(out.slice(0, min(last_period.value(), 6)));
-        size_t extension_length = min(out.size() - last_period.value(), 3);
-        auto extension = TRY(out.slice(last_period.value() + 1, extension_length));
-        return SFN::try_create(move(name), move(extension), 1);
-    }
-}
-
 ErrorOr<Vector<ByteBuffer>> FATInode::collect_sfns()
 {
     MutexLocker locker(m_inode_lock);
@@ -188,9 +103,9 @@ ErrorOr<Vector<ByteBuffer>> FATInode::collect_sfns()
     return sfns;
 }
 
-ErrorOr<void> FATInode::create_unique_sfn_for(FATEntry& entry, NonnullRefPtr<SFN> sfn, Vector<ByteBuffer> existing_sfns)
+ErrorOr<void> FATInode::create_unique_sfn_for(FATEntry& entry, NonnullRefPtr<SFNUtils::SFN> sfn, Vector<ByteBuffer> existing_sfns)
 {
-    auto is_sfn_unique = [existing_sfns](SFN const& sfn) -> ErrorOr<bool> {
+    auto is_sfn_unique = [existing_sfns](SFNUtils::SFN const& sfn) -> ErrorOr<bool> {
         auto serialized_name = TRY(sfn.serialize_name());
         auto serialized_extension = TRY(sfn.serialize_extension());
         for (auto const& current_sfn : existing_sfns) {
@@ -699,12 +614,12 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
 
     FATEntry entry {};
 
-    bool valid_sfn = is_valid_sfn(name);
+    bool valid_sfn = SFNUtils::is_valid_sfn(name);
 
     if (valid_sfn) {
         TRY(encode_known_good_sfn_for(entry, name));
     } else {
-        auto sfn = TRY(create_sfn_from_lfn(name));
+        auto sfn = TRY(SFNUtils::create_sfn_from_lfn(name));
         auto existing_sfns = TRY(collect_sfns());
         TRY(create_unique_sfn_for(entry, move(sfn), move(existing_sfns)));
     }
@@ -775,12 +690,12 @@ ErrorOr<void> FATInode::add_child(Inode& inode, StringView name, mode_t mode)
 
     auto entry = bit_cast<FATInode*>(&inode)->m_entry;
 
-    bool valid_sfn = is_valid_sfn(name);
+    bool valid_sfn = SFNUtils::is_valid_sfn(name);
 
     if (valid_sfn) {
         TRY(encode_known_good_sfn_for(entry, name));
     } else {
-        NonnullRefPtr<SFN> sfn = TRY(create_sfn_from_lfn(name));
+        auto sfn = TRY(SFNUtils::create_sfn_from_lfn(name));
         Vector<ByteBuffer> existing_sfns = TRY(collect_sfns());
         TRY(create_unique_sfn_for(entry, move(sfn), move(existing_sfns)));
     }
