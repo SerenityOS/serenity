@@ -13,10 +13,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio"));
 
-    StringView string = "yes"sv;
+    StringView string = "y"sv;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(string, "String to output (defaults to 'yes')", "string", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(string, "String to output (default 'y')", "string", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     for (;;)
