@@ -91,7 +91,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else if (color_when_string.equals_ignoring_ascii_case("never"sv)) {
                 force_color = false;
             } else if (!color_when_string.equals_ignoring_ascii_case("auto"sv)) {
-                warnln("Unknown argument '{}'. Valid arguments for --color are always, never and auto", color_when_string);
+                warnln("Unknown argument '{}'. Valid arguments for --color are always, never, or auto (default)", color_when_string);
                 return false;
             }
 
