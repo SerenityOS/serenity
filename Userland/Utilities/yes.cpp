@@ -16,6 +16,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView string = "y"sv;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Repeatedly output a line with the specified string, or 'y'.");
     args_parser.add_positional_argument(string, "String to output (default 'y')", "string", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
