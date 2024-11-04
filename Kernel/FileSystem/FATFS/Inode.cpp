@@ -663,6 +663,24 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
 
         FATEntry parent_directory = create_directory_entry(".."sv);
 
+        // NOTE: While setting the first cluster of the ".." entry to that of the current entry
+        // is _usually_ the right thing to do, we're actually supposed to set it to 0 if we are
+        // dealing with the root directory. This isn't an issues when dealing with FAT12 or FAT16,
+        // since the root directory's first cluster is always 0, but it's something to account for
+        // when working with FAT32.
+        switch (fs().m_fat_version) {
+        case FATVersion::FAT12:
+        case FATVersion::FAT16:
+            parent_directory.first_cluster_low = m_entry.first_cluster_low;
+            break;
+        case FATVersion::FAT32:
+            if (this != &fs().root_inode()) {
+                parent_directory.first_cluster_low = m_entry.first_cluster_low;
+                parent_directory.first_cluster_high = m_entry.first_cluster_high;
+            }
+            break;
+        }
+
         auto block = BlockBasedFileSystem::BlockIndex { fs().first_block_of_cluster(allocated_cluster).start_block.value() };
         TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&current_directory)), sizeof(FATEntry), 0));
         TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&parent_directory)), sizeof(FATEntry), sizeof(FATEntry)));
