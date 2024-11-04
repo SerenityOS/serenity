@@ -44,6 +44,7 @@ set(LIBTEST_BASED_SOURCES
     TestExt2FS.cpp
     TestFileSystemDirentTypes.cpp
     TestInvalidUIDSet.cpp
+    TestSFNUtilities.cpp
     TestSharedInodeVMObject.cpp
     TestPosixFallocate.cpp
     TestPrivateInodeVMObject.cpp
