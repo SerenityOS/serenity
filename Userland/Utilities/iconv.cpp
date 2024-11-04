@@ -18,10 +18,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(in_path, "Path to input file (reads STDIN if this is omitted)", "FILE", Core::ArgsParser::Required::No);
 
     StringView from = "utf-8"sv;
-    args_parser.add_option(from, "Source encoding", "from", 'f', "ENCODING");
+    args_parser.add_option(from, "Source encoding (default utf-8)", "from", 'f', "ENCODING");
 
     StringView to = "utf-8"sv;
-    args_parser.add_option(to, "Destination encoding", "to", 't', "ENCODING");
+    args_parser.add_option(to, "Destination encoding (default utf-8)", "to", 't', "ENCODING");
 
     args_parser.parse(arguments);
 
