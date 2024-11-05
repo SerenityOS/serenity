@@ -9,11 +9,10 @@
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBEndpoint.h>
 #include <Kernel/Bus/USB/USBRequest.h>
-#include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Devices/Storage/StorageManagement.h>
-#include <Kernel/Devices/Storage/USB/BulkSCSIInterface.h>
-#include <Kernel/Devices/Storage/USB/Codes.h>
-#include <Kernel/Devices/Storage/USB/SCSIComands.h>
+#include <Kernel/Devices/Storage/USB/BOT/BulkSCSIInterface.h>
+#include <Kernel/Devices/Storage/USB/BOT/Codes.h>
+#include <Kernel/Devices/Storage/USB/UAS/Structures.h>
+#include <Kernel/Devices/Storage/USB/UAS/UASInterface.h>
 
 namespace Kernel::USB {
 
@@ -25,24 +24,6 @@ void MassStorageDriver::init()
 {
     auto driver = MUST(adopt_nonnull_lock_ref_or_enomem(new MassStorageDriver()));
     USBManagement::register_driver(driver);
-}
-
-ErrorOr<void> MassStorageDriver::checkout_interface(USB::Device& device, USBInterface const& interface)
-{
-    auto const& descriptor = interface.descriptor();
-
-    if (descriptor.interface_class_code != USB_CLASS_MASS_STORAGE)
-        return ENOTSUP;
-
-    dmesgln("USB MassStorage Interface for device {}:{} found:", device.device_descriptor().vendor_id, device.device_descriptor().product_id);
-    dmesgln("    Subclass: {} [{:#02x}]", MassStorage::subclass_string((SubclassCode)descriptor.interface_sub_class_code), descriptor.interface_sub_class_code);
-    dmesgln("    Protocol: {} [{:#02x}]", MassStorage::transport_protocol_string((TransportProtocol)descriptor.interface_protocol), descriptor.interface_protocol);
-
-    // FIXME: Find a nice way of handling multiple device subclasses and protocols
-    if (descriptor.interface_protocol == to_underlying(TransportProtocol::BBB))
-        return initialise_bulk_only_device(device, interface);
-
-    return ENOTSUP;
 }
 
 ErrorOr<void> MassStorageDriver::probe(USB::Device& device)
@@ -57,24 +38,44 @@ ErrorOr<void> MassStorageDriver::probe(USB::Device& device)
         // FIXME: There might be multiple MassStorage configs present,
         //        figure out how to decide which one to take,
         //        although that's very unlikely
-        bool has_accepted_an_interface = false;
+        Optional<USBInterface const&> bot_interface;
+        Optional<USBInterface const&> uas_interface;
+
         for (auto const& interface : config.interfaces()) {
-            // FIXME: Handle multiple interfaces
-            //        Interface may coexist at the same time,
-            //        but having multiple handles on the same data storage seems like a bad idea,
-            //        so:
-            // FIXME: Choose the best supported interface
-            //        UAS for example is supposed to be better than BBB, but BBB will always
-            //        be the first listed interface of them, when both are supported
-            auto result = checkout_interface(device, interface);
-            if (result.is_error())
+            if (interface.descriptor().interface_class_code != USB_CLASS_MASS_STORAGE)
                 continue;
 
-            has_accepted_an_interface = true;
+            if (interface.descriptor().interface_protocol == to_underlying(TransportProtocol::UAS))
+                uas_interface = interface;
+            else if (interface.descriptor().interface_protocol == to_underlying(TransportProtocol::BBB))
+                bot_interface = interface;
+            else
+                dmesgln("USB MassStorage Interface for device {:04x}:{:04x} has unsupported protocol {}", device.device_descriptor().vendor_id, device.device_descriptor().product_id,
+                    transport_protocol_string(static_cast<TransportProtocol>(interface.descriptor().interface_protocol)));
         }
 
-        if (has_accepted_an_interface)
+        if (!bot_interface.has_value() && !uas_interface.has_value())
+            continue;
+
+        dmesgln("USB MassStorage Interfaces for device {:04x}:{:04x} found:", device.device_descriptor().vendor_id, device.device_descriptor().product_id);
+        dmesgln("    Configuration: {}", config.configuration_id());
+        dmesgln("    BOT Interface: {}", bot_interface.has_value());
+        dmesgln("    UAS Interface: {}", uas_interface.has_value());
+
+        if (uas_interface.has_value() && device.speed() != USB::Device::DeviceSpeed::SuperSpeed) {
+            // FIXME: We only support UAS on version < 3.0 devices
+            //        as we don't support streams, which are mandatory for UAS on USB 3.0 devices,
+            // as they replace the Read/WriteReady signals to and leverage stream IDs instead
+            dmesgln("    Using UAS interface");
+            TRY(initialise_uas_device(device, *uas_interface));
             return {};
+        }
+
+        if (bot_interface.has_value()) {
+            dmesgln("    Using BOT interface");
+            TRY(initialise_bulk_only_device(device, *bot_interface));
+            return {};
+        }
     }
 
     return ENOTSUP;
@@ -83,14 +84,11 @@ ErrorOr<void> MassStorageDriver::probe(USB::Device& device)
 ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device, USBInterface const& interface)
 {
     auto const& descriptor = interface.descriptor();
-    auto const& configuration = interface.configuration();
 
     if (descriptor.interface_sub_class_code != to_underlying(MassStorage::SubclassCode::SCSI_transparent))
         return ENOTSUP;
 
-    TRY(device.control_transfer(
-        USB_REQUEST_RECIPIENT_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
-        USB_REQUEST_SET_CONFIGURATION, configuration.configuration_id(), 0, 0, nullptr));
+    TRY(device.set_configuration_and_interface(interface));
 
     u8 max_luns;
     TRY(device.control_transfer(
@@ -101,9 +99,9 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
     if (max_luns != 0)
         dmesgln("SCSI/BBB: WARNING: USB Mass Storage Device supports multiple LUNs ({}) only targetting first LUN", max_luns);
 
-    u8 in_pipe_address = 0xff;
+    u8 in_pipe_endpoint_number = 0xff;
     u16 in_max_packet_size;
-    u8 out_pipe_address = 0xff;
+    u8 out_pipe_endpoint_number = 0xff;
     u16 out_max_packet_size;
 
     if (interface.descriptor().number_of_endpoints < 2) {
@@ -116,136 +114,153 @@ ErrorOr<void> MassStorageDriver::initialise_bulk_only_device(USB::Device& device
             continue;
         // The upper bit of the Endpoint address is set to 1, iff it is the Bulk-In Endpoint
         if (endpoint.endpoint_address & 0x80) {
-            in_pipe_address = endpoint.endpoint_address & 0b1111;
+            in_pipe_endpoint_number = endpoint.endpoint_address & 0b1111;
             in_max_packet_size = endpoint.max_packet_size;
         } else {
-            out_pipe_address = endpoint.endpoint_address & 0b1111;
+            out_pipe_endpoint_number = endpoint.endpoint_address & 0b1111;
             out_max_packet_size = endpoint.max_packet_size;
         }
     }
-    if (in_pipe_address == 0xff || out_pipe_address == 0xff) {
+    if (in_pipe_endpoint_number == 0xff || out_pipe_endpoint_number == 0xff) {
         dmesgln("SCSI/BBB: Interface did not advertise two Bulk Endpoints; Rejecting");
         return ENOTSUP;
     }
 
-    auto in_pipe = TRY(BulkInPipe::create(device.controller(), device, in_pipe_address, in_max_packet_size));
-    auto out_pipe = TRY(BulkOutPipe::create(device.controller(), device, out_pipe_address, out_max_packet_size));
+    auto in_pipe = TRY(BulkInPipe::create(device.controller(), device, in_pipe_endpoint_number, in_max_packet_size));
+    auto out_pipe = TRY(BulkOutPipe::create(device.controller(), device, out_pipe_endpoint_number, out_max_packet_size));
 
-    SCSI::Inquiry inquiry_command {};
-    inquiry_command.allocation_length = sizeof(SCSI::StandardInquiryData);
-
-    SCSI::StandardInquiryData inquiry_data;
-
-    auto inquiry_response = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(*out_pipe, *in_pipe, inquiry_command, &inquiry_data, sizeof(inquiry_data)));
-    if (inquiry_response.status != CSWStatus::Passed) {
-        dmesgln("SCSI/BBB: Inquiry failed with code {}", to_underlying(inquiry_response.status));
-        return EIO;
-    }
-    dmesgln("    Device Type: {}", inquiry_data.device_type_string());
-    dmesgln("    Peripheral Qualifier: {:#03b}", (u8)inquiry_data.peripheral_info.qualifier);
-    dmesgln("    Removable: {}", (inquiry_data.removable & 0x80) == 0x80);
-    dmesgln("    Version: {:#02x}", inquiry_data.version);
-    dmesgln("    Vendor: {}", StringView { inquiry_data.vendor_id, 8 });
-    dmesgln("    Product: {}", StringView { inquiry_data.product_id, 16 });
-    dmesgln("    Revision: {}", StringView { inquiry_data.product_revision_level, 4 });
-    if (inquiry_data.peripheral_info.device_type != SCSI::StandardInquiryData::DeviceType::DirectAccessBlockDevice) {
-        dmesgln("SCSI/BBB: Device is not a Direct Access Block device; Rejecting");
-        return ENOTSUP;
-    }
-    if (inquiry_data.version < 3 || inquiry_data.version > 7) {
-        dmesgln("SCSI/BBB: Device SCSI version not supported ({:#02x}); Rejecting", inquiry_data.version);
-        return ENOTSUP;
-    }
-    if (inquiry_data.response_data.response_data_format != 2) {
-        // SCSI Commands Reference Manual, Rev. J states that only format 2 is valid,
-        // and that format 1 is obsolete, but does not actually specify what format 1 would have been
-        // so ENOTSUP to be safe
-        dmesgln("SCSI/BBB: Device does not support response data format 2 (got {} instead); Rejecting", (u8)inquiry_data.response_data.response_data_format);
-        return ENOTSUP;
-    }
-
-    // FIXME: Re-query INQUIRY if the DRIVE SERIAL NUMBER field is present (see the ADDITIONAL LENGTH field), to record it
-    //        (bytes 36-43 ~ 8 bytes)
-
-    size_t tries = 0;
-    constexpr size_t max_tries = 5;
-    while (tries < max_tries) {
-        SCSI::TestUnitReady test_unit_ready_command {};
-        auto test_unit_ready_response = TRY(send_scsi_command<SCSIDataDirection::NoData>(*out_pipe, *in_pipe, test_unit_ready_command));
-
-        if (test_unit_ready_response.status == CSWStatus::Passed)
-            break;
-
-        SCSI::RequestSense request_sense_command {};
-        SCSI::FixedFormatSenseData sense_data;
-
-        request_sense_command.allocation_length = sizeof(sense_data);
-
-        auto request_sense_response = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(*out_pipe, *in_pipe, request_sense_command, &sense_data, sizeof(sense_data)));
-        if (request_sense_response.status != CSWStatus::Passed) {
-            dmesgln("SCSI/BBB: Request Sense failed with code {}, possibly unimplemented", to_underlying(request_sense_response.status));
-            return EIO;
-        }
-        // FIXME: Maybe hide this behind a debug flag, as some hardware fails once after startup
-        dbgln("SCSI/BBB: TestUnitReady Failed:");
-        // FIXME: to_string() these
-        dbgln("    Sense Key: {:#02x}", (u8)sense_data.sense_key);
-        dbgln("    Additional Sense Code: {:#02x}", (u8)sense_data.additional_sense_code);
-        dbgln("    Additional Sense Code Qualifier: {:#02x}", (u8)sense_data.additional_sense_code_qualifier);
-
-        ++tries;
-    }
-    if (tries == max_tries) {
-        dmesgln("SCSI/BBB: TestUnitReady failed too many times");
-        return EIO;
-    }
-
-    SCSI::ReadCapacity10Parameters capacity;
-    auto status = TRY(send_scsi_command<SCSIDataDirection::DataToInitiator>(*out_pipe, *in_pipe, SCSI::ReadCapacity10 {}, &capacity, sizeof(capacity)));
-
-    if (status.data_residue != 0) {
-        dmesgln("SCSI/BBB: Read Capacity returned with non-zero data residue; Rejecting");
-        return EIO;
-    }
-
-    if (status.status != CSWStatus::Passed) {
-        dmesgln("SCSI/BBB: Failed to query USB Drive capacity; Rejecting");
-        // FIXME: More error handling
-        return ENOTSUP;
-    }
-
-    dmesgln("    Block Size: {}B", capacity.block_size);
-    dmesgln("    Block Count: {}", capacity.block_count);
-    dmesgln("    Total Size: {}MiB", (u64)capacity.block_size * capacity.block_count / MiB);
-
-    StorageDevice::LUNAddress lun = {
-        device.controller().storage_controller_id(),
-        device.address(),
-        // FIXME: Again, support multiple LUNs per device
-        0
-    };
-
-    auto bulk_scsi_interface = TRY(DeviceManagement::try_create_device<BulkSCSIInterface>(
-        lun,
-        device.address(), // FIXME: Figure out a better ID to put here
-        capacity.block_size,
-        capacity.block_count,
+    auto bulk_scsi_interface = TRY(BulkSCSIInterface::initialize(
         device,
+        interface,
         move(in_pipe),
         move(out_pipe)));
 
-    m_interfaces.append(bulk_scsi_interface);
-    StorageManagement::the().add_device(bulk_scsi_interface);
+    m_bot_interfaces.append(move(bulk_scsi_interface));
+
+    return {};
+}
+
+ErrorOr<void> MassStorageDriver::initialise_uas_device(USB::Device& device, USBInterface const& interface)
+{
+    auto const& descriptor = interface.descriptor();
+    auto const& configuration = interface.configuration();
+
+    if (descriptor.interface_sub_class_code != to_underlying(MassStorage::SubclassCode::SCSI_transparent))
+        return ENOTSUP;
+
+    TRY(device.set_configuration_and_interface(interface));
+
+    Optional<u8> command_pipe_endpoint_number;
+    u16 command_max_packet_size;
+    Optional<u8> status_pipe_endpoint_number;
+    u16 status_max_packet_size;
+    Optional<u8> in_pipe_endpoint_number;
+    u16 in_max_packet_size;
+    Optional<u8> out_pipe_endpoint_number;
+    u16 out_max_packet_size;
+
+    if (interface.descriptor().number_of_endpoints < 4) {
+        dmesgln("SCSI/UAS: Interface does not provide enough endpoints for advertised UAS transfer protocol; Rejecting");
+        return EIO;
+    }
+
+    Optional<u8> last_seen_endpoint_number;
+    u16 last_seen_max_packet_size;
+
+    TRY(configuration.for_each_descriptor_in_interface(interface,
+        [&](ReadonlyBytes descriptor_data) -> ErrorOr<void> {
+            auto const& descriptor_header = *bit_cast<USBDescriptorCommon const*>(descriptor_data.data());
+
+            if (descriptor_header.descriptor_type == DESCRIPTOR_TYPE_ENDPOINT) {
+                auto descriptor = bit_cast<USBEndpointDescriptor const*>(descriptor_data.data());
+                if ((descriptor->endpoint_attributes_bitmap & USBEndpoint::ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_MASK) != USBEndpoint::ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_BULK)
+                    return {};
+                last_seen_endpoint_number = descriptor->endpoint_address & 0b1111;
+                last_seen_max_packet_size = descriptor->max_packet_size;
+                return {};
+            }
+
+            // Note: The spec says that the Pipe Usage Descriptor should be the first descriptor after the Endpoint Descriptor,
+            //       but we don't enforce that here
+            //       As other descriptors, like the SuperSpeed Endpoint Companion Descriptor, may be present in between
+            if (descriptor_header.descriptor_type != UAS_PIPE_USAGE_DESCRIPTOR)
+                return {};
+
+            if (descriptor_data.size() < sizeof(PipeUsageDescriptor)) {
+                dmesgln("SCSI/UAS: Provided Pipe Usage Descriptor is too small; Rejecting");
+                return EIO;
+            }
+
+            auto descriptor = *bit_cast<PipeUsageDescriptor const*>(descriptor_data.data());
+
+            if (!last_seen_endpoint_number.has_value()) {
+                dmesgln("SCSI/UAS: Found Pipe Usage Descriptor without preceding Endpoint Descriptor; Rejecting");
+                return EIO;
+            }
+
+            using enum PipeID;
+            switch (descriptor.pipe_id) {
+            case CommandPipe:
+                command_pipe_endpoint_number = last_seen_endpoint_number;
+                command_max_packet_size = last_seen_max_packet_size;
+                break;
+            case StatusPipe:
+                status_pipe_endpoint_number = last_seen_endpoint_number;
+                status_max_packet_size = last_seen_max_packet_size;
+                break;
+            case DataInPipe:
+                in_pipe_endpoint_number = last_seen_endpoint_number;
+                in_max_packet_size = last_seen_max_packet_size;
+                break;
+            case DataOutPipe:
+                out_pipe_endpoint_number = last_seen_endpoint_number;
+                out_max_packet_size = last_seen_max_packet_size;
+                break;
+            }
+
+            last_seen_endpoint_number.clear();
+            last_seen_max_packet_size = 0;
+
+            return {};
+        }));
+
+    if (!in_pipe_endpoint_number.has_value()
+        || !out_pipe_endpoint_number.has_value()
+        || !command_pipe_endpoint_number.has_value()
+        || !status_pipe_endpoint_number.has_value()) {
+        dmesgln("SCSI/UAS: Interface did not advertise all required Bulk Endpoints; Rejecting");
+        return EIO;
+    }
+
+    auto command_pipe = TRY(BulkOutPipe::create(device.controller(), device, *command_pipe_endpoint_number, command_max_packet_size));
+    auto status_pipe = TRY(BulkInPipe::create(device.controller(), device, *status_pipe_endpoint_number, status_max_packet_size));
+    auto in_pipe = TRY(BulkInPipe::create(device.controller(), device, *in_pipe_endpoint_number, in_max_packet_size));
+    auto out_pipe = TRY(BulkOutPipe::create(device.controller(), device, *out_pipe_endpoint_number, out_max_packet_size));
+
+    auto uas_interface = TRY(UASInterface::initialize(
+        device,
+        interface,
+        move(command_pipe),
+        move(status_pipe),
+        move(in_pipe),
+        move(out_pipe)));
+
+    m_uas_interfaces.append(move(uas_interface));
 
     return {};
 }
 
 void MassStorageDriver::detach(USB::Device& device)
 {
-    auto&& interface = AK::find_if(m_interfaces.begin(), m_interfaces.end(), [&device](auto& interface) { return &interface.device() == &device; });
-
-    StorageManagement::the().remove_device(*interface);
-    m_interfaces.remove(*interface);
+    if (auto&& interface = AK::find_if(m_bot_interfaces.begin(), m_bot_interfaces.end(), [&device](auto& interface) { return &interface.device() == &device; }); interface != m_bot_interfaces.end()) {
+        m_bot_interfaces.remove(*interface);
+        return;
+    }
+    if (auto&& interface = AK::find_if(m_uas_interfaces.begin(), m_uas_interfaces.end(), [&device](auto& interface) { return &interface.device() == &device; }); interface != m_uas_interfaces.end()) {
+        m_uas_interfaces.remove(*interface);
+        return;
+    }
+    VERIFY_NOT_REACHED();
 }
 
 }

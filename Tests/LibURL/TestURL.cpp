@@ -195,7 +195,9 @@ TEST_CASE(file_url_serialization)
 TEST_CASE(file_url_relative)
 {
     EXPECT_EQ(URL::URL("https://vkoskiv.com/index.html"sv).complete_url("/static/foo.js"sv).serialize(), "https://vkoskiv.com/static/foo.js");
-    EXPECT_EQ(URL::URL("file:///home/vkoskiv/test/index.html"sv).complete_url("/static/foo.js"sv).serialize(), "file:///home/vkoskiv/test/static/foo.js");
+    EXPECT_EQ(URL::URL("file:///home/vkoskiv/test/index.html"sv).complete_url("/static/foo.js"sv).serialize(), "file:///static/foo.js");
+    EXPECT_EQ(URL::URL("https://vkoskiv.com/index.html"sv).complete_url("static/foo.js"sv).serialize(), "https://vkoskiv.com/static/foo.js");
+    EXPECT_EQ(URL::URL("file:///home/vkoskiv/test/index.html"sv).complete_url("static/foo.js"sv).serialize(), "file:///home/vkoskiv/test/static/foo.js");
 }
 
 TEST_CASE(about_url)
@@ -456,8 +458,8 @@ TEST_CASE(username_and_password)
         URL::URL url(url_with_username_and_password);
         EXPECT(url.is_valid());
         EXPECT_EQ(MUST(url.serialized_host()), "test.com"sv);
-        EXPECT_EQ(MUST(url.username()), "username"sv);
-        EXPECT_EQ(MUST(url.password()), "password"sv);
+        EXPECT_EQ(url.username(), "username"sv);
+        EXPECT_EQ(url.password(), "password"sv);
     }
 
     {
@@ -465,8 +467,10 @@ TEST_CASE(username_and_password)
         URL::URL url(url_with_percent_encoded_credentials);
         EXPECT(url.is_valid());
         EXPECT_EQ(MUST(url.serialized_host()), "test.com"sv);
-        EXPECT_EQ(MUST(url.username()), "username!$%"sv);
-        EXPECT_EQ(MUST(url.password()), "password!$%"sv);
+        EXPECT_EQ(url.username(), "username%21%24%25");
+        EXPECT_EQ(url.password(), "password%21%24%25");
+        EXPECT_EQ(URL::percent_decode(url.username()), "username!$%"sv);
+        EXPECT_EQ(URL::percent_decode(url.password()), "password!$%"sv);
     }
 
     {
@@ -475,8 +479,8 @@ TEST_CASE(username_and_password)
         URL::URL url(url_with_long_username);
         EXPECT(url.is_valid());
         EXPECT_EQ(MUST(url.serialized_host()), "test.com"sv);
-        EXPECT_EQ(MUST(url.username()), username);
-        EXPECT(MUST(url.password()).is_empty());
+        EXPECT_EQ(url.username(), username);
+        EXPECT(url.password().is_empty());
     }
 
     {
@@ -485,8 +489,8 @@ TEST_CASE(username_and_password)
         URL::URL url(url_with_long_password);
         EXPECT(url.is_valid());
         EXPECT_EQ(MUST(url.serialized_host()), "test.com"sv);
-        EXPECT(MUST(url.username()).is_empty());
-        EXPECT_EQ(MUST(url.password()), password);
+        EXPECT(url.username().is_empty());
+        EXPECT_EQ(url.password(), password);
     }
 }
 
@@ -508,5 +512,20 @@ TEST_CASE(ascii_only_url)
         EXPECT_EQ(url.scheme(), "http");
         EXPECT_EQ(MUST(url.serialized_host()), "example.com"sv);
         EXPECT_EQ(url.to_byte_string(), "http://example.com/iNdEx.HtMl#fRaGmEnT");
+    }
+}
+
+TEST_CASE(invalid_domain_code_points)
+{
+    {
+        constexpr auto upper_case_url = "http://example%25.com"sv;
+        URL::URL url(upper_case_url);
+        EXPECT(!url.is_valid());
+    }
+
+    {
+        constexpr auto mixed_case_url = "http://thing\u0007y/'"sv;
+        URL::URL url(mixed_case_url);
+        EXPECT(!url.is_valid());
     }
 }

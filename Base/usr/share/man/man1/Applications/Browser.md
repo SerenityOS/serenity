@@ -16,12 +16,12 @@ Browser is an application used to view the World Wide Web. It is built on top of
 
 ## Options
 
-* `--help`: Display help message and exit
-* `--version`: Display version number and exit
+-   `--help`: Display help message and exit
+-   `--version`: Display version number and exit
 
 ## Arguments
 
-* `urls`: A list of urls to open, one per tab. If none are specified, then the homepage will be opened instead.
+-   `urls`: A list of urls to open, one per tab. If none are specified, then the homepage will be opened instead.
 
 ## Examples
 

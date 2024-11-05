@@ -108,21 +108,6 @@ Navigable::Navigable(JS::NonnullGCPtr<Page> page)
     , m_event_handler({}, *this)
 {
     all_navigables().set(this);
-
-    m_cursor_blink_timer = Core::Timer::create_repeating(500, [this] {
-        if (!is_focused())
-            return;
-        if (!m_cursor_position)
-            return;
-        auto node = m_cursor_position->node();
-        if (!node)
-            return;
-        node->document().update_layout();
-        if (node->paintable()) {
-            m_cursor_blink_state = !m_cursor_blink_state;
-            node->paintable()->set_needs_display();
-        }
-    });
 }
 
 Navigable::~Navigable()
@@ -138,7 +123,6 @@ void Navigable::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_current_session_history_entry);
     visitor.visit(m_active_session_history_entry);
     visitor.visit(m_container);
-    visitor.visit(m_cursor_position);
     m_event_handler.visit_edges(visitor);
 }
 
@@ -717,7 +701,7 @@ static WebIDL::ExceptionOr<Navigable::NavigationParamsVariant> create_navigation
     request->set_referrer(entry->document_state()->request_referrer());
 
     // 4. If documentResource is a POST resource, then:
-    if (document_resource.has<POSTResource>()) {
+    if (auto* post_resource = document_resource.get_pointer<POSTResource>()) {
         // 1. Set request's method to `POST`.
         request->set_method(TRY_OR_THROW_OOM(vm, ByteBuffer::copy("POST"sv.bytes())));
 
@@ -725,9 +709,8 @@ static WebIDL::ExceptionOr<Navigable::NavigationParamsVariant> create_navigation
         request->set_body(document_resource.get<POSTResource>().request_body.value());
 
         // 3. Set `Content-Type` to documentResource's request content-type in request's header list.
-        auto request_content_type = document_resource.get<POSTResource>().request_content_type;
-        auto request_content_type_string = [request_content_type]() {
-            switch (request_content_type) {
+        auto request_content_type = [&]() {
+            switch (post_resource->request_content_type) {
             case POSTResource::RequestContentType::ApplicationXWWWFormUrlencoded:
                 return "application/x-www-form-urlencoded"sv;
             case POSTResource::RequestContentType::MultipartFormData:
@@ -738,7 +721,18 @@ static WebIDL::ExceptionOr<Navigable::NavigationParamsVariant> create_navigation
                 VERIFY_NOT_REACHED();
             }
         }();
-        auto header = Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, request_content_type_string);
+
+        StringBuilder request_content_type_buffer;
+        if (!post_resource->request_content_type_directives.is_empty()) {
+            request_content_type_buffer.append(request_content_type);
+
+            for (auto const& directive : post_resource->request_content_type_directives)
+                request_content_type_buffer.appendff("; {}={}", directive.type, directive.value);
+
+            request_content_type = request_content_type_buffer.string_view();
+        }
+
+        auto header = Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, request_content_type);
         request->header_list()->append(move(header));
     }
 
@@ -2007,7 +2001,7 @@ void Navigable::set_viewport_size(CSSPixelSize size)
     m_size = size;
     if (auto document = active_document()) {
         // NOTE: Resizing the viewport changes the reference value for viewport-relative CSS lengths.
-        document->invalidate_style();
+        document->invalidate_style(DOM::StyleInvalidationReason::NavigableSetViewportSize);
         document->set_needs_layout();
     }
     m_needs_repaint = true;
@@ -2098,7 +2092,7 @@ void Navigable::inform_the_navigation_api_about_aborting_navigation()
     }));
 }
 
-void Navigable::record_painting_commands(Painting::RecordingPainter& recording_painter, PaintConfig config)
+void Navigable::record_display_list(Painting::DisplayListRecorder& display_list_recorder, PaintConfig config)
 {
     auto document = active_document();
     if (!document)
@@ -2110,12 +2104,12 @@ void Navigable::record_painting_commands(Painting::RecordingPainter& recording_p
 
     auto background_color = document->background_color();
 
-    recording_painter.fill_rect(bitmap_rect, background_color);
+    display_list_recorder.fill_rect(bitmap_rect, background_color);
     if (!document->paintable()) {
         VERIFY_NOT_REACHED();
     }
 
-    Web::PaintContext context(recording_painter, page.palette(), page.client().device_pixels_per_css_pixel());
+    Web::PaintContext context(display_list_recorder, page.palette(), page.client().device_pixels_per_css_pixel());
     context.set_device_viewport_rect(viewport_rect);
     context.set_should_show_line_box_borders(config.should_show_line_box_borders);
     context.set_should_paint_overlay(config.paint_overlay);
@@ -2142,8 +2136,8 @@ void Navigable::record_painting_commands(Painting::RecordingPainter& recording_p
             auto scroll_offset = context.rounded_device_point(scrollable_frame->offset).to_type<int>();
             scroll_offsets_by_frame_id[scrollable_frame->id] = scroll_offset;
         }
-        recording_painter.commands_list().apply_scroll_offsets(scroll_offsets_by_frame_id);
-        recording_painter.commands_list().mark_unnecessary_commands();
+        display_list_recorder.display_list().apply_scroll_offsets(scroll_offsets_by_frame_id);
+        display_list_recorder.display_list().mark_unnecessary_commands();
     }
 
     m_needs_repaint = false;
@@ -2163,44 +2157,9 @@ UserNavigationInvolvement user_navigation_involvement(DOM::Event const& event)
     return event.is_trusted() ? UserNavigationInvolvement::Activation : UserNavigationInvolvement::None;
 }
 
-void Navigable::did_edit(Badge<EditEventHandler>)
-{
-    reset_cursor_blink_cycle();
-
-    if (m_cursor_position && is<DOM::Text>(*m_cursor_position->node())) {
-        auto& text_node = static_cast<DOM::Text&>(*m_cursor_position->node());
-        if (auto text_node_owner = text_node.editable_text_node_owner())
-            text_node_owner->did_edit_text_node({});
-    }
-}
-
-void Navigable::reset_cursor_blink_cycle()
-{
-    m_cursor_blink_state = true;
-    m_cursor_blink_timer->restart();
-    if (m_cursor_position && m_cursor_position->node()->paintable())
-        m_cursor_position->node()->paintable()->set_needs_display();
-}
-
 bool Navigable::is_focused() const
 {
     return &m_page->focused_navigable() == this;
-}
-
-void Navigable::set_cursor_position(JS::NonnullGCPtr<DOM::Position> position)
-{
-    if (m_cursor_position && m_cursor_position->equals(position))
-        return;
-
-    if (m_cursor_position && m_cursor_position->node()->paintable())
-        m_cursor_position->node()->paintable()->set_needs_display();
-
-    m_cursor_position = position;
-
-    if (m_cursor_position && m_cursor_position->node()->paintable())
-        m_cursor_position->node()->paintable()->set_needs_display();
-
-    reset_cursor_blink_cycle();
 }
 
 static String visible_text_in_range(DOM::Range const& range)
@@ -2245,13 +2204,20 @@ void Navigable::select_all()
     auto document = active_document();
     if (!document)
         return;
-    auto* body = document->body();
-    if (!body)
-        return;
+
     auto selection = document->get_selection();
     if (!selection)
         return;
-    (void)selection->select_all_children(*document->body());
+
+    if (auto position = document->cursor_position(); position && position->node()->is_editable()) {
+        auto& node = *position->node();
+        auto node_length = node.length();
+
+        (void)selection->set_base_and_extent(node, 0, node, node_length);
+        document->set_cursor_position(DOM::Position::create(document->realm(), node, node_length));
+    } else if (auto* body = document->body()) {
+        (void)selection->select_all_children(*body);
+    }
 }
 
 void Navigable::paste(String const& text)
@@ -2261,22 +2227,6 @@ void Navigable::paste(String const& text)
         return;
 
     m_event_handler.handle_paste(text);
-}
-
-bool Navigable::increment_cursor_position_offset()
-{
-    if (!m_cursor_position->increment_offset())
-        return false;
-    reset_cursor_blink_cycle();
-    return true;
-}
-
-bool Navigable::decrement_cursor_position_offset()
-{
-    if (!m_cursor_position->decrement_offset())
-        return false;
-    reset_cursor_blink_cycle();
-    return true;
 }
 
 }

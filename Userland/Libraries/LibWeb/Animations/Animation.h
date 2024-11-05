@@ -101,7 +101,8 @@ public:
     virtual bool is_css_animation() const { return false; }
     virtual bool is_css_transition() const { return false; }
 
-    virtual JS::GCPtr<DOM::Element> owning_element() const { return {}; }
+    JS::GCPtr<DOM::Element> owning_element() const { return m_owning_element; }
+    void set_owning_element(JS::GCPtr<DOM::Element> value) { m_owning_element = value; }
 
     virtual AnimationClass animation_class() const { return AnimationClass::None; }
     virtual Optional<int> class_specific_composite_order(JS::NonnullGCPtr<Animation>) const { return {}; }
@@ -192,7 +193,10 @@ private:
     // https://www.w3.org/TR/web-animations-1/#pending-pause-task
     TaskState m_pending_pause_task { TaskState::None };
 
-    Optional<int> m_pending_finish_microtask_id;
+    // https://www.w3.org/TR/css-animations-2/#owning-element-section
+    JS::GCPtr<DOM::Element> m_owning_element;
+
+    Optional<HTML::TaskID> m_pending_finish_microtask_id;
 
     Optional<double> m_saved_play_time;
     Optional<double> m_saved_pause_time;

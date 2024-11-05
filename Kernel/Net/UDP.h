@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Net/IPv4/IPv4.h>
+#include <Kernel/Net/IP/IPv4.h>
 
 namespace Kernel {
 
@@ -27,14 +27,15 @@ public:
     u16 checksum() const { return m_checksum; }
     void set_checksum(u16 checksum) { m_checksum = checksum; }
 
-    void const* payload() const { return this + 1; }
-    void* payload() { return this + 1; }
+    void const* payload() const { return &m_payload[0]; }
+    void* payload() { return &m_payload[0]; }
 
 private:
     NetworkOrdered<u16> m_source_port;
     NetworkOrdered<u16> m_destination_port;
     NetworkOrdered<u16> m_length;
     NetworkOrdered<u16> m_checksum;
+    u8 m_payload[0];
 };
 
 static_assert(sizeof(UDPPacket) == 8);

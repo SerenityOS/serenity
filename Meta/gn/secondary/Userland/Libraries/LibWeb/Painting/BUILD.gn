@@ -5,7 +5,7 @@ source_set("Painting") {
     "//Userland/",  # For LibGfx needing LibGUI needing WindowServer types
   ]
   sources = [
-    "AffineCommandExecutorCPU.cpp",
+    "AffineDisplayListPlayerCPU.cpp",
     "AudioPaintable.cpp",
     "BackgroundPainting.cpp",
     "BorderPainting.cpp",
@@ -16,8 +16,9 @@ source_set("Painting") {
     "CheckBoxPaintable.cpp",
     "ClippableAndScrollable.cpp",
     "Command.cpp",
-    "CommandExecutorCPU.cpp",
-    "CommandList.cpp",
+    "DisplayList.cpp",
+    "DisplayListPlayerCPU.cpp",
+    "DisplayListRecorder.cpp",
     "FilterPainting.cpp",
     "GradientPainting.cpp",
     "ImagePaintable.cpp",
@@ -27,11 +28,11 @@ source_set("Painting") {
     "MediaPaintable.cpp",
     "NestedBrowsingContextPaintable.cpp",
     "PaintContext.cpp",
+    "PaintStyle.cpp",
     "Paintable.cpp",
     "PaintableBox.cpp",
     "PaintableFragment.cpp",
     "RadioButtonPaintable.cpp",
-    "RecordingPainter.cpp",
     "SVGClipPaintable.cpp",
     "SVGForeignObjectPaintable.cpp",
     "SVGGraphicsPaintable.cpp",
@@ -49,7 +50,7 @@ source_set("Painting") {
   ]
 
   if (current_os == "linux" || current_os == "mac") {
-    sources += [ "CommandExecutorGPU.cpp" ]
+    sources += [ "DisplayListPlayerGPU.cpp" ]
     public_deps = [ "//Userland/Libraries/LibAccelGfx" ]
   }
 }

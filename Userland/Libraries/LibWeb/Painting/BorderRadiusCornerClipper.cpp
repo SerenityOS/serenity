@@ -78,7 +78,7 @@ void BorderRadiusCornerClipper::sample_under_corners(Gfx::Painter& page_painter)
                     position.translate_by(translation);
                     if (!clip_rect.contains(position))
                         continue;
-                    auto page_pixel = page_painter.target()->get_pixel<Gfx::StorageFormat::BGRA8888>(position.x(), position.y());
+                    auto page_pixel = page_painter.target().get_pixel<Gfx::StorageFormat::BGRA8888>(position.x(), position.y());
                     final_pixel = page_pixel.with_alpha(mask_alpha);
                 }
                 m_corner_bitmap->set_pixel<Gfx::StorageFormat::BGRA8888>(corner_location.x(), corner_location.y(), final_pixel);
@@ -128,14 +128,14 @@ ScopedCornerRadiusClip::ScopedCornerRadiusClip(PaintContext& context, DevicePixe
     m_has_radius = corner_radii.has_any_radius();
     if (!m_has_radius)
         return;
-    m_context.recording_painter().sample_under_corners(m_id, corner_radii, border_rect.to_type<int>(), corner_clip);
+    m_context.display_list_recorder().sample_under_corners(m_id, corner_radii, border_rect.to_type<int>(), corner_clip);
 }
 
 ScopedCornerRadiusClip::~ScopedCornerRadiusClip()
 {
     if (!m_has_radius)
         return;
-    m_context.recording_painter().blit_corner_clipping(m_id);
+    m_context.display_list_recorder().blit_corner_clipping(m_id);
 }
 
 }

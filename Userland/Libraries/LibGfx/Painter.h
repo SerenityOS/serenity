@@ -16,14 +16,17 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/Gradients.h>
 #include <LibGfx/GrayscaleBitmap.h>
+#include <LibGfx/LineStyle.h>
 #include <LibGfx/PaintStyle.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
+#include <LibGfx/ScalingMode.h>
 #include <LibGfx/Size.h>
 #include <LibGfx/TextAlignment.h>
 #include <LibGfx/TextDirection.h>
 #include <LibGfx/TextElision.h>
 #include <LibGfx/TextWrapping.h>
+#include <LibGfx/WindingRule.h>
 
 namespace Gfx {
 
@@ -46,20 +49,6 @@ public:
 
     explicit Painter(Gfx::Bitmap&);
     ~Painter() = default;
-
-    enum class LineStyle {
-        Solid,
-        Dotted,
-        Dashed,
-    };
-
-    enum class ScalingMode {
-        NearestNeighbor,
-        SmoothPixels,
-        BilinearBlend,
-        BoxSampling,
-        None,
-    };
 
     void clear_rect(IntRect const&, Color);
     void fill_rect(IntRect const&, Color);
@@ -151,11 +140,6 @@ public:
 
     void stroke_path(Path const&, Color, int thickness);
 
-    enum class WindingRule {
-        Nonzero,
-        EvenOdd,
-    };
-
     void fill_path(Path const&, Color, WindingRule rule = WindingRule::Nonzero);
     void fill_path(Path const&, PaintStyle const& paint_style, float opacity = 1.0f, WindingRule rule = WindingRule::Nonzero);
 
@@ -183,7 +167,7 @@ public:
 
     IntPoint translation() const { return state().translation; }
 
-    Gfx::Bitmap* target() { return m_target.ptr(); }
+    [[nodiscard]] Gfx::Bitmap& target() { return *m_target; }
 
     void save() { m_state_stack.append(m_state_stack.last()); }
     void restore()

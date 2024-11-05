@@ -17,16 +17,18 @@ $ Maps
 The default data provider is [OpenStreetMaps](https://www.openstreetmap.org/), an open-source community-maintained map similar in spirit to Wikipedia.
 
 ## Features
+
 Pan around the map by clicking and dragging.
 
 Zoom by using the toolbar icons, the mouse wheel or `Ctrl +` to zoom-in and `Ctrl -` to zoom-out. Reset the zoom to a global view with `Ctrl 0`.
 Double-clicking anywhere on the map zooms-in to that location. Double-clicking whilst holding `Shift` zooms-out.
 
 Right-click on a location to:
-* Copy its coordinates to the Clipboard
-* Save it to your favorites
-* Open it in various mapping services
-* Center the map on it
+
+-   Copy its coordinates to the Clipboard
+-   Save it to your favorites
+-   Open it in various mapping services
+-   Center the map on it
 
 Show and hide the search panel by clicking on the leftmost magnifying glass in the toolbar. Type your query, press `Return` and then click on a result to focus on it in the map. Navigate the search results with the `Up` and `Down` arrow keys.
 

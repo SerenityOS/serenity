@@ -10,7 +10,7 @@
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/Parser/ParsingContext.h>
 #include <LibWeb/CSS/StyleProperties.h>
-#include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
+#include <LibWeb/CSS/StyleValues/CSSColorValue.h>
 #include <LibWeb/HTML/HTMLFontElement.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Infra/CharacterTypes.h>
@@ -26,7 +26,7 @@ enum class Mode {
 };
 
 // https://html.spec.whatwg.org/multipage/rendering.html#rules-for-parsing-a-legacy-font-size
-static Optional<CSS::ValueID> parse_legacy_font_size(StringView string)
+static Optional<CSS::Keyword> parse_legacy_font_size(StringView string)
 {
     // 1. Let input be the attribute's value.
     // 2. Let position be a pointer into input, initially pointing at the start of the string.
@@ -81,19 +81,19 @@ static Optional<CSS::ValueID> parse_legacy_font_size(StringView string)
     // 12. Set 'font-size' to the keyword corresponding to the value of value according to the following table:
     switch (value) {
     case 1:
-        return CSS::ValueID::XSmall;
+        return CSS::Keyword::XSmall;
     case 2:
-        return CSS::ValueID::Small;
+        return CSS::Keyword::Small;
     case 3:
-        return CSS::ValueID::Medium;
+        return CSS::Keyword::Medium;
     case 4:
-        return CSS::ValueID::Large;
+        return CSS::Keyword::Large;
     case 5:
-        return CSS::ValueID::XLarge;
+        return CSS::Keyword::XLarge;
     case 6:
-        return CSS::ValueID::XxLarge;
+        return CSS::Keyword::XxLarge;
     case 7:
-        return CSS::ValueID::XxxLarge;
+        return CSS::Keyword::XxxLarge;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -119,12 +119,12 @@ void HTMLFontElement::apply_presentational_hints(CSS::StyleProperties& style) co
             // https://html.spec.whatwg.org/multipage/rendering.html#phrasing-content-3:rules-for-parsing-a-legacy-colour-value
             auto color = parse_legacy_color_value(value);
             if (color.has_value())
-                style.set_property(CSS::PropertyID::Color, CSS::ColorStyleValue::create(color.value()));
+                style.set_property(CSS::PropertyID::Color, CSS::CSSColorValue::create_from_color(color.value()));
         } else if (name.equals_ignoring_ascii_case("size"sv)) {
             // When a font element has a size attribute, the user agent is expected to use the following steps, known as the rules for parsing a legacy font size, to treat the attribute as a presentational hint setting the element's 'font-size' property:
             auto font_size_or_empty = parse_legacy_font_size(value);
             if (font_size_or_empty.has_value()) {
-                auto font_size = string_from_value_id(font_size_or_empty.release_value());
+                auto font_size = string_from_keyword(font_size_or_empty.release_value());
                 if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, font_size, CSS::PropertyID::FontSize))
                     style.set_property(CSS::PropertyID::FontSize, parsed_value.release_nonnull());
             }

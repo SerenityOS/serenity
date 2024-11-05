@@ -6,16 +6,16 @@
 
 #include <AK/Optional.h>
 #include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/FUSEDevice.h>
 #include <Kernel/FileSystem/FUSE/Definitions.h>
 #include <Kernel/FileSystem/FUSE/FUSEConnection.h>
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<FUSEDevice> FUSEDevice::must_create()
+UNMAP_AFTER_INIT NonnullRefPtr<FUSEDevice> FUSEDevice::must_create()
 {
-    return MUST(DeviceManagement::try_create_device<FUSEDevice>());
+    return MUST(Device::try_create_device<FUSEDevice>());
 }
 
 UNMAP_AFTER_INIT FUSEDevice::FUSEDevice()

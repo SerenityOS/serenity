@@ -452,8 +452,10 @@ ErrorOr<CCITTStatus> decode_single_ccitt_2d_line(BigEndianInputBitStream& input_
     };
 
     auto const encode_for = [&](Change change, i8 offset = 0) -> ErrorOr<void> {
-        auto const to_encode = remainder_from_pass_mode + change.column - column + offset;
-        for (u32 i {}; i < to_encode; ++i)
+        i32 const to_encode = remainder_from_pass_mode + change.column - column + offset;
+        if (to_encode < 0)
+            return Error::from_string_literal("CCITTDecoder: Corrupted stream");
+        for (i32 i {}; i < to_encode; ++i)
             TRY(decoded_bits.write_bits(current_color == ccitt_white ? 0u : 1u, 1));
 
         column = change.column + offset;

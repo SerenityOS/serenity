@@ -125,7 +125,23 @@ int main(int argc, char** argv)
 
     if (do_illegal_instruction || do_all_crash_types) {
         any_failures |= !Crash("Illegal instruction", []() {
-            __builtin_trap();
+#if ARCH(AARCH64)
+            asm volatile("udf #0" :);
+#elif ARCH(X86_64)
+            asm volatile("ud2" :);
+#elif ARCH(RISCV64)
+            // Invalid instructions are not required to trap on RISC-V.
+            // However, writing to a read-only CSR, which the non-compressed unimp pseudoinstruction
+            // gets expanded to, is required to cause an illegal-instruction exception.
+            asm volatile(R"(
+                .option push
+                .option arch, -c
+                    unimp
+                .option pop
+            )" :);
+#else
+#    error Unknown architecture
+#endif
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }

@@ -150,8 +150,11 @@ static double parse_simplified_iso8601(ByteString const& iso_8601)
     return time_clip(time_ms);
 }
 
-static double parse_date_string(ByteString const& date_string)
+static double parse_date_string(VM& vm, ByteString const& date_string)
 {
+    if (date_string.is_empty())
+        return NAN;
+
     auto value = parse_simplified_iso8601(date_string);
     if (isfinite(value))
         return value;
@@ -168,6 +171,7 @@ static double parse_date_string(ByteString const& date_string)
         "%m/%e/%Y%t%R%t%z"sv,                  // "12/05/2022 10:00 -0800"
         "%Y/%m/%e%t%R"sv,                      // "2014/11/14 13:05"
         "%Y-%m-%e%t%R"sv,                      // "2014-11-14 13:05"
+        "%B%t%e,%t%Y"sv,                       // "June 5, 2023"
         "%B%t%e,%t%Y%t%T"sv,                   // "June 5, 2023 17:00:00"
         "%b%t%d%t%Y%t%Z"sv,                    // "Jan 01 1970 GMT"
         "%a%t%b%t%e%t%T%t%Y%t%z"sv,            // "Wed Apr 17 23:08:53 2019 +0000"
@@ -177,8 +181,15 @@ static double parse_date_string(ByteString const& date_string)
         "%Y-%m-%e%t%T"sv,                      // "2024-01-15 00:00:01"
         "%a%t%b%t%e%t%Y%t%T%t%Z"sv,            // "Tue Nov 07 2023 10:05:55  UTC"
         "%a%t%b%t%e%t%T%t%Y"sv,                // "Wed Apr 17 23:08:53 2019"
+        "%a%t%b%t%e%t%Y%t%T"sv,                // "Wed Apr 17 2019 23:08:53"
         "%Y-%m-%eT%T%X%z"sv,                   // "2024-01-26T22:10:11.306+0000"
         "%m/%e/%Y,%t%T%t%p"sv,                 // "1/27/2024, 9:28:30 AM"
+        "%Y-%m-%e"sv,                          // "2024-1-15"
+        "%Y-%m-%e%t%T%tGMT%z"sv,               // "2024-07-05 00:00:00 GMT-0800"
+        "%d%t%B%t%Y"sv,                        // "01 February 2013"
+        "%d%t%B%t%Y%t%R"sv,                    // "01 February 2013 08:00"
+        "%d%t%b%t%Y"sv,                        // "01 Jan 2000"
+        "%d%t%b%t%Y%t%R"sv,                    // "01 Jan 2000 08:00"
     };
 
     for (auto const& format : extra_formats) {
@@ -187,6 +198,7 @@ static double parse_date_string(ByteString const& date_string)
             return 1000.0 * maybe_datetime->timestamp();
     }
 
+    vm.host_unrecognized_date_string(date_string);
     return NAN;
 }
 
@@ -256,7 +268,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DateConstructor::construct(FunctionObjec
             if (primitive.is_string()) {
                 // 1. Assert: The next step never returns an abrupt completion because Type(v) is String.
                 // 2. Let tv be the result of parsing v as a date, in exactly the same manner as for the parse method (21.4.3.2).
-                time_value = parse_date_string(primitive.as_string().byte_string());
+                time_value = parse_date_string(vm, primitive.as_string().byte_string());
             }
             // iii. Else,
             else {
@@ -333,7 +345,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 
     auto date_string = TRY(vm.argument(0).to_byte_string(vm));
 
-    return Value(parse_date_string(date_string));
+    return Value(parse_date_string(vm, date_string));
 }
 
 // 21.4.3.4 Date.UTC ( year [ , month [ , date [ , hours [ , minutes [ , seconds [ , ms ] ] ] ] ] ] ), https://tc39.es/ecma262/#sec-date.utc

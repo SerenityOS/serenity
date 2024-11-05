@@ -92,7 +92,7 @@ Gfx::Path CanvasRenderingContext2D::rect_path(float x, float y, float width, flo
 
 void CanvasRenderingContext2D::fill_rect(float x, float y, float width, float height)
 {
-    return fill_internal(rect_path(x, y, width, height), Gfx::Painter::WindingRule::EvenOdd);
+    return fill_internal(rect_path(x, y, width, height), Gfx::WindingRule::EvenOdd);
 }
 
 void CanvasRenderingContext2D::clear_rect(float x, float y, float width, float height)
@@ -155,10 +155,10 @@ WebIDL::ExceptionOr<void> CanvasRenderingContext2D::draw_image_internal(CanvasIm
 
     // 6. Paint the region of the image argument specified by the source rectangle on the region of the rendering context's output bitmap specified by the destination rectangle, after applying the current transformation matrix to the destination rectangle.
     draw_clipped([&](auto& painter) {
-        auto scaling_mode = Gfx::Painter::ScalingMode::NearestNeighbor;
+        auto scaling_mode = Gfx::ScalingMode::NearestNeighbor;
         if (drawing_state().image_smoothing_enabled) {
             // FIXME: Honor drawing_state().image_smoothing_quality
-            scaling_mode = Gfx::Painter::ScalingMode::BilinearBlend;
+            scaling_mode = Gfx::ScalingMode::BilinearBlend;
         }
 
         painter.underlying_painter().draw_scaled_bitmap_with_transform(destination_rect.to_rounded<int>(), *bitmap, source_rect, drawing_state().transform, drawing_state().global_alpha, scaling_mode);
@@ -300,7 +300,7 @@ void CanvasRenderingContext2D::fill_text(StringView text, float x, float y, Opti
 {
     if (is<Gfx::BitmapFont>(*current_font()))
         return bitmap_font_fill_text(text, x, y, max_width);
-    fill_internal(text_path(text, x, y, max_width), Gfx::Painter::WindingRule::Nonzero);
+    fill_internal(text_path(text, x, y, max_width), Gfx::WindingRule::Nonzero);
 }
 
 void CanvasRenderingContext2D::stroke_text(StringView text, float x, float y, Optional<double> max_width)
@@ -319,10 +319,40 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
 {
     draw_clipped([&](auto& painter) {
         auto& drawing_state = this->drawing_state();
+
+        Gfx::Path::StrokeStyle stroke_style;
+        stroke_style.thickness = drawing_state.line_width;
+
+        stroke_style.cap_style = [](Bindings::CanvasLineCap cap) {
+            switch (cap) {
+            case Bindings::CanvasLineCap::Butt:
+                return Gfx::Path::CapStyle::Butt;
+            case Bindings::CanvasLineCap::Round:
+                return Gfx::Path::CapStyle::Round;
+            case Bindings::CanvasLineCap::Square:
+                return Gfx::Path::CapStyle::Square;
+            }
+            VERIFY_NOT_REACHED();
+        }(drawing_state.line_cap);
+
+        stroke_style.join_style = [](Bindings::CanvasLineJoin join) {
+            switch (join) {
+            case Bindings::CanvasLineJoin::Bevel:
+                return Gfx::Path::JoinStyle::Bevel;
+            case Bindings::CanvasLineJoin::Round:
+                return Gfx::Path::JoinStyle::Round;
+            case Bindings::CanvasLineJoin::Miter:
+                return Gfx::Path::JoinStyle::Miter;
+            }
+            VERIFY_NOT_REACHED();
+        }(drawing_state.line_join);
+
+        stroke_style.miter_limit = drawing_state.miter_limit;
+
         if (auto color = drawing_state.stroke_style.as_color(); color.has_value()) {
-            painter.stroke_path(path, color->with_opacity(drawing_state.global_alpha), drawing_state.line_width);
+            painter.stroke_path(path, color->with_opacity(drawing_state.global_alpha), stroke_style);
         } else {
-            painter.stroke_path(path, drawing_state.stroke_style.to_gfx_paint_style(), drawing_state.line_width, drawing_state.global_alpha);
+            painter.stroke_path(path, drawing_state.stroke_style.to_gfx_paint_style(), stroke_style, drawing_state.global_alpha);
         }
         return path.bounding_box();
     });
@@ -339,17 +369,17 @@ void CanvasRenderingContext2D::stroke(Path2D const& path)
     stroke_internal(transformed_path);
 }
 
-static Gfx::Painter::WindingRule parse_fill_rule(StringView fill_rule)
+static Gfx::WindingRule parse_fill_rule(StringView fill_rule)
 {
     if (fill_rule == "evenodd"sv)
-        return Gfx::Painter::WindingRule::EvenOdd;
+        return Gfx::WindingRule::EvenOdd;
     if (fill_rule == "nonzero"sv)
-        return Gfx::Painter::WindingRule::Nonzero;
+        return Gfx::WindingRule::Nonzero;
     dbgln("Unrecognized fillRule for CRC2D.fill() - this problem goes away once we pass an enum instead of a string");
-    return Gfx::Painter::WindingRule::Nonzero;
+    return Gfx::WindingRule::Nonzero;
 }
 
-void CanvasRenderingContext2D::fill_internal(Gfx::Path const& path, Gfx::Painter::WindingRule winding_rule)
+void CanvasRenderingContext2D::fill_internal(Gfx::Path const& path, Gfx::WindingRule winding_rule)
 {
     draw_clipped([&, this](auto& painter) mutable {
         auto path_to_fill = path;
@@ -435,7 +465,7 @@ void CanvasRenderingContext2D::reset_to_default_state()
 
     // 1. Clear canvas's bitmap to transparent black.
     if (painter)
-        painter->clear_rect(painter->target()->rect(), Color::Transparent);
+        painter->clear_rect(painter->target().rect(), Color::Transparent);
 
     // 2. Empty the list of subpaths in context's current default path.
     path().clear();
@@ -447,7 +477,7 @@ void CanvasRenderingContext2D::reset_to_default_state()
     reset_drawing_state();
 
     if (painter)
-        did_draw(painter->target()->rect().to_type<float>());
+        did_draw(painter->target().rect().to_type<float>());
 }
 
 // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-measuretext
@@ -585,7 +615,7 @@ CanvasRenderingContext2D::PreparedText CanvasRenderingContext2D::prepare_text(By
     return prepared_text;
 }
 
-void CanvasRenderingContext2D::clip_internal(Gfx::Path& path, Gfx::Painter::WindingRule winding_rule)
+void CanvasRenderingContext2D::clip_internal(Gfx::Path& path, Gfx::WindingRule winding_rule)
 {
     // FIXME: This should calculate the new clip path by intersecting the given path with the current one.
     // See: https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-clip-dev

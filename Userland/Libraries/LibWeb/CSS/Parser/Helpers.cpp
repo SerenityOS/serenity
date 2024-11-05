@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2023, the SerenityOS developers.
- * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2024, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  *
@@ -32,7 +32,7 @@ CSS::ElementInlineCSSStyleDeclaration* parse_css_style_attribute(CSS::Parser::Pa
     return CSS::Parser::Parser::create(context, css).parse_as_style_attribute(element);
 }
 
-RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
+RefPtr<CSS::CSSStyleValue> parse_css_value(CSS::Parser::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
 {
     if (string.is_empty())
         return nullptr;
@@ -47,6 +47,11 @@ CSS::CSSRule* parse_css_rule(CSS::Parser::ParsingContext const& context, StringV
 Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const& context, StringView selector_text)
 {
     return CSS::Parser::Parser::create(context, selector_text).parse_as_selector();
+}
+
+Optional<CSS::Selector::PseudoElement> parse_pseudo_element_selector(CSS::Parser::ParsingContext const& context, StringView selector_text)
+{
+    return CSS::Parser::Parser::create(context, selector_text).parse_as_pseudo_element_selector();
 }
 
 RefPtr<CSS::MediaQuery> parse_media_query(CSS::Parser::ParsingContext const& context, StringView string)

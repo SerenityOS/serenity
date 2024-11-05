@@ -1,0 +1,325 @@
+%PDF-1.3
+%µ¶
+
+1 0 obj
+<</Type/Pages/Kids[3 0 R]/Count 1>>
+endobj
+
+2 0 obj
+<</Type/Catalog/Pages 1 0 R>>
+endobj
+
+3 0 obj
+<</Type/Page/Parent 1 0 R/Contents 4 0 R/MediaBox[0 0 400 300]/Rotate 0>>
+endobj
+
+4 0 obj
+<</Length 2313>>
+stream
+/DeviceRGB CS
+
+20 w
+
+% Horizontal lines.
+0 J
+1 0 0 SC
+20 280 m
+60 280 l
+S
+
+1 J
+1 1 0 SC
+20 250 m
+60 250 l
+S
+
+2 J
+0 0 1 SC
+20 220 m
+60 220 l
+S
+
+% Vertical lines.
+0 J
+1 0 0 SC
+20 50 m
+20 90 l
+S
+
+1 J
+1 1 0 SC
+50 50 m
+50 90 l
+S
+
+2 J
+0 0 1 SC
+80 50 m
+80 90 l
+S
+
+% Degenerate lines.
+% Different PDF engines disagree what to do here for butt and
+% square caps (but all except LibPDF draw a cicle for round caps, and all
+% except LibPDF draw a square for square caps, even if engines don't agree on
+% orientation).
+0 J
+1 0 0 SC
+95 280 m
+95 280 l
+S
+
+1 J
+1 1 0 SC
+95 250 m
+95 250 l
+S
+
+2 J
+0 0 1 SC
+95 220 m
+95 220 l
+S
+
+% Degenerate line ends, but actual path.
+q
+1 j
+
+0 J
+1 0 0 SC
+130 280 m
+130 280 l
+150 290 l
+150 290 l
+S
+
+1 J
+1 1 0 SC
+130 250 m
+130 250 l
+150 260 l
+150 260 l
+S
+
+2 J
+0 0 1 SC
+130 220 m
+130 220 l
+150 230 l
+150 230 l
+S
+
+Q
+
+% Weird line ends.
+q
+1 j
+
+0 J
+1 0 0 SC
+190 279 m
+190 280 l
+210 290 l
+210 291 l
+S
+
+1 J
+1 1 0 SC
+190 249 m
+190 250 l
+210 260 l
+210 261 l
+S
+
+2 J
+0 0 1 SC
+190 219 m
+190 220 l
+210 230 l
+210 231 l
+S
+
+Q
+
+% Half-open lines.
+q
+1 j
+
+0 J
+1 0 0 SC
+240 280 m
+260 280 l
+240 280 l
+S
+
+1 J
+1 1 0 SC
+240 250 m
+260 250 l
+240 250 l
+S
+
+2 J
+0 0 1 SC
+240 220 m
+260 220 l
+240 220 l
+S
+
+Q
+
+% Closed lines.
+q
+0 j
+0 J
+1 0 0 SC
+290 280 m
+310 280 l
+h
+S
+
+1 j
+1 J
+1 1 0 SC
+290 250 m
+310 250 l
+h
+S
+
+2 j
+2 J
+0 0 1 SC
+290 220 m
+310 220 l
+h
+S
+
+Q
+
+% Open triangle, facing down.
+0 J
+1 0 0 SC
+200 170 m
+260 170 l
+230 130 l
+200 170 l
+S
+
+% Open triangle, facing down, opposite winding order. Bevel linejoins.
+q
+0 J
+2 j
+1 0 0 SC
+200 90 m
+230 50 l
+260 90 l
+200 90 l
+S
+Q
+
+% Closed triangle, facing up.
+0 J
+1 0 0 SC
+280 130 m
+340 130 l
+310 170 l
+280 130 l
+h
+S
+
+% Very short and wide line.
+
+q
+200 w
+0 J
+1 0 0 SC
+370 150 m
+372 150 l
+S
+Q
+
+% Very short and wide line with very thin caps.
+
+q
+200 w
+0 J
+0 0 1 SC
+375    150 m
+375.01 150 l
+376.99 150 l
+377    150 l
+S
+Q
+
+% Closed rect (using `re`).
+0 J
+1 j
+0 1 0 SC
+20 130 50 50 re
+S
+
+% Open rect.
+0 1 0 SC
+110 130 m
+160 130 l
+160 180 l
+110 180 l
+110 130 l
+S
+
+% Small closed rects with line width becoming wider than rect size.
+q
+0 J
+0 1 0 SC
+8 w
+
+100 80 20 20 re
+S
+
+130 85 15 15 re
+S
+
+155 90 10 10 re
+S
+
+175 95 5 5 re
+S
+
+Q
+
+% Lines with sharp angles, miter linejoins, and differing miter limits.
+0 0 1 SC
+
+4 w
+0 J
+0 j
+
+300 10 m
+305 65 l
+310 10 l
+S
+
+q
+20 M
+320 10 m
+325 65 l
+330 10 l
+S
+Q
+
+endstream
+endobj
+
+xref
+0 5
+0000000000 65536 f 
+0000000016 00000 n 
+0000000068 00000 n 
+0000000114 00000 n 
+0000000204 00000 n 
+
+trailer
+<</Size 5/Root 2 0 R>>
+startxref
+2568
+%%EOF

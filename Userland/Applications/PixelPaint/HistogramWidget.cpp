@@ -111,7 +111,7 @@ void HistogramWidget::paint_event(GUI::PaintEvent& event)
     brightness_path.line_to({ last_drawn_x, bottom_line });
     brightness_path.close();
 
-    painter.fill_path(brightness_path, Color::MidGray, Gfx::Painter::WindingRule::EvenOdd);
+    painter.fill_path(brightness_path, Color::MidGray, Gfx::WindingRule::EvenOdd);
     painter.stroke_path(red_channel_path, Color(Color::NamedColor::Red).with_alpha(90), 2);
     painter.stroke_path(green_channel_path, Color(Color::NamedColor::Green).with_alpha(90), 2);
     painter.stroke_path(blue_channel_path, Color(Color::NamedColor::Blue).with_alpha(90), 2);

@@ -9,8 +9,8 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleProperties.h>
-#include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
-#include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
+#include <LibWeb/CSS/StyleValues/CSSColorValue.h>
+#include <LibWeb/CSS/StyleValues/CSSKeywordValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/HTMLCollection.h>
@@ -65,8 +65,8 @@ void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) c
         }
         if (name == HTML::AttributeNames::align) {
             if (value.equals_ignoring_ascii_case("center"sv)) {
-                style.set_property(CSS::PropertyID::MarginLeft, CSS::IdentifierStyleValue::create(CSS::ValueID::Auto));
-                style.set_property(CSS::PropertyID::MarginRight, CSS::IdentifierStyleValue::create(CSS::ValueID::Auto));
+                style.set_property(CSS::PropertyID::MarginLeft, CSS::CSSKeywordValue::create(CSS::Keyword::Auto));
+                style.set_property(CSS::PropertyID::MarginRight, CSS::CSSKeywordValue::create(CSS::Keyword::Auto));
             } else if (auto parsed_value = parse_css_value(CSS::Parser::ParsingContext { document() }, value, CSS::PropertyID::Float)) {
                 style.set_property(CSS::PropertyID::Float, parsed_value.release_nonnull());
             }
@@ -76,7 +76,7 @@ void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) c
             // https://html.spec.whatwg.org/multipage/rendering.html#tables-2:rules-for-parsing-a-legacy-colour-value
             auto color = parse_legacy_color_value(value);
             if (color.has_value())
-                style.set_property(CSS::PropertyID::BackgroundColor, CSS::ColorStyleValue::create(color.value()));
+                style.set_property(CSS::PropertyID::BackgroundColor, CSS::CSSColorValue::create_from_color(color.value()));
             return;
         }
         if (name == HTML::AttributeNames::cellspacing) {
@@ -89,10 +89,10 @@ void HTMLTableElement::apply_presentational_hints(CSS::StyleProperties& style) c
             if (!border)
                 return;
             auto apply_border_style = [&](CSS::PropertyID style_property, CSS::PropertyID width_property, CSS::PropertyID color_property) {
-                auto legacy_line_style = CSS::IdentifierStyleValue::create(CSS::ValueID::Outset);
+                auto legacy_line_style = CSS::CSSKeywordValue::create(CSS::Keyword::Outset);
                 style.set_property(style_property, legacy_line_style);
                 style.set_property(width_property, CSS::LengthStyleValue::create(CSS::Length::make_px(border)));
-                style.set_property(color_property, CSS::ColorStyleValue::create(Color(128, 128, 128)));
+                style.set_property(color_property, CSS::CSSColorValue::create_from_color(Color(128, 128, 128)));
             };
             apply_border_style(CSS::PropertyID::BorderLeftStyle, CSS::PropertyID::BorderLeftWidth, CSS::PropertyID::BorderLeftColor);
             apply_border_style(CSS::PropertyID::BorderTopStyle, CSS::PropertyID::BorderTopWidth, CSS::PropertyID::BorderTopColor);

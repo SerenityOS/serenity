@@ -5,19 +5,16 @@
  */
 
 #include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/SelfTTYDevice.h>
 #include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SelfTTYDevice> SelfTTYDevice::must_create()
+UNMAP_AFTER_INIT NonnullRefPtr<SelfTTYDevice> SelfTTYDevice::must_create()
 {
-    auto self_tty_device_or_error = DeviceManagement::try_create_device<SelfTTYDevice>();
-    // FIXME: Find a way to propagate errors
-    VERIFY(!self_tty_device_or_error.is_error());
-    return self_tty_device_or_error.release_value();
+    return MUST(Device::try_create_device<SelfTTYDevice>());
 }
 
 ErrorOr<NonnullRefPtr<OpenFileDescription>> SelfTTYDevice::open(int options)

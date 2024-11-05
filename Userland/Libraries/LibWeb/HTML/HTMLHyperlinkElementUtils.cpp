@@ -97,7 +97,7 @@ String HTMLHyperlinkElementUtils::username() const
         return String {};
 
     // 3. Return this element's url's username.
-    return m_url->username().release_value();
+    return m_url->username();
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-username
@@ -114,7 +114,7 @@ void HTMLHyperlinkElementUtils::set_username(StringView username)
         return;
 
     // 4. Set the username given this’s URL and the given value.
-    MUST(url->set_username(username));
+    url->set_username(username);
 
     // 5. Update href.
     update_href();
@@ -134,7 +134,7 @@ String HTMLHyperlinkElementUtils::password() const
         return String {};
 
     // 4. Return url's password.
-    return url->password().release_value();
+    return url->password();
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-password
@@ -151,7 +151,7 @@ void HTMLHyperlinkElementUtils::set_password(StringView password)
         return;
 
     // 4. Set the password, given url and the given value.
-    MUST(url->set_password(password));
+    url->set_password(password);
 
     // 5. Update href.
     update_href();

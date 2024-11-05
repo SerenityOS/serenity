@@ -97,7 +97,7 @@ void LineBuilder::append_box(Box const& box, CSSPixels leading_size, CSSPixels t
     };
 }
 
-void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_node, size_t length_in_node, CSSPixels leading_size, CSSPixels trailing_size, CSSPixels leading_margin, CSSPixels trailing_margin, CSSPixels content_width, CSSPixels content_height, Vector<Gfx::DrawGlyphOrEmoji> glyph_run)
+void LineBuilder::append_text_chunk(TextNode const& text_node, size_t offset_in_node, size_t length_in_node, CSSPixels leading_size, CSSPixels trailing_size, CSSPixels leading_margin, CSSPixels trailing_margin, CSSPixels content_width, CSSPixels content_height, RefPtr<Gfx::GlyphRun> glyph_run)
 {
     ensure_last_line_box().add_fragment(text_node, offset_in_node, length_in_node, leading_size, trailing_size, leading_margin, trailing_margin, content_width, content_height, 0, 0, move(glyph_run));
     m_max_height_on_current_line = max(m_max_height_on_current_line, content_height);
@@ -163,6 +163,7 @@ void LineBuilder::update_last_line()
     auto& line_box = line_boxes.last();
 
     auto text_align = m_context.containing_block().computed_values().text_align();
+    auto direction = m_context.containing_block().computed_values().direction();
 
     auto current_line_height = max(m_max_height_on_current_line, m_context.containing_block().computed_values().line_height());
     CSSPixels x_offset_top = m_context.leftmost_x_offset_at(m_current_y);
@@ -178,6 +179,14 @@ void LineBuilder::update_last_line()
         case CSS::TextAlign::Center:
         case CSS::TextAlign::LibwebCenter:
             x_offset += excess_horizontal_space / 2;
+            break;
+        case CSS::TextAlign::Start:
+            if (direction == CSS::Direction::Rtl)
+                x_offset += excess_horizontal_space;
+            break;
+        case CSS::TextAlign::End:
+            if (direction == CSS::Direction::Ltr)
+                x_offset += excess_horizontal_space;
             break;
         case CSS::TextAlign::Right:
         case CSS::TextAlign::LibwebRight:

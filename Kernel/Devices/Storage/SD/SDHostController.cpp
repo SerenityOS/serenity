@@ -6,7 +6,7 @@
 
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/SD/Commands.h>
 #include <Kernel/Devices/Storage/SD/SDHostController.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
@@ -78,6 +78,16 @@ void SDHostController::complete_current_request(AsyncDeviceRequest::RequestResul
     VERIFY_NOT_REACHED();
 }
 
+LockRefPtr<StorageDevice> SDHostController::device(u32 index) const
+{
+    // FIXME: Remove this once we get rid of this hacky method in the future.
+    if (index != 0)
+        return nullptr;
+    if (!m_card)
+        return nullptr;
+    return *m_card;
+}
+
 ErrorOr<void> SDHostController::initialize()
 {
     m_registers = get_register_map_base_address();
@@ -129,7 +139,7 @@ void SDHostController::try_enable_dma()
     }
 }
 
-ErrorOr<NonnullLockRefPtr<SDMemoryCard>> SDHostController::try_initialize_inserted_card()
+ErrorOr<NonnullRefPtr<SDMemoryCard>> SDHostController::try_initialize_inserted_card()
 {
     if (!is_card_inserted())
         return ENODEV;
@@ -263,7 +273,7 @@ ErrorOr<NonnullLockRefPtr<SDMemoryCard>> SDHostController::try_initialize_insert
     m_registers->host_configuration_0 |= data_transfer_width_4bit;
     // 6. In case of SD memory only card, go to the 'End'. In case of other card, go to step (7).
 
-    return TRY(DeviceManagement::try_create_device<SDMemoryCard>(
+    return TRY(Device::try_create_device<SDMemoryCard>(
         *this,
         StorageDevice::LUNAddress { controller_id(), 0, 0 },
         hardware_relative_controller_id(), block_len,

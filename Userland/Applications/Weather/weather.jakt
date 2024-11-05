@@ -1,0 +1,108 @@
+struct Temperature {
+    current: f64
+    min: f64
+    max: f64
+    feels_like: f64
+}
+
+enum Icon implements(Hashable, Equal<Icon>) {
+    day: bool
+
+    Clear
+    PartiallyCloudy
+    Cloudy
+    Rainy
+    Snowy
+    Thunderstorm
+    Windy
+    Foggy
+    Unknown
+
+    fn hash(this) -> u32 => .day.pair_hash_with(&match this {
+        Clear => 0
+        PartiallyCloudy => 1
+        Cloudy => 2
+        Rainy => 3
+        Snowy => 4
+        Thunderstorm => 5
+        Windy => 6
+        Foggy => 7
+        Unknown => 8
+    })
+
+    fn equals(this, other: Icon) -> bool => .day == other.day and match this {
+        Clear => other is Clear
+        PartiallyCloudy => other is PartiallyCloudy
+        Cloudy => other is Cloudy
+        Rainy => other is Rainy
+        Snowy => other is Snowy
+        Thunderstorm => other is Thunderstorm
+        Windy => other is Windy
+        Foggy => other is Foggy
+        Unknown => other is Unknown
+    }
+
+    // FIXME: This should really be a stdlib function :)
+    private fn read(anon path: String) throws -> [u8] {
+        mut file = File::open_for_reading(path)
+        return file.read_all()
+    }
+
+    comptime all_data() throws -> [Icon:[u8]] => [
+        Icon::Clear(day: true): read("icons/clear-day.png")
+        Icon::Clear(day: false): read("icons/cloudy-night.png") // FIXME: Make a night icon
+        Icon::PartiallyCloudy(day: true): read("icons/partially-cloudy-day.png")
+        Icon::PartiallyCloudy(day: false): read("icons/partially-cloudy-night.png")
+        Icon::Cloudy(day: true): read("icons/cloudy-day.png")
+        Icon::Cloudy(day: false): read("icons/cloudy-night.png")
+        Icon::Rainy(day: true): read("icons/rainy-day.png")
+        Icon::Rainy(day: false): read("icons/rainy-night.png")
+        Icon::Thunderstorm(day: true): read("icons/thunderstorm-day.png")
+        Icon::Thunderstorm(day: false): read("icons/thunderstorm-night.png")
+        Icon::Snowy(day: true): read("icons/snowy-day.png")
+        Icon::Snowy(day: false): read("icons/snowy-night.png")
+        Icon::Foggy(day: true): read("icons/foggy-day.png")
+        Icon::Foggy(day: false): read("icons/foggy-night.png")
+        Icon::Unknown(day: true): []
+        Icon::Unknown(day: false): []
+    ]
+
+    fn name(this) throws -> String => match this {
+        Clear => "Clear"
+        PartiallyCloudy => "Partially Cloudy"
+        Cloudy => "Cloudy"
+        Rainy => "Rainy"
+        Snowy => "Snowy"
+        Thunderstorm => "Thunderstorm"
+        Windy => "Windy"
+        Foggy => "Foggy"
+        Unknown => "Unknown"
+    }
+
+    fn bitmap(this) throws -> [u8] {
+        let data = all_data()
+        return data[this]
+    }
+}
+
+struct Coords {
+    latitude: f64
+    longitude: f64
+}
+
+struct Forecast {
+    data: [WeatherData]
+}
+
+struct WeatherData {
+    city_name: String
+    country_code: String
+    coords: Coords
+    state: String
+    cloudiness: f64
+    precipitation: f64
+    humidity: f64
+    temperature: Temperature
+    icon: Icon
+    timestamp: i64
+}

@@ -3,6 +3,7 @@ set(SOURCES
     AntiAliasingPainter.cpp
     Bitmap.cpp
     BitmapMixer.cpp
+    BitmapSequence.cpp
     CMYKBitmap.cpp
     ClassicStylePainter.cpp
     ClassicWindowTheme.cpp
@@ -54,8 +55,8 @@ set(SOURCES
     ImageFormats/JPEG2000Loader.cpp
     ImageFormats/JPEGLoader.cpp
     ImageFormats/JPEGXLEntropyDecoder.cpp
-    ImageFormats/JPEGXLLoader.cpp
     ImageFormats/JPEGXLICC.cpp
+    ImageFormats/JPEGXLLoader.cpp
     ImageFormats/JPEGWriter.cpp
     ImageFormats/PBMLoader.cpp
     ImageFormats/PGMLoader.cpp

@@ -16,17 +16,17 @@ Available parameters are listed under /sys/kernel/conf/.
 
 ## Options
 
-* `-a`: Display all kernel parameters and associated values.
-* `-w`: Set kernel parameters to the specified values.
+-   `-a`: Display all kernel parameters and associated values.
+-   `-w`: Set kernel parameters to the specified values.
 
 ## Arguments
 
-* `variable`: Retrieve the specified parameter.
-* `variable=value`: Set the specified parameter to the specified value. The option `-w` has to be specified.
+-   `variable`: Retrieve the specified parameter.
+-   `variable=value`: Set the specified parameter to the specified value. The option `-w` has to be specified.
 
 ## Files
 
-* `/sys/kernel/conf` - source of kernel parameters
+-   `/sys/kernel/conf` - source of kernel parameters
 
 ## Examples
 

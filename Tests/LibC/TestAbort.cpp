@@ -15,10 +15,6 @@ TEST_CASE(_abort)
         _abort();
         return Test::Crash::Failure::DidNotCrash;
     });
-    EXPECT_CRASH_WITH_SIGNAL("This should _abort with SIGILL signal", SIGILL, [] {
-        _abort();
-        return Test::Crash::Failure::DidNotCrash;
-    });
 }
 
 TEST_CASE(abort)

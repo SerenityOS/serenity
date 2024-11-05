@@ -92,6 +92,7 @@ class BootDriveType(Enum):
     PCI_SD = "pci-sd"
     USB_UHCI = "usb-uhci"
     USB_xHCI = "usb-xhci"
+    USB_UAS = "usb-uas"
     VirtIOBLK = "virtio"
 
 
@@ -485,26 +486,27 @@ def set_up_cpu_count(config: Configuration):
 
 
 def set_up_spice(config: Configuration):
-    if environ.get("SERENITY_SPICE") == "1":
-        chardev_info = run(
-            [str(config.qemu_binary), "-chardev", "help"],
-            capture_output=True,
-            encoding="utf-8",
-        ).stdout.lower()
-        if "qemu-vdagent" in chardev_info:
-            config.spice_arguments = [
-                "-chardev",
-                "qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent",
-            ]
-        elif "spicevmc" in chardev_info:
-            config.spice_arguments = ["-chardev", "spicevmc,id=vdagent,name=vdagent"]
-        else:
-            raise RunError("No compatible SPICE character device was found")
+    # Only the default machine has virtio-serial (required for the spice agent).
+    if config.machine_type != MachineType.Default:
+        return
+    use_non_qemu_spice = environ.get("SERENITY_SPICE") == "1"
+    chardev_info = run(
+        [str(config.qemu_binary), "-chardev", "help"],
+        capture_output=True,
+        encoding="utf-8",
+    ).stdout.lower()
+    if use_non_qemu_spice and "spicevmc" in chardev_info:
+        config.spice_arguments = ["-chardev", "spicevmc,id=vdagent,name=vdagent"]
+    elif "qemu-vdagent" in chardev_info:
+        config.extra_arguments.extend([
+            "-chardev",
+            "qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent",
+        ])
 
-        if "spice" in chardev_info:
-            config.spice_arguments.extend(["-spice", "port=5930,agent-mouse=off,disable-ticketing=on"])
-        if "spice" in chardev_info or "vdagent" in chardev_info:
-            config.spice_arguments.extend(["-device", "virtserialport,chardev=vdagent,nr=1"])
+    if use_non_qemu_spice and "spice" in chardev_info:
+        config.spice_arguments.extend(["-spice", "port=5930,agent-mouse=off,disable-ticketing=on"])
+    if "spice" in chardev_info or "vdagent" in chardev_info:
+        config.extra_arguments.extend(["-device", "virtserialport,chardev=vdagent,nr=1"])
 
 
 def set_up_audio_backend(config: Configuration):
@@ -582,6 +584,8 @@ def set_up_screens(config: Configuration):
             config.display_backend = "sdl,gl=off"
         elif config.screen_count > 1 and "sdl" in qemu_display_info:
             config.display_backend = "sdl,gl=off"
+        elif "gtk" in qemu_display_info and has_virgl():
+            config.display_backend = "gtk,gl=on"
         elif "sdl" in qemu_display_info and has_virgl():
             config.display_backend = "sdl,gl=on"
         elif "cocoa" in qemu_display_info:
@@ -649,6 +653,12 @@ def set_up_boot_drive(config: Configuration):
     elif config.boot_drive_type == BootDriveType.USB_xHCI:
         config.add_device("qemu-xhci,id=boot-drive-xhci")
         config.add_device("usb-storage,bus=boot-drive-xhci.0,drive=boot-drive")
+        # FIXME: Find a better way to address the usb drive
+        config.kernel_cmdline.append("root=block3:0")
+    elif config.boot_drive_type == BootDriveType.USB_UAS:
+        config.add_device("qemu-xhci,id=boot-drive-xhci,p3=0")
+        config.add_device("usb-uas,bus=boot-drive-xhci.0,id=boot-drive-uas,pcap=log.pcap")
+        config.add_device("scsi-hd,bus=boot-drive-uas.0,scsi-id=0,lun=0,drive=boot-drive")
         # FIXME: Find a better way to address the usb drive
         config.kernel_cmdline.append("root=block3:0")
     elif config.boot_drive_type == BootDriveType.VirtIOBLK:

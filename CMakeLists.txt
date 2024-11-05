@@ -18,7 +18,7 @@ endif()
 
 # Check for toolchain mismatch, user might need to rebuild toolchain
 set(GCC_VERSION "13.2.0")
-set(LLVM_VERSION "18.1.3")
+set(LLVM_VERSION "19.1.0")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(EXPECTED_COMPILER_VERSION "${GCC_VERSION}")
 else()
@@ -49,13 +49,6 @@ if (NOT HACKSTUDIO_BUILD)
 
     # Host tools, required to generate files for the build
     find_package(Lagom CONFIG REQUIRED)
-
-    if (ENABLE_JAKT)
-        find_package(Jakt CONFIG REQUIRED
-            HINTS "${Lagom_DIR}/.."
-        )
-    endif()
-
 endif()
 
 # Meta target to run all code-gen steps in the build.
@@ -190,7 +183,8 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland/Services)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland)
 
-add_custom_target(components ALL)
+include(jakt)
+
 option(BUILD_EVERYTHING "Build all optional components" ON)
 
 include(utils)

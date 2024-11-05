@@ -44,7 +44,7 @@ void NetworkAdapter::send(MACAddress const& destination, ARPPacket const& packet
     send_packet({ (u8 const*)eth, size_in_bytes });
 }
 
-void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Address const& source_ipv4, MACAddress const& destination_mac, IPv4Address const& destination_ipv4, IPv4Protocol protocol, size_t payload_size, u8 type_of_service, u8 ttl)
+void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Address const& source_ipv4, MACAddress const& destination_mac, IPv4Address const& destination_ipv4, TransportProtocol protocol, size_t payload_size, u8 type_of_service, u8 ttl)
 {
     size_t ipv4_packet_size = sizeof(IPv4Packet) + payload_size;
     VERIFY(ipv4_packet_size <= mtu());
@@ -52,11 +52,13 @@ void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Addres
     size_t ethernet_frame_size = ipv4_payload_offset() + payload_size;
     VERIFY(packet.buffer->size() == ethernet_frame_size);
     memset(packet.buffer->data(), 0, ipv4_payload_offset());
-    auto& eth = *(EthernetFrameHeader*)packet.buffer->data();
+
+    auto& eth = *bit_cast<EthernetFrameHeader*>(packet.buffer->data());
     eth.set_source(mac_address());
     eth.set_destination(destination_mac);
     eth.set_ether_type(EtherType::IPv4);
-    auto& ipv4 = *(IPv4Packet*)eth.payload();
+
+    auto& ipv4 = *bit_cast<IPv4Packet*>(eth.payload());
     ipv4.set_version(4);
     ipv4.set_internet_header_length(5);
     ipv4.set_dscp_and_ecn(type_of_service);
@@ -67,6 +69,38 @@ void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Addres
     ipv4.set_ident(1);
     ipv4.set_ttl(ttl);
     ipv4.set_checksum(ipv4.compute_checksum());
+}
+
+void NetworkAdapter::fill_in_ipv6_header(PacketWithTimestamp& packet, IPv6Address const& source_ipv6, MACAddress const& destination_mac, IPv6Address const& destination_ipv6, TransportProtocol protocol, size_t payload_size, u8 hop_limit)
+{
+    size_t ipv6_packet_size = sizeof(IPv6PacketHeader) + payload_size;
+    VERIFY(ipv6_packet_size <= mtu());
+
+    size_t ethernet_frame_size = ipv6_payload_offset() + payload_size;
+    VERIFY(packet.buffer->size() == ethernet_frame_size);
+    memset(packet.buffer->data(), 0, ipv6_payload_offset());
+
+    auto& eth = *bit_cast<EthernetFrameHeader*>(packet.buffer->data());
+    eth.set_source(mac_address());
+    eth.set_destination(destination_mac);
+    eth.set_ether_type(EtherType::IPv6);
+
+    auto& ipv6 = *bit_cast<IPv6PacketHeader*>(eth.payload());
+    ipv6.set_version(6);
+    ipv6.set_destination(destination_ipv6);
+    ipv6.set_source(source_ipv6);
+
+    switch (protocol) {
+    case TransportProtocol::ICMPv6:
+        ipv6.set_next_header(static_cast<u8>(TransportProtocol::ICMPv6));
+        break;
+    default:
+        dbgln("fill_in_ipv6_header: Unknown TransportProtocol, setting NoNextHeader");
+        ipv6.set_next_header(static_cast<u8>(IPv6NextHeader::NoNextHeader));
+    }
+
+    ipv6.set_length(payload_size);
+    ipv6.set_hop_limit(hop_limit);
 }
 
 void NetworkAdapter::did_receive(ReadonlyBytes payload)

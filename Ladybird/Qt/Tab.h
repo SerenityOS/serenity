@@ -41,7 +41,7 @@ public:
     void forward();
     void reload();
 
-    void debug_request(ByteString const& request, ByteString const& argument);
+    void debug_request(ByteString const& request, ByteString const& argument = "");
 
     void open_file();
     void update_reset_zoom_button();
@@ -53,6 +53,8 @@ public:
     void show_inspector_window(InspectorTarget = InspectorTarget::Document);
 
     void show_find_in_page();
+    void find_previous();
+    void find_next();
 
     QIcon const& favicon() const { return m_favicon; }
     QString const& title() const { return m_title; }
@@ -64,6 +66,18 @@ public:
     QToolButton* hamburger_button() const { return m_hamburger_button; }
 
     void update_hover_label();
+
+    void set_block_popups(bool);
+    void set_line_box_borders(bool);
+    void set_same_origin_policy(bool);
+    void set_scripting(bool);
+    void set_user_agent_string(ByteString const&);
+    void set_navigator_compatibility_mode(ByteString const&);
+
+    void set_enable_do_not_track(bool);
+
+    bool url_is_hidden() const { return m_location_edit->url_is_hidden(); }
+    void set_url_is_hidden(bool url_is_hidden) { m_location_edit->set_url_is_hidden(url_is_hidden); }
 
 public slots:
     void focus_location_editor();

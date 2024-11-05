@@ -37,6 +37,8 @@ CSSGroupingRule
 CSSImportRule
 CSSKeyframeRule
 CSSKeyframesRule
+CSSLayerBlockRule
+CSSLayerStatementRule
 CSSMediaRule
 CSSNamespaceRule
 CSSRule
@@ -51,6 +53,7 @@ CanvasPattern
 CanvasRenderingContext2D
 CharacterData
 Clipboard
+ClipboardEvent
 CloseEvent
 CloseWatcher
 Comment
@@ -74,6 +77,8 @@ DOMStringList
 DOMStringMap
 DOMTokenList
 DataTransfer
+DataTransferItem
+DataTransferItemList
 DataView
 Date
 DisposableStack
@@ -237,6 +242,7 @@ Performance
 PerformanceEntry
 PerformanceMark
 PerformanceMeasure
+PerformanceNavigation
 PerformanceObserver
 PerformanceObserverEntryList
 PerformanceTiming
@@ -281,6 +287,7 @@ SVGForeignObjectElement
 SVGGeometryElement
 SVGGradientElement
 SVGGraphicsElement
+SVGImageElement
 SVGLength
 SVGLineElement
 SVGLinearGradientElement
@@ -310,12 +317,15 @@ SVGUseElement
 Screen
 ScreenOrientation
 Selection
+ServiceWorkerContainer
+ServiceWorkerRegistration
 Set
 ShadowRealm
 ShadowRoot
 SharedArrayBuffer
 StaticRange
 Storage
+StorageManager
 String
 StyleSheet
 StyleSheetList

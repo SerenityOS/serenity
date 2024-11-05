@@ -11,7 +11,6 @@
 #include <AK/Optional.h>
 #include <AK/Time.h>
 #include <AK/Variant.h>
-#include <Kernel/API/KeyCode.h>
 #include <LibGfx/Rect.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/SafeFunction.h>
@@ -20,6 +19,7 @@
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/PixelUnits.h>
+#include <LibWeb/UIEvents/KeyCode.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <math.h>
 
@@ -109,7 +109,7 @@ public:
 
     JS::NonnullGCPtr<TextTrack> add_text_track(Bindings::TextTrackKind kind, String const& label, String const& language);
 
-    WebIDL::ExceptionOr<void> handle_keydown(Badge<Web::EventHandler>, KeyCode);
+    WebIDL::ExceptionOr<bool> handle_keydown(Badge<Web::EventHandler>, UIEvents::KeyCode, u32 modifiers);
 
     enum class MouseTrackingComponent {
         Timeline,

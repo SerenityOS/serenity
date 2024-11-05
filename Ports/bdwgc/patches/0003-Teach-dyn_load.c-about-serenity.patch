@@ -8,7 +8,7 @@ Subject: [PATCH] Teach dyn_load.c about serenity
  1 file changed, 20 insertions(+), 3 deletions(-)
 
 diff --git a/dyn_load.c b/dyn_load.c
-index bee040c39925679ae159a644ec9b72d1fa794d25..db57ded046676d96f24ff948f0a8df2db4b4c847 100644
+index c73897e6ba0e7f70443940790d558b91f9bb75c9..bd3192ad75d68e5daa8ff4c0a989c521d3b0426d 100644
 --- a/dyn_load.c
 +++ b/dyn_load.c
 @@ -63,7 +63,7 @@ STATIC GC_has_static_roots_func GC_has_static_roots = 0;

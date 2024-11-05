@@ -50,6 +50,8 @@ public:
     void set_screen_rects(Vector<Web::DevicePixelRect, 4> const& rects, size_t main_screen_index) { m_screen_rect = rects[main_screen_index]; }
     void set_device_pixels_per_css_pixel(float device_pixels_per_css_pixel) { m_device_pixels_per_css_pixel = device_pixels_per_css_pixel; }
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
+    void set_preferred_contrast(Web::CSS::PreferredContrast);
+    void set_preferred_motion(Web::CSS::PreferredMotion);
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
     void set_has_focus(bool);
     void set_is_scripting_enabled(bool);
@@ -85,6 +87,8 @@ public:
 
     virtual double device_pixels_per_css_pixel() const override { return m_device_pixels_per_css_pixel; }
 
+    virtual Web::DisplayListPlayerType display_list_player_type() const override;
+
 private:
     PageClient(PageHost&, u64 id);
 
@@ -95,6 +99,8 @@ private:
     virtual Gfx::Palette palette() const override;
     virtual Web::DevicePixelRect screen_rect() const override { return m_screen_rect; }
     virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override { return m_preferred_color_scheme; }
+    virtual Web::CSS::PreferredContrast preferred_contrast() const override { return m_preferred_contrast; }
+    virtual Web::CSS::PreferredMotion preferred_motion() const override { return m_preferred_motion; }
     virtual void page_did_request_cursor_change(Gfx::StandardCursor) override;
     virtual void page_did_layout() override;
     virtual void page_did_change_title(ByteString const&) override;
@@ -179,6 +185,8 @@ private:
     PaintState m_paint_state { PaintState::Ready };
 
     Web::CSS::PreferredColorScheme m_preferred_color_scheme { Web::CSS::PreferredColorScheme::Auto };
+    Web::CSS::PreferredContrast m_preferred_contrast { Web::CSS::PreferredContrast::NoPreference };
+    Web::CSS::PreferredMotion m_preferred_motion { Web::CSS::PreferredMotion::NoPreference };
 
     RefPtr<WebDriverConnection> m_webdriver;
 

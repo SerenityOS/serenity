@@ -18,14 +18,14 @@ that does not exist.
 
 ## Options
 
-* `-a`: Change access time of file
-* `-c`: Do not create a file if it does not exist
-* `-m`: Change modification time of file
-* `-r`: Use time of file specified by reference path instead of current time
-* `-t`: Use specified time in format [[CC]YY]MMDDhhmm[.SS] instead of current
-time
-* `-d`: Use specified datetime in formats YYYY-MM-DDThh:mm:SS[.frac][tz] or
-YYYY-MM-DDThh:mm:SS[,frac][tz] instead of current time
+-   `-a`: Change access time of file
+-   `-c`: Do not create a file if it does not exist
+-   `-m`: Change modification time of file
+-   `-r`: Use time of file specified by reference path instead of current time
+-   `-t`: Use specified time in format [[CC]YY]MMDDhhmm[.SS] instead of current
+    time
+-   `-d`: Use specified datetime in formats YYYY-MM-DDThh:mm:SS[.frac][tz] or
+    YYYY-MM-DDThh:mm:SS[,frac][tz] instead of current time
 
 ## Examples
 
@@ -51,6 +51,7 @@ $ touch -r anotherfile thatfile
 ```
 
 ## See also
-* [`mktemp`(1)](help://man/1/mktemp) to create a temporary file
-* [`futimens`(2)](help://man/3/futimens)
-* [`utimensat`(2)](help://man/3/utimensat)
+
+-   [`mktemp`(1)](help://man/1/mktemp) to create a temporary file
+-   [`futimens`(2)](help://man/3/futimens)
+-   [`utimensat`(2)](help://man/3/utimensat)

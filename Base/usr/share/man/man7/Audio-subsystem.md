@@ -59,12 +59,12 @@ LibDSP also contains a collection of general signal processing primitives, such 
 
 This is a non-exhaustive list of applications that use audio. Most of these follow the good practices laid out in this manual page and may serve as a template for new audio applications.
 
-* **Piano** is a sequencer/tracker and synthesizer.
-* [**aplay**](help://man/1/aplay) is a command line audio file playback utility.
-* **SoundPlayer** is a UI audio file player with extra features such as playlist support and audio visualizations.
-* [**asctl**](help://man/1/asctl) is a command line audio server control utility.
-* **Applets/Audio** (AudioApplet) is a taskbar applet for setting audio parameters through a UI.
-* The [Browser](help://man/1/Applications/Browser) can play audio on websites.
+-   **Piano** is a sequencer/tracker and synthesizer.
+-   [**aplay**](help://man/1/aplay) is a command line audio file playback utility.
+-   **SoundPlayer** is a UI audio file player with extra features such as playlist support and audio visualizations.
+-   [**asctl**](help://man/1/asctl) is a command line audio server control utility.
+-   **Applets/Audio** (AudioApplet) is a taskbar applet for setting audio parameters through a UI.
+-   The [Browser](help://man/1/Applications/Browser) can play audio on websites.
 
 ### Volume
 
@@ -80,11 +80,11 @@ SerenityOS's audio system uses a variety of sample rates in different layers of 
 
 ## Files
 
-* [/dev/audio](help://man/4/audio)
-* AudioApplet and AudioServer have settings which are managed by ConfigServer.
-* `/tmp/session/%sid/portal/audio`: AudioServer's client IPC socket
+-   [/dev/audio](help://man/4/audio)
+-   AudioApplet and AudioServer have settings which are managed by ConfigServer.
+-   `/tmp/session/%sid/portal/audio`: AudioServer's client IPC socket
 
 ## See also
 
-* [asctl](help://man/1/asctl)
-* [aplay](help://man/1/aplay)
+-   [asctl](help://man/1/asctl)
+-   [aplay](help://man/1/aplay)

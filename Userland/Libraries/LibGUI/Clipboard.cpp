@@ -133,7 +133,15 @@ ErrorOr<Clipboard::DataAndType> Clipboard::DataAndType::from_json(JsonObject con
     DataAndType result;
     result.data = object.get_byte_string("data"sv)->to_byte_buffer();
     result.mime_type = *object.get_byte_string("mime_type"sv);
-    // FIXME: Also read metadata
+
+    auto maybe_metadata_object = object.get_object("metadata"sv);
+    if (maybe_metadata_object.has_value()) {
+        auto metadata_object = maybe_metadata_object.release_value();
+
+        metadata_object.for_each_member([&](auto& key, auto& value) {
+            result.metadata.set(key, value.as_string());
+        });
+    }
 
     return result;
 }
@@ -143,7 +151,15 @@ ErrorOr<JsonObject> Clipboard::DataAndType::to_json() const
     JsonObject object;
     object.set("data", TRY(ByteString::from_utf8(data.bytes())));
     object.set("mime_type", mime_type);
-    // FIXME: Also write metadata
+
+    if (!metadata.is_empty()) {
+        JsonObject metadata_object;
+        for (auto const& data : metadata) {
+            metadata_object.set(data.key, data.value);
+        }
+
+        object.set("metadata", metadata_object);
+    }
 
     return object;
 }

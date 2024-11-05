@@ -12,7 +12,7 @@ Application files are a subset of the INI format.
 They have no easily detectable filemagic and contain application information (App group):
 
 | Key           | Description                      |
-|---------------|----------------------------------|
+| ------------- | -------------------------------- |
 | Name          | name                             |
 | Executable    | executable path                  |
 | Category      | category (optional)              |
@@ -23,7 +23,7 @@ They have no easily detectable filemagic and contain application information (Ap
 and launcher information (Launcher group, optional):
 
 | Key       | Description                           |
-|-----------|---------------------------------------|
+| --------- | ------------------------------------- |
 | FileTypes | supported file types separated by ',' |
 | Protocols | protocols separated by ','            |
 
@@ -42,6 +42,6 @@ Category=Utilities
 
 ## See also
 
-- [ini(5)](help://man/5/ini)
-- [`Userland/Services/Taskbar/main.cpp`](../../../../../Userland/Services/Taskbar/main.cpp)
-- `Launcher::load_handlers` in [`Userland/Services/LaunchServer/Launcher.cpp`](../../../../../Userland/Services/LaunchServer/Launcher.cpp)
+-   [ini(5)](help://man/5/ini)
+-   [`Userland/Services/Taskbar/main.cpp`](../../../../../Userland/Services/Taskbar/main.cpp)
+-   `Launcher::load_handlers` in [`Userland/Services/LaunchServer/Launcher.cpp`](../../../../../Userland/Services/LaunchServer/Launcher.cpp)

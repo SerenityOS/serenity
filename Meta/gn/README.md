@@ -35,14 +35,14 @@ If GN or ninja report a bunch of errors, it's likely that you need to create an 
 
 If you modify `args.gn` outside of `gn args`, be sure to run `gn gen` again to regenerate the ninja files.
 
-
 # Typical gn args
 
 On macOS, the default args should work out of the box. For compiling Ladybird there won't be any tailoring needed if you have Qt6 installed via homebrew and the Xcode tools installed.
 
-On Ubuntu, it's likely that the default ``cc`` and ``c++`` will not be able to compile the project. For compiling Ladybird, a typical ``args.gn`` might look like the below:
+On Ubuntu, it's likely that the default `cc` and `c++` will not be able to compile the project. For compiling Ladybird, a typical `args.gn` might look like the below:
 
 args.gn
+
 ```gn
 # Set build arguments here. See `gn help buildargs`.
 # Chosen clang must be >= version 15.0.0
@@ -55,7 +55,7 @@ qt_install_lib="/usr/lib/x86_64-linux-gnu"
 qt_install_libexec="/usr/lib/qt6/libexec/"
 ```
 
-As with any gn project, ``gn args <build dir> --list`` is your best friend.
+As with any gn project, `gn args <build dir> --list` is your best friend.
 
 # Running binaries from the GN build
 

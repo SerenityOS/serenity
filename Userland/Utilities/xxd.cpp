@@ -33,26 +33,89 @@ enum class DisplayStyle {
     Bits
 };
 
-static void print_ascii(Bytes line)
+enum class Color {
+    Black = 30,
+    Red,
+    Green,
+    Yellow,
+    Blue,
+    Purple,
+    Cyan,
+    White
+};
+
+enum class ColorizeOutput {
+    No,
+    Yes
+};
+
+static void color_on(Color const& color)
+{
+    out("\e[0;{}m", AK::to_underlying(color));
+}
+
+static void color_off()
+{
+    out("\e[0m");
+}
+
+static bool is_tab_or_linebreak(u8 const& byte)
+{
+    return byte == '\t' || byte == '\n' || byte == '\r';
+}
+
+static bool is_printable(u8 const& byte)
+{
+    return byte >= 0x20 && byte <= 0x7E;
+}
+
+static Color choose_color(u8 const& byte)
+{
+    if (byte == 0x00) {
+        return Color::White;
+    } else if (byte == 0xFF) {
+        return Color::Blue;
+    } else if (is_printable(byte)) {
+        return Color::Green;
+    } else if (is_tab_or_linebreak(byte)) {
+        return Color::Yellow;
+    }
+
+    return Color::Red;
+}
+
+static void print_ascii(Bytes line, ColorizeOutput const colorize_output)
 {
     for (auto const& byte : line) {
+        if (colorize_output == ColorizeOutput::Yes)
+            color_on(choose_color(byte));
+
         if (is_ascii_printable(byte)) {
             putchar(byte);
         } else {
             putchar('.');
         }
+
+        if (colorize_output == ColorizeOutput::Yes)
+            color_off();
     }
 }
 
-static void print_line_hex(Bytes line, size_t line_length_config, size_t group_size, bool uppercase)
+static void print_line_hex(Bytes line, size_t line_length_config, size_t group_size, bool uppercase, ColorizeOutput const colorize_output)
 {
     for (size_t i = 0; i < line_length_config; ++i) {
         if (i < line.size()) {
+            if (colorize_output == ColorizeOutput::Yes)
+                color_on(choose_color(line[i]));
+
             if (uppercase) {
                 out("{:02X}", line[i]);
             } else {
                 out("{:02x}", line[i]);
             }
+
+            if (colorize_output == ColorizeOutput::Yes)
+                color_off();
         } else {
             out("  ");
         }
@@ -65,10 +128,10 @@ static void print_line_hex(Bytes line, size_t line_length_config, size_t group_s
     out(" ");
 }
 
-static void print_line_little_endian_hex(Bytes line, size_t line_length_config, size_t group_size, bool uppercase)
+static void print_line_little_endian_hex(Bytes line, size_t line_length_config, size_t group_size, bool uppercase, ColorizeOutput const colorize_output)
 {
     if (group_size == 1) {
-        print_line_hex(line, line_length_config, group_size, uppercase);
+        print_line_hex(line, line_length_config, group_size, uppercase, colorize_output);
         return;
     }
 
@@ -86,12 +149,17 @@ static void print_line_little_endian_hex(Bytes line, size_t line_length_config, 
                 }
             }
             for (ssize_t i = group.size() - 1; i >= 0; --i) {
+                if (colorize_output == ColorizeOutput::Yes)
+                    color_on(choose_color(group[i]));
+
                 if (uppercase) {
                     out("{:02X}", group[i]);
                 } else {
-
                     out("{:02x}", group[i]);
                 }
+
+                if (colorize_output == ColorizeOutput::Yes)
+                    color_off();
             }
         } else {
             for (size_t i = 0; i < group_size; ++i) {
@@ -105,7 +173,7 @@ static void print_line_little_endian_hex(Bytes line, size_t line_length_config, 
     out(" ");
 }
 
-static void print_line_bits(Bytes line, size_t line_length_config, size_t group_size)
+static void print_line_bits(Bytes line, size_t line_length_config, size_t group_size, ColorizeOutput const colorize_output)
 {
     auto print_byte = [](u8 byte) {
         for (ssize_t i = 7; i >= 0; --i) {
@@ -115,7 +183,13 @@ static void print_line_bits(Bytes line, size_t line_length_config, size_t group_
 
     for (size_t i = 0; i < line_length_config; ++i) {
         if (i < line.size()) {
+            if (colorize_output == ColorizeOutput::Yes)
+                color_on(choose_color(line[i]));
+
             print_byte(line[i]);
+
+            if (colorize_output == ColorizeOutput::Yes)
+                color_off();
         } else {
             out("         ");
         }
@@ -261,9 +335,22 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         }
     }
 
-    // TODO: colorize output
+    ColorizeOutput colorize_output = ColorizeOutput::No;
     if (!colorize_output_option.is_null()) {
-        warnln("Colorizing output is not supported");
+        if (colorize_output_option == "always") {
+            colorize_output = ColorizeOutput::Yes;
+        } else if (colorize_output_option == "auto") {
+            if (TRY(Core::System::isatty(STDOUT_FILENO))) {
+                colorize_output = ColorizeOutput::Yes;
+            } else {
+                colorize_output = ColorizeOutput::No;
+            }
+        } else if (colorize_output_option == "never") {
+            colorize_output = ColorizeOutput::No;
+        } else {
+            warnln("Unknown value '{}' for -R, should be one of 'always', 'auto', or 'never'", colorize_output_option);
+            return 1;
+        }
     }
 
     if (revert) {
@@ -332,19 +419,19 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
             switch (display_style) {
             case DisplayStyle::Hex:
-                print_line_hex(current_line, line_length_config, group_size, uppercase_hex);
-                print_ascii(current_line);
+                print_line_hex(current_line, line_length_config, group_size, uppercase_hex, colorize_output);
+                print_ascii(current_line, colorize_output);
                 break;
             case DisplayStyle::PlainHex:
-                print_line_hex(current_line, line_length_config, group_size, uppercase_hex);
+                print_line_hex(current_line, line_length_config, group_size, uppercase_hex, colorize_output);
                 break;
             case DisplayStyle::HexLittleEndian:
-                print_line_little_endian_hex(current_line, line_length_config, group_size, uppercase_hex);
-                print_ascii(current_line);
+                print_line_little_endian_hex(current_line, line_length_config, group_size, uppercase_hex, colorize_output);
+                print_ascii(current_line, colorize_output);
                 break;
             case DisplayStyle::Bits:
-                print_line_bits(current_line, line_length_config, group_size);
-                print_ascii(current_line);
+                print_line_bits(current_line, line_length_config, group_size, colorize_output);
+                print_ascii(current_line, colorize_output);
                 break;
             case DisplayStyle::CStyle:
                 print_line_c_style(current_line);

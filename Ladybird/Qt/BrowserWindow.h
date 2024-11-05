@@ -31,7 +31,7 @@ class BrowserWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::CookieJar&, WebContentOptions const&, StringView webdriver_content_ipc_path, Tab* parent_tab = nullptr, Optional<u64> page_index = {});
+    BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::CookieJar&, WebContentOptions const&, StringView webdriver_content_ipc_path, bool allow_popups, Tab* parent_tab = nullptr, Optional<u64> page_index = {});
 
     WebContentView& view() const { return m_current_tab->view(); }
 
@@ -117,9 +117,13 @@ public slots:
     void open_next_tab();
     void open_previous_tab();
     void open_file();
-    void enable_auto_color_scheme();
-    void enable_light_color_scheme();
-    void enable_dark_color_scheme();
+    void enable_auto_contrast();
+    void enable_less_contrast();
+    void enable_more_contrast();
+    void enable_no_preference_contrast();
+    void enable_auto_motion();
+    void enable_no_preference_motion();
+    void enable_reduce_motion();
     void zoom_in();
     void zoom_out();
     void reset_zoom();
@@ -164,8 +168,16 @@ private:
 
     void set_window_rect(Optional<Web::DevicePixels> x, Optional<Web::DevicePixels> y, Optional<Web::DevicePixels> width, Optional<Web::DevicePixels> height);
 
+    ByteString user_agent_string() const { return m_user_agent_string; }
+    void set_user_agent_string(ByteString const& user_agent_string) { m_user_agent_string = user_agent_string; }
+    ByteString navigator_compatibility_mode() const { return m_navigator_compatibility_mode; }
+    void set_navigator_compatibility_mode(ByteString const& navigator_compatibility_mode) { m_navigator_compatibility_mode = navigator_compatibility_mode; }
+
     QScreen* m_current_screen;
     double m_device_pixel_ratio { 0 };
+
+    Web::CSS::PreferredColorScheme m_preferred_color_scheme;
+    void set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme);
 
     QTabWidget* m_tabs_container { nullptr };
     Tab* m_current_tab { nullptr };
@@ -184,6 +196,13 @@ private:
     QAction* m_find_in_page_action { nullptr };
     QAction* m_view_source_action { nullptr };
     QAction* m_inspect_dom_node_action { nullptr };
+    QAction* m_show_line_box_borders_action { nullptr };
+    QAction* m_enable_scripting_action { nullptr };
+    QAction* m_block_pop_ups_action { nullptr };
+    QAction* m_enable_same_origin_policy_action { nullptr };
+
+    ByteString m_user_agent_string {};
+    ByteString m_navigator_compatibility_mode {};
 
     SettingsDialog* m_settings_dialog { nullptr };
 
@@ -191,6 +210,8 @@ private:
 
     WebContentOptions m_web_content_options;
     StringView m_webdriver_content_ipc_path;
+
+    bool m_allow_popups { false };
 };
 
 }

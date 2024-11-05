@@ -184,7 +184,10 @@ public:
     CSS::StyleProperties* computed_css_values() { return m_computed_css_values.ptr(); }
     CSS::StyleProperties const* computed_css_values() const { return m_computed_css_values.ptr(); }
     void set_computed_css_values(RefPtr<CSS::StyleProperties>);
-    NonnullRefPtr<CSS::StyleProperties> resolved_css_values();
+    NonnullRefPtr<CSS::StyleProperties> resolved_css_values(Optional<CSS::Selector::PseudoElement::Type> = {});
+
+    void set_pseudo_element_computed_css_values(CSS::Selector::PseudoElement::Type, RefPtr<CSS::StyleProperties>);
+    RefPtr<CSS::StyleProperties> pseudo_element_computed_css_values(CSS::Selector::PseudoElement::Type);
 
     void reset_animated_css_properties();
 
@@ -222,7 +225,7 @@ public:
     [[nodiscard]] HashMap<FlyString, CSS::StyleProperty> const& custom_properties(Optional<CSS::Selector::PseudoElement::Type>) const;
 
     // NOTE: The function is wrapped in a JS::HeapFunction immediately.
-    int queue_an_element_task(HTML::Task::Source, Function<void()>);
+    HTML::TaskID queue_an_element_task(HTML::Task::Source, Function<void()>);
 
     bool is_void_element() const;
     bool serializes_as_void() const;
@@ -236,10 +239,11 @@ public:
     virtual void did_receive_focus() { }
     virtual void did_lose_focus() { }
 
-    static JS::GCPtr<Layout::Node> create_layout_node_for_display_type(DOM::Document&, CSS::Display const&, NonnullRefPtr<CSS::StyleProperties>, Element*);
+    static JS::GCPtr<Layout::NodeWithStyle> create_layout_node_for_display_type(DOM::Document&, CSS::Display const&, NonnullRefPtr<CSS::StyleProperties>, Element*);
 
-    void set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement::Type, JS::GCPtr<Layout::Node>);
-    JS::GCPtr<Layout::Node> get_pseudo_element_node(CSS::Selector::PseudoElement::Type) const;
+    void set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement::Type, JS::GCPtr<Layout::NodeWithStyle>);
+    JS::GCPtr<Layout::NodeWithStyle> get_pseudo_element_node(CSS::Selector::PseudoElement::Type) const;
+    bool has_pseudo_elements() const;
     void clear_pseudo_element_nodes(Badge<Layout::TreeBuilder>);
     void serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilder>& children_array) const;
 
@@ -447,9 +451,17 @@ private:
     RefPtr<CSS::StyleProperties> m_computed_css_values;
     HashMap<FlyString, CSS::StyleProperty> m_custom_properties;
 
-    using PseudoElementCustomProperties = Array<HashMap<FlyString, CSS::StyleProperty>, to_underlying(CSS::Selector::PseudoElement::Type::KnownPseudoElementCount)>;
-    mutable OwnPtr<PseudoElementCustomProperties> m_pseudo_element_custom_properties;
-    PseudoElementCustomProperties& pseudo_element_custom_properties() const;
+    struct PseudoElement {
+        JS::GCPtr<Layout::NodeWithStyle> layout_node;
+        RefPtr<CSS::StyleProperties> computed_css_values;
+        HashMap<FlyString, CSS::StyleProperty> custom_properties;
+    };
+    // TODO: CSS::Selector::PseudoElement::Type includes a lot of pseudo-elements that exist in shadow trees,
+    //       and so we don't want to include data for them here.
+    using PseudoElementData = Array<PseudoElement, to_underlying(CSS::Selector::PseudoElement::Type::KnownPseudoElementCount)>;
+    mutable OwnPtr<PseudoElementData> m_pseudo_element_data;
+    Optional<PseudoElement&> get_pseudo_element(CSS::Selector::PseudoElement::Type) const;
+    PseudoElement& ensure_pseudo_element(CSS::Selector::PseudoElement::Type) const;
 
     Optional<CSS::Selector::PseudoElement::Type> m_use_pseudo_element;
 
@@ -458,9 +470,6 @@ private:
 
     Optional<FlyString> m_id;
     Optional<FlyString> m_name;
-
-    using PseudoElementLayoutNodes = Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::Type::KnownPseudoElementCount)>;
-    OwnPtr<PseudoElementLayoutNodes> m_pseudo_element_nodes;
 
     // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-reaction-queue
     // All elements have an associated custom element reaction queue, initially empty. Each item in the custom element reaction queue is of one of two types:

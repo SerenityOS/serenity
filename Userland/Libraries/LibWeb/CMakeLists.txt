@@ -23,6 +23,7 @@ set(SOURCES
     Bindings/OptionConstructor.cpp
     Bindings/PlatformObject.cpp
     Clipboard/Clipboard.cpp
+    Clipboard/ClipboardEvent.cpp
     Crypto/Crypto.cpp
     Crypto/CryptoAlgorithms.cpp
     Crypto/CryptoBindings.cpp
@@ -42,6 +43,8 @@ set(SOURCES
     CSS/CSSKeyframeRule.cpp
     CSS/CSSKeyframesRule.cpp
     CSS/CSSFontFaceRule.cpp
+    CSS/CSSLayerBlockRule.cpp
+    CSS/CSSLayerStatementRule.cpp
     CSS/CSSMediaRule.cpp
     CSS/CSSNumericType.cpp
     CSS/CSSNamespaceRule.cpp
@@ -50,6 +53,7 @@ set(SOURCES
     CSS/CSSStyleDeclaration.cpp
     CSS/CSSStyleRule.cpp
     CSS/CSSStyleSheet.cpp
+    CSS/CSSStyleValue.cpp
     CSS/CSSSupportsRule.cpp
     CSS/CSSTransition.cpp
     CSS/Display.cpp
@@ -60,6 +64,7 @@ set(SOURCES
     CSS/Frequency.cpp
     CSS/GridTrackPlacement.cpp
     CSS/GridTrackSize.cpp
+    CSS/Interpolation.cpp
     CSS/Length.cpp
     CSS/LengthBox.cpp
     CSS/MediaList.cpp
@@ -83,6 +88,8 @@ set(SOURCES
     CSS/ParsedFontFace.cpp
     CSS/PercentageOr.cpp
     CSS/PreferredColorScheme.cpp
+    CSS/PreferredContrast.cpp
+    CSS/PreferredMotion.cpp
     CSS/Ratio.cpp
     CSS/Resolution.cpp
     CSS/ResolvedCSSStyleDeclaration.cpp
@@ -98,18 +105,23 @@ set(SOURCES
     CSS/StyleProperty.cpp
     CSS/StyleSheet.cpp
     CSS/StyleSheetList.cpp
-    CSS/StyleValue.cpp
     CSS/StyleValues/AngleStyleValue.cpp
     CSS/StyleValues/BackgroundRepeatStyleValue.cpp
     CSS/StyleValues/BackgroundSizeStyleValue.cpp
     CSS/StyleValues/BasicShapeStyleValue.cpp
     CSS/StyleValues/BorderRadiusStyleValue.cpp
-    CSS/StyleValues/CalculatedStyleValue.cpp
-    CSS/StyleValues/ColorStyleValue.cpp
     CSS/StyleValues/ConicGradientStyleValue.cpp
     CSS/StyleValues/ContentStyleValue.cpp
     CSS/StyleValues/CounterDefinitionsStyleValue.cpp
     CSS/StyleValues/CounterStyleValue.cpp
+    CSS/StyleValues/CSSColorValue.cpp
+    CSS/StyleValues/CSSHSL.cpp
+    CSS/StyleValues/CSSHWB.cpp
+    CSS/StyleValues/CSSKeywordValue.cpp
+    CSS/StyleValues/CSSMathValue.cpp
+    CSS/StyleValues/CSSOKLab.cpp
+    CSS/StyleValues/CSSOKLCH.cpp
+    CSS/StyleValues/CSSRGB.cpp
     CSS/StyleValues/DisplayStyleValue.cpp
     CSS/StyleValues/EasingStyleValue.cpp
     CSS/StyleValues/EdgeStyleValue.cpp
@@ -118,13 +130,13 @@ set(SOURCES
     CSS/StyleValues/GridTemplateAreaStyleValue.cpp
     CSS/StyleValues/GridTrackPlacementStyleValue.cpp
     CSS/StyleValues/GridTrackSizeListStyleValue.cpp
-    CSS/StyleValues/IdentifierStyleValue.cpp
     CSS/StyleValues/ImageStyleValue.cpp
     CSS/StyleValues/IntegerStyleValue.cpp
     CSS/StyleValues/LengthStyleValue.cpp
     CSS/StyleValues/LinearGradientStyleValue.cpp
     CSS/StyleValues/MathDepthStyleValue.cpp
     CSS/StyleValues/NumberStyleValue.cpp
+    CSS/StyleValues/OpenTypeTaggedStyleValue.cpp
     CSS/StyleValues/PositionStyleValue.cpp
     CSS/StyleValues/RadialGradientStyleValue.cpp
     CSS/StyleValues/RectStyleValue.cpp
@@ -272,6 +284,8 @@ set(SOURCES
     HTML/CustomElements/CustomElementReactionNames.cpp
     HTML/CustomElements/CustomElementRegistry.cpp
     HTML/DataTransfer.cpp
+    HTML/DataTransferItem.cpp
+    HTML/DataTransferItemList.cpp
     HTML/Dates.cpp
     HTML/DecodedImageData.cpp
     HTML/DedicatedWorkerGlobalScope.cpp
@@ -279,6 +293,7 @@ set(SOURCES
     HTML/DOMParser.cpp
     HTML/DOMStringList.cpp
     HTML/DOMStringMap.cpp
+    HTML/DragDataStore.cpp
     HTML/DragEvent.cpp
     HTML/ElementInternals.cpp
     HTML/EmbedderPolicy.cpp
@@ -429,9 +444,11 @@ set(SOURCES
     HTML/Scripting/SerializedEnvironmentSettingsObject.cpp
     HTML/SelectedFile.cpp
     HTML/SelectItem.cpp
+    HTML/ServiceWorkerContainer.cpp
+    HTML/ServiceWorkerRegistration.cpp
     HTML/SessionHistoryEntry.cpp
     HTML/SessionHistoryTraversalQueue.cpp
-    HTML/SharedImageRequest.cpp
+    HTML/SharedResourceRequest.cpp
     HTML/SourceSet.cpp
     HTML/Storage.cpp
     HTML/StructuredSerialize.cpp
@@ -511,6 +528,7 @@ set(SOURCES
     Layout/SVGForeignObjectBox.cpp
     Layout/SVGGeometryBox.cpp
     Layout/SVGGraphicsBox.cpp
+    Layout/SVGImageBox.cpp
     Layout/SVGSVGBox.cpp
     Layout/SVGMaskBox.cpp
     Layout/SVGClipBox.cpp
@@ -536,12 +554,14 @@ set(SOURCES
     MixedContent/AbstractOperations.cpp
     Namespace.cpp
     NavigationTiming/EntryNames.cpp
+    NavigationTiming/PerformanceNavigation.cpp
     NavigationTiming/PerformanceTiming.cpp
+    Page/DragAndDropEventHandler.cpp
     Page/EditEventHandler.cpp
     Page/EventHandler.cpp
     Page/InputEvent.cpp
     Page/Page.cpp
-    Painting/AffineCommandExecutorCPU.cpp
+    Painting/AffineDisplayListPlayerCPU.cpp
     Painting/AudioPaintable.cpp
     Painting/BackgroundPainting.cpp
     Painting/BorderRadiiData.cpp
@@ -550,10 +570,11 @@ set(SOURCES
     Painting/BordersData.cpp
     Painting/CanvasPaintable.cpp
     Painting/Command.cpp
-    Painting/CommandExecutorCPU.cpp
-    Painting/CommandList.cpp
     Painting/CheckBoxPaintable.cpp
     Painting/ClippableAndScrollable.cpp
+    Painting/DisplayList.cpp
+    Painting/DisplayListPlayerCPU.cpp
+    Painting/DisplayListRecorder.cpp
     Painting/GradientPainting.cpp
     Painting/FilterPainting.cpp
     Painting/ImagePaintable.cpp
@@ -568,7 +589,6 @@ set(SOURCES
     Painting/PaintableBox.cpp
     Painting/PaintableFragment.cpp
     Painting/RadioButtonPaintable.cpp
-    Painting/RecordingPainter.cpp
     Painting/SVGForeignObjectPaintable.cpp
     Painting/SVGPathPaintable.cpp
     Painting/SVGGraphicsPaintable.cpp
@@ -607,6 +627,8 @@ set(SOURCES
     ResizeObserver/ResizeObserverSize.cpp
     SecureContexts/AbstractOperations.cpp
     SRI/SRI.cpp
+    StorageAPI/NavigatorStorage.cpp
+    StorageAPI/StorageManager.cpp
     Streams/AbstractOperations.cpp
     Streams/ByteLengthQueuingStrategy.cpp
     Streams/CountQueuingStrategy.cpp
@@ -642,6 +664,7 @@ set(SOURCES
     SVG/SVGGeometryElement.cpp
     SVG/SVGGraphicsElement.cpp
     SVG/SVGGradientElement.cpp
+    SVG/SVGImageElement.cpp
     SVG/SVGPathElement.cpp
     SVG/SVGCircleElement.cpp
     SVG/SVGEllipseElement.cpp
@@ -753,13 +776,13 @@ set(GENERATED_SOURCES
     ARIA/AriaRoles.cpp
     CSS/DefaultStyleSheetSource.cpp
     CSS/Enums.cpp
+    CSS/Keyword.cpp
     CSS/MathFunctions.cpp
     CSS/MediaFeatureID.cpp
     CSS/PropertyID.cpp
     CSS/PseudoClass.cpp
     CSS/QuirksModeStyleSheetSource.cpp
     CSS/TransformFunctions.cpp
-    CSS/ValueID.cpp
     MathML/MathMLStyleSheetSource.cpp
     SVG/SVGStyleSheetSource.cpp
     Worker/WebWorkerClientEndpoint.h
@@ -773,7 +796,7 @@ target_link_libraries(LibWeb PRIVATE LibCore LibCrypto LibJS LibMarkdown LibHTTP
 
 if (HAS_ACCELERATED_GRAPHICS)
     target_link_libraries(LibWeb PRIVATE ${ACCEL_GFX_LIBS})
-    target_sources(LibWeb PRIVATE Painting/CommandExecutorGPU.cpp)
+    target_sources(LibWeb PRIVATE Painting/DisplayListPlayerGPU.cpp)
     target_link_libraries(LibWeb PRIVATE LibAccelGfx)
     target_compile_definitions(LibWeb PRIVATE HAS_ACCELERATED_GRAPHICS)
 endif()

@@ -281,15 +281,15 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
     // https://www.w3.org/TR/mediaqueries-5/#media-descriptor-table
     switch (media_feature) {
     case CSS::MediaFeatureID::AnyHover:
-        return CSS::MediaFeatureValue(CSS::ValueID::Hover);
+        return CSS::MediaFeatureValue(CSS::Keyword::Hover);
     case CSS::MediaFeatureID::AnyPointer:
-        return CSS::MediaFeatureValue(CSS::ValueID::Fine);
+        return CSS::MediaFeatureValue(CSS::Keyword::Fine);
     case CSS::MediaFeatureID::AspectRatio:
         return CSS::MediaFeatureValue(CSS::Ratio(inner_width(), inner_height()));
     case CSS::MediaFeatureID::Color:
         return CSS::MediaFeatureValue(8);
     case CSS::MediaFeatureID::ColorGamut:
-        return CSS::MediaFeatureValue(CSS::ValueID::Srgb);
+        return CSS::MediaFeatureValue(CSS::Keyword::Srgb);
     case CSS::MediaFeatureID::ColorIndex:
         return CSS::MediaFeatureValue(0);
     // FIXME: device-aspect-ratio
@@ -299,13 +299,13 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
         return CSS::MediaFeatureValue(CSS::Length::make_px(page().web_exposed_screen_area().width()));
     case CSS::MediaFeatureID::DisplayMode:
         // FIXME: Detect if window is fullscreen
-        return CSS::MediaFeatureValue(CSS::ValueID::Browser);
+        return CSS::MediaFeatureValue(CSS::Keyword::Browser);
     case CSS::MediaFeatureID::DynamicRange:
-        return CSS::MediaFeatureValue(CSS::ValueID::Standard);
+        return CSS::MediaFeatureValue(CSS::Keyword::Standard);
     case CSS::MediaFeatureID::EnvironmentBlending:
-        return CSS::MediaFeatureValue(CSS::ValueID::Opaque);
+        return CSS::MediaFeatureValue(CSS::Keyword::Opaque);
     case CSS::MediaFeatureID::ForcedColors:
-        return CSS::MediaFeatureValue(CSS::ValueID::None);
+        return CSS::MediaFeatureValue(CSS::Keyword::None);
     case CSS::MediaFeatureID::Grid:
         return CSS::MediaFeatureValue(0);
     case CSS::MediaFeatureID::Height:
@@ -313,60 +313,78 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
     case CSS::MediaFeatureID::HorizontalViewportSegments:
         return CSS::MediaFeatureValue(1);
     case CSS::MediaFeatureID::Hover:
-        return CSS::MediaFeatureValue(CSS::ValueID::Hover);
+        return CSS::MediaFeatureValue(CSS::Keyword::Hover);
     case CSS::MediaFeatureID::InvertedColors:
-        return CSS::MediaFeatureValue(CSS::ValueID::None);
+        return CSS::MediaFeatureValue(CSS::Keyword::None);
     case CSS::MediaFeatureID::Monochrome:
         return CSS::MediaFeatureValue(0);
     case CSS::MediaFeatureID::NavControls:
-        return CSS::MediaFeatureValue(CSS::ValueID::Back);
+        return CSS::MediaFeatureValue(CSS::Keyword::Back);
     case CSS::MediaFeatureID::Orientation:
-        return CSS::MediaFeatureValue(inner_height() >= inner_width() ? CSS::ValueID::Portrait : CSS::ValueID::Landscape);
+        return CSS::MediaFeatureValue(inner_height() >= inner_width() ? CSS::Keyword::Portrait : CSS::Keyword::Landscape);
     case CSS::MediaFeatureID::OverflowBlock:
-        return CSS::MediaFeatureValue(CSS::ValueID::Scroll);
+        return CSS::MediaFeatureValue(CSS::Keyword::Scroll);
     case CSS::MediaFeatureID::OverflowInline:
-        return CSS::MediaFeatureValue(CSS::ValueID::Scroll);
+        return CSS::MediaFeatureValue(CSS::Keyword::Scroll);
     case CSS::MediaFeatureID::Pointer:
-        return CSS::MediaFeatureValue(CSS::ValueID::Fine);
+        return CSS::MediaFeatureValue(CSS::Keyword::Fine);
     case CSS::MediaFeatureID::PrefersColorScheme: {
         switch (page().preferred_color_scheme()) {
         case CSS::PreferredColorScheme::Light:
-            return CSS::MediaFeatureValue(CSS::ValueID::Light);
+            return CSS::MediaFeatureValue(CSS::Keyword::Light);
         case CSS::PreferredColorScheme::Dark:
-            return CSS::MediaFeatureValue(CSS::ValueID::Dark);
+            return CSS::MediaFeatureValue(CSS::Keyword::Dark);
         case CSS::PreferredColorScheme::Auto:
         default:
-            return CSS::MediaFeatureValue(page().palette().is_dark() ? CSS::ValueID::Dark : CSS::ValueID::Light);
+            return CSS::MediaFeatureValue(page().palette().is_dark() ? CSS::Keyword::Dark : CSS::Keyword::Light);
         }
     }
     case CSS::MediaFeatureID::PrefersContrast:
-        // FIXME: Make this a preference
-        return CSS::MediaFeatureValue(CSS::ValueID::NoPreference);
+        switch (page().preferred_contrast()) {
+        case CSS::PreferredContrast::Less:
+            return CSS::MediaFeatureValue(CSS::Keyword::Less);
+        case CSS::PreferredContrast::More:
+            return CSS::MediaFeatureValue(CSS::Keyword::More);
+        case CSS::PreferredContrast::NoPreference:
+            return CSS::MediaFeatureValue(CSS::Keyword::NoPreference);
+        case CSS::PreferredContrast::Auto:
+        default:
+            // FIXME: Fallback to system settings
+            return CSS::MediaFeatureValue(CSS::Keyword::NoPreference);
+        }
     case CSS::MediaFeatureID::PrefersReducedData:
         // FIXME: Make this a preference
-        return CSS::MediaFeatureValue(CSS::ValueID::NoPreference);
+        return CSS::MediaFeatureValue(CSS::Keyword::NoPreference);
     case CSS::MediaFeatureID::PrefersReducedMotion:
-        // FIXME: Make this a preference
-        return CSS::MediaFeatureValue(CSS::ValueID::NoPreference);
+        switch (page().preferred_motion()) {
+        case CSS::PreferredMotion::NoPreference:
+            return CSS::MediaFeatureValue(CSS::Keyword::NoPreference);
+        case CSS::PreferredMotion::Reduce:
+            return CSS::MediaFeatureValue(CSS::Keyword::Reduce);
+        case CSS::PreferredMotion::Auto:
+        default:
+            // FIXME: Fallback to system settings
+            return CSS::MediaFeatureValue(CSS::Keyword::NoPreference);
+        }
     case CSS::MediaFeatureID::PrefersReducedTransparency:
         // FIXME: Make this a preference
-        return CSS::MediaFeatureValue(CSS::ValueID::NoPreference);
+        return CSS::MediaFeatureValue(CSS::Keyword::NoPreference);
     case CSS::MediaFeatureID::Resolution:
         return CSS::MediaFeatureValue(CSS::Resolution(device_pixel_ratio(), CSS::Resolution::Type::Dppx));
     case CSS::MediaFeatureID::Scan:
-        return CSS::MediaFeatureValue(CSS::ValueID::Progressive);
+        return CSS::MediaFeatureValue(CSS::Keyword::Progressive);
     case CSS::MediaFeatureID::Scripting:
         if (associated_document().is_scripting_enabled())
-            return CSS::MediaFeatureValue(CSS::ValueID::Enabled);
-        return CSS::MediaFeatureValue(CSS::ValueID::None);
+            return CSS::MediaFeatureValue(CSS::Keyword::Enabled);
+        return CSS::MediaFeatureValue(CSS::Keyword::None);
     case CSS::MediaFeatureID::Update:
-        return CSS::MediaFeatureValue(CSS::ValueID::Fast);
+        return CSS::MediaFeatureValue(CSS::Keyword::Fast);
     case CSS::MediaFeatureID::VerticalViewportSegments:
         return CSS::MediaFeatureValue(1);
     case CSS::MediaFeatureID::VideoColorGamut:
-        return CSS::MediaFeatureValue(CSS::ValueID::Srgb);
+        return CSS::MediaFeatureValue(CSS::Keyword::Srgb);
     case CSS::MediaFeatureID::VideoDynamicRange:
-        return CSS::MediaFeatureValue(CSS::ValueID::Standard);
+        return CSS::MediaFeatureValue(CSS::Keyword::Standard);
     case CSS::MediaFeatureID::Width:
         return CSS::MediaFeatureValue(CSS::Length::make_px(inner_width()));
 
@@ -1120,9 +1138,51 @@ Variant<JS::Handle<DOM::Event>, JS::Value> Window::event() const
 // https://w3c.github.io/csswg-drafts/cssom/#dom-window-getcomputedstyle
 JS::NonnullGCPtr<CSS::CSSStyleDeclaration> Window::get_computed_style(DOM::Element& element, Optional<String> const& pseudo_element) const
 {
-    // FIXME: Make this fully spec compliant.
-    (void)pseudo_element;
-    return heap().allocate<CSS::ResolvedCSSStyleDeclaration>(realm(), element);
+    // 1. Let doc be elt’s node document.
+
+    // 2. Let obj be elt.
+    Optional<CSS::Selector::PseudoElement::Type> obj_pseudo;
+
+    // 3. If pseudoElt is provided, is not the empty string, and starts with a colon, then:
+    if (pseudo_element.has_value() && pseudo_element.value().starts_with(':')) {
+        // 1. Parse pseudoElt as a <pseudo-element-selector>, and let type be the result.
+        auto type = parse_pseudo_element_selector(CSS::Parser::ParsingContext(associated_document()), pseudo_element.value());
+
+        // 2. If type is failure, or is an ::slotted() or ::part() pseudo-element, let obj be null.
+        // FIXME: We can't pass a null element to ResolvedCSSStyleDeclaration
+        if (!type.has_value()) {
+        }
+        // 3. Otherwise let obj be the given pseudo-element of elt.
+        else {
+            // TODO: Keep the function arguments of the pseudo-element if there are any.
+            obj_pseudo = type.value().type();
+        }
+    }
+
+    // AD-HOC: Just return a ResolvedCSSStyleDeclaration because that's what we have for now.
+    // FIXME: Implement CSSStyleProperties, and then follow the rest of these steps instead.
+    return heap().allocate<CSS::ResolvedCSSStyleDeclaration>(realm(), element, obj_pseudo);
+
+    // 4. Let decls be an empty list of CSS declarations.
+
+    // 5. If obj is not null, and elt is connected, part of the flat tree, and its shadow-including root
+    //    has a browsing context which either doesn’t have a browsing context container, or whose browsing
+    //    context container is being rendered, set decls to a list of all longhand properties that are
+    //    supported CSS properties, in lexicographical order, with the value being the resolved value
+    //    computed for obj using the style rules associated with doc. Additionally, append to decls all
+    //    the custom properties whose computed value for obj is not the guaranteed-invalid value.
+
+    // 6. Return a live CSSStyleProperties object with the following properties:
+    //    computed flag
+    //        Set.
+    //    readonly flag
+    //        Set.
+    //    declarations
+    //        decls.
+    //    parent CSS rule
+    //        Null.
+    //    owner node
+    //        obj.
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-matchmedia
@@ -1422,7 +1482,7 @@ double Window::device_pixel_ratio() const
 }
 
 // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#dom-animationframeprovider-requestanimationframe
-i32 Window::request_animation_frame(WebIDL::CallbackType& callback)
+WebIDL::UnsignedLong Window::request_animation_frame(WebIDL::CallbackType& callback)
 {
     // FIXME: Make this fully spec compliant. Currently implements a mix of 'requestAnimationFrame()' and 'run the animation frame callbacks'.
     return m_animation_frame_callback_driver.add([this, callback = JS::make_handle(callback)](double now) {
@@ -1434,14 +1494,14 @@ i32 Window::request_animation_frame(WebIDL::CallbackType& callback)
 }
 
 // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#animationframeprovider-cancelanimationframe
-void Window::cancel_animation_frame(i32 handle)
+void Window::cancel_animation_frame(WebIDL::UnsignedLong handle)
 {
     // 1. If this is not supported, then throw a "NotSupportedError" DOMException.
     // NOTE: Doesn't apply in this Window-specific implementation.
 
     // 2. Let callbacks be this's target object's map of animation frame callbacks.
     // 3. Remove callbacks[handle].
-    m_animation_frame_callback_driver.remove(handle);
+    (void)m_animation_frame_callback_driver.remove(handle);
 }
 
 // https://w3c.github.io/requestidlecallback/#dom-window-requestidlecallback
@@ -1692,6 +1752,28 @@ Window::NamedObjects Window::named_objects(StringView name)
     });
 
     return objects;
+}
+
+bool Window::find(String const& string)
+{
+    if (string.is_empty())
+        return false;
+
+    auto& page = this->page();
+    Optional<Page::FindInPageResult> result;
+    if (auto last_query = page.last_find_in_page_query(); last_query.has_value() && last_query->string == string) {
+        result = page.find_in_page_next_match();
+    } else {
+        Page::FindInPageQuery query {
+            string,
+            CaseSensitivity::CaseInsensitive,
+            Page::WrapAround::No,
+        };
+
+        result = page.find_in_page(query);
+    }
+
+    return result.has_value() && result->total_match_count.has_value() && *result->total_match_count > 0;
 }
 
 }

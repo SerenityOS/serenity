@@ -24,7 +24,7 @@ Defines a GUI label widget.
 
 ## Registered Properties
 
-| Property        | Type           | Possible values                                                             | Description                |
-|-----------------|----------------|-----------------------------------------------------------------------------|----------------------------|
-| text_alignment  | text_alignment | Center, CenterLeft, CenterRight, TopLeft, TopRight, BottomLeft, BottomRight | Sets alignment of the text |
-| text_wrapping   | text_wrapping  |                                                                             |                            |                                                      |                            |
+| Property       | Type           | Possible values                                                             | Description                |
+| -------------- | -------------- | --------------------------------------------------------------------------- | -------------------------- | --- | --- |
+| text_alignment | text_alignment | Center, CenterLeft, CenterRight, TopLeft, TopRight, BottomLeft, BottomRight | Sets alignment of the text |
+| text_wrapping  | text_wrapping  |                                                                             |                            |     |     |

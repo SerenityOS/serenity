@@ -21,5 +21,5 @@ Defines a GUI group box widget. Used to contain widgets in a border with a title
 ## Registered Properties
 
 | Property | Type   | Possible values | Description    |
-|----------|--------|-----------------|----------------|
+| -------- | ------ | --------------- | -------------- |
 | title    | string | Any string      | Sets the title |

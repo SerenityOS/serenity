@@ -127,11 +127,11 @@ class ConnectionFromClient final
 
 // Client side.
 namespace MyClient {
-    
+
     class Client final
         : public IPC::ConnectionToServer<MyClientEndpoint, MyServerEndpoint>
         , public MyClientEndpoint {};
-    
+
 }
 ```
 
@@ -140,5 +140,5 @@ asynchronous functions are prefixed with `async_` and the names of the synchrono
 
 ## See also
 
-- [`Meta/Lagom/Tools/CodeGenerators/IPCCompiler/main.cpp`](../../../../../Meta/Lagom/Tools/CodeGenerators/IPCCompiler/main.cpp)
-- [ipc(4)](help://man/4/ipc) (IPC Unix socket documentation) 
+-   [`Meta/Lagom/Tools/CodeGenerators/IPCCompiler/main.cpp`](../../../../../Meta/Lagom/Tools/CodeGenerators/IPCCompiler/main.cpp)
+-   [ipc(4)](help://man/4/ipc) (IPC Unix socket documentation)

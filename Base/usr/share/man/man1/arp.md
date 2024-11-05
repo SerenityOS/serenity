@@ -16,14 +16,14 @@ ARP stands for Address Resolution Protocol, which is used to find devices in loc
 
 ## Options
 
-* `-s`, `--set`: Set an ARP table entry
-* `-d`, `--delete`: Delete an ARP table entry
-* `-n`, `--numeric`: Display numerical addresses. Don't resolve hostnames
+-   `-s`, `--set`: Set an ARP table entry
+-   `-d`, `--delete`: Delete an ARP table entry
+-   `-n`, `--numeric`: Display numerical addresses. Don't resolve hostnames
 
 ## Arguments
 
-* `address`: IPv4 protocol address
-* `hwaddress`: Hardware address
+-   `address`: IPv4 protocol address
+-   `hwaddress`: Hardware address
 
 ## Examples
 

@@ -12,15 +12,15 @@ runtime. So, just lie to TBB that we don't support weak symbols.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/third-party/tbb/include/oneapi/tbb/detail/_config.h b/third-party/tbb/include/oneapi/tbb/detail/_config.h
-index fa287cd2968ec7f336b754ee450a8da12f4ded23..b93878aa6369a8ffe386da4dd822ab5bd1fe3c3b 100644
+index d6705e154c36d6ed405233f14dc2cd17bbaf7281..739df2b5520999d63ec09374932b04c6c560ae20 100644
 --- a/third-party/tbb/include/oneapi/tbb/detail/_config.h
 +++ b/third-party/tbb/include/oneapi/tbb/detail/_config.h
-@@ -195,7 +195,7 @@
+@@ -201,7 +201,7 @@
  
  /** __TBB_WEAK_SYMBOLS_PRESENT denotes that the system supports the weak symbol mechanism **/
  #ifndef __TBB_WEAK_SYMBOLS_PRESENT
--    #define __TBB_WEAK_SYMBOLS_PRESENT ( !_WIN32 && !__APPLE__ && !__sun && (__TBB_GCC_VERSION >= 40000 || __INTEL_COMPILER ) )
-+    #define __TBB_WEAK_SYMBOLS_PRESENT ( !_WIN32 && !__APPLE__ && !__sun && !__serenity__ && (__TBB_GCC_VERSION >= 40000 || __INTEL_COMPILER ) )
+-    #define __TBB_WEAK_SYMBOLS_PRESENT ( !__EMSCRIPTEN__ && !_WIN32 && !__APPLE__ && !__sun && (__TBB_GCC_VERSION >= 40000 || __INTEL_COMPILER ) )
++    #define __TBB_WEAK_SYMBOLS_PRESENT ( !__EMSCRIPTEN__ && !_WIN32 && !__APPLE__ && !__sun && !__serenity__ && (__TBB_GCC_VERSION >= 40000 || __INTEL_COMPILER ) )
  #endif
  
  /** Presence of compiler features **/

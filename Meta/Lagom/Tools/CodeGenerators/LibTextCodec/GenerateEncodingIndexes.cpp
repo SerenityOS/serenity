@@ -15,11 +15,13 @@
 #include <LibCore/File.h>
 #include <LibMain/Main.h>
 
+namespace {
 struct LookupTable {
     u32 first_pointer;
     u32 max_code_point;
     Vector<u32> code_points;
     bool generate_accessor;
+    bool generate_inverse_accessor;
 };
 
 struct LookupTables {
@@ -32,7 +34,12 @@ enum class GenerateAccessor {
     Yes,
 };
 
-LookupTable prepare_table(JsonArray const& data, GenerateAccessor generate_accessor = GenerateAccessor::No)
+enum class GenerateInverseAccessor {
+    No,
+    Yes,
+};
+
+LookupTable prepare_table(JsonArray const& data, GenerateAccessor generate_accessor = GenerateAccessor::No, GenerateInverseAccessor generate_inverse_accessor = GenerateInverseAccessor::No)
 {
     Vector<u32> code_points;
     code_points.ensure_capacity(data.size());
@@ -57,7 +64,7 @@ LookupTable prepare_table(JsonArray const& data, GenerateAccessor generate_acces
     } else {
         VERIFY(first_pointer == 0);
     }
-    return { first_pointer, max, move(code_points), generate_accessor == GenerateAccessor::Yes };
+    return { first_pointer, max, move(code_points), generate_accessor == GenerateAccessor::Yes, generate_inverse_accessor == GenerateInverseAccessor::Yes };
 }
 
 void generate_table(SourceGenerator generator, StringView name, LookupTable& table)
@@ -80,6 +87,8 @@ void generate_table(SourceGenerator generator, StringView name, LookupTable& tab
     generator.appendln("\n};");
     if (table.generate_accessor)
         generator.appendln("Optional<u32> index_@name@_code_point(u32 pointer);");
+    if (table.generate_inverse_accessor)
+        generator.appendln("Optional<u32> code_point_@name@_index(u32 code_point);");
 }
 
 ErrorOr<void> generate_header_file(LookupTables& tables, Core::File& file)
@@ -154,6 +163,42 @@ Optional<u32> index_@name@_code_point(u32 pointer)
     }
 }
 
+void generate_inverse_table_accessor(SourceGenerator generator, StringView name, LookupTable& table)
+{
+    generator.set("name", name);
+    generator.set("first_pointer", MUST(String::number(table.first_pointer)));
+    generator.set("size", MUST(String::number(table.code_points.size())));
+
+    // FIXME - Doing a linear search here is really slow, should be generating
+    //         some kind of reverse lookup table.
+
+    if (table.first_pointer > 0) {
+        generator.append(R"~~~(
+Optional<u32> code_point_@name@_index(u32 code_point)
+{
+    for (u32 i = 0; i < s_@name@_index.size(); ++i) {
+        if (s_@name@_index[i] == code_point) {
+            return s_@name@_index_first_pointer + i;
+        }
+    }
+    return {};
+}
+)~~~");
+    } else {
+        generator.append(R"~~~(
+Optional<u32> code_point_@name@_index(u32 code_point)
+{
+    for (u32 i = 0; i < s_@name@_index.size(); ++i) {
+        if (s_@name@_index[i] == code_point) {
+            return i;
+        }
+    }
+    return {};
+}
+)~~~");
+    }
+}
+
 ErrorOr<void> generate_implementation_file(LookupTables& tables, Core::File& file)
 {
     StringBuilder builder;
@@ -168,6 +213,8 @@ namespace TextCodec {
     for (auto& [key, table] : tables.indexes) {
         if (table.generate_accessor)
             generate_table_accessor(generator.fork(), key, table);
+        if (table.generate_inverse_accessor)
+            generate_inverse_table_accessor(generator.fork(), key, table);
     }
 
     generator.appendln("\n}");
@@ -175,6 +222,7 @@ namespace TextCodec {
     TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
 }
+} // end anonymous namespace
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -192,7 +240,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto json_data = TRY(json_file->read_until_eof());
     auto data = TRY(JsonValue::from_string(json_data)).as_object();
 
-    auto gb18030_table = prepare_table(data.get("gb18030"sv)->as_array(), GenerateAccessor::Yes);
+    auto gb18030_table = prepare_table(data.get("gb18030"sv)->as_array(), GenerateAccessor::Yes, GenerateInverseAccessor::Yes);
 
     // FIXME: Encoding specification is not updated to GB-18030-2022 yet (https://github.com/whatwg/encoding/issues/312)
     // NOTE: See https://commits.webkit.org/264918@main
@@ -220,10 +268,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         .indexes = {
             { "gb18030"sv, move(gb18030_table) },
             { "big5"sv, prepare_table(data.get("big5"sv)->as_array(), GenerateAccessor::Yes) },
-            { "jis0208"sv, prepare_table(data.get("jis0208"sv)->as_array(), GenerateAccessor::Yes) },
+            { "jis0208"sv, prepare_table(data.get("jis0208"sv)->as_array(), GenerateAccessor::Yes, GenerateInverseAccessor::Yes) },
             { "jis0212"sv, prepare_table(data.get("jis0212"sv)->as_array(), GenerateAccessor::Yes) },
-            { "euc_kr"sv, prepare_table(data.get("euc-kr"sv)->as_array(), GenerateAccessor::Yes) },
+            { "euc_kr"sv, prepare_table(data.get("euc-kr"sv)->as_array(), GenerateAccessor::Yes, GenerateInverseAccessor::Yes) },
             { "ibm866"sv, prepare_table(data.get("ibm866"sv)->as_array()) },
+            { "iso_2022_jp_katakana"sv, prepare_table(data.get("iso-2022-jp-katakana"sv)->as_array(), GenerateAccessor::Yes) },
             { "iso_8859_2"sv, prepare_table(data.get("iso-8859-2"sv)->as_array()) },
             { "iso_8859_3"sv, prepare_table(data.get("iso-8859-3"sv)->as_array()) },
             { "iso_8859_4"sv, prepare_table(data.get("iso-8859-4"sv)->as_array()) },

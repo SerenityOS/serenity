@@ -11,10 +11,10 @@
 namespace Kernel {
 
 class FullDevice final : public CharacterDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
-    static NonnullLockRefPtr<FullDevice> must_create();
+    static NonnullRefPtr<FullDevice> must_create();
     virtual ~FullDevice() override;
 
 private:

@@ -7,7 +7,7 @@
 
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/HID/PS2/MouseDevice.h>
 #include <Kernel/Sections.h>
 
@@ -156,11 +156,25 @@ UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<PS2MouseDevice>> PS2MouseDevice::try_to_i
     return device;
 }
 
+UNMAP_AFTER_INIT ErrorOr<int> PS2MouseDevice::reset_device()
+{
+    auto do_reset = [this] -> ErrorOr<int> {
+        TRY(attached_controller().reset_device(attached_port_index()));
+        return TRY(read_from_device());
+    };
+    auto maybe_device_id = do_reset();
+    for (int attempt = 1; attempt < 10; attempt++) {
+        if (!maybe_device_id.is_error())
+            return maybe_device_id;
+        microseconds_delay(500);
+        maybe_device_id = do_reset();
+    }
+    return maybe_device_id;
+}
+
 UNMAP_AFTER_INIT ErrorOr<void> PS2MouseDevice::initialize()
 {
-    TRY(attached_controller().reset_device(attached_port_index()));
-
-    u8 device_id = TRY(read_from_device());
+    int device_id = TRY(reset_device());
 
     TRY(send_command(SerialIOController::DeviceCommand::SetDefaults));
     TRY(send_command(SerialIOController::DeviceCommand::EnablePacketStreaming));

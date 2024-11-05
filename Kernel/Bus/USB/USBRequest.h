@@ -41,5 +41,14 @@ static constexpr u8 USB_REQUEST_GET_DESCRIPTOR = 0x06;
 static constexpr u8 USB_REQUEST_SET_DESCRIPTOR = 0x07;
 static constexpr u8 USB_REQUEST_GET_CONFIGURATION = 0x08;
 static constexpr u8 USB_REQUEST_SET_CONFIGURATION = 0x09;
+static constexpr u8 USB_REQUEST_SET_INTERFACE = 0x0B;
+
+// Table 9-6
+static constexpr u16 USB_FEATURE_DEVICE_REMOTE_WAKEUP = 1;
+static constexpr u16 USB_FEATURE_ENDPOINT_HALT = 0;
+static constexpr u16 USB_FEATURE_TEST_MODE = 2;
+
+// Figure 9-6
+static constexpr u16 USB_ENDPOINT_STATUS_HALT = 1 << 0;
 
 }

@@ -8,7 +8,7 @@ Each process runs has a user ID and a group ID. By default, a new process inheri
 
 Each file has permissions that control if it can be read, written, and executed by processes belonging to its owner, by processes belonging to other users in the owner's group, and by processes belonging to others.
 
-In addition to the access permissions bits, executables may have the "Set User ID"  and the "Set Group ID" bit set. When executables with these bits set are executed, they run with the user or group ID of the executable, instead of with the user and group ID of their parent process. These binaries are also called "SUID binaries" or "setuid binaries" (or "SGID binaries" or "setgid binaries" for the "Set Group ID" bit).
+In addition to the access permissions bits, executables may have the "Set User ID" and the "Set Group ID" bit set. When executables with these bits set are executed, they run with the user or group ID of the executable, instead of with the user and group ID of their parent process. These binaries are also called "SUID binaries" or "setuid binaries" (or "SGID binaries" or "setgid binaries" for the "Set Group ID" bit).
 
 The motivation behind SUID binaries is that they allow users to do tasks that would normally require elevated permissions, without having to give users these permissions fully.
 
@@ -22,7 +22,7 @@ Since SUID binaries are able to bypass access checks, only carefully selected bi
 
 In some instances, it is useful for a SUID binary to either temporarily or permanently drop its permissions and set the effective user ID to the real user ID.
 
-To make this possible, each process has *three* user (and group) IDs: The (real) user ID, the *effective* user ID, and the *saved* user ID. When a process executes a normal binary, all three IDs are set to the parent process's user ID. However, when a process executes a SUID binary, the process runs with the parent process's ID as its real ID, but it takes its effective ID and saved ID from the binary. (Analogously for the group ID for SGID binaries.)
+To make this possible, each process has _three_ user (and group) IDs: The (real) user ID, the _effective_ user ID, and the _saved_ user ID. When a process executes a normal binary, all three IDs are set to the parent process's user ID. However, when a process executes a SUID binary, the process runs with the parent process's ID as its real ID, but it takes its effective ID and saved ID from the binary. (Analogously for the group ID for SGID binaries.)
 
 The function [`setresuid`(2)](help://man/2/getresuid) can change the real, effective, and saved user ID of a process -- but for non-root processes it is only valid to set each new ID to the current value of real, effective, or saved user ID. Since SUID binaries start with the binary's owner as effective and saved user ID and with the current user's ID as real user ID, this allows switching the effective user ID between the SUID owner's ID and the current user's ID.
 
@@ -56,16 +56,16 @@ if (setresuid(new_uid, new_uid, new_uid) < 0)
 
 (On SerenityOS, this is usually the same as calling `setuid(new_uid)`, but easier to reason about.)
 
-Changing group IDs is analogous.  Since changing the user ID changes the permissions of a process, group privileges should be dropped before user privileges are dropped, and if they're dropped temporarily, user privileges should be restored before group privileges are restored.
+Changing group IDs is analogous. Since changing the user ID changes the permissions of a process, group privileges should be dropped before user privileges are dropped, and if they're dropped temporarily, user privileges should be restored before group privileges are restored.
 
 For historical reasons, there are many functions for setting and getting these IDs. `setresuid()`, `setresgid()`, `getresuid()`, and `getresgid()` are the most flexible of these functions and they have the easiest to understand semantics.
 
 ## See also
 
-* "Setuid Demystified", Proceedings of the 11th USENIX Security Symposium, August 2002, Pages 171–190
-* [`getresuid`(2) / `getresgid`(2)](help://man/2/getresuid)
-* [`geteuid`(2) / `getegid`(2)](help://man/2/geteuid)
-* [`getuid`(2) / `getgid`(2)](help://man/2/getuid)
-* [`seteuid`(2) / `setegid`(2)](help://man/2/seteuid)
-* [`setuid`(2) / `setgid`(2)](help://man/2/setuid)
-* [`setresuid`(2) / `setresgid`(2)](help://man/2/setresuid)
+-   "Setuid Demystified", Proceedings of the 11th USENIX Security Symposium, August 2002, Pages 171–190
+-   [`getresuid`(2) / `getresgid`(2)](help://man/2/getresuid)
+-   [`geteuid`(2) / `getegid`(2)](help://man/2/geteuid)
+-   [`getuid`(2) / `getgid`(2)](help://man/2/getuid)
+-   [`seteuid`(2) / `setegid`(2)](help://man/2/seteuid)
+-   [`setuid`(2) / `setgid`(2)](help://man/2/setuid)
+-   [`setresuid`(2) / `setresgid`(2)](help://man/2/setresuid)

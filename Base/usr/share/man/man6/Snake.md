@@ -11,6 +11,7 @@ $ Snake
 ```
 
 ## Description
+
 `Snake` is an arcade game in which you navigate Snake to eat food. With each item of food you eat Snake grows longer by one block. The challenge is to keep growing without colliding with yourself. Once this happens, the game is over.
 
 Use the arrow keys to move Up, Down, Left and Right or alternatively use `W`, `A`, `S`, `D`.

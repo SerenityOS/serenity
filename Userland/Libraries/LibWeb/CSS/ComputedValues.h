@@ -7,9 +7,10 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <LibGfx/FontCascadeList.h>
-#include <LibGfx/Painter.h>
+#include <LibGfx/ScalingMode.h>
 #include <LibWeb/CSS/BackdropFilter.h>
 #include <LibWeb/CSS/CalculatedOr.h>
 #include <LibWeb/CSS/Clip.h>
@@ -104,13 +105,18 @@ public:
     static CSS::ContentVisibility content_visibility() { return CSS::ContentVisibility::Visible; }
     static CSS::Cursor cursor() { return CSS::Cursor::Auto; }
     static CSS::WhiteSpace white_space() { return CSS::WhiteSpace::Normal; }
-    static CSS::TextAlign text_align() { return CSS::TextAlign::Left; }
+    static CSS::WordBreak word_break() { return CSS::WordBreak::Normal; }
+    static CSS::LengthOrCalculated word_spacing() { return CSS::Length::make_px(0); }
+    static LengthOrCalculated letter_spacing() { return CSS::Length::make_px(0); }
+    static Variant<LengthOrCalculated, NumberOrCalculated> tab_size() { return NumberOrCalculated(8.0f); }
+    static CSS::TextAlign text_align() { return CSS::TextAlign::Start; }
     static CSS::TextJustify text_justify() { return CSS::TextJustify::Auto; }
     static CSS::Positioning position() { return CSS::Positioning::Static; }
     static CSS::TextDecorationLine text_decoration_line() { return CSS::TextDecorationLine::None; }
     static CSS::Length text_decoration_thickness() { return Length::make_auto(); }
     static CSS::TextDecorationStyle text_decoration_style() { return CSS::TextDecorationStyle::Solid; }
     static CSS::TextTransform text_transform() { return CSS::TextTransform::None; }
+    static CSS::TextOverflow text_overflow() { return CSS::TextOverflow::Clip; }
     static CSS::LengthPercentage text_indent() { return CSS::Length::make_px(0); }
     static CSS::Display display() { return CSS::Display { CSS::DisplayOutside::Inline, CSS::DisplayInside::Flow }; }
     static Color color() { return Color::Black; }
@@ -141,6 +147,9 @@ public:
     static float fill_opacity() { return 1.0f; }
     static CSS::FillRule fill_rule() { return CSS::FillRule::Nonzero; }
     static CSS::ClipRule clip_rule() { return CSS::ClipRule::Nonzero; }
+    static CSS::StrokeLinecap stroke_linecap() { return CSS::StrokeLinecap::Butt; }
+    static CSS::StrokeLinejoin stroke_linejoin() { return CSS::StrokeLinejoin::Miter; }
+    static float stroke_miterlimit() { return 4.0f; }
     static float stroke_opacity() { return 1.0f; }
     static float stop_opacity() { return 1.0f; }
     static CSS::TextAnchor text_anchor() { return CSS::TextAnchor::Start; }
@@ -164,6 +173,8 @@ public:
     static CSS::GridAutoFlow grid_auto_flow() { return CSS::GridAutoFlow {}; }
     static ColumnCount column_count() { return ColumnCount::make_auto(); }
     static CSS::Size column_gap() { return CSS::Size::make_auto(); }
+    static CSS::ColumnSpan column_span() { return CSS::ColumnSpan::None; }
+    static CSS::Size column_width() { return CSS::Size::make_auto(); }
     static CSS::Size row_gap() { return CSS::Size::make_auto(); }
     static CSS::BorderCollapse border_collapse() { return CSS::BorderCollapse::Separate; }
     static Vector<Vector<String>> grid_template_areas() { return {}; }
@@ -177,6 +188,8 @@ public:
     static CSS::TableLayout table_layout() { return CSS::TableLayout::Auto; }
     static QuotesData quotes() { return QuotesData { .type = QuotesData::Type::Auto }; }
     static CSS::TransformBox transform_box() { return CSS::TransformBox::ViewBox; }
+    static CSS::Direction direction() { return CSS::Direction::Ltr; }
+    static CSS::UnicodeBidi unicode_bidi() { return CSS::UnicodeBidi::Normal; }
 
     // https://www.w3.org/TR/SVG/geometry.html
     static LengthPercentage cx() { return CSS::Length::make_px(0); }
@@ -328,19 +341,19 @@ struct BorderRadiusData {
 };
 
 // FIXME: Find a better place for this helper.
-inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_value, Gfx::IntRect source, Gfx::IntRect target)
+inline Gfx::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_value, Gfx::IntRect source, Gfx::IntRect target)
 {
     switch (css_value) {
     case CSS::ImageRendering::Auto:
     case CSS::ImageRendering::HighQuality:
     case CSS::ImageRendering::Smooth:
         if (target.width() < source.width() || target.height() < source.height())
-            return Gfx::Painter::ScalingMode::BoxSampling;
-        return Gfx::Painter::ScalingMode::BilinearBlend;
+            return Gfx::ScalingMode::BoxSampling;
+        return Gfx::ScalingMode::BilinearBlend;
     case CSS::ImageRendering::CrispEdges:
-        return Gfx::Painter::ScalingMode::NearestNeighbor;
+        return Gfx::ScalingMode::NearestNeighbor;
     case CSS::ImageRendering::Pixelated:
-        return Gfx::Painter::ScalingMode::SmoothPixels;
+        return Gfx::ScalingMode::SmoothPixels;
     }
     VERIFY_NOT_REACHED();
 }
@@ -366,6 +379,7 @@ public:
     CSS::PointerEvents pointer_events() const { return m_inherited.pointer_events; }
     CSS::Display display() const { return m_noninherited.display; }
     Optional<int> const& z_index() const { return m_noninherited.z_index; }
+    Variant<LengthOrCalculated, NumberOrCalculated> tab_size() const { return m_inherited.tab_size; }
     CSS::TextAlign text_align() const { return m_inherited.text_align; }
     CSS::TextJustify text_justify() const { return m_inherited.text_justify; }
     CSS::LengthPercentage const& text_indent() const { return m_inherited.text_indent; }
@@ -374,9 +388,12 @@ public:
     CSS::TextDecorationStyle text_decoration_style() const { return m_noninherited.text_decoration_style; }
     Color text_decoration_color() const { return m_noninherited.text_decoration_color; }
     CSS::TextTransform text_transform() const { return m_inherited.text_transform; }
+    CSS::TextOverflow text_overflow() const { return m_noninherited.text_overflow; }
     Vector<ShadowData> const& text_shadow() const { return m_inherited.text_shadow; }
     CSS::Positioning position() const { return m_noninherited.position; }
     CSS::WhiteSpace white_space() const { return m_inherited.white_space; }
+    CSS::LengthOrCalculated word_spacing() const { return m_inherited.word_spacing; }
+    LengthOrCalculated letter_spacing() const { return m_inherited.letter_spacing; }
     CSS::FlexDirection flex_direction() const { return m_noninherited.flex_direction; }
     CSS::FlexWrap flex_wrap() const { return m_noninherited.flex_wrap; }
     FlexBasis const& flex_basis() const { return m_noninherited.flex_basis; }
@@ -415,11 +432,15 @@ public:
     CSS::GridTrackPlacement const& grid_row_start() const { return m_noninherited.grid_row_start; }
     CSS::ColumnCount column_count() const { return m_noninherited.column_count; }
     CSS::Size const& column_gap() const { return m_noninherited.column_gap; }
+    CSS::ColumnSpan const& column_span() const { return m_noninherited.column_span; }
+    CSS::Size const& column_width() const { return m_noninherited.column_width; }
     CSS::Size const& row_gap() const { return m_noninherited.row_gap; }
     CSS::BorderCollapse border_collapse() const { return m_inherited.border_collapse; }
     Vector<Vector<String>> const& grid_template_areas() const { return m_noninherited.grid_template_areas; }
     CSS::ObjectFit object_fit() const { return m_noninherited.object_fit; }
     CSS::ObjectPosition object_position() const { return m_noninherited.object_position; }
+    CSS::Direction direction() const { return m_inherited.direction; }
+    CSS::UnicodeBidi unicode_bidi() const { return m_noninherited.unicode_bidi; }
 
     CSS::LengthBox const& inset() const { return m_noninherited.inset; }
     const CSS::LengthBox& margin() const { return m_noninherited.margin; }
@@ -451,6 +472,9 @@ public:
     CSS::FillRule fill_rule() const { return m_inherited.fill_rule; }
     Optional<SVGPaint> const& stroke() const { return m_inherited.stroke; }
     float fill_opacity() const { return m_inherited.fill_opacity; }
+    CSS::StrokeLinecap stroke_linecap() const { return m_inherited.stroke_linecap; }
+    CSS::StrokeLinejoin stroke_linejoin() const { return m_inherited.stroke_linejoin; }
+    NumberOrCalculated stroke_miterlimit() const { return m_inherited.stroke_miterlimit; }
     float stroke_opacity() const { return m_inherited.stroke_opacity; }
     LengthPercentage const& stroke_width() const { return m_inherited.stroke_width; }
     Color stop_color() const { return m_noninherited.stop_color; }
@@ -477,6 +501,9 @@ public:
     CSSPixels font_size() const { return m_inherited.font_size; }
     int font_weight() const { return m_inherited.font_weight; }
     CSS::FontVariant font_variant() const { return m_inherited.font_variant; }
+    Optional<FlyString> font_language_override() const { return m_inherited.font_language_override; }
+    Optional<HashMap<FlyString, IntegerOrCalculated>> font_feature_settings() const { return m_inherited.font_feature_settings; }
+    Optional<HashMap<FlyString, NumberOrCalculated>> font_variation_settings() const { return m_inherited.font_variation_settings; }
     CSSPixels line_height() const { return m_inherited.line_height; }
     CSS::Time transition_delay() const { return m_noninherited.transition_delay; }
 
@@ -508,6 +535,9 @@ protected:
         CSSPixels font_size { InitialValues::font_size() };
         int font_weight { InitialValues::font_weight() };
         CSS::FontVariant font_variant { InitialValues::font_variant() };
+        Optional<FlyString> font_language_override;
+        Optional<HashMap<FlyString, IntegerOrCalculated>> font_feature_settings;
+        Optional<HashMap<FlyString, NumberOrCalculated>> font_variation_settings;
         CSSPixels line_height { InitialValues::line_height() };
         CSS::BorderCollapse border_collapse { InitialValues::border_collapse() };
         CSS::Length border_spacing_horizontal { InitialValues::border_spacing() };
@@ -520,20 +550,28 @@ protected:
         CSS::Cursor cursor { InitialValues::cursor() };
         CSS::ImageRendering image_rendering { InitialValues::image_rendering() };
         CSS::PointerEvents pointer_events { InitialValues::pointer_events() };
+        Variant<LengthOrCalculated, NumberOrCalculated> tab_size { InitialValues::tab_size() };
         CSS::TextAlign text_align { InitialValues::text_align() };
         CSS::TextJustify text_justify { InitialValues::text_justify() };
         CSS::TextTransform text_transform { InitialValues::text_transform() };
         CSS::LengthPercentage text_indent { InitialValues::text_indent() };
         CSS::WhiteSpace white_space { InitialValues::white_space() };
+        CSS::WordBreak word_break { InitialValues::word_break() };
+        CSS::LengthOrCalculated word_spacing { InitialValues::word_spacing() };
+        LengthOrCalculated letter_spacing { InitialValues::letter_spacing() };
         CSS::ListStyleType list_style_type { InitialValues::list_style_type() };
         CSS::ListStylePosition list_style_position { InitialValues::list_style_position() };
         CSS::Visibility visibility { InitialValues::visibility() };
         CSS::QuotesData quotes { InitialValues::quotes() };
+        CSS::Direction direction { InitialValues::direction() };
 
         Optional<SVGPaint> fill;
         CSS::FillRule fill_rule { InitialValues::fill_rule() };
         Optional<SVGPaint> stroke;
         float fill_opacity { InitialValues::fill_opacity() };
+        CSS::StrokeLinecap stroke_linecap { InitialValues::stroke_linecap() };
+        CSS::StrokeLinejoin stroke_linejoin { InitialValues::stroke_linejoin() };
+        NumberOrCalculated stroke_miterlimit { InitialValues::stroke_miterlimit() };
         float stroke_opacity { InitialValues::stroke_opacity() };
         LengthPercentage stroke_width { Length::make_px(1) };
         CSS::TextAnchor text_anchor { InitialValues::text_anchor() };
@@ -558,6 +596,7 @@ protected:
         CSS::LengthPercentage text_decoration_thickness { InitialValues::text_decoration_thickness() };
         CSS::TextDecorationStyle text_decoration_style { InitialValues::text_decoration_style() };
         Color text_decoration_color { InitialValues::color() };
+        CSS::TextOverflow text_overflow { InitialValues::text_overflow() };
         CSS::Positioning position { InitialValues::position() };
         CSS::Size width { InitialValues::width() };
         CSS::Size min_width { InitialValues::min_width() };
@@ -613,6 +652,8 @@ protected:
         CSS::GridTrackPlacement grid_row_start { InitialValues::grid_row_start() };
         CSS::ColumnCount column_count { InitialValues::column_count() };
         CSS::Size column_gap { InitialValues::column_gap() };
+        CSS::ColumnSpan column_span { InitialValues::column_span() };
+        CSS::Size column_width { InitialValues::column_width() };
         CSS::Size row_gap { InitialValues::row_gap() };
         Vector<Vector<String>> grid_template_areas { InitialValues::grid_template_areas() };
         Gfx::Color stop_color { InitialValues::stop_color() };
@@ -625,6 +666,7 @@ protected:
         CSS::TableLayout table_layout { InitialValues::table_layout() };
         CSS::ObjectFit object_fit { InitialValues::object_fit() };
         CSS::ObjectPosition object_position { InitialValues::object_position() };
+        CSS::UnicodeBidi unicode_bidi { InitialValues::unicode_bidi() };
 
         Optional<MaskReference> mask;
         CSS::MaskType mask_type { InitialValues::mask_type() };
@@ -660,6 +702,9 @@ public:
     void set_font_size(CSSPixels font_size) { m_inherited.font_size = font_size; }
     void set_font_weight(int font_weight) { m_inherited.font_weight = font_weight; }
     void set_font_variant(CSS::FontVariant font_variant) { m_inherited.font_variant = font_variant; }
+    void set_font_language_override(Optional<FlyString> font_language_override) { m_inherited.font_language_override = font_language_override; }
+    void set_font_feature_settings(Optional<HashMap<FlyString, IntegerOrCalculated>> value) { m_inherited.font_feature_settings = move(value); }
+    void set_font_variation_settings(Optional<HashMap<FlyString, NumberOrCalculated>> value) { m_inherited.font_variation_settings = move(value); }
     void set_line_height(CSSPixels line_height) { m_inherited.line_height = line_height; }
     void set_border_spacing_horizontal(CSS::Length border_spacing_horizontal) { m_inherited.border_spacing_horizontal = border_spacing_horizontal; }
     void set_border_spacing_vertical(CSS::Length border_spacing_vertical) { m_inherited.border_spacing_vertical = border_spacing_vertical; }
@@ -676,6 +721,7 @@ public:
     void set_float(CSS::Float value) { m_noninherited.float_ = value; }
     void set_clear(CSS::Clear value) { m_noninherited.clear = value; }
     void set_z_index(Optional<int> value) { m_noninherited.z_index = value; }
+    void set_tab_size(Variant<LengthOrCalculated, NumberOrCalculated> value) { m_inherited.tab_size = value; }
     void set_text_align(CSS::TextAlign text_align) { m_inherited.text_align = text_align; }
     void set_text_justify(CSS::TextJustify text_justify) { m_inherited.text_justify = text_justify; }
     void set_text_decoration_line(Vector<CSS::TextDecorationLine> value) { m_noninherited.text_decoration_line = move(value); }
@@ -685,9 +731,13 @@ public:
     void set_text_transform(CSS::TextTransform value) { m_inherited.text_transform = value; }
     void set_text_shadow(Vector<ShadowData>&& value) { m_inherited.text_shadow = move(value); }
     void set_text_indent(CSS::LengthPercentage value) { m_inherited.text_indent = move(value); }
+    void set_text_overflow(CSS::TextOverflow value) { m_noninherited.text_overflow = value; }
     void set_webkit_text_fill_color(Color value) { m_inherited.webkit_text_fill_color = value; }
     void set_position(CSS::Positioning position) { m_noninherited.position = position; }
     void set_white_space(CSS::WhiteSpace value) { m_inherited.white_space = value; }
+    void set_word_spacing(CSS::LengthOrCalculated value) { m_inherited.word_spacing = value; }
+    void set_word_break(CSS::WordBreak value) { m_inherited.word_break = value; }
+    void set_letter_spacing(CSS::LengthOrCalculated value) { m_inherited.letter_spacing = value; }
     void set_width(CSS::Size const& width) { m_noninherited.width = width; }
     void set_min_width(CSS::Size const& width) { m_noninherited.min_width = width; }
     void set_max_width(CSS::Size const& width) { m_noninherited.max_width = width; }
@@ -743,6 +793,8 @@ public:
     void set_grid_row_start(CSS::GridTrackPlacement value) { m_noninherited.grid_row_start = value; }
     void set_column_count(CSS::ColumnCount value) { m_noninherited.column_count = value; }
     void set_column_gap(CSS::Size const& column_gap) { m_noninherited.column_gap = column_gap; }
+    void set_column_span(CSS::ColumnSpan const& column_span) { m_noninherited.column_span = column_span; }
+    void set_column_width(CSS::Size const& column_width) { m_noninherited.column_width = column_width; }
     void set_row_gap(CSS::Size const& row_gap) { m_noninherited.row_gap = row_gap; }
     void set_border_collapse(CSS::BorderCollapse const& border_collapse) { m_inherited.border_collapse = border_collapse; }
     void set_grid_template_areas(Vector<Vector<String>> const& grid_template_areas) { m_noninherited.grid_template_areas = grid_template_areas; }
@@ -752,11 +804,16 @@ public:
     void set_quotes(CSS::QuotesData value) { m_inherited.quotes = value; }
     void set_object_fit(CSS::ObjectFit value) { m_noninherited.object_fit = value; }
     void set_object_position(CSS::ObjectPosition value) { m_noninherited.object_position = value; }
+    void set_direction(CSS::Direction value) { m_inherited.direction = value; }
+    void set_unicode_bidi(CSS::UnicodeBidi value) { m_noninherited.unicode_bidi = value; }
 
     void set_fill(SVGPaint value) { m_inherited.fill = value; }
     void set_stroke(SVGPaint value) { m_inherited.stroke = value; }
     void set_fill_rule(CSS::FillRule value) { m_inherited.fill_rule = value; }
     void set_fill_opacity(float value) { m_inherited.fill_opacity = value; }
+    void set_stroke_linecap(CSS::StrokeLinecap value) { m_inherited.stroke_linecap = value; }
+    void set_stroke_linejoin(CSS::StrokeLinejoin value) { m_inherited.stroke_linejoin = value; }
+    void set_stroke_miterlimit(NumberOrCalculated value) { m_inherited.stroke_miterlimit = value; }
     void set_stroke_opacity(float value) { m_inherited.stroke_opacity = value; }
     void set_stroke_width(LengthPercentage value) { m_inherited.stroke_width = value; }
     void set_stop_color(Color value) { m_noninherited.stop_color = value; }

@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Adam Hodgen <ant1441@gmail.com>
  * Copyright (c) 2023, Bastiaan van der Plaat <bastiaan.v.d.plaat@gmail.com>
+ * Copyright (c) 2024, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -48,7 +49,7 @@ namespace Web::HTML {
 
 class HTMLInputElement final
     : public HTMLElement
-    , public FormAssociatedElement
+    , public FormAssociatedTextControlElement
     , public DOM::EditableTextNodeOwner
     , public Layout::ImageProvider {
     WEB_PLATFORM_OBJECT(HTMLInputElement, HTMLElement);
@@ -75,6 +76,12 @@ public:
 
     virtual String value() const override;
     WebIDL::ExceptionOr<void> set_value(String const&);
+
+    // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-textarea/input-relevant-value
+    virtual String relevant_value() override { return value(); }
+    WebIDL::ExceptionOr<void> set_relevant_value(String const& value) override { return set_value(value); }
+
+    virtual void set_dirty_value_flag(bool flag) override { m_dirty_value = flag; }
 
     void commit_pending_changes();
 
@@ -137,13 +144,10 @@ public:
     WebIDL::ExceptionOr<bool> report_validity();
     void set_custom_validity(String const&);
 
-    WebIDL::ExceptionOr<void> select();
-    WebIDL::ExceptionOr<void> set_selection_range(u32 start, u32 end, Optional<String> const& direction = {});
-
     WebIDL::ExceptionOr<void> show_picker();
 
     // ^DOM::EditableTextNodeOwner
-    virtual void did_edit_text_node(Badge<Navigable>) override;
+    virtual void did_edit_text_node(Badge<DOM::Document>) override;
 
     // ^EventTarget
     // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-input-element
@@ -176,6 +180,8 @@ public:
     virtual void form_associated_element_was_removed(DOM::Node*) override;
     virtual void form_associated_element_attribute_changed(FlyString const&, Optional<String> const&) override;
 
+    virtual WebIDL::ExceptionOr<void> cloned(Node&, bool) override;
+
     JS::NonnullGCPtr<ValidityState const> validity() const;
 
     // ^HTMLElement
@@ -196,6 +202,11 @@ public:
     bool value_as_number_applies() const;
     bool step_applies() const;
     bool step_up_or_down_applies() const;
+    bool select_applies() const;
+    bool selection_or_range_applies() const;
+
+protected:
+    void selection_was_changed() override;
 
 private:
     HTMLInputElement(DOM::Document&, DOM::QualifiedName);
@@ -288,11 +299,12 @@ private:
     JS::GCPtr<DOM::Element> m_file_label;
 
     void update_slider_shadow_tree_elements();
-    JS::GCPtr<DOM::Element> m_slider_thumb;
+    JS::GCPtr<DOM::Element> m_slider_runnable_track;
     JS::GCPtr<DOM::Element> m_slider_progress_element;
+    JS::GCPtr<DOM::Element> m_slider_thumb;
 
     JS::GCPtr<DecodedImageData> image_data() const;
-    JS::GCPtr<SharedImageRequest> m_image_request;
+    JS::GCPtr<SharedResourceRequest> m_resource_request;
     SelectedCoordinate m_selected_coordinate;
 
     Optional<DOM::DocumentLoadEventDelayer> m_load_event_delayer;

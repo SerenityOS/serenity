@@ -45,7 +45,7 @@ void VectorImage::rotate(Gfx::RotationDirection rotation_direction)
     m_size = { m_size.height(), m_size.width() };
 }
 
-void VectorImage::draw_into(Gfx::Painter& painter, Gfx::IntRect const& dest, Gfx::Painter::ScalingMode) const
+void VectorImage::draw_into(Gfx::Painter& painter, Gfx::IntRect const& dest, Gfx::ScalingMode) const
 {
     m_vector->draw_into(painter, dest, m_transform);
 }
@@ -65,7 +65,7 @@ void BitmapImage::rotate(Gfx::RotationDirection rotation)
     m_bitmap = m_bitmap->rotated(rotation).release_value_but_fixme_should_propagate_errors();
 }
 
-void BitmapImage::draw_into(Gfx::Painter& painter, Gfx::IntRect const& dest, Gfx::Painter::ScalingMode scaling_mode) const
+void BitmapImage::draw_into(Gfx::Painter& painter, Gfx::IntRect const& dest, Gfx::ScalingMode scaling_mode) const
 {
     painter.draw_scaled_bitmap(dest, *m_bitmap, m_bitmap->rect(), 1.0f, scaling_mode);
 }
@@ -370,7 +370,7 @@ void ViewWidget::animate()
     }
 }
 
-void ViewWidget::set_scaling_mode(Gfx::Painter::ScalingMode scaling_mode)
+void ViewWidget::set_scaling_mode(Gfx::ScalingMode scaling_mode)
 {
     m_scaling_mode = scaling_mode;
     update();

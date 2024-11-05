@@ -45,6 +45,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(classid)                    \
     __ENUMERATE_HTML_ATTRIBUTE(clear)                      \
     __ENUMERATE_HTML_ATTRIBUTE(code)                       \
+    __ENUMERATE_HTML_ATTRIBUTE(codebase)                   \
     __ENUMERATE_HTML_ATTRIBUTE(codetype)                   \
     __ENUMERATE_HTML_ATTRIBUTE(color)                      \
     __ENUMERATE_HTML_ATTRIBUTE(cols)                       \
@@ -104,6 +105,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(longdesc)                   \
     __ENUMERATE_HTML_ATTRIBUTE(loop)                       \
     __ENUMERATE_HTML_ATTRIBUTE(low)                        \
+    __ENUMERATE_HTML_ATTRIBUTE(lowsrc)                     \
     __ENUMERATE_HTML_ATTRIBUTE(marginheight)               \
     __ENUMERATE_HTML_ATTRIBUTE(marginwidth)                \
     __ENUMERATE_HTML_ATTRIBUTE(max)                        \
@@ -117,6 +119,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(name)                       \
     __ENUMERATE_HTML_ATTRIBUTE(nohref)                     \
     __ENUMERATE_HTML_ATTRIBUTE(nomodule)                   \
+    __ENUMERATE_HTML_ATTRIBUTE(noresize)                   \
     __ENUMERATE_HTML_ATTRIBUTE(noshade)                    \
     __ENUMERATE_HTML_ATTRIBUTE(novalidate)                 \
     __ENUMERATE_HTML_ATTRIBUTE(nowrap)                     \
@@ -211,6 +214,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(ping)                       \
     __ENUMERATE_HTML_ATTRIBUTE(placeholder)                \
     __ENUMERATE_HTML_ATTRIBUTE(playsinline)                \
+    __ENUMERATE_HTML_ATTRIBUTE(popover)                    \
     __ENUMERATE_HTML_ATTRIBUTE(poster)                     \
     __ENUMERATE_HTML_ATTRIBUTE(preload)                    \
     __ENUMERATE_HTML_ATTRIBUTE(readonly)                   \

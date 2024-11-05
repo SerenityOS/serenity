@@ -137,6 +137,39 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
     if (origin && *origin == Infrastructure::Request::Origin::Client)
         request.set_origin(request.client()->origin());
 
+    // 11. If all of the following conditions are true:
+    if (
+        // - request’s URL’s scheme is an HTTP(S) scheme
+        Infrastructure::is_http_or_https_scheme(request.url().scheme())
+        // - request’s mode is "same-origin", "cors", or "no-cors"
+        && (request.mode() == Infrastructure::Request::Mode::SameOrigin || request.mode() == Infrastructure::Request::Mode::CORS || request.mode() == Infrastructure::Request::Mode::NoCORS)
+        // - request’s window is an environment settings object
+        && request.window().has<JS::GCPtr<HTML::EnvironmentSettingsObject>>()
+        // - request’s method is `GET`
+        && StringView { request.method() }.equals_ignoring_ascii_case("GET"sv)
+        // - request’s unsafe-request flag is not set or request’s header list is empty
+        && (!request.unsafe_request() || request.header_list()->is_empty())) {
+        // 1. Assert: request’s origin is same origin with request’s client’s origin.
+        VERIFY(request.origin().has<HTML::Origin>() && request.origin().get<HTML::Origin>().is_same_origin(request.client()->origin()));
+
+        // 2. Let onPreloadedResponseAvailable be an algorithm that runs the following step given a response
+        //    response: set fetchParams’s preloaded response candidate to response.
+        auto on_preloaded_response_available = JS::create_heap_function(realm.heap(), [fetch_params](JS::NonnullGCPtr<Infrastructure::Response> response) {
+            fetch_params->set_preloaded_response_candidate(response);
+        });
+
+        // FIXME: 3. Let foundPreloadedResource be the result of invoking consume a preloaded resource for request’s
+        //    window, given request’s URL, request’s destination, request’s mode, request’s credentials mode,
+        //    request’s integrity metadata, and onPreloadedResponseAvailable.
+        auto found_preloaded_resource = false;
+        (void)on_preloaded_response_available;
+
+        // 4. If foundPreloadedResource is true and fetchParams’s preloaded response candidate is null, then set
+        //    fetchParams’s preloaded response candidate to "pending".
+        if (found_preloaded_resource && fetch_params->preloaded_response_candidate().has<Empty>())
+            fetch_params->set_preloaded_response_candidate(Infrastructure::FetchParams::PreloadedResponseCandidatePendingTag {});
+    }
+
     // 12. If request’s policy container is "client", then:
     auto const* policy_container = request.policy_container().get_pointer<Infrastructure::Request::PolicyContainer>();
     if (policy_container) {
@@ -155,9 +188,13 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
         // 1. Let value be `*/*`.
         auto value = "*/*"sv;
 
-        // 2. A user agent should set value to the first matching statement, if any, switching on request’s
-        //    destination:
-        if (request.destination().has_value()) {
+        // 2. If request’s initiator is "prefetch", then set value to the document `Accept` header value.
+        if (request.initiator() == Infrastructure::Request::Initiator::Prefetch) {
+            value = document_accept_header_value;
+        }
+
+        // 3. Otherwise, the user agent should set value to the first matching statement, if any, switching on request’s destination:
+        else if (request.destination().has_value()) {
             switch (*request.destination()) {
             // -> "document"
             // -> "frame"
@@ -165,8 +202,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
             case Infrastructure::Request::Destination::Document:
             case Infrastructure::Request::Destination::Frame:
             case Infrastructure::Request::Destination::IFrame:
-                // `text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8`
-                value = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"sv;
+                // the document `Accept` header value
+                value = document_accept_header_value;
                 break;
             // -> "image"
             case Infrastructure::Request::Destination::Image:
@@ -188,7 +225,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Infrastructure::FetchController>> fetch(JS:
             }
         }
 
-        // 3. Append (`Accept`, value) to request’s header list.
+        // 4. Append (`Accept`, value) to request’s header list.
         auto header = Infrastructure::Header::from_string_pair("Accept"sv, value.bytes());
         request.header_list()->append(move(header));
     }
@@ -1563,6 +1600,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
         // NOTE: `Accept` and `Accept-Language` are already included (unless fetch() is used, which does not include
         //       the latter by default), and `Accept-Charset` is a waste of bytes. See HTTP header layer division for
         //       more details.
+        if (ResourceLoader::the().enable_do_not_track() && !http_request->header_list()->contains("DNT"sv.bytes())) {
+            auto header = Infrastructure::Header::from_string_pair("DNT"sv, "1"sv);
+            http_request->header_list()->append(move(header));
+        }
 
         // 21. If includeCredentials is true, then:
         if (include_credentials == IncludeCredentials::Yes) {
@@ -1602,7 +1643,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 //    true, set authorizationValue to httpRequest’s current URL, converted to an `Authorization` value.
                 else if (http_request->current_url().includes_credentials() && is_authentication_fetch == IsAuthenticationFetch::Yes) {
                     auto const& url = http_request->current_url();
-                    auto payload = MUST(String::formatted("{}:{}", MUST(url.username()), MUST(url.password())));
+                    auto payload = MUST(String::formatted("{}:{}", URL::percent_decode(url.username()), URL::percent_decode(url.password())));
                     authorization_value = TRY_OR_THROW_OOM(vm, encode_base64(payload.bytes()));
                 }
 
@@ -1819,10 +1860,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
                 auto password = ByteString::empty();
 
                 // 3. Set the username given request’s current URL and username.
-                MUST(request->current_url().set_username(username));
+                request->current_url().set_username(username);
 
                 // 4. Set the password given request’s current URL and password.
-                MUST(request->current_url().set_password(password));
+                request->current_url().set_password(password);
             }
 
             // 4. Set response to the result of running HTTP-network-or-cache fetch given fetchParams and true.

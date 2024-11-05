@@ -76,36 +76,36 @@ void Canvas::draw()
     painter.draw_triangle({ 430, 240 }, { 480, 140 }, { 480, 240 }, Color::Red);
     painter.draw_rect({ 380, 140, 100, 100 }, Color::Yellow);
 
-    painter.draw_line({ 500, 20 }, { 750, 20 }, Color::Green, 1, Gfx::Painter::LineStyle::Solid);
-    painter.draw_line({ 500, 30 }, { 750, 30 }, Color::Red, 5, Gfx::Painter::LineStyle::Solid);
-    painter.draw_line({ 500, 45 }, { 750, 45 }, Color::Blue, 10, Gfx::Painter::LineStyle::Solid);
+    painter.draw_line({ 500, 20 }, { 750, 20 }, Color::Green, 1, Gfx::LineStyle::Solid);
+    painter.draw_line({ 500, 30 }, { 750, 30 }, Color::Red, 5, Gfx::LineStyle::Solid);
+    painter.draw_line({ 500, 45 }, { 750, 45 }, Color::Blue, 10, Gfx::LineStyle::Solid);
 
-    painter.draw_line({ 500, 60 }, { 750, 60 }, Color::Green, 1, Gfx::Painter::LineStyle::Dotted);
-    painter.draw_line({ 500, 70 }, { 750, 70 }, Color::Red, 5, Gfx::Painter::LineStyle::Dotted);
-    painter.draw_line({ 500, 85 }, { 750, 85 }, Color::Blue, 10, Gfx::Painter::LineStyle::Dotted);
+    painter.draw_line({ 500, 60 }, { 750, 60 }, Color::Green, 1, Gfx::LineStyle::Dotted);
+    painter.draw_line({ 500, 70 }, { 750, 70 }, Color::Red, 5, Gfx::LineStyle::Dotted);
+    painter.draw_line({ 500, 85 }, { 750, 85 }, Color::Blue, 10, Gfx::LineStyle::Dotted);
 
-    painter.draw_line({ 500, 100 }, { 750, 100 }, Color::Green, 1, Gfx::Painter::LineStyle::Dashed);
-    painter.draw_line({ 500, 110 }, { 750, 110 }, Color::Red, 5, Gfx::Painter::LineStyle::Dashed);
-    painter.draw_line({ 500, 125 }, { 750, 125 }, Color::Blue, 10, Gfx::Painter::LineStyle::Dashed);
+    painter.draw_line({ 500, 100 }, { 750, 100 }, Color::Green, 1, Gfx::LineStyle::Dashed);
+    painter.draw_line({ 500, 110 }, { 750, 110 }, Color::Red, 5, Gfx::LineStyle::Dashed);
+    painter.draw_line({ 500, 125 }, { 750, 125 }, Color::Blue, 10, Gfx::LineStyle::Dashed);
 
-    painter.draw_line({ 500, 140 }, { 500, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Solid);
-    painter.draw_line({ 510, 140 }, { 510, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Solid);
-    painter.draw_line({ 525, 140 }, { 525, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Solid);
+    painter.draw_line({ 500, 140 }, { 500, 240 }, Color::Green, 1, Gfx::LineStyle::Solid);
+    painter.draw_line({ 510, 140 }, { 510, 240 }, Color::Red, 5, Gfx::LineStyle::Solid);
+    painter.draw_line({ 525, 140 }, { 525, 240 }, Color::Blue, 10, Gfx::LineStyle::Solid);
 
-    painter.draw_line({ 540, 140 }, { 540, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Dotted);
-    painter.draw_line({ 550, 140 }, { 550, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Dotted);
-    painter.draw_line({ 565, 140 }, { 565, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Dotted);
+    painter.draw_line({ 540, 140 }, { 540, 240 }, Color::Green, 1, Gfx::LineStyle::Dotted);
+    painter.draw_line({ 550, 140 }, { 550, 240 }, Color::Red, 5, Gfx::LineStyle::Dotted);
+    painter.draw_line({ 565, 140 }, { 565, 240 }, Color::Blue, 10, Gfx::LineStyle::Dotted);
 
-    painter.draw_line({ 580, 140 }, { 580, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Dashed);
-    painter.draw_line({ 590, 140 }, { 590, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Dashed);
-    painter.draw_line({ 605, 140 }, { 605, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Dashed);
+    painter.draw_line({ 580, 140 }, { 580, 240 }, Color::Green, 1, Gfx::LineStyle::Dashed);
+    painter.draw_line({ 590, 140 }, { 590, 240 }, Color::Red, 5, Gfx::LineStyle::Dashed);
+    painter.draw_line({ 605, 140 }, { 605, 240 }, Color::Blue, 10, Gfx::LineStyle::Dashed);
 
-    painter.draw_line({ 640, 190 }, { 740, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Dashed);
-    painter.draw_line({ 640, 140 }, { 740, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Solid);
-    painter.draw_line({ 690, 140 }, { 740, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Solid);
-    painter.draw_line({ 740, 190 }, { 640, 240 }, Color::Green, 1, Gfx::Painter::LineStyle::Dotted);
-    painter.draw_line({ 740, 140 }, { 640, 240 }, Color::Red, 5, Gfx::Painter::LineStyle::Solid);
-    painter.draw_line({ 690, 140 }, { 640, 240 }, Color::Blue, 10, Gfx::Painter::LineStyle::Solid);
+    painter.draw_line({ 640, 190 }, { 740, 240 }, Color::Green, 1, Gfx::LineStyle::Dashed);
+    painter.draw_line({ 640, 140 }, { 740, 240 }, Color::Red, 5, Gfx::LineStyle::Solid);
+    painter.draw_line({ 690, 140 }, { 740, 240 }, Color::Blue, 10, Gfx::LineStyle::Solid);
+    painter.draw_line({ 740, 190 }, { 640, 240 }, Color::Green, 1, Gfx::LineStyle::Dotted);
+    painter.draw_line({ 740, 140 }, { 640, 240 }, Color::Red, 5, Gfx::LineStyle::Solid);
+    painter.draw_line({ 690, 140 }, { 640, 240 }, Color::Blue, 10, Gfx::LineStyle::Solid);
 
     auto bg = Gfx::Bitmap::load_from_file("/res/html/misc/90s-bg.png"sv).release_value_but_fixme_should_propagate_errors();
     painter.draw_tiled_bitmap({ 20, 260, 480, 320 }, *bg);
@@ -126,7 +126,7 @@ void Canvas::draw()
     path.line_to({ 90, 460 });
     path.elliptical_arc_to({ 260, 540 }, { 40, 30 }, 0, true, false);
     path.close();
-    painter.fill_path(path, Color::Yellow, Gfx::Painter::WindingRule::EvenOdd);
+    painter.fill_path(path, Color::Yellow, Gfx::WindingRule::EvenOdd);
 
     auto buggie = Gfx::Bitmap::load_from_file("/res/graphics/buggie.png"sv).release_value_but_fixme_should_propagate_errors();
     painter.blit({ 280, 280 }, *buggie, buggie->rect(), 0.5);

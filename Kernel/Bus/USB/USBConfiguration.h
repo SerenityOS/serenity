@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
+#include <AK/MemoryStream.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/USB/USBDescriptors.h>
 #include <Kernel/Bus/USB/USBDevice.h>
@@ -19,14 +21,22 @@ class USBConfiguration {
 public:
     USBConfiguration() = delete;
     USBConfiguration(Device& device, USBConfigurationDescriptor const descriptor, u8 descriptor_index)
-        : m_device(device)
+        : m_device(&device)
         , m_descriptor(descriptor)
         , m_descriptor_index(descriptor_index)
     {
         m_interfaces.ensure_capacity(descriptor.number_of_interfaces);
     }
 
-    Device const& device() const { return m_device; }
+private:
+    USBConfiguration(USBConfiguration const&);
+
+public:
+    USBConfiguration(USBConfiguration&&);
+    USBConfiguration copy() const { return USBConfiguration(*this); }
+
+    Device const& device() const { return *m_device; }
+    void set_device(Badge<Device>, Device& device) { m_device = &device; }
     USBConfigurationDescriptor const& descriptor() const { return m_descriptor; }
 
     u8 interface_count() const { return m_descriptor.number_of_interfaces; }
@@ -36,13 +46,40 @@ public:
 
     Vector<USBInterface> const& interfaces() const { return m_interfaces; }
 
+    template<CallableAs<ErrorOr<void>, ReadonlyBytes> Callback>
+    ErrorOr<void> for_each_descriptor_in_interface(USBInterface const& interface, Callback&& callback) const
+    {
+        auto stream = FixedMemoryStream(m_descriptor_hierarchy_buffer.span());
+        TRY(stream.seek(interface.descriptor_offset({}), SeekMode::SetPosition));
+
+        auto const interface_descriptor = TRY(stream.read_value<USBInterfaceDescriptor>());
+
+        VERIFY(__builtin_memcmp(&interface_descriptor, &interface.descriptor(), sizeof(USBInterfaceDescriptor)) == 0);
+
+        while (!stream.is_eof()) {
+            auto const descriptor_header = TRY(stream.read_value<USBDescriptorCommon>());
+
+            if (descriptor_header.descriptor_type == DESCRIPTOR_TYPE_INTERFACE)
+                break;
+
+            ReadonlyBytes descriptor_data { m_descriptor_hierarchy_buffer.span().slice(stream.offset() - sizeof(USBDescriptorCommon), descriptor_header.length) };
+            TRY(callback(descriptor_data));
+
+            TRY(stream.seek(descriptor_header.length - sizeof(USBDescriptorCommon), SeekMode::FromCurrentPosition));
+        }
+
+        return {};
+    }
+
     ErrorOr<void> enumerate_interfaces();
 
 private:
-    Device& m_device;                              // Reference to the device linked to this configuration
+    Device* m_device;                              // Reference to the device linked to this configuration
     USBConfigurationDescriptor const m_descriptor; // Descriptor that backs this configuration
     u8 m_descriptor_index;                         // Descriptor index for {GET,SET}_DESCRIPTOR
     Vector<USBInterface> m_interfaces;             // Interfaces for this device
+
+    FixedArray<u8> m_descriptor_hierarchy_buffer; // Buffer for us to store the entire hierarchy into
 };
 
 }

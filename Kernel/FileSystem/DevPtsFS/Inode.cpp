@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/FileSystem/DevPtsFS/Inode.h>
 #include <Kernel/FileSystem/RAMBackedFileType.h>
 

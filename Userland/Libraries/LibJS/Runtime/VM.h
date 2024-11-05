@@ -75,6 +75,11 @@ public:
         return m_byte_string_cache;
     }
 
+    HashMap<Utf16String, GCPtr<PrimitiveString>>& utf16_string_cache()
+    {
+        return m_utf16_string_cache;
+    }
+
     PrimitiveString& empty_string() { return *m_empty_string; }
 
     PrimitiveString& single_ascii_character_string(u8 character)
@@ -274,6 +279,7 @@ public:
     Function<ThrowCompletionOr<void>(Realm&)> host_ensure_can_compile_strings;
     Function<ThrowCompletionOr<void>(Object&)> host_ensure_can_add_private_element;
     Function<ThrowCompletionOr<HandledByHost>(ArrayBuffer&, size_t)> host_resize_array_buffer;
+    Function<void(StringView)> host_unrecognized_date_string;
 
     Vector<StackTraceElement> stack_trace() const;
 
@@ -296,6 +302,7 @@ private:
 
     HashMap<String, GCPtr<PrimitiveString>> m_string_cache;
     HashMap<ByteString, GCPtr<PrimitiveString>> m_byte_string_cache;
+    HashMap<Utf16String, GCPtr<PrimitiveString>> m_utf16_string_cache;
 
     Heap m_heap;
 

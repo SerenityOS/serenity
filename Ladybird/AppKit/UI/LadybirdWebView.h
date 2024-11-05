@@ -10,6 +10,8 @@
 #include <LibGfx/Forward.h>
 #include <LibURL/Forward.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
+#include <LibWeb/CSS/PreferredContrast.h>
+#include <LibWeb/CSS/PreferredMotion.h>
 #include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWebView/Forward.h>
@@ -37,6 +39,9 @@
 - (void)onFaviconChange:(Gfx::Bitmap const&)bitmap;
 - (void)onAudioPlayStateChange:(Web::HTML::AudioPlayState)play_state;
 
+- (void)onFindInPageResult:(size_t)current_match_index
+           totalMatchCount:(Optional<size_t> const&)total_match_count;
+
 @end
 
 @interface LadybirdWebView : NSClipView <NSMenuDelegate>
@@ -59,6 +64,8 @@
 - (void)handleVisibility:(BOOL)is_visible;
 
 - (void)setPreferredColorScheme:(Web::CSS::PreferredColorScheme)color_scheme;
+- (void)setPreferredContrast:(Web::CSS::PreferredContrast)contrast;
+- (void)setPreferredMotion:(Web::CSS::PreferredMotion)motion;
 
 - (void)findInPage:(NSString*)query
     caseSensitivity:(CaseSensitivity)case_sensitivity;

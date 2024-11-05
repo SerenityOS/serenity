@@ -34,7 +34,6 @@
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
-#include <LibWeb/HTML/SharedImageRequest.h>
 #include <LibWeb/HTML/VisibilityState.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/ObservableArray.h>
@@ -241,7 +240,7 @@ public:
 
     void set_needs_layout();
 
-    void invalidate_layout();
+    void invalidate_layout_tree();
     void invalidate_stacking_context_tree();
 
     virtual bool is_child_allowed(Node const&) const override;
@@ -601,7 +600,7 @@ public:
 
     void update_for_history_step_application(JS::NonnullGCPtr<HTML::SessionHistoryEntry>, bool do_not_reactivate, size_t script_history_length, size_t script_history_index, Optional<Bindings::NavigationType> navigation_type, Optional<Vector<JS::NonnullGCPtr<HTML::SessionHistoryEntry>>> entries_for_navigation_api = {}, Optional<JS::NonnullGCPtr<HTML::SessionHistoryEntry>> previous_entry_for_activation = {}, bool update_navigation_api = true);
 
-    HashMap<URL::URL, JS::GCPtr<HTML::SharedImageRequest>>& shared_image_requests();
+    HashMap<URL::URL, JS::GCPtr<HTML::SharedResourceRequest>>& shared_resource_requests();
 
     void restore_the_history_object_state(JS::NonnullGCPtr<HTML::SessionHistoryEntry> entry);
 
@@ -688,6 +687,19 @@ public:
     void set_console_client(JS::GCPtr<JS::ConsoleClient> console_client) { m_console_client = console_client; }
     JS::GCPtr<JS::ConsoleClient> console_client() const { return m_console_client; }
 
+    JS::GCPtr<DOM::Position> cursor_position() const { return m_cursor_position; }
+    void set_cursor_position(JS::NonnullGCPtr<DOM::Position>);
+    bool increment_cursor_position_offset();
+    bool decrement_cursor_position_offset();
+
+    bool cursor_blink_state() const { return m_cursor_blink_state; }
+
+    void user_did_edit_document_text(Badge<EditEventHandler>);
+    // Cached pointer to the last known node navigable.
+    // If this document is currently the "active document" of the cached navigable, the cache is still valid.
+    JS::GCPtr<HTML::Navigable> cached_navigable();
+    void set_cached_navigable(JS::GCPtr<HTML::Navigable>);
+
 protected:
     virtual void initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -714,6 +726,8 @@ private:
     Element* find_a_potential_indicated_element(FlyString const& fragment) const;
 
     void dispatch_events_for_animation_if_necessary(JS::NonnullGCPtr<Animations::Animation>);
+
+    void reset_cursor_blink_cycle();
 
     JS::NonnullGCPtr<Page> m_page;
     OwnPtr<CSS::StyleComputer> m_style_computer;
@@ -902,7 +916,7 @@ private:
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#latest-entry
     JS::GCPtr<HTML::SessionHistoryEntry> m_latest_entry;
 
-    HashMap<URL::URL, JS::GCPtr<HTML::SharedImageRequest>> m_shared_image_requests;
+    HashMap<URL::URL, JS::GCPtr<HTML::SharedResourceRequest>> m_shared_resource_requests;
 
     // https://www.w3.org/TR/web-animations-1/#timeline-associated-with-a-document
     HashTable<JS::NonnullGCPtr<Animations::AnimationTimeline>> m_associated_animation_timelines;
@@ -950,6 +964,13 @@ private:
     bool m_allow_declarative_shadow_roots { false };
 
     JS::GCPtr<JS::ConsoleClient> m_console_client;
+
+    JS::GCPtr<DOM::Position> m_cursor_position;
+    RefPtr<Core::Timer> m_cursor_blink_timer;
+    bool m_cursor_blink_state { false };
+
+    // NOTE: This is WeakPtr, not GCPtr, on purpose. We don't want the document to keep some old detached navigable alive.
+    WeakPtr<HTML::Navigable> m_cached_navigable;
 };
 
 template<>

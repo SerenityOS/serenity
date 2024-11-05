@@ -16,6 +16,22 @@
 
 namespace AK {
 
+String String::from_utf8_with_replacement_character(StringView view, WithBOMHandling with_bom_handling)
+{
+    if (auto bytes = view.bytes(); with_bom_handling == WithBOMHandling::Yes && bytes.size() >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF)
+        view = view.substring_view(3);
+
+    if (Utf8View(view).validate())
+        return String::from_utf8_without_validation(view.bytes());
+
+    StringBuilder builder;
+
+    for (auto c : Utf8View { view })
+        builder.append_code_point(c);
+
+    return builder.to_string_without_validation();
+}
+
 String String::from_utf8_without_validation(ReadonlyBytes bytes)
 {
     String result;

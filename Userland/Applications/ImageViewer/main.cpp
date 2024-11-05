@@ -254,19 +254,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
 
     auto nearest_neighbor_action = GUI::Action::create_checkable("&Nearest Neighbor", [&](auto&) {
-        widget.set_scaling_mode(Gfx::Painter::ScalingMode::NearestNeighbor);
+        widget.set_scaling_mode(Gfx::ScalingMode::NearestNeighbor);
     });
 
     auto smooth_pixels_action = GUI::Action::create_checkable("&Smooth Pixels", [&](auto&) {
-        widget.set_scaling_mode(Gfx::Painter::ScalingMode::SmoothPixels);
+        widget.set_scaling_mode(Gfx::ScalingMode::SmoothPixels);
     });
 
     auto bilinear_action = GUI::Action::create_checkable("&Bilinear", [&](auto&) {
-        widget.set_scaling_mode(Gfx::Painter::ScalingMode::BilinearBlend);
+        widget.set_scaling_mode(Gfx::ScalingMode::BilinearBlend);
     });
 
     auto box_sampling_action = GUI::Action::create_checkable("B&ox Sampling", [&](auto&) {
-        widget.set_scaling_mode(Gfx::Painter::ScalingMode::BoxSampling);
+        widget.set_scaling_mode(Gfx::ScalingMode::BoxSampling);
     });
     box_sampling_action->set_checked(true);
 

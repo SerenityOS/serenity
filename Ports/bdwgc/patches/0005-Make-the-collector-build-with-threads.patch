@@ -19,7 +19,7 @@ Co-Authored-By: EWouters <6179932+EWouters@users.noreply.github.com>
  2 files changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index ddb04eece816e6c0440376210b514f964b66e3b1..c9e776d87d550f10505d89027a153d1cad575608 100644
+index faca593e426ffb4add1a4eee73ef9ac1cdc23cbe..620662222d447fad399f713a537de58d1daa1432 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -86,7 +86,11 @@ option(enable_register_main_static_data "Perform the initial guess of data root
@@ -36,7 +36,7 @@ index ddb04eece816e6c0440376210b514f964b66e3b1..c9e776d87d550f10505d89027a153d1c
  option(enable_emscripten_asyncify "Use Emscripten asyncify feature" OFF)
  option(install_headers "Install header and pkg-config metadata files" ON)
 diff --git a/tests/test.c b/tests/test.c
-index 8afc0fe7a1d2fdba644b9f762c6c34ee19bac4db..5d7d59e2e734da4fee44144edf9f33838a8ed0ed 100644
+index 529ca33d8cb19c9a1863609a81cc3fb9eb9847d3..50b715067be252299011f768f3d9f6d6fc05dbd6 100644
 --- a/tests/test.c
 +++ b/tests/test.c
 @@ -43,7 +43,7 @@

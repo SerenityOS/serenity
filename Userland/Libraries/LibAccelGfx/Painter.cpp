@@ -407,7 +407,7 @@ void Painter::draw_scaled_bitmap(Gfx::FloatRect const& dst_rect, Gfx::Bitmap con
     GL::delete_texture(texture);
 }
 
-void Painter::draw_glyph_run(Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color const& color)
+void Painter::draw_glyph_run(Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Gfx::Font const& font, Color const& color)
 {
     bind_target_canvas();
 
@@ -420,7 +420,6 @@ void Painter::draw_glyph_run(Span<Gfx::DrawGlyphOrEmoji const> glyph_run, Color 
         if (glyph_or_emoji.has<Gfx::DrawGlyph>()) {
             auto const& glyph = glyph_or_emoji.get<Gfx::DrawGlyph>();
 
-            auto const& font = *glyph.font;
             auto code_point = glyph.code_point;
             auto point = glyph.position;
 
@@ -642,13 +641,13 @@ void Painter::blit_canvas(Gfx::IntRect const& dst_rect, Canvas const& canvas, fl
 void Painter::blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const& canvas, float opacity, Optional<Gfx::AffineTransform> affine_transform)
 {
     auto texture = GL::Texture(canvas.framebuffer().texture);
-    blit_scaled_texture(dst_rect, texture, { { 0, 0 }, canvas.size() }, Painter::ScalingMode::NearestNeighbor, opacity, move(affine_transform));
+    blit_scaled_texture(dst_rect, texture, { { 0, 0 }, canvas.size() }, ScalingMode::NearestNeighbor, opacity, move(affine_transform));
 }
 
 void Painter::blit_canvas(Gfx::FloatRect const& dst_rect, Canvas const& canvas, Gfx::FloatRect const& src_rect, float opacity, Optional<Gfx::AffineTransform> affine_transform, BlendingMode blending_mode)
 {
     auto texture = GL::Texture(canvas.framebuffer().texture);
-    blit_scaled_texture(dst_rect, texture, src_rect, Painter::ScalingMode::NearestNeighbor, opacity, move(affine_transform), blending_mode);
+    blit_scaled_texture(dst_rect, texture, src_rect, ScalingMode::NearestNeighbor, opacity, move(affine_transform), blending_mode);
 }
 
 void Painter::blit_scaled_texture(Gfx::FloatRect const& dst_rect, GL::Texture const& texture, Gfx::FloatRect const& src_rect, ScalingMode scaling_mode, float opacity, Optional<Gfx::AffineTransform> affine_transform, BlendingMode blending_mode)

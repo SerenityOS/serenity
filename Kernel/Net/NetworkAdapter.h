@@ -20,8 +20,10 @@
 #include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/ICMP.h>
-#include <Kernel/Net/IPv4/ARP.h>
-#include <Kernel/Net/IPv4/IPv4.h>
+#include <Kernel/Net/IP/ARP.h>
+#include <Kernel/Net/IP/IP.h>
+#include <Kernel/Net/IP/IPv4.h>
+#include <Kernel/Net/IP/IPv6.h>
 
 namespace Kernel {
 
@@ -87,7 +89,8 @@ public:
     void set_ipv6_netmask(IPv6Address const&);
 
     void send(MACAddress const&, ARPPacket const&);
-    void fill_in_ipv4_header(PacketWithTimestamp&, IPv4Address const&, MACAddress const&, IPv4Address const&, IPv4Protocol, size_t, u8 type_of_service, u8 ttl);
+    void fill_in_ipv4_header(PacketWithTimestamp&, IPv4Address const&, MACAddress const&, IPv4Address const&, TransportProtocol, size_t, u8 type_of_service, u8 ttl);
+    void fill_in_ipv6_header(PacketWithTimestamp&, IPv6Address const&, MACAddress const&, IPv6Address const&, TransportProtocol, size_t, u8 hop_limit);
 
     size_t dequeue_packet(u8* buffer, size_t buffer_size, UnixDateTime& packet_timestamp);
 
@@ -107,6 +110,7 @@ public:
 
     constexpr size_t layer3_payload_offset() const { return sizeof(EthernetFrameHeader); }
     constexpr size_t ipv4_payload_offset() const { return layer3_payload_offset() + sizeof(IPv4Packet); }
+    constexpr size_t ipv6_payload_offset() const { return layer3_payload_offset() + sizeof(IPv6PacketHeader); }
 
     Function<void()> on_receive;
 

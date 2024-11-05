@@ -59,7 +59,7 @@ talk: https://www.youtube.com/watch?v=WE5bmt0zBxg)
 On a very high level, the PBT runner remembers the random bits (`RandomRun`)
 used when generating the random value, and when it finds a value that fails the
 user's test, instead of trying to shrink the generated value it tries to shrink
-these random bits and then generate a new value from them. 
+these random bits and then generate a new value from them.
 
 This makes shrinking work automatically on any data you might want to generate.
 
@@ -74,46 +74,53 @@ the user.
 
 ## Code organization
 
-- `TestResult.h`
-  - Defines an enum class TestResult.
-    This expands the typical "passed / failed": we also need to care about
-    a generator rejecting a RandomRun (eg. when the user calls the ASSUME(...)
-    macro with a predicate that can't be satisfied).
+-   `TestResult.h`
 
-- `Generator.h`
-  - Contains generators: fns of shape T(), eg. `u32 Gen::unsigned_int(u32 max)`
-    - These implicitly depend on a RandomnessSource held by the singleton
-      TestSuite.
-  - These can be called directly, but the top-level use by the user should always
-    happen via the GEN(...) macro which makes sure the generated value gets
-    logged to the user in case of a failure.
-  - Example:
-    `Gen::vector(1, 4, []() { return Gen::unsigned_int(5); })`
-    generates vectors of length between 1 and 4, of unsigned ints in range 0..5.
-    Eg. `{2,5,3}`, `{0}`, `{1,5,5,2}`.
+    -   Defines an enum class TestResult.
+        This expands the typical "passed / failed": we also need to care about
+        a generator rejecting a RandomRun (eg. when the user calls the ASSUME(...)
+        macro with a predicate that can't be satisfied).
 
-- `RandomnessSource.h`
-  - A source of random bits.
-  - There are two variants of `RandomnessSource`:
-    - Live: gives `AK/Random` u32 values and remembers them into a `RandomRun`
-    - Recorded: gives (replays) u32 values from a static `RandomRun`
+-   `Generator.h`
 
-- `RandomRun.h`
-  - A finite sequence of random bits (in practice, `u32`s).
-  - Example: `{2,5,0,11,8,0,0,1}`
+    -   Contains generators: fns of shape T(), eg. `u32 Gen::unsigned_int(u32 max)`
+        -   These implicitly depend on a RandomnessSource held by the singleton
+            TestSuite.
+    -   These can be called directly, but the top-level use by the user should always
+        happen via the GEN(...) macro which makes sure the generated value gets
+        logged to the user in case of a failure.
+    -   Example:
+        `Gen::vector(1, 4, []() { return Gen::unsigned_int(5); })`
+        generates vectors of length between 1 and 4, of unsigned ints in range 0..5.
+        Eg. `{2,5,3}`, `{0}`, `{1,5,5,2}`.
 
-- `ShrinkCommand.h`
-  - A high-level recipe for how to try and minimize a given `RandomRun`.
-  - For example, "zero this contiguous chunk of it" or "minimize the number on
-    this index using binary search".
-  - These later get interpreted by the PBT runner on a specific `RandomRun`.
+-   `RandomnessSource.h`
 
-- `Chunk.h`
-  - A description of a contiguous `RandomRun` slice.
-  - Example: `Chunk{size = 4, index = 2}`:  [_,_,X,X,X,X,...]
+    -   A source of random bits.
+    -   There are two variants of `RandomnessSource`:
+        -   Live: gives `AK/Random` u32 values and remembers them into a `RandomRun`
+        -   Recorded: gives (replays) u32 values from a static `RandomRun`
 
-- `Shrink.h`
-  - Algorithms for interpreting `ShrinkCommand`s and the main shrinking loop
+-   `RandomRun.h`
 
-- `TestCase.h`
-  - The `TestCase::randomized(...)` function contains the main testing loop
+    -   A finite sequence of random bits (in practice, `u32`s).
+    -   Example: `{2,5,0,11,8,0,0,1}`
+
+-   `ShrinkCommand.h`
+
+    -   A high-level recipe for how to try and minimize a given `RandomRun`.
+    -   For example, "zero this contiguous chunk of it" or "minimize the number on
+        this index using binary search".
+    -   These later get interpreted by the PBT runner on a specific `RandomRun`.
+
+-   `Chunk.h`
+
+    -   A description of a contiguous `RandomRun` slice.
+    -   Example: `Chunk{size = 4, index = 2}`: [_,_,X,X,X,X,...]
+
+-   `Shrink.h`
+
+    -   Algorithms for interpreting `ShrinkCommand`s and the main shrinking loop
+
+-   `TestCase.h`
+    -   The `TestCase::randomized(...)` function contains the main testing loop

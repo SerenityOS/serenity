@@ -55,8 +55,3 @@ LibC, namely:
 * Use libc++'s builtin character type table instead of the one provided
   by LibC as there's a lot of extra porting work to convince the rest of
   locale.cpp to use our character type table properly.
-
-## `0006-clang-Add-fvisibility-inlines-hidden-function-templa.patch`
-
-Add -fvisibility-inlines-hidden-function-templates
-

@@ -65,7 +65,6 @@ set(KERNEL_SOURCES
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
     Devices/Device.cpp
-    Devices/DeviceManagement.cpp
     Devices/FUSEDevice.cpp
     Devices/PCISerialDevice.cpp
     Devices/SerialDevice.cpp
@@ -127,7 +126,10 @@ set(KERNEL_SOURCES
     Devices/Storage/SD/PCISDHostController.cpp
     Devices/Storage/SD/SDHostController.cpp
     Devices/Storage/SD/SDMemoryCard.cpp
-    Devices/Storage/USB/BulkSCSIInterface.cpp
+    Devices/Storage/USB/BOT/BulkSCSIInterface.cpp
+    Devices/Storage/USB/BOT/BulkSCSIStorageDevice.cpp
+    Devices/Storage/USB/UAS/UASInterface.cpp
+    Devices/Storage/USB/UAS/UASStorageDevice.cpp
     Devices/Storage/VirtIO/VirtIOBlockController.cpp
     Devices/Storage/VirtIO/VirtIOBlockDevice.cpp
     Devices/Storage/StorageController.cpp
@@ -235,6 +237,7 @@ set(KERNEL_SOURCES
     Firmware/ACPI/Parser.cpp
     Firmware/ACPI/StaticParsing.cpp
     Firmware/DeviceTree/DeviceTree.cpp
+    Firmware/DeviceTree/Management.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IRQHandler.cpp
     Interrupts/PCIIRQHandler.cpp
@@ -261,6 +264,7 @@ set(KERNEL_SOURCES
     Memory/VirtualRange.cpp
     Locking/LockRank.cpp
     Locking/Mutex.cpp
+    Library/Assertions.cpp
     Library/DoubleBuffer.cpp
     Library/IOWindow.cpp
     Library/MiniStdLib.cpp
@@ -275,7 +279,7 @@ set(KERNEL_SOURCES
     Net/Intel/E1000NetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
     Net/VirtIO/VirtIONetworkAdapter.cpp
-    Net/IPv4/Socket.cpp
+    Net/IP/Socket.cpp
     Net/LocalSocket.cpp
     Net/LoopbackAdapter.cpp
     Net/NetworkAdapter.cpp
@@ -448,7 +452,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         ${KERNEL_SOURCES}
         
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/ASM_wrapper.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPU.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/CPUID.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/InterruptManagement.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86_64/Interrupts.cpp
@@ -501,7 +504,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/kprintf.cpp
         Arch/aarch64/MainIdRegister.cpp
         Arch/aarch64/PageDirectory.cpp
-        Arch/aarch64/Panic.cpp
         Arch/aarch64/Processor.cpp
         Arch/aarch64/PowerState.cpp
         Arch/aarch64/SafeMem.cpp
@@ -536,7 +538,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
 
         Arch/riscv64/archctl.cpp
         Arch/riscv64/boot.S
-        Arch/riscv64/CPU.cpp
         Arch/riscv64/CurrentTime.cpp
         Arch/riscv64/DebugOutput.cpp
         Arch/riscv64/Delay.cpp
@@ -545,7 +546,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         Arch/riscv64/Interrupts/PLIC.cpp
         Arch/riscv64/MMU.cpp
         Arch/riscv64/PageDirectory.cpp
-        Arch/riscv64/Panic.cpp
         Arch/riscv64/PCI/Initializer.cpp
         Arch/riscv64/PowerState.cpp
         Arch/riscv64/pre_init.cpp

@@ -16,6 +16,8 @@ namespace Kernel {
     do {                                          \
         if (domain == AF_INET)                    \
             TRY(require_promise(Pledge::inet));   \
+        else if (domain == AF_INET6)              \
+            TRY(require_promise(Pledge::inet));   \
         else if (domain == AF_LOCAL)              \
             TRY(require_promise(Pledge::unix));   \
     } while (0)

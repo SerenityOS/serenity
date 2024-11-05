@@ -101,6 +101,10 @@
     "right",
     "both"
   ],
+  "column-span": [
+    "none",
+    "all"
+  ],
   "content-visibility": [
     "visible",
     "auto",
@@ -143,6 +147,10 @@
     "all-scroll",
     "zoom-in",
     "zoom-out"
+  ],
+  "direction": [
+    "ltr",
+    "rtl"
   ],
   "display-box": [
     "contents",
@@ -204,9 +212,27 @@
     "inline-start",
     "inline-end"
   ],
+  "font-display": [
+    "auto",
+    "block",
+    "swap",
+    "fallback",
+    "optional"
+  ],
   "font-variant": [
     "normal",
     "small-caps"
+  ],
+  "font-width": [
+    "ultra-condensed",
+    "extra-condensed",
+    "condensed",
+    "semi-condensed",
+    "normal",
+    "semi-expanded",
+    "expanded",
+    "extra-expanded",
+    "ultra-expanded"
   ],
   "image-rendering": [
     "auto",
@@ -369,6 +395,10 @@
     "middle",
     "end"
   ],
+  "text-overflow": [
+    "clip",
+    "ellipsis"
+  ],
   "scrollbar-gutter": [
     "auto",
     "stable",
@@ -379,9 +409,21 @@
     "thin",
     "none"
   ],
+  "stroke-linecap": [
+    "butt",
+    "square",
+    "round"
+  ],
+  "stroke-linejoin": [
+    "miter",
+    "round",
+    "bevel"
+  ],
   "text-align": [
     "center",
     "justify",
+    "start",
+    "end",
     "left",
     "right",
     "-libweb-center",
@@ -425,6 +467,14 @@
     "stroke-box",
     "view-box "
   ],
+  "unicode-bidi": [
+    "bidi-override",
+    "embed",
+    "isolate",
+    "isolate-override",
+    "normal",
+    "plaintext"
+  ],
   "vertical-align": [
     "baseline",
     "bottom",
@@ -446,5 +496,11 @@
     "pre",
     "pre-line",
     "pre-wrap"
+  ],
+  "word-break": [
+    "normal",
+    "keep-all",
+    "break-all",
+    "break-word"
   ]
 }

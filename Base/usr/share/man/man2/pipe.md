@@ -17,9 +17,9 @@ int pipe2(int pipefd[2], int flags);
 Any data written to the `pipefd[1]` can then be read from `pipefd[0]`. When `pipefd[1]` is closed, reads
 from `pipefd[0]` will return EOF.
 
-`pipe2()` behaves the same as `pipe()`, but it additionally accepts the following *flags*:
+`pipe2()` behaves the same as `pipe()`, but it additionally accepts the following _flags_:
 
-* `O_CLOEXEC`: Automatically close the file descriptors created by this call, as if by `close()` call, when performing an `exec()`.
+-   `O_CLOEXEC`: Automatically close the file descriptors created by this call, as if by `close()` call, when performing an `exec()`.
 
 ## Examples
 

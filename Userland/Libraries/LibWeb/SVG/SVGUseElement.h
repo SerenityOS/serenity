@@ -51,19 +51,26 @@ private:
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
+    void process_the_url(Optional<String> const& href);
+
     static Optional<FlyString> parse_id_from_href(StringView);
 
     JS::GCPtr<DOM::Element> referenced_element();
 
-    void clone_element_tree_as_our_shadow_tree(Element* to_clone) const;
-    bool is_valid_reference_element(Element* reference_element) const;
+    void fetch_the_document(URL::URL const& url);
+    bool is_referrenced_element_same_document() const;
+
+    void clone_element_tree_as_our_shadow_tree(Element* to_clone);
+    bool is_valid_reference_element(Element const& reference_element) const;
 
     Optional<float> m_x;
     Optional<float> m_y;
 
-    Optional<FlyString> m_referenced_id;
+    URL::URL m_href;
 
     JS::GCPtr<DOM::DocumentObserver> m_document_observer;
+    JS::GCPtr<HTML::SharedResourceRequest> m_resource_request;
+    Optional<DOM::DocumentLoadEventDelayer> m_load_event_delayer;
 };
 
 }

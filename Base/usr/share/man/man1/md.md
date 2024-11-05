@@ -17,7 +17,7 @@ standard input.
 
 ## Options
 
-* `-H`, `--html`: Render the document into HTML.
+-   `-H`, `--html`: Render the document into HTML.
 
 ## Examples
 
@@ -28,4 +28,5 @@ $ md --html /usr/share/man/man1/md.md
 ```
 
 ## See Also
-* [`man`(1)](help://man/1/man) to more easily read manpages
+
+-   [`man`(1)](help://man/1/man) to more easily read manpages

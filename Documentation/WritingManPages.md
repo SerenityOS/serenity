@@ -58,10 +58,15 @@ All manpages should contain at least the following three sections:
 
 ```md
 ## Name
+
 The manpage name, in the style described above.
+
 ## Description
+
 Main text of the manpage.
+
 ## See also
+
 List of related pages.
 ```
 
@@ -73,18 +78,31 @@ Applications in sections 1 and 8, especially command-line ones, must adhere to t
 
 ```md
 ## Name
+
 program name - single-sentence descriptor of the program
+
 ## Synopsis
+
 Usage synopsis for invoking the program, within a `sh` code block.
+
 ## Description
+
 Prose description of the program.
+
 ## Options
+
 A list of optional arguments (flags) the program takes, with a brief description of each. More complex description, especially when options interact, should be part of the Description section. May be omitted if the program has no options.
+
 ## Arguments
+
 A list of (required) arguments the program takes, in the same format as the Options section. May be omitted if the program has no arguments.
+
 ## Examples
+
 Program invocation examples with resulting output.
+
 ## See also
+
 List of related pages.
 ```
 

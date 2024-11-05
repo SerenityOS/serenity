@@ -26,7 +26,7 @@ Defines a GUI frame widget. Frames can contain other GUI widgets.
 ## Registered Properties
 
 | Property  | Type    | Possible values                                              | Description        |
-|-----------|---------|--------------------------------------------------------------|--------------------|
+| --------- | ------- | ------------------------------------------------------------ | ------------------ |
 | thickness | integer | 64-bit integer                                               | Sets the thickness |
 | shadow    | enum    | Plain, Raised, Sunken                                        | Sets the shadow    |
 | shape     | enum    | NoFrame, Box, Container, Panel, VerticalLine, HorizontalLine | Sets the shape     |

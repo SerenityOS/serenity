@@ -168,6 +168,7 @@ on the user.
 
 All major numbers in the operating systems are allocated per device type (family of devices).
 We allocate them in `Kernel/API/MajorNumberAllocation.h`, based on this set of rules:
+
 1. The allocation is either for a new type of block device or character device, not both.
 2. The family name string is not already taken for any block or character devices.
 3. The family name string is informative and short.
@@ -175,26 +176,26 @@ We allocate them in `Kernel/API/MajorNumberAllocation.h`, based on this set of r
    enum (either CharacterDeviceFamily or BlockDeviceNumber).
 5. The family name string is written in snake_case name when inserted to the appropriate
    to-StringView function (`character_device_family_to_string_view` or `block_device_family_to_string_view`) with the actual allocation, for example:
-   ```c++
-   ALWAYS_INLINE StringView character_device_family_to_string_view(CharacterDeviceFamily family)
-   {
-      switch (family) {
+    ```c++
+    ALWAYS_INLINE StringView character_device_family_to_string_view(CharacterDeviceFamily family)
+    {
+       switch (family) {
+       ...
+       case CharacterDeviceFamily::FUSE:
+         return "fuse"sv;
       ...
-      case CharacterDeviceFamily::FUSE:
-        return "fuse"sv;
-     ...
-      }
-   }
-   ```
-   Also, you should add an entry in either `s_character_device_numbers` or `s_block_device_numbers` array.
-   For example:
-   ```c++
-   static constexpr CharacterDeviceFamily s_character_device_numbers[] = {
-      ...
-      CharacterDeviceFamily::FUSE,
-      ...
-   };
-   ```
+       }
+    }
+    ```
+    Also, you should add an entry in either `s_character_device_numbers` or `s_block_device_numbers` array.
+    For example:
+    ```c++
+    static constexpr CharacterDeviceFamily s_character_device_numbers[] = {
+       ...
+       CharacterDeviceFamily::FUSE,
+       ...
+    };
+    ```
 6. The allocation must be inserted by keeping the ascending order of the allocated major numbers
    in the appropriate enum and associated to-StringView function.
 
@@ -203,8 +204,9 @@ We allocate them in `Kernel/API/MajorNumberAllocation.h`, based on this set of r
 Currently, we have many devices that are either inserted at boot time but also devices that could be inserted
 afterwards.
 
-To make it easier writing device drivers, when constructing an object from a `Device`-derived class, the usual pattern is to use `DeviceManagement` `try_create_device` method.
+To make it easier writing device drivers, when constructing an object from a `Device`-derived class, the usual pattern is to use `Device` `try_create_device` method.
 For example, constructing a `VirtIOGPU3DDevice` is done this way:
+
 ```c++
 ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::try_create(VirtIOGraphicsAdapter& adapter)
 {
@@ -215,11 +217,11 @@ ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::try_create(Virt
         Memory::Region::Access::ReadWrite,
         AllocationStrategy::AllocateNow));
     auto kernel_context_id = TRY(adapter.create_context());
-    return TRY(DeviceManagement::try_create_device<VirtIOGPU3DDevice>(adapter, move(region_result), kernel_context_id));
+    return TRY(Device::try_create_device<VirtIOGPU3DDevice>(adapter, move(region_result), kernel_context_id));
 }
 ```
 
-The reason for using `DeviceManagement` `try_create_device` method is because that method
+The reason for using `Device` `try_create_device` method is because that method
 calls the virtual `Device` `after_inserting()` method which does crucial initialization steps
 to register the device and expose it by the usual userspace interfaces.
 

@@ -59,7 +59,7 @@ JS::NonnullGCPtr<DOMURL> DOMURL::initialize_a_url(JS::Realm& realm, URL::URL con
 
     // 2. Set url’s URL to urlRecord.
     // 3. Set url’s query object to a new URLSearchParams object.
-    auto query_object = MUST(URLSearchParams::construct_impl(realm, query));
+    auto query_object = URLSearchParams::create(realm, query);
 
     // 4. Initialize url’s query object with query.
     auto result_url = DOMURL::create(realm, url_record, move(query_object));
@@ -190,8 +190,6 @@ WebIDL::ExceptionOr<String> DOMURL::to_json() const
 // https://url.spec.whatwg.org/#ref-for-dom-url-href②
 WebIDL::ExceptionOr<void> DOMURL::set_href(String const& href)
 {
-    auto& vm = realm().vm();
-
     // 1. Let parsedURL be the result of running the basic URL parser on the given value.
     URL::URL parsed_url = href;
 
@@ -210,7 +208,7 @@ WebIDL::ExceptionOr<void> DOMURL::set_href(String const& href)
 
     // 6. If query is non-null, then set this’s query object’s list to the result of parsing query.
     if (query.has_value())
-        m_query->m_list = TRY_OR_THROW_OOM(vm, url_decode(*query));
+        m_query->m_list = url_decode(*query);
     return {};
 }
 
@@ -246,12 +244,10 @@ WebIDL::ExceptionOr<void> DOMURL::set_protocol(String const& protocol)
 }
 
 // https://url.spec.whatwg.org/#dom-url-username
-WebIDL::ExceptionOr<String> DOMURL::username() const
+String const& DOMURL::username() const
 {
-    auto& vm = realm().vm();
-
     // The username getter steps are to return this’s URL’s username.
-    return TRY_OR_THROW_OOM(vm, m_url.username());
+    return m_url.username();
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-username%E2%91%A0
@@ -262,16 +258,14 @@ void DOMURL::set_username(String const& username)
         return;
 
     // 2. Set the username given this’s URL and the given value.
-    MUST(m_url.set_username(username));
+    m_url.set_username(username);
 }
 
 // https://url.spec.whatwg.org/#dom-url-password
-WebIDL::ExceptionOr<String> DOMURL::password() const
+String const& DOMURL::password() const
 {
-    auto& vm = realm().vm();
-
     // The password getter steps are to return this’s URL’s password.
-    return TRY_OR_THROW_OOM(vm, m_url.password());
+    return m_url.password();
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-password%E2%91%A0
@@ -282,7 +276,7 @@ void DOMURL::set_password(String const& password)
         return;
 
     // 2. Set the password given this’s URL and the given value.
-    MUST(m_url.set_password(password));
+    m_url.set_password(password);
 }
 
 // https://url.spec.whatwg.org/#dom-url-host
@@ -417,10 +411,8 @@ WebIDL::ExceptionOr<String> DOMURL::search() const
 }
 
 // https://url.spec.whatwg.org/#ref-for-dom-url-search%E2%91%A0
-WebIDL::ExceptionOr<void> DOMURL::set_search(String const& search)
+void DOMURL::set_search(String const& search)
 {
-    auto& vm = realm().vm();
-
     // 1. Let url be this’s URL.
     auto& url = m_url;
 
@@ -436,7 +428,7 @@ WebIDL::ExceptionOr<void> DOMURL::set_search(String const& search)
         strip_trailing_spaces_from_an_opaque_path(*this);
 
         // 4. Return.
-        return {};
+        return;
     }
 
     // 3. Let input be the given value with a single leading U+003F (?) removed, if any.
@@ -453,10 +445,8 @@ WebIDL::ExceptionOr<void> DOMURL::set_search(String const& search)
         m_url = move(result_url);
 
         // 6. Set this’s query object’s list to the result of parsing input.
-        m_query->m_list = TRY_OR_THROW_OOM(vm, url_decode(input));
+        m_query->m_list = url_decode(input);
     }
-
-    return {};
 }
 
 // https://url.spec.whatwg.org/#dom-url-searchparams
@@ -591,12 +581,12 @@ void strip_trailing_spaces_from_an_opaque_path(DOMURL& url)
 }
 
 // https://url.spec.whatwg.org/#concept-url-parser
-URL::URL parse(StringView input, Optional<URL::URL> const& base_url)
+URL::URL parse(StringView input, Optional<URL::URL> const& base_url, Optional<StringView> encoding)
 {
     // FIXME: We should probably have an extended version of URL::URL for LibWeb instead of standalone functions like this.
 
     // 1. Let url be the result of running the basic URL parser on input with base and encoding.
-    auto url = URL::Parser::basic_parse(input, base_url);
+    auto url = URL::Parser::basic_parse(input, base_url, {}, {}, encoding);
 
     // 2. If url is failure, return failure.
     if (!url.is_valid())

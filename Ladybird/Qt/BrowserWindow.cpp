@@ -19,6 +19,8 @@
 #include <Ladybird/Qt/TabBar.h>
 #include <Ladybird/Utilities.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
+#include <LibWeb/CSS/PreferredContrast.h>
+#include <LibWeb/CSS/PreferredMotion.h>
 #include <LibWeb/Loader/UserAgent.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/UserAgent.h>
@@ -68,11 +70,12 @@ public:
     }
 };
 
-BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::CookieJar& cookie_jar, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path, Tab* parent_tab, Optional<u64> page_index)
+BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::CookieJar& cookie_jar, WebContentOptions const& web_content_options, StringView webdriver_content_ipc_path, bool allow_popups, Tab* parent_tab, Optional<u64> page_index)
     : m_tabs_container(new TabWidget(this))
     , m_cookie_jar(cookie_jar)
     , m_web_content_options(web_content_options)
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
+    , m_allow_popups(allow_popups)
 {
     setWindowIcon(app_icon());
 
@@ -93,6 +96,12 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
             QObject::connect(m_current_screen, &QScreen::logicalDotsPerInchChanged, this, &BrowserWindow::device_pixel_ratio_changed);
         });
     }
+
+    QObject::connect(Settings::the(), &Settings::enable_do_not_track_changed, this, [this](bool enable) {
+        for_each_tab([enable](auto& tab) {
+            tab.set_enable_do_not_track(enable);
+        });
+    });
 
     m_hamburger_menu = new HamburgerMenu(this);
 
@@ -156,6 +165,20 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     m_find_in_page_action->setIcon(load_icon_from_uri("resource://icons/16x16/find.png"sv));
     m_find_in_page_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Find));
 
+    auto find_previous_shortcuts = QKeySequence::keyBindings(QKeySequence::StandardKey::FindPrevious);
+    for (auto const& shortcut : find_previous_shortcuts)
+        new QShortcut(shortcut, this, [this] {
+            if (m_current_tab)
+                m_current_tab->find_previous();
+        });
+
+    auto find_next_shortcuts = QKeySequence::keyBindings(QKeySequence::StandardKey::FindNext);
+    for (auto const& shortcut : find_next_shortcuts)
+        new QShortcut(shortcut, this, [this] {
+            if (m_current_tab)
+                m_current_tab->find_next();
+        });
+
     edit_menu->addAction(m_find_in_page_action);
     QObject::connect(m_find_in_page_action, &QAction::triggered, this, &BrowserWindow::show_find_in_page);
 
@@ -186,7 +209,10 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     auto* zoom_in_action = new QAction("Zoom &In", this);
     zoom_in_action->setIcon(load_icon_from_uri("resource://icons/16x16/zoom-in.png"sv));
     auto zoom_in_shortcuts = QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomIn);
-    zoom_in_shortcuts.append(QKeySequence(Qt::CTRL | Qt::Key_Equal));
+    auto secondary_zoom_shortcut = QKeySequence(Qt::CTRL | Qt::Key_Equal);
+    if (!zoom_in_shortcuts.contains(secondary_zoom_shortcut))
+        zoom_in_shortcuts.append(AK::move(secondary_zoom_shortcut));
+
     zoom_in_action->setShortcuts(zoom_in_shortcuts);
     m_zoom_menu->addAction(zoom_in_action);
     QObject::connect(zoom_in_action, &QAction::triggered, this, &BrowserWindow::zoom_in);
@@ -213,21 +239,80 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     auto_color_scheme->setCheckable(true);
     color_scheme_group->addAction(auto_color_scheme);
     color_scheme_menu->addAction(auto_color_scheme);
-    QObject::connect(auto_color_scheme, &QAction::triggered, this, &BrowserWindow::enable_auto_color_scheme);
-
+    QObject::connect(auto_color_scheme, &QAction::triggered, this, [this] {
+        set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Auto);
+    });
     auto* light_color_scheme = new QAction("&Light", this);
     light_color_scheme->setCheckable(true);
     color_scheme_group->addAction(light_color_scheme);
     color_scheme_menu->addAction(light_color_scheme);
-    QObject::connect(light_color_scheme, &QAction::triggered, this, &BrowserWindow::enable_light_color_scheme);
+    QObject::connect(light_color_scheme, &QAction::triggered, this, [this] {
+        set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Light);
+    });
 
     auto* dark_color_scheme = new QAction("&Dark", this);
     dark_color_scheme->setCheckable(true);
     color_scheme_group->addAction(dark_color_scheme);
     color_scheme_menu->addAction(dark_color_scheme);
-    QObject::connect(dark_color_scheme, &QAction::triggered, this, &BrowserWindow::enable_dark_color_scheme);
+    QObject::connect(dark_color_scheme, &QAction::triggered, this, [this] {
+        set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Dark);
+    });
 
     auto_color_scheme->setChecked(true);
+
+    auto* contrast_menu = view_menu->addMenu("&Contrast");
+
+    auto* contrast_group = new QActionGroup(this);
+
+    auto* auto_contrast = new QAction("&Auto", this);
+    auto_contrast->setCheckable(true);
+    contrast_group->addAction(auto_contrast);
+    contrast_menu->addAction(auto_contrast);
+    QObject::connect(auto_contrast, &QAction::triggered, this, &BrowserWindow::enable_auto_contrast);
+
+    auto* less_contrast = new QAction("&Less", this);
+    less_contrast->setCheckable(true);
+    contrast_group->addAction(less_contrast);
+    contrast_menu->addAction(less_contrast);
+    QObject::connect(less_contrast, &QAction::triggered, this, &BrowserWindow::enable_less_contrast);
+
+    auto* more_contrast = new QAction("&More", this);
+    more_contrast->setCheckable(true);
+    contrast_group->addAction(more_contrast);
+    contrast_menu->addAction(more_contrast);
+    QObject::connect(more_contrast, &QAction::triggered, this, &BrowserWindow::enable_more_contrast);
+
+    auto* no_preference_contrast = new QAction("&No Preference", this);
+    no_preference_contrast->setCheckable(true);
+    contrast_group->addAction(no_preference_contrast);
+    contrast_menu->addAction(no_preference_contrast);
+    QObject::connect(no_preference_contrast, &QAction::triggered, this, &BrowserWindow::enable_no_preference_contrast);
+
+    auto_contrast->setChecked(true);
+
+    auto* motion_menu = view_menu->addMenu("&Motion");
+
+    auto* motion_group = new QActionGroup(this);
+
+    auto* auto_motion = new QAction("&Auto", this);
+    auto_motion->setCheckable(true);
+    motion_group->addAction(auto_motion);
+    motion_menu->addAction(auto_motion);
+    QObject::connect(auto_motion, &QAction::triggered, this, &BrowserWindow::enable_auto_motion);
+
+    auto* reduce_motion = new QAction("&Reduce", this);
+    reduce_motion->setCheckable(true);
+    motion_group->addAction(reduce_motion);
+    motion_menu->addAction(reduce_motion);
+    QObject::connect(reduce_motion, &QAction::triggered, this, &BrowserWindow::enable_reduce_motion);
+
+    auto* no_preference_motion = new QAction("&No Preference", this);
+    no_preference_motion->setCheckable(true);
+    motion_group->addAction(no_preference_motion);
+    motion_menu->addAction(no_preference_motion);
+    QObject::connect(no_preference_motion, &QAction::triggered, this, &BrowserWindow::enable_no_preference_motion);
+
+    auto_motion->setChecked(true);
 
     auto* show_menubar = new QAction("Show &Menubar", this);
     show_menubar->setCheckable(true);
@@ -336,12 +421,14 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
 
     debug_menu->addSeparator();
 
-    auto* show_line_box_borders_action = new QAction("Show Line Box Borders", this);
-    show_line_box_borders_action->setCheckable(true);
-    debug_menu->addAction(show_line_box_borders_action);
-    QObject::connect(show_line_box_borders_action, &QAction::triggered, this, [this, show_line_box_borders_action] {
-        bool state = show_line_box_borders_action->isChecked();
-        debug_request("set-line-box-borders", state ? "on" : "off");
+    m_show_line_box_borders_action = new QAction("Show Line Box Borders", this);
+    m_show_line_box_borders_action->setCheckable(true);
+    debug_menu->addAction(m_show_line_box_borders_action);
+    QObject::connect(m_show_line_box_borders_action, &QAction::triggered, this, [this] {
+        bool state = m_show_line_box_borders_action->isChecked();
+        for_each_tab([state](auto& tab) {
+            tab.set_line_box_borders(state);
+        });
     });
 
     debug_menu->addSeparator();
@@ -384,12 +471,15 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
         user_agent_group->addAction(action);
         spoof_user_agent_menu->addAction(action);
         QObject::connect(action, &QAction::triggered, this, [this, user_agent] {
-            debug_request("spoof-user-agent", user_agent);
-            debug_request("clear-cache"); // clear the cache to ensure requests are re-done with the new user agent
+            for_each_tab([user_agent](auto& tab) {
+                tab.set_user_agent_string(user_agent);
+            });
+            set_user_agent_string(user_agent);
         });
         return action;
     };
 
+    set_user_agent_string(Web::default_user_agent);
     auto* disable_spoofing = add_user_agent("Disabled"sv, Web::default_user_agent);
     disable_spoofing->setChecked(true);
     for (auto const& user_agent : WebView::user_agents)
@@ -402,39 +492,72 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     QObject::connect(custom_user_agent_action, &QAction::triggered, this, [this, disable_spoofing] {
         auto user_agent = QInputDialog::getText(this, "Custom User Agent", "Enter User Agent:");
         if (!user_agent.isEmpty()) {
-            debug_request("spoof-user-agent", ak_byte_string_from_qstring(user_agent));
-            debug_request("clear-cache"); // clear the cache to ensure requests are re-done with the new user agent
+            auto user_agent_byte_string = ak_byte_string_from_qstring(user_agent);
+            for_each_tab([&](auto& tab) {
+                tab.set_user_agent_string(user_agent_byte_string);
+            });
+            set_user_agent_string(user_agent_byte_string);
         } else {
             disable_spoofing->activate(QAction::Trigger);
         }
     });
 
+    auto* navigator_compatibility_mode_menu = debug_menu->addMenu("Navigator Compatibility Mode");
+    navigator_compatibility_mode_menu->setIcon(load_icon_from_uri("resource://icons/16x16/spoof.png"sv));
+
+    auto* navigator_compatibility_mode_group = new QActionGroup(this);
+
+    auto add_navigator_compatibility_mode = [this, &navigator_compatibility_mode_group, &navigator_compatibility_mode_menu](auto name, auto const& compatibility_mode) {
+        auto* action = new QAction(qstring_from_ak_string(name), this);
+        action->setCheckable(true);
+        navigator_compatibility_mode_group->addAction(action);
+        navigator_compatibility_mode_menu->addAction(action);
+        QObject::connect(action, &QAction::triggered, this, [this, compatibility_mode] {
+            for_each_tab([compatibility_mode](auto& tab) {
+                tab.set_navigator_compatibility_mode(compatibility_mode);
+            });
+            set_navigator_compatibility_mode(compatibility_mode);
+        });
+        return action;
+    };
+    auto* chrome_compatibility_mode = add_navigator_compatibility_mode("Chrome"_string, "chrome"sv.to_byte_string());
+    chrome_compatibility_mode->setChecked(true);
+    add_navigator_compatibility_mode("Gecko"_string, "gecko"sv.to_byte_string());
+    add_navigator_compatibility_mode("WebKit"_string, "webkit"sv.to_byte_string());
+    set_navigator_compatibility_mode("chrome");
+
     debug_menu->addSeparator();
 
-    auto* enable_scripting_action = new QAction("Enable Scripting", this);
-    enable_scripting_action->setCheckable(true);
-    enable_scripting_action->setChecked(true);
-    debug_menu->addAction(enable_scripting_action);
-    QObject::connect(enable_scripting_action, &QAction::triggered, this, [this, enable_scripting_action] {
-        bool state = enable_scripting_action->isChecked();
-        debug_request("scripting", state ? "on" : "off");
+    m_enable_scripting_action = new QAction("Enable Scripting", this);
+    m_enable_scripting_action->setCheckable(true);
+    m_enable_scripting_action->setChecked(true);
+    debug_menu->addAction(m_enable_scripting_action);
+    QObject::connect(m_enable_scripting_action, &QAction::triggered, this, [this] {
+        bool state = m_enable_scripting_action->isChecked();
+        for_each_tab([state](auto& tab) {
+            tab.set_scripting(state);
+        });
     });
 
-    auto* block_pop_ups_action = new QAction("Block Pop-ups", this);
-    block_pop_ups_action->setCheckable(true);
-    block_pop_ups_action->setChecked(true);
-    debug_menu->addAction(block_pop_ups_action);
-    QObject::connect(block_pop_ups_action, &QAction::triggered, this, [this, block_pop_ups_action] {
-        bool state = block_pop_ups_action->isChecked();
-        debug_request("block-pop-ups", state ? "on" : "off");
+    m_block_pop_ups_action = new QAction("Block Pop-ups", this);
+    m_block_pop_ups_action->setCheckable(true);
+    m_block_pop_ups_action->setChecked(!allow_popups);
+    debug_menu->addAction(m_block_pop_ups_action);
+    QObject::connect(m_block_pop_ups_action, &QAction::triggered, this, [this] {
+        bool state = m_block_pop_ups_action->isChecked();
+        for_each_tab([state](auto& tab) {
+            tab.set_block_popups(state);
+        });
     });
 
-    auto* enable_same_origin_policy_action = new QAction("Enable Same-Origin Policy", this);
-    enable_same_origin_policy_action->setCheckable(true);
-    debug_menu->addAction(enable_same_origin_policy_action);
-    QObject::connect(enable_same_origin_policy_action, &QAction::triggered, this, [this, enable_same_origin_policy_action] {
-        bool state = enable_same_origin_policy_action->isChecked();
-        debug_request("same-origin-policy", state ? "on" : "off");
+    m_enable_same_origin_policy_action = new QAction("Enable Same-Origin Policy", this);
+    m_enable_same_origin_policy_action->setCheckable(true);
+    debug_menu->addAction(m_enable_same_origin_policy_action);
+    QObject::connect(m_enable_same_origin_policy_action, &QAction::triggered, this, [this] {
+        bool state = m_enable_same_origin_policy_action->isChecked();
+        for_each_tab([state](auto& tab) {
+            tab.set_same_origin_policy(state);
+        });
     });
 
     auto* help_menu = m_hamburger_menu->addMenu("&Help");
@@ -460,7 +583,7 @@ BrowserWindow::BrowserWindow(Vector<URL::URL> const& initial_urls, WebView::Cook
     });
     QObject::connect(m_new_window_action, &QAction::triggered, this, [this] {
         auto initial_urls = Vector<URL::URL> { ak_url_from_qstring(Settings::the()->new_tab_page()) };
-        (void)static_cast<Ladybird::Application*>(QApplication::instance())->new_window(initial_urls, m_cookie_jar, m_web_content_options, m_webdriver_content_ipc_path);
+        (void)static_cast<Ladybird::Application*>(QApplication::instance())->new_window(initial_urls, m_cookie_jar, m_web_content_options, m_webdriver_content_ipc_path, m_allow_popups);
     });
     QObject::connect(open_file_action, &QAction::triggered, this, &BrowserWindow::open_file);
     QObject::connect(settings_action, &QAction::triggered, this, [this] {
@@ -585,8 +708,11 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab, Tab& par
     }
 
     m_tabs_container->addTab(tab, "New Tab");
-    if (activate_tab == Web::HTML::ActivateTab::Yes)
+    if (activate_tab == Web::HTML::ActivateTab::Yes) {
         m_tabs_container->setCurrentWidget(tab);
+        if (m_tabs_container->count() != 1)
+            tab->set_url_is_hidden(true);
+    }
     initialize_tab(tab);
     return *tab;
 }
@@ -600,8 +726,11 @@ Tab& BrowserWindow::create_new_tab(Web::HTML::ActivateTab activate_tab)
     }
 
     m_tabs_container->addTab(tab, "New Tab");
-    if (activate_tab == Web::HTML::ActivateTab::Yes)
+    if (activate_tab == Web::HTML::ActivateTab::Yes) {
         m_tabs_container->setCurrentWidget(tab);
+        if (m_tabs_container->count() != 1)
+            tab->set_url_is_hidden(true);
+    }
     initialize_tab(tab);
 
     return *tab;
@@ -624,7 +753,7 @@ void BrowserWindow::initialize_tab(Tab* tab)
 
     tab->view().on_new_web_view = [this, tab](auto activate_tab, Web::HTML::WebViewHints hints, Optional<u64> page_index) {
         if (hints.popup) {
-            auto& window = static_cast<Ladybird::Application*>(QApplication::instance())->new_window({}, m_cookie_jar, m_web_content_options, m_webdriver_content_ipc_path, tab, AK::move(page_index));
+            auto& window = static_cast<Ladybird::Application*>(QApplication::instance())->new_window({}, m_cookie_jar, m_web_content_options, m_webdriver_content_ipc_path, m_allow_popups, tab, AK::move(page_index));
             window.set_window_rect(hints.screen_x, hints.screen_y, hints.width, hints.height);
             return window.current_tab()->view().handle();
         }
@@ -639,7 +768,7 @@ void BrowserWindow::initialize_tab(Tab* tab)
 
     tab->view().on_link_click = [this](auto url, auto target, unsigned modifiers) {
         // TODO: maybe activate tabs according to some configuration, this is just normal current browser behavior
-        if (modifiers == Mod_Ctrl) {
+        if (modifiers == Web::UIEvents::Mod_Ctrl) {
             m_current_tab->view().on_tab_open_request(url, Web::HTML::ActivateTab::No);
         } else if (target == "_blank") {
             m_current_tab->view().on_tab_open_request(url, Web::HTML::ActivateTab::Yes);
@@ -649,7 +778,7 @@ void BrowserWindow::initialize_tab(Tab* tab)
     };
 
     tab->view().on_link_middle_click = [this](auto url, auto target, unsigned modifiers) {
-        m_current_tab->view().on_link_click(url, target, Mod_Ctrl);
+        m_current_tab->view().on_link_click(url, target, Web::UIEvents::Mod_Ctrl);
         (void)modifiers;
     };
 
@@ -677,6 +806,15 @@ void BrowserWindow::initialize_tab(Tab* tab)
     create_close_button_for_tab(tab);
 
     tab->focus_location_editor();
+
+    tab->set_line_box_borders(m_show_line_box_borders_action->isChecked());
+    tab->set_scripting(m_enable_scripting_action->isChecked());
+    tab->set_block_popups(m_block_pop_ups_action->isChecked());
+    tab->set_same_origin_policy(m_enable_same_origin_policy_action->isChecked());
+    tab->set_user_agent_string(user_agent_string());
+    tab->set_navigator_compatibility_mode(navigator_compatibility_mode());
+    tab->set_enable_do_not_track(Settings::the()->enable_do_not_track());
+    tab->view().set_preferred_color_scheme(m_preferred_color_scheme);
 }
 
 void BrowserWindow::activate_tab(int index)
@@ -851,24 +989,52 @@ void BrowserWindow::open_previous_tab()
     m_tabs_container->setCurrentIndex(next_index);
 }
 
-void BrowserWindow::enable_auto_color_scheme()
+void BrowserWindow::enable_auto_contrast()
 {
     for_each_tab([](auto& tab) {
-        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Auto);
+        tab.view().set_preferred_contrast(Web::CSS::PreferredContrast::Auto);
     });
 }
 
-void BrowserWindow::enable_light_color_scheme()
+void BrowserWindow::enable_less_contrast()
 {
     for_each_tab([](auto& tab) {
-        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Light);
+        tab.view().set_preferred_contrast(Web::CSS::PreferredContrast::Less);
     });
 }
 
-void BrowserWindow::enable_dark_color_scheme()
+void BrowserWindow::enable_more_contrast()
 {
     for_each_tab([](auto& tab) {
-        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Dark);
+        tab.view().set_preferred_contrast(Web::CSS::PreferredContrast::More);
+    });
+}
+
+void BrowserWindow::enable_no_preference_contrast()
+{
+    for_each_tab([](auto& tab) {
+        tab.view().set_preferred_contrast(Web::CSS::PreferredContrast::NoPreference);
+    });
+}
+
+void BrowserWindow::enable_auto_motion()
+{
+    for_each_tab([](auto& tab) {
+        tab.view().set_preferred_motion(Web::CSS::PreferredMotion::Auto);
+    });
+}
+
+void BrowserWindow::enable_no_preference_motion()
+{
+    for_each_tab([](auto& tab) {
+        tab.view().set_preferred_motion(Web::CSS::PreferredMotion::NoPreference);
+    });
+}
+
+void BrowserWindow::enable_reduce_motion()
+{
+    for_each_tab([](auto& tab) {
+        tab.view().set_preferred_motion(Web::CSS::PreferredMotion::Reduce);
     });
 }
 
@@ -945,6 +1111,14 @@ void BrowserWindow::set_window_rect(Optional<Web::DevicePixels> x, Optional<Web:
         height = 600;
 
     setGeometry(x.value().value(), y.value().value(), width.value().value(), height.value().value());
+}
+
+void BrowserWindow::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
+{
+    m_preferred_color_scheme = color_scheme;
+    for_each_tab([color_scheme](auto& tab) {
+        tab.view().set_preferred_color_scheme(color_scheme);
+    });
 }
 
 void BrowserWindow::copy_selected_text()

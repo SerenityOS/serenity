@@ -16,10 +16,10 @@ Unlike many other software projects, SerenityOS is not concerned with gaining th
 
 That said, please do file any bugs you find, keeping the following in mind:
 
-* One issue per bug. Putting multiple things in the same issue makes both discussion and completion unnecessarily complicated.
-* No build issues (or other support requests). If the GitHub Actions CI build succeeds, the build problem is most likely on your side. Work it out locally, or ask in the `#build-problems` channel on Discord.
-* Don't comment on issues just to add a joke or irrelevant commentary. Hundreds of people get notified about comments so let's keep them relevant.
-* For bare metal issues, please include the complete debug log from the serial console and what you tried to do to solve the issue before opening the issue. Don't forget to add the hardware model of your machine and relevant details about it, to help us diagnose what the problem is.
+-   One issue per bug. Putting multiple things in the same issue makes both discussion and completion unnecessarily complicated.
+-   No build issues (or other support requests). If the GitHub Actions CI build succeeds, the build problem is most likely on your side. Work it out locally, or ask in the `#build-problems` channel on Discord.
+-   Don't comment on issues just to add a joke or irrelevant commentary. Hundreds of people get notified about comments so let's keep them relevant.
+-   For bare metal issues, please include the complete debug log from the serial console and what you tried to do to solve the issue before opening the issue. Don't forget to add the hardware model of your machine and relevant details about it, to help us diagnose what the problem is.
 
 ## Human language policy
 
@@ -27,9 +27,9 @@ In SerenityOS, we treat human language as seriously as we do programming languag
 
 The following applies to all user-facing strings, code, comments, and commit messages:
 
-* The official project language is American English with ISO 8601 dates and metric units.
-* Use proper spelling, grammar, and punctuation.
-* Write in an authoritative and technical tone.
+-   The official project language is American English with ISO 8601 dates and metric units.
+-   Use proper spelling, grammar, and punctuation.
+-   Write in an authoritative and technical tone.
 
 Everyone is encouraged to make use of tooling (spell checkers, etc) to make this easier.
 
@@ -43,37 +43,37 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 
 **Do:**
 
-* Write in idiomatic SerenityOS C++23, using the `AK` containers in all code.
-* Conform to the project coding style found in [CodingStyle.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md). Use `clang-format` (version 18 or later) to automatically format C++ files. See [AdvancedBuildInstructions.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/AdvancedBuildInstructions.md#clang-format-updates) for instructions on how to get an up-to-date version if your OS distribution does not ship clang-format-18.
-* Choose expressive variable, function and class names. Make it as obvious as possible what the code is doing.
-* Split your changes into separate, atomic commits (i.e. A commit per feature or fix, where the build, tests and the system are all functioning).
-* Make sure your commits are rebased on the master branch.
-* Wrap your commit messages at 72 characters.
-* The first line of the commit message is the subject line, and must have the format "Category: Brief description of what's being changed". The category should be the name of a library, application, service, utility, etc.
-  * Examples: `LibAudio`, `HackStudio`, `Base`, `Kernel`, `ConfigServer`, `cat`
-  * Don't use a category like "`Userland`" or "`Utilities`", except for generic changes that affect a large portion of code within these directories.
-  * Don't use specific component names, e.g. C++ class names, as the category either - mention them in the summary instead. E.g. `LibGUI: Brief description of what's being changed in FooWidget` rather than `FooWidget: Brief description of what's being changed`
-  * Several categories may be combined with `+`, e.g. `LibJS+LibWeb+Browser: ...`
-* Write the commit message subject line in the imperative mood ("Foo: Change the way dates work", not "Foo: Changed the way dates work").
-* Write your commit messages in proper English, with care and punctuation.
-* Amend your existing commits when adding changes after a review, where relevant.
-* Mark each review comment as "resolved" after pushing a fix with the requested changes.
-* Add your personal copyright line to files when making substantive changes. (Optional but encouraged!)
-* Check the spelling of your code, comments and commit messages.
-* If you have images that go along with your code, run `optipng -strip all` on them to optimize and strip away useless metadata - this can reduce file size from multiple kilobytes to a couple hundred bytes.
+-   Write in idiomatic SerenityOS C++23, using the `AK` containers in all code.
+-   Conform to the project coding style found in [CodingStyle.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md). Use `clang-format` (version 18 or later) to automatically format C++ files. See [AdvancedBuildInstructions.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/AdvancedBuildInstructions.md#clang-format-updates) for instructions on how to get an up-to-date version if your OS distribution does not ship clang-format-18.
+-   Choose expressive variable, function and class names. Make it as obvious as possible what the code is doing.
+-   Split your changes into separate, atomic commits (i.e. A commit per feature or fix, where the build, tests and the system are all functioning).
+-   Make sure your commits are rebased on the master branch.
+-   Wrap your commit messages at 72 characters.
+-   The first line of the commit message is the subject line, and must have the format "Category: Brief description of what's being changed". The category should be the name of a library, application, service, utility, etc.
+    -   Examples: `LibAudio`, `HackStudio`, `Base`, `Kernel`, `ConfigServer`, `cat`
+    -   Don't use a category like "`Userland`" or "`Utilities`", except for generic changes that affect a large portion of code within these directories.
+    -   Don't use specific component names, e.g. C++ class names, as the category either - mention them in the summary instead. E.g. `LibGUI: Brief description of what's being changed in FooWidget` rather than `FooWidget: Brief description of what's being changed`
+    -   Several categories may be combined with `+`, e.g. `LibJS+LibWeb+Browser: ...`
+-   Write the commit message subject line in the imperative mood ("Foo: Change the way dates work", not "Foo: Changed the way dates work").
+-   Write your commit messages in proper English, with care and punctuation.
+-   Amend your existing commits when adding changes after a review, where relevant.
+-   Mark each review comment as "resolved" after pushing a fix with the requested changes.
+-   Add your personal copyright line to files when making substantive changes. (Optional but encouraged!)
+-   Check the spelling of your code, comments and commit messages.
+-   If you have images that go along with your code, run `optipng -strip all` on them to optimize and strip away useless metadata - this can reduce file size from multiple kilobytes to a couple hundred bytes.
 
 **Don't:**
 
-* Submit code that's incompatible with the project licence (2-clause BSD.)
-* Touch anything outside the stated scope of the PR.
-* Iterate excessively on your design across multiple commits.
-* Use weasel-words like "refactor" or "fix" to avoid explaining what's being changed.
-* End commit message subject lines with a period.
-* Include commented-out code.
-* Write in C. (Instead, take advantage of C++'s amenities, and don't limit yourself to the standard C library.)
-* Attempt large architectural changes until you are familiar with the system and have worked on it for a while.
-* Engage in excessive "feng shui programming" by moving code around without quantifiable benefit.
-* Add jokes or other "funny" things to user-facing parts of the system.
+-   Submit code that's incompatible with the project licence (2-clause BSD.)
+-   Touch anything outside the stated scope of the PR.
+-   Iterate excessively on your design across multiple commits.
+-   Use weasel-words like "refactor" or "fix" to avoid explaining what's being changed.
+-   End commit message subject lines with a period.
+-   Include commented-out code.
+-   Write in C. (Instead, take advantage of C++'s amenities, and don't limit yourself to the standard C library.)
+-   Attempt large architectural changes until you are familiar with the system and have worked on it for a while.
+-   Engage in excessive "feng shui programming" by moving code around without quantifiable benefit.
+-   Add jokes or other "funny" things to user-facing parts of the system.
 
 ## Pull Request Q&A
 
@@ -87,18 +87,17 @@ Ping them right away if it's something urgent! If it's less urgent, advertise yo
 
 ### Who are the project maintainers?
 
-- [@ADKaster](https://github.com/ADKaster)
-- [@alimpfard](https://github.com/alimpfard)
-- [@AtkinsSJ](https://github.com/AtkinsSJ)
-- [@awesomekling](https://github.com/awesomekling)
-- [@BertalanD](https://github.com/BertalanD)
-- [@GMTA](https://github.com/gmta)
-- [@kalenikaliaksandr](https://github.com/kalenikaliaksandr)
-- [@Lubrsi](https://github.com/Lubrsi)
-- [@nico](https://github.com/nico)
-- [@tcl3](https://github.com/tcl3)
-- [@timschumi](https://github.com/timschumi)
-- [@trflynn89](https://github.com/trflynn89)
+-   [@ADKaster](https://github.com/ADKaster)
+-   [@alimpfard](https://github.com/alimpfard)
+-   [@AtkinsSJ](https://github.com/AtkinsSJ)
+-   [@BertalanD](https://github.com/BertalanD)
+-   [@GMTA](https://github.com/gmta)
+-   [@kalenikaliaksandr](https://github.com/kalenikaliaksandr)
+-   [@Lubrsi](https://github.com/Lubrsi)
+-   [@nico](https://github.com/nico)
+-   [@tcl3](https://github.com/tcl3)
+-   [@timschumi](https://github.com/timschumi)
+-   [@trflynn89](https://github.com/trflynn89)
 
 Maintainership is by invitation only and does not correlate with any particular metric.
 
@@ -118,14 +117,15 @@ It's definitely better to ask on Discord. Due to the volume of GitHub notificati
 
 The repository contains a file called `.pre-commit-config.yaml` that defines several 'commit hooks' that can be run automatically just before and after creating a new commit. These hooks lint your commit message, and the changes it contains to ensure they will pass the automated CI for pull requests.
 To enable these hooks firstly follow the installation instructions available at https://pre-commit.com/#install and then enable one or both of the following hooks:
- - pre-commit hook - Runs Meta/lint-ci.sh and Meta/lint-ports.py to ensure changes to the code will pass linting:
-   ```console
-   pre-commit install
-   ```
- - post-commit hook - Lints the commit message to ensure it will pass the commit linting:
-   ```console
-   pre-commit install --hook-type commit-msg
-   ```
+
+-   pre-commit hook - Runs Meta/lint-ci.sh and Meta/lint-ports.py to ensure changes to the code will pass linting:
+    ```console
+    pre-commit install
+    ```
+-   post-commit hook - Lints the commit message to ensure it will pass the commit linting:
+    ```console
+    pre-commit install --hook-type commit-msg
+    ```
 
 ## On abandoned pull requests
 
@@ -135,7 +135,7 @@ To make this easier, we do appreciate it if folks enable the "Allow edits from m
 
 ## On ideologically motivated changes
 
-Serenity's goal is to enable collaboration between as many groups as *reasonably* possible, and we welcome contributions that make the project more accessisble to people.
+Serenity's goal is to enable collaboration between as many groups as _reasonably_ possible, and we welcome contributions that make the project more accessisble to people.
 
 However, Serenity is intended to be a purely technical exercise, in the sense of it not being meant to invoke any sociopolitical change. We explicitly try to avoid drama or getting involved in "external" culture wars, and can reject changes that we feel to be sensitive.
 

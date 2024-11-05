@@ -23,7 +23,7 @@ VirtIOGPU3DDevice::PerContextState::PerContextState(OpenFileDescription& descrip
 {
 }
 
-ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::try_create(VirtIOGraphicsAdapter& adapter)
+ErrorOr<NonnullRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::create(VirtIOGraphicsAdapter& adapter)
 {
     // Setup memory transfer region
     auto region_result = TRY(MM.allocate_kernel_region(
@@ -32,7 +32,7 @@ ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::try_create(Virt
         Memory::Region::Access::ReadWrite,
         AllocationStrategy::AllocateNow));
     auto kernel_context_id = TRY(adapter.create_context());
-    return TRY(DeviceManagement::try_create_device<VirtIOGPU3DDevice>(adapter, move(region_result), kernel_context_id));
+    return TRY(Device::try_create_device<VirtIOGPU3DDevice>(adapter, move(region_result), kernel_context_id));
 }
 
 VirtIOGPU3DDevice::VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region, Graphics::VirtIOGPU::ContextID kernel_context_id)

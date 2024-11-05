@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/CSS/Keyword.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleProperties.h>
-#include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
@@ -140,7 +140,7 @@ static inline bool matches_link_pseudo_class(DOM::Element const& element)
     return element.has_attribute(HTML::AttributeNames::href);
 }
 
-static inline bool matches_hover_pseudo_class(DOM::Element const& element)
+bool matches_hover_pseudo_class(DOM::Element const& element)
 {
     auto* hovered_node = element.document().hovered_node();
     if (!hovered_node)
@@ -606,13 +606,13 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     case CSS::PseudoClass::Dir: {
         // "Values other than ltr and rtl are not invalid, but do not match anything."
         // - https://www.w3.org/TR/selectors-4/#the-dir-pseudo
-        if (!first_is_one_of(pseudo_class.identifier, CSS::ValueID::Ltr, CSS::ValueID::Rtl))
+        if (!first_is_one_of(pseudo_class.keyword, CSS::Keyword::Ltr, CSS::Keyword::Rtl))
             return false;
         switch (element.directionality()) {
         case DOM::Element::Directionality::Ltr:
-            return pseudo_class.identifier == CSS::ValueID::Ltr;
+            return pseudo_class.keyword == CSS::Keyword::Ltr;
         case DOM::Element::Directionality::Rtl:
-            return pseudo_class.identifier == CSS::ValueID::Rtl;
+            return pseudo_class.keyword == CSS::Keyword::Rtl;
         }
         VERIFY_NOT_REACHED();
     }
@@ -702,8 +702,12 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, Optio
     }
     case CSS::Selector::SimpleSelector::Type::Id:
         return component.name() == element.id();
-    case CSS::Selector::SimpleSelector::Type::Class:
-        return element.has_class(component.name());
+    case CSS::Selector::SimpleSelector::Type::Class: {
+        // Class selectors are matched case insensitively in quirks mode.
+        // See: https://drafts.csswg.org/selectors-4/#class-html
+        auto case_sensitivity = element.document().in_quirks_mode() ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive;
+        return element.has_class(component.name(), case_sensitivity);
+    }
     case CSS::Selector::SimpleSelector::Type::Attribute:
         return matches_attribute(component.attribute(), style_sheet_for_rule, element);
     case CSS::Selector::SimpleSelector::Type::PseudoClass:
@@ -788,8 +792,12 @@ static bool fast_matches_simple_selector(CSS::Selector::SimpleSelector const& si
             return false;
         }
         return matches_namespace(simple_selector.qualified_name(), element, style_sheet_for_rule);
-    case CSS::Selector::SimpleSelector::Type::Class:
-        return element.has_class(simple_selector.name());
+    case CSS::Selector::SimpleSelector::Type::Class: {
+        // Class selectors are matched case insensitively in quirks mode.
+        // See: https://drafts.csswg.org/selectors-4/#class-html
+        auto case_sensitivity = element.document().in_quirks_mode() ? CaseSensitivity::CaseInsensitive : CaseSensitivity::CaseSensitive;
+        return element.has_class(simple_selector.name(), case_sensitivity);
+    }
     case CSS::Selector::SimpleSelector::Type::Id:
         return simple_selector.name() == element.id();
     case CSS::Selector::SimpleSelector::Type::Attribute:

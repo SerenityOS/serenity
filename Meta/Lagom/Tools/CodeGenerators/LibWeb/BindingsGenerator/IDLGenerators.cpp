@@ -10,6 +10,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "IDLGenerators.h"
 #include "Namespaces.h"
 #include <AK/Array.h>
 #include <AK/LexicalPath.h>
@@ -17,9 +18,9 @@
 #include <AK/QuickSort.h>
 #include <LibIDL/Types.h>
 
-Vector<StringView> s_header_search_paths;
-
 namespace IDL {
+
+Vector<StringView> g_header_search_paths;
 
 // FIXME: Generate this automatically somehow.
 static bool is_platform_object(Type const& type)
@@ -52,6 +53,7 @@ static bool is_platform_object(Type const& type)
         "DynamicsCompressorNode"sv,
         "ElementInternals"sv,
         "EventTarget"sv,
+        "File"sv,
         "FileList"sv,
         "FontFace"sv,
         "FormData"sv,
@@ -73,6 +75,7 @@ static bool is_platform_object(Type const& type)
         "Path2D"sv,
         "PerformanceEntry"sv,
         "PerformanceMark"sv,
+        "PerformanceNavigation"sv,
         "PeriodicWave"sv,
         "PointerEvent"sv,
         "ReadableStreamBYOBReader"sv,
@@ -82,6 +85,8 @@ static bool is_platform_object(Type const& type)
         "ReadableStream"sv,
         "Request"sv,
         "Selection"sv,
+        "ServiceWorkerContainer"sv,
+        "ServiceWorkerRegistration"sv,
         "SVGTransform"sv,
         "ShadowRoot"sv,
         "Table"sv,
@@ -259,7 +264,7 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
 
 static ByteString make_input_acceptable_cpp(ByteString const& input)
 {
-    if (input.is_one_of("class", "template", "for", "default", "char", "namespace", "delete", "inline")) {
+    if (input.is_one_of("class", "template", "for", "default", "char", "namespace", "delete", "inline", "register")) {
         StringBuilder builder;
         builder.append(input);
         builder.append('_');
@@ -282,7 +287,7 @@ static void generate_include_for(auto& generator, auto& path)
 {
     auto forked_generator = generator.fork();
     auto path_string = path;
-    for (auto& search_path : s_header_search_paths) {
+    for (auto& search_path : g_header_search_paths) {
         if (!path.starts_with(search_path))
             continue;
         auto relative_path = LexicalPath::relative_path(path, search_path);
@@ -330,6 +335,11 @@ static void emit_includes_for_all_imports(auto& interface, auto& generator, bool
 template<typename ParameterType>
 static void generate_to_string(SourceGenerator& scoped_generator, ParameterType const& parameter, bool variadic, bool optional, Optional<ByteString> const& optional_default_value)
 {
+    if (parameter.type->name() == "USVString")
+        scoped_generator.set("to_string", "to_well_formed_string"sv);
+    else
+        scoped_generator.set("to_string", "to_string"sv);
+
     if (variadic) {
         scoped_generator.append(R"~~~(
     Vector<String> @cpp_name@;
@@ -338,7 +348,7 @@ static void generate_to_string(SourceGenerator& scoped_generator, ParameterType 
         @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
 
         for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
-            auto to_string_result = TRY(vm.argument(i).to_string(vm));
+            auto to_string_result = TRY(vm.argument(i).@to_string@(vm));
             @cpp_name@.unchecked_append(move(to_string_result));
         }
     }
@@ -348,14 +358,14 @@ static void generate_to_string(SourceGenerator& scoped_generator, ParameterType 
             scoped_generator.append(R"~~~(
     @string_type@ @cpp_name@;
     if (!@legacy_null_to_empty_string@ || !@js_name@@js_suffix@.is_null()) {
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
+        @cpp_name@ = TRY(@js_name@@js_suffix@.@to_string@(vm));
     }
 )~~~");
         } else {
             scoped_generator.append(R"~~~(
     Optional<@string_type@> @cpp_name@;
     if (!@js_name@@js_suffix@.is_nullish())
-        @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
+        @cpp_name@ = TRY(@js_name@@js_suffix@.@to_string@(vm));
 )~~~");
         }
     } else {
@@ -373,7 +383,7 @@ static void generate_to_string(SourceGenerator& scoped_generator, ParameterType 
         scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_undefined()) {
         if (!@legacy_null_to_empty_string@ || !@js_name@@js_suffix@.is_null())
-            @cpp_name@ = TRY(@js_name@@js_suffix@.to_string(vm));
+            @cpp_name@ = TRY(@js_name@@js_suffix@.@to_string@(vm));
     })~~~");
         if (!may_be_null) {
             scoped_generator.append(R"~~~( else {
@@ -384,6 +394,41 @@ static void generate_to_string(SourceGenerator& scoped_generator, ParameterType 
             scoped_generator.append(R"~~~(
 )~~~");
         }
+    }
+}
+
+static void generate_from_integral(SourceGenerator& scoped_generator, IDL::Type const& type)
+{
+    struct TypeMap {
+        StringView idl_type;
+        StringView cpp_type;
+    };
+    static constexpr auto idl_type_map = to_array<TypeMap>({
+        { "byte"sv, "WebIDL::Byte"sv },
+        { "octet"sv, "WebIDL::Octet"sv },
+        { "short"sv, "WebIDL::Short"sv },
+        { "unsigned short"sv, "WebIDL::UnsignedShort"sv },
+        { "long"sv, "WebIDL::Long"sv },
+        { "unsigned long"sv, "WebIDL::UnsignedLong"sv },
+        { "long long"sv, "double"sv },
+        { "unsigned long long"sv, "double"sv },
+    });
+
+    auto it = find_if(idl_type_map.begin(), idl_type_map.end(), [&](auto const& entry) {
+        return entry.idl_type == type.name();
+    });
+
+    VERIFY(it != idl_type_map.end());
+    scoped_generator.set("cpp_type"sv, it->cpp_type);
+
+    if (type.is_nullable()) {
+        scoped_generator.append(R"~~~(
+    @result_expression@ JS::Value(static_cast<@cpp_type@>(@value@.release_value()));
+)~~~");
+    } else {
+        scoped_generator.append(R"~~~(
+    @result_expression@ JS::Value(static_cast<@cpp_type@>(@value@));
+)~~~");
     }
 }
 
@@ -1740,22 +1785,8 @@ static void generate_wrap_statement(SourceGenerator& generator, ByteString const
     @result_expression@ JS::Value(@value@);
 )~~~");
         }
-    } else if (type.name() == "short" || type.name() == "long" || type.name() == "unsigned short") {
-        scoped_generator.append(R"~~~(
-    @result_expression@ JS::Value((i32)@value@);
-)~~~");
-    } else if (type.name() == "unsigned long") {
-        scoped_generator.append(R"~~~(
-    @result_expression@ JS::Value((u32)@value@);
-)~~~");
-    } else if (type.name() == "long long") {
-        scoped_generator.append(R"~~~(
-    @result_expression@ JS::Value((double)@value@);
-)~~~");
-    } else if (type.name() == "unsigned long long") {
-        scoped_generator.append(R"~~~(
-    @result_expression@ JS::Value((double)@value@);
-)~~~");
+    } else if (type.is_integer()) {
+        generate_from_integral(scoped_generator, type);
     } else if (type.name() == "Location" || type.name() == "Promise" || type.name() == "Uint8Array" || type.name() == "Uint8ClampedArray" || type.name() == "any") {
         scoped_generator.append(R"~~~(
     @result_expression@ @value@;
@@ -3608,6 +3639,41 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
         }
     }
 )~~~");
+            }
+
+            // If a reflected IDL attribute has the type USVString:
+            else if (attribute.type->name() == "USVString") {
+                // The getter steps are:
+                // 1. Let element be the result of running this's get the element.
+                // NOTE: this is "impl" above
+                // 2. Let contentAttributeValue be the result of running this's get the content attribute.
+                attribute_generator.append(R"~~~(
+    auto content_attribute_value = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
+)~~~");
+                // 3. Let attributeDefinition be the attribute definition of element's content attribute whose namespace is null and local name is the reflected content attribute name.
+                // NOTE: this is "attribute" above
+
+                // 4. If attributeDefinition indicates it contains a URL:
+                if (attribute.extended_attributes.contains("URL")) {
+                    // 1. If contentAttributeValue is null, then return the empty string.
+                    // 2. Let urlString be the result of encoding-parsing-and-serializing a URL given contentAttributeValue, relative to element's node document.
+                    // 3. If urlString is not failure, then return urlString.
+                    attribute_generator.append(R"~~~(
+    if (!content_attribute_value.has_value())
+        return JS::PrimitiveString::create(vm, String {});
+
+    auto url_string = impl->document().parse_url(*content_attribute_value);
+    if (url_string.is_valid())
+        return JS::PrimitiveString::create(vm, MUST(url_string.to_string()));
+)~~~");
+                }
+
+                // 5. Return contentAttributeValue, converted to a scalar value string.
+                attribute_generator.append(R"~~~(
+    String retval;
+    if (content_attribute_value.has_value())
+        retval = MUST(Infra::convert_to_scalar_value_string(*content_attribute_value));
+)~~~");
             } else {
                 attribute_generator.append(R"~~~(
     auto retval = impl->get_attribute_value(HTML::AttributeNames::@attribute.reflect_name@);
@@ -4115,9 +4181,10 @@ static void generate_using_namespace_definitions(SourceGenerator& generator)
     generator.append(R"~~~(
     // FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
     using namespace Web::Animations;
+    using namespace Web::Clipboard;
+    using namespace Web::Crypto;
     using namespace Web::CSS;
     using namespace Web::DOM;
-    using namespace Web::Crypto;
     using namespace Web::DOMParsing;
     using namespace Web::DOMURL;
     using namespace Web::Encoding;
@@ -4129,20 +4196,21 @@ static void generate_using_namespace_definitions(SourceGenerator& generator)
     using namespace Web::IndexedDB;
     using namespace Web::Internals;
     using namespace Web::IntersectionObserver;
+    using namespace Web::NavigationTiming;
+    using namespace Web::PerformanceTimeline;
     using namespace Web::RequestIdleCallback;
     using namespace Web::ResizeObserver;
     using namespace Web::Selection;
-    using namespace Web::NavigationTiming;
-    using namespace Web::PerformanceTimeline;
-    using namespace Web::UserTiming;
+    using namespace Web::StorageAPI;
     using namespace Web::Streams;
     using namespace Web::SVG;
     using namespace Web::UIEvents;
-    using namespace Web::XHR;
+    using namespace Web::UserTiming;
     using namespace Web::WebAssembly;
     using namespace Web::WebAudio;
     using namespace Web::WebGL;
     using namespace Web::WebIDL;
+    using namespace Web::XHR;
 )~~~"sv);
 }
 
@@ -4586,6 +4654,7 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/Buffers.h>
 #include <LibWeb/WebIDL/Tracing.h>

@@ -39,18 +39,19 @@ ErrorOr<NonnullOwnPtr<InstalledPortDatabase>> InstalledPortDatabase::instantiate
     auto appending_database_file_descriptor = TRY(Core::File::open(path, Core::File::OpenMode::Write | Core::File::OpenMode::Append));
     auto buffered_file = TRY(Core::InputBufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
+    int line_number = 0;
 
     HashMap<String, InstalledPort> ports;
     while (TRY(buffered_file->can_read_line())) {
         auto line = TRY(buffered_file->read_line(buffer));
+        line_number += 1;
         if (line.is_empty())
             continue;
 
         auto parts = line.split_view(' ');
         if (parts.size() < 2) {
-            dbgln("Invalid database entry {} (only {} parts)", line, parts.size());
-            // FIXME: Skip over invalid entries instead?
-            return Error::from_string_view("Database entry too short"sv);
+            dbgln("Invalid database entry '{}' (only {} parts) on line {}", line, parts.size(), line_number);
+            continue;
         }
         auto install_type_string = parts[0];
         auto port_name = TRY(String::from_utf8(parts[1]));

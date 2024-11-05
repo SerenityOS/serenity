@@ -35,6 +35,18 @@ inputs:
     description: 'Whether the toolchain prebuilt cache was hit'
     required: false
     default: false
+  jakt_prebuilt_primary_key:
+    description: 'Primary key for the jakt prebuilt cache'
+    required: false
+    default: ''
+  jakt_prebuilt_hit:
+    description: 'Whether the jakt prebuilt cache was hit'
+    required: false
+    default: false
+  jakt_prebuilt_path:
+    description: 'Path to the prebuilt jakt toolchain'
+    required: false
+    default: ''
 
 runs:
   using: "composite"
@@ -47,6 +59,13 @@ runs:
       with:
         path: ${{ inputs.toolchain_prebuilt_path }}
         key: ${{ inputs.toolchain_prebuilt_primary_key }}
+
+    - name: 'Jakt Toolchain Prebuilt Cache'
+      uses: actions/cache/save@v4
+      if: ${{ github.event_name != 'pull_request' && !inputs.jakt_prebuilt_hit }}
+      with:
+          path: ${{ inputs.jakt_prebuilt_path }}
+          key: ${{ inputs.jakt_prebuilt_primary_key }}
 
     - name: 'Toolchain Compiler Cache'
       uses: actions/cache/save@v4

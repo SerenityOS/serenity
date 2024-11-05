@@ -23,8 +23,8 @@ seconds total, not by 2 seconds.
 
 ## Options
 
-* `-s delta_seconds`, `--set delta_seconds`: Adjust system time by
-  `delta_seconds`. Must be superuser.
+-   `-s delta_seconds`, `--set delta_seconds`: Adjust system time by
+    `delta_seconds`. Must be superuser.
 
 ## Examples
 

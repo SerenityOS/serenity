@@ -27,10 +27,10 @@ namespace Kernel {
 class VirtIOGraphicsAdapter;
 class VirtIODisplayConnector final : public DisplayConnector {
     friend class Graphics::VirtIOGPU::Console;
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
-    static NonnullLockRefPtr<VirtIODisplayConnector> must_create(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id);
+    static ErrorOr<NonnullRefPtr<VirtIODisplayConnector>> create(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id);
 
     void set_edid_bytes(Badge<VirtIOGraphicsAdapter>, Array<u8, 128> const& edid_bytes);
     void set_safe_mode_setting_after_initialization(Badge<VirtIOGraphicsAdapter>);

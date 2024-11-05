@@ -155,7 +155,7 @@ WebIDL::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsign
 
         if (m_style_sheet_list) {
             m_style_sheet_list->document().style_computer().invalidate_rule_cache();
-            m_style_sheet_list->document().invalidate_style();
+            m_style_sheet_list->document_or_shadow_root().invalidate_style(DOM::StyleInvalidationReason::StyleSheetInsertRule);
         }
     }
 
@@ -176,7 +176,7 @@ WebIDL::ExceptionOr<void> CSSStyleSheet::delete_rule(unsigned index)
     if (!result.is_exception()) {
         if (m_style_sheet_list) {
             m_style_sheet_list->document().style_computer().invalidate_rule_cache();
-            m_style_sheet_list->document().invalidate_style();
+            m_style_sheet_list->document_or_shadow_root().invalidate_style(DOM::StyleInvalidationReason::StyleSheetDeleteRule);
         }
     }
     return result;
@@ -291,17 +291,26 @@ WebIDL::ExceptionOr<void> CSSStyleSheet::remove_rule(Optional<WebIDL::UnsignedLo
     return delete_rule(index.value_or(0));
 }
 
+void CSSStyleSheet::for_each_effective_rule(TraversalOrder order, Function<void(Web::CSS::CSSRule const&)> const& callback) const
+{
+    if (m_media->matches())
+        m_rules->for_each_effective_rule(order, callback);
+}
+
 void CSSStyleSheet::for_each_effective_style_rule(Function<void(CSSStyleRule const&)> const& callback) const
 {
-    if (m_media->matches()) {
-        m_rules->for_each_effective_style_rule(callback);
-    }
+    for_each_effective_rule(TraversalOrder::Preorder, [&](CSSRule const& rule) {
+        if (rule.type() == CSSRule::Type::Style)
+            callback(static_cast<CSSStyleRule const&>(rule));
+    });
 }
 
 void CSSStyleSheet::for_each_effective_keyframes_at_rule(Function<void(CSSKeyframesRule const&)> const& callback) const
 {
-    if (m_media->matches())
-        m_rules->for_each_effective_keyframes_at_rule(callback);
+    for_each_effective_rule(TraversalOrder::Preorder, [&](CSSRule const& rule) {
+        if (rule.type() == CSSRule::Type::Keyframes)
+            callback(static_cast<CSSKeyframesRule const&>(rule));
+    });
 }
 
 bool CSSStyleSheet::evaluate_media_queries(HTML::Window const& window)

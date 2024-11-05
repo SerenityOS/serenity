@@ -9,17 +9,20 @@ Make sure you have all the dependencies installed:
 ```console
 sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-gui qemu-system-x86 qemu-utils ccache rsync unzip texinfo libssl-dev
 ```
+
 Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
 
-#### GCC 13 or Clang 17
+#### GCC 13 or Clang 17+
 
-A host compiler that supports C++23 features is required for building host tools, the newer the better. Tested versions include gcc-13 and clang-17.
+A host compiler that supports C++23 features is required for building host tools, the newer the better. Tested versions include gcc-13 and Clang 17 through 19.
 
 On Ubuntu gcc-13 is available in the repositories of 24.04 (Noble) and later.
 If you are running an older version, you will either need to upgrade, or find an alternative installation source
 (i.e. from the [ubuntu-toolchain-r/test PPA](https://launchpad.net/~ubuntu-toolchain-r/+archive/ubuntu/test)).
 
-Next, update your local package information from this repository:
+On both Ubuntu and Debian, recent versions of Clang are available in the [LLVM apt repositories](https://apt.llvm.org/).
+
+Next, update your local package information from the new repositories:
 
 ```console
 sudo apt update
@@ -29,6 +32,12 @@ Now on Ubuntu or Debian you can install gcc-13 with apt like this:
 
 ```console
 sudo apt install gcc-13 g++-13
+```
+
+For Clang, the following packages are required (for example Clang 19). Note that the `-dev` packages are only necessary when jakt is enabled.
+
+```
+sudo apt install libclang-19-dev clang-19 llvm-19 llvm-19-dev
 ```
 
 #### QEMU 6.2 or later
@@ -53,10 +62,10 @@ attempt to build CMake from source if the version on your path is older than 3.2
 
 If you have previously compiled SerenityOS with an older or distribution-provided version of CMake,
 you will need to manually remove the CMakeCache.txt files, as these files reference the older CMake version and path.
+
 ```console
 rm Build/*/CMakeCache.txt
 ```
-
 
 ### Windows
 
@@ -68,7 +77,8 @@ for details.
 ```console
 sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu-desktop qemu-system-aarch64 ccache rsync unzip
 ```
-Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
+
+Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224), and `clang llvm llvm-libs` for building with Clang.
 
 ### SerenityOS
 
@@ -88,8 +98,8 @@ This is best achieved by adding `ln -sf /usr/local/bin/bash mnt/bin/sh` to your 
 
 There is also documentation for installing the build prerequisites for some less commonly used systems:
 
-* [Other Linux distributions and \*NIX systems](BuildInstructionsOther.md)
-* [macOS](BuildInstructionsMacOS.md)
+-   [Other Linux distributions and \*NIX systems](BuildInstructionsOther.md)
+-   [macOS](BuildInstructionsMacOS.md)
 
 ## Build
 
@@ -130,11 +140,12 @@ Ports might also have additional dependencies. Most prominently, you may need:
 `rename`, `zip`.
 
 For select ports you might need slightly more exotic dependencies such as:
-- `file` (version 5.44 exactly, for file)
-- `libpython3-dev` (most prominently for boost)
-- `lua` (for luarocks)
-- `openjdk-17-jdk` (to compile OpenJDK)
-- `rake` (to build mruby).
+
+-   `file` (version 5.44 exactly, for file)
+-   `libpython3-dev` (most prominently for boost)
+-   `lua` (for luarocks)
+-   `openjdk-17-jdk` (to compile OpenJDK)
+-   `rake` (to build mruby).
 
 You may also need a symlink from "/usr/bin/python" to "/usr/bin/python3"; some ports depend on "python" existing, most notably ninja.
 

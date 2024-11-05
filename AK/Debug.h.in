@@ -78,6 +78,10 @@
 #    cmakedefine01 CSS_TOKENIZER_DEBUG
 #endif
 
+#ifndef CSS_TRANSITIONS_DEBUG
+#    cmakedefine01 CSS_TRANSITIONS_DEBUG
+#endif
+
 #ifndef DDS_DEBUG
 #    cmakedefine01 DDS_DEBUG
 #endif
@@ -448,6 +452,10 @@
 
 #ifndef SQLSERVER_DEBUG
 #    cmakedefine01 SQLSERVER_DEBUG
+#endif
+
+#ifndef STYLE_INVALIDATION_DEBUG
+#    cmakedefine01 STYLE_INVALIDATION_DEBUG
 #endif
 
 #ifndef SYNTAX_HIGHLIGHTING_DEBUG

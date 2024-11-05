@@ -492,7 +492,7 @@ void MapWidget::paint_map(GUI::Painter& painter)
                     if ((child_tile_y & 1) > 0)
                         target_rect.translate_by(0, TILE_SIZE / 2);
 
-                    painter.draw_scaled_bitmap(target_rect, *child_tile.release_value(), tile_source, 1.f, Gfx::Painter::ScalingMode::BilinearBlend);
+                    painter.draw_scaled_bitmap(target_rect, *child_tile.release_value(), tile_source, 1.f, Gfx::ScalingMode::BilinearBlend);
                     ++cached_tiles_used;
                 }
             }
@@ -510,7 +510,7 @@ void MapWidget::paint_map(GUI::Painter& painter)
                     source_rect.translate_by(TILE_SIZE / 2, 0);
                 if ((tile_y & 1) > 0)
                     source_rect.translate_by(0, TILE_SIZE / 2);
-                painter.draw_scaled_bitmap(tile_rect, *larger_tile.release_value(), source_rect, 1.f, Gfx::Painter::ScalingMode::BilinearBlend);
+                painter.draw_scaled_bitmap(tile_rect, *larger_tile.release_value(), source_rect, 1.f, Gfx::ScalingMode::BilinearBlend);
             }
         }
     }

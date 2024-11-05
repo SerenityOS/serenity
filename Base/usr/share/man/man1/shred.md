@@ -14,15 +14,15 @@ $ shred [options...] [path...]
 
 ## Options
 
-* `--help`: Display this message
-* `-v`, `--verbose`: Show progress during the shred operation
-* `-n`, `--iterations`: Iterations count of shred operation
-* `-u`: Deallocate and remove file after overwriting
-* `--random-source`: Get random bytes from a file other than /dev/random
+-   `--help`: Display this message
+-   `-v`, `--verbose`: Show progress during the shred operation
+-   `-n`, `--iterations`: Iterations count of shred operation
+-   `-u`: Deallocate and remove file after overwriting
+-   `--random-source`: Get random bytes from a file other than /dev/random
 
 ## Arguments
 
-* `path`: Files to shred
+-   `path`: Files to shred
 
 ## Examples
 
@@ -36,4 +36,5 @@ $ shred -v --iterations 10 /tmp/FILE_TO_BE_SHREDDED
 ```
 
 ## See also
-* [`rm`(1)](help://man/1/rm) to delete a file or directory without overwriting the content first
+
+-   [`rm`(1)](help://man/1/rm) to delete a file or directory without overwriting the content first

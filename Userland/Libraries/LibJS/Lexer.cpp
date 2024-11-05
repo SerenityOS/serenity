@@ -20,76 +20,173 @@ HashMap<DeprecatedFlyString, TokenType> Lexer::s_keywords;
 
 static constexpr TokenType parse_two_char_token(StringView view)
 {
-    if (view == "=>"sv)
-        return TokenType::Arrow;
-    if (view == "+="sv)
-        return TokenType::PlusEquals;
-    if (view == "-="sv)
-        return TokenType::MinusEquals;
-    if (view == "*="sv)
-        return TokenType::AsteriskEquals;
-    if (view == "/="sv)
-        return TokenType::SlashEquals;
-    if (view == "%="sv)
-        return TokenType::PercentEquals;
-    if (view == "&="sv)
-        return TokenType::AmpersandEquals;
-    if (view == "|="sv)
-        return TokenType::PipeEquals;
-    if (view == "^="sv)
-        return TokenType::CaretEquals;
-    if (view == "&&"sv)
-        return TokenType::DoubleAmpersand;
-    if (view == "||"sv)
-        return TokenType::DoublePipe;
-    if (view == "??"sv)
-        return TokenType::DoubleQuestionMark;
-    if (view == "**"sv)
-        return TokenType::DoubleAsterisk;
-    if (view == "=="sv)
-        return TokenType::EqualsEquals;
-    if (view == "<="sv)
-        return TokenType::LessThanEquals;
-    if (view == ">="sv)
-        return TokenType::GreaterThanEquals;
-    if (view == "!="sv)
-        return TokenType::ExclamationMarkEquals;
-    if (view == "--"sv)
-        return TokenType::MinusMinus;
-    if (view == "++"sv)
-        return TokenType::PlusPlus;
-    if (view == "<<"sv)
-        return TokenType::ShiftLeft;
-    if (view == ">>"sv)
-        return TokenType::ShiftRight;
-    if (view == "?."sv)
-        return TokenType::QuestionMarkPeriod;
-    return TokenType::Invalid;
+    if (view.length() != 2)
+        return TokenType::Invalid;
+
+    auto const* bytes = view.bytes().data();
+    switch (bytes[0]) {
+    case '=':
+        switch (bytes[1]) {
+        case '>':
+            return TokenType::Arrow;
+        case '=':
+            return TokenType::EqualsEquals;
+        default:
+            return TokenType::Invalid;
+        }
+    case '+':
+        switch (bytes[1]) {
+        case '=':
+            return TokenType::PlusEquals;
+        case '+':
+            return TokenType::PlusPlus;
+        default:
+            return TokenType::Invalid;
+        }
+    case '-':
+        switch (bytes[1]) {
+        case '=':
+            return TokenType::MinusEquals;
+        case '-':
+            return TokenType::MinusMinus;
+        default:
+            return TokenType::Invalid;
+        }
+    case '*':
+        switch (bytes[1]) {
+        case '=':
+            return TokenType::AsteriskEquals;
+        case '*':
+            return TokenType::DoubleAsterisk;
+        default:
+            return TokenType::Invalid;
+        }
+    case '/':
+        switch (bytes[1]) {
+        case '=':
+            return TokenType::SlashEquals;
+        default:
+            return TokenType::Invalid;
+        }
+    case '%':
+        switch (bytes[1]) {
+        case '=':
+            return TokenType::PercentEquals;
+        default:
+            return TokenType::Invalid;
+        }
+    case '&':
+        switch (bytes[1]) {
+        case '=':
+            return TokenType::AmpersandEquals;
+        case '&':
+            return TokenType::DoubleAmpersand;
+        default:
+            return TokenType::Invalid;
+        }
+    case '|':
+        switch (bytes[1]) {
+        case '=':
+            return TokenType::PipeEquals;
+        case '|':
+            return TokenType::DoublePipe;
+        default:
+            return TokenType::Invalid;
+        }
+    case '^':
+        switch (bytes[1]) {
+        case '=':
+            return TokenType::CaretEquals;
+        default:
+            return TokenType::Invalid;
+        }
+    case '<':
+        switch (bytes[1]) {
+        case '=':
+            return TokenType::LessThanEquals;
+        case '<':
+            return TokenType::ShiftLeft;
+        default:
+            return TokenType::Invalid;
+        }
+    case '>':
+        switch (bytes[1]) {
+        case '=':
+            return TokenType::GreaterThanEquals;
+        case '>':
+            return TokenType::ShiftRight;
+        default:
+            return TokenType::Invalid;
+        }
+    case '?':
+        switch (bytes[1]) {
+        case '?':
+            return TokenType::DoubleQuestionMark;
+        case '.':
+            return TokenType::QuestionMarkPeriod;
+        default:
+            return TokenType::Invalid;
+        }
+    case '!':
+        switch (bytes[1]) {
+        case '=':
+            return TokenType::ExclamationMarkEquals;
+        default:
+            return TokenType::Invalid;
+        }
+    default:
+        return TokenType::Invalid;
+    }
 }
 
 static constexpr TokenType parse_three_char_token(StringView view)
 {
-    if (view == "==="sv)
-        return TokenType::EqualsEqualsEquals;
-    if (view == "!=="sv)
-        return TokenType::ExclamationMarkEqualsEquals;
-    if (view == "**="sv)
-        return TokenType::DoubleAsteriskEquals;
-    if (view == "<<="sv)
-        return TokenType::ShiftLeftEquals;
-    if (view == ">>="sv)
-        return TokenType::ShiftRightEquals;
-    if (view == "&&="sv)
-        return TokenType::DoubleAmpersandEquals;
-    if (view == "||="sv)
-        return TokenType::DoublePipeEquals;
-    if (view == "\?\?="sv)
-        return TokenType::DoubleQuestionMarkEquals;
-    if (view == ">>>"sv)
-        return TokenType::UnsignedShiftRight;
-    if (view == "..."sv)
-        return TokenType::TripleDot;
-    return TokenType::Invalid;
+    if (view.length() != 3)
+        return TokenType::Invalid;
+
+    auto const* bytes = view.bytes().data();
+    switch (bytes[0]) {
+    case '<':
+        if (bytes[1] == '<' && bytes[2] == '=')
+            return TokenType::ShiftLeftEquals;
+        return TokenType::Invalid;
+    case '>':
+        if (bytes[1] == '>' && bytes[2] == '=')
+            return TokenType::ShiftRightEquals;
+        if (bytes[1] == '>' && bytes[2] == '>')
+            return TokenType::UnsignedShiftRight;
+        return TokenType::Invalid;
+    case '=':
+        if (bytes[1] == '=' && bytes[2] == '=')
+            return TokenType::EqualsEqualsEquals;
+        return TokenType::Invalid;
+    case '!':
+        if (bytes[1] == '=' && bytes[2] == '=')
+            return TokenType::ExclamationMarkEqualsEquals;
+        return TokenType::Invalid;
+    case '.':
+        if (bytes[1] == '.' && bytes[2] == '.')
+            return TokenType::TripleDot;
+        return TokenType::Invalid;
+    case '*':
+        if (bytes[1] == '*' && bytes[2] == '=')
+            return TokenType::DoubleAsteriskEquals;
+        return TokenType::Invalid;
+    case '&':
+        if (bytes[1] == '&' && bytes[2] == '=')
+            return TokenType::DoubleAmpersandEquals;
+        return TokenType::Invalid;
+    case '|':
+        if (bytes[1] == '|' && bytes[2] == '=')
+            return TokenType::DoublePipeEquals;
+        return TokenType::Invalid;
+    case '?':
+        if (bytes[1] == '?' && bytes[2] == '=')
+            return TokenType::DoubleQuestionMarkEquals;
+        return TokenType::Invalid;
+    default:
+        return TokenType::Invalid;
+    }
 }
 
 static consteval Array<TokenType, 256> make_single_char_tokens_array()
@@ -127,7 +224,7 @@ static constexpr auto s_single_char_tokens = make_single_char_tokens_array();
 
 Lexer::Lexer(StringView source, StringView filename, size_t line_number, size_t line_column)
     : m_source(source)
-    , m_current_token(TokenType::Eof, {}, {}, {}, filename, 0, 0, 0)
+    , m_current_token(TokenType::Eof, {}, {}, {}, 0, 0, 0)
     , m_filename(String::from_utf8(filename).release_value_but_fixme_should_propagate_errors())
     , m_line_number(line_number)
     , m_line_column(line_column)
@@ -871,7 +968,6 @@ Token Lexer::next()
         m_current_token = Token(TokenType::Invalid, "Invalid unicode codepoint in source"_string,
             ""sv, // Since the invalid unicode can occur anywhere in the current token the trivia is not correct
             m_source.substring_view(value_start + 1, min(4u, m_source.length() - value_start - 2)),
-            m_filename,
             m_line_number,
             m_line_column - 1,
             value_start + 1);
@@ -884,7 +980,6 @@ Token Lexer::next()
             token_message,
             m_source.substring_view(trivia_start - 1, value_start - trivia_start),
             m_source.substring_view(value_start - 1, m_position - value_start),
-            m_filename,
             value_start_line_number,
             value_start_column_number,
             value_start - 1);
@@ -928,7 +1023,6 @@ Token Lexer::force_slash_as_regex()
         String {},
         m_current_token.trivia(),
         m_source.substring_view(value_start - 1, m_position - value_start),
-        m_filename,
         m_current_token.line_number(),
         m_current_token.line_column(),
         value_start - 1);

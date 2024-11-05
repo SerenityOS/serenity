@@ -111,8 +111,13 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> TGAImageDecoderPlugin::create(Readonl
 
 static ErrorOr<ARGB32> read_pixel_from_stream(Stream& stream, size_t bytes_size)
 {
-    // NOTE: We support 24-bit color pixels and 32-bit color pixels
-    VERIFY(bytes_size == 3 || bytes_size == 4);
+    // NOTE: We support 8-bit, 24-bit and 32-bit color pixels
+    VERIFY(bytes_size == 1 || bytes_size == 3 || bytes_size == 4);
+
+    if (bytes_size == 1) {
+        auto raw = TRY(stream.read_value<u8>());
+        return Color(raw, raw, raw).value();
+    }
     if (bytes_size == 3) {
         Array<u8, 3> raw;
         TRY(stream.read_until_filled(raw.span()));
@@ -145,8 +150,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
     auto data_type = m_context->header.data_type_code;
     auto width = m_context->header.width;
     auto height = m_context->header.height;
-    auto x_origin = m_context->header.x_origin;
-    auto y_origin = m_context->header.y_origin;
+    auto image_descriptior = m_context->header.image_descriptor;
 
     if (index != 0)
         return Error::from_string_literal("TGAImageDecoderPlugin: frame index must be 0");
@@ -159,6 +163,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
 
     RefPtr<Gfx::Bitmap> bitmap;
     switch (bits_per_pixel) {
+    case 8:
     case 24:
         bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { m_context->header.width, m_context->header.height }));
         break;
@@ -169,34 +174,25 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
 
     default:
         // FIXME: Implement other TGA bit depths
-        return Error::from_string_literal("TGAImageDecoderPlugin: Can only handle 24 and 32 bits per pixel");
+        return Error::from_string_literal("TGAImageDecoderPlugin: Can only handle 8, 24 and 32 bits per pixel");
     }
 
-    // FIXME: Try to understand the Image origin (instead of X and Y origin coordinates)
-    // based on the Image descriptor, Field 5.6, bits 4 and 5.
-
-    // NOTE: If Y origin is set to a negative number, just assume the generating software
-    // meant that we start with Y origin at the top height of the picture.
-    // At least this is the observed behavior when generating some pictures in GIMP.
-    if (y_origin < 0)
-        y_origin = height;
-    if (y_origin != 0 && y_origin != height)
-        return Error::from_string_literal("TGAImageDecoderPlugin: Can only handle Y origin which is 0 or the entire height");
-    if (x_origin != 0 && x_origin != width)
-        return Error::from_string_literal("TGAImageDecoderPlugin: Can only handle X origin which is 0 or the entire width");
+    auto is_top_to_bottom = (image_descriptior & 1 << 5) == 0;
+    auto is_left_to_right = (image_descriptior & 1 << 4) == 0;
 
     VERIFY((bits_per_pixel % 8) == 0);
     auto bytes_per_pixel = bits_per_pixel / 8;
 
     switch (data_type) {
+    case TGADataType::UncompressedBlackAndWhite:
     case TGADataType::UncompressedRGB: {
         for (int row = 0; row < height; ++row) {
             for (int col = 0; col < width; ++col) {
                 auto actual_row = row;
-                if (y_origin < height)
+                if (is_top_to_bottom)
                     actual_row = height - 1 - row;
                 auto actual_col = col;
-                if (x_origin > width)
+                if (!is_left_to_right)
                     actual_col = width - 1 - col;
                 bitmap->scanline(actual_row)[actual_col] = TRY(read_pixel_from_stream(m_context->stream, bytes_per_pixel));
             }
@@ -217,10 +213,10 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
                 int row = current_pixel_index / width;
                 int col = current_pixel_index % width;
                 auto actual_row = row;
-                if (y_origin < height)
+                if (is_top_to_bottom)
                     actual_row = height - 1 - row;
                 auto actual_col = col;
-                if (x_origin > width)
+                if (!is_left_to_right)
                     actual_col = width - 1 - col;
                 bitmap->scanline(actual_row)[actual_col] = pixel;
                 if (pixel_packet_header.raw && (current_pixel_index + 1) < max_pixel_index)
@@ -232,7 +228,7 @@ ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optiona
     }
     default:
         // FIXME: Implement other TGA data types
-        return Error::from_string_literal("TGAImageDecoderPlugin: Can currently only handle the UncompressedRGB or CompressedRGB data type");
+        return Error::from_string_literal("TGAImageDecoderPlugin: Can currently only handle the UncompressedRGB, CompressedRGB or UncompressedBlackAndWhite data type");
     }
 
     m_context->bitmap = bitmap;

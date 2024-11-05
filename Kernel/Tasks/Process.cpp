@@ -14,7 +14,8 @@
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/BaseDevices.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/NullDevice.h>
 #include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -228,7 +229,9 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView 
     TRY(process->m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         TRY(fds.try_resize(Process::OpenFileDescriptions::max_open()));
 
-        auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : DeviceManagement::the().null_device();
+        // NOTE: If Device::base_devices() is returning nullptr, it means the null device is not attached which is a bug.
+        VERIFY(Device::base_devices() != nullptr);
+        auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : Device::base_devices()->null_device;
         auto description = TRY(device_to_use_as_tty.open(O_RDWR));
         auto setup_description = [&](int fd) {
             fds.m_fds_metadatas[fd].allocate();
@@ -532,7 +535,7 @@ void Process::crash(int signal, Optional<RegisterState const&> regs, bool out_of
     if (out_of_memory) {
         dbgln("\033[31;1mOut of memory\033[m, killing: {}", *this);
     } else {
-        if (ip >= kernel_load_base && g_kernel_symbols_available.was_set()) {
+        if (ip >= g_boot_info.kernel_load_base && g_kernel_symbols_available.was_set()) {
             auto const* symbol = symbolicate_kernel_address(ip);
             dbgln("\033[31;1m{:p}  {} +{}\033[0m\n", ip, (symbol ? symbol->name : "(k?)"), (symbol ? ip - symbol->address : 0));
         } else {

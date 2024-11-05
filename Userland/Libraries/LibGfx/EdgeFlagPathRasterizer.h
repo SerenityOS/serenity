@@ -10,8 +10,8 @@
 #include <AK/GenericShorthands.h>
 #include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Forward.h>
 #include <LibGfx/PaintStyle.h>
-#include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 
 namespace Gfx {
@@ -145,8 +145,8 @@ class EdgeFlagPathRasterizer {
 public:
     EdgeFlagPathRasterizer(IntSize);
 
-    void fill(Painter&, Path const&, Color, Painter::WindingRule, FloatPoint offset = {});
-    void fill(Painter&, Path const&, PaintStyle const&, float opacity, Painter::WindingRule, FloatPoint offset = {});
+    void fill(Painter&, Path const&, Color, WindingRule, FloatPoint offset = {});
+    void fill(Painter&, Path const&, PaintStyle const&, float opacity, WindingRule, FloatPoint offset = {});
 
 private:
     using SubpixelSample = Detail::Sample<SamplesPerPixel>;
@@ -172,16 +172,16 @@ private:
         }
     };
 
-    void fill_internal(Painter&, Path const&, auto color_or_function, Painter::WindingRule, FloatPoint offset);
+    void fill_internal(Painter&, Path const&, auto color_or_function, WindingRule, FloatPoint offset);
     Detail::Edge* plot_edges_for_scanline(int scanline, auto plot_edge, EdgeExtent&, Detail::Edge* active_edges = nullptr);
 
-    template<Painter::WindingRule>
+    template<WindingRule>
     FLATTEN void write_scanline(Painter&, int scanline, EdgeExtent, auto& color_or_function);
     Color scanline_color(int scanline, int offset, u8 alpha, auto& color_or_function);
     void write_pixel(BitmapFormat format, ARGB32* scanline_ptr, int scanline, int offset, SampleType sample, auto& color_or_function);
     void fast_fill_solid_color_span(ARGB32* scanline_ptr, int start, int end, Color color);
 
-    template<Painter::WindingRule, typename Callback>
+    template<WindingRule, typename Callback>
     auto accumulate_scanline(EdgeExtent, auto, Callback);
     auto accumulate_even_odd_scanline(EdgeExtent, auto, auto sample_callback);
     auto accumulate_non_zero_scanline(EdgeExtent, auto, auto sample_callback);
@@ -196,10 +196,10 @@ private:
         WindingCounts winding;
     };
 
-    template<Painter::WindingRule WindingRule>
+    template<WindingRule WindingRule>
     constexpr auto initial_acc() const
     {
-        if constexpr (WindingRule == Painter::WindingRule::EvenOdd)
+        if constexpr (WindingRule == WindingRule::EvenOdd)
             return SampleType {};
         else
             return NonZeroAcc {};
@@ -218,15 +218,15 @@ private:
 
         void set_scanline_range(int min_scanline, int max_scanline)
         {
-            this->min_scanline = min_scanline;
-            edges.resize(max_scanline - min_scanline + 1);
+            m_min_scanline = min_scanline;
+            m_edges.resize(max_scanline - min_scanline + 1);
         }
 
-        auto& operator[](int scanline) { return edges[scanline - min_scanline]; }
+        auto& operator[](int scanline) { return m_edges[scanline - m_min_scanline]; }
 
     private:
-        Vector<Detail::Edge*> edges;
-        int min_scanline { 0 };
+        Vector<Detail::Edge*> m_edges;
+        int m_min_scanline { 0 };
     } m_edge_table;
 };
 

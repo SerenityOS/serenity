@@ -15,7 +15,7 @@
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Page/Page.h>
-#include <LibWeb/Painting/CommandExecutorCPU.h>
+#include <LibWeb/Painting/DisplayListPlayerCPU.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
 #include <LibWeb/SVG/SVGDecodedImageData.h>
@@ -92,12 +92,23 @@ RefPtr<Gfx::Bitmap> SVGDecodedImageData::render(Gfx::IntSize size) const
     m_document->navigable()->set_viewport_size(size.to_type<CSSPixels>());
     m_document->update_layout();
 
-    Painting::CommandList painting_commands;
-    Painting::RecordingPainter recording_painter(painting_commands);
-    Painting::CommandExecutorCPU executor { *bitmap };
+    Painting::DisplayList display_list;
+    Painting::DisplayListRecorder display_list_recorder(display_list);
 
-    m_document->navigable()->record_painting_commands(recording_painter, {});
-    painting_commands.execute(executor);
+    m_document->navigable()->record_display_list(display_list_recorder, {});
+
+    auto painting_command_executor_type = m_page_client->display_list_player_type();
+    switch (painting_command_executor_type) {
+    case DisplayListPlayerType::CPU:
+    case DisplayListPlayerType::CPUWithExperimentalTransformSupport:
+    case DisplayListPlayerType::GPU: { // GPU painter does not have any path rasterization support so we always fall back to CPU painter
+        Painting::DisplayListPlayerCPU executor { *bitmap };
+        display_list.execute(executor);
+        break;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
 
     return bitmap;
 }

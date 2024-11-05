@@ -6,14 +6,16 @@
 
 #pragma once
 
-#include <LibGfx/Painter.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/Forward.h>
 #include <LibGfx/Path.h>
+#include <LibGfx/WindingRule.h>
 
 namespace Gfx {
 
 struct ClipPath {
     Path path;
-    Painter::WindingRule winding_rule;
+    WindingRule winding_rule;
 };
 
 class PathClipper {

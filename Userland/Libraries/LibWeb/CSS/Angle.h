@@ -33,6 +33,7 @@ public:
 
     Type type() const { return m_type; }
     double raw_value() const { return m_value; }
+    StringView unit_name() const;
 
     bool operator==(Angle const& other) const
     {
@@ -51,11 +52,9 @@ public:
         return 0;
     }
 
-    static Angle resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Angle const& reference_value);
+    static Angle resolve_calculated(NonnullRefPtr<CSSMathValue> const&, Layout::Node const&, Angle const& reference_value);
 
 private:
-    StringView unit_name() const;
-
     Type m_type;
     double m_value { 0 };
 };

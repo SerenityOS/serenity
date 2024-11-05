@@ -46,9 +46,9 @@ to be recognized. To specify whether a long option has a value, the `has_arg`
 member of `struct option` must be set to one of the following predefined macro
 values:
 
-* `no_argument`, if no value is accepted;
-* `required_argument`, if a value is optionally accepted;
-* `optional_argument`, if a value is optionally accepted.
+-   `no_argument`, if no value is accepted;
+-   `required_argument`, if a value is optionally accepted;
+-   `optional_argument`, if a value is optionally accepted.
 
 If an option is parsed successfully, `getopt()` and `getopt_long()`
 automatically increase the `optind` variable to point to the next command-line
@@ -150,4 +150,4 @@ const char* file_name = argv[optind];
 
 ## See also
 
-* [`getopt`(5)](help://man/5/getopt)
+-   [`getopt`(5)](help://man/5/getopt)

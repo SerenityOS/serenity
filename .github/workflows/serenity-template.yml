@@ -66,6 +66,7 @@ jobs:
           serenity_ccache_path: ${{ env.SERENITY_CCACHE_DIR }}
           toolchain_ccache_path: ${{ env.TOOLCHAIN_CCACHE_DIR }}
           download_cache_path: ${{ github.workspace }}/Build/caches
+          jakt_toolchain_cache_path: ${{ github.workspace }}/Toolchain/Local/jakt
 
       - name: Assign Build Parameters
         id: 'build-parameters'
@@ -77,12 +78,16 @@ jobs:
           fi
 
       - name: Build Toolchain
-        if: ${{ !steps.cache-restore.outputs.toolchain_prebuilt_hit }}
+        if: ${{ steps.cache-restore.outputs.toolchain_prebuilt_hit != 'true' }}
         run: |
           ${{ github.workspace }}/Toolchain/Build${{ inputs.toolchain }}.sh --ci
         env:
           ARCH: ${{ inputs.arch}}
           CCACHE_DIR: ${{ env.TOOLCHAIN_CCACHE_DIR }}
+
+      - name: Build jakt toolchain
+        if: ${{ steps.cache-restore.output.jakt_prebuilt_hit != 'true' }}
+        run: ARCH="${{ inputs.arch }}" CXX=g++-13 ${{ github.workspace }}/Toolchain/BuildJakt.sh
 
       - name: Create Build Environment
         if: ${{ inputs.debug_options == 'ALL_DEBUG' }}
@@ -133,8 +138,6 @@ jobs:
         uses: ./.github/actions/cache-save
         with:
           arch: ${{ inputs.arch }}
-          qemu_cache_primary_key: ${{ steps.cache-restore.outputs.qemu_cache_primary_key }}
-          qemu_cache_hit: ${{ steps.cache-restore.outputs.qemu_cache_hit }}
           serenity_ccache_path: ${{ env.SERENITY_CCACHE_DIR }}
           serenity_ccache_primary_key: ${{ steps.cache-restore.outputs.serenity_ccache_primary_key }}
           toolchain_ccache_path: ${{ env.TOOLCHAIN_CCACHE_DIR }}
@@ -142,6 +145,9 @@ jobs:
           toolchain_prebuilt_path: ${{ steps.cache-restore.outputs.toolchain_prebuilt_path }}
           toolchain_prebuilt_primary_key: ${{ steps.cache-restore.outputs.toolchain_prebuilt_primary_key }}
           toolchain_prebuilt_hit: ${{ steps.cache-restore.outputs.toolchain_prebuilt_hit }}
+          jakt_prebuilt_primary_key: ${{ steps.cache-restore.outputs.jakt_prebuilt_primary_key }}
+          jakt_prebuilt_hit: ${{ steps.cache-restore.outputs.jakt_prebuilt_hit }}
+          jakt_prebuilt_path: ${{ github.workspace }}/Toolchain/Local/jakt
 
       # === TEST ===
 
@@ -187,8 +193,8 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: ./Meta/analyze-qemu-coverage.sh
         env:
-          SERENITY_TOOLCHAIN: ${{ matrix.toolchain }}
-          SERENITY_ARCH: ${{ matrix.arch }}
+          SERENITY_TOOLCHAIN: ${{ inputs.toolchain }}
+          SERENITY_ARCH: ${{ inputs.arch }}
 
       # FIXME: Deploy the static html pages somewhere
       # FIXME: Alter script to also (instead?) produce a raw coverage.txt file for ingestion into sonar cloud

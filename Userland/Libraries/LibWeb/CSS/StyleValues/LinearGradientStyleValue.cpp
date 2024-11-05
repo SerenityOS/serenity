@@ -55,7 +55,7 @@ String LinearGradientStyleValue::to_string() const
     return MUST(builder.to_string());
 }
 
-bool LinearGradientStyleValue::equals(StyleValue const& other_) const
+bool LinearGradientStyleValue::equals(CSSStyleValue const& other_) const
 {
     if (type() != other_.type())
         return false;
@@ -112,7 +112,7 @@ void LinearGradientStyleValue::resolve_for_size(Layout::NodeWithStyleAndBoxModel
 void LinearGradientStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering, Vector<Gfx::Path> const& clip_paths) const
 {
     VERIFY(m_resolved.has_value());
-    context.recording_painter().fill_rect_with_linear_gradient(dest_rect.to_type<int>(), m_resolved->data, clip_paths);
+    context.display_list_recorder().fill_rect_with_linear_gradient(dest_rect.to_type<int>(), m_resolved->data, clip_paths);
 }
 
 }

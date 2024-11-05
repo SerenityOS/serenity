@@ -28,9 +28,9 @@ SpiceAgent::SpiceAgent(NonnullOwnPtr<Core::File> spice_device, Vector<Capability
         Core::Notifier::Type::Read);
 
     m_notifier->on_activation = [this] {
-        auto result = on_message_received();
-        if (result.is_error()) {
-            dbgln("Failed to handle message: {}", result.release_error());
+        auto result = read_chunks();
+        if (result.is_error() && result.error().code() != EAGAIN) {
+            dbgln("Failed to read chunk(s): {}", result.release_error());
         }
     };
 }
@@ -103,12 +103,35 @@ ErrorOr<void> SpiceAgent::send_clipboard_contents(ClipboardDataType data_type)
     return {};
 }
 
-ErrorOr<void> SpiceAgent::on_message_received()
+ErrorOr<void> SpiceAgent::on_chunk_received(Bytes chunk_buffer)
 {
-    auto buffer = TRY(this->read_message_buffer());
-    auto stream = FixedMemoryStream(buffer.bytes());
+    auto stream = FixedMemoryStream(chunk_buffer);
+    if (!m_message.header.has_value()) {
+        // Read the header (the chunk must at least contain the header).
+        m_message.header = MUST(stream.read_value<MessageHeader>());
+        m_message.buffer.resize(m_message.header->data_size());
+        m_message.recv_offset = 0;
+    }
 
-    auto header = TRY(stream.read_value<MessageHeader>());
+    // Read message data. Most messages are one chunk, but some, such as file transfers, can be
+    // split over multiple chunks. In that case, we wait until we've received all the chunks.
+    Bytes result = TRY(stream.read_some(Bytes(m_message.buffer).slice(m_message.recv_offset)));
+    m_message.recv_offset += result.size();
+    if (m_message.recv_offset < m_message.header->data_size())
+        return {};
+
+    ScopeGuard cleanup_message = [&] {
+        m_message.buffer.trim(0, true);
+        m_message.recv_offset = 0;
+        m_message.header = {};
+    };
+    TRY(on_message_received(*m_message.header, m_message.buffer));
+    return {};
+}
+
+ErrorOr<void> SpiceAgent::on_message_received(MessageHeader const& header, Bytes data_buffer)
+{
+    auto stream = FixedMemoryStream(data_buffer);
     switch (header.type()) {
     case Message::Type::AnnounceCapabilities: {
         auto message = TRY(AnnounceCapabilitiesMessage::read_from_stream(stream));
@@ -275,21 +298,32 @@ ErrorOr<void> SpiceAgent::did_receive_clipboard_message(ClipboardMessage& messag
     return {};
 }
 
-ErrorOr<ByteBuffer> SpiceAgent::read_message_buffer()
+ErrorOr<void> SpiceAgent::read_chunks()
 {
-    auto header = TRY(m_spice_device->read_value<ChunkHeader>());
-    auto buffer = TRY(ByteBuffer::create_uninitialized(header.size()));
-    TRY(m_spice_device->read_until_filled(buffer));
+    while (!m_spice_device->is_eof()) {
+        if (m_chunk.buffer.is_empty()) {
+            // Cautiously, try to read the chunk header. If it's (somehow) incomplete, wait.
+            Bytes result = TRY(m_spice_device->read_some(Bytes(m_chunk.header).slice(m_chunk.recv_offset)));
+            m_chunk.recv_offset += result.size();
+            if (m_chunk.recv_offset < sizeof(ChunkHeader))
+                return {};
+            auto header = bit_cast<ChunkHeader>(m_chunk.header);
+            m_chunk.buffer.resize(header.size());
+            m_chunk.recv_offset = 0;
+        }
 
-    // If the header's size is bigger than or equal to 2048, we may have more data incoming.
-    while (header.size() >= message_buffer_threshold) {
-        header = TRY(m_spice_device->read_value<ChunkHeader>());
+        // Read chunk data, notify chunk receipt once the buffer is full.
+        Bytes result = TRY(m_spice_device->read_some(Bytes(m_chunk.buffer).slice(m_chunk.recv_offset)));
+        m_chunk.recv_offset += result.size();
+        if (m_chunk.recv_offset < m_chunk.buffer.size())
+            return {};
 
-        auto new_buffer = TRY(ByteBuffer::create_uninitialized(header.size()));
-        TRY(m_spice_device->read_until_filled(new_buffer));
-        TRY(buffer.try_append(new_buffer));
+        ScopeGuard cleanup_chunk = [&] {
+            m_chunk.buffer.trim(0, true);
+            m_chunk.recv_offset = 0;
+        };
+        TRY(on_chunk_received(m_chunk.buffer));
     }
-
-    return buffer;
+    return {};
 }
 };

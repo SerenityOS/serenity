@@ -14,7 +14,6 @@
 #include <AK/RefPtr.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
-#include <Kernel/API/KeyCode.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Point.h>
@@ -26,6 +25,8 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibURL/URL.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
+#include <LibWeb/CSS/PreferredContrast.h>
+#include <LibWeb/CSS/PreferredMotion.h>
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Forward.h>
@@ -37,7 +38,9 @@
 #include <LibWeb/HTML/TokenizedFeatures.h>
 #include <LibWeb/HTML/WebViewHints.h>
 #include <LibWeb/Loader/FileRequest.h>
+#include <LibWeb/Page/InputEvent.h>
 #include <LibWeb/PixelUnits.h>
+#include <LibWeb/UIEvents/KeyCode.h>
 
 #ifdef HAS_ACCELERATED_GRAPHICS
 #    include <LibAccelGfx/Context.h>
@@ -96,12 +99,16 @@ public:
     bool handle_mousewheel(DevicePixelPoint, DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers, DevicePixels wheel_delta_x, DevicePixels wheel_delta_y);
     bool handle_doubleclick(DevicePixelPoint, DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers);
 
-    bool handle_keydown(KeyCode, unsigned modifiers, u32 code_point);
-    bool handle_keyup(KeyCode, unsigned modifiers, u32 code_point);
+    bool handle_drag_and_drop_event(DragEvent::Type, DevicePixelPoint, DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers, Vector<HTML::SelectedFile> files);
+
+    bool handle_keydown(UIEvents::KeyCode, unsigned modifiers, u32 code_point);
+    bool handle_keyup(UIEvents::KeyCode, unsigned modifiers, u32 code_point);
 
     Gfx::Palette palette() const;
     CSSPixelRect web_exposed_screen_area() const;
     CSS::PreferredColorScheme preferred_color_scheme() const;
+    CSS::PreferredContrast preferred_contrast() const;
+    CSS::PreferredMotion preferred_motion() const;
 
     bool is_same_origin_policy_enabled() const { return m_same_origin_policy_enabled; }
     void set_same_origin_policy_enabled(bool b) { m_same_origin_policy_enabled = b; }
@@ -185,9 +192,23 @@ public:
 
     void clear_selection();
 
-    void find_in_page(String const& query, CaseSensitivity);
-    void find_in_page_next_match();
-    void find_in_page_previous_match();
+    enum class WrapAround {
+        Yes,
+        No,
+    };
+    struct FindInPageQuery {
+        String string {};
+        CaseSensitivity case_sensitivity { CaseSensitivity::CaseInsensitive };
+        WrapAround wrap_around { WrapAround::Yes };
+    };
+    struct FindInPageResult {
+        size_t current_match_index { 0 };
+        Optional<size_t> total_match_count {};
+    };
+    FindInPageResult find_in_page(FindInPageQuery const&);
+    FindInPageResult find_in_page_next_match();
+    FindInPageResult find_in_page_previous_match();
+    Optional<FindInPageQuery> last_find_in_page_query() const { return m_last_find_in_page_query; }
 
 private:
     explicit Page(JS::NonnullGCPtr<PageClient>);
@@ -195,7 +216,14 @@ private:
 
     JS::GCPtr<HTML::HTMLMediaElement> media_context_menu_element();
 
-    void update_find_in_page_selection();
+    Vector<JS::Handle<DOM::Document>> documents_in_active_window() const;
+
+    enum class SearchDirection {
+        Forward,
+        Backward,
+    };
+    FindInPageResult perform_find_in_page_query(FindInPageQuery const&, Optional<SearchDirection> = {});
+    void update_find_in_page_selection(Vector<JS::Handle<DOM::Range>> matches);
 
     JS::NonnullGCPtr<PageClient> m_client;
 
@@ -239,7 +267,8 @@ private:
     // FIXME: Actually support pdf viewing
     bool m_pdf_viewer_supported { false };
     size_t m_find_in_page_match_index { 0 };
-    Vector<JS::NonnullGCPtr<DOM::Range>> m_find_in_page_matches;
+    Optional<FindInPageQuery> m_last_find_in_page_query;
+    URL::URL m_last_find_in_page_url;
 };
 
 struct PaintOptions {
@@ -252,12 +281,15 @@ struct PaintOptions {
     bool should_show_line_box_borders { false };
     bool has_focus { false };
 
-    bool use_gpu_painter { false };
-    bool use_experimental_cpu_transform_support { false };
-
 #ifdef HAS_ACCELERATED_GRAPHICS
     AccelGfx::Context* accelerated_graphics_context { nullptr };
 #endif
+};
+
+enum class DisplayListPlayerType {
+    CPU,
+    CPUWithExperimentalTransformSupport,
+    GPU,
 };
 
 class PageClient : public JS::Cell {
@@ -271,6 +303,8 @@ public:
     virtual DevicePixelRect screen_rect() const = 0;
     virtual double device_pixels_per_css_pixel() const = 0;
     virtual CSS::PreferredColorScheme preferred_color_scheme() const = 0;
+    virtual CSS::PreferredContrast preferred_contrast() const = 0;
+    virtual CSS::PreferredMotion preferred_motion() const = 0;
     virtual void paint_next_frame() = 0;
     virtual void paint(DevicePixelRect const&, Gfx::Bitmap&, PaintOptions = {}) = 0;
     virtual void page_did_change_title(ByteString const&) { }
@@ -349,6 +383,8 @@ public:
 
     virtual void schedule_repaint() = 0;
     virtual bool is_ready_to_paint() const = 0;
+
+    virtual DisplayListPlayerType display_list_player_type() const = 0;
 
 protected:
     virtual ~PageClient() = default;

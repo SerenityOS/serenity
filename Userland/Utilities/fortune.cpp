@@ -82,7 +82,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.set_general_help("Open a fortune cookie, receive a free quote for the day!");
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
-        .help_string = "Chose when to color the output. Valid options are always, never and auto (default). When color is set to auto, color codes will be emitted when stdout is a terminal",
+        .help_string = "Chose when to color the output. Valid options are always, never, or auto (default). When color is set to auto, color codes will be emitted when stdout is a terminal",
         .long_name = "color",
         .value_name = "when",
         .accept_value = [&force_color](StringView color_when_string) {
@@ -91,7 +91,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else if (color_when_string.equals_ignoring_ascii_case("never"sv)) {
                 force_color = false;
             } else if (!color_when_string.equals_ignoring_ascii_case("auto"sv)) {
-                warnln("Unknown argument '{}'. Valid arguments for --color are always, never and auto", color_when_string);
+                warnln("Unknown argument '{}'. Valid arguments for --color are always, never, or auto (default)", color_when_string);
                 return false;
             }
 

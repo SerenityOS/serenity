@@ -78,7 +78,7 @@ ErrorOr<void> Hub::enumerate_and_power_on_hub()
             return EINVAL;
 
         // FIXME: Which configuration should we choose if there is more than one?
-        TRY(control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_RECIPIENT_DEVICE, USB_REQUEST_SET_CONFIGURATION, m_configurations[0].configuration_id(), 0, 0, nullptr));
+        TRY(set_configuration(m_configurations[0]));
     }
 
     USBHubDescriptor descriptor {};

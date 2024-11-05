@@ -14,53 +14,7 @@
 #include <string.h>
 #include <unistd.h>
 
-int head(ByteString const& filename, bool print_filename, ssize_t line_count, ssize_t byte_count);
-
-ErrorOr<int> serenity_main(Main::Arguments args)
-{
-    TRY(Core::System::pledge("stdio rpath"));
-
-    int line_count = -1;
-    int byte_count = -1;
-    bool never_print_filenames = false;
-    bool always_print_filenames = false;
-    Vector<ByteString> files;
-
-    Core::ArgsParser args_parser;
-    args_parser.set_general_help("Print the beginning ('head') of a file.");
-    args_parser.add_option(line_count, "Number of lines to print (default 10)", "lines", 'n', "number");
-    args_parser.add_option(byte_count, "Number of bytes to print", "bytes", 'c', "number");
-    args_parser.add_option(never_print_filenames, "Never print filenames", "quiet", 'q');
-    args_parser.add_option(always_print_filenames, "Always print filenames", "verbose", 'v');
-    args_parser.add_positional_argument(files, "File to process", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(args);
-
-    if (line_count == -1 && byte_count == -1) {
-        line_count = 10;
-    }
-
-    bool print_filenames = files.size() > 1;
-    if (always_print_filenames)
-        print_filenames = true;
-    else if (never_print_filenames)
-        print_filenames = false;
-
-    if (files.is_empty()) {
-        return head("", print_filenames, line_count, byte_count);
-    }
-
-    int rc = 0;
-
-    for (auto& file : files) {
-        if (head(file, print_filenames, line_count, byte_count) != 0) {
-            rc = 1;
-        }
-    }
-
-    return rc;
-}
-
-int head(ByteString const& filename, bool print_filename, ssize_t line_count, ssize_t byte_count)
+static int head(ByteString const& filename, bool print_filename, ssize_t line_count, ssize_t byte_count)
 {
     bool is_stdin = false;
     int fd = -1;
@@ -143,4 +97,48 @@ int head(ByteString const& filename, bool print_filename, ssize_t line_count, ss
     }
 
     return 0;
+}
+
+ErrorOr<int> serenity_main(Main::Arguments args)
+{
+    TRY(Core::System::pledge("stdio rpath"));
+
+    int line_count = -1;
+    int byte_count = -1;
+    bool never_print_filenames = false;
+    bool always_print_filenames = false;
+    Vector<ByteString> files;
+
+    Core::ArgsParser args_parser;
+    args_parser.set_general_help("Print the beginning ('head') of a file.");
+    args_parser.add_option(line_count, "Number of lines to print (default 10)", "lines", 'n', "number");
+    args_parser.add_option(byte_count, "Number of bytes to print", "bytes", 'c', "number");
+    args_parser.add_option(never_print_filenames, "Never print filenames", "quiet", 'q');
+    args_parser.add_option(always_print_filenames, "Always print filenames", "verbose", 'v');
+    args_parser.add_positional_argument(files, "File to process", "file", Core::ArgsParser::Required::No);
+    args_parser.parse(args);
+
+    if (line_count == -1 && byte_count == -1) {
+        line_count = 10;
+    }
+
+    bool print_filenames = files.size() > 1;
+    if (always_print_filenames)
+        print_filenames = true;
+    else if (never_print_filenames)
+        print_filenames = false;
+
+    if (files.is_empty()) {
+        return head("", print_filenames, line_count, byte_count);
+    }
+
+    int rc = 0;
+
+    for (auto& file : files) {
+        if (head(file, print_filenames, line_count, byte_count) != 0) {
+            rc = 1;
+        }
+    }
+
+    return rc;
 }

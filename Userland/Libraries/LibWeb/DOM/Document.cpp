@@ -99,6 +99,7 @@
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
+#include <LibWeb/HTML/SharedResourceRequest.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
@@ -371,6 +372,25 @@ Document::Document(JS::Realm& realm, const URL::URL& url, TemporaryDocumentForFr
         .has_legacy_override_built_ins_interface_extended_attribute = true,
     };
 
+    m_cursor_blink_timer = Core::Timer::create_repeating(500, [this] {
+        if (!m_cursor_position)
+            return;
+
+        auto node = m_cursor_position->node();
+        if (!node)
+            return;
+
+        if (auto navigable = this->navigable(); !navigable || !navigable->is_focused())
+            return;
+
+        node->document().update_layout();
+
+        if (node->paintable()) {
+            m_cursor_blink_state = !m_cursor_blink_state;
+            node->paintable()->set_needs_display();
+        }
+    });
+
     HTML::main_thread_event_loop().register_document({}, *this);
 }
 
@@ -463,7 +483,7 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_intersection_observers);
     visitor.visit(m_resize_observers);
 
-    visitor.visit(m_shared_image_requests);
+    visitor.visit(m_shared_resource_requests);
 
     visitor.visit(m_associated_animation_timelines);
     visitor.visit(m_list_of_available_images);
@@ -485,6 +505,7 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_top_layer_elements);
     visitor.visit(m_top_layer_pending_removals);
     visitor.visit(m_console_client);
+    visitor.visit(m_cursor_position);
 }
 
 // https://w3c.github.io/selection-api/#dom-document-getselection
@@ -1013,7 +1034,7 @@ URL::URL Document::parse_url(StringView url) const
     auto base_url = this->base_url();
 
     // 2. Return the result of applying the URL parser to url, with baseURL.
-    return DOMURL::parse(url, base_url);
+    return DOMURL::parse(url, base_url, Optional<StringView> { m_encoding });
 }
 
 void Document::set_needs_layout()
@@ -1024,7 +1045,7 @@ void Document::set_needs_layout()
     schedule_layout_update();
 }
 
-void Document::invalidate_layout()
+void Document::invalidate_layout_tree()
 {
     tear_down_layout_tree();
     schedule_layout_update();
@@ -1229,7 +1250,7 @@ void Document::update_style()
 
     auto invalidation = update_style_recursively(*this, style_computer());
     if (invalidation.rebuild_layout_tree) {
-        invalidate_layout();
+        invalidate_layout_tree();
     } else {
         if (invalidation.relayout)
             set_needs_layout();
@@ -1347,9 +1368,9 @@ void Document::set_hovered_node(Node* node)
 
     auto* common_ancestor = find_common_ancestor(old_hovered_node, m_hovered_node);
     if (common_ancestor)
-        common_ancestor->invalidate_style();
+        common_ancestor->invalidate_style(StyleInvalidationReason::Hover);
     else
-        invalidate_style();
+        invalidate_style(StyleInvalidationReason::Hover);
 
     // https://w3c.github.io/uievents/#mouseout
     if (old_hovered_node && old_hovered_node != m_hovered_node) {
@@ -2678,8 +2699,8 @@ void Document::evaluate_media_rules()
 
     if (any_media_queries_changed_match_state) {
         style_computer().invalidate_rule_cache();
-        invalidate_style();
-        invalidate_layout();
+        invalidate_style(StyleInvalidationReason::MediaQueryChangedMatchState);
+        invalidate_layout_tree();
     }
 }
 
@@ -4284,9 +4305,9 @@ void Document::update_for_history_step_application(JS::NonnullGCPtr<HTML::Sessio
     }
 }
 
-HashMap<URL::URL, JS::GCPtr<HTML::SharedImageRequest>>& Document::shared_image_requests()
+HashMap<URL::URL, JS::GCPtr<HTML::SharedResourceRequest>>& Document::shared_resource_requests()
 {
-    return m_shared_image_requests;
+    return m_shared_resource_requests;
 }
 
 // https://www.w3.org/TR/web-animations-1/#dom-document-timeline
@@ -5172,13 +5193,22 @@ void Document::set_needs_to_refresh_scroll_state(bool b)
 
 Vector<JS::Handle<DOM::Range>> Document::find_matching_text(String const& query, CaseSensitivity case_sensitivity)
 {
-    if (!document_element() || !document_element()->layout_node())
+    if (!layout_node())
+        return {};
+
+    // Ensure the layout tree exists before searching for text matches.
+    update_layout();
+
+    auto const& text_blocks = layout_node()->text_blocks();
+    if (text_blocks.is_empty())
         return {};
 
     Vector<JS::Handle<DOM::Range>> matches;
-    document_element()->layout_node()->for_each_in_inclusive_subtree_of_type<Layout::TextNode>([&](auto const& text_node) {
-        auto const& text = text_node.text_for_rendering();
+    for (auto const& text_block : text_blocks) {
         size_t offset = 0;
+        size_t i = 0;
+        auto const& text = text_block.text;
+        auto* match_start_position = &text_block.positions[0];
         while (true) {
             auto match_index = case_sensitivity == CaseSensitivity::CaseInsensitive
                 ? text.find_byte_offset_ignoring_case(query, offset)
@@ -5186,17 +5216,26 @@ Vector<JS::Handle<DOM::Range>> Document::find_matching_text(String const& query,
             if (!match_index.has_value())
                 break;
 
-            auto range = create_range();
-            auto& dom_node = const_cast<DOM::Text&>(text_node.dom_node());
-            (void)range->set_start(dom_node, match_index.value());
-            (void)range->set_end(dom_node, match_index.value() + query.code_points().length());
+            for (; i < text_block.positions.size() - 1 && match_index.value() > text_block.positions[i + 1].start_offset; ++i)
+                match_start_position = &text_block.positions[i + 1];
 
-            matches.append(range);
-            offset = match_index.value() + 1;
+            auto start_position = match_index.value() - match_start_position->start_offset;
+            auto& start_dom_node = match_start_position->dom_node;
+
+            auto* match_end_position = match_start_position;
+            for (; i < text_block.positions.size() - 1 && (match_index.value() + query.bytes_as_string_view().length() > text_block.positions[i + 1].start_offset); ++i)
+                match_end_position = &text_block.positions[i + 1];
+
+            auto& end_dom_node = match_end_position->dom_node;
+            auto end_position = match_index.value() + query.bytes_as_string_view().length() - match_end_position->start_offset;
+
+            matches.append(Range::create(start_dom_node, start_position, end_dom_node, end_position));
+            match_start_position = match_end_position;
+            offset = match_index.value() + query.bytes_as_string_view().length() + 1;
+            if (offset >= text.bytes_as_string_view().length())
+                break;
         }
-
-        return TraversalDecision::Continue;
-    });
+    }
 
     return matches;
 }
@@ -5247,6 +5286,71 @@ JS::NonnullGCPtr<Document> Document::parse_html_unsafe(JS::VM& vm, StringView ht
 
     // 5. Return document.
     return document;
+}
+
+void Document::set_cursor_position(JS::NonnullGCPtr<DOM::Position> position)
+{
+    if (m_cursor_position && m_cursor_position->equals(position))
+        return;
+
+    if (m_cursor_position && m_cursor_position->node()->paintable())
+        m_cursor_position->node()->paintable()->set_needs_display();
+
+    m_cursor_position = position;
+
+    if (m_cursor_position && m_cursor_position->node()->paintable())
+        m_cursor_position->node()->paintable()->set_needs_display();
+
+    reset_cursor_blink_cycle();
+}
+
+bool Document::increment_cursor_position_offset()
+{
+    if (!m_cursor_position->increment_offset())
+        return false;
+
+    reset_cursor_blink_cycle();
+    return true;
+}
+
+bool Document::decrement_cursor_position_offset()
+{
+    if (!m_cursor_position->decrement_offset())
+        return false;
+
+    reset_cursor_blink_cycle();
+    return true;
+}
+
+void Document::user_did_edit_document_text(Badge<EditEventHandler>)
+{
+    reset_cursor_blink_cycle();
+
+    if (m_cursor_position && is<DOM::Text>(*m_cursor_position->node())) {
+        auto& text_node = static_cast<DOM::Text&>(*m_cursor_position->node());
+
+        if (auto* text_node_owner = text_node.editable_text_node_owner())
+            text_node_owner->did_edit_text_node({});
+    }
+}
+
+void Document::reset_cursor_blink_cycle()
+{
+    m_cursor_blink_state = true;
+    m_cursor_blink_timer->restart();
+
+    if (m_cursor_position && m_cursor_position->node()->paintable())
+        m_cursor_position->node()->paintable()->set_needs_display();
+}
+
+JS::GCPtr<HTML::Navigable> Document::cached_navigable()
+{
+    return m_cached_navigable.ptr();
+}
+
+void Document::set_cached_navigable(JS::GCPtr<HTML::Navigable> navigable)
+{
+    m_cached_navigable = navigable.ptr();
 }
 
 }

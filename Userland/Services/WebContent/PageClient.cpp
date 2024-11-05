@@ -26,7 +26,7 @@
 #include <WebContent/WebDriverConnection.h>
 
 #ifdef HAS_ACCELERATED_GRAPHICS
-#    include <LibWeb/Painting/CommandExecutorGPU.h>
+#    include <LibWeb/Painting/DisplayListPlayerGPU.h>
 #endif
 
 namespace WebContent {
@@ -146,14 +146,28 @@ void PageClient::set_palette_impl(Gfx::PaletteImpl& impl)
 {
     m_palette_impl = impl;
     if (auto* document = page().top_level_browsing_context().active_document())
-        document->invalidate_style();
+        document->invalidate_style(Web::DOM::StyleInvalidationReason::SettingsChange);
 }
 
 void PageClient::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
 {
     m_preferred_color_scheme = color_scheme;
     if (auto* document = page().top_level_browsing_context().active_document())
-        document->invalidate_style();
+        document->invalidate_style(Web::DOM::StyleInvalidationReason::SettingsChange);
+}
+
+void PageClient::set_preferred_contrast(Web::CSS::PreferredContrast contrast)
+{
+    m_preferred_contrast = contrast;
+    if (auto* document = page().top_level_browsing_context().active_document())
+        document->invalidate_style(Web::DOM::StyleInvalidationReason::SettingsChange);
+}
+
+void PageClient::set_preferred_motion(Web::CSS::PreferredMotion motion)
+{
+    m_preferred_motion = motion;
+    if (auto* document = page().top_level_browsing_context().active_document())
+        document->invalidate_style(Web::DOM::StyleInvalidationReason::SettingsChange);
 }
 
 void PageClient::set_is_scripting_enabled(bool is_scripting_enabled)
@@ -204,8 +218,6 @@ void PageClient::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& ta
 #ifdef HAS_ACCELERATED_GRAPHICS
     paint_options.accelerated_graphics_context = m_accelerated_graphics_context.ptr();
 #endif
-    paint_options.use_gpu_painter = s_use_gpu_painter;
-    paint_options.use_experimental_cpu_transform_support = s_use_experimental_cpu_transform_support;
     page().top_level_traversable()->paint(content_rect, target, paint_options);
 }
 
@@ -707,6 +719,15 @@ void PageClient::console_peer_did_misbehave(char const* reason)
 void PageClient::did_get_js_console_messages(i32 start_index, Vector<ByteString> message_types, Vector<ByteString> messages)
 {
     client().async_did_get_js_console_messages(m_id, start_index, move(message_types), move(messages));
+}
+
+Web::DisplayListPlayerType PageClient::display_list_player_type() const
+{
+    if (s_use_gpu_painter)
+        return Web::DisplayListPlayerType::GPU;
+    if (s_use_experimental_cpu_transform_support)
+        return Web::DisplayListPlayerType::CPUWithExperimentalTransformSupport;
+    return Web::DisplayListPlayerType::CPU;
 }
 
 }

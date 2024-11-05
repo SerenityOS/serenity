@@ -17,7 +17,7 @@
 <div style="background-color: #8c98a5;"> <!-- Expected: #8c99a6 -->
     <p>legacy rgba with percentages and number alpha</p>
 </div>
-<div style="background-color: #8c99a6;">
+<div style="background-color: #8c98a5;"> <!-- Expected: #8c99a6 -->
     <p>legacy rgba with percentages and percentage alpha</p>
 </div>
 <div style="background-color: #00ff00;">
@@ -37,6 +37,9 @@
 </div>
 <div style="background-color: #ffffff;">
     <p>legacy rgba with out-of-range percentages (should be clamped)</p>
+</div>
+<div style="background-color: #1a80e6;">
+    <p>modern rgb with percentages (round away from 0)</p>
 </div>
 <div style="background-color: #0a331e;">
     <p>modern rgb with mixed types</p>

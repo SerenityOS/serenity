@@ -25,13 +25,12 @@ public:
     static LockRefPtr<Driver> get_driver_by_name(StringView name);
     static void unregister_driver(NonnullLockRefPtr<Driver> driver);
 
-    Vector<NonnullLockRefPtr<Driver>>& available_drivers() { return m_available_drivers; }
+    static Vector<NonnullLockRefPtr<Driver>>& available_drivers();
 
 private:
     void enumerate_controllers();
 
     USBController::List m_controllers;
-    Vector<NonnullLockRefPtr<Driver>> m_available_drivers;
 };
 
 }

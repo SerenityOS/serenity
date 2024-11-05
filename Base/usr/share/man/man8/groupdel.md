@@ -24,14 +24,14 @@ You should manually check all users to ensure that no user remain in this group.
 
 ## Exit Values
 
-* 0 - Success
-* 1 - Couldn't update the group file
-* 6 - Specified group doesn't exist
-* 8 - Can't remove user's primary group
+-   0 - Success
+-   1 - Couldn't update the group file
+-   6 - Specified group doesn't exist
+-   8 - Can't remove user's primary group
 
 ## Files
 
-* `/etc/group` - group information (such as GID) in this file is deleted.
+-   `/etc/group` - group information (such as GID) in this file is deleted.
 
 ## Examples
 
@@ -40,6 +40,7 @@ You should manually check all users to ensure that no user remain in this group.
 ```
 
 ## See Also
-* [`userdel`(8)](help://man/8/userdel)
-* [`groupadd`(8)](help://man/8/groupadd)
-* [`groups`(1)](help://man/1/groups)
+
+-   [`userdel`(8)](help://man/8/userdel)
+-   [`groupadd`(8)](help://man/8/groupadd)
+-   [`groups`(1)](help://man/1/groups)

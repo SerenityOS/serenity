@@ -14,13 +14,14 @@
 #include <AK/NumericLimits.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Line.h>
+#include <LibGfx/Painter.h>
 
 namespace Gfx {
 
-void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, Painter::LineStyle style, Color, LineLengthMode line_length_mode)
+void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, LineStyle style, Color, LineLengthMode line_length_mode)
 {
     // FIXME: Implement this :P
-    VERIFY(style == Painter::LineStyle::Solid);
+    VERIFY(style == LineStyle::Solid);
 
     if (color.alpha() == 0)
         return;
@@ -142,7 +143,7 @@ void AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Col
 {
     // AA circles don't really work below a radius of 2px.
     if (thickness < 4)
-        return m_underlying_painter.draw_line(point1, point2, color, thickness, Painter::LineStyle::Dotted);
+        return m_underlying_painter.draw_line(point1, point2, color, thickness, LineStyle::Dotted);
 
     auto draw_spaced_dots = [&](int start, int end, auto to_point) {
         int step = thickness * 2;
@@ -180,32 +181,32 @@ void AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Col
     }
 }
 
-void AntiAliasingPainter::draw_line(IntPoint actual_from, IntPoint actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
+void AntiAliasingPainter::draw_line(IntPoint actual_from, IntPoint actual_to, Color color, float thickness, LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
 {
     draw_line(actual_from.to_type<float>(), actual_to.to_type<float>(), color, thickness, style, alternate_color, line_length_mode);
 }
 
-void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, Painter::LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
+void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
 {
-    if (style == Painter::LineStyle::Dotted)
+    if (style == LineStyle::Dotted)
         return draw_dotted_line(actual_from.to_rounded<int>(), actual_to.to_rounded<int>(), color, static_cast<int>(round(thickness)));
     draw_anti_aliased_line(actual_from, actual_to, color, thickness, style, alternate_color, line_length_mode);
 }
 
-void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thickness)
+void AntiAliasingPainter::stroke_path(Path const& path, Color color, Path::StrokeStyle const& stroke_style)
 {
-    if (thickness <= 0)
+    if (stroke_style.thickness <= 0)
         return;
     // FIXME: Cache this? Probably at a higher level such as in LibWeb?
-    fill_path(path.stroke_to_fill(thickness), color);
+    fill_path(path.stroke_to_fill(stroke_style), color);
 }
 
-void AntiAliasingPainter::stroke_path(Path const& path, Gfx::PaintStyle const& paint_style, float thickness, float opacity)
+void AntiAliasingPainter::stroke_path(Path const& path, Gfx::PaintStyle const& paint_style, Path::StrokeStyle const& stroke_style, float opacity)
 {
-    if (thickness <= 0)
+    if (stroke_style.thickness <= 0)
         return;
     // FIXME: Cache this? Probably at a higher level such as in LibWeb?
-    fill_path(path.stroke_to_fill(thickness), paint_style, opacity);
+    fill_path(path.stroke_to_fill(stroke_style), paint_style, opacity);
 }
 
 void AntiAliasingPainter::fill_rect(FloatRect const& float_rect, Color color)

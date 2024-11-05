@@ -14,8 +14,8 @@
 #include <LibWeb/HTML/DecodedImageData.h>
 #include <LibWeb/HTML/ImageRequest.h>
 #include <LibWeb/HTML/PotentialCORSRequest.h>
+#include <LibWeb/Painting/DisplayListRecorder.h>
 #include <LibWeb/Painting/PaintContext.h>
-#include <LibWeb/Painting/RecordingPainter.h>
 #include <LibWeb/Platform/Timer.h>
 
 namespace Web::CSS {
@@ -30,12 +30,12 @@ ImageStyleValue::~ImageStyleValue() = default;
 
 void ImageStyleValue::load_any_resources(DOM::Document& document)
 {
-    if (m_image_request)
+    if (m_resource_request)
         return;
     m_document = &document;
 
-    m_image_request = HTML::SharedImageRequest::get_or_create(document.realm(), document.page(), m_url);
-    m_image_request->add_callbacks(
+    m_resource_request = HTML::SharedResourceRequest::get_or_create(document.realm(), document.page(), m_url);
+    m_resource_request->add_callbacks(
         [this, weak_this = make_weak_ptr()] {
             if (!weak_this)
                 return;
@@ -47,7 +47,7 @@ void ImageStyleValue::load_any_resources(DOM::Document& document)
             if (auto navigable = m_document->navigable())
                 navigable->set_needs_display();
 
-            auto image_data = m_image_request->image_data();
+            auto image_data = m_resource_request->image_data();
             if (image_data->is_animated() && image_data->frame_count() > 1) {
                 m_timer = Platform::Timer::create();
                 m_timer->set_interval(image_data->frame_duration(0));
@@ -57,18 +57,18 @@ void ImageStyleValue::load_any_resources(DOM::Document& document)
         },
         nullptr);
 
-    if (m_image_request->needs_fetching()) {
+    if (m_resource_request->needs_fetching()) {
         auto request = HTML::create_potential_CORS_request(document.vm(), m_url, Fetch::Infrastructure::Request::Destination::Image, HTML::CORSSettingAttribute::NoCORS);
         request->set_client(&document.relevant_settings_object());
-        m_image_request->fetch_image(document.realm(), request);
+        m_resource_request->fetch_resource(document.realm(), request);
     }
 }
 
 void ImageStyleValue::animate()
 {
-    if (!m_image_request)
+    if (!m_resource_request)
         return;
-    auto image_data = m_image_request->image_data();
+    auto image_data = m_resource_request->image_data();
     if (!image_data)
         return;
 
@@ -105,7 +105,7 @@ String ImageStyleValue::to_string() const
     return serialize_a_url(MUST(m_url.to_string()));
 }
 
-bool ImageStyleValue::equals(StyleValue const& other) const
+bool ImageStyleValue::equals(CSSStyleValue const& other) const
 {
     if (type() != other.type())
         return false;
@@ -137,15 +137,15 @@ void ImageStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_r
 {
     if (auto const* b = bitmap(m_current_frame_index, dest_rect.size().to_type<int>()); b != nullptr) {
         auto scaling_mode = to_gfx_scaling_mode(image_rendering, b->rect(), dest_rect.to_type<int>());
-        context.recording_painter().draw_scaled_immutable_bitmap(dest_rect.to_type<int>(), *b, b->rect(), scaling_mode, clip_paths);
+        context.display_list_recorder().draw_scaled_immutable_bitmap(dest_rect.to_type<int>(), *b, b->rect(), scaling_mode, clip_paths);
     }
 }
 
 JS::GCPtr<HTML::DecodedImageData> ImageStyleValue::image_data() const
 {
-    if (!m_image_request)
+    if (!m_resource_request)
         return nullptr;
-    return m_image_request->image_data();
+    return m_resource_request->image_data();
 }
 
 Optional<Gfx::Color> ImageStyleValue::color_if_single_pixel_bitmap() const

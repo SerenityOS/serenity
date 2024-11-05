@@ -170,7 +170,9 @@ cmd_with_target() {
         else
             TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Local/$TARGET_TOOLCHAIN/$TARGET"
         fi
+        JAKT_TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Local/jakt"
         SUPER_BUILD_DIR="$SERENITY_SOURCE_DIR/Build/superbuild-$TARGET$TARGET_TOOLCHAIN"
+        JAKT_LIB_DIR="$BUILD_DIR/Root/usr/local/lib/$TARGET-pc-serenity-unknown"
     else
         SUPER_BUILD_DIR="$BUILD_DIR"
         CMAKE_ARGS+=("-DCMAKE_INSTALL_PREFIX=$SERENITY_SOURCE_DIR/Build/lagom-install")
@@ -251,6 +253,18 @@ build_toolchain() {
     fi
 }
 
+build_jakt() {
+    [ -z "$JAKT_TOOLCHAIN_DIR" ] && return
+    echo "build_jakt: $JAKT_TOOLCHAIN_DIR"
+    ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ./BuildJakt.sh )
+}
+
+ensure_jakt() {
+    if ! [ -d "$JAKT_TOOLCHAIN_DIR" ] || ! [ -d "$JAKT_LIB_DIR" ]; then
+        build_jakt || true # CMake can handle the failure.
+    fi
+}
+
 ensure_toolchain() {
     if [ "$(cmake -P "$SERENITY_SOURCE_DIR"/Meta/CMake/cmake-version.cmake)" -ne 1 ]; then
         build_cmake
@@ -270,6 +284,7 @@ ensure_toolchain() {
         fi
     fi
 
+    ensure_jakt
 }
 
 confirm_rebuild_if_toolchain_exists() {
@@ -367,6 +382,7 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
     cmd_with_target
     [[ "$CMD" != "recreate" && "$CMD" != "rebuild" ]] || delete_target
     [ "$TARGET" = "lagom" ] || ensure_toolchain
+    ensure_jakt
     ensure_target
     case "$CMD" in
         build)

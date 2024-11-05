@@ -45,7 +45,7 @@ void SVGGraphicsElement::attribute_changed(FlyString const& name, Optional<Strin
         if (transform_list.has_value())
             m_transform = transform_from_transform_list(*transform_list);
         // FIXME: This should only invalidate the contents of the SVG.
-        document().invalidate_layout();
+        document().invalidate_layout_tree();
     }
 }
 
@@ -149,6 +149,9 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
         NamedPropertyID(CSS::PropertyID::Fill),
         // FIXME: The `stroke` attribute and CSS `stroke` property are not the same! But our support is limited enough that they are equivalent for now.
         NamedPropertyID(CSS::PropertyID::Stroke),
+        NamedPropertyID(CSS::PropertyID::StrokeLinecap),
+        NamedPropertyID(CSS::PropertyID::StrokeLinejoin),
+        NamedPropertyID(CSS::PropertyID::StrokeMiterlimit),
         NamedPropertyID(CSS::PropertyID::StrokeWidth),
         NamedPropertyID(CSS::PropertyID::FillRule),
         NamedPropertyID(CSS::PropertyID::FillOpacity),
@@ -233,6 +236,27 @@ Optional<float> SVGGraphicsElement::fill_opacity() const
     return layout_node()->computed_values().fill_opacity();
 }
 
+Optional<CSS::StrokeLinecap> SVGGraphicsElement::stroke_linecap() const
+{
+    if (!layout_node())
+        return {};
+    return layout_node()->computed_values().stroke_linecap();
+}
+
+Optional<CSS::StrokeLinejoin> SVGGraphicsElement::stroke_linejoin() const
+{
+    if (!layout_node())
+        return {};
+    return layout_node()->computed_values().stroke_linejoin();
+}
+
+Optional<CSS::NumberOrCalculated> SVGGraphicsElement::stroke_miterlimit() const
+{
+    if (!layout_node())
+        return {};
+    return layout_node()->computed_values().stroke_miterlimit();
+}
+
 Optional<float> SVGGraphicsElement::stroke_opacity() const
 {
     if (!layout_node())
@@ -261,6 +285,7 @@ Optional<float> SVGGraphicsElement::stroke_width() const
     return width.to_px(*layout_node(), scaled_viewport_size).to_double();
 }
 
+// https://svgwg.org/svg2-draft/types.html#__svg__SVGGraphicsElement__getBBox
 JS::NonnullGCPtr<Geometry::DOMRect> SVGGraphicsElement::get_b_box(Optional<SVGBoundingBoxOptions>)
 {
     // FIXME: It should be possible to compute this without layout updates. The bounding box is within the
@@ -271,7 +296,10 @@ JS::NonnullGCPtr<Geometry::DOMRect> SVGGraphicsElement::get_b_box(Optional<SVGBo
     if (!layout_node())
         return Geometry::DOMRect::create(realm());
     // Invert the SVG -> screen space transform.
-    auto svg_element_rect = shadow_including_first_ancestor_of_type<SVG::SVGSVGElement>()->paintable_box()->absolute_rect();
+    auto owner_svg_element = this->owner_svg_element();
+    if (!owner_svg_element)
+        return Geometry::DOMRect::create(realm());
+    auto svg_element_rect = owner_svg_element->paintable_box()->absolute_rect();
     auto inverse_transform = static_cast<Painting::SVGGraphicsPaintable&>(*paintable_box()).computed_transforms().svg_to_css_pixels_transform().inverse();
     auto translated_rect = paintable_box()->absolute_rect().to_type<float>().translated(-svg_element_rect.location().to_type<float>());
     if (inverse_transform.has_value())

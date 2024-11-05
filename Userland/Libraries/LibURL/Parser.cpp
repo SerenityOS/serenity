@@ -14,6 +14,8 @@
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <AK/Utf8View.h>
+#include <LibTextCodec/Decoder.h>
+#include <LibTextCodec/Encoder.h>
 #include <LibURL/Parser.h>
 #include <LibUnicode/IDNA.h>
 
@@ -21,6 +23,22 @@ namespace URL {
 
 // NOTE: This is similar to the LibC macro EOF = -1.
 constexpr u32 end_of_file = 0xFFFFFFFF;
+
+// https://url.spec.whatwg.org/#forbidden-host-code-point
+static bool is_forbidden_host_code_point(u32 code_point)
+{
+    // A forbidden host code point is U+0000 NULL, U+0009 TAB, U+000A LF, U+000D CR, U+0020 SPACE,
+    // U+0023 (#), U+002F (/), U+003A (:), U+003C (<), U+003E (>), U+003F (?), U+0040 (@), U+005B ([),
+    // U+005C (\), U+005D (]), U+005E (^), or U+007C (|).
+    return "\0\t\n\r #/:<>?@[\\]^|"sv.contains(code_point);
+}
+
+// https://url.spec.whatwg.org/#forbidden-domain-code-point
+static bool is_forbidden_domain_code_point(u32 code_point)
+{
+    // A forbidden domain code point is a forbidden host code point, a C0 control, U+0025 (%), or U+007F DELETE.
+    return is_forbidden_host_code_point(code_point) || is_ascii_c0_control(code_point) || code_point == '%' || code_point == 0x7F;
+}
 
 // https://url.spec.whatwg.org/#url-code-points
 static bool is_url_code_point(u32 code_point)
@@ -44,9 +62,8 @@ static void report_validation_error(SourceLocation const& location = SourceLocat
 static Optional<Host> parse_opaque_host(StringView input)
 {
     // 1. If input contains a forbidden host code point, host-invalid-code-point validation error, return failure.
-    auto forbidden_host_characters_excluding_percent = "\0\t\n\r #/:<>?@[\\]^|"sv;
-    for (auto character : forbidden_host_characters_excluding_percent) {
-        if (input.contains(character)) {
+    for (auto code_point : Utf8View { input }) {
+        if (is_forbidden_host_code_point(code_point)) {
             report_validation_error();
             return {};
         }
@@ -58,7 +75,7 @@ static Optional<Host> parse_opaque_host(StringView input)
     //       currently report validation errors, they are only useful for debugging efforts in the URL parsing code.
 
     // 4. Return the result of running UTF-8 percent-encode on input using the C0 control percent-encode set.
-    return String::from_byte_string(percent_encode(input, PercentEncodeSet::C0Control)).release_value_but_fixme_should_propagate_errors();
+    return percent_encode(input, PercentEncodeSet::C0Control);
 }
 
 struct ParsedIPv4Number {
@@ -568,7 +585,8 @@ static bool ends_in_a_number_checker(StringView input)
         return true;
 
     // 5. If parsing last as an IPv4 number does not return failure, then return true.
-    if (parse_ipv4_number(last).has_value())
+    // NOTE: This is equivalent to checking that last is "0X" or "0x", followed by zero or more ASCII hex digits.
+    if (last.starts_with("0x"sv, CaseSensitivity::CaseInsensitive) && all_of(last.substring_view(2), is_ascii_hex_digit))
         return true;
 
     // 6. Return false.
@@ -581,14 +599,26 @@ static ErrorOr<String> domain_to_ascii(StringView domain, bool be_strict)
     // 1. Let result be the result of running Unicode ToASCII with domain_name set to domain, UseSTD3ASCIIRules set to beStrict, CheckHyphens set to false, CheckBidi set to true, CheckJoiners set to true, Transitional_Processing set to false, and VerifyDnsLength set to beStrict. [UTS46]
     // 2. If result is a failure value, domain-to-ASCII validation error, return failure.
 
-    // OPTIMIZATION: Fast path for all-ASCII domain strings.
-    if (all_of(domain, is_ascii)) {
+    // OPTIMIZATION: If beStrict is false, domain is an ASCII string, and strictly splitting domain on U+002E (.)
+    //               does not produce any item that starts with an ASCII case-insensitive match for "xn--", this
+    //               step is equivalent to ASCII lowercasing domain.
+    if (!be_strict && all_of(domain, is_ascii)) {
         // 3. If result is the empty string, domain-to-ASCII validation error, return failure.
         if (domain.is_empty())
             return Error::from_string_literal("Empty domain");
 
-        auto lowercase_domain = domain.to_lowercase_string();
-        return String::from_utf8_without_validation(lowercase_domain.bytes());
+        bool slow_path = false;
+        for (auto part : domain.split_view('.')) {
+            if (part.starts_with("xn--"sv, CaseSensitivity::CaseInsensitive)) {
+                slow_path = true;
+                break;
+            }
+        }
+
+        if (!slow_path) {
+            auto lowercase_domain = domain.to_lowercase_string();
+            return String::from_utf8_without_validation(lowercase_domain.bytes());
+        }
     }
 
     Unicode::IDNA::ToAsciiOptions const options {
@@ -610,7 +640,6 @@ static ErrorOr<String> domain_to_ascii(StringView domain, bool be_strict)
 }
 
 // https://url.spec.whatwg.org/#concept-host-parser
-// NOTE: This is a very bare-bones implementation.
 static Optional<Host> parse_host(StringView input, bool is_opaque = false)
 {
     // 1. If input starts with U+005B ([), then:
@@ -648,9 +677,8 @@ static Optional<Host> parse_host(StringView input, bool is_opaque = false)
     auto ascii_domain = ascii_domain_or_error.release_value();
 
     // 7. If asciiDomain contains a forbidden domain code point, domain-invalid-code-point validation error, return failure.
-    auto forbidden_host_characters = "\0\t\n\r #%/:<>?@[\\]^|"sv;
-    for (auto character : forbidden_host_characters) {
-        if (ascii_domain.bytes_as_string_view().contains(character)) {
+    for (auto character : ascii_domain.bytes_as_string_view()) {
+        if (is_forbidden_domain_code_point(character)) {
             report_validation_error();
             return {};
         }
@@ -742,52 +770,56 @@ void Parser::shorten_urls_path(URL& url)
 }
 
 // https://url.spec.whatwg.org/#string-percent-encode-after-encoding
-ErrorOr<String> Parser::percent_encode_after_encoding(StringView input, PercentEncodeSet percent_encode_set, bool space_as_plus)
+String Parser::percent_encode_after_encoding(TextCodec::Encoder& encoder, StringView input, PercentEncodeSet percent_encode_set, bool space_as_plus)
 {
-    // NOTE: This is written somewhat ad-hoc since we don't yet implement the Encoding spec.
-
+    // 1. Let encodeOutput be an empty I/O queue.
     StringBuilder output;
 
-    // 3. For each byte of encodeOutput converted to a byte sequence:
-    for (u8 byte : input) {
-        // 1. If spaceAsPlus is true and byte is 0x20 (SP), then append U+002B (+) to output and continue.
-        if (space_as_plus && byte == ' ') {
-            output.append('+');
-            continue;
-        }
+    // 2. Set potentialError to the result of running encode or fail with inputQueue, encoder, and encodeOutput.
+    MUST(encoder.process(
+        Utf8View(input),
 
-        // 2. Let isomorph be a code point whose value is byte’s value.
-        u32 isomorph = byte;
+        // 3. For each byte of encodeOutput converted to a byte sequence:
+        [&](u8 byte) -> ErrorOr<void> {
+            // 1. If spaceAsPlus is true and byte is 0x20 (SP), then append U+002B (+) to output and continue.
+            if (space_as_plus && byte == ' ') {
+                output.append('+');
+                return {};
+            }
 
-        // 3. Assert: percentEncodeSet includes all non-ASCII code points.
+            // 2. Let isomorph be a code point whose value is byte’s value.
+            u32 isomorph = byte;
 
-        // 4. If isomorphic is not in percentEncodeSet, then append isomorph to output.
-        if (!code_point_is_in_percent_encode_set(isomorph, percent_encode_set)) {
-            output.append_code_point(isomorph);
-        }
+            // 3. Assert: percentEncodeSet includes all non-ASCII code points.
 
-        // 5. Otherwise, percent-encode byte and append the result to output.
-        else {
-            output.appendff("%{:02X}", byte);
-        }
-    }
+            // 4. If isomorphic is not in percentEncodeSet, then append isomorph to output.
+            if (!code_point_is_in_percent_encode_set(isomorph, percent_encode_set)) {
+                output.append_code_point(isomorph);
+            }
+
+            // 5. Otherwise, percent-encode byte and append the result to output.
+            else {
+                output.appendff("%{:02X}", byte);
+            }
+
+            return {};
+        },
+
+        // 4. If potentialError is non-null, then append "%26%23", followed by the shortest sequence of ASCII digits
+        //    representing potentialError in base ten, followed by "%3B", to output.
+        [&](u32 error) -> ErrorOr<void> {
+            output.appendff("%26%23{}%3B", error);
+            return {};
+        }));
 
     // 6. Return output.
-    return output.to_string();
+    return MUST(output.to_string());
 }
 
 // https://url.spec.whatwg.org/#concept-basic-url-parser
-// NOTE: This parser assumes a UTF-8 encoding.
-// NOTE: Refrain from using the URL classes setters inside this algorithm. Rather, set the values directly. This bypasses the setters' built-in
-//       validation, which is strictly unnecessary since we set m_valid=true at the end anyways. Furthermore, this algorithm may be used in the
-//       future for validation of URLs, which would then lead to infinite recursion.
-//       The same goes for base_url, because e.g. the port() getter does not always return m_port, and we are interested in the underlying member
-//       variables' values here, not what the URL class presents to its users.
-URL Parser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Optional<URL> url, Optional<State> state_override)
+URL Parser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Optional<URL> url, Optional<State> state_override, Optional<StringView> encoding)
 {
-    dbgln_if(URL_PARSER_DEBUG, "URL::Parser::parse: Parsing '{}'", raw_input);
-    if (raw_input.is_empty())
-        return base_url.has_value() ? *base_url : URL {};
+    dbgln_if(URL_PARSER_DEBUG, "URL::Parser::basic_parse: Parsing '{}'", raw_input);
 
     size_t start_index = 0;
     size_t end_index = raw_input.length();
@@ -799,42 +831,32 @@ URL Parser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Opt
 
         // 2. If input contains any leading or trailing C0 control or space, invalid-URL-unit validation error.
         // 3. Remove any leading and trailing C0 control or space from input.
-        //
-        // FIXME: We aren't checking exactly for 'trailing C0 control or space' here.
-
         bool has_validation_error = false;
-        for (size_t i = 0; i < raw_input.length(); ++i) {
-            i8 ch = raw_input[i];
-            if (0 <= ch && ch <= 0x20) {
-                ++start_index;
-                has_validation_error = true;
-            } else {
+
+        for (; start_index < raw_input.length(); ++start_index) {
+            if (!is_ascii_c0_control_or_space(raw_input[start_index]))
                 break;
-            }
+            has_validation_error = true;
         }
-        for (ssize_t i = raw_input.length() - 1; i >= 0; --i) {
-            i8 ch = raw_input[i];
-            if (0 <= ch && ch <= 0x20) {
-                --end_index;
-                has_validation_error = true;
-            } else {
+
+        for (; end_index > start_index; --end_index) {
+            if (!is_ascii_c0_control_or_space(raw_input[end_index - 1]))
                 break;
-            }
+            has_validation_error = true;
         }
+
         if (has_validation_error)
             report_validation_error();
     }
-    if (start_index >= end_index)
-        return {};
 
     ByteString processed_input = raw_input.substring_view(start_index, end_index - start_index);
 
     // 2. If input contains any ASCII tab or newline, invalid-URL-unit validation error.
     // 3. Remove all ASCII tab or newline from input.
     for (auto const ch : processed_input) {
-        if (ch == '\t' || ch == '\n') {
+        if (ch == '\t' || ch == '\n' || ch == '\r') {
             report_validation_error();
-            processed_input = processed_input.replace("\t"sv, ""sv, ReplaceMode::All).replace("\n"sv, ""sv, ReplaceMode::All);
+            processed_input = processed_input.replace("\t"sv, ""sv, ReplaceMode::All).replace("\n"sv, ""sv, ReplaceMode::All).replace("\r"sv, ""sv, ReplaceMode::All);
             break;
         }
     }
@@ -842,7 +864,13 @@ URL Parser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Opt
     // 4. Let state be state override if given, or scheme start state otherwise.
     State state = state_override.value_or(State::SchemeStart);
 
-    // FIXME: 5. Set encoding to the result of getting an output encoding from encoding.
+    // 5. Set encoding to the result of getting an output encoding from encoding.
+    Optional<TextCodec::Encoder&> encoder = {};
+    if (encoding.has_value())
+        encoder = TextCodec::encoder_for(TextCodec::get_output_encoding(*encoding));
+    if (!encoder.has_value())
+        encoder = TextCodec::encoder_for("utf-8"sv);
+    VERIFY(encoder.has_value());
 
     // 6. Let buffer be the empty string.
     StringBuilder buffer;
@@ -1209,7 +1237,7 @@ URL Parser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Opt
                 || (url->is_special() && code_point == '\\')) {
                 // then:
 
-                // 1. If atSignSeen is true and buffer is the empty string, invalid-credentials validation error, return failure.
+                // 1. If atSignSeen is true and buffer is the empty string, host-missing validation error, return failure.
                 if (at_sign_seen && buffer.is_empty()) {
                     report_validation_error();
                     return {};
@@ -1446,10 +1474,6 @@ URL Parser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Opt
                     // 1. Set url’s host to base’s host.
                     url->m_data->host = base_url->m_data->host;
 
-                    // FIXME: The spec does not seem to mention these steps.
-                    url->m_data->paths = base_url->m_data->paths;
-                    url->m_data->paths.remove(url->m_data->paths.size() - 1);
-
                     // 2. If the code point substring from pointer to the end of input does not start with a Windows drive letter and base’s path[0] is a normalized Windows drive letter, then append base’s path[0] to url’s path.
                     auto substring_from_pointer = input.substring_view(iterator - input.begin()).as_string();
                     if (!starts_with_windows_drive_letter(substring_from_pointer) && is_normalized_windows_drive_letter(base_url->m_data->paths[0]))
@@ -1486,8 +1510,7 @@ URL Parser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Opt
                 // 3. Otherwise, run these steps:
                 else {
                     // 1. Let host be the result of host parsing buffer with url is not special.
-                    // FIXME: It seems we are not passing through url is not special through here
-                    auto host = parse_host(buffer.string_view(), true);
+                    auto host = parse_host(buffer.string_view(), !url->is_special());
 
                     // 2. If host is failure, then return failure.
                     if (!host.has_value())
@@ -1680,7 +1703,7 @@ URL Parser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Opt
                 auto query_percent_encode_set = url->is_special() ? PercentEncodeSet::SpecialQuery : PercentEncodeSet::Query;
 
                 // 2. Percent-encode after encoding, with encoding, buffer, and queryPercentEncodeSet, and append the result to url’s query.
-                url->m_data->query = percent_encode_after_encoding(buffer.string_view(), query_percent_encode_set).release_value_but_fixme_should_propagate_errors();
+                url->m_data->query = percent_encode_after_encoding(*encoder, buffer.string_view(), query_percent_encode_set);
 
                 // 3. Set buffer to the empty string.
                 buffer.clear();
@@ -1722,7 +1745,7 @@ URL Parser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Opt
                 // NOTE: The percent-encode is done on EOF on the entire buffer.
                 buffer.append_code_point(code_point);
             } else {
-                url->m_data->fragment = percent_encode_after_encoding(buffer.string_view(), PercentEncodeSet::Fragment).release_value_but_fixme_should_propagate_errors();
+                url->m_data->fragment = percent_encode_after_encoding(*encoder, buffer.string_view(), PercentEncodeSet::Fragment);
                 buffer.clear();
             }
             break;
@@ -1736,7 +1759,7 @@ URL Parser::basic_parse(StringView raw_input, Optional<URL> const& base_url, Opt
     }
 
     url->m_data->valid = true;
-    dbgln_if(URL_PARSER_DEBUG, "URL::Parser::parse: Parsed URL to be '{}'.", url->serialize());
+    dbgln_if(URL_PARSER_DEBUG, "URL::Parser::basic_parse: Parsed URL to be '{}'.", url->serialize());
 
     // 10. Return url.
     return url.release_value();

@@ -20,18 +20,18 @@ Each tab has its own renderer process, which is sandboxed from the rest of the s
 
 All the core library support components are developed in the serenity monorepo:
 
-- LibWeb: Web Rendering Engine 
-- LibJS: JavaScript Engine
-- LibWasm: WebAssembly implementation
-- LibCrypto/LibTLS: Cryptography primitives and Transport Layer Security (rather than OpenSSL)
-- LibHTTP: HTTP/1.1 client
-- LibGfx: 2D Graphics Library, Image Decoding and Rendering (rather than skia)
-- LibArchive: Archive file format support (rather than libarchive, zlib)
-- LibUnicode, LibLocale: Unicode and Locale support (rather than libicu)
-- LibAudio, LibVideo: Audio and Video playback (rather than libav, ffmpeg)
-- LibCore: Event Loop, OS Abstraction layer
-- LibIPC: Inter-Process Communication
-- ... and more!
+-   LibWeb: Web Rendering Engine
+-   LibJS: JavaScript Engine
+-   LibWasm: WebAssembly implementation
+-   LibCrypto/LibTLS: Cryptography primitives and Transport Layer Security (rather than OpenSSL)
+-   LibHTTP: HTTP/1.1 client
+-   LibGfx: 2D Graphics Library, Image Decoding and Rendering (rather than skia)
+-   LibArchive: Archive file format support (rather than libarchive, zlib)
+-   LibUnicode, LibLocale: Unicode and Locale support (rather than libicu)
+-   LibAudio, LibVideo: Audio and Video playback (rather than libav, ffmpeg)
+-   LibCore: Event Loop, OS Abstraction layer
+-   LibIPC: Inter-Process Communication
+-   ... and more!
 
 ## Building and Development
 

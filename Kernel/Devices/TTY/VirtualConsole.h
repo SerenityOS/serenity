@@ -45,7 +45,7 @@ private:
 class VirtualConsole final : public TTY
     , public KeyboardClient
     , public VT::TerminalClient {
-    friend class DeviceManagement;
+    friend class Device;
     friend class ConsoleImpl;
     friend class VT::Terminal;
 

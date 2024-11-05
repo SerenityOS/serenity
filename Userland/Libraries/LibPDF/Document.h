@@ -40,7 +40,7 @@ struct OutlineItem final : public RefCounted<OutlineItem>
     , public Weakable<OutlineItem> {
     WeakPtr<OutlineItem> parent;
     Vector<NonnullRefPtr<OutlineItem>> children;
-    ByteString title; // Already converted to UTF-8.
+    String title;
     i32 count { 0 };
     Destination dest;
     Gfx::Color color { Color::NamedColor::Black }; // 'C' in the PDF spec
@@ -69,16 +69,16 @@ public:
 
     // These all return strings that are already converted to UTF-8.
 
-    PDFErrorOr<Optional<ByteString>> title() const;
-    PDFErrorOr<Optional<ByteString>> author() const;
-    PDFErrorOr<Optional<ByteString>> subject() const;
-    PDFErrorOr<Optional<ByteString>> keywords() const;
+    PDFErrorOr<Optional<String>> title() const;
+    PDFErrorOr<Optional<String>> author() const;
+    PDFErrorOr<Optional<String>> subject() const;
+    PDFErrorOr<Optional<String>> keywords() const;
 
     // Name of the program that created the original, non-PDF file.
-    PDFErrorOr<Optional<ByteString>> creator() const;
+    PDFErrorOr<Optional<String>> creator() const;
 
     // Name of the program that converted the file to PDF.
-    PDFErrorOr<Optional<ByteString>> producer() const;
+    PDFErrorOr<Optional<String>> producer() const;
 
     // FIXME: Provide some helper for parsing the date strings returned by these two methods.
     PDFErrorOr<Optional<ByteString>> creation_date() const;
@@ -92,7 +92,7 @@ private:
         return TRY(m_info_dict->get_string(m_document, name))->string();
     }
 
-    PDFErrorOr<Optional<ByteString>> get_text(DeprecatedFlyString const& name) const;
+    PDFErrorOr<Optional<String>> get_text(DeprecatedFlyString const& name) const;
 
     WeakPtr<Document> m_document;
     NonnullRefPtr<DictObject> m_info_dict;
@@ -103,7 +103,7 @@ class Document final
     , public Weakable<Document> {
 public:
     // Converts a text string (PDF 1.7 spec, 3.8.1. "String Types") to UTF-8.
-    static ByteString text_string_to_utf8(ByteString const&);
+    static ErrorOr<String> text_string_to_utf8(ByteString const&);
 
     static PDFErrorOr<NonnullRefPtr<Document>> create(ReadonlyBytes bytes);
 

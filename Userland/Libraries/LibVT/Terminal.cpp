@@ -35,7 +35,9 @@ void Terminal::clear()
     for (size_t i = 0; i < rows(); ++i)
         active_buffer()[i]->clear();
     set_cursor(0, 0);
-    m_client.terminal_did_perform_possibly_partial_clear();
+
+    if (!m_use_alternate_screen_buffer)
+        m_client.terminal_did_perform_possibly_partial_clear();
 }
 
 void Terminal::clear_history()

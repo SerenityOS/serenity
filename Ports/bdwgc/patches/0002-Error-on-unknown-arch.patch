@@ -8,10 +8,10 @@ Subject: [PATCH] Error on unknown arch
  1 file changed, 2 insertions(+)
 
 diff --git a/include/private/gcconfig.h b/include/private/gcconfig.h
-index 2126a12..7b8b86f 100644
+index b410f188f91960977a11695bf2a9da4639a32e94..2e36e697a0ab1ba89db9c18a4caa35d381f8ec90 100644
 --- a/include/private/gcconfig.h
 +++ b/include/private/gcconfig.h
-@@ -344,6 +344,8 @@ EXTERN_C_BEGIN
+@@ -351,6 +351,8 @@ EXTERN_C_BEGIN
  #        define I386
  #    elif defined(__x86_64__)
  #        define X86_64

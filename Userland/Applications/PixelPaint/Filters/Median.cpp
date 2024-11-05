@@ -8,6 +8,7 @@
 #include <AK/QuickSort.h>
 #include <Applications/PixelPaint/Filters/MedianSettingsGML.h>
 #include <LibGUI/SpinBox.h>
+#include <LibGfx/Painter.h>
 
 namespace PixelPaint::Filters {
 

@@ -35,6 +35,10 @@ inputs:
     description: 'Path to the download cache directory'
     required: false
     default: 'caches'
+  jakt_toolchain_cache_path:
+    description: 'Path to the prebuilt jakt toolchain cache'
+    required: false
+    default: ''
 
 outputs:
   serenity_ccache_primary_key:
@@ -46,12 +50,18 @@ outputs:
   toolchain_prebuilt_primary_key:
     description: 'Primary key for the toolchain cache'
     value: ${{ steps.toolchain-prebuilt.outputs.cache-primary-key }}
+  jakt_prebuilt_primary_key:
+    description: 'Primary key for the jakt toolchain cache'
+    value: ${{ steps.jakt-prebuilt.outputs.cache-primary-key }}
   toolchain_prebuilt_path:
     description: 'Path to the prebuilt toolchain'
     value: ${{ steps.toolchain-stamps.outputs.toolchain_path }}
   toolchain_prebuilt_hit:
     description: 'Whether the toolchain prebuilt cache was hit'
     value: ${{ steps.toolchain-prebuilt.outputs.cache-hit }}
+  jakt_prebuilt_hit:
+    description: 'Whether the jakt prebuilt cache was hit'
+    value: ${{ steps.jakt-prebuilt.outputs.cache-hit }}
 
 runs:
   using: "composite"
@@ -92,6 +102,13 @@ runs:
       with:
         path: ${{ steps.toolchain-stamps.outputs.toolchain_path }}
         key: '"toolchain" | "${{ inputs.arch }}" | "${{ inputs.toolchain }}" | "${{ steps.toolchain-stamps.outputs.toolchain_stamp }}"'
+
+    - name: 'Jakt Toolchain Prebuilt Cache'
+      uses: actions/cache/restore@v4
+      id: 'jakt-prebuilt'
+      with:
+        path: ${{ inputs.jakt_toolchain_cache_path }}
+        key: toolchain-${{ runner.os }}-jakt-toolchain-${{ inputs.arch }}-${{ steps.toolchain-stamps.outputs.toolchain_stamp }}-${{ hashFiles('Toolchain/BuildJakt.sh') }}
 
     - name: 'Toolchain Compiler Cache'
       uses: actions/cache/restore@v4

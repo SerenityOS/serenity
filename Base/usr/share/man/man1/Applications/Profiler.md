@@ -27,11 +27,11 @@ Profiler can also load performance information from previously created
 
 ## Options
 
-* `-p PID`, `--pid PID`: PID to profile
+-   `-p PID`, `--pid PID`: PID to profile
 
 ## Arguments
 
-* `perfcore-file`: Path of perfcore file to load
+-   `perfcore-file`: Path of perfcore file to load
 
 ## Examples
 
@@ -49,5 +49,5 @@ $ Profiler perfcore.123
 
 ## See also
 
-* [`perfcore`(5)](help://man/5/perfcore)
-* [`profile`(1)](help://man/1/profile)
+-   [`perfcore`(5)](help://man/5/perfcore)
+-   [`profile`(1)](help://man/1/profile)

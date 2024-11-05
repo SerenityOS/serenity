@@ -5,16 +5,16 @@
  */
 
 #include <AK/NonnullOwnPtr.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeController.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeNameSpace.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NVMeNameSpace>> NVMeNameSpace::try_create(NVMeController const& controller, Vector<NonnullLockRefPtr<NVMeQueue>> queues, u16 nsid, size_t storage_size, size_t lba_size)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NVMeNameSpace>> NVMeNameSpace::create(NVMeController const& controller, Vector<NonnullLockRefPtr<NVMeQueue>> queues, u16 nsid, size_t storage_size, size_t lba_size)
 {
-    auto device = TRY(DeviceManagement::try_create_device<NVMeNameSpace>(StorageDevice::LUNAddress { controller.controller_id(), nsid, 0 }, controller.hardware_relative_controller_id(), move(queues), storage_size, lba_size, nsid));
+    auto device = TRY(Device::try_create_device<NVMeNameSpace>(StorageDevice::LUNAddress { controller.controller_id(), nsid, 0 }, controller.hardware_relative_controller_id(), move(queues), storage_size, lba_size, nsid));
     return device;
 }
 

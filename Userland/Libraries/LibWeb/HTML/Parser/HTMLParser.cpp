@@ -1719,9 +1719,10 @@ void HTMLParser::handle_in_body(HTMLToken& token)
 
         // Otherwise, for each attribute on the token, check to see if the attribute is already present on the top element of the stack of open elements.
         // If it is not, add the attribute and its corresponding value to that element.
+        auto& top_element = m_stack_of_open_elements.first();
         token.for_each_attribute([&](auto& attribute) {
-            if (!current_node().has_attribute(attribute.local_name))
-                MUST(current_node().set_attribute(attribute.local_name, attribute.value));
+            if (!top_element.has_attribute(attribute.local_name))
+                top_element.append_attribute(attribute.local_name, attribute.value);
             return IterationDecision::Continue;
         });
         return;
@@ -1743,7 +1744,6 @@ void HTMLParser::handle_in_body(HTMLToken& token)
 
     // -> A start tag whose tag name is "body"
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::body) {
-
         // Parse error.
         log_parse_error();
 
@@ -1763,7 +1763,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         auto& body_element = m_stack_of_open_elements.elements().at(1);
         token.for_each_attribute([&](auto& attribute) {
             if (!body_element->has_attribute(attribute.local_name))
-                MUST(body_element->set_attribute(attribute.local_name, attribute.value));
+                body_element->append_attribute(attribute.local_name, attribute.value);
             return IterationDecision::Continue;
         });
         return;
@@ -4272,6 +4272,10 @@ Vector<JS::Handle<DOM::Node>> HTMLParser::parse_html_fragment(DOM::Element& cont
     auto temp_document = DOM::Document::create_for_fragment_parsing(context_element.realm());
     temp_document->set_document_type(DOM::Document::Type::HTML);
 
+    // AD-HOC: We set the about base URL of the document to the same as the context element's document.
+    //         This is required for Document::parse_url() to work inside iframe srcdoc documents.
+    temp_document->set_about_base_url(context_element.document().about_base_url());
+
     // 2. If the node document of the context element is in quirks mode, then let the Document be in quirks mode.
     //    Otherwise, the node document of the context element is in limited-quirks mode, then let the Document be in limited-quirks mode.
     //    Otherwise, leave the Document in no-quirks mode.
@@ -4648,7 +4652,7 @@ String HTMLParser::serialize_html_fragment(DOM::Node const& node, SerializableSh
 }
 
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#current-dimension-value
-static RefPtr<CSS::StyleValue> parse_current_dimension_value(float value, Utf8View input, Utf8View::Iterator position)
+static RefPtr<CSS::CSSStyleValue> parse_current_dimension_value(float value, Utf8View input, Utf8View::Iterator position)
 {
     // 1. If position is past the end of input, then return value as a length.
     if (position == input.end())
@@ -4663,7 +4667,7 @@ static RefPtr<CSS::StyleValue> parse_current_dimension_value(float value, Utf8Vi
 }
 
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-dimension-values
-RefPtr<CSS::StyleValue> parse_dimension_value(StringView string)
+RefPtr<CSS::CSSStyleValue> parse_dimension_value(StringView string)
 {
     // 1. Let input be the string being parsed.
     auto input = Utf8View(string);
@@ -4740,7 +4744,7 @@ RefPtr<CSS::StyleValue> parse_dimension_value(StringView string)
 }
 
 // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-non-zero-dimension-values
-RefPtr<CSS::StyleValue> parse_nonzero_dimension_value(StringView string)
+RefPtr<CSS::CSSStyleValue> parse_nonzero_dimension_value(StringView string)
 {
     // 1. Let input be the string being parsed.
     // 2. Let value be the result of parsing input using the rules for parsing dimension values.

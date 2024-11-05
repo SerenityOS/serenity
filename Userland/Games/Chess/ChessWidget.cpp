@@ -112,7 +112,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
         if (!(m_dragging_piece && sq == m_moving_square)) {
             auto bmp = get_piece_graphic(active_board.get_piece(sq));
             if (bmp) {
-                painter.draw_scaled_bitmap(tile_rect.shrunken(square_margin, square_margin, square_margin, square_margin), *bmp, bmp->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+                painter.draw_scaled_bitmap(tile_rect.shrunken(square_margin, square_margin, square_margin, square_margin), *bmp, bmp->rect(), 1.0f, Gfx::ScalingMode::BilinearBlend);
             }
         }
 
@@ -148,7 +148,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
         path.line_to(A);
         path.close();
 
-        painter.fill_path(path, color, Gfx::Painter::WindingRule::EvenOdd);
+        painter.fill_path(path, color, Gfx::WindingRule::EvenOdd);
     };
 
     for (auto& m : m_board_markings) {
@@ -197,7 +197,7 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
         auto bmp = get_piece_graphic(active_board.get_piece(m_moving_square));
         if (bmp) {
             auto center = m_drag_point - Gfx::IntPoint(square_width / 2, square_height / 2);
-            painter.draw_scaled_bitmap({ center, { square_width, square_height } }, *bmp, bmp->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+            painter.draw_scaled_bitmap({ center, { square_width, square_height } }, *bmp, bmp->rect(), 1.0f, Gfx::ScalingMode::BilinearBlend);
         }
     }
 
@@ -232,6 +232,8 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
 
     if (!square.has_value())
         return;
+
+    set_focus(true);
 
     auto piece = board().get_piece(square.value());
     if (drag_enabled() && piece.color == board().turn() && !m_playback) {

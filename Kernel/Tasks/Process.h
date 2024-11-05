@@ -144,7 +144,8 @@ class Process final
         u8 termination_status { 0 };
         u8 termination_signal { 0 };
         SetOnce reject_transition_to_executable_from_writable_prot;
-        SetOnce jailed;
+        SetOnce jailed_until_exit;
+        bool jailed_until_exec { false };
     };
 
 public:
@@ -298,7 +299,9 @@ public:
 
     bool is_jailed() const
     {
-        return with_protected_data([](auto& protected_data) { return protected_data.jailed.was_set(); });
+        return with_protected_data([](auto& protected_data) {
+            return protected_data.jailed_until_exit.was_set() || protected_data.jailed_until_exec;
+        });
     }
 
     NonnullRefPtr<Credentials> credentials() const;

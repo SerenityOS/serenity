@@ -19,15 +19,15 @@ namespace Kernel {
 
 extern "C" [[noreturn]] void init();
 
-extern "C" [[noreturn]] void pre_init(PhysicalPtr fdt_ptr);
-extern "C" [[noreturn]] void pre_init(PhysicalPtr fdt_ptr)
+extern "C" [[noreturn]] void pre_init(PhysicalPtr flattened_devicetree_paddr);
+extern "C" [[noreturn]] void pre_init(PhysicalPtr flattened_devicetree_paddr)
 {
     // We want to drop to EL1 as soon as possible, because that is the
     // exception level the kernel should run at.
     initialize_exceptions();
 
     // Next step is to set up page tables and enable the MMU.
-    Memory::init_page_tables(fdt_ptr);
+    Memory::init_page_tables(flattened_devicetree_paddr);
 
     // At this point the MMU is enabled, physical memory is identity mapped,
     // and the kernel is also mapped into higher virtual memory. However we are still executing
@@ -45,7 +45,7 @@ extern "C" [[noreturn]] void pre_init(PhysicalPtr fdt_ptr)
     // in high virtual memory.
     asm volatile(
         "mov x0, %[base] \n"
-        "add sp, sp, x0 \n" ::[base] "r"(physical_to_virtual_offset)
+        "add sp, sp, x0 \n" ::[base] "r"(g_boot_info.physical_to_virtual_offset)
         : "x0");
 
     // We can now unmap the identity map as everything is running in high virtual memory at this point.

@@ -34,6 +34,6 @@ private:
 
     explicit BochsGraphicsAdapter(PCI::DeviceIdentifier const&);
 
-    LockRefPtr<DisplayConnector> m_display_connector;
+    RefPtr<DisplayConnector> m_display_connector;
 };
 }

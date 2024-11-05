@@ -7,7 +7,7 @@
 #include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Layout/SVGClipBox.h>
 #include <LibWeb/Layout/SVGMaskBox.h>
-#include <LibWeb/Painting/CommandExecutorCPU.h>
+#include <LibWeb/Painting/DisplayListPlayerCPU.h>
 #include <LibWeb/Painting/SVGClipPaintable.h>
 #include <LibWeb/Painting/SVGGraphicsPaintable.h>
 #include <LibWeb/Painting/StackingContext.h>
@@ -81,15 +81,15 @@ RefPtr<Gfx::Bitmap> SVGMaskable::calculate_mask_of_svg(PaintContext& context, CS
         if (mask_bitmap_or_error.is_error())
             return {};
         mask_bitmap = mask_bitmap_or_error.release_value();
-        CommandList painting_commands;
-        RecordingPainter recording_painter(painting_commands);
-        recording_painter.translate(-mask_rect.location().to_type<int>());
-        auto paint_context = context.clone(recording_painter);
+        DisplayList display_list;
+        DisplayListRecorder display_list_recorder(display_list);
+        display_list_recorder.translate(-mask_rect.location().to_type<int>());
+        auto paint_context = context.clone(display_list_recorder);
         paint_context.set_svg_transform(graphics_element.get_transform());
         paint_context.set_draw_svg_geometry_for_clip_path(is<SVGClipPaintable>(paintable));
         StackingContext::paint_node_as_stacking_context(paintable, paint_context);
-        CommandExecutorCPU executor { *mask_bitmap };
-        painting_commands.execute(executor);
+        DisplayListPlayerCPU executor { *mask_bitmap };
+        display_list.execute(executor);
         return mask_bitmap;
     };
     RefPtr<Gfx::Bitmap> mask_bitmap = {};

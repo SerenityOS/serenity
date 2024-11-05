@@ -91,6 +91,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     m_toolbar->addAction(&m_window->reload_action());
     m_toolbar->addWidget(m_location_edit);
     m_toolbar->addAction(&m_window->new_tab_action());
+    m_toolbar->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Fixed);
     m_hamburger_button_action = m_toolbar->addWidget(m_hamburger_button);
     m_toolbar->setIconSize({ 16, 16 });
     // This is a little awkward, but without this Qt shrinks the button to the size of the icon.
@@ -145,7 +146,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         m_favicon = default_favicon();
         emit favicon_changed(tab_index(), m_favicon);
 
-        m_location_edit->setText(url_serialized);
+        m_location_edit->set_url(url);
         m_location_edit->setCursorPosition(0);
     };
 
@@ -155,7 +156,7 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
     };
 
     view().on_url_change = [this](auto const& url) {
-        m_location_edit->setText(qstring_from_ak_string(url.serialize()));
+        m_location_edit->set_url(url);
     };
 
     QObject::connect(m_location_edit, &QLineEdit::returnPressed, this, &Tab::location_edit_return_pressed);
@@ -313,6 +314,10 @@ Tab::Tab(BrowserWindow* window, WebContentOptions const& web_content_options, St
         }
 
         view().file_picker_closed(std::move(selected_files));
+    };
+
+    view().on_find_in_page = [this](auto current_match_index, auto const& total_match_count) {
+        m_find_in_page->update_result_label(current_match_index, total_match_count);
     };
 
     m_select_dropdown = new QMenu("Select Dropdown", this);
@@ -859,7 +864,7 @@ void Tab::copy_link_url(URL::URL const& url)
 
 void Tab::location_edit_return_pressed()
 {
-    navigate(ak_url_from_qstring(m_location_edit->text()));
+    navigate(m_location_edit->url());
 }
 
 void Tab::open_file()
@@ -900,6 +905,9 @@ void Tab::update_hover_label()
 
 void Tab::update_navigation_buttons_state()
 {
+    if (m_window->current_tab() != this)
+        return;
+
     m_window->go_back_action().setEnabled(m_can_navigate_back);
     m_window->go_forward_action().setEnabled(m_can_navigate_forward);
 }
@@ -946,6 +954,16 @@ void Tab::show_find_in_page()
     m_find_in_page->setFocus();
 }
 
+void Tab::find_previous()
+{
+    m_find_in_page->find_previous();
+}
+
+void Tab::find_next()
+{
+    m_find_in_page->find_next();
+}
+
 void Tab::close_sub_widgets()
 {
     auto close_widget_window = [](auto* widget) {
@@ -954,6 +972,43 @@ void Tab::close_sub_widgets()
     };
 
     close_widget_window(m_inspector_widget);
+}
+
+void Tab::set_block_popups(bool enabled)
+{
+    debug_request("block-pop-ups", enabled ? "on" : "off");
+}
+
+void Tab::set_line_box_borders(bool enabled)
+{
+    debug_request("set-line-box-borders", enabled ? "on" : "off");
+}
+
+void Tab::set_same_origin_policy(bool enabled)
+{
+    debug_request("same-origin-policy", enabled ? "on" : "off");
+}
+
+void Tab::set_scripting(bool enabled)
+{
+    debug_request("scripting", enabled ? "on" : "off");
+}
+
+void Tab::set_user_agent_string(ByteString const& user_agent)
+{
+    debug_request("spoof-user-agent", user_agent);
+    // Clear the cache to ensure requests are re-done with the new user agent.
+    debug_request("clear-cache");
+}
+
+void Tab::set_navigator_compatibility_mode(ByteString const& compatibility_mode)
+{
+    debug_request("navigator-compatibility-mode", compatibility_mode);
+}
+
+void Tab::set_enable_do_not_track(bool enable)
+{
+    m_view->set_enable_do_not_track(enable);
 }
 
 }

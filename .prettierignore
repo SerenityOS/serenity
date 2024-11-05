@@ -1,7 +1,13 @@
+# Automatically regenerated Markdown files based on git patches.
+Toolchain/Patches
+Ports/*/patches
+
 Base/home/anon/Source/js
 Userland/Libraries/LibJS/Tests/invalid-lhs-in-assignment.js
 Userland/Libraries/LibJS/Tests/unicode-identifier-escape.js
 Userland/Libraries/LibJS/Tests/modules/failing.mjs
+# FIXME: Uses regex flags which cause a syntax error in prettier.
+Userland/Libraries/LibJS/Tests/builtins/RegExp/RegExp.prototype.flags.js
 
 # FIXME: Remove once prettier is updated to support using declarations.
 Userland/Libraries/LibJS/Tests/builtins/DisposableStack/DisposableStack.prototype.@@dispose.js

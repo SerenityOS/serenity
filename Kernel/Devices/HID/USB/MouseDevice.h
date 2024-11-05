@@ -20,7 +20,7 @@
 namespace Kernel {
 
 class USBMouseDevice final : public MouseDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static ErrorOr<NonnullRefPtr<USBMouseDevice>> try_create_instance(USB::Device const&, size_t max_packet_size, NonnullOwnPtr<USB::InterruptInPipe> pipe);

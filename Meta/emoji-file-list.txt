@@ -423,6 +423,8 @@ U+1F3E4.png
 U+1F3E5.png
 U+1F3E6.png
 U+1F3E7.png
+U+1F3E8.png
+U+1F3E9.png
 U+1F3EA.png
 U+1F3EB.png
 U+1F3EC.png
@@ -1278,6 +1280,7 @@ U+1FAA8.png
 U+1FAA9.png
 U+1FAAA.png
 U+1FAAB.png
+U+1FAAC.png
 U+1FAAD.png
 U+1FAAE.png
 U+1FAAF.png

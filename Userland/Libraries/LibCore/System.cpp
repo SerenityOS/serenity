@@ -150,9 +150,17 @@ namespace Core::System {
 
 #ifdef AK_OS_SERENITY
 
-ErrorOr<void> enter_jail_mode()
+ErrorOr<void> enter_jail_mode_until_exit()
 {
-    auto rc = prctl(PR_SET_JAILED, 0, 0, 0);
+    auto rc = prctl(PR_SET_JAILED_UNTIL_EXIT, 0, 0, 0);
+    if (rc != 0)
+        return Error::from_syscall("prctl"sv, -rc);
+    return {};
+}
+
+ErrorOr<void> enter_jail_mode_until_exec()
+{
+    auto rc = prctl(PR_SET_JAILED_UNTIL_EXEC, 0, 0, 0);
     if (rc != 0)
         return Error::from_syscall("prctl"sv, -rc);
     return {};

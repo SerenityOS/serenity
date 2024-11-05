@@ -14,7 +14,7 @@ Print targets of the specified symbolic links.
 
 ## Options
 
-* `-n`, `--no-newline`: Do not output a newline after each target
+-   `-n`, `--no-newline`: Do not output a newline after each target
 
 ## Examples
 
@@ -24,4 +24,4 @@ $ readlink /proc/self/cwd
 
 ## See also
 
-* [`readlink`(2)](help://man/2/readlink)
+-   [`readlink`(2)](help://man/2/readlink)

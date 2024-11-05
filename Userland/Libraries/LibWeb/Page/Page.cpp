@@ -48,7 +48,6 @@ void Page::visit_edges(JS::Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_top_level_traversable);
     visitor.visit(m_client);
-    visitor.visit(m_find_in_page_matches);
 }
 
 HTML::Navigable& Page::focused_navigable()
@@ -110,6 +109,16 @@ CSSPixelRect Page::web_exposed_screen_area() const
 CSS::PreferredColorScheme Page::preferred_color_scheme() const
 {
     return m_client->preferred_color_scheme();
+}
+
+CSS::PreferredContrast Page::preferred_contrast() const
+{
+    return m_client->preferred_contrast();
+}
+
+CSS::PreferredMotion Page::preferred_motion() const
+{
+    return m_client->preferred_motion();
 }
 
 CSSPixelPoint Page::device_to_css_point(DevicePixelPoint point) const
@@ -202,12 +211,17 @@ bool Page::handle_doubleclick(DevicePixelPoint position, DevicePixelPoint screen
     return top_level_traversable()->event_handler().handle_doubleclick(device_to_css_point(position), device_to_css_point(screen_position), button, buttons, modifiers);
 }
 
-bool Page::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
+bool Page::handle_drag_and_drop_event(DragEvent::Type type, DevicePixelPoint position, DevicePixelPoint screen_position, unsigned button, unsigned buttons, unsigned modifiers, Vector<HTML::SelectedFile> files)
+{
+    return top_level_traversable()->event_handler().handle_drag_and_drop_event(type, device_to_css_point(position), device_to_css_point(screen_position), button, buttons, modifiers, move(files));
+}
+
+bool Page::handle_keydown(UIEvents::KeyCode key, unsigned modifiers, u32 code_point)
 {
     return focused_navigable().event_handler().handle_keydown(key, modifiers, code_point);
 }
 
-bool Page::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
+bool Page::handle_keyup(UIEvents::KeyCode key, unsigned modifiers, u32 code_point)
 {
     return focused_navigable().event_handler().handle_keyup(key, modifiers, code_point);
 }
@@ -533,13 +547,23 @@ void Page::set_user_style(String source)
     }
 }
 
+Vector<JS::Handle<DOM::Document>> Page::documents_in_active_window() const
+{
+    if (!top_level_traversable_is_initialized())
+        return {};
+
+    auto documents = HTML::main_thread_event_loop().documents_in_this_event_loop();
+    for (ssize_t i = documents.size() - 1; i >= 0; --i) {
+        if (documents[i]->window() != top_level_traversable()->active_window())
+            documents.remove(i);
+    }
+
+    return documents;
+}
+
 void Page::clear_selection()
 {
-    auto documents = HTML::main_thread_event_loop().documents_in_this_event_loop();
-    for (auto const& document : documents) {
-        if (&document->page() != this)
-            continue;
-
+    for (auto const& document : documents_in_active_window()) {
         auto selection = document->get_selection();
         if (!selection)
             continue;
@@ -548,69 +572,129 @@ void Page::clear_selection()
     }
 }
 
-void Page::find_in_page(String const& query, CaseSensitivity case_sensitivity)
+Page::FindInPageResult Page::perform_find_in_page_query(FindInPageQuery const& query, Optional<SearchDirection> direction)
 {
-    m_find_in_page_match_index = 0;
+    VERIFY(top_level_traversable_is_initialized());
 
-    if (query.is_empty()) {
-        m_find_in_page_matches = {};
-        update_find_in_page_selection();
-        return;
-    }
-
-    auto documents = HTML::main_thread_event_loop().documents_in_this_event_loop();
     Vector<JS::Handle<DOM::Range>> all_matches;
-    for (auto const& document : documents) {
-        if (&document->page() != this)
-            continue;
 
-        auto matches = document->find_matching_text(query, case_sensitivity);
+    auto find_current_match_index = [this, &direction](auto& document, auto& matches) -> size_t {
+        // Always return the first match if there is no active query.
+        if (!m_last_find_in_page_query.has_value())
+            return 0;
+
+        auto selection = document.get_selection();
+        if (!selection)
+            return 0;
+
+        auto range = selection->range();
+        if (!range)
+            return 0;
+
+        for (size_t i = 0; i < matches.size(); ++i) {
+            auto boundary_comparison_or_error = matches[i]->compare_boundary_points(DOM::Range::HowToCompareBoundaryPoints::START_TO_START, *range);
+            if (!boundary_comparison_or_error.is_error() && boundary_comparison_or_error.value() >= 0) {
+                // If the match occurs after the current selection then we don't need to increment the match index later on.
+                if (boundary_comparison_or_error.value() && direction == SearchDirection::Forward)
+                    direction = {};
+
+                return i;
+            }
+        }
+
+        return 0;
+    };
+
+    for (auto document : documents_in_active_window()) {
+        auto matches = document->find_matching_text(query.string, query.case_sensitivity);
+        if (document == top_level_traversable()->active_document()) {
+            auto new_match_index = find_current_match_index(*document, matches);
+            m_find_in_page_match_index = new_match_index + all_matches.size();
+        }
+
         all_matches.extend(move(matches));
     }
 
-    m_find_in_page_matches.clear_with_capacity();
-    for (auto& match : all_matches)
-        m_find_in_page_matches.append(*match);
-
-    update_find_in_page_selection();
-}
-
-void Page::find_in_page_next_match()
-{
-    if (m_find_in_page_matches.is_empty())
-        return;
-
-    if (m_find_in_page_match_index == m_find_in_page_matches.size() - 1) {
-        m_find_in_page_match_index = 0;
-    } else {
-        m_find_in_page_match_index++;
+    if (auto active_document = top_level_traversable()->active_document()) {
+        if (m_last_find_in_page_url.serialize(URL::ExcludeFragment::Yes) != active_document->url().serialize(URL::ExcludeFragment::Yes)) {
+            m_last_find_in_page_url = top_level_traversable()->active_document()->url();
+            m_find_in_page_match_index = 0;
+        }
     }
 
-    update_find_in_page_selection();
-}
-
-void Page::find_in_page_previous_match()
-{
-    if (m_find_in_page_matches.is_empty())
-        return;
-
-    if (m_find_in_page_match_index == 0) {
-        m_find_in_page_match_index = m_find_in_page_matches.size() - 1;
-    } else {
-        m_find_in_page_match_index--;
+    if (direction.has_value()) {
+        if (direction.value() == SearchDirection::Forward) {
+            if (m_find_in_page_match_index >= all_matches.size() - 1) {
+                if (query.wrap_around == WrapAround::No)
+                    return {};
+                m_find_in_page_match_index = 0;
+            } else {
+                m_find_in_page_match_index++;
+            }
+        } else {
+            if (m_find_in_page_match_index == 0) {
+                if (query.wrap_around == WrapAround::No)
+                    return {};
+                m_find_in_page_match_index = all_matches.size() - 1;
+            } else {
+                m_find_in_page_match_index--;
+            }
+        }
     }
 
-    update_find_in_page_selection();
+    update_find_in_page_selection(all_matches);
+
+    return Page::FindInPageResult {
+        .current_match_index = m_find_in_page_match_index,
+        .total_match_count = all_matches.size(),
+    };
 }
 
-void Page::update_find_in_page_selection()
+Page::FindInPageResult Page::find_in_page(FindInPageQuery const& query)
+{
+    if (!top_level_traversable_is_initialized())
+        return {};
+
+    if (query.string.is_empty()) {
+        m_last_find_in_page_query = {};
+        clear_selection();
+        return {};
+    }
+
+    auto result = perform_find_in_page_query(query);
+
+    m_last_find_in_page_query = query;
+    m_last_find_in_page_url = top_level_traversable()->active_document()->url();
+
+    return result;
+}
+
+Page::FindInPageResult Page::find_in_page_next_match()
+{
+    if (!(m_last_find_in_page_query.has_value() && top_level_traversable_is_initialized()))
+        return {};
+
+    auto result = perform_find_in_page_query(*m_last_find_in_page_query, SearchDirection::Forward);
+    return result;
+}
+
+Page::FindInPageResult Page::find_in_page_previous_match()
+{
+    if (!(m_last_find_in_page_query.has_value() && top_level_traversable_is_initialized()))
+        return {};
+
+    auto result = perform_find_in_page_query(*m_last_find_in_page_query, SearchDirection::Backward);
+    return result;
+}
+
+void Page::update_find_in_page_selection(Vector<JS::Handle<DOM::Range>> matches)
 {
     clear_selection();
 
-    if (m_find_in_page_matches.is_empty())
+    if (matches.is_empty())
         return;
 
-    auto current_range = m_find_in_page_matches[m_find_in_page_match_index];
+    auto current_range = matches[m_find_in_page_match_index];
     auto common_ancestor_container = current_range->common_ancestor_container();
     auto& document = common_ancestor_container->document();
     if (!document.window())

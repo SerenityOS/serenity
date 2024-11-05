@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Enumerate.h>
 #include <AK/Math.h>
 #include <AK/StringBuilder.h>
 #include <AK/TypeCasts.h>
@@ -12,6 +13,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibGfx/TextLayout.h>
+#include <LibGfx/Vector2.h>
 
 namespace Gfx {
 
@@ -217,10 +219,8 @@ void Path::text(Utf8View text, Font const& font)
     }
 
     auto& scaled_font = static_cast<ScaledFont const&>(font);
-    auto font_list = Gfx::FontCascadeList::create();
-    font_list->add(scaled_font);
     for_each_glyph_position(
-        last_point(), text, font_list, [&](DrawGlyphOrEmoji glyph_or_emoji) {
+        last_point(), text, scaled_font, [&](DrawGlyphOrEmoji glyph_or_emoji) {
             if (glyph_or_emoji.has<DrawGlyph>()) {
                 auto& glyph = glyph_or_emoji.get<DrawGlyph>();
                 move_to(glyph.position);
@@ -258,13 +258,10 @@ Path Path::place_text_along(Utf8View text, Font const& font) const
         return lines[line_index].a();
     };
 
-    auto font_list = Gfx::FontCascadeList::create();
-    font_list->add(font);
     auto& scaled_font = static_cast<Gfx::ScaledFont const&>(font);
-
     Gfx::Path result_path;
     Gfx::for_each_glyph_position(
-        {}, text, font_list, [&](Gfx::DrawGlyphOrEmoji glyph_or_emoji) {
+        {}, text, font, [&](Gfx::DrawGlyphOrEmoji glyph_or_emoji) {
             auto* glyph = glyph_or_emoji.get_pointer<Gfx::DrawGlyph>();
             if (!glyph)
                 return;
@@ -307,10 +304,12 @@ void Path::close()
     }
     if (first_point_in_subpath != last_point())
         line_to(first_point_in_subpath);
+    append_segment<PathSegment::ClosePath>();
 }
 
 void Path::close_all_subpaths()
 {
+    // This is only called before filling, not before stroking, so this doesn't have to insert ClosePath segments.
     auto it = begin();
     // Note: Get the end outside the loop as closing subpaths will move the end.
     auto end = this->end();
@@ -324,12 +323,13 @@ void Path::close_all_subpaths()
         }
         // Find the end of the current subpath.
         FloatPoint cursor = first_point_in_subpath;
-        while (it < end) {
+        for (; it < end; ++it) {
             auto segment = *it;
+            if (segment.command() == PathSegment::ClosePath)
+                continue;
             if (segment.command() == PathSegment::MoveTo)
                 break;
             cursor = segment.point();
-            ++it;
         }
         // Close the subpath.
         if (first_point_in_subpath != cursor) {
@@ -361,6 +361,9 @@ ByteString Path::to_byte_string() const
         case PathSegment::CubicBezierCurveTo:
             builder.append('C');
             break;
+        case PathSegment::ClosePath:
+            builder.append('Z');
+            break;
         }
         for (auto point : segment.points())
             builder.appendff(" {},{}", point.x(), point.y());
@@ -372,6 +375,7 @@ void Path::segmentize_path()
 {
     Vector<FloatLine> segments;
     FloatBoundingBox bounding_box;
+    Vector<size_t> subpath_end_indices;
 
     auto add_line = [&](auto const& p0, auto const& p1) {
         segments.append({ p0, p1 });
@@ -400,11 +404,16 @@ void Path::segmentize_path()
             });
             break;
         }
+        case PathSegment::ClosePath: {
+            subpath_end_indices.append(segments.size() - 1);
+            break;
         }
-        cursor = segment.point();
+        }
+        if (segment.command() != PathSegment::ClosePath)
+            cursor = segment.point();
     }
 
-    m_split_lines = SplitLines { move(segments), bounding_box };
+    m_split_lines = SplitLines { move(segments), bounding_box, move(subpath_end_indices) };
 }
 
 Path Path::copy_transformed(Gfx::AffineTransform const& transform) const
@@ -464,28 +473,8 @@ private:
     ReadonlySpan<T> m_span;
 };
 
-Path Path::stroke_to_fill(float thickness) const
+static Vector<FloatPoint, 128> make_pen(float thickness)
 {
-    // Note: This convolves a polygon with the path using the algorithm described
-    // in https://keithp.com/~keithp/talks/cairo2003.pdf (3.1 Stroking Splines via Convolution)
-
-    VERIFY(thickness > 0);
-
-    auto lines = split_lines();
-    if (lines.is_empty())
-        return Path {};
-
-    // Paths can be disconnected, which a pain to deal with, so split it up.
-    Vector<Vector<FloatPoint>> segments;
-    segments.append({ lines.first().a() });
-    for (auto& line : lines) {
-        if (line.a() == segments.last().last()) {
-            segments.last().append(line.b());
-        } else {
-            segments.append({ line.a(), line.b() });
-        }
-    }
-
     constexpr auto flatness = 0.15f;
     auto pen_vertex_count = 4;
     if (thickness > flatness) {
@@ -513,8 +502,65 @@ Path Path::stroke_to_fill(float thickness) const
         theta -= theta_delta;
     }
 
+    return pen_vertices;
+}
+
+Path Path::stroke_to_fill(StrokeStyle const& style) const
+{
+    // Note: This convolves a polygon with the path using the algorithm described
+    // in https://keithp.com/~keithp/talks/cairo2003.pdf (3.1 Stroking Splines via Convolution)
+    // Cap style handling is done by replacing the convolution with an explicit shape
+    // at the path's ends, but we still maintain a position on the pen and pretend we're convolving.
+
+    auto thickness = style.thickness;
+    auto cap_style = style.cap_style;
+    auto join_style = style.join_style;
+
+    VERIFY(thickness > 0);
+
+    auto lines = split_lines();
+    if (lines.is_empty())
+        return Path {};
+
+    auto subpath_end_indices = split_lines_subbpath_end_indices();
+
+    // Paths can be disconnected, which a pain to deal with, so split it up.
+    // Also filter out duplicate points here (but keep one-point paths around
+    // since we draw round and square caps for them).
+    Vector<Vector<FloatPoint>> segments;
+    Vector<bool> segment_is_closed;
+    segments.append({ lines.first().a() });
+    for (auto const& [line_index, line] : enumerate(lines)) {
+        if (line.a() == segments.last().last()) {
+            if (line.a() != line.b())
+                segments.last().append(line.b());
+        } else {
+            if (subpath_end_indices.size() >= segments.size())
+                segment_is_closed.append(subpath_end_indices[segments.size() - 1] == line_index);
+            else
+                segment_is_closed.append(false);
+            segments.append({ line.a() });
+            if (line.a() != line.b())
+                segments.last().append(line.b());
+        }
+    }
+    if (segment_is_closed.size() < segments.size()) {
+        if (subpath_end_indices.size() >= segments.size())
+            segment_is_closed.append(subpath_end_indices[segments.size() - 1] == lines.size() - 1);
+        else
+            segment_is_closed.append(false);
+        VERIFY(segment_is_closed.size() == segments.size());
+    }
+
+    Vector<FloatPoint, 128> pen_vertices = make_pen(thickness);
+
+    static constexpr auto mod = [](int a, int b) {
+        VERIFY(b > 0);
+        VERIFY(a + b >= 0);
+        return (a + b) % b;
+    };
     auto wrapping_index = [](auto& vertices, auto index) {
-        return vertices[(index + vertices.size()) % vertices.size()];
+        return vertices[mod(index, vertices.size())];
     };
 
     auto angle_between = [](auto p1, auto p2) {
@@ -537,7 +583,7 @@ Path Path::stroke_to_fill(float thickness) const
 
     Vector<ActiveRange, 128> active_ranges;
     active_ranges.ensure_capacity(pen_vertices.size());
-    for (auto i = 0; i < pen_vertex_count; i++) {
+    for (int i = 0; i < (int)pen_vertices.size(); i++) {
         active_ranges.unchecked_append({ angle_between(wrapping_index(pen_vertices, i - 1), pen_vertices[i]),
             angle_between(pen_vertices[i], wrapping_index(pen_vertices, i + 1)) });
     }
@@ -549,11 +595,35 @@ Path Path::stroke_to_fill(float thickness) const
             current_angle += AK::Pi<float> * 2;
         if (target_angle < current_angle)
             target_angle += AK::Pi<float> * 2;
-        return (target_angle - current_angle) <= AK::Pi<float>;
+
+        auto angle = target_angle - current_angle;
+
+        // If the end of the range is antiparallel to where we want to go,
+        // we have to keep moving clockwise: In that case, the _next_ range
+        // is what we want.
+        if (fabs(angle - AK::Pi<float>) < 0.0001f)
+            return true;
+
+        return angle <= AK::Pi<float>;
     };
 
     Path convolution;
-    for (auto& segment : segments) {
+    for (auto const& [segment_index, segment] : enumerate(segments)) {
+        if (segment.size() < 2) {
+            // Draw round and square caps for single-point segments.
+            // FIXME: THis is is a bit ad-hoc. It matches what most PDF engines do,
+            // and matches what Chrome and Firefox (but not WebKit) do for canvas paths.
+            if (cap_style == CapStyle::Round) {
+                convolution.move_to(segment[0] + pen_vertices[0]);
+                for (int i = 1; i < (int)pen_vertices.size(); i++)
+                    convolution.line_to(segment[0] + pen_vertices[i]);
+                convolution.close();
+            } else if (cap_style == CapStyle::Square) {
+                convolution.rect({ segment[0].translated(-thickness / 2, -thickness / 2), { thickness, thickness } });
+            }
+            continue;
+        }
+
         RoundTrip<FloatPoint> shape { segment };
 
         bool first = true;
@@ -574,30 +644,160 @@ Path Path::stroke_to_fill(float thickness) const
 
         auto start_slope = slope();
         // Note: At least one range must be active.
-        auto active = *active_ranges.find_first_index_if([&](auto& range) {
+        int active = *active_ranges.find_first_index_if([&](auto& range) {
             return range.in_range(start_slope);
         });
 
-        while (shape_idx < shape.size()) {
+        shape_idx = 1;
+
+        auto add_round_join = [&](unsigned next_index) {
             add_vertex(shape[shape_idx] + pen_vertices[active]);
-            auto slope_now = slope();
+            auto slope_now = angle_between(shape[shape_idx], shape[next_index]);
             auto range = active_ranges[active];
-            if (range.in_range(slope_now)) {
+            while (!range.in_range(slope_now)) {
+                active = mod(active + (clockwise(slope_now, range.end) ? 1 : -1), pen_vertices.size());
+                add_vertex(shape[shape_idx] + pen_vertices[active]);
+                range = active_ranges[active];
+            }
+        };
+
+        auto add_bevel_join = [&](unsigned next_index) {
+            add_vertex(shape[shape_idx] + pen_vertices[active]);
+            auto slope_now = angle_between(shape[shape_idx], shape[next_index]);
+            auto range = active_ranges[active];
+            auto last_active = active;
+            while (!range.in_range(slope_now)) {
+                last_active = active;
+                active = mod(active + (clockwise(slope_now, range.end) ? 1 : -1), pen_vertices.size());
+                range = active_ranges[active];
+            }
+            if (last_active != active)
+                add_vertex(shape[shape_idx] + pen_vertices[active]);
+        };
+
+        auto add_miter_join = [&](unsigned next_index) {
+            auto cross_product = [](FloatPoint const& p1, FloatPoint const& p2) {
+                return p1.x() * p2.y() - p1.y() * p2.x();
+            };
+
+            auto segment1 = shape[shape_idx] - shape[shape_idx - 1];
+            auto normal1 = FloatVector2(-segment1.y(), segment1.x()).normalized();
+            auto offset1 = FloatPoint(normal1.x(), normal1.y()) * (thickness / 2);
+            auto p1 = shape[shape_idx - 1] + offset1;
+
+            auto segment2 = shape[next_index] - shape[shape_idx];
+            auto normal2 = FloatVector2(-segment2.y(), segment2.x()).normalized();
+            auto offset2 = FloatPoint(normal2.x(), normal2.y()) * (thickness / 2);
+            auto p2 = shape[shape_idx] + offset2;
+
+            auto denominator = cross_product(segment1, segment2);
+            if (denominator == 0)
+                return add_bevel_join(next_index);
+
+            auto intersection = p1 + segment1 * cross_product(p2 - p1, segment2) / denominator;
+            if (intersection.distance_from(shape[shape_idx]) / (thickness / 2) > style.miter_limit)
+                return add_bevel_join(next_index);
+
+            add_vertex(intersection);
+            auto slope_now = angle_between(shape[shape_idx], shape[next_index]);
+            auto range = active_ranges[active];
+            while (!range.in_range(slope_now)) {
+                active = mod(active + (clockwise(slope_now, range.end) ? 1 : -1), pen_vertices.size());
+                range = active_ranges[active];
+            }
+        };
+
+        auto add_linejoin = [&](unsigned next_index) {
+            switch (join_style) {
+            case JoinStyle::Miter:
+                add_miter_join(next_index);
+                break;
+            case JoinStyle::Round:
+                add_round_join(next_index);
+                break;
+            case JoinStyle::Bevel:
+                add_bevel_join(next_index);
+                break;
+            }
+        };
+
+        auto trace_path_until_index = [&](size_t index) {
+            while (shape_idx < index) {
+                add_linejoin(shape_idx + 1);
+                shape_idx++;
+            }
+        };
+
+        auto add_linecap = [&]() {
+            if (cap_style == CapStyle::Butt || cap_style == CapStyle::Square) {
+                auto segment = shape[shape_idx] - shape[shape_idx - 1];
+                auto segment_vector = FloatVector2(segment.x(), segment.y()).normalized();
+                auto normal = FloatVector2(-segment_vector.y(), segment_vector.x());
+                auto offset = FloatPoint(normal.x() * (thickness / 2), normal.y() * (thickness / 2));
+                auto p1 = shape[shape_idx] + offset;
+                auto p2 = shape[shape_idx] - offset;
+                if (cap_style == CapStyle::Square) {
+                    auto square_cap_offset = segment_vector * (thickness / 2);
+                    p1.translate_by(square_cap_offset.x(), square_cap_offset.y());
+                    p2.translate_by(square_cap_offset.x(), square_cap_offset.y());
+                }
+
+                add_vertex(p1);
+                auto slope_now = slope();
+                active = mod(active + pen_vertices.size() / 2, pen_vertices.size());
+                if (!active_ranges[active].in_range(slope_now)) {
+                    if (wrapping_index(active_ranges, active + 1).in_range(slope_now))
+                        active = mod(active + 1, pen_vertices.size());
+                    else if (wrapping_index(active_ranges, active - 1).in_range(slope_now))
+                        active = mod(active - 1, pen_vertices.size());
+                    else
+                        VERIFY_NOT_REACHED();
+                }
+                add_vertex(p2);
                 shape_idx++;
             } else {
-                if (clockwise(slope_now, range.end)) {
-                    if (active == static_cast<size_t>(pen_vertex_count - 1))
-                        active = 0;
-                    else
-                        active++;
-                } else {
-                    if (active == 0)
-                        active = pen_vertex_count - 1;
-                    else
-                        active--;
-                }
+                VERIFY(cap_style == CapStyle::Round);
+                add_round_join(shape_idx + 1);
             }
+        };
+
+        bool current_segment_is_closed = segment_is_closed[segment_index];
+
+        // Outer stroke.
+        trace_path_until_index(segment.size() - 1);
+        VERIFY(shape_idx == segment.size() - 1);
+
+        // Close outer stroke for closed paths, or draw cap 1 for open paths.
+        if (current_segment_is_closed) {
+            add_linejoin(1);
+
+            // Start an independent path for the inner stroke.
+            convolution.close();
+            first = true;
+
+            auto start_slope = slope();
+            active = *active_ranges.find_first_index_if([&](auto& range) {
+                return range.in_range(start_slope);
+            });
+
+            ++shape_idx;
+            VERIFY(shape_idx == segment.size());
+        } else {
+            add_linecap();
         }
+
+        // Inner stroke.
+        trace_path_until_index(2 * (segment.size() - 1));
+        VERIFY(shape_idx == 2 * (segment.size() - 1));
+
+        // Close inner stroke for closed paths, or draw cap 2 for open paths.
+        if (current_segment_is_closed) {
+            add_linejoin(segment.size());
+        } else {
+            add_linecap();
+        }
+
+        convolution.close();
     }
 
     return convolution;

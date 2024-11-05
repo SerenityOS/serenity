@@ -6,24 +6,21 @@
 
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/DeviceControlDevice.h>
 #include <Kernel/Devices/Loop/LoopDevice.h>
 #include <Kernel/Library/StdLib.h>
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<DeviceControlDevice> DeviceControlDevice::must_create()
+UNMAP_AFTER_INIT NonnullRefPtr<DeviceControlDevice> DeviceControlDevice::must_create()
 {
-    auto device_control_device_or_error = DeviceManagement::try_create_device<DeviceControlDevice>();
-    // FIXME: Find a way to propagate errors
-    VERIFY(!device_control_device_or_error.is_error());
-    return device_control_device_or_error.release_value();
+    return MUST(Device::try_create_device<DeviceControlDevice>());
 }
 
 bool DeviceControlDevice::can_read(OpenFileDescription const&, u64) const
 {
-    return DeviceManagement::the().event_queue({}).with([](auto& queue) -> bool {
+    return Device::event_queue().with([](auto& queue) -> bool {
         return !queue.is_empty();
     });
 }
@@ -42,7 +39,7 @@ ErrorOr<size_t> DeviceControlDevice::read(OpenFileDescription&, u64 offset, User
     if ((size % sizeof(DeviceEvent)) != 0)
         return Error::from_errno(EOVERFLOW);
 
-    return DeviceManagement::the().event_queue({}).with([&](auto& queue) -> ErrorOr<size_t> {
+    return Device::event_queue().with([&](auto& queue) -> ErrorOr<size_t> {
         size_t nread = 0;
         for (size_t event_index = 0; event_index < (size / sizeof(DeviceEvent)); event_index++) {
             if (queue.is_empty())

@@ -36,7 +36,7 @@ constexpr FlatPtr page_round_down(FlatPtr x)
 
 inline FlatPtr virtual_to_low_physical(FlatPtr virtual_)
 {
-    return virtual_ - physical_to_virtual_offset;
+    return virtual_ - g_boot_info.physical_to_virtual_offset;
 }
 
 enum class UsedMemoryRangeType {
@@ -223,7 +223,7 @@ public:
     template<typename Callback>
     void for_each_used_memory_range(Callback callback)
     {
-        m_global_data.template with([&](auto& global_data) {
+        m_global_data.with([&](auto& global_data) {
             for (auto& range : global_data.used_memory_ranges)
                 callback(range);
         });

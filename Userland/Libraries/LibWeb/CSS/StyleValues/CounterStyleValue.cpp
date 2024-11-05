@@ -8,15 +8,15 @@
 
 #include "CounterStyleValue.h"
 #include <LibWeb/CSS/Enums.h>
+#include <LibWeb/CSS/Keyword.h>
 #include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/CSS/StyleValues/CustomIdentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StringStyleValue.h>
-#include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/DOM/Element.h>
 
 namespace Web::CSS {
 
-CounterStyleValue::CounterStyleValue(CounterFunction function, FlyString counter_name, ValueComparingNonnullRefPtr<StyleValue const> counter_style, FlyString join_string)
+CounterStyleValue::CounterStyleValue(CounterFunction function, FlyString counter_name, ValueComparingNonnullRefPtr<CSSStyleValue const> counter_style, FlyString join_string)
     : StyleValueWithDefaultOperators(Type::Counter)
     , m_properties {
         .function = function,
@@ -30,7 +30,7 @@ CounterStyleValue::CounterStyleValue(CounterFunction function, FlyString counter
 CounterStyleValue::~CounterStyleValue() = default;
 
 // https://drafts.csswg.org/css-counter-styles-3/#generate-a-counter
-static String generate_a_counter_representation(StyleValue const& counter_style, i32 value)
+static String generate_a_counter_representation(CSSStyleValue const& counter_style, i32 value)
 {
     // When asked to generate a counter representation using a particular counter style for a particular
     // counter value, follow these steps:
@@ -51,9 +51,9 @@ static String generate_a_counter_representation(StyleValue const& counter_style,
     //  It's based largely on the ListItemMarkerBox code, with minimal adjustments.
     if (counter_style.is_custom_ident()) {
         auto counter_style_name = counter_style.as_custom_ident().custom_ident();
-        auto identifier = value_id_from_string(counter_style_name);
-        if (identifier.has_value()) {
-            auto list_style_type = value_id_to_list_style_type(*identifier);
+        auto keyword = keyword_from_string(counter_style_name);
+        if (keyword.has_value()) {
+            auto list_style_type = keyword_to_list_style_type(*keyword);
             if (list_style_type.has_value()) {
                 switch (*list_style_type) {
                 case ListStyleType::Square:
@@ -147,11 +147,11 @@ String CounterStyleValue::to_string() const
 
     // 4. Let list be a list of CSS component values belonging to <counter>,
     //    omitting the last CSS component value if it is "decimal".
-    Vector<RefPtr<StyleValue const>> list;
+    Vector<RefPtr<CSSStyleValue const>> list;
     list.append(CustomIdentStyleValue::create(m_properties.counter_name));
     if (m_properties.function == CounterFunction::Counters)
         list.append(StringStyleValue::create(m_properties.join_string.to_string()));
-    if (m_properties.counter_style->to_identifier() != ValueID::Decimal)
+    if (m_properties.counter_style->to_keyword() != Keyword::Decimal)
         list.append(m_properties.counter_style);
 
     // 5. Let each item in list be the result of invoking serialize a CSS component value on that item.

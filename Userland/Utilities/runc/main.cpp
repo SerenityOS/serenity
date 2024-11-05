@@ -131,7 +131,7 @@ static ErrorOr<void> deploy_container_based_on_config_file(StringView config_fil
     TRY(Core::System::pledge("stdio rpath wpath cpath proc mount exec"));
 
     if (enforce_jail)
-        TRY(Core::System::enter_jail_mode());
+        TRY(Core::System::enter_jail_mode_until_exit());
 
     // Remove the proc pledge
     TRY(Core::System::pledge("stdio rpath wpath cpath mount exec"));
@@ -179,7 +179,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath wpath cpath proc exec"));
 
     if (enforce_jail)
-        TRY(Core::System::enter_jail_mode());
+        TRY(Core::System::enter_jail_mode_until_exit());
 
     // Remove the proc pledge
     TRY(Core::System::pledge("stdio rpath wpath cpath exec"));

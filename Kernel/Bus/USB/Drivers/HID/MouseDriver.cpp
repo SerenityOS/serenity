@@ -10,7 +10,7 @@
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBEndpoint.h>
 #include <Kernel/Bus/USB/USBRequest.h>
-#include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/HID/Management.h>
 
 namespace Kernel::USB {
@@ -60,14 +60,11 @@ ErrorOr<void> MouseDriver::initialize_device(USB::Device& device, USBInterface c
 {
     if (interface.endpoints().size() != 1)
         return ENOTSUP;
-    auto const& configuration = interface.configuration();
     // FIXME: Should we check other configurations?
-    TRY(device.control_transfer(
-        USB_REQUEST_RECIPIENT_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
-        USB_REQUEST_SET_CONFIGURATION, configuration.configuration_id(), 0, 0, nullptr));
+    TRY(device.set_configuration_and_interface(interface));
 
     auto const& endpoint_descriptor = interface.endpoints()[0];
-    auto interrupt_in_pipe = TRY(USB::InterruptInPipe::create(device.controller(), device, endpoint_descriptor.endpoint_address, endpoint_descriptor.max_packet_size, 10));
+    auto interrupt_in_pipe = TRY(USB::InterruptInPipe::create(device.controller(), device, endpoint_descriptor.endpoint_address & 0xf, endpoint_descriptor.max_packet_size, 10));
 
     // We only support the boot protocol, so switch to it. By default the report protocol is used (see 7.2.6 Set_Protocol Request).
     TRY(device.control_transfer(

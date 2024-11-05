@@ -221,22 +221,24 @@ install_icon() {
     local icon="$1"
     local launcher="$2"
 
-    command -v convert >/dev/null || true
-    local convert_exists=$?
-    command -v identify >/dev/null || true
-    local identify_exists=$?
-
-    if [ "${convert_exists}" != "0" ] || [ "${identify_exists}" != 0 ]; then
-        echo 'Unable to install icon: missing convert or identify, did you install ImageMagick?'
-        return
+    if command -v magick >/dev/null; then
+        magick_convert=magick
+    elif command -v convert >/dev/null; then
+        magick_convert=convert
+    else
+        magick_convert=""
+    fi
+    if [ -z "${magick_convert}" ] || ! command -v identify >/dev/null; then
+        echo 'Unable to install icon: missing magick/convert or identify, did you install ImageMagick?'
+        exit 1
     fi
 
     for icon_size in "16x16" "32x32"; do
         index=$(run identify -format '%p;%wx%h\n' "$icon" | grep "$icon_size" | cut -d";" -f1 | head -n1)
         if [ -n "$index" ]; then
-            run convert "${icon}[${index}]" "app-${icon_size}.png"
+            run "${magick_convert}" "${icon}[${index}]" "app-${icon_size}.png"
         else
-            run convert "$icon[0]" -resize $icon_size "app-${icon_size}.png"
+            run "${magick_convert}" "$icon[0]" -resize $icon_size "app-${icon_size}.png"
         fi
     done
     run $OBJCOPY --add-section serenity_icon_s="app-16x16.png" "${DESTDIR}${launcher}"

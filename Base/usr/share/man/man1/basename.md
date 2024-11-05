@@ -14,8 +14,8 @@ $ basename <path> [suffix]
 
 ## Arguments
 
-* `path`: The path which we want to get basename of
-* `suffix`: Suffix to strip from name
+-   `path`: The path which we want to get basename of
+-   `suffix`: Suffix to strip from name
 
 ## Examples
 

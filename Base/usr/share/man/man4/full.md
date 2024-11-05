@@ -19,7 +19,7 @@ chmod 666 /dev/full
 
 ## Files
 
-* /dev/full
+-   /dev/full
 
 ## Examples
 
@@ -30,6 +30,5 @@ $ head -c 8 /dev/full | hexdump
 
 ## See also
 
-* [`null`(4)](help://man/4/null)
-* [`zero`(4)](help://man/4/zero)
-
+-   [`null`(4)](help://man/4/null)
+-   [`zero`(4)](help://man/4/zero)

@@ -14,6 +14,7 @@
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Internals/Internals.h>
+#include <LibWeb/Page/InputEvent.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
@@ -68,12 +69,12 @@ void Internals::send_text(HTML::HTMLElement& target, String const& text)
     target.focus();
 
     for (auto code_point : text.code_points())
-        page.handle_keydown(code_point_to_key_code(code_point), 0, code_point);
+        page.handle_keydown(UIEvents::code_point_to_key_code(code_point), 0, code_point);
 }
 
 void Internals::commit_text()
 {
-    global_object().browsing_context()->page().handle_keydown(Key_Return, 0, 0);
+    global_object().browsing_context()->page().handle_keydown(UIEvents::Key_Return, 0, 0);
 }
 
 void Internals::click(double x, double y)
@@ -115,6 +116,27 @@ JS::NonnullGCPtr<InternalAnimationTimeline> Internals::create_internal_animation
 {
     auto& realm = this->realm();
     return realm.heap().allocate<InternalAnimationTimeline>(realm, realm);
+}
+
+void Internals::simulate_drag_start(double x, double y, String const& name, String const& contents)
+{
+    Vector<HTML::SelectedFile> files;
+    files.empend(name.to_byte_string(), MUST(ByteBuffer::copy(contents.bytes())));
+
+    auto& page = global_object().browsing_context()->page();
+    page.handle_drag_and_drop_event(DragEvent::Type::DragStart, { x, y }, { x, y }, UIEvents::MouseButton::Primary, 0, 0, move(files));
+}
+
+void Internals::simulate_drag_move(double x, double y)
+{
+    auto& page = global_object().browsing_context()->page();
+    page.handle_drag_and_drop_event(DragEvent::Type::DragMove, { x, y }, { x, y }, UIEvents::MouseButton::Primary, 0, 0, {});
+}
+
+void Internals::simulate_drop(double x, double y)
+{
+    auto& page = global_object().browsing_context()->page();
+    page.handle_drag_and_drop_event(DragEvent::Type::Drop, { x, y }, { x, y }, UIEvents::MouseButton::Primary, 0, 0, {});
 }
 
 }

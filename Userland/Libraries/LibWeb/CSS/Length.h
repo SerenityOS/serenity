@@ -155,6 +155,7 @@ public:
 
     Type type() const { return m_type; }
     double raw_value() const { return m_value; }
+    StringView unit_name() const;
 
     struct ResolutionContext {
         [[nodiscard]] static Length::ResolutionContext for_layout_node(Layout::Node const&);
@@ -222,12 +223,10 @@ public:
     Optional<Length> absolutize(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
     Length absolutized(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
 
-    static Length resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, Length const& reference_value);
-    static Length resolve_calculated(NonnullRefPtr<CalculatedStyleValue> const&, Layout::Node const&, CSSPixels reference_value);
+    static Length resolve_calculated(NonnullRefPtr<CSSMathValue> const&, Layout::Node const&, Length const& reference_value);
+    static Length resolve_calculated(NonnullRefPtr<CSSMathValue> const&, Layout::Node const&, CSSPixels reference_value);
 
 private:
-    char const* unit_name() const;
-
     [[nodiscard]] CSSPixels to_px_slow_case(Layout::Node const&) const;
 
     Type m_type;

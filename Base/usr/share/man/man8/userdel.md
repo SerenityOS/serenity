@@ -16,19 +16,19 @@ This program must be run as root.
 
 ## Options
 
-* `-r`, `--remove`: Remove the home directory for this user if the directory exists.
+-   `-r`, `--remove`: Remove the home directory for this user if the directory exists.
 
 ## Exit Values
 
-* 0 - Success
-* 1 - Couldn't update the password file
-* 6 - Specified user doesn't exist
-* 12 - Couldn't remove home directory
+-   0 - Success
+-   1 - Couldn't update the password file
+-   6 - Specified user doesn't exist
+-   12 - Couldn't remove home directory
 
 ## Files
 
-* `/etc/passwd` - user information (such as UID and GID) in this file is deleted.
-* `/home/` - user home directory is deleted if the `-r` flag is specified.
+-   `/etc/passwd` - user information (such as UID and GID) in this file is deleted.
+-   `/home/` - user home directory is deleted if the `-r` flag is specified.
 
 ## Examples
 
@@ -39,5 +39,6 @@ This program must be run as root.
 ```
 
 ## See Also
-* [`usermod`(8)](help://man/8/usermod)
-* [`useradd`(8)](help://man/8/useradd)
+
+-   [`usermod`(8)](help://man/8/usermod)
+-   [`useradd`(8)](help://man/8/useradd)

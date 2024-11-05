@@ -1,0 +1,237 @@
+import extern "LibGUI/Application.h"
+import extern "LibGUI/BoxLayout.h"
+import extern "LibGUI/DynamicWidgetContainer.h"
+import extern "LibGUI/Frame.h"
+import extern "LibGUI/ImageWidget.h"
+import extern "LibGUI/Label.h"
+import extern "LibGUI/MessageBox.h"
+import extern "LibGUI/ScrollableContainerWidget.h"
+import extern "LibGUI/Statusbar.h"
+import extern "LibGUI/TextBox.h"
+import extern "LibGUI/Widget.h"
+import extern "LibGUI/Window.h"
+import extern "LibGUI/PasswordInputDialog.h"
+import extern "LibGUI/Button.h"
+import extern "LibGUI/Icon.h"
+import extern "LibMain/Main.h"
+import extern "AK/NumberFormat.h"
+import extern "LibCore/DateTime.h"
+import jakt::platform::utility { null }
+import openweathermap { OpenWeatherMap, WeatherData, Forecast }
+
+import extern "AK/Format.h" {
+    extern fn dbgln(anon fmt: StringView, ..) -> void
+}
+
+export "IndividualEntryWidget.h" { Weather::IndividualEntryWidget }
+export "SearchView.h" { Weather::SearchView }
+export "View.h" { Weather::View }
+
+fn panic(anon message: String) -> never {
+    eprintln("panic: {}", message)
+    abort()
+}
+
+comptime degree_c() -> String => "℃"
+
+namespace Weather {
+    fn must_be<U, T>(anon name: StringView, anon x: raw UnderlyingClassTypeOf<T>) throws -> U {
+        if x as! raw void == null() {
+            throw Error::from_string_literal(name)
+        }
+        return (unsafe *x).self()
+    }
+    class SearchView : GUI::Widget {
+        public content: GUI::Widget? = None
+
+        [[raw_constructor()]]
+        public fn constructor(mut this) { }
+
+        public extern fn try_create() throws -> SearchView
+        public fn construct() => must try_create()
+
+        public fn initialize(mut this) throws {
+            .content = must_be<GUI::Widget>("content", .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Widget>>("content"))
+        }
+    }
+
+    class View : GUI::Widget {
+        public search_window: GUI::Window? = None
+        public searchview: SearchView? = None
+        public content: GUI::Widget? = None
+        public searchbox: GUI::TextBox? = None
+
+        [[raw_constructor()]]
+        public fn constructor(mut this)
+        {
+        }
+
+        public extern fn try_create() throws -> View
+        public fn construct() =>  must try_create()
+        public fn initialize(mut this) throws {
+            .content = must_be<GUI::Widget>("content", .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Widget>>("content"))
+            .searchbox = must_be<GUI::TextBox>("searchbox", .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::TextBox>>("searchbox"))
+        }
+
+        public fn ensure_search_window(mut this, anon window: &GUI::Window) throws -> GUI::Window {
+            guard .search_window is None else {
+                return .search_window!
+            }
+
+            .set_window(&raw window)
+            mut search_window = GUI::Window(&raw window)
+            search_window.set_rect(&.searchbox!.screen_relative_rect().translated(0 as! i32, .searchbox!.height() + 7))
+            search_window.set_window_type(WindowServer::WindowType::Tooltip)
+            search_window.set_resizable(false)
+            .search_window = search_window
+            .searchview = search_window.set_main_widget<UnderlyingClassTypeOf<SearchView>>().self()
+            .searchview!.initialize()
+            return search_window
+        }
+    }
+
+    class IndividualEntryWidget : GUI::Widget {
+        public description: GUI::Label? = None
+        public city_name: GUI::Label? = None
+        public country_name: GUI::Label? = None
+        public state: GUI::Label? = None
+        public temp_current: GUI::Label? = None
+        public temp_min_max: GUI::Label? = None
+        public temp_unit: GUI::Label? = None
+        public feels_like: GUI::Label? = None
+        public feels_like_unit: GUI::Label? = None
+        public humidity: GUI::Label? = None
+        public image: GUI::ImageWidget? = None
+        public container: GUI::DynamicWidgetContainer? = None
+        public forecast_labels: [GUI::Label]? = None
+        public timer: Core::Timer? = None
+
+        [[raw_constructor()]]
+        public fn constructor(mut this)
+        {
+            .timer = try Core::Timer(null())
+        }
+
+        public fn construct() -> IndividualEntryWidget => must try_create()
+        public extern fn try_create() throws -> IndividualEntryWidget
+        public fn initialize(mut this) throws {
+            .description = must_be<GUI::Label>(
+                "description"
+                .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>("description")
+            )
+            .city_name = must_be<GUI::Label>(
+                "city_name"
+                .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>("city_name")
+            )
+            .country_name = must_be<GUI::Label>(
+                "country_name"
+                .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>("country_name")
+            )
+            .state = must_be<GUI::Label>(
+                "state"
+                .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>("state")
+            )
+            .temp_current = must_be<GUI::Label>(
+                "temp_current"
+                .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>("temp_current")
+            )
+            .temp_min_max = must_be<GUI::Label>(
+                "temp_min_max"
+                .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>("temp_min_max")
+            )
+            .temp_unit = must_be<GUI::Label>(
+                "temp_unit"
+                .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>("temp_unit")
+            )
+            .feels_like = must_be<GUI::Label>(
+                "feels_like"
+                .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>("feels_like")
+            )
+            .feels_like_unit = must_be<GUI::Label>(
+                "feels_like_unit"
+                .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>("feels_like_unit")
+            )
+            .humidity = must_be<GUI::Label>(
+                "humidity"
+                .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>("humidity")
+            )
+            .image = must_be<GUI::ImageWidget>(
+                "icon"
+                .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::ImageWidget>>("icon")
+            )
+            .container = must_be<GUI::DynamicWidgetContainer>(
+                "container"
+                .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::DynamicWidgetContainer>>("container")
+            )
+
+            .forecast_labels = []
+            for i in 1..5 {
+                let label = must_be<GUI::Label>(
+                    "forecast_labels"
+                    .find_descendant_of_type_named<UnderlyingClassTypeOf<GUI::Label>>(format("forecast{}", i))
+                )
+
+                .forecast_labels!.push(label)
+            }
+        }
+
+        public fn populate_with(mut this, anon data: &WeatherData) throws {
+            .city_name!.set_text(ak_string(data.city_name))
+            .country_name!.set_text(ak_string(data.country_code))
+            .state!.set_text(ak_string(match data.cloudiness > 0f64 {
+                true => format("{} ({}% Cloud cover)", data.state, data.cloudiness)
+                false => data.state
+            }))
+            .temp_current!.set_text(ak_string(format("{}", data.temperature.current)))
+            .temp_min_max!.set_text(ak_string(format("({} - {})", data.temperature.min, data.temperature.max)))
+            .feels_like!.set_text(ak_string(format("{}", data.temperature.feels_like)))
+            .temp_unit!.set_text(ak_string(degree_c()))
+            .feels_like_unit!.set_text(ak_string(degree_c()))
+            .humidity!.set_text(ak_string(format("{}", data.humidity)))
+
+            // FIXME: Set the icon instead of this text.
+            .description!.set_text(ak_string(data.icon.name()))
+            let icon_data = data.icon.bitmap()
+            let bytes = AK::Span(icon_data.unsafe_data() as! raw const u8, icon_data.size() as! i64)
+            mut image = .image!
+            unsafe { cpp { "image->set_bitmap(MUST(Gfx::Bitmap::load_from_bytes(bytes)));" } }
+
+            let date = Core::DateTime::now()
+            .container!.set_section_label(ak_string(format("Weather in {} (updated at {})", data.city_name, date.to_byte_string("%H:%M:%S", Core::DateTime::LocalTime::Yes))))
+        }
+
+        public fn populate_with(mut this, anon forecast: &Forecast) throws {
+            mut max = forecast.data.size()
+            if .forecast_labels!.size() < max {
+                max = .forecast_labels!.size()
+            }
+
+            let now = time(NULL) as! i64
+            let seconds_per_hour = 60 * 60
+
+            for i in 0..max {
+                mut label = .forecast_labels![i]
+                let data = forecast.data[i]
+                // Timezones? What are those?
+                mut t = data.timestamp - now
+                mut rounded = t - (t % seconds_per_hour) // Round down to the nearest hour
+                if rounded <= 0 {
+                    rounded = t - (t % 60) // Round down to the nearest minute
+                }
+                if rounded <= 0 {
+                    continue
+                }
+
+                let diff = AK::human_readable_time(rounded)
+                label.set_text(ak_string(
+                    format("in {}: {}, {}{} - {}{}", diff, data.state, data.temperature.min, degree_c(), data.temperature.max, degree_c())
+                ))
+            }
+        }
+
+        fn ak_string<T>(anon s: T) throws -> AK::String {
+            unsafe { cpp { "return AK::String::from_byte_string(s);" } }
+            abort()
+        }
+    }
+}

@@ -6,7 +6,6 @@
  */
 
 #include "InlineFormattingContext.h"
-#include <AK/Function.h>
 #include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>
 #include <LibWeb/Layout/BlockContainer.h>
@@ -195,6 +194,19 @@ void FlexFormattingContext::parent_context_did_dimension_child_root_box()
     });
 }
 
+// https://www.w3.org/TR/css-flexbox-1/#flex-direction-property
+bool FlexFormattingContext::is_direction_reverse() const
+{
+    switch (flex_container().computed_values().direction()) {
+    case CSS::Direction::Ltr:
+        return m_flex_direction == CSS::FlexDirection::ColumnReverse || m_flex_direction == CSS::FlexDirection::RowReverse;
+    case CSS::Direction::Rtl:
+        return m_flex_direction == CSS::FlexDirection::ColumnReverse || m_flex_direction == CSS::FlexDirection::Row;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void FlexFormattingContext::populate_specified_margins(FlexItem& item, CSS::FlexDirection flex_direction) const
 {
     auto width_of_containing_block = m_flex_container_state.content_width();
@@ -283,14 +295,8 @@ void FlexFormattingContext::generate_anonymous_flex_items()
         auto order_bucket = order_item_bucket.get(key);
         if (order_bucket.has_value()) {
             auto& items = order_bucket.value();
-            if (is_direction_reverse()) {
-                for (auto item : items.in_reverse()) {
-                    m_flex_items.append(move(item));
-                }
-            } else {
-                for (auto item : items) {
-                    m_flex_items.append(move(item));
-                }
+            for (auto item : items) {
+                m_flex_items.append(move(item));
             }
         }
     }
@@ -509,6 +515,21 @@ CSSPixels FlexFormattingContext::adjust_main_size_through_aspect_ratio_for_cross
     return main_size;
 }
 
+CSSPixels FlexFormattingContext::adjust_cross_size_through_aspect_ratio_for_main_size_min_max_constraints(Box const& box, CSSPixels cross_size, CSS::Size const& min_main_size, CSS::Size const& max_main_size) const
+{
+    if (!should_treat_main_max_size_as_none(box)) {
+        auto max_main_size_px = max_main_size.to_px(box, is_row_layout() ? m_flex_container_state.content_width() : m_flex_container_state.content_height());
+        cross_size = min(cross_size, calculate_cross_size_from_main_size_and_aspect_ratio(max_main_size_px, box.preferred_aspect_ratio().value()));
+    }
+
+    if (!min_main_size.is_auto()) {
+        auto min_main_size_px = min_main_size.to_px(box, is_row_layout() ? m_flex_container_state.content_width() : m_flex_container_state.content_height());
+        cross_size = max(cross_size, calculate_cross_size_from_main_size_and_aspect_ratio(min_main_size_px, box.preferred_aspect_ratio().value()));
+    }
+
+    return cross_size;
+}
+
 // https://www.w3.org/TR/css-flexbox-1/#algo-main-item
 void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(FlexItem& item)
 {
@@ -551,6 +572,13 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
             if (is_row_layout())
                 return get_pixel_width(child_box, size);
             return get_pixel_height(child_box, size);
+        }
+
+        // AD-HOC: If we're sizing the flex container under a min-content constraint in the main axis,
+        //         flex items resolve percentages in the main axis to 0.
+        if (m_available_space_for_items->main.is_min_content()
+            && computed_main_size(item.box).contains_percentage()) {
+            return CSSPixels(0);
         }
 
         // B. If the flex item has ...
@@ -622,19 +650,19 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
         //       in the various helpers that calculate the intrinsic sizes of a flex item,
         //       e.g. calculate_min_content_main_size().
 
-        if (item.used_flex_basis->has<CSS::FlexBasisContent>()) {
+        if (item.used_flex_basis->has<CSS::FlexBasisContent>())
             return calculate_max_content_main_size(item);
-        }
 
         return calculate_fit_content_main_size(item);
     }();
 
-    // AD-HOC: This is not mentioned in the spec, but if the item has an aspect ratio,
-    //         we may need to adjust the main size in these ways:
-    //         - using stretch-fit main size if the flex basis is indefinite and there is no cross size to resolve the ratio against.
+    // AD-HOC: This is not mentioned in the spec, but if the item has an aspect ratio, we may need
+    //         to adjust the main size in these ways:
+    //         - using stretch-fit main size if the flex basis is indefinite, there is no
+    //           intrinsic size and no cross size to resolve the ratio against.
     //         - in response to cross size min/max constraints.
     if (item.box->has_natural_aspect_ratio()) {
-        if (!item.used_flex_basis_is_definite && !has_definite_cross_size(item)) {
+        if (!item.used_flex_basis_is_definite && !item.box->has_natural_width() && !item.box->has_natural_height() && !has_definite_cross_size(item)) {
             item.flex_base_size = inner_main_size(m_flex_container_state);
         }
         item.flex_base_size = adjust_main_size_through_aspect_ratio_for_cross_size_min_max_constraints(child_box, item.flex_base_size, computed_cross_min_size(child_box), computed_cross_max_size(child_box));
@@ -743,13 +771,15 @@ CSSPixels FlexFormattingContext::content_based_minimum_size(FlexItem const& item
 // https://www.w3.org/TR/css-flexbox-1/#algo-line-break
 void FlexFormattingContext::collect_flex_items_into_flex_lines()
 {
-    // FIXME: Also support wrap-reverse
-
     // If the flex container is single-line, collect all the flex items into a single flex line.
     if (is_single_line()) {
         FlexLine line;
         for (auto& item : m_flex_items) {
-            line.items.append(item);
+            if (is_direction_reverse()) {
+                line.items.prepend(item);
+            } else {
+                line.items.append(item);
+            }
         }
         m_flex_lines.append(move(line));
         return;
@@ -773,12 +803,21 @@ void FlexFormattingContext::collect_flex_items_into_flex_lines()
             line = {};
             line_main_size = 0;
         }
-        line.items.append(item);
+
+        if (is_direction_reverse()) {
+            line.items.prepend(item);
+        } else {
+            line.items.append(item);
+        }
+
         line_main_size += outer_hypothetical_main_size;
         // CSS-FLEXBOX-2: Account for gap between flex items.
         line_main_size += main_gap();
     }
     m_flex_lines.append(move(line));
+
+    if (flex_container().computed_values().flex_wrap() == CSS::FlexWrap::WrapReverse)
+        m_flex_lines.reverse();
 }
 
 // https://drafts.csswg.org/css-flexbox-1/#resolve-flexible-lengths
@@ -1020,7 +1059,7 @@ void FlexFormattingContext::resolve_flexible_lengths()
     }
 }
 
-// https://drafts.csswg.org/css-flexbox-1/#algo-cross-item
+// https://www.w3.org/TR/css-flexbox-1/#hypothetical-cross-size
 void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& item, bool resolve_percentage_min_max_sizes)
 {
     // Determine the hypothetical cross size of each item by performing layout
@@ -1150,7 +1189,7 @@ void FlexFormattingContext::calculate_cross_size_of_each_flex_line()
     }
 }
 
-// https://www.w3.org/TR/css-flexbox-1/#algo-stretch
+// https://www.w3.org/TR/css-flexbox-1/#cross-sizing
 void FlexFormattingContext::determine_used_cross_size_of_each_flex_item()
 {
     for (auto& flex_line : m_flex_lines) {
@@ -1415,13 +1454,21 @@ void FlexFormattingContext::align_all_flex_items_along_the_cross_axis()
         for (auto& item : flex_line.items) {
             CSSPixels half_line_size = flex_line.cross_size / 2;
             switch (alignment_for_item(item.box)) {
+            case CSS::AlignItems::Normal:
+                // https://drafts.csswg.org/css-flexbox/#flex-wrap-property
+                // When flex-wrap is wrap-reverse, the cross-start and cross-end directions are swapped.
+                if (flex_container().computed_values().flex_wrap() == CSS::FlexWrap::WrapReverse) {
+                    item.cross_offset = half_line_size - item.cross_size.value() - item.margins.cross_after - item.borders.cross_after - item.padding.cross_after;
+                } else {
+                    item.cross_offset = -half_line_size + item.margins.cross_before + item.borders.cross_before + item.padding.cross_before;
+                }
+                break;
             case CSS::AlignItems::Baseline:
                 // FIXME: Implement this
                 //  Fallthrough
             case CSS::AlignItems::Start:
             case CSS::AlignItems::FlexStart:
             case CSS::AlignItems::Stretch:
-            case CSS::AlignItems::Normal:
                 item.cross_offset = -half_line_size + item.margins.cross_before + item.borders.cross_before + item.padding.cross_before;
                 break;
             case CSS::AlignItems::End:
@@ -1848,6 +1895,9 @@ CSSPixels FlexFormattingContext::calculate_cross_min_content_contribution(FlexIt
         return !is_row_layout() ? get_pixel_width(item.box, computed_cross_size(item.box)) : get_pixel_height(item.box, computed_cross_size(item.box));
     }();
 
+    if (item.box->has_preferred_aspect_ratio())
+        size = adjust_cross_size_through_aspect_ratio_for_main_size_min_max_constraints(item.box, size, computed_main_min_size(item.box), computed_main_max_size(item.box));
+
     auto const& computed_min_size = this->computed_cross_min_size(item.box);
     auto const& computed_max_size = this->computed_cross_max_size(item.box);
 
@@ -1866,6 +1916,9 @@ CSSPixels FlexFormattingContext::calculate_cross_max_content_contribution(FlexIt
             return calculate_max_content_cross_size(item);
         return !is_row_layout() ? get_pixel_width(item.box, computed_cross_size(item.box)) : get_pixel_height(item.box, computed_cross_size(item.box));
     }();
+
+    if (item.box->has_preferred_aspect_ratio())
+        size = adjust_cross_size_through_aspect_ratio_for_main_size_min_max_constraints(item.box, size, computed_main_min_size(item.box), computed_main_max_size(item.box));
 
     auto const& computed_min_size = this->computed_cross_min_size(item.box);
     auto const& computed_max_size = this->computed_cross_max_size(item.box);

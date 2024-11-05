@@ -1914,26 +1914,29 @@ void HTMLMediaElement::reject_pending_play_promises(ReadonlySpan<JS::NonnullGCPt
         WebIDL::reject_promise(realm, promise, error);
 }
 
-WebIDL::ExceptionOr<void> HTMLMediaElement::handle_keydown(Badge<Web::EventHandler>, KeyCode key)
+WebIDL::ExceptionOr<bool> HTMLMediaElement::handle_keydown(Badge<Web::EventHandler>, UIEvents::KeyCode key, u32 modifiers)
 {
+    if (modifiers != UIEvents::KeyModifier::Mod_None)
+        return false;
+
     switch (key) {
-    case KeyCode::Key_Space:
+    case UIEvents::KeyCode::Key_Space:
         TRY(toggle_playback());
         break;
 
-    case KeyCode::Key_Home:
+    case UIEvents::KeyCode::Key_Home:
         set_current_time(0);
         break;
-    case KeyCode::Key_End:
+    case UIEvents::KeyCode::Key_End:
         set_current_time(duration());
         break;
 
-    case KeyCode::Key_Left:
-    case KeyCode::Key_Right: {
+    case UIEvents::KeyCode::Key_Left:
+    case UIEvents::KeyCode::Key_Right: {
         static constexpr double time_skipped_per_key_press = 5.0;
         auto current_time = this->current_time();
 
-        if (key == KeyCode::Key_Left)
+        if (key == UIEvents::KeyCode::Key_Left)
             current_time = max(0.0, current_time - time_skipped_per_key_press);
         else
             current_time = min(duration(), current_time + time_skipped_per_key_press);
@@ -1942,12 +1945,12 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::handle_keydown(Badge<Web::EventHandl
         break;
     }
 
-    case KeyCode::Key_Up:
-    case KeyCode::Key_Down: {
+    case UIEvents::KeyCode::Key_Up:
+    case UIEvents::KeyCode::Key_Down: {
         static constexpr double volume_change_per_key_press = 0.1;
         auto volume = this->volume();
 
-        if (key == KeyCode::Key_Up)
+        if (key == UIEvents::KeyCode::Key_Up)
             volume = min(1.0, volume + volume_change_per_key_press);
         else
             volume = max(0.0, volume - volume_change_per_key_press);
@@ -1956,15 +1959,15 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::handle_keydown(Badge<Web::EventHandl
         break;
     }
 
-    case KeyCode::Key_M:
+    case UIEvents::KeyCode::Key_M:
         set_muted(!muted());
         break;
 
     default:
-        break;
+        return false;
     }
 
-    return {};
+    return true;
 }
 
 void HTMLMediaElement::set_layout_display_time(Badge<Painting::MediaPaintable>, Optional<double> display_time)

@@ -12,6 +12,7 @@ set(TEST_SOURCES
     TestMedianCut.cpp
     TestPainter.cpp
     TestParseISOBMFF.cpp
+    TestPath.cpp
     TestRect.cpp
     TestScalingFunctions.cpp
     TestWOFF.cpp

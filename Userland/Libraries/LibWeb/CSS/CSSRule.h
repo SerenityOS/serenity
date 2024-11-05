@@ -31,6 +31,9 @@ public:
         Keyframe = 8,
         Namespace = 10,
         Supports = 12,
+        // AD-HOC: These are not included in the spec, but we need them internally. So, their numbers are arbitrary.
+        LayerBlock = 100,
+        LayerStatement = 101,
     };
 
     virtual Type type() const = 0;
@@ -39,6 +42,7 @@ public:
     void set_css_text(StringView);
 
     CSSRule* parent_rule() { return m_parent_rule.ptr(); }
+    CSSRule const* parent_rule() const { return m_parent_rule.ptr(); }
     void set_parent_rule(CSSRule*);
 
     CSSStyleSheet* parent_style_sheet() { return m_parent_style_sheet.ptr(); }
@@ -54,8 +58,19 @@ protected:
 
     virtual void visit_edges(Cell::Visitor&) override;
 
+    [[nodiscard]] FlyString const& parent_layer_internal_qualified_name() const
+    {
+        if (!m_cached_layer_name.has_value())
+            return parent_layer_internal_qualified_name_slow_case();
+        return m_cached_layer_name.value();
+    }
+
+    [[nodiscard]] FlyString const& parent_layer_internal_qualified_name_slow_case() const;
+
     JS::GCPtr<CSSRule> m_parent_rule;
     JS::GCPtr<CSSStyleSheet> m_parent_style_sheet;
+
+    mutable Optional<FlyString> m_cached_layer_name;
 };
 
 }

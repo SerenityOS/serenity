@@ -18,7 +18,7 @@
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/CSS/StyleProperties.h>
-#include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
+#include <LibWeb/CSS/StyleValues/CSSKeywordValue.h>
 #include <LibWeb/CSS/StyleValues/NumberStyleValue.h>
 #include <LibWeb/DOM/Attr.h>
 #include <LibWeb/DOM/DOMTokenList.h>
@@ -101,8 +101,10 @@ void Element::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_class_list);
     visitor.visit(m_shadow_root);
     visitor.visit(m_custom_element_definition);
-    if (m_pseudo_element_nodes) {
-        visitor.visit(m_pseudo_element_nodes->span());
+    if (m_pseudo_element_data) {
+        for (auto& pseudo_element : *m_pseudo_element_data) {
+            visitor.visit(pseudo_element.layout_node);
+        }
     }
     if (m_registered_intersection_observers) {
         for (auto& registered_intersection_observers : *m_registered_intersection_observers)
@@ -393,7 +395,7 @@ JS::GCPtr<Layout::Node> Element::create_layout_node(NonnullRefPtr<CSS::StyleProp
     return create_layout_node_for_display_type(document(), display, move(style), this);
 }
 
-JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Document& document, CSS::Display const& display, NonnullRefPtr<CSS::StyleProperties> style, Element* element)
+JS::GCPtr<Layout::NodeWithStyle> Element::create_layout_node_for_display_type(DOM::Document& document, CSS::Display const& display, NonnullRefPtr<CSS::StyleProperties> style, Element* element)
 {
     if (display.is_table_inside() || display.is_table_row_group() || display.is_table_header_group() || display.is_table_footer_group() || display.is_table_row())
         return document.heap().allocate_without_realm<Layout::Box>(document, element, move(style));
@@ -446,9 +448,11 @@ void Element::run_attribute_change_steps(FlyString const& local_name, Optional<S
 
     // AD-HOC: Run our own internal attribute change handler.
     attribute_changed(local_name, old_value, value);
-    invalidate_style_after_attribute_change(local_name);
 
-    document().bump_dom_tree_version();
+    if (old_value != value) {
+        invalidate_style_after_attribute_change(local_name);
+        document().bump_dom_tree_version();
+    }
 }
 
 void Element::attribute_changed(FlyString const& name, Optional<String> const&, Optional<String> const& value)
@@ -529,17 +533,17 @@ static CSS::RequiredInvalidationAfterStyleChange compute_required_invalidation(C
 
 CSS::RequiredInvalidationAfterStyleChange Element::recompute_style()
 {
-    set_needs_style_update(false);
     VERIFY(parent());
 
-    auto new_computed_css_values = document().style_computer().compute_style(*this);
+    auto& style_computer = document().style_computer();
+    auto new_computed_css_values = style_computer.compute_style(*this);
 
     // Tables must not inherit -libweb-* values for text-align.
     // FIXME: Find the spec for this.
     if (is<HTML::HTMLTableElement>(*this)) {
         auto text_align = new_computed_css_values->text_align();
         if (text_align.has_value() && (text_align.value() == CSS::TextAlign::LibwebLeft || text_align.value() == CSS::TextAlign::LibwebCenter || text_align.value() == CSS::TextAlign::LibwebRight))
-            new_computed_css_values->set_property(CSS::PropertyID::TextAlign, CSS::IdentifierStyleValue::create(CSS::ValueID::Start));
+            new_computed_css_values->set_property(CSS::PropertyID::TextAlign, CSS::CSSKeywordValue::create(CSS::Keyword::Start));
     }
 
     CSS::RequiredInvalidationAfterStyleChange invalidation;
@@ -548,11 +552,32 @@ CSS::RequiredInvalidationAfterStyleChange Element::recompute_style()
     else
         invalidation = CSS::RequiredInvalidationAfterStyleChange::full();
 
+    if (!invalidation.is_none())
+        set_computed_css_values(move(new_computed_css_values));
+
+    // Any document change that can cause this element's style to change, could also affect its pseudo-elements.
+    auto recompute_pseudo_element_style = [&](CSS::Selector::PseudoElement::Type pseudo_element) {
+        style_computer.push_ancestor(*this);
+
+        auto pseudo_element_style = pseudo_element_computed_css_values(pseudo_element);
+        auto new_pseudo_element_style = style_computer.compute_pseudo_element_style_if_needed(*this, pseudo_element);
+
+        // TODO: Can we be smarter about invalidation?
+        if (pseudo_element_style && new_pseudo_element_style) {
+            invalidation |= compute_required_invalidation(*pseudo_element_style, *new_pseudo_element_style);
+        } else if (pseudo_element_style || new_pseudo_element_style) {
+            invalidation = CSS::RequiredInvalidationAfterStyleChange::full();
+        }
+
+        set_pseudo_element_computed_css_values(pseudo_element, move(new_pseudo_element_style));
+        style_computer.pop_ancestor(*this);
+    };
+
+    recompute_pseudo_element_style(CSS::Selector::PseudoElement::Type::Before);
+    recompute_pseudo_element_style(CSS::Selector::PseudoElement::Type::After);
+
     if (invalidation.is_none())
         return invalidation;
-
-    m_computed_css_values = move(new_computed_css_values);
-    computed_css_values_changed();
 
     if (invalidation.repaint)
         document().set_needs_to_resolve_paint_only_properties();
@@ -562,14 +587,32 @@ CSS::RequiredInvalidationAfterStyleChange Element::recompute_style()
         layout_node()->apply_style(*m_computed_css_values);
         if (invalidation.repaint && paintable())
             paintable()->set_needs_display();
+
+        // Do the same for pseudo-elements.
+        for (auto i = 0; i < to_underlying(CSS::Selector::PseudoElement::Type::KnownPseudoElementCount); i++) {
+            auto pseudo_element_type = static_cast<CSS::Selector::PseudoElement::Type>(i);
+            auto pseudo_element = get_pseudo_element(pseudo_element_type);
+            if (!pseudo_element.has_value() || !pseudo_element->layout_node)
+                continue;
+
+            auto pseudo_element_style = pseudo_element_computed_css_values(pseudo_element_type);
+            if (!pseudo_element_style)
+                continue;
+
+            if (auto* node_with_style = dynamic_cast<Layout::NodeWithStyle*>(pseudo_element->layout_node.ptr())) {
+                node_with_style->apply_style(*pseudo_element_style);
+                if (invalidation.repaint && node_with_style->paintable())
+                    node_with_style->paintable()->set_needs_display();
+            }
+        }
     }
 
     return invalidation;
 }
 
-NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
+NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values(Optional<CSS::Selector::PseudoElement::Type> type)
 {
-    auto element_computed_style = CSS::ResolvedCSSStyleDeclaration::create(*this);
+    auto element_computed_style = CSS::ResolvedCSSStyleDeclaration::create(*this, type);
     auto properties = CSS::StyleProperties::create();
 
     for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
@@ -782,7 +825,7 @@ WebIDL::ExceptionOr<void> Element::set_inner_html(StringView value)
 
         if (context->is_connected()) {
             // NOTE: Since the DOM has changed, we have to rebuild the layout tree.
-            context->document().invalidate_layout();
+            context->document().invalidate_layout_tree();
         }
     }
 
@@ -833,7 +876,7 @@ void Element::set_shadow_root(JS::GCPtr<ShadowRoot> shadow_root)
     m_shadow_root = move(shadow_root);
     if (m_shadow_root)
         m_shadow_root->set_host(this);
-    invalidate_style();
+    invalidate_style(StyleInvalidationReason::ElementSetShadowRoot);
 }
 
 CSS::CSSStyleDeclaration* Element::style_for_bindings()
@@ -854,7 +897,7 @@ void Element::make_html_uppercased_qualified_name()
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#queue-an-element-task
-int Element::queue_an_element_task(HTML::Task::Source source, Function<void()> steps)
+HTML::TaskID Element::queue_an_element_task(HTML::Task::Source source, Function<void()> steps)
 {
     return queue_a_task(source, HTML::main_thread_event_loop(), document(), JS::create_heap_function(heap(), move(steps)));
 }
@@ -909,7 +952,9 @@ JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
 JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 {
-    Vector<JS::Handle<Geometry::DOMRect>> rects;
+    auto navigable = document().navigable();
+    if (!navigable)
+        return Geometry::DOMRectList::create(realm(), {});
 
     // NOTE: Ensure that layout is up-to-date before looking at metrics.
     const_cast<Document&>(document()).update_layout();
@@ -917,7 +962,7 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
     // 1. If the element on which it was invoked does not have an associated layout box return an empty DOMRectList
     //    object and stop this algorithm.
     if (!layout_node())
-        return Geometry::DOMRectList::create(realm(), move(rects));
+        return Geometry::DOMRectList::create(realm(), {});
 
     // FIXME: 2. If the element has an associated SVG layout box return a DOMRectList object containing a single
     //          DOMRect object that describes the bounding box of the element as defined by the SVG specification,
@@ -930,9 +975,6 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
     //          or inline-table include both the table box and the caption box, if any, but not the anonymous container box.
     // FIXME: - Replace each anonymous block box with its child box(es) and repeat this until no anonymous block boxes
     //          are left in the final list.
-    const_cast<Document&>(document()).update_layout();
-    auto navigable = document().navigable();
-    VERIFY(navigable);
     auto viewport_offset = navigable->viewport_scroll_offset();
 
     // NOTE: Make sure CSS transforms are resolved before it is used to calculate the rect position.
@@ -942,6 +984,7 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
     CSSPixelPoint scroll_offset;
     auto const* paintable = this->paintable();
 
+    Vector<JS::Handle<Geometry::DOMRect>> rects;
     if (auto const* paintable_box = this->paintable_box()) {
         transform = Gfx::extract_2d_affine_transform(paintable_box->transform());
         for (auto const* containing_block = paintable->containing_block(); !containing_block->is_viewport(); containing_block = containing_block->containing_block()) {
@@ -1085,36 +1128,49 @@ void Element::children_changed()
     set_needs_style_update(true);
 }
 
-void Element::set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement::Type pseudo_element, JS::GCPtr<Layout::Node> pseudo_element_node)
+void Element::set_pseudo_element_node(Badge<Layout::TreeBuilder>, CSS::Selector::PseudoElement::Type pseudo_element, JS::GCPtr<Layout::NodeWithStyle> pseudo_element_node)
 {
-    if (!m_pseudo_element_nodes) {
-        if (!pseudo_element_node)
-            return;
-        m_pseudo_element_nodes = make<PseudoElementLayoutNodes>();
-    }
+    auto existing_pseudo_element = get_pseudo_element(pseudo_element);
+    if (!existing_pseudo_element.has_value() && !pseudo_element_node)
+        return;
 
-    (*m_pseudo_element_nodes)[to_underlying(pseudo_element)] = pseudo_element_node;
+    ensure_pseudo_element(pseudo_element).layout_node = move(pseudo_element_node);
 }
 
-JS::GCPtr<Layout::Node> Element::get_pseudo_element_node(CSS::Selector::PseudoElement::Type pseudo_element) const
+JS::GCPtr<Layout::NodeWithStyle> Element::get_pseudo_element_node(CSS::Selector::PseudoElement::Type pseudo_element) const
 {
-    if (!m_pseudo_element_nodes)
-        return nullptr;
-    return (*m_pseudo_element_nodes)[to_underlying(pseudo_element)];
+    if (auto element_data = get_pseudo_element(pseudo_element); element_data.has_value())
+        return element_data->layout_node;
+    return nullptr;
+}
+
+bool Element::has_pseudo_elements() const
+{
+    if (m_pseudo_element_data) {
+        for (auto& pseudo_element : *m_pseudo_element_data) {
+            if (pseudo_element.layout_node)
+                return true;
+        }
+    }
+    return false;
 }
 
 void Element::clear_pseudo_element_nodes(Badge<Layout::TreeBuilder>)
 {
-    m_pseudo_element_nodes = nullptr;
+    if (m_pseudo_element_data) {
+        for (auto& pseudo_element : *m_pseudo_element_data) {
+            pseudo_element.layout_node = nullptr;
+        }
+    }
 }
 
 void Element::serialize_pseudo_elements_as_json(JsonArraySerializer<StringBuilder>& children_array) const
 {
-    if (!m_pseudo_element_nodes)
+    if (!m_pseudo_element_data)
         return;
-    for (size_t i = 0; i < m_pseudo_element_nodes->size(); ++i) {
-        auto& pseudo_element_node = (*m_pseudo_element_nodes)[i];
-        if (!pseudo_element_node)
+    for (size_t i = 0; i < m_pseudo_element_data->size(); ++i) {
+        auto& pseudo_element = (*m_pseudo_element_data)[i].layout_node;
+        if (!pseudo_element)
             continue;
         auto object = MUST(children_array.add_object());
         MUST(object.add("name"sv, MUST(String::formatted("::{}", CSS::Selector::PseudoElement::name(static_cast<CSS::Selector::PseudoElement::Type>(i))))));
@@ -1871,7 +1927,7 @@ void Element::invalidate_style_after_attribute_change(FlyString const& attribute
     (void)attribute_name;
 
     // FIXME: This will need to become smarter when we implement the :has() selector.
-    invalidate_style();
+    invalidate_style(StyleInvalidationReason::ElementAttributeChange);
 }
 
 // https://www.w3.org/TR/wai-aria-1.2/#tree_exclusion
@@ -2195,11 +2251,33 @@ void Element::set_computed_css_values(RefPtr<CSS::StyleProperties> style)
     computed_css_values_changed();
 }
 
-auto Element::pseudo_element_custom_properties() const -> PseudoElementCustomProperties&
+void Element::set_pseudo_element_computed_css_values(CSS::Selector::PseudoElement::Type pseudo_element, RefPtr<CSS::StyleProperties> style)
 {
-    if (!m_pseudo_element_custom_properties)
-        m_pseudo_element_custom_properties = make<PseudoElementCustomProperties>();
-    return *m_pseudo_element_custom_properties;
+    if (!m_pseudo_element_data && !style)
+        return;
+    ensure_pseudo_element(pseudo_element).computed_css_values = move(style);
+}
+
+RefPtr<CSS::StyleProperties> Element::pseudo_element_computed_css_values(CSS::Selector::PseudoElement::Type type)
+{
+    auto pseudo_element = get_pseudo_element(type);
+    if (pseudo_element.has_value())
+        return pseudo_element->computed_css_values;
+    return nullptr;
+}
+
+Optional<Element::PseudoElement&> Element::get_pseudo_element(CSS::Selector::PseudoElement::Type type) const
+{
+    if (!m_pseudo_element_data)
+        return {};
+    return m_pseudo_element_data->at(to_underlying(type));
+}
+
+Element::PseudoElement& Element::ensure_pseudo_element(CSS::Selector::PseudoElement::Type type) const
+{
+    if (!m_pseudo_element_data)
+        m_pseudo_element_data = make<PseudoElementData>();
+    return m_pseudo_element_data->at(to_underlying(type));
 }
 
 void Element::set_custom_properties(Optional<CSS::Selector::PseudoElement::Type> pseudo_element, HashMap<FlyString, CSS::StyleProperty> custom_properties)
@@ -2208,14 +2286,14 @@ void Element::set_custom_properties(Optional<CSS::Selector::PseudoElement::Type>
         m_custom_properties = move(custom_properties);
         return;
     }
-    pseudo_element_custom_properties()[to_underlying(pseudo_element.value())] = move(custom_properties);
+    ensure_pseudo_element(pseudo_element.value()).custom_properties = move(custom_properties);
 }
 
 HashMap<FlyString, CSS::StyleProperty> const& Element::custom_properties(Optional<CSS::Selector::PseudoElement::Type> pseudo_element) const
 {
     if (!pseudo_element.has_value())
         return m_custom_properties;
-    return pseudo_element_custom_properties()[to_underlying(pseudo_element.value())];
+    return ensure_pseudo_element(pseudo_element.value()).custom_properties;
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-scroll

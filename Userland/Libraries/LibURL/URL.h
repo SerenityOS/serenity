@@ -9,6 +9,7 @@
 #pragma once
 
 #include <AK/ByteString.h>
+#include <AK/CopyOnWrite.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
@@ -75,36 +76,8 @@ enum class SpaceAsPlus {
     No,
     Yes,
 };
-ByteString percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo, SpaceAsPlus = SpaceAsPlus::No);
+String percent_encode(StringView input, PercentEncodeSet set = PercentEncodeSet::Userinfo, SpaceAsPlus = SpaceAsPlus::No);
 ByteString percent_decode(StringView input);
-
-template<typename T>
-class CopyOnWrite {
-public:
-    CopyOnWrite()
-        : m_value(adopt_ref(*new T))
-    {
-    }
-    T& mutable_value()
-    {
-        if (m_value->ref_count() > 1)
-            m_value = m_value->clone();
-        return *m_value;
-    }
-    T const& value() const { return *m_value; }
-
-    operator T const&() const { return value(); }
-    operator T&() { return mutable_value(); }
-
-    T const* operator->() const { return &value(); }
-    T* operator->() { return &mutable_value(); }
-
-    T const* ptr() const { return m_value.ptr(); }
-    T* ptr() { return m_value.ptr(); }
-
-private:
-    NonnullRefPtr<T> m_value;
-};
 
 // https://url.spec.whatwg.org/#url-representation
 // A URL is a struct that represents a universal identifier. To disambiguate from a valid URL string it can also be referred to as a URL record.
@@ -126,8 +99,8 @@ public:
     bool is_valid() const { return m_data->valid; }
 
     String const& scheme() const { return m_data->scheme; }
-    ErrorOr<String> username() const;
-    ErrorOr<String> password() const;
+    String const& username() const { return m_data->username; }
+    String const& password() const { return m_data->password; }
     Host const& host() const { return m_data->host; }
     ErrorOr<String> serialized_host() const;
     ByteString basename() const;
@@ -145,8 +118,8 @@ public:
     bool is_special() const { return is_special_scheme(m_data->scheme); }
 
     void set_scheme(String);
-    ErrorOr<void> set_username(StringView);
-    ErrorOr<void> set_password(StringView);
+    void set_username(StringView);
+    void set_password(StringView);
     void set_host(Host);
     void set_port(Optional<u16>);
     void set_paths(Vector<ByteString> const&);
@@ -179,9 +152,6 @@ public:
             return true;
         return equals(other, ExcludeFragment::No);
     }
-
-    String const& raw_username() const { return m_data->username; }
-    String const& raw_password() const { return m_data->password; }
 
     Optional<BlobURLEntry> const& blob_url_entry() const { return m_data->blob_url_entry; }
     void set_blob_url_entry(Optional<BlobURLEntry> entry) { m_data->blob_url_entry = move(entry); }
@@ -240,7 +210,7 @@ private:
         // A URL also has an associated blob URL entry that is either null or a blob URL entry. It is initially null.
         Optional<BlobURLEntry> blob_url_entry;
     };
-    CopyOnWrite<Data> m_data;
+    AK::CopyOnWrite<Data> m_data;
 };
 
 URL create_with_url_or_path(ByteString const&);

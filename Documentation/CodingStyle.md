@@ -8,14 +8,13 @@ This document describes the coding style used for C++ code in the Serenity Opera
 
 We'll definitely be tweaking and amending this over time, so let's consider it a living document. :)
 
-
 ### Names
 
-A combination of CamelCase, snake\_case, and SCREAMING\_CASE:
+A combination of CamelCase, snake_case, and SCREAMING_CASE:
 
-- Use CamelCase (Capitalize the first letter, including all letters in an acronym) in a class, struct, or namespace name
-- Use snake\_case (all lowercase, with underscores separating words) for variable and function names
-- Use SCREAMING\_CASE for constants (both global and static member variables)
+-   Use CamelCase (Capitalize the first letter, including all letters in an acronym) in a class, struct, or namespace name
+-   Use snake_case (all lowercase, with underscores separating words) for variable and function names
+-   Use SCREAMING_CASE for constants (both global and static member variables)
 
 ###### Right:
 
@@ -248,7 +247,6 @@ for (auto& child : children)
     child->do_child_thing();
 ```
 
-
 #### OK:
 
 ```cpp
@@ -386,8 +384,8 @@ signed int c; // Doesn't omit "signed".
 
 For types with methods, prefer `class` over `struct`.
 
-* For classes, make public getters and setters, keep members private with `m_` prefix.
-* For structs, let everything be public and skip the `m_` prefix.
+-   For classes, make public getters and setters, keep members private with `m_` prefix.
+-   For structs, let everything be public and skip the `m_` prefix.
 
 ###### Right:
 
@@ -516,7 +514,7 @@ draw_jpg(); // FIXME(joe): Make this code handle jpg in addition to the png supp
 draw_jpg(); // TODO: Make this code handle jpg in addition to the png support.
 ```
 
-Explain *why* the code does something. The code itself should already say what is happening.
+Explain _why_ the code does something. The code itself should already say what is happening.
 
 ###### Right:
 
@@ -646,16 +644,17 @@ const Salt& m_salt;
 
 Before you consider a cast, please see if your problem can be solved another way that avoids the visual clutter.
 
-- Integer constants can be specified to have (some) specific sizes with postfixes like `u, l, ul` etc. The same goes for single-precision floating-point constants with `f`.
-- Working with smaller-size integers in arithmetic expressions is hard because of [implicit promotion](https://wiki.sei.cmu.edu/confluence/display/c/INT02-C.+Understand+integer+conversion+rules). Generally, it is fine to use `int` and other "large" types in local variables, and possibly cast at the end.
-- If you `const_cast`, _really_ consider whether your APIs need to be adjusted in terms of their constness. Does the member function you're writing actually make sense to be `const`?
-- If you do checked casts between base and derived types, also consider your APIs. For example: Does the function being called actually need to receive the more general type or is it fine with the more specialized type?
+-   Integer constants can be specified to have (some) specific sizes with postfixes like `u, l, ul` etc. The same goes for single-precision floating-point constants with `f`.
+-   Working with smaller-size integers in arithmetic expressions is hard because of [implicit promotion](https://wiki.sei.cmu.edu/confluence/display/c/INT02-C.+Understand+integer+conversion+rules). Generally, it is fine to use `int` and other "large" types in local variables, and possibly cast at the end.
+-   If you `const_cast`, _really_ consider whether your APIs need to be adjusted in terms of their constness. Does the member function you're writing actually make sense to be `const`?
+-   If you do checked casts between base and derived types, also consider your APIs. For example: Does the function being called actually need to receive the more general type or is it fine with the more specialized type?
 
 If you _do_ need to cast: **Don't use C-style casts**. The C-style cast has [complex behavior](https://en.cppreference.com/w/c/language/cast) that is undesired in many instances. Be aware of what sort of type conversion the code is trying to achieve, and use the appropriate (!) C++ cast operator, like `static_cast`, `reinterpret_cast`, `bit_cast`, `dynamic_cast` etc.
 
 There is a single exception to this rule: marking a function parameter as used with `(void)parameter;`.
 
 ###### Right:
+
 ```cpp
 MyParentClass& object = get_object();
 // Verify the type...
@@ -678,6 +677,7 @@ return const_cast<SeekableStream*>(this)->seek(0, SeekMode::FromCurrentPosition)
 ```
 
 ###### Wrong:
+
 ```cpp
 // These should be static_cast.
 size_t mask_length = (size_t)((u8)-1) + 1;
@@ -695,6 +695,7 @@ Curly braces may only be omitted from `if`/`else`/`for`/`while`/etc. statement b
 Additionally, if any body of a connected if/else statement requires curly braces according to this rule, all of them do.
 
 ###### Right:
+
 ```cpp
 if (condition)
     foo();

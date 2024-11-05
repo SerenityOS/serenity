@@ -674,7 +674,7 @@ Optional<Gfx::IntRect> Image::nonempty_content_bounding_rect() const
     return bounding_rect;
 }
 
-ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode)
+ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::ScalingMode scaling_mode)
 {
     float scale_x = 1.0f;
     float scale_y = 1.0f;
@@ -687,7 +687,7 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode sca
         scale_y = new_size.height() / static_cast<float>(size().height());
     }
 
-    if (scaling_mode != Gfx::Painter::ScalingMode::None) {
+    if (scaling_mode != Gfx::ScalingMode::None) {
         Vector<NonnullRefPtr<Layer>> scaled_layers;
         TRY(scaled_layers.try_ensure_capacity(m_layers.size()));
 

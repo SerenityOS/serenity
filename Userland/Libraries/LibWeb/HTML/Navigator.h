@@ -15,6 +15,7 @@
 #include <LibWeb/HTML/NavigatorOnLine.h>
 #include <LibWeb/HTML/PluginArray.h>
 #include <LibWeb/HTML/UserActivation.h>
+#include <LibWeb/StorageAPI/NavigatorStorage.h>
 
 namespace Web::HTML {
 
@@ -23,7 +24,8 @@ class Navigator : public Bindings::PlatformObject
     , public NavigatorConcurrentHardwareMixin
     , public NavigatorIDMixin
     , public NavigatorLanguageMixin
-    , public NavigatorOnLineMixin {
+    , public NavigatorOnLineMixin
+    , public StorageAPI::NavigatorStorage {
     WEB_PLATFORM_OBJECT(Navigator, Bindings::PlatformObject);
     JS_DECLARE_ALLOCATOR(Navigator);
 
@@ -50,6 +52,10 @@ public:
     [[nodiscard]] JS::NonnullGCPtr<Clipboard::Clipboard> clipboard();
     [[nodiscard]] JS::NonnullGCPtr<UserActivation> user_activation();
 
+    Optional<FlyString> do_not_track() const;
+
+    JS::NonnullGCPtr<ServiceWorkerContainer> service_worker();
+
     static WebIDL::Long max_touch_points();
 
     virtual ~Navigator() override;
@@ -62,6 +68,9 @@ private:
 
     virtual void initialize(JS::Realm&) override;
 
+    // ^StorageAPI::NavigatorStorage
+    virtual Bindings::PlatformObject const& this_navigator_storage_object() const override { return *this; }
+
     JS::GCPtr<PluginArray> m_plugin_array;
     JS::GCPtr<MimeTypeArray> m_mime_type_array;
 
@@ -70,6 +79,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/interaction.html#dom-navigator-useractivation
     JS::GCPtr<UserActivation> m_user_activation;
+
+    // https://w3c.github.io/ServiceWorker/#navigator-serviceworker
+    JS::GCPtr<ServiceWorkerContainer> m_service_worker_container;
 };
 
 }

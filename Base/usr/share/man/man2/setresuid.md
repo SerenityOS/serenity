@@ -26,13 +26,13 @@ Otherwise, returns -1 and sets `errno` to describe the error.
 
 ## Errors
 
-* `EPERM`: At least one of the passed IDs was not equal to the current real, effective, or saved ID, and the user is not superuser.
+-   `EPERM`: At least one of the passed IDs was not equal to the current real, effective, or saved ID, and the user is not superuser.
 
 ## See also
 
-* [`setuid_overview`(7)](help://man/7/setuid_overview)
-* [`geteuid`(2) / `getegid`(2)](help://man/2/geteuid)
-* [`getuid`(2) / `getgid`(2)](help://man/2/getuid)
-* [`getresuid`(2) / `getresgid`(2)](help://man/2/getresuid)
-* [`seteuid`(2) / `setegid`(2)](help://man/2/seteuid)
-* [`setuid`(2) / `setgid`(2)](help://man/2/setuid)
+-   [`setuid_overview`(7)](help://man/7/setuid_overview)
+-   [`geteuid`(2) / `getegid`(2)](help://man/2/geteuid)
+-   [`getuid`(2) / `getgid`(2)](help://man/2/getuid)
+-   [`getresuid`(2) / `getresgid`(2)](help://man/2/getresuid)
+-   [`seteuid`(2) / `setegid`(2)](help://man/2/seteuid)
+-   [`setuid`(2) / `setgid`(2)](help://man/2/setuid)

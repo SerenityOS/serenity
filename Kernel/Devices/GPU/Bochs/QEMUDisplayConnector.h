@@ -20,12 +20,12 @@ struct BochsDisplayMMIORegisters;
 class QEMUDisplayConnector final
     : public DisplayConnector {
     friend class BochsGraphicsAdapter;
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     AK_TYPEDEF_DISTINCT_ORDERED_ID(u16, IndexID);
 
-    static NonnullLockRefPtr<QEMUDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile>);
+    static ErrorOr<NonnullRefPtr<QEMUDisplayConnector>> create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile>);
 
 private:
     IndexID index_id() const;

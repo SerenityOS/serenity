@@ -1,6 +1,6 @@
 ## Name
 
-posix\_spawnattr - configure attributes for posix\_spawn
+posix_spawnattr - configure attributes for posix_spawn
 
 ## Synopsis
 
@@ -48,22 +48,21 @@ It is valid to alternatingly call `posix_spawnattr_init()` and `posix_spawnattr_
 
 `posix_spawnattr_setflags()` configures which attributes of the new child process `posix_spawn()` will set. It receives a bitmask that can contain:
 
-* `POSIX_SPAWN_RESETIDS`: If set, `posix_spawn()` will reset the effective uid and gid of the child process to the real uid and gid of the parent process. See also [`setuid_overview`(7)](help://man/7/setuid_overview).
+-   `POSIX_SPAWN_RESETIDS`: If set, `posix_spawn()` will reset the effective uid and gid of the child process to the real uid and gid of the parent process. See also [`setuid_overview`(7)](help://man/7/setuid_overview).
 
-* `POSIX_SPAWN_SETPGROUP`: If set, `posix_spawn()` will set the process group ID of the child process to the process group ID configured with `posix_spawnattr_setpgroup()`, as if `setpgid(0, pgroup)` was called in the child process. The behavior if both this and `POSIX_SPAWN_SETSID` is set is undefined.
+-   `POSIX_SPAWN_SETPGROUP`: If set, `posix_spawn()` will set the process group ID of the child process to the process group ID configured with `posix_spawnattr_setpgroup()`, as if `setpgid(0, pgroup)` was called in the child process. The behavior if both this and `POSIX_SPAWN_SETSID` is set is undefined.
 
-* `POSIX_SPAWN_SETSCHEDPARAM`: If set, `posix_spawn()` will set the scheduler parameter of the child process to the process group ID configured with `posix_spawnattr_setschedparam()`, as if `sched_setparam(0, schedparam)` was called in the child process.
+-   `POSIX_SPAWN_SETSCHEDPARAM`: If set, `posix_spawn()` will set the scheduler parameter of the child process to the process group ID configured with `posix_spawnattr_setschedparam()`, as if `sched_setparam(0, schedparam)` was called in the child process.
 
-* `POSIX_SPAWN_SETSCHEDULER`: This is not yet implemented in SerenityOS.
+-   `POSIX_SPAWN_SETSCHEDULER`: This is not yet implemented in SerenityOS.
 
-* `POSIX_SPAWN_SETSIGDEF`: If set, `posix_spawn()` will reset the signal handlers of the child process configured with `posix_spawnattr_setsigdefault()` to each signal's default handler.
+-   `POSIX_SPAWN_SETSIGDEF`: If set, `posix_spawn()` will reset the signal handlers of the child process configured with `posix_spawnattr_setsigdefault()` to each signal's default handler.
 
-* `POSIX_SPAWN_SETSIGMASK`: If set, `posix_spawn()` will set the signal mask of the child process to the signal mask configured with `posix_spawnattr_setsigmask()`, as if `sigprocmask()` was called in the child process.
+-   `POSIX_SPAWN_SETSIGMASK`: If set, `posix_spawn()` will set the signal mask of the child process to the signal mask configured with `posix_spawnattr_setsigmask()`, as if `sigprocmask()` was called in the child process.
 
-* `POSIX_SPAWN_SETSID`: If set, `posix_spawn()` will run the child process in a new session, as if `setsid()` was called in the child process. The behavior if both this and `POSIX_SPAWN_SETPGROUP` is set is undefined.
+-   `POSIX_SPAWN_SETSID`: If set, `posix_spawn()` will run the child process in a new session, as if `setsid()` was called in the child process. The behavior if both this and `POSIX_SPAWN_SETPGROUP` is set is undefined.
 
 The `posix_spawnattr_get*` functions return what's been set with the corresponding setters. The default `flags` and `pgroup` are 0, the default `sigdefault` set is `sigemptyset()`, all other fields have an unspecified default value.
-
 
 ## Return value
 
@@ -75,4 +74,4 @@ If the effect of an attr fails, the child will exit with exit code 127 before ev
 
 ## See also
 
-* [`posix_spawn`(2)](help://man/3/posix_spawn)
+-   [`posix_spawn`(2)](help://man/3/posix_spawn)

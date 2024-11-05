@@ -8,6 +8,7 @@
 
 #include <AK/Badge.h>
 #include <AK/OwnPtr.h>
+#include <AK/SetOnce.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/USB/Drivers/USBDriver.h>
@@ -31,6 +32,13 @@ class USBConfiguration;
 // https://www.ftdichip.com/Support/Documents/TechnicalNotes/TN_113_Simplified%20Description%20of%20USB%20Device%20Enumeration.pdf
 class Hub;
 class Device : public AtomicRefCounted<Device> {
+    friend class Hub;
+    // Note: This constructor is only used by the USB::Hub class
+    //       As that class inherits from Device, but is usually initialized with a Device object
+    //       needing a copy constructor,
+    // FIXME: Ideally Hub should not inherit from Device, but instead have a Device member
+    Device(Device const& device);
+
 public:
     enum class DeviceSpeed : u8 {
         LowSpeed = 0,
@@ -43,7 +51,6 @@ public:
 
     Device(USBController const&, Hub const*, u8 port, DeviceSpeed);
     Device(USBController const&, Hub const*, u8 port, DeviceSpeed, u8 address, USBDeviceDescriptor const& descriptor);
-    Device(Device const& device);
     virtual ~Device();
 
     u8 port() const { return m_device_port; }
@@ -69,6 +76,8 @@ public:
             m_driver->detach(*this);
         m_driver = nullptr;
     }
+
+    ErrorOr<void> set_configuration_and_interface(USBInterface const& interface);
 
     SpinlockProtected<RefPtr<SysFSUSBDeviceInformation>, LockRank::None>& sysfs_device_info_node(Badge<USB::Hub>) { return m_sysfs_device_info_node; }
 
@@ -99,6 +108,7 @@ public:
 
 protected:
     void set_default_pipe(NonnullOwnPtr<ControlPipe> pipe);
+    ErrorOr<void> set_configuration(USBConfiguration const& configuration);
 
     u8 m_device_port { 0 };     // What port is this device attached to. NOTE: This is 1-based.
     DeviceSpeed m_device_speed; // What speed is this device running at
@@ -114,6 +124,12 @@ protected:
     NonnullLockRefPtr<USBController> m_controller;
     Hub const* m_hub { nullptr };
     OwnPtr<ControlPipe> m_default_pipe; // Default communication pipe (endpoint0) used during enumeration
+
+    // The current configuration is behind a SetOnce, this is the easiest way to
+    // guarantee that when a driver is attached, another driver cannot choose a different configuration
+    // using a different interface in the same configuration is fine, though
+    SetOnce m_was_configured;
+    u8 m_current_configuration { 0 };
 
     LockRefPtr<Driver> m_driver;
 

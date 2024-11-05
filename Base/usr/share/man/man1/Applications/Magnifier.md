@@ -24,4 +24,4 @@ To lock the location, making Magnifier stop following your mouse and stay in pla
 
 To view a pixel grid overlay, press `G`.
 
-For users with slight visual impairment, Magnifier can apply several filters to the captured image. Click on the *Accessibility* menu and select one of the impairment categories available in the drop-down list.
+For users with slight visual impairment, Magnifier can apply several filters to the captured image. Click on the _Accessibility_ menu and select one of the impairment categories available in the drop-down list.

@@ -1,4 +1,7 @@
-{ pkgs ? import <nixpkgs> { } }: with pkgs;
+{
+  pkgs ? import <nixpkgs> { },
+}:
+with pkgs;
 
 mkShell.override { stdenv = gcc13Stdenv; } {
   packages = [
@@ -13,6 +16,12 @@ mkShell.override { stdenv = gcc13Stdenv; } {
     qt6.qttools
     qt6.qtwayland
     qt6.qtwayland.dev
+    # For clangd and clang-format
+    clang-tools
+    # For LibWeb-related formatting
+    nodePackages.prettier
+    # For the pre-commit hooks
+    pre-commit
   ];
 
   shellHook = ''

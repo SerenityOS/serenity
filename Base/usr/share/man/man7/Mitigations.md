@@ -17,6 +17,7 @@ to collect and describe the mitigations in one centralized place.
 of userspace code with kernel privileges.
 
 It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/8602fa5b49aa4e2b039764a14698f0baa3ad0532):
+
 ```
 commit 8602fa5b49aa4e2b039764a14698f0baa3ad0532
 Author: Andreas Kling <awesomekling@gmail.com>
@@ -49,6 +50,7 @@ These instructions let user mode code query the addresses of various kernel stru
 meaning that they leak kernel addresses that can be exploited to defeat ASLR.
 
 It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/9c0836ce97ae36165abd8eb5241bb5239af3a756):
+
 ```
 commit 9c0836ce97ae36165abd8eb5241bb5239af3a756
 Author: Andreas Kling <awesomekling@gmail.com>
@@ -96,16 +98,18 @@ Kernel: Add a basic implementation of unveil()
 It allows a program to be placed inside a lightweight OS-level virtualization environment.
 
 Current restrictions on jailed processes (configurable when creating a Jail):
-- Process ID view isolation, being limited (both in `/proc` and `/sys/kernel/processes`) to only processes that share the same jail.
+
+-   Process ID view isolation, being limited (both in `/proc` and `/sys/kernel/processes`) to only processes that share the same jail.
 
 Special restrictions on filesystem also apply:
-- Write access is forbidden to the `/sys/kernel/power_state` node.
-- Read accesses is forbidden by default to all nodes in `/sys/kernel` directory, except for:
+
+-   Write access is forbidden to the `/sys/kernel/power_state` node.
+-   Read accesses is forbidden by default to all nodes in `/sys/kernel` directory, except for:
     `df`, `interrupts`, `keymap`, `memstat`, `processes`, `stats` and `uptime`.
-- Write access is forbidden to kernel configuration variables (which are located in `/sys/kernel/conf`).
-- Open access is forbidden to all device nodes except for `/dev/full`, `/dev/null`, `/dev/zero`, `/dev/random` and various
+-   Write access is forbidden to kernel configuration variables (which are located in `/sys/kernel/conf`).
+-   Open access is forbidden to all device nodes except for `/dev/full`, `/dev/null`, `/dev/zero`, `/dev/random` and various
     other TTY/PTY devices (not including Kernel virtual consoles).
-- Executing SUID binaries is forbidden.
+-   Executing SUID binaries is forbidden.
 
 It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/5e062414c11df31ed595c363990005eef00fa263),
 for kernel support, and the following commits added basic userspace utilities:
@@ -222,6 +226,7 @@ It can find various issues, including integer overflows, out-of-bounds array
 accesses, type corruption, and more.
 
 It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/d44be968938ecf95023351a358c43c4957638d87):
+
 ```
 commit d44be968938ecf95023351a358c43c4957638d87
 Author: Andreas Kling <kling@serenityos.org>
@@ -243,6 +248,7 @@ With this mitigation it is now more difficult to craft a kernel exploit to do so
 like disabling SMEP / SMAP.
 
 It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/6136faa4ebf6a878606f33bc03c5e62de9d5e662):
+
 ```
 commit 6136faa4ebf6a878606f33bc03c5e62de9d5e662
 Author: Andreas Kling <kling@serenityos.org>
@@ -263,6 +269,7 @@ to make that memory read-only before passing control to the main executable.
 This prevents attackers from overwriting the [Global Offset Table (GOT)](https://en.wikipedia.org/wiki/Global_Offset_Table).
 
 It was first enabled for executables in the following [commit](https://github.com/SerenityOS/serenity/commit/fa4c249425a65076ca04a3cb0c173d49472796fb):
+
 ```
 commit fa4c249425a65076ca04a3cb0c173d49472796fb
 Author: Andreas Kling <kling@serenityos.org>
@@ -272,6 +279,7 @@ LibELF+Userland: Enable RELRO for all userland executables :^)
 ```
 
 Shared libraries were enabled in a follow-up [commit](https://github.com/SerenityOS/serenity/commit/713b3b36be4f659e58e253b6c830509898dbd2fa):
+
 ```
 commit 713b3b36be4f659e58e253b6c830509898dbd2fa
 Author: Andreas Kling <kling@serenityos.org>
@@ -288,6 +296,7 @@ style attacks by generating code that probes the stack in page-sized increments 
 This prevents attackers from using a large stack allocation to "jump over" the stack guard page into adjacent memory.
 
 It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/7142562310e631156d1f64aff22f068ae2c48a5e):
+
 ```
 commit 7142562310e631156d1f64aff22f068ae2c48a5e
 Author: Andreas Kling <kling@serenityos.org>
@@ -337,6 +346,7 @@ Date:   Fri Jan 1 15:27:42 2021 -0800
 
 Build + LibC: Enable -fstack-protector-strong in user space
 ```
+
 ### Protected Kernel Process Data
 
 The kernel applies a exploit mitigation technique where vulnerable data
@@ -346,6 +356,7 @@ or updated. This means that an attacker needs more than an arbitrary
 kernel write primitive to be able to elevate a process to root for example.
 
 It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/cbcf891040e9921ff628fdda668c9738f358a178):
+
 ```
 commit cbcf891040e9921ff628fdda668c9738f358a178
 Author: Andreas Kling <kling@serenityos.org>
@@ -423,5 +434,5 @@ Kernel: Enable -ftrivial-auto-var-init as a security mitigation
 
 ## See also
 
-* [`unveil`(2)](help://man/2/unveil)
-* [`pledge`(2)](help://man/2/pledge)
+-   [`unveil`(2)](help://man/2/unveil)
+-   [`pledge`(2)](help://man/2/pledge)

@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='cmatrix'
 useconfigure='true'
-version='3112b127babe72d2222059edd2d7eb7fb8bddfb1'
+version='5c082c64a1296859a11bee60c8c086655953a416'
 depends=(
     'ncurses'
 )
@@ -9,7 +9,7 @@ configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
 )
 files=(
-    "https://github.com/abishekvashok/cmatrix/archive/${version}.tar.gz#a1d313d49a39cb5ae3a1c675872712f9f871114a161c38cbe94ce78967825f87"
+    "https://github.com/abishekvashok/cmatrix/archive/${version}.tar.gz#722fb8e8d4879adf3185f720d5a927134e64c9c7346f603910d235385359f8c3"
 )
 launcher_name='cmatrix'
 launcher_category='&Games'

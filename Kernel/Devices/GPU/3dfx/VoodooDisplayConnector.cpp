@@ -11,13 +11,11 @@
 
 namespace Kernel::VoodooGraphics {
 
-NonnullLockRefPtr<VoodooDisplayConnector> VoodooDisplayConnector::must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<RegisterMap volatile> registers_mapping, NonnullOwnPtr<IOWindow> io_window)
+ErrorOr<NonnullRefPtr<VoodooDisplayConnector>> VoodooDisplayConnector::create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<RegisterMap volatile> registers_mapping, NonnullOwnPtr<IOWindow> io_window)
 {
-    auto device_or_error = DeviceManagement::try_create_device<VoodooDisplayConnector>(framebuffer_address, framebuffer_resource_size, move(registers_mapping), move(io_window));
-    VERIFY(!device_or_error.is_error());
-    auto connector = device_or_error.release_value();
-    MUST(connector->create_attached_framebuffer_console());
-    MUST(connector->fetch_and_initialize_edid());
+    auto connector = TRY(Device::try_create_device<VoodooDisplayConnector>(framebuffer_address, framebuffer_resource_size, move(registers_mapping), move(io_window)));
+    TRY(connector->create_attached_framebuffer_console());
+    TRY(connector->fetch_and_initialize_edid());
     return connector;
 }
 

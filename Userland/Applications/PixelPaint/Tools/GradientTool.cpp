@@ -447,12 +447,12 @@ void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, Gf
                                          icon_line3_rotated_offset.a(),
                                          icon_line4_rotated_offset.a(),
                                          icon_line5_rotated_offset.a()),
-                    Color(Color::MidGray).with_alpha(alpha), Gfx::Painter::WindingRule::EvenOdd);
+                    Color(Color::MidGray).with_alpha(alpha), Gfx::WindingRule::EvenOdd);
                 aa_painter.fill_path(make_triangle_path(
                                          icon_line3_rotated_offset.b(),
                                          icon_line4_rotated_offset.b(),
                                          icon_line5_rotated_offset.b()),
-                    Color(Color::MidGray).with_alpha(alpha), Gfx::Painter::WindingRule::EvenOdd);
+                    Color(Color::MidGray).with_alpha(alpha), Gfx::WindingRule::EvenOdd);
             }
         };
 

@@ -9,16 +9,17 @@ Subject: [PATCH] Make it possible to override HOSTCC and CC from the
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/makefile b/makefile
-index 9ceaaad..6b9dff5 100644
+index 0240e5ec9ffe3699aadd0fce2466466b7ceea614..865d52f5b5f8a1fe58125c058a03523f7e79db12 100644
 --- a/makefile
 +++ b/makefile
-@@ -31,8 +31,8 @@ CFLAGS = -O2
- #CC = gcc -Wall -g -Wwrite-strings
- #CC = gcc -O4 -Wall -pedantic -fno-strict-aliasing
- #CC = gcc -fprofile-arcs -ftest-coverage # then gcov f1.c; cat f1.c.gcov
--HOSTCC = gcc -g -Wall -pedantic -Wcast-qual
+@@ -31,9 +31,9 @@ CFLAGS = -O2
+ #CC = cc -Wall -g -Wwrite-strings
+ #CC = cc -O4 -Wall -pedantic -fno-strict-aliasing
+ #CC = cc -fprofile-arcs -ftest-coverage # then gcov f1.c; cat f1.c.gcov
+-HOSTCC = cc -g -Wall -pedantic -Wcast-qual
++HOSTCC ?= cc -g -Wall -pedantic -Wcast-qual
+ # HOSTCC = g++ -g -Wall -pedantic -Wcast-qual
 -CC = $(HOSTCC)  # change this is cross-compiling.
-+HOSTCC ?= gcc -g -Wall -pedantic -Wcast-qual
 +CC ?= $(HOSTCC)  # change this is cross-compiling.
  
  # By fiat, to make our lives easier, yacc is now defined to be bison.

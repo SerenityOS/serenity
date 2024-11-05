@@ -59,7 +59,7 @@ static NonnullRefPtr<Core::Promise<NonnullRefPtr<Gfx::VectorFont>>> load_vector_
 JS_DEFINE_ALLOCATOR(FontFace);
 
 template<CSS::PropertyID PropertyID>
-RefPtr<CSS::StyleValue const> parse_property_string(JS::Realm& realm, StringView value)
+RefPtr<CSSStyleValue const> parse_property_string(JS::Realm& realm, StringView value)
 {
     auto parser = CSS::Parser::Parser::create(CSS::Parser::ParsingContext(realm), value);
     return parser.parse_as_css_value(PropertyID);
@@ -262,12 +262,13 @@ WebIDL::ExceptionOr<void> FontFace::set_weight(String const& string)
 // https://drafts.csswg.org/css-font-loading/#dom-fontface-stretch
 WebIDL::ExceptionOr<void> FontFace::set_stretch(String const& string)
 {
-    auto property = parse_property_string<CSS::PropertyID::FontStretch>(realm(), string);
+    // NOTE: font-stretch is now an alias for font-width
+    auto property = parse_property_string<CSS::PropertyID::FontWidth>(realm(), string);
     if (!property)
         return WebIDL::SyntaxError::create(realm(), "FontFace.stretch setter: Invalid font descriptor"_fly_string);
 
     if (m_is_css_connected) {
-        // FIXME: Propagate to the CSSFontFaceRule and update the font-stretch property
+        // FIXME: Propagate to the CSSFontFaceRule and update the font-width property
     }
 
     m_stretch = property->to_string();
@@ -389,7 +390,22 @@ void FontFace::load_font_source()
             auto& style_computer = const_cast<StyleComputer&>(window.document()->style_computer());
 
             // FIXME: The ParsedFontFace is kind of expensive to create. We should be using a shared sub-object for the data
-            ParsedFontFace parsed_font_face { font->m_family, font->m_weight.to_number<int>(), 0 /* FIXME: slope */, font->m_urls, font->m_unicode_ranges };
+            ParsedFontFace parsed_font_face {
+                font->m_family,
+                font->m_weight.to_number<int>(),
+                0,                      // FIXME: slope
+                Gfx::FontWidth::Normal, // FIXME: width
+                font->m_urls,
+                font->m_unicode_ranges,
+                {},                // FIXME: ascent_override
+                {},                // FIXME: descent_override
+                {},                // FIXME: line_gap_override
+                FontDisplay::Auto, // FIXME: font_display
+                {},                // font-named-instance doesn't exist in FontFace
+                {},                // font-language-override doesn't exist in FontFace
+                {},                // FIXME: feature_settings
+                {},                // FIXME: variation_settings
+            };
             if (auto loader = style_computer.load_font_face(parsed_font_face, move(on_load), move(on_error)); loader.has_value())
                 loader->start_loading_next_url();
         } else {

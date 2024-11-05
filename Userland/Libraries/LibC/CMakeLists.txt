@@ -66,7 +66,6 @@ set(SOURCES
     sys/uio.cpp
     sys/wait.cpp
     syslog.cpp
-    termcap.cpp
     termios.cpp
     time.cpp
     times.cpp
@@ -204,7 +203,6 @@ set(HEADERS
     strings.h
     sysexits.h
     syslog.h
-    termcap.h
     termios.h
     time.h
     ucontext.h
@@ -247,27 +245,31 @@ add_custom_command(
     COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
 )
 
-add_library(crt0_shared STATIC crt0_shared.cpp)
-add_dependencies(crt0_shared install_libc_headers)
-target_link_libraries(crt0_shared PRIVATE NoCoverage)
-add_custom_command(
-    TARGET crt0_shared
-    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
-)
+# FIXME: These files are never needed (and Clang driver never references them) but GCC might need
+#        some convincing that this is the case.
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_library(crt0_shared STATIC crt0_shared.cpp)
+    add_dependencies(crt0_shared install_libc_headers)
+    target_link_libraries(crt0_shared PRIVATE NoCoverage)
+    add_custom_command(
+        TARGET crt0_shared
+        COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
+    )
 
-add_library(crti STATIC arch/${SERENITY_ARCH}/crti.S)
-target_link_libraries(crti PRIVATE NoCoverage)
-add_custom_command(
-    TARGET crti
-    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crti> ${CMAKE_INSTALL_PREFIX}/usr/lib/crti.o
-)
+    add_library(crti STATIC arch/${SERENITY_ARCH}/crti.S)
+    target_link_libraries(crti PRIVATE NoCoverage)
+    add_custom_command(
+        TARGET crti
+        COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crti> ${CMAKE_INSTALL_PREFIX}/usr/lib/crti.o
+    )
 
-add_library(crtn STATIC arch/${SERENITY_ARCH}/crtn.S)
-target_link_libraries(crtn PRIVATE NoCoverage)
-add_custom_command(
-    TARGET crtn
-    COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crtn> ${CMAKE_INSTALL_PREFIX}/usr/lib/crtn.o
-)
+    add_library(crtn STATIC arch/${SERENITY_ARCH}/crtn.S)
+    target_link_libraries(crtn PRIVATE NoCoverage)
+    add_custom_command(
+        TARGET crtn
+        COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crtn> ${CMAKE_INSTALL_PREFIX}/usr/lib/crtn.o
+    )
+endif()
 
 # ===== LibC =====
 # Prevent GCC from removing null checks by marking the `FILE*` argument non-null
@@ -281,7 +283,10 @@ else()
 endif()
 
 serenity_libc(LibC c)
-add_dependencies(LibC crti crt0 crt0_shared crtn install_libc_headers)
+add_dependencies(LibC crt0 install_libc_headers)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_dependencies(LibC crti crt0_shared crtn)
+endif()
 target_link_libraries(LibC PRIVATE LibSystem LibTimeZone)
 target_link_options(LibC PRIVATE -nolibc)
 

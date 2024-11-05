@@ -15,6 +15,8 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
+#include <LibWeb/CSS/PreferredContrast.h>
+#include <LibWeb/CSS/PreferredMotion.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Loader/FileRequest.h>
 #include <LibWeb/Page/InputEvent.h>
@@ -63,6 +65,7 @@ private:
     virtual void key_event(u64 page_id, Web::KeyEvent const&) override;
     virtual void mouse_event(u64 page_id, Web::MouseEvent const&) override;
     virtual void add_backing_store(u64 page_id, i32 front_bitmap_id, Gfx::ShareableBitmap const& front_bitmap, i32 back_bitmap_id, Gfx::ShareableBitmap const& back_bitmap) override;
+    virtual void drag_event(u64 page_id, Web::DragEvent const&) override;
     virtual void ready_to_paint(u64 page_id) override;
     virtual void debug_request(u64 page_id, ByteString const&, ByteString const&) override;
     virtual void get_source(u64 page_id) override;
@@ -89,6 +92,9 @@ private:
     virtual void set_autoplay_allowlist(u64 page_id, Vector<String> const& allowlist) override;
     virtual void set_proxy_mappings(u64 page_id, Vector<ByteString> const&, HashMap<ByteString, size_t> const&) override;
     virtual void set_preferred_color_scheme(u64 page_id, Web::CSS::PreferredColorScheme const&) override;
+    virtual void set_preferred_contrast(u64 page_id, Web::CSS::PreferredContrast const&) override;
+    virtual void set_preferred_motion(u64 page_id, Web::CSS::PreferredMotion const&) override;
+    virtual void set_enable_do_not_track(u64 page_id, bool) override;
     virtual void set_has_focus(u64 page_id, bool) override;
     virtual void set_is_scripting_enabled(u64 page_id, bool) override;
     virtual void set_device_pixels_per_css_pixel(u64 page_id, float) override;

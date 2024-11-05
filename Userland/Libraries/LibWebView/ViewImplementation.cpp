@@ -135,6 +135,12 @@ void ViewImplementation::enqueue_input_event(Web::InputEvent event)
         },
         [this](Web::MouseEvent const& event) {
             client().async_mouse_event(m_client_state.page_index, event.clone_without_chrome_data());
+        },
+        [this](Web::DragEvent& event) {
+            auto cloned_event = event.clone_without_chrome_data();
+            cloned_event.files = move(event.files);
+
+            client().async_drag_event(m_client_state.page_index, move(cloned_event));
         });
 }
 
@@ -142,19 +148,41 @@ void ViewImplementation::did_finish_handling_input_event(Badge<WebContentClient>
 {
     auto event = m_pending_input_events.dequeue();
 
-    if (!event_was_accepted && event.has<Web::KeyEvent>()) {
-        auto const& key_event = event.get<Web::KeyEvent>();
+    if (event_was_accepted)
+        return;
 
-        // Here we handle events that were not consumed or cancelled by the WebContent. Propagate the event back
-        // to the concrete view implementation.
-        if (on_finish_handling_key_event)
-            on_finish_handling_key_event(key_event);
-    }
+    // Here we handle events that were not consumed or cancelled by the WebContent. Propagate the event back
+    // to the concrete view implementation.
+    event.visit(
+        [this](Web::KeyEvent const& event) {
+            if (on_finish_handling_key_event)
+                on_finish_handling_key_event(event);
+        },
+        [this](Web::DragEvent const& event) {
+            if (on_finish_handling_drag_event)
+                on_finish_handling_drag_event(event);
+        },
+        [](auto const&) {});
 }
 
 void ViewImplementation::set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme)
 {
     client().async_set_preferred_color_scheme(page_id(), color_scheme);
+}
+
+void ViewImplementation::set_preferred_contrast(Web::CSS::PreferredContrast contrast)
+{
+    client().async_set_preferred_contrast(page_id(), contrast);
+}
+
+void ViewImplementation::set_preferred_motion(Web::CSS::PreferredMotion motion)
+{
+    client().async_set_preferred_motion(page_id(), motion);
+}
+
+void ViewImplementation::set_enable_do_not_track(bool enable)
+{
+    client().async_set_enable_do_not_track(page_id(), enable);
 }
 
 ByteString ViewImplementation::selected_text()

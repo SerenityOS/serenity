@@ -71,7 +71,7 @@ void VideoFrameWidget::paint_event(GUI::PaintEvent& event)
         return;
 
     if (m_sizing_mode == VideoSizingMode::Stretch) {
-        painter.draw_scaled_bitmap(frame_inner_rect(), *m_bitmap, m_bitmap->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+        painter.draw_scaled_bitmap(frame_inner_rect(), *m_bitmap, m_bitmap->rect(), 1.0f, Gfx::ScalingMode::BilinearBlend);
         return;
     }
 
@@ -101,7 +101,7 @@ void VideoFrameWidget::paint_event(GUI::PaintEvent& event)
     }
 
     auto display_rect = Gfx::IntRect(center.translated(-display_size.width() / 2, -display_size.height() / 2), display_size);
-    painter.draw_scaled_bitmap(display_rect, *m_bitmap, m_bitmap->rect(), 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+    painter.draw_scaled_bitmap(display_rect, *m_bitmap, m_bitmap->rect(), 1.0f, Gfx::ScalingMode::BilinearBlend);
 }
 
 }

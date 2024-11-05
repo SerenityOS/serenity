@@ -483,6 +483,54 @@ ErrorOr<void> xHCIController::configure_endpoint(u8 slot, u64 input_context_addr
     return {};
 }
 
+ErrorOr<void> xHCIController::reset_endpoint(u8 slot, u8 endpoint, TransferStatePreserve transfer_state_preserve)
+{
+    // 4.6.8 Reset Endpoint
+    // Insert a Reset Endpoint Command TRB on the Command Ring and initialize the following fields:
+    // * TRB Type = Reset Endpoint Command (r refer to Table 6-91).
+    // * Transfer State Preserve (TSP) = Desired Transfer State result.
+    // * Endpoint ID = ID of the target endpoint.
+    // * Slot ID = ID of the target Device Slot.
+    TransferRequestBlock transfer_request_block {};
+    transfer_request_block.reset_endpoint_command.transfer_request_block_type = TransferRequestBlock::TRBType::Reset_Endpoint_Command;
+    transfer_request_block.reset_endpoint_command.transfer_state_preserve = transfer_state_preserve == TransferStatePreserve::Yes ? 1 : 0;
+    transfer_request_block.reset_endpoint_command.endpoint_id = endpoint;
+    transfer_request_block.reset_endpoint_command.slot_id = slot;
+    execute_command(transfer_request_block);
+    if (transfer_request_block.command_completion_event.completion_code != TransferRequestBlock::CompletionCode::Success) {
+        dmesgln_pci(*this, "Reset Endpoint command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
+        return EINVAL;
+    }
+    return {};
+}
+
+ErrorOr<void> xHCIController::set_tr_dequeue_pointer(u8 slot, u8 endpoint, u8 stream_context_type, u16 stream, u64 new_tr_dequeue_pointer, u8 dequeue_cycle_state)
+{
+    // 4.6.10 Set TR Dequeue Pointer
+    // Insert a Set TR Dequeue Pointer Command on the Command Ring and initialize the following fields:
+    // * TRB Type = Set TR Dequeue Pointer Command (refer to Table 6-91).
+    // * Endpoint ID = ID of the target endpoint.
+    // * Stream ID = ID of the target Stream Context or ‘0’ if MaxPStreams = ‘0’.
+    // * Slot ID = ID of the target Device Slot.
+    // * New TR Dequeue Pointer = The new TR Dequeue Pointer field value for the target endpoint.
+    // * Dequeue Cycle State (DCS) = The state of the xHCI CCS flag for the TRB pointed to by the TR Dequeue Pointer field.
+    TransferRequestBlock transfer_request_block {};
+    transfer_request_block.set_tr_dequeue_pointer_command.transfer_request_block_type = TransferRequestBlock::TRBType::Set_TR_Dequeue_Pointer_Command;
+    transfer_request_block.set_tr_dequeue_pointer_command.endpoint_id = endpoint;
+    transfer_request_block.set_tr_dequeue_pointer_command.stream_id = stream;
+    transfer_request_block.set_tr_dequeue_pointer_command.slot_id = slot;
+    transfer_request_block.set_tr_dequeue_pointer_command.new_tr_dequeue_pointer_low = new_tr_dequeue_pointer >> 4;
+    transfer_request_block.set_tr_dequeue_pointer_command.new_tr_dequeue_pointer_high = new_tr_dequeue_pointer >> 32;
+    transfer_request_block.set_tr_dequeue_pointer_command.dequeue_cycle_state = dequeue_cycle_state;
+    transfer_request_block.set_tr_dequeue_pointer_command.stream_context_type = stream_context_type;
+    execute_command(transfer_request_block);
+    if (transfer_request_block.command_completion_event.completion_code != TransferRequestBlock::CompletionCode::Success) {
+        dmesgln_pci(*this, "Set TR Dequeue Pointer command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
+        return EINVAL;
+    }
+    return {};
+}
+
 ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
 {
     // 4. After the port successfully reaches the Enabled state, system software shall obtain a Device Slot for the newly attached device using an Enable Slot Command,
@@ -821,33 +869,40 @@ ErrorOr<Vector<xHCIController::TransferRequestBlock>> xHCIController::prepare_no
 {
     auto const& device = transfer.pipe().device();
     auto const slot = device.controller_identifier();
+
     u32 max_burst_payload = 0;
     {
-        auto endpoint_id = endpoint_index(transfer.pipe().endpoint_address(), transfer.pipe().direction());
+        auto endpoint_id = endpoint_index(transfer.pipe().endpoint_number(), transfer.pipe().direction());
         SpinlockLocker locker(m_slots_state[slot - 1].lock);
         max_burst_payload = m_slots_state[slot - 1].endpoint_rings[endpoint_id - 1].max_burst_payload;
     }
     VERIFY(max_burst_payload > 0);
+
     u32 total_transfer_size = transfer.transfer_data_size();
     auto transfer_request_blocks_count = ceil_div(total_transfer_size, max_burst_payload);
     Vector<TransferRequestBlock> transfer_request_blocks;
     TRY(transfer_request_blocks.try_resize(transfer_request_blocks_count));
+
     auto offset = 0u;
     for (auto i = 0u; i < transfer_request_blocks_count; ++i) {
         auto& transfer_request_block = transfer_request_blocks[i];
         auto buffer_pointer = transfer.buffer_physical().get() + offset;
         transfer_request_block.normal.data_buffer_pointer_low = buffer_pointer;
         transfer_request_block.normal.data_buffer_pointer_high = buffer_pointer >> 32;
+
         auto remaining = total_transfer_size - offset;
         auto trb_transfer_length = remaining < max_burst_payload ? remaining : max_burst_payload;
         transfer_request_block.normal.transfer_request_block_transfer_length = trb_transfer_length;
         offset += trb_transfer_length;
-        transfer_request_block.normal.transfer_descriptor_size = min(ceil_div(remaining, (u32)transfer.pipe().max_packet_size()), 31);
+
+        transfer_request_block.normal.transfer_descriptor_size = min(transfer_request_blocks_count - i - 1, 31);
         transfer_request_block.normal.interrupter_target = 0;
+
         if (i != (transfer_request_blocks_count - 1))
             transfer_request_block.normal.chain_bit = 1;
         else
             transfer_request_block.normal.interrupt_on_completion = 1;
+
         transfer_request_block.normal.transfer_request_block_type = TransferRequestBlock::TRBType::Normal;
     }
 
@@ -863,11 +918,15 @@ ErrorOr<size_t> xHCIController::submit_bulk_transfer(Transfer& transfer)
     auto transfer_request_blocks = TRY(prepare_normal_transfer(transfer));
 
     SyncPendingTransfer pending_transfer;
-    TRY(enqueue_transfer(transfer.pipe().device().controller_identifier(), transfer.pipe().endpoint_address(), transfer.pipe().direction(), transfer_request_blocks, pending_transfer));
+    TRY(enqueue_transfer(transfer.pipe().device().controller_identifier(), transfer.pipe().endpoint_number(), transfer.pipe().direction(), transfer_request_blocks, pending_transfer));
     pending_transfer.wait_queue.wait_forever();
     VERIFY(!pending_transfer.endpoint_list_node.is_in_list());
 
-    if (pending_transfer.completion_code != TransferRequestBlock::CompletionCode::Success)
+    if (pending_transfer.completion_code == TransferRequestBlock::CompletionCode::Stall_Error)
+        return ESHUTDOWN;
+
+    if (pending_transfer.completion_code != TransferRequestBlock::CompletionCode::Success
+        && pending_transfer.completion_code != TransferRequestBlock::CompletionCode::Short_Packet)
         return EIO;
 
     return transfer.transfer_data_size() - pending_transfer.remainder;
@@ -882,20 +941,61 @@ ErrorOr<void> xHCIController::submit_async_interrupt_transfer(NonnullLockRefPtr<
     auto transfer_request_blocks = TRY(prepare_normal_transfer(transfer));
 
     NonnullOwnPtr<PeriodicPendingTransfer> pending_transfer = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PeriodicPendingTransfer({}, move(transfer_request_blocks), move(transfer))));
-    TRY(enqueue_transfer(pending_transfer->original_transfer->pipe().device().controller_identifier(), pending_transfer->original_transfer->pipe().endpoint_address(), pending_transfer->original_transfer->pipe().direction(), pending_transfer->transfer_request_blocks, *pending_transfer));
+    TRY(enqueue_transfer(pending_transfer->original_transfer->pipe().device().controller_identifier(), pending_transfer->original_transfer->pipe().endpoint_number(), pending_transfer->original_transfer->pipe().direction(), pending_transfer->transfer_request_blocks, *pending_transfer));
     TRY(m_active_periodic_transfers.try_append(move(pending_transfer)));
+
+    return {};
+}
+
+ErrorOr<void> xHCIController::reset_pipe(USB::Device& device, USB::Pipe& pipe)
+{
+    u8 slot = device.controller_identifier();
+    u8 endpoint_id = endpoint_index(pipe.endpoint_number(), pipe.direction());
+
+    // 3rd "Note:" in 4.6.8 Reset Endpoint
+
+    // Reset Endpoint Command (TSP = ‘0’).
+    TRY(reset_endpoint(slot, endpoint_id, TransferStatePreserve::No));
+
+    // If the device was behind a TT and it is a Control or Bulk endpoint:
+    //   * TODO: Issue a ClearFeature(CLEAR_TT_BUFFER) request to the hub.
+
+    // If not a Control endpoint:
+    //   * Issue a ClearFeature(ENDPOINT_HALT) request to device.
+    if (pipe.type() != Pipe::Type::Control) {
+        TRY(device.control_transfer(USB_REQUEST_TYPE_STANDARD | USB_REQUEST_RECIPIENT_ENDPOINT | USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE,
+            USB_REQUEST_CLEAR_FEATURE, USB_FEATURE_ENDPOINT_HALT, pipe.endpoint_address(), 0, nullptr));
+    }
+
+    auto& slot_state = m_slots_state[slot - 1];
+    auto& endpoint_ring = slot_state.endpoint_rings[endpoint_id - 1];
+
+    // Issue a Set TR Dequeue Pointer Command, clear the endpoint state and reference the TRB to start.
+
+    // TODO: Set the Stream ID and Stream Context Type if streams are enabled for the endpoint once we support streams.
+    TRY(set_tr_dequeue_pointer(slot, endpoint_id, 0, 0, endpoint_ring.ring_paddr(), 1));
+
+    endpoint_ring.enqueue_index = 0;
+    endpoint_ring.pending_transfers.clear();
+    endpoint_ring.producer_cycle_state = 1;
+    endpoint_ring.free_transfer_request_blocks = endpoint_ring_size - 1; // -1 to exclude the Link TRB
+    for (size_t i = 0; i < endpoint_ring_size - 1; i++)
+        endpoint_ring.ring_vaddr()[i] = {};
+
+    // Ring Doorbell to restart the pipe.
+    ring_endpoint_doorbell(slot, pipe.endpoint_number(), pipe.direction());
 
     return {};
 }
 
 ErrorOr<void> xHCIController::initialize_endpoint_if_needed(Pipe const& pipe)
 {
-    VERIFY(pipe.endpoint_address() != 0); // Endpoint 0 is manually initialized during device initialization
+    VERIFY(pipe.endpoint_number() != 0); // Endpoint 0 is manually initialized during device initialization
     auto const slot = pipe.device().controller_identifier();
     auto& slot_state = m_slots_state[slot - 1];
     SpinlockLocker locker(slot_state.lock);
     VERIFY(slot_state.input_context_region);
-    auto endpoint_id = endpoint_index(pipe.endpoint_address(), pipe.direction());
+    auto endpoint_id = endpoint_index(pipe.endpoint_number(), pipe.direction());
     auto& endpoint_ring = slot_state.endpoint_rings[endpoint_id - 1];
     if (endpoint_ring.region)
         return {}; // Already initialized
@@ -922,7 +1022,7 @@ ErrorOr<void> xHCIController::initialize_endpoint_if_needed(Pipe const& pipe)
     control_context->drop_contexts = 0;
     control_context->add_contexts = (1 << 0) | (1 << endpoint_id);
 
-    auto* endpoint_context = input_endpoint_context(slot, pipe.endpoint_address(), pipe.direction());
+    auto* endpoint_context = input_endpoint_context(slot, pipe.endpoint_number(), pipe.direction());
     switch (pipe.type()) {
     case Pipe::Type::Isochronous:
         if (pipe.direction() == Pipe::Direction::In)
@@ -1360,7 +1460,8 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
     auto& endpoint_ring = slot_state.endpoint_rings[endpoint - 1];
     VERIFY(endpoint_ring.region);
 
-    if (transfer_request_block.transfer_event.completion_code != TransferRequestBlock::CompletionCode::Success)
+    if (transfer_request_block.transfer_event.completion_code != TransferRequestBlock::CompletionCode::Success
+        && transfer_request_block.transfer_event.completion_code != TransferRequestBlock::CompletionCode::Short_Packet)
         dmesgln_pci(*this, "Transfer error on slot {} endpoint {}: {}", slot, endpoint, enum_to_string(transfer_request_block.transfer_event.completion_code));
 
     VERIFY(transfer_request_block.transfer_event.event_data == 0); // The Pointer points to the interrupting TRB
@@ -1394,7 +1495,7 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
             auto& periodic_pending_transfer = static_cast<PeriodicPendingTransfer&>(pending_transfer);
             periodic_pending_transfer.original_transfer->invoke_async_callback();
             // Reschedule the periodic transfer (NOTE: We MUST() here since a re-enqueue should never fail)
-            MUST(enqueue_transfer(slot, periodic_pending_transfer.original_transfer->pipe().endpoint_address(), periodic_pending_transfer.original_transfer->pipe().direction(), periodic_pending_transfer.transfer_request_blocks, periodic_pending_transfer));
+            MUST(enqueue_transfer(slot, periodic_pending_transfer.original_transfer->pipe().endpoint_number(), periodic_pending_transfer.original_transfer->pipe().direction(), periodic_pending_transfer.transfer_request_blocks, periodic_pending_transfer));
         }
         return;
     }

@@ -111,6 +111,10 @@
 #cmakedefine01 ICMP_DEBUG
 #endif
 
+#ifndef ICMPV6_DEBUG
+#cmakedefine01 ICMPV6_DEBUG
+#endif
+
 #ifndef INTEL_GRAPHICS_DEBUG
 #cmakedefine01 INTEL_GRAPHICS_DEBUG
 #endif
@@ -141,6 +145,10 @@
 
 #ifndef IPV4_DEBUG
 #cmakedefine01 IPV4_DEBUG
+#endif
+
+#ifndef IPV6_DEBUG
+#cmakedefine01 IPV6_DEBUG
 #endif
 
 #ifndef IPV4_SOCKET_DEBUG
@@ -357,4 +365,8 @@
 
 #ifndef XHCI_DEBUG
 #cmakedefine01 XHCI_DEBUG
+#endif
+
+#ifndef USB_MASS_STORAGE_DEBUG
+#cmakedefine01 USB_MASS_STORAGE_DEBUG
 #endif

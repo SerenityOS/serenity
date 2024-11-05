@@ -38,13 +38,13 @@ TraversalDecision SVGPathPaintable::hit_test(CSSPixelPoint position, HitTestType
     return SVGGraphicsPaintable::hit_test(position, type, callback);
 }
 
-static Gfx::Painter::WindingRule to_gfx_winding_rule(SVG::FillRule fill_rule)
+static Gfx::WindingRule to_gfx_winding_rule(SVG::FillRule fill_rule)
 {
     switch (fill_rule) {
     case SVG::FillRule::Nonzero:
-        return Gfx::Painter::WindingRule::Nonzero;
+        return Gfx::WindingRule::Nonzero;
     case SVG::FillRule::Evenodd:
-        return Gfx::Painter::WindingRule::EvenOdd;
+        return Gfx::WindingRule::EvenOdd;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -66,7 +66,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto svg_element_rect = svg_node->paintable_box()->absolute_rect();
 
     // FIXME: This should not be trucated to an int.
-    RecordingPainterStateSaver save_painter { context.recording_painter() };
+    DisplayListRecorderStateSaver save_painter { context.display_list_recorder() };
 
     auto offset = context.floored_device_point(svg_element_rect.location()).to_type<int>().to_type<float>();
     auto maybe_view_box = svg_node->dom_node().view_box();
@@ -98,7 +98,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
         // The raw geometry of each child element exclusive of rendering properties such as fill, stroke, stroke-width
         // within a clipPath conceptually defines a 1-bit mask (with the possible exception of anti-aliasing along
         // the edge of the geometry) which represents the silhouette of the graphics associated with that element.
-        context.recording_painter().fill_path({
+        context.display_list_recorder().fill_path({
             .path = closed_path(),
             .color = Color::Black,
             .winding_rule = to_gfx_winding_rule(graphics_element.clip_rule().value_or(SVG::ClipRule::Nonzero)),
@@ -116,7 +116,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto fill_opacity = graphics_element.fill_opacity().value_or(1);
     auto winding_rule = to_gfx_winding_rule(graphics_element.fill_rule().value_or(SVG::FillRule::Nonzero));
     if (auto paint_style = graphics_element.fill_paint_style(paint_context); paint_style.has_value()) {
-        context.recording_painter().fill_path({
+        context.display_list_recorder().fill_path({
             .path = closed_path(),
             .paint_style = *paint_style,
             .winding_rule = winding_rule,
@@ -124,7 +124,7 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
             .translation = offset,
         });
     } else if (auto fill_color = graphics_element.fill_color(); fill_color.has_value()) {
-        context.recording_painter().fill_path({
+        context.display_list_recorder().fill_path({
             .path = closed_path(),
             .color = fill_color->with_opacity(fill_opacity),
             .winding_rule = winding_rule,
@@ -132,13 +132,44 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
         });
     }
 
+    Gfx::Path::CapStyle cap_style;
+    switch (graphics_element.stroke_linecap().value_or(CSS::InitialValues::stroke_linecap())) {
+    case CSS::StrokeLinecap::Butt:
+        cap_style = Gfx::Path::CapStyle::Butt;
+        break;
+    case CSS::StrokeLinecap::Round:
+        cap_style = Gfx::Path::CapStyle::Round;
+        break;
+    case CSS::StrokeLinecap::Square:
+        cap_style = Gfx::Path::CapStyle::Square;
+        break;
+    }
+
+    Gfx::Path::JoinStyle join_style;
+    switch (graphics_element.stroke_linejoin().value_or(CSS::InitialValues::stroke_linejoin())) {
+    case CSS::StrokeLinejoin::Miter:
+        join_style = Gfx::Path::JoinStyle::Miter;
+        break;
+    case CSS::StrokeLinejoin::Round:
+        join_style = Gfx::Path::JoinStyle::Round;
+        break;
+    case CSS::StrokeLinejoin::Bevel:
+        join_style = Gfx::Path::JoinStyle::Bevel;
+        break;
+    }
+
+    auto miter_limit = graphics_element.stroke_miterlimit().value_or(CSS::InitialValues::stroke_miterlimit()).resolved(layout_node());
+
     auto stroke_opacity = graphics_element.stroke_opacity().value_or(1);
 
     // Note: This is assuming .x_scale() == .y_scale() (which it does currently).
     float stroke_thickness = graphics_element.stroke_width().value_or(1) * viewbox_scale;
 
     if (auto paint_style = graphics_element.stroke_paint_style(paint_context); paint_style.has_value()) {
-        context.recording_painter().stroke_path({
+        context.display_list_recorder().stroke_path({
+            .cap_style = cap_style,
+            .join_style = join_style,
+            .miter_limit = static_cast<float>(miter_limit),
             .path = path,
             .paint_style = *paint_style,
             .thickness = stroke_thickness,
@@ -146,7 +177,10 @@ void SVGPathPaintable::paint(PaintContext& context, PaintPhase phase) const
             .translation = offset,
         });
     } else if (auto stroke_color = graphics_element.stroke_color(); stroke_color.has_value()) {
-        context.recording_painter().stroke_path({
+        context.display_list_recorder().stroke_path({
+            .cap_style = cap_style,
+            .join_style = join_style,
+            .miter_limit = static_cast<float>(miter_limit),
             .path = path,
             .color = stroke_color->with_opacity(stroke_opacity),
             .thickness = stroke_thickness,

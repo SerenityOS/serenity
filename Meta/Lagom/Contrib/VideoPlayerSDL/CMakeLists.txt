@@ -1,6 +1,8 @@
 if(NOT EMSCRIPTEN)
   add_compile_options(-DAK_DONT_REPLACE_STD)
+  find_package(SDL2 REQUIRED)
 
+  include_directories(${SDL2_INCLUDE_DIRS})
   add_executable(VideoPlayerSDL
       main.cpp
   )

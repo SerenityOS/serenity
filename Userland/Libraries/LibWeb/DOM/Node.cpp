@@ -207,8 +207,8 @@ void Node::set_text_content(Optional<String> const& maybe_content)
     // Otherwise, do nothing.
 
     if (is_connected()) {
-        document().invalidate_style();
-        document().invalidate_layout();
+        document().invalidate_style(StyleInvalidationReason::NodeSetTextContent);
+        document().invalidate_layout_tree();
     }
 
     document().bump_dom_tree_version();
@@ -362,13 +362,37 @@ void Node::set_node_value(Optional<String> const& maybe_value)
 // https://html.spec.whatwg.org/multipage/document-sequences.html#node-navigable
 JS::GCPtr<HTML::Navigable> Node::navigable() const
 {
+    auto& document = const_cast<Document&>(this->document());
+    if (auto cached_navigable = document.cached_navigable()) {
+        if (cached_navigable->active_document() == &document)
+            return cached_navigable;
+    }
+
     // To get the node navigable of a node node, return the navigable whose active document is node's node document,
     // or null if there is no such navigable.
-    return HTML::Navigable::navigable_with_active_document(const_cast<Document&>(document()));
+    auto navigable = HTML::Navigable::navigable_with_active_document(document);
+    document.set_cached_navigable(navigable);
+    return navigable;
 }
 
-void Node::invalidate_style()
+[[maybe_unused]] static StringView to_string(StyleInvalidationReason reason)
 {
+#define __ENUMERATE_STYLE_INVALIDATION_REASON(reason) \
+    case StyleInvalidationReason::reason:             \
+        return #reason##sv;
+    switch (reason) {
+        ENUMERATE_STYLE_INVALIDATION_REASONS(__ENUMERATE_STYLE_INVALIDATION_REASON)
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+void Node::invalidate_style(StyleInvalidationReason reason)
+{
+    if (!needs_style_update() && !document().needs_full_style_update()) {
+        dbgln_if(STYLE_INVALIDATION_DEBUG, "Invalidate style ({}): {}", to_string(reason), debug_description());
+    }
+
     if (is_document()) {
         auto& document = static_cast<DOM::Document&>(*this);
         document.set_needs_full_style_update(true);
@@ -590,7 +614,7 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
         // 6. Run assign slottables for a tree with node’s root.
         assign_slottables_for_a_tree(node_to_insert->root());
 
-        node_to_insert->invalidate_style();
+        node_to_insert->invalidate_style(StyleInvalidationReason::NodeInsertBefore);
 
         // 7. For each shadow-including inclusive descendant inclusiveDescendant of node, in shadow-including tree order:
         node_to_insert->for_each_shadow_including_inclusive_descendant([&](Node& inclusive_descendant) {
@@ -631,8 +655,8 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
 
     if (is_connected()) {
         // FIXME: This will need to become smarter when we implement the :has() selector.
-        invalidate_style();
-        document().invalidate_layout();
+        invalidate_style(StyleInvalidationReason::NodeInsertBefore);
+        document().invalidate_layout_tree();
     }
 
     document().bump_dom_tree_version();
@@ -690,6 +714,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Node::append_child(JS::NonnullGCPtr<
 void Node::remove(bool suppress_observers)
 {
     bool was_connected = is_connected();
+    bool had_layout_node = layout_node();
 
     // 1. Let parent be node’s parent
     auto* parent = this->parent();
@@ -830,8 +855,13 @@ void Node::remove(bool suppress_observers)
     if (was_connected) {
         // Since the tree structure has changed, we need to invalidate both style and layout.
         // In the future, we should find a way to only invalidate the parts that actually need it.
-        document().invalidate_style();
-        document().invalidate_layout();
+        document().invalidate_style(StyleInvalidationReason::NodeRemove);
+
+        // NOTE: If we didn't have a layout node before, rebuilding the layout tree isn't gonna give us one
+        //       after we've been removed from the DOM.
+        if (had_layout_node) {
+            document().invalidate_layout_tree();
+        }
     }
 
     document().bump_dom_tree_version();
@@ -1354,7 +1384,10 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
 
     MUST((object.add("visible"sv, !!layout_node())));
 
-    if (has_child_nodes() || (is_element() && static_cast<DOM::Element const*>(this)->is_shadow_host())) {
+    auto const* element = is_element() ? static_cast<DOM::Element const*>(this) : nullptr;
+
+    if (has_child_nodes()
+        || (element && (element->is_shadow_host() || element->has_pseudo_elements()))) {
         auto children = MUST(object.add_array("children"sv));
         auto add_child = [&children](DOM::Node const& child) {
             if (child.is_uninteresting_whitespace_node())
@@ -1366,9 +1399,7 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
         };
         for_each_child(add_child);
 
-        if (is_element()) {
-            auto const* element = static_cast<DOM::Element const*>(this);
-
+        if (element) {
             // Pseudo-elements don't have DOM nodes,so we have to add them separately.
             element->serialize_pseudo_elements_as_json(children);
 

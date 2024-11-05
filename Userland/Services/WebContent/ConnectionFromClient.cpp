@@ -37,6 +37,7 @@
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/ProxyMappings.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Loader/UserAgent.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Painting/StackingContext.h>
 #include <LibWeb/Painting/ViewportPaintable.h>
@@ -223,6 +224,9 @@ void ConnectionFromClient::process_next_input_event()
                 return page->page().handle_doubleclick(event.position, event.screen_position, event.button, event.buttons, event.modifiers);
             }
             VERIFY_NOT_REACHED();
+        },
+        [&](Web::DragEvent& event) {
+            return page->page().handle_drag_and_drop_event(event.type, event.position, event.screen_position, event.button, event.buttons, event.modifiers, move(event.files));
         });
 
     // We have to notify the client about coalesced events, so we do that by saying none of them were handled by the web page->
@@ -271,6 +275,11 @@ void ConnectionFromClient::mouse_event(u64 page_id, Web::MouseEvent const& event
     }
 
     enqueue_input_event({ page_id, move(const_cast<Web::MouseEvent&>(event)), 0 });
+}
+
+void ConnectionFromClient::drag_event(u64 page_id, Web::DragEvent const& event)
+{
+    enqueue_input_event({ page_id, move(const_cast<Web::DragEvent&>(event)), 0 });
 }
 
 void ConnectionFromClient::enqueue_input_event(QueuedInputEvent event)
@@ -416,6 +425,23 @@ void ConnectionFromClient::debug_request(u64 page_id, ByteString const& request,
         }
         return;
     }
+
+    if (request == "navigator-compatibility-mode") {
+        Web::NavigatorCompatibilityMode compatibility_mode;
+        if (argument == "chrome") {
+            compatibility_mode = Web::NavigatorCompatibilityMode::Chrome;
+        } else if (argument == "gecko") {
+            compatibility_mode = Web::NavigatorCompatibilityMode::Gecko;
+        } else if (argument == "webkit") {
+            compatibility_mode = Web::NavigatorCompatibilityMode::WebKit;
+        } else {
+            dbgln("Unknown navigator compatibility mode '{}', defaulting to Chrome", argument);
+            compatibility_mode = Web::NavigatorCompatibilityMode::Chrome;
+        }
+
+        Web::ResourceLoader::the().set_navigator_compatibility_mode(compatibility_mode);
+        return;
+    }
 }
 
 void ConnectionFromClient::get_source(u64 page_id)
@@ -552,12 +578,9 @@ void ConnectionFromClient::inspect_dom_node(u64 page_id, i32 node_id, Optional<W
                 return;
             }
 
-            // FIXME: Pseudo-elements only exist as Layout::Nodes, which don't have style information
-            //        in a format we can use. So, we run the StyleComputer again to get the specified
-            //        values, and have to ignore the computed values and custom properties.
-            auto pseudo_element_style = page->page().focused_navigable().active_document()->style_computer().compute_style(element, pseudo_element);
-            ByteString computed_values = serialize_json(pseudo_element_style);
-            ByteString resolved_values = "{}";
+            auto pseudo_element_style = element.pseudo_element_computed_css_values(pseudo_element.value());
+            ByteString computed_values = serialize_json(*pseudo_element_style);
+            ByteString resolved_values = serialize_json(*element.resolved_css_values(pseudo_element.value()));
             ByteString custom_properties_json = serialize_custom_properties_json(element, pseudo_element);
             ByteString node_box_sizing_json = serialize_node_box_sizing_json(pseudo_element_node.ptr());
 
@@ -650,8 +673,10 @@ void ConnectionFromClient::add_dom_node_attributes(u64 page_id, i32 node_id, Vec
 
     auto& element = static_cast<Web::DOM::Element&>(*dom_node);
 
-    for (auto const& attribute : attributes)
-        element.set_attribute(attribute.name, attribute.value).release_value_but_fixme_should_propagate_errors();
+    for (auto const& attribute : attributes) {
+        // NOTE: We ignore invalid attributes for now, but we may want to send feedback to the user that this failed.
+        (void)element.set_attribute(attribute.name, attribute.value);
+    }
 
     async_did_finish_editing_dom_node(page_id, element.unique_id());
 }
@@ -671,7 +696,8 @@ void ConnectionFromClient::replace_dom_node_attribute(u64 page_id, i32 node_id, 
         if (should_remove_attribute && Web::Infra::is_ascii_case_insensitive_match(name, attribute.name))
             should_remove_attribute = false;
 
-        element.set_attribute(attribute.name, attribute.value).release_value_but_fixme_should_propagate_errors();
+        // NOTE: We ignore invalid attributes for now, but we may want to send feedback to the user that this failed.
+        (void)element.set_attribute(attribute.name, attribute.value);
     }
 
     if (should_remove_attribute)
@@ -836,7 +862,8 @@ void ConnectionFromClient::find_in_page(u64 page_id, String const& query, CaseSe
     if (!page.has_value())
         return;
 
-    page->page().find_in_page(query, case_sensitivity);
+    auto result = page->page().find_in_page({ .string = query, .case_sensitivity = case_sensitivity });
+    async_did_find_in_page(page_id, result.current_match_index, result.total_match_count);
 }
 
 void ConnectionFromClient::find_in_page_next_match(u64 page_id)
@@ -845,7 +872,8 @@ void ConnectionFromClient::find_in_page_next_match(u64 page_id)
     if (!page.has_value())
         return;
 
-    page->page().find_in_page_next_match();
+    auto result = page->page().find_in_page_next_match();
+    async_did_find_in_page(page_id, result.current_match_index, result.total_match_count);
 }
 
 void ConnectionFromClient::find_in_page_previous_match(u64 page_id)
@@ -854,7 +882,8 @@ void ConnectionFromClient::find_in_page_previous_match(u64 page_id)
     if (!page.has_value())
         return;
 
-    page->page().find_in_page_previous_match();
+    auto result = page->page().find_in_page_previous_match();
+    async_did_find_in_page(page_id, result.current_match_index, result.total_match_count);
 }
 
 void ConnectionFromClient::paste(u64 page_id, String const& text)
@@ -952,6 +981,23 @@ void ConnectionFromClient::set_preferred_color_scheme(u64 page_id, Web::CSS::Pre
 {
     if (auto page = this->page(page_id); page.has_value())
         page->set_preferred_color_scheme(color_scheme);
+}
+
+void ConnectionFromClient::set_preferred_contrast(u64 page_id, Web::CSS::PreferredContrast const& contrast)
+{
+    if (auto page = this->page(page_id); page.has_value())
+        page->set_preferred_contrast(contrast);
+}
+
+void ConnectionFromClient::set_preferred_motion(u64 page_id, Web::CSS::PreferredMotion const& motion)
+{
+    if (auto page = this->page(page_id); page.has_value())
+        page->set_preferred_motion(motion);
+}
+
+void ConnectionFromClient::set_enable_do_not_track(u64, bool enable)
+{
+    Web::ResourceLoader::the().set_enable_do_not_track(enable);
 }
 
 void ConnectionFromClient::set_has_focus(u64 page_id, bool has_focus)

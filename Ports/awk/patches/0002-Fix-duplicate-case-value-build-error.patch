@@ -1,0 +1,30 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sun, 27 Oct 2024 01:53:40 +0000
+Subject: [PATCH] Fix duplicate case value build error
+
+```
+[awk/build] main.c: In function 'fpecatch':
+[awk/build] main.c:92:9: error: duplicate case value
+[awk/build]    92 |         case 0:
+[awk/build]       |         ^~~~
+[awk/build] main.c:68:9: note: previously used here
+[awk/build]    68 |         case FPE_INTDIV:
+[awk/build]       |         ^~~~
+```
+---
+ main.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/main.c b/main.c
+index 7d3ef84a580f4775b3faf463d94d580e22945750..3ef15da32ef4c1f55144e21e328b60d82b1ee885 100644
+--- a/main.c
++++ b/main.c
+@@ -89,7 +89,6 @@ static noreturn void fpecatch(int n
+ 	case FPE_FLTSUB:
+ 		mesg = "Subscript out of range";
+ 		break;
+-	case 0:
+ 	default:
+ 		mesg = "Unknown error";
+ 		break;

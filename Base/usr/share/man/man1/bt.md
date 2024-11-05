@@ -16,14 +16,14 @@ addresses for each frame in the stack producing a backtrace.
 
 **NOTE**:
 
-* Kernel addresses will not be available unless you are super user.
+-   Kernel addresses will not be available unless you are super user.
 
-* If Kernel addresses are available, they will not be symbolicated unless
-  the current user has access to the `/boot/Kernel` file.
+-   If Kernel addresses are available, they will not be symbolicated unless
+    the current user has access to the `/boot/Kernel` file.
 
 ## Arguments
 
-* `pid`: Process ID
+-   `pid`: Process ID
 
 ## Examples
 
@@ -41,6 +41,6 @@ $ watch -n 1 -- bt 124
 
 ## See also
 
-* [`Profiler`(1)](help://man/1/Applications/Profiler)
+-   [`Profiler`(1)](help://man/1/Applications/Profiler)
 
-* [`watch`(1)](help://man/1/watch)
+-   [`watch`(1)](help://man/1/watch)

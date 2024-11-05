@@ -36,7 +36,7 @@ interface HTMLInputElement : HTMLElement {
     [CEReactions, Reflect=readonly] attribute boolean readOnly;
     [CEReactions, Reflect] attribute boolean required;
     [CEReactions] attribute unsigned long size;
-    [CEReactions, Reflect] attribute DOMString src;
+    [CEReactions, Reflect] attribute USVString src;
     [CEReactions, Reflect] attribute DOMString step;
     [CEReactions] attribute DOMString type;
     [CEReactions, Reflect=value] attribute DOMString defaultValue;
@@ -58,11 +58,11 @@ interface HTMLInputElement : HTMLElement {
     readonly attribute NodeList? labels;
 
     undefined select();
-    [FIXME] attribute unsigned long? selectionStart;
-    [FIXME] attribute unsigned long? selectionEnd;
-    [FIXME] attribute DOMString? selectionDirection;
-    [FIXME] undefined setRangeText(DOMString replacement);
-    [FIXME] undefined setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
+    attribute unsigned long? selectionStart;
+    attribute unsigned long? selectionEnd;
+    attribute DOMString? selectionDirection;
+    undefined setRangeText(DOMString replacement);
+    undefined setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
     undefined setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
 
     undefined showPicker();

@@ -94,7 +94,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
                         path.line_to({ current_point->x() - 1, inner_rect.bottom() });
                         path.line_to({ first_point->x() + 1, inner_rect.bottom() });
                         path.close();
-                        painter.fill_path(path, background_color, Gfx::Painter::WindingRule::EvenOdd);
+                        painter.fill_path(path, background_color, Gfx::WindingRule::EvenOdd);
                     } else if (points_in_path == 1 && current_point) {
                         // Can't fill any area, we only have one data point.
                         // Just draw a vertical line as a "fill"...

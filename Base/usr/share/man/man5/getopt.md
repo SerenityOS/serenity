@@ -10,7 +10,7 @@ $ command -o --long-option
 
 ## Description
 
-Most programs accept various *options* that configure their behavior to be
+Most programs accept various _options_ that configure their behavior to be
 passed alongside other command-line arguments. Each program accepts its own set
 of options, though many programs share options in common.
 
@@ -20,7 +20,7 @@ in one argument. Long options have whole strings as their names, are preceded by
 a double dash, and cannot be grouped.
 
 Each option can require (or optionally accept) a **value** (also often
-confusingly called an *argument*). Generally, a value for an option, if any,
+confusingly called an _argument_). Generally, a value for an option, if any,
 should be written after the option itself, although the exact syntax for values
 of short and long options differs. In both cases, the value can be specified as
 the next command-line argument after the option. For short options, the value
@@ -88,4 +88,4 @@ $ command --force -- -argument --another-argument
 
 ## See also
 
-* [`getopt`(3)](help://man/3/getopt)
+-   [`getopt`(3)](help://man/3/getopt)

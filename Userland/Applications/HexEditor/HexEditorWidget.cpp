@@ -518,22 +518,29 @@ void HexEditorWidget::update_inspector_values(size_t position)
 
     auto selected_bytes = m_editor->get_selected_bytes();
 
-    auto ascii_string = String::from_utf8(ReadonlyBytes { selected_bytes });
+    // Replace control chars with something else - we don't want line breaks here ;)
+    auto replace_control_chars = [](ErrorOr<String> string_or_error) {
+        if (string_or_error.is_error())
+            return string_or_error;
+        return string_or_error.release_value().replace("\n"sv, " "sv, ReplaceMode::All);
+    };
+
+    auto ascii_string = replace_control_chars(String::from_utf8(ReadonlyBytes { selected_bytes }));
     value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCIIString, move(ascii_string));
 
     Utf8View utf8_string_view { ReadonlyBytes { selected_bytes } };
     utf8_string_view.validate(valid_bytes);
-    if (valid_bytes == 0)
+    if (valid_bytes == 0) {
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, ""_string);
-    else
-        // FIXME: replace control chars with something else - we don't want line breaks here ;)
-        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, String::from_utf8(utf8_string_view.as_string()));
+    } else {
+        auto utf8_string = replace_control_chars(String::from_utf8(utf8_string_view.as_string()));
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, move(utf8_string));
+    }
 
     // FIXME: Parse as other values like Timestamp etc
 
     auto decoder = TextCodec::decoder_for(m_value_inspector_little_endian ? "utf-16le"sv : "utf-16be"sv);
-    ErrorOr<String> utf16_string = decoder->to_utf8(StringView(selected_bytes.span()));
-
+    auto utf16_string = replace_control_chars(decoder->to_utf8(StringView(selected_bytes.span())));
     value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16String, move(utf16_string));
 
     m_value_inspector->set_model(value_inspector_model);

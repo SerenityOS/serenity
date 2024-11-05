@@ -10,10 +10,9 @@ Reading from `/dev/null` returns end of file and exits with status 0.
 
 ## Files
 
-* /dev/null
+-   /dev/null
 
 ## See also
 
-* [`full`(4)](help://man/4/full)
-* [`zero`(4)](help://man/4/zero)
-
+-   [`full`(4)](help://man/4/full)
+-   [`zero`(4)](help://man/4/zero)

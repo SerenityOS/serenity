@@ -8,6 +8,7 @@ The recommended extensions for VS Code include:
 
 -   [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)
 -   [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
+-   [Jakt](https://github.com/SerenityOS/jakt/tree/main/editors/vscode) (See [Jakt](#jakt) for more information)
 
 ## Code comprehension
 
@@ -349,3 +350,30 @@ The following snippet may be useful if you want to quickly generate a license he
     }
 }
 ```
+
+## Jakt
+
+To use Jakt, build and install the jakt extension from the [Jakt repository](https://github.com/SerenityOS/jakt/tree/main/editors/vscode).
+A few configuration options are required to have `import extern` statements work correctly, which should go into your `settings.json`:
+
+```json
+{
+    // If you have installed jakt globally, you can omit this setting (though keep in mind that the compiler build *should* match the one in your serenity checkout)
+    "jaktLanguageServer.compiler.executablePath": "Toolchain/Local/jakt/bin/jakt",
+
+    "jaktLanguageServer.extraCompilerImportPaths": [
+        ".",
+        "Userland/Libraries",
+        "Userland/Libraries/LibCrypt",
+        "Userland/Libraries/LibSystem",
+        "Userland/Services",
+        "Userland",
+        "Build/x86_64",
+        "Build/x86_64/Userland/Services",
+        "Build/x86_64/Userland/Libraries",
+        "Build/x86_64/Userland"
+    ]
+}
+```
+
+Note that the build directories are architecture-specific, so you may need to adjust them if the generated headers are different per architecture.

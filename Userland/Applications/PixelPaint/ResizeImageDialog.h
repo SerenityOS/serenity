@@ -7,7 +7,7 @@
 #pragma once
 
 #include <LibGUI/Dialog.h>
-#include <LibGfx/Painter.h>
+#include <LibGfx/ScalingMode.h>
 
 namespace PixelPaint {
 
@@ -16,14 +16,14 @@ class ResizeImageDialog final : public GUI::Dialog {
 
 public:
     Gfx::IntSize desired_size() const { return m_desired_size; }
-    Gfx::Painter::ScalingMode scaling_mode() const { return m_scaling_mode; }
+    Gfx::ScalingMode scaling_mode() const { return m_scaling_mode; }
     bool should_rescale() const { return m_rescale_image; }
 
 private:
     ResizeImageDialog(Gfx::IntSize starting_size, GUI::Window* parent_window);
 
     Gfx::IntSize m_desired_size;
-    Gfx::Painter::ScalingMode m_scaling_mode;
+    Gfx::ScalingMode m_scaling_mode;
     float m_starting_aspect_ratio;
     bool m_rescale_image;
 };

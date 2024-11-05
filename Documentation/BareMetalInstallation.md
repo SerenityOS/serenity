@@ -4,7 +4,6 @@
 
 Whilst it is possible to run Serenity on physical x86-compatible hardware, it is not yet ready to be used by non-technical users who aren't prepared to report bugs or assist with its development. For this reason, there are currently no pre-built install images so a bare-metal installation requires that you build an installation image from source. Current hardware support is extremely limited. Most successful hard disk installations have been on Pentium 4 era hardware but by network booting Serenity (which is no longer supported) users have been able to get it running on more modern hardware such as Core i5 machines.
 
-
 ## Hardware support and requirements
 
 Storage-wise Serenity requires a >= 2 GB parallel ATA or SATA disk for IDE/AHCI. Some older SATA chipsets already operate in IDE mode whilst some newer ones will depend upon adjusting a BIOS option to run your SATA controller in IDE (sometimes referred to as Legacy or PATA) mode. SATA AHCI is supported, but may not work on every controller due to bugs in the implementation.
@@ -53,7 +52,7 @@ If it happens to you that the system hangs, you should be able to see the last m
 an assertion or kernel panic. Depending on your hardware setup, the framebuffer could be 80x25 VGA text mode, or high resolution
 framebuffer with 8x8 font glyphs.
 
-You can force capable multiboot bootloaders to boot Serenity into high resolution mode by editing **Kernel/Arch/i386/Boot/boot.S** and 
+You can force capable multiboot bootloaders to boot Serenity into high resolution mode by editing **Kernel/Arch/i386/Boot/boot.S** and
 adding **| MULTIBOOT_VIDEO_MODE** to the end of the **multiboot_flags** before building Serenity.
 
 Setting a boot argument of `graphics_subsystem_mode=limited` will force the kernel to not initialize any framebuffer devices, hence allowing the system to boot into console-only mode as `SystemServer` will detect this condition and will not initialize `WindowServer`.

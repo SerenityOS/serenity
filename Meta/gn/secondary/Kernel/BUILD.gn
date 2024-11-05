@@ -107,6 +107,7 @@ write_cmake_config("kernel_debug_gen") {
     "WAITBLOCK_DEBUG=",
     "WAITQUEUE_DEBUG=",
     "XHCI_DEBUG=",
+    "USB_MASS_STORAGE_DEBUG=",
   ]
 }
 
@@ -507,7 +508,6 @@ executable("Kernel_bin") {
     "Devices/BlockDevice.cpp",
     "Devices/CharacterDevice.cpp",
     "Devices/Device.cpp",
-    "Devices/DeviceManagement.cpp",
     "Devices/GPU/Bochs/GraphicsAdapter.cpp",
     "Devices/GPU/Bochs/QEMUDisplayConnector.cpp",
     "Devices/GPU/Console/BootFramebufferConsole.cpp",
@@ -695,7 +695,7 @@ executable("Kernel_bin") {
     "Memory/SharedInodeVMObject.cpp",
     "Memory/VMObject.cpp",
     "Memory/VirtualRange.cpp",
-    "Net/IPv4/Socket.cpp",
+    "Net/IP/Socket.cpp",
     "Net/Intel/E1000ENetworkAdapter.cpp",
     "Net/Intel/E1000NetworkAdapter.cpp",
     "Net/LocalSocket.cpp",

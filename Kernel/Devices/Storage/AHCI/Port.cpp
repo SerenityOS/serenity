@@ -277,7 +277,7 @@ bool AHCIPort::initialize()
 
         // FIXME: We don't support ATAPI devices yet, so for now we don't "create" them
         if (!is_atapi_attached()) {
-            m_connected_device = ATADiskDevice::create(*m_parent_controller, { m_port_index, 0 }, 0, logical_sector_size, max_addressable_sector);
+            m_connected_device = MUST(ATADiskDevice::create(*m_parent_controller, { m_port_index, 0 }, 0, logical_sector_size, max_addressable_sector));
         } else {
             dbgln("AHCI Port {}: Ignoring ATAPI devices as we don't support them.", representative_port_index());
         }

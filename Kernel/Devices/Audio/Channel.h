@@ -13,7 +13,7 @@ namespace Kernel {
 class AudioController;
 class AudioChannel final
     : public CharacterDevice {
-    friend class DeviceManagement;
+    friend class Device;
 
 public:
     static ErrorOr<NonnullRefPtr<AudioChannel>> create(AudioController const&, size_t channel_index);

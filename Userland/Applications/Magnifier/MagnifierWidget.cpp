@@ -108,7 +108,7 @@ void MagnifierWidget::paint_event(GUI::PaintEvent& event)
         painter.fill_rect(frame_inner_rect, Gfx::Color::Black);
 
     if (m_grabbed_bitmap)
-        painter.draw_scaled_bitmap(bitmap_rect, *m_grabbed_bitmap, m_grabbed_bitmap->rect(), 1.0, Gfx::Painter::ScalingMode::NearestNeighbor);
+        painter.draw_scaled_bitmap(bitmap_rect, *m_grabbed_bitmap, m_grabbed_bitmap->rect(), 1.0, Gfx::ScalingMode::NearestNeighbor);
 
     if (m_show_grid) {
         int start_y = bitmap_rect.top();
@@ -132,15 +132,15 @@ void MagnifierWidget::second_paint_event(GUI::PaintEvent&)
 
     GUI::Painter painter(*this);
 
-    auto target = painter.target();
-    auto bitmap_clone_or_error = target->clone();
+    auto& target = painter.target();
+    auto bitmap_clone_or_error = target.clone();
     if (bitmap_clone_or_error.is_error())
         return;
 
     auto clone = bitmap_clone_or_error.release_value();
-    auto rect = target->rect();
+    auto rect = target.rect();
 
-    m_color_filter->apply(*target, rect, *clone, rect);
+    m_color_filter->apply(target, rect, *clone, rect);
 }
 
 void MagnifierWidget::mousemove_event(GUI::MouseEvent& event)

@@ -29,11 +29,14 @@ public:
     virtual Web::DevicePixelRect screen_rect() const override;
     virtual double device_pixels_per_css_pixel() const override;
     virtual Web::CSS::PreferredColorScheme preferred_color_scheme() const override;
+    virtual Web::CSS::PreferredContrast preferred_contrast() const override;
+    virtual Web::CSS::PreferredMotion preferred_motion() const override;
     virtual void paint_next_frame() override {};
     virtual void paint(Web::DevicePixelRect const&, Gfx::Bitmap&, Web::PaintOptions = {}) override;
     virtual void request_file(Web::FileRequest) override;
     virtual void schedule_repaint() override {};
     virtual bool is_ready_to_paint() const override { return true; }
+    virtual Web::DisplayListPlayerType display_list_player_type() const override { VERIFY_NOT_REACHED(); }
 
 private:
     explicit PageHost(ConnectionFromClient&);

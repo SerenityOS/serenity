@@ -27,6 +27,7 @@ public:
         LineTo,
         QuadraticBezierCurveTo,
         CubicBezierCurveTo,
+        ClosePath,
     };
 
     ALWAYS_INLINE Command command() const { return m_command; }
@@ -58,6 +59,8 @@ public:
             return 2; // Control point + point.
         case Command::CubicBezierCurveTo:
             return 3; // Two control points + point.
+        case Command::ClosePath:
+            return 0;
         }
         VERIFY_NOT_REACHED();
     }
@@ -206,7 +209,31 @@ public:
     void close();
     void close_all_subpaths();
 
-    Path stroke_to_fill(float thickness) const;
+    enum class CapStyle {
+        Butt,
+        Round,
+        Square,
+    };
+
+    enum class JoinStyle {
+        Miter,
+        Round,
+        Bevel,
+    };
+
+    struct StrokeStyle {
+        float thickness { 1 };
+        CapStyle cap_style { CapStyle::Round };
+        JoinStyle join_style { JoinStyle::Round };
+
+        // Only used for JoinStyle::Miter.
+        // The miter limit ratio is the maximum allowed ratio of the miter length to the stroke width. If the ratio is exceeded, the join is converted to a bevel join.
+        // The minimum angle at which this happens is 2 * arcsin(1 / miter_limit).
+        // The default value of 10 matches the PDF and <canvas> default value, which corresponds to 11.48 degrees.
+        // (SVG uses a default of 4, which corresponds to 28.96 degrees.)
+        float miter_limit { 10 };
+    };
+    Path stroke_to_fill(StrokeStyle const&) const;
 
     Path place_text_along(Utf8View text, Font const&) const;
 
@@ -221,6 +248,15 @@ public:
             VERIFY(m_split_lines.has_value());
         }
         return m_split_lines->lines;
+    }
+
+    ReadonlySpan<size_t> split_lines_subbpath_end_indices() const
+    {
+        if (!m_split_lines.has_value()) {
+            const_cast<Path*>(this)->segmentize_path();
+            VERIFY(m_split_lines.has_value());
+        }
+        return m_split_lines->subpath_end_indices;
     }
 
     Gfx::FloatRect const& bounding_box() const
@@ -284,6 +320,7 @@ private:
     struct SplitLines {
         Vector<FloatLine> lines;
         Gfx::FloatRect bounding_box;
+        Vector<size_t> subpath_end_indices;
     };
 
     Optional<SplitLines> m_split_lines {};

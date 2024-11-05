@@ -11,6 +11,7 @@
 #include <LibJS/Forward.h>
 
 namespace Web {
+class DragAndDropEventHandler;
 class EditEventHandler;
 class EventHandler;
 class LoadRequest;
@@ -24,7 +25,7 @@ class XMLDocumentBuilder;
 }
 
 namespace Web::Painting {
-class RecordingPainter;
+class DisplayListRecorder;
 class SVGGradientPaintStyle;
 using PaintStyle = RefPtr<SVGGradientPaintStyle>;
 }
@@ -99,23 +100,32 @@ class BackgroundSizeStyleValue;
 class BasicShapeStyleValue;
 class BorderRadiusStyleValue;
 class CSSAnimation;
+class CSSColorValue;
 class CSSConditionRule;
 class CSSFontFaceRule;
 class CSSGroupingRule;
+class CSSHSL;
+class CSSHWB;
 class CSSImportRule;
 class CSSKeyframeRule;
 class CSSKeyframesRule;
+class CSSKeywordValue;
+class CSSLayerBlockRule;
+class CSSLayerStatementRule;
+class CSSMathValue;
 class CSSMediaRule;
+class CSSOKLab;
+class CSSOKLCH;
+class CSSRGB;
 class CSSRule;
 class CSSRuleList;
 class CSSStyleDeclaration;
 class CSSStyleRule;
 class CSSStyleSheet;
 struct CSSStyleSheetInit;
+class CSSStyleValue;
 class CSSSupportsRule;
-class CalculatedStyleValue;
 class Clip;
-class ColorStyleValue;
 class ConicGradientStyleValue;
 class ContentStyleValue;
 class CounterStyleValue;
@@ -147,10 +157,7 @@ class GridTrackPlacement;
 class GridTrackPlacementStyleValue;
 class GridTrackSizeList;
 class GridTrackSizeListStyleValue;
-class IdentifierStyleValue;
 class ImageStyleValue;
-class InheritStyleValue;
-class InitialStyleValue;
 class IntegerOrCalculated;
 class IntegerStyleValue;
 class Length;
@@ -168,6 +175,7 @@ class MediaQueryListEvent;
 class Number;
 class NumberOrCalculated;
 class NumberStyleValue;
+class OpenTypeTaggedStyleValue;
 class ParsedFontFace;
 class Percentage;
 class PercentageOrCalculated;
@@ -181,7 +189,6 @@ class RectStyleValue;
 class Resolution;
 class ResolutionOrCalculated;
 class ResolutionStyleValue;
-class RevertStyleValue;
 class Screen;
 class ScreenOrientation;
 class ScrollbarGutterStyleValue;
@@ -194,7 +201,6 @@ class StyleComputer;
 class StyleProperties;
 class StyleSheet;
 class StyleSheetList;
-class StyleValue;
 class StyleValueList;
 class Supports;
 class SVGPaint;
@@ -207,12 +213,11 @@ class TransformationStyleValue;
 class TransitionStyleValue;
 class URLStyleValue;
 class UnresolvedStyleValue;
-class UnsetStyleValue;
 class VisualViewport;
 
+enum class Keyword;
 enum class MediaFeatureID;
 enum class PropertyID;
-enum class ValueID;
 
 struct BackgroundLayerData;
 }
@@ -326,6 +331,7 @@ struct Header;
 namespace Web::FileAPI {
 class Blob;
 class File;
+class FileList;
 }
 
 namespace Web::Geometry {
@@ -355,11 +361,15 @@ class CloseWatcher;
 class CloseWatcherManager;
 class CustomElementDefinition;
 class CustomElementRegistry;
+class DataTransfer;
+class DataTransferItem;
+class DataTransferItemList;
 class DecodedImageData;
 class DocumentState;
 class DOMParser;
 class DOMStringList;
 class DOMStringMap;
+class DragDataStore;
 class DragEvent;
 class ElementInternals;
 struct EmbedderPolicy;
@@ -472,7 +482,9 @@ class Plugin;
 class PluginArray;
 class PromiseRejectionEvent;
 class SelectedFile;
-class SharedImageRequest;
+class ServiceWorkerContainer;
+class ServiceWorkerRegistration;
+class SharedResourceRequest;
 class Storage;
 class SubmitEvent;
 class TextMetrics;
@@ -580,6 +592,7 @@ class MimeType;
 }
 
 namespace Web::NavigationTiming {
+class PerformanceNavigation;
 class PerformanceTiming;
 }
 
@@ -661,6 +674,11 @@ struct ReadableStreamGetReaderOptions;
 struct Transformer;
 struct UnderlyingSink;
 struct UnderlyingSource;
+}
+
+namespace Web::StorageAPI {
+class NavigatorStorage;
+class StorageManager;
 }
 
 namespace Web::SVG {

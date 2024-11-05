@@ -25,6 +25,8 @@ ErrorOr<Utf16Data> utf8_to_utf16(Utf8View const&);
 ErrorOr<Utf16Data> utf32_to_utf16(Utf32View const&);
 ErrorOr<void> code_point_to_utf16(Utf16Data&, u32);
 
+size_t utf16_code_unit_length_from_utf8(StringView);
+
 class Utf16View;
 
 class Utf16CodePointIterator {

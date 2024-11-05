@@ -9,9 +9,10 @@ unshared resources such as PIDs, filesystem view and hostname.
 ## Containers on the kernel side
 
 The kernel currently exposes 3 types of possible isolation mechanisms:
-- VFS Root contexts
-- Process lists
-- Hostname contexts
+
+-   VFS Root contexts
+-   Process lists
+-   Hostname contexts
 
 ### VFS Root Contexts
 
@@ -54,14 +55,15 @@ from it.
 ## Kernel-Userspace interfaces
 
 There are 2 main syscalls to handle resource isolation:
-- `unshare_create` which creates a new isolation mechanism and returns
-  an index number for a specified isolation type. 
-- `unshare_attach` which attach the user process based on the index number
-  and isolation type.
+
+-   `unshare_create` which creates a new isolation mechanism and returns
+    an index number for a specified isolation type.
+-   `unshare_attach` which attach the user process based on the index number
+    and isolation type.
 
 ## Jails as a security mechanism
 
-When the user process is jailed, it can't create or attach to other resources.
+When the user process is jailed **until exit**, it can't create or attach to other resources.
 This makes jails as an effective mechanism to create secure (sandboxed) containers,
 so a user program and its descendants will always use the same resources that
 were chosen upon the creation of the container.

@@ -488,7 +488,7 @@ void paint_outer_box_shadow(Gfx::Painter& painter, PaintBoxShadowParams params)
     // FIXME: Could reduce the shadow paints from 8 to 4 for shadows with all corner radii 50%.
 
     // FIXME: We use this since we want the clip rect to include everything after a certain x or y.
-    // Note: Using painter.target()->width() or height() does not work, when the painter is a small
+    // Note: Using painter.target().width() or height() does not work, when the painter is a small
     // translated bitmap rather than full screen, as the clip rect may not intersect.
     constexpr auto really_large_number = NumericLimits<int>::max() / 2;
 
@@ -569,33 +569,27 @@ void paint_box_shadow(PaintContext& context,
             auto shrinked_border_radii = border_radii;
             shrinked_border_radii.shrink(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
             ScopedCornerRadiusClip corner_clipper { context, device_content_rect, shrinked_border_radii, CornerClip::Outside };
-            context.recording_painter().paint_inner_box_shadow_params(params);
+            context.display_list_recorder().paint_inner_box_shadow_params(params);
         } else {
             ScopedCornerRadiusClip corner_clipper { context, device_content_rect, border_radii, CornerClip::Inside };
-            context.recording_painter().paint_outer_box_shadow_params(params);
+            context.display_list_recorder().paint_outer_box_shadow_params(params);
         }
     }
 }
 
 void paint_text_shadow(PaintContext& context, PaintableFragment const& fragment, Vector<ShadowData> const& shadow_layers)
 {
-    if (shadow_layers.is_empty() || fragment.glyph_run().is_empty())
+    if (shadow_layers.is_empty())
+        return;
+
+    auto glyph_run = fragment.glyph_run();
+    if (!glyph_run || glyph_run->glyphs().is_empty())
         return;
 
     auto fragment_width = context.enclosing_device_pixels(fragment.width()).value();
     auto fragment_height = context.enclosing_device_pixels(fragment.height()).value();
     auto draw_rect = context.enclosing_device_rect(fragment.absolute_rect()).to_type<int>();
     auto fragment_baseline = context.rounded_device_pixels(fragment.baseline()).value();
-
-    Vector<Gfx::DrawGlyphOrEmoji> scaled_glyph_run;
-    scaled_glyph_run.ensure_capacity(fragment.glyph_run().glyphs().size());
-    for (auto glyph : fragment.glyph_run().glyphs()) {
-        glyph.visit([&](auto& glyph) {
-            glyph.font = glyph.font->with_size(glyph.font->point_size() * static_cast<float>(context.device_pixels_per_css_pixel()));
-            glyph.position = glyph.position.scaled(context.device_pixels_per_css_pixel());
-        });
-        scaled_glyph_run.append(move(glyph));
-    }
 
     // Note: Box-shadow layers are ordered front-to-back, so we paint them in reverse
     for (auto& layer : shadow_layers.in_reverse()) {
@@ -620,7 +614,7 @@ void paint_text_shadow(PaintContext& context, PaintableFragment const& fragment,
             draw_rect.y() + offset_y - margin
         };
 
-        context.recording_painter().paint_text_shadow(blur_radius, bounding_rect, text_rect, scaled_glyph_run, layer.color, fragment_baseline, draw_location);
+        context.display_list_recorder().paint_text_shadow(blur_radius, bounding_rect, text_rect.translated(0, fragment_baseline), *glyph_run, context.device_pixels_per_css_pixel(), layer.color, draw_location);
     }
 }
 

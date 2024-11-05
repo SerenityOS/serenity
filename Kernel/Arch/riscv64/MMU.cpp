@@ -142,10 +142,10 @@ static UNMAP_AFTER_INIT void insert_entries_for_memory_range(PageBumpAllocator& 
 
 static UNMAP_AFTER_INIT void setup_quickmap_page_table(PageBumpAllocator& allocator, u64* root_table)
 {
-    auto kernel_pt1024_base = VirtualAddress { *adjust_by_mapping_base(&kernel_mapping_base) + KERNEL_PT1024_OFFSET };
+    auto kernel_pt1024_base = VirtualAddress { *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) + KERNEL_PT1024_OFFSET };
 
     auto quickmap_page_table = PhysicalAddress { bit_cast<PhysicalPtr>(insert_page_table(allocator, root_table, kernel_pt1024_base)) };
-    *adjust_by_mapping_base(&boot_pd_kernel_pt1023) = bit_cast<PageTableEntry*>(quickmap_page_table.offset(calculate_physical_to_link_time_address_offset()).get());
+    *adjust_by_mapping_base(&g_boot_info.boot_pd_kernel_pt1023) = bit_cast<PageTableEntry*>(quickmap_page_table.offset(calculate_physical_to_link_time_address_offset()).get());
 }
 
 static UNMAP_AFTER_INIT void build_mappings(PageBumpAllocator& allocator, u64* root_table)
@@ -163,16 +163,16 @@ static UNMAP_AFTER_INIT void build_mappings(PageBumpAllocator& allocator, u64* r
 
 static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
 {
-    auto kernel_page_directory = bit_cast<PhysicalPtr>(get_page_directory(root_table, VirtualAddress { *adjust_by_mapping_base(&kernel_mapping_base) }));
+    auto kernel_page_directory = bit_cast<PhysicalPtr>(get_page_directory(root_table, VirtualAddress { *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) }));
     if (kernel_page_directory == 0)
         panic_without_mmu("Could not find kernel page directory!"sv);
 
-    *adjust_by_mapping_base(&boot_pd_kernel) = PhysicalAddress { kernel_page_directory };
+    *adjust_by_mapping_base(&g_boot_info.boot_pd_kernel) = PhysicalAddress { kernel_page_directory };
 
     // There is no level 4 table in Sv39
-    *adjust_by_mapping_base(&boot_pml4t) = PhysicalAddress { 0 };
+    *adjust_by_mapping_base(&g_boot_info.boot_pml4t) = PhysicalAddress { 0 };
 
-    *adjust_by_mapping_base(&boot_pdpt) = PhysicalAddress { bit_cast<PhysicalPtr>(root_table) };
+    *adjust_by_mapping_base(&g_boot_info.boot_pdpt) = PhysicalAddress { bit_cast<PhysicalPtr>(root_table) };
 }
 
 // This function has to fit into one page as it will be identity mapped.
@@ -221,17 +221,17 @@ static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
     VERIFY_NOT_REACHED();
 }
 
-[[noreturn]] UNMAP_AFTER_INIT void init_page_tables_and_jump_to_init(FlatPtr mhartid, PhysicalPtr fdt_phys_addr)
+[[noreturn]] UNMAP_AFTER_INIT void init_page_tables_and_jump_to_init(FlatPtr boot_hart_id, PhysicalPtr flattened_devicetree_paddr)
 {
     if (RISCV64::CSR::SATP::read().MODE != RISCV64::CSR::SATP::Mode::Bare)
         panic_without_mmu("Kernel booted with MMU enabled"sv);
 
-    ::DeviceTree::FlattenedDeviceTreeHeader* fdt_header = bit_cast<::DeviceTree::FlattenedDeviceTreeHeader*>(fdt_phys_addr);
+    ::DeviceTree::FlattenedDeviceTreeHeader* fdt_header = bit_cast<::DeviceTree::FlattenedDeviceTreeHeader*>(flattened_devicetree_paddr);
     if (fdt_header->magic != 0xd00dfeed)
         panic_without_mmu("Invalid FDT passed"sv);
 
     // Copy the FDT to a known location
-    u8* fdt_storage = bit_cast<u8*>(fdt_phys_addr);
+    u8* fdt_storage = bit_cast<u8*>(flattened_devicetree_paddr);
     if (fdt_header->totalsize > DeviceTree::fdt_storage_size)
         panic_without_mmu("Passed FDT is bigger than the internal storage"sv);
     for (size_t o = 0; o < fdt_header->totalsize; o += 1) {
@@ -239,11 +239,14 @@ static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
         adjust_by_mapping_base(DeviceTree::s_fdt_storage)[o] = fdt_storage[o];
     }
 
-    *adjust_by_mapping_base(&physical_to_virtual_offset) = calculate_physical_to_link_time_address_offset();
-    *adjust_by_mapping_base(&kernel_mapping_base) = KERNEL_MAPPING_BASE;
-    *adjust_by_mapping_base(&kernel_load_base) = KERNEL_MAPPING_BASE;
+    *adjust_by_mapping_base(&g_boot_info.boot_method) = BootMethod::PreInit;
 
-    *adjust_by_mapping_base(&s_boot_info) = { .mhartid = mhartid, .fdt_phys_addr = fdt_phys_addr };
+    *adjust_by_mapping_base(&g_boot_info.flattened_devicetree_paddr) = PhysicalAddress { flattened_devicetree_paddr };
+    *adjust_by_mapping_base(&g_boot_info.physical_to_virtual_offset) = calculate_physical_to_link_time_address_offset();
+    *adjust_by_mapping_base(&g_boot_info.kernel_mapping_base) = KERNEL_MAPPING_BASE;
+    *adjust_by_mapping_base(&g_boot_info.kernel_load_base) = KERNEL_MAPPING_BASE;
+
+    *adjust_by_mapping_base(&g_boot_info.arch_specific.boot_hart_id) = boot_hart_id;
 
     PageBumpAllocator allocator(adjust_by_mapping_base(reinterpret_cast<u64*>(page_tables_phys_start)), adjust_by_mapping_base(reinterpret_cast<u64*>(page_tables_phys_end)));
     auto* root_table = allocator.take_page();
@@ -267,7 +270,7 @@ static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
         .MODE = RISCV64::CSR::SATP::Mode::Sv39,
     };
 
-    enable_paging(s_boot_info, bit_cast<FlatPtr>(satp), &enable_paging_level0_table[enable_paging_vpn_0]);
+    enable_paging(g_boot_info, bit_cast<FlatPtr>(satp), &enable_paging_level0_table[enable_paging_vpn_0]);
 }
 
 }

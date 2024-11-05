@@ -326,7 +326,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
 {
-    auto* rx_descriptors = (e1000_tx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
+    auto* rx_descriptors = (e1000_rx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
     constexpr auto rx_buffer_page_count = rx_buffer_size / PAGE_SIZE;
     for (size_t i = 0; i < number_of_rx_descriptors; ++i) {
         auto& descriptor = rx_descriptors[i];
@@ -432,7 +432,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
 
 void E1000NetworkAdapter::receive()
 {
-    auto* rx_descriptors = (e1000_tx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
+    auto* rx_descriptors = (e1000_rx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
     u32 rx_current;
     for (;;) {
         rx_current = in32(REG_RXDESCTAIL) % number_of_rx_descriptors;

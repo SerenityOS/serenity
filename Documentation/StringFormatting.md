@@ -37,13 +37,13 @@ ByteString::formatted("{0:.4}", "cool dude") == "cool";
 
 In order, the format can contain:
 
-- Fill character and alignment
-- Sign
-- `#` Hash
-- `0` Zero
-- Width
-- Precision
-- Type specifier
+-   Fill character and alignment
+-   Sign
+-   `#` Hash
+-   `0` Zero
+-   Width
+-   Precision
+-   Type specifier
 
 Each of these is optional. You can include any combination of them, but they must be in this order.
 
@@ -55,15 +55,15 @@ space. (` `)
 
 The alignment characters are:
 
-- `<`: Align left.
-- `>`: Align right.
-- `^`: Align centered.
+-   `<`: Align left.
+-   `>`: Align right.
+-   `^`: Align centered.
 
 ### Sign
 
-- `+`: Always display a sign before the number.
-- `-`: Display a sign for negative numbers only.
-- (space): Display a sign for negative numbers, and a leading space for other numbers.
+-   `+`: Always display a sign before the number.
+-   `-`: Display a sign for negative numbers only.
+-   (space): Display a sign for negative numbers, and a leading space for other numbers.
 
 ### Hash
 
@@ -71,9 +71,9 @@ The alignment characters are:
 
 For integer types, this adds the number-base prefix after the sign:
 
-- `0b` for binary.
-- `0` for octal.
-- `0x` for hexadecimal.
+-   `0b` for binary.
+-   `0` for octal.
+-   `0x` for hexadecimal.
 
 ### Zero
 
@@ -89,22 +89,22 @@ allows you to use an integer argument instead of a hard-coded number.
 
 ### Type specifiers
 
-| Type      | Effect                | Example output           |
-|-----------|-----------------------|--------------------------|
-| *nothing* | default format        | Anything! :^)            |
-| b         | binary                | `110`, `0b000110`        |
-| B         | binary uppercase      | `110`, `0B000110`        |
-| d         | decimal               | `42`, `+0000042`         |
-| o         | octal                 | `043`                    |
-| x         | hexadecimal           | `ff0`, `0x00000ff0`      |
-| X         | hexadecimal uppercase | `FF0`, `0X00000FF0`      |
-| c         | character             | `a`                      |
-| s         | string                | `well, hello friends!`   |
-| p         | pointer               | `0xdeadc0de`             |
-| f         | float                 | `1.234`, `-inf`          |
-| a         | hex float             |                          |
-| A         | hex float uppercase   |                          |
-| hex-dump  | hexadecimal dump      | `fdfdfdfd`, `3030    00` |
+| Type      | Effect                | Example output         |
+| --------- | --------------------- | ---------------------- |
+| _nothing_ | default format        | Anything! :^)          |
+| b         | binary                | `110`, `0b000110`      |
+| B         | binary uppercase      | `110`, `0B000110`      |
+| d         | decimal               | `42`, `+0000042`       |
+| o         | octal                 | `043`                  |
+| x         | hexadecimal           | `ff0`, `0x00000ff0`    |
+| X         | hexadecimal uppercase | `FF0`, `0X00000FF0`    |
+| c         | character             | `a`                    |
+| s         | string                | `well, hello friends!` |
+| p         | pointer               | `0xdeadc0de`           |
+| f         | float                 | `1.234`, `-inf`        |
+| a         | hex float             |                        |
+| A         | hex float uppercase   |                        |
+| hex-dump  | hexadecimal dump      | `fdfdfdfd`, `3030 00`  |
 
 Not all type specifiers are compatible with all input types, of course.
 

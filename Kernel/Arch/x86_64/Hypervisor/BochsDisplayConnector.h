@@ -19,15 +19,15 @@ namespace Kernel {
 class BochsDisplayConnector
     : public DisplayConnector {
     friend class BochsGraphicsAdapter;
-    friend class DeviceManagement;
+    friend class Device;
     friend class GraphicsManagement;
 
 public:
     AK_TYPEDEF_DISTINCT_ORDERED_ID(u16, IndexID);
 
-    static LockRefPtr<BochsDisplayConnector> try_create_for_vga_isa_connector();
+    static ErrorOr<NonnullRefPtr<BochsDisplayConnector>> try_create_for_vga_isa_connector();
 
-    static NonnullLockRefPtr<BochsDisplayConnector> must_create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware);
+    static ErrorOr<NonnullRefPtr<BochsDisplayConnector>> create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware);
 
 private:
     IndexID index_id() const;

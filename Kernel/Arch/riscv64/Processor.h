@@ -189,9 +189,14 @@ ALWAYS_INLINE Thread* ProcessorBase<T>::current_thread()
 template<typename T>
 ALWAYS_INLINE void ProcessorBase<T>::pause()
 {
-    // FIXME: Use the pause instruction directly (via .option arch, +zihintpause)
-    //        when we upgrade our toolchain to clang 17
-    asm volatile(".word 0x0100000f");
+    // PAUSE is a HINT defined by the Zihintpause extension.
+    // We don't have to check if that extension is supported, since HINTs effectively behave like NOPs if they are not implemented.
+    asm volatile(R"(
+        .option push
+        .option arch, +zihintpause
+            pause
+        .option pop
+    )" :);
 }
 
 template<typename T>

@@ -11,7 +11,6 @@
 #include <LibWeb/HTML/DecodedImageData.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/HTML/ImageRequest.h>
-#include <LibWeb/Layout/ImageBox.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/ImagePaintable.h>
 #include <LibWeb/Platform/FontPlugin.h>
@@ -20,17 +19,23 @@ namespace Web::Painting {
 
 JS_DEFINE_ALLOCATOR(ImagePaintable);
 
+JS::NonnullGCPtr<ImagePaintable> ImagePaintable::create(Layout::SVGImageBox const& layout_box)
+{
+    return layout_box.heap().allocate_without_realm<ImagePaintable>(layout_box, layout_box.dom_node(), false, String {}, true);
+}
+
 JS::NonnullGCPtr<ImagePaintable> ImagePaintable::create(Layout::ImageBox const& layout_box)
 {
     auto alt = layout_box.dom_node().get_attribute_value(HTML::AttributeNames::alt);
-    return layout_box.heap().allocate_without_realm<ImagePaintable>(layout_box, move(alt));
+    return layout_box.heap().allocate_without_realm<ImagePaintable>(layout_box, layout_box.image_provider(), layout_box.renders_as_alt_text(), move(alt), false);
 }
 
-ImagePaintable::ImagePaintable(Layout::ImageBox const& layout_box, String alt_text)
+ImagePaintable::ImagePaintable(Layout::Box const& layout_box, Layout::ImageProvider const& image_provider, bool renders_as_alt_text, String alt_text, bool is_svg_image)
     : PaintableBox(layout_box)
-    , m_renders_as_alt_text(layout_box.renders_as_alt_text())
+    , m_renders_as_alt_text(renders_as_alt_text)
     , m_alt_text(move(alt_text))
-    , m_image_provider(layout_box.image_provider())
+    , m_image_provider(image_provider)
+    , m_is_svg_image(is_svg_image)
 {
     const_cast<DOM::Document&>(layout_box.document()).register_viewport_client(*this);
 }
@@ -50,11 +55,6 @@ void ImagePaintable::finalize()
     document().unregister_viewport_client(*this);
 }
 
-Layout::ImageBox const& ImagePaintable::layout_box() const
-{
-    return static_cast<Layout::ImageBox const&>(layout_node());
-}
-
 void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
 {
     if (!is_visible())
@@ -66,8 +66,8 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
         auto image_rect = context.rounded_device_rect(absolute_rect());
         if (m_renders_as_alt_text) {
             auto enclosing_rect = context.enclosing_device_rect(absolute_rect()).to_type<int>();
-            context.recording_painter().draw_rect(enclosing_rect, Gfx::Color::Black);
-            context.recording_painter().draw_text(enclosing_rect, m_alt_text, Platform::FontPlugin::the().default_font(), Gfx::TextAlignment::Center, computed_values().color(), Gfx::TextElision::Right);
+            context.display_list_recorder().draw_rect(enclosing_rect, Gfx::Color::Black);
+            context.display_list_recorder().draw_text(enclosing_rect, m_alt_text, Platform::FontPlugin::the().default_font(), Gfx::TextAlignment::Center, computed_values().color());
         } else if (auto bitmap = m_image_provider.current_image_bitmap(image_rect.size().to_type<int>())) {
             ScopedCornerRadiusClip corner_clip { context, image_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
             auto image_int_rect = image_rect.to_type<int>();
@@ -80,7 +80,8 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             auto scale_y = 0.0f;
             Gfx::IntRect bitmap_intersect = bitmap_rect;
 
-            switch (computed_values().object_fit()) {
+            auto object_fit = m_is_svg_image ? CSS::ObjectFit::Contain : computed_values().object_fit();
+            switch (object_fit) {
             case CSS::ObjectFit::Fill:
                 scale_x = (float)image_int_rect.width() / bitmap_rect.width();
                 scale_y = (float)image_int_rect.height() / bitmap_rect.height();
@@ -151,7 +152,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
                 (int)scaled_bitmap_height
             };
 
-            context.recording_painter().draw_scaled_immutable_bitmap(draw_rect.intersected(image_int_rect), *bitmap, bitmap_rect.intersected(bitmap_intersect), scaling_mode);
+            context.display_list_recorder().draw_scaled_immutable_bitmap(draw_rect.intersected(image_int_rect), *bitmap, bitmap_rect.intersected(bitmap_intersect), scaling_mode);
         }
     }
 }

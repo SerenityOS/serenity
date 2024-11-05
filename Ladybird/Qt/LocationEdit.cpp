@@ -19,7 +19,10 @@ namespace Ladybird {
 LocationEdit::LocationEdit(QWidget* parent)
     : QLineEdit(parent)
 {
-    setPlaceholderText("Search or enter web address");
+    update_placeholder();
+    QObject::connect(Settings::the(), &Settings::enable_search_changed, this, &LocationEdit::update_placeholder);
+    QObject::connect(Settings::the(), &Settings::search_engine_changed, this, &LocationEdit::update_placeholder);
+
     m_autocomplete = make<AutoComplete>(this);
     this->setCompleter(m_autocomplete);
 
@@ -37,7 +40,7 @@ LocationEdit::LocationEdit(QWidget* parent)
         auto query = ak_string_from_qstring(text());
 
         if (auto url = WebView::sanitize_url(query, search_engine_url); url.has_value())
-            setText(qstring_from_ak_string(url->serialize()));
+            set_url(url.release_value());
     });
 
     connect(this, &QLineEdit::textEdited, [this] {
@@ -65,7 +68,22 @@ void LocationEdit::focusInEvent(QFocusEvent* event)
 void LocationEdit::focusOutEvent(QFocusEvent* event)
 {
     QLineEdit::focusOutEvent(event);
+    if (m_url_is_hidden) {
+        m_url_is_hidden = false;
+        if (text().isEmpty())
+            setText(qstring_from_ak_string(m_url.serialize()));
+    }
     highlight_location();
+}
+
+void LocationEdit::update_placeholder()
+{
+    if (Settings::the()->enable_search())
+        setPlaceholderText(qstring_from_ak_string(
+            MUST(String::formatted("Search with {} or enter web address",
+                Settings::the()->search_engine().name))));
+    else
+        setPlaceholderText("Enter web address");
 }
 
 void LocationEdit::highlight_location()
@@ -107,6 +125,16 @@ void LocationEdit::highlight_location()
 
     QInputMethodEvent event(QString(), attributes);
     QCoreApplication::sendEvent(this, &event);
+}
+
+void LocationEdit::set_url(URL::URL const& url)
+{
+    m_url = url;
+    if (m_url_is_hidden) {
+        clear();
+    } else {
+        setText(qstring_from_ak_string(url.serialize()));
+    }
 }
 
 }

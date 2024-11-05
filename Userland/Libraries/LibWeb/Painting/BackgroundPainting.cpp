@@ -62,11 +62,16 @@ static Vector<Gfx::Path> compute_text_clip_paths(PaintContext& context, Paintabl
 {
     Vector<Gfx::Path> text_clip_paths;
     auto add_text_clip_path = [&](PaintableFragment const& fragment) {
+        auto glyph_run = fragment.glyph_run();
+        if (!glyph_run || glyph_run->glyphs().is_empty())
+            return;
         // Scale to the device pixels.
         Gfx::Path glyph_run_path;
-        for (auto glyph : fragment.glyph_run().glyphs()) {
+        auto const& font = fragment.glyph_run()->font();
+        auto resized_font = font.with_size(font.point_size() * static_cast<float>(context.device_pixels_per_css_pixel()));
+        auto const* scaled_font = static_cast<Gfx::ScaledFont const*>(resized_font.ptr());
+        for (auto glyph : fragment.glyph_run()->glyphs()) {
             glyph.visit([&](auto& glyph) {
-                glyph.font = glyph.font->with_size(glyph.font->point_size() * static_cast<float>(context.device_pixels_per_css_pixel()));
                 glyph.position = glyph.position.scaled(context.device_pixels_per_css_pixel());
             });
 
@@ -75,13 +80,12 @@ static Vector<Gfx::Path> compute_text_clip_paths(PaintContext& context, Paintabl
 
                 // Get the path for the glyph.
                 Gfx::Path glyph_path;
-                auto const& scaled_font = static_cast<Gfx::ScaledFont const&>(*draw_glyph.font);
-                auto glyph_id = scaled_font.glyph_id_for_code_point(draw_glyph.code_point);
-                scaled_font.append_glyph_path_to(glyph_path, glyph_id);
+                auto glyph_id = scaled_font->glyph_id_for_code_point(draw_glyph.code_point);
+                scaled_font->append_glyph_path_to(glyph_path, glyph_id);
 
                 // Transform the path to the fragment's position.
                 // FIXME: Record glyphs and use Painter::draw_glyphs() instead to avoid this duplicated code.
-                auto top_left = draw_glyph.position + Gfx::FloatPoint(scaled_font.glyph_left_bearing(draw_glyph.code_point), 0);
+                auto top_left = draw_glyph.position + Gfx::FloatPoint(scaled_font->glyph_left_bearing(draw_glyph.code_point), 0);
                 auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(top_left);
                 auto transform = Gfx::AffineTransform {}.translate(glyph_position.blit_position.to_type<float>());
                 glyph_run_path.append_path(glyph_path.copy_transformed(transform));
@@ -126,7 +130,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         clip_paths = compute_text_clip_paths(context, *layout_node.paintable());
     }
 
-    auto& painter = context.recording_painter();
+    auto& display_list_recorder = context.display_list_recorder();
 
     struct BackgroundBox {
         CSSPixelRect rect;
@@ -181,7 +185,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
         }
     }
 
-    painter.fill_rect_with_rounded_corners(
+    display_list_recorder.fill_rect_with_rounded_corners(
         context.rounded_device_rect(color_box.rect).to_type<int>(),
         background_color,
         color_box.radii.top_left.as_corner(context),
@@ -217,14 +221,14 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
     for (auto& layer : background_layers->in_reverse()) {
         if (!layer_is_paintable(layer))
             continue;
-        RecordingPainterStateSaver state { painter };
+        DisplayListRecorderStateSaver state { display_list_recorder };
 
         // Clip
         auto clip_box = get_box(layer.clip);
 
         CSSPixelRect const& css_clip_rect = clip_box.rect;
         auto clip_rect = context.rounded_device_rect(css_clip_rect);
-        painter.add_clip_rect(clip_rect.to_type<int>());
+        display_list_recorder.add_clip_rect(clip_rect.to_type<int>());
         ScopedCornerRadiusClip corner_clip { context, clip_rect, clip_box.radii };
 
         if (layer.clip == CSS::BackgroundBox::BorderBox) {
@@ -452,7 +456,7 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
                     fill_rect = fill_rect->united(image_device_rect);
                 }
             });
-            painter.fill_rect(fill_rect->to_type<int>(), color.value(), clip_paths);
+            display_list_recorder.fill_rect(fill_rect->to_type<int>(), color.value(), clip_paths);
         } else {
             for_each_image_device_rect([&](auto const& image_device_rect) {
                 image.paint(context, image_device_rect, image_rendering, clip_paths);

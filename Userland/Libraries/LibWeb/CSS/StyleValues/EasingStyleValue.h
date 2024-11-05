@@ -10,7 +10,7 @@
 
 #pragma once
 
-#include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/CSSStyleValue.h>
 
 namespace Web::CSS {
 
@@ -91,7 +91,7 @@ public:
     bool properties_equal(EasingStyleValue const& other) const { return m_function == other.m_function; }
 
 private:
-    EasingStyleValue(Function function)
+    EasingStyleValue(Function const& function)
         : StyleValueWithDefaultOperators(Type::Easing)
         , m_function(function)
     {

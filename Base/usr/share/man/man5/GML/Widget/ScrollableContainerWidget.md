@@ -27,7 +27,7 @@ Content declared as `content_widget` property.
 ## Registered Properties
 
 | Property                           | Type          | Possible values        | Description                                 |
-|------------------------------------|---------------|------------------------|---------------------------------------------|
+| ---------------------------------- | ------------- | ---------------------- | ------------------------------------------- |
 | ~~layout~~                         |               | none                   | Does not take layout                        |
 | scrollbars_enabled                 | bool          | true or false          | Status of scrollbar                         |
 | should_hide_unnecessary_scrollbars | bool          | true or false          | Whether to hide scrollbars when unnecessary |

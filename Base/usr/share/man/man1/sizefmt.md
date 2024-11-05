@@ -16,7 +16,7 @@ suffixes (KB for Kilobytes, or KiB for Kibibytes, for example).
 
 ## Arguments
 
-* `integer-with-suffix`: a number with a suffix (possibly).
+-   `integer-with-suffix`: a number with a suffix (possibly).
 
 ## Examples
 

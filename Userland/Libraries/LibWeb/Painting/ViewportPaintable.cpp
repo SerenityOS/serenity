@@ -61,7 +61,7 @@ void ViewportPaintable::build_stacking_context_tree()
 void ViewportPaintable::paint_all_phases(PaintContext& context)
 {
     build_stacking_context_tree_if_needed();
-    context.recording_painter().translate(-context.device_viewport_rect().location().to_type<int>());
+    context.display_list_recorder().translate(-context.device_viewport_rect().location().to_type<int>());
     stacking_context()->paint(context);
 }
 
@@ -232,18 +232,10 @@ void ViewportPaintable::recompute_selection_states()
 
         // 2. If it's a text node, mark it as StartAndEnd and return.
         if (is<DOM::Text>(*start_container)) {
-            if (auto* paintable = start_container->paintable()) {
+            if (auto* paintable = start_container->paintable())
                 paintable->set_selection_state(SelectionState::StartAndEnd);
-            }
             return;
         }
-    }
-
-    if (start_container == end_container && is<DOM::Text>(*start_container)) {
-        if (auto* paintable = start_container->paintable()) {
-            paintable->set_selection_state(SelectionState::StartAndEnd);
-        }
-        return;
     }
 
     // 4. Mark the selection start node as Start (if text) or Full (if anything else).

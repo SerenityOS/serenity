@@ -32,6 +32,34 @@ Optional<SelectorList> Parser::parse_as_relative_selector(SelectorParsingMode pa
     return {};
 }
 
+Optional<Selector::PseudoElement> Parser::parse_as_pseudo_element_selector()
+{
+    // FIXME: This is quite janky. Selector parsing is not at all designed to allow parsing just a single part of a selector.
+    //        So, this code parses a whole selector, then rejects it if it's not a single pseudo-element simple selector.
+    //        Come back and fix this, future Sam!
+    auto maybe_selector_list = parse_a_selector_list(m_token_stream, SelectorType::Standalone, SelectorParsingMode::Standard);
+    if (maybe_selector_list.is_error())
+        return {};
+    auto& selector_list = maybe_selector_list.value();
+
+    if (selector_list.size() != 1)
+        return {};
+    auto& selector = selector_list.first();
+
+    if (selector->compound_selectors().size() != 1)
+        return {};
+    auto& first_compound_selector = selector->compound_selectors().first();
+
+    if (first_compound_selector.simple_selectors.size() != 1)
+        return {};
+    auto& simple_selector = first_compound_selector.simple_selectors.first();
+
+    if (simple_selector.type != Selector::SimpleSelector::Type::PseudoElement)
+        return {};
+
+    return simple_selector.pseudo_element();
+}
+
 template<typename T>
 Parser::ParseErrorOr<SelectorList> Parser::parse_a_selector_list(TokenStream<T>& tokens, SelectorType mode, SelectorParsingMode parsing_mode)
 {
@@ -538,16 +566,16 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
         case PseudoClassMetadata::ParameterType::Ident: {
             auto function_token_stream = TokenStream(pseudo_function.values());
             function_token_stream.skip_whitespace();
-            auto maybe_ident_token = function_token_stream.next_token();
+            auto maybe_keyword_token = function_token_stream.next_token();
             function_token_stream.skip_whitespace();
-            if (!maybe_ident_token.is(Token::Type::Ident) || function_token_stream.has_next_token()) {
-                dbgln_if(CSS_PARSER_DEBUG, "Failed to parse :{}() parameter as an ident: not an ident", pseudo_function.name());
+            if (!maybe_keyword_token.is(Token::Type::Ident) || function_token_stream.has_next_token()) {
+                dbgln_if(CSS_PARSER_DEBUG, "Failed to parse :{}() parameter as a keyword: not an ident", pseudo_function.name());
                 return ParseError::SyntaxError;
             }
 
-            auto maybe_ident = value_id_from_string(maybe_ident_token.token().ident());
-            if (!maybe_ident.has_value()) {
-                dbgln_if(CSS_PARSER_DEBUG, "Failed to parse :{}() parameter as an ident: unrecognized ident", pseudo_function.name());
+            auto maybe_keyword = keyword_from_string(maybe_keyword_token.token().ident());
+            if (!maybe_keyword.has_value()) {
+                dbgln_if(CSS_PARSER_DEBUG, "Failed to parse :{}() parameter as a keyword: unrecognized keyword", pseudo_function.name());
                 return ParseError::SyntaxError;
             }
 
@@ -555,7 +583,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
                 .type = Selector::SimpleSelector::Type::PseudoClass,
                 .value = Selector::SimpleSelector::PseudoClassSelector {
                     .type = pseudo_class,
-                    .identifier = maybe_ident.value() }
+                    .keyword = maybe_keyword.value() }
             };
         }
         case PseudoClassMetadata::ParameterType::LanguageRanges: {
