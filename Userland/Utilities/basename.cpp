@@ -17,6 +17,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView suffix;
 
     Core::ArgsParser args_parser;
+    args_parser.set_general_help("Return the filename portion of the given path.");
     args_parser.add_positional_argument(path, "Path to get basename from", "path");
     args_parser.add_positional_argument(suffix, "Suffix to strip from name", "suffix", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
