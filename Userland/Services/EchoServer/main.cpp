@@ -58,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         clients.set(id, client);
     };
 
-    outln("Listening on 0.0.0.0:{}", port);
+    outln("Listening on 0.0.0.0:{}...", port);
 
     return event_loop.exec();
 }
