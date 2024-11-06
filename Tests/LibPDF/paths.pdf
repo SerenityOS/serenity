@@ -14,7 +14,7 @@ endobj
 endobj
 
 4 0 obj
-<</Length 2313>>
+<</Length 2981>>
 stream
 /DeviceRGB CS
 
@@ -210,10 +210,10 @@ q
 0 J
 2 j
 1 0 0 SC
-200 90 m
-230 50 l
-260 90 l
-200 90 l
+240 90 m
+270 50 l
+300 90 l
+240 90 l
 S
 Q
 
@@ -307,6 +307,71 @@ q
 S
 Q
 
+% PDF 1.7 spec, TABLE 4.6 Examples of line dash patterns
+
+q
+0 J
+1 0 0 SC
+3 0 0 3 100 60 cm
+1 w
+
+[] 0 d
+0 0 m 13 0 l S
+
+1 0 0 1 0 -3 cm
+[3] 0 d
+0 0 m 13 0 l S
+
+1 0 0 1 0 -3 cm
+[2] 1 d
+0 0 m 13 0 l S
+
+1 0 0 1 0 -3 cm
+[2 1] 0 d
+0 0 m 13 0 l S
+
+1 0 0 1 0 -3 cm
+[3 5] 6 d
+0 0 m 13 0 l S
+
+1 0 0 1 0 -3 cm
+[2 3] 11 d
+0 0 m 13 0 l S
+Q
+
+% Dashed rect with 0 dash length
+
+[ 0 10 ] 0 d
+1 J
+0 1 0 SC
+155 45 30 30 re
+S
+
+% Dashed rects with different cap styles. The last one also has a no-op negative
+% scale factor.
+
+1 w
+[ 2 2 ] 1 d
+0 J
+0 1 0 SC
+195 45 30 30 re
+S
+
+1 w
+[ 2 2 ] 1 d
+1 J
+0 1 0 SC
+155 5 30 30 re
+S
+
+-1 0 0 -1 0 0 cm
+1 w
+[ 2 2 ] 1 d
+2 J
+0 1 0 SC
+-195 -5 -30 -30 re
+S
+
 endstream
 endobj
 
@@ -321,5 +386,5 @@ xref
 trailer
 <</Size 5/Root 2 0 R>>
 startxref
-2568
+3236
 %%EOF
