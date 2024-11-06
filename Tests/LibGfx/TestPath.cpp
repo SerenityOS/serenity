@@ -115,6 +115,25 @@ TEST_CASE(path_to_fill_miter_linejoin)
     }
 }
 
+TEST_CASE(path_to_fill_dash)
+{
+    {
+        Gfx::Path path;
+        path.move_to({ 0, 0.5 });
+        path.line_to({ 13, 0.5 });
+        auto fill = path.stroke_to_fill({ .thickness = 1, .cap_style = Gfx::Path::CapStyle::Butt, .dash_pattern = { 3, 3 }, .dash_offset = 0 });
+        EXPECT_EQ(fill.to_byte_string(), "M 3,1 L 3,0 L 0,0 L 0,1 L 3,1 Z M 9,1 L 9,0 L 6,0 L 6,1 L 9,1 Z M 13,1 L 13,0 L 12,0 L 12,1 L 13,1 Z");
+    }
+
+    {
+        Gfx::Path path;
+        path.move_to({ 0, 0.5 });
+        path.line_to({ 13, 0.5 });
+        auto fill = path.stroke_to_fill({ .thickness = 1, .cap_style = Gfx::Path::CapStyle::Butt, .dash_pattern = { 2, 3 }, .dash_offset = 11 });
+        EXPECT_EQ(fill.to_byte_string(), "M 1,1 L 1,0 L 0,0 L 0,1 L 1,1 Z M 6,1 L 6,0 L 4,0 L 4,1 L 6,1 Z M 11,1 L 11,0 L 9,0 L 9,1 L 11,1 Z");
+    }
+}
+
 TEST_CASE(path_to_string)
 {
     {

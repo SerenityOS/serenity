@@ -232,6 +232,9 @@ public:
         // The default value of 10 matches the PDF and <canvas> default value, which corresponds to 11.48 degrees.
         // (SVG uses a default of 4, which corresponds to 28.96 degrees.)
         float miter_limit { 10 };
+
+        Vector<float> dash_pattern {};
+        float dash_offset { 0 };
     };
     Path stroke_to_fill(StrokeStyle const&) const;
 
