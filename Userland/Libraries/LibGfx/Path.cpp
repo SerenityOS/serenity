@@ -505,6 +505,217 @@ static Vector<FloatPoint, 128> make_pen(float thickness)
     return pen_vertices;
 }
 
+static void apply_dash_pattern(Vector<Vector<FloatPoint>>& segments, Vector<bool>& segment_is_closed, Vector<float> dash_pattern, float dash_offset)
+{
+    VERIFY(!dash_pattern.is_empty());
+
+    // Has to be ensured by callers. (They all double the list, but <canvas> needs to do that in a way that
+    // is visible to JS accessors, so don't do it here.)
+    VERIFY(dash_pattern.size() % 2 == 0);
+
+    // This implementation is vaguely based on the <canvas> spec. One difference is that the <canvas> spec
+    // modifies the path in place, while this implementation returns a new path. The spec is written in terms
+    // of [start, end] intervals that are removed from the input path, while we have to instead add the
+    // complement of those intervals to the output path. This is done by keeping track of the previous `end`
+    // value and then filling in the gap between that and the current `start` value on every interval, and
+    // at the end of each subpath.
+
+    Vector<Vector<FloatPoint>> new_segments;
+
+    // https://html.spec.whatwg.org/multipage/canvas.html#line-styles:dash-list-5
+    // 7. Let `pattern width` be the concatenation of all the entries of style's dash list, in coordinate space units.
+    // (NOTE: The spec means sum, not concatenation.)
+    float pattern_width = 0;
+    for (auto& entry : dash_pattern) {
+        VERIFY(entry >= 0);
+        pattern_width += entry;
+    }
+
+    // 8. For each subpath `subpath` in `path`, run the following substeps. These substeps mutate the subpaths in `path` in vivo.
+    for (auto const& [subpath_index, subpath] : enumerate(segments)) {
+        float end, last_end = 0;
+
+        // 1. Let `subpath width` be the length of all the lines of `subpath`, in coordinate space units.
+        float subpath_width = 0;
+        for (size_t i = 0; i < subpath.size() - 1; i++)
+            subpath_width += subpath[i].distance_from(subpath[i + 1]);
+
+        // 2. Let `offset` be the value of style's lineDashOffset, in coordinate space units.
+        float offset = dash_offset;
+
+        // 3. While `offset` is greater than `pattern width`, decrement it by pattern width.
+        //    While `offset` is less than zero, increment it by `pattern width`.
+        // FIXME: Rewrite this using fmodf() in the future, once this has good test coverage.
+        while (offset > pattern_width)
+            offset -= pattern_width;
+        while (offset < 0)
+            offset += pattern_width;
+
+        // 4. Define `L` to be a linear coordinate line defined along all lines in subpath, such that the start of the first line
+        //    in the subpath is defined as coordinate 0, and the end of the last line in the subpath is defined as coordinate `subpath width`.
+        float L = 0;
+        size_t current_vertex_index = 0;
+
+        auto next_L = [&]() -> float {
+            return L + subpath[current_vertex_index].distance_from(subpath[current_vertex_index + 1]);
+        };
+
+        auto append_distinct = [](Vector<FloatPoint>& path, FloatPoint p) {
+            if (path.is_empty() || path.last() != p)
+                path.append(p);
+        };
+
+        auto skip_until = [&](float target_L) {
+            while (next_L() < target_L) {
+                L = next_L();
+                current_vertex_index++;
+            }
+        };
+
+        auto append_until = [&](Vector<FloatPoint>& new_subpath, float target_L) {
+            while (next_L() < target_L) {
+                L = next_L();
+                current_vertex_index++;
+                append_distinct(new_subpath, subpath[current_vertex_index]);
+            }
+        };
+
+        auto append_lerp = [&](Vector<FloatPoint>& new_subpath, float target_L) {
+            VERIFY(target_L >= L);
+            VERIFY(target_L <= next_L());
+            append_distinct(new_subpath, mix(subpath[current_vertex_index], subpath[current_vertex_index + 1], (target_L - L) / (next_L() - L)));
+        };
+
+        // 5. Let `position` be zero minus offset.
+        float position = -offset;
+
+        // 6. Let `index` be 0.
+        size_t index = 0;
+
+        // 7. Let `current state` be off (the other states being on and zero-on).
+        // (NOTE: The mentioned "zero-on" state in the spec appears unused.)
+        enum class State {
+            Off,
+            On,
+        };
+        State current_state = State::Off;
+
+    dash_on:
+        // 8. Dash on: Let `segment length` be the value of style's dash list's `index`th entry.
+        float segment_length = dash_pattern[index];
+
+        // 9. Increment `position` by `segment length`.
+        position += segment_length;
+
+        // 10. If `position` is greater than `subpath width`, then end these substeps for this subpath and start them again for the next subpath;
+        //     if there are no more subpaths, then jump to the step labeled `convert` instead.
+        if (position > subpath_width) {
+            if (last_end < subpath_width) {
+                // Fill from last_end to subpath_width.
+                Vector<FloatPoint> new_subpath;
+
+                skip_until(last_end);
+                append_lerp(new_subpath, last_end);
+                for (++current_vertex_index; current_vertex_index < subpath.size(); ++current_vertex_index)
+                    append_distinct(new_subpath, subpath[current_vertex_index]);
+
+                new_segments.append(move(new_subpath));
+            }
+            continue;
+        }
+
+        // 11. If `segment length` is nonzero, then let current state be on.
+        if (segment_length != 0)
+            current_state = State::On;
+
+        // 12. Increment `index` by one.
+        index++;
+
+        // 13. Dash off: Let segment length be the value of style's dash list's `index`th entry.
+        // (NOTE: The label "Dash off:" in the spec appears unused.)
+        segment_length = dash_pattern[index];
+
+        // 14. Let `start` be the offset `position` on L.
+        float start = position;
+
+        // 15. Increment `position` by `segment length`.
+        position += segment_length;
+
+        // 16. If `position` is less than zero, then jump to the step labeled `post-cut`.
+        if (position < 0)
+            goto post_cut;
+
+        // 17. If `start` is less than zero, then let `start` be zero.
+        if (start < 0)
+            start = 0;
+
+        // 18. If `position` is greater than `subpath width`, then let `end` be the offset `subpath width` on `L`. Otherwise, let `end` be the offset `position` on `L`.
+        end = position > subpath_width ? subpath_width : position;
+
+        // 19. Jump to the first appropriate step:
+        //   If segment length is zero and current state is off
+        //       Do nothing, just continue to the next step.
+        //   If current state is off
+        //       Cut the line on which `end` finds itself short at `end` and place a point there, cutting in two the subpath that it was in;
+        //       remove all line segments, joins, points, and subpaths that are between `start` and `end`; and finally place a single point at
+        //       `start` with no lines connecting to it.
+        //       The point has a directionality for the purposes of drawing line caps (see below). The directionality is the direction that
+        //       the original line had at that point (i.e. when `L` was defined above).
+        //   Otherwise
+        //       Cut the line on which `start` finds itself into two at `start` and place a point there, cutting in two the subpath that it was in,
+        //       and similarly cut the line on which `end` finds itself short at end and place a point there, cutting in two the subpath that it was in,
+        //       and then remove all line segments, joins, points, and subpaths that are between `start` and `end`.
+        if (segment_length == 0 && current_state == State::Off) {
+            // Do nothing.
+        } else if (current_state == State::Off) {
+            Vector<FloatPoint> new_subpath;
+
+            skip_until(start);
+            append_lerp(new_subpath, start);
+
+            // FIXME: Store directionality.
+            new_segments.append(move(new_subpath));
+        } else {
+            Vector<FloatPoint> new_subpath;
+
+            skip_until(last_end);
+            append_lerp(new_subpath, last_end);
+            append_until(new_subpath, start);
+            append_lerp(new_subpath, start);
+
+            new_segments.append(move(new_subpath));
+            last_end = end;
+        }
+
+        // 20. If start and end are the same point, then this results in just the line being cut in two and two points being inserted there,
+        //     with nothing being removed, unless a join also happens to be at that point, in which case the join must be removed.
+        // FIXME: Not clear if we have to do anything here, given our inverted interval implementation.
+
+    post_cut:
+        // 21. Post-cut: If position is greater than subpath width, then jump to the step labeled convert.
+        if (position > subpath_width)
+            break;
+
+        // 22. If segment length is greater than zero, then let positioned-at-on-dash be false.
+        // (NOTE: The spec doesn't mention positioned-at-on-dash anywhere else.)
+
+        // 23. Increment index by one. If it is equal to the number of entries in style's dash list, then let index be 0.
+        index++;
+        if (index == dash_pattern.size())
+            index = 0;
+
+        // 24. Return to the step labeled `dash on`.
+        goto dash_on;
+    }
+
+    segments = move(new_segments);
+
+    // This function is only called if there are dashes, and dashes are never closed.
+    segment_is_closed.resize(segments.size());
+    for (auto& is_closed : segment_is_closed)
+        is_closed = false;
+}
+
 Path Path::stroke_to_fill(StrokeStyle const& style) const
 {
     // Note: This convolves a polygon with the path using the algorithm described
@@ -551,6 +762,9 @@ Path Path::stroke_to_fill(StrokeStyle const& style) const
             segment_is_closed.append(false);
         VERIFY(segment_is_closed.size() == segments.size());
     }
+
+    if (!style.dash_pattern.is_empty())
+        apply_dash_pattern(segments, segment_is_closed, style.dash_pattern, style.dash_offset);
 
     Vector<FloatPoint, 128> pen_vertices = make_pen(thickness);
 
