@@ -210,10 +210,10 @@ RENDERER_HANDLER(set_miter_limit)
 RENDERER_HANDLER(set_dash_pattern)
 {
     auto dash_array = MUST(m_document->resolve_to<ArrayObject>(args[0]));
-    Vector<int> pattern;
+    Vector<float> pattern;
     for (auto& element : *dash_array)
-        pattern.append(element.to_int());
-    state().line_dash_pattern = LineDashPattern { pattern, args[1].to_int() };
+        pattern.append(element.to_float());
+    state().line_dash_pattern = LineDashPattern { pattern, args[1].to_float() };
     return {};
 }
 
