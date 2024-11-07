@@ -29,6 +29,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         exit(1);
     }
 
+    if (port < 1024 && geteuid() != 0) {
+        warnln("Listening on port {} requires root privileges", port);
+        exit(1);
+    }
+
     Core::EventLoop event_loop;
 
     auto server = TRY(Core::TCPServer::try_create());
