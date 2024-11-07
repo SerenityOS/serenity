@@ -19,6 +19,7 @@ SECTIONS
 
     .text ALIGN(4K) : AT (ADDR(.text))
     {
+        start_of_kernel_text = .;
         *(.text.first)
 
         start_of_safemem_text = .;
@@ -29,6 +30,7 @@ SECTIONS
         end_of_safemem_atomic_text = .;
 
         *(.text*)
+        end_of_kernel_text = .;
     } :text
 
     .driver_init ALIGN(4K) : AT (ADDR(.driver_init))
@@ -53,7 +55,9 @@ SECTIONS
 
     .data ALIGN(4K) : AT (ADDR(.data))
     {
+        start_of_kernel_data = .;
         *(.data*)
+        end_of_kernel_data = .;
     } :data
 
     .ksyms ALIGN(4K) : AT (ADDR(.ksyms))
@@ -85,14 +89,10 @@ SECTIONS
     */
 
     /* FIXME: Placeholder to satisfy linker */
-    start_of_kernel_text = .;
-    end_of_kernel_text = .;
     start_of_unmap_after_init = .;
     end_of_unmap_after_init = .;
     start_of_ro_after_init = .;
     end_of_ro_after_init = .;
-    start_of_kernel_data = .;
-    end_of_kernel_data = .;
 
     . = ALIGN(4K);
     page_tables_phys_start = .;
