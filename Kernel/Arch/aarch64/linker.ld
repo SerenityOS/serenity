@@ -5,10 +5,10 @@ KERNEL_MAPPING_BASE = 0x2000000000;
 /* TODO: Add FLAGS to the program headers */
 PHDRS
 {
-  text PT_LOAD ;
-  data PT_LOAD ;
-  ksyms PT_LOAD ;
-  bss PT_LOAD ;
+    text PT_LOAD ;
+    data PT_LOAD ;
+    ksyms PT_LOAD ;
+    bss PT_LOAD ;
 }
 
 SECTIONS
@@ -80,10 +80,10 @@ SECTIONS
     end_of_initial_stack = .;
 
     /*
-        FIXME: 8MB is enough space for all of the tables required to identity map 
+        FIXME: 8MB is enough space for all of the tables required to identity map
                physical memory. 8M is wasteful, so this should be properly calculated.
     */
-    
+
     /* FIXME: Placeholder to satisfy linker */
     start_of_kernel_text = .;
     end_of_kernel_text = .;
@@ -96,7 +96,7 @@ SECTIONS
 
     . = ALIGN(4K);
     page_tables_phys_start = .;
-    
+
     . += 8M;
     page_tables_phys_end = .;
 
