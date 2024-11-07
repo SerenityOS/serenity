@@ -1030,7 +1030,18 @@ Gfx::Path::JoinStyle Renderer::line_join_style() const
 
 Gfx::Path::StrokeStyle Renderer::stroke_style() const
 {
-    return { line_width(), line_cap_style(), line_join_style(), state().miter_limit };
+    auto dash_pattern = state().line_dash_pattern.pattern;
+
+    // The spec doesn't explicitly say how to handle dash patterns with an odd number of elements.
+    // <canvas> and <svg> repeat the pattern, so we do the same.
+    if (dash_pattern.size() % 2 == 1)
+        dash_pattern.extend(dash_pattern);
+
+    for (auto& value : dash_pattern)
+        value *= state().ctm.x_scale();
+    float dash_phase = state().ctm.x_scale() * state().line_dash_pattern.phase;
+
+    return { line_width(), line_cap_style(), line_join_style(), state().miter_limit, move(dash_pattern), dash_phase };
 }
 
 PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)
