@@ -6,13 +6,13 @@ ENTRY(init)
 
 PHDRS
 {
-  elf_headers PT_LOAD FILEHDR PHDRS FLAGS(PF_R) ;
-  text PT_LOAD FLAGS(PF_R | PF_X) ;
-  data PT_LOAD FLAGS(PF_R | PF_W) ;
-  bss PT_LOAD FLAGS(PF_R | PF_W) ;
-  dynamic_segment PT_LOAD FLAGS(PF_R | PF_W) ;
-  dynamic PT_DYNAMIC FLAGS(PF_R | PF_W) ;
-  ksyms PT_LOAD FLAGS(PF_R) ;
+    elf_headers PT_LOAD FILEHDR PHDRS FLAGS(PF_R) ;
+    text PT_LOAD FLAGS(PF_R | PF_X) ;
+    data PT_LOAD FLAGS(PF_R | PF_W) ;
+    bss PT_LOAD FLAGS(PF_R | PF_W) ;
+    dynamic_segment PT_LOAD FLAGS(PF_R | PF_W) ;
+    dynamic PT_DYNAMIC FLAGS(PF_R | PF_W) ;
+    ksyms PT_LOAD FLAGS(PF_R) ;
 }
 
 SECTIONS
