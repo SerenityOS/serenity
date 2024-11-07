@@ -51,6 +51,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
+    if (port < 1024 && geteuid() != 0) {
+        warnln("Listening on port {} requires root privileges", port);
+        return 1;
+    }
+
     if (username.is_empty() != password.is_empty()) {
         warnln("Both username and password are required for HTTP basic authentication.");
         return 1;
