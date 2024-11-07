@@ -1126,6 +1126,8 @@ ErrorOr<int> Shell::builtin_time(Main::Arguments arguments)
         iteration_times.add(static_cast<float>(timer.elapsed()));
     }
 
+    warnln();
+
     if (number_of_iterations == 1) {
         warnln("Time: {} ms", iteration_times.values().first());
     } else {
