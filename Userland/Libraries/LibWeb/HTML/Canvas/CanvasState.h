@@ -80,6 +80,8 @@ public:
         Bindings::CanvasLineCap line_cap { Bindings::CanvasLineCap::Butt };
         Bindings::CanvasLineJoin line_join { Bindings::CanvasLineJoin::Miter };
         float miter_limit { 10 };
+        Vector<double> dash_list;
+        float line_dash_offset { 0 };
         bool image_smoothing_enabled { true };
         Bindings::ImageSmoothingQuality image_smoothing_quality { Bindings::ImageSmoothingQuality::Low };
         float global_alpha = { 1 };
