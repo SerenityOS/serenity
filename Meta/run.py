@@ -747,6 +747,7 @@ def set_up_machine_devices(config: Configuration):
             [
                 "virtio-keyboard",
                 "virtio-tablet",
+                "virtio-serial,max_ports=2",
             ]
         )
         return
