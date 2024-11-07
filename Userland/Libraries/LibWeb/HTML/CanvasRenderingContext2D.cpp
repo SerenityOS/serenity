@@ -349,6 +349,10 @@ void CanvasRenderingContext2D::stroke_internal(Gfx::Path const& path)
 
         stroke_style.miter_limit = drawing_state.miter_limit;
 
+        for (auto& dash : drawing_state.dash_list)
+            stroke_style.dash_pattern.append(static_cast<float>(dash));
+        stroke_style.dash_offset = drawing_state.line_dash_offset;
+
         if (auto color = drawing_state.stroke_style.as_color(); color.has_value()) {
             painter.stroke_path(path, color->with_opacity(drawing_state.global_alpha), stroke_style);
         } else {

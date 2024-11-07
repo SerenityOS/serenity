@@ -92,7 +92,7 @@ ctx.lineTo(385, 150);
 ctx.lineTo(390, 230);
 ctx.stroke();
 
-// Different angles
+// Different angles, butt caps
 ctx.lineCap = 'butt';
 ctx.lineWidth = 5;
 
@@ -114,6 +114,24 @@ for (let angle = 0; angle < 360; angle += 15) {
   ctx.stroke();
 }
 
+// Circles with different dashes
+let dashes = [
+  [15, 3, 3, 3, 3, 3, 3, 3],
+  [1],
+  [12, 3, 3],
+];
+for (let r = innerRadius - 10, i = 0; r >= 10; r -= 10, i++) {
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, r, 0, 2 * Math.PI);
+  ctx.closePath();
+  ctx.setLineDash(dashes[i % dashes.length]);
+  ctx.lineDashOffset = (r - 30) / 2;
+  ctx.stroke();
+}
+ctx.setLineDash([]);
+ctx.lineDashOffset = 0;
+
+// Different angles, round caps
 ctx.lineCap = 'round';
 ctx.lineWidth = 5;
 
