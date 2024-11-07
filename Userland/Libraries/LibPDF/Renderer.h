@@ -37,8 +37,8 @@ enum class LineJoinStyle : u8 {
 };
 
 struct LineDashPattern {
-    Vector<int> pattern;
-    int phase;
+    Vector<float> pattern;
+    float phase;
 };
 
 enum class TextRenderingMode : u8 {
