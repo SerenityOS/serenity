@@ -92,12 +92,10 @@ extern ctor_func_t end_ctors[];
 extern uintptr_t __stack_chk_guard;
 READONLY_AFTER_INIT uintptr_t __stack_chk_guard __attribute__((used));
 
-#if ARCH(X86_64)
 extern "C" u8 start_of_safemem_text[];
 extern "C" u8 end_of_safemem_text[];
 extern "C" u8 start_of_safemem_atomic_text[];
 extern "C" u8 end_of_safemem_atomic_text[];
-#endif
 
 extern "C" USB::DriverInitFunction driver_init_table_start[];
 extern "C" USB::DriverInitFunction driver_init_table_end[];
@@ -217,11 +215,11 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
 
 #if ARCH(X86_64)
     MM.unmap_prekernel();
+#endif
 
     // Ensure that the safemem sections are not empty. This could happen if the linker accidentally discards the sections.
     VERIFY(+start_of_safemem_text != +end_of_safemem_text);
     VERIFY(+start_of_safemem_atomic_text != +end_of_safemem_atomic_text);
-#endif
 
     // Invoke all static global constructors in the kernel.
     // Note that we want to do this as early as possible.
