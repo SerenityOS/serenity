@@ -65,7 +65,7 @@ public:
         m_max_column_index = max(0, columns_count - 1);
         m_max_row_index = max(0, rows_count - 1);
     }
-    OccupationGrid() {};
+    OccupationGrid() { }
 
     void set_occupied(int column_start, int column_end, int row_start, int row_end);
 

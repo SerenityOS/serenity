@@ -200,7 +200,7 @@ static NSString* const TOOLBAR_TAB_OVERVIEW_IDENTIFIER = @"ToolbarTabOverviewIde
 
     self.tab.titlebarAppearsTransparent = NO;
 
-    [delegate createNewTab:OptionalNone {}
+    [delegate createNewTab:OptionalNone { }
                    fromTab:[self tab]
                activateTab:Web::HTML::ActivateTab::Yes];
 

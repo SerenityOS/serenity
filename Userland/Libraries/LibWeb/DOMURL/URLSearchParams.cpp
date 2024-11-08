@@ -334,8 +334,8 @@ void URLSearchParams::sort()
             return true;
 
         for (auto k = a_code_points.begin(), l = b_code_points.begin();
-             k != a_code_points.end() && l != b_code_points.end();
-             ++k, ++l) {
+            k != a_code_points.end() && l != b_code_points.end();
+            ++k, ++l) {
             if (*k != *l) {
                 return *k < *l;
             }

@@ -13,7 +13,9 @@ namespace Gfx {
 class LumaFilter {
 public:
     LumaFilter(Bitmap& bitmap)
-        : m_bitmap(bitmap) {};
+        : m_bitmap(bitmap)
+    {
+    }
 
     void apply(u8 lower_bound, u8 upper_bound);
 

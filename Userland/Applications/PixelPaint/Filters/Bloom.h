@@ -19,7 +19,9 @@ public:
     virtual StringView filter_name() const override { return "Bloom Filter"sv; }
 
     Bloom(ImageEditor* editor)
-        : InplaceFilter(editor) {};
+        : InplaceFilter(editor)
+    {
+    }
 
 private:
     int m_luma_lower { 128 };

@@ -21,8 +21,8 @@ public:
     explicit CPUID(u32 function, u32 ecx = 0)
     {
         asm volatile("cpuid"
-                     : "=a"(m_eax), "=b"(m_ebx), "=c"(m_ecx), "=d"(m_edx)
-                     : "a"(function), "c"(ecx));
+            : "=a"(m_eax), "=b"(m_ebx), "=c"(m_ecx), "=d"(m_edx)
+            : "a"(function), "c"(ecx));
     }
 
     u32 eax() const { return m_eax; }
