@@ -94,6 +94,83 @@ bool Node::is_compatible_with(StringView wanted_compatible_string) const
     return is_compatible;
 }
 
+// 2.4.1 Properties for Interrupt Generating Devices
+ErrorOr<Node const*> Node::interrupt_parent(DeviceTree const& device_tree) const
+{
+    auto maybe_interrupt_parent_prop = get_property("interrupt-parent"sv);
+    if (maybe_interrupt_parent_prop.has_value()) {
+        auto interrupt_parent_prop = maybe_interrupt_parent_prop.release_value();
+
+        if (interrupt_parent_prop.size() != sizeof(u32))
+            return Error::from_errno(EINVAL);
+
+        auto const* interrupt_parent = device_tree.phandle(interrupt_parent_prop.as<u32>());
+
+        if (interrupt_parent == nullptr)
+            return Error::from_errno(ENOENT);
+
+        return interrupt_parent;
+    }
+
+    if (m_parent == nullptr)
+        return Error::from_errno(ENOENT);
+
+    return m_parent;
+}
+
+// 2.4 Interrupts and Interrupt Mapping
+ErrorOr<Node const*> Node::interrupt_domain_root(DeviceTree const& device_tree) const
+{
+    auto const* current_node = this;
+
+    for (;;) {
+        // Interupt controllers are specified by the presence of the interrupt-controller property.
+        // An interrupt nexus can be identified by the interrupt-map property.
+        if (current_node->has_property("interrupt-controller"sv) || current_node->has_property("interrupt-map"sv))
+            return current_node;
+
+        current_node = TRY(current_node->interrupt_parent(device_tree));
+    }
+}
+
+ErrorOr<FixedArray<Interrupt>> Node::interrupts(DeviceTree const& device_tree) const
+{
+    auto const& domain_root = *TRY(interrupt_domain_root(device_tree));
+
+    auto interrupt_cells_prop = domain_root.get_property("#interrupt-cells"sv);
+    if (!interrupt_cells_prop.has_value())
+        return Error::from_errno(EINVAL);
+
+    if (interrupt_cells_prop->size() != sizeof(u32))
+        return Error::from_errno(EINVAL);
+
+    auto interrupt_cells = interrupt_cells_prop->as<u32>();
+
+    // TODO: Support interrupts-extended.
+
+    auto interrupts_prop = get_property("interrupts"sv);
+    if (!interrupts_prop.has_value())
+        return Error::from_errno(EINVAL);
+
+    auto interrupts_raw = interrupts_prop->raw_data;
+
+    if (!domain_root.has_property("interrupt-controller"sv))
+        return Error::from_errno(ENOTSUP); // TODO: Handle interrupt nexuses
+
+    auto interrupt_count = interrupts_prop->size() / (interrupt_cells * sizeof(u32));
+
+    auto interrupts = TRY(FixedArray<Interrupt>::create(interrupt_count));
+
+    for (size_t i = 0; i < interrupt_count; i++) {
+        interrupts[i] = Interrupt {
+            .domain_root = &domain_root,
+            .interrupt_identifier = interrupts_raw.slice(i * interrupt_cells * sizeof(u32), interrupt_cells * sizeof(u32)),
+        };
+    }
+
+    return interrupts;
+}
+
 ErrorOr<Reg> Node::reg() const
 {
     if (parent() == nullptr)
