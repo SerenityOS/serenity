@@ -491,8 +491,8 @@ static_assert(sizeof(ID_AA64DFR1_EL1) == 8);
 // https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/CNTFRQ-EL0--Counter-timer-Frequency-register
 // CNTFRQ_EL0, Counter-timer Frequency register
 struct alignas(u64) CNTFRQ_EL0 {
-    u64 : 32;
     u64 ClockFrequency : 32;
+    u64 : 32;
 
     static inline CNTFRQ_EL0 read()
     {
@@ -505,6 +505,71 @@ struct alignas(u64) CNTFRQ_EL0 {
     }
 };
 static_assert(sizeof(CNTFRQ_EL0) == 8);
+
+// https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/CNTP-TVAL-EL0--Counter-timer-Physical-Timer-TimerValue-register
+// CNTP_TVAL_EL0, Counter-timer Physical Timer TimerValue register
+struct alignas(u64) CNTP_TVAL_EL0 {
+    u64 TimerValue : 32;
+    u64 : 32;
+
+    static inline CNTP_TVAL_EL0 read()
+    {
+        CNTP_TVAL_EL0 timer_value;
+
+        asm volatile("mrs %[value], CNTP_TVAL_EL0"
+                     : [value] "=r"(timer_value));
+
+        return timer_value;
+    }
+
+    static inline void write(CNTP_TVAL_EL0 cntp_tval_el0)
+    {
+        asm volatile("msr CNTP_TVAL_EL0, %[value]" ::[value] "r"(cntp_tval_el0));
+    }
+};
+static_assert(sizeof(CNTP_TVAL_EL0) == 8);
+
+// https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/CNTP-CTL-EL0--Counter-timer-Physical-Timer-Control-register
+// CNTP_CTL_EL0, Counter-timer Physical Timer Control register
+struct alignas(u64) CNTP_CTL_EL0 {
+    u64 ENABLE : 1;
+    u64 IMASK : 1;
+    u64 ISTATUS : 1;
+    u64 : 61;
+
+    static inline CNTP_CTL_EL0 read()
+    {
+        CNTP_CTL_EL0 control_register;
+
+        asm volatile("mrs %[value], CNTP_CTL_EL0"
+                     : [value] "=r"(control_register));
+
+        return control_register;
+    }
+
+    static inline void write(CNTP_CTL_EL0 cntp_ctl_el0)
+    {
+        asm volatile("msr CNTP_CTL_EL0, %[value]" ::[value] "r"(cntp_ctl_el0));
+    }
+};
+static_assert(sizeof(CNTP_CTL_EL0) == 8);
+
+// https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/CNTPCT-EL0--Counter-timer-Physical-Count-register
+// CNTPCT_EL0, Counter-timer Physical Count register
+struct alignas(u64) CNTPCT_EL0 {
+    u64 PhysicalCount;
+
+    static inline CNTPCT_EL0 read()
+    {
+        CNTPCT_EL0 physical_count;
+
+        asm volatile("mrs %[value], CNTPCT_EL0"
+                     : [value] "=r"(physical_count));
+
+        return physical_count;
+    }
+};
+static_assert(sizeof(CNTPCT_EL0) == 8);
 
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/TCR-EL1--Translation-Control-Register--EL1-
 // Translation Control Register

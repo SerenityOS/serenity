@@ -19,6 +19,7 @@
 #    include <Kernel/Arch/x86_64/Time/RTC.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/Timer.h>
+#    include <Kernel/Arch/aarch64/Time/ARMv8Timer.h>
 #elif ARCH(RISCV64)
 #    include <Kernel/Arch/riscv64/Timer.h>
 #else
@@ -148,7 +149,12 @@ MonotonicTime TimeManagement::monotonic_time(TimePrecision precision) const
             HPET::the().update_time(seconds, ticks, true);
 #elif ARCH(AARCH64)
             // FIXME: Get rid of these horrible casts
-            const_cast<RPi::Timer*>(static_cast<RPi::Timer const*>(m_system_timer.ptr()))->update_time(seconds, ticks, true);
+            if (m_system_timer->timer_type() == HardwareTimerType::RPiTimer)
+                const_cast<RPi::Timer*>(static_cast<RPi::Timer const*>(m_system_timer.ptr()))->update_time(seconds, ticks, true);
+            else if (m_system_timer->timer_type() == HardwareTimerType::ARMv8Timer)
+                const_cast<ARMv8Timer*>(static_cast<ARMv8Timer const*>(m_system_timer.ptr()))->update_time(seconds, ticks, true);
+            else
+                VERIFY_NOT_REACHED();
 #elif ARCH(RISCV64)
             TODO_RISCV64();
 #else
@@ -497,6 +503,8 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
         u64 delta_ns;
         if (m_system_timer->timer_type() == HardwareTimerType::RPiTimer)
             delta_ns = static_cast<RPi::Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
+        else if (m_system_timer->timer_type() == HardwareTimerType::ARMv8Timer)
+            delta_ns = static_cast<ARMv8Timer*>(m_system_timer.ptr())->update_time(seconds_since_boot, ticks_this_second, false);
         else
             VERIFY_NOT_REACHED();
 
