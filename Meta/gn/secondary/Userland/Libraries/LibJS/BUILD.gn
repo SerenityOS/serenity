@@ -93,6 +93,7 @@ shared_library("LibJS") {
     "Runtime/BoundFunction.cpp",
     "Runtime/Completion.cpp",
     "Runtime/ConsoleObject.cpp",
+    "Runtime/ConsoleObjectPrototype.cpp",
     "Runtime/DataView.cpp",
     "Runtime/DataViewConstructor.cpp",
     "Runtime/DataViewPrototype.cpp",
