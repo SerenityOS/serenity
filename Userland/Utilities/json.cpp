@@ -33,12 +33,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView path;
     StringView dotted_key;
+    StringView colorize_output_option = "auto"sv;
     u32 spaces_in_indent = 4;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Pretty-print a JSON file with syntax-coloring and indentation.");
     args_parser.add_option(dotted_key, "Dotted query key", "query", 'q', "foo.*.bar");
     args_parser.add_option(spaces_in_indent, "Indent size", "indent-size", 'i', "spaces_in_indent");
+    args_parser.add_option(colorize_output_option, "Choose when to color the output. Valid options are 'always', 'never', or 'auto' (default)", nullptr, 'R', "when");
     args_parser.add_positional_argument(path, "Path to JSON file", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -53,7 +55,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         json = query(json, key_parts);
     }
 
-    print(json, spaces_in_indent, 0, isatty(STDOUT_FILENO));
+    bool colorize_output = false;
+    if (!colorize_output_option.is_null()) {
+        if (colorize_output_option == "always") {
+            colorize_output = true;
+        } else if (colorize_output_option == "auto") {
+            colorize_output = TRY(Core::System::isatty(STDOUT_FILENO));
+        } else if (colorize_output_option == "never") {
+            colorize_output = false;
+        } else {
+            warnln("Unknown value '{}' for -R, should be one of 'always', 'never', or 'auto' (default)", colorize_output_option);
+            return 1;
+        }
+    }
+
+    print(json, spaces_in_indent, 0, colorize_output);
     outln();
 
     return 0;
