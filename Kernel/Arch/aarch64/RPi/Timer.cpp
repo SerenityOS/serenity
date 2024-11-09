@@ -33,9 +33,9 @@ enum FlagBits {
     SystemTimerMatch3 = 1 << 3,
 };
 
-Timer::Timer()
-    : HardwareTimer(1)
-    , m_registers(MMIO::the().peripheral<TimerRegisters>(0x3000).release_value_but_fixme_should_propagate_errors())
+Timer::Timer(Memory::TypedMapping<TimerRegisters volatile> registers_mapping, size_t interrupt_number)
+    : HardwareTimer(interrupt_number)
+    , m_registers(move(registers_mapping))
 {
     // FIXME: Actually query the frequency of the timer. By default it is 100MHz.
     m_frequency = 1e6;
@@ -186,13 +186,34 @@ static constinit Array const compatibles_array = {
 
 DEVICETREE_DRIVER(BCM2835TimerDriver, compatibles_array);
 
+// https://www.kernel.org/doc/Documentation/devicetree/bindings/timer/brcm,bcm2835-system-timer.txt
 ErrorOr<void> BCM2835TimerDriver::probe(DeviceTree::Device const& device, StringView) const
 {
+    if (DeviceTree::get().is_compatible_with("raspberrypi,4-model-b"sv))
+        return ENOTSUP; // HACK: The Pi 4 system timer doesn't appear to work on QEMU; only the generic ARM timer does.
+
+    auto const interrupts = TRY(device.node().interrupts(DeviceTree::get()));
+    if (interrupts.size() != 4)
+        return EINVAL; // The devicetree binding requires 4 interrupts.
+
+    // This driver currently only uses channel 1.
+    auto const& interrupt = interrupts[1];
+
+    // FIXME: Don't depend on a specific interrupt descriptor format and implement proper devicetree interrupt mapping/translation.
+    if (!interrupt.domain_root->is_compatible_with("brcm,bcm2836-armctrl-ic"sv))
+        return ENOTSUP;
+    if (interrupt.interrupt_identifier.size() != sizeof(BigEndian<u64>))
+        return ENOTSUP;
+    auto const interrupt_number = *reinterpret_cast<BigEndian<u64> const*>(interrupt.interrupt_identifier.data()) & 0xffff'ffff;
+
+    auto physical_address = TRY(device.get_resource(0)).paddr;
+
     DeviceTree::DeviceRecipe<NonnullLockRefPtr<HardwareTimerBase>> recipe {
         name(),
         device.node_name(),
-        []() {
-            return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Timer());
+        [physical_address, interrupt_number]() -> ErrorOr<NonnullLockRefPtr<HardwareTimerBase>> {
+            auto registers_mapping = TRY(Memory::map_typed_writable<TimerRegisters volatile>(physical_address));
+            return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Timer(move(registers_mapping), interrupt_number));
         },
     };
 
