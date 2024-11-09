@@ -11,6 +11,7 @@ source_set("HTML") {
     "//Userland/Libraries/LibWeb:all_generated",
   ]
   sources = [
+    "AbstractWorker.cpp",
     "AnimatedBitmapDecodedImageData.cpp",
     "AttributeNames.cpp",
     "AudioTrack.cpp",
