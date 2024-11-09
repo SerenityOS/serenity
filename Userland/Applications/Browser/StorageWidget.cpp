@@ -8,17 +8,21 @@
 #include "StorageWidget.h"
 #include "CookiesModel.h"
 #include "StorageModel.h"
-#include <Applications/Browser/StorageWidgetGML.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibWeb/Cookie/Cookie.h>
 
 namespace Browser {
 
-StorageWidget::StorageWidget()
+ErrorOr<NonnullRefPtr<StorageWidget>> StorageWidget::create()
 {
-    load_from_gml(storage_widget_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(try_create());
+    TRY(widget->setup());
+    return widget;
+}
+
+ErrorOr<void> StorageWidget::setup()
+{
     auto& tab_widget = *find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
 
     m_cookies_table_view = tab_widget.find_descendant_of_type_named<GUI::TableView>("cookies_tableview");
@@ -95,6 +99,8 @@ StorageWidget::StorageWidget()
     m_session_storage_table_view->set_model(m_session_storage_filtering_model);
     m_session_storage_table_view->set_column_headers_visible(true);
     m_session_storage_table_view->set_alternating_row_colors(true);
+
+    return {};
 }
 
 void StorageWidget::set_cookies_entries(Vector<Web::Cookie::Cookie> entries)

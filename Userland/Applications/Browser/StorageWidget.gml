@@ -1,4 +1,4 @@
-@GUI::Widget {
+@Browser::StorageWidget {
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {
         margins: [4]
