@@ -80,6 +80,11 @@ private:
     Vector<u8, 2 * sizeof(u32)> m_raw;
 };
 
+struct Interrupt {
+    Node const* domain_root;
+    ReadonlyBytes interrupt_identifier;
+};
+
 struct Property {
     class ValueStream : public FixedMemoryStream {
     public:
@@ -300,6 +305,15 @@ public:
     ErrorOr<Ranges> ranges() const;
 
     ErrorOr<Address> translate_child_bus_address_to_root_address(Address const&) const;
+
+    // ErrorOr can't hold a reference, so these have to be pointers.
+    // The return value of these functions is always non-null.
+    ErrorOr<Node const*> interrupt_parent(DeviceTree const& device_tree) const;
+    ErrorOr<Node const*> interrupt_domain_root(DeviceTree const& device_tree) const;
+
+    // Handles both the "interrupts" and "interrupts-extended" properties.
+    // The returned Interrupt::domain_root is always non-null.
+    ErrorOr<FixedArray<Interrupt>> interrupts(DeviceTree const& device_tree) const;
 
     // FIXME: Stringify?
     // FIXME: Flatten?
