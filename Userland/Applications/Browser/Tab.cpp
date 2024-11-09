@@ -1035,7 +1035,10 @@ void Tab::show_history_inspector()
         history_window->resize(500, 300);
         history_window->set_title("History");
         history_window->set_icon(g_icon_bag.history);
-        m_history_widget = history_window->set_main_widget<HistoryWidget>();
+        if (auto history_widget = History::HistoryWidget::create(); !history_widget.is_error()) {
+            m_history_widget = history_widget.release_value();
+            history_window->set_main_widget(m_history_widget);
+        }
     }
 
     // FIXME: Reimplement viewing history entries using WebContent's history.

@@ -7,7 +7,7 @@ serenity_component(
 
 stringify_gml(BrowserWindow.gml BrowserWindowGML.h browser_window_gml)
 stringify_gml(EditBookmark.gml EditBookmarkGML.h edit_bookmark_gml)
-stringify_gml(History/HistoryWidget.gml HistoryWidgetGML.h history_widget_gml)
+compile_gml(History/HistoryWidget.gml History/HistoryWidgetGML.cpp)
 compile_gml(StorageWidget.gml StorageWidgetGML.cpp)
 stringify_gml(Tab.gml TabGML.h tab_gml)
 
@@ -18,6 +18,7 @@ set(SOURCES
     DownloadWidget.cpp
     History/HistoryModel.cpp
     History/HistoryWidget.cpp
+    History/HistoryWidgetGML.cpp
     IconBag.cpp
     InspectorWidget.cpp
     StorageModel.cpp
@@ -33,7 +34,6 @@ set(SOURCES
 set(GENERATED_SOURCES
     BrowserWindowGML.h
     EditBookmarkGML.h
-    HistoryWidgetGML.h
     TabGML.h
 )
 

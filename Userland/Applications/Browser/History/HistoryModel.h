@@ -12,13 +12,15 @@
 #include <LibGUI/Widget.h>
 #include <LibURL/URL.h>
 
-namespace Browser {
+namespace Browser::History {
 
 // FIXME: Reimplement viewing history entries using WebContent's history.
 struct URLTitlePair {
     URL::URL url;
     ByteString title;
 };
+
+
 
 class HistoryModel final : public GUI::Model {
 public:

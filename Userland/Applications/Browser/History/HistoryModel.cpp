@@ -7,7 +7,7 @@
 #include "HistoryModel.h"
 #include <AK/FuzzyMatch.h>
 
-namespace Browser {
+namespace Browser::History {
 
 void HistoryModel::set_items(Vector<URLTitlePair> items)
 {

@@ -5,14 +5,18 @@
  */
 
 #include "HistoryWidget.h"
-#include <Applications/Browser/HistoryWidgetGML.h>
-#include <LibGUI/TableView.h>
 
-namespace Browser {
-HistoryWidget::HistoryWidget()
+namespace Browser::History {
+
+ErrorOr<NonnullRefPtr<HistoryWidget>> HistoryWidget::create()
 {
-    load_from_gml(history_widget_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(try_create());
+    TRY(widget->setup());
+    return widget;
+}
 
+ErrorOr<void> HistoryWidget::setup()
+{
     m_table_view = find_descendant_of_type_named<GUI::TableView>("history_tableview");
     m_textbox = find_descendant_of_type_named<GUI::TextBox>("history_filter_textbox");
 
@@ -29,6 +33,8 @@ HistoryWidget::HistoryWidget()
 
     m_table_view->set_model(m_filtering_model);
     m_table_view->set_alternating_row_colors(true);
+
+    return {};
 }
 
 void HistoryWidget::set_history_entries(Vector<URLTitlePair> entries)
