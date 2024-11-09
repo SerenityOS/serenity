@@ -20,7 +20,7 @@ struct InterruptControllerRegisters;
 // https://github.com/raspberrypi/documentation/files/1888662/BCM2837-ARM-Peripherals.-.Revised.-.V2-1.pdf (RPi3)
 class InterruptController : public IRQController {
 public:
-    InterruptController();
+    InterruptController(Memory::TypedMapping<InterruptControllerRegisters volatile>);
 
 private:
     virtual void enable(GenericInterruptHandler const&) override;
