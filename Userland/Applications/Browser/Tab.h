@@ -24,7 +24,11 @@ namespace Browser {
 
 class BrowserWindow;
 class InspectorWidget;
-class HistoryWidget;
+
+namespace History {
+    class HistoryWidget;
+}
+
 class StorageWidget;
 class URLBox;
 
@@ -110,7 +114,7 @@ private:
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<InspectorWidget> m_dom_inspector_widget;
     RefPtr<StorageWidget> m_storage_widget;
-    RefPtr<HistoryWidget> m_history_widget;
+    RefPtr<History::HistoryWidget> m_history_widget;
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;
 

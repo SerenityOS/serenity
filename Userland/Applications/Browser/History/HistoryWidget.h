@@ -10,11 +10,12 @@
 #include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
+#include <LibGUI/TableView.h>
 
-namespace Browser {
+namespace Browser::History {
 
 class HistoryWidget final : public GUI::Widget {
-    C_OBJECT(HistoryWidget);
+    C_OBJECT_ABSTRACT(HistoryWidget);
 
 public:
     virtual ~HistoryWidget() override = default;
@@ -22,8 +23,14 @@ public:
     void set_history_entries(Vector<URLTitlePair> entries);
     void clear_history_entries();
 
+    static ErrorOr<NonnullRefPtr<HistoryWidget>> create();
+
+protected:
+    static ErrorOr<NonnullRefPtr<HistoryWidget>> try_create();
+
 private:
-    HistoryWidget();
+    ErrorOr<void> setup();
+    HistoryWidget() = default;
 
     RefPtr<GUI::TableView> m_table_view;
     RefPtr<GUI::TextBox> m_textbox;
