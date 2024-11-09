@@ -40,13 +40,21 @@
 
 # https://github.com/circl-lastname/LBSync might be useful.
 
-
-import subprocess
+import argparse
 import re
+import subprocess
 
-print_fully_merged_prs = False
-print_dont_want_commits = False
+parser = argparse.ArgumentParser()
+parser.add_argument('--print-fully-merged-prs',
+                    action='store_true',
+                    help='Printing fully merged pull requests')
+parser.add_argument('--print-dont-want-commits',
+                    action='store_true',
+                    help='Print unwanted commits')
 
+args = parser.parse_args()
+print_fully_merged_prs = args.print_fully_merged_prs
+print_dont_want_commits = args.print_dont_want_commits
 
 # Get the last common commit between origin/master and ladybird/master
 merge_base_commit = subprocess.check_output(
@@ -166,9 +174,32 @@ serenity_cherry_picks.add('18499c4eac301db7e8915284f33766ca96cdeef2')
 # https://github.com/SerenityOS/serenity/commit/6c4e0e8549be445d44a4440
 serenity_cherry_picks.add('376b956214b87fbf6f5c71a8ebf6c4b1f1f10bf3')
 
+# https://github.com/LadybirdBrowser/ladybird/pull/213 was part of
+# https://github.com/SerenityOS/serenity/pull/24513 and
+# https://github.com/SerenityOS/serenity/pull/24586
+serenity_cherry_picks.add('920f47073582a8367de796817ccebbf0735d0740')
+serenity_cherry_picks.add('58fc901578419a97b45b64edcac48ce387d6021f')
+
+# https://github.com/LadybirdBrowser/ladybird/pull/275 and
+# https://github.com/LadybirdBrowser/ladybird/pull/2210 were done independently
+# in:
+# https://github.com/SerenityOS/serenity/pull/25040 (last commit)
+# https://github.com/SerenityOS/serenity/pull/25168
+# https://github.com/SerenityOS/serenity/pull/25316
+serenity_cherry_picks.add('e9001da8d645a20303488c66f5a8f5f33b81fa81')
+serenity_cherry_picks.add('7ac3806a1dfa096ec3af8e5cbf4aa636ab55bf05')
+
+# https://github.com/LadybirdBrowser/ladybird/pull/300 was part of
+# https://github.com/SerenityOS/serenity/pull/24513
+serenity_cherry_picks.add('3214f2c5bf9d18a7a1427261f569a7effe918592')
+
 # https://github.com/LadybirdBrowser/ladybird/pull/349 was independently
 # rediscovered as part of https://github.com/SerenityOS/serenity/pull/24629
 serenity_cherry_picks.add('5f06594bbd2d045ac026cbdba7c912249cdd5812')
+
+# https://github.com/LadybirdBrowser/ladybird/pull/483 was a cherry-pick of
+# https://github.com/SerenityOS/serenity/commit/85b7ce8c2f6da
+serenity_cherry_picks.add('33bfac23ef4289cc9fda2971aef5ad1427c6d45a')
 
 # https://github.com/LadybirdBrowser/ladybird/pull/617/commits was a subset of
 # https://github.com/SerenityOS/serenity/pull/24522/commits and
@@ -312,6 +343,7 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/239": "NIH violation: icu",
     "https://github.com/LadybirdBrowser/ladybird/pull/249": "NIH violation: icu / vcpkg",
     "https://github.com/LadybirdBrowser/ladybird/pull/259": "Still used in Serenity",
+    "https://github.com/LadybirdBrowser/ladybird/pull/270": "NIH violation",
     "https://github.com/LadybirdBrowser/ladybird/pull/307": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/313": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/315": "Ladybird-specific",
@@ -351,7 +383,9 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/689": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/715": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/726": "swift",
+    "https://github.com/LadybirdBrowser/ladybird/pull/737": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/753": "Ladybird-specific",
+    "https://github.com/LadybirdBrowser/ladybird/pull/754": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/756": "NIH violation: libjxl",
 
     "https://github.com/LadybirdBrowser/ladybird/pull/787": "Got reverted",
@@ -370,6 +404,7 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/1120": "NIH violation: libpng+apng",
     "https://github.com/LadybirdBrowser/ladybird/pull/1130": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1138": "NIH violation: skia",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1175": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1220": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1221": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1263": "Ladybird-specific",
@@ -384,7 +419,10 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/1455": "NIH violation: libjxl",
     "https://github.com/LadybirdBrowser/ladybird/pull/1477": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1515": "Ladybird-specific",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1541": "Got reverted",
     "https://github.com/LadybirdBrowser/ladybird/pull/1589": "swift",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1634": "Still used in Serenity",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1870": "Got reverted",
 }
 
 # Quick consistency check:
@@ -467,9 +505,18 @@ never_merge_commits = {
     "baf7a2dee7ff3756ba455d2609322bb869e79750": "Ladybird-specific",
     "c096608dd9d3a8b0916bd7158ce1bd6b28477ad5": "Ladybird-specific",
     "23b5e47b7bcb9943ecd59327d74cfd44530fb2b3": "Ladybird-specific",
+    "d0afc3e643119e764960279783d576f6507244c4": "Ladybird-specific",
+    "0cdbcfd8b04bdc01e6222769ac89444dce6324bc": "Ladybird-specific",
+    "4907eb19502286eb4eb4dd301a2f032911566eb6": "Ladybird-specific",
+    "bbc17c35230da0da64bc8be2efa74da5d6c4ad50": "Ladybird-specific",
+    "421aa7c475ea50bddd2a0f27e8b7cb7d70c7167a": "Still used in Serenity",
+    "e70d96e4e7df3bc17c66de94948a9ecf31ae045f": "Still used in Serenity",
+    "fed4668fb18ba76f7d239f5a7f1a171a032dec42": "Still used in Serenity",
     "a8d0712c28a9576be621c6a14847fbbb1df622a4": "NIH violation: harfbuzz",
     "fdfbfcab37d679e0b59a0573706490c458d3fd55": "NIH violation: harfbuzz",  # Reverts previous commit.
     "2936a9a45ef41838861d16134f6fcb74f13a9b3b": "Ladybird-specific",  # Got reverted in PR16 again.
+    "061ad33705765792ae935bc8d77e329c20ce55d0": "Reverted PR1541",
+    "325ff4ac276ff2805a65c154d3f77af321c72717": "Reverted PR1870",
 }
 
 for commit in never_merge_commits:
