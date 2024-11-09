@@ -1,4 +1,4 @@
-@GUI::Widget {
+@Browser::EditBookmarkWidget {
     fixed_width: 260
     fixed_height: 85
     fill_with_background_color: true
