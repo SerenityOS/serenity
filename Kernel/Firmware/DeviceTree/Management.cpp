@@ -28,9 +28,12 @@ Management& Management::the()
 
 ErrorOr<void> Management::register_driver(NonnullOwnPtr<DeviceTree::Driver>&& driver)
 {
-    for (auto compatible_entry : driver->compatibles()) {
-        VERIFY(!s_the->m_drivers.contains(compatible_entry));
-        TRY(the().m_drivers.try_set(compatible_entry, move(driver)));
+    TRY(the().m_drivers.try_append(move(driver)));
+    auto& driver_in_list = the().m_drivers.last();
+
+    for (auto compatible_entry : driver_in_list->compatibles()) {
+        VERIFY(!s_the->m_driver_map.contains(compatible_entry));
+        TRY(the().m_driver_map.try_set(compatible_entry, driver_in_list.ptr()));
     }
 
     return {};
@@ -55,7 +58,7 @@ ErrorOr<void> Management::scan_node_for_devices(::DeviceTree::Node const& node)
 
         // The compatible property is ordered from most specific to least specific, so choose the first compatible we have a driver for.
         TRY(maybe_compatible->for_each_string([this, &device](StringView compatible_entry) -> ErrorOr<IterationDecision> {
-            auto maybe_driver = m_drivers.get(compatible_entry);
+            auto maybe_driver = m_driver_map.get(compatible_entry);
             if (!maybe_driver.has_value())
                 return IterationDecision::Continue;
 
