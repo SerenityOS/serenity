@@ -36,28 +36,43 @@
             }
         }
 
-        @GUI::Widget {
+        @GUI::GroupBox {
+            title: "Output:"
             layout: @GUI::VerticalBoxLayout {
-                margins: [0, 0, 0, 8]
+                margins: [4]
+                spacing: 0
             }
 
-            @GUI::CheckBox {
-                name: "edit_in_pixel_paint"
+            @GUI::RadioButton {
+                name: "output_radio_clipboard"
+                text: "Clipboard"
+            }
+
+            @GUI::RadioButton {
+                name: "output_radio_pixel_paint"
                 text: "Edit in Pixel Paint"
             }
-        }
 
-        @GUI::Widget {
-            layout: @GUI::HorizontalBoxLayout {}
-
-            @GUI::TextBox {
-                name: "destination"
-                mode: "DisplayOnly"
+            @GUI::RadioButton {
+                name: "output_radio_file"
+                text: "File"
+                checked: true
             }
 
-            @GUI::Button {
-                name: "browse"
-                max_width: 22
+            @GUI::Widget {
+                layout: @GUI::HorizontalBoxLayout {}
+
+                @GUI::Layout::Spacer {}
+
+                @GUI::TextBox {
+                    name: "destination"
+                    mode: "DisplayOnly"
+                }
+
+                @GUI::Button {
+                    name: "browse"
+                    max_width: 22
+                }
             }
         }
 

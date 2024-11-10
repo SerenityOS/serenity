@@ -20,7 +20,7 @@ MainWindow::MainWindow()
 
     set_title("Screenshot");
     set_icon(app_icon.bitmap_for_size(16));
-    resize(300, 150);
+    resize(300, 220);
     set_resizable(false);
     set_minimizable(false);
 
@@ -52,10 +52,15 @@ MainWindow::MainWindow()
 
     m_selected_area = *main_widget->find_descendant_of_type_named<GUI::RadioButton>("selected_area");
 
-    m_edit_in_pixel_paint = *main_widget->find_descendant_of_type_named<GUI::CheckBox>("edit_in_pixel_paint");
-    m_edit_in_pixel_paint->on_checked = [this](bool is_checked) {
-        m_browse->set_enabled(!is_checked);
-        m_destination->set_enabled(!is_checked);
+    m_output_radio_clipboard = *main_widget->find_descendant_of_type_named<GUI::RadioButton>("output_radio_clipboard");
+
+    m_output_radio_pixel_paint = *main_widget->find_descendant_of_type_named<GUI::RadioButton>("output_radio_pixel_paint");
+
+    m_output_radio_file = *main_widget->find_descendant_of_type_named<GUI::RadioButton>("output_radio_file");
+
+    m_output_radio_file->on_checked = [this](bool is_checked) {
+        m_browse->set_enabled(is_checked);
+        m_destination->set_enabled(is_checked);
     };
 
     m_destination = *main_widget->find_descendant_of_type_named<GUI::TextBox>("destination");
@@ -71,8 +76,10 @@ void MainWindow::take_screenshot()
     if (m_selected_area->is_checked())
         arguments.append("-r"sv);
 
-    if (m_edit_in_pixel_paint->is_checked())
+    if (m_output_radio_pixel_paint->is_checked())
         arguments.append("-e"sv);
+    else if (m_output_radio_clipboard->is_checked())
+        arguments.append("-c"sv);
 
     // FIXME: Place common screenshot code into library and use that
     MUST(Core::Process::spawn("/bin/shot"sv, arguments, m_destination->text(), Core::Process::KeepAsChild::No));
