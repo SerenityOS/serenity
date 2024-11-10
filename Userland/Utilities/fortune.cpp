@@ -46,6 +46,18 @@ public:
     ByteString const& url() const { return m_url; }
     Optional<ByteString> const& context() const { return m_context; }
 
+    size_t length() const
+    {
+        // TODO: Should we consider m_utc_time's length as well?
+        size_t total = 0;
+
+        total = m_quote.length() + m_author.length() + m_url.length();
+        if (m_context.has_value())
+            total += m_context.value().length();
+
+        return total;
+    }
+
 private:
     Quote() = default;
 
@@ -78,6 +90,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Optional<bool> force_color;
 
+    bool wait_before_termination = false;
+    constexpr u32 minimum_secs_to_wait = 6;
+    constexpr u32 chars_per_second = 20;
+
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Open a fortune cookie, receive a free quote for the day!");
     args_parser.add_option(Core::ArgsParser::Option {
@@ -98,6 +114,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return true;
         },
     });
+    args_parser.add_option(wait_before_termination, "Wait before termination for an amount of time calculated from the number of characters in the message", "wait", 'w');
     args_parser.add_positional_argument(path, "Path to JSON file with quotes (/res/fortunes.json by default)", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -150,6 +167,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (stdout_is_tty)
         outln(); // Tasteful spacing
+
+    if (wait_before_termination)
+        sleep(max(chosen_quote.length() / chars_per_second, minimum_secs_to_wait));
 
     return 0;
 }
