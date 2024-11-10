@@ -29,6 +29,7 @@
     __ENUMERATE_SHELL_BUILTIN(where, InAllModes)             \
     __ENUMERATE_SHELL_BUILTIN(cd, InAllModes)                \
     __ENUMERATE_SHELL_BUILTIN(cdh, InAllModes)               \
+    __ENUMERATE_SHELL_BUILTIN(command, InAllModes)           \
     __ENUMERATE_SHELL_BUILTIN(pwd, InAllModes)               \
     __ENUMERATE_SHELL_BUILTIN(type, InAllModes)              \
     __ENUMERATE_SHELL_BUILTIN(exec, InAllModes)              \

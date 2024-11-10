@@ -55,15 +55,15 @@ enum FollowSymlinks {
     No
 };
 
-static Vector<ByteString> find_matching_executables_in_path(StringView filename, FollowSymlinks follow_symlinks = FollowSymlinks::No)
+static Vector<ByteString> find_matching_executables_in_path(StringView filename, FollowSymlinks follow_symlinks = FollowSymlinks::No, Optional<StringView> force_path = {})
 {
     // Edge cases in which there are guaranteed no solutions
     if (filename.is_empty() || filename.contains('/'))
         return {};
 
     char const* path_str = getenv("PATH");
-    auto path = DEFAULT_PATH_SV;
-    if (path_str != nullptr) // maybe && *path_str
+    auto path = force_path.value_or(DEFAULT_PATH_SV);
+    if (path_str != nullptr && !force_path.has_value())
         path = { path_str, strlen(path_str) };
 
     Vector<ByteString> executables;
@@ -509,6 +509,84 @@ ErrorOr<int> Shell::builtin_cdh(Main::Arguments arguments)
     StringView path = cd_history.at(cd_history.size() - index);
     StringView cd_args[] = { "cd"sv, path };
     return Shell::builtin_cd({ .argc = 0, .argv = 0, .strings = cd_args });
+}
+
+ErrorOr<int> Shell::builtin_command(Main::Arguments arguments)
+{
+    bool describe = false;
+    bool describe_verbosely = false;
+    bool search_in_default_path = false;
+    Vector<StringView> commands_or_args;
+
+    Core::ArgsParser parser;
+    parser.add_option(search_in_default_path, "default-path", "Use a default value for PATH", 'p');
+    parser.add_option(describe, "describe", "Describe the file that would be executed", 'v');
+    parser.add_option(describe_verbosely, "describe-verbosely", "Describe the file that would be executed more verbosely", 'V');
+    parser.add_positional_argument(commands_or_args, "Arguments or command names to search for", "arg");
+    parser.set_stop_on_first_non_option(true);
+
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+        return 1;
+
+    auto const look_up_builtin = [](StringView builtin) -> Optional<ByteString> {
+        for (auto const& _builtin : builtin_names) {
+            if (_builtin == builtin) {
+                return builtin;
+            }
+        }
+        return {};
+    };
+
+    describe |= describe_verbosely;
+    if (!describe) {
+        AST::Command command;
+        TRY(command.argv.try_ensure_capacity(commands_or_args.size()));
+        for (auto& arg : commands_or_args)
+            command.argv.append(TRY(String::from_utf8(arg)));
+
+        auto commands = TRY(expand_aliases({ move(command) }));
+
+        int exit_code = 1;
+        for (auto& job : run_commands(commands)) {
+            block_on_job(job);
+            exit_code = job->exit_code();
+        }
+
+        return exit_code;
+    }
+
+    bool any_failed = false;
+    for (auto const& argument : commands_or_args) {
+        auto alias = m_aliases.get(argument);
+        if (alias.has_value()) {
+            if (describe_verbosely)
+                outln("{}: aliased to {}", argument, alias.value());
+            else
+                outln("{}", alias.value());
+            continue;
+        }
+
+        auto const builtin = look_up_builtin(argument);
+        if (builtin.has_value()) {
+            if (describe_verbosely)
+                outln("{}: shell built-in command", builtin.value());
+            else
+                outln("{}", builtin.value());
+            continue;
+        }
+
+        auto const executables = find_matching_executables_in_path(argument, FollowSymlinks::No, search_in_default_path ? DEFAULT_PATH_SV : Optional<StringView>());
+        if (!executables.is_empty()) {
+            outln("{}", executables.first());
+            continue;
+        }
+
+        if (describe_verbosely)
+            warnln("{} not found", argument);
+        any_failed = true;
+    }
+
+    return any_failed ? 1 : 0;
 }
 
 ErrorOr<int> Shell::builtin_dirs(Main::Arguments arguments)
