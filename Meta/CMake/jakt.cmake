@@ -23,10 +23,10 @@ if(${PROJECT_NAME} STREQUAL "Lagom")
     set(JAKT_TARGET_TRIPLE ${arch}-unknown-${os}-unknown)
     set(JAKT_LIBRARY_BASE "${SerenityOS_SOURCE_DIR}/Toolchain/Local/jakt/lib")
 else()
-    set(JAKT_LIBRARY_BASE "${CMAKE_SYSROOT}/usr/local/lib")
+    set(JAKT_LIBRARY_BASE "${SerenityOS_SOURCE_DIR}/Toolchain/Local/jakt/usr/local/lib")
 endif()
 set(JAKT_LIBRARY_DIR "${JAKT_LIBRARY_BASE}/${JAKT_TARGET_TRIPLE}")
-set(JAKT_INCLUDE_DIR "${CMAKE_SYSROOT}/usr/local/include/runtime")
+set(JAKT_INCLUDE_DIR "${SerenityOS_SOURCE_DIR}/Toolchain/Local/jakt/usr/local/include/runtime")
 
 # Make sure the jakt compiler:
 # - exists
