@@ -25,8 +25,8 @@ WordGame::WordGame()
     : m_clear_message_timer(Core::Timer::create_single_shot(5000, [this] { clear_message(); }))
 {
     read_words();
-    m_num_letters = Config::read_i32("MasterWord"sv, ""sv, "word_length"sv, 5);
-    m_max_guesses = Config::read_i32("MasterWord"sv, ""sv, "max_guesses"sv, 6);
+    m_num_letters = Config::read_u32("MasterWord"sv, ""sv, "word_length"sv, 5);
+    m_max_guesses = Config::read_u32("MasterWord"sv, ""sv, "max_guesses"sv, 6);
     m_check_guesses = Config::read_bool("MasterWord"sv, ""sv, "check_guesses_in_dictionary"sv, false);
     reset();
     pick_font();

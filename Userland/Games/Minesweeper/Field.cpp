@@ -152,9 +152,9 @@ void Field::initialize()
 
     {
         bool single_chording = Config::read_bool("Minesweeper"sv, "Game"sv, "SingleChording"sv, false);
-        int mine_count = Config::read_i32("Minesweeper"sv, "Game"sv, "MineCount"sv, 10);
-        int rows = Config::read_i32("Minesweeper"sv, "Game"sv, "Rows"sv, 9);
-        int columns = Config::read_i32("Minesweeper"sv, "Game"sv, "Columns"sv, 9);
+        auto mine_count = Config::read_u32("Minesweeper"sv, "Game"sv, "MineCount"sv, 10);
+        auto rows = Config::read_u32("Minesweeper"sv, "Game"sv, "Rows"sv, 9);
+        auto columns = Config::read_u32("Minesweeper"sv, "Game"sv, "Columns"sv, 9);
         auto difficulty_string = Config::read_string("Minesweeper"sv, "Game"sv, "Difficulty"sv, "beginner"sv);
         auto difficulty = difficulty_from_string(difficulty_string);
 
@@ -556,9 +556,9 @@ void Field::set_field_size(Difficulty difficulty, size_t rows, size_t columns, s
     if (m_rows == rows && m_columns == columns && m_mine_count == mine_count)
         return;
     {
-        Config::write_i32("Minesweeper"sv, "Game"sv, "MineCount"sv, mine_count);
-        Config::write_i32("Minesweeper"sv, "Game"sv, "Rows"sv, rows);
-        Config::write_i32("Minesweeper"sv, "Game"sv, "Columns"sv, columns);
+        Config::write_u32("Minesweeper"sv, "Game"sv, "MineCount"sv, mine_count);
+        Config::write_u32("Minesweeper"sv, "Game"sv, "Rows"sv, rows);
+        Config::write_u32("Minesweeper"sv, "Game"sv, "Columns"sv, columns);
         Config::write_string("Minesweeper"sv, "Game"sv, "Difficulty"sv, difficulty_to_string(difficulty));
     }
     m_difficulty = difficulty;

@@ -60,7 +60,7 @@ ColorLines::ColorLines(StringView app_name)
 {
     VERIFY(m_marble_bitmaps.size() == Marble::number_of_colors);
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
-    m_high_score = Config::read_i32(m_app_name, m_app_name, "HighScore"sv, 0);
+    m_high_score = Config::read_u32(m_app_name, m_app_name, "HighScore"sv, 0);
     reset();
 }
 
@@ -155,7 +155,7 @@ void ColorLines::timer_event(Core::TimerEvent&)
         text.appendff("Your score is {}", m_score);
         if (m_score > m_high_score) {
             text.append("\nThis is a new high score!"sv);
-            Config::write_i32(m_app_name, m_app_name, "HighScore"sv, int(m_high_score = m_score));
+            Config::write_u32(m_app_name, m_app_name, "HighScore"sv, m_high_score = m_score);
         }
         GUI::MessageBox::show(window(),
             text.string_view(),

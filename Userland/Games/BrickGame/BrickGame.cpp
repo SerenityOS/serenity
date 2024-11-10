@@ -450,7 +450,7 @@ BrickGame::BrickGame(StringView app_name)
     , m_brick_game(make<Bricks>())
 {
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
-    m_high_score = Config::read_i32(m_app_name, m_app_name, "HighScore"sv, 0);
+    m_high_score = Config::read_u32(m_app_name, m_app_name, "HighScore"sv, 0);
     reset();
 }
 
@@ -692,7 +692,7 @@ void BrickGame::game_over()
     text.appendff("Your score was {}", current_score);
     if (current_score > m_high_score) {
         text.append("\nThat's a new high score!"sv);
-        Config::write_i32(m_app_name, m_app_name, "HighScore"sv, int(m_high_score = current_score));
+        Config::write_u32(m_app_name, m_app_name, "HighScore"sv, m_high_score = current_score);
     }
     GUI::MessageBox::show(window(),
         text.string_view(),

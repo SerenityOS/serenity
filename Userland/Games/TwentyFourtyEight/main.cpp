@@ -48,8 +48,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    size_t board_size = Config::read_i32("2048"sv, ""sv, "board_size"sv, 4);
-    u32 target_tile = Config::read_i32("2048"sv, ""sv, "target_tile"sv, 2048);
+    size_t board_size = Config::read_u32("2048"sv, ""sv, "board_size"sv, 4);
+    u32 target_tile = Config::read_u32("2048"sv, ""sv, "target_tile"sv, 2048);
     bool evil_ai = Config::read_bool("2048"sv, ""sv, "evil_ai"sv, false);
 
     if ((target_tile & (target_tile - 1)) != 0) {
@@ -57,8 +57,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         target_tile = 2048;
     }
 
-    Config::write_i32("2048"sv, ""sv, "board_size"sv, board_size);
-    Config::write_i32("2048"sv, ""sv, "target_tile"sv, target_tile);
+    Config::write_u32("2048"sv, ""sv, "board_size"sv, board_size);
+    Config::write_u32("2048"sv, ""sv, "target_tile"sv, target_tile);
     Config::write_bool("2048"sv, ""sv, "evil_ai"sv, evil_ai);
 
     window->set_double_buffering_enabled(false);
@@ -129,8 +129,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         if (!size_dialog->temporary()) {
 
-            Config::write_i32("2048"sv, ""sv, "board_size"sv, board_size);
-            Config::write_i32("2048"sv, ""sv, "target_tile"sv, target_tile);
+            Config::write_u32("2048"sv, ""sv, "board_size"sv, board_size);
+            Config::write_u32("2048"sv, ""sv, "target_tile"sv, target_tile);
             Config::write_bool("2048"sv, ""sv, "evil_ai"sv, evil_ai);
 
             GUI::MessageBox::show(size_dialog, "New settings have been saved and will be applied on a new game"sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);

@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    u32 high_score = Config::read_i32("FlappyBug"sv, "Game"sv, "HighScore"sv, 0);
+    u32 high_score = Config::read_u32("FlappyBug"sv, "Game"sv, "HighScore"sv, 0);
 
     auto window = GUI::Window::construct();
     window->resize(FlappyBug::Game::game_width, FlappyBug::Game::game_height);
@@ -49,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (score <= high_score)
             return high_score;
 
-        Config::write_i32("FlappyBug"sv, "Game"sv, "HighScore"sv, score);
+        Config::write_u32("FlappyBug"sv, "Game"sv, "HighScore"sv, score);
         high_score = score;
 
         return high_score;
