@@ -93,14 +93,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
 
     ByteString output_path;
-    bool output_to_clipboard = false;
+    bool output_to_clipboard_and_exit = false;
+    bool output_to_clipboard_and_continue = false;
     unsigned delay = 0;
     bool select_region = false;
     bool edit_image = false;
     int screen = -1;
 
     args_parser.add_positional_argument(output_path, "Output filename", "output", Core::ArgsParser::Required::No);
-    args_parser.add_option(output_to_clipboard, "Output to clipboard", "clipboard", 'c');
+    args_parser.add_option(output_to_clipboard_and_exit, "Output to clipboard and exit", "clipboard", 'c');
+    args_parser.add_option(output_to_clipboard_and_continue, "Output to clipboard and process other arguments", nullptr, 'y');
     args_parser.add_option(delay, "Seconds to wait before taking a screenshot", "delay", 'd', "seconds");
     args_parser.add_option(screen, "The index of the screen (default: -1 for all screens)", "screen", 's', "index");
     args_parser.add_option(select_region, "Select a region to capture", "region", 'r');
@@ -146,9 +148,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    if (output_to_clipboard) {
+    if (output_to_clipboard_and_exit || output_to_clipboard_and_continue) {
         GUI::Clipboard::the().set_bitmap(*bitmap);
-        return 0;
+        if (output_to_clipboard_and_exit)
+            return 0;
     }
 
     auto encoded_bitmap_or_error = Gfx::PNGWriter::encode(*bitmap);
