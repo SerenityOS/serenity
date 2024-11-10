@@ -255,15 +255,15 @@ build_for() {
 
         buildstep "jakt/support/build/$TOOLCHAIN" "$PREFIX/bin/jakt" cross \
                                                             --only-support-libs \
-                                                            --install-root "$SYSROOT/usr/local" \
+                                                            --install-root "$PREFIX/usr/local" \
                                                             --target-triple "$JAKT_TARGET" \
                                                             --target-links-ak \
                                                             -C "$TARGET_CXX" \
                                                             -O \
                                                             -J "$NPROC"
 
-        buildstep "jakt/support/build/$TOOLCHAIN/ranlib" "$TARGET_RANLIB" "$SYSROOT/usr/local/lib/$JAKT_TARGET/libjakt_runtime_$JAKT_TARGET.a"
-        buildstep "jakt/support/build/$TOOLCHAIN/ranlib" "$TARGET_RANLIB" "$SYSROOT/usr/local/lib/$JAKT_TARGET/libjakt_main_$JAKT_TARGET.a"
+        buildstep "jakt/support/build/$TOOLCHAIN/ranlib" "$TARGET_RANLIB" "$PREFIX/usr/local/lib/$JAKT_TARGET/libjakt_runtime_$JAKT_TARGET.a"
+        buildstep "jakt/support/build/$TOOLCHAIN/ranlib" "$TARGET_RANLIB" "$PREFIX/usr/local/lib/$JAKT_TARGET/libjakt_main_$JAKT_TARGET.a"
     popd
 }
 
