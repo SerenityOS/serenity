@@ -343,6 +343,7 @@ shared_library("LibWeb") {
            "WebGL",
            "WebIDL",
            "WebSockets",
+           "WebVTT",
            "Worker",
            "XHR",
            "XLink",
