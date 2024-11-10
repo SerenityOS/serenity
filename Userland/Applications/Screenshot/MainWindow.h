@@ -28,7 +28,9 @@ private:
     RefPtr<GUI::Button> m_cancel_button;
     RefPtr<GUI::Button> m_browse;
     RefPtr<GUI::RadioButton> m_selected_area;
-    RefPtr<GUI::CheckBox> m_edit_in_pixel_paint;
+    RefPtr<GUI::RadioButton> m_output_radio_clipboard;
+    RefPtr<GUI::RadioButton> m_output_radio_pixel_paint;
+    RefPtr<GUI::RadioButton> m_output_radio_file;
     RefPtr<GUI::TextBox> m_destination;
 };
 
