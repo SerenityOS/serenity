@@ -106,6 +106,15 @@ ErrorOr<void> MainWidget::setup()
         set_modified(true);
     };
     confirm_close_checkbox.set_checked(m_confirm_close, GUI::AllowCallback::No);
+
+    m_window_resize_on_zoom = Config::read_bool("Terminal"sv, "Terminal"sv, "ResizeOnZoom"sv, true);
+    auto& window_resize_on_zoom_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("window_resize_on_zoom");
+    window_resize_on_zoom_checkbox.on_checked = [&](bool window_resize_on_zoom) {
+        m_window_resize_on_zoom = window_resize_on_zoom;
+        Config::write_bool("Terminal"sv, "Terminal"sv, "ResizeOnZoom"sv, window_resize_on_zoom);
+        set_modified(true);
+    };
+    window_resize_on_zoom_checkbox.set_checked(m_window_resize_on_zoom, GUI::AllowCallback::No);
     return {};
 }
 
@@ -120,6 +129,7 @@ void MainWidget::write_back_settings() const
     Config::write_bool("Terminal"sv, "Terminal"sv, "ConfirmClose"sv, m_orignal_confirm_close);
     Config::write_string("Terminal"sv, "Window"sv, "Bell"sv, VT::TerminalWidget::stringify_bell(m_original_bell_mode));
     Config::write_string("Terminal"sv, "Terminal"sv, "AutoMark"sv, VT::TerminalWidget::stringify_automark_mode(m_automark_mode));
+    Config::write_bool("Terminal"sv, "Terminal"sv, "ResizeOnZoom"sv, m_window_resize_on_zoom);
 }
 
 void MainWidget::cancel_settings()

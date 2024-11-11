@@ -136,6 +136,8 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
 
     m_terminal.set_size(Config::read_i32("Terminal"sv, "Window"sv, "Width"sv, 80), Config::read_i32("Terminal"sv, "Window"sv, "Height"sv, 25));
 
+    m_resize_on_zoom = Config::read_bool("Terminal"sv, "Terminal"sv, "ResizeOnZoom"sv, true);
+
     m_copy_action = GUI::Action::create("&Copy", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         copy();
     });
