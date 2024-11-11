@@ -9,10 +9,10 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugSession.h>
+#include <LibDisassembly/Disassembler.h>
+#include <LibDisassembly/ELFSymbolProvider.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
-#include <LibX86/Disassembler.h>
-#include <LibX86/ELFSymbolProvider.h>
 #include <stdio.h>
 
 namespace HackStudio {
@@ -50,9 +50,9 @@ DisassemblyModel::DisassemblyModel(Debug::DebugSession const& debug_session, Ptr
 
     auto view = symbol.value().raw_data();
 
-    X86::ELFSymbolProvider symbol_provider(*elf);
-    X86::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
-    X86::Disassembler disassembler(stream);
+    Disassembly::ELFSymbolProvider symbol_provider(*elf);
+    Disassembly::SimpleInstructionStream stream((u8 const*)view.characters_without_null_termination(), view.length());
+    Disassembly::Disassembler disassembler(stream, Disassembly::architecture_from_elf_machine(elf->machine()).value_or(Disassembly::host_architecture()));
 
     size_t offset_into_symbol = 0;
     for (;;) {
@@ -60,11 +60,12 @@ DisassemblyModel::DisassemblyModel(Debug::DebugSession const& debug_session, Ptr
         if (!insn.has_value())
             break;
         FlatPtr address_in_profiled_program = symbol.value().value() + offset_into_symbol;
-        auto disassembly = insn.value().to_byte_string(address_in_profiled_program, &symbol_provider);
-        StringView instruction_bytes = view.substring_view(offset_into_symbol, insn.value().length());
-        m_instructions.append({ insn.value(), disassembly, instruction_bytes, address_in_profiled_program });
+        auto disassembly = insn.value()->to_byte_string(address_in_profiled_program, symbol_provider);
+        auto length = insn.value()->length();
+        StringView instruction_bytes = view.substring_view(offset_into_symbol, length);
+        m_instructions.append({ insn.release_value(), disassembly, instruction_bytes, address_in_profiled_program });
 
-        offset_into_symbol += insn.value().length();
+        offset_into_symbol += length;
     }
 }
 
