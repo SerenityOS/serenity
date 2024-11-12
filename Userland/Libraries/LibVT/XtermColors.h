@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
+
 #pragma once
 
-static constexpr unsigned xterm_colors[256] = {
+static constexpr Array<unsigned, 256> xterm_colors = to_array<unsigned>({
     0x000000,
     0xcc0000,
     0x3e9a06,
@@ -263,4 +265,4 @@ static constexpr unsigned xterm_colors[256] = {
     0xdadada,
     0xe4e4e4,
     0xeeeeee,
-};
+});

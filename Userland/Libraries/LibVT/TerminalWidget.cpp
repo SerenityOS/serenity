@@ -89,8 +89,9 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy)
     : m_terminal(*this)
     , m_automatic_size_policy(automatic_size_policy)
 {
-    static_assert(sizeof(m_colors) == sizeof(xterm_colors));
-    memcpy(m_colors, xterm_colors, sizeof(m_colors));
+    VERIFY(m_colors.size() == xterm_colors.size());
+    for (size_t i = 0; i < xterm_colors.size(); i++)
+        m_colors[i] = Gfx::Color::from_rgb(xterm_colors[i]);
 
     set_override_cursor(Gfx::StandardCursor::IBeam);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
