@@ -15,6 +15,7 @@ As usual, make the `configure` script recognize Serenity. Also set
 `MACHDEP` (which is used for `sys.platform`) to a version-less
 `serenityos`, even when not cross-compiling.
 
+
 ## `0003-Include-sys-uio.h-in-socketmodule.c.patch`
 
 Include `sys/uio.h` in `socketmodule.c`
@@ -34,6 +35,7 @@ unknown.
 
 Don't include `sys/syscall.h` in mimalloc
 
+
 ## `0006-Force-disable-pyrepl.patch`
 
 Force-disable pyrepl
@@ -41,4 +43,14 @@ Force-disable pyrepl
 We are lacking termios support for this leading to a non-functional
 modern REPL. Force-disable it in the source instead of requiring users
 to set PYTHON_BASIC_REPL=1 to work around the issue.
+
+## `0007-Backport-gh-126688-Reinit-import-lock-after-fork.patch`
+
+Backport gh-126688: Reinit import lock after fork
+
+https://github.com/python/cpython/pull/126765
+This PR will be included in some future version of Python,
+it is needed for `os.fork` to work on SerenityOS.
+
+Authored-By: Sam Gross <colesbury@gmail.com>
 
