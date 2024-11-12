@@ -212,11 +212,6 @@ void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent&
     client().async_update_screen_rects(m_client_state.page_index, screen_rects, event.main_screen_index());
 }
 
-ByteString OutOfProcessWebView::dump_layout_tree()
-{
-    return client().dump_layout_tree(m_client_state.page_index);
-}
-
 OrderedHashMap<String, String> OutOfProcessWebView::get_local_storage_entries()
 {
     return client().get_local_storage_entries(m_client_state.page_index);
