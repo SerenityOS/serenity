@@ -397,6 +397,7 @@ U+1F3C9.png
 U+1F3CA.png
 U+1F3CB.png
 U+1F3CC.png
+U+1F3CD.png
 U+1F3CE.png
 U+1F3CF.png
 U+1F3D0.png
@@ -548,8 +549,10 @@ U+1F464.png
 U+1F465.png
 U+1F468.png
 U+1F469.png
+U+1F46A.png
 U+1F46F.png
 U+1F471.png
+U+1F472.png
 U+1F473.png
 U+1F478.png
 U+1F479.png
@@ -575,6 +578,7 @@ U+1F48C.png
 U+1F48D.png
 U+1F48E.png
 U+1F490.png
+U+1F491.png
 U+1F492.png
 U+1F493.png
 U+1F494.png
@@ -1144,6 +1148,7 @@ U+1F997.png
 U+1F998.png
 U+1F999.png
 U+1F99A.png
+U+1F99B.png
 U+1F99C.png
 U+1F99D.png
 U+1F99E.png
