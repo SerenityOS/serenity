@@ -1,0 +1,58 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Oskar Skog <oskar@oskog97.com>
+Date: Wed, 13 Nov 2024 01:07:10 +0200
+Subject: [PATCH] Backport gh-126688: Reinit import lock after fork
+
+https://github.com/python/cpython/pull/126765
+This PR will be included in some future version of Python,
+it is needed for `os.fork` to work on SerenityOS.
+
+Authored-By: Sam Gross <colesbury@gmail.com>
+---
+ Include/internal/pycore_import.h | 1 +
+ Modules/posixmodule.c            | 1 +
+ Python/import.c                  | 7 +++++++
+ 3 files changed, 9 insertions(+)
+
+diff --git a/Include/internal/pycore_import.h b/Include/internal/pycore_import.h
+index 3806e0d3cd0a95bd9ddc6557212ded290772cc32..55029abdd31b5a479f16a048d402c44c2d7affca 100644
+--- a/Include/internal/pycore_import.h
++++ b/Include/internal/pycore_import.h
+@@ -21,6 +21,7 @@ extern int _PyImport_SetModuleString(const char *name, PyObject* module);
+ 
+ extern void _PyImport_AcquireLock(PyInterpreterState *interp);
+ extern void _PyImport_ReleaseLock(PyInterpreterState *interp);
++extern void _PyImport_ReInitLock(PyInterpreterState *interp);
+ 
+ // This is used exclusively for the sys and builtins modules:
+ extern int _PyImport_FixupBuiltin(
+diff --git a/Modules/posixmodule.c b/Modules/posixmodule.c
+index 51e34b5f4b74fc1d7a7ea405fb797d0dd390e4f4..15dca2d4fa04ce88a87d361c12d33ba01e3e6e7d 100644
+--- a/Modules/posixmodule.c
++++ b/Modules/posixmodule.c
+@@ -677,6 +677,7 @@ PyOS_AfterFork_Child(void)
+     _PyEval_StartTheWorldAll(&_PyRuntime);
+     _PyThreadState_DeleteList(list);
+ 
++    _PyImport_ReInitLock(tstate->interp);
+     _PyImport_ReleaseLock(tstate->interp);
+ 
+     _PySignal_AfterFork();
+diff --git a/Python/import.c b/Python/import.c
+index 2ec596828e3e6fab5253f58ee14081907c49eff6..125ee439a20a20d8918778500c5c7e6ce554368a 100644
+--- a/Python/import.c
++++ b/Python/import.c
+@@ -120,6 +120,13 @@ _PyImport_ReleaseLock(PyInterpreterState *interp)
+     _PyRecursiveMutex_Unlock(&IMPORT_LOCK(interp));
+ }
+ 
++void
++_PyImport_ReInitLock(PyInterpreterState *interp)
++{
++    // gh-126688: Thread id may change after fork() on some operating systems.
++    IMPORT_LOCK(interp).thread = PyThread_get_thread_ident_ex();
++}
++
+ 
+ /***************/
+ /* sys.modules */
