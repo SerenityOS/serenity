@@ -193,6 +193,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`links`](links/)                             | Links web browser                                             | 2.29                     | http://links.twibright.com/                                          |
 | [`lite-xl`](lite-xl/)                         | Lite-XL                                                       | 2.1.3                    | https://lite-xl.com/                                                 |
 | [`llvm`](llvm/)                               | LLVM                                                          | 19.1.0                   | https://llvm.org/                                                    |
+| [`lolcat`](lolcat/)                           | lolcat                                                        | 1212a9c                  | https://github.com/jaseg/lolcat/                                     |
 | [`lowdown`](lowdown/)                         | lowdown                                                       | 1.0.2                    | https://kristaps.bsd.lv/lowdown/                                     |
 | [`lrzip`](lrzip/)                             | lrzip                                                         | 0.651                    | https://github.com/ckolivas/lrzip                                    |
 | [`lua`](lua/)                                 | Lua                                                           | 5.4.6                    | https://www.lua.org/                                                 |
