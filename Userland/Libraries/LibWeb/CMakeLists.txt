@@ -753,6 +753,7 @@ set(SOURCES
     WebGL/WebGLRenderingContext.cpp
     WebGL/WebGLRenderingContextBase.cpp
     WebGL/WebGLShader.cpp
+    WebGL/WebGLTexture.cpp
     WebIDL/AbstractOperations.cpp
     WebIDL/Buffers.cpp
     WebIDL/CallbackType.cpp
