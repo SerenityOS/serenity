@@ -1,0 +1,37 @@
+From 1855230d5734e829bd7569c8329ed2bb17b671d5 Mon Sep 17 00:00:00 2001
+From: Ninad Sachania <ninad.sachania@gmail.com>
+Date: Wed, 13 Nov 2024 08:46:33 +0000
+Subject: [PATCH] Remove unnecessary headers
+
+---
+ censor.c | 1 -
+ lolcat.c | 1 -
+ 2 files changed, 2 deletions(-)
+
+diff --git a/censor.c b/censor.c
+index 39b25a4..6ca5d7a 100644
+--- a/censor.c
++++ b/censor.c
+@@ -14,7 +14,6 @@
+  */
+ 
+ #include <ctype.h>
+-#include <err.h>
+ #include <errno.h>
+ #include <locale.h>
+ #include <stdint.h>
+diff --git a/lolcat.c b/lolcat.c
+index 011f5dc..9097a83 100755
+--- a/lolcat.c
++++ b/lolcat.c
+@@ -16,7 +16,6 @@
+ #define _XOPEN_SOURCE
+ 
+ #include <ctype.h>
+-#include <err.h>
+ #include <errno.h>
+ #include <locale.h>
+ #include <stdint.h>
+-- 
+2.43.0
+
