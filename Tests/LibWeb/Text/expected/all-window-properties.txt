@@ -383,6 +383,7 @@ WeakMap
 WeakRef
 WeakSet
 WebGLContextEvent
+WebGLObject
 WebGLRenderingContext
 WebKitCSSMatrix
 WebSocket
