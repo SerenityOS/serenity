@@ -4,9 +4,19 @@ source_set("WebGL") {
   sources = [
     "EventNames.cpp",
     "OpenGLContext.cpp",
+    "WebGLActiveInfo.cpp",
+    "WebGLBuffer.cpp",
     "WebGLContextAttributes.cpp",
     "WebGLContextEvent.cpp",
+    "WebGLFramebuffer.cpp",
+    "WebGLObject.cpp",
+    "WebGLProgram.cpp",
+    "WebGLRenderbuffer.cpp",
     "WebGLRenderingContext.cpp",
     "WebGLRenderingContextBase.cpp",
+    "WebGLShader.cpp",
+    "WebGLShaderPrecisionFormat.cpp",
+    "WebGLTexture.cpp",
+    "WebGLUniformLocation.cpp",
   ]
 }
