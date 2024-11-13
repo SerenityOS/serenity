@@ -391,6 +391,7 @@ WebGLProgram
 WebGLRenderbuffer
 WebGLRenderingContext
 WebGLShader
+WebGLShaderPrecisionFormat
 WebGLTexture
 WebGLUniformLocation
 WebKitCSSMatrix
