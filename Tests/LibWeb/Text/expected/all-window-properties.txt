@@ -384,6 +384,7 @@ WebGLRenderbuffer
 WebGLRenderingContext
 WebGLShader
 WebGLTexture
+WebGLUniformLocation
 WebKitCSSMatrix
 WebSocket
 WheelEvent
