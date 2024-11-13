@@ -233,6 +233,10 @@ serenity_cherry_picks.add('a4eb46fcca88d16f193a2ae0d7ca890bb8447c88')
 # https://github.com/SerenityOS/serenity/pull/24664
 serenity_cherry_picks.add('176e3ba16a007dce11175c68167f6486a8a817c0')
 
+# https://github.com/LadybirdBrowser/ladybird/pull/434 landed here:
+# https://github.com/SerenityOS/serenity/pull/24686
+serenity_cherry_picks.add('b4d13d060a7fb6d68b32820a71a39dadfe5e2678')
+
 # https://github.com/SerenityOS/serenity/pull/24563 cherry-picked
 # https://github.com/LadybirdBrowser/ladybird/pull/134
 # https://github.com/LadybirdBrowser/ladybird/pull/130
@@ -278,6 +282,15 @@ serenity_cherry_picks.add('3a0f80bbae4c291df1e1847b5ce2058221482d81')
 serenity_cherry_picks.add('f0a306fe500c392a5207b3bdd88f781230c2cbfe')
 serenity_cherry_picks.add('906fa0482236c050e8386f1e1969edf531e5e257')
 
+# https://github.com/LadybirdBrowser/ladybird/pull/1031 was morally done done in
+# https://github.com/SerenityOS/serenity/pull/24754
+serenity_cherry_picks.add('00eca78d289dfd1b14bf0a2f95992e8bb7b455da')
+
+# Ladybird PR-less commit b118c99c271e34e2c5020022d062a4371f199a71 was
+# cherry-picked in https://github.com/SerenityOS/serenity/pull/24748
+# but without `-x` flag.
+serenity_cherry_picks.add('b118c99c271e34e2c5020022d062a4371f199a71')
+
 # Define a list of pull request IDs that should never be merged
 # and the reasons why they shouldn't be merged.
 # We fairly likely don't want the PRs in here (but it isn't 100% set
@@ -318,6 +331,7 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/87": "Serenity does not use vcpkg",
     "https://github.com/LadybirdBrowser/ladybird/pull/89": "Serenity does not use vcpkg",
     "https://github.com/LadybirdBrowser/ladybird/pull/92": "Ladybird-specific",
+    "https://github.com/LadybirdBrowser/ladybird/pull/103": "Ladybird-specific (see serenity PR24679)",
     "https://github.com/LadybirdBrowser/ladybird/pull/109": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/110": "NIH violation: icu",
     "https://github.com/LadybirdBrowser/ladybird/pull/115": "Still used in Serenity",
@@ -344,6 +358,7 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/249": "NIH violation: icu / vcpkg",
     "https://github.com/LadybirdBrowser/ladybird/pull/259": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/270": "NIH violation",
+    "https://github.com/LadybirdBrowser/ladybird/pull/285": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/307": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/313": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/315": "Ladybird-specific",
@@ -352,6 +367,7 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/330": "NIH violation: wolfssl",
     "https://github.com/LadybirdBrowser/ladybird/pull/469": "NIH violation: wolfssl",
 
+    "https://github.com/LadybirdBrowser/ladybird/pull/342": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/348": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/374": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/375": "Ladybird-specific",
@@ -360,6 +376,10 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/402": "No Ladybird/Android in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/409": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/410": "Ladybird-specific",
+    "https://github.com/LadybirdBrowser/ladybird/pull/395": "Big-endian patch",
+    "https://github.com/LadybirdBrowser/ladybird/pull/415": "Big-endian patch",
+    "https://github.com/LadybirdBrowser/ladybird/pull/416": "Big-endian patch",
+    "https://github.com/LadybirdBrowser/ladybird/pull/426": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/427": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/446": "vcpkg (vulkan)",
     "https://github.com/LadybirdBrowser/ladybird/pull/454": "No Ladybird/Android in Serenity",
@@ -368,22 +388,31 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/478": "No Ladybird/Android in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/481": "No Ladybird/Android in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/487": "Still used in Serenity",
+    "https://github.com/LadybirdBrowser/ladybird/pull/519": "Dependabot",
+    "https://github.com/LadybirdBrowser/ladybird/pull/525": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/551": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/574": "NIH violation: skia",
+    "https://github.com/LadybirdBrowser/ladybird/pull/577": "Ladybird-specific",
+    "https://github.com/LadybirdBrowser/ladybird/pull/580": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/581": "No Ladybird/Android in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/592": "No Ladybird/Android in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/597": "No Ladybird/Android in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/598": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/599": "NIH violation: skia",
+    "https://github.com/LadybirdBrowser/ladybird/pull/624": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/636": "NIH violation: libwebp",
+    "https://github.com/LadybirdBrowser/ladybird/pull/640": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/641": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/642": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/644": "NIH violation: skia",
+    "https://github.com/LadybirdBrowser/ladybird/pull/668": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/674": "NIH violation: simdutf",
+    "https://github.com/LadybirdBrowser/ladybird/pull/678": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/689": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/715": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/726": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/737": "Ladybird-specific",
+    "https://github.com/LadybirdBrowser/ladybird/pull/745": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/753": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/754": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/756": "NIH violation: libjxl",
@@ -391,12 +420,18 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/787": "Got reverted",
     "https://github.com/LadybirdBrowser/ladybird/pull/810": "Reverted PR787",
 
+    "https://github.com/LadybirdBrowser/ladybird/pull/805": "Ladybird-specific",
+
     # Maybe want the first commit here?
     "https://github.com/LadybirdBrowser/ladybird/pull/821": "swift",
 
+    "https://github.com/LadybirdBrowser/ladybird/pull/833": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/845": "NIH violation: skia",
+    "https://github.com/LadybirdBrowser/ladybird/pull/855": "Ladybird-specific(ish)",
     "https://github.com/LadybirdBrowser/ladybird/pull/860": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/866": "Still used in Serenity",
+    "https://github.com/LadybirdBrowser/ladybird/pull/900": "Ladybird-specific",
+    "https://github.com/LadybirdBrowser/ladybird/pull/979": "No Ladybird/Android in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/1006": "No Ladybird/Android in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/1050": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/1071": "NIH violation: harfbuzz",
@@ -407,7 +442,7 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/1175": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1220": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1221": "swift",
-    "https://github.com/LadybirdBrowser/ladybird/pull/1263": "Ladybird-specific",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1263": "Dependabot",
     "https://github.com/LadybirdBrowser/ladybird/pull/1328": "NIH violation: skia",
 
     # Removing HeaderCheck might be fine, not sure if that's used. But the rest is.
@@ -416,13 +451,18 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/1436": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/1449": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/1451": "NIH violation: curl, sqlite3, simdutf",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1452": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/1455": "NIH violation: libjxl",
     "https://github.com/LadybirdBrowser/ladybird/pull/1477": "swift",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1504": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/1515": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/1541": "Got reverted",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1581": "Dependabot",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1588": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/1589": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1634": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/1870": "Got reverted",
+    "https://github.com/LadybirdBrowser/ladybird/pull/2293": "Dependabot",
 }
 
 # Quick consistency check:
@@ -496,6 +536,7 @@ never_merge_commits = {
     "cc435e7a78dbd88aff69d696e1c5defed3aafc0b": "Still used in Serenity (PR5)",
     "5863ef852d344ff8f1cdb262ed582f5a77424b4f": "Still used in Serenity (PR6)",
     "72cdd1892b3ca532218ad8ba4de65e5aaea20af7": "Ladybird-specific (PR8, commit 1)",
+    "d334b2b57f2def558c76db78a248790464cb400e": "Made obsolete by PR1031 (PR9, commit 1)",
     "9b05fb98f3c742e66b70a661952f0c601e8437c6": "Still used in Serenity (PR11, commit 1)",
     "faeff81ce90a8123c81e02cae2093669d58e7e36": "Ladybird-specific (PR11, commit 2)",
     "9dd24991a85a58416533f0edfbc36acd3b68950e": "Ladybird-specific (PR11, commit 3)",
