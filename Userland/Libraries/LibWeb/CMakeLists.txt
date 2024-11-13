@@ -743,6 +743,7 @@ set(SOURCES
     WebDriver/TimeoutsConfiguration.cpp
     WebGL/EventNames.cpp
     WebGL/OpenGLContext.cpp
+    WebGL/WebGLActiveInfo.cpp
     WebGL/WebGLBuffer.cpp
     WebGL/WebGLContextAttributes.cpp
     WebGL/WebGLContextEvent.cpp
