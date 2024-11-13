@@ -1173,9 +1173,11 @@ ErrorOr<int> Shell::builtin_time(Main::Arguments arguments)
     Vector<StringView> args;
 
     int number_of_iterations = 1;
+    bool output_json = false;
 
     Core::ArgsParser parser;
     parser.add_option(number_of_iterations, "Number of iterations", "iterations", 'n', "iterations");
+    parser.add_option(output_json, "Output timing report in JSON format", "json", 'j');
     parser.set_stop_on_first_non_option(true);
     parser.add_positional_argument(args, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes);
 
@@ -1204,26 +1206,69 @@ ErrorOr<int> Shell::builtin_time(Main::Arguments arguments)
         iteration_times.add(static_cast<float>(timer.elapsed()));
     }
 
-    warnln();
+    if (output_json) {
+        JsonObject object;
+        object.set("command", ByteString::join(' ', arguments.strings));
+        if (number_of_iterations == 1) {
+            object.set("number_of_iterations", number_of_iterations);
+            object.set("time", static_cast<double>(iteration_times.values().first()));
+            warnln("{}", object.to_byte_string());
+        } else {
+            object.set("number_of_iterations", number_of_iterations);
 
-    if (number_of_iterations == 1) {
-        warnln("Time: {} ms", iteration_times.values().first());
+            auto build_stats_object = [&](auto timings) -> JsonObject {
+                JsonObject object;
+
+                object.set("average_time", static_cast<double>(timings.average()));
+                object.set("median", static_cast<double>(timings.median()));
+                object.set("standard_deviation", static_cast<double>(timings.standard_deviation()));
+                object.set("min", static_cast<double>(timings.min()));
+                object.set("max", static_cast<double>(timings.max()));
+
+                return object;
+            };
+
+            // Counting all
+            object.set("all_iterations", build_stats_object(iteration_times));
+
+            // Excluding first
+            AK::Statistics iteration_times_excluding_first;
+            for (size_t i = 1; i < iteration_times.size(); i++)
+                iteration_times_excluding_first.add(iteration_times.values()[i]);
+
+            object.set("excluding_first_iteration", build_stats_object(iteration_times_excluding_first));
+
+            JsonArray raw_timings;
+            for (auto const& value : iteration_times.values()) {
+                TRY(raw_timings.append(static_cast<double>(value)));
+            }
+
+            object.set("raw_timings", raw_timings);
+
+            warnln("{}", object.to_byte_string());
+        }
     } else {
-        AK::Statistics iteration_times_excluding_first;
-        for (size_t i = 1; i < iteration_times.size(); i++)
-            iteration_times_excluding_first.add(iteration_times.values()[i]);
+        warnln();
 
-        warnln("Timing report: {} ms", iteration_times.sum());
-        warnln("==============");
-        warnln("Command:         {}", ByteString::join(' ', arguments.strings));
-        warnln("Average time:    {:.2} ms (median: {}, stddev: {:.2}, min: {}, max: {})",
-            iteration_times.average(), iteration_times.median(),
-            iteration_times.standard_deviation(),
-            iteration_times.min(), iteration_times.max());
-        warnln("Excluding first: {:.2} ms (median: {}, stddev: {:.2}, min: {}, max: {})",
-            iteration_times_excluding_first.average(), iteration_times_excluding_first.median(),
-            iteration_times_excluding_first.standard_deviation(),
-            iteration_times_excluding_first.min(), iteration_times_excluding_first.max());
+        if (number_of_iterations == 1) {
+            warnln("Time: {} ms", iteration_times.values().first());
+        } else {
+            AK::Statistics iteration_times_excluding_first;
+            for (size_t i = 1; i < iteration_times.size(); i++)
+                iteration_times_excluding_first.add(iteration_times.values()[i]);
+
+            warnln("Timing report: {} ms", iteration_times.sum());
+            warnln("==============");
+            warnln("Command:         {}", ByteString::join(' ', arguments.strings));
+            warnln("Average time:    {:.2} ms (median: {}, stddev: {:.2}, min: {}, max: {})",
+                iteration_times.average(), iteration_times.median(),
+                iteration_times.standard_deviation(),
+                iteration_times.min(), iteration_times.max());
+            warnln("Excluding first: {:.2} ms (median: {}, stddev: {:.2}, min: {}, max: {})",
+                iteration_times_excluding_first.average(), iteration_times_excluding_first.median(),
+                iteration_times_excluding_first.standard_deviation(),
+                iteration_times_excluding_first.min(), iteration_times_excluding_first.max());
+        }
     }
 
     return exit_code;
