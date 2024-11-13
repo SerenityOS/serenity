@@ -389,6 +389,7 @@ WebGLObject
 WebGLProgram
 WebGLRenderbuffer
 WebGLRenderingContext
+WebGLShader
 WebKitCSSMatrix
 WebSocket
 WheelEvent
