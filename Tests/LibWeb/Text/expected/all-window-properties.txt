@@ -382,6 +382,7 @@ VisualViewport
 WeakMap
 WeakRef
 WeakSet
+WebGLActiveInfo
 WebGLBuffer
 WebGLContextEvent
 WebGLFramebuffer
