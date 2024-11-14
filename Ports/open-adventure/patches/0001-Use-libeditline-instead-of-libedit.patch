@@ -1,0 +1,70 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ninad Sachania <ninad.sachania@gmail.com>
+Date: Thu, 14 Nov 2024 06:37:10 +0000
+Subject: [PATCH] Use libeditline instead of libedit
+
+---
+ Makefile | 4 ++--
+ cheat.c  | 2 +-
+ main.c   | 2 +-
+ misc.c   | 4 ++--
+ 4 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 88c59e6e60c46d3ec5855b94f93f6f7647ef5067..5eab3c7ca71f17713d33e18d965174396e60b250 100644
+--- a/Makefile
++++ b/Makefile
+@@ -13,8 +13,8 @@ VERS=$(shell sed -n <NEWS.adoc '/^[0-9]/s/:.*//p' | head -1)
+ 
+ CC?=gcc
+ CCFLAGS+=-std=c99 -Wall -Wextra -D_DEFAULT_SOURCE -DVERSION=\"$(VERS)\" -O2 -D_FORTIFY_SOURCE=2 -fstack-protector-all $(CFLAGS) -g $(EXTRA)
+-LIBS=$(shell pkg-config --libs libedit)
+-INC+=$(shell pkg-config --cflags libedit)
++LIBS=$(shell pkg-config --libs libeditline)
++INC+=$(shell pkg-config --cflags libeditline)
+ 
+ # LLVM/Clang on macOS seems to need -ledit flag for linking
+ UNAME_S := $(shell uname -s)
+diff --git a/cheat.c b/cheat.c
+index 4e94025668fa367a9a584e859eef62bec061de49..d8f769b9114cf30167ca0de06e1b3384cbcf17ee 100644
+--- a/cheat.c
++++ b/cheat.c
+@@ -8,7 +8,7 @@
+  * SPDX-License-Identifier: BSD-2-Clause
+  */
+ #include "advent.h"
+-#include <editline/readline.h>
++#include <editline.h>
+ #include <getopt.h>
+ #include <stdbool.h>
+ #include <stdio.h>
+diff --git a/main.c b/main.c
+index 835fc1b3bbc435ac6e10bfa674e0a438974ba25e..66c306e111d4300c2e2a8fa95048ea3584b3ad13 100644
+--- a/main.c
++++ b/main.c
+@@ -5,7 +5,7 @@
+ 
+ #include "advent.h"
+ #include <ctype.h>
+-#include <editline/readline.h>
++#include <editline.h>
+ #include <getopt.h>
+ #include <signal.h>
+ #include <stdbool.h>
+diff --git a/misc.c b/misc.c
+index b28949eccb8f5268eccbff68b8056672925cfa7c..6d62e54112877350a9fb81ca5f23667077992861 100644
+--- a/misc.c
++++ b/misc.c
+@@ -6,10 +6,10 @@
+  */
+ 
+ #include <ctype.h>
+-#include <editline/readline.h>
++#include <stdio.h>
++#include <editline.h>
+ #include <inttypes.h>
+ #include <stdarg.h>
+-#include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <strings.h>

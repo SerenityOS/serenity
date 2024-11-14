@@ -238,6 +238,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`ObjFW`](ObjFW/)                             | ObjFW                                                         | 1.1.2                    | https://objfw.nil.im/                                                |
 | [`oksh`](oksh/)                               | oksh                                                          | 7.1                      | https://github.com/ibara/oksh                                        |
 | [`oniguruma`](oniguruma/)                     | oniguruma                                                     | 6.9.9                    | https://github.com/kkos/oniguruma/                                   |
+| [`open-adventure`](open-adventure/)           | Open Adventure                                                | 1.20                     | https://gitlab.com/esr/open-adventure/                               |
 | [`OpenJDK`](OpenJDK/)                         | OpenJDK                                                       | 17.0.6                   | https://openjdk.java.net/                                            |
 | [`openjpeg`](openjpeg/)                       | OpenJPEG                                                      | 2.5.2                    | https://www.openjpeg.org/                                            |
 | [`openrct2`](openrct2/)                       | OpenRCT2                                                      | 0.4.9                    | https://openrct2.org/                                                |
