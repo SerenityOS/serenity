@@ -10,10 +10,10 @@
 #include "BrowserWindow.h"
 #include "BookmarksBarWidget.h"
 #include "Browser.h"
+#include "BrowserWindowWidget.h"
 #include "InspectorWidget.h"
 #include "Tab.h"
 #include "TaskManagerWidget.h"
-#include <Applications/Browser/BrowserWindowGML.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
@@ -44,6 +44,14 @@
 
 namespace Browser {
 
+ErrorOr<NonnullRefPtr<BrowserWindow>> BrowserWindow::try_create(WebView::CookieJar& cookie_jar, Vector<URL::URL> const& initial_urls, StringView man_file)
+{
+    auto browser_window_widget = TRY(BrowserWindowWidget::try_create());
+    auto browser_window = TRY(adopt_nonnull_ref_or_enomem(new (nothrow)
+            BrowserWindow(cookie_jar, initial_urls, man_file, browser_window_widget)));
+    return browser_window;
+}
+
 static ByteString bookmarks_file_path()
 {
     StringBuilder builder;
@@ -52,7 +60,7 @@ static ByteString bookmarks_file_path()
     return builder.to_byte_string();
 }
 
-BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> const& initial_urls, StringView const man_file)
+BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> const& initial_urls, StringView const man_file, NonnullRefPtr<BrowserWindowWidget> window_widget)
     : m_cookie_jar(cookie_jar)
     , m_window_actions(*this)
 {
@@ -64,12 +72,11 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
     set_icon(app_icon.bitmap_for_size(16));
     set_title("Browser");
 
-    auto widget = set_main_widget<GUI::Widget>();
-    widget->load_from_gml(browser_window_gml).release_value_but_fixme_should_propagate_errors();
+    set_main_widget(window_widget);
 
-    auto& top_line = *widget->find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
+    auto& top_line = *window_widget->find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
 
-    m_tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
+    m_tab_widget = *window_widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
     m_tab_widget->on_tab_count_change = [&top_line](size_t tab_count) {
         top_line.set_visible(tab_count > 1);
     };
