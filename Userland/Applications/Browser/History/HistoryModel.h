@@ -20,8 +20,6 @@ struct URLTitlePair {
     ByteString title;
 };
 
-
-
 class HistoryModel final : public GUI::Model {
 public:
     enum Column {

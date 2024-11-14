@@ -1,12 +1,15 @@
 /*
+ * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
+ * Copyright (c) 2022, networkException <networkexception@serenityos.org>
+ * Copyright (c) 2023, Cameron Youell <cameronyouell@gmail.com>
  * Copyright (c) 2024, the SerenityOS developers
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "EditBookmarkDialog.h"
 #include <Applications/Browser/BookmarksBarWidget.h>
 #include <Applications/Browser/Browser.h>
-#include "EditBookmarkDialog.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>

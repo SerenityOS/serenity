@@ -19,12 +19,14 @@
 namespace Browser {
 
 class Tab;
+class BrowserWindowWidget;
 
 class BrowserWindow final : public GUI::Window
     , public Config::Listener {
-    C_OBJECT(BrowserWindow);
+    C_OBJECT_ABSTRACT(BrowserWindow);
 
 public:
+    static ErrorOr<NonnullRefPtr<BrowserWindow>> try_create(WebView::CookieJar& cookie_jar, Vector<URL::URL> const& initial_urls, StringView man_file);
     virtual ~BrowserWindow() override = default;
 
     GUI::TabWidget& tab_widget();
@@ -52,7 +54,7 @@ public:
     void broadcast_window_size(Gfx::IntSize);
 
 private:
-    BrowserWindow(WebView::CookieJar&, Vector<URL::URL> const&, StringView const);
+    BrowserWindow(WebView::CookieJar&, Vector<URL::URL> const&, StringView const, NonnullRefPtr<BrowserWindowWidget> window_widget);
 
     void build_menus(StringView const);
     ErrorOr<void> load_search_engines(GUI::Menu& settings_menu);

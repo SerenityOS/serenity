@@ -8,9 +8,9 @@
 
 #include "HistoryModel.h"
 #include <LibGUI/FilteringProxyModel.h>
+#include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
-#include <LibGUI/TableView.h>
 
 namespace Browser::History {
 

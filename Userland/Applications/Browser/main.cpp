@@ -219,7 +219,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto cookie_jar = TRY(WebView::CookieJar::create(*database));
-    auto window = Browser::BrowserWindow::construct(*cookie_jar, sanitize_urls(specified_urls), man_file);
+    auto window_or_error = Browser::BrowserWindow::try_create(*cookie_jar, sanitize_urls(specified_urls), man_file);
+    if (window_or_error.is_error()) {
+        warnln("Browser window creation failed");
+        return window_or_error.release_error();
+    }
+    auto window = window_or_error.release_value();
 
     chrome_process.on_new_tab = [&](auto const& raw_urls) {
         open_urls_from_client(*window, raw_urls, NewWindow::No);
