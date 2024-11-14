@@ -113,13 +113,14 @@ void MainWidget::apply_settings()
 {
     m_original_bell_mode = m_bell_mode;
     m_orignal_confirm_close = m_confirm_close;
+    m_original_automark_mode = m_automark_mode;
     write_back_settings();
 }
 void MainWidget::write_back_settings() const
 {
     Config::write_bool("Terminal"sv, "Terminal"sv, "ConfirmClose"sv, m_orignal_confirm_close);
     Config::write_string("Terminal"sv, "Window"sv, "Bell"sv, VT::TerminalWidget::stringify_bell(m_original_bell_mode));
-    Config::write_string("Terminal"sv, "Terminal"sv, "AutoMark"sv, VT::TerminalWidget::stringify_automark_mode(m_automark_mode));
+    Config::write_string("Terminal"sv, "Terminal"sv, "AutoMark"sv, VT::TerminalWidget::stringify_automark_mode(m_original_automark_mode));
 }
 
 void MainWidget::cancel_settings()
