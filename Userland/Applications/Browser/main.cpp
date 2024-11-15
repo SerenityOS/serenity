@@ -8,8 +8,8 @@
 
 #include <AK/Enumerate.h>
 #include <Applications/Browser/Browser.h>
+#include <Applications/Browser/BrowserTabWidget.h>
 #include <Applications/Browser/BrowserWindow.h>
-#include <Applications/Browser/Tab.h>
 #include <Applications/Browser/WindowActions.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
@@ -27,7 +27,6 @@
 #include <LibWebView/ChromeProcess.h>
 #include <LibWebView/CookieJar.h>
 #include <LibWebView/Database.h>
-#include <LibWebView/OutOfProcessWebView.h>
 #include <LibWebView/ProcessManager.h>
 #include <LibWebView/RequestServerAdapter.h>
 #include <LibWebView/SearchEngine.h>
@@ -118,7 +117,10 @@ static void open_urls_from_client(Browser::BrowserWindow& window, Vector<ByteStr
             outln("New browser windows are not yet supported. Opening URLs in a new tab.");
 
         auto activate_tab = i == 0 ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No;
-        window.create_new_tab(url, activate_tab);
+        auto tab_or_error = window.create_new_tab(url, activate_tab);
+        if (tab_or_error.is_error()) {
+            outln("Failed to create a new tab with error: {}", tab_or_error.release_error());
+        }
     }
 
     window.show();
@@ -259,7 +261,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     app->on_action_enter = [&](GUI::Action& action) {
         if (auto* browser_window = dynamic_cast<Browser::BrowserWindow*>(app->active_window())) {
-            auto* tab = static_cast<Browser::Tab*>(browser_window->tab_widget().active_widget());
+            auto* tab = static_cast<Browser::BrowserTabWidget*>(browser_window->tab_widget().active_widget());
             if (!tab)
                 return;
             tab->action_entered(action);
@@ -268,7 +270,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     app->on_action_leave = [&](auto& action) {
         if (auto* browser_window = dynamic_cast<Browser::BrowserWindow*>(app->active_window())) {
-            auto* tab = static_cast<Browser::Tab*>(browser_window->tab_widget().active_widget());
+            auto* tab = static_cast<Browser::BrowserTabWidget*>(browser_window->tab_widget().active_widget());
             if (!tab)
                 return;
             tab->action_left(action);

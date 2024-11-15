@@ -7,39 +7,34 @@
 
 #pragma once
 
+#include "History/HistoryWidget.h"
+#include "InspectorWidget.h"
+#include "StorageWidget.h"
+#include "URLBox.h"
 #include <AK/Optional.h>
 #include <LibGUI/ActionGroup.h>
+#include <LibGUI/Dialog.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibHTTP/Job.h>
 #include <LibURL/URL.h>
 #include <LibWeb/Forward.h>
+#include <LibWebView/OutOfProcessWebView.h>
 #include <LibWebView/ViewImplementation.h>
-
-namespace WebView {
-class OutOfProcessWebView;
-}
 
 namespace Browser {
 
 class BrowserWindow;
-class InspectorWidget;
 
-namespace History {
-    class HistoryWidget;
-}
-
-class StorageWidget;
-class URLBox;
-
-class Tab final : public GUI::Widget {
-    C_OBJECT(Tab);
+class BrowserTabWidget final : public GUI::Widget {
+    C_OBJECT_ABSTRACT(BrowserTabWidget);
 
     // FIXME: This should go away eventually.
     friend class BrowserWindow;
 
 public:
-    virtual ~Tab() override;
+    static ErrorOr<NonnullRefPtr<BrowserTabWidget>> create(BrowserWindow& browser_window);
+    virtual ~BrowserTabWidget() override;
 
     URL::URL url() const;
 
@@ -63,9 +58,9 @@ public:
 
     Function<void(ByteString const&)> on_title_change;
     Function<void(const URL::URL&)> on_tab_open_request;
-    Function<void(Tab&)> on_activate_tab_request;
-    Function<void(Tab&)> on_tab_close_request;
-    Function<void(Tab&)> on_tab_close_other_request;
+    Function<void(BrowserTabWidget&)> on_activate_tab_request;
+    Function<void(BrowserTabWidget&)> on_tab_close_request;
+    Function<void(BrowserTabWidget&)> on_tab_close_other_request;
     Function<void(const URL::URL&)> on_window_open_request;
     Function<void(Gfx::Bitmap const&)> on_favicon_change;
     Function<Vector<Web::Cookie::Cookie>()> on_get_cookies_entries;
@@ -90,8 +85,12 @@ public:
 
     WebView::OutOfProcessWebView& view() { return *m_web_content_view; }
 
+protected:
+    static ErrorOr<NonnullRefPtr<BrowserTabWidget>> try_create();
+
 private:
-    explicit Tab(BrowserWindow&);
+    ErrorOr<void> setup(BrowserWindow&);
+    BrowserTabWidget() = default;
 
     virtual void show_event(GUI::ShowEvent&) override;
     virtual void hide_event(GUI::HideEvent&) override;

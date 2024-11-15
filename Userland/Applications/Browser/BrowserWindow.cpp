@@ -10,9 +10,8 @@
 #include "BrowserWindow.h"
 #include "BookmarksBarWidget.h"
 #include "Browser.h"
+#include "BrowserTabWidget.h"
 #include "BrowserWindowWidget.h"
-#include "InspectorWidget.h"
-#include "Tab.h"
 #include "TaskManagerWidget.h"
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
@@ -30,14 +29,12 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/ToolbarContainer.h>
-#include <LibGUI/Widget.h>
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/AudioPlayState.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Loader/UserAgent.h>
 #include <LibWebView/CookieJar.h>
-#include <LibWebView/OutOfProcessWebView.h>
 #include <LibWebView/SearchEngine.h>
 #include <LibWebView/UserAgent.h>
 #include <LibWebView/WebContentClient.h>
@@ -82,29 +79,32 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
     };
 
     m_tab_widget->on_change = [this](auto& active_widget) {
-        auto& tab = static_cast<Browser::Tab&>(active_widget);
+        auto& tab = static_cast<BrowserTabWidget&>(active_widget);
         set_window_title_for_tab(tab);
         tab.did_become_active();
         update_displayed_zoom_level();
     };
 
     m_tab_widget->on_middle_click = [](auto& clicked_widget) {
-        auto& tab = static_cast<Browser::Tab&>(clicked_widget);
+        auto& tab = static_cast<BrowserTabWidget&>(clicked_widget);
         tab.on_tab_close_request(tab);
     };
 
     m_tab_widget->on_tab_close_click = [](auto& clicked_widget) {
-        auto& tab = static_cast<Browser::Tab&>(clicked_widget);
+        auto& tab = static_cast<BrowserTabWidget&>(clicked_widget);
         tab.on_tab_close_request(tab);
     };
 
     m_tab_widget->on_context_menu_request = [](auto& clicked_widget, const GUI::ContextMenuEvent& context_menu_event) {
-        auto& tab = static_cast<Browser::Tab&>(clicked_widget);
+        auto& tab = static_cast<BrowserTabWidget&>(clicked_widget);
         tab.context_menu_requested(context_menu_event.screen_position());
     };
 
     m_window_actions.on_create_new_tab = [this] {
-        create_new_tab(Browser::g_new_tab_url, Web::HTML::ActivateTab::Yes);
+        auto tab_or_error = create_new_tab(Browser::g_new_tab_url, Web::HTML::ActivateTab::Yes);
+        if (tab_or_error.is_error()) {
+            dbgln("Failed to create a new tab with error: {}", tab_or_error.release_error());
+        }
     };
 
     m_window_actions.on_create_new_window = [this] {
@@ -123,7 +123,7 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
         m_window_actions.on_tabs.append([this, i] {
             if (i >= m_tab_widget->tab_count())
                 return;
-            m_tab_widget->set_tab_index(i);
+            m_tab_widget->set_tab_index(static_cast<int>(i));
         });
     }
     m_window_actions.on_tabs.append([this] {
@@ -135,7 +135,7 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
         Config::write_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, action.is_checked());
     };
 
-    bool show_bookmarks_bar = Config::read_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, Browser::default_show_bookmarks_bar);
+    bool const show_bookmarks_bar = Config::read_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, Browser::default_show_bookmarks_bar);
     m_window_actions.show_bookmarks_bar_action().set_checked(show_bookmarks_bar);
     Browser::BookmarksBarWidget::the().set_visible(show_bookmarks_bar);
 
@@ -144,14 +144,18 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
         Config::write_bool("Browser"sv, "Preferences"sv, "VerticalTabs"sv, action.is_checked());
     };
 
-    bool vertical_tabs = Config::read_bool("Browser"sv, "Preferences"sv, "VerticalTabs"sv, false);
+    bool const vertical_tabs = Config::read_bool("Browser"sv, "Preferences"sv, "VerticalTabs"sv, false);
     m_window_actions.vertical_tabs_action().set_checked(vertical_tabs);
     m_tab_widget->set_tab_position(vertical_tabs ? TabPosition::Left : TabPosition::Top);
 
     build_menus(man_file);
 
-    for (size_t i = 0; i < initial_urls.size(); ++i)
-        create_new_tab(initial_urls[i], (i == 0) ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
+    for (size_t i = 0; i < initial_urls.size(); ++i) {
+        auto tab_or_error = create_new_tab(initial_urls[i], (i == 0) ? Web::HTML::ActivateTab::Yes : Web::HTML::ActivateTab::No);
+        if (tab_or_error.is_error()) {
+            dbgln("Failed to create a new tab for url: {} with error: {}", initial_urls[i], tab_or_error.release_error());
+        }
+    }
 }
 
 void BrowserWindow::build_menus(StringView const man_file)
@@ -261,14 +265,14 @@ void BrowserWindow::build_menus(StringView const man_file)
 
     m_inspect_dom_tree_action = GUI::Action::create(
         "Inspect &DOM Tree", { Mod_Ctrl | Mod_Shift, Key_I }, { Mod_None, Key_F12 }, g_icon_bag.dom_tree, [this](auto&) {
-            active_tab().show_inspector_window(Tab::InspectorTarget::Document);
+            active_tab().show_inspector_window(BrowserTabWidget::InspectorTarget::Document);
         },
         this);
     m_inspect_dom_tree_action->set_status_tip("Open inspector window for this page"_string);
 
     m_inspect_dom_node_action = GUI::Action::create(
         "&Inspect Element", g_icon_bag.inspect, [this](auto&) {
-            active_tab().show_inspector_window(Tab::InspectorTarget::HoveredElement);
+            active_tab().show_inspector_window(BrowserTabWidget::InspectorTarget::HoveredElement);
         },
         this);
     m_inspect_dom_node_action->set_status_tip("Open inspector for this element"_string);
@@ -547,36 +551,41 @@ GUI::TabWidget& BrowserWindow::tab_widget()
     return *m_tab_widget;
 }
 
-Tab& BrowserWindow::active_tab()
+BrowserTabWidget& BrowserWindow::active_tab()
 {
-    return verify_cast<Tab>(*tab_widget().active_widget());
+    return verify_cast<BrowserTabWidget>(*tab_widget().active_widget());
 }
 
-void BrowserWindow::set_window_title_for_tab(Tab const& tab)
+void BrowserWindow::set_window_title_for_tab(BrowserTabWidget const& tab)
 {
-    auto& title = tab.title();
+    auto const& title = tab.title();
     auto url = tab.url();
     set_title(ByteString::formatted("{} - Browser", title.is_empty() ? url.to_byte_string() : title));
 }
 
-Tab& BrowserWindow::create_new_tab(URL::URL const& url, Web::HTML::ActivateTab activate)
+ErrorOr<NonnullRefPtr<BrowserTabWidget>> BrowserWindow::create_new_tab(URL::URL const& url, Web::HTML::ActivateTab activate)
 {
-    auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab"_string, *this);
+    auto error_or_tab = BrowserTabWidget::create(*this);
+    if (error_or_tab.is_error()) {
+        return error_or_tab.release_error();
+    }
+    auto new_tab = error_or_tab.release_value();
+    m_tab_widget->add_tab(new_tab, "New tab"_string);
 
     m_tab_widget->set_bar_visible(!is_fullscreen() && m_tab_widget->children().size() > 1);
-    m_tab_widget->set_tab_icon(new_tab, new_tab.icon());
+    m_tab_widget->set_tab_icon(new_tab, new_tab->icon());
 
-    new_tab.on_title_change = [this, &new_tab](auto& title) {
+    new_tab->on_title_change = [this, new_tab](auto& title) {
         m_tab_widget->set_tab_title(new_tab, String::from_byte_string(title).release_value_but_fixme_should_propagate_errors());
-        if (m_tab_widget->active_widget() == &new_tab)
+        if (m_tab_widget->active_widget() == new_tab)
             set_window_title_for_tab(new_tab);
     };
 
-    new_tab.on_favicon_change = [this, &new_tab](auto& bitmap) {
+    new_tab->on_favicon_change = [this, new_tab](auto& bitmap) {
         m_tab_widget->set_tab_icon(new_tab, &bitmap);
     };
 
-    new_tab.view().on_audio_play_state_changed = [this, &new_tab](auto play_state) {
+    new_tab->view().on_audio_play_state_changed = [this, new_tab](auto play_state) {
         switch (play_state) {
         case Web::HTML::AudioPlayState::Paused:
             m_tab_widget->set_tab_action_icon(new_tab, nullptr);
@@ -588,15 +597,18 @@ Tab& BrowserWindow::create_new_tab(URL::URL const& url, Web::HTML::ActivateTab a
         }
     };
 
-    new_tab.on_tab_open_request = [this](auto& url) {
-        create_new_tab(url, Web::HTML::ActivateTab::Yes);
+    new_tab->on_tab_open_request = [this](auto& url) {
+        auto tab_or_error = create_new_tab(url, Web::HTML::ActivateTab::Yes);
+        if (tab_or_error.is_error()) {
+            dbgln("Failed to create a new tab with error: {}", tab_or_error.release_error());
+        }
     };
 
-    new_tab.on_activate_tab_request = [this](auto& tab) {
+    new_tab->on_activate_tab_request = [this](auto& tab) {
         m_tab_widget->set_active_widget(&tab);
     };
 
-    new_tab.on_tab_close_request = [this](auto& tab) {
+    new_tab->on_tab_close_request = [this](auto& tab) {
         m_tab_widget->deferred_invoke([this, &tab] {
             m_tab_widget->remove_tab(tab);
             m_tab_widget->set_bar_visible(!is_fullscreen() && m_tab_widget->children().size() > 1);
@@ -605,7 +617,7 @@ Tab& BrowserWindow::create_new_tab(URL::URL const& url, Web::HTML::ActivateTab a
         });
     };
 
-    new_tab.on_tab_close_other_request = [this](auto& tab) {
+    new_tab->on_tab_close_other_request = [this](auto& tab) {
         m_tab_widget->deferred_invoke([this, &tab] {
             m_tab_widget->remove_all_tabs_except(tab);
             VERIFY(m_tab_widget->children().size() == 1);
@@ -613,48 +625,48 @@ Tab& BrowserWindow::create_new_tab(URL::URL const& url, Web::HTML::ActivateTab a
         });
     };
 
-    new_tab.on_window_open_request = [this](auto& url) {
+    new_tab->on_window_open_request = [this](auto& url) {
         create_new_window(url);
     };
 
-    new_tab.view().on_get_all_cookies = [this](auto& url) {
+    new_tab->view().on_get_all_cookies = [this](auto& url) {
         return m_cookie_jar.get_all_cookies(url);
     };
 
-    new_tab.view().on_get_named_cookie = [this](auto& url, auto& name) {
+    new_tab->view().on_get_named_cookie = [this](auto& url, auto& name) {
         return m_cookie_jar.get_named_cookie(url, name);
     };
 
-    new_tab.view().on_get_cookie = [this](auto& url, auto source) {
+    new_tab->view().on_get_cookie = [this](auto& url, auto source) {
         return m_cookie_jar.get_cookie(url, source);
     };
 
-    new_tab.view().on_set_cookie = [this](auto& url, auto& cookie, auto source) {
+    new_tab->view().on_set_cookie = [this](auto& url, auto& cookie, auto source) {
         m_cookie_jar.set_cookie(url, cookie, source);
     };
 
-    new_tab.view().on_update_cookie = [this](auto const& cookie) {
+    new_tab->view().on_update_cookie = [this](auto const& cookie) {
         m_cookie_jar.update_cookie(cookie);
     };
 
-    new_tab.on_get_cookies_entries = [this]() {
+    new_tab->on_get_cookies_entries = [this]() {
         return m_cookie_jar.get_all_cookies();
     };
 
-    new_tab.on_get_local_storage_entries = [this]() {
+    new_tab->on_get_local_storage_entries = [this]() {
         return active_tab().view().get_local_storage_entries();
     };
 
-    new_tab.on_get_session_storage_entries = [this]() {
+    new_tab->on_get_session_storage_entries = [this]() {
         return active_tab().view().get_session_storage_entries();
     };
 
-    new_tab.load(url);
+    new_tab->load(url);
 
-    dbgln_if(SPAM_DEBUG, "Added new tab {:p}, loading {}", &new_tab, url);
+    dbgln_if(SPAM_DEBUG, "Added new tab {:p}, loading {}", new_tab, url);
 
     if (activate == Web::HTML::ActivateTab::Yes)
-        m_tab_widget->set_active_widget(&new_tab);
+        m_tab_widget->set_active_widget(new_tab);
 
     return new_tab;
 }
@@ -666,7 +678,7 @@ void BrowserWindow::create_new_window(URL::URL const& url)
 
 void BrowserWindow::content_filters_changed()
 {
-    tab_widget().for_each_child_of_type<Browser::Tab>([](auto& tab) {
+    tab_widget().for_each_child_of_type<BrowserTabWidget>([](auto& tab) {
         tab.content_filters_changed();
         return IterationDecision::Continue;
     });
@@ -674,7 +686,7 @@ void BrowserWindow::content_filters_changed()
 
 void BrowserWindow::autoplay_allowlist_changed()
 {
-    tab_widget().for_each_child_of_type<Browser::Tab>([](auto& tab) {
+    tab_widget().for_each_child_of_type<BrowserTabWidget>([](auto& tab) {
         tab.autoplay_allowlist_changed();
         return IterationDecision::Continue;
     });
@@ -682,7 +694,7 @@ void BrowserWindow::autoplay_allowlist_changed()
 
 void BrowserWindow::proxy_mappings_changed()
 {
-    tab_widget().for_each_child_of_type<Browser::Tab>([](auto& tab) {
+    tab_widget().for_each_child_of_type<BrowserTabWidget>([](auto& tab) {
         tab.proxy_mappings_changed();
         return IterationDecision::Continue;
     });
@@ -736,7 +748,7 @@ void BrowserWindow::config_bool_did_change(StringView domain, StringView group, 
 
 void BrowserWindow::broadcast_window_position(Gfx::IntPoint position)
 {
-    tab_widget().for_each_child_of_type<Browser::Tab>([&](auto& tab) {
+    tab_widget().for_each_child_of_type<BrowserTabWidget>([&](auto& tab) {
         tab.window_position_changed(position);
         return IterationDecision::Continue;
     });
@@ -744,7 +756,7 @@ void BrowserWindow::broadcast_window_position(Gfx::IntPoint position)
 
 void BrowserWindow::broadcast_window_size(Gfx::IntSize size)
 {
-    tab_widget().for_each_child_of_type<Browser::Tab>([&](auto& tab) {
+    tab_widget().for_each_child_of_type<BrowserTabWidget>([&](auto& tab) {
         tab.window_size_changed(size);
         return IterationDecision::Continue;
     });

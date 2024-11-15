@@ -9,16 +9,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Tab.h"
+#include "BrowserTabWidget.h"
 #include "BookmarksBarWidget.h"
 #include "Browser.h"
 #include "BrowserWindow.h"
 #include "DownloadWidget.h"
-#include "History/HistoryWidget.h"
-#include "InspectorWidget.h"
-#include "StorageWidget.h"
-#include <AK/StringBuilder.h>
-#include <Applications/Browser/TabGML.h>
 #include <Applications/Browser/URLBox.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
@@ -54,64 +49,20 @@
 
 namespace Browser {
 
-Tab::~Tab()
+BrowserTabWidget::~BrowserTabWidget()
 {
     close_sub_widgets();
 }
 
-void Tab::start_download(const URL::URL& url)
+ErrorOr<NonnullRefPtr<BrowserTabWidget>> BrowserTabWidget::create(BrowserWindow& browser_window)
 {
-    auto window = GUI::Window::construct(&this->window());
-    window->resize(300, 170);
-    window->set_title(ByteString::formatted("0% of {}", url.basename()));
-    window->set_resizable(false);
-    (void)window->set_main_widget<DownloadWidget>(url);
-    window->show();
+    auto widget = TRY(try_create());
+    TRY(widget->setup(browser_window));
+    return widget;
 }
 
-void Tab::view_source(const URL::URL& url, StringView source)
+ErrorOr<void> BrowserTabWidget::setup(BrowserWindow& window)
 {
-    auto window = GUI::Window::construct(&this->window());
-    auto editor = window->set_main_widget<GUI::TextEditor>();
-    editor->set_text(source);
-    editor->set_mode(GUI::TextEditor::ReadOnly);
-    editor->set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
-    editor->set_ruler_visible(true);
-    editor->set_visualize_trailing_whitespace(false);
-    window->resize(640, 480);
-    window->set_title(url.to_byte_string());
-    window->set_icon(g_icon_bag.filetype_text);
-    window->set_window_mode(GUI::WindowMode::Modeless);
-    window->show();
-}
-
-void Tab::update_status(Optional<String> text_override, i32 count_waiting)
-{
-    if (text_override.has_value()) {
-        m_statusbar->set_text(*text_override);
-        return;
-    }
-
-    if (m_loaded) {
-        m_statusbar->set_text({});
-        return;
-    }
-
-    VERIFY(m_navigating_url.has_value());
-
-    if (count_waiting == 0) {
-        // ex: "Loading google.com"
-        m_statusbar->set_text(String::formatted("Loading {}", m_navigating_url->serialized_host().release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors());
-    } else {
-        // ex: "google.com is waiting on 5 resources"
-        m_statusbar->set_text(String::formatted("{} is waiting on {} resource{}", m_navigating_url->serialized_host().release_value_but_fixme_should_propagate_errors(), count_waiting, count_waiting == 1 ? ""sv : "s"sv).release_value_but_fixme_should_propagate_errors());
-    }
-}
-
-Tab::Tab(BrowserWindow& window)
-{
-    load_from_gml(tab_gml).release_value_but_fixme_should_propagate_errors();
-
     m_icon = g_icon_bag.default_favicon;
 
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
@@ -683,8 +634,12 @@ Tab::Tab(BrowserWindow& window)
 
     view().on_new_web_view = [this](auto activate_tab, auto, auto) {
         // FIXME: Create a child tab that re-uses the ConnectionFromClient of the parent tab
-        auto& tab = this->window().create_new_tab(URL::URL("about:blank"), activate_tab);
-        return tab.view().handle();
+        auto tab_or_error = this->window().create_new_tab(URL::URL("about:blank"), activate_tab);
+        if (tab_or_error.is_error()) {
+            dbgln("Failed to create a new web view tab with error: {}", tab_or_error.release_error());
+            return "Invalid handle"_string;
+        }
+        return tab_or_error.release_value()->view().handle();
     };
 
     view().on_activate_tab = [this]() {
@@ -716,7 +671,10 @@ Tab::Tab(BrowserWindow& window)
     auto search_selected_text_action = GUI::Action::create(
         "&Search for <query>"sv, g_icon_bag.search, [this](auto&) {
             auto url = MUST(String::formatted(g_search_engine, URL::percent_encode(*m_page_context_menu_search_text)));
-            this->window().create_new_tab(url, Web::HTML::ActivateTab::Yes);
+            auto tab_or_error = this->window().create_new_tab(url, Web::HTML::ActivateTab::Yes);
+            if (tab_or_error.is_error()) {
+                dbgln("Failed to create a new tab for url: {} with error: {}", url, tab_or_error.release_error());
+            }
         },
         this);
 
@@ -791,9 +749,60 @@ Tab::Tab(BrowserWindow& window)
         auto screen_position = view().screen_relative_rect().location().translated(widget_position);
         m_page_context_menu->popup(screen_position);
     };
+
+    return {};
 }
 
-void Tab::update_reset_zoom_button()
+void BrowserTabWidget::start_download(const URL::URL& url)
+{
+    auto window = GUI::Window::construct(&this->window());
+    window->resize(300, 170);
+    window->set_title(ByteString::formatted("0% of {}", url.basename()));
+    window->set_resizable(false);
+    (void)window->set_main_widget<DownloadWidget>(url);
+    window->show();
+}
+
+void BrowserTabWidget::view_source(const URL::URL& url, StringView const& source)
+{
+    auto window = GUI::Window::construct(&this->window());
+    auto editor = window->set_main_widget<GUI::TextEditor>();
+    editor->set_text(source);
+    editor->set_mode(GUI::TextEditor::ReadOnly);
+    editor->set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
+    editor->set_ruler_visible(true);
+    editor->set_visualize_trailing_whitespace(false);
+    window->resize(640, 480);
+    window->set_title(url.to_byte_string());
+    window->set_icon(g_icon_bag.filetype_text);
+    window->set_window_mode(GUI::WindowMode::Modeless);
+    window->show();
+}
+
+void BrowserTabWidget::update_status(Optional<String> text_override, i32 count_waiting)
+{
+    if (text_override.has_value()) {
+        m_statusbar->set_text(*text_override);
+        return;
+    }
+
+    if (m_loaded) {
+        m_statusbar->set_text({});
+        return;
+    }
+
+    VERIFY(m_navigating_url.has_value());
+
+    if (count_waiting == 0) {
+        // ex: "Loading google.com"
+        m_statusbar->set_text(String::formatted("Loading {}", m_navigating_url->serialized_host().release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors());
+    } else {
+        // ex: "google.com is waiting on 5 resources"
+        m_statusbar->set_text(String::formatted("{} is waiting on {} resource{}", m_navigating_url->serialized_host().release_value_but_fixme_should_propagate_errors(), count_waiting, count_waiting == 1 ? ""sv : "s"sv).release_value_but_fixme_should_propagate_errors());
+    }
+}
+
+void BrowserTabWidget::update_reset_zoom_button()
 {
     auto zoom_level = view().zoom_level();
     if (zoom_level != 1.0f) {
@@ -804,33 +813,33 @@ void Tab::update_reset_zoom_button()
     }
 }
 
-void Tab::load(URL::URL const& url)
+void BrowserTabWidget::load(URL::URL const& url)
 {
     m_web_content_view->load(url);
     m_location_box->set_focus(false);
 }
 
-URL::URL Tab::url() const
+URL::URL BrowserTabWidget::url() const
 {
     return m_web_content_view->url();
 }
 
-void Tab::reload()
+void BrowserTabWidget::reload()
 {
     view().reload();
 }
 
-void Tab::go_back()
+void BrowserTabWidget::go_back()
 {
     view().traverse_the_history_by_delta(-1);
 }
 
-void Tab::go_forward()
+void BrowserTabWidget::go_forward()
 {
     view().traverse_the_history_by_delta(1);
 }
 
-void Tab::update_actions()
+void BrowserTabWidget::update_actions()
 {
     auto& window = this->window();
     if (this != &window.active_tab())
@@ -839,7 +848,7 @@ void Tab::update_actions()
     window.go_forward_action().set_enabled(m_can_navigate_forward);
 }
 
-ErrorOr<void> Tab::bookmark_current_url()
+ErrorOr<void> BrowserTabWidget::bookmark_current_url()
 {
     auto url = this->url().to_byte_string();
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
@@ -851,7 +860,7 @@ ErrorOr<void> Tab::bookmark_current_url()
     return {};
 }
 
-void Tab::update_bookmark_button(StringView url)
+void BrowserTabWidget::update_bookmark_button(StringView url)
 {
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
         m_bookmark_button->set_icon(g_icon_bag.bookmark_filled);
@@ -862,7 +871,7 @@ void Tab::update_bookmark_button(StringView url)
     }
 }
 
-void Tab::did_become_active()
+void BrowserTabWidget::did_become_active()
 {
     BookmarksBarWidget::the().on_bookmark_click = [this](auto& url, auto open) {
         if (open == BookmarksBarWidget::Open::InNewTab)
@@ -891,12 +900,12 @@ void Tab::did_become_active()
     update_actions();
 }
 
-void Tab::context_menu_requested(Gfx::IntPoint screen_position)
+void BrowserTabWidget::context_menu_requested(Gfx::IntPoint screen_position)
 {
     m_tab_context_menu->popup(screen_position);
 }
 
-void Tab::content_filters_changed()
+void BrowserTabWidget::content_filters_changed()
 {
     if (g_content_filters_enabled)
         m_web_content_view->set_content_filters(g_content_filters);
@@ -904,7 +913,7 @@ void Tab::content_filters_changed()
         m_web_content_view->set_content_filters({});
 }
 
-void Tab::autoplay_allowlist_changed()
+void BrowserTabWidget::autoplay_allowlist_changed()
 {
     if (g_autoplay_allowed_on_all_websites)
         m_web_content_view->set_autoplay_allowed_on_all_websites();
@@ -912,42 +921,42 @@ void Tab::autoplay_allowlist_changed()
         m_web_content_view->set_autoplay_allowlist(g_autoplay_allowlist);
 }
 
-void Tab::proxy_mappings_changed()
+void BrowserTabWidget::proxy_mappings_changed()
 {
     m_web_content_view->set_proxy_mappings(g_proxies, g_proxy_mappings);
 }
 
-void Tab::action_entered(GUI::Action& action)
+void BrowserTabWidget::action_entered(GUI::Action& action)
 {
     m_statusbar->set_override_text(action.status_tip());
 }
 
-void Tab::action_left(GUI::Action&)
+void BrowserTabWidget::action_left(GUI::Action&)
 {
     m_statusbar->set_override_text({});
 }
 
-void Tab::window_position_changed(Gfx::IntPoint position)
+void BrowserTabWidget::window_position_changed(Gfx::IntPoint position)
 {
     m_web_content_view->set_window_position(position);
 }
 
-void Tab::window_size_changed(Gfx::IntSize size)
+void BrowserTabWidget::window_size_changed(Gfx::IntSize size)
 {
     m_web_content_view->set_window_size(size);
 }
 
-BrowserWindow const& Tab::window() const
+BrowserWindow const& BrowserTabWidget::window() const
 {
     return static_cast<BrowserWindow const&>(*Widget::window());
 }
 
-BrowserWindow& Tab::window()
+BrowserWindow& BrowserTabWidget::window()
 {
     return static_cast<BrowserWindow&>(*Widget::window());
 }
 
-void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
+void BrowserTabWidget::show_inspector_window(Browser::BrowserTabWidget::InspectorTarget inspector_target)
 {
     if (!m_dom_inspector_widget) {
         auto window = GUI::Window::construct(&this->window());
@@ -976,7 +985,7 @@ void Tab::show_inspector_window(Browser::Tab::InspectorTarget inspector_target)
     window->move_to_front();
 }
 
-void Tab::close_sub_widgets()
+void BrowserTabWidget::close_sub_widgets()
 {
     auto close_widget_window = [](auto& widget) {
         if (widget) {
@@ -988,7 +997,7 @@ void Tab::close_sub_widgets()
     close_widget_window(m_storage_widget);
 }
 
-void Tab::show_storage_inspector()
+void BrowserTabWidget::show_storage_inspector()
 {
     if (!m_storage_widget) {
         auto storage_window = GUI::Window::construct(&window());
@@ -1028,7 +1037,7 @@ void Tab::show_storage_inspector()
     window->move_to_front();
 }
 
-void Tab::show_history_inspector()
+void BrowserTabWidget::show_history_inspector()
 {
     if (!m_history_widget) {
         auto history_window = GUI::Window::construct(&window());
@@ -1049,17 +1058,17 @@ void Tab::show_history_inspector()
     window->move_to_front();
 }
 
-void Tab::show_event(GUI::ShowEvent&)
+void BrowserTabWidget::show_event(GUI::ShowEvent&)
 {
     m_web_content_view->set_visible(true);
 }
 
-void Tab::hide_event(GUI::HideEvent&)
+void BrowserTabWidget::hide_event(GUI::HideEvent&)
 {
     m_web_content_view->set_visible(false);
 }
 
-void Tab::enable_webdriver_mode()
+void BrowserTabWidget::enable_webdriver_mode()
 {
     m_web_content_view->connect_to_webdriver(Browser::g_webdriver_content_ipc_path);
     auto& webdriver_banner = *find_descendant_of_type_named<GUI::Widget>("webdriver_banner");

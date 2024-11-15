@@ -9,7 +9,7 @@ compile_gml(BrowserWindowWidget.gml BrowserWindowWidgetGML.cpp)
 compile_gml(EditBookmarkWidget.gml EditBookmarkWidgetGML.cpp)
 compile_gml(History/HistoryWidget.gml History/HistoryWidgetGML.cpp)
 compile_gml(StorageWidget.gml StorageWidgetGML.cpp)
-stringify_gml(Tab.gml TabGML.h tab_gml)
+compile_gml(BrowserTabWidget.gml BrowserTabWidgetGML.cpp)
 
 set(SOURCES
     BookmarksBarWidget.cpp
@@ -27,15 +27,12 @@ set(SOURCES
     StorageModel.cpp
     StorageWidget.cpp
     StorageWidgetGML.cpp
-    Tab.cpp
+    BrowserTabWidget.cpp
+    BrowserTabWidgetGML.cpp
     TaskManagerWidget.cpp
     URLBox.cpp
     WindowActions.cpp
     main.cpp
-)
-
-set(GENERATED_SOURCES
-    TabGML.h
 )
 
 serenity_app(Browser ICON app-browser)
