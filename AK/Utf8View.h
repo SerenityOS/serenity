@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/Function.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 
@@ -160,6 +161,52 @@ public:
         }
 
         return true;
+    }
+
+    template<typename Callback>
+    auto for_each_split_view(Function<bool(u32)> splitter, SplitBehavior split_behavior, Callback callback) const
+    {
+        bool keep_empty = has_flag(split_behavior, SplitBehavior::KeepEmpty);
+        bool keep_trailing_separator = has_flag(split_behavior, SplitBehavior::KeepTrailingSeparator);
+
+        auto start_offset = 0u;
+        auto offset = 0u;
+
+        auto run_callback = [&]() {
+            auto length = offset - start_offset;
+
+            if (length == 0 && !keep_empty)
+                return;
+
+            auto substring = unicode_substring_view(start_offset, length);
+
+            // Reject splitter-only entries if we're not keeping empty results
+            if (keep_trailing_separator && !keep_empty && length == 1 && splitter(*substring.begin()))
+                return;
+
+            callback(substring);
+        };
+
+        auto iterator = begin();
+        while (iterator != end()) {
+            if (splitter(*iterator)) {
+                if (keep_trailing_separator)
+                    ++offset;
+
+                run_callback();
+
+                if (!keep_trailing_separator)
+                    ++offset;
+
+                start_offset = offset;
+                ++iterator;
+                continue;
+            }
+
+            ++offset;
+            ++iterator;
+        }
+        run_callback();
     }
 
 private:
