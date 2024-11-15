@@ -5,7 +5,6 @@
  */
 
 #include "StorageModel.h"
-
 #include <AK/FuzzyMatch.h>
 
 namespace Browser {

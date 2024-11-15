@@ -8,7 +8,6 @@
 #include "DownloadWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
-#include <AK/StringBuilder.h>
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibCore/Proxy.h>
 #include <LibCore/StandardPaths.h>
@@ -20,7 +19,6 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Progressbar.h>
-#include <LibGUI/Window.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
 #include <LibConfig/Client.h>
@@ -114,7 +112,7 @@ DownloadWidget::DownloadWidget(const URL::URL& url)
     m_cancel_button = button_container.add<GUI::Button>("Cancel"_string);
     m_cancel_button->set_fixed_size(100, 22);
     m_cancel_button->on_click = [this](auto) {
-        bool success = m_download->stop();
+        bool const success = m_download->stop();
         VERIFY(success);
         window()->close();
     };
@@ -129,9 +127,9 @@ DownloadWidget::DownloadWidget(const URL::URL& url)
 
 void DownloadWidget::did_progress(Optional<u64> total_size, u64 downloaded_size)
 {
-    int percent = 0;
+    int percent { 0 };
     if (total_size.has_value()) {
-        percent = downloaded_size * 100 / total_size.value();
+        percent = static_cast<int>(downloaded_size * 100 / total_size.value());
         window()->set_progress(percent);
         m_progressbar->set_value(percent);
     }

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Applications/Browser/IconBag.h>
+#include "IconBag.h"
 
 namespace Browser {
 ErrorOr<IconBag> IconBag::try_create()

@@ -14,7 +14,7 @@
 #include "Browser.h"
 #include "BrowserWindow.h"
 #include "DownloadWidget.h"
-#include <Applications/Browser/URLBox.h>
+#include "URLBox.h"
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibCore/MimeData.h>
@@ -763,7 +763,7 @@ void BrowserTabWidget::start_download(const URL::URL& url)
     window->show();
 }
 
-void BrowserTabWidget::view_source(const URL::URL& url, StringView const& source)
+void BrowserTabWidget::view_source(const URL::URL& url, StringView source)
 {
     auto window = GUI::Window::construct(&this->window());
     auto editor = window->set_main_widget<GUI::TextEditor>();

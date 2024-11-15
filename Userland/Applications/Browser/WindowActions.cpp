@@ -6,10 +6,9 @@
  */
 
 #include "WindowActions.h"
-#include <Applications/Browser/Browser.h>
+#include "Browser.h"
 #include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Bitmap.h>
 
 namespace Browser {
 
