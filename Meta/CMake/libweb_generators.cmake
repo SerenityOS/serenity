@@ -66,6 +66,7 @@ function (generate_css_implementation)
 
     invoke_idl_generator(
         "GeneratedCSSStyleProperties.cpp"
+        "GeneratedCSSStyleProperties.idl"
         Lagom::GenerateCSSStyleProperties
         "${LIBWEB_INPUT_FOLDER}/CSS/Properties.json"
         "CSS/GeneratedCSSStyleProperties.h"
@@ -119,10 +120,17 @@ function (generate_css_implementation)
     list(TRANSFORM CSS_GENERATED_TO_INSTALL PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")
     install(FILES ${CSS_GENERATED_TO_INSTALL} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/LibWeb/CSS")
 
+    set(CSS_GENERATED_IDL
+        "GeneratedCSSStyleProperties.idl"
+    )
+    list(APPEND LIBWEB_ALL_GENERATED_IDL ${CSS_GENERATED_IDL})
+    set(LIBWEB_ALL_GENERATED_IDL ${LIBWEB_ALL_GENERATED_IDL} PARENT_SCOPE)
 endfunction()
 
 function (generate_js_bindings target)
     set(LIBWEB_INPUT_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
+    set(generated_idl_targets ${LIBWEB_ALL_GENERATED_IDL})
+    list(TRANSFORM generated_idl_targets PREPEND "generate_")
     function(libweb_js_bindings class)
         cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_BINDINGS "NAMESPACE;ITERABLE;GLOBAL" "" "")
         get_filename_component(basename "${class}" NAME)
@@ -183,6 +191,7 @@ function (generate_js_bindings target)
         add_custom_target(generate_${basename} DEPENDS ${BINDINGS_SOURCES})
         add_dependencies(all_generated generate_${basename})
         add_dependencies(${target} generate_${basename})
+        add_dependencies(generate_${basename} ${generated_idl_targets})
 
         # install generated sources
         list(FILTER BINDINGS_SOURCES INCLUDE REGEX "\.h$")
@@ -218,6 +227,7 @@ function (generate_js_bindings target)
         add_custom_target(generate_exposed_interfaces DEPENDS ${exposed_interface_sources})
         add_dependencies(all_generated generate_exposed_interfaces)
         add_dependencies(${target} generate_exposed_interfaces)
+        add_dependencies(generate_exposed_interfaces ${generated_idl_targets})
 
         list(FILTER exposed_interface_sources INCLUDE REGEX "\.h$")
         list(TRANSFORM exposed_interface_sources PREPEND "${CMAKE_CURRENT_BINARY_DIR}/")

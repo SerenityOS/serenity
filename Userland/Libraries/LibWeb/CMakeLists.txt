@@ -811,6 +811,7 @@ set(GENERATED_SOURCES
     CSS/DefaultStyleSheetSource.cpp
     CSS/Enums.cpp
     CSS/GeneratedCSSStyleProperties.cpp
+    CSS/GeneratedCSSStyleProperties.idl
     CSS/Keyword.cpp
     CSS/MathFunctions.cpp
     CSS/MediaFeatureID.cpp
