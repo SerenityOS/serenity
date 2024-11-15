@@ -18,7 +18,7 @@ You can control where and how a piece falls, by moving it left or right, making 
 
 -   `Left`: Move left, `Right`: Move right, `Up`: Rotate right, `Down`: Move down
 -   `A`: Move left, `D`: Move right, `W`: Rotate right, `E`: Rotate left, `S`: Move down
--   `H`: Move left, `L`: Move right, `K`: Rotate right
+-   `H`: Move left, `L`: Move right, `K`: Rotate right, `Z`: Rotate left
 
 The `Escape` and `P` keys pause and unpause the game.
 
