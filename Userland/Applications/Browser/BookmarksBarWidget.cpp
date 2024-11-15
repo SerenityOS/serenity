@@ -7,9 +7,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "BookmarksBarWidget.h"
+#include "Browser.h"
 #include "EditBookmarkDialog.h"
-#include <Applications/Browser/BookmarksBarWidget.h>
-#include <Applications/Browser/Browser.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>

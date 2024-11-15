@@ -13,7 +13,7 @@ namespace Browser {
 Vector<JsonValue> EditBookmarkDialog::edit_bookmark(GUI::Window* parent_window, RefPtr<Gfx::Bitmap> icon, StringView title, StringView url,
     PerformEditOn perform_edit_on)
 {
-    auto editor_or_error = EditBookmarkDialog::try_create(parent_window, move(title), move(url));
+    auto editor_or_error = EditBookmarkDialog::try_create(parent_window, title, url);
     if (editor_or_error.is_error()) {
         GUI::MessageBox::show(parent_window, "Couldn't load \"edit bookmark\" dialog"sv, "Error while opening \"edit bookmark\" dialog"sv, GUI::MessageBox::Type::Error);
         return {};
@@ -40,7 +40,7 @@ EditBookmarkDialog::try_create(GUI::Window* parent_window, StringView title, Str
 {
     auto edit_bookmark_widget = TRY(EditBookmarkWidget::try_create());
     auto edit_bookmark_dialog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow)
-            EditBookmarkDialog(parent_window, move(title), move(url), edit_bookmark_widget)));
+            EditBookmarkDialog(parent_window, title, url, edit_bookmark_widget)));
     return edit_bookmark_dialog;
 }
 

@@ -10,14 +10,14 @@
 
 namespace Browser {
 
-    class EditBookmarkWidget : public GUI::Widget {
+class EditBookmarkWidget : public GUI::Widget {
     C_OBJECT_ABSTRACT(EditBookmarkWidget)
-    public:
-        static ErrorOr<NonnullRefPtr<EditBookmarkWidget>> try_create();
-        virtual ~EditBookmarkWidget() override = default;
+public:
+    static ErrorOr<NonnullRefPtr<EditBookmarkWidget>> try_create();
+    virtual ~EditBookmarkWidget() override = default;
 
-    private:
-        EditBookmarkWidget() = default;
-    };
+private:
+    EditBookmarkWidget() = default;
+};
 
 }
