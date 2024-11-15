@@ -8,7 +8,7 @@
 #pragma once
 
 #include "BookmarksBarWidget.h"
-#include "Tab.h"
+#include "BrowserTabWidget.h"
 #include "WindowActions.h"
 #include <LibConfig/Listener.h>
 #include <LibGUI/ActionGroup.h>
@@ -18,7 +18,7 @@
 
 namespace Browser {
 
-class Tab;
+class BrowserTabWidget;
 class BrowserWindowWidget;
 
 class BrowserWindow final : public GUI::Window
@@ -30,8 +30,8 @@ public:
     virtual ~BrowserWindow() override = default;
 
     GUI::TabWidget& tab_widget();
-    Tab& active_tab();
-    Tab& create_new_tab(URL::URL const&, Web::HTML::ActivateTab activate);
+    BrowserTabWidget& active_tab();
+    ErrorOr<NonnullRefPtr<BrowserTabWidget>> create_new_tab(URL::URL const&, Web::HTML::ActivateTab activate);
     void create_new_window(URL::URL const&);
 
     GUI::Action& go_back_action() { return *m_go_back_action; }
@@ -58,7 +58,7 @@ private:
 
     void build_menus(StringView const);
     ErrorOr<void> load_search_engines(GUI::Menu& settings_menu);
-    void set_window_title_for_tab(Tab const&);
+    void set_window_title_for_tab(BrowserTabWidget const&);
 
     virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override;
     virtual void config_bool_did_change(StringView domain, StringView group, StringView key, bool value) override;

@@ -8,12 +8,11 @@
 
 #include "CookiesModel.h"
 #include "StorageModel.h"
-#include "Tab.h"
 #include <LibGUI/FilteringProxyModel.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibWeb/Cookie/Cookie.h>
-#include <LibGUI/Menu.h>
 
 namespace Browser {
 

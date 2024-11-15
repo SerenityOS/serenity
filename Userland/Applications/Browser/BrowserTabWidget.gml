@@ -1,4 +1,4 @@
-@GUI::Widget {
+@Browser::BrowserTabWidget {
     layout: @GUI::VerticalBoxLayout {
         spacing: 2
     }
