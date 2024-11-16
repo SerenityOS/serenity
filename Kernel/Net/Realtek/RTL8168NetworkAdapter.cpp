@@ -261,8 +261,8 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(StringView interfa
     , PCI::Device(device_identifier)
     , IRQHandler(irq)
     , m_registers_io_window(move(registers_io_window))
-    , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(TXDescriptor) * (number_of_rx_descriptors + 1)).release_value_but_fixme_should_propagate_errors(), "RTL8168 RX"sv, Memory::Region::Access::ReadWrite).release_value())
-    , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(Memory::page_round_up(sizeof(RXDescriptor) * (number_of_tx_descriptors + 1)).release_value_but_fixme_should_propagate_errors(), "RTL8168 TX"sv, Memory::Region::Access::ReadWrite).release_value())
+    , m_rx_descriptors(Memory::allocate_dma_region_as_typed_array<RXDescriptor volatile>(number_of_rx_descriptors + 1, "RTL8168 RX"sv, Memory::Region::Access::ReadWrite).release_value_but_fixme_should_propagate_errors())
+    , m_tx_descriptors(Memory::allocate_dma_region_as_typed_array<TXDescriptor volatile>(number_of_tx_descriptors + 1, "RTL8168 TX"sv, Memory::Region::Access::ReadWrite).release_value_but_fixme_should_propagate_errors())
 {
     dmesgln_pci(*this, "Found @ {}", device_identifier.address());
     dmesgln_pci(*this, "I/O port base: {}", m_registers_io_window);
@@ -923,10 +923,10 @@ void RTL8168NetworkAdapter::start_hardware()
     out16(REG_INT_MOD, 0x5151);
 
     // point to tx descriptors
-    out64(REG_TXADDR, m_tx_descriptors_region->physical_page(0)->paddr().get());
+    out64(REG_TXADDR, m_tx_descriptors.paddr.get());
 
     // point to rx descriptors
-    out64(REG_RXADDR, m_rx_descriptors_region->physical_page(0)->paddr().get());
+    out64(REG_RXADDR, m_rx_descriptors.paddr.get());
 
     // configure tx: use the maximum dma transfer size, default interframe gap time.
     out32(REG_TXCFG, TXCFG_IFG011 | TXCFG_MAX_DMA_UNLIMITED);
@@ -1252,9 +1252,8 @@ void RTL8168NetworkAdapter::set_phy_speed()
 
 UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_rx_descriptors()
 {
-    auto* rx_descriptors = (RXDescriptor*)m_rx_descriptors_region->vaddr().as_ptr();
     for (size_t i = 0; i < number_of_rx_descriptors; ++i) {
-        auto& descriptor = rx_descriptors[i];
+        auto& descriptor = m_rx_descriptors[i];
         auto region = MM.allocate_contiguous_kernel_region(Memory::page_round_up(RX_BUFFER_SIZE).release_value_but_fixme_should_propagate_errors(), "RTL8168 RX buffer"sv, Memory::Region::Access::ReadWrite).release_value();
         memset(region->vaddr().as_ptr(), 0, region->size()); // MM already zeros out newly allocated pages, but we do it again in case that ever changes
         m_rx_buffers_regions.append(move(region));
@@ -1265,14 +1264,13 @@ UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_rx_descriptors()
         descriptor.buffer_address_low = physical_address & 0xFFFFFFFF;
         descriptor.buffer_address_high = (u64)physical_address >> 32; // cast to prevent shift count >= with of type warnings in 32 bit systems
     }
-    rx_descriptors[number_of_rx_descriptors - 1].flags = rx_descriptors[number_of_rx_descriptors - 1].flags | RXDescriptor::EndOfRing;
+    m_rx_descriptors[number_of_rx_descriptors - 1].flags = m_rx_descriptors[number_of_rx_descriptors - 1].flags | RXDescriptor::EndOfRing;
 }
 
 UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_tx_descriptors()
 {
-    auto* tx_descriptors = (TXDescriptor*)m_tx_descriptors_region->vaddr().as_ptr();
     for (size_t i = 0; i < number_of_tx_descriptors; ++i) {
-        auto& descriptor = tx_descriptors[i];
+        auto& descriptor = m_tx_descriptors[i];
         auto region = MM.allocate_contiguous_kernel_region(Memory::page_round_up(TX_BUFFER_SIZE).release_value_but_fixme_should_propagate_errors(), "RTL8168 TX buffer"sv, Memory::Region::Access::ReadWrite).release_value();
         memset(region->vaddr().as_ptr(), 0, region->size()); // MM already zeros out newly allocated pages, but we do it again in case that ever changes
         m_tx_buffers_regions.append(move(region));
@@ -1282,7 +1280,7 @@ UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_tx_descriptors()
         descriptor.buffer_address_low = physical_address & 0xFFFFFFFF;
         descriptor.buffer_address_high = (u64)physical_address >> 32;
     }
-    tx_descriptors[number_of_tx_descriptors - 1].flags = tx_descriptors[number_of_tx_descriptors - 1].flags | TXDescriptor::EndOfRing;
+    m_tx_descriptors[number_of_tx_descriptors - 1].flags = m_tx_descriptors[number_of_tx_descriptors - 1].flags | TXDescriptor::EndOfRing;
 }
 
 UNMAP_AFTER_INIT RTL8168NetworkAdapter::~RTL8168NetworkAdapter() = default;
@@ -1366,8 +1364,7 @@ void RTL8168NetworkAdapter::send_raw(ReadonlyBytes payload)
         return;
     }
 
-    auto* tx_descriptors = (TXDescriptor*)m_tx_descriptors_region->vaddr().as_ptr();
-    auto& free_descriptor = tx_descriptors[m_tx_free_index];
+    auto& free_descriptor = m_tx_descriptors[m_tx_free_index];
 
     if ((free_descriptor.flags & TXDescriptor::Ownership) != 0) {
         dbgln_if(RTL8168_DEBUG, "RTL8168: No free TX buffers, sleeping until one is available");
@@ -1390,10 +1387,9 @@ void RTL8168NetworkAdapter::send_raw(ReadonlyBytes payload)
 
 void RTL8168NetworkAdapter::receive()
 {
-    auto* rx_descriptors = (RXDescriptor*)m_rx_descriptors_region->vaddr().as_ptr();
     for (u16 i = 0; i < number_of_rx_descriptors; ++i) {
         auto descriptor_index = (m_rx_free_index + i) % number_of_rx_descriptors;
-        auto& descriptor = rx_descriptors[descriptor_index];
+        auto& descriptor = m_rx_descriptors[descriptor_index];
 
         if ((descriptor.flags & RXDescriptor::Ownership) != 0) {
             m_rx_free_index = descriptor_index;
