@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
+#include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/Label.h>
@@ -40,7 +41,7 @@ static void update_notification_window_locations(Gfx::IntRect const& screen_rect
     }
 }
 
-NotificationWindow::NotificationWindow(i32 client_id, String const& text, String const& title, Gfx::ShareableBitmap const& icon)
+NotificationWindow::NotificationWindow(i32 client_id, String const& text, String const& title, Gfx::ShareableBitmap const& icon, URL::URL const& launch_url)
 {
     m_id = client_id;
 
@@ -69,6 +70,11 @@ NotificationWindow::NotificationWindow(i32 client_id, String const& text, String
     set_rect(rect);
 
     auto widget = NotificationServer::NotificationWidget::try_create().release_value_but_fixme_should_propagate_errors();
+    widget->set_greedy_for_hits(true);
+    widget->on_click = [this] {
+        if (m_launch_url.is_valid())
+            Desktop::Launcher::open(m_launch_url);
+    };
     set_main_widget(widget);
 
     m_image = widget->find_descendant_of_type_named<GUI::ImageWidget>("icon"sv);
@@ -81,6 +87,7 @@ NotificationWindow::NotificationWindow(i32 client_id, String const& text, String
     m_title_label->set_text(title);
     m_text_label = widget->find_descendant_of_type_named<GUI::Label>("text");
     m_text_label->set_text(text);
+    m_launch_url = launch_url;
 
     // FIXME: There used to be code for setting the tooltip here, but since we
     // expand the notification now we no longer set the tooltip. Should there be
@@ -118,6 +125,8 @@ void NotificationWindow::enter_event(Core::Event&)
     resize_to_fit_text();
     move_to_front();
     update_notification_window_locations(GUI::Desktop::the().rect());
+    if (m_launch_url.is_valid())
+        set_cursor(Gfx::StandardCursor::Hand);
 }
 
 void NotificationWindow::leave_event(Core::Event&)
@@ -126,6 +135,7 @@ void NotificationWindow::leave_event(Core::Event&)
     m_text_label->set_height(40 - (m_title_label->height() + GUI::Layout::default_spacing + main_widget()->layout()->margins().vertical_total()));
     set_height(40);
     update_notification_window_locations(GUI::Desktop::the().rect());
+    set_cursor(Gfx::StandardCursor::Arrow);
 }
 
 void NotificationWindow::set_text(String const& value)

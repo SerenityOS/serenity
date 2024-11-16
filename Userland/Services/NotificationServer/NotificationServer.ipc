@@ -2,11 +2,13 @@
 
 endpoint NotificationServer
 {
-    show_notification(String text, String title, Gfx::ShareableBitmap icon) => ()
+    show_notification(String text, String title, Gfx::ShareableBitmap icon, URL::URL launch_url) => ()
 
     update_notification_text(String text, String title) => (bool still_showing)
 
     update_notification_icon(Gfx::ShareableBitmap icon) => (bool still_showing)
+
+    update_notification_launch_url(URL::URL launch_url) => (bool still_showing)
 
     is_showing() => (bool still_showing)
 

@@ -18,8 +18,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto server = TRY(IPC::MultiServer<NotificationServer::ConnectionFromClient>::try_create());
 
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
-    TRY(Core::System::pledge("stdio recvfd sendfd accept rpath"));
+    TRY(Core::System::pledge("unix stdio recvfd sendfd accept rpath"));
 
     return app->exec();
 }
