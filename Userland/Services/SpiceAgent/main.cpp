@@ -8,7 +8,6 @@
 #include "SpiceAgent.h"
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
-#include <LibDesktop/Launcher.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
@@ -28,11 +27,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // We use the application to be able to easily write to the user's clipboard.
     auto app = TRY(GUI::Application::create(arguments));
 
-    TRY(Desktop::Launcher::add_allowed_url(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory())));
-    TRY(Desktop::Launcher::seal_allowlist());
-
     TRY(Core::System::pledge("unix rpath wpath cpath stdio sendfd recvfd"));
     TRY(Core::System::unveil(SPICE_DEVICE, "rw"sv));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/notify", "rw"));
     TRY(Core::System::unveil(Core::StandardPaths::downloads_directory(), "rwc"sv));
     TRY(Core::System::unveil(nullptr, nullptr));
 
