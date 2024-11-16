@@ -6,6 +6,7 @@
 
 #include <AK/Atomic.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
+#include <Kernel/Library/MiniStdLib.h>
 
 namespace Kernel::VirtIO {
 
