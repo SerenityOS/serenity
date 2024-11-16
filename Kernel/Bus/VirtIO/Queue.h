@@ -8,7 +8,6 @@
 
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/ScatterGatherList.h>
 
 namespace Kernel::VirtIO {
 
