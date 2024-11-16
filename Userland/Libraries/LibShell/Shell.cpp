@@ -2123,8 +2123,7 @@ void Shell::bring_cursor_to_beginning_of_a_line() const
     size_t fill_count = ws.ws_col - eol_mark_length;
     auto fill_buffer = ByteString::repeated(' ', fill_count);
     fwrite(fill_buffer.characters(), 1, fill_count, stderr);
-
-    putc('\r', stderr);
+    fwrite("\x1b[2K\r", 1, 5, stderr);
 }
 
 bool Shell::has_history_event(StringView source)
