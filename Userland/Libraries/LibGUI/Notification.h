@@ -55,11 +55,11 @@ private:
     void connection_closed();
 
     String m_title;
-    bool m_title_dirty;
+    bool m_title_dirty { false };
     String m_text;
-    bool m_text_dirty;
+    bool m_text_dirty { false };
     RefPtr<Gfx::Bitmap const> m_icon;
-    bool m_icon_dirty;
+    bool m_icon_dirty { false };
 
     bool m_destroyed { false };
     bool m_shown { false };
