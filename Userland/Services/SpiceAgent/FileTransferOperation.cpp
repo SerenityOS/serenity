@@ -7,8 +7,8 @@
 #include "FileTransferOperation.h"
 #include "SpiceAgent.h"
 #include <LibCore/StandardPaths.h>
-#include <LibDesktop/Launcher.h>
 #include <LibFileSystem/FileSystem.h>
+#include <LibGUI/Notification.h>
 #include <LibURL/URL.h>
 
 namespace SpiceAgent {
@@ -54,6 +54,12 @@ ErrorOr<void> FileTransferOperation::begin_transfer(SpiceAgent& agent)
     return {};
 }
 
+static Gfx::Bitmap const& downloads_folder_icon()
+{
+    static NonnullRefPtr<Gfx::Bitmap> s_icon = MUST(Gfx::Bitmap::load_from_file("/res/icons/32x32/downloads.png"sv));
+    return *s_icon;
+}
+
 ErrorOr<void> FileTransferOperation::complete_transfer(SpiceAgent& agent)
 {
     // Ensure that we are in the `Transferring` status.
@@ -68,10 +74,13 @@ ErrorOr<void> FileTransferOperation::complete_transfer(SpiceAgent& agent)
     auto status_message = FileTransferStatusMessage(m_id, FileTransferStatus::Success);
     TRY(agent.send_message(status_message));
 
-    // Open the file manager for the user :^)
-    // FIXME: This currently opens a new window for each successful file transfer...
-    //        Is there a way/can we make a way for it to highlight a new file in an already-open window?
-    Desktop::Launcher::open(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory(), m_metadata.name.to_byte_string()));
+    // Notify the user that the file transfer is complete :^)
+    auto notification = GUI::Notification::construct();
+    notification->set_icon(&downloads_folder_icon());
+    notification->set_title("File transfer complete!"_string);
+    notification->set_text(TRY(String::formatted("{} is now in your Downloads folder.", m_metadata.name.to_byte_string())));
+    notification->set_launch_url(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory(), m_metadata.name.to_byte_string()));
+    notification->show();
 
     return {};
 }
