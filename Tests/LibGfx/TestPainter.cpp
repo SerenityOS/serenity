@@ -53,3 +53,11 @@ TEST_CASE(draw_rect_rough_bounds)
     painter.draw_rect(Gfx::IntRect(0, 0, 1, 1), Color::Black, true);
     painter.draw_rect(Gfx::IntRect(9, 9, 1, 1), Color::Black, true);
 }
+
+TEST_CASE(draw_triangle_wave)
+{
+    auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { 10, 10 }));
+    Gfx::Painter painter(*bitmap);
+    for (int y = -3; y < bitmap->height() + 3; ++y)
+        painter.draw_triangle_wave({ 0, y }, { bitmap->width(), y }, Gfx::Color::Red, 3, 2);
+}
