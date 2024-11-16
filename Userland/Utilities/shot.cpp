@@ -52,8 +52,11 @@ private:
     {
         if (m_anchor_point.has_value()) {
             m_region = Gfx::IntRect::from_two_points(*m_anchor_point, event.position());
-            update();
         }
+
+        m_mouse_y = event.y();
+        m_mouse_x = event.x();
+        update();
     }
 
     virtual void mouseup_event(GUI::MouseEvent& event) override
@@ -68,6 +71,8 @@ private:
         painter.clear_rect(m_window->rect(), Gfx::Color::Transparent);
         painter.fill_rect(m_window->rect(), m_background_color);
 
+        painter.draw_line(Gfx::IntPoint(0, m_mouse_y), Gfx::IntPoint(m_window->width(), m_mouse_y), Gfx::Color::Green);
+        painter.draw_line(Gfx::IntPoint(m_mouse_x, 0), Gfx::IntPoint(m_mouse_x, m_window->height()), Gfx::Color::Green);
         if (m_region.is_empty())
             return;
 
@@ -86,6 +91,9 @@ private:
     Gfx::IntRect m_region;
     GUI::Window* m_window = nullptr;
     Gfx::Color const m_background_color;
+
+    int m_mouse_y = 0;
+    int m_mouse_x = 0;
 };
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
