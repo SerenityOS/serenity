@@ -190,6 +190,12 @@ WebIDL::ExceptionOr<void> Selection::collapse(JS::GCPtr<DOM::Node> node, unsigne
         return {};
     }
 
+    // FIXME: Update this to match the spec once the spec is updated.
+    // Spec PR: https://github.com/w3c/selection-api/pull/342
+    if (node->is_document_type()) {
+        return WebIDL::InvalidNodeTypeError::create(realm(), "Selection.collapse() with DocumentType node"_string);
+    }
+
     // 2. The method must throw an IndexSizeError exception if offset is longer than node's length and abort these steps.
     if (offset > node->length()) {
         return WebIDL::IndexSizeError::create(realm(), "Selection.collapse() with offset longer than node's length"_fly_string);
@@ -355,6 +361,12 @@ WebIDL::ExceptionOr<void> Selection::set_base_and_extent(JS::NonnullGCPtr<DOM::N
 // https://w3c.github.io/selection-api/#dom-selection-selectallchildren
 WebIDL::ExceptionOr<void> Selection::select_all_children(JS::NonnullGCPtr<DOM::Node> node)
 {
+    // FIXME: Update this to match the spec once the spec is updated.
+    // Spec PR: https://github.com/w3c/selection-api/pull/342
+    if (node->is_document_type()) {
+        return WebIDL::InvalidNodeTypeError::create(realm(), "Selection.selectAllChildren() with DocumentType node"_string);
+    }
+
     // 1. If node's root is not the document associated with this, abort these steps.
     if (&node->root() != m_document.ptr())
         return {};
