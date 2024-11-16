@@ -67,6 +67,7 @@ source_set("CSS") {
     "StyleProperties.cpp",
     "StyleProperty.cpp",
     "StyleSheet.cpp",
+    "StyleSheetIdentifier.cpp",
     "StyleSheetList.cpp",
     "Supports.cpp",
     "SystemColor.cpp",
