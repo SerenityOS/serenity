@@ -201,8 +201,8 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> E1000ENetworkAdapter::cr
 
     auto rx_buffer_region = TRY(MM.allocate_contiguous_kernel_region(rx_buffer_size * number_of_rx_descriptors, "E1000 RX buffers"sv, Memory::Region::Access::ReadWrite));
     auto tx_buffer_region = MM.allocate_contiguous_kernel_region(tx_buffer_size * number_of_tx_descriptors, "E1000 TX buffers"sv, Memory::Region::Access::ReadWrite).release_value();
-    auto rx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors)), "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite));
-    auto tx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors)), "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite));
+    auto rx_descriptors_region = TRY(Memory::allocate_dma_region_as_typed_array<RxDescriptor volatile>(number_of_rx_descriptors, "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite));
+    auto tx_descriptors_region = TRY(Memory::allocate_dma_region_as_typed_array<TxDescriptor volatile>(number_of_tx_descriptors, "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite));
 
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) E1000ENetworkAdapter(interface_name.representable_view(),
         pci_device_identifier,
@@ -238,13 +238,13 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000ENetworkAdapter::initialize(Badge<Networking
 UNMAP_AFTER_INIT E1000ENetworkAdapter::E1000ENetworkAdapter(StringView interface_name,
     PCI::DeviceIdentifier const& device_identifier, u8 irq,
     NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
-    NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,
-    NonnullOwnPtr<Memory::Region> tx_descriptors_region)
+    NonnullOwnPtr<Memory::Region> tx_buffer_region, Memory::TypedMapping<RxDescriptor volatile[]> rx_descriptors,
+    Memory::TypedMapping<TxDescriptor volatile[]> tx_descriptors)
     : E1000NetworkAdapter(interface_name, device_identifier, irq, move(registers_io_window),
           move(rx_buffer_region),
           move(tx_buffer_region),
-          move(rx_descriptors_region),
-          move(tx_descriptors_region))
+          move(rx_descriptors),
+          move(tx_descriptors))
 {
 }
 

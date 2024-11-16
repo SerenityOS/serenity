@@ -174,16 +174,16 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> E1000NetworkAdapter::cre
 
     auto rx_buffer_region = TRY(MM.allocate_contiguous_kernel_region(rx_buffer_size * number_of_rx_descriptors, "E1000 RX buffers"sv, Memory::Region::Access::ReadWrite));
     auto tx_buffer_region = MM.allocate_contiguous_kernel_region(tx_buffer_size * number_of_tx_descriptors, "E1000 TX buffers"sv, Memory::Region::Access::ReadWrite).release_value();
-    auto rx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors)), "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite));
-    auto tx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors)), "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite));
+    auto rx_descriptors = TRY(Memory::allocate_dma_region_as_typed_array<RxDescriptor volatile>(number_of_rx_descriptors, "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite));
+    auto tx_descriptors = TRY(Memory::allocate_dma_region_as_typed_array<TxDescriptor volatile>(number_of_tx_descriptors, "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite));
 
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) E1000NetworkAdapter(interface_name.representable_view(),
         pci_device_identifier,
         irq, move(registers_io_window),
         move(rx_buffer_region),
         move(tx_buffer_region),
-        move(rx_descriptors_region),
-        move(tx_descriptors_region))));
+        move(rx_descriptors),
+        move(tx_descriptors))));
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingManagement>)
@@ -229,14 +229,14 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_interrupts()
 UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(StringView interface_name,
     PCI::DeviceIdentifier const& device_identifier, u8 irq,
     NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
-    NonnullOwnPtr<Memory::Region> tx_buffer_region, NonnullOwnPtr<Memory::Region> rx_descriptors_region,
-    NonnullOwnPtr<Memory::Region> tx_descriptors_region)
+    NonnullOwnPtr<Memory::Region> tx_buffer_region, Memory::TypedMapping<RxDescriptor volatile[]> rx_descriptors,
+    Memory::TypedMapping<TxDescriptor volatile[]> tx_descriptors)
     : NetworkAdapter(interface_name)
     , PCI::Device(device_identifier)
     , IRQHandler(irq)
     , m_registers_io_window(move(registers_io_window))
-    , m_rx_descriptors_region(move(rx_descriptors_region))
-    , m_tx_descriptors_region(move(tx_descriptors_region))
+    , m_rx_descriptors(move(rx_descriptors))
+    , m_tx_descriptors(move(tx_descriptors))
     , m_rx_buffer_region(move(rx_buffer_region))
     , m_tx_buffer_region(move(tx_buffer_region))
 {
@@ -326,18 +326,17 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
 {
-    auto* rx_descriptors = (e1000_rx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
     constexpr auto rx_buffer_page_count = rx_buffer_size / PAGE_SIZE;
     for (size_t i = 0; i < number_of_rx_descriptors; ++i) {
-        auto& descriptor = rx_descriptors[i];
+        auto& descriptor = m_rx_descriptors[i];
         m_rx_buffers[i] = m_rx_buffer_region->vaddr().as_ptr() + rx_buffer_size * i;
         descriptor.addr = m_rx_buffer_region->physical_page(rx_buffer_page_count * i)->paddr().get();
         descriptor.status = 0;
     }
 
-    out32(REG_RXDESCLO, m_rx_descriptors_region->physical_page(0)->paddr().get());
+    out32(REG_RXDESCLO, m_rx_descriptors.paddr.get());
     out32(REG_RXDESCHI, 0);
-    out32(REG_RXDESCLEN, number_of_rx_descriptors * sizeof(e1000_rx_desc));
+    out32(REG_RXDESCLEN, number_of_rx_descriptors * sizeof(RxDescriptor));
     out32(REG_RXDESCHEAD, 0);
     out32(REG_RXDESCTAIL, number_of_rx_descriptors - 1);
 
@@ -346,19 +345,18 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
 {
-    auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
     constexpr auto tx_buffer_page_count = tx_buffer_size / PAGE_SIZE;
 
     for (size_t i = 0; i < number_of_tx_descriptors; ++i) {
-        auto& descriptor = tx_descriptors[i];
+        auto& descriptor = m_tx_descriptors[i];
         m_tx_buffers[i] = m_tx_buffer_region->vaddr().as_ptr() + tx_buffer_size * i;
         descriptor.addr = m_tx_buffer_region->physical_page(tx_buffer_page_count * i)->paddr().get();
         descriptor.cmd = 0;
     }
 
-    out32(REG_TXDESCLO, m_tx_descriptors_region->physical_page(0)->paddr().get());
+    out32(REG_TXDESCLO, m_tx_descriptors.paddr.get());
     out32(REG_TXDESCHI, 0);
-    out32(REG_TXDESCLEN, number_of_tx_descriptors * sizeof(e1000_tx_desc));
+    out32(REG_TXDESCLEN, number_of_tx_descriptors * sizeof(TxDescriptor));
     out32(REG_TXDESCHEAD, 0);
     out32(REG_TXDESCTAIL, 0);
 
@@ -407,8 +405,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
     disable_irq();
     size_t tx_current = in32(REG_TXDESCTAIL) % number_of_tx_descriptors;
     dbgln_if(E1000_DEBUG, "E1000: Sending packet ({} bytes)", payload.size());
-    auto* tx_descriptors = (e1000_tx_desc*)m_tx_descriptors_region->vaddr().as_ptr();
-    auto& descriptor = tx_descriptors[tx_current];
+    auto& descriptor = m_tx_descriptors[tx_current];
     VERIFY(payload.size() <= 8192);
     auto* vptr = (void*)m_tx_buffers[tx_current];
     memcpy(vptr, payload.data(), payload.size());
@@ -432,19 +429,18 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
 
 void E1000NetworkAdapter::receive()
 {
-    auto* rx_descriptors = (e1000_rx_desc*)m_rx_descriptors_region->vaddr().as_ptr();
     u32 rx_current;
     for (;;) {
         rx_current = in32(REG_RXDESCTAIL) % number_of_rx_descriptors;
         rx_current = (rx_current + 1) % number_of_rx_descriptors;
-        if (!(rx_descriptors[rx_current].status & 1))
+        if (!(m_rx_descriptors[rx_current].status & 1))
             break;
         auto* buffer = m_rx_buffers[rx_current];
-        u16 length = rx_descriptors[rx_current].length;
+        u16 length = m_rx_descriptors[rx_current].length;
         VERIFY(length <= 8192);
         dbgln_if(E1000_DEBUG, "E1000: Received 1 packet @ {:p} ({} bytes)", buffer, length);
         did_receive({ buffer, length });
-        rx_descriptors[rx_current].status = 0;
+        m_rx_descriptors[rx_current].status = 0;
         out32(REG_RXDESCTAIL, rx_current);
     }
 }
