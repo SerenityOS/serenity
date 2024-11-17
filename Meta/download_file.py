@@ -8,6 +8,7 @@ It's intended to be used for files that are cached between runs.
 """
 
 import argparse
+import gzip
 import hashlib
 import os
 import pathlib
@@ -73,10 +74,14 @@ def main():
 
     os.makedirs(output_file.parent, exist_ok=True)
 
-    with urllib.request.urlopen(args.url) as f:
+    request = urllib.request.Request(args.url, headers={"Accept-Encoding": "gzip"})
+    with urllib.request.urlopen(request) as f:
         try:
             with tempfile.NamedTemporaryFile(delete=False, dir=output_file.parent) as out:
-                out.write(f.read())
+                if f.headers.get("Content-Encoding") == "gzip":
+                    out.write(gzip.decompress(f.read()))
+                else:
+                    out.write(f.read())
                 os.rename(out.name, output_file)
         except IOError:
             os.unlink(out.name)
