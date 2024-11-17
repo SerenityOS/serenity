@@ -38,9 +38,9 @@ def main():
     parser.add_argument('url', help='input url')
     parser.add_argument('-o', '--output', required=True,
                         help='output file')
-    parser.add_argument('-v', '--version', required=True,
+    parser.add_argument('-v', '--version', required=False,
                         help='version of file to detect mismatches and redownload')
-    parser.add_argument('-f', '--version-file', required=True,
+    parser.add_argument('-f', '--version-file', required=False,
                         help='filesystem location to cache version')
     parser.add_argument('-c', "--cache-path", required=False,
                         help='path for cached files to clear on version mismatch')
@@ -48,14 +48,19 @@ def main():
                         help='expected SHA-256 hash of the downloaded file')
     args = parser.parse_args()
 
-    version_from_file = ''
-    version_file = pathlib.Path(args.version_file)
-    if version_file.exists():
-        with version_file.open('r') as f:
-            version_from_file = f.readline().strip()
+    if (args.version is None) != (args.version_file is None):
+        parser.error("Both -v/--version and -f/--version-file must be provided together.")
 
-    if version_from_file == args.version:
-        return 0
+    if args.version:
+        version_from_file = ''
+        version_file = pathlib.Path(args.version_file)
+        os.makedirs(version_file.parent, exist_ok=True)
+        if version_file.exists():
+            with version_file.open() as f:
+                version_from_file = f.readline().strip()
+
+        if version_from_file == args.version:
+            return 0
 
     # Fresh build or version mismatch, delete old cache
     if args.cache_path:
@@ -65,6 +70,8 @@ def main():
 
     output_file = pathlib.Path(args.output)
     print(f"Downloading file {output_file} from {args.url}")
+
+    os.makedirs(output_file.parent, exist_ok=True)
 
     with urllib.request.urlopen(args.url) as f:
         try:
@@ -83,8 +90,9 @@ def main():
             print(f"Actual:   {actual_sha256}")
             return 1
 
-    with open(version_file, 'w') as f:
-        f.write(args.version)
+    if args.version_file:
+        with open(version_file, 'w') as f:
+            f.write(args.version)
 
 
 if __name__ == '__main__':
