@@ -2,6 +2,8 @@
 include(${CMAKE_CURRENT_LIST_DIR}/serenity_components.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/code_generators.cmake)
 
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
 function(serenity_set_implicit_links target_name)
     # Make sure that CMake is aware of the implicit LibC dependency, and ensure
     # that we are choosing the correct and updated LibC.
@@ -210,23 +212,6 @@ function(embed_resource target section file)
     )
 endfunction()
 
-function(remove_path_if_version_changed version version_file cache_path)
-    set(version_differs YES)
-
-    if (EXISTS "${version_file}")
-        file(STRINGS "${version_file}" active_version)
-        if (version STREQUAL active_version)
-            set(version_differs NO)
-        endif()
-    endif()
-
-    if (version_differs)
-        message(STATUS "Removing outdated ${cache_path} for version ${version}")
-        file(REMOVE_RECURSE "${cache_path}")
-        file(WRITE "${version_file}" "${version}")
-    endif()
-endfunction()
-
 function(invoke_generator name generator primary_source header implementation)
     cmake_parse_arguments(invoke_generator "" "" "arguments;dependencies" ${ARGN})
 
@@ -247,47 +232,47 @@ function(invoke_generator name generator primary_source header implementation)
 endfunction()
 
 function(download_file_multisource urls path)
-    cmake_parse_arguments(DOWNLOAD "" "SHA256" "" ${ARGN})
+    cmake_parse_arguments(DOWNLOAD "" "SHA256;VERSION;VERSION_FILE;CACHE_PATH" "" ${ARGN})
 
-    if (NOT "${DOWNLOAD_SHA256}" STREQUAL "")
-        set(DOWNLOAD_SHA256 EXPECTED_HASH "SHA256=${DOWNLOAD_SHA256}")
+    if (NOT ENABLE_NETWORK_DOWNLOADS AND NOT EXISTS "${path}")
+        message(FATAL_ERROR "${path} does not exist, and unable to download it")
     endif()
 
-    if (NOT EXISTS "${path}")
-        if (NOT ENABLE_NETWORK_DOWNLOADS)
-            message(FATAL_ERROR "${path} does not exist, and unable to download it")
-        endif()
-
-        get_filename_component(file "${path}" NAME)
-        set(tmp_path "${path}.tmp")
-
-        foreach(url ${urls})
-            message(STATUS "Downloading file ${file} from ${url}")
-
-            file(DOWNLOAD "${url}" "${tmp_path}" INACTIVITY_TIMEOUT 10 STATUS download_result ${DOWNLOAD_SHA256})
-            list(GET download_result 0 status_code)
-            list(GET download_result 1 error_message)
-
-            if (status_code EQUAL 0)
-                file(RENAME "${tmp_path}" "${path}")
-                break()
-            endif()
-
-            file(REMOVE "${tmp_path}")
-            message(WARNING "Failed to download ${url}: ${error_message}")
-        endforeach()
-
-        if (NOT status_code EQUAL 0)
-            message(FATAL_ERROR "Failed to download ${path} from any source")
-        endif()
+    if (EXISTS "${path}" AND "${DOWNLOAD_VERSION}" STREQUAL "")
+        return() # Assume the current version is up-to-date.
     endif()
+
+    foreach(url ${urls})
+        set(DOWNLOAD_COMMAND "${Python3_EXECUTABLE}" "${SerenityOS_SOURCE_DIR}/Meta/download_file.py" "-o" "${path}" "${url}")
+
+        if (NOT "${DOWNLOAD_SHA256}" STREQUAL "")
+            list(APPEND DOWNLOAD_COMMAND "-s" "${DOWNLOAD_SHA256}")
+        endif()
+        if (NOT "${DOWNLOAD_VERSION}" STREQUAL "")
+            list(APPEND DOWNLOAD_COMMAND "-v" "${DOWNLOAD_VERSION}")
+            list(APPEND DOWNLOAD_COMMAND "-f" "${DOWNLOAD_VERSION_FILE}")
+        endif()
+        if (NOT "${DOWNLOAD_CACHE_PATH}" STREQUAL "")
+            list(APPEND DOWNLOAD_COMMAND "-c" "${DOWNLOAD_CACHE_PATH}")
+        endif()
+
+        execute_process(COMMAND ${DOWNLOAD_COMMAND} RESULT_VARIABLE status_code)
+
+        if(status_code EQUAL 0)
+            return()
+        endif()
+
+        message(WARNING "Failed to download ${path} from ${url}")
+    endforeach()
+
+    message(FATAL_ERROR "Failed to download ${path} from any source")
 endfunction()
 
 function(download_file url path)
-    cmake_parse_arguments(DOWNLOAD "" "SHA256" "" ${ARGN})
+    cmake_parse_arguments(DOWNLOAD "" "SHA256;VERSION;VERSION_FILE;CACHE_PATH" "" ${ARGN})
 
     # If the timestamp doesn't match exactly, the Web Archive should redirect to the closest archived file automatically.
-    download_file_multisource("${url};https://web.archive.org/web/99991231235959/${url}" "${path}" SHA256 "${DOWNLOAD_SHA256}")
+    download_file_multisource("${url};https://web.archive.org/web/99991231235959/${url}" "${path}" SHA256 "${DOWNLOAD_SHA256}" VERSION "${DOWNLOAD_VERSION}" VERSION_FILE "${DOWNLOAD_VERSION_FILE}" CACHE_PATH "${DOWNLOAD_CACHE_PATH}")
 endfunction()
 
 function(extract_path dest_dir zip_path source_path dest_path)

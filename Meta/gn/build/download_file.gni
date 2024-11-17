@@ -39,7 +39,7 @@ template("download_file") {
          "must set 'version_file' in $target_name")
 
   action(target_name) {
-    script = "//Meta/gn/build/download_file.py"
+    script = "//Meta/download_file.py"
 
     sources = []
     if (defined(invoker.cache)) {

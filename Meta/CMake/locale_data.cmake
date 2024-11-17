@@ -31,10 +31,8 @@ set(CLDR_UNITS_SOURCE cldr-units-modern)
 set(CLDR_UNITS_PATH "${CLDR_PATH}/${CLDR_UNITS_SOURCE}")
 
 if (ENABLE_UNICODE_DATABASE_DOWNLOAD)
-    remove_path_if_version_changed("${CLDR_VERSION}" "${CLDR_VERSION_FILE}" "${CLDR_PATH}")
-
     if (ENABLE_NETWORK_DOWNLOADS)
-        download_file("${CLDR_ZIP_URL}" "${CLDR_ZIP_PATH}" SHA256 "${CLDR_SHA256}")
+        download_file("${CLDR_ZIP_URL}" "${CLDR_ZIP_PATH}" SHA256 "${CLDR_SHA256}" VERSION "${CLDR_VERSION}" VERSION_FILE "${CLDR_VERSION_FILE}" CACHE_PATH "${CLDR_PATH}")
         extract_path("${CLDR_PATH}" "${CLDR_ZIP_PATH}" "${CLDR_BCP47_SOURCE}/**" "${CLDR_BCP47_PATH}")
         extract_path("${CLDR_PATH}" "${CLDR_ZIP_PATH}" "${CLDR_CORE_SOURCE}/**" "${CLDR_CORE_PATH}")
         extract_path("${CLDR_PATH}" "${CLDR_ZIP_PATH}" "${CLDR_DATES_SOURCE}/**" "${CLDR_DATES_PATH}")

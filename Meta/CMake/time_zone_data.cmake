@@ -44,10 +44,8 @@ function(extract_tzdb_file source path)
 endfunction()
 
 if (ENABLE_TIME_ZONE_DATABASE_DOWNLOAD)
-    remove_path_if_version_changed("${TZDB_VERSION}" "${TZDB_VERSION_FILE}" "${TZDB_PATH}")
-
     if (ENABLE_NETWORK_DOWNLOADS)
-        download_file("${TZDB_ZIP_URL}" "${TZDB_ZIP_PATH}" SHA256 "${TZDB_SHA256}")
+        download_file("${TZDB_ZIP_URL}" "${TZDB_ZIP_PATH}" SHA256 "${TZDB_SHA256}" VERSION "${TZDB_VERSION}" VERSION_FILE "${TZDB_VERSION_FILE}" CACHE_PATH "${TZDB_PATH}")
         extract_tzdb_file("${TZDB_AFRICA_SOURCE}" "${TZDB_AFRICA_PATH}")
         extract_tzdb_file("${TZDB_ANTARCTICA_SOURCE}" "${TZDB_ANTARCTICA_PATH}")
         extract_tzdb_file("${TZDB_ASIA_SOURCE}" "${TZDB_ASIA_PATH}")
