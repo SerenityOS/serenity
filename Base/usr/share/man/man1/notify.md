@@ -5,21 +5,26 @@ notify - create a notification
 ## Synopsis
 
 ```**sh
-$ notify <title> <message> [icon-path]
+$ notify <title> <message> [-I icon-path] [-L launch-url]
 ```
+
+## Options
+
+-   `-I`, `--icon-path`: Path to icon image file
+-   `-L`, `--launch-url`: Notification launch URL
 
 ## Arguments
 
--   `title`: The title of notification
--   `message`: The message of notification
--   `icon-path`: Path to icon image file
+-   `title`: Notification title
+-   `message`: Notification message
 
 ## Description
 
-`notify` creates a WindowServer notification with title `title` and message `message`. You can also provide an icon path; by default, no icon will be used.
+`notify` creates a WindowServer notification with the title `title` and message `message`. Optionally, you can also provide an icon path and/or a launch URL
+for the notification.
 
 ## Examples
 
 ```sh
-$ <command> && notify "Information" "Command succeeded" /res/icons/32x32/msgbox-information.png
+$ <command> && notify "Information" "Command succeeded" -I /res/icons/32x32/msgbox-information.png
 ```

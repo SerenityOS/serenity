@@ -18,9 +18,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     String title {};
     String message {};
     StringView icon_path {};
+    StringView launch_url {};
     args_parser.add_positional_argument(title, "Title of the notification", "title");
     args_parser.add_positional_argument(message, "Message to display in the notification", "message");
-    args_parser.add_positional_argument(icon_path, "Path of icon to display in the notification", "icon-path", Core::ArgsParser::Required::No);
+    args_parser.add_option(icon_path, "Path of icon to display in the notification", "icon-path", 'I', "icon_path");
+    args_parser.add_option(launch_url, "Launch URL for the notification", "launch-url", 'L', "launch_url");
     args_parser.parse(arguments);
 
     auto notification = GUI::Notification::construct();
@@ -29,6 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!icon_path.is_empty()) {
         notification->set_icon(TRY(Gfx::Bitmap::load_from_file(icon_path)));
     }
+    notification->set_launch_url(launch_url);
     notification->show();
 
     return 0;
