@@ -291,6 +291,10 @@ serenity_cherry_picks.add('00eca78d289dfd1b14bf0a2f95992e8bb7b455da')
 # but without `-x` flag.
 serenity_cherry_picks.add('b118c99c271e34e2c5020022d062a4371f199a71')
 
+# Ladybird PR-less commit 50dc1c3c19b82af797c79b5aa694b3ac7f0114bb was a
+# cherry-pick of serenity's https://github.com/SerenityOS/serenity/pull/24533
+serenity_cherry_picks.add('50dc1c3c19b82af797c79b5aa694b3ac7f0114bb')
+
 # Define a list of pull request IDs that should never be merged
 # and the reasons why they shouldn't be merged.
 # We fairly likely don't want the PRs in here (but it isn't 100% set
@@ -308,6 +312,8 @@ never_merge_prs = {
     # Might want sommething like the CMakePresets.json commit in here, maybe.
     "https://github.com/LadybirdBrowser/ladybird/pull/34": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/47": "Ladybird-specific",  # More CMakePresets
+    "https://github.com/LadybirdBrowser/ladybird/pull/188": "Ladybird-specific",  # More CMakePresets
+    "https://github.com/LadybirdBrowser/ladybird/pull/305": "Ladybird-specific",  # More CMakePresets
 
     "https://github.com/LadybirdBrowser/ladybird/pull/26": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/27": "Ladybird-specific",
@@ -390,15 +396,18 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/487": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/519": "Dependabot",
     "https://github.com/LadybirdBrowser/ladybird/pull/525": "Ladybird-specific",
+    "https://github.com/LadybirdBrowser/ladybird/pull/526": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/551": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/574": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/577": "Ladybird-specific",
+    "https://github.com/LadybirdBrowser/ladybird/pull/578": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/580": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/581": "No Ladybird/Android in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/592": "No Ladybird/Android in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/597": "No Ladybird/Android in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/598": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/599": "NIH violation: skia",
+    "https://github.com/LadybirdBrowser/ladybird/pull/622": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/624": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/636": "NIH violation: libwebp",
     "https://github.com/LadybirdBrowser/ladybird/pull/640": "NIH violation: skia",
@@ -440,6 +449,7 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/1130": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1138": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/1175": "swift",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1195": "Reverted 6c9adf3dbc64 in never_merge_commits",
     "https://github.com/LadybirdBrowser/ladybird/pull/1220": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1221": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1263": "Dependabot",
@@ -461,8 +471,10 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/1588": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/1589": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1634": "Still used in Serenity",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1718": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/1870": "Got reverted",
     "https://github.com/LadybirdBrowser/ladybird/pull/2293": "Dependabot",
+    "https://github.com/LadybirdBrowser/ladybird/pull/2317": "Got reverted, then relanded in PR2335",
 }
 
 # Quick consistency check:
@@ -493,6 +505,11 @@ never_merge_commits = {
     "bce7b24cfb86ba1b8a253d999e5bcc9d330cba6b": "NIH violation: skia",
     "d9927d128c25c740fe5d396b1a3e1d532121fdb2": "Still used in Serenity",
 
+    # We don't want the first three commits of https://github.com/LadybirdBrowser/ladybird/pull/71
+    "f55f64755da49020e5f63c40b12054baf73592a8": "Ladybird-specific",
+    "41176a4f4eb42f557708e74224249900646221ba": "Still used in Serenity",
+    "6f387577c593fa35787dc89045a03b9923985a5c": "Still used in Serenity",
+
     # We merged one commit of https://github.com/LadybirdBrowser/ladybird/pull/42
     # but don't want the rest: Serenity still uses bitmap fonts.
     "1b2d08ee7e32d3934a6add0e6438f782900fccc4": "Still used in Serenity",
@@ -515,10 +532,12 @@ never_merge_commits = {
     "4822d1da4e4199b248f94f7c2a55940404fa29b6": "Still used in Serenity",
     "cd84d23afad6e15feef630acfa58140f57cb6db7": "Still used in Serenity",
 
-    # The 2nd commit of https://github.com/LadybirdBrowser/ladybird/pull/1125
+    # First commit of PR179; not sure yet if we want the 2nd.
+    "1bde774918ce9e41fc271edb2bdcd136f63699c2": "Still used in Serenity",
+
+    # The 2nd commit of https://github.com/LadybirdBrowser/ladybird/pull/1125, 6c9adf3dbc64,
     # was reverted in https://github.com/LadybirdBrowser/ladybird/pull/1195.
     "6c9adf3dbc641445a03da9cd1083f89c911504be": "Got reverted",
-    "660e846e945b1a73982a150bb6be928f2ed9f4da": "Reverted 6c9adf3dbc64",
 
     # We merged two commits of https://github.com/LadybirdBrowser/ladybird/pull/257,
     # but I think we don't want the other three since we still need that code (?)
@@ -558,12 +577,19 @@ never_merge_commits = {
     "2936a9a45ef41838861d16134f6fcb74f13a9b3b": "Ladybird-specific",  # Got reverted in PR16 again.
     "061ad33705765792ae935bc8d77e329c20ce55d0": "Reverted PR1541",
     "325ff4ac276ff2805a65c154d3f77af321c72717": "Reverted PR1870",
+    "2a5dbedad4e76fbaaab4ba6a6e0e0a740260af05": "Reverted PR2317",
 }
 
 for commit in never_merge_commits:
     assert commit not in serenity_cherry_picks
-    # FIXME: If all commits of a PR are in never_merge_commits, diag that
-    # the PR should be in never_merge_prs instead.
+# If all commits of a PR are in never_merge_commits, diag that the PR should be
+# in never_merge_prs instead.
+never_merge_commit_set = set(never_merge_commits.keys())
+for pr in ladybird_commits:
+    pr_commit_set = set(ladybird_commits[pr])
+    all_pr_commits_are_in_never_merge_commits = pr_commit_set.issubset(never_merge_commit_set)
+    assert not all_pr_commits_are_in_never_merge_commits, \
+        f'all commits {pr_commit_set} of {pr} unwanted, put PR in never_merge_prs instead'
 
 print("Report of Ladybird commits and their cherry-pick status in SerenityOS:")
 print("=====================================================================")
