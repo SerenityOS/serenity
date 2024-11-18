@@ -388,7 +388,7 @@ ErrorOr<void> FATInode::allocate_and_add_cluster_to_chain()
         // This is not the first cluster in the chain, so we need to update the
         // FAT entry for the last cluster in the chain to point to the newly
         // allocated cluster.
-        TRY(fs().fat_write(m_cluster_list[m_cluster_list.size() - 1], allocated_cluster));
+        TRY(fs().fat_write(m_cluster_list.last(), allocated_cluster));
     }
 
     m_cluster_list.append(allocated_cluster);
@@ -401,13 +401,12 @@ ErrorOr<void> FATInode::remove_last_cluster_from_chain()
     VERIFY(m_inode_lock.is_locked());
     VERIFY(m_cluster_list.size() > 0);
 
-    u32 last_cluster = m_cluster_list[m_cluster_list.size() - 1];
-    TRY(fs().fat_write(last_cluster, 0x0));
+    u32 last_cluster = m_cluster_list.take_last();
 
     dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_last_cluster_from_chain(): freeing cluster {}", identifier(), last_cluster);
 
+    TRY(fs().fat_write(last_cluster, 0));
     TRY(fs().notify_cluster_freed());
-    m_cluster_list.remove(m_cluster_list.size() - 1);
 
     if (m_cluster_list.is_empty() || (m_cluster_list.size() == 1 && first_cluster() <= 1)) {
         // We have removed the last cluster in the chain, so update the inode metadata.
@@ -422,7 +421,7 @@ ErrorOr<void> FATInode::remove_last_cluster_from_chain()
     } else {
         // We have removed a cluster from the chain, so update the FAT entry for
         // the last cluster in the chain mark it as the end of the chain.
-        last_cluster = m_cluster_list[m_cluster_list.size() - 1];
+        last_cluster = m_cluster_list.last();
         TRY(fs().fat_write(last_cluster, fs().end_of_chain_marker()));
     }
 
