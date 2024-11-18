@@ -21,6 +21,7 @@ source_set("CSS") {
     "CSSLayerStatementRule.cpp",
     "CSSMediaRule.cpp",
     "CSSNamespaceRule.cpp",
+    "CSSNestedDeclarations.cpp",
     "CSSNumericType.cpp",
     "CSSRule.cpp",
     "CSSRuleList.cpp",
