@@ -692,6 +692,9 @@ ErrorOr<void> Editor::resized()
 
 ErrorOr<void> Editor::handle_resize_event(bool reset_origin)
 {
+    if (!m_initialized || !m_is_editing)
+        return {};
+
     m_has_origin_reset_scheduled = false;
     if (reset_origin && !set_origin(false)) {
         m_has_origin_reset_scheduled = true;
@@ -845,6 +848,9 @@ ErrorOr<void> Editor::try_update_once()
 
 void Editor::handle_interrupt_event()
 {
+    if (!m_initialized || !m_is_editing)
+        return;
+
     m_was_interrupted = false;
     m_previous_interrupt_was_handled_as_interrupt = false;
 
