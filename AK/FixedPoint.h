@@ -403,6 +403,7 @@ public:
         return *this < other || *this == other;
     }
 
+#ifndef KERNEL
     // Casting from a float should be faster than casting to a float
     template<FloatingPoint F>
     bool operator==(F other) const { return *this == (This)other; }
@@ -416,6 +417,7 @@ public:
     bool operator<(F other) const { return *this < (This)other; }
     template<FloatingPoint F>
     bool operator<=(F other) const { return *this <= (This)other; }
+#endif
 
     template<size_t P, typename U>
     operator FixedPoint<P, U>() const
