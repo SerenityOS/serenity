@@ -15,8 +15,10 @@ namespace AK::Concepts {
 template<typename T>
 concept Integral = IsIntegral<T>;
 
+#ifndef KERNEL
 template<typename T>
 concept FloatingPoint = IsFloatingPoint<T>;
+#endif
 
 template<typename T>
 concept Fundamental = IsFundamental<T>;
@@ -168,7 +170,9 @@ using AK::Concepts::ConvertibleTo;
 using AK::Concepts::DerivedFrom;
 using AK::Concepts::Enum;
 using AK::Concepts::FallibleFunction;
+#ifndef KERNEL
 using AK::Concepts::FloatingPoint;
+#endif
 using AK::Concepts::Fundamental;
 using AK::Concepts::Indexable;
 using AK::Concepts::Integral;

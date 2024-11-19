@@ -97,6 +97,7 @@ struct IndexVectorFor<T> {
     using Type = T;
 };
 
+#ifndef KERNEL
 template<SIMDVector T>
 requires(IsFloatingPoint<ElementOf<T>>)
 struct IndexVectorFor<T> {
@@ -105,6 +106,7 @@ struct IndexVectorFor<T> {
         u32 __attribute__((vector_size(sizeof(T)))),
         u64 __attribute__((vector_size(sizeof(T))))>;
 };
+#endif
 
 }
 
@@ -114,10 +116,13 @@ using IndexVectorFor = typename Detail::IndexVectorFor<T>::Type;
 static_assert(IsSame<IndexVectorFor<i8x16>, i8x16>);
 static_assert(IsSame<IndexVectorFor<u32x4>, u32x4>);
 static_assert(IsSame<IndexVectorFor<u64x4>, u64x4>);
-#if defined(AK_COMPILER_CLANG)
+
+#ifndef KERNEL
+#    if defined(AK_COMPILER_CLANG)
 // FIXME: GCC silently ignores the dependent vector_size attribute, this seems to be a bug
 //        https://gcc.gnu.org/bugzilla/show_bug.cgi?id=68703
 static_assert(IsSame<IndexVectorFor<f32x4>, u32x4>);
 static_assert(IsSame<IndexVectorFor<f64x4>, u64x4>);
+#    endif
 #endif
 }
