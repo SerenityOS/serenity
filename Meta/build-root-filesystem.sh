@@ -25,10 +25,12 @@ fi
 
 if rsync --chown 2>&1 | grep "missing argument" >/dev/null; then
     rsync -aH --chown=0:0 --inplace --update "$SERENITY_SOURCE_DIR"/Base/ mnt/
-    rsync -aH --chown=0:0 --inplace --update Root/ mnt/
+    rsync -aH --chown=0:0 --exclude="/usr/include" --inplace --update Root/ mnt/
+    rsync -aHL --chown=0:0 --inplace --update Root/usr/include/ mnt/usr/include/
 else
     rsync -aH --inplace --update "$SERENITY_SOURCE_DIR"/Base/ mnt/
-    rsync -aH --inplace --update Root/ mnt/
+    rsync -aH --inplace --exclude="/usr/include" --update Root/ mnt/
+    rsync -aHL --inplace --update Root/usr/include/ mnt/usr/include/
     chown -R 0:0 mnt/
 fi
 
