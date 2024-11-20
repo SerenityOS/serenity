@@ -657,12 +657,12 @@ if (BUILD_LAGOM)
 
         enable_testing()
         # LibTest
-        file(GLOB LIBTEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/*.cpp")
-        list(FILTER LIBTEST_SOURCES EXCLUDE REGEX ".*Main.cpp$")
-        add_library(
-            LibTest
-            ${LIBTEST_SOURCES}
+        set(LIBTEST_SOURCES
+            ../../Userland/Libraries/LibTest/AsyncTestStreams.cpp
+            ../../Userland/Libraries/LibTest/TestSuite.cpp
+            ../../Userland/Libraries/LibTest/CrashTest.cpp
         )
+        add_library(LibTest ${LIBTEST_SOURCES})
         target_link_libraries(LibTest PRIVATE AK LibCore LibFileSystem)
         set_target_properties(LibTest PROPERTIES OUTPUT_NAME lagom-test)
         add_library(
@@ -785,13 +785,30 @@ if (BUILD_LAGOM)
 
         # Tests that are not LibTest based
         # Shell
-        file(GLOB SHELL_TESTS CONFIGURE_DEPENDS "../../Userland/Shell/Tests/*.sh")
-        foreach(TEST_PATH ${SHELL_TESTS})
-            get_filename_component(TEST_NAME ${TEST_PATH} NAME_WE)
+        set(SHELL_TESTS
+            backgrounding.sh
+            brace-exp.sh
+            builtin-redir.sh
+            builtin-test.sh
+            control-structure-as-command.sh
+            function.sh
+            heredocs.sh
+            if.sh
+            immediate.sh
+            loop.sh
+            match.sh
+            sigpipe.sh
+            slice.sh
+            special-vars.sh
+            subshell.sh
+            valid.sh
+        )
+        foreach(TEST_SCRIPT ${SHELL_TESTS})
+            get_filename_component(TEST_NAME ${TEST_SCRIPT} NAME_WE)
             add_test(
                 NAME "Shell-${TEST_NAME}"
-                COMMAND Shell --skip-shellrc "${TEST_PATH}"
-                WORKING_DIRECTORY ${SERENITY_PROJECT_ROOT}/Userland/Shell/Tests
+                COMMAND Shell --skip-shellrc "${TEST_SCRIPT}"
+                WORKING_DIRECTORY ${SERENITY_PROJECT_ROOT}/Tests/LibShell/Tests
             )
             set_tests_properties("Shell-${TEST_NAME}" PROPERTIES
                 TIMEOUT 10
