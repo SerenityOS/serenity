@@ -8,7 +8,6 @@ target_compile_definitions(DynamicLoader_CompileOptions INTERFACE NO_TLS _DYNAMI
 target_compile_options(DynamicLoader_CompileOptions INTERFACE -fno-rtti -fpie -ffunction-sections -fdata-sections)
 target_link_options(DynamicLoader_CompileOptions INTERFACE -nolibc -nostdlib++ -nostartfiles -static-libgcc -fpie -Wl,--gc-sections)
 target_link_options(DynamicLoader_CompileOptions INTERFACE -fno-sanitize=undefined) # Sanitizer runtime is linked in manually
-add_dependencies(DynamicLoader_CompileOptions install_libc_headers)
 
 add_executable(Loader.so ${SOURCES})
 
