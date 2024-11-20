@@ -40,7 +40,6 @@ add_compile_definitions(PREKERNEL)
 
 add_executable(${PREKERNEL_TARGET} ${SOURCES} $<TARGET_OBJECTS:KernelObject>)
 add_dependencies(${PREKERNEL_TARGET} Kernel)
-add_dependencies(${PREKERNEL_TARGET} install_libc_headers)
 target_compile_options(${PREKERNEL_TARGET} PRIVATE -no-pie -fno-pic -fno-threadsafe-statics)
 
 target_link_options(${PREKERNEL_TARGET} PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld -nostdlib LINKER:--no-pie)

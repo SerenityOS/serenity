@@ -218,27 +218,20 @@ set(HEADERS
 )
 
 # ===== LibC headers =====
-add_custom_target(install_libc_headers)
-
-# Copy LibC's headers into the sysroot to satisfy libc++'s include priority requirements.
+# NOTE: We have to symlink LibC's headers into the sysroot to satisfy libc++'s include priority
+#       requirements.
 foreach(RELATIVE_HEADER_PATH IN LISTS HEADERS)
     get_filename_component(directory ${RELATIVE_HEADER_PATH} DIRECTORY)
+    get_filename_component(name ${RELATIVE_HEADER_PATH} NAME)
     string(REPLACE "../" "" subdirectory "${directory}")
     file(MAKE_DIRECTORY "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${subdirectory}")
-    add_custom_command(
-        TARGET install_libc_headers
-        PRE_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${RELATIVE_HEADER_PATH}" "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${subdirectory}"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        VERBATIM
-    )
+    file(CREATE_LINK "${CMAKE_CURRENT_SOURCE_DIR}/${RELATIVE_HEADER_PATH}" "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${subdirectory}/${name}" SYMBOLIC)
 endforeach()
 
 # ===== Start files =====
 # NOTE: We link all these against NoCoverage so that we don't break ports by requiring coverage
 #       symbols in runtime/startup objects.
 add_library(crt0 STATIC crt0.cpp)
-add_dependencies(crt0 install_libc_headers)
 target_link_libraries(crt0 PRIVATE NoCoverage)
 add_custom_command(
     TARGET crt0
@@ -249,7 +242,6 @@ add_custom_command(
 #        some convincing that this is the case.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_library(crt0_shared STATIC crt0_shared.cpp)
-    add_dependencies(crt0_shared install_libc_headers)
     target_link_libraries(crt0_shared PRIVATE NoCoverage)
     add_custom_command(
         TARGET crt0_shared
@@ -283,7 +275,7 @@ else()
 endif()
 
 serenity_libc(LibC c)
-add_dependencies(LibC crt0 install_libc_headers)
+add_dependencies(LibC crt0)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_dependencies(LibC crti crt0_shared crtn)
 endif()

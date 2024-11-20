@@ -803,11 +803,10 @@ add_compile_definitions(KERNEL)
 add_link_options(LINKER:-z,notext)
 
 add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
-add_dependencies(kernel_heap install_libc_headers)
 target_link_libraries(kernel_heap PUBLIC GenericClangPlugin)
 
 add_executable(Kernel ${SOURCES})
-add_dependencies(Kernel generate_EscapeSequenceStateMachine.h generate_version_header install_libc_headers)
+add_dependencies(Kernel generate_EscapeSequenceStateMachine.h generate_version_header)
 target_link_libraries(Kernel PUBLIC GenericClangPlugin)
 
 if("${SERENITY_ARCH}" STREQUAL "aarch64")
