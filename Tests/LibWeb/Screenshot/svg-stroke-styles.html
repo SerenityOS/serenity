@@ -60,7 +60,7 @@ path:nth-of-type(3) {
         stroke-linecap="butt" fill="none" />
 
   <!-- Open triangle, facing down, opposite winding order. Bevel linejoins. -->
-  <path d="M200,210 L230,250 L260,210 h-60" stroke="red"
+  <path d="M240,210 L270,250 L300,210 h-60" stroke="red"
         stroke-linecap="butt" fill="none" stroke-linejoin="bevel" />
 
   <!-- Closed triangle, facing up. -->
@@ -101,4 +101,30 @@ path:nth-of-type(3) {
   <path d="M320,290 l 5,-55 l5,55" stroke="blue" stroke-linecap="butt"
         stroke-linejoin="miter" fill="none" stroke-miterlimit="20"
         style="stroke-width: 4; stroke-miterlimit: -5" />
+
+
+  <!-- PDF 1.7 spec, TABLE 4.6 Examples of line dash patterns. -->
+  <g fill="none" stroke-linecap="butt" stroke="red" transform="translate(100, 240) scale(3)">
+      <path d="M0,0 h13"  style="stroke-width: 1; stroke-linecap: butt" stroke-dashoffset="0" stroke-dasharray="none" />
+      <path d="M0,3 h13"  style="stroke-width: 1; stroke-linecap: butt" stroke-dashoffset="0" stroke-dasharray="3" />
+      <path d="M0,6 h13"  style="stroke-width: 1; stroke-linecap: butt" stroke-dashoffset="1" stroke-dasharray="2" />
+      <path d="M0,9 h13"  style="stroke-width: 1; stroke-linecap: butt" stroke-dashoffset="0" stroke-dasharray="2 1" />
+      <path d="M0,12 h13" style="stroke-width: 1; stroke-linecap: butt" stroke-dashoffset="6" stroke-dasharray="3 5" />
+      <path d="M0,15 h13" style="stroke-width: 1; stroke-linecap: butt" stroke-dashoffset="11" stroke-dasharray="2 3" />
+  </g>
+
+  <!-- Dashed rect with 0 dash length. -->
+  <rect x="155" y="225" width="30" height="30" fill="none" stroke="green"
+        style="stroke-linecap: round" stroke-dashoffset="0" stroke-dasharray="0 10" stroke-width="4" />
+
+  <!-- Dashed rects with different cap styles. The last one also has a no-op negative scale factor. -->
+  <rect x="195" y="225" width="30" height="30" fill="none" stroke="green"
+        style="stroke-linecap: butt" stroke-dashoffset="1" stroke-dasharray="2 2" stroke-width="1" />
+  <rect x="155" y="265" width="30" height="30" fill="none" stroke="green"
+        style="stroke-linecap: round" stroke-dashoffset="1" stroke-dasharray="2 2" stroke-width="1" />
+  <g transform="scale(-1)">
+      <rect x="-225" y="-295" width="30" height="30" fill="none" stroke="green"
+            style="stroke-linecap: square" stroke-dashoffset="1" stroke-dasharray="2 2" stroke-width="1" />
+  </g>
+
 </svg>
