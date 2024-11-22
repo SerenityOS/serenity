@@ -110,7 +110,9 @@ template("generate_idl_bindings") {
              [
                rebase_path(inputs[0], root_build_dir),
                rebase_path("//Userland/Libraries/LibWeb", root_build_dir),
+               rebase_path("$target_gen_dir", root_build_dir),
              ]
+      deps = [ ":generate_css_generated_css_style_properties" ]
     }
 
     source_set(name + "_sources") {

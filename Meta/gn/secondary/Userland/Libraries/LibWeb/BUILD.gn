@@ -77,10 +77,13 @@ compiled_action("generate_window_or_worker_interfaces") {
     rebase_path("$target_gen_dir/Bindings", root_build_dir),
     "-b",
     rebase_path("//Userland/Libraries/LibWeb", root_build_dir),
+    "-b",
+    rebase_path("$target_gen_dir", root_build_dir),
   ]
   foreach(idl, inputs) {
     args += [ rebase_path(idl, root_build_dir) ]
   }
+  deps = [ ":generate_css_generated_css_style_properties" ]
 }
 
 compiled_action("generate_aria_roles") {
@@ -112,6 +115,28 @@ compiled_action("generate_css_enums") {
     rebase_path(outputs[0], root_build_dir),
     "-c",
     rebase_path(outputs[1], root_build_dir),
+    "-j",
+    rebase_path(inputs[0], root_build_dir),
+  ]
+}
+
+compiled_action("generate_css_generated_css_style_properties") {
+  tool = "//Meta/Lagom/Tools/CodeGenerators/LibWeb:GenerateCSSStyleProperties"
+  inputs = [ "CSS/Properties.json" ]
+  outputs = [
+    "$target_gen_dir/CSS/GeneratedCSSStyleProperties.h",
+    "$target_gen_dir/CSS/GeneratedCSSStyleProperties.cpp",
+  ]
+  args = [
+    "-h",
+    rebase_path(outputs[0], root_build_dir),
+    "-c",
+    rebase_path(outputs[1], root_build_dir),
+
+    # Secretly creates GeneratedCSSStyleProperties.idl too.
+    "-i",
+    rebase_path("$target_gen_dir/CSS/GeneratedCSSStyleProperties.idl",
+                root_build_dir),
     "-j",
     rebase_path(inputs[0], root_build_dir),
   ]
@@ -254,6 +279,7 @@ source_set("all_generated") {
     ":WebWorkerServerEndpoint",
     ":generate_aria_roles",
     ":generate_css_enums",
+    ":generate_css_generated_css_style_properties",
     ":generate_css_keyword",
     ":generate_css_math_functions",
     ":generate_css_media_feature_id",

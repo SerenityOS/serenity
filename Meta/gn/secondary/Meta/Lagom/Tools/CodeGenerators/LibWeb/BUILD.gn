@@ -52,6 +52,14 @@ lagom_tool("GenerateCSSPseudoClass") {
   ]
 }
 
+lagom_tool("GenerateCSSStyleProperties") {
+  sources = [ "GenerateCSSStyleProperties.cpp" ]
+  deps = [
+    ":headers",
+    "//Userland/Libraries/LibMain",
+  ]
+}
+
 lagom_tool("GenerateCSSTransformFunctions") {
   sources = [ "GenerateCSSTransformFunctions.cpp" ]
   deps = [
