@@ -409,6 +409,7 @@ struct ext2_inode_large {
     __u32 i_crtime;       /* File creation time */
     __u32 i_crtime_extra; /* extra File creation time (nsec << 2 | epoch)*/
     __u32 i_version_hi;   /* high 32 bits for 64-bit version */
+    __u32 i_projid;       /* Project ID */
 };
 
 #define i_size_high i_dir_acl
