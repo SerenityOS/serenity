@@ -210,18 +210,28 @@ u64 Ext2FS::inode_size() const
 {
     return EXT2_INODE_SIZE(&super_block());
 }
+
 u64 Ext2FS::blocks_per_group() const
 {
     return EXT2_BLOCKS_PER_GROUP(&super_block());
 }
 
-ErrorOr<void> Ext2FS::write_ext2_inode(InodeIndex inode, ext2_inode const& e2inode)
+ErrorOr<void> Ext2FS::write_ext2_inode(InodeIndex inode, ext2_inode_large const& e2inode)
 {
     BlockIndex block_index;
     unsigned offset;
     if (!find_block_containing_inode(inode, block_index, offset))
         return EINVAL;
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((u8 const*)&e2inode));
+
+    Vector<u8> inode_storage;
+    TRY(inode_storage.try_resize(inode_size()));
+
+    size_t used_inode_size = inode_size() > EXT2_GOOD_OLD_INODE_SIZE ? EXT2_GOOD_OLD_INODE_SIZE + e2inode.i_extra_isize : inode_size();
+    VERIFY(used_inode_size >= EXT2_GOOD_OLD_INODE_SIZE && used_inode_size <= inode_size());
+
+    memcpy(inode_storage.data(), &e2inode, min(used_inode_size, sizeof(ext2_inode_large)));
+
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(inode_storage.data());
     return write_block(block_index, buffer, inode_size(), offset);
 }
 
@@ -493,19 +503,30 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, St
     if (parent_inode.m_raw_inode.i_links_count == 0)
         return ENOENT;
 
-    ext2_inode e2inode {};
-    auto now = kgettimeofday().truncated_seconds_since_epoch();
+    ext2_inode_large e2inode {};
+    auto now = kgettimeofday().to_timespec();
+
+    u32 extra = Ext2FSInode::encode_time_to_extra(now.tv_sec, now.tv_nsec);
+
     e2inode.i_mode = mode;
     e2inode.i_uid = static_cast<u16>(uid.value());
     ext2fs_set_i_uid_high(e2inode, uid.value() >> 16);
     e2inode.i_gid = static_cast<u16>(gid.value());
     ext2fs_set_i_gid_high(e2inode, gid.value() >> 16);
     e2inode.i_size = 0;
-    e2inode.i_atime = now;
-    e2inode.i_ctime = now;
-    e2inode.i_mtime = now;
+    e2inode.i_atime = now.tv_sec;
+    e2inode.i_ctime = now.tv_sec;
+    e2inode.i_mtime = now.tv_sec;
+    e2inode.i_crtime = now.tv_sec;
+    e2inode.i_atime_extra = extra;
+    e2inode.i_ctime_extra = extra;
+    e2inode.i_mtime_extra = extra;
+    e2inode.i_crtime_extra = extra;
     e2inode.i_dtime = 0;
     e2inode.i_flags = 0;
+
+    if (inode_size() > EXT2_GOOD_OLD_INODE_SIZE)
+        e2inode.i_extra_isize = min(inode_size(), sizeof(ext2_inode_large)) - EXT2_GOOD_OLD_INODE_SIZE;
 
     // For directories, add +1 link count for the "." entry in self.
     e2inode.i_links_count = is_directory(mode);
@@ -606,7 +627,7 @@ ErrorOr<void> Ext2FS::free_inode(Ext2FSInode& inode)
     }
 
     // NOTE: After this point, the inode metadata is wiped.
-    memset(&inode.m_raw_inode, 0, sizeof(ext2_inode));
+    memset(&inode.m_raw_inode, 0, sizeof(ext2_inode_large));
     inode.m_raw_inode.i_dtime = kgettimeofday().truncated_seconds_since_epoch();
     TRY(write_ext2_inode(inode.index(), inode.m_raw_inode));
 
@@ -707,7 +728,11 @@ ErrorOr<NonnullRefPtr<Ext2FSInode>> Ext2FS::build_root_inode() const
     auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Ext2FSInode(const_cast<Ext2FS&>(*this), EXT2_ROOT_INO)));
 
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&inode->m_raw_inode));
-    TRY(read_block(block_index, &buffer, sizeof(ext2_inode), offset));
+
+    size_t size = min(inode_size(), sizeof(ext2_inode_large));
+    VERIFY(size >= EXT2_GOOD_OLD_INODE_SIZE);
+
+    TRY(read_block(block_index, &buffer, size, offset));
     return inode;
 }
 
@@ -744,7 +769,11 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FS::get_inode(InodeIdentifier inode) const
     auto new_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index())));
 
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&new_inode->m_raw_inode));
-    TRY(read_block(block_index, &buffer, sizeof(ext2_inode), offset));
+
+    size_t size = min(inode_size(), sizeof(ext2_inode_large));
+    VERIFY(size >= EXT2_GOOD_OLD_INODE_SIZE);
+
+    TRY(read_block(block_index, &buffer, size, offset));
 
     TRY(m_inode_cache.try_set(inode.index(), new_inode));
     return new_inode;

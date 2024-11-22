@@ -79,7 +79,10 @@ private:
 
     ErrorOr<NonnullRefPtr<Ext2FSInode>> build_root_inode() const;
 
-    ErrorOr<void> write_ext2_inode(InodeIndex, ext2_inode const&);
+    // NOTE: The large Ext2 inode structure is strictly superset of the classic 128-byte inode structure,
+    // so the this function simply ignores all the extra data if the filesystem doesn't support large inodes.
+    ErrorOr<void> write_ext2_inode(InodeIndex, ext2_inode_large const&);
+
     bool find_block_containing_inode(InodeIndex, BlockIndex& block_index, unsigned& offset) const;
 
     ErrorOr<void> flush_super_block();
