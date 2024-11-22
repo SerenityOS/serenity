@@ -298,6 +298,7 @@ confirm_rebuild_if_toolchain_exists() {
 
 delete_toolchain() {
     [ ! -d "$TOOLCHAIN_DIR" ] || rm -rf "$TOOLCHAIN_DIR"
+    ! [ -d "$JAKT_TOOLCHAIN_DIR" ] || rm -fr "$JAKT_TOOLCHAIN_DIR"
 }
 
 kill_tmux_session() {
