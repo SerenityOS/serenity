@@ -414,6 +414,10 @@ struct ext2_inode_large {
 
 #define i_size_high i_dir_acl
 
+#define EXT4_EPOCH_BITS 2
+#define EXT4_EPOCH_MASK ((1 << EXT4_EPOCH_BITS) - 1)
+#define EXT4_NSEC_MASK (~0UL << EXT4_EPOCH_BITS)
+
 #if defined(__KERNEL__) || defined(__linux__)
 #    define i_reserved1 osd1.linux1.l_i_reserved1
 #    define i_frag osd2.linux2.l_i_frag
