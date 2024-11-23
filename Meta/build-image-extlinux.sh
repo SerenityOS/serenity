@@ -75,7 +75,7 @@ dd if=/dev/zero of="${dev}${partition_number}" bs=1M count=1 status=none || die 
 echo "done"
 
 printf "creating new filesystem... "
-mke2fs -q -I 128 "${dev}${partition_number}" || die "couldn't create filesystem"
+mke2fs -q "${dev}${partition_number}" || die "couldn't create filesystem"
 echo "done"
 
 printf "mounting filesystem... "
