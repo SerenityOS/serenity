@@ -228,7 +228,71 @@ bool __attribute__((weak)) code_point_has_grapheme_break_property(u32, GraphemeB
 bool __attribute__((weak)) code_point_has_word_break_property(u32, WordBreakProperty) { return {}; }
 bool __attribute__((weak)) code_point_has_sentence_break_property(u32, SentenceBreakProperty) { return {}; }
 
-Optional<BidirectionalClass> __attribute__((weak)) bidirectional_class_from_string(StringView) { return {}; }
-Optional<BidirectionalClass> __attribute__((weak)) bidirectional_class(u32) { return {}; }
+Optional<BidirectionalClassInternal> __attribute__((weak)) bidirectional_class_internal(u32) { return {}; }
+
+#if ENABLE_UNICODE_DATA
+static constexpr BidiClass bidi_class_from_bidirectional_class_interal(BidirectionalClassInternal direction)
+{
+    switch (direction) {
+    case BidirectionalClassInternal::Arabic_Number:
+        return BidiClass::ArabicNumber;
+    case BidirectionalClassInternal::Paragraph_Separator:
+        return BidiClass::BlockSeparator;
+    case BidirectionalClassInternal::Boundary_Neutral:
+        return BidiClass::BoundaryNeutral;
+    case BidirectionalClassInternal::Common_Separator:
+        return BidiClass::CommonNumberSeparator;
+    case BidirectionalClassInternal::Nonspacing_Mark:
+        return BidiClass::DirNonSpacingMark;
+    case BidirectionalClassInternal::European_Number:
+        return BidiClass::EuropeanNumber;
+    case BidirectionalClassInternal::European_Separator:
+        return BidiClass::EuropeanNumberSeparator;
+    case BidirectionalClassInternal::European_Terminator:
+        return BidiClass::EuropeanNumberTerminator;
+    case BidirectionalClassInternal::First_Strong_Isolate:
+        return BidiClass::FirstStrongIsolate;
+    case BidirectionalClassInternal::Left_To_Right:
+        return BidiClass::LeftToRight;
+    case BidirectionalClassInternal::Left_To_Right_Embedding:
+        return BidiClass::LeftToRightEmbedding;
+    case BidirectionalClassInternal::Left_To_Right_Isolate:
+        return BidiClass::LeftToRightIsolate;
+    case BidirectionalClassInternal::Left_To_Right_Override:
+        return BidiClass::LeftToRightOverride;
+    case BidirectionalClassInternal::Other_Neutral:
+        return BidiClass::OtherNeutral;
+    case BidirectionalClassInternal::Pop_Directional_Format:
+        return BidiClass::PopDirectionalFormat;
+    case BidirectionalClassInternal::Pop_Directional_Isolate:
+        return BidiClass::PopDirectionalIsolate;
+    case BidirectionalClassInternal::Right_To_Left:
+        return BidiClass::RightToLeft;
+    case BidirectionalClassInternal::Arabic_Letter:
+        return BidiClass::RightToLeftArabic;
+    case BidirectionalClassInternal::Right_To_Left_Embedding:
+        return BidiClass::RightToLeftEmbedding;
+    case BidirectionalClassInternal::Right_To_Left_Isolate:
+        return BidiClass::RightToLeftIsolate;
+    case BidirectionalClassInternal::Right_To_Left_Override:
+        return BidiClass::RightToLeftOverride;
+    case BidirectionalClassInternal::Segment_Separator:
+        return BidiClass::SegmentSeparator;
+    case BidirectionalClassInternal::White_Space:
+        return BidiClass::WhiteSpaceNeutral;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+#endif
+
+BidiClass bidirectional_class([[maybe_unused]] u32 code_point)
+{
+#if ENABLE_UNICODE_DATA
+    if (auto bidi_class_internal = bidirectional_class_internal(code_point); bidi_class_internal.has_value())
+        return bidi_class_from_bidirectional_class_interal(bidi_class_internal.value());
+#endif
+    return BidiClass::LeftToRight;
+}
 
 }
