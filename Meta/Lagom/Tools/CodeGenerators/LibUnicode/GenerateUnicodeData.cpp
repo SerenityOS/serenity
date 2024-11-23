@@ -843,7 +843,7 @@ namespace Unicode {
     generate_enum("WordBreakProperty"sv, {}, unicode_data.word_break_props.keys());
     generate_enum("SentenceBreakProperty"sv, {}, unicode_data.sentence_break_props.keys());
     generate_enum("CompatibilityFormattingTag"sv, "Canonical"sv, unicode_data.compatibility_tags);
-    generate_enum("BidirectionalClass"sv, {}, unicode_data.bidirectional_classes.values(), unicode_data.bidirectional_class_aliases);
+    generate_enum("BidirectionalClassInternal"sv, {}, unicode_data.bidirectional_classes.values(), unicode_data.bidirectional_class_aliases);
 
     generator.append(R"~~~(
 struct SpecialCasing {
@@ -1038,7 +1038,7 @@ struct CodePointNameComparator : public CodePointRangeComparator {
 
 struct BidiClassData {
     CodePointRange code_point_range {};
-    BidirectionalClass bidi_class {};
+    BidirectionalClassInternal bidi_class {};
 };
 
 struct CodePointBidiClassComparator : public CodePointRangeComparator {
@@ -1303,7 +1303,7 @@ static constexpr Array<BidiClassData, @size@> s_bidirectional_classes { {
             generator.set("first", ByteString::formatted("{:#x}", data.code_point_range.first));
             generator.set("last", ByteString::formatted("{:#x}", data.code_point_range.last));
             generator.set("bidi_class", data.bidi_class);
-            generator.append("{ { @first@, @last@ }, BidirectionalClass::@bidi_class@ }");
+            generator.append("{ { @first@, @last@ }, BidirectionalClassInternal::@bidi_class@ }");
 
             if (bidi_classes_in_current_row == max_bidi_classes_per_row) {
                 bidi_classes_in_current_row = 0;
@@ -1445,7 +1445,7 @@ Optional<u32> code_point_composition(u32 first_code_point, u32 second_code_point
     return {};
 }
 
-Optional<BidirectionalClass> bidirectional_class(u32 code_point)
+Optional<BidirectionalClassInternal> bidirectional_class_internal(u32 code_point)
 {
     if (auto const* entry = binary_search(s_bidirectional_classes, code_point, nullptr, CodePointBidiClassComparator {}))
         return entry->bidi_class;
@@ -1512,8 +1512,6 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
     TRY(append_prop_search("GraphemeBreakProperty"sv, "grapheme_break_property"sv, "s_grapheme_break_properties"sv));
     TRY(append_prop_search("WordBreakProperty"sv, "word_break_property"sv, "s_word_break_properties"sv));
     TRY(append_prop_search("SentenceBreakProperty"sv, "sentence_break_property"sv, "s_sentence_break_properties"sv));
-
-    TRY(append_from_string("BidirectionalClass"sv, "bidirectional_class"sv, unicode_data.bidirectional_classes, {}));
 
     generator.append(R"~~~(
 }
