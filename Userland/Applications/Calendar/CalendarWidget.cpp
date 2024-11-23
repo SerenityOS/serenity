@@ -93,7 +93,7 @@ ErrorOr<NonnullRefPtr<CalendarWidget>> CalendarWidget::create(GUI::Window* paren
 
     file_menu->add_separator();
 
-    file_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    file_menu->add_action(GUI::CommonActions::make_quit_action([widget](auto&) {
         if (!widget->request_close())
             return;
         GUI::Application::the()->quit();
