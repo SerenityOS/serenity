@@ -198,6 +198,7 @@ struct UnicodeData {
 
     HashTable<ByteString> bidirectional_classes;
     Vector<CodePointBidiClass> code_point_bidirectional_classes;
+    Vector<Alias> bidirectional_class_aliases;
 };
 
 static ByteString sanitize_entry(ByteString const& entry)
@@ -842,7 +843,7 @@ namespace Unicode {
     generate_enum("WordBreakProperty"sv, {}, unicode_data.word_break_props.keys());
     generate_enum("SentenceBreakProperty"sv, {}, unicode_data.sentence_break_props.keys());
     generate_enum("CompatibilityFormattingTag"sv, "Canonical"sv, unicode_data.compatibility_tags);
-    generate_enum("BidirectionalClass"sv, {}, unicode_data.bidirectional_classes.values());
+    generate_enum("BidirectionalClass"sv, {}, unicode_data.bidirectional_classes.values(), unicode_data.bidirectional_class_aliases);
 
     generator.append(R"~~~(
 struct SpecialCasing {
@@ -1916,6 +1917,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     populate_general_category_unions(unicode_data.general_categories);
     TRY(parse_unicode_data(*unicode_data_file, unicode_data));
+    TRY(parse_value_alias_list(*prop_value_alias_file, "bc"sv, unicode_data.bidirectional_classes.values(), unicode_data.bidirectional_class_aliases));
     TRY(parse_value_alias_list(*prop_value_alias_file, "gc"sv, unicode_data.general_categories.keys(), unicode_data.general_category_aliases));
     TRY(parse_value_alias_list(*prop_value_alias_file, "sc"sv, unicode_data.script_list.keys(), unicode_data.script_aliases, false));
     TRY(normalize_script_extensions(unicode_data.script_extensions, unicode_data.script_list, unicode_data.script_aliases));
