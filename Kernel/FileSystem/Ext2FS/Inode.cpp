@@ -417,10 +417,10 @@ InodeMetadata Ext2FSInode::metadata() const
     metadata.uid = inode_uid(m_raw_inode);
     metadata.gid = inode_gid(m_raw_inode);
     metadata.link_count = m_raw_inode.i_links_count;
-    metadata.atime = UnixDateTime::from_seconds_since_epoch(m_raw_inode.i_atime);
-    metadata.ctime = UnixDateTime::from_seconds_since_epoch(m_raw_inode.i_ctime);
-    metadata.mtime = UnixDateTime::from_seconds_since_epoch(m_raw_inode.i_mtime);
-    metadata.dtime = UnixDateTime::from_seconds_since_epoch(m_raw_inode.i_dtime);
+    metadata.atime = UnixDateTime::from_seconds_since_epoch(static_cast<i32>(m_raw_inode.i_atime));
+    metadata.ctime = UnixDateTime::from_seconds_since_epoch(static_cast<i32>(m_raw_inode.i_ctime));
+    metadata.mtime = UnixDateTime::from_seconds_since_epoch(static_cast<i32>(m_raw_inode.i_mtime));
+    metadata.dtime = UnixDateTime::from_seconds_since_epoch(static_cast<i32>(m_raw_inode.i_dtime));
     metadata.block_size = fs().logical_block_size();
     metadata.block_count = m_raw_inode.i_blocks;
 
