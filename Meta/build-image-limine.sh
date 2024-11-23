@@ -77,7 +77,7 @@ echo "done"
 
 printf "creating new filesystems... "
 mkfs.vfat -F 32 "${dev}p1" || die "couldn't create efi filesystem"
-mke2fs -q -I 128 "${dev}p2" || die "couldn't create root filesystem"
+mke2fs -q "${dev}p2" || die "couldn't create root filesystem"
 echo "done"
 
 printf "mounting filesystems... "
