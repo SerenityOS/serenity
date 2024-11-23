@@ -167,6 +167,9 @@ jobs:
           echo "::group::ninja run # Qemu output"
           ninja run
           echo "::endgroup::"
+          echo "::group::Check Filesystem Consistency"
+          e2fsck -f -y _disk_image
+          echo "::endgroup::"
           echo "::group::Verify Output File"
           mkdir fsmount
           sudo mount -t ext2 -o loop,rw _disk_image fsmount
