@@ -23,29 +23,29 @@
 namespace Kernel::Memory {
 
 // 4KiB page size was chosen to make this code slightly simpler
-constexpr u32 GRANULE_SIZE = 0x1000;
-constexpr u32 PAGE_TABLE_SIZE = 0x1000;
+constexpr size_t GRANULE_SIZE = 0x1000;
+constexpr size_t PAGE_TABLE_SIZE = 0x1000;
 
 // Documentation for translation table format
 // https://developer.arm.com/documentation/101811/0101/Controlling-address-translation
-constexpr u32 PAGE_DESCRIPTOR = 0b11;
-constexpr u32 TABLE_DESCRIPTOR = 0b11;
-constexpr u32 DESCRIPTOR_MASK = ~0b11;
+constexpr u64 PAGE_DESCRIPTOR = 0b11;
+constexpr u64 TABLE_DESCRIPTOR = 0b11;
+constexpr u64 DESCRIPTOR_MASK = ~0b11;
 
-constexpr u32 ACCESS_FLAG = 1 << 10;
+constexpr u64 ACCESS_FLAG = 1 << 10;
 
 // shareability
-constexpr u32 OUTER_SHAREABLE = (2 << 8);
-constexpr u32 INNER_SHAREABLE = (3 << 8);
+constexpr u64 OUTER_SHAREABLE = (2 << 8);
+constexpr u64 INNER_SHAREABLE = (3 << 8);
 
 // these index into the MAIR attribute table
-constexpr u32 NORMAL_MEMORY = (0 << 2);
-constexpr u32 DEVICE_MEMORY = (1 << 2);
-constexpr u32 NORMAL_NONCACHEABLE_MEMORY = (2 << 2);
-constexpr u32 ATTR_INDX_MASK = (0b111 << 2);
+constexpr u64 NORMAL_MEMORY = (0 << 2);
+constexpr u64 DEVICE_MEMORY = (1 << 2);
+constexpr u64 NORMAL_NONCACHEABLE_MEMORY = (2 << 2);
+constexpr u64 ATTR_INDX_MASK = (0b111 << 2);
 
-constexpr u32 ACCESS_PERMISSION_EL0 = (1 << 6);
-constexpr u32 ACCESS_PERMISSION_READONLY = (1 << 7);
+constexpr u64 ACCESS_PERMISSION_EL0 = (1 << 6);
+constexpr u64 ACCESS_PERMISSION_READONLY = (1 << 7);
 
 // Figure D5-15 of Arm Architecture Reference Manual Armv8 - page D5-2588
 class PageDirectoryEntry {
