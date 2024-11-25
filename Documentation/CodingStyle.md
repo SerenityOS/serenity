@@ -339,8 +339,7 @@ In C++ implementation files, do not use "using" declarations of any kind to impo
 ```cpp
 // File.cpp
 
-std::swap(a, b);
-c = std::numeric_limits<int>::max()
+Core::ArgsParser args_parser;
 ```
 
 ###### Wrong:
@@ -348,8 +347,8 @@ c = std::numeric_limits<int>::max()
 ```cpp
 // File.cpp
 
-using std::swap;
-swap(a, b);
+using Core::ArgsParser;
+ArgsParser args_parser;
 ```
 
 ###### Wrong:
@@ -357,8 +356,8 @@ swap(a, b);
 ```cpp
 // File.cpp
 
-using namespace std;
-swap(a, b);
+using namespace Core;
+ArgsParser args_parser;
 ```
 
 ### Types
