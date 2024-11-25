@@ -611,7 +611,7 @@ Tab::Tab(BrowserWindow& window)
         if (auto path = GUI::FilePicker::get_open_filepath(&window, "Select file", Core::StandardPaths::home_directory(), false, GUI::Dialog::ScreenPosition::CenterWithinParent, move(accepted_file_filters)); path.has_value())
             create_selected_file(path.release_value());
 
-        view().file_picker_closed(std::move(selected_files));
+        view().file_picker_closed(move(selected_files));
     };
 
     m_select_dropdown = GUI::Menu::construct();
