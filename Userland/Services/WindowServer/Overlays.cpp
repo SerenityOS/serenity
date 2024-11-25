@@ -431,7 +431,7 @@ WindowStackSwitchOverlay::WindowStackSwitchOverlay(Screen& screen, WindowStack& 
 TileWindowOverlay::TileWindowOverlay(Window& window, Gfx::IntRect const& tiled_frame_rect, Gfx::Palette&& palette)
     : m_window(window)
     , m_tiled_frame_rect(tiled_frame_rect)
-    , m_palette(std::move(palette))
+    , m_palette(move(palette))
 {
 }
 
