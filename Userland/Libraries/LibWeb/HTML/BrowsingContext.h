@@ -123,6 +123,10 @@ public:
 
     // https://html.spec.whatwg.org/multipage/origin.html#one-permitted-sandboxed-navigator
     BrowsingContext const* the_one_permitted_sandboxed_navigator() const;
+    void set_the_one_permitted_sandboxed_navigator(BrowsingContext const*)
+    {
+        // FIXME: Implement this
+    }
 
     bool has_navigable_been_destroyed() const;
 
@@ -130,6 +134,9 @@ public:
     void set_opener_browsing_context(JS::GCPtr<BrowsingContext> browsing_context) { m_opener_browsing_context = browsing_context; }
 
     void set_is_popup(TokenizedFeature::Popup is_popup) { m_is_popup = is_popup; }
+
+    SandboxingFlagSet popup_sandboxing_flag_set() const { return m_popup_sandboxing_flag_set; }
+    void set_popup_sandboxing_flag_set(SandboxingFlagSet value) { m_popup_sandboxing_flag_set = value; }
 
 private:
     explicit BrowsingContext(JS::NonnullGCPtr<Page>);
@@ -149,6 +156,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/browsers.html#is-popup
     TokenizedFeature::Popup m_is_popup { TokenizedFeature::Popup::No };
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#popup-sandboxing-flag-set
+    SandboxingFlagSet m_popup_sandboxing_flag_set {};
 
     // https://html.spec.whatwg.org/multipage/document-sequences.html#is-auxiliary
     bool m_is_auxiliary { false };
