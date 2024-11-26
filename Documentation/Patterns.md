@@ -3,18 +3,18 @@
 ## Introduction
 
 Over time numerous reoccurring patterns have emerged from or were adopted by
-the serenity code base. This document aims to track and describe them, so they
+the Serenity code base. This document aims to track and describe them, so they
 can be propagated further and the code base can be kept consistent.
 
 ## `TRY(...)` Error Handling
 
-The `TRY(..)` macro is used for error propagation in the serenity code base.
+The `TRY(...)` macro is used for error propagation in the Serenity code base.
 The goal being to reduce the amount of boiler plate error code required to
 properly handle and propagate errors throughout the code base.
 
-Any code surrounded by `TRY(..)` will attempt to be executed, and any error
+Any code surrounded by `TRY(...)` will attempt to be executed, and any error
 will immediately be returned from the function. If no error occurs then the
-result of the contents of the TRY will be the result of the macro's execution.
+result of the contents of the `TRY(...)` will be the result of the macro's execution.
 
 ### Examples:
 
@@ -59,7 +59,7 @@ ErrorOr<Region*> AddressSpace::allocate_region(VirtualRange const& range, String
 }
 ```
 
-Note: Our `TRY(...)` macro functions similarly to the `?` [operator in rust](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator).
+Note: Our `TRY(...)` macro functions similarly to the `?` [operator in Rust](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator).
 
 ## `MUST(...)` Error Handling
 
@@ -130,30 +130,30 @@ private:
 }
 ```
 
-## The `serenity_main(..)` program entry point
+## The `serenity_main(...)` program entry point
 
 Serenity has moved to a pattern where executables do not expose a normal C
-main function. A `serenity_main(..)` is exposed instead. The main reasoning
+main function. A `serenity_main(...)` is exposed instead. The main reasoning
 is that the `Main::Arguments` struct can provide arguments in a more idiomatic
-way that fits with the serenity API surface area. The ErrorOr<int> likewise
+way that fits with the Serenity API surface area. The `ErrorOr<int>` likewise
 allows the program to propagate errors seamlessly with the `TRY(...)` macro,
 avoiding a significant amount of clunky C style error handling.
 
 These executables are then linked with the `LibMain` library, which will link in
 the normal C `int main(int, char**)` function which will call into the programs
-`serenity_main(..)` on program startup.
+`serenity_main(...)` on program startup.
 
 The creation of the pattern was documented in the following video:
-[OS hacking: A better main() for SerenityOS C++ programs](https://www.youtube.com/watch?v=5PciKJW1rUc)
+[OS hacking: A better main() for SerenityOS C++ programs](https://www.youtube.com/watch?v=5PciKJW1rUc).
 
 ### Examples:
 
-A function `main(..)` would normally look something like:
+In C and C++, the main function normally looks something like:
 
 ```cpp
 int main(int argc, char** argv)
 {
-   return 0;
+    return 0;
 }
 ```
 
@@ -222,10 +222,10 @@ class MemoryManager {
 
 ## Static Assertions of the size of a type
 
-It's a universal pattern to use `static_assert` to validate the size of a
+It's a universal pattern to use `static_assert` to validate that the size of a
 type matches the author's expectations. Unfortunately when these assertions
 fail they don't give you the values that actually caused the failure. This
-forces one to go investigate by printing out the size, or checking it in a
+forces one to go investigate by printing out the size, checking it in a
 debugger, etc.
 
 For this reason `AK::AssertSize` was added. It exploits the fact that the
@@ -278,10 +278,9 @@ TEST_CASE(string_view_literal_operator)
 
 ## Source Location
 
-C++20 added std::source_location, which lets you capture the
-callers **FILE** / **LINE** / **FUNCTION** etc as a default
+C++20 added [`std::source_location`](https://en.cppreference.com/w/cpp/utility/source_location), which lets you capture the
+callers **FILE** / **LINE** / **FUNCTION** etc. as a default
 argument to functions.
-See: https://en.cppreference.com/w/cpp/utility/source_location
 
 `AK::SourceLocation` is the implementation of this feature in
 SerenityOS. It's become the idiomatic way to capture the location
@@ -310,7 +309,7 @@ int main(int, char**)
 ```
 
 If you only want to only capture `AK::SourceLocation` data with a certain debug macro enabled, avoid
-adding `#ifdef`'s to all functions which have the `AK::SourceLocation` argument. Since SourceLocation
+adding `#ifdef`'s to all functions which have the `AK::SourceLocation` argument. Since `AK::SourceLocation`
 is just a simple struct, you can just declare an empty class which can be optimized away by the
 compiler, and alias both to the same name.
 
@@ -338,9 +337,9 @@ private:
 
 There are four "contiguous list" / array-like types, including C-style arrays themselves. They share a lot of their API, but their use cases are all slightly different, mostly relating to how they allocate their data.
 
-Note that `Span<type>` differs from all of these types in that it provides a _view_ on data owned by somebody else. The four types mentioned above all own their data, but they can provide `Span`'s which view all or part of their data. For APIs that aren't specific to the kind of list and don't need to handle resizing in any way, `Span` is a good choice.
+Note that `Span<type>` differs from all of these types in that it provides a _view_ on data owned by somebody else. The four types mentioned above all own their data, but they can provide `Span`s which view all or part of their data. For APIs that aren't specific to the kind of list and don't need to handle resizing in any way, `Span` is a good choice.
 
 -   C-style arrays are generally discouraged (and this also holds for pointer+size-style arrays when passing them around). They are only used for the implementation of other collections or in specific circumstances.
 -   `Array` is a thin wrapper around C-style arrays similar to `std::array`, where the template arguments include the size of the array. It allocates its data inline, just as arrays do, and never does any dynamic allocations.
 -   `Vector` is similar to `std::vector` and represents a dynamic resizable array. For most basic use cases of lists, this is the go-to collection. It has an optional inline capacity (the second template argument) which will allocate inline as the name suggests, but this is not always used. If the contents outgrow the inline capacity, Vector will automatically switch to the standard out-of-line storage. This is allocated on the heap, and the space is automatically resized and moved when more (or less) space is needed.
--   `FixedArray` is essentially a runtime-sized `Array`. It can't resize like `Vector`, but it's ideal for circumstances where the size is not known at compile time but doesn't need to change once the collection is initialized. `FixedArray` guarantees to not allocate or deallocate except for its constructor and destructor.
+-   `FixedArray` is essentially a runtime-sized `Array`. It can't resize like `Vector`, but it's ideal for circumstances where the size is not known at compile time but doesn't need to change once the collection is initialized. `FixedArray` guarantees to not allocate or deallocate except for in its constructor and destructor.
