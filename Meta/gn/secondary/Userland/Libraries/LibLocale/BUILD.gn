@@ -178,6 +178,7 @@ source_set("LibLocale") {
     "NumberFormat.cpp",
     "PluralRules.cpp",
     "RelativeTimeFormat.cpp",
+    "Segmenter.cpp",
   ]
   deps = [
     "//AK",

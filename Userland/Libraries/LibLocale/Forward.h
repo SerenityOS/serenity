@@ -45,6 +45,8 @@ enum class Weekday : u8;
 enum class WeekendEndRegion : u8;
 enum class WeekendStartRegion : u8;
 
+class Segmenter;
+
 struct CalendarFormat;
 struct CalendarPattern;
 struct CalendarRangePattern;

@@ -15,6 +15,7 @@ set(SOURCES
     NumberFormat.cpp
     PluralRules.cpp
     RelativeTimeFormat.cpp
+    Segmenter.cpp
 )
 
 serenity_lib(LibLocale locale)
