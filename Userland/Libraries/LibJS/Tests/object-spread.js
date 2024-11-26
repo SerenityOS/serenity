@@ -33,6 +33,7 @@ test("spread object inside object literal", () => {
 });
 
 test("complex nested object spreading", () => {
+    asdf;
     const obj = {
         ...{},
         ...{
