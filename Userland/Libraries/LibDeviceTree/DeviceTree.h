@@ -8,6 +8,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/Endian.h>
+#include <AK/FixedArray.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/IterationDecision.h>
@@ -17,6 +18,67 @@
 #include <AK/Span.h>
 
 namespace DeviceTree {
+
+// Devicetree Specification 0.4 (DTSpec): https://github.com/devicetree-org/devicetree-specification/releases/download/v0.4/devicetree-specification-v0.4.pdf
+
+class DeviceTree;
+class Node;
+
+class Address {
+public:
+    Address() = default;
+    Address(ReadonlyBytes data)
+        : m_raw(static_cast<decltype(m_raw)>(data))
+    {
+    }
+
+    ReadonlyBytes raw() const { return m_raw; }
+
+    static Address from_flatptr(FlatPtr flatptr)
+    {
+        BigEndian<FlatPtr> big_endian_flatptr { flatptr };
+
+        Address address;
+        address.m_raw.resize(sizeof(FlatPtr));
+        __builtin_memcpy(address.m_raw.data(), &big_endian_flatptr, sizeof(big_endian_flatptr));
+        return address;
+    }
+
+    ErrorOr<FlatPtr> as_flatptr() const
+    {
+        if (m_raw.size() == sizeof(u32))
+            return *reinterpret_cast<BigEndian<u32> const*>(m_raw.data());
+        if (m_raw.size() == 2 * sizeof(u32))
+            return *reinterpret_cast<BigEndian<u64> const*>(m_raw.data());
+        return ERANGE;
+    }
+
+private:
+    Vector<u8, 4 * sizeof(u32)> m_raw;
+};
+
+class Size {
+public:
+    Size() = default;
+    Size(ReadonlyBytes data)
+        : m_raw(static_cast<decltype(m_raw)>(data))
+    {
+    }
+
+    ReadonlyBytes raw() const { return m_raw; }
+
+    ErrorOr<size_t> as_size_t() const
+    {
+        if (m_raw.size() == sizeof(u32))
+            return *reinterpret_cast<BigEndian<u32> const*>(m_raw.data());
+        if (m_raw.size() == 2 * sizeof(u32))
+            return *reinterpret_cast<BigEndian<u64> const*>(m_raw.data());
+        return ERANGE;
+    }
+
+private:
+    Vector<u8, 2 * sizeof(u32)> m_raw;
+};
 
 struct Property {
     class ValueStream : public FixedMemoryStream {
@@ -95,6 +157,100 @@ struct Property {
     ValueStream as_stream() const { return ValueStream { raw_data }; }
 };
 
+// 2.3.6 reg
+class RegEntry {
+public:
+    RegEntry(Address const& address, Size const& size, Node const& node)
+        : m_address(address)
+        , m_length(size)
+        , m_node(node)
+    {
+    }
+
+    RegEntry(Address&& address, Size&& size, Node const& node)
+        : m_address(move(address))
+        , m_length(move(size))
+        , m_node(node)
+    {
+    }
+
+    Address bus_address() const { return m_address; }
+    Size length() const { return m_length; }
+
+    ErrorOr<Address> resolve_root_address() const;
+
+private:
+    Address m_address;
+    Size m_length;
+    Node const& m_node;
+};
+
+class Reg {
+public:
+    Reg(ReadonlyBytes data, Node const& node)
+        : m_raw(data)
+        , m_node(node)
+    {
+    }
+
+    ErrorOr<RegEntry> entry(size_t index) const;
+    size_t entry_count() const;
+
+private:
+    ReadonlyBytes m_raw;
+    Node const& m_node;
+};
+
+// 2.3.8 ranges
+class RangesEntry {
+public:
+    RangesEntry(Address const& child_bus_address, Address const& parent_bus_address, Size const& length, Node const& node)
+        : m_child_bus_address(child_bus_address)
+        , m_parent_bus_address(parent_bus_address)
+        , m_length(length)
+        , m_node(node)
+    {
+    }
+
+    RangesEntry(Address&& child_bus_address, Address&& parent_bus_address, Size&& length, Node const& node)
+        : m_child_bus_address(move(child_bus_address))
+        , m_parent_bus_address(move(parent_bus_address))
+        , m_length(move(length))
+        , m_node(node)
+    {
+    }
+
+    Address child_bus_address() const { return m_child_bus_address; }
+    Address parent_bus_address() const { return m_parent_bus_address; }
+    Size length() const { return m_length; }
+
+    ErrorOr<Address> translate_child_bus_address_to_parent_bus_address(Address const&) const;
+
+private:
+    Address m_child_bus_address;
+    Address m_parent_bus_address;
+    Size m_length;
+    Node const& m_node;
+};
+
+class Ranges {
+public:
+    Ranges(ReadonlyBytes data, Node const& node)
+        : m_raw(data)
+        , m_node(node)
+    {
+    }
+
+    ErrorOr<RangesEntry> entry(size_t index) const;
+    size_t entry_count() const;
+
+    ErrorOr<Address> translate_child_bus_address_to_parent_bus_address(Address const&) const;
+
+private:
+    ReadonlyBytes m_raw;
+    Node const& m_node;
+};
+
 class Node {
     AK_MAKE_NONCOPYABLE(Node);
     AK_MAKE_DEFAULT_MOVABLE(Node);
@@ -112,18 +268,38 @@ public:
     HashMap<StringView, Node> const& children() const { return m_children; }
     HashMap<StringView, Property> const& properties() const { return m_properties; }
 
+    bool is_root() const { return m_parent == nullptr; }
+
     Node const* parent() const { return m_parent; }
 
     // NOTE: When checking for multiple drivers, prefer iterating over the string array instead,
     //       as the compatible strings are sorted by preference, which this function cannot account for.
     bool is_compatible_with(StringView) const;
 
-    // FIXME: Add convenience functions for common properties like "reg" and "compatible"
-    // Note: The "reg" property is a list of address and size pairs, but the address is not always a u32 or u64
-    //       In pci devices the #address-size is 3 cells: (phys.lo phys.mid phys.hi)
-    //       with the following format:
-    //       phys.lo, phys.mid: 64-bit Address - BigEndian
-    //       phys.hi: relocatable(1), prefetchable(1), aliased(1), 000(3), space type(2), bus number(8), device number(5), function number(3), register number(8) - BigEndian
+    // 2.3.5 #address-cells and #size-cells
+    u32 address_cells() const
+    {
+        if (auto prop = get_property("#address-cells"sv); prop.has_value())
+            return prop.release_value().as<u32>();
+
+        // If missing, a client program should assume a default value of 2 for #address-cells, and a value of 1 for #size-cells.
+        return 2;
+    }
+
+    // 2.3.5 #address-cells and #size-cells
+    u32 size_cells() const
+    {
+        if (auto prop = get_property("#size-cells"sv); prop.has_value())
+            return prop.release_value().as<u32>();
+
+        // If missing, a client program should assume a default value of 2 for #address-cells, and a value of 1 for #size-cells.
+        return 1;
+    }
+
+    ErrorOr<Reg> reg() const;
+    ErrorOr<Ranges> ranges() const;
+
+    ErrorOr<Address> translate_child_bus_address_to_root_address(Address const&) const;
 
     // FIXME: Stringify?
     // FIXME: Flatten?
@@ -188,11 +364,6 @@ public:
             return {};
         return node->get_property(property_name);
     }
-
-    // FIXME: Add a helper to iterate over each descendant fulfilling some properties
-    //        Like each node with a "compatible" property containing "pci" or "usb",
-    //        bonus points if it could automatically recurse in the tree under some conditions,
-    //        like "simple-bus" or "pci-bridge" nodes
 
     auto for_each_node(CallableAs<ErrorOr<RecursionDecision>, StringView, Node const&> auto callback) const
     {
