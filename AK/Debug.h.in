@@ -82,6 +82,10 @@
 #    cmakedefine01 CSS_TRANSITIONS_DEBUG
 #endif
 
+#ifndef DEVICETREE_DEBUG
+#    cmakedefine01 DEVICETREE_DEBUG
+#endif
+
 #ifndef DDS_DEBUG
 #    cmakedefine01 DDS_DEBUG
 #endif
