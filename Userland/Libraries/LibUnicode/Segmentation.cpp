@@ -363,7 +363,7 @@ static void for_each_sentence_segmentation_boundary_impl([[maybe_unused]] ViewTy
 #if ENABLE_UNICODE_DATA
     using SBP = SentenceBreakProperty;
 
-    // https://www.unicode.org/reports/tr29/#Grapheme_Cluster_Boundary_Rules
+    // https://www.unicode.org/reports/tr29/#Sentence_Boundary_Rules
     if (view.is_empty())
         return;
 
