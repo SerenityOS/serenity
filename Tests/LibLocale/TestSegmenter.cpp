@@ -15,15 +15,56 @@
 template<size_t N>
 static void test_segmentation(Locale::SegmenterGranularity granularity, StringView string, size_t const (&expected_boundaries)[N])
 {
-    Vector<size_t> boundaries;
-    auto segmenter = Locale::Segmenter::create(granularity);
+    {
+        Vector<size_t> boundaries;
+        auto segmenter = Locale::Segmenter::create(granularity);
 
-    segmenter->for_each_boundary(MUST(String::from_utf8(string)), [&](auto boundary) {
+        segmenter->for_each_boundary(MUST(String::from_utf8(string)), [&](auto boundary) {
+            boundaries.append(boundary);
+            return IterationDecision::Continue;
+        });
+
+        EXPECT_EQ(boundaries, ReadonlySpan<size_t> { expected_boundaries });
+    }
+
+    {
+        Vector<size_t> boundaries;
+        auto segmenter = Locale::Segmenter::create(granularity);
+        segmenter->set_segmented_text(MUST(String::from_utf8(string)));
+
+        size_t boundary = 0;
         boundaries.append(boundary);
-        return IterationDecision::Continue;
-    });
+        while (true) {
+            auto next_boundary = segmenter->next_boundary(boundary);
+            if (!next_boundary.has_value())
+                break;
 
-    EXPECT_EQ(boundaries, ReadonlySpan<size_t> { expected_boundaries });
+            boundary = next_boundary.value();
+            boundaries.append(boundary);
+        }
+
+        EXPECT_EQ(boundaries, ReadonlySpan<size_t> { expected_boundaries });
+    }
+
+    {
+        Vector<size_t> boundaries;
+        auto segmenter = Locale::Segmenter::create(granularity);
+        segmenter->set_segmented_text(MUST(String::from_utf8(string)));
+
+        size_t boundary = string.length();
+        boundaries.append(boundary);
+        while (true) {
+            auto next_boundary = segmenter->previous_boundary(boundary);
+            if (!next_boundary.has_value())
+                break;
+
+            boundary = next_boundary.value();
+            boundaries.append(boundary);
+        }
+
+        boundaries.reverse();
+        EXPECT_EQ(boundaries, ReadonlySpan<size_t> { expected_boundaries });
+    }
 }
 
 template<size_t N>
