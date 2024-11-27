@@ -13,10 +13,10 @@
 #include <LibLocale/Segmenter.h>
 
 template<size_t N>
-static void test_grapheme_segmentation(StringView string, size_t const (&expected_boundaries)[N])
+static void test_segmentation(Locale::SegmenterGranularity granularity, StringView string, size_t const (&expected_boundaries)[N])
 {
     Vector<size_t> boundaries;
-    auto segmenter = Locale::Segmenter::create(Locale::SegmenterGranularity::Grapheme);
+    auto segmenter = Locale::Segmenter::create(granularity);
 
     segmenter->for_each_boundary(MUST(String::from_utf8(string)), [&](auto boundary) {
         boundaries.append(boundary);
@@ -24,6 +24,12 @@ static void test_grapheme_segmentation(StringView string, size_t const (&expecte
     });
 
     EXPECT_EQ(boundaries, ReadonlySpan<size_t> { expected_boundaries });
+}
+
+template<size_t N>
+static void test_grapheme_segmentation(StringView string, size_t const (&expected_boundaries)[N])
+{
+    test_segmentation(Locale::SegmenterGranularity::Grapheme, string, expected_boundaries);
 }
 
 TEST_CASE(grapheme_segmentation)
@@ -79,15 +85,7 @@ TEST_CASE(grapheme_segmentation_indic_conjunct_break)
 template<size_t N>
 static void test_word_segmentation(StringView string, size_t const (&expected_boundaries)[N])
 {
-    Vector<size_t> boundaries;
-    auto segmenter = Locale::Segmenter::create(Locale::SegmenterGranularity::Word);
-
-    segmenter->for_each_boundary(MUST(String::from_utf8(string)), [&](auto boundary) {
-        boundaries.append(boundary);
-        return IterationDecision::Continue;
-    });
-
-    EXPECT_EQ(boundaries, ReadonlySpan<size_t> { expected_boundaries });
+    test_segmentation(Locale::SegmenterGranularity::Word, string, expected_boundaries);
 }
 
 TEST_CASE(word_segmentation)
