@@ -53,17 +53,17 @@ public:
     virtual void set_segmented_text(String text) override
     {
         m_string_storage = move(text);
-        m_segmented_text = Utf8View { m_string_storage.code_points() };
+        set_text(m_string_storage.code_points());
     }
 
     virtual void set_segmented_text(Utf16View const& text) override
     {
-        m_segmented_text = text;
+        set_text(text);
     }
 
     void set_segmented_text(Utf32View const& text)
     {
-        m_segmented_text = text;
+        set_text(text);
     }
 
     virtual size_t current_boundary() override
@@ -73,9 +73,21 @@ public:
 
     virtual Optional<size_t> previous_boundary(size_t boundary, Inclusive inclusive) override
     {
+        recompute_boundaries_if_necessary();
+
         if (inclusive == Inclusive::Yes)
             ++boundary;
-        auto new_boundary = m_segmented_text.visit([&](auto const& text) { return previous_segmentation_boundary(text, boundary); });
+
+        // FIXME: Add AK::lower_bound, use
+        Optional<size_t> new_boundary;
+        for (auto segment_boundary : m_boundaries) {
+            if (segment_boundary < boundary) {
+                new_boundary = segment_boundary;
+                continue;
+            }
+            break;
+        }
+
         if (new_boundary.has_value())
             m_current_boundary = new_boundary.value();
         return new_boundary;
@@ -83,9 +95,20 @@ public:
 
     virtual Optional<size_t> next_boundary(size_t boundary, Inclusive inclusive) override
     {
+        recompute_boundaries_if_necessary();
+
         if (inclusive == Inclusive::Yes)
             --boundary;
-        auto new_boundary = m_segmented_text.visit([&](auto const& text) { return next_segmentation_boundary(text, boundary); });
+
+        // FIXME: Add AK::upper_bound, use
+        Optional<size_t> new_boundary;
+        for (auto segment_boundary : m_boundaries) {
+            if (segment_boundary > boundary) {
+                new_boundary = segment_boundary;
+                break;
+            }
+        }
+
         if (new_boundary.has_value())
             m_current_boundary = new_boundary.value();
         return new_boundary;
@@ -113,32 +136,24 @@ public:
     }
 
 private:
-    template<class T>
-    Optional<size_t> previous_segmentation_boundary(T const& text, size_t boundary)
+    void set_text(Variant<Utf8View, Utf16View, Utf32View> text)
     {
-        switch (segmenter_granularity()) {
-        case SegmenterGranularity::Grapheme:
-            return Unicode::previous_grapheme_segmentation_boundary(text, boundary);
-        case SegmenterGranularity::Sentence:
-            return Unicode::previous_sentence_segmentation_boundary(text, boundary);
-        case SegmenterGranularity::Word:
-            return Unicode::previous_word_segmentation_boundary(text, boundary);
-        }
-        VERIFY_NOT_REACHED();
+        m_segmented_text = text;
+        m_must_recompute_boundaries = true;
     }
 
-    template<class T>
-    Optional<size_t> next_segmentation_boundary(T const& text, size_t boundary)
+    void recompute_boundaries_if_necessary()
     {
-        switch (segmenter_granularity()) {
-        case SegmenterGranularity::Grapheme:
-            return Unicode::next_grapheme_segmentation_boundary(text, boundary);
-        case SegmenterGranularity::Sentence:
-            return Unicode::next_sentence_segmentation_boundary(text, boundary);
-        case SegmenterGranularity::Word:
-            return Unicode::next_word_segmentation_boundary(text, boundary);
-        }
-        VERIFY_NOT_REACHED();
+        if (!m_must_recompute_boundaries)
+            return;
+
+        m_boundaries.clear();
+        auto callback = [&](size_t boundary) {
+            m_boundaries.append(boundary);
+            return IterationDecision::Continue;
+        };
+        m_segmented_text.visit([&](auto const& text) { return for_each_segmentation_boundary(text, move(callback)); });
+        m_must_recompute_boundaries = false;
     }
 
     template<class T>
@@ -157,6 +172,8 @@ private:
         }
     }
 
+    bool m_must_recompute_boundaries { true };
+    Vector<size_t> m_boundaries;
     size_t m_current_boundary { 0 };
     String m_string_storage;
     Variant<Utf8View, Utf16View, Utf32View> m_segmented_text { Utf8View {} };
