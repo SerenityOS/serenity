@@ -481,7 +481,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             auto const& frame = stack_array.at(i);
             auto ptr = frame.as_integer<u64>();
             u32 offset = 0;
-            DeprecatedFlyString object_name;
+            FlyString object_name;
             ByteString symbol;
 
             if (maybe_kernel_base.has_value() && ptr >= maybe_kernel_base.value()) {
@@ -497,7 +497,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
                 if (it != current_processes.end())
                     library_metadata = &it->value->library_metadata;
                 if (auto const* library = library_metadata ? library_metadata->library_containing(ptr) : nullptr) {
-                    object_name = library->name;
+                    object_name = TRY(FlyString::from_utf8(library->name.view()));
                     symbol = library->symbolicate(ptr, &offset);
                 } else {
                     symbol = ByteString::formatted("?? <{:p}>", ptr);
@@ -681,7 +681,7 @@ ProfileNode::ProfileNode(Process const& process)
 {
 }
 
-ProfileNode::ProfileNode(Process const& process, DeprecatedFlyString const& object_name, ByteString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
+ProfileNode::ProfileNode(Process const& process, FlyString const& object_name, ByteString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     : m_process(process)
     , m_symbol(move(symbol))
     , m_pid(pid)
@@ -690,12 +690,12 @@ ProfileNode::ProfileNode(Process const& process, DeprecatedFlyString const& obje
     , m_timestamp(timestamp)
 {
     ByteString object;
-    if (object_name.ends_with(": .text"sv)) {
-        object = object_name.view().substring_view(0, object_name.length() - 7);
+    if (object_name.ends_with_bytes(": .text"sv)) {
+        object = object_name.bytes_as_string_view().substring_view(0, object_name.bytes().size() - 7);
     } else {
-        object = object_name;
+        object = ByteString::from_utf8(object_name.bytes()).release_value_but_fixme_should_propagate_errors();
     }
-    m_object_name = LexicalPath::basename(object);
+    m_object_name = FlyString::from_utf8(object.view()).release_value_but_fixme_should_propagate_errors();
 }
 
 }
