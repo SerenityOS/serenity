@@ -29,7 +29,7 @@
 #include <LibURL/URL.h>
 #include <stdlib.h>
 
-static bool is_missing_file_acceptable(String const& filename)
+static bool is_missing_file_acceptable(ByteString const& filename)
 {
     StringView const acceptable_missing_files[] = {
         // FIXME: Please write these manpages!
@@ -56,7 +56,7 @@ static bool is_missing_file_acceptable(String const& filename)
         "index.html"sv,
     };
     for (auto const& suffix : acceptable_missing_files) {
-        if (filename.ends_with_bytes(suffix))
+        if (filename.ends_with(suffix))
             return true;
     }
     return false;
@@ -301,8 +301,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (verbose_output)
         outln("Reading and parsing Markdown files ...");
-    // FIXME: Use ByteString for file paths
-    HashMap<String, MarkdownLinkage> files;
+    HashMap<ByteString, MarkdownLinkage> files;
     for (auto path : file_paths) {
         auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
@@ -327,7 +326,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             // Since this should never happen anyway, fail early.
             return 1;
         }
-        files.set(TRY(String::from_byte_string(TRY(FileSystem::real_path(path)))), MarkdownLinkage::analyze(*document, verbose_output));
+        files.set((TRY(FileSystem::real_path(path))), MarkdownLinkage::analyze(*document, verbose_output));
     }
 
     if (verbose_output)
@@ -340,14 +339,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             continue;
         }
 
-        auto file_lexical_path = LexicalPath(file_item.key.to_byte_string());
+        auto file_lexical_path = LexicalPath(file_item.key);
         auto file_dir = file_lexical_path.dirname();
         for (auto const& file_link : file_item.value.file_links()) {
-            String pointee_file;
+            ByteString pointee_file;
             if (file_link.file_path.is_empty()) {
                 pointee_file = file_item.key;
             } else {
-                pointee_file = TRY(String::from_byte_string(LexicalPath::absolute_path(file_dir, file_link.file_path)));
+                pointee_file = LexicalPath::absolute_path(file_dir, file_link.file_path);
             }
             if (!FileSystem::exists(pointee_file) && !is_missing_file_acceptable(pointee_file)) {
                 outln("File '{}' points to '{}' (label '{}'), but '{}' does not exist!",
@@ -389,7 +388,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (output_link_graph) {
         // First, collect all pages, and collect links between pages in a second step after all pages must have been collected.
-        HashMap<String, NonnullRefPtr<Manual::PageNode const>> pages;
+        HashMap<ByteString, NonnullRefPtr<Manual::PageNode const>> pages;
         for (auto const& file : files) {
             auto base_relative_path = TRY(String::formatted("/{}", LexicalPath::relative_path(file.key, base_path)));
             auto page = Manual::Node::try_create_from_query({ base_relative_path });
@@ -405,7 +404,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     dbgln("Not including {} in the link graph since it's not a man page.", link.file_path);
                     continue;
                 }
-                TRY(pages.try_set(TRY(String::from_byte_string(link.file_path)), maybe_target_page.value()));
+                TRY(pages.try_set(link.file_path, maybe_target_page.value()));
             }
         }
 
@@ -417,7 +416,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             Vector<NonnullRefPtr<Manual::PageNode const>> linked_pages;
             for (auto const& link : file.value.file_links()) {
-                auto linked_page = pages.get(TRY(String::from_byte_string(link.file_path)));
+                auto linked_page = pages.get(link.file_path);
                 if (!linked_page.has_value())
                     continue;
 
