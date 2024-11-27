@@ -8,6 +8,7 @@
 
 #include <AK/Badge.h>
 #include <AK/Noncopyable.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <LibDeviceTree/DeviceTree.h>
 
 namespace Kernel::DeviceTree {
@@ -35,6 +36,12 @@ public:
         VERIFY(m_driver == nullptr);
         m_driver = &driver;
     }
+
+    struct Resource {
+        PhysicalAddress paddr;
+        size_t size;
+    };
+    ErrorOr<Resource> get_resource(size_t index) const;
 
 private:
     // This needs to be a pointer for the class to be movable.
