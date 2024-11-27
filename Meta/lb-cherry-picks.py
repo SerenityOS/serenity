@@ -286,6 +286,16 @@ serenity_cherry_picks.add('906fa0482236c050e8386f1e1969edf531e5e257')
 # https://github.com/SerenityOS/serenity/pull/24754
 serenity_cherry_picks.add('00eca78d289dfd1b14bf0a2f95992e8bb7b455da')
 
+# https://github.com/LadybirdBrowser/ladybird/pull/2059 was amended into the
+# commit for https://github.com/LadybirdBrowser/ladybird/pull/1962 in
+# https://github.com/SerenityOS/serenity/pull/25478
+serenity_cherry_picks.add('04289fe24e4c3d296a805c8069ca00de443dc1b4')
+
+# https://github.com/LadybirdBrowser/ladybird/pull/2193 cherry-picks changes
+# already in https://github.com/SerenityOS/serenity/pull/25099, see
+# https://github.com/LadybirdBrowser/ladybird/pull/1091#issuecomment-2407342711
+serenity_cherry_picks.add('b09b23a162d0901fc3f512ac9356262d58e470dc')
+
 # Ladybird PR-less commit b118c99c271e34e2c5020022d062a4371f199a71 was
 # cherry-picked in https://github.com/SerenityOS/serenity/pull/24748
 # but without `-x` flag.
@@ -356,7 +366,6 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/204": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/212": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/214": "NIH violation: skia",
-    "https://github.com/LadybirdBrowser/ladybird/pull/218": "NIH violation: icu",
     "https://github.com/LadybirdBrowser/ladybird/pull/219": "NIH violation: icu",
     "https://github.com/LadybirdBrowser/ladybird/pull/223": "NIH violation: libpng+apng",
     "https://github.com/LadybirdBrowser/ladybird/pull/236": "Ladybird-specific",
@@ -441,6 +450,7 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/866": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/900": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/979": "No Ladybird/Android in Serenity",
+    "https://github.com/LadybirdBrowser/ladybird/pull/997": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1006": "No Ladybird/Android in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/1050": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/1071": "NIH violation: harfbuzz",
@@ -450,6 +460,8 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/1138": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/1175": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1195": "Reverted 6c9adf3dbc64 in never_merge_commits",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1200": "swift",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1202": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1220": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1221": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1263": "Dependabot",
@@ -467,14 +479,25 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/1504": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/1515": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/1541": "Got reverted",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1580": "Serenity does not use vcpkg",
     "https://github.com/LadybirdBrowser/ladybird/pull/1581": "Dependabot",
     "https://github.com/LadybirdBrowser/ladybird/pull/1588": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/1589": "swift",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1623": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/1634": "Still used in Serenity",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1663": "Reverted PR1644 commit 5",
     "https://github.com/LadybirdBrowser/ladybird/pull/1718": "Ladybird-specific",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1799": "swift",
+    "https://github.com/LadybirdBrowser/ladybird/pull/1819": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1870": "Got reverted",
+    "https://github.com/LadybirdBrowser/ladybird/pull/2000": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/2293": "Dependabot",
     "https://github.com/LadybirdBrowser/ladybird/pull/2317": "Got reverted, then relanded in PR2335",
+    "https://github.com/LadybirdBrowser/ladybird/pull/2040": "Got reverted in PR2082",
+    "https://github.com/LadybirdBrowser/ladybird/pull/2082": "Reverted PR2040",
+    "https://github.com/LadybirdBrowser/ladybird/pull/2182": "ladybird-specific",
+    "https://github.com/LadybirdBrowser/ladybird/pull/2512": "NIH violation: skia",
+    "https://github.com/LadybirdBrowser/ladybird/pull/2527": "Still used in Serenity",
 }
 
 # Quick consistency check:
@@ -535,6 +558,16 @@ never_merge_commits = {
     # First commit of PR179; not sure yet if we want the 2nd.
     "1bde774918ce9e41fc271edb2bdcd136f63699c2": "Still used in Serenity",
 
+    # PR218 added an ICU-based text segmenter. We don't have the ICU bits,
+    # but we do have the general code changes in there. The first one should
+    # possibly be in serenity_cherry_picks above.
+    "3fe0a27fbd3fc4b42c2daf99a5e5889de2bd22b7": "Kind of have this, except for ICU",
+    "3974996e95582fb9fb3f952ac0cc76c11d239061": "Might this?",
+    "ab56b8c8dce6dfd447aeaabc45933bfd14f51f41": "Still used in Serenity",
+
+    # 2nd commit of PR289; not sure yet if we want the 1st.
+    "bdb24f950e0360314e18f7662aafee1d34ee894f": "Reverted 722a669 below",
+
     # The 2nd commit of https://github.com/LadybirdBrowser/ladybird/pull/1125, 6c9adf3dbc64,
     # was reverted in https://github.com/LadybirdBrowser/ladybird/pull/1195.
     "6c9adf3dbc641445a03da9cd1083f89c911504be": "Got reverted",
@@ -544,6 +577,25 @@ never_merge_commits = {
     "666979fb9039540261de9a9ecc1dc6569933a256": "Sill used in Serenity",
     "546f740772cd328f46400d9666d8f24dede4fe23": "Sill used in Serenity",
     "ebdb92eef6e0e718f459533ed75a833e9bcb52b2": "Sill used in Serenity",
+
+    # We don't want most of https://github.com/LadybirdBrowser/ladybird/pull/965 (swift)
+    "1dff3ca0c46dc8df454a11c8949c42dd8faea6d2": "swift (PR965, commit 2)",
+    "e7a9126f8110f8fe7690a4136bb5cc0e603da901": "swift (PR965, commit 3)",
+    "cb55f653284464226c1560bfe0788aed45964064": "swift (PR965, commit 5)",
+    "2d6a65884ca3a02358f672de668e3161ed80f44f": "swift (PR965, commit 6)",
+    "5a31fed1daa8aabd3f1bab076450409aaac525f6": "swift (PR965, commit 7)",
+
+    # https://github.com/LadybirdBrowser/ladybird/pull/1465 first commit adds
+    # Noto Emoji as predicable emoji font, but serenity's built-in emoji font
+    # is already predictable.
+    "aef85a83bd5891d2b6223de60856b65739bd59ed": "Ladybird-specific",
+
+    # https://github.com/LadybirdBrowser/ladybird/pull/1644 commit 5 got reverted
+    "556a0936dd329fbfe00469b8831a6efae311733b": "Got reverted",
+
+    # Omit skia-related commits from https://github.com/LadybirdBrowser/ladybird/pull/1963
+    "6c642d168d54ced889546a88ffc0662f6d8564d2": "NIH violation: skia",
+    "8fd59899fc667aa3dd6c2de7b8248ee129563e53": "NIH violation: skia",
 
     # Commits from the first 14 PRs didn't get Pull-request: footers:
     "6d3a54e4a8d149171105d1e6378cbd2e2d1bb7fc": "Ladybird-specific (PR2)",
@@ -578,6 +630,7 @@ never_merge_commits = {
     "061ad33705765792ae935bc8d77e329c20ce55d0": "Reverted PR1541",
     "325ff4ac276ff2805a65c154d3f77af321c72717": "Reverted PR1870",
     "2a5dbedad4e76fbaaab4ba6a6e0e0a740260af05": "Reverted PR2317",
+    "722a669b2284249ddf30dd842a471145c29484c2": "Got reverted in PR289",
 }
 
 for commit in never_merge_commits:
