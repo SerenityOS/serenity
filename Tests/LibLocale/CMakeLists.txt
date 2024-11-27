@@ -1,4 +1,5 @@
 set(TEST_SOURCES
+    BenchmarkSegmenter.cpp
     TestDateTimeFormat.cpp
     TestLocale.cpp
     TestSegmenter.cpp
