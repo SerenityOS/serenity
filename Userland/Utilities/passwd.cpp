@@ -87,7 +87,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
-        target_account.set_password(new_password);
+        TRY(target_account.set_password(new_password));
     }
 
     TRY(Core::System::pledge("stdio wpath rpath cpath fattr"));

@@ -27,7 +27,7 @@
 
 namespace Core {
 
-static ByteString get_salt()
+static ErrorOr<ByteString> get_salt()
 {
     char random_data[12];
     fill_with_random({ random_data, sizeof(random_data) });
@@ -35,8 +35,7 @@ static ByteString get_salt()
     StringBuilder builder;
     builder.append("$5$"sv);
 
-    // FIXME: change to TRY() and make method fallible
-    auto salt_string = MUST(encode_base64({ random_data, sizeof(random_data) }));
+    auto salt_string = TRY(encode_base64({ random_data, sizeof(random_data) }));
     builder.append(salt_string);
 
     return builder.to_byte_string();
@@ -184,9 +183,10 @@ ErrorOr<void> Account::login() const
     return {};
 }
 
-void Account::set_password(SecretString const& password)
+ErrorOr<void> Account::set_password(SecretString const& password)
 {
-    m_password_hash = crypt(password.characters(), get_salt().characters());
+    m_password_hash = crypt(password.characters(), TRY(get_salt()).characters());
+    return {};
 }
 
 void Account::set_password_enabled(bool enabled)
