@@ -10,6 +10,7 @@ source_set("WebDriver") {
     "ElementReference.cpp",
     "Error.cpp",
     "ExecuteScript.cpp",
+    "HeapTimer.cpp",
     "InputSource.cpp",
     "InputState.cpp",
     "Response.cpp",
