@@ -9,9 +9,11 @@
 #include <AK/Format.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Environment.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
+#include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -94,10 +96,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!print_type) {
-        out("{}", StringView(data_and_type.data));
-        // Append a newline to text contents, unless the caller says otherwise.
-        if (data_and_type.mime_type.starts_with("text/"sv) && !no_newline)
-            outln();
+        if (data_and_type.mime_type == "image/x-serenityos"sv) {
+            auto bitmap = data_and_type.as_bitmap();
+            auto encoded_buffer = TRY(Gfx::PNGWriter::encode(*bitmap));
+
+            auto file = TRY(Core::File::open_file_or_standard_stream(""sv, Core::File::OpenMode::Write));
+            TRY(file->write_until_depleted(encoded_buffer));
+        } else {
+            out("{}", StringView(data_and_type.data));
+            // Append a newline to text contents, unless the caller says otherwise.
+            if (data_and_type.mime_type.starts_with("text/"sv) && !no_newline)
+                outln();
+        }
     } else {
         outln("{}", data_and_type.mime_type);
     }
