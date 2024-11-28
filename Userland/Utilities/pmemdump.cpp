@@ -21,13 +21,18 @@
 
 static bool try_set_offset_and_length_parameters(ByteString const& arg_offset, ByteString const& arg_length, u64& offset, u64& length)
 {
-    // TODO: Add support for hex values
-    auto possible_offset = arg_offset.to_number<u64>();
+    auto possible_offset = (arg_offset.starts_with("0x"sv, AK::CaseSensitivity::CaseInsensitive)
+            ? AK::StringUtils::convert_to_uint_from_hex<u64>(arg_offset.substring(2))
+            : arg_offset.to_number<u64>());
     if (!possible_offset.has_value())
         return false;
-    auto possible_length = arg_length.to_number<u64>();
-    if (!possible_length.has_value())
+
+    auto possible_length = (arg_length.starts_with("0x"sv, AK::CaseSensitivity::CaseInsensitive)
+            ? AK::StringUtils::convert_to_uint_from_hex<u64>(arg_length.substring(2))
+            : arg_length.to_number<u64>());
+    if (!possible_offset.has_value())
         return false;
+
     offset = possible_offset.value();
     length = possible_length.value();
     return true;
