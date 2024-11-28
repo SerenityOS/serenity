@@ -104,7 +104,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     u64 offset = 0;
     u64 length = 0;
     if (!try_set_offset_and_length_parameters(arg_offset, arg_length, offset, length)) {
-        warnln("pmemdump: Invalid length or offset parameters\n");
+        warnln("pmemdump: Invalid length or offset parameters");
         return 1;
     }
 
