@@ -189,11 +189,8 @@ private:
     RefPtr<Protocol::RequestClient> m_request_client;
 };
 
-static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Core::EventLoop& event_loop, HeadlessWebContentView& view, URL::URL url, int screenshot_timeout)
+static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Core::EventLoop& event_loop, HeadlessWebContentView& view, URL::URL url, int screenshot_timeout, StringView const output_file_path)
 {
-    // FIXME: Allow passing the output path as an argument.
-    static constexpr auto output_file_path = "output.png"sv;
-
     if (FileSystem::exists(output_file_path))
         TRY(FileSystem::remove(output_file_path, FileSystem::RecursionMode::Disallowed));
 
@@ -646,6 +643,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView test_root_path;
     ByteString test_glob;
     Vector<ByteString> certificates;
+    StringView output_file_path = "output.png"sv;
 
 #if !defined(AK_OS_SERENITY)
     platform_init();
@@ -665,6 +663,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
     args_parser.add_option(is_layout_test_mode, "Enable layout test mode", "layout-test-mode");
     args_parser.add_option(certificates, "Path to a certificate file", "certificate", 'C', "certificate");
+    args_parser.add_option(output_file_path, "Output file path", "output", 'o', "path");
     args_parser.add_positional_argument(raw_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -711,7 +710,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (web_driver_ipc_path.is_empty()) {
-        auto timer = TRY(load_page_for_screenshot_and_exit(event_loop, *view, url.value(), screenshot_timeout));
+        auto timer = TRY(load_page_for_screenshot_and_exit(event_loop, *view, url.value(), screenshot_timeout, output_file_path));
         return event_loop.exec();
     }
 
