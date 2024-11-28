@@ -474,7 +474,7 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
 }
 
 struct Test {
-    String input_path;
+    ByteString input_path;
     String expectation_path;
     TestMode mode;
     Optional<TestResult> result;
@@ -522,8 +522,7 @@ static ErrorOr<void> collect_dump_tests(Vector<Test>& tests, StringView path, St
         auto basename = LexicalPath::title(name);
         auto expectation_path = TRY(String::formatted("{}/expected/{}/{}.txt", path, trail, basename));
 
-        // FIXME: Test paths should be ByteString
-        tests.append({ TRY(String::from_byte_string(input_path)), move(expectation_path), mode, {} });
+        tests.append({ input_path, move(expectation_path), mode, {} });
     }
     return {};
 }
@@ -534,8 +533,7 @@ static ErrorOr<void> collect_ref_tests(Vector<Test>& tests, StringView path)
         if (entry.type == Core::DirectoryEntry::Type::Directory)
             return IterationDecision::Continue;
         auto input_path = TRY(FileSystem::real_path(TRY(String::formatted("{}/{}", path, entry.name))));
-        // FIXME: Test paths should be ByteString
-        tests.append({ TRY(String::from_byte_string(input_path)), {}, TestMode::Ref, {} });
+        tests.append({ input_path, {}, TestMode::Ref, {} });
         return IterationDecision::Continue;
     }));
 
@@ -555,7 +553,7 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
     TRY(collect_ref_tests(tests, TRY(String::formatted("{}/Screenshot", test_root_path))));
 
     tests.remove_all_matching([&](auto const& test) {
-        return !test.input_path.bytes_as_string_view().matches(test_glob, CaseSensitivity::CaseSensitive);
+        return !test.input_path.matches(test_glob, CaseSensitivity::CaseSensitive);
     });
 
     size_t pass_count = 0;
@@ -581,7 +579,7 @@ static ErrorOr<int> run_tests(HeadlessWebContentView& view, StringView test_root
         else
             outln("");
 
-        if (s_skipped_tests.contains_slow(test.input_path.bytes_as_string_view())) {
+        if (s_skipped_tests.contains_slow(test.input_path)) {
             test.result = TestResult::Skipped;
             ++skipped_count;
             continue;
