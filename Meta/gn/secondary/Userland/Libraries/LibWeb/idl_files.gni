@@ -65,6 +65,7 @@ standard_idl_files = [
   "//Userland/Libraries/LibWeb/CSS/VisualViewport.idl",
   "//Userland/Libraries/LibWeb/DOM/AbortController.idl",
   "//Userland/Libraries/LibWeb/DOM/AbortSignal.idl",
+  "//Userland/Libraries/LibWeb/DOM/BeforeUnloadEvent.idl",
   "//Userland/Libraries/LibWeb/DOM/AbstractRange.idl",
   "//Userland/Libraries/LibWeb/DOM/Attr.idl",
   "//Userland/Libraries/LibWeb/DOM/CDATASection.idl",
