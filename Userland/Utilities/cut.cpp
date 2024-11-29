@@ -140,13 +140,13 @@ static void process_line_bytes(StringView line, Vector<Range> const& ranges)
     outln();
 }
 
-static void process_line_characters(StringView line, Vector<Range> const& ranges)
+static ErrorOr<void> process_line_characters(StringView line, Vector<Range> const& ranges)
 {
     for (auto const& range : ranges) {
         if (range.m_from > line.length())
             continue;
 
-        auto s = String::from_utf8(line).release_value_but_fixme_should_propagate_errors();
+        auto s = TRY(String::from_utf8(line));
         size_t i = 1;
         for (auto c : s.code_points()) {
             if (range.contains(i++))
@@ -154,6 +154,7 @@ static void process_line_characters(StringView line, Vector<Range> const& ranges
         }
     }
     outln();
+    return {};
 }
 
 static void process_line_fields(StringView line, Vector<Range> const& ranges, char delimiter, bool only_print_delimited_lines)
@@ -280,7 +281,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (selected_bytes) {
                 process_line_bytes(line, disjoint_ranges);
             } else if (selected_characters) {
-                process_line_characters(line, disjoint_ranges);
+                TRY(process_line_characters(line, disjoint_ranges));
             } else if (selected_fields) {
                 process_line_fields(line, disjoint_ranges, delimiter[0], only_print_delimited_lines);
             } else {
