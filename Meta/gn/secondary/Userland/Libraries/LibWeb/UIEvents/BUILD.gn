@@ -9,6 +9,7 @@ source_set("UIEvents") {
     "EventNames.cpp",
     "FocusEvent.cpp",
     "InputEvent.cpp",
+    "InputTypes.cpp",
     "KeyboardEvent.cpp",
     "MouseEvent.cpp",
     "PointerEvent.cpp",
