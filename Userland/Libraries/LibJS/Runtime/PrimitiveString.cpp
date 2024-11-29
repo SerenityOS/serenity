@@ -229,7 +229,7 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, ByteString string)
     return *it->value;
 }
 
-NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, DeprecatedFlyString const& string)
+NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, FlyByteString const& string)
 {
     return create(vm, ByteString { string });
 }

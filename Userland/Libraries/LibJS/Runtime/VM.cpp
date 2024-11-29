@@ -258,7 +258,7 @@ void VM::gather_roots(HashMap<Cell*, HeapRoot>& roots)
 }
 
 // 9.1.2.1 GetIdentifierReference ( env, name, strict ), https://tc39.es/ecma262/#sec-getidentifierreference
-ThrowCompletionOr<Reference> VM::get_identifier_reference(Environment* environment, DeprecatedFlyString name, bool strict, size_t hops)
+ThrowCompletionOr<Reference> VM::get_identifier_reference(Environment* environment, FlyByteString name, bool strict, size_t hops)
 {
     // 1. If env is the value null, then
     if (!environment) {
@@ -292,7 +292,7 @@ ThrowCompletionOr<Reference> VM::get_identifier_reference(Environment* environme
 }
 
 // 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding
-ThrowCompletionOr<Reference> VM::resolve_binding(DeprecatedFlyString const& name, Environment* environment)
+ThrowCompletionOr<Reference> VM::resolve_binding(FlyByteString const& name, Environment* environment)
 {
     // 1. If env is not present or if env is undefined, then
     if (!environment) {

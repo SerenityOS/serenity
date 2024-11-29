@@ -64,7 +64,7 @@ static void print_indent(int indent)
     out("{}", ByteString::repeated(' ', indent * 2));
 }
 
-static void update_function_name(Value value, DeprecatedFlyString const& name)
+static void update_function_name(Value value, FlyByteString const& name)
 {
     if (!value.is_function())
         return;
@@ -88,7 +88,7 @@ void LabelledStatement::dump(int indent) const
 }
 
 // 15.2.5 Runtime Semantics: InstantiateOrdinaryFunctionExpression, https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression
-Value FunctionExpression::instantiate_ordinary_function_expression(VM& vm, DeprecatedFlyString given_name) const
+Value FunctionExpression::instantiate_ordinary_function_expression(VM& vm, FlyByteString given_name) const
 {
     auto& realm = *vm.current_realm();
 
@@ -255,19 +255,19 @@ ThrowCompletionOr<ClassElement::ClassValue> ClassField::class_element_evaluation
     };
 }
 
-static Optional<DeprecatedFlyString> nullopt_or_private_identifier_description(Expression const& expression)
+static Optional<FlyByteString> nullopt_or_private_identifier_description(Expression const& expression)
 {
     if (is<PrivateIdentifier>(expression))
         return static_cast<PrivateIdentifier const&>(expression).string();
     return {};
 }
 
-Optional<DeprecatedFlyString> ClassField::private_bound_identifier() const
+Optional<FlyByteString> ClassField::private_bound_identifier() const
 {
     return nullopt_or_private_identifier_description(*m_key);
 }
 
-Optional<DeprecatedFlyString> ClassMethod::private_bound_identifier() const
+Optional<FlyByteString> ClassMethod::private_bound_identifier() const
 {
     return nullopt_or_private_identifier_description(*m_key);
 }
@@ -299,7 +299,7 @@ ThrowCompletionOr<ClassElement::ClassValue> StaticInitializer::class_element_eva
     return ClassValue { normal_completion(body_function) };
 }
 
-ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::create_class_constructor(VM& vm, Environment* class_environment, Environment* environment, Value super_class, ReadonlySpan<Value> element_keys, Optional<DeprecatedFlyString> const& binding_name, DeprecatedFlyString const& class_name) const
+ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::create_class_constructor(VM& vm, Environment* class_environment, Environment* environment, Value super_class, ReadonlySpan<Value> element_keys, Optional<FlyByteString> const& binding_name, FlyByteString const& class_name) const
 {
     auto& realm = *vm.current_realm();
 
@@ -1350,7 +1350,7 @@ void CatchClause::dump(int indent) const
 {
     print_indent(indent);
     m_parameter.visit(
-        [&](DeprecatedFlyString const& parameter) {
+        [&](FlyByteString const& parameter) {
             if (parameter.is_empty())
                 outln("CatchClause");
             else
@@ -1499,7 +1499,7 @@ void ScopeNode::add_hoisted_function(NonnullRefPtr<FunctionDeclaration const> de
     m_functions_hoistable_with_annexB_extension.append(move(declaration));
 }
 
-DeprecatedFlyString ExportStatement::local_name_for_default = "*default*";
+FlyByteString ExportStatement::local_name_for_default = "*default*";
 
 static void dump_assert_clauses(ModuleRequest const& request)
 {
@@ -1517,7 +1517,7 @@ void ExportStatement::dump(int indent) const
     print_indent(indent + 1);
     outln("(ExportEntries)");
 
-    auto string_or_null = [](Optional<DeprecatedFlyString> const& string) -> ByteString {
+    auto string_or_null = [](Optional<FlyByteString> const& string) -> ByteString {
         if (!string.has_value()) {
             return "null";
         }
@@ -1565,7 +1565,7 @@ void ImportStatement::dump(int indent) const
     }
 }
 
-bool ExportStatement::has_export(DeprecatedFlyString const& export_name) const
+bool ExportStatement::has_export(FlyByteString const& export_name) const
 {
     return any_of(m_entries.begin(), m_entries.end(), [&](auto& entry) {
         // Make sure that empty exported names does not overlap with anything
@@ -1575,7 +1575,7 @@ bool ExportStatement::has_export(DeprecatedFlyString const& export_name) const
     });
 }
 
-bool ImportStatement::has_bound_name(DeprecatedFlyString const& name) const
+bool ImportStatement::has_bound_name(FlyByteString const& name) const
 {
     return any_of(m_entries.begin(), m_entries.end(), [&](auto& entry) {
         return entry.local_name == name;
@@ -1689,7 +1689,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, Global
     Vector<FunctionDeclaration const&> functions_to_initialize;
 
     // 7. Let declaredFunctionNames be a new empty List.
-    HashTable<DeprecatedFlyString> declared_function_names;
+    HashTable<FlyByteString> declared_function_names;
 
     // 8. For each element d of varDeclarations, in reverse List order, do
 
@@ -1724,7 +1724,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, Global
     }));
 
     // 9. Let declaredVarNames be a new empty List.
-    HashTable<DeprecatedFlyString> declared_var_names;
+    HashTable<FlyByteString> declared_var_names;
 
     // 10. For each element d of varDeclarations, do
     TRY(for_each_var_scoped_variable_declaration([&](Declaration const& declaration) {
@@ -1854,7 +1854,7 @@ ThrowCompletionOr<void> Program::global_declaration_instantiation(VM& vm, Global
     return {};
 }
 
-ModuleRequest::ModuleRequest(DeprecatedFlyString module_specifier_, Vector<ImportAttribute> attributes)
+ModuleRequest::ModuleRequest(FlyByteString module_specifier_, Vector<ImportAttribute> attributes)
     : module_specifier(move(module_specifier_))
     , attributes(move(attributes))
 {

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyByteString.h>
 #include <AK/FlyString.h>
 #include <AK/Function.h>
 #include <AK/RefCounted.h>

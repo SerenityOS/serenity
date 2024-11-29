@@ -261,7 +261,7 @@ private:
 
     Token next_token(size_t steps = 1) const;
 
-    void check_identifier_name_for_assignment_validity(DeprecatedFlyString const&, bool force_strict = false);
+    void check_identifier_name_for_assignment_validity(FlyByteString const&, bool force_strict = false);
 
     bool try_parse_arrow_function_expression_failed_at_position(Position const&) const;
     void set_try_parse_arrow_function_expression_failed_at_position(Position const&, bool);
@@ -271,7 +271,7 @@ private:
     bool parse_directive(ScopeNode& body);
     void parse_statement_list(ScopeNode& output_node, AllowLabelledFunction allow_labelled_functions = AllowLabelledFunction::No);
 
-    DeprecatedFlyString consume_string_value();
+    FlyByteString consume_string_value();
     ModuleRequest parse_module_request();
 
     struct RulePosition {
@@ -334,12 +334,12 @@ private:
         ParserState(Lexer, Program::Type);
     };
 
-    [[nodiscard]] NonnullRefPtr<Identifier const> create_identifier_and_register_in_current_scope(SourceRange range, DeprecatedFlyString string, Optional<DeclarationKind> = {});
+    [[nodiscard]] NonnullRefPtr<Identifier const> create_identifier_and_register_in_current_scope(SourceRange range, FlyByteString string, Optional<DeclarationKind> = {});
 
     NonnullRefPtr<SourceCode const> m_source_code;
     Vector<Position> m_rule_starts;
     ParserState m_state;
-    DeprecatedFlyString m_filename;
+    FlyByteString m_filename;
     Vector<ParserState> m_saved_state;
     HashMap<size_t, TokenMemoization> m_token_memoizations;
     Program::Type m_program_type;

@@ -19,7 +19,7 @@
 
 namespace PDF {
 
-PDFErrorOr<ByteBuffer> Filter::decode(Document* document, ReadonlyBytes bytes, DeprecatedFlyString const& encoding_type, RefPtr<DictObject> decode_parms)
+PDFErrorOr<ByteBuffer> Filter::decode(Document* document, ReadonlyBytes bytes, FlyByteString const& encoding_type, RefPtr<DictObject> decode_parms)
 {
     if (encoding_type == CommonNames::ASCIIHexDecode)
         return decode_ascii_hex(bytes);

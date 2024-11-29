@@ -18,7 +18,7 @@ namespace JS {
 JS_DEFINE_ALLOCATOR(SyntheticModule);
 
 // 1.2.1 CreateSyntheticModule ( exportNames, evaluationSteps, realm, hostDefined ), https://tc39.es/proposal-json-modules/#sec-createsyntheticmodule
-SyntheticModule::SyntheticModule(Vector<DeprecatedFlyString> export_names, SyntheticModule::EvaluationFunction evaluation_steps, Realm& realm, StringView filename)
+SyntheticModule::SyntheticModule(Vector<FlyByteString> export_names, SyntheticModule::EvaluationFunction evaluation_steps, Realm& realm, StringView filename)
     : Module(realm, filename)
     , m_export_names(move(export_names))
     , m_evaluation_steps(move(evaluation_steps))
@@ -27,14 +27,14 @@ SyntheticModule::SyntheticModule(Vector<DeprecatedFlyString> export_names, Synth
 }
 
 // 1.2.3.1 GetExportedNames( exportStarSet ), https://tc39.es/proposal-json-modules/#sec-smr-getexportednames
-ThrowCompletionOr<Vector<DeprecatedFlyString>> SyntheticModule::get_exported_names(VM&, Vector<Module*>)
+ThrowCompletionOr<Vector<FlyByteString>> SyntheticModule::get_exported_names(VM&, Vector<Module*>)
 {
     // 1. Return module.[[ExportNames]].
     return m_export_names;
 }
 
 // 1.2.3.2 ResolveExport( exportName, resolveSet ), https://tc39.es/proposal-json-modules/#sec-smr-resolveexport
-ThrowCompletionOr<ResolvedBinding> SyntheticModule::resolve_export(VM&, DeprecatedFlyString const& export_name, Vector<ResolvedBinding>)
+ThrowCompletionOr<ResolvedBinding> SyntheticModule::resolve_export(VM&, FlyByteString const& export_name, Vector<ResolvedBinding>)
 {
     // 1. If module.[[ExportNames]] does not contain exportName, return null.
     if (!m_export_names.contains_slow(export_name))
@@ -123,7 +123,7 @@ ThrowCompletionOr<Promise*> SyntheticModule::evaluate(VM& vm)
 }
 
 // 1.2.2 SetSyntheticModuleExport ( module, exportName, exportValue ), https://tc39.es/proposal-json-modules/#sec-setsyntheticmoduleexport
-ThrowCompletionOr<void> SyntheticModule::set_synthetic_module_export(DeprecatedFlyString const& export_name, Value export_value)
+ThrowCompletionOr<void> SyntheticModule::set_synthetic_module_export(FlyByteString const& export_name, Value export_value)
 {
     auto& vm = this->realm().vm();
 
@@ -143,7 +143,7 @@ NonnullGCPtr<SyntheticModule> SyntheticModule::create_default_export_synthetic_m
     };
 
     // 2. Return CreateSyntheticModule("default", closure, realm)
-    return realm.heap().allocate_without_realm<SyntheticModule>(Vector<DeprecatedFlyString> { "default" }, move(closure), realm, filename);
+    return realm.heap().allocate_without_realm<SyntheticModule>(Vector<FlyByteString> { "default" }, move(closure), realm, filename);
 }
 
 // 1.4 ParseJSONModule ( source ), https://tc39.es/proposal-json-modules/#sec-parse-json-module

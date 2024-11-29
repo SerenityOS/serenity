@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyByteString.h>
 #include <AK/Vector.h>
 #include <LibJS/Module.h>
 
@@ -28,20 +28,20 @@ struct ImportAttribute {
 struct ModuleRequest {
     ModuleRequest() = default;
 
-    explicit ModuleRequest(DeprecatedFlyString specifier)
+    explicit ModuleRequest(FlyByteString specifier)
         : module_specifier(move(specifier))
     {
     }
 
-    ModuleRequest(DeprecatedFlyString specifier, Vector<ImportAttribute> attributes);
+    ModuleRequest(FlyByteString specifier, Vector<ImportAttribute> attributes);
 
     void add_attribute(ByteString key, ByteString value)
     {
         attributes.empend(move(key), move(value));
     }
 
-    DeprecatedFlyString module_specifier; // [[Specifier]]
-    Vector<ImportAttribute> attributes;   // [[Attributes]]
+    FlyByteString module_specifier;     // [[Specifier]]
+    Vector<ImportAttribute> attributes; // [[Attributes]]
 };
 
 }

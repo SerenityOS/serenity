@@ -2479,7 +2479,7 @@ bool ECMA262Parser::parse_unicode_property_escape(PropertyEscape& property, bool
         [](Empty&) -> bool { VERIFY_NOT_REACHED(); });
 }
 
-DeprecatedFlyString ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_bracket)
+FlyByteString ECMA262Parser::read_capture_group_specifier(bool take_starting_angle_bracket)
 {
     static auto id_start_category = Unicode::property_from_string("ID_Start"sv);
     static auto id_continue_category = Unicode::property_from_string("ID_Continue"sv);
@@ -2582,7 +2582,7 @@ DeprecatedFlyString ECMA262Parser::read_capture_group_specifier(bool take_starti
         builder.append_code_point(code_point);
     }
 
-    DeprecatedFlyString name = builder.to_byte_string();
+    FlyByteString name = builder.to_byte_string();
     if (!hit_end || name.is_empty())
         set_error(Error::InvalidNameForCaptureGroup);
 

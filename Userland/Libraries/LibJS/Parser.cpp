@@ -105,7 +105,7 @@ public:
         return scope_pusher;
     }
 
-    static ScopePusher catch_scope(Parser& parser, RefPtr<BindingPattern const> const& pattern, DeprecatedFlyString const& parameter)
+    static ScopePusher catch_scope(Parser& parser, RefPtr<BindingPattern const> const& pattern, FlyByteString const& parameter)
     {
         ScopePusher scope_pusher(parser, nullptr, ScopeLevel::NotTopLevel, ScopeType::Catch);
         if (pattern) {
@@ -233,7 +233,7 @@ public:
     ScopePusher* parent_scope() { return m_parent_scope; }
     ScopePusher const* parent_scope() const { return m_parent_scope; }
 
-    [[nodiscard]] bool has_declaration(DeprecatedFlyString const& name) const
+    [[nodiscard]] bool has_declaration(FlyByteString const& name) const
     {
         return m_lexical_names.contains(name) || m_var_names.contains(name) || !m_functions_to_hoist.find_if([&name](auto& function) { return function->name() == name; }).is_end();
     }
@@ -478,7 +478,7 @@ public:
     }
 
 private:
-    void throw_identifier_declared(DeprecatedFlyString const& name, NonnullRefPtr<Declaration const> const& declaration)
+    void throw_identifier_declared(FlyByteString const& name, NonnullRefPtr<Declaration const> const& declaration)
     {
         m_parser.syntax_error(ByteString::formatted("Identifier '{}' already declared", name), declaration->source_range().start);
     }
@@ -491,16 +491,16 @@ private:
     ScopePusher* m_parent_scope { nullptr };
     ScopePusher* m_top_level_scope { nullptr };
 
-    HashTable<DeprecatedFlyString> m_lexical_names;
-    HashTable<DeprecatedFlyString> m_var_names;
-    HashTable<DeprecatedFlyString> m_function_names;
+    HashTable<FlyByteString> m_lexical_names;
+    HashTable<FlyByteString> m_var_names;
+    HashTable<FlyByteString> m_function_names;
 
-    HashTable<DeprecatedFlyString> m_forbidden_lexical_names;
-    HashTable<DeprecatedFlyString> m_forbidden_var_names;
+    HashTable<FlyByteString> m_forbidden_lexical_names;
+    HashTable<FlyByteString> m_forbidden_var_names;
     Vector<NonnullRefPtr<FunctionDeclaration const>> m_functions_to_hoist;
 
-    HashTable<DeprecatedFlyString> m_bound_names;
-    HashTable<DeprecatedFlyString> m_function_parameters_candidates_for_local_variables;
+    HashTable<FlyByteString> m_bound_names;
+    HashTable<FlyByteString> m_function_parameters_candidates_for_local_variables;
 
     struct IdentifierGroup {
         bool captured_by_nested_function { false };
@@ -510,7 +510,7 @@ private:
         Vector<NonnullRefPtr<Identifier>> identifiers;
         Optional<DeclarationKind> declaration_kind;
     };
-    HashMap<DeprecatedFlyString, IdentifierGroup> m_identifier_groups;
+    HashMap<FlyByteString, IdentifierGroup> m_identifier_groups;
 
     Optional<Vector<FunctionParameter>> m_function_parameters;
 
@@ -1059,7 +1059,7 @@ RefPtr<FunctionExpression const> Parser::try_parse_arrow_function_expression(boo
                 syntax_error("BindingIdentifier may not be 'arguments' or 'eval' in strict mode");
             if (is_async && token.value() == "await"sv)
                 syntax_error("'await' is a reserved identifier in async functions");
-            auto identifier = create_ast_node<Identifier const>({ m_source_code, rule_start.position(), position() }, token.DeprecatedFlyString_value());
+            auto identifier = create_ast_node<Identifier const>({ m_source_code, rule_start.position(), position() }, token.FlyByteString_value());
             parameters.append({ identifier, {} });
         }
         // If there's a newline between the closing paren and arrow it's not a valid arrow function,
@@ -1330,11 +1330,11 @@ NonnullRefPtr<ClassExpression const> Parser::parse_class_expression(bool expect_
     Vector<NonnullRefPtr<ClassElement const>> elements;
     RefPtr<Expression const> super_class;
     RefPtr<FunctionExpression const> constructor;
-    HashTable<DeprecatedFlyString> found_private_names;
+    HashTable<FlyByteString> found_private_names;
 
     RefPtr<Identifier const> class_name;
     if (expect_class_name || match_identifier() || match(TokenType::Yield) || match(TokenType::Await)) {
-        class_name = create_identifier_and_register_in_current_scope({ m_source_code, rule_start.position(), position() }, consume_identifier_reference().DeprecatedFlyString_value());
+        class_name = create_identifier_and_register_in_current_scope({ m_source_code, rule_start.position(), position() }, consume_identifier_reference().FlyByteString_value());
     }
 
     ScopePusher class_declaration_scope = ScopePusher::class_declaration_scope(*this, class_name);
@@ -1634,13 +1634,13 @@ NonnullRefPtr<ClassExpression const> Parser::parse_class_expression(bool expect_
             constructor = create_ast_node<FunctionExpression>(
                 { m_source_code, rule_start.position(), position() }, class_name, "",
                 move(constructor_body), Vector { FunctionParameter { move(argument_name), nullptr, true } }, 0, FunctionKind::Normal,
-                /* is_strict_mode */ true, parsing_insights, /* local_variables_names */ Vector<DeprecatedFlyString> {});
+                /* is_strict_mode */ true, parsing_insights, /* local_variables_names */ Vector<FlyByteString> {});
         } else {
             FunctionParsingInsights parsing_insights;
             constructor = create_ast_node<FunctionExpression>(
                 { m_source_code, rule_start.position(), position() }, class_name, "",
                 move(constructor_body), Vector<FunctionParameter> {}, 0, FunctionKind::Normal,
-                /* is_strict_mode */ true, parsing_insights, /* local_variables_names */ Vector<DeprecatedFlyString> {});
+                /* is_strict_mode */ true, parsing_insights, /* local_variables_names */ Vector<FlyByteString> {});
         }
     }
 
@@ -2041,7 +2041,7 @@ NonnullRefPtr<ObjectExpression const> Parser::parse_object_expression()
                 property_key = parse_property_key();
             } else {
                 property_key = create_ast_node<StringLiteral>({ m_source_code, rule_start.position(), position() }, identifier.value());
-                property_value = create_identifier_and_register_in_current_scope({ m_source_code, rule_start.position(), position() }, identifier.DeprecatedFlyString_value());
+                property_value = create_identifier_and_register_in_current_scope({ m_source_code, rule_start.position(), position() }, identifier.FlyByteString_value());
             }
         } else {
             property_key = parse_property_key();
@@ -2449,7 +2449,7 @@ Parser::ExpressionResult Parser::parse_secondary_expression(NonnullRefPtr<Expres
             expected("IdentifierName");
         }
 
-        return create_ast_node<MemberExpression>({ m_source_code, rule_start.position(), position() }, move(lhs), create_ast_node<Identifier>({ m_source_code, rule_start.position(), position() }, consume_and_allow_division().DeprecatedFlyString_value()));
+        return create_ast_node<MemberExpression>({ m_source_code, rule_start.position(), position() }, move(lhs), create_ast_node<Identifier>({ m_source_code, rule_start.position(), position() }, consume_and_allow_division().FlyByteString_value()));
     case TokenType::BracketOpen: {
         consume(TokenType::BracketOpen);
         auto expression = create_ast_node<MemberExpression>({ m_source_code, rule_start.position(), position() }, move(lhs), parse_expression(0), true);
@@ -2628,7 +2628,7 @@ NonnullRefPtr<Identifier const> Parser::parse_identifier()
     auto token = consume_identifier();
     if (m_state.in_class_field_initializer && token.value() == "arguments"sv)
         syntax_error("'arguments' is not allowed in class field initializer");
-    return create_identifier_and_register_in_current_scope({ m_source_code, identifier_start, position() }, token.DeprecatedFlyString_value());
+    return create_identifier_and_register_in_current_scope({ m_source_code, identifier_start, position() }, token.FlyByteString_value());
 }
 
 Vector<CallExpression::Argument> Parser::parse_arguments()
@@ -2923,11 +2923,11 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u16 parse_options, O
         } else if (FunctionNodeType::must_have_name() || match_identifier()) {
             name = create_identifier_and_register_in_current_scope(
                 { m_source_code, rule_start.position(), position() },
-                consume_identifier().DeprecatedFlyString_value());
+                consume_identifier().FlyByteString_value());
         } else if (is_function_expression && (match(TokenType::Yield) || match(TokenType::Await))) {
             name = create_identifier_and_register_in_current_scope(
                 { m_source_code, rule_start.position(), position() },
-                consume().DeprecatedFlyString_value());
+                consume().FlyByteString_value());
         }
 
         if (name) {
@@ -3003,7 +3003,7 @@ Vector<FunctionParameter> Parser::parse_formal_parameters(int& function_length, 
             return pattern.release_nonnull();
 
         auto token = consume_identifier();
-        auto parameter_name = token.DeprecatedFlyString_value();
+        auto parameter_name = token.FlyByteString_value();
 
         check_identifier_name_for_assignment_validity(parameter_name);
 
@@ -3038,7 +3038,7 @@ Vector<FunctionParameter> Parser::parse_formal_parameters(int& function_length, 
                 syntax_error(message, Position { token.line_number(), token.line_column() });
             break;
         }
-        return create_ast_node<Identifier const>({ m_source_code, rule_start.position(), position() }, token.DeprecatedFlyString_value());
+        return create_ast_node<Identifier const>({ m_source_code, rule_start.position(), position() }, token.FlyByteString_value());
     };
 
     while (match(TokenType::CurlyOpen) || match(TokenType::BracketOpen) || match_identifier() || match(TokenType::TripleDot)) {
@@ -3086,7 +3086,7 @@ Vector<FunctionParameter> Parser::parse_formal_parameters(int& function_length, 
     return parameters;
 }
 
-static AK::Array<DeprecatedFlyString, 36> s_reserved_words = { "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "import", "in", "instanceof", "new", "null", "return", "super", "switch", "this", "throw", "true", "try", "typeof", "var", "void", "while", "with" };
+static AK::Array<FlyByteString, 36> s_reserved_words = { "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "import", "in", "instanceof", "new", "null", "return", "super", "switch", "this", "throw", "true", "try", "typeof", "var", "void", "while", "with" };
 
 RefPtr<BindingPattern const> Parser::parse_binding_pattern(Parser::AllowDuplicates allow_duplicates, Parser::AllowMemberExpressions allow_member_expressions)
 {
@@ -3148,11 +3148,11 @@ RefPtr<BindingPattern const> Parser::parse_binding_pattern(Parser::AllowDuplicat
                     auto string_literal = parse_string_literal(token);
                     name = create_identifier_and_register_in_current_scope({ m_source_code, rule_start.position(), position() }, string_literal->value());
                 } else if (match(TokenType::BigIntLiteral)) {
-                    auto string_value = consume().DeprecatedFlyString_value();
+                    auto string_value = consume().FlyByteString_value();
                     VERIFY(string_value.ends_with("n"sv));
-                    name = create_identifier_and_register_in_current_scope({ m_source_code, rule_start.position(), position() }, DeprecatedFlyString(string_value.view().substring_view(0, string_value.length() - 1)));
+                    name = create_identifier_and_register_in_current_scope({ m_source_code, rule_start.position(), position() }, FlyByteString(string_value.view().substring_view(0, string_value.length() - 1)));
                 } else {
-                    name = create_identifier_and_register_in_current_scope({ m_source_code, rule_start.position(), position() }, consume().DeprecatedFlyString_value());
+                    name = create_identifier_and_register_in_current_scope({ m_source_code, rule_start.position(), position() }, consume().FlyByteString_value());
                 }
             } else if (match(TokenType::BracketOpen)) {
                 consume();
@@ -3191,7 +3191,7 @@ RefPtr<BindingPattern const> Parser::parse_binding_pattern(Parser::AllowDuplicat
                         return {};
                     alias = binding_pattern.release_nonnull();
                 } else if (match_identifier_name()) {
-                    alias = create_identifier_and_register_in_current_scope({ m_source_code, rule_start.position(), position() }, consume().DeprecatedFlyString_value());
+                    alias = create_identifier_and_register_in_current_scope({ m_source_code, rule_start.position(), position() }, consume().FlyByteString_value());
                 } else {
                     expected("identifier or binding pattern");
                     return {};
@@ -3229,7 +3229,7 @@ RefPtr<BindingPattern const> Parser::parse_binding_pattern(Parser::AllowDuplicat
                 alias = pattern.release_nonnull();
             } else if (match_identifier_name()) {
                 // BindingElement must always have an Empty name field
-                auto identifier_name = consume_identifier().DeprecatedFlyString_value();
+                auto identifier_name = consume_identifier().FlyByteString_value();
                 alias = create_identifier_and_register_in_current_scope({ m_source_code, rule_start.position(), position() }, identifier_name);
             } else {
                 expected("identifier or binding pattern");
@@ -3295,19 +3295,19 @@ RefPtr<Identifier const> Parser::parse_lexical_binding(Optional<DeclarationKind>
     auto binding_start = push_start();
 
     if (match_identifier()) {
-        return create_identifier_and_register_in_current_scope({ m_source_code, binding_start.position(), position() }, consume_identifier().DeprecatedFlyString_value(), declaration_kind);
+        return create_identifier_and_register_in_current_scope({ m_source_code, binding_start.position(), position() }, consume_identifier().FlyByteString_value(), declaration_kind);
     }
     if (!m_state.in_generator_function_context && match(TokenType::Yield)) {
         if (m_state.strict_mode)
             syntax_error("Identifier must not be a reserved word in strict mode ('yield')");
 
-        return create_identifier_and_register_in_current_scope({ m_source_code, binding_start.position(), position() }, consume().DeprecatedFlyString_value(), declaration_kind);
+        return create_identifier_and_register_in_current_scope({ m_source_code, binding_start.position(), position() }, consume().FlyByteString_value(), declaration_kind);
     }
     if (!m_state.await_expression_is_valid && match(TokenType::Async)) {
         if (m_program_type == Program::Type::Module)
             syntax_error("Identifier must not be a reserved word in modules ('async')");
 
-        return create_identifier_and_register_in_current_scope({ m_source_code, binding_start.position(), position() }, consume().DeprecatedFlyString_value(), declaration_kind);
+        return create_identifier_and_register_in_current_scope({ m_source_code, binding_start.position(), position() }, consume().FlyByteString_value(), declaration_kind);
     }
 
     return {};
@@ -3467,7 +3467,7 @@ NonnullRefPtr<BreakStatement const> Parser::parse_break_statement()
 {
     auto rule_start = push_start();
     consume(TokenType::Break);
-    Optional<DeprecatedFlyString> target_label;
+    Optional<FlyByteString> target_label;
     if (match(TokenType::Semicolon)) {
         consume();
     } else {
@@ -3494,7 +3494,7 @@ NonnullRefPtr<ContinueStatement const> Parser::parse_continue_statement()
         syntax_error("'continue' not allow outside of a loop");
 
     consume(TokenType::Continue);
-    Optional<DeprecatedFlyString> target_label;
+    Optional<FlyByteString> target_label;
     if (match(TokenType::Semicolon)) {
         consume();
         return create_ast_node<ContinueStatement>({ m_source_code, rule_start.position(), position() }, target_label);
@@ -3563,7 +3563,7 @@ NonnullRefPtr<OptionalChain const> Parser::parse_optional_chain(NonnullRefPtr<Ex
                     auto start = position();
                     auto identifier = consume_and_allow_division();
                     chain.append(OptionalChain::MemberReference {
-                        create_ast_node<Identifier>({ m_source_code, start, position() }, identifier.DeprecatedFlyString_value()),
+                        create_ast_node<Identifier>({ m_source_code, start, position() }, identifier.FlyByteString_value()),
                         OptionalChain::Mode::Optional,
                     });
                 } else {
@@ -3589,7 +3589,7 @@ NonnullRefPtr<OptionalChain const> Parser::parse_optional_chain(NonnullRefPtr<Ex
                 auto start = position();
                 auto identifier = consume_and_allow_division();
                 chain.append(OptionalChain::MemberReference {
-                    create_ast_node<Identifier>({ m_source_code, start, position() }, identifier.DeprecatedFlyString_value()),
+                    create_ast_node<Identifier>({ m_source_code, start, position() }, identifier.FlyByteString_value()),
                     OptionalChain::Mode::NotOptional,
                 });
             } else {
@@ -3756,7 +3756,7 @@ NonnullRefPtr<CatchClause const> Parser::parse_catch_clause()
     auto rule_start = push_start();
     consume(TokenType::Catch);
 
-    DeprecatedFlyString parameter;
+    FlyByteString parameter;
     RefPtr<BindingPattern const> pattern_parameter;
     auto should_expect_parameter = false;
     if (match(TokenType::ParenOpen)) {
@@ -3776,7 +3776,7 @@ NonnullRefPtr<CatchClause const> Parser::parse_catch_clause()
     if (should_expect_parameter && parameter.is_empty() && !pattern_parameter)
         expected("an identifier or a binding pattern");
 
-    HashTable<DeprecatedFlyString> bound_names;
+    HashTable<FlyByteString> bound_names;
 
     if (pattern_parameter) {
         // NOTE: Nothing in the callback throws an exception.
@@ -4525,7 +4525,7 @@ void Parser::discard_saved_state()
     m_saved_state.take_last();
 }
 
-void Parser::check_identifier_name_for_assignment_validity(DeprecatedFlyString const& name, bool force_strict)
+void Parser::check_identifier_name_for_assignment_validity(FlyByteString const& name, bool force_strict)
 {
     // FIXME: this is now called from multiple places maybe the error message should be dynamic?
     if (any_of(s_reserved_words, [&](auto& value) { return name == value; })) {
@@ -4545,11 +4545,11 @@ bool Parser::match_with_clause() const
     return !m_state.current_token.trivia_contains_line_terminator() && m_state.current_token.original_value() == "assert"sv;
 }
 
-DeprecatedFlyString Parser::consume_string_value()
+FlyByteString Parser::consume_string_value()
 {
     VERIFY(match(TokenType::StringLiteral));
     auto string_token = consume();
-    DeprecatedFlyString value = parse_string_literal(string_token)->value();
+    FlyByteString value = parse_string_literal(string_token)->value();
 
     // This also checks IsStringWellFormedUnicode which makes sure there is no unpaired surrogate
     // Surrogates are at least 3 bytes
@@ -4620,7 +4620,7 @@ ModuleRequest Parser::parse_module_request()
     return request;
 }
 
-static DeprecatedFlyString default_string_value = "default";
+static FlyByteString default_string_value = "default";
 
 NonnullRefPtr<ImportStatement const> Parser::parse_import_statement(Program& program)
 {
@@ -4709,13 +4709,13 @@ NonnullRefPtr<ImportStatement const> Parser::parse_import_statement(Program& pro
                 // ImportSpecifier :  ImportedBinding
                 auto require_as = !match_imported_binding();
                 auto name_position = position();
-                auto name = consume().DeprecatedFlyString_value();
+                auto name = consume().FlyByteString_value();
 
                 if (match_as()) {
                     consume(TokenType::Identifier);
 
                     auto alias_position = position();
-                    auto alias = consume_identifier().DeprecatedFlyString_value();
+                    auto alias = consume_identifier().FlyByteString_value();
                     check_identifier_name_for_assignment_validity(alias);
 
                     entries_with_location.append({ { name, alias }, alias_position });
@@ -4736,7 +4736,7 @@ NonnullRefPtr<ImportStatement const> Parser::parse_import_statement(Program& pro
                 consume(TokenType::Identifier);
 
                 auto alias_position = position();
-                auto alias = consume_identifier().DeprecatedFlyString_value();
+                auto alias = consume_identifier().FlyByteString_value();
                 check_identifier_name_for_assignment_validity(alias);
 
                 entries_with_location.append({ { move(name), alias }, alias_position });
@@ -4823,7 +4823,7 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
         auto default_position = position();
         consume(TokenType::Default);
 
-        Optional<DeprecatedFlyString> local_name;
+        Optional<FlyByteString> local_name;
 
         auto lookahead_token = next_token();
 
@@ -4937,7 +4937,7 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
             Required
         } check_for_from { FromSpecifier::NotAllowed };
 
-        auto parse_module_export_name = [&](bool lhs) -> DeprecatedFlyString {
+        auto parse_module_export_name = [&](bool lhs) -> FlyByteString {
             // https://tc39.es/ecma262/#prod-ModuleExportName
             //  ModuleExportName :
             //      IdentifierName
@@ -5162,7 +5162,7 @@ Parser::ForbiddenTokens Parser::ForbiddenTokens::forbid(std::initializer_list<To
 template NonnullRefPtr<FunctionExpression> Parser::parse_function_node(u16, Optional<Position> const&);
 template NonnullRefPtr<FunctionDeclaration> Parser::parse_function_node(u16, Optional<Position> const&);
 
-NonnullRefPtr<Identifier const> Parser::create_identifier_and_register_in_current_scope(SourceRange range, DeprecatedFlyString string, Optional<DeclarationKind> declaration_kind)
+NonnullRefPtr<Identifier const> Parser::create_identifier_and_register_in_current_scope(SourceRange range, FlyByteString string, Optional<DeclarationKind> declaration_kind)
 {
     auto id = create_ast_node<Identifier const>(range, string);
     if (m_state.current_scope_pusher)

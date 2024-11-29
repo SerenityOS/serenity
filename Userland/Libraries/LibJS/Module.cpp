@@ -134,7 +134,7 @@ ThrowCompletionOr<Object*> Module::get_module_namespace(VM& vm)
         auto exported_names = TRY(get_exported_names(vm));
 
         // b. Let unambiguousNames be a new empty List.
-        Vector<DeprecatedFlyString> unambiguous_names;
+        Vector<FlyByteString> unambiguous_names;
 
         // c. For each element name of exportedNames, do
         for (auto& name : exported_names) {
@@ -157,7 +157,7 @@ ThrowCompletionOr<Object*> Module::get_module_namespace(VM& vm)
 }
 
 // 10.4.6.12 ModuleNamespaceCreate ( module, exports ), https://tc39.es/ecma262/#sec-modulenamespacecreate
-Object* Module::module_namespace_create(VM& vm, Vector<DeprecatedFlyString> unambiguous_names)
+Object* Module::module_namespace_create(VM& vm, Vector<FlyByteString> unambiguous_names)
 {
     auto& realm = this->realm();
 

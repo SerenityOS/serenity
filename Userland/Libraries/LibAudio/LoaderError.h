@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
 #include <AK/Error.h>
+#include <AK/FlyByteString.h>
 #include <AK/FlyString.h>
 #include <errno.h>
 

@@ -180,8 +180,8 @@ ErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPtr<E
     }
 
     // CFF spec, "Table 22 Charset ID"
-    Vector<SID> charset;                       // Maps GID to CIDs for CID-keyed, to SIDs otherwise.
-    Vector<DeprecatedFlyString> charset_names; // Only valid for non-CID-keyed fonts.
+    Vector<SID> charset;                 // Maps GID to CIDs for CID-keyed, to SIDs otherwise.
+    Vector<FlyByteString> charset_names; // Only valid for non-CID-keyed fonts.
     if (top_dict.is_cid_keyed) {
         charset = TRY(parse_charset(FixedMemoryStream { cff_bytes.slice(top_dict.charset_offset) }, glyphs.size()));
     } else {
@@ -840,16 +840,16 @@ ErrorOr<Vector<StringView>> CFF::parse_strings(FixedMemoryStream& reader)
     return strings;
 }
 
-DeprecatedFlyString CFF::resolve_sid(SID sid, Vector<StringView> const& strings)
+FlyByteString CFF::resolve_sid(SID sid, Vector<StringView> const& strings)
 {
     if (sid < s_cff_builtin_names.size())
-        return DeprecatedFlyString(s_cff_builtin_names[sid]);
+        return FlyByteString(s_cff_builtin_names[sid]);
 
     if (sid - s_cff_builtin_names.size() < strings.size())
-        return DeprecatedFlyString(strings[sid - s_cff_builtin_names.size()]);
+        return FlyByteString(strings[sid - s_cff_builtin_names.size()]);
 
     dbgln("Couldn't find string for SID {}, going with space", sid);
-    return DeprecatedFlyString("space");
+    return FlyByteString("space");
 }
 
 ErrorOr<Vector<CFF::SID>> CFF::parse_charset(Stream&& reader, size_t glyph_count)

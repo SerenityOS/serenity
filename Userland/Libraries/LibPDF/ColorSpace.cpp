@@ -20,7 +20,7 @@ RefPtr<Gfx::ICC::Profile> ICCBasedColorSpace::s_srgb_profile;
 ENUMERATE_COLOR_SPACE_FAMILIES(ENUMERATE);
 #undef ENUMERATE
 
-PDFErrorOr<ColorSpaceFamily> ColorSpaceFamily::get(DeprecatedFlyString const& family_name)
+PDFErrorOr<ColorSpaceFamily> ColorSpaceFamily::get(FlyByteString const& family_name)
 {
 #define ENUMERATE(f_name, may_be_specified_directly) \
     if (family_name == f_name.name()) {              \
@@ -45,7 +45,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
     return Error { Error::Type::MalformedPDF, "Color space must be name or array" };
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString const& name, Renderer&)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(FlyByteString const& name, Renderer&)
 {
     // Simple color spaces with no parameters, which can be specified directly
     if (name == CommonNames::DeviceGray)

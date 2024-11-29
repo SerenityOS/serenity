@@ -27,13 +27,13 @@ public:
     void set_font_size(float font_size) override;
     PDFErrorOr<void> draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const&) override;
 
-    DeprecatedFlyString base_font_name() const { return m_base_font_name; }
+    FlyByteString base_font_name() const { return m_base_font_name; }
 
 protected:
     PDFErrorOr<void> initialize(Document*, NonnullRefPtr<DictObject> const&, float font_size) override;
 
 private:
-    DeprecatedFlyString m_base_font_name;
+    FlyByteString m_base_font_name;
     RefPtr<Type1FontProgram> m_font_program;
     OwnPtr<TrueTypePainter> m_fallback_font_painter;
     HashMap<Type1GlyphCacheKey, RefPtr<Gfx::Bitmap>> m_glyph_cache;

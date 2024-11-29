@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyByteString.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Variant.h>
@@ -206,16 +206,16 @@ public:
     {
         return m_value.visit(
             [](StringView view) { return view; },
-            [](DeprecatedFlyString const& identifier) { return identifier.view(); },
+            [](FlyByteString const& identifier) { return identifier.view(); },
             [](Empty) -> StringView { VERIFY_NOT_REACHED(); });
     }
 
-    DeprecatedFlyString DeprecatedFlyString_value() const
+    FlyByteString FlyByteString_value() const
     {
         return m_value.visit(
-            [](StringView view) -> DeprecatedFlyString { return view; },
-            [](DeprecatedFlyString const& identifier) -> DeprecatedFlyString { return identifier; },
-            [](Empty) -> DeprecatedFlyString { VERIFY_NOT_REACHED(); });
+            [](StringView view) -> FlyByteString { return view; },
+            [](FlyByteString const& identifier) -> FlyByteString { return identifier; },
+            [](Empty) -> FlyByteString { VERIFY_NOT_REACHED(); });
     }
 
     size_t line_number() const { return m_line_number; }
@@ -234,7 +234,7 @@ public:
     ByteString string_value(StringValueStatus& status) const;
     ByteString raw_template_value() const;
 
-    void set_identifier_value(DeprecatedFlyString value)
+    void set_identifier_value(FlyByteString value)
     {
         m_value = move(value);
     }
@@ -247,7 +247,7 @@ private:
     StringView m_message;
     StringView m_trivia;
     StringView m_original_value;
-    Variant<Empty, StringView, DeprecatedFlyString> m_value {};
+    Variant<Empty, StringView, FlyByteString> m_value {};
     size_t m_line_number { 0 };
     size_t m_line_column { 0 };
     size_t m_offset { 0 };

@@ -809,7 +809,7 @@ void Interpreter::enter_object_environment(Object& object)
     running_execution_context().lexical_environment = new_object_environment(object, true, old_environment);
 }
 
-ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, DeprecatedFlyString const& name)
+ThrowCompletionOr<NonnullGCPtr<Bytecode::Executable>> compile(VM& vm, ASTNode const& node, FunctionKind kind, FlyByteString const& name)
 {
     auto executable_result = Bytecode::Generator::generate_from_ast_node(vm, node, kind);
     if (executable_result.is_error())
@@ -1156,7 +1156,7 @@ inline ThrowCompletionOr<Value> get_global(Interpreter& interpreter, IdentifierT
     return vm.throw_completion<ReferenceError>(ErrorType::UnknownIdentifier, identifier);
 }
 
-inline ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value, Value value, Optional<DeprecatedFlyString const&> const& base_identifier, PropertyKey name, Op::PropertyKind kind, PropertyLookupCache* cache = nullptr)
+inline ThrowCompletionOr<void> put_by_property_key(VM& vm, Value base, Value this_value, Value value, Optional<FlyByteString const&> const& base_identifier, PropertyKey name, Op::PropertyKind kind, PropertyLookupCache* cache = nullptr)
 {
     // Better error message than to_object would give
     if (vm.in_strict_mode() && base.is_nullish())
@@ -1266,7 +1266,7 @@ inline Value new_function(VM& vm, FunctionNode const& function_node, Optional<Id
     Value value;
 
     if (!function_node.has_name()) {
-        DeprecatedFlyString name = {};
+        FlyByteString name = {};
         if (lhs_name.has_value())
             name = vm.bytecode_interpreter().current_executable().get_identifier(lhs_name.value());
         value = function_node.instantiate_ordinary_function_expression(vm, name);
@@ -1283,7 +1283,7 @@ inline Value new_function(VM& vm, FunctionNode const& function_node, Optional<Id
     return value;
 }
 
-inline ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Optional<DeprecatedFlyString const&> const& base_identifier, Value property_key_value, Value value, Op::PropertyKind kind)
+inline ThrowCompletionOr<void> put_by_value(VM& vm, Value base, Optional<FlyByteString const&> const& base_identifier, Value property_key_value, Value value, Op::PropertyKind kind)
 {
     // OPTIMIZATION: Fast path for simple Int32 indexes in array-like objects.
     if ((kind == Op::PropertyKind::KeyValue || kind == Op::PropertyKind::DirectKeyValue)
@@ -1370,7 +1370,7 @@ struct CalleeAndThis {
     Value this_value;
 };
 
-inline ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Bytecode::Interpreter& interpreter, DeprecatedFlyString const& name, EnvironmentCoordinate& cache)
+inline ThrowCompletionOr<CalleeAndThis> get_callee_and_this_from_environment(Bytecode::Interpreter& interpreter, FlyByteString const& name, EnvironmentCoordinate& cache)
 {
     auto& vm = interpreter.vm();
 
@@ -1458,7 +1458,7 @@ inline MarkedVector<Value> argument_list_evaluation(VM& vm, Value arguments)
     return argument_values;
 }
 
-inline ThrowCompletionOr<void> create_variable(VM& vm, DeprecatedFlyString const& name, Op::EnvironmentMode mode, bool is_global, bool is_immutable, bool is_strict)
+inline ThrowCompletionOr<void> create_variable(VM& vm, FlyByteString const& name, Op::EnvironmentMode mode, bool is_global, bool is_immutable, bool is_strict)
 {
     if (mode == Op::EnvironmentMode::Lexical) {
         VERIFY(!is_global);
@@ -1493,8 +1493,8 @@ inline ThrowCompletionOr<ECMAScriptFunctionObject*> new_class(VM& vm, Value supe
     auto* class_environment = vm.lexical_environment();
     vm.running_execution_context().lexical_environment = vm.running_execution_context().saved_lexical_environments.take_last();
 
-    Optional<DeprecatedFlyString> binding_name;
-    DeprecatedFlyString class_name;
+    Optional<FlyByteString> binding_name;
+    FlyByteString class_name;
     if (!class_expression.has_name() && lhs_name.has_value()) {
         class_name = interpreter.current_executable().get_identifier(lhs_name.value());
     } else {

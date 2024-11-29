@@ -133,7 +133,7 @@ public:
 
     static ErrorOr<Vector<CFF::Glyph>> parse_charstrings(FixedMemoryStream&&, Vector<ByteBuffer> const& local_subroutines, Vector<ByteBuffer> const& global_subroutines);
 
-    static DeprecatedFlyString resolve_sid(SID, Vector<StringView> const&);
+    static FlyByteString resolve_sid(SID, Vector<StringView> const&);
     static ErrorOr<Vector<SID>> parse_charset(Stream&&, size_t);
     static ErrorOr<Vector<u8>> parse_fdselect(Stream&&, size_t);
     static ErrorOr<Vector<u8>> parse_encoding(Stream&&, HashMap<Card8, SID>& supplemental);

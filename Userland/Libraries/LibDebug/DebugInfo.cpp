@@ -91,8 +91,8 @@ ErrorOr<void> DebugInfo::prepare_lines()
         return {};
     }));
 
-    HashMap<DeprecatedFlyString, Optional<ByteString>> memoized_full_paths;
-    auto compute_full_path = [&](DeprecatedFlyString const& file_path) -> Optional<ByteString> {
+    HashMap<FlyByteString, Optional<ByteString>> memoized_full_paths;
+    auto compute_full_path = [&](FlyByteString const& file_path) -> Optional<ByteString> {
         if (file_path.view().contains("Toolchain/"sv) || file_path.view().contains("libgcc"sv))
             return {};
         if (file_path.view().starts_with("./"sv) && !m_source_root.is_empty())

@@ -25,7 +25,7 @@ public:
     static ErrorOr<FlyString> from_utf8(StringView);
     static FlyString from_utf8_without_validation(ReadonlyBytes);
     template<typename T>
-    requires(IsOneOf<RemoveCVReference<T>, ByteString, DeprecatedFlyString, FlyString, String>)
+    requires(IsOneOf<RemoveCVReference<T>, ByteString, FlyByteString, FlyString, String>)
     static ErrorOr<String> from_utf8(T&&) = delete;
 
     FlyString(String const&);
@@ -56,8 +56,8 @@ public:
     [[nodiscard]] static size_t number_of_fly_strings();
 
     // FIXME: Remove these once all code has been ported to FlyString
-    [[nodiscard]] DeprecatedFlyString to_deprecated_fly_string() const;
-    static ErrorOr<FlyString> from_deprecated_fly_string(DeprecatedFlyString const&);
+    [[nodiscard]] FlyByteString to_deprecated_fly_string() const;
+    static ErrorOr<FlyString> from_deprecated_fly_string(FlyByteString const&);
     template<typename T>
     requires(IsSame<RemoveCVReference<T>, StringView>)
     static ErrorOr<String> from_deprecated_fly_string(T&&) = delete;

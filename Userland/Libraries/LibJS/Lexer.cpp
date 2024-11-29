@@ -16,7 +16,7 @@
 
 namespace JS {
 
-HashMap<DeprecatedFlyString, TokenType> Lexer::s_keywords;
+HashMap<FlyByteString, TokenType> Lexer::s_keywords;
 
 static constexpr TokenType parse_two_char_token(StringView view)
 {
@@ -700,7 +700,7 @@ Token Lexer::next()
     // bunch of Invalid* tokens (bad numeric literals, unterminated comments etc.)
     StringView token_message;
 
-    Optional<DeprecatedFlyString> identifier;
+    Optional<FlyByteString> identifier;
     size_t identifier_length = 0;
 
     if (m_current_token.type() == TokenType::RegexLiteral && !is_eof() && is_ascii_alpha(m_current_char) && !did_consume_whitespace_or_comments) {

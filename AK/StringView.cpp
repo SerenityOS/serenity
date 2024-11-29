@@ -14,7 +14,7 @@
 
 #ifndef KERNEL
 #    include <AK/ByteString.h>
-#    include <AK/DeprecatedFlyString.h>
+#    include <AK/FlyByteString.h>
 #    include <AK/FlyString.h>
 #    include <AK/String.h>
 #endif
@@ -40,7 +40,7 @@ StringView::StringView(ByteString const& string)
 {
 }
 
-StringView::StringView(DeprecatedFlyString const& string)
+StringView::StringView(FlyByteString const& string)
     : m_characters(string.characters())
     , m_length(string.length())
 {

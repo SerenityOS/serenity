@@ -47,7 +47,7 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType0>> CIDFontType0::create(Document* document,
     if (descriptor->contains(CommonNames::FontFile3)) {
         auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile3));
         auto font_file_dict = font_file_stream->dict();
-        DeprecatedFlyString subtype;
+        FlyByteString subtype;
         if (font_file_dict->contains(CommonNames::Subtype))
             subtype = font_file_dict->get_name(CommonNames::Subtype)->name();
         if (subtype == CommonNames::CIDFontType0C) {

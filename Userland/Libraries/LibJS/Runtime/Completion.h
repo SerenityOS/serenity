@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyByteString.h>
 #include <AK/Optional.h>
 #include <AK/Try.h>
 #include <AK/TypeCasts.h>

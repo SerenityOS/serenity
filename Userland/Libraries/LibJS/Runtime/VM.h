@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyByteString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
@@ -195,8 +195,8 @@ public:
     u32 execution_generation() const { return m_execution_generation; }
     void finish_execution_generation() { ++m_execution_generation; }
 
-    ThrowCompletionOr<Reference> resolve_binding(DeprecatedFlyString const&, Environment* = nullptr);
-    ThrowCompletionOr<Reference> get_identifier_reference(Environment*, DeprecatedFlyString, bool strict, size_t hops = 0);
+    ThrowCompletionOr<Reference> resolve_binding(FlyByteString const&, Environment* = nullptr);
+    ThrowCompletionOr<Reference> get_identifier_reference(Environment*, FlyByteString, bool strict, size_t hops = 0);
 
     // 5.2.3.2 Throw an Exception, https://tc39.es/ecma262/#sec-throw-an-exception
     template<typename T, typename... Args>

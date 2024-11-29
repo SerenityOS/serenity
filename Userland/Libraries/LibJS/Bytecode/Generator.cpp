@@ -199,7 +199,7 @@ CodeGenerationErrorOr<void> Generator::emit_function_declaration_instantiation(E
     return {};
 }
 
-CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::compile(VM& vm, ASTNode const& node, FunctionKind enclosing_function_kind, GCPtr<ECMAScriptFunctionObject const> function, MustPropagateCompletion must_propagate_completion, Vector<DeprecatedFlyString> local_variable_names)
+CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::compile(VM& vm, ASTNode const& node, FunctionKind enclosing_function_kind, GCPtr<ECMAScriptFunctionObject const> function, MustPropagateCompletion must_propagate_completion, Vector<FlyByteString> local_variable_names)
 {
     Generator generator(vm, function, must_propagate_completion);
 
@@ -462,7 +462,7 @@ CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::compile(VM& vm, ASTNo
 
 CodeGenerationErrorOr<NonnullGCPtr<Executable>> Generator::generate_from_ast_node(VM& vm, ASTNode const& node, FunctionKind enclosing_function_kind)
 {
-    Vector<DeprecatedFlyString> local_variable_names;
+    Vector<FlyByteString> local_variable_names;
     if (is<ScopeNode>(node))
         local_variable_names = static_cast<ScopeNode const&>(node).local_variables_names();
     return compile(vm, node, enclosing_function_kind, {}, MustPropagateCompletion::Yes, move(local_variable_names));
@@ -568,7 +568,7 @@ void Generator::end_variable_scope()
     }
 }
 
-void Generator::begin_continuable_scope(Label continue_target, Vector<DeprecatedFlyString> const& language_label_set)
+void Generator::begin_continuable_scope(Label continue_target, Vector<FlyByteString> const& language_label_set)
 {
     m_continuable_scopes.append({ continue_target, language_label_set });
     start_boundary(BlockBoundaryType::Continue);
@@ -585,7 +585,7 @@ Label Generator::nearest_breakable_scope() const
     return m_breakable_scopes.last().bytecode_target;
 }
 
-void Generator::begin_breakable_scope(Label breakable_target, Vector<DeprecatedFlyString> const& language_label_set)
+void Generator::begin_breakable_scope(Label breakable_target, Vector<FlyByteString> const& language_label_set)
 {
     m_breakable_scopes.append({ breakable_target, language_label_set });
     start_boundary(BlockBoundaryType::Break);
@@ -969,7 +969,7 @@ void Generator::generate_scoped_jump(JumpType type)
     VERIFY_NOT_REACHED();
 }
 
-void Generator::generate_labelled_jump(JumpType type, DeprecatedFlyString const& label)
+void Generator::generate_labelled_jump(JumpType type, FlyByteString const& label)
 {
     TemporaryChange temp { m_current_unwind_context, m_current_unwind_context };
     size_t current_boundary = m_boundaries.size();
@@ -1020,7 +1020,7 @@ void Generator::generate_break()
     generate_scoped_jump(JumpType::Break);
 }
 
-void Generator::generate_break(DeprecatedFlyString const& break_label)
+void Generator::generate_break(FlyByteString const& break_label)
 {
     generate_labelled_jump(JumpType::Break, break_label);
 }
@@ -1030,7 +1030,7 @@ void Generator::generate_continue()
     generate_scoped_jump(JumpType::Continue);
 }
 
-void Generator::generate_continue(DeprecatedFlyString const& continue_label)
+void Generator::generate_continue(FlyByteString const& continue_label)
 {
     generate_labelled_jump(JumpType::Continue, continue_label);
 }
