@@ -176,6 +176,12 @@ constexpr auto to_array(T (&&a)[N])
     return Detail::to_array_impl(move(a), MakeIndexSequence<N>());
 }
 
+template<typename T>
+constexpr auto to_array(Array<T, 0>)
+{
+    return Array<T, 0> {};
+}
+
 }
 
 #if USING_AK_GLOBALLY
