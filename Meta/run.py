@@ -570,6 +570,10 @@ def set_up_screens(config: Configuration):
     if provided_display_backend is not None:
         config.display_backend = provided_display_backend
     else:
+        # The `gtk,gl=on` display backend appears to be broken on systems with NVIDIA graphics.
+        # Check if `nvidia-smi` is installed; if it is, assume that NVIDIA drivers would be used.
+        is_linux_with_nvidia_graphics = sys.platform == "linux" and which("nvidia-smi") is not None
+
         qemu_display_info = run(
             [str(config.qemu_binary), "-display", "help"],
             capture_output=True,
@@ -584,7 +588,7 @@ def set_up_screens(config: Configuration):
             config.display_backend = "sdl,gl=off"
         elif config.screen_count > 1 and "sdl" in qemu_display_info:
             config.display_backend = "sdl,gl=off"
-        elif "gtk" in qemu_display_info and has_virgl():
+        elif "gtk" in qemu_display_info and has_virgl() and not is_linux_with_nvidia_graphics:
             config.display_backend = "gtk,gl=on"
         elif "sdl" in qemu_display_info and has_virgl():
             config.display_backend = "sdl,gl=on"
