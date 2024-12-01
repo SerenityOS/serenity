@@ -1038,9 +1038,6 @@ ErrorOr<void> VirtualFileSystem::rmdir(VFSRootContext const& vfs_root_context, C
     if (custody->is_readonly())
         return EROFS;
 
-    TRY(inode.remove_child("."sv));
-    TRY(inode.remove_child(".."sv));
-
     return parent_inode.remove_child(KLexicalPath::basename(path));
 }
 
