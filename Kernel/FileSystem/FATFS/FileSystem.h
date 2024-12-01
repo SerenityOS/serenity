@@ -65,6 +65,7 @@ public:
     virtual ~FATFS() override = default;
     virtual StringView class_name() const override { return "FATFS"sv; }
     virtual Inode& root_inode() override;
+    virtual ErrorOr<void> rename(Inode& old_parent_inode, StringView old_basename, Inode& new_parent_inode, StringView new_basename) override;
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const override;
 
 private:

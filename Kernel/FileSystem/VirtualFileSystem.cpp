@@ -812,18 +812,9 @@ ErrorOr<void> VirtualFileSystem::rename(VFSRootContext const& vfs_root_context, 
         }
         if (new_inode.is_directory() && !old_inode.is_directory())
             return EISDIR;
-        TRY(new_parent_inode.remove_child(new_basename));
     }
 
-    TRY(new_parent_inode.add_child(old_inode, new_basename, old_inode.mode()));
-    TRY(old_parent_inode.remove_child(old_basename));
-
-    // If the inode that we moved is a directory and we changed parent
-    // directories, then we also have to make .. point to the new parent inode,
-    // because .. is its own inode.
-    if (old_inode.is_directory() && old_parent_inode.index() != new_parent_inode.index()) {
-        TRY(old_inode.replace_child(".."sv, new_parent_inode));
-    }
+    TRY(new_parent_inode.fs().rename(old_parent_inode, old_basename, new_parent_inode, new_basename));
 
     return {};
 }

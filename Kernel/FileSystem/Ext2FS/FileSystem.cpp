@@ -26,6 +26,75 @@ Ext2FS::Ext2FS(OpenFileDescription& file_description)
 
 Ext2FS::~Ext2FS() = default;
 
+ErrorOr<void> Ext2FS::rename(Inode& old_parent_inode, StringView old_basename, Inode& new_parent_inode, StringView new_basename)
+{
+    MutexLocker locker(m_lock);
+
+    if (auto maybe_inode_to_be_replaced = new_parent_inode.lookup(new_basename); !maybe_inode_to_be_replaced.is_error()) {
+        VERIFY(!maybe_inode_to_be_replaced.value()->is_directory());
+        TRY(new_parent_inode.remove_child(new_basename));
+    }
+
+    auto old_inode = TRY(old_parent_inode.lookup(old_basename));
+
+    TRY(new_parent_inode.add_child(old_inode, new_basename, old_inode->mode()));
+    TRY(old_parent_inode.remove_child(old_basename));
+
+    // If the inode that we moved is a directory and we changed parent
+    // directories, then we also have to make .. point to the new parent inode,
+    // because .. is its own inode.
+    if (old_inode->is_directory() && old_parent_inode.index() != new_parent_inode.index()) {
+        Vector<Ext2FSDirectoryEntry> entries;
+        bool has_file_type_attribute = has_flag(get_features_optional(), Ext2FS::FeaturesOptional::ExtendedAttributes);
+
+        Optional<InodeIndex> dot_dot_index;
+        TRY(old_inode->traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
+            auto is_replacing_this_inode = entry.name == ".."sv;
+            auto inode_index = is_replacing_this_inode ? new_parent_inode.index() : entry.inode.index();
+
+            auto entry_name = TRY(KString::try_create(entry.name));
+            TRY(entries.try_empend(move(entry_name), inode_index, has_file_type_attribute ? Ext2FSInode::to_ext2_file_type(new_parent_inode.mode()) : (u8)EXT2_FT_UNKNOWN));
+
+            if (is_replacing_this_inode)
+                dot_dot_index = entry.inode.index();
+
+            return {};
+        }));
+
+        if (!dot_dot_index.has_value())
+            return ENOENT;
+
+        auto dot_dot = TRY(get_inode({ fsid(), *dot_dot_index }));
+        auto new_inode = TRY(new_parent_inode.lookup(new_basename));
+
+        auto old_index_it = static_cast<Ext2FSInode&>(*old_inode).m_lookup_cache.find(".."sv);
+        bool has_cached_dot_dot = old_index_it != static_cast<Ext2FSInode&>(*old_inode).m_lookup_cache.end();
+        if (has_cached_dot_dot)
+            old_index_it->value = new_parent_inode.index();
+
+        // NOTE: Between this line and the write_directory line, all operations must
+        //       be atomic. Any changes made should be reverted.
+        TRY(new_parent_inode.increment_link_count());
+
+        auto maybe_decrement_error = dot_dot->decrement_link_count();
+        if (maybe_decrement_error.is_error()) {
+            if (has_cached_dot_dot)
+                old_index_it->value = *dot_dot_index;
+
+            MUST(new_parent_inode.decrement_link_count());
+            return maybe_decrement_error;
+        }
+
+        // FIXME: The filesystem is left in an inconsistent state if this fails.
+        //        Revert the changes made above if we can't write_directory.
+        //        Ideally, decrement should be the last operation, but we currently
+        //        can't "un-write" a directory entry list.
+        TRY(static_cast<Ext2FSInode&>(*new_inode).write_directory(entries));
+    }
+
+    return {};
+}
+
 ErrorOr<void> Ext2FS::flush_super_block()
 {
     MutexLocker locker(m_lock);

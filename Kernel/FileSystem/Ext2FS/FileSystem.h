@@ -50,6 +50,8 @@ public:
     virtual bool supports_watchers() const override { return true; }
     virtual bool supports_backing_loop_devices() const override { return true; }
 
+    virtual ErrorOr<void> rename(Inode& old_parent_inode, StringView old_basename, Inode& new_parent_inode, StringView new_basename) override;
+
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const override;
 
     FeaturesOptional get_features_optional() const;
