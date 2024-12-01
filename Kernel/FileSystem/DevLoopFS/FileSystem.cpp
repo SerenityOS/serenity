@@ -52,6 +52,11 @@ Inode& DevLoopFS::root_inode()
     return *m_root_inode;
 }
 
+ErrorOr<void> DevLoopFS::rename(Inode&, StringView, Inode&, StringView)
+{
+    return EROFS;
+}
+
 ErrorOr<NonnullRefPtr<Inode>> DevLoopFS::get_inode(InodeIdentifier inode_id) const
 {
     if (inode_id.index() == 1)

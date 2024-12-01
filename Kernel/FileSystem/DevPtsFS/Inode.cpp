@@ -112,11 +112,6 @@ ErrorOr<void> DevPtsFSInode::remove_child(StringView)
     return EROFS;
 }
 
-ErrorOr<void> DevPtsFSInode::replace_child(StringView, Inode&)
-{
-    return EROFS;
-}
-
 ErrorOr<void> DevPtsFSInode::chmod(mode_t)
 {
     return EROFS;

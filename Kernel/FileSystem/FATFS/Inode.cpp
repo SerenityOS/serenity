@@ -240,14 +240,6 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
     return blocks.release_nonnull();
 }
 
-ErrorOr<void> FATInode::replace_child(StringView name, Inode& inode)
-{
-    // FIXME: Implement this properly
-    TRY(remove_child(name));
-    TRY(add_child(inode, name, inode.mode()));
-    return {};
-}
-
 ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback)
 {
     VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
@@ -748,11 +740,9 @@ ErrorOr<void> FATInode::add_child(Inode& inode, StringView name, mode_t mode)
     return {};
 }
 
-ErrorOr<void> FATInode::remove_child(StringView name)
+ErrorOr<void> FATInode::remove_child_impl(StringView name, FreeClusters free_clusters)
 {
     MutexLocker locker(m_inode_lock);
-
-    dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_child(): removing inode \"{}\"", identifier(), name);
 
     VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
 
@@ -798,7 +788,7 @@ ErrorOr<void> FATInode::remove_child(StringView name)
                 for (auto const& lfn_entry_location : lfn_entry_locations)
                     TRY(fs().write_block(lfn_entry_location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&unused_entry)), sizeof(FATEntry), lfn_entry_location.entry * sizeof(FATEntry)));
 
-                if (name == "."sv || name == ".."sv)
+                if (name == "."sv || name == ".."sv || free_clusters == FreeClusters::No)
                     return {};
 
                 u32 entry_first_cluster = entry->first_cluster_low;
@@ -820,6 +810,12 @@ ErrorOr<void> FATInode::remove_child(StringView name)
     }
 
     return EINVAL;
+}
+
+ErrorOr<void> FATInode::remove_child(StringView name)
+{
+    dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_child(): removing inode \"{}\"", identifier(), name);
+    return remove_child_impl(name, FreeClusters::Yes);
 }
 
 ErrorOr<void> FATInode::chmod(mode_t)

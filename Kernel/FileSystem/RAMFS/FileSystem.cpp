@@ -31,6 +31,23 @@ Inode& RAMFS::root_inode()
     return *m_root_inode;
 }
 
+ErrorOr<void> RAMFS::rename(Inode& old_parent_inode, StringView old_basename, Inode& new_parent_inode, StringView new_basename)
+{
+    MutexLocker locker(m_lock);
+
+    if (auto maybe_inode_to_be_replaced = new_parent_inode.lookup(new_basename); !maybe_inode_to_be_replaced.is_error()) {
+        VERIFY(!maybe_inode_to_be_replaced.value()->is_directory());
+        TRY(new_parent_inode.remove_child(new_basename));
+    }
+
+    auto old_inode = TRY(old_parent_inode.lookup(old_basename));
+
+    TRY(new_parent_inode.add_child(old_inode, new_basename, old_inode->mode()));
+    TRY(old_parent_inode.remove_child(old_basename));
+
+    return {};
+}
+
 unsigned RAMFS::next_inode_index()
 {
     MutexLocker locker(m_lock);

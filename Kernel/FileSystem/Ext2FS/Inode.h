@@ -38,7 +38,6 @@ private:
     virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode& child, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
-    virtual ErrorOr<void> replace_child(StringView name, Inode& child) override;
     virtual ErrorOr<void> update_timestamps(Optional<UnixDateTime> atime, Optional<UnixDateTime> ctime, Optional<UnixDateTime> mtime) override;
     virtual ErrorOr<void> increment_link_count() override;
     virtual ErrorOr<void> decrement_link_count() override;

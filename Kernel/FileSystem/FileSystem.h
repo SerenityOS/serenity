@@ -32,6 +32,8 @@ public:
     virtual Inode& root_inode() = 0;
     virtual bool supports_watchers() const { return false; }
 
+    virtual ErrorOr<void> rename(Inode& old_parent_inode, StringView old_basename, Inode& new_parent_inode, StringView new_basename) = 0;
+
     // FIXME: We should aim to provide more concise mechanism to ensure
     // that backing Inodes from the FileSystem are kept intact so we can
     // attach them to a loop device.

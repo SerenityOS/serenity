@@ -265,11 +265,6 @@ ErrorOr<void> FUSEInode::remove_child(StringView)
     return ENOTIMPL;
 }
 
-ErrorOr<void> FUSEInode::replace_child(StringView, Inode&)
-{
-    return ENOTIMPL;
-}
-
 ErrorOr<void> FUSEInode::chmod(mode_t)
 {
     return ENOTIMPL;

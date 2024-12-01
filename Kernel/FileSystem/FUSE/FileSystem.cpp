@@ -70,6 +70,11 @@ Inode& FUSE::root_inode()
     return *m_root_inode;
 }
 
+ErrorOr<void> FUSE::rename(Inode&, StringView, Inode&, StringView)
+{
+    return ENOTIMPL;
+}
+
 u8 FUSE::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
 {
     return ram_backed_file_type_to_directory_entry_type(entry);

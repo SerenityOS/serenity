@@ -53,6 +53,11 @@ Inode& ISO9660FS::root_inode()
     return *m_root_inode;
 }
 
+ErrorOr<void> ISO9660FS::rename(Inode&, StringView, Inode&, StringView)
+{
+    return EROFS;
+}
+
 unsigned ISO9660FS::total_block_count() const
 {
     return LittleEndian { m_primary_volume->volume_space_size.little };
