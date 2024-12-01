@@ -19,21 +19,21 @@ namespace Kernel {
 
 static constexpr size_t max_inline_symlink_length = 60;
 
-static u8 to_ext2_file_type(mode_t mode)
+u8 Ext2FSInode::to_ext2_file_type(mode_t mode)
 {
-    if (is_regular_file(mode))
+    if (Kernel::is_regular_file(mode))
         return EXT2_FT_REG_FILE;
-    if (is_directory(mode))
+    if (Kernel::is_directory(mode))
         return EXT2_FT_DIR;
-    if (is_character_device(mode))
+    if (Kernel::is_character_device(mode))
         return EXT2_FT_CHRDEV;
-    if (is_block_device(mode))
+    if (Kernel::is_block_device(mode))
         return EXT2_FT_BLKDEV;
-    if (is_fifo(mode))
+    if (Kernel::is_fifo(mode))
         return EXT2_FT_FIFO;
-    if (is_socket(mode))
+    if (Kernel::is_socket(mode))
         return EXT2_FT_SOCK;
-    if (is_symlink(mode))
+    if (Kernel::is_symlink(mode))
         return EXT2_FT_SYMLINK;
     return EXT2_FT_UNKNOWN;
 }
