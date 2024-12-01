@@ -106,11 +106,6 @@ ErrorOr<void> DevLoopFSInode::remove_child(StringView)
     return EROFS;
 }
 
-ErrorOr<void> DevLoopFSInode::replace_child(StringView, Inode&)
-{
-    return EROFS;
-}
-
 ErrorOr<void> DevLoopFSInode::chmod(mode_t)
 {
     return EROFS;
