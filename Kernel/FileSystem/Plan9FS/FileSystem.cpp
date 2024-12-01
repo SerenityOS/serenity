@@ -91,6 +91,12 @@ Inode& Plan9FS::root_inode()
     return *m_root_inode;
 }
 
+ErrorOr<void> Plan9FS::rename(Inode&, StringView, Inode&, StringView)
+{
+    // TODO
+    return ENOTIMPL;
+}
+
 Plan9FS::ReceiveCompletion::ReceiveCompletion(u16 tag)
     : tag(tag)
 {

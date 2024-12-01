@@ -90,11 +90,6 @@ ErrorOr<void> SysFSInode::remove_child(StringView)
     return EROFS;
 }
 
-ErrorOr<void> SysFSInode::replace_child(StringView, Inode&)
-{
-    return EROFS;
-}
-
 ErrorOr<void> SysFSInode::chmod(mode_t)
 {
     return EPERM;
