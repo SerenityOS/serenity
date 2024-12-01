@@ -37,6 +37,5 @@ private:
     virtual StringView class_name() const override { return "E1000ENetworkAdapter"sv; }
 
     virtual void detect_eeprom() override;
-    virtual u32 read_eeprom(u8 address) override;
 };
 }
