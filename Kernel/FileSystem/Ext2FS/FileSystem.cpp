@@ -29,12 +29,12 @@ Ext2FS::~Ext2FS() = default;
 ErrorOr<void> Ext2FS::rename(Inode& old_parent_inode, StringView old_basename, Inode& new_parent_inode, StringView new_basename)
 {
     if (!new_parent_inode.lookup(new_basename).is_error())
-        TRY(new_parent_inode.remove_child(new_basename));
+        TRY(static_cast<Ext2FSInode&>(new_parent_inode).remove_child_impl(new_basename, false));
 
     auto old_inode = TRY(old_parent_inode.lookup(old_basename));
 
     TRY(new_parent_inode.add_child(old_inode, new_basename, old_inode->mode()));
-    TRY(old_parent_inode.remove_child(old_basename));
+    TRY(static_cast<Ext2FSInode&>(old_parent_inode).remove_child_impl(old_basename, false));
 
     // If the inode that we moved is a directory and we changed parent
     // directories, then we also have to make .. point to the new parent inode,
