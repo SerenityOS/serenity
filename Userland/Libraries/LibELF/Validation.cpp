@@ -250,9 +250,9 @@ bool validate_program_headers(Elf_Ehdr const& elf_header, size_t file_size, Read
                 return false;
             }
 
-            if (program_header.p_type == PT_LOAD && program_header.p_align % (size_t)PAGE_SIZE != 0) {
+            if (program_header.p_type == PT_LOAD && program_header.p_align % (size_t)SERENITY_PAGE_SIZE != 0) {
                 if (verbose)
-                    dbgln("Program header ({}) with p_type PT_LOAD has p_align ({}) not divisible by page size ({})", header_index, program_header.p_align, PAGE_SIZE);
+                    dbgln("Program header ({}) with p_type PT_LOAD has p_align ({}) not divisible by page size ({})", header_index, program_header.p_align, SERENITY_PAGE_SIZE);
                 return false;
             }
 
@@ -322,7 +322,7 @@ bool validate_program_headers(Elf_Ehdr const& elf_header, size_t file_size, Read
                     return false;
                 }
 
-                if (program_header.p_memsz % PAGE_SIZE != 0) {
+                if (program_header.p_memsz % SERENITY_PAGE_SIZE != 0) {
                     if (verbose)
                         dbgln("PT_GNU_STACK size is not page-aligned.");
                     return false;
