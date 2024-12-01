@@ -31,10 +31,11 @@ consteval IOSize io_size_for()
         static_assert(false, "Invalid IO size");
 }
 
-template<Enum E, E L, typename T>
+template<Enum E, E L, typename T, bool _Debug = false>
 struct IOReg {
     static constexpr E Location = L;
     static constexpr IOSize Size = io_size_for<T>();
+    static constexpr bool Debug = _Debug;
     using Type = T;
 };
 
@@ -68,42 +69,60 @@ public:
     requires(Entry::Size == IOSize::Byte)
     auto read()
     {
-        return bit_cast<typename Entry::Type>(m_window->read8(static_cast<u64>(Reg)));
+        auto value = m_window->read8(static_cast<u64>(Reg));
+        if constexpr (Entry::Debug)
+            dbgln("Read {:#04x}: {:#02x}", (u32)Entry::Location, value);
+        return bit_cast<typename Entry::Type>(value);
     }
 
     template<E Reg, typename Entry = decltype(find_entry<Reg>(declval<Entries>()...))>
     requires(Entry::Size == IOSize::Word)
     auto read()
     {
-        return bit_cast<typename Entry::Type>(m_window->read16(static_cast<u64>(Reg)));
+        auto value = m_window->read16(static_cast<u64>(Reg));
+        if constexpr (Entry::Debug)
+            dbgln("Read {:#04x}: {:#04x}", (u32)Entry::Location, value);
+        return bit_cast<typename Entry::Type>(value);
     }
 
     template<E Reg, typename Entry = decltype(find_entry<Reg>(declval<Entries>()...))>
     requires(Entry::Size == IOSize::DWord)
     auto read()
     {
-        return bit_cast<typename Entry::Type>(m_window->read32(static_cast<u64>(Reg)));
+        auto value = m_window->read32(static_cast<u64>(Reg));
+        if constexpr (Entry::Debug)
+            dbgln("Read {:#04x}: {:#08x}", (u32)Entry::Location, value);
+        return bit_cast<typename Entry::Type>(value);
     }
 
     template<E Reg, typename Entry = decltype(find_entry<Reg>(declval<Entries>()...))>
     requires(Entry::Size == IOSize::Byte)
     void write(Entry::Type value)
     {
-        m_window->write8(static_cast<u64>(Reg), bit_cast<u8>(value));
+        auto v = bit_cast<u8>(value);
+        if constexpr (Entry::Debug)
+            dbgln("Write {:#04x}: {:#02x}", (u32)Entry::Location, v);
+        m_window->write8(static_cast<u64>(Reg), v);
     }
 
     template<E Reg, typename Entry = decltype(find_entry<Reg>(declval<Entries>()...))>
     requires(Entry::Size == IOSize::Word)
     void write(Entry::Type value)
     {
-        m_window->write16(static_cast<u64>(Reg), bit_cast<u16>(value));
+        auto v = bit_cast<u16>(value);
+        if constexpr (Entry::Debug)
+            dbgln("Write {:#04x}: {:#04x}", (u32)Entry::Location, v);
+        m_window->write16(static_cast<u64>(Reg), v);
     }
 
     template<E Reg, typename Entry = decltype(find_entry<Reg>(declval<Entries>()...))>
     requires(Entry::Size == IOSize::DWord)
     void write(Entry::Type value)
     {
-        m_window->write32(static_cast<u64>(Reg), bit_cast<u32>(value));
+        auto v = bit_cast<u32>(value);
+        if constexpr (Entry::Debug)
+            dbgln("Write {:#04x}: {:#08x}", (u32)Entry::Location, v);
+        m_window->write32(static_cast<u64>(Reg), v);
     }
 
     IOWindow& window() { return *m_window; }

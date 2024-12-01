@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include "E1000Descriptors.h"
+#include "E1000Registers.h"
+#include <AK/EnumBits.h>
 #include <AK/OwnPtr.h>
 #include <AK/SetOnce.h>
 #include <Kernel/Bus/PCI/Access.h>
@@ -36,30 +39,21 @@ public:
     virtual StringView device_name() const override { return "E1000"sv; }
     virtual Type adapter_type() const override { return Type::Ethernet; }
 
+    void detect_model_and_operating_mode();
+
 protected:
+    // FIXME: Newer NICs only allow 2048 bytes per descriptor
     static constexpr size_t rx_buffer_size = 8192;
     static constexpr size_t tx_buffer_size = 8192;
 
-    struct RxDescriptor {
-        uint64_t addr { 0 };
-        uint16_t length { 0 };
-        uint16_t checksum { 0 };
-        uint8_t status { 0 };
-        uint8_t errors { 0 };
-        uint16_t special { 0 };
+    enum class OperatingMode {
+        Intel8254x_legacy, // No EEPROM present bit, aka 82544GC/EI
+        Intel8254x,
+        Intel8254x_14bit_til_82574,
+        // Note: 8255x does not seem to be compatible
+        // FIXME: This should be more fine grained in the future
+        Intel82576_and_later, // In these the TCLT and some other registers seem to have changed, as well as a new SRRCTL was introduced
     };
-    static_assert(AssertSize<RxDescriptor, 16>());
-
-    struct TxDescriptor {
-        uint64_t addr { 0 };
-        uint16_t length { 0 };
-        uint8_t cso { 0 };
-        uint8_t cmd { 0 };
-        uint8_t status { 0 };
-        uint8_t css { 0 };
-        uint16_t special { 0 };
-    };
-    static_assert(AssertSize<TxDescriptor, 16>());
 
     void setup_interrupts();
     void setup_link();
@@ -67,40 +61,36 @@ protected:
     E1000NetworkAdapter(StringView, PCI::DeviceIdentifier const&, u8 irq,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
         NonnullOwnPtr<Memory::Region> tx_buffer_region,
-        Memory::TypedMapping<RxDescriptor volatile[]> rx_descriptors,
-        Memory::TypedMapping<TxDescriptor volatile[]> tx_descriptors);
+        Memory::TypedMapping<E1000::RxDescriptor volatile[]> rx_descriptors,
+        Memory::TypedMapping<E1000::TxDescriptor volatile[]> tx_descriptors);
 
     virtual bool handle_irq() override;
     virtual StringView class_name() const override { return "E1000NetworkAdapter"sv; }
 
     virtual void detect_eeprom();
-    virtual u32 read_eeprom(u8 address);
+    virtual u16 read_eeprom(u16 address);
     void read_mac_address();
 
     void initialize_rx_descriptors();
     void initialize_tx_descriptors();
-
-    void out8(u16 address, u8);
-    void out16(u16 address, u16);
-    void out32(u16 address, u32);
-    u8 in8(u16 address);
-    u16 in16(u16 address);
-    u32 in32(u16 address);
+    void set_tipg();
 
     void receive();
 
     static constexpr size_t number_of_rx_descriptors = 256;
     static constexpr size_t number_of_tx_descriptors = 256;
 
-    NonnullOwnPtr<IOWindow> m_registers_io_window;
+    using Register = E1000::Register;
+    E1000::RegisterMap m_registers;
 
-    Memory::TypedMapping<RxDescriptor volatile[]> m_rx_descriptors;
-    Memory::TypedMapping<TxDescriptor volatile[]> m_tx_descriptors;
+    Memory::TypedMapping<E1000::RxDescriptor volatile[]> m_rx_descriptors;
+    Memory::TypedMapping<E1000::TxDescriptor volatile[]> m_tx_descriptors;
 
     NonnullOwnPtr<Memory::Region> m_rx_buffer_region;
     NonnullOwnPtr<Memory::Region> m_tx_buffer_region;
     Array<void*, number_of_rx_descriptors> m_rx_buffers;
     Array<void*, number_of_tx_descriptors> m_tx_buffers;
+    OperatingMode m_operating_mode { OperatingMode::Intel8254x_legacy };
     SetOnce m_has_eeprom;
     bool m_link_up { false };
     EntropySource m_entropy_source;
