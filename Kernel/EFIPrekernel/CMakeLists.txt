@@ -28,7 +28,6 @@ add_compile_definitions(PREKERNEL)
 add_executable(EFIPrekernel ${SOURCES})
 
 add_dependencies(EFIPrekernel Kernel)
-add_dependencies(EFIPrekernel install_libc_headers)
 
 target_compile_options(EFIPrekernel PRIVATE -fno-threadsafe-statics)
 target_link_options(EFIPrekernel PRIVATE LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld LINKER:--no-dynamic-linker -nostdlib)
