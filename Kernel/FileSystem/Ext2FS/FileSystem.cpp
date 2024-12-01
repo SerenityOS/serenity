@@ -38,7 +38,7 @@ ErrorOr<void> Ext2FS::rename(Inode& old_parent_inode, StringView old_basename, I
     auto old_inode = TRY(old_parent_inode.lookup(old_basename));
 
     TRY(new_parent_inode.add_child(old_inode, new_basename, old_inode->mode()));
-    TRY(old_parent_inode.remove_child(old_basename));
+    TRY(static_cast<Ext2FSInode&>(old_parent_inode).remove_child_impl(old_basename, Ext2FSInode::RemoveDotEntries::No));
 
     // If the inode that we moved is a directory and we changed parent
     // directories, then we also have to make .. point to the new parent inode,

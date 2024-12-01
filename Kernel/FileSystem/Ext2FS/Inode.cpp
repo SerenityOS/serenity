@@ -793,10 +793,9 @@ ErrorOr<void> Ext2FSInode::add_child(Inode& child, StringView name, mode_t mode)
     return {};
 }
 
-ErrorOr<void> Ext2FSInode::remove_child(StringView name)
+ErrorOr<void> Ext2FSInode::remove_child_impl(StringView name, RemoveDotEntries remove_dot_entries)
 {
     MutexLocker locker(m_inode_lock);
-    dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::remove_child(): Removing '{}'", identifier(), name);
     VERIFY(is_directory());
 
     TRY(populate_lookup_cache());
@@ -807,6 +806,12 @@ ErrorOr<void> Ext2FSInode::remove_child(StringView name)
     auto child_inode_index = (*it).value;
 
     InodeIdentifier child_id { fsid(), child_inode_index };
+    auto child_inode = TRY(fs().get_inode(child_id));
+    if (child_inode->is_directory() && remove_dot_entries == RemoveDotEntries::Yes) {
+        TRY(static_cast<Ext2FSInode&>(*child_inode).remove_child_impl("."sv, RemoveDotEntries::No));
+        TRY(static_cast<Ext2FSInode&>(*child_inode).remove_child_impl(".."sv, RemoveDotEntries::No));
+    }
+
     bool has_file_type_attribute = has_flag(fs().get_features_optional(), Ext2FS::FeaturesOptional::ExtendedAttributes);
 
     Vector<Ext2FSDirectoryEntry> entries;
@@ -822,11 +827,17 @@ ErrorOr<void> Ext2FSInode::remove_child(StringView name)
 
     m_lookup_cache.remove(it);
 
-    auto child_inode = TRY(fs().get_inode(child_id));
     TRY(child_inode->decrement_link_count());
 
     did_remove_child(child_id, name);
     return {};
+}
+
+ErrorOr<void> Ext2FSInode::remove_child(StringView name)
+{
+    dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::remove_child(): Removing '{}'", identifier(), name);
+    // TODO: Implement something like remove_directory so we can get rid of remove_child_impl.
+    return remove_child_impl(name, RemoveDotEntries::Yes);
 }
 
 ErrorOr<void> Ext2FSInode::populate_lookup_cache()

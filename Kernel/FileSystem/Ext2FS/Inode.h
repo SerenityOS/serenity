@@ -57,6 +57,12 @@ private:
     ErrorOr<BlockBasedFileSystem::BlockIndex> allocate_block(BlockBasedFileSystem::BlockIndex, bool zero_newly_allocated_block, bool allow_cache);
     ErrorOr<u32> allocate_and_zero_block();
 
+    enum class RemoveDotEntries {
+        Yes,
+        No,
+    };
+
+    ErrorOr<void> remove_child_impl(StringView name, RemoveDotEntries);
     ErrorOr<void> write_directory(Vector<Ext2FSDirectoryEntry>&);
     ErrorOr<void> populate_lookup_cache();
     ErrorOr<void> resize(u64);
