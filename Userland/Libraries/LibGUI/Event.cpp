@@ -12,15 +12,25 @@
 
 namespace GUI {
 
-DropEvent::DropEvent(Gfx::IntPoint position, ByteString const& text, NonnullRefPtr<Core::MimeData const> mime_data)
-    : Event(Event::Drop)
+DropEvent::DropEvent(Type type, Gfx::IntPoint position, MouseButton button, u32 buttons, u32 modifiers, ByteString const& text, NonnullRefPtr<Core::MimeData const> mime_data)
+    : Event(type)
     , m_position(position)
+    , m_button(button)
+    , m_buttons(buttons)
+    , m_modifiers(modifiers)
     , m_text(text)
     , m_mime_data(move(mime_data))
 {
 }
 
 DropEvent::~DropEvent() = default;
+
+DragEvent::DragEvent(Type type, Gfx::IntPoint position, MouseButton button, u32 buttons, u32 modifiers, ByteString const& text, NonnullRefPtr<Core::MimeData const> mime_data)
+    : DropEvent(type, position, button, buttons, modifiers, text, move(mime_data))
+{
+}
+
+DragEvent::~DragEvent() = default;
 
 ByteString KeyEvent::to_byte_string() const
 {

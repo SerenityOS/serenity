@@ -9,7 +9,6 @@
 #include <AK/ByteString.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibCore/Event.h>
-#include <LibCore/MimeData.h>
 #include <LibGfx/Rect.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/WindowType.h>
@@ -115,17 +114,6 @@ public:
     int wheel_delta_y() const { return m_wheel_delta_y; }
     int wheel_raw_delta_x() const { return m_wheel_raw_delta_x; }
     int wheel_raw_delta_y() const { return m_wheel_raw_delta_y; }
-    bool is_drag() const { return m_drag; }
-
-    Vector<String> mime_types() const
-    {
-        if (!m_mime_data)
-            return {};
-        return m_mime_data->formats();
-    }
-
-    void set_drag(bool b) { m_drag = b; }
-    void set_mime_data(Core::MimeData const& mime_data) { m_mime_data = mime_data; }
 
     MouseEvent translated(Gfx::IntPoint delta) const
     {
@@ -143,8 +131,6 @@ private:
     int m_wheel_delta_y { 0 };
     int m_wheel_raw_delta_x { 0 };
     int m_wheel_raw_delta_y { 0 };
-    bool m_drag { false };
-    RefPtr<Core::MimeData const> m_mime_data;
 };
 
 class ResizeEvent final : public Event {

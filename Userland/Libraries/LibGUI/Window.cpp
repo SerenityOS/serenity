@@ -432,7 +432,7 @@ void Window::handle_drop_event(DropEvent& event)
     if (!m_main_widget)
         return;
     auto result = m_main_widget->hit_test(event.position());
-    auto local_event = make<DropEvent>(result.local_position, event.text(), event.mime_data());
+    auto local_event = make<DropEvent>(Event::Type::Drop, result.local_position, event.button(), event.buttons(), event.modifiers(), event.text(), event.mime_data());
     VERIFY(result.widget);
     result.widget->dispatch_event(*local_event, this);
 
@@ -766,14 +766,14 @@ void Window::handle_drag_move_event(DragEvent& event)
     auto result = m_main_widget->hit_test(event.position());
     VERIFY(result.widget);
 
-    Application::the()->set_drag_hovered_widget({}, result.widget, result.local_position, event.mime_types());
+    Application::the()->set_drag_hovered_widget({}, result.widget, result.local_position, event);
 
     // NOTE: Setting the drag hovered widget may have executed arbitrary code, so re-check that the widget is still there.
     if (!result.widget)
         return;
 
     if (result.widget->has_pending_drop()) {
-        DragEvent drag_move_event(static_cast<Event::Type>(event.type()), result.local_position, event.mime_types());
+        DragEvent drag_move_event(static_cast<Event::Type>(event.type()), result.local_position, event.button(), event.buttons(), event.modifiers(), event.text(), event.mime_data());
         result.widget->dispatch_event(drag_move_event, this);
     }
 }

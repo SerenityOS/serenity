@@ -69,7 +69,7 @@ PathBreadcrumbbar::PathBreadcrumbbar(NonnullRefPtr<GUI::TextBox> location_text_b
     };
 
     m_breadcrumbbar->on_segment_drag_enter = [&](size_t, GUI::DragEvent& event) {
-        if (event.mime_types().contains_slow("text/uri-list"sv))
+        if (event.mime_data().has_urls())
             event.accept();
     };
 
