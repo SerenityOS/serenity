@@ -20,7 +20,7 @@ ErrorOr<void> InstalledPortDatabase::for_each_by_type(InstalledPort::Type type, 
 
 ErrorOr<void> InstalledPortDatabase::insert_new_port_to_ports_database(InstalledPort::Type type, String name, InstalledPort port, Vector<Port> const& dependencies)
 {
-    TRY(m_database_file->write_until_depleted(ByteString::formatted("{} {} {}\n", type == InstalledPort::Type::Auto ? "auto"sv : "manual"sv, name, port.version_string())));
+    TRY(m_database_file->write_until_depleted(ByteString::formatted("{} {} {}\n", type == InstalledPort::Type::Auto ? "auto"sv : "manual"sv, name, TRY(port.version_string()))));
     if (!dependencies.is_empty()) {
         TRY(m_database_file->write_until_depleted(ByteString::formatted("dependency {}", name)));
         for (auto& dependency : dependencies) {

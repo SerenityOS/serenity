@@ -17,7 +17,7 @@ class Port {
 
 public:
     [[nodiscard]] String name() const { return m_name; }
-    [[nodiscard]] String version_string() const { return m_version.has<String>() ? m_version.get<String>() : m_version.get<SemVer::SemVer>().to_string(); }
+    [[nodiscard]] ErrorOr<String> version_string() const { return m_version.has<String>() ? m_version.get<String>() : TRY(m_version.get<SemVer::SemVer>().to_string()); }
     [[nodiscard]] ErrorOr<SemVer::SemVer> version_semver() const
     {
         if (m_version.has<String>())
