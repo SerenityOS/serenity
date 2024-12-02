@@ -725,7 +725,7 @@ ErrorOr<void> FATInode::add_child(Inode& inode, StringView name, mode_t mode)
 
     Vector<FATLongFileNameEntry> lfn_entries = {};
     if (!valid_sfn)
-        auto lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
+        lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
 
     MutexLocker locker(m_inode_lock);
 
