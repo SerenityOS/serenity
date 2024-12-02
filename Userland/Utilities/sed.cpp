@@ -724,12 +724,21 @@ static ErrorOr<void> write_pattern_space(File& output, StringBuilder& pattern_sp
 
 static void print_unambiguous(StringView pattern_space)
 {
-    // TODO: find out the terminal width, folding width should be less than that
-    // to make it clear that folding is happening
-    constexpr size_t fold_width = 70;
+    auto find_fold_width = []() -> size_t {
+        auto isatty = Core::System::isatty(STDOUT_FILENO);
+        if (!isatty.is_error() && isatty.release_value()) {
+            struct winsize ws;
+            if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0) {
+                return ws.ws_col;
+            }
+        }
+
+        return 70;
+    };
+    size_t fold_width = find_fold_width();
 
     AK::StringBuilder unambiguous_output;
-    auto folded_append = [&unambiguous_output, current_line_length = size_t { 0 }](auto const& value, size_t length) mutable {
+    auto folded_append = [&unambiguous_output, current_line_length = size_t { 0 }, fold_width](auto const& value, size_t length) mutable {
         if (current_line_length + length < fold_width) {
             current_line_length += length;
         } else {
@@ -902,7 +911,7 @@ static ErrorOr<void> run(Vector<File>& inputs, Script& script, bool suppress_def
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    TRY(Core::System::pledge("stdio cpath rpath wpath fattr chown"));
+    TRY(Core::System::pledge("stdio cpath rpath wpath fattr chown tty"));
 
     bool suppress_default_output = false;
     bool edit_in_place = false;
@@ -948,7 +957,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     // We only need fattr and chown for in-place editing.
     if (!edit_in_place)
-        TRY(Core::System::pledge("stdio cpath rpath wpath"));
+        TRY(Core::System::pledge("stdio cpath rpath wpath tty"));
 
     if (script.commands().is_empty()) {
         if (pos_args.is_empty()) {
