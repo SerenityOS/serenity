@@ -833,6 +833,13 @@ static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& patte
         break;
     case '#':
         break;
+    case 'w': {
+        auto const& w_args = command.arguments->get<WArguments>();
+        auto output_file = TRY(Core::File::open(w_args.output_filepath, Core::File::OpenMode::Write | Core::File::OpenMode::Append));
+        TRY(output_file->write_until_depleted(TRY(pattern_space.to_byte_buffer())));
+        TRY(output_file->write_until_depleted("\n"sv.bytes()));
+        break;
+    }
     default:
         warnln("Command not implemented: {}", command.function);
         break;
@@ -959,7 +966,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         TRY(paths_to_unveil.try_set(TRY(FileSystem::absolute_path(input_filename)), edit_in_place ? "rwc"_string : "r"_string));
     }
     for (auto const& output_filename : TRY(script.output_filenames())) {
-        TRY(paths_to_unveil.try_set(TRY(FileSystem::absolute_path(output_filename)), "w"_string));
+        TRY(paths_to_unveil.try_set(TRY(FileSystem::absolute_path(output_filename)), "rwc"_string));
     }
 
     Vector<File> inputs;
