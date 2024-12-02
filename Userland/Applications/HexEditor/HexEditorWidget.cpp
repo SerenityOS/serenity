@@ -833,8 +833,7 @@ void HexEditorWidget::set_value_inspector_visible(bool visible)
 
 void HexEditorWidget::drag_enter_event(GUI::DragEvent& event)
 {
-    auto const& mime_types = event.mime_types();
-    if (mime_types.contains_slow("text/uri-list"sv))
+    if (event.mime_data().has_urls())
         event.accept();
 }
 

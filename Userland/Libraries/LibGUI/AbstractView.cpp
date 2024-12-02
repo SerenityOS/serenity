@@ -791,7 +791,7 @@ void AbstractView::drag_enter_event(DragEvent& event)
     //       We might be able to reduce event traffic by communicating the set of drag-accepting
     //       rects in this widget to the windowing system somehow.
     event.accept();
-    dbgln_if(DRAG_DEBUG, "accepting drag of {}", event.mime_types());
+    dbgln_if(DRAG_DEBUG, "accepting drag of {}", event.mime_data().formats());
 }
 
 void AbstractView::drag_move_event(DragEvent& event)
@@ -801,7 +801,7 @@ void AbstractView::drag_move_event(DragEvent& event)
 
     auto index = index_at_event_position(event.position());
     ModelIndex new_drop_candidate_index;
-    bool acceptable = model()->accepts_drag(index, event.mime_types());
+    bool acceptable = model()->accepts_drag(index, event.mime_data());
 
     if (acceptable && index.is_valid())
         new_drop_candidate_index = index;

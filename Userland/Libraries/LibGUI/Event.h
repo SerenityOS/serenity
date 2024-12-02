@@ -482,37 +482,31 @@ private:
     int m_wheel_raw_delta_y { 0 };
 };
 
-class DragEvent final : public Event {
+class DropEvent : public Event {
 public:
-    DragEvent(Type type, Gfx::IntPoint position, Vector<String> mime_types)
-        : Event(type)
-        , m_position(position)
-        , m_mime_types(move(mime_types))
-    {
-    }
-
-    Gfx::IntPoint position() const { return m_position; }
-    Vector<String> const& mime_types() const { return m_mime_types; }
-
-private:
-    Gfx::IntPoint m_position;
-    Vector<String> m_mime_types;
-};
-
-class DropEvent final : public Event {
-public:
-    DropEvent(Gfx::IntPoint, ByteString const& text, NonnullRefPtr<Core::MimeData const> mime_data);
-
+    DropEvent(Type type, Gfx::IntPoint, MouseButton button, u32 buttons, u32 modifiers, ByteString const& text, NonnullRefPtr<Core::MimeData const> mime_data);
     ~DropEvent();
 
     Gfx::IntPoint position() const { return m_position; }
+    MouseButton button() const { return m_button; }
+    unsigned buttons() const { return m_buttons; }
+    unsigned modifiers() const { return m_modifiers; }
     ByteString const& text() const { return m_text; }
     Core::MimeData const& mime_data() const { return m_mime_data; }
 
 private:
     Gfx::IntPoint m_position;
+    MouseButton m_button { MouseButton::None };
+    unsigned m_buttons { 0 };
+    unsigned m_modifiers { 0 };
     ByteString m_text;
     NonnullRefPtr<Core::MimeData const> m_mime_data;
+};
+
+class DragEvent final : public DropEvent {
+public:
+    DragEvent(Type type, Gfx::IntPoint, MouseButton button, u32 buttons, u32 modifiers, ByteString const& text, NonnullRefPtr<Core::MimeData const> mime_data);
+    ~DragEvent();
 };
 
 class ThemeChangeEvent final : public Event {

@@ -682,8 +682,7 @@ ErrorOr<void> MainWidget::load_from_file(ByteString const& filename, NonnullOwnP
 
 void MainWidget::drag_enter_event(GUI::DragEvent& event)
 {
-    auto const& mime_types = event.mime_types();
-    if (mime_types.contains_slow("text/uri-list"sv))
+    if (event.mime_data().has_urls())
         event.accept();
 }
 

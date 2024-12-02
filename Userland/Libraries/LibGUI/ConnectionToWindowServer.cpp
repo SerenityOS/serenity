@@ -259,14 +259,10 @@ void ConnectionToWindowServer::mouse_up(i32 window_id, Gfx::IntPoint mouse_posit
         Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseUp, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta_x, wheel_delta_y, wheel_raw_delta_x, wheel_raw_delta_y));
 }
 
-void ConnectionToWindowServer::mouse_move(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y, bool is_drag, Vector<String> const& mime_types)
+void ConnectionToWindowServer::mouse_move(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y)
 {
-    if (auto* window = Window::from_window_id(window_id)) {
-        if (is_drag)
-            Core::EventLoop::current().post_event(*window, make<DragEvent>(Event::DragMove, mouse_position, mime_types));
-        else
-            Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseMove, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta_x, wheel_delta_y, wheel_raw_delta_x, wheel_raw_delta_y));
-    }
+    if (auto* window = Window::from_window_id(window_id))
+        Core::EventLoop::current().post_event(*window, make<MouseEvent>(Event::MouseMove, mouse_position, buttons, to_mouse_button(button), modifiers, wheel_delta_x, wheel_delta_y, wheel_raw_delta_x, wheel_raw_delta_y));
 }
 
 void ConnectionToWindowServer::mouse_double_click(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta_x, i32 wheel_delta_y, i32 wheel_raw_delta_x, i32 wheel_raw_delta_y)
@@ -349,12 +345,16 @@ void ConnectionToWindowServer::applet_area_rect_changed(Gfx::IntRect const& rect
     });
 }
 
-void ConnectionToWindowServer::drag_dropped(i32 window_id, Gfx::IntPoint mouse_position, ByteString const& text, HashMap<String, ByteBuffer> const& mime_data)
+void ConnectionToWindowServer::drag_moved(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, ByteString const& text, HashMap<String, ByteBuffer> const& mime_data)
 {
-    if (auto* window = Window::from_window_id(window_id)) {
-        auto mime_data_obj = Core::MimeData::construct(mime_data);
-        Core::EventLoop::current().post_event(*window, make<DropEvent>(mouse_position, text, mime_data_obj));
-    }
+    if (auto* window = Window::from_window_id(window_id))
+        Core::EventLoop::current().post_event(*window, make<DragEvent>(Event::Type::DragMove, mouse_position, to_mouse_button(button), buttons, modifiers, text, Core::MimeData::construct(mime_data)));
+}
+
+void ConnectionToWindowServer::drag_dropped(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, ByteString const& text, HashMap<String, ByteBuffer> const& mime_data)
+{
+    if (auto* window = Window::from_window_id(window_id))
+        Core::EventLoop::current().post_event(*window, make<DropEvent>(Event::Type::Drop, mouse_position, to_mouse_button(button), buttons, modifiers, text, Core::MimeData::construct(mime_data)));
 }
 
 void ConnectionToWindowServer::drag_accepted()

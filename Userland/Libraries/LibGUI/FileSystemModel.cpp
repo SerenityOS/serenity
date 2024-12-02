@@ -855,9 +855,9 @@ ErrorOr<String> FileSystemModel::column_name(int column) const
     VERIFY_NOT_REACHED();
 }
 
-bool FileSystemModel::accepts_drag(ModelIndex const& index, Vector<String> const& mime_types) const
+bool FileSystemModel::accepts_drag(ModelIndex const& index, Core::MimeData const& mime_data) const
 {
-    if (!mime_types.contains_slow("text/uri-list"sv))
+    if (!mime_data.has_urls())
         return false;
 
     if (!index.is_valid())

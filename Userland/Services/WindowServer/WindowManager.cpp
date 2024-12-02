@@ -1110,38 +1110,48 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event)
     if (!m_dnd_client)
         return false;
 
+    auto send_dnd_event = [&](auto callback) {
+        auto* window = hovered_window();
+        if (!window || !window->client())
+            return false;
+
+        auto translated_event = event.translated(-window->position());
+        auto mime_data = m_dnd_mime_data->all_data().clone();
+
+        // If the mime data is so large that it causes memory troubles, we should silently drop the drag'n'drop request entirely.
+        if (mime_data.is_error()) {
+            dbgln("Drag and drop mimetype data nearly caused OOM and was dropped: {}", mime_data.release_error());
+            return false;
+        }
+
+        callback(*window, translated_event.position(), mime_data.release_value());
+        return true;
+    };
+
     if (event.type() == Event::MouseMove) {
         m_dnd_overlay->cursor_moved();
 
         // We didn't let go of the drag yet, see if we should send some drag move events..
-        if (auto* window = hovered_window()) {
-            event.set_drag(true);
-            event.set_mime_data(*m_dnd_mime_data);
-            deliver_mouse_event(*window, event);
-        } else {
+        auto event_sent = send_dnd_event([&](auto& window, auto event_position, auto mime_data) {
+            window.client()->async_drag_moved(window.window_id(), event_position, event.button(), event.buttons(), event.modifiers(), m_dnd_text, move(mime_data));
+        });
+
+        if (!event_sent)
             set_accepts_drag(false);
-        }
     }
 
-    if (!(event.type() == Event::MouseUp && event.button() == MouseButton::Primary))
-        return true;
+    if (event.type() == Event::MouseUp && event.button() == MouseButton::Primary) {
+        auto event_sent = send_dnd_event([&](auto& window, auto event_position, auto mime_data) {
+            m_dnd_client->async_drag_accepted();
+            window.client()->async_drag_dropped(window.window_id(), event_position, event.button(), event.buttons(), event.modifiers(), m_dnd_text, move(mime_data));
+        });
 
-    if (auto* window = hovered_window()) {
-        m_dnd_client->async_drag_accepted();
-        if (window->client()) {
-            auto translated_event = event.translated(-window->position());
-            auto copied_mime_data_or_error = m_dnd_mime_data->all_data().clone();
-            // If the mime data is so large that it causes memory troubles, we should silently drop the drag'n'drop request entirely.
-            if (copied_mime_data_or_error.is_error())
-                dbgln("Drag and drop mimetype data nearly caused OOM and was dropped: {}", copied_mime_data_or_error.release_error());
-            else
-                window->client()->async_drag_dropped(window->window_id(), translated_event.position(), m_dnd_text, copied_mime_data_or_error.release_value());
-        }
-    } else {
-        m_dnd_client->async_drag_cancelled();
+        if (!event_sent)
+            m_dnd_client->async_drag_cancelled();
+
+        end_dnd_drag();
     }
 
-    end_dnd_drag();
     return true;
 }
 

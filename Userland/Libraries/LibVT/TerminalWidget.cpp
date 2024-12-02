@@ -1199,8 +1199,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 
 void TerminalWidget::drag_enter_event(GUI::DragEvent& event)
 {
-    auto const& mime_types = event.mime_types();
-    if (mime_types.contains_slow("text/plain"sv) || mime_types.contains_slow("text/uri-list"sv))
+    if (event.mime_data().has_text() || event.mime_data().has_urls())
         event.accept();
 }
 
