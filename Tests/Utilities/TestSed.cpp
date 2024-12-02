@@ -25,6 +25,17 @@ static void run_sed(Vector<char const*>&& arguments, StringView standard_input, 
     EXPECT_EQ(StringView { expected_stdout.bytes() }, StringView { stdout.bytes() });
 }
 
+TEST_CASE(quit_after_single_line)
+{
+    run_sed({ "q" }, "foo\n"sv, "foo\n"sv);
+    run_sed({ "1q" }, "foo\n"sv, "foo\n"sv);
+}
+
+TEST_CASE(delete_single_line)
+{
+    run_sed({ "1d" }, "1\n2\n"sv, "2\n"sv);
+}
+
 TEST_CASE(print_lineno)
 {
     run_sed({ "=", "-n" }, "hi"sv, "1\n"sv);

@@ -882,12 +882,13 @@ static ErrorOr<void> run(Vector<File>& inputs, Script& script, bool suppress_def
 
         if (cycle_decision == CycleDecision::Next)
             continue;
-        if (cycle_decision == CycleDecision::Quit)
-            break;
 
         if (!suppress_default_output)
             TRY(write_pattern_space(stdout, pattern_space));
         pattern_space.clear();
+
+        if (cycle_decision == CycleDecision::Quit)
+            break;
     }
     return {};
 }
