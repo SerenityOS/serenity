@@ -71,6 +71,10 @@ private:
     virtual void focusout_event(GUI::FocusEvent&) override;
     virtual void show_event(GUI::ShowEvent&) override;
     virtual void hide_event(GUI::HideEvent&) override;
+    virtual void drag_enter_event(GUI::DragEvent&) override;
+    virtual void drag_move_event(GUI::DragEvent&) override;
+    virtual void drag_leave_event(GUI::Event&) override;
+    virtual void drop_event(GUI::DropEvent&) override;
 
     // ^WebView::ViewImplementation
     virtual void initialize_client(CreateNewClient) override;
@@ -81,6 +85,10 @@ private:
     virtual Gfx::IntPoint to_widget_position(Gfx::IntPoint content_position) const override;
 
     void enqueue_native_event(Web::MouseEvent::Type, GUI::MouseEvent const& event);
+
+    void enqueue_native_event(Web::DragEvent::Type, GUI::DropEvent const& event);
+    void finish_handling_drag_event(Web::DragEvent const&);
+
     void enqueue_native_event(Web::KeyEvent::Type, GUI::KeyEvent const& event);
     void finish_handling_key_event(Web::KeyEvent const&);
 
