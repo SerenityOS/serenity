@@ -805,7 +805,7 @@ static void print_unambiguous(StringView pattern_space)
     outln("{}$", unambiguous_output.string_view());
 }
 
-static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& pattern_space, StringBuilder& hold_space, File& input, File& stdout, bool suppress_default_output)
+static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& pattern_space, StringBuilder& hold_space, StringBuilder& read_command_file_contents, File& input, File& stdout, bool suppress_default_output)
 {
     auto cycle_decision = CycleDecision::None;
 
@@ -910,6 +910,18 @@ static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& patte
         TRY(output_file->write_value('\n'));
         break;
     }
+    case 'r': {
+        auto const& r_args = command.arguments->get<RArguments>();
+        auto input_file_or_error = Core::File::open(r_args.input_filepath, Core::File::OpenMode::Read);
+        if (!input_file_or_error.is_error()) {
+            auto input_file = input_file_or_error.release_value();
+            auto file_contents = TRY(input_file->read_until_eof());
+
+            VERIFY(read_command_file_contents.is_empty());
+            read_command_file_contents.append(file_contents);
+        }
+        break;
+    }
     default:
         warnln("Command not implemented: {}", command.function);
         break;
@@ -924,6 +936,7 @@ static ErrorOr<void> run(Vector<File>& inputs, Script& script, bool suppress_def
 
     StringBuilder pattern_space;
     StringBuilder hold_space;
+    StringBuilder read_command_file_contents;
 
     // TODO: extend to multiple input files
     auto& input = inputs[0];
@@ -931,6 +944,10 @@ static ErrorOr<void> run(Vector<File>& inputs, Script& script, bool suppress_def
 
     // main loop
     while (input.has_next()) {
+        if (!read_command_file_contents.is_empty() && !suppress_default_output)
+            // FIXME: Should we use `out' instead?
+            outln("{}", read_command_file_contents.string_view());
+        read_command_file_contents.clear();
 
         // Avoid potential last, empty line
         auto line = TRY(input.next());
@@ -950,7 +967,7 @@ static ErrorOr<void> run(Vector<File>& inputs, Script& script, bool suppress_def
         for (auto& command : script.commands()) {
             if (!command.is_enabled())
                 continue;
-            auto command_cycle_decision = TRY(apply(command, pattern_space, hold_space, input, stdout, suppress_default_output));
+            auto command_cycle_decision = TRY(apply(command, pattern_space, hold_space, read_command_file_contents, input, stdout, suppress_default_output));
             if (command_cycle_decision == CycleDecision::Next || command_cycle_decision == CycleDecision::Quit) {
                 cycle_decision = command_cycle_decision;
                 break;
