@@ -39,17 +39,9 @@
 #    include <AK/Types.h>
 #endif
 
-#include <AK/Platform.h>
-
 #define ElfW(type) Elf64_##type
 
 #define ELFSIZE 64
-
-#if defined(AK_OS_SERENITY)
-#    define SERENITY_PAGE_SIZE PAGE_SIZE
-#else
-#    define SERENITY_PAGE_SIZE 4096
-#endif
 
 typedef uint8_t Elf_Byte;
 
