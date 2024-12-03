@@ -344,7 +344,42 @@ struct YArguments {
 
     static SedErrorOr<YArguments> parse(GenericLexer& lexer)
     {
-        return SedError::parsing_error(lexer, "not implemented"sv);
+        auto generic_error_message = "Incomplete transform command"sv;
+
+        if (lexer.is_eof())
+            return SedError::parsing_error(lexer, generic_error_message);
+
+        auto delimiter = lexer.consume();
+        if (delimiter == '\\' || delimiter == '\n')
+            return SedError::parsing_error(lexer, "\\n and \\ cannot be used as delimiters."sv);
+
+        auto characters = lexer.consume_until([is_escape_sequence = false, delimiter](char c) mutable {
+            if (c == delimiter && !is_escape_sequence)
+                return true;
+            is_escape_sequence = c == '\\' && !is_escape_sequence;
+            return false;
+        });
+
+        if (!lexer.consume_specific(delimiter))
+            return SedError::parsing_error(lexer, generic_error_message);
+
+        auto replacements = lexer.consume_until([is_escape_sequence = false, delimiter](char c) mutable {
+            if (c == delimiter && !is_escape_sequence)
+                return true;
+            is_escape_sequence = c == '\\' && !is_escape_sequence;
+            return false;
+        });
+
+        if (characters.length() != replacements.length())
+            return SedError::parsing_error(lexer, "Transform strings are not the same length.");
+
+        if (!lexer.consume_specific(delimiter))
+            return SedError::parsing_error(lexer, "The transform command was not properly terminated."sv);
+
+        return YArguments {
+            .characters = characters,
+            .replacements = replacements
+        };
     }
 };
 
@@ -835,6 +870,29 @@ static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& patte
         if (replacement_made && s_args.print)
             TRY(write_pattern_space(stdout, pattern_space));
         TRY(write_pattern_space(input, pattern_space));
+        break;
+    }
+    case 'y': {
+        // FIXME: Escaping in the transform strings doesn't work properly
+        auto pattern_space_sv = pattern_space.string_view();
+        auto const& y_args = command.arguments->get<YArguments>();
+        VERIFY(y_args.characters.length() == y_args.replacements.length());
+
+        HashMap<char, char> replacement;
+        for (size_t i = 0; i < y_args.characters.length(); i++) {
+            TRY(replacement.try_set(y_args.characters[i], y_args.replacements[i]));
+        }
+
+        StringBuilder new_string;
+        for (size_t i = 0; i < pattern_space.length(); i++) {
+            if (replacement.contains(pattern_space_sv[i]))
+                new_string.append(replacement.get(pattern_space_sv[i]).value());
+            else
+                new_string.append(pattern_space_sv[i]);
+        }
+
+        pattern_space.clear();
+        pattern_space.append(new_string.to_byte_string());
         break;
     }
     case 'x':
