@@ -829,6 +829,11 @@ static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& patte
         auto replacement_made = result != pattern_space_sv;
         pattern_space.clear();
         pattern_space.append(result);
+        if (replacement_made && s_args.output_filepath.has_value()) {
+            auto output_file = TRY(Core::File::open(s_args.output_filepath.value(), Core::File::OpenMode::Write | Core::File::OpenMode::Append));
+            TRY(output_file->write_until_depleted(TRY(pattern_space.to_byte_buffer())));
+            TRY(output_file->write_value('\n'));
+        }
         if (replacement_made && s_args.print)
             TRY(write_pattern_space(stdout, pattern_space));
         TRY(write_pattern_space(input, pattern_space));
