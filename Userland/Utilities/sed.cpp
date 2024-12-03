@@ -102,7 +102,8 @@ using SedErrorOr = ErrorOr<T, SedError>;
     F('x', 2)                  \
     F('y', 2)                  \
     F(':', 0)                  \
-    F('=', 1)
+    F('=', 1)                  \
+    F('#', 0)
 
 enum class AddressType {
     Unset,
@@ -405,6 +406,10 @@ struct Command {
 
     void enable_for(StringView pattern_space, size_t line_number, bool is_last_line)
     {
+        if (function == '#') {
+            m_is_enabled = false;
+            return;
+        }
         m_is_enabled = selects(pattern_space, line_number, is_last_line);
     }
 
@@ -559,6 +564,9 @@ static SedErrorOr<Command> parse_command(GenericLexer& lexer)
         break;
     case ':':
         command.arguments = TRY(ColonArguments::parse(lexer));
+        break;
+    case '#':
+        lexer.consume_until('\n');
         break;
     default: {
         auto padding = lexer.consume_until(is_command_separator);
