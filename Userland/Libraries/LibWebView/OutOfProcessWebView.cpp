@@ -282,17 +282,64 @@ void OutOfProcessWebView::hide_event(GUI::HideEvent&)
     set_system_visibility_state(false);
 }
 
+static constexpr Web::UIEvents::MouseButton web_button_from_gui_button(GUI::MouseButton button)
+{
+    switch (button) {
+    case GUI::MouseButton::None:
+        return Web::UIEvents::MouseButton::None;
+    case GUI::MouseButton::Primary:
+        return Web::UIEvents::MouseButton::Primary;
+    case GUI::MouseButton::Secondary:
+        return Web::UIEvents::MouseButton::Secondary;
+    case GUI::MouseButton::Middle:
+        return Web::UIEvents::MouseButton::Middle;
+    case GUI::MouseButton::Backward:
+        return Web::UIEvents::MouseButton::Backward;
+    case GUI::MouseButton::Forward:
+        return Web::UIEvents::MouseButton::Forward;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+static constexpr Web::UIEvents::MouseButton web_buttons_from_gui_buttons(unsigned buttons)
+{
+    auto result = Web::UIEvents::MouseButton::None;
+
+    if ((buttons & GUI::MouseButton::Primary) != 0)
+        result |= Web::UIEvents::MouseButton::Primary;
+    if ((buttons & GUI::MouseButton::Secondary) != 0)
+        result |= Web::UIEvents::MouseButton::Secondary;
+    if ((buttons & GUI::MouseButton::Middle) != 0)
+        result |= Web::UIEvents::MouseButton::Middle;
+    if ((buttons & GUI::MouseButton::Backward) != 0)
+        result |= Web::UIEvents::MouseButton::Backward;
+    if ((buttons & GUI::MouseButton::Forward) != 0)
+        result |= Web::UIEvents::MouseButton::Forward;
+
+    return result;
+}
+
+static constexpr Web::UIEvents::KeyModifier web_modifiers_from_gui_modifiers(unsigned modifiers)
+{
+    static_assert(IsSame<KeyModifier, Web::UIEvents::KeyModifier>);
+    return static_cast<Web::UIEvents::KeyModifier>(modifiers);
+}
+
 void OutOfProcessWebView::enqueue_native_event(Web::MouseEvent::Type type, GUI::MouseEvent const& event)
 {
     auto position = to_content_position(event.position()).to_type<Web::DevicePixels>();
     auto screen_position = (event.position() + (window()->position() + relative_position())).to_type<Web::DevicePixels>();
+
+    auto button = web_button_from_gui_button(event.button());
+    auto buttons = web_buttons_from_gui_buttons(event.buttons());
+    auto modifiers = web_modifiers_from_gui_modifiers(event.modifiers());
 
     // FIXME: This wheel delta step size multiplier is used to remain the old scroll behaviour, in future use system step size.
     static constexpr int SCROLL_STEP_SIZE = 24;
     auto wheel_delta_x = event.wheel_delta_x() * SCROLL_STEP_SIZE;
     auto wheel_delta_y = event.wheel_delta_y() * SCROLL_STEP_SIZE;
 
-    enqueue_input_event(Web::MouseEvent { type, position, screen_position, static_cast<Web::UIEvents::MouseButton>(to_underlying(event.button())), static_cast<Web::UIEvents::MouseButton>(event.buttons()), static_cast<KeyModifier>(event.modifiers()), wheel_delta_x, wheel_delta_y, nullptr });
+    enqueue_input_event(Web::MouseEvent { type, position, screen_position, button, buttons, modifiers, wheel_delta_x, wheel_delta_y, nullptr });
 }
 
 struct KeyData : Web::ChromeInputData {
