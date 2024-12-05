@@ -80,6 +80,7 @@
 
 #if ARCH(AARCH64) || ARCH(RISCV64)
 #    include <Kernel/Firmware/DeviceTree/Management.h>
+#    include <Kernel/Firmware/DeviceTree/PlatformInit.h>
 #endif
 
 // Defined in the linker script
@@ -192,6 +193,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
 
     CommandLine::initialize();
     Memory::MemoryManager::initialize(0);
+
+#if ARCH(AARCH64) || ARCH(RISCV64)
+    DeviceTree::run_platform_init();
+#endif
 
 #if ARCH(AARCH64)
     auto firmware_version = RPi::Mailbox::the().query_firmware_version();
