@@ -83,6 +83,7 @@ public:
     void print_usage_terminal(FILE*, StringView argv0);
     void print_usage_markdown(FILE*, StringView argv0);
     void print_version(FILE*);
+    void set_version(StringView const& version);
 
     void add_option(Option&&);
     void add_ignored(char const* long_name, char short_name = 0, OptionHideMode hide_mode = OptionHideMode::None);
@@ -213,6 +214,8 @@ private:
     bool m_perform_autocomplete { false };
     char const* m_general_help { nullptr };
     bool m_stop_on_first_non_option { false };
+
+    StringView m_version;
 };
 
 }
