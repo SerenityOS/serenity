@@ -25,6 +25,7 @@ static constinit auto const s_platform_init_table = to_array<PlatformInitTableEn
 #if ARCH(AARCH64)
     { "raspberrypi,3-model-b"sv, raspberry_pi_platform_init },
     { "raspberrypi,4-model-b"sv, raspberry_pi_platform_init },
+    { "linux,dummy-virt"sv, virt_platform_init },
 #endif
 });
 

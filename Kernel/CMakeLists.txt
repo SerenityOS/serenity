@@ -515,6 +515,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/vector_table.S
 
         Arch/aarch64/PlatformInit/RaspberryPi.cpp
+        Arch/aarch64/PlatformInit/Virt.cpp
 
         Arch/aarch64/Serial/PL011.cpp
     )

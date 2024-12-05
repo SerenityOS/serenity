@@ -11,5 +11,6 @@
 namespace Kernel {
 
 void raspberry_pi_platform_init(StringView compatible_string);
+void virt_platform_init(StringView compatible_string);
 
 }
