@@ -30,6 +30,8 @@ public:
         Alternate5 = 0b010,
     };
 
+    static void initialize();
+    static bool is_initialized();
     static GPIO& the();
 
     void set_pin_function(unsigned pin_number, PinFunction);

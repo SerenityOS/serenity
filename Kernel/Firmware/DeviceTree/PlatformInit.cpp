@@ -10,6 +10,10 @@
 #include <Kernel/Firmware/DeviceTree/PlatformInit.h>
 #include <LibDeviceTree/FlattenedDeviceTree.h>
 
+#if ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/PlatformInit.h>
+#endif
+
 namespace Kernel::DeviceTree {
 
 struct PlatformInitTableEntry {
@@ -17,7 +21,12 @@ struct PlatformInitTableEntry {
     void (*init_function)(StringView compatible_string);
 };
 
-static constinit auto const s_platform_init_table = to_array<PlatformInitTableEntry>({});
+static constinit auto const s_platform_init_table = to_array<PlatformInitTableEntry>({
+#if ARCH(AARCH64)
+    { "raspberrypi,3-model-b"sv, raspberry_pi_platform_init },
+    { "raspberrypi,4-model-b"sv, raspberry_pi_platform_init },
+#endif
+});
 
 void run_platform_init()
 {

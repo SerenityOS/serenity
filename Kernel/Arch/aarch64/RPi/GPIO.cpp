@@ -38,15 +38,27 @@ struct GPIOControlRegisters {
     u32 test;
 };
 
+static Singleton<GPIO> s_the;
+
 GPIO::GPIO()
     : m_registers(MMIO::the().peripheral<GPIOControlRegisters>(0x20'0000).release_value_but_fixme_should_propagate_errors())
 {
 }
 
+void GPIO::initialize()
+{
+    s_the.ensure_instance();
+}
+
+bool GPIO::is_initialized()
+{
+    return s_the.is_initialized();
+}
+
 GPIO& GPIO::the()
 {
-    static Singleton<GPIO> instance;
-    return instance;
+    VERIFY(is_initialized());
+    return s_the;
 }
 
 void GPIO::set_pin_function(unsigned pin_number, PinFunction function)

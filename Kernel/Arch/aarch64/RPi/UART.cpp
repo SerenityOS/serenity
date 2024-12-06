@@ -5,9 +5,7 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/Arch/aarch64/RPi/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
-#include <Kernel/Arch/aarch64/RPi/Timer.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 
 namespace Kernel::RPi {
@@ -90,6 +88,8 @@ enum ControlBits {
     CTSHardwareFlowControlEnable = 1 << 15,
 };
 
+static Singleton<UART> s_the;
+
 UART::UART()
     : m_registers(MMIO::the().peripheral<UARTRegisters>(0x20'1000).release_value_but_fixme_should_propagate_errors())
 {
@@ -98,29 +98,25 @@ UART::UART()
 
     // FIXME: Should wait for current transmission to end and should flush FIFO.
 
-    constexpr int baud_rate = 115'200;
-
-    // Set UART clock so that the baud rate divisor ends up as 1.0.
-    // FIXME: Not sure if this is a good UART clock rate.
-    u32 rate_in_hz = Timer::set_clock_rate(Timer::ClockID::UART, 16 * baud_rate);
-
-    // The BCM's PL011 UART is alternate function 0 on pins 14 and 15.
-    auto& gpio = GPIO::the();
-    gpio.set_pin_function(14, GPIO::PinFunction::Alternate0);
-    gpio.set_pin_function(15, GPIO::PinFunction::Alternate0);
-    gpio.set_pin_pull_up_down_state(Array { 14, 15 }, GPIO::PullUpDownState::Disable);
-
-    // Clock and pins are configured. Turn UART on.
-    set_baud_rate(baud_rate, rate_in_hz);
     m_registers->line_control = EnableFIFOs | WordLength8Bits;
 
     m_registers->control = UARTEnable | TransmitEnable | ReceiveEnable;
 }
 
+void UART::initialize()
+{
+    s_the.ensure_instance();
+}
+
+bool UART::is_initialized()
+{
+    return s_the.is_initialized();
+}
+
 UART& UART::the()
 {
-    static Singleton<UART> instance;
-    return instance;
+    VERIFY(is_initialized());
+    return s_the;
 }
 
 void UART::send(u32 c)

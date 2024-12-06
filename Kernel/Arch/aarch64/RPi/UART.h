@@ -19,6 +19,8 @@ struct UARTRegisters;
 class UART {
 public:
     UART();
+    static void initialize();
+    static bool is_initialized();
     static UART& the();
 
     void send(u32 c);
@@ -26,8 +28,9 @@ public:
 
     void print_str(char const*, size_t);
 
-private:
     void set_baud_rate(int baud_rate, int uart_frequency_in_hz);
+
+private:
     void wait_until_we_can_send();
     void wait_until_we_can_receive();
 
