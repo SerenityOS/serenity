@@ -10,15 +10,15 @@
 #include <AK/Types.h>
 #include <Kernel/Memory/TypedMapping.h>
 
-namespace Kernel::RPi {
+namespace Kernel {
 
-struct UARTRegisters;
+// Technical Reference Manual for the PrimeCell UART (PL011): https://documentation-service.arm.com/static/5e8e36c2fd977155116a90b5
 
-// Abstracts the PL011 UART on a Raspberry Pi.
-// (The BCM2711 on a Raspberry Pi 4 has five PL011 UARTs; this is always the first of those.)
-class UART {
+struct PL011Registers;
+
+class PL011 {
 public:
-    static ErrorOr<NonnullOwnPtr<UART>> initialize(PhysicalAddress);
+    static ErrorOr<NonnullOwnPtr<PL011>> initialize(PhysicalAddress);
 
     void send(u32 c);
     u32 receive();
@@ -28,12 +28,12 @@ public:
     void set_baud_rate(int baud_rate, int uart_frequency_in_hz);
 
 private:
-    UART(Memory::TypedMapping<UARTRegisters volatile>);
+    PL011(Memory::TypedMapping<PL011Registers volatile>);
 
     void wait_until_we_can_send();
     void wait_until_we_can_receive();
 
-    Memory::TypedMapping<UARTRegisters volatile> m_registers;
+    Memory::TypedMapping<PL011Registers volatile> m_registers;
 };
 
 }

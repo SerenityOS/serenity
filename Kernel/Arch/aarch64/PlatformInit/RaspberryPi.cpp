@@ -12,14 +12,14 @@
 #include <Kernel/Arch/aarch64/RPi/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
-#include <Kernel/Arch/aarch64/RPi/UART.h>
+#include <Kernel/Arch/aarch64/Serial/PL011.h>
 
 namespace Kernel {
 
 void raspberry_pi_platform_init(StringView compatible_string)
 {
     // We have to use a raw pointer here because this variable will be set before global constructors are called.
-    static RPi::UART* s_debug_console_uart;
+    static PL011* s_debug_console_uart;
 
     static DebugConsole const s_debug_console {
         .write_character = [](char character) {
@@ -37,7 +37,7 @@ void raspberry_pi_platform_init(StringView compatible_string)
 
     RPi::Mailbox::initialize();
     RPi::GPIO::initialize();
-    s_debug_console_uart = MUST(RPi::UART::initialize(peripheral_base_address.offset(0x20'1000))).leak_ptr();
+    s_debug_console_uart = MUST(PL011::initialize(peripheral_base_address.offset(0x20'1000))).leak_ptr();
 
     constexpr int baud_rate = 115'200;
 
