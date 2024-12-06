@@ -5,19 +5,19 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/Arch/aarch64/RPi/UART.h>
+#include <Kernel/Arch/aarch64/Serial/PL011.h>
 
-namespace Kernel::RPi {
+namespace Kernel {
 
-// "13.4 Register View" / "11.5 Register View"
-struct UARTRegisters {
+// 3.2 Summary of registers
+struct PL011Registers {
     u32 data;
     u32 receive_status_or_error_clear;
     u32 unused[4];
     u32 flag;
     u32 unused2;
 
-    u32 unused_ilpr;
+    u32 irda_low_power_counter;
     u32 integer_baud_rate_divisor;    // Only the lowest 16 bits are used.
     u32 fractional_baud_rate_divisor; // Only the lowest 6 bits are used.
     u32 line_control;
@@ -30,24 +30,25 @@ struct UARTRegisters {
     u32 masked_interrupt_status;
     u32 interrupt_clear;
     u32 dma_control;
-    u32 test_control;
 };
+static_assert(AssertSize<PL011Registers, 0x4c>());
 
 // Bits of the `flag` register.
-// See "FR register" in Broadcom doc for details.
+// 3.3.3 Flag Register, UARTFR
 enum FlagBits {
     ClearToSend = 1 << 0,
-    UnsupportedDSR = 1 << 1,
-    UnsupportedDCD = 1 << 2,
+    DataSetReady = 1 << 1,
+    DataCarrierDetect = 1 << 2,
     UARTBusy = 1 << 3,
     ReceiveFifoEmpty = 1 << 4,
     TransmitFifoFull = 1 << 5,
     ReceiveFifoFull = 1 << 6,
     TransmitFifoEmpty = 1 << 7,
+    RingIndicator = 1 << 8,
 };
 
 // Bits for the `line_control` register.
-// See "LCRH register" in Broadcom doc for details.
+// 3.3.7 Line Control Register, UARTLCR_H
 enum LineControlBits {
     SendBreak = 1 << 0,
     EnableParityCheckingAndGeneration = 1 << 1,
@@ -64,30 +65,30 @@ enum LineControlBits {
 };
 
 // Bits for the `control` register.
-// See "CR register" in Broadcom doc for details. From there:
+// 3.3.8 Control Register, UARTCR
 //     NOTE: Program the control registers as follows:
 //     1. Disable the UART.
 //     2. Wait for the end of transmission or reception of the current character.
-//     3. Flush the transmit FIFO by setting the FEN bit to 0 in the Line Control Register, UART_LCRH.
-//     4. Reprogram the Control Register, UART_CR.
+//     3. Flush the transmit FIFO by setting the FEN bit to 0 in the Line Control Register, UARTLCR_H.
+//     4. Reprogram the Control Register, UARTCR.
 //     5. Enable the UART
 enum ControlBits {
     UARTEnable = 1 << 0,
-    UnsupportedSIREN = 1 << 1,
-    UnsupportedSIRLP = 1 << 2,
+    SIREnable = 1 << 1,
+    SIRLowPowerIrDAModeEnable = 1 << 2,
     // Bits 3-6 are reserved.
     LoopbackEnable = 1 << 7,
     TransmitEnable = 1 << 8,
     ReceiveEnable = 1 << 9,
-    UnsupportedDTR = 1 << 10,
+    DataTransmitReady = 1 << 10,
     RequestToSend = 1 << 11,
-    UnsupportedOut1 = 1 << 12,
-    UnsupportedOut2 = 1 << 13,
+    Out1 = 1 << 12,
+    Out2 = 1 << 13,
     RTSHardwareFlowControlEnable = 1 << 14,
     CTSHardwareFlowControlEnable = 1 << 15,
 };
 
-UART::UART(Memory::TypedMapping<UARTRegisters volatile> registers_mapping)
+PL011::PL011(Memory::TypedMapping<PL011Registers volatile> registers_mapping)
     : m_registers(move(registers_mapping))
 {
     // Disable UART while changing configuration.
@@ -100,19 +101,19 @@ UART::UART(Memory::TypedMapping<UARTRegisters volatile> registers_mapping)
     m_registers->control = UARTEnable | TransmitEnable | ReceiveEnable;
 }
 
-ErrorOr<NonnullOwnPtr<UART>> UART::initialize(PhysicalAddress physical_address)
+ErrorOr<NonnullOwnPtr<PL011>> PL011::initialize(PhysicalAddress physical_address)
 {
-    auto registers_mapping = TRY(Memory::map_typed_writable<UARTRegisters volatile>(physical_address));
-    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) UART(move(registers_mapping))));
+    auto registers_mapping = TRY(Memory::map_typed_writable<PL011Registers volatile>(physical_address));
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) PL011(move(registers_mapping))));
 }
 
-void UART::send(u32 c)
+void PL011::send(u32 c)
 {
     wait_until_we_can_send();
     m_registers->data = c;
 }
 
-void UART::print_str(char const* s, size_t length)
+void PL011::print_str(char const* s, size_t length)
 {
     for (size_t i = 0; i < length; ++i) {
         char character = *s++;
@@ -122,7 +123,7 @@ void UART::print_str(char const* s, size_t length)
     }
 }
 
-u32 UART::receive()
+u32 PL011::receive()
 {
     wait_until_we_can_receive();
 
@@ -130,9 +131,9 @@ u32 UART::receive()
     return m_registers->data & 0xFF;
 }
 
-void UART::set_baud_rate(int baud_rate, int uart_frequency_in_hz)
+void PL011::set_baud_rate(int baud_rate, int uart_frequency_in_hz)
 {
-    // Broadcom doc: """Baud rate divisor BAUDDIV = (FUARTCLK/(16 * Baud rate))""".
+    // 3.3.6 Fractional Baud Rate Register, UARTFBRD: """Baud rate divisor BAUDDIV = (FUARTCLK/(16 * Baud rate))""".
     // BAUDDIV is stored as a 16.6 fixed point value, so do computation scaled by (1 << 6) == 64.
     // 64*(FUARTCLK/(16 * Baud rate)) == 4*FUARTCLK/(Baud rate). For rounding, add 0.5 == (Baud rate/2)/(Baud rate).
     u32 baud_rate_divisor_fixed_point = (4 * uart_frequency_in_hz + baud_rate / 2) / baud_rate;
@@ -141,13 +142,13 @@ void UART::set_baud_rate(int baud_rate, int uart_frequency_in_hz)
     m_registers->fractional_baud_rate_divisor = baud_rate_divisor_fixed_point % 64;
 }
 
-void UART::wait_until_we_can_send()
+void PL011::wait_until_we_can_send()
 {
     while (m_registers->flag & TransmitFifoFull)
         Processor::wait_check();
 }
 
-void UART::wait_until_we_can_receive()
+void PL011::wait_until_we_can_receive()
 {
     while (m_registers->flag & ReceiveFifoEmpty)
         Processor::wait_check();

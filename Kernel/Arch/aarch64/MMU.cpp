@@ -11,7 +11,6 @@
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
-#include <Kernel/Arch/aarch64/RPi/UART.h>
 #include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Boot/BootInfo.h>
 #include <Kernel/Firmware/DeviceTree/DeviceTree.h>

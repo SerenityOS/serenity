@@ -480,7 +480,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/RPi/MiniUART.cpp
         Arch/aarch64/RPi/SDHostController.cpp
         Arch/aarch64/RPi/Timer.cpp
-        Arch/aarch64/RPi/UART.cpp
         Arch/aarch64/RPi/Watchdog.cpp
     )
     set(SOURCES_RUNNING_WITHOUT_MMU
@@ -516,6 +515,8 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/vector_table.S
 
         Arch/aarch64/PlatformInit/RaspberryPi.cpp
+
+        Arch/aarch64/Serial/PL011.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
