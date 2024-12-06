@@ -16,17 +16,28 @@
 
 namespace Kernel {
 
-void raspberry_pi_platform_init(StringView)
+void raspberry_pi_platform_init(StringView compatible_string)
 {
+    // We have to use a raw pointer here because this variable will be set before global constructors are called.
+    static RPi::UART* s_debug_console_uart;
+
     static DebugConsole const s_debug_console {
         .write_character = [](char character) {
-            RPi::UART::the().send(character);
+            s_debug_console_uart->send(character);
         },
     };
 
+    PhysicalAddress peripheral_base_address;
+    if (compatible_string == "raspberrypi,3-model-b"sv)
+        peripheral_base_address.set(0x3f00'0000);
+    else if (compatible_string == "raspberrypi,4-model-b"sv)
+        peripheral_base_address.set(0xfe00'0000);
+    else
+        VERIFY_NOT_REACHED();
+
     RPi::Mailbox::initialize();
     RPi::GPIO::initialize();
-    RPi::UART::initialize();
+    s_debug_console_uart = MUST(RPi::UART::initialize(peripheral_base_address.offset(0x20'1000))).leak_ptr();
 
     constexpr int baud_rate = 115'200;
 
@@ -41,7 +52,7 @@ void raspberry_pi_platform_init(StringView)
     gpio.set_pin_pull_up_down_state(Array { 14, 15 }, RPi::GPIO::PullUpDownState::Disable);
 
     // Clock and pins are configured. Turn UART on.
-    RPi::UART::the().set_baud_rate(baud_rate, rate_in_hz);
+    s_debug_console_uart->set_baud_rate(baud_rate, rate_in_hz);
 
     set_debug_console(&s_debug_console);
 

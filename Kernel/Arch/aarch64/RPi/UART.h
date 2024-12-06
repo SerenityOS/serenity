@@ -18,10 +18,7 @@ struct UARTRegisters;
 // (The BCM2711 on a Raspberry Pi 4 has five PL011 UARTs; this is always the first of those.)
 class UART {
 public:
-    UART();
-    static void initialize();
-    static bool is_initialized();
-    static UART& the();
+    static ErrorOr<NonnullOwnPtr<UART>> initialize(PhysicalAddress);
 
     void send(u32 c);
     u32 receive();
@@ -31,6 +28,8 @@ public:
     void set_baud_rate(int baud_rate, int uart_frequency_in_hz);
 
 private:
+    UART(Memory::TypedMapping<UARTRegisters volatile>);
+
     void wait_until_we_can_send();
     void wait_until_we_can_receive();
 

@@ -5,7 +5,6 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/UART.h>
 
 namespace Kernel::RPi {
@@ -88,10 +87,8 @@ enum ControlBits {
     CTSHardwareFlowControlEnable = 1 << 15,
 };
 
-static Singleton<UART> s_the;
-
-UART::UART()
-    : m_registers(MMIO::the().peripheral<UARTRegisters>(0x20'1000).release_value_but_fixme_should_propagate_errors())
+UART::UART(Memory::TypedMapping<UARTRegisters volatile> registers_mapping)
+    : m_registers(move(registers_mapping))
 {
     // Disable UART while changing configuration.
     m_registers->control = 0;
@@ -103,20 +100,10 @@ UART::UART()
     m_registers->control = UARTEnable | TransmitEnable | ReceiveEnable;
 }
 
-void UART::initialize()
+ErrorOr<NonnullOwnPtr<UART>> UART::initialize(PhysicalAddress physical_address)
 {
-    s_the.ensure_instance();
-}
-
-bool UART::is_initialized()
-{
-    return s_the.is_initialized();
-}
-
-UART& UART::the()
-{
-    VERIFY(is_initialized());
-    return s_the;
+    auto registers_mapping = TRY(Memory::map_typed_writable<UARTRegisters volatile>(physical_address));
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) UART(move(registers_mapping))));
 }
 
 void UART::send(u32 c)
