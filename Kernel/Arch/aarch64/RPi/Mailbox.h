@@ -51,6 +51,8 @@ public:
         u32 m_empty_tag = 0;
     };
 
+    static void initialize();
+    static bool is_initialized();
     static Mailbox& the();
 
     // Sends message queue to VideoCore

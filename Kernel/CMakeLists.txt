@@ -473,7 +473,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(RPI_SOURCES
         Arch/aarch64/RPi/AUX.cpp
-        Arch/aarch64/RPi/DebugOutput.cpp
         Arch/aarch64/RPi/Framebuffer.cpp
         Arch/aarch64/RPi/GPIO.cpp
         Arch/aarch64/RPi/InterruptController.cpp
@@ -503,6 +502,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/boot.S
         Arch/aarch64/CPUID.cpp
         Arch/aarch64/CurrentTime.cpp
+        Arch/aarch64/DebugOutput.cpp
         Arch/aarch64/Dummy.cpp
         Arch/aarch64/FPUState.S
         Arch/aarch64/InterruptManagement.cpp
@@ -514,6 +514,8 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/SafeMem.cpp
         Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/vector_table.S
+
+        Arch/aarch64/PlatformInit/RaspberryPi.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'

@@ -38,6 +38,8 @@ constexpr u32 MBOX_EMPTY = 0x4000'0000;
 
 constexpr int ARM_TO_VIDEOCORE_CHANNEL = 8;
 
+static Singleton<Mailbox> s_the;
+
 Mailbox::Mailbox()
     : m_registers(MMIO::the().peripheral<MailboxRegisters>(0xb880).release_value_but_fixme_should_propagate_errors())
 {
@@ -61,10 +63,20 @@ bool Mailbox::MessageHeader::success() const
     return m_command_tag == MBOX_RESPONSE_SUCCESS;
 }
 
+void Mailbox::initialize()
+{
+    s_the.ensure_instance();
+}
+
+bool Mailbox::is_initialized()
+{
+    return s_the.is_initialized();
+}
+
 Mailbox& Mailbox::the()
 {
-    static Singleton<Mailbox> instance;
-    return instance;
+    VERIFY(is_initialized());
+    return s_the;
 }
 
 void Mailbox::wait_until_we_can_write() const

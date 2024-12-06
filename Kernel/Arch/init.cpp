@@ -198,13 +198,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     DeviceTree::run_platform_init();
 #endif
 
-#if ARCH(AARCH64)
-    auto firmware_version = RPi::Mailbox::the().query_firmware_version();
-    dmesgln("RPi: Firmware version: {}", firmware_version);
-
-    RPi::Framebuffer::initialize();
-#endif
-
     // NOTE: If the bootloader provided a framebuffer, then set up an initial console.
     // If the bootloader didn't provide a framebuffer, then set up an initial text console.
     // We do so we can see the output on the screen as soon as possible.
