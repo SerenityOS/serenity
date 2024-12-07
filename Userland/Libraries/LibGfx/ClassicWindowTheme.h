@@ -11,7 +11,7 @@
 
 namespace Gfx {
 
-class ClassicWindowTheme final : public WindowTheme {
+class ClassicWindowTheme : public WindowTheme {
 public:
     ClassicWindowTheme() = default;
     virtual ~ClassicWindowTheme() override = default;
@@ -36,7 +36,11 @@ public:
     }
     virtual float frame_alpha_hit_threshold(WindowState) const override { return 1.0f; }
 
-private:
+    virtual void paint_taskbar(Painter&, IntRect const& taskbar_rect, Palette const&) const override;
+
+    virtual void paint_button(Painter&, IntRect const&, Palette const&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true, bool focused = false, bool default_button = false) const override;
+
+protected:
     int menubar_height() const;
 
     struct FrameColors {

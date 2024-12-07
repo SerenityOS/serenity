@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/StylePainter.h>
 
 namespace Gfx {
 
@@ -49,6 +50,9 @@ public:
     virtual bool is_simple_rect_frame() const = 0;
     virtual bool frame_uses_alpha(WindowState, Palette const&) const = 0;
     virtual float frame_alpha_hit_threshold(WindowState) const = 0;
+
+    virtual void paint_taskbar(Painter&, IntRect const& taskbar_rect, Palette const&) const = 0;
+    virtual void paint_button(Painter&, IntRect const&, Palette const&, ButtonStyle, bool pressed, bool hovered = false, bool checked = false, bool enabled = true, bool focused = false, bool default_button = false) const = 0;
 
 protected:
     WindowTheme() = default;
