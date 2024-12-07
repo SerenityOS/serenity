@@ -49,6 +49,7 @@ public:
     virtual Vector<IntRect> layout_buttons(WindowType, WindowMode, IntRect const& window_rect, Palette const&, size_t buttons) const = 0;
     virtual bool is_simple_rect_frame() const = 0;
     virtual bool frame_uses_alpha(WindowState, Palette const&) const = 0;
+    virtual bool taskbar_uses_alpha() const = 0;
     virtual float frame_alpha_hit_threshold(WindowState) const = 0;
 
     virtual void paint_taskbar(Painter&, IntRect const& taskbar_rect, Palette const&) const = 0;

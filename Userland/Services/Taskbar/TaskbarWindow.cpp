@@ -121,6 +121,7 @@ ErrorOr<NonnullRefPtr<TaskbarWindow>> TaskbarWindow::create()
 TaskbarWindow::TaskbarWindow()
 {
     set_window_type(GUI::WindowType::Taskbar);
+    set_has_alpha_channel(GUI::Application::the()->palette().window_theme().taskbar_uses_alpha());
     set_title("Taskbar");
 
     on_screen_rects_change(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
@@ -285,6 +286,9 @@ void TaskbarWindow::event(Core::Event& event)
     }
     case GUI::Event::FontsChange:
         set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());
+        break;
+    case GUI::Event::ThemeChange:
+        set_has_alpha_channel(GUI::Application::the()->palette().window_theme().taskbar_uses_alpha());
         break;
     }
     Window::event(event);
