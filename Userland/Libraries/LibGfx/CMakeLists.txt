@@ -78,6 +78,7 @@ set(SOURCES
     ImageFormats/WebPWriter.cpp
     ImageFormats/WebPWriterLossless.cpp
     ImmutableBitmap.cpp
+    LunaWindowTheme.cpp
     MedianCut.cpp
     Painter.cpp
     Palette.cpp
