@@ -131,7 +131,7 @@ void ClockWidget::update_format(ByteString const& format)
 
 void ClockWidget::paint_event(GUI::PaintEvent& event)
 {
-    GUI::Frame::paint_event(event);
+    TaskbarFrame::paint_event(event);
     auto time_text = Core::DateTime::now().to_byte_string(m_time_format);
     GUI::Painter painter(*this);
     painter.add_clip_rect(frame_inner_rect());

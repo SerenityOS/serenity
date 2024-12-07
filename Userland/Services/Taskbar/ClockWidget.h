@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "TaskbarFrame.h"
 #include <LibCore/DateTime.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Application.h>
@@ -18,7 +19,7 @@
 
 namespace Taskbar {
 
-class ClockWidget final : public GUI::Frame {
+class ClockWidget final : public TaskbarFrame {
     C_OBJECT(ClockWidget);
 
 public:
