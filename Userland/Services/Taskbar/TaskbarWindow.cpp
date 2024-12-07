@@ -30,6 +30,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/WindowTheme.h>
 #include <serenity.h>
 #include <stdio.h>
 
@@ -60,8 +61,7 @@ private:
     {
         GUI::Painter painter(*this);
         painter.add_clip_rect(event.rect());
-        painter.fill_rect(rect(), palette().button());
-        painter.draw_line({ 0, 1 }, { width() - 1, 1 }, palette().threed_highlight());
+        palette().window_theme().paint_taskbar(painter, rect(), palette());
     }
 
     virtual void did_layout() override
