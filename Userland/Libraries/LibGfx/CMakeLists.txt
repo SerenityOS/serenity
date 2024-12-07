@@ -83,6 +83,7 @@ set(SOURCES
     Palette.cpp
     Path.cpp
     PathClipper.cpp
+    PlasticWindowTheme.cpp
     Point.cpp
     Rect.cpp
     ShareableBitmap.cpp

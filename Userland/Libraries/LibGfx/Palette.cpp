@@ -9,6 +9,7 @@
 #include <AK/Badge.h>
 #include <LibGfx/ClassicWindowTheme.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/PlasticWindowTheme.h>
 #include <string.h>
 
 namespace Gfx {
@@ -53,6 +54,10 @@ Gfx::WindowTheme& Palette::window_theme() const
     case WindowThemeProvider::Classic: {
         static ClassicWindowTheme classic_window_theme;
         return classic_window_theme;
+    }
+    case WindowThemeProvider::RedmondPlastic: {
+        static PlasticWindowTheme plastic_window_theme;
+        return plastic_window_theme;
     }
     default:
         VERIFY_NOT_REACHED();
