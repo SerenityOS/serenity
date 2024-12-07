@@ -10,6 +10,7 @@ set(SOURCES
     QuickLaunchWidget.cpp
     ShutdownDialog.cpp
     TaskbarButton.cpp
+    TaskbarFrame.cpp
     TaskbarWindow.cpp
     WindowList.cpp
 )

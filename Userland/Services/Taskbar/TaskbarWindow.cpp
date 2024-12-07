@@ -11,6 +11,7 @@
 #include "ClockWidget.h"
 #include "QuickLaunchWidget.h"
 #include "TaskbarButton.h"
+#include "TaskbarFrame.h"
 #include <AK/Debug.h>
 #include <AK/Error.h>
 #include <AK/String.h>
@@ -140,7 +141,7 @@ ErrorOr<void> TaskbarWindow::populate_taskbar()
 
     m_default_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"sv));
 
-    m_applet_area_container = main_widget->add<GUI::Frame>();
+    m_applet_area_container = main_widget->add<TaskbarFrame>();
     m_applet_area_container->set_frame_style(Gfx::FrameStyle::SunkenPanel);
 
     m_clock_widget = main_widget->add<Taskbar::ClockWidget>();
