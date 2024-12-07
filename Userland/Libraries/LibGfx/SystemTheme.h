@@ -313,6 +313,7 @@ inline StringView to_string(PathRole role)
 
 #define ENUMERATE_WINDOW_THEMES(M) \
     M(Classic)                     \
+    M(RedmondGlass)                \
     M(RedmondPlastic)
 
 enum class WindowThemeProvider {

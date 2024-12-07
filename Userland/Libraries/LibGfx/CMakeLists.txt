@@ -30,6 +30,7 @@ set(SOURCES
     Font/VectorFont.cpp
     Font/WOFF/Font.cpp
     Font/WOFF2/Font.cpp
+    GlassWindowTheme.cpp
     GradientPainting.cpp
     ICC/BinaryWriter.cpp
     ICC/Enums.cpp

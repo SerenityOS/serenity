@@ -8,6 +8,7 @@
 
 #include <AK/Badge.h>
 #include <LibGfx/ClassicWindowTheme.h>
+#include <LibGfx/GlassWindowTheme.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/PlasticWindowTheme.h>
 #include <string.h>
@@ -58,6 +59,10 @@ Gfx::WindowTheme& Palette::window_theme() const
     case WindowThemeProvider::RedmondPlastic: {
         static PlasticWindowTheme plastic_window_theme;
         return plastic_window_theme;
+    }
+    case WindowThemeProvider::RedmondGlass: {
+        static GlassWindowTheme glass_window_theme;
+        return glass_window_theme;
     }
     default:
         VERIFY_NOT_REACHED();
