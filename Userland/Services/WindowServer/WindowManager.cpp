@@ -2276,7 +2276,7 @@ void WindowManager::set_always_on_top(Window& window, bool always_on_top)
 Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint desired)
 {
     // FIXME: Find a  better source for the width and height to shift by.
-    Gfx::IntPoint shift(8, Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette()) + 10);
+    Gfx::IntPoint shift(8, palette().window_theme().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette()) + 10);
 
     Window const* overlap_window = nullptr;
     current_window_stack().for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& window) {
@@ -2293,7 +2293,7 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint desir
         point = overlap_window->position() + shift;
         point = { point.x() % screen.width(),
             (point.y() >= available_rect.height())
-                ? Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette())
+                ? palette().window_theme().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette())
                 : point.y() };
     } else {
         point = desired;

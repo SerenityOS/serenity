@@ -13,6 +13,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibGfx/WindowTheme.h>
 
 namespace Gfx {
 
@@ -35,6 +36,12 @@ public:
     {
         VERIFY((int)role < (int)AlignmentRole::__Count);
         return theme().alignment[(int)role];
+    }
+
+    Gfx::WindowThemeProvider window_theme_provider(WindowThemeRole role) const
+    {
+        VERIFY((int)role < (int)WindowThemeRole::__Count);
+        return theme().window_theme[(int)role];
     }
 
     bool flag(FlagRole role) const
@@ -164,6 +171,8 @@ public:
 
     Gfx::TextAlignment title_alignment() const { return alignment(AlignmentRole::TitleAlignment); }
 
+    Gfx::WindowTheme& window_theme() const;
+
     bool bold_text_as_bright() const { return flag(FlagRole::BoldTextAsBright); }
     bool is_dark() const { return flag(FlagRole::IsDark); }
     bool title_buttons_icon_only() const { return flag(FlagRole::TitleButtonsIconOnly); }
@@ -190,6 +199,7 @@ public:
 
     void set_color(ColorRole, Color);
     void set_alignment(AlignmentRole, Gfx::TextAlignment);
+    void set_window_theme_provider(WindowThemeRole, Gfx::WindowThemeProvider);
     void set_flag(FlagRole, bool);
     void set_metric(MetricRole, int);
     void set_path(PathRole, ByteString);
