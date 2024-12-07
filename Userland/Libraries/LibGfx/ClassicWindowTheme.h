@@ -34,6 +34,10 @@ public:
     {
         return compute_frame_colors(state, palette).uses_alpha();
     }
+    virtual bool taskbar_uses_alpha() const override
+    {
+        return false;
+    }
     virtual float frame_alpha_hit_threshold(WindowState) const override { return 1.0f; }
 
     virtual void paint_taskbar(Painter&, IntRect const& taskbar_rect, Palette const&) const override;
