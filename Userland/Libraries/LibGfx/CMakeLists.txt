@@ -1,5 +1,6 @@
 set(SOURCES
     AffineTransform.cpp
+    AeroWindowTheme.cpp
     AntiAliasingPainter.cpp
     Bitmap.cpp
     BitmapMixer.cpp

@@ -7,6 +7,7 @@
  */
 
 #include <AK/Badge.h>
+#include <LibGfx/AeroWindowTheme.h>
 #include <LibGfx/ClassicWindowTheme.h>
 #include <LibGfx/LunaWindowTheme.h>
 #include <LibGfx/Palette.h>
@@ -58,6 +59,10 @@ Gfx::WindowTheme& Palette::window_theme() const
     case WindowThemeProvider::Luna: {
         static LunaWindowTheme luna_window_theme;
         return luna_window_theme;
+    }
+    case WindowThemeProvider::Aero: {
+        static AeroWindowTheme aero_window_theme;
+        return aero_window_theme;
     }
     default:
         VERIFY_NOT_REACHED();
