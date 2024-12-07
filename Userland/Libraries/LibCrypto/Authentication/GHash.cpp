@@ -6,6 +6,8 @@
 
 #include <AK/ByteReader.h>
 #include <AK/Debug.h>
+#include <AK/SIMD.h>
+#include <AK/SIMDExtras.h>
 #include <AK/Types.h>
 #include <LibCrypto/Authentication/GHash.h>
 
@@ -84,39 +86,165 @@ GHash::TagType GHash::process(ReadonlyBytes aad, ReadonlyBytes cipher)
     return digest;
 }
 
-/// Galois Field multiplication using <x^127 + x^7 + x^2 + x + 1>.
-/// Note that x, y, and z are strictly BE.
 void galois_multiply(u32 (&_z)[4], u32 const (&_x)[4], u32 const (&_y)[4])
 {
-    // Note: Copied upfront to stack to avoid memory access in the loop.
-    u32 x[4] { _x[0], _x[1], _x[2], _x[3] };
-    u32 const y[4] { _y[0], _y[1], _y[2], _y[3] };
-    u32 z[4] { 0, 0, 0, 0 };
+    /** This function computes 128bit x 128bit unsigned integer multiplication inside Galois finite field, producing 128bit result.
+     *   It uses 9 32bit x 32bit to 64bit carry-less multiplications in Karatsuba decomposition.
+     */
+    using namespace AK::SIMD;
 
-    // Unrolled by 32, the access in y[3-(i/32)] can be cached throughout the loop.
-#pragma GCC unroll 32
-    for (ssize_t i = 127, j = 0; i > -1; --i, j++) {
-        auto r = -((y[j / 32] >> (i % 32)) & 1);
-        z[0] ^= x[0] & r;
-        z[1] ^= x[1] & r;
-        z[2] ^= x[2] & r;
-        z[3] ^= x[3] & r;
-        auto a0 = x[0] & 1;
-        x[0] >>= 1;
-        auto a1 = x[1] & 1;
-        x[1] >>= 1;
-        x[1] |= a0 << 31;
-        auto a2 = x[2] & 1;
-        x[2] >>= 1;
-        x[2] |= a1 << 31;
-        auto a3 = x[3] & 1;
-        x[3] >>= 1;
-        x[3] |= a2 << 31;
+    static auto const rotate_left = [](u32x4 const& x) -> u32x4 {
+        return u32x4 { x[3], x[0], x[1], x[2] };
+    };
 
-        x[0] ^= 0xe1000000 & -a3;
+    static auto const mul_32_x_32_64 = [](u32x4 const& a, u32x4 const& b) -> u64x4 {
+        /** This function computes 32bit x 32bit unsigned integer multiplication, producing 64bit result.
+         *  It does this for 4 32bit integers x 4 32bit integers at a time, producing 4 64bit integers result.
+         */
+        u64x2 r1;
+        u64x2 r2;
+
+#if defined __has_builtin
+#    if __has_builtin(__builtin_ia32_pmuludq128)
+        if (true) {
+            r1 = simd_cast<u64x2>(__builtin_ia32_pmuludq128(simd_cast<i32x4>(u32x4 { a[0], 0, a[1], 0 }), simd_cast<i32x4>(u32x4 { b[0], 0, b[1], 0 })));
+            r2 = simd_cast<u64x2>(__builtin_ia32_pmuludq128(simd_cast<i32x4>(u32x4 { a[2], 0, a[3], 0 }), simd_cast<i32x4>(u32x4 { b[2], 0, b[3], 0 })));
+        } else
+#    endif
+#endif
+        {
+            r1 = u64x2 { static_cast<u64>(a[0]) * static_cast<u64>(b[0]), static_cast<u64>(a[1]) * static_cast<u64>(b[1]) };
+            r2 = u64x2 { static_cast<u64>(a[2]) * static_cast<u64>(b[2]), static_cast<u64>(a[3]) * static_cast<u64>(b[3]) };
+        }
+        return u64x4 { r1[0], r1[1], r2[0], r2[1] };
+    };
+
+    static auto const clmul_32_x_32_64 = [](u32 const& a, u32 const& b, u32& lo, u32& hi) -> void {
+        /** This function computes 32bit x 32bit unsigned integer carry-less multiplication, producing 64bit result.
+         *  It does this by extracting 4 bits from each integer at a time and multiplying those.
+         *  Those 4 bits are packed into 32bit integers with holes, 1 significant bit plus 3 holes, repeated 4 times.
+         *  Repeating previous logic 4 times, we are able to multiply all of the input 32 bits.
+         *  The holes are there to prevent the carry spill to more significant bits. Respectively, allowing the carry
+         *  to spill into holes, the holes are later discarded.
+         *  https://www.bearssl.org/constanttime.html#ghash-for-gcm
+         */
+        constexpr u32x4 mask32 = { 0x11111111, 0x22222222, 0x44444444, 0x88888888 };
+        constexpr u64x4 mask64 = { 0x1111111111111111ull, 0x2222222222222222ull, 0x4444444444444444ull, 0x8888888888888888ull };
+
+        u32x4 ta;
+        u32x4 tb;
+        u64x4 tu64;
+        u64x4 tc;
+        u64 cc;
+
+        ta = a & mask32;
+        tb = b & mask32;
+        tb = item_reverse(tb);
+
+        tb = rotate_left(tb);
+        tu64 = mul_32_x_32_64(ta, tb);
+        tc[0] = reduce_xor(u64x4 { tu64[0], tu64[1], tu64[2], tu64[3] });
+
+        tb = rotate_left(tb);
+        tu64 = mul_32_x_32_64(ta, tb);
+        tc[1] = reduce_xor(u64x4 { tu64[0], tu64[1], tu64[2], tu64[3] });
+
+        tb = rotate_left(tb);
+        tu64 = mul_32_x_32_64(ta, tb);
+        tc[2] = reduce_xor(u64x4 { tu64[0], tu64[1], tu64[2], tu64[3] });
+
+        tb = rotate_left(tb);
+        tu64 = mul_32_x_32_64(ta, tb);
+        tc[3] = reduce_xor(u64x4 { tu64[0], tu64[1], tu64[2], tu64[3] });
+
+        tc &= mask64;
+        cc = reduce_or(tc);
+        lo = static_cast<u32>((cc >> (0 * 32)) & 0xfffffffful);
+        hi = static_cast<u32>((cc >> (1 * 32)) & 0xfffffffful);
+    };
+
+    u32 aa[4];
+    u32 bb[4];
+    u32 ta[9];
+    u32 tb[9];
+    u32 tc[4];
+    u32 tu32[4];
+    u32 td[4];
+    u32 te[4];
+    u32 z[8];
+
+    aa[3] = _x[0];
+    aa[2] = _x[1];
+    aa[1] = _x[2];
+    aa[0] = _x[3];
+    bb[3] = _y[0];
+    bb[2] = _y[1];
+    bb[1] = _y[2];
+    bb[0] = _y[3];
+    ta[0] = aa[0];
+    ta[1] = aa[1];
+    ta[2] = ta[0] ^ ta[1];
+    ta[3] = aa[2];
+    ta[4] = aa[3];
+    ta[5] = ta[3] ^ ta[4];
+    ta[6] = ta[0] ^ ta[3];
+    ta[7] = ta[1] ^ ta[4];
+    ta[8] = ta[6] ^ ta[7];
+    tb[0] = bb[0];
+    tb[1] = bb[1];
+    tb[2] = tb[0] ^ tb[1];
+    tb[3] = bb[2];
+    tb[4] = bb[3];
+    tb[5] = tb[3] ^ tb[4];
+    tb[6] = tb[0] ^ tb[3];
+    tb[7] = tb[1] ^ tb[4];
+    tb[8] = tb[6] ^ tb[7];
+    for (int i = 0; i != 9; ++i) {
+        clmul_32_x_32_64(ta[i], tb[i], ta[i], tb[i]);
     }
-
-    memcpy(_z, z, sizeof(z));
+    tc[0] = ta[0];
+    tc[1] = ta[0] ^ ta[1] ^ ta[2] ^ tb[0];
+    tc[2] = ta[1] ^ tb[0] ^ tb[1] ^ tb[2];
+    tc[3] = tb[1];
+    td[0] = ta[3];
+    td[1] = ta[3] ^ ta[4] ^ ta[5] ^ tb[3];
+    td[2] = ta[4] ^ tb[3] ^ tb[4] ^ tb[5];
+    td[3] = tb[4];
+    te[0] = ta[6];
+    te[1] = ta[6] ^ ta[7] ^ ta[8] ^ tb[6];
+    te[2] = ta[7] ^ tb[6] ^ tb[7] ^ tb[8];
+    te[3] = tb[7];
+    te[0] ^= (tc[0] ^ td[0]);
+    te[1] ^= (tc[1] ^ td[1]);
+    te[2] ^= (tc[2] ^ td[2]);
+    te[3] ^= (tc[3] ^ td[3]);
+    tc[2] ^= te[0];
+    tc[3] ^= te[1];
+    td[0] ^= te[2];
+    td[1] ^= te[3];
+    z[0] = tc[0] << 1;
+    z[1] = (tc[1] << 1) | (tc[0] >> 31);
+    z[2] = (tc[2] << 1) | (tc[1] >> 31);
+    z[3] = (tc[3] << 1) | (tc[2] >> 31);
+    z[4] = (td[0] << 1) | (tc[3] >> 31);
+    z[5] = (td[1] << 1) | (td[0] >> 31);
+    z[6] = (td[2] << 1) | (td[1] >> 31);
+    z[7] = (td[3] << 1) | (td[2] >> 31);
+    for (int i = 0; i != 4; ++i) {
+        tu32[0] = z[i] << 31;
+        tu32[1] = z[i] << 30;
+        tu32[2] = z[i] << 25;
+        z[i + 3] ^= (tu32[0] ^ tu32[1] ^ tu32[2]);
+        tu32[0] = z[i] >> 0;
+        tu32[1] = z[i] >> 1;
+        tu32[2] = z[i] >> 2;
+        tu32[3] = z[i] >> 7;
+        z[i + 4] ^= (tu32[0] ^ tu32[1] ^ tu32[2] ^ tu32[3]);
+    }
+    _z[0] = z[7];
+    _z[1] = z[6];
+    _z[2] = z[5];
+    _z[3] = z[4];
 }
 
 }
