@@ -122,6 +122,9 @@ namespace Gfx {
 #define ENUMERATE_ALIGNMENT_ROLES(C) \
     C(TitleAlignment)
 
+#define ENUMERATE_WINDOW_THEME_ROLES(C) \
+    C(WindowTheme)
+
 #define ENUMERATE_FLAG_ROLES(C) \
     C(BoldTextAsBright)         \
     C(IsDark)                   \
@@ -194,6 +197,33 @@ inline StringView to_string(AlignmentRole role)
     case AlignmentRole::role:            \
         return #role##sv;
         ENUMERATE_ALIGNMENT_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
+#undef __ENUMERATE_ALIGNMENT_ROLE
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+enum class WindowThemeRole {
+    NoRole,
+
+#undef __ENUMERATE_WINDOW_THEME_ROLE
+#define __ENUMERATE_WINDOW_THEME_ROLE(role) role,
+    ENUMERATE_WINDOW_THEME_ROLES(__ENUMERATE_WINDOW_THEME_ROLE)
+#undef __ENUMERATE_WINDOW_THEME_ROLE
+
+        __Count,
+};
+
+inline StringView to_string(WindowThemeRole role)
+{
+    switch (role) {
+    case WindowThemeRole::NoRole:
+        return "NoRole"sv;
+#undef __ENUMERATE_ALIGNMENT_ROLE
+#define __ENUMERATE_ALIGNMENT_ROLE(role) \
+    case WindowThemeRole::role:          \
+        return #role##sv;
+        ENUMERATE_WINDOW_THEME_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
 #undef __ENUMERATE_ALIGNMENT_ROLE
     default:
         VERIFY_NOT_REACHED();
@@ -281,9 +311,39 @@ inline StringView to_string(PathRole role)
     }
 }
 
+#define ENUMERATE_WINDOW_THEMES(M) \
+    M(Classic)
+
+enum class WindowThemeProvider {
+#define __ENUMERATE(x) x,
+    ENUMERATE_WINDOW_THEMES(__ENUMERATE)
+#undef __ENUMERATE
+};
+
+inline Optional<WindowThemeProvider> window_theme_provider_from_string(StringView string)
+{
+#define __ENUMERATE(x) \
+    if (string == #x)  \
+        return WindowThemeProvider::x;
+    ENUMERATE_WINDOW_THEMES(__ENUMERATE)
+#undef __ENUMERATE
+    return {};
+}
+
+inline char const* to_string(WindowThemeProvider window_theme_provider)
+{
+#define __ENUMERATE(x)                                   \
+    if (window_theme_provider == WindowThemeProvider::x) \
+        return #x;
+    ENUMERATE_WINDOW_THEMES(__ENUMERATE)
+#undef __ENUMERATE
+    return {};
+}
+
 struct SystemTheme {
     ARGB32 color[(int)ColorRole::__Count];
     Gfx::TextAlignment alignment[(int)AlignmentRole::__Count];
+    WindowThemeProvider window_theme[(int)WindowThemeRole::__Count];
     bool flag[(int)FlagRole::__Count];
     int metric[(int)MetricRole::__Count];
     char path[(int)PathRole::__Count][256]; // TODO: PATH_MAX?

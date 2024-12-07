@@ -33,8 +33,6 @@ public:
 
     virtual ~WindowTheme() = default;
 
-    static WindowTheme& current();
-
     virtual void paint_normal_frame(Painter&, WindowState, WindowMode, IntRect const& window_rect, StringView title, Bitmap const& icon, Palette const&, IntRect const& leftmost_button_rect, int menu_row_count, bool window_modified) const = 0;
     virtual void paint_notification_frame(Painter&, WindowMode, IntRect const& window_rect, Palette const&, IntRect const& close_button_rect) const = 0;
 

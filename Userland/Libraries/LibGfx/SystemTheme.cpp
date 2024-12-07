@@ -98,6 +98,24 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
         return Gfx::TextAlignment::CenterLeft;
     };
 
+    auto get_window_theme = [&](auto& name, auto role) {
+        auto window_theme = file.read_entry("Window", name);
+        if (window_theme.is_empty()) {
+            switch (role) {
+            case (int)WindowThemeRole::WindowTheme:
+                return Gfx::WindowThemeProvider::Classic;
+            default:
+                dbgln("Window theme {} has no fallback value!", name);
+                return Gfx::WindowThemeProvider::Classic;
+            }
+        }
+
+        if (auto provider = window_theme_provider_from_string(window_theme); provider.has_value())
+            return *provider;
+        dbgln("Window theme {} has an invalid value!", name);
+        return Gfx::WindowThemeProvider::Classic;
+    };
+
     auto get_metric = [&](auto& name, auto role) {
         int metric = file.read_num_entry("Metrics", name, -1);
         if (metric == -1) {
@@ -164,6 +182,12 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
     data->alignment[(int)AlignmentRole::role] = get_alignment(#role, (int)AlignmentRole::role);
     ENUMERATE_ALIGNMENT_ROLES(__ENUMERATE_ALIGNMENT_ROLE)
 #undef __ENUMERATE_ALIGNMENT_ROLE
+
+#undef __ENUMERATE_WINDOW_THEME_ROLE
+#define __ENUMERATE_WINDOW_THEME_ROLE(role) \
+    data->window_theme[(int)WindowThemeRole::role] = get_window_theme(#role, (int)WindowThemeRole::role);
+    ENUMERATE_WINDOW_THEME_ROLES(__ENUMERATE_WINDOW_THEME_ROLE)
+#undef __ENUMERATE_WINDOW_THEME_ROLE
 
 #undef __ENUMERATE_FLAG_ROLE
 #define __ENUMERATE_FLAG_ROLE(role)                            \

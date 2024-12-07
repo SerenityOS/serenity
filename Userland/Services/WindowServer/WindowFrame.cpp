@@ -60,12 +60,18 @@ static ByteString s_last_menu_shadow_path;
 static ByteString s_last_taskbar_shadow_path;
 static ByteString s_last_tooltip_shadow_path;
 
+static Gfx::WindowTheme& current_window_theme()
+{
+    auto& wm = WindowManager::the();
+    return wm.palette().window_theme();
+}
+
 Gfx::IntRect WindowFrame::frame_rect_for_window(Window& window, Gfx::IntRect const& rect)
 {
     if (window.is_frameless())
         return rect;
     int menu_row_count = (window.menubar().has_menus() && window.should_show_menubar()) ? 1 : 0;
-    return Gfx::WindowTheme::current().frame_rect_for_window(to_theme_window_type(window.type()), to_theme_window_mode(window.mode()), rect, WindowManager::the().palette(), menu_row_count);
+    return current_window_theme().frame_rect_for_window(to_theme_window_type(window.type()), to_theme_window_mode(window.mode()), rect, WindowManager::the().palette(), menu_row_count);
 }
 
 WindowFrame::WindowFrame(Window& window)
@@ -117,7 +123,7 @@ void WindowFrame::window_was_constructed(Badge<Window>)
 
     set_button_icons();
 
-    m_has_alpha_channel = Gfx::WindowTheme::current().frame_uses_alpha(window_state_for_theme(), WindowManager::the().palette());
+    m_has_alpha_channel = current_window_theme().frame_uses_alpha(window_state_for_theme(), WindowManager::the().palette());
 }
 
 WindowFrame::~WindowFrame() = default;
@@ -154,6 +160,7 @@ void WindowFrame::reload_config()
         StringBuilder full_path;
         full_path.append(icons_path);
         full_path.append(path);
+        dbgln("Reloading buitmap {}", full_path.string_view());
         if (multiscale_bitmap)
             multiscale_bitmap->load(full_path.string_view(), default_path);
         else
@@ -257,22 +264,22 @@ Gfx::IntRect WindowFrame::menubar_rect() const
 {
     if (!m_window.menubar().has_menus() || !m_window.should_show_menubar())
         return {};
-    return Gfx::WindowTheme::current().menubar_rect(to_theme_window_type(m_window.type()), to_theme_window_mode(m_window.mode()), m_window.rect(), WindowManager::the().palette(), menu_row_count());
+    return current_window_theme().menubar_rect(to_theme_window_type(m_window.type()), to_theme_window_mode(m_window.mode()), m_window.rect(), WindowManager::the().palette(), menu_row_count());
 }
 
 Gfx::IntRect WindowFrame::titlebar_rect() const
 {
-    return Gfx::WindowTheme::current().titlebar_rect(to_theme_window_type(m_window.type()), to_theme_window_mode(m_window.mode()), m_window.rect(), WindowManager::the().palette());
+    return current_window_theme().titlebar_rect(to_theme_window_type(m_window.type()), to_theme_window_mode(m_window.mode()), m_window.rect(), WindowManager::the().palette());
 }
 
 Gfx::IntRect WindowFrame::titlebar_icon_rect() const
 {
-    return Gfx::WindowTheme::current().titlebar_icon_rect(to_theme_window_type(m_window.type()), to_theme_window_mode(m_window.mode()), m_window.rect(), WindowManager::the().palette());
+    return current_window_theme().titlebar_icon_rect(to_theme_window_type(m_window.type()), to_theme_window_mode(m_window.mode()), m_window.rect(), WindowManager::the().palette());
 }
 
 Gfx::IntRect WindowFrame::titlebar_text_rect() const
 {
-    return Gfx::WindowTheme::current().titlebar_text_rect(to_theme_window_type(m_window.type()), to_theme_window_mode(m_window.mode()), m_window.rect(), WindowManager::the().palette());
+    return current_window_theme().titlebar_text_rect(to_theme_window_type(m_window.type()), to_theme_window_mode(m_window.mode()), m_window.rect(), WindowManager::the().palette());
 }
 
 Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
@@ -294,7 +301,7 @@ Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
 void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
-    Gfx::WindowTheme::current().paint_notification_frame(painter, to_theme_window_mode(m_window.mode()), m_window.rect(), palette, m_buttons.last()->relative_rect());
+    current_window_theme().paint_notification_frame(painter, to_theme_window_mode(m_window.mode()), m_window.rect(), palette, m_buttons.last()->relative_rect());
 }
 
 void WindowFrame::paint_menubar(Gfx::Painter& painter)
@@ -336,7 +343,7 @@ void WindowFrame::paint_menubar(Gfx::Painter& painter)
 void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
-    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), to_theme_window_mode(m_window.mode()), m_window.rect(), m_window.computed_title(), m_window.icon(), palette, leftmost_titlebar_button_rect(), menu_row_count(), m_window.is_modified());
+    current_window_theme().paint_normal_frame(painter, window_state_for_theme(), to_theme_window_mode(m_window.mode()), m_window.rect(), m_window.computed_title(), m_window.icon(), palette, leftmost_titlebar_button_rect(), menu_row_count(), m_window.is_modified());
 
     if (m_window.menubar().has_menus() && m_window.should_show_menubar())
         paint_menubar(painter);
@@ -411,7 +418,7 @@ void WindowFrame::theme_changed()
     layout_buttons();
     set_button_icons();
 
-    m_has_alpha_channel = Gfx::WindowTheme::current().frame_uses_alpha(window_state_for_theme(), WindowManager::the().palette());
+    m_has_alpha_channel = current_window_theme().frame_uses_alpha(window_state_for_theme(), WindowManager::the().palette());
 }
 
 auto WindowFrame::render_to_cache(Screen& screen) -> PerScaleRenderedCache*
@@ -663,7 +670,7 @@ void WindowFrame::window_rect_changed(Gfx::IntRect const& old_rect, Gfx::IntRect
 
 void WindowFrame::layout_buttons()
 {
-    auto button_rects = Gfx::WindowTheme::current().layout_buttons(to_theme_window_type(m_window.type()), to_theme_window_mode(m_window.mode()), m_window.rect(), WindowManager::the().palette(), m_buttons.size());
+    auto button_rects = current_window_theme().layout_buttons(to_theme_window_type(m_window.type()), to_theme_window_mode(m_window.mode()), m_window.rect(), WindowManager::the().palette(), m_buttons.size());
     for (size_t i = 0; i < m_buttons.size(); i++)
         m_buttons[i]->set_relative_rect(button_rects[i]);
 }
@@ -703,7 +710,7 @@ Optional<HitTestResult> WindowFrame::PerScaleRenderedCache::hit_test(WindowFrame
         .is_frame_hit = true,
     };
 
-    u8 alpha_threshold = Gfx::WindowTheme::current().frame_alpha_hit_threshold(frame.window_state_for_theme()) * 255;
+    u8 alpha_threshold = current_window_theme().frame_alpha_hit_threshold(frame.window_state_for_theme()) * 255;
     if (alpha_threshold == 0)
         return result;
     u8 alpha = 0xff;
