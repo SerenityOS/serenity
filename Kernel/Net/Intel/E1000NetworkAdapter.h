@@ -38,9 +38,20 @@ public:
     virtual StringView device_name() const override { return "E1000"sv; }
     virtual Type adapter_type() const override { return Type::Ethernet; }
 
+    void detect_model_and_operating_mode();
+
 protected:
     static constexpr size_t rx_buffer_size = 8192;
     static constexpr size_t tx_buffer_size = 8192;
+
+    enum class OperatingMode {
+        Intel8254x_legacy, // No EEPROM present bit, aka 82544GC/EI
+        Intel8254x,
+        Intel8254x_14bit_eeprom,
+        // Note: 8255x does not seem to be compatible
+        // FIXME: This should be more fine grained in the future
+        Intel8257x_and_later, // This is for now functionally equivalent to the 8254x_14bit mode
+    };
 
     struct RxDescriptor {
         uint64_t addr { 0 };
@@ -72,8 +83,6 @@ protected:
         Memory::TypedMapping<RxDescriptor volatile[]> rx_descriptors,
         Memory::TypedMapping<TxDescriptor volatile[]> tx_descriptors);
 
-    void check_quirks();
-
     virtual bool handle_irq() override;
     virtual StringView class_name() const override { return "E1000NetworkAdapter"sv; }
 
@@ -99,8 +108,8 @@ protected:
     NonnullOwnPtr<Memory::Region> m_tx_buffer_region;
     Array<void*, number_of_rx_descriptors> m_rx_buffers;
     Array<void*, number_of_tx_descriptors> m_tx_buffers;
+    OperatingMode m_operating_mode { OperatingMode::Intel8254x_legacy };
     SetOnce m_has_eeprom;
-    SetOnce m_is_82541xx_82547GI_EI; // EEPROM logic for those is different
     bool m_link_up { false };
     EntropySource m_entropy_source;
 

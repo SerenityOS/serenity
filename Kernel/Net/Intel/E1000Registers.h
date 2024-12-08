@@ -169,14 +169,14 @@ union EEPROMRead {
         u32 : 3;
         u32 address : 8;
         u32 data : 16;
-    };
+    } address_8;
     struct {
         u32 start : 1 = 0;
         u32 done : 1 = 0;
         u32 address : 14 = 0;
         u32 data : 16 = 0;
-    } variant_82541xx_or_82547GI_EI;
-    u32 raw;
+    } address_14;
+    u32 raw = 0;
 };
 
 // 13.4.17

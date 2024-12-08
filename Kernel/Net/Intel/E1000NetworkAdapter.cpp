@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericShorthands.h>
 #include <AK/MACAddress.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
@@ -14,43 +15,242 @@
 
 namespace Kernel {
 
-// https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf Section 5.2
 UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
 {
-    // FIXME: It would be nice to distinguish which particular device it is.
-    //        Especially since it's needed to determine which registers we can access.
-    //        The reason I haven't done it now is because there's some IDs with multiple devices
-    //        and some devices with multiple IDs.
+    // FIXME: There are probably more compatible devices out there
+    // FIXME: This code is essentially copied in the operating mode detection
     switch (device_id) {
+    // 8254x series
+    // https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf
+    // Section 5.2
+    case 0x100E: // 82540EM-A
+    case 0x100F: // 82545EM-A (COPPER)
+    case 0x1010: // 82546EB-A1 (COPPER)
+    case 0x1011: // 82545EM-A (FIBER)
+    case 0x1012: // 82546EB-A1 (FIBER)
+    case 0x1013: // 82541EI-A0, 82541EI-B0
+    case 0x1015: // 82540EM-A (LOM)
+    case 0x1016: // 82540EP-A (LOM)
+    case 0x1017: // 82540EP-A
+    case 0x1018: // 82541EI-B0 (MOBILE)
     case 0x1019: // 82547EI-A0, 82547EI-A1, 82547EI-B0, 82547GI-B0
-    case 0x101A: // 82547EI-B0
-    case 0x1010: // 82546EB-A1
-    case 0x1012: // 82546EB-A1
-    case 0x101D: // 82546EB-A1
-    case 0x1079: // 82546GB-B0
-    case 0x107A: // 82546GB-B0
-    case 0x107B: // 82546GB-B0
-    case 0x100F: // 82545EM-A
-    case 0x1011: // 82545EM-A
-    case 0x1026: // 82545GM-B
-    case 0x1027: // 82545GM-B
-    case 0x1028: // 82545GM-B
+    case 0x101A: // 82547EI-B0 (MOBILE)
+    case 0x101D: // 82546EB-A1 (QUAD-COPPER)
+    case 0x1026: // 82545GM-B (COPPER)
+    case 0x1027: // 82545GM-B (FIBER)
+    case 0x1028: // 82545GM-B (SERDES)
+    case 0x1076: // 82541GI-B1, 82541PI-C0
+    case 0x1077: // 82541GI-B1 (MOBILE)
+    case 0x1078: // 82541ER-C0
+    case 0x1079: // 82546GB-B0 (COPPER)
+    case 0x107A: // 82546GB-B0 (FIBER)
+    case 0x107B: // 82546GB-B0 (SERDES)
     case 0x1107: // 82544EI-A4
     case 0x1112: // 82544GC-A4
-    case 0x1013: // 82541EI-A0, 82541EI-B0
-    case 0x1018: // 82541EI-B0
-    case 0x1076: // 82541GI-B1, 82541PI-C0
-    case 0x1077: // 82541GI-B1
-    case 0x1078: // 82541ER-C0
-    case 0x1017: // 82540EP-A
-    case 0x1016: // 82540EP-A
-    case 0x100E: // 82540EM-A
-    case 0x1015: // 82540EM-A
         return true;
+        // 8257[123]:
+        // FIXME: Intel link
+        // https://ftp.mizar.org/packages/e1000/8257x%20Developer%20Manual/Revision%201.8/OpenSDM_8257x-18.pdf)
+    case 0x105E:
+    case 0x1081: // (Dual Port, Gb/s, copper)
+    case 0x1082: // (Dual Port, Mb/s, Fiber/SerDes)
+    case 0x1083: // (Dual Port, Mb/s, 1000BASE-X Backplane)
+    case 0x1096: // (Dual Port, Gb/s, copper + IO Acceleration)
+    case 0x1097: // (Dual Port, Gb/s, Fiber/SerDes + IO Acceleration)
+    case 0x1098: // (Dual Port, Mb/s, 1000BASE-X Backplane + IO Acceleration)
+    case 0x108B:
+    case 0x108C: // (Single Port, Gb / s, copper)
+        return true;
+    // 82574:
+    case 0x10D3: // 82574L
+        return true;
+    // 82576:
+    case 0x10C9: // Dual port copper
+    case 0x10E6: // Dual port fiber
+    case 0x10E7: // Dual port SerDes
+        return true;
+    // 82580:
+    // https://cdrdv2-public.intel.com/333167/333167%20-%2082580-eb-db-gbe-controller-datasheet.pdf
+    case 0x1509: // EEPROM-less
+    case 0x150E: // copper
+    case 0x150F: // fiber
+    case 0x1510: // 1000BASE-KX/BX backplane
+    case 0x1511: // SGMII
+    case 0x1516: // copper dual
+        return true;
+    // I231
+    // https://cdrdv2-public.intel.com/333017/333017%20-%20I211_Datasheet_v_3_4.pdf
+    case 0x1539:
+        // FIXME: Support iNVM
+        return false;
+    // I350
+    // https://cdrdv2-public.intel.com/333171/ethernet-controller-i350-datasheet.pdf
+    case 0x151F: // EEPROM-less
+    case 0x1521: // Copper
+    case 0x1522: // Fiber
+    case 0x1523: // 1000BASE-KX/BX backplane
+    case 0x1524: // SGMII PHY
+        return true;
+
+    // FIXME: Likely compatible devices,
+    //        Disabled for now until we know where the IDs come from
+    case 0x1000: // 82542
+    case 0x0438: // DH89XXCC_SGMII
+    case 0x043A: // DH89XXCC_SERDES
+    case 0x043C: // DH89XXCC_BACKPLANE
+    case 0x0440: // DH89XXCC_SFP
+    case 0x1001: // 82543GC_FIBER
+    case 0x1004: // 82543GC_COPPER
+    case 0x1008: // 82544EI_COPPER
+    case 0x1009: // 82544EI_FIBER
+    case 0x100C: // 82544GC_COPPER
+    case 0x100D: // 82544GC_LOM
+    case 0x1014: // 82541ER_LOM
+    case 0x101E: // 82540EP_LP
+    case 0x1049: // ICH8_IGP_M_AMT
+    case 0x104A: // ICH8_IGP_AMT
+    case 0x104B: // ICH8_IGP_C
+    case 0x104C: // ICH8_IFE
+    case 0x104D: // ICH8_IGP_M
+    case 0x105F: // 82571EB_FIBER
+    case 0x1060: // 82571EB_SERDES
+    case 0x1075: // 82547GI
+    case 0x107C: // 82541GI_LF
+    case 0x107D: // 82572EI_COPPER
+    case 0x107E: // 82572EI_FIBER
+    case 0x107F: // 82572EI_SERDES
+    case 0x108A: // 82546GB_PCIE
+    case 0x109A: // 82573L
+    case 0x10A4: // 82571EB_QUAD_COPPER
+    case 0x10A5: // 82571EB_QUAD_FIBER
+    case 0x10A7: // 82575EB_COPPER
+    case 0x10A9: // 82575EB_FIBER_SERDES
+    case 0x10B5: // 82546GB_QUAD_COPPER_KSP3
+    case 0x10B9: // 82572EI
+    case 0x10BA: // 80003ES2LAN_COPPER_SPT
+    case 0x10BB: // 80003ES2LAN_SERDES_SPT
+    case 0x10BC: // 82571EB_QUAD_COPPER_LP
+    case 0x10BD: // ICH9_IGP_AMT
+    case 0x10BF: // ICH9_IGP_M
+    case 0x10C0: // ICH9_IFE
+    case 0x10C2: // ICH9_IFE_G
+    case 0x10C3: // ICH9_IFE_GT
+    case 0x10C4: // ICH8_IFE_GT
+    case 0x10C5: // ICH8_IFE_G
+    case 0x10CA: // 82576_VF
+    case 0x10CB: // ICH9_IGP_M_V
+    case 0x10CC: // ICH10_R_BM_LM
+    case 0x10CD: // ICH10_R_BM_LF
+    case 0x10CE: // ICH10_R_BM_V
+    case 0x10D5: // 82571PT_QUAD_COPPER
+    case 0x10D6: // 82575GB_QUAD_COPPER
+    case 0x10D9: // 82571EB_SERDES_DUAL
+    case 0x10DA: // 82571EB_SERDES_QUAD
+    case 0x10DE: // ICH10_D_BM_LM
+    case 0x10DF: // ICH10_D_BM_LF
+    case 0x10E5: // ICH9_BM
+    case 0x10E8: // 82576_QUAD_COPPER
+    case 0x10EA: // PCH_M_HV_LM
+    case 0x10EB: // PCH_M_HV_LC
+    case 0x10EF: // PCH_D_HV_DM
+    case 0x10F0: // PCH_D_HV_DC
+    case 0x10F5: // ICH9_IGP_M_AMT
+    case 0x10F6: // 82574LA
+    case 0x1501: // ICH8_82567V_3
+    case 0x1502: // PCH2_LV_LM
+    case 0x1503: // PCH2_LV_V
+    case 0x150A: // 82576_NS
+    case 0x150C: // 82583V
+    case 0x150D: // 82576_SERDES_QUAD
+    case 0x1518: // 82576_NS_SERDES
+    case 0x1520: // I350_VF
+    case 0x1526: // 82576_QUAD_COPPER_ET2
+    case 0x1527: // 82580_QUAD_FIBER
+    case 0x152D: // 82576_VF_HV
+    case 0x152F: // I350_VF_HV
+    case 0x1533: // I210_COPPER
+    case 0x1534: // I210_COPPER_OEM1
+    case 0x1535: // I210_COPPER_IT
+    case 0x1536: // I210_FIBER
+    case 0x1537: // I210_SERDES
+    case 0x1538: // I210_SGMII
+    case 0x153A: // PCH_LPT_I217_LM
+    case 0x153B: // PCH_LPT_I217_V
+    case 0x1546: // I350_DA4
+    case 0x1559: // PCH_LPTLP_I218_V
+    case 0x155A: // PCH_LPTLP_I218_LM
+    case 0x156F: // PCH_SPT_I219_LM
+    case 0x1570: // PCH_SPT_I219_V
+    case 0x157B: // I210_COPPER_FLASHLESS
+    case 0x157C: // I210_SERDES_FLASHLESS
+    case 0x15A0: // PCH_I218_LM2
+    case 0x15A1: // PCH_I218_V2
+    case 0x15A2: // PCH_I218_LM3
+    case 0x15A3: // PCH_I218_V3
+    case 0x15B7: // PCH_SPT_I219_LM2
+    case 0x15B8: // PCH_SPT_I219_V2
+    case 0x15B9: // PCH_LBG_I219_LM3
+    case 0x15BB: // PCH_CNP_I219_LM7
+    case 0x15BC: // PCH_CNP_I219_V7
+    case 0x15BD: // PCH_CNP_I219_LM6
+    case 0x15BE: // PCH_CNP_I219_V6
+    case 0x15D6: // PCH_SPT_I219_V5
+    case 0x15D7: // PCH_SPT_I219_LM4
+    case 0x15D8: // PCH_SPT_I219_V4
+    case 0x15DF: // PCH_ICP_I219_LM8
+    case 0x15E0: // PCH_ICP_I219_V8
+    case 0x15E1: // PCH_ICP_I219_LM9
+    case 0x15E2: // PCH_ICP_I219_V9
+    case 0x15E3: // PCH_SPT_I219_LM5
+    case 0x1F40: // I354_BACKPLANE_1GBPS
+    case 0x1F41: // I354_SGMII
+    case 0x1F45: // I354_BACKPLANE_2_5GBPS
+    case 0x294C: // ICH9_IGP_C
     default:
         return false;
     }
 }
+
+// Heritage of controllers:
+// 8255x: (https://www.intel.com/content/dam/doc/manual/8255x-10-100-mbps-ethernet-controller-software-dev-manual.pdf)
+//    * 1229: 82557-B, 8255ER
+//    * 1029- config over EEPROM: 82557-C, 82558, 82559
+// 8257x: (1-3) (https://ftp.mizar.org/packages/e1000/8257x%20Developer%20Manual/Revision%201.8/OpenSDM_8257x-18.pdf)
+//    * 105E/1081^a (Dual Port, Gb/s, copper)
+//    * 1082^a      (Dual Port, Mb/s, Fiber/SerDes)
+//    * 1083^a      (Dual Port, Mb/s, 1000BASE-X Backplane)
+//    * 1096^a      (Dual Port, Gb/s, copper + IO Acceleration)
+//    * 1097^a      (Dual Port, Gb/s, Fiber/SerDes + IO Acceleration)
+//    * 1098^a      (Dual Port, Mb/s, 1000BASE-X Backplane + IO Acceleration)
+//    * 108B/108C (Single Port, Gb/s, copper)
+//    * 109A      - 82573L (???) "Not applicable to "631xESB/632xESB"
+//    ^a: 631xESB/632xESB
+// 82574: (http://web.archive.org/web/20191030005441/https://digitallibrary.intel.com/content/dam/ccl/public/82574l-gbe-controller-datasheet.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb250ZW50SWQiOiIzMTc2OTQiLCJlbnRlcnByaXNlSWQiOiIxMzYuMjQzLjMzLjE1MCIsIkFDQ1RfTk0iOiIiLCJDTkRBX05CUiI6IiIsImlhdCI6MTU3MjM5Njg3N30.qWfHYA2b2JUaloVU4Sxyq6ltDR3cbEDd1O1IhpSROGw)
+//        Intel link is dead....
+// * 0x10D3: 82574/Default
+
+// 82575 -> no direct data sheet?
+// |-82576:
+//   * 10C9: Dual port copper
+//   * 10E6: Dual port fiber
+//   * 10E7: Dual port SerDes
+//   * 10CA: Virtual Function
+//   * 10A6: Dummy device
+//   |-82580:
+//     * 1509 EEPROM-less
+//     * 150E copper
+//     * 150F fiber
+//     * 1510 1000BASE-KX/BX backplane
+//     * 1511 SGMII
+//     * 1516 copper dual
+//     * 10A6 Dummy device
+//     |-I350:
+//       * 151F EEPROM-less
+//       * 1521 Copper
+//       * 1522 Fiber
+//       * 1523 1000BASE-KX/BX backplane
+//       * 1524 SGMII PHY
+//       * 10A6 Dummy device
 
 UNMAP_AFTER_INIT ErrorOr<bool> E1000NetworkAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
 {
@@ -87,7 +287,7 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
 
     dmesgln_pci(*this, "IO base: {}", m_registers.window());
     dmesgln_pci(*this, "Interrupt line: {}", interrupt_number());
-    check_quirks();
+    detect_model_and_operating_mode();
     detect_eeprom();
     dmesgln_pci(*this, "Has EEPROM? {}", m_has_eeprom.was_set());
     read_mac_address();
@@ -106,24 +306,65 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
     return {};
 }
 
-UNMAP_AFTER_INIT void E1000NetworkAdapter::check_quirks()
+UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_model_and_operating_mode()
 {
-
     u16 device_id = device_identifier().hardware_id().device_id;
-    // The 82541xx and 82547GI/EI have a different EEPROM access method
-    switch (device_id) {
-    case 0x1019: // 82547EI-A0, 82547EI-A1, 82547EI-B0, 82547GI-B0
-    case 0x101A: // 82547EI-B0
-    case 0x1013: // 82541EI-A0, 82541EI-B0
-    case 0x1018: // 82541EI-B0
-    case 0x1076: // 82541GI-B1, 82541PI-C0
-    case 0x1077: // 82541GI-B1
-    case 0x1078: // 82541ER-C0
-        m_is_82541xx_82547GI_EI.set();
-        break;
-    default:
-        break;
+    // 82544GC/EI
+    if (first_is_one_of(device_id,
+            0x1008, // 82544EI_COPPER
+            0x1009, // 82544EI (FIBER)
+            0x100C, // 82544GC_COPPER
+            0x100D, // 82544GC_LOM
+            0x1107, // 82544EI-A4
+            0x1112  // 82544GC-A4
+            )) {
+        m_operating_mode = OperatingMode::Intel8254x_legacy;
+        return;
     }
+    // 8254x \(82541xx, 82547GI/EI)
+    if (first_is_one_of(device_id,
+            0x100E, // 82540EM-A
+            0x100F, // 82545EM-A (COPPER)
+            0x1010, // 82546EB-A1 (COPPER)
+            0x1011, // 82545EM-A (FIBER)
+            0x1012, // 82546EB-A1 (FIBER)
+            0x1015, // 82540EM-A (LOM)
+            0x1016, // 82540EP-A (LOM)
+            0x1017, // 82540EP-A
+            0x1019, // 82547EI-A0, 82547EI-A1, 82547EI-B0, 82547GI-B0
+            0x101A, // 82547EI-B0 (MOBILE)
+            0x101D, // 82546EB-A1 (QUAD-COPPER)
+            0x1026, // 82545GM-B (COPPER)
+            0x1027, // 82545GM-B (FIBER)
+            0x1028, // 82545GM-B (SERDES)
+            0x1079, // 82546GB-B0 (COPPER)
+            0x107A, // 82546GB-B0 (FIBER)
+            0x107B  // 82546GB-B0 (SERDES)
+            )) {
+        m_operating_mode = OperatingMode::Intel8254x;
+        return;
+    }
+    // 82541xx, 82547GI/EI
+    if (first_is_one_of(device_id,
+            0x1013, // 82541EI
+            0x1013, // 82541EI-A0, 82541EI-B0
+            0x1014, // 82541ER_LOM
+            0x1018, // 82541EI-B0
+            0x1019, // 82547EI-A0, 82547EI-A1, 82547EI-B0, 82547GI-B0
+            0x101A, // 82547EI-B0
+            0x1076, // 82541GI
+            0x1076, // 82541GI-B1, 82541PI-C0
+            0x1077, // 82541GI_MOBILE
+            0x1077, // 82541GI-B1
+            0x1078, // 82541ER
+            0x1078, // 82541ER-C0
+            0x107C  // 82541GI_LF
+            )) {
+        m_operating_mode = OperatingMode::Intel8254x_14bit_eeprom;
+        return;
+    }
+    // 8257x and later
+    m_operating_mode = OperatingMode::Intel8257x_and_later;
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_link()
@@ -199,22 +440,25 @@ bool E1000NetworkAdapter::handle_irq()
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_eeprom()
 {
-    // FIXME: On most devices we can check the EECD.EE_PRES register (this is what the E1000E driver does)
-    //        But this is not supported on the 82544GC/EI
+    if (m_operating_mode != OperatingMode::Intel8254x_14bit_eeprom) {
+        if (m_registers.read<Register::EEPROMControl>().eeprom_present)
+            m_has_eeprom.set();
+        else
+            dmesgln_pci(*this, "E1000: EEPROM not present");
+        return;
+    }
 
-    m_registers.write<Register::EEPROMRead>({ .start = 1 });
+    // The 82544GC/EI models do not have an EEPROM present bit
+    // So we cannot use that to determine if the EEPROM is present
+    // But have to try to read from it, to see if it's there
+    E1000::EEPROMRead eerd = {};
+    eerd.address_8.start = 1;
+    m_registers.write<Register::EEPROMRead>(eerd);
     for (int i = 0; i < 999; ++i) {
         auto data = m_registers.read<Register::EEPROMRead>();
-        if (m_is_82541xx_82547GI_EI.was_set()) {
-            if (data.variant_82541xx_or_82547GI_EI.done) {
-                m_has_eeprom.set();
-                return;
-            }
-        } else {
-            if (data.done) {
-                m_has_eeprom.set();
-                return;
-            }
+        if (data.address_8.done) {
+            m_has_eeprom.set();
+            return;
         }
         Processor::wait_check();
     }
@@ -227,28 +471,33 @@ UNMAP_AFTER_INIT u16 E1000NetworkAdapter::read_eeprom(u16 address)
     // FIXME: Should this just return 0 then?
     VERIFY(m_has_eeprom.was_set());
 
-    // FIXME: Maybe add a timeout to the loops?
-
-    if (m_is_82541xx_82547GI_EI.was_set()) {
-        E1000::EEPROMRead eerd = { .variant_82541xx_or_82547GI_EI { .start = 1, .address = address } };
+    if (m_operating_mode == OperatingMode::Intel8254x_14bit_eeprom
+        || m_operating_mode == OperatingMode::Intel8257x_and_later) {
+        E1000::EEPROMRead eerd = {};
+        eerd.address_14.start = 1;
+        eerd.address_14.address = address;
         m_registers.write<Register::EEPROMRead>(eerd);
         while (eerd = m_registers.read<Register::EEPROMRead>(),
-            !eerd.variant_82541xx_or_82547GI_EI.done)
+            !eerd.address_14.done)
             Processor::wait_check();
-        return eerd.variant_82541xx_or_82547GI_EI.data;
+        return eerd.address_14.data;
     }
 
-    // The normal EEPROM only has an 8 bit address field
+    // The 8254x models only have an 8 bit address
     VERIFY(address < 0xFF);
-    E1000::EEPROMRead eerd = { .start = 1, .address = address };
+    E1000::EEPROMRead eerd {};
+    eerd.address_8.start = 1;
+    eerd.address_8.address = address;
     m_registers.write<Register::EEPROMRead>(eerd);
-    while (eerd = m_registers.read<Register::EEPROMRead>(), !eerd.done)
+    while (eerd = m_registers.read<Register::EEPROMRead>(), !eerd.address_8.done)
         Processor::wait_check();
-    return eerd.data;
+    return eerd.address_8.data;
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
 {
+    // FIXME: Support other ways of getting the mac address
+    //        Like iNVM on the I211
     VERIFY(m_has_eeprom.was_set());
 
     // 5.6.1 Ethernet Address (00h-02h)
