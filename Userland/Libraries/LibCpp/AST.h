@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/ByteString.h>
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyByteString.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/StringView.h>
@@ -46,7 +46,7 @@ public:
         VERIFY(m_end.has_value());
         return m_end.value();
     }
-    DeprecatedFlyString const& filename() const
+    FlyByteString const& filename() const
     {
         return m_filename;
     }
@@ -77,7 +77,7 @@ private:
     ASTNode const* m_parent { nullptr };
     Optional<Position> m_start;
     Optional<Position> m_end;
-    DeprecatedFlyString m_filename;
+    FlyByteString m_filename;
 };
 
 class TranslationUnit : public ASTNode {

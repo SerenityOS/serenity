@@ -12,7 +12,7 @@
 
 #include <AK/ByteString.h>
 #include <AK/COWVector.h>
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyByteString.h>
 #include <AK/HashMap.h>
 #include <AK/MemMem.h>
 #include <AK/RedBlackTree.h>
@@ -477,7 +477,7 @@ private:
 
 class Match final {
 private:
-    Optional<DeprecatedFlyString> string;
+    Optional<FlyByteString> string;
 
 public:
     Match() = default;
@@ -522,7 +522,7 @@ public:
     }
 
     RegexStringView view {};
-    Optional<DeprecatedFlyString> capture_group_name {};
+    Optional<FlyByteString> capture_group_name {};
     size_t line { 0 };
     size_t column { 0 };
     size_t global_offset { 0 };
