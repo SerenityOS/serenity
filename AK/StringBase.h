@@ -72,6 +72,8 @@ public:
     [[nodiscard]] ALWAYS_INLINE FlatPtr raw(Badge<FlyString>) const { return bit_cast<FlatPtr>(m_data); }
 
 protected:
+    bool is_invalid() const { return m_invalid_tag == UINTPTR_MAX; }
+
     template<typename Func>
     ErrorOr<void> replace_with_new_string(size_t byte_count, Func&& callback)
     {
@@ -89,6 +91,8 @@ protected:
             callback(buffer);
     }
 
+    void replace_with_string_builder(StringBuilder&);
+
     // This is not a trivial operation with storage, so it does not belong here. Unfortunately, it
     // is impossible to implement it without access to StringData.
     ErrorOr<StringBase> substring_from_byte_offset_with_shared_superstring(size_t start, size_t byte_count) const;
@@ -101,6 +105,11 @@ private:
     static constexpr uintptr_t SHORT_STRING_FLAG = 1;
 
     explicit StringBase(NonnullRefPtr<Detail::StringData const>);
+
+    explicit constexpr StringBase(nullptr_t)
+        : m_invalid_tag(UINTPTR_MAX)
+    {
+    }
 
     explicit constexpr StringBase(ShortString short_string)
         : m_short_string(short_string)
@@ -124,6 +133,7 @@ private:
     union {
         ShortString m_short_string;
         Detail::StringData const* m_data { nullptr };
+        uintptr_t m_invalid_tag;
     };
 };
 

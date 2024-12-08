@@ -16,6 +16,8 @@ namespace AK {
 namespace Detail {
 template<size_t inline_capacity>
 class ByteBuffer;
+
+class StringData;
 }
 
 enum class TrailingCodePointTransformation : u8;
@@ -127,6 +129,16 @@ class NonnullOwnPtr;
 
 template<typename T>
 class Optional;
+
+#ifndef KERNEL
+
+template<>
+class Optional<String>;
+
+template<>
+class Optional<FlyString>;
+
+#endif
 
 #ifdef KERNEL
 template<typename T>
