@@ -7,6 +7,9 @@
  */
 
 #include <AK/Badge.h>
+#include <LibGfx/AeroWindowTheme.h>
+#include <LibGfx/ClassicWindowTheme.h>
+#include <LibGfx/LunaWindowTheme.h>
 #include <LibGfx/Palette.h>
 #include <string.h>
 
@@ -46,6 +49,26 @@ NonnullRefPtr<PaletteImpl> PaletteImpl::clone() const
     return adopt_ref(*new PaletteImpl(move(new_theme_buffer)));
 }
 
+Gfx::WindowTheme& Palette::window_theme() const
+{
+    switch (m_impl->window_theme_provider(WindowThemeRole::WindowTheme)) {
+    case WindowThemeProvider::Classic: {
+        static ClassicWindowTheme classic_window_theme;
+        return classic_window_theme;
+    }
+    case WindowThemeProvider::Luna: {
+        static LunaWindowTheme luna_window_theme;
+        return luna_window_theme;
+    }
+    case WindowThemeProvider::Aero: {
+        static AeroWindowTheme aero_window_theme;
+        return aero_window_theme;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void Palette::set_color(ColorRole role, Color color)
 {
     if (m_impl->ref_count() != 1)
@@ -60,6 +83,14 @@ void Palette::set_alignment(AlignmentRole role, Gfx::TextAlignment value)
         m_impl = m_impl->clone();
     auto& theme = const_cast<SystemTheme&>(impl().theme());
     theme.alignment[(int)role] = value;
+}
+
+void Palette::set_window_theme_provider(WindowThemeRole role, Gfx::WindowThemeProvider value)
+{
+    if (m_impl->ref_count() != 1)
+        m_impl = m_impl->clone();
+    auto& theme = const_cast<SystemTheme&>(impl().theme());
+    theme.window_theme[(int)role] = value;
 }
 
 void Palette::set_flag(FlagRole role, bool value)

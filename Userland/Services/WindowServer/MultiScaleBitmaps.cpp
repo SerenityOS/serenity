@@ -49,7 +49,9 @@ bool MultiScaleBitmaps::load(StringView filename, StringView default_filename)
     Optional<Gfx::BitmapFormat> bitmap_format;
     bool did_load_any = false;
 
-    m_bitmaps.clear(); // If we're reloading the bitmaps get rid of the old ones
+    // If we're reloading the bitmaps get rid of the old ones.
+    m_bitmaps.clear();
+    m_format = Gfx::BitmapFormat::Invalid;
 
     auto add_bitmap = [&](StringView path, int scale_factor) {
         auto bitmap_or_error = Gfx::Bitmap::load_from_file(path, scale_factor);

@@ -623,9 +623,19 @@ void Painter::draw_rect_with_thickness(IntRect const& rect, Color color, int thi
     IntPoint p3 = { rect.location().x() + rect.width(), rect.location().y() + rect.height() };
     IntPoint p4 = { rect.location().x(), rect.location().y() + rect.height() };
 
-    draw_line(p1, p2, color, thickness);
+    if (thickness == 1) {
+        auto line_to_rect = [&](IntPoint p1, IntPoint p2) {
+            return IntRect::from_two_points(p1, p2.translated(1, 1));
+        };
+        fill_rect(line_to_rect(p1, p2.translated(-1, 0)), color);
+        fill_rect(line_to_rect(p2, p3), color);
+        fill_rect(line_to_rect(p4, p3.translated(-1, 0)), color);
+        fill_rect(line_to_rect(p4, p1), color);
+        return;
+    }
+    draw_line(p1.translated(1, 0), p2.translated(-1, 0), color, thickness);
     draw_line(p2, p3, color, thickness);
-    draw_line(p3, p4, color, thickness);
+    draw_line(p4.translated(1, 0), p3.translated(-1, 0), color, thickness);
     draw_line(p4, p1, color, thickness);
 }
 

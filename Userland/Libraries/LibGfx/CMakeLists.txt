@@ -1,5 +1,6 @@
 set(SOURCES
     AffineTransform.cpp
+    AeroWindowTheme.cpp
     AntiAliasingPainter.cpp
     Bitmap.cpp
     BitmapMixer.cpp
@@ -78,6 +79,7 @@ set(SOURCES
     ImageFormats/WebPWriter.cpp
     ImageFormats/WebPWriterLossless.cpp
     ImmutableBitmap.cpp
+    LunaWindowTheme.cpp
     MedianCut.cpp
     Painter.cpp
     Palette.cpp
@@ -93,7 +95,6 @@ set(SOURCES
     TextLayout.cpp
     Triangle.cpp
     VectorGraphic.cpp
-    WindowTheme.cpp
 )
 
 serenity_lib(LibGfx gfx)
