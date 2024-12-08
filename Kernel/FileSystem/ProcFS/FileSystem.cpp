@@ -43,4 +43,9 @@ Inode& ProcFS::root_inode()
     return *m_root_inode;
 }
 
+ErrorOr<void> ProcFS::rename(Inode&, StringView, Inode&, StringView)
+{
+    return EROFS;
+}
+
 }

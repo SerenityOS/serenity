@@ -36,6 +36,8 @@ public:
     virtual StringView class_name() const override { return "ISO9660FS"sv; }
     virtual Inode& root_inode() override;
 
+    virtual ErrorOr<void> rename(Inode& old_parent_inode, StringView old_basename, Inode& new_parent_inode, StringView new_basename) override;
+
     virtual unsigned total_block_count() const override;
     virtual unsigned total_inode_count() const override;
 

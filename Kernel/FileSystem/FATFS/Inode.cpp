@@ -25,7 +25,7 @@ ErrorOr<NonnullRefPtr<FATInode>> FATInode::create(FATFS& fs, FATEntry entry, FAT
 }
 
 FATInode::FATInode(FATFS& fs, FATEntry entry, FATEntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename)
-    : Inode(fs, first_cluster(fs.m_fat_version))
+    : Inode(fs, first_cluster(fs.m_fat_version, entry.first_cluster_low, entry.first_cluster_high))
     , m_entry(entry)
     , m_inode_metadata_location(inode_metadata_location)
     , m_filename(move(filename))
@@ -240,14 +240,6 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
     return blocks.release_nonnull();
 }
 
-ErrorOr<void> FATInode::replace_child(StringView name, Inode& inode)
-{
-    // FIXME: Implement this properly
-    TRY(remove_child(name));
-    TRY(add_child(inode, name, inode.mode()));
-    return {};
-}
-
 ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback)
 {
     VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
@@ -353,18 +345,18 @@ StringView FATInode::byte_terminated_string(StringView string, u8 fill_byte)
 
 u32 FATInode::first_cluster() const
 {
-    return first_cluster(fs().m_fat_version);
+    return first_cluster(fs().m_fat_version, m_entry.first_cluster_low, m_entry.first_cluster_high);
 }
 
-u32 FATInode::first_cluster(FATVersion const version) const
+u32 FATInode::first_cluster(FATVersion const version, u16 first_cluster_low, u16 first_cluster_high)
 {
     if (version == FATVersion::FAT32) {
-        return (static_cast<u32>(m_entry.first_cluster_high) << 16) | m_entry.first_cluster_low;
+        return (static_cast<u32>(first_cluster_high) << 16) | first_cluster_low;
     }
     // The space occupied in a directory entry by `first_cluster_high` (0x14)
     // is reserved in FAT12/16, and may be used to store file meta-data.
     // As a result, do not include it on FAT12/16 file systems.
-    return m_entry.first_cluster_low;
+    return first_cluster_low;
 }
 
 ErrorOr<void> FATInode::allocate_and_add_cluster_to_chain()
@@ -725,7 +717,7 @@ ErrorOr<void> FATInode::add_child(Inode& inode, StringView name, mode_t mode)
 
     Vector<FATLongFileNameEntry> lfn_entries = {};
     if (!valid_sfn)
-        auto lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
+        lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
 
     MutexLocker locker(m_inode_lock);
 
@@ -742,11 +734,9 @@ ErrorOr<void> FATInode::add_child(Inode& inode, StringView name, mode_t mode)
     return {};
 }
 
-ErrorOr<void> FATInode::remove_child(StringView name)
+ErrorOr<void> FATInode::remove_child_impl(StringView name, bool free_clusters)
 {
     MutexLocker locker(m_inode_lock);
-
-    dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_child(): removing inode \"{}\"", identifier(), name);
 
     VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
 
@@ -792,7 +782,7 @@ ErrorOr<void> FATInode::remove_child(StringView name)
                 for (auto const& lfn_entry_location : lfn_entry_locations)
                     TRY(fs().write_block(lfn_entry_location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&unused_entry)), sizeof(FATEntry), lfn_entry_location.entry * sizeof(FATEntry)));
 
-                if (name == "."sv || name == ".."sv)
+                if (name == "."sv || name == ".."sv || !free_clusters)
                     return {};
 
                 u32 entry_first_cluster = entry->first_cluster_low;
@@ -814,6 +804,12 @@ ErrorOr<void> FATInode::remove_child(StringView name)
     }
 
     return EINVAL;
+}
+
+ErrorOr<void> FATInode::remove_child(StringView name)
+{
+    dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_child(): removing inode \"{}\"", identifier(), name);
+    return remove_child_impl(name, true);
 }
 
 ErrorOr<void> FATInode::chmod(mode_t)

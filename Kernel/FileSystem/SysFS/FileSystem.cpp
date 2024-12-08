@@ -36,4 +36,9 @@ Inode& SysFS::root_inode()
     return *m_root_inode;
 }
 
+ErrorOr<void> SysFS::rename(Inode&, StringView, Inode&, StringView)
+{
+    return EROFS;
+}
+
 }

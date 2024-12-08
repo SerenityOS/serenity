@@ -45,6 +45,11 @@ Inode& DevPtsFS::root_inode()
     return *m_root_inode;
 }
 
+ErrorOr<void> DevPtsFS::rename(Inode&, StringView, Inode&, StringView)
+{
+    return EROFS;
+}
+
 u8 DevPtsFS::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const
 {
     return ram_backed_file_type_to_directory_entry_type(entry);
