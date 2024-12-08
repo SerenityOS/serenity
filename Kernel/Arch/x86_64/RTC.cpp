@@ -36,7 +36,7 @@ static u8 bcd_to_binary(u8 bcd)
 
 static bool try_to_read_registers(unsigned& year, unsigned& month, unsigned& day, unsigned& hour, unsigned& minute, unsigned& second)
 {
-    // Note: Let's wait 0.01 seconds until we stop trying to query the RTC CMOS
+    // Note: Let's wait 0.1 seconds until we stop trying to query the RTC CMOS
     size_t time_passed_in_milliseconds = 0;
     bool update_in_progress_ended_successfully = false;
     while (time_passed_in_milliseconds < 100) {
