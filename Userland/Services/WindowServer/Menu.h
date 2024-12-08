@@ -156,6 +156,8 @@ private:
 
     void start_activation_animation(MenuItem&);
 
+    bool flipped_at_vertical_axis() const { return m_flipped_at_vertical_axis; }
+
     ConnectionFromClient* m_client { nullptr };
     int m_menu_id { 0 };
     String m_name;
@@ -171,6 +173,7 @@ private:
     Gfx::IntPoint m_last_position_in_hover;
     int m_theme_index_at_last_paint { -1 };
     int m_hovered_item_index { -1 };
+    bool m_flipped_at_vertical_axis { false };
 
     bool m_scrollable { false };
     int m_scroll_offset { 0 };
