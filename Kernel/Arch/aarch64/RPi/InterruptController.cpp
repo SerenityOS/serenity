@@ -31,8 +31,8 @@ struct InterruptControllerRegisters {
     u32 disable_basic_irqs;
 };
 
-InterruptController::InterruptController()
-    : m_registers(MMIO::the().peripheral<InterruptControllerRegisters>(0xB200).release_value_but_fixme_should_propagate_errors())
+InterruptController::InterruptController(Memory::TypedMapping<InterruptControllerRegisters volatile> registers_mapping)
+    : m_registers(move(registers_mapping))
 {
 }
 
@@ -75,13 +75,17 @@ static constinit Array const compatibles_array = {
 
 DEVICETREE_DRIVER(BCM2836InterruptControllerDriver, compatibles_array);
 
+// https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm2835-armctrl-ic.txt
 ErrorOr<void> BCM2836InterruptControllerDriver::probe(DeviceTree::Device const& device, StringView) const
 {
+    auto physical_address = TRY(device.get_resource(0)).paddr;
+
     DeviceTree::DeviceRecipe<NonnullLockRefPtr<IRQController>> recipe {
         name(),
         device.node_name(),
-        []() {
-            return adopt_nonnull_lock_ref_or_enomem(new (nothrow) InterruptController());
+        [physical_address]() -> ErrorOr<NonnullLockRefPtr<IRQController>> {
+            auto registers_mapping = TRY(Memory::map_typed_writable<InterruptControllerRegisters volatile>(physical_address));
+            return adopt_nonnull_lock_ref_or_enomem(new (nothrow) InterruptController(move(registers_mapping)));
         },
     };
 

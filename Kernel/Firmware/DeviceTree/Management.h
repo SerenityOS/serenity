@@ -19,13 +19,13 @@ public:
 
     static ErrorOr<void> register_driver(NonnullOwnPtr<DeviceTree::Driver>&&);
 
-    ErrorOr<void> scan_node_for_devices(::DeviceTree::DeviceTreeNodeView const& node);
+    ErrorOr<void> scan_node_for_devices(::DeviceTree::Node const& node);
 
 private:
     static bool attach_device_to_driver(Device&, Driver const&, StringView compatible_entry);
 
     HashMap<StringView, NonnullOwnPtr<Driver>> m_drivers;
-    HashMap<::DeviceTree::DeviceTreeNodeView const*, Device> m_devices;
+    HashMap<::DeviceTree::Node const*, Device> m_devices;
 };
 
 }
