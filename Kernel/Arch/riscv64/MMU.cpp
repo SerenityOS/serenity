@@ -8,8 +8,8 @@
 
 #include <Kernel/Arch/riscv64/CPU.h>
 #include <Kernel/Arch/riscv64/MMU.h>
-#include <Kernel/Arch/riscv64/PageDirectory.h>
 #include <Kernel/Arch/riscv64/SBI.h>
+#include <Kernel/Arch/riscv64/VirtualMemoryDefinitions.h>
 #include <Kernel/Arch/riscv64/pre_init.h>
 #include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Memory/MemoryManager.h>
