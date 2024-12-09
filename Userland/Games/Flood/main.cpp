@@ -73,11 +73,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    size_t board_rows = Config::read_i32("Flood"sv, ""sv, "board_rows"sv, 16);
-    size_t board_columns = Config::read_i32("Flood"sv, ""sv, "board_columns"sv, 16);
+    size_t board_rows = Config::read_u32("Flood"sv, ""sv, "board_rows"sv, 16);
+    size_t board_columns = Config::read_u32("Flood"sv, ""sv, "board_columns"sv, 16);
 
-    Config::write_i32("Flood"sv, ""sv, "board_rows"sv, board_rows);
-    Config::write_i32("Flood"sv, ""sv, "board_columns"sv, board_columns);
+    Config::write_u32("Flood"sv, ""sv, "board_rows"sv, board_rows);
+    Config::write_u32("Flood"sv, ""sv, "board_columns"sv, board_columns);
 
     window->set_double_buffering_enabled(false);
     window->set_title("Flood");
@@ -122,8 +122,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         board_rows = settings_dialog->board_rows();
         board_columns = settings_dialog->board_columns();
 
-        Config::write_i32("Flood"sv, ""sv, "board_rows"sv, board_rows);
-        Config::write_i32("Flood"sv, ""sv, "board_columns"sv, board_columns);
+        Config::write_u32("Flood"sv, ""sv, "board_rows"sv, board_rows);
+        Config::write_u32("Flood"sv, ""sv, "board_columns"sv, board_columns);
 
         GUI::MessageBox::show(settings_dialog, "New settings have been saved and will be applied on a new game"sv, "Settings Changed Successfully"sv, GUI::MessageBox::Type::Information);
     };
