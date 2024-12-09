@@ -468,10 +468,14 @@ ErrorOr<Vector<FATEntryLocation>> FATInode::allocate_entries(u32 count)
     }
 
     if (locations.size() < count) {
+        VERIFY(count - locations.size() <= entries_per_block);
+
+        u32 new_block_index = block_list.size();
         TRY(allocate_and_add_cluster_to_chain());
-        u32 new_block_index = block_list.size() - fs().m_parameter_block->common_bpb()->sectors_per_cluster - 1;
+        block_list = TRY(get_block_list());
+
         u32 entry_index;
-        for (entry_index = 0; entry_index < count - locations.size(); entry_index++) {
+        for (entry_index = 0; entry_index <= count - locations.size(); entry_index++) {
             locations.unchecked_append({ block_list[new_block_index], entry_index });
             dbgln_if(FAT_DEBUG, "FATInode[{}]::allocate_entries(): allocated new entry at block {}, offset {}", identifier(), block_list[new_block_index], entry_index);
         }
@@ -482,6 +486,8 @@ ErrorOr<Vector<FATEntryLocation>> FATInode::allocate_entries(u32 count)
         end_entry.filename[0] = end_entry_byte;
         TRY(fs().write_block(block_list[new_block_index], UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&end_entry)), sizeof(FATEntry), entry_index * sizeof(FATEntry)));
     }
+
+    VERIFY(locations.size() == count);
 
     return locations;
 }
