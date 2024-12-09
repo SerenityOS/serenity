@@ -75,19 +75,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         rc = rename(old_path.characters(), new_path.characters());
         if (rc < 0) {
             if (errno == EXDEV) {
-                auto result = FileSystem::copy_file_or_directory(
-                    new_path, old_path,
-                    FileSystem::RecursionMode::Allowed,
-                    FileSystem::LinkMode::Disallowed,
-                    FileSystem::AddDuplicateFileMarker::No);
-
-                if (result.is_error()) {
+                if (auto result = FileSystem::copy_file_or_directory(
+                        new_path, old_path,
+                        FileSystem::RecursionMode::Allowed,
+                        FileSystem::LinkMode::Disallowed,
+                        FileSystem::AddDuplicateFileMarker::No);
+                    result.is_error()) {
                     warnln("mv: could not move '{}': {}", old_path, result.error());
                     return 1;
                 }
-                rc = unlink(old_path.characters());
-                if (rc < 0)
-                    warnln("mv: unlink '{}': {}", old_path, strerror(errno));
+
+                if (auto result = FileSystem::remove(old_path.view(), FileSystem::RecursionMode::Allowed); result.is_error())
+                    warnln("mv: could not remove '{}': {}", old_path, result.error());
             } else {
                 warnln("mv: cannot move '{}' : {}", old_path, strerror(errno));
             }
