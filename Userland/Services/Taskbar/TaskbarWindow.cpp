@@ -11,6 +11,7 @@
 #include "ClockWidget.h"
 #include "QuickLaunchWidget.h"
 #include "TaskbarButton.h"
+#include "TaskbarFrame.h"
 #include <AK/Debug.h>
 #include <AK/Error.h>
 #include <AK/String.h>
@@ -30,6 +31,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/WindowTheme.h>
 #include <serenity.h>
 #include <stdio.h>
 
@@ -60,8 +62,7 @@ private:
     {
         GUI::Painter painter(*this);
         painter.add_clip_rect(event.rect());
-        painter.fill_rect(rect(), palette().button());
-        painter.draw_line({ 0, 1 }, { width() - 1, 1 }, palette().threed_highlight());
+        palette().window_theme().paint_taskbar(painter, rect(), palette());
     }
 
     virtual void did_layout() override
@@ -120,6 +121,7 @@ ErrorOr<NonnullRefPtr<TaskbarWindow>> TaskbarWindow::create()
 TaskbarWindow::TaskbarWindow()
 {
     set_window_type(GUI::WindowType::Taskbar);
+    set_has_alpha_channel(GUI::Application::the()->palette().window_theme().taskbar_uses_alpha());
     set_title("Taskbar");
 
     on_screen_rects_change(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
@@ -140,7 +142,7 @@ ErrorOr<void> TaskbarWindow::populate_taskbar()
 
     m_default_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"sv));
 
-    m_applet_area_container = main_widget->add<GUI::Frame>();
+    m_applet_area_container = main_widget->add<TaskbarFrame>();
     m_applet_area_container->set_frame_style(Gfx::FrameStyle::SunkenPanel);
 
     m_clock_widget = main_widget->add<Taskbar::ClockWidget>();
@@ -284,6 +286,9 @@ void TaskbarWindow::event(Core::Event& event)
     }
     case GUI::Event::FontsChange:
         set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());
+        break;
+    case GUI::Event::ThemeChange:
+        set_has_alpha_channel(GUI::Application::the()->palette().window_theme().taskbar_uses_alpha());
         break;
     }
     Window::event(event);
