@@ -19,7 +19,7 @@ struct TimerRegisters;
 
 class Timer final : public HardwareTimer<IRQHandler> {
 public:
-    Timer();
+    Timer(Memory::TypedMapping<TimerRegisters volatile>, size_t interrupt_number);
     virtual ~Timer();
 
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::RPiTimer; }

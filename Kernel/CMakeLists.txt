@@ -238,6 +238,7 @@ set(KERNEL_SOURCES
     Firmware/ACPI/Initialize.cpp
     Firmware/ACPI/Parser.cpp
     Firmware/ACPI/StaticParsing.cpp
+    Firmware/DeviceTree/Device.cpp
     Firmware/DeviceTree/DeviceTree.cpp
     Firmware/DeviceTree/Management.cpp
     Firmware/DeviceTree/PlatformInit.cpp

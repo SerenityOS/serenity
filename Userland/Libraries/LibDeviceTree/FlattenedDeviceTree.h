@@ -44,7 +44,7 @@ struct FlattenedDeviceTreeReserveEntry {
 static_assert(sizeof(FlattenedDeviceTreeReserveEntry) == 16, "FDT Memory Reservation entry size must match specification");
 
 // https://devicetree-specification.readthedocs.io/en/v0.3/flattened-format.html#lexical-structure
-enum FlattenedDeviceTreeTokenType : u32 {
+enum class FlattenedDeviceTreeTokenType : u32 {
     BeginNode = 1,
     EndNode = 2,
     Property = 3,
@@ -62,6 +62,6 @@ struct DeviceTreeCallbacks {
 
 ErrorOr<void> walk_device_tree(FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree, DeviceTreeCallbacks);
 
-ErrorOr<DeviceTreeProperty> slow_get_property(StringView name, FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree);
+ErrorOr<Property> slow_get_property(StringView name, FlattenedDeviceTreeHeader const&, ReadonlyBytes raw_device_tree);
 
 } // namespace DeviceTree

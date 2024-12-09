@@ -8,6 +8,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/Endian.h>
+#include <AK/FixedArray.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/IterationDecision.h>
@@ -18,7 +19,73 @@
 
 namespace DeviceTree {
 
-struct DeviceTreeProperty {
+// Devicetree Specification 0.4 (DTSpec): https://github.com/devicetree-org/devicetree-specification/releases/download/v0.4/devicetree-specification-v0.4.pdf
+
+class DeviceTree;
+class Node;
+
+class Address {
+public:
+    Address() = default;
+    Address(ReadonlyBytes data)
+        : m_raw(static_cast<decltype(m_raw)>(data))
+    {
+    }
+
+    ReadonlyBytes raw() const { return m_raw; }
+
+    static Address from_flatptr(FlatPtr flatptr)
+    {
+        BigEndian<FlatPtr> big_endian_flatptr { flatptr };
+
+        Address address;
+        address.m_raw.resize(sizeof(FlatPtr));
+        __builtin_memcpy(address.m_raw.data(), &big_endian_flatptr, sizeof(big_endian_flatptr));
+        return address;
+    }
+
+    ErrorOr<FlatPtr> as_flatptr() const
+    {
+        if (m_raw.size() == sizeof(u32))
+            return *reinterpret_cast<BigEndian<u32> const*>(m_raw.data());
+        if (m_raw.size() == 2 * sizeof(u32))
+            return *reinterpret_cast<BigEndian<u64> const*>(m_raw.data());
+        return ERANGE;
+    }
+
+private:
+    Vector<u8, 4 * sizeof(u32)> m_raw;
+};
+
+class Size {
+public:
+    Size() = default;
+    Size(ReadonlyBytes data)
+        : m_raw(static_cast<decltype(m_raw)>(data))
+    {
+    }
+
+    ReadonlyBytes raw() const { return m_raw; }
+
+    ErrorOr<size_t> as_size_t() const
+    {
+        if (m_raw.size() == sizeof(u32))
+            return *reinterpret_cast<BigEndian<u32> const*>(m_raw.data());
+        if (m_raw.size() == 2 * sizeof(u32))
+            return *reinterpret_cast<BigEndian<u64> const*>(m_raw.data());
+        return ERANGE;
+    }
+
+private:
+    Vector<u8, 2 * sizeof(u32)> m_raw;
+};
+
+struct Interrupt {
+    Node const* domain_root;
+    ReadonlyBytes interrupt_identifier;
+};
+
+struct Property {
     class ValueStream : public FixedMemoryStream {
     public:
         using AK::FixedMemoryStream::FixedMemoryStream;
@@ -82,7 +149,7 @@ struct DeviceTreeProperty {
         size_t count = raw_data.size() / sizeof(T);
         size_t offset = 0;
         for (size_t i = 0; i < count; ++i, offset += sizeof(T)) {
-            auto sub_property = DeviceTreeProperty { raw_data.slice(offset, sizeof(T)) };
+            auto sub_property = Property { raw_data.slice(offset, sizeof(T)) };
             auto result = callback(sub_property.as<T>());
             if (result.is_error())
                 return result;
@@ -95,61 +162,183 @@ struct DeviceTreeProperty {
     ValueStream as_stream() const { return ValueStream { raw_data }; }
 };
 
-class DeviceTreeNodeView {
-    AK_MAKE_NONCOPYABLE(DeviceTreeNodeView);
-    AK_MAKE_DEFAULT_MOVABLE(DeviceTreeNodeView);
+// 2.3.6 reg
+class RegEntry {
+public:
+    RegEntry(Address const& address, Size const& size, Node const& node)
+        : m_address(address)
+        , m_length(size)
+        , m_node(node)
+    {
+    }
+
+    RegEntry(Address&& address, Size&& size, Node const& node)
+        : m_address(move(address))
+        , m_length(move(size))
+        , m_node(node)
+    {
+    }
+
+    Address bus_address() const { return m_address; }
+    Size length() const { return m_length; }
+
+    ErrorOr<Address> resolve_root_address() const;
+
+private:
+    Address m_address;
+    Size m_length;
+    Node const& m_node;
+};
+
+class Reg {
+public:
+    Reg(ReadonlyBytes data, Node const& node)
+        : m_raw(data)
+        , m_node(node)
+    {
+    }
+
+    ErrorOr<RegEntry> entry(size_t index) const;
+    size_t entry_count() const;
+
+private:
+    ReadonlyBytes m_raw;
+    Node const& m_node;
+};
+
+// 2.3.8 ranges
+class RangesEntry {
+public:
+    RangesEntry(Address const& child_bus_address, Address const& parent_bus_address, Size const& length, Node const& node)
+        : m_child_bus_address(child_bus_address)
+        , m_parent_bus_address(parent_bus_address)
+        , m_length(length)
+        , m_node(node)
+    {
+    }
+
+    RangesEntry(Address&& child_bus_address, Address&& parent_bus_address, Size&& length, Node const& node)
+        : m_child_bus_address(move(child_bus_address))
+        , m_parent_bus_address(move(parent_bus_address))
+        , m_length(move(length))
+        , m_node(node)
+    {
+    }
+
+    Address child_bus_address() const { return m_child_bus_address; }
+    Address parent_bus_address() const { return m_parent_bus_address; }
+    Size length() const { return m_length; }
+
+    ErrorOr<Address> translate_child_bus_address_to_parent_bus_address(Address const&) const;
+
+private:
+    Address m_child_bus_address;
+    Address m_parent_bus_address;
+    Size m_length;
+    Node const& m_node;
+};
+
+class Ranges {
+public:
+    Ranges(ReadonlyBytes data, Node const& node)
+        : m_raw(data)
+        , m_node(node)
+    {
+    }
+
+    ErrorOr<RangesEntry> entry(size_t index) const;
+    size_t entry_count() const;
+
+    ErrorOr<Address> translate_child_bus_address_to_parent_bus_address(Address const&) const;
+
+private:
+    ReadonlyBytes m_raw;
+    Node const& m_node;
+};
+
+class Node {
+    AK_MAKE_NONCOPYABLE(Node);
+    AK_MAKE_DEFAULT_MOVABLE(Node);
 
 public:
     bool has_property(StringView prop) const { return m_properties.contains(prop); }
     bool has_child(StringView child) const { return m_children.contains(child); }
-    bool child(StringView name) const { return has_property(name) || has_child(name); }
 
-    Optional<DeviceTreeProperty> get_property(StringView prop) const { return m_properties.get(prop).copy(); }
+    Optional<Property> get_property(StringView prop) const { return m_properties.get(prop).copy(); }
 
     // FIXME: The spec says that @address parts of the name should be ignored when looking up nodes
     //        when they do not appear in the queried name, and all nodes with the same name should be returned
-    Optional<DeviceTreeNodeView const&> get_child(StringView child) const { return m_children.get(child); }
+    Optional<Node const&> get_child(StringView child) const { return m_children.get(child); }
 
-    HashMap<StringView, DeviceTreeNodeView> const& children() const { return m_children; }
-    HashMap<StringView, DeviceTreeProperty> const& properties() const { return m_properties; }
+    HashMap<StringView, Node> const& children() const { return m_children; }
+    HashMap<StringView, Property> const& properties() const { return m_properties; }
 
-    DeviceTreeNodeView const* parent() const { return m_parent; }
+    bool is_root() const { return m_parent == nullptr; }
+
+    Node const* parent() const { return m_parent; }
 
     // NOTE: When checking for multiple drivers, prefer iterating over the string array instead,
     //       as the compatible strings are sorted by preference, which this function cannot account for.
     bool is_compatible_with(StringView) const;
 
-    // FIXME: Add convenience functions for common properties like "reg" and "compatible"
-    // Note: The "reg" property is a list of address and size pairs, but the address is not always a u32 or u64
-    //       In pci devices the #address-size is 3 cells: (phys.lo phys.mid phys.hi)
-    //       with the following format:
-    //       phys.lo, phys.mid: 64-bit Address - BigEndian
-    //       phys.hi: relocatable(1), prefetchable(1), aliased(1), 000(3), space type(2), bus number(8), device number(5), function number(3), register number(8) - BigEndian
+    // 2.3.5 #address-cells and #size-cells
+    u32 address_cells() const
+    {
+        if (auto prop = get_property("#address-cells"sv); prop.has_value())
+            return prop.release_value().as<u32>();
+
+        // If missing, a client program should assume a default value of 2 for #address-cells, and a value of 1 for #size-cells.
+        return 2;
+    }
+
+    // 2.3.5 #address-cells and #size-cells
+    u32 size_cells() const
+    {
+        if (auto prop = get_property("#size-cells"sv); prop.has_value())
+            return prop.release_value().as<u32>();
+
+        // If missing, a client program should assume a default value of 2 for #address-cells, and a value of 1 for #size-cells.
+        return 1;
+    }
+
+    ErrorOr<Reg> reg() const;
+    ErrorOr<Ranges> ranges() const;
+
+    ErrorOr<Address> translate_child_bus_address_to_root_address(Address const&) const;
+
+    // ErrorOr can't hold a reference, so these have to be pointers.
+    // The return value of these functions is always non-null.
+    ErrorOr<Node const*> interrupt_parent(DeviceTree const& device_tree) const;
+    ErrorOr<Node const*> interrupt_domain_root(DeviceTree const& device_tree) const;
+
+    // Handles both the "interrupts" and "interrupts-extended" properties.
+    // The returned Interrupt::domain_root is always non-null.
+    ErrorOr<FixedArray<Interrupt>> interrupts(DeviceTree const& device_tree) const;
 
     // FIXME: Stringify?
     // FIXME: Flatten?
     // Note: That we dont have a oder of children and properties in this view
 protected:
     friend class DeviceTree;
-    DeviceTreeNodeView(DeviceTreeNodeView* parent)
+    Node(Node* parent)
         : m_parent(parent)
     {
     }
-    HashMap<StringView, DeviceTreeNodeView>& children() { return m_children; }
-    HashMap<StringView, DeviceTreeProperty>& properties() { return m_properties; }
-    DeviceTreeNodeView* parent() { return m_parent; }
+    HashMap<StringView, Node>& children() { return m_children; }
+    HashMap<StringView, Property>& properties() { return m_properties; }
+    Node* parent() { return m_parent; }
 
 private:
-    DeviceTreeNodeView* m_parent;
-    HashMap<StringView, DeviceTreeNodeView> m_children;
-    HashMap<StringView, DeviceTreeProperty> m_properties;
+    Node* m_parent;
+    HashMap<StringView, Node> m_children;
+    HashMap<StringView, Property> m_properties;
 };
 
-class DeviceTree : public DeviceTreeNodeView {
+class DeviceTree : public Node {
 public:
     static ErrorOr<NonnullOwnPtr<DeviceTree>> parse(ReadonlyBytes);
 
-    DeviceTreeNodeView const* resolve_node(StringView path) const
+    Node const* resolve_node(StringView path) const
     {
         // FIXME: May children of aliases be referenced?
         // Note: Aliases may not contain a '/' in their name
@@ -166,7 +355,7 @@ public:
             }
         }
 
-        DeviceTreeNodeView const* node = this;
+        Node const* node = this;
         path.for_each_split_view('/', SplitBehavior::Nothing, [&](auto const& part) {
             if (auto child = node->get_child(part); child.has_value()) {
                 node = &child.value();
@@ -180,7 +369,7 @@ public:
         return node;
     }
 
-    Optional<DeviceTreeProperty> resolve_property(StringView path) const
+    Optional<Property> resolve_property(StringView path) const
     {
         auto property_name = path.find_last_split_view('/');
         auto node_path = path.substring_view(0, path.length() - property_name.length() - 1);
@@ -190,14 +379,9 @@ public:
         return node->get_property(property_name);
     }
 
-    // FIXME: Add a helper to iterate over each descendant fulfilling some properties
-    //        Like each node with a "compatible" property containing "pci" or "usb",
-    //        bonus points if it could automatically recurse in the tree under some conditions,
-    //        like "simple-bus" or "pci-bridge" nodes
-
-    auto for_each_node(CallableAs<ErrorOr<RecursionDecision>, StringView, DeviceTreeNodeView const&> auto callback) const
+    auto for_each_node(CallableAs<ErrorOr<RecursionDecision>, StringView, Node const&> auto callback) const
     {
-        auto iterate = [&](auto self, StringView name, DeviceTreeNodeView const& node) -> ErrorOr<RecursionDecision> {
+        auto iterate = [&](auto self, StringView name, Node const& node) -> ErrorOr<RecursionDecision> {
             auto result = TRY(callback(name, node));
 
             if (result == RecursionDecision::Recurse) {
@@ -217,7 +401,7 @@ public:
         return iterate(iterate, "/"sv, *this);
     }
 
-    DeviceTreeNodeView const* phandle(u32 phandle) const
+    Node const* phandle(u32 phandle) const
     {
         if (phandle >= m_phandles.size())
             return nullptr;
@@ -228,14 +412,14 @@ public:
 
 private:
     DeviceTree(ReadonlyBytes flattened_device_tree)
-        : DeviceTreeNodeView(nullptr)
+        : Node(nullptr)
         , m_flattened_device_tree(flattened_device_tree)
     {
     }
 
-    auto for_each_node(CallableAs<ErrorOr<RecursionDecision>, StringView, DeviceTreeNodeView&> auto callback)
+    auto for_each_node(CallableAs<ErrorOr<RecursionDecision>, StringView, Node&> auto callback)
     {
-        auto iterate = [&](auto self, StringView name, DeviceTreeNodeView& node) -> ErrorOr<RecursionDecision> {
+        auto iterate = [&](auto self, StringView name, Node& node) -> ErrorOr<RecursionDecision> {
             auto result = TRY(callback(name, node));
 
             if (result == RecursionDecision::Recurse) {
@@ -255,7 +439,7 @@ private:
         return iterate(iterate, "/"sv, *this);
     }
 
-    ErrorOr<void> set_phandle(u32 phandle, DeviceTreeNodeView* node)
+    ErrorOr<void> set_phandle(u32 phandle, Node* node)
     {
         if (m_phandles.size() > phandle && m_phandles[phandle] != nullptr)
             return Error::from_string_view_or_print_error_and_return_errno("Duplicate phandle entry in DeviceTree"sv, EINVAL);
@@ -266,7 +450,7 @@ private:
     }
 
     ReadonlyBytes m_flattened_device_tree;
-    Vector<DeviceTreeNodeView*> m_phandles;
+    Vector<Node*> m_phandles;
 };
 
 }

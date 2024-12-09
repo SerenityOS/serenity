@@ -8,6 +8,7 @@
 
 #include <AK/Badge.h>
 #include <AK/Noncopyable.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 #include <LibDeviceTree/DeviceTree.h>
 
 namespace Kernel::DeviceTree {
@@ -20,13 +21,13 @@ class Device {
     AK_MAKE_DEFAULT_MOVABLE(Device);
 
 public:
-    Device(::DeviceTree::DeviceTreeNodeView const& node, StringView node_name)
+    Device(::DeviceTree::Node const& node, StringView node_name)
         : m_node(&node)
         , m_node_name(node_name)
     {
     }
 
-    ::DeviceTree::DeviceTreeNodeView const& node() const { return *m_node; }
+    ::DeviceTree::Node const& node() const { return *m_node; }
     StringView node_name() const { return m_node_name; }
 
     Driver const* driver() const { return m_driver; }
@@ -36,9 +37,15 @@ public:
         m_driver = &driver;
     }
 
+    struct Resource {
+        PhysicalAddress paddr;
+        size_t size;
+    };
+    ErrorOr<Resource> get_resource(size_t index) const;
+
 private:
     // This needs to be a pointer for the class to be movable.
-    ::DeviceTree::DeviceTreeNodeView const* m_node;
+    ::DeviceTree::Node const* m_node;
     StringView m_node_name;
     Driver const* m_driver { nullptr };
 };
