@@ -29,6 +29,8 @@ public:
 
     virtual Inode& root_inode() override;
 
+    virtual ErrorOr<void> rename(Inode& old_parent_inode, StringView old_basename, Inode& new_parent_inode, StringView new_basename) override;
+
     u16 allocate_tag() { return m_next_tag++; }
     u32 allocate_fid() { return m_next_fid++; }
 

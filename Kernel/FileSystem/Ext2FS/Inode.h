@@ -38,7 +38,6 @@ private:
     virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode& child, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
-    virtual ErrorOr<void> replace_child(StringView name, Inode& child) override;
     virtual ErrorOr<void> update_timestamps(Optional<UnixDateTime> atime, Optional<UnixDateTime> ctime, Optional<UnixDateTime> mtime) override;
     virtual ErrorOr<void> increment_link_count() override;
     virtual ErrorOr<void> decrement_link_count() override;
@@ -49,6 +48,8 @@ private:
 
     bool is_within_inode_bounds(FlatPtr base, FlatPtr value_offset, size_t value_size) const;
 
+    static u8 to_ext2_file_type(mode_t mode);
+
     static time_t decode_seconds_with_extra(i32 seconds, u32 extra) { return (extra & EXT4_EPOCH_MASK) ? static_cast<time_t>(seconds) + (static_cast<time_t>(extra & EXT4_EPOCH_MASK) << 32) : static_cast<time_t>(seconds); }
     static u32 decode_nanoseconds_from_extra(u32 extra) { return (extra & EXT4_NSEC_MASK) >> EXT4_EPOCH_BITS; }
     static u32 encode_time_to_extra(time_t seconds, u32 nanoseconds) { return (((static_cast<time_t>(seconds) - static_cast<i32>(seconds)) >> 32) & EXT4_EPOCH_MASK) | (nanoseconds << EXT4_EPOCH_BITS); }
@@ -56,6 +57,7 @@ private:
     ErrorOr<BlockBasedFileSystem::BlockIndex> allocate_block(BlockBasedFileSystem::BlockIndex, bool zero_newly_allocated_block, bool allow_cache);
     ErrorOr<u32> allocate_and_zero_block();
 
+    ErrorOr<void> remove_child_impl(StringView name, bool remove_misc);
     ErrorOr<void> write_directory(Vector<Ext2FSDirectoryEntry>&);
     ErrorOr<void> populate_lookup_cache();
     ErrorOr<void> resize(u64);

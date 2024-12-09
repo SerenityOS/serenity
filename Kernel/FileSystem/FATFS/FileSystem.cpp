@@ -265,6 +265,35 @@ Inode& FATFS::root_inode()
     return *m_root_inode;
 }
 
+ErrorOr<void> FATFS::rename(Inode& old_parent_inode, StringView old_basename, Inode& new_parent_inode, StringView new_basename)
+{
+    if (!new_parent_inode.lookup(new_basename).is_error())
+        TRY(new_parent_inode.remove_child(new_basename));
+
+    auto old_inode = MUST(old_parent_inode.lookup(old_basename));
+
+    TRY(new_parent_inode.add_child(old_inode, new_basename, old_inode->mode()));
+    TRY(static_cast<FATInode&>(old_parent_inode).remove_child_impl(old_basename, false));
+
+    if (old_inode->is_directory() && old_parent_inode.index() != new_parent_inode.index()) {
+        auto dot_dot = TRY(old_inode->lookup(".."sv));
+        if (m_fat_version == FATVersion::FAT32) {
+            if (&new_parent_inode == &root_inode()) {
+                static_cast<FATInode&>(*dot_dot).m_entry.first_cluster_low = 0;
+                static_cast<FATInode&>(*dot_dot).m_entry.first_cluster_high = 0;
+            } else {
+                static_cast<FATInode&>(*dot_dot).m_entry.first_cluster_low = static_cast<FATInode&>(new_parent_inode).m_entry.first_cluster_low;
+                static_cast<FATInode&>(*dot_dot).m_entry.first_cluster_high = static_cast<FATInode&>(new_parent_inode).m_entry.first_cluster_high;
+            }
+        } else {
+            static_cast<FATInode&>(*dot_dot).m_entry.first_cluster_low = static_cast<FATInode&>(new_parent_inode).m_entry.first_cluster_low;
+        }
+        TRY(static_cast<FATInode&>(*dot_dot).flush_metadata());
+    }
+
+    return {};
+}
+
 FatBlockSpan FATFS::first_block_of_cluster(u32 cluster) const
 {
     // For FAT12/16, we use a value of cluster 0 to indicate this is a cluster for the root directory.
