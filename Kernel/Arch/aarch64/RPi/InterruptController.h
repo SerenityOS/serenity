@@ -28,7 +28,7 @@ private:
 
     virtual void eoi(GenericInterruptHandler const&) const override;
 
-    virtual u64 pending_interrupts() const override;
+    virtual Optional<size_t> pending_interrupt() const override;
 
     virtual StringView model() const override
     {
