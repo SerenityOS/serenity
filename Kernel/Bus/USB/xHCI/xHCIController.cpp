@@ -216,7 +216,8 @@ ErrorOr<void> xHCIController::initialize()
     m_operational_registers.configure.max_device_slots_enabled = m_device_slots;
 
     // 2. Program the Device Context Base Address Array Pointer (DCBAAP) register (5.4.6) with a 64-bit address pointing to where the Device Context Base Address Array is located.
-    m_device_context_base_address_array_region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up((m_device_slots + 1) * sizeof(u64))), "xHCI Device Context Base Address Array"sv, Memory::Region::Access::ReadWrite));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    m_device_context_base_address_array_region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up((m_device_slots + 1) * sizeof(u64))), "xHCI Device Context Base Address Array"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO));
     dbgln_if(XHCI_DEBUG, "xHCI: Device Context Base Address Array - {} / {}", m_device_context_base_address_array_region->vaddr(), m_device_context_base_address_array_region->physical_page(0)->paddr());
     m_device_context_base_address_array = reinterpret_cast<u64*>(m_device_context_base_address_array_region->vaddr().as_ptr());
     auto requested_scratchpad_buffers = (m_capability_registers.structural_parameters.max_scratchpad_buffers_high << 5) | m_capability_registers.structural_parameters.max_scratchpad_buffers_low;
@@ -238,7 +239,8 @@ ErrorOr<void> xHCIController::initialize()
     m_operational_registers.device_context_base_address_array_pointer.high = device_context_base_address_array_pointer >> 32;
 
     // 3. Define the Command Ring Dequeue Pointer by programming the Command Ring Control Register (5.4.5) with a 64-bit address pointing to the starting address of the first TRB of the Command Ring.
-    m_command_and_event_rings_region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up(sizeof(CommandAndEventRings))), "xHCI Command and Event Rings"sv, Memory::Region::Access::ReadWrite));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    m_command_and_event_rings_region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up(sizeof(CommandAndEventRings))), "xHCI Command and Event Rings"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO));
     dbgln_if(XHCI_DEBUG, "xHCI: Command and Event Rings - {} / {}", m_command_and_event_rings_region->vaddr(), m_command_and_event_rings_region->physical_page(0)->paddr());
     auto command_and_event_rings_region_virtual_address = m_command_and_event_rings_region->vaddr().get();
     m_command_ring = reinterpret_cast<TransferRequestBlock*>(command_and_event_rings_region_virtual_address + __builtin_offsetof(CommandAndEventRings, command_ring));
@@ -545,7 +547,8 @@ ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
 
     // 5. After successfully obtaining a Device Slot, system software shall initialize the data structures associated with the slot as described in section 4.3.3.
     //   1. Allocate an Input Context data structure (6.2.5) and initialize all fields to ‘0’.
-    slot_state.input_context_region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up(input_context_size())), "xHCI Input Context"sv, Memory::Region::ReadWrite));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    slot_state.input_context_region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up(input_context_size())), "xHCI Input Context"sv, Memory::Region::ReadWrite, Memory::MemoryType::IO));
 
     //   2. Initialize the Input Control Context (6.2.5.1) of the Input Context by setting the A0 and A1 flags to ‘1’.
     // These flags indicate that the Slot Context and the Endpoint 0 Context of the Input Context are affected by the command.
@@ -623,7 +626,8 @@ ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
 
     //   4.  Allocate and initialize the Transfer Ring for the Default Control Endpoint.
     //   Refer to section 4.9 for TRB Ring initialization requirements and to section 6.4 for the formats of TRBs
-    slot_state.endpoint_rings[0].region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up(endpoint_ring_size * sizeof(TransferRequestBlock))), "xHCI Endpoint Rings"sv, Memory::Region::ReadWrite));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    slot_state.endpoint_rings[0].region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up(endpoint_ring_size * sizeof(TransferRequestBlock))), "xHCI Endpoint Rings"sv, Memory::Region::ReadWrite, Memory::MemoryType::IO));
     auto* endpoint_ring_memory = slot_state.endpoint_rings[0].ring_vaddr();
     endpoint_ring_memory[endpoint_ring_size - 1].generic.transfer_request_block_type = TransferRequestBlock::TRBType::Link;
     auto endpoint_ring_address = slot_state.endpoint_rings[0].ring_paddr();
@@ -671,7 +675,8 @@ ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
     endpoint_context->average_transfer_request_block = 8;
 
     //   6. Allocate the Output Device Context data structure (6.2.1) and initialize it to ‘0’.
-    slot_state.device_context_region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up(device_context_size())), "xHCI Device Context"sv, Memory::Region::ReadWrite));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    slot_state.device_context_region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up(device_context_size())), "xHCI Device Context"sv, Memory::Region::ReadWrite, Memory::MemoryType::IO));
 
     //   7. Load the appropriate (Device Slot ID) entry in the Device Context Base Address Array (5.4.6) with a pointer to the Output Device Context data structure (6.2.1).
     m_device_context_base_address_array[slot] = slot_state.device_context_region->physical_page(0)->paddr().get();
@@ -1000,7 +1005,8 @@ ErrorOr<void> xHCIController::initialize_endpoint_if_needed(Pipe const& pipe)
     if (endpoint_ring.region)
         return {}; // Already initialized
 
-    endpoint_ring.region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up(endpoint_ring_size * sizeof(TransferRequestBlock))), "xHCI Endpoint Rings"sv, Memory::Region::ReadWrite));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    endpoint_ring.region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up(endpoint_ring_size * sizeof(TransferRequestBlock))), "xHCI Endpoint Rings"sv, Memory::Region::ReadWrite, Memory::MemoryType::IO));
     auto* endpoint_ring_memory = endpoint_ring.ring_vaddr();
     endpoint_ring_memory[endpoint_ring_size - 1].generic.transfer_request_block_type = TransferRequestBlock::TRBType::Link;
     auto endpoint_ring_address = endpoint_ring.ring_paddr();
