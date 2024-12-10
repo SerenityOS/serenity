@@ -26,7 +26,7 @@ private:
     virtual void enable(GenericInterruptHandler const&) override;
     virtual void disable(GenericInterruptHandler const&) override;
 
-    virtual void eoi(GenericInterruptHandler const&) const override;
+    virtual void eoi(GenericInterruptHandler const&) override;
 
     virtual Optional<size_t> pending_interrupt() const override;
 
