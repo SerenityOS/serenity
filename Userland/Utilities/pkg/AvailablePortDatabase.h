@@ -21,7 +21,7 @@ public:
     static ErrorOr<NonnullOwnPtr<AvailablePortDatabase>> instantiate_ports_database(StringView path);
     static ErrorOr<int> download_available_ports_list_file(StringView path);
 
-    void query_details_for_package(HashMap<String, InstalledPort> const& installed_ports_map, StringView package_name, bool verbose);
+    ErrorOr<void> query_details_for_package(HashMap<String, InstalledPort> const& installed_ports_map, StringView package_name, bool verbose);
 
     HashMap<String, AvailablePort> const& map() const { return m_available_ports; }
     String const& path() const { return m_path; }

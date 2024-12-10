@@ -13,17 +13,17 @@
 #include <LibMain/Main.h>
 #include <unistd.h>
 
-static void print_port_details(InstalledPort const& port, Optional<AvailablePort> const& available_port)
+static ErrorOr<void> print_port_details(InstalledPort const& port, Optional<AvailablePort> const& available_port)
 {
-    out("{}, installed as {}, version {}", port.name(), port.type_as_string_view(), port.version_string());
+    out("{}, installed as {}, version {}", port.name(), port.type_as_string_view(), TRY(port.version_string()));
     if (available_port.has_value()) {
         auto const& upstream_port = available_port.value();
         auto const& upstream_version = upstream_port.version_semver();
         auto const& this_version = port.version_semver();
 
         if ((this_version.is_error() || upstream_version.is_error())) {
-            if (upstream_port.version_string() != port.version_string()) {
-                outln(" (upgrade available -> {})", upstream_port.version_string());
+            if (TRY(upstream_port.version_string()) != TRY(port.version_string())) {
+                outln(" (upgrade available -> {})", TRY(upstream_port.version_string()));
             }
         } else {
             auto const& ap_version = upstream_version.value();
@@ -44,6 +44,7 @@ static void print_port_details(InstalledPort const& port, Optional<AvailablePort
             out(" {}", dependency);
         outln();
     }
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -102,9 +103,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(installed_ports_database->for_each_by_type(InstalledPort::Type::Manual, [database](InstalledPort const& port) -> ErrorOr<void> {
             auto available_port = database.map().find(port.name());
             if (available_port != database.map().end()) {
-                print_port_details(port, available_port->value);
+                TRY(print_port_details(port, available_port->value));
             } else {
-                print_port_details(port, {});
+                TRY(print_port_details(port, {}));
             }
             return {};
         }));
@@ -115,7 +116,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("pkg: Queried package name is empty.");
             return 0;
         }
-        available_ports_database->query_details_for_package(installed_ports_database->map(), query_package, verbose);
+        TRY(available_ports_database->query_details_for_package(installed_ports_database->map(), query_package, verbose));
     }
 
     return return_value;
