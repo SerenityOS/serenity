@@ -58,7 +58,7 @@ void InterruptController::disable(GenericInterruptHandler const& handler)
         m_registers->disable_irqs_2 = m_registers->disable_irqs_2 | (1 << (interrupt_number - 32));
 }
 
-void InterruptController::eoi(GenericInterruptHandler const&) const
+void InterruptController::eoi(GenericInterruptHandler const&)
 {
     // NOTE: The interrupt controller cannot clear the interrupt, since it is basically just a big multiplexer.
     //       The interrupt should be cleared by the corresponding device driver, such as a timer or uart.

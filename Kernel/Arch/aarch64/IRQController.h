@@ -20,7 +20,7 @@ public:
     virtual void enable(GenericInterruptHandler const&) = 0;
     virtual void disable(GenericInterruptHandler const&) = 0;
 
-    virtual void eoi(GenericInterruptHandler const&) const = 0;
+    virtual void eoi(GenericInterruptHandler const&) = 0;
 
     virtual Optional<size_t> pending_interrupt() const = 0;
 
