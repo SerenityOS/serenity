@@ -749,7 +749,7 @@ RENDERER_HANDLER(inline_image_begin_data)
     VERIFY_NOT_REACHED();
 }
 
-static PDFErrorOr<Value> expand_inline_image_value(Value const& value, HashMap<DeprecatedFlyString, DeprecatedFlyString> const& value_expansions)
+static PDFErrorOr<Value> expand_inline_image_value(Value const& value, HashMap<FlyByteString, FlyByteString> const& value_expansions)
 {
     if (!value.has<NonnullRefPtr<Object>>())
         return value;
@@ -777,7 +777,7 @@ static PDFErrorOr<Value> expand_inline_image_value(Value const& value, HashMap<D
     // For the DecodeParms dict. It might be fine to just `return value` here, I'm not sure if there can really be abbreviations in here.
     if (object->is<DictObject>()) {
         auto const& dict = object->cast<DictObject>()->map();
-        HashMap<DeprecatedFlyString, Value> expanded_dict;
+        HashMap<FlyByteString, Value> expanded_dict;
         for (auto const& [key, value] : dict) {
             auto expanded_value = TRY(expand_inline_image_value(value, value_expansions));
             expanded_dict.set(key, expanded_value);
@@ -821,7 +821,7 @@ static PDFErrorOr<Value> expand_inline_image_colorspace(Value color_space_value,
 static PDFErrorOr<NonnullRefPtr<StreamObject>> expand_inline_image_abbreviations(NonnullRefPtr<StreamObject> inline_stream, NonnullRefPtr<DictObject> resources, RefPtr<Document> document)
 {
     // TABLE 4.43 Entries in an inline image object
-    static HashMap<DeprecatedFlyString, DeprecatedFlyString> key_expansions {
+    static HashMap<FlyByteString, FlyByteString> key_expansions {
         { "BPC", "BitsPerComponent" },
         { "CS", "ColorSpace" },
         { "D", "Decode" },
@@ -838,7 +838,7 @@ static PDFErrorOr<NonnullRefPtr<StreamObject>> expand_inline_image_abbreviations
     // TABLE 4.44 Additional abbreviations in an inline image object
     // "Also note that JBIG2Decode and JPXDecode are not listed in Table 4.44
     //  because those filters can be applied only to image XObjects."
-    static HashMap<DeprecatedFlyString, DeprecatedFlyString> value_expansions {
+    static HashMap<FlyByteString, FlyByteString> value_expansions {
         { "G", "DeviceGray" },
         { "RGB", "DeviceRGB" },
         { "CMYK", "DeviceCMYK" },
@@ -853,13 +853,13 @@ static PDFErrorOr<NonnullRefPtr<StreamObject>> expand_inline_image_abbreviations
     };
 
     // The values in key_expansions, that is the final expansions, are the valid keys in an inline image dict.
-    HashTable<DeprecatedFlyString> valid_keys;
+    HashTable<FlyByteString> valid_keys;
     for (auto const& [key, value] : key_expansions)
         valid_keys.set(value);
 
-    HashMap<DeprecatedFlyString, Value> expanded_dict;
+    HashMap<FlyByteString, Value> expanded_dict;
     for (auto const& [key, value] : inline_stream->dict()->map()) {
-        DeprecatedFlyString expanded_key = key_expansions.get(key).value_or(key);
+        FlyByteString expanded_key = key_expansions.get(key).value_or(key);
 
         // "Entries other than those listed are ignored"
         if (!valid_keys.contains(expanded_key)) {
@@ -1153,7 +1153,7 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
     auto width = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Width)));
     auto height = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Height)));
 
-    auto is_filter = [&](DeprecatedFlyString const& name) -> PDFErrorOr<bool> {
+    auto is_filter = [&](FlyByteString const& name) -> PDFErrorOr<bool> {
         if (!image_dict->contains(CommonNames::Filter))
             return false;
         auto filter_object = TRY(image_dict->get_object(m_document, CommonNames::Filter));

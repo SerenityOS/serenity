@@ -75,7 +75,7 @@ PDFErrorOr<Optional<ByteString>> InfoDict::modification_date() const
     return get(CommonNames::ModDate);
 }
 
-PDFErrorOr<Optional<String>> InfoDict::get_text(DeprecatedFlyString const& name) const
+PDFErrorOr<Optional<String>> InfoDict::get_text(FlyByteString const& name) const
 {
     return TRY(TRY(get(name)).map(Document::text_string_to_utf8));
 }
@@ -237,7 +237,7 @@ PDFErrorOr<Page> Document::get_page(u32 index)
     if (maybe_resources_object.has_value())
         resources = maybe_resources_object.value()->cast<DictObject>();
     else
-        resources = make_object<DictObject>(HashMap<DeprecatedFlyString, Value> {});
+        resources = make_object<DictObject>(HashMap<FlyByteString, Value> {});
 
     RefPtr<Object> contents;
     if (raw_page_object->contains(CommonNames::Contents))
@@ -320,9 +320,9 @@ PDFErrorOr<Optional<InfoDict>> Document::info_dict()
     return InfoDict(this, TRY(trailer()->get_dict(this, CommonNames::Info)));
 }
 
-PDFErrorOr<Vector<DeprecatedFlyString>> Document::read_filters(NonnullRefPtr<DictObject> dict)
+PDFErrorOr<Vector<FlyByteString>> Document::read_filters(NonnullRefPtr<DictObject> dict)
 {
-    Vector<DeprecatedFlyString> filters;
+    Vector<FlyByteString> filters;
 
     // We may either get a single filter or an array of cascading filters
     auto filter_object = TRY(dict->get_object(this, CommonNames::Filter));
@@ -370,7 +370,7 @@ PDFErrorOr<void> Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObj
     return {};
 }
 
-PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree(NonnullRefPtr<DictObject> tree, DeprecatedFlyString name)
+PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree(NonnullRefPtr<DictObject> tree, FlyByteString name)
 {
     if (tree->contains(CommonNames::Kids)) {
         return find_in_name_tree_nodes(tree->get_array(CommonNames::Kids), name);
@@ -381,7 +381,7 @@ PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree(NonnullRefPtr<Dict
     return find_in_key_value_array(key_value_names_array, name);
 }
 
-PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree_nodes(NonnullRefPtr<ArrayObject> siblings, DeprecatedFlyString name)
+PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree_nodes(NonnullRefPtr<ArrayObject> siblings, FlyByteString name)
 {
     for (size_t i = 0; i < siblings->size(); i++) {
         auto sibling = TRY(resolve_to<DictObject>(siblings->at(i)));
@@ -397,7 +397,7 @@ PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_name_tree_nodes(NonnullRefPt
     return Error { Error::Type::MalformedPDF, ByteString::formatted("Didn't find node in name tree containing name {}", name) };
 }
 
-PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_key_value_array(NonnullRefPtr<ArrayObject> key_value_array, DeprecatedFlyString name)
+PDFErrorOr<NonnullRefPtr<Object>> Document::find_in_key_value_array(NonnullRefPtr<ArrayObject> key_value_array, FlyByteString name)
 {
     if (key_value_array->size() % 2 == 1)
         return Error { Error::Type::MalformedPDF, "key/value array has dangling key" };
@@ -493,7 +493,7 @@ PDFErrorOr<Destination> Document::create_destination_from_parameters(NonnullRefP
     return Destination { type, page_number, parameters };
 }
 
-PDFErrorOr<Optional<NonnullRefPtr<Object>>> Document::get_inheritable_object(DeprecatedFlyString const& name, NonnullRefPtr<DictObject> object)
+PDFErrorOr<Optional<NonnullRefPtr<Object>>> Document::get_inheritable_object(FlyByteString const& name, NonnullRefPtr<DictObject> object)
 {
     if (!object->contains(name)) {
         if (!object->contains(CommonNames::Parent))
@@ -504,7 +504,7 @@ PDFErrorOr<Optional<NonnullRefPtr<Object>>> Document::get_inheritable_object(Dep
     return TRY(object->get_object(this, name));
 }
 
-PDFErrorOr<Optional<Value>> Document::get_inheritable_value(DeprecatedFlyString const& name, NonnullRefPtr<DictObject> object)
+PDFErrorOr<Optional<Value>> Document::get_inheritable_value(FlyByteString const& name, NonnullRefPtr<DictObject> object)
 {
     if (!object->contains(name)) {
         if (!object->contains(CommonNames::Parent))
@@ -535,7 +535,7 @@ PDFErrorOr<Destination> Document::create_destination_from_object(NonnullRefPtr<O
     }
 
     if (dest_obj->is<NameObject>() || dest_obj->is<StringObject>()) {
-        DeprecatedFlyString dest_name;
+        FlyByteString dest_name;
         if (dest_obj->is<NameObject>())
             dest_name = dest_obj->cast<NameObject>()->name();
         else

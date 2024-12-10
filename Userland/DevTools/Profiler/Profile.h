@@ -16,7 +16,7 @@
 #include "SignpostsModel.h"
 #include "SourceModel.h"
 #include <AK/Bitmap.h>
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyByteString.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
@@ -35,7 +35,7 @@ extern OwnPtr<Debug::DebugInfo> g_kernel_debug_info;
 
 class ProfileNode : public RefCounted<ProfileNode> {
 public:
-    static NonnullRefPtr<ProfileNode> create(Process const& process, DeprecatedFlyString const& object_name, ByteString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
+    static NonnullRefPtr<ProfileNode> create(Process const& process, FlyByteString const& object_name, ByteString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     {
         return adopt_ref(*new ProfileNode(process, object_name, move(symbol), address, offset, timestamp, pid));
     }
@@ -54,7 +54,7 @@ public:
     bool has_seen_event(size_t event_index) const { return m_seen_events.get(event_index); }
     void did_see_event(size_t event_index) { m_seen_events.set(event_index, true); }
 
-    DeprecatedFlyString const& object_name() const { return m_object_name; }
+    FlyByteString const& object_name() const { return m_object_name; }
     ByteString const& symbol() const { return m_symbol; }
     FlatPtr address() const { return m_address; }
     u32 offset() const { return m_offset; }
@@ -75,7 +75,7 @@ public:
         m_children.append(child);
     }
 
-    ProfileNode& find_or_create_child(DeprecatedFlyString const& object_name, ByteString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
+    ProfileNode& find_or_create_child(FlyByteString const& object_name, ByteString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     {
         for (size_t i = 0; i < m_children.size(); ++i) {
             auto& child = m_children[i];
@@ -113,12 +113,12 @@ public:
 
 private:
     explicit ProfileNode(Process const&);
-    explicit ProfileNode(Process const&, DeprecatedFlyString const& object_name, ByteString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t);
+    explicit ProfileNode(Process const&, FlyByteString const& object_name, ByteString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t);
 
     bool m_root { false };
     Process const& m_process;
     ProfileNode* m_parent { nullptr };
-    DeprecatedFlyString m_object_name;
+    FlyByteString m_object_name;
     ByteString m_symbol;
     pid_t m_pid { 0 };
     FlatPtr m_address { 0 };
@@ -167,7 +167,7 @@ public:
     Vector<NonnullRefPtr<ProfileNode>> const& roots() const { return m_roots; }
 
     struct Frame {
-        DeprecatedFlyString object_name;
+        FlyByteString object_name;
         ByteString symbol;
         FlatPtr address { 0 };
         u32 offset { 0 };

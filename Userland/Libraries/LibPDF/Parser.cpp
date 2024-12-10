@@ -403,10 +403,10 @@ PDFErrorOr<NonnullRefPtr<ArrayObject>> Parser::parse_array()
     return make_object<ArrayObject>(values);
 }
 
-PDFErrorOr<HashMap<DeprecatedFlyString, Value>> Parser::parse_dict_contents_until(char const* end)
+PDFErrorOr<HashMap<FlyByteString, Value>> Parser::parse_dict_contents_until(char const* end)
 {
     m_reader.consume_whitespace();
-    HashMap<DeprecatedFlyString, Value> map;
+    HashMap<FlyByteString, Value> map;
 
     while (!m_reader.done()) {
         parse_comment();
@@ -425,7 +425,7 @@ PDFErrorOr<NonnullRefPtr<DictObject>> Parser::parse_dict()
     if (!m_reader.consume('<') || !m_reader.consume('<'))
         return error("Expected dict to start with \"<<\"");
 
-    HashMap<DeprecatedFlyString, Value> map = TRY(parse_dict_contents_until(">>"));
+    HashMap<FlyByteString, Value> map = TRY(parse_dict_contents_until(">>"));
 
     if (!m_reader.consume('>') || !m_reader.consume('>'))
         return error("Expected dict to end with \">>\"");
@@ -440,7 +440,7 @@ PDFErrorOr<void> Parser::unfilter_stream(NonnullRefPtr<StreamObject> stream_obje
     if (!dict->contains(CommonNames::Filter))
         return {};
 
-    Vector<DeprecatedFlyString> filters = TRY(m_document->read_filters(dict));
+    Vector<FlyByteString> filters = TRY(m_document->read_filters(dict));
 
     // Every filter may get its own parameter dictionary
     Vector<RefPtr<DictObject>> decode_parms_vector;
@@ -523,7 +523,7 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_inline_image()
     // and then arbitrary binary data between ID and EI.
     // This means they need a special code path in the parser, so that image data in there doesn't confuse the operator parser.
 
-    HashMap<DeprecatedFlyString, Value> map = TRY(parse_dict_contents_until("ID"));
+    HashMap<FlyByteString, Value> map = TRY(parse_dict_contents_until("ID"));
     m_reader.consume(2); // "ID"
 
     // "Unless the image uses ASCIIHexDecode or ASCII85Decode as one of its filters,
