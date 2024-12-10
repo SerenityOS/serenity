@@ -261,8 +261,9 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(StringView interfa
     , PCI::Device(device_identifier)
     , IRQHandler(irq)
     , m_registers_io_window(move(registers_io_window))
-    , m_rx_descriptors(Memory::allocate_dma_region_as_typed_array<RXDescriptor volatile>(number_of_rx_descriptors + 1, "RTL8168 RX"sv, Memory::Region::Access::ReadWrite).release_value_but_fixme_should_propagate_errors())
-    , m_tx_descriptors(Memory::allocate_dma_region_as_typed_array<TXDescriptor volatile>(number_of_tx_descriptors + 1, "RTL8168 TX"sv, Memory::Region::Access::ReadWrite).release_value_but_fixme_should_propagate_errors())
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    , m_rx_descriptors(Memory::allocate_dma_region_as_typed_array<RXDescriptor volatile>(number_of_rx_descriptors + 1, "RTL8168 RX"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO).release_value_but_fixme_should_propagate_errors())
+    , m_tx_descriptors(Memory::allocate_dma_region_as_typed_array<TXDescriptor volatile>(number_of_tx_descriptors + 1, "RTL8168 TX"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO).release_value_but_fixme_should_propagate_errors())
 {
     dmesgln_pci(*this, "Found @ {}", device_identifier.address());
     dmesgln_pci(*this, "I/O port base: {}", m_registers_io_window);

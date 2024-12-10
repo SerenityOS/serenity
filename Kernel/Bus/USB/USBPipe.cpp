@@ -34,7 +34,8 @@ ErrorOr<void> Pipe::clear_halt()
 
 ErrorOr<NonnullOwnPtr<ControlPipe>> ControlPipe::create(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, size_t buffer_size)
 {
-    auto dma_buffer = TRY(MM.allocate_dma_buffer_pages(TRY(Memory::page_round_up(buffer_size)), "USB device DMA buffer"sv, Memory::Region::Access::ReadWrite));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    auto dma_buffer = TRY(MM.allocate_dma_buffer_pages(TRY(Memory::page_round_up(buffer_size)), "USB device DMA buffer"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO));
     return adopt_nonnull_own_or_enomem(new (nothrow) ControlPipe(controller, device, endpoint_number, max_packet_size, move(dma_buffer)));
 }
 
@@ -74,7 +75,8 @@ ErrorOr<size_t> ControlPipe::submit_control_transfer(u8 request_type, u8 request
 ErrorOr<NonnullOwnPtr<BulkInPipe>> BulkInPipe::create(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, size_t buffer_size)
 {
     VERIFY(buffer_size >= max_packet_size);
-    auto dma_buffer = TRY(MM.allocate_dma_buffer_pages(TRY(Memory::page_round_up(buffer_size)), "USB pipe DMA buffer"sv, Memory::Region::Access::ReadWrite));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    auto dma_buffer = TRY(MM.allocate_dma_buffer_pages(TRY(Memory::page_round_up(buffer_size)), "USB pipe DMA buffer"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO));
     return adopt_nonnull_own_or_enomem(new (nothrow) BulkInPipe(controller, device, endpoint_number, max_packet_size, move(dma_buffer)));
 }
 
@@ -120,7 +122,8 @@ ErrorOr<size_t> BulkInPipe::submit_bulk_in_transfer(size_t length, UserOrKernelB
 ErrorOr<NonnullOwnPtr<BulkOutPipe>> BulkOutPipe::create(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, size_t buffer_size)
 {
     VERIFY(buffer_size >= max_packet_size);
-    auto dma_buffer = TRY(MM.allocate_dma_buffer_pages(TRY(Memory::page_round_up(buffer_size)), "USB pipe DMA buffer"sv, Memory::Region::Access::ReadWrite));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    auto dma_buffer = TRY(MM.allocate_dma_buffer_pages(TRY(Memory::page_round_up(buffer_size)), "USB pipe DMA buffer"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO));
     return adopt_nonnull_own_or_enomem(new (nothrow) BulkOutPipe(controller, device, endpoint_number, max_packet_size, move(dma_buffer)));
 }
 
@@ -166,7 +169,8 @@ ErrorOr<size_t> BulkOutPipe::submit_bulk_out_transfer(size_t length, UserOrKerne
 ErrorOr<NonnullOwnPtr<InterruptInPipe>> InterruptInPipe::create(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, u16 poll_interval, size_t buffer_size)
 {
     VERIFY(buffer_size >= max_packet_size);
-    auto dma_buffer = TRY(MM.allocate_dma_buffer_pages(TRY(Memory::page_round_up(buffer_size)), "USB pipe DMA buffer"sv, Memory::Region::Access::ReadWrite));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    auto dma_buffer = TRY(MM.allocate_dma_buffer_pages(TRY(Memory::page_round_up(buffer_size)), "USB pipe DMA buffer"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO));
     return adopt_nonnull_own_or_enomem(new (nothrow) InterruptInPipe(controller, device, endpoint_number, max_packet_size, poll_interval, move(dma_buffer)));
 }
 
@@ -189,7 +193,8 @@ ErrorOr<NonnullLockRefPtr<Transfer>> InterruptInPipe::submit_interrupt_in_transf
 ErrorOr<NonnullOwnPtr<InterruptOutPipe>> InterruptOutPipe::create(USBController const& controller, Device& device, u8 endpoint_number, u16 max_packet_size, u16 poll_interval, size_t buffer_size)
 {
     VERIFY(buffer_size >= max_packet_size);
-    auto dma_buffer = TRY(MM.allocate_dma_buffer_pages(TRY(Memory::page_round_up(buffer_size)), "USB pipe DMA buffer"sv, Memory::Region::Access::ReadWrite));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    auto dma_buffer = TRY(MM.allocate_dma_buffer_pages(TRY(Memory::page_round_up(buffer_size)), "USB pipe DMA buffer"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO));
     return adopt_nonnull_own_or_enomem(new (nothrow) InterruptOutPipe(controller, device, endpoint_number, max_packet_size, poll_interval, move(dma_buffer)));
 }
 

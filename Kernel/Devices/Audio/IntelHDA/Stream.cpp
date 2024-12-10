@@ -67,7 +67,8 @@ ErrorOr<void> Stream::initialize_buffer()
     size_t cyclic_buffer_size_in_bytes = number_of_buffers_required_for_cyclic_buffer_size * PAGE_SIZE;
 
     TRY(m_buffers.with([&](auto& buffers) -> ErrorOr<void> {
-        buffers = TRY(MM.allocate_dma_buffer_pages(cyclic_buffer_size_in_bytes, "IntelHDA Stream Buffers"sv, Memory::Region::Access::ReadWrite));
+        // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+        buffers = TRY(MM.allocate_dma_buffer_pages(cyclic_buffer_size_in_bytes, "IntelHDA Stream Buffers"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO));
 
         // 3.3.38 Input/Output/Bidirectional Stream Descriptor Cyclic Buffer Length
         m_stream_io_window->write32(StreamRegisterOffset::CyclicBufferLength, buffers->size());
@@ -76,7 +77,8 @@ ErrorOr<void> Stream::initialize_buffer()
         m_stream_io_window->write16(StreamRegisterOffset::LastValidIndex, number_of_buffers_required_for_cyclic_buffer_size - 1);
 
         // 3.6.2: Buffer Descriptor List
-        m_buffer_descriptor_list = TRY(MM.allocate_dma_buffer_page("IntelHDA Stream BDL"sv, Memory::Region::Access::ReadWrite));
+        // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+        m_buffer_descriptor_list = TRY(MM.allocate_dma_buffer_page("IntelHDA Stream BDL"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO));
         auto bdl_physical_address = m_buffer_descriptor_list->physical_page(0)->paddr().get();
         m_stream_io_window->write32(StreamRegisterOffset::BDLLowerBaseAddress, bdl_physical_address & 0xffffffffu);
         m_stream_io_window->write32(StreamRegisterOffset::BDLUpperBaseAddress, bdl_physical_address >> 32);

@@ -46,7 +46,8 @@ ErrorOr<void> AHCIPort::allocate_resources_and_initialize_ports()
         m_command_table_pages.append(move(command_table_page));
     }
 
-    m_command_list_region = TRY(MM.allocate_dma_buffer_page("AHCI Port Command List"sv, Memory::Region::Access::ReadWrite, m_command_list_page));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    m_command_list_region = TRY(MM.allocate_dma_buffer_page("AHCI Port Command List"sv, Memory::Region::Access::ReadWrite, m_command_list_page, Memory::MemoryType::IO));
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list page at {}", representative_port_index(), m_command_list_page->paddr());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: FIS receive page at {}", representative_port_index(), m_fis_receive_page->paddr());
