@@ -107,7 +107,8 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
     Processor::current().exit_trap(*trap_frame);
 }
 
-static Array<GenericInterruptHandler*, 64> s_interrupt_handlers;
+// A GICv2 supports a maximum of 1020 interrupts.
+static Array<GenericInterruptHandler*, 1020> s_interrupt_handlers;
 
 extern "C" void handle_interrupt(TrapFrame&);
 extern "C" void handle_interrupt(TrapFrame& trap_frame)
@@ -115,25 +116,17 @@ extern "C" void handle_interrupt(TrapFrame& trap_frame)
     Processor::current().enter_trap(trap_frame, true);
 
     for (auto& interrupt_controller : InterruptManagement::the().controllers()) {
-        auto pending_interrupts = interrupt_controller->pending_interrupts();
-
         // TODO: Add these interrupts as a source of entropy for randomness.
-        u8 irq = 0;
-        while (pending_interrupts) {
-            if ((pending_interrupts & 0b1) != 0b1) {
-                irq += 1;
-                pending_interrupts >>= 1;
-                continue;
-            }
+        for (;;) {
+            auto maybe_irq = interrupt_controller->pending_interrupt();
+            if (!maybe_irq.has_value())
+                break;
 
-            auto* handler = s_interrupt_handlers[irq];
+            auto* handler = s_interrupt_handlers[maybe_irq.value()];
             VERIFY(handler);
             handler->increment_call_count();
             handler->handle_interrupt();
             handler->eoi();
-
-            irq += 1;
-            pending_interrupts >>= 1;
         }
     }
 
@@ -217,7 +210,7 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
 
 void initialize_interrupts()
 {
-    for (u8 i = 0; i < s_interrupt_handlers.size(); ++i) {
+    for (size_t i = 0; i < s_interrupt_handlers.size(); ++i) {
         auto* handler = new UnhandledInterruptHandler(i);
         handler->register_interrupt_handler();
     }
