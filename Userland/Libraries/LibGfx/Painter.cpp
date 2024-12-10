@@ -1967,9 +1967,7 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
                 }
             }
         } else {
-            for (int y = min_y; y <= max_y; y += thickness)
-                draw_physical_pixel({ x, y }, color, thickness);
-            draw_physical_pixel({ x, max_y }, color, thickness);
+            fill_physical_rect({ x, min_y, thickness, max_y - min_y + thickness }, color);
         }
         return;
     }
@@ -2002,9 +2000,7 @@ void Painter::draw_line(IntPoint a_p1, IntPoint a_p2, Color color, int thickness
                 }
             }
         } else {
-            for (int x = min_x; x <= max_x; x += thickness)
-                draw_physical_pixel({ x, y }, color, thickness);
-            draw_physical_pixel({ max_x, y }, color, thickness);
+            fill_physical_rect({ min_x, y, max_x - min_x + thickness, thickness }, color);
         }
         return;
     }
