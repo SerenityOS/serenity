@@ -19,21 +19,21 @@ namespace Kernel {
 
 static constexpr size_t max_inline_symlink_length = 60;
 
-static u8 to_ext2_file_type(mode_t mode)
+u8 Ext2FSInode::to_ext2_file_type(mode_t mode)
 {
-    if (is_regular_file(mode))
+    if (Kernel::is_regular_file(mode))
         return EXT2_FT_REG_FILE;
-    if (is_directory(mode))
+    if (Kernel::is_directory(mode))
         return EXT2_FT_DIR;
-    if (is_character_device(mode))
+    if (Kernel::is_character_device(mode))
         return EXT2_FT_CHRDEV;
-    if (is_block_device(mode))
+    if (Kernel::is_block_device(mode))
         return EXT2_FT_BLKDEV;
-    if (is_fifo(mode))
+    if (Kernel::is_fifo(mode))
         return EXT2_FT_FIFO;
-    if (is_socket(mode))
+    if (Kernel::is_socket(mode))
         return EXT2_FT_SOCK;
-    if (is_symlink(mode))
+    if (Kernel::is_symlink(mode))
         return EXT2_FT_SYMLINK;
     return EXT2_FT_UNKNOWN;
 }
@@ -793,10 +793,9 @@ ErrorOr<void> Ext2FSInode::add_child(Inode& child, StringView name, mode_t mode)
     return {};
 }
 
-ErrorOr<void> Ext2FSInode::remove_child(StringView name)
+ErrorOr<void> Ext2FSInode::remove_child_impl(StringView name, RemoveDotEntries remove_dot_entries)
 {
     MutexLocker locker(m_inode_lock);
-    dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::remove_child(): Removing '{}'", identifier(), name);
     VERIFY(is_directory());
 
     TRY(populate_lookup_cache());
@@ -807,6 +806,12 @@ ErrorOr<void> Ext2FSInode::remove_child(StringView name)
     auto child_inode_index = (*it).value;
 
     InodeIdentifier child_id { fsid(), child_inode_index };
+    auto child_inode = TRY(fs().get_inode(child_id));
+    if (child_inode->is_directory() && remove_dot_entries == RemoveDotEntries::Yes) {
+        TRY(static_cast<Ext2FSInode&>(*child_inode).remove_child_impl("."sv, RemoveDotEntries::No));
+        TRY(static_cast<Ext2FSInode&>(*child_inode).remove_child_impl(".."sv, RemoveDotEntries::No));
+    }
+
     bool has_file_type_attribute = has_flag(fs().get_features_optional(), Ext2FS::FeaturesOptional::ExtendedAttributes);
 
     Vector<Ext2FSDirectoryEntry> entries;
@@ -822,69 +827,17 @@ ErrorOr<void> Ext2FSInode::remove_child(StringView name)
 
     m_lookup_cache.remove(it);
 
-    auto child_inode = TRY(fs().get_inode(child_id));
     TRY(child_inode->decrement_link_count());
 
     did_remove_child(child_id, name);
     return {};
 }
 
-ErrorOr<void> Ext2FSInode::replace_child(StringView name, Inode& child)
+ErrorOr<void> Ext2FSInode::remove_child(StringView name)
 {
-    MutexLocker locker(m_inode_lock);
-    dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::replace_child(): Replacing '{}' with inode {}", identifier(), name, child.index());
-    VERIFY(is_directory());
-
-    TRY(populate_lookup_cache());
-
-    if (name.length() > EXT2_NAME_LEN)
-        return ENAMETOOLONG;
-
-    Vector<Ext2FSDirectoryEntry> entries;
-    bool has_file_type_attribute = has_flag(fs().get_features_optional(), Ext2FS::FeaturesOptional::ExtendedAttributes);
-
-    Optional<InodeIndex> old_child_index;
-    TRY(traverse_as_directory([&](auto& entry) -> ErrorOr<void> {
-        auto is_replacing_this_inode = name == entry.name;
-        auto inode_index = is_replacing_this_inode ? child.index() : entry.inode.index();
-
-        auto entry_name = TRY(KString::try_create(entry.name));
-        TRY(entries.try_empend(move(entry_name), inode_index, has_file_type_attribute ? to_ext2_file_type(child.mode()) : (u8)EXT2_FT_UNKNOWN));
-        if (is_replacing_this_inode)
-            old_child_index = entry.inode.index();
-
-        return {};
-    }));
-
-    if (!old_child_index.has_value())
-        return ENOENT;
-
-    auto old_child = TRY(fs().get_inode({ fsid(), *old_child_index }));
-
-    auto old_index_it = m_lookup_cache.find(name);
-    VERIFY(old_index_it != m_lookup_cache.end());
-    old_index_it->value = child.index();
-
-    // NOTE: Between this line and the write_directory line, all operations must
-    //       be atomic. Any changes made should be reverted.
-    TRY(child.increment_link_count());
-
-    auto maybe_decrement_error = old_child->decrement_link_count();
-    if (maybe_decrement_error.is_error()) {
-        old_index_it->value = *old_child_index;
-        MUST(child.decrement_link_count());
-        return maybe_decrement_error;
-    }
-
-    // FIXME: The filesystem is left in an inconsistent state if this fails.
-    //        Revert the changes made above if we can't write_directory.
-    //        Ideally, decrement should be the last operation, but we currently
-    //        can't "un-write" a directory entry list.
-    TRY(write_directory(entries));
-
-    // TODO: Emit a did_replace_child event.
-
-    return {};
+    dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::remove_child(): Removing '{}'", identifier(), name);
+    // TODO: Implement something like remove_directory so we can get rid of remove_child_impl.
+    return remove_child_impl(name, RemoveDotEntries::Yes);
 }
 
 ErrorOr<void> Ext2FSInode::populate_lookup_cache()

@@ -46,7 +46,6 @@ private:
     virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView, mode_t, dev_t, UserID, GroupID) override { return EROFS; }
     virtual ErrorOr<void> add_child(Inode&, StringView, mode_t) override { return EROFS; }
     virtual ErrorOr<void> remove_child(StringView) override { return EROFS; }
-    virtual ErrorOr<void> replace_child(StringView, Inode&) override { return EROFS; }
     virtual ErrorOr<void> chmod(mode_t) override { return EROFS; }
     virtual ErrorOr<void> chown(UserID, GroupID) override { return EROFS; }
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) override { return EROFS; }
