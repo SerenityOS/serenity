@@ -24,7 +24,8 @@ public:
 private:
     static bool attach_device_to_driver(Device&, Driver const&, StringView compatible_entry);
 
-    HashMap<StringView, NonnullOwnPtr<Driver>> m_drivers;
+    Vector<NonnullOwnPtr<Driver>> m_drivers;
+    HashMap<StringView, Driver*> m_driver_map;
     HashMap<::DeviceTree::Node const*, Device> m_devices;
 };
 

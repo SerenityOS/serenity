@@ -58,15 +58,18 @@ void InterruptController::disable(GenericInterruptHandler const& handler)
         m_registers->disable_irqs_2 = m_registers->disable_irqs_2 | (1 << (interrupt_number - 32));
 }
 
-void InterruptController::eoi(GenericInterruptHandler const&) const
+void InterruptController::eoi(GenericInterruptHandler const&)
 {
     // NOTE: The interrupt controller cannot clear the interrupt, since it is basically just a big multiplexer.
     //       The interrupt should be cleared by the corresponding device driver, such as a timer or uart.
 }
 
-u64 InterruptController::pending_interrupts() const
+Optional<size_t> InterruptController::pending_interrupt() const
 {
-    return ((u64)m_registers->irq_pending_2 << 32) | (u64)m_registers->irq_pending_1;
+    auto irq_number_plus_one = bit_scan_forward(((u64)m_registers->irq_pending_2 << 32) | (u64)m_registers->irq_pending_1);
+    if (irq_number_plus_one == 0)
+        return {};
+    return irq_number_plus_one - 1;
 }
 
 static constinit Array const compatibles_array = {
