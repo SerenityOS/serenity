@@ -116,8 +116,6 @@ protected:
     size_t m_controller_identifier { 0 };
 
     // Device description
-    u16 m_vendor_id { 0 };                      // This device's vendor ID assigned by the USB group
-    u16 m_product_id { 0 };                     // This device's product ID assigned by the USB group
     USBDeviceDescriptor m_device_descriptor {}; // Device Descriptor obtained from USB Device
     Vector<USBConfiguration> m_configurations;  // Configurations for this device
 
