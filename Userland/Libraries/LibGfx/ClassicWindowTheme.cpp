@@ -242,4 +242,15 @@ int ClassicWindowTheme::titlebar_height(WindowType window_type, WindowMode windo
     }
 }
 
+void ClassicWindowTheme::paint_taskbar(Painter& painter, IntRect const& taskbar_rect, Palette const& palette) const
+{
+    painter.fill_rect(taskbar_rect, palette.button());
+    painter.draw_line({ 0, 1 }, { taskbar_rect.width() - 1, 1 }, palette.threed_highlight());
+}
+
+void ClassicWindowTheme::paint_button(Painter& painter, IntRect const& rect, Palette const& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled, bool focused, bool default_button) const
+{
+    StylePainter::current().paint_button(painter, rect, palette, button_style, pressed, hovered, checked, enabled, focused, default_button);
+}
+
 }

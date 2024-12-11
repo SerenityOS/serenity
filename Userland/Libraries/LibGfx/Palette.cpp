@@ -7,7 +7,10 @@
  */
 
 #include <AK/Badge.h>
+#include <LibGfx/ClassicWindowTheme.h>
+#include <LibGfx/GlassWindowTheme.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/PlasticWindowTheme.h>
 #include <string.h>
 
 namespace Gfx {
@@ -46,6 +49,26 @@ NonnullRefPtr<PaletteImpl> PaletteImpl::clone() const
     return adopt_ref(*new PaletteImpl(move(new_theme_buffer)));
 }
 
+Gfx::WindowTheme& Palette::window_theme() const
+{
+    switch (m_impl->window_theme_provider(WindowThemeRole::WindowTheme)) {
+    case WindowThemeProvider::Classic: {
+        static ClassicWindowTheme classic_window_theme;
+        return classic_window_theme;
+    }
+    case WindowThemeProvider::RedmondPlastic: {
+        static PlasticWindowTheme plastic_window_theme;
+        return plastic_window_theme;
+    }
+    case WindowThemeProvider::RedmondGlass: {
+        static GlassWindowTheme glass_window_theme;
+        return glass_window_theme;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 void Palette::set_color(ColorRole role, Color color)
 {
     if (m_impl->ref_count() != 1)
@@ -60,6 +83,14 @@ void Palette::set_alignment(AlignmentRole role, Gfx::TextAlignment value)
         m_impl = m_impl->clone();
     auto& theme = const_cast<SystemTheme&>(impl().theme());
     theme.alignment[(int)role] = value;
+}
+
+void Palette::set_window_theme_provider(WindowThemeRole role, Gfx::WindowThemeProvider value)
+{
+    if (m_impl->ref_count() != 1)
+        m_impl = m_impl->clone();
+    auto& theme = const_cast<SystemTheme&>(impl().theme());
+    theme.window_theme[(int)role] = value;
 }
 
 void Palette::set_flag(FlagRole role, bool value)

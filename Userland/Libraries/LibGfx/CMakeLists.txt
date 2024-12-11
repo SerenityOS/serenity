@@ -30,6 +30,7 @@ set(SOURCES
     Font/VectorFont.cpp
     Font/WOFF/Font.cpp
     Font/WOFF2/Font.cpp
+    GlassWindowTheme.cpp
     GradientPainting.cpp
     ICC/BinaryWriter.cpp
     ICC/Enums.cpp
@@ -83,6 +84,7 @@ set(SOURCES
     Palette.cpp
     Path.cpp
     PathClipper.cpp
+    PlasticWindowTheme.cpp
     Point.cpp
     Rect.cpp
     ShareableBitmap.cpp
@@ -93,7 +95,6 @@ set(SOURCES
     TextLayout.cpp
     Triangle.cpp
     VectorGraphic.cpp
-    WindowTheme.cpp
 )
 
 serenity_lib(LibGfx gfx)
