@@ -55,6 +55,8 @@ public:
                 m_parent_terminal.set_show_scrollbar(value);
             else if (key == "ConfirmClose" && on_confirm_close_changed)
                 on_confirm_close_changed(value);
+            else if (key == "ResizeOnZoom")
+                m_parent_terminal.set_resize_on_zoom(value);
         } else if (group == "Cursor" && key == "Blinking") {
             m_parent_terminal.set_cursor_blinking(value);
         }
@@ -413,9 +415,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto& font = terminal->font();
         auto new_size = max(5, font.presentation_size() + adjustment);
         if (auto new_font = Gfx::FontDatabase::the().get(font.family(), new_size, font.weight(), font.width(), font.slope(), preference)) {
-            terminal->set_font_and_resize_to_fit(*new_font);
-            terminal->apply_size_increments_to_window(*window);
-            window->resize(terminal->size());
+            if (terminal->should_resize_on_zoom()) {
+                terminal->set_font_and_resize_to_fit(*new_font);
+                terminal->apply_size_increments_to_window(*window);
+                window->resize(terminal->size());
+            } else {
+                terminal->set_font(*new_font);
+                terminal->apply_size_increments_to_window(*window);
+            }
         }
     };
 
