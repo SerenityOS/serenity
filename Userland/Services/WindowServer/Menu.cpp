@@ -360,10 +360,15 @@ void Menu::handle_mouse_move_event(MouseEvent const& mouse_event)
     if (hovered_item() && hovered_item()->is_submenu()) {
 
         auto item = *hovered_item();
-        auto submenu_top_left = item.rect().location() + Gfx::IntPoint { item.rect().width(), 0 };
-        auto submenu_bottom_left = submenu_top_left + Gfx::IntPoint { 0, item.submenu()->menu_window()->height() };
+        auto submenu_top = item.submenu()->menu_window()->rect().top_left() - menu_window()->position();
+        auto submenu_bottom = item.submenu()->menu_window()->rect().bottom_left() - menu_window()->position();
 
-        auto safe_hover_triangle = Gfx::Triangle { m_last_position_in_hover, submenu_top_left, submenu_bottom_left };
+        if (item.submenu()->opens_to_the_left()) {
+            submenu_top = item.submenu()->menu_window()->rect().top_right() - menu_window()->position();
+            submenu_bottom = item.submenu()->menu_window()->rect().bottom_right() - menu_window()->position();
+        }
+
+        auto safe_hover_triangle = Gfx::Triangle { m_last_position_in_hover, submenu_top, submenu_bottom };
         m_last_position_in_hover = mouse_event.position();
 
         // Don't update the hovered item if mouse is moving towards a submenu
@@ -664,15 +669,17 @@ void Menu::do_popup(Gfx::IntPoint position, bool make_input, bool as_submenu)
 
     constexpr auto margin = 10;
     Gfx::IntPoint adjusted_pos = m_unadjusted_position = position;
+    m_opens_to_the_left = false;
 
     if (adjusted_pos.x() + window.width() >= screen.rect().right() - margin) {
-        // Vertically translate the window by its full width, i.e. flip it at its vertical axis.
+        // Horizontally translate the window by its full width, i.e. flip it at its vertical axis.
         adjusted_pos = adjusted_pos.translated(-window.width(), 0);
         // If the window is a submenu, translate to the opposite side of its immediate ancestor
         if (auto* ancestor = MenuManager::the().closest_open_ancestor_of(*this); ancestor && as_submenu) {
             constexpr auto offset = 1 + frame_thickness() * 2;
             adjusted_pos = adjusted_pos.translated(-ancestor->menu_window()->width() + offset, 0);
         }
+        m_opens_to_the_left = true;
     } else {
         // Even if no adjustment needs to be done, move the menu to the right by 1px so it's not
         // underneath the cursor and can be closed by another click at the same position.
