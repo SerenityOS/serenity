@@ -93,7 +93,7 @@ ErrorOr<void> Hub::enumerate_and_power_on_hub()
     }
 
     if constexpr (USB_DEBUG) {
-        dbgln("USB Hub Descriptor for {:04x}:{:04x}", m_vendor_id, m_product_id);
+        dbgln("USB Hub Descriptor for {:04x}:{:04x}", m_device_descriptor.vendor_id, m_device_descriptor.product_id);
         dbgln("Number of Downstream Ports: {}", descriptor.number_of_downstream_ports);
         dbgln("Hub Characteristics: {:#04x}", static_cast<u16>(descriptor.hub_characteristics.raw));
         dbgln("Power On to Power Good Time: {} ms ({} * 2ms)", descriptor.power_on_to_power_good_time * 2, descriptor.power_on_to_power_good_time);

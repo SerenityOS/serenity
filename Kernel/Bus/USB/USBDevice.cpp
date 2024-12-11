@@ -38,7 +38,7 @@ ErrorOr<NonnullLockRefPtr<Device>> Device::try_create(USBController& controller,
         auto result = driver->probe(device);
         if (result.is_error())
             continue;
-        dbgln_if(USB_DEBUG, "Found driver {} for device {:04x}:{:04x}!", driver->name(), device->m_vendor_id, device->m_product_id);
+        dbgln_if(USB_DEBUG, "Found driver {} for device {:04x}:{:04x}!", driver->name(), device->device_descriptor().vendor_id, device->device_descriptor().product_id);
         device->set_driver(driver);
         break;
     }
