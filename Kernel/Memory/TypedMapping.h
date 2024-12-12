@@ -116,11 +116,11 @@ static ErrorOr<TypedMapping<T[]>> map_typed_array(PhysicalAddress paddr, size_t 
 }
 
 template<typename T>
-static ErrorOr<TypedMapping<T[]>> allocate_dma_region_as_typed_array(size_t items, StringView name, Region::Access access)
+static ErrorOr<TypedMapping<T[]>> allocate_dma_region_as_typed_array(size_t items, StringView name, Region::Access access, MemoryType memory_type = MemoryType::NonCacheable)
 {
     size_t length_in_bytes = items * sizeof(T);
     size_t mapping_length = TRY(page_round_up(length_in_bytes));
-    auto region = TRY(MM.allocate_dma_buffer_pages(mapping_length, name, access));
+    auto region = TRY(MM.allocate_dma_buffer_pages(mapping_length, name, access, memory_type));
 
     Memory::TypedMapping<T[]> table;
     table.paddr = region->physical_page(0)->paddr();

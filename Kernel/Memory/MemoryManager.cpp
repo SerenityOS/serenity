@@ -1074,35 +1074,35 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
     return region;
 }
 
-ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalRAMPage>& dma_buffer_page)
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalRAMPage>& dma_buffer_page, MemoryType memory_type)
 {
     auto page = TRY(allocate_physical_page());
     dma_buffer_page = page;
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behavior by default)
-    return allocate_kernel_region_with_physical_pages({ &page, 1 }, name, access, MemoryType::NonCacheable);
+    return allocate_kernel_region_with_physical_pages({ &page, 1 }, name, access, memory_type);
 }
 
-ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access)
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(StringView name, Memory::Region::Access access, MemoryType memory_type)
 {
     RefPtr<Memory::PhysicalRAMPage> dma_buffer_page;
 
-    return allocate_dma_buffer_page(name, access, dma_buffer_page);
+    return allocate_dma_buffer_page(name, access, dma_buffer_page, memory_type);
 }
 
-ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, Vector<NonnullRefPtr<Memory::PhysicalRAMPage>>& dma_buffer_pages)
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, Vector<NonnullRefPtr<Memory::PhysicalRAMPage>>& dma_buffer_pages, MemoryType memory_type)
 {
     VERIFY(!(size % PAGE_SIZE));
     dma_buffer_pages = TRY(allocate_contiguous_physical_pages(size));
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behavior by default)
-    return allocate_kernel_region_with_physical_pages(dma_buffer_pages, name, access, MemoryType::NonCacheable);
+    return allocate_kernel_region_with_physical_pages(dma_buffer_pages, name, access, memory_type);
 }
 
-ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access)
+ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, MemoryType memory_type)
 {
     VERIFY(!(size % PAGE_SIZE));
     Vector<NonnullRefPtr<Memory::PhysicalRAMPage>> dma_buffer_pages;
 
-    return allocate_dma_buffer_pages(size, name, access, dma_buffer_pages);
+    return allocate_dma_buffer_pages(size, name, access, dma_buffer_pages, memory_type);
 }
 
 ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, MemoryType memory_type)

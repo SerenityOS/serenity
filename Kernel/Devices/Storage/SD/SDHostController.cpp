@@ -114,7 +114,8 @@ ErrorOr<void> SDHostController::initialize()
 void SDHostController::try_enable_dma()
 {
     if (m_registers->capabilities.adma2) {
-        auto maybe_dma_buffer = MM.allocate_dma_buffer_pages(dma_region_size, "SDHC DMA Buffer"sv, Memory::Region::Access::ReadWrite);
+        // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+        auto maybe_dma_buffer = MM.allocate_dma_buffer_pages(dma_region_size, "SDHC DMA Buffer"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO);
         if (maybe_dma_buffer.is_error()) {
             dmesgln("Could not allocate DMA pages for SDHC: {}", maybe_dma_buffer.error());
         } else {

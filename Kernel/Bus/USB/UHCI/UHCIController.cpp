@@ -109,7 +109,8 @@ ErrorOr<void> UHCIController::reset()
     }
 
     // Let's allocate the physical page for the Frame List (which is 4KiB aligned)
-    m_framelist = TRY(MM.allocate_dma_buffer_page("UHCI Framelist"sv, Memory::Region::Access::Write));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    m_framelist = TRY(MM.allocate_dma_buffer_page("UHCI Framelist"sv, Memory::Region::Access::Write, Memory::MemoryType::IO));
     dbgln("UHCI: Allocated framelist at physical address {}", m_framelist->physical_page(0)->paddr());
     dbgln("UHCI: Framelist is at virtual address {}", m_framelist->vaddr());
     write_sofmod(64); // 1mS frame time
@@ -145,7 +146,8 @@ UNMAP_AFTER_INIT ErrorOr<void> UHCIController::create_structures()
     // Now the Transfer Descriptor pool
     m_transfer_descriptor_pool = TRY(UHCIDescriptorPool<TransferDescriptor>::try_create("Transfer Descriptor Pool"sv));
 
-    m_isochronous_transfer_pool = TRY(MM.allocate_dma_buffer_page("UHCI Isochronous Descriptor Pool"sv, Memory::Region::Access::ReadWrite));
+    // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+    m_isochronous_transfer_pool = TRY(MM.allocate_dma_buffer_page("UHCI Isochronous Descriptor Pool"sv, Memory::Region::Access::ReadWrite, Memory::MemoryType::IO));
 
     // Set up the Isochronous Transfer Descriptor list
     m_iso_td_list.resize(UHCI_NUMBER_OF_ISOCHRONOUS_TDS);

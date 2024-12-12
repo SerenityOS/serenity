@@ -45,7 +45,8 @@ public:
 
         // Create a DMA buffer page to holds the ring buffer
         VERIFY(PAGE_SIZE >= capacity * sizeof(T));
-        auto buffer_region = TRY(MM.allocate_dma_buffer_page(name, U == RingBufferType::Input ? Memory::Region::Access::Read : Memory::Region::Access::Write));
+        // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
+        auto buffer_region = TRY(MM.allocate_dma_buffer_page(name, U == RingBufferType::Input ? Memory::Region::Access::Read : Memory::Region::Access::Write, Memory::MemoryType::IO));
 
         // 4.4.1.1, 4.4.2: The CORB buffer in memory must be allocated to start on a 128-byte boundary
         // and in memory configured to match the access type being used.

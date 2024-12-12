@@ -169,10 +169,10 @@ public:
     void deallocate_physical_page(PhysicalAddress);
 
     ErrorOr<NonnullOwnPtr<Region>> allocate_contiguous_kernel_region(size_t, StringView name, Region::Access access, MemoryType = MemoryType::Normal);
-    ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_page(StringView name, Region::Access access, RefPtr<PhysicalRAMPage>& dma_buffer_page);
-    ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_page(StringView name, Region::Access access);
-    ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_pages(size_t size, StringView name, Region::Access access, Vector<NonnullRefPtr<PhysicalRAMPage>>& dma_buffer_pages);
-    ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_pages(size_t size, StringView name, Region::Access access);
+    ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_page(StringView name, Region::Access access, RefPtr<PhysicalRAMPage>& dma_buffer_page, MemoryType = MemoryType::NonCacheable);
+    ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_page(StringView name, Region::Access access, MemoryType = MemoryType::NonCacheable);
+    ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_pages(size_t size, StringView name, Region::Access access, Vector<NonnullRefPtr<PhysicalRAMPage>>& dma_buffer_pages, MemoryType = MemoryType::NonCacheable);
+    ErrorOr<NonnullOwnPtr<Region>> allocate_dma_buffer_pages(size_t size, StringView name, Region::Access access, MemoryType = MemoryType::NonCacheable);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region(size_t, StringView name, Region::Access access, AllocationStrategy strategy = AllocationStrategy::Reserve, MemoryType = MemoryType::Normal);
     ErrorOr<NonnullOwnPtr<Region>> allocate_mmio_kernel_region(PhysicalAddress, size_t, StringView name, Region::Access access, MemoryType = MemoryType::IO);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region_with_physical_pages(Span<NonnullRefPtr<PhysicalRAMPage>>, StringView name, Region::Access access, MemoryType = MemoryType::Normal);
