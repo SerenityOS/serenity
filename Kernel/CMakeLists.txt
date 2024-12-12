@@ -521,6 +521,8 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/PlatformInit/Virt.cpp
 
         Arch/aarch64/Serial/PL011.cpp
+
+        Bus/PCI/DeviceTreeInitializer.cpp
     )
 
     # Otherwise linker errors e.g undefined reference to `__aarch64_cas8_acq_rel'
@@ -558,7 +560,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         Arch/riscv64/Interrupts/PLIC.cpp
         Arch/riscv64/MMU.cpp
         Arch/riscv64/PageDirectory.cpp
-        Arch/riscv64/PCI/Initializer.cpp
         Arch/riscv64/PowerState.cpp
         Arch/riscv64/pre_init.cpp
         Arch/riscv64/Processor.cpp
@@ -567,6 +568,8 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         Arch/riscv64/SmapDisabler.cpp
         Arch/riscv64/Timer.cpp
         Arch/riscv64/trap_handler.S
+
+        Bus/PCI/DeviceTreeInitializer.cpp
     )
 
     # NOTE: These files cannot use a stack protector and sanitizers, as these will cause accesses to global variables to be inserted
