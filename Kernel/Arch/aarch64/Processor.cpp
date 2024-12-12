@@ -8,6 +8,7 @@
 #include <AK/Format.h>
 #include <AK/Vector.h>
 
+#include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
@@ -51,6 +52,8 @@ void ProcessorBase<T>::initialize(u32)
         dmesgln("CPU[{}]: {} not detected, randomness will be poor", m_cpu, cpu_feature_to_description(CPUFeature::RNG));
 
     store_fpu_state(&s_clean_fpu_state);
+
+    initialize_interrupts();
 }
 
 template<typename T>
