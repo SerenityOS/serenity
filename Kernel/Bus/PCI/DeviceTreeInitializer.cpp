@@ -32,17 +32,13 @@ void initialize()
     // [2]: https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-bus-common.yaml
     // [3]: https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-host-bridge.yaml
 
-    // The pci controllers are usually in /soc/pcie?@XXXXXXXX
-    // FIXME: They can also appear in the root node, or any simple-bus other than soc
+    // The pci controllers are usually in /soc/pcie?@XXXXXXXX on RISC-V, and in /pcie?@XXXXXXXX on AArch64
+    // FIXME: They can also appear in any simple-bus other than soc
     auto const& device_tree = DeviceTree::get();
 
     auto maybe_soc = device_tree.get_child("soc"sv);
-    if (!maybe_soc.has_value()) {
-        dmesgln("PCI: No `soc` node found in the device tree, PCI initialization will be skipped");
-        return;
-    }
 
-    auto const& soc = maybe_soc.value();
+    auto const& pci_host_controller_node_parent = maybe_soc.has_value() ? maybe_soc.value() : device_tree;
 
     enum class ControllerCompatible {
         Unknown,
@@ -50,8 +46,8 @@ void initialize()
     };
 
     // These properties must be present
-    auto soc_address_cells = soc.get_property("#address-cells"sv).value().as<u32>();
-    [[maybe_unused]] auto soc_size_cells = soc.get_property("#size-cells"sv).value().as<u32>();
+    auto soc_address_cells = pci_host_controller_node_parent.get_property("#address-cells"sv).value().as<u32>();
+    [[maybe_unused]] auto soc_size_cells = pci_host_controller_node_parent.get_property("#size-cells"sv).value().as<u32>();
 
     Optional<u32> domain_counter;
     FlatPtr pci_32bit_mmio_base = 0;
@@ -60,7 +56,8 @@ void initialize()
     u64 pci_64bit_mmio_size = 0;
     HashMap<PCIInterruptSpecifier, u64> masked_interrupt_mapping;
     PCIInterruptSpecifier interrupt_mask;
-    for (auto const& [name, node] : soc.children()) {
+    bool found_compatible_pci_controller = false;
+    for (auto const& [name, node] : pci_host_controller_node_parent.children()) {
         if (!name.starts_with("pci"sv))
             continue;
 
@@ -151,6 +148,8 @@ void initialize()
             VERIFY_NOT_REACHED(); // This should have been rejected earlier
         }
 
+        found_compatible_pci_controller = true;
+
         auto maybe_ranges = node.get_property("ranges"sv);
         if (maybe_ranges.has_value()) {
             auto address_cells = node.get_property("#address-cells"sv).value().as<u32>();
@@ -167,7 +166,7 @@ void initialize()
 
                 if (pci_address_metadata.space_type != OpenFirmwareAddress::SpaceType::Memory32BitSpace
                     && pci_address_metadata.space_type != OpenFirmwareAddress::SpaceType::Memory64BitSpace)
-                    continue; // We currently only support memory-mapped PCI on RISC-V
+                    continue; // We currently only support memory-mapped PCI on RISC-V and AArch64
 
                 // TODO: Support mapped PCI addresses
                 VERIFY(pci_address == mmio_address);
@@ -243,9 +242,30 @@ void initialize()
                 auto const* interrupt_controller = device_tree.phandle(interrupt_controller_phandle);
                 VERIFY(interrupt_controller);
 
+                if (!interrupt_controller->has_property("interrupt-controller"sv)) {
+                    dmesgln("PCI: Implement support for nested interrupt nexuses");
+                    TODO();
+                }
+
+                MUST(map_stream.discard(sizeof(u32) * interrupt_controller->address_cells()));
+
                 auto interrupt_cells = interrupt_controller->get_property("#interrupt-cells"sv)->as<u32>();
+#if ARCH(RISCV64)
                 VERIFY(interrupt_cells == 1 || interrupt_cells == 2);
                 u64 interrupt = MUST(map_stream.read_cells(interrupt_cells));
+#elif ARCH(AARCH64)
+                // FIXME: Don't depend on a specific interrupt descriptor format.
+                auto const& domain_root = *MUST(interrupt_controller->interrupt_domain_root(device_tree));
+                if (!domain_root.is_compatible_with("arm,gic-400"sv) && !domain_root.is_compatible_with("arm,cortex-a15-gic"sv))
+                    TODO();
+
+                VERIFY(interrupt_cells == 3);
+                MUST(map_stream.discard(sizeof(u32))); // This is the IRQ type.
+                u64 interrupt = MUST(map_stream.read_cell()) + 32;
+                MUST(map_stream.discard(sizeof(u32))); // This is the trigger type.
+#else
+#    error Unknown architecture
+#endif
 
                 pin &= pin_mask;
                 pci_address_metadata.raw &= metadata_mask.raw;
@@ -259,6 +279,12 @@ void initialize()
                     interrupt);
             }
         }
+    }
+
+    if (!found_compatible_pci_controller) {
+        dmesgln("PCI: No compatible controller found");
+        g_pci_access_io_probe_failed.set();
+        return;
     }
 
     if (pci_32bit_mmio_size != 0 || pci_64bit_mmio_size != 0) {

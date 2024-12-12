@@ -23,17 +23,3 @@ void microseconds_delay(u32)
 }
 
 }
-
-// Initializer.cpp
-namespace Kernel::PCI {
-
-SetOnce g_pci_access_io_probe_failed;
-SetOnce g_pci_access_is_disabled_from_commandline;
-
-void initialize()
-{
-    dbgln("PCI: FIXME: Enable PCI for aarch64 platforms");
-    g_pci_access_io_probe_failed.set();
-}
-
-}
