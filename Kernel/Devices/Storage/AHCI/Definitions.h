@@ -37,7 +37,7 @@ enum HeaderAttributes : u8 {
     C = (1 << 7), /* Updates Command register */
 };
 
-struct [[gnu::packed]] Header {
+struct Header {
     u8 fis_type;
     u8 port_muliplier;
 };
@@ -47,7 +47,7 @@ static_assert(AssertSize<Header, 2>());
 
 namespace Kernel::FIS::HostToDevice {
 
-struct [[gnu::packed]] Register {
+struct Register {
     Header header;
     u8 command;
     u8 features_low;
@@ -66,7 +66,7 @@ static_assert(AssertSize<Register, 5 * 4>());
 
 namespace Kernel::FIS::DeviceToHost {
 
-struct [[gnu::packed]] Register {
+struct Register {
     Header header;
     u8 status;
     u8 error;
@@ -79,7 +79,7 @@ struct [[gnu::packed]] Register {
 };
 static_assert(AssertSize<Register, 5 * 4>());
 
-struct [[gnu::packed]] SetDeviceBits {
+struct SetDeviceBits {
     Header header;
     u8 status;
     u8 error;
@@ -87,13 +87,13 @@ struct [[gnu::packed]] SetDeviceBits {
 };
 static_assert(AssertSize<SetDeviceBits, 2 * 4>());
 
-struct [[gnu::packed]] DMAActivate {
+struct DMAActivate {
     Header header;
     u16 reserved;
 };
 static_assert(AssertSize<DMAActivate, 1 * 4>());
 
-struct [[gnu::packed]] PIOSetup {
+struct PIOSetup {
     Header header;
     u8 status;
     u8 error;
@@ -113,16 +113,16 @@ static_assert(AssertSize<PIOSetup, 5 * 4>());
 
 namespace Kernel::FIS::BiDirectional {
 
-struct [[gnu::packed]] Data {
+struct Data {
     Header header;
     u16 reserved;
     u32 data[];
 };
 static_assert(AssertSize<Data, 1 * 4>());
 
-struct [[gnu::packed]] BISTActivate {
+struct BISTActivate {
 };
-struct [[gnu::packed]] DMASetup {
+struct DMASetup {
     Header header;
     u16 reserved;
     u32 dma_buffer_identifier_low;
@@ -246,7 +246,7 @@ enum HBACapabilitiesExtended : u32 {
 };
 
 // This structure is not defined by the AHCI spec, but is used within the code
-struct [[gnu::packed]] HBADefinedCapabilities {
+struct HBADefinedCapabilities {
     size_t ports_count { 1 };
     size_t max_command_list_entries_count { 1 };
     u8 interface_speed_generation { 1 };
@@ -274,7 +274,6 @@ struct [[gnu::packed]] HBADefinedCapabilities {
     bool aggressive_device_sleep_management_supported : 1 { false };
     bool devsleep_entrance_from_slumber_only : 1 { false };
 };
-static_assert(AssertSize<HBADefinedCapabilities, 20>());
 
 enum class DeviceDetectionInitialization {
     NoActionRequested,
@@ -371,7 +370,7 @@ private:
     u32 volatile& m_bitfield;
 };
 
-struct [[gnu::packed]] PortRegisters {
+struct PortRegisters {
     u32 clb;  /* Port x Command List Base Address */
     u32 clbu; /* Port x Command List Base Address Upper 32-Bits */
     u32 fb;   /* Port x FIS Base Address */
@@ -395,7 +394,7 @@ struct [[gnu::packed]] PortRegisters {
 };
 static_assert(AssertSize<PortRegisters, 0x80>());
 
-struct [[gnu::packed]] GenericHostControl {
+struct GenericHostControl {
     u32 cap; /* Host Capabilities */
     u32 ghc; /* Global Host Control */
     u32 is;  /* Interrupt Status */
@@ -410,7 +409,7 @@ struct [[gnu::packed]] GenericHostControl {
 };
 static_assert(AssertSize<GenericHostControl, 0x2c>());
 
-struct [[gnu::packed]] HBA {
+struct HBA {
     GenericHostControl control_regs;
     u8 reserved[52];
     u8 nvmhci[64];
@@ -420,7 +419,7 @@ struct [[gnu::packed]] HBA {
 static_assert(AssertSize<HBA, 0x100>());
 static_assert(__builtin_offsetof(HBA, port_regs[32]) == 0x1100);
 
-struct [[gnu::packed]] CommandHeader {
+struct CommandHeader {
     u16 attributes;
     u16 prdtl; /* Physical Region Descriptor Table Length */
     u32 prdbc; /* Physical Region Descriptor Byte Count */
@@ -430,7 +429,7 @@ struct [[gnu::packed]] CommandHeader {
 };
 static_assert(AssertSize<CommandHeader, 8 * 4>());
 
-struct [[gnu::packed]] PhysicalRegionDescriptor {
+struct PhysicalRegionDescriptor {
     u32 base_low;
     u32 base_high;
     u32 reserved;
@@ -438,7 +437,7 @@ struct [[gnu::packed]] PhysicalRegionDescriptor {
 };
 static_assert(AssertSize<PhysicalRegionDescriptor, 4 * 4>());
 
-struct [[gnu::packed]] CommandTable {
+struct CommandTable {
     u8 command_fis[64];
     u8 atapi_command[32];
     u8 reserved[32];
@@ -660,5 +659,6 @@ struct [[gnu::packed]] ATAIdentifyBlock {
     u16 reserved10[19];
     u16 integrity;
 };
+static_assert(AssertSize<ATAIdentifyBlock, 512>());
 
 };
