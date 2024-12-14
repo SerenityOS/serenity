@@ -571,6 +571,71 @@ struct alignas(u64) CNTPCT_EL0 {
 };
 static_assert(sizeof(CNTPCT_EL0) == 8);
 
+// https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/CNTV-TVAL-EL0--Counter-timer-Virtual-Timer-TimerValue-register
+// CNTV_TVAL_EL0, Counter-timer Virtual Timer TimerValue register
+struct alignas(u64) CNTV_TVAL_EL0 {
+    u64 TimerValue : 32;
+    u64 : 32;
+
+    static inline CNTV_TVAL_EL0 read()
+    {
+        CNTV_TVAL_EL0 timer_value;
+
+        asm volatile("mrs %[value], CNTV_TVAL_EL0"
+                     : [value] "=r"(timer_value));
+
+        return timer_value;
+    }
+
+    static inline void write(CNTV_TVAL_EL0 cntv_tval_el0)
+    {
+        asm volatile("msr CNTV_TVAL_EL0, %[value]" ::[value] "r"(cntv_tval_el0));
+    }
+};
+static_assert(sizeof(CNTV_TVAL_EL0) == 8);
+
+// https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/CNTV-CTL-EL0--Counter-timer-Virtual-Timer-Control-register
+// CNTV_CTL_EL0, Counter-timer Virtual Timer Control register
+struct alignas(u64) CNTV_CTL_EL0 {
+    u64 ENABLE : 1;
+    u64 IMASK : 1;
+    u64 ISTATUS : 1;
+    u64 : 61;
+
+    static inline CNTV_CTL_EL0 read()
+    {
+        CNTV_CTL_EL0 control_register;
+
+        asm volatile("mrs %[value], CNTV_CTL_EL0"
+                     : [value] "=r"(control_register));
+
+        return control_register;
+    }
+
+    static inline void write(CNTV_CTL_EL0 cntv_ctl_el0)
+    {
+        asm volatile("msr CNTV_CTL_EL0, %[value]" ::[value] "r"(cntv_ctl_el0));
+    }
+};
+static_assert(sizeof(CNTV_CTL_EL0) == 8);
+
+// https://developer.arm.com/documentation/ddi0595/2020-12/AArch64-Registers/CNTVCT-EL0--Counter-timer-Virtual-Count-register
+// CNTVCT_EL0, Counter-timer Virtual Count register
+struct alignas(u64) CNTVCT_EL0 {
+    u64 VirtualCount;
+
+    static inline CNTVCT_EL0 read()
+    {
+        CNTVCT_EL0 virtual_count;
+
+        asm volatile("mrs %[value], CNTVCT_EL0"
+                     : [value] "=r"(virtual_count));
+
+        return virtual_count;
+    }
+};
+static_assert(sizeof(CNTVCT_EL0) == 8);
+
 // https://developer.arm.com/documentation/ddi0595/2021-06/AArch64-Registers/TCR-EL1--Translation-Control-Register--EL1-
 // Translation Control Register
 struct alignas(u64) TCR_EL1 {
