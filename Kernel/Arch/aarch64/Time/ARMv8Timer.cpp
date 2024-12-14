@@ -101,7 +101,8 @@ DEVICETREE_DRIVER(ARMv8TimerDriver, compatibles_array);
 ErrorOr<void> ARMv8TimerDriver::probe(DeviceTree::Device const& device, StringView) const
 {
     auto const interrupts = TRY(device.node().interrupts(DeviceTree::get()));
-    if (interrupts.size() != 4)
+
+    if (device.node().has_property("interrupt-names"sv) || interrupts.size() != 4)
         return ENOTSUP; // TODO: Support the interrupt-names property.
 
     // Index 1 is the interrupt for the EL1 physical timer. This driver currently only uses that timer.
