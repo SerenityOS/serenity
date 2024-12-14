@@ -30,10 +30,10 @@ ErrorOr<NonnullLockRefPtr<ARMv8Timer>> ARMv8Timer::initialize(u8 interrupt_numbe
     auto timer = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) ARMv8Timer(interrupt_number)));
 
     // Enable the physical timer.
-    auto ctl = Aarch64::CNTP_CTL_EL0::read();
+    auto ctl = Aarch64::CNTV_CTL_EL0::read();
     ctl.IMASK = 0;
     ctl.ENABLE = 1;
-    Aarch64::CNTP_CTL_EL0::write(ctl);
+    Aarch64::CNTV_CTL_EL0::write(ctl);
 
     timer->enable_irq();
 
@@ -42,14 +42,14 @@ ErrorOr<NonnullLockRefPtr<ARMv8Timer>> ARMv8Timer::initialize(u8 interrupt_numbe
 
 u64 ARMv8Timer::current_ticks()
 {
-    return Aarch64::CNTPCT_EL0::read().PhysicalCount;
+    return Aarch64::CNTVCT_EL0::read().VirtualCount;
 }
 
 bool ARMv8Timer::handle_irq()
 {
     HardwareTimer::handle_irq();
 
-    if (Aarch64::CNTP_CTL_EL0::read().ISTATUS == 0)
+    if (Aarch64::CNTV_CTL_EL0::read().ISTATUS == 0)
         return false;
 
     start_timer(m_interrupt_interval);
@@ -85,7 +85,7 @@ u64 ARMv8Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, boo
 
 void ARMv8Timer::start_timer(u32 delta)
 {
-    Aarch64::CNTP_TVAL_EL0::write(Aarch64::CNTP_TVAL_EL0 {
+    Aarch64::CNTV_TVAL_EL0::write(Aarch64::CNTV_TVAL_EL0 {
         .TimerValue = delta,
     });
 }
@@ -105,8 +105,15 @@ ErrorOr<void> ARMv8TimerDriver::probe(DeviceTree::Device const& device, StringVi
     if (device.node().has_property("interrupt-names"sv) || interrupts.size() != 4)
         return ENOTSUP; // TODO: Support the interrupt-names property.
 
-    // Index 1 is the interrupt for the EL1 physical timer. This driver currently only uses that timer.
-    auto const& interrupt = interrupts[1];
+    enum class DeviceTreeTimerInterruptIndex {
+        EL3Physical = 0,          // "sec-phys"
+        EL1Physical = 1,          // "phys"
+        EL1Virtual = 2,           // "virt"
+        NonSecureEL2Physical = 3, // "hyp-phys"
+    };
+
+    // Use the EL1 virtual timer, as that timer should should be accessible to us both on device and in a VM.
+    auto const& interrupt = interrupts[to_underlying(DeviceTreeTimerInterruptIndex::EL1Virtual)];
 
     // FIXME: Don't depend on a specific interrupt descriptor format and implement proper devicetree interrupt mapping/translation.
     if (!interrupt.domain_root->is_compatible_with("arm,gic-400"sv) && !interrupt.domain_root->is_compatible_with("arm,cortex-a15-gic"sv))
