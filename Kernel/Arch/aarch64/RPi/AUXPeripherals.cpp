@@ -5,7 +5,7 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/Arch/aarch64/RPi/AUX.h>
+#include <Kernel/Arch/aarch64/RPi/AUXPeripherals.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 
 namespace Kernel::RPi::AUX {

@@ -473,7 +473,7 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     endif()
 elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
     set(RPI_SOURCES
-        Arch/aarch64/RPi/AUX.cpp
+        Arch/aarch64/RPi/AUXPeripherals.cpp
         Arch/aarch64/RPi/Framebuffer.cpp
         Arch/aarch64/RPi/GPIO.cpp
         Arch/aarch64/RPi/InterruptController.cpp
