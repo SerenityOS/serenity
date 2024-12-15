@@ -20,7 +20,7 @@ enum class TXCommand : u8 {
     IC = 1 << 2,   // Insert Checksum
     RS = 1 << 3,   // Report Status
     RPS = 1 << 4,  // Report Packet Sent (82544GC/EI only)
-    DEXT = 1 << 5, // Descriptor Extension (Do not use)
+    DEXT = 1 << 5, // Descriptor Extension (82576 and later, Do Not Use for now)
     VLE = 1 << 6,  // VLAN Packet Enable
     ID = 1 << 7,   // Interrupt Delay Enable
 };
@@ -40,8 +40,9 @@ enum class Register {
     InterruptThrottling = 0x00C4,
     InterruptMask = 0x00D0,
     InterruptMaskClear = 0x00D8,
-    RCtrl = 0x0100,
-    TCtrl = 0x0400,
+    RCtrl = 0x0100,      // RCTL
+    TCtrl = 0x0400,      // TCTL
+    TCtrlExt = 0x0404,   // TCTL_EXT
     TIPG = 0x0410,       // Transmit Inter Packet Gap
     RXDescLow = 0x2800,  // Receive Descriptor Base Low (RDBAL)
     RXDescHigh = 0x2804, // Receive Descriptor Base High (RDBAH)
@@ -57,6 +58,10 @@ enum class Register {
     TXDescHead = 0x3810,
     TXDescTail = 0x3818,
     RXDCTL = 0x3828, // RX Descriptor Control
+
+    // 64 Bit IO allowed to load/store both at the same time
+    RAL0 = 0x5400, // Receive Address Low
+    RAH0 = 0x5404, // Receive Address High
 };
 
 enum class LinkSpeed : u32 {
@@ -181,59 +186,40 @@ union EEPROMRead {
 
 // 13.4.17
 // Table 13-63
-union InterruptCauseRead {
-    struct {
-        u32 transmit_descriptor_written_back : 1;
-        u32 transmit_queue_empty : 1;
-        u32 link_status_change : 1;
-        u32 receive_sequence_error : 1;
-        u32 receive_descriptor_minimum_threshold_reached : 1; // RXDMT0
-        u32 : 1;
-        u32 receiver_overrun : 1;        // RXO
-        u32 receive_timer_interrupt : 1; // RXT0
-        u32 : 1;
-        u32 mdio_access_complete : 1;
-        u32 receiving_c_ordered_sets : 1;
-        // The following may also be GP interrupts
-        u32 : 1;
-        u32 phy_interrupt : 1;
-        u32 general_purpose_interrupt_62 : 1;
-        u32 general_purpose_interrupt_73 : 1;
-
-        u32 transmit_descriptor_low_threshold_hit : 1;
-        u32 small_receive_packet_detected : 1;
-        u32 : 15;
-    };
-    u32 raw;
-};
-static_assert(AssertSize<InterruptCauseRead, 4>());
-
 // 13.4.20
 // Table 13-65
-enum class InterruptMask {
+enum class Interrupt {
     TXDW = 1 << 0,   // Transmit Descriptor Written Back
-    TXQE = 1 << 1,   // Transmit Queue Empty
+    TXQE = 1 << 1,   // Transmit Queue Empty, until 82576
     LSC = 1 << 2,    // Link Status Change
     RXSEQ = 1 << 3,  // Receive Sequence Error (not on 82541xx, 82547GI/EI)
     RXDMT0 = 1 << 4, // Receive Descriptor Minimum Threshold hit
-    // 5 Reserved
-    RXO = 1 << 6,  // Receiver FIFO Overrun
-    RXT0 = 1 << 7, // Receive Timer Interrupt
-    // 8 Reserved
-    MDAC = 1 << 9,   // MDIO Access Complete
-    RXCFG = 1 << 10, // Receiving /C/ Ordered Sets
+    MACSec = 1 << 5, // MAC Security (since 82576)
+    RXO = 1 << 6,    // Receiver FIFO Overrun
+
+    RXT0 = 1 << 7, // Receive Timer Interrupt       (until 82576)
+    RXDW = 1 << 7, // Receive Descriptor Write Back (since 82576)
+    // 8 Reserved (VMMB)
+    MDAC = 1 << 9,   // MDIO Access Complete        (until 82576)
+    RXCFG = 1 << 10, // Receiving /C/ Ordered Sets  (until 82576)
     //
     PHYINT = 1 << 12, // PHY Interrupt (not on 82544GI/EI)
+    // 82576 and later have GPI_SDPx (here)
     // 11-12 General Purpose Interrupts (82544GI/EI only)
     //       otherwise Reserved
     GPI1 = 1 << 13,
     GPI2 = 1 << 14,
     TXD_LOW = 1 << 15, // Transmit Descriptor Low Threshold Hit (not on 82544GC/EI)
-    SRPD = 1 << 16,    // Small Receive Packet Detection (not on 82544GC/EI)
+    SRPD = 1 << 16,    // Small Receive Packet Detection (not on 82544GC/EI, until 82576)
     // 17-31 Reserved
+
+    // FIXME: Newer NICs have more interrupts
+
+    InterruptClear = ~0,
+    None = 0
+
 };
-AK_ENUM_BITWISE_OPERATORS(InterruptMask);
-// FIXME: This should be the same as the interrupt cause, which is nicer?
+AK_ENUM_BITWISE_OPERATORS(Interrupt);
 
 // 13.4.22
 // Table 13-67
@@ -263,7 +249,7 @@ struct ReceiveControl {
     u32 multicast_promiscuous_enable : 1;
     u32 long_packet_enable : 1;
     LoopbackMode loopback_mode : 2;
-    FreeBufferThreshold read_descriptor_minimum_threshold_size : 2;
+    FreeBufferThreshold read_descriptor_minimum_threshold_size : 2; // Reserved on 82576 and later
     u32 : 2;
     u32 multicast_offset : 2;
     u32 : 1;
@@ -272,11 +258,11 @@ struct ReceiveControl {
     u32 vlan_filter_enable : 1;
     u32 canonical_form_indicator_enable : 1;
     u32 canonical_form_indicator_value : 1;
-    u32 : 1;
+    u32 pad_small_packets : 1; // 82576 and later
     u32 discard_pause_frames : 1;
     u32 pass_mac_control_frames : 1;
     u32 : 1;
-    u32 buffer_size_extension : 1; // BSEX
+    u32 buffer_size_extension : 1; // BSEX, reserved on 82576 and later
     u32 strip_ethernet_crc : 1;
     u32 : 5;
 };
@@ -284,20 +270,46 @@ static_assert(AssertSize<ReceiveControl, 4>());
 
 // 13.4.33
 // Table 13-76
-struct TransmitControl {
-    u32 : 1;
-    u32 enable : 1;
-    u32 : 1;
-    u32 pad_short_packets : 1;
-    u32 collision_threshold : 8;
-    u32 collision_distance : 10;
-    u32 software_xoff_transmit : 1;
-    u32 : 1;
-    u32 retransmit_on_late_collision : 1;
-    u32 no_retransmit_on_underrun : 1; // 82544GC/EI only
-    u32 : 6;
+union TransmitControl {
+    struct {
+        u32 : 1;
+        u32 enable : 1;
+        u32 : 1;
+        u32 pad_short_packets : 1;
+        u32 collision_threshold : 8;
+        u32 : 10;
+        u32 software_xoff_transmit : 1;
+        u32 : 1;
+        u32 retransmit_on_late_collision : 1;
+        u32 no_retransmit_on_underrun : 1; // 82544GC/EI only
+        u32 : 6;
+    };
+    struct {
+        u32 : 12;
+        u32 collision_distance : 10;
+        u32 : 10;
+    } until_82576; // Moved to TCTL_EXT(19:10)
+    struct {
+        u32 : 10;
+        u32 back_off_slot_time : 10;
+        u32 : 12;
+    } from_82576;
 };
 static_assert(AssertSize<TransmitControl, 4>());
+
+struct TransmitControlExtended {
+    u32 reserved_x40 : 10;
+    u32 collision_distance : 10;
+    u32 : 12;
+};
+static_assert(AssertSize<TransmitControlExtended, 4>());
+
+struct TransmitInterPacketGap {
+    u32 ipgt : 10;
+    u32 ipgr1 : 10;
+    u32 ipgr : 10;
+    u32 : 2;
+};
 
 using RegisterMap = IORegister<Register,
     IOReg<Register, Register::Ctrl, Ctrl>,
@@ -305,14 +317,15 @@ using RegisterMap = IORegister<Register,
     IOReg<Register, Register::EEPROMControl, EEPROMControl>,
     IOReg<Register, Register::EEPROMRead, EEPROMRead>,
 
-    IOReg<Register, Register::InterruptCauseR, InterruptCauseRead>,
+    IOReg<Register, Register::InterruptCauseR, Interrupt>,
     IOReg<Register, Register::InterruptThrottling, u32>,
-    IOReg<Register, Register::InterruptMask, InterruptMask>,
+    IOReg<Register, Register::InterruptMask, Interrupt>,
 
     IOReg<Register, Register::RCtrl, ReceiveControl>,
 
     IOReg<Register, Register::TCtrl, TransmitControl>,
-    IOReg<Register, Register::TIPG, u32>,
+    IOReg<Register, Register::TCtrlExt, TransmitControlExtended>,
+    IOReg<Register, Register::TIPG, TransmitInterPacketGap>,
 
     IOReg<Register, Register::RXDescLow, u32>,
     IOReg<Register, Register::RXDescHigh, u32>,
@@ -324,6 +337,8 @@ using RegisterMap = IORegister<Register,
     IOReg<Register, Register::TXDescHigh, u32>,
     IOReg<Register, Register::TXDescLength, u32>,
     IOReg<Register, Register::TXDescHead, u32>,
-    IOReg<Register, Register::TXDescTail, u32>>;
+    IOReg<Register, Register::TXDescTail, u32>,
 
+    IOReg<Register, Register::RAL0, u32>,
+    IOReg<Register, Register::RAH0, u32>>;
 }

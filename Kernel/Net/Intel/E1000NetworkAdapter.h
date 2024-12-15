@@ -41,16 +41,17 @@ public:
     void detect_model_and_operating_mode();
 
 protected:
+    // FIXME: Newer NICs only allow 2048 bytes per descriptor
     static constexpr size_t rx_buffer_size = 8192;
     static constexpr size_t tx_buffer_size = 8192;
 
     enum class OperatingMode {
         Intel8254x_legacy, // No EEPROM present bit, aka 82544GC/EI
         Intel8254x,
-        Intel8254x_14bit_eeprom,
+        Intel8254x_14bit_til_82574,
         // Note: 8255x does not seem to be compatible
         // FIXME: This should be more fine grained in the future
-        Intel8257x_and_later, // This is for now functionally equivalent to the 8254x_14bit mode
+        Intel82576_and_later, // In these the TCLT and some other registers seem to have changed
     };
 
     struct RxDescriptor {
@@ -92,6 +93,7 @@ protected:
 
     void initialize_rx_descriptors();
     void initialize_tx_descriptors();
+    void set_tipg();
 
     void receive();
 

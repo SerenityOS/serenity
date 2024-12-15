@@ -48,9 +48,11 @@ UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
     case 0x1107: // 82544EI-A4
     case 0x1112: // 82544GC-A4
         return true;
-        // 8257[123]:
-        // FIXME: Intel link
-        // https://ftp.mizar.org/packages/e1000/8257x%20Developer%20Manual/Revision%201.8/OpenSDM_8257x-18.pdf)
+    // 63[12]xESB
+    // 8256[34]EB
+    // 8257[123]:
+    // FIXME: Intel link
+    // https://ftp.mizar.org/packages/e1000/8257x%20Developer%20Manual/Revision%201.8/OpenSDM_8257x-18.pdf)
     case 0x105E:
     case 0x1081: // (Dual Port, Gb/s, copper)
     case 0x1082: // (Dual Port, Mb/s, Fiber/SerDes)
@@ -215,14 +217,14 @@ UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
 // 8255x: (https://www.intel.com/content/dam/doc/manual/8255x-10-100-mbps-ethernet-controller-software-dev-manual.pdf)
 //    * 1229: 82557-B, 8255ER
 //    * 1029- config over EEPROM: 82557-C, 82558, 82559
-// 8257x: (1-3) (https://ftp.mizar.org/packages/e1000/8257x%20Developer%20Manual/Revision%201.8/OpenSDM_8257x-18.pdf)
+// 63[12]xESB, 8256[34]EB 8257[123] (https://ftp.mizar.org/packages/e1000/8257x%20Developer%20Manual/Revision%201.8/OpenSDM_8257x-18.pdf)
 //    * 105E/1081^a (Dual Port, Gb/s, copper)
 //    * 1082^a      (Dual Port, Mb/s, Fiber/SerDes)
 //    * 1083^a      (Dual Port, Mb/s, 1000BASE-X Backplane)
 //    * 1096^a      (Dual Port, Gb/s, copper + IO Acceleration)
 //    * 1097^a      (Dual Port, Gb/s, Fiber/SerDes + IO Acceleration)
 //    * 1098^a      (Dual Port, Mb/s, 1000BASE-X Backplane + IO Acceleration)
-//    * 108B/108C (Single Port, Gb/s, copper)
+//    * 108B/108C   (Single Port, Gb/s, copper)
 //    * 109A      - 82573L (???) "Not applicable to "631xESB/632xESB"
 //    ^a: 631xESB/632xESB
 // 82574: (http://web.archive.org/web/20191030005441/https://digitallibrary.intel.com/content/dam/ccl/public/82574l-gbe-controller-datasheet.pdf?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjb250ZW50SWQiOiIzMTc2OTQiLCJlbnRlcnByaXNlSWQiOiIxMzYuMjQzLjMzLjE1MCIsIkFDQ1RfTk0iOiIiLCJDTkRBX05CUiI6IiIsImlhdCI6MTU3MjM5Njg3N30.qWfHYA2b2JUaloVU4Sxyq6ltDR3cbEDd1O1IhpSROGw)
@@ -230,7 +232,7 @@ UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
 // * 0x10D3: 82574/Default
 
 // 82575 -> no direct data sheet?
-// |-82576:
+// |-82576: (https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/82576eb-gigabit-ethernet-controller-datasheet.pdf)
 //   * 10C9: Dual port copper
 //   * 10E6: Dual port fiber
 //   * 10E7: Dual port SerDes
@@ -265,6 +267,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> E1000NetworkAdapter::cre
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
 
+    // FIXME: Newer NICs only allow 2048 bytes per descriptor
     auto rx_buffer_region = TRY(MM.allocate_contiguous_kernel_region(rx_buffer_size * number_of_rx_descriptors, "E1000 RX buffers"sv, Memory::Region::Access::ReadWrite));
     auto tx_buffer_region = MM.allocate_contiguous_kernel_region(tx_buffer_size * number_of_tx_descriptors, "E1000 TX buffers"sv, Memory::Region::Access::ReadWrite).release_value();
     auto rx_descriptors = TRY(Memory::allocate_dma_region_as_typed_array<RxDescriptor volatile>(number_of_rx_descriptors, "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite));
@@ -311,13 +314,15 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_model_and_operating_mode()
     u16 device_id = device_identifier().hardware_id().device_id;
     // 82544GC/EI
     if (first_is_one_of(device_id,
-            0x1008, // 82544EI_COPPER
+            0x1008, // 82544EI (COPPER)
             0x1009, // 82544EI (FIBER)
-            0x100C, // 82544GC_COPPER
+            0x100C, // 82544GC (COPPER)
             0x100D, // 82544GC_LOM
-            0x1107, // 82544EI-A4
-            0x1112  // 82544GC-A4
+            0x1107, // 82544EI-A4 (COPPER)
+            0x1112  // 82544GC-A4 (COPPER)
             )) {
+        dbgln("E1000: Using Intel8254x legacy mode");
+
         m_operating_mode = OperatingMode::Intel8254x_legacy;
         return;
     }
@@ -341,10 +346,17 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_model_and_operating_mode()
             0x107A, // 82546GB-B0 (FIBER)
             0x107B  // 82546GB-B0 (SERDES)
             )) {
+
+        dbgln("E1000: Using Intel8254x mode");
         m_operating_mode = OperatingMode::Intel8254x;
+
         return;
     }
     // 82541xx, 82547GI/EI
+    // 63[12]xESB
+    // 8256[34]EB
+    // 8257[123]
+    // 82574
     if (first_is_one_of(device_id,
             0x1013, // 82541EI
             0x1013, // 82541EI-A0, 82541EI-B0
@@ -358,13 +370,30 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_model_and_operating_mode()
             0x1077, // 82541GI-B1
             0x1078, // 82541ER
             0x1078, // 82541ER-C0
-            0x107C  // 82541GI_LF
+            0x107C, // 82541GI_LF
+            // 63[12]xESB
+            // 8256[34]EB
+            // 8257[123]
+            0x105E,
+            0x1081,
+            0x1082,
+            0x1083,
+            0x1096,
+            0x1097,
+            0x1098,
+            0x108B,
+            0x108C,
+
+            0x10D3 // 82574L
             )) {
-        m_operating_mode = OperatingMode::Intel8254x_14bit_eeprom;
+        dbgln("E1000: Late E1000 mode");
+
+        m_operating_mode = OperatingMode::Intel8254x_14bit_til_82574;
         return;
     }
-    // 8257x and later
-    m_operating_mode = OperatingMode::Intel8257x_and_later;
+    dbgln("E1000: Usign IGB/82576 and later mode");
+    // 82576 and later
+    m_operating_mode = OperatingMode::Intel82576_and_later;
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_link()
@@ -380,7 +409,7 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_interrupts()
     //        There's probably a way to find an ideal interrupt rate etc
     m_registers.write<Register::InterruptThrottling>(6000); // Interrupt rate of 1.536 milliseconds
     // We want: Link status change, RX timer, RX overrun
-    using InterruptMask = E1000::InterruptMask;
+    using InterruptMask = E1000::Interrupt;
     m_registers.write<Register::InterruptMask>(InterruptMask::LSC | InterruptMask::RXT0 | InterruptMask::RXO);
     (void)m_registers.read<Register::InterruptCauseR>();
     enable_irq();
@@ -410,10 +439,18 @@ bool E1000NetworkAdapter::handle_irq()
 
     m_entropy_source.add_random_event(irq_cause);
 
-    if (irq_cause.raw == 0)
+    using enum E1000::Interrupt;
+    using E1000::has_flag;
+
+    if (irq_cause == None)
         return false;
 
-    if (irq_cause.link_status_change) {
+    // Let's be honest and only handle the interrupts we care about
+    if (!E1000::has_any_flag(irq_cause,
+            LSC | RXO | RXT0))
+        return false;
+
+    if (has_flag(irq_cause, LSC)) {
         auto ctrl = m_registers.read<Register::Ctrl>();
         ctrl.set_link_up = 1;
         m_registers.write<Register::Ctrl>(ctrl);
@@ -422,25 +459,24 @@ bool E1000NetworkAdapter::handle_irq()
 
         autoconfigure_link_local_ipv6();
     }
-    if (irq_cause.receive_descriptor_minimum_threshold_reached) {
-        // Threshold OK?
-    }
-    if (irq_cause.receiver_overrun) {
+    if (has_flag(irq_cause, RXO)) {
         dbgln_if(E1000_DEBUG, "E1000: RX buffer overrun");
     }
-    if (irq_cause.receive_timer_interrupt) {
+    if (has_flag(irq_cause, RXT0)) {
+        // Note: RXDW on newer NICs, but it sounds like it has the same meaning
         receive();
     }
 
     m_wait_queue.wake_all();
 
-    m_registers.write<Register::InterruptCauseR>({ .raw = 0xffffffff });
+    m_registers.write<Register::InterruptCauseR>(InterruptClear);
     return true;
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_eeprom()
 {
-    if (m_operating_mode != OperatingMode::Intel8254x_14bit_eeprom) {
+    if (m_operating_mode != OperatingMode::Intel8254x_legacy) {
+        // FIXME: Some models seem to lie here?
         if (m_registers.read<Register::EEPROMControl>().eeprom_present)
             m_has_eeprom.set();
         else
@@ -470,9 +506,9 @@ UNMAP_AFTER_INIT u16 E1000NetworkAdapter::read_eeprom(u16 address)
 {
     // FIXME: Should this just return 0 then?
     VERIFY(m_has_eeprom.was_set());
-
-    if (m_operating_mode == OperatingMode::Intel8254x_14bit_eeprom
-        || m_operating_mode == OperatingMode::Intel8257x_and_later) {
+    if (first_is_one_of(m_operating_mode,
+            OperatingMode::Intel8254x_14bit_til_82574,
+            OperatingMode::Intel82576_and_later)) {
         E1000::EEPROMRead eerd = {};
         eerd.address_14.start = 1;
         eerd.address_14.address = address;
@@ -498,6 +534,25 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
 {
     // FIXME: Support other ways of getting the mac address
     //        Like iNVM on the I211
+    auto ral = m_registers.read<Register::RAL0>();
+    auto rah = m_registers.read<Register::RAH0>();
+    bool rah_va = rah & 0x80000000;
+
+    rah &= 0xffff;
+    MACAddress mac_ra {};
+    mac_ra[0] = (ral >> 0) & 0xff;
+    mac_ra[1] = (ral >> 8) & 0xff;
+    mac_ra[2] = (ral >> 16) & 0xff;
+    mac_ra[3] = (ral >> 24) & 0xff;
+    mac_ra[4] = (rah >> 0) & 0xff;
+    mac_ra[5] = (rah >> 8) & 0xff;
+
+    dbgln("E1000: MAC address from RAL/RAH: {}, valid?={}", mac_ra.to_string(), rah_va);
+    if (rah_va) {
+        dbgln("E1000: Using MAC address from RAL0/RAH0");
+        set_mac_address(mac_ra);
+        return;
+    }
     VERIFY(m_has_eeprom.was_set());
 
     // 5.6.1 Ethernet Address (00h-02h)
@@ -515,11 +570,21 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
     mac[4] = tmp & 0xff;
     mac[5] = tmp >> 8;
 
+    dbgln("E1000: MAC address from EEPROM: {}", mac.to_string());
+
+    dbgln("E1000: Using MAC address from EEPROM");
+    dbgln("E1000: Filling in RAL0/RAH0 with MAC address from EEPROM");
+    ral = (mac[0] << 0) | (mac[1] << 8) | (mac[2] << 16) | (mac[3] << 24);
+    rah = (mac[4] << 0) | (mac[5] << 8) | 0x80000000;
+    m_registers.write<Register::RAL0>(ral);
+    m_registers.write<Register::RAH0>(rah);
+
     set_mac_address(mac);
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
 {
+    // FIXME: Newer NICs only allow 2048 bytes per descriptor
     constexpr auto rx_buffer_page_count = rx_buffer_size / PAGE_SIZE;
     for (size_t i = 0; i < number_of_rx_descriptors; ++i) {
         auto& descriptor = m_rx_descriptors[i];
@@ -534,22 +599,32 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
     m_registers.write<Register::RXDescHead>(0);
     m_registers.write<Register::RXDescTail>(number_of_rx_descriptors - 1);
 
-    E1000::ReceiveControl rctl;
-    rctl.enable = 1,
-    rctl.store_bad_frames = 1,
-    rctl.unicast_promiscuous_enable = 1,
-    rctl.multicast_promiscuous_enable = 1,
-    rctl.loopback_mode = E1000::LoopbackMode::None,
-    rctl.read_descriptor_minimum_threshold_size = E1000::ReceiveControl::FreeBufferThreshold::Half,
-    rctl.broadcast_accept_mode = 1,
-    rctl.buffer_size_extension = 1,
-    rctl.buffer_size = E1000::ReceiveControl::BufferSize::Size8192,
-    rctl.strip_ethernet_crc = 1,
+    E1000::ReceiveControl rctl = m_registers.read<Register::RCtrl>();
+    rctl.enable = 0;
+    m_registers.write<Register::RCtrl>(rctl);
+
+    rctl.enable = 1;
+    rctl.store_bad_frames = 1;
+    rctl.unicast_promiscuous_enable = 1;
+    rctl.multicast_promiscuous_enable = 1;
+    rctl.loopback_mode = E1000::LoopbackMode::None;
+    rctl.broadcast_accept_mode = 1;
+    rctl.strip_ethernet_crc = 1;
+
+    if (m_operating_mode != OperatingMode::Intel82576_and_later) {
+        rctl.buffer_size = E1000::ReceiveControl::BufferSize::Size8192;
+        rctl.buffer_size_extension = 1;
+        rctl.read_descriptor_minimum_threshold_size = E1000::ReceiveControl::FreeBufferThreshold::Half;
+    } else {
+        rctl.buffer_size = E1000::ReceiveControl::BufferSize::Size2048;
+    }
+
     m_registers.write<Register::RCtrl>(rctl);
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
 {
+    // FIXME: Newer NICs only allow 2048 bytes per descriptor
     constexpr auto tx_buffer_page_count = tx_buffer_size / PAGE_SIZE;
 
     for (size_t i = 0; i < number_of_tx_descriptors; ++i) {
@@ -566,24 +641,95 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
     m_registers.write<Register::TXDescTail>(0);
 
     E1000::TransmitControl tctl = m_registers.read<Register::TCtrl>();
+    tctl.enable = 0;
+    m_registers.write<Register::TCtrl>(tctl);
+
     tctl.enable = 1;
     tctl.pad_short_packets = 1;
     m_registers.write<Register::TCtrl>(tctl);
 
-    // FIXME: Do this properly
-    // IPGT:= 10 (8/6 for the 82544GC/EI) - IPG Transmit Time            (10 bit)
-    //        The 82544GC/EI has a different value for IPGT depending if it is in IEEE 802.3 mode or 10/100/1000BASE-T mode
-    // IPGR1:= 8 - IPG Receive Time 1 (half duplex only) ~= 2/3 of IPGR2 (10 bit)
-    // IPGR2:= 6 (+6) - IPG Receive Time 2 (half duplex only)            (10 bit)
-    // Recommendation are for "IEEE 802.3 minimum IPG value of 96-bit time"
-    // The magic value here has:
-    // 10, 8, 6 so it should be fine for now
-    m_registers.write<Register::TIPG>(0x0060200A);
+    set_tipg();
+}
+
+void E1000NetworkAdapter::set_tipg()
+{
+
+    auto device_id = device_identifier().hardware_id().device_id;
+    auto tipg = E1000::TransmitInterPacketGap {};
+    // 8254x 14.5 Transmit Initialization
+    if (m_operating_mode == OperatingMode::Intel8254x_legacy) {
+        if (device_id == 0x1009) {
+            // FIBER
+            tipg.ipgt = 6;
+            tipg.ipgr1 = 8;
+            tipg.ipgr = 6;
+        } else {
+            // COPPER
+            tipg.ipgt = 8;
+            tipg.ipgr1 = 8;
+            tipg.ipgr = 6;
+        }
+    } else if (
+        m_operating_mode == OperatingMode::Intel8254x || m_operating_mode == OperatingMode::Intel8254x_14bit_til_82574) {
+        // FIXME: This is a bit of a mess
+        //        Each model family seems to have different defaults, which we need to set here
+        //        8254x: 10.5.6 Transmit Initialization -> 10,10,10
+        //        8257[123] -> 8,8,7
+        //        82574 -> 8,2,10, but the default is 8,8,6?
+        if (m_operating_mode == OperatingMode::Intel8254x || first_is_one_of(device_id, 0x1013, // 82541EI
+                0x1013,                                                                         // 82541EI-A0, 82541EI-B0
+                0x1014,                                                                         // 82541ER_LOM
+                0x1018,                                                                         // 82541EI-B0
+                0x1019,                                                                         // 82547EI-A0, 82547EI-A1, 82547EI-B0, 82547GI-B0
+                0x101A,                                                                         // 82547EI-B0
+                0x1076,                                                                         // 82541GI
+                0x1076,                                                                         // 82541GI-B1, 82541PI-C0
+                0x1077,                                                                         // 82541GI_MOBILE
+                0x1077,                                                                         // 82541GI-B1
+                0x1078,                                                                         // 82541ER
+                0x1078,                                                                         // 82541ER-C0
+                0x107C                                                                          // 82541GI_LF
+                )) {
+            tipg.ipgt = 10;
+            tipg.ipgr1 = 10;
+            tipg.ipgr = 10;
+        } else if (first_is_one_of(device_id, 0x105E,
+                       0x1081,
+                       0x1082,
+                       0x1083,
+                       0x1096,
+                       0x1097,
+                       0x1098,
+                       0x108B,
+                       0x108C)) {
+            tipg.ipgt = 8;
+            tipg.ipgr1 = 8;
+            tipg.ipgr = 7;
+        } else if (first_is_one_of(device_id, 0x10D3)) {
+            tipg.ipgt = 8;
+            tipg.ipgr1 = 2;
+            tipg.ipgr = 10;
+        } else {
+            dbgln("E1000: Unknown device ID {:#04x}", device_id);
+            VERIFY_NOT_REACHED();
+        }
+    } else {
+        // 82576 and later
+        // Modern NICs have propper HW/FW defaults for this, as it seems
+        tipg = m_registers.read<Register::TIPG>();
+    }
+
+    m_registers.write<Register::TIPG>(tipg);
 }
 
 void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
 {
-    VERIFY(payload.size() <= 8192);
+    if (m_operating_mode != OperatingMode::Intel82576_and_later) {
+        VERIFY(payload.size() <= 8192);
+    } else {
+        // FIXME: Support splitting the packet into multiple descriptors
+        VERIFY(payload.size() <= 2048);
+    }
 
     disable_irq();
 
