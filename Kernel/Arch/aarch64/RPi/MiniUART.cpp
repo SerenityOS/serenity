@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Arch/aarch64/RPi/AUX.h>
+#include <Kernel/Arch/aarch64/RPi/AUXPeripherals.h>
 #include <Kernel/Arch/aarch64/RPi/GPIO.h>
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/MiniUART.h>
