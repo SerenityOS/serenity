@@ -17,7 +17,7 @@ Co-Authored-By: Oskar Skog <oskar@oskog97.com>
  1 file changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/configure b/configure
-index 7cdd386c387f588496877bfd63663061b176803d..10753f9b8a50e5e9ec004f63b922fd1433252121 100755
+index ae70f02f70e5d1267d876709a00d5a94a17a9df3..cf1437d0a093aadb1c877ad585f95af01a8eb011 100755
 --- a/configure
 +++ b/configure
 @@ -4042,6 +4042,9 @@ then
@@ -48,7 +48,7 @@ index 7cdd386c387f588496877bfd63663061b176803d..10753f9b8a50e5e9ec004f63b922fd14
  	*-*-linux*)
  		case "$host_cpu" in
  		arm*)
-@@ -7580,7 +7587,7 @@ printf "%s\n" "#define Py_ENABLE_SHARED 1" >>confdefs.h
+@@ -7583,7 +7590,7 @@ printf "%s\n" "#define Py_ENABLE_SHARED 1" >>confdefs.h
          PY3LIBRARY=libpython3.so
        fi
        ;;
@@ -57,7 +57,7 @@ index 7cdd386c387f588496877bfd63663061b176803d..10753f9b8a50e5e9ec004f63b922fd14
        LDLIBRARY='libpython$(LDVERSION).so'
        BLDLIBRARY='-L. -lpython$(LDVERSION)'
        RUNSHARED=LD_LIBRARY_PATH=`pwd`${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
-@@ -13045,7 +13052,7 @@ then
+@@ -13048,7 +13055,7 @@ then
  		 then CCSHARED="-fPIC";
  		 else CCSHARED="+z";
  		 fi;;
@@ -66,7 +66,7 @@ index 7cdd386c387f588496877bfd63663061b176803d..10753f9b8a50e5e9ec004f63b922fd14
  	Emscripten*|WASI*)
  		if test "x$enable_wasm_dynamic_linking" = xyes
  then :
-@@ -13083,7 +13090,7 @@ then
+@@ -13086,7 +13093,7 @@ then
  	    LINKFORSHARED="-Wl,-E -Wl,+s";;
  #	    LINKFORSHARED="-Wl,-E -Wl,+s -Wl,+b\$(BINLIBDEST)/lib-dynload";;
  	Linux-android*) LINKFORSHARED="-pie -Xlinker -export-dynamic";;
