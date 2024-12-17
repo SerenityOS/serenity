@@ -106,8 +106,10 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
 
     VERIFY((uintptr_t)stack % 16 == 0);
 
+#if ARCH(X86_64)
     // Push a fake return address
     push_on_stack(nullptr);
+#endif
 
     int rc = syscall(SC_create_thread, pthread_create_helper, thread_params);
     if (rc >= 0)
