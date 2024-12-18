@@ -18,17 +18,12 @@ class StringBuilder {
 public:
     static constexpr size_t inline_capacity = 256;
 
+    using Buffer = Detail::ByteBuffer<inline_capacity>;
     using OutputType = ByteString;
 
     static ErrorOr<StringBuilder> create(size_t initial_capacity = inline_capacity);
 
     explicit StringBuilder(size_t initial_capacity = inline_capacity);
-
-    enum class UseInlineCapacityOnly {
-        Yes,
-        No,
-    };
-    explicit StringBuilder(UseInlineCapacityOnly use_inline_capacity_only);
     ~StringBuilder() = default;
 
     ErrorOr<void> try_append(StringView);
@@ -73,8 +68,8 @@ public:
     [[nodiscard]] ByteString to_byte_string() const;
 #endif
 
-    [[nodiscard]] String to_string_without_validation() const;
-    ErrorOr<String> to_string() const;
+    [[nodiscard]] String to_string_without_validation();
+    ErrorOr<String> to_string();
 
     [[nodiscard]] FlyString to_fly_string_without_validation() const;
     ErrorOr<FlyString> to_fly_string() const;
@@ -107,13 +102,16 @@ public:
         return {};
     }
 
+    Optional<Buffer::OutlineBuffer> leak_buffer_for_string_construction(Badge<Detail::StringData>);
+
 private:
+    explicit StringBuilder(Buffer);
+
     ErrorOr<void> will_append(size_t);
     u8* data();
     u8 const* data() const;
 
-    UseInlineCapacityOnly m_use_inline_capacity_only { UseInlineCapacityOnly::No };
-    Detail::ByteBuffer<inline_capacity> m_buffer;
+    Buffer m_buffer;
 };
 
 }
