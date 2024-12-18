@@ -1455,7 +1455,15 @@ bool MemoryManager::validate_user_stack(AddressSpace& space, VirtualAddress vadd
         return false;
 
     auto* region = find_user_region_from_vaddr(space, vaddr);
-    return region && region->is_user() && region->is_stack();
+    bool is_valid_user_stack = region && region->is_user() && region->is_stack();
+
+    // The stack pointer initially points to the exclusive end of the stack region.
+    if (!is_valid_user_stack) {
+        region = find_user_region_from_vaddr(space, vaddr.offset(-1));
+        is_valid_user_stack = region && region->range().end() == vaddr && region->is_user() && region->is_stack();
+    }
+
+    return is_valid_user_stack;
 }
 
 void MemoryManager::unregister_kernel_region(Region& region)

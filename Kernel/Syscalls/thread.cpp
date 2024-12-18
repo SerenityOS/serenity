@@ -28,7 +28,7 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
         return EOVERFLOW;
 
     TRY(address_space().with([&](auto& space) -> ErrorOr<void> {
-        if (!MM.validate_user_stack(*space, VirtualAddress(user_sp.value() - 4)))
+        if (!MM.validate_user_stack(*space, VirtualAddress(user_sp.value())))
             return EFAULT;
         return {};
     }));
