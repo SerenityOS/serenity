@@ -16,12 +16,18 @@ namespace Kernel::Aarch64::Asm {
 
 inline void set_ttbr1_el1(FlatPtr ttbr1_el1)
 {
-    asm volatile("msr ttbr1_el1, %[value]" ::[value] "r"(ttbr1_el1));
+    asm volatile(R"(
+        msr ttbr1_el1, %[value]
+        isb
+    )" ::[value] "r"(ttbr1_el1));
 }
 
 inline void set_ttbr0_el1(FlatPtr ttbr0_el1)
 {
-    asm volatile("msr ttbr0_el1, %[value]" ::[value] "r"(ttbr0_el1));
+    asm volatile(R"(
+        msr ttbr0_el1, %[value]
+        isb
+    )" ::[value] "r"(ttbr0_el1));
 }
 
 inline FlatPtr get_ttbr0_el1()
