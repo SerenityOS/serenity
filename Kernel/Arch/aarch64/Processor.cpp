@@ -45,6 +45,9 @@ void ProcessorBase<T>::initialize(u32)
 {
     m_deferred_call_pool.init();
 
+    // FIXME: Actually set the correct count when we support SMP on AArch64.
+    g_total_processors.store(1, AK::MemoryOrder::memory_order_release);
+
     dmesgln("CPU[{}]: Supports {}", m_cpu, build_cpu_feature_names(m_features));
     dmesgln("CPU[{}]: Physical address bit width: {}", m_cpu, m_physical_address_bit_width);
     dmesgln("CPU[{}]: Virtual address bit width: {}", m_cpu, m_virtual_address_bit_width);
