@@ -14,6 +14,7 @@
 #include <Kernel/Devices/Storage/StorageDevice.h>
 #include <Kernel/Devices/Storage/StorageDevicePartition.h>
 #include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/Firmware/DeviceTree/DeviceRecipe.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <LibPartition/PartitionTable.h>
 
@@ -43,6 +44,8 @@ public:
 
     void add_device(StorageDevice&);
     void remove_device(StorageDevice&);
+
+    static void add_recipe(DeviceTree::DeviceRecipe<NonnullRefPtr<StorageController>>);
 
 private:
     void enumerate_pci_controllers(bool nvme_poll);
