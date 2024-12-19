@@ -10,7 +10,7 @@ the `socket` module.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Modules/socketmodule.c b/Modules/socketmodule.c
-index daec560ddfcac706533417a293abee88fb563bbc..0830e337ab436d6a945509f91f0f60335f2304e5 100644
+index 1c0bc7967321201f9cce07a5311d183cd687ba3c..4ee3f6de665deb11577cae1eb3059d9bd066fc19 100644
 --- a/Modules/socketmodule.c
 +++ b/Modules/socketmodule.c
 @@ -176,7 +176,7 @@ shutdown(how) -- shut down traffic in one or both directions\n\
