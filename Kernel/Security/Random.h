@@ -163,8 +163,16 @@ public:
     {
         auto& kernel_rng = KernelRng::the();
         SpinlockLocker lock(kernel_rng.get_lock());
+
+        u64 timestamp = 0;
+        auto maybe_cycle_count = Processor::read_cycle_count();
+        if (maybe_cycle_count.has_value())
+            timestamp = maybe_cycle_count.release_value();
+        else
+            timestamp = static_cast<u64>(TimeManagement::now().milliseconds_since_epoch());
+
         // We don't lock this because on the off chance a pool is corrupted, entropy isn't lost.
-        Event<T> event = { Processor::read_cpu_counter(), m_source, event_data };
+        Event<T> event = { timestamp, m_source, event_data };
         kernel_rng.add_random_event(event, m_pool);
         m_pool++;
         kernel_rng.wake_if_ready();

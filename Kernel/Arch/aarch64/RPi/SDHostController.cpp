@@ -5,35 +5,44 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/Arch/aarch64/RPi/GPIO.h>
-#include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/SDHostController.h>
+#include <Kernel/Devices/Storage/StorageManagement.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
+#include <Kernel/Firmware/DeviceTree/Driver.h>
+#include <Kernel/Firmware/DeviceTree/Management.h>
 
 namespace Kernel::RPi {
 
-Singleton<SDHostController> s_sdhc;
-
-SDHostController& SDHostController::the()
+SDHostController::SDHostController(Memory::TypedMapping<SD::HostControlRegisterMap volatile> registers)
+    : m_registers(move(registers))
 {
-    return *s_sdhc;
 }
 
-SDHostController::SDHostController()
-    : ::SDHostController()
+static constinit Array const compatibles_array = {
+    "brcm,bcm2835-sdhci"sv,
+};
+
+DEVICETREE_DRIVER(BCM2835SDHCIController, compatibles_array);
+
+// https://www.kernel.org/doc/Documentation/devicetree/bindings/mmc/brcm,iproc-sdhci.yaml
+ErrorOr<void> BCM2835SDHCIController::probe(DeviceTree::Device const& device, StringView) const
 {
-    auto& gpio = GPIO::the();
-    gpio.set_pin_function(21, GPIO::PinFunction::Alternate3); // CD
-    gpio.set_pin_high_detect_enable(21, true);
+    auto physical_address = TRY(device.get_resource(0)).paddr;
 
-    gpio.set_pin_function(22, GPIO::PinFunction::Alternate3); // SD1_CLK
-    gpio.set_pin_function(23, GPIO::PinFunction::Alternate3); // SD1_CMD
+    DeviceTree::DeviceRecipe<NonnullRefPtr<StorageController>> recipe {
+        name(),
+        device.node_name(),
+        [physical_address] -> ErrorOr<NonnullRefPtr<StorageController>> {
+            auto registers = TRY(Memory::map_typed_writable<SD::HostControlRegisterMap volatile>(physical_address));
+            auto sdhc = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SDHostController(move(registers))));
+            TRY(sdhc->initialize());
+            return sdhc;
+        }
+    };
 
-    gpio.set_pin_function(24, GPIO::PinFunction::Alternate3); // SD1_DAT0
-    gpio.set_pin_function(25, GPIO::PinFunction::Alternate3); // SD1_DAT1
-    gpio.set_pin_function(26, GPIO::PinFunction::Alternate3); // SD1_DAT2
-    gpio.set_pin_function(27, GPIO::PinFunction::Alternate3); // SD1_DAT3
+    StorageManagement::add_recipe(move(recipe));
 
-    m_registers = MMIO::the().peripheral<SD::HostControlRegisterMap>(0x30'0000).release_value_but_fixme_should_propagate_errors();
+    return {};
 }
 
 }

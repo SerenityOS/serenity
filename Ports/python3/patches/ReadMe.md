@@ -44,13 +44,3 @@ We are lacking termios support for this leading to a non-functional
 modern REPL. Force-disable it in the source instead of requiring users
 to set PYTHON_BASIC_REPL=1 to work around the issue.
 
-## `0007-Backport-gh-126688-Reinit-import-lock-after-fork.patch`
-
-Backport gh-126688: Reinit import lock after fork
-
-https://github.com/python/cpython/pull/126765
-This PR will be included in some future version of Python,
-it is needed for `os.fork` to work on SerenityOS.
-
-Authored-By: Sam Gross <colesbury@gmail.com>
-

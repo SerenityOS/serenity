@@ -143,7 +143,7 @@ public:
     void idle_begin() const;
     void idle_end() const;
     u64 time_spent_idle() const;
-    ALWAYS_INLINE static u64 read_cpu_counter();
+    ALWAYS_INLINE static Optional<u64> read_cycle_count();
 
     void check_invoke_scheduler();
     void invoke_scheduler_async() { m_invoke_scheduler_async = true; }
