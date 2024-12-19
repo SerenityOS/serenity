@@ -22,7 +22,7 @@ class NativeFunction : public FunctionObject {
 
 public:
     static NonnullGCPtr<NativeFunction> create(Realm&, ESCAPING Function<ThrowCompletionOr<Value>(VM&)> behaviour, i32 length, PropertyKey const& name, Optional<Realm*> = {}, Optional<Object*> prototype = {}, Optional<StringView> const& prefix = {});
-    static NonnullGCPtr<NativeFunction> create(Realm&, DeprecatedFlyString const& name, ESCAPING Function<ThrowCompletionOr<Value>(VM&)>);
+    static NonnullGCPtr<NativeFunction> create(Realm&, FlyByteString const& name, ESCAPING Function<ThrowCompletionOr<Value>(VM&)>);
 
     virtual ~NativeFunction() override = default;
 
@@ -34,18 +34,18 @@ public:
     virtual ThrowCompletionOr<Value> call();
     virtual ThrowCompletionOr<NonnullGCPtr<Object>> construct(FunctionObject& new_target);
 
-    virtual DeprecatedFlyString const& name() const override { return m_name; }
+    virtual FlyByteString const& name() const override { return m_name; }
     virtual bool is_strict_mode() const override;
     virtual bool has_constructor() const override { return false; }
     virtual Realm* realm() const override { return m_realm; }
 
-    Optional<DeprecatedFlyString> const& initial_name() const { return m_initial_name; }
-    void set_initial_name(Badge<FunctionObject>, DeprecatedFlyString initial_name) { m_initial_name = move(initial_name); }
+    Optional<FlyByteString> const& initial_name() const { return m_initial_name; }
+    void set_initial_name(Badge<FunctionObject>, FlyByteString initial_name) { m_initial_name = move(initial_name); }
 
 protected:
-    NativeFunction(DeprecatedFlyString name, Object& prototype);
+    NativeFunction(FlyByteString name, Object& prototype);
     NativeFunction(JS::GCPtr<JS::HeapFunction<ThrowCompletionOr<Value>(VM&)>>, Object* prototype, Realm& realm);
-    NativeFunction(DeprecatedFlyString name, JS::GCPtr<JS::HeapFunction<ThrowCompletionOr<Value>(VM&)>>, Object& prototype);
+    NativeFunction(FlyByteString name, JS::GCPtr<JS::HeapFunction<ThrowCompletionOr<Value>(VM&)>>, Object& prototype);
     explicit NativeFunction(Object& prototype);
 
     virtual void initialize(Realm&) override;
@@ -54,9 +54,9 @@ protected:
 private:
     virtual bool is_native_function() const final { return true; }
 
-    DeprecatedFlyString m_name;
+    FlyByteString m_name;
     GCPtr<PrimitiveString> m_name_string;
-    Optional<DeprecatedFlyString> m_initial_name; // [[InitialName]]
+    Optional<FlyByteString> m_initial_name; // [[InitialName]]
     JS::GCPtr<JS::HeapFunction<ThrowCompletionOr<Value>(VM&)>> m_native_function;
     GCPtr<Realm> m_realm;
 };

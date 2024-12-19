@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyByteString.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
 #include <LibDebug/Dwarf/DwarfTypes.h>
@@ -113,20 +113,20 @@ public:
 
     struct LineInfo {
         FlatPtr address { 0 };
-        DeprecatedFlyString file;
+        FlyByteString file;
         size_t line { 0 };
     };
 
     Vector<LineInfo> const& lines() const { return m_lines; }
 
     struct DirectoryAndFile {
-        DeprecatedFlyString directory;
-        DeprecatedFlyString filename;
+        FlyByteString directory;
+        FlyByteString filename;
     };
     DirectoryAndFile get_directory_and_file(size_t file_index) const;
 
     struct FileEntry {
-        DeprecatedFlyString name;
+        FlyByteString name;
         size_t directory_index { 0 };
     };
     Vector<FileEntry> const& source_files() const { return m_source_files; }

@@ -37,13 +37,13 @@ public:
     void set_font_size(float font_size) override;
     PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u8, Renderer const&) override;
 
-    DeprecatedFlyString base_font_name() const { return m_base_font_name; }
+    FlyByteString base_font_name() const { return m_base_font_name; }
 
 protected:
     PDFErrorOr<void> initialize(Document*, NonnullRefPtr<DictObject> const&, float font_size) override;
 
 private:
-    DeprecatedFlyString m_base_font_name;
+    FlyByteString m_base_font_name;
 
     // Always non-null once initialize() has completed.
     // FIXME: Move this class hierarchy to the usual fallible construction pattern and make this a NonnullOwnPtr.

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/ByteString.h>
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyByteString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
@@ -28,7 +28,7 @@ public:
         ByteString key;
         Vector<ByteString> parameters;
         ByteString value;
-        DeprecatedFlyString filename;
+        FlyByteString filename;
         size_t line { 0 };
         size_t column { 0 };
     };
