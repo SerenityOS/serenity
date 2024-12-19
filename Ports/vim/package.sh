@@ -6,7 +6,7 @@ useconfigure="true"
 files=(
     "https://github.com/vim/vim/archive/refs/tags/v${version}.tar.gz#206c8fc2535df33b9ea62fa1c9acae66c981a3e3aa4de0f652ef3a25e2b92571"
 )
-configopts=("--with-tlib=tinfo" "--with-features=normal")
+configopts=("--with-tlib=tinfo" "--with-features=huge")
 depends=("ncurses" "gettext")
 
 export vim_cv_getcwd_broken=no
