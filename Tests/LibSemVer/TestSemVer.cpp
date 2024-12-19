@@ -34,37 +34,37 @@
 
 TEST_CASE(to_string) // NOLINT(readability-function-cognitive-complexity, readability-function-size)
 {
-    EXPECT_EQ(GET_SEMVER("1.2.3"sv).to_string(), GET_STRING("1.2.3"sv));
-    EXPECT_EQ(GET_SEMVER("1.2.3"sv).to_string(), GET_STRING("1.2.3"sv));
-    EXPECT_EQ(GET_SEMVER("10.20.30"sv).to_string(), GET_STRING("10.20.30"sv));
-    EXPECT_EQ(GET_SEMVER("1.1.2-prerelease+meta"sv).to_string(), GET_STRING("1.1.2-prerelease+meta"sv));
-    EXPECT_EQ(GET_SEMVER("1.1.2+meta"sv).to_string(), GET_STRING("1.1.2+meta"sv));
-    EXPECT_EQ(GET_SEMVER("1.1.2+meta-valid"sv).to_string(), GET_STRING("1.1.2+meta-valid"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0-alpha"sv).to_string(), GET_STRING("1.0.0-alpha"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0-beta"sv).to_string(), GET_STRING("1.0.0-beta"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0-alpha.beta"sv).to_string(), GET_STRING("1.0.0-alpha.beta"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0-alpha.beta.1"sv).to_string(), GET_STRING("1.0.0-alpha.beta.1"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0-alpha.1"sv).to_string(), GET_STRING("1.0.0-alpha.1"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0-alpha0.valid"sv).to_string(), GET_STRING("1.0.0-alpha0.valid"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0-alpha.0valid"sv).to_string(), GET_STRING("1.0.0-alpha.0valid"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0-rc.1+build.1"sv).to_string(), GET_STRING("1.0.0-rc.1+build.1"sv));
-    EXPECT_EQ(GET_SEMVER("2.0.0-rc.1+build.123"sv).to_string(), GET_STRING("2.0.0-rc.1+build.123"sv));
-    EXPECT_EQ(GET_SEMVER("1.2.3-beta"sv).to_string(), GET_STRING("1.2.3-beta"sv));
-    EXPECT_EQ(GET_SEMVER("10.2.3-DEV-SNAPSHOT"sv).to_string(), GET_STRING("10.2.3-DEV-SNAPSHOT"sv));
-    EXPECT_EQ(GET_SEMVER("1.2.3-SNAPSHOT-123"sv).to_string(), GET_STRING("1.2.3-SNAPSHOT-123"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0"sv).to_string(), GET_STRING("1.0.0"sv));
-    EXPECT_EQ(GET_SEMVER("2.0.0"sv).to_string(), GET_STRING("2.0.0"sv));
-    EXPECT_EQ(GET_SEMVER("1.1.7"sv).to_string(), GET_STRING("1.1.7"sv));
-    EXPECT_EQ(GET_SEMVER("2.0.0+build.1848"sv).to_string(), GET_STRING("2.0.0+build.1848"sv));
-    EXPECT_EQ(GET_SEMVER("2.0.1-alpha.1227"sv).to_string(), GET_STRING("2.0.1-alpha.1227"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0-alpha+beta"sv).to_string(), GET_STRING("1.0.0-alpha+beta"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0-alpha-a.b-c-somethinglong+build.1-aef.1-its-okay"sv).to_string(), GET_STRING("1.0.0-alpha-a.b-c-somethinglong+build.1-aef.1-its-okay"sv));
-    EXPECT_EQ(GET_SEMVER("1.2.3----RC-SNAPSHOT.12.9.1--.12+788"sv).to_string(), GET_STRING("1.2.3----RC-SNAPSHOT.12.9.1--.12+788"sv));
-    EXPECT_EQ(GET_SEMVER("1.2.3----RC-SNAPSHOT.12.9.1--"sv).to_string(), GET_STRING("1.2.3----RC-SNAPSHOT.12.9.1--"sv));
-    EXPECT_EQ(GET_SEMVER("1.2.3----R-S.12.9.1--.12+meta"sv).to_string(), GET_STRING("1.2.3----R-S.12.9.1--.12+meta"sv));
-    EXPECT_EQ(GET_SEMVER("1.2.3----RC-SNAPSHOT.12.9.1--.12"sv).to_string(), GET_STRING("1.2.3----RC-SNAPSHOT.12.9.1--.12"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0+0.build.1-rc.10000aaa-kk-0.1"sv).to_string(), GET_STRING("1.0.0+0.build.1-rc.10000aaa-kk-0.1"sv));
-    EXPECT_EQ(GET_SEMVER("1.0.0-0A.is.legal"sv).to_string(), GET_STRING("1.0.0-0A.is.legal"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.2.3"sv).to_string()), GET_STRING("1.2.3"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.2.3"sv).to_string()), GET_STRING("1.2.3"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("10.20.30"sv).to_string()), GET_STRING("10.20.30"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.1.2-prerelease+meta"sv).to_string()), GET_STRING("1.1.2-prerelease+meta"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.1.2+meta"sv).to_string()), GET_STRING("1.1.2+meta"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.1.2+meta-valid"sv).to_string()), GET_STRING("1.1.2+meta-valid"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0-alpha"sv).to_string()), GET_STRING("1.0.0-alpha"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0-beta"sv).to_string()), GET_STRING("1.0.0-beta"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0-alpha.beta"sv).to_string()), GET_STRING("1.0.0-alpha.beta"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0-alpha.beta.1"sv).to_string()), GET_STRING("1.0.0-alpha.beta.1"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0-alpha.1"sv).to_string()), GET_STRING("1.0.0-alpha.1"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0-alpha0.valid"sv).to_string()), GET_STRING("1.0.0-alpha0.valid"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0-alpha.0valid"sv).to_string()), GET_STRING("1.0.0-alpha.0valid"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0-rc.1+build.1"sv).to_string()), GET_STRING("1.0.0-rc.1+build.1"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("2.0.0-rc.1+build.123"sv).to_string()), GET_STRING("2.0.0-rc.1+build.123"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.2.3-beta"sv).to_string()), GET_STRING("1.2.3-beta"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("10.2.3-DEV-SNAPSHOT"sv).to_string()), GET_STRING("10.2.3-DEV-SNAPSHOT"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.2.3-SNAPSHOT-123"sv).to_string()), GET_STRING("1.2.3-SNAPSHOT-123"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0"sv).to_string()), GET_STRING("1.0.0"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("2.0.0"sv).to_string()), GET_STRING("2.0.0"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.1.7"sv).to_string()), GET_STRING("1.1.7"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("2.0.0+build.1848"sv).to_string()), GET_STRING("2.0.0+build.1848"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("2.0.1-alpha.1227"sv).to_string()), GET_STRING("2.0.1-alpha.1227"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0-alpha+beta"sv).to_string()), GET_STRING("1.0.0-alpha+beta"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0-alpha-a.b-c-somethinglong+build.1-aef.1-its-okay"sv).to_string()), GET_STRING("1.0.0-alpha-a.b-c-somethinglong+build.1-aef.1-its-okay"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.2.3----RC-SNAPSHOT.12.9.1--.12+788"sv).to_string()), GET_STRING("1.2.3----RC-SNAPSHOT.12.9.1--.12+788"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.2.3----RC-SNAPSHOT.12.9.1--"sv).to_string()), GET_STRING("1.2.3----RC-SNAPSHOT.12.9.1--"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.2.3----R-S.12.9.1--.12+meta"sv).to_string()), GET_STRING("1.2.3----R-S.12.9.1--.12+meta"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.2.3----RC-SNAPSHOT.12.9.1--.12"sv).to_string()), GET_STRING("1.2.3----RC-SNAPSHOT.12.9.1--.12"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0+0.build.1-rc.10000aaa-kk-0.1"sv).to_string()), GET_STRING("1.0.0+0.build.1-rc.10000aaa-kk-0.1"sv));
+    EXPECT_EQ(MUST(GET_SEMVER("1.0.0-0A.is.legal"sv).to_string()), GET_STRING("1.0.0-0A.is.legal"sv));
 }
 
 TEST_CASE(normal_bump) // NOLINT(readability-function-cognitive-complexity)
@@ -72,35 +72,35 @@ TEST_CASE(normal_bump) // NOLINT(readability-function-cognitive-complexity)
     auto version = GET_SEMVER("1.1.2-prerelease+meta"sv);
 
     // normal bumps
-    auto major_bump = version.bump(SemVer::BumpType::Major);
+    auto major_bump = MUST(version.bump(SemVer::BumpType::Major));
     EXPECT_EQ(major_bump.major(), version.major() + 1);
     EXPECT_EQ(major_bump.minor(), 0ul);
     EXPECT_EQ(major_bump.patch(), 0ul);
-    EXPECT(major_bump.suffix().is_empty());
+    EXPECT(MUST(major_bump.suffix()).is_empty());
 
-    auto minor_bump = version.bump(SemVer::BumpType::Minor);
+    auto minor_bump = MUST(version.bump(SemVer::BumpType::Minor));
     EXPECT_EQ(minor_bump.major(), version.major());
     EXPECT_EQ(minor_bump.minor(), version.minor() + 1);
     EXPECT_EQ(minor_bump.patch(), 0ul);
-    EXPECT(minor_bump.suffix().is_empty());
+    EXPECT(MUST(minor_bump.suffix()).is_empty());
 
-    auto patch_bump = version.bump(SemVer::BumpType::Patch);
+    auto patch_bump = MUST(version.bump(SemVer::BumpType::Patch));
     EXPECT_EQ(patch_bump.major(), version.major());
     EXPECT_EQ(patch_bump.minor(), version.minor());
     EXPECT_EQ(patch_bump.patch(), version.patch() + 1);
-    EXPECT(minor_bump.suffix().is_empty());
+    EXPECT(MUST(minor_bump.suffix()).is_empty());
 }
 
 TEST_CASE(prerelease_bump_increment_numeric)
 {
     auto version = GET_SEMVER("1.1.2-0"sv);
 
-    auto prerelease_bump = version.bump(SemVer::BumpType::Prerelease);
+    auto prerelease_bump = MUST(version.bump(SemVer::BumpType::Prerelease));
     EXPECT_EQ(prerelease_bump.major(), version.major());
     EXPECT_EQ(prerelease_bump.minor(), version.minor());
     EXPECT_EQ(prerelease_bump.patch(), version.patch());
     EXPECT_NE(prerelease_bump.prerelease(), version.prerelease());
-    EXPECT(prerelease_bump.build_metadata().is_empty());
+    EXPECT(MUST(prerelease_bump.build_metadata()).is_empty());
 
     auto version_prerelease_parts = version.prerelease_identifiers();
     auto bumped_prerelease_parts = prerelease_bump.prerelease_identifiers();
@@ -112,12 +112,12 @@ TEST_CASE(prerelease_bump_rightmost_numeric_part)
 {
     auto version = GET_SEMVER("1.1.2-a.1.0.c"sv);
 
-    auto prerelease_bump = version.bump(SemVer::BumpType::Prerelease);
+    auto prerelease_bump = MUST(version.bump(SemVer::BumpType::Prerelease));
     EXPECT_EQ(prerelease_bump.major(), version.major());
     EXPECT_EQ(prerelease_bump.minor(), version.minor());
     EXPECT_EQ(prerelease_bump.patch(), version.patch());
     EXPECT_NE(prerelease_bump.prerelease(), version.prerelease());
-    EXPECT(prerelease_bump.build_metadata().is_empty());
+    EXPECT(MUST(prerelease_bump.build_metadata()).is_empty());
 
     auto version_prerelease_parts = version.prerelease_identifiers();
     auto bumped_prerelease_parts = prerelease_bump.prerelease_identifiers();
@@ -129,12 +129,12 @@ TEST_CASE(prerelease_bump_add_zero_if_no_numeric)
 {
     auto version = GET_SEMVER("1.1.2-only.strings"sv);
 
-    auto prerelease_bump = version.bump(SemVer::BumpType::Prerelease);
+    auto prerelease_bump = MUST(version.bump(SemVer::BumpType::Prerelease));
     EXPECT_EQ(prerelease_bump.major(), version.major());
     EXPECT_EQ(prerelease_bump.minor(), version.minor());
     EXPECT_EQ(prerelease_bump.patch(), version.patch());
     EXPECT_NE(prerelease_bump.prerelease(), version.prerelease());
-    EXPECT(prerelease_bump.build_metadata().is_empty());
+    EXPECT(MUST(prerelease_bump.build_metadata()).is_empty());
 
     auto version_prerelease_parts = version.prerelease_identifiers();
     auto bumped_prerelease_parts = prerelease_bump.prerelease_identifiers();

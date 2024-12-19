@@ -57,9 +57,9 @@ public:
         return String::join('.', m_prerelease_identifiers).release_value_but_fixme_should_propagate_errors();
     }
     [[nodiscard]] ReadonlySpan<String> build_metadata_identifiers() const { return m_build_metadata_identifiers.span(); }
-    [[nodiscard]] String build_metadata() const { return String::join('.', m_build_metadata_identifiers).release_value_but_fixme_should_propagate_errors(); }
+    [[nodiscard]] ErrorOr<String> build_metadata() const { return TRY(String::join('.', m_build_metadata_identifiers)); }
 
-    [[nodiscard]] SemVer bump(BumpType) const;
+    [[nodiscard]] ErrorOr<SemVer> bump(BumpType) const;
 
     [[nodiscard]] bool is_same(SemVer const&, CompareType = CompareType::Exact) const;
     [[nodiscard]] bool is_greater_than(SemVer const&) const;
@@ -73,8 +73,8 @@ public:
 
     [[nodiscard]] bool satisfies(StringView const& semver_spec) const;
 
-    [[nodiscard]] String suffix() const;
-    [[nodiscard]] String to_string() const;
+    [[nodiscard]] ErrorOr<String> suffix() const;
+    [[nodiscard]] ErrorOr<String> to_string() const;
 
 private:
     char m_number_separator;
@@ -95,6 +95,6 @@ template<>
 struct AK::Formatter<SemVer::SemVer> : Formatter<String> {
     ErrorOr<void> format(FormatBuilder& builder, SemVer::SemVer const& value)
     {
-        return Formatter<String>::format(builder, value.to_string());
+        return Formatter<String>::format(builder, TRY(value.to_string()));
     }
 };
