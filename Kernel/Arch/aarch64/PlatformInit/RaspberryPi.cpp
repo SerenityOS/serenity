@@ -60,6 +60,18 @@ void raspberry_pi_platform_init(StringView compatible_string)
     dmesgln("RPi: Firmware version: {}", firmware_version);
 
     RPi::Framebuffer::initialize();
+
+    // The BCM's SDHC is alternate function 3 on pins 21-27.
+    gpio.set_pin_function(21, RPi::GPIO::PinFunction::Alternate3); // CD
+    gpio.set_pin_high_detect_enable(21, true);
+
+    gpio.set_pin_function(22, RPi::GPIO::PinFunction::Alternate3); // SD1_CLK
+    gpio.set_pin_function(23, RPi::GPIO::PinFunction::Alternate3); // SD1_CMD
+
+    gpio.set_pin_function(24, RPi::GPIO::PinFunction::Alternate3); // SD1_DAT0
+    gpio.set_pin_function(25, RPi::GPIO::PinFunction::Alternate3); // SD1_DAT1
+    gpio.set_pin_function(26, RPi::GPIO::PinFunction::Alternate3); // SD1_DAT2
+    gpio.set_pin_function(27, RPi::GPIO::PinFunction::Alternate3); // SD1_DAT3
 }
 
 }

@@ -14,8 +14,7 @@ namespace Kernel::RPi {
 
 class SDHostController : public ::SDHostController {
 public:
-    static SDHostController& the();
-    SDHostController();
+    SDHostController(Memory::TypedMapping<SD::HostControlRegisterMap volatile>);
     virtual ~SDHostController() override = default;
 
 protected:
