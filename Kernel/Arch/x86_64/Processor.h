@@ -270,7 +270,7 @@ ALWAYS_INLINE bool ProcessorBase<T>::has_pat() const
 }
 
 template<typename T>
-ALWAYS_INLINE u64 ProcessorBase<T>::read_cycle_count()
+ALWAYS_INLINE Optional<u64> ProcessorBase<T>::read_cycle_count()
 {
     return read_tsc();
 }
