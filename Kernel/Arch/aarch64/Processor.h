@@ -205,8 +205,9 @@ ALWAYS_INLINE void ProcessorBase<T>::wait_check()
 template<typename T>
 ALWAYS_INLINE Optional<u64> ProcessorBase<T>::read_cycle_count()
 {
-    TODO_AARCH64();
-    return 0;
+    if (Processor::current().has_feature(CPUFeature::PMUv3))
+        return Aarch64::PMCCNTR_EL0::read().CCNT;
+    return {};
 }
 
 }
