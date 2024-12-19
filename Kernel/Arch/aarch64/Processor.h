@@ -203,7 +203,7 @@ ALWAYS_INLINE void ProcessorBase<T>::wait_check()
 }
 
 template<typename T>
-ALWAYS_INLINE u64 ProcessorBase<T>::read_cycle_count()
+ALWAYS_INLINE Optional<u64> ProcessorBase<T>::read_cycle_count()
 {
     TODO_AARCH64();
     return 0;
