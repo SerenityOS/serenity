@@ -247,7 +247,17 @@ public:
         return fetch_add(1) + 1;
     }
 
+    ALWAYS_INLINE constexpr T operator++() noexcept
+    {
+        return fetch_add(1) + 1;
+    }
+
     ALWAYS_INLINE T operator++(int) volatile noexcept
+    {
+        return fetch_add(1);
+    }
+
+    ALWAYS_INLINE constexpr T operator++(int) noexcept
     {
         return fetch_add(1);
     }
@@ -262,12 +272,32 @@ public:
         return __atomic_fetch_add(&m_value, val, order);
     }
 
+    ALWAYS_INLINE constexpr T fetch_add(T val, MemoryOrder order = DefaultMemoryOrder) noexcept
+    {
+        if (is_constant_evaluated()) {
+            T old_value = m_value;
+            m_value += val;
+            return old_value;
+        }
+        return static_cast<Atomic volatile*>(this)->fetch_add(val, order);
+    }
+
     ALWAYS_INLINE T operator--() volatile noexcept
     {
         return fetch_sub(1) - 1;
     }
 
+    ALWAYS_INLINE constexpr T operator--() noexcept
+    {
+        return fetch_sub(1) - 1;
+    }
+
     ALWAYS_INLINE T operator--(int) volatile noexcept
+    {
+        return fetch_sub(1);
+    }
+
+    ALWAYS_INLINE constexpr T operator--(int) noexcept
     {
         return fetch_sub(1);
     }
@@ -286,6 +316,16 @@ public:
             __builtin_unreachable();
 #endif
         return __atomic_fetch_sub(ptr, val, order);
+    }
+
+    ALWAYS_INLINE constexpr T fetch_sub(T val, MemoryOrder order = DefaultMemoryOrder) noexcept
+    {
+        if (is_constant_evaluated()) {
+            T old_value = m_value;
+            m_value -= val;
+            return old_value;
+        }
+        return static_cast<Atomic volatile*>(this)->fetch_sub(val, order);
     }
 
     ALWAYS_INLINE T operator&=(T val) volatile noexcept
@@ -323,9 +363,21 @@ public:
         return load();
     }
 
+    ALWAYS_INLINE constexpr operator T() const noexcept
+    {
+        return load();
+    }
+
     ALWAYS_INLINE T load(MemoryOrder order = DefaultMemoryOrder) const volatile noexcept
     {
         return __atomic_load_n(&m_value, order);
+    }
+
+    ALWAYS_INLINE constexpr T load(MemoryOrder order = DefaultMemoryOrder) const noexcept
+    {
+        if (is_constant_evaluated())
+            return m_value;
+        return static_cast<Atomic const volatile*>(this)->load(order);
     }
 
     // NOLINTNEXTLINE(misc-unconventional-assign-operator) We want operator= to exchange the value, so returning an object of type Atomic& here does not make sense
