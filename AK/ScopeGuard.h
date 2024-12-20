@@ -13,12 +13,12 @@ namespace AK {
 template<typename Callback>
 class ScopeGuard {
 public:
-    ScopeGuard(Callback callback)
+    constexpr ScopeGuard(Callback callback)
         : m_callback(move(callback))
     {
     }
 
-    ~ScopeGuard()
+    constexpr ~ScopeGuard()
     {
         m_callback();
     }
