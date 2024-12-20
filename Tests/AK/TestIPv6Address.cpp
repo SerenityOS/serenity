@@ -167,3 +167,14 @@ TEST_CASE(subnets)
     EXPECT(broadcast.is_in_subnet(all_routers.network(12), 12));
     EXPECT(!documentation.is_in_subnet(lla, 4));
 }
+
+TEST_CASE(should_convert_to_u128)
+{
+    constexpr u8 array_address[] = { 0x20, 0x01, 0x0d, 0xb8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+    constexpr IPv6Address addr(array_address);
+    auto addr_u128 = addr.to_u128();
+
+    auto expected = bit_cast<NetworkOrdered<u128>>(array_address);
+
+    EXPECT_EQ(static_cast<u128>(addr_u128), static_cast<u128>(expected));
+}
