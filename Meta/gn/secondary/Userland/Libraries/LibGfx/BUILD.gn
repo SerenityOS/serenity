@@ -57,6 +57,7 @@ shared_library("LibGfx") {
     "Font/WOFF/Font.cpp",
     "Font/WOFF2/Font.cpp",
     "FontCascadeList.cpp",
+    "GlassWindowTheme.cpp",
     "GradientPainting.cpp",
     "ICC/BinaryWriter.cpp",
     "ICC/Enums.cpp",
@@ -108,6 +109,7 @@ shared_library("LibGfx") {
     "Palette.cpp",
     "Path.cpp",
     "PathClipper.cpp",
+    "PlasticWindowTheme.cpp",
     "Point.cpp",
     "Rect.cpp",
     "ShareableBitmap.cpp",
@@ -118,7 +120,6 @@ shared_library("LibGfx") {
     "TextLayout.cpp",
     "Triangle.cpp",
     "VectorGraphic.cpp",
-    "WindowTheme.cpp",
   ]
 
   sources += get_target_outputs(":generate_tiff_sources")
