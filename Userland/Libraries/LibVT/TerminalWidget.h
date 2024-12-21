@@ -121,6 +121,9 @@ public:
     static ByteString stringify_bell(BellMode);
     static ByteString stringify_automark_mode(AutoMarkMode);
 
+    bool should_resize_on_zoom() const { return m_resize_on_zoom; }
+    void set_resize_on_zoom(bool value) { m_resize_on_zoom = value; }
+
 private:
     TerminalWidget(int ptm_fd, bool automatic_size_policy);
 
@@ -262,6 +265,8 @@ private:
 
     bool m_startup_process_owns_pty { false };
     pid_t m_startup_process_id { -1 };
+
+    bool m_resize_on_zoom { true };
 };
 
 }
