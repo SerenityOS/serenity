@@ -7,6 +7,12 @@ files=(
 depends=(
     'readline'
 )
+launcher_name='Lua'
+launcher_category='D&evelopment'
+launcher_command='/usr/local/bin/lua -i'
+launcher_run_in_terminal='true'
+#icon_file="./doc/logo.gif" 
+icon_file="https://static-00.iconduck.com/assets.00/file-type-lua-icon-256x256-l4ladwf6.png"
 makeopts+=(
     '-Csrc/'
     'serenity'
