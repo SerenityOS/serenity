@@ -626,6 +626,7 @@ if (BUILD_LAGOM)
             lagom_utility(ntpquery SOURCES ../../Userland/Utilities/ntpquery.cpp LIBS LibMain)
         endif()
 
+        lagom_utility(pcfconv SOURCES ../../Userland/Utilities/pcfconv.cpp LIBS LibFileSystem LibGfx LibMain LibURL)
         lagom_utility(pdf SOURCES ../../Userland/Utilities/pdf.cpp LIBS LibGfx LibPDF LibMain)
         lagom_utility(sed SOURCES ../../Userland/Utilities/sed.cpp LIBS LibFileSystem LibMain LibRegex)
         lagom_utility(sql SOURCES ../../Userland/Utilities/sql.cpp LIBS LibFileSystem LibIPC LibLine LibMain LibSQL)
