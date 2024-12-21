@@ -52,7 +52,7 @@ public:
     [[nodiscard]] Kind kind() const { return m_kind; }
 
     u32 element_size() const { return m_element_size; }
-    virtual DeprecatedFlyString const& element_name() const = 0;
+    virtual FlyByteString const& element_name() const = 0;
 
     // 25.1.3.11 IsUnclampedIntegerElementType ( type ), https://tc39.es/ecma262/#sec-isunclampedintegerelementtype
     virtual bool is_unclamped_integer_element_type() const = 0;
@@ -520,7 +520,7 @@ ThrowCompletionOr<double> compare_typed_array_elements(VM&, Value x, Value y, Fu
         static ThrowCompletionOr<NonnullGCPtr<ClassName>> create(Realm&, u32 length, FunctionObject& new_target); \
         static ThrowCompletionOr<NonnullGCPtr<ClassName>> create(Realm&, u32 length);                             \
         static NonnullGCPtr<ClassName> create(Realm&, u32 length, ArrayBuffer& buffer);                           \
-        virtual DeprecatedFlyString const& element_name() const override;                                         \
+        virtual FlyByteString const& element_name() const override;                                               \
                                                                                                                   \
     protected:                                                                                                    \
         ClassName(Object& prototype, u32 length, ArrayBuffer& array_buffer);                                      \

@@ -6,7 +6,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/ByteString.h>
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyByteString.h>
 #include <AK/Format.h>
 #include <AK/Function.h>
 #include <AK/StdLibExtras.h>
@@ -16,7 +16,7 @@
 
 namespace AK {
 
-bool ByteString::operator==(DeprecatedFlyString const& fly_string) const
+bool ByteString::operator==(FlyByteString const& fly_string) const
 {
     return m_impl == fly_string.impl() || view() == fly_string.view();
 }
@@ -337,7 +337,7 @@ ByteString escape_html_entities(StringView html)
     return builder.to_byte_string();
 }
 
-ByteString::ByteString(DeprecatedFlyString const& string)
+ByteString::ByteString(FlyByteString const& string)
     : m_impl(string.impl())
 {
 }

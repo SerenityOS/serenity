@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyByteString.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/Value.h>
@@ -21,16 +21,16 @@ public:
     }
 
     StringOrSymbol(char const* chars)
-        : StringOrSymbol(DeprecatedFlyString(chars))
+        : StringOrSymbol(FlyByteString(chars))
     {
     }
 
     StringOrSymbol(ByteString const& string)
-        : StringOrSymbol(DeprecatedFlyString(string))
+        : StringOrSymbol(FlyByteString(string))
     {
     }
 
-    StringOrSymbol(DeprecatedFlyString const& string)
+    StringOrSymbol(FlyByteString const& string)
         : m_string(string)
     {
     }
@@ -38,7 +38,7 @@ public:
     ~StringOrSymbol()
     {
         if (is_string())
-            m_string.~DeprecatedFlyString();
+            m_string.~FlyByteString();
     }
 
     StringOrSymbol(Symbol const* symbol)
@@ -50,7 +50,7 @@ public:
     StringOrSymbol(StringOrSymbol const& other)
     {
         if (other.is_string())
-            new (&m_string) DeprecatedFlyString(other.m_string);
+            new (&m_string) FlyByteString(other.m_string);
         else
             m_bits = other.m_bits;
     }
@@ -58,7 +58,7 @@ public:
     StringOrSymbol(StringOrSymbol&& other)
     {
         if (other.is_string())
-            new (&m_string) DeprecatedFlyString(move(other.m_string));
+            new (&m_string) FlyByteString(move(other.m_string));
         else
             m_bits = exchange(other.m_bits, 0);
     }
@@ -67,7 +67,7 @@ public:
     ALWAYS_INLINE bool is_symbol() const { return is_valid() && (m_bits & 2); }
     ALWAYS_INLINE bool is_string() const { return is_valid() && !(m_bits & 2); }
 
-    ALWAYS_INLINE DeprecatedFlyString as_string() const
+    ALWAYS_INLINE FlyByteString as_string() const
     {
         VERIFY(is_string());
         return m_string;
@@ -144,7 +144,7 @@ private:
     }
 
     union {
-        DeprecatedFlyString m_string;
+        FlyByteString m_string;
         Symbol const* m_symbol_with_tag;
         uintptr_t m_bits;
     };

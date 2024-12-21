@@ -504,7 +504,7 @@ template<>
 struct Formatter<ByteString> : Formatter<StringView> {
 };
 template<>
-struct Formatter<DeprecatedFlyString> : Formatter<StringView> {
+struct Formatter<FlyByteString> : Formatter<StringView> {
 };
 
 template<typename T>

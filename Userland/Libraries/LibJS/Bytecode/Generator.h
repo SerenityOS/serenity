@@ -153,9 +153,9 @@ public:
 
     CodeGenerationErrorOr<Optional<ScopedOperand>> emit_named_evaluation_if_anonymous_function(Expression const&, Optional<IdentifierTableIndex> lhs_name, Optional<ScopedOperand> preferred_dst = {});
 
-    void begin_continuable_scope(Label continue_target, Vector<DeprecatedFlyString> const& language_label_set);
+    void begin_continuable_scope(Label continue_target, Vector<FlyByteString> const& language_label_set);
     void end_continuable_scope();
-    void begin_breakable_scope(Label breakable_target, Vector<DeprecatedFlyString> const& language_label_set);
+    void begin_breakable_scope(Label breakable_target, Vector<FlyByteString> const& language_label_set);
     void end_breakable_scope();
 
     [[nodiscard]] Label nearest_continuable_scope() const;
@@ -198,7 +198,7 @@ public:
         return m_regex_table->insert(move(regex));
     }
 
-    IdentifierTableIndex intern_identifier(DeprecatedFlyString string)
+    IdentifierTableIndex intern_identifier(FlyByteString string)
     {
         return m_identifier_table->insert(move(string));
     }
@@ -265,10 +265,10 @@ public:
     bool must_enter_finalizer() const { return m_boundaries.contains_slow(BlockBoundaryType::ReturnToFinally); }
 
     void generate_break();
-    void generate_break(DeprecatedFlyString const& break_label);
+    void generate_break(FlyByteString const& break_label);
 
     void generate_continue();
-    void generate_continue(DeprecatedFlyString const& continue_label);
+    void generate_continue(FlyByteString const& continue_label);
 
     template<typename OpType>
     void emit_return(ScopedOperand value)
@@ -343,14 +343,14 @@ public:
 private:
     VM& m_vm;
 
-    static CodeGenerationErrorOr<NonnullGCPtr<Executable>> compile(VM&, ASTNode const&, FunctionKind, GCPtr<ECMAScriptFunctionObject const>, MustPropagateCompletion, Vector<DeprecatedFlyString> local_variable_names);
+    static CodeGenerationErrorOr<NonnullGCPtr<Executable>> compile(VM&, ASTNode const&, FunctionKind, GCPtr<ECMAScriptFunctionObject const>, MustPropagateCompletion, Vector<FlyByteString> local_variable_names);
 
     enum class JumpType {
         Continue,
         Break,
     };
     void generate_scoped_jump(JumpType);
-    void generate_labelled_jump(JumpType, DeprecatedFlyString const& label);
+    void generate_labelled_jump(JumpType, FlyByteString const& label);
 
     Generator(VM&, GCPtr<ECMAScriptFunctionObject const>, MustPropagateCompletion);
     ~Generator() = default;
@@ -362,7 +362,7 @@ private:
 
     struct LabelableScope {
         Label bytecode_target;
-        Vector<DeprecatedFlyString> language_label_set;
+        Vector<FlyByteString> language_label_set;
     };
 
     BasicBlock* m_current_basic_block { nullptr };
