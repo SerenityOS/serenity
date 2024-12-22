@@ -623,6 +623,17 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, bool m
         InterruptDisabler disabler;
         u8* dest_ptr = MM.quickmap_page(*new_physical_page);
         memcpy(dest_ptr, page_buffer, PAGE_SIZE);
+
+        if (is_executable()) {
+            // Some architectures require an explicit synchronization operation after writing to memory that will be executed.
+            // This is required even if no instructions were previously fetched from that (physical) memory location,
+            // because some systems have an I-cache that is not coherent with the D-cache,
+            // resulting in the I-cache being filled with old values if the contents of the D-cache aren't written back yet.
+
+            // __builtin___clear_cache is a no-op on architectures where this isn't needed, like on x86.
+            __builtin___clear_cache(reinterpret_cast<char*>(dest_ptr), reinterpret_cast<char*>(dest_ptr + PAGE_SIZE));
+        }
+
         MM.unquickmap_page();
     }
 
