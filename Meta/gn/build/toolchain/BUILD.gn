@@ -91,11 +91,13 @@ template("unix_toolchain") {
 
     tool("solink") {
       outfile = "{{output_dir}}/{{target_output_name}}{{output_extension}}"
+      rspfile = outfile + ".rsp"
+      rspfile_content = "{{inputs}}"
       if (current_os == "ios" || current_os == "mac") {
-        command = "$ld -shared {{ldflags}} -o $outfile {{inputs}} {{libs}} {{frameworks}} -Wl,-install_name,@rpath/{{target_output_name}}{{output_extension}}"
+        command = "$ld -shared {{ldflags}} -o $outfile @\"$rspfile\" {{libs}} {{frameworks}} -Wl,-install_name,@rpath/{{target_output_name}}{{output_extension}}"
         default_output_extension = ".dylib"
       } else {
-        command = "$ld -shared {{ldflags}} -Wl,-soname,{{target_output_name}}{{output_extension}} -Wl,-rpath,\\\$ORIGIN -o $outfile {{inputs}} {{libs}}"
+        command = "$ld -shared {{ldflags}} -Wl,-soname,{{target_output_name}}{{output_extension}} -Wl,-rpath,\\\$ORIGIN -o $outfile @\"$rspfile\" {{libs}}"
         default_output_extension = ".so"
       }
       description = "SOLINK $outfile"
