@@ -963,7 +963,8 @@ ErrorOr<u32> SDHostController::retrieve_sd_clock_frequency()
     if (m_registers->capabilities.base_clock_frequency == 0) {
         // Spec says:
         // If these bits are all 0, the Host System has to get information via another method
-        TODO();
+        dbgln("FIXME: The SD Host Controller does not provide the base clock frequency; get this frequency using another method");
+        return ENOTSUP;
     }
     i64 const one_mhz = 1'000'000;
     return { m_registers->capabilities.base_clock_frequency * one_mhz };
