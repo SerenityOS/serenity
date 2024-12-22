@@ -76,6 +76,59 @@ if (NOT ENABLE_JAKT)
     return()
 endif()
 
+# Get the C++ compiler's include dirs
+# Equivalent to: $CXX -xc++ /dev/null -E -Wp,-v 2>&1 | sed -n 's,^ ,,p'
+execute_process(
+    COMMAND ${CMAKE_CXX_COMPILER} -xc++ /dev/null -E
+    OUTPUT_VARIABLE CXX_INCLUDES
+    ERROR_VARIABLE CXX_INCLUDES
+)
+string(REGEX MATCHALL "(^|\n) [^\n]*" CXX_INCLUDES "${CXX_INCLUDES}")
+string(REGEX REPLACE "\n" "" CXX_INCLUDES "${CXX_INCLUDES}")
+string(REGEX REPLACE "; +" ";" CXX_INCLUDES "${CXX_INCLUDES}")
+
+# Get the builtin/system includes
+# Equivalent to $CXX -E test.cpp |& sed -e '/^# 1 /p;d' | sed -e 's/# 1 "//;s/"[^"]*$//'
+file(WRITE ${CMAKE_BINARY_DIR}/jakt_test.cpp "#include <new>")
+execute_process(
+    COMMAND ${CMAKE_CXX_COMPILER} -E ${CMAKE_BINARY_DIR}/jakt_test.cpp
+    OUTPUT_VARIABLE CXX_SYSTEM_INCLUDES
+    ERROR_VARIABLE CXX_SYSTEM_INCLUDES
+)
+string(REGEX MATCHALL "\n# 1 [^\n]*\n" CXX_SYSTEM_INCLUDES "${CXX_SYSTEM_INCLUDES}")
+string(REGEX REPLACE "# 1 \"" "" CXX_SYSTEM_INCLUDES "${CXX_SYSTEM_INCLUDES}")
+string(REGEX REPLACE "\"[^\"]*\n" "\n" CXX_SYSTEM_INCLUDES "${CXX_SYSTEM_INCLUDES}")
+string(REGEX REPLACE "\n" ";" CXX_SYSTEM_INCLUDES "${CXX_SYSTEM_INCLUDES}")
+
+set(CXX_SYSTEM_INCLUDES_CLEAN)
+foreach(include IN LISTS CXX_SYSTEM_INCLUDES)
+    # If the include is not a path, ignore it
+    if (NOT include MATCHES "^/")
+        continue()
+    endif()
+    # Get the dirname of the include
+    get_filename_component(include_dir ${include} DIRECTORY)
+    # If the dir is a subdir of any of CXX_INCLUDES, ignore it
+    set(skip FALSE)
+    foreach(cxx_include IN LISTS CXX_INCLUDES)
+        if (include_dir MATCHES "^${cxx_include}")
+            set(skip TRUE)
+            break()
+        endif()
+    endforeach()
+    if (skip)
+        continue()
+    endif()
+    # If the dir ends with /bits, strip the /bits segment
+    if (include_dir MATCHES "/bits$")
+        get_filename_component(include_dir ${include_dir} DIRECTORY)
+    endif()
+    list(APPEND CXX_SYSTEM_INCLUDES_CLEAN ${include_dir})
+endforeach()
+
+# Remove duplicates
+list(REMOVE_DUPLICATES CXX_SYSTEM_INCLUDES_CLEAN)
+
 cmake_host_system_information(RESULT JAKT_PROCESSOR_COUNT QUERY NUMBER_OF_PHYSICAL_CORES)
 set_property(GLOBAL PROPERTY JOB_POOLS jakt_pool=1)
 
@@ -97,6 +150,12 @@ function(add_jakt_executable target source)
 
     foreach(config IN LISTS JAKT_EXECUTABLE_CONFIGS)
         list(APPEND configs "--config" "${config}")
+    endforeach()
+    foreach(include IN LISTS CXX_COMPILER_INCLUDES)
+        list(APPEND includes "-I" "${include}")
+    endforeach()
+    foreach(include IN LISTS CXX_SYSTEM_INCLUDES_CLEAN)
+        list(APPEND includes "--extra-cpp-flag-isystem${include}")
     endforeach()
     foreach(include IN LISTS JAKT_EXECUTABLE_INCLUDES)
         list(APPEND includes "-I" "${include}")
@@ -198,6 +257,7 @@ function(serenity_jakt_app target_name source)
             ${PROJECT_BINARY_DIR}/Userland/Services
             ${PROJECT_BINARY_DIR}/Userland/Libraries
             ${PROJECT_BINARY_DIR}/Userland
+            ${CMAKE_SYSROOT}/usr/include
             ${SERENITY_JAKT_EXECUTABLE_INCLUDES}
         CONFIGS ${SERENITY_JAKT_EXECUTABLE_CONFIGS}
         LINK_LIBRARIES ${SERENITY_JAKT_EXECUTABLE_LINK_LIBRARIES}
@@ -223,6 +283,7 @@ function(serenity_jakt_executable target_name)
             ${PROJECT_BINARY_DIR}/Userland/Services
             ${PROJECT_BINARY_DIR}/Userland/Libraries
             ${PROJECT_BINARY_DIR}/Userland
+            ${CMAKE_SYSROOT}/usr/include
             ${SERENITY_JAKT_EXECUTABLE_INCLUDES}
         CONFIGS ${SERENITY_JAKT_EXECUTABLE_CONFIGS}
         LINK_LIBRARIES ${SERENITY_JAKT_EXECUTABLE_LINK_LIBRARIES}
