@@ -23,6 +23,7 @@ struct alignas(16) RegisterState {
     u64 elr_el1;   // Exception Link Register, EL1
     u64 sp_el0;    // EL0 stack pointer
     u64 tpidr_el0; // EL0 Software Thread ID Register
+    u64 esr_el1;   // Exception Syndrome Register, EL1
 
     FlatPtr userspace_sp() const { return sp_el0; }
     void set_userspace_sp(FlatPtr value)
