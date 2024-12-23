@@ -6,8 +6,8 @@
 
 #include <AK/ByteString.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedFlyString.h>
 #include <AK/FixedArray.h>
+#include <AK/FlyByteString.h>
 #include <AK/Format.h>
 #include <AK/IntegralMath.h>
 #include <AK/Math.h>

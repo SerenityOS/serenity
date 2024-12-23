@@ -25,7 +25,7 @@ namespace JS {
 
 JS_DEFINE_ALLOCATOR(Object);
 
-static HashMap<GCPtr<Object const>, HashMap<DeprecatedFlyString, Object::IntrinsicAccessor>> s_intrinsics;
+static HashMap<GCPtr<Object const>, HashMap<FlyByteString, Object::IntrinsicAccessor>> s_intrinsics;
 
 // 10.1.12 OrdinaryObjectCreate ( proto [ , additionalInternalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinaryobjectcreate
 NonnullGCPtr<Object> Object::create(Realm& realm, Object* prototype)
@@ -1398,7 +1398,7 @@ Optional<Completion> Object::enumerate_object_properties(Function<Optional<Compl
     //    * Enumerating the properties of the target object includes enumerating properties of its prototype, and the prototype of the prototype, and so on, recursively.
     //    * A property of a prototype is not processed if it has the same name as a property that has already been processed.
 
-    HashTable<DeprecatedFlyString> visited;
+    HashTable<FlyByteString> visited;
 
     auto const* target = this;
     while (target) {
@@ -1406,7 +1406,7 @@ Optional<Completion> Object::enumerate_object_properties(Function<Optional<Compl
         for (auto& key : own_keys) {
             if (!key.is_string())
                 continue;
-            DeprecatedFlyString property_key = key.as_string().byte_string();
+            FlyByteString property_key = key.as_string().byte_string();
             if (visited.contains(property_key))
                 continue;
             auto descriptor = TRY(target->internal_get_own_property(property_key));
