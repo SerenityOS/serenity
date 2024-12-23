@@ -67,14 +67,6 @@ static void setup_el1()
 {
     Aarch64::SCTLR_EL1 system_control_register_el1 = Aarch64::SCTLR_EL1::reset_value();
 
-    system_control_register_el1.UCT = 1;  // Don't trap access to CTR_EL0
-    system_control_register_el1.nTWE = 1; // Don't trap WFE instructions
-    system_control_register_el1.nTWI = 1; // Don't trap WFI instructions
-    system_control_register_el1.DZE = 1;  // Don't trap DC ZVA instructions
-    system_control_register_el1.UMA = 1;  // Don't trap access to DAIF (debugging) flags of EFLAGS register
-    system_control_register_el1.SA0 = 1;  // Enable stack access alignment check for EL0
-    system_control_register_el1.SA = 1;   // Enable stack access alignment check for EL1
-
     // FIXME: Enable memory access alignment check when userspace will not execute unaligned memory accesses anymore.
     //        See: https://github.com/SerenityOS/serenity/issues/17516
     system_control_register_el1.A = 0; // Disable memory access alignment check
