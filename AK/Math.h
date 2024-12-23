@@ -862,6 +862,32 @@ constexpr T log10(T x)
 }
 
 template<FloatingPoint T>
+constexpr T exp2(T exponent)
+{
+    CONSTEXPR_STATE(exp2, exponent);
+
+#if ARCH(X86_64)
+    T res;
+    asm("fld1\n"
+        "fld %%st(1)\n"
+        "fprem\n"
+        "f2xm1\n"
+        "faddp\n"
+        "fscale\n"
+        "fstp %%st(1)"
+        : "=t"(res)
+        : "0"(exponent));
+    return res;
+#else
+#    if defined(AK_OS_SERENITY)
+    // TODO: Add implementation for this function.
+    TODO();
+#    endif
+    return __builtin_exp2(exponent);
+#endif
+}
+
+template<FloatingPoint T>
 constexpr T exp(T exponent)
 {
     CONSTEXPR_STATE(exp, exponent);
@@ -886,32 +912,6 @@ constexpr T exp(T exponent)
     TODO();
 #    endif
     return __builtin_exp(exponent);
-#endif
-}
-
-template<FloatingPoint T>
-constexpr T exp2(T exponent)
-{
-    CONSTEXPR_STATE(exp2, exponent);
-
-#if ARCH(X86_64)
-    T res;
-    asm("fld1\n"
-        "fld %%st(1)\n"
-        "fprem\n"
-        "f2xm1\n"
-        "faddp\n"
-        "fscale\n"
-        "fstp %%st(1)"
-        : "=t"(res)
-        : "0"(exponent));
-    return res;
-#else
-#    if defined(AK_OS_SERENITY)
-    // TODO: Add implementation for this function.
-    TODO();
-#    endif
-    return __builtin_exp2(exponent);
 #endif
 }
 
