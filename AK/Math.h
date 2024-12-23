@@ -879,11 +879,46 @@ constexpr T exp2(T exponent)
         : "0"(exponent));
     return res;
 #else
-#    if defined(AK_OS_SERENITY)
-    // TODO: Add implementation for this function.
-    TODO();
-#    endif
-    return __builtin_exp2(exponent);
+    // TODO: Add better implementation of this function.
+    // This is just fast exponentiation for the integer part and
+    // the first couple terms of the taylor series for the fractional part.
+
+    if (exponent < 0)
+        return 1 / exp2(-exponent);
+
+    if (exponent >= log2(NumericLimits<T>::max()))
+        return Infinity<T>;
+
+    // Integer exponentiation part.
+    int int_exponent = static_cast<int>(exponent);
+    T exponent_fraction = exponent - int_exponent;
+
+    T int_result = 1;
+    T base = 2;
+    for (;;) {
+        if (int_exponent & 1)
+            int_result *= base;
+        int_exponent >>= 1;
+        if (!int_exponent)
+            break;
+        base *= base;
+    }
+
+    // Fractional part.
+    // Uses:
+    // exp(x) = sum(n, 0, \infty, x ** n / n!)
+    // 2**x = exp(log2(e) * x)
+    // FIXME: Pick better step size (and make it dependent on T).
+    T result = 0;
+    T power = 1;
+    T factorial = 1;
+    for (int i = 1; i < 16; ++i) {
+        result += power / factorial;
+        power *= exponent_fraction / L2_E<T>;
+        factorial *= i;
+    }
+
+    return int_result * result;
 #endif
 }
 
@@ -907,11 +942,8 @@ constexpr T exp(T exponent)
         : "0"(exponent));
     return res;
 #else
-#    if defined(AK_OS_SERENITY)
-    // TODO: Add implementation for this function.
-    TODO();
-#    endif
-    return __builtin_exp(exponent);
+    // TODO: Add better implementation of this function.
+    return exp2(exponent * L2_E<T>);
 #endif
 }
 
