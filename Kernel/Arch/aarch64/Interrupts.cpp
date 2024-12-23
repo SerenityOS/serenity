@@ -33,13 +33,10 @@ static void dump_exception_syndrome_register(Aarch64::ESR_EL1 const& esr_el1)
 
 void dump_registers(RegisterState const& regs)
 {
-    auto esr_el1 = Kernel::Aarch64::ESR_EL1::read();
+    auto esr_el1 = bit_cast<Aarch64::ESR_EL1>(regs.esr_el1);
     dump_exception_syndrome_register(esr_el1);
 
     // Special registers
-    Aarch64::SPSR_EL1 spsr_el1 = {};
-    memcpy(&spsr_el1, (u8 const*)&regs.spsr_el1, sizeof(u64));
-
     dbgln("Saved Program Status: (NZCV({:#b}) DAIF({:#b}) M({:#b})) / {:#x}", ((regs.spsr_el1 >> 28) & 0b1111), ((regs.spsr_el1 >> 6) & 0b1111), regs.spsr_el1 & 0b1111, regs.spsr_el1);
     dbgln("Exception Link Register: {:#x}", regs.elr_el1);
     dbgln("Stack Pointer (EL0): {:#x}", regs.sp_el0);
@@ -83,14 +80,13 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
 {
     Processor::current().enter_trap(*trap_frame, false);
 
-    auto esr_el1 = Kernel::Aarch64::ESR_EL1::read();
+    auto esr_el1 = bit_cast<Aarch64::ESR_EL1>(trap_frame->regs->esr_el1);
     auto fault_address = Aarch64::FAR_EL1::read().virtual_address;
     Processor::enable_interrupts();
 
     if (Aarch64::exception_class_is_data_abort(esr_el1.EC) || Aarch64::exception_class_is_instruction_abort(esr_el1.EC)) {
         auto page_fault_or_error = page_fault_from_exception_syndrome_register(VirtualAddress(fault_address), esr_el1);
         if (page_fault_or_error.is_error()) {
-            dump_registers(*trap_frame->regs);
             handle_crash(*trap_frame->regs, "Unknown page fault", SIGSEGV, false);
         } else {
             auto page_fault = page_fault_or_error.release_value();
@@ -99,7 +95,6 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
     } else if (Aarch64::exception_class_is_svc_instruction_execution(esr_el1.EC)) {
         syscall_handler(trap_frame);
     } else {
-        dump_registers(*trap_frame->regs);
         handle_crash(*trap_frame->regs, "Unexpected exception", SIGSEGV, false);
     }
 

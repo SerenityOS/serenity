@@ -17,6 +17,7 @@
 #define ELR_EL1_SLOT        (32 * 8)
 #define SP_EL0_SLOT         (33 * 8)
 #define TPIDR_EL0_SLOT      (34 * 8)
+#define ESR_EL1_SLOT        (35 * 8)
 
 // Vector Table Entry macro. Each entry is aligned at 128 bytes, meaning we have
 // at most that many instructions.
@@ -68,6 +69,8 @@
     str x0, [sp, #SP_EL0_SLOT]
     mrs x0, tpidr_el0
     str x0, [sp, #TPIDR_EL0_SLOT]
+    mrs x0, esr_el1
+    str x0, [sp, #ESR_EL1_SLOT]
 
     // Set up TrapFrame struct on the stack
     mov x0, sp
