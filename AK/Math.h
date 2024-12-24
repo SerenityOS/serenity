@@ -736,28 +736,6 @@ constexpr T tan(T angle)
 }
 
 template<FloatingPoint T>
-constexpr T atan(T value)
-{
-    CONSTEXPR_STATE(atan, value);
-
-#if ARCH(X86_64)
-    T ret;
-    asm(
-        "fld1\n"
-        "fpatan\n"
-        : "=t"(ret)
-        : "0"(value));
-    return ret;
-#else
-#    if defined(AK_OS_SERENITY)
-    // TODO: Add implementation for this function.
-    TODO();
-#    endif
-    return __builtin_atan(value);
-#endif
-}
-
-template<FloatingPoint T>
 constexpr T asin(T x)
 {
     CONSTEXPR_STATE(asin, x);
@@ -793,6 +771,28 @@ constexpr T acos(T value)
 
     // FIXME: I am naive
     return static_cast<T>(0.5) * Pi<T> - asin<T>(value);
+}
+
+template<FloatingPoint T>
+constexpr T atan(T value)
+{
+    CONSTEXPR_STATE(atan, value);
+
+#if ARCH(X86_64)
+    T ret;
+    asm(
+        "fld1\n"
+        "fpatan\n"
+        : "=t"(ret)
+        : "0"(value));
+    return ret;
+#else
+#    if defined(AK_OS_SERENITY)
+    // TODO: Add implementation for this function.
+    TODO();
+#    endif
+    return __builtin_atan(value);
+#endif
 }
 
 template<FloatingPoint T>
