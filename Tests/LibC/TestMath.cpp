@@ -17,6 +17,32 @@
 #include <float.h>
 #include <math.h>
 
+TEST_CASE(fmod)
+{
+    EXPECT_EQ(fmod(+0.0, 1.0), 0.0);
+    EXPECT_EQ(fmod(-0.0, 1.0), -0.0);
+
+    EXPECT_EQ(fmod(42.0, __builtin_huge_val()), 42.0);
+
+    // x has smaller exponent than y
+    EXPECT_EQ(fmod(1.0, 3.0), 1.0);
+    EXPECT_EQ(fmod(1.0, -3.0), 1.0);
+    EXPECT_EQ(fmod(-1.0, 3.0), -1.0);
+    EXPECT_EQ(fmod(-1.0, -3.0), -1.0);
+
+    // x has same exponent as y
+    EXPECT_EQ(fmod(2.0, 3.0), 2.0);
+    EXPECT_EQ(fmod(2.0, -3.0), 2.0);
+    EXPECT_EQ(fmod(-2.0, 3.0), -2.0);
+    EXPECT_EQ(fmod(-2.0, -3.0), -2.0);
+
+    // x has larger exponent than y
+    EXPECT_EQ(fmod(5.0, 3.0), 2.0);
+    EXPECT_EQ(fmod(5.0, -3.0), 2.0);
+    EXPECT_EQ(fmod(-5.0, 3.0), -2.0);
+    EXPECT_EQ(fmod(-5.0, -3.0), -2.0);
+}
+
 TEST_CASE(atan2)
 {
     EXPECT_APPROXIMATE(atan2(-1, -0.0e0), -M_PI_2);
