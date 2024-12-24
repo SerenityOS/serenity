@@ -115,6 +115,8 @@ public:
 
     void open_menubar_menu(Menu&);
 
+    Gfx::WindowTheme::WindowState window_state_for_theme() const;
+
 private:
     void paint_notification_frame(Gfx::Painter&);
     void paint_normal_frame(Gfx::Painter&);
@@ -126,7 +128,6 @@ private:
     void handle_menubar_mouse_event(MouseEvent const&);
     void handle_menu_mouse_event(Menu&, MouseEvent const&);
 
-    Gfx::WindowTheme::WindowState window_state_for_theme() const;
     ByteString computed_title() const;
 
     Gfx::IntRect constrained_render_rect_to_screen(Gfx::IntRect const&) const;

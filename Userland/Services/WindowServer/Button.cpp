@@ -17,6 +17,7 @@ namespace WindowServer {
 Button::Button(WindowFrame& frame, Function<void(Button&)>&& on_click_handler)
     : on_click(move(on_click_handler))
     , m_frame(frame)
+
 {
 }
 
@@ -36,7 +37,10 @@ void Button::paint(Screen& screen, Gfx::Painter& painter)
         auto icon_location = rect().center().translated(-(bitmap.width() / 2), -(bitmap.height() / 2));
         if (m_pressed)
             painter.translate(1, 1);
-        painter.blit(icon_location, bitmap, bitmap.rect());
+        auto inactive_opacity = palette.window_title_button_inactive_alpha() / 255.0f;
+        bool is_inactive = m_frame.window().type() != WindowType::Notification
+            && m_frame.window_state_for_theme() == Gfx::WindowTheme::WindowState::Inactive;
+        painter.blit(icon_location, bitmap, bitmap.rect(), is_inactive ? inactive_opacity : 1.0f);
     };
 
     if (m_hovered && m_icon.hover_bitmap && !m_icon.hover_bitmap->is_empty())

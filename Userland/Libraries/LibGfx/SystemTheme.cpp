@@ -130,6 +130,8 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
                 return 15;
             case (int)MetricRole::TitleButtonWidth:
                 return 15;
+            case (int)MetricRole::TitleButtonInactiveAlpha:
+                return 255;
             default:
                 dbgln("Metric {} has no fallback value!", name);
                 return 16;
