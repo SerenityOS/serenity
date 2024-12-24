@@ -74,11 +74,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool destination_is_existing_dir = FileSystem::is_directory(destination);
 
     for (auto& source : sources) {
-        // FIXME: May be formatted wrong if destination is a directory with a trailing slash, e.g. if called as such:
-        // cp source dest/
-        // ... `destination_path` may be formatted as `dest//source`, which isn't strictly correct.
         auto destination_path = destination_is_existing_dir
-            ? ByteString::formatted("{}/{}", destination, LexicalPath::basename(source))
+            ? LexicalPath::canonicalized_path(ByteString::formatted("{}/{}", destination, LexicalPath::basename(source)))
             : destination;
 
         if (interactive && FileSystem::exists(destination_path)) {
