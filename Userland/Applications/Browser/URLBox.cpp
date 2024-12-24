@@ -4,10 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Applications/Browser/URLBox.h>
+#include "URLBox.h"
 #include <LibGfx/Palette.h>
 #include <LibGfx/TextAttributes.h>
-#include <LibURL/URL.h>
 #include <LibWebView/URL.h>
 
 namespace Browser {

@@ -1,4 +1,4 @@
-@GUI::Widget {
+@Browser::BrowserWindowWidget {
     name: "browser"
     fill_with_background_color: true
     layout: @GUI::VerticalBoxLayout {}
@@ -14,7 +14,7 @@
         container_margins: [0]
         uniform_tabs: true
         reorder_allowed: true
-        show_close_buttons: true
+        close_button_enabled: true
         text_alignment: "CenterLeft"
     }
 }
