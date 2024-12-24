@@ -103,8 +103,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     chess_widget.set_show_available_moves(Config::read_bool("Games"sv, "Chess"sv, "ShowAvailableMoves"sv, true));
     chess_widget.set_highlight_checks(Config::read_bool("Games"sv, "Chess"sv, "HighlightChecks"sv, true));
     chess_widget.set_unlimited_time_control(Config::read_bool("Games"sv, "Chess"sv, "UnlimitedTimeControl"sv, true));
-    chess_widget.set_time_control_seconds(Config::read_i32("Games"sv, "Chess"sv, "TimeControlSeconds"sv, 300));
-    chess_widget.set_time_control_increment(Config::read_i32("Games"sv, "Chess"sv, "TimeControlIncrement"sv, 3));
+    chess_widget.set_time_control_seconds(Config::read_u32("Games"sv, "Chess"sv, "TimeControlSeconds"sv, 300));
+    chess_widget.set_time_control_increment(Config::read_u32("Games"sv, "Chess"sv, "TimeControlIncrement"sv, 3));
     chess_widget.initialize_timer();
 
     auto game_menu = window->add_menu("&Game"_string);
@@ -173,8 +173,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         chess_widget.set_time_control_increment(new_game_dialog->time_control_increment());
 
         Config::write_bool("Games"sv, "Chess"sv, "UnlimitedTimeControl"sv, new_game_dialog->unlimited_time_control());
-        Config::write_i32("Games"sv, "Chess"sv, "TimeControlSeconds"sv, new_game_dialog->time_control_seconds());
-        Config::write_i32("Games"sv, "Chess"sv, "TimeControlIncrement"sv, new_game_dialog->time_control_increment());
+        Config::write_u32("Games"sv, "Chess"sv, "TimeControlSeconds"sv, new_game_dialog->time_control_seconds());
+        Config::write_u32("Games"sv, "Chess"sv, "TimeControlIncrement"sv, new_game_dialog->time_control_increment());
         chess_widget.reset();
     }));
     game_menu->add_separator();
