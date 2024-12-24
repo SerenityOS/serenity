@@ -182,6 +182,7 @@ public:
     int window_title_height() const { return metric(MetricRole::TitleHeight); }
     int window_title_button_width() const { return metric(MetricRole::TitleButtonWidth); }
     int window_title_button_height() const { return metric(MetricRole::TitleButtonHeight); }
+    int window_title_button_inactive_alpha() const { return metric(MetricRole::TitleButtonInactiveAlpha); }
 
     ByteString title_button_icons_path() const { return path(PathRole::TitleButtonIcons); }
     ByteString active_window_shadow_path() const { return path(PathRole::ActiveWindowShadow); }

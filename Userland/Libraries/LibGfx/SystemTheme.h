@@ -135,7 +135,8 @@ namespace Gfx {
     C(BorderRadius)               \
     C(TitleHeight)                \
     C(TitleButtonWidth)           \
-    C(TitleButtonHeight)
+    C(TitleButtonHeight)          \
+    C(TitleButtonInactiveAlpha)
 
 #define ENUMERATE_PATH_ROLES(C) \
     C(TitleButtonIcons)         \
