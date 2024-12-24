@@ -627,6 +627,17 @@ constexpr T sin(T angle)
     return ret;
 #else
 #    if defined(AK_OS_SERENITY)
+    if (angle < 0)
+        return -sin(-angle);
+
+    angle = fmod(angle, 2 * Pi<T>);
+
+    if (angle >= Pi<T>)
+        return -sin(angle - Pi<T>);
+
+    if (angle > Pi<T> / 2)
+        return sin(Pi<T> - angle);
+
     // FIXME: This is a very naive implementation, and is only valid for small x.
     //        Probably a good idea to use a better algorithm in the future, such as a taylor approximation.
     return angle;
@@ -650,6 +661,17 @@ constexpr T cos(T angle)
     return ret;
 #else
 #    if defined(AK_OS_SERENITY)
+    if (angle < 0)
+        return cos(-angle);
+
+    angle = fmod(angle, 2 * Pi<T>);
+
+    if (angle >= Pi<T>)
+        return -cos(angle - Pi<T>);
+
+    if (angle > Pi<T> / 2)
+        return -cos(Pi<T> - angle);
+
     // FIXME: This is a very naive implementation, and is only valid for small x.
     //        Probably a good idea to use a better algorithm in the future, such as a taylor approximation.
     return 1 - ((angle * angle) / 2);
