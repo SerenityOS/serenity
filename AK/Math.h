@@ -66,6 +66,17 @@ constexpr T to_degrees(T radians)
     return radians * 180 / AK::Pi<T>;
 }
 
+template<FloatingPoint FloatT>
+FloatT copysign(FloatT x, FloatT y)
+{
+    using Extractor = FloatExtractor<FloatT>;
+    Extractor ex, ey;
+    ex.d = x;
+    ey.d = y;
+    ex.sign = ey.sign;
+    return ex.d;
+}
+
 #define CONSTEXPR_STATE(function, args...)        \
     if (is_constant_evaluated()) {                \
         if (IsSame<T, long double>)               \
