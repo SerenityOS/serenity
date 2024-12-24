@@ -638,9 +638,9 @@ constexpr T sin(T angle)
     if (angle > Pi<T> / 2)
         return sin(Pi<T> - angle);
 
-    // FIXME: This is a very naive implementation, and is only valid for small x.
-    //        Probably a good idea to use a better algorithm in the future, such as a taylor approximation.
-    return angle;
+    // https://en.wikipedia.org/wiki/Bh%C4%81skara_I%27s_sine_approximation_formula
+    // FIXME: This is not a good formula! It requires divisions, so it's slow, and it's not very accurate either.
+    return 16 * angle * (Pi<T> - angle) / (5 * Pi<T> * Pi<T> - 4 * angle * (Pi<T> - angle));
 #    else
     return __builtin_sin(angle);
 #    endif
@@ -672,9 +672,9 @@ constexpr T cos(T angle)
     if (angle > Pi<T> / 2)
         return -cos(Pi<T> - angle);
 
-    // FIXME: This is a very naive implementation, and is only valid for small x.
-    //        Probably a good idea to use a better algorithm in the future, such as a taylor approximation.
-    return 1 - ((angle * angle) / 2);
+    // https://en.wikipedia.org/wiki/Bh%C4%81skara_I%27s_sine_approximation_formula
+    // FIXME: This is not a good formula! It requires divisions, so it's slow, and it's not very accurate either.
+    return (Pi<T> * Pi<T> - 4 * angle * angle) / (Pi<T> * Pi<T> + angle * angle);
 #    else
     return __builtin_cos(angle);
 #    endif
