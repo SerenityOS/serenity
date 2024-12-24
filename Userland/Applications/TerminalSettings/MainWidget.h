@@ -35,5 +35,7 @@ private:
     VT::TerminalWidget::BellMode m_original_bell_mode;
     VT::TerminalWidget::AutoMarkMode m_original_automark_mode;
     bool m_orignal_confirm_close { true };
+
+    bool m_window_resize_on_zoom;
 };
 }

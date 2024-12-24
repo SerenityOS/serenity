@@ -66,4 +66,17 @@
             text: "Auto-mark on interactive shell prompts"
         }
     }
+
+    @GUI::GroupBox {
+        title: "Window resize"
+        preferred_height: "fit"
+        layout: @GUI::VerticalBoxLayout {
+            margins: [8]
+        }
+
+        @GUI::CheckBox {
+            name: "window_resize_on_zoom"
+            text: "Resize the window on zoom in/out"
+        }
+    }
 }
