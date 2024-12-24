@@ -809,10 +809,68 @@ constexpr T atan2(T y, T x)
     return ret;
 #else
 #    if defined(AK_OS_SERENITY)
-    // TODO: Add implementation for this function.
-    TODO();
-#    endif
+    if (__builtin_isnan(y))
+        return y;
+    if (__builtin_isnan(x))
+        return x;
+
+    // SPECIAL VALUES
+    //      atan2(±0, -0) returns ±pi.
+    if (y == 0 && x == 0 && signbit(x))
+        return copysign(Pi<T>, y);
+
+    //      atan2(±0, +0) returns ±0.
+    if (y == 0 && x == 0 && !signbit(x))
+        return y;
+
+    //      atan2(±0, x) returns ±pi for x < 0.
+    if (y == 0 && x < 0)
+        return copysign(Pi<T>, y);
+
+    //      atan2(±0, x) returns ±0 for x > 0.
+    if (y == 0 && x > 0)
+        return y;
+
+    //      atan2(y, ±0) returns +pi/2 for y > 0.
+    if (y > 0 && x == 0)
+        return Pi<T> / 2;
+
+    //      atan2(y, ±0) returns -pi/2 for y < 0.
+    if (y < 0 && x == 0)
+        return -Pi<T> / 2;
+
+    //      atan2(±y, -infinity) returns ±pi for finite y > 0.
+    if (!__builtin_isinf(y) && y > 0 && __builtin_isinf(x) && signbit(x))
+        return copysign(Pi<T>, y);
+
+    //      atan2(±y, +infinity) returns ±0 for finite y > 0.
+    if (!__builtin_isinf(y) && y > 0 && __builtin_isinf(x) && !signbit(x))
+        return copysign(static_cast<T>(0), y);
+
+    //      atan2(±infinity, x) returns ±pi/2 for finite x.
+    if (__builtin_isinf(y) && !__builtin_isinf(x))
+        return copysign(Pi<T> / 2, y);
+
+    //      atan2(±infinity, -infinity) returns ±3*pi/4.
+    if (__builtin_isinf(y) && __builtin_isinf(x) && signbit(x))
+        return copysign(3 * Pi<T> / 4, y);
+
+    //      atan2(±infinity, +infinity) returns ±pi/4.
+    if (__builtin_isinf(y) && __builtin_isinf(x) && !signbit(x))
+        return copysign(Pi<T> / 4, y);
+
+    // Check quadrant, going counterclockwise.
+    if (y > 0 && x > 0)
+        return atan(y / x);
+    if (y > 0 && x < 0)
+        return atan(y / x) + Pi<T>;
+    if (y < 0 && x < 0)
+        return atan(y / x) - Pi<T>;
+    // y < 0 && x > 0
+    return atan(y / x);
+#    else
     return __builtin_atan2(y, x);
+#    endif
 #endif
 }
 
