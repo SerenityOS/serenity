@@ -798,8 +798,7 @@ constexpr T atan(T value)
     return ret;
 #else
 #    if defined(AK_OS_SERENITY)
-    // TODO: Add implementation for this function.
-    TODO();
+    return asin(value / sqrt(1 + value * value));
 #    endif
     return __builtin_atan(value);
 #endif
