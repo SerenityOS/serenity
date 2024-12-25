@@ -12,22 +12,22 @@
 #include <LibSemVer/SemVer.h>
 
 namespace SemVer {
-String SemVer::suffix() const
+ErrorOr<String> SemVer::suffix() const
 {
     StringBuilder sb;
     if (!m_prerelease_identifiers.is_empty())
         sb.appendff("-{}", prerelease());
     if (!m_build_metadata_identifiers.is_empty())
-        sb.appendff("+{}", build_metadata());
-    return sb.to_string().release_value_but_fixme_should_propagate_errors();
+        sb.appendff("+{}", TRY(build_metadata()));
+    return TRY(sb.to_string());
 }
 
-String SemVer::to_string() const
+ErrorOr<String> SemVer::to_string() const
 {
-    return String::formatted("{}{}{}{}{}{}", m_major, m_number_separator, m_minor, m_number_separator, m_patch, suffix()).release_value_but_fixme_should_propagate_errors();
+    return TRY(String::formatted("{}{}{}{}{}{}", m_major, m_number_separator, m_minor, m_number_separator, m_patch, TRY(suffix())));
 }
 
-SemVer SemVer::bump(BumpType type) const
+ErrorOr<SemVer> SemVer::bump(BumpType type) const
 {
     switch (type) {
     case BumpType::Major:
@@ -45,7 +45,7 @@ SemVer SemVer::bump(BumpType type) const
             auto numeric_identifier = identifier.to_number<u32>();
             if (numeric_identifier.has_value()) {
                 is_found = true;
-                identifier = String::formatted("{}", numeric_identifier.value() + 1).release_value_but_fixme_should_propagate_errors();
+                identifier = TRY(String::formatted("{}", numeric_identifier.value() + 1));
                 break;
             }
         }
@@ -298,6 +298,6 @@ ErrorOr<SemVer> from_string_view(StringView const& version, char normal_version_
 bool is_valid(StringView const& version, char normal_version_separator)
 {
     auto result = from_string_view(version, normal_version_separator);
-    return !result.is_error() && result.release_value().to_string() == version;
+    return !result.is_error() && MUST(result.release_value().to_string()) == version;
 }
 }

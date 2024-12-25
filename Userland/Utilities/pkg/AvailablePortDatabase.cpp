@@ -28,17 +28,17 @@
 #include <LibShell/PosixParser.h>
 #include <LibShell/Shell.h>
 
-void AvailablePortDatabase::query_details_for_package(HashMap<String, InstalledPort> const& installed_ports_map, StringView package_name, bool verbose)
+ErrorOr<void> AvailablePortDatabase::query_details_for_package(HashMap<String, InstalledPort> const& installed_ports_map, StringView package_name, bool verbose)
 {
     auto possible_available_port = m_available_ports.find(package_name);
     if (possible_available_port == m_available_ports.end()) {
         outln("pkg: No match for queried name \"{}\"", package_name);
-        return;
+        return {};
     }
 
     auto& available_port = possible_available_port->value;
 
-    outln("{}: {}, {}", available_port.name(), available_port.version_string(), available_port.website());
+    outln("{}: {}, {}", available_port.name(), TRY(available_port.version_string()), available_port.website());
     if (verbose) {
         out("Installed: ");
         auto installed_port = installed_ports_map.find(package_name);
@@ -51,15 +51,15 @@ void AvailablePortDatabase::query_details_for_package(HashMap<String, InstalledP
             auto error_or_installed_version = installed_port->value.version_semver();
 
             if (error_or_available_version.is_error() || error_or_installed_version.is_error()) {
-                auto ip_version = installed_port->value.version_string();
-                auto ap_version = available_port.version_string();
+                auto ip_version = TRY(installed_port->value.version_string());
+                auto ap_version = TRY(available_port.version_string());
 
                 if (ip_version == ap_version) {
                     outln("Already on latest version");
                 } else {
                     outln("Update to {} available", ap_version);
                 }
-                return;
+                return {};
             }
 
             auto available_version = error_or_available_version.value();
@@ -73,6 +73,7 @@ void AvailablePortDatabase::query_details_for_package(HashMap<String, InstalledP
             outln("No");
         }
     }
+    return {};
 }
 
 static Optional<Markdown::Table::Column const&> get_column_in_table(Markdown::Table const& ports_table, StringView column_name)
