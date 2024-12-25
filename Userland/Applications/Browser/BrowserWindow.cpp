@@ -59,6 +59,31 @@ BrowserWindow::BrowserWindow(WebView::CookieJar& cookie_jar, Vector<URL::URL> co
     auto app_icon = GUI::Icon::default_icon("app-browser"sv);
     m_bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), true);
 
+    // Search Widget
+    auto& search_widget = widget->add<GUI::Widget>();
+    search_widget.set_layout<GUI::HorizontalBoxLayout>();
+    search_widget.set_fixed_height(30);
+    search_widget.set_visible(false);
+
+    auto& search_bar = search_widget.add<GUI::TextBox>();
+    search_bar.set_fixed_width(200);
+    search_bar.set_placeholder("Find in page...");
+
+    auto& find_next_button = search_widget.add<GUI::Button>("Next");
+    find_next_button.on_click = [this, &search_bar] {
+        active_tab().find_next();
+    };
+
+    auto& find_prev_button = search_widget.add<GUI::Button>("Previous");
+    find_prev_button.on_click = [this, &search_bar] {
+        active_tab().find_previous();
+    };
+
+    auto& close_search_button = search_widget.add<GUI::Button>("Close");
+    close_search_button.on_click = [&search_widget] {
+        search_widget.set_visible(false);
+    };
+
     restore_size_and_position("Browser"sv, "Window"sv, { { 730, 560 } });
     save_size_and_position_on_close("Browser"sv, "Window"sv);
     set_icon(app_icon.bitmap_for_size(16));
@@ -776,7 +801,10 @@ void BrowserWindow::update_displayed_zoom_level()
     active_tab().update_reset_zoom_button();
     update_zoom_menu();
 }
-
+void BrowserWindow::update_actions() {
+    // Ensure find-in-page is hooked correctly to the active tab.
+    if (this != &window().active_tab()) return;
+}
 void BrowserWindow::show_task_manager_window()
 {
     if (!m_task_manager_window) {

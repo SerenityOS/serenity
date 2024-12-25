@@ -58,6 +58,73 @@ Tab::~Tab()
 {
     close_sub_widgets();
 }
+void Tab::find_in_page(StringView query)
+{
+    if (query.is_empty()) {
+        view().clear_find_highlights();
+        return;
+    }
+    view().search_for_text(query);
+}
+
+void Tab::find_next()
+{
+    view().find_next_match();
+}
+
+void Tab::find_previous()
+{
+    view().find_previous_match();
+}
+
+// Other existing methods remain unchanged...
+
+URL::URL Tab::url() const
+{
+    return m_web_content_view->url();
+}
+
+void Tab::reload()
+{
+    view().reload();
+}
+
+void Tab::go_back()
+{
+    view().traverse_the_history_by_delta(-1);
+}
+
+void Tab::go_forward()
+{
+    view().traverse_the_history_by_delta(1);
+}
+
+void Tab::update_actions()
+{
+    auto& window = this->window();
+    if (this != &window.active_tab())
+        return;
+    window.go_back_action().set_enabled(m_can_navigate_back);
+    window.go_forward_action().set_enabled(m_can_navigate_forward);
+}
+
+void Tab::load(URL::URL const& url)
+{
+    m_web_content_view->load(url);
+    m_location_box->set_focus(false);
+}
+
+BrowserWindow const& Tab::window() const
+{
+    return static_cast<BrowserWindow const&>(*Widget::window());
+}
+
+BrowserWindow& Tab::window()
+{
+    return static_cast<BrowserWindow&>(*Widget::window());
+}
+
+}
 
 void Tab::start_download(const URL::URL& url)
 {
