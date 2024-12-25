@@ -726,9 +726,7 @@ constexpr T tan(T angle)
     return ret;
 #else
 #    if defined(AK_OS_SERENITY)
-    // FIXME: This is a very naive implementation, and is only valid for small x.
-    //        Probably a good idea to use a better algorithm in the future, such as a taylor approximation.
-    return angle;
+    return sin(angle) / cos(angle);
 #    else
     return __builtin_tan(angle);
 #    endif
