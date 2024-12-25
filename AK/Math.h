@@ -739,10 +739,20 @@ template<FloatingPoint T>
 constexpr T asin(T x)
 {
     CONSTEXPR_STATE(asin, x);
-    if (x > 1 || x < -1)
+
+    if (x < 0)
+        return -asin(-x);
+
+    if (x > 1)
         return NaN<T>;
-    if (x > (T)0.5 || x < (T)-0.5)
-        return 2 * atan<T>(x / (1 + sqrt<T>(1 - x * x)));
+
+    if (x > (T)0.5) {
+        // asin(x) = pi/2 - 2 * asin(sqrt((1 - x) / 2))
+        // If 0.5 < x <= 1, then sqrt((1 - x) / 2 ) < 0.5,
+        // and the recursion will go down the `<= 0.5` branch.
+        return Pi<T> / 2 - 2 * asin(sqrt((1 - x) / 2));
+    }
+
     T squared = x * x;
     T value = x;
     T i = x * squared;
