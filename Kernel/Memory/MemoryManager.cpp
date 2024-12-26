@@ -1067,7 +1067,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
     OwnPtr<KString> name_kstring;
     if (!name.is_null())
         name_kstring = TRY(KString::try_create(name));
-    auto vmobject = TRY(AnonymousVMObject::try_create_physically_contiguous_with_size(size));
+    auto vmobject = TRY(AnonymousVMObject::try_create_physically_contiguous_with_size(size, memory_type));
     auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, memory_type));
     TRY(m_global_data.with([&](auto& global_data) { return global_data.region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size); }));
     TRY(region->map(kernel_page_directory()));
@@ -1092,7 +1092,7 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(S
 ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, Vector<NonnullRefPtr<Memory::PhysicalRAMPage>>& dma_buffer_pages, MemoryType memory_type)
 {
     VERIFY(!(size % PAGE_SIZE));
-    dma_buffer_pages = TRY(allocate_contiguous_physical_pages(size));
+    dma_buffer_pages = TRY(allocate_contiguous_physical_pages(size, memory_type));
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behavior by default)
     return allocate_kernel_region_with_physical_pages(dma_buffer_pages, name, access, memory_type);
 }
@@ -1262,6 +1262,8 @@ NonnullRefPtr<PhysicalRAMPage> MemoryManager::allocate_committed_physical_page(B
     VERIFY(page);
     if (should_zero_fill == ShouldZeroFill::Yes) {
         InterruptDisabler disabler;
+        // FIXME: To prevent aliasing memory with different memory types, this page should be mapped using the same memory type it will use later for the actual mapping.
+        //        (See the comment above the memset in allocate_contiguous_physical_pages.)
         auto* ptr = quickmap_page(*page);
         memset(ptr, 0, PAGE_SIZE);
         unquickmap_page();
@@ -1315,6 +1317,8 @@ ErrorOr<NonnullRefPtr<PhysicalRAMPage>> MemoryManager::allocate_physical_page(Sh
         }
 
         if (should_zero_fill == ShouldZeroFill::Yes) {
+            // FIXME: To prevent aliasing memory with different memory types, this page should be mapped using the same memory type it will use later for the actual mapping.
+            //        (See the comment above the memset in allocate_contiguous_physical_pages.)
             auto* ptr = quickmap_page(*page);
             memset(ptr, 0, PAGE_SIZE);
             unquickmap_page();
@@ -1326,7 +1330,7 @@ ErrorOr<NonnullRefPtr<PhysicalRAMPage>> MemoryManager::allocate_physical_page(Sh
     });
 }
 
-ErrorOr<Vector<NonnullRefPtr<PhysicalRAMPage>>> MemoryManager::allocate_contiguous_physical_pages(size_t size)
+ErrorOr<Vector<NonnullRefPtr<PhysicalRAMPage>>> MemoryManager::allocate_contiguous_physical_pages(size_t size, MemoryType memory_type_for_zero_fill)
 {
     VERIFY(!(size % PAGE_SIZE));
     size_t page_count = ceil_div(size, static_cast<size_t>(PAGE_SIZE));
@@ -1349,7 +1353,9 @@ ErrorOr<Vector<NonnullRefPtr<PhysicalRAMPage>>> MemoryManager::allocate_contiguo
     }));
 
     {
-        auto cleanup_region = TRY(MM.allocate_kernel_region_with_physical_pages(physical_pages, {}, Region::Access::Read | Region::Access::Write));
+        // The memory_type_for_zero_fill argument ensures that the cleanup region is mapped using the same memory type as the subsequent actual mapping, preventing aliasing of physical memory with mismatched memory types.
+        // On some architectures like ARM, aliasing memory with mismatched memory types can lead to unexpected behavior and potentially worse performance.
+        auto cleanup_region = TRY(MM.allocate_kernel_region_with_physical_pages(physical_pages, {}, Region::Access::Read | Region::Access::Write, memory_type_for_zero_fill));
         memset(cleanup_region->vaddr().as_ptr(), 0, PAGE_SIZE * page_count);
     }
     return physical_pages;

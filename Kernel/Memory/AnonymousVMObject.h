@@ -22,7 +22,7 @@ public:
     static ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> try_create_for_physical_range(PhysicalAddress paddr, size_t size);
     static ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> try_create_with_physical_pages(Span<NonnullRefPtr<PhysicalRAMPage>>);
     static ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> try_create_purgeable_with_size(size_t, AllocationStrategy);
-    static ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> try_create_physically_contiguous_with_size(size_t);
+    static ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> try_create_physically_contiguous_with_size(size_t, MemoryType memory_type_for_zero_fill);
     virtual ErrorOr<NonnullLockRefPtr<VMObject>> try_clone() override;
 
     [[nodiscard]] NonnullRefPtr<PhysicalRAMPage> allocate_committed_page(Badge<Region>);

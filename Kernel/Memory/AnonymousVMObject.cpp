@@ -88,9 +88,9 @@ ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_with
     return adopt_nonnull_lock_ref_or_enomem(new (nothrow) AnonymousVMObject(move(new_physical_pages), strategy, move(committed_pages)));
 }
 
-ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size)
+ErrorOr<NonnullLockRefPtr<AnonymousVMObject>> AnonymousVMObject::try_create_physically_contiguous_with_size(size_t size, MemoryType memory_type_for_zero_fill)
 {
-    auto contiguous_physical_pages = TRY(MM.allocate_contiguous_physical_pages(size));
+    auto contiguous_physical_pages = TRY(MM.allocate_contiguous_physical_pages(size, memory_type_for_zero_fill));
 
     auto new_physical_pages = TRY(FixedArray<RefPtr<PhysicalRAMPage>>::create(contiguous_physical_pages.span()));
 
