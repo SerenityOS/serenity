@@ -234,7 +234,7 @@ endforeach()
 add_library(crt0 STATIC crt0.cpp)
 target_link_libraries(crt0 PRIVATE NoCoverage)
 add_custom_command(
-    TARGET crt0
+    TARGET crt0 POST_BUILD
     COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
 )
 
@@ -244,21 +244,21 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_library(crt0_shared STATIC crt0_shared.cpp)
     target_link_libraries(crt0_shared PRIVATE NoCoverage)
     add_custom_command(
-        TARGET crt0_shared
+        TARGET crt0_shared POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
     )
 
     add_library(crti STATIC arch/${SERENITY_ARCH}/crti.S)
     target_link_libraries(crti PRIVATE NoCoverage)
     add_custom_command(
-        TARGET crti
+        TARGET crti POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crti> ${CMAKE_INSTALL_PREFIX}/usr/lib/crti.o
     )
 
     add_library(crtn STATIC arch/${SERENITY_ARCH}/crtn.S)
     target_link_libraries(crtn PRIVATE NoCoverage)
     add_custom_command(
-        TARGET crtn
+        TARGET crtn POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crtn> ${CMAKE_INSTALL_PREFIX}/usr/lib/crtn.o
     )
 endif()
