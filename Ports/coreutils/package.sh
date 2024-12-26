@@ -1,13 +1,13 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='coreutils'
-version='9.4'
+version='9.5'
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=(
     'build-aux/config.sub'
 )
 files=(
-    "https://ftpmirror.gnu.org/gnu/coreutils/coreutils-${version}.tar.gz#5f600d9093973b0afe25393d9bc18c44f2232657f4ca0d95ea31c702eb66b739"
+    "https://ftpmirror.gnu.org/gnu/coreutils/coreutils-${version}.tar.gz#767ae6a22950ec42f3ba5f7c1de79dd27800ee8e9b8642da5dedb5974a1741e5"
 )
 
 # Exclude some non-working utilities:
