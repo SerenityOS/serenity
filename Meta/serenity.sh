@@ -7,7 +7,7 @@ print_help() {
     NAME=$(basename "$ARG0")
     cat <<EOF
 Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
-  Supported TARGETs: aarch64, x86_64, riscv64, lagom. Defaults to SERENITY_ARCH, or x86_64 if not set.
+  Supported TARGETs: aarch64, x86_64, riscv64, lagom. Defaults to SERENITY_ARCH, or host architecture if not set.
   Supported TOOLCHAINs: GNU, Clang. Defaults to SERENITY_TOOLCHAIN, or GNU if not set.
   Supported COMMANDs:
     build:      Compiles the target binaries, [ARGS...] are passed through to ninja
@@ -84,13 +84,24 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 exit_if_running_as_root "Do not run serenity.sh as root, your Build directory will become root-owned"
 
+host_arch=$(uname -m)
+if [ "$host_arch" = "x86_64" ] || [ "$host_arch" = "amd64" ] || [ "$host_arch" = "x64" ]; then
+    host_arch="x86_64"
+elif [ "$host_arch" = "aarch64" ] || [ "$host_arch" = "arm64" ]; then
+    host_arch="aarch64"
+elif [ "$host_arch" = "riscv64" ]; then
+    host_arch="riscv64"
+else
+    die "Unknown host architecture: $host_arch"
+fi
+
 # shellcheck source=/dev/null
 . "${DIR}/find_compiler.sh"
 
 if [ -n "$1" ]; then
     TARGET="$1"; shift
 else
-    TARGET="${SERENITY_ARCH:-"x86_64"}"
+    TARGET="${SERENITY_ARCH:-${host_arch}}"
 fi
 
 CMAKE_ARGS=()
