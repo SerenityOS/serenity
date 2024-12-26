@@ -39,6 +39,16 @@ class Arch(Enum):
     x86_64 = "x86_64"
 
 
+def host_arch_matches(arch: Arch) -> bool:
+    machine = os.uname().machine
+    if arch == Arch.Aarch64:
+        return machine == Arch.Aarch64.value or machine == "arm64"
+    elif arch == Arch.RISCV64:
+        return machine == Arch.RISCV64.value
+    elif arch == Arch.x86_64:
+        return machine == Arch.x86_64.value or machine == "amd64" or machine == "x64"
+
+
 @unique
 class QEMUKind(Enum):
     """VM distinctions determining which hardware acceleration technology *might* be used."""
@@ -64,12 +74,17 @@ class MachineType(Enum):
     QEMUGrub = "qgrub"
     CI = "ci"
     Limine = "limine"
+    RaspberryPi3B = "raspi3b"
+    RaspberryPi4B = "raspi4b"
 
     def uses_grub(self) -> bool:
         return self in [MachineType.QEMU35Grub, MachineType.QEMUGrub]
 
     def is_q35(self) -> bool:
         return self in [MachineType.QEMU35Grub, MachineType.QEMU35]
+
+    def is_raspberry_pi(self) -> bool:
+        return self in [MachineType.RaspberryPi3B, MachineType.RaspberryPi4B]
 
     def supports_pc_speaker(self) -> bool:
         """Whether the pcspk-audiodev option is allowed for this machine type."""
@@ -420,18 +435,25 @@ def set_up_virtualization_support(config: Configuration):
     # even if we couldn't detect it otherwise; this is intended behavior.
     if provided_virtualization_enable is not None:
         config.virtualization_support = provided_virtualization_enable == "1"
-    elif config.architecture == Arch.x86_64 and os.uname().machine == Arch.x86_64.value:
-        # FIXME: Can RISC-V use hardware acceleration?
+    elif host_arch_matches(config.architecture) and not config.machine_type.is_raspberry_pi():
         config.virtualization_support = (config.qemu_kind in [QEMUKind.NativeWindows, QEMUKind.MacOS]
                                          or kvm_usable())
 
-    if config.virtualization_support:
+    # FIXME: Booting with KVM on aarch64 is broken, so disable it for now.
+    # FIXME: QEMU on Windows on ARM does not support WHPX yet
+    if config.virtualization_support and config.qemu_kind != QEMUKind.MacOS and config.architecture == Arch.Aarch64:
+        config.virtualization_support = False
+
+    if config.virtualization_support and config.qemu_kind in [QEMUKind.NativeWindows, QEMUKind.MacOS]:
         available_accelerators = run(
             [str(config.qemu_binary), "-accel", "help"],
             capture_output=True,
         ).stdout
         # Check if HVF is actually available if we're on MacOS
         if config.qemu_kind == QEMUKind.MacOS and (b"hvf" not in available_accelerators):
+            config.virtualization_support = False
+        # Check if WHPX is actually available if we're on Windows
+        if config.qemu_kind == QEMUKind.NativeWindows and (b"whpx" not in available_accelerators):
             config.virtualization_support = False
 
 
@@ -613,6 +635,10 @@ def set_up_display_device(config: Configuration):
             raise RunError("SERENITY_GL and multi-monitor support cannot be set up simultaneously")
         config.display_device = "virtio-vga-gl"
 
+    elif config.screen_count == 1:
+        # FIXME: The default VGA device is broken when running in a hypervisor on arm.
+        if config.architecture == Arch.Aarch64 and not config.machine_type.is_raspberry_pi():
+            config.display_device = "virtio-gpu-pci"
     elif config.screen_count > 1:
         # QEMU appears to not support the virtio-vga VirtIO GPU variant on macOS.
         # To ensure we can still boot on macOS with VirtIO GPU, use the virtio-gpu-pci
@@ -629,7 +655,7 @@ def set_up_display_device(config: Configuration):
 
 
 def set_up_boot_drive(config: Configuration):
-    if config.architecture == Arch.Aarch64:
+    if config.machine_type.is_raspberry_pi():
         config.boot_drive = f"file={config.disk_image},if=sd,format=raw,id=boot-drive"
         return
 
@@ -639,13 +665,15 @@ def set_up_boot_drive(config: Configuration):
         config.add_devices(["ahci,id=boot-drive-ahci", "ide-hd,drive=boot-drive,bus=boot-drive-ahci.0"])
         config.kernel_cmdline.append("root=ahci0:0:0")
     if config.boot_drive_type == BootDriveType.NVMe:
-        config.add_devices(
-            [
+        if config.architecture == Arch.x86_64:
+            config.add_devices([
                 "i82801b11-bridge,id=bridge4",
                 "nvme,serial=deadbeef,drive=boot-drive,bus=bridge4,logical_block_size=4096,physical_block_size=4096",
-            ]
-        )
-        config.kernel_cmdline.append("root=nvme0:1:0")
+            ])
+            config.kernel_cmdline.append("root=nvme0:1:0")
+        else:
+            config.add_devices(["nvme,serial=deadbeef,drive=boot-drive"])
+            config.kernel_cmdline.append("root=block3:0")
     elif config.boot_drive_type == BootDriveType.PCI_SD:
         config.add_devices(["sdhci-pci", "sd-card,drive=boot-drive"])
         config.kernel_cmdline.append("root=sd0:0:0")
@@ -691,8 +719,10 @@ def set_up_network_hardware(config: Configuration):
     provided_ethernet_device_type = environ.get("SERENITY_ETHERNET_DEVICE_TYPE")
     if provided_ethernet_device_type is not None:
         config.ethernet_device_type = provided_ethernet_device_type
+    elif config.architecture in [Arch.Aarch64, Arch.RISCV64] and not config.machine_type.is_raspberry_pi():
+        config.ethernet_device_type = "virtio-net-pci"
 
-    if config.architecture == Arch.Aarch64:
+    if config.machine_type.is_raspberry_pi():
         config.network_backend = None
         config.network_default_device = None
     else:
@@ -713,18 +743,18 @@ def set_up_kernel(config: Configuration):
 
 
 def set_up_machine_devices(config: Configuration):
-    # TODO: Maybe disable SPICE everwhere except the default machine?
+    # TODO: Maybe disable SPICE everywhere except the default machine?
 
     if config.qemu_kind != QEMUKind.NativeWindows:
         config.extra_arguments.extend(["-qmp", "unix:qmp-sock,server,nowait"])
 
     config.extra_arguments.extend(["-name", "SerenityOS", "-d", "guest_errors"])
 
-    # Architecture specifics.
-    if config.architecture == Arch.Aarch64:
-        config.qemu_machine = "raspi3b"
+    # Machine/Architecture specifics.
+    if config.machine_type.is_raspberry_pi():
+        config.qemu_machine = config.machine_type.value
         config.cpu_count = None
-        config.ram_size = "1G"  # The raspi3b machine only accepts 1G as a valid RAM size.
+        config.ram_size = None
         config.vga_type = None
         config.display_device = None
         config.kernel_cmdline.append("serial_debug")
@@ -732,22 +762,28 @@ def set_up_machine_devices(config: Configuration):
             # FIXME: Windows QEMU crashes when we set the same display as usual here.
             config.display_backend = None
             config.audio_devices = []
+
+            caches_path = BUILD_DIRECTORY.parent / "caches"
+            dtb_path = str(caches_path / "bcm2837-rpi-3-b.dtb")
+            if config.machine_type == MachineType.RaspberryPi4B:
+                dtb_path = str(caches_path / "bcm2711-rpi-4-b.dtb")
+
             config.extra_arguments.extend(
                 [
                     "-serial", "stdio",
-                    "-dtb", str(BUILD_DIRECTORY.parent / "caches" / "bcm2710-rpi-3-b.dtb")
+                    "-dtb", dtb_path
                 ]
             )
             config.qemu_cpu = None
             return
 
-    elif config.architecture == Arch.RISCV64:
+    elif config.architecture == Arch.Aarch64 or config.architecture == Arch.RISCV64:
         config.qemu_machine = "virt"
         config.cpu_count = None
         config.audio_devices = []
         config.extra_arguments.extend(["-serial", "stdio"])
-        config.kernel_cmdline.extend(["serial_debug", "nvme_poll"])
-        config.qemu_cpu = None
+        config.kernel_cmdline.extend(["serial_debug"])
+        config.qemu_cpu = "max" if config.architecture == Arch.Aarch64 else None
         config.add_devices(
             [
                 "virtio-keyboard",
