@@ -3,6 +3,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/serenity_components.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/code_generators.cmake)
 
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
+include(GNUInstallDirs)
 
 function(serenity_set_implicit_links target_name)
     # Make sure that CMake is aware of the implicit LibC dependency, and ensure

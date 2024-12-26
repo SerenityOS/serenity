@@ -7,6 +7,11 @@ if (POLICY CMP0116)
     cmake_policy(SET CMP0116 NEW)
 endif()
 
+# Acknowledge that DESTINATION paths for install() commands will be normalized
+if (POLICY CMP0177)
+    cmake_policy(SET CMP0177 NEW)
+endif()
+
 serenity_option(ENABLE_COMPILETIME_FORMAT_CHECK ON CACHE BOOL "Enable compiletime format string checks")
 serenity_option(ENABLE_UNDEFINED_SANITIZER OFF CACHE BOOL "Enable undefined behavior sanitizer testing in gcc/clang")
 serenity_option(UNDEFINED_BEHAVIOR_IS_FATAL OFF CACHE BOOL "Make undefined behavior sanitizer errors non-recoverable")
