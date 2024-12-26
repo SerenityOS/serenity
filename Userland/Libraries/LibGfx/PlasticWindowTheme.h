@@ -23,7 +23,7 @@ class PlasticWindowTheme : public ClassicWindowTheme {
     {
         return true;
     }
-    virtual Vector<IntRect> layout_buttons(WindowType, WindowMode, IntRect const& window_rect, Palette const&, size_t buttons) const override;
+    virtual Vector<IntRect> layout_buttons(WindowType, WindowMode, IntRect const& window_rect, Palette const&, size_t buttons, bool is_maximized = false) const override;
 
     virtual void paint_taskbar(Painter&, IntRect const& taskbar_rect, Palette const&) const override;
 

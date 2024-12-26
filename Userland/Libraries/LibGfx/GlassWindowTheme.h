@@ -26,7 +26,7 @@ class GlassWindowTheme : public ClassicWindowTheme {
     {
         return true;
     }
-    virtual Vector<IntRect> layout_buttons(WindowType, WindowMode, IntRect const& window_rect, Palette const&, size_t buttons) const override;
+    virtual Vector<IntRect> layout_buttons(WindowType, WindowMode, IntRect const& window_rect, Palette const&, size_t buttons, bool is_maximized = false) const override;
 
     virtual float frame_alpha_hit_threshold(WindowState) const override { return 0.6f; }
 

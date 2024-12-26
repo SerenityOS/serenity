@@ -130,12 +130,16 @@ void GlassWindowTheme::paint_normal_frame(Painter& painter, WindowState window_s
     }
 }
 
-Vector<IntRect> GlassWindowTheme::layout_buttons(WindowType window_type, WindowMode window_mode, IntRect const& window_rect, Palette const& palette, size_t buttons) const
+Vector<IntRect> GlassWindowTheme::layout_buttons(WindowType window_type, WindowMode window_mode, IntRect const& window_rect, Palette const& palette, size_t buttons, bool is_maximized) const
 {
-    auto button_rects = ClassicWindowTheme::layout_buttons(window_type, window_mode, window_rect, palette, buttons);
-    for (auto& rect : button_rects)
-        rect.translate_by(-s_window_border_radius_mask.width() - 1, 1);
+    auto button_rects = ClassicWindowTheme::layout_buttons(window_type, window_mode, window_rect, palette, buttons, is_maximized);
+    auto button_offset = [&](IntRect button_rect) -> IntPoint {
+        return { -max(palette.window_border_thickness(), s_window_border_radius_mask.width()) - 1,
+            -button_rect.y() + (is_maximized ? palette.window_border_thickness() : 1) + 3 };
+    };
 
+    for (auto& button_rect : button_rects)
+        button_rect.translate_by(button_offset(button_rect));
     return button_rects;
 }
 

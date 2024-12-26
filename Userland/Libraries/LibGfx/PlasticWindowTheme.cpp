@@ -133,9 +133,9 @@ void PlasticWindowTheme::paint_normal_frame(Painter& painter, WindowState window
     }
 }
 
-Vector<IntRect> PlasticWindowTheme::layout_buttons(WindowType window_type, WindowMode window_mode, IntRect const& window_rect, Palette const& palette, size_t buttons) const
+Vector<IntRect> PlasticWindowTheme::layout_buttons(WindowType window_type, WindowMode window_mode, IntRect const& window_rect, Palette const& palette, size_t buttons, bool is_maximized) const
 {
-    auto button_rects = ClassicWindowTheme::layout_buttons(window_type, window_mode, window_rect, palette, buttons);
+    auto button_rects = ClassicWindowTheme::layout_buttons(window_type, window_mode, window_rect, palette, buttons, is_maximized);
     for (auto& rect : button_rects)
         rect.translate_by(-s_window_border_radius_mask.width(), 2);
 

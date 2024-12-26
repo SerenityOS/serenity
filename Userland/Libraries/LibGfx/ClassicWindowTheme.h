@@ -28,7 +28,7 @@ public:
 
     virtual IntRect frame_rect_for_window(WindowType, WindowMode, IntRect const& window_rect, Palette const&, int menu_row_count) const override;
 
-    virtual Vector<IntRect> layout_buttons(WindowType, WindowMode, IntRect const& window_rect, Palette const&, size_t buttons) const override;
+    virtual Vector<IntRect> layout_buttons(WindowType, WindowMode, IntRect const& window_rect, Palette const&, size_t buttons, bool is_maximized = false) const override;
     virtual bool is_simple_rect_frame() const override { return true; }
     virtual bool frame_uses_alpha(WindowState state, Palette const& palette) const override
     {
