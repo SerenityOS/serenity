@@ -198,8 +198,9 @@ IntRect ClassicWindowTheme::frame_rect_for_window(WindowType window_type, Window
     }
 }
 
-Vector<IntRect> ClassicWindowTheme::layout_buttons(WindowType window_type, WindowMode window_mode, IntRect const& window_rect, Palette const& palette, size_t buttons) const
+Vector<IntRect> ClassicWindowTheme::layout_buttons(WindowType window_type, WindowMode window_mode, IntRect const& window_rect, Palette const& palette, size_t buttons, bool is_maximized) const
 {
+    (void)is_maximized;
     int window_button_width = palette.window_title_button_width();
     int window_button_height = palette.window_title_button_height();
     int pos;

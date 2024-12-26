@@ -46,7 +46,7 @@ public:
 
     virtual IntRect frame_rect_for_window(WindowType, WindowMode, IntRect const& window_rect, Palette const&, int menu_row_count) const = 0;
 
-    virtual Vector<IntRect> layout_buttons(WindowType, WindowMode, IntRect const& window_rect, Palette const&, size_t buttons) const = 0;
+    virtual Vector<IntRect> layout_buttons(WindowType, WindowMode, IntRect const& window_rect, Palette const&, size_t buttons, bool is_maximized = false) const = 0;
     virtual bool is_simple_rect_frame() const = 0;
     virtual bool frame_uses_alpha(WindowState, Palette const&) const = 0;
     virtual bool taskbar_uses_alpha() const = 0;
