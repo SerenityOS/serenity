@@ -101,7 +101,7 @@ void GlassWindowTheme::paint_normal_frame(Painter& painter, WindowState window_s
     }
 
     // Draw frame border.
-    auto inner = frame_rect.shrunken(26, 5, 5, 5);
+    auto inner = frame_rect.shrunken(palette.window_title_height() + palette.window_border_thickness(), palette.window_border_thickness(), palette.window_border_thickness(), palette.window_border_thickness());
     painter.draw_rect_with_thickness(frame_rect, s_frame_colors.border, 1);
     painter.draw_rect_with_thickness(frame_rect.shrunken(1, 1, 1, 1), s_frame_colors.base.with_alpha(170), 1);
     painter.draw_rect_with_thickness(inner.inflated(1, 1, 1, 1), s_frame_colors.base.with_alpha(110), 1);
@@ -145,10 +145,9 @@ Vector<IntRect> GlassWindowTheme::layout_buttons(WindowType window_type, WindowM
 
 void GlassWindowTheme::paint_taskbar(Painter& painter, IntRect const& taskbar_rect, Palette const&) const
 {
-    auto base_color = Color(2, 3, 4, 219);
     painter.clear_rect(taskbar_rect, Color::Transparent);
     painter.fill_rect_with_linear_gradient(taskbar_rect, s_title_gradient, 45, 0.9f);
-    painter.draw_line(taskbar_rect.top_left(), taskbar_rect.top_right(), base_color, 1);
+    painter.draw_line(taskbar_rect.top_left(), taskbar_rect.top_right(), s_frame_colors.border, 1);
     painter.draw_line(taskbar_rect.top_left().translated(0, 1), taskbar_rect.top_right().translated(0, 1), s_frame_colors.base.with_alpha(170), 1);
 }
 
