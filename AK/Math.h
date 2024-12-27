@@ -571,7 +571,28 @@ constexpr T sqrt(T x)
     return res;
 #elif ARCH(AARCH64)
     AARCH64_INSTRUCTION(fsqrt, x);
+#elif ARCH(RISCV64)
+    if constexpr (IsSame<T, float>) {
+        float res;
+        asm("fsqrt.s %0, %1"
+            : "=f"(res)
+            : "f"(x));
+        return res;
+    }
+    if constexpr (IsSame<T, double>) {
+        double res;
+        asm("fsqrt.d %0, %1"
+            : "=f"(res)
+            : "f"(x));
+        return res;
+    }
+    if constexpr (IsSame<T, long double>)
+        TODO_RISCV64();
 #else
+#    if defined(AK_OS_SERENITY)
+    // TODO: Add implementation for this function.
+    TODO();
+#    endif
     return __builtin_sqrt(x);
 #endif
 }
