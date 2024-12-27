@@ -220,6 +220,30 @@ constexpr T rint(T x)
 #    endif
 #elif ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintx, x);
+#elif ARCH(RISCV64)
+    if (__builtin_isnan(x))
+        return x;
+
+    // Floating point values have a gap size of >= 1 for values above 2^mantissa_bits - 1.
+    if (fabs(x) > FloatExtractor<T>::mantissa_max)
+        return x;
+
+    if constexpr (IsSame<T, float>) {
+        i64 r;
+        asm("fcvt.l.s %0, %1, dyn"
+            : "=r"(r)
+            : "f"(x));
+        return copysign(static_cast<float>(r), x);
+    }
+    if constexpr (IsSame<T, double>) {
+        i64 r;
+        asm("fcvt.l.d %0, %1, dyn"
+            : "=r"(r)
+            : "f"(x));
+        return copysign(static_cast<double>(r), x);
+    }
+    if constexpr (IsSame<T, long double>)
+        TODO_RISCV64();
 #endif
     TODO();
 }
