@@ -159,10 +159,8 @@ cleanup() {
             else
                 umount mnt || ( sleep 1 && sync && umount mnt )
             fi
-            rmdir mnt
-        else
-            rm -rf mnt
         fi
+        rm -rf mnt
 
         if [ "$(uname -s)" = "OpenBSD" ]; then
             vnconfig -u "$VND"
