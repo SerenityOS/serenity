@@ -96,17 +96,16 @@ ErrorOr<void> AbstractThemePreview::set_theme_from_file(StringView path, Nonnull
 
 void AbstractThemePreview::paint_window(StringView title, Gfx::IntRect const& rect, Gfx::WindowTheme::WindowState state, Gfx::Bitmap const& icon, int button_count)
 {
-    GUI::Painter painter(*this);
+    GUI::Painter gui_painter(*this);
+
+    auto window_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, this->rect().size()).release_value();
+    GUI::Painter painter(window_bitmap);
+    painter.translate(-this->rect().location());
 
     struct Button {
         Gfx::IntRect rect;
         RefPtr<Gfx::Bitmap> bitmap;
     };
-
-    int window_button_width = m_preview_palette.window_title_button_width();
-    int window_button_height = m_preview_palette.window_title_button_height();
-    auto titlebar_text_rect = m_preview_palette.window_theme().titlebar_text_rect(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, rect, m_preview_palette);
-    int pos = titlebar_text_rect.right();
 
     Array possible_buttons {
         Button { {}, m_close_bitmap.is_null() ? m_default_close_bitmap : m_close_bitmap },
@@ -116,12 +115,9 @@ void AbstractThemePreview::paint_window(StringView title, Gfx::IntRect const& re
 
     auto buttons = possible_buttons.span().trim(button_count);
 
-    for (auto& button : buttons) {
-        pos -= window_button_width;
-        Gfx::IntRect button_rect { pos, 0, window_button_width, window_button_height };
-        button_rect.center_vertically_within(titlebar_text_rect);
-        button.rect = button_rect;
-    }
+    int button_idx = 0;
+    for (auto rect : m_preview_palette.window_theme().layout_buttons(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, rect, m_preview_palette, buttons.size(), false))
+        buttons[button_idx++].rect = rect;
 
     auto frame_rect = m_preview_palette.window_theme().frame_rect_for_window(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, rect, m_preview_palette, 0);
 
@@ -142,12 +138,15 @@ void AbstractThemePreview::paint_window(StringView title, Gfx::IntRect const& re
     m_preview_palette.window_theme().paint_normal_frame(painter, state, Gfx::WindowTheme::WindowMode::Other, rect, title, icon, m_preview_palette, buttons.last().rect, 0, false);
     painter.fill_rect(rect.translated(-frame_rect.location()), m_preview_palette.color(Gfx::ColorRole::Background));
 
+    auto inactive_button_opacity = m_preview_palette.window_title_button_inactive_alpha() / 255.0f;
     for (auto& button : buttons) {
         if (!m_preview_palette.title_buttons_icon_only())
             Gfx::StylePainter::paint_button(painter, button.rect, m_preview_palette, Gfx::ButtonStyle::Normal, false);
         auto bitmap_rect = button.bitmap->rect().centered_within(button.rect);
-        painter.blit(bitmap_rect.location(), *button.bitmap, button.bitmap->rect());
+        painter.blit(bitmap_rect.location(), *button.bitmap, button.bitmap->rect(), state == Gfx::WindowTheme::WindowState::Inactive ? inactive_button_opacity : 1.0f);
     }
+
+    gui_painter.blit(this->rect().location(), *window_bitmap, window_bitmap->rect());
 }
 
 void AbstractThemePreview::paint_event(GUI::PaintEvent& event)
