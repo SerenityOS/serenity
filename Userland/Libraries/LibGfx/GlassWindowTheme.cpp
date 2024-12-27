@@ -124,10 +124,27 @@ void GlassWindowTheme::paint_normal_frame(Painter& painter, WindowState window_s
     }
 }
 
+void GlassWindowTheme::paint_notification_frame(Painter& painter, WindowMode window_mode, IntRect const& window_rect, Palette const& palette, IntRect const& close_button_rect) const
+{
+    (void)close_button_rect;
+
+    auto frame_rect = frame_rect_for_window(WindowType::Notification, window_mode, window_rect, palette, 0);
+    frame_rect.set_location({ 0, 0 });
+    frame_rect.shrink(0, 1, 1, 0);
+
+    painter.fill_rect(frame_rect, s_frame_colors.base.with_alpha(150));
+    painter.fill_rect_with_linear_gradient(frame_rect, s_title_gradient, 45, 0.9f);
+
+    painter.draw_rect_with_thickness(frame_rect, s_frame_colors.border, 1);
+    painter.draw_rect_with_thickness(frame_rect.shrunken(1, 1, 1, 1), s_frame_colors.base.with_alpha(170), 1);
+}
+
 Vector<IntRect> GlassWindowTheme::layout_buttons(WindowType window_type, WindowMode window_mode, IntRect const& window_rect, Palette const& palette, size_t buttons, bool is_maximized) const
 {
     auto button_rects = ClassicWindowTheme::layout_buttons(window_type, window_mode, window_rect, palette, buttons, is_maximized);
     auto button_offset = [&](IntRect button_rect) -> IntPoint {
+        if (window_type == WindowType::Notification)
+            return { 1, -1 };
         return { -max(palette.window_border_thickness(), s_window_border_radius_mask.width()) - 1,
             -button_rect.y() + (is_maximized ? palette.window_border_thickness() : 1) + 3 };
     };
