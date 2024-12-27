@@ -169,12 +169,27 @@ void PlasticWindowTheme::paint_normal_frame(Painter& painter, WindowState window
     }
 }
 
+void PlasticWindowTheme::paint_notification_frame(Painter& painter, WindowMode window_mode, IntRect const& window_rect, Palette const& palette, IntRect const& close_button_rect) const
+{
+    (void)close_button_rect;
+
+    auto frame_rect = frame_rect_for_window(WindowType::Notification, window_mode, window_rect, palette, 0);
+    frame_rect.set_location({ 0, 0 });
+
+    paint_window_frame(frame_rect, painter, palette, s_frame_colors);
+
+    auto titlebar_rect = this->titlebar_rect(WindowType::Notification, window_mode, window_rect, palette);
+    painter.fill_rect_with_linear_gradient(titlebar_rect, s_title_gradient, 270);
+}
+
 Vector<IntRect> PlasticWindowTheme::layout_buttons(WindowType window_type, WindowMode window_mode, IntRect const& window_rect, Palette const& palette, size_t buttons, bool is_maximized) const
 {
     auto button_rects = ClassicWindowTheme::layout_buttons(window_type, window_mode, window_rect, palette, buttons, is_maximized);
-    for (auto& rect : button_rects)
-        rect.translate_by(-s_window_border_radius_mask.width(), 2);
-
+    if (window_type != WindowType::Notification) {
+        IntPoint offset(-s_window_border_radius_mask.width(), 2);
+        for (auto& rect : button_rects)
+            rect.translate_by(offset);
+    }
     return button_rects;
 }
 
