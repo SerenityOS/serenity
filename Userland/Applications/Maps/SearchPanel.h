@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include "MapWidget.h"
 #include <LibGUI/Button.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/TextBox.h>
+#include <LibMaps/MapWidget.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
 
