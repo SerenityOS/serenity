@@ -22,11 +22,23 @@ cp /somewhere/on/your/system/file.txt mnt/home/anon
 
 This will configure your keymap to German (`de`) instead of US English. See [`Base/res/keymaps/`](../Base/res/keymaps/) for a full list. Note that the `keymap` program itself will also modify the `/etc/Keyboard.ini` config file, but this way the change will persist across image rebuilds.
 
+## Selecting an architecture
+
+By default, the build script will build for the architecture of your host system.
+If you want to build for a different architecture, you can specify it with the `SERENITY_ARCH` environment variable.
+For example, force a build build for `aarch64`, you can run:
+
+```sh
+SERENITY_ARCH=aarch64 Meta/serenity.sh run
+```
+
+Supported values for `SERENITY_ARCH` are `x86_64`, `aarch64`, and `riscv64`.
+
 ## Ninja build targets
 
 The `Meta/serenity.sh` script provides an abstraction over the build targets which are made available by CMake. The
 following build targets cannot be accessed through the script and have to be used directly by changing the current
-directory to `Build/x86_64` and then running `ninja <target>`:
+directory to `Build/<architecture>` and then running `ninja <target>`:
 
 -   `ninja limine-image`: Builds a disk image (`limine_disk_image`) with Limine
 -   `ninja grub-image`: Builds a disk image (`grub_disk_image`) with GRUB
