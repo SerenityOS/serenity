@@ -109,8 +109,9 @@ Run the following command to build and run SerenityOS:
 Meta/serenity.sh run
 ```
 
-This will compile all of SerenityOS and install the built files into the `Build/x86_64/Root` directory inside your Git
-repository. It will also build a disk image and start SerenityOS using QEMU.
+This will compile all of SerenityOS and install the built files into the `Build/<architecture>/Root` directory inside your Git
+repository. It will also build a disk image and start SerenityOS using QEMU. The chosen architecture defaults to
+your host architecture. Supported architectures are x86_64, aarch64 and riscv64.
 
 The first time this command is executed, it will also download some required database files from the internet and build
 the SerenityOS cross-compiler toolchain. These steps only have to be done once, so the next build will go much faster.
