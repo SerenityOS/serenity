@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ObjFW'
-version='1.1.2'
+version='1.2.2'
 useconfigure='true'
 files=(
-    "https://objfw.nil.im/downloads/objfw-${version}.tar.gz#5d9f9a70d583298e780ae11fc75a7ae2beeef904b301e1bc4f4ffa8d7ee31d9f"
+    "https://objfw.nil.im/downloads/objfw-${version}.tar.gz#4fe0bed1ec21561a184d804aa577ff630f1e3d20b1c3b973073e23ce829294a1"
 )
 workdir="objfw-${version}"
 use_fresh_config_sub='true'
