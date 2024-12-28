@@ -160,7 +160,6 @@ void WindowFrame::reload_config()
         StringBuilder full_path;
         full_path.append(icons_path);
         full_path.append(path);
-        dbgln("Reloading buitmap {}", full_path.string_view());
         if (multiscale_bitmap)
             multiscale_bitmap->load(full_path.string_view(), default_path);
         else
