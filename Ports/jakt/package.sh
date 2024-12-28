@@ -10,6 +10,10 @@ archive_hash='d7b5e772074a44f428facd230ac9dafdcf2034c188e31715f592b6058162e4d7'
 files=(
     "https://github.com/SerenityOS/jakt/archive/${commit_hash}.tar.gz#${archive_hash}"
 )
+launcher_name='Jakt'
+launcher_category='D&evelopment'
+launcher_command='/usr/local/bin/jakt --repl'
+launcher_run_in_terminal='true'
 workdir="jakt-${commit_hash}"
 
 configure() {
