@@ -43,12 +43,14 @@
                 @GUI::GroupBox {
                     title: "CPU usage"
                     name: "cpu_graph"
+                    preferred_height: "opportunistic_grow"
                     layout: @GUI::VerticalBoxLayout {}
                 }
 
                 @GUI::GroupBox {
                     title: "Memory usage"
-                    fixed_height: 120
+                    preferred_height: "opportunistic_grow"
+                    min_height: 120
                     layout: @GUI::VerticalBoxLayout {
                         margins: [6]
                     }
