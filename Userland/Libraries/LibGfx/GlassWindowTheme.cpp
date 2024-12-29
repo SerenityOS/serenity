@@ -75,12 +75,18 @@ void GlassWindowTheme::paint_normal_frame(Painter& painter, WindowState window_s
     (void)leftmost_button_rect;
 
     auto frame_rect = frame_rect_for_window(WindowType::Normal, window_mode, window_rect, palette, menu_row_count);
+    auto relative_window_location = window_rect.location() - frame_rect.location();
     frame_rect.set_location({ 0, 0 });
     frame_rect.shrink(0, 1, 1, 1);
 
-    // Paint Aero-style gradient.
-    painter.fill_rect(frame_rect, s_frame_colors.base.with_alpha(150));
-    painter.fill_rect_with_linear_gradient(frame_rect, s_title_gradient, 45, 0.9f);
+    auto frame_rects = frame_rect.shatter({ relative_window_location, window_rect.size() });
+    for (auto const& clip_rect : frame_rects) {
+        // Paint Aero-style gradient.
+        PainterStateSaver saver { painter };
+        painter.add_clip_rect(clip_rect);
+        painter.fill_rect(frame_rect, s_frame_colors.base.with_alpha(150));
+        painter.fill_rect_with_linear_gradient(frame_rect, s_title_gradient, 45, 0.9f);
+    }
 
     // Draw frame title.
     auto titlebar_rect = this->titlebar_rect(WindowType::Normal, window_mode, window_rect, palette);
