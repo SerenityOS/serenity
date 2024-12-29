@@ -189,7 +189,7 @@ option(BUILD_EVERYTHING "Build all optional components" ON)
 
 include(utils)
 include(flac_spec_tests)
-include(download_raspberry_pi_3_dtb)
+include(download_raspberry_pi_dtb)
 
 serenity_component(
     Tests
