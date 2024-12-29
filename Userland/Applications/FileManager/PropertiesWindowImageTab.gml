@@ -180,4 +180,14 @@
             spacing: 2
         }
     }
+
+    @GUI::GroupBox {
+        name: "image_gps"
+        title: "GPS Location"
+        preferred_height: 200
+        visible: false
+        layout: @GUI::VerticalBoxLayout {
+            margins: [8]
+        }
+    }
 }
