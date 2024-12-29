@@ -597,15 +597,15 @@ ErrorOr<void> build_performance_tab(GUI::Widget& graphs_container)
 {
     auto& cpu_graph_group_box = *graphs_container.find_descendant_of_type_named<GUI::GroupBox>("cpu_graph");
 
-    size_t cpu_graphs_per_row = min(4, ProcessModel::the().cpus().size());
-    auto cpu_graph_rows = ceil_div(ProcessModel::the().cpus().size(), cpu_graphs_per_row);
-    cpu_graph_group_box.set_fixed_height(120u * cpu_graph_rows);
+    size_t cpus_count = ProcessModel::the().cpus().size();
+    size_t cpu_graphs_per_row = min(cpus_count, 4);
+    auto cpu_graph_rows = ceil_div(cpus_count, cpu_graphs_per_row);
 
     Vector<SystemMonitor::GraphWidget&> cpu_graphs;
     for (auto row = 0u; row < cpu_graph_rows; ++row) {
         auto& cpu_graph_row = cpu_graph_group_box.add<GUI::Widget>();
         cpu_graph_row.set_layout<GUI::HorizontalBoxLayout>(6);
-        cpu_graph_row.set_fixed_height(108);
+        cpu_graph_row.set_min_height(108);
         for (auto i = 0u; i < cpu_graphs_per_row; ++i) {
             auto& cpu_graph = cpu_graph_row.add<SystemMonitor::GraphWidget>();
             cpu_graph.set_max(100);
