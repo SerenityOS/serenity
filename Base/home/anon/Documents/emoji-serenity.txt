@@ -84,7 +84,19 @@ Emoji Tag Sequence Flags (limited cross-platform support)
 🏴󠁢󠁱󠁢󠁯󠁿 - U+1F3F4 U+E0062 U+E0071 U+E0062 U+E006F U+E007F BQ-BO Bonaire
 🏴󠁢󠁱󠁳󠁡󠁿 - U+1F3F4 U+E0062 U+E0071 U+E0073 U+E0061 U+E007F BQ-SA Saba
 🏴󠁢󠁱󠁳󠁥󠁿 - U+1F3F4 U+E0062 U+E0071 U+E0073 U+E0065 U+E007F BQ-SE Sint Eustatius
+🏴󠁣󠁡󠁡󠁢󠁿 - U+1F3F4 U+E0063 U+E0061 U+E0061 U+E0062 U+E007F CA-AB Alberta
+🏴󠁣󠁡󠁢󠁣󠁿 - U+1F3F4 U+E0063 U+E0061 U+E0062 U+E0063 U+E007F CA-BC British Columbia
+🏴󠁣󠁡󠁭󠁢󠁿 - U+1F3F4 U+E0063 U+E0061 U+E006D U+E0062 U+E007F CA-MB Manitoba
+🏴󠁣󠁡󠁮󠁢󠁿 - U+1F3F4 U+E0063 U+E0061 U+E006E U+E0062 U+E007F CA-NB New Brunswick
+🏴󠁣󠁡󠁮󠁬󠁿 - U+1F3F4 U+E0063 U+E0061 U+E006E U+E006C U+E007F CA-NL Newfoundland and Labrador
+🏴󠁣󠁡󠁮󠁳󠁿 - U+1F3F4 U+E0063 U+E0061 U+E006E U+E0073 U+E007F CA-NS Nova Scotia
+🏴󠁣󠁡󠁮󠁴󠁿 - U+1F3F4 U+E0063 U+E0061 U+E006E U+E0074 U+E007F CA-NT Northwest Territories
+🏴󠁣󠁡󠁮󠁵󠁿 - U+1F3F4 U+E0063 U+E0061 U+E006E U+E0075 U+E007F CA-NU Nunavut
+🏴󠁣󠁡󠁯󠁮󠁿 - U+1F3F4 U+E0063 U+E0061 U+E006F U+E006E U+E007F CA-ON Ontario
+🏴󠁣󠁡󠁰󠁥󠁿 - U+1F3F4 U+E0063 U+E0061 U+E0070 U+E0065 U+E007F CA-PE Prince Edward Island
 🏴󠁣󠁡󠁱󠁣󠁿 - U+1F3F4 U+E0063 U+E0061 U+E0071 U+E0063 U+E007F CA-QC Quebec
+🏴󠁣󠁡󠁳󠁫󠁿 - U+1F3F4 U+E0063 U+E0061 U+E0073 U+E006B U+E007F CA-SK Saskatchewan
+🏴󠁣󠁡󠁹󠁴󠁿 - U+1F3F4 U+E0063 U+E0061 U+E0079 U+E0074 U+E007F CA-YT Yukon
 🏴󠁤󠁥󠁢󠁢󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0062 U+E0062 U+E007F DE-BB Brandenburg
 🏴󠁤󠁥󠁢󠁥󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0062 U+E0065 U+E007F DE-BE Berlin
 🏴󠁤󠁥󠁢󠁷󠁿 - U+1F3F4 U+E0064 U+E0065 U+E0062 U+E0077 U+E007F DE-BW Baden-Württemberg
