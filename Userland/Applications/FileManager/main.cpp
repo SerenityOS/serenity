@@ -93,7 +93,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio thread recvfd sendfd cpath rpath wpath fattr proc exec unix"));
 
-    Config::pledge_domains({ "FileManager", "WindowManager" });
+    Config::pledge_domains({ "FileManager", "WindowManager", "Maps" });
     Config::monitor_domain("FileManager");
     Config::monitor_domain("WindowManager");
 

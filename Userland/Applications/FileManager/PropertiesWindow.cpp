@@ -41,6 +41,9 @@
 #include <LibGfx/Font/WOFF/Font.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
+#include <LibGfx/ImageFormats/ExifGPS.h>
+#include <LibGfx/ImageFormats/TIFFMetadata.h>
+#include <LibMaps/MapWidget.h>
 #include <LibPDF/Document.h>
 #include <grp.h>
 #include <pwd.h>
@@ -472,6 +475,23 @@ ErrorOr<void> PropertiesWindow::create_image_tab(GUI::TabWidget& tab_widget, Non
 
             auto& value_label = widget.add<GUI::Label>(field.value);
             value_label.set_text_alignment(Gfx::TextAlignment::TopLeft);
+        }
+    }
+
+    if (auto const& metadata = image_decoder->metadata(); metadata.has_value() && is<Gfx::ExifMetadata>(*metadata)) {
+        auto const& exif_metadata = static_cast<Gfx::ExifMetadata const&>(*metadata);
+        if (auto gps = Gfx::ExifGPS::from_exif_metadata(exif_metadata); gps.has_value()) {
+            auto& gps_container = *tab.find_descendant_of_type_named<GUI::GroupBox>("image_gps");
+            gps_container.set_visible(true);
+
+            Maps::MapWidget::Options options {};
+            options.center.latitude = gps->latitude();
+            options.center.longitude = gps->longitude();
+            options.zoom = 14;
+            auto& map_widget = gps_container.add<Maps::MapWidget>(options);
+            map_widget.add_marker(Maps::MapWidget::Marker {
+                .latlng = { gps->latitude(), gps->longitude() },
+            });
         }
     }
 
