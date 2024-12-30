@@ -19,7 +19,7 @@ namespace DeviceTree {
 
 // https://devicetree-specification.readthedocs.io/en/v0.3/flattened-format.html
 struct FlattenedDeviceTreeHeader {
-    BigEndian<u32> magic;             // 0xDOODFEED (BE)
+    BigEndian<u32> magic;             // 0xD00DFEED (BE)
     BigEndian<u32> totalsize;         // Total size of entire blob including padding b/w and after fields
     BigEndian<u32> off_dt_struct;     // Offset of StructureBlock from beginning of header
                                       // https://devicetree-specification.readthedocs.io/en/v0.3/flattened-format.html#sect-fdt-structure-block
