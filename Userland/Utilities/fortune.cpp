@@ -74,7 +74,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    StringView path = "/res/fortunes.json"sv;
+    StringView path = "/usr/share/fortune/fortunes.json"sv;
 
     Optional<bool> force_color;
 
@@ -98,7 +98,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return true;
         },
     });
-    args_parser.add_positional_argument(path, "Path to JSON file with quotes (/res/fortunes.json by default)", "path", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(path, "Path to JSON file with quotes (/usr/share/fortune/fortunes.json by default)", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
