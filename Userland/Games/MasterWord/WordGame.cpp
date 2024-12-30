@@ -175,7 +175,7 @@ void WordGame::read_words()
     m_words.clear();
 
     auto try_load_words = [&]() -> ErrorOr<void> {
-        auto response = TRY(Core::File::open("/res/words.txt"sv, Core::File::OpenMode::Read));
+        auto response = TRY(Core::File::open("/usr/share/MasterWord/words.txt"sv, Core::File::OpenMode::Read));
         auto words_file = TRY(Core::InputBufferedFile::create(move(response)));
         Array<u8, 128> buffer;
 
@@ -189,7 +189,7 @@ void WordGame::read_words()
     };
 
     if (try_load_words().is_error()) {
-        GUI::MessageBox::show(nullptr, "Could not read /res/words.txt.\nPlease ensure this file exists and restart MasterWord."sv, "MasterWord"sv);
+        GUI::MessageBox::show(nullptr, "Could not read /usr/share/MasterWord/words.txt.\nPlease ensure this file exists and restart MasterWord."sv, "MasterWord"sv);
         exit(0);
     }
 }
