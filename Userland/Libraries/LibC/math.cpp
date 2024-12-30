@@ -359,6 +359,7 @@ MAKE_AK_BACKED1(log10);
 MAKE_AK_BACKED1(exp);
 MAKE_AK_BACKED1(exp2);
 MAKE_AK_BACKED1(fabs);
+MAKE_AK_BACKED1(rint);
 
 MAKE_AK_BACKED2(atan2);
 MAKE_AK_BACKED2(hypot);
@@ -434,72 +435,6 @@ float truncf(float x) NOEXCEPT
 #endif
 
     return internal_to_integer(x, RoundingMode::ToZero);
-}
-
-long double rintl(long double value)
-{
-#if ARCH(AARCH64)
-    (void)value;
-    TODO_AARCH64();
-#elif ARCH(RISCV64)
-    (void)value;
-    TODO_RISCV64();
-#elif ARCH(X86_64)
-    long double res;
-    asm(
-        "frndint\n"
-        : "=t"(res)
-        : "0"(value));
-    return res;
-#else
-#    error "Unknown architecture"
-#endif
-}
-double rint(double value)
-{
-#if ARCH(AARCH64)
-    (void)value;
-    TODO_AARCH64();
-#elif ARCH(RISCV64)
-    i64 output;
-    // FIXME: This saturates at 64-bit integer boundaries; see Table 11.4 (RISC-V Unprivileged ISA V20191213)
-    asm("fcvt.l.d %0, %1, dyn"
-        : "=r"(output)
-        : "f"(value));
-    return static_cast<double>(output);
-#elif ARCH(X86_64)
-    double res;
-    asm(
-        "frndint\n"
-        : "=t"(res)
-        : "0"(value));
-    return res;
-#else
-#    error "Unknown architecture"
-#endif
-}
-float rintf(float value)
-{
-#if ARCH(AARCH64)
-    (void)value;
-    TODO_AARCH64();
-#elif ARCH(RISCV64)
-    i64 output;
-    // FIXME: This saturates at 64-bit integer boundaries; see Table 11.4 (RISC-V Unprivileged ISA V20191213)
-    asm("fcvt.l.s %0, %1, dyn"
-        : "=r"(output)
-        : "f"(value));
-    return static_cast<float>(output);
-#elif ARCH(X86_64)
-    float res;
-    asm(
-        "frndint\n"
-        : "=t"(res)
-        : "0"(value));
-    return res;
-#else
-#    error "Unknown architecture"
-#endif
 }
 
 long lrintl(long double value)
