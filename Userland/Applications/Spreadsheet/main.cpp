@@ -48,6 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));
     TRY(Core::System::unveil("/etc", "r"));
     TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/usr/share/Spreadsheet", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-spreadsheet"sv);

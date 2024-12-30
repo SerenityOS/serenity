@@ -10,9 +10,9 @@
 TEST_ROOT("Userland/Applications/Spreadsheet/Tests");
 
 #ifdef AK_OS_SERENITY
-static constexpr auto s_spreadsheet_runtime_path = "/res/js/Spreadsheet/runtime.js"sv;
+static constexpr auto s_spreadsheet_runtime_path = "/usr/share/Spreadsheet/runtime.js"sv;
 #else
-static constexpr auto s_spreadsheet_runtime_path = "../../../../Base/res/js/Spreadsheet/runtime.js"sv;
+static constexpr auto s_spreadsheet_runtime_path = "../../../../Base/usr/share/Spreadsheet/runtime.js"sv;
 #endif
 
 TESTJS_RUN_FILE_FUNCTION(ByteString const&, JS::Realm& realm, JS::ExecutionContext& global_execution_context)
