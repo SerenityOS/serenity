@@ -9,7 +9,7 @@ script_name="$(basename "$0")"
 
 function list_templates() {
   echo "Available templates:"
-  for file in ./Base/res/devel/templates/*.ini; do
+  for file in ./Base/usr/share/HackStudio/templates/*.ini; do
     printf '  %s - ' "$(basename "${file%%.ini}")"
     awk -F "=" '/Description/ { print $2 }' "$file"
   done
@@ -48,9 +48,9 @@ done
 TEMPLATE="$1"
 DESTINATION="$2"
 
-TEMPLATE_SOURCE_DIRECTORY="./Base/res/devel/templates/$TEMPLATE"
-TEMPLATE_INI="./Base/res/devel/templates/$TEMPLATE.ini"
-TEMPLATE_POSTCREATE="./Base/res/devel/templates/$TEMPLATE.postcreate"
+TEMPLATE_SOURCE_DIRECTORY="./Base/usr/share/HackStudio/templates/$TEMPLATE"
+TEMPLATE_INI="./Base/usr/share/HackStudio/templates/$TEMPLATE.ini"
+TEMPLATE_POSTCREATE="./Base/usr/share/HackStudio/templates/$TEMPLATE.postcreate"
 
 if [[ ! -f "$TEMPLATE_INI" ]]; then
   echo "$script_name: unknown template \"$TEMPLATE\"."

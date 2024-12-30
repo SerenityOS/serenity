@@ -135,7 +135,7 @@ if [ -f mnt/bin/network-settings ]; then
 fi
 
 chmod 600 mnt/etc/shadow
-chmod 755 mnt/res/devel/templates/*.postcreate
+chmod 755 mnt/usr/share/HackStudio/templates/*.postcreate
 echo "done"
 
 printf "creating initial filesystem structure... "
