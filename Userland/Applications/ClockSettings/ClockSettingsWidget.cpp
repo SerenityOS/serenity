@@ -36,7 +36,7 @@ ErrorOr<void> ClockSettingsWidget::setup()
     auto& custom_radio = *find_descendant_of_type_named<GUI::RadioButton>("custom_radio");
     m_clock_preview = *find_descendant_of_type_named<GUI::Label>("clock_preview");
 
-    m_time_format = Config::read_string("Taskbar"sv, "Clock"sv, "TimeFormat"sv);
+    m_time_format = Config::read_string("Taskbar"sv, "Clock"sv, "TimeFormat"sv, "%T"sv);
     m_custom_format_input = *find_descendant_of_type_named<GUI::TextBox>("custom_format_input");
     m_custom_format_input->set_text(m_time_format);
     m_custom_format_input->set_enabled(false);

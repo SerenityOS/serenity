@@ -38,7 +38,7 @@ ErrorOr<NonnullRefPtr<ViewWidget>> ViewWidget::create()
 ErrorOr<void> ViewWidget::setup()
 {
     auto& slider = *find_descendant_of_type_named<GUI::HorizontalOpacitySlider>("background_opacity_slider");
-    m_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv);
+    m_opacity = Config::read_i32("Terminal"sv, "Window"sv, "Opacity"sv, 255);
     m_original_opacity = m_opacity;
     slider.set_value(m_opacity);
     slider.on_change = [this](int value) {
@@ -126,23 +126,18 @@ ErrorOr<void> ViewWidget::setup()
         m_cursor_shape = VT::CursorShape::Block;
         Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Block"sv);
     };
-    terminal_cursor_block.set_checked(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv) == "Block"sv);
-
     terminal_cursor_underline.on_checked = [&](bool) {
         set_modified(true);
         m_cursor_shape = VT::CursorShape::Underline;
         Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Underline"sv);
     };
-    terminal_cursor_underline.set_checked(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv) == "Underline"sv);
-
     terminal_cursor_bar.on_checked = [&](bool) {
         set_modified(true);
         m_cursor_shape = VT::CursorShape::Bar;
         Config::write_string("Terminal"sv, "Cursor"sv, "Shape"sv, "Bar"sv);
     };
-    terminal_cursor_bar.set_checked(Config::read_string("Terminal"sv, "Cursor"sv, "Shape"sv) == "Bar"sv);
 
-    m_max_history_size = Config::read_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv);
+    m_max_history_size = Config::read_i32("Terminal"sv, "Terminal"sv, "MaxHistorySize"sv, 1024);
     m_original_max_history_size = m_max_history_size;
     auto& history_size_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("history_size_spinbox");
     history_size_spinbox.set_value(m_max_history_size, GUI::AllowCallback::No);
