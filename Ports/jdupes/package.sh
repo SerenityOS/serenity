@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='jdupes'
-version='1.27.3'
+version='1.28.0'
 files=(
-    "https://codeberg.org/jbruchon/jdupes/archive/v${version}.tar.gz#1c75ed30dc95b3b5024019ab2ba3f78a14835c11d5b71249aa94374fde650c16"
+    "https://codeberg.org/jbruchon/jdupes/archive/v${version}.tar.gz#a8f21c04fff5e3ff0a92e8ac76114b2195ed43dc32b84bf343f5256e7ba9cb04"
 )
 workdir='jdupes'
 depends=(
