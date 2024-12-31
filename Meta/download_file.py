@@ -74,7 +74,10 @@ def main():
 
     os.makedirs(output_file.parent, exist_ok=True)
 
-    request = urllib.request.Request(args.url, headers={"Accept-Encoding": "gzip"})
+    request = urllib.request.Request(args.url, headers={
+                      "Accept-Encoding": "gzip",
+                      "User-Agent": "Serenity Meta/download_file.py",
+                  })
     with urllib.request.urlopen(request) as f:
         try:
             with tempfile.NamedTemporaryFile(delete=False, dir=output_file.parent) as out:
