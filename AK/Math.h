@@ -475,10 +475,10 @@ constexpr T fmod(T x, T y)
     // the exponent into the mantissa.
 
     auto x_bits = FloatExtractor<T>::from_float(x);
-    typename FloatExtractor<T>::ComponentType x_exponent = x_bits.exponent; // - FloatExtractor<T>::exponent_bias;
+    typename FloatExtractor<T>::ComponentType x_exponent = x_bits.exponent;
 
     auto y_bits = FloatExtractor<T>::from_float(y);
-    typename FloatExtractor<T>::ComponentType y_exponent = y_bits.exponent; // - FloatExtractor<T>::exponent_bias;
+    typename FloatExtractor<T>::ComponentType y_exponent = y_bits.exponent;
 
     // FIXME: Handle denormals. For now, treat them as 0.
     if (x_exponent == 0 && y_exponent != 0)
