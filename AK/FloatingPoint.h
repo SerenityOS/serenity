@@ -13,91 +13,95 @@
 namespace AK {
 
 template<typename T>
-union FloatExtractor;
+struct FloatExtractor;
 
 #ifdef AK_HAS_FLOAT_128
 template<>
-union FloatExtractor<f128> {
+struct FloatExtractor<f128> {
+    static constexpr FloatExtractor<f128> from_float(f128 f) { return bit_cast<FloatExtractor<f128>>(f); }
+    constexpr f128 to_float() const { return bit_cast<f128>(*this); }
+
     using ComponentType = unsigned __int128;
     static constexpr int mantissa_bits = 112;
     static constexpr ComponentType mantissa_max = (((ComponentType)1) << 112) - 1;
     static constexpr int exponent_bias = 16383;
     static constexpr int exponent_bits = 15;
     static constexpr unsigned exponent_max = 32767;
-    struct [[gnu::packed]] {
-        ComponentType mantissa : 112;
-        ComponentType exponent : 15;
-        ComponentType sign : 1;
-    };
-    f128 d;
+
+    ComponentType mantissa : 112;
+    ComponentType exponent : 15;
+    ComponentType sign : 1;
 };
-// Validate that f128 and the FloatExtractor union are 128 bits.
+// Validate that f128 and the FloatExtractor struct are 128 bits.
 static_assert(AssertSize<f128, 16>());
 static_assert(AssertSize<FloatExtractor<f128>, sizeof(f128)>());
 #endif
 
 #ifdef AK_HAS_FLOAT_80
 template<>
-union FloatExtractor<f80> {
+struct FloatExtractor<f80> {
+    static constexpr FloatExtractor<f80> from_float(f80 f) { return bit_cast<FloatExtractor<f80>>(f); }
+    constexpr f80 to_float() const { return bit_cast<f80>(*this); }
+
     using ComponentType = unsigned long long;
     static constexpr int mantissa_bits = 64;
     static constexpr ComponentType mantissa_max = ~0ull;
     static constexpr int exponent_bias = 16383;
     static constexpr int exponent_bits = 15;
     static constexpr unsigned exponent_max = 32767;
-    struct [[gnu::packed]] {
-        // This is technically wrong: Extended floating point values really only have 63 bits of mantissa
-        // and an "integer bit" that behaves in various strange, unintuitive and non-IEEE-754 ways.
-        // However, since all bit-fiddling float code assumes IEEE floats, it cannot handle this properly.
-        // If we pretend that 80-bit floats are IEEE floats with 64-bit mantissas, almost everything works correctly
-        // and we just need a few special cases.
-        ComponentType mantissa : 64;
-        ComponentType exponent : 15;
-        ComponentType sign : 1;
-    };
-    f80 d;
+
+    // This is technically wrong: Extended floating point values really only have 63 bits of mantissa
+    // and an "integer bit" that behaves in various strange, unintuitive and non-IEEE-754 ways.
+    // However, since all bit-fiddling float code assumes IEEE floats, it cannot handle this properly.
+    // If we pretend that 80-bit floats are IEEE floats with 64-bit mantissas, almost everything works correctly
+    // and we just need a few special cases.
+    ComponentType mantissa : 64;
+    ComponentType exponent : 15;
+    ComponentType sign : 1;
 };
 static_assert(AssertSize<FloatExtractor<f80>, sizeof(f80)>());
 #endif
 
 template<>
-union FloatExtractor<f64> {
+struct FloatExtractor<f64> {
+    static constexpr FloatExtractor<f64> from_float(f64 f) { return bit_cast<FloatExtractor<f64>>(f); }
+    constexpr f64 to_float() const { return bit_cast<f64>(*this); }
+
     using ComponentType = unsigned long long;
     static constexpr int mantissa_bits = 52;
     static constexpr ComponentType mantissa_max = (1ull << 52) - 1;
     static constexpr int exponent_bias = 1023;
     static constexpr int exponent_bits = 11;
     static constexpr unsigned exponent_max = 2047;
-    struct [[gnu::packed]] {
-        // FIXME: These types have to all be the same, otherwise this struct
-        //        goes from being a bitfield describing the layout of an f64
-        //        into being a multibyte mess on windows.
-        //        Technically, '-mno-ms-bitfields' is supposed to disable this
-        //        very intuitive and portable behaviour on windows, but it doesn't
-        //        work with the msvc ABI.
-        //        See <https://github.com/llvm/llvm-project/issues/24757>
-        ComponentType mantissa : 52;
-        ComponentType exponent : 11;
-        ComponentType sign : 1;
-    };
-    f64 d;
+
+    // FIXME: These types have to all be the same, otherwise this struct
+    //        goes from being a bitfield describing the layout of an f64
+    //        into being a multibyte mess on windows.
+    //        Technically, '-mno-ms-bitfields' is supposed to disable this
+    //        very intuitive and portable behaviour on windows, but it doesn't
+    //        work with the msvc ABI.
+    //        See <https://github.com/llvm/llvm-project/issues/24757>
+    ComponentType mantissa : 52;
+    ComponentType exponent : 11;
+    ComponentType sign : 1;
 };
 static_assert(AssertSize<FloatExtractor<f64>, sizeof(f64)>());
 
 template<>
-union FloatExtractor<f32> {
+struct FloatExtractor<f32> {
+    static constexpr FloatExtractor<f32> from_float(f32 f) { return bit_cast<FloatExtractor<f32>>(f); }
+    constexpr f32 to_float() const { return bit_cast<f32>(*this); }
+
     using ComponentType = unsigned;
     static constexpr int mantissa_bits = 23;
     static constexpr ComponentType mantissa_max = (1 << 23) - 1;
     static constexpr int exponent_bias = 127;
     static constexpr int exponent_bits = 8;
     static constexpr ComponentType exponent_max = 255;
-    struct [[gnu::packed]] {
-        ComponentType mantissa : 23;
-        ComponentType exponent : 8;
-        ComponentType sign : 1;
-    };
-    f32 d;
+
+    ComponentType mantissa : 23;
+    ComponentType exponent : 8;
+    ComponentType sign : 1;
 };
 static_assert(AssertSize<FloatExtractor<f32>, sizeof(f32)>());
 

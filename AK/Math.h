@@ -70,11 +70,10 @@ template<FloatingPoint FloatT>
 FloatT copysign(FloatT x, FloatT y)
 {
     using Extractor = FloatExtractor<FloatT>;
-    Extractor ex, ey;
-    ex.d = x;
-    ey.d = y;
+    auto ex = Extractor::from_float(x);
+    auto ey = Extractor::from_float(y);
     ex.sign = ey.sign;
-    return ex.d;
+    return ex.to_float();
 }
 
 #define CONSTEXPR_STATE(function, args...)        \
@@ -475,10 +474,10 @@ constexpr T fmod(T x, T y)
     // If y_exponent < x_exponent, we'll iteratively reduce x_exponent by shifting from
     // the exponent into the mantissa.
 
-    FloatExtractor<T> x_bits { .d = x };
+    auto x_bits = FloatExtractor<T>::from_float(x);
     typename FloatExtractor<T>::ComponentType x_exponent = x_bits.exponent; // - FloatExtractor<T>::exponent_bias;
 
-    FloatExtractor<T> y_bits { .d = y };
+    auto y_bits = FloatExtractor<T>::from_float(y);
     typename FloatExtractor<T>::ComponentType y_exponent = y_bits.exponent; // - FloatExtractor<T>::exponent_bias;
 
     // FIXME: Handle denormals. For now, treat them as 0.
@@ -523,7 +522,7 @@ constexpr T fmod(T x, T y)
 
     x_bits.exponent = x_exponent;
     x_bits.mantissa = x_mantissa;
-    return x_bits.d;
+    return x_bits.to_float();
 #    else
     if constexpr (IsSame<T, long double>)
         return __builtin_fmodl(x, y);
@@ -966,7 +965,7 @@ constexpr T log2(T x)
     if (x <= 0 || __builtin_isnan(x))
         return NaN<T>;
 
-    FloatExtractor<T> ext { .d = x };
+    auto ext = FloatExtractor<T>::from_float(x);
     T exponent = ext.exponent - FloatExtractor<T>::exponent_bias;
 
     // When the mantissa shows 0b00 (implicitly 1.0) we are on a power of 2
@@ -982,7 +981,7 @@ constexpr T log2(T x)
     };
 
     // (1 <= mantissa < 2)
-    T m = mantissa_ext.d;
+    T m = mantissa_ext.to_float();
 
     // This is a reconstruction of one of Sun's algorithms
     // They use a transformation to lower the problem space,
