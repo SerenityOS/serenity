@@ -49,8 +49,7 @@ UnsignedBigInteger::UnsignedBigInteger(double value)
         return;
     }
 
-    FloatExtractor<double> extractor;
-    extractor.d = value;
+    auto extractor = FloatExtractor<double>::from_float(value);
     VERIFY(!extractor.sign);
 
     i32 real_exponent = extractor.exponent - extractor.exponent_bias;
@@ -350,7 +349,7 @@ double UnsignedBigInteger::to_double(UnsignedBigInteger::RoundingMode rounding_m
     VERIFY((mantissa & 0xfff0000000000000) == 0);
     extractor.mantissa = mantissa;
 
-    return extractor.d;
+    return extractor.to_float();
 }
 
 void UnsignedBigInteger::set_to_0()
@@ -638,8 +637,7 @@ UnsignedBigInteger::CompareResult UnsignedBigInteger::compare_to_double(double v
     if (is_zero())
         return CompareResult::DoubleGreaterThanBigInt;
 
-    FloatExtractor<double> extractor;
-    extractor.d = value;
+    auto extractor = FloatExtractor<double>::from_float(value);
 
     // Value cannot be negative at this point.
     VERIFY(extractor.sign == 0);

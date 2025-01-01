@@ -47,7 +47,7 @@ FloatingPointExponentialForm inner_convert_floating_point_to_decimal_exponential
 {
     using Extractor = FloatExtractor<FloatingPoint>;
 
-    Extractor bit_representation { .d = value };
+    auto bit_representation = Extractor::from_float(value);
 
     bool sign = bit_representation.sign;
     i32 exponent = bit_representation.exponent;
