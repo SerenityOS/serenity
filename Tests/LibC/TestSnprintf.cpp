@@ -293,15 +293,15 @@ TEST_CASE(float_value_precision)
 TEST_CASE(float_value_special)
 {
     union {
-        float f;
-        int i;
+        double f;
+        u64 i;
     } v;
 
-    v.i = 0x7fc00000;
+    v.i = 0x7ff8000000000000;
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", v.f, 6, LITERAL("| nan|\0") }));
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", -v.f, 6, LITERAL("|-nan|\0") }));
 
-    v.i = 0x7f800000;
+    v.i = 0x7ff0000000000000;
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", v.f, 6, LITERAL("| inf|\0") }));
     EXPECT(test_single<double>({ LITERAL("xxxxxxx"), "|%4f|", -v.f, 6, LITERAL("|-inf|\0") }));
 }
