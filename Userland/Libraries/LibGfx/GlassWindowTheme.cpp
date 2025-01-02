@@ -72,7 +72,6 @@ void GlassWindowTheme::paint_normal_frame(Painter& painter, WindowState window_s
     (void)window_state;
     (void)icon;
     (void)window_modified;
-    (void)leftmost_button_rect;
 
     auto frame_rect = frame_rect_for_window(WindowType::Normal, window_mode, window_rect, palette, menu_row_count);
     auto relative_window_location = window_rect.location() - frame_rect.location();
@@ -93,6 +92,7 @@ void GlassWindowTheme::paint_normal_frame(Painter& painter, WindowState window_s
     titlebar_rect.set_height(titlebar_rect.height() + palette.window_border_thickness() + 1);
     auto& title_font = FontDatabase::window_title_font();
     auto clipped_title_rect = titlebar_rect.translated(7, 0);
+    clipped_title_rect.set_width(leftmost_button_rect.left() - clipped_title_rect.x());
     if (!clipped_title_rect.is_empty()) {
         auto title_alignment = palette.title_alignment();
         painter.draw_text(clipped_title_rect.translated(1, 2), window_title, title_font, title_alignment, Color(15, 16, 137), Gfx::TextElision::Right);

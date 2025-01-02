@@ -122,10 +122,8 @@ static void paint_window_frame(IntRect rect, Painter& painter, Palette const& pa
 void PlasticWindowTheme::paint_normal_frame(Painter& painter, WindowState window_state, WindowMode window_mode, IntRect const& window_rect, StringView window_title, Bitmap const& icon, Palette const& palette, IntRect const& leftmost_button_rect, int menu_row_count, bool window_modified) const
 {
     // FIXME: Handle these cases.
-    (void)window_state;
     (void)icon;
     (void)window_modified;
-    (void)leftmost_button_rect;
 
     bool is_inactive = window_state == WindowState::Inactive;
     auto const& frame_colors = is_inactive ? s_inactive_frame_colors : s_frame_colors;
@@ -142,6 +140,7 @@ void PlasticWindowTheme::paint_normal_frame(Painter& painter, WindowState window
 
     auto& title_font = FontDatabase::window_title_font();
     auto clipped_title_rect = titlebar_rect.translated(7, 0);
+    clipped_title_rect.set_width(leftmost_button_rect.left() - clipped_title_rect.x());
     if (!clipped_title_rect.is_empty()) {
         auto title_alignment = palette.title_alignment();
         painter.draw_text(clipped_title_rect.translated(1, 2), window_title, title_font, title_alignment, Color(15, 16, 137), Gfx::TextElision::Right);
