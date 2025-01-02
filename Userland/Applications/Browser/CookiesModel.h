@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Tab.h"
 #include <AK/Vector.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Widget.h>

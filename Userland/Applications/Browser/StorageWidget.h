@@ -8,8 +8,8 @@
 
 #include "CookiesModel.h"
 #include "StorageModel.h"
-#include "Tab.h"
 #include <LibGUI/FilteringProxyModel.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibWeb/Cookie/Cookie.h>
@@ -17,7 +17,7 @@
 namespace Browser {
 
 class StorageWidget final : public GUI::Widget {
-    C_OBJECT(StorageWidget);
+    C_OBJECT_ABSTRACT(StorageWidget);
 
 public:
     virtual ~StorageWidget() override = default;
@@ -32,8 +32,14 @@ public:
     void set_session_storage_entries(OrderedHashMap<String, String> entries);
     void clear_session_storage_entries();
 
+    static ErrorOr<NonnullRefPtr<StorageWidget>> create();
+
+protected:
+    static ErrorOr<NonnullRefPtr<StorageWidget>> try_create();
+
 private:
-    StorageWidget();
+    ErrorOr<void> setup();
+    StorageWidget() = default;
 
     void delete_cookie(Web::Cookie::Cookie);
 
