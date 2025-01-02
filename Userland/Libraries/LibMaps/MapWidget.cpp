@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "MapWidget.h"
 #include <Applications/MapsSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
@@ -13,6 +12,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibMaps/MapWidget.h>
 #include <LibProtocol/Request.h>
 #include <LibURL/URL.h>
 

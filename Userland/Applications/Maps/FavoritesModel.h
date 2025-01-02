@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "MapWidget.h"
 #include <LibGUI/Model.h>
+#include <LibMaps/MapWidget.h>
 
 namespace Maps {
 

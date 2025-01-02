@@ -14,11 +14,10 @@ set(SOURCES
     FavoritesModel.cpp
     FavoritesPanelGML.cpp
     FavoritesPanel.cpp
-    MapWidget.cpp
     SearchPanelGML.cpp
     SearchPanel.cpp
     UsersMapWidget.cpp
 )
 
 serenity_app(Maps ICON app-maps)
-target_link_libraries(Maps PRIVATE LibConfig LibCore LibDesktop LibGfx LibGUI LibMain LibProtocol LibURL)
+target_link_libraries(Maps PRIVATE LibConfig LibCore LibDesktop LibGfx LibGUI LibMain LibMaps LibProtocol LibURL)
