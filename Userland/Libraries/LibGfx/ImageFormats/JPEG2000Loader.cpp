@@ -156,6 +156,13 @@ static ErrorOr<StartOfTilePart> read_start_of_tile_part(ReadonlyBytes data)
     return sot;
 }
 
+enum class SubBand {
+    HorizontalLowpassVerticalLowpass,   // "LL" in spec
+    HorizontalHighpassVerticalLowpass,  // "HL" in spec
+    HorizontalLowpassVerticalHighpass,  // "LH" in spec
+    HorizontalHighpassVerticalHighpass, // "HH" in spec
+};
+
 // A.5.1 Image and tile size (SIZ)
 struct ImageAndTileSize {
     // "Denotes capabilities that a decoder needs to properly decode the codestream."
@@ -202,6 +209,87 @@ struct ImageAndTileSize {
         u8 vertical_separation { 0 }; // "YRsiz" in spec.
     };
     Vector<ComponentInformation> components;
+
+    // (B-5)
+    u32 number_of_x_tiles() const { return ceil_div(width - x_offset, tile_width); }
+    u32 number_of_y_tiles() const { return ceil_div(height - y_offset, tile_height); }
+
+    IntPoint tile_2d_index_from_1d_index(u32 tile_index) const
+    {
+        // (B-6)
+        return { tile_index % number_of_x_tiles(), tile_index / number_of_x_tiles() };
+    }
+
+    IntRect reference_grid_coordinates_for_tile(IntPoint tile_2d_index) const
+    {
+        int p = tile_2d_index.x();
+        int q = tile_2d_index.y();
+        int tx0 = max(tile_x_offset + p * tile_width, x_offset);      // (B-7)
+        int ty0 = max(tile_y_offset + q * tile_height, y_offset);     // (B-8)
+        int tx1 = min(tile_x_offset + (p + 1) * tile_width, width);   // (B-9)
+        int ty1 = min(tile_y_offset + (q + 1) * tile_height, height); // (B-10)
+        return { tx0, ty0, tx1 - tx0, ty1 - ty0 };                    // (B-11)
+    }
+
+    IntRect reference_grid_coordinates_for_tile_component(IntRect tile_rect, int component_index) const
+    {
+        // (B-12)
+        int tcx0 = ceil_div(tile_rect.left(), static_cast<int>(components[component_index].horizontal_separation));
+        int tcx1 = ceil_div(tile_rect.right(), static_cast<int>(components[component_index].horizontal_separation));
+        int tcy0 = ceil_div(tile_rect.top(), static_cast<int>(components[component_index].vertical_separation));
+        int tcy1 = ceil_div(tile_rect.bottom(), static_cast<int>(components[component_index].vertical_separation));
+        return { tcx0, tcy0, tcx1 - tcx0, tcy1 - tcy0 }; // (B-13)
+    }
+
+    IntRect reference_grid_coordinates_for_tile_component(IntPoint tile_2d_index, int component_index) const
+    {
+        auto tile_rect = reference_grid_coordinates_for_tile(tile_2d_index);
+        return reference_grid_coordinates_for_tile_component(tile_rect, component_index);
+    }
+
+    IntRect reference_grid_coordinates_for_ll_band(IntRect tile_rect, int component_index, int r, int N_L) const
+    {
+        // B.5
+        // (B-14)
+        auto component_rect = reference_grid_coordinates_for_tile_component(tile_rect, component_index);
+        int denominator = 1 << (N_L - r);
+        int trx0 = ceil_div(component_rect.left(), denominator);
+        int try0 = ceil_div(component_rect.top(), denominator);
+        int trx1 = ceil_div(component_rect.right(), denominator);
+        int try1 = ceil_div(component_rect.bottom(), denominator);
+
+        return { trx0, try0, trx1 - trx0, try1 - try0 };
+    }
+
+    IntRect reference_grid_coordinates_for_sub_band(IntRect tile_rect, int component_index, int n_b, SubBand sub_band) const
+    {
+        // B.5
+        // Table B.1 – Quantities (xob, yob) for sub-band b
+        int xob = 0;
+        int yob = 0;
+        if (sub_band == SubBand::HorizontalHighpassVerticalLowpass || sub_band == SubBand::HorizontalHighpassVerticalHighpass)
+            xob = 1;
+        if (sub_band == SubBand::HorizontalLowpassVerticalHighpass || sub_band == SubBand::HorizontalHighpassVerticalHighpass)
+            yob = 1;
+        VERIFY(n_b >= 1 || (n_b == 0 && sub_band == SubBand::HorizontalLowpassVerticalLowpass));
+        int o_scale = 1 << (n_b - 1);
+
+        // (B-15)
+        auto component_rect = reference_grid_coordinates_for_tile_component(tile_rect, component_index);
+        int denominator = 1 << n_b;
+        int tbx0 = ceil_div(component_rect.left() - o_scale * xob, denominator);
+        int tby0 = ceil_div(component_rect.top() - o_scale * yob, denominator);
+        int tbx1 = ceil_div(component_rect.right() - o_scale * xob, denominator);
+        int tby1 = ceil_div(component_rect.bottom() - o_scale * yob, denominator);
+
+        return { tbx0, tby0, tbx1 - tbx0, tby1 - tby0 };
+    }
+
+    IntRect reference_grid_coordinates_for_sub_band(IntPoint tile_2d_index, int component_index, int n_b, SubBand sub_band) const
+    {
+        auto tile_rect = reference_grid_coordinates_for_tile(tile_2d_index);
+        return reference_grid_coordinates_for_sub_band(tile_rect, component_index, n_b, sub_band);
+    }
 };
 
 static ErrorOr<ImageAndTileSize> read_image_and_tile_size(ReadonlyBytes data)
