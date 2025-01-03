@@ -23,6 +23,61 @@
 
 // rfc3745 lists the MIME type. It only mentions the jp2_id_string as magic number.
 
+// A short overview of the JPEG2000 format:
+//
+// Image Decomposition
+// -------------------
+//
+// 1. An image is first divided into independent tiles
+// 2. Each tile is split into component tiles (one each for R, G, B, A)
+// 3. Each component tiles undergoes Discrete Wavelet Transform (DWT)
+//
+// Resolution Levels and Subbands
+// ------------------------------
+//
+// The DWT produces hierarchical resolution levels with these subbands:
+// - Level 0: Single LL (Lowpass-Lowpass) subband
+// - Level 1+: HL (Highpass-Lowpass), LH (Lowpass-Highpass), and HH (Highpass-Highpass) subbands
+//
+// Subband Layout:
+// +-----+-----+----------+
+// | LL0 | HL1 |          |
+// +-----+-----+   HL2    |
+// | LH1 | HH1 |          |
+// +-----+-----+----------+
+// |           |          |
+// |    LH2    |    HH2   |
+// |           |          |
+// +-----------+----------+
+//
+// Precinct Structure
+// ------------------
+// - Precincts are rectangular regions that span all subbands within a resolution level
+// - Typical size: 512k × 512k pixels
+// - Most images contain only a single precinct due to this large size
+// - "Precinct limited to a subband": portion of precinct covering one subband
+//
+// Layer System
+// -----------
+// - Coefficients' bitplanes can be stored separately
+// - Groups of bitplanes form "layers"
+// - For example, for an 8bpp image, layer 0 might contain the first two bitplanes, layer 1 the next two, etc.
+// - Enables progressive refinement of image color resolution
+//
+// Codeblock Organization
+// ----------------------
+// - Each precinct is divided into codeblocks
+// - A codeblock is the smallest coded unit in JPEG2000
+// - Typical codeblock size: 64×64 pixels
+// - Codeblocks store coefficient bitplanes from wavelet transformation
+// - Independent arithmetic decoder contexts enable parallel decoding
+//
+// Packets
+// -------
+// "All compressed image data representing a specific tile, layer, component, resolution level and precinct appears in the
+//  codestream in a contiguous segment called a packet."
+// A packet contains a packet header, and information about all codeblocks in the packet.
+
 namespace Gfx {
 
 // A JPEG2000 image can be stored in a codestream with markers, similar to a JPEG image,
