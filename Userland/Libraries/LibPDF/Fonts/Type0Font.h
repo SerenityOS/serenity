@@ -55,7 +55,7 @@ public:
     PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&) override;
     WritingMode writing_mode() const override { return m_cmap->writing_mode(); }
 
-    DeprecatedFlyString base_font_name() const { return m_base_font_name; }
+    FlyByteString base_font_name() const { return m_base_font_name; }
 
 protected:
     PDFErrorOr<void> initialize(Document*, NonnullRefPtr<DictObject> const&, float) override;
@@ -63,7 +63,7 @@ protected:
 private:
     float get_char_width(u16 char_code) const;
 
-    DeprecatedFlyString m_base_font_name;
+    FlyByteString m_base_font_name;
     CIDSystemInfo m_system_info;
     HashMap<u16, u16> m_widths;
     u16 m_missing_width;

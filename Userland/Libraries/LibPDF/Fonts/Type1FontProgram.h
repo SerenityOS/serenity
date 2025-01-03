@@ -24,8 +24,8 @@ public:
         CIDKeyed,
     };
 
-    RefPtr<Gfx::Bitmap> rasterize_glyph(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
-    Gfx::FloatPoint glyph_translation(DeprecatedFlyString const& char_name, float width) const;
+    RefPtr<Gfx::Bitmap> rasterize_glyph(FlyByteString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
+    Gfx::FloatPoint glyph_translation(FlyByteString const& char_name, float width) const;
     RefPtr<Encoding> encoding() const { return m_encoding; }
 
     Kind kind() const { return m_kind; }
@@ -39,8 +39,8 @@ protected:
         {
         }
 
-        DeprecatedFlyString base_character;
-        DeprecatedFlyString accent_character;
+        FlyByteString base_character;
+        FlyByteString accent_character;
         Gfx::FloatPoint accent_origin;
     };
 
@@ -101,7 +101,7 @@ protected:
         m_font_matrix = move(font_matrix);
     }
 
-    ErrorOr<void> add_glyph(DeprecatedFlyString name, Glyph&& glyph)
+    ErrorOr<void> add_glyph(FlyByteString name, Glyph&& glyph)
     {
         TRY(m_glyph_map.try_set(move(name), move(glyph)));
         return {};
@@ -112,12 +112,12 @@ protected:
     void set_kind(Kind kind) { m_kind = kind; }
 
 private:
-    HashMap<DeprecatedFlyString, Glyph> m_glyph_map;
+    HashMap<FlyByteString, Glyph> m_glyph_map;
     Gfx::AffineTransform m_font_matrix;
     RefPtr<Encoding> m_encoding;
     Kind m_kind { NameKeyed };
 
-    Gfx::Path build_char(DeprecatedFlyString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
+    Gfx::Path build_char(FlyByteString const& char_name, float width, Gfx::GlyphSubpixelOffset subpixel_offset);
     Gfx::AffineTransform glyph_transform_to_device_space(Glyph const& glyph, float width) const;
 };
 

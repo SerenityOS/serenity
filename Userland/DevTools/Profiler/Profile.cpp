@@ -481,7 +481,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
             auto const& frame = stack_array.at(i);
             auto ptr = frame.as_integer<u64>();
             u32 offset = 0;
-            DeprecatedFlyString object_name;
+            FlyByteString object_name;
             ByteString symbol;
 
             if (maybe_kernel_base.has_value() && ptr >= maybe_kernel_base.value()) {
@@ -681,7 +681,7 @@ ProfileNode::ProfileNode(Process const& process)
 {
 }
 
-ProfileNode::ProfileNode(Process const& process, DeprecatedFlyString const& object_name, ByteString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
+ProfileNode::ProfileNode(Process const& process, FlyByteString const& object_name, ByteString symbol, FlatPtr address, u32 offset, u64 timestamp, pid_t pid)
     : m_process(process)
     , m_symbol(move(symbol))
     , m_pid(pid)
