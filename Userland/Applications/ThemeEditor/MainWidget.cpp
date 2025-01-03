@@ -65,8 +65,8 @@ static PropertyTab const window_tab {
                 { Gfx::ColorRole::InactiveWindowTitle },
                 { Gfx::ColorRole::InactiveWindowTitleShadow },
                 { Gfx::ColorRole::InactiveWindowTitleStripes },
-                { Gfx::PathRole::InactiveWindowShadow } } },
-
+                { Gfx::PathRole::InactiveWindowShadow },
+                { Gfx::MetricRole::TitleButtonInactiveAlpha } } },
         { "Highlighted Window",
             { { Gfx::ColorRole::HighlightWindowBorder1 },
                 { Gfx::ColorRole::HighlightWindowBorder2 },
