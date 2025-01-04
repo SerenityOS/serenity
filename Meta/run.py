@@ -621,6 +621,10 @@ def set_up_screens(config: Configuration):
         else:
             config.display_backend = "gtk,gl=off"
 
+    # Disable "Zoom To Fit" because it breaks absolute mouse input and looks ugly.
+    if config.display_backend.startswith("gtk"):
+        config.display_backend += ",zoom-to-fit=off"
+
 
 def set_up_display_device(config: Configuration):
     config.enable_gl = environ.get("SERENITY_GL") == "1"
