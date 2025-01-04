@@ -197,6 +197,7 @@ public:
     bool flag(FlagRole role) const { return m_impl->flag(role); }
     int metric(MetricRole role) const { return m_impl->metric(role); }
     ByteString path(PathRole role) const { return m_impl->path(role); }
+    Gfx::WindowThemeProvider window_theme_provider(WindowThemeRole role) const { return m_impl->window_theme_provider(role); }
 
     void set_color(ColorRole, Color);
     void set_alignment(AlignmentRole, Gfx::TextAlignment);

@@ -15,6 +15,7 @@
 #include <Applications/ThemeEditor/MetricPropertyGML.h>
 #include <Applications/ThemeEditor/PathPropertyGML.h>
 #include <Applications/ThemeEditor/ThemeEditorGML.h>
+#include <Applications/ThemeEditor/WindowThemePropertyGML.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
@@ -39,7 +40,8 @@ static PropertyTab const window_tab {
     "Windows"sv,
     {
         { "General",
-            { { Gfx::FlagRole::IsDark },
+            { { Gfx::WindowThemeRole::WindowTheme },
+                { Gfx::FlagRole::IsDark },
                 { Gfx::AlignmentRole::TitleAlignment },
                 { Gfx::MetricRole::TitleHeight },
                 { Gfx::MetricRole::TitleButtonWidth },
@@ -212,9 +214,19 @@ static PropertyTab const color_scheme_tab {
 
 ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create()
 {
-    auto alignment_model = TRY(AlignmentModel::try_create());
+    auto alignment_model = TRY(AlignmentModel::try_create({
+        { "Center", Gfx::TextAlignment::Center },
+        { "Left", Gfx::TextAlignment::CenterLeft },
+        { "Right", Gfx::TextAlignment::CenterRight },
+    }));
 
-    auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget(move(alignment_model))));
+    auto window_theme_model = TRY(WindowThemeModel::try_create({
+        { "Classic", Gfx::WindowThemeProvider::Classic },
+        { "Redmond Plastic", Gfx::WindowThemeProvider::RedmondPlastic },
+        { "Redmond Glass", Gfx::WindowThemeProvider::RedmondGlass },
+    }));
+
+    auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget(move(alignment_model), move(window_theme_model))));
 
     TRY(main_widget->load_from_gml(theme_editor_gml));
     main_widget->m_preview_widget = main_widget->find_descendant_of_type_named<ThemeEditor::PreviewWidget>("preview_widget");
@@ -231,9 +243,10 @@ ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create()
     return main_widget;
 }
 
-MainWidget::MainWidget(NonnullRefPtr<AlignmentModel> alignment_model)
+MainWidget::MainWidget(NonnullRefPtr<AlignmentModel> alignment_model, NonnullRefPtr<WindowThemeModel> system_theme_model)
     : m_current_palette(GUI::Application::the()->palette())
     , m_alignment_model(move(alignment_model))
+    , m_window_theme_model(move(system_theme_model))
 {
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
         m_statusbar->set_override_text(action.status_tip());
@@ -373,6 +386,10 @@ void MainWidget::save_to_file(ByteString const& filename, NonnullOwnPtr<Core::Fi
     ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
 #undef __ENUMERATE_PATH_ROLE
 
+#define __ENUMERATE_WINDOW_THEME_ROLE(role) theme->write_entry("Window", to_string(Gfx::WindowThemeRole::role), to_string(m_current_palette.window_theme_provider(Gfx::WindowThemeRole::role)));
+    ENUMERATE_WINDOW_THEME_ROLES(__ENUMERATE_WINDOW_THEME_ROLE)
+#undef __ENUMERATE_WINDOW_THEME_ROLE
+
     auto sync_result = theme->sync();
     if (sync_result.is_error()) {
         GUI::MessageBox::show_error(window(), ByteString::formatted("Failed to save theme file: {}", sync_result.error()));
@@ -408,6 +425,10 @@ ErrorOr<Core::AnonymousBuffer> MainWidget::encode()
     data->metric[(int)Gfx::MetricRole::role] = m_current_palette.metric(Gfx::MetricRole::role);
     ENUMERATE_METRIC_ROLES(__ENUMERATE_METRIC_ROLE)
 #undef __ENUMERATE_METRIC_ROLE
+
+#define __ENUMERATE_WINDOW_THEME_ROLE(role) data->window_theme[(int)Gfx::WindowThemeRole::role] = m_current_palette.window_theme_provider(Gfx::WindowThemeRole::role);
+    ENUMERATE_WINDOW_THEME_ROLES(__ENUMERATE_WINDOW_THEME_ROLE)
+#undef __ENUMERATE_WINDOW_THEME_ROLE
 
 #define ENCODE_PATH(role, allow_empty)                                                                                                       \
     do {                                                                                                                                     \
@@ -567,6 +588,23 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     VERIFY(m_path_inputs[to_underlying(role)].is_null());
                     m_path_inputs[to_underlying(role)] = path_input;
                     return {};
+                },
+                [&](Gfx::WindowThemeRole role) -> ErrorOr<void> {
+                    TRY(row_widget->load_from_gml(window_theme_property_gml));
+
+                    auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
+                    name_label.set_text(TRY(String::from_utf8(to_string(role))));
+
+                    auto& window_theme_picker = *row_widget->find_descendant_of_type_named<GUI::ComboBox>("combo_box");
+                    window_theme_picker.set_model(*m_window_theme_model);
+                    window_theme_picker.on_change = [&, role](auto&, auto& index) {
+                        set_window_theme(role, index.data(GUI::ModelRole::Custom).to_window_theme_provider(Gfx::WindowThemeProvider::Classic));
+                    };
+                    window_theme_picker.set_selected_index(m_window_theme_model->index_of(m_current_palette.window_theme_provider(role)), GUI::AllowCallback::No);
+
+                    VERIFY(m_window_theme_inputs[to_underlying(role)].is_null());
+                    m_window_theme_inputs[to_underlying(role)] = window_theme_picker;
+                    return {};
                 }));
         }
     }
@@ -606,6 +644,13 @@ void MainWidget::set_path(Gfx::PathRole role, ByteString value)
 {
     auto preview_palette = m_current_palette;
     preview_palette.set_path(role, value);
+    set_palette(preview_palette);
+}
+
+void MainWidget::set_window_theme(Gfx::WindowThemeRole role, Gfx::WindowThemeProvider value)
+{
+    auto preview_palette = m_current_palette;
+    preview_palette.set_window_theme_provider(role, value);
     set_palette(preview_palette);
 }
 
