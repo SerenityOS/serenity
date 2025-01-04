@@ -43,9 +43,9 @@ Co-Authored-By: sdomi <ja@sdomi.pl>
  src/video/serenity/SDL_serenitymessagebox.h   |  38 +
  src/video/serenity/SDL_serenitymouse.cpp      | 157 +++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
- src/video/serenity/SDL_serenityvideo.cpp      | 658 ++++++++++++++++++
+ src/video/serenity/SDL_serenityvideo.cpp      | 659 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 21 files changed, 1377 insertions(+), 27 deletions(-)
+ 21 files changed, 1378 insertions(+), 27 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -901,10 +901,10 @@ index 0000000000000000000000000000000000000000..039f0361b3d1b248e218ea69495f58e5
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..dff132dec6ac8d139db10dbc4b0a7e56c365275c
+index 0000000000000000000000000000000000000000..64f956a456730cfd99998566810c04df64a1bfa0
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,658 @@
+@@ -0,0 +1,659 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -983,9 +983,9 @@ index 0000000000000000000000000000000000000000..dff132dec6ac8d139db10dbc4b0a7e56
 +    MAP_KEYCODE(PageDown, PAGEDOWN);
 +    MAP_KEYCODE(LeftShift, LSHIFT);
 +    MAP_KEYCODE(RightShift, RSHIFT);
-+    MAP_KEYCODE(Control, LCTRL);
++    MAP_KEYCODE(LeftControl, LCTRL);
 +    MAP_KEYCODE(RightControl, RCTRL);
-+    MAP_KEYCODE(Alt, LALT);
++    MAP_KEYCODE(LeftAlt, LALT);
 +    MAP_KEYCODE(RightAlt, RALT);
 +    MAP_KEYCODE(CapsLock, CAPSLOCK);
 +    MAP_KEYCODE(NumLock, NUMLOCKCLEAR);
@@ -1070,7 +1070,8 @@ index 0000000000000000000000000000000000000000..dff132dec6ac8d139db10dbc4b0a7e56
 +    MAP_KEYCODE(Pipe, BACKSLASH);
 +    MAP_KEYCODE(Tilde, GRAVE);
 +    MAP_KEYCODE(Backtick, GRAVE);
-+    MAP_KEYCODE(Super, LGUI);
++    MAP_KEYCODE(LeftSuper, LGUI);
++    MAP_KEYCODE(RightSuper, LGUI);
 +    MAP_KEYCODE(BrowserSearch, AC_SEARCH);
 +    MAP_KEYCODE(BrowserFavorites, AC_BOOKMARKS);
 +    MAP_KEYCODE(BrowserHome, AC_HOME);
