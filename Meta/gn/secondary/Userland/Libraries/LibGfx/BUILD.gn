@@ -80,6 +80,7 @@ shared_library("LibGfx") {
     "ImageFormats/ImageDecoder.cpp",
     "ImageFormats/JBIG2Loader.cpp",
     "ImageFormats/JPEG2000Loader.cpp",
+    "ImageFormats/JPEG2000ProgressionIterators.cpp",
     "ImageFormats/JPEGLoader.cpp",
     "ImageFormats/JPEGWriter.cpp",
     "ImageFormats/JPEGXLEntropyDecoder.cpp",
