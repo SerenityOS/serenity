@@ -5,17 +5,17 @@ Subject: [PATCH] Add platform support for SerenityOS
 
 ---
  .../config/detail/select_platform_config.hpp  |  5 ++++
- boost/config/platform/serenity.hpp            | 26 +++++++++++++++++++
+ .../boost/config/platform/serenity.hpp        | 26 +++++++++++++++++++
  tools/build/src/tools/features/os-feature.jam |  4 +--
  tools/build/src/tools/gcc.jam                 |  4 ++-
  tools/build/src/tools/python.jam              |  1 +
  5 files changed, 37 insertions(+), 3 deletions(-)
- create mode 100644 boost/config/platform/serenity.hpp
+ create mode 100644 libs/config/include/boost/config/platform/serenity.hpp
 
-diff --git a/boost/config/detail/select_platform_config.hpp b/boost/config/detail/select_platform_config.hpp
-index dbff74aaf74ea59eaf204f463bf2b37df9c432a5..d280ed5c02ff90b5eb0dfef3948d17a2d4310109 100644
---- a/boost/config/detail/select_platform_config.hpp
-+++ b/boost/config/detail/select_platform_config.hpp
+diff --git a/libs/config/include/boost/config/detail/select_platform_config.hpp b/libs/config/include/boost/config/detail/select_platform_config.hpp
+index dbff74aaf74ea59eaf204f463bf2b37df9c432a5..3b664107303df336bab8010caad42ddaed24550e 100644
+--- a/libs/config/include/boost/config/detail/select_platform_config.hpp
++++ b/libs/config/include/boost/config/detail/select_platform_config.hpp
 @@ -93,6 +93,10 @@
  // Web assembly:
  #  define BOOST_PLATFORM_CONFIG "boost/config/platform/wasm.hpp"
@@ -35,11 +35,11 @@ index dbff74aaf74ea59eaf204f463bf2b37df9c432a5..d280ed5c02ff90b5eb0dfef3948d17a2
  #  include <boost/config/detail/posix_features.hpp>
  
  
-diff --git a/boost/config/platform/serenity.hpp b/boost/config/platform/serenity.hpp
+diff --git a/libs/config/include/boost/config/platform/serenity.hpp b/libs/config/include/boost/config/platform/serenity.hpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..ecde1fe0e4adf068aaf44aee75757a26df5e1af9
+index 0000000000000000000000000000000000000000..89d09ca6b01626691ed2c45184bd8d322973df49
 --- /dev/null
-+++ b/boost/config/platform/serenity.hpp
++++ b/libs/config/include/boost/config/platform/serenity.hpp
 @@ -0,0 +1,26 @@
 +//  (C) Copyright 2022 Gunnar Beutner
 +//  Use, modification and distribution are subject to the
