@@ -2,7 +2,6 @@
 port='boost'
 version='1.83.0'
 useconfigure='true'
-workdir="boost_${version//./_}"
 depends=(
     'zlib'
     'bzip2'
@@ -11,7 +10,7 @@ depends=(
     'libicu'
 )
 files=(
-    "https://boostorg.jfrog.io/artifactory/main/release/${version}/source/boost_${version//./_}.tar.bz2#6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e"
+    "https://github.com/boostorg/boost/releases/download/boost-${version}/boost-${version}.tar.gz#0c6049764e80aa32754acd7d4f179fd5551d8172a83b71532ae093e7384e98da"
 )
 bjamopts=(
     '--user-config=user-config.jam'
