@@ -484,7 +484,8 @@ def set_up_disk_image_path(config: Configuration):
 
 def set_up_cpu(config: Configuration):
     if config.qemu_kind == QEMUKind.NativeWindows:
-        config.qemu_cpu = "max,vmx=off"
+        # Setting -cpu to "max" breaks on QEMU 9 with WHPX whereas the default cpu is more broadly compatible
+        config.qemu_cpu = None
     else:
         provided_cpu = environ.get("SERENITY_QEMU_CPU")
         if provided_cpu is not None:
