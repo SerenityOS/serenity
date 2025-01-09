@@ -189,11 +189,11 @@ static UNMAP_AFTER_INIT void setup_kernel_page_directory(u64* root_table)
         "   csrw satp, %[satp] \n"
         "   sfence.vma \n"
 
-        // Continue execution at high virtual address, by using an absolute jump.
-        "   ld t0, 3f \n"
+        // Continue execution at high virtual address.
+        "   lla t0, 2f \n"
+        "   add t0, t0, %[offset] \n"
         "   jr t0 \n"
-        "3: .dword 4f \n"
-        "4: \n"
+        "2: \n"
 
         // Add kernel_mapping_base to the stack pointer, such that it is also using the mapping in high virtual memory.
         "   add sp, sp, %[offset] \n"
