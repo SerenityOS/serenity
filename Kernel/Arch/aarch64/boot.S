@@ -13,32 +13,32 @@
 .global start
 .type start, @function
 start:
-  // Let only core 0 continue, put other cores to sleep.
-  mrs x13, MPIDR_EL1
-  and x13, x13, 0xff
-  cbnz x13, halt
+    // Let only core 0 continue, put other cores to sleep.
+    mrs x13, MPIDR_EL1
+    and x13, x13, 0xff
+    cbnz x13, halt
 
-  // Set the stack pointer register to the location defined in the linker script.
-  adrp x14, end_of_initial_stack
-  add x14, x14, :lo12:end_of_initial_stack
-  mov sp, x14
+    // Set the stack pointer register to the location defined in the linker script.
+    adrp x14, end_of_initial_stack
+    add x14, x14, :lo12:end_of_initial_stack
+    mov sp, x14
 
-  // Clear BSS.
-  adrp x14, start_of_bss
-  add x14, x14, :lo12:start_of_bss
-  adrp x15, end_of_bss
-  add x15, x15, :lo12:end_of_bss
-  cmp x14, x15
-  b.ge Lbss_clear_done
-Lbss_clear_loop:
-  str xzr, [x14], #8
-  cmp x14, x15
-  b.lt Lbss_clear_loop
-Lbss_clear_done:
+    // Clear BSS.
+    adrp x14, start_of_bss
+    add x14, x14, :lo12:start_of_bss
+    adrp x15, end_of_bss
+    add x15, x15, :lo12:end_of_bss
+    cmp x14, x15
+    b.ge .Lbss_clear_done
+.Lbss_clear_loop:
+    str xzr, [x14], #8
+    cmp x14, x15
+    b.lt .Lbss_clear_loop
+.Lbss_clear_done:
 
-  b pre_init
+    b pre_init
 
 halt:
-  msr daifset, #2
-  wfi
-  b halt
+    msr daifset, #2
+    wfi
+    b halt

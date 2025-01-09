@@ -42,7 +42,7 @@ sigsetjmp:
     mov %rbp, (5 * 8)(%rdi)
     mov %rsp, (6 * 8)(%rdi)
     mov (%rsp), %rax        // Grab return address
-    mov %rax, (7 * 8)(%rdi)    
+    mov %rax, (7 * 8)(%rdi)
     xor %eax, %eax
     ret
 
