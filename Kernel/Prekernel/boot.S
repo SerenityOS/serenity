@@ -136,7 +136,7 @@ print_no_halt:
 
 
 
-/* 
+/*
     this function assumes that paging is disabled (or everything is mapped 1:1)
     param 1: pointer to string ended with null terminator (C string)
 */
@@ -222,15 +222,15 @@ print_and_halt:
 gdt_table_real_mode:
     .quad 0             /* Empty entry */
 
-	.short 0xffff
-	.short 0
+    .short 0xffff
+    .short 0
     .byte 0
     .byte 0b10011010
     .byte 0b00001111
     .byte 0x0
 
     .short 0xffff
-	.short 0
+    .short 0
     .byte 0
     .byte 0b10010010
     .byte 0b00001111
@@ -328,7 +328,7 @@ real_start:
     mov $end_of_prekernel_image, %esi
     cmp $MAX_KERNEL_SIZE, %esi
     jbe kernel_not_too_large
-    
+
     movl $kernel_image_too_big_string, %esi
     pushl %esi
     call print_and_halt
