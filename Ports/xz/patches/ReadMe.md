@@ -14,3 +14,10 @@ Fix that by just adding the appropriate configuration options for
 automatically using libtool, without having to manually link the
 static library into a shared library.
 
+## `0002-liblzma-Don-t-assume-getauxval-is-Linux-only.patch`
+
+liblzma: Don't assume getauxval is Linux-only
+
+SerenityOS doesn't expose Linux-compatible hwcaps (like HWCAP_CRC32)
+in the auxiliary vector.
+

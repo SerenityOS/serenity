@@ -1,0 +1,38 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <sholz8530@gmail.com>
+Date: Wed, 8 Jan 2025 21:10:05 +0100
+Subject: [PATCH] liblzma: Don't assume getauxval is Linux-only
+
+SerenityOS doesn't expose Linux-compatible hwcaps (like HWCAP_CRC32)
+in the auxiliary vector.
+---
+ src/liblzma/check/crc32_arm64.h | 2 +-
+ src/liblzma/check/crc_common.h  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/liblzma/check/crc32_arm64.h b/src/liblzma/check/crc32_arm64.h
+index 39c1c63ec0eced25ad5042e1611ecd8064831d8d..bea249c9462c7298bce154a1228dba71c4f0e128 100644
+--- a/src/liblzma/check/crc32_arm64.h
++++ b/src/liblzma/check/crc32_arm64.h
+@@ -78,7 +78,7 @@ crc32_arch_optimized(const uint8_t *buf, size_t size, uint32_t crc)
+ static inline bool
+ is_arch_extension_supported(void)
+ {
+-#if defined(HAVE_GETAUXVAL)
++#if defined(__linux__) && defined(HAVE_GETAUXVAL)
+ 	return (getauxval(AT_HWCAP) & HWCAP_CRC32) != 0;
+ 
+ #elif defined(HAVE_ELF_AUX_INFO)
+diff --git a/src/liblzma/check/crc_common.h b/src/liblzma/check/crc_common.h
+index 63a7b5cefebffc506dc54a6378134008ead3c806..917bf98c9ce611fc946f8acad0c1cf31f2a2fdee 100644
+--- a/src/liblzma/check/crc_common.h
++++ b/src/liblzma/check/crc_common.h
+@@ -48,7 +48,7 @@
+ #endif
+ 
+ // Keep this in sync with changes to crc32_arm64.h
+-#if defined(_WIN32) || defined(HAVE_GETAUXVAL) \
++#if defined(_WIN32) || (defined(__linux__) && defined(HAVE_GETAUXVAL)) \
+ 		|| defined(HAVE_ELF_AUX_INFO) \
+ 		|| (defined(__APPLE__) && defined(HAVE_SYSCTLBYNAME))
+ #	define ARM64_RUNTIME_DETECTION 1
