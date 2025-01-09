@@ -85,15 +85,12 @@ private:
 static UNMAP_AFTER_INIT FlatPtr calculate_physical_to_link_time_address_offset()
 {
     FlatPtr physical_address;
-    FlatPtr link_time_address;
 
     asm volatile(
-        "   adr %[physical_address], #0\n"
-        "1: ldr %[link_time_address], =1b\n"
-        : [physical_address] "=r"(physical_address),
-        [link_time_address] "=r"(link_time_address));
+        "adrp %[physical_address], start_of_kernel_image"
+        : [physical_address] "=r"(physical_address));
 
-    return link_time_address - physical_address - 4;
+    return KERNEL_MAPPING_BASE - physical_address;
 }
 
 // NOTE: To access global variables while the MMU is not yet enabled, we need
