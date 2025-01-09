@@ -811,7 +811,6 @@ set(SOURCES
 )
 
 add_compile_definitions(KERNEL)
-add_link_options(LINKER:-z,notext)
 
 add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
 target_link_libraries(kernel_heap PUBLIC GenericClangPlugin)
