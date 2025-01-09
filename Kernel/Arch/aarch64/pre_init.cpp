@@ -34,12 +34,14 @@ extern "C" [[noreturn]] void pre_init(PhysicalPtr flattened_devicetree_paddr)
     // from the physical memory address, so we have to jump to the kernel in high memory. We also need to
     // switch the stack pointer to high memory, such that we can unmap the identity mapping.
 
-    // Continue execution at high virtual address, by using an absolute jump.
+    // Continue execution at high virtual address.
     asm volatile(
-        "ldr x0, =1f \n"
+        "adrp x0, 1f \n"
+        "add x0, x0, :lo12:1f \n"
+        "add x0, x0, %[base] \n"
         "br x0 \n"
-        "1: \n" ::
-            : "x0");
+        "1: \n" ::[base] "r"(g_boot_info.physical_to_virtual_offset)
+        : "x0");
 
     // Add kernel_mapping_base to the stack pointer, such that it is also using the mapping
     // in high virtual memory.

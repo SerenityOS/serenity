@@ -111,5 +111,3 @@ SECTIONS
 
     end_of_kernel_image = .;
 }
-
-size_of_bss_divided_by_8 = (end_of_bss - start_of_bss + 7) / 8;

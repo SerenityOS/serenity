@@ -172,7 +172,8 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
         "mov x0, sp \n"
         "str x0, %[from_sp] \n"
         "str fp, %[from_fp] \n"
-        "ldr x0, =1f \n"
+        "adrp x0, 1f \n"
+        "add x0, x0, :lo12:1f \n"
         "str x0, %[from_ip] \n"
 
         "ldr x0, %[to_sp] \n"
@@ -395,8 +396,9 @@ NAKED void do_assume_context(Thread*, u32)
         "mov x0, x19 \n" // to_thread
         "mov x1, x19 \n" // from_thread
         "sub sp, sp, 32 \n"
-        "stp x19, x19, [sp] \n"                  // to_thread, from_thread (for thread_context_first_enter)
-        "ldr lr, =thread_context_first_enter \n" // should be same as regs.elr_el1
+        "stp x19, x19, [sp] \n"                           // to_thread, from_thread (for thread_context_first_enter)
+        "adrp lr, thread_context_first_enter \n"          // should be same as regs.elr_el1
+        "add lr, lr, :lo12:thread_context_first_enter \n" // should be same as regs.elr_el1
         "b enter_thread_context \n");
     // clang-format on
 }

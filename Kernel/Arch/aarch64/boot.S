@@ -26,11 +26,15 @@ start:
   // Clear BSS.
   adrp x14, start_of_bss
   add x14, x14, :lo12:start_of_bss
-  ldr x15, =size_of_bss_divided_by_8
+  adrp x15, end_of_bss
+  add x15, x15, :lo12:end_of_bss
+  cmp x14, x15
+  b.ge Lbss_clear_done
 Lbss_clear_loop:
   str xzr, [x14], #8
-  subs x15, x15, #1
-  bne Lbss_clear_loop
+  cmp x14, x15
+  b.lt Lbss_clear_loop
+Lbss_clear_done:
 
   b pre_init
 
