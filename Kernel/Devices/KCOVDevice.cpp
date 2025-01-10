@@ -71,7 +71,7 @@ ErrorOr<void> KCOVDevice::ioctl(OpenFileDescription&, unsigned request, Userspac
     }
 }
 
-ErrorOr<NonnullLockRefPtr<Memory::VMObject>> KCOVDevice::vmobject_for_mmap(Process& process, Memory::VirtualRange const&, u64&, bool)
+ErrorOr<File::VMObjectAndMemoryType> KCOVDevice::vmobject_and_memory_type_for_mmap(Process& process, Memory::VirtualRange const&, u64&, bool)
 {
     auto* kcov_instance = process.kcov_instance();
     VERIFY(kcov_instance != nullptr); // Should have happened on fd open()
@@ -79,7 +79,10 @@ ErrorOr<NonnullLockRefPtr<Memory::VMObject>> KCOVDevice::vmobject_for_mmap(Proce
     if (!kcov_instance->vmobject())
         return ENOBUFS; // mmaped, before KCOV_SETBUFSIZE
 
-    return *kcov_instance->vmobject();
+    return VMObjectAndMemoryType {
+        .vmobject = *kcov_instance->vmobject(),
+        .memory_type = Memory::MemoryType::Normal,
+    };
 }
 
 }

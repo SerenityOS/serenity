@@ -38,7 +38,7 @@ ErrorOr<size_t> MemoryDevice::read(OpenFileDescription&, u64 offset, UserOrKerne
     return length;
 }
 
-ErrorOr<NonnullLockRefPtr<Memory::VMObject>> MemoryDevice::vmobject_for_mmap(Process&, Memory::VirtualRange const& range, u64& offset, bool)
+ErrorOr<File::VMObjectAndMemoryType> MemoryDevice::vmobject_and_memory_type_for_mmap(Process&, Memory::VirtualRange const& range, u64& offset, bool)
 {
     auto viewed_address = PhysicalAddress(offset);
 
@@ -58,7 +58,10 @@ ErrorOr<NonnullLockRefPtr<Memory::VMObject>> MemoryDevice::vmobject_for_mmap(Pro
     }
 
     offset = 0;
-    return TRY(Memory::AnonymousVMObject::try_create_for_physical_range(viewed_address, range.size()));
+    return VMObjectAndMemoryType {
+        .vmobject = TRY(Memory::AnonymousVMObject::try_create_for_physical_range(viewed_address, range.size())),
+        .memory_type = Memory::MemoryType::IO,
+    };
 }
 
 }

@@ -17,12 +17,15 @@ AnonymousFile::AnonymousFile(NonnullLockRefPtr<Memory::AnonymousVMObject> vmobje
 
 AnonymousFile::~AnonymousFile() = default;
 
-ErrorOr<NonnullLockRefPtr<Memory::VMObject>> AnonymousFile::vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool)
+ErrorOr<File::VMObjectAndMemoryType> AnonymousFile::vmobject_and_memory_type_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool)
 {
     if (offset != 0)
         return EINVAL;
 
-    return m_vmobject;
+    return VMObjectAndMemoryType {
+        .vmobject = m_vmobject,
+        .memory_type = Memory::MemoryType::Normal,
+    };
 }
 
 ErrorOr<NonnullOwnPtr<KString>> AnonymousFile::pseudo_path(OpenFileDescription const&) const
