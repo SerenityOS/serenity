@@ -1,4 +1,4 @@
-@GUI::Frame {
+@ThemeEditor::Previews::WindowPreview {
     layout: @GUI::VerticalBoxLayout {}
 
     @GUI::Widget {
