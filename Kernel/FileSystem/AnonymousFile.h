@@ -20,7 +20,7 @@ public:
 
     virtual ~AnonymousFile() override;
 
-    virtual ErrorOr<NonnullLockRefPtr<Memory::VMObject>> vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared) override;
+    virtual ErrorOr<VMObjectAndMemoryType> vmobject_and_memory_type_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared) override;
 
 private:
     virtual StringView class_name() const override { return "AnonymousFile"sv; }

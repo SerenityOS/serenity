@@ -19,7 +19,7 @@ public:
     static void free_process();
 
     // ^File
-    ErrorOr<NonnullLockRefPtr<Memory::VMObject>> vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared) override;
+    ErrorOr<VMObjectAndMemoryType> vmobject_and_memory_type_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared) override;
     virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
 
 protected:

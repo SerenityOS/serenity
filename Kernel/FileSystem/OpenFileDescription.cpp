@@ -379,9 +379,9 @@ InodeMetadata OpenFileDescription::metadata() const
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Memory::VMObject>> OpenFileDescription::vmobject_for_mmap(Process& process, Memory::VirtualRange const& range, u64& offset, bool shared)
+ErrorOr<File::VMObjectAndMemoryType> OpenFileDescription::vmobject_for_mmap(Process& process, Memory::VirtualRange const& range, u64& offset, bool shared)
 {
-    return m_file->vmobject_for_mmap(process, range, offset, shared);
+    return m_file->vmobject_and_memory_type_for_mmap(process, range, offset, shared);
 }
 
 ErrorOr<void> OpenFileDescription::truncate(u64 length)

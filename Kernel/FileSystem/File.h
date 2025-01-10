@@ -64,7 +64,7 @@ public:
 //   - Can be overridden in subclasses to implement arbitrary functionality.
 //   - Subclasses should take care to validate incoming addresses before dereferencing.
 //
-// vmobject_for_mmap()
+// vmobject_and_memory_type_for_mmap()
 //
 //   - Optional. If unimplemented, mmap() on this File will fail with -ENODEV.
 //   - Called by mmap() when userspace wants to memory-map this File somewhere.
@@ -90,8 +90,13 @@ public:
     virtual ErrorOr<size_t> read(OpenFileDescription&, u64, UserOrKernelBuffer&, size_t) = 0;
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) = 0;
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg);
-    virtual ErrorOr<NonnullLockRefPtr<Memory::VMObject>> vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared);
     virtual ErrorOr<struct stat> stat() const { return EBADF; }
+
+    struct VMObjectAndMemoryType {
+        NonnullLockRefPtr<Memory::VMObject> vmobject;
+        Memory::MemoryType memory_type;
+    };
+    virtual ErrorOr<VMObjectAndMemoryType> vmobject_and_memory_type_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared);
 
     // Although this might be better described "name" or "description", these terms already have other meanings.
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const = 0;
