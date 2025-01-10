@@ -13,7 +13,7 @@
 #include <Kernel/Bus/USB/EHCI/EHCIController.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBManagement.h>
-#include <Kernel/Bus/USB/xHCI/xHCIController.h>
+#include <Kernel/Bus/USB/xHCI/PCIxHCIController.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
 #include <Kernel/Sections.h>
 
@@ -59,7 +59,7 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
             return;
         case xHCI: {
             dmesgln("USBManagement: xHCI controller found at {}", device_identifier.address());
-            auto xhci_controller_or_error = xHCIController::try_to_initialize(device_identifier);
+            auto xhci_controller_or_error = PCIxHCIController::try_to_initialize(device_identifier);
             if (xhci_controller_or_error.is_error())
                 dmesgln("USBManagement: Failed initializing xHCI controller - {}", xhci_controller_or_error.error());
             else

@@ -8,13 +8,13 @@
 
 namespace Kernel::USB {
 
-ErrorOr<NonnullOwnPtr<xHCIInterrupter>> xHCIInterrupter::create(xHCIController& controller, u16 interrupter_id)
+ErrorOr<NonnullOwnPtr<xHCIPCIInterrupter>> xHCIPCIInterrupter::create(PCIxHCIController& controller, u16 interrupter_id)
 {
     auto irq = TRY(controller.allocate_irq(0));
-    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) xHCIInterrupter(controller, interrupter_id, irq)));
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) xHCIPCIInterrupter(controller, interrupter_id, irq)));
 }
 
-xHCIInterrupter::xHCIInterrupter(xHCIController& controller, u16 interrupter_id, u16 irq)
+xHCIPCIInterrupter::xHCIPCIInterrupter(PCIxHCIController& controller, u16 interrupter_id, u16 irq)
     : PCI::IRQHandler(controller, irq)
     , m_controller(controller)
     , m_interrupter_id(interrupter_id)
@@ -22,9 +22,9 @@ xHCIInterrupter::xHCIInterrupter(xHCIController& controller, u16 interrupter_id,
     enable_irq();
 }
 
-bool xHCIInterrupter::handle_irq()
+bool xHCIPCIInterrupter::handle_irq()
 {
-    m_controller.handle_interrupt({}, m_interrupter_id);
+    m_controller.handle_interrupt(m_interrupter_id);
     return true;
 }
 
