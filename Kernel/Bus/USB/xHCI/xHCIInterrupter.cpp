@@ -28,4 +28,23 @@ bool xHCIPCIInterrupter::handle_irq()
     return true;
 }
 
+ErrorOr<NonnullOwnPtr<xHCIDeviceTreeInterrupter>> xHCIDeviceTreeInterrupter::create(DeviceTreexHCIController& controller, size_t irq, u16 interrupter_id)
+{
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) xHCIDeviceTreeInterrupter(controller, interrupter_id, irq)));
+}
+
+xHCIDeviceTreeInterrupter::xHCIDeviceTreeInterrupter(DeviceTreexHCIController& controller, u16 interrupter_id, size_t irq)
+    : IRQHandler(irq)
+    , m_controller(controller)
+    , m_interrupter_id(interrupter_id)
+{
+    enable_irq();
+}
+
+bool xHCIDeviceTreeInterrupter::handle_irq()
+{
+    m_controller.handle_interrupt(m_interrupter_id);
+    return true;
+}
+
 }

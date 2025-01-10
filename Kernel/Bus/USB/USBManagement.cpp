@@ -9,18 +9,21 @@
 #include <AK/Singleton.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Bus/USB/EHCI/EHCIController.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/USB/xHCI/PCIxHCIController.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::USB {
 
 static NeverDestroyed<Vector<NonnullLockRefPtr<Driver>>> s_available_drivers;
 static Singleton<USBManagement> s_the;
+static NeverDestroyed<Vector<DeviceTree::DeviceRecipe<NonnullLockRefPtr<USBController>>>> s_recipes;
 
 READONLY_AFTER_INIT bool s_initialized_sys_fs_directory = false;
 
@@ -32,6 +35,19 @@ UNMAP_AFTER_INIT USBManagement::USBManagement()
 UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
 {
     if (kernel_command_line().disable_usb())
+        return;
+
+    for (auto& recipe : *s_recipes) {
+        auto device_or_error = recipe.create_device();
+        if (device_or_error.is_error()) {
+            dmesgln("USBManagement: Failed to create USB controller for device \"{}\" with driver {}: {}", recipe.node_name, recipe.driver_name, device_or_error.release_error());
+            continue;
+        }
+
+        m_controllers.append(device_or_error.release_value());
+    }
+
+    if (PCI::Access::is_disabled())
         return;
 
     MUST(PCI::enumerate([this](PCI::DeviceIdentifier const& device_identifier) {
@@ -115,6 +131,11 @@ void USBManagement::unregister_driver(NonnullLockRefPtr<Driver> driver)
 USBManagement& USBManagement::the()
 {
     return *s_the;
+}
+
+void USBManagement::add_recipe(DeviceTree::DeviceRecipe<NonnullLockRefPtr<USBController>> recipe)
+{
+    s_recipes->append(move(recipe));
 }
 
 Vector<NonnullLockRefPtr<Driver>>& USBManagement::available_drivers()
