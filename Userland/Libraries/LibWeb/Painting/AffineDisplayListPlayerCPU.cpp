@@ -138,7 +138,7 @@ CommandResult AffineDisplayListPlayerCPU::set_clip_rect(SetClipRect const& clip)
     auto clip_quad = current_stacking_context.transform.map_to_quad(clip.rect.to_type<float>());
     current_stacking_context.clip.bounds = enclosing_int_rect(clip_quad.bounding_rect());
     // FIXME: Flips and rotations by x*90° should also be marked as rectangular.
-    current_stacking_context.clip.is_rectangular = current_stacking_context.transform.is_identity_or_translation_or_scale();
+    current_stacking_context.clip.is_rectangular = current_stacking_context.transform.is_identity_or_translation_or_scale(Gfx::AffineTransform::AllowNegativeScaling::Yes);
     current_stacking_context.clip.quad = clip_quad;
     painter().add_clip_rect(current_stacking_context.clip.bounds);
     return CommandResult::Continue;
