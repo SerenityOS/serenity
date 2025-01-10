@@ -1,4 +1,4 @@
-@GUI::Frame {
+@ThemeEditor::AlignmentProperty {
     layout: @GUI::HorizontalBoxLayout {
         spacing: 4
     }
@@ -13,6 +13,6 @@
 
     @GUI::ComboBox {
         name: "combo_box"
-        model_only: true
+        only_allow_values_from_model: true
     }
 }

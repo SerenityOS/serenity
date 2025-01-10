@@ -19,8 +19,6 @@
 
 namespace ThemeEditor {
 
-class MiniWidgetGallery;
-
 class PreviewWidget final
     : public GUI::AbstractThemePreview
     , public GUI::ColorFilterer {
@@ -48,7 +46,6 @@ private:
     Gfx::IntRect m_highlight_window_rect;
 
     OwnPtr<Gfx::ColorBlindnessFilter> m_color_filter = nullptr;
-    RefPtr<MiniWidgetGallery> m_gallery;
 };
 
 }

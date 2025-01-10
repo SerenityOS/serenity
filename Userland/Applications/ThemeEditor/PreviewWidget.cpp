@@ -8,9 +8,10 @@
  */
 
 #include "PreviewWidget.h"
+#include "Previews/WindowPreview.h"
+
 #include <AK/LexicalPath.h>
 #include <AK/StringView.h>
-#include <Applications/ThemeEditor/WindowPreviewGML.h>
 #include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/MessageBox.h>
@@ -18,52 +19,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/WindowTheme.h>
 
-REGISTER_WIDGET(ThemeEditor, PreviewWidget);
-
 namespace ThemeEditor {
-
-class MiniWidgetGallery final : public GUI::Widget {
-    C_OBJECT_ABSTRACT(MiniWidgetGallery);
-
-public:
-    static ErrorOr<NonnullRefPtr<MiniWidgetGallery>> try_create()
-    {
-        auto gallery = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MiniWidgetGallery()));
-        TRY(gallery->load_from_gml(window_preview_gml));
-
-        gallery->for_each_child_widget([](auto& child) {
-            child.set_focus_policy(GUI::FocusPolicy::NoFocus);
-            return IterationDecision::Continue;
-        });
-
-        return gallery;
-    }
-
-    void set_preview_palette(Gfx::Palette& palette)
-    {
-        set_palette(palette);
-        Function<void(GUI::Widget&)> recurse = [&](GUI::Widget& parent_widget) {
-            parent_widget.for_each_child_widget([&](auto& widget) {
-                widget.set_palette(palette);
-                recurse(widget);
-                return IterationDecision::Continue;
-            });
-        };
-        recurse(*this);
-    }
-
-private:
-    MiniWidgetGallery()
-    {
-    }
-};
-
-ErrorOr<NonnullRefPtr<PreviewWidget>> PreviewWidget::try_create()
-{
-    auto preview_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PreviewWidget()));
-    preview_widget->m_gallery = TRY(preview_widget->try_add<MiniWidgetGallery>());
-    return preview_widget;
-}
 
 PreviewWidget::PreviewWidget()
     : GUI::AbstractThemePreview(GUI::Application::the()->palette())
@@ -73,7 +29,8 @@ PreviewWidget::PreviewWidget()
 
 void PreviewWidget::palette_changed()
 {
-    m_gallery->set_preview_palette(preview_palette());
+    auto& gallery = *find_descendant_of_type_named<Previews::WindowPreview>("window_preview");
+    gallery.set_preview_palette(preview_palette());
     update_preview_window_locations();
 }
 
@@ -106,7 +63,8 @@ void PreviewWidget::update_preview_window_locations()
 
     center_window_group_within(window_group, frame_inner_rect());
 
-    m_gallery->set_relative_rect(m_active_window_rect);
+    auto& gallery = *find_descendant_of_type_named<Previews::WindowPreview>("window_preview");
+    gallery.set_relative_rect(m_active_window_rect);
 }
 
 void PreviewWidget::paint_preview(GUI::PaintEvent&)

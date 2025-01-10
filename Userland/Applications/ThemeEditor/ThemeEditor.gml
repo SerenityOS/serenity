@@ -1,4 +1,4 @@
-@GUI::Widget {
+@ThemeEditor::MainWidget {
     layout: @GUI::VerticalBoxLayout {}
     fill_with_background_color: true
 

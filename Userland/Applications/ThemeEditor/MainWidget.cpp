@@ -9,13 +9,12 @@
  */
 
 #include "MainWidget.h"
-#include <Applications/ThemeEditor/AlignmentPropertyGML.h>
-#include <Applications/ThemeEditor/ColorPropertyGML.h>
-#include <Applications/ThemeEditor/FlagPropertyGML.h>
-#include <Applications/ThemeEditor/MetricPropertyGML.h>
-#include <Applications/ThemeEditor/PathPropertyGML.h>
-#include <Applications/ThemeEditor/ThemeEditorGML.h>
-#include <Applications/ThemeEditor/WindowThemePropertyGML.h>
+#include "AlignmentProperty.h"
+#include "ColorProperty.h"
+#include "FlagProperty.h"
+#include "MetricProperty.h"
+#include "PathProperty.h"
+#include "WindowThemeProperty.h"
 #include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
@@ -212,41 +211,35 @@ static PropertyTab const color_scheme_tab {
     }
 };
 
-ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create()
+ErrorOr<void> MainWidget::initialize()
 {
-    auto alignment_model = TRY(AlignmentModel::try_create({
+    m_alignment_model = TRY(AlignmentModel::try_create({
         { "Center", Gfx::TextAlignment::Center },
         { "Left", Gfx::TextAlignment::CenterLeft },
         { "Right", Gfx::TextAlignment::CenterRight },
     }));
 
-    auto window_theme_model = TRY(WindowThemeModel::try_create({
+    m_window_theme_model = TRY(WindowThemeModel::try_create({
         { "Classic", Gfx::WindowThemeProvider::Classic },
         { "Redmond Plastic", Gfx::WindowThemeProvider::RedmondPlastic },
         { "Redmond Glass", Gfx::WindowThemeProvider::RedmondGlass },
     }));
 
-    auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MainWidget(move(alignment_model), move(window_theme_model))));
+    m_preview_widget = find_descendant_of_type_named<ThemeEditor::PreviewWidget>("preview_widget");
+    m_property_tabs = find_descendant_of_type_named<GUI::TabWidget>("property_tabs");
+    m_statusbar = find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
-    TRY(main_widget->load_from_gml(theme_editor_gml));
-    main_widget->m_preview_widget = main_widget->find_descendant_of_type_named<ThemeEditor::PreviewWidget>("preview_widget");
-    main_widget->m_property_tabs = main_widget->find_descendant_of_type_named<GUI::TabWidget>("property_tabs");
-    main_widget->m_statusbar = main_widget->find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    TRY(add_property_tab(window_tab));
+    TRY(add_property_tab(widgets_tab));
+    TRY(add_property_tab(syntax_highlighting_tab));
+    TRY(add_property_tab(color_scheme_tab));
 
-    TRY(main_widget->add_property_tab(window_tab));
-    TRY(main_widget->add_property_tab(widgets_tab));
-    TRY(main_widget->add_property_tab(syntax_highlighting_tab));
-    TRY(main_widget->add_property_tab(color_scheme_tab));
-
-    main_widget->build_override_controls();
-
-    return main_widget;
+    build_override_controls();
+    return {};
 }
 
-MainWidget::MainWidget(NonnullRefPtr<AlignmentModel> alignment_model, NonnullRefPtr<WindowThemeModel> system_theme_model)
+MainWidget::MainWidget()
     : m_current_palette(GUI::Application::the()->palette())
-    , m_alignment_model(move(alignment_model))
-    , m_window_theme_model(move(system_theme_model))
 {
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
         m_statusbar->set_override_text(action.status_tip());
@@ -501,11 +494,10 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
         group_box->set_preferred_height(GUI::SpecialDimension::Fit);
 
         for (auto const& property : group.properties) {
-            NonnullRefPtr<GUI::Widget> row_widget = group_box->add<GUI::Widget>();
-            row_widget->set_fixed_height(22);
             TRY(property.role.visit(
                 [&](Gfx::AlignmentRole role) -> ErrorOr<void> {
-                    TRY(row_widget->load_from_gml(alignment_property_gml));
+                    AK::NonnullRefPtr<AlignmentProperty> row_widget = TRY(group_box->try_add<AlignmentProperty>());
+                    row_widget->set_fixed_height(22);
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(TRY(String::from_utf8(to_string(role))));
@@ -522,7 +514,8 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::ColorRole role) -> ErrorOr<void> {
-                    TRY(row_widget->load_from_gml(color_property_gml));
+                    AK::NonnullRefPtr<ColorProperty> row_widget = TRY(group_box->try_add<ColorProperty>());
+                    row_widget->set_fixed_height(22);
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(TRY(String::from_utf8(to_string(role))));
@@ -538,7 +531,8 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::FlagRole role) -> ErrorOr<void> {
-                    TRY(row_widget->load_from_gml(flag_property_gml));
+                    AK::NonnullRefPtr<FlagProperty> row_widget = TRY(group_box->try_add<FlagProperty>());
+                    row_widget->set_fixed_height(22);
 
                     auto& checkbox = *row_widget->find_descendant_of_type_named<GUI::CheckBox>("checkbox");
                     checkbox.set_text(TRY(String::from_utf8(to_string(role))));
@@ -552,7 +546,8 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::MetricRole role) -> ErrorOr<void> {
-                    TRY(row_widget->load_from_gml(metric_property_gml));
+                    AK::NonnullRefPtr<MetricProperty> row_widget = TRY(group_box->try_add<MetricProperty>());
+                    row_widget->set_fixed_height(22);
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(TRY(String::from_utf8(to_string(role))));
@@ -568,7 +563,8 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::PathRole role) -> ErrorOr<void> {
-                    TRY(row_widget->load_from_gml(path_property_gml));
+                    AK::NonnullRefPtr<PathProperty> row_widget = TRY(group_box->try_add<PathProperty>());
+                    row_widget->set_fixed_height(22);
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(TRY(String::from_utf8(to_string(role))));
@@ -590,7 +586,8 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     return {};
                 },
                 [&](Gfx::WindowThemeRole role) -> ErrorOr<void> {
-                    TRY(row_widget->load_from_gml(window_theme_property_gml));
+                    AK::NonnullRefPtr<WindowThemeProperty> row_widget = TRY(group_box->try_add<WindowThemeProperty>());
+                    row_widget->set_fixed_height(22);
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
                     name_label.set_text(TRY(String::from_utf8(to_string(role))));
