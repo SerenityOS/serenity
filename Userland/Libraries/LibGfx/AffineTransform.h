@@ -35,8 +35,14 @@ public:
         return m_values[0] == 1 && m_values[1] == 0 && m_values[2] == 0 && m_values[3] == 1;
     }
 
-    [[nodiscard]] bool is_identity_or_translation_or_scale() const
+    enum class AllowNegativeScaling {
+        No,
+        Yes,
+    };
+    [[nodiscard]] bool is_identity_or_translation_or_scale(AllowNegativeScaling allow_negative_scaling) const
     {
+        if (allow_negative_scaling == AllowNegativeScaling::No && (m_values[0] < 0 || m_values[3] < 0))
+            return false;
         return m_values[1] == 0 && m_values[2] == 0;
     }
 
