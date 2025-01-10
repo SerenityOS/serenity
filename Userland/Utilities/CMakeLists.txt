@@ -74,6 +74,7 @@ set(CMD_SOURCES_CPP
     ifconfig.cpp
     image.cpp
     image2bin.cpp
+    imgcmp.cpp
     ini.cpp
     init.cpp
     install.cpp
@@ -329,6 +330,7 @@ target_link_libraries(icc PRIVATE LibGfx LibMedia LibURL)
 target_link_libraries(iconv PRIVATE LibTextCodec)
 target_link_libraries(image PRIVATE LibGfx)
 target_link_libraries(image2bin PRIVATE LibGfx)
+target_link_libraries(imgcmp PRIVATE LibGfx)
 target_link_libraries(ini PRIVATE LibFileSystem)
 target_link_libraries(install-bin PRIVATE LibFileSystem)
 target_link_libraries(isobmff PRIVATE LibGfx)
