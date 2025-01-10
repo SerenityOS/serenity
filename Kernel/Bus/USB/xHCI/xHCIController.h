@@ -16,10 +16,12 @@
 namespace Kernel::USB {
 
 class xHCIPCIInterrupter;
+class xHCIDeviceTreeInterrupter;
 
 class xHCIController
     : public USBController {
     friend class xHCIPCIInterrupter;
+    friend class xHCIDeviceTreeInterrupter;
 
 public:
     virtual ~xHCIController() override;
