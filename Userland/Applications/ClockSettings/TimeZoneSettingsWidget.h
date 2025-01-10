@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2025, RatcheT2497 <ratchetnumbers@proton.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,13 +14,16 @@
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 
+namespace ClockSettings {
+
 class TimeZoneSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(TimeZoneSettingsWidget)
 public:
-    static ErrorOr<NonnullRefPtr<TimeZoneSettingsWidget>> create();
+    static ErrorOr<NonnullRefPtr<TimeZoneSettingsWidget>> try_create();
+    ErrorOr<void> initialize();
 
 private:
-    TimeZoneSettingsWidget();
+    TimeZoneSettingsWidget() = default;
 
     virtual void second_paint_event(GUI::PaintEvent&) override;
 
@@ -38,3 +42,5 @@ private:
     Optional<Gfx::FloatPoint> m_time_zone_location;
     ByteString m_time_zone_text;
 };
+
+}
