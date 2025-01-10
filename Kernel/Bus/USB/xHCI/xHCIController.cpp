@@ -1,13 +1,11 @@
 /*
  * Copyright (c) 2024, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2025, Sönke Holz <sholz8530@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <Kernel/Arch/Delay.h>
-#include <Kernel/Bus/PCI/API.h>
-#include <Kernel/Bus/PCI/BarMapping.h>
-#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBRequest.h>
@@ -17,17 +15,8 @@
 
 namespace Kernel::USB {
 
-ErrorOr<NonnullLockRefPtr<xHCIController>> xHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
-{
-    auto registers_mapping = TRY(PCI::map_bar<u8>(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) xHCIController(pci_device_identifier, move(registers_mapping))));
-    TRY(controller->initialize());
-    return controller;
-}
-
-UNMAP_AFTER_INIT xHCIController::xHCIController(PCI::DeviceIdentifier const& pci_device_identifier, Memory::TypedMapping<u8> registers_mapping)
-    : PCI::Device(pci_device_identifier)
-    , m_registers_mapping(move(registers_mapping))
+UNMAP_AFTER_INIT xHCIController::xHCIController(Memory::TypedMapping<u8> registers_mapping)
+    : m_registers_mapping(move(registers_mapping))
     , m_capability_registers(*reinterpret_cast<CapabilityRegisters volatile*>(m_registers_mapping.ptr()))
     , m_operational_registers(*reinterpret_cast<OperationalRegisters volatile*>(m_registers_mapping.ptr() + m_capability_registers.capability_register_length))
     , m_runtime_registers(*reinterpret_cast<RuntimeRegisters volatile*>(m_registers_mapping.ptr() + m_capability_registers.runtime_register_space_offset))
@@ -67,7 +56,7 @@ void xHCIController::take_exclusive_control_from_bios()
     if (!usb_legacy_support_extended_capability->usb_legacy_support_capability.host_controller_bios_owned_semaphore)
         return;
 
-    dmesgln_pci(*this, "Controller is owned by BIOS - taking ownership");
+    dmesgln_xhci("Controller is owned by BIOS - taking ownership");
     usb_legacy_support_extended_capability->usb_legacy_support_capability.host_controller_os_owned_semaphore = 1;
     for (auto attempts = 0; attempts < 20; ++attempts) {
         if (!usb_legacy_support_extended_capability->usb_legacy_support_capability.host_controller_bios_owned_semaphore)
@@ -75,9 +64,9 @@ void xHCIController::take_exclusive_control_from_bios()
         microseconds_delay(50000); // The time that OS shall wait for BIOS to respond to the request for ownership should not exceed ‘1’ second.
     }
     if (usb_legacy_support_extended_capability->usb_legacy_support_capability.host_controller_bios_owned_semaphore)
-        dmesgln_pci(*this, "Bios refuses to transfer ownership - ignoring");
+        dmesgln_xhci("Bios refuses to transfer ownership - ignoring");
     else if (usb_legacy_support_extended_capability->usb_legacy_support_capability.host_controller_os_owned_semaphore)
-        dmesgln_pci(*this, "Took ownership of controller successfully");
+        dmesgln_xhci("Took ownership of controller successfully");
     // Force disable BIOS control in case the BIOS is broken/non-responsive (disable their SMIs)
     usb_legacy_support_extended_capability->usb_legacy_support_capability.host_controller_bios_owned_semaphore = 0;
     usb_legacy_support_extended_capability->usb_legacy_support_control_status.usb_smi_enable = 0;
@@ -89,29 +78,6 @@ void xHCIController::take_exclusive_control_from_bios()
     usb_legacy_support_extended_capability->usb_legacy_support_control_status.smi_on_os_ownership_change = 1;
     usb_legacy_support_extended_capability->usb_legacy_support_control_status.smi_on_pci_command = 1;
     usb_legacy_support_extended_capability->usb_legacy_support_control_status.smi_on_bar = 1;
-}
-
-void xHCIController::intel_quirk_enable_xhci_ports()
-{
-    // Intel chipsets that include both xHCI and EHCI USB controllers default to configuring their USB ports to be attached to the EHCI controller,
-    // Attach them to the xHCI controller instead.
-    bool ehci_controller_found = false;
-    MUST(PCI::enumerate([&ehci_controller_found](PCI::DeviceIdentifier const& device_identifier) {
-        if (device_identifier.hardware_id().vendor_id != PCI::VendorID::Intel
-            || device_identifier.class_code() != PCI::ClassID::SerialBus
-            || device_identifier.subclass_code() != PCI::SerialBus::SubclassID::USB
-            || device_identifier.prog_if() != PCI::SerialBus::USBProgIf::EHCI)
-            return;
-        ehci_controller_found = true;
-    }));
-    if (!ehci_controller_found)
-        return;
-    dmesgln_pci(*this, "Switching Intel chipset USB ports to xHCI instead of EHCI");
-    SpinlockLocker const locker(device_identifier().operation_lock());
-    // Enable USB3 Ports
-    write32_locked(device_identifier(), intel_xhci_usb3_port_super_speed_enable_offset, read32_locked(device_identifier(), intel_xhci_usb3_port_routing_mask_offset));
-    // Enable USB2 Ports
-    write32_locked(device_identifier(), intel_xhci_usb2_port_routing_offset, read32_locked(device_identifier(), intel_xhci_usb2_port_routing_mask_offset));
 }
 
 ErrorOr<void> xHCIController::find_port_max_speeds()
@@ -154,7 +120,7 @@ ErrorOr<void> xHCIController::find_port_max_speeds()
         if (count == 0 || count > (m_port_max_speeds.size() - offset + 1))
             continue;
         if (supported_protocol_capability->protocol_speed_id_count > 0) {
-            dmesgln_pci(*this, "Controller has explicit protocol speed ID definitions - this is not supported yet");
+            dmesgln_xhci("Controller has explicit protocol speed ID definitions - this is not supported yet");
             continue;
         }
         auto max_speed = major_revision == 0x03 ? USB::Device::DeviceSpeed::SuperSpeed : USB::Device::DeviceSpeed::HighSpeed;
@@ -166,40 +132,24 @@ ErrorOr<void> xHCIController::find_port_max_speeds()
 
 ErrorOr<void> xHCIController::initialize()
 {
-    dmesgln_pci(*this, "Controller found {}", PCI::get_hardware_id(device_identifier()));
-    dmesgln_pci(*this, "Registers base: {}", m_registers_mapping.paddr);
+    dmesgln_xhci("Registers base: {}", m_registers_mapping.paddr);
 
     auto interface_version = m_capability_registers.host_controller_interface_version_number;
     if (interface_version < 0x0090 || interface_version > 0x0120) { // The Intel specification defines versions 0.9.0 up to 1.2.0
-        dmesgln_pci(*this, "Unsupported interface version: {}.{}.{}", interface_version >> 8, (interface_version >> 4) & 0xF, interface_version & 0xF);
+        dmesgln_xhci("Unsupported interface version: {}.{}.{}", interface_version >> 8, (interface_version >> 4) & 0xF, interface_version & 0xF);
         return ENOTSUP;
     }
-    dmesgln_pci(*this, "Interface version: {}.{}.{}", interface_version >> 8, (interface_version >> 4) & 0xF, interface_version & 0xF);
+    dmesgln_xhci("Interface version: {}.{}.{}", interface_version >> 8, (interface_version >> 4) & 0xF, interface_version & 0xF);
     dbgln_if(XHCI_DEBUG, "xHCI: Using {}-bit addressing", m_capability_registers.capability_parameters_1._64bit_addressing_capability ? 64 : 32);
 
-    PCI::enable_bus_mastering(device_identifier());
-    PCI::enable_memory_space(device_identifier());
-
-#if ARCH(RISCV64)
-    constexpr bool use_msi = false;
-    dmesgln_pci(*this, "FIXME: Disabling MSI-based interrupts on RISC-V");
-#else
-    constexpr bool use_msi = true;
-#endif
-    auto interrupt_type = TRY(reserve_irqs(1, use_msi)); // TODO: Support more than one interrupter using MSI/MSI-X
-    m_using_message_signalled_interrupts = interrupt_type != PCI::InterruptType::PIN;
-
     take_exclusive_control_from_bios();
-
-    if (device_identifier().hardware_id().vendor_id == PCI::VendorID::Intel)
-        intel_quirk_enable_xhci_ports();
 
     TRY(find_port_max_speeds());
 
     TRY(reset());
 
     if ((m_operational_registers.page_size & 1) == 0) {
-        dmesgln_pci(*this, "Interface does not support 4K pages");
+        dmesgln_xhci("Interface does not support 4K pages");
         return ENOTSUP;
     }
 
@@ -299,7 +249,8 @@ ErrorOr<void> xHCIController::initialize()
     //     3. Enable the Interrupter by writing a ‘1’ to the Interrupt Enable (IE) field of the Interrupter Management register (5.5.2.1).
     m_runtime_registers.interrupter_registers[0].interrupter_management.interrupt_enabled = 1;
 
-    m_interrupter = TRY(xHCIInterrupter::create(*this, 0));
+    m_using_message_signalled_interrupts = using_message_signalled_interrupts();
+    m_interrupter = TRY(create_interrupter(0));
 
     return start();
 }
@@ -316,7 +267,7 @@ ErrorOr<void> xHCIController::reset()
             break;
     }
     if (m_operational_registers.usb_command.host_controller_reset) {
-        dmesgln_pci(*this, "Failed resetting controller - stuck in reset state");
+        dmesgln_xhci("Failed resetting controller - stuck in reset state");
         return EBUSY;
     }
 
@@ -326,7 +277,7 @@ ErrorOr<void> xHCIController::reset()
         if (!m_operational_registers.usb_status.controller_not_ready)
             return {};
     }
-    dmesgln_pci(*this, "Failed resetting controller - stuck in not-ready state");
+    dmesgln_xhci("Failed resetting controller - stuck in not-ready state");
     return EBUSY;
 }
 
@@ -339,14 +290,14 @@ ErrorOr<void> xHCIController::start()
             break;
     }
     if (m_operational_registers.usb_status.host_controller_halted) {
-        dmesgln_pci(*this, "Failed starting controller");
+        dmesgln_xhci("Failed starting controller");
         return EBUSY;
     }
-    dmesgln_pci(*this, "Finished starting controller");
+    dmesgln_xhci("Finished starting controller");
 
     m_root_hub = TRY(xHCIRootHub::try_create(*this));
     TRY(m_root_hub->setup({}));
-    dmesgln_pci(*this, "Initialized root hub");
+    dmesgln_xhci("Initialized root hub");
     return {};
 }
 
@@ -358,7 +309,7 @@ ErrorOr<void> xHCIController::stop()
         if (m_operational_registers.usb_status.host_controller_halted)
             return {};
     }
-    dmesgln_pci(*this, "Failed stopping controller");
+    dmesgln_xhci("Failed stopping controller");
     return EBUSY;
 }
 
@@ -419,7 +370,7 @@ ErrorOr<u8> xHCIController::enable_slot()
         return (u8)transfer_request_block.command_completion_event.slot_id;
     }
     // If a Device Slot is not available, the Slot ID field shall be cleared to '0' and a No Slots Available Error shall be returned in the Command Completion Event.
-    dmesgln_pci(*this, "Enable Slot command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
+    dmesgln_xhci("Enable Slot command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
     return EINVAL;
 }
 
@@ -438,7 +389,7 @@ ErrorOr<void> xHCIController::address_device(u8 slot, u64 input_context_address)
     transfer_request_block.address_device_command.block_set_address_request = 0;
     execute_command(transfer_request_block);
     if (transfer_request_block.command_completion_event.completion_code != TransferRequestBlock::CompletionCode::Success) {
-        dmesgln_pci(*this, "Address Device command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
+        dmesgln_xhci("Address Device command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
         return EINVAL;
     }
     return {};
@@ -458,7 +409,7 @@ ErrorOr<void> xHCIController::evaluate_context(u8 slot, u64 input_context_addres
     transfer_request_block.evaluate_context_command.input_context_pointer_high = input_context_address >> 32;
     execute_command(transfer_request_block);
     if (transfer_request_block.command_completion_event.completion_code != TransferRequestBlock::CompletionCode::Success) {
-        dmesgln_pci(*this, "Evaluate Context command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
+        dmesgln_xhci("Evaluate Context command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
         return EINVAL;
     }
     return {};
@@ -479,7 +430,7 @@ ErrorOr<void> xHCIController::configure_endpoint(u8 slot, u64 input_context_addr
     transfer_request_block.configure_endpoint_command.deconfigure = 0;
     execute_command(transfer_request_block);
     if (transfer_request_block.command_completion_event.completion_code != TransferRequestBlock::CompletionCode::Success) {
-        dmesgln_pci(*this, "Configure Endpoint command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
+        dmesgln_xhci("Configure Endpoint command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
         return EINVAL;
     }
     return {};
@@ -500,7 +451,7 @@ ErrorOr<void> xHCIController::reset_endpoint(u8 slot, u8 endpoint, TransferState
     transfer_request_block.reset_endpoint_command.slot_id = slot;
     execute_command(transfer_request_block);
     if (transfer_request_block.command_completion_event.completion_code != TransferRequestBlock::CompletionCode::Success) {
-        dmesgln_pci(*this, "Reset Endpoint command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
+        dmesgln_xhci("Reset Endpoint command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
         return EINVAL;
     }
     return {};
@@ -527,7 +478,7 @@ ErrorOr<void> xHCIController::set_tr_dequeue_pointer(u8 slot, u8 endpoint, u8 st
     transfer_request_block.set_tr_dequeue_pointer_command.stream_context_type = stream_context_type;
     execute_command(transfer_request_block);
     if (transfer_request_block.command_completion_event.completion_code != TransferRequestBlock::CompletionCode::Success) {
-        dmesgln_pci(*this, "Set TR Dequeue Pointer command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
+        dmesgln_xhci("Set TR Dequeue Pointer command failed with completion code: {}", enum_to_string(transfer_request_block.command_completion_event.completion_code));
         return EINVAL;
     }
     return {};
@@ -592,7 +543,7 @@ ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
             speed = USB::Device::DeviceSpeed::SuperSpeed;
             break;
         default:
-            dmesgln_pci(*this, "Unknown port speed reported ({}), assuming SuperSpeed/USB3", port_speed);
+            dmesgln_xhci("Unknown port speed reported ({}), assuming SuperSpeed/USB3", port_speed);
             speed = USB::Device::DeviceSpeed::SuperSpeed;
             break;
         }
@@ -696,7 +647,7 @@ ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
     USBDeviceDescriptor dev_descriptor {};
     auto transfer_length = TRY(device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, short_device_descriptor_length, &dev_descriptor));
     if (transfer_length < short_device_descriptor_length) {
-        dmesgln_pci(*this, "USB Device did not return enough bytes for short device descriptor - Expected {} but got {}", short_device_descriptor_length, transfer_length);
+        dmesgln_xhci("USB Device did not return enough bytes for short device descriptor - Expected {} but got {}", short_device_descriptor_length, transfer_length);
         return EIO;
     }
     VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
@@ -711,7 +662,7 @@ ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
     // 8. Now that the Default Control Endpoint is fully operational, system software may read the complete USB Device Descriptor and possibly the Configuration Descriptors so that it can hand the device off to the appropriate Class Driver(s).
     transfer_length = TRY(device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_DEVICE << 8), 0, sizeof(USBDeviceDescriptor), &dev_descriptor));
     if (transfer_length < sizeof(USBDeviceDescriptor)) {
-        dmesgln_pci(*this, "USB Device did not return enough bytes for device descriptor - Expected {} but got {}", sizeof(USBDeviceDescriptor), transfer_length);
+        dmesgln_xhci("USB Device did not return enough bytes for device descriptor - Expected {} but got {}", sizeof(USBDeviceDescriptor), transfer_length);
         return EIO;
     }
     VERIFY(dev_descriptor.descriptor_header.descriptor_type == DESCRIPTOR_TYPE_DEVICE);
@@ -722,7 +673,7 @@ ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
         USBHubDescriptor hub_descriptor {};
         transfer_length = TRY(device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST | USB_REQUEST_TYPE_CLASS, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_HUB << 8), 0, sizeof(USBHubDescriptor), &hub_descriptor));
         if (transfer_length < sizeof(USBHubDescriptor)) {
-            dmesgln_pci(*this, "USB Device did not return enough bytes for hub descriptor - Expected {} but got {}", sizeof(USBHubDescriptor), transfer_length);
+            dmesgln_xhci("USB Device did not return enough bytes for hub descriptor - Expected {} but got {}", sizeof(USBHubDescriptor), transfer_length);
             return EIO;
         }
         control_context->drop_contexts = 0;
@@ -1198,14 +1149,14 @@ ErrorOr<void> xHCIController::set_port_feature(Badge<xHCIRootHub>, u8 port, HubF
         if (!m_operational_registers.port_registers[port].port_status_and_control.port_enabled_disabled     // Port disabled
             || m_operational_registers.port_registers[port].port_status_and_control.port_reset              // Port resetting
             || m_operational_registers.port_registers[port].port_status_and_control.port_link_state >= 3) { // Port is not in suspendable state
-            dmesgln_pci(*this, "Attempt to suspend port {} in non-suspendable state", port);
+            dmesgln_xhci("Attempt to suspend port {} in non-suspendable state", port);
             return EINVAL;
         }
         port_status.port_link_state_write_strobe = 1;
         port_status.port_link_state = 3;
         break;
     default:
-        dmesgln_pci(*this, "Attempt to set unknown feature {} for port {}", (u8)feature, port);
+        dmesgln_xhci("Attempt to set unknown feature {} for port {}", (u8)feature, port);
         return EINVAL;
     }
     m_operational_registers.port_registers[port].port_status_and_control.raw = port_status.raw;
@@ -1239,7 +1190,7 @@ ErrorOr<void> xHCIController::clear_port_feature(Badge<xHCIRootHub>, u8 port, Hu
         if (!m_operational_registers.port_registers[port].port_status_and_control.port_enabled_disabled     // Port disabled
             || m_operational_registers.port_registers[port].port_status_and_control.port_reset              // Port resetting
             || m_operational_registers.port_registers[port].port_status_and_control.port_link_state != 3) { // Port is not in suspended state
-            dmesgln_pci(*this, "Attempt to un-suspend port {} in non-suspended state", port);
+            dmesgln_xhci("Attempt to un-suspend port {} in non-suspended state", port);
             return EINVAL;
         }
         port_status.port_link_state_write_strobe = 1;
@@ -1264,7 +1215,7 @@ ErrorOr<void> xHCIController::clear_port_feature(Badge<xHCIRootHub>, u8 port, Hu
         port_status.over_current_change = 1;
         break;
     default:
-        dmesgln_pci(*this, "Attempt to clear unknown feature {} for port {}", (u8)feature, port);
+        dmesgln_xhci("Attempt to clear unknown feature {} for port {}", (u8)feature, port);
         return EINVAL;
     }
     m_operational_registers.port_registers[port].port_status_and_control.raw = port_status.raw;
@@ -1272,7 +1223,7 @@ ErrorOr<void> xHCIController::clear_port_feature(Badge<xHCIRootHub>, u8 port, Hu
     return {};
 }
 
-void xHCIController::handle_interrupt(Badge<xHCIInterrupter>, u16 interrupter_id)
+void xHCIController::handle_interrupt(u16 interrupter_id)
 {
     VERIFY(interrupter_id == 0);
     // The USBSTS must be read/written manually since it has RW1C/S fields which will change state given a normal read-modify-write sequence
@@ -1283,15 +1234,15 @@ void xHCIController::handle_interrupt(Badge<xHCIInterrupter>, u16 interrupter_id
         m_runtime_registers.interrupter_registers[0].interrupter_management.interrupt_pending = 1;
 
     if (usb_status.host_controller_halted) {
-        dmesgln_pci(*this, "Host controller halted unexpectedly");
+        dmesgln_xhci("Host controller halted unexpectedly");
         return;
     }
     if (usb_status.host_system_error) {
-        dmesgln_pci(*this, "Host system error");
+        dmesgln_xhci("Host system error");
         return;
     }
     if (usb_status.host_controller_error) {
-        dmesgln_pci(*this, "Host controller error");
+        dmesgln_xhci("Host controller error");
         return;
     }
     if (usb_status.event_interrupt) {
@@ -1468,13 +1419,13 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
 
     if (transfer_request_block.transfer_event.completion_code != TransferRequestBlock::CompletionCode::Success
         && transfer_request_block.transfer_event.completion_code != TransferRequestBlock::CompletionCode::Short_Packet)
-        dmesgln_pci(*this, "Transfer error on slot {} endpoint {}: {}", slot, endpoint, enum_to_string(transfer_request_block.transfer_event.completion_code));
+        dmesgln_xhci("Transfer error on slot {} endpoint {}: {}", slot, endpoint, enum_to_string(transfer_request_block.transfer_event.completion_code));
 
     VERIFY(transfer_request_block.transfer_event.event_data == 0); // The Pointer points to the interrupting TRB
     auto transfer_request_block_pointer = ((u64)transfer_request_block.transfer_event.transfer_request_block_pointer_high << 32) | transfer_request_block.transfer_event.transfer_request_block_pointer_low;
     VERIFY(transfer_request_block_pointer % sizeof(TransferRequestBlock) == 0);
     if (transfer_request_block_pointer < endpoint_ring.ring_paddr() || (transfer_request_block_pointer - endpoint_ring.ring_paddr()) > (endpoint_ring_size * sizeof(TransferRequestBlock))) {
-        dmesgln_pci(*this, "Transfer event on slot {} endpoint {} points to unknown TRB", slot, endpoint);
+        dmesgln_xhci("Transfer event on slot {} endpoint {} points to unknown TRB", slot, endpoint);
         return;
     }
     auto transfer_request_block_index = (transfer_request_block_pointer - endpoint_ring.ring_paddr()) / sizeof(TransferRequestBlock);
@@ -1505,13 +1456,13 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
         }
         return;
     }
-    dmesgln_pci(*this, "Transfer event on slot {} endpoint {} points to unowned TRB", slot, endpoint);
+    dmesgln_xhci("Transfer event on slot {} endpoint {} points to unowned TRB", slot, endpoint);
 }
 
 void xHCIController::event_handling_thread()
 {
     while (!Process::current().is_dying()) {
-        m_event_queue.wait_forever(device_name());
+        m_event_queue.wait_forever("xHCI"sv);
         // Handle up to ring-size events each time
         for (auto i = 0u; i < event_ring_segment_size; ++i) {
             // If the Cycle bit of the Event TRB pointed to by the Event Ring Dequeue Pointer equals CCS, then the Event TRB is a valid event,
@@ -1535,7 +1486,7 @@ void xHCIController::event_handling_thread()
                 dbgln_if(XHCI_DEBUG, "Port status change detected by controller");
                 break;
             default:
-                dmesgln_pci(*this, "Received unknown event type {} from controller", enum_to_string(event_type));
+                dmesgln_xhci("Received unknown event type {} from controller", enum_to_string(event_type));
                 break;
             }
 

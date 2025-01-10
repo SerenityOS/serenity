@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2024, Idan Horowitz <idan.horowitz@serenityos.org>
+ * Copyright (c) 2025, Sönke Holz <sholz8530@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,23 +8,21 @@
 #pragma once
 
 #include <AK/StdLibExtras.h>
-#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Bus/USB/xHCI/xHCIRootHub.h>
+#include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel::USB {
 
-class xHCIInterrupter;
+class xHCIPCIInterrupter;
 
-class xHCIController final
-    : public USBController
-    , public PCI::Device {
+class xHCIController
+    : public USBController {
+    friend class xHCIPCIInterrupter;
+
 public:
-    static ErrorOr<NonnullLockRefPtr<xHCIController>> try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~xHCIController() override;
-
-    virtual StringView device_name() const override { return "xHCI"sv; }
 
     virtual ErrorOr<void> initialize() override;
     virtual ErrorOr<void> reset() override;
@@ -47,13 +46,17 @@ public:
     ErrorOr<void> set_port_feature(Badge<xHCIRootHub>, u8 port, HubFeatureSelector);
     ErrorOr<void> clear_port_feature(Badge<xHCIRootHub>, u8 port, HubFeatureSelector);
 
-    void handle_interrupt(Badge<xHCIInterrupter>, u16 interrupter_id);
+protected:
+    xHCIController(Memory::TypedMapping<u8> registers_mapping);
+
+    virtual bool using_message_signalled_interrupts() const = 0;
+    virtual ErrorOr<NonnullOwnPtr<GenericInterruptHandler>> create_interrupter(u16 interrupter_id) = 0;
+    virtual ErrorOr<void> write_dmesgln_prefix(StringBuilder&) const = 0;
 
 private:
-    xHCIController(PCI::DeviceIdentifier const& pci_device_identifier, Memory::TypedMapping<u8> registers_io_window);
+    void handle_interrupt(u16 interrupter_id);
 
     void take_exclusive_control_from_bios();
-    void intel_quirk_enable_xhci_ports();
     ErrorOr<void> find_port_max_speeds();
 
     void event_handling_thread();
@@ -61,11 +64,6 @@ private:
 
     // Arbitrarily chosen to decrease allocation sizes, can be increased up to 256 if we reach this limit
     static constexpr size_t max_devices = 64;
-
-    static constexpr PCI::RegisterOffset intel_xhci_usb2_port_routing_offset = static_cast<PCI::RegisterOffset>(0xD0);
-    static constexpr PCI::RegisterOffset intel_xhci_usb2_port_routing_mask_offset = static_cast<PCI::RegisterOffset>(0xD4);
-    static constexpr PCI::RegisterOffset intel_xhci_usb3_port_super_speed_enable_offset = static_cast<PCI::RegisterOffset>(0xD8);
-    static constexpr PCI::RegisterOffset intel_xhci_usb3_port_routing_mask_offset = static_cast<PCI::RegisterOffset>(0xDC);
 
     // 5.3 Host Controller Capability Registers
     struct CapabilityRegisters {
@@ -1196,8 +1194,22 @@ private:
     TransferRequestBlock* m_event_ring_segment { nullptr };
     PhysicalPtr m_event_ring_segment_pointer { 0 };
 
-    OwnPtr<xHCIInterrupter> m_interrupter;
+    OwnPtr<GenericInterruptHandler> m_interrupter;
     OwnPtr<xHCIRootHub> m_root_hub;
+
+protected:
+    template<typename... Parameters>
+    void dmesgln_xhci(AK::CheckedFormatString<Parameters...>&& fmt, Parameters const&... parameters) const
+    {
+        StringBuilder builder;
+
+        MUST(write_dmesgln_prefix(builder));
+
+        AK::VariadicFormatParams<AK::AllowDebugOnlyFormatters::Yes, Parameters...> variadic_format_params { parameters... };
+        MUST(AK::vformat(builder, fmt.view(), variadic_format_params));
+
+        dmesgln("{}", builder.string_view());
+    }
 };
 
 }
