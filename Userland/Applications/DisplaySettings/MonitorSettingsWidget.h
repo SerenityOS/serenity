@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2025, RatcheT2497 <ratchetnumbers@proton.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,6 +34,7 @@ public:
         if (m_showing_screen_numbers)
             show_screen_numbers(false);
     }
+    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
     void show_screen_numbers(bool);
