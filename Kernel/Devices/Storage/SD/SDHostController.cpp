@@ -953,7 +953,7 @@ ErrorOr<SD::SDConfigurationRegister> SDHostController::retrieve_sd_configuration
     TRY(transaction_control_with_data_transfer_using_the_dat_line_without_dma(
         SD::Commands::app_send_scr,
         0, 1, 8,
-        UserOrKernelBuffer::for_kernel_buffer(scr.raw), DataTransferType::Read));
+        UserOrKernelBuffer::for_kernel_buffer(scr.raw, sizeof(SD::SDConfigurationRegister)), DataTransferType::Read));
 
     return scr;
 }

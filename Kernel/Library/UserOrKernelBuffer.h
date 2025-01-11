@@ -7,9 +7,11 @@
 
 #pragma once
 
+#include <AK/Span.h>
 #include <AK/Types.h>
 #include <AK/Userspace.h>
 #include <Kernel/API/POSIX/errno.h>
+#include <Kernel/Library/KBuffer.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/UnixTypes.h>
@@ -20,17 +22,41 @@ class [[nodiscard]] UserOrKernelBuffer {
 public:
     UserOrKernelBuffer() = delete;
 
-    static UserOrKernelBuffer for_kernel_buffer(u8* kernel_buffer)
+    static UserOrKernelBuffer for_kernel_buffer(ReadonlyBytes bytes)
     {
-        VERIFY(!kernel_buffer || !Memory::is_user_address(VirtualAddress(kernel_buffer)));
-        return UserOrKernelBuffer(kernel_buffer);
+        VERIFY(!Memory::is_user_address(VirtualAddress(bytes.data())) || !Memory::is_user_address(VirtualAddress(bytes.data()).offset(bytes.size())));
+        return UserOrKernelBuffer(bytes.data(), bytes.size());
+    }
+
+    static UserOrKernelBuffer for_kernel_buffer(Bytes bytes)
+    {
+        VERIFY(!Memory::is_user_address(VirtualAddress(bytes.data())) || !Memory::is_user_address(VirtualAddress(bytes.data()).offset(bytes.size())));
+        return UserOrKernelBuffer(bytes.data(), bytes.size());
+    }
+
+    static UserOrKernelBuffer for_kernel_buffer(ByteBuffer const& buffer)
+    {
+        VERIFY(!Memory::is_user_address(VirtualAddress(buffer.data())) || !Memory::is_user_address(VirtualAddress(buffer.data()).offset(buffer.size())));
+        return UserOrKernelBuffer(buffer.data(), buffer.size());
+    }
+
+    static UserOrKernelBuffer for_kernel_buffer(KBuffer const& buffer)
+    {
+        VERIFY(!Memory::is_user_address(VirtualAddress(buffer.data())) || !Memory::is_user_address(VirtualAddress(buffer.data()).offset(buffer.size())));
+        return UserOrKernelBuffer(buffer.data(), buffer.size());
+    }
+
+    static UserOrKernelBuffer for_kernel_buffer(u8* kernel_buffer, size_t size)
+    {
+        VERIFY(!kernel_buffer || !Memory::is_user_address(VirtualAddress(kernel_buffer)) || !Memory::is_user_address(VirtualAddress(kernel_buffer).offset(size)));
+        return UserOrKernelBuffer(kernel_buffer, size);
     }
 
     static ErrorOr<UserOrKernelBuffer> for_user_buffer(u8* user_buffer, size_t size)
     {
         if (user_buffer && !Memory::is_user_range(VirtualAddress(user_buffer), size))
             return Error::from_errno(EFAULT);
-        return UserOrKernelBuffer(user_buffer);
+        return UserOrKernelBuffer(user_buffer, size);
     }
 
     template<typename UserspaceType>
@@ -38,7 +64,7 @@ public:
     {
         if (!Memory::is_user_range(VirtualAddress(userspace.unsafe_userspace_ptr()), size))
             return Error::from_errno(EFAULT);
-        return UserOrKernelBuffer(const_cast<u8*>((u8 const*)userspace.unsafe_userspace_ptr()));
+        return UserOrKernelBuffer(const_cast<u8*>((u8 const*)userspace.unsafe_userspace_ptr()), size);
     }
 
     [[nodiscard]] bool is_kernel_buffer() const;
@@ -46,10 +72,10 @@ public:
 
     [[nodiscard]] UserOrKernelBuffer offset(size_t offset) const
     {
+        VERIFY(offset <= this->m_size);
         if (!m_buffer)
             return *this;
-        UserOrKernelBuffer offset_buffer = *this;
-        offset_buffer.m_buffer += offset;
+        auto offset_buffer = UserOrKernelBuffer(this->m_buffer + offset, this->m_size - offset);
         VERIFY(offset_buffer.is_kernel_buffer() == is_kernel_buffer());
         return offset_buffer;
     }
@@ -153,13 +179,23 @@ public:
         return read_buffered<BUFFER_BYTES, F>(0, len, f);
     }
 
+    size_t size() const { return m_size; }
+
 private:
-    explicit UserOrKernelBuffer(u8* buffer)
+    UserOrKernelBuffer(u8* buffer, size_t size)
         : m_buffer(buffer)
+        , m_size(size)
+    {
+    }
+
+    UserOrKernelBuffer(u8 const* buffer, size_t size)
+        : m_buffer(const_cast<u8*>(buffer))
+        , m_size(size)
     {
     }
 
     u8* m_buffer;
+    size_t m_size { 0 };
 };
 
 }

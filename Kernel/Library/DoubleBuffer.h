@@ -20,18 +20,18 @@ public:
     ErrorOr<size_t> write(UserOrKernelBuffer const&, size_t);
     ErrorOr<size_t> write(u8 const* data, size_t size)
     {
-        return write(UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data)), size);
+        return write(UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data), size), size);
     }
     ErrorOr<size_t> read(UserOrKernelBuffer&, size_t);
     ErrorOr<size_t> read(u8* data, size_t size)
     {
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer(data);
+        auto buffer = UserOrKernelBuffer::for_kernel_buffer(data, size);
         return read(buffer, size);
     }
     ErrorOr<size_t> peek(UserOrKernelBuffer&, size_t);
     ErrorOr<size_t> peek(u8* data, size_t size)
     {
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer(data);
+        auto buffer = UserOrKernelBuffer::for_kernel_buffer(data, size);
         return peek(buffer, size);
     }
 

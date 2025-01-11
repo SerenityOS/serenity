@@ -64,7 +64,7 @@ ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(VFSRootContext const& vfs
     VERIFY(size() <= MAXPATHLEN);
 
     Array<u8, MAXPATHLEN> contents;
-    auto read_bytes = TRY(read_until_filled_or_end(0, contents.size(), UserOrKernelBuffer::for_kernel_buffer(contents.data()), nullptr));
+    auto read_bytes = TRY(read_until_filled_or_end(0, contents.size(), UserOrKernelBuffer::for_kernel_buffer(contents.data(), MAXPATHLEN), nullptr));
     return VirtualFileSystem::resolve_path(vfs_root_context, credentials, StringView { contents.span().trim(read_bytes) }, base, out_parent, options, symlink_recursion_level);
 }
 

@@ -436,7 +436,7 @@ bool IPv4Socket::did_receive(IPv4Address const& source_address, u16 source_port,
             VERIFY(m_can_read);
             return false;
         }
-        auto scratch_buffer = UserOrKernelBuffer::for_kernel_buffer(m_scratch_buffer->data());
+        auto scratch_buffer = UserOrKernelBuffer::for_kernel_buffer(*m_scratch_buffer);
         auto nreceived_or_error = protocol_receive(packet, scratch_buffer, m_scratch_buffer->size(), 0);
         if (nreceived_or_error.is_error())
             return false;

@@ -60,7 +60,7 @@ ErrorOr<NonnullOwnPtr<KString>> SlavePTY::pseudo_name() const
 void SlavePTY::echo(u8 ch)
 {
     if (should_echo_input()) {
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch);
+        auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch, sizeof(u8));
         [[maybe_unused]] auto result = m_master->on_slave_write(buffer, 1);
     }
 }

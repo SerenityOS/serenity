@@ -236,7 +236,7 @@ void VirtIONetworkAdapter::handle_queue_update(u16 queue_index)
 
 static bool copy_data_to_chain(VirtIO::QueueChain& chain, Memory::RingBuffer& ring, u8 const* data, size_t length)
 {
-    UserOrKernelBuffer buf = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data));
+    UserOrKernelBuffer buf = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data), length);
 
     size_t offset = 0;
     while (offset < length) {

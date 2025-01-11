@@ -27,7 +27,7 @@ ErrorOr<FlatPtr> Process::sys$readlink(Userspace<Syscall::SC_readlink_params con
     VERIFY(description->inode()->size() <= MAXPATHLEN);
 
     Array<u8, MAXPATHLEN> link_target;
-    auto read_bytes = TRY(description->inode()->read_until_filled_or_end(0, link_target.size(), UserOrKernelBuffer::for_kernel_buffer(link_target.data()), description));
+    auto read_bytes = TRY(description->inode()->read_until_filled_or_end(0, link_target.size(), UserOrKernelBuffer::for_kernel_buffer(link_target.span()), description));
     auto size_to_copy = min(read_bytes, params.buffer.size);
     TRY(copy_to_user(params.buffer.data, link_target.data(), size_to_copy));
     // Note: we return the whole size here, not the copied size.

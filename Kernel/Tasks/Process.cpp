@@ -833,7 +833,7 @@ ErrorOr<void> Process::dump_perfcore()
         dbgln("Failed to generate perfcore for pid {}: Could not allocate buffer.", pid().value());
         return ENOMEM;
     }
-    auto json_buffer = UserOrKernelBuffer::for_kernel_buffer(json->data());
+    auto json_buffer = UserOrKernelBuffer::for_kernel_buffer(*json);
     TRY(description->write(json_buffer, json->size()));
 
     dbgln("Wrote perfcore for pid {} to {}", pid().value(), perfcore_filename);

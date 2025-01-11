@@ -83,7 +83,7 @@ size_t PartitionableDevice::block_size() const
 ErrorOr<void> PartitionableDevice::read_block(size_t block_index, Bytes block_buffer)
 {
     VERIFY(block_buffer.size() == block_size());
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(block_buffer.data());
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(block_buffer);
     bool read_successful = m_device.read_block(block_index, buffer);
     if (!read_successful)
         return Error::from_errno(EIO);

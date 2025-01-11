@@ -57,14 +57,14 @@ ErrorOr<void> Ext2FSInode::write_singly_indirect_block_pointer(BlockBasedFileSys
 
     auto singly_indirect_block_storage = TRY(ByteBuffer::create_zeroed(block_size));
     auto singly_indirect_block_contents = Span<u32> { bit_cast<u32*>(singly_indirect_block_storage.data()), entries_per_block };
-    auto singly_indirect_block_buffer = UserOrKernelBuffer::for_kernel_buffer(singly_indirect_block_storage.data());
+    auto singly_indirect_block_buffer = UserOrKernelBuffer::for_kernel_buffer(singly_indirect_block_storage);
 
     if (m_raw_inode.i_block[EXT2_IND_BLOCK] == 0) [[unlikely]] {
         m_raw_inode.i_block[EXT2_IND_BLOCK] = TRY(allocate_and_zero_block());
         set_metadata_dirty(true);
     }
 
-    TRY(fs().read_block(m_raw_inode.i_block[EXT2_IND_BLOCK], &singly_indirect_block_buffer, block_size, 0));
+    TRY(fs().read_block(m_raw_inode.i_block[EXT2_IND_BLOCK], singly_indirect_block_buffer, block_size, 0));
 
     singly_indirect_block_contents[offset_in_block] = on_disk_index.value();
     TRY(fs().write_block(m_raw_inode.i_block[EXT2_IND_BLOCK], singly_indirect_block_buffer, block_size));
@@ -94,25 +94,25 @@ ErrorOr<void> Ext2FSInode::write_doubly_indirect_block_pointer(BlockBasedFileSys
 
     auto doubly_indirect_block_storage = TRY(ByteBuffer::create_zeroed(block_size));
     auto doubly_indirect_block_contents = Span<u32> { bit_cast<u32*>(doubly_indirect_block_storage.data()), entries_per_block };
-    auto doubly_indirect_block_buffer = UserOrKernelBuffer::for_kernel_buffer(doubly_indirect_block_storage.data());
+    auto doubly_indirect_block_buffer = UserOrKernelBuffer::for_kernel_buffer(doubly_indirect_block_storage);
 
     auto singly_indirect_block_storage = TRY(ByteBuffer::create_zeroed(block_size));
     auto singly_indirect_block_contents = Span<u32> { bit_cast<u32*>(singly_indirect_block_storage.data()), entries_per_block };
-    auto singly_indirect_block_buffer = UserOrKernelBuffer::for_kernel_buffer(singly_indirect_block_storage.data());
+    auto singly_indirect_block_buffer = UserOrKernelBuffer::for_kernel_buffer(singly_indirect_block_storage);
 
     if (m_raw_inode.i_block[EXT2_DIND_BLOCK] == 0) [[unlikely]] {
         m_raw_inode.i_block[EXT2_DIND_BLOCK] = TRY(allocate_and_zero_block());
         set_metadata_dirty(true);
     }
 
-    TRY(fs().read_block(m_raw_inode.i_block[EXT2_DIND_BLOCK], &doubly_indirect_block_buffer, block_size, 0));
+    TRY(fs().read_block(m_raw_inode.i_block[EXT2_DIND_BLOCK], doubly_indirect_block_buffer, block_size, 0));
 
     if (doubly_indirect_block_contents[offset_in_doubly_indirect_block] == 0) [[unlikely]] {
         doubly_indirect_block_contents[offset_in_doubly_indirect_block] = TRY(allocate_and_zero_block());
         TRY(fs().write_block(m_raw_inode.i_block[EXT2_DIND_BLOCK], doubly_indirect_block_buffer, block_size));
     }
 
-    TRY(fs().read_block(doubly_indirect_block_contents[offset_in_doubly_indirect_block], &singly_indirect_block_buffer, block_size, 0));
+    TRY(fs().read_block(doubly_indirect_block_contents[offset_in_doubly_indirect_block], singly_indirect_block_buffer, block_size, 0));
 
     singly_indirect_block_contents[offset_in_singly_indirect_block] = on_disk_index.value();
     TRY(fs().write_block(doubly_indirect_block_contents[offset_in_doubly_indirect_block], singly_indirect_block_buffer, block_size));
@@ -152,36 +152,36 @@ ErrorOr<void> Ext2FSInode::write_triply_indirect_block_pointer(BlockBasedFileSys
 
     auto triply_indirect_block_storage = TRY(ByteBuffer::create_zeroed(block_size));
     auto triply_indirect_block_contents = Span<u32> { bit_cast<u32*>(triply_indirect_block_storage.data()), entries_per_block };
-    auto triply_indirect_block_buffer = UserOrKernelBuffer::for_kernel_buffer(triply_indirect_block_storage.data());
+    auto triply_indirect_block_buffer = UserOrKernelBuffer::for_kernel_buffer(triply_indirect_block_storage);
 
     auto doubly_indirect_block_storage = TRY(ByteBuffer::create_zeroed(block_size));
     auto doubly_indirect_block_contents = Span<u32> { bit_cast<u32*>(doubly_indirect_block_storage.data()), entries_per_block };
-    auto doubly_indirect_block_buffer = UserOrKernelBuffer::for_kernel_buffer(doubly_indirect_block_storage.data());
+    auto doubly_indirect_block_buffer = UserOrKernelBuffer::for_kernel_buffer(doubly_indirect_block_storage);
 
     auto singly_indirect_block_storage = TRY(ByteBuffer::create_zeroed(block_size));
     auto singly_indirect_block_contents = Span<u32> { bit_cast<u32*>(singly_indirect_block_storage.data()), entries_per_block };
-    auto singly_indirect_block_buffer = UserOrKernelBuffer::for_kernel_buffer(singly_indirect_block_storage.data());
+    auto singly_indirect_block_buffer = UserOrKernelBuffer::for_kernel_buffer(singly_indirect_block_storage);
 
     if (m_raw_inode.i_block[EXT2_TIND_BLOCK] == 0) [[unlikely]] {
         m_raw_inode.i_block[EXT2_TIND_BLOCK] = TRY(allocate_and_zero_block());
         set_metadata_dirty(true);
     }
 
-    TRY(fs().read_block(m_raw_inode.i_block[EXT2_TIND_BLOCK], &triply_indirect_block_buffer, block_size, 0));
+    TRY(fs().read_block(m_raw_inode.i_block[EXT2_TIND_BLOCK], triply_indirect_block_buffer, block_size, 0));
 
     if (triply_indirect_block_contents[offset_in_triply_indirect_block] == 0) [[unlikely]] {
         triply_indirect_block_contents[offset_in_triply_indirect_block] = TRY(allocate_and_zero_block());
         TRY(fs().write_block(m_raw_inode.i_block[EXT2_TIND_BLOCK], triply_indirect_block_buffer, block_size));
     }
 
-    TRY(fs().read_block(triply_indirect_block_contents[offset_in_triply_indirect_block], &doubly_indirect_block_buffer, block_size, 0));
+    TRY(fs().read_block(triply_indirect_block_contents[offset_in_triply_indirect_block], doubly_indirect_block_buffer, block_size, 0));
 
     if (doubly_indirect_block_contents[offset_in_doubly_indirect_block] == 0) [[unlikely]] {
         doubly_indirect_block_contents[offset_in_doubly_indirect_block] = TRY(allocate_and_zero_block());
         TRY(fs().write_block(triply_indirect_block_contents[offset_in_triply_indirect_block], doubly_indirect_block_buffer, block_size));
     }
 
-    TRY(fs().read_block(doubly_indirect_block_contents[offset_in_doubly_indirect_block], &singly_indirect_block_buffer, block_size, 0));
+    TRY(fs().read_block(doubly_indirect_block_contents[offset_in_doubly_indirect_block], singly_indirect_block_buffer, block_size, 0));
 
     singly_indirect_block_contents[offset_in_singly_indirect_block] = on_disk_index.value();
     TRY(fs().write_block(doubly_indirect_block_contents[offset_in_doubly_indirect_block], singly_indirect_block_buffer, block_size));
@@ -225,7 +225,7 @@ ErrorOr<u32> Ext2FSInode::allocate_and_zero_block()
     auto block = blocks.first();
 
     auto buffer_content = TRY(ByteBuffer::create_zeroed(block_size));
-    TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(buffer_content.data()), block_size));
+    TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(buffer_content), block_size));
     return block.value();
 }
 
@@ -281,9 +281,9 @@ ErrorOr<Ext2FS::BlockList> Ext2FSInode::compute_block_list(BlockBasedFileSystem:
 
     auto process_block_array = [&](auto current_logical_index, unsigned level, auto array_block_index, ByteBuffer& array_storage, auto&& callback) -> ErrorOr<IterationDecision> {
         TRY(array_storage.try_resize(block_size));
+        auto buffer = UserOrKernelBuffer::for_kernel_buffer(array_storage);
         auto* array = (u32*)array_storage.data();
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)array);
-        TRY(fs().read_block(array_block_index, &buffer, block_size, 0));
+        TRY(fs().read_block(array_block_index, buffer, block_size, 0));
         for (unsigned i = 0; i < block_size / sizeof(u32); ++i) {
             if (array[i] != 0) {
                 if (TRY(callback(current_logical_index + i * AK::pow(entries_per_block, level - 1), array[i])) == IterationDecision::Break)
@@ -351,8 +351,8 @@ ErrorOr<void> Ext2FSInode::free_all_blocks()
         TRY(array_storage.try_resize(block_size));
 
         auto* array = bit_cast<u32*>(array_storage.data());
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(array));
-        TRY(fs().read_block(array_block_index, &buffer, block_size, 0));
+        auto buffer = UserOrKernelBuffer::for_kernel_buffer(array_storage);
+        TRY(fs().read_block(array_block_index, buffer, block_size, 0));
 
         for (unsigned i = 0; i < block_size / sizeof(u32); ++i) {
             if (array[i] != 0)
@@ -530,7 +530,7 @@ ErrorOr<size_t> Ext2FSInode::read_bytes_locked(off_t offset, size_t count, UserO
             // This is a hole, act as if it's filled with zeroes.
             TRY(buffer_offset.memset(0, num_bytes_to_copy));
         } else {
-            if (auto result = fs().read_block(block_index, &buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache); result.is_error()) {
+            if (auto result = fs().read_block(block_index, buffer_offset, num_bytes_to_copy, offset_into_block, allow_cache); result.is_error()) {
                 dmesgln("Ext2FSInode[{}]::read_bytes(): Failed to read block {} (index {})", identifier(), block_index.value(), current_block_logical_index);
                 return result.release_error();
             }
@@ -645,7 +645,7 @@ ErrorOr<void> Ext2FSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyst
     VERIFY(is_directory());
 
     u8 buffer[max_block_size];
-    auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
+    auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer, max_block_size);
 
     auto block_size = fs().logical_block_size();
     auto file_size = size();
@@ -724,7 +724,7 @@ ErrorOr<void> Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries
 
     TRY(resize(serialized_bytes_count));
 
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(directory_data.data());
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(directory_data);
     auto nwritten = TRY(prepare_and_write_bytes_locked(0, serialized_bytes_count, buffer, nullptr));
     set_metadata_dirty(true);
     if (nwritten != directory_data.size())
@@ -743,7 +743,7 @@ ErrorOr<BlockBasedFileSystem::BlockIndex> Ext2FSInode::allocate_block(BlockBased
 
     if (zero_newly_allocated_block) {
         u8 zero_buffer[PAGE_SIZE] {};
-        if (auto result = fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(zero_buffer), fs().logical_block_size(), 0, allow_cache); result.is_error()) {
+        if (auto result = fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(zero_buffer, PAGE_SIZE), fs().logical_block_size(), 0, allow_cache); result.is_error()) {
             dbgln("Ext2FSInode[{}]::allocate_block(): Failed to zero block {} (index {})", identifier(), block, block_index);
             return result.release_error();
         }

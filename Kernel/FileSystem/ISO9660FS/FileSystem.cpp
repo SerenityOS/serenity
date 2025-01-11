@@ -97,7 +97,7 @@ ErrorOr<void> ISO9660FS::parse_volume_set()
     VERIFY(!m_primary_volume);
 
     auto block = TRY(KBuffer::try_create_with_size("ISO9660FS: Temporary volume descriptor storage"sv, m_device_block_size, Memory::Region::Access::Read | Memory::Region::Access::Write));
-    auto block_buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
+    auto block_buffer = UserOrKernelBuffer::for_kernel_buffer(*block);
 
     auto current_block_index = first_data_area_block;
     while (true) {
@@ -253,7 +253,7 @@ ErrorOr<NonnullLockRefPtr<ISO9660FSDirectoryEntry>> ISO9660FS::directory_entry_f
     }
 
     auto blocks = TRY(KBuffer::try_create_with_size("ISO9660FS: Directory traversal buffer"sv, data_length, Memory::Region::Access::Read | Memory::Region::Access::Write));
-    auto blocks_buffer = UserOrKernelBuffer::for_kernel_buffer(blocks->data());
+    auto blocks_buffer = UserOrKernelBuffer::for_kernel_buffer(*blocks);
     TRY(raw_read_blocks(BlockBasedFileSystem::BlockIndex { extent_location }, data_length / device_block_size(), blocks_buffer));
     auto entry = TRY(ISO9660FSDirectoryEntry::try_create(extent_location, data_length, move(blocks)));
     m_directory_entry_cache.set(key, entry);
