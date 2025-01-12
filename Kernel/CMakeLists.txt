@@ -93,6 +93,7 @@ set(KERNEL_SOURCES
     Devices/GPU/Console/ContiguousFramebufferConsole.cpp
     Devices/GPU/DisplayConnector.cpp
     Devices/GPU/Generic/DisplayConnector.cpp
+    Devices/GPU/Generic/SimpleFramebuffer.cpp
     Devices/GPU/Management.cpp
     Devices/GPU/Intel/Auxiliary/GMBusConnector.cpp
     Devices/GPU/Intel/Plane/DisplayPlane.cpp
