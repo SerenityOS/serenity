@@ -769,7 +769,7 @@ def set_up_machine_devices(config: Configuration):
             config.audio_devices = []
 
             caches_path = BUILD_DIRECTORY.parent / "caches"
-            dtb_path = str(caches_path / "bcm2837-rpi-3-b.dtb")
+            dtb_path = str(caches_path / "bcm2710-rpi-3-b.dtb")
             if config.machine_type == MachineType.RaspberryPi4B:
                 dtb_path = str(caches_path / "bcm2711-rpi-4-b.dtb")
 
