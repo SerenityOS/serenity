@@ -47,14 +47,22 @@ ErrorOr<void> Management::scan_node_for_devices(::DeviceTree::Node const& node)
 
         auto& device = m_devices.get(&child).release_value();
 
+        auto maybe_compatible = child.get_property("compatible"sv);
+        if (!maybe_compatible.has_value())
+            continue;
+
+        // FIXME: The Pi 3 System Timer is disabled in the devicetree, and only the generic ARM timer is enabled. The generic Arm timer on the Pi 3 is connected to the root interrupt controller, which we currently don't support.
+        bool const ignore_status_disabled = DeviceTree::get().is_compatible_with("raspberrypi,3-model-b"sv) && child.is_compatible_with("brcm,bcm2835-system-timer"sv);
+
+        // The lack of a status property should be treated as if the property existed with the value of "okay". (DTspec 0.4 "2.3.4 status")
+        auto maybe_status = child.get_property("status"sv);
+        if (maybe_status.has_value() && maybe_status->as_string() != "okay" && !ignore_status_disabled)
+            continue;
+
         if (child.is_compatible_with("simple-bus"sv)) {
             TRY(scan_node_for_devices(child));
             continue;
         }
-
-        auto maybe_compatible = child.get_property("compatible"sv);
-        if (!maybe_compatible.has_value())
-            continue;
 
         // The compatible property is ordered from most specific to least specific, so choose the first compatible we have a driver for.
         TRY(maybe_compatible->for_each_string([this, &device](StringView compatible_entry) -> ErrorOr<IterationDecision> {
