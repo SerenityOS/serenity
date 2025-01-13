@@ -189,9 +189,6 @@ DEVICETREE_DRIVER(BCM2835TimerDriver, compatibles_array);
 // https://www.kernel.org/doc/Documentation/devicetree/bindings/timer/brcm,bcm2835-system-timer.txt
 ErrorOr<void> BCM2835TimerDriver::probe(DeviceTree::Device const& device, StringView) const
 {
-    if (DeviceTree::get().is_compatible_with("raspberrypi,4-model-b"sv))
-        return ENOTSUP; // HACK: The Pi 4 system timer doesn't appear to work on QEMU; only the generic ARM timer does.
-
     auto const interrupts = TRY(device.node().interrupts(DeviceTree::get()));
     if (interrupts.size() != 4)
         return EINVAL; // The devicetree binding requires 4 interrupts.
