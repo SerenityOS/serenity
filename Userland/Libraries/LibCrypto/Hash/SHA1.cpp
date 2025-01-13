@@ -26,18 +26,18 @@ void SHA1::transform_impl<CPUFeatures::None>()
 {
     auto& data = m_data_buffer;
 
-    u32 blocks[80];
+    u32 blocks[16];
     for (size_t i = 0; i < 16; ++i)
         blocks[i] = AK::convert_between_host_and_network_endian(((u32 const*)data)[i]);
-
-    // w[i] = (w[i-3] xor w[i-8] xor w[i-14] xor w[i-16]) leftrotate 1
-    for (size_t i = 16; i < Rounds; ++i)
-        blocks[i] = ROTATE_LEFT(blocks[i - 3] ^ blocks[i - 8] ^ blocks[i - 14] ^ blocks[i - 16], 1);
 
     auto a = m_state[0], b = m_state[1], c = m_state[2], d = m_state[3], e = m_state[4];
     u32 f, k;
 
     for (size_t i = 0; i < Rounds; ++i) {
+        // w[i] = (w[i-3] xor w[i-8] xor w[i-14] xor w[i-16]) leftrotate 1
+        if (i >= 16)
+            blocks[i % 16] = ROTATE_LEFT(blocks[(i - 3) % 16] ^ blocks[(i - 8) % 16] ^ blocks[(i - 14) % 16] ^ blocks[(i - 16) % 16], 1);
+
         if (i <= 19) {
             f = (b & c) | ((~b) & d);
             k = SHA1Constants::RoundConstants[0];
@@ -51,7 +51,7 @@ void SHA1::transform_impl<CPUFeatures::None>()
             f = b ^ c ^ d;
             k = SHA1Constants::RoundConstants[3];
         }
-        auto temp = ROTATE_LEFT(a, 5) + f + e + k + blocks[i];
+        auto temp = ROTATE_LEFT(a, 5) + f + e + k + blocks[i % 16];
         e = d;
         d = c;
         c = ROTATE_LEFT(b, 30);
