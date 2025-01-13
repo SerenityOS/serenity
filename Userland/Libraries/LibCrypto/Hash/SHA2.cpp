@@ -34,15 +34,11 @@ void SHA256::transform_impl<CPUFeatures::None>()
 {
     auto& data = m_data_buffer;
 
-    u32 m[BlockSize];
+    u32 m[16];
 
     size_t i = 0;
     for (size_t j = 0; i < 16; ++i, j += 4) {
         m[i] = (data[j] << 24) | (data[j + 1] << 16) | (data[j + 2] << 8) | data[j + 3];
-    }
-
-    for (; i < BlockSize; ++i) {
-        m[i] = SIGN1(m[i - 2]) + m[i - 7] + SIGN0(m[i - 15]) + m[i - 16];
     }
 
     auto a = m_state[0], b = m_state[1],
@@ -51,7 +47,10 @@ void SHA256::transform_impl<CPUFeatures::None>()
          g = m_state[6], h = m_state[7];
 
     for (i = 0; i < Rounds; ++i) {
-        auto temp0 = h + EP1(e) + CH(e, f, g) + SHA256Constants::RoundConstants[i] + m[i];
+        if (i >= 16)
+            m[i % 16] = SIGN1(m[(i - 2) % 16]) + m[(i - 7) % 16] + SIGN0(m[(i - 15) % 16]) + m[(i - 16) % 16];
+
+        auto temp0 = h + EP1(e) + CH(e, f, g) + SHA256Constants::RoundConstants[i] + m[i % 16];
         auto temp1 = EP0(a) + MAJ(a, b, c);
         h = g;
         g = f;
@@ -220,15 +219,11 @@ SHA256::DigestType SHA256::peek()
 
 inline void SHA384::transform(u8 const* data)
 {
-    u64 m[80];
+    u64 m[16];
 
     size_t i = 0;
     for (size_t j = 0; i < 16; ++i, j += 8) {
         m[i] = ((u64)data[j] << 56) | ((u64)data[j + 1] << 48) | ((u64)data[j + 2] << 40) | ((u64)data[j + 3] << 32) | ((u64)data[j + 4] << 24) | ((u64)data[j + 5] << 16) | ((u64)data[j + 6] << 8) | (u64)data[j + 7];
-    }
-
-    for (; i < Rounds; ++i) {
-        m[i] = SIGN1(m[i - 2]) + m[i - 7] + SIGN0(m[i - 15]) + m[i - 16];
     }
 
     auto a = m_state[0], b = m_state[1],
@@ -237,8 +232,10 @@ inline void SHA384::transform(u8 const* data)
          g = m_state[6], h = m_state[7];
 
     for (i = 0; i < Rounds; ++i) {
+        if (i >= 16)
+            m[i % 16] = SIGN1(m[(i - 2) % 16]) + m[(i - 7) % 16] + SIGN0(m[(i - 15) % 16]) + m[(i - 16) % 16];
         // Note : SHA384 uses the SHA512 constants.
-        auto temp0 = h + EP1(e) + CH(e, f, g) + SHA512Constants::RoundConstants[i] + m[i];
+        auto temp0 = h + EP1(e) + CH(e, f, g) + SHA512Constants::RoundConstants[i] + m[i % 16];
         auto temp1 = EP0(a) + MAJ(a, b, c);
         h = g;
         g = f;
@@ -333,15 +330,11 @@ SHA384::DigestType SHA384::peek()
 
 inline void SHA512::transform(u8 const* data)
 {
-    u64 m[80];
+    u64 m[16];
 
     size_t i = 0;
     for (size_t j = 0; i < 16; ++i, j += 8) {
         m[i] = ((u64)data[j] << 56) | ((u64)data[j + 1] << 48) | ((u64)data[j + 2] << 40) | ((u64)data[j + 3] << 32) | ((u64)data[j + 4] << 24) | ((u64)data[j + 5] << 16) | ((u64)data[j + 6] << 8) | (u64)data[j + 7];
-    }
-
-    for (; i < Rounds; ++i) {
-        m[i] = SIGN1(m[i - 2]) + m[i - 7] + SIGN0(m[i - 15]) + m[i - 16];
     }
 
     auto a = m_state[0], b = m_state[1],
@@ -350,7 +343,10 @@ inline void SHA512::transform(u8 const* data)
          g = m_state[6], h = m_state[7];
 
     for (i = 0; i < Rounds; ++i) {
-        auto temp0 = h + EP1(e) + CH(e, f, g) + SHA512Constants::RoundConstants[i] + m[i];
+        if (i >= 16)
+            m[i % 16] = SIGN1(m[(i - 2) % 16]) + m[(i - 7) % 16] + SIGN0(m[(i - 15) % 16]) + m[(i - 16) % 16];
+
+        auto temp0 = h + EP1(e) + CH(e, f, g) + SHA512Constants::RoundConstants[i] + m[i % 16];
         auto temp1 = EP0(a) + MAJ(a, b, c);
         h = g;
         g = f;
