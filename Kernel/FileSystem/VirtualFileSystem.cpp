@@ -873,7 +873,7 @@ ErrorOr<void> VirtualFileSystem::symlink(VFSRootContext const& vfs_root_context,
 
     auto inode = TRY(parent_inode.create_child(basename, S_IFLNK | 0644, 0, credentials.euid(), credentials.egid()));
 
-    auto target_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((u8 const*)target.characters_without_null_termination()));
+    auto target_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((u8 const*)target.characters_without_null_termination()), target.length());
     TRY(inode->write_bytes(0, target.length(), target_buffer, nullptr));
     return {};
 }

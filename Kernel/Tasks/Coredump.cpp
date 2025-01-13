@@ -162,7 +162,7 @@ ErrorOr<void> Coredump::write_elf_header()
     elf_file_header.e_shnum = 0;
     elf_file_header.e_shstrndx = SHN_UNDEF;
 
-    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(Elf_Ehdr)));
+    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header), sizeof(Elf_Ehdr)), sizeof(Elf_Ehdr)));
 
     return {};
 }
@@ -198,7 +198,7 @@ ErrorOr<void> Coredump::write_program_headers(size_t notes_size)
 
         offset += phdr.p_filesz;
 
-        [[maybe_unused]] auto rc = m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&phdr)), sizeof(Elf_Phdr));
+        [[maybe_unused]] auto rc = m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&phdr), sizeof(Elf_Phdr)), sizeof(Elf_Phdr));
     }
 
     Elf_Phdr notes_pheader {};
@@ -211,7 +211,7 @@ ErrorOr<void> Coredump::write_program_headers(size_t notes_size)
     notes_pheader.p_align = 0;
     notes_pheader.p_flags = 0;
 
-    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(Elf_Phdr)));
+    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader), sizeof(Elf_Phdr)), sizeof(Elf_Phdr)));
 
     return {};
 }
@@ -259,7 +259,7 @@ ErrorOr<void> Coredump::write_regions()
                     if (page)
                         return UserOrKernelBuffer::for_user_buffer(reinterpret_cast<uint8_t*>((region.vaddr().as_ptr() + (i * PAGE_SIZE))), PAGE_SIZE);
                     // If the current page is not backed by a physical page, we zero it in the coredump file.
-                    return UserOrKernelBuffer::for_kernel_buffer(zero_buffer);
+                    return UserOrKernelBuffer::for_kernel_buffer(zero_buffer, PAGE_SIZE);
                 }();
                 TRY(src_buffer.value().read(buffer->bytes().slice(i * PAGE_SIZE, PAGE_SIZE)));
             }
@@ -267,7 +267,7 @@ ErrorOr<void> Coredump::write_regions()
             return {};
         }));
 
-        TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(buffer->data()), buffer->size()));
+        TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(*buffer), buffer->size()));
     }
 
     return {};
@@ -275,7 +275,7 @@ ErrorOr<void> Coredump::write_regions()
 
 ErrorOr<void> Coredump::write_notes_segment(ReadonlyBytes notes_segment)
 {
-    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(notes_segment.data())), notes_segment.size()));
+    TRY(m_description->write(UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(notes_segment.data()), notes_segment.size()), notes_segment.size()));
     return {};
 }
 

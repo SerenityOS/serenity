@@ -210,7 +210,7 @@ void Console::write_control_message(ControlMessage message)
     PhysicalAddress start_of_chunk;
     size_t length_of_chunk;
 
-    auto data = UserOrKernelBuffer::for_kernel_buffer((u8*)&message);
+    auto data = UserOrKernelBuffer::for_kernel_buffer((u8*)&message, sizeof(ControlMessage));
     while (!m_control_transmit_buffer->copy_data_in(data, 0, sizeof(message), start_of_chunk, length_of_chunk)) {
         ringbuffer_lock.unlock();
         m_control_wait_queue.wait_forever();

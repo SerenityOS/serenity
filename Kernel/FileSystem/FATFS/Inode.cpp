@@ -226,11 +226,11 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
 
     u8 buffer[512];
     VERIFY(fs().m_device_block_size <= sizeof(buffer));
-    auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
+    auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer, 512);
 
     for (BlockBasedFileSystem::BlockIndex block : block_list) {
         dbgln_if(FAT_DEBUG, "FATInode[{}]::read_block_list(): reading block: {}", identifier(), block);
-        TRY(fs().read_block(block, &buf, sizeof(buffer)));
+        TRY(fs().read_block(block, buf, sizeof(buffer)));
         TRY(builder.append((char const*)buffer, fs().m_device_block_size));
     }
 
@@ -454,7 +454,7 @@ ErrorOr<Vector<FATEntryLocation>> FATInode::allocate_entries(u32 count)
 
             FATEntry end_entry {};
             end_entry.filename[0] = end_entry_byte;
-            TRY(fs().write_block(block_list[block_index], UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&end_entry)), sizeof(FATEntry), entry_index * sizeof(FATEntry)));
+            TRY(fs().write_block(block_list[block_index], UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&end_entry), sizeof(FATEntry)), sizeof(FATEntry), entry_index * sizeof(FATEntry)));
             break;
         }
     }
@@ -476,7 +476,7 @@ ErrorOr<Vector<FATEntryLocation>> FATInode::allocate_entries(u32 count)
 
         FATEntry end_entry {};
         end_entry.filename[0] = end_entry_byte;
-        TRY(fs().write_block(block_list[new_block_index], UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&end_entry)), sizeof(FATEntry), entry_index * sizeof(FATEntry)));
+        TRY(fs().write_block(block_list[new_block_index], UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&end_entry), sizeof(FATEntry)), sizeof(FATEntry), entry_index * sizeof(FATEntry)));
     }
 
     VERIFY(locations.size() == count);
@@ -512,7 +512,7 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t count, UserOrKe
 
         dbgln_if(FAT_DEBUG, "FATInode[{}]::read_bytes_locked(): Reading {} byte(s) from block {} at offset {}", identifier(), to_read, block_list[block_index], offset_into_block);
 
-        TRY(fs().read_block(block_list[block_index], &buffer_offset, to_read, offset_into_block));
+        TRY(fs().read_block(block_list[block_index], buffer_offset, to_read, offset_into_block));
 
         nread += to_read;
         remaining_count -= to_read;
@@ -679,16 +679,16 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
         }
 
         auto block = BlockBasedFileSystem::BlockIndex { fs().first_block_of_cluster(allocated_cluster).start_block.value() };
-        TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&current_directory)), sizeof(FATEntry), 0));
-        TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&parent_directory)), sizeof(FATEntry), sizeof(FATEntry)));
+        TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&current_directory), sizeof(FATEntry)), sizeof(FATEntry), 0));
+        TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&parent_directory), sizeof(FATEntry)), sizeof(FATEntry), sizeof(FATEntry)));
     }
 
     // FIXME: If we fail here we should clean up the entries we wrote
-    TRY(fs().write_block(entries[lfn_entries.size()].block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&entry)), sizeof(FATEntry), entries[lfn_entries.size()].entry * sizeof(FATEntry)));
+    TRY(fs().write_block(entries[lfn_entries.size()].block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&entry), sizeof(FATEntry)), sizeof(FATEntry), entries[lfn_entries.size()].entry * sizeof(FATEntry)));
 
     for (u32 i = 0; i < lfn_entries.size(); i++) {
         auto location = entries[lfn_entries.size() - i - 1];
-        TRY(fs().write_block(location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&lfn_entries[i])), sizeof(FATLongFileNameEntry), location.entry * sizeof(FATLongFileNameEntry)));
+        TRY(fs().write_block(location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&lfn_entries[i]), sizeof(FATLongFileNameEntry)), sizeof(FATLongFileNameEntry), location.entry * sizeof(FATLongFileNameEntry)));
     }
 
     return TRY(FATInode::create(fs(), entry, entries[lfn_entries.size()], lfn_entries));
@@ -730,11 +730,11 @@ ErrorOr<void> FATInode::add_child(Inode& inode, StringView name, mode_t mode)
     auto entries = TRY(allocate_entries(lfn_entries.size() + 1));
 
     // FIXME: If we fail here we should clean up the entries we wrote
-    TRY(fs().write_block(entries[lfn_entries.size()].block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&entry)), sizeof(FATEntry), entries[lfn_entries.size()].entry * sizeof(FATEntry)));
+    TRY(fs().write_block(entries[lfn_entries.size()].block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&entry), sizeof(FATEntry)), sizeof(FATEntry), entries[lfn_entries.size()].entry * sizeof(FATEntry)));
 
     for (u32 i = 0; i < lfn_entries.size(); i++) {
         auto location = entries[lfn_entries.size() - i - 1];
-        TRY(fs().write_block(location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&lfn_entries[i])), sizeof(FATLongFileNameEntry), location.entry * sizeof(FATLongFileNameEntry)));
+        TRY(fs().write_block(location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&lfn_entries[i]), sizeof(FATLongFileNameEntry)), sizeof(FATLongFileNameEntry), location.entry * sizeof(FATLongFileNameEntry)));
     }
 
     return {};
@@ -783,10 +783,10 @@ ErrorOr<void> FATInode::remove_child_impl(StringView name, FreeClusters free_clu
                 // FIXME: If it's the last entry move the end entry instead of unused entries
                 FATEntry unused_entry {};
                 unused_entry.filename[0] = unused_entry_byte;
-                TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&unused_entry)), sizeof(FATEntry), block_entry * sizeof(FATEntry)));
+                TRY(fs().write_block(block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&unused_entry), sizeof(FATEntry)), sizeof(FATEntry), block_entry * sizeof(FATEntry)));
 
                 for (auto const& lfn_entry_location : lfn_entry_locations)
-                    TRY(fs().write_block(lfn_entry_location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&unused_entry)), sizeof(FATEntry), lfn_entry_location.entry * sizeof(FATEntry)));
+                    TRY(fs().write_block(lfn_entry_location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&unused_entry), sizeof(FATEntry)), sizeof(FATEntry), lfn_entry_location.entry * sizeof(FATEntry)));
 
                 if (name == "."sv || name == ".."sv || free_clusters == FreeClusters::No)
                     return {};
@@ -861,7 +861,7 @@ ErrorOr<void> FATInode::resize(u64 size)
         u64 clear_from = old_size;
         u8 zero_buffer[PAGE_SIZE] {};
         while (bytes_to_clear) {
-            auto nwritten = TRY(write_bytes_locked(clear_from, min(static_cast<u64>(sizeof(zero_buffer)), bytes_to_clear), UserOrKernelBuffer::for_kernel_buffer(zero_buffer), nullptr));
+            auto nwritten = TRY(write_bytes_locked(clear_from, min(static_cast<u64>(sizeof(zero_buffer)), bytes_to_clear), UserOrKernelBuffer::for_kernel_buffer(zero_buffer, PAGE_SIZE), nullptr));
             VERIFY(nwritten != 0);
             bytes_to_clear -= nwritten;
             clear_from += nwritten;
@@ -890,7 +890,7 @@ ErrorOr<void> FATInode::flush_metadata()
 
     dbgln_if(FAT_DEBUG, "FATInode[{}]::flush_metadata(): Writing entry at block {}, entry {} (size: {}, cluster_low: {}, cluster_high: {})", identifier().index(), m_inode_metadata_location.block, m_inode_metadata_location.entry, m_entry.file_size, m_entry.first_cluster_low, m_entry.first_cluster_high);
 
-    TRY(fs().write_block(m_inode_metadata_location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&m_entry)), sizeof(FATEntry), m_inode_metadata_location.entry * sizeof(FATEntry)));
+    TRY(fs().write_block(m_inode_metadata_location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&m_entry), sizeof(FATEntry)), sizeof(FATEntry), m_inode_metadata_location.entry * sizeof(FATEntry)));
 
     set_metadata_dirty(false);
     return {};
