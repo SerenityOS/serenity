@@ -52,7 +52,7 @@ Sheet::Sheet(Workbook& workbook)
     global_object().define_direct_property("thisSheet", &global_object(), JS::default_attributes); // Self-reference is unfortunate, but required.
 
     // Sadly, these have to be evaluated once per sheet.
-    constexpr auto runtime_file_path = "/res/js/Spreadsheet/runtime.js"sv;
+    constexpr auto runtime_file_path = "/usr/share/Spreadsheet/runtime.js"sv;
     auto file_or_error = Core::File::open(runtime_file_path, Core::File::OpenMode::Read);
     if (!file_or_error.is_error()) {
         auto buffer = file_or_error.value()->read_until_eof().release_value_but_fixme_should_propagate_errors();
