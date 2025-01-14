@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, cflip <cflip@cflip.net>
+ * Copyright (c) 2025, RatcheT2497 <ratchetnumbers@proton.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,15 +10,17 @@
 #include <AK/RefPtr.h>
 #include <LibGUI/SettingsWindow.h>
 
+namespace ClockSettings {
+
 class ClockSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(ClockSettingsWidget)
 
 public:
     static ErrorOr<NonnullRefPtr<ClockSettingsWidget>> try_create();
+    ErrorOr<void> initialize();
 
 private:
     ClockSettingsWidget() = default;
-    ErrorOr<void> setup();
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
@@ -34,3 +37,5 @@ private:
 
     ByteString m_time_format;
 };
+
+}
