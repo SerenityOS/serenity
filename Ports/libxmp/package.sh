@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='libxmp'
-version='4.6.0'
+version='4.6.1'
 files=(
-    "https://github.com/libxmp/libxmp/releases/download/libxmp-${version}/libxmp-${version}.tar.gz#2d3c45fe523b50907e89e60f9a3b7f4cc9aab83ec9dbba7743eaffbcdcb35ea6"
+    "https://github.com/libxmp/libxmp/releases/download/libxmp-${version}/libxmp-${version}.tar.gz#af605e72c83b24abaf03269347e24ebc3fc06cd7b495652a2c619c1f514bc5cb"
 )
 useconfigure='true'
 use_fresh_config_sub='false'
