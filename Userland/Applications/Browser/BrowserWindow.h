@@ -8,7 +8,7 @@
 #pragma once
 
 #include "BookmarksBarWidget.h"
-#include "Tab.h"
+#include "BrowserTabWidget.h"
 #include "WindowActions.h"
 #include <LibConfig/Listener.h>
 #include <LibGUI/ActionGroup.h>
@@ -18,18 +18,20 @@
 
 namespace Browser {
 
-class Tab;
+class BrowserTabWidget;
+class BrowserWindowWidget;
 
 class BrowserWindow final : public GUI::Window
     , public Config::Listener {
-    C_OBJECT(BrowserWindow);
+    C_OBJECT_ABSTRACT(BrowserWindow);
 
 public:
+    static ErrorOr<NonnullRefPtr<BrowserWindow>> try_create(WebView::CookieJar& cookie_jar, Vector<URL::URL> const& initial_urls, StringView man_file);
     virtual ~BrowserWindow() override = default;
 
     GUI::TabWidget& tab_widget();
-    Tab& active_tab();
-    Tab& create_new_tab(URL::URL const&, Web::HTML::ActivateTab activate);
+    BrowserTabWidget& active_tab();
+    ErrorOr<NonnullRefPtr<BrowserTabWidget>> create_new_tab(URL::URL const&, Web::HTML::ActivateTab activate);
     void create_new_window(URL::URL const&);
 
     GUI::Action& go_back_action() { return *m_go_back_action; }
@@ -52,11 +54,11 @@ public:
     void broadcast_window_size(Gfx::IntSize);
 
 private:
-    BrowserWindow(WebView::CookieJar&, Vector<URL::URL> const&, StringView const);
+    BrowserWindow(WebView::CookieJar&, Vector<URL::URL> const&, StringView const, NonnullRefPtr<BrowserWindowWidget> window_widget);
 
     void build_menus(StringView const);
     ErrorOr<void> load_search_engines(GUI::Menu& settings_menu);
-    void set_window_title_for_tab(Tab const&);
+    void set_window_title_for_tab(BrowserTabWidget const&);
 
     virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override;
     virtual void config_bool_did_change(StringView domain, StringView group, StringView key, bool value) override;
