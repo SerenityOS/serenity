@@ -299,7 +299,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         // disable CMAC
         out8(REG_IBCR2, in8(REG_IBCR2) & ~1);
 
-        while ((in32(REG_IBISR0) & 0x2) != 0)
+        while ((in8(REG_IBISR0) & 0x2) != 0)
             Processor::wait_check();
 
         out8(REG_IBISR0, in8(REG_IBISR0) | 0x20);
@@ -314,7 +314,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         while ((in32(REG_TXCFG) & TXCFG_EMPTY) == 0)
             Processor::wait_check();
 
-        while ((in32(REG_MCU) & (MCU_RX_EMPTY | MCU_TX_EMPTY)) == 0)
+        while ((in8(REG_MCU) & (MCU_RX_EMPTY | MCU_TX_EMPTY)) == 0)
             Processor::wait_check();
 
         out8(REG_COMMAND, in8(REG_COMMAND) & ~(COMMAND_RX_ENABLE | COMMAND_TX_ENABLE));
@@ -325,7 +325,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         data &= ~(1 << 14);
         ocp_out(0xe8de, data);
 
-        while ((in32(REG_MCU) & MCU_LINK_LIST_READY) == 0)
+        while ((in8(REG_MCU) & MCU_LINK_LIST_READY) == 0)
             Processor::wait_check();
 
         // vendor magic values ???
@@ -333,7 +333,7 @@ UNMAP_AFTER_INIT ErrorOr<void> RTL8168NetworkAdapter::initialize(Badge<Networkin
         data |= (1 << 15);
         ocp_out(0xe8de, data);
 
-        while ((in32(REG_MCU) & MCU_LINK_LIST_READY) == 0)
+        while ((in8(REG_MCU) & MCU_LINK_LIST_READY) == 0)
             Processor::wait_check();
     }
 
