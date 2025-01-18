@@ -7,10 +7,14 @@
 #include "JPEG2000Boxes.h"
 #include <AK/Function.h>
 
+// Core coding system spec (.jp2 format): T-REC-T.800-201511-S!!PDF-E.pdf available here:
+// https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-T.800-201511-S!!PDF-E&type=items
+
 namespace Gfx::ISOBMFF {
 
 ErrorOr<void> JPEG2000HeaderBox::read_from_stream(BoxStream& stream)
 {
+    // I.5.3 JP2 Header box (superbox)
     auto make_subbox = [](BoxType type, BoxStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
         switch (type) {
         case BoxType::JPEG2000ChannelDefinitionBox:
@@ -37,6 +41,7 @@ void JPEG2000HeaderBox::dump(String const& prepend) const
 
 ErrorOr<void> JPEG2000ImageHeaderBox::read_from_stream(BoxStream& stream)
 {
+    // I.5.3.1 Image Header box
     height = TRY(stream.read_value<BigEndian<u32>>());
     width = TRY(stream.read_value<BigEndian<u32>>());
     num_components = TRY(stream.read_value<BigEndian<u16>>());
@@ -66,6 +71,7 @@ void JPEG2000ImageHeaderBox::dump(String const& prepend) const
 
 ErrorOr<void> JPEG2000ColorSpecificationBox::read_from_stream(BoxStream& stream)
 {
+    // I.5.3.3 Colour Specification box
     method = TRY(stream.read_value<u8>());
     precedence = TRY(stream.read_value<i8>());
     approximation = TRY(stream.read_value<u8>());
@@ -106,6 +112,7 @@ void JPEG2000ColorSpecificationBox::dump(String const& prepend) const
 
 ErrorOr<void> JPEG2000ChannelDefinitionBox::read_from_stream(BoxStream& stream)
 {
+    // I.5.3.6 Channel Definition box
     u16 count = TRY(stream.read_value<BigEndian<u16>>());
     for (u32 i = 0; i < count; ++i) {
         Channel channel;
@@ -139,6 +146,7 @@ void JPEG2000ChannelDefinitionBox::dump(String const& prepend) const
 
 ErrorOr<void> JPEG2000ResolutionBox::read_from_stream(BoxStream& stream)
 {
+    // I.5.3.7 Resolution box (superbox)
     auto make_subbox = [](BoxType type, BoxStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
         switch (type) {
         case BoxType::JPEG2000CaptureResolutionBox:
@@ -179,6 +187,7 @@ void JPEG2000ResolutionSubboxBase::dump(String const& prepend) const
 
 ErrorOr<void> JPEG2000CaptureResolutionBox::read_from_stream(BoxStream& stream)
 {
+    // I.5.3.7.1 Capture Resolution box
     return JPEG2000ResolutionSubboxBase::read_from_stream(stream);
 }
 
@@ -189,6 +198,7 @@ void JPEG2000CaptureResolutionBox::dump(String const& prepend) const
 
 ErrorOr<void> JPEG2000DefaultDisplayResolutionBox::read_from_stream(BoxStream& stream)
 {
+    // I.5.3.7.2 Default Display Resolution box
     return JPEG2000ResolutionSubboxBase::read_from_stream(stream);
 }
 
@@ -199,6 +209,7 @@ void JPEG2000DefaultDisplayResolutionBox::dump(String const& prepend) const
 
 ErrorOr<void> JPEG2000ContiguousCodestreamBox::read_from_stream(BoxStream& stream)
 {
+    // I.5.4 Contiguous Codestream box
     // FIXME: It's wasteful to make a copy of all the image data here. Having just a ReadonlyBytes
     // or streaming it into the jpeg2000 decoder would be nicer.
     ByteBuffer local_codestream = TRY(ByteBuffer::create_uninitialized(stream.remaining()));
@@ -215,6 +226,7 @@ void JPEG2000ContiguousCodestreamBox::dump(String const& prepend) const
 
 ErrorOr<void> JPEG2000SignatureBox::read_from_stream(BoxStream& stream)
 {
+    // I.5.1 JPEG 2000 Signature box
     signature = TRY(stream.read_value<BigEndian<u32>>());
     return {};
 }
@@ -227,6 +239,7 @@ void JPEG2000SignatureBox::dump(String const& prepend) const
 
 ErrorOr<void> JPEG2000UUIDInfoBox::read_from_stream(BoxStream& stream)
 {
+    // I.7.3 UUID Info boxes (superbox)
     auto make_subbox = [](BoxType type, BoxStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
         switch (type) {
         case BoxType::JPEG2000UUIDListBox:
@@ -249,6 +262,7 @@ void JPEG2000UUIDInfoBox::dump(String const& prepend) const
 
 ErrorOr<void> JPEG2000UUIDListBox::read_from_stream(BoxStream& stream)
 {
+    // I.7.3.1 UUID List box
     u16 count = TRY(stream.read_value<BigEndian<u16>>());
     for (u32 i = 0; i < count; ++i) {
         Array<u8, 16> uuid;
@@ -280,6 +294,7 @@ ErrorOr<String> JPEG2000URLBox::url_as_string() const
 
 ErrorOr<void> JPEG2000URLBox::read_from_stream(BoxStream& stream)
 {
+    // I.7.3.2 Data Entry URL box
     version_number = TRY(stream.read_value<u8>());
     flag = TRY(stream.read_value<u8>()) << 16;
     flag |= TRY(stream.read_value<BigEndian<u16>>());

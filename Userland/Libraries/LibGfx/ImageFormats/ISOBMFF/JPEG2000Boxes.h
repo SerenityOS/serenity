@@ -50,7 +50,7 @@ struct JPEG2000ChannelDefinitionBox final : public Box {
     Vector<Channel> channels;
 };
 
-// I.5.3.7 Resolution box
+// I.5.3.7 Resolution box (superbox)
 struct JPEG2000ResolutionBox final : public SuperBox {
     BOX_SUBTYPE(JPEG2000ResolutionBox);
 };
