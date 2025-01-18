@@ -11,6 +11,6 @@
 void TaskbarFrame::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
-    painter.fill_rect(rect(), palette().window());
+    painter.fill_rect(rect(), palette().button());
     Frame::paint_event(event);
 }
