@@ -23,6 +23,8 @@ ErrorOr<void> JPEG2000HeaderBox::read_from_stream(BoxStream& stream)
             return TRY(JPEG2000ColorSpecificationBox::create_from_stream(stream));
         case BoxType::JPEG2000ImageHeaderBox:
             return TRY(JPEG2000ImageHeaderBox::create_from_stream(stream));
+        case BoxType::JPEG2000PaletteBox:
+            return TRY(JPEG2000PaletteBox::create_from_stream(stream));
         case BoxType::JPEG2000ResolutionBox:
             return TRY(JPEG2000ResolutionBox::create_from_stream(stream));
         default:
@@ -108,6 +110,63 @@ void JPEG2000ColorSpecificationBox::dump(String const& prepend) const
         outln("{}- enumerated_color_space = {}", prepend, enumerated_color_space);
     if (method == 2 || method == 3)
         outln("{}- icc_data = {} bytes", prepend, icc_data.size());
+}
+
+ErrorOr<void> JPEG2000PaletteBox::read_from_stream(BoxStream& stream)
+{
+    // I.5.3.4 Palette box
+    u16 number_of_entries = TRY(stream.read_value<BigEndian<u16>>());
+    u8 number_of_palette_columns = TRY(stream.read_value<u8>());
+
+    for (u8 i = 0; i < number_of_palette_columns; ++i) {
+        // Table I.13 – B^i values
+        BitDepth bit_depth;
+        u8 depth = TRY(stream.read_value<u8>());
+        bit_depth.depth = (depth & 0x7f) + 1;
+        bit_depth.is_signed = (depth & 0x80) != 0;
+        bit_depths.append(bit_depth);
+    }
+
+    for (u16 i = 0; i < number_of_entries; ++i) {
+        Color color;
+        for (auto const& bit_depth : bit_depths) {
+            i64 value = 0;
+            for (u8 j = 0; j < ceil_div(bit_depth.depth, static_cast<u8>(8)); ++j) {
+                u8 byte = TRY(stream.read_value<u8>());
+                value = (value << 8) | byte;
+            }
+
+            // Sign extend if needed.
+            if (bit_depth.is_signed && (value >> (bit_depth.depth - 1)))
+                value |= ~((1LL << bit_depth.depth) - 1);
+
+            color.append(value);
+        }
+        palette_entries.append(color);
+    }
+
+    return {};
+}
+
+void JPEG2000PaletteBox::dump(String const& prepend) const
+{
+    Box::dump(prepend);
+    outln("{}- number_of_entries = {}", prepend, palette_entries.size());
+    outln("{}- number_of_palette_columns = {}", prepend, bit_depths.size());
+
+    outln("{}- bit_depths", prepend);
+    for (auto const& bit_depth : bit_depths) {
+        outln("{}  - {}, {}", prepend, bit_depth.depth, bit_depth.is_signed ? "signed" : "unsigned");
+    }
+
+    outln("{}- palette_entries", prepend);
+    for (auto const& color : palette_entries) {
+        out("{}  - ", prepend);
+        for (auto value : color) {
+            out("{:#x} ", value);
+        }
+        outln();
+    }
 }
 
 ErrorOr<void> JPEG2000ChannelDefinitionBox::read_from_stream(BoxStream& stream)
