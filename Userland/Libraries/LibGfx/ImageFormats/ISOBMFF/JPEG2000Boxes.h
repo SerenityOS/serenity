@@ -38,6 +38,22 @@ struct JPEG2000ColorSpecificationBox final : public Box {
     ByteBuffer icc_data;              // Only set if method == 2
 };
 
+// I.5.3.4 Palette box
+struct JPEG2000PaletteBox final : public Box {
+    BOX_SUBTYPE(JPEG2000PaletteBox);
+
+    struct BitDepth {
+        u8 depth;
+        bool is_signed;
+    };
+    Vector<BitDepth> bit_depths;
+
+    // BitDepth::depth is at most 38 per spec (Table I.13).
+    // i64 is more than enough. Palettes don't have a ton of entries, so memory use here isn't critical.
+    using Color = Vector<i64, 4>;
+    Vector<Color> palette_entries;
+};
+
 // I.5.3.6 Channel Definition box
 struct JPEG2000ChannelDefinitionBox final : public Box {
     BOX_SUBTYPE(JPEG2000ChannelDefinitionBox);
