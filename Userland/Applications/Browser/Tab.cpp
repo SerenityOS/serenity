@@ -264,11 +264,9 @@ Tab::Tab(BrowserWindow& window)
     };
 
     view().on_link_click = [this](auto& url, auto& target, unsigned modifiers) {
-        if (target == "_blank" || modifiers == Mod_Ctrl) {
+        (void)target;
+        if (modifiers == Mod_Ctrl)
             on_tab_open_request(url);
-        } else {
-            load(url);
-        }
     };
 
     view().on_resource_status_change = [this](auto count_waiting) {
@@ -309,12 +307,12 @@ Tab::Tab(BrowserWindow& window)
 
     m_link_context_menu = GUI::Menu::construct();
     auto link_default_action = GUI::Action::create("&Open", g_icon_bag.go_to, [this](auto&) {
-        view().on_link_click(m_link_context_menu_url, "", 0);
+        load(m_link_context_menu_url);
     });
     m_link_context_menu->add_action(link_default_action);
     m_link_context_menu_default_action = link_default_action;
     m_link_context_menu->add_action(GUI::Action::create("Open in New &Tab", g_icon_bag.new_tab, [this](auto&) {
-        view().on_link_click(m_link_context_menu_url, "_blank", 0);
+        on_tab_open_request(m_link_context_menu_url);
     }));
     m_link_context_menu->add_separator();
     m_link_copy_action = GUI::Action::create("Copy &URL", g_icon_bag.copy, [this](auto&) {
@@ -349,10 +347,10 @@ Tab::Tab(BrowserWindow& window)
 
     m_image_context_menu = GUI::Menu::construct();
     m_image_context_menu->add_action(GUI::Action::create("&Open Image", g_icon_bag.filetype_image, [this](auto&) {
-        view().on_link_click(m_image_context_menu_url, "", 0);
+        load(m_image_context_menu_url);
     }));
     m_image_context_menu->add_action(GUI::Action::create("Open Image in New &Tab", g_icon_bag.new_tab, [this](auto&) {
-        view().on_link_click(m_image_context_menu_url, "_blank", 0);
+        on_tab_open_request(m_image_context_menu_url);
     }));
     m_image_context_menu->add_separator();
     m_image_context_menu->add_action(GUI::Action::create("&Copy Image", g_icon_bag.copy, [this](auto&) {
@@ -397,10 +395,10 @@ Tab::Tab(BrowserWindow& window)
     m_audio_context_menu->add_action(*m_media_context_menu_loop_action);
     m_audio_context_menu->add_separator();
     m_audio_context_menu->add_action(GUI::Action::create("&Open Audio", g_icon_bag.filetype_audio, [this](auto&) {
-        view().on_link_click(m_media_context_menu_url, "", 0);
+        load(m_media_context_menu_url);
     }));
     m_audio_context_menu->add_action(GUI::Action::create("Open Audio in New &Tab", g_icon_bag.new_tab, [this](auto&) {
-        view().on_link_click(m_media_context_menu_url, "_blank", 0);
+        on_tab_open_request(m_media_context_menu_url);
     }));
     m_audio_context_menu->add_separator();
     m_audio_context_menu->add_action(GUI::Action::create("Copy Audio &URL", g_icon_bag.copy, [this](auto&) {
@@ -420,10 +418,10 @@ Tab::Tab(BrowserWindow& window)
     m_video_context_menu->add_action(*m_media_context_menu_loop_action);
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(GUI::Action::create("&Open Video", g_icon_bag.filetype_video, [this](auto&) {
-        view().on_link_click(m_media_context_menu_url, "", 0);
+        load(m_media_context_menu_url);
     }));
     m_video_context_menu->add_action(GUI::Action::create("Open Video in New &Tab", g_icon_bag.new_tab, [this](auto&) {
-        view().on_link_click(m_media_context_menu_url, "_blank", 0);
+        on_tab_open_request(m_media_context_menu_url);
     }));
     m_video_context_menu->add_separator();
     m_video_context_menu->add_action(GUI::Action::create("Copy Video &URL", g_icon_bag.copy, [this](auto&) {
@@ -467,7 +465,7 @@ Tab::Tab(BrowserWindow& window)
     };
 
     view().on_link_middle_click = [this](auto& href, auto&, auto) {
-        view().on_link_click(href, "_blank", 0);
+        on_tab_open_request(href);
     };
 
     view().on_title_change = [this](auto const& title) {
