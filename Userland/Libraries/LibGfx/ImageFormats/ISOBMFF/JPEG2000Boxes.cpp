@@ -17,6 +17,8 @@ ErrorOr<void> JPEG2000HeaderBox::read_from_stream(BoxStream& stream)
     // I.5.3 JP2 Header box (superbox)
     auto make_subbox = [](BoxType type, BoxStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
         switch (type) {
+        case BoxType::JPEG2000BitsPerComponentBox:
+            return TRY(JPEG2000BitsPerComponentBox::create_from_stream(stream));
         case BoxType::JPEG2000ChannelDefinitionBox:
             return TRY(JPEG2000ChannelDefinitionBox::create_from_stream(stream));
         case BoxType::JPEG2000ColorSpecificationBox:
@@ -71,6 +73,28 @@ void JPEG2000ImageHeaderBox::dump(String const& prepend) const
     outln("{}- compression_type = {}", prepend, compression_type);
     outln("{}- is_colorspace_unknown = {}", prepend, is_colorspace_unknown);
     outln("{}- contains_intellectual_property_rights = {}", prepend, contains_intellectual_property_rights);
+}
+
+ErrorOr<void> JPEG2000BitsPerComponentBox::read_from_stream(BoxStream& stream)
+{
+    // I.5.3.2 Bits Per Component box
+    while (!stream.is_eof()) {
+        BitsPerComponent bits_per_component;
+        u8 depth = TRY(stream.read_value<u8>());
+        bits_per_component.depth = (depth & 0x7f) + 1;
+        bits_per_component.is_signed = (depth & 0x80) != 0;
+        bits_per_components.append(bits_per_component);
+    }
+    return {};
+}
+
+void JPEG2000BitsPerComponentBox::dump(String const& prepend) const
+{
+    Box::dump(prepend);
+    for (auto const& bits_per_component : bits_per_components) {
+        outln("{}- depth = {}", prepend, bits_per_component.depth);
+        outln("{}- is_signed = {}", prepend, bits_per_component.is_signed);
+    }
 }
 
 ErrorOr<void> JPEG2000ColorSpecificationBox::read_from_stream(BoxStream& stream)

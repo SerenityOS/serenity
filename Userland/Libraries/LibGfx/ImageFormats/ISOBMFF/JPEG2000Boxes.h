@@ -27,6 +27,17 @@ struct JPEG2000ImageHeaderBox final : public Box {
     u8 contains_intellectual_property_rights { 0 };
 };
 
+// I.5.3.2 Bits Per Component box
+struct JPEG2000BitsPerComponentBox final : public Box {
+    BOX_SUBTYPE(JPEG2000BitsPerComponentBox);
+
+    struct BitsPerComponent {
+        u8 depth;
+        bool is_signed;
+    };
+    Vector<BitsPerComponent> bits_per_components;
+};
+
 // I.5.3.3 Colour Specification box
 struct JPEG2000ColorSpecificationBox final : public Box {
     BOX_SUBTYPE(JPEG2000ColorSpecificationBox);
