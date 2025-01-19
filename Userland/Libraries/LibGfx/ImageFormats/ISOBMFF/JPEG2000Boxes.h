@@ -155,8 +155,8 @@ struct JPEG2000URLBox final : public Box {
 
     ErrorOr<String> url_as_string() const;
 
-    u8 version_number;
-    u32 flag;
+    u8 version_number { 0 };
+    u32 flag { 0 };
     ByteBuffer url_bytes;
 };
 
