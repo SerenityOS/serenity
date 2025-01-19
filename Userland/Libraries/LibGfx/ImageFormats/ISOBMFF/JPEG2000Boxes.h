@@ -54,6 +54,26 @@ struct JPEG2000PaletteBox final : public Box {
     Vector<Color> palette_entries;
 };
 
+// I.5.3.5 Component Mapping box
+struct JPEG2000ComponentMappingBox final : public Box {
+    BOX_SUBTYPE(JPEG2000ComponentMappingBox);
+
+    struct Mapping {
+        u16 component_index;
+
+        // "0: Direct use. This channel is created directly from an actual component in the codestream. The index of the
+        //     component mapped to this channel is specified in the CMP^i field for this channel."
+        // "1: Palette mapping. This channel is created by applying the palette to an actual component in the codestream. The
+        //     index of the component mapped into the palette is specified in the CMP^i field for this channel. The column from
+        //     the palette to use is specified in the PCOL^i field for this channel."
+        // "2 to 255: Reserved for ITU-T | ISO use"
+        u8 mapping_type;
+
+        u8 palette_component_index;
+    };
+    Vector<Mapping> component_mappings;
+};
+
 // I.5.3.6 Channel Definition box
 struct JPEG2000ChannelDefinitionBox final : public Box {
     BOX_SUBTYPE(JPEG2000ChannelDefinitionBox);

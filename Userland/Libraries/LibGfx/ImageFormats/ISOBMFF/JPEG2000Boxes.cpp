@@ -21,6 +21,8 @@ ErrorOr<void> JPEG2000HeaderBox::read_from_stream(BoxStream& stream)
             return TRY(JPEG2000ChannelDefinitionBox::create_from_stream(stream));
         case BoxType::JPEG2000ColorSpecificationBox:
             return TRY(JPEG2000ColorSpecificationBox::create_from_stream(stream));
+        case BoxType::JPEG2000ComponentMappingBox:
+            return TRY(JPEG2000ComponentMappingBox::create_from_stream(stream));
         case BoxType::JPEG2000ImageHeaderBox:
             return TRY(JPEG2000ImageHeaderBox::create_from_stream(stream));
         case BoxType::JPEG2000PaletteBox:
@@ -166,6 +168,30 @@ void JPEG2000PaletteBox::dump(String const& prepend) const
             out("{:#x} ", value);
         }
         outln();
+    }
+}
+
+ErrorOr<void> JPEG2000ComponentMappingBox::read_from_stream(BoxStream& stream)
+{
+    // I.5.3.5 Component Mapping box
+    // "the number of channels specified in the Component Mapping box is determined by the length of the box."
+    while (!stream.is_eof()) {
+        Mapping mapping;
+        mapping.component_index = TRY(stream.read_value<BigEndian<u16>>());
+        mapping.mapping_type = TRY(stream.read_value<u8>());
+        mapping.palette_component_index = TRY(stream.read_value<u8>());
+        component_mappings.append(mapping);
+    }
+    return {};
+}
+
+void JPEG2000ComponentMappingBox::dump(String const& prepend) const
+{
+    Box::dump(prepend);
+    for (auto const& mapping : component_mappings) {
+        outln("{}- component_index = {}", prepend, mapping.component_index);
+        outln("{}- mapping_type = {}", prepend, mapping.mapping_type);
+        outln("{}- palette_component_index = {}", prepend, mapping.palette_component_index);
     }
 }
 
