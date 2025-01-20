@@ -16,6 +16,9 @@ namespace Kernel {
 #define REG_EECD 0x0010
 #define REG_EEPROM 0x0014
 
+#define REG_RAL 0x5400
+#define REG_RAH 0x5404
+
 // EECD Register
 
 #define EECD_PRES 0x100
@@ -255,6 +258,21 @@ UNMAP_AFTER_INIT void E1000ENetworkAdapter::detect_eeprom()
     // Section 13.4.3 of https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf
     if (in32(REG_EECD) & EECD_PRES)
         m_has_eeprom.set();
+}
+
+UNMAP_AFTER_INIT void E1000ENetworkAdapter::read_mac_address()
+{
+    MACAddress mac {};
+    u32 hi = in32(REG_RAH);
+    u32 lo = in32(REG_RAL);
+    mac[0] = (u8)(lo >> (0));
+    mac[1] = (u8)(lo >> (1 * 8));
+    mac[2] = (u8)(lo >> (2 * 8));
+    mac[3] = (u8)(lo >> (3 * 8));
+    mac[4] = (u8)(hi >> (0));
+    mac[5] = (u8)(hi >> (1 * 8));
+
+    set_mac_address(mac);
 }
 
 UNMAP_AFTER_INIT u32 E1000ENetworkAdapter::read_eeprom(u8 address)

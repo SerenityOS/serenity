@@ -75,7 +75,7 @@ protected:
 
     virtual void detect_eeprom();
     virtual u32 read_eeprom(u8 address);
-    void read_mac_address();
+    virtual void read_mac_address();
 
     void initialize_rx_descriptors();
     void initialize_tx_descriptors();

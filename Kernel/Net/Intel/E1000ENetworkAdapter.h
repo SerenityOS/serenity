@@ -38,5 +38,6 @@ private:
 
     virtual void detect_eeprom() override;
     virtual u32 read_eeprom(u8 address) override;
+    virtual void read_mac_address() override;
 };
 }
