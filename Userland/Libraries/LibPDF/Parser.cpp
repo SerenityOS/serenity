@@ -452,8 +452,11 @@ PDFErrorOr<void> Parser::unfilter_stream(NonnullRefPtr<StreamObject> stream_obje
             for (size_t i = 0; i < decode_parms_array->size(); ++i) {
                 RefPtr<DictObject> decode_parms;
                 auto entry = decode_parms_array->at(i);
-                if (entry.has<NonnullRefPtr<Object>>())
-                    decode_parms = entry.get<NonnullRefPtr<Object>>()->cast<DictObject>();
+                if (entry.has<NonnullRefPtr<Object>>()) {
+                    auto entry_object = entry.get<NonnullRefPtr<Object>>();
+                    if (entry_object->is<DictObject>())
+                        decode_parms = entry_object->cast<DictObject>();
+                }
                 decode_parms_vector.append(decode_parms);
             }
         } else {
