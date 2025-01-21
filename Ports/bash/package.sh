@@ -15,6 +15,9 @@ icon_file='https://static-00.iconduck.com/assets.00/bash-icon-224x256-qo4a7ex6.p
 files=(
     "https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz#9599b22ecd1d5787ad7d3b7bf0c59f312b3396d1e281175dd1f8a4014da621ff"
 )
+depends=(
+    'readline'
+)
 
 build() {
     run_replace_in_file "s/define GETCWD_BROKEN 1/undef GETCWD_BROKEN/" config.h
