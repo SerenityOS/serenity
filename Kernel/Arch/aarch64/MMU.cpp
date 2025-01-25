@@ -284,9 +284,7 @@ void init_page_tables(PhysicalPtr flattened_devicetree_paddr)
         adjust_by_mapping_base(DeviceTree::s_fdt_storage)[o] = fdt_storage[o];
     }
 
-    *adjust_by_mapping_base(&g_boot_info.boot_method) = BootMethod::Multiboot1;
-    adjust_by_mapping_base(&g_boot_info.boot_method_specific)->pre_init.~PreInitBootInfo();
-    new (adjust_by_mapping_base(&g_boot_info.boot_method_specific.multiboot1)) Multiboot1BootInfo;
+    *adjust_by_mapping_base(&g_boot_info.boot_method) = BootMethod::PreInit;
 
     *adjust_by_mapping_base(&g_boot_info.flattened_devicetree_paddr) = PhysicalAddress { flattened_devicetree_paddr };
     *adjust_by_mapping_base(&g_boot_info.physical_to_virtual_offset) = calculate_physical_to_link_time_address_offset();
