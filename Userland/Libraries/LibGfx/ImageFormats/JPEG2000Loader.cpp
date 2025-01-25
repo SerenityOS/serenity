@@ -11,6 +11,7 @@
 #include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
 #include <LibGfx/ImageFormats/JPEG2000InverseDiscreteWaveletTransform.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
+#include <LibGfx/ImageFormats/JPEG2000ProgressionIterators.h>
 #include <LibTextCodec/Decoder.h>
 
 // Core coding system spec (.jp2 format): T-REC-T.800-201511-S!!PDF-E.pdf available here:
@@ -648,12 +649,77 @@ struct TilePartData {
     ReadonlyBytes data;
 };
 
+struct DecodedCodeBlock {
+    IntRect rect; // Confined to sub-band rect.
+
+    // Transient state used to read packet headers.
+
+    // B.10.4 Code-block inclusion
+    bool is_included { false };
+
+    // B.10.7.1 Single codeword segment
+    // "Lblock is a code-block state variable. [...] The value of Lblock is initially set to three."
+    u32 Lblock { 3 };
+
+    // Becomes true when the first packet including this codeblock is read.
+    bool has_been_included_in_previous_packet { false };
+
+    // Data read from packet headers.
+
+    // B.10.5 Zero bit-plane information
+    // "the number of missing most significant bit-planes, P, may vary from code-block to code-block;
+    //  these missing bit-planes are all taken to be zero."
+    u32 p { 0 };
+
+    struct Layer {
+        ReadonlyBytes data;
+        u8 number_of_coding_passes { 0 };
+    };
+    Vector<Layer, 1> layers;
+};
+
+struct DecodedPrecinct {
+    IntRect rect; // NOT confined to sub-band rect.
+
+    int num_code_blocks_wide { 0 };
+    int num_code_blocks_high { 0 };
+    Vector<DecodedCodeBlock> code_blocks;
+
+    // Transient state used to read packet headers.
+    Optional<JPEG2000::TagTree> code_block_inclusion_tree;
+    Optional<JPEG2000::TagTree> p_tree;
+};
+
+struct DecodedSubBand {
+    IntRect rect;
+
+    // These are the same for all three sub-bands at a given resolution level.
+    int num_precincts_wide { 0 };
+    int num_precincts_high { 0 };
+
+    Vector<DecodedPrecinct> precincts;
+};
+
+struct DecodedTileComponent {
+    IntRect rect;
+    DecodedSubBand nLL; // N_L LL in the spec, corresponds to resolution level 0.
+
+    using DecodedSubBands = Array<DecodedSubBand, 3>; // Ordered HL, LH, HH.
+    Vector<DecodedSubBands> decompositions;
+    static constexpr Array SubBandOrder { JPEG2000::SubBand::HorizontalHighpassVerticalLowpass, JPEG2000::SubBand::HorizontalLowpassVerticalHighpass, JPEG2000::SubBand::HorizontalHighpassVerticalHighpass };
+};
+
 struct TileData {
+    // Data from codestream markers.
     Optional<CodingStyleDefault> cod;
     Vector<CodingStyleComponent> cocs;
     Optional<QuantizationDefault> qcd;
     Vector<QuantizationComponent> qccs;
     Vector<TilePartData> tile_parts;
+
+    // Data used during decoding.
+    IntRect rect;
+    Vector<DecodedTileComponent> components;
 };
 
 struct JPEG2000LoadingContext {
@@ -679,6 +745,23 @@ struct JPEG2000LoadingContext {
     Vector<QuantizationComponent> qccs;
     Vector<Comment> coms;
     Vector<TileData> tiles;
+
+    CodingStyleParameters const& coding_style_parameters_for_component(TileData const& tile, size_t component_index) const
+    {
+        // Tile-part COC > Tile-part COD > Main COC > Main COD
+        for (auto const& coc : tile.cocs) {
+            if (coc.component_index == component_index)
+                return coc.parameters;
+        }
+        if (tile.cod.has_value())
+            return tile.cod->parameters;
+
+        for (auto const& coc : cocs) {
+            if (coc.component_index == component_index)
+                return coc.parameters;
+        }
+        return cod.parameters;
+    }
 };
 
 struct MarkerSegment {
@@ -1119,11 +1202,165 @@ ErrorOr<u32> TagTree::read_value(u32 x, u32 y, Function<ErrorOr<bool>()> const& 
 
 }
 
+static IntRect aligned_enclosing_rect(IntRect outer_rect, IntRect inner_rect, int width_increment, int height_increment)
+{
+    int new_x = (inner_rect.x() / width_increment) * width_increment;
+    int new_y = (inner_rect.y() / height_increment) * height_increment;
+    int new_right = inner_rect.width() == 0 ? new_x : ceil_div(inner_rect.right(), width_increment) * width_increment;
+    int new_bottom = inner_rect.height() == 0 ? new_y : ceil_div(inner_rect.bottom(), height_increment) * height_increment;
+    return IntRect::intersection(outer_rect, IntRect::from_two_points({ new_x, new_y }, { new_right, new_bottom }));
+}
+
+static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
+{
+    auto make_precinct = [&](DecodedSubBand const& sub_band, IntRect precinct_rect, int xcb_prime, int ycb_prime) -> ErrorOr<DecodedPrecinct> {
+        auto rect_covered_by_codeblocks = aligned_enclosing_rect(precinct_rect, sub_band.rect, 1 << xcb_prime, 1 << ycb_prime);
+        auto num_code_blocks_wide = rect_covered_by_codeblocks.width() / (1 << xcb_prime);
+        auto num_code_blocks_high = rect_covered_by_codeblocks.height() / (1 << ycb_prime);
+
+        DecodedPrecinct precinct;
+        precinct.rect = precinct_rect;
+        precinct.num_code_blocks_wide = num_code_blocks_wide;
+        precinct.num_code_blocks_high = num_code_blocks_high;
+        precinct.code_blocks.resize(num_code_blocks_wide * num_code_blocks_high);
+
+        dbgln_if(JPEG2000_DEBUG, "Precinct rect: {}, num_code_blocks_wide: {}, num_code_blocks_high: {}", precinct.rect, num_code_blocks_wide, num_code_blocks_high);
+
+        for (auto [code_block_index, current_block] : enumerate(precinct.code_blocks)) {
+            size_t code_block_x = code_block_index % num_code_blocks_wide;
+            size_t code_block_y = code_block_index / num_code_blocks_wide;
+
+            auto code_block_rect = IntRect { { code_block_x * (1 << xcb_prime), code_block_y * (1 << ycb_prime) }, { 1 << xcb_prime, 1 << ycb_prime } };
+            code_block_rect.set_location(code_block_rect.location() + rect_covered_by_codeblocks.location());
+
+            // B.7 Division of the sub-bands into code-blocks
+            // "NOTE – Code-blocks in the partition may extend beyond the boundaries of the sub-band coefficients. When this happens, only the
+            //  coefficients lying within the sub-band are coded using the method described in Annex D. The first stripe coded using this method
+            //  corresponds to the first four rows of sub-band coefficients in the code-block or to as many such rows as are present."
+            current_block.rect = code_block_rect.intersected(sub_band.rect);
+        }
+
+        if (!precinct.code_blocks.is_empty()) {
+            precinct.code_block_inclusion_tree = TRY(JPEG2000::TagTree::create(num_code_blocks_wide, num_code_blocks_high));
+            precinct.p_tree = TRY(JPEG2000::TagTree::create(num_code_blocks_wide, num_code_blocks_high));
+        }
+
+        return precinct;
+    };
+
+    auto make_sub_band = [&](TileData const& tile, int component_index, DecodedSubBand& sub_band, JPEG2000::SubBand sub_band_type, int r) -> ErrorOr<void> {
+        auto const& coding_parameters = context.coding_style_parameters_for_component(tile, component_index);
+        auto N_L = coding_parameters.number_of_decomposition_levels;
+
+        // Table F.1 – Decomposition level nb for sub-band b
+        // Note: The spec suggests that this ends with n_b = 1, but if N_L is 0, we have 0LL and nothing else.
+        auto n_b = [N_L](int r) { return r == 0 ? N_L : (N_L + 1 - r); };
+
+        sub_band.rect = context.siz.reference_grid_coordinates_for_sub_band(tile.rect, component_index, n_b(r), sub_band_type);
+
+        dbgln_if(JPEG2000_DEBUG, "Sub-band rect: {}", sub_band.rect);
+
+        // Compute tile size at resolution level r.
+        auto ll_rect = context.siz.reference_grid_coordinates_for_ll_band(tile.rect, component_index, r, N_L);
+
+        // B.6
+        // (B-16)
+        int num_precincts_wide = 0;
+        int num_precincts_high = 0;
+        int PPx = coding_parameters.precinct_sizes[r].PPx;
+        int PPy = coding_parameters.precinct_sizes[r].PPy;
+
+        if (ll_rect.width() != 0)
+            num_precincts_wide = ceil_div(ll_rect.right(), 1 << PPx) - (ll_rect.left() / (1 << PPx));
+        if (ll_rect.height() != 0)
+            num_precincts_high = ceil_div(ll_rect.bottom(), 1 << PPy) - (ll_rect.top() / (1 << PPy));
+
+        sub_band.num_precincts_wide = num_precincts_wide;
+        sub_band.num_precincts_high = num_precincts_high;
+
+        auto precinct_origin = IntPoint { ll_rect.x() & ~((1 << PPx) - 1), ll_rect.y() & ~((1 << PPy) - 1) };
+
+        if (r > 0) {
+            PPx--;
+            PPy--;
+            precinct_origin /= 2;
+        }
+
+        // B.7
+        // (B-17)
+        // (The r > 0 check was done right above already.)
+        int xcb_prime = min(coding_parameters.code_block_width_exponent, PPx);
+
+        // (B-18)
+        // (The r > 0 check was done right above already.)
+        int ycb_prime = min(coding_parameters.code_block_height_exponent, PPy);
+
+        for (int precinct_y_index = 0; precinct_y_index < num_precincts_high; ++precinct_y_index) {
+            for (int precinct_x_index = 0; precinct_x_index < num_precincts_wide; ++precinct_x_index) {
+                auto precinct_rect = IntRect({ precinct_x_index * (1 << PPx), precinct_y_index * (1 << PPy), 1 << PPx, 1 << PPy });
+                precinct_rect.set_location(precinct_rect.location() + precinct_origin);
+
+                sub_band.precincts.append(TRY(make_precinct(sub_band, precinct_rect, xcb_prime, ycb_prime)));
+            }
+        }
+
+        return {};
+    };
+
+    auto make_component = [&](TileData const& tile, int component_index) -> ErrorOr<DecodedTileComponent> {
+        DecodedTileComponent component;
+        component.rect = context.siz.reference_grid_coordinates_for_tile_component(tile.rect, component_index);
+
+        dbgln_if(JPEG2000_DEBUG, "making nLL for component {}", component_index);
+        TRY(make_sub_band(tile, component_index, component.nLL, JPEG2000::SubBand::HorizontalLowpassVerticalLowpass, 0));
+
+        auto N_L = context.coding_style_parameters_for_component(tile, component_index).number_of_decomposition_levels;
+        for (int resolution_level = 1; resolution_level <= N_L; ++resolution_level) {
+            DecodedTileComponent::DecodedSubBands sub_bands;
+            for (auto [sub_band_index, sub_band] : enumerate(DecodedTileComponent::SubBandOrder)) {
+                dbgln_if(JPEG2000_DEBUG, "r {} making sub-band {} for component {}", resolution_level, (int)sub_band, component_index);
+                TRY(make_sub_band(tile, component_index, sub_bands[sub_band_index], sub_band, resolution_level));
+            }
+            component.decompositions.append(move(sub_bands));
+        }
+
+        return component;
+    };
+
+    auto make_tile = [&](size_t tile_index, TileData& tile) -> ErrorOr<void> {
+        auto const& cod = tile.cod.value_or(context.cod);
+
+        if (cod.may_use_SOP_marker)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: SOP marker not yet implemented");
+        if (cod.may_use_EPH_marker)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: EPH marker not yet implemented");
+
+        auto pq = context.siz.tile_2d_index_from_1d_index(tile_index);
+        tile.rect = context.siz.reference_grid_coordinates_for_tile(pq);
+
+        for (auto [component_index, component] : enumerate(context.siz.components)) {
+            VERIFY(component.bit_depth() >= 1);
+            VERIFY(component.bit_depth() <= 38);
+            if (component.horizontal_separation != 1)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Horizontal separation not yet implemented");
+            if (component.vertical_separation != 1)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Vertical separation not yet implemented");
+            tile.components.append(TRY(make_component(tile, component_index)));
+        }
+
+        return {};
+    };
+
+    for (auto const& [tile_index, tile] : enumerate(context.tiles))
+        TRY(make_tile(tile_index, tile));
+
+    return {};
+}
+
 static ErrorOr<void> decode_image(JPEG2000LoadingContext& context)
 {
     TRY(parse_codestream_tile_headers(context));
-
-    // FIXME: Determine geometry such as number of code-blocks in each precinct.
+    TRY(compute_decoding_metadata(context));
     // FIXME: Read packet headers.
     // FIXME: Run bit-plane decoding algorithm to get coefficients.
     // FIXME: Run inverse wavelet transform on coefficients.
