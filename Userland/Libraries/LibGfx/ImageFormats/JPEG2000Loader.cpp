@@ -302,6 +302,15 @@ static ErrorOr<ImageAndTileSize> read_image_and_tile_size(ReadonlyBytes data)
     siz.tile_y_offset = TRY(stream.read_value<BigEndian<u32>>());
     u16 component_count = TRY(stream.read_value<BigEndian<u16>>()); // "Csiz" in spec.
 
+    // Table A.9 – Image and tile size parameter values
+    // Xsiz, Ysiz, XTsiz, YTsiz: 1 to 2^32-1.
+    if (siz.width == 0 || siz.height == 0 || siz.tile_width == 0 || siz.tile_height == 0)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid image or tile size");
+
+    // CSiz: 1 to 16384.
+    if (component_count < 1 || component_count > 16384)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid number of components");
+
     for (size_t i = 0; i < component_count; ++i) {
         ImageAndTileSize::ComponentInformation component;
         component.depth_and_sign = TRY(stream.read_value<u8>());
