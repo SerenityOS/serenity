@@ -12,7 +12,7 @@ PHDRS
     bss PT_LOAD FLAGS(PF_R | PF_W) ;
     dynamic_segment PT_LOAD FLAGS(PF_R | PF_W) ;
     dynamic PT_DYNAMIC FLAGS(PF_R | PF_W) ;
-    ksyms PT_LOAD FLAGS(PF_R) ;
+    ksyms PT_LOAD FLAGS(PF_R | PF_W) ;
 }
 
 SECTIONS
