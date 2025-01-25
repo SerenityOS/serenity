@@ -211,6 +211,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init([[maybe_
     }
     dmesgln("Starting SerenityOS...");
 
+    dmesgln("Boot method: {}", boot_info.boot_method);
+
 #if ARCH(X86_64)
     MM.unmap_prekernel();
 #endif

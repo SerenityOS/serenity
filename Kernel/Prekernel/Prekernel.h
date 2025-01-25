@@ -105,4 +105,22 @@ struct BootInfo {
 };
 
 }
+
+template<>
+struct AK::Formatter<Kernel::BootMethod> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Kernel::BootMethod boot_method)
+    {
+        using enum Kernel::BootMethod;
+        switch (boot_method) {
+        case PreInit:
+            return builder.put_literal("PreInit"sv);
+        case Multiboot1:
+            return builder.put_literal("Multiboot1"sv);
+        case EFI:
+            return builder.put_literal("EFI"sv);
+        }
+
+        VERIFY_NOT_REACHED();
+    }
+};
 #endif
