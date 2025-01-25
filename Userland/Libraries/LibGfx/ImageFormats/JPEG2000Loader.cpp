@@ -30,8 +30,8 @@
 // -------------------
 //
 // 1. An image is first divided into independent tiles
-// 2. Each tile is split into component tiles (one each for R, G, B, A)
-// 3. Each component tiles undergoes Discrete Wavelet Transform (DWT)
+// 2. Each tile is split into tile components (one each for R, G, B, A)
+// 3. Each tile component undergoes Discrete Wavelet Transform (DWT)
 //
 // Resolution Levels and Subbands
 // ------------------------------
