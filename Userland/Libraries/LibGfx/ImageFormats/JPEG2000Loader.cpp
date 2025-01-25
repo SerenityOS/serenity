@@ -720,6 +720,9 @@ struct TileData {
     // Data used during decoding.
     IntRect rect;
     Vector<DecodedTileComponent> components;
+
+    // FIXME: This will have to move and be reorganized come POC support.
+    OwnPtr<JPEG2000::ProgressionIterator> progression_iterator;
 };
 
 struct JPEG2000LoadingContext {
@@ -1351,8 +1354,37 @@ static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
         return {};
     };
 
-    for (auto const& [tile_index, tile] : enumerate(context.tiles))
+    auto make_progression_iterator = [&](JPEG2000LoadingContext const& context, TileData const& tile) -> ErrorOr<OwnPtr<JPEG2000::ProgressionIterator>> {
+        auto number_of_layers = tile.cod.value_or(context.cod).number_of_layers;
+
+        int max_number_of_decomposition_levels = 0;
+        for (size_t component_index = 0; component_index < context.siz.components.size(); ++component_index)
+            max_number_of_decomposition_levels = max(max_number_of_decomposition_levels, context.coding_style_parameters_for_component(tile, component_index).number_of_decomposition_levels);
+
+        auto number_of_precincts_from_resolution_level_and_component = [&](int r, int component_index) {
+            auto const& sub_band = r == 0 ? tile.components[component_index].nLL : tile.components[component_index].decompositions[r - 1][0];
+            return sub_band.num_precincts_wide * sub_band.num_precincts_high;
+        };
+
+        switch (tile.cod.value_or(context.cod).progression_order) {
+        case CodingStyleDefault::ProgressionOrder::LayerResolutionComponentPosition:
+            return make<JPEG2000::LayerResolutionLevelComponentPositionProgressionIterator>(number_of_layers, max_number_of_decomposition_levels, context.siz.components.size(), move(number_of_precincts_from_resolution_level_and_component));
+        case CodingStyleDefault::ResolutionLayerComponentPosition:
+            return make<JPEG2000::ResolutionLevelLayerComponentPositionProgressionIterator>(number_of_layers, max_number_of_decomposition_levels, context.siz.components.size(), move(number_of_precincts_from_resolution_level_and_component));
+        case CodingStyleDefault::ResolutionPositionComponentLayer:
+            return Error::from_string_literal("JPEG200Loader: ResolutionPositionComponentLayer progression order not yet supported");
+        case CodingStyleDefault::PositionComponentResolutionLayer:
+            return Error::from_string_literal("JPEG200Loader: PositionComponentResolutionLayer progression order not yet supported");
+        case CodingStyleDefault::ComponentPositionResolutionLayer:
+            return Error::from_string_literal("JPEG200Loader: ComponentPositionResolutionLayer progression order not yet supported");
+        }
+        VERIFY_NOT_REACHED();
+    };
+
+    for (auto const& [tile_index, tile] : enumerate(context.tiles)) {
         TRY(make_tile(tile_index, tile));
+        tile.progression_iterator = TRY(make_progression_iterator(context, tile));
+    }
 
     return {};
 }
