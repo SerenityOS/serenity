@@ -650,7 +650,7 @@ struct TileData {
 struct JPEG2000LoadingContext {
     enum class State {
         NotDecoded = 0,
-        DecodedTileHeaders,
+        DecodedImage,
         Error,
     };
     State state { State::NotDecoded };
@@ -1110,6 +1110,19 @@ ErrorOr<u32> TagTree::read_value(u32 x, u32 y, Function<ErrorOr<bool>()> const& 
 
 }
 
+static ErrorOr<void> decode_image(JPEG2000LoadingContext& context)
+{
+    TRY(parse_codestream_tile_headers(context));
+
+    // FIXME: Determine geometry such as number of code-blocks in each precinct.
+    // FIXME: Read packet headers.
+    // FIXME: Run bit-plane decoding algorithm to get coefficients.
+    // FIXME: Run inverse wavelet transform on coefficients.
+    // FIXME: Convert transformed coefficients to pixel values.
+
+    return {};
+}
+
 bool JPEG2000ImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     return data.starts_with(jp2_id_string) || data.starts_with(marker_id_string);
@@ -1142,9 +1155,9 @@ ErrorOr<ImageFrameDescriptor> JPEG2000ImageDecoderPlugin::frame(size_t index, Op
     if (m_context->state == JPEG2000LoadingContext::State::Error)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state < JPEG2000LoadingContext::State::DecodedTileHeaders) {
-        TRY(parse_codestream_tile_headers(*m_context));
-        m_context->state = JPEG2000LoadingContext::State::DecodedTileHeaders;
+    if (m_context->state < JPEG2000LoadingContext::State::DecodedImage) {
+        TRY(decode_image(*m_context));
+        m_context->state = JPEG2000LoadingContext::State::DecodedImage;
     }
 
     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Draw the rest of the owl");
