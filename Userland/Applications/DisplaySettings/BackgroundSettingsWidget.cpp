@@ -9,7 +9,6 @@
 #include "BackgroundSettingsWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
-#include <Applications/DisplaySettings/BackgroundSettingsGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
 #include <LibDesktop/Launcher.h>
@@ -31,29 +30,19 @@
 
 namespace DisplaySettings {
 
-ErrorOr<NonnullRefPtr<BackgroundSettingsWidget>> BackgroundSettingsWidget::try_create(bool& background_settings_changed)
+ErrorOr<void> BackgroundSettingsWidget::initialize()
 {
-    auto background_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BackgroundSettingsWidget(background_settings_changed)));
+    TRY(m_modes.try_append("Tile"_string));
+    TRY(m_modes.try_append("Center"_string));
+    TRY(m_modes.try_append("Stretch"_string));
 
-    TRY(background_settings_widget->m_modes.try_append("Tile"_string));
-    TRY(background_settings_widget->m_modes.try_append("Center"_string));
-    TRY(background_settings_widget->m_modes.try_append("Stretch"_string));
-
-    TRY(background_settings_widget->create_frame());
-    TRY(background_settings_widget->load_current_settings());
-
-    return background_settings_widget;
-}
-
-BackgroundSettingsWidget::BackgroundSettingsWidget(bool& background_settings_changed)
-    : m_background_settings_changed { background_settings_changed }
-{
+    TRY(create_frame());
+    TRY(load_current_settings());
+    return {};
 }
 
 ErrorOr<void> BackgroundSettingsWidget::create_frame()
 {
-    TRY(load_from_gml(background_settings_gml));
-
     m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 
     m_wallpaper_view = *find_descendant_of_type_named<GUI::IconView>("wallpaper_view");
@@ -113,7 +102,6 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
             return;
         m_wallpaper_view->selection().clear();
         m_monitor_widget->set_wallpaper(MUST(String::from_byte_string(response.release_value().filename())));
-        m_background_settings_changed = true;
         set_modified(true);
     };
 
@@ -123,7 +111,6 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
     bool first_mode_change = true;
     m_mode_combo->on_change = [this, first_mode_change](auto&, const GUI::ModelIndex& index) mutable {
         m_monitor_widget->set_wallpaper_mode(m_modes.at(index.row()));
-        m_background_settings_changed = !first_mode_change;
         first_mode_change = false;
         set_modified(true);
     };
@@ -134,7 +121,6 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
     bool first_color_change = true;
     m_color_input->on_change = [this, first_color_change]() mutable {
         m_monitor_widget->set_background_color(m_color_input->color());
-        m_background_settings_changed = !first_color_change;
         first_color_change = false;
         set_modified(true);
     };
@@ -172,7 +158,6 @@ ErrorOr<void> BackgroundSettingsWidget::load_current_settings()
 
     m_color_input->set_color(palette_desktop_color, GUI::AllowCallback::No);
     m_monitor_widget->set_background_color(palette_desktop_color);
-    m_background_settings_changed = false;
 
     return {};
 }
