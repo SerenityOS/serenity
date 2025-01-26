@@ -156,13 +156,6 @@ static ErrorOr<StartOfTilePart> read_start_of_tile_part(ReadonlyBytes data)
     return sot;
 }
 
-enum class SubBand {
-    HorizontalLowpassVerticalLowpass,   // "LL" in spec
-    HorizontalHighpassVerticalLowpass,  // "HL" in spec
-    HorizontalLowpassVerticalHighpass,  // "LH" in spec
-    HorizontalHighpassVerticalHighpass, // "HH" in spec
-};
-
 // A.5.1 Image and tile size (SIZ)
 struct ImageAndTileSize {
     // "Denotes capabilities that a decoder needs to properly decode the codestream."
@@ -261,17 +254,17 @@ struct ImageAndTileSize {
         return { trx0, try0, trx1 - trx0, try1 - try0 };
     }
 
-    IntRect reference_grid_coordinates_for_sub_band(IntRect tile_rect, int component_index, int n_b, SubBand sub_band) const
+    IntRect reference_grid_coordinates_for_sub_band(IntRect tile_rect, int component_index, int n_b, JPEG2000::SubBand sub_band) const
     {
         // B.5
         // Table B.1 – Quantities (xob, yob) for sub-band b
         int xob = 0;
         int yob = 0;
-        if (sub_band == SubBand::HorizontalHighpassVerticalLowpass || sub_band == SubBand::HorizontalHighpassVerticalHighpass)
+        if (sub_band == JPEG2000::SubBand::HorizontalHighpassVerticalLowpass || sub_band == JPEG2000::SubBand::HorizontalHighpassVerticalHighpass)
             xob = 1;
-        if (sub_band == SubBand::HorizontalLowpassVerticalHighpass || sub_band == SubBand::HorizontalHighpassVerticalHighpass)
+        if (sub_band == JPEG2000::SubBand::HorizontalLowpassVerticalHighpass || sub_band == JPEG2000::SubBand::HorizontalHighpassVerticalHighpass)
             yob = 1;
-        VERIFY(n_b >= 1 || (n_b == 0 && sub_band == SubBand::HorizontalLowpassVerticalLowpass));
+        VERIFY(n_b >= 1 || (n_b == 0 && sub_band == JPEG2000::SubBand::HorizontalLowpassVerticalLowpass));
         int o_scale = 1 << (n_b - 1);
 
         // (B-15)
@@ -285,7 +278,7 @@ struct ImageAndTileSize {
         return { tbx0, tby0, tbx1 - tbx0, tby1 - tby0 };
     }
 
-    IntRect reference_grid_coordinates_for_sub_band(IntPoint tile_2d_index, int component_index, int n_b, SubBand sub_band) const
+    IntRect reference_grid_coordinates_for_sub_band(IntPoint tile_2d_index, int component_index, int n_b, JPEG2000::SubBand sub_band) const
     {
         auto tile_rect = reference_grid_coordinates_for_tile(tile_2d_index);
         return reference_grid_coordinates_for_sub_band(tile_rect, component_index, n_b, sub_band);
