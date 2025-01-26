@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BitStream.h>
 #include <AK/Debug.h>
 #include <AK/Enumerate.h>
 #include <AK/MemoryStream.h>
@@ -765,6 +766,19 @@ struct JPEG2000LoadingContext {
         }
         return cod.parameters;
     }
+
+    ErrorOr<JPEG2000::ProgressionData> next_progression_data(TileData& tile) const
+    {
+        JPEG2000::ProgressionData progression_data;
+
+        do {
+            if (!tile.progression_iterator->has_next())
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: No more progression orders but packets left");
+            progression_data = tile.progression_iterator->next();
+        } while (progression_data.resolution_level > coding_style_parameters_for_component(tile, progression_data.component).number_of_decomposition_levels);
+
+        return progression_data;
+    }
 };
 
 struct MarkerSegment {
@@ -1389,11 +1403,274 @@ static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
     return {};
 }
 
+static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, TileData& tile, ReadonlyBytes data)
+{
+    auto progression_data = TRY(context.next_progression_data(tile));
+
+    FixedMemoryStream stream { data };
+    BigEndianInputBitStream bitstream { MaybeOwned { stream } };
+
+    // B.9 Packets
+    // "All compressed image data representing a specific tile, layer, component, resolution level and precinct appears in the
+    //  codestream in a contiguous segment called a packet. Packet data is aligned at 8-bit (one byte) boundaries."
+    auto const& coding_parameters = context.coding_style_parameters_for_component(tile, progression_data.component);
+    auto const r = progression_data.resolution_level;
+    u32 const current_layer_index = progression_data.layer;
+
+    // FIXME: Relax. Will need implementing D.5, D.6, D.7, and probably more.
+    if (coding_parameters.code_block_style != 0)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Code-block style not yet implemented");
+
+    // B.10 Packet header information coding
+    // "The packets have headers with the following information:
+    // - zero length packet;
+    // - code-block inclusion;
+    // - zero bit-plane information;
+    // - number of coding passes;
+    // - length of the code-block compressed image data from a given code-block."
+
+    // B.10.1 Bit-stuffing routine
+    // "If the value of the byte is 0xFF, the next byte includes an extra zero bit stuffed into the MSB. Once all bits of the
+    //  packet header have been assembled, the last byte is packed to the byte boundary and emitted."
+    u8 last_full_byte { 0 };
+    Function<ErrorOr<bool>()> read_bit = [&bitstream, &last_full_byte]() -> ErrorOr<bool> {
+        if (bitstream.is_aligned_to_byte_boundary()) {
+            if (last_full_byte == 0xFF) {
+                bool stuff_bit = TRY(bitstream.read_bit());
+                if (stuff_bit)
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid bit-stuffing");
+            }
+            last_full_byte = 0;
+        }
+        bool bit = TRY(bitstream.read_bit());
+        last_full_byte = (last_full_byte << 1) | bit;
+        return bit;
+    };
+
+    // Tag trees are used to store the code-block inclusion bits and the zero bit-plane information.
+    // B.10.2 Tag trees
+    // "At every node of this tree the minimum integer of the (up to four) nodes below it is recorded. [...]
+    //  Level 0 is the lowest level of the tag tree; it contains the top node. [...]
+    //  Each node has a [...] current value, [...] initialized to zero. A 0 bit in the tag tree means that the minimum
+    //  (or the value in the case of the highest level) is larger than the current value and a 1 bit means that the minimum
+    //  (or the value in the case of the highest level) is equal to the current value.
+    //  For each contiguous 0 bit in the tag tree the current value is incremented by one.
+    //  Nodes at higher levels cannot be coded until lower level node values are fixed (i.e, a 1 bit is coded). [...]
+    //  Only the information needed for the current code-block is stored at the current point in the packet header."
+    // The example in Figure B.13 / Table B.5 is useful to understand what exactly "only the information needed" means.
+
+    // The most useful section to understand the overall flow is B.10.8 Order of information within packet header,
+    // which has an example packet header bitstream, and the data layout:
+    // "bit for zero or non-zero length packet
+    //  for each sub-band (LL or HL, LH and HH)
+    //      for all code-blocks in this sub-band confined to the relevant precinct, in raster order
+    //          code-block inclusion bits (if not previously included then tag tree, else one bit)
+    //          if code-block included
+    //              if first instance of code-block
+    //                  zero bit-planes information
+    //              number of coding passes included
+    //              increase of code-block length indicator (Lblock)
+    //              for each codeword segment
+    //                  length of codeword segment"
+    // The below implements these steps.
+
+    // "bit for zero or non-zero length packet"
+    // B.10.3 Zero length packet
+    // "The first bit in the packet header denotes whether the packet has a length of zero (empty packet). The value 0 indicates a
+    //  zero length; no code-blocks are included in this case. The value 1 indicates a non-zero length; this case is considered
+    //  exclusively hereinafter."
+    bool is_non_zero = TRY(read_bit());
+    bool is_empty = !is_non_zero;
+    if (is_empty) {
+        VERIFY(last_full_byte != 0xFF); // Can't possibly have a stuffed bit here.
+        return stream.offset();
+    }
+
+    // " for each sub-band (LL or HL, LH and HH)"
+    struct TemporaryCodeBlockData {
+        u8 number_of_coding_passes { 0 };
+        u32 length_of_codeword_segment { 0 };
+    };
+    Array<Vector<TemporaryCodeBlockData>, 3> temporary_code_block_data {};
+
+    static constexpr Array level_0_sub_bands { JPEG2000::SubBand::HorizontalLowpassVerticalLowpass };
+    auto sub_bands = r == 0 ? level_0_sub_bands.span() : DecodedTileComponent::SubBandOrder.span();
+    for (auto [sub_band_index, sub_band] : enumerate(sub_bands)) {
+        auto& component = tile.components[progression_data.component];
+        auto& sub_band_data = r == 0 ? component.nLL : component.decompositions[r - 1][sub_band_index];
+        auto& precinct = sub_band_data.precincts[progression_data.precinct];
+
+        // B.9: "Only those code-blocks that contain samples from the relevant sub-band, confined to the precinct, have any representation in the packet."
+        if (precinct.num_code_blocks_wide == 0 || precinct.num_code_blocks_high == 0)
+            continue;
+
+        TRY(temporary_code_block_data[sub_band_index].try_resize(precinct.code_blocks.size()));
+        auto& code_block_inclusion_tree = precinct.code_block_inclusion_tree.value();
+        auto& p_tree = precinct.p_tree.value();
+
+        for (auto const& [code_block_index, current_block] : enumerate(precinct.code_blocks)) {
+            size_t code_block_x = code_block_index % precinct.num_code_blocks_wide;
+            size_t code_block_y = code_block_index / precinct.num_code_blocks_wide;
+
+            // B.10.4 Code-block inclusion
+            bool is_included;
+            if (current_block.has_been_included_in_previous_packet) {
+                // "For code-blocks that have been included in a previous packet, a single bit is used to represent the information, where
+                //  a 1 means that the code-block is included in this layer and a 0 means that it is not."
+                is_included = TRY(read_bit());
+            } else {
+                // "For code-blocks that have not been previously included in any packet, this information is signalled with a separate tag
+                //  tree code for each precinct as confined to a sub-band. The values in this tag tree are the number of the layer in which the
+                //  current code-block is first included."
+                is_included = TRY(code_block_inclusion_tree.read_value(code_block_x, code_block_y, read_bit, current_layer_index + 1)) <= current_layer_index;
+            }
+            dbgln_if(JPEG2000_DEBUG, "code-block inclusion: {}", is_included);
+            current_block.is_included = is_included;
+
+            if (!is_included)
+                continue;
+
+            // B.10.5 Zero bit-plane information
+            // "If a code-block is included for the first time,
+            //  [...] the number of actual bit-planes for which coding passes are generated is Mb – P
+            //  [...] these missing bit-planes are all taken to be zero
+            //  [...] The value of P is coded in the packet header with a separate tag tree for every precinct"
+            // And Annex E, E.1 Inverse quantization procedure:
+            // "Mb = G + exp_b - 1       (E-2)
+            //  where the number of guard bits G and the exponent exp_b are specified in the QCD or QCC marker segments (see A.6.4 and A.6.5)."
+            bool is_included_for_the_first_time = is_included && !current_block.has_been_included_in_previous_packet;
+            if (is_included_for_the_first_time) {
+                u32 p = TRY(p_tree.read_value(code_block_x, code_block_y, read_bit));
+                dbgln_if(JPEG2000_DEBUG, "zero bit-plane information: {}", p);
+                current_block.p = p;
+                current_block.has_been_included_in_previous_packet = true;
+            }
+
+            // B.10.6 Number of coding passes
+            // Table B.4 – Codewords for the number of coding passes for each code-block
+            u8 number_of_coding_passes = TRY([&]() -> ErrorOr<u8> {
+                if (!TRY(read_bit()))
+                    return 1;
+                if (!TRY(read_bit()))
+                    return 2;
+
+                u8 bits = TRY(read_bit());
+                bits = (bits << 1) | TRY(read_bit());
+                if (bits != 3)
+                    return 3 + bits;
+
+                bits = TRY(read_bit());
+                bits = (bits << 1) | TRY(read_bit());
+                bits = (bits << 1) | TRY(read_bit());
+                bits = (bits << 1) | TRY(read_bit());
+                bits = (bits << 1) | TRY(read_bit());
+                if (bits != 31)
+                    return 6 + bits;
+
+                bits = TRY(read_bit());
+                bits = (bits << 1) | TRY(read_bit());
+                bits = (bits << 1) | TRY(read_bit());
+                bits = (bits << 1) | TRY(read_bit());
+                bits = (bits << 1) | TRY(read_bit());
+                bits = (bits << 1) | TRY(read_bit());
+                bits = (bits << 1) | TRY(read_bit());
+                return 37 + bits;
+            }());
+            dbgln_if(JPEG2000_DEBUG, "number of coding passes: {}", number_of_coding_passes);
+            temporary_code_block_data[sub_band_index][code_block_index].number_of_coding_passes = number_of_coding_passes;
+
+            // B.10.7 Length of the compressed image data from a given code-block
+            // We currently always use B.10.7.1 Single codeword segment; see the comment below B.10.7.2 for why.
+
+            // B.10.7.1 Single codeword segment
+            // "A codeword segment is the number of bytes contributed to a packet by a code-block.
+            //  The length of a codeword segment is represented by a binary number of length:
+            //      bits = Lblock + ⌊log2(number_of_coding_passes)⌋
+            //  where Lblock is a code-block state variable. A separate Lblock is used for each code-block in the precinct.
+            //  The value of Lblock is initially set to three. The number of bytes contributed by each code-block is preceded by signalling
+            //  bits that increase the value of Lblock, as needed. A signalling bit of zero indicates the current value of Lblock is sufficient.
+            //  If there are k ones followed by a zero, the value of Lblock is incremented by k."
+            u32 k = 0;
+            while (TRY(read_bit()))
+                k++;
+            current_block.Lblock += k;
+            u32 bits = current_block.Lblock + (u32)floor(log2(number_of_coding_passes));
+            if (bits > 32)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Too many bits for length of codeword segment");
+            u32 length = 0;
+            for (u32 i = 0; i < bits; ++i) {
+                bool bit = TRY(read_bit());
+                length = (length << 1) | bit;
+            }
+            dbgln_if(JPEG2000_DEBUG, "length {}", length);
+            temporary_code_block_data[sub_band_index][code_block_index].length_of_codeword_segment = length;
+
+            // B.10.7.2 Multiple codeword segments
+            // "Multiple codeword segments arise when a termination occurs between coding passes which are included in the packet"
+            // "In normal operation (not selective arithmetic coding bypass), the arithmetic coder shall be terminated either
+            //  at the end of every coding pass or only at the end of every code-block (see D.4.1)"
+            // => This can only happen if uses_termination_on_each_coding_pass() or uses_selective_arithmetic_coding_bypass().
+            //    We currently reject files with code_block_style != 0, so this cannot currently happen.
+            //    Once we stop rejecting files with uses_termination_on_each_coding_pass() or uses_selective_arithmetic_coding_bypass()
+            //    set, we must implement this.
+            // FIXME: Implement.
+        }
+    }
+
+    if (last_full_byte == 0xFF) {
+        bool final_stuff_bit = TRY(read_bit());
+        if (final_stuff_bit)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid bit-stuffing");
+    }
+
+    // Done reading packet header. Set `data` on each codeblock on the packet.
+    u32 offset = stream.offset();
+    for (auto [sub_band_index, sub_band] : enumerate(sub_bands)) {
+        auto& component = tile.components[progression_data.component];
+        auto& sub_band_data = r == 0 ? component.nLL : component.decompositions[r - 1][sub_band_index];
+        auto& precinct = sub_band_data.precincts[progression_data.precinct];
+
+        for (auto const& [code_block_index, current_block] : enumerate(precinct.code_blocks)) {
+            auto& temporary_code_block_data_entry = temporary_code_block_data[sub_band_index][code_block_index];
+            auto block_data = data.slice(offset, temporary_code_block_data_entry.length_of_codeword_segment);
+            offset += temporary_code_block_data_entry.length_of_codeword_segment;
+            TRY(current_block.layers.try_append({ block_data, temporary_code_block_data_entry.number_of_coding_passes }));
+        }
+    }
+
+    return offset;
+}
+
+static ErrorOr<void> read_tile_part_packet_headers(JPEG2000LoadingContext& context, TileData& tile, TilePartData& tile_part)
+{
+    auto data = tile_part.data;
+    while (!data.is_empty()) {
+        auto length = TRY(read_one_packet_header(context, tile, data));
+        data = data.slice(length);
+    }
+
+    return {};
+}
+
+static ErrorOr<void> read_tile_packet_headers(JPEG2000LoadingContext& context, TileData& tile)
+{
+    for (auto& tile_part : tile.tile_parts)
+        TRY(read_tile_part_packet_headers(context, tile, tile_part));
+    return {};
+}
+
+static ErrorOr<void> read_packet_headers(JPEG2000LoadingContext& context)
+{
+    for (auto& tile : context.tiles)
+        TRY(read_tile_packet_headers(context, tile));
+    return {};
+}
+
 static ErrorOr<void> decode_image(JPEG2000LoadingContext& context)
 {
     TRY(parse_codestream_tile_headers(context));
     TRY(compute_decoding_metadata(context));
-    // FIXME: Read packet headers.
+    TRY(read_packet_headers(context));
     // FIXME: Run bit-plane decoding algorithm to get coefficients.
     // FIXME: Run inverse wavelet transform on coefficients.
     // FIXME: Convert transformed coefficients to pixel values.
