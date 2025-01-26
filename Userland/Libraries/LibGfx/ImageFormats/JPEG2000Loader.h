@@ -12,6 +12,13 @@ namespace Gfx {
 
 namespace JPEG2000 {
 
+enum class SubBand {
+    HorizontalLowpassVerticalLowpass,   // "LL" in spec
+    HorizontalHighpassVerticalLowpass,  // "HL" in spec
+    HorizontalLowpassVerticalHighpass,  // "LH" in spec
+    HorizontalHighpassVerticalHighpass, // "HH" in spec
+};
+
 struct TagTreeNode;
 class TagTree {
 public:
