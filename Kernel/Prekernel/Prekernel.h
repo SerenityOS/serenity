@@ -89,6 +89,8 @@ struct BootInfo {
     PhysicalAddress flattened_devicetree_paddr { 0 };
     size_t flattened_devicetree_size { 0 };
 
+    PhysicalAddress acpi_rsdp_paddr { 0 };
+
     size_t physical_to_virtual_offset { 0 };
     FlatPtr kernel_mapping_base { 0 };
     FlatPtr kernel_load_base { 0 };

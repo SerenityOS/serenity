@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Boot/BootInfo.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/ACPI/StaticParsing.h>
@@ -19,7 +20,12 @@ UNMAP_AFTER_INIT void initialize()
     if (feature_level == AcpiFeatureLevel::Disabled)
         return;
 
-    auto rsdp = MUST(StaticParsing::find_rsdp_in_platform_specific_memory_locations());
+    Optional<PhysicalAddress> rsdp;
+    if (!g_boot_info.acpi_rsdp_paddr.is_null())
+        rsdp = g_boot_info.acpi_rsdp_paddr;
+    else
+        rsdp = MUST(StaticParsing::find_rsdp_in_platform_specific_memory_locations());
+
     if (!rsdp.has_value())
         return;
 
