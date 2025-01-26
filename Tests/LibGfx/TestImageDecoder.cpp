@@ -14,6 +14,7 @@
 #include <LibGfx/ImageFormats/ILBMLoader.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/ImageFormats/JBIG2Loader.h>
+#include <LibGfx/ImageFormats/JPEG2000BitplaneDecoding.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
 #include <LibGfx/ImageFormats/JPEG2000ProgressionIterators.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
@@ -579,6 +580,45 @@ TEST_CASE(test_jpeg_malformed_frame)
         auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
         auto frame_or_error = plugin_decoder->frame(0);
         EXPECT(frame_or_error.is_error());
+    }
+}
+
+TEST_CASE(test_jpeg2000_spec_annex_j_10_bitplane_decoding)
+{
+    // J.10.4 Arithmetic-coded compressed data
+    {
+        // Table J.22 – Arithmetic decode of first code-block
+        constexpr Array input = to_array<u8>({ 0x01, 0x8F, 0x0D, 0xC8, 0x75, 0x5D });
+
+        Vector<i16> output;
+        output.resize(5);
+        Gfx::JPEG2000::Span2D<i16> result { output.span(), { 1, 5 }, 1 };
+
+        // 16, 9, 3 are from J.10.3 Packet headers, Table J.20 – Decoding first packet header.
+        TRY_OR_FAIL(Gfx::JPEG2000::decode_code_block(result, Gfx::JPEG2000::SubBand::HorizontalLowpassVerticalLowpass, 16, input, 9, 3));
+
+        EXPECT_EQ(output[0], -26);
+        EXPECT_EQ(output[1], -22);
+        EXPECT_EQ(output[2], -30);
+        EXPECT_EQ(output[3], -32);
+        EXPECT_EQ(output[4], -19);
+    }
+
+    {
+        // Table J.23 – Arithmetic decode of second code-block
+        constexpr Array input = to_array<u8>({ 0x0F, 0xB1, 0x76 });
+
+        Vector<i16> output;
+        output.resize(4);
+        Gfx::JPEG2000::Span2D<i16> result { output.span(), { 1, 4 }, 1 };
+
+        // 7, 10, 7 are from J.10.3 Packet headers, Table J.21 – Decoding second packet header.
+        TRY_OR_FAIL(Gfx::JPEG2000::decode_code_block(result, Gfx::JPEG2000::SubBand::HorizontalLowpassVerticalHighpass, 7, input, 10, 7));
+
+        EXPECT_EQ(output[0], 1);
+        EXPECT_EQ(output[1], 5);
+        EXPECT_EQ(output[2], 1);
+        EXPECT_EQ(output[3], 0);
     }
 }
 
