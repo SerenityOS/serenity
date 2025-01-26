@@ -10,6 +10,7 @@
 #include <AK/MemoryStream.h>
 #include <LibGfx/ImageFormats/ISOBMFF/JPEG2000Boxes.h>
 #include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
+#include <LibGfx/ImageFormats/JPEG2000BitplaneDecoding.h>
 #include <LibGfx/ImageFormats/JPEG2000InverseDiscreteWaveletTransform.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
 #include <LibGfx/ImageFormats/JPEG2000ProgressionIterators.h>
@@ -677,6 +678,29 @@ struct DecodedCodeBlock {
         u8 number_of_coding_passes { 0 };
     };
     Vector<Layer, 1> layers;
+
+    u32 number_of_coding_passes() const
+    {
+        u32 total = 0;
+        for (auto const& layer : layers)
+            total += layer.number_of_coding_passes;
+        return total;
+    }
+
+    ErrorOr<ByteBuffer> data_for_all_layers() const
+    {
+        size_t total_size = 0;
+        for (auto const& layer : layers)
+            total_size += layer.data.size();
+
+        ByteBuffer buffer = TRY(ByteBuffer::create_uninitialized(total_size));
+        size_t offset = 0;
+        for (auto const& layer : layers) {
+            memcpy(buffer.offset_pointer(offset), layer.data.data(), layer.data.size());
+            offset += layer.data.size();
+        }
+        return buffer;
+    }
 };
 
 struct DecodedPrecinct {
@@ -699,6 +723,9 @@ struct DecodedSubBand {
     int num_precincts_high { 0 };
 
     Vector<DecodedPrecinct> precincts;
+
+    // Valid after bitplane decoding. rect.width() * rect.height() == coefficients.size().
+    Vector<float> coefficients;
 };
 
 struct DecodedTileComponent {
@@ -765,6 +792,23 @@ struct JPEG2000LoadingContext {
                 return coc.parameters;
         }
         return cod.parameters;
+    }
+
+    QuantizationDefault const& quantization_parameters_for_component(TileData const& tile, size_t component_index)
+    {
+        // Tile-part QCC > Tile-part QCD > Main QCC > Main QCD
+        for (auto const& qcc : tile.qccs) {
+            if (qcc.component_index == component_index)
+                return qcc.qcd;
+        }
+        if (tile.qcd.has_value())
+            return tile.qcd.value();
+
+        for (auto const& qcc : qccs) {
+            if (qcc.component_index == component_index)
+                return qcc.qcd;
+        }
+        return qcd;
     }
 
     ErrorOr<JPEG2000::ProgressionData> next_progression_data(TileData& tile) const
@@ -1666,12 +1710,157 @@ static ErrorOr<void> read_packet_headers(JPEG2000LoadingContext& context)
     return {};
 }
 
+static u8 get_exponent(QuantizationDefault const& quantization_parameters, JPEG2000::SubBand sub_band, int resolution_level)
+{
+    switch (quantization_parameters.quantization_style) {
+    case QuantizationDefault::QuantizationStyle::NoQuantization: {
+        auto const& steps = quantization_parameters.step_sizes.get<Vector<QuantizationDefault::ReversibleStepSize>>();
+        if (sub_band == JPEG2000::SubBand::HorizontalLowpassVerticalLowpass) {
+            VERIFY(resolution_level == 0);
+            return steps[0].exponent;
+        }
+        VERIFY(resolution_level > 0);
+        return steps[1 + (resolution_level - 1) * 3 + (int)sub_band - 1].exponent;
+    }
+    case QuantizationDefault::QuantizationStyle::ScalarDerived:
+    case QuantizationDefault::QuantizationStyle::ScalarExpounded: {
+        auto const& steps = quantization_parameters.step_sizes.get<Vector<QuantizationDefault::IrreversibleStepSize>>();
+
+        if (quantization_parameters.quantization_style == QuantizationDefault::QuantizationStyle::ScalarDerived) {
+            // Callers must use (E-5).
+            return steps[0].exponent;
+        }
+
+        if (sub_band == JPEG2000::SubBand::HorizontalLowpassVerticalLowpass) {
+            VERIFY(resolution_level == 0);
+            return steps[0].exponent;
+        }
+        VERIFY(resolution_level > 0);
+        return steps[1 + (resolution_level - 1) * 3 + (int)sub_band - 1].exponent;
+    }
+    }
+    VERIFY_NOT_REACHED();
+}
+
+static int compute_M_b(JPEG2000LoadingContext& context, TileData& tile, int component_index, JPEG2000::SubBand sub_band_type, int r, int N_L)
+{
+    // Annex E, E.1 Inverse quantization procedure:
+    // "Mb = G + exp_b - 1       (E-2)
+    //  where the number of guard bits G and the exponent exp_b are specified in the QCD or QCC marker segments (see A.6.4 and A.6.5)."
+    auto quantization_parameters = context.quantization_parameters_for_component(tile, component_index);
+    auto exponent = get_exponent(quantization_parameters, sub_band_type, r);
+    if (quantization_parameters.quantization_style == QuantizationDefault::QuantizationStyle::ScalarDerived) {
+        // Table F.1 – Decomposition level nb for sub-band b
+        // Note: The spec suggests that this ends with n_b = 1, but if N_L is 0, we have 0LL and nothing else.
+        int n_b = r == 0 ? N_L : (N_L + 1 - r);
+        // (E-5)
+        exponent = exponent - N_L + n_b;
+        // This is the same as `if (r != 0) exponent = exponent - (r - 1);`
+    }
+    return quantization_parameters.number_of_guard_bits + exponent - 1;
+}
+
+static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& context)
+{
+    auto copy_and_dequantize_if_needed = [&](JPEG2000::Span2D<float> output, Span<i16> input, QuantizationDefault const& quantization_parameters, JPEG2000::SubBand sub_band_type, int component_index, int r) {
+        int w = output.size.width();
+        int h = output.size.height();
+        VERIFY(w * h == static_cast<int>(input.size()));
+
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                float value = static_cast<float>(input[y * w + x]);
+
+                // E.1 Inverse quantization procedure
+                // The coefficients store qbar_b.
+                if (quantization_parameters.quantization_style != QuantizationDefault::QuantizationStyle::NoQuantization) {
+                    // E.1.1 Irreversible transformation
+                    auto R_I = context.siz.components[component_index].bit_depth();
+
+                    // Table E.1 – Sub-band gains
+                    auto log_2_gain_b = sub_band_type == JPEG2000::SubBand::HorizontalLowpassVerticalLowpass ? 0 : (sub_band_type == JPEG2000::SubBand::HorizontalHighpassVerticalLowpass || sub_band_type == JPEG2000::SubBand::HorizontalLowpassVerticalHighpass ? 1 : 2);
+                    auto R_b = R_I + log_2_gain_b;
+
+                    u16 mantissa;
+                    if (quantization_parameters.quantization_style == QuantizationDefault::QuantizationStyle::ScalarDerived) {
+                        // (E-5)
+                        mantissa = quantization_parameters.step_sizes.get<Vector<QuantizationDefault::IrreversibleStepSize>>()[0].mantissa;
+                    } else {
+                        if (r == 0)
+                            mantissa = quantization_parameters.step_sizes.get<Vector<QuantizationDefault::IrreversibleStepSize>>()[0].mantissa;
+                        else
+                            mantissa = quantization_parameters.step_sizes.get<Vector<QuantizationDefault::IrreversibleStepSize>>()[3 * (r - 1) + (int)sub_band_type].mantissa;
+                    }
+
+                    // (E-3)
+                    auto exponent = get_exponent(quantization_parameters, sub_band_type, r);
+                    float step_size = powf(2.0f, R_b - exponent) * (1.0f + mantissa / powf(2.0f, 11.0f));
+
+                    value *= step_size; // FIXME: Round and clamp?
+
+                    // FIXME: This might be incomplete: if bitplanes are missing, we might need to scale up.
+                }
+
+                output.data[y * output.pitch + x] = value;
+            }
+        }
+    };
+
+    auto decode_bitplanes = [&](TileData& tile, JPEG2000::SubBand sub_band_type, DecodedSubBand& sub_band, int component_index, int r, int N_L) -> ErrorOr<void> {
+        TRY(sub_band.coefficients.try_resize(sub_band.rect.width() * sub_band.rect.height()));
+
+        int M_b = compute_M_b(context, tile, component_index, sub_band_type, r, N_L);
+
+        // FIXME: Codeblocks all use independent arithmetic coders, so this could run in parallel.
+        for (auto& precinct : sub_band.precincts) {
+
+            Vector<i16> precinct_coefficients;
+            auto clipped_precinct_rect = precinct.rect.intersected(sub_band.rect);
+            precinct_coefficients.resize(clipped_precinct_rect.width() * clipped_precinct_rect.height());
+
+            for (auto& code_block : precinct.code_blocks) {
+                int total_number_of_coding_passes = code_block.number_of_coding_passes();
+                ByteBuffer combined_data = TRY(code_block.data_for_all_layers());
+
+                JPEG2000::Span2D<i16> output;
+                output.size = code_block.rect.size();
+                output.pitch = clipped_precinct_rect.width();
+                output.data = precinct_coefficients.span().slice((code_block.rect.y() - clipped_precinct_rect.y()) * output.pitch + (code_block.rect.x() - clipped_precinct_rect.x()));
+                TRY(JPEG2000::decode_code_block(output, sub_band_type, total_number_of_coding_passes, combined_data, M_b, code_block.p));
+            }
+
+            JPEG2000::Span2D<float> output;
+            output.size = clipped_precinct_rect.size();
+            output.pitch = sub_band.rect.width();
+            output.data = sub_band.coefficients.span().slice((clipped_precinct_rect.y() - sub_band.rect.y()) * output.pitch + (clipped_precinct_rect.x() - sub_band.rect.x()));
+            copy_and_dequantize_if_needed(output, precinct_coefficients, context.quantization_parameters_for_component(tile, component_index), sub_band_type, component_index, r);
+        }
+
+        return {};
+    };
+
+    for (auto& tile : context.tiles) {
+        for (auto [component_index, component] : enumerate(tile.components)) {
+            int N_L = component.decompositions.size();
+            TRY(decode_bitplanes(tile, JPEG2000::SubBand::HorizontalLowpassVerticalLowpass, component.nLL, component_index, 0, N_L));
+            for (auto const& [decomposition_index, decomposition] : enumerate(component.decompositions)) {
+                int r = decomposition_index + 1;
+                for (auto [sub_band_index, sub_band] : enumerate(DecodedTileComponent::SubBandOrder)) {
+                    TRY(decode_bitplanes(tile, sub_band, decomposition[sub_band_index], component_index, r, N_L));
+                }
+            }
+        }
+    }
+
+    return {};
+}
+
 static ErrorOr<void> decode_image(JPEG2000LoadingContext& context)
 {
     TRY(parse_codestream_tile_headers(context));
     TRY(compute_decoding_metadata(context));
     TRY(read_packet_headers(context));
-    // FIXME: Run bit-plane decoding algorithm to get coefficients.
+    TRY(decode_bitplanes_to_coefficients(context));
     // FIXME: Run inverse wavelet transform on coefficients.
     // FIXME: Convert transformed coefficients to pixel values.
 
