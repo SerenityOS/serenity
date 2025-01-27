@@ -1081,6 +1081,12 @@ static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, Rea
     auto reader = TRY(Gfx::ISOBMFF::Reader::create(TRY(try_make<FixedMemoryStream>(data))));
     context.boxes = TRY(reader.read_entire_file());
 
+    dbgln_if(JPEG2000_DEBUG, "Embedded ISOBMFF boxes:");
+    if constexpr (JPEG2000_DEBUG) {
+        for (auto& box : context.boxes)
+            box->dump();
+    }
+
     // I.2.2 File organization
     // "A particular order of those boxes in the file is not generally implied. However, the JPEG 2000 Signature box
     //  shall be the first box in a JP2 file, the File Type box shall immediately follow the JPEG 2000 Signature box
