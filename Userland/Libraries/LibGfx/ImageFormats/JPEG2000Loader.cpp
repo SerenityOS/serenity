@@ -1902,6 +1902,117 @@ static ErrorOr<void> run_inverse_discrete_wavelet_transform(JPEG2000LoadingConte
     return {};
 }
 
+static ErrorOr<void> postprocess_samples(JPEG2000LoadingContext& context)
+{
+    auto undo_multiple_component_transformation = [&](TileData& tile) -> ErrorOr<void> {
+        VERIFY(context.siz.components.size() == tile.components.size());
+        if (tile.components.size() < 3)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple component transformation type but fewer than 3 components");
+
+        auto transformation0 = context.coding_style_parameters_for_component(tile, 0).transformation;
+        auto transformation1 = context.coding_style_parameters_for_component(tile, 1).transformation;
+        auto transformation2 = context.coding_style_parameters_for_component(tile, 2).transformation;
+        if (transformation0 != transformation1 || transformation1 != transformation2)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple component transformation type but components disagree on lossiness");
+
+        // "The three components [...] shall have the same separation on the reference grid and the same bit-depth."
+        if (context.siz.components[0].horizontal_separation != context.siz.components[1].horizontal_separation
+            || context.siz.components[1].horizontal_separation != context.siz.components[2].horizontal_separation) {
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple component transformation type but components disagree on horizontal separation");
+        }
+
+        if (context.siz.components[0].vertical_separation != context.siz.components[1].vertical_separation
+            || context.siz.components[1].vertical_separation != context.siz.components[2].vertical_separation) {
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple component transformation type but components disagree on vertical separation");
+        }
+
+        // Note: Spec says "bit-depth" but we check bit depth and sign. That must be what the spec means?
+        if (context.siz.components[0].depth_and_sign != context.siz.components[1].depth_and_sign
+            || context.siz.components[1].depth_and_sign != context.siz.components[2].depth_and_sign) {
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple component transformation type but components disagree on bit depth");
+        }
+
+        if (tile.components[0].rect.size() != tile.components[1].rect.size()
+            || tile.components[0].rect.size() != tile.components[1].rect.size()) {
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple component transformation type but components disagree on dimensions");
+        }
+
+        auto& c0 = tile.components[0].samples;
+        auto& c1 = tile.components[1].samples;
+        auto& c2 = tile.components[2].samples;
+        int w = tile.components[0].rect.width();
+
+        if (transformation0 == JPEG2000::Transformation::Reversible_5_3_Filter) {
+            // G.2 Reversible multiple component transformation (RCT)
+            // "The three components input into the RCT shall have the same separation on the reference grid and the same bit-depth."
+            // Same for RCT and ICT; checked above this branch.
+            for (int y = 0; y < tile.components[0].rect.height(); ++y) {
+                for (int x = 0; x < w; ++x) {
+                    float Y = c0[y * w + x];
+                    float Cb = c1[y * w + x];
+                    float Cr = c2[y * w + x];
+
+                    float G = Y - floorf((Cb + Cr) / 4); // (G-6)
+                    float R = Cr + G;                    // (G-7)
+                    float B = Cb + G;                    // (G-8)
+
+                    c0[y * w + x] = R;
+                    c1[y * w + x] = G;
+                    c2[y * w + x] = B;
+                }
+            }
+        } else {
+            VERIFY(transformation0 == JPEG2000::Transformation::Irreversible_9_7_Filter);
+
+            // G.3 Irreversible multiple component transformation (ICT)
+            // "The three components input into the ICT shall have the same separation on the reference grid and the same bit-depth."
+            // Same for RCT and ICT; checked above this branch.
+            for (int y = 0; y < tile.components[0].rect.height(); ++y) {
+                for (int x = 0; x < w; ++x) {
+                    float Y = c0[y * w + x];
+                    float Cb = c1[y * w + x];
+                    float Cr = c2[y * w + x];
+
+                    float R = Y + 1.402f * Cr;                  // (G-12)
+                    float G = Y - 0.34413f * Cb - 0.7141f * Cr; // (G-13)
+                    float B = Y + 1.772f * Cb;                  // (G-14)
+
+                    c0[y * w + x] = R;
+                    c1[y * w + x] = G;
+                    c2[y * w + x] = B;
+                }
+            }
+        }
+
+        return {};
+    };
+
+    auto undo_dc_level_shift = [&](TileData& tile) -> ErrorOr<void> {
+        VERIFY(context.siz.components.size() == tile.components.size());
+
+        // DC level shift
+        // G.1.2 Inverse DC level shifting of tile-components
+        for (auto [component_index, component] : enumerate(tile.components)) {
+            if (!context.siz.components[component_index].is_signed()) {
+                for (auto& coefficient : component.samples)
+                    coefficient += 1u << (context.siz.components[component_index].bit_depth() - 1); // (G-2)
+            }
+        }
+
+        return {};
+    };
+
+    for (auto& tile : context.tiles) {
+        // Figure G.1 – Placement of the DC level shifting with component transformation
+        if (tile.cod.value_or(context.cod).multiple_component_transformation_type == CodingStyleDefault::MultipleComponentTransformationType::MultipleComponentTransformationUsed)
+            TRY(undo_multiple_component_transformation(tile));
+
+        TRY(undo_dc_level_shift(tile));
+    }
+
+    return {};
+}
+
 static ErrorOr<void> decode_image(JPEG2000LoadingContext& context)
 {
     TRY(parse_codestream_tile_headers(context));
@@ -1909,6 +2020,7 @@ static ErrorOr<void> decode_image(JPEG2000LoadingContext& context)
     TRY(read_packet_headers(context));
     TRY(decode_bitplanes_to_coefficients(context));
     TRY(run_inverse_discrete_wavelet_transform(context));
+    TRY(postprocess_samples(context));
     // FIXME: Convert transformed coefficients to pixel values.
 
     return {};
