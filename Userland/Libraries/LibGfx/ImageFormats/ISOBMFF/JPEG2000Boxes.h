@@ -25,6 +25,43 @@ struct JPEG2000ImageHeaderBox final : public Box {
     u8 compression_type { 0 };
     u8 is_colorspace_unknown { 0 };
     u8 contains_intellectual_property_rights { 0 };
+
+    enum CompressionType {
+        // T.800, I.5.3.1 Image Header box
+
+        // "The value of this field shall be 7."
+        Default = 7,
+
+        // T.801, Table M.19 – Legal C values
+        Uncompressed = 0,
+
+        // "Rec. ITU-T T.4, the basic algorithm known as MH (Modified Huffman). This value is only permitted for bi-level images."
+        T_4_Modified_Huffman = 1,
+
+        // "Rec. ITU-T T.4, commonly known as MR (Modified READ). This value is only permitted for bi-level images."
+        T_4_Modified_Read = 2,
+
+        // "Rec. ITU-T T.6, commonly known as MMR (Modified Modified READ). This value is only permitted for bi-level images."
+        T_4_Modified_Modified_Read = 3,
+
+        // "Rec. ITU-T T.82 | ISO/IEC 11544. Commonly known as JBIG. This value is only permitted for bi-level images."
+        JBIG_BILEVEL = 4,
+
+        // "Rec. ITU-T T.81 | ISO/IEC 10918-1 or Rec. ITU-T T.84 | ISO/IEC 10918-3. Commonly known as JPEG. [...]
+        //  This value is only permitted for continuous tone, greyscale or colour images."
+        JPEG = 5,
+
+        JPEG_LS = 6,
+
+        JBIG2 = 8,
+
+        // "Rec. ITU-T T.82 | ISO/IEC 11544. Commonly known as JBIG. This value is permitted for any image permitted by the JBIG standard."
+        JBIG_ANY = 9,
+
+        RUN_LENGTH = 10,
+        JPEG_XR = 11,
+        JPEG_XS = 12,
+    };
 };
 
 // I.5.3.2 Bits Per Component box
@@ -47,6 +84,48 @@ struct JPEG2000ColorSpecificationBox final : public Box {
     u8 approximation { 0 };
     u32 enumerated_color_space { 0 }; // Only set if method == 1
     ByteBuffer icc_data;              // Only set if method == 2
+
+    enum EnumCS {
+        // T.800, Table I.10 – Legal EnumCS values
+
+        // "sRGB as defined by IEC 61966-2-1 with Lmini=0 and Lmaxi=255. This colourspace shall be used with channels carrying unsigned values only."
+        sRGB = 16,
+
+        // "A greyscale space where image luminance is related to code values using the sRGB non-linearity given in Equations (2) to (4) of IEC 61966-2-1 (sRGB) specification. [...]
+        //  This colourspace shall be used with channels carrying unsigned values only."
+        Greyscale = 17,
+
+        // "sYCC as defined by IEC 61966-2-1 Amd. 1with Lmini=0 and Lmaxi=255. This colourspace shall be used with channels carrying unsigned values only."
+        sYCC = 18,
+
+        // T.801, Table M.25 – Additional legal EnumCS values
+
+        // "This value shall be used to indicate bi-level images. Each image sample is one bit: 0 = white, 1 = black."
+        BiLevel = 0,
+
+        YCbCr1 = 1,
+        YCbCr2 = 3,
+        YCbCr3 = 4,
+        PhotoYCC = 9,
+        CMY = 11,
+        CMYK = 12,
+        YCCK = 13,
+        CIELab = 14,
+
+        // "This value shall be used to indicate bi-level images. Each image sample is one bit: 1 = white, 0 = black.""
+        BiLevel2 = 15,
+
+        // (T.801 also lists 18 for sYCC, but that's already in T.800 above.)
+
+        CIEJab = 19,
+        e_sRGB = 20,
+        ROMM_RGB = 21,
+        YPbPr_1125_60 = 22,
+        YPbPr_1150_50 = 23,
+        e_sYCC = 24,
+        scRGB = 25,
+        scRGB_Gray_Scale = 26, // [sic], inconsistent with the spelling of "greyscale" in T.800.
+    };
 };
 
 // I.5.3.4 Palette box
