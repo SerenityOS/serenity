@@ -27,6 +27,7 @@
     __ENUMERATE_IMAGE_FORMAT(jpeg, ".jbig2")   \
     __ENUMERATE_IMAGE_FORMAT(jpeg2000, ".jp2") \
     __ENUMERATE_IMAGE_FORMAT(jpeg, ".jpeg")    \
+    __ENUMERATE_IMAGE_FORMAT(jpeg, ".jpf")     \
     __ENUMERATE_IMAGE_FORMAT(jpeg, ".jpg")     \
     __ENUMERATE_IMAGE_FORMAT(jpeg2000, ".jpx") \
     __ENUMERATE_IMAGE_FORMAT(jxl, ".jxl")      \
