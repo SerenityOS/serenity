@@ -6,20 +6,12 @@
 
 #pragma once
 
-#include <AK/Span.h>
 #include <AK/Vector.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
+#include <LibGfx/ImageFormats/JPEG2000Span2D.h>
 #include <LibGfx/ImageFormats/QMArithmeticDecoder.h>
-#include <LibGfx/Size.h>
 
 namespace Gfx::JPEG2000 {
-
-template<class T>
-struct Span2D {
-    Span<T> data;
-    IntSize size;
-    int pitch;
-};
 
 inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int number_of_coding_passes, ReadonlyBytes data, int M_b, int p)
 {
