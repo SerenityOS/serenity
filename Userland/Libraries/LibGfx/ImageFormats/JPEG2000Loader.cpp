@@ -780,6 +780,8 @@ struct JPEG2000LoadingContext {
     Vector<Comment> coms;
     Vector<TileData> tiles;
 
+    RefPtr<Bitmap> bitmap;
+
     CodingStyleParameters const& coding_style_parameters_for_component(TileData const& tile, size_t component_index) const
     {
         // Tile-part COC > Tile-part COD > Main COC > Main COD
@@ -2013,6 +2015,62 @@ static ErrorOr<void> postprocess_samples(JPEG2000LoadingContext& context)
     return {};
 }
 
+static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
+{
+    // FIXME: This is pretty ad-hoc. It should look at JPEG2000ChannelDefinitionBox,
+    //        JPEG2000ColorSpecificationBox::method, and if present at
+    //        JPEG2000PaletteBox and JPEG2000ComponentMappingBox
+    //        to figure out mapping from components to bitmap channels (and optionally return a CMYKBitmap instead).
+
+    auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { context.siz.width, context.siz.height }));
+
+    for (auto& tile : context.tiles) {
+        // compute_decoding_metadata currently rejects images with horizontal_separation or vertical_separation != 1.
+        for (auto& component : tile.components) {
+            if (component.rect.size() != tile.components[0].rect.size())
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Components with differing sizes not yet supported");
+        }
+
+        int w = tile.components[0].rect.width();
+        int h = tile.components[0].rect.height();
+
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                float value = tile.components[0].samples[y * w + x];
+
+                // FIXME: This is wrong for palettized images.
+                u8 byte_value = round_to<u8>(clamp(value, 0.0f, 255.0f));
+                u8 r = byte_value;
+                u8 g = byte_value;
+                u8 b = byte_value;
+                u8 a = 255;
+
+                if (tile.components.size() == 3) {
+                    g = round_to<u8>(clamp(tile.components[1].samples[y * w + x], 0.0f, 255.0f));
+                    b = round_to<u8>(clamp(tile.components[2].samples[y * w + x], 0.0f, 255.0f));
+                } else if (tile.components.size() == 4) {
+                    g = round_to<u8>(clamp(tile.components[1].samples[y * w + x], 0.0f, 255.0f));
+                    b = round_to<u8>(clamp(tile.components[2].samples[y * w + x], 0.0f, 255.0f));
+                    a = round_to<u8>(clamp(tile.components[3].samples[y * w + x], 0.0f, 255.0f));
+                }
+
+                Color pixel;
+                pixel.set_red(r);
+                pixel.set_green(g);
+                pixel.set_blue(b);
+                pixel.set_alpha(a);
+                bitmap->set_pixel(x + tile.components[0].rect.left(), y + tile.components[0].rect.top(), pixel);
+            }
+        }
+    }
+
+    // FIXME: Could release sample data here, to reduce peak memory use.
+
+    context.bitmap = move(bitmap);
+
+    return {};
+}
+
 static ErrorOr<void> decode_image(JPEG2000LoadingContext& context)
 {
     TRY(parse_codestream_tile_headers(context));
@@ -2021,7 +2079,7 @@ static ErrorOr<void> decode_image(JPEG2000LoadingContext& context)
     TRY(decode_bitplanes_to_coefficients(context));
     TRY(run_inverse_discrete_wavelet_transform(context));
     TRY(postprocess_samples(context));
-    // FIXME: Convert transformed coefficients to pixel values.
+    TRY(convert_to_bitmap(context));
 
     return {};
 }
@@ -2063,7 +2121,7 @@ ErrorOr<ImageFrameDescriptor> JPEG2000ImageDecoderPlugin::frame(size_t index, Op
         m_context->state = JPEG2000LoadingContext::State::DecodedImage;
     }
 
-    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Draw the rest of the owl");
+    return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
 ErrorOr<Optional<ReadonlyBytes>> JPEG2000ImageDecoderPlugin::icc_data()

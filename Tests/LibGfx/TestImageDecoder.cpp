@@ -672,12 +672,17 @@ TEST_CASE(test_jpeg2000_spec_annex_j_10)
     // clang-format on
 
     auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(data));
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(1, 9));
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 1, 9 }));
 
-    // FIXME: Do something with this.
-    // For now, this is useful for debugging:
-    // `Build/lagom/bin/TestImageDecoder test_jpeg2000_spec_annex_j_10` prints internal state with JPEG2000_DEBUG=1.
-    (void)plugin_decoder->frame(0);
+    // "After the inverse 5-3 reversible filter and level shifting, the component samples in decimal are:"
+    Array expected_values = { 101, 103, 104, 105, 96, 97, 96, 102, 109 };
+    for (int i = 0; i < 9; ++i) {
+        auto pixel = frame.image->get_pixel(0, i);
+        EXPECT_EQ(pixel.red(), expected_values[i]);
+        EXPECT_EQ(pixel.green(), expected_values[i]);
+        EXPECT_EQ(pixel.blue(), expected_values[i]);
+        EXPECT_EQ(pixel.alpha(), 0xff);
+    }
 }
 
 TEST_CASE(test_jpeg2000_simple)
