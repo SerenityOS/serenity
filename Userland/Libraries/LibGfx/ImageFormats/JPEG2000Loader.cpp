@@ -735,6 +735,9 @@ struct DecodedTileComponent {
     using DecodedSubBands = Array<DecodedSubBand, 3>; // Ordered HL, LH, HH.
     Vector<DecodedSubBands> decompositions;
     static constexpr Array SubBandOrder { JPEG2000::SubBand::HorizontalHighpassVerticalLowpass, JPEG2000::SubBand::HorizontalLowpassVerticalHighpass, JPEG2000::SubBand::HorizontalHighpassVerticalHighpass };
+
+    // Valid after IDWT.
+    Vector<float> samples;
 };
 
 struct TileData {
@@ -1855,13 +1858,57 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
     return {};
 }
 
+static ErrorOr<void> run_inverse_discrete_wavelet_transform(JPEG2000LoadingContext& context)
+{
+    // FIXME: Could run these in parallel.
+    for (auto& tile : context.tiles) {
+        for (auto [component_index, component] : enumerate(tile.components)) {
+            int N_L = component.decompositions.size();
+
+            Gfx::JPEG2000::IDWTInput input;
+            input.transformation = context.coding_style_parameters_for_component(tile, component_index).transformation;
+            input.LL.rect = component.nLL.rect;
+            input.LL.data = { component.nLL.coefficients, component.nLL.rect.size(), component.nLL.rect.width() };
+
+            for (auto const& [decomposition_index, decomposition] : enumerate(component.decompositions)) {
+                int r = decomposition_index + 1;
+
+                JPEG2000::IDWTDecomposition idwt_decomposition;
+                idwt_decomposition.ll_rect = context.siz.reference_grid_coordinates_for_ll_band(tile.rect, component_index, r, N_L);
+
+                VERIFY(DecodedTileComponent::SubBandOrder[0] == JPEG2000::SubBand::HorizontalHighpassVerticalLowpass);
+                auto hl_rect = decomposition[0].rect;
+                idwt_decomposition.hl = { hl_rect, { decomposition[0].coefficients, hl_rect.size(), hl_rect.width() } };
+
+                VERIFY(DecodedTileComponent::SubBandOrder[1] == JPEG2000::SubBand::HorizontalLowpassVerticalHighpass);
+                auto lh_rect = decomposition[1].rect;
+                idwt_decomposition.lh = { lh_rect, { decomposition[1].coefficients, lh_rect.size(), lh_rect.width() } };
+
+                VERIFY(DecodedTileComponent::SubBandOrder[2] == JPEG2000::SubBand::HorizontalHighpassVerticalHighpass);
+                auto hh_rect = decomposition[2].rect;
+                idwt_decomposition.hh = { hh_rect, { decomposition[2].coefficients, hh_rect.size(), hh_rect.width() } };
+
+                input.decompositions.append(idwt_decomposition);
+            }
+
+            auto output = TRY(JPEG2000::IDWT(input));
+            VERIFY(component.rect == output.rect);
+            component.samples = move(output.data);
+
+            // FIXME: Could release coefficient data here, to reduce peak memory use.
+        }
+    }
+
+    return {};
+}
+
 static ErrorOr<void> decode_image(JPEG2000LoadingContext& context)
 {
     TRY(parse_codestream_tile_headers(context));
     TRY(compute_decoding_metadata(context));
     TRY(read_packet_headers(context));
     TRY(decode_bitplanes_to_coefficients(context));
-    // FIXME: Run inverse wavelet transform on coefficients.
+    TRY(run_inverse_discrete_wavelet_transform(context));
     // FIXME: Convert transformed coefficients to pixel values.
 
     return {};
