@@ -1165,6 +1165,9 @@ static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, Rea
     auto const& image_header_box = static_cast<ISOBMFF::JPEG2000ImageHeaderBox const&>(*header_box.child_boxes()[image_header_box_index.value()]);
     context.size = { image_header_box.width, image_header_box.height };
 
+    if (image_header_box.compression_type != ISOBMFF::JPEG2000ImageHeaderBox::CompressionType::Default)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Decoding of non-jpeg2000 data embedded in jpeg2000 files is not implemented");
+
     auto const& color_header_box = static_cast<ISOBMFF::JPEG2000ColorSpecificationBox const&>(*header_box.child_boxes()[color_header_box_index.value()]);
     if (color_header_box.method == 2 || color_header_box.method == 3)
         context.icc_data = color_header_box.icc_data.bytes();
