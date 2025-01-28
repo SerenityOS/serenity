@@ -89,6 +89,11 @@ enum class AddressSpace {
     PCIConfigurationSpace = 2,
     EmbeddedController = 3,
     SMBus = 4,
+    SystemCMOS = 5,
+    PCIBarTarget = 6,
+    IPMI = 7,
+    GeneralPurposeIO = 8,
+    GenericSerialBus = 9,
     PCC = 0xA,
     FunctionalFixedHardware = 0x7F
 };
@@ -158,6 +163,11 @@ struct [[gnu::packed]] GenericAddressStructure {
     u8 bit_offset;
     u8 access_size;
     u64 address;
+
+    [[nodiscard]] bool is_nonzero() const
+    {
+        return address_space != 0 || bit_width != 0 || bit_offset != 0 || access_size != 0 || address != 0;
+    }
 };
 
 struct [[gnu::packed]] HPET {
@@ -175,7 +185,7 @@ struct [[gnu::packed]] HPET {
 struct [[gnu::packed]] FADT {
     SDTHeader h;
     u32 firmware_ctrl;
-    u32 dsdt_ptr;
+    u32 dsdt;
     u8 reserved;
     u8 preferred_pm_profile;
     u16 sci_int;
@@ -325,6 +335,16 @@ struct [[gnu::packed]] DSDT {
     SDTHeader h;
     unsigned char definition_block[];
 };
+
+// The SSDT and DSDT are different names for the same table structure
+using SSDT = DSDT;
+
 }
+
+static constexpr size_t PM1_CNT_SLP_TYP_offset = 10;
+static constexpr u16 PM1_CNT_SLP_EN = 1u << 13;
+
+static constexpr size_t SLEEP_CONTROL_SLP_TYP_offset = 2;
+static constexpr u8 SLEEP_CONTROL_SLP_EN = 1u << 5;
 
 }

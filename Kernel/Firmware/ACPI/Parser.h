@@ -6,10 +6,12 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <AK/Types.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
+#include <Kernel/Firmware/ACPI/AML/Namespace.h>
 #include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Interrupts/IRQHandler.h>
@@ -62,9 +64,7 @@ public:
     void try_acpi_reboot();
     bool can_reboot();
     void try_acpi_shutdown();
-    bool can_shutdown() { return false; }
-
-    void enable_aml_parsing();
+    bool can_shutdown();
 
     PhysicalAddress rsdp() const { return m_rsdp; }
     PhysicalAddress main_system_description_table() const { return m_main_system_description_table; }
@@ -93,6 +93,8 @@ private:
     void process_fadt_data();
     void process_dsdt();
 
+    bool extract_s5_contents(u16& SLP_TYPa, u16& SLP_TYPb);
+
     bool validate_reset_register(Memory::TypedMapping<Structures::FADT> const&);
     void access_generic_address(Structures::GenericAddressStructure const&, u32 value);
 
@@ -102,8 +104,9 @@ private:
     Vector<PhysicalAddress> m_sdt_pointers;
     PhysicalAddress m_fadt;
 
+    Optional<AML::Namespace> m_root_namespace;
+
     bool m_xsdt_supported { false };
-    bool m_can_process_bytecode { false };
     FADTFlags::HardwareFeatures m_hardware_flags;
     FADTFlags::x86_Specific_Flags m_x86_specific_flags;
 };
