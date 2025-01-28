@@ -9,6 +9,7 @@
 #include <AK/MemoryStream.h>
 #include <LibGfx/ImageFormats/ISOBMFF/JPEG2000Boxes.h>
 #include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
+#include <LibGfx/ImageFormats/JPEG2000InverseDiscreteWaveletTransform.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
 #include <LibTextCodec/Decoder.h>
 
@@ -321,19 +322,13 @@ static ErrorOr<ImageAndTileSize> read_image_and_tile_size(ReadonlyBytes data)
 
 // Data shared by COD and COC marker segments
 struct CodingStyleParameters {
-    // Table A.20 – Transformation for the SPcod and SPcoc parameters
-    enum Transformation {
-        Irreversible_9_7_Filter = 0,
-        Reversible_5_3_Filter = 1,
-    };
-
     // Table A.15 – Coding style parameter values of the SPcod and SPcoc parameters
     // "Number of decomposition levels, NL, Zero implies no transformation."
     u8 number_of_decomposition_levels { 0 };
     u8 code_block_width_exponent { 0 };  // "xcb" in spec; 2 already added.
     u8 code_block_height_exponent { 0 }; // "ycb" in spec; 2 already added.
     u8 code_block_style { 0 };
-    Transformation transformation { Irreversible_9_7_Filter };
+    JPEG2000::Transformation transformation { JPEG2000::Transformation::Irreversible_9_7_Filter };
 
     // Table A.19 – Code-block style for the SPcod and SPcoc parameters
     bool uses_selective_arithmetic_coding_bypass() const { return code_block_style & 1; }
@@ -372,10 +367,11 @@ static ErrorOr<CodingStyleParameters> read_coding_style_parameters(ReadonlyBytes
 
     parameters.code_block_style = TRY(stream.read_value<u8>());
 
+    // Table A.20 – Transformation for the SPcod and SPcoc parameters
     u8 transformation = TRY(stream.read_value<u8>());
     if (transformation > 1)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid transformation");
-    parameters.transformation = static_cast<CodingStyleParameters::Transformation>(transformation);
+    parameters.transformation = transformation == 0 ? JPEG2000::Transformation::Irreversible_9_7_Filter : JPEG2000::Transformation::Reversible_5_3_Filter;
 
     if (has_explicit_precinct_size) {
         for (size_t i = 0; i < parameters.number_of_decomposition_levels + 1u; ++i) {

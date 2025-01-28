@@ -15,6 +15,7 @@
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/ImageFormats/JBIG2Loader.h>
 #include <LibGfx/ImageFormats/JPEG2000BitplaneDecoding.h>
+#include <LibGfx/ImageFormats/JPEG2000InverseDiscreteWaveletTransform.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
 #include <LibGfx/ImageFormats/JPEG2000ProgressionIterators.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
@@ -620,6 +621,39 @@ TEST_CASE(test_jpeg2000_spec_annex_j_10_bitplane_decoding)
         EXPECT_EQ(output[2], 1);
         EXPECT_EQ(output[3], 0);
     }
+}
+
+TEST_CASE(test_jpeg2000_spec_annex_j_10_inverse_discrete_wavelet_transform)
+{
+    constexpr Array ll_plane = to_array<float>({ -26, -22, -30, -32, -19 });
+    constexpr Array lh_plane = to_array<float>({ 1, 5, 1, 0 });
+
+    Gfx::JPEG2000::IDWTInput input;
+    input.transformation = Gfx::JPEG2000::Transformation::Reversible_5_3_Filter;
+
+    input.LL.rect = { 0, 0, 1, 5 };
+    input.LL.data = { ll_plane.span(), input.LL.rect.size(), input.LL.rect.width() };
+
+    Gfx::JPEG2000::IDWTSubBand lh_sub_band;
+    lh_sub_band.rect = { 0, 0, 1, 4 };
+    lh_sub_band.data = { lh_plane.span(), lh_sub_band.rect.size(), lh_sub_band.rect.width() };
+
+    Gfx::JPEG2000::IDWTDecomposition decomposition;
+    decomposition.ll_rect = { 0, 0, 1, 9 };
+    decomposition.hl = { { 0, 0, 0, 5 }, { {}, { 0, 5 }, 0 } };
+    decomposition.lh = lh_sub_band;
+    decomposition.hh = { { 0, 0, 0, 4 }, { {}, { 0, 4 }, 0 } };
+    input.decompositions.append(decomposition);
+
+    auto output = TRY_OR_FAIL(Gfx::JPEG2000::IDWT(input));
+
+    EXPECT_EQ(output.rect, Gfx::IntRect(0, 0, 1, 9));
+    EXPECT_EQ(output.data.size(), 9u);
+
+    // From J.10.5 Wavelet and level shift
+    constexpr Array expected = to_array<float>({ 101, 103, 104, 105, 96, 97, 96, 102, 109 });
+    for (int i = 0; i < 9; ++i)
+        EXPECT_EQ(output.data[i] + 128, expected[i]);
 }
 
 TEST_CASE(test_jpeg2000_spec_annex_j_10)
