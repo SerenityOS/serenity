@@ -113,7 +113,7 @@ ErrorOr<void> FATFS::initialize_while_locked()
     VERIFY(!is_initialized_while_locked());
 
     m_boot_record = TRY(KBuffer::try_create_with_size("FATFS: Boot Record"sv, m_device_block_size));
-    auto boot_record_buffer = UserOrKernelBuffer::for_kernel_buffer(m_boot_record->data());
+    auto boot_record_buffer = UserOrKernelBuffer::for_kernel_buffer(*m_boot_record);
     TRY(raw_read(0, boot_record_buffer));
     m_parameter_block = TRY(adopt_nonnull_own_or_enomem(new (nothrow) DOSBIOSParameterBlock(m_boot_record)));
 
@@ -240,10 +240,10 @@ ErrorOr<void> FATFS::initialize_while_locked()
     m_root_inode = TRY(FATInode::create(*this, root_entry, { 0, 1 }));
 
     if (m_fat_version == FATVersion::FAT32) {
-        auto fs_info_buffer = UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&m_fs_info));
+        auto fs_info_buffer = UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&m_fs_info), sizeof(FAT32FSInfo));
         // We know that there is a DOS7 BPB, because if it wasn't present
         // we would have returned EINVAL above.
-        TRY(read_block(ebpb.dos7_bpb()->fs_info_sector, &fs_info_buffer, sizeof(m_fs_info)));
+        TRY(read_block(ebpb.dos7_bpb()->fs_info_sector, fs_info_buffer, sizeof(m_fs_info)));
 
         if (m_fs_info.lead_signature != fs_info_signature_1 || m_fs_info.struct_signature != fs_info_signature_2 || m_fs_info.trailing_signature != fs_info_signature_3) {
             dbgln("FATFS: Invalid FSInfo struct signature");
@@ -409,7 +409,7 @@ ErrorOr<void> FATFS::set_free_cluster_count(u32 value)
     VERIFY(m_fat_version == FATVersion::FAT32);
 
     m_fs_info.last_known_free_cluster_count = value;
-    auto fs_info_buffer = UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&m_fs_info));
+    auto fs_info_buffer = UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&m_fs_info), sizeof(FAT32FSInfo));
     TRY(write_block(m_parameter_block->dos7_bpb()->fs_info_sector, fs_info_buffer, sizeof(m_fs_info)));
 
     return {};
@@ -473,14 +473,14 @@ ErrorOr<u32> FATFS::fat_read(u32 cluster)
         buffer_size += m_device_block_size;
 
     auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, buffer_size));
-    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
+    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(*fat_sector);
 
     MutexLocker locker(m_lock);
 
     if (read_extra_block)
         TRY(read_blocks(fat_sector_index, 2, fat_sector_buffer));
     else
-        TRY(read_block(fat_sector_index, &fat_sector_buffer, m_device_block_size));
+        TRY(read_block(fat_sector_index, fat_sector_buffer, m_device_block_size));
 
     // Look up the next cluster to read, or read End of Chain marker from table.
     return cluster_number(*fat_sector, cluster, entry_offset);
@@ -501,14 +501,14 @@ ErrorOr<void> FATFS::fat_write(u32 cluster, u32 value)
         buffer_size += m_device_block_size;
 
     auto fat_sector = TRY(KBuffer::try_create_with_size("FATFS: FAT read buffer"sv, buffer_size));
-    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(fat_sector->data());
+    auto fat_sector_buffer = UserOrKernelBuffer::for_kernel_buffer(*fat_sector);
 
     MutexLocker locker(m_lock);
 
     if (need_extra_block)
         TRY(read_blocks(fat_sector_index, 2, fat_sector_buffer));
     else
-        TRY(read_block(fat_sector_index, &fat_sector_buffer, m_device_block_size));
+        TRY(read_block(fat_sector_index, fat_sector_buffer, m_device_block_size));
 
     switch (m_fat_version) {
     case FATVersion::FAT12: {

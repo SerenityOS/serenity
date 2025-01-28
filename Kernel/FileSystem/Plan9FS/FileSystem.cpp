@@ -193,7 +193,6 @@ bool Plan9FS::is_complete(ReceiveCompletion const& completion)
 ErrorOr<void> Plan9FS::post_message(Plan9FSMessage& message, LockRefPtr<ReceiveCompletion> completion)
 {
     auto const& buffer = message.build();
-    u8 const* data = buffer.data();
     size_t size = buffer.size();
     auto& description = file_description();
 
@@ -210,15 +209,16 @@ ErrorOr<void> Plan9FS::post_message(Plan9FSMessage& message, LockRefPtr<ReceiveC
         // this one?
     }
 
+    auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(buffer);
     while (size > 0) {
         if (!description.can_write()) {
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
             if (Thread::current()->block<Thread::WriteBlocker>({}, description, unblock_flags).was_interrupted())
                 return EINTR;
         }
-        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(data));
+
         auto nwritten = TRY(description.write(data_buffer, size));
-        data += nwritten;
+        data_buffer = data_buffer.offset(nwritten);
         size -= nwritten;
     }
 
@@ -228,17 +228,17 @@ ErrorOr<void> Plan9FS::post_message(Plan9FSMessage& message, LockRefPtr<ReceiveC
 ErrorOr<void> Plan9FS::do_read(u8* data, size_t size)
 {
     auto& description = file_description();
+    auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data, size);
     while (size > 0) {
         if (!description.can_read()) {
             auto unblock_flags = Thread::FileBlocker::BlockFlags::None;
             if (Thread::current()->block<Thread::ReadBlocker>({}, description, unblock_flags).was_interrupted())
                 return EINTR;
         }
-        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data);
         auto nread = TRY(description.read(data_buffer, size));
         if (nread == 0)
             return EIO;
-        data += nread;
+        data_buffer = data_buffer.offset(nread);
         size -= nread;
     }
     return {};

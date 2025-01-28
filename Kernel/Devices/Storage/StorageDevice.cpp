@@ -118,7 +118,7 @@ ErrorOr<size_t> StorageDevice::read(OpenFileDescription&, u64 offset, UserOrKern
 
     if (remaining > 0) {
         auto data = TRY(ByteBuffer::create_uninitialized(block_size()));
-        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data());
+        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(data.data(), block_size());
         auto read_request = TRY(try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index + whole_blocks, 1, data_buffer, block_size()));
         auto result = read_request->wait();
         if (result.wait_result().was_interrupted())
@@ -191,7 +191,7 @@ ErrorOr<size_t> StorageDevice::write(OpenFileDescription&, u64 offset, UserOrKer
     // partial write, we have to read the block's content first, modify it,
     // then write the whole block back to the disk.
     if (remaining > 0) {
-        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(partial_write_block->data());
+        auto data_buffer = UserOrKernelBuffer::for_kernel_buffer(partial_write_block->data(), block_size());
         {
             auto read_request = TRY(try_make_request<AsyncBlockDeviceRequest>(AsyncBlockDeviceRequest::Read, index + whole_blocks, 1, data_buffer, block_size()));
             auto result = read_request->wait();
