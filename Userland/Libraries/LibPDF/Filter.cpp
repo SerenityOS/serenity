@@ -364,10 +364,10 @@ PDFErrorOr<ByteBuffer> Filter::decode_jbig2(Document* document, ReadonlyBytes by
 
 PDFErrorOr<ByteBuffer> Filter::decode_dct(ReadonlyBytes bytes)
 {
-    if (!Gfx::JPEGImageDecoderPlugin::sniff({ bytes.data(), bytes.size() }))
+    if (!Gfx::JPEGImageDecoderPlugin::sniff(bytes))
         return AK::Error::from_string_literal("Not a JPEG image!");
 
-    auto decoder = TRY(Gfx::JPEGImageDecoderPlugin::create_with_options({ bytes.data(), bytes.size() }, { .cmyk = Gfx::JPEGDecoderOptions::CMYK::PDF }));
+    auto decoder = TRY(Gfx::JPEGImageDecoderPlugin::create_with_options(bytes, { .cmyk = Gfx::JPEGDecoderOptions::CMYK::PDF }));
     auto internal_format = decoder->natural_frame_format();
 
     if (internal_format == Gfx::NaturalFrameFormat::CMYK) {
