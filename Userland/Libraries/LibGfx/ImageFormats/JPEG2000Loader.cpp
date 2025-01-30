@@ -310,6 +310,10 @@ static ErrorOr<ImageAndTileSize> read_image_and_tile_size(ReadonlyBytes data)
     if (siz.width == 0 || siz.height == 0 || siz.tile_width == 0 || siz.tile_height == 0)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid image or tile size");
 
+    // Ad-hoc: Limit image size to < 4 GiB.
+    if (static_cast<u64>(siz.width) * siz.height > INT32_MAX)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Image is suspiciously large, not decoding");
+
     // CSiz: 1 to 16384.
     if (component_count < 1 || component_count > 16384)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid number of components");
