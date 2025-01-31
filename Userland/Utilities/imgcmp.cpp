@@ -37,12 +37,15 @@ static ErrorOr<void> save_image(NonnullRefPtr<Gfx::Bitmap> bitmap, StringView ou
     return Gfx::WebPWriter::encode(*buffered_stream, *bitmap);
 }
 
-static bool are_pixels_equal(Gfx::Color first_pixel, Gfx::Color second_pixel)
+static bool are_pixels_equal(Gfx::Color first_pixel, Gfx::Color second_pixel, int threshold)
 {
-    return first_pixel == second_pixel;
+    return abs(first_pixel.red() - second_pixel.red()) <= threshold
+        && abs(first_pixel.green() - second_pixel.green()) <= threshold
+        && abs(first_pixel.blue() - second_pixel.blue()) <= threshold
+        && abs(first_pixel.alpha() - second_pixel.alpha()) <= threshold;
 }
 
-static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> make_diff_image(NonnullRefPtr<Gfx::Bitmap> first_image, NonnullRefPtr<Gfx::Bitmap> second_image)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> make_diff_image(NonnullRefPtr<Gfx::Bitmap> first_image, NonnullRefPtr<Gfx::Bitmap> second_image, int threshold)
 {
     VERIFY(first_image->size() == second_image->size());
 
@@ -52,7 +55,7 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> make_diff_image(NonnullRefPtr<Gfx::Bi
         for (int x = 0; x < first_image->width(); ++x) {
             auto first_pixel = first_image->get_pixel<Gfx::StorageFormat::BGRA8888>(x, y);
             auto second_pixel = second_image->get_pixel<Gfx::StorageFormat::BGRA8888>(x, y);
-            if (are_pixels_equal(first_pixel, second_pixel)) {
+            if (are_pixels_equal(first_pixel, second_pixel, threshold)) {
                 diff_image->set_pixel(x, y, first_pixel.interpolate(Gfx::Color::White, 0.5f));
             } else {
                 diff_image->set_pixel(x, y, Gfx::Color::Red);
@@ -69,6 +72,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView write_diff_image_path;
     args_parser.add_option(write_diff_image_path, "Write image that highlights differing pixels", "write-diff-image", {}, "FILE");
+
+    int threshold = 0;
+    args_parser.add_option(threshold, "Only consider pixels further apart than this (in any channel) as distinct (default: 0)", "threshold", {}, "THRESHOLD");
 
     StringView first_image_path;
     args_parser.add_positional_argument(first_image_path, "Path to first input image", "FILE1");
@@ -87,7 +93,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!write_diff_image_path.is_empty()) {
-        auto diff_image = TRY(make_diff_image(*first_image, *second_image));
+        auto diff_image = TRY(make_diff_image(*first_image, *second_image, threshold));
         TRY(save_image(diff_image, write_diff_image_path));
     }
 
@@ -95,7 +101,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         for (int x = 0; x < first_image->physical_width(); ++x) {
             auto first_pixel = first_image->get_pixel(x, y);
             auto second_pixel = second_image->get_pixel(x, y);
-            if (!are_pixels_equal(first_pixel, second_pixel)) {
+            if (!are_pixels_equal(first_pixel, second_pixel, threshold)) {
                 warnln("different pixel at ({}, {}), {} vs {}", x, y, first_pixel, second_pixel);
                 return 1;
             }
