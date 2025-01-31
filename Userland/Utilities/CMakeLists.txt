@@ -66,6 +66,7 @@ set(CMD_SOURCES_CPP
     head.cpp
     headless-browser.cpp
     hexdump.cpp
+    hiddump.cpp
     host.cpp
     hostname.cpp
     icc.cpp
@@ -326,6 +327,7 @@ target_link_libraries(gml-format PRIVATE LibGUI)
 target_link_libraries(grep PRIVATE LibFileSystem LibRegex LibURL)
 target_link_libraries(gzip PRIVATE LibCompress)
 target_link_libraries(headless-browser PRIVATE LibCrypto LibFileSystem LibGemini LibGfx LibHTTP LibImageDecoderClient LibTLS LibWeb LibWebView LibWebSocket LibIPC LibJS LibDiff LibURL)
+target_link_libraries(hiddump PRIVATE LibHID)
 target_link_libraries(icc PRIVATE LibGfx LibMedia LibURL)
 target_link_libraries(iconv PRIVATE LibTextCodec)
 target_link_libraries(image PRIVATE LibGfx)
