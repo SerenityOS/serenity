@@ -17,6 +17,7 @@
 #endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Firmware/ACPI/AML/Parser.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/TypedMapping.h>
@@ -153,12 +154,6 @@ bool Parser::handle_irq()
     TODO();
 }
 
-UNMAP_AFTER_INIT void Parser::enable_aml_parsing()
-{
-    // FIXME: When enabled, do other things to "parse AML".
-    m_can_process_bytecode = true;
-}
-
 UNMAP_AFTER_INIT void Parser::process_fadt_data()
 {
     dmesgln("ACPI: Initializing Fixed ACPI data");
@@ -204,17 +199,77 @@ UNMAP_AFTER_INIT void Parser::process_fadt_data()
 
 UNMAP_AFTER_INIT void Parser::process_dsdt()
 {
-    auto sdt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
+    auto fadt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
+
+    PhysicalAddress dsdt_address;
+    // Extended physical address of the DSDT. If this field contains a nonzero value which can be used by the OSPM,
+    // then the DSDT field must be ignored by the OSPM.
+    if (fadt->h.revision >= 2 && fadt->x_dsdt != 0) {
+        dsdt_address = PhysicalAddress(fadt->x_dsdt);
+    } else {
+        dsdt_address = PhysicalAddress(fadt->dsdt);
+    }
 
     // Add DSDT-pointer to expose the full table in /sys/firmware/acpi/
-    m_sdt_pointers.append(PhysicalAddress(sdt->dsdt_ptr));
+    m_sdt_pointers.append(dsdt_address);
 
-    auto dsdt_or_error = Memory::map_typed<Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr));
+    // Check if AML support has been explicitly disabled
+    if (kernel_command_line().acpi_feature_level() != AcpiFeatureLevel::Enabled)
+        return;
+
+    auto dsdt_or_error = Memory::map_typed<Structures::DSDT>(dsdt_address);
     if (dsdt_or_error.is_error()) {
         dmesgln("ACPI: DSDT is unmappable");
         return;
     }
-    dmesgln("ACPI: Using DSDT @ {} with {} bytes", PhysicalAddress(sdt->dsdt_ptr), dsdt_or_error.value()->h.length);
+    // Remap including the full definition block
+    dsdt_or_error = Memory::map_typed<Structures::DSDT>(dsdt_address, dsdt_or_error.value()->h.length);
+    if (dsdt_or_error.is_error()) {
+        dmesgln("ACPI: DSDT is unmappable");
+        return;
+    }
+    auto dsdt = dsdt_or_error.release_value();
+    dmesgln("ACPI: Using DSDT @ {} of length {} bytes", dsdt_address, dsdt->h.length);
+
+    AML::Namespace root_namespace;
+
+    auto integers_are_64bit = dsdt->h.revision >= 2 ? AML::IntegerBitness::IntegersAre64Bit : AML::IntegerBitness::IntegersAre32Bit;
+    auto definition_block_length = dsdt->h.length - sizeof(Structures::SDTHeader);
+    AML::Parser parser(root_namespace, { dsdt->definition_block, definition_block_length }, integers_are_64bit);
+
+    auto result = parser.populate_namespace();
+    if (result.is_error()) {
+        dmesgln("ACPI: Unable to parse DSDT AML: {}", result.error());
+        return;
+    }
+
+    auto failed = false;
+    enumerate_static_tables([&](StringView signature, PhysicalAddress table_address, size_t length) {
+        if (signature != "SSDT")
+            return;
+        auto ssdt_or_error = Memory::map_typed<Structures::SSDT>(table_address, length);
+        if (ssdt_or_error.is_error()) {
+            dmesgln("ACPI: SSDT is unmappable");
+            failed = true;
+            return;
+        }
+        auto ssdt = ssdt_or_error.release_value();
+
+        auto integers_are_64bit = ssdt->h.revision >= 2 ? AML::IntegerBitness::IntegersAre64Bit : AML::IntegerBitness::IntegersAre32Bit;
+        auto definition_block_length = length - sizeof(Structures::SDTHeader);
+        AML::Parser parser(root_namespace, { ssdt->definition_block, definition_block_length }, integers_are_64bit);
+
+        auto result = parser.populate_namespace();
+        if (result.is_error()) {
+            dmesgln("ACPI: Unable to parse SSDT AML: {}", result.error());
+            failed = true;
+            return;
+        }
+    });
+    if (failed)
+        return;
+
+    m_root_namespace = move(root_namespace);
 }
 
 bool Parser::can_reboot()
@@ -257,18 +312,19 @@ void Parser::access_generic_address(Structures::GenericAddressStructure const& s
     }
     case GenericAddressStructure::AddressSpace::SystemMemory: {
         dbgln("ACPI: Sending value {:x} to {}", value, PhysicalAddress(structure.address));
-        switch ((GenericAddressStructure::AccessSize)structure.access_size) {
+        auto access_size = structure.access_size ?: (structure.bit_width / 8);
+        switch ((GenericAddressStructure::AccessSize)access_size) {
         case GenericAddressStructure::AccessSize::Byte:
-            *Memory::map_typed<u8>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *Memory::map_typed_writable<u8>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
             break;
         case GenericAddressStructure::AccessSize::Word:
-            *Memory::map_typed<u16>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *Memory::map_typed_writable<u16>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
             break;
         case GenericAddressStructure::AccessSize::DWord:
-            *Memory::map_typed<u32>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *Memory::map_typed_writable<u32>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
             break;
         case GenericAddressStructure::AccessSize::QWord: {
-            *Memory::map_typed<u64>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *Memory::map_typed_writable<u64>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
             break;
         }
         default:
@@ -324,9 +380,104 @@ void Parser::try_acpi_reboot()
     Processor::halt();
 }
 
+bool Parser::extract_s5_contents(u16& SLP_TYPa, u16& SLP_TYPb)
+{
+    VERIFY(m_root_namespace.has_value());
+    if (!m_root_namespace->contains_node({ "_S5"sv }))
+        return false;
+    auto s5_object = MUST(m_root_namespace->get_node({ "_S5"sv }));
+    if (!s5_object->is_define_package())
+        return false;
+    auto elements = static_cast<AML::DefinePackage&>(*s5_object).element_list();
+    if (elements.size() < 2)
+        return false;
+    if (!elements[0]->is_integer_data() || !elements[1]->is_integer_data())
+        return false;
+    SLP_TYPa = static_cast<AML::IntegerData&>(*elements[0]).value();
+    SLP_TYPb = static_cast<AML::IntegerData&>(*elements[1]).value();
+    return true;
+}
+
+bool Parser::can_shutdown()
+{
+    if (!m_root_namespace.has_value())
+        return false;
+    u16 SLP_TYPa;
+    u16 SLP_TYPb;
+    return extract_s5_contents(SLP_TYPa, SLP_TYPb);
+}
+
 void Parser::try_acpi_shutdown()
 {
-    dmesgln("ACPI: Shutdown is not supported with the current configuration, aborting!");
+    if (!can_shutdown()) {
+        dmesgln("ACPI: Shutdown not supported!");
+        return;
+    }
+
+    auto fadt_or_error = Memory::map_typed<Structures::FADT>(m_fadt);
+    if (fadt_or_error.is_error()) {
+        dmesgln("ACPI: Failed mapping FADT {}", fadt_or_error.error());
+        return;
+    }
+    auto fadt = fadt_or_error.release_value();
+
+    InterruptDisabler disabler;
+    // 16.1.7 Transitioning from the Working to the Soft Off State
+    // 1. OSPM executes the _PTS control method, passing the argument 5.
+    if (m_root_namespace->contains_node({ "_PTS"sv })) {
+        // NOTE: It is technically legal to not call the _PTS method even on machines where it exists (QEMU for example, does not have one),
+        // due to the below paragraph from the ACPI specification, but since manufacturers are known to not follow the specification very
+        // closely, we should still strive to eventually support executing it
+        // "During a catastrophic failure (where the integrity of the AML code interpreter or driver structure is questionable), if OSPM
+        // decides to shut the system off, it will not issue a _PTS, but will immediately issue a SLP_TYP of “soft off” and then set the
+        // SLP_EN bit, or directly write the HW-reduced ACPI Sleep Type value and the SLP_EN bit to the Sleep Control Register. Hence,
+        // the hardware should not rely solely on the _PTS control method to sequence the system to the “soft off” state"
+        dbgln("FIXME: Implement AML method execution for _PTS shutdown call");
+    }
+
+    // 2. OSPM prepares its components to shut down (flushing disk caches).
+    // NOTE: This is done by the caller
+
+    // 3. If not a HW-reduced ACPI platform, OSPM writes SLP_TYPa (from the \_S5 object) with the
+    // SLP_ENa bit set to the PM1a_CNT register.
+    u16 SLP_TYPa;
+    u16 SLP_TYPb;
+    auto success = extract_s5_contents(SLP_TYPa, SLP_TYPb);
+    VERIFY(success); // can_shutdown() already checked this works
+    if (!m_hardware_flags.hardware_reduced_acpi) {
+        u16 const PM1a_CNT_shutdown_value = PM1_CNT_SLP_EN | (SLP_TYPa << PM1_CNT_SLP_TYP_offset);
+        // X_PM1a_CNT_BLK ... If this field contains a nonzero value which can be used by the OSPM,
+        // then the PM1a_CNT_BLK field must be ignored by the OSPM.
+        if (fadt->h.revision >= 2 && fadt->x_pm1a_cnt_blk.is_nonzero())
+            access_generic_address(fadt->x_pm1a_cnt_blk, PM1a_CNT_shutdown_value);
+#if ARCH(X86_64)
+        else if (fadt->PM1a_CNT_BLK != 0)
+            IO::out16(fadt->PM1a_CNT_BLK, PM1a_CNT_shutdown_value);
+#endif
+    }
+
+    // 4. OSPM writes SLP_TYPb (from the \_S5 object) with the SLP_ENb bit set to the PM1b_CNT
+    // register, or writes the HW-reduced ACPI Sleep Type value for S5 and the SLP_EN bit to the
+    // Sleep Control Register.
+    if (fadt->h.revision >= 5 && m_hardware_flags.hardware_reduced_acpi && fadt->sleep_control.is_nonzero()) {
+        // NOTE: One would assume that the 'HW-reduced ACPI Sleep Type value' is SLP_TYPb, given
+        // that it's mentioned next to SLP_TYPb, and is not actually defined anywhere else in the
+        // ACPI specification, but in practice this value is actually SLP_TYPa.
+        access_generic_address(fadt->sleep_control, SLEEP_CONTROL_SLP_EN | (SLP_TYPa << SLEEP_CONTROL_SLP_TYP_offset));
+    } else {
+        u16 const PM1b_CNT_shutdown_value = PM1_CNT_SLP_EN | (SLP_TYPb << PM1_CNT_SLP_TYP_offset);
+        // X_PM1b_CNT_BLK ... If this field contains a nonzero value which can be used by the OSPM,
+        // then the PM1b_CNT_BLK field must be ignored by the OSPM.
+        if (fadt->h.revision >= 2 && fadt->x_pm1b_cnt_blk.is_nonzero())
+            access_generic_address(fadt->x_pm1b_cnt_blk, PM1b_CNT_shutdown_value);
+#if ARCH(X86_64)
+        else if (fadt->PM1b_CNT_BLK != 0)
+            IO::out16(fadt->PM1b_CNT_BLK, PM1b_CNT_shutdown_value);
+#endif
+    }
+
+    // 5. The system enters the Soft Off state.
+    Processor::halt();
 }
 
 size_t Parser::get_table_size(PhysicalAddress table_header)
