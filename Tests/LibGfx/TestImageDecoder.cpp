@@ -693,6 +693,7 @@ TEST_CASE(test_jpeg2000_decode)
 
     Array test_inputs = {
         TEST_INPUT("jpeg2000/kakadu-lossless-rgba-u8-prog1-layers1-res6-mct.jp2"sv),
+        TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-tile3x2-cblk4x16-tp3-layers3-res2-mct.jp2"sv),
     };
 
     for (auto test_input : test_inputs) {
