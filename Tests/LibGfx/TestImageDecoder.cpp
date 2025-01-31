@@ -687,7 +687,7 @@ TEST_CASE(test_jpeg2000_spec_annex_j_10)
 
 TEST_CASE(test_jpeg2000_simple)
 {
-    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/simple.jp2"sv)));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/kakadu-lossy-rgba-u8-prog0-layers1-res6-mct.jp2"sv)));
     EXPECT(Gfx::JPEG2000ImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
 
