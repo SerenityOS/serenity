@@ -37,6 +37,11 @@ static ErrorOr<void> save_image(NonnullRefPtr<Gfx::Bitmap> bitmap, StringView ou
     return Gfx::WebPWriter::encode(*buffered_stream, *bitmap);
 }
 
+static bool are_pixels_equal(Gfx::Color first_pixel, Gfx::Color second_pixel)
+{
+    return first_pixel == second_pixel;
+}
+
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> make_diff_image(NonnullRefPtr<Gfx::Bitmap> first_image, NonnullRefPtr<Gfx::Bitmap> second_image)
 {
     VERIFY(first_image->size() == second_image->size());
@@ -47,7 +52,7 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> make_diff_image(NonnullRefPtr<Gfx::Bi
         for (int x = 0; x < first_image->width(); ++x) {
             auto first_pixel = first_image->get_pixel<Gfx::StorageFormat::BGRA8888>(x, y);
             auto second_pixel = second_image->get_pixel<Gfx::StorageFormat::BGRA8888>(x, y);
-            if (first_pixel == second_pixel) {
+            if (are_pixels_equal(first_pixel, second_pixel)) {
                 diff_image->set_pixel(x, y, first_pixel.interpolate(Gfx::Color::White, 0.5f));
             } else {
                 diff_image->set_pixel(x, y, Gfx::Color::Red);
@@ -90,7 +95,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         for (int x = 0; x < first_image->physical_width(); ++x) {
             auto first_pixel = first_image->get_pixel(x, y);
             auto second_pixel = second_image->get_pixel(x, y);
-            if (first_pixel != second_pixel) {
+            if (!are_pixels_equal(first_pixel, second_pixel)) {
                 warnln("different pixel at ({}, {}), {} vs {}", x, y, first_pixel, second_pixel);
                 return 1;
             }
