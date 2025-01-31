@@ -1520,7 +1520,11 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
         u8 number_of_coding_passes { 0 };
         u32 length_of_codeword_segment { 0 };
     };
-    Array<Vector<TemporaryCodeBlockData>, 3> temporary_code_block_data {};
+    struct TemporarySubBandData {
+        DecodedPrecinct* precinct { nullptr };
+        Vector<TemporaryCodeBlockData> temporary_code_block_data;
+    };
+    Array<TemporarySubBandData, 3> temporary_sub_band_data {};
 
     static constexpr Array level_0_sub_bands { JPEG2000::SubBand::HorizontalLowpassVerticalLowpass };
     auto sub_bands = r == 0 ? level_0_sub_bands.span() : DecodedTileComponent::SubBandOrder.span();
@@ -1533,7 +1537,8 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
         if (precinct.num_code_blocks_wide == 0 || precinct.num_code_blocks_high == 0)
             continue;
 
-        TRY(temporary_code_block_data[sub_band_index].try_resize(precinct.code_blocks.size()));
+        temporary_sub_band_data[sub_band_index].precinct = &precinct;
+        TRY(temporary_sub_band_data[sub_band_index].temporary_code_block_data.try_resize(precinct.code_blocks.size()));
 
         for (auto const& [code_block_index, current_block] : enumerate(precinct.code_blocks)) {
             size_t code_block_x = code_block_index % precinct.num_code_blocks_wide;
@@ -1604,7 +1609,7 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
                 return 37 + bits;
             }());
             dbgln_if(JPEG2000_DEBUG, "number of coding passes: {}", number_of_coding_passes);
-            temporary_code_block_data[sub_band_index][code_block_index].number_of_coding_passes = number_of_coding_passes;
+            temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].number_of_coding_passes = number_of_coding_passes;
 
             // B.10.7 Length of the compressed image data from a given code-block
             // We currently always use B.10.7.1 Single codeword segment; see the comment below B.10.7.2 for why.
@@ -1630,7 +1635,7 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
                 length = (length << 1) | bit;
             }
             dbgln_if(JPEG2000_DEBUG, "length {}", length);
-            temporary_code_block_data[sub_band_index][code_block_index].length_of_codeword_segment = length;
+            temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].length_of_codeword_segment = length;
 
             // B.10.7.2 Multiple codeword segments
             // "Multiple codeword segments arise when a termination occurs between coding passes which are included in the packet"
@@ -1664,16 +1669,11 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
 
     // Done reading packet header. Set `data` on each codeblock on the packet.
     u32 offset = stream.offset();
-    for (auto [sub_band_index, sub_band] : enumerate(sub_bands)) {
-        auto& component = tile.components[progression_data.component];
-        auto& sub_band_data = r == 0 ? component.nLL : component.decompositions[r - 1][sub_band_index];
-        auto& precinct = sub_band_data.precincts[progression_data.precinct];
-
-        for (auto const& [code_block_index, current_block] : enumerate(precinct.code_blocks)) {
-            auto& temporary_code_block_data_entry = temporary_code_block_data[sub_band_index][code_block_index];
-            auto block_data = data.slice(offset, temporary_code_block_data_entry.length_of_codeword_segment);
-            offset += temporary_code_block_data_entry.length_of_codeword_segment;
-            TRY(current_block.layers.try_append({ block_data, temporary_code_block_data_entry.number_of_coding_passes }));
+    for (auto const& temporary_sub_band : temporary_sub_band_data) {
+        for (auto const& [code_block_index, temporary_code_block] : enumerate(temporary_sub_band.temporary_code_block_data)) {
+            auto block_data = data.slice(offset, temporary_code_block.length_of_codeword_segment);
+            offset += temporary_code_block.length_of_codeword_segment;
+            TRY(temporary_sub_band.precinct->code_blocks[code_block_index].layers.try_append({ block_data, temporary_code_block.number_of_coding_passes }));
         }
     }
 
