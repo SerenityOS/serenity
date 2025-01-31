@@ -477,6 +477,7 @@ if (BUILD_LAGOM)
         GL
         GLSL
         GPU
+        HID
         HTTP
         IMAP
         ImageDecoderClient
@@ -655,6 +656,7 @@ if (BUILD_LAGOM)
         lagom_utility(xml SOURCES ../../Userland/Utilities/xml.cpp LIBS LibFileSystem LibMain LibXML LibURL)
         lagom_utility(xzcat SOURCES ../../Userland/Utilities/xzcat.cpp LIBS LibCompress LibMain)
         lagom_utility(fdtdump SOURCES ../../Userland/Utilities/fdtdump.cpp LIBS LibDeviceTree LibMain)
+        lagom_utility(hiddump SOURCES ../../Userland/Utilities/hiddump.cpp LIBS LibHID LibMain)
         lagom_utility(crypto-bench SOURCES ../../Userland/Utilities/crypto-bench.cpp LIBS LibMain LibCrypto)
 
         enable_testing()
