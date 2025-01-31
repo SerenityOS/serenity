@@ -1337,10 +1337,10 @@ static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
 
         sub_band.rect = context.siz.reference_grid_coordinates_for_sub_band(tile.rect, component_index, n_b(r), sub_band_type);
 
-        dbgln_if(JPEG2000_DEBUG, "Sub-band rect: {}", sub_band.rect);
-
         // Compute tile size at resolution level r.
         auto ll_rect = context.siz.reference_grid_coordinates_for_ll_band(tile.rect, component_index, r, N_L);
+
+        dbgln_if(JPEG2000_DEBUG, "Sub-band rect: {}, ll rect {}", sub_band.rect, ll_rect);
 
         // B.6
         // (B-16)
@@ -1416,6 +1416,8 @@ static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
 
         auto pq = context.siz.tile_2d_index_from_1d_index(tile_index);
         tile.rect = context.siz.reference_grid_coordinates_for_tile(pq);
+
+        dbgln_if(JPEG2000_DEBUG, "tile {} rect {}", tile_index, tile.rect);
 
         for (auto [component_index, component] : enumerate(context.siz.components)) {
             VERIFY(component.bit_depth() >= 1);
