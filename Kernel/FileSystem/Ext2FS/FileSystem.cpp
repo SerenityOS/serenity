@@ -98,7 +98,7 @@ ErrorOr<void> Ext2FS::rename(Inode& old_parent_inode, StringView old_basename, I
 ErrorOr<void> Ext2FS::flush_super_block()
 {
     MutexLocker locker(m_lock);
-    auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
+    auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block, sizeof(ext2_super_block));
     auto const superblock_physical_block_count = (sizeof(ext2_super_block) / device_block_size());
 
     // FIXME: We currently have no ability of writing within a device block, but the ability to do so would allow us to use device block sizes larger than 1024.
@@ -139,7 +139,7 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
     VERIFY(!is_initialized_while_locked());
 
     VERIFY((sizeof(ext2_super_block) % device_block_size()) == 0);
-    auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block);
+    auto super_block_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&m_super_block, sizeof(ext2_super_block));
     TRY(raw_read_blocks(super_block_offset_on_device / device_block_size(), (sizeof(ext2_super_block) / device_block_size()), super_block_buffer));
 
     auto const& super_block = this->super_block();
@@ -185,7 +185,7 @@ ErrorOr<void> Ext2FS::initialize_while_locked()
     auto blocks_to_read = ceil_div(m_block_group_count * sizeof(ext2_group_desc), logical_block_size());
     BlockIndex first_block_of_bgdt = first_block_of_block_group_descriptors();
     m_cached_group_descriptor_table = TRY(KBuffer::try_create_with_size("Ext2FS: Block group descriptors"sv, logical_block_size() * blocks_to_read, Memory::Region::Access::ReadWrite));
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_group_descriptor_table->data());
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(m_cached_group_descriptor_table->data(), logical_block_size());
     TRY(read_blocks(first_block_of_bgdt, blocks_to_read, buffer));
 
     if constexpr (EXT2_DEBUG) {
@@ -300,7 +300,7 @@ ErrorOr<void> Ext2FS::write_ext2_inode(InodeIndex inode, ext2_inode_large const&
 
     memcpy(inode_storage.data(), &e2inode, min(used_inode_size, sizeof(ext2_inode_large)));
 
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(inode_storage.data());
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(inode_storage.data(), inode_size());
     return write_block(block_index, buffer, inode_size(), offset);
 }
 
@@ -518,8 +518,8 @@ ErrorOr<Ext2FS::CachedBitmap*> Ext2FS::get_bitmap_block(BlockIndex bitmap_block_
     }
 
     auto block = TRY(KBuffer::try_create_with_size("Ext2FS: Cached bitmap block"sv, logical_block_size(), Memory::Region::Access::ReadWrite));
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
-    TRY(read_block(bitmap_block_index, &buffer, logical_block_size()));
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(block->data(), logical_block_size());
+    TRY(read_block(bitmap_block_index, buffer, logical_block_size()));
     auto new_bitmap = TRY(adopt_nonnull_own_or_enomem(new (nothrow) CachedBitmap(bitmap_block_index, move(block))));
     TRY(m_cached_bitmaps.try_append(move(new_bitmap)));
     return m_cached_bitmaps.last().ptr();
@@ -711,9 +711,9 @@ void Ext2FS::flush_block_group_descriptor_table()
     MutexLocker locker(m_lock);
     auto blocks_to_write = ceil_div(m_block_group_count * sizeof(ext2_group_desc), logical_block_size());
     auto first_block_of_bgdt = first_block_of_block_group_descriptors();
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)block_group_descriptors());
+    auto span = UserOrKernelBuffer::for_kernel_buffer((u8*)block_group_descriptors(), sizeof(ext2_group_desc));
     auto write_bgdt_to_block = [&](BlockIndex index) {
-        if (auto result = write_blocks(index, blocks_to_write, buffer); result.is_error())
+        if (auto result = write_blocks(index, blocks_to_write, span); result.is_error())
             dbgln("Ext2FS[{}]::flush_block_group_descriptor_table(): Failed to write blocks: {}", fsid(), result.error());
     };
 
@@ -750,7 +750,7 @@ ErrorOr<void> Ext2FS::flush_writes()
         }
         for (auto& cached_bitmap : m_cached_bitmaps) {
             if (cached_bitmap->dirty) {
-                auto buffer = UserOrKernelBuffer::for_kernel_buffer(cached_bitmap->buffer->data());
+                auto buffer = UserOrKernelBuffer::for_kernel_buffer(cached_bitmap->buffer->data(), cached_bitmap->buffer->size());
                 if (auto result = write_block(cached_bitmap->bitmap_block_index, buffer, logical_block_size()); result.is_error()) {
                     dbgln("Ext2FS[{}]::flush_writes(): Failed to write blocks: {}", fsid(), result.error());
                 }
@@ -796,12 +796,12 @@ ErrorOr<NonnullRefPtr<Ext2FSInode>> Ext2FS::build_root_inode() const
 
     auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Ext2FSInode(const_cast<Ext2FS&>(*this), EXT2_ROOT_INO)));
 
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&inode->m_raw_inode));
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&inode->m_raw_inode), sizeof(ext2_inode_large));
 
     size_t size = min(inode_size(), sizeof(ext2_inode_large));
     VERIFY(size >= EXT2_GOOD_OLD_INODE_SIZE);
 
-    TRY(read_block(block_index, &buffer, size, offset));
+    TRY(read_block(block_index, buffer, size, offset));
     return inode;
 }
 
@@ -837,12 +837,12 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FS::get_inode(InodeIdentifier inode) const
 
     auto new_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index())));
 
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&new_inode->m_raw_inode));
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<u8*>(&new_inode->m_raw_inode), sizeof(ext2_inode_large));
 
     size_t size = min(inode_size(), sizeof(ext2_inode_large));
     VERIFY(size >= EXT2_GOOD_OLD_INODE_SIZE);
 
-    TRY(read_block(block_index, &buffer, size, offset));
+    TRY(read_block(block_index, buffer, size, offset));
 
     TRY(m_inode_cache.try_set(inode.index(), new_inode));
     return new_inode;

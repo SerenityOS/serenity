@@ -12,6 +12,9 @@ namespace Kernel {
 
 bool UserOrKernelBuffer::is_kernel_buffer() const
 {
+    // NOTE: This is safe to do, because when we instantiate a UserOrKernelBuffer,
+    // we check for the entire range (i.e. use the given size), so now checking only
+    // the base pointer is considered safe.
     return !Memory::is_user_address(VirtualAddress(m_buffer));
 }
 

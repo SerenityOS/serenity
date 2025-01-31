@@ -21,7 +21,7 @@ ErrorOr<size_t> ISO9660Inode::read_bytes_locked(off_t offset, size_t size, UserO
         return 0;
 
     auto block = TRY(KBuffer::try_create_with_size("ISO9660FS: Inode read buffer"sv, fs().device_block_size()));
-    auto block_buffer = UserOrKernelBuffer::for_kernel_buffer(block->data());
+    auto block_buffer = UserOrKernelBuffer::for_kernel_buffer(*block);
 
     size_t total_bytes = min(size, data_length - offset);
     size_t nread = 0;

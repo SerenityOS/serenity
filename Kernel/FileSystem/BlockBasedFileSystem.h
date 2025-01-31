@@ -27,7 +27,7 @@ protected:
 
     virtual ErrorOr<void> initialize_while_locked() override;
 
-    ErrorOr<void> read_block(BlockIndex, UserOrKernelBuffer*, size_t count, u64 offset = 0, bool allow_cache = true) const;
+    ErrorOr<void> read_block(BlockIndex, Optional<UserOrKernelBuffer>, size_t count, u64 offset = 0, bool allow_cache = true) const;
     ErrorOr<void> read_blocks(BlockIndex, unsigned count, UserOrKernelBuffer&, bool allow_cache = true) const;
 
     ErrorOr<void> raw_read(BlockIndex, UserOrKernelBuffer&);

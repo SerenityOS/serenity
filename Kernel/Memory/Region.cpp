@@ -594,7 +594,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, bool m
     u8 page_buffer[PAGE_SIZE];
     auto& inode = inode_vmobject.inode();
 
-    auto buffer = UserOrKernelBuffer::for_kernel_buffer(page_buffer);
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(page_buffer, PAGE_SIZE);
     auto result = inode.read_bytes(page_index_in_vmobject * PAGE_SIZE, PAGE_SIZE, buffer, nullptr);
 
     if (result.is_error()) {

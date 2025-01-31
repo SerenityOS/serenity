@@ -768,7 +768,7 @@ static ErrorOr<FixedArray<u8>> read_elf_buffer_including_program_headers(OpenFil
         return EINVAL;
 
     auto elf_buffer = TRY(FixedArray<u8>::create(last_needed_byte_offset_on_program_header_list));
-    auto elf_read_buffer = UserOrKernelBuffer::for_kernel_buffer(elf_buffer.data());
+    auto elf_read_buffer = UserOrKernelBuffer::for_kernel_buffer(elf_buffer.data(), last_needed_byte_offset_on_program_header_list);
     {
         auto nread = TRY(elf_file.read(elf_read_buffer, 0, elf_buffer.span().size()));
         if (nread < elf_buffer.span().size())
@@ -807,7 +807,7 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
     auto interpreter_path_program_header = maybe_interpreter_path_program_header.release_value();
 
     auto buffer = TRY(KBuffer::try_create_with_size("ELF interpreter program path"sv, static_cast<size_t>(interpreter_path_program_header.p_filesz) - 1));
-    auto buffer_as_kernel_buffer = buffer->as_kernel_buffer();
+    auto buffer_as_kernel_buffer = UserOrKernelBuffer::for_kernel_buffer(*buffer);
     {
         auto nread = TRY(elf_file.read(buffer_as_kernel_buffer, static_cast<size_t>(interpreter_path_program_header.p_offset), buffer->size()));
         if (nread < buffer->size())
@@ -836,7 +836,7 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
 
     static_assert(sizeof(Elf_Ehdr) < PAGE_SIZE);
     auto elf_interpreter_buffer = Array<u8, sizeof(Elf_Ehdr)>::from_repeated_value(0);
-    auto elf_interpreter_read_buffer = UserOrKernelBuffer::for_kernel_buffer(elf_interpreter_buffer.data());
+    auto elf_interpreter_read_buffer = UserOrKernelBuffer::for_kernel_buffer(elf_interpreter_buffer.span());
     auto nread = TRY(interpreter_description->read(elf_interpreter_read_buffer, elf_interpreter_buffer.span().size()));
     if (nread < sizeof(Elf_Ehdr))
         return ENOEXEC;
@@ -899,7 +899,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
     // The size of a ELF header should suffice to find the shebang sign (known as #! sign) if the file has it
     // in the start.
     auto preliminary_buffer = Array<u8, sizeof(Elf_Ehdr)>::from_repeated_value(0);
-    auto preliminary_read_buffer = UserOrKernelBuffer::for_kernel_buffer(preliminary_buffer.data());
+    auto preliminary_read_buffer = UserOrKernelBuffer::for_kernel_buffer(preliminary_buffer.span());
     auto nread = TRY(description->read(preliminary_read_buffer, 0, preliminary_buffer.span().size()));
 
     // 1) #! interpreted file
@@ -907,7 +907,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
         // FIXME: PAGE_SIZE seems like enough for specifying an interpreter for now.
         // We might need to re-evaluate this but to avoid further allocations, this is how it is for now.
         auto shebang_line_buffer = Array<u8, PAGE_SIZE>::from_repeated_value(0);
-        auto shebang_line_read_buffer = UserOrKernelBuffer::for_kernel_buffer(shebang_line_buffer.data());
+        auto shebang_line_read_buffer = UserOrKernelBuffer::for_kernel_buffer(shebang_line_buffer.span());
         TRY(description->read(shebang_line_read_buffer, 0, shebang_line_buffer.span().size()));
         auto shebang_words = TRY(find_shebang_interpreter_for_executable(shebang_line_buffer));
         auto shebang_path = TRY(shebang_words.first()->try_clone());
