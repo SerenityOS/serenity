@@ -709,8 +709,12 @@ TEST_CASE(test_jpeg2000_decode)
     }
 }
 
-TEST_CASE(test_jpeg2000_simple)
+TEST_CASE(test_jpeg2000_icc_and_decode_lossy)
 {
+    auto png_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/ref.png"sv)));
+    auto png_plugin_decoder = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(png_file->bytes()));
+    auto ref_frame = TRY_OR_FAIL(expect_single_frame_of_size(*png_plugin_decoder, { 119, 101 }));
+
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/kakadu-lossy-rgba-u8-prog0-layers1-res6-mct.jp2"sv)));
     EXPECT(Gfx::JPEG2000ImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
@@ -720,6 +724,25 @@ TEST_CASE(test_jpeg2000_simple)
     auto icc_bytes = MUST(plugin_decoder->icc_data());
     EXPECT(icc_bytes.has_value());
     EXPECT_EQ(icc_bytes->size(), 3144u);
+
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 119, 101 }));
+    for (int y = 0; y < frame.image->height(); ++y) {
+        for (int x = 0; x < frame.image->width(); ++x) {
+            auto pixel = frame.image->get_pixel(x, y);
+            auto ref_pixel = ref_frame.image->get_pixel(x, y);
+
+            // FIXME: ref.png is kakadu-lossy-rgba-u8-prog0-layers1-res6-mct.jp2 opened in Photoshop and saved as png,
+            // so the image data should be identical. Maybe lossy reconstruction isn't exact (maybe some decoders round
+            // after every IDWT level and we don't, or something like this), but being off by 5 seems high.
+            // Investigate and try to lower the threshold here, ideally probably to zero. If that happens, move the
+            // decoding data checking part of this test to test_jpeg2000_decode.
+            constexpr int Threshold = 5;
+            EXPECT(abs(pixel.red() - ref_pixel.red()) <= Threshold);
+            EXPECT(abs(pixel.green() - ref_pixel.green()) <= Threshold);
+            EXPECT(abs(pixel.blue() - ref_pixel.blue()) <= Threshold);
+            EXPECT(abs(pixel.alpha() - ref_pixel.alpha()) <= Threshold);
+        }
+    }
 }
 
 TEST_CASE(test_jpeg2000_gray)
