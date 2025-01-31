@@ -477,6 +477,7 @@ if (BUILD_LAGOM)
         GL
         GLSL
         GPU
+        HID
         HTTP
         IMAP
         ImageDecoderClient
