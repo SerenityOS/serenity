@@ -31,7 +31,7 @@ else
 fi
 
 MOLD_BUILD="$DIR"/Build/mold 
-cmake -B "$MOLD_BUILD" -S. -DCMAKE_INSTALL_PREFIX="$DIR"/Local/mold
-make -C "$MOLD_BUILD" install -j"$MAKEJOBS"
+cmake -B "$MOLD_BUILD" -S. -GNinja -DCMAKE_INSTALL_PREFIX="$DIR"/Local/mold
+ninja -C "$MOLD_BUILD" install -j"$MAKEJOBS"
 
 popd
