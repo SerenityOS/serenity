@@ -18,6 +18,7 @@
 #include <LibGfx/ImageFormats/JPEG2000InverseDiscreteWaveletTransform.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
 #include <LibGfx/ImageFormats/JPEG2000ProgressionIterators.h>
+#include <LibGfx/ImageFormats/JPEG2000TagTree.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/JPEGXLLoader.h>
 #include <LibGfx/ImageFormats/PAMLoader.h>
