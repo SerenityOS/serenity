@@ -1415,18 +1415,6 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
         return bit;
     };
 
-    // Tag trees are used to store the code-block inclusion bits and the zero bit-plane information.
-    // B.10.2 Tag trees
-    // "At every node of this tree the minimum integer of the (up to four) nodes below it is recorded. [...]
-    //  Level 0 is the lowest level of the tag tree; it contains the top node. [...]
-    //  Each node has a [...] current value, [...] initialized to zero. A 0 bit in the tag tree means that the minimum
-    //  (or the value in the case of the highest level) is larger than the current value and a 1 bit means that the minimum
-    //  (or the value in the case of the highest level) is equal to the current value.
-    //  For each contiguous 0 bit in the tag tree the current value is incremented by one.
-    //  Nodes at higher levels cannot be coded until lower level node values are fixed (i.e, a 1 bit is coded). [...]
-    //  Only the information needed for the current code-block is stored at the current point in the packet header."
-    // The example in Figure B.13 / Table B.5 is useful to understand what exactly "only the information needed" means.
-
     // The most useful section to understand the overall flow is B.10.8 Order of information within packet header,
     // which has an example packet header bitstream, and the data layout:
     // "bit for zero or non-zero length packet
