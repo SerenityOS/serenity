@@ -1689,7 +1689,7 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
 
                     // Table E.1 – Sub-band gains
                     auto log_2_gain_b = sub_band_type == JPEG2000::SubBand::HorizontalLowpassVerticalLowpass ? 0 : (sub_band_type == JPEG2000::SubBand::HorizontalHighpassVerticalLowpass || sub_band_type == JPEG2000::SubBand::HorizontalLowpassVerticalHighpass ? 1 : 2);
-                    auto R_b = R_I + log_2_gain_b;
+                    auto R_b = R_I + log_2_gain_b; // (E-4)
 
                     u16 mantissa;
                     if (quantization_parameters.quantization_style == QuantizationDefault::QuantizationStyle::ScalarDerived) {
@@ -1706,9 +1706,8 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
                     auto exponent = get_exponent(quantization_parameters, sub_band_type, r);
                     float step_size = powf(2.0f, R_b - exponent) * (1.0f + mantissa / powf(2.0f, 11.0f));
 
-                    value *= step_size; // FIXME: Round and clamp?
-
-                    // FIXME: This might be incomplete: if bitplanes are missing, we might need to scale up.
+                    // (E-6), with r chosen as 0 (see NOTE below (E-6)).
+                    value *= step_size;
                 }
 
                 output.data[y * output.pitch + x] = value;
