@@ -1461,8 +1461,6 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
             continue;
 
         TRY(temporary_code_block_data[sub_band_index].try_resize(precinct.code_blocks.size()));
-        auto& code_block_inclusion_tree = precinct.code_block_inclusion_tree.value();
-        auto& p_tree = precinct.p_tree.value();
 
         for (auto const& [code_block_index, current_block] : enumerate(precinct.code_blocks)) {
             size_t code_block_x = code_block_index % precinct.num_code_blocks_wide;
@@ -1478,7 +1476,7 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
                 // "For code-blocks that have not been previously included in any packet, this information is signalled with a separate tag
                 //  tree code for each precinct as confined to a sub-band. The values in this tag tree are the number of the layer in which the
                 //  current code-block is first included."
-                is_included = TRY(code_block_inclusion_tree.read_value(code_block_x, code_block_y, read_bit, current_layer_index + 1)) <= current_layer_index;
+                is_included = TRY(precinct.code_block_inclusion_tree->read_value(code_block_x, code_block_y, read_bit, current_layer_index + 1)) <= current_layer_index;
             }
             dbgln_if(JPEG2000_DEBUG, "code-block inclusion: {}", is_included);
             current_block.is_included = is_included;
@@ -1496,7 +1494,7 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
             //  where the number of guard bits G and the exponent exp_b are specified in the QCD or QCC marker segments (see A.6.4 and A.6.5)."
             bool is_included_for_the_first_time = is_included && !current_block.has_been_included_in_previous_packet;
             if (is_included_for_the_first_time) {
-                u32 p = TRY(p_tree.read_value(code_block_x, code_block_y, read_bit));
+                u32 p = TRY(precinct.p_tree->read_value(code_block_x, code_block_y, read_bit));
                 dbgln_if(JPEG2000_DEBUG, "zero bit-plane information: {}", p);
                 current_block.p = p;
                 current_block.has_been_included_in_previous_packet = true;
