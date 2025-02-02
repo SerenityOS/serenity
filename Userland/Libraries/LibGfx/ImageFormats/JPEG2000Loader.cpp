@@ -825,11 +825,17 @@ struct JPEG2000LoadingContext {
     {
         JPEG2000::ProgressionData progression_data;
 
+        auto progression_data_has_packet = [&](JPEG2000::ProgressionData const& progression_data) {
+            if (progression_data.resolution_level > coding_style_parameters_for_component(tile, progression_data.component).number_of_decomposition_levels)
+                return false;
+            return true;
+        };
+
         do {
             if (!tile.progression_iterator->has_next())
                 return Error::from_string_literal("JPEG2000ImageDecoderPlugin: No more progression orders but packets left");
             progression_data = tile.progression_iterator->next();
-        } while (progression_data.resolution_level > coding_style_parameters_for_component(tile, progression_data.component).number_of_decomposition_levels);
+        } while (!progression_data_has_packet(progression_data));
 
         return progression_data;
     }
