@@ -859,11 +859,16 @@ struct MarkerSegment {
     Optional<ReadonlyBytes> data;
 };
 
+static ErrorOr<u16> peek_marker(ReadonlyBytes data)
+{
+    if (2 > data.size())
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for marker");
+    return *reinterpret_cast<BigEndian<u16> const*>(data.data());
+}
+
 static ErrorOr<u16> peek_marker(JPEG2000LoadingContext& context)
 {
-    if (context.codestream_cursor + 2 > context.codestream_data.size())
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough data for marker");
-    return *reinterpret_cast<BigEndian<u16> const*>(context.codestream_data.data() + context.codestream_cursor);
+    return peek_marker(context.codestream_data.slice(context.codestream_cursor));
 }
 
 static ErrorOr<MarkerSegment> read_marker_at_cursor(JPEG2000LoadingContext& context)
