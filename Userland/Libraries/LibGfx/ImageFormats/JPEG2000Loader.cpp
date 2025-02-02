@@ -770,7 +770,8 @@ struct JPEG2000LoadingContext {
     State state { State::NotDecoded };
     ReadonlyBytes codestream_data;
     size_t codestream_cursor { 0 };
-    Optional<ReadonlyBytes> icc_data;
+
+    Optional<ISOBMFF::JPEG2000ColorSpecificationBox const&> color_box; // This is always set for box-based files.
 
     IntSize size;
 
@@ -1190,9 +1191,7 @@ static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, Rea
     if (image_header_box.compression_type != ISOBMFF::JPEG2000ImageHeaderBox::CompressionType::Default)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Decoding of non-jpeg2000 data embedded in jpeg2000 files is not implemented");
 
-    auto const& color_header_box = static_cast<ISOBMFF::JPEG2000ColorSpecificationBox const&>(*header_box.child_boxes()[color_header_box_index.value()]);
-    if (color_header_box.method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Restricted || color_header_box.method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Any)
-        context.icc_data = color_header_box.icc_data.bytes();
+    context.color_box = static_cast<ISOBMFF::JPEG2000ColorSpecificationBox const&>(*header_box.child_boxes()[color_header_box_index.value()]);
 
     TRY(parse_codestream_main_header(context));
 
@@ -2076,7 +2075,13 @@ ErrorOr<ImageFrameDescriptor> JPEG2000ImageDecoderPlugin::frame(size_t index, Op
 
 ErrorOr<Optional<ReadonlyBytes>> JPEG2000ImageDecoderPlugin::icc_data()
 {
-    return m_context->icc_data;
+    if (m_context->color_box.has_value()
+        && (m_context->color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Restricted
+            || m_context->color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Any)) {
+        return m_context->color_box->icc_data.bytes();
+    }
+
+    return OptionalNone {};
 }
 
 }
