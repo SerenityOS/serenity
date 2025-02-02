@@ -92,6 +92,8 @@ inline ErrorOr<IDWTOutput> _2D_SR(Transformation transformation, IDWTOutput ll, 
 {
     // Figure F.6 – The 2D_SR procedure
     auto a = TRY(_2D_INTERLEAVE(move(ll), decomposition));
+    if (a.rect.is_empty())
+        return a;
 
     // Leave enough room for max expansion in _1D_EXTR.
     IDWTInternalBuffers buffers;
@@ -130,8 +132,7 @@ inline ErrorOr<IDWTOutput> _2D_INTERLEAVE(IDWTOutput ll, IDWTDecomposition const
     a.rect = decomposition.ll_rect; // == { { u0, v0 }, { u1 - u0 }, { v1 - v0 } }
     TRY(a.data.try_resize(a.rect.width() * a.rect.height()));
 
-    {
-        VERIFY(!ll.rect.is_empty());
+    if (!ll.rect.is_empty()) {
         Span2D<float const> b { ll.data, ll.rect.size(), ll.rect.width() };
         VERIFY(ceil_div(u1, 2) - ceil_div(u0, 2) == b.width());
         VERIFY(ceil_div(v1, 2) - ceil_div(v0, 2) == b.height());
