@@ -828,6 +828,16 @@ struct JPEG2000LoadingContext {
         auto progression_data_has_packet = [&](JPEG2000::ProgressionData const& progression_data) {
             if (progression_data.resolution_level > coding_style_parameters_for_component(tile, progression_data.component).number_of_decomposition_levels)
                 return false;
+
+            // "It can happen that numprecincts is 0 for a particular tile-component and resolution level. When this happens, there are no
+            //  packets for this tile-component and resolution level."
+            // `num_precincts_wide` and `num_precincts_high` are the same for all sub-bands at a given resolution level, so it's
+            // enough to only check the first.
+            auto& component = tile.components[progression_data.component];
+            auto& sub_band_data = progression_data.resolution_level == 0 ? component.nLL : component.decompositions[progression_data.resolution_level - 1][0];
+            if (sub_band_data.num_precincts_wide == 0 || sub_band_data.num_precincts_high == 0)
+                return false;
+
             return true;
         };
 
