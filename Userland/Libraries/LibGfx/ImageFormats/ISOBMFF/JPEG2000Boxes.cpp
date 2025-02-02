@@ -105,6 +105,8 @@ ErrorOr<void> JPEG2000ColorSpecificationBox::read_from_stream(BoxStream& stream)
     approximation = TRY(stream.read_value<u8>());
     if (method == Method::Enumerated) {
         enumerated_color_space = TRY(stream.read_value<BigEndian<u32>>());
+        // FIXME: For some enumerated color spaces, there's additional data here
+        // (e.g. CIELab, see T.801 M.11.7.4.1 EP field format for the CIELab colourspace)
     } else if (method == Method::ICC_Restricted) {
         ByteBuffer local_icc_data = TRY(ByteBuffer::create_uninitialized(stream.remaining()));
         TRY(stream.read_until_filled(local_icc_data));
