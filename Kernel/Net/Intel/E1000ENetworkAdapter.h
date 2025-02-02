@@ -31,12 +31,12 @@ public:
 private:
     E1000ENetworkAdapter(StringView interface_name, PCI::DeviceIdentifier const&, u8 irq,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
-        NonnullOwnPtr<Memory::Region> tx_buffer_region, Memory::TypedMapping<RxDescriptor volatile[]> rx_descriptors,
-        Memory::TypedMapping<TxDescriptor volatile[]> tx_descriptors);
+        NonnullOwnPtr<Memory::Region> tx_buffer_region, Memory::TypedMapping<E1000::RxDescriptor volatile[]> rx_descriptors,
+        Memory::TypedMapping<E1000::TxDescriptor volatile[]> tx_descriptors);
 
     virtual StringView class_name() const override { return "E1000ENetworkAdapter"sv; }
 
     virtual void detect_eeprom() override;
-    virtual u32 read_eeprom(u8 address) override;
+    virtual u16 read_eeprom(u16 address) override;
 };
 }
