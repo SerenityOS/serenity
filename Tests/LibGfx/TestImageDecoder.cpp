@@ -695,6 +695,7 @@ TEST_CASE(test_jpeg2000_decode)
     Array test_inputs = {
         TEST_INPUT("jpeg2000/kakadu-lossless-rgba-u8-prog1-layers1-res6-mct.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-tile3x2-cblk4x16-tp3-layers3-res2-mct.jp2"sv),
+        TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-tile3x2-res5.jp2"sv),
     };
 
     for (auto test_input : test_inputs) {
@@ -704,9 +705,18 @@ TEST_CASE(test_jpeg2000_decode)
 
         auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 119, 101 }));
 
+        // The two rightmost columns aren't identical, but they aren't identical when decompressing the image with
+        // opj_decompress or Preview.app either. It looks like OpenJPEG might have produced a weird input file,
+        // see https://github.com/uclouvain/openjpeg/issues/1575
+        bool has_wrong_rightmost_columns = test_input.ends_with("openjpeg-lossless-rgba-u8-prog0-tile3x2-res5.jp2"sv);
+
         for (int y = 0; y < frame.image->height(); ++y)
-            for (int x = 0; x < frame.image->width(); ++x)
+            for (int x = 0; x < frame.image->width(); ++x) {
+                if (has_wrong_rightmost_columns && x >= 117 && (y <= 27 || (y >= 52 && y <= 79)))
+                    continue;
+
                 EXPECT_EQ(frame.image->get_pixel(x, y), ref_frame.image->get_pixel(x, y));
+            }
     }
 }
 
