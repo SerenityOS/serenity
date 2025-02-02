@@ -698,6 +698,7 @@ TEST_CASE(test_jpeg2000_decode)
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-tile3x2-res5.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-SOP.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-EPH.jp2"sv),
+        TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-EPH-SOP.jp2"sv),
     };
 
     for (auto test_input : test_inputs) {
