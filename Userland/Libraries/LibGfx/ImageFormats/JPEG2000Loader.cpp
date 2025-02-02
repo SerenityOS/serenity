@@ -423,7 +423,7 @@ struct CodingStyleDefault {
     // Table A.13 – Coding style parameter values for the Scod parameter
     bool has_explicit_precinct_size { false };
     bool may_use_SOP_marker { false };
-    bool may_use_EPH_marker { false };
+    bool shall_use_EPH_marker { false };
 
     // Table A.16 – Progression order for the SGcod, SPcoc, and Ppoc parameters
     // B.12 Progression order
@@ -458,7 +458,7 @@ static ErrorOr<CodingStyleDefault> read_coding_style_default(ReadonlyBytes data)
     u8 Scod = TRY(stream.read_value<u8>());
     cod.has_explicit_precinct_size = Scod & 1;
     cod.may_use_SOP_marker = Scod & 2;
-    cod.may_use_EPH_marker = Scod & 4;
+    cod.shall_use_EPH_marker = Scod & 4;
 
     u32 SGcod = TRY(stream.read_value<BigEndian<u32>>());
     u8 progression_order = SGcod >> 24;
@@ -475,7 +475,7 @@ static ErrorOr<CodingStyleDefault> read_coding_style_default(ReadonlyBytes data)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid multiple component transformation type");
     cod.multiple_component_transformation_type = static_cast<CodingStyleDefault::MultipleComponentTransformationType>(multiple_component_transformation_type);
 
-    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COD marker segment: has_explicit_precinct_size={}, may_use_SOP_marker={}, may_use_EPH_marker={}", cod.has_explicit_precinct_size, cod.may_use_SOP_marker, cod.may_use_EPH_marker);
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COD marker segment: has_explicit_precinct_size={}, may_use_SOP_marker={}, shall_use_EPH_marker={}", cod.has_explicit_precinct_size, cod.may_use_SOP_marker, cod.shall_use_EPH_marker);
     dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: COD marker segment: progression_order={}, number_of_layers={}, multiple_component_transformation_type={}", (int)cod.progression_order, cod.number_of_layers, (int)cod.multiple_component_transformation_type);
 
     cod.parameters = TRY(read_coding_style_parameters(data.slice(stream.offset()), "COD"sv, cod.has_explicit_precinct_size));
@@ -1334,7 +1334,7 @@ static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
     auto make_tile = [&](size_t tile_index, TileData& tile) -> ErrorOr<void> {
         auto const& cod = tile.cod.value_or(context.cod);
 
-        if (cod.may_use_EPH_marker)
+        if (cod.shall_use_EPH_marker)
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: EPH marker not yet implemented");
 
         auto pq = context.siz.tile_2d_index_from_1d_index(tile_index);
