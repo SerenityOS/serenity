@@ -1334,8 +1334,6 @@ static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
     auto make_tile = [&](size_t tile_index, TileData& tile) -> ErrorOr<void> {
         auto const& cod = tile.cod.value_or(context.cod);
 
-        if (cod.may_use_SOP_marker)
-            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: SOP marker not yet implemented");
         if (cod.may_use_EPH_marker)
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: EPH marker not yet implemented");
 
@@ -1397,6 +1395,25 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
     auto progression_data = TRY(context.next_progression_data(tile));
 
     FixedMemoryStream stream { data };
+
+    if (tile.cod.value_or(context.cod).may_use_SOP_marker && data.size() >= 2 && TRY(peek_marker(data)) == J2K_SOP) {
+        // A.8.1 Start of packet (SOP)
+        // "It may be used in the bit stream in front of every packet. It shall not be used unless indicated that it is
+        //  allowed in the proper COD marker segment (see A.6.1). If PPM or PPT marker segments are used, then the SOP marker
+        //  segment may appear immediately before the packet data in the bit stream.
+        //  If SOP marker segments are allowed (by signalling in the COD marker segment, see A.6.1), each packet in any given tile-
+        //  part may or may not be appended with an SOP marker segment."
+        // Just skip this data if it's there.
+        // FIMXE: Tweak once we add support for PPM and PPT.
+        u16 marker = TRY(stream.read_value<BigEndian<u16>>());
+        u16 marker_length = TRY(stream.read_value<BigEndian<u16>>());
+        u16 packet_sequence_number = TRY(stream.read_value<BigEndian<u16>>());
+        VERIFY(marker == J2K_SOP); // Due to the peek_marker check above.
+        if (marker_length != 4)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid SOP marker length");
+        (void)packet_sequence_number; // FIXME: Do something with this?
+    }
+
     BigEndianInputBitStream bitstream { MaybeOwned { stream } };
 
     // B.9 Packets
