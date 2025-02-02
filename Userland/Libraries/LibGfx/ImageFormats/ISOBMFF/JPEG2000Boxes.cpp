@@ -103,24 +103,21 @@ ErrorOr<void> JPEG2000ColorSpecificationBox::read_from_stream(BoxStream& stream)
     method = TRY(stream.read_value<u8>());
     precedence = TRY(stream.read_value<i8>());
     approximation = TRY(stream.read_value<u8>());
-    if (method == 1)
+    if (method == Method::Enumerated)
         enumerated_color_space = TRY(stream.read_value<BigEndian<u32>>());
-    if (method == 2) {
+    if (method == Method::ICC_Restricted) {
         ByteBuffer local_icc_data = TRY(ByteBuffer::create_uninitialized(stream.remaining()));
         TRY(stream.read_until_filled(local_icc_data));
         icc_data = move(local_icc_data);
     }
-
-    // T.801 JPX extended file format syntax,
-    // Table M.22 – Legal METH values
-    if (method == 3) {
+    if (method == Method::ICC_Any) {
         ByteBuffer local_icc_data = TRY(ByteBuffer::create_uninitialized(stream.remaining()));
         TRY(stream.read_until_filled(local_icc_data));
         icc_data = move(local_icc_data);
     }
-    if (method == 4)
+    if (method == Method::Vendor)
         return Error::from_string_literal("Method 4 is not yet implemented");
-    if (method == 5)
+    if (method == Method::Parameterized)
         return Error::from_string_literal("Method 5 is not yet implemented");
 
     return {};
