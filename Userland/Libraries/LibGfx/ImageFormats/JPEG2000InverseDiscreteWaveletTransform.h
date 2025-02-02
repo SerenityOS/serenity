@@ -204,7 +204,6 @@ inline ErrorOr<IDWTOutput> VER_SR(Transformation transformation, IDWTOutput a, I
 {
     int u0 = a.rect.left();
     int v0 = a.rect.top();
-    ;
     int u1 = a.rect.right();
     int v1 = a.rect.bottom();
 
