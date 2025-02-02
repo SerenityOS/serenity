@@ -82,8 +82,40 @@ struct JPEG2000ColorSpecificationBox final : public Box {
     u8 method { 0 };
     i8 precedence { 0 };
     u8 approximation { 0 };
-    u32 enumerated_color_space { 0 }; // Only set if method == 1
-    ByteBuffer icc_data;              // Only set if method == 2
+    u32 enumerated_color_space { 0 }; // Only set if method == Method::Enumerated
+    ByteBuffer icc_data;              // Only set if method == Method::ICC_Restricted or Method::ICC_Any
+
+    enum Method {
+        // T.800, Table I.9 – Legal METH values
+
+        // "Enumerated Colourspace. This colourspace specification box contains the enumerated value of the colourspace of this image. The
+        //  enumerated value is found in the EnumCS field in this box."
+        Enumerated = 1,
+
+        // "Restricted ICC profile. This Colour Specification box contains an ICC profile in the PROFILE field. This profile shall specify the
+        //  transformation needed to convert the decompressed image data into the PCSXYZ, and shall conform to either the Monochrome Input, the
+        //  Three-Component Matrix-Based Input profile class, the Monochrome Display or the Three-Component Matrix-Based Display class and
+        //  contain all the required tags specified therein"
+        ICC_Restricted = 2,
+
+        // "other values" "Reserved for other ITU-T | ISO uses. If the value of METH is not 1 or 2, there may be fields in this box following the APPROX field,
+        //  and a conforming JP2 reader shall ignore the entire Colour Specification box.""
+
+        // T.801, Table M.22 – Legal METH values
+
+        // "Any ICC method. This Colour Specification box indicates that the colourspace of the codestream is specified by an
+        //  embedded input ICC profile. Contrary to the Restricted ICC method defined in the JP2 file format, this method allows
+        //  for any input ICC profile"
+        ICC_Any = 3,
+
+        // "Vendor Colour method. This Colour Specification box indicates that the colourspace of the codestream is specified by
+        //  a unique vendor defined code.
+        Vendor = 4,
+
+        // "Parameterized colourspace. This Colour Specification box indicates that the colourspace of the codestream is
+        // parameterized"
+        Parameterized = 5,
+    };
 
     enum EnumCS {
         // T.800, Table I.10 – Legal EnumCS values
