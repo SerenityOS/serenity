@@ -38,9 +38,21 @@ public:
     virtual StringView device_name() const override { return "E1000"sv; }
     virtual Type adapter_type() const override { return Type::Ethernet; }
 
+    void detect_model_and_operating_mode();
+
 protected:
+    // FIXME: Newer NICs only allow 2048 bytes per descriptor
     static constexpr size_t rx_buffer_size = 8192;
     static constexpr size_t tx_buffer_size = 8192;
+
+    enum class OperatingMode {
+        Intel8254x_legacy, // No EEPROM present bit, aka 82544GC/EI
+        Intel8254x,
+        Intel8254x_14bit_til_82574,
+        // Note: 8255x does not seem to be compatible
+        // FIXME: This should be more fine grained in the future
+        Intel82576_and_later, // In these the TCLT and some other registers seem to have changed, as well as a new SRRCTL was introduced
+    };
 
     void setup_interrupts();
     void setup_link();
@@ -77,6 +89,7 @@ protected:
     NonnullOwnPtr<Memory::Region> m_tx_buffer_region;
     Array<void*, number_of_rx_descriptors> m_rx_buffers;
     Array<void*, number_of_tx_descriptors> m_tx_buffers;
+    OperatingMode m_operating_mode { OperatingMode::Intel8254x_legacy };
     SetOnce m_has_eeprom;
     bool m_link_up { false };
     EntropySource m_entropy_source;
