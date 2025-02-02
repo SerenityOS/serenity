@@ -1333,10 +1333,6 @@ static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
 
     auto make_tile = [&](size_t tile_index, TileData& tile) -> ErrorOr<void> {
         auto const& cod = tile.cod.value_or(context.cod);
-
-        if (cod.shall_use_EPH_marker)
-            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: EPH marker not yet implemented");
-
         auto pq = context.siz.tile_2d_index_from_1d_index(tile_index);
         tile.rect = context.siz.reference_grid_coordinates_for_tile(pq);
 
@@ -1613,6 +1609,18 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
         bool final_stuff_bit = TRY(read_bit());
         if (final_stuff_bit)
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid bit-stuffing");
+    }
+
+    if (tile.cod.value_or(context.cod).shall_use_EPH_marker) {
+        // A.8.2 End of packet header (EPH)
+        // "If EPH markers are required (by signalling in the COD marker segment, see A.6.1), each packet header in any given tile-
+        //  part shall be postpended with an EPH marker segment. If the packet headers are moved to a PPM or PPT marker segments
+        //  (see A.7.4 and A.7.5), then the EPH markers shall appear after the packet headers in the PPM or PPT marker segments."
+        // Just skip this data if it's there.
+        // FIMXE: Tweak once we add support for PPM and PPT.
+        u16 marker = TRY(stream.read_value<BigEndian<u16>>());
+        if (marker != J2K_EPH)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Expected EPH marker");
     }
 
     // Done reading packet header. Set `data` on each codeblock on the packet.
