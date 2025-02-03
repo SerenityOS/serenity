@@ -714,6 +714,28 @@ TEST_CASE(test_jpeg2000_decode)
     }
 }
 
+TEST_CASE(test_jpeg2000_decode_rgb)
+{
+    auto png_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/ref-rgb.png"sv)));
+    auto png_plugin_decoder = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(png_file->bytes()));
+    auto ref_frame = TRY_OR_FAIL(expect_single_frame_of_size(*png_plugin_decoder, { 119, 101 }));
+
+    Array test_inputs = {
+        TEST_INPUT("jpeg2000/kakadu-lossless-rgb-u8-prog1-layers1-res6-mct.jp2"sv),
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = TRY_OR_FAIL(Core::MappedFile::map(test_input));
+        EXPECT(Gfx::JPEG2000ImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
+        auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 119, 101 }));
+
+        for (int y = 0; y < frame.image->height(); ++y)
+            for (int x = 0; x < frame.image->width(); ++x)
+                EXPECT_EQ(frame.image->get_pixel(x, y), ref_frame.image->get_pixel(x, y));
+    }
+}
+
 TEST_CASE(test_jpeg2000_icc_and_decode_lossy)
 {
     auto png_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/ref.png"sv)));
