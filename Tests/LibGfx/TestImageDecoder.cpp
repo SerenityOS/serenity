@@ -781,6 +781,27 @@ TEST_CASE(test_jpeg2000_decode_greyscale)
     }
 }
 
+TEST_CASE(test_jpeg2000_decode_unsupported)
+{
+    Array test_inputs = {
+        TEST_INPUT("jpeg2000/kakadu-lossless-cmyk-u8-prog1-layers1-res6.jp2"sv),
+        TEST_INPUT("jpeg2000/kakadu-lossless-cmyka-u8-prog1-layers1-res6.jp2"sv),
+        // TEST_INPUT("jpeg2000/kakadu-lossless-rgba-u16-prog1-layers1-res6.jp2"sv), // FIXME: Should be rejected but currently isn't.
+
+        // FIXME: See FIXME in JPEG2000ColorSpecificationBox::read_from_stream() for lab.
+        // TEST_INPUT("jpeg2000/kakadu-lossless-lab-u8-prog1-layers1-res6.jp2"sv),
+        // TEST_INPUT("jpeg2000/kakadu-lossless-lab-alpha-u8-prog1-layers1-res6.jp2"sv),
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = TRY_OR_FAIL(Core::MappedFile::map(test_input));
+        EXPECT(Gfx::JPEG2000ImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
+        auto frame = plugin_decoder->frame(0);
+        EXPECT(frame.is_error());
+    }
+}
+
 TEST_CASE(test_jpeg2000_icc_and_decode_lossy)
 {
     auto png_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/ref.png"sv)));

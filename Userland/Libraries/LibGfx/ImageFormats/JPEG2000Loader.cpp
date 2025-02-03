@@ -1966,10 +1966,29 @@ static ErrorOr<void> postprocess_samples(JPEG2000LoadingContext& context)
 
 static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
 {
-    // FIXME: This is pretty ad-hoc. It should look at JPEG2000ChannelDefinitionBox,
-    //        JPEG2000ColorSpecificationBox::method, and if present at
-    //        JPEG2000PaletteBox and JPEG2000ComponentMappingBox
+    // FIXME: This is pretty ad-hoc. It should look at
+    //        JPEG2000ChannelDefinitionBox, JPEG2000PaletteBox and JPEG2000ComponentMappingBox too (if present)
     //        to figure out mapping from components to bitmap channels (and optionally return a CMYKBitmap instead).
+
+    // FIXME: context.color_box is the color after applying the palette, if one is present.
+    if (context.color_box.has_value()) {
+        if (context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::Enumerated) {
+            if (context.color_box->enumerated_color_space == ISOBMFF::JPEG2000ColorSpecificationBox::EnumCS::sRGB) {
+                // FIXME: Look at JPEG2000ChannelDefinitionBox to decide if alpha is present, instead of using component count.
+            } else if (context.color_box->enumerated_color_space == ISOBMFF::JPEG2000ColorSpecificationBox::EnumCS::Greyscale) {
+                // FIXME: Should we accept greyscale-alpha too? (Photoshop can save them fine, so probably?)
+            } else {
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB and greyscale enumerated color space supported yet");
+            }
+        } else if (context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Restricted
+            || context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Any) {
+            // FIXME: Look at ICC data space header and verify it's RGB (or, eventually, CMYK). For now, just assume that.
+        } else {
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Can only handle enumerated and ICC color specification methods yet");
+        }
+    } else {
+        // Raw codestream. Go by number of components.
+    }
 
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { context.siz.width, context.siz.height }));
 
