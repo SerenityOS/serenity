@@ -65,7 +65,7 @@ ErrorOr<NonnullRefPtr<BochsDisplayConnector>> BochsDisplayConnector::create(Phys
 }
 
 BochsDisplayConnector::BochsDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
-    : DisplayConnector(framebuffer_address, framebuffer_resource_size, Memory::MemoryType::IO)
+    : DisplayConnector(framebuffer_address, framebuffer_resource_size, Memory::MemoryType::NonCacheable)
 {
 }
 

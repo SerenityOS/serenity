@@ -27,7 +27,7 @@ ErrorOr<void> VMWareDisplayConnector::create_attached_framebuffer_console()
 }
 
 VMWareDisplayConnector::VMWareDisplayConnector(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
-    : DisplayConnector(framebuffer_address, framebuffer_resource_size, Memory::MemoryType::IO)
+    : DisplayConnector(framebuffer_address, framebuffer_resource_size, Memory::MemoryType::NonCacheable)
     , m_parent_adapter(parent_adapter)
 {
 }
