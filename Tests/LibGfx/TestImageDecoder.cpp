@@ -786,7 +786,7 @@ TEST_CASE(test_jpeg2000_decode_unsupported)
     Array test_inputs = {
         TEST_INPUT("jpeg2000/kakadu-lossless-cmyk-u8-prog1-layers1-res6.jp2"sv),
         TEST_INPUT("jpeg2000/kakadu-lossless-cmyka-u8-prog1-layers1-res6.jp2"sv),
-        // TEST_INPUT("jpeg2000/kakadu-lossless-rgba-u16-prog1-layers1-res6.jp2"sv), // FIXME: Should be rejected but currently isn't.
+        TEST_INPUT("jpeg2000/kakadu-lossless-rgba-u16-prog1-layers1-res6.jp2"sv),
 
         // FIXME: See FIXME in JPEG2000ColorSpecificationBox::read_from_stream() for lab.
         // TEST_INPUT("jpeg2000/kakadu-lossless-lab-u8-prog1-layers1-res6.jp2"sv),

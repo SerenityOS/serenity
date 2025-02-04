@@ -1990,6 +1990,10 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
         // Raw codestream. Go by number of components.
     }
 
+    for (auto& c : context.siz.components)
+        if (c.bit_depth() != 8)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only 8 bits per component supported yet");
+
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { context.siz.width, context.siz.height }));
 
     for (auto& tile : context.tiles) {
