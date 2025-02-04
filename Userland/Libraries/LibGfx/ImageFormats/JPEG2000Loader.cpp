@@ -1994,7 +1994,9 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
                 u8 b = byte_value;
                 u8 a = 255;
 
-                if (tile.components.size() == 3) {
+                if (tile.components.size() == 2) {
+                    a = round_to<u8>(clamp(tile.components[1].samples[y * w + x], 0.0f, 255.0f));
+                } else if (tile.components.size() == 3) {
                     g = round_to<u8>(clamp(tile.components[1].samples[y * w + x], 0.0f, 255.0f));
                     b = round_to<u8>(clamp(tile.components[2].samples[y * w + x], 0.0f, 255.0f));
                 } else if (tile.components.size() == 4) {
