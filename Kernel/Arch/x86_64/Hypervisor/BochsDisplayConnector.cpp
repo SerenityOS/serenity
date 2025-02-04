@@ -28,31 +28,6 @@ static u16 get_register_with_io(u16 index)
     return IO::in16(VBE_DISPI_IOPORT_DATA);
 }
 
-ErrorOr<NonnullRefPtr<BochsDisplayConnector>> BochsDisplayConnector::try_create_for_vga_isa_connector()
-{
-    VERIFY(PCI::Access::is_hardware_disabled());
-    BochsDisplayConnector::IndexID index_id = get_register_with_io(0);
-    if (index_id != VBE_DISPI_ID5)
-        return Error::from_errno(ENOTSUP);
-
-    auto video_ram_64k_chunks_count = get_register_with_io(to_underlying(BochsDISPIRegisters::VIDEO_RAM_64K_CHUNKS_COUNT));
-    if (video_ram_64k_chunks_count == 0 || video_ram_64k_chunks_count == 0xffff) {
-        dmesgln("Graphics: Bochs ISA VGA compatible adapter does not indicate amount of VRAM, default to 8 MiB");
-        video_ram_64k_chunks_count = (8 * MiB) / (64 * KiB);
-    } else {
-        dmesgln("Graphics: Bochs ISA VGA compatible adapter indicates {} bytes of VRAM", video_ram_64k_chunks_count * (64 * KiB));
-    }
-
-    // Note: The default physical address for isa-vga framebuffer in QEMU is 0xE0000000.
-    // Since this is probably hardcoded at other OSes in their guest drivers,
-    // we can assume this is going to stay the same framebuffer physical address for
-    // this device and will not be changed in the future.
-    auto connector = TRY(Device::try_create_device<BochsDisplayConnector>(PhysicalAddress(0xE0000000), video_ram_64k_chunks_count * (64 * KiB)));
-    TRY(connector->create_attached_framebuffer_console());
-    TRY(connector->initialize_edid_for_generic_monitor({}));
-    return connector;
-}
-
 ErrorOr<NonnullRefPtr<BochsDisplayConnector>> BochsDisplayConnector::create(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool virtual_box_hardware)
 {
     auto connector = TRY(Device::try_create_device<BochsDisplayConnector>(framebuffer_address, framebuffer_resource_size));

@@ -135,15 +135,11 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     /* Explanation on the flow here:
      *
      * If the user chose to disable graphics support entirely, then all we can do
-     * is to set up a plain old VGA text console and exit this function.
+     * is exit this function and keep the dummy boot console.
      * Otherwise, we either try to find a device that we natively support so
      * we can initialize it, and in case we don't find any device to initialize,
      * we try to initialize a simple DisplayConnector to support a pre-initialized
      * framebuffer.
-     *
-     * Note: If the user disabled PCI access, the kernel behaves like it's running
-     * on a pure ISA PC machine and therefore the kernel will try to initialize
-     * a variant that is suitable for ISA VGA handling, and not PCI adapters.
      */
 
     ScopeGuard assign_console_on_initialization_exit([this] {
@@ -169,24 +165,6 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     bool use_boot_framebuffer = graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited
         && boot_framebuffer_usable;
 
-    // Note: Don't try to initialize an ISA Bochs VGA adapter if PCI hardware is
-    // present but the user decided to disable its usage nevertheless.
-    // Otherwise we risk using the Bochs VBE driver on a wrong physical address
-    // for the framebuffer.
-    if (PCI::Access::is_hardware_disabled() && !use_boot_framebuffer) {
-#if ARCH(X86_64)
-        auto vga_isa_bochs_display_connector_or_error = BochsDisplayConnector::try_create_for_vga_isa_connector();
-        if (!vga_isa_bochs_display_connector_or_error.is_error()) {
-            m_platform_board_specific_display_connector = vga_isa_bochs_display_connector_or_error.release_value();
-            dmesgln("Graphics: Using a Bochs ISA VGA compatible adapter");
-            MUST(m_platform_board_specific_display_connector->set_safe_mode_setting());
-            dmesgln("Graphics: Invoking manual blanking with VGA ISA ports");
-            IO::out8(0x3c0, 0x20);
-            return true;
-        }
-#endif
-    }
-
     if (use_boot_framebuffer) {
         initialize_preset_resolution_generic_display_connector();
         return true;
@@ -202,11 +180,6 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
             if (auto result = determine_and_initialize_graphics_device(device_identifier); result.is_error())
                 dbgln("Failed to initialize device {}, due to {}", device_identifier.address(), result.error());
         }));
-    } else {
-#if ARCH(X86_64)
-        dmesgln("Graphics: Using an assumed-to-exist ISA VGA compatible generic adapter");
-        return true;
-#endif
     }
 
     // Note: If we failed to find any graphics device to be used natively, but the
