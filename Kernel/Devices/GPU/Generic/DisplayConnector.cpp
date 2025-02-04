@@ -20,7 +20,7 @@ ErrorOr<NonnullRefPtr<GenericDisplayConnector>> GenericDisplayConnector::create_
 }
 
 GenericDisplayConnector::GenericDisplayConnector(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
-    : DisplayConnector(framebuffer_address, height * pitch, true)
+    : DisplayConnector(framebuffer_address, height * pitch, Memory::MemoryType::NonCacheable)
 {
     m_current_mode_setting.horizontal_active = width;
     m_current_mode_setting.vertical_active = height;

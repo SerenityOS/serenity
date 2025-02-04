@@ -38,7 +38,7 @@ ErrorOr<void> IntelNativeDisplayConnector::create_attached_framebuffer_console(B
 }
 
 IntelNativeDisplayConnector::IntelNativeDisplayConnector(IntelDisplayConnectorGroup const& parent_connector_group, ConnectorIndex connector_index, Type type, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size)
-    : DisplayConnector(framebuffer_address, framebuffer_resource_size, true)
+    : DisplayConnector(framebuffer_address, framebuffer_resource_size, Memory::MemoryType::NonCacheable)
     , m_type(type)
     , m_connector_index(connector_index)
     , m_parent_connector_group(parent_connector_group)
