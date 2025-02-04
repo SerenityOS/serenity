@@ -744,6 +744,7 @@ TEST_CASE(test_jpeg2000_decode_greyscale)
 
     Array test_inputs = {
         TEST_INPUT("jpeg2000/kakadu-lossless-gray-u8-prog1-layers1-res6.jp2"sv),
+        TEST_INPUT("jpeg2000/kakadu-lossless-gray-u8-prog1-layers1-res6-icc.jp2"sv),
     };
 
     for (auto test_input : test_inputs) {
