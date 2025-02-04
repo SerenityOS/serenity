@@ -23,7 +23,7 @@ ErrorOr<NonnullRefPtr<VirtIODisplayConnector>> VirtIODisplayConnector::create(Vi
 static_assert((MAX_VIRTIOGPU_RESOLUTION_WIDTH * MAX_VIRTIOGPU_RESOLUTION_HEIGHT * sizeof(u32) * 2) % PAGE_SIZE == 0);
 
 VirtIODisplayConnector::VirtIODisplayConnector(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id)
-    : DisplayConnector((MAX_VIRTIOGPU_RESOLUTION_WIDTH * MAX_VIRTIOGPU_RESOLUTION_HEIGHT * sizeof(u32) * 2), false)
+    : DisplayConnector((MAX_VIRTIOGPU_RESOLUTION_WIDTH * MAX_VIRTIOGPU_RESOLUTION_HEIGHT * sizeof(u32) * 2), Memory::MemoryType::IO)
     , m_graphics_adapter(graphics_adapter)
     , m_scanout_id(scanout_id)
 {

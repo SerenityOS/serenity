@@ -77,7 +77,7 @@ ErrorOr<void> QEMUDisplayConnector::set_safe_mode_setting()
 }
 
 QEMUDisplayConnector::QEMUDisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::TypedMapping<BochsDisplayMMIORegisters volatile> registers_mapping)
-    : DisplayConnector(framebuffer_address, framebuffer_resource_size, false)
+    : DisplayConnector(framebuffer_address, framebuffer_resource_size, Memory::MemoryType::IO)
     , m_registers(move(registers_mapping))
 {
 }

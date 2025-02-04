@@ -105,8 +105,8 @@ public:
 protected:
     void set_edid_bytes(Array<u8, 128> const& edid_bytes, bool might_be_invalid = false);
 
-    DisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool enable_write_combine_optimization);
-    DisplayConnector(size_t framebuffer_resource_size, bool enable_write_combine_optimization);
+    DisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, Memory::MemoryType);
+    DisplayConnector(size_t framebuffer_resource_size, Memory::MemoryType);
     virtual void enable_console() = 0;
     virtual void disable_console() = 0;
     virtual ErrorOr<void> flush_first_surface() = 0;
@@ -156,7 +156,7 @@ private:
     OwnPtr<Memory::Region> m_fake_writes_framebuffer_region;
     u8* m_framebuffer_data {};
 
-    bool const m_enable_write_combine_optimization { false };
+    Memory::MemoryType m_memory_type { Memory::MemoryType::NonCacheable };
     bool const m_framebuffer_at_arbitrary_physical_range { false };
 
 protected:
