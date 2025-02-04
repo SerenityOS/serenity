@@ -773,6 +773,10 @@ struct JPEG2000LoadingContext {
 
     Optional<ISOBMFF::JPEG2000ColorSpecificationBox const&> color_box; // This is always set for box-based files.
 
+    Optional<ISOBMFF::JPEG2000PaletteBox const&> palette_box;
+    Optional<ISOBMFF::JPEG2000ComponentMappingBox const&> component_mapping_box;
+    Optional<ISOBMFF::JPEG2000ChannelDefinitionBox const&> channel_definition_box;
+
     IntSize size;
 
     ISOBMFF::BoxList boxes;
@@ -1156,6 +1160,9 @@ static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, Rea
 
     Optional<size_t> image_header_box_index;
     Optional<size_t> color_header_box_index;
+    Optional<size_t> palette_box_index;
+    Optional<size_t> component_mapping_box_index;
+    Optional<size_t> channel_definition_box_index;
     auto const& header_box = static_cast<ISOBMFF::JPEG2000HeaderBox const&>(*context.boxes[jp2_header_box_index.value()]);
     for (size_t i = 0; i < header_box.child_boxes().size(); ++i) {
         auto const& subbox = header_box.child_boxes()[i];
@@ -1178,6 +1185,27 @@ static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, Rea
             if (use_this_color_box)
                 color_header_box_index = i;
         }
+        if (subbox->box_type() == ISOBMFF::BoxType::JPEG2000PaletteBox) {
+            // T.800, I.5.3.4 Palette box
+            // "There shall be at most one Palette box inside a JP2 Header box."
+            if (palette_box_index.has_value())
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple Palette boxes");
+            palette_box_index = i;
+        }
+        if (subbox->box_type() == ISOBMFF::BoxType::JPEG2000ComponentMappingBox) {
+            // T.800, I.5.3.5 Component Mapping box
+            // "There shall be at most one Component Mapping box inside a JP2 Header box."
+            if (component_mapping_box_index.has_value())
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple Component Mapping boxes");
+            component_mapping_box_index = i;
+        }
+        if (subbox->box_type() == ISOBMFF::BoxType::JPEG2000ChannelDefinitionBox) {
+            // T.800, I.5.3.6 Channel Definition box
+            // "There shall be at most one Channel Definition box inside a JP2 Header box."
+            if (channel_definition_box_index.has_value())
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple Channel Definition boxes");
+            channel_definition_box_index = i;
+        }
     }
 
     if (!image_header_box_index.has_value())
@@ -1192,6 +1220,18 @@ static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, Rea
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Decoding of non-jpeg2000 data embedded in jpeg2000 files is not implemented");
 
     context.color_box = static_cast<ISOBMFF::JPEG2000ColorSpecificationBox const&>(*header_box.child_boxes()[color_header_box_index.value()]);
+
+    // "If the JP2 Header box contains a Palette box, then it shall also contain a Component Mapping box.
+    //  If the JP2 Header box does not contain a Palette box, then it shall not contain a Component Mapping box."
+    if (palette_box_index.has_value() != component_mapping_box_index.has_value())
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Palette box and Component Mapping box must both be present or both be absent");
+
+    if (palette_box_index.has_value())
+        context.palette_box = static_cast<ISOBMFF::JPEG2000PaletteBox const&>(*header_box.child_boxes()[palette_box_index.value()]);
+    if (component_mapping_box_index.has_value())
+        context.component_mapping_box = static_cast<ISOBMFF::JPEG2000ComponentMappingBox const&>(*header_box.child_boxes()[component_mapping_box_index.value()]);
+    if (channel_definition_box_index.has_value())
+        context.channel_definition_box = static_cast<ISOBMFF::JPEG2000ChannelDefinitionBox const&>(*header_box.child_boxes()[channel_definition_box_index.value()]);
 
     TRY(parse_codestream_main_header(context));
 
