@@ -182,7 +182,7 @@ class Configuration:
     # QEMU -display; if None, will omit the option and let QEMU figure out which backend to use on its own.
     display_backend: str | None = None
     # A QEMU -device for the graphics card.
-    display_device: str | None = "VGA,vgamem_mb=64"
+    display_device: str | None = "virtio-gpu-pci"
     # QEMU -netdev
     network_backend: str | None = None
     # A QEMU -device for networking.
@@ -640,10 +640,6 @@ def set_up_display_device(config: Configuration):
             raise RunError("SERENITY_GL and multi-monitor support cannot be set up simultaneously")
         config.display_device = "virtio-vga-gl"
 
-    elif config.screen_count == 1:
-        # FIXME: The default VGA device is broken when running in a hypervisor on arm.
-        if config.architecture == Arch.Aarch64 and not config.machine_type.is_raspberry_pi():
-            config.display_device = "virtio-gpu-pci"
     elif config.screen_count > 1:
         # QEMU appears to not support the virtio-vga VirtIO GPU variant on macOS.
         # To ensure we can still boot on macOS with VirtIO GPU, use the virtio-gpu-pci
