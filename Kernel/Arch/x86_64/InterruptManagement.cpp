@@ -41,7 +41,7 @@ UNMAP_AFTER_INIT void InterruptManagement::initialize()
 {
     VERIFY(!InterruptManagement::initialized());
     s_interrupt_management = new InterruptManagement();
-    if (!kernel_command_line().is_smp_enabled_without_ioapic_enabled()) {
+    if (kernel_command_line().is_smp_enabled_without_ioapic_enabled()) {
         dbgln("Can't enable SMP mode without IOAPIC mode being enabled");
     }
     if (!kernel_command_line().is_ioapic_enabled() && !kernel_command_line().is_smp_enabled())
