@@ -16,8 +16,6 @@
 #    include <Kernel/Arch/RegisterState.h>
 #endif
 
-constexpr int syscall_vector = 0x82;
-
 extern "C" {
 struct pollfd;
 struct timeval;
