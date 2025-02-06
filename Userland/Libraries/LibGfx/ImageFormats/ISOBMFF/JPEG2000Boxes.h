@@ -203,7 +203,37 @@ struct JPEG2000ChannelDefinitionBox final : public Box {
     struct Channel {
         u16 channel_index;
         u16 channel_type;
+
+        // "0              : This channel is associated as the image as a whole (for example, an independent opacity channel that
+        //                   should be applied to all colour channels).
+        //  1 to (2^16 – 2): This channel is associated with a particular colour as indicated by this value. This value is used to
+        //                   associate a particular channel with a particular aspect of the specification of the colourspace of this
+        //                   image. For example, indicating that a channel is associated with the red channel of an RGB image allows
+        //                   the reader to associate that decoded channel with the Red input to an ICC profile contained within a
+        //                   Colour Specification box. Colour indicators are specified in Table I.18.
+        //  2^16 – 1       : This channel is not associated with any particular colour."
         u16 channel_association;
+
+        enum Type {
+            // T.800, Table I.16 – Typi field values
+
+            // "This channel is the colour image data for the associated colour."
+            Color = 0,
+
+            // "Opacity. A sample value of 0 indicates that the sample is 100% transparent, and the maximum value of the
+            //  channel (related to the bit depth of the codestream component or the related palette component mapped to this
+            //  channel) indicates a 100% opaque sample. All opacity channels shall be mapped from unsigned components."
+            Opacity = 1,
+
+            // "Premultiplied opacity. An opacity channel as specified above, except that the value of the opacity channel has
+            //  been multiplied into the colour channels for which this channel is associated."
+            PremultipliedOpacity = 2,
+
+            // 3 to (2^16 – 2) Reserved for ITU-T | ISO use
+
+            // The type of this channel is not specified.
+            Unspecified = 0xFFFF,
+        };
     };
     Vector<Channel> channels;
 };
