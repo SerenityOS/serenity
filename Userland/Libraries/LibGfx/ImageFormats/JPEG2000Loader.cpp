@@ -1900,6 +1900,11 @@ static ErrorOr<void> postprocess_samples(JPEG2000LoadingContext& context)
         if (tile.components.size() < 3)
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple component transformation type but fewer than 3 components");
 
+        // T.800, I.5.3.6 Channel Definition box
+        // "If a multiple component transform is specified within the codestream, the image must be in an RGB colourspace and the
+        //  red, green and blue colours as channels 0, 1 and 2 in the codestream, respectively."
+        // FIXME: Check this.
+
         auto transformation0 = context.coding_style_parameters_for_component(tile, 0).transformation;
         auto transformation1 = context.coding_style_parameters_for_component(tile, 1).transformation;
         auto transformation2 = context.coding_style_parameters_for_component(tile, 2).transformation;
@@ -2033,6 +2038,37 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
         }
     } else {
         // Raw codestream. Go by number of components.
+    }
+
+    if (context.channel_definition_box.has_value()) {
+        if (context.channel_definition_box->channels.size() != context.siz.components.size())
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel count doesn't match component count");
+
+        Vector<bool, 4> channel_used;
+        channel_used.resize(context.channel_definition_box->channels.size());
+
+        for (auto channel : context.channel_definition_box->channels) {
+            if (channel.channel_index >= context.siz.components.size())
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel index out of range");
+            if (channel_used[channel.channel_index])
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel index used multiple times");
+            channel_used[channel.channel_index] = true;
+
+            if (channel.channel_type != ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Color
+                && channel.channel_type != ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Opacity) {
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only color and opacity channels supported yet");
+            }
+            if (channel.channel_type == ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Color) {
+                if (channel.channel_index + 1 != channel.channel_association)
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only unshuffled color channel indices supported yet");
+            } else {
+                VERIFY(channel.channel_type == ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Opacity);
+                if (channel.channel_index != context.siz.components.size() - 1)
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only opacity channel as last channel supported yet");
+                if (channel.channel_association != 0)
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only full opacity channel supported yet");
+            }
+        }
     }
 
     for (auto& c : context.siz.components)
