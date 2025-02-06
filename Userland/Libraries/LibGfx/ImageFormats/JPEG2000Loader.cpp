@@ -2010,6 +2010,11 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
     //        JPEG2000ChannelDefinitionBox, JPEG2000PaletteBox and JPEG2000ComponentMappingBox too (if present)
     //        to figure out mapping from components to bitmap channels (and optionally return a CMYKBitmap instead).
 
+    if (context.palette_box.has_value()) {
+        // FIXME: Support this.
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Palettized images not yet supported");
+    }
+
     // FIXME: context.color_box is the color after applying the palette, if one is present.
     if (context.color_box.has_value()) {
         if (context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::Enumerated) {
