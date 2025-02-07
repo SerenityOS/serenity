@@ -168,6 +168,7 @@
     X(SA)                         \
     X(SM)                         \
     X(SMask)                      \
+    X(SMaskInData)                \
     X(Separation)                 \
     X(Size)                       \
     X(StmF)                       \

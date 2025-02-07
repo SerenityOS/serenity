@@ -1165,8 +1165,34 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
         auto last_filter_index = filters->elements().size() - 1;
         return MUST(filters->get_name_at(m_document, last_filter_index))->name() == name;
     };
-    if (TRY(is_filter(CommonNames::JPXDecode))) {
-        return Error(Error::Type::RenderingUnsupported, "JPXDecode filter");
+    bool is_jpeg2000 = TRY(is_filter(CommonNames::JPXDecode));
+
+    // "SMaskInData specifies whether soft-mask information packaged with the im-
+    //  age samples should be used (see “Soft-Mask Images” on page 553); if it is, the
+    //  SMask entry is not needed. If SMaskInData is nonzero, there must be only one
+    //  opacity channel in the JPEG2000 data and it must apply to all color channels."
+    if (is_jpeg2000 && image_dict->contains(CommonNames::SMaskInData)) {
+        auto smask_in_data = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::SMaskInData)));
+        if (smask_in_data == 0) {
+            // "If present, encoded soft-mask image information should be ignored."
+            // That's what we currently always do.
+        } else if (smask_in_data == 1) {
+            // "The image’s data stream includes encoded soft-mask values. An
+            //  application can create a soft-mask image from the information to
+            //  be used as a source of mask shape or mask opacity in the transpar-
+            //  ency imaging model.""
+            return Error(Error::Type::RenderingUnsupported, "SMaskInData=1 not yet supported");
+        } else if (smask_in_data == 2) {
+            // "The image’s data stream includes color channels that have been
+            //  preblended with a background; the image data also includes an
+            //  opacity channel. An application can create a soft-mask image with
+            //  a Matte entry from the opacity channel information to be used as
+            //  a source of mask shape or mask opacity in the transparency mod-
+            //  el."
+            return Error(Error::Type::RenderingUnsupported, "SMaskInData=2 not yet supported");
+        } else {
+            return Error(Error::Type::MalformedPDF, "Invalid SMaskInData value");
+        }
     }
 
     bool is_image_mask = false;
@@ -1174,10 +1200,19 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
         is_image_mask = TRY(m_document->resolve_to<bool>(image_dict->get_value(CommonNames::ImageMask)));
     }
 
+    if (is_image_mask && is_jpeg2000) {
+        // JPEG2000 always returns 8bpp data, but image masks are 1bpp. Need to convert.
+        return Error(Error::Type::RenderingUnsupported, "JPEG2000 image masks not yet supported");
+    }
+
     // "(Required for images, except those that use the JPXDecode filter; not allowed for image masks) [...]
     //  it can be any type of color space except Pattern."
     NonnullRefPtr<ColorSpace> color_space = DeviceGrayColorSpace::the();
     if (!is_image_mask) {
+        // "If ColorSpace is not present in the image dictionary, the color space informa-
+        //  tion in the JPEG2000 data is used."
+        if (!image_dict->contains(CommonNames::ColorSpace) && is_jpeg2000)
+            return Error(Error::Type::RenderingUnsupported, "Using color space from jpeg2000 image not yet implemented");
         auto color_space_object = MUST(image_dict->get_object(m_document, CommonNames::ColorSpace));
         color_space = TRY(get_color_space_from_document(color_space_object));
     }
@@ -1190,8 +1225,11 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
     // "Valid values are 1, 2, 4, 8, and (in PDF 1.5) 16."
     // Per spec, this is required even for /Mask images, but it's required to be 1 there.
     // In practice, it's sometimes missing for /Mask images.
+    // "If the image stream uses the JPXDecode filter, this entry is optional and ignored if present."
     auto bits_per_component = 1;
-    if (!is_image_mask)
+    if (is_jpeg2000)
+        bits_per_component = 8;
+    else if (!is_image_mask)
         bits_per_component = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::BitsPerComponent)));
     switch (bits_per_component) {
     case 1:
@@ -1208,8 +1246,11 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
 
     int const n_components = color_space->number_of_components();
 
+    // PDF 1.7 spec, 3.3.8 JPXDecode Filter:
+    // "Decode is ignored, except in the case where the image is treated as a mask; that is, when ImageMask is true.
+    //  In this case, the JPEG2000 data must provide a single color channel with 1-bit samples."
     Vector<float> decode_array;
-    if (image_dict->contains(CommonNames::Decode)) {
+    if ((!is_jpeg2000 || is_image_mask) && image_dict->contains(CommonNames::Decode)) {
         decode_array = MUST(image_dict->get_array(m_document, CommonNames::Decode))->float_elements();
     } else {
         decode_array = color_space->default_decode();
