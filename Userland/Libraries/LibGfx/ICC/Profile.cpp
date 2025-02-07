@@ -409,7 +409,7 @@ ErrorOr<DateTime> DateTime::from_time_t(time_t timestamp)
     return result;
 }
 
-static ErrorOr<ProfileHeader> read_header(ReadonlyBytes bytes)
+ErrorOr<ProfileHeader> Profile::read_header(ReadonlyBytes bytes)
 {
     if (bytes.size() < sizeof(ICCHeader))
         return Error::from_string_literal("ICC::Profile: Not enough data for header");
