@@ -403,23 +403,33 @@ Process::~Process()
 extern void signal_trampoline_dummy() __attribute__((used));
 void signal_trampoline_dummy()
 {
+    // The trampoline preserves the current return value, and then calls the signal handler.
+    // We do this because, when interrupting a blocking syscall, that syscall may return
+    // some special error code; This error code would likely be overwritten by the signal handler,
+    // so it's necessary to preserve it here.
+
+    // Stack state:
+    //   syscall return value (initialized with 0)  <- stack pointer + offset_to_return_value_slot
+    //   __ucontext
+    //   siginfo
+    //   FPUState
+    //   __ucontext*
+    //   siginfo*
+    //   signal number
+    //   handler address                            <- stack pointer
+
+    constexpr static auto offset_to_return_value_slot = sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 4 * sizeof(FlatPtr);
+
 #if ARCH(X86_64)
-    // The trampoline preserves the current rax, pushes the signal code and
-    // then calls the signal handler. We do this because, when interrupting a
-    // blocking syscall, that syscall may return some special error code in eax;
-    // This error code would likely be overwritten by the signal handler, so it's
-    // necessary to preserve it here.
-    constexpr static auto offset_to_first_register_slot = sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 3 * sizeof(FlatPtr);
     asm(
         ".intel_syntax noprefix\n"
         ".globl asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
-        // stack state: 0, ucontext, signal_info (alignment = 16), fpu_state (alignment = 16), ucontext*, siginfo*, signal, handler
 
-        // Pop the handler into rcx
-        "pop rcx\n" // save handler
         // we have to save rax 'cause it might be the return value from a syscall
         "mov [rsp+%P1], rax\n"
+        // Pop the handler into rcx
+        "pop rcx\n" // save handler
         // pop signal number into rdi (first param)
         "pop rdi\n"
         // pop siginfo* into rsi (second param)
@@ -438,18 +448,16 @@ void signal_trampoline_dummy()
         ".att_syntax"
         :
         : "i"(Syscall::SC_sigreturn),
-        "i"(offset_to_first_register_slot));
+        "i"(offset_to_return_value_slot));
 #elif ARCH(AARCH64)
-    constexpr static auto offset_to_first_register_slot = align_up_to(sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 3 * sizeof(FlatPtr), 16);
     asm(
         ".global asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
-        // stack state: 0, ucontext, signal_info (alignment = 16), fpu_state (alignment = 16), ucontext*, siginfo*, signal, handler
 
+        // Store x0 (return value from a syscall) into the register slot, such that we can return the correct value in sys$sigreturn.
+        "str x0, [sp, %[offset_to_return_value_slot]]\n"
         // Load the handler address into x3.
         "ldr x3, [sp, #0]\n"
-        // Store x0 (return value from a syscall) into the register slot, such that we can return the correct value in sys$sigreturn.
-        "str x0, [sp, %[offset_to_first_register_slot]]\n"
         // Load the signal number into the first argument.
         "ldr x0, [sp, #8]\n"
         // Load a pointer to the signal_info structure into the second argument.
@@ -469,18 +477,16 @@ void signal_trampoline_dummy()
         "\n"
         ".global asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end: \n" ::[sigreturn_syscall_number] "i"(Syscall::SC_sigreturn),
-        [offset_to_first_register_slot] "i"(offset_to_first_register_slot));
+        [offset_to_return_value_slot] "i"(offset_to_return_value_slot));
 #elif ARCH(RISCV64)
-    constexpr static auto offset_to_a0_slot = sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 4 * sizeof(FlatPtr);
     asm(
         ".global asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
-        // stack state: 0, ucontext, signal_info (alignment = 16), fpu_state (alignment = 16), ucontext*, siginfo*, signal, handler
 
+        // Store a0 (return value from a syscall) into the register slot, such that we can return the correct value in sys$sigreturn.
+        "sd a0, %[offset_to_return_value_slot](sp)\n"
         // Load the handler address into t0.
         "ld t0, 0(sp)\n"
-        // Store a0 (return value from a syscall) into the register slot, such that we can return the correct value in sys$sigreturn.
-        "sd a0, %[offset_to_first_register_slot](sp)\n"
         // Load the signal number into the first argument.
         "ld a0, 8(sp)\n"
         // Load a pointer to the signal_info structure into the second argument.
@@ -501,7 +507,7 @@ void signal_trampoline_dummy()
         "\n"
         ".global asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end: \n" ::[sigreturn_syscall_number] "i"(Syscall::SC_sigreturn),
-        [offset_to_first_register_slot] "i"(offset_to_a0_slot));
+        [offset_to_return_value_slot] "i"(offset_to_return_value_slot));
 #else
 #    error Unknown architecture
 #endif
