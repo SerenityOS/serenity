@@ -8,6 +8,7 @@
 #include <AK/Debug.h>
 #include <AK/Enumerate.h>
 #include <AK/MemoryStream.h>
+#include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ImageFormats/ISOBMFF/JPEG2000Boxes.h>
 #include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
 #include <LibGfx/ImageFormats/JPEG2000BitplaneDecoding.h>
@@ -2021,25 +2022,37 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
     }
 
     // FIXME: context.color_box is the color after applying the palette, if one is present.
+    enum class ColorSpace {
+        sRGB,
+        Gray,
+    } color_space;
     if (context.color_box.has_value()) {
         if (context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::Enumerated) {
             if (context.color_box->enumerated_color_space == ISOBMFF::JPEG2000ColorSpecificationBox::EnumCS::sRGB) {
-                // FIXME: Look at JPEG2000ChannelDefinitionBox to decide if alpha is present, instead of using component count.
+                color_space = ColorSpace::sRGB;
             } else if (context.color_box->enumerated_color_space == ISOBMFF::JPEG2000ColorSpecificationBox::EnumCS::Greyscale) {
-                // FIXME: Should we accept greyscale-alpha too? (Photoshop can save them fine, so probably?)
+                color_space = ColorSpace::Gray;
             } else {
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB and greyscale enumerated color space supported yet");
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB and grayscale enumerated color space supported yet");
             }
         } else if (context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Restricted
             || context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Any) {
-            // FIXME: Look at ICC data space header and verify it's RGB (or, eventually, CMYK). For now, just assume that.
+            auto icc_header = TRY(ICC::Profile::read_header(context.color_box->icc_data.bytes()));
+            if (icc_header.data_color_space == ICC::ColorSpace::RGB)
+                color_space = ColorSpace::sRGB;
+            else if (icc_header.data_color_space == ICC::ColorSpace::Gray)
+                color_space = ColorSpace::Gray;
+            else
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB and grayscale ICC color space supported yet");
         } else {
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Can only handle enumerated and ICC color specification methods yet");
         }
     } else {
         // Raw codestream. Go by number of components.
+        color_space = context.siz.components.size() < 3 ? ColorSpace::Gray : ColorSpace::sRGB;
     }
 
+    bool has_alpha = false;
     if (context.channel_definition_box.has_value()) {
         if (context.channel_definition_box->channels.size() != context.siz.components.size())
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel count doesn't match component count");
@@ -2067,9 +2080,22 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only opacity channel as last channel supported yet");
                 if (channel.channel_association != 0)
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only full opacity channel supported yet");
+                has_alpha = true;
             }
         }
+    } else if (!context.color_box.has_value()) {
+        // Raw codestream. Go by number of components.
+        has_alpha = context.siz.components.size() == 2 || context.siz.components.size() == 4;
     }
+
+    unsigned expected_channel_count = color_space == ColorSpace::Gray ? 1 : 3;
+    if (has_alpha)
+        expected_channel_count++;
+    if (context.siz.components.size() < expected_channel_count)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough components for expected channel count");
+
+    if (context.siz.components.size() > expected_channel_count)
+        dbgln("JPEG2000ImageDecoderPlugin: More components ({}) than expected channel count ({}), ignoring superfluous channels", context.siz.components.size(), expected_channel_count);
 
     for (auto& c : context.siz.components)
         if (c.bit_depth() != 8)
