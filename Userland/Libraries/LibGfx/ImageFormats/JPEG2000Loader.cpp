@@ -762,6 +762,12 @@ struct TileData {
     OwnPtr<JPEG2000::ProgressionIterator> progression_iterator;
 };
 
+enum class ColorSpace {
+    sRGB,
+    Gray,
+    Unsupported,
+};
+
 struct JPEG2000LoadingContext {
     enum class State {
         NotDecoded = 0,
@@ -791,6 +797,14 @@ struct JPEG2000LoadingContext {
     Vector<Comment> coms;
     Vector<TileData> tiles;
 
+    // Valid after headers have been decoded.
+    // The awkward `color_space_error` is so that determine_color_space() can always succeed and
+    // e.g. `file` can return data for JPEG2000s even if we can't decode the image data due to not
+    // yet supporting its colorspace.
+    ColorSpace color_space { ColorSpace::Unsupported };
+    Optional<Error> color_space_error;
+
+    // Valid once `state` is StateDecodedImage.
     RefPtr<Bitmap> bitmap;
 
     CodingStyleParameters const& coding_style_parameters_for_component(TileData const& tile, size_t component_index) const
@@ -2017,36 +2031,10 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Palettized images not yet supported");
     }
 
-    // FIXME: context.color_box is the color after applying the palette, if one is present.
-    enum class ColorSpace {
-        sRGB,
-        Gray,
-    } color_space;
-    if (context.color_box.has_value()) {
-        if (context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::Enumerated) {
-            if (context.color_box->enumerated_color_space == ISOBMFF::JPEG2000ColorSpecificationBox::EnumCS::sRGB) {
-                color_space = ColorSpace::sRGB;
-            } else if (context.color_box->enumerated_color_space == ISOBMFF::JPEG2000ColorSpecificationBox::EnumCS::Greyscale) {
-                color_space = ColorSpace::Gray;
-            } else {
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB and grayscale enumerated color space supported yet");
-            }
-        } else if (context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Restricted
-            || context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Any) {
-            auto icc_header = TRY(ICC::Profile::read_header(context.color_box->icc_data.bytes()));
-            if (icc_header.data_color_space == ICC::ColorSpace::RGB)
-                color_space = ColorSpace::sRGB;
-            else if (icc_header.data_color_space == ICC::ColorSpace::Gray)
-                color_space = ColorSpace::Gray;
-            else
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB and grayscale ICC color space supported yet");
-        } else {
-            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Can only handle enumerated and ICC color specification methods yet");
-        }
-    } else {
-        // Raw codestream. Go by number of components.
-        color_space = context.siz.components.size() < 3 ? ColorSpace::Gray : ColorSpace::sRGB;
-    }
+    // determine_color_space() defers returning an error until here, so that JPEG2000ImageDecoderPlugin::create()
+    // can succeed even with unsupported color spaces.
+    if (context.color_space == ColorSpace::Unsupported)
+        return move(context.color_space_error.value());
 
     bool has_alpha = false;
     if (context.channel_definition_box.has_value()) {
@@ -2084,7 +2072,7 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
         has_alpha = context.siz.components.size() == 2 || context.siz.components.size() == 4;
     }
 
-    unsigned expected_channel_count = color_space == ColorSpace::Gray ? 1 : 3;
+    unsigned expected_channel_count = context.color_space == ColorSpace::Gray ? 1 : 3;
     if (has_alpha)
         expected_channel_count++;
     if (context.siz.components.size() < expected_channel_count)
@@ -2178,10 +2166,52 @@ IntSize JPEG2000ImageDecoderPlugin::size()
     return m_context->size;
 }
 
+static void determine_color_space(JPEG2000LoadingContext& context)
+{
+    // FIXME: context.color_box is the color after applying the palette, if one is present.
+    if (context.color_box.has_value()) {
+        if (context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::Enumerated) {
+            if (context.color_box->enumerated_color_space == ISOBMFF::JPEG2000ColorSpecificationBox::EnumCS::sRGB) {
+                context.color_space = ColorSpace::sRGB;
+            } else if (context.color_box->enumerated_color_space == ISOBMFF::JPEG2000ColorSpecificationBox::EnumCS::Greyscale) {
+                context.color_space = ColorSpace::Gray;
+            } else {
+                context.color_space = ColorSpace::Unsupported;
+                context.color_space_error = Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB and grayscale enumerated color space supported yet");
+            }
+        } else if (context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Restricted
+            || context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Any) {
+            auto icc_header_or_error = ICC::Profile::read_header(context.color_box->icc_data.bytes());
+            if (icc_header_or_error.is_error()) {
+                context.color_space = ColorSpace::Unsupported;
+                context.color_space_error = icc_header_or_error.release_error();
+                return;
+            }
+
+            auto icc_header = icc_header_or_error.release_value();
+            if (icc_header.data_color_space == ICC::ColorSpace::RGB) {
+                context.color_space = ColorSpace::sRGB;
+            } else if (icc_header.data_color_space == ICC::ColorSpace::Gray) {
+                context.color_space = ColorSpace::Gray;
+            } else {
+                context.color_space = ColorSpace::Unsupported;
+                context.color_space_error = Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB and grayscale ICC color space supported yet");
+            }
+        } else {
+            context.color_space = ColorSpace::Unsupported;
+            context.color_space_error = Error::from_string_literal("JPEG2000ImageDecoderPlugin: Can only handle enumerated and ICC color specification methods yet");
+        }
+    } else {
+        // Raw codestream. Go by number of components.
+        context.color_space = context.siz.components.size() < 3 ? ColorSpace::Gray : ColorSpace::sRGB;
+    }
+}
+
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEG2000ImageDecoderPlugin::create(ReadonlyBytes data)
 {
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEG2000ImageDecoderPlugin()));
     TRY(decode_jpeg2000_header(*plugin->m_context, data));
+    determine_color_space(*plugin->m_context);
     return plugin;
 }
 
