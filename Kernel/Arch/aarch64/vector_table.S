@@ -118,7 +118,6 @@
 .endm
 
 .global vector_table_el1
-.weak vector_table_el1 // Vector table is weak in case someone wants to hook us in C++ land :^)
 .type vector_table_el1, @object
 
 // Vector table is 2KiB aligned (2^11)
