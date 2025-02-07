@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Tasks/Process.h>
 
@@ -79,7 +78,6 @@ ErrorOr<FlatPtr> Process::sys$sigreturn(RegisterState& registers)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
-    SmapDisabler disabler;
 
     // Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
     auto stack_ptr = registers.userspace_sp();
