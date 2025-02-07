@@ -66,7 +66,7 @@ ErrorOr<void> read_pam_header(Context& context)
             max_val = TRY(read_number(*context.stream));
         } else if (token == "TUPLTYPE") {
             // FIXME: tupltype should be all text until the next newline, with leading and trailing space stripped.
-            // FIXME: If there are multipe TUPLTYPE lines, their values are all appended.
+            // FIXME: If there are multiple TUPLTYPE lines, their values are all appended.
             tupltype = TRY(read_token(*context.stream));
         } else {
             return Error::from_string_view("Unknown PAM token"sv);
