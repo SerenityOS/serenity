@@ -21,7 +21,7 @@ FlatPtr g_highest_kernel_symbol_address = 0;
 SetOnce g_kernel_symbols_available;
 
 extern "C" {
-__attribute__((section(".kernel_symbols"))) char kernel_symbols[5 * MiB] {};
+__attribute__((section(".kernel_symbols"))) char kernel_symbols[8 * MiB] {};
 }
 
 static KernelSymbol* s_symbols;
