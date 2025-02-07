@@ -2242,4 +2242,21 @@ ErrorOr<Optional<ReadonlyBytes>> JPEG2000ImageDecoderPlugin::icc_data()
     return OptionalNone {};
 }
 
+NaturalFrameFormat JPEG2000ImageDecoderPlugin::natural_frame_format() const
+{
+    if (m_context->state == JPEG2000LoadingContext::State::Error)
+        return NaturalFrameFormat::RGB;
+
+    switch (m_context->color_space) {
+    case ColorSpace::sRGB:
+        return NaturalFrameFormat::RGB;
+    case ColorSpace::Gray:
+        return NaturalFrameFormat::Grayscale;
+    case ColorSpace::Unsupported:
+        return NaturalFrameFormat::RGB;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 }
