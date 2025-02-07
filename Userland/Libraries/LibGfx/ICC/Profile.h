@@ -224,6 +224,7 @@ inline Color MatrixMatrixConversion::map(FloatVector3 in_rgb) const
 class Profile : public RefCounted<Profile> {
 public:
     static ErrorOr<NonnullRefPtr<Profile>> try_load_from_externally_owned_memory(ReadonlyBytes);
+    static ErrorOr<ProfileHeader> read_header(ReadonlyBytes);
     static ErrorOr<NonnullRefPtr<Profile>> create(ProfileHeader const& header, OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table);
 
     Optional<PreferredCMMType> preferred_cmm_type() const { return m_header.preferred_cmm_type; }
