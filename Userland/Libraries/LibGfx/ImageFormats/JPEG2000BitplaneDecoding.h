@@ -15,6 +15,7 @@ namespace Gfx::JPEG2000 {
 
 struct BitplaneDecodingOptions {
     bool reset_context_probabilities_each_pass { false };
+    bool uses_vertically_causal_context { false };
 };
 
 inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int number_of_coding_passes, ReadonlyBytes data, int M_b, int p, BitplaneDecodingOptions options = {})
@@ -87,6 +88,14 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
         auto strip_value = significance_and_sign[strip_offset + x];
         return (strip_value & (1 << strip_y)) != 0;
     };
+    auto is_significant_with_y_horizon = [&](int x, int y, int y_horizon) {
+        if (options.uses_vertically_causal_context && y >= y_horizon) {
+            // D.7 Vertically causal context formation
+            // "any coefficient from the next code-block scan is considered to be insignificant"
+            return false;
+        }
+        return is_significant(x, y);
+    };
     auto sign_is_negative = [&](int x, int y) {
         auto strip_index = y / 4;
         auto strip_y = y % 4;
@@ -120,11 +129,11 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
 
     // Helper functions, mostly for computing arithmetic decoder contexts in various situations.
 
-    auto compute_context_ll_lh = [&](int x, int y) -> unsigned {
+    auto compute_context_ll_lh = [&](int x, int y, int y_horizon) -> unsigned {
         // Table D.1 – Contexts for the significance propagation and cleanup coding passes
         u8 sum_h = is_significant(x - 1, y) + is_significant(x + 1, y);
-        u8 sum_v = is_significant(x, y - 1) + is_significant(x, y + 1);
-        u8 sum_d = is_significant(x - 1, y - 1) + is_significant(x - 1, y + 1) + is_significant(x + 1, y - 1) + is_significant(x + 1, y + 1);
+        u8 sum_v = is_significant(x, y - 1) + is_significant_with_y_horizon(x, y + 1, y_horizon);
+        u8 sum_d = is_significant(x - 1, y - 1) + is_significant_with_y_horizon(x - 1, y + 1, y_horizon) + is_significant(x + 1, y - 1) + is_significant_with_y_horizon(x + 1, y + 1, y_horizon);
 
         if (sum_h == 2)
             return 8;
@@ -150,11 +159,11 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
     };
 
     // Like compute_context_ll_lh but with sum_h and sum_v swapped
-    auto compute_context_hl = [&](int x, int y) -> unsigned {
+    auto compute_context_hl = [&](int x, int y, int y_horizon) -> unsigned {
         // Table D.1 – Contexts for the significance propagation and cleanup coding passes
         u8 sum_h = is_significant(x - 1, y) + is_significant(x + 1, y);
-        u8 sum_v = is_significant(x, y - 1) + is_significant(x, y + 1);
-        u8 sum_d = is_significant(x - 1, y - 1) + is_significant(x - 1, y + 1) + is_significant(x + 1, y - 1) + is_significant(x + 1, y + 1);
+        u8 sum_v = is_significant(x, y - 1) + is_significant_with_y_horizon(x, y + 1, y_horizon);
+        u8 sum_d = is_significant(x - 1, y - 1) + is_significant_with_y_horizon(x - 1, y + 1, y_horizon) + is_significant(x + 1, y - 1) + is_significant_with_y_horizon(x + 1, y + 1, y_horizon);
 
         if (sum_v == 2)
             return 8;
@@ -179,12 +188,12 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
         return 0;
     };
 
-    auto compute_context_hh = [&](int x, int y) -> unsigned {
+    auto compute_context_hh = [&](int x, int y, int y_horizon) -> unsigned {
         // Table D.1 – Contexts for the significance propagation and cleanup coding passes
         u8 sum_h = is_significant(x - 1, y) + is_significant(x + 1, y);
-        u8 sum_v = is_significant(x, y - 1) + is_significant(x, y + 1);
+        u8 sum_v = is_significant(x, y - 1) + is_significant_with_y_horizon(x, y + 1, y_horizon);
         u8 sum_h_v = sum_h + sum_v;
-        u8 sum_d = is_significant(x - 1, y - 1) + is_significant(x - 1, y + 1) + is_significant(x + 1, y - 1) + is_significant(x + 1, y + 1);
+        u8 sum_d = is_significant(x - 1, y - 1) + is_significant_with_y_horizon(x - 1, y + 1, y_horizon) + is_significant(x + 1, y - 1) + is_significant_with_y_horizon(x + 1, y + 1, y_horizon);
 
         if (sum_d >= 3)
             return 8;
@@ -211,24 +220,24 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
         return 0;
     };
 
-    auto compute_context = [&](int x, int y) -> unsigned {
+    auto compute_context = [&](int x, int y, int y_horizon) -> unsigned {
         switch (sub_band) {
         case SubBand::HorizontalLowpassVerticalLowpass:
         case SubBand::HorizontalLowpassVerticalHighpass:
-            return compute_context_ll_lh(x, y);
+            return compute_context_ll_lh(x, y, y_horizon);
         case SubBand::HorizontalHighpassVerticalLowpass:
-            return compute_context_hl(x, y);
+            return compute_context_hl(x, y, y_horizon);
         case SubBand::HorizontalHighpassVerticalHighpass:
-            return compute_context_hh(x, y);
+            return compute_context_hh(x, y, y_horizon);
         }
         VERIFY_NOT_REACHED();
     };
 
-    auto v_or_h_contribution = [&](IntPoint p, IntPoint d0, IntPoint d1) -> i8 {
+    auto v_or_h_contribution = [&](IntPoint p, IntPoint d0, IntPoint d1, int y_horizon) -> i8 {
         auto p0 = p + d0;
         auto p1 = p + d1;
         // Table D.2 – Contributions of the vertical (and the horizontal) neighbours to the sign context
-        if (is_significant(p1.x(), p1.y())) {
+        if (is_significant_with_y_horizon(p1.x(), p1.y(), y_horizon)) {
             if (!sign_is_negative(p1.x(), p1.y())) {
                 if (is_significant(p0.x(), p0.y()))
                     return !sign_is_negative(p0.x(), p0.y()) ? 1 : 0;
@@ -243,13 +252,13 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
         return 0;
     };
 
-    auto read_sign_bit = [&](int x, int y) {
+    auto read_sign_bit = [&](int x, int y, int y_horizon) {
         // C2, Decode sign bit of current coefficient
         // Sign bit
         // D.3.2 Sign bit decoding
         // Table D.2 – Contributions of the vertical (and the horizontal) neighbours to the sign context
-        i8 v_contribution = v_or_h_contribution({ x, y }, { 0, -1 }, { 0, 1 });
-        i8 h_contribution = v_or_h_contribution({ x, y }, { -1, 0 }, { 1, 0 });
+        i8 v_contribution = v_or_h_contribution({ x, y }, { 0, -1 }, { 0, 1 }, y_horizon);
+        i8 h_contribution = v_or_h_contribution({ x, y }, { -1, 0 }, { 1, 0 }, y_horizon);
         // Table D.3 – Sign contexts from the vertical and horizontal contributions
         u8 context_label = 9;
         if (h_contribution == 0)
@@ -282,7 +291,7 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
                     // D1, Is the current coefficient significant?
                     if (!is_significant(x, y + coefficient_index)) {
                         // D2, Is the context bin zero? (see Table D.1)
-                        u8 context = compute_context(x, y + coefficient_index);
+                        u8 context = compute_context(x, y + coefficient_index, y + 4);
                         if (context != 0) {
                             // C1, Decode significance bit of current coefficient (See D.3.1)
                             bool is_newly_significant = arithmetic_decoder.get_next_bit(all_other_contexts[context]);
@@ -295,7 +304,7 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
 
                             // D3, Did the current coefficient just become significant?
                             if (is_newly_significant) {
-                                bool sign_bit = read_sign_bit(x, y + coefficient_index);
+                                bool sign_bit = read_sign_bit(x, y + coefficient_index, y + 4);
                                 set_sign(x, y + coefficient_index, sign_bit);
                             }
                         }
@@ -327,8 +336,8 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
                         u8 context;
                         if (became_significant_at_bitplane[(y + coefficient_index) * w + x] == current_bitplane - 1) {
                             u8 sum_h = is_significant(x - 1, y + coefficient_index) + is_significant(x + 1, y + coefficient_index);
-                            u8 sum_v = is_significant(x, y + coefficient_index - 1) + is_significant(x, y + coefficient_index + 1);
-                            u8 sum_d = is_significant(x - 1, y + coefficient_index - 1) + is_significant(x - 1, y + coefficient_index + 1) + is_significant(x + 1, y + coefficient_index - 1) + is_significant(x + 1, y + coefficient_index + 1);
+                            u8 sum_v = is_significant(x, y + coefficient_index - 1) + is_significant_with_y_horizon(x, y + coefficient_index + 1, y + 4);
+                            u8 sum_d = is_significant(x - 1, y + coefficient_index - 1) + is_significant_with_y_horizon(x - 1, y + coefficient_index + 1, y + 4) + is_significant(x + 1, y + coefficient_index - 1) + is_significant_with_y_horizon(x + 1, y + coefficient_index + 1, y + 4);
                             context = (sum_h + sum_v + sum_d) >= 1 ? 15 : 14;
                         } else {
                             context = 16;
@@ -355,7 +364,7 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
                 Array<u8, 4> contexts {};
                 int num_undecoded = 0;
                 for (int i = 0; i < 4; ++i) {
-                    contexts[i] = compute_context(x, y + i);
+                    contexts[i] = compute_context(x, y + i, y + 4);
                     if (!is_significant(x, y + i))
                         ++num_undecoded; // FIXME: This is probably redundant since this would imply a context being non-0.
                 }
@@ -386,7 +395,7 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
                                 ++coefficient_index;
 
                                 // C1, Decode significance bit of current coefficient (See D.3.1)
-                                u8 context = compute_context(x, y + coefficient_index); // PERF: could use `contexts` cache (needs invalidation then).
+                                u8 context = compute_context(x, y + coefficient_index, y + 4); // PERF: could use `contexts` cache (needs invalidation then).
                                 bool is_newly_significant = arithmetic_decoder.get_next_bit(all_other_contexts[context]);
                                 is_current_coefficient_significant = is_newly_significant;
                                 set_significant(x, y + coefficient_index, is_newly_significant);
@@ -399,7 +408,7 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
 
                             // D3, Did the current coefficient just become significant?
                             if (is_current_coefficient_significant) {
-                                bool sign_bit = read_sign_bit(x, y + coefficient_index);
+                                bool sign_bit = read_sign_bit(x, y + coefficient_index, y + 4);
                                 set_sign(x, y + coefficient_index, sign_bit);
                             }
 
@@ -422,7 +431,7 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
                         bool has_already_been_coded = pass > 0 && was_coded_in_pass[(y + coefficient_index) * w + x] == pass - 2;
                         if (!is_significant_or_coded && !has_already_been_coded) {
                             // C1, Decode significance bit of current coefficient
-                            u8 context = compute_context(x, y + coefficient_index); // PERF: could use `contexts` cache (needs invalidation then).
+                            u8 context = compute_context(x, y + coefficient_index, y + 4); // PERF: could use `contexts` cache (needs invalidation then).
                             bool is_newly_significant = arithmetic_decoder.get_next_bit(all_other_contexts[context]);
                             set_significant(x, y + coefficient_index, is_newly_significant);
                             if (is_newly_significant) {
@@ -432,7 +441,7 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
 
                             // D3, Did the current coefficient just become significant?
                             if (is_newly_significant) {
-                                bool sign_bit = read_sign_bit(x, y + coefficient_index);
+                                bool sign_bit = read_sign_bit(x, y + coefficient_index, y + 4);
                                 set_sign(x, y + coefficient_index, sign_bit);
                             }
                         }
