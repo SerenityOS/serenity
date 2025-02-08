@@ -1480,7 +1480,7 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
     u32 const current_layer_index = progression_data.layer;
 
     // FIXME: Relax. Will need implementing D.5, D.6, D.7, and probably more.
-    if ((coding_parameters.code_block_style & ~(8 | 2)) != 0)
+    if ((coding_parameters.code_block_style & ~(0x20 | 8 | 2)) != 0)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Code-block style not yet implemented");
 
     // B.10 Packet header information coding
@@ -1828,6 +1828,7 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
         JPEG2000::BitplaneDecodingOptions bitplane_decoding_options;
         bitplane_decoding_options.reset_context_probabilities_each_pass = coding_style.reset_context_probabilities();
         bitplane_decoding_options.uses_vertically_causal_context = coding_style.uses_vertically_causal_context();
+        bitplane_decoding_options.uses_segmentation_symbols = coding_style.uses_segmentation_symbols();
 
         int M_b = compute_M_b(context, tile, component_index, sub_band_type, r, N_L);
 

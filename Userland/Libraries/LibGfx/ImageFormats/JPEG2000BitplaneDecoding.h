@@ -16,6 +16,7 @@ namespace Gfx::JPEG2000 {
 struct BitplaneDecodingOptions {
     bool reset_context_probabilities_each_pass { false };
     bool uses_vertically_causal_context { false };
+    bool uses_segmentation_symbols { false };
 };
 
 inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int number_of_coding_passes, ReadonlyBytes data, int M_b, int p, BitplaneDecodingOptions options = {})
@@ -466,6 +467,17 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
             break;
         case 2:
             cleanup_pass(current_bitplane, pass);
+
+            if (options.uses_segmentation_symbols) {
+                // D.5 Error resilience segmentation symbol
+                u8 segmentation_symbol = arithmetic_decoder.get_next_bit(uniform_context);
+                segmentation_symbol = (segmentation_symbol << 1) | arithmetic_decoder.get_next_bit(uniform_context);
+                segmentation_symbol = (segmentation_symbol << 1) | arithmetic_decoder.get_next_bit(uniform_context);
+                segmentation_symbol = (segmentation_symbol << 1) | arithmetic_decoder.get_next_bit(uniform_context);
+                if (segmentation_symbol != 0xA)
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid segmentation symbol");
+            }
+
             ++current_bitplane;
             break;
         }
