@@ -31,6 +31,7 @@ shared_library("LibPDF") {
   deps = [
     "//AK",
     "//Userland/Libraries/LibCompress",
+    "//Userland/Libraries/LibCore",
     "//Userland/Libraries/LibCrypto",
     "//Userland/Libraries/LibGfx",
     "//Userland/Libraries/LibIPC",
