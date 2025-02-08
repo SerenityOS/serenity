@@ -1480,7 +1480,7 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
     u32 const current_layer_index = progression_data.layer;
 
     // FIXME: Relax. Will need implementing D.5, D.6, D.7, and probably more.
-    if (coding_parameters.code_block_style != 0)
+    if ((coding_parameters.code_block_style & ~2) != 0)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Code-block style not yet implemented");
 
     // B.10 Packet header information coding
@@ -1824,6 +1824,10 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
     auto decode_bitplanes = [&](TileData& tile, JPEG2000::SubBand sub_band_type, DecodedSubBand& sub_band, int component_index, int r, int N_L) -> ErrorOr<void> {
         TRY(sub_band.coefficients.try_resize(sub_band.rect.width() * sub_band.rect.height()));
 
+        auto const& coding_style = context.coding_style_parameters_for_component(tile, component_index);
+        JPEG2000::BitplaneDecodingOptions bitplane_decoding_options;
+        bitplane_decoding_options.reset_context_probabilities_each_pass = coding_style.reset_context_probabilities();
+
         int M_b = compute_M_b(context, tile, component_index, sub_band_type, r, N_L);
 
         // FIXME: Codeblocks all use independent arithmetic coders, so this could run in parallel.
@@ -1841,7 +1845,7 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
                 output.size = code_block.rect.size();
                 output.pitch = clipped_precinct_rect.width();
                 output.data = precinct_coefficients.span().slice((code_block.rect.y() - clipped_precinct_rect.y()) * output.pitch + (code_block.rect.x() - clipped_precinct_rect.x()));
-                TRY(JPEG2000::decode_code_block(output, sub_band_type, total_number_of_coding_passes, combined_data, M_b, code_block.p));
+                TRY(JPEG2000::decode_code_block(output, sub_band_type, total_number_of_coding_passes, combined_data, M_b, code_block.p, bitplane_decoding_options));
             }
 
             JPEG2000::Span2D<float> output;

@@ -13,7 +13,11 @@
 
 namespace Gfx::JPEG2000 {
 
-inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int number_of_coding_passes, ReadonlyBytes data, int M_b, int p)
+struct BitplaneDecodingOptions {
+    bool reset_context_probabilities_each_pass { false };
+};
+
+inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int number_of_coding_passes, ReadonlyBytes data, int M_b, int p, BitplaneDecodingOptions options = {})
 {
     // This is an implementation of the bitplane decoding algorithm described in Annex D of the JPEG2000 spec.
     // It's modeled closely after Figure D.3 – Flow chart for all coding passes on a code-block bit-plane,
@@ -457,7 +461,8 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
             break;
         }
 
-        // FIXME: Optionally reset contexts between bitplanes, depending on uses_termination_on_each_coding_pass().
+        if (options.reset_context_probabilities_each_pass)
+            reset_contexts();
     }
 
     // Convert internal state to output.
