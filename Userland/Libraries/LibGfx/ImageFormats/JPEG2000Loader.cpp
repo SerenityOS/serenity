@@ -1480,7 +1480,7 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
     u32 const current_layer_index = progression_data.layer;
 
     // FIXME: Relax. Will need implementing D.5, D.6, D.7, and probably more.
-    if ((coding_parameters.code_block_style & ~(0x20 | 8 | 2)) != 0)
+    if ((coding_parameters.code_block_style & ~(0x20 | 0x10 | 8 | 2)) != 0)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Code-block style not yet implemented");
 
     // B.10 Packet header information coding
