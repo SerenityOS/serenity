@@ -138,7 +138,7 @@
         return YES;
     if (item.action == @selector(showGoToPageDialog:))
         return _pdfDocument.pdf ? YES : NO;
-    return [super validateMenuItem:item];
+    return NO;
 }
 
 - (IBAction)toggleShowClippingPaths:(id)sender
