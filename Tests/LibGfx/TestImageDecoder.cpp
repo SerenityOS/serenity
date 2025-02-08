@@ -696,6 +696,7 @@ TEST_CASE(test_jpeg2000_decode)
         TEST_INPUT("jpeg2000/kakadu-lossless-rgba-u8-prog1-layers1-res6-mct.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-tile3x2-cblk4x16-tp3-layers3-res2-mct.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-02-resetprob.jp2"sv),
+        TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-08-vcausal.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-tile3x2-res5.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-SOP.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-EPH.jp2"sv),
@@ -789,7 +790,6 @@ TEST_CASE(test_jpeg2000_decode_unsupported)
     Array test_inputs = {
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-01-bypass.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-04-termall.jp2"sv),
-        TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-08-vcausal.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-16-pterm.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-32-segsym.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-63-all.jp2"sv),
