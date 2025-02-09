@@ -597,7 +597,7 @@ TEST_CASE(test_jpeg2000_spec_annex_j_10_bitplane_decoding)
         Gfx::JPEG2000::Span2D<i16> result { output.span(), { 1, 5 }, 1 };
 
         // 16, 9, 3 are from J.10.3 Packet headers, Table J.20 – Decoding first packet header.
-        TRY_OR_FAIL(Gfx::JPEG2000::decode_code_block(result, Gfx::JPEG2000::SubBand::HorizontalLowpassVerticalLowpass, 16, input, 9, 3));
+        TRY_OR_FAIL(Gfx::JPEG2000::decode_code_block(result, Gfx::JPEG2000::SubBand::HorizontalLowpassVerticalLowpass, 16, { input }, 9, 3));
 
         EXPECT_EQ(output[0], -26);
         EXPECT_EQ(output[1], -22);
@@ -615,7 +615,7 @@ TEST_CASE(test_jpeg2000_spec_annex_j_10_bitplane_decoding)
         Gfx::JPEG2000::Span2D<i16> result { output.span(), { 1, 4 }, 1 };
 
         // 7, 10, 7 are from J.10.3 Packet headers, Table J.21 – Decoding second packet header.
-        TRY_OR_FAIL(Gfx::JPEG2000::decode_code_block(result, Gfx::JPEG2000::SubBand::HorizontalLowpassVerticalHighpass, 7, input, 10, 7));
+        TRY_OR_FAIL(Gfx::JPEG2000::decode_code_block(result, Gfx::JPEG2000::SubBand::HorizontalLowpassVerticalHighpass, 7, { input }, 10, 7));
 
         EXPECT_EQ(output[0], 1);
         EXPECT_EQ(output[1], 5);
@@ -696,6 +696,9 @@ TEST_CASE(test_jpeg2000_decode)
         TEST_INPUT("jpeg2000/kakadu-lossless-rgba-u8-prog1-layers1-res6-mct.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-tile3x2-cblk4x16-tp3-layers3-res2-mct.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-02-resetprob.jp2"sv),
+        TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-04-termall.jp2"sv),
+        TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-04-termall-layers.jp2"sv),
+        TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-06-resetprob-termall.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-08-vcausal.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-16-pterm.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-32-segsym.jp2"sv),
@@ -791,7 +794,6 @@ TEST_CASE(test_jpeg2000_decode_unsupported)
 {
     Array test_inputs = {
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-01-bypass.jp2"sv),
-        TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-04-termall.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-63-all.jp2"sv),
         TEST_INPUT("jpeg2000/kakadu-lossless-cmyk-u8-prog1-layers1-res6.jp2"sv),
         TEST_INPUT("jpeg2000/kakadu-lossless-cmyka-u8-prog1-layers1-res6.jp2"sv),

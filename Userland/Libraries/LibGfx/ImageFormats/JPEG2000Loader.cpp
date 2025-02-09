@@ -77,6 +77,10 @@
 // - Typical codeblock size: 64×64 pixels
 // - Codeblocks store coefficient bitplanes from wavelet transformation
 // - Independent arithmetic decoder contexts enable parallel decoding
+// - A codeblock can be split into segments. A segment is a group of bytes
+//   that are fed into the arithmetic decoder as one unit. Most files use one segment,
+//   but the code block styles "termination on each coding pass" and
+//   "selective arithmetic coding bypass" use multiple segments.
 //
 // Packets
 // -------
@@ -680,7 +684,7 @@ struct DecodedCodeBlock {
     u32 p { 0 };
 
     struct Layer {
-        ReadonlyBytes data;
+        Vector<ReadonlyBytes, 1> segments;
         u8 number_of_coding_passes { 0 };
     };
     Vector<Layer, 1> layers;
@@ -693,19 +697,26 @@ struct DecodedCodeBlock {
         return total;
     }
 
-    ErrorOr<ByteBuffer> data_for_all_layers() const
+    ErrorOr<Vector<ReadonlyBytes, 1>> segments_for_all_layers(bool uses_termination_on_each_coding_pass, ByteBuffer& maybe_storage) const
     {
+        if (uses_termination_on_each_coding_pass) {
+            Vector<ReadonlyBytes, 1> all_segments;
+            for (auto const& layer : layers)
+                TRY(all_segments.try_extend(layer.segments));
+            return all_segments;
+        }
+
         size_t total_size = 0;
         for (auto const& layer : layers)
-            total_size += layer.data.size();
+            total_size += layer.segments[0].size();
 
-        ByteBuffer buffer = TRY(ByteBuffer::create_uninitialized(total_size));
+        maybe_storage = TRY(ByteBuffer::create_uninitialized(total_size));
         size_t offset = 0;
         for (auto const& layer : layers) {
-            memcpy(buffer.offset_pointer(offset), layer.data.data(), layer.data.size());
-            offset += layer.data.size();
+            memcpy(maybe_storage.offset_pointer(offset), layer.segments[0].data(), layer.segments[0].size());
+            offset += layer.segments[0].size();
         }
-        return buffer;
+        return Vector<ReadonlyBytes, 1> { maybe_storage };
     }
 };
 
@@ -1480,7 +1491,7 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
     u32 const current_layer_index = progression_data.layer;
 
     // FIXME: Relax. Will need implementing D.5, D.6, D.7, and probably more.
-    if ((coding_parameters.code_block_style & ~(0x20 | 0x10 | 8 | 2)) != 0)
+    if ((coding_parameters.code_block_style & ~(0x20 | 0x10 | 8 | 4 | 2)) != 0)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Code-block style not yet implemented");
 
     // B.10 Packet header information coding
@@ -1539,7 +1550,7 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
     // " for each sub-band (LL or HL, LH and HH)"
     struct TemporaryCodeBlockData {
         u8 number_of_coding_passes { 0 };
-        u32 length_of_codeword_segment { 0 };
+        Vector<u32, 1> length_of_codeword_segments;
     };
     struct TemporarySubBandData {
         DecodedPrecinct* precinct { nullptr };
@@ -1633,7 +1644,15 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
             temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].number_of_coding_passes = number_of_coding_passes;
 
             // B.10.7 Length of the compressed image data from a given code-block
-            // We currently always use B.10.7.1 Single codeword segment; see the comment below B.10.7.2 for why.
+            // "Multiple codeword segments arise when a termination occurs between coding passes which are included in the packet"
+            int number_of_segments = 1;
+            if (coding_parameters.uses_termination_on_each_coding_pass()) {
+                // See Table D.8 – Arithmetic coder termination patterns, 2nd column.
+                number_of_segments = number_of_coding_passes;
+            } else {
+                // FIXME: Handle uses_selective_arithmetic_coding_bypass(), and the combination of the two.
+                // (We currently reject uses_selective_arithmetic_coding_bypass() above.)
+            }
 
             // B.10.7.1 Single codeword segment
             // "A codeword segment is the number of bytes contributed to a packet by a code-block.
@@ -1647,26 +1666,40 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
             while (TRY(read_bit()))
                 k++;
             current_block.Lblock += k;
-            u32 bits = current_block.Lblock + (u32)floor(log2(number_of_coding_passes));
-            if (bits > 32)
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Too many bits for length of codeword segment");
-            u32 length = 0;
-            for (u32 i = 0; i < bits; ++i) {
-                bool bit = TRY(read_bit());
-                length = (length << 1) | bit;
-            }
-            dbgln_if(JPEG2000_DEBUG, "length {}", length);
-            temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].length_of_codeword_segment = length;
 
-            // B.10.7.2 Multiple codeword segments
-            // "Multiple codeword segments arise when a termination occurs between coding passes which are included in the packet"
-            // "In normal operation (not selective arithmetic coding bypass), the arithmetic coder shall be terminated either
-            //  at the end of every coding pass or only at the end of every code-block (see D.4.1)"
-            // => This can only happen if uses_termination_on_each_coding_pass() or uses_selective_arithmetic_coding_bypass().
-            //    We currently reject files with code_block_style != 0, so this cannot currently happen.
-            //    Once we stop rejecting files with uses_termination_on_each_coding_pass() or uses_selective_arithmetic_coding_bypass()
-            //    set, we must implement this.
-            // FIXME: Implement.
+            auto read_one_codeword_segment_length = [&](int number_of_passes) -> ErrorOr<u32> {
+                u32 bits = current_block.Lblock + (u32)floor(log2(number_of_passes));
+                if (bits > 32)
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Too many bits for length of codeword segment");
+
+                u32 length = 0;
+                for (u32 i = 0; i < bits; ++i) {
+                    bool bit = TRY(read_bit());
+                    length = (length << 1) | bit;
+                }
+                return length;
+            };
+
+            VERIFY(temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].length_of_codeword_segments.is_empty());
+            if (number_of_segments == 1) {
+                u32 length = TRY(read_one_codeword_segment_length(number_of_coding_passes));
+                dbgln_if(JPEG2000_DEBUG, "length {}", length);
+                temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].length_of_codeword_segments.append(length);
+            } else {
+                // B.10.7.2 Multiple codeword segments
+                // "Let T be the set of indices of terminated coding passes included for the code-block in the packet as indicated in Tables D.8
+                //  and D.9. If the index final coding pass included in the packet is not a member of T, then it is added to T. Let n_1 < ... < n_K
+                //  be the indices in T. K lengths are signalled consecutively with each length using the mechanism described in B.10.7.1."
+                // "using the mechanism" means adjusting Lblock just once, and then reading one code word segment length with the
+                // number of passes per segment, apparently.
+                // We currently only implement termination on each pass and not yet selective arithmetic coding bypass, so K
+                // is just number_of_segments == number_of_coding_passes.
+                for (int i = 0; i < number_of_segments; ++i) {
+                    u32 length = TRY(read_one_codeword_segment_length(1));
+                    dbgln_if(JPEG2000_DEBUG, "length({}) {}", i, length);
+                    temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].length_of_codeword_segments.append(length);
+                }
+            }
         }
     }
 
@@ -1692,9 +1725,19 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
     u32 offset = stream.offset();
     for (auto const& temporary_sub_band : temporary_sub_band_data) {
         for (auto const& [code_block_index, temporary_code_block] : enumerate(temporary_sub_band.temporary_code_block_data)) {
-            auto block_data = data.slice(offset, temporary_code_block.length_of_codeword_segment);
-            offset += temporary_code_block.length_of_codeword_segment;
-            TRY(temporary_sub_band.precinct->code_blocks[code_block_index].layers.try_append({ block_data, temporary_code_block.number_of_coding_passes }));
+            DecodedCodeBlock::Layer layer;
+            layer.number_of_coding_passes = temporary_code_block.number_of_coding_passes;
+            for (u32 length : temporary_code_block.length_of_codeword_segments) {
+                auto segment_data = data.slice(offset, length);
+                offset += length;
+                TRY(layer.segments.try_append(segment_data));
+            }
+            if (!coding_parameters.uses_termination_on_each_coding_pass()) {
+                if (layer.segments.is_empty())
+                    layer.segments.append(data.slice(offset, 0));
+                VERIFY(layer.segments.size() == 1);
+            }
+            TRY(temporary_sub_band.precinct->code_blocks[code_block_index].layers.try_append(layer));
         }
     }
 
@@ -1827,6 +1870,7 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
         auto const& coding_style = context.coding_style_parameters_for_component(tile, component_index);
         JPEG2000::BitplaneDecodingOptions bitplane_decoding_options;
         bitplane_decoding_options.reset_context_probabilities_each_pass = coding_style.reset_context_probabilities();
+        bitplane_decoding_options.uses_termination_on_each_coding_pass = coding_style.uses_termination_on_each_coding_pass();
         bitplane_decoding_options.uses_vertically_causal_context = coding_style.uses_vertically_causal_context();
         bitplane_decoding_options.uses_segmentation_symbols = coding_style.uses_segmentation_symbols();
 
@@ -1841,13 +1885,14 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
 
             for (auto& code_block : precinct.code_blocks) {
                 int total_number_of_coding_passes = code_block.number_of_coding_passes();
-                ByteBuffer combined_data = TRY(code_block.data_for_all_layers());
+                ByteBuffer storage;
+                Vector<ReadonlyBytes, 1> combined_segments = TRY(code_block.segments_for_all_layers(coding_style.uses_termination_on_each_coding_pass(), storage));
 
                 JPEG2000::Span2D<i16> output;
                 output.size = code_block.rect.size();
                 output.pitch = clipped_precinct_rect.width();
                 output.data = precinct_coefficients.span().slice((code_block.rect.y() - clipped_precinct_rect.y()) * output.pitch + (code_block.rect.x() - clipped_precinct_rect.x()));
-                TRY(JPEG2000::decode_code_block(output, sub_band_type, total_number_of_coding_passes, combined_data, M_b, code_block.p, bitplane_decoding_options));
+                TRY(JPEG2000::decode_code_block(output, sub_band_type, total_number_of_coding_passes, combined_segments, M_b, code_block.p, bitplane_decoding_options));
             }
 
             JPEG2000::Span2D<float> output;
