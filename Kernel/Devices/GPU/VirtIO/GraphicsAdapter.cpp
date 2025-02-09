@@ -408,8 +408,6 @@ ErrorOr<void> VirtIOGraphicsAdapter::flush_displayed_image(Graphics::VirtIOGPU::
 ErrorOr<void> VirtIOGraphicsAdapter::synchronous_virtio_gpu_command(size_t microseconds_timeout, PhysicalAddress buffer_start, size_t request_size, size_t response_size)
 {
     VERIFY(m_operation_lock.is_locked());
-    VERIFY(microseconds_timeout > 10);
-    VERIFY(microseconds_timeout < 100000);
     auto& queue = get_queue(CONTROLQ);
     queue.disable_interrupts();
     SpinlockLocker lock(queue.lock());
