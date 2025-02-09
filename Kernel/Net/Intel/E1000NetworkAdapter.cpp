@@ -668,7 +668,6 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
 {
-    // FIXME: Newer NICs only allow 2048 bytes per legacy descriptor
     // Hence FIXME: Support Advanced descriptors
     constexpr auto tx_buffer_page_count = tx_buffer_size / PAGE_SIZE;
 
@@ -820,11 +819,12 @@ void E1000NetworkAdapter::receive()
 
         // FIXME: We may receive packets split across multiple descriptors
         if (m_operating_mode != OperatingMode::Intel82576_and_later) {
+            auto& descriptor = m_rx_descriptors[rx_current].legacy;
 
-            if (!has_flag(m_rx_descriptors[rx_current].legacy.status, E1000::RxDescriptorStatus::DD))
+            if (!has_flag(descriptor.status, E1000::RxDescriptorStatus::DD))
                 break;
             // FIXME: Support split packets
-            VERIFY(has_flag(m_rx_descriptors[rx_current].legacy.status, E1000::RxDescriptorStatus::EOP));
+            VERIFY(has_flag(descriptor.status, E1000::RxDescriptorStatus::EOP));
 
             auto* buffer = m_rx_buffers[rx_current];
             u16 length = m_rx_descriptors[rx_current].legacy.length;
@@ -832,6 +832,11 @@ void E1000NetworkAdapter::receive()
             VERIFY(length <= 8192);
 
             dbgln_if(E1000_DEBUG, "E1000: Received 1 packet @ {:p} ({} bytes)", buffer, length);
+            dbgln_if(E1000_DEBUG, "E1000: Status {}", (E1000::RxDescriptorStatus)descriptor.status);
+            dbgln_if(E1000_DEBUG, "E1000: Error {:#02x}", (u32)descriptor.errors);
+
+            VERIFY(descriptor.errors == 0);
+
             did_receive({ buffer, length });
 
             m_rx_descriptors[rx_current].legacy.status = E1000::RxDescriptorStatus::None;
@@ -852,7 +857,14 @@ void E1000NetworkAdapter::receive()
 
                 VERIFY(length <= 8192);
 
-                dbgln_if(E1000_DEBUG, "E1000: Received 1 packet @ {:p} ({} bytes)", buffer, length);
+                dbgln_if(1, "E1000: Received 1 packet @ {:p} ({} bytes)", buffer, length);
+                dbgln_if(1, "E1000: PacketType {:#04x}", (decltype(descriptor.packet_type))descriptor.packet_type);
+                dbgln_if(1, "E1000: Status {}", (decltype(descriptor.extended_status))descriptor.extended_status);
+                dbgln_if(1, "E1000: ExtendedError {:#04x}", (u64)descriptor.extended_error);
+                dbgln_if(1, "E1000: SplitHeader {}", (bool)descriptor.split_header);
+
+                VERIFY(to_underlying(descriptor.extended_error) == 0);
+
                 did_receive({ buffer, length });
             }
             {
