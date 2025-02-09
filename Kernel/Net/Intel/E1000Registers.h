@@ -9,7 +9,7 @@
 #include <AK/EnumBits.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
-#include <Kernel/Library/IORegister.h>
+#include <Kernel/Library/IORegisterMap.h>
 
 namespace Kernel::E1000 {
 
@@ -32,6 +32,8 @@ enum class Register {
     TCtrlExt = 0x0404, // TCTL_EXT
     TIPG = 0x0410,     // Transmit Inter Packet Gap
 
+    GPIE = 0x1514, // General Purpose Interrupt Enable
+
     ExtendedInterruptThrottling = 0x1680, // EITR
 
     RXDescLow = 0x2800,  // Receive Descriptor Base Low (RDBAL)
@@ -50,10 +52,12 @@ enum class Register {
     RXDCTL = 0x3828, // RX Descriptor Control
 
     // 64 Bit IO allowed to load/store both at the same time
-    RAL0 = 0x5400, // Receive Address Low
-    RAH0 = 0x5404, // Receive Address High
+    RAL = 0x5400, // Receive Address Low
+    RAH = 0x5404, // Receive Address High
 
     SRRCTL0 = 0xC00C, // Split and Replication Receive Control for Queue 0
+
+    TXDCTL0 = 0x3808, // Transmit Descriptor Control (+0x40 per queue)
 };
 
 enum class LinkSpeed : u32 {
@@ -214,6 +218,19 @@ enum class Interrupt {
 AK_ENUM_BITWISE_OPERATORS(Interrupt);
 
 // I211
+// 8.7.17 General Purpose Interrupt Enable - GPIE
+struct GeneralPurposeInterruptEnable {
+    u32 non_selective_interrupt_clear_on_read : 1; // NSICR
+    u32 : 3;
+    u32 multiple_msix : 1; // Multiple MSI-X vectors
+    u32 : 2;
+    u32 ll_interval : 5;
+    u32 : 18;
+    u32 extended_interrupt_auto_mask_enable : 1; // EIAME
+    u32 pba_support : 1;
+};
+
+// I211
 // 8.7.14 Interrupt Throttle - EITR
 struct ExtendedInterruptThrottling {
     u32 : 2;
@@ -316,6 +333,7 @@ struct TransmitInterPacketGap {
     u32 ipgr : 10;
     u32 : 2;
 };
+static_assert(AssertSize<TransmitInterPacketGap, 4>());
 
 // https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/82576eb-gigabit-ethernet-controller-datasheet.pdf
 // 8.10.2 Split and Replication Receive Control (SRRCTL)
@@ -340,8 +358,26 @@ struct SplitAndReplicationReceiveControl {
     u32 : 3;
     u32 drop_enable : 1;
 };
+static_assert(AssertSize<SplitAndReplicationReceiveControl, 4>());
 
-using RegisterMap = IORegister<Register,
+// I211
+// 8.11.15 Transmit Descriptor Control (TXDCTL)
+struct TransmitDescriptorControl {
+    u32 prefetch_threshold : 5;
+    u32 : 3;
+    u32 host_threshold : 5;
+    u32 : 3;
+    u32 writeback_threshold : 5;
+    u32 : 3;
+    u32 : 1;
+    u32 queue_enable : 1;
+    u32 software_flush : 1;
+    u32 priority : 1;
+    u32 head_writeback_threshold : 4;
+};
+static_assert(AssertSize<TransmitDescriptorControl, 4>());
+
+using RegisterMap = IORegisterMap<Register,
     IOReg<Register, Register::Ctrl, Ctrl>,
     IOReg<Register, Register::Status, Status>,
     IOReg<Register, Register::EEPROMControl, EEPROMControl>,
@@ -371,8 +407,10 @@ using RegisterMap = IORegister<Register,
     IOReg<Register, Register::TXDescHead, u32>,
     IOReg<Register, Register::TXDescTail, u32>,
 
-    IOReg<Register, Register::RAL0, u32>,
-    IOReg<Register, Register::RAH0, u32>,
+    IORegArray<Register, Register::RAL, u32, 16, 8, true>,
+    IORegArray<Register, Register::RAH, u32, 16, 8, true>,
 
-    IOReg<Register, Register::SRRCTL0, SplitAndReplicationReceiveControl>>;
+    IOReg<Register, Register::SRRCTL0, SplitAndReplicationReceiveControl>,
+
+    IOReg<Register, Register::TXDCTL0, TransmitDescriptorControl>>;
 }

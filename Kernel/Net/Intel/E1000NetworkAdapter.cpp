@@ -555,8 +555,8 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
 {
     // FIXME: Support other ways of getting the mac address
     //        Like iNVM on the I211
-    auto ral = m_registers.read<Register::RAL0>();
-    auto rah = m_registers.read<Register::RAH0>();
+    auto ral = m_registers.read<Register::RAL, 0>();
+    auto rah = m_registers.read<Register::RAH, 0>();
     bool rah_va = rah & 0x80000000;
 
     rah &= 0xffff;
@@ -597,8 +597,8 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
     // In this case, we have to fill in the RAL0/RAH0 registers
     ral = (mac[0] << 0) | (mac[1] << 8) | (mac[2] << 16) | (mac[3] << 24);
     rah = (mac[4] << 0) | (mac[5] << 8) | 0x80000000;
-    m_registers.write<Register::RAL0>(ral);
-    m_registers.write<Register::RAH0>(rah);
+    m_registers.write<Register::RAL, 0>(ral);
+    m_registers.write<Register::RAH, 0>(rah);
 
     set_mac_address(mac);
 }
