@@ -856,7 +856,8 @@ void E1000NetworkAdapter::receive()
                 // Reset the descriptor
                 // FIXME: If we'd want to be really nice we should probably do a placement new here or the like
                 auto& descriptor = m_rx_descriptors[rx_current].advanced;
-                descriptor.packet_buffer_address = bit_cast<u64>(m_rx_buffers[rx_current]);
+                constexpr auto tx_buffer_page_count = tx_buffer_size / PAGE_SIZE;
+                descriptor.packet_buffer_address = m_tx_buffer_region->physical_page(tx_buffer_page_count * rx_current)->paddr().get();
                 // FIXME: Is this always allowed?
                 descriptor.header_buffer_address = 0;
             }
