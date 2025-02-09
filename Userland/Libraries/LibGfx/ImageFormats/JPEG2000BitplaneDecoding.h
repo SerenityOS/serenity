@@ -15,11 +15,12 @@ namespace Gfx::JPEG2000 {
 
 struct BitplaneDecodingOptions {
     bool reset_context_probabilities_each_pass { false };
+    bool uses_termination_on_each_coding_pass { false };
     bool uses_vertically_causal_context { false };
     bool uses_segmentation_symbols { false };
 };
 
-inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int number_of_coding_passes, ReadonlyBytes data, int M_b, int p, BitplaneDecodingOptions options = {})
+inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int number_of_coding_passes, Vector<ReadonlyBytes, 1> segments, int M_b, int p, BitplaneDecodingOptions options = {})
 {
     // This is an implementation of the bitplane decoding algorithm described in Annex D of the JPEG2000 spec.
     // It's modeled closely after Figure D.3 – Flow chart for all coding passes on a code-block bit-plane,
@@ -29,6 +30,14 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
     int const w = result.size.width();
     int const h = result.size.height();
     int const num_strips = ceil_div(h, 4);
+
+    if (options.uses_termination_on_each_coding_pass)
+        VERIFY(segments.size() == static_cast<size_t>(number_of_coding_passes));
+    else
+        VERIFY(segments.size() == 1);
+
+    if (number_of_coding_passes == 0)
+        return {};
 
     // Decoder state.
 
@@ -66,7 +75,7 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
     QMArithmeticDecoder::Context run_length_context;
     Array<QMArithmeticDecoder::Context, 17> all_other_contexts {};
 
-    QMArithmeticDecoder arithmetic_decoder = TRY(QMArithmeticDecoder::initialize(data));
+    QMArithmeticDecoder arithmetic_decoder = TRY(QMArithmeticDecoder::initialize(segments[0]));
 
     auto reset_contexts = [&]() {
         // Table D.7 – Initial states for all contexts
@@ -484,6 +493,9 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
 
         if (options.reset_context_probabilities_each_pass)
             reset_contexts();
+
+        if (options.uses_termination_on_each_coding_pass && pass + 1 < number_of_coding_passes)
+            arithmetic_decoder = TRY(QMArithmeticDecoder::initialize(segments[pass + 1]));
     }
 
     // Convert internal state to output.
