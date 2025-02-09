@@ -657,7 +657,10 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
         rctl.read_descriptor_minimum_threshold_size = E1000::ReceiveControl::FreeBufferThreshold::Half;
     } else {
         rctl.buffer_size = E1000::ReceiveControl::BufferSize::Size2048;
-        // FIXME: Fill out the read_descriptor_minimum_threshold_size equivalent
+
+        auto srrctl = m_registers.read<Register::SRRCTL0>();
+        srrctl.read_descriptor_minimum_threshold_size = number_of_rx_descriptors / 2 / 16;
+        m_registers.write<Register::SRRCTL0>(srrctl);
     }
 
     m_registers.write<Register::RCtrl>(rctl);
