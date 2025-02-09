@@ -388,6 +388,8 @@ static ErrorOr<CodingStyleParameters> read_coding_style_parameters(ReadonlyBytes
     parameters.code_block_height_exponent = ycb;
 
     parameters.code_block_style = TRY(stream.read_value<u8>());
+    if (parameters.code_block_style & 0xC0)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Reserved code block style bits set");
 
     // Table A.20 – Transformation for the SPcod and SPcoc parameters
     u8 transformation = TRY(stream.read_value<u8>());
@@ -1490,9 +1492,9 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
     auto const r = progression_data.resolution_level;
     u32 const current_layer_index = progression_data.layer;
 
-    // FIXME: Relax. Will need implementing D.5, D.6, D.7, and probably more.
-    if ((coding_parameters.code_block_style & ~(0x20 | 0x10 | 8 | 4 | 2)) != 0)
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Code-block style not yet implemented");
+    // FIXME: Relax.
+    if (coding_parameters.uses_selective_arithmetic_coding_bypass())
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Selective arithmetic coding bypass not yet implemented");
 
     // B.10 Packet header information coding
     // "The packets have headers with the following information:
