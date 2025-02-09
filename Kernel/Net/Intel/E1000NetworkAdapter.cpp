@@ -411,7 +411,20 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_interrupts()
 {
     // FIXME: Do this properly,
     //        like set the interrupt rate depending on the current utilization and link speed
-    m_registers.write<Register::InterruptThrottling>(6000); // Interrupt rate of 1.536 milliseconds
+    if (m_operating_mode != OperatingMode::Intel82576_and_later)
+        m_registers.write<Register::InterruptThrottling>(6000); // Interrupt rate of 1.536 milliseconds
+    // Note: The 82574 also has an EITR and an ITR, so we might want to set those as well
+    if (m_operating_mode == OperatingMode::Intel82576_and_later || (m_operating_mode == OperatingMode::Intel8254x_14bit_til_82574 && device_identifier().hardware_id().device_id == 0x10D3)) {
+        // 82574
+        // 82576 and later
+        auto eitr = m_registers.read<Register::ExtendedInterruptThrottling>();
+        eitr.interval = 1536; // 1.536 milliseconds
+        // Note: The 82574 has no enable bit, so we don't need to set it, as it would actually increase the interrupt interval
+        if (m_operating_mode == OperatingMode::Intel8254x_14bit_til_82574 && device_identifier().hardware_id().device_id == 0x10D3)
+            eitr.lli_enable = 1;
+
+        m_registers.write<Register::ExtendedInterruptThrottling>(eitr);
+    }
 
     // We want: Link status change, RX timer, RX overrun
     using InterruptMask = E1000::Interrupt;

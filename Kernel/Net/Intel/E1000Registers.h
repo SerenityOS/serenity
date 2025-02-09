@@ -24,13 +24,16 @@ enum class Register {
     EEPROMRead = 0x0014,
     CtrlExt = 0x0018,
     InterruptCauseR = 0x00C0,
-    InterruptThrottling = 0x00C4,
+    InterruptThrottling = 0x00C4, // ITR, seems to be not present on later NICs
     InterruptMask = 0x00D0,
     InterruptMaskClear = 0x00D8,
-    RCtrl = 0x0100,      // RCTL
-    TCtrl = 0x0400,      // TCTL
-    TCtrlExt = 0x0404,   // TCTL_EXT
-    TIPG = 0x0410,       // Transmit Inter Packet Gap
+    RCtrl = 0x0100,    // RCTL
+    TCtrl = 0x0400,    // TCTL
+    TCtrlExt = 0x0404, // TCTL_EXT
+    TIPG = 0x0410,     // Transmit Inter Packet Gap
+
+    ExtendedInterruptThrottling = 0x1680, // EITR
+
     RXDescLow = 0x2800,  // Receive Descriptor Base Low (RDBAL)
     RXDescHigh = 0x2804, // Receive Descriptor Base High (RDBAH)
     RXDescLength = 0x2808,
@@ -210,6 +213,20 @@ enum class Interrupt {
 };
 AK_ENUM_BITWISE_OPERATORS(Interrupt);
 
+// I211
+// 8.7.14 Interrupt Throttle - EITR
+struct ExtendedInterruptThrottling {
+    u32 : 2;
+    u32 interval : 13;  // in µs intervals
+    u32 lli_enable : 1; // Low Latency Interrupt Enable
+    // Already present on 82574, but there the interval is in 256ns intervals, 15 bit,
+    // ie. it also spans the enable bit, rest is reserved
+    // and only is used for MSI-X interrupts
+    u32 ll_counter : 5;
+    u32 moderation_counter : 10;
+    u32 counter_integrity : 1; // Counter Integrity Enable, don't set counters
+};
+
 // 13.4.22
 // Table 13-67
 struct ReceiveControl {
@@ -339,6 +356,8 @@ using RegisterMap = IORegister<Register,
     IOReg<Register, Register::TCtrl, TransmitControl>,
     IOReg<Register, Register::TCtrlExt, TransmitControlExtended>,
     IOReg<Register, Register::TIPG, TransmitInterPacketGap>,
+
+    IOReg<Register, Register::ExtendedInterruptThrottling, ExtendedInterruptThrottling>,
 
     IOReg<Register, Register::RXDescLow, u32>,
     IOReg<Register, Register::RXDescHigh, u32>,
