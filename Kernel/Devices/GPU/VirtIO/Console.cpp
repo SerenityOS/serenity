@@ -73,7 +73,8 @@ void Console::enqueue_refresh_timer()
             MUST(g_io_work->try_queue([this]() {
                 {
                     MutexLocker locker(m_parent_display_connector->m_flushing_lock);
-                    MUST(m_parent_display_connector->flush_first_surface());
+                    if (auto result = m_parent_display_connector->flush_first_surface(); result.is_error())
+                        dbgln("VirtIOGPU::Console: Failed to flush display: {}", result.error());
                 }
                 m_dirty = false;
             }));
