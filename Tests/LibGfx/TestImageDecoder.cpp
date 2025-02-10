@@ -731,6 +731,7 @@ TEST_CASE(test_jpeg2000_decode_rgb)
 
     Array test_inputs = {
         TEST_INPUT("jpeg2000/kakadu-lossless-rgb-u8-prog1-layers1-res6-mct.jp2"sv),
+        TEST_INPUT("jpeg2000/jasper-rgba-u8-solid-alpha-cbstyle-04-termall.jp2"sv),
     };
 
     for (auto test_input : test_inputs) {
