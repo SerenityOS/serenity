@@ -123,8 +123,19 @@ ErrorOr<void> Device::set_configuration_and_interface(USBInterface const& interf
 
     // FIXME: When we use the default alternate_setting of interface/the current alternate setting, we don't need to SET_INTERFACE it
     //        but that gets a bit difficult to track
-    TRY(control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_RECIPIENT_INTERFACE, USB_REQUEST_SET_INTERFACE,
-        interface.descriptor().alternate_setting, interface.descriptor().interface_id, 0, nullptr));
+    auto result = control_transfer(USB_REQUEST_TRANSFER_DIRECTION_HOST_TO_DEVICE | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_RECIPIENT_INTERFACE, USB_REQUEST_SET_INTERFACE,
+        interface.descriptor().alternate_setting, interface.descriptor().interface_id, 0, nullptr);
+    if (result.is_error()) {
+        auto error = result.release_error();
+        if (error.code() == ESHUTDOWN) {
+            // USB 2.0 Specification Section 9.4.10 Set Interface
+            // "If a device only supports a default setting for the specified interface, then a STALL may be returned in the Status stage of the request."
+            // This means the interface should already have the desired alternate setting selected.
+        } else {
+            return error;
+        }
+    }
+
     // FIXME: As in activate_configuration, we should set up changed endpoints on xHCI here
 
     return {};
