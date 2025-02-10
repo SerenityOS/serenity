@@ -451,7 +451,7 @@ PDFErrorOr<void> Parser::unfilter_stream(NonnullRefPtr<StreamObject> stream_obje
             auto decode_parms_array = decode_parms_object->cast<ArrayObject>();
             for (size_t i = 0; i < decode_parms_array->size(); ++i) {
                 RefPtr<DictObject> decode_parms;
-                auto entry = decode_parms_array->at(i);
+                auto entry = TRY(m_document->resolve(decode_parms_array->at(i)));
                 if (entry.has<NonnullRefPtr<Object>>()) {
                     auto entry_object = entry.get<NonnullRefPtr<Object>>();
                     if (entry_object->is<DictObject>())
