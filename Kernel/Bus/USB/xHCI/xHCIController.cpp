@@ -815,6 +815,29 @@ ErrorOr<size_t> xHCIController::submit_control_transfer(Transfer& transfer)
     pending_transfer.wait_queue.wait_forever();
     VERIFY(!pending_transfer.endpoint_list_node.is_in_list());
 
+    if (pending_transfer.completion_code == TransferRequestBlock::CompletionCode::Stall_Error) {
+        // 4.8.3 Endpoint Context State
+        // Note: A STALL detected on any stage (Setup, Data, or Status) of a Default Control
+        //       Endpoint request shall transition the Endpoint Context to the Halted state. A
+        //       Default Control Endpoint STALL condition is cleared by a Reset Endpoint
+        //       Command which transitions the endpoint from the Halted to the Stopped state.
+        //       The Default Control Endpoint shall return to the Running state when the
+        //       Doorbell is rung for the next Setup Stage TD sent to the endpoint.
+        //
+        //       Section 8.5.3.4 of the USB2 spec and section 8.12.2.3 of the USB3 spec state of
+        //       Control pipes, “Unlike the case of a functional stall, protocol stall does not
+        //       indicate an error with the device.” The xHC treats a functional stall and protocol
+        //       stall identically, by Halting the endpoint and requiring software to clear the
+        //       condition by issuing a Reset Endpoint Command.
+
+        // Callers of this function expect normal USB behavior, so we have to handle the xHCI quirk of
+        // requiring software to clear the halt condition for control pipes here.
+        if (reset_pipe(transfer.pipe().device(), transfer.pipe()).is_error())
+            return EIO;
+
+        return ESHUTDOWN;
+    }
+
     if (pending_transfer.completion_code != TransferRequestBlock::CompletionCode::Success)
         return EINVAL;
 
