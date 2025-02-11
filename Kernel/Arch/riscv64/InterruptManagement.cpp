@@ -113,9 +113,17 @@ NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_contro
     return m_interrupt_controllers[0];
 }
 
-void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)>)
+void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)> callback)
 {
-    TODO_RISCV64();
+    for (size_t i = 0; i < GENERIC_INTERRUPT_HANDLERS_COUNT; i++) {
+        auto& handler = get_interrupt_handler(i);
+        if (handler.type() == HandlerType::SharedIRQHandler) {
+            static_cast<SharedIRQHandler&>(handler).enumerate_handlers(callback);
+            continue;
+        }
+        if (handler.type() != HandlerType::UnhandledInterruptHandler)
+            callback(handler);
+    }
 }
 
 }
