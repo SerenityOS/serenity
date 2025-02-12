@@ -8,8 +8,9 @@ Serenity boots to a graphical desktop on all machines unless otherwise noted.
 
 | Model                                  | Notes                  |
 | -------------------------------------- | ---------------------- |
-| Intel 82545XX                          | Also known as e1000    |
+| Intel 82545XX family                   | Also known as e1000    |
 | Intel 82574L                           | Also known as e1000e   |
+| Intel 82576 family                     | Also known as igb      |
 | RTL8168/8111 (Variants B, E, E-VL & H) | Other variants are WIP |
 
 ### Desktop machines
