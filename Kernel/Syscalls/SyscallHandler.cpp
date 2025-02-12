@@ -11,6 +11,7 @@
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Sections.h>
+#include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
@@ -131,29 +132,18 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 
     current_thread->yield_if_should_be_stopped();
 
-#if ARCH(X86_64)
     // Apply a random offset in the range 0-255 to the stack pointer,
     // to make kernel stacks a bit less deterministic.
-    u32 lsw;
-    u32 msw;
-    read_tsc(lsw, msw);
+    auto* ptr = static_cast<char*>(__builtin_alloca(get_fast_random<u8>()));
+    AK::taint_for_optimizer(ptr);
 
-    auto* ptr = (char*)__builtin_alloca(lsw & 0xff);
-    asm volatile(""
-                 : "=m"(*ptr));
-
+#if ARCH(X86_64)
     constexpr FlatPtr iopl_mask = 3u << 12;
 
     FlatPtr flags = regs.flags();
     if ((flags & (iopl_mask)) != 0) {
         PANIC("Syscall from process with IOPL != 0");
     }
-#elif ARCH(AARCH64)
-    // FIXME: Implement the security mechanism for aarch64
-#elif ARCH(RISCV64)
-    // FIXME: Implement the security mechanism for riscv64
-#else
-#    error Unknown architecture
 #endif
 
     Memory::MemoryManager::validate_syscall_preconditions(process, regs);
