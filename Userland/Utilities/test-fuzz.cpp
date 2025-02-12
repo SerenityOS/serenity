@@ -28,6 +28,7 @@
     T(GIFLoader)             \
     T(GzipDecompression)     \
     T(GzipRoundtrip)         \
+    T(HIDReportDescriptor)   \
     T(HttpRequest)           \
     T(ICCProfile)            \
     T(ICOLoader)             \
