@@ -30,6 +30,13 @@ set(SOURCES
     ../../AK/StringView.cpp
 )
 
+if ("${SERENITY_ARCH}" STREQUAL "x86_64")
+    set(SOURCES
+        ${SOURCES}
+        Arch/x86_64/CPUID.cpp
+    )
+endif()
+
 set_source_files_properties(KernelImage.S PROPERTIES OBJECT_DEPENDS ${PREKERNEL_KERNEL_IMAGE_PATH})
 
 add_compile_definitions(PREKERNEL)
