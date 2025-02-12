@@ -1,4 +1,4 @@
-@GUI::Frame {
+@ThemeEditor::MetricProperty {
     layout: @GUI::HorizontalBoxLayout {
         spacing: 4
     }

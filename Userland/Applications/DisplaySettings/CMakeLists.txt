@@ -4,12 +4,12 @@ serenity_component(
     TARGETS DisplaySettings
 )
 
-stringify_gml(BackgroundSettings.gml BackgroundSettingsGML.h background_settings_gml)
-stringify_gml(DesktopSettings.gml DesktopSettingsGML.h desktop_settings_gml)
-stringify_gml(EffectsSettings.gml EffectsSettingsGML.h effects_settings_gml)
-stringify_gml(FontSettings.gml FontSettingsGML.h font_settings_gml)
-stringify_gml(MonitorSettings.gml MonitorSettingsGML.h monitor_settings_window_gml)
-stringify_gml(ThemesSettings.gml ThemesSettingsGML.h themes_settings_gml)
+compile_gml(BackgroundSettings.gml BackgroundSettingsGML.cpp)
+compile_gml(DesktopSettings.gml DesktopSettingsGML.cpp)
+compile_gml(EffectsSettings.gml EffectsSettingsGML.cpp)
+compile_gml(FontSettings.gml FontSettingsGML.cpp)
+compile_gml(MonitorSettings.gml MonitorSettingsGML.cpp)
+compile_gml(ThemesSettings.gml ThemesSettingsGML.cpp)
 
 set(SOURCES
     BackgroundSettingsWidget.cpp
@@ -20,17 +20,15 @@ set(SOURCES
     MonitorWidget.cpp
     ThemePreviewWidget.cpp
     ThemesSettingsWidget.cpp
+    BackgroundSettingsGML.cpp
+    DesktopSettingsGML.cpp
+    EffectsSettingsGML.cpp
+    FontSettingsGML.cpp
+    MonitorSettingsGML.cpp
+    ThemesSettingsGML.cpp
     main.cpp
 )
 
-set(GENERATED_SOURCES
-    BackgroundSettingsGML.h
-    DesktopSettingsGML.h
-    EffectsSettingsGML.h
-    FontSettingsGML.h
-    MonitorSettingsGML.h
-    ThemesSettingsGML.h
-)
 
 serenity_app(DisplaySettings ICON app-display-settings)
 target_link_libraries(DisplaySettings PRIVATE LibCore LibDesktop LibGfx LibGUI LibConfig LibIPC LibMain LibEDID LibThreading LibFileSystemAccessClient LibURL)
