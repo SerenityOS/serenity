@@ -12,6 +12,8 @@
 
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/Interrupts.h>
+#elif ARCH(RISCV64)
+#    include <Kernel/Arch/riscv64/Interrupts.h>
 #endif
 
 namespace Kernel {

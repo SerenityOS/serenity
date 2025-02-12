@@ -41,7 +41,40 @@ RegistersModel::RegistersModel(PtraceRegisters const& regs)
 #elif ARCH(AARCH64)
     TODO_AARCH64();
 #elif ARCH(RISCV64)
-    TODO_RISCV64();
+    m_registers.append({ "ra", regs.x[0] });
+    m_registers.append({ "sp", regs.x[1] });
+    m_registers.append({ "gp", regs.x[2] });
+    m_registers.append({ "tp", regs.x[3] });
+    m_registers.append({ "fp", regs.x[7] });
+
+    m_registers.append({ "a0", regs.x[9] });
+    m_registers.append({ "a1", regs.x[10] });
+    m_registers.append({ "a2", regs.x[11] });
+    m_registers.append({ "a3", regs.x[12] });
+    m_registers.append({ "a4", regs.x[13] });
+    m_registers.append({ "a5", regs.x[14] });
+    m_registers.append({ "a6", regs.x[15] });
+    m_registers.append({ "a7", regs.x[16] });
+
+    m_registers.append({ "t0", regs.x[4] });
+    m_registers.append({ "t1", regs.x[5] });
+    m_registers.append({ "t2", regs.x[6] });
+    m_registers.append({ "t3", regs.x[27] });
+    m_registers.append({ "t4", regs.x[28] });
+    m_registers.append({ "t5", regs.x[29] });
+    m_registers.append({ "t6", regs.x[30] });
+
+    m_registers.append({ "s1", regs.x[8] });
+    m_registers.append({ "s2", regs.x[17] });
+    m_registers.append({ "s3", regs.x[18] });
+    m_registers.append({ "s4", regs.x[19] });
+    m_registers.append({ "s5", regs.x[20] });
+    m_registers.append({ "s6", regs.x[21] });
+    m_registers.append({ "s7", regs.x[22] });
+    m_registers.append({ "s8", regs.x[23] });
+    m_registers.append({ "s9", regs.x[24] });
+    m_registers.append({ "s10", regs.x[25] });
+    m_registers.append({ "s11", regs.x[26] });
 #else
 #    error Unknown architecture
 #endif
@@ -79,8 +112,40 @@ RegistersModel::RegistersModel(PtraceRegisters const& current_regs, PtraceRegist
     (void)previous_regs;
     TODO_AARCH64();
 #elif ARCH(RISCV64)
-    (void)previous_regs;
-    TODO_RISCV64();
+    m_registers.append({ "ra", current_regs.x[0], current_regs.x[0] != previous_regs.x[0] });
+    m_registers.append({ "sp", current_regs.x[1], current_regs.x[1] != previous_regs.x[1] });
+    m_registers.append({ "gp", current_regs.x[2], current_regs.x[2] != previous_regs.x[2] });
+    m_registers.append({ "tp", current_regs.x[3], current_regs.x[3] != previous_regs.x[3] });
+    m_registers.append({ "fp", current_regs.x[7], current_regs.x[7] != previous_regs.x[7] });
+
+    m_registers.append({ "a0", current_regs.x[9], current_regs.x[9] != previous_regs.x[9] });
+    m_registers.append({ "a1", current_regs.x[10], current_regs.x[10] != previous_regs.x[10] });
+    m_registers.append({ "a2", current_regs.x[11], current_regs.x[11] != previous_regs.x[11] });
+    m_registers.append({ "a3", current_regs.x[12], current_regs.x[12] != previous_regs.x[12] });
+    m_registers.append({ "a4", current_regs.x[13], current_regs.x[13] != previous_regs.x[13] });
+    m_registers.append({ "a5", current_regs.x[14], current_regs.x[14] != previous_regs.x[14] });
+    m_registers.append({ "a6", current_regs.x[15], current_regs.x[15] != previous_regs.x[15] });
+    m_registers.append({ "a7", current_regs.x[16], current_regs.x[16] != previous_regs.x[16] });
+
+    m_registers.append({ "t0", current_regs.x[4], current_regs.x[4] != previous_regs.x[4] });
+    m_registers.append({ "t1", current_regs.x[5], current_regs.x[5] != previous_regs.x[5] });
+    m_registers.append({ "t2", current_regs.x[6], current_regs.x[6] != previous_regs.x[6] });
+    m_registers.append({ "t3", current_regs.x[27], current_regs.x[27] != previous_regs.x[27] });
+    m_registers.append({ "t4", current_regs.x[28], current_regs.x[28] != previous_regs.x[28] });
+    m_registers.append({ "t5", current_regs.x[29], current_regs.x[29] != previous_regs.x[29] });
+    m_registers.append({ "t6", current_regs.x[30], current_regs.x[30] != previous_regs.x[30] });
+
+    m_registers.append({ "s1", current_regs.x[8], current_regs.x[8] != previous_regs.x[8] });
+    m_registers.append({ "s2", current_regs.x[17], current_regs.x[17] != previous_regs.x[17] });
+    m_registers.append({ "s3", current_regs.x[18], current_regs.x[18] != previous_regs.x[18] });
+    m_registers.append({ "s4", current_regs.x[19], current_regs.x[19] != previous_regs.x[19] });
+    m_registers.append({ "s5", current_regs.x[20], current_regs.x[20] != previous_regs.x[20] });
+    m_registers.append({ "s6", current_regs.x[21], current_regs.x[21] != previous_regs.x[21] });
+    m_registers.append({ "s7", current_regs.x[22], current_regs.x[22] != previous_regs.x[22] });
+    m_registers.append({ "s8", current_regs.x[23], current_regs.x[23] != previous_regs.x[23] });
+    m_registers.append({ "s9", current_regs.x[24], current_regs.x[24] != previous_regs.x[24] });
+    m_registers.append({ "s10", current_regs.x[25], current_regs.x[25] != previous_regs.x[25] });
+    m_registers.append({ "s11", current_regs.x[26], current_regs.x[26] != previous_regs.x[26] });
 #else
 #    error Unknown architecture
 #endif
