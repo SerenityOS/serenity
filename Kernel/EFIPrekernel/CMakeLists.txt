@@ -4,16 +4,24 @@ configure_file(KernelImage.S.in KernelImage.S @ONLY)
 set(SOURCES
     init.cpp
 
+    ConfigurationTable.cpp
     DebugOutput.cpp
     Panic.cpp
+    Relocation.cpp
     Runtime.cpp
     kmalloc.cpp
 
     KernelImage.S
 
+    Arch/${SERENITY_ARCH}/Boot.cpp
+    Arch/${SERENITY_ARCH}/MMU.cpp
+
     ../Firmware/EFI/EFI.cpp
     ../Library/MiniStdLib.cpp
     ../Prekernel/UBSanitizer.cpp
+
+    ../../Userland/Libraries/LibELF/Image.cpp
+    ../../Userland/Libraries/LibELF/Validation.cpp
 
     ../../AK/Format.cpp
     ../../AK/StringBuilder.cpp

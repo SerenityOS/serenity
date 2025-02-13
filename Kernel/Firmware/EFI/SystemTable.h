@@ -24,6 +24,10 @@ static_assert(AssertSize<ConfigurationTable, 24>());
 // EFI_DTB_TABLE_GUID: https://uefi.org/specs/UEFI/2.10/04_EFI_System_Table.html#devicetree-tables
 static constexpr GUID DTB_TABLE_GUID = { 0xb1b621d5, 0xf19c, 0x41a5, { 0x83, 0x0b, 0xd9, 0x15, 0x2c, 0x69, 0xaa, 0xe0 } };
 
+// https://uefi.org/specs/UEFI/2.10/04_EFI_System_Table.html#industry-standard-configuration-tables
+static constexpr GUID ACPI_2_0_TABLE_GUID = { 0x8868e871, 0xe4f1, 0x11d3, { 0xbc, 0x22, 0x00, 0x80, 0xc7, 0x3c, 0x88, 0x81 } };
+static constexpr GUID ACPI_TABLE_GUID = { 0xeb9d2d30, 0x2d88, 0x11d3, { 0x9a, 0x16, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d } };
+
 // EFI_SYSTEM_TABLE: https://uefi.org/specs/UEFI/2.10/04_EFI_System_Table.html#efi-system-table-1
 struct SystemTable {
     static constexpr u64 signature = 0x5453595320494249;
