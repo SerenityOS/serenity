@@ -794,6 +794,10 @@ TEST_CASE(test_jpeg2000_decode_unsupported)
 {
     Array test_inputs = {
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-01-bypass.jp2"sv),
+        TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-01-bypass-layers.jp2"sv),
+        TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-01-bypass-finer-layers.jp2"sv),
+        TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-05-bypass-termall.jp2"sv),
+        TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-59-all-but-termall.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-63-all.jp2"sv),
         TEST_INPUT("jpeg2000/kakadu-lossless-cmyk-u8-prog1-layers1-res6.jp2"sv),
         TEST_INPUT("jpeg2000/kakadu-lossless-cmyka-u8-prog1-layers1-res6.jp2"sv),
