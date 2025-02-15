@@ -1664,6 +1664,15 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
             //  The value of Lblock is initially set to three. The number of bytes contributed by each code-block is preceded by signalling
             //  bits that increase the value of Lblock, as needed. A signalling bit of zero indicates the current value of Lblock is sufficient.
             //  If there are k ones followed by a zero, the value of Lblock is incremented by k."
+            // B.10.7.2 Multiple codeword segments
+            // "Let T be the set of indices of terminated coding passes included for the code-block in the packet as indicated in Tables D.8
+            //  and D.9. If the index final coding pass included in the packet is not a member of T, then it is added to T. Let n_1 < ... < n_K
+            //  be the indices in T. K lengths are signalled consecutively with each length using the mechanism described in B.10.7.1."
+            // "using the mechanism" means adjusting Lblock just once, and then reading one code word segment length with the
+            // number of passes per segment, apparently.
+            // We combine both cases: the single segment case is a special case of the multiple segment case.
+            // For the B.10.7.1 case, we'll have number_of_segments == 1 and number_of_passes_in_segment == number_of_coding_passes.
+
             u32 k = 0;
             while (TRY(read_bit()))
                 k++;
@@ -1683,24 +1692,14 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
             };
 
             VERIFY(temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].length_of_codeword_segments.is_empty());
-            if (number_of_segments == 1) {
-                u32 length = TRY(read_one_codeword_segment_length(number_of_coding_passes));
-                dbgln_if(JPEG2000_DEBUG, "length {}", length);
+            for (int i = 0; i < number_of_segments; ++i) {
+                int number_of_passes_in_segment = number_of_coding_passes;
+                if (coding_parameters.uses_termination_on_each_coding_pass())
+                    number_of_passes_in_segment = 1;
+
+                u32 length = TRY(read_one_codeword_segment_length(number_of_passes_in_segment));
+                dbgln_if(JPEG2000_DEBUG, "length({}) {}", i, length);
                 temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].length_of_codeword_segments.append(length);
-            } else {
-                // B.10.7.2 Multiple codeword segments
-                // "Let T be the set of indices of terminated coding passes included for the code-block in the packet as indicated in Tables D.8
-                //  and D.9. If the index final coding pass included in the packet is not a member of T, then it is added to T. Let n_1 < ... < n_K
-                //  be the indices in T. K lengths are signalled consecutively with each length using the mechanism described in B.10.7.1."
-                // "using the mechanism" means adjusting Lblock just once, and then reading one code word segment length with the
-                // number of passes per segment, apparently.
-                // We currently only implement termination on each pass and not yet selective arithmetic coding bypass, so K
-                // is just number_of_segments == number_of_coding_passes.
-                for (int i = 0; i < number_of_segments; ++i) {
-                    u32 length = TRY(read_one_codeword_segment_length(1));
-                    dbgln_if(JPEG2000_DEBUG, "length({}) {}", i, length);
-                    temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].length_of_codeword_segments.append(length);
-                }
             }
         }
     }
