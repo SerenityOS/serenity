@@ -1647,14 +1647,20 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
 
             // B.10.7 Length of the compressed image data from a given code-block
             // "Multiple codeword segments arise when a termination occurs between coding passes which are included in the packet"
-            int number_of_segments = 1;
-            if (coding_parameters.uses_termination_on_each_coding_pass()) {
-                // See Table D.8 – Arithmetic coder termination patterns, 2nd column.
-                number_of_segments = number_of_coding_passes;
-            } else {
-                // FIXME: Handle uses_selective_arithmetic_coding_bypass(), and the combination of the two.
-                // (We currently reject uses_selective_arithmetic_coding_bypass() above.)
-            }
+            u32 passes_from_previous_layers = precinct.code_blocks[code_block_index].number_of_coding_passes();
+            JPEG2000::BitplaneDecodingOptions options;
+            options.uses_termination_on_each_coding_pass = coding_parameters.uses_termination_on_each_coding_pass();
+            int number_of_segments = [&]() {
+                auto old_segment_index = passes_from_previous_layers == 0 ? 0 : JPEG2000::segment_index_from_pass_index(options, passes_from_previous_layers - 1);
+                auto new_segment_index = JPEG2000::segment_index_from_pass_index(options, passes_from_previous_layers + number_of_coding_passes - 1);
+                auto number_of_segments = new_segment_index - old_segment_index;
+
+                // If the old layer does not end on a segment boundary, the new layer has to add one segment for continuing the previous segment
+                // in addition to counting the segments it contains and starts.
+                if (old_segment_index == JPEG2000::segment_index_from_pass_index(options, passes_from_previous_layers))
+                    number_of_segments++;
+                return number_of_segments;
+            }();
 
             // B.10.7.1 Single codeword segment
             // "A codeword segment is the number of bytes contributed to a packet by a code-block.

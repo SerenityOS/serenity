@@ -20,6 +20,13 @@ struct BitplaneDecodingOptions {
     bool uses_segmentation_symbols { false };
 };
 
+inline auto segment_index_from_pass_index(BitplaneDecodingOptions options, unsigned pass)
+{
+    if (options.uses_termination_on_each_coding_pass)
+        return pass;
+    return 0u;
+}
+
 inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int number_of_coding_passes, Vector<ReadonlyBytes, 1> segments, int M_b, int p, BitplaneDecodingOptions options = {})
 {
     // This is an implementation of the bitplane decoding algorithm described in Annex D of the JPEG2000 spec.
@@ -31,13 +38,10 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
     int const h = result.size.height();
     int const num_strips = ceil_div(h, 4);
 
-    if (options.uses_termination_on_each_coding_pass)
-        VERIFY(segments.size() == static_cast<size_t>(number_of_coding_passes));
-    else
-        VERIFY(segments.size() == 1);
-
     if (number_of_coding_passes == 0)
         return {};
+
+    VERIFY(segment_index_from_pass_index(options, number_of_coding_passes - 1) == segments.size() - 1);
 
     // Decoder state.
 
@@ -467,7 +471,7 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
 
     for (; pass < number_of_coding_passes && current_bitplane < M_b; ++pass) {
         if (options.uses_termination_on_each_coding_pass)
-            arithmetic_decoder = TRY(QMArithmeticDecoder::initialize(segments[pass]));
+            arithmetic_decoder = TRY(QMArithmeticDecoder::initialize(segments[segment_index_from_pass_index(options, pass)]));
 
         // D0, Is this the first bit-plane for the code-block?
         switch ((pass + 2) % 3) {
