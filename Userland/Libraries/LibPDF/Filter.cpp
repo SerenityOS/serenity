@@ -314,16 +314,15 @@ PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes bytes, RefPtr<DictObje
             damaged_rows_before_error = decode_parms->get_value(CommonNames::DamagedRowsBeforeError).get<int>();
     }
 
-    // FIXME: This parameter seems crucial when reading its description, but we still
-    //        achieve to decode images that have it. Figure out what to do with it.
-    (void)end_of_block;
-
     if (require_end_of_line || (encoded_byte_align && k != 0) || damaged_rows_before_error > 0)
         return Error::rendering_unsupported_error("Unimplemented option for the CCITTFaxDecode Filter");
 
     ByteBuffer decoded {};
     if (k < 0) {
-        decoded = TRY(Gfx::CCITT::decode_ccitt_group4(bytes, columns, rows));
+        Gfx::CCITT::Group4Options options {
+            .has_end_of_block = end_of_block ? Gfx::CCITT::Group4Options::HasEndOfBlock::Yes : Gfx::CCITT::Group4Options::HasEndOfBlock::No
+        };
+        decoded = TRY(Gfx::CCITT::decode_ccitt_group4(bytes, columns, rows, options));
     } else if (k == 0) {
         Gfx::CCITT::Group3Options options {
             .require_end_of_line = require_end_of_line ? Gfx::CCITT::Group3Options::RequireEndOfLine::Yes : Gfx::CCITT::Group3Options::RequireEndOfLine::No,
