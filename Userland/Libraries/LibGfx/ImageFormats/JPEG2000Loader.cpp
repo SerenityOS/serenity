@@ -703,27 +703,53 @@ struct DecodedCodeBlock {
         return total;
     }
 
-    ErrorOr<Vector<ReadonlyBytes, 1>> segments_for_all_layers(bool uses_termination_on_each_coding_pass, ByteBuffer& maybe_storage) const
+    Optional<u32> highest_segment_index() const
     {
-        if (uses_termination_on_each_coding_pass) {
-            Vector<ReadonlyBytes, 1> all_segments;
-            for (auto const& layer : layers)
-                for (auto const& segment : layer.segments)
-                    TRY(all_segments.try_append(segment.data));
-            return all_segments;
-        }
-
-        size_t total_size = 0;
-        for (auto const& layer : layers)
-            total_size += layer.segments[0].data.size();
-
-        maybe_storage = TRY(ByteBuffer::create_uninitialized(total_size));
-        size_t offset = 0;
+        Optional<u32> highest_index;
         for (auto const& layer : layers) {
-            memcpy(maybe_storage.offset_pointer(offset), layer.segments[0].data.data(), layer.segments[0].data.size());
-            offset += layer.segments[0].data.size();
+            for (auto const& segment : layer.segments)
+                highest_index = max(highest_index.value_or(segment.index), segment.index);
         }
-        return Vector<ReadonlyBytes, 1> { maybe_storage };
+        return highest_index;
+    }
+
+    ErrorOr<Vector<ReadonlyBytes, 1>> segments_for_all_layers(ByteBuffer& maybe_storage) const
+    {
+        Vector<Vector<ReadonlyBytes, 1>, 1> all_segment_parts_for_segment;
+        all_segment_parts_for_segment.resize(highest_segment_index().value_or(0) + 1);
+
+        for (auto const& layer : layers)
+            for (auto const& segment : layer.segments)
+                TRY(all_segment_parts_for_segment[segment.index].try_append(segment.data));
+
+        // Copy segments with multiple parts into consecutive storage.
+        size_t total_scratch_size = 0;
+        for (auto const& segment_parts : all_segment_parts_for_segment) {
+            if (segment_parts.size() > 1) {
+                for (auto const& segment_part : segment_parts)
+                    total_scratch_size += segment_part.size();
+            }
+        }
+
+        if (total_scratch_size > 0)
+            maybe_storage = TRY(ByteBuffer::create_uninitialized(total_scratch_size));
+
+        Vector<ReadonlyBytes, 1> all_segments;
+        size_t scratch_offset = 0;
+        for (auto& segment_parts : all_segment_parts_for_segment) {
+            if (segment_parts.size() == 1) {
+                TRY(all_segments.try_append(segment_parts[0]));
+                continue;
+            }
+
+            auto start = scratch_offset;
+            for (auto const& segment_part : segment_parts) {
+                memcpy(maybe_storage.offset_pointer(scratch_offset), segment_part.data(), segment_part.size());
+                scratch_offset += segment_part.size();
+            }
+            TRY(all_segments.try_append(maybe_storage.bytes().slice(start, scratch_offset - start)));
+        }
+        return all_segments;
     }
 };
 
@@ -1750,11 +1776,6 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
                 offset += length;
                 TRY(layer.segments.try_append({ segment_data, segment_index }));
             }
-            if (!coding_parameters.uses_termination_on_each_coding_pass()) {
-                if (layer.segments.is_empty())
-                    layer.segments.append({ data.slice(offset, 0), 0 });
-                VERIFY(layer.segments.size() == 1);
-            }
             TRY(temporary_sub_band.precinct->code_blocks[code_block_index].layers.try_append(layer));
         }
     }
@@ -1904,7 +1925,7 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
             for (auto& code_block : precinct.code_blocks) {
                 int total_number_of_coding_passes = code_block.number_of_coding_passes();
                 ByteBuffer storage;
-                Vector<ReadonlyBytes, 1> combined_segments = TRY(code_block.segments_for_all_layers(coding_style.uses_termination_on_each_coding_pass(), storage));
+                Vector<ReadonlyBytes, 1> combined_segments = TRY(code_block.segments_for_all_layers(storage));
 
                 JPEG2000::Span2D<i16> output;
                 output.size = code_block.rect.size();
