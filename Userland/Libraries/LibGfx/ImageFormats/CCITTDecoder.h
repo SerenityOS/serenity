@@ -65,6 +65,15 @@ struct Group3Options {
 
 ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u32 image_height, Group3Options const& options);
 
-ErrorOr<ByteBuffer> decode_ccitt_group4(ReadonlyBytes bytes, u32 image_width, u32 image_height);
+struct Group4Options {
+    enum class HasEndOfBlock : u8 {
+        No = 0,
+        Yes = 1,
+    };
+
+    HasEndOfBlock has_end_of_block = HasEndOfBlock::No;
+};
+
+ErrorOr<ByteBuffer> decode_ccitt_group4(ReadonlyBytes bytes, u32 image_width, u32 image_height, Group4Options const& = {});
 
 }
