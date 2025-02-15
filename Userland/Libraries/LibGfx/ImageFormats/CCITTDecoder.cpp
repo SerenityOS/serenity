@@ -420,6 +420,19 @@ struct CCITTStatus {
     bool has_reached_eol { false };
 };
 
+ErrorOr<void> ensure_invalid_result_is_actually_eol(BigEndianInputBitStream& input_bit_stream, InvalidResult partially_read_eol)
+{
+    if (partially_read_eol != 0)
+        return Error::from_string_literal("CCITTDecoder: Unable to find the correct mode");
+
+    auto const remaining_eol = TRY(input_bit_stream.read_bits(5));
+    if (remaining_eol != 1) {
+        return Error::from_string_literal("CCITTDecoder: Unable to find the correct mode");
+    }
+
+    return {};
+}
+
 ErrorOr<CCITTStatus> decode_single_ccitt_2d_line(BigEndianInputBitStream& input_bit_stream, BigEndianOutputBitStream& decoded_bits, ReferenceLine&& reference_line, u32 image_width)
 {
     CCITTStatus status {};
@@ -470,14 +483,7 @@ ErrorOr<CCITTStatus> decode_single_ccitt_2d_line(BigEndianInputBitStream& input_
         auto const maybe_mode = TRY(read_mode(input_bit_stream));
 
         if (maybe_mode.has<InvalidResult>()) {
-            auto const partially_read_eol = maybe_mode.get<InvalidResult>();
-
-            if (partially_read_eol != 0)
-                return Error::from_string_literal("CCITTDecoder: Unable to find the correct mode");
-
-            auto const remaining_eol = TRY(input_bit_stream.read_bits(5));
-            if (remaining_eol != 1)
-                return Error::from_string_literal("CCITTDecoder: Unable to find the correct mode");
+            TRY(ensure_invalid_result_is_actually_eol(input_bit_stream, maybe_mode.get<InvalidResult>()));
 
             // We reached EOL
             status.has_reached_eol = true;
