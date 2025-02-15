@@ -420,20 +420,42 @@ struct CCITTStatus {
     bool has_reached_eol { false };
 };
 
-ErrorOr<void> ensure_invalid_result_is_actually_eol(BigEndianInputBitStream& input_bit_stream, InvalidResult partially_read_eol)
+ErrorOr<void> ensure_invalid_result_is_actually_eol(BigEndianInputBitStream& input_bit_stream, InvalidResult partially_read_eol, Group4Options const& options)
 {
     if (partially_read_eol != 0)
         return Error::from_string_literal("CCITTDecoder: Unable to find the correct mode");
 
     auto const remaining_eol = TRY(input_bit_stream.read_bits(5));
-    if (remaining_eol != 1) {
+    if (options.has_end_of_block == Group4Options::HasEndOfBlock::Yes
+        && remaining_eol == 0) {
+        // Some PDF like 00000337.pdf ends with an EOFB [1] that is byte aligned. This is
+        // what we are trying to detect/read here. As we already read 12 bytes from
+        // partially_read_eol and remaining_eol, we need to realign ourselves first.
+        // [1] 2.4.1.1 End-of-facsimile block
+
+        static constexpr u32 EOFB = 0x001001;
+
+        u8 fill_bits_length = (12 + input_bit_stream.bits_until_next_byte_boundary()) % 8;
+        u8 to_read = fill_bits_length + 12;
+        auto potential_eofb = TRY(input_bit_stream.read_bits(to_read));
+
+        // We already checked that the 12 first bits were zeroes, so here we check that the
+        // last to_read bits end with EOFB.
+        if (potential_eofb != EOFB)
+            return Error::from_string_literal("CCITTDecoder: Unable to find the correct mode");
+    } else if (remaining_eol != 1) {
         return Error::from_string_literal("CCITTDecoder: Unable to find the correct mode");
     }
 
     return {};
 }
 
-ErrorOr<CCITTStatus> decode_single_ccitt_2d_line(BigEndianInputBitStream& input_bit_stream, BigEndianOutputBitStream& decoded_bits, ReferenceLine&& reference_line, u32 image_width)
+ErrorOr<CCITTStatus> decode_single_ccitt_2d_line(
+    BigEndianInputBitStream& input_bit_stream,
+    BigEndianOutputBitStream& decoded_bits,
+    ReferenceLine&& reference_line,
+    u32 image_width,
+    Group4Options const& options = {})
 {
     CCITTStatus status {};
     Color current_color { ccitt_white };
@@ -483,7 +505,7 @@ ErrorOr<CCITTStatus> decode_single_ccitt_2d_line(BigEndianInputBitStream& input_
         auto const maybe_mode = TRY(read_mode(input_bit_stream));
 
         if (maybe_mode.has<InvalidResult>()) {
-            TRY(ensure_invalid_result_is_actually_eol(input_bit_stream, maybe_mode.get<InvalidResult>()));
+            TRY(ensure_invalid_result_is_actually_eol(input_bit_stream, maybe_mode.get<InvalidResult>(), options));
 
             // We reached EOL
             status.has_reached_eol = true;
@@ -621,7 +643,7 @@ ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u3
     return decoded_bytes;
 }
 
-ErrorOr<ByteBuffer> decode_ccitt_group4(ReadonlyBytes bytes, u32 image_width, u32 image_height)
+ErrorOr<ByteBuffer> decode_ccitt_group4(ReadonlyBytes bytes, u32 image_width, u32 image_height, Group4Options const& options)
 {
     auto strip_stream = make<FixedMemoryStream>(bytes);
     auto bit_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(*strip_stream));
@@ -636,7 +658,7 @@ ErrorOr<ByteBuffer> decode_ccitt_group4(ReadonlyBytes bytes, u32 image_width, u3
 
     u32 i {};
     while (!status.has_reached_eol && (image_height == 0 || i < image_height)) {
-        status = TRY(decode_single_ccitt_2d_line(*bit_stream, *decoded_bits, move(status.current_line), image_width));
+        status = TRY(decode_single_ccitt_2d_line(*bit_stream, *decoded_bits, move(status.current_line), image_width, options));
         ++i;
     }
 
