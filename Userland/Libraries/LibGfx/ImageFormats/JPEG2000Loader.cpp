@@ -689,9 +689,9 @@ struct DecodedCodeBlock {
         struct Segment {
             ReadonlyBytes data;
             u32 index { 0 };
+            int number_of_passes { 0 };
         };
         Vector<Segment, 1> segments;
-        u8 number_of_coding_passes { 0 };
     };
     Vector<Layer, 1> layers;
 
@@ -699,7 +699,20 @@ struct DecodedCodeBlock {
     {
         u32 total = 0;
         for (auto const& layer : layers)
-            total += layer.number_of_coding_passes;
+            for (auto const& segment : layer.segments)
+                total += segment.number_of_passes;
+        return total;
+    }
+
+    u32 number_of_coding_passes_in_segment(u32 segment_index) const
+    {
+        u32 total = 0;
+        for (auto const& layer : layers) {
+            for (auto const& segment : layer.segments) {
+                if (segment.index == segment_index)
+                    total += segment.number_of_passes;
+            }
+        }
         return total;
     }
 
@@ -1523,10 +1536,6 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
     auto const r = progression_data.resolution_level;
     u32 const current_layer_index = progression_data.layer;
 
-    // FIXME: Relax.
-    if (coding_parameters.uses_selective_arithmetic_coding_bypass())
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Selective arithmetic coding bypass not yet implemented");
-
     // B.10 Packet header information coding
     // "The packets have headers with the following information:
     // - zero length packet;
@@ -1582,10 +1591,10 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
 
     // " for each sub-band (LL or HL, LH and HH)"
     struct TemporaryCodeBlockData {
-        u8 number_of_coding_passes { 0 };
         struct Segment {
             u32 length { 0 };
             u32 index { 0 };
+            int number_of_passes { 0 };
         };
         Vector<Segment, 1> codeword_segments;
     };
@@ -1678,13 +1687,15 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
                 return 37 + bits;
             }());
             dbgln_if(JPEG2000_DEBUG, "number of coding passes: {}", number_of_coding_passes);
-            temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].number_of_coding_passes = number_of_coding_passes;
 
             // B.10.7 Length of the compressed image data from a given code-block
             // "Multiple codeword segments arise when a termination occurs between coding passes which are included in the packet"
+
             u32 passes_from_previous_layers = precinct.code_blocks[code_block_index].number_of_coding_passes();
+
             JPEG2000::BitplaneDecodingOptions options;
             options.uses_termination_on_each_coding_pass = coding_parameters.uses_termination_on_each_coding_pass();
+            options.uses_selective_arithmetic_coding_bypass = coding_parameters.uses_selective_arithmetic_coding_bypass();
             int number_of_segments = [&]() {
                 auto old_segment_index = passes_from_previous_layers == 0 ? 0 : JPEG2000::segment_index_from_pass_index(options, passes_from_previous_layers - 1);
                 auto new_segment_index = JPEG2000::segment_index_from_pass_index(options, passes_from_previous_layers + number_of_coding_passes - 1);
@@ -1712,7 +1723,7 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
             // "using the mechanism" means adjusting Lblock just once, and then reading one code word segment length with the
             // number of passes per segment, apparently.
             // We combine both cases: the single segment case is a special case of the multiple segment case.
-            // For the B.10.7.1 case, we'll have number_of_segments == 1 and number_of_passes_in_segment == number_of_coding_passes.
+            // For the B.10.7.1 case, we'll have number_of_segments = 1 and number_of_passes_in_segment = number_of_coding_passes.
 
             u32 k = 0;
             while (TRY(read_bit()))
@@ -1733,17 +1744,33 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
             };
 
             VERIFY(temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].codeword_segments.is_empty());
+
+            int number_of_passes_used = 0;
             for (int i = 0; i < number_of_segments; ++i) {
+                int number_of_passes_in_segment = number_of_coding_passes;
                 u32 segment_index = JPEG2000::segment_index_from_pass_index(options, passes_from_previous_layers) + i;
 
-                int number_of_passes_in_segment = number_of_coding_passes;
-                if (coding_parameters.uses_termination_on_each_coding_pass())
+                if (coding_parameters.uses_termination_on_each_coding_pass()) {
                     number_of_passes_in_segment = 1;
+                } else if (coding_parameters.uses_selective_arithmetic_coding_bypass()) {
+                    number_of_passes_in_segment = JPEG2000::number_of_passes_from_segment_index_in_bypass_mode(segment_index);
 
+                    // Correction at start: Did the previous layer end in an incomplete segment that's continued in this layer?
+                    Optional<u32> previous_segment_id = precinct.code_blocks[code_block_index].highest_segment_index();
+                    if (previous_segment_id.has_value() && segment_index == previous_segment_id.value())
+                        number_of_passes_in_segment -= precinct.code_blocks[code_block_index].number_of_coding_passes_in_segment(segment_index);
+
+                    // Correction at end: Does this layer end in an incomplete segment that's continued in the next layer?
+                    if (i == number_of_segments - 1)
+                        number_of_passes_in_segment = min(number_of_coding_passes - number_of_passes_used, number_of_passes_in_segment);
+                }
                 u32 length = TRY(read_one_codeword_segment_length(number_of_passes_in_segment));
                 dbgln_if(JPEG2000_DEBUG, "length({}) {}", i, length);
-                temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].codeword_segments.append({ length, segment_index });
+                temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].codeword_segments.append({ length, segment_index, number_of_passes_in_segment });
+                number_of_passes_used += number_of_passes_in_segment;
+                VERIFY(number_of_passes_used <= number_of_coding_passes);
             }
+            VERIFY(number_of_passes_used == number_of_coding_passes);
         }
     }
 
@@ -1770,11 +1797,10 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
     for (auto const& temporary_sub_band : temporary_sub_band_data) {
         for (auto const& [code_block_index, temporary_code_block] : enumerate(temporary_sub_band.temporary_code_block_data)) {
             DecodedCodeBlock::Layer layer;
-            layer.number_of_coding_passes = temporary_code_block.number_of_coding_passes;
-            for (auto [length, segment_index] : temporary_code_block.codeword_segments) {
+            for (auto [length, index, number_of_passes] : temporary_code_block.codeword_segments) {
                 auto segment_data = data.slice(offset, length);
                 offset += length;
-                TRY(layer.segments.try_append({ segment_data, segment_index }));
+                layer.segments.append({ segment_data, index, number_of_passes });
             }
             TRY(temporary_sub_band.precinct->code_blocks[code_block_index].layers.try_append(layer));
         }
@@ -1908,6 +1934,7 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
 
         auto const& coding_style = context.coding_style_parameters_for_component(tile, component_index);
         JPEG2000::BitplaneDecodingOptions bitplane_decoding_options;
+        bitplane_decoding_options.uses_selective_arithmetic_coding_bypass = coding_style.uses_selective_arithmetic_coding_bypass();
         bitplane_decoding_options.reset_context_probabilities_each_pass = coding_style.reset_context_probabilities();
         bitplane_decoding_options.uses_termination_on_each_coding_pass = coding_style.uses_termination_on_each_coding_pass();
         bitplane_decoding_options.uses_vertically_causal_context = coding_style.uses_vertically_causal_context();

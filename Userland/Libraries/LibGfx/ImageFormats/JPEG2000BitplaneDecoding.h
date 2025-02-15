@@ -14,17 +14,44 @@
 namespace Gfx::JPEG2000 {
 
 struct BitplaneDecodingOptions {
+    bool uses_selective_arithmetic_coding_bypass { false };
     bool reset_context_probabilities_each_pass { false };
     bool uses_termination_on_each_coding_pass { false };
     bool uses_vertically_causal_context { false };
     bool uses_segmentation_symbols { false };
 };
 
+inline auto segment_index_from_pass_index_in_bypass_mode(unsigned pass)
+{
+    // D.6 Selective arithmetic coding bypass
+    // Table D.9 – Selective arithmetic coding bypass
+    if (pass < 10)
+        return 0u;
+    // After the first 10 passes, this mode alternates between 1 segment for 2 passes and 1 segment for 1 pass.
+    return 1u + (2u * ((pass - 10) / 3u)) + (((pass - 10) % 3u) == 2u ? 1 : 0);
+}
+
 inline auto segment_index_from_pass_index(BitplaneDecodingOptions options, unsigned pass)
 {
     if (options.uses_termination_on_each_coding_pass)
         return pass;
+
+    // "If termination on each coding pass is selected (see A.6.1 and A.6.2), then every pass is
+    //  terminated (including both raw passes)."
+    // This is handled by putting this behind the uses_termination_on_each_coding_pass check.
+    if (options.uses_selective_arithmetic_coding_bypass)
+        return segment_index_from_pass_index_in_bypass_mode(pass);
+
     return 0u;
+}
+
+inline auto number_of_passes_from_segment_index_in_bypass_mode(unsigned segment_index)
+{
+    // Table D.9 – Selective arithmetic coding bypass
+    if (segment_index == 0)
+        return 10u;
+    // After the first 10 passes, this mode alternates between 1 segment for 2 passes and 1 segment for 1 pass.
+    return segment_index % 2 == 1 ? 2u : 1u;
 }
 
 inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int number_of_coding_passes, Vector<ReadonlyBytes, 1> segments, int M_b, int p, BitplaneDecodingOptions options = {})
@@ -90,6 +117,35 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
         all_other_contexts[0] = { 4, 0 }; // "All zero neighbours"
     };
     reset_contexts();
+
+    // Add raw decoder state for bypass mode, tracking current segment
+    size_t current_raw_byte_index = 0;
+    u8 current_raw_bit_position = 0;
+    size_t current_raw_segment = 1;
+    bool use_bypass = false;
+
+    auto set_current_raw_segment = [&](size_t raw_segment_index) {
+        current_raw_byte_index = 0;
+        current_raw_bit_position = 0;
+        current_raw_segment = raw_segment_index;
+    };
+
+    auto read_raw_bit = [&]() -> bool {
+        // Check if we need to skip a stuffed bit
+        if (current_raw_bit_position == 0 && current_raw_byte_index > 0
+            && segments[current_raw_segment][current_raw_byte_index - 1] == 0xFF) {
+            // Skip the stuffed bit (which must be 0) XXX comment
+            current_raw_bit_position = 1;
+        }
+
+        bool bit = (segments[current_raw_segment][current_raw_byte_index] >> (7 - current_raw_bit_position)) & 1;
+        current_raw_bit_position++;
+        if (current_raw_bit_position == 8) {
+            current_raw_bit_position = 0;
+            current_raw_byte_index++;
+        }
+        return bit;
+    };
 
     // State setters and getters.
 
@@ -267,6 +323,9 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
     };
 
     auto read_sign_bit = [&](int x, int y, int y_horizon) {
+        if (use_bypass)
+            return read_raw_bit();
+
         // C2, Decode sign bit of current coefficient
         // Sign bit
         // D.3.2 Sign bit decoding
@@ -308,7 +367,12 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
                         u8 context = compute_context(x, y + coefficient_index, y + 4);
                         if (context != 0) {
                             // C1, Decode significance bit of current coefficient (See D.3.1)
-                            bool is_newly_significant = arithmetic_decoder.get_next_bit(all_other_contexts[context]);
+                            bool is_newly_significant;
+                            if (use_bypass)
+                                is_newly_significant = read_raw_bit();
+                            else
+                                is_newly_significant = arithmetic_decoder.get_next_bit(all_other_contexts[context]);
+
                             set_significant(x, y + coefficient_index, is_newly_significant);
                             if (is_newly_significant) {
                                 became_significant_at_bitplane[(y + coefficient_index) * w + x] = current_bitplane;
@@ -345,18 +409,23 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
 
                     // D6, Was the coefficient coded in the last significance propagation?
                     if (became_significant_at_bitplane[(y + coefficient_index) * w + x] != current_bitplane) {
-                        // C3, Decode magnitude refinement pass bit of current coefficient
-                        // Table D.4 – Contexts for the magnitude refinement coding passes
-                        u8 context;
-                        if (became_significant_at_bitplane[(y + coefficient_index) * w + x] == current_bitplane - 1) {
-                            u8 sum_h = is_significant(x - 1, y + coefficient_index) + is_significant(x + 1, y + coefficient_index);
-                            u8 sum_v = is_significant(x, y + coefficient_index - 1) + is_significant_with_y_horizon(x, y + coefficient_index + 1, y + 4);
-                            u8 sum_d = is_significant(x - 1, y + coefficient_index - 1) + is_significant_with_y_horizon(x - 1, y + coefficient_index + 1, y + 4) + is_significant(x + 1, y + coefficient_index - 1) + is_significant_with_y_horizon(x + 1, y + coefficient_index + 1, y + 4);
-                            context = (sum_h + sum_v + sum_d) >= 1 ? 15 : 14;
+                        bool magnitude_bit;
+                        if (use_bypass) {
+                            magnitude_bit = read_raw_bit();
                         } else {
-                            context = 16;
+                            // C3, Decode magnitude refinement pass bit of current coefficient
+                            // Table D.4 – Contexts for the magnitude refinement coding passes
+                            u8 context;
+                            if (became_significant_at_bitplane[(y + coefficient_index) * w + x] == current_bitplane - 1) {
+                                u8 sum_h = is_significant(x - 1, y + coefficient_index) + is_significant(x + 1, y + coefficient_index);
+                                u8 sum_v = is_significant(x, y + coefficient_index - 1) + is_significant_with_y_horizon(x, y + coefficient_index + 1, y + 4);
+                                u8 sum_d = is_significant(x - 1, y + coefficient_index - 1) + is_significant_with_y_horizon(x - 1, y + coefficient_index + 1, y + 4) + is_significant(x + 1, y + coefficient_index - 1) + is_significant_with_y_horizon(x + 1, y + coefficient_index + 1, y + 4);
+                                context = (sum_h + sum_v + sum_d) >= 1 ? 15 : 14;
+                            } else {
+                                context = 16;
+                            }
+                            magnitude_bit = arithmetic_decoder.get_next_bit(all_other_contexts[context]);
                         }
-                        bool magnitude_bit = arithmetic_decoder.get_next_bit(all_other_contexts[context]);
                         magnitudes[(y + coefficient_index) * w + x] |= magnitude_bit << (num_bits - current_bitplane);
                     }
 
@@ -470,18 +539,33 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
     };
 
     for (; pass < number_of_coding_passes && current_bitplane < M_b; ++pass) {
-        if (options.uses_termination_on_each_coding_pass)
+        enum class PassType {
+            SignificancePropagation,
+            MagnitudeRefinement,
+            Cleanup,
+        };
+        PassType pass_type = static_cast<PassType>((pass + 2) % 3);
+
+        if (options.uses_selective_arithmetic_coding_bypass)
+            use_bypass = pass >= 10 && pass_type != PassType::Cleanup;
+
+        if (options.uses_selective_arithmetic_coding_bypass && use_bypass
+            && (options.uses_termination_on_each_coding_pass || pass_type == PassType::SignificancePropagation)) {
+            set_current_raw_segment(segment_index_from_pass_index(options, pass));
+        } else if (options.uses_termination_on_each_coding_pass
+            || (options.uses_selective_arithmetic_coding_bypass && pass >= 10 && pass_type == PassType::Cleanup)) {
             arithmetic_decoder = TRY(QMArithmeticDecoder::initialize(segments[segment_index_from_pass_index(options, pass)]));
+        }
 
         // D0, Is this the first bit-plane for the code-block?
-        switch ((pass + 2) % 3) {
-        case 0:
+        switch (pass_type) {
+        case PassType::SignificancePropagation:
             significance_propagation_pass(current_bitplane, pass);
             break;
-        case 1:
+        case PassType::MagnitudeRefinement:
             magnitude_refinement_pass(current_bitplane);
             break;
-        case 2:
+        case PassType::Cleanup:
             cleanup_pass(current_bitplane, pass);
 
             if (options.uses_segmentation_symbols) {
