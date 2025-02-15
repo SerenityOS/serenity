@@ -466,6 +466,9 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
     };
 
     for (; pass < number_of_coding_passes && current_bitplane < M_b; ++pass) {
+        if (options.uses_termination_on_each_coding_pass)
+            arithmetic_decoder = TRY(QMArithmeticDecoder::initialize(segments[pass]));
+
         // D0, Is this the first bit-plane for the code-block?
         switch ((pass + 2) % 3) {
         case 0:
@@ -493,9 +496,6 @@ inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int
 
         if (options.reset_context_probabilities_each_pass)
             reset_contexts();
-
-        if (options.uses_termination_on_each_coding_pass && pass + 1 < number_of_coding_passes)
-            arithmetic_decoder = TRY(QMArithmeticDecoder::initialize(segments[pass + 1]));
     }
 
     // Convert internal state to output.
