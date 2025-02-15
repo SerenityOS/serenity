@@ -686,7 +686,11 @@ struct DecodedCodeBlock {
     u32 p { 0 };
 
     struct Layer {
-        Vector<ReadonlyBytes, 1> segments;
+        struct Segment {
+            ReadonlyBytes data;
+            u32 index { 0 };
+        };
+        Vector<Segment, 1> segments;
         u8 number_of_coding_passes { 0 };
     };
     Vector<Layer, 1> layers;
@@ -704,19 +708,20 @@ struct DecodedCodeBlock {
         if (uses_termination_on_each_coding_pass) {
             Vector<ReadonlyBytes, 1> all_segments;
             for (auto const& layer : layers)
-                TRY(all_segments.try_extend(layer.segments));
+                for (auto const& segment : layer.segments)
+                    TRY(all_segments.try_append(segment.data));
             return all_segments;
         }
 
         size_t total_size = 0;
         for (auto const& layer : layers)
-            total_size += layer.segments[0].size();
+            total_size += layer.segments[0].data.size();
 
         maybe_storage = TRY(ByteBuffer::create_uninitialized(total_size));
         size_t offset = 0;
         for (auto const& layer : layers) {
-            memcpy(maybe_storage.offset_pointer(offset), layer.segments[0].data(), layer.segments[0].size());
-            offset += layer.segments[0].size();
+            memcpy(maybe_storage.offset_pointer(offset), layer.segments[0].data.data(), layer.segments[0].data.size());
+            offset += layer.segments[0].data.size();
         }
         return Vector<ReadonlyBytes, 1> { maybe_storage };
     }
@@ -1552,7 +1557,11 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
     // " for each sub-band (LL or HL, LH and HH)"
     struct TemporaryCodeBlockData {
         u8 number_of_coding_passes { 0 };
-        Vector<u32, 1> length_of_codeword_segments;
+        struct Segment {
+            u32 length { 0 };
+            u32 index { 0 };
+        };
+        Vector<Segment, 1> codeword_segments;
     };
     struct TemporarySubBandData {
         DecodedPrecinct* precinct { nullptr };
@@ -1697,15 +1706,17 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
                 return length;
             };
 
-            VERIFY(temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].length_of_codeword_segments.is_empty());
+            VERIFY(temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].codeword_segments.is_empty());
             for (int i = 0; i < number_of_segments; ++i) {
+                u32 segment_index = JPEG2000::segment_index_from_pass_index(options, passes_from_previous_layers) + i;
+
                 int number_of_passes_in_segment = number_of_coding_passes;
                 if (coding_parameters.uses_termination_on_each_coding_pass())
                     number_of_passes_in_segment = 1;
 
                 u32 length = TRY(read_one_codeword_segment_length(number_of_passes_in_segment));
                 dbgln_if(JPEG2000_DEBUG, "length({}) {}", i, length);
-                temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].length_of_codeword_segments.append(length);
+                temporary_sub_band_data[sub_band_index].temporary_code_block_data[code_block_index].codeword_segments.append({ length, segment_index });
             }
         }
     }
@@ -1734,14 +1745,14 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
         for (auto const& [code_block_index, temporary_code_block] : enumerate(temporary_sub_band.temporary_code_block_data)) {
             DecodedCodeBlock::Layer layer;
             layer.number_of_coding_passes = temporary_code_block.number_of_coding_passes;
-            for (u32 length : temporary_code_block.length_of_codeword_segments) {
+            for (auto [length, segment_index] : temporary_code_block.codeword_segments) {
                 auto segment_data = data.slice(offset, length);
                 offset += length;
-                TRY(layer.segments.try_append(segment_data));
+                TRY(layer.segments.try_append({ segment_data, segment_index }));
             }
             if (!coding_parameters.uses_termination_on_each_coding_pass()) {
                 if (layer.segments.is_empty())
-                    layer.segments.append(data.slice(offset, 0));
+                    layer.segments.append({ data.slice(offset, 0), 0 });
                 VERIFY(layer.segments.size() == 1);
             }
             TRY(temporary_sub_band.precinct->code_blocks[code_block_index].layers.try_append(layer));
