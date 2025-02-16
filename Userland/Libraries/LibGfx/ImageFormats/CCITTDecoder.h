@@ -72,6 +72,7 @@ struct Group4Options {
     };
 
     HasEndOfBlock has_end_of_block = HasEndOfBlock::No;
+    EncodedByteAligned encoded_byte_aligned = EncodedByteAligned::No;
 };
 
 ErrorOr<ByteBuffer> decode_ccitt_group4(ReadonlyBytes bytes, u32 image_width, u32 image_height, Group4Options const& = {});

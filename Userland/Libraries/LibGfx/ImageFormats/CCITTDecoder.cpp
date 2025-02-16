@@ -658,6 +658,9 @@ ErrorOr<ByteBuffer> decode_ccitt_group4(ReadonlyBytes bytes, u32 image_width, u3
 
     u32 i {};
     while (!status.has_reached_eol && (image_height == 0 || i < image_height)) {
+        if (options.encoded_byte_aligned == EncodedByteAligned::Yes)
+            bit_stream->align_to_byte_boundary();
+
         status = TRY(decode_single_ccitt_2d_line(*bit_stream, *decoded_bits, move(status.current_line), image_width, options));
         ++i;
     }
