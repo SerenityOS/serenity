@@ -156,6 +156,8 @@ constexpr Array black_terminating_codes = {
     Code { 63, 12, 0b000001100111 },
 };
 
+constexpr Code EOL = { 0, 12, 0b000000000001 };
+
 // Table 3a/T.4 – Make-up codes
 constexpr Array white_make_up_codes = {
     Code { 64, 5, 0b11011 },
@@ -185,7 +187,7 @@ constexpr Array white_make_up_codes = {
     Code { 1600, 9, 0b010011010 },
     Code { 1664, 6, 0b011000 },
     Code { 1728, 9, 0b010011011 },
-    Code { 0xE0L, 12, 0b000000000001 },
+    EOL,
 };
 
 // Table 3a/T.4 – Make-up codes
@@ -217,7 +219,7 @@ constexpr Array black_make_up_codes = {
     Code { 1600, 13, 0b0000001011011 },
     Code { 1664, 13, 0b0000001100100 },
     Code { 1728, 13, 0b0000001100101 },
-    Code { 0xE0L, 11, 0b00000000000 },
+    EOL,
 };
 
 // Table 3b/T.4 – Make-up codes
