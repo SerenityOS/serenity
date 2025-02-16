@@ -326,7 +326,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_ccitt(ReadonlyBytes bytes, RefPtr<DictObje
     } else if (k == 0) {
         Gfx::CCITT::Group3Options options {
             .require_end_of_line = require_end_of_line ? Gfx::CCITT::Group3Options::RequireEndOfLine::Yes : Gfx::CCITT::Group3Options::RequireEndOfLine::No,
-            .encoded_byte_aligned = encoded_byte_align ? Gfx::CCITT::Group3Options::EncodedByteAligned::Yes : Gfx::CCITT::Group3Options::EncodedByteAligned::No,
+            .encoded_byte_aligned = encoded_byte_align ? Gfx::CCITT::EncodedByteAligned::Yes : Gfx::CCITT::EncodedByteAligned::No,
         };
 
         decoded = TRY(Gfx::CCITT::decode_ccitt_group3(bytes, columns, rows, options));
