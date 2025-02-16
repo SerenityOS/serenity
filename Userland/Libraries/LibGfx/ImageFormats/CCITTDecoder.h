@@ -26,6 +26,11 @@ namespace Gfx::CCITT {
 // Section 10: Modified Huffman Compression
 ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 image_height);
 
+enum class EncodedByteAligned : u8 {
+    No = 0,
+    Yes = 1,
+};
+
 // While this is named for a CCITT context, this struct holds data like TIFF's T4Options tag
 struct Group3Options {
     enum class Mode : u8 {
@@ -45,11 +50,6 @@ struct Group3Options {
 
     // Addition from the PDF specification
     enum class RequireEndOfLine : u8 {
-        No = 0,
-        Yes = 1,
-    };
-
-    enum class EncodedByteAligned : u8 {
         No = 0,
         Yes = 1,
     };
