@@ -358,7 +358,7 @@ StitchingFunction::create(Document* document, Vector<Bound> domain, Optional<Vec
 
     Vector<NonnullRefPtr<Function>> functions;
     for (size_t i = 0; i < functions_array->size(); i++) {
-        auto function = TRY(Function::create(document, functions_array->get_object_at(i)));
+        auto function = TRY(Function::create(document, TRY(functions_array->get_object_at(document, i))));
         functions.append(move(function));
     }
 
