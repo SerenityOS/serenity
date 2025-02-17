@@ -11,9 +11,11 @@
 
 namespace PDF {
 
+class Renderer;
+
 class Shading : public RefCounted<Shading> {
 public:
-    static PDFErrorOr<NonnullRefPtr<Shading>> create(Document*, NonnullRefPtr<Object>);
+    static PDFErrorOr<NonnullRefPtr<Shading>> create(Document*, NonnullRefPtr<Object>, Renderer&);
 
     virtual ~Shading() = default;
 };
