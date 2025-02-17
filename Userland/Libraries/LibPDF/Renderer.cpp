@@ -104,9 +104,9 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
     // insert a horizontal reflection about the vertical midpoint into our transformation
     // matrix
 
-    static Gfx::AffineTransform horizontal_reflection_matrix = { 1, 0, 0, -1, 0, 0 };
+    static Gfx::AffineTransform vertical_reflection_matrix = { 1, 0, 0, -1, 0, 0 };
 
-    userspace_matrix.multiply(horizontal_reflection_matrix);
+    userspace_matrix.multiply(vertical_reflection_matrix);
     userspace_matrix.translate(0.0f, -height);
 
     auto initial_clipping_path = rect_path(userspace_matrix.map(Gfx::FloatRect(0, 0, width, height)));
