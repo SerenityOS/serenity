@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/RefCounted.h>
+#include <LibGfx/Forward.h>
 #include <LibPDF/Value.h>
 
 namespace PDF {
@@ -19,7 +20,7 @@ public:
 
     virtual ~Shading() = default;
 
-    virtual PDFErrorOr<void> draw() = 0;
+    virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) = 0;
 };
 
 }
