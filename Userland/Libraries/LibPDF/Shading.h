@@ -18,6 +18,8 @@ public:
     static PDFErrorOr<NonnullRefPtr<Shading>> create(Document*, NonnullRefPtr<Object>, Renderer&);
 
     virtual ~Shading() = default;
+
+    virtual PDFErrorOr<void> draw() = 0;
 };
 
 }
