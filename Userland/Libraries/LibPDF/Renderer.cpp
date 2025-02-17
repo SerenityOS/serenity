@@ -742,7 +742,7 @@ RENDERER_HANDLER(shade)
     }
 
     auto shading_dict_or_stream = TRY(shading_resource_dict->get_object(m_document, shading_name));
-    auto shading = TRY(Shading::create(m_document, shading_dict_or_stream));
+    auto shading = TRY(Shading::create(m_document, shading_dict_or_stream, *this));
 
     // FIXME: Draw something with `shading`.
 

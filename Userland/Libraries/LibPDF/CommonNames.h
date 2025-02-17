@@ -14,10 +14,13 @@
     X(ASCII85Decode)              \
     X(ASCIIHexDecode)             \
     X(Alternate)                  \
+    X(AntiAlias)                  \
     X(Author)                     \
+    X(BBox)                       \
     X(BG)                         \
     X(BG2)                        \
     X(BM)                         \
+    X(Background)                 \
     X(BaseEncoding)               \
     X(BaseFont)                   \
     X(BitsPerComponent)           \
