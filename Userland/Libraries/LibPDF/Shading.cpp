@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Painter.h>
+#include <LibGfx/Vector2.h>
 #include <LibPDF/ColorSpace.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
@@ -82,7 +84,7 @@ class AxialShading final : public Shading {
 public:
     static PDFErrorOr<NonnullRefPtr<AxialShading>> create(Document*, NonnullRefPtr<DictObject>, CommonEntries);
 
-    virtual PDFErrorOr<void> draw() override;
+    virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
     using FunctionsType = Variant<NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
@@ -179,9 +181,60 @@ PDFErrorOr<NonnullRefPtr<AxialShading>> AxialShading::create(Document* document,
     return adopt_ref(*new AxialShading(move(common_entries), start, end, t0, t1, move(functions), extend_start, extend_end));
 }
 
-PDFErrorOr<void> AxialShading::draw()
+PDFErrorOr<void> AxialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& inverse_ctm)
 {
-    return Error::rendering_unsupported_error("Cannot draw axial shading yet");
+    auto& bitmap = painter.target();
+
+    auto scale = painter.scale();
+    auto clip_rect = painter.clip_rect() * scale;
+
+    Vector<float, 4> color_components;
+    color_components.resize(m_common_entries.color_space->number_of_components());
+
+    // FIXME: Do something with m_common_entries.b_box if it's set.
+
+    for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
+        for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
+            Gfx::FloatPoint pdf = inverse_ctm.map(Gfx::FloatPoint { x, y } / scale);
+
+            // FIXME: Normalize m_end to have unit length from m_start.
+            Gfx::FloatVector2 to_point { pdf.x() - m_start.x(), pdf.y() - m_start.y() };
+            Gfx::FloatVector2 to_end { m_end.x() - m_start.x(), m_end.y() - m_start.y() };
+            float x_prime = to_point.dot(to_end) / to_end.dot(to_end);
+
+            float t;
+            if (0 <= x_prime && x_prime <= 1)
+                t = m_t0 + (m_t1 - m_t0) * x_prime;
+            else if (x_prime < 0) {
+                if (!m_extend_start)
+                    continue;
+                t = m_t0;
+            } else {
+                if (!m_extend_end)
+                    continue;
+                t = m_t1;
+            }
+
+            TRY(m_functions.visit(
+                [&](Function const& function) -> PDFErrorOr<void> {
+                    auto result = TRY(function.evaluate(to_array({ t })));
+                    result.copy_to(color_components);
+                    return {};
+                },
+                [&](Vector<NonnullRefPtr<Function>> const& functions) -> PDFErrorOr<void> {
+                    for (size_t i = 0; i < functions.size(); ++i) {
+                        auto result = TRY(functions[i]->evaluate(to_array({ t })));
+                        color_components[i] = result[0];
+                    }
+                    return {};
+                }));
+
+            auto color = TRY(m_common_entries.color_space->style(color_components));
+            bitmap.scanline(y)[x] = color.get<Gfx::Color>().value();
+        }
+    }
+
+    return {};
 }
 
 }
