@@ -394,11 +394,8 @@ StitchingFunction::create(Document* document, Vector<Bound> domain, Optional<Vec
         return Error { Error::Type::MalformedPDF, "Function stitching /Encode size does not match /Functions size" };
 
     Vector<Bound> encode;
-    for (size_t i = 0; i < encode_array->size(); i += 2) {
+    for (size_t i = 0; i < encode_array->size(); i += 2)
         encode.append({ encode_array->at(i).to_float(), encode_array->at(i + 1).to_float() });
-        if (encode.last().lower > encode.last().upper)
-            return Error { Error::Type::MalformedPDF, "Function stitching /Encode lower bound > upper bound" };
-    }
 
     auto function = adopt_ref(*new StitchingFunction(move(functions)));
     function->m_domain = domain[0];
