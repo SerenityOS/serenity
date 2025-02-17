@@ -18,6 +18,8 @@ struct Code {
     u16 run_length {};
     u8 code_length {};
     u16 code {};
+
+    bool operator==(Code const&) const = default;
 };
 
 // Table 2/T.4 – Terminating codes
@@ -281,7 +283,12 @@ struct Change {
 
 using ReferenceLine = Vector<Change>;
 
-ErrorOr<u32> read_run_length(BigEndianInputBitStream& input_bit_stream, Optional<ReferenceLine&> reference_line, Color current_color, u32 image_width, u32 column)
+enum class ShouldAcceptEOL : u8 {
+    No = 0,
+    Yes = 1,
+};
+
+ErrorOr<u32> read_run_length(BigEndianInputBitStream& input_bit_stream, Optional<ReferenceLine&> reference_line, Color current_color, u32 image_width, u32 column, ShouldAcceptEOL should_accept_eol = ShouldAcceptEOL::No)
 {
     u8 size {};
     u16 potential_code {};
@@ -292,8 +299,14 @@ ErrorOr<u32> read_run_length(BigEndianInputBitStream& input_bit_stream, Optional
         size++;
 
         if (auto const maybe_markup = get_markup_code(current_color, potential_code, size); maybe_markup.has_value()) {
+            if (*maybe_markup == EOL) {
+                if (should_accept_eol == ShouldAcceptEOL::No || column != 0 || run_length != 0)
+                    return Error::from_string_literal("CCITTDecoder: Invalid EndOfLine code");
+                should_accept_eol = ShouldAcceptEOL::No;
+            }
+
             run_length += maybe_markup->run_length;
-            // OK, let's reset the loop to read a terminal code now
+            // Let's reset the loop to read a new code.
             size = 0;
             potential_code = 0;
         } else if (auto const maybe_terminal = get_terminal_code(current_color, potential_code, size); maybe_terminal.has_value()) {
@@ -313,7 +326,7 @@ ErrorOr<u32> read_run_length(BigEndianInputBitStream& input_bit_stream, Optional
     return run_length;
 }
 
-ErrorOr<ReferenceLine> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_stream, BigEndianOutputBitStream& decoded_bits, u32 image_width)
+ErrorOr<ReferenceLine> decode_single_ccitt3_1d_line(BigEndianInputBitStream& input_bit_stream, BigEndianOutputBitStream& decoded_bits, u32 image_width, ShouldAcceptEOL should_accept_eol)
 {
     // This is only useful for the 2D decoder.
     ReferenceLine reference_line;
@@ -335,7 +348,7 @@ ErrorOr<ReferenceLine> decode_single_ccitt3_1d_line(BigEndianInputBitStream& inp
 
         current_color = invert(current_color);
 
-        run_length += TRY(read_run_length(input_bit_stream, reference_line, current_color, image_width, column));
+        run_length += TRY(read_run_length(input_bit_stream, reference_line, current_color, image_width, column, should_accept_eol));
     }
 
     TRY(decoded_bits.align_to_byte_boundary());
@@ -580,7 +593,7 @@ ErrorOr<void> decode_single_ccitt3_2d_block(BigEndianInputBitStream& input_bit_s
         bool const next_is_1D = TRY(input_bit_stream.read_bit()) == 1;
 
         if (next_is_1D)
-            reference_line = TRY(decode_single_ccitt3_1d_line(input_bit_stream, decoded_bits, image_width));
+            reference_line = TRY(decode_single_ccitt3_1d_line(input_bit_stream, decoded_bits, image_width, ShouldAcceptEOL::No));
         else
             reference_line = TRY(decode_single_ccitt_2d_line(input_bit_stream, decoded_bits, move(reference_line), image_width)).current_line;
     }
@@ -601,7 +614,7 @@ ErrorOr<ByteBuffer> decode_ccitt_rle(ReadonlyBytes bytes, u32 image_width, u32 i
     auto decoded_bits = make<BigEndianOutputBitStream>(MaybeOwned<Stream>(*output_stream));
 
     while (!bit_stream->is_eof()) {
-        TRY(decode_single_ccitt3_1d_line(*bit_stream, *decoded_bits, image_width));
+        TRY(decode_single_ccitt3_1d_line(*bit_stream, *decoded_bits, image_width, ShouldAcceptEOL::No));
 
         bit_stream->align_to_byte_boundary();
     }
@@ -627,10 +640,12 @@ ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u3
         // ---
         // NOTE: For whatever reason, the last EOL doesn't seem to be included
 
+        bool const require_end_of_line = options.require_end_of_line == Group3Options::RequireEndOfLine::Yes;
+
         for (u32 i = 0; i < image_height; ++i) {
-            if (options.require_end_of_line == Group3Options::RequireEndOfLine::Yes)
+            if (require_end_of_line)
                 TRY(read_eol(*bit_stream, options.use_fill_bits));
-            TRY(decode_single_ccitt3_1d_line(*bit_stream, *decoded_bits, image_width));
+            TRY(decode_single_ccitt3_1d_line(*bit_stream, *decoded_bits, image_width, require_end_of_line ? ShouldAcceptEOL::No : ShouldAcceptEOL::Yes));
             if (options.encoded_byte_aligned == EncodedByteAligned::Yes)
                 bit_stream->align_to_byte_boundary();
         }
