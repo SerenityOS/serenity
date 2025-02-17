@@ -8,6 +8,7 @@
 
 namespace Gfx {
 
+class AffineTransform;
 class Bitmap;
 class CMYKBitmap;
 class ImmutableBitmap;
