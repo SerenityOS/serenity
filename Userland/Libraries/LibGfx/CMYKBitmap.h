@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Format.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <LibGfx/Bitmap.h>
@@ -72,5 +73,17 @@ inline CMYK* CMYKBitmap::end()
 {
     return reinterpret_cast<CMYK*>(m_data.data() + data_size());
 }
+
+}
+
+namespace AK {
+
+template<>
+struct Formatter<Gfx::CMYK> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::CMYK const& value)
+    {
+        return Formatter<FormatString>::format(builder, "{:#02x}{:02x}{:02x}{:02x}"sv, value.c, value.m, value.y, value.k);
+    }
+};
 
 }
