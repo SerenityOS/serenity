@@ -37,6 +37,7 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
     virtual NaturalFrameFormat natural_frame_format() const override;
+    virtual ErrorOr<NonnullRefPtr<CMYKBitmap>> cmyk_frame() override;
 
 private:
     JPEG2000ImageDecoderPlugin();
