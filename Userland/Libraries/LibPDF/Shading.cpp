@@ -347,9 +347,101 @@ PDFErrorOr<NonnullRefPtr<RadialShading>> RadialShading::create(Document* documen
     return adopt_ref(*new RadialShading(move(common_entries), start, start_radius, end, end_radius, t0, t1, move(functions), extend_start, extend_end));
 }
 
-PDFErrorOr<void> RadialShading::draw(Gfx::Painter&, Gfx::AffineTransform const&)
+PDFErrorOr<void> RadialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& inverse_ctm)
 {
-    return Error::rendering_unsupported_error("Cannot draw radial shading yet");
+    auto& bitmap = painter.target();
+
+    auto scale = painter.scale();
+    auto clip_rect = painter.clip_rect() * scale;
+
+    Vector<float, 4> color_components;
+    color_components.resize(m_common_entries.color_space->number_of_components());
+
+    // FIXME: Do something with m_common_entries.b_box if it's set.
+
+    // FIXME: Use smaller box if the circles are nested and the outer circle is not extended.
+
+    for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
+        for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
+            Gfx::FloatPoint point = inverse_ctm.map(Gfx::FloatPoint { x, y } / scale);
+
+            // The spec explains how to get a point given s. We want to solve the inverse problem:
+            // The current pixel is at p. We want to find the s where (c(s) - p)^2 = r(s)^2 (eq 1).
+            // Per spec, the circle depending on s has its center at
+            //
+            //     c(s) = c0 + s * (c1 - c0)
+            //
+            // and a radius of
+            //
+            //     r(s) = r0 + s * (r1 - r0)
+            //
+            // Putting that into (eq 1):
+            //
+            //     (c0 + s * (c1 - c0) - p)^2 = (r0 + s * (r1 - r0))^2
+            //
+            // Rearranging terms, we get a quadratic equation in s:
+            //
+            //     A * s^2 + B * s + C = 0
+            //
+            // with:
+            //
+            //     A = (c1 - c0)^2 - (r1 - r0)^2
+            //     B = -2 * ((c1 - c0) * (p - c0) + (r1 - r0) * r0)
+            //     C = (c0 - p)^2 - r0^2
+            //
+            // When both circles touch in one point, A = 0 and we get a linear equation instead.
+
+            // FIXME: Normalize m_end to have unit length from m_start.
+            Gfx::FloatVector2 to_point { point.x() - m_start.x(), point.y() - m_start.y() };
+            Gfx::FloatVector2 to_end { m_end.x() - m_start.x(), m_end.y() - m_start.y() };
+            float dr = m_end_radius - m_start_radius;
+
+            float A = to_end.dot(to_end) - dr * dr;
+            float B = -2 * (to_end.dot(to_point) + dr * m_start_radius);
+            float C = to_point.dot(to_point) - m_start_radius * m_start_radius;
+            float s_0;
+            float s_1;
+            if (A != 0) {
+                float discriminant = B * B - 4 * A * C;
+                if (discriminant < 0)
+                    continue;
+
+                s_0 = (-B + sqrt(discriminant)) / (2 * A);
+                s_1 = (-B - sqrt(discriminant)) / (2 * A);
+                if (A < 0)
+                    swap(s_0, s_1);
+            } else {
+                // Linear case: B * s + C = 0
+                s_0 = -C / B;
+                s_1 = s_0;
+            }
+
+            // FIXME: Handle extension.
+            float s = s_0 >= 0 && s_0 <= 1 ? s_0 : s_1;
+            if (s < 0 || s > 1)
+                continue;
+            float t = m_t0 + s * (m_t1 - m_t0);
+
+            TRY(m_functions.visit(
+                [&](Function const& function) -> PDFErrorOr<void> {
+                    auto result = TRY(function.evaluate(to_array({ t })));
+                    result.copy_to(color_components);
+                    return {};
+                },
+                [&](Vector<NonnullRefPtr<Function>> const& functions) -> PDFErrorOr<void> {
+                    for (size_t i = 0; i < functions.size(); ++i) {
+                        auto result = TRY(functions[i]->evaluate(to_array({ t })));
+                        color_components[i] = result[0];
+                    }
+                    return {};
+                }));
+
+            auto color = TRY(m_common_entries.color_space->style(color_components));
+            bitmap.scanline(y)[x] = color.get<Gfx::Color>().value();
+        }
+    }
+
+    return {};
 }
 
 }
