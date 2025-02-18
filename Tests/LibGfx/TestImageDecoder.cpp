@@ -1524,6 +1524,23 @@ TEST_CASE(test_tiff_cmyk)
     EXPECT_NE(frame.image->get_pixel(60, 75), Gfx::Color::NamedColor::White);
 }
 
+TEST_CASE(test_tiff_cmyk_raw)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("tiff/cmyk-small.tif"sv)));
+    EXPECT(Gfx::TIFFImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::TIFFImageDecoderPlugin::create(file->bytes()));
+
+    EXPECT_EQ(plugin_decoder->natural_frame_format(), Gfx::NaturalFrameFormat::CMYK);
+    auto cmyk_frame = TRY_OR_FAIL(plugin_decoder->cmyk_frame());
+    EXPECT_EQ(cmyk_frame->size(), Gfx::IntSize(2, 3));
+    EXPECT_EQ(cmyk_frame->scanline(0)[0], (Gfx::CMYK { 0, 0, 0, 0 }));
+    EXPECT_EQ(cmyk_frame->scanline(0)[1], (Gfx::CMYK { 0, 0, 0, 255 }));
+    EXPECT_EQ(cmyk_frame->scanline(1)[0], (Gfx::CMYK { 255, 0, 0, 0 }));
+    EXPECT_EQ(cmyk_frame->scanline(1)[1], (Gfx::CMYK { 0, 255, 0, 0 }));
+    EXPECT_EQ(cmyk_frame->scanline(2)[0], (Gfx::CMYK { 0, 0, 255, 0 }));
+    EXPECT_EQ(cmyk_frame->scanline(2)[1], (Gfx::CMYK { 255, 255, 255, 0 }));
+}
+
 TEST_CASE(test_tiff_tiled)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("tiff/tiled.tiff"sv)));

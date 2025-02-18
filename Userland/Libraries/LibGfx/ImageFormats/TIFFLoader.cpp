@@ -126,6 +126,13 @@ public:
         return m_metadata.tile_width().has_value() && m_metadata.tile_length().has_value();
     }
 
+    bool is_cmyk() const
+    {
+        // m_photometric_interpretation is not set yet.
+        auto photometric_interpretation = m_metadata.photometric_interpretation();
+        return photometric_interpretation.has_value() && photometric_interpretation.value() == PhotometricInterpretation::CMYK;
+    }
+
     ErrorOr<void> ensure_baseline_tags_are_correct() const
     {
         if (!segment_offsets().has_value())
@@ -828,6 +835,26 @@ Optional<Metadata const&> TIFFImageDecoderPlugin::metadata()
 ErrorOr<Optional<ReadonlyBytes>> TIFFImageDecoderPlugin::icc_data()
 {
     return m_context->metadata().icc_profile().map([](auto const& buffer) -> ReadonlyBytes { return buffer.bytes(); });
+}
+
+NaturalFrameFormat TIFFImageDecoderPlugin::natural_frame_format() const
+{
+    if (m_context->is_cmyk())
+        return NaturalFrameFormat::CMYK;
+    return NaturalFrameFormat::RGB;
+}
+
+ErrorOr<NonnullRefPtr<CMYKBitmap>> TIFFImageDecoderPlugin::cmyk_frame()
+{
+    VERIFY(natural_frame_format() == NaturalFrameFormat::CMYK);
+
+    if (m_context->state() == TIFF::TIFFLoadingContext::State::Error)
+        return Error::from_string_literal("TIFFImageDecoderPlugin: Decoding failed");
+
+    if (m_context->state() < TIFF::TIFFLoadingContext::State::FrameDecoded)
+        TRY(m_context->decode_frame());
+
+    return *m_context->cmyk_bitmap();
 }
 
 ErrorOr<NonnullOwnPtr<ExifMetadata>> TIFFImageDecoderPlugin::read_exif_metadata(ReadonlyBytes data)

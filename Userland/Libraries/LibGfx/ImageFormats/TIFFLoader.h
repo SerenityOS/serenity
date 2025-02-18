@@ -47,6 +47,9 @@ public:
     virtual Optional<Metadata const&> metadata() override;
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
+    virtual NaturalFrameFormat natural_frame_format() const override;
+    virtual ErrorOr<NonnullRefPtr<CMYKBitmap>> cmyk_frame() override;
+
     static ErrorOr<ByteBuffer> invert_horizontal_differencing(ReadonlyBytes, u32 columns, Span<u32> bits_per_component);
 
 private:
