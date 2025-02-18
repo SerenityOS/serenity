@@ -822,6 +822,7 @@ struct TileData {
 enum class ColorSpace {
     sRGB,
     Gray,
+    CMYK,
     Unsupported,
 };
 
@@ -863,6 +864,7 @@ struct JPEG2000LoadingContext {
 
     // Valid once `state` is StateDecodedImage.
     RefPtr<Bitmap> bitmap;
+    RefPtr<CMYKBitmap> cmyk_bitmap;
 
     CodingStyleParameters const& coding_style_parameters_for_component(TileData const& tile, size_t component_index) const
     {
@@ -2195,7 +2197,19 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
         has_alpha = context.siz.components.size() == 2 || context.siz.components.size() == 4;
     }
 
-    unsigned expected_channel_count = context.color_space == ColorSpace::Gray ? 1 : 3;
+    unsigned expected_channel_count = [](ColorSpace color_space) {
+        switch (color_space) {
+        case ColorSpace::Gray:
+            return 1;
+        case ColorSpace::sRGB:
+            return 3;
+        case ColorSpace::CMYK:
+            return 4;
+        case ColorSpace::Unsupported: // Rejected above.
+            VERIFY_NOT_REACHED();
+        };
+        VERIFY_NOT_REACHED();
+    }(context.color_space);
     if (has_alpha)
         expected_channel_count++;
     if (context.siz.components.size() < expected_channel_count)
@@ -2207,6 +2221,36 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
     for (auto& c : context.siz.components)
         if (c.bit_depth() != 8)
             return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only 8 bits per component supported yet");
+
+    if (context.color_space == ColorSpace::CMYK) {
+        if (has_alpha)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: CMYK with alpha not yet supported");
+
+        auto bitmap = TRY(Gfx::CMYKBitmap::create_with_size({ context.siz.width, context.siz.height }));
+
+        for (auto& tile : context.tiles) {
+            // compute_decoding_metadata currently rejects images with horizontal_separation or vertical_separation != 1.
+            for (auto& component : tile.components) {
+                if (component.rect.size() != tile.components[0].rect.size())
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Components with differing sizes not yet supported");
+            }
+            int w = tile.components[0].rect.width();
+            int h = tile.components[0].rect.height();
+
+            for (int y = 0; y < h; ++y) {
+                for (int x = 0; x < w; ++x) {
+                    float C = round_to<u8>(clamp(tile.components[0].samples[y * w + x], 0.0f, 255.0f));
+                    float M = round_to<u8>(clamp(tile.components[1].samples[y * w + x], 0.0f, 255.0f));
+                    float Y = round_to<u8>(clamp(tile.components[2].samples[y * w + x], 0.0f, 255.0f));
+                    float K = round_to<u8>(clamp(tile.components[3].samples[y * w + x], 0.0f, 255.0f));
+                    bitmap->scanline(y + tile.components[0].rect.top())[x + tile.components[0].rect.left()] = { (u8)C, (u8)M, (u8)Y, (u8)K };
+                }
+            }
+        }
+
+        context.cmyk_bitmap = move(bitmap);
+        return {};
+    }
 
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { context.siz.width, context.siz.height }));
 
@@ -2298,6 +2342,8 @@ static void determine_color_space(JPEG2000LoadingContext& context)
                 context.color_space = ColorSpace::sRGB;
             } else if (context.color_box->enumerated_color_space == ISOBMFF::JPEG2000ColorSpecificationBox::EnumCS::Greyscale) {
                 context.color_space = ColorSpace::Gray;
+            } else if (context.color_box->enumerated_color_space == ISOBMFF::JPEG2000ColorSpecificationBox::EnumCS::CMYK) {
+                context.color_space = ColorSpace::CMYK;
             } else {
                 context.color_space = ColorSpace::Unsupported;
                 context.color_space_error = Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB and grayscale enumerated color space supported yet");
@@ -2316,6 +2362,8 @@ static void determine_color_space(JPEG2000LoadingContext& context)
                 context.color_space = ColorSpace::sRGB;
             } else if (icc_header.data_color_space == ICC::ColorSpace::Gray) {
                 context.color_space = ColorSpace::Gray;
+            } else if (icc_header.data_color_space == ICC::ColorSpace::CMYK) {
+                context.color_space = ColorSpace::CMYK;
             } else {
                 context.color_space = ColorSpace::Unsupported;
                 context.color_space_error = Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB and grayscale ICC color space supported yet");
@@ -2351,6 +2399,9 @@ ErrorOr<ImageFrameDescriptor> JPEG2000ImageDecoderPlugin::frame(size_t index, Op
         m_context->state = JPEG2000LoadingContext::State::DecodedImage;
     }
 
+    if (m_context->cmyk_bitmap && !m_context->bitmap)
+        return ImageFrameDescriptor { TRY(m_context->cmyk_bitmap->to_low_quality_rgb()), 0 };
+
     return ImageFrameDescriptor { m_context->bitmap, 0 };
 }
 
@@ -2375,11 +2426,28 @@ NaturalFrameFormat JPEG2000ImageDecoderPlugin::natural_frame_format() const
         return NaturalFrameFormat::RGB;
     case ColorSpace::Gray:
         return NaturalFrameFormat::Grayscale;
+    case ColorSpace::CMYK:
+        return NaturalFrameFormat::CMYK;
     case ColorSpace::Unsupported:
         return NaturalFrameFormat::RGB;
     }
 
     VERIFY_NOT_REACHED();
+}
+
+ErrorOr<NonnullRefPtr<CMYKBitmap>> JPEG2000ImageDecoderPlugin::cmyk_frame()
+{
+    VERIFY(natural_frame_format() == NaturalFrameFormat::CMYK);
+
+    if (m_context->state < JPEG2000LoadingContext::State::DecodedImage) {
+        if (auto result = decode_image(*m_context); result.is_error()) {
+            m_context->state = JPEG2000LoadingContext::State::Error;
+            return result.release_error();
+        }
+        m_context->state = JPEG2000LoadingContext::State::DecodedImage;
+    }
+
+    return *m_context->cmyk_bitmap;
 }
 
 }

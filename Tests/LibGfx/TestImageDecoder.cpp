@@ -784,6 +784,56 @@ TEST_CASE(test_jpeg2000_decode_greyscale_alpha)
     }
 }
 
+TEST_CASE(test_jpeg2000_decode_cmyk)
+{
+    Array test_inputs = {
+        TEST_INPUT("jpeg2000/kakadu-lossless-cmyk-u8-prog1-layers1-res6.jp2"sv),
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = TRY_OR_FAIL(Core::MappedFile::map(test_input));
+        EXPECT(Gfx::JPEG2000ImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
+
+        EXPECT_EQ(plugin_decoder->natural_frame_format(), Gfx::NaturalFrameFormat::CMYK);
+        auto cmyk_frame = TRY_OR_FAIL(plugin_decoder->cmyk_frame());
+        EXPECT_EQ(cmyk_frame->size(), Gfx::IntSize(119, 101));
+
+        // FIXME: It'd be nice to compare the CMYK values to a reference image,
+        //        but we currently don't have a reference CMYK decoder. The tiff decoder could
+        //        learn this, but I'm also having trouble generating a reference CMYK tiff file.
+        //        For now, just spot-check a pixel.
+        EXPECT_EQ(cmyk_frame->scanline(80)[80], (Gfx::CMYK { 0x0c, 0xea, 0xd3, 0x00 }));
+    }
+}
+
+TEST_CASE(test_jpeg2000_decode_cmyk_small_raw)
+{
+    Array test_inputs = {
+        TEST_INPUT("jpeg2000/cmyk-small.jpf"sv),
+        TEST_INPUT("jpeg2000/cmyk-small-icc.jpf"sv),
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = TRY_OR_FAIL(Core::MappedFile::map(test_input));
+        EXPECT(Gfx::JPEG2000ImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
+
+        EXPECT_EQ(plugin_decoder->natural_frame_format(), Gfx::NaturalFrameFormat::CMYK);
+        auto cmyk_frame = TRY_OR_FAIL(plugin_decoder->cmyk_frame());
+        EXPECT_EQ(cmyk_frame->size(), Gfx::IntSize(4, 2));
+        EXPECT_EQ(cmyk_frame->scanline(0)[0], (Gfx::CMYK { 0, 0, 0, 0 }));
+        EXPECT_EQ(cmyk_frame->scanline(0)[1], (Gfx::CMYK { 127, 127, 127, 0 }));
+        EXPECT_EQ(cmyk_frame->scanline(0)[2], (Gfx::CMYK { 255, 255, 255, 0 }));
+        EXPECT_EQ(cmyk_frame->scanline(0)[3], (Gfx::CMYK { 255, 255, 255, 255 }));
+        EXPECT_EQ(cmyk_frame->scanline(1)[0], (Gfx::CMYK { 255, 0, 0, 0 }));
+        EXPECT_EQ(cmyk_frame->scanline(1)[1], (Gfx::CMYK { 0, 255, 0, 0 }));
+        EXPECT_EQ(cmyk_frame->scanline(1)[2], (Gfx::CMYK { 0, 0, 255, 0 }));
+        EXPECT_EQ(cmyk_frame->scanline(1)[2], (Gfx::CMYK { 0, 0, 255, 0 }));
+        EXPECT_EQ(cmyk_frame->scanline(1)[3], (Gfx::CMYK { 0, 0, 0, 255 }));
+    }
+}
+
 TEST_CASE(test_jpeg2000_decode_greyscale)
 {
     auto png_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/ref-gray.png"sv)));
@@ -810,7 +860,6 @@ TEST_CASE(test_jpeg2000_decode_greyscale)
 TEST_CASE(test_jpeg2000_decode_unsupported)
 {
     Array test_inputs = {
-        TEST_INPUT("jpeg2000/kakadu-lossless-cmyk-u8-prog1-layers1-res6.jp2"sv),
         TEST_INPUT("jpeg2000/kakadu-lossless-cmyka-u8-prog1-layers1-res6.jp2"sv),
         TEST_INPUT("jpeg2000/kakadu-lossless-rgba-u16-prog1-layers1-res6.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-indexed-u8-rgb-u8.jp2"sv),
