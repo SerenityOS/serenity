@@ -237,6 +237,121 @@ PDFErrorOr<void> AxialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform 
     return {};
 }
 
+class RadialShading final : public Shading {
+public:
+    static PDFErrorOr<NonnullRefPtr<RadialShading>> create(Document*, NonnullRefPtr<DictObject>, CommonEntries);
+
+    virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
+
+private:
+    using FunctionsType = Variant<NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
+
+    RadialShading(CommonEntries common_entries, Gfx::FloatPoint start, float start_radius, Gfx::FloatPoint end, float end_radius, float t0, float t1, FunctionsType functions, bool extend_start, bool extend_end)
+        : m_common_entries(move(common_entries))
+        , m_start(start)
+        , m_start_radius(start_radius)
+        , m_end(end)
+        , m_end_radius(end_radius)
+        , m_t0(t0)
+        , m_t1(t1)
+        , m_functions(move(functions))
+        , m_extend_start(extend_start)
+        , m_extend_end(extend_end)
+    {
+    }
+
+    CommonEntries m_common_entries;
+    Gfx::FloatPoint m_start;
+    float m_start_radius { 0.0f };
+    Gfx::FloatPoint m_end;
+    float m_end_radius { 0.0f };
+    float m_t0 { 0.0f };
+    float m_t1 { 1.0f };
+    FunctionsType m_functions;
+    bool m_extend_start { false };
+    bool m_extend_end { false };
+};
+
+PDFErrorOr<NonnullRefPtr<RadialShading>> RadialShading::create(Document* document, NonnullRefPtr<DictObject> shading_dict, CommonEntries common_entries)
+{
+    // TABLE 4.31 Additional entries specific to a type 3 shading dictionary
+    // "(Required) An array of six numbers [ x0 y0 r0 x1 y1 r1 ] specifying the centers and
+    //  radii of the starting and ending circles, expressed in the shading’s target coor-
+    //  dinate space. The radii r0 and r1 must both be greater than or equal to 0. If one
+    //  radius is 0, the corresponding circle is treated as a point; if both are 0, nothing is
+    //  painted."
+    auto coords = TRY(shading_dict->get_array(document, CommonNames::Coords));
+    if (coords->size() != 6)
+        return Error::malformed_error("Coords must have 6 elements");
+    Gfx::FloatPoint start { coords->at(0).to_float(), coords->at(1).to_float() };
+    float start_radius = coords->at(2).to_float();
+    Gfx::FloatPoint end { coords->at(3).to_float(), coords->at(4).to_float() };
+    float end_radius = coords->at(5).to_float();
+
+    // "(Optional) An array of two numbers [ t0 t1 ] specifying the limiting values of a
+    //  parametric variable t. The variable is considered to vary linearly between these
+    //  two values as the color gradient varies between the starting and ending circles.
+    //  The variable t becomes the input argument to the color function(s). Default
+    //  value: [ 0.0 1.0 ]."
+    float t0 = 0.0f;
+    float t1 = 1.0f;
+    if (shading_dict->contains(CommonNames::Domain)) {
+        auto domain_array = TRY(shading_dict->get_array(document, CommonNames::Domain));
+        if (domain_array->size() != 2)
+            return Error::malformed_error("Domain must have 2 elements");
+        t0 = domain_array->at(0).to_float();
+        t1 = domain_array->at(1).to_float();
+    }
+
+    // "(Required) A 1-in, n-out function or an array of n 1-in, 1-out functions (where n
+    //  is the number of color components in the shading dictionary’s color space). The
+    //  function(s) are called with values of the parametric variable t in the domain de-
+    //  fined by the shading dictionary’s Domain entry. Each function’s domain must be
+    //  a superset of that of the shading dictionary. If the value returned by the function
+    //  for a given color component is out of range, it is adjusted to the nearest valid val-
+    //  ue."
+    FunctionsType functions = TRY([&]() -> PDFErrorOr<FunctionsType> {
+        auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
+        if (function_object->is<ArrayObject>()) {
+            auto function_array = function_object->cast<ArrayObject>();
+            Vector<NonnullRefPtr<Function>> functions_vector;
+            if (function_array->size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
+                return Error::malformed_error("Function array must have as many elements as color space has components");
+            for (size_t i = 0; i < function_array->size(); ++i) {
+                auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
+                if (TRY(function->evaluate(to_array({ 0.0f }))).size() != 1)
+                    return Error::malformed_error("Function must have 1 output component");
+                TRY(functions_vector.try_append(move(function)));
+            }
+            return functions_vector;
+        }
+        auto function = TRY(Function::create(document, function_object));
+        if (TRY(function->evaluate(to_array({ 0.0f }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
+            return Error::malformed_error("Function must have as many output components as color space");
+        return function;
+    }());
+
+    // "(Optional) An array of two boolean values specifying whether to extend the
+    //  shading beyond the starting and ending circles, respectively. Default value:
+    //  [ false false ]."
+    bool extend_start = false;
+    bool extend_end = false;
+    if (shading_dict->contains(CommonNames::Extend)) {
+        auto extend_array = TRY(shading_dict->get_array(document, CommonNames::Extend));
+        if (extend_array->size() != 2)
+            return Error::malformed_error("Extend must have 2 elements");
+        extend_start = extend_array->at(0).get<bool>();
+        extend_end = extend_array->at(1).get<bool>();
+    }
+
+    return adopt_ref(*new RadialShading(move(common_entries), start, start_radius, end, end_radius, t0, t1, move(functions), extend_start, extend_end));
+}
+
+PDFErrorOr<void> RadialShading::draw(Gfx::Painter&, Gfx::AffineTransform const&)
+{
+    return Error::rendering_unsupported_error("Cannot draw radial shading yet");
+}
+
 }
 
 PDFErrorOr<NonnullRefPtr<Shading>> Shading::create(Document* document, NonnullRefPtr<Object> shading_dict_or_stream, Renderer& renderer)
@@ -264,7 +379,9 @@ PDFErrorOr<NonnullRefPtr<Shading>> Shading::create(Document* document, NonnullRe
             return Error::malformed_error("Axial shading dictionary has wrong type");
         return AxialShading::create(document, shading_dict, move(common_entries));
     case 3:
-        return Error::rendering_unsupported_error("Radial shading not yet implemented");
+        if (!shading_dict_or_stream->is<DictObject>())
+            return Error::malformed_error("Radial shading dictionary has wrong type");
+        return RadialShading::create(document, shading_dict, move(common_entries));
     case 4:
         return Error::rendering_unsupported_error("Free-form Gouraud-shaded triangle mesh not yet implemented");
     case 5:
