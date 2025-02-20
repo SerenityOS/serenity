@@ -172,12 +172,6 @@ ALWAYS_INLINE bool ProcessorBase<T>::has_nx() const
 }
 
 template<typename T>
-ALWAYS_INLINE bool ProcessorBase<T>::has_pat() const
-{
-    return false;
-}
-
-template<typename T>
 ALWAYS_INLINE FlatPtr ProcessorBase<T>::current_in_irq()
 {
     return current().m_in_irq;
