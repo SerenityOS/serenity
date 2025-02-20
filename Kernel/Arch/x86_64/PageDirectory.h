@@ -122,7 +122,7 @@ public:
         case MemoryType::Normal: // WB (write back) => PAT=0b000
             break;
         case MemoryType::NonCacheable: // WC (write combining) => PAT=0b100
-            if (Processor::current().has_pat()) {
+            if (Processor::current().has_feature(CPUFeature::PAT)) {
                 m_raw |= PAT;
                 break;
             }

@@ -94,7 +94,6 @@ public:
     ALWAYS_INLINE static u32 current_id();
     ALWAYS_INLINE static bool is_bootstrap_processor();
     ALWAYS_INLINE bool has_nx() const;
-    ALWAYS_INLINE bool has_pat() const;
     ALWAYS_INLINE bool has_feature(CPUFeature::Type const& feature) const
     {
         return m_features.has_flag(feature);
