@@ -246,6 +246,12 @@ ErrorOr<ParsedReportDescriptor> ReportDescriptorParser::parse()
             }
 
             case MainItemTag::Collection: {
+                m_current_collection_tree_depth++;
+
+                // Prevent generating collection trees with a huge depth.
+                if (m_current_collection_tree_depth > 50)
+                    return Error::from_string_view_or_print_error_and_return_errno("Report descriptor defines more than 50 nested collections"sv, E2BIG);
+
                 auto collection_type = static_cast<CollectionType>(TRY(m_stream.read_item_data_unsigned(item_header)));
 
                 Collection new_collection {};
@@ -274,6 +280,8 @@ ErrorOr<ParsedReportDescriptor> ReportDescriptorParser::parse()
                     return Error::from_string_view_or_print_error_and_return_errno("End Collection item with a corresponding Collection item"sv, EINVAL);
 
                 m_current_collection = m_current_collection->parent;
+                m_current_collection_tree_depth--;
+
                 break;
 
             default:

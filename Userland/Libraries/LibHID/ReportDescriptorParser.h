@@ -183,6 +183,7 @@ private:
     SetOnce m_input_output_or_feature_item_seen;
 
     size_t m_total_report_field_count { 0 };
+    size_t m_current_collection_tree_depth { 0 };
 };
 
 }
