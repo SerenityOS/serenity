@@ -2,14 +2,6 @@
 
 .section .text
 
-.global gdt64ptr
-gdt64ptr:
-.quad 0
-
-.global code64_sel
-code64_sel:
-.short 0
-
 /*
   The apic_ap_start function will be loaded to P0x00008000 where the APIC
   will boot the AP from in real mode. This code also contains space for

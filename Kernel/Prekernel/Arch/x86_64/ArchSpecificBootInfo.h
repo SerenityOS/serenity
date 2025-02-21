@@ -14,8 +14,6 @@ VALIDATE_IS_X86()
 namespace Kernel {
 
 struct ArchSpecificBootInfo {
-    u32 gdt64ptr;
-    u16 code64_sel;
 };
 
 }

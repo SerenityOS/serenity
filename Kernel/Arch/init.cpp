@@ -140,11 +140,6 @@ ALWAYS_INLINE static Processor& bsp_processor()
 
 Atomic<Graphics::Console*> g_boot_console;
 
-#if ARCH(X86_64)
-extern "C" u32 gdt64ptr;
-extern "C" u16 code64_sel;
-#endif
-
 READONLY_AFTER_INIT static StringView s_kernel_cmdline;
 
 READONLY_AFTER_INIT constinit BootInfo g_boot_info;
@@ -153,8 +148,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
 {
 #if ARCH(X86_64)
     g_boot_info = boot_info;
-    gdt64ptr = boot_info.arch_specific.gdt64ptr;
-    code64_sel = boot_info.arch_specific.code64_sel;
     s_kernel_cmdline = boot_info.cmdline;
 #elif ARCH(AARCH64) || ARCH(RISCV64)
     if (boot_info.boot_method == BootMethod::EFI) {
