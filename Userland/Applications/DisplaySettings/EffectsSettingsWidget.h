@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2025, RatcheT2497 <ratchetnumbers@proton.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,17 +11,15 @@
 #include <LibGUI/SettingsWindow.h>
 #include <LibGUI/SystemEffects.h>
 
-namespace GUI {
-
 namespace DisplaySettings {
 
-class EffectsSettingsWidget final : public SettingsWindow::Tab {
+class EffectsSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(EffectsSettingsWidget);
 
-    static ErrorOr<NonnullRefPtr<EffectsSettingsWidget>> try_create();
-
 public:
+    static ErrorOr<NonnullRefPtr<EffectsSettingsWidget>> try_create();
     virtual ~EffectsSettingsWidget() override = default;
+    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
 
@@ -30,13 +29,11 @@ private:
 
     ErrorOr<void> load_settings();
 
-    SystemEffects m_system_effects;
+    GUI::SystemEffects m_system_effects;
     Vector<String> m_geometry_list;
     Vector<String> m_tile_window_list;
-    RefPtr<ComboBox> m_geometry_combobox;
-    RefPtr<ComboBox> m_tile_window_combobox;
+    RefPtr<GUI::ComboBox> m_geometry_combobox;
+    RefPtr<GUI::ComboBox> m_tile_window_combobox;
 };
-
-}
 
 }

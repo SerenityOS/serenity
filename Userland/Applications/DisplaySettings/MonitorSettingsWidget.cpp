@@ -6,7 +6,6 @@
  */
 
 #include "MonitorSettingsWidget.h"
-#include <Applications/DisplaySettings/MonitorSettingsGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
@@ -19,15 +18,13 @@
 
 namespace DisplaySettings {
 
-ErrorOr<NonnullRefPtr<MonitorSettingsWidget>> MonitorSettingsWidget::try_create()
+ErrorOr<void> MonitorSettingsWidget::initialize()
 {
-    auto monitor_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MonitorSettingsWidget()));
+    TRY(load_current_settings());
+    TRY(create_resolution_list());
+    TRY(create_frame());
 
-    TRY(monitor_settings_widget->load_current_settings());
-    TRY(monitor_settings_widget->create_resolution_list());
-    TRY(monitor_settings_widget->create_frame());
-
-    return monitor_settings_widget;
+    return {};
 }
 
 ErrorOr<void> MonitorSettingsWidget::create_resolution_list()
@@ -103,8 +100,6 @@ ErrorOr<void> MonitorSettingsWidget::generate_resolution_strings()
 
 ErrorOr<void> MonitorSettingsWidget::create_frame()
 {
-    TRY(load_from_gml(monitor_settings_window_gml));
-
     m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 
     m_screen_combo = *find_descendant_of_type_named<GUI::ComboBox>("screen_combo");
