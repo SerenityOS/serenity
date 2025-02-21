@@ -28,8 +28,6 @@ extern "C" u8 end_of_prekernel_image[];
 extern "C" u8 _binary_Kernel_standalone_start[];
 extern "C" u8 end_of_prekernel_image_after_kernel_image[];
 
-extern "C" u8 gdt64ptr[];
-extern "C" u16 code64_sel;
 extern "C" u64 boot_pml4t[512];
 extern "C" u64 boot_pdpt[512];
 extern "C" u64 boot_pd0[512];
@@ -227,8 +225,6 @@ extern "C" [[noreturn]] void init()
     info.kernel_mapping_base = kernel_mapping_base;
     info.kernel_load_base = kernel_load_base;
 #if ARCH(X86_64)
-    info.arch_specific.gdt64ptr = (PhysicalPtr)gdt64ptr;
-    info.arch_specific.code64_sel = code64_sel;
     info.boot_pml4t = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pml4t) };
 #endif
     info.boot_pdpt = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pdpt) };
