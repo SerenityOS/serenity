@@ -26,7 +26,7 @@ static constexpr size_t CHUNK_SIZE = 64;
 #endif
 static_assert(is_power_of_two(CHUNK_SIZE));
 
-static constexpr size_t INITIAL_KMALLOC_MEMORY_SIZE = 2 * MiB;
+static constexpr size_t INITIAL_KMALLOC_MEMORY_SIZE = 16 * MiB;
 static constexpr size_t KMALLOC_DEFAULT_ALIGNMENT = 16;
 
 // Treat the heap as logically separate from .bss
