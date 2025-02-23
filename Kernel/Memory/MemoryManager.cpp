@@ -457,7 +457,15 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_efi(MemoryManager::GlobalD
             // done *and* there's >= 40 phys bit that would put max phyusical boundary to 1T
             // This should allow virtual firmware to avoid the reserved range at the
             // 1T boundary on VFs with big bars."
-            if (start_paddr.get() != 0x000000fd00000000 || length != (0x000000ffffffffff - 0x000000fd00000000) + 1)
+            //
+            // On Meteor Lake systems, coreboot marks the address range used by the P2SB device
+            // (0x3fff0000000-0x3ffffffffff) as reserved. Nothing actually ends up using it,
+            // so we can ignore it.
+            // Moreover if we don't we end up with highest_address at 4 TiB mark which
+            // would need an enormous metadata storage for this huge (0-4TiB) range.
+            // Until we support discontinous regions better we need to skip this range.
+            if ((start_paddr.get() != 0x000000fd00000000 || length != (0x000000ffffffffff - 0x000000fd00000000) + 1)
+                && (start_paddr.get() != 0x000003fff0000000 || length != 0x10000000))
 #endif
                 global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, start_paddr, length });
             break;
@@ -718,7 +726,15 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_multiboot(MemoryManager::G
             // done *and* there's >= 40 phys bit that would put max phyusical boundary to 1T
             // This should allow virtual firmware to avoid the reserved range at the
             // 1T boundary on VFs with big bars."
-            if (address != 0x000000fd00000000 || length != (0x000000ffffffffff - 0x000000fd00000000) + 1)
+            //
+            // On Meteor Lake systems, coreboot marks the address range used by the P2SB device
+            // (0x3fff0000000-0x3ffffffffff) as reserved. Nothing actually ends up using it,
+            // so we can ignore it.
+            // Moreover if we don't we end up with highest_address at 4 TiB mark which
+            // would need an enormous metadata storage for this huge (0-4TiB) range.
+            // Until we support discontinous regions better we need to skip this range.
+            if ((address != 0x000000fd00000000 || length != (0x000000ffffffffff - 0x000000fd00000000) + 1)
+                && (address != 0x000003fff0000000 || length != 0x10000000))
 #endif
                 global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, start_address, length });
             break;
