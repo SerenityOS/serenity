@@ -416,10 +416,51 @@ PDFErrorOr<void> RadialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform
                 s_1 = s_0;
             }
 
-            // FIXME: Handle extension.
-            float s = s_0 >= 0 && s_0 <= 1 ? s_0 : s_1;
-            if (s < 0 || s > 1)
-                continue;
+            float s;
+            if (to_end.length() < max(m_start_radius, m_end_radius) - min(m_start_radius, m_end_radius)) {
+                // One circle is inside the other one.
+                // One of s_0, s_1 will be 0..1 in the main gradient part, and the other one will be negative in the whole circle.
+                s = m_start_radius < m_end_radius ? s_0 : s_1;
+                if (s < 0) {
+                    if (!m_extend_start)
+                        continue;
+                    s = 0;
+                } else if (s > 1) {
+                    if (!m_extend_end)
+                        continue;
+                    s = 1;
+                }
+            } else {
+                // Two disjoint or overlapping circles. Assuming the start circle is to the left of the end circle,
+                // s_0 is the value of s when the left side of the circle touches the current point, while s_1 is the value
+                // of s when the right side of the circle touches the current point. The forward formulation in the spec
+                // says we're drawing the circles in increasing order of s, so the s_0 value is the one that draws on
+                // top for the points drawn by both edges.
+                // s_0 is in [0..1] in the start circle up to outside of the end circle (where it's > 1).
+                // s_1 is in [0..1] in the end circle up to outside of the start circle (where it's < 0).
+                s = s_0 >= 0 && s_0 <= 1 ? s_0 : s_1;
+
+                if (m_extend_start) {
+                    if (m_start_radius <= m_end_radius && s < -m_start_radius / dr)
+                        continue;
+                    if (s < 0)
+                        s = 0;
+                } else {
+                    if (s < 0 && !(m_extend_end && s_0 > 0))
+                        continue;
+                }
+
+                if (m_extend_end) {
+                    if (m_start_radius > m_end_radius && s > -m_start_radius / dr)
+                        continue;
+                    if (s_0 > 1)
+                        s = 1;
+                } else {
+                    if (s > 1)
+                        continue;
+                }
+            }
+
             float t = m_t0 + s * (m_t1 - m_t0);
 
             TRY(m_functions.visit(
