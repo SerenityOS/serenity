@@ -80,6 +80,103 @@ PDFErrorOr<CommonEntries> read_common_entries(Document* document, DictObject con
     return common_entries;
 }
 
+class FunctionBasedShading final : public Shading {
+public:
+    static PDFErrorOr<NonnullRefPtr<FunctionBasedShading>> create(Document*, NonnullRefPtr<DictObject>, CommonEntries);
+
+    virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
+
+private:
+    using FunctionsType = Variant<NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
+
+    FunctionBasedShading(CommonEntries common_entries, Gfx::FloatRect domain, Gfx::AffineTransform matrix, FunctionsType functions)
+        : m_common_entries(move(common_entries))
+        , m_domain(domain)
+        , m_matrix(matrix)
+        , m_functions(move(functions))
+    {
+    }
+
+    CommonEntries m_common_entries;
+    Gfx::FloatRect m_domain;
+    Gfx::AffineTransform m_matrix;
+    FunctionsType m_functions;
+};
+
+PDFErrorOr<NonnullRefPtr<FunctionBasedShading>> FunctionBasedShading::create(Document* document, NonnullRefPtr<DictObject> shading_dict, CommonEntries common_entries)
+{
+    // TABLE 4.29 Additional entries specific to a type 1 shading dictionary
+
+    // "(Optional) An array of four numbers [ xmin xmax ymin ymax ] specifying the
+    //  rectangular domain of coordinates over which the color function(s) are defined.
+    //  Default value: [ 0.0 1.0 0.0 1.0 ]."
+    Gfx::FloatRect domain { 0.0f, 0.0f, 1.0f, 1.0f };
+    if (shading_dict->contains(CommonNames::Domain)) {
+        auto domain_array = TRY(shading_dict->get_array(document, CommonNames::Domain));
+        if (domain_array->size() != 4)
+            return Error::malformed_error("Domain must have 4 elements");
+        float xmin = domain_array->at(0).to_float();
+        float xmax = domain_array->at(1).to_float();
+        float ymin = domain_array->at(2).to_float();
+        float ymax = domain_array->at(3).to_float();
+        domain = Gfx::FloatRect::from_two_points({ xmin, ymin }, { xmax, ymax });
+    }
+
+    // "(Optional) An array of six numbers specifying a transformation matrix mapping
+    //  the coordinate space specified by the Domain entry into the shading’s target co-
+    //  ordinate space. For example, to map the domain rectangle [ 0.0 1.0 0.0 1.0 ] to a
+    //  1-inch square with lower-left corner at coordinates (100, 100) in default user
+    //  space, the Matrix value would be [ 72 0 0 72 100 100 ]. Default value: the iden-
+    //  tity matrix [ 1 0 0 1 0 0 ]."
+    Gfx::AffineTransform matrix;
+    if (shading_dict->contains(CommonNames::Matrix)) {
+        auto matrix_array = TRY(shading_dict->get_array(document, CommonNames::Matrix));
+        if (matrix_array->size() != 6)
+            return Error::malformed_error("Matrix must have 6 elements");
+        matrix = Gfx::AffineTransform {
+            matrix_array->at(0).to_float(),
+            matrix_array->at(1).to_float(),
+            matrix_array->at(2).to_float(),
+            matrix_array->at(3).to_float(),
+            matrix_array->at(4).to_float(),
+            matrix_array->at(5).to_float(),
+        };
+    }
+
+    // "(Required) A 2-in, n-out function or an array of n 2-in, 1-out functions (where n
+    //  is the number of color components in the shading dictionary’s color space). Each
+    //  function’s domain must be a superset of that of the shading dictionary. If the val-
+    //  ue returned by the function for a given color component is out of range, it is ad-
+    //  justed to the nearest valid value."
+    FunctionsType functions = TRY([&]() -> PDFErrorOr<FunctionsType> {
+        auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
+        if (function_object->is<ArrayObject>()) {
+            auto function_array = function_object->cast<ArrayObject>();
+            Vector<NonnullRefPtr<Function>> functions_vector;
+            if (function_array->size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
+                return Error::malformed_error("Function array must have as many elements as color space has components");
+            for (size_t i = 0; i < function_array->size(); ++i) {
+                auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
+                if (TRY(function->evaluate(to_array({ domain.x(), domain.y() }))).size() != 1)
+                    return Error::malformed_error("Function must have 1 output component");
+                TRY(functions_vector.try_append(move(function)));
+            }
+            return functions_vector;
+        }
+        auto function = TRY(Function::create(document, function_object));
+        if (TRY(function->evaluate(to_array({ domain.x(), domain.y() }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
+            return Error::malformed_error("Function must have as many output components as color space");
+        return function;
+    }());
+
+    return adopt_ref(*new FunctionBasedShading(move(common_entries), domain, matrix, move(functions)));
+}
+
+PDFErrorOr<void> FunctionBasedShading::draw(Gfx::Painter&, Gfx::AffineTransform const&)
+{
+    return Error::rendering_unsupported_error("Cannot draw function-based shading yet");
+}
+
 class AxialShading final : public Shading {
 public:
     static PDFErrorOr<NonnullRefPtr<AxialShading>> create(Document*, NonnullRefPtr<DictObject>, CommonEntries);
@@ -506,7 +603,9 @@ PDFErrorOr<NonnullRefPtr<Shading>> Shading::create(Document* document, NonnullRe
 
     switch (shading_type) {
     case 1:
-        return Error::rendering_unsupported_error("Function-based shading not yet implemented");
+        if (!shading_dict_or_stream->is<DictObject>())
+            return Error::malformed_error("Function-based shading dictionary has wrong type");
+        return FunctionBasedShading::create(document, shading_dict, move(common_entries));
     case 2:
         if (!shading_dict_or_stream->is<DictObject>())
             return Error::malformed_error("Axial shading dictionary has wrong type");
