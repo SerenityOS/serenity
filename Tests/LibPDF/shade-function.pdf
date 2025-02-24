@@ -1,0 +1,93 @@
+%PDF-1.7
+%µ¶
+
+1 0 obj
+<<
+  /Count 1
+  /Kids [ 3 0 R ]
+  /Type /Pages
+>>
+endobj
+
+2 0 obj
+<<
+  /Type /Catalog
+  /Pages 1 0 R
+>>
+endobj
+
+3 0 obj
+<<
+  /Contents [ 4 0 R ]
+  /MediaBox [ 0 0 100 100 ]
+  /Parent 1 0 R
+  /Resources <<
+    /Shading <<
+      /Sh0 6 0 R
+    >>
+  >>
+  /Type /Page
+>>
+endobj
+
+4 0 obj
+<<
+  /Length 50
+>>
+stream
+q
+0.1 g
+100 0 0 100 0 0 cm
+0 0 1 1 re f
+/Sh0 sh
+Q
+
+endstream
+endobj
+
+5 0 obj
+<<
+  /Domain [ 0 1 0 1 ]
+  /Range [ 0 1 0 1 0 1 ]
+  /FunctionType 4
+  /Length 30
+>>
+stream
+{
+  4 mul 360 mul sin
+  dup
+}
+
+endstream
+endobj
+
+6 0 obj
+<<
+  /AntiAlias false
+  /ColorSpace /DeviceRGB
+  /Domain [ 0 1 0 1 ]
+  /Matrix [ .7 -.7 .7 .7 -.2 .5 ]
+  /Function 5 0 R
+  /ShadingType 1
+  /Length 10
+>>
+endobj
+
+xref
+0 7
+0000000000 65536 f 
+0000000016 00000 n 
+0000000082 00000 n 
+0000000136 00000 n 
+0000000299 00000 n 
+0000000402 00000 n 
+0000000550 00000 n 
+
+trailer
+<<
+  /Size 7
+  /Root 2 0 R
+>>
+startxref
+720
+%%EOF
