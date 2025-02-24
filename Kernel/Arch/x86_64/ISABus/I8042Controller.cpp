@@ -358,6 +358,11 @@ ErrorOr<void> I8042Controller::do_reset_device(PortIndex port_index)
     // Wait until we get the self-test result
     auto self_test_result = TRY(do_wait_then_read_any_input(I8042Port::Buffer));
 
+    // Acknowledge means that reset is still in progress.
+    // Consume it and wait a bit longer
+    if (self_test_result == I8042Response::Acknowledge)
+        self_test_result = TRY(do_wait_then_read_any_input(I8042Port::Buffer));
+
     // FIXME: Is this the correct errno value for this?
     if (self_test_result != I8042Response::Success)
         return Error::from_errno(EIO);
