@@ -21,6 +21,7 @@ set(TEST_FILES
     paths.pdf
     pattern.pdf
     rotate.pdf
+    shade-function.pdf
     shade-radial.pdf
     standard-14-fonts.pdf
     text.pdf
