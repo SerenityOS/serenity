@@ -8,6 +8,7 @@
 #include <Kernel/Arch/x86_64/InterruptManagement.h>
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #include <Kernel/Arch/x86_64/Interrupts/IOAPIC.h>
+#include <Kernel/Arch/x86_64/ProcessorInfo.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 #include <Kernel/Sections.h>
@@ -79,7 +80,7 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
             trigger_level_mode = true;
             break;
         }
-        configure_redirection_entry(redirection_override.gsi() - gsi_base(), InterruptManagement::acquire_mapped_interrupt_number(redirection_override.source()) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, active_low, trigger_level_mode, true, 0);
+        configure_redirection_entry(redirection_override.gsi() - gsi_base(), InterruptManagement::acquire_mapped_interrupt_number(redirection_override.source()) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, active_low, trigger_level_mode, true, Processor::by_id(0).info().apic_id());
         return;
     }
     isa_identity_map(interrupt_vector);
@@ -88,13 +89,13 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
 void IOAPIC::isa_identity_map(size_t index)
 {
     InterruptDisabler disabler;
-    configure_redirection_entry(index, InterruptManagement::acquire_mapped_interrupt_number(index) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, false, true, 0);
+    configure_redirection_entry(index, InterruptManagement::acquire_mapped_interrupt_number(index) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, false, true, Processor::by_id(0).info().apic_id());
 }
 
 void IOAPIC::map_pci_interrupts()
 {
     InterruptDisabler disabler;
-    configure_redirection_entry(11, 11 + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, true, true, 0);
+    configure_redirection_entry(11, 11 + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, true, true, Processor::by_id(0).info().apic_id());
 }
 
 bool IOAPIC::is_enabled() const
@@ -147,7 +148,7 @@ void IOAPIC::map_isa_interrupts()
             trigger_level_mode = true;
             break;
         }
-        configure_redirection_entry(redirection_override.gsi() - gsi_base(), InterruptManagement::acquire_mapped_interrupt_number(redirection_override.source()) + IRQ_VECTOR_BASE, 0, false, active_low, trigger_level_mode, true, 0);
+        configure_redirection_entry(redirection_override.gsi() - gsi_base(), InterruptManagement::acquire_mapped_interrupt_number(redirection_override.source()) + IRQ_VECTOR_BASE, 0, false, active_low, trigger_level_mode, true, Processor::by_id(0).info().apic_id());
     }
 }
 
@@ -168,7 +169,7 @@ void IOAPIC::hard_disable()
 void IOAPIC::reset_redirection_entry(size_t index) const
 {
     InterruptDisabler disabler;
-    configure_redirection_entry(index, 0, 0, false, false, false, true, 0);
+    configure_redirection_entry(index, 0, 0, false, false, false, true, Processor::by_id(0).info().apic_id());
 }
 
 void IOAPIC::configure_redirection_entry(size_t index, u8 interrupt_vector, u8 delivery_mode, bool logical_destination, bool active_low, bool trigger_level_mode, bool masked, u8 destination) const
