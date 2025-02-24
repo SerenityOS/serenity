@@ -8,6 +8,7 @@
 #include <Kernel/Arch/PCIMSI.h>
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #include <Kernel/Arch/x86_64/PCI/MSI.h>
+#include <Kernel/Arch/x86_64/ProcessorInfo.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
 
 namespace Kernel {
@@ -19,7 +20,7 @@ u64 msi_address_register(u8 destination_id, bool redirection_hint, bool destinat
         if (destination_mode)
             flags |= msi_destination_mode_logical;
     }
-    return (msi_address_base | (destination_id << msi_destination_shift) | flags);
+    return (msi_address_base | (Processor::by_id(destination_id).info().apic_id() << msi_destination_shift) | flags);
 }
 
 u32 msi_data_register(u8 vector, bool level_trigger, bool assert)
