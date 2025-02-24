@@ -97,7 +97,7 @@ jobs:
           tar --exclude='.[^/]*' -czvf libjs-wasm.tar.gz -C ${{ github.workspace }}/libjs-data .
 
       - name: Deploy to GitHub
-        uses: JamesIves/github-pages-deploy-action@v4.6.9
+        uses: JamesIves/github-pages-deploy-action@v4.7.3
         if: github.ref == 'refs/heads/master'
         with:
           git-config-name: BuggieBot
