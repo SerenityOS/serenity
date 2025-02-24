@@ -172,9 +172,50 @@ PDFErrorOr<NonnullRefPtr<FunctionBasedShading>> FunctionBasedShading::create(Doc
     return adopt_ref(*new FunctionBasedShading(move(common_entries), domain, matrix, move(functions)));
 }
 
-PDFErrorOr<void> FunctionBasedShading::draw(Gfx::Painter&, Gfx::AffineTransform const&)
+PDFErrorOr<void> FunctionBasedShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& inverse_ctm)
 {
-    return Error::rendering_unsupported_error("Cannot draw function-based shading yet");
+    auto& bitmap = painter.target();
+
+    auto scale = painter.scale();
+    auto clip_rect = painter.clip_rect() * scale;
+
+    Vector<float, 4> color_components;
+    color_components.resize(m_common_entries.color_space->number_of_components());
+
+    auto maybe_to_domain = m_matrix.inverse();
+    if (!maybe_to_domain.has_value())
+        return Error::malformed_error("Matrix is not invertible");
+    auto to_domain = maybe_to_domain.value();
+
+    // FIXME: Do something with m_common_entries.b_box if it's set.
+
+    for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
+        for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
+            Gfx::FloatPoint shading_point = inverse_ctm.map(Gfx::FloatPoint { x, y } / scale);
+            auto domain_point = to_domain.map(shading_point);
+            if (!m_domain.contains(domain_point))
+                continue;
+
+            TRY(m_functions.visit(
+                [&](Function const& function) -> PDFErrorOr<void> {
+                    auto result = TRY(function.evaluate(to_array({ domain_point.x(), domain_point.y() })));
+                    result.copy_to(color_components);
+                    return {};
+                },
+                [&](Vector<NonnullRefPtr<Function>> const& functions) -> PDFErrorOr<void> {
+                    for (size_t i = 0; i < functions.size(); ++i) {
+                        auto result = TRY(functions[i]->evaluate(to_array({ domain_point.x(), domain_point.y() })));
+                        color_components[i] = result[0];
+                    }
+                    return {};
+                }));
+
+            auto color = TRY(m_common_entries.color_space->style(color_components));
+            bitmap.scanline(y)[x] = color.get<Gfx::Color>().value();
+        }
+    }
+
+    return {};
 }
 
 class AxialShading final : public Shading {
