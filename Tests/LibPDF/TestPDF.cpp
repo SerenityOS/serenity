@@ -312,6 +312,42 @@ TEST_CASE(postscript)
     check_evaluate("{ pop }"sv, { 8.0f, 1.0f, 0.5f }, { 8.0f, 1.0f });
     check_evaluate("{ 3 1 roll }"sv, { 0.5f, 1.0f, 2.0f }, { 2.0f, 0.5f, 1.0f });
     check_evaluate("{ 3 -1 roll }"sv, { 0.5f, 1.0f, 2.0f }, { 1.0f, 2.0f, 0.5f });
+
+    // Comments
+    check_evaluate(R"(
+    % comment
+    {
+        % comment
+        1
+
+        % comment
+        {
+            % comment
+            1
+            % comment
+        }
+        % comment
+        if
+
+        % comment
+        {
+            % comment
+            1
+            % comment
+        }
+        % comment
+        {
+            % comment
+            0
+            % comment
+        }
+        ifelse
+
+        % comment
+    }
+    % comment
+    )"sv,
+        {}, { 1.0f });
 }
 
 TEST_CASE(render)

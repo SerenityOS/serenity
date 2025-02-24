@@ -512,6 +512,7 @@ private:
         Vector<Token> if_false;
     };
 
+    static bool skip_whitespace_and_comments(Reader&);
     static PDFErrorOr<Vector<Token>> parse_postscript_calculator_function(Reader&, Vector<NonnullOwnPtr<IfElse>>&);
 
     struct Stack {
@@ -639,22 +640,42 @@ Optional<PostScriptCalculatorFunction::OperatorType> PostScriptCalculatorFunctio
     return {};
 }
 
+bool PostScriptCalculatorFunction::skip_whitespace_and_comments(Reader& reader)
+{
+    bool did_skip = false;
+    while (!reader.done()) {
+        if (reader.consume_whitespace()) {
+            did_skip = true;
+            continue;
+        }
+        if (reader.matches('%')) {
+            did_skip = true;
+            reader.consume();
+            while (!reader.consume_eol())
+                reader.consume();
+            continue;
+        }
+        break;
+    }
+    return did_skip;
+}
+
 PDFErrorOr<Vector<PostScriptCalculatorFunction::Token>>
 PostScriptCalculatorFunction::parse_postscript_calculator_function(Reader& reader, Vector<NonnullOwnPtr<IfElse>>& if_elses)
 {
     // Assumes valid syntax.
-    reader.consume_whitespace();
+    skip_whitespace_and_comments(reader);
     if (!reader.consume('{'))
         return Error { Error::Type::MalformedPDF, "PostScript expected '{'" };
 
     Vector<PostScriptCalculatorFunction::Token> tokens;
     while (!reader.matches('}')) {
-        if (reader.consume_whitespace())
+        if (skip_whitespace_and_comments(reader))
             continue;
 
         if (reader.matches('{')) {
             auto if_true = TRY(parse_postscript_calculator_function(reader, if_elses));
-            reader.consume_whitespace();
+            skip_whitespace_and_comments(reader);
             if (reader.matches("if")) {
                 reader.consume(2);
                 tokens.append({ OperatorType::If, (int)if_elses.size() });
@@ -664,7 +685,7 @@ PostScriptCalculatorFunction::parse_postscript_calculator_function(Reader& reade
 
             VERIFY(reader.matches('{'));
             auto if_false = TRY(parse_postscript_calculator_function(reader, if_elses));
-            reader.consume_whitespace();
+            skip_whitespace_and_comments(reader);
 
             if (reader.matches("ifelse")) {
                 reader.consume(6);
