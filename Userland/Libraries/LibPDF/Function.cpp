@@ -547,6 +547,8 @@ Optional<PostScriptCalculatorFunction::OperatorType> PostScriptCalculatorFunctio
 {
     auto match_keyword = [&](char const* keyword) {
         if (reader.matches(keyword)) {
+            // FIXME: Check if followed by whitespace or any of (, ), <, >, [, ], {, }, /, %.
+            //        Currently, this incorrectly accepts `add4` as `add 4`.
             reader.consume((int)strlen(keyword));
             return true;
         }
@@ -676,6 +678,11 @@ PostScriptCalculatorFunction::parse_postscript_calculator_function(Reader& reade
 
         if (reader.matches_number()) {
             // FIXME: Nicer float conversion.
+            // FIXME: Check if followed by whitespace or any of (, ), <, >, [, ], {, }, /, %.
+            //        Currently, this incorrectly accepts `4add` as `4 add`.
+            //        (I think technically `4add` should be an identifier? But since this subset supports no
+            //        identifiers, that won't happen in practice. We should reject it though, instead of accepting it
+            //        as `4 add`.)
             char const* start = reinterpret_cast<char const*>(reader.bytes().slice(reader.offset()).data());
             char* endptr;
             float value = strtof(start, &endptr);
