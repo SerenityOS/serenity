@@ -973,7 +973,6 @@ PDFErrorOr<ReadonlySpan<float>> PostScriptCalculatorFunction::evaluate(ReadonlyS
     if (stack.top != m_range.size())
         return Error { Error::Type::MalformedPDF, "Postscript result size does not match range size"_string };
 
-    // FIXME: Does this need reversing?
     m_result.resize(stack.top);
     for (size_t i = 0; i < stack.top; ++i)
         m_result[i] = clamp(stack.stack[i], m_range[i].lower, m_range[i].upper);
