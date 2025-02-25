@@ -36,6 +36,14 @@ brew install llvm@18
 brew install gcc@13
 ```
 
+# Nix
+
+If Nix is installed, entering the devshell will provide an environment with all required build dependencies already included.
+
+```
+nix --extra-experimental-features "nix-command flakes" develop
+```
+
 # Notes
 
 You can use both Intel and Apple Silicon Macs to run a native architecture version of SerenityOS.
