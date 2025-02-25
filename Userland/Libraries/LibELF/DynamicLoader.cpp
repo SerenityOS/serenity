@@ -575,6 +575,12 @@ DynamicLoader::RelocationResult DynamicLoader::do_direct_relocation(DynamicObjec
         auto res = lookup_symbol(symbol);
         VirtualAddress symbol_location;
         if (!res.has_value()) {
+            // We do not support these
+            // TODO: Can we tell gcc not to generate the piece of code that uses these?
+            // (--disable-tm-clone-registry flag in gcc configuration?)
+            if (symbol.name().is_one_of("__deregister_frame_info"sv, "_ITM_registerTMCloneTable"sv, "_ITM_deregisterTMCloneTable"sv, "__register_frame_info"sv))
+                break;
+
             if (symbol.bind() != STB_WEAK) {
                 // Symbol not found
                 return RelocationResult::Failed;
@@ -849,5 +855,4 @@ void DynamicLoader::compute_topological_order(Vector<NonnullRefPtr<DynamicLoader
     m_topological_ordering_state = TopologicalOrderingState::Visited;
     topological_order.append(*this);
 }
-
 }
