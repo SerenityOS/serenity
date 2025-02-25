@@ -33,7 +33,10 @@ mkShell.override { stdenv = gccStdenv; } {
       imagemagick
       libtool
       # For development
-      clang-tools
+      # NOTE: The unwrapped clang package is used because the one installed by `clang-tools`
+      #       adds extra include and resource directories that conflict with serenity's custom toolchain.
+      # FIXME: Go back to the `clang-tools` package once https://github.com/NixOS/nixpkgs/pull/354755 is merged.
+      llvmPackages_19.clang-unwrapped
       nodePackages.prettier
       pre-commit
     ]
