@@ -79,7 +79,7 @@ void VectorscopeWidget::rebuild_vectorscope_image()
             auto const brightness = m_vectorscope_data[u_index][v_index];
             if (brightness < 0.0001f)
                 continue;
-            auto const pseudo_rect = Gfx::FloatRect::centered_at(color_vector.to_vector(scope_size) * 2.0f, size_1x1);
+            auto const pseudo_rect = Gfx::FloatRect::centered_on(color_vector.to_vector(scope_size) * 2.0f, size_1x1);
             auto color = Color::from_yuv(0.6f, color_vector.u, color_vector.v);
             color = color.saturated_to(1.0f - min(brightness, 1.0f));
             color.set_alpha(static_cast<u8>(min(AK::sqrt(brightness), alpha_range) * NumericLimits<u8>::max() / alpha_range));
@@ -101,7 +101,7 @@ void VectorscopeWidget::paint_event(GUI::PaintEvent& event)
     auto const scope_size = min(height(), width());
     auto const graticule_size = scope_size / 6;
     auto const graticule_thickness = graticule_size / 12;
-    auto const entire_scope_rect = Gfx::FloatRect::centered_at({ 0, 0 }, { scope_size, scope_size });
+    auto const entire_scope_rect = Gfx::FloatRect::centered_on({ 0, 0 }, { scope_size, scope_size });
 
     painter.fill_ellipse(entire_scope_rect.to_rounded<int>().shrunken(graticule_thickness * 2, graticule_thickness * 2), Color::Black);
 
@@ -153,13 +153,13 @@ void VectorscopeWidget::paint_event(GUI::PaintEvent& event)
         base_painter.draw_line(Gfx::IntPoint(right_outer_vertex, center_rounded.y() + graticule_size / 2), Gfx::IntPoint(right_outer_vertex, bottom_inner_vertex), corner_color, graticule_thickness);
 
         // Add text label to vectorscope
-        auto text_rect = Gfx::FloatRect::centered_at(center, { graticule_size, graticule_size }).to_rounded<int>().translated(-(graticule_thickness + 1), -(graticule_thickness + 1));
+        auto text_rect = Gfx::FloatRect::centered_on(center, { graticule_size, graticule_size }).to_rounded<int>().translated(-(graticule_thickness + 1), -(graticule_thickness + 1));
         base_painter.draw_text(text_rect, StringView { &primary_color.symbol, 1 }, Gfx::TextAlignment::BottomRight, graticule_color);
     }
 
     if (m_color_at_mouseposition != Color::Transparent) {
         auto color_vector = ColorVector { m_color_at_mouseposition };
-        painter.draw_ellipse(Gfx::FloatRect::centered_at(color_vector.to_vector(scope_size) * 2.0, { graticule_size, graticule_size }).to_rounded<int>(), graticule_color, graticule_thickness);
+        painter.draw_ellipse(Gfx::FloatRect::centered_on(color_vector.to_vector(scope_size) * 2.0, { graticule_size, graticule_size }).to_rounded<int>(), graticule_color, graticule_thickness);
     }
 }
 

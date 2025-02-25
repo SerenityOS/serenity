@@ -830,11 +830,6 @@ public:
         return false;
     }
 
-    [[nodiscard]] static Rect<T> centered_at(Point<T> const& point, Size<T> const& size)
-    {
-        return { { point.x() - size.width() / 2, point.y() - size.height() / 2 }, size };
-    }
-
     void unite_horizontally(Rect<T> const& other)
     {
         auto new_left = min(left(), other.left());

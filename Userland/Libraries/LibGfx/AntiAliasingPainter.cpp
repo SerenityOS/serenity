@@ -586,7 +586,7 @@ void AntiAliasingPainter::fill_rect_with_rounded_corners(IntRect const& a_rect, 
     auto fill_corner = [&](auto const& ellipse_center, auto const& corner_point, CornerRadius const& corner) {
         PainterStateSaver save { m_underlying_painter };
         m_underlying_painter.add_clip_rect(IntRect::from_two_points(ellipse_center, corner_point));
-        fill_ellipse(IntRect::centered_at(ellipse_center, { corner.horizontal_radius * 2, corner.vertical_radius * 2 }), color, blend_mode);
+        fill_ellipse(IntRect::centered_on(ellipse_center, { corner.horizontal_radius * 2, corner.vertical_radius * 2 }), color, blend_mode);
     };
 
     auto bounding_rect = a_rect.inflated(0, 1, 1, 0);
