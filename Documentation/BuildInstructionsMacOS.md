@@ -36,6 +36,10 @@ brew install llvm@18
 brew install gcc@13
 ```
 
+# Nix
+
+If you have nix installed you can just enter the devShell provided by the flake and execute the run script.
+
 # Notes
 
 You can use both Intel and Apple Silicon Macs to run a native architecture version of SerenityOS.
