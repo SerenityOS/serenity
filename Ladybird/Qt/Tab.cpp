@@ -818,12 +818,12 @@ void Tab::reload()
 
 void Tab::open_link(URL::URL const& url)
 {
-    view().on_link_click(url, "", 0);
+    view().load(url);
 }
 
 void Tab::open_link_in_new_tab(URL::URL const& url)
 {
-    view().on_link_click(url, "_blank", Web::UIEvents::Mod_Ctrl);
+    view().on_tab_open_request(url, Web::HTML::ActivateTab::Yes);
 }
 
 void Tab::copy_link_url(URL::URL const& url)
