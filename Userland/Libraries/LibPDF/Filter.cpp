@@ -407,7 +407,14 @@ PDFErrorOr<ByteBuffer> Filter::decode_jpx(ReadonlyBytes bytes)
     auto decoder = TRY(Gfx::JPEG2000ImageDecoderPlugin::create(bytes));
     auto internal_format = decoder->natural_frame_format();
 
-    VERIFY(internal_format != Gfx::NaturalFrameFormat::CMYK); // Not yet implemented in JPEG2000ImageDecoderPlugin.
+    if (internal_format == Gfx::NaturalFrameFormat::CMYK) {
+        auto bitmap = TRY(decoder->cmyk_frame());
+        // FIXME: Could give CMYKBitmap a method to steal its internal ByteBuffer.
+        auto size = bitmap->size().width() * bitmap->size().height() * 4;
+        auto buffer = TRY(ByteBuffer::create_uninitialized(size));
+        buffer.overwrite(0, bitmap->scanline(0), size);
+        return buffer;
+    }
 
     auto bitmap = TRY(decoder->frame(0)).image;
     auto size = bitmap->size().width() * bitmap->size().height() * (internal_format == Gfx::NaturalFrameFormat::Grayscale ? 1 : 3);
