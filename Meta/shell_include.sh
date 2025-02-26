@@ -83,24 +83,16 @@ get_number_of_processing_units() {
   ($number_of_processing_units)
 }
 
-# Discover how to get apparent size from `du`. GNU du has --apparent-size / -b,
-# BSD du has `-A`.
-if command -v gdu > /dev/null 2>&1 && gdu --version | grep -q "GNU coreutils"; then
-    DU="gdu"
+# Discover how to get apparent size from `du`. GNU/BusyBox du has --apparent-size / -b, BSD/Darwin du has `-A`.
+if du --help | grep -qE "GNU coreutils|BusyBox"; then
     DU_APPARENT_SIZE_FLAG="-b"
 else
-    DU="du"
-    SYSTEM_NAME="$(uname -s)"
-    if [ "$SYSTEM_NAME" = "Darwin" ]; then
-        DU_APPARENT_SIZE_FLAG="-A"
-    else
-        DU_APPARENT_SIZE_FLAG="-b"
-    fi
+    DU_APPARENT_SIZE_FLAG="-A"
 fi
 
 disk_usage() {
     # shellcheck disable=SC2003,SC2307
-    expr "$(${DU} ${DU_APPARENT_SIZE_FLAG} -sm "$1" | cut -f1)"
+    expr "$(du ${DU_APPARENT_SIZE_FLAG} -sm "$1" | cut -f1)"
 }
 
 inode_usage() {

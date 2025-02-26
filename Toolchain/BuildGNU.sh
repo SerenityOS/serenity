@@ -243,18 +243,10 @@ pushd "$DIR/Build/$ARCH"
         buildstep "binutils/configure" "$DIR"/Tarballs/$BINUTILS_NAME/configure --prefix="$PREFIX" \
                                                  --target="$TARGET" \
                                                  --with-sysroot="$SYSROOT" \
-                                                 --enable-shared \
+                                                 --enable-static \
+                                                 --disable-shared \
                                                  --disable-nls \
                                                  ${CI:+"--quiet"} || exit 1
-        if [ "$SYSTEM_NAME" = "Darwin" ]; then
-            # under macOS generated makefiles are not resolving the "intl"
-            # dependency properly to allow linking its own copy of
-            # libintl when building with --enable-shared.
-            buildstep "binutils/build" "$MAKE" -j "$MAKEJOBS" || true
-            pushd intl
-            buildstep "binutils/build" "$MAKE" all-yes
-            popd
-        fi
         echo "XXX build binutils"
         buildstep "binutils/build" "$MAKE" MAKEINFO=true -j "$MAKEJOBS" || exit 1
         buildstep "binutils/install" "$MAKE" MAKEINFO=true install || exit 1
@@ -298,7 +290,8 @@ pushd "$DIR/Build/$ARCH"
                                             --with-sysroot="$SYSROOT" \
                                             --disable-nls \
                                             --disable-libstdcxx-pch \
-                                            --enable-shared \
+                                            --enable-static \
+                                            --disable-shared \
                                             --enable-languages=c,c++,objc,obj-c++ \
                                             --enable-default-pie \
                                             --enable-lto \
