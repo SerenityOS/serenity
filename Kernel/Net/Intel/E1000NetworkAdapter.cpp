@@ -292,22 +292,32 @@ UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::initialize(Badge<NetworkingM
 
     enable_bus_mastering(device_identifier());
 
+    // Issue a global reset
+    // FIXME: It seems like were missing a step somewhere
+    //        As the device does not link up after a global reset
+    //        Even if the PHY does
+    global_reset();
+
     dmesgln_pci(*this, "IO base: {}", m_registers.window());
     dmesgln_pci(*this, "Interrupt line: {}", interrupt_number());
+
     detect_model_and_operating_mode();
+
     detect_eeprom();
     dmesgln_pci(*this, "Has EEPROM? {}", m_has_eeprom.was_set());
+
     read_mac_address();
     auto const& mac = mac_address();
     dmesgln_pci(*this, "MAC address: {}", mac.to_string());
 
+    probe_phy();
+    TRY(setup_link());
+
     initialize_rx_descriptors();
     initialize_tx_descriptors();
 
-    setup_link();
     setup_interrupts();
-
-    m_link_up = m_registers.read<Register::Status>().link_up != 0;
+    // m_link_up = m_registers.read<Register::Status>().link_up != 0;
     autoconfigure_link_local_ipv6();
 
     return {};
@@ -400,15 +410,116 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_model_and_operating_mode()
     m_operating_mode = OperatingMode::Intel82576_and_later;
 }
 
-UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_link()
+UNMAP_AFTER_INIT void E1000NetworkAdapter::global_reset()
 {
+    dmesgln_pci(*this, "E1000: Issuing a global reset");
+    disable_interrupts();
+    disable_bus_mastering(device_identifier());
+
+    auto ctrl = m_registers.read<Register::Ctrl>();
+    ctrl.reset = 1;
+    m_registers.write<Register::Ctrl>(ctrl);
+    // Wait for the reset to complete
+    while (m_registers.read<Register::Ctrl>().reset)
+        Processor::wait_check();
+
+    enable_bus_mastering(device_identifier());
+    disable_interrupts();
+}
+
+UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::setup_link()
+{
+    auto ext_ctrl = m_registers.read<Register::CtrlExt>();
+    if (ext_ctrl.link_mode != 0b00) {
+        dmesgln_pci(*this, "E1000: FIXME: Device not a Copper PHY, link_mode: {#02b}", (u8)ext_ctrl.link_mode);
+        return ENOTSUP;
+    }
+
+    TRY(setup_link_phy());
+
     auto ctrl = m_registers.read<Register::Ctrl>();
     ctrl.set_link_up = 1;
+
+    auto ana = read_phy_register<MII::Register::AutoNegotiationAdvertisement>();
+    VERIFY(ana.selector == MII::ANASelector::Std802_3);
+    auto ana_eth = bit_cast<MII::AutoNegotiationAdvertisement802_3>(ana);
+    // FIXME: Cross check this:
+    ctrl.receive_flow_control_enable = ana_eth.pause;
+    ctrl.transmit_flow_control_enable = ana_eth.asymmetric_pause;
+    dbgln("E1000: ANA: {:#04x}, pause: {}, asymmetric_pause: {}",
+        bit_cast<u16>(ana_eth), (bool)ana_eth.pause, (bool)ana_eth.asymmetric_pause);
+
+    // FIXME: We should somehow read and set the Flow control settings according to what the PHY supports
+    //        and that may also need some more host memory space, other registers, etc.
+    //        for now, leave those untouched
+    ctrl.invert_loss_of_signal = 0;
     m_registers.write<Register::Ctrl>(ctrl);
+    // FIXME: Should we poll STATUS until we have a link, and speed?
+
+    auto phy_status = read_phy_register<MII::Register::Status>();
+    MII::ExtendedStatus phy_ext_status {};
+    if (phy_status.extended_status)
+        phy_ext_status = read_phy_register<MII::Register::ExtendedStatus>();
+    auto status = m_registers.read<Register::Status>();
+
+    dbgln("E1000: Link up: {}/PHY: {}", (bool)status.link_up, (bool)phy_status.link_status);
+    dbgln("E1000: Full Duplex: {}/{}", (bool)status.full_duplex, MII::is_full_duplex(phy_status, phy_ext_status));
+
+    m_link_up = phy_status.link_status;
+
+    return {};
+}
+
+UNMAP_AFTER_INIT ErrorOr<void> E1000NetworkAdapter::setup_link_phy()
+{
+    dmesgln_pci(*this, "E1000: Starting PHY Auto-negotiation");
+    auto status = read_phy_register<MII::Register::Status>();
+    if (!status.auto_negotiation_ability) {
+        dmesgln_pci(*this, "E1000: PHY does not support auto-negotiation");
+        return ENOTSUP;
+    }
+
+    auto ctrl = read_phy_register<MII::Register::Control>();
+    ctrl.restart_auto_negotiation = 1;
+
+    write_phy_register<MII::Register::Control>(ctrl);
+
+    // Wait for the auto-negotiation to complete
+    // FIXME: Timeout
+    for (;;) {
+        status = read_phy_register<MII::Register::Status>();
+        if (status.auto_negotiation_complete) {
+            dmesgln_pci(*this, "E1000: PHY Auto-negotiation complete");
+            return {};
+        }
+        if (status.remote_fault) {
+            dmesgln_pci(*this, "E1000: PHY Remote fault detected");
+            return ENOTCONN;
+        }
+        Processor::wait_check();
+    }
+
+    return {};
+}
+
+UNMAP_AFTER_INIT void E1000NetworkAdapter::disable_interrupts()
+{
+    m_registers.write<Register::InterruptMaskClear>(E1000::Interrupt::All);
+    // FIXME: Maybe write to EIMC as well?
+}
+UNMAP_AFTER_INIT void E1000NetworkAdapter::enable_interrupts()
+{
+    // FIXME: Maybe write to EIMS/EIMC as well?
+    m_registers.write<Register::InterruptMaskClear>(E1000::Interrupt::None);
+    // We want: Link status change, RX timer, RX overrun
+    m_registers.write<Register::InterruptMask>(
+        E1000::Interrupt::LSC | E1000::Interrupt::RXT0 | E1000::Interrupt::RXO);
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_interrupts()
 {
+    // FIXME: Support MSI/MSI-X
+
     // FIXME: Do this properly,
     //        like set the interrupt rate depending on the current utilization and link speed
     if (m_operating_mode != OperatingMode::Intel82576_and_later)
@@ -422,14 +533,10 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_interrupts()
         // Note: The 82574 has no enable bit, so we don't need to set it, as it would actually increase the interrupt interval
         if (m_operating_mode == OperatingMode::Intel8254x_14bit_til_82574 && device_identifier().hardware_id().device_id == 0x10D3)
             eitr.lli_enable = 1;
-
         m_registers.write<Register::ExtendedInterruptThrottling>(eitr);
     }
 
-    // We want: Link status change, RX timer, RX overrun
-    using InterruptMask = E1000::Interrupt;
-    m_registers.write<Register::InterruptMask>(
-        InterruptMask::LSC | InterruptMask::RXT0 | InterruptMask::RXO);
+    enable_interrupts();
 
     (void)m_registers.read<Register::InterruptCauseR>();
 
@@ -461,20 +568,21 @@ bool E1000NetworkAdapter::handle_irq()
     m_entropy_source.add_random_event(irq_cause);
 
     using enum E1000::Interrupt;
-    using E1000::has_flag;
+    using E1000::has_flag, E1000::has_any_flag;
 
     if (irq_cause == None)
         return false;
 
     // Let's be honest and only handle the interrupts we care about
-    if (!E1000::has_any_flag(irq_cause,
+    if (!has_any_flag(irq_cause,
             LSC | RXO | RXT0))
         return false;
 
     if (has_flag(irq_cause, LSC)) {
-        auto ctrl = m_registers.read<Register::Ctrl>();
-        ctrl.set_link_up = 1;
-        m_registers.write<Register::Ctrl>(ctrl);
+        dbgln("E1000: Link status change");
+        // auto ctrl = m_registers.read<Register::Ctrl>();
+        // ctrl.set_link_up = 1;
+        // m_registers.write<Register::Ctrl>(ctrl);
 
         m_link_up = m_registers.read<Register::Status>().link_up != 0;
 
@@ -549,6 +657,86 @@ UNMAP_AFTER_INIT u16 E1000NetworkAdapter::read_eeprom(u16 address)
     while (eerd = m_registers.read<Register::EEPROMRead>(), !eerd.address_8.done)
         Processor::wait_check();
     return eerd.address_8.data;
+}
+
+UNMAP_AFTER_INIT void E1000NetworkAdapter::probe_phy()
+{
+    // NOTE/FIXME: Newer models don't use an address field in the MDIC register, but have a central one
+    //             On others the documentation reads like the PHY is always at address 1
+    //             On others it reads like it could be any address
+    //             Also on some it seems like we can poke the PCI phy via the MDIC register
+    //             So we can probably get away with a lookup table/operation mode switch here
+    // FIXME: Support multi-PHY setups
+
+    for (u16 i = 0; i < 32; ++i) {
+        auto request = E1000::MDIC {};
+        request.register_address = MII::Register::Status;
+        request.phy_address = i;
+        request.operation = E1000::MDIC::Operation::Read;
+
+        m_registers.write<Register::MDIC>(request);
+        auto status = m_registers.read<Register::MDIC>();
+        // FIXME: We can use interrupts here, and even without there might be a nicer way
+        for (int j = 0; j < 999; ++j) {
+            status = m_registers.read<Register::MDIC>();
+            if (status.ready || status.error)
+                break;
+            Processor::wait_check();
+        }
+        if (status.ready && !status.error) {
+            dmesgln_pci(*this, "E1000: Found PHY at address {}", i);
+            m_phy_address = i;
+            return;
+        }
+    }
+
+    dmesgln_pci(*this, "E1000: No PHY found, assuming PHY 0");
+    m_phy_address = 0;
+}
+
+u16 E1000NetworkAdapter::read_phy_register(MII::Register address)
+{
+    auto request = E1000::MDIC {};
+    request.register_address = address;
+    // FIXME: Technically this field does not exist on all models, but setting it to 0 is explicitly allowed
+    //        See probe_phy
+    request.phy_address = m_phy_address;
+    request.operation = E1000::MDIC::Operation::Read;
+
+    // FIXME: Support doing this with interrupts, also a better way to wait
+    for (int i = 0; i < 999; ++i) {
+        m_registers.write<Register::MDIC>(request);
+        auto status = m_registers.read<Register::MDIC>();
+        if (status.ready) {
+            if (status.error)
+                break;
+            return status.data;
+        }
+        Processor::wait_check();
+    }
+
+    dmesgln_pci(*this, "E1000: PHY read failed");
+    return 0;
+}
+
+void E1000NetworkAdapter::write_phy_register(MII::Register address, u16 data)
+{
+    auto request = E1000::MDIC {};
+    request.register_address = address;
+    request.phy_address = m_phy_address;
+    request.data = data;
+    request.operation = E1000::MDIC::Operation::Write;
+
+    m_registers.write<Register::MDIC>(request);
+
+    // FIXME: Support doing this with interrupts, also a better way to wait
+    for (int i = 0; i < 999; ++i) {
+        auto status = m_registers.read<Register::MDIC>();
+        if (status.ready)
+            return;
+        Processor::wait_check();
+    }
+    dmesgln_pci(*this, "E1000: PHY write failed");
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::read_mac_address()
@@ -633,17 +821,18 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
         }
     }
 
-    m_registers.write<Register::RXDescLow>(m_rx_descriptors.paddr.get() & 0xffffffff);
-    m_registers.write<Register::RXDescHigh>(m_rx_descriptors.paddr.get() >> 32);
-    m_registers.write<Register::RXDescLength>(number_of_rx_descriptors * sizeof(E1000::RxDescriptor));
-    m_registers.write<Register::RXDescHead>(0);
-    m_registers.write<Register::RXDescTail>(number_of_rx_descriptors - 1);
+    m_registers.write<Register::RDBAL0>(m_rx_descriptors.paddr.get() & 0xffffffff);
+    m_registers.write<Register::RDBAH0>(m_rx_descriptors.paddr.get() >> 32);
+    m_registers.write<Register::RDLEN0>(number_of_rx_descriptors * sizeof(E1000::RxDescriptor));
+    m_registers.write<Register::RDH0>(0);
+    m_registers.write<Register::RDT0>(number_of_rx_descriptors - 1);
 
     E1000::ReceiveControl rctl = m_registers.read<Register::RCtrl>();
     rctl.enable = 0;
     m_registers.write<Register::RCtrl>(rctl);
 
     rctl.enable = 1;
+    rctl.long_packet_enable = 1;
     rctl.store_bad_frames = 1;
     rctl.unicast_promiscuous_enable = 1;
     rctl.multicast_promiscuous_enable = 1;
@@ -664,6 +853,8 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_rx_descriptors()
     }
 
     m_registers.write<Register::RCtrl>(rctl);
+
+    // FIXME: We might want to poll RXDCTL until it is ready
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
@@ -678,18 +869,30 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::initialize_tx_descriptors()
         descriptor.cmd = {};
     }
 
-    m_registers.write<Register::TXDescLow>(m_tx_descriptors.paddr.get() & 0xffffffff);
-    m_registers.write<Register::TXDescHigh>(m_tx_descriptors.paddr.get() >> 32);
-    m_registers.write<Register::TXDescLength>(number_of_tx_descriptors * sizeof(E1000::TxDescriptor));
-    m_registers.write<Register::TXDescHead>(0);
-    m_registers.write<Register::TXDescTail>(0);
+    m_registers.write<Register::TDBAL0>(m_tx_descriptors.paddr.get() & 0xffffffff);
+    m_registers.write<Register::TDBAH0>(m_tx_descriptors.paddr.get() >> 32);
+    m_registers.write<Register::TDLEN0>(number_of_tx_descriptors * sizeof(E1000::TxDescriptor));
+    m_registers.write<Register::TDH0>(0);
+    m_registers.write<Register::TDT0>(0);
 
     E1000::TransmitControl tctl = m_registers.read<Register::TCtrl>();
     tctl.enable = 0;
     m_registers.write<Register::TCtrl>(tctl);
 
-    tctl.enable = 1;
+    auto txdctl = E1000::TransmitDescriptorControl {};
+    txdctl.writeback_threshold = 0x1;
+    if (m_operating_mode == OperatingMode::Intel82576_and_later)
+        txdctl.queue_enable = 1;
+
+    m_registers.write<Register::TXDCTL0, 0>(txdctl);
+    if (m_operating_mode == OperatingMode::Intel82576_and_later) {
+        // FIXME: Do we need to poll this on earlier models as well?
+        while (!(m_registers.read<Register::TXDCTL0, 0>().queue_enable))
+            Processor::wait_check();
+    }
+
     tctl.pad_short_packets = 1;
+    tctl.enable = 1;
     m_registers.write<Register::TCtrl>(tctl);
 
     set_tipg();
@@ -777,8 +980,8 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
 
     disable_irq();
 
-    size_t tx_current = m_registers.read<Register::TXDescTail>() % number_of_tx_descriptors;
-    [[maybe_unused]] auto tx_head = m_registers.read<Register::TXDescHead>();
+    size_t tx_current = m_registers.read<Register::TDT0>() % number_of_tx_descriptors;
+    [[maybe_unused]] auto tx_head = m_registers.read<Register::TDH0>();
 
     dbgln_if(E1000_DEBUG, "E1000: Sending packet ({} bytes)", payload.size());
     dbgln_if(E1000_DEBUG, "E1000: Using tx descriptor {} (head is at {})", tx_current, tx_head);
@@ -798,7 +1001,7 @@ void E1000NetworkAdapter::send_raw(ReadonlyBytes payload)
     Processor::disable_interrupts();
     enable_irq();
 
-    m_registers.write<Register::TXDescTail>(tx_current);
+    m_registers.write<Register::TDT0>(tx_current);
     for (;;) {
         if (descriptor.status) {
             Processor::enable_interrupts();
@@ -814,7 +1017,7 @@ void E1000NetworkAdapter::receive()
 {
     u32 rx_current;
     for (;;) {
-        rx_current = m_registers.read<Register::RXDescTail>() % number_of_rx_descriptors;
+        rx_current = m_registers.read<Register::RDT0>() % number_of_rx_descriptors;
         rx_current = (rx_current + 1) % number_of_rx_descriptors;
 
         // FIXME: We may receive packets split across multiple descriptors
@@ -840,12 +1043,15 @@ void E1000NetworkAdapter::receive()
             did_receive({ buffer, length });
 
             m_rx_descriptors[rx_current].legacy.status = E1000::RxDescriptorStatus::None;
-            m_registers.write<Register::RXDescTail>(rx_current);
+            m_registers.write<Register::RDT0>(rx_current);
         } else {
             // The write-back descriptor for advanced descriptors is completely different from it's normal descriptor
             // So we need to restore the normal descriptor after we've read it
             {
-                auto& descriptor = m_rx_descriptors[rx_current].advanced_write_back;
+                E1000::AdvancedRxDescriptorWriteBack descriptor;
+                // AAAAAAhhh, I just want a copy I can print
+                __builtin_memcpy(&descriptor, (void*)&m_rx_descriptors[rx_current].advanced, sizeof(E1000::AdvancedRxDescriptorWriteBack));
+
                 if (!has_flag(descriptor.extended_status, E1000::RxDescriptorExtendedStatus::DD))
                     break;
 
@@ -858,11 +1064,7 @@ void E1000NetworkAdapter::receive()
                 VERIFY(length <= 8192);
 
                 dbgln_if(1, "E1000: Received 1 packet @ {:p} ({} bytes)", buffer, length);
-                dbgln_if(1, "E1000: PacketType {:#04x}", (decltype(descriptor.packet_type))descriptor.packet_type);
-                dbgln_if(1, "E1000: Status {}", (decltype(descriptor.extended_status))descriptor.extended_status);
-                dbgln_if(1, "E1000: ExtendedError {:#04x}", (u64)descriptor.extended_error);
-                dbgln_if(1, "E1000: SplitHeader {}", (bool)descriptor.split_header);
-
+                dbgln_if(1, "E1000: {}", descriptor);
                 VERIFY(to_underlying(descriptor.extended_error) == 0);
 
                 did_receive({ buffer, length });
@@ -877,7 +1079,7 @@ void E1000NetworkAdapter::receive()
                 descriptor.header_buffer_address = 0;
             }
 
-            m_registers.write<Register::RXDescTail>(rx_current);
+            m_registers.write<Register::RDT0>(rx_current);
         };
     }
 }
@@ -907,5 +1109,4 @@ bool E1000NetworkAdapter::link_full_duplex()
     auto status = m_registers.read<Register::Status>();
     return status.full_duplex != 0;
 }
-
 }

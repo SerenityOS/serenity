@@ -9,6 +9,7 @@
 #include <AK/EnumBits.h>
 #include <AK/Format.h>
 #include <AK/StdLibExtraDetails.h>
+#include <AK/StringBuilder.h>
 #include <AK/Types.h>
 
 namespace Kernel::E1000 {
@@ -287,6 +288,33 @@ struct Formatter<Kernel::E1000::RxDescriptorStatus> : Formatter<Kernel::E1000::R
     {
         auto extended_status = static_cast<Kernel::E1000::RxDescriptorExtendedStatus>(to_underlying(status));
         return Formatter<Kernel::E1000::RxDescriptorExtendedStatus>::format(builder, extended_status);
+    }
+};
+
+template<>
+struct Formatter<Kernel::E1000::AdvancedRxDescriptorWriteBack> : StandardFormatter {
+    ErrorOr<void> format(FormatBuilder& builder, Kernel::E1000::AdvancedRxDescriptorWriteBack const& descriptor)
+    {
+        return builder.builder().try_appendff(
+            R"~~~({{
+        RSS {:#01x}({:#04x})
+        PacketType {}
+        HeaderLen {}
+        SplitHeader {}
+        Status {}
+        Error {:#03x}
+        Length {}B
+        VLAN {:#02x}
+}})~~~",
+            (u8)descriptor.rss_type,
+            (u32)descriptor.rss_hash,
+            auto(descriptor.packet_type),
+            (u16)descriptor.header_len,
+            (bool)descriptor.split_header,
+            auto(descriptor.extended_status),
+            (u16)descriptor.extended_error,
+            (u16)descriptor.pkt_len,
+            (u16)descriptor.vlan_tag);
     }
 };
 

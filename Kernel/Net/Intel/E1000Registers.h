@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "MII.h"
 #include <AK/EnumBits.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
@@ -18,46 +19,49 @@ namespace Kernel::E1000 {
 enum class Register {
     // FIXME: There are more registers, allowing some more HW acceleration,
     //        statistics and more. Support these!
-    Ctrl = 0x0000,
+
+    // General
+    Ctrl = 0x0000, // Aliased to 0x0004 as it seems
     Status = 0x0008,
+    CtrlExt = 0x0018,
+    MDIC = 0x0020, // MDI Control
+
+    // Flash/EEPROM
     EEPROMControl = 0x0010,
     EEPROMRead = 0x0014,
-    CtrlExt = 0x0018,
-    InterruptCauseR = 0x00C0,
-    InterruptThrottling = 0x00C4, // ITR, seems to be not present on later NICs
-    InterruptMask = 0x00D0,
-    InterruptMaskClear = 0x00D8,
-    RCtrl = 0x0100,    // RCTL
+
+    // Interrupts
+    InterruptCauseR = 0x00C0,             // ICR, aliased to 0x1500
+    InterruptThrottling = 0x00C4,         // ITR, replaced by EITR
+    InterruptMask = 0x00D0,               // IMS, aliased to 0x1508
+    InterruptMaskClear = 0x00D8,          // IMC, aliased to 0x150C
+    ExtendedInterruptThrottling = 0x1680, // EITR
+    GPIE = 0x1514,                        // General Purpose Interrupt Enable
+
+    // Receive
+    RCtrl = 0x0100,   // RCTL
+    RDBAL0 = 0x2800,  // Receive Descriptor Base Low [:4:0x100],          aliased to 0xC000[:16:0x40], 0x0110
+    RDBAH0 = 0x2804,  // Receive Descriptor Base High[:4:0x100],          aliased to 0xC004[:16:0x40], 0x0114
+    RDLEN0 = 0x2808,  // Receive Descriptor Length[:4:0x100],             aliased to 0xC008[:16:0x40], 0x0118
+    SRRCTL0 = 0x280C, // Split and Replication Receive Control[:4:0x100], aliased to 0xC00C[:16:0x40]
+    RDH0 = 0x2810,    // Receive Descriptor Head[:4:0x100],               aliased to 0xC010[:16:0x40], 0x0120
+    RDT0 = 0x2818,    // Receive Descriptor Tail[:4:0x100],               aliased to 0xC018[:16:0x40], 0x0128
+    RXDCTL0 = 0x2828, // RX Descriptor Control[:4:0x100],                 aliased to 0xC028[:16:0x40]
+    // Note: 64 Bit IO allowed to load/store both at the same time:
+    RAL = 0x5400, // Receive Address Low [:24:8], aliased to 0x0040[:16:8]
+    RAH = 0x5404, // Receive Address High[:24:8], aliased to 0x0044[:16:8]
+
+    // Transmit
     TCtrl = 0x0400,    // TCTL
     TCtrlExt = 0x0404, // TCTL_EXT
     TIPG = 0x0410,     // Transmit Inter Packet Gap
+    TDBAL0 = 0x3800,   // Transmit Descriptor Base Low[:4:0x100],  aliased to 0xE000[:16:0x40], 0x0420
+    TDBAH0 = 0x3804,   // Transmit Descriptor Base High[:4:0x100], aliased to 0xE004[:16:0x40], 0x0424
+    TDLEN0 = 0x3808,   // Transmit Descriptor Length[:4:0x100],    aliased to 0xE008[:16:0x40], 0x0428
+    TDH0 = 0x3810,     // Transmit Descriptor Head[:4:0x100],      aliased to 0xE010[:16:0x40], 0x0430
+    TDT0 = 0x3818,     // Transmit Descriptor Tail[:4:0x100],      aliased to 0xE018[:16:0x40], 0x0438
+    TXDCTL0 = 0x3828,  // Transmit Descriptor Control[:4:0x100],   aliased to 0xE028[:16:0x40]
 
-    GPIE = 0x1514, // General Purpose Interrupt Enable
-
-    ExtendedInterruptThrottling = 0x1680, // EITR
-
-    RXDescLow = 0x2800,  // Receive Descriptor Base Low (RDBAL)
-    RXDescHigh = 0x2804, // Receive Descriptor Base High (RDBAH)
-    RXDescLength = 0x2808,
-    RXDescHead = 0x2810,
-    RXDescTail = 0x2818,
-    RDTR = 0x2820,  // RX Delay Timer Register
-    RADV = 0x282C,  // RX Int. Absolute Delay Timer
-    RSRPD = 0x2C00, // RX Small Packet Detect Interrupt
-    TXDescLow = 0x3800,
-    TXDescHigh = 0x3804,
-    TXDescLength = 0x3808,
-    TXDescHead = 0x3810,
-    TXDescTail = 0x3818,
-    RXDCTL = 0x3828, // RX Descriptor Control
-
-    // 64 Bit IO allowed to load/store both at the same time
-    RAL = 0x5400, // Receive Address Low
-    RAH = 0x5404, // Receive Address High
-
-    SRRCTL0 = 0xC00C, // Split and Replication Receive Control for Queue 0
-
-    TXDCTL0 = 0x3808, // Transmit Descriptor Control (+0x40 per queue)
 };
 
 enum class LinkSpeed : u32 {
@@ -135,6 +139,56 @@ struct Status {
 };
 static_assert(AssertSize<Status, 4>());
 
+struct CtrlExt {
+    u32 : 1;
+    u32 i2c_over_sdp : 1;
+    u32 sdp2_gpien : 1;
+    u32 sdp3_gpien : 1;
+    u32 : 2; // May contain PHYINT
+    u32 sdp2_data : 1;
+    u32 sdp3_data : 1;
+    u32 : 2;
+    u32 sdp2_iodir : 1;
+    u32 sdp3_iodir : 1;
+    u32 auto_speed_detection : 1; // ASDCHK
+    u32 eeprom_reset : 1;         // EE_RST
+    u32 : 1;
+    u32 speed_select_bypass : 1;      // SPD_BYPS
+    u32 no_snoop_disable : 1;         // NS_DIS
+    u32 relaxed_ordering_disable : 1; // RO_DIS
+    u32 : 1;
+    u32 dynamic_mac_clock_gating : 1;
+    u32 phy_power_down_enable : 1;
+    u32 : 1;           // Was Voltage Regulator Power Down
+    u32 link_mode : 2; // 0b00: Copper, 0b10 : Fiber, 0b11: External TBI
+    u32 : 1;
+    u32 i2c_enable : 1;
+    u32 ext_vlan : 1;
+    u32 : 1;
+    u32 driver_loaded : 1; // DRV_LOAD
+    u32 : 3;
+};
+static_assert(AssertSize<CtrlExt, 4>());
+
+// 13.4.7
+// Table 13-14
+struct MDIC {
+    enum class Operation : u32 {
+        Read = 0b10,
+        Write = 0b10,
+    };
+
+    u32 data : 16;
+    MII::Register register_address : 5;
+    // Note: The PHY address is not present on some newer NICs, and is instead controlled by a separate register
+    u32 phy_address : 5;
+    Operation operation : 2;
+    u32 ready : 1;
+    u32 interrupt_enable : 1;
+    u32 error : 1;
+    u32 : 1;
+};
+
 // 13.4.3
 // Table 13-6
 struct EEPROMControl {
@@ -184,7 +238,7 @@ union EEPROMRead {
 // Table 13-63
 // 13.4.20
 // Table 13-65
-enum class Interrupt {
+enum class Interrupt : u32 {
     TXDW = 1 << 0,   // Transmit Descriptor Written Back
     TXQE = 1 << 1,   // Transmit Queue Empty, until 82576
     LSC = 1 << 2,    // Link Status Change
@@ -211,7 +265,8 @@ enum class Interrupt {
 
     // FIXME: Newer NICs have more interrupts
 
-    InterruptClear = ~0,
+    InterruptClear = ~0u,
+    All = ~0u,
     None = 0
 
 };
@@ -363,13 +418,15 @@ static_assert(AssertSize<SplitAndReplicationReceiveControl, 4>());
 // I211
 // 8.11.15 Transmit Descriptor Control (TXDCTL)
 struct TransmitDescriptorControl {
+    // Note: On some NICs these thresholds are 6 bits
     u32 prefetch_threshold : 5;
     u32 : 3;
     u32 host_threshold : 5;
     u32 : 3;
     u32 writeback_threshold : 5;
     u32 : 3;
-    u32 : 1;
+    u32 : 1; // Was Granularity
+    // FIXME: On "early" NICs this is LWTHRESH
     u32 queue_enable : 1;
     u32 software_flush : 1;
     u32 priority : 1;
@@ -380,37 +437,38 @@ static_assert(AssertSize<TransmitDescriptorControl, 4>());
 using RegisterMap = IORegisterMap<Register,
     IOReg<Register, Register::Ctrl, Ctrl>,
     IOReg<Register, Register::Status, Status>,
+    IOReg<Register, Register::CtrlExt, CtrlExt>,
+    IOReg<Register, Register::MDIC, MDIC>,
+
     IOReg<Register, Register::EEPROMControl, EEPROMControl>,
     IOReg<Register, Register::EEPROMRead, EEPROMRead>,
 
     IOReg<Register, Register::InterruptCauseR, Interrupt>,
     IOReg<Register, Register::InterruptThrottling, u32>,
     IOReg<Register, Register::InterruptMask, Interrupt>,
+    IOReg<Register, Register::InterruptMaskClear, Interrupt>,
+    IOReg<Register, Register::ExtendedInterruptThrottling, ExtendedInterruptThrottling>,
+    IOReg<Register, Register::GPIE, GeneralPurposeInterruptEnable>,
 
     IOReg<Register, Register::RCtrl, ReceiveControl>,
+    IOReg<Register, Register::RDBAL0, u32>,
+    IOReg<Register, Register::RDBAH0, u32>,
+    IOReg<Register, Register::RDLEN0, u32>,
+    IOReg<Register, Register::SRRCTL0, SplitAndReplicationReceiveControl>,
+    IOReg<Register, Register::RDH0, u32>,
+    IOReg<Register, Register::RDT0, u32>,
+    // FIXME: RXDCTL
+    IORegArray<Register, Register::RAL, u32, 16, 8, true>,
+    IORegArray<Register, Register::RAH, u32, 16, 8, true>,
 
     IOReg<Register, Register::TCtrl, TransmitControl>,
     IOReg<Register, Register::TCtrlExt, TransmitControlExtended>,
     IOReg<Register, Register::TIPG, TransmitInterPacketGap>,
+    IOReg<Register, Register::TDBAL0, u32>,
+    IOReg<Register, Register::TDBAH0, u32>,
+    IOReg<Register, Register::TDLEN0, u32>,
+    IOReg<Register, Register::TDH0, u32>,
+    IOReg<Register, Register::TDT0, u32>,
+    IORegArray<Register, Register::TXDCTL0, TransmitDescriptorControl, 4, 0x100>>;
 
-    IOReg<Register, Register::ExtendedInterruptThrottling, ExtendedInterruptThrottling>,
-
-    IOReg<Register, Register::RXDescLow, u32>,
-    IOReg<Register, Register::RXDescHigh, u32>,
-    IOReg<Register, Register::RXDescLength, u32>,
-    IOReg<Register, Register::RXDescHead, u32>,
-    IOReg<Register, Register::RXDescTail, u32>,
-
-    IOReg<Register, Register::TXDescLow, u32>,
-    IOReg<Register, Register::TXDescHigh, u32>,
-    IOReg<Register, Register::TXDescLength, u32>,
-    IOReg<Register, Register::TXDescHead, u32>,
-    IOReg<Register, Register::TXDescTail, u32>,
-
-    IORegArray<Register, Register::RAL, u32, 16, 8, true>,
-    IORegArray<Register, Register::RAH, u32, 16, 8, true>,
-
-    IOReg<Register, Register::SRRCTL0, SplitAndReplicationReceiveControl>,
-
-    IOReg<Register, Register::TXDCTL0, TransmitDescriptorControl>>;
 }

@@ -54,8 +54,13 @@ protected:
         Intel82576_and_later, // In these the TCLT and some other registers seem to have changed, as well as a new SRRCTL was introduced
     };
 
+    void global_reset();
+
+    void enable_interrupts();
+    void disable_interrupts();
     void setup_interrupts();
-    void setup_link();
+
+    ErrorOr<void> setup_link();
 
     E1000NetworkAdapter(StringView, PCI::DeviceIdentifier const&, u8 irq,
         NonnullOwnPtr<IOWindow> registers_io_window, NonnullOwnPtr<Memory::Region> rx_buffer_region,
@@ -66,9 +71,19 @@ protected:
     virtual bool handle_irq() override;
     virtual StringView class_name() const override { return "E1000NetworkAdapter"sv; }
 
-    virtual void detect_eeprom();
-    virtual u16 read_eeprom(u16 address);
+    void detect_eeprom();
+    u16 read_eeprom(u16 address);
     void read_mac_address();
+
+    void probe_phy();
+    template<MII::Register Register>
+    MII::RegisterType<Register> read_phy_register() { return bit_cast<MII::RegisterType<Register>>(read_phy_register(Register)); }
+    template<MII::Register Register>
+    void write_phy_register(MII::RegisterType<Register> value) { write_phy_register(Register, bit_cast<u16>(value)); }
+    u16 read_phy_register(MII::Register);
+    void write_phy_register(MII::Register, u16);
+
+    ErrorOr<void> setup_link_phy();
 
     void initialize_rx_descriptors();
     void initialize_tx_descriptors();
@@ -91,6 +106,7 @@ protected:
     Array<void*, number_of_tx_descriptors> m_tx_buffers;
     OperatingMode m_operating_mode { OperatingMode::Intel8254x_legacy };
     SetOnce m_has_eeprom;
+    u8 m_phy_address;
     bool m_link_up { false };
     EntropySource m_entropy_source;
 
