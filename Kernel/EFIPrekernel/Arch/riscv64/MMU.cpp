@@ -75,11 +75,11 @@ static EFIErrorOr<void> map_single_page(void* root_page_table, FlatPtr vaddr, Ph
     // Always set the A/D bits as we don't know if the hardware updates them automatically (i.e. if Svadu is supported).
     // If the hardware doesn't update them automatically they act like additional permission bits.
     PageTableEntryBits flags = PageTableEntryBits::Valid | PageTableEntryBits::Accessed | PageTableEntryBits::Dirty;
-    if (to_underlying(access & Access::Read) != 0)
+    if (has_flag(access, Access::Read))
         flags |= PageTableEntryBits::Readable;
-    if (to_underlying(access & Access::Write) != 0)
+    if (has_flag(access, Access::Write))
         flags |= PageTableEntryBits::Writeable;
-    if (to_underlying(access & Access::Execute) != 0)
+    if (has_flag(access, Access::Execute))
         flags |= PageTableEntryBits::Executable;
 
     *pte = ((paddr >> PADDR_PPN_OFFSET) << PTE_PPN_OFFSET) | to_underlying(flags);
