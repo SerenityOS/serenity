@@ -46,7 +46,6 @@ RefPtr<MultiScaleBitmaps> MultiScaleBitmaps::create(StringView filename, StringV
 
 bool MultiScaleBitmaps::load(StringView filename, StringView default_filename)
 {
-    Optional<Gfx::BitmapFormat> bitmap_format;
     bool did_load_any = false;
 
     // If we're reloading the bitmaps get rid of the old ones.

@@ -707,7 +707,6 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_multiboot(MemoryManager::G
         PhysicalAddress upper;
     };
 
-    Optional<ContiguousPhysicalVirtualRange> last_contiguous_physical_range;
     for (auto const* mmap = mmap_begin; mmap < mmap_end; mmap++) {
         // We have to copy these onto the stack, because we take a reference to these when printing them out,
         // and doing so on a packed struct field is UB.

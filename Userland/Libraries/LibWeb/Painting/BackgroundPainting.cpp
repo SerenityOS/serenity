@@ -419,7 +419,6 @@ void paint_background(PaintContext& context, Layout::NodeWithStyleAndBoxModelMet
 
         CSSPixels initial_image_x = image_rect.x();
         CSSPixels image_y = image_rect.y();
-        Optional<DevicePixelRect> last_image_device_rect;
 
         image.resolve_for_size(layout_node, image_rect.size());
 
