@@ -53,7 +53,6 @@ set(SOURCES
     stdlib.cpp
     string.cpp
     strings.cpp
-    stubs.cpp
     sys/archctl.cpp
     sys/auxv.cpp
     sys/file.cpp
