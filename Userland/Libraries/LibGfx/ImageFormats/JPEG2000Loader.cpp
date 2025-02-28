@@ -2218,9 +2218,20 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
     if (context.siz.components.size() > expected_channel_count)
         dbgln("JPEG2000ImageDecoderPlugin: More components ({}) than expected channel count ({}), ignoring superfluous channels", context.siz.components.size(), expected_channel_count);
 
-    for (auto& c : context.siz.components)
-        if (c.bit_depth() != 8)
-            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only 8 bits per component supported yet");
+    // Convert to 8bpp.
+    // FIXME: Don't do this for palettized images.
+    for (auto& tile : context.tiles) {
+        for (auto const& [component_index, component] : enumerate(tile.components)) {
+            if (context.siz.components[component_index].is_signed())
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only unsigned components supported yet");
+            if (context.siz.components[component_index].bit_depth() > 8)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: More than 8 bits per component not supported yet");
+            if (context.siz.components[component_index].bit_depth() < 8) {
+                for (float& sample : component.samples)
+                    sample = (sample * 255.0f) / ((1 << context.siz.components[component_index].bit_depth()) - 1);
+            }
+        }
+    }
 
     if (context.color_space == ColorSpace::CMYK) {
         if (has_alpha)
