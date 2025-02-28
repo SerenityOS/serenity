@@ -99,7 +99,7 @@ struct JPEG2000ColorSpecificationBox final : public Box {
         ICC_Restricted = 2,
 
         // "other values" "Reserved for other ITU-T | ISO uses. If the value of METH is not 1 or 2, there may be fields in this box following the APPROX field,
-        //  and a conforming JP2 reader shall ignore the entire Colour Specification box.""
+        //  and a conforming JP2 reader shall ignore the entire Colour Specification box."
 
         // T.801, Table M.22 – Legal METH values
 
@@ -109,7 +109,7 @@ struct JPEG2000ColorSpecificationBox final : public Box {
         ICC_Any = 3,
 
         // "Vendor Colour method. This Colour Specification box indicates that the colourspace of the codestream is specified by
-        //  a unique vendor defined code.
+        //  a unique vendor defined code."
         Vendor = 4,
 
         // "Parameterized colourspace. This Colour Specification box indicates that the colourspace of the codestream is
@@ -144,7 +144,7 @@ struct JPEG2000ColorSpecificationBox final : public Box {
         YCCK = 13,
         CIELab = 14,
 
-        // "This value shall be used to indicate bi-level images. Each image sample is one bit: 1 = white, 0 = black.""
+        // "This value shall be used to indicate bi-level images. Each image sample is one bit: 1 = white, 0 = black."
         BiLevel2 = 15,
 
         // (T.801 also lists 18 for sYCC, but that's already in T.800 above.)
