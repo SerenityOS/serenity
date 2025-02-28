@@ -85,7 +85,7 @@ ErrorOr<void> MonitorSettingsWidget::generate_resolution_strings()
         i32 gcf = 0;
 
         if (a == 0 || b == 0)
-            continue; // Skip "0" resolutions to prevent a #DE.
+            continue;
         
         for (;;) {
             i32 r = a % b;
