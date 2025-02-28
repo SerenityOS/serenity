@@ -1488,11 +1488,11 @@ static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
         case CodingStyleDefault::ResolutionLayerComponentPosition:
             return make<JPEG2000::ResolutionLevelLayerComponentPositionProgressionIterator>(number_of_layers, max_number_of_decomposition_levels, context.siz.components.size(), move(number_of_precincts_from_resolution_level_and_component));
         case CodingStyleDefault::ResolutionPositionComponentLayer:
-            return Error::from_string_literal("JPEG200Loader: ResolutionPositionComponentLayer progression order not yet supported");
+            return Error::from_string_literal("JPEG2000Loader: ResolutionPositionComponentLayer progression order not yet supported");
         case CodingStyleDefault::PositionComponentResolutionLayer:
-            return Error::from_string_literal("JPEG200Loader: PositionComponentResolutionLayer progression order not yet supported");
+            return Error::from_string_literal("JPEG2000Loader: PositionComponentResolutionLayer progression order not yet supported");
         case CodingStyleDefault::ComponentPositionResolutionLayer:
-            return Error::from_string_literal("JPEG200Loader: ComponentPositionResolutionLayer progression order not yet supported");
+            return Error::from_string_literal("JPEG2000Loader: ComponentPositionResolutionLayer progression order not yet supported");
         }
         VERIFY_NOT_REACHED();
     };
