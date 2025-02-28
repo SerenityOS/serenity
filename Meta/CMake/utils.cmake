@@ -295,7 +295,7 @@ function(download_file url path)
     cmake_parse_arguments(DOWNLOAD "" "SHA256;VERSION;VERSION_FILE;CACHE_PATH" "" ${ARGN})
 
     # If the timestamp doesn't match exactly, the Web Archive should redirect to the closest archived file automatically.
-    download_file_multisource("${url};https://web.archive.org/web/99991231235959/${url}" "${path}" SHA256 "${DOWNLOAD_SHA256}" VERSION "${DOWNLOAD_VERSION}" VERSION_FILE "${DOWNLOAD_VERSION_FILE}" CACHE_PATH "${DOWNLOAD_CACHE_PATH}")
+    download_file_multisource("${url};https://web.archive.org/web/99991231235959id_/${url}" "${path}" SHA256 "${DOWNLOAD_SHA256}" VERSION "${DOWNLOAD_VERSION}" VERSION_FILE "${DOWNLOAD_VERSION_FILE}" CACHE_PATH "${DOWNLOAD_CACHE_PATH}")
 endfunction()
 
 function(extract_path dest_dir zip_path source_path dest_path)
