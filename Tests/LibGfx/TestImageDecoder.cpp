@@ -862,6 +862,7 @@ TEST_CASE(test_jpeg2000_decode_unsupported)
     Array test_inputs = {
         TEST_INPUT("jpeg2000/kakadu-lossless-cmyka-u8-prog1-layers1-res6.jp2"sv),
         TEST_INPUT("jpeg2000/kakadu-lossless-rgba-u16-prog1-layers1-res6.jp2"sv),
+        TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u4.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-indexed-u8-rgb-u8.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-bgra-u8.jp2"sv),
 
