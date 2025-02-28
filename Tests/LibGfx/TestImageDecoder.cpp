@@ -739,6 +739,36 @@ TEST_CASE(test_jpeg2000_decode)
     }
 }
 
+TEST_CASE(test_jpeg2000_decode_4bpp)
+{
+    auto png_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/ref.png"sv)));
+    auto png_plugin_decoder = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(png_file->bytes()));
+    auto ref_frame = TRY_OR_FAIL(expect_single_frame_of_size(*png_plugin_decoder, { 119, 101 }));
+
+    Array test_inputs = {
+        TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u4.jp2"sv),
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = TRY_OR_FAIL(Core::MappedFile::map(test_input));
+        EXPECT(Gfx::JPEG2000ImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
+
+        auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 119, 101 }));
+
+        for (int y = 0; y < frame.image->height(); ++y)
+            for (int x = 0; x < frame.image->width(); ++x) {
+                Gfx::Color expected = ref_frame.image->get_pixel(x, y);
+                auto map = [](u8 x) {
+                    // Simulates a round-trip through 4bpp.
+                    return round_to<u8>(x / 17.f) * 17;
+                };
+                expected = Color(map(expected.red()), map(expected.green()), map(expected.blue()), map(expected.alpha()));
+                EXPECT_EQ(frame.image->get_pixel(x, y), expected);
+            }
+    }
+}
+
 TEST_CASE(test_jpeg2000_decode_rgb)
 {
     auto png_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/ref-rgb.png"sv)));
@@ -862,7 +892,6 @@ TEST_CASE(test_jpeg2000_decode_unsupported)
     Array test_inputs = {
         TEST_INPUT("jpeg2000/kakadu-lossless-cmyka-u8-prog1-layers1-res6.jp2"sv),
         TEST_INPUT("jpeg2000/kakadu-lossless-rgba-u16-prog1-layers1-res6.jp2"sv),
-        TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u4.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-indexed-u8-rgb-u8.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-bgra-u8.jp2"sv),
 
