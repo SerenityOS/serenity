@@ -1888,14 +1888,14 @@ static int compute_M_b(JPEG2000LoadingContext& context, TileData& tile, int comp
 
 static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& context)
 {
-    auto copy_and_dequantize_if_needed = [&](JPEG2000::Span2D<float> output, Span<i16> input, QuantizationDefault const& quantization_parameters, JPEG2000::SubBand sub_band_type, int component_index, int r) {
+    auto copy_and_dequantize_if_needed = [&](JPEG2000::Span2D<float> output, ReadonlySpan<float> input, QuantizationDefault const& quantization_parameters, JPEG2000::SubBand sub_band_type, int component_index, int r) {
         int w = output.size.width();
         int h = output.size.height();
         VERIFY(w * h == static_cast<int>(input.size()));
 
         for (int y = 0; y < h; ++y) {
             for (int x = 0; x < w; ++x) {
-                float value = static_cast<float>(input[y * w + x]);
+                float value = input[y * w + x];
 
                 // E.1 Inverse quantization procedure
                 // The coefficients store qbar_b.
@@ -1947,7 +1947,7 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
         // FIXME: Codeblocks all use independent arithmetic coders, so this could run in parallel.
         for (auto& precinct : sub_band.precincts) {
 
-            Vector<i16> precinct_coefficients;
+            Vector<float> precinct_coefficients;
             auto clipped_precinct_rect = precinct.rect.intersected(sub_band.rect);
             precinct_coefficients.resize(clipped_precinct_rect.width() * clipped_precinct_rect.height());
 
@@ -1956,7 +1956,7 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
                 ByteBuffer storage;
                 Vector<ReadonlyBytes, 1> combined_segments = TRY(code_block.segments_for_all_layers(storage));
 
-                JPEG2000::Span2D<i16> output;
+                JPEG2000::Span2D<float> output;
                 output.size = code_block.rect.size();
                 output.pitch = clipped_precinct_rect.width();
                 output.data = precinct_coefficients.span().slice((code_block.rect.y() - clipped_precinct_rect.y()) * output.pitch + (code_block.rect.x() - clipped_precinct_rect.x()));
@@ -2224,12 +2224,13 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
         for (auto const& [component_index, component] : enumerate(tile.components)) {
             if (context.siz.components[component_index].is_signed())
                 return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only unsigned components supported yet");
-            if (context.siz.components[component_index].bit_depth() > 8)
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: More than 8 bits per component not supported yet");
-            if (context.siz.components[component_index].bit_depth() < 8) {
-                for (float& sample : component.samples)
-                    sample = (sample * 255.0f) / ((1 << context.siz.components[component_index].bit_depth()) - 1);
-            }
+
+            // > 16bpp currently overflow the u16s internal to decode_code_block().
+            if (context.siz.components[component_index].bit_depth() > 16)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: More than 16 bits per component not supported yet");
+
+            for (float& sample : component.samples)
+                sample = (sample * 255.0f) / ((1 << context.siz.components[component_index].bit_depth()) - 1);
         }
     }
 
