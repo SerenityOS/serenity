@@ -34,6 +34,8 @@ public:
             ManyToOneRange = 13,
             UnicodeVariationSequences = 14,
         };
+
+        // https://learn.microsoft.com/en-us/typography/opentype/spec/cmap#unicode-platform-platform-id--0
         enum class UnicodeEncoding {
             DeprecatedUnicode1_0 = 0,
             DeprecatedUnicode1_1 = 1,
@@ -44,6 +46,7 @@ public:
             UnicodeFullRepertoire = 6,     // "for use with subtable format 13"
         };
 
+        // https://learn.microsoft.com/en-us/typography/opentype/spec/cmap#windows-platform-platform-id--3
         enum class WindowsEncoding {
             UnicodeBMP = 1,
             UnicodeFullRepertoire = 10,
