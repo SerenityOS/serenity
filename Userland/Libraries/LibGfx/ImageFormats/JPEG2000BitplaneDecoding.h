@@ -54,7 +54,7 @@ inline auto number_of_passes_from_segment_index_in_bypass_mode(unsigned segment_
     return segment_index % 2 == 1 ? 2u : 1u;
 }
 
-inline ErrorOr<void> decode_code_block(Span2D<i16> result, SubBand sub_band, int number_of_coding_passes, Vector<ReadonlyBytes, 1> segments, int M_b, int p, BitplaneDecodingOptions options = {})
+inline ErrorOr<void> decode_code_block(Span2D<float> result, SubBand sub_band, int number_of_coding_passes, Vector<ReadonlyBytes, 1> segments, int M_b, int p, BitplaneDecodingOptions options = {})
 {
     // This is an implementation of the bitplane decoding algorithm described in Annex D of the JPEG2000 spec.
     // It's modeled closely after Figure D.3 – Flow chart for all coding passes on a code-block bit-plane,

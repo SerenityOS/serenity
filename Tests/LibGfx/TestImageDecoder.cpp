@@ -601,9 +601,9 @@ TEST_CASE(test_jpeg2000_spec_annex_j_10_bitplane_decoding)
         // Table J.22 – Arithmetic decode of first code-block
         constexpr Array input = to_array<u8>({ 0x01, 0x8F, 0x0D, 0xC8, 0x75, 0x5D });
 
-        Vector<i16> output;
+        Vector<float> output;
         output.resize(5);
-        Gfx::JPEG2000::Span2D<i16> result { output.span(), { 1, 5 }, 1 };
+        Gfx::JPEG2000::Span2D<float> result { output.span(), { 1, 5 }, 1 };
 
         // 16, 9, 3 are from J.10.3 Packet headers, Table J.20 – Decoding first packet header.
         TRY_OR_FAIL(Gfx::JPEG2000::decode_code_block(result, Gfx::JPEG2000::SubBand::HorizontalLowpassVerticalLowpass, 16, { input }, 9, 3));
@@ -619,9 +619,9 @@ TEST_CASE(test_jpeg2000_spec_annex_j_10_bitplane_decoding)
         // Table J.23 – Arithmetic decode of second code-block
         constexpr Array input = to_array<u8>({ 0x0F, 0xB1, 0x76 });
 
-        Vector<i16> output;
+        Vector<float> output;
         output.resize(4);
-        Gfx::JPEG2000::Span2D<i16> result { output.span(), { 1, 4 }, 1 };
+        Gfx::JPEG2000::Span2D<float> result { output.span(), { 1, 4 }, 1 };
 
         // 7, 10, 7 are from J.10.3 Packet headers, Table J.21 – Decoding second packet header.
         TRY_OR_FAIL(Gfx::JPEG2000::decode_code_block(result, Gfx::JPEG2000::SubBand::HorizontalLowpassVerticalHighpass, 7, { input }, 10, 7));
@@ -724,6 +724,7 @@ TEST_CASE(test_jpeg2000_decode)
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-EPH-SOP.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-PLT.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-TLM.jp2"sv),
+        TEST_INPUT("jpeg2000/kakadu-lossless-rgba-u16-prog1-layers1-res6.jp2"sv),
     };
 
     for (auto test_input : test_inputs) {
@@ -891,7 +892,6 @@ TEST_CASE(test_jpeg2000_decode_unsupported)
 {
     Array test_inputs = {
         TEST_INPUT("jpeg2000/kakadu-lossless-cmyka-u8-prog1-layers1-res6.jp2"sv),
-        TEST_INPUT("jpeg2000/kakadu-lossless-rgba-u16-prog1-layers1-res6.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-indexed-u8-rgb-u8.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-bgra-u8.jp2"sv),
 
