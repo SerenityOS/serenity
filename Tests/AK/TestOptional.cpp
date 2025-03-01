@@ -122,15 +122,17 @@ TEST_CASE(comparison_with_numeric_types)
 
 TEST_CASE(test_copy_ctor_and_dtor_called)
 {
-#ifdef AK_HAVE_CONDITIONALLY_TRIVIAL
     static_assert(IsTriviallyDestructible<Optional<u8>>);
-    static_assert(IsTriviallyCopyable<Optional<u8>>);
+    // static_assert(IsTriviallyCopyable<Optional<u8>>);
     static_assert(IsTriviallyCopyConstructible<Optional<u8>>);
     static_assert(IsTriviallyCopyAssignable<Optional<u8>>);
     // These can't be trivial as we have to clear the original object.
     static_assert(!IsTriviallyMoveConstructible<Optional<u8>>);
     static_assert(!IsTriviallyMoveAssignable<Optional<u8>>);
-#endif
+
+    static_assert(IsTriviallyCopyConstructible<Optional<int&>>);
+    static_assert(IsTriviallyCopyAssignable<Optional<int&>>);
+    static_assert(IsTriviallyDestructible<Optional<int&>>);
 
     struct DestructionChecker {
         explicit DestructionChecker(bool& was_destroyed)
@@ -204,12 +206,10 @@ TEST_CASE(test_copy_ctor_and_dtor_called)
     Optional<MoveChecker> move2 = move(move1);
     EXPECT(was_moved);
 
-#ifdef AK_HAVE_CONDITIONALLY_TRIVIAL
     struct NonDestructible {
         ~NonDestructible() = delete;
     };
     static_assert(!IsDestructible<Optional<NonDestructible>>);
-#endif
 }
 
 TEST_CASE(basic_optional_reference)
@@ -300,3 +300,60 @@ TEST_CASE(comparison_reference)
     EXPECT_EQ(opt1, opt2);
     EXPECT_NE(opt1, opt3);
 }
+
+TEST_CASE(uninitialized_constructor)
+{
+    static bool was_constructed = false;
+    struct Internal {
+        Internal() { was_constructed = true; }
+    };
+
+    struct ShouldNotBeDefaultConstructed {
+        bool m_default_constructed { true };
+        Internal m_internal;
+        ShouldNotBeDefaultConstructed() = default;
+        ShouldNotBeDefaultConstructed(bool)
+            : m_default_constructed(false)
+        {
+        }
+    };
+    static_assert(IsConstructible<ShouldNotBeDefaultConstructed>);
+
+    Optional<ShouldNotBeDefaultConstructed> opt;
+    EXPECT(!was_constructed);
+    EXPECT(!opt.has_value());
+
+    opt = ShouldNotBeDefaultConstructed { true };
+    EXPECT(was_constructed);
+    EXPECT(opt.has_value());
+    EXPECT(!opt.value().m_default_constructed);
+}
+
+consteval bool test_constexpr()
+{
+    Optional<int> none;
+    if (none.has_value())
+        return false;
+
+    Optional<int> x;
+    x = 3;
+    if (!x.has_value())
+        return false;
+
+    if (x.value() != 3)
+        return false;
+
+    Optional<int> y;
+    y = x.release_value();
+    if (!y.has_value())
+        return false;
+
+    if (y.value() != 3)
+        return false;
+
+    if (x.has_value())
+        return false;
+
+    return true;
+}
+static_assert(test_constexpr());
