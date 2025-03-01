@@ -41,7 +41,8 @@ following build targets cannot be accessed through the script and have to be use
 directory to `Build/<architecture>` and then running `ninja <target>`:
 
 -   `ninja limine-image`: Builds an x86-64 disk image (`limine_disk_image`) with Limine
--   `ninja grub-image`: Builds an x86-64 disk image (`grub_disk_image`) with GRUB
+-   `ninja grub-image`: Builds an x86-64 disk image (`grub_disk_image`) with GRUB for legacy BIOS systems
+-   `ninja grub-uefi-image`: Builds an x86-64 disk image (`grub_uefi_disk_image`) with GRUB for UEFI systems
 -   `ninja extlinux-image`: Builds an x86-64 disk image (`extlinux_disk_image`) with extlinux
 -   `ninja check-style`: Runs the same linters the CI does to verify project style on changed files
 -   `ninja install-ports`: Copies the entire ports tree into the installed rootfs for building ports in Serenity
