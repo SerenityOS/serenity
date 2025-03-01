@@ -40,9 +40,9 @@ The `Meta/serenity.sh` script provides an abstraction over the build targets whi
 following build targets cannot be accessed through the script and have to be used directly by changing the current
 directory to `Build/<architecture>` and then running `ninja <target>`:
 
--   `ninja limine-image`: Builds a disk image (`limine_disk_image`) with Limine
--   `ninja grub-image`: Builds a disk image (`grub_disk_image`) with GRUB
--   `ninja extlinux-image`: Builds a disk image (`extlinux_disk_image`) with extlinux
+-   `ninja limine-image`: Builds an x86-64 disk image (`limine_disk_image`) with Limine
+-   `ninja grub-image`: Builds an x86-64 disk image (`grub_disk_image`) with GRUB
+-   `ninja extlinux-image`: Builds an x86-64 disk image (`extlinux_disk_image`) with extlinux
 -   `ninja check-style`: Runs the same linters the CI does to verify project style on changed files
 -   `ninja install-ports`: Copies the entire ports tree into the installed rootfs for building ports in Serenity
 -   `ninja lint-shell-scripts`: Checks style of shell scripts in the source tree with shellcheck
