@@ -84,7 +84,7 @@ get_number_of_processing_units() {
 }
 
 # Discover how to get apparent size from `du`. GNU/BusyBox du has --apparent-size / -b, BSD/Darwin du has `-A`.
-if du --help | grep -qE "GNU coreutils|BusyBox"; then
+if du --help 2>&1 | grep -qE "GNU coreutils|BusyBox"; then
     DU_APPARENT_SIZE_FLAG="-b"
 else
     DU_APPARENT_SIZE_FLAG="-A"
