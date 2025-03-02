@@ -8,6 +8,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Time.h>
+#include <AK/Variant.h>
 
 #include "VideoSampleData.h"
 
