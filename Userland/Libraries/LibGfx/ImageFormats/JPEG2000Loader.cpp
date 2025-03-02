@@ -275,7 +275,12 @@ struct ImageAndTileSize {
         if (sub_band == JPEG2000::SubBand::HorizontalLowpassVerticalHighpass || sub_band == JPEG2000::SubBand::HorizontalHighpassVerticalHighpass)
             yob = 1;
         VERIFY(n_b >= 1 || (n_b == 0 && sub_band == JPEG2000::SubBand::HorizontalLowpassVerticalLowpass));
-        int o_scale = 1 << (n_b - 1);
+
+        // If n_b is 0, `1 << (n_b - 1)` is undefined, but n_b is only 0 for the LL band, where xob and yob are 0 anyways.
+        // So the value of o_scale doesn't matter in that case.
+        int o_scale = 0;
+        if (n_b > 0)
+            o_scale = 1 << (n_b - 1);
 
         // (B-15)
         auto component_rect = reference_grid_coordinates_for_tile_component(tile_rect, component_index);
