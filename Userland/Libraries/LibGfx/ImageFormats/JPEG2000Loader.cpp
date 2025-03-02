@@ -814,6 +814,8 @@ struct TileData {
     // Data used during decoding.
     IntRect rect;
     Vector<DecodedTileComponent> components;
+    Vector<Vector<float>> channels;
+    Vector<ImageAndTileSize::ComponentInformation> channel_information;
 
     // FIXME: This will have to move and be reorganized come POC support.
     OwnPtr<JPEG2000::ProgressionIterator> progression_iterator;
@@ -2152,22 +2154,84 @@ static ErrorOr<void> postprocess_samples(JPEG2000LoadingContext& context)
 
 static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
 {
-    if (context.palette_box.has_value() && context.options.palette_handling != JPEG2000DecoderOptions::PaletteHandling::PaletteIndicesAsGrayscale) {
-        // FIXME: Support this. Look at component_mapping_box when doing so.
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Palettized images not yet supported");
-    }
-
     // determine_color_space() defers returning an error until here, so that JPEG2000ImageDecoderPlugin::create()
     // can succeed even with unsupported color spaces.
     if (context.color_space == ColorSpace::Unsupported)
         return move(context.color_space_error.value());
 
+    // Map components to channels.
+    if (context.palette_box.has_value() && context.options.palette_handling != JPEG2000DecoderOptions::PaletteHandling::PaletteIndicesAsGrayscale) {
+        VERIFY(context.component_mapping_box.has_value()); // Enforced in decode_jpeg2000_header().
+        auto cmap = context.component_mapping_box.value();
+
+        // I.5.3.4 Palette box
+        // "This value shall be in the range 1 to 1024"
+        if (context.palette_box->palette_entries.size() > 1024)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only up to 1024 palette entries allowed");
+
+        for (auto& palette_entry : context.palette_box->palette_entries)
+            VERIFY(palette_entry.size() == context.palette_box->bit_depths.size()); // Enforced in JPEG2000PaletteBox::read_from_stream().
+        auto palette_channel_count = context.palette_box->bit_depths.size();
+
+        for (auto& tile : context.tiles) {
+            TRY(tile.channels.try_resize(cmap.component_mappings.size()));
+
+            for (auto const& [i, mapping] : enumerate(cmap.component_mappings)) {
+                if (mapping.component_index >= tile.components.size())
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Component mapping index out of range");
+
+                if (mapping.mapping_type == ISOBMFF::JPEG2000ComponentMappingBox::Mapping::Type::Direct) {
+                    tile.channels[mapping.component_index] = move(tile.components[mapping.component_index].samples);
+                    TRY(tile.channel_information.try_append(context.siz.components[mapping.component_index]));
+                    continue;
+                }
+
+                if (mapping.mapping_type != ISOBMFF::JPEG2000ComponentMappingBox::Mapping::Type::Palette)
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Unknown mapping type");
+
+                if (context.siz.components[mapping.component_index].is_signed())
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Don't know how to handle signed palette components");
+
+                if (mapping.palette_component_index >= palette_channel_count)
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Palette component index out of range");
+
+                ImageAndTileSize::ComponentInformation component_information;
+                component_information.depth_and_sign = context.palette_box->bit_depths[mapping.palette_component_index].depth - 1;
+                if (context.palette_box->bit_depths[mapping.palette_component_index].is_signed)
+                    component_information.depth_and_sign |= 0x80;
+                component_information.horizontal_separation = context.siz.components[mapping.component_index].horizontal_separation;
+                component_information.vertical_separation = context.siz.components[mapping.component_index].vertical_separation;
+                TRY(tile.channel_information.try_append(component_information));
+
+                auto const& component = tile.components[mapping.component_index];
+                TRY(tile.channels[i].try_ensure_capacity(component.samples.size()));
+                for (auto sample : component.samples) {
+                    int index = static_cast<int>(sample);
+                    if (index < 0 || static_cast<size_t>(index) >= context.palette_box->palette_entries.size())
+                        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Palette index out of range");
+                    tile.channels[i].append(context.palette_box->palette_entries[index][mapping.palette_component_index]);
+                }
+            }
+
+            for (auto& component : tile.components)
+                component.samples.clear();
+        }
+    } else {
+        for (auto& tile : context.tiles) {
+            for (size_t i = 0; i < tile.components.size(); ++i) {
+                TRY(tile.channels.try_append(move(tile.components[i].samples)));
+                TRY(tile.channel_information.try_append(context.siz.components[i]));
+            }
+        }
+    }
+    auto const channel_count = context.tiles[0].channels.size();
+
     bool has_alpha = false;
     if (context.palette_box.has_value() && context.options.palette_handling == JPEG2000DecoderOptions::PaletteHandling::PaletteIndicesAsGrayscale) {
         for (auto& tile : context.tiles) {
-            if (tile.components.size() != 1)
+            if (tile.channels.size() != 1)
                 return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Palette indices as grayscale require single component");
-            for (auto sample : tile.components[0].samples) {
+            for (auto sample : tile.channels[0]) {
                 // The JPEG2000 spec allows palette indices up to 1023, but the PDF spec says that JPEG2000 images
                 // embedded in PDFs must have indices that fit in a one byte.
                 if (sample < 0 || sample >= 256)
@@ -2176,8 +2240,8 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
         }
     } else {
         if (context.channel_definition_box.has_value()) {
-            if (context.channel_definition_box->channels.size() != context.siz.components.size())
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel count doesn't match component count");
+            if (context.channel_definition_box->channels.size() != channel_count)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel count doesn't match channel count");
 
             Vector<bool, 4> channel_used;
             channel_used.resize(context.channel_definition_box->channels.size());
@@ -2185,7 +2249,7 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
             // If you make this more flexible in the future and implement channel swapping,
             // check if that should happen for JPEG2000 files in PDFs as well.
             for (auto channel : context.channel_definition_box->channels) {
-                if (channel.channel_index >= context.siz.components.size())
+                if (channel.channel_index >= channel_count)
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel index out of range");
                 if (channel_used[channel.channel_index])
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel index used multiple times");
@@ -2200,7 +2264,7 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
                         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only unshuffled color channel indices supported yet");
                 } else {
                     VERIFY(channel.channel_type == ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Opacity);
-                    if (channel.channel_index != context.siz.components.size() - 1)
+                    if (channel.channel_index != channel_count - 1)
                         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only opacity channel as last channel supported yet");
                     if (channel.channel_association != 0)
                         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only full opacity channel supported yet");
@@ -2208,8 +2272,8 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
                 }
             }
         } else if (!context.color_box.has_value()) {
-            // Raw codestream. Go by number of components.
-            has_alpha = context.siz.components.size() == 2 || context.siz.components.size() == 4;
+            // Raw codestream. Go by number of channels.
+            has_alpha = channel_count == 2 || channel_count == 4;
         }
 
         unsigned expected_channel_count = [](ColorSpace color_space) {
@@ -2227,28 +2291,27 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
         }(context.color_space);
         if (has_alpha)
             expected_channel_count++;
-        if (context.siz.components.size() < expected_channel_count)
-            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough components for expected channel count");
+        if (channel_count < expected_channel_count)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough channels for expected channel count");
 
-        if (context.siz.components.size() > expected_channel_count)
-            dbgln("JPEG2000ImageDecoderPlugin: More components ({}) than expected channel count ({}), ignoring superfluous channels", context.siz.components.size(), expected_channel_count);
+        if (channel_count > expected_channel_count)
+            dbgln("JPEG2000ImageDecoderPlugin: More channels ({}) than expected channel count ({}), ignoring superfluous channels", context.siz.components.size(), expected_channel_count);
 
         // Convert to 8bpp.
-        // FIXME: Don't do this for palettized images.
         for (auto& tile : context.tiles) {
-            for (auto const& [component_index, component] : enumerate(tile.components)) {
-                if (context.siz.components[component_index].is_signed())
+            for (auto const& [channel_index, channel] : enumerate(tile.channels)) {
+                if (tile.channel_information[channel_index].is_signed())
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only unsigned components supported yet");
 
-                if (context.siz.components[component_index].bit_depth() == 8)
+                if (tile.channel_information[channel_index].bit_depth() == 8)
                     continue;
 
                 // > 16bpp currently overflow the u16s internal to decode_code_block().
-                if (context.siz.components[component_index].bit_depth() > 16)
+                if (tile.channel_information[channel_index].bit_depth() > 16)
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: More than 16 bits per component not supported yet");
 
-                for (float& sample : component.samples)
-                    sample = (sample * 255.0f) / ((1 << context.siz.components[component_index].bit_depth()) - 1);
+                for (float& sample : channel)
+                    sample = (sample * 255.0f) / ((1 << tile.channel_information[channel_index].bit_depth()) - 1);
             }
         }
     }
@@ -2270,10 +2333,10 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
 
             for (int y = 0; y < h; ++y) {
                 for (int x = 0; x < w; ++x) {
-                    float C = round_to<u8>(clamp(tile.components[0].samples[y * w + x], 0.0f, 255.0f));
-                    float M = round_to<u8>(clamp(tile.components[1].samples[y * w + x], 0.0f, 255.0f));
-                    float Y = round_to<u8>(clamp(tile.components[2].samples[y * w + x], 0.0f, 255.0f));
-                    float K = round_to<u8>(clamp(tile.components[3].samples[y * w + x], 0.0f, 255.0f));
+                    float C = round_to<u8>(clamp(tile.channels[0][y * w + x], 0.0f, 255.0f));
+                    float M = round_to<u8>(clamp(tile.channels[1][y * w + x], 0.0f, 255.0f));
+                    float Y = round_to<u8>(clamp(tile.channels[2][y * w + x], 0.0f, 255.0f));
+                    float K = round_to<u8>(clamp(tile.channels[3][y * w + x], 0.0f, 255.0f));
                     bitmap->scanline(y + tile.components[0].rect.top())[x + tile.components[0].rect.left()] = { (u8)C, (u8)M, (u8)Y, (u8)K };
                 }
             }
@@ -2297,24 +2360,23 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
 
         for (int y = 0; y < h; ++y) {
             for (int x = 0; x < w; ++x) {
-                float value = tile.components[0].samples[y * w + x];
+                float value = tile.channels[0][y * w + x];
 
-                // FIXME: This is wrong for palettized images.
                 u8 byte_value = round_to<u8>(clamp(value, 0.0f, 255.0f));
                 u8 r = byte_value;
                 u8 g = byte_value;
                 u8 b = byte_value;
                 u8 a = 255;
 
-                if (tile.components.size() == 2) {
-                    a = round_to<u8>(clamp(tile.components[1].samples[y * w + x], 0.0f, 255.0f));
-                } else if (tile.components.size() == 3) {
-                    g = round_to<u8>(clamp(tile.components[1].samples[y * w + x], 0.0f, 255.0f));
-                    b = round_to<u8>(clamp(tile.components[2].samples[y * w + x], 0.0f, 255.0f));
-                } else if (tile.components.size() == 4) {
-                    g = round_to<u8>(clamp(tile.components[1].samples[y * w + x], 0.0f, 255.0f));
-                    b = round_to<u8>(clamp(tile.components[2].samples[y * w + x], 0.0f, 255.0f));
-                    a = round_to<u8>(clamp(tile.components[3].samples[y * w + x], 0.0f, 255.0f));
+                if (tile.channels.size() == 2) {
+                    a = round_to<u8>(clamp(tile.channels[1][y * w + x], 0.0f, 255.0f));
+                } else if (tile.channels.size() == 3) {
+                    g = round_to<u8>(clamp(tile.channels[1][y * w + x], 0.0f, 255.0f));
+                    b = round_to<u8>(clamp(tile.channels[2][y * w + x], 0.0f, 255.0f));
+                } else if (tile.channels.size() == 4) {
+                    g = round_to<u8>(clamp(tile.channels[1][y * w + x], 0.0f, 255.0f));
+                    b = round_to<u8>(clamp(tile.channels[2][y * w + x], 0.0f, 255.0f));
+                    a = round_to<u8>(clamp(tile.channels[3][y * w + x], 0.0f, 255.0f));
                 }
 
                 Color pixel;
