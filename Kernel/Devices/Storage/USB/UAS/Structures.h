@@ -82,7 +82,9 @@ struct CommandIU {
     u8 reserved_1 { 0 };
     BigEndian<u64> lun;
     u8 cdb[16];
-    u8 additional_cbd_bytes[]; // indicated by additional_cbd_length -> multiple dwords
+    // Note: See SenseIU
+    // FIXME: Look up the technical maximum size of the additional_cbd_bytes
+    u8 additional_cbd_bytes[512 - 32]; // indicated by additional_cbd_length -> multiple dwords
 
     template<typename Command>
     void set_command(Command const& command)
@@ -93,7 +95,7 @@ struct CommandIU {
         additional_cbd_length = 0;
     }
 };
-static_assert(AssertSize<CommandIU, 32>());
+static_assert(AssertSize<CommandIU, 512>());
 
 // 6.2.3 Read Ready IU
 // Table 13
@@ -117,9 +119,19 @@ struct SenseIU {
     SCSI::StatusCode status;
     u8 reserved[7];
     BigEndian<u16> length; // FIXME: The spec does not actually state the endianness of this?
-    u8 sense_data[];
+    // Note: As a Sense IU is of technically of flexible size
+    //       we need to forcefully allocate some data here, to be able to put it
+    //       into an ErrorOr later.
+    //       The maximum size of the sense data the device may send is controlled by the
+    //       MAXIMUM SENSE DATA LENGTH field in the Control extension mode page of the device.
+    //       In theory the maximum size of the sense data is 252 bytes,
+    //       meaning the maximum size of the IU is 252+16=268 bytes.
+    //       But the spec also states that the SenseIU must will always be transmitted
+    //       in it's own USB packet, so we can just use the maximum packet size
+    //       of a packet instead, which is 512 bytes (USB3 allows up to 1024 bytes)
+    u8 sense_data[512 - 16];
 };
-static_assert(AssertSize<SenseIU, 16>());
+static_assert(AssertSize<SenseIU, 512>());
 
 // 6.2.6 Response IU
 // Table 17
