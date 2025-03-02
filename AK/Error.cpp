@@ -22,4 +22,8 @@ Error Error::from_string_view_or_print_error_and_return_errno(StringView string_
 #endif
 }
 
+// Properties that ErrorOr should have:
+static_assert(IsTriviallyMoveConstructible<ErrorOr<int>>);
+static_assert(IsTriviallyDestructible<ErrorOr<int>>);
+
 }
