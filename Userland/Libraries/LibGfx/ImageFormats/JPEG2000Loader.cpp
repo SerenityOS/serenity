@@ -2225,6 +2225,9 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
             if (context.siz.components[component_index].is_signed())
                 return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only unsigned components supported yet");
 
+            if (context.siz.components[component_index].bit_depth() == 8)
+                continue;
+
             // > 16bpp currently overflow the u16s internal to decode_code_block().
             if (context.siz.components[component_index].bit_depth() > 16)
                 return Error::from_string_literal("JPEG2000ImageDecoderPlugin: More than 16 bits per component not supported yet");
