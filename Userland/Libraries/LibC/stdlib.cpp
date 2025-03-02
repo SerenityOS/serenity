@@ -477,9 +477,16 @@ int clearenv()
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/setenv.html
 int setenv(char const* name, char const* value, int overwrite)
 {
+    auto new_var_len = strlen(name);
+    if (new_var_len == 0 || strchr(name, '=')) {
+        errno = EINVAL;
+        return -1;
+    }
+
     if (!overwrite && getenv(name))
         return 0;
-    auto const total_length = strlen(name) + strlen(value) + 2;
+
+    auto const total_length = new_var_len + strlen(value) + 2;
     auto* var = (char*)malloc(total_length);
     snprintf(var, total_length, "%s=%s", name, value);
     s_malloced_environment_variables.set((FlatPtr)var);

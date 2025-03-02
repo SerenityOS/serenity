@@ -41,3 +41,18 @@ TEST_CASE(putenv_overwrite_invalid_value)
     EXPECT_NE(environment_variable, nullptr);
     EXPECT_EQ(strcmp(environment_variable, "789"), 0);
 }
+
+TEST_CASE(setenv_invalid_name)
+{
+    // Empty name
+    auto result = setenv("", "test", 1);
+    EXPECT_EQ(result, -1);
+    auto* val = getenv("");
+    EXPECT_EQ(val, nullptr);
+
+    // Name which contains '='
+    result = setenv("TEST=", "test", 1);
+    EXPECT_EQ(result, -1);
+    val = getenv("TEST=");
+    EXPECT_EQ(val, nullptr);
+}
