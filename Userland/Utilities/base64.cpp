@@ -5,6 +5,7 @@
  */
 
 #include <AK/Base64.h>
+#include <AK/Variant.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
