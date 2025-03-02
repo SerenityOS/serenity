@@ -909,6 +909,22 @@ TEST_CASE(test_jpeg2000_decode_indexed)
     }
 }
 
+TEST_CASE(test_jpeg2000_decode_indexed_small_raw)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/indexed-small.jp2"sv)));
+    EXPECT(Gfx::JPEG2000ImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = TRY_OR_FAIL(plugin_decoder->frame(0)).image;
+    EXPECT_EQ(frame->size(), Gfx::IntSize(3, 2));
+    EXPECT_EQ(frame->scanline(0)[0], Gfx::Color(255, 0, 0).value());
+    EXPECT_EQ(frame->scanline(0)[1], Gfx::Color(0, 255, 0).value());
+    EXPECT_EQ(frame->scanline(0)[2], Gfx::Color(0, 0, 255).value());
+    EXPECT_EQ(frame->scanline(1)[0], Gfx::Color(0, 255, 255).value());
+    EXPECT_EQ(frame->scanline(1)[1], Gfx::Color(255, 0, 255).value());
+    EXPECT_EQ(frame->scanline(1)[2], Gfx::Color(255, 255, 0).value());
+}
+
 TEST_CASE(test_jpeg2000_decode_unsupported)
 {
     Array test_inputs = {

@@ -386,3 +386,29 @@ TEST_CASE(render)
     // MyCalGray
     EXPECT_EQ(bitmap->get_pixel(270, 370 - 320), Gfx::Color::NamedColor::Black);
 }
+
+TEST_CASE(render_jpeg2000_indexed)
+{
+#if !defined(AK_OS_SERENITY)
+    // Get from Build/lagom/bin/TestPDF to Build/lagom/Root/res.
+    auto source_root = LexicalPath(MUST(Core::System::current_executable_path())).parent().parent().string();
+    Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::formatted("{}/Root/res", source_root))));
+#endif
+
+    auto file = MUST(Core::MappedFile::map("jpeg2000-indexed-small.pdf"sv));
+    auto document = MUST(PDF::Document::create(file->bytes()));
+    MUST(document->initialize());
+    EXPECT_EQ(document->get_page_count(), 1U);
+
+    auto page = MUST(document->get_page(0));
+    auto page_size = Gfx::IntSize { 3, 2 };
+    auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
+    MUST(PDF::Renderer::render(document, page, bitmap, Color::White, PDF::RenderingPreferences {}));
+
+    EXPECT_EQ(bitmap->scanline(0)[0], Gfx::Color(127, 0, 0).value());
+    EXPECT_EQ(bitmap->scanline(0)[1], Gfx::Color(0, 127, 0).value());
+    EXPECT_EQ(bitmap->scanline(0)[2], Gfx::Color(0, 0, 127).value());
+    EXPECT_EQ(bitmap->scanline(1)[0], Gfx::Color(0, 127, 127).value());
+    EXPECT_EQ(bitmap->scanline(1)[1], Gfx::Color(127, 0, 127).value());
+    EXPECT_EQ(bitmap->scanline(1)[2], Gfx::Color(127, 127, 0).value());
+}
