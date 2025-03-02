@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/Variant.h>
 
 namespace Web::CSS {
 
@@ -71,11 +72,17 @@ private:
     };
 
     GridTrackPlacement()
-        : m_value(Auto {}) {};
+        : m_value(Auto {})
+    {
+    }
     GridTrackPlacement(AreaOrLine value)
-        : m_value(value) {};
+        : m_value(value)
+    {
+    }
     GridTrackPlacement(Span value)
-        : m_value(value) {};
+        : m_value(value)
+    {
+    }
 
     Variant<Auto, AreaOrLine, Span> m_value;
 };

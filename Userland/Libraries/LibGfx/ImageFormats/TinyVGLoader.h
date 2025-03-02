@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <AK/OwnPtr.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
