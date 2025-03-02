@@ -404,7 +404,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_jpx(ReadonlyBytes bytes)
     if (!Gfx::JPEG2000ImageDecoderPlugin::sniff(bytes))
         return AK::Error::from_string_literal("Not a JPEG2000 image!");
 
-    auto decoder = TRY(Gfx::JPEG2000ImageDecoderPlugin::create(bytes));
+    auto decoder = TRY(Gfx::JPEG2000ImageDecoderPlugin::create_with_options(bytes, { .palette_handling = Gfx::JPEG2000DecoderOptions::PaletteHandling::PaletteIndicesAsGrayscale }));
     auto internal_format = decoder->natural_frame_format();
 
     if (internal_format == Gfx::NaturalFrameFormat::CMYK) {

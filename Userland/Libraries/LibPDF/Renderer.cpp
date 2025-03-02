@@ -1226,6 +1226,8 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
     if (!is_image_mask) {
         // "If ColorSpace is not present in the image dictionary, the color space informa-
         //  tion in the JPEG2000 data is used."
+        // FIXME: When implementing this, check how palettized JPEG2000 images with color space
+        //        from the image are handled. I suppose the palette embedded in the image is then used?
         if (!image_dict->contains(CommonNames::ColorSpace) && is_jpeg2000)
             return Error(Error::Type::RenderingUnsupported, "Using color space from jpeg2000 image not yet implemented");
         auto color_space_object = MUST(image_dict->get_object(m_document, CommonNames::ColorSpace));
