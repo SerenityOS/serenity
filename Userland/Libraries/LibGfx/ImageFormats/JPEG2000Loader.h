@@ -23,10 +23,22 @@ enum class SubBand {
 
 struct JPEG2000LoadingContext;
 
+struct JPEG2000DecoderOptions {
+    enum class PaletteHandling {
+        // Expands palette (to RGB or CMYK). Default.
+        Expand,
+
+        // Returns palette indices as grayscale. For use in PDFs.
+        PaletteIndicesAsGrayscale,
+    };
+    PaletteHandling palette_handling { PaletteHandling::Expand };
+};
+
 class JPEG2000ImageDecoderPlugin : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create_with_options(ReadonlyBytes, JPEG2000DecoderOptions = {});
 
     virtual ~JPEG2000ImageDecoderPlugin() override;
 
@@ -40,7 +52,7 @@ public:
     virtual ErrorOr<NonnullRefPtr<CMYKBitmap>> cmyk_frame() override;
 
 private:
-    JPEG2000ImageDecoderPlugin();
+    JPEG2000ImageDecoderPlugin(JPEG2000DecoderOptions);
 
     OwnPtr<JPEG2000LoadingContext> m_context;
 };

@@ -835,6 +835,7 @@ struct JPEG2000LoadingContext {
     State state { State::NotDecoded };
     ReadonlyBytes codestream_data;
     size_t codestream_cursor { 0 };
+    JPEG2000DecoderOptions options;
 
     Optional<ISOBMFF::JPEG2000ColorSpecificationBox const&> color_box; // This is always set for box-based files.
 
@@ -2151,7 +2152,7 @@ static ErrorOr<void> postprocess_samples(JPEG2000LoadingContext& context)
 
 static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
 {
-    if (context.palette_box.has_value()) {
+    if (context.palette_box.has_value() && context.options.palette_handling != JPEG2000DecoderOptions::PaletteHandling::PaletteIndicesAsGrayscale) {
         // FIXME: Support this. Look at component_mapping_box when doing so.
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Palettized images not yet supported");
     }
@@ -2162,78 +2163,93 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
         return move(context.color_space_error.value());
 
     bool has_alpha = false;
-    if (context.channel_definition_box.has_value()) {
-        if (context.channel_definition_box->channels.size() != context.siz.components.size())
-            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel count doesn't match component count");
-
-        Vector<bool, 4> channel_used;
-        channel_used.resize(context.channel_definition_box->channels.size());
-
-        for (auto channel : context.channel_definition_box->channels) {
-            if (channel.channel_index >= context.siz.components.size())
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel index out of range");
-            if (channel_used[channel.channel_index])
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel index used multiple times");
-            channel_used[channel.channel_index] = true;
-
-            if (channel.channel_type != ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Color
-                && channel.channel_type != ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Opacity) {
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only color and opacity channels supported yet");
-            }
-            if (channel.channel_type == ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Color) {
-                if (channel.channel_index + 1 != channel.channel_association)
-                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only unshuffled color channel indices supported yet");
-            } else {
-                VERIFY(channel.channel_type == ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Opacity);
-                if (channel.channel_index != context.siz.components.size() - 1)
-                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only opacity channel as last channel supported yet");
-                if (channel.channel_association != 0)
-                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only full opacity channel supported yet");
-                has_alpha = true;
+    if (context.palette_box.has_value() && context.options.palette_handling == JPEG2000DecoderOptions::PaletteHandling::PaletteIndicesAsGrayscale) {
+        for (auto& tile : context.tiles) {
+            if (tile.components.size() != 1)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Palette indices as grayscale require single component");
+            for (auto sample : tile.components[0].samples) {
+                // The JPEG2000 spec allows palette indices up to 1023, but the PDF spec says that JPEG2000 images
+                // embedded in PDFs must have indices that fit in a one byte.
+                if (sample < 0 || sample >= 256)
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Palette indices out of range");
             }
         }
-    } else if (!context.color_box.has_value()) {
-        // Raw codestream. Go by number of components.
-        has_alpha = context.siz.components.size() == 2 || context.siz.components.size() == 4;
-    }
+    } else {
+        if (context.channel_definition_box.has_value()) {
+            if (context.channel_definition_box->channels.size() != context.siz.components.size())
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel count doesn't match component count");
 
-    unsigned expected_channel_count = [](ColorSpace color_space) {
-        switch (color_space) {
-        case ColorSpace::Gray:
-            return 1;
-        case ColorSpace::sRGB:
-            return 3;
-        case ColorSpace::CMYK:
-            return 4;
-        case ColorSpace::Unsupported: // Rejected above.
+            Vector<bool, 4> channel_used;
+            channel_used.resize(context.channel_definition_box->channels.size());
+
+            // If you make this more flexible in the future and implement channel swapping,
+            // check if that should happen for JPEG2000 files in PDFs as well.
+            for (auto channel : context.channel_definition_box->channels) {
+                if (channel.channel_index >= context.siz.components.size())
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel index out of range");
+                if (channel_used[channel.channel_index])
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Channel definition box channel index used multiple times");
+                channel_used[channel.channel_index] = true;
+
+                if (channel.channel_type != ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Color
+                    && channel.channel_type != ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Opacity) {
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only color and opacity channels supported yet");
+                }
+                if (channel.channel_type == ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Color) {
+                    if (channel.channel_index + 1 != channel.channel_association)
+                        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only unshuffled color channel indices supported yet");
+                } else {
+                    VERIFY(channel.channel_type == ISOBMFF::JPEG2000ChannelDefinitionBox::Channel::Type::Opacity);
+                    if (channel.channel_index != context.siz.components.size() - 1)
+                        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only opacity channel as last channel supported yet");
+                    if (channel.channel_association != 0)
+                        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only full opacity channel supported yet");
+                    has_alpha = true;
+                }
+            }
+        } else if (!context.color_box.has_value()) {
+            // Raw codestream. Go by number of components.
+            has_alpha = context.siz.components.size() == 2 || context.siz.components.size() == 4;
+        }
+
+        unsigned expected_channel_count = [](ColorSpace color_space) {
+            switch (color_space) {
+            case ColorSpace::Gray:
+                return 1;
+            case ColorSpace::sRGB:
+                return 3;
+            case ColorSpace::CMYK:
+                return 4;
+            case ColorSpace::Unsupported: // Rejected above.
+                VERIFY_NOT_REACHED();
+            };
             VERIFY_NOT_REACHED();
-        };
-        VERIFY_NOT_REACHED();
-    }(context.color_space);
-    if (has_alpha)
-        expected_channel_count++;
-    if (context.siz.components.size() < expected_channel_count)
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough components for expected channel count");
+        }(context.color_space);
+        if (has_alpha)
+            expected_channel_count++;
+        if (context.siz.components.size() < expected_channel_count)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Not enough components for expected channel count");
 
-    if (context.siz.components.size() > expected_channel_count)
-        dbgln("JPEG2000ImageDecoderPlugin: More components ({}) than expected channel count ({}), ignoring superfluous channels", context.siz.components.size(), expected_channel_count);
+        if (context.siz.components.size() > expected_channel_count)
+            dbgln("JPEG2000ImageDecoderPlugin: More components ({}) than expected channel count ({}), ignoring superfluous channels", context.siz.components.size(), expected_channel_count);
 
-    // Convert to 8bpp.
-    // FIXME: Don't do this for palettized images.
-    for (auto& tile : context.tiles) {
-        for (auto const& [component_index, component] : enumerate(tile.components)) {
-            if (context.siz.components[component_index].is_signed())
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only unsigned components supported yet");
+        // Convert to 8bpp.
+        // FIXME: Don't do this for palettized images.
+        for (auto& tile : context.tiles) {
+            for (auto const& [component_index, component] : enumerate(tile.components)) {
+                if (context.siz.components[component_index].is_signed())
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only unsigned components supported yet");
 
-            if (context.siz.components[component_index].bit_depth() == 8)
-                continue;
+                if (context.siz.components[component_index].bit_depth() == 8)
+                    continue;
 
-            // > 16bpp currently overflow the u16s internal to decode_code_block().
-            if (context.siz.components[component_index].bit_depth() > 16)
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: More than 16 bits per component not supported yet");
+                // > 16bpp currently overflow the u16s internal to decode_code_block().
+                if (context.siz.components[component_index].bit_depth() > 16)
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: More than 16 bits per component not supported yet");
 
-            for (float& sample : component.samples)
-                sample = (sample * 255.0f) / ((1 << context.siz.components[component_index].bit_depth()) - 1);
+                for (float& sample : component.samples)
+                    sample = (sample * 255.0f) / ((1 << context.siz.components[component_index].bit_depth()) - 1);
+            }
         }
     }
 
@@ -2336,9 +2352,10 @@ bool JPEG2000ImageDecoderPlugin::sniff(ReadonlyBytes data)
     return data.starts_with(jp2_id_string) || data.starts_with(marker_id_string);
 }
 
-JPEG2000ImageDecoderPlugin::JPEG2000ImageDecoderPlugin()
+JPEG2000ImageDecoderPlugin::JPEG2000ImageDecoderPlugin(JPEG2000DecoderOptions options)
 {
     m_context = make<JPEG2000LoadingContext>();
+    m_context->options = options;
 }
 
 JPEG2000ImageDecoderPlugin::~JPEG2000ImageDecoderPlugin() = default;
@@ -2350,7 +2367,12 @@ IntSize JPEG2000ImageDecoderPlugin::size()
 
 static void determine_color_space(JPEG2000LoadingContext& context)
 {
-    // FIXME: context.color_box is the color after applying the palette, if one is present.
+    if (context.palette_box.has_value() && context.options.palette_handling == JPEG2000DecoderOptions::PaletteHandling::PaletteIndicesAsGrayscale) {
+        // context.color_box has the color space after palette expansion. But in this mode, we don't expand the palette.
+        context.color_space = ColorSpace::Gray;
+        return;
+    }
+
     if (context.color_box.has_value()) {
         if (context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::Enumerated) {
             if (context.color_box->enumerated_color_space == ISOBMFF::JPEG2000ColorSpecificationBox::EnumCS::sRGB) {
@@ -2395,7 +2417,12 @@ static void determine_color_space(JPEG2000LoadingContext& context)
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEG2000ImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEG2000ImageDecoderPlugin()));
+    return create_with_options(data, {});
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEG2000ImageDecoderPlugin::create_with_options(ReadonlyBytes data, JPEG2000DecoderOptions options)
+{
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEG2000ImageDecoderPlugin(options)));
     TRY(decode_jpeg2000_header(*plugin->m_context, data));
     determine_color_space(*plugin->m_context);
     return plugin;
