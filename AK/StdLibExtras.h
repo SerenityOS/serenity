@@ -53,6 +53,10 @@ struct _RawPtr {
 
 namespace AK {
 
+struct Empty {
+    constexpr bool operator==(Empty const&) const = default;
+};
+
 template<typename T, typename SizeType = decltype(sizeof(T)), SizeType N>
 constexpr SizeType array_size(T (&)[N])
 {
@@ -194,6 +198,7 @@ __DEFINE_GENERIC_ABS(long double, 0.0L, fabsl);
 using AK::array_size;
 using AK::ceil_div;
 using AK::clamp;
+using AK::Empty;
 using AK::exchange;
 using AK::floor_div;
 using AK::forward;

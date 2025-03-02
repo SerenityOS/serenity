@@ -216,10 +216,6 @@ using MergeAndDeduplicatePacks = InheritFromPacks<MakeIndexSequence<sizeof...(Ps
 
 namespace AK {
 
-struct Empty {
-    constexpr bool operator==(Empty const&) const = default;
-};
-
 template<typename T>
 concept NotLvalueReference = !IsLvalueReference<T>;
 
@@ -522,6 +518,5 @@ struct TypeList<Variant<Ts...>> : TypeList<Ts...> { };
 }
 
 #if USING_AK_GLOBALLY
-using AK::Empty;
 using AK::Variant;
 #endif
