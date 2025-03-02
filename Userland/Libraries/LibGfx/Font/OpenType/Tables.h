@@ -16,6 +16,7 @@
 #include <AK/Forward.h>
 #include <AK/Span.h>
 #include <AK/String.h>
+#include <AK/Variant.h>
 #include <LibGfx/Font/OpenType/DataTypes.h>
 
 namespace OpenType {

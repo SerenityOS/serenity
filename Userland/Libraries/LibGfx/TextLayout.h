@@ -12,6 +12,7 @@
 #include <AK/Forward.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/FontCascadeList.h>

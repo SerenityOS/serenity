@@ -12,6 +12,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Span.h>
 #include <AK/String.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibGfx/ICC/DistinctFourCC.h>
 #include <LibGfx/ICC/Enums.h>

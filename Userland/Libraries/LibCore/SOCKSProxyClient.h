@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <AK/Variant.h>
 #include <LibCore/Proxy.h>
 #include <LibCore/Socket.h>
 
