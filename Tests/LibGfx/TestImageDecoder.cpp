@@ -860,7 +860,6 @@ TEST_CASE(test_jpeg2000_decode_cmyk_small_raw)
         EXPECT_EQ(cmyk_frame->scanline(1)[0], (Gfx::CMYK { 255, 0, 0, 0 }));
         EXPECT_EQ(cmyk_frame->scanline(1)[1], (Gfx::CMYK { 0, 255, 0, 0 }));
         EXPECT_EQ(cmyk_frame->scanline(1)[2], (Gfx::CMYK { 0, 0, 255, 0 }));
-        EXPECT_EQ(cmyk_frame->scanline(1)[2], (Gfx::CMYK { 0, 0, 255, 0 }));
         EXPECT_EQ(cmyk_frame->scanline(1)[3], (Gfx::CMYK { 0, 0, 0, 255 }));
     }
 }
