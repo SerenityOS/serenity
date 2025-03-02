@@ -1306,8 +1306,10 @@ static ErrorOr<void> decode_jpeg2000_header(JPEG2000LoadingContext& context, Rea
 
     // "If the JP2 Header box contains a Palette box, then it shall also contain a Component Mapping box.
     //  If the JP2 Header box does not contain a Palette box, then it shall not contain a Component Mapping box."
-    if (palette_box_index.has_value() != component_mapping_box_index.has_value())
-        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Palette box and Component Mapping box must both be present or both be absent");
+    // This is violated in practice though; some files have a Palette box without a Component Mapping box.
+    // So check for something weaker.
+    if (!palette_box_index.has_value() && component_mapping_box_index.has_value())
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Component Mapping should not be present without Palette box");
 
     if (palette_box_index.has_value())
         context.palette_box = static_cast<ISOBMFF::JPEG2000PaletteBox const&>(*header_box.child_boxes()[palette_box_index.value()]);
@@ -2161,8 +2163,20 @@ static ErrorOr<void> convert_to_bitmap(JPEG2000LoadingContext& context)
 
     // Map components to channels.
     if (context.palette_box.has_value() && context.options.palette_handling != JPEG2000DecoderOptions::PaletteHandling::PaletteIndicesAsGrayscale) {
-        VERIFY(context.component_mapping_box.has_value()); // Enforced in decode_jpeg2000_header().
-        auto cmap = context.component_mapping_box.value();
+        ISOBMFF::JPEG2000ComponentMappingBox cmap;
+        if (context.component_mapping_box.has_value()) {
+            cmap = context.component_mapping_box.value();
+        } else {
+            // The spec requires that cmap is present if pclr is, but in practice some (very few) files have pclr without cmap.
+            // Assume that everything maps through directly in this case.
+            for (size_t i = 0; i < context.palette_box->bit_depths.size(); ++i) {
+                ISOBMFF::JPEG2000ComponentMappingBox::Mapping mapping;
+                mapping.component_index = 0;
+                mapping.palette_component_index = i;
+                mapping.mapping_type = ISOBMFF::JPEG2000ComponentMappingBox::Mapping::Type::Palette;
+                cmap.component_mappings.append(mapping);
+            }
+        }
 
         // I.5.3.4 Palette box
         // "This value shall be in the range 1 to 1024"
