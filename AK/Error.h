@@ -8,7 +8,6 @@
 
 #include <AK/StringView.h>
 #include <AK/Try.h>
-#include <AK/Variant.h>
 
 #if defined(AK_OS_SERENITY) && defined(KERNEL)
 #    include <errno_codes.h>
@@ -21,10 +20,10 @@ namespace AK {
 
 class [[nodiscard]] Error {
 public:
-    ALWAYS_INLINE Error(Error&&) = default;
-    ALWAYS_INLINE Error& operator=(Error&&) = default;
+    constexpr ALWAYS_INLINE Error(Error&&) = default;
+    constexpr ALWAYS_INLINE Error& operator=(Error&&) = default;
 
-    static Error from_errno(int code)
+    constexpr static Error from_errno(int code)
     {
         VERIFY(code != 0);
         return Error(code);
@@ -37,24 +36,20 @@ public:
     static Error from_string_view_or_print_error_and_return_errno(StringView string_literal, int code);
 
 #ifndef KERNEL
-    static Error from_syscall(StringView syscall_name, int rc)
+    constexpr static Error from_syscall(StringView syscall_name, int rc)
     {
         return Error(syscall_name, rc);
     }
-    static Error from_string_view(StringView string_literal) { return Error(string_literal); }
+    constexpr static Error from_string_view(StringView string_literal) { return Error(string_literal); }
 
+    // `Error::from_string_view(ByteString::formatted(...))` is a somewhat common mistake, which leads to a UAF situation.
+    // If your string outlives this error and _isn't_ a temporary being passed to this function, explicitly call .view() on it to resolve to the StringView overload.
     template<OneOf<ByteString, DeprecatedFlyString, String, FlyString> T>
-    static Error from_string_view(T)
-    {
-        // `Error::from_string_view(ByteString::formatted(...))` is a somewhat common mistake, which leads to a UAF situation.
-        // If your string outlives this error and _isn't_ a temporary being passed to this function, explicitly call .view() on it to resolve to the StringView overload.
-        static_assert(DependentFalse<T>, "Error::from_string_view(String) is almost always a use-after-free");
-        VERIFY_NOT_REACHED();
-    }
+    constexpr static Error from_string_view(T) = delete;
 
 #endif
 
-    static Error copy(Error const& error)
+    constexpr static Error copy(Error const& error)
     {
         return Error(error);
     }
@@ -67,20 +62,20 @@ public:
     // If you need to return a static string based on a dynamic condition (like
     // picking an error from an array), then prefer `from_string_view` instead.
     template<size_t N>
-    ALWAYS_INLINE static Error from_string_literal(char const (&string_literal)[N])
+    constexpr static Error from_string_literal(char const (&string_literal)[N])
     {
         return from_string_view(StringView { string_literal, N - 1 });
     }
 
     // Note: Don't call this from C++; it's here for Jakt interop (as the name suggests).
     template<SameAs<StringView> T>
-    ALWAYS_INLINE static Error __jakt_from_string_literal(T string)
+    constexpr ALWAYS_INLINE static Error __jakt_from_string_literal(T string)
     {
         return from_string_view(string);
     }
 #endif
 
-    bool operator==(Error const& other) const
+    constexpr bool operator==(Error const& other) const
     {
 #ifdef KERNEL
         return m_code == other.m_code;
@@ -89,36 +84,36 @@ public:
 #endif
     }
 
-    int code() const { return m_code; }
-    bool is_errno() const
+    constexpr int code() const { return m_code; }
+    constexpr bool is_errno() const
     {
         return m_code != 0;
     }
 #ifndef KERNEL
-    bool is_syscall() const
+    constexpr bool is_syscall() const
     {
         return m_syscall;
     }
-    StringView string_literal() const
+    constexpr StringView string_literal() const
     {
         return m_string_literal;
     }
 #endif
 
 protected:
-    Error(int code)
+    constexpr Error(int code)
         : m_code(code)
     {
     }
 
 private:
 #ifndef KERNEL
-    Error(StringView string_literal)
+    constexpr Error(StringView string_literal)
         : m_string_literal(string_literal)
     {
     }
 
-    Error(StringView syscall_name, int rc)
+    constexpr Error(StringView syscall_name, int rc)
         : m_string_literal(syscall_name)
         , m_code(-rc)
         , m_syscall(true)
@@ -126,8 +121,8 @@ private:
     }
 #endif
 
-    Error(Error const&) = default;
-    Error& operator=(Error const&) = default;
+    constexpr Error(Error const&) = default;
+    constexpr Error& operator=(Error const&) = default;
 
 #ifndef KERNEL
     StringView m_string_literal;
@@ -149,62 +144,136 @@ public:
     using ResultType = T;
     using ErrorType = E;
 
-    ErrorOr()
+    constexpr ALWAYS_INLINE ErrorOr()
     requires(IsSame<T, Empty>)
-        : m_value_or_error(Empty {})
+        : m_value {}
+        , m_is_error(false)
     {
     }
 
-    ALWAYS_INLINE ErrorOr(ErrorOr&&) = default;
-    ALWAYS_INLINE ErrorOr& operator=(ErrorOr&&) = default;
+    constexpr ALWAYS_INLINE ErrorOr(ErrorOr&& other)
+    requires(!Detail::IsTriviallyMoveConstructible<T> || !Detail::IsTriviallyMoveConstructible<E>)
+        : m_is_error(other.m_is_error)
+    {
+        if (other.is_error())
+            construct_at<E>(&m_error, other.release_error());
+        else
+            construct_at<T>(&m_value, other.release_value());
+    }
+    constexpr ALWAYS_INLINE ErrorOr(ErrorOr&& other) = default;
+
+    constexpr ALWAYS_INLINE ErrorOr& operator=(ErrorOr&& other)
+    requires(!Detail::IsTriviallyMoveConstructible<T> || !Detail::IsTriviallyMoveConstructible<E>)
+    {
+        if (this == &other)
+            return *this;
+
+        if (m_is_error)
+            m_error.~ErrorType();
+        else
+            m_value.~T();
+
+        if (other.is_error())
+            construct_at<E>(&m_error, other.release_error());
+        else
+            construct_at<T>(&m_value, other.release_value());
+
+        m_is_error = other.m_is_error;
+        return *this;
+    }
+    constexpr ALWAYS_INLINE ErrorOr& operator=(ErrorOr&& other) = default;
 
     ErrorOr(ErrorOr const&) = delete;
     ErrorOr& operator=(ErrorOr const&) = delete;
 
     template<typename U>
-    ALWAYS_INLINE ErrorOr(ErrorOr<U, ErrorType>&& value)
+    constexpr ALWAYS_INLINE ErrorOr(ErrorOr<U, ErrorType>&& value)
     requires(IsConvertible<U, T>)
-        : m_value_or_error(value.m_value_or_error.visit([](U& v) { return Variant<T, ErrorType>(move(v)); }, [](ErrorType& error) { return Variant<T, ErrorType>(move(error)); }))
+        : m_is_error(value.is_error())
     {
+        if (value.is_error())
+            construct_at<E>(&m_error, value.release_error());
+        else
+            construct_at<T>(&m_value, value.release_value());
     }
 
     template<typename U>
-    ALWAYS_INLINE ErrorOr(U&& value)
-    requires(
-        requires { T(declval<U>()); } || requires { ErrorType(declval<RemoveCVReference<U>>()); })
-        : m_value_or_error(forward<U>(value))
+    constexpr ALWAYS_INLINE ErrorOr(U&& value)
+    requires(requires { T(declval<U>()); } && !IsSame<U, ErrorType>)
+        : m_value(forward<U>(value))
+        , m_is_error(false)
+    {
+    }
+    template<typename U>
+    constexpr ALWAYS_INLINE ErrorOr(U&& error)
+    requires(requires { ErrorType(declval<RemoveCVReference<U>>()); } && !IsSame<U, T>)
+        : m_error(forward<U>(error))
+        , m_is_error(true)
     {
     }
 
 #ifdef AK_OS_SERENITY
-    ErrorOr(ErrnoCode code)
-        : m_value_or_error(Error::from_errno(code))
+    constexpr ALWAYS_INLINE ErrorOr(ErrnoCode code)
+        : m_error(Error::from_errno(code))
+        , m_is_error(true)
     {
     }
 #endif
 
-    T& value()
+    constexpr ALWAYS_INLINE T& value()
     {
-        return m_value_or_error.template get<T>();
+        VERIFY(!is_error());
+        return m_value;
     }
-    T const& value() const { return m_value_or_error.template get<T>(); }
+    constexpr ALWAYS_INLINE T const& value() const
+    {
+        VERIFY(!is_error());
+        return m_value;
+    }
 
-    ErrorType& error() { return m_value_or_error.template get<ErrorType>(); }
-    ErrorType const& error() const { return m_value_or_error.template get<ErrorType>(); }
+    constexpr ALWAYS_INLINE ErrorType& error()
+    {
+        VERIFY(is_error());
+        return m_error;
+    }
+    constexpr ALWAYS_INLINE ErrorType const& error() const
+    {
+        VERIFY(is_error());
+        return m_error;
+    }
 
-    bool is_error() const { return m_value_or_error.template has<ErrorType>(); }
+    constexpr ALWAYS_INLINE bool is_error() const { return m_is_error; }
 
-    T release_value() { return move(value()); }
-    ErrorType release_error() { return move(error()); }
+    constexpr ALWAYS_INLINE T&& release_value() { return move(value()); }
+    constexpr ALWAYS_INLINE ErrorType&& release_error() { return move(error()); }
 
-    T release_value_but_fixme_should_propagate_errors()
+    constexpr ALWAYS_INLINE T release_value_but_fixme_should_propagate_errors()
     {
         VERIFY(!is_error());
         return release_value();
     }
 
+    ~ErrorOr()
+    requires(!Detail::IsDestructible<T> || !Detail::IsDestructible<ErrorType>)
+    = delete;
+
+    constexpr ALWAYS_INLINE ~ErrorOr()
+    requires(IsTriviallyDestructible<T> && IsTriviallyDestructible<ErrorType>)
+    = default;
+    constexpr ALWAYS_INLINE ~ErrorOr()
+    {
+        if (m_is_error)
+            m_error.~ErrorType();
+        else
+            m_value.~T();
+    }
+
 private:
-    Variant<T, ErrorType> m_value_or_error;
+    union {
+        T m_value;
+        ErrorType m_error;
+    };
+    bool m_is_error;
 };
 
 template<typename ErrorType>

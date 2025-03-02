@@ -374,7 +374,7 @@ TEST_CASE(fallible_json_object_for_each)
         return CustomError {};
     });
     EXPECT(result2.is_error());
-    EXPECT((IsSame<decltype(result2.release_error()), CustomError>));
+    static_assert((IsSame<decltype(result2.release_error()), CustomError&&>));
 
     auto result3 = object.try_for_each_member([](auto const&, auto const&) -> CustomErrorOr<int> {
         return 42;
@@ -385,7 +385,7 @@ TEST_CASE(fallible_json_object_for_each)
         return CustomError {};
     });
     EXPECT(result4.is_error());
-    EXPECT((IsSame<decltype(result4.release_error()), CustomError>));
+    static_assert((IsSame<decltype(result4.release_error()), CustomError&&>));
 }
 
 TEST_CASE(fallible_json_array_for_each)
@@ -414,7 +414,7 @@ TEST_CASE(fallible_json_array_for_each)
         return CustomError {};
     });
     EXPECT(result2.is_error());
-    EXPECT((IsSame<decltype(result2.release_error()), CustomError>));
+    static_assert((IsSame<decltype(result2.release_error()), CustomError&&>));
 
     auto result3 = array.try_for_each([](auto const&) -> CustomErrorOr<int> {
         return 42;
@@ -425,7 +425,7 @@ TEST_CASE(fallible_json_array_for_each)
         return CustomError {};
     });
     EXPECT(result4.is_error());
-    EXPECT((IsSame<decltype(result4.release_error()), CustomError>));
+    static_assert((IsSame<decltype(result4.release_error()), CustomError&&>));
 }
 
 TEST_CASE(json_array_is_empty)
