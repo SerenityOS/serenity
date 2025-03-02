@@ -12,6 +12,7 @@
 #include <AK/ByteString.h>
 #include <AK/Forward.h>
 #include <AK/Span.h>
+#include <AK/Variant.h>
 #include <LibCore/File.h>
 #include <LibCore/Socket.h>
 
