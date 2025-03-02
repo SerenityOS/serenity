@@ -183,12 +183,18 @@ struct JPEG2000ComponentMappingBox final : public Box {
     struct Mapping {
         u16 component_index;
 
-        // "0: Direct use. This channel is created directly from an actual component in the codestream. The index of the
-        //     component mapped to this channel is specified in the CMP^i field for this channel."
-        // "1: Palette mapping. This channel is created by applying the palette to an actual component in the codestream. The
-        //     index of the component mapped into the palette is specified in the CMP^i field for this channel. The column from
-        //     the palette to use is specified in the PCOL^i field for this channel."
-        // "2 to 255: Reserved for ITU-T | ISO use"
+        enum Type {
+            // "0: Direct use. This channel is created directly from an actual component in the codestream. The index of the
+            //     component mapped to this channel is specified in the CMP^i field for this channel."
+            Direct = 0,
+
+            // "1: Palette mapping. This channel is created by applying the palette to an actual component in the codestream. The
+            //     index of the component mapped into the palette is specified in the CMP^i field for this channel. The column from
+            //     the palette to use is specified in the PCOL^i field for this channel."
+            Palette = 1,
+
+            // "2 to 255: Reserved for ITU-T | ISO use"
+        };
         u8 mapping_type;
 
         u8 palette_component_index;
