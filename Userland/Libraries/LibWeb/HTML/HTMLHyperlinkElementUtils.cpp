@@ -487,6 +487,10 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<String> hyperlink_
     if (!url.is_valid())
         return;
 
+    // AD-HOC: LibWeb (and navigables) don't support help://. Once a "link click" event is sent to the chrome (i.e. the Help app) navigation is handled there.
+    if (url.scheme() == "help"sv)
+        return;
+
     auto url_string = MUST(url.to_string());
 
     // 10. If hyperlinkSuffix is non-null, then append it to urlString.
