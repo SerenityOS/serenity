@@ -123,13 +123,11 @@ TEST_CASE(comparison_with_numeric_types)
 TEST_CASE(test_copy_ctor_and_dtor_called)
 {
     static_assert(IsTriviallyDestructible<Optional<u8>>);
-    // FIXME: Figure out what is missing for this one:
-    // static_assert(IsTriviallyCopyable<Optional<u8>>);
+    static_assert(IsTriviallyCopyable<Optional<u8>>);
     static_assert(IsTriviallyCopyConstructible<Optional<u8>>);
     static_assert(IsTriviallyCopyAssignable<Optional<u8>>);
-    // These can't be trivial as we have to clear the original object.
-    static_assert(!IsTriviallyMoveConstructible<Optional<u8>>);
-    static_assert(!IsTriviallyMoveAssignable<Optional<u8>>);
+    static_assert(IsTriviallyMoveConstructible<Optional<u8>>);
+    static_assert(IsTriviallyMoveAssignable<Optional<u8>>);
 
     static_assert(IsTriviallyCopyConstructible<Optional<int&>>);
     static_assert(IsTriviallyCopyAssignable<Optional<int&>>);
