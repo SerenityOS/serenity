@@ -346,25 +346,15 @@ PDFErrorOr<void> Document::build_page_tree()
 PDFErrorOr<void> Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> const& page_tree)
 {
     auto kids_array = TRY(page_tree->get_array(this, CommonNames::Kids));
-    auto page_count = page_tree->get(CommonNames::Count).value().get<int>();
 
-    if (static_cast<size_t>(page_count) != kids_array->elements().size()) {
-        // This page tree contains child page trees, so we recursively add
-        // these pages to the overall page tree
-
-        for (auto& value : *kids_array) {
-            auto reference_index = value.as_ref_index();
-            auto maybe_page_tree_node = TRY(m_parser->conditionally_parse_page_tree_node(reference_index));
-            if (maybe_page_tree_node) {
-                TRY(add_page_tree_node_to_page_tree(maybe_page_tree_node.release_nonnull()));
-            } else {
-                m_page_object_indices.append(reference_index);
-            }
+    for (auto& value : *kids_array) {
+        auto reference_index = value.as_ref_index();
+        auto maybe_page_tree_node = TRY(m_parser->conditionally_parse_page_tree_node(reference_index));
+        if (maybe_page_tree_node) {
+            TRY(add_page_tree_node_to_page_tree(maybe_page_tree_node.release_nonnull()));
+        } else {
+            m_page_object_indices.append(reference_index);
         }
-    } else {
-        // We know all of the kids are leaf nodes
-        for (auto& value : *kids_array)
-            m_page_object_indices.append(value.as_ref_index());
     }
 
     return {};
