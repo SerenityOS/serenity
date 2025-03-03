@@ -119,15 +119,18 @@ public:
     requires(!IsMoveConstructible<T>)
     = delete;
     ALWAYS_INLINE constexpr Optional(Optional&& other)
+    requires(IsMoveConstructible<T> && !IsTriviallyMoveConstructible<T>)
         : m_has_value(other.m_has_value)
     {
         if (other.has_value())
             construct_at<RemoveConst<T>>(&m_storage, other.release_value());
     }
+    // Note: Checking for Move-Constructible to allow for reference members in T
     Optional& operator=(Optional&& other)
     requires(!IsMoveConstructible<T> || !IsDestructible<T>)
     = delete;
     ALWAYS_INLINE constexpr Optional& operator=(Optional&& other)
+    requires(IsMoveConstructible<T> && !IsTriviallyMoveAssignable<T>)
     {
         if (this == &other)
             return *this;
@@ -139,6 +142,9 @@ public:
             construct_at<RemoveConst<T>>(&m_storage, other.release_value());
         return *this;
     }
+
+    ALWAYS_INLINE constexpr Optional(Optional&& other) = default;
+    ALWAYS_INLINE constexpr Optional& operator=(Optional&& other) = default;
 
     ~Optional()
     requires(!IsDestructible<T>)
