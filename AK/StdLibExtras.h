@@ -15,6 +15,7 @@
 #include <AK/StdLibExtraDetails.h>
 
 #include <AK/Assertions.h>
+#include <AK/StdShim.h>
 
 namespace AK {
 
@@ -43,38 +44,6 @@ void compiletime_fail(Args...);
 #    define AK_REPLACED_STD_NAMESPACE std
 #endif
 
-namespace AK_REPLACED_STD_NAMESPACE { // NOLINT(cert-dcl58-cpp) Names in std to aid tools
-
-// NOTE: These are in the "std" namespace since some compilers and static analyzers rely on it.
-//       If USING_AK_GLOBALLY is false, we can't put them in ::std, so we put them in AK::replaced_std instead
-//       The user code should not notice anything unless it explicitly asks for std::stuff, so...don't.
-
-template<typename T>
-constexpr T&& forward(AK::Detail::RemoveReference<T>& param)
-{
-    return static_cast<T&&>(param);
-}
-
-template<typename T>
-constexpr T&& forward(AK::Detail::RemoveReference<T>&& param) noexcept
-{
-    static_assert(!AK::Detail::IsLvalueReference<T>, "Can't forward an rvalue as an lvalue.");
-    return static_cast<T&&>(param);
-}
-
-template<typename T>
-constexpr T&& move(T& arg)
-{
-    return static_cast<T&&>(arg);
-}
-
-}
-
-namespace AK {
-using AK_REPLACED_STD_NAMESPACE::forward;
-using AK_REPLACED_STD_NAMESPACE::move;
-}
-
 namespace AK::Detail {
 template<typename T>
 struct _RawPtr {
@@ -83,6 +52,10 @@ struct _RawPtr {
 }
 
 namespace AK {
+
+struct Empty {
+    constexpr bool operator==(Empty const&) const = default;
+};
 
 template<typename T, typename SizeType = decltype(sizeof(T)), SizeType N>
 constexpr SizeType array_size(T (&)[N])
@@ -225,6 +198,7 @@ __DEFINE_GENERIC_ABS(long double, 0.0L, fabsl);
 using AK::array_size;
 using AK::ceil_div;
 using AK::clamp;
+using AK::Empty;
 using AK::exchange;
 using AK::floor_div;
 using AK::forward;

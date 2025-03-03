@@ -9,6 +9,7 @@
 #include <AK/Badge.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 
