@@ -34,6 +34,7 @@ public:
     void set_document(WeakPtr<Document> const&);
 
     ByteString parse_comment();
+    void consume_whitespace() { m_reader.consume_whitespace(); }
 
     void move_by(size_t count) { m_reader.move_by(count); }
     void move_to(size_t offset) { m_reader.move_to(offset); }
