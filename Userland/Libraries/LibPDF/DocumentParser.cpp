@@ -629,6 +629,7 @@ PDFErrorOr<Value> DocumentParser::parse_compressed_object_with_index(u32 index)
     }
 
     stream_parser.push_reference({ index, 0 });
+    stream_parser.consume_whitespace();
     auto value = TRY(stream_parser.parse_value());
     stream_parser.pop_reference();
 
