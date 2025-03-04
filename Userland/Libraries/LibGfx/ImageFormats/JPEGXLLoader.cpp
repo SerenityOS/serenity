@@ -714,6 +714,9 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
             && (frame_header.height + frame_header.y0 == size_header.height);
         bool const full_frame = !frame_header.have_crop || cover_image_area;
 
+        // Set default value for is_last
+        frame_header.is_last = frame_header.frame_type == FrameHeader::FrameType::kRegularFrame;
+
         if (normal_frame) {
             frame_header.blending_info = TRY(read_blending_info(stream, metadata, full_frame));
 
@@ -727,7 +730,6 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
             frame_header.is_last = TRY(stream.read_bit());
         }
 
-        // FIXME: Ensure that is_last has the correct default value
         VERIFY(normal_frame);
 
         auto const resets_canvas = full_frame && frame_header.blending_info.mode == BlendingInfo::BlendMode::kReplace;
