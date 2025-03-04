@@ -730,15 +730,11 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
             frame_header.is_last = TRY(stream.read_bit());
         }
 
-        VERIFY(normal_frame);
+        if (frame_header.frame_type != FrameHeader::FrameType::kLFFrame && !frame_header.is_last)
+            frame_header.save_as_reference = TRY(stream.read_bits(2));
 
         auto const resets_canvas = full_frame && frame_header.blending_info.mode == BlendingInfo::BlendMode::kReplace;
         auto const can_reference = !frame_header.is_last && (frame_header.duration == 0 || frame_header.save_as_reference != 0) && frame_header.frame_type != FrameHeader::FrameType::kLFFrame;
-
-        if (frame_header.frame_type != FrameHeader::FrameType::kLFFrame) {
-            if (!frame_header.is_last)
-                TODO();
-        }
 
         frame_header.save_before_ct = !normal_frame;
         if (frame_header.frame_type == FrameHeader::FrameType::kReferenceOnly || (resets_canvas && can_reference))
