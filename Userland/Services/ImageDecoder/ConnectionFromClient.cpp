@@ -29,7 +29,9 @@ void ConnectionFromClient::die()
     Core::EventLoop::current().quit(0);
 }
 
-static void decode_image_to_bitmaps_and_durations_with_decoder(Gfx::ImageDecoder const& decoder, Optional<Gfx::IntSize> ideal_size, Vector<Optional<NonnullRefPtr<Gfx::Bitmap>>>& bitmaps, Vector<u32>& durations)
+namespace {
+
+void decode_image_to_bitmaps_and_durations_with_decoder(Gfx::ImageDecoder const& decoder, Optional<Gfx::IntSize> ideal_size, Vector<Optional<NonnullRefPtr<Gfx::Bitmap>>>& bitmaps, Vector<u32>& durations)
 {
     for (size_t i = 0; i < decoder.frame_count(); ++i) {
         auto frame_or_error = decoder.frame(i, ideal_size);
@@ -44,7 +46,7 @@ static void decode_image_to_bitmaps_and_durations_with_decoder(Gfx::ImageDecoder
     }
 }
 
-static ErrorOr<ConnectionFromClient::DecodeResult> decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> const& known_mime_type)
+ErrorOr<ConnectionFromClient::DecodeResult> decode_image_to_details(Core::AnonymousBuffer const& encoded_buffer, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> const& known_mime_type)
 {
     auto decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes { encoded_buffer.data<u8>(), encoded_buffer.size() }, known_mime_type));
 
@@ -80,6 +82,8 @@ static ErrorOr<ConnectionFromClient::DecodeResult> decode_image_to_details(Core:
     result.bitmaps = Gfx::BitmapSequence { bitmaps };
 
     return result;
+}
+
 }
 
 NonnullRefPtr<ConnectionFromClient::Job> ConnectionFromClient::make_decode_image_job(i64 image_id, Core::AnonymousBuffer encoded_buffer, Optional<Gfx::IntSize> ideal_size, Optional<ByteString> mime_type)
