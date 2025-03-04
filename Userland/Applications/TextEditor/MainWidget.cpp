@@ -34,6 +34,7 @@
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/VimEditingEngine.h>
+#include <LibGemini/Document.h>
 #include <LibGfx/Font/Font.h>
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
@@ -429,9 +430,16 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         },
         this);
 
+    m_gemtext_preview_action = GUI::Action::create_checkable(
+        "&Gemtext Preview", [this](auto&) {
+            set_preview_mode(PreviewMode::Gemtext);
+        },
+        this);
+
     m_preview_actions.add_action(*m_no_preview_action);
     m_preview_actions.add_action(*m_markdown_preview_action);
     m_preview_actions.add_action(*m_html_preview_action);
+    m_preview_actions.add_action(*m_gemtext_preview_action);
     m_preview_actions.set_exclusive(true);
 
     m_layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
@@ -588,6 +596,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     view_menu->add_action(*m_no_preview_action);
     view_menu->add_action(*m_markdown_preview_action);
     view_menu->add_action(*m_html_preview_action);
+    view_menu->add_action(*m_gemtext_preview_action);
     m_no_preview_action->set_checked(true);
     view_menu->add_separator();
 
@@ -886,6 +895,10 @@ void MainWidget::set_preview_mode(PreviewMode mode)
         m_markdown_preview_action->set_checked(true);
         set_web_view_visible(true);
         update_markdown_preview();
+    } else if (m_preview_mode == PreviewMode::Gemtext) {
+        m_gemtext_preview_action->set_checked(true);
+        set_web_view_visible(true);
+        update_gemtext_preview();
     } else {
         m_no_preview_action->set_checked(true);
         set_web_view_visible(false);
@@ -900,6 +913,9 @@ void MainWidget::update_preview()
         break;
     case PreviewMode::HTML:
         update_html_preview();
+        break;
+    case PreviewMode::Gemtext:
+        update_gemtext_preview();
         break;
     default:
         break;
@@ -920,6 +936,13 @@ void MainWidget::update_html_preview()
 {
     // FIXME: Retain original scroll after loading new preview
     m_page_view->load_html(m_editor->text());
+}
+
+void MainWidget::update_gemtext_preview()
+{
+    auto document = Gemini::Document::parse(m_editor->text(), {});
+    auto html = document->render_to_html();
+    m_page_view->load_html(html);
 }
 
 void MainWidget::update_statusbar()
