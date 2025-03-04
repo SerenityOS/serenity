@@ -277,7 +277,7 @@ void Parser::access_generic_address(Structures::GenericAddressStructure const& s
         return;
     }
     case GenericAddressStructure::AddressSpace::PCIConfigurationSpace: {
-        // According to https://uefi.org/specs/ACPI/6.4/05_ACPI_Software_Programming_Model/ACPI_Software_Programming_Model.html#address-space-format,
+        // According to https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#address-space-format,
         // PCI addresses must be confined to devices on Segment group 0, bus 0.
         auto pci_address = PCI::Address(0, 0, ((structure.address >> 24) & 0xFF), ((structure.address >> 16) & 0xFF));
         dbgln("ACPI: Sending value {:x} to {}", value, pci_address);
@@ -299,7 +299,7 @@ void Parser::access_generic_address(Structures::GenericAddressStructure const& s
 
 bool Parser::validate_reset_register(Memory::TypedMapping<Structures::FADT> const& fadt)
 {
-    // According to https://uefi.org/specs/ACPI/6.4/04_ACPI_Hardware_Specification/ACPI_Hardware_Specification.html#reset-register,
+    // According to https://uefi.org/specs/ACPI/6.5/04_ACPI_Hardware_Specification.html#reset-register,
     // the reset register can only be located in I/O bus, PCI bus or memory-mapped.
     return (fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::PCIConfigurationSpace || fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::SystemMemory || fadt->reset_reg.address_space == (u8)GenericAddressStructure::AddressSpace::SystemIO);
 }
