@@ -10,7 +10,7 @@
 
 namespace Kernel::ACPI::StaticParsing {
 
-// https://uefi.org/specs/ACPI/6.4/05_ACPI_Software_Programming_Model/ACPI_Software_Programming_Model.html#finding-the-rsdp-on-ia-pc-systems
+// https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#finding-the-rsdp-on-ia-pc-systems
 ErrorOr<Optional<PhysicalAddress>> find_rsdp_in_platform_specific_memory_locations()
 {
     constexpr auto signature = "RSD PTR "sv;
