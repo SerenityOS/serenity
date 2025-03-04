@@ -13,12 +13,9 @@
 
 namespace Kernel::ACPI::StaticParsing {
 
+Optional<PhysicalAddress> find_rsdp();
 ErrorOr<Optional<PhysicalAddress>> find_table(PhysicalAddress rsdp, StringView signature);
 ErrorOr<Optional<PhysicalAddress>> search_table_in_xsdt(PhysicalAddress xsdt, StringView signature);
 ErrorOr<Optional<PhysicalAddress>> search_table_in_rsdt(PhysicalAddress rsdt, StringView signature);
-
-// NOTE: This function is implemented for each CPU architecture in a subdirectory
-// under the Kernel/Arch directory.
-ErrorOr<Optional<PhysicalAddress>> find_rsdp_in_platform_specific_memory_locations();
 
 }

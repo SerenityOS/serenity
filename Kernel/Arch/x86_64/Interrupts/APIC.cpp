@@ -262,12 +262,7 @@ UNMAP_AFTER_INIT bool APIC::init_bsp()
         m_apic_base = region_or_error.release_value();
     }
 
-    auto possible_rsdp_physical_address_or_error = ACPI::StaticParsing::find_rsdp_in_platform_specific_memory_locations();
-    if (possible_rsdp_physical_address_or_error.is_error()) {
-        dbgln("APIC: Failed to map RSDP");
-        return false;
-    }
-    auto possible_rsdp_physical_address = possible_rsdp_physical_address_or_error.release_value();
+    auto possible_rsdp_physical_address = ACPI::StaticParsing::find_rsdp();
     if (!possible_rsdp_physical_address.has_value()) {
         dbgln("APIC: RSDP not found");
         return false;
