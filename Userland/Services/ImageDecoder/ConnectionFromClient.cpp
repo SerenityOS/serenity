@@ -83,7 +83,7 @@ ErrorOr<ConnectionFromClient::DecodeResult> decode_image_to_details(Core::Anonym
     if (bitmaps.is_empty() || no_frame_available)
         return Error::from_string_literal("Could not decode image");
 
-    result.bitmaps = Gfx::BitmapSequence { bitmaps };
+    result.bitmaps = { move(bitmaps) };
 
     return result;
 }
