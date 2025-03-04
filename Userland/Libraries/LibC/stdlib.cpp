@@ -466,11 +466,10 @@ int unsetenv(char const* name)
 
 int clearenv()
 {
-    size_t environ_size = 0;
-    for (; environ[environ_size]; ++environ_size) {
-        environ[environ_size] = NULL;
+    for (char** env = environ; *env; ++env) {
+        free_environment_variable_if_needed(*env);
+        *env = nullptr;
     }
-    *environ = NULL;
     return 0;
 }
 
