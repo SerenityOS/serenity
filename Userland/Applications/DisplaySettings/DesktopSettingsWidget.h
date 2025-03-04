@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
+ * Copyright (c) 2025, RatcheT2497 <ratchetnumbers@proton.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,6 +19,7 @@ class DesktopSettingsWidget : public GUI::SettingsWindow::Tab {
 public:
     static ErrorOr<NonnullRefPtr<DesktopSettingsWidget>> try_create();
     virtual ~DesktopSettingsWidget() override = default;
+    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
 

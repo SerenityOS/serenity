@@ -3,30 +3,31 @@ serenity_component(
     TARGETS ThemeEditor
 )
 
-stringify_gml(ThemeEditor.gml ThemeEditorGML.h theme_editor_gml)
-stringify_gml(AlignmentProperty.gml AlignmentPropertyGML.h alignment_property_gml)
-stringify_gml(ColorProperty.gml ColorPropertyGML.h color_property_gml)
-stringify_gml(FlagProperty.gml FlagPropertyGML.h flag_property_gml)
-stringify_gml(MetricProperty.gml MetricPropertyGML.h metric_property_gml)
-stringify_gml(PathProperty.gml PathPropertyGML.h path_property_gml)
-stringify_gml(WindowThemeProperty.gml WindowThemePropertyGML.h window_theme_property_gml)
-stringify_gml(Previews/WindowPreview.gml WindowPreviewGML.h window_preview_gml)
+compile_gml(ThemeEditor.gml ThemeEditorGML.cpp)
+compile_gml(AlignmentProperty.gml AlignmentPropertyGML.cpp)
+compile_gml(ColorProperty.gml ColorPropertyGML.cpp)
+compile_gml(FlagProperty.gml FlagPropertyGML.cpp)
+compile_gml(MetricProperty.gml MetricPropertyGML.cpp)
+compile_gml(PathProperty.gml PathPropertyGML.cpp)
+compile_gml(PreviewWidget.gml PreviewWidgetGML.cpp)
+compile_gml(Previews/WindowPreview.gml Previews/WindowPreviewGML.cpp)
+compile_gml(WindowThemeProperty.gml WindowThemePropertyGML.cpp)
 
 set(SOURCES
     MainWidget.cpp
     PreviewWidget.cpp
     main.cpp
-)
 
-set(GENERATED_SOURCES
-    AlignmentPropertyGML.h
-    ColorPropertyGML.h
-    FlagPropertyGML.h
-    MetricPropertyGML.h
-    PathPropertyGML.h
-    ThemeEditorGML.h
-    WindowPreviewGML.h
-    WindowThemePropertyGML.h
+    AlignmentPropertyGML.cpp
+    ColorPropertyGML.cpp
+    FlagPropertyGML.cpp
+    MetricPropertyGML.cpp
+    PathPropertyGML.cpp
+    ThemeEditorGML.cpp
+    PreviewWidgetGML.cpp
+    WindowThemePropertyGML.cpp
+    Previews/WindowPreview.cpp
+    Previews/WindowPreviewGML.cpp
 )
 
 serenity_app(ThemeEditor ICON app-theme-editor)
