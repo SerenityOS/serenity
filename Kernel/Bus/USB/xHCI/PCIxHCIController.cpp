@@ -15,11 +15,11 @@ namespace Kernel::USB {
 
 ErrorOr<NonnullLockRefPtr<PCIxHCIController>> PCIxHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    auto registers_mapping = TRY(PCI::map_bar<u8>(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) PCIxHCIController(pci_device_identifier, move(registers_mapping))));
-
     PCI::enable_bus_mastering(pci_device_identifier);
     PCI::enable_memory_space(pci_device_identifier);
+
+    auto registers_mapping = TRY(PCI::map_bar<u8>(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
+    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) PCIxHCIController(pci_device_identifier, move(registers_mapping))));
 
     auto interrupt_type = TRY(controller->reserve_irqs(1, true)); // TODO: Support more than one interrupter using MSI/MSI-X
     controller->m_using_message_signalled_interrupts = interrupt_type != PCI::InterruptType::PIN;
