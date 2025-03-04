@@ -410,7 +410,7 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/DebugOutput.cpp
         Arch/x86_64/Delay.cpp
 
-        Arch/x86_64/Firmware/ACPI/StaticParsing.cpp
+        Arch/x86_64/Firmware/ACPI.cpp
         Arch/x86_64/Firmware/MultiProcessor/Parser.cpp
         Arch/x86_64/Firmware/PCBIOS/Mapper.cpp
         Arch/x86_64/Firmware/PCBIOS/SysFSComponent.cpp
@@ -499,8 +499,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
 
         kprintf.cpp
 
-        Arch/aarch64/Firmware/ACPI/StaticParsing.cpp
-
         Arch/aarch64/archctl.cpp
         Arch/aarch64/boot.S
         Arch/aarch64/CPUID.cpp
@@ -550,8 +548,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
 
         Arch/Processor.cpp
         kprintf.cpp
-
-        Arch/riscv64/Firmware/ACPI/StaticParsing.cpp
 
         Arch/riscv64/archctl.cpp
         Arch/riscv64/boot.S

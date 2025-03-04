@@ -9,7 +9,25 @@
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Memory/TypedMapping.h>
 
+#if ARCH(X86_64)
+#    include <Kernel/Arch/x86_64/Firmware/ACPI.h>
+#endif
+
 namespace Kernel::ACPI::StaticParsing {
+
+Optional<PhysicalAddress> find_rsdp()
+{
+    Optional<PhysicalAddress> rsdp;
+    if (!g_boot_info.acpi_rsdp_paddr.is_null())
+        rsdp = g_boot_info.acpi_rsdp_paddr;
+
+#if ARCH(X86_64)
+    if (!rsdp.has_value())
+        rsdp = StaticParsing::find_rsdp_in_ia_pc_specific_memory_locations();
+#endif
+
+    return rsdp;
+}
 
 static bool match_table_signature(PhysicalAddress table_header, StringView signature)
 {
