@@ -62,6 +62,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         text_widget->set_preview_mode(MainWidget::PreviewMode::Markdown);
     } else if (preview_mode == "html") {
         text_widget->set_preview_mode(MainWidget::PreviewMode::HTML);
+    } else if (preview_mode == "gemtext") {
+        text_widget->set_preview_mode(MainWidget::PreviewMode::Gemtext);
     } else if (preview_mode == "none") {
         text_widget->set_preview_mode(MainWidget::PreviewMode::None);
     } else {

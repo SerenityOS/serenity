@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2025, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,6 +38,7 @@ public:
         None,
         Markdown,
         HTML,
+        Gemtext,
     };
 
     void set_preview_mode(PreviewMode);
@@ -53,6 +54,7 @@ private:
     void update_preview();
     void update_markdown_preview();
     void update_html_preview();
+    void update_gemtext_preview();
 
     WebView::OutOfProcessWebView& ensure_web_view();
     void set_web_view_visible(bool);
@@ -91,6 +93,7 @@ private:
     RefPtr<GUI::Action> m_no_preview_action;
     RefPtr<GUI::Action> m_markdown_preview_action;
     RefPtr<GUI::Action> m_html_preview_action;
+    RefPtr<GUI::Action> m_gemtext_preview_action;
 
     RefPtr<GUI::Toolbar> m_toolbar;
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;
