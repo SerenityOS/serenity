@@ -120,7 +120,7 @@ NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_contro
 UNMAP_AFTER_INIT ErrorOr<Optional<PhysicalAddress>> InterruptManagement::find_madt_physical_address()
 {
     dbgln("Early access to ACPI tables for interrupt setup");
-    auto possible_rsdp_physical_address = TRY(ACPI::StaticParsing::find_rsdp_in_platform_specific_memory_locations());
+    auto possible_rsdp_physical_address = ACPI::StaticParsing::find_rsdp();
     if (!possible_rsdp_physical_address.has_value())
         return Optional<PhysicalAddress> {};
     auto possible_apic_physical_address = TRY(ACPI::StaticParsing::find_table(possible_rsdp_physical_address.value(), "APIC"sv));

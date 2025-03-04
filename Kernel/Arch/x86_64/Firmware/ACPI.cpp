@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/x86_64/Firmware/ACPI.h>
 #include <Kernel/Arch/x86_64/Firmware/PCBIOS/Mapper.h>
-#include <Kernel/Firmware/ACPI/StaticParsing.h>
 #include <Kernel/Memory/MemoryManager.h>
 
 namespace Kernel::ACPI::StaticParsing {
 
 // https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#finding-the-rsdp-on-ia-pc-systems
-ErrorOr<Optional<PhysicalAddress>> find_rsdp_in_platform_specific_memory_locations()
+Optional<PhysicalAddress> find_rsdp_in_ia_pc_specific_memory_locations()
 {
     constexpr auto signature = "RSD PTR "sv;
     auto ebda_or_error = map_ebda();
