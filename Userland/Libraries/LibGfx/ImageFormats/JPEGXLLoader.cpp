@@ -884,7 +884,7 @@ public:
         // Finally, the decoder reads (tree.size() + 1) / 2 pre-clustered distributions D as specified in C.1.
 
         auto const num_pre_clustered_distributions = (tree.m_tree.size() + 1) / 2;
-        decoder = TRY(decoder->create(stream, num_pre_clustered_distributions));
+        decoder = TRY(EntropyDecoder::create(stream, num_pre_clustered_distributions));
 
         return tree;
     }
