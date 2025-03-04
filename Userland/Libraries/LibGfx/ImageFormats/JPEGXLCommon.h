@@ -66,6 +66,14 @@ ALWAYS_INLINE ErrorOr<u64> U64(LittleEndianInputBitStream& stream)
     return value;
 }
 
+ALWAYS_INLINE ErrorOr<f32> F16(LittleEndianInputBitStream& stream)
+{
+    u16 const bits16 = TRY(stream.read_bits(16));
+    auto const biased_exp = (bits16 >> 10) & 0x1F;
+    VERIFY(biased_exp != 31);
+    return bit_cast<_Float16>(bits16);
+}
+
 template<Enum E>
 ErrorOr<E> read_enum(LittleEndianInputBitStream& stream)
 {
