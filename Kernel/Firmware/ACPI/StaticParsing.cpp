@@ -22,7 +22,7 @@ Optional<PhysicalAddress> find_rsdp()
         rsdp = g_boot_info.acpi_rsdp_paddr;
 
 #if ARCH(X86_64)
-    if (!rsdp.has_value())
+    if (!rsdp.has_value() && g_boot_info.boot_method == BootMethod::Multiboot1)
         rsdp = StaticParsing::find_rsdp_in_ia_pc_specific_memory_locations();
 #endif
 
