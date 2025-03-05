@@ -2041,10 +2041,7 @@ public:
 
         TRY(render_extra_channels(frame.image, m_metadata));
 
-        if (!m_image.has_value())
-            m_image = TRY(Image::create({ m_header.width, m_header.height }, m_metadata));
-
-        frame.image.blend_into(*m_image, frame.frame_header);
+        m_frames.append(move(frame));
 
         return {};
     }
@@ -2062,6 +2059,14 @@ public:
                 TODO();
 
             TRY(decode_frame());
+
+            while (!m_frames.last().frame_header.is_last)
+                TRY(decode_frame());
+
+            if (!m_image.has_value())
+                m_image = TRY(Image::create({ m_header.width, m_header.height }, m_metadata));
+
+            m_frames.last().image.blend_into(*m_image, m_frames.last().frame_header);
 
             m_bitmap = TRY(m_image->to_bitmap(m_metadata));
             m_image.clear();
@@ -2111,6 +2116,8 @@ private:
     // JPEG XL images can be composed of multiples sub-images, this variable is an internal
     // representation of this blending before the final rendering (in m_bitmap)
     Optional<Image> m_image;
+
+    Vector<Frame> m_frames;
 
     Optional<EntropyDecoder> m_entropy_decoder {};
 
