@@ -1159,6 +1159,11 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
         dbgln_if(JBIG2_DEBUG, "refinement delta width: {}, refinement delta height: {}, refinement x offset: {}, refinement y offset: {}", refinement_delta_width, refinement_delta_height, refinement_x_offset, refinement_y_offset);
 
         // Table 12 – Parameters used to decode a symbol instance's bitmap using refinement
+        if (symbol.width() > static_cast<u32>(INT32_MAX) || static_cast<i32>(symbol.width()) + refinement_delta_width < 0)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Refinement width out of bounds");
+        if (symbol.height() > static_cast<u32>(INT32_MAX) || static_cast<i32>(symbol.height()) + refinement_delta_height < 0)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Refinement height out of bounds");
+
         GenericRefinementRegionDecodingInputParameters refinement_inputs;
         refinement_inputs.region_width = symbol.width() + refinement_delta_width;
         refinement_inputs.region_height = symbol.height() + refinement_delta_height;
