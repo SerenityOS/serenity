@@ -72,7 +72,6 @@ private:
     u32 read_register(u32 index) const;
 
     virtual void initialize() override;
-    void map_isa_interrupts();
     void isa_identity_map(size_t index);
 
     PhysicalAddress m_address;
