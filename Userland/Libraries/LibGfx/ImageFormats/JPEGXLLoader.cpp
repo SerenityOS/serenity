@@ -2031,13 +2031,16 @@ public:
     ErrorOr<void> decode_frame()
     {
         auto frame = TRY(read_frame(m_stream, m_header, m_metadata, m_entropy_decoder));
+        auto const& frame_header = frame.frame_header;
 
-        if (frame.frame_header.restoration_filter.gab || frame.frame_header.restoration_filter.epf_iters != 0)
+        if (frame_header.restoration_filter.gab || frame_header.restoration_filter.epf_iters != 0)
             TODO();
 
         TRY(apply_image_features(frame, m_metadata));
 
-        apply_colour_transformation(frame, m_metadata);
+        if (!frame_header.save_before_ct) {
+            apply_colour_transformation(frame, m_metadata);
+        }
 
         TRY(render_extra_channels(frame.image, m_metadata));
 
