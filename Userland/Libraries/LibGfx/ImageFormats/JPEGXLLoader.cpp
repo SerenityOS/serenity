@@ -532,6 +532,12 @@ static ErrorOr<BlendingInfo> read_blending_info(LittleEndianInputBitStream& stre
 }
 ///
 
+// From FrameHeader, but used in RestorationFilter
+enum class Encoding {
+    kVarDCT = 0,
+    kModular = 1,
+};
+
 /// J.1 - General
 struct RestorationFilter {
     bool gab { true };
@@ -590,11 +596,6 @@ struct FrameHeader {
         kLFFrame = 1,
         kReferenceOnly = 2,
         kSkipProgressive = 3,
-    };
-
-    enum class Encoding {
-        kVarDCT = 0,
-        kModular = 1,
     };
 
     enum class Flags {
@@ -656,7 +657,7 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
 
     if (!all_default) {
         frame_header.frame_type = static_cast<FrameHeader::FrameType>(TRY(stream.read_bits(2)));
-        frame_header.encoding = static_cast<FrameHeader::Encoding>(TRY(stream.read_bits(1)));
+        frame_header.encoding = static_cast<Encoding>(TRY(stream.read_bits(1)));
 
         frame_header.flags = static_cast<FrameHeader::Flags>(TRY(U64(stream)));
 
@@ -677,13 +678,13 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
                 frame_header.ec_upsampling[i] = U32(1, 2, 4, 8);
         }
 
-        if (frame_header.encoding == FrameHeader::Encoding::kModular)
+        if (frame_header.encoding == Encoding::kModular)
             frame_header.group_size_shift = TRY(stream.read_bits(2));
 
         // Set x_qm_scale default value
-        frame_header.x_qm_scale = metadata.xyb_encoded && frame_header.encoding == FrameHeader::Encoding::kVarDCT ? 3 : 2;
+        frame_header.x_qm_scale = metadata.xyb_encoded && frame_header.encoding == Encoding::kVarDCT ? 3 : 2;
 
-        if (metadata.xyb_encoded && frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+        if (metadata.xyb_encoded && frame_header.encoding == Encoding::kVarDCT) {
             frame_header.x_qm_scale = TRY(stream.read_bits(3));
             frame_header.b_qm_scale = TRY(stream.read_bits(3));
         }
@@ -1609,7 +1610,7 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
     // the number of channels is computed as follows:
 
     auto num_channels = metadata.num_extra_channels;
-    if (frame_header.encoding == FrameHeader::Encoding::kModular) {
+    if (frame_header.encoding == Encoding::kModular) {
         if (!frame_header.do_YCbCr && !metadata.xyb_encoded
             && metadata.colour_encoding.colour_space == ColourEncoding::ColourSpace::kGrey) {
             num_channels += 1;
@@ -1647,7 +1648,7 @@ static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
 
     lf_global.lf_dequant = TRY(read_lf_channel_dequantization(stream));
 
-    if (frame_header.encoding == FrameHeader::Encoding::kVarDCT)
+    if (frame_header.encoding == Encoding::kVarDCT)
         TODO();
 
     lf_global.gmodular = TRY(read_global_modular(stream, image, frame_header, metadata, entropy_decoder));
@@ -1662,7 +1663,7 @@ static ErrorOr<void> read_lf_group(LittleEndianInputBitStream&,
     FrameHeader const& frame_header)
 {
     // LF coefficients
-    if (frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+    if (frame_header.encoding == Encoding::kVarDCT) {
         TODO();
     }
 
@@ -1681,7 +1682,7 @@ static ErrorOr<void> read_lf_group(LittleEndianInputBitStream&,
     }
 
     // HF metadata
-    if (frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+    if (frame_header.encoding == Encoding::kVarDCT) {
         TODO();
     }
 
@@ -1756,7 +1757,7 @@ static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
     FrameHeader const& frame_header,
     u32 group_dim)
 {
-    if (frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+    if (frame_header.encoding == Encoding::kVarDCT) {
         (void)stream;
         TODO();
     }
@@ -1840,7 +1841,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     for (u32 i {}; i < frame.num_lf_groups; ++i)
         TRY(read_lf_group(stream, frame.image, frame.frame_header));
 
-    if (frame.frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+    if (frame.frame_header.encoding == Encoding::kVarDCT) {
         TODO();
     }
 
