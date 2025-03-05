@@ -532,14 +532,42 @@ static ErrorOr<BlendingInfo> read_blending_info(LittleEndianInputBitStream& stre
 }
 ///
 
+// From FrameHeader, but used in RestorationFilter
+enum class Encoding {
+    kVarDCT = 0,
+    kModular = 1,
+};
+
 /// J.1 - General
 struct RestorationFilter {
     bool gab { true };
+    bool gab_custom { false };
+    f32 gab_x_weight1 { 0.115169525 };
+    f32 gab_x_weight2 { 0.061248592 };
+    f32 gab_y_weight1 { 0.115169525 };
+    f32 gab_y_weight2 { 0.061248592 };
+    f32 gab_b_weight1 { 0.115169525 };
+    f32 gab_b_weight2 { 0.061248592 };
+
     u8 epf_iters { 2 };
+
+    bool epf_sharp_custom { false };
+    Array<f32, 8> epf_sharp_lut { 0, 1. / 7, 2. / 7, 3. / 7, 4. / 7, 5. / 7, 6. / 7, 1 };
+
+    bool epf_weight_custom { false };
+    Array<f32, 3> epf_channel_scale { 40.0, 5.0, 3.5 };
+
+    bool epf_sigma_custom { false };
+    f32 epf_quant_mul { 0.46 };
+    f32 epf_pass0_sigma_scale { 0.9 };
+    f32 epf_pass2_sigma_scale { 6.5 };
+    f32 epf_border_sad_mul { 2. / 3 };
+    f32 epf_sigma_for_modular { 1.0 };
+
     Extensions extensions;
 };
 
-static ErrorOr<RestorationFilter> read_restoration_filter(LittleEndianInputBitStream& stream)
+static ErrorOr<RestorationFilter> read_restoration_filter(LittleEndianInputBitStream& stream, Encoding encoding)
 {
     RestorationFilter restoration_filter;
 
@@ -549,12 +577,29 @@ static ErrorOr<RestorationFilter> read_restoration_filter(LittleEndianInputBitSt
         restoration_filter.gab = TRY(stream.read_bit());
 
         if (restoration_filter.gab) {
-            TODO();
+            restoration_filter.gab_custom = TRY(stream.read_bit());
+            if (restoration_filter.gab_custom) {
+                return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
+            }
         }
 
         restoration_filter.epf_iters = TRY(stream.read_bits(2));
         if (restoration_filter.epf_iters != 0) {
-            TODO();
+            if (encoding == Encoding::kVarDCT) {
+                restoration_filter.epf_sharp_custom = TRY(stream.read_bit());
+                if (restoration_filter.epf_sharp_custom)
+                    return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
+            }
+            restoration_filter.epf_weight_custom = TRY(stream.read_bit());
+            if (restoration_filter.epf_sharp_custom)
+                return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
+
+            restoration_filter.epf_sigma_custom = TRY(stream.read_bit());
+            if (restoration_filter.epf_sharp_custom)
+                return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
+
+            if (encoding == Encoding::kModular)
+                return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
         }
 
         restoration_filter.extensions = TRY(read_extensions(stream));
@@ -592,11 +637,6 @@ struct FrameHeader {
         kSkipProgressive = 3,
     };
 
-    enum class Encoding {
-        kVarDCT = 0,
-        kModular = 1,
-    };
-
     enum class Flags {
         None = 0,
         kNoise = 1,
@@ -617,6 +657,8 @@ struct FrameHeader {
     FixedArray<u8> ec_upsampling {};
 
     u8 group_size_shift { 1 };
+    u8 x_qm_scale { 3 };
+    u8 b_qm_scale { 2 };
     Passes passes {};
 
     u8 lf_level {};
@@ -654,7 +696,7 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
 
     if (!all_default) {
         frame_header.frame_type = static_cast<FrameHeader::FrameType>(TRY(stream.read_bits(2)));
-        frame_header.encoding = static_cast<FrameHeader::Encoding>(TRY(stream.read_bits(1)));
+        frame_header.encoding = static_cast<Encoding>(TRY(stream.read_bits(1)));
 
         frame_header.flags = static_cast<FrameHeader::Flags>(TRY(U64(stream)));
 
@@ -675,11 +717,16 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
                 frame_header.ec_upsampling[i] = U32(1, 2, 4, 8);
         }
 
-        if (frame_header.encoding == FrameHeader::Encoding::kModular)
+        if (frame_header.encoding == Encoding::kModular)
             frame_header.group_size_shift = TRY(stream.read_bits(2));
 
-        if (frame_header.encoding == FrameHeader::Encoding::kVarDCT)
-            TODO();
+        // Set x_qm_scale default value
+        frame_header.x_qm_scale = metadata.xyb_encoded && frame_header.encoding == Encoding::kVarDCT ? 3 : 2;
+
+        if (metadata.xyb_encoded && frame_header.encoding == Encoding::kVarDCT) {
+            frame_header.x_qm_scale = TRY(stream.read_bits(3));
+            frame_header.b_qm_scale = TRY(stream.read_bits(3));
+        }
 
         if (frame_header.frame_type != FrameHeader::FrameType::kReferenceOnly)
             frame_header.passes = TRY(read_passes(stream));
@@ -714,6 +761,9 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
             && (frame_header.height + frame_header.y0 == size_header.height);
         bool const full_frame = !frame_header.have_crop || cover_image_area;
 
+        // Set default value for is_last
+        frame_header.is_last = frame_header.frame_type == FrameHeader::FrameType::kRegularFrame;
+
         if (normal_frame) {
             frame_header.blending_info = TRY(read_blending_info(stream, metadata, full_frame));
 
@@ -727,16 +777,11 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
             frame_header.is_last = TRY(stream.read_bit());
         }
 
-        // FIXME: Ensure that is_last has the correct default value
-        VERIFY(normal_frame);
+        if (frame_header.frame_type != FrameHeader::FrameType::kLFFrame && !frame_header.is_last)
+            frame_header.save_as_reference = TRY(stream.read_bits(2));
 
         auto const resets_canvas = full_frame && frame_header.blending_info.mode == BlendingInfo::BlendMode::kReplace;
         auto const can_reference = !frame_header.is_last && (frame_header.duration == 0 || frame_header.save_as_reference != 0) && frame_header.frame_type != FrameHeader::FrameType::kLFFrame;
-
-        if (frame_header.frame_type != FrameHeader::FrameType::kLFFrame) {
-            if (!frame_header.is_last)
-                TODO();
-        }
 
         frame_header.save_before_ct = !normal_frame;
         if (frame_header.frame_type == FrameHeader::FrameType::kReferenceOnly || (resets_canvas && can_reference))
@@ -744,7 +789,7 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
 
         frame_header.name = TRY(read_string(stream));
 
-        frame_header.restoration_filter = TRY(read_restoration_filter(stream));
+        frame_header.restoration_filter = TRY(read_restoration_filter(stream, frame_header.encoding));
 
         frame_header.extensions = TRY(read_extensions(stream));
     }
@@ -942,7 +987,19 @@ static ErrorOr<WPHeader> read_self_correcting_predictor(LittleEndianInputBitStre
     bool const default_wp = TRY(stream.read_bit());
 
     if (!default_wp) {
-        TODO();
+        self_correcting_predictor.wp_p1 = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_p2 = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_p3a = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_p3b = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_p3c = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_p3d = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_p3e = TRY(stream.read_bits(5));
+        self_correcting_predictor.wp_w = {
+            TRY(stream.read_bits<u8>(4)),
+            TRY(stream.read_bits<u8>(4)),
+            TRY(stream.read_bits<u8>(4)),
+            TRY(stream.read_bits<u8>(4)),
+        };
     }
 
     return self_correcting_predictor;
@@ -1592,7 +1649,7 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
     // the number of channels is computed as follows:
 
     auto num_channels = metadata.num_extra_channels;
-    if (frame_header.encoding == FrameHeader::Encoding::kModular) {
+    if (frame_header.encoding == Encoding::kModular) {
         if (!frame_header.do_YCbCr && !metadata.xyb_encoded
             && metadata.colour_encoding.colour_space == ColourEncoding::ColourSpace::kGrey) {
             num_channels += 1;
@@ -1611,8 +1668,77 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
 }
 ///
 
+/// K.3.1  Patches decoding
+struct Patch {
+    u32 width {};
+    u32 height {};
+
+    u32 ref {};
+
+    u32 x0 {};
+    u32 y0 {};
+
+    u32 count {};
+
+    // x[] and y[] in the spec
+    FixedArray<IntPoint> positions;
+};
+
+ErrorOr<Patch> read_patch(LittleEndianInputBitStream& stream, EntropyDecoder& decoder, u32 num_extra_channels)
+{
+    Patch patch;
+    patch.ref = TRY(decoder.decode_hybrid_uint(stream, 1));
+    patch.x0 = TRY(decoder.decode_hybrid_uint(stream, 3));
+    patch.y0 = TRY(decoder.decode_hybrid_uint(stream, 3));
+    patch.width = TRY(decoder.decode_hybrid_uint(stream, 2)) + 1;
+    patch.height = TRY(decoder.decode_hybrid_uint(stream, 2)) + 1;
+    patch.count = TRY(decoder.decode_hybrid_uint(stream, 7)) + 1;
+
+    patch.positions = TRY(FixedArray<IntPoint>::create(patch.count));
+
+    for (u32 j = 0; j < patch.count; j++) {
+        if (j == 0) {
+            auto position = IntPoint {
+                TRY(decoder.decode_hybrid_uint(stream, 4)),
+                TRY(decoder.decode_hybrid_uint(stream, 4)),
+            };
+            patch.positions[j] = position;
+        } else {
+            auto position = IntPoint {
+                unpack_signed(TRY(decoder.decode_hybrid_uint(stream, 6))) + patch.positions[j - 1].x(),
+                unpack_signed(TRY(decoder.decode_hybrid_uint(stream, 6))) + patch.positions[j - 1].y(),
+            };
+            patch.positions[j] = position;
+        }
+
+        // FIXME: Bail out if this condition is not respected
+        /* the width x height rectangle with top-left coordinates (x, y)
+           is fully contained within the frame */
+
+        if (num_extra_channels > 0)
+            return Error::from_string_literal("JPEGXLLoader: Implement reading patches for extra channels");
+    }
+
+    return patch;
+}
+
+ErrorOr<FixedArray<Patch>> read_patches(LittleEndianInputBitStream& stream, u32 num_extra_channels)
+{
+    auto decoder = TRY(EntropyDecoder::create(stream, 10));
+    u32 const num_patches = TRY(decoder.decode_hybrid_uint(stream, 0));
+
+    auto patches = TRY(FixedArray<Patch>::create(num_patches));
+    for (auto& patch : patches)
+        patch = TRY(read_patch(stream, decoder, num_extra_channels));
+
+    return patches;
+}
+
+///
+
 /// G.1 - LfGlobal
 struct LfGlobal {
+    FixedArray<Patch> patches;
     LfChannelDequantization lf_dequant;
     GlobalModular gmodular;
 };
@@ -1625,12 +1751,21 @@ static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
 {
     LfGlobal lf_global;
 
-    if (frame_header.flags != FrameHeader::Flags::None)
-        TODO();
+    if (frame_header.flags != FrameHeader::Flags::None) {
+        if (frame_header.flags & FrameHeader::Flags::kPatches) {
+            lf_global.patches = TRY(read_patches(stream, metadata.num_extra_channels));
+        }
+        if (frame_header.flags & FrameHeader::Flags::kSplines) {
+            return Error::from_string_literal("JPEGXLLoader: Implement Splines");
+        }
+        if (frame_header.flags & FrameHeader::Flags::kNoise) {
+            return Error::from_string_literal("JPEGXLLoader: Implement Noise");
+        }
+    }
 
     lf_global.lf_dequant = TRY(read_lf_channel_dequantization(stream));
 
-    if (frame_header.encoding == FrameHeader::Encoding::kVarDCT)
+    if (frame_header.encoding == Encoding::kVarDCT)
         TODO();
 
     lf_global.gmodular = TRY(read_global_modular(stream, image, frame_header, metadata, entropy_decoder));
@@ -1645,7 +1780,7 @@ static ErrorOr<void> read_lf_group(LittleEndianInputBitStream&,
     FrameHeader const& frame_header)
 {
     // LF coefficients
-    if (frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+    if (frame_header.encoding == Encoding::kVarDCT) {
         TODO();
     }
 
@@ -1664,7 +1799,7 @@ static ErrorOr<void> read_lf_group(LittleEndianInputBitStream&,
     }
 
     // HF metadata
-    if (frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+    if (frame_header.encoding == Encoding::kVarDCT) {
         TODO();
     }
 
@@ -1739,7 +1874,7 @@ static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
     FrameHeader const& frame_header,
     u32 group_dim)
 {
-    if (frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+    if (frame_header.encoding == Encoding::kVarDCT) {
         (void)stream;
         TODO();
     }
@@ -1823,7 +1958,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     for (u32 i {}; i < frame.num_lf_groups; ++i)
         TRY(read_lf_group(stream, frame.image, frame.frame_header));
 
-    if (frame.frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+    if (frame.frame_header.encoding == Encoding::kVarDCT) {
         TODO();
     }
 
@@ -2021,20 +2156,20 @@ public:
     ErrorOr<void> decode_frame()
     {
         auto frame = TRY(read_frame(m_stream, m_header, m_metadata, m_entropy_decoder));
+        auto const& frame_header = frame.frame_header;
 
-        if (frame.frame_header.restoration_filter.gab || frame.frame_header.restoration_filter.epf_iters != 0)
+        if (frame_header.restoration_filter.gab || frame_header.restoration_filter.epf_iters != 0)
             TODO();
 
         TRY(apply_image_features(frame, m_metadata));
 
-        apply_colour_transformation(frame, m_metadata);
+        if (!frame_header.save_before_ct) {
+            apply_colour_transformation(frame, m_metadata);
+        }
 
         TRY(render_extra_channels(frame.image, m_metadata));
 
-        if (!m_image.has_value())
-            m_image = TRY(Image::create({ m_header.width, m_header.height }, m_metadata));
-
-        frame.image.blend_into(*m_image, frame.frame_header);
+        m_frames.append(move(frame));
 
         return {};
     }
@@ -2052,6 +2187,14 @@ public:
                 TODO();
 
             TRY(decode_frame());
+
+            while (!m_frames.last().frame_header.is_last)
+                TRY(decode_frame());
+
+            if (!m_image.has_value())
+                m_image = TRY(Image::create({ m_header.width, m_header.height }, m_metadata));
+
+            m_frames.last().image.blend_into(*m_image, m_frames.last().frame_header);
 
             m_bitmap = TRY(m_image->to_bitmap(m_metadata));
             m_image.clear();
@@ -2101,6 +2244,8 @@ private:
     // JPEG XL images can be composed of multiples sub-images, this variable is an internal
     // representation of this blending before the final rendering (in m_bitmap)
     Optional<Image> m_image;
+
+    Vector<Frame> m_frames;
 
     Optional<EntropyDecoder> m_entropy_decoder {};
 
