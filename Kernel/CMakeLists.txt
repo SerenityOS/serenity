@@ -411,7 +411,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/Delay.cpp
 
         Arch/x86_64/Firmware/ACPI.cpp
-        Arch/x86_64/Firmware/MultiProcessor/Parser.cpp
         Arch/x86_64/Firmware/PCBIOS/Mapper.cpp
         Arch/x86_64/Firmware/PCBIOS/SysFSComponent.cpp
         Arch/x86_64/Firmware/PCBIOS/SysFSDirectory.cpp
