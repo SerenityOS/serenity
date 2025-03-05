@@ -92,12 +92,6 @@ void IOAPIC::isa_identity_map(size_t index)
     configure_redirection_entry(index, InterruptManagement::acquire_mapped_interrupt_number(index) + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, false, true, Processor::by_id(0).info().apic_id());
 }
 
-void IOAPIC::map_pci_interrupts()
-{
-    InterruptDisabler disabler;
-    configure_redirection_entry(11, 11 + IRQ_VECTOR_BASE, DeliveryMode::Normal, false, false, true, true, Processor::by_id(0).info().apic_id());
-}
-
 bool IOAPIC::is_enabled() const
 {
     return !is_hard_disabled();
