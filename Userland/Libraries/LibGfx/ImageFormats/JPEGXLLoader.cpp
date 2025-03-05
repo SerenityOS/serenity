@@ -1668,8 +1668,77 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
 }
 ///
 
+/// K.3.1  Patches decoding
+struct Patch {
+    u32 width {};
+    u32 height {};
+
+    u32 ref {};
+
+    u32 x0 {};
+    u32 y0 {};
+
+    u32 count {};
+
+    // x[] and y[] in the spec
+    FixedArray<IntPoint> positions;
+};
+
+static ErrorOr<Patch> read_patch(LittleEndianInputBitStream& stream, EntropyDecoder& decoder, u32 num_extra_channels)
+{
+    Patch patch;
+    patch.ref = TRY(decoder.decode_hybrid_uint(stream, 1));
+    patch.x0 = TRY(decoder.decode_hybrid_uint(stream, 3));
+    patch.y0 = TRY(decoder.decode_hybrid_uint(stream, 3));
+    patch.width = TRY(decoder.decode_hybrid_uint(stream, 2)) + 1;
+    patch.height = TRY(decoder.decode_hybrid_uint(stream, 2)) + 1;
+    patch.count = TRY(decoder.decode_hybrid_uint(stream, 7)) + 1;
+
+    patch.positions = TRY(FixedArray<IntPoint>::create(patch.count));
+
+    for (u32 j = 0; j < patch.count; j++) {
+        if (j == 0) {
+            auto position = IntPoint {
+                TRY(decoder.decode_hybrid_uint(stream, 4)),
+                TRY(decoder.decode_hybrid_uint(stream, 4)),
+            };
+            patch.positions[j] = position;
+        } else {
+            auto position = IntPoint {
+                unpack_signed(TRY(decoder.decode_hybrid_uint(stream, 6))) + patch.positions[j - 1].x(),
+                unpack_signed(TRY(decoder.decode_hybrid_uint(stream, 6))) + patch.positions[j - 1].y(),
+            };
+            patch.positions[j] = position;
+        }
+
+        // FIXME: Bail out if this condition is not respected
+        /* the width x height rectangle with top-left coordinates (x, y)
+           is fully contained within the frame */
+
+        if (num_extra_channels > 0)
+            return Error::from_string_literal("JPEGXLLoader: Implement reading patches for extra channels");
+    }
+
+    return patch;
+}
+
+static ErrorOr<FixedArray<Patch>> read_patches(LittleEndianInputBitStream& stream, u32 num_extra_channels)
+{
+    auto decoder = TRY(EntropyDecoder::create(stream, 10));
+    u32 const num_patches = TRY(decoder.decode_hybrid_uint(stream, 0));
+
+    auto patches = TRY(FixedArray<Patch>::create(num_patches));
+    for (auto& patch : patches)
+        patch = TRY(read_patch(stream, decoder, num_extra_channels));
+
+    return patches;
+}
+
+///
+
 /// G.1 - LfGlobal
 struct LfGlobal {
+    FixedArray<Patch> patches;
     LfChannelDequantization lf_dequant;
     GlobalModular gmodular;
 };
@@ -1682,8 +1751,17 @@ static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
 {
     LfGlobal lf_global;
 
-    if (frame_header.flags != FrameHeader::Flags::None)
-        TODO();
+    if (frame_header.flags != FrameHeader::Flags::None) {
+        if (frame_header.flags & FrameHeader::Flags::kPatches) {
+            lf_global.patches = TRY(read_patches(stream, metadata.num_extra_channels));
+        }
+        if (frame_header.flags & FrameHeader::Flags::kSplines) {
+            return Error::from_string_literal("JPEGXLLoader: Implement Splines");
+        }
+        if (frame_header.flags & FrameHeader::Flags::kNoise) {
+            return Error::from_string_literal("JPEGXLLoader: Implement Noise");
+        }
+    }
 
     lf_global.lf_dequant = TRY(read_lf_channel_dequantization(stream));
 
