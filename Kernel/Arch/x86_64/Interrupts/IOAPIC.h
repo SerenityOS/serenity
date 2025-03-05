@@ -73,7 +73,6 @@ private:
 
     virtual void initialize() override;
     void map_isa_interrupts();
-    void map_pci_interrupts();
     void isa_identity_map(size_t index);
 
     PhysicalAddress m_address;
