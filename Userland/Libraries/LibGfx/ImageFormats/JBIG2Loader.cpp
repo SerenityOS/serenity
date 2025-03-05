@@ -1164,8 +1164,8 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
         refinement_inputs.region_height = symbol.height() + refinement_delta_height;
         refinement_inputs.gr_template = inputs.refinement_template;
         refinement_inputs.reference_bitmap = &symbol;
-        refinement_inputs.reference_x_offset = refinement_delta_width / 2 + refinement_x_offset;
-        refinement_inputs.reference_y_offset = refinement_delta_height / 2 + refinement_y_offset;
+        refinement_inputs.reference_x_offset = floor_div(refinement_delta_width, 2) + refinement_x_offset;
+        refinement_inputs.reference_y_offset = floor_div(refinement_delta_height, 2) + refinement_y_offset;
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
         refinement_result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, decoder, refinement_contexts));
