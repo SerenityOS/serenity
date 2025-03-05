@@ -617,6 +617,8 @@ struct FrameHeader {
     FixedArray<u8> ec_upsampling {};
 
     u8 group_size_shift { 1 };
+    u8 x_qm_scale { 3 };
+    u8 b_qm_scale { 2 };
     Passes passes {};
 
     u8 lf_level {};
@@ -678,8 +680,13 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
         if (frame_header.encoding == FrameHeader::Encoding::kModular)
             frame_header.group_size_shift = TRY(stream.read_bits(2));
 
-        if (frame_header.encoding == FrameHeader::Encoding::kVarDCT)
-            TODO();
+        // Set x_qm_scale default value
+        frame_header.x_qm_scale = metadata.xyb_encoded && frame_header.encoding == FrameHeader::Encoding::kVarDCT ? 3 : 2;
+
+        if (metadata.xyb_encoded && frame_header.encoding == FrameHeader::Encoding::kVarDCT) {
+            frame_header.x_qm_scale = TRY(stream.read_bits(3));
+            frame_header.b_qm_scale = TRY(stream.read_bits(3));
+        }
 
         if (frame_header.frame_type != FrameHeader::FrameType::kReferenceOnly)
             frame_header.passes = TRY(read_passes(stream));
