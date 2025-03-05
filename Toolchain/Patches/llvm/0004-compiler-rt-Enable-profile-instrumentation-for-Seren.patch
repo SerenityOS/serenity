@@ -9,8 +9,8 @@ enough to linux to use the pre-canned InstrProfiling implementation.
  clang/lib/Driver/ToolChains/Serenity.cpp      |  3 +++
  clang/test/Driver/instrprof-ld.c              | 20 +++++++++++++++++++
  compiler-rt/cmake/config-ix.cmake             |  2 +-
- .../lib/profile/InstrProfilingPlatformLinux.c |  2 +-
- .../lib/profile/InstrProfilingPlatformOther.c |  3 ++-
+ .../lib/profile/InstrProfilingPlatformLinux.c |  3 ++-
+ .../lib/profile/InstrProfilingPlatformOther.c |  2 +-
  5 files changed, 27 insertions(+), 3 deletions(-)
 
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
@@ -66,42 +66,42 @@ index a96bba4a1e76..4b099da9e2d2 100644
  // RUN:     --target=x86_64-apple-darwin14 -fprofile-instr-generate -fuse-ld=ld \
  // RUN:     -resource-dir=%S/Inputs/resource_dir \
 diff --git a/compiler-rt/cmake/config-ix.cmake b/compiler-rt/cmake/config-ix.cmake
-index dad557af2ae8..b3c46ae85554 100644
+index cf729c3adb1f..76d42499daf0 100644
 --- a/compiler-rt/cmake/config-ix.cmake
 +++ b/compiler-rt/cmake/config-ix.cmake
-@@ -816,7 +816,7 @@ else()
+@@ -836,7 +836,7 @@ else()
  endif()
  
  if (PROFILE_SUPPORTED_ARCH AND NOT LLVM_USE_SANITIZER AND
--    OS_NAME MATCHES "Darwin|Linux|FreeBSD|Windows|Android|Fuchsia|SunOS|NetBSD|AIX")
-+    OS_NAME MATCHES "Darwin|Linux|FreeBSD|Windows|Android|Fuchsia|SunOS|NetBSD|AIX|SerenityOS")
+-    OS_NAME MATCHES "Darwin|Linux|FreeBSD|Windows|Android|Fuchsia|SunOS|NetBSD|AIX|WASI|Haiku")
++    OS_NAME MATCHES "Darwin|Linux|FreeBSD|Windows|Android|Fuchsia|SunOS|NetBSD|AIX|WASI|Haiku|SerenityOS")
    set(COMPILER_RT_HAS_PROFILE TRUE)
  else()
    set(COMPILER_RT_HAS_PROFILE FALSE)
 diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
-index b766436497b7..848df63fe0b8 100644
+index 5b230c1b2006..3641479114d6 100644
 --- a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 +++ b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
-@@ -8,7 +8,7 @@
- 
- #if defined(__linux__) || defined(__FreeBSD__) || defined(__Fuchsia__) || \
-     (defined(__sun__) && defined(__svr4__)) || defined(__NetBSD__) || \
--    defined(_AIX)
-+    defined(_AIX) || defined(__serenity__)
- 
- #if !defined(_AIX)
- #include <elf.h>
-diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
-index aa79a5641cec..e07284e06427 100644
---- a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
-+++ b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
 @@ -8,7 +8,8 @@
  
+ #if defined(__linux__) || defined(__FreeBSD__) || defined(__Fuchsia__) ||      \
+     (defined(__sun__) && defined(__svr4__)) || defined(__NetBSD__) ||          \
+-    defined(_AIX) || defined(__wasm__) || defined(__HAIKU__)
++    defined(_AIX) || defined(__wasm__) || defined(__HAIKU__) ||                \
++    defined(__serenity__)
+ 
+ #if !defined(_AIX) && !defined(__wasm__)
+ #include <elf.h>
+diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
+index 29e570b9fba9..483b836b0a55 100644
+--- a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
++++ b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
+@@ -9,7 +9,7 @@
  #if !defined(__APPLE__) && !defined(__linux__) && !defined(__FreeBSD__) &&     \
      !defined(__Fuchsia__) && !(defined(__sun__) && defined(__svr4__)) &&       \
--    !defined(__NetBSD__) && !defined(_WIN32) && !defined(_AIX)
-+    !defined(__NetBSD__) && !defined(_WIN32) && !defined(_AIX) &&              \
-+    !defined(__serenity__)
+     !defined(__NetBSD__) && !defined(_WIN32) && !defined(_AIX) &&              \
+-    !defined(__wasm__) && !defined(__HAIKU__)
++    !defined(__wasm__) && !defined(__HAIKU__) && !defined(__serenity__)
  
  #include <stdlib.h>
  #include <stdio.h>

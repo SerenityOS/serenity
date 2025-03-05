@@ -25,10 +25,10 @@ Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
  6 files changed, 20 insertions(+), 5 deletions(-)
 
 diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
-index 5ca580fbb59c..a7fe41b0ab06 100644
+index 5db06ccdadbe..e82cda307ddf 100644
 --- a/llvm/cmake/modules/HandleLLVMOptions.cmake
 +++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
-@@ -534,6 +534,9 @@ elseif(MINGW OR CYGWIN)
+@@ -550,6 +550,9 @@ elseif(MINGW OR CYGWIN)
    if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
      append("-Wa,-mbig-obj" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
    endif()
@@ -52,10 +52,10 @@ index c42b5e686bdc..ad4ad534f40c 100644
  #elif defined(_AIX)
  #include <sys/machine.h>
 diff --git a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
-index bba3329e8cc2..81455916a546 100644
+index 944fca000d61..492ceb2d2ece 100644
 --- a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
 +++ b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
-@@ -219,7 +219,8 @@ SharedMemoryMapper::Create(ExecutorProcessControl &EPC, SymbolAddrs SAs) {
+@@ -218,7 +218,8 @@ SharedMemoryMapper::Create(ExecutorProcessControl &EPC, SymbolAddrs SAs) {
  
  void SharedMemoryMapper::reserve(size_t NumBytes,
                                   OnReservedFunction OnReserved) {
@@ -66,10 +66,10 @@ index bba3329e8cc2..81455916a546 100644
    EPC.callSPSWrapperAsync<
        rt::SPSExecutorSharedMemoryMapperServiceReserveSignature>(
 diff --git a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
-index f5118c0f2bfa..426497a45a47 100644
+index 4fbf232008c8..579b5c7c40ea 100644
 --- a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
 +++ b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
-@@ -51,7 +51,8 @@ static DWORD getWindowsProtectionFlags(MemProt MP) {
+@@ -50,7 +50,8 @@ static DWORD getWindowsProtectionFlags(MemProt MP) {
  
  Expected<std::pair<ExecutorAddr, std::string>>
  ExecutorSharedMemoryMapperService::reserve(uint64_t Size) {
@@ -80,10 +80,10 @@ index f5118c0f2bfa..426497a45a47 100644
  #if defined(LLVM_ON_UNIX)
  
 diff --git a/llvm/lib/Support/Unix/Path.inc b/llvm/lib/Support/Unix/Path.inc
-index cf05db546e02..7f60a5d56789 100644
+index 6004e007c0c7..8564c69a28a2 100644
 --- a/llvm/lib/Support/Unix/Path.inc
 +++ b/llvm/lib/Support/Unix/Path.inc
-@@ -112,7 +112,7 @@ typedef uint_t uint;
+@@ -107,7 +107,7 @@ typedef uint_t uint;
  #endif
  
  #if defined(__NetBSD__) || defined(__DragonFly__) || defined(__GNU__) ||       \
@@ -92,7 +92,7 @@ index cf05db546e02..7f60a5d56789 100644
  #define STATVFS_F_FLAG(vfs) (vfs).f_flag
  #else
  #define STATVFS_F_FLAG(vfs) (vfs).f_flags
-@@ -511,6 +511,9 @@ static bool is_local_impl(struct STATVFS &Vfs) {
+@@ -506,6 +506,9 @@ static bool is_local_impl(struct STATVFS &Vfs) {
  #elif defined(__HAIKU__)
    // Haiku doesn't expose this information.
    return false;
@@ -103,10 +103,10 @@ index cf05db546e02..7f60a5d56789 100644
    // statvfs::f_basetype contains a null-terminated FSType name of the mounted
    // target
 diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.inc
-index 2742734bb11e..a5fd340a452b 100644
+index 0708df1eed0a..a6103e357593 100644
 --- a/llvm/lib/Support/Unix/Program.inc
 +++ b/llvm/lib/Support/Unix/Program.inc
-@@ -352,7 +352,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
+@@ -342,7 +342,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
  namespace llvm {
  namespace sys {
  
@@ -115,7 +115,7 @@ index 2742734bb11e..a5fd340a452b 100644
  static pid_t(wait4)(pid_t pid, int *status, int options, struct rusage *usage);
  #elif !defined(__Fuchsia__)
  using ::wait4;
-@@ -395,6 +395,13 @@ pid_t(llvm::sys::wait4)(pid_t pid, int *status, int options,
+@@ -385,6 +385,13 @@ pid_t(llvm::sys::wait4)(pid_t pid, int *status, int options,
  }
  #endif
  

@@ -16,30 +16,34 @@ LibC, namely:
 ---
  libcxx/include/CMakeLists.txt                 |  1 +
  libcxx/include/__config                       |  5 +++--
+ .../__cxx03/__support/ibm/locale_mgmt_zos.h   |  2 +-
  libcxx/include/__locale_dir/locale_base_api.h |  2 ++
  .../__locale_dir/locale_base_api/serenity.h   | 22 +++++++++++++++++++
+ .../include/__support/ibm/locale_mgmt_zos.h   |  2 +-
  libcxx/include/locale                         |  2 +-
+ libcxx/src/CMakeLists.txt                     |  4 ++++
  libcxx/src/include/config_elast.h             |  2 ++
- 6 files changed, 31 insertions(+), 3 deletions(-)
+ libcxx/src/support/ibm/xlocale_zos.cpp        |  2 ++
+ 10 files changed, 39 insertions(+), 5 deletions(-)
  create mode 100644 libcxx/include/__locale_dir/locale_base_api/serenity.h
 
 diff --git a/libcxx/include/CMakeLists.txt b/libcxx/include/CMakeLists.txt
-index 32579272858a..016163984660 100644
+index 8dac823503d7..2c02534f0151 100644
 --- a/libcxx/include/CMakeLists.txt
 +++ b/libcxx/include/CMakeLists.txt
-@@ -491,6 +491,7 @@ set(files
+@@ -506,6 +506,7 @@ set(files
+   __locale_dir/locale_base_api/ibm.h
    __locale_dir/locale_base_api/musl.h
-   __locale_dir/locale_base_api/newlib.h
    __locale_dir/locale_base_api/openbsd.h
 +  __locale_dir/locale_base_api/serenity.h
-   __locale_dir/locale_base_api/win32.h
-   __math/abs.h
-   __math/copysign.h
+   __locale_dir/pad_and_output.h
+   __locale_dir/support/apple.h
+   __locale_dir/support/bsd_like.h
 diff --git a/libcxx/include/__config b/libcxx/include/__config
-index 661af5be3c22..634cabbbbefd 100644
+index a866a7e65183..5b8bc958cd26 100644
 --- a/libcxx/include/__config
 +++ b/libcxx/include/__config
-@@ -817,7 +817,8 @@ typedef __char32_t char32_t;
+@@ -825,7 +825,8 @@ typedef __char32_t char32_t;
          defined(__APPLE__) ||                                                                                          \
          defined(__MVS__) ||                                                                                            \
          defined(_AIX) ||                                                                                               \
@@ -47,33 +51,46 @@ index 661af5be3c22..634cabbbbefd 100644
 +        defined(__EMSCRIPTEN__) ||                                                                                     \
 +        defined(__serenity__)
  // clang-format on
- #      define _LIBCPP_HAS_THREAD_API_PTHREAD
- #    elif defined(__Fuchsia__)
-@@ -890,7 +891,7 @@ typedef __char32_t char32_t;
+ #      undef _LIBCPP_HAS_THREAD_API_PTHREAD
+ #      define _LIBCPP_HAS_THREAD_API_PTHREAD 1
+@@ -908,7 +909,7 @@ typedef __char32_t char32_t;
  #  endif
  
  #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
--      defined(_LIBCPP_HAS_MUSL_LIBC) || defined(__OpenBSD__)
-+      defined(_LIBCPP_HAS_MUSL_LIBC) || defined(__OpenBSD__) || defined(__serenity__)
+-      _LIBCPP_HAS_MUSL_LIBC || defined(__OpenBSD__) || defined(__LLVM_LIBC__)
++      _LIBCPP_HAS_MUSL_LIBC || defined(__OpenBSD__) || defined(__LLVM_LIBC__) || defined(__serenity__)
  #    define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE
  #  endif
  
+diff --git a/libcxx/include/__cxx03/__support/ibm/locale_mgmt_zos.h b/libcxx/include/__cxx03/__support/ibm/locale_mgmt_zos.h
+index 9fa8f8c9088e..2a9cbec71ea6 100644
+--- a/libcxx/include/__cxx03/__support/ibm/locale_mgmt_zos.h
++++ b/libcxx/include/__cxx03/__support/ibm/locale_mgmt_zos.h
+@@ -10,7 +10,7 @@
+ #ifndef _LIBCPP___CXX03___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
+ #define _LIBCPP___CXX03___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
+ 
+-#if defined(__MVS__)
++#if defined(__MVS__) || defined(__serenity__)
+ #  include <__cxx03/locale.h>
+ #  include <__cxx03/string>
+ 
 diff --git a/libcxx/include/__locale_dir/locale_base_api.h b/libcxx/include/__locale_dir/locale_base_api.h
-index 8c000c558c52..bb5745019fc5 100644
+index c1e73caeecce..12611341eb8e 100644
 --- a/libcxx/include/__locale_dir/locale_base_api.h
 +++ b/libcxx/include/__locale_dir/locale_base_api.h
-@@ -25,6 +25,8 @@
- #  include <__locale_dir/locale_base_api/fuchsia.h>
- #elif defined(__wasi__) || defined(_LIBCPP_HAS_MUSL_LIBC)
- #  include <__locale_dir/locale_base_api/musl.h>
-+#elif defined(__serenity__)
-+#  include <__locale_dir/locale_base_api/serenity.h>
- #elif defined(__APPLE__) || defined(__FreeBSD__)
- #  include <xlocale.h>
- #endif
+@@ -133,6 +133,8 @@
+ #    include <__locale_dir/locale_base_api/openbsd.h>
+ #  elif defined(__wasi__) || _LIBCPP_HAS_MUSL_LIBC
+ #    include <__locale_dir/locale_base_api/musl.h>
++#  elif defined(__serenity__)
++#    include <__locale_dir/locale_base_api/serenity.h>
+ #  endif
+ 
+ #  include <__locale_dir/locale_base_api/bsd_locale_fallbacks.h>
 diff --git a/libcxx/include/__locale_dir/locale_base_api/serenity.h b/libcxx/include/__locale_dir/locale_base_api/serenity.h
 new file mode 100644
-index 000000000000..4644fca4ae95
+index 000000000000..13abb601dcb7
 --- /dev/null
 +++ b/libcxx/include/__locale_dir/locale_base_api/serenity.h
 @@ -0,0 +1,22 @@
@@ -90,7 +107,7 @@ index 000000000000..4644fca4ae95
 +
 +#include <stddef.h>
 +
-+#include <__support/xlocale/__nop_locale_mgmt.h>
++#include <__support/ibm/locale_mgmt_zos.h>
 +#include <__support/xlocale/__posix_l_fallback.h>
 +#include <__support/xlocale/__strtonum_fallback.h>
 +#include <clocale>
@@ -99,24 +116,52 @@ index 000000000000..4644fca4ae95
 +#include <cwctype>
 +
 +#endif // _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
+diff --git a/libcxx/include/__support/ibm/locale_mgmt_zos.h b/libcxx/include/__support/ibm/locale_mgmt_zos.h
+index 5fc04b6b4b29..787cc04d5792 100644
+--- a/libcxx/include/__support/ibm/locale_mgmt_zos.h
++++ b/libcxx/include/__support/ibm/locale_mgmt_zos.h
+@@ -10,7 +10,7 @@
+ #ifndef _LIBCPP___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
+ #define _LIBCPP___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
+ 
+-#if defined(__MVS__)
++#if defined(__MVS__) || defined(__serenity__)
+ #  include <locale.h>
+ #  include <string>
+ 
 diff --git a/libcxx/include/locale b/libcxx/include/locale
-index 573910a85bef..ae19777a5346 100644
+index 5af674d19414..3f8526776beb 100644
 --- a/libcxx/include/locale
 +++ b/libcxx/include/locale
-@@ -220,7 +220,7 @@ template <class charT> class messages_byname;
+@@ -224,7 +224,7 @@ template <class charT> class messages_byname;
  
- #  if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+ #    if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
  // Most unix variants have catopen.  These are the specific ones that don't.
--#    if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__)
-+#    if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
- #      define _LIBCPP_HAS_CATOPEN 1
- #      include <nl_types.h>
- #    endif
+-#      if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__)
++#      if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
+ #        define _LIBCPP_HAS_CATOPEN 1
+ #        include <nl_types.h>
+ #      else
+diff --git a/libcxx/src/CMakeLists.txt b/libcxx/src/CMakeLists.txt
+index 4e9bf900af4c..ea40148ae278 100644
+--- a/libcxx/src/CMakeLists.txt
++++ b/libcxx/src/CMakeLists.txt
+@@ -113,6 +113,10 @@ elseif(ZOS)
+     support/ibm/wcsnrtombs.cpp
+     support/ibm/xlocale_zos.cpp
+     )
++elseif(SERENITYOS)
++  list(APPEND LIBCXX_SOURCES
++    support/ibm/xlocale_zos.cpp
++    )
+ endif()
+ 
+ if (LIBCXX_ENABLE_FILESYSTEM)
 diff --git a/libcxx/src/include/config_elast.h b/libcxx/src/include/config_elast.h
-index 899e124ad261..11d930bc8a3c 100644
+index 7edff2d9375d..ba24e85be8d0 100644
 --- a/libcxx/src/include/config_elast.h
 +++ b/libcxx/src/include/config_elast.h
-@@ -35,6 +35,8 @@
+@@ -37,6 +37,8 @@
  #  define _LIBCPP_ELAST 4095
  #elif defined(__APPLE__)
  // No _LIBCPP_ELAST needed on Apple
@@ -125,3 +170,17 @@ index 899e124ad261..11d930bc8a3c 100644
  #elif defined(__MVS__)
  #  define _LIBCPP_ELAST 1160
  #elif defined(_LIBCPP_MSVCRT_LIKE)
+diff --git a/libcxx/src/support/ibm/xlocale_zos.cpp b/libcxx/src/support/ibm/xlocale_zos.cpp
+index 136999ec0b02..23a56c0f5867 100644
+--- a/libcxx/src/support/ibm/xlocale_zos.cpp
++++ b/libcxx/src/support/ibm/xlocale_zos.cpp
+@@ -7,7 +7,9 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include <__assert>
++#ifndef __serenity__
+ #include <__support/ibm/xlocale.h>
++#endif
+ #include <sstream>
+ #include <vector>
+ 

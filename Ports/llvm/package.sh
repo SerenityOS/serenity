@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='llvm'
 useconfigure='true'
-version='19.1.0'
+version='20.1.0'
 workdir="llvm-project-${version}.src"
 configopts=(
     "-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt"
