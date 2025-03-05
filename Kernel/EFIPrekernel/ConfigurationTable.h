@@ -10,6 +10,6 @@
 
 namespace Kernel {
 
-void populate_devicetree_and_acpi_boot_info(BootInfo* boot_info);
+void populate_firmware_boot_info(BootInfo* boot_info);
 
 }

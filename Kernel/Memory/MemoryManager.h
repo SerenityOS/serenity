@@ -44,14 +44,16 @@ enum class UsedMemoryRangeType {
     Kernel,
     BootModule,
     PhysicalPages,
-    __Count
+    SMBIOS,
+    __Count,
 };
 
 static constexpr StringView UserMemoryRangeTypeNames[] {
     "Low memory"sv,
     "Kernel"sv,
     "Boot module"sv,
-    "Physical Pages"sv
+    "Physical Pages"sv,
+    "SMBIOS"sv,
 };
 static_assert(array_size(UserMemoryRangeTypeNames) == to_underlying(UsedMemoryRangeType::__Count));
 
