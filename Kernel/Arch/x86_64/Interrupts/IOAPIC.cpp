@@ -50,7 +50,8 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
         if (redirection_override.source() != interrupt_vector)
             continue;
         bool active_low = false;
-        // See ACPI spec Version 6.2, page 205 to learn more about Interrupt Overriding Flags.
+        // See https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#interrupt-source-override-structure
+        // to learn more about Interrupt Overriding Flags.
         switch ((redirection_override.flags() & 0b11)) {
         case 0:
             active_low = false;
@@ -66,7 +67,8 @@ void IOAPIC::map_interrupt_redirection(u8 interrupt_vector)
         }
 
         bool trigger_level_mode = false;
-        // See ACPI spec Version 6.2, page 205 to learn more about Interrupt Overriding Flags.
+        // See https://uefi.org/specs/ACPI/6.5/05_ACPI_Software_Programming_Model.html#interrupt-source-override-structure
+        // to learn more about Interrupt Overriding Flags.
         switch (((redirection_override.flags() >> 2) & 0b11)) {
         case 0:
             trigger_level_mode = false;
