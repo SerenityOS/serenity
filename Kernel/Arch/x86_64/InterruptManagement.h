@@ -71,7 +71,6 @@ private:
     void locate_apic_data();
     Vector<NonnullLockRefPtr<IRQController>> m_interrupt_controllers;
     Vector<ISAInterruptOverrideMetadata> m_isa_interrupt_overrides;
-    Vector<PCIInterruptOverrideMetadata> m_pci_interrupt_overrides;
     Optional<PhysicalAddress> m_madt_physical_address;
 };
 

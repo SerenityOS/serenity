@@ -74,6 +74,14 @@ struct BootFramebufferInfo {
     BootFramebufferType type { BootFramebufferType::None };
 };
 
+struct SMBIOSBootInfo {
+    PhysicalAddress entry_point_paddr { 0 };
+    u8 entry_point_length { 0 };
+    bool entry_point_is_64_bit { false };
+    u32 maximum_structure_table_length { 0 };
+    PhysicalAddress structure_table_paddr { 0 };
+};
+
 union BootMethodSpecificBootInfo {
     PreInitBootInfo pre_init {};
     Multiboot1BootInfo multiboot1;
@@ -90,6 +98,7 @@ struct BootInfo {
     size_t flattened_devicetree_size { 0 };
 
     PhysicalAddress acpi_rsdp_paddr { 0 };
+    SMBIOSBootInfo smbios {};
 
     size_t physical_to_virtual_offset { 0 };
     FlatPtr kernel_mapping_base { 0 };

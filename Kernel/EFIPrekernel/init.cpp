@@ -285,7 +285,7 @@ extern "C" EFIAPI EFI::Status init(EFI::Handle image_handle, EFI::SystemTable* s
 
     set_up_kernel_stack(root_page_table);
     convert_and_map_cmdline(loaded_image_protocol, root_page_table, *boot_info);
-    populate_devicetree_and_acpi_boot_info(boot_info);
+    populate_firmware_boot_info(boot_info);
 
     arch_prepare_boot(root_page_table, *boot_info);
 

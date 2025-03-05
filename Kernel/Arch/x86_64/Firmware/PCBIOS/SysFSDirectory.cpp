@@ -96,6 +96,12 @@ UNMAP_AFTER_INIT SysFSBIOSDirectory::SysFSBIOSDirectory(SysFSFirmwareDirectory& 
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSBIOSDirectory::find_dmi_entry64bit_point()
 {
+    if (!g_boot_info.smbios.entry_point_paddr.is_null() && g_boot_info.smbios.entry_point_is_64_bit)
+        return g_boot_info.smbios.entry_point_paddr;
+
+    if (g_boot_info.boot_method != BootMethod::Multiboot1)
+        return {};
+
     auto bios_or_error = map_bios();
     if (bios_or_error.is_error())
         return {};
@@ -104,6 +110,12 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSBIOSDirectory::find_dmi_entry64b
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSBIOSDirectory::find_dmi_entry32bit_point()
 {
+    if (!g_boot_info.smbios.entry_point_paddr.is_null() && !g_boot_info.smbios.entry_point_is_64_bit)
+        return g_boot_info.smbios.entry_point_paddr;
+
+    if (g_boot_info.boot_method != BootMethod::Multiboot1)
+        return {};
+
     auto bios_or_error = map_bios();
     if (bios_or_error.is_error())
         return {};
