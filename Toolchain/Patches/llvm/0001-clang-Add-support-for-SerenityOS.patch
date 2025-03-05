@@ -43,10 +43,10 @@ Co-authored-by: Dan Klishch <danilklishch@gmail.com>
  create mode 100644 clang/test/Driver/serenity.cpp
 
 diff --git a/clang/lib/Basic/Targets.cpp b/clang/lib/Basic/Targets.cpp
-index 29133f9ee8fc..a2c48ce382f2 100644
+index 281aebdb1c35..c9da76cae09b 100644
 --- a/clang/lib/Basic/Targets.cpp
 +++ b/clang/lib/Basic/Targets.cpp
-@@ -166,6 +166,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
+@@ -170,6 +170,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
      case llvm::Triple::OpenBSD:
        return std::make_unique<OpenBSDTargetInfo<AArch64leTargetInfo>>(Triple,
                                                                        Opts);
@@ -56,7 +56,7 @@ index 29133f9ee8fc..a2c48ce382f2 100644
      case llvm::Triple::Win32:
        switch (Triple.getEnvironment()) {
        case llvm::Triple::GNU:
-@@ -463,6 +466,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
+@@ -466,6 +469,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
          return std::make_unique<OHOSTargetInfo<RISCV64TargetInfo>>(Triple,
                                                                     Opts);
        }
@@ -66,7 +66,7 @@ index 29133f9ee8fc..a2c48ce382f2 100644
      default:
        return std::make_unique<RISCV64TargetInfo>(Triple, Opts);
      }
-@@ -586,6 +592,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
+@@ -591,6 +597,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
        return std::make_unique<MCUX86_32TargetInfo>(Triple, Opts);
      case llvm::Triple::Hurd:
        return std::make_unique<HurdTargetInfo<X86_32TargetInfo>>(Triple, Opts);
@@ -76,7 +76,7 @@ index 29133f9ee8fc..a2c48ce382f2 100644
      default:
        return std::make_unique<X86_32TargetInfo>(Triple, Opts);
      }
-@@ -646,6 +655,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
+@@ -654,6 +663,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
        return std::make_unique<PS5OSTargetInfo<X86_64TargetInfo>>(Triple, Opts);
      case llvm::Triple::Hurd:
        return std::make_unique<HurdTargetInfo<X86_64TargetInfo>>(Triple, Opts);
@@ -87,10 +87,10 @@ index 29133f9ee8fc..a2c48ce382f2 100644
        return std::make_unique<X86_64TargetInfo>(Triple, Opts);
      }
 diff --git a/clang/lib/Basic/Targets/OSTargets.h b/clang/lib/Basic/Targets/OSTargets.h
-index 5f27c3469f86..854fd14cb39b 100644
+index 991efd2bde01..0b67528245fd 100644
 --- a/clang/lib/Basic/Targets/OSTargets.h
 +++ b/clang/lib/Basic/Targets/OSTargets.h
-@@ -1001,6 +1001,23 @@ public:
+@@ -1040,6 +1040,23 @@ public:
    }
  };
  
@@ -115,7 +115,7 @@ index 5f27c3469f86..854fd14cb39b 100644
  } // namespace clang
  #endif // LLVM_CLANG_LIB_BASIC_TARGETS_OSTARGETS_H
 diff --git a/clang/lib/Driver/CMakeLists.txt b/clang/lib/Driver/CMakeLists.txt
-index 32a4378ab499..7aab8da3b0e4 100644
+index 5bdb6614389c..0b147a4754db 100644
 --- a/clang/lib/Driver/CMakeLists.txt
 +++ b/clang/lib/Driver/CMakeLists.txt
 @@ -75,6 +75,7 @@ add_clang_library(clangDriver
@@ -125,20 +125,20 @@ index 32a4378ab499..7aab8da3b0e4 100644
 +  ToolChains/Serenity.cpp
    ToolChains/Solaris.cpp
    ToolChains/SPIRV.cpp
-   ToolChains/TCE.cpp
+   ToolChains/SPIRVOpenMP.cpp
 diff --git a/clang/lib/Driver/Driver.cpp b/clang/lib/Driver/Driver.cpp
-index 8e44d5afa40e..1cea1f1138d1 100644
+index 87855fdb7997..2549f5940ff4 100644
 --- a/clang/lib/Driver/Driver.cpp
 +++ b/clang/lib/Driver/Driver.cpp
-@@ -43,6 +43,7 @@
- #include "ToolChains/PS4CPU.h"
- #include "ToolChains/RISCVToolchain.h"
+@@ -45,6 +45,7 @@
  #include "ToolChains/SPIRV.h"
+ #include "ToolChains/SPIRVOpenMP.h"
+ #include "ToolChains/SYCL.h"
 +#include "ToolChains/Serenity.h"
  #include "ToolChains/Solaris.h"
  #include "ToolChains/TCE.h"
- #include "ToolChains/VEToolchain.h"
-@@ -6398,6 +6399,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
+ #include "ToolChains/UEFI.h"
+@@ -6663,6 +6664,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
      case llvm::Triple::Fuchsia:
        TC = std::make_unique<toolchains::Fuchsia>(*this, Target, Args);
        break;
@@ -149,10 +149,10 @@ index 8e44d5afa40e..1cea1f1138d1 100644
        TC = std::make_unique<toolchains::Solaris>(*this, Target, Args);
        break;
 diff --git a/clang/lib/Driver/ToolChain.cpp b/clang/lib/Driver/ToolChain.cpp
-index 20a555afb809..0f9c4694e7c7 100644
+index acf9d264d631..5653b07368c4 100644
 --- a/clang/lib/Driver/ToolChain.cpp
 +++ b/clang/lib/Driver/ToolChain.cpp
-@@ -613,6 +613,8 @@ StringRef ToolChain::getOSLibName() const {
+@@ -702,6 +702,8 @@ StringRef ToolChain::getOSLibName() const {
      return "sunos";
    case llvm::Triple::AIX:
      return "aix";
@@ -161,7 +161,7 @@ index 20a555afb809..0f9c4694e7c7 100644
    default:
      return getOS();
    }
-@@ -1128,7 +1130,8 @@ ToolChain::UnwindLibType ToolChain::GetUnwindLibType(
+@@ -1225,7 +1227,8 @@ ToolChain::UnwindLibType ToolChain::GetUnwindLibType(
    else if (LibName == "platform" || LibName == "") {
      ToolChain::RuntimeLibType RtLibType = GetRuntimeLibType(Args);
      if (RtLibType == ToolChain::RLT_CompilerRT) {
@@ -476,17 +476,17 @@ index 000000000000..2a1f685cb662
 +
 +#endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SERENITY_H
 diff --git a/clang/lib/Lex/InitHeaderSearch.cpp b/clang/lib/Lex/InitHeaderSearch.cpp
-index 2218db15013d..36a6cd6425dd 100644
+index bb2a21356fa8..6a8922661285 100644
 --- a/clang/lib/Lex/InitHeaderSearch.cpp
 +++ b/clang/lib/Lex/InitHeaderSearch.cpp
-@@ -304,6 +304,7 @@ bool InitHeaderSearch::ShouldAddDefaultIncludePaths(
+@@ -300,6 +300,7 @@ bool InitHeaderSearch::ShouldAddDefaultIncludePaths(
    case llvm::Triple::PS4:
    case llvm::Triple::PS5:
    case llvm::Triple::RTEMS:
 +  case llvm::Triple::Serenity:
    case llvm::Triple::Solaris:
+   case llvm::Triple::UEFI:
    case llvm::Triple::WASI:
-   case llvm::Triple::ZOS:
 diff --git a/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/include/c++/v1/.keep b/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/include/c++/v1/.keep
 new file mode 100644
 index 000000000000..e69de29bb2d1
