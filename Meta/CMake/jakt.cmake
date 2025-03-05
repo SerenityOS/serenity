@@ -76,6 +76,18 @@ if (NOT ENABLE_JAKT)
     return()
 endif()
 
+find_package(Python COMPONENTS Interpreter REQUIRED)
+file(WRITE ${CMAKE_BINARY_DIR}/jakt_test.cpp "#include <new>")
+execute_process(
+    COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/get_cxx_includes.py
+        --compiler ${CMAKE_CXX_COMPILER}
+        --test-file "${CMAKE_BINARY_DIR}/jakt_test.cpp"
+    OUTPUT_VARIABLE CXX_SYSTEM_INCLUDES_CLEAN
+)
+
+# Remove duplicates
+list(REMOVE_DUPLICATES CXX_SYSTEM_INCLUDES_CLEAN)
+
 cmake_host_system_information(RESULT JAKT_PROCESSOR_COUNT QUERY NUMBER_OF_PHYSICAL_CORES)
 set_property(GLOBAL PROPERTY JOB_POOLS jakt_pool=1)
 
@@ -97,6 +109,12 @@ function(add_jakt_executable target source)
 
     foreach(config IN LISTS JAKT_EXECUTABLE_CONFIGS)
         list(APPEND configs "--config" "${config}")
+    endforeach()
+    foreach(include IN LISTS CXX_COMPILER_INCLUDES)
+        list(APPEND includes "-I" "${include}")
+    endforeach()
+    foreach(include IN LISTS CXX_SYSTEM_INCLUDES_CLEAN)
+        list(APPEND includes "--extra-cpp-flag-isystem${include}")
     endforeach()
     foreach(include IN LISTS JAKT_EXECUTABLE_INCLUDES)
         list(APPEND includes "-I" "${include}")
@@ -198,6 +216,7 @@ function(serenity_jakt_app target_name source)
             ${PROJECT_BINARY_DIR}/Userland/Services
             ${PROJECT_BINARY_DIR}/Userland/Libraries
             ${PROJECT_BINARY_DIR}/Userland
+            ${CMAKE_SYSROOT}/usr/include
             ${SERENITY_JAKT_EXECUTABLE_INCLUDES}
         CONFIGS ${SERENITY_JAKT_EXECUTABLE_CONFIGS}
         LINK_LIBRARIES ${SERENITY_JAKT_EXECUTABLE_LINK_LIBRARIES}
@@ -223,6 +242,7 @@ function(serenity_jakt_executable target_name)
             ${PROJECT_BINARY_DIR}/Userland/Services
             ${PROJECT_BINARY_DIR}/Userland/Libraries
             ${PROJECT_BINARY_DIR}/Userland
+            ${CMAKE_SYSROOT}/usr/include
             ${SERENITY_JAKT_EXECUTABLE_INCLUDES}
         CONFIGS ${SERENITY_JAKT_EXECUTABLE_CONFIGS}
         LINK_LIBRARIES ${SERENITY_JAKT_EXECUTABLE_LINK_LIBRARIES}
