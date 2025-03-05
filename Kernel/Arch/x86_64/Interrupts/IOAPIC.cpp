@@ -105,47 +105,6 @@ void IOAPIC::spurious_eoi(GenericInterruptHandler const& handler) const
     dbgln("IOAPIC: Spurious interrupt");
 }
 
-void IOAPIC::map_isa_interrupts()
-{
-    InterruptDisabler disabler;
-    for (auto redirection_override : InterruptManagement::the().isa_overrides()) {
-        if ((redirection_override.gsi() < gsi_base()) || (redirection_override.gsi() >= (gsi_base() + m_redirection_entries_count)))
-            continue;
-        bool active_low = false;
-        // See ACPI spec Version 6.2, page 205 to learn more about Interrupt Overriding Flags.
-        switch ((redirection_override.flags() & 0b11)) {
-        case 0:
-            active_low = false;
-            break;
-        case 1:
-            active_low = false;
-            break;
-        case 2:
-            VERIFY_NOT_REACHED();
-        case 3:
-            active_low = true;
-            break;
-        }
-
-        bool trigger_level_mode = false;
-        // See ACPI spec Version 6.2, page 205 to learn more about Interrupt Overriding Flags.
-        switch (((redirection_override.flags() >> 2) & 0b11)) {
-        case 0:
-            trigger_level_mode = false;
-            break;
-        case 1:
-            trigger_level_mode = false;
-            break;
-        case 2:
-            VERIFY_NOT_REACHED();
-        case 3:
-            trigger_level_mode = true;
-            break;
-        }
-        configure_redirection_entry(redirection_override.gsi() - gsi_base(), InterruptManagement::acquire_mapped_interrupt_number(redirection_override.source()) + IRQ_VECTOR_BASE, 0, false, active_low, trigger_level_mode, true, Processor::by_id(0).info().apic_id());
-    }
-}
-
 void IOAPIC::reset_all_redirection_entries() const
 {
     InterruptDisabler disabler;
