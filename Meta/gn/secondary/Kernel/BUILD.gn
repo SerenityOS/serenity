@@ -312,7 +312,6 @@ source_set("arch_sources") {
       "Arch/x86_64/DebugOutput.cpp",
       "Arch/x86_64/Delay.cpp",
       "Arch/x86_64/Firmware/ACPI/StaticParsing.cpp",
-      "Arch/x86_64/Firmware/MultiProcessor/Parser.cpp",
       "Arch/x86_64/Firmware/PCBIOS/Mapper.cpp",
       "Arch/x86_64/Firmware/PCBIOS/SysFSComponent.cpp",
       "Arch/x86_64/Firmware/PCBIOS/SysFSDirectory.cpp",

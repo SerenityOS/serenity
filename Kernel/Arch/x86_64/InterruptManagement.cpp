@@ -7,7 +7,6 @@
 #include <AK/ByteReader.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/Interrupts.h>
-#include <Kernel/Arch/x86_64/Firmware/MultiProcessor/Parser.h>
 #include <Kernel/Arch/x86_64/InterruptManagement.h>
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #include <Kernel/Arch/x86_64/Interrupts/IOAPIC.h>
@@ -175,10 +174,6 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_ioapic_mode()
         } else {
             dbgln("Interrupts: Detected {}", irq_controller->model());
         }
-    }
-
-    if (auto mp_parser = MultiProcessorParser::autodetect()) {
-        m_pci_interrupt_overrides = mp_parser->get_pci_interrupt_redirections();
     }
 
     APIC::initialize();
