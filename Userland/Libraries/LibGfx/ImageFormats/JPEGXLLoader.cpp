@@ -541,11 +541,33 @@ enum class Encoding {
 /// J.1 - General
 struct RestorationFilter {
     bool gab { true };
+    bool gab_custom { false };
+    f32 gab_x_weight1 { 0.115169525 };
+    f32 gab_x_weight2 { 0.061248592 };
+    f32 gab_y_weight1 { 0.115169525 };
+    f32 gab_y_weight2 { 0.061248592 };
+    f32 gab_b_weight1 { 0.115169525 };
+    f32 gab_b_weight2 { 0.061248592 };
+
     u8 epf_iters { 2 };
+
+    bool epf_sharp_custom { false };
+    Array<f32, 8> epf_sharp_lut { 0, 1. / 7, 2. / 7, 3. / 7, 4. / 7, 5. / 7, 6. / 7, 1 };
+
+    bool epf_weight_custom { false };
+    Array<f32, 3> epf_channel_scale { 40.0, 5.0, 3.5 };
+
+    bool epf_sigma_custom { false };
+    f32 epf_quant_mul { 0.46 };
+    f32 epf_pass0_sigma_scale { 0.9 };
+    f32 epf_pass2_sigma_scale { 6.5 };
+    f32 epf_border_sad_mul { 2. / 3 };
+    f32 epf_sigma_for_modular { 1.0 };
+
     Extensions extensions;
 };
 
-static ErrorOr<RestorationFilter> read_restoration_filter(LittleEndianInputBitStream& stream)
+static ErrorOr<RestorationFilter> read_restoration_filter(LittleEndianInputBitStream& stream, Encoding encoding)
 {
     RestorationFilter restoration_filter;
 
@@ -555,12 +577,29 @@ static ErrorOr<RestorationFilter> read_restoration_filter(LittleEndianInputBitSt
         restoration_filter.gab = TRY(stream.read_bit());
 
         if (restoration_filter.gab) {
-            TODO();
+            restoration_filter.gab_custom = TRY(stream.read_bit());
+            if (restoration_filter.gab_custom) {
+                return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
+            }
         }
 
         restoration_filter.epf_iters = TRY(stream.read_bits(2));
         if (restoration_filter.epf_iters != 0) {
-            TODO();
+            if (encoding == Encoding::kVarDCT) {
+                restoration_filter.epf_sharp_custom = TRY(stream.read_bit());
+                if (restoration_filter.epf_sharp_custom)
+                    return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
+            }
+            restoration_filter.epf_weight_custom = TRY(stream.read_bit());
+            if (restoration_filter.epf_sharp_custom)
+                return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
+
+            restoration_filter.epf_sigma_custom = TRY(stream.read_bit());
+            if (restoration_filter.epf_sharp_custom)
+                return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
+
+            if (encoding == Encoding::kModular)
+                return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
         }
 
         restoration_filter.extensions = TRY(read_extensions(stream));
@@ -750,7 +789,7 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
 
         frame_header.name = TRY(read_string(stream));
 
-        frame_header.restoration_filter = TRY(read_restoration_filter(stream));
+        frame_header.restoration_filter = TRY(read_restoration_filter(stream, frame_header.encoding));
 
         frame_header.extensions = TRY(read_extensions(stream));
     }
