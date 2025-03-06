@@ -788,6 +788,8 @@ void MainWidget::set_path(StringView path)
             set_preview_mode(PreviewMode::Markdown);
         else if (m_extension == "html" || m_extension == "htm")
             set_preview_mode(PreviewMode::HTML);
+        else if (m_extension == "gmi")
+            set_preview_mode(PreviewMode::Gemtext);
         else
             set_preview_mode(PreviewMode::None);
     }
