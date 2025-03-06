@@ -680,7 +680,6 @@ if (BUILD_LAGOM)
         # LibTest tests from Tests/
         set(TEST_DIRECTORIES
             AK
-            JSSpecCompiler
             LibCrypto
             LibCompress
             LibGL
