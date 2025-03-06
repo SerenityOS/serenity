@@ -472,15 +472,22 @@ void inverse_move_to_front_transform(Vector<u32>& clusters)
 
 ErrorOr<void> EntropyDecoder::read_pre_clustered_distributions(LittleEndianInputBitStream& stream, u32 num_distrib)
 {
+    auto [clusters, num_clusters] = TRY(Gfx::JPEGXL::read_pre_clustered_distributions(stream, num_distrib));
+    m_clusters = move(clusters);
+    TRY(m_configs.try_resize(num_clusters));
+    return {};
+}
+
+ErrorOr<ClustersInfo> read_pre_clustered_distributions(LittleEndianInputBitStream& stream, u32 num_distrib)
+{
     // C.2.2  Distribution clustering
     if (num_distrib == 1) {
         // If num_dist == 1, then num_clusters = 1 and clusters[0] = 0, and the remainder of this subclause is skipped.
-        m_clusters = { 0 };
-        TRY(m_configs.try_resize(1));
-        return {};
+        return ClustersInfo { { 0 }, 1 };
     };
 
-    TRY(m_clusters.try_resize(num_distrib));
+    Vector<u32> clusters;
+    TRY(clusters.try_resize(num_distrib));
 
     bool const is_simple = TRY(stream.read_bit());
 
@@ -488,9 +495,9 @@ ErrorOr<void> EntropyDecoder::read_pre_clustered_distributions(LittleEndianInput
 
     auto const read_clusters = [&](auto&& reader) -> ErrorOr<void> {
         for (u32 i {}; i < num_distrib; ++i) {
-            m_clusters[i] = TRY(reader());
-            if (m_clusters[i] >= num_clusters)
-                num_clusters = m_clusters[i] + 1;
+            clusters[i] = TRY(reader());
+            if (clusters[i] >= num_clusters)
+                num_clusters = clusters[i] + 1;
         }
         return {};
     };
@@ -508,12 +515,11 @@ ErrorOr<void> EntropyDecoder::read_pre_clustered_distributions(LittleEndianInput
         TRY(read_clusters([&]() { return decoder.decode_hybrid_uint(stream, 0); }));
 
         if (use_mtf)
-            inverse_move_to_front_transform(m_clusters);
+            inverse_move_to_front_transform(clusters);
 
         TRY(decoder.ensure_end_state());
     }
-    TRY(m_configs.try_resize(num_clusters));
-    return {};
+    return ClustersInfo { move(clusters), num_clusters };
 }
 
 }

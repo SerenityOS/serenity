@@ -49,6 +49,13 @@ struct LZ77 {
     u32 min_length {};
 };
 
+struct ClustersInfo {
+    Vector<u32> clusters;
+    u32 num_clusters {};
+};
+
+ErrorOr<ClustersInfo> read_pre_clustered_distributions(LittleEndianInputBitStream& stream, u32 num_distrib);
+
 class EntropyDecoder {
     AK_MAKE_NONCOPYABLE(EntropyDecoder);
     AK_MAKE_DEFAULT_MOVABLE(EntropyDecoder);
