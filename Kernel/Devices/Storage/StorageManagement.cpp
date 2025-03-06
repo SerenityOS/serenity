@@ -103,8 +103,6 @@ void StorageManagement::add_recipe(DeviceTree::DeviceRecipe<NonnullRefPtr<Storag
 
 UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool nvme_poll)
 {
-    VERIFY(m_controllers.is_empty());
-
     if (!kernel_command_line().disable_physical_storage()) {
         // NOTE: Search for VMD devices before actually searching for storage controllers
         // because the VMD device is only a bridge to such (NVMe) controllers.
@@ -177,7 +175,6 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool nvme_pol
 
 UNMAP_AFTER_INIT void StorageManagement::enumerate_storage_devices()
 {
-    VERIFY(!m_controllers.is_empty());
     for (auto& controller : m_controllers) {
         for (size_t device_index = 0; device_index < controller->devices_count(); device_index++) {
             auto device = controller->device(device_index);
@@ -383,7 +380,6 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_logical_unit
 
 UNMAP_AFTER_INIT bool StorageManagement::determine_boot_device(StringView boot_argument)
 {
-    VERIFY(!m_controllers.is_empty());
     m_boot_argument = boot_argument;
 
     if (m_boot_argument.starts_with(block_device_prefix)) {
@@ -420,7 +416,6 @@ UNMAP_AFTER_INIT bool StorageManagement::determine_boot_device(StringView boot_a
 
 UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uuid()
 {
-    VERIFY(!m_storage_devices.is_empty());
     VERIFY(m_boot_argument.starts_with(partition_uuid_prefix));
 
     auto partition_uuid = UUID(m_boot_argument.substring_view(partition_uuid_prefix.length()), UUID::Endianness::Mixed);
@@ -493,7 +488,6 @@ ErrorOr<NonnullRefPtr<VFSRootContext>> StorageManagement::create_first_vfs_root_
 
 UNMAP_AFTER_INIT void StorageManagement::initialize(bool poll)
 {
-    VERIFY(s_storage_device_minor_number == 0);
     if (!PCI::Access::is_disabled()) {
         enumerate_pci_controllers(poll);
     }
