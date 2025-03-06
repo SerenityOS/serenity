@@ -1836,13 +1836,105 @@ static ErrorOr<FixedArray<Patch>> read_patches(LittleEndianInputBitStream& strea
     TRY(decoder.ensure_end_state());
     return patches;
 }
+///
 
+/// I.2.1 - Quantizer
+struct Quantizer {
+    u32 global_scale {};
+    u32 quant_lf {};
+};
+
+static ErrorOr<Quantizer> read_quantizer(LittleEndianInputBitStream& stream)
+{
+    Quantizer quantizer;
+    quantizer.global_scale = U32(1 + TRY(stream.read_bits(11)), 2049 + TRY(stream.read_bits(11)), 4097 + TRY(stream.read_bits(12)), 8193 + TRY(stream.read_bits(16)));
+    quantizer.quant_lf = U32(16, 1 + TRY(stream.read_bits(5)), 1 + TRY(stream.read_bits(8)), 1 + TRY(stream.read_bits(16)));
+
+    return quantizer;
+}
+///
+
+/// I.2.2 - HF block context decoding
+struct HFBlockContext {
+    Vector<u32> block_ctx_map {};
+    Vector<u32> qf_thresholds {};
+    Array<Vector<i32>, 3> lf_thresholds {};
+};
+
+static ErrorOr<HFBlockContext> read_hf_block_context(LittleEndianInputBitStream& stream)
+{
+    HFBlockContext hf_block_context;
+
+    if (TRY(stream.read_bit())) {
+        hf_block_context.block_ctx_map = { 0, 1, 2, 2, 3, 3, 4, 5, 6, 6, 6, 6, 6,
+            7, 8, 9, 9, 10, 11, 12, 13, 14, 14, 14, 14, 14,
+            7, 8, 9, 9, 10, 11, 12, 13, 14, 14, 14, 14, 14 };
+    } else {
+        Array<u8, 3> nb_lf_thr {};
+
+        for (u8 i = 0; i < 3; i++) {
+            nb_lf_thr[i] = TRY(stream.read_bits(4));
+            for (u8 j = 0; j < nb_lf_thr[i]; j++) {
+                i32 t = unpack_signed(U32(TRY(stream.read_bits(4)), 16 + TRY(stream.read_bits(8)), 272 + TRY(stream.read_bits(16)), 65808 + TRY(stream.read_bits(32))));
+                TRY(hf_block_context.lf_thresholds[i].try_append(t));
+            }
+        }
+
+        u8 nb_qf_thr = TRY(stream.read_bits(4));
+        for (u8 i = 0; i < nb_qf_thr; i++) {
+            u32 t = 1 + U32(TRY(stream.read_bits(2)), 4 + TRY(stream.read_bits(3)), 12 + TRY(stream.read_bits(5)), 44 + TRY(stream.read_bits(8)));
+            TRY(hf_block_context.qf_thresholds.try_append(t));
+        }
+
+        u32 bsize = 39 * (nb_qf_thr + 1) * (nb_lf_thr[0] + 1) * (nb_lf_thr[1] + 1) * (nb_lf_thr[2] + 1);
+
+        if (bsize > 39 * 64)
+            return Error::from_string_literal("JPEGXLLoader: Invalid bsize in read HF Block Context");
+
+        /* num_dist = bsize <= 39 * 64 and the resulting num_clusters <= 16 */
+        auto [clusters, num_clusters] = TRY(read_pre_clustered_distributions(stream, bsize));
+        hf_block_context.block_ctx_map = move(clusters);
+        if (num_clusters > 16)
+            return Error::from_string_literal("JPEGXLLoader: Invalid num_clusters in HF Block Context");
+    }
+
+    return hf_block_context;
+}
+///
+
+/// I.2.3 - LF channel correlation factors
+struct LfChannelCorrelation {
+    u32 colour_factor { 84 };
+    f32 base_correlation_x { 0.0 };
+    f32 base_correlation_b { 1.0 };
+    u8 x_factor_lf { 128 };
+    u8 b_factor_lf { 128 };
+};
+
+static ErrorOr<LfChannelCorrelation> read_lf_channel_correlation(LittleEndianInputBitStream& stream)
+{
+    LfChannelCorrelation lf_channel_correlation;
+
+    bool all_default = TRY(stream.read_bit());
+    if (!all_default) {
+        lf_channel_correlation.colour_factor = U32(84, 256, 2 + TRY(stream.read_bits(8)), 258 + TRY(stream.read_bits(16)));
+        lf_channel_correlation.base_correlation_x = TRY(F16(stream));
+        lf_channel_correlation.base_correlation_b = TRY(F16(stream));
+        lf_channel_correlation.x_factor_lf = TRY(F16(stream));
+        lf_channel_correlation.b_factor_lf = TRY(F16(stream));
+    }
+
+    return lf_channel_correlation;
+}
 ///
 
 /// G.1 - LfGlobal
 struct LfGlobal {
     FixedArray<Patch> patches;
     LfChannelDequantization lf_dequant;
+    Quantizer quantizer;
+    HFBlockContext hf_block_ctx;
+    LfChannelCorrelation lf_chan_corr;
     GlobalModular gmodular;
 };
 
@@ -1867,8 +1959,11 @@ static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
 
     lf_global.lf_dequant = TRY(read_lf_channel_dequantization(stream));
 
-    if (frame_header.encoding == Encoding::kVarDCT)
-        TODO();
+    if (frame_header.encoding == Encoding::kVarDCT) {
+        lf_global.quantizer = TRY(read_quantizer(stream));
+        lf_global.hf_block_ctx = TRY(read_hf_block_context(stream));
+        lf_global.lf_chan_corr = TRY(read_lf_channel_correlation(stream));
+    }
 
     lf_global.gmodular = TRY(read_global_modular(stream, frame_size, frame_header, metadata));
 
