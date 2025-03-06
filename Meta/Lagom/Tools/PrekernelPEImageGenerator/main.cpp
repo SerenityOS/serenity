@@ -26,6 +26,8 @@ static_assert(is_power_of_two(PE_SECTION_ALIGNMENT));
 static constexpr size_t PE_FILE_ALIGNMENT = 512;
 static_assert(is_power_of_two(PE_FILE_ALIGNMENT));
 
+namespace {
+
 ErrorOr<ByteBuffer> translate_relocations(ELF::Image const& elf_image, Span<ELF::Image::Section const*> sorted_elf_sections, Bytes raw_elf)
 {
     unsigned none_relocation_type;
@@ -349,6 +351,8 @@ ErrorOr<void> write_pe_sections(Core::OutputBufferedFile& stream, Span<ELF::Imag
     TRY(stream.write_until_depleted(base_relocation_section_data));
 
     return {};
+}
+
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
