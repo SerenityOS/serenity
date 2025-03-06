@@ -59,10 +59,6 @@ INCLUDE_CHECK_EXCLUDES = {
     "Userland/Libraries/LibCpp/Tests/preprocessor/",
 }
 
-LOCAL_INCLUDE_ROOT_OVERRIDES = {
-    "Meta/Lagom/Tools/CodeGenerators/JSSpecCompiler/",
-}
-
 LOCAL_INCLUDE_SUFFIX_EXCLUDES = [
     # Some Qt files are required to include their .moc files, which will be located in a deep
     # subdirectory that we won't find from here.
@@ -100,12 +96,6 @@ def is_in_prefix_list(filename, prefix_list):
     )
 
 
-def find_matching_prefix(filename, prefix_list):
-    matching_prefixes = [prefix for prefix in prefix_list if filename.startswith(prefix)]
-    assert len(matching_prefixes) <= 1
-    return matching_prefixes[0] if matching_prefixes else None
-
-
 def run():
     errors_license = []
     errors_pragma_once_bad = []
@@ -139,10 +129,7 @@ def run():
         if BAD_INCLUDE_COMPLEX.search(file_content):
             errors_include_bad_complex.append(filename)
         if not is_in_prefix_list(filename, INCLUDE_CHECK_EXCLUDES):
-            if include_root := find_matching_prefix(filename, LOCAL_INCLUDE_ROOT_OVERRIDES):
-                local_include_root = pathlib.Path(include_root)
-            else:
-                local_include_root = pathlib.Path(filename).parent
+            file_directory = pathlib.Path(filename).parent
             for include_line in ANY_INCLUDE_PATTERN.findall(file_content):
                 if SYSTEM_INCLUDE_PATTERN.match(include_line):
                     # Don't try to resolve system-style includes, as these might depend on generators.
@@ -155,7 +142,7 @@ def run():
                     continue
 
                 relative_filename = local_match.group(1)
-                referenced_file = local_include_root.joinpath(relative_filename)
+                referenced_file = file_directory.joinpath(relative_filename)
 
                 if referenced_file.suffix in LOCAL_INCLUDE_SUFFIX_EXCLUDES:
                     continue
