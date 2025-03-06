@@ -425,7 +425,7 @@ using IdentityType = typename __IdentityType<T>::Type;
 template<typename T, typename = void>
 struct __AddReference {
     using LvalueType = T;
-    using TvalueType = T;
+    using RvalueType = T;
 };
 
 template<typename T>
