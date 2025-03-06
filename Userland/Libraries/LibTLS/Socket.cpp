@@ -56,7 +56,8 @@ struct PromiseAwaiter {
     bool await_ready() const { return promise->is_resolved(); }
     void await_suspend(std::coroutine_handle<> awaiter)
     {
-        promise->when_resolved([awaiter](auto&) {
+        // Note: Argument pack as to allow `Promise<void>` which does not pass any arguments to the callback.
+        promise->when_resolved([awaiter](auto&...) {
             Core::deferred_invoke([awaiter] { awaiter.resume(); });
         });
         promise->when_rejected([awaiter](auto&) {
@@ -76,14 +77,12 @@ struct PromiseAwaiter {
 
 Coroutine<ErrorOr<NonnullOwnPtr<TLSv12>>> TLSv12::async_connect(ByteString const& host, u16 port, Options options)
 {
-    auto promise = Core::Promise<Empty>::construct();
+    auto promise = Core::Promise<void>::construct();
     OwnPtr<Core::Socket> tcp_socket = CO_TRY(co_await Core::TCPSocket::async_connect(host, port));
     CO_TRY(tcp_socket->set_blocking(false));
     auto tls_socket = make<TLSv12>(move(tcp_socket), move(options));
     tls_socket->set_sni(host);
-    tls_socket->on_connected = [=] {
-        promise->resolve({});
-    };
+    tls_socket->on_connected = [promise] { promise->resolve(); };
     tls_socket->on_tls_error = [&tls_socket = *tls_socket, promise](auto alert) {
         tls_socket.try_disambiguate_error();
         promise->reject(AK::Error::from_string_view(enum_to_string(alert)));
@@ -94,7 +93,7 @@ Coroutine<ErrorOr<NonnullOwnPtr<TLSv12>>> TLSv12::async_connect(ByteString const
         tls_socket.on_connected = nullptr;
     };
 
-    CO_TRY(co_await PromiseAwaiter<Empty> { promise });
+    CO_TRY(co_await PromiseAwaiter<void> { promise });
 
     tls_socket->m_context.should_expect_successful_read = true;
     co_return tls_socket;
@@ -102,15 +101,13 @@ Coroutine<ErrorOr<NonnullOwnPtr<TLSv12>>> TLSv12::async_connect(ByteString const
 
 Coroutine<ErrorOr<NonnullOwnPtr<TLSv12>>> TLSv12::async_connect(ByteString const& host, Core::Socket& underlying_stream, Options options)
 {
-    auto promise = Core::Promise<Empty>::construct();
+    auto promise = Core::Promise<void>::construct();
     CO_TRY(underlying_stream.set_blocking(false));
     auto tls_socket = make<TLSv12>(&underlying_stream, move(options));
     tls_socket->set_sni(host);
-    tls_socket->on_connected = [=] {
-        promise->resolve({});
-    };
-    tls_socket->on_tls_error = [&, promise](auto alert) {
-        tls_socket->try_disambiguate_error();
+    tls_socket->on_connected = [promise] { promise->resolve(); };
+    tls_socket->on_tls_error = [&tls_socket = *tls_socket, promise](auto alert) {
+        tls_socket.try_disambiguate_error();
         promise->reject(AK::Error::from_string_view(enum_to_string(alert)));
     };
 
@@ -119,7 +116,7 @@ Coroutine<ErrorOr<NonnullOwnPtr<TLSv12>>> TLSv12::async_connect(ByteString const
         tls_socket.on_connected = nullptr;
     };
 
-    CO_TRY(co_await PromiseAwaiter<Empty> { promise });
+    CO_TRY(co_await PromiseAwaiter<void> { promise });
 
     tls_socket->m_context.should_expect_successful_read = true;
     co_return tls_socket;

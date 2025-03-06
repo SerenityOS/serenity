@@ -13,7 +13,7 @@ Client::Client(StringView host, u16 port, NonnullOwnPtr<Core::Socket> socket)
     : m_host(host)
     , m_port(port)
     , m_socket(move(socket))
-    , m_connect_pending(Promise<Empty>::construct())
+    , m_connect_pending(Promise<void>::construct())
 {
     setup_callbacks();
 }
@@ -84,7 +84,7 @@ ErrorOr<void> Client::on_ready_to_receive()
 
     // Once we get server hello we can start sending.
     if (m_connect_pending) {
-        m_connect_pending->resolve({});
+        m_connect_pending->resolve();
         m_connect_pending.clear();
         m_buffer.clear();
         return {};

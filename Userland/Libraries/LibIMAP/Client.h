@@ -25,7 +25,7 @@ public:
 
     Client(Client&&);
 
-    RefPtr<Promise<Empty>> connection_promise()
+    RefPtr<Promise<void>> connection_promise()
     {
         return m_connect_pending;
     }
@@ -72,7 +72,7 @@ private:
     u16 m_port;
 
     NonnullOwnPtr<Core::Socket> m_socket;
-    RefPtr<Promise<Empty>> m_connect_pending {};
+    RefPtr<Promise<void>> m_connect_pending;
 
     int m_current_command = 1;
 
