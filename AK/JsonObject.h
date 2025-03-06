@@ -20,7 +20,10 @@ namespace AK {
 
 class JsonObject {
     template<typename Callback>
-    using CallbackErrorType = decltype(declval<Callback>()(declval<ByteString const&>(), declval<JsonValue const&>()).release_error());
+    using CallbackErrorType = decltype(declval<Callback>()(declval<ByteString const&>(), declval<JsonValue const&>()))::ErrorType;
+
+    static_assert(SameAs<CallbackErrorType<ErrorOr<void> (*)(ByteString const&, JsonValue const&)>, Error>);
+    static_assert(SameAs<ErrorOr<void, CallbackErrorType<ErrorOr<void> (*)(ByteString const&, JsonValue const&)>>, ErrorOr<void>>);
 
 public:
     JsonObject();
