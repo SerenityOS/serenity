@@ -411,10 +411,8 @@ static ErrorOr<TestResult> run_test(HeadlessWebContentView& view, StringView inp
 {
     // Clear the current document.
     // FIXME: Implement a debug-request to do this more thoroughly.
-    auto promise = Core::Promise<Empty>::construct();
-    view.on_load_finish = [&](auto) {
-        promise->resolve({});
-    };
+    auto promise = Core::Promise<void>::construct();
+    view.on_load_finish = [&](auto const&) { promise->resolve(); };
     view.on_text_test_finish = {};
 
     view.on_request_file_picker = [&](auto const& accepted_file_types, auto allow_multiple_files) {

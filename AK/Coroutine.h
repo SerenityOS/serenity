@@ -242,6 +242,12 @@ struct TryAwaiter {
         }
     }
 
+    void await_resume()
+    requires(IsSame<T, ErrorOr<void>>)
+    {
+        (void)m_expression->release_value();
+    }
+
     decltype(auto) await_resume()
     {
         return m_expression->release_value();
@@ -263,7 +269,7 @@ auto declval_coro_result(T&&) -> T;
 
 // GCC cannot handle CO_TRY(...CO_TRY(...)...), this hack ensures that it always has the right type information available.
 // FIXME: Remove this once GCC can correctly infer the result type of `co_await TryAwaiter { ... }`.
-#        define CO_TRY(expression) static_cast<decltype(AK::Detail::declval_coro_result(expression).release_value())>(co_await ::AK::Detail::TryAwaiter { (expression) })
+#        define CO_TRY(expression) static_cast<AddRvalueReference<typename RemoveReference<decltype(expression)>::ResultType>>(co_await ::AK::Detail::TryAwaiter { (expression) })
 #    endif
 #elifndef AK_COROUTINE_STATEMENT_EXPRS_BROKEN
 #    define CO_TRY(expression)                               \
