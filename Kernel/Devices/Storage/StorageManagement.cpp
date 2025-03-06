@@ -188,9 +188,9 @@ UNMAP_AFTER_INIT void StorageManagement::dump_storage_devices_and_partitions() c
     for (auto const& storage_device : m_storage_devices) {
         auto const& partitions = storage_device.partitions();
         if (partitions.is_empty()) {
-            critical_dmesgln("  Device: block{}:{} (no partitions)", storage_device.major(), storage_device.minor());
+            critical_dmesgln("  Device: block{}:{} ({}, no partitions)", storage_device.major(), storage_device.minor(), storage_device.command_set_to_string_view());
         } else {
-            critical_dmesgln("  Device: block{}:{} ({} partitions)", storage_device.major(), storage_device.minor(), partitions.size());
+            critical_dmesgln("  Device: block{}:{} ({}, {} partitions)", storage_device.major(), storage_device.minor(), storage_device.command_set_to_string_view(), partitions.size());
             unsigned partition_number = 1;
             for (auto const& partition : partitions) {
                 critical_dmesgln("    Partition: {}, block{}:{} (UUID {})", partition_number, partition->major(), partition->minor(), partition->metadata().unique_guid().to_string());
