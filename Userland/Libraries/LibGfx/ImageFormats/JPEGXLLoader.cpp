@@ -896,8 +896,8 @@ public:
 
         // 1 / 2 Read the 6 pre-clustered distributions
         auto const num_distrib = 6;
-        if (!decoder.has_value())
-            decoder = TRY(EntropyDecoder::create(stream, num_distrib));
+        VERIFY(!decoder.has_value());
+        decoder = TRY(EntropyDecoder::create(stream, num_distrib));
 
         // 2 / 2 Decode the tree
 
@@ -1629,6 +1629,7 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
 
 /// G.1.2 - LF channel dequantization weights
 struct GlobalModular {
+    Optional<EntropyDecoder> decoder;
     MATree ma_tree;
     ModularData modular_data;
 };
@@ -1636,15 +1637,14 @@ struct GlobalModular {
 static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& stream,
     IntSize frame_size,
     FrameHeader const& frame_header,
-    ImageMetadata const& metadata,
-    Optional<EntropyDecoder>& entropy_decoder)
+    ImageMetadata const& metadata)
 {
     GlobalModular global_modular;
 
     auto const decode_ma_tree = TRY(stream.read_bit());
 
     if (decode_ma_tree)
-        global_modular.ma_tree = TRY(MATree::decode(stream, entropy_decoder));
+        global_modular.ma_tree = TRY(MATree::decode(stream, global_modular.decoder));
 
     // The decoder then decodes a modular sub-bitstream (Annex H), where
     // the number of channels is computed as follows:
@@ -1665,7 +1665,7 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
     auto channels = TRY(FixedArray<IntSize>::create(num_channels));
     channels.fill_with(frame_size);
 
-    global_modular.modular_data = TRY(read_modular_bitstream(stream, channels, entropy_decoder, global_modular.ma_tree, frame_header.group_dim()));
+    global_modular.modular_data = TRY(read_modular_bitstream(stream, channels, global_modular.decoder, global_modular.ma_tree, frame_header.group_dim()));
 
     return global_modular;
 }
@@ -1749,8 +1749,7 @@ struct LfGlobal {
 static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
     IntSize frame_size,
     FrameHeader const& frame_header,
-    ImageMetadata const& metadata,
-    Optional<EntropyDecoder>& entropy_decoder)
+    ImageMetadata const& metadata)
 {
     LfGlobal lf_global;
 
@@ -1771,7 +1770,7 @@ static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
     if (frame_header.encoding == Encoding::kVarDCT)
         TODO();
 
-    lf_global.gmodular = TRY(read_global_modular(stream, frame_size, frame_header, metadata, entropy_decoder));
+    lf_global.gmodular = TRY(read_global_modular(stream, frame_size, frame_header, metadata));
 
     return lf_global;
 }
@@ -1926,8 +1925,7 @@ struct Frame {
 
 static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     SizeHeader const& size_header,
-    ImageMetadata const& metadata,
-    Optional<EntropyDecoder>& entropy_decoder)
+    ImageMetadata const& metadata)
 {
     // F.1 - General
     // Each Frame is byte-aligned by invoking ZeroPadToByte() (B.2.7)
@@ -1971,7 +1969,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
 
     frame.image = TRY(Image::create({ frame.width, frame.height }, metadata));
 
-    frame.lf_global = TRY(read_lf_global(stream, { frame.width, frame.height }, frame.frame_header, metadata, entropy_decoder));
+    frame.lf_global = TRY(read_lf_global(stream, { frame.width, frame.height }, frame.frame_header, metadata));
 
     for (u32 i {}; i < frame.num_lf_groups; ++i)
         TRY(read_lf_group(stream, frame.image, frame.frame_header));
@@ -2177,7 +2175,7 @@ public:
 
     ErrorOr<void> decode_frame()
     {
-        auto frame = TRY(read_frame(m_stream, m_header, m_metadata, m_entropy_decoder));
+        auto frame = TRY(read_frame(m_stream, m_header, m_metadata));
         auto const& frame_header = frame.frame_header;
 
         if (frame_header.restoration_filter.gab || frame_header.restoration_filter.epf_iters != 0)
@@ -2268,8 +2266,6 @@ private:
     Optional<Image> m_image;
 
     Vector<Frame> m_frames;
-
-    Optional<EntropyDecoder> m_entropy_decoder {};
 
     SizeHeader m_header;
     ImageMetadata m_metadata;
