@@ -17,6 +17,8 @@
 #include <LibCore/File.h>
 #include <LibMain/Main.h>
 
+namespace {
+
 struct ArgumentDefinition {
     Optional<ByteString> name;
     Optional<ByteString> cpp_type;
@@ -541,6 +543,8 @@ ErrorOr<JsonValue> read_entire_file_as_json(StringView filename)
     auto json_data = TRY(ByteBuffer::create_uninitialized(json_size));
     TRY(file->read_until_filled(json_data.bytes()));
     return JsonValue::from_string(json_data);
+}
+
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

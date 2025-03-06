@@ -253,7 +253,7 @@ struct CLDR {
     })
 
 // NOTE: We return a pointer only because ErrorOr cannot store references. You may safely assume the pointer is non-null.
-ErrorOr<JsonValue const*> read_json_file_with_cache(ByteString const& path)
+static ErrorOr<JsonValue const*> read_json_file_with_cache(ByteString const& path)
 {
     static HashMap<ByteString, JsonValue> parsed_json_cache;
 

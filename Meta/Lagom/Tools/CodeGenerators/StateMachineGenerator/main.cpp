@@ -238,7 +238,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-HashTable<ByteString> actions(StateMachine const& machine)
+static HashTable<ByteString> actions(StateMachine const& machine)
 {
     HashTable<ByteString> table;
 
@@ -260,7 +260,7 @@ HashTable<ByteString> actions(StateMachine const& machine)
     return table;
 }
 
-void generate_lookup_table(StateMachine const& machine, SourceGenerator& generator)
+static void generate_lookup_table(StateMachine const& machine, SourceGenerator& generator)
 {
     generator.append(R"~~~(
     static constexpr StateTransition STATE_TRANSITION_TABLE[][256] = {
