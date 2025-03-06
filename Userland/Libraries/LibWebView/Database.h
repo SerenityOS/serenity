@@ -36,18 +36,18 @@ public:
     template<typename... PlaceholderValues>
     void execute_statement(SQL::StatementID statement_id, OnResult on_result, OnComplete on_complete, OnError on_error, PlaceholderValues&&... placeholder_values)
     {
-        auto sync_promise = Core::Promise<Empty>::construct();
+        auto sync_promise = Core::Promise<void>::construct();
 
         PendingExecution pending_execution {
             .on_result = move(on_result),
             .on_complete = [sync_promise, on_complete = move(on_complete)] {
                 if (on_complete)
                     on_complete();
-                sync_promise->resolve({}); },
+                sync_promise->resolve(); },
             .on_error = [sync_promise, on_error = move(on_error)](auto message) {
                 if (on_error)
                     on_error(message);
-                sync_promise->resolve({}); },
+                sync_promise->resolve(); },
         };
 
         Vector<SQL::Value> values { SQL::Value(forward<PlaceholderValues>(placeholder_values))... };
