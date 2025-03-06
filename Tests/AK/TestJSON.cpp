@@ -327,6 +327,9 @@ struct CustomError {
 template<typename T>
 class CustomErrorOr {
 public:
+    using ResultType = T;
+    using ErrorType = CustomError;
+
     CustomErrorOr(T)
         : m_is_error(false)
     {
