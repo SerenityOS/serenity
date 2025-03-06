@@ -10,9 +10,6 @@
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/UUID.h>
-#if ARCH(AARCH64)
-#    include <Kernel/Arch/aarch64/RPi/SDHostController.h>
-#endif
 #include <Kernel/API/DeviceFileTypes.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
