@@ -11,9 +11,9 @@
 #include <sys/internals.h>
 #include <unistd.h>
 
-extern "C" {
-
 int main(int, char**, char**);
+
+extern "C" {
 
 // Tell the compiler that this may be called from somewhere else.
 int _entry(int argc, char** argv) __attribute__((used));
