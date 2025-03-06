@@ -9,6 +9,7 @@
 #include <LibCore/System.h>
 #include <LibLine/Editor.h>
 #include <LibMain/Main.h>
+#include <math.h>
 #include <stdio.h>
 #include <termios.h>
 #include <unistd.h>
