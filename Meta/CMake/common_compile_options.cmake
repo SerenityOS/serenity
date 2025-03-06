@@ -7,6 +7,7 @@ set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 add_compile_options(-Wall)
 add_compile_options(-Wextra)
+add_compile_options(-Wmissing-declarations)
 
 add_compile_options(-Wno-invalid-offsetof)
 
