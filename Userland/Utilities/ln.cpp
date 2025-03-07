@@ -14,12 +14,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool force = false;
     bool symbolic = false;
+    bool verbose = false;
     StringView target;
     StringView path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(force, "Force the creation", "force", 'f');
     args_parser.add_option(symbolic, "Create a symlink", "symbolic", 's');
+    args_parser.add_option(verbose, "Verbose", "verbose", 'v');
     args_parser.add_positional_argument(target, "Link target", "target");
     args_parser.add_positional_argument(path, "Link path", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -51,6 +53,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else {
         TRY(Core::System::link(target, path));
     }
+
+    if (verbose)
+        outln("'{}' -> '{}'", path, target);
 
     return 0;
 }
