@@ -305,6 +305,10 @@ ErrorOr<void> VirtualFileSystem::remove_mount(Mount& mount, FileBackedFileSystem
             if (fs->is_file_backed()) {
                 dbgln("VirtualFileSystem: Unmounting file backed file system {} for the last time...", fs->fsid());
                 auto& file_backed_fs = static_cast<FileBackedFileSystem&>(*fs);
+                if (file_backed_fs.file().is_loop_device()) {
+                    auto& device = static_cast<LoopDevice&>(file_backed_fs.file());
+                    device.unref();
+                }
                 file_backed_fs_list.remove(file_backed_fs);
             }
         } else {
