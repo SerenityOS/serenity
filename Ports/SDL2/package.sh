@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='SDL2'
-version='2.30.5'
+version='2.32.0'
 useconfigure='true'
 files=(
-    "https://github.com/libsdl-org/SDL/releases/download/release-${version}/SDL2-${version}.tar.gz#f374f3fa29c37dfcc20822d4a7d7dc57e58924d1a5f2ad511bfab4c8193de63b"
+    "https://github.com/libsdl-org/SDL/releases/download/release-${version}/SDL2-${version}.tar.gz#f5c2b52498785858f3de1e2996eba3c1b805d08fe168a47ea527c7fc339072d0"
 )
 configopts=(
     "-DCMAKE_CXX_FLAGS=-I${SERENITY_BUILD_DIR}/Root/usr/include/Services/ -I${SERENITY_BUILD_DIR}/Root/usr/include/Userland/Services/"
