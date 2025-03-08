@@ -1624,8 +1624,39 @@ static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
             return make<JPEG2000::LayerResolutionLevelComponentPositionProgressionIterator>(number_of_layers, max_number_of_decomposition_levels, context.siz.components.size(), move(number_of_precincts_from_resolution_level_and_component));
         case CodingStyleDefault::ResolutionLayerComponentPosition:
             return make<JPEG2000::ResolutionLevelLayerComponentPositionProgressionIterator>(number_of_layers, max_number_of_decomposition_levels, context.siz.components.size(), move(number_of_precincts_from_resolution_level_and_component));
-        case CodingStyleDefault::ResolutionPositionComponentLayer:
-            return Error::from_string_literal("JPEG2000Loader: ResolutionPositionComponentLayer progression order not yet supported");
+        case CodingStyleDefault::ResolutionPositionComponentLayer: {
+            auto XRsiz = [&](size_t i) { return context.siz.components[i].horizontal_separation; };
+            auto YRsiz = [&](size_t i) { return context.siz.components[i].vertical_separation; };
+
+            // "To use this progression, XRsiz and YRsiz values must be powers of two for each component."
+            for (size_t component_index = 0; component_index < context.siz.components.size(); ++component_index) {
+                if (!is_power_of_two(XRsiz(component_index)) || !is_power_of_two(YRsiz(component_index)))
+                    return Error::from_string_literal("JPEG2000Loader: ResolutionPositionComponentLayer progression order requires XRsiz and YRsiz to be powers of two");
+            }
+
+            auto PPx = [&](int resolution_level, int component) {
+                return context.coding_style_parameters_for_component(tile, component).precinct_sizes[resolution_level].PPx;
+            };
+            auto PPy = [&](int resolution_level, int component) {
+                return context.coding_style_parameters_for_component(tile, component).precinct_sizes[resolution_level].PPy;
+            };
+            auto N_L = [&](int component) {
+                return context.coding_style_parameters_for_component(tile, component).number_of_decomposition_levels;
+            };
+            auto num_precincts_wide = [&](int resolution_level, int component) {
+                auto const& sub_band = resolution_level == 0 ? tile.components[component].nLL : tile.components[component].decompositions[resolution_level - 1][0];
+                return sub_band.num_precincts_wide;
+            };
+            auto ll_rect = [&](int resolution_level, int component) {
+                // The outer N_L lambda has been move()d away by the time this runs and can't be called here.
+                auto N_L = context.coding_style_parameters_for_component(tile, component).number_of_decomposition_levels;
+                return context.siz.reference_grid_coordinates_for_ll_band(tile.rect, component, resolution_level, N_L);
+            };
+
+            return make<JPEG2000::ResolutionLevelPositionComponentLayerProgressionIterator>(
+                number_of_layers, max_number_of_decomposition_levels, context.siz.components.size(), move(number_of_precincts_from_resolution_level_and_component),
+                move(XRsiz), move(YRsiz), move(PPx), move(PPy), move(N_L), move(num_precincts_wide), tile.rect, move(ll_rect));
+        }
         case CodingStyleDefault::PositionComponentResolutionLayer:
             return Error::from_string_literal("JPEG2000Loader: PositionComponentResolutionLayer progression order not yet supported");
         case CodingStyleDefault::ComponentPositionResolutionLayer:
