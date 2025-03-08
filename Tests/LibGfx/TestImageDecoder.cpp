@@ -1009,30 +1009,13 @@ TEST_CASE(test_jpeg2000_progression_iterators)
         auto precinct_count = [](int, int) { return 1; };
         Gfx::JPEG2000::LayerResolutionLevelComponentPositionProgressionIterator iterator { layer_count, max_number_of_decomposition_levels, component_count, move(precinct_count) };
 
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 0, .resolution_level = 0, .component = 0, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 0, .resolution_level = 0, .component = 1, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 0, .resolution_level = 1, .component = 0, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 0, .resolution_level = 1, .component = 1, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 0, .resolution_level = 2, .component = 0, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 0, .resolution_level = 2, .component = 1, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 1, .resolution_level = 0, .component = 0, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 1, .resolution_level = 0, .component = 1, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 1, .resolution_level = 1, .component = 0, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 1, .resolution_level = 1, .component = 1, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 1, .resolution_level = 2, .component = 0, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 1, .resolution_level = 2, .component = 1, .precinct = 0 }));
+        for (int layer = 0; layer < layer_count; ++layer)
+            for (int resolution_level = 0; resolution_level <= max_number_of_decomposition_levels; ++resolution_level)
+                for (int component = 0; component < component_count; ++component)
+                    for (int precinct = 0; precinct < precinct_count(resolution_level, component); ++precinct) {
+                        EXPECT(iterator.has_next());
+                        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = layer, .resolution_level = resolution_level, .component = component, .precinct = precinct }));
+                    }
         EXPECT(!iterator.has_next());
     }
 
@@ -1043,30 +1026,13 @@ TEST_CASE(test_jpeg2000_progression_iterators)
         auto precinct_count = [](int, int) { return 1; };
         Gfx::JPEG2000::ResolutionLevelLayerComponentPositionProgressionIterator iterator { layer_count, max_number_of_decomposition_levels, component_count, move(precinct_count) };
 
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 0, .resolution_level = 0, .component = 0, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 0, .resolution_level = 0, .component = 1, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 1, .resolution_level = 0, .component = 0, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 1, .resolution_level = 0, .component = 1, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 0, .resolution_level = 1, .component = 0, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 0, .resolution_level = 1, .component = 1, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 1, .resolution_level = 1, .component = 0, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 1, .resolution_level = 1, .component = 1, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 0, .resolution_level = 2, .component = 0, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 0, .resolution_level = 2, .component = 1, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 1, .resolution_level = 2, .component = 0, .precinct = 0 }));
-        EXPECT(iterator.has_next());
-        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = 1, .resolution_level = 2, .component = 1, .precinct = 0 }));
+        for (int resolution_level = 0; resolution_level <= max_number_of_decomposition_levels; ++resolution_level)
+            for (int layer = 0; layer < layer_count; ++layer)
+                for (int component = 0; component < component_count; ++component)
+                    for (int precinct = 0; precinct < precinct_count(resolution_level, component); ++precinct) {
+                        EXPECT(iterator.has_next());
+                        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = layer, .resolution_level = resolution_level, .component = component, .precinct = precinct }));
+                    }
         EXPECT(!iterator.has_next());
     }
 }
