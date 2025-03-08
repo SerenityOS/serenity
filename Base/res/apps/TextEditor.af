@@ -4,4 +4,4 @@ Executable=/bin/TextEditor
 Category=&Utilities
 
 [Launcher]
-FileTypes=txt,md,html,htm,js,json,ini
+FileTypes=txt,md,html,htm,js,json,ini,gmi
