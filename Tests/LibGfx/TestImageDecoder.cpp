@@ -1005,8 +1005,8 @@ TEST_CASE(test_jpeg2000_progression_iterators)
     {
         int const layer_count = 2;
         int const max_number_of_decomposition_levels = 2;
-        int const component_count = 2;
-        auto precinct_count = [](int, int) { return 1; };
+        int const component_count = 4;
+        auto precinct_count = [](int, int) { return 5; };
         Gfx::JPEG2000::LayerResolutionLevelComponentPositionProgressionIterator iterator { layer_count, max_number_of_decomposition_levels, component_count, move(precinct_count) };
 
         for (int layer = 0; layer < layer_count; ++layer)
@@ -1022,8 +1022,8 @@ TEST_CASE(test_jpeg2000_progression_iterators)
     {
         int const layer_count = 2;
         int const max_number_of_decomposition_levels = 2;
-        int const component_count = 2;
-        auto precinct_count = [](int, int) { return 1; };
+        int const component_count = 4;
+        auto precinct_count = [](int, int) { return 5; };
         Gfx::JPEG2000::ResolutionLevelLayerComponentPositionProgressionIterator iterator { layer_count, max_number_of_decomposition_levels, component_count, move(precinct_count) };
 
         for (int resolution_level = 0; resolution_level <= max_number_of_decomposition_levels; ++resolution_level)
