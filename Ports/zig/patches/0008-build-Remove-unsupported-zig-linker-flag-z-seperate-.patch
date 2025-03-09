@@ -8,10 +8,10 @@ Subject: [PATCH] build: Remove unsupported zig linker flag -z seperate-code
  1 file changed, 1 insertion(+)
 
 diff --git a/build b/build
-index e7d809893e46e247a579050ac61091a78c6b90a5..bf53f9ecca8fc15b9a80bd3c13b7c551f77979df 100755
+index 48a3b45d8c224abfc38fd64a243d2d4b48f8bb2b..66f61dcab57f5cf451a512b308968b80989e6915 100755
 --- a/build
 +++ b/build
-@@ -190,6 +190,7 @@ cmake "$ROOTDIR/llvm" \
+@@ -177,6 +177,7 @@ cmake "$ROOTDIR/llvm" \
    -DCMAKE_SYSTEM_NAME="$TARGET_OS_CMAKE" \
    -DCMAKE_C_COMPILER="$ZIG;cc;-fno-sanitize=all;-s;-target;$TARGET;-mcpu=$MCPU" \
    -DCMAKE_CXX_COMPILER="$ZIG;c++;-fno-sanitize=all;-s;-target;$TARGET;-mcpu=$MCPU" \

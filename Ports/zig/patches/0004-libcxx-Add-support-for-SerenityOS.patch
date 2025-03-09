@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: sin-ack <sin-ack@protonmail.com>
 Date: Tue, 27 Sep 2022 00:08:46 +0000
-Subject: [PATCH] [libc++] Add support for SerenityOS
+Subject: [PATCH] [libcxx] Add support for SerenityOS
 
 This commit teaches libc++ about what features are available in our
 LibC, namely:
@@ -18,21 +18,22 @@ This commit is an adaptation of the LLVM patch by Daniel Bertalan to fit
 the layout of the zig-bootstrap project.
 
 Co-Authored-By: Daniel Bertalan <dani@danielbertalan.dev>
+Co-Authored-By: Linus Groh <mail@linusgroh.de>
 ---
- zig/lib/libcxx/include/__config               |  5 ++--
- zig/lib/libcxx/include/__locale               |  2 ++
- .../include/__support/serenity/xlocale.h      | 24 +++++++++++++++++++
+ zig/lib/libcxx/include/__config               |  5 +++--
+ .../include/__locale_dir/locale_base_api.h    |  2 ++
+ .../__locale_dir/locale_base_api/serenity.h   | 22 +++++++++++++++++++
  zig/lib/libcxx/include/locale                 |  2 +-
  zig/lib/libcxx/src/include/config_elast.h     |  2 ++
- 5 files changed, 32 insertions(+), 3 deletions(-)
- create mode 100644 zig/lib/libcxx/include/__support/serenity/xlocale.h
+ 5 files changed, 30 insertions(+), 3 deletions(-)
+ create mode 100644 zig/lib/libcxx/include/__locale_dir/locale_base_api/serenity.h
 
 diff --git a/zig/lib/libcxx/include/__config b/zig/lib/libcxx/include/__config
-index 7967c70035414e65a10aa82e564cf1ce48a12032..dad99cd4cc2520e22e9ef8e60ce3e9267c733cbc 100644
+index 8165dbc5490711e36f88110fc2231f110590251d..b5d78ee2c7a7234ca09b73a4c98c9c56ca5e5a2e 100644
 --- a/zig/lib/libcxx/include/__config
 +++ b/zig/lib/libcxx/include/__config
-@@ -930,7 +930,8 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
-         defined(__sun__) ||                                                                                            \
+@@ -817,7 +817,8 @@ typedef __char32_t char32_t;
+         defined(__APPLE__) ||                                                                                          \
          defined(__MVS__) ||                                                                                            \
          defined(_AIX) ||                                                                                               \
 -        defined(__EMSCRIPTEN__)
@@ -41,7 +42,7 @@ index 7967c70035414e65a10aa82e564cf1ce48a12032..dad99cd4cc2520e22e9ef8e60ce3e926
  // clang-format on
  #      define _LIBCPP_HAS_THREAD_API_PTHREAD
  #    elif defined(__Fuchsia__)
-@@ -1008,7 +1009,7 @@ _LIBCPP_BEGIN_NAMESPACE_STD _LIBCPP_END_NAMESPACE_STD
+@@ -890,7 +891,7 @@ typedef __char32_t char32_t;
  #  endif
  
  #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
@@ -50,25 +51,25 @@ index 7967c70035414e65a10aa82e564cf1ce48a12032..dad99cd4cc2520e22e9ef8e60ce3e926
  #    define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE
  #  endif
  
-diff --git a/zig/lib/libcxx/include/__locale b/zig/lib/libcxx/include/__locale
-index e0ffa0ca00ffe2b13c363440da0f7cd26c6d65db..33e994abe361af548ccbc5e17c251741546f5503 100644
---- a/zig/lib/libcxx/include/__locale
-+++ b/zig/lib/libcxx/include/__locale
-@@ -44,6 +44,8 @@
- # include <__support/musl/xlocale.h>
- #elif defined(_LIBCPP_HAS_MUSL_LIBC)
- # include <__support/musl/xlocale.h>
+diff --git a/zig/lib/libcxx/include/__locale_dir/locale_base_api.h b/zig/lib/libcxx/include/__locale_dir/locale_base_api.h
+index 8c000c558c52793f5f334d11898da8e7e8486388..bb5745019fc5dabec88115fe9ef3b424574dd31a 100644
+--- a/zig/lib/libcxx/include/__locale_dir/locale_base_api.h
++++ b/zig/lib/libcxx/include/__locale_dir/locale_base_api.h
+@@ -25,6 +25,8 @@
+ #  include <__locale_dir/locale_base_api/fuchsia.h>
+ #elif defined(__wasi__) || defined(_LIBCPP_HAS_MUSL_LIBC)
+ #  include <__locale_dir/locale_base_api/musl.h>
 +#elif defined(__serenity__)
-+# include <__support/serenity/xlocale.h>
++#  include <__locale_dir/locale_base_api/serenity.h>
+ #elif defined(__APPLE__) || defined(__FreeBSD__)
+ #  include <xlocale.h>
  #endif
- 
- #if !defined(_LIBCPP_HAS_NO_PRAGMA_SYSTEM_HEADER)
-diff --git a/zig/lib/libcxx/include/__support/serenity/xlocale.h b/zig/lib/libcxx/include/__support/serenity/xlocale.h
+diff --git a/zig/lib/libcxx/include/__locale_dir/locale_base_api/serenity.h b/zig/lib/libcxx/include/__locale_dir/locale_base_api/serenity.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..0f939d2f6989e2ad617145308d079776fe87b6ce
+index 0000000000000000000000000000000000000000..4644fca4ae9595903933fe2c531b9e7298e19f60
 --- /dev/null
-+++ b/zig/lib/libcxx/include/__support/serenity/xlocale.h
-@@ -0,0 +1,24 @@
++++ b/zig/lib/libcxx/include/__locale_dir/locale_base_api/serenity.h
+@@ -0,0 +1,22 @@
 +//===----------------------------------------------------------------------===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -77,45 +78,43 @@ index 0000000000000000000000000000000000000000..0f939d2f6989e2ad617145308d079776
 +//
 +//===----------------------------------------------------------------------===//
 +
-+#ifndef _LIBCPP_SUPPORT_SERENITY_XLOCALE_H
-+#define _LIBCPP_SUPPORT_SERENITY_XLOCALE_H
++#ifndef _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
++#define _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
 +
-+#if defined(__serenity__)
++#include <stddef.h>
 +
-+#include <cstdlib>
-+#include <clocale>
-+#include <cwctype>
-+#include <ctype.h>
 +#include <__support/xlocale/__nop_locale_mgmt.h>
 +#include <__support/xlocale/__posix_l_fallback.h>
 +#include <__support/xlocale/__strtonum_fallback.h>
++#include <clocale>
++#include <cstdlib>
++#include <ctype.h>
++#include <cwctype>
 +
-+#endif // __serenity__
-+
-+#endif
++#endif // _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
 diff --git a/zig/lib/libcxx/include/locale b/zig/lib/libcxx/include/locale
-index 874866f69822366f24a99458a040d07651c7ae4a..55632f101f06528c3a9eb01e062f69b06d887369 100644
+index 573910a85bef540f48cf24f98a7a0226c1ae778e..ae19777a534614bfc862f871a40be70d4b15e670 100644
 --- a/zig/lib/libcxx/include/locale
 +++ b/zig/lib/libcxx/include/locale
-@@ -216,7 +216,7 @@ template <class charT> class messages_byname;
+@@ -220,7 +220,7 @@ template <class charT> class messages_byname;
  
- #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+ #  if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
  // Most unix variants have catopen.  These are the specific ones that don't.
--#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__)
-+#  if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
- #    define _LIBCPP_HAS_CATOPEN 1
- #    include <nl_types.h>
- #  endif
+-#    if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__)
++#    if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
+ #      define _LIBCPP_HAS_CATOPEN 1
+ #      include <nl_types.h>
+ #    endif
 diff --git a/zig/lib/libcxx/src/include/config_elast.h b/zig/lib/libcxx/src/include/config_elast.h
-index bef26ec5019eccab758733eb85a1f8a6fc404968..fbb2899b1939a2f9ce7a39337c99e48c7749f7f2 100644
+index 899e124ad261b23a95dc8cda9d0c550bfbf3078f..11d930bc8a3cee31b337d96c2a58f1bed2978062 100644
 --- a/zig/lib/libcxx/src/include/config_elast.h
 +++ b/zig/lib/libcxx/src/include/config_elast.h
 @@ -35,6 +35,8 @@
- #define _LIBCPP_ELAST 4095
+ #  define _LIBCPP_ELAST 4095
  #elif defined(__APPLE__)
  // No _LIBCPP_ELAST needed on Apple
 +#elif defined(__serenity__)
 +// No _LIBCPP_ELAST needed on SerenityOS
- #elif defined(__sun__)
- #define _LIBCPP_ELAST ESTALE
  #elif defined(__MVS__)
+ #  define _LIBCPP_ELAST 1160
+ #elif defined(_LIBCPP_MSVCRT_LIKE)
