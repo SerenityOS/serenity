@@ -41,8 +41,6 @@ protected:
 
     u64 m_device_block_size { 512 };
 
-    void remove_disk_cache_before_last_unmount();
-
 private:
     void flush_specific_block_if_needed(BlockIndex index);
 
