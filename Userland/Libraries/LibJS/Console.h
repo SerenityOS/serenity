@@ -11,6 +11,7 @@
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/String.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibJS/Forward.h>
