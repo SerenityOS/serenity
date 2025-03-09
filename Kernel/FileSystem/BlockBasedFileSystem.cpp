@@ -121,14 +121,6 @@ BlockBasedFileSystem::BlockBasedFileSystem(OpenFileDescription& file_description
 
 BlockBasedFileSystem::~BlockBasedFileSystem() = default;
 
-void BlockBasedFileSystem::remove_disk_cache_before_last_unmount()
-{
-    VERIFY(m_lock.is_locked());
-    m_cache.with_exclusive([&](auto& cache) {
-        cache.clear();
-    });
-}
-
 ErrorOr<void> BlockBasedFileSystem::initialize_while_locked()
 {
     VERIFY(m_lock.is_locked());
