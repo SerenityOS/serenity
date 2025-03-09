@@ -674,7 +674,6 @@ ErrorOr<void> Ext2FS::prepare_to_clear_last_mount(Inode& mount_guest_inode)
     dmesgln("Ext2FS: Clean unmount, setting superblock to valid state");
     m_super_block.s_state = EXT2_VALID_FS;
     TRY(flush_super_block());
-    BlockBasedFileSystem::remove_disk_cache_before_last_unmount();
 
     return {};
 }
