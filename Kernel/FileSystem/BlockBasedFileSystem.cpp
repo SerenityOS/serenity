@@ -22,12 +22,11 @@ class DiskCache {
 public:
     static constexpr size_t EntryCount = 10000;
     explicit DiskCache(BlockBasedFileSystem& fs, NonnullOwnPtr<KBuffer> cached_block_data, NonnullOwnPtr<KBuffer> entries_buffer)
-        : m_fs(fs)
-        , m_cached_block_data(move(cached_block_data))
+        : m_cached_block_data(move(cached_block_data))
         , m_entries(move(entries_buffer))
     {
         for (size_t i = 0; i < EntryCount; ++i) {
-            entries()[i].data = m_cached_block_data->data() + i * m_fs->logical_block_size();
+            entries()[i].data = m_cached_block_data->data() + i * fs.logical_block_size();
             m_clean_list.append(entries()[i]);
         }
     }
@@ -67,7 +66,7 @@ public:
         return &entry;
     }
 
-    ErrorOr<CacheEntry*> ensure(BlockBasedFileSystem::BlockIndex block_index) const
+    ErrorOr<CacheEntry*> ensure(BlockBasedFileSystem::BlockIndex block_index, BlockBasedFileSystem& fs) const
     {
         if (auto* entry = get(block_index))
             return entry;
@@ -76,8 +75,8 @@ public:
             // Not a single clean entry! Flush writes and try again.
             // NOTE: We want to make sure we only call FileBackedFileSystem flush here,
             //       not some FileBackedFileSystem subclass flush!
-            m_fs->flush_writes_impl();
-            return ensure(block_index);
+            fs.flush_writes_impl();
+            return ensure(block_index, fs);
         }
 
         VERIFY(m_clean_list.last());
@@ -104,7 +103,6 @@ public:
     }
 
 private:
-    mutable NonnullRefPtr<BlockBasedFileSystem> m_fs;
     NonnullOwnPtr<KBuffer> m_cached_block_data;
 
     // NOTE: m_entries must be declared before m_dirty_list and m_clean_list because their entries are allocated from it.
@@ -168,7 +166,7 @@ ErrorOr<void> BlockBasedFileSystem::write_block(BlockIndex index, UserOrKernelBu
             return {};
         }
 
-        auto entry = TRY(cache->ensure(index));
+        auto entry = TRY(cache->ensure(index, *this));
         if (count < logical_block_size()) {
             // Fill the cache first.
             TRY(read_block(index, nullptr, logical_block_size()));
@@ -242,7 +240,7 @@ ErrorOr<void> BlockBasedFileSystem::read_block(BlockIndex index, UserOrKernelBuf
             return {};
         }
 
-        auto* entry = TRY(cache->ensure(index));
+        auto* entry = TRY(cache->ensure(index, const_cast<BlockBasedFileSystem&>(*this)));
         if (!entry->has_data) {
             auto base_offset = index.value() * logical_block_size();
             auto entry_data_buffer = UserOrKernelBuffer::for_kernel_buffer(entry->data);
