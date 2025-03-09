@@ -1,0 +1,103 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: sin-ack <sin-ack@users.noreply.github.com>
+Date: Sun, 16 Jul 2023 17:34:51 +0300
+Subject: [PATCH] Extend support for SerenityOS target
+
+Co-Authored-By: Linus Groh <mail@linusgroh.de>
+---
+ zig/lib/std/zig/LibCInstallation.zig | 26 +++++++++++++++++++++-----
+ zig/lib/std/zig/target.zig           |  2 +-
+ 2 files changed, 22 insertions(+), 6 deletions(-)
+
+diff --git a/zig/lib/std/zig/LibCInstallation.zig b/zig/lib/std/zig/LibCInstallation.zig
+index b52c00931325e2df1c45df97007affce7a3dd306..a00decc2989f75a3e6f6c93b34db94f6ef5d6b28 100644
+--- a/zig/lib/std/zig/LibCInstallation.zig
++++ b/zig/lib/std/zig/LibCInstallation.zig
+@@ -101,7 +101,7 @@ pub fn parse(
+         return error.ParseError;
+     }
+ 
+-    if (self.gcc_dir == null and os_tag == .haiku) {
++    if (self.gcc_dir == null and (os_tag == .haiku or os_tag == .serenity)) {
+         log.err("gcc_dir may not be empty for {s}", .{@tagName(os_tag)});
+         return error.ParseError;
+     }
+@@ -196,8 +196,12 @@ pub fn findNative(args: FindNativeOptions) FindError!LibCInstallation {
+         try self.findNativeCrtDirWindows(args, sdk);
+     } else if (is_haiku) {
+         try self.findNativeIncludeDirPosix(args);
+-        try self.findNativeGccDirHaiku(args);
++        try self.findNativeGccDirPosix(args);
+         self.crt_dir = try args.allocator.dupeZ(u8, "/system/develop/lib");
++    } else if (is_serenity) {
++        try self.findNativeIncludeDirPosix(args);
++        try self.findNativeGccDirPosix(args);
++        self.crt_dir = try args.allocator.dupeZ(u8, "/usr/lib");
+     } else if (builtin.target.os.tag.isSolarish()) {
+         // There is only one libc, and its headers/libraries are always in the same spot.
+         self.include_dir = try args.allocator.dupeZ(u8, "/usr/include");
+@@ -308,7 +312,7 @@ fn findNativeIncludeDirPosix(self: *LibCInstallation, args: FindNativeOptions) F
+     const include_dir_example_file = if (is_haiku) "posix/stdlib.h" else "stdlib.h";
+     const sys_include_dir_example_file = if (is_windows)
+         "sys\\types.h"
+-    else if (is_haiku)
++    else if (is_haiku or is_serenity)
+         "errno.h"
+     else
+         "sys/errno.h";
+@@ -452,7 +456,7 @@ fn findNativeCrtDirPosix(self: *LibCInstallation, args: FindNativeOptions) FindE
+     });
+ }
+ 
+-fn findNativeGccDirHaiku(self: *LibCInstallation, args: FindNativeOptions) FindError!void {
++fn findNativeGccDirPosix(self: *LibCInstallation, args: FindNativeOptions) FindError!void {
+     self.gcc_dir = try ccPrintFileName(.{
+         .allocator = args.allocator,
+         .search_basename = "crtbeginS.o",
+@@ -948,6 +952,17 @@ pub const CrtBasenames = struct {
+                 },
+                 .static_exe, .static_pie => .{},
+             },
++            .serenity => switch (mode) {
++                .dynamic_lib => .{
++                    .crtbegin = "crtbeginS.o",
++                    .crtend = "crtendS.o",
++                },
++                .dynamic_exe, .dynamic_pie, .static_exe, .static_pie => .{
++                    .crt0 = "crt0.o",
++                    .crtbegin = "crtbeginS.o",
++                    .crtend = "crtendS.o",
++                },
++            },
+             else => .{},
+         };
+     }
+@@ -992,7 +1007,7 @@ pub fn resolveCrtPaths(
+                 .crtn = if (crt_basenames.crtn) |basename| try crt_dir_path.join(arena, basename) else null,
+             };
+         },
+-        .haiku => {
++        .haiku, .serenity => {
+             const gcc_dir_path: Path = .{
+                 .root_dir = std.Build.Cache.Directory.cwd(),
+                 .sub_path = lci.gcc_dir orelse return error.LibCInstallationMissingCrtDir,
+@@ -1028,5 +1043,6 @@ const Path = std.Build.Cache.Path;
+ const is_darwin = builtin.target.os.tag.isDarwin();
+ const is_windows = builtin.target.os.tag == .windows;
+ const is_haiku = builtin.target.os.tag == .haiku;
++const is_serenity = builtin.target.os.tag == .serenity;
+ 
+ const log = std.log.scoped(.libc_installation);
+diff --git a/zig/lib/std/zig/target.zig b/zig/lib/std/zig/target.zig
+index f4c6ae688558ca396c0b34cfe18b1968c5b169cb..3b5637dd9eab6236599aa2102b0d9fd82ce8ad67 100644
+--- a/zig/lib/std/zig/target.zig
++++ b/zig/lib/std/zig/target.zig
+@@ -252,7 +252,7 @@ pub fn isLibCLibName(target: std.Target, name: []const u8) bool {
+         return false;
+     }
+ 
+-    if (target.abi.isGnu() or target.abi.isMusl()) {
++    if (target.abi.isGnu() or target.abi.isMusl() or target.os.tag == .serenity) {
+         if (eqlIgnoreCase(ignore_case, name, "m"))
+             return true;
+         if (eqlIgnoreCase(ignore_case, name, "rt"))

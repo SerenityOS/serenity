@@ -1,6 +1,6 @@
 const std = @import("std");
 
-const SerenityIncludes = @cImport({
+const serenity_includes = @cImport({
     @cInclude("bits/pthread_integration.h");
     @cInclude("dirent.h");
     @cInclude("errno_codes.h");
@@ -26,7 +26,7 @@ const constants = blk: {
     @setEvalBranchQuota(10000);
 
     var constant_list: []const []const u8 = &.{};
-    var constant_iterator = std.mem.tokenize(u8, constant_file, "\n");
+    var constant_iterator = std.mem.tokenizeScalar(u8, constant_file, '\n');
     while (constant_iterator.next()) |constant| {
         constant_list = constant_list ++ &[_][]const u8{constant};
     }
@@ -36,16 +36,8 @@ const constants = blk: {
 
 pub fn main() !void {
     const writer = std.io.getStdOut().writer();
-
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
-    defer arena.deinit();
-    const allocator = arena.allocator();
-
     inline for (constants) |constant| {
-        const value = @field(SerenityIncludes, constant);
-        const decl = try std.fmt.allocPrint(allocator, "pub const " ++ constant ++ " = {d};\n", .{value});
-        defer allocator.free(decl);
-
-        try writer.writeAll(decl);
+        const value = comptime @field(serenity_includes, constant);
+        try writer.writeAll(std.fmt.comptimePrint("pub const {s} = {d};\n", .{ constant, value }));
     }
 }
