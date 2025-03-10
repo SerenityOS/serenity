@@ -53,44 +53,6 @@ static bool s_log_malloc = false;
 static bool s_scrub_malloc = true;
 static bool s_scrub_free = true;
 static bool s_profiling = false;
-static bool s_in_userspace_emulator = false;
-
-ALWAYS_INLINE static void ue_notify_malloc(void const* ptr, size_t size)
-{
-    if (s_in_userspace_emulator)
-        syscall(SC_emuctl, 1, size, (FlatPtr)ptr);
-}
-
-ALWAYS_INLINE static void ue_notify_free(void const* ptr)
-{
-    if (s_in_userspace_emulator)
-        syscall(SC_emuctl, 2, (FlatPtr)ptr, 0);
-}
-
-ALWAYS_INLINE static void ue_notify_realloc(void const* ptr, size_t size)
-{
-    if (s_in_userspace_emulator)
-        syscall(SC_emuctl, 3, size, (FlatPtr)ptr);
-}
-
-ALWAYS_INLINE static void ue_notify_chunk_size_changed(void const* block, size_t chunk_size)
-{
-    if (s_in_userspace_emulator)
-        syscall(SC_emuctl, 4, chunk_size, (FlatPtr)block);
-}
-
-struct MemoryAuditingSuppressor {
-    ALWAYS_INLINE MemoryAuditingSuppressor()
-    {
-        if (s_in_userspace_emulator)
-            syscall(SC_emuctl, 7);
-    }
-    ALWAYS_INLINE ~MemoryAuditingSuppressor()
-    {
-        if (s_in_userspace_emulator)
-            syscall(SC_emuctl, 8);
-    }
-};
 
 struct MallocStats {
     size_t number_of_malloc_calls;
@@ -348,10 +310,7 @@ static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializ
                     new (block) BigAllocationBlock(real_size);
                 }
 
-                void* ptr = reinterpret_cast<void*>(round_up_to_power_of_two(reinterpret_cast<uintptr_t>(&block->m_slot[0]), align));
-
-                ue_notify_malloc(ptr, size);
-                return ptr;
+                return reinterpret_cast<void*>(round_up_to_power_of_two(reinterpret_cast<uintptr_t>(&block->m_slot[0]), align));
             }
         }
 #endif
@@ -359,9 +318,7 @@ static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializ
         g_malloc_stats.number_of_big_allocs++;
         new (block) BigAllocationBlock(real_size);
 
-        void* ptr = reinterpret_cast<void*>(round_up_to_power_of_two(reinterpret_cast<uintptr_t>(&block->m_slot[0]), align));
-        ue_notify_malloc(ptr, size);
-        return ptr;
+        return reinterpret_cast<void*>(round_up_to_power_of_two(reinterpret_cast<uintptr_t>(&block->m_slot[0]), align));
     }
 
     ChunkedBlock* block = nullptr;
@@ -381,7 +338,6 @@ static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializ
         block = s_hot_empty_blocks[--s_hot_empty_block_count];
         if (block->m_size != good_size) {
             new (block) ChunkedBlock(good_size);
-            ue_notify_chunk_size_changed(block, good_size);
             char buffer[64];
             snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu)", good_size);
             set_mmap_name(block, ChunkedBlock::block_size, buffer);
@@ -407,7 +363,6 @@ static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializ
             if (this_block_was_purged)
                 g_malloc_stats.number_of_cold_empty_block_purge_hits++;
             new (block) ChunkedBlock(good_size);
-            ue_notify_chunk_size_changed(block, good_size);
         }
         allocator->usable_blocks.append(*block);
     }
@@ -438,7 +393,6 @@ static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializ
     if (s_scrub_malloc && caller_will_initialize_memory == CallerWillInitializeMemory::No)
         memset(ptr, MALLOC_SCRUB_BYTE, block->m_size);
 
-    ue_notify_malloc(ptr, size);
     return ptr;
 }
 
@@ -538,7 +492,6 @@ static void free_impl(void* ptr)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/malloc.html
 void* malloc(size_t size)
 {
-    MemoryAuditingSuppressor suppressor;
     auto ptr_or_error = malloc_impl(size, 16, CallerWillInitializeMemory::No);
 
     if (ptr_or_error.is_error()) {
@@ -555,17 +508,14 @@ void* malloc(size_t size)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/free.html
 void free(void* ptr)
 {
-    MemoryAuditingSuppressor suppressor;
     if (s_profiling)
         perf_event(PERF_EVENT_FREE, reinterpret_cast<FlatPtr>(ptr), 0);
-    ue_notify_free(ptr);
     free_impl(ptr);
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/calloc.html
 void* calloc(size_t count, size_t size)
 {
-    MemoryAuditingSuppressor suppressor;
     if (Checked<size_t>::multiplication_would_overflow(count, size)) {
         errno = ENOMEM;
         return nullptr;
@@ -585,7 +535,6 @@ void* calloc(size_t count, size_t size)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_memalign.html
 int posix_memalign(void** memptr, size_t alignment, size_t size)
 {
-    MemoryAuditingSuppressor suppressor;
     auto ptr_or_error = malloc_impl(size, alignment, CallerWillInitializeMemory::No);
 
     if (ptr_or_error.is_error())
@@ -597,7 +546,6 @@ int posix_memalign(void** memptr, size_t alignment, size_t size)
 
 void* aligned_alloc(size_t alignment, size_t size)
 {
-    MemoryAuditingSuppressor suppressor;
     auto ptr_or_error = malloc_impl(size, alignment, CallerWillInitializeMemory::No);
 
     if (ptr_or_error.is_error()) {
@@ -610,7 +558,6 @@ void* aligned_alloc(size_t alignment, size_t size)
 
 size_t malloc_size(void const* ptr)
 {
-    MemoryAuditingSuppressor suppressor;
     if (!ptr)
         return 0;
     void* page_base = (void*)((FlatPtr)ptr & ChunkedBlock::block_mask);
@@ -632,7 +579,6 @@ size_t malloc_good_size(size_t size)
 
 void* realloc(void* ptr, size_t size)
 {
-    MemoryAuditingSuppressor suppressor;
     if (!ptr)
         return malloc(size);
     if (!size) {
@@ -643,7 +589,6 @@ void* realloc(void* ptr, size_t size)
     auto existing_allocation_size = malloc_size(ptr);
 
     if (size <= existing_allocation_size) {
-        ue_notify_realloc(ptr, size);
         return ptr;
     }
     auto* new_ptr = malloc(size);
@@ -656,14 +601,6 @@ void* realloc(void* ptr, size_t size)
 
 void __malloc_init()
 {
-    s_in_userspace_emulator = (int)syscall(SC_emuctl, 0) != -ENOSYS;
-    if (s_in_userspace_emulator) {
-        // Don't bother scrubbing memory if we're running in UE since it
-        // keeps track of heap memory anyway.
-        s_scrub_malloc = false;
-        s_scrub_free = false;
-    }
-
     if (secure_getenv("LIBC_NOSCRUB_MALLOC"))
         s_scrub_malloc = false;
     if (secure_getenv("LIBC_NOSCRUB_FREE"))

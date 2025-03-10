@@ -30,7 +30,7 @@ static bool is_unfuzzable_syscall(int fn)
 
 static bool is_nosys_syscall(int fn)
 {
-    return fn == SC_futex || fn == SC_emuctl;
+    return fn == SC_futex;
 }
 
 static bool is_bad_idea(int fn, size_t const* direct_sc_args, size_t const* fake_sc_params, char const* some_string)

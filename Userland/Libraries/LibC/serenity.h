@@ -68,8 +68,6 @@ int setkeymap(char const* name, uint32_t const* map, uint32_t* const shift_map, 
 
 uint16_t internet_checksum(void const* ptr, size_t count);
 
-int emuctl(uintptr_t command, uintptr_t arg0, uintptr_t arg1);
-
 int serenity_open(char const* path, size_t path_length, int options, ...);
 
 __END_DECLS
