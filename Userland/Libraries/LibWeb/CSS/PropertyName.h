@@ -12,7 +12,7 @@
 namespace Web::CSS {
 
 // https://drafts.css-houdini.org/css-typed-om-1/#custom-property-name-string
-static bool is_a_custom_property_name_string(StringView string)
+inline bool is_a_custom_property_name_string(StringView string)
 {
     // A string is a custom property name string if it starts with two dashes (U+002D HYPHEN-MINUS), like --foo.
     return string.starts_with("--"sv);

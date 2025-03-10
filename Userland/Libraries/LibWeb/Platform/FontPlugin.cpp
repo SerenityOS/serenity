@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Assertions.h>
 #include <LibWeb/Platform/FontPlugin.h>
 
 namespace Web::Platform {

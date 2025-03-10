@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 // Contains fixed data tables from the VP8 spec.
 
 namespace Gfx {

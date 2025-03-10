@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <AK/ByteString.h>
 #include <AK/DeprecatedFlyString.h>
 #include <AK/Format.h>

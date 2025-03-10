@@ -8,10 +8,9 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <LibManual/Node.h>
+#include <LibManual/SectionNode.h>
 
 namespace Manual {
-
-class SectionNode;
 
 class PageNode : public Node {
 public:

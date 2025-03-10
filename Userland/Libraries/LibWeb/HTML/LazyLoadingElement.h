@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/HeapFunction.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/AttributeNames.h>
 

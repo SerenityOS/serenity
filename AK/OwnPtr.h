@@ -9,7 +9,6 @@
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/RefCounted.h>
 
 #define OWNPTR_SCRUB_BYTE 0xf0
 
@@ -171,7 +170,11 @@ protected:
         : m_ptr(ptr)
     {
         static_assert(
-            requires { requires typename T::AllowOwnPtr()(); } || !requires { requires !typename T::AllowOwnPtr()(); declval<T>().ref(); declval<T>().unref(); }, "Use RefPtr<> for RefCounted types");
+            requires { requires typename T::AllowOwnPtr()(); }
+                || !requires { 
+                    requires !typename T::AllowOwnPtr()();
+                    declval<T>().ref(); declval<T>().unref(); },
+            "Use RefPtr<> for RefCounted types");
     }
 
 private:

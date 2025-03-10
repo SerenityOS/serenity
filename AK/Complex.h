@@ -7,7 +7,9 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/Format.h>
 #include <AK/Math.h>
+#include <AK/String.h>
 
 namespace AK {
 

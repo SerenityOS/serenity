@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Optional.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/Forward.h>

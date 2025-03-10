@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/CircularQueue.h>
-#include <AK/Types.h>
 
 namespace AK {
 

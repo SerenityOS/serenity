@@ -5,6 +5,7 @@
  */
 
 #include <AK/Error.h>
+#include <AK/StdLibExtraDetails.h>
 
 #ifdef KERNEL
 #    include <AK/Format.h>

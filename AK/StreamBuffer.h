@@ -8,6 +8,8 @@
 
 #include <AK/Coroutine.h>
 #include <AK/Error.h>
+#include <AK/Span.h>
+#include <AK/kmalloc.h>
 
 namespace AK {
 

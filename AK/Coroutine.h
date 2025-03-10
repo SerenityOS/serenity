@@ -8,6 +8,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/Noncopyable.h>
+#include <AK/StdLibExtras.h>
 #include <coroutine>
 
 namespace AK {

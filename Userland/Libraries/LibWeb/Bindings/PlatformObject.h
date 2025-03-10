@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Weakable.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/Forward.h>
 

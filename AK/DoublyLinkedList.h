@@ -9,7 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/Error.h>
 #include <AK/Find.h>
-#include <AK/StdLibExtras.h>
+#include <AK/kmalloc.h>
 
 namespace AK {
 

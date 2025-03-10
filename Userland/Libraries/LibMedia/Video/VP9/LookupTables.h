@@ -10,6 +10,7 @@
 #include "Enums.h"
 #include "MotionVector.h"
 #include "Symbols.h"
+#include <AK/StdLibExtras.h>
 
 namespace Media::Video::VP9 {
 

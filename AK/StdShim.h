@@ -44,6 +44,7 @@ constexpr T&& move(T& arg)
 template<typename T, typename... Args>
 constexpr T* construct_at(T* location, Args&&... args) noexcept
 {
+    // FIXME: GCC may complain here about casting away const....
     return ::new ((void*)location) T(forward<Args>(args)...);
 }
 

@@ -10,7 +10,6 @@
 
 #include <AK/Format.h>
 #include <AK/Traits.h>
-#include <AK/Types.h>
 
 namespace AK {
 

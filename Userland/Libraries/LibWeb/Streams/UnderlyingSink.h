@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <LibJS/Forward.h>
-#include <LibWeb/Forward.h>
+#include <LibJS/Heap/Handle.h>
+#include <LibWeb/WebIDL/CallbackType.h>
 
 namespace Web::Streams {
 

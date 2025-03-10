@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
 

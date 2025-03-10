@@ -9,10 +9,9 @@
 #include <AK/Array.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
-#include <AK/TypedTransfer.h>
-#include <AK/Userspace.h>
 
 #if defined(KERNEL) && !defined(PREKERNEL)
+#    include <AK/Userspace.h>
 #    include <Kernel/Arch/SafeMem.h>
 #    include <Kernel/Arch/SmapDisabler.h>
 #    include <Kernel/Memory/MemorySections.h>

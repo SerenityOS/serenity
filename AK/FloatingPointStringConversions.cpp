@@ -7,11 +7,9 @@
 #include <AK/BigIntBase.h>
 #include <AK/CharacterTypes.h>
 #include <AK/FloatingPointStringConversions.h>
-#include <AK/Format.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringView.h>
 #include <AK/UFixedBigInt.h>
-#include <AK/UFixedBigIntDivision.h>
 
 namespace AK {
 
@@ -30,7 +28,7 @@ struct FloatingPointInfo {
     using SameSizeUnsigned = Conditional<sizeof(T) == sizeof(u64), u64, u32>;
 
     // Implementing just this gives all the other bit sizes and mask immediately.
-    static constexpr inline i32 mantissa_bits()
+    static constexpr i32 mantissa_bits()
     {
         if constexpr (sizeof(T) == sizeof(u64))
             return 52;
@@ -38,48 +36,48 @@ struct FloatingPointInfo {
         return 23;
     }
 
-    static constexpr inline i32 exponent_bits()
+    static constexpr i32 exponent_bits()
     {
         return sizeof(T) * 8u - 1u - mantissa_bits();
     }
 
-    static constexpr inline i32 exponent_bias()
+    static constexpr i32 exponent_bias()
     {
         return (1 << (exponent_bits() - 1)) - 1;
     }
 
-    static constexpr inline i32 minimum_exponent()
+    static constexpr i32 minimum_exponent()
     {
         return -exponent_bias();
     }
 
-    static constexpr inline i32 infinity_exponent()
+    static constexpr i32 infinity_exponent()
     {
         static_assert(exponent_bits() < 31);
         return (1 << exponent_bits()) - 1;
     }
 
-    static constexpr inline i32 sign_bit_index()
+    static constexpr i32 sign_bit_index()
     {
         return sizeof(T) * 8 - 1;
     }
 
-    static constexpr inline SameSizeUnsigned sign_mask()
+    static constexpr SameSizeUnsigned sign_mask()
     {
         return SameSizeUnsigned { 1 } << sign_bit_index();
     }
 
-    static constexpr inline SameSizeUnsigned mantissa_mask()
+    static constexpr SameSizeUnsigned mantissa_mask()
     {
         return (SameSizeUnsigned { 1 } << mantissa_bits()) - 1;
     }
 
-    static constexpr inline SameSizeUnsigned exponent_mask()
+    static constexpr SameSizeUnsigned exponent_mask()
     {
         return SameSizeUnsigned { infinity_exponent() } << mantissa_bits();
     }
 
-    static constexpr inline i32 max_exponent_round_to_even()
+    static constexpr i32 max_exponent_round_to_even()
     {
         if constexpr (sizeof(T) == sizeof(u64))
             return 23;
@@ -87,7 +85,7 @@ struct FloatingPointInfo {
         return 10;
     }
 
-    static constexpr inline i32 min_exponent_round_to_even()
+    static constexpr i32 min_exponent_round_to_even()
     {
         if constexpr (sizeof(T) == sizeof(u64))
             return -4;
@@ -95,7 +93,7 @@ struct FloatingPointInfo {
         return -17;
     }
 
-    static constexpr inline size_t max_possible_digits_needed_for_parsing()
+    static constexpr size_t max_possible_digits_needed_for_parsing()
     {
         if constexpr (sizeof(T) == sizeof(u64))
             return 769;
@@ -103,7 +101,7 @@ struct FloatingPointInfo {
         return 114;
     }
 
-    static constexpr inline i32 max_power_of_10()
+    static constexpr i32 max_power_of_10()
     {
         if constexpr (sizeof(T) == sizeof(u64))
             return 308;
@@ -111,7 +109,7 @@ struct FloatingPointInfo {
         return 38;
     }
 
-    static constexpr inline i32 min_power_of_10()
+    static constexpr i32 min_power_of_10()
     {
         // Closest double value to zero is xe-324 and since we have at most 19 digits
         // we know that -324 -19 = -343 so exponent below that must be zero (for double)
@@ -121,7 +119,7 @@ struct FloatingPointInfo {
         return -65;
     }
 
-    static constexpr inline i32 max_exact_power_of_10()
+    static constexpr i32 max_exact_power_of_10()
     {
         // These are the largest power of 10 representable in T
         // So all powers of 10*i less than or equal to this should be the exact
@@ -133,7 +131,7 @@ struct FloatingPointInfo {
         return 10;
     }
 
-    static constexpr inline T power_of_ten(i32 exponent)
+    static constexpr T power_of_ten(i32 exponent)
     {
         VERIFY(exponent <= max_exact_power_of_10());
         VERIFY(exponent >= 0);
@@ -141,7 +139,7 @@ struct FloatingPointInfo {
     }
 
     template<u32 MaxPower>
-    static constexpr inline Array<T, MaxPower + 1> compute_powers_of_ten()
+    static constexpr Array<T, MaxPower + 1> compute_powers_of_ten()
     {
         // All these values are guaranteed to be exact all powers of MaxPower is the
         Array<T, MaxPower + 1> values {};

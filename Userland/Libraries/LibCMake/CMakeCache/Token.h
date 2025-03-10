@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <LibCMake/Position.h>
 
 namespace CMake::Cache {

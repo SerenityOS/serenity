@@ -10,10 +10,10 @@
 
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <Kernel/API/VirGL.h>
 #include <LibGfx/Size.h>
 #include <LibVirtGPU/Commands.h>
 #include <LibVirtGPU/VirGLProtocol.h>
-#include <sys/ioctl.h>
 
 namespace VirtGPU {
 

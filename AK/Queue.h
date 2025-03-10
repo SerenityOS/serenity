@@ -7,8 +7,6 @@
 #pragma once
 
 #include <AK/IntrusiveList.h>
-#include <AK/OwnPtr.h>
-#include <AK/SinglyLinkedList.h>
 #include <AK/Vector.h>
 
 namespace AK {

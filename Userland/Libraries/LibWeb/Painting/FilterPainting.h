@@ -7,7 +7,7 @@
 #pragma once
 
 #include <LibGfx/Forward.h>
-#include <LibWeb/CSS/Filter.h>
+#include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Painting {

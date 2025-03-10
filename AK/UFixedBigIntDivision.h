@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Diagnostics.h>
 #include <AK/UFixedBigInt.h>
 
 namespace AK::Detail {

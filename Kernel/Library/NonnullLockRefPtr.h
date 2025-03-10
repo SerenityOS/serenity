@@ -9,6 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
 #include <AK/Format.h>
+#include <AK/Forward.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>

@@ -6,6 +6,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Queue.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>

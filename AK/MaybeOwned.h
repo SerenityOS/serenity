@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Variant.h>
 

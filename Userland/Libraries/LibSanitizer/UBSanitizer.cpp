@@ -6,6 +6,11 @@
 
 #include <AK/Format.h>
 #include <AK/UBSanitizer.h>
+#ifdef KERNEL
+#    include <Kernel/Library/Assertions.h>
+#else
+#    include <stdlib.h> // For abort
+#endif
 
 using namespace AK::UBSanitizer;
 

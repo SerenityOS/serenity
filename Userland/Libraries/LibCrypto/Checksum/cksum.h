@@ -9,6 +9,7 @@
 #include <AK/Span.h>
 #include <AK/Types.h>
 #include <LibCrypto/Checksum/ChecksumFunction.h>
+#include <sys/types.h>
 
 namespace Crypto::Checksum {
 

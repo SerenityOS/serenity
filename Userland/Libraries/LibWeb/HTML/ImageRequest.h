@@ -6,10 +6,8 @@
 
 #pragma once
 
-#include <AK/Error.h>
-#include <AK/OwnPtr.h>
 #include <LibGfx/Size.h>
-#include <LibJS/Heap/Handle.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibURL/URL.h>
 #include <LibWeb/Forward.h>
 

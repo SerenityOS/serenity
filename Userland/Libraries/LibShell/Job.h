@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Execution.h"
 #include "Forward.h"
 #include <AK/ByteString.h>
 #include <AK/Debug.h>
@@ -25,16 +24,7 @@ class Job : public RefCounted<Job> {
 public:
     static NonnullRefPtr<Job> create(pid_t pid, pid_t pgid, ByteString cmd, u64 job_id, AST::Command&& command) { return adopt_ref(*new Job(pid, pgid, move(cmd), job_id, move(command))); }
 
-    ~Job()
-    {
-        if constexpr (SHELL_JOB_DEBUG) {
-            if (m_active) {
-                auto elapsed = m_command_timer.elapsed();
-                // Don't mistake this for the command!
-                dbgln("Job entry '{}' deleted in {} ms", m_cmd, elapsed);
-            }
-        }
-    }
+    ~Job();
 
     Function<void(RefPtr<Job>)> on_exit;
 

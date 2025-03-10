@@ -6,6 +6,7 @@
 
 #include <LibTest/AsyncTestCase.h>
 #include <LibTest/AsyncTestStreams.h>
+#include <unistd.h>
 
 ASYNC_TEST_CASE(input_basic)
 {

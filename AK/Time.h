@@ -8,12 +8,12 @@
 
 #include <AK/Array.h>
 #include <AK/Assertions.h>
-#include <AK/Badge.h>
 #include <AK/Checked.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
 
 #if defined(AK_OS_SERENITY) && defined(KERNEL)
+#    include <AK/Badge.h>
 #    include <Kernel/API/POSIX/sys/time.h>
 #    include <Kernel/API/POSIX/time.h>
 

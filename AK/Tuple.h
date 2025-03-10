@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/StdLibExtras.h>
 #include <AK/TypeList.h>
 
 namespace AK::Detail {

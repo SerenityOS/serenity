@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibURL/URL.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 

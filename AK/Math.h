@@ -6,13 +6,12 @@
 
 #pragma once
 
-#include <AK/BuiltinWrappers.h>
 #include <AK/Concepts.h>
 #include <AK/FloatingPoint.h>
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtraDetails.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
-#include <math.h>
 
 #ifdef KERNEL
 #    error "Including AK/Math.h from the Kernel is never correct! Floating point is disabled."

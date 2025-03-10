@@ -7,9 +7,9 @@
 #include <AK/Assertions.h>
 #include <AK/Format.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <serenity.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 /*

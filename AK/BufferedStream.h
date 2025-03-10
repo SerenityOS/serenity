@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/CircularBuffer.h>
-#include <AK/OwnPtr.h>
 #include <AK/Stream.h>
 
 namespace AK {

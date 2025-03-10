@@ -9,7 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/OwnPtr.h>
 
-#ifndef AK_OS_MACOS
+#if not defined(AK_OS_MACOS) and not defined(AK_OS_SERENITY)
 // Make sure egl.h doesn't give us definitions from X11 headers
 #    define EGL_NO_X11
 #    include <EGL/egl.h>

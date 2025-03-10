@@ -31,7 +31,7 @@ struct InputColors {
     }
 };
 
-static InputColors compute_input_colors(Palette const& palette, Optional<Color> accent_color)
+inline InputColors compute_input_colors(Palette const& palette, Optional<Color> accent_color)
 {
     // These shades have been picked to work well for all themes and have enough variation to paint
     // all input states (disabled, enabled, checked, etc).

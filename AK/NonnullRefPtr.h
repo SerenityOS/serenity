@@ -12,6 +12,7 @@
 #include <AK/Format.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
+#include <AK/kmalloc.h>
 
 namespace AK {
 

@@ -6,6 +6,7 @@
  */
 
 #include <AK/Format.h>
+#include <AK/kmalloc.h>
 #include <bits/search.h>
 #include <search.h>
 

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 // These names are defined in B.1.1.3 - Marker assignments
 
 #define JPEG_APPN0 0XFFE0

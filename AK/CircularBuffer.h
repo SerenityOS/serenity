@@ -10,7 +10,7 @@
 #include <AK/Error.h>
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
-#include <AK/Vector.h>
+#include <cstddef>
 
 namespace AK {
 
@@ -54,7 +54,7 @@ protected:
     [[nodiscard]] ReadonlyBytes next_read_span(size_t offset = 0) const;
     [[nodiscard]] ReadonlyBytes next_seekback_span(size_t distance) const;
 
-    ByteBuffer m_buffer {};
+    ByteBuffer m_buffer;
 
     size_t m_reading_head {};
     size_t m_used_space {};

@@ -10,6 +10,7 @@
 #include <AK/Optional.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/MimeSniff/MimeType.h>
 
 namespace Web::HTML {
 

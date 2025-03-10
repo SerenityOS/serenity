@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/Forward.h>
 #include <AK/Noncopyable.h>
+#include <AK/Platform.h>
 
 #if defined(KERNEL)
 #    include <Kernel/Arch/Processor.h>

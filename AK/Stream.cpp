@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <AK/Format.h>
 #include <AK/Stream.h>
 #include <AK/StringBuilder.h>

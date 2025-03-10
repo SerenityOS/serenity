@@ -13,8 +13,8 @@
 
 #include <AK/ByteString.h>
 #include <AK/Forward.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>
-#include <AK/OwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <AK/Variant.h>
 

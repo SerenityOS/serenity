@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Optional.h>
+
 namespace Web::CSS {
 
 class ColumnCount {
@@ -34,7 +36,7 @@ private:
         , m_value(value)
     {
     }
-    ColumnCount() {};
+    ColumnCount() { }
 
     Type m_type { Type::Auto };
     Optional<int> m_value;

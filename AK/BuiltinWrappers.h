@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "Concepts.h"
+#include <AK/Assertions.h>
+#include <AK/Concepts.h>
 
 namespace AK {
 
