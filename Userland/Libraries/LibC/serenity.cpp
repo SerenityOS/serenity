@@ -147,11 +147,6 @@ u16 internet_checksum(void const* ptr, size_t count)
     return htons(~checksum);
 }
 
-int emuctl(uintptr_t command, uintptr_t arg0, uintptr_t arg1)
-{
-    return syscall(SC_emuctl, command, arg0, arg1);
-}
-
 int serenity_open(char const* path, size_t path_length, int options, ...)
 {
     if (!path) {

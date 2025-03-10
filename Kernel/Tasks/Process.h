@@ -348,7 +348,6 @@ public:
     void stop_tracing();
     void tracer_trap(Thread&, RegisterState const&);
 
-    ErrorOr<FlatPtr> sys$emuctl();
     ErrorOr<FlatPtr> sys$yield();
     ErrorOr<FlatPtr> sys$sync();
     ErrorOr<FlatPtr> sys$beep(int tone);
