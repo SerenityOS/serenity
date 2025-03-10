@@ -57,9 +57,14 @@ public:
     virtual ProgressionData next() override;
 
 private:
+    SyncGenerator<ProgressionData> generator();
+
+    Optional<ProgressionData> m_next;
+    int m_layer_count { 0 };
+    int m_max_number_of_decomposition_levels { 0 };
+    int m_component_count { 0 };
     Function<int(int resolution_level, int component)> m_precinct_count;
-    ProgressionData m_next {};
-    ProgressionData m_end {};
+    SyncGenerator<ProgressionData> m_generator;
 };
 
 }

@@ -51,23 +51,29 @@ SyncGenerator<ProgressionData> LayerResolutionLevelComponentPositionProgressionI
 }
 
 ResolutionLevelLayerComponentPositionProgressionIterator::ResolutionLevelLayerComponentPositionProgressionIterator(int layer_count, int max_number_of_decomposition_levels, int component_count, Function<int(int resolution_level, int component)> precinct_count)
-    : m_precinct_count(move(precinct_count))
+    : m_layer_count(layer_count)
+    , m_max_number_of_decomposition_levels(max_number_of_decomposition_levels)
+    , m_component_count(component_count)
+    , m_precinct_count(move(precinct_count))
+    , m_generator(generator())
 {
-    m_end.layer = layer_count;
-    m_end.resolution_level = max_number_of_decomposition_levels + 1;
-    m_end.component = component_count;
-    m_end.precinct = m_precinct_count(m_next.resolution_level, m_next.component);
+    m_next = m_generator.next();
 }
 
 bool ResolutionLevelLayerComponentPositionProgressionIterator::has_next() const
 {
-    return m_next != ProgressionData { 0, m_end.resolution_level, 0, 0 };
+    return m_next.has_value();
 }
 
 ProgressionData ResolutionLevelLayerComponentPositionProgressionIterator::next()
 {
-    ProgressionData current_data = m_next;
+    auto result = m_next;
+    m_next = m_generator.next();
+    return result.value();
+}
 
+SyncGenerator<ProgressionData> ResolutionLevelLayerComponentPositionProgressionIterator::generator()
+{
     // B.12.1.2 Resolution level-layer-component-position progression
     // "for each r = 0,..., Nmax
     //      for each l = 0,..., L – 1
@@ -77,32 +83,11 @@ ProgressionData ResolutionLevelLayerComponentPositionProgressionIterator::next()
     // FIXME: This always iterates up to Nmax, instead of just N_l of each component. That means several of the iteration results will be invalid and skipped.
     // (This is a performance issue, not a correctness issue.)
 
-    ++m_next.precinct;
-    if (m_next.precinct < m_end.precinct)
-        return current_data;
-
-    m_next.precinct = 0;
-    ++m_next.component;
-    if (m_next.component < m_end.component) {
-        m_end.precinct = m_precinct_count(m_next.resolution_level, m_next.component);
-        return current_data;
-    }
-
-    m_next.component = 0;
-    ++m_next.layer;
-    if (m_next.layer < m_end.layer) {
-        m_end.precinct = m_precinct_count(m_next.resolution_level, m_next.component);
-        return current_data;
-    }
-
-    m_next.layer = 0;
-
-    ++m_next.resolution_level;
-    if (has_next())
-        m_end.precinct = m_precinct_count(m_next.resolution_level, m_next.component);
-    VERIFY(m_next.resolution_level < m_end.resolution_level || !has_next());
-
-    return current_data;
+    for (int r = 0; r <= m_max_number_of_decomposition_levels; ++r)
+        for (int l = 0; l < m_layer_count; ++l)
+            for (int i = 0; i < m_component_count; ++i)
+                for (int k = 0; k < m_precinct_count(r, i); ++k)
+                    co_yield ProgressionData { l, r, i, k };
 }
 
 }
