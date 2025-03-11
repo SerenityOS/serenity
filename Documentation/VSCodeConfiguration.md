@@ -14,35 +14,7 @@ The recommended extensions for VS Code include:
 
 Clangd has the best support for cross-compiling workflows, especially if configured as noted below. The Microsoft C/C++ tools can work, but require a lot more configuration and may not understand the sysroot in use.
 
-### clangd
-
-The official clangd extension can be used for C++ comprehension. It is recommended in general, as it is most likely to work on all platforms.
-
-clangd uses `compile_commands.json` files to understand the project. CMake will generate these in either Build/x86_64, Build/x86_64clang, and Build/lagom.
-Depending on which configuration you use most, set the CompilationDatabase configuration item in the below `.clangd` file accordingly. It goes at the root of your checkout (`serenity/.clangd`):
-
-```yaml
-CompileFlags:
-    Add: [-D__serenity__]
-    CompilationDatabase: Build/x86_64
-
-Diagnostics:
-    UnusedIncludes: None
-    MissingIncludes: None
-```
-
-The UnusedIncludes and MissingIncludes flags are used to disable the [Include Cleaner](https://clangd.llvm.org/design/include-cleaner) feature of newer clangd releases.
-It can be re-enabled if you don't mind the noisy inlay hints and problems in the problem view.
-
-Run `./Meta/serenity.sh run` at least once to generate the `compile_commands.json` file.
-
-In addition to the `.clangd` file, the `settings.json` file below has a required `clangd.arguments` entry for `--query-driver` that allows clangd to find the cross-compiler's built-in include paths.
-
-#### Known issues
-
--   Some distribution clangd packages still have issues identifying paths to the serenity cross-compilers' builtin include paths after supplying the `--query-driver` option from `settings.json`. This has been seen on at least Debian. If the inlay hints suggest that `<new>` cannot be found, first triple check your configuration matches the `.clangd` file from this section, verify that you've run the OS via `Meta/serenity.sh run`, and quadruple check your `clangd.arguments` section in the project-local `settings.json` file. If all of the above are correct, building `clangd` from the serenity clang toolchain is known to work. See [AdvancedBuildInstructions](AdvancedBuildInstructions.md#serenity-aware-clang-tools) for steps on how to build it from source. After building from source, be sure to set `clangd.path` in your `settings.json` to `${workspaceFolder}/Toolchain/Local/clang/bin/clangd`.
-
--   clangd has a tendency to crash when stressing bleeding edge compiler features. You can usually just restart it via the command palette. If that doesn't help, close currently open C++ files and/or switch branches before restarting, which helps sometimes.
+See [ClangdConfiguration](ClangdConfiguration.md) for information on how to configure clangd.
 
 ### DSL syntax highlighting
 
@@ -149,11 +121,10 @@ These belong in the `.vscode/settings.json` of Serenity.
     // git commit message length
     "git.inputValidationLength": 72,
     "git.inputValidationSubjectLength": 72,
-    // Tell clangd to ask the cross-compilers for their builtin include paths
-    "clangd.arguments": [
-        "--query-driver=${workspaceFolder}/Toolchain/Local/**/*",
-        "--header-insertion=never" // See https://github.com/clangd/clangd/issues/1247
-    ]
+    // See ClangdConfiguration.md for arguments that may be needed.
+    "clangd.arguments": [],
+    // Set if needed.
+    "clangd.path": "..."
 }
 ```
 

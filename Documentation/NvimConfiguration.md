@@ -183,14 +183,4 @@ nmap <silent>gs :CocCommand clangd.switchSourceHeader vsplit<CR>
 
 # Configure .clangd
 
-> **Note**: Every time a new source is added or the compilation commands get adjusted
-> (through CMake) you need to rerun `./Meta/serenity.sh rebuild`.
-
-Link `ln -s /path/to/serenity/Build/x86_64/compile_commands.json /path/to/serenity/compile_commands.json`.
-
-Create `/path/to/serenity/.clangd` (replace `/path/to/serenity`
-with your SerenityOS directory) with content of the clangd section in the
-[VSCodeConfiguration.md](./VSCodeConfiguration.md).
-
-> **Note**: You can add a `Remove` part, where you can remove unwanted flags
-> such as those that aren't supported by the current version of clang.
+Configure `.clangd` as explained in [ClangdConfiguration](ClangdConfiguration.md).
