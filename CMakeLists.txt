@@ -98,6 +98,12 @@ if("${SERENITY_ARCH}" STREQUAL "x86_64")
         BYPRODUCTS "${CMAKE_BINARY_DIR}/extlinux_disk_image"
         USES_TERMINAL
     )
+elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
+    add_custom_target(raspberry-pi-image
+        COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-raspberry-pi.sh"
+        BYPRODUCTS ${CMAKE_BINARY_DIR}/raspberry_pi_image
+        USES_TERMINAL
+    )
 endif()
 
 add_custom_target(install-native-partition
