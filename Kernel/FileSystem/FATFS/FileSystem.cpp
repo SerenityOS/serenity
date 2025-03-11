@@ -404,11 +404,12 @@ u32 FATFS::end_of_chain_marker() const
     }
 }
 
-ErrorOr<void> FATFS::set_free_cluster_count(u32 value)
+ErrorOr<void> FATFS::update_fsinfo(u32 free_cluster_count, u32 next_free_cluster_hint)
 {
     VERIFY(m_fat_version == FATVersion::FAT32);
 
-    m_fs_info.last_known_free_cluster_count = value;
+    m_fs_info.last_known_free_cluster_count = free_cluster_count;
+    m_fs_info.next_free_cluster_hint = next_free_cluster_hint;
     auto fs_info_buffer = UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&m_fs_info));
     TRY(write_block(m_parameter_block->dos7_bpb()->fs_info_sector, fs_info_buffer, sizeof(m_fs_info)));
 
@@ -438,8 +439,8 @@ ErrorOr<u32> FATFS::allocate_cluster()
         if (TRY(fat_read(i)) == 0) {
             dbgln_if(FAT_DEBUG, "FATFS: Allocating cluster {}", i);
 
-            if (m_fat_version == FATVersion::FAT32 && m_fs_info.last_known_free_cluster_count != fs_info_data_unknown)
-                TRY(set_free_cluster_count(m_fs_info.last_known_free_cluster_count - 1));
+            if (m_fat_version == FATVersion::FAT32)
+                TRY(update_fsinfo(m_fs_info.last_known_free_cluster_count == fs_info_data_unknown ? fs_info_data_unknown : (m_fs_info.last_known_free_cluster_count - 1), i + 1));
 
             TRY(fat_write(i, end_of_chain_marker()));
             return i;
@@ -449,12 +450,20 @@ ErrorOr<u32> FATFS::allocate_cluster()
     return Error::from_errno(ENOSPC);
 }
 
-ErrorOr<void> FATFS::notify_cluster_freed()
+ErrorOr<void> FATFS::notify_clusters_freed(u32 first_freed_cluster, u32 freed_cluster_count)
 {
-    if (m_fat_version == FATVersion::FAT32 && m_fs_info.last_known_free_cluster_count != fs_info_data_unknown)
-        TRY(set_free_cluster_count(m_fs_info.last_known_free_cluster_count + 1));
+    if (m_fat_version == FATVersion::FAT32) {
+        u32 free_cluster_count = (m_fs_info.last_known_free_cluster_count == fs_info_data_unknown) ? fs_info_data_unknown : (m_fs_info.last_known_free_cluster_count + freed_cluster_count);
+        u32 first_free_cluster = (first_freed_cluster < m_fs_info.next_free_cluster_hint || m_fs_info.next_free_cluster_hint == fs_info_data_unknown) ? first_freed_cluster : m_fs_info.next_free_cluster_hint;
+        TRY(update_fsinfo(free_cluster_count, first_free_cluster));
+    }
 
     return {};
+}
+
+ErrorOr<void> FATFS::notify_cluster_freed(u32 cluster)
+{
+    return notify_clusters_freed(cluster, 1);
 }
 
 ErrorOr<u32> FATFS::fat_read(u32 cluster)

@@ -90,9 +90,10 @@ private:
 
     FatBlockSpan first_block_of_cluster(u32 cluster) const;
 
-    ErrorOr<void> set_free_cluster_count(u32);
+    ErrorOr<void> update_fsinfo(u32 free_cluster_count, u32 next_free_cluster_hint);
     ErrorOr<u32> allocate_cluster();
-    ErrorOr<void> notify_cluster_freed();
+    ErrorOr<void> notify_cluster_freed(u32);
+    ErrorOr<void> notify_clusters_freed(u32 first_cluster, u32 freed_cluster_count);
 
     size_t fat_offset_for_cluster(u32 cluster) const;
 
