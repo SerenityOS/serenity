@@ -47,6 +47,8 @@ public:
     virtual Optional<Metadata const&> metadata() override;
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
+    static ErrorOr<ByteBuffer> invert_horizontal_differencing(ReadonlyBytes, u32 columns, Span<u32> bits_per_component);
+
 private:
     TIFFImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream>);
 

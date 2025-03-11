@@ -8,6 +8,7 @@
 #include <AK/ConstrainedStream.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
+#include <AK/FixedArray.h>
 #include <AK/String.h>
 #include <LibCompress/Lzw.h>
 #include <LibCompress/PackBitsDecoder.h>
@@ -41,6 +42,37 @@ bool is_bilevel(TIFF::PhotometricInterpretation interpretation)
     return interpretation == TIFF::PhotometricInterpretation::WhiteIsZero || interpretation == TIFF::PhotometricInterpretation::BlackIsZero;
 }
 
+}
+
+ErrorOr<ByteBuffer> TIFFImageDecoderPlugin::invert_horizontal_differencing(ReadonlyBytes input, u32 columns, Span<u32> bits_per_component)
+{
+    auto inverted = TRY(ByteBuffer::create_zeroed(input.size()));
+    auto memory_stream = make<FixedMemoryStream>(inverted.bytes());
+    auto inverted_stream = BigEndianOutputBitStream(move(memory_stream));
+
+    memory_stream = make<FixedMemoryStream>(input);
+    auto stream = BigEndianInputBitStream(move(memory_stream));
+
+    while (!stream.is_eof()) {
+        auto last_values = TRY(FixedArray<u32>::create(bits_per_component.size()));
+
+        for (u32 i = 0; i < columns; ++i) {
+            for (u8 component = 0; component < bits_per_component.size(); ++component) {
+                u32 sample = TRY(stream.read_bits(bits_per_component[component]));
+                sample += last_values[component];
+
+                TRY(inverted_stream.write_bits(sample, bits_per_component[component]));
+
+                last_values[component] = sample;
+            }
+        }
+
+        // Rows are bit-aligned:
+        stream.align_to_byte_boundary();
+        TRY(inverted_stream.align_to_byte_boundary());
+    }
+
+    return inverted;
 }
 
 namespace TIFF {
@@ -343,7 +375,14 @@ private:
             TRY(m_stream->seek(offsets[segment_index]));
 
             auto const rows_in_segment = segment_index < offsets.size() - 1 ? segment_length : *m_metadata.image_length() - segment_length * segment_index;
-            auto const decoded_bytes = TRY(segment_decoder(byte_counts[segment_index], { segment_width, rows_in_segment }));
+            auto decoded_bytes = TRY(segment_decoder(byte_counts[segment_index], { segment_width, rows_in_segment }));
+
+            ByteBuffer differential_predictor_buffer;
+            if (m_predictor == Predictor::HorizontalDifferencing) {
+                differential_predictor_buffer = TRY(TIFFImageDecoderPlugin::invert_horizontal_differencing(decoded_bytes, segment_width, m_bits_per_sample));
+                decoded_bytes = differential_predictor_buffer;
+            }
+
             auto decoded_segment = make<FixedMemoryStream>(decoded_bytes);
             auto decoded_stream = make<BigEndianInputBitStream>(move(decoded_segment));
 
@@ -351,8 +390,6 @@ private:
                 auto const image_row = row + segment_length * (segment_index / segment_per_rows);
                 if (image_row >= *m_metadata.image_length())
                     break;
-
-                Optional<Color> last_color {};
 
                 for (u32 column = 0; column < segment_width; ++column) {
                     // If image_length % segment_length != 0, the last tile will be padded.
@@ -367,18 +404,6 @@ private:
                         oriented_bitmap.get<ExifOrientedCMYKBitmap>().set_pixel(image_column, image_row, cmyk);
                     } else {
                         auto color = TRY(read_color(*decoded_stream));
-
-                        // FIXME:  We should do the differencing at the byte-stream level, that would make it
-                        //         compatible with both LibPDF and all color formats.
-                        if (m_predictor == Predictor::HorizontalDifferencing && last_color.has_value()) {
-                            color.set_red(last_color->red() + color.red());
-                            color.set_green(last_color->green() + color.green());
-                            color.set_blue(last_color->blue() + color.blue());
-                            if (m_alpha_channel_index.has_value())
-                                color.set_alpha(last_color->alpha() + color.alpha());
-                        }
-
-                        last_color = color;
                         if (image_column >= m_image_width)
                             continue;
                         oriented_bitmap.get<ExifOrientedBitmap>().set_pixel(image_column, image_row, color.value());
