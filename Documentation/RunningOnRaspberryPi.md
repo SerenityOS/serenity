@@ -4,8 +4,6 @@
 
 This is for development purposes only - Serenity doesn't currently boot on Raspberry Pi! Use this guide if you want to set up a development environment.
 
-Currently only UART output is supported, no display.
-
 64-bit only, so you need a Raspberry Pi 3 or newer.
 
 ## Running in QEMU
