@@ -30,50 +30,32 @@ You can also run it under gdb with:
 Meta/serenity.sh gdb aarch64
 ```
 
-## Running on real hardware using an SD Card
+## Running on real hardware using an SD card
 
-### Step 0: Download and run Raspberry Pi OS from an SD Card
+### Step 0: Build a SerenityOS SD card image
 
-This step is needed because the original firmware files need to be present on the SD Card when booting Serenity. It will also help with the UART setup.
+You can build an SD card image for the Raspberry Pi 3 and 4 with:
+
+```console
+ninja -C Build/aarch64 raspberry-pi-image
+```
+
+The generated disk image will be written to `Build/aarch64/raspberry_pi_disk_image`.
+Write this image to the SD card you want to use to boot Serenity using a command such as:
+
+```console
+sudo cp Build/aarch64/raspberry_pi_disk_image /dev/sdx && sync
+```
+
+(Replace `/dev/sdx` with your sd card device file)
 
 ### Step 1: Connect your Raspberry Pi to your PC using a UART cable
 
 Please follow one of the existing guides (for example [here](https://scribles.net/setting-up-serial-communication-between-raspberry-pi-and-pc)) and make sure UART is working on Raspberry Pi OS before proceeding.
 
-If you're using a Raspberry Pi 4B and want to test if the UART is working correctly, you need to do a few extra steps.
-UART0 (the one that SerenityOS uses) is used for bluetooth on these models, so for the OS to use it instead, ensure that you disable Bluetooth inside the `config.txt`:
+### Step 2: Put the SD Card in the Raspberry Pi and power on
 
-```
-dtoverlay=disable-bt
-```
-
-### Step 2: Mount SD Card
-
-If you use a Raspberry Pi 4, and your serenity kernel is called `kernel8.img`
-(the default), and you don't have any other `kernel*.img` files on your SD
-card, make sure `config.txt` is empty.
-
-If you want to use filename that isn't `kernel8.img` or if you want to keep
-other `kernel*.img` files on your SD card, put this in config.txt:
-
-```
-arm_64bit=1
-kernel=myfilename.img
-```
-
-If you use a Raspberry Pi 3, put this in config.txt:
-
-```
-enable_uart=1
-```
-
-### Step 3: Copy Serenity kernel to SD Card
-
-`kernel8.img` can be found in `Build/aarch64/Kernel/`. Copy it to the main directory on the `Boot/` partition, next to `config.txt`. You can either replace the original file or use another name (see above).
-
-### Step 4: Put the SD Card in the Raspberry Pi and power on
-
-You should start seeing some messages in your UART terminal window.
+You should start seeing some messages in your UART terminal window. The default configuration is 115200-8-N-1 (115200 baud, one start bit, 8 data bits, no parity).
 
 ## Running on real hardware using network (Raspberry Pi 3)
 
