@@ -30,8 +30,9 @@ Make sure to read the basic [Build Instructions](BuildInstructions.md) first.
 -   [Running On Raspberry Pi](RunningOnRaspberryPi.md)
 -   [Known Hardware Compatibility](HardwareCompatibility.md)
 
-## Configuring Editors
+## Configuring Editors and Language Servers
 
+-   [clangd (all editors)](ClangdConfiguration.md)
 -   [CLion](CLionConfiguration.md)
 -   [Emacs](EmacsConfiguration.md)
 -   [Helix](HelixConfiguration.md)
