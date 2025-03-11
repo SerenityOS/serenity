@@ -274,7 +274,7 @@ else()
 endif()
 
 serenity_libc(LibC c)
-add_dependencies(LibC crt0)
+add_dependencies(LibC crt0 LibUBSanitizer)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_dependencies(LibC crti crt0_shared crtn)
 endif()
