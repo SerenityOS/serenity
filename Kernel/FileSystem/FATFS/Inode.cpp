@@ -15,13 +15,7 @@ namespace Kernel {
 ErrorOr<NonnullRefPtr<FATInode>> FATInode::create(FATFS& fs, FATEntry entry, FATEntryLocation inode_metadata_location, Vector<FATLongFileNameEntry> const& lfn_entries)
 {
     auto filename = TRY(compute_filename(entry, lfn_entries));
-    u32 entry_first_cluster = entry.first_cluster_low;
-    if (fs.m_fat_version == FATVersion::FAT32)
-        entry_first_cluster |= (static_cast<u32>(entry.first_cluster_high) << 16);
-    auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FATInode(fs, entry, inode_metadata_location, move(filename))));
-    MutexLocker locker(inode->m_inode_lock);
-    inode->m_cluster_list = TRY(inode->compute_cluster_list(fs, entry_first_cluster));
-    return inode;
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FATInode(fs, entry, inode_metadata_location, move(filename))));
 }
 
 FATInode::FATInode(FATFS& fs, FATEntry entry, FATEntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename)
@@ -31,6 +25,17 @@ FATInode::FATInode(FATFS& fs, FATEntry entry, FATEntryLocation inode_metadata_lo
     , m_filename(move(filename))
 {
     dbgln_if(FAT_DEBUG, "FATInode[{}]::FATInode(): Creating inode with filename \"{}\"", identifier(), m_filename);
+}
+
+ErrorOr<RawPtr<Vector<u32>>> FATInode::get_cluster_list()
+{
+    VERIFY(m_inode_lock.is_locked());
+
+    if (m_cluster_list.has_value())
+        return &m_cluster_list.value();
+
+    m_cluster_list = TRY(compute_cluster_list(fs(), first_cluster()));
+    return &m_cluster_list.value();
 }
 
 ErrorOr<Vector<u32>> FATInode::compute_cluster_list(FATFS& fs, u32 first_cluster)
@@ -203,7 +208,8 @@ ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> FATInode::get_block_list()
 
     Vector<BlockBasedFileSystem::BlockIndex> block_list;
 
-    for (auto cluster : m_cluster_list) {
+    auto cluster_list = TRY(get_cluster_list());
+    for (auto cluster : *cluster_list) {
         auto span = fs().first_block_of_cluster(cluster);
         for (size_t i = 0; i < span.number_of_sectors; i++) {
             dbgln_if(FAT_DEBUG, "FATInode[{}]::get_block_list(): Appending block {} to  block list", identifier(), BlockBasedFileSystem::BlockIndex { span.start_block.value() + i });
@@ -271,7 +277,8 @@ ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATIn
             return EINVAL;
         } else {
             auto entry_number_bytes = i * sizeof(FATEntry);
-            auto cluster = m_cluster_list[entry_number_bytes / bytes_per_cluster];
+            auto cluster_list = TRY(get_cluster_list());
+            auto cluster = (*cluster_list)[entry_number_bytes / bytes_per_cluster];
             auto block = BlockBasedFileSystem::BlockIndex { fs().first_block_of_cluster(cluster).start_block.value() + (entry_number_bytes % bytes_per_cluster) / fs().m_device_block_size };
 
             auto entries_per_sector = fs().m_device_block_size / sizeof(FATEntry);
@@ -365,8 +372,9 @@ ErrorOr<void> FATInode::allocate_and_add_cluster_to_chain()
 
     u32 allocated_cluster = TRY(fs().allocate_cluster());
     dbgln_if(FAT_DEBUG, "FATInode[{}]::allocate_and_add_cluster_to_chain(): allocated cluster {}", identifier(), allocated_cluster);
+    auto cluster_list = TRY(get_cluster_list());
 
-    if (m_cluster_list.is_empty() || (m_cluster_list.size() == 1 && first_cluster() <= 1)) {
+    if (cluster_list->is_empty() || (cluster_list->size() == 1 && first_cluster() <= 1)) {
         // This is the first cluster in the chain, so update the inode metadata.
         if (fs().m_fat_version == FATVersion::FAT32) {
             // Only FAT32 uses the `first_cluster_high` field.
@@ -380,10 +388,10 @@ ErrorOr<void> FATInode::allocate_and_add_cluster_to_chain()
         // This is not the first cluster in the chain, so we need to update the
         // FAT entry for the last cluster in the chain to point to the newly
         // allocated cluster.
-        TRY(fs().fat_write(m_cluster_list.last(), allocated_cluster));
+        TRY(fs().fat_write(cluster_list->last(), allocated_cluster));
     }
 
-    m_cluster_list.append(allocated_cluster);
+    cluster_list->append(allocated_cluster);
 
     return {};
 }
@@ -391,16 +399,17 @@ ErrorOr<void> FATInode::allocate_and_add_cluster_to_chain()
 ErrorOr<void> FATInode::remove_last_cluster_from_chain()
 {
     VERIFY(m_inode_lock.is_locked());
-    VERIFY(m_cluster_list.size() > 0);
+    auto cluster_list = TRY(get_cluster_list());
+    VERIFY(cluster_list->size() > 0);
 
-    u32 last_cluster = m_cluster_list.take_last();
+    u32 last_cluster = cluster_list->take_last();
 
     dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_last_cluster_from_chain(): freeing cluster {}", identifier(), last_cluster);
 
     TRY(fs().fat_write(last_cluster, 0));
     TRY(fs().notify_cluster_freed(last_cluster));
 
-    if (m_cluster_list.is_empty() || (m_cluster_list.size() == 1 && first_cluster() <= 1)) {
+    if (cluster_list->is_empty() || (cluster_list->size() == 1 && first_cluster() <= 1)) {
         // We have removed the last cluster in the chain, so update the inode metadata.
         if (fs().m_fat_version == FATVersion::FAT32) {
             // Only FAT32 uses the `first_cluster_high` field.
@@ -413,7 +422,7 @@ ErrorOr<void> FATInode::remove_last_cluster_from_chain()
     } else {
         // We have removed a cluster from the chain, so update the FAT entry for
         // the last cluster in the chain mark it as the end of the chain.
-        last_cluster = m_cluster_list.last();
+        last_cluster = cluster_list->last();
         TRY(fs().fat_write(last_cluster, fs().end_of_chain_marker()));
     }
 
@@ -523,6 +532,7 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t count, UserOrKe
 
 InodeMetadata FATInode::metadata() const
 {
+    auto cluster_count = ceil_div(static_cast<u64>(m_entry.file_size), fs().m_device_block_size * fs().m_parameter_block->common_bpb()->sectors_per_cluster);
     return {
         .inode = identifier(),
         .size = m_entry.file_size,
@@ -535,7 +545,7 @@ InodeMetadata FATInode::metadata() const
         .ctime = time_from_packed_dos(m_entry.creation_date, m_entry.creation_time),
         .mtime = time_from_packed_dos(m_entry.modification_date, m_entry.modification_time),
         .dtime = {},
-        .block_count = m_cluster_list.size() * fs().m_parameter_block->common_bpb()->sectors_per_cluster,
+        .block_count = cluster_count * fs().m_parameter_block->common_bpb()->sectors_per_cluster,
         .block_size = fs().m_device_block_size,
         .major_device = 0,
         .minor_device = 0,
@@ -868,6 +878,8 @@ ErrorOr<void> FATInode::resize(u64 size, Optional<u64> clear_from, Optional<u64>
     VERIFY(m_inode_lock.is_locked());
     VERIFY(size != m_entry.file_size);
 
+    auto cluster_list = TRY(get_cluster_list());
+
     u64 bytes_per_cluster = fs().m_device_block_size * fs().m_parameter_block->common_bpb()->sectors_per_cluster;
 
     u64 size_rounded_up_to_bytes_per_cluster = size;
@@ -877,10 +889,10 @@ ErrorOr<void> FATInode::resize(u64 size, Optional<u64> clear_from, Optional<u64>
         size_rounded_up_to_bytes_per_cluster = (size + bytes_per_cluster) - (size % bytes_per_cluster);
 
     if (size > m_entry.file_size) {
-        while (m_cluster_list.size() * bytes_per_cluster < size_rounded_up_to_bytes_per_cluster)
+        while (cluster_list->size() * bytes_per_cluster < size_rounded_up_to_bytes_per_cluster)
             TRY(allocate_and_add_cluster_to_chain());
     } else {
-        while (m_cluster_list.size() * bytes_per_cluster > size_rounded_up_to_bytes_per_cluster)
+        while (cluster_list->size() * bytes_per_cluster > size_rounded_up_to_bytes_per_cluster)
             TRY(remove_last_cluster_from_chain());
     }
 
