@@ -104,7 +104,7 @@ uart_2ndstage=1
 enable_uart=1
 enable_gic=1
 
-kernel=kernel8.img
+kernel=Kernel.bin
 
 [pi4]
 # We use UART0 as the console.
@@ -114,4 +114,4 @@ EOF
 echo "serial_debug root=block100:1" >boot/cmdline.txt
 
 # FIXME: Mount the boot partition on /boot (both here and in serenity), so we don't need to move the kernel image to the boot filesystem.
-mv mnt/boot/kernel8.img boot/
+mv mnt/boot/Kernel.bin boot/
