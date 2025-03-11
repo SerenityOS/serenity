@@ -398,7 +398,7 @@ ErrorOr<void> FATInode::remove_last_cluster_from_chain()
     dbgln_if(FAT_DEBUG, "FATInode[{}]::remove_last_cluster_from_chain(): freeing cluster {}", identifier(), last_cluster);
 
     TRY(fs().fat_write(last_cluster, 0));
-    TRY(fs().notify_cluster_freed());
+    TRY(fs().notify_cluster_freed(last_cluster));
 
     if (m_cluster_list.is_empty() || (m_cluster_list.size() == 1 && first_cluster() <= 1)) {
         // We have removed the last cluster in the chain, so update the inode metadata.
@@ -797,10 +797,10 @@ ErrorOr<void> FATInode::remove_child_impl(StringView name, FreeClusters free_clu
 
                 auto cluster_list = TRY(compute_cluster_list(fs(), entry_first_cluster));
 
-                for (auto cluster : cluster_list) {
-                    TRY(fs().notify_cluster_freed());
+                for (auto cluster : cluster_list)
                     TRY(fs().fat_write(cluster, 0));
-                }
+
+                TRY(fs().notify_clusters_freed(cluster_list.first(), cluster_list.size()));
 
                 return {};
             }
