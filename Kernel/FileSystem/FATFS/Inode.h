@@ -62,6 +62,7 @@ private:
     static ErrorOr<void> encode_known_good_sfn_for(FATEntry& entry, StringView name);
     static ErrorOr<Vector<FATLongFileNameEntry>> create_lfn_entries(StringView name, u8 checksum);
 
+    ErrorOr<RawPtr<Vector<u32>>> get_cluster_list();
     ErrorOr<Vector<u32>> compute_cluster_list(FATFS&, u32 first_cluster);
     ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> get_block_list();
     ErrorOr<NonnullOwnPtr<KBuffer>> read_block_list();
@@ -103,7 +104,7 @@ private:
     virtual ErrorOr<void> flush_metadata() override;
     virtual ErrorOr<void> update_timestamps(Optional<UnixDateTime> atime, Optional<UnixDateTime> ctime, Optional<UnixDateTime> mtime) override;
 
-    Vector<u32> m_cluster_list;
+    Optional<Vector<u32>> m_cluster_list;
     FATEntry m_entry;
     FATEntryLocation m_inode_metadata_location;
     NonnullOwnPtr<KString> m_filename;
