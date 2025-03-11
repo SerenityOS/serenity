@@ -899,13 +899,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel" DESTINATION boot)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel.debug" DESTINATION boot)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kernel.map" DESTINATION res)
 
-if ("${SERENITY_ARCH}" STREQUAL "aarch64")
-    add_custom_command(
-        TARGET Kernel POST_BUILD
-        COMMAND ${CMAKE_OBJCOPY} -O binary Kernel kernel8.img
-        BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/kernel8.img
-    )
-elseif ("${SERENITY_ARCH}" STREQUAL "riscv64")
+if (("${SERENITY_ARCH}" STREQUAL "aarch64") OR ("${SERENITY_ARCH}" STREQUAL "riscv64"))
     add_custom_command(
         TARGET Kernel POST_BUILD
         COMMAND ${CMAKE_OBJCOPY} -O binary Kernel Kernel.bin
