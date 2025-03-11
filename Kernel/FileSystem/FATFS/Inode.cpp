@@ -576,8 +576,15 @@ ErrorOr<size_t> FATInode::write_bytes_locked(off_t offset, size_t size, UserOrKe
     dbgln_if(FAT_DEBUG, "FATInode[{}]::write_bytes_locked(): Writing size: {} offset: {}", identifier(), size, offset);
 
     u32 new_size = max(m_entry.file_size, offset + size);
-    if (new_size != m_entry.file_size)
-        TRY(resize(new_size));
+    if (new_size != m_entry.file_size) {
+        Optional<u64> clear_from;
+        Optional<u64> to_clear;
+        if (offset > m_entry.file_size) {
+            clear_from = static_cast<u64>(m_entry.file_size);
+            to_clear = offset - m_entry.file_size;
+        }
+        TRY(resize(new_size, clear_from, to_clear));
+    }
 
     auto block_list = TRY(get_block_list());
 
@@ -829,12 +836,38 @@ ErrorOr<void> FATInode::chown(UserID, GroupID)
     return Error::from_errno(ENOTSUP);
 }
 
-ErrorOr<void> FATInode::resize(u64 size)
+ErrorOr<void> FATInode::zero_data(u64 offset, u64 count)
+{
+    Vector<u8> zero_buffer;
+    TRY(zero_buffer.try_resize(fs().m_device_block_size));
+
+    auto block_list = TRY(get_block_list());
+
+    u32 first_block_index = offset / fs().m_device_block_size;
+    u32 last_block_index = (offset + count - 1) / fs().m_device_block_size;
+
+    size_t offset_into_first_block = offset - first_block_index * fs().m_device_block_size;
+
+    size_t remaining_count = count;
+    for (u32 block_index = first_block_index; block_index <= last_block_index; ++block_index) {
+        size_t offset_into_block = block_index == first_block_index ? offset_into_first_block : 0;
+
+        size_t to_write = min(fs().m_device_block_size - offset_into_block, remaining_count);
+        dbgln_if(FAT_DEBUG, "FATInode[{}]::zero_data(): Writing {} byte(s) to block {} at offset {}", identifier(), to_write, block_list[block_index], offset_into_block);
+
+        TRY(fs().write_block(block_list[block_index], UserOrKernelBuffer::for_kernel_buffer(zero_buffer.data()), to_write, offset_into_block));
+
+        remaining_count -= to_write;
+    }
+
+    return {};
+}
+
+ErrorOr<void> FATInode::resize(u64 size, Optional<u64> clear_from, Optional<u64> to_clear)
 {
     VERIFY(m_inode_lock.is_locked());
     VERIFY(size != m_entry.file_size);
 
-    u32 old_size = m_entry.file_size;
     u64 bytes_per_cluster = fs().m_device_block_size * fs().m_parameter_block->common_bpb()->sectors_per_cluster;
 
     u64 size_rounded_up_to_bytes_per_cluster = size;
@@ -854,19 +887,8 @@ ErrorOr<void> FATInode::resize(u64 size)
     m_entry.file_size = size;
     set_metadata_dirty(true);
 
-    if (size > old_size) {
-        // There will likely be stale data following the old end of the file,
-        // so make sure to zero out all of the newly-allocated data.
-        u64 bytes_to_clear = size - old_size;
-        u64 clear_from = old_size;
-        u8 zero_buffer[PAGE_SIZE] {};
-        while (bytes_to_clear) {
-            auto nwritten = TRY(write_bytes_locked(clear_from, min(static_cast<u64>(sizeof(zero_buffer)), bytes_to_clear), UserOrKernelBuffer::for_kernel_buffer(zero_buffer), nullptr));
-            VERIFY(nwritten != 0);
-            bytes_to_clear -= nwritten;
-            clear_from += nwritten;
-        }
-    }
+    if (clear_from.has_value() && to_clear.has_value())
+        TRY(zero_data(*clear_from, *to_clear));
 
     return {};
 }
@@ -878,7 +900,13 @@ ErrorOr<void> FATInode::truncate_locked(u64 size)
         return {};
 
     dbgln_if(FAT_DEBUG, "FATInode[{}]::truncate_locked(): truncating to {}", identifier(), size);
-    TRY(resize(size));
+    Optional<u64> clear_from;
+    Optional<u64> to_clear;
+    if (size > m_entry.file_size) {
+        clear_from = static_cast<u64>(m_entry.file_size);
+        to_clear = size - m_entry.file_size;
+    }
+    TRY(resize(size, clear_from, to_clear));
 
     return {};
 }

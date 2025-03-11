@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <Kernel/FileSystem/FATFS/Definitions.h>
@@ -74,7 +75,8 @@ private:
     ErrorOr<void> remove_last_cluster_from_chain();
     ErrorOr<Vector<FATEntryLocation>> allocate_entries(u32 count);
 
-    ErrorOr<void> resize(u64 size);
+    ErrorOr<void> zero_data(u64 offset, u64 count);
+    ErrorOr<void> resize(u64 size, Optional<u64> clear_from, Optional<u64> to_clear);
 
     ErrorOr<Vector<ByteBuffer>> collect_sfns();
 
