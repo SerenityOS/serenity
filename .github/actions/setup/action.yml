@@ -54,7 +54,7 @@ runs:
       shell: bash
       run: |
         python3 -m pip install --upgrade pip
-        pip3 install flake8 requests six
+        pip3 install ruff requests six
 
     - name: 'Install Dependencies'
       if: ${{ inputs.os == 'Serenity' }}
