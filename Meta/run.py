@@ -436,8 +436,7 @@ def set_up_virtualization_support(config: Configuration):
     if provided_virtualization_enable is not None:
         config.virtualization_support = provided_virtualization_enable == "1"
     elif host_arch_matches(config.architecture) and not config.machine_type.is_raspberry_pi():
-        config.virtualization_support = (config.qemu_kind in [QEMUKind.NativeWindows, QEMUKind.MacOS]
-                                         or kvm_usable())
+        config.virtualization_support = config.qemu_kind in [QEMUKind.NativeWindows, QEMUKind.MacOS] or kvm_usable()
 
     # FIXME: Booting with KVM on aarch64 is broken, so disable it for now.
     # FIXME: QEMU on Windows on ARM does not support WHPX yet
@@ -521,10 +520,12 @@ def set_up_spice(config: Configuration):
     if use_non_qemu_spice and "spicevmc" in chardev_info:
         config.spice_arguments = ["-chardev", "spicevmc,id=vdagent,name=vdagent"]
     elif "qemu-vdagent" in chardev_info:
-        config.extra_arguments.extend([
-            "-chardev",
-            "qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent",
-        ])
+        config.extra_arguments.extend(
+            [
+                "-chardev",
+                "qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent",
+            ]
+        )
 
     if use_non_qemu_spice and "spice" in chardev_info:
         config.spice_arguments.extend(["-spice", "port=5930,agent-mouse=off,disable-ticketing=on"])
@@ -667,10 +668,12 @@ def set_up_boot_drive(config: Configuration):
         config.kernel_cmdline.append("root=ahci0:0:0")
     if config.boot_drive_type == BootDriveType.NVMe:
         if config.architecture == Arch.x86_64:
-            config.add_devices([
-                "i82801b11-bridge,id=bridge4",
-                "nvme,serial=deadbeef,drive=boot-drive,bus=bridge4,logical_block_size=4096,physical_block_size=4096",
-            ])
+            config.add_devices(
+                [
+                    "i82801b11-bridge,id=bridge4",
+                    "nvme,serial=deadbeef,drive=boot-drive,bus=bridge4,logical_block_size=4096,physical_block_size=4096",
+                ]
+            )
             config.kernel_cmdline.append("root=nvme0:1:0")
         else:
             config.add_devices(["nvme,serial=deadbeef,drive=boot-drive"])
@@ -767,12 +770,7 @@ def set_up_machine_devices(config: Configuration):
             if config.machine_type == MachineType.RaspberryPi4B:
                 dtb_path = str(caches_path / "bcm2711-rpi-4-b.dtb")
 
-            config.extra_arguments.extend(
-                [
-                    "-serial", "stdio",
-                    "-dtb", dtb_path
-                ]
-            )
+            config.extra_arguments.extend(["-serial", "stdio", "-dtb", dtb_path])
             config.qemu_cpu = None
             return
 

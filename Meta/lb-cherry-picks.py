@@ -45,27 +45,19 @@ import re
 import subprocess
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--print-fully-merged-prs',
-                    action='store_true',
-                    help='Printing fully merged pull requests')
-parser.add_argument('--print-dont-want-commits',
-                    action='store_true',
-                    help='Print unwanted commits')
+parser.add_argument('--print-fully-merged-prs', action='store_true', help='Printing fully merged pull requests')
+parser.add_argument('--print-dont-want-commits', action='store_true', help='Print unwanted commits')
 
 args = parser.parse_args()
 print_fully_merged_prs = args.print_fully_merged_prs
 print_dont_want_commits = args.print_dont_want_commits
 
 # Get the last common commit between origin/master and ladybird/master
-merge_base_commit = subprocess.check_output(
-    ['git', 'merge-base', 'origin/master', 'ladybird/master']
-).decode().strip()
+merge_base_commit = subprocess.check_output(['git', 'merge-base', 'origin/master', 'ladybird/master']).decode().strip()
 
 # Get all Ladybird commits since the fork, grouped by pull request
 ladybird_commits = {}
-log_output = subprocess.check_output(
-    ['git', 'log', f'{merge_base_commit}..ladybird/master', '--notes']
-).decode()
+log_output = subprocess.check_output(['git', 'log', f'{merge_base_commit}..ladybird/master', '--notes']).decode()
 
 commit_title = {}
 current_pr = None
@@ -98,7 +90,7 @@ for line in log_output.splitlines():
         cherry_picked_commit = line.split('(cherry picked from commit ')[1].split(';')[0]
         m = re.search('[^0-9a-f]', cherry_picked_commit)
         if m:
-            cherry_picked_commit = cherry_picked_commit[:m.start()]
+            cherry_picked_commit = cherry_picked_commit[: m.start()]
         serenity_cherry_picks.add(cherry_picked_commit)
 
 # Some Ladybird commits landed in SerenityOS without `git cherry-pick -x`.
@@ -318,13 +310,13 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/15": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/16": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/17": "Ladybird-specific",
-
+    #
     # Might want sommething like the CMakePresets.json commit in here, maybe.
     "https://github.com/LadybirdBrowser/ladybird/pull/34": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/47": "Ladybird-specific",  # More CMakePresets
     "https://github.com/LadybirdBrowser/ladybird/pull/188": "Ladybird-specific",  # More CMakePresets
     "https://github.com/LadybirdBrowser/ladybird/pull/305": "Ladybird-specific",  # More CMakePresets
-
+    #
     "https://github.com/LadybirdBrowser/ladybird/pull/26": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/27": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/30": "Ladybird-specific",
@@ -339,10 +331,10 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/80": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/81": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/83": "Ladybird-specific",
-
+    #
     # See https://github.com/SerenityOS/serenity/pull/25060
     "https://github.com/LadybirdBrowser/ladybird/pull/86": "Ladybird-specific",
-
+    #
     "https://github.com/LadybirdBrowser/ladybird/pull/78": "NIH violation: woff2",
     "https://github.com/LadybirdBrowser/ladybird/pull/87": "Serenity does not use vcpkg",
     "https://github.com/LadybirdBrowser/ladybird/pull/89": "Serenity does not use vcpkg",
@@ -377,11 +369,11 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/307": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/313": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/315": "Ladybird-specific",
-
+    #
     # wolfssl was merged upstream and quickly reverted again:
     "https://github.com/LadybirdBrowser/ladybird/pull/330": "NIH violation: wolfssl",
     "https://github.com/LadybirdBrowser/ladybird/pull/469": "NIH violation: wolfssl",
-
+    #
     "https://github.com/LadybirdBrowser/ladybird/pull/342": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/348": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/374": "Ladybird-specific",
@@ -434,15 +426,15 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/753": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/754": "Still used in Serenity",
     "https://github.com/LadybirdBrowser/ladybird/pull/756": "NIH violation: libjxl",
-
+    #
     "https://github.com/LadybirdBrowser/ladybird/pull/787": "Got reverted",
     "https://github.com/LadybirdBrowser/ladybird/pull/810": "Reverted PR787",
-
+    #
     "https://github.com/LadybirdBrowser/ladybird/pull/805": "Ladybird-specific",
-
+    #
     # Maybe want the first commit here?
     "https://github.com/LadybirdBrowser/ladybird/pull/821": "swift",
-
+    #
     "https://github.com/LadybirdBrowser/ladybird/pull/833": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/845": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/855": "Ladybird-specific(ish)",
@@ -466,10 +458,10 @@ never_merge_prs = {
     "https://github.com/LadybirdBrowser/ladybird/pull/1221": "swift",
     "https://github.com/LadybirdBrowser/ladybird/pull/1263": "Dependabot",
     "https://github.com/LadybirdBrowser/ladybird/pull/1328": "NIH violation: skia",
-
+    #
     # Removing HeaderCheck might be fine, not sure if that's used. But the rest is.
     "https://github.com/LadybirdBrowser/ladybird/pull/1349": "Still used in Serenity",
-
+    #
     "https://github.com/LadybirdBrowser/ladybird/pull/1436": "Ladybird-specific",
     "https://github.com/LadybirdBrowser/ladybird/pull/1449": "NIH violation: skia",
     "https://github.com/LadybirdBrowser/ladybird/pull/1451": "NIH violation: curl, sqlite3, simdutf",
@@ -505,8 +497,7 @@ never_merge_prs = {
 for pr in never_merge_prs.keys():
     assert pr in ladybird_commits, f'Unknown PR {pr} in never_merge_prs'
     for commit in ladybird_commits[pr]:
-        assert commit not in serenity_cherry_picks, \
-            f'commit {commit} of never_merge_pr {pr} merged'
+        assert commit not in serenity_cherry_picks, f'commit {commit} of never_merge_pr {pr} merged'
 
 
 # For PRs where we do want (or did already merge) some of the commits, this is
@@ -527,12 +518,10 @@ never_merge_commits = {
     "3f97f733164742ced090669187752e9a95c33017": "NIH violation: skia",
     "bce7b24cfb86ba1b8a253d999e5bcc9d330cba6b": "NIH violation: skia",
     "d9927d128c25c740fe5d396b1a3e1d532121fdb2": "Still used in Serenity",
-
     # We don't want the first three commits of https://github.com/LadybirdBrowser/ladybird/pull/71
     "f55f64755da49020e5f63c40b12054baf73592a8": "Ladybird-specific",
     "41176a4f4eb42f557708e74224249900646221ba": "Still used in Serenity",
     "6f387577c593fa35787dc89045a03b9923985a5c": "Still used in Serenity",
-
     # We merged one commit of https://github.com/LadybirdBrowser/ladybird/pull/42
     # but don't want the rest: Serenity still uses bitmap fonts.
     "1b2d08ee7e32d3934a6add0e6438f782900fccc4": "Still used in Serenity",
@@ -554,49 +543,39 @@ never_merge_commits = {
     "e81bd345610aae7b77339d9abddd2957a7b51591": "Still used in Serenity",
     "4822d1da4e4199b248f94f7c2a55940404fa29b6": "Still used in Serenity",
     "cd84d23afad6e15feef630acfa58140f57cb6db7": "Still used in Serenity",
-
     # First commit of PR179; not sure yet if we want the 2nd.
     "1bde774918ce9e41fc271edb2bdcd136f63699c2": "Still used in Serenity",
-
     # PR218 added an ICU-based text segmenter. We don't have the ICU bits,
     # but we do have the general code changes in there. The first one should
     # possibly be in serenity_cherry_picks above.
     "3fe0a27fbd3fc4b42c2daf99a5e5889de2bd22b7": "Kind of have this, except for ICU",
     "3974996e95582fb9fb3f952ac0cc76c11d239061": "Might this?",
     "ab56b8c8dce6dfd447aeaabc45933bfd14f51f41": "Still used in Serenity",
-
     # 2nd commit of PR289; not sure yet if we want the 1st.
     "bdb24f950e0360314e18f7662aafee1d34ee894f": "Reverted 722a669 below",
-
     # The 2nd commit of https://github.com/LadybirdBrowser/ladybird/pull/1125, 6c9adf3dbc64,
     # was reverted in https://github.com/LadybirdBrowser/ladybird/pull/1195.
     "6c9adf3dbc641445a03da9cd1083f89c911504be": "Got reverted",
-
     # We merged two commits of https://github.com/LadybirdBrowser/ladybird/pull/257,
     # but I think we don't want the other three since we still need that code (?)
     "666979fb9039540261de9a9ecc1dc6569933a256": "Sill used in Serenity",
     "546f740772cd328f46400d9666d8f24dede4fe23": "Sill used in Serenity",
     "ebdb92eef6e0e718f459533ed75a833e9bcb52b2": "Sill used in Serenity",
-
     # We don't want most of https://github.com/LadybirdBrowser/ladybird/pull/965 (swift)
     "1dff3ca0c46dc8df454a11c8949c42dd8faea6d2": "swift (PR965, commit 2)",
     "e7a9126f8110f8fe7690a4136bb5cc0e603da901": "swift (PR965, commit 3)",
     "cb55f653284464226c1560bfe0788aed45964064": "swift (PR965, commit 5)",
     "2d6a65884ca3a02358f672de668e3161ed80f44f": "swift (PR965, commit 6)",
     "5a31fed1daa8aabd3f1bab076450409aaac525f6": "swift (PR965, commit 7)",
-
     # https://github.com/LadybirdBrowser/ladybird/pull/1465 first commit adds
     # Noto Emoji as predicable emoji font, but serenity's built-in emoji font
     # is already predictable.
     "aef85a83bd5891d2b6223de60856b65739bd59ed": "Ladybird-specific",
-
     # https://github.com/LadybirdBrowser/ladybird/pull/1644 commit 5 got reverted
     "556a0936dd329fbfe00469b8831a6efae311733b": "Got reverted",
-
     # Omit skia-related commits from https://github.com/LadybirdBrowser/ladybird/pull/1963
     "6c642d168d54ced889546a88ffc0662f6d8564d2": "NIH violation: skia",
     "8fd59899fc667aa3dd6c2de7b8248ee129563e53": "NIH violation: skia",
-
     # Commits from the first 14 PRs didn't get Pull-request: footers:
     "6d3a54e4a8d149171105d1e6378cbd2e2d1bb7fc": "Ladybird-specific (PR2)",
     "f3a0e16ae9325739c1d62c42f99fec2d875455f3": "Ladybird-specific (PR3, commit 4)",
@@ -611,7 +590,6 @@ never_merge_commits = {
     "9b05fb98f3c742e66b70a661952f0c601e8437c6": "Still used in Serenity (PR11, commit 1)",
     "faeff81ce90a8123c81e02cae2093669d58e7e36": "Ladybird-specific (PR11, commit 2)",
     "9dd24991a85a58416533f0edfbc36acd3b68950e": "Ladybird-specific (PR11, commit 3)",
-
     # Direct commits without a PR:
     "0f7df8d3e03e5d0db5b57620318990b72f74753b": "Ladybird-specific",
     "baf7a2dee7ff3756ba455d2609322bb869e79750": "Ladybird-specific",
@@ -641,8 +619,9 @@ never_merge_commit_set = set(never_merge_commits.keys())
 for pr in ladybird_commits:
     pr_commit_set = set(ladybird_commits[pr])
     all_pr_commits_are_in_never_merge_commits = pr_commit_set.issubset(never_merge_commit_set)
-    assert not all_pr_commits_are_in_never_merge_commits, \
+    assert not all_pr_commits_are_in_never_merge_commits, (
         f'all commits {pr_commit_set} of {pr} unwanted, put PR in never_merge_prs instead'
+    )
 
 print("Report of Ladybird commits and their cherry-pick status in SerenityOS:")
 print("=====================================================================")
@@ -652,8 +631,7 @@ num_dont_want = 0
 for pr, commits in reversed(ladybird_commits.items()):
     # Arbitrarily count PRs where we merged some commits and don't want the
     # others as cherry-picked instead of don't-want.
-    all_cherry_picked = all(c in serenity_cherry_picks or
-                            c in never_merge_commits for c in commits)
+    all_cherry_picked = all(c in serenity_cherry_picks or c in never_merge_commits for c in commits)
     if all_cherry_picked:
         num_cherry_picked += 1
         if not print_fully_merged_prs:
@@ -677,7 +655,6 @@ for pr, commits in reversed(ladybird_commits.items()):
 
 
 print("\n=====================================================================")
-print(f"{len(ladybird_commits)} PRs, {num_cherry_picked} cherry-picked PRs, "
-      f"{num_dont_want} unwanted PRs")
+print(f"{len(ladybird_commits)} PRs, {num_cherry_picked} cherry-picked PRs, {num_dont_want} unwanted PRs")
 print(f"{len(ladybird_commits) - num_cherry_picked - num_dont_want} to go")
 print("=====================================================================")

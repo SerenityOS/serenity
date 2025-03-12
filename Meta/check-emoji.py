@@ -17,20 +17,26 @@ def any_problems_here():
             print(f'Non-png file {filename} does not belong in the emoji directory')
             found_invalid_filenames = True
             break
-        filename = filename[:-len('.png')]
+        filename = filename[: -len('.png')]
         if RE_INVALID_CHAR.search(filename):
-            print(f'Filename {filename}.png contains invalid characters in its filename. Only uppercase letters'
-                  ' A-F and U, numbers, +, and _ should be used.')
+            print(
+                f'Filename {filename}.png contains invalid characters in its filename. Only uppercase letters'
+                ' A-F and U, numbers, +, and _ should be used.'
+            )
             found_invalid_filenames = True
             break
         if 'U+0' in filename:
-            print(f'Filename {filename}.png contains codepoint(s) with leading zeros. Leading zeros should be'
-                  ' removed from codepoint(s).')
+            print(
+                f'Filename {filename}.png contains codepoint(s) with leading zeros. Leading zeros should be'
+                ' removed from codepoint(s).'
+            )
             found_invalid_filenames = True
             break
         if '+U' in filename:
-            print(f'Filename {filename}.png is incorrectly named. "_" should be used as a separator between'
-                  ' codepoints, not "+".')
+            print(
+                f'Filename {filename}.png is incorrectly named. "_" should be used as a separator between'
+                ' codepoints, not "+".'
+            )
             found_invalid_filenames = True
             break
         if RE_MISSING_UNDERSCORE.search(filename):
@@ -38,8 +44,10 @@ def any_problems_here():
             found_invalid_filenames = True
             break
         if RE_MISSING_LETTER_U.search(filename):
-            print(f'Filename {filename}.png is either missing a "U" to indicate the start of a codepoint,'
-                  ' or has a spurious underscore ("_").')
+            print(
+                f'Filename {filename}.png is either missing a "U" to indicate the start of a codepoint,'
+                ' or has a spurious underscore ("_").'
+            )
             found_invalid_filenames = True
             break
         if RE_MISSING_SIGN_PLUS.search(filename):
@@ -47,14 +55,16 @@ def any_problems_here():
             found_invalid_filenames = True
             break
         if 'U+FE0F' in filename:
-            print(f'Filename {filename}.png should not include any emoji presentation selectors. U+FE0F codepoints'
-                  ' should be removed from the filename.')
+            print(
+                f'Filename {filename}.png should not include any emoji presentation selectors. U+FE0F codepoints'
+                ' should be removed from the filename.'
+            )
             found_invalid_filenames = True
             break
 
-        code_points = [int(code_point[len('U+'):], 16) for code_point in filename.split('_')]
+        code_points = [int(code_point[len('U+') :], 16) for code_point in filename.split('_')]
 
-        if any(code_point > 0x10ffff for code_point in code_points):
+        if any(code_point > 0x10FFFF for code_point in code_points):
             print(f'Filename {filename}.png contains a code point exceeding U+10FFFF')
             found_invalid_filenames = True
             break

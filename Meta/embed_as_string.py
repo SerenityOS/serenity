@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 r"""
-    Embeds a file as a String or StringView, a la #embed from C++23
+Embeds a file as a String or StringView, a la #embed from C++23
 """
 
 import argparse
@@ -9,17 +9,14 @@ import sys
 
 def main():
     parser = argparse.ArgumentParser(
-                 epilog=__doc__,
-                 formatter_class=argparse.RawDescriptionHelpFormatter)
+        epilog=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument('input', help='input file to stringify')
-    parser.add_argument('--type', choices=['string', 'string-view'],
-                        default='string')
-    parser.add_argument('-o', '--output', required=True,
-                        help='output file')
-    parser.add_argument('-n', '--variable-name', required=True,
-                        help='name of the C++ variable')
-    parser.add_argument('-s', '--namespace', required=False,
-                        help='C++ namespace to put the string into')
+    parser.add_argument('--type', choices=['string', 'string-view'], default='string')
+    parser.add_argument('-o', '--output', required=True, help='output file')
+    parser.add_argument('-n', '--variable-name', required=True, help='name of the C++ variable')
+    parser.add_argument('-s', '--namespace', required=False, help='C++ namespace to put the string into')
     args = parser.parse_args()
 
     with open(args.output, 'w') as f:

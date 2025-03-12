@@ -33,10 +33,10 @@ class SegmentHeader:
 
 
 def read_segment_header(data, offset):
-    segment_number, = struct.unpack_from('>I', data, offset)
+    (segment_number,) = struct.unpack_from('>I', data, offset)
     flags = data[offset + 4]
     segment_page_association_size_is_32_bits = (flags & 0b100_0000) != 0
-    type = (flags & 0b11_1111)
+    type = flags & 0b11_1111
 
     referred_segments_count = data[offset + 5] >> 5
     if referred_segments_count > 4:
@@ -55,12 +55,12 @@ def read_segment_header(data, offset):
     else:
         segment_header_size += 1
 
-    data_size, = struct.unpack_from('>I', data, offset + segment_header_size)
-    if data_size == 0xffff_ffff:
+    (data_size,) = struct.unpack_from('>I', data, offset + segment_header_size)
+    if data_size == 0xFFFF_FFFF:
         raise Exception('cannot handle indeterminate length')
     segment_header_size += 4
 
-    bytes = data[offset:offset + segment_header_size]
+    bytes = data[offset : offset + segment_header_size]
     return SegmentHeader(segment_header_size, type, bytes, data_size, None)
 
 
@@ -73,7 +73,7 @@ def read_segment_headers(data, is_random_access):
         offset += segment_header.segment_header_size
 
         if not is_random_access:
-            segment_header.data = data[offset:offset + segment_header.data_size]
+            segment_header.data = data[offset : offset + segment_header.data_size]
             offset += segment_header.data_size
 
         segment_headers.append(segment_header)
@@ -83,7 +83,7 @@ def read_segment_headers(data, is_random_access):
 
     if is_random_access:
         for segment_header in segment_headers:
-            segment_header.data = data[offset:offset + segment_header.data_size]
+            segment_header.data = data[offset : offset + segment_header.data_size]
             offset += segment_header.data_size
 
     return segment_headers
@@ -107,7 +107,8 @@ def get_dimensions(segment_headers):
 
 def main():
     parser = argparse.ArgumentParser(
-        epilog=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        epilog=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("image", help="Input image")
     parser.add_argument("-o", "--output", help="Path to output PDF")
@@ -137,11 +138,15 @@ def main():
 
               ''')
 
-    operators = dedent(b'''\
+    operators = dedent(
+        b'''\
                   %d 0 0 %d 0 0 cm
-                  /Im Do''' % (width, height))
+                  /Im Do'''
+        % (width, height)
+    )
 
-    objs = [dedent(b'''\
+    objs = [
+        dedent(b'''\
               1 0 obj
               <<
                 /Type /Catalog
@@ -149,8 +154,7 @@ def main():
               >>
               endobj
               '''),
-
-            dedent(b'''\
+        dedent(b'''\
               2 0 obj
               <<
                 /Type /Pages
@@ -159,8 +163,8 @@ def main():
               >>
               endobj
               '''),
-
-            dedent(b'''\
+        dedent(
+            b'''\
               3 0 obj
               <<
                 /Type /Page
@@ -174,20 +178,24 @@ def main():
                 >>
               >>
               endobj
-              ''' % (width, height)),
-
-            dedent(b'''\
+              '''
+            % (width, height)
+        ),
+        dedent(
+            b'''\
               4 0 obj
               <</Length %d>>
               stream
-              ''' % len(operators)) +
-            operators +
-            dedent(b'''
+              '''
+            % len(operators)
+        )
+        + operators
+        + dedent(b'''
               endstream
               endobj
               '''),
-
-            dedent(b'''\
+        dedent(
+            b'''\
               5 0 obj
               <<
                 /Length %d
@@ -200,13 +208,15 @@ def main():
                 /BitsPerComponent 1
               >>
               stream
-              ''' % (len(image_data), width, height)) +
-            image_data +
-            dedent(b'''
+              '''
+            % (len(image_data), width, height)
+        )
+        + image_data
+        + dedent(b'''
               endstream
               endobj
               '''),
-            ]
+    ]
 
     with open(args.output, 'wb') as f:
         f.write(start)
@@ -225,7 +235,9 @@ def main():
             f.write(b'%010d 00000 n \n' % offset)
         f.write(b'\n')
 
-        f.write(dedent(b'''\
+        f.write(
+            dedent(
+                b'''\
             trailer
             <<
               /Size %d
@@ -234,7 +246,10 @@ def main():
             startxref
             %d
             %%%%EOF
-            ''' % (len(objs) + 1, xref_offset)))
+            '''
+                % (len(objs) + 1, xref_offset)
+            )
+        )
 
 
 if __name__ == '__main__':

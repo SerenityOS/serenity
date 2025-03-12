@@ -35,18 +35,14 @@ def compute_sha256(path):
 def main():
     parser = argparse.ArgumentParser(
         epilog=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument('url', help='input url')
-    parser.add_argument('-o', '--output', required=True,
-                        help='output file')
-    parser.add_argument('-v', '--version', required=False,
-                        help='version of file to detect mismatches and redownload')
-    parser.add_argument('-f', '--version-file', required=False,
-                        help='filesystem location to cache version')
-    parser.add_argument('-c', "--cache-path", required=False,
-                        help='path for cached files to clear on version mismatch')
-    parser.add_argument('-s', "--sha256", required=False,
-                        help='expected SHA-256 hash of the downloaded file')
+    parser.add_argument('-o', '--output', required=True, help='output file')
+    parser.add_argument('-v', '--version', required=False, help='version of file to detect mismatches and redownload')
+    parser.add_argument('-f', '--version-file', required=False, help='filesystem location to cache version')
+    parser.add_argument('-c', "--cache-path", required=False, help='path for cached files to clear on version mismatch')
+    parser.add_argument('-s', "--sha256", required=False, help='expected SHA-256 hash of the downloaded file')
     args = parser.parse_args()
 
     if (args.version is None) != (args.version_file is None):
@@ -74,10 +70,13 @@ def main():
 
     os.makedirs(output_file.parent, exist_ok=True)
 
-    request = urllib.request.Request(args.url, headers={
-                      "Accept-Encoding": "gzip",
-                      "User-Agent": "Serenity Meta/download_file.py",
-                  })
+    request = urllib.request.Request(
+        args.url,
+        headers={
+            "Accept-Encoding": "gzip",
+            "User-Agent": "Serenity Meta/download_file.py",
+        },
+    )
     with urllib.request.urlopen(request) as f:
         try:
             with tempfile.NamedTemporaryFile(delete=False, dir=output_file.parent) as out:

@@ -118,17 +118,18 @@ tag_fields = ['id', 'types', 'counts', 'default', 'name', 'associated_enum', 'is
 Tag = namedtuple(
     'Tag',
     field_names=tag_fields,
-    defaults=(None,) * len(tag_fields)
+    defaults=(None,) * len(tag_fields),
 )
 
 # FIXME: Some tag have only a few allowed values, we should ensure that
+# Do not reformat this list, even if lines are a bit too long.
+# fmt: off
 known_tags: List[Tag] = [
     Tag('256', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageWidth", is_required=True),
     Tag('257', [TIFFType.UnsignedShort, TIFFType.UnsignedLong], [1], None, "ImageLength", is_required=True),
     Tag('258', [TIFFType.UnsignedShort], [], None, "BitsPerSample", is_required=False),
     Tag('259', [TIFFType.UnsignedShort], [1], None, "Compression", Compression, is_required=True),
-    Tag('262', [TIFFType.UnsignedShort], [1], None, "PhotometricInterpretation",
-        PhotometricInterpretation, is_required=True),
+    Tag('262', [TIFFType.UnsignedShort], [1], None, "PhotometricInterpretation", PhotometricInterpretation, is_required=True),
     Tag('266', [TIFFType.UnsignedShort], [1], FillOrder.LeftToRight, "FillOrder", FillOrder),
     Tag('271', [TIFFType.ASCII], [], None, "Make"),
     Tag('272', [TIFFType.ASCII], [], None, "Model"),
@@ -165,10 +166,13 @@ known_tags: List[Tag] = [
     Tag('3', [TIFFType.ASCII], [2], None, "GPSLongitudeRef"),
     Tag('4', [TIFFType.UnsignedRational], [3], None, "GPSLongitude"),
 ]
+# fmt: on
 
-HANDLE_TAG_SIGNATURE_TEMPLATE = ("ErrorOr<void> {namespace}handle_tag(Function<ErrorOr<void>(u32)>&& subifd_handler, "
-                                 "ExifMetadata& metadata, u16 tag, {namespace}Type type, u32 count, "
-                                 "Vector<{namespace}Value>&& value)")
+HANDLE_TAG_SIGNATURE_TEMPLATE = (
+    "ErrorOr<void> {namespace}handle_tag(Function<ErrorOr<void>(u32)>&& subifd_handler, "
+    "ExifMetadata& metadata, u16 tag, {namespace}Type type, u32 count, "
+    "Vector<{namespace}Value>&& value)"
+)
 HANDLE_TAG_SIGNATURE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="")
 HANDLE_TAG_SIGNATURE_TIFF_NAMESPACE = HANDLE_TAG_SIGNATURE_TEMPLATE.format(namespace="TIFF::")
 
@@ -196,12 +200,12 @@ def export_enum_to_cpp(e: Type[EnumWithExportName]) -> str:
 def export_enum_to_string_converter(enums: List[Type[EnumWithExportName]]) -> str:
     stringifier_internals = []
     for e in enums:
-        single_stringifier = fR"""    if constexpr (IsSame<E, {e.export_name()}>) {{
+        single_stringifier = Rf"""    if constexpr (IsSame<E, {e.export_name()}>) {{
         switch (value) {{
             default:
                 return "Invalid value for {e.export_name()}"sv;"""
         for entry in e:
-            single_stringifier += fR"""
+            single_stringifier += Rf"""
             case {e.export_name()}::{entry.name}:
                 return "{entry.name}"sv;"""
 
@@ -212,7 +216,7 @@ def export_enum_to_string_converter(enums: List[Type[EnumWithExportName]]) -> st
 
     stringifier_internals_str = '\n'.join(stringifier_internals)
 
-    out = fR"""template<Enum E>
+    out = Rf"""template<Enum E>
 StringView name_for_enum_tag_value(E value) {{
 {stringifier_internals_str}
     VERIFY_NOT_REACHED();
@@ -262,9 +266,9 @@ def tiff_type_to_cpp(t: TIFFType, with_promotion: bool = True) -> str:
 
 def is_container(t: TIFFType) -> bool:
     """
-        Some TIFF types are defined on the unit scale but are intended to be used within a collection.
-        An example of that are ASCII strings defined as N * byte. Let's intercept that and generate
-        a nice API instead of Vector<u8>.
+    Some TIFF types are defined on the unit scale but are intended to be used within a collection.
+    An example of that are ASCII strings defined as N * byte. Let's intercept that and generate
+    a nice API instead of Vector<u8>.
     """
     return t in [TIFFType.ASCII, TIFFType.Byte, TIFFType.Undefined, TIFFType.UTF8]
 
@@ -325,28 +329,28 @@ def generate_getter(tag: Tag) -> str:
             container_initialization = f'{container_type} tmp{{}};'
         else:
             container_type = f'Vector<{tag_final_type}>'
-            container_initialization = fR"""{container_type} tmp{{}};
+            container_initialization = Rf"""{container_type} tmp{{}};
         auto maybe_failure = tmp.try_resize(possible_value->size());
         if (maybe_failure.is_error())
             return OptionalNone {{}};
         """
 
         return_type = container_type
-        unpacked_if_needed = fR"""
+        unpacked_if_needed = Rf"""
         {container_initialization}
         for (u32 i = 0; i < possible_value->size(); ++i)
             tmp[i] = {extracted_value_template.format('i')};
 
         return tmp;"""
 
-    signature = fR"    Optional<{return_type}> {pascal_case_to_snake_case(tag.name)}() const"
+    signature = Rf"    Optional<{return_type}> {pascal_case_to_snake_case(tag.name)}() const"
 
     if tag.default is not None and single_count:
         return_if_empty = f'{default_value_to_cpp(tag.default)}'
     else:
         return_if_empty = 'OptionalNone {}'
 
-    body = fR"""
+    body = Rf"""
     {{
         auto const& possible_value = m_data.get("{tag.name}"sv);
         if (!possible_value.has_value())
@@ -361,7 +365,7 @@ def generate_getter(tag: Tag) -> str:
 def generate_metadata_class(tags: List[Tag]) -> str:
     getters = '\n'.join([generate_getter(tag) for tag in tags])
 
-    output = fR"""class ExifMetadata : public Metadata {{
+    output = Rf"""class ExifMetadata : public Metadata {{
 public:
     virtual ~ExifMetadata() = default;
 
@@ -394,7 +398,7 @@ private:
 
 
 def generate_metadata_file(tags: List[Tag]) -> str:
-    output = fR"""{LICENSE}
+    output = Rf"""{LICENSE}
 
 #pragma once
 
@@ -479,14 +483,14 @@ def generate_tag_handler(tag: Tag) -> str:
     not_in_count_list = ''
     if len(tag.counts) != 0:
         not_in_count_list = f"|| ({' && '.join([f'count != {c}' for c in tag.counts])})"
-    pre_condition = fR"""if ({not_in_type_list}
+    pre_condition = Rf"""if ({not_in_type_list}
             {not_in_count_list})
             return Error::from_string_literal("TIFFImageDecoderPlugin: Tag {tag.name} invalid");"""
 
     check_value = ''
     if tag.associated_enum is not None:
         not_in_value_list = f"({' && '.join([f'v != {v.value}' for v in tag.associated_enum])})"
-        check_value = fR"""
+        check_value = Rf"""
         for (u32 i = 0; i < value.size(); ++i) {{
             TRY(value[i].visit(
                 []({tiff_type_to_cpp(tag.types[0])} const& v) -> ErrorOr<void> {{
@@ -507,7 +511,7 @@ def generate_tag_handler(tag: Tag) -> str:
             raise RuntimeError("Accessing `value[0]` in the C++ code might fail!")
         handle_subifd = f'TRY(subifd_handler(value[0].get<{tiff_type_to_cpp(TIFFType.IFD)}>()));'
 
-    output = fR"""    case {tag.id}:
+    output = Rf"""    case {tag.id}:
         // {tag.name}
 
         dbgln_if(TIFF_DEBUG, "{tag.name}({{}}): {{}}", name_for_enum_tag_value(type), format_tiff_value(tag, value));
@@ -523,22 +527,42 @@ def generate_tag_handler(tag: Tag) -> str:
 
 
 def generate_tag_handler_file(tags: List[Tag]) -> str:
-    formatter_for_tag_with_enum = '\n'.join([fR"""        case {tag.id}:
+    formatter_for_tag_with_enum = '\n'.join(
+        [
+            Rf"""        case {tag.id}:
             return MUST(String::from_utf8(
                 name_for_enum_tag_value(static_cast<{tag.associated_enum.export_name()}>(v.get<u32>()))));"""
-                                             for tag in tags if tag.associated_enum])
+            for tag in tags
+            if tag.associated_enum
+        ]
+    )
 
-    ensure_tags_are_present = '\n'.join([fR"""    if (!metadata.{pascal_case_to_snake_case(tag.name)}().has_value())
+    ensure_tags_are_present = '\n'.join(
+        [
+            Rf"""    if (!metadata.{pascal_case_to_snake_case(tag.name)}().has_value())
         return Error::from_string_literal("Unable to decode image, missing required tag {tag.name}.");
-""" for tag in filter(lambda tag: tag.is_required, known_tags)])
+"""
+            for tag in filter(lambda tag: tag.is_required, known_tags)
+        ]
+    )
 
-    tiff_type_from_u16_cases = '\n'.join([fR"""    case to_underlying(Type::{t.name}):
-        return Type::{t.name};""" for t in TIFFType])
+    tiff_type_from_u16_cases = '\n'.join(
+        [
+            Rf"""    case to_underlying(Type::{t.name}):
+        return Type::{t.name};"""
+            for t in TIFFType
+        ]
+    )
 
-    size_of_tiff_type_cases = '\n'.join([fR"""    case Type::{t.name}:
-        return {t.size};""" for t in TIFFType])
+    size_of_tiff_type_cases = '\n'.join(
+        [
+            Rf"""    case Type::{t.name}:
+        return {t.size};"""
+            for t in TIFFType
+        ]
+    )
 
-    output = fR"""{LICENSE}
+    output = Rf"""{LICENSE}
 
 #include <AK/Debug.h>
 #include <AK/String.h>
