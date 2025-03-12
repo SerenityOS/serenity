@@ -5,6 +5,7 @@
  */
 
 #include <AK/BitStream.h>
+#include <AK/FixedArray.h>
 #include <AK/Hex.h>
 #include <LibCompress/Deflate.h>
 #include <LibCompress/Lzw.h>
@@ -14,6 +15,7 @@
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
+#include <LibGfx/ImageFormats/TIFFLoader.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Filter.h>
 #include <LibPDF/Reader.h>
@@ -161,55 +163,9 @@ PDFErrorOr<ByteBuffer> Filter::decode_png_prediction(Bytes bytes, size_t bytes_p
 
 PDFErrorOr<ByteBuffer> Filter::decode_tiff_prediction(Bytes bytes, int columns, int colors, int bits_per_component)
 {
-    // TIFF 6 spec, Section 14: Differencing Predictor.
-    // "Assuming 8-bit grayscale pixels for the moment, a basic C implementation might look something like this:
-    //     char image[][]; int row, col;
-    //     /* take horizontal differences: */
-    //     for (row = 0; row < nrows; row++)
-    //         for (col = ncols - 1; col >= 1; col--)
-    //             image[row][col] -= image[row][col-1];
-    //  If we don’t have 8-bit components, we need to work a little harder [...]
-    //  Suppose we have 4-bit components packed two per byte in the normal TIFF uncompressed [...]
-    //  first expand each 4-bit component into an 8-bit byte, so that we have one component per byte, low-order justified.
-    //  We then perform the horizontal differencing [...] we then repack the 4-bit differences two to a byte [...]
-    //  If the components are greater than 8 bits deep, expanding the components into 16-bit words instead of 8-bit bytes
-    //  seems like the best way to perform the subtraction on most computers. [...]
-    //  An additional consideration arises in the case of color images. [...]
-    //  we will do our horizontal differences with an offset of SamplesPerPixel [...
-    //  In other words, we will subtract red from red, green from green, and blue from blue"
-    //
-    // The spec text describes the forward transform; this implements the inverse.
-    //
-    // Section 8: Baseline Field Reference Guide, entry for Compression:
-    // "Each row is padded to the next BYTE/SHORT/LONG boundary, consistent with
-    //  the preceding BitsPerSample rule."
-    //
-    // That's consistent with PDF. PDF allows bits_per_component to be 1, 2, 4, 8, or 16.
-
-    // FIXME: Support bits_per_component != 8.
-    if (bits_per_component != 8)
-        return AK::Error::from_string_literal("PDF: TIFF Predictor with bits per component != 8 not yet implemented");
-
-    // Translate from PDF spec language to TIFF 6 spec language:
-    int samples_per_pixel = colors;
-
-    ByteBuffer decoded;
-    TRY(decoded.try_ensure_capacity(bytes.size()));
-
-    while (!bytes.is_empty()) {
-        auto row = bytes.slice(0, columns * samples_per_pixel);
-        for (int column = 1; column < columns; ++column) {
-            for (int sample = 0; sample < samples_per_pixel; ++sample) {
-                int index = column * samples_per_pixel + sample;
-                row[index] += row[index - samples_per_pixel];
-            }
-        }
-        decoded.append(row);
-
-        bytes = bytes.slice(row.size());
-    }
-
-    return decoded;
+    auto bits_per_sample = TRY(FixedArray<u32>::create(colors));
+    bits_per_sample.fill_with(bits_per_component);
+    return TRY(Gfx::TIFFImageDecoderPlugin::invert_horizontal_differencing(bytes, columns, bits_per_sample.span()));
 }
 
 PDFErrorOr<ByteBuffer> Filter::handle_lzw_and_flate_parameters(ByteBuffer buffer, RefPtr<DictObject> decode_parms)
