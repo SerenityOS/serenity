@@ -96,6 +96,8 @@ static constexpr u8 s_empty_32_bit_fat[12] = { 0xF8, 0xFF, 0xFF, 0x0F, 0xFF, 0xF
 
 static constexpr u8 s_zero_buffer[4096] { 0 };
 
+static constexpr u8 s_fat_entry_size { 32 };
+
 enum class FATType {
     FAT12,
     FAT16,
@@ -192,25 +194,6 @@ static Array<u8, sizeof(Kernel::FAT32FSInfo)> serialize_fat32_fs_info(Kernel::FA
     return output;
 }
 
-static ErrorOr<void> wipe_file(Core::File& file, u64 file_size)
-{
-    VERIFY(static_cast<u64>(file_size) >= 360 * KiB);
-
-    TRY(file.seek(0, SeekMode::SetPosition));
-
-    // Wipe the entire partition or the first 34 MiB, whichever is smaller.
-    for (size_t i = 0; i < 34 * MiB; i += sizeof(s_zero_buffer)) {
-        size_t to_write = min(file_size - i, sizeof(s_zero_buffer));
-        TRY(file.write_until_depleted({ &s_zero_buffer, to_write }));
-        if (file_size - i <= sizeof(s_zero_buffer))
-            break;
-    }
-
-    TRY(file.seek(0, SeekMode::SetPosition));
-
-    return {};
-}
-
 // This algorithm only works for 512 byte sectors, which are the only ones we support anyway.
 // This may also produce slightly inefficient results, using up to 2 extra sectors for FAT16 and up to 8 for FAT32.
 static u32 get_sectors_per_fat(Kernel::DOS3BIOSParameterBlock const& boot_record, FATType fat_type)
@@ -238,7 +221,7 @@ static u32 get_sectors_per_fat(Kernel::DOS3BIOSParameterBlock const& boot_record
 
     VERIFY(sector_count != 0);
 
-    u32 root_directory_sectors = ((boot_record.root_directory_entry_count * 32) + (boot_record.bytes_per_sector - 1)) / boot_record.bytes_per_sector;
+    u32 root_directory_sectors = ((boot_record.root_directory_entry_count * s_fat_entry_size) + (boot_record.bytes_per_sector - 1)) / boot_record.bytes_per_sector;
     u32 sectors_per_container = sector_count - (boot_record.reserved_sector_count + root_directory_sectors);
     u32 container_count = (256 * boot_record.sectors_per_cluster) + boot_record.fat_count;
 
@@ -495,8 +478,6 @@ static ErrorOr<void> format_fat_16_bit(Core::File& file, FATType fat_type, u64 f
     auto boot_record = TRY(generate_dos_3_bios_parameter_block(file_size, fat_type));
     auto boot_record_16_bit = generate_dos_4_bios_parameter_block(fat_type, volume_id);
 
-    TRY(wipe_file(file, file_size));
-
     Vector<u8> mbr;
     mbr.append(serialize_dos_3_bios_parameter_block(boot_record).data(), sizeof(boot_record));
     mbr.append(serialize_dos_4_bios_parameter_block(boot_record_16_bit).data(), sizeof(boot_record_16_bit));
@@ -517,9 +498,13 @@ static ErrorOr<void> format_fat_16_bit(Core::File& file, FATType fat_type, u64 f
 
     for (size_t i = 0; i < boot_record.fat_count; ++i) {
         TRY(file.write_until_depleted({ FAT_sector.data(), FAT_sector.size() }));
-        if (i + 1 != boot_record.fat_count)
-            TRY(file.seek(boot_record.bytes_per_sector * (boot_record.sectors_per_fat_16bit - 1), SeekMode::FromCurrentPosition));
+        for (u16 j = 0; j < boot_record.sectors_per_fat_16bit - 1; ++j)
+            TRY(file.write_until_depleted({ &s_zero_buffer, 512 }));
     }
+
+    size_t root_directory_sectors = ceil_div(boot_record.root_directory_entry_count * s_fat_entry_size, 512);
+    for (size_t i = 0; i < root_directory_sectors; ++i)
+        TRY(file.write_until_depleted({ &s_zero_buffer, 512 }));
 
     return {};
 }
@@ -530,8 +515,6 @@ static ErrorOr<void> format_fat32(Core::File& file, u64 file_size, u32 volume_id
     auto boot_record_fat32 = generate_dos_7_bios_parameter_block(boot_record, volume_id);
     auto fs_info = generate_fat32_fs_info(boot_record, boot_record_fat32);
     s_bootcode[s_message_offset_offset] = 0x77;
-
-    TRY(wipe_file(file, file_size));
 
     Vector<u8> mbr;
     mbr.append(serialize_dos_3_bios_parameter_block(boot_record).data(), sizeof(boot_record));
@@ -544,6 +527,12 @@ static ErrorOr<void> format_fat32(Core::File& file, u64 file_size, u32 volume_id
     Vector<u8> serialized_fs_info;
     serialized_fs_info.append(serialize_fat32_fs_info(fs_info).data(), sizeof(fs_info));
     VERIFY(serialized_fs_info.size() == 512);
+
+    // Wipe all the reserved sectors.
+    for (size_t i = 0; i < boot_record.reserved_sector_count; ++i)
+        TRY(file.write_until_depleted({ &s_zero_buffer, 512 }));
+
+    TRY(file.seek(0, SeekMode::SetPosition));
 
     // Write the boot record and the FSInfo block at the start of the file, and also back them up at sectors 6 and 7 respectively.
     for (size_t i = 0; i < 2; ++i) {
@@ -561,9 +550,13 @@ static ErrorOr<void> format_fat32(Core::File& file, u64 file_size, u32 volume_id
     TRY(file.seek(boot_record.bytes_per_sector * boot_record.reserved_sector_count, SeekMode::SetPosition));
     for (size_t i = 0; i < boot_record.fat_count; ++i) {
         TRY(file.write_until_depleted({ FAT_sector.data(), FAT_sector.size() }));
-        if (i + 1 != boot_record.fat_count)
-            TRY(file.seek(boot_record.bytes_per_sector * (boot_record_fat32.sectors_per_fat_32bit - 1), SeekMode::FromCurrentPosition));
+        for (size_t j = 0; j < boot_record_fat32.sectors_per_fat_32bit - 1; ++j)
+            TRY(file.write_until_depleted({ &s_zero_buffer, 512 }));
     }
+
+    // Erase the root directory cluster (which we always place right after the FAT).
+    for (size_t i = 0; i < boot_record.sectors_per_cluster; ++i)
+        TRY(file.write_until_depleted({ &s_zero_buffer, 512 }));
 
     return {};
 }
