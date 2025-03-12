@@ -5,6 +5,7 @@
  */
 
 #include <AK/BitStream.h>
+#include <AK/ConstrainedStream.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/Enumerate.h>
@@ -1926,6 +1927,28 @@ struct Frame {
     }
 };
 
+class AutoDepletingConstrainedStream : public ConstrainedStream {
+public:
+    AutoDepletingConstrainedStream(MaybeOwned<Stream> stream, u64 limit)
+        : ConstrainedStream(move(stream), limit)
+    {
+    }
+
+    ~AutoDepletingConstrainedStream()
+    {
+        dbgln_if(JPEGXL_DEBUG, "Discarding {} remaining bytes", remaining());
+        if (discard(remaining()).is_error())
+            dbgln("JPEGXLLoader: Corrupted stream, reached EOF");
+    }
+};
+
+static LittleEndianInputBitStream get_stream_for_section(LittleEndianInputBitStream& stream, u32 section_size)
+{
+    VERIFY(stream.align_to_byte_boundary() == 0);
+    auto constrained_stream = make<AutoDepletingConstrainedStream>(MaybeOwned<Stream>(stream), section_size);
+    return LittleEndianInputBitStream(move(constrained_stream));
+}
+
 static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     SizeHeader const& size_header,
     ImageMetadata const& metadata)
@@ -1978,25 +2001,43 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
 
     frame.image = TRY(Image::create({ frame.width, frame.height }, metadata));
 
-    frame.lf_global = TRY(read_lf_global(stream, { frame.width, frame.height }, frame.frame_header, metadata));
+    // "If num_groups == 1 and num_passes == 1, then there is a single TOC entry and a single section
+    // containing all frame data structures."
+    if (frame.num_groups == 1 && frame.frame_header.passes.num_passes == 1) {
+        auto section_stream = get_stream_for_section(stream, frame.toc.entries[0]);
+        frame.lf_global = TRY(read_lf_global(section_stream, { frame.width, frame.height }, frame.frame_header, metadata));
+        TRY(read_lf_group(section_stream, frame.image, frame.frame_header));
+        TRY(read_pass_group(section_stream, frame.image, frame.frame_header));
+    } else {
+        {
+            auto lf_stream = get_stream_for_section(stream, frame.toc.entries[0]);
+            frame.lf_global = TRY(read_lf_global(lf_stream, { frame.width, frame.height }, frame.frame_header, metadata));
+        }
 
-    for (u32 i {}; i < frame.num_lf_groups; ++i)
-        TRY(read_lf_group(stream, frame.image, frame.frame_header));
+        for (u32 i {}; i < frame.num_lf_groups; ++i) {
+            auto lf_stream = get_stream_for_section(stream, frame.toc.entries[1 + i]);
+            TRY(read_lf_group(lf_stream, frame.image, frame.frame_header));
+        }
 
-    if (frame.frame_header.encoding == Encoding::kVarDCT) {
-        TODO();
+        if (frame.frame_header.encoding == Encoding::kVarDCT) {
+            TODO();
+        }
+
+        for (u64 pass_index {}; pass_index < frame.frame_header.passes.num_passes; ++pass_index) {
+            for (u64 group_index {}; group_index < frame.num_groups; ++group_index) {
+                auto toc_section_number = 2 + frame.num_lf_groups + pass_index * frame.num_groups + group_index;
+                auto pass_stream = get_stream_for_section(stream, frame.toc.entries[toc_section_number]);
+                TRY(read_pass_group(pass_stream, frame.image, frame.frame_header));
+            }
+        }
     }
-
-    auto const num_pass_group = frame.num_groups * frame.frame_header.passes.num_passes;
-    auto const& transform_infos = frame.lf_global.gmodular.modular_data.transform;
-    for (u64 i {}; i < num_pass_group; ++i)
-        TRY(read_pass_group(stream, frame.image, frame.frame_header));
 
     TRY(frame.render_image());
 
     // G.4.2 - Modular group data
     // When all modular groups are decoded, the inverse transforms are applied to
     // the at that point fully decoded GlobalModular image, as specified in H.6.
+    auto const& transform_infos = frame.lf_global.gmodular.modular_data.transform;
     for (auto const& transformation : transform_infos.in_reverse())
         apply_transformation(frame.image, transformation);
 
