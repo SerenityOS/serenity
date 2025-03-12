@@ -18,7 +18,6 @@ src_values = []
 
 
 class ScriptSrcValueFinder(HTMLParser):
-
     def handle_starttag(self, tag, attrs):
         if tag == "script":
             attr_dict = dict(attrs)
@@ -50,6 +49,7 @@ def map_to_path(sources, is_resource=True, resource_path=None):
     def path_mapper(x):
         output_path = wpt_base_url + x.__str__().replace(wpt_import_path, '')
         return PathMapping(output_path, x.absolute())
+
     filepaths = list(map(path_mapper, filepaths))
 
     return filepaths
@@ -59,7 +59,7 @@ def modify_sources(files):
     for file in files:
         # Get the distance to the wpt-imports folder
         folder_index = str(file).find(wpt_import_path)
-        non_prefixed_path = str(file)[folder_index + len(wpt_import_path):]
+        non_prefixed_path = str(file)[folder_index + len(wpt_import_path) :]
         parent_folder_count = len(Path(non_prefixed_path).parent.parts) - 1
         parent_folder_path = '../' * parent_folder_count
 
