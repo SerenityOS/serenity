@@ -555,6 +555,7 @@ ErrorOr<void> ReportDescriptorParser::add_report_fields(FieldType field_type, It
                 .start_bit_index = start_bit_index,
                 .end_bit_index = start_bit_index + field_size_in_bits,
                 .is_array = !item_data.variable,
+                .is_relative = static_cast<bool>(item_data.relative),
                 .logical_minimum = m_current_item_state_table.global.logical_minimum.value(),
                 .logical_maximum = m_current_item_state_table.global.logical_maximum.value(),
                 .usage = usage,
