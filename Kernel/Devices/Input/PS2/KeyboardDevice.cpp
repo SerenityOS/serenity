@@ -9,9 +9,9 @@
 #include <Kernel/Bus/SerialIO/PS2Definitions.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Devices/HID/Management.h>
-#include <Kernel/Devices/HID/PS2/KeyboardDevice.h>
-#include <Kernel/Devices/HID/ScanCodeEvent.h>
+#include <Kernel/Devices/Input/Management.h>
+#include <Kernel/Devices/Input/PS2/KeyboardDevice.h>
+#include <Kernel/Devices/Input/ScanCodeEvent.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/WorkQueue.h>

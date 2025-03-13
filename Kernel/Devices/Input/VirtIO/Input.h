@@ -9,8 +9,8 @@
 #include <AK/AtomicRefCounted.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/Devices/HID/KeyboardDevice.h>
-#include <Kernel/Devices/HID/MouseDevice.h>
+#include <Kernel/Devices/Input/KeyboardDevice.h>
+#include <Kernel/Devices/Input/MouseDevice.h>
 #include <Kernel/Memory/RingBuffer.h>
 #include <Kernel/Security/Random.h>
 

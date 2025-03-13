@@ -7,9 +7,9 @@
 #include <AK/Span.h>
 #include <AK/String.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
-#include <Kernel/Devices/HID/Management.h>
-#include <Kernel/Devices/HID/VirtIO/EvDevDefinitions.h>
-#include <Kernel/Devices/HID/VirtIO/Input.h>
+#include <Kernel/Devices/Input/Management.h>
+#include <Kernel/Devices/Input/VirtIO/EvDevDefinitions.h>
+#include <Kernel/Devices/Input/VirtIO/Input.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::VirtIO {
@@ -224,8 +224,8 @@ UNMAP_AFTER_INIT ErrorOr<void> Input::initialize_virtio_resources()
         supply_chain_and_notify(EVENTQ, event_queue_chain);
     }
 
-    HIDManagement::the().attach_standalone_hid_device(*m_mouse_device);
-    HIDManagement::the().attach_standalone_hid_device(*m_keyboard_device);
+    InputManagement::the().attach_standalone_input_device(*m_mouse_device);
+    InputManagement::the().attach_standalone_input_device(*m_keyboard_device);
 
     return {};
 }

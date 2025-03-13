@@ -12,7 +12,7 @@
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Devices/HID/KeyboardDevice.h>
+#include <Kernel/Devices/Input/KeyboardDevice.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Scheduler.h>
@@ -54,7 +54,7 @@ void KeyboardDevice::handle_input_event(KeyEvent queued_event)
     }
 
     if (queued_event.map_entry_index != 0xFF)
-        queued_event.code_point = HIDManagement::the().get_char_from_character_map(queued_event, queued_event.map_entry_index);
+        queued_event.code_point = InputManagement::the().get_char_from_character_map(queued_event, queued_event.map_entry_index);
 
     // If using a non-QWERTY layout, queued_event.key needs to be updated to be the same as event.code_point
     KeyCode mapped_key = code_point_to_key_code(queued_event.code_point);
@@ -62,9 +62,9 @@ void KeyboardDevice::handle_input_event(KeyEvent queued_event)
         queued_event.key = mapped_key;
 
     {
-        SpinlockLocker locker(HIDManagement::the().m_client_lock);
-        if (HIDManagement::the().m_client)
-            HIDManagement::the().m_client->on_key_pressed(queued_event);
+        SpinlockLocker locker(InputManagement::the().m_client_lock);
+        if (InputManagement::the().m_client)
+            InputManagement::the().m_client->on_key_pressed(queued_event);
     }
 
     {
@@ -83,7 +83,7 @@ ErrorOr<NonnullRefPtr<KeyboardDevice>> KeyboardDevice::try_to_initialize()
 // FIXME: UNMAP_AFTER_INIT is fine for now, but for hot-pluggable devices
 // like USB keyboards, we need to remove this
 UNMAP_AFTER_INIT KeyboardDevice::KeyboardDevice()
-    : HIDDevice(MajorAllocation::CharacterDeviceFamily::Keyboard, HIDManagement::the().generate_minor_device_number_for_keyboard())
+    : InputDevice(MajorAllocation::CharacterDeviceFamily::Keyboard, InputManagement::the().generate_minor_device_number_for_keyboard())
 {
 }
 

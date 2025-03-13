@@ -33,7 +33,7 @@
 #include <Kernel/Devices/Generic/RandomDevice.h>
 #include <Kernel/Devices/Generic/SelfTTYDevice.h>
 #include <Kernel/Devices/Generic/ZeroDevice.h>
-#include <Kernel/Devices/HID/Management.h>
+#include <Kernel/Devices/Input/Management.h>
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
 #    include <Kernel/Devices/KCOVDevice.h>
 #endif
@@ -346,7 +346,7 @@ void init_stage2(void*)
 #if ARCH(X86_64)
     VMWareBackdoor::the(); // don't wait until first mouse packet
 #endif
-    MUST(HIDManagement::initialize());
+    MUST(InputManagement::initialize());
 
     GraphicsManagement::the().initialize();
     VirtualConsole::initialize_consoles();

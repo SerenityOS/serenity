@@ -11,14 +11,14 @@
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/Devices/HID/Device.h>
-#include <Kernel/Devices/HID/ScanCodeEvent.h>
+#include <Kernel/Devices/Input/Device.h>
+#include <Kernel/Devices/Input/ScanCodeEvent.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Security/Random.h>
 
 namespace Kernel {
 
-class KeyboardDevice : public HIDDevice {
+class KeyboardDevice : public InputDevice {
     friend class Device;
 
 public:

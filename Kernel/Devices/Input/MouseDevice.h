@@ -11,13 +11,13 @@
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/Devices/HID/Device.h>
+#include <Kernel/Devices/Input/Device.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Security/Random.h>
 
 namespace Kernel {
 
-class MouseDevice : public HIDDevice {
+class MouseDevice : public InputDevice {
     friend class Device;
 
 public:

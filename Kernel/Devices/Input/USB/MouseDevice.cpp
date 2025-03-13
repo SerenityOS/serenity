@@ -12,7 +12,7 @@
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/Bus/USB/USBTransfer.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Devices/HID/USB/MouseDevice.h>
+#include <Kernel/Devices/Input/USB/MouseDevice.h>
 #include <Kernel/Library/KString.h>
 
 namespace Kernel {

@@ -8,7 +8,7 @@
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Devices/HID/PS2/MouseDevice.h>
+#include <Kernel/Devices/Input/PS2/MouseDevice.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

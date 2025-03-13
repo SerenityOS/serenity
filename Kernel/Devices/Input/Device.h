@@ -12,19 +12,19 @@
 
 namespace Kernel {
 
-class HIDManagement;
-class HIDDevice : public CharacterDevice {
-    friend class HIDManagement;
+class InputManagement;
+class InputDevice : public CharacterDevice {
+    friend class InputManagement;
 
 protected:
-    HIDDevice(MajorAllocation::CharacterDeviceFamily character_device_family, MinorNumber minor)
+    InputDevice(MajorAllocation::CharacterDeviceFamily character_device_family, MinorNumber minor)
         : CharacterDevice(character_device_family, minor)
     {
     }
 
     EntropySource m_entropy_source;
 
-    IntrusiveListNode<HIDDevice, NonnullRefPtr<HIDDevice>> m_list_node;
+    IntrusiveListNode<InputDevice, NonnullRefPtr<InputDevice>> m_list_node;
 };
 
 }
