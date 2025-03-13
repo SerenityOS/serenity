@@ -5,7 +5,9 @@
  */
 
 #include <AK/BitStream.h>
+#include <AK/Debug.h>
 #include <AK/Endian.h>
+#include <AK/Enumerate.h>
 #include <AK/FixedArray.h>
 #include <AK/String.h>
 #include <LibCompress/Brotli.h>
@@ -1574,6 +1576,15 @@ static ErrorOr<ModularHeader> read_modular_header(LittleEndianInputBitStream& st
     for (u32 i {}; i < nb_transforms; ++i)
         modular_header.transform[i] = TRY(read_transform_info(stream));
 
+    if constexpr (JPEGXL_DEBUG) {
+        dbgln("Decoding modular sub-stream ({} tree, {} transforms):",
+            modular_header.use_global_tree ? "global"sv : "local"sv,
+            nb_transforms);
+
+        for (auto const& [i, channel] : enumerate(image.channels()))
+            dbgln("- Channel {}: {}x{}", i, channel.width(), channel.height());
+    }
+
     Optional<MATree> local_tree;
     if (!modular_header.use_global_tree)
         TODO();
@@ -1938,6 +1949,14 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
         frame.height = ceil(static_cast<double>(frame.height) / frame.frame_header.upsampling);
     }
 
+    dbgln_if(JPEGXL_DEBUG, "Frame{}: {}x{} {} - type({}) - flags({}){}"sv,
+        frame.frame_header.name.is_empty() ? ""sv : MUST(String::formatted(" \"{}\"", frame.frame_header.name)),
+        frame.width, frame.height,
+        frame.frame_header.encoding,
+        to_underlying(frame.frame_header.frame_type),
+        to_underlying(frame.frame_header.flags),
+        frame.frame_header.is_last ? " - is_last"sv : ""sv);
+
     if (frame.frame_header.lf_level > 0)
         TODO();
 
@@ -2140,6 +2159,8 @@ public:
         m_header = TRY(read_size_header(m_stream));
         m_metadata = TRY(read_metadata_header(m_stream));
 
+        dbgln_if(JPEGXL_DEBUG, "Decoding a JPEG XL image with size {}x{} and {} channels.", m_header.width, m_header.height, m_metadata.number_of_channels());
+
         m_state = State::HeaderDecoded;
 
         return {};
@@ -2324,4 +2345,29 @@ ErrorOr<Optional<ReadonlyBytes>> JPEGXLImageDecoderPlugin::icc_data()
         return OptionalNone {};
     return m_context->icc_profile();
 }
+
+}
+
+namespace AK {
+
+template<>
+struct Formatter<Gfx::Encoding> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::Encoding const& header)
+    {
+        auto string = "Unknown"sv;
+        switch (header) {
+        case Gfx::Encoding::kVarDCT:
+            string = "VarDCT"sv;
+            break;
+        case Gfx::Encoding::kModular:
+            string = "Modular"sv;
+            break;
+        default:
+            break;
+        }
+
+        return Formatter<StringView>::format(builder, string);
+    }
+};
+
 }
