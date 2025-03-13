@@ -258,6 +258,10 @@
 #    cmakedefine01 JPEG2000_DEBUG
 #endif
 
+#ifndef JPEGXL_DEBUG
+#    cmakedefine01 JPEGXL_DEBUG
+#endif
+
 #ifndef JS_BYTECODE_DEBUG
 #    cmakedefine01 JS_BYTECODE_DEBUG
 #endif
