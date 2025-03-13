@@ -126,6 +126,7 @@ struct Field {
     size_t end_bit_index;
 
     bool is_array;
+    bool is_relative;
 
     i32 logical_minimum;
     i32 logical_maximum;
