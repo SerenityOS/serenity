@@ -74,7 +74,7 @@ static constexpr auto unshifted_evdev_key_map = to_array<KeyCodeEntry const>({
     { Key_Q, 0x10 },                 { Key_W, 0x11 },                 { Key_E, 0x12 },                 { Key_R, 0x13 },
     { Key_T, 0x14 },                 { Key_Y, 0x15 },                 { Key_U, 0x16 },                 { Key_I, 0x17 },
     { Key_O, 0x18 },                 { Key_P, 0x19 },                 { Key_LeftBracket, 0x1a },       { Key_RightBracket, 0x1b },
-    { Key_Return, 0x1c },            { Key_LeftControl, 0x1d },       { Key_A, 0x1e },                 { Key_S, 0x1f },
+    { Key_Return, 0x1c },            { Key_LeftControl, 0xff },       { Key_A, 0x1e },                 { Key_S, 0x1f },
 
     // 0x20-0x2f
     { Key_D, 0x20 },                 { Key_F, 0x21 },                 { Key_G, 0x22 },                 { Key_H, 0x23 },
@@ -90,7 +90,7 @@ static constexpr auto unshifted_evdev_key_map = to_array<KeyCodeEntry const>({
 
     // 0x40-0x4f
     { Key_F6, 0xff },                { Key_F7, 0xff },                { Key_F8, 0xff },                { Key_F9, 0xff },
-    { Key_F10, 0xff },               { Key_NumLock, 0x45 },           { Key_ScrollLock, 0xff },        { Key_Home, 0xff },
+    { Key_F10, 0xff },               { Key_NumLock, 0xff },           { Key_ScrollLock, 0xff },        { Key_Home, 0xff },
     { Key_Up, 0xff },                { Key_PageUp, 0xff },            { Key_Minus, 0x4a },             { Key_Left, 0xff },
     { Key_Invalid, 0xff },           { Key_Right, 0xff },             { Key_Plus, 0x4e },              { Key_End, 0xff },
 
@@ -102,7 +102,7 @@ static constexpr auto unshifted_evdev_key_map = to_array<KeyCodeEntry const>({
 
     // 0x60-0x6f
     // FIXME: Add Numpad "/" key to character map for key code 0x62
-    { Key_Return, 0xff },            { Key_RightControl, 0xff },      { Key_Slash, 0xff },             { Key_SysRq, 0xff },
+    { Key_Return, 0x1c },            { Key_RightControl, 0xff },      { Key_Slash, 0xff },             { Key_SysRq, 0xff },
     { Key_RightAlt, 0xff },          { Key_Invalid, 0xff },           { Key_Home, 0xff },              { Key_Up, 0xff },
     { Key_PageUp, 0xff },            { Key_Left, 0xff },              { Key_Right, 0xff },             { Key_End, 0xff },
     { Key_Down, 0xff },              { Key_PageDown, 0xff },          { Key_Insert, 0xff },            { Key_Delete, 0xff },
@@ -111,7 +111,7 @@ static constexpr auto unshifted_evdev_key_map = to_array<KeyCodeEntry const>({
     { Key_Invalid, 0xff },           { Key_Mute, 0xff },              { Key_VolumeDown, 0xff },        { Key_VolumeUp, 0xff },
     { Key_Power, 0xff },             { Key_Equal, 0xff },             { Key_Invalid, 0xff },           { Key_PauseBreak, 0xff },
     { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
-    { Key_Invalid, 0xff },           { Key_LeftSuper, 0xff },         { Key_LeftSuper, 0xff },         { Key_Menu, 0xff },
+    { Key_Invalid, 0xff },           { Key_LeftSuper, 0xff },         { Key_RightSuper, 0xff },        { Key_Menu, 0xff },
 
     // 0x80-0x8f
     { Key_Stop, 0xff },              { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
@@ -133,7 +133,7 @@ static constexpr auto shifted_evdev_key_map = to_array<KeyCodeEntry const>({
     { Key_Q, 0x10 },                 { Key_W, 0x11 },                 { Key_E, 0x12 },                 { Key_R, 0x13 },
     { Key_T, 0x14 },                 { Key_Y, 0x15 },                 { Key_U, 0x16 },                 { Key_I, 0x17 },
     { Key_O, 0x18 },                 { Key_P, 0x19 },                 { Key_LeftBrace, 0x1a },         { Key_RightBrace, 0x1b },
-    { Key_Return, 0x1c },            { Key_LeftControl, 0x1d },       { Key_A, 0x1e },                 { Key_S, 0x1f },
+    { Key_Return, 0x1c },            { Key_LeftControl, 0xff },       { Key_A, 0x1e },                 { Key_S, 0x1f },
 
     // 0x20-0x2f
     { Key_D, 0x20 },                 { Key_F, 0x21 },                 { Key_G, 0x22 },                 { Key_H, 0x23 },
