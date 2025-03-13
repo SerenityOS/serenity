@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/HID/Management.h>
+#include <Kernel/Devices/Input/Management.h>
 #include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
@@ -34,7 +34,7 @@ ErrorOr<FlatPtr> Process::sys$setkeymap(Userspace<Syscall::SC_setkeymap_params c
     if (map_name->length() > map_name_max_size)
         return ENAMETOOLONG;
 
-    HIDManagement::the().set_maps(move(map_name), character_map_data);
+    InputManagement::the().set_maps(move(map_name), character_map_data);
     return 0;
 }
 
@@ -44,7 +44,7 @@ ErrorOr<FlatPtr> Process::sys$getkeymap(Userspace<Syscall::SC_getkeymap_params c
     TRY(require_promise(Pledge::getkeymap));
     auto params = TRY(copy_typed_from_user(user_params));
 
-    return HIDManagement::the().keymap_data().with([&](auto const& keymap_data) -> ErrorOr<FlatPtr> {
+    return InputManagement::the().keymap_data().with([&](auto const& keymap_data) -> ErrorOr<FlatPtr> {
         if (params.map_name.size < keymap_data.character_map_name->length())
             return ENAMETOOLONG;
         TRY(copy_to_user(params.map_name.data, keymap_data.character_map_name->characters(), keymap_data.character_map_name->length()));

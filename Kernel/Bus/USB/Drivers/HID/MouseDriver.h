@@ -9,7 +9,7 @@
 #include <Kernel/Bus/USB/Drivers/USBDriver.h>
 #include <Kernel/Bus/USB/USBInterface.h>
 #include <Kernel/Bus/USB/USBManagement.h>
-#include <Kernel/Devices/HID/USB/MouseDevice.h>
+#include <Kernel/Devices/Input/USB/MouseDevice.h>
 
 namespace Kernel::USB {
 

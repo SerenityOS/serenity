@@ -10,7 +10,7 @@
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/Bus/SerialIO/Device.h>
 #include <Kernel/Bus/SerialIO/PS2Definitions.h>
-#include <Kernel/Devices/HID/MouseDevice.h>
+#include <Kernel/Devices/Input/MouseDevice.h>
 #include <Kernel/Security/Random.h>
 
 namespace Kernel {

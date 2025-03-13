@@ -11,7 +11,7 @@
 #include <Kernel/Bus/USB/USBEndpoint.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Devices/HID/Management.h>
+#include <Kernel/Devices/Input/Management.h>
 
 namespace Kernel::USB {
 
@@ -72,7 +72,7 @@ ErrorOr<void> MouseDriver::initialize_device(USB::Device& device, USBInterface c
         to_underlying(HID::Request::SET_PROTOCOL), to_underlying(HID::Protocol::Boot), interface.descriptor().interface_id, 0, nullptr));
 
     auto mouse_device = TRY(USBMouseDevice::try_create_instance(device, endpoint_descriptor.max_packet_size, move(interrupt_in_pipe)));
-    HIDManagement::the().attach_standalone_hid_device(*mouse_device);
+    InputManagement::the().attach_standalone_input_device(*mouse_device);
     m_interfaces.append(mouse_device);
     return {};
 }
@@ -81,7 +81,7 @@ void MouseDriver::detach(USB::Device& device)
 {
     auto&& mouse_device = AK::find_if(m_interfaces.begin(), m_interfaces.end(), [&device](auto& interface) { return &interface.device() == &device; });
 
-    HIDManagement::the().detach_standalone_hid_device(*mouse_device);
+    InputManagement::the().detach_standalone_input_device(*mouse_device);
     m_interfaces.remove(*mouse_device);
 }
 

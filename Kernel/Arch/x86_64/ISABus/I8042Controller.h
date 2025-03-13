@@ -86,7 +86,7 @@ private:
     NonnullRefPtr<I8042Controller> const m_controller;
 };
 
-class HIDManagement;
+class InputManagement;
 class I8042Controller final : public SerialIOController {
     friend class PS2KeyboardDevice;
     friend class PS2MouseDevice;
@@ -116,7 +116,7 @@ public:
     virtual ErrorOr<void> prepare_for_input(PortIndex) override;
 
     // Note: This function exists only for the initialization process of the controller
-    bool check_existence_via_probing(Badge<HIDManagement>);
+    bool check_existence_via_probing(Badge<InputManagement>);
 
     bool handle_irq(Badge<I8042ControllerIRQHandler>, u8 irq_number);
 

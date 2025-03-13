@@ -10,15 +10,15 @@
 #    include <Kernel/Arch/x86_64/ISABus/I8042Controller.h>
 #endif
 #include <Kernel/Boot/CommandLine.h>
-#include <Kernel/Devices/HID/Device.h>
-#include <Kernel/Devices/HID/Management.h>
+#include <Kernel/Devices/Input/Device.h>
+#include <Kernel/Devices/Input/Management.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
 
 Atomic<bool> g_caps_lock_remapped_to_ctrl;
-static Singleton<HIDManagement> s_the;
+static Singleton<InputManagement> s_the;
 
 // clang-format off
 static constexpr Keyboard::CharacterMapData DEFAULT_CHARACTER_MAP =
@@ -79,34 +79,34 @@ static constexpr Keyboard::CharacterMapData DEFAULT_CHARACTER_MAP =
 };
 // clang-format on
 
-void HIDManagement::set_client(KeyboardClient* client)
+void InputManagement::set_client(KeyboardClient* client)
 {
     SpinlockLocker locker(m_client_lock);
     m_client = client;
 }
 
-size_t HIDManagement::generate_minor_device_number_for_mouse()
+size_t InputManagement::generate_minor_device_number_for_mouse()
 {
     // FIXME: Lock this to prevent race conditions with hot-plugging devices!
     return m_mouse_minor_number++;
 }
-size_t HIDManagement::generate_minor_device_number_for_keyboard()
+size_t InputManagement::generate_minor_device_number_for_keyboard()
 {
     // FIXME: Lock this to prevent race conditions with hot-plugging devices!
     return m_keyboard_minor_number++;
 }
 
-UNMAP_AFTER_INIT HIDManagement::KeymapData::KeymapData()
+UNMAP_AFTER_INIT InputManagement::KeymapData::KeymapData()
     : character_map_name(KString::must_create("en-us"sv))
     , character_map(DEFAULT_CHARACTER_MAP)
 {
 }
 
-UNMAP_AFTER_INIT HIDManagement::HIDManagement()
+UNMAP_AFTER_INIT InputManagement::InputManagement()
 {
 }
 
-void HIDManagement::set_maps(NonnullOwnPtr<KString> character_map_name, Keyboard::CharacterMapData const& character_map_data)
+void InputManagement::set_maps(NonnullOwnPtr<KString> character_map_name, Keyboard::CharacterMapData const& character_map_data)
 {
     m_keymap_data.with([&](auto& keymap_data) {
         keymap_data.character_map_name = move(character_map_name);
@@ -115,21 +115,21 @@ void HIDManagement::set_maps(NonnullOwnPtr<KString> character_map_name, Keyboard
     });
 }
 
-void HIDManagement::detach_standalone_hid_device(HIDDevice& device)
+void InputManagement::detach_standalone_input_device(InputDevice& device)
 {
-    m_standalone_hid_devices.with([&](auto& list) {
+    m_standalone_input_devices.with([&](auto& list) {
         list.remove(device);
     });
 }
 
-void HIDManagement::attach_standalone_hid_device(HIDDevice& device)
+void InputManagement::attach_standalone_input_device(InputDevice& device)
 {
-    m_standalone_hid_devices.with([&](auto& list) {
+    m_standalone_input_devices.with([&](auto& list) {
         list.append(device);
     });
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
+UNMAP_AFTER_INIT ErrorOr<void> InputManagement::enumerate()
 {
     // FIXME: When we have USB HID support, we should ensure that we disable
     // emulation of the PS/2 controller if it was set by the BIOS.
@@ -170,26 +170,26 @@ UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
     auto i8042_enable_first_port_translation = kernel_command_line().i8042_enable_first_port_translation() ? I8042Controller::EnableKeyboardFirstPortTranslation::Yes : I8042Controller::EnableKeyboardFirstPortTranslation::No;
     if (auto result_or_error = i8042_controller->detect_devices(i8042_enable_first_port_translation); result_or_error.is_error())
         return {};
-    m_hid_serial_io_controllers.with([&](auto& list) {
+    m_input_serial_io_controllers.with([&](auto& list) {
         list.append(i8042_controller);
     });
 #endif
     return {};
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::initialize()
+UNMAP_AFTER_INIT ErrorOr<void> InputManagement::initialize()
 {
     VERIFY(!s_the.is_initialized());
     s_the.ensure_instance();
     return s_the->enumerate();
 }
 
-HIDManagement& HIDManagement::the()
+InputManagement& InputManagement::the()
 {
     return *s_the;
 }
 
-u32 HIDManagement::get_char_from_character_map(KeyEvent event, u8 index) const
+u32 InputManagement::get_char_from_character_map(KeyEvent event, u8 index) const
 {
     VERIFY(index < CHAR_MAP_SIZE);
     auto modifiers = event.modifiers();

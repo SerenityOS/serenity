@@ -70,13 +70,6 @@ set(KERNEL_SOURCES
     Devices/FUSEDevice.cpp
     Devices/PCISerialDevice.cpp
     Devices/SerialDevice.cpp
-    Devices/HID/KeyboardDevice.cpp
-    Devices/HID/Management.cpp
-    Devices/HID/MouseDevice.cpp
-    Devices/HID/PS2/KeyboardDevice.cpp
-    Devices/HID/PS2/MouseDevice.cpp
-    Devices/HID/USB/MouseDevice.cpp
-    Devices/HID/VirtIO/Input.cpp
     Devices/Generic/ConsoleDevice.cpp
     Devices/Generic/DeviceControlDevice.cpp
     Devices/Generic/FullDevice.cpp
@@ -113,6 +106,13 @@ set(KERNEL_SOURCES
     Devices/GPU/VirtIO/Console.cpp
     Devices/GPU/VirtIO/GPU3DDevice.cpp
     Devices/GPU/VirtIO/GraphicsAdapter.cpp
+    Devices/Input/KeyboardDevice.cpp
+    Devices/Input/Management.cpp
+    Devices/Input/MouseDevice.cpp
+    Devices/Input/PS2/KeyboardDevice.cpp
+    Devices/Input/PS2/MouseDevice.cpp
+    Devices/Input/USB/MouseDevice.cpp
+    Devices/Input/VirtIO/Input.cpp
     Devices/Loop/LoopDevice.cpp
     Devices/Serial/VirtIO/Console.cpp
     Devices/Serial/VirtIO/ConsolePort.cpp
@@ -430,8 +430,8 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/Time/RTC.cpp
         Arch/x86_64/PCSpeaker.cpp
 
-        Arch/x86_64/ISABus/HID/VMWareMouseDevice.cpp
         Arch/x86_64/ISABus/I8042Controller.cpp
+        Arch/x86_64/ISABus/Input/VMWareMouseDevice.cpp
         Arch/x86_64/ISABus/SerialDevice.cpp
         Arch/x86_64/PCI/Controller/PIIX4HostBridge.cpp
         Arch/x86_64/PCI/Initializer.cpp
