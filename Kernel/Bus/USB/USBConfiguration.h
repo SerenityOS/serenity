@@ -46,7 +46,7 @@ public:
 
     Vector<USBInterface> const& interfaces() const { return m_interfaces; }
 
-    template<CallableAs<ErrorOr<void>, ReadonlyBytes> Callback>
+    template<CallableAs<ErrorOr<IterationDecision>, ReadonlyBytes> Callback>
     ErrorOr<void> for_each_descriptor_in_interface(USBInterface const& interface, Callback&& callback) const
     {
         auto stream = FixedMemoryStream(m_descriptor_hierarchy_buffer.span());
@@ -63,7 +63,8 @@ public:
                 break;
 
             ReadonlyBytes descriptor_data { m_descriptor_hierarchy_buffer.span().slice(stream.offset() - sizeof(USBDescriptorCommon), descriptor_header.length) };
-            TRY(callback(descriptor_data));
+            if (TRY(callback(descriptor_data)) == IterationDecision::Break)
+                return {};
 
             TRY(stream.seek(descriptor_header.length - sizeof(USBDescriptorCommon), SeekMode::FromCurrentPosition));
         }
