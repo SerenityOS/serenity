@@ -1365,7 +1365,7 @@ private:
 ///
 
 /// H.2 - Image decoding
-struct ModularHeader {
+struct ModularData {
     bool use_global_tree {};
     WPHeader wp_params {};
     Vector<TransformInfo> transform {};
@@ -1493,26 +1493,26 @@ static Neighborhood retrieve_neighborhood(Channel const& channel, u32 x, u32 y)
     return neighborhood;
 }
 
-static ErrorOr<ModularHeader> read_modular_header(LittleEndianInputBitStream& stream,
+static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& stream,
     Image& image,
     ImageMetadata const& metadata,
     Optional<EntropyDecoder>& decoder,
     MATree const& global_tree,
     u16 num_channels)
 {
-    ModularHeader modular_header;
+    ModularData modular_data;
 
-    modular_header.use_global_tree = TRY(stream.read_bit());
-    modular_header.wp_params = TRY(read_self_correcting_predictor(stream));
+    modular_data.use_global_tree = TRY(stream.read_bit());
+    modular_data.wp_params = TRY(read_self_correcting_predictor(stream));
     auto const nb_transforms = U32(0, 1, 2 + TRY(stream.read_bits(4)), 18 + TRY(stream.read_bits(8)));
 
-    TRY(modular_header.transform.try_resize(nb_transforms));
+    TRY(modular_data.transform.try_resize(nb_transforms));
     for (u32 i {}; i < nb_transforms; ++i)
-        modular_header.transform[i] = TRY(read_transform_info(stream));
+        modular_data.transform[i] = TRY(read_transform_info(stream));
 
     if constexpr (JPEGXL_DEBUG) {
         dbgln("Decoding modular sub-stream ({} tree, {} transforms):",
-            modular_header.use_global_tree ? "global"sv : "local"sv,
+            modular_data.use_global_tree ? "global"sv : "local"sv,
             nb_transforms);
 
         for (auto const& [i, channel] : enumerate(image.channels()))
@@ -1520,7 +1520,7 @@ static ErrorOr<ModularHeader> read_modular_header(LittleEndianInputBitStream& st
     }
 
     Optional<MATree> local_tree;
-    if (!modular_header.use_global_tree)
+    if (!modular_data.use_global_tree)
         TODO();
 
     // where dist_multiplier is set to the largest channel width amongst all channels
@@ -1545,7 +1545,7 @@ static ErrorOr<ModularHeader> read_modular_header(LittleEndianInputBitStream& st
     auto const& tree = local_tree.has_value() ? *local_tree : global_tree;
     for (u16 i {}; i < num_channels; ++i) {
 
-        auto self_correcting_data = TRY(SelfCorrectingData::create(modular_header.wp_params, image.channels()[i].width()));
+        auto self_correcting_data = TRY(SelfCorrectingData::create(modular_data.wp_params, image.channels()[i].width()));
 
         for (u32 y {}; y < image.channels()[i].height(); y++) {
             for (u32 x {}; x < image.channels()[i].width(); x++) {
@@ -1569,14 +1569,14 @@ static ErrorOr<ModularHeader> read_modular_header(LittleEndianInputBitStream& st
         image.channels()[i].set_decoded(true);
     }
 
-    return modular_header;
+    return modular_data;
 }
 ///
 
 /// G.1.2 - LF channel dequantization weights
 struct GlobalModular {
     MATree ma_tree;
-    ModularHeader modular_header;
+    ModularData modular_data;
 };
 
 static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& stream,
@@ -1609,7 +1609,7 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
     //        However, the decoder only decodes the first nb_meta_channels channels and any further channels
     //        that have a width and height that are both at most group_dim. At that point, it stops decoding.
     //        No inverse transforms are applied yet.
-    global_modular.modular_header = TRY(read_modular_header(stream, image, metadata, entropy_decoder, global_modular.ma_tree, num_channels));
+    global_modular.modular_data = TRY(read_modular_bitstream(stream, image, metadata, entropy_decoder, global_modular.ma_tree, num_channels));
 
     return global_modular;
 }
@@ -1918,7 +1918,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     }
 
     auto const num_pass_group = frame.num_groups * frame.frame_header.passes.num_passes;
-    auto const& transform_infos = frame.lf_global.gmodular.modular_header.transform;
+    auto const& transform_infos = frame.lf_global.gmodular.modular_data.transform;
     for (u64 i {}; i < num_pass_group; ++i)
         TRY(read_pass_group(stream, frame.image, frame.frame_header, group_dim));
 
