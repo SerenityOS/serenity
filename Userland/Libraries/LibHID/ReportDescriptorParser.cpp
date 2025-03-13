@@ -258,11 +258,14 @@ ErrorOr<ParsedReportDescriptor> ReportDescriptorParser::parse()
                 new_collection.parent = m_current_collection;
                 new_collection.type = collection_type;
 
+                // 6.2.2.6 Collection, End Collection Items: "[A] Usage item tag must be associated with any collection [...]."
+                if (m_current_item_state_table.local.usages.size() == 0)
+                    return Error::from_string_view_or_print_error_and_return_errno("Collection item without a preceding Usage item"sv, EINVAL);
+
                 if (m_current_item_state_table.local.usages.size() > 1)
                     return Error::from_string_view_or_print_error_and_return_errno("Collection item with multiple usages"sv, EINVAL);
 
-                if (m_current_item_state_table.local.usages.size() == 1)
-                    new_collection.usage = m_current_item_state_table.local.usages.first();
+                new_collection.usage = m_current_item_state_table.local.usages.first();
 
                 if (m_current_collection == nullptr) {
                     TRY(m_parsed.top_level_collections.try_empend(move(new_collection)));
