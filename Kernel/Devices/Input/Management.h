@@ -16,7 +16,7 @@
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Bus/SerialIO/Controller.h>
-#include <Kernel/Devices/HID/Device.h>
+#include <Kernel/Devices/Input/Device.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/UnixTypes.h>
@@ -29,14 +29,14 @@ extern Atomic<bool> g_caps_lock_remapped_to_ctrl;
 class MouseDevice;
 class KeyboardDevice;
 class KeyboardClient;
-class HIDManagement {
+class InputManagement {
     friend class KeyboardDevice;
     friend class MouseDevice;
 
 public:
-    HIDManagement();
+    InputManagement();
     static ErrorOr<void> initialize();
-    static HIDManagement& the();
+    static InputManagement& the();
 
     ErrorOr<void> enumerate();
 
@@ -53,8 +53,8 @@ public:
     void set_client(KeyboardClient* client);
     void set_maps(NonnullOwnPtr<KString> character_map_name, Keyboard::CharacterMapData const& character_map);
 
-    void attach_standalone_hid_device(HIDDevice&);
-    void detach_standalone_hid_device(HIDDevice&);
+    void attach_standalone_input_device(InputDevice&);
+    void detach_standalone_input_device(InputDevice&);
 
 private:
     size_t generate_minor_device_number_for_mouse();
@@ -65,11 +65,11 @@ private:
     size_t m_keyboard_minor_number { 0 };
     KeyboardClient* m_client { nullptr };
 
-    SpinlockProtected<IntrusiveList<&SerialIOController::m_list_node>, LockRank::None> m_hid_serial_io_controllers;
+    SpinlockProtected<IntrusiveList<&SerialIOController::m_list_node>, LockRank::None> m_input_serial_io_controllers;
     // NOTE: This list is used for standalone devices, like USB HID devices
     // (which are not attached via a SerialIO controller in the sense that
     // there's no specific serial IO controller to coordinate their usage).
-    SpinlockProtected<IntrusiveList<&HIDDevice::m_list_node>, LockRank::None> m_standalone_hid_devices;
+    SpinlockProtected<IntrusiveList<&InputDevice::m_list_node>, LockRank::None> m_standalone_input_devices;
     Spinlock<LockRank::None> m_client_lock;
 };
 

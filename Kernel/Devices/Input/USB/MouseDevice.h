@@ -13,7 +13,7 @@
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/Bus/USB/USBPipe.h>
-#include <Kernel/Devices/HID/MouseDevice.h>
+#include <Kernel/Devices/Input/MouseDevice.h>
 #include <Kernel/Library/KString.h>
 #include <Kernel/Security/Random.h>
 
@@ -24,7 +24,7 @@ class USBMouseDevice final : public MouseDevice {
 
 public:
     static ErrorOr<NonnullRefPtr<USBMouseDevice>> try_create_instance(USB::Device const&, size_t max_packet_size, NonnullOwnPtr<USB::InterruptInPipe> pipe);
-    virtual ~USBMouseDevice() override {};
+    virtual ~USBMouseDevice() override { }
 
     USB::Device const& device() const { return *m_attached_usb_device; }
 

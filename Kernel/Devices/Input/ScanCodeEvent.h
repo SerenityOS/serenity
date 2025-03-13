@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/Devices/HID/Definitions.h>
+#include <Kernel/Devices/Input/Definitions.h>
 
 namespace Kernel {
 

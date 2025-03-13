@@ -6,8 +6,8 @@
 
 #include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Devices/HID/Management.h>
-#include <Kernel/Devices/HID/MouseDevice.h>
+#include <Kernel/Devices/Input/Management.h>
+#include <Kernel/Devices/Input/MouseDevice.h>
 
 namespace Kernel {
 
@@ -17,7 +17,7 @@ ErrorOr<NonnullRefPtr<MouseDevice>> MouseDevice::try_to_initialize()
 }
 
 MouseDevice::MouseDevice()
-    : HIDDevice(MajorAllocation::CharacterDeviceFamily::Mouse, HIDManagement::the().generate_minor_device_number_for_mouse())
+    : InputDevice(MajorAllocation::CharacterDeviceFamily::Mouse, InputManagement::the().generate_minor_device_number_for_mouse())
 {
 }
 
