@@ -134,7 +134,7 @@ enum class LocalItemTag : u8 {
 }
 
 template<>
-class AK::Traits<HID::ItemHeader> : public DefaultTraits<HID::ItemHeader> {
+class AK::Traits<::HID::ItemHeader> : public DefaultTraits<::HID::ItemHeader> {
 public:
     static constexpr bool is_trivially_serializable() { return true; }
 };
