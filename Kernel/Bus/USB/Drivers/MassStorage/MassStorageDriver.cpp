@@ -168,23 +168,23 @@ ErrorOr<void> MassStorageDriver::initialise_uas_device(USB::Device& device, USBI
     u16 last_seen_max_packet_size;
 
     TRY(configuration.for_each_descriptor_in_interface(interface,
-        [&](ReadonlyBytes descriptor_data) -> ErrorOr<void> {
+        [&](ReadonlyBytes descriptor_data) -> ErrorOr<IterationDecision> {
             auto const& descriptor_header = *bit_cast<USBDescriptorCommon const*>(descriptor_data.data());
 
             if (descriptor_header.descriptor_type == DESCRIPTOR_TYPE_ENDPOINT) {
                 auto descriptor = bit_cast<USBEndpointDescriptor const*>(descriptor_data.data());
                 if ((descriptor->endpoint_attributes_bitmap & USBEndpoint::ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_MASK) != USBEndpoint::ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_BULK)
-                    return {};
+                    return IterationDecision::Continue;
                 last_seen_endpoint_number = descriptor->endpoint_address & 0b1111;
                 last_seen_max_packet_size = descriptor->max_packet_size;
-                return {};
+                return IterationDecision::Continue;
             }
 
             // Note: The spec says that the Pipe Usage Descriptor should be the first descriptor after the Endpoint Descriptor,
             //       but we don't enforce that here
             //       As other descriptors, like the SuperSpeed Endpoint Companion Descriptor, may be present in between
             if (descriptor_header.descriptor_type != UAS_PIPE_USAGE_DESCRIPTOR)
-                return {};
+                return IterationDecision::Continue;
 
             if (descriptor_data.size() < sizeof(PipeUsageDescriptor)) {
                 dmesgln("SCSI/UAS: Provided Pipe Usage Descriptor is too small; Rejecting");
@@ -221,7 +221,7 @@ ErrorOr<void> MassStorageDriver::initialise_uas_device(USB::Device& device, USBI
             last_seen_endpoint_number.clear();
             last_seen_max_packet_size = 0;
 
-            return {};
+            return IterationDecision::Continue;
         }));
 
     if (!in_pipe_endpoint_number.has_value()
