@@ -106,6 +106,29 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_markdown_docume
     });
 }
 
+static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_gemtext_document(HTML::NavigationParams const& navigation_params)
+{
+    return create_document_for_inline_content(navigation_params.navigable.ptr(), navigation_params.id, [&](DOM::Document& document) {
+        auto& realm = document.realm();
+        auto process_body = JS::create_heap_function(realm.heap(), [&document, url = navigation_params.response->url().value()](ByteBuffer data) {
+            auto gemtext_document = Gemini::Document::parse(data, {});
+
+            auto parser = HTML::HTMLParser::create(document, gemtext_document->render_to_html(), "utf-8"sv);
+            parser->run(url);
+        });
+
+        auto process_body_error = JS::create_heap_function(realm.heap(), [](JS::Value) {
+            dbgln("FIXME: Load html page with an error if read of body failed.");
+        });
+
+        navigation_params.response->body()->fully_read(
+            realm,
+            process_body,
+            process_body_error,
+            JS::NonnullGCPtr { realm.global_object() });
+    });
+}
+
 bool build_xml_document(DOM::Document& document, ByteBuffer const& data, Optional<String> content_encoding)
 {
     Optional<TextCodec::Decoder&> decoder;
@@ -541,6 +564,9 @@ JS::GCPtr<DOM::Document> load_document(HTML::NavigationParams const& navigation_
     //    navigable, navigationParams's id, and navigationParams's navigation timing type.
     if (type.essence() == "text/markdown"sv)
         return load_markdown_document(navigation_params).release_value_but_fixme_should_propagate_errors();
+
+    if (type.essence() == "text/gemini"sv)
+        return load_gemtext_document(navigation_params).release_value_but_fixme_should_propagate_errors();
 
     // FIXME: 4. Otherwise, the document's type is such that the resource will not affect navigationParams's navigable,
     //        e.g., because the resource is to be handed to an external application or because it is an unknown type
