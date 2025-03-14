@@ -819,6 +819,12 @@ TEST_CASE(test_jpeg2000_decode_greyscale_alpha)
 
 TEST_CASE(test_jpeg2000_decode_cmyk)
 {
+    auto tiff_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/ref-cmyk.tif"sv)));
+    auto tiff_plugin_decoder = TRY_OR_FAIL(Gfx::TIFFImageDecoderPlugin::create(tiff_file->bytes()));
+    EXPECT_EQ(tiff_plugin_decoder->size(), Gfx::Size(119, 101));
+    EXPECT_EQ(tiff_plugin_decoder->natural_frame_format(), Gfx::NaturalFrameFormat::CMYK);
+    auto ref_cmyk_frame = TRY_OR_FAIL(tiff_plugin_decoder->cmyk_frame());
+
     Array test_inputs = {
         TEST_INPUT("jpeg2000/kakadu-lossless-cmyk-u8-prog1-layers1-res6.jp2"sv),
     };
@@ -832,11 +838,16 @@ TEST_CASE(test_jpeg2000_decode_cmyk)
         auto cmyk_frame = TRY_OR_FAIL(plugin_decoder->cmyk_frame());
         EXPECT_EQ(cmyk_frame->size(), Gfx::IntSize(119, 101));
 
-        // FIXME: It'd be nice to compare the CMYK values to a reference image,
-        //        but we currently don't have a reference CMYK decoder. The tiff decoder could
-        //        learn this, but I'm also having trouble generating a reference CMYK tiff file.
-        //        For now, just spot-check a pixel.
-        EXPECT_EQ(cmyk_frame->scanline(80)[80], (Gfx::CMYK { 0x0c, 0xea, 0xd3, 0x00 }));
+        for (int y = 0; y < cmyk_frame->size().height(); ++y)
+            for (int x = 0; x < cmyk_frame->size().width(); ++x) {
+                // FIXME: The last three pixels do not decode right. They do not decode right in Preview.app either.
+                // Likely Photoshop wrote a slightly wrong CMYK JPEG2000:
+                // https://community.adobe.com/t5/photoshop-ecosystem-bugs/photoshop-writes-cmyk-jpeg2000-file-in-a-way-that-macos-s-preview-app-does-not-decode-correctly/idc-p/15180197
+                if (y == 100 && x >= 116)
+                    continue;
+
+                EXPECT_EQ(cmyk_frame->scanline(y)[x], ref_cmyk_frame->scanline(y)[x]);
+            }
     }
 }
 
