@@ -6,6 +6,7 @@
 
 #include <Kernel/Arch/PowerState.h>
 #include <Kernel/Arch/aarch64/RPi/Watchdog.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 
 namespace Kernel {
 
@@ -15,7 +16,8 @@ void arch_specific_reboot()
 
 void arch_specific_poweroff()
 {
-    RPi::Watchdog::the().system_shutdown();
+    if (DeviceTree::get().is_compatible_with("raspberrypi,3-model-b"sv) || DeviceTree::get().is_compatible_with("raspberrypi,4-model-b"sv))
+        RPi::Watchdog::the().system_shutdown();
 }
 
 }
