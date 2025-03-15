@@ -1625,7 +1625,8 @@ static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
         case CodingStyleDefault::ResolutionLayerComponentPosition:
             return make<JPEG2000::ResolutionLevelLayerComponentPositionProgressionIterator>(number_of_layers, max_number_of_decomposition_levels, context.siz.components.size(), move(number_of_precincts_from_resolution_level_and_component));
         case CodingStyleDefault::ResolutionPositionComponentLayer:
-        case CodingStyleDefault::PositionComponentResolutionLayer: {
+        case CodingStyleDefault::PositionComponentResolutionLayer:
+        case CodingStyleDefault::ComponentPositionResolutionLayer: {
             auto XRsiz = [&](size_t i) { return context.siz.components[i].horizontal_separation; };
             auto YRsiz = [&](size_t i) { return context.siz.components[i].vertical_separation; };
 
@@ -1658,12 +1659,14 @@ static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
                 return make<JPEG2000::ResolutionLevelPositionComponentLayerProgressionIterator>(
                     number_of_layers, max_number_of_decomposition_levels, context.siz.components.size(), move(number_of_precincts_from_resolution_level_and_component),
                     move(XRsiz), move(YRsiz), move(PPx), move(PPy), move(N_L), move(num_precincts_wide), tile.rect, move(ll_rect));
-            return make<JPEG2000::PositionComponentResolutionLevelLayerProgressionIterator>(
+            if (tile.cod.value_or(context.cod).progression_order == CodingStyleDefault::PositionComponentResolutionLayer)
+                return make<JPEG2000::PositionComponentResolutionLevelLayerProgressionIterator>(
+                    number_of_layers, context.siz.components.size(), move(number_of_precincts_from_resolution_level_and_component),
+                    move(XRsiz), move(YRsiz), move(PPx), move(PPy), move(N_L), move(num_precincts_wide), tile.rect, move(ll_rect));
+            return make<JPEG2000::ComponentPositionResolutionLevelLayerProgressionIterator>(
                 number_of_layers, context.siz.components.size(), move(number_of_precincts_from_resolution_level_and_component),
                 move(XRsiz), move(YRsiz), move(PPx), move(PPy), move(N_L), move(num_precincts_wide), tile.rect, move(ll_rect));
         }
-        case CodingStyleDefault::ComponentPositionResolutionLayer:
-            return Error::from_string_literal("JPEG2000Loader: ComponentPositionResolutionLayer progression order not yet supported");
         }
         VERIFY_NOT_REACHED();
     };
