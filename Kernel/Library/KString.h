@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
 
 namespace Kernel {

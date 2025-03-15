@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/ByteBuffer.h>
 #include <AK/FixedArray.h>
 #include <AK/MemMem.h>
 #include <AK/MemoryStream.h>

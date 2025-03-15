@@ -9,6 +9,7 @@
 #include <AK/Forward.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
+#include <LibURL/Origin.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/PermissionsPolicy/Decision.h>
 

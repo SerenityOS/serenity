@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibGfx/Matrix4x4.h>
 #include <LibWeb/Painting/InlinePaintable.h>
 #include <LibWeb/Painting/Paintable.h>
+#include <LibWeb/Painting/PaintableBox.h>
 
 namespace Web::Painting {
 

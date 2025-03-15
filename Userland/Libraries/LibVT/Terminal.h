@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <AK/Noncopyable.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibVT/CharacterSet.h>

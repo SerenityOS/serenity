@@ -10,6 +10,7 @@
 #include <AK/FlyString.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibWeb/CSS/Keyword.h>
 #include <LibWeb/CSS/PseudoClass.h>

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/EnumBits.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 namespace Web::HTML {

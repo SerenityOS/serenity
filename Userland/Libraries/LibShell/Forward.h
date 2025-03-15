@@ -66,5 +66,6 @@ class WriteRedirection;
 namespace Shell {
 
 class Shell;
+class Job;
 
 }

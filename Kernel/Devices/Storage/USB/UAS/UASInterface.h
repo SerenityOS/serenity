@@ -18,16 +18,10 @@ namespace Kernel::USB {
 class UASInterface : public RefCounted<UASInterface> {
 
     union IU {
-        // Note: As the SenseIU is of flexible size we need to forcefully allocate some data here.
-        //       The maximum size of the sense data the device may send is controlled by the
-        //       MAXIMUM SENSE DATA LENGTH field in the Control extension mode page of the device.
-        //       In theory the maximum size of the sense data is 252 bytes
-        //       Meaning the maximum size of the IU is 252+16=268 bytes
-        //       Just to be safe we allocate 512 bytes here, as the spec tells us that the
-        //       SenseIU is to not share a USB packet with any other IU, so we can just use
-        //       to the maximum packet size, which is 512 bytes (USB3 allows up to 1024 bytes)
-        u8 dummy[512] {};
-
+        // FIXME: raw accessor is here, to allow easier memcpy without compilers complaining about non trivial copy constructors
+        //        There should be a smarter way
+        //        Also default constructed, as otherwise the con/de-structors are deleted (until c++26)
+        u8 raw[512] = {};
         InformationUnitHeader header;
         CommandIU command;
         ResponseIU response;
@@ -172,7 +166,7 @@ public:
         SendSCSICommandResult result;
         result.transfer_size = transfer_size;
         result.response_size = sense_size;
-        memcpy(&result.response, &sense, sense_size);
+        memcpy(&result.response.sense, &sense.sense, sense_size);
         return result;
     }
 

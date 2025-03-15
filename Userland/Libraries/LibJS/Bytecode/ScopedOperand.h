@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <LibJS/Bytecode/Operand.h>
 

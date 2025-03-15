@@ -9,13 +9,14 @@
 #include <AK/Assertions.h>
 #include <AK/Checked.h>
 #include <AK/Concepts.h>
-#include <AK/EnumBits.h>
 #include <AK/Forward.h>
+#include <AK/Iterator.h>
 #include <AK/Optional.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringHash.h>
 #include <AK/StringUtils.h>
+#include <AK/Traits.h>
 
 namespace AK {
 

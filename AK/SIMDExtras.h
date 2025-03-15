@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/BitCast.h>
-#include <AK/Concepts.h>
 #include <AK/SIMD.h>
 
 namespace AK::SIMD {
