@@ -207,8 +207,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (auto res = Core::System::setpgid(pid, sid); res.is_error())
                 dbgln("{}", res.release_error());
 
-            if (auto res = Core::System::setsid(); res.is_error())
+            if (auto res = Core::System::setsid(); res.is_error()) {
                 dbgln("{}", res.release_error());
+            } else {
+                TRY(Core::System::exec(arguments.strings.first(), arguments.strings, Core::System::SearchInPath::No));
+                VERIFY_NOT_REACHED();
+            }
         }
     }
 
