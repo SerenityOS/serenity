@@ -11,11 +11,12 @@
 
 namespace HID {
 
+struct ApplicationCollection;
 struct ParsedReportDescriptor;
 struct Field;
 
 // The maximum field size is 32 bits. Fields can be signed or unsigned.
 // Use an i64 for the field value so it can fit all possible field values without having the caller convert it to a signed int.
-ErrorOr<void> parse_input_report(ParsedReportDescriptor const&, ReadonlyBytes, Function<ErrorOr<IterationDecision>(Field const&, i64)>);
+ErrorOr<void> parse_input_report(ParsedReportDescriptor const&, ApplicationCollection const&, ReadonlyBytes, Function<ErrorOr<IterationDecision>(Field const&, i64)>);
 
 }

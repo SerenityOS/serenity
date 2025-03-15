@@ -254,10 +254,6 @@ ErrorOr<ParsedReportDescriptor> ReportDescriptorParser::parse()
 
                 auto collection_type = static_cast<CollectionType>(TRY(m_stream.read_item_data_unsigned(item_header)));
 
-                Collection new_collection {};
-                new_collection.parent = m_current_collection;
-                new_collection.type = collection_type;
-
                 // 6.2.2.6 Collection, End Collection Items: "[A] Usage item tag must be associated with any collection [...]."
                 if (m_current_item_state_table.local.usages.size() == 0)
                     return Error::from_string_view_or_print_error_and_return_errno("Collection item without a preceding Usage item"sv, EINVAL);
@@ -265,12 +261,28 @@ ErrorOr<ParsedReportDescriptor> ReportDescriptorParser::parse()
                 if (m_current_item_state_table.local.usages.size() > 1)
                     return Error::from_string_view_or_print_error_and_return_errno("Collection item with multiple usages"sv, EINVAL);
 
-                new_collection.usage = m_current_item_state_table.local.usages.first();
+                auto usage = m_current_item_state_table.local.usages.first();
 
                 if (m_current_collection == nullptr) {
-                    TRY(m_parsed.top_level_collections.try_empend(move(new_collection)));
-                    m_current_collection = &m_parsed.top_level_collections.last();
+                    // 8.4 Report Constraints: "Each top level collection must be an application collection and reports may not span more than one top level collection."
+                    // FIXME: Maybe also check for the second condition somehow? We also expect that behaviour, as each ApplicationCollection has a HashMap of its reports.
+                    if (collection_type != CollectionType::Application)
+                        return Error::from_string_view_or_print_error_and_return_errno("Top-level collection with type != Application"sv, EINVAL);
+
+                    ApplicationCollection new_collection {};
+                    new_collection.parent = m_current_collection;
+                    new_collection.type = collection_type;
+                    new_collection.usage = usage;
+
+                    TRY(m_parsed.application_collections.try_empend(move(new_collection)));
+                    m_current_collection = &m_parsed.application_collections.last();
+                    m_current_application_collection = &m_parsed.application_collections.last();
                 } else {
+                    Collection new_collection {};
+                    new_collection.parent = m_current_collection;
+                    new_collection.type = collection_type;
+                    new_collection.usage = usage;
+
                     TRY(m_current_collection->child_collections.try_empend(move(new_collection)));
                     m_current_collection = &m_current_collection->child_collections.last();
                 }
@@ -461,6 +473,9 @@ ErrorOr<void> ReportDescriptorParser::add_report_fields(FieldType field_type, It
     if (m_current_collection == nullptr)
         return Error::from_string_view_or_print_error_and_return_errno("Input item without a preceding collection item"sv, EINVAL);
 
+    // We always should have a current application collection if m_current_collection != nullptr.
+    VERIFY(m_current_application_collection != nullptr);
+
     if (m_current_item_state_table.local.usage_minimum.has_value() && !m_current_item_state_table.local.usage_maximum.has_value())
         return Error::from_string_view_or_print_error_and_return_errno("Usage Minimum item without a corresponding Usage Maximum item"sv, EINVAL);
 
@@ -487,11 +502,11 @@ ErrorOr<void> ReportDescriptorParser::add_report_fields(FieldType field_type, It
     auto& report_map = [this, field_type] -> HashMap<u8, Report>& {
         switch (field_type) {
         case FieldType::Input:
-            return m_parsed.input_reports;
+            return m_current_application_collection->input_reports;
         case FieldType::Output:
-            return m_parsed.output_reports;
+            return m_current_application_collection->output_reports;
         case FieldType::Feature:
-            return m_parsed.feature_reports;
+            return m_current_application_collection->feature_reports;
         }
         VERIFY_NOT_REACHED();
     }();
