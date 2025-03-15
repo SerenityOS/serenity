@@ -17,6 +17,7 @@ template void ProcessorBase<Processor>::smp_enable();
 template void ProcessorBase<Processor>::flush_tlb_local(VirtualAddress vaddr, size_t page_count);
 template void ProcessorBase<Processor>::flush_entire_tlb_local();
 template void ProcessorBase<Processor>::flush_tlb(Memory::PageDirectory const*, VirtualAddress, size_t);
+template void ProcessorBase<Processor>::flush_instruction_cache(VirtualAddress vaddr, size_t byte_count);
 template void ProcessorBase<Processor>::early_initialize(u32 cpu);
 template void ProcessorBase<Processor>::initialize(u32 cpu);
 template void ProcessorBase<Processor>::halt();

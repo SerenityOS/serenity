@@ -853,6 +853,12 @@ void ProcessorBase<T>::flush_tlb(Memory::PageDirectory const* page_directory, Vi
         flush_tlb_local(vaddr, page_count);
 }
 
+template<typename T>
+void ProcessorBase<T>::flush_instruction_cache(VirtualAddress, size_t)
+{
+    // The instruction and data cache are coherent on x86, so we don't need to do anything here.
+}
+
 void Processor::smp_return_to_pool(ProcessorMessage& msg)
 {
     ProcessorMessage* next = nullptr;
