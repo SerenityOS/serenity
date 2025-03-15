@@ -84,6 +84,7 @@ set(AK_TEST_SOURCES
     TestStringFloatingPointConversions.cpp
     TestStringUtils.cpp
     TestStringView.cpp
+    TestSyncGenerator.cpp
     TestDuration.cpp
     TestTrie.cpp
     TestTuple.cpp
