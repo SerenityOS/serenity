@@ -168,6 +168,13 @@ void ProcessorBase<T>::flush_tlb(Memory::PageDirectory const*, VirtualAddress va
 }
 
 template<typename T>
+void ProcessorBase<T>::flush_instruction_cache(VirtualAddress, size_t)
+{
+    // FIXME: Use the SBI RFENCE extension to flush the instruction cache of other harts when we support SMP on riscv64.
+    asm volatile("fence.i" ::: "memory");
+}
+
+template<typename T>
 u32 ProcessorBase<T>::clear_critical()
 {
     InterruptDisabler disabler;

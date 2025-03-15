@@ -97,6 +97,12 @@ void ProcessorBase<T>::flush_tlb(Memory::PageDirectory const*, VirtualAddress va
 }
 
 template<typename T>
+void ProcessorBase<T>::flush_instruction_cache(VirtualAddress vaddr, size_t byte_count)
+{
+    __builtin___clear_cache(reinterpret_cast<char*>(vaddr.as_ptr()), reinterpret_cast<char*>(vaddr.offset(byte_count).as_ptr()));
+}
+
+template<typename T>
 u32 ProcessorBase<T>::clear_critical()
 {
     InterruptDisabler disabler;

@@ -69,6 +69,8 @@ public:
     static void flush_tlb_local(VirtualAddress vaddr, size_t page_count);
     static void flush_tlb(Memory::PageDirectory const*, VirtualAddress, size_t);
 
+    static void flush_instruction_cache(VirtualAddress vaddr, size_t byte_count);
+
     void early_initialize(u32 cpu);
     void initialize(u32 cpu);
     ALWAYS_INLINE static bool is_initialized();
