@@ -942,7 +942,7 @@ void MainWidget::update_html_preview()
 
 void MainWidget::update_gemtext_preview()
 {
-    auto document = Gemini::Document::parse(m_editor->text(), {});
+    auto document = Gemini::Document::parse(m_editor->text());
     auto html = document->render_to_html();
     m_page_view->load_html(html);
 }
