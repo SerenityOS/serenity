@@ -62,12 +62,12 @@ public:
 
 class Link : public Line {
 public:
-    Link(ByteString line, Document const&);
+    Link(ByteString line);
     virtual ~Link() override = default;
     virtual ByteString render_to_html() const override;
 
 private:
-    URL::URL m_url;
+    ByteString m_url;
     ByteString m_name;
 };
 

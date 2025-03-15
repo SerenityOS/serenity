@@ -52,7 +52,7 @@ ByteString Control::render_to_html() const
     }
 }
 
-Link::Link(ByteString text, Document const& document)
+Link::Link(ByteString text)
     : Line(move(text))
 {
     size_t index = 2;
@@ -68,16 +68,16 @@ Link::Link(ByteString text, Document const& document)
             ++offset;
         m_name = url_string.substring_view(offset, url_string.length() - offset);
     }
-    m_url = document.url().complete_url(url);
+    m_url = url.trim_whitespace();
     if (m_name.is_empty())
-        m_name = m_url.to_byte_string();
+        m_name = m_url;
 }
 
 ByteString Link::render_to_html() const
 {
     StringBuilder builder;
     builder.append("<a href=\""sv);
-    builder.append(escape_html_entities(m_url.to_byte_string()));
+    builder.append(escape_html_entities(m_url));
     builder.append("\">"sv);
     builder.append(escape_html_entities(m_name));
     builder.append("</a><br>\n"sv);

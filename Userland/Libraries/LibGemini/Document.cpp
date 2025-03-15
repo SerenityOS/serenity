@@ -74,7 +74,7 @@ void Document::read_lines(StringView source)
         close_list_if_needed();
 
         if (line.starts_with("=>"sv)) {
-            m_lines.append(make<Link>(move(line), *this));
+            m_lines.append(make<Link>(move(line)));
             continue;
         }
 
