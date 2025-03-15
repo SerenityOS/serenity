@@ -1505,7 +1505,6 @@ static Neighborhood retrieve_neighborhood(Channel const& channel, u32 x, u32 y)
 
 static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& stream,
     Span<IntSize> channels_info,
-    ImageMetadata const& metadata,
     Optional<EntropyDecoder>& decoder,
     MATree const& global_tree)
 {
@@ -1534,12 +1533,12 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
     if (!modular_data.use_global_tree)
         TODO();
 
-    // where dist_multiplier is set to the largest channel width amongst all channels
-    // that are to be decoded, excluding the meta-channels.
+    // where the dist_multiplier from C.3.3 is set to the largest channel width amongst all channels
+    // that are to be decoded.
     auto const dist_multiplier = [&]() {
         u32 dist_multiplier {};
-        // FIXME: This should start at nb_meta_channels not 0
-        for (u16 i = 0; i < metadata.number_of_channels(); ++i) {
+        // FIXME: Only consider the channels that are to be decoded.
+        for (u32 i = 0; i < modular_data.channels.size(); ++i) {
             if (modular_data.channels[i].width() > dist_multiplier)
                 dist_multiplier = modular_data.channels[i].width();
         }
@@ -1625,7 +1624,7 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
     auto channels = TRY(FixedArray<IntSize>::create(num_channels));
     channels.fill_with(frame_size);
 
-    global_modular.modular_data = TRY(read_modular_bitstream(stream, channels, metadata, entropy_decoder, global_modular.ma_tree));
+    global_modular.modular_data = TRY(read_modular_bitstream(stream, channels, entropy_decoder, global_modular.ma_tree));
 
     return global_modular;
 }
