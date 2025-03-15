@@ -38,6 +38,9 @@ concept Enum = IsEnum<T>;
 template<typename T, typename U>
 concept SameAs = IsSame<T, U>;
 
+template<typename T, typename U>
+concept SameAsIgnoringCVReference = IsSameIgnoringCV<RemoveReference<T>, RemoveReference<U>>;
+
 template<class From, class To>
 concept ConvertibleTo = IsConvertible<From, To>;
 
@@ -182,6 +185,7 @@ using AK::Concepts::IteratorPairWith;
 using AK::Concepts::OneOf;
 using AK::Concepts::OneOfIgnoringCV;
 using AK::Concepts::SameAs;
+using AK::Concepts::SameAsIgnoringCVReference;
 using AK::Concepts::Signed;
 using AK::Concepts::SpecializationOf;
 using AK::Concepts::Unsigned;
