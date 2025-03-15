@@ -707,6 +707,7 @@ TEST_CASE(test_jpeg2000_decode)
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-tile4x2-cblk4x16-tp3-layers3-res2.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog1-tile4x2-cblk4x16-tp3-layers3-res2.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog2-tile4x2-cblk4x16-tp3-layers3-res2.jp2"sv),
+        TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog3-tile4x2-cblk4x16-tp3-layers3-res2.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-01-bypass.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-01-bypass-layers.jp2"sv),
         TEST_INPUT("jpeg2000/jasper-rgba-u8-cbstyle-01-bypass-finer-layers.jp2"sv),
@@ -946,7 +947,6 @@ TEST_CASE(test_jpeg2000_decode_unsupported)
         TEST_INPUT("jpeg2000/openjpeg-lossless-RGN.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-bgra-u8.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-tile-part-index-overflow.jp2"sv),
-        TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog3-tile4x2-cblk4x16-tp3-layers3-res2.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog4-tile4x2-cblk4x16-tp3-layers3-res2.jp2"sv),
 
         // FIXME: See FIXME in JPEG2000ColorSpecificationBox::read_from_stream() for lab.
@@ -1075,6 +1075,39 @@ TEST_CASE(test_jpeg2000_progression_iterators)
         for (int resolution_level = 0; resolution_level <= max_number_of_decomposition_levels; ++resolution_level)
             for (int precinct = 0; precinct < precinct_count_number; ++precinct)
                 for (int component = 0; component < component_count; ++component)
+                    for (int layer = 0; layer < layer_count; ++layer) {
+                        EXPECT(iterator.has_next());
+                        EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = layer, .resolution_level = resolution_level, .component = component, .precinct = precinct }));
+                    }
+        EXPECT(!iterator.has_next());
+    }
+
+    {
+        int const layer_count = 2;
+        int const max_number_of_decomposition_levels = 2;
+        int const component_count = 4;
+        int const precinct_count_number = 5;
+        auto precinct_count = [](int, int) { return precinct_count_number; };
+
+        Gfx::IntRect tile_rect { 0, 0, 5 * 32, 32 };
+        auto XRsiz = [&](size_t) { return 1; };
+        auto YRsiz = [&](size_t) { return 1; };
+
+        auto PPx = [&](int r, int) { return 5 - (max_number_of_decomposition_levels - r); };
+        auto PPy = [&](int r, int) { return 5 - (max_number_of_decomposition_levels - r); };
+        auto N_L = [&](int) { return max_number_of_decomposition_levels; };
+        auto num_precincts_wide = [&](int, int) { return precinct_count_number; };
+        auto ll_rect = [&](int r, int) {
+            return tile_rect / (1 << (max_number_of_decomposition_levels - r));
+        };
+        Gfx::JPEG2000::PositionComponentResolutionLevelLayerProgressionIterator iterator {
+            layer_count, component_count, move(precinct_count),
+            move(XRsiz), move(YRsiz), move(PPx), move(PPy), move(N_L), move(num_precincts_wide), tile_rect, move(ll_rect)
+        };
+
+        for (int precinct = 0; precinct < precinct_count_number; ++precinct)
+            for (int component = 0; component < component_count; ++component)
+                for (int resolution_level = 0; resolution_level <= max_number_of_decomposition_levels; ++resolution_level)
                     for (int layer = 0; layer < layer_count; ++layer) {
                         EXPECT(iterator.has_next());
                         EXPECT_EQ(iterator.next(), (Gfx::JPEG2000::ProgressionData { .layer = layer, .resolution_level = resolution_level, .component = component, .precinct = precinct }));
