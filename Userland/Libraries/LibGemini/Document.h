@@ -32,20 +32,16 @@ class Document : public RefCounted<Document> {
 public:
     ByteString render_to_html() const;
 
-    static NonnullRefPtr<Document> parse(StringView source, const URL::URL&);
-
-    const URL::URL& url() const { return m_url; }
+    static NonnullRefPtr<Document> parse(StringView source);
 
 private:
-    explicit Document(const URL::URL& url)
-        : m_url(url)
+    explicit Document()
     {
     }
 
     void read_lines(StringView);
 
     Vector<NonnullOwnPtr<Line>> m_lines;
-    URL::URL m_url;
     bool m_inside_preformatted_block { false };
     bool m_inside_unordered_list { false };
 };

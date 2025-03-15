@@ -111,7 +111,7 @@ static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOM::Document>> load_gemtext_documen
     return create_document_for_inline_content(navigation_params.navigable.ptr(), navigation_params.id, [&](DOM::Document& document) {
         auto& realm = document.realm();
         auto process_body = JS::create_heap_function(realm.heap(), [&document, url = navigation_params.response->url().value()](ByteBuffer data) {
-            auto gemtext_document = Gemini::Document::parse(data, {});
+            auto gemtext_document = Gemini::Document::parse(data);
 
             auto parser = HTML::HTMLParser::create(document, gemtext_document->render_to_html(), "utf-8"sv);
             parser->run(url);

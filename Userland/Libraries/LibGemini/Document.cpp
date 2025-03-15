@@ -17,9 +17,6 @@ ByteString Document::render_to_html() const
 {
     StringBuilder html_builder;
     html_builder.append("<!DOCTYPE html>\n<html>\n"sv);
-    html_builder.append("<head>\n<title>"sv);
-    html_builder.append(m_url.serialize_path());
-    html_builder.append("</title>\n</head>\n"sv);
     html_builder.append("<body>\n"sv);
     for (auto& line : m_lines) {
         html_builder.append(line->render_to_html());
@@ -29,9 +26,9 @@ ByteString Document::render_to_html() const
     return html_builder.to_byte_string();
 }
 
-NonnullRefPtr<Document> Document::parse(StringView lines, const URL::URL& url)
+NonnullRefPtr<Document> Document::parse(StringView lines)
 {
-    auto document = adopt_ref(*new Document(url));
+    auto document = adopt_ref(*new Document());
     document->read_lines(lines);
     return document;
 }
