@@ -49,7 +49,7 @@ ErrorOr<size_t> MouseDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer&
         auto packet = m_queue.dequeue();
 
         dbgln_if(MOUSE_DEBUG, "Mouse Read: Buttons {:x}", packet.buttons);
-        dbgln_if(MOUSE_DEBUG, "Mouse: X {}, Y {}, Z {}, W {}, Relative {}", packet.x, packet.y, packet.z, packet.w, packet.buttons);
+        dbgln_if(MOUSE_DEBUG, "Mouse: X {}, Y {}, Z {}, W {}, Relative {}", packet.x, packet.y, packet.z, packet.w, packet.is_relative);
         dbgln_if(MOUSE_DEBUG, "Mouse Read: Filter packets");
 
         size_t bytes_read_from_packet = min(remaining_space_in_buffer, sizeof(MousePacket));
