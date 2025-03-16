@@ -43,6 +43,7 @@ write_cmake_config("kernel_debug_gen") {
     "FORK_DEBUG=",
     "FUTEX_DEBUG=",
     "FUTEXQUEUE_DEBUG=",
+    "HID_DEBUG=",
     "HPET_COMPARATOR_DEBUG=",
     "HPET_DEBUG=",
     "ICMP_DEBUG=",
