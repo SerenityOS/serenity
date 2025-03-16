@@ -68,7 +68,7 @@ ALWAYS_INLINE void clear_bits(Address address, FlatPtr bit_mask)
 }
 
 // 4.1.11 Supervisor Address Translation and Protection (satp) Register
-struct [[gnu::packed]] alignas(u64) SATP {
+struct SATP {
     enum class Mode : u64 {
         Bare = 0,
         Sv39 = 8,
@@ -95,15 +95,12 @@ struct [[gnu::packed]] alignas(u64) SATP {
         return bit_cast<SATP>(CSR::read(CSR::Address::SATP));
     }
 
-    bool operator==(SATP const& other) const
-    {
-        return bit_cast<u64>(*this) == bit_cast<u64>(other);
-    }
+    bool operator==(SATP const& other) const = default;
 };
 static_assert(AssertSize<SATP, 8>());
 
 // 4.1.1 Supervisor Status Register (sstatus)
-struct [[gnu::packed]] alignas(u64) SSTATUS {
+struct SSTATUS {
     // Useful for CSR::{set,clear}_bits
     enum class Offset {
         SIE = 1,
