@@ -88,6 +88,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`freeciv`](freeciv/)                         | Freeciv                                                       | 3.1.1                    | http://freeciv.org/                                                  |
 | [`freedink`](freedink/)                       | FreeDink                                                      | 109.6                    | https://www.gnu.org/software/freedink/                               |
 | [`freetype`](freetype/)                       | FreeType                                                      | 2.13.2                   | https://www.freetype.org/                                            |
+| [`fribidi`](fribidi/)                         | GNU FriBidi                                                   | 1.0.16                   | https://github.com/fribidi/fribidi                                   |
 | [`frotz`](frotz/)                             | Frotz                                                         | 2.54                     | https://gitlab.com/DavidGriffith/frotz                               |
 | [`gawk`](gawk/)                               | GNU awk                                                       | 5.3.1                    | https://www.gnu.org/software/gawk/                                   |
 | [`gcc`](gcc/)                                 | GNU Compiler Collection                                       | 13.2.0                   | https://gcc.gnu.org/                                                 |
