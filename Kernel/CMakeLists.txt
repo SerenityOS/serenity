@@ -106,6 +106,7 @@ set(KERNEL_SOURCES
     Devices/GPU/VirtIO/Console.cpp
     Devices/GPU/VirtIO/GPU3DDevice.cpp
     Devices/GPU/VirtIO/GraphicsAdapter.cpp
+    Devices/Input/HID/Device.cpp
     Devices/Input/KeyboardDevice.cpp
     Devices/Input/Management.cpp
     Devices/Input/MouseDevice.cpp
@@ -616,6 +617,11 @@ set(ELF_SOURCES
     ../Userland/Libraries/LibELF/Validation.cpp
 )
 
+set(HID_SOURCES
+    ../Userland/Libraries/LibHID/ReportDescriptorParser.cpp
+    ../Userland/Libraries/LibHID/ReportParser.cpp
+)
+
 add_custom_command(
     COMMAND "${SerenityOS_SOURCE_DIR}/Kernel/generate-version-file.sh" "${CMAKE_CURRENT_BINARY_DIR}/Version.h.tmp"
     COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/Version.h.tmp" "${CMAKE_CURRENT_BINARY_DIR}/Version.h"
@@ -805,6 +811,7 @@ set(SOURCES
     ${DT_SOURCES}
     ${EDID_SOURCES}
     ${ELF_SOURCES}
+    ${HID_SOURCES}
     ${VT_SOURCES}
     ${CRYPTO_SOURCES}
     ${PARTITION_SOURCES}
