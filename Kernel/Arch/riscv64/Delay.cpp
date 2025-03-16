@@ -18,10 +18,10 @@ void microseconds_delay(u32 microseconds)
 {
     VERIFY(s_timebase_frequency != 0);
 
-    u64 const start = RISCV64::CSR::read(RISCV64::CSR::Address::TIME);
+    u64 const start = RISCV64::CSR::read<RISCV64::CSR::Address::TIME>();
     u64 const delta = (static_cast<u64>(microseconds) * s_timebase_frequency) / 1'000'000ull;
 
-    while ((RISCV64::CSR::read(RISCV64::CSR::Address::TIME) - start) < delta)
+    while ((RISCV64::CSR::read<RISCV64::CSR::Address::TIME>() - start) < delta)
         Processor::pause();
 }
 
