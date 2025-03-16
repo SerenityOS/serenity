@@ -12,6 +12,7 @@
 
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Arch/DeferredCallPool.h>
+#include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 #include <Kernel/Arch/riscv64/CSR.h>
 #include <Kernel/Memory/VirtualAddress.h>
