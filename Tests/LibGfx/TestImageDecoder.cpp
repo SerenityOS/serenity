@@ -943,6 +943,7 @@ TEST_CASE(test_jpeg2000_decode_unsupported)
     Array test_inputs = {
         TEST_INPUT("jpeg2000/kakadu-lossless-cmyka-u8-prog1-layers1-res6.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-bgra-u8.jp2"sv),
+        TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-tile-part-index-overflow.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog2-tile4x2-cblk4x16-tp3-layers3-res2.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog3-tile4x2-cblk4x16-tp3-layers3-res2.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog4-tile4x2-cblk4x16-tp3-layers3-res2.jp2"sv),
