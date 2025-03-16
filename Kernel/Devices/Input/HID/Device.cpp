@@ -8,6 +8,7 @@
 #include <Kernel/Devices/Input/HID/Definitions.h>
 #include <Kernel/Devices/Input/HID/Device.h>
 #include <Kernel/Devices/Input/HID/KeyboardDriver.h>
+#include <Kernel/Devices/Input/HID/MouseDriver.h>
 
 namespace Kernel::HID {
 
@@ -39,6 +40,12 @@ ErrorOr<void> Device::initialize()
         case Keyboard: {
             auto keyboard_handler = TRY(HID::KeyboardDriver::create(*this, application_collection));
             m_application_collection_handlers.append(move(keyboard_handler));
+            break;
+        }
+
+        case Mouse: {
+            auto mouse_handler = TRY(HID::MouseDriver::create(*this, application_collection));
+            m_application_collection_handlers.append(move(mouse_handler));
             break;
         }
 

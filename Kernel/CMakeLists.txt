@@ -109,6 +109,7 @@ set(KERNEL_SOURCES
     Devices/GPU/VirtIO/GraphicsAdapter.cpp
     Devices/Input/HID/Device.cpp
     Devices/Input/HID/KeyboardDriver.cpp
+    Devices/Input/HID/MouseDriver.cpp
     Devices/Input/KeyboardDevice.cpp
     Devices/Input/Management.cpp
     Devices/Input/MouseDevice.cpp

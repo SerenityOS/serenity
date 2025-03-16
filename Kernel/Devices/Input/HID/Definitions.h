@@ -23,6 +23,9 @@ enum class Usage : u32 {
     // https://usb.org/sites/default/files/hut1_6.pdf#chapter.4
     Mouse = 0x0001'0002,
     Keyboard = 0x0001'0006,
+    X = 0x0001'0030,
+    Y = 0x0001'0031,
+    Wheel = 0x0001'0038,
 
     // Keyboard/Keypad Page (0x07)
     // https://usb.org/sites/default/files/hut1_6.pdf#chapter.10
@@ -37,6 +40,19 @@ enum class Usage : u32 {
     KeyboardRightShift = 0x0007'00e5,
     KeyboardRightAlt = 0x0007'00e6,
     KeyboardRightGUI = 0x0007'00e7,
+
+    // Button Page (0x09)
+    // https://usb.org/sites/default/files/hut1_6.pdf#chapter.12
+    NoButtonPressed = 0x0009'0000,
+    Button1 = 0x0009'0001,
+    Button2 = 0x0009'0002,
+    Button3 = 0x0009'0003,
+    Button4 = 0x0009'0004,
+    Button5 = 0x0009'0005,
+
+    // Consumer Page (0x0c)
+    // https://usb.org/sites/default/files/hut1_6.pdf#chapter.15
+    ACPan = 0x000c'0238,
 };
 
 }
