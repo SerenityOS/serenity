@@ -142,13 +142,13 @@ ALWAYS_INLINE bool ProcessorBase<T>::are_interrupts_enabled()
 template<typename T>
 ALWAYS_INLINE void ProcessorBase<T>::enable_interrupts()
 {
-    RISCV64::CSR::set_bits(RISCV64::CSR::Address::SSTATUS, 1 << to_underlying(RISCV64::CSR::SSTATUS::Offset::SIE));
+    RISCV64::CSR::set_bits<RISCV64::CSR::Address::SSTATUS>(RISCV64::CSR::SSTATUS::Bit::SIE);
 }
 
 template<typename T>
 ALWAYS_INLINE void ProcessorBase<T>::disable_interrupts()
 {
-    RISCV64::CSR::clear_bits(RISCV64::CSR::Address::SSTATUS, 1 << to_underlying(RISCV64::CSR::SSTATUS::Offset::SIE));
+    RISCV64::CSR::clear_bits<RISCV64::CSR::Address::SSTATUS>(RISCV64::CSR::SSTATUS::Bit::SIE);
 }
 
 template<typename T>
@@ -204,7 +204,7 @@ ALWAYS_INLINE void ProcessorBase<T>::wait_check()
 template<typename T>
 ALWAYS_INLINE Optional<u64> ProcessorBase<T>::read_cycle_count()
 {
-    return RISCV64::CSR::read(RISCV64::CSR::Address::CYCLE);
+    return RISCV64::CSR::read<RISCV64::CSR::Address::CYCLE>();
 }
 
 }

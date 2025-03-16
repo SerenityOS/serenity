@@ -10,14 +10,14 @@
 namespace Kernel {
 
 SmapDisabler::SmapDisabler()
-    : m_flags(RISCV64::CSR::read_and_set_bits(RISCV64::CSR::Address::SSTATUS, 1 << to_underlying(RISCV64::CSR::SSTATUS::Offset::SUM)))
+    : m_flags(RISCV64::CSR::read_and_set_bits<RISCV64::CSR::Address::SSTATUS>(to_underlying(RISCV64::CSR::SSTATUS::Bit::SUM)))
 {
 }
 
 SmapDisabler::~SmapDisabler()
 {
-    if ((m_flags & (1 << to_underlying(RISCV64::CSR::SSTATUS::Offset::SUM))) == 0)
-        RISCV64::CSR::clear_bits(RISCV64::CSR::Address::SSTATUS, 1 << to_underlying(RISCV64::CSR::SSTATUS::Offset::SUM));
+    if ((m_flags & to_underlying(RISCV64::CSR::SSTATUS::Bit::SUM)) == 0)
+        RISCV64::CSR::clear_bits<RISCV64::CSR::Address::SSTATUS>(RISCV64::CSR::SSTATUS::Bit::SUM);
 }
 
 }

@@ -35,7 +35,7 @@ UNMAP_AFTER_INIT void PLIC::initialize()
     // Initialize priority-threshold to 0 (accept any interrupt of priority 1 or above)
     m_registers->contexts[m_boot_hart_supervisor_mode_context_id].priority_threshold = 0;
     // Enable external interrupts in the current hart
-    RISCV64::CSR::set_bits(RISCV64::CSR::Address::SIE, 1 << (to_underlying(RISCV64::CSR::SCAUSE::SupervisorExternalInterrupt) & ~RISCV64::CSR::SCAUSE_INTERRUPT_MASK));
+    RISCV64::CSR::set_bits<RISCV64::CSR::Address::SIE>(RISCV64::CSR::SIE::SupervisorExternalInterrupt);
 }
 
 void PLIC::enable(GenericInterruptHandler const& handler)
