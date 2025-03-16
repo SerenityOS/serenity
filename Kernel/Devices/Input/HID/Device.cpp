@@ -7,6 +7,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/Input/HID/Definitions.h>
 #include <Kernel/Devices/Input/HID/Device.h>
+#include <Kernel/Devices/Input/HID/KeyboardDriver.h>
 
 namespace Kernel::HID {
 
@@ -35,6 +36,12 @@ ErrorOr<void> Device::initialize()
 
         using enum HID::Usage;
         switch (static_cast<HID::Usage>(application_collection.usage)) {
+        case Keyboard: {
+            auto keyboard_driver = TRY(HID::KeyboardDriver::create(*this, application_collection));
+            m_application_collection_drivers.append(move(keyboard_driver));
+            break;
+        }
+
         default:
             dbgln_if(HID_DEBUG, "HID: Unsupported Application Collection Usage: {:#x}", application_collection.usage);
             continue;
