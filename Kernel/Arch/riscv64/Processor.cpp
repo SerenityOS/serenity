@@ -125,7 +125,7 @@ void ProcessorBase<T>::initialize(u32)
 
     store_fpu_state(&s_clean_fpu_state);
 
-    RISCV64::CSR::write(RISCV64::CSR::Address::STVEC, bit_cast<FlatPtr>(+asm_trap_handler));
+    RISCV64::CSR::write<RISCV64::CSR::Address::STVEC>(bit_cast<FlatPtr>(+asm_trap_handler));
 
     initialize_interrupts();
 }
@@ -135,7 +135,7 @@ template<typename T>
 {
     // WFI ignores the value of sstatus.SIE, so we can't use disable_interrupts().
     // Instead, disable all interrupts sources by setting sie to zero.
-    RISCV64::CSR::write(RISCV64::CSR::Address::SIE, 0);
+    RISCV64::CSR::write<RISCV64::CSR::Address::SIE>(0);
     for (;;)
         asm volatile("wfi");
 }

@@ -20,7 +20,7 @@ Timer::Timer()
     m_interrupt_interval = m_frequency / OPTIMAL_TICKS_PER_SECOND_RATE;
 
     set_compare(current_ticks() + m_interrupt_interval);
-    RISCV64::CSR::set_bits(RISCV64::CSR::Address::SIE, 1 << (to_underlying(CSR::SCAUSE::SupervisorTimerInterrupt) & ~CSR::SCAUSE_INTERRUPT_MASK));
+    RISCV64::CSR::set_bits<RISCV64::CSR::Address::SIE>(CSR::SIE::SupervisorTimerInterrupt);
 }
 
 NonnullLockRefPtr<Timer> Timer::initialize()
@@ -39,7 +39,7 @@ Timer& Timer::the()
 
 u64 Timer::current_ticks()
 {
-    return RISCV64::CSR::read(RISCV64::CSR::Address::TIME);
+    return RISCV64::CSR::read<RISCV64::CSR::Address::TIME>();
 }
 
 void Timer::handle_interrupt()
@@ -51,7 +51,7 @@ void Timer::handle_interrupt()
 
 void Timer::disable()
 {
-    RISCV64::CSR::clear_bits(RISCV64::CSR::Address::SIE, 1 << (to_underlying(CSR::SCAUSE::SupervisorTimerInterrupt) & ~CSR::SCAUSE_INTERRUPT_MASK));
+    RISCV64::CSR::clear_bits<RISCV64::CSR::Address::SIE>(CSR::SIE::SupervisorTimerInterrupt);
 }
 
 u64 Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)

@@ -34,7 +34,8 @@ enum class Address : u16 {
     TIME = 0xc01,
 };
 
-ALWAYS_INLINE FlatPtr read(Address address)
+template<Address address>
+ALWAYS_INLINE FlatPtr read()
 {
     FlatPtr ret;
     asm volatile("csrr %0, %1"
@@ -43,12 +44,14 @@ ALWAYS_INLINE FlatPtr read(Address address)
     return ret;
 }
 
-ALWAYS_INLINE void write(Address address, FlatPtr value)
+template<Address address>
+ALWAYS_INLINE void write(FlatPtr value)
 {
     asm volatile("csrw %0, %1" ::"i"(address), "Kr"(value));
 }
 
-ALWAYS_INLINE FlatPtr read_and_set_bits(Address address, FlatPtr bit_mask)
+template<Address address>
+ALWAYS_INLINE FlatPtr read_and_set_bits(FlatPtr bit_mask)
 {
     FlatPtr ret;
     asm volatile("csrrs %0, %1, %2"
@@ -57,12 +60,16 @@ ALWAYS_INLINE FlatPtr read_and_set_bits(Address address, FlatPtr bit_mask)
     return ret;
 }
 
-ALWAYS_INLINE void set_bits(Address address, FlatPtr bit_mask)
+template<Address address, Enum E>
+requires(IsSame<UnderlyingType<E>, FlatPtr>)
+ALWAYS_INLINE void set_bits(E bit_mask)
 {
     asm volatile("csrs %0, %1" ::"i"(address), "Kr"(bit_mask));
 }
 
-ALWAYS_INLINE void clear_bits(Address address, FlatPtr bit_mask)
+template<Address address, Enum E>
+requires(IsSame<UnderlyingType<E>, FlatPtr>)
+ALWAYS_INLINE void clear_bits(E bit_mask)
 {
     asm volatile("csrc %0, %1" ::"i"(address), "Kr"(bit_mask));
 }
@@ -87,12 +94,12 @@ struct SATP {
 
     static ALWAYS_INLINE void write(SATP satp)
     {
-        CSR::write(CSR::Address::SATP, bit_cast<FlatPtr>(satp));
+        CSR::write<Address::SATP>(bit_cast<FlatPtr>(satp));
     }
 
     static ALWAYS_INLINE SATP read()
     {
-        return bit_cast<SATP>(CSR::read(CSR::Address::SATP));
+        return bit_cast<SATP>(CSR::read<Address::SATP>());
     }
 
     bool operator==(SATP const& other) const = default;
@@ -102,18 +109,18 @@ static_assert(AssertSize<SATP, 8>());
 // 4.1.1 Supervisor Status Register (sstatus)
 struct SSTATUS {
     // Useful for CSR::{set,clear}_bits
-    enum class Offset {
-        SIE = 1,
-        SPIE = 5,
-        UBE = 6,
-        SPP = 8,
-        VS = 9,
-        FS = 13,
-        XS = 15,
-        SUM = 18,
-        MXR = 19,
-        UXL = 32,
-        SD = 63,
+    enum class Bit : u64 {
+        SIE = 1 << 1,
+        SPIE = 1 << 5,
+        UBE = 1 << 6,
+        SPP = 1 << 8,
+        VS = 1 << 9,
+        FS = 1 << 13,
+        XS = 1 << 15,
+        SUM = 1 << 18,
+        MXR = 1 << 19,
+        UXL = 1ull << 32,
+        SD = 1ull << 63,
     };
 
     enum class PrivilegeMode : u64 {
@@ -210,12 +217,12 @@ struct SSTATUS {
 
     static ALWAYS_INLINE void write(SSTATUS sstatus)
     {
-        CSR::write(CSR::Address::SSTATUS, bit_cast<FlatPtr>(sstatus));
+        CSR::write<Address::SSTATUS>(bit_cast<FlatPtr>(sstatus));
     }
 
     static ALWAYS_INLINE SSTATUS read()
     {
-        return bit_cast<SSTATUS>(CSR::read(CSR::Address::SSTATUS));
+        return bit_cast<SSTATUS>(CSR::read<Address::SSTATUS>());
     }
 };
 static_assert(AssertSize<SSTATUS, 8>());
@@ -225,9 +232,16 @@ constexpr u64 SCAUSE_INTERRUPT_MASK = 1LU << 63;
 
 enum class SCAUSE : u64 {
     // Interrupts
+    // 0 Reserved
     SupervisorSoftwareInterrupt = SCAUSE_INTERRUPT_MASK | 1,
+    // 2-4 Reserved
     SupervisorTimerInterrupt = SCAUSE_INTERRUPT_MASK | 5,
+    // 6-8 Reserved
     SupervisorExternalInterrupt = SCAUSE_INTERRUPT_MASK | 9,
+    // 10-12 Reserved
+    CounterOverflowInterrupt = SCAUSE_INTERRUPT_MASK | 13,
+    // 14-15 Reserved
+    // >= 16 Designated for platform use
 
     // Exceptions
     InstructionAddressMisaligned = 0,
@@ -240,11 +254,26 @@ enum class SCAUSE : u64 {
     StoreOrAMOAccessFault = 7,
     EnvironmentCallFromUMode = 8,
     EnvironmentCallFromSMode = 9,
-
+    // 10-11 Reserved
     InstructionPageFault = 12,
     LoadPageFault = 13,
-
+    // 14 Reserved
     StoreOrAMOPageFault = 15,
+    // 16-17 Reserved
+    SoftwareCheck = 18,
+    HardwareError = 19,
+    // 20-23 Reserved
+    // 24-31 Designated for custom use
+    // 32-47 Reserved
+    // 48-63 Designated for custom use
+    // >= 64 Reserved
+};
+
+enum class SIE : u64 {
+    SupervisorSoftwareInterrupt = 1 << 1,
+    SupervisorTimerInterrupt = 1 << 5,
+    SupervisorExternalInterrupt = 1 << 9,
+    LocalCounterOverflowInterrupt = 1 << 13,
 };
 
 }
@@ -356,6 +385,8 @@ struct AK::Formatter<Kernel::RISCV64::CSR::SCAUSE> : AK::Formatter<FormatString>
             return builder.put_string("Supervisor timer interrupt"sv);
         case Kernel::RISCV64::CSR::SCAUSE::SupervisorExternalInterrupt:
             return builder.put_string("Supervisor external interrupt"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::CounterOverflowInterrupt:
+            return builder.put_string("Counter-overflow interrupt"sv);
 
         case Kernel::RISCV64::CSR::SCAUSE::InstructionAddressMisaligned:
             return builder.put_string("Instruction address misaligned"sv);
@@ -383,6 +414,10 @@ struct AK::Formatter<Kernel::RISCV64::CSR::SCAUSE> : AK::Formatter<FormatString>
             return builder.put_string("Load page fault"sv);
         case Kernel::RISCV64::CSR::SCAUSE::StoreOrAMOPageFault:
             return builder.put_string("Store/AMO page fault"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::SoftwareCheck:
+            return builder.put_string("Software check"sv);
+        case Kernel::RISCV64::CSR::SCAUSE::HardwareError:
+            return builder.put_string("Hardware error"sv);
         default:
             VERIFY_NOT_REACHED();
         }

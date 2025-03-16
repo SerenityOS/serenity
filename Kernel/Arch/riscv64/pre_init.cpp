@@ -35,7 +35,7 @@ UNMAP_AFTER_INIT void dbgln_without_mmu(StringView message)
     dbgln_without_mmu(message);
 
     // We can't use Processor::halt() here, as that would result in an absolute jump.
-    RISCV64::CSR::write(RISCV64::CSR::Address::SIE, 0);
+    RISCV64::CSR::write<RISCV64::CSR::Address::SIE>(0);
     for (;;)
         asm volatile("wfi");
 }
@@ -77,7 +77,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void pre_init(FlatPtr boot_hart_id, Phy
         panic_without_mmu("Failed to perform relative relocations"sv);
 
     // Catch traps in pre_init
-    RISCV64::CSR::write(RISCV64::CSR::Address::STVEC, bit_cast<FlatPtr>(&early_trap_handler));
+    RISCV64::CSR::write<RISCV64::CSR::Address::STVEC>(bit_cast<FlatPtr>(&early_trap_handler));
 
     Memory::init_page_tables_and_jump_to_init(boot_hart_id, flattened_devicetree_paddr);
 }
