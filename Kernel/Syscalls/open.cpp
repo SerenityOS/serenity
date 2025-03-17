@@ -23,6 +23,14 @@ ErrorOr<FlatPtr> Process::open_impl(Userspace<Syscall::SC_open_params const*> us
     int options = params.options;
     u16 mode = params.mode;
 
+    // Note: Some users assume O_RDONLY is always 0,
+    //       but it's not guaranteed by POSIX, only a historical quirk, and
+    //       actually making it 0 and while making O_RDWR distinguishable
+    //       violates POSIX recommendations,
+    //       and complicates a few things down the line
+    if (options == 0)
+        options = O_RDONLY;
+
     if (options & O_NOFOLLOW_NOERROR)
         return EINVAL;
 
