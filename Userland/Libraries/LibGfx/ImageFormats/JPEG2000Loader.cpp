@@ -525,6 +525,34 @@ static ErrorOr<CodingStyleComponent> read_coding_style_component(ReadonlyBytes d
     return coc;
 }
 
+// A.6.3 Region of interest (RGN)
+struct RegionOfInterest {
+    u16 component_index { 0 }; // "Crgn" in spec.
+    // The only valid ROI style in T.800 is 0, so this doesn't "Srgn".
+    u8 implicit_roi_shift { 0 }; // "SPrgn" in spec and Table A.26 – Region-of-interest values from SPrgn parameter (Srgn = 0).
+};
+
+static ErrorOr<RegionOfInterest> read_region_of_interest(ReadonlyBytes data, size_t number_of_components)
+{
+    FixedMemoryStream stream { data };
+
+    RegionOfInterest rgn;
+    if (number_of_components < 257)
+        rgn.component_index = TRY(stream.read_value<u8>());
+    else
+        rgn.component_index = TRY(stream.read_value<BigEndian<u16>>());
+
+    u8 roi_style = TRY(stream.read_value<u8>());
+    if (roi_style != 0)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid ROI style");
+
+    rgn.implicit_roi_shift = TRY(stream.read_value<u8>());
+
+    dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: RGN marker segment: component_index={}, implicit_roi_shift={}", rgn.component_index, rgn.implicit_roi_shift);
+
+    return rgn;
+}
+
 // A.6.4 Quantization default (QCD)
 struct QuantizationDefault {
     enum QuantizationStyle {
@@ -887,6 +915,7 @@ struct TileData {
     // Data from codestream markers.
     Optional<CodingStyleDefault> cod;
     Vector<CodingStyleComponent> cocs;
+    Vector<RegionOfInterest> rgns;
     Optional<QuantizationDefault> qcd;
     Vector<QuantizationComponent> qccs;
     Optional<ProgressionOrderChange> poc;
@@ -934,6 +963,7 @@ struct JPEG2000LoadingContext {
     ImageAndTileSize siz;
     CodingStyleDefault cod;
     Vector<CodingStyleComponent> cocs;
+    Vector<RegionOfInterest> rgns;
     QuantizationDefault qcd;
     Vector<QuantizationComponent> qccs;
     Optional<ProgressionOrderChange> poc;
@@ -1108,6 +1138,8 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
                 saw_QCD_marker = true;
             } else if (marker.marker == J2K_QCC) {
                 context.qccs.append(TRY(read_quantization_component(marker.data.value(), context.siz.components.size())));
+            } else if (marker.marker == J2K_RGN) {
+                context.rgns.append(TRY(read_region_of_interest(marker.data.value(), context.siz.components.size())));
             } else if (marker.marker == J2K_POC) {
                 if (context.poc.has_value())
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple POC markers in main header");
@@ -1207,6 +1239,8 @@ static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& contex
                 tile.qcd = TRY(read_quantization_default(marker.data.value()));
             } else if (marker.marker == J2K_QCC) {
                 tile.qccs.append(TRY(read_quantization_component(marker.data.value(), context.siz.components.size())));
+            } else if (marker.marker == J2K_RGN) {
+                tile.rgns.append(TRY(read_region_of_interest(marker.data.value(), context.siz.components.size())));
             } else if (marker.marker == J2K_POC) {
                 if (tile.poc.has_value())
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple POC markers in tile header");
@@ -1911,6 +1945,9 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
 
 static ErrorOr<void> read_tile_part_packet_headers(JPEG2000LoadingContext& context, TileData& tile, TilePartData& tile_part)
 {
+    if (!context.rgns.is_empty() || !tile.rgns.is_empty())
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: RGN markers not yet supported");
+
     auto data = tile_part.data;
     while (!data.is_empty()) {
         auto length = TRY(read_one_packet_header(context, tile, data));
