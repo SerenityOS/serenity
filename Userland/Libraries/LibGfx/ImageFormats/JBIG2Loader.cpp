@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/IntegralMath.h>
 #include <AK/Utf16View.h>
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
 #include <LibGfx/ImageFormats/JBIG2Loader.h>
@@ -2044,10 +2045,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     u8 delta_s_offset_value = (text_region_segment_flags >> 10) & 0x1f; // "SBDSOFFSET" in spec.
     i8 delta_s_offset = delta_s_offset_value;
     if (delta_s_offset_value & 0x10) {
-        // This is converting a 5-bit two's complement number ot i8.
-        // FIXME: There's probably a simpler way to do this? Probably just sign-extend by or-ing in the top 3 bits?
-        delta_s_offset_value = (~delta_s_offset_value + 1) & 0x1f;
-        delta_s_offset = -delta_s_offset_value;
+        delta_s_offset = AK::sign_extend(delta_s_offset_value, 5);
     }
 
     u8 refinement_template = (text_region_segment_flags >> 15) != 0; // "SBRTEMPLATE" in spec.
