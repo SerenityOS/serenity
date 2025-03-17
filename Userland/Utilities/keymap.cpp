@@ -1,10 +1,12 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2025, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteString.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
@@ -89,8 +91,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         if (!keymaps_vector.find(mapping).is_end()) {
             int rc = set_keymap(mapping);
-            if (rc == 0)
+            if (rc == 0) {
+                mapper_config->write_entry("Mapping", "ActiveKeymap", mapping);
                 return rc;
+            }
         } else {
             warnln("Keymap '{}' is not in list of configured keymaps ({})", mapping, keymaps);
         }
