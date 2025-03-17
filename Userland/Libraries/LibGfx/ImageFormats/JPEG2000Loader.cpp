@@ -634,6 +634,81 @@ static ErrorOr<QuantizationComponent> read_quantization_component(ReadonlyBytes 
     return qcc;
 }
 
+// A.6.6 Progression order change (POC)
+struct ProgressionOrderChange {
+    struct Entry {
+        // Start indices are all inclusive, end indices all exclusive.
+
+        // layer_start is implicitly always 0 and not stored in the codestream.
+        u8 resolution_level_start { 0 }; // "RSpoc" in spec.
+        u16 component_start { 0 };       // "CSpoc" in spec.
+
+        u16 layer_end { 0 };           // "LYEpoc" in spec.
+        u8 resolution_level_end { 0 }; // "REpoc" in spec.
+        u16 component_end { 0 };       // "CEpoc" in spec.
+
+        CodingStyleDefault::ProgressionOrder progression_order { CodingStyleDefault::ProgressionOrder::LayerResolutionComponentPosition }; // "Ppoc" in spec.
+    };
+    Vector<Entry> entries;
+};
+
+static ErrorOr<ProgressionOrderChange> read_progression_order_change(ReadonlyBytes data, size_t number_of_components)
+{
+    FixedMemoryStream stream { data };
+
+    auto entry_size = number_of_components < 257 ? 7 : 9;
+    if (data.size() % entry_size != 0)
+        return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid POC marker segment size");
+    auto entry_count = data.size() / entry_size;
+
+    ProgressionOrderChange poc;
+    TRY(poc.entries.try_ensure_capacity(entry_count));
+    for (size_t i = 0; i < entry_count; ++i) {
+        // Table A.32 – Progression order change, tile parameter values
+        ProgressionOrderChange::Entry entry;
+
+        entry.resolution_level_start = TRY(stream.read_value<u8>());
+        if (entry.resolution_level_start > 32)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid resolution level start in POC");
+
+        if (number_of_components < 257)
+            entry.component_start = TRY(stream.read_value<u8>());
+        else
+            entry.component_start = TRY(stream.read_value<BigEndian<u16>>());
+        if (entry.component_start > 16'383)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid component start in POC");
+
+        entry.layer_end = TRY(stream.read_value<BigEndian<u16>>());
+        if (entry.layer_end == 0)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid layer end in POC");
+
+        entry.resolution_level_end = TRY(stream.read_value<u8>());
+        if (entry.resolution_level_end <= entry.resolution_level_start || entry.resolution_level_end > 33)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid resolution level end in POC");
+
+        if (number_of_components < 257)
+            entry.component_end = TRY(stream.read_value<u8>());
+        else
+            entry.component_end = TRY(stream.read_value<BigEndian<u16>>());
+        if (entry.component_end == 0)
+            entry.component_end = 256; // "(0 is interpreted as 256)"
+        if (entry.component_end <= entry.component_start || entry.component_end > 16'384)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid component end in POC");
+
+        u8 progression_order = TRY(stream.read_value<u8>());
+        if (progression_order > 4)
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Invalid progression order in POC");
+        entry.progression_order = static_cast<CodingStyleDefault::ProgressionOrder>(progression_order);
+
+        dbgln_if(JPEG2000_DEBUG, "JPEG2000ImageDecoderPlugin: POC marker segment: entry[{}]: resolution_level_start={}, component_start={}, layer_end={}, resolution_level_end={}, component_end={}, progression_order={}",
+            i, entry.resolution_level_start, entry.component_start, entry.layer_end, entry.resolution_level_end, entry.component_end, (int)entry.progression_order);
+
+        poc.entries.append(entry);
+    }
+
+    return poc;
+}
+
 // A.9.2 Comment (COM)
 struct Comment {
     enum CommentType {
@@ -814,6 +889,7 @@ struct TileData {
     Vector<CodingStyleComponent> cocs;
     Optional<QuantizationDefault> qcd;
     Vector<QuantizationComponent> qccs;
+    Optional<ProgressionOrderChange> poc;
     Vector<TilePartData> tile_parts;
 
     // Data used during decoding.
@@ -860,6 +936,7 @@ struct JPEG2000LoadingContext {
     Vector<CodingStyleComponent> cocs;
     QuantizationDefault qcd;
     Vector<QuantizationComponent> qccs;
+    Optional<ProgressionOrderChange> poc;
     Vector<Comment> coms;
     Vector<TileData> tiles;
 
@@ -1031,6 +1108,10 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
                 saw_QCD_marker = true;
             } else if (marker.marker == J2K_QCC) {
                 context.qccs.append(TRY(read_quantization_component(marker.data.value(), context.siz.components.size())));
+            } else if (marker.marker == J2K_POC) {
+                if (context.poc.has_value())
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple POC markers in main header");
+                context.poc = TRY(read_progression_order_change(marker.data.value(), context.siz.components.size()));
             } else if (marker.marker == J2K_COM) {
                 context.coms.append(TRY(read_comment(marker.data.value())));
             } else if (marker.marker == J2K_TLM) {
@@ -1126,6 +1207,10 @@ static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& contex
                 tile.qcd = TRY(read_quantization_default(marker.data.value()));
             } else if (marker.marker == J2K_QCC) {
                 tile.qccs.append(TRY(read_quantization_component(marker.data.value(), context.siz.components.size())));
+            } else if (marker.marker == J2K_POC) {
+                if (tile.poc.has_value())
+                    return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple POC markers in tile header");
+                tile.poc = TRY(read_progression_order_change(marker.data.value(), context.siz.components.size()));
             } else if (marker.marker == J2K_COM) {
                 tile_part.coms.append(TRY(read_comment(marker.data.value())));
             } else if (marker.marker == J2K_PLT) {
@@ -1481,6 +1566,9 @@ static ErrorOr<void> compute_decoding_metadata(JPEG2000LoadingContext& context)
     };
 
     auto make_progression_iterator = [&](JPEG2000LoadingContext const& context, TileData const& tile) -> ErrorOr<OwnPtr<JPEG2000::ProgressionIterator>> {
+        if (tile.poc.has_value() || context.poc.has_value())
+            return Error::from_string_literal("JPEG2000ImageDecoderPlugin: POC markers not yet supported");
+
         auto number_of_layers = tile.cod.value_or(context.cod).number_of_layers;
 
         int max_number_of_decomposition_levels = 0;
