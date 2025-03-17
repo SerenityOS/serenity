@@ -7,6 +7,7 @@
 #include <AK/ByteReader.h>
 #include <AK/Endian.h>
 #include <AK/Function.h>
+#include <AK/IntegralMath.h>
 #include <AK/MemoryStream.h>
 #include <LibHID/ReportDescriptorParser.h>
 #include <LibHID/ReportParser.h>
@@ -51,7 +52,7 @@ ErrorOr<void> parse_input_report(ParsedReportDescriptor const& report_descriptor
         // 5.8 Format of Multibyte Numeric Values: If Logical Minimum and Logical Maximum are both positive values
         // then a sign bit is unnecessary in the report field and the contents of a field can be assumed to be an unsigned value.
         if (field.logical_minimum < 0)
-            field_value = (static_cast<i32>(field_value << (32 - field_size_in_bits))) >> (32 - field_size_in_bits);
+            field_value = AK::sign_extend(static_cast<u64>(field_value), field_size_in_bits);
 
         if (TRY(callback(field, field_value)) == IterationDecision::Break)
             return {};

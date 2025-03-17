@@ -16,8 +16,6 @@
 namespace Audio {
 
 ALWAYS_INLINE u8 frame_channel_type_to_channel_count(FlacFrameChannelType channel_type);
-// Sign-extend an arbitrary-size signed number to 64 bit signed
-ALWAYS_INLINE i64 sign_extend(u32 n, u8 size);
 // Decodes the sign representation method used in Rice coding.
 // Numbers alternate between positive and negative: 0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, ...
 ALWAYS_INLINE i32 rice_to_signed(u32 x);
