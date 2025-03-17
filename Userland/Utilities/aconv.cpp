@@ -164,7 +164,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             auto samples = samples_or_error.release_value();
             if (writer.has_value())
-                TRY((*writer)->write_samples(samples.span()));
+                TRY((*writer)->write_samples(samples));
             // TODO: Show progress updates like aplay by moving the progress calculation into a common utility function.
             if (output != "-"sv) {
                 out("\033[u{}/{}", input_loader->loaded_samples(), input_loader->total_samples());

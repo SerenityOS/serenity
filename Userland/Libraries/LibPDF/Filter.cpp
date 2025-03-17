@@ -165,7 +165,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_tiff_prediction(Bytes bytes, int columns, 
 {
     auto bits_per_sample = TRY(FixedArray<u32>::create(colors));
     bits_per_sample.fill_with(bits_per_component);
-    return TRY(Gfx::TIFFImageDecoderPlugin::invert_horizontal_differencing(bytes, columns, bits_per_sample.span()));
+    return TRY(Gfx::TIFFImageDecoderPlugin::invert_horizontal_differencing(bytes, columns, bits_per_sample));
 }
 
 PDFErrorOr<ByteBuffer> Filter::handle_lzw_and_flate_parameters(ByteBuffer buffer, RefPtr<DictObject> decode_parms)

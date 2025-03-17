@@ -239,7 +239,7 @@ static NonZeroTokensView create_non_zero_tokens_view(NonZeroTokensView non_zero_
 
 static NonZeroTokensView create_non_zero_tokens_view(NonZeroTokens& non_zero_tokens, u32 start_in_sub_blocks, u32 size_in_sub_blocks, bool subsampling)
 {
-    return create_non_zero_tokens_view({ non_zero_tokens[0].span(), non_zero_tokens[1].span(), non_zero_tokens[2].span() }, start_in_sub_blocks, size_in_sub_blocks, subsampling);
+    return create_non_zero_tokens_view({ non_zero_tokens[0], non_zero_tokens[1], non_zero_tokens[2] }, start_in_sub_blocks, size_in_sub_blocks, subsampling);
 }
 
 struct TileContext {
