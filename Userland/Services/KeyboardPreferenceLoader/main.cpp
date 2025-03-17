@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2025, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -27,7 +27,11 @@ ErrorOr<int> serenity_main(Main::Arguments)
     if (keymaps_vector.size() == 0)
         exit(1);
 
-    TRY(Core::Process::spawn("/bin/keymap"sv, Array { "-m", keymaps_vector.first().characters() }, {}, Core::Process::KeepAsChild::Yes));
+    auto active_keymap = mapper_config->read_entry("Mapping", "ActiveKeymap", "");
+    if (active_keymap.is_empty())
+        active_keymap = keymaps_vector.first();
+
+    TRY(Core::Process::spawn("/bin/keymap"sv, Array { "-m", active_keymap.characters() }, {}, Core::Process::KeepAsChild::Yes));
 
     bool enable_num_lock = keyboard_settings_config->read_bool_entry("StartupEnable", "NumLock", true);
     auto keyboard_device = TRY(Core::File::open("/dev/input/keyboard/0"sv, Core::File::OpenMode::Read));
