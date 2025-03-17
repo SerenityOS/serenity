@@ -1144,16 +1144,20 @@ static ErrorOr<void> parse_codestream_main_header(JPEG2000LoadingContext& contex
                 if (context.poc.has_value())
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple POC markers in main header");
                 context.poc = TRY(read_progression_order_change(marker.data.value(), context.siz.components.size()));
+            } else if (marker.marker == J2K_PPM) {
+                // FIXME: Implement. (I haven't yet found a way to generate files that use this.)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: PPM marker not yet implemented");
             } else if (marker.marker == J2K_TLM) {
                 // TLM describes tile-part lengths, for random access. They can be ignored for now.
             } else if (marker.marker == J2K_PLM) {
                 // PLM describes packet lengths, for random access. They can be ignored for now.
+            } else if (marker.marker == J2K_CRG) {
+                // FIXME: Implement. (I haven't yet found a way to generate files that use this.)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: CRG marker not yet implemented");
             } else if (marker.marker == J2K_COM) {
                 context.coms.append(TRY(read_comment(marker.data.value())));
             } else {
-                // FIXME: These are valid main header markers. Parse contents.
-                dbgln("JPEG2000ImageDecoderPlugin: marker {:#04x} not yet implemented", marker.marker);
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: marker not yet implemented");
+                VERIFY_NOT_REACHED();
             }
             break;
         }
@@ -1245,14 +1249,15 @@ static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& contex
                 if (tile.poc.has_value())
                     return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Multiple POC markers in tile header");
                 tile.poc = TRY(read_progression_order_change(marker.data.value(), context.siz.components.size()));
+            } else if (marker.marker == J2K_PPT) {
+                // FIXME: Implement. (I haven't yet found a way to generate files that use this.)
+                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: PPT marker not yet implemented");
             } else if (marker.marker == J2K_PLT) {
                 // PLT describes packet lengths, for random access. They can be ignored for now.
             } else if (marker.marker == J2K_COM) {
                 tile_part.coms.append(TRY(read_comment(marker.data.value())));
             } else {
-                // FIXME: These are valid main header markers. Parse contents.
-                dbgln("JPEG2000ImageDecoderPlugin: marker {:#04x} not yet implemented in tile header", marker.marker);
-                return Error::from_string_literal("JPEG2000ImageDecoderPlugin: marker not yet implemented in tile header");
+                VERIFY_NOT_REACHED();
             }
             break;
         }
