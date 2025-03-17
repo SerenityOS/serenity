@@ -1015,7 +1015,7 @@ DecoderErrorOr<void> Parser::decode_partition(TileContext& tile_context, u32 row
     bool has_cols = (column + half_block_8x8) < tile_context.frame_context.columns();
     u32 row_in_tile = row - tile_context.rows_start;
     u32 column_in_tile = column - tile_context.columns_start;
-    auto partition = TreeParser::parse_partition(tile_context.decoder, *m_probability_tables, *tile_context.counter, has_rows, has_cols, subsize, num_8x8, tile_context.above_partition_context, tile_context.left_partition_context.span(), row_in_tile, column_in_tile, !tile_context.frame_context.is_inter_predicted());
+    auto partition = TreeParser::parse_partition(tile_context.decoder, *m_probability_tables, *tile_context.counter, has_rows, has_cols, subsize, num_8x8, tile_context.above_partition_context, tile_context.left_partition_context, row_in_tile, column_in_tile, !tile_context.frame_context.is_inter_predicted());
 
     auto child_subsize = subsize_lookup[partition][subsize];
     if (child_subsize < Block_8x8 || partition == PartitionNone) {

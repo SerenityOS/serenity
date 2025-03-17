@@ -44,7 +44,7 @@ ErrorOr<void> PortableFormatWriter::add_pixels(Stream& output, Options const& op
                 row.unchecked_at(j * 3 + 2) = color.blue();
             }
 
-            TRY(output.write_until_depleted(row.span()));
+            TRY(output.write_until_depleted(row));
         }
 
         return {};
