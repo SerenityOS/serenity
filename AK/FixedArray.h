@@ -172,6 +172,9 @@ public:
     Span<T> span() { return { data(), size() }; }
     ReadonlySpan<T> span() const { return { data(), size() }; }
 
+    operator Span<T>() { return span(); }
+    operator ReadonlySpan<T>() const { return span(); }
+
 private:
     static size_t storage_allocation_size(size_t size)
     {
