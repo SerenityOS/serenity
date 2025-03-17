@@ -42,13 +42,13 @@ ErrorOr<void> Plan9FSInode::ensure_open_for_mode(int mode)
 
         m_open_mode |= mode;
 
-        if ((m_open_mode & O_RDWR) == O_RDWR) {
+        if ((m_open_mode & O_ACCMODE) == O_RDWR) {
             l_mode |= 2;
             p9_mode |= 2;
-        } else if (m_open_mode & O_WRONLY) {
+        } else if ((m_open_mode & O_ACCMODE) == O_WRONLY) {
             l_mode |= 1;
             p9_mode |= 1;
-        } else if (m_open_mode & O_RDONLY) {
+        } else if ((m_open_mode & O_ACCMODE) == O_RDONLY) {
             // Leave the values at 0.
         }
     }

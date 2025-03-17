@@ -65,7 +65,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd cpath chown rpath exec proc id"));
     TRY(Core::System::unveil("/home", "r"));
-    TRY(Core::System::unveil("/tmp", "c"));
+    TRY(Core::System::unveil("/tmp", "rc"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/shadow", "r"));
     TRY(Core::System::unveil("/etc/group", "r"));

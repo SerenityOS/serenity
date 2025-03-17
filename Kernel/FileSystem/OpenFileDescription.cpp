@@ -488,8 +488,8 @@ void OpenFileDescription::set_writable(bool b)
 void OpenFileDescription::set_rw_mode(int options)
 {
     m_state.with([&](auto& state) {
-        state.readable = (options & O_RDONLY) == O_RDONLY;
-        state.writable = (options & O_WRONLY) == O_WRONLY;
+        state.readable = (options & O_ACCMODE) == O_RDONLY || (options & O_ACCMODE) == O_RDWR;
+        state.writable = (options & O_ACCMODE) == O_WRONLY || (options & O_ACCMODE) == O_RDWR;
     });
 }
 

@@ -409,10 +409,12 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process cons
 
     bool should_truncate_file = false;
 
-    if ((options & O_RDONLY) && !metadata.may_read(credentials))
-        return EACCES;
+    if ((options & O_ACCMODE) == O_RDONLY || (options & O_ACCMODE) == O_RDWR) {
+        if (!metadata.may_read(credentials))
+            return EACCES;
+    }
 
-    if (options & O_WRONLY) {
+    if ((options & O_ACCMODE) == O_WRONLY || (options & O_ACCMODE) == O_RDWR) {
         if (!metadata.may_write(credentials))
             return EACCES;
         if (metadata.is_directory())
@@ -426,13 +428,13 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process cons
 
     if (metadata.is_fifo()) {
         auto fifo = TRY(inode.fifo());
-        if (options & O_WRONLY) {
+        if ((options & O_ACCMODE) == O_WRONLY) {
             auto description = TRY(fifo->open_direction_blocking(FIFO::Direction::Writer));
             description->set_rw_mode(options);
             description->set_file_flags(options);
             description->set_original_inode(inode);
             return description;
-        } else if (options & O_RDONLY) {
+        } else if ((options & O_ACCMODE) == O_RDONLY) {
             auto description = TRY(fifo->open_direction_blocking(FIFO::Direction::Reader));
             description->set_rw_mode(options);
             description->set_file_flags(options);
@@ -457,7 +459,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process cons
     }
 
     // Check for read-only FS. Do this after handling devices, but before modifying the inode in any way.
-    if ((options & O_WRONLY) && custody.is_readonly())
+    if ((options & O_ACCMODE) != O_RDONLY && custody.is_readonly())
         return EROFS;
 
     if (should_truncate_file) {
@@ -1004,12 +1006,14 @@ ErrorOr<void> validate_path_against_process_veil(Process const& process, StringV
         }
         return {};
     }
-    if (options & O_RDONLY) {
+    if ((options & O_ACCMODE) == O_RDONLY || (options & O_ACCMODE) == O_RDWR) {
         if (options & O_DIRECTORY) {
             if (!(unveiled_path.permissions() & (UnveilAccess::Read | UnveilAccess::Browse))) {
                 log_veiled_path("'r' or 'b'"sv);
                 return EACCES;
             }
+        } else if ((options & O_ACCMODE) == O_RDONLY && (options & O_EXEC)) {
+            // Special case: opening a file as exec-only doesn't require 'r'.
         } else {
             if (!(unveiled_path.permissions() & UnveilAccess::Read)) {
                 log_veiled_path("'r'"sv);
@@ -1017,7 +1021,7 @@ ErrorOr<void> validate_path_against_process_veil(Process const& process, StringV
             }
         }
     }
-    if (options & O_WRONLY) {
+    if ((options & O_ACCMODE) == O_WRONLY || (options & O_ACCMODE) == O_RDWR) {
         if (!(unveiled_path.permissions() & UnveilAccess::Write)) {
             log_veiled_path("'w'"sv);
             return EACCES;

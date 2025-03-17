@@ -67,7 +67,7 @@ bool FILE::close()
 
 bool FILE::flush()
 {
-    if (m_mode & O_WRONLY && m_buffer.may_use()) {
+    if (((m_mode & O_ACCMODE) == O_WRONLY || (m_mode & O_ACCMODE) == O_RDWR) && m_buffer.may_use()) {
         // When open for writing, write out all the buffered data.
         while (m_buffer.is_not_empty()) {
             bool ok = write_from_buffer();
@@ -75,7 +75,7 @@ bool FILE::flush()
                 return false;
         }
     }
-    if (m_mode & O_RDONLY) {
+    if (((m_mode & O_ACCMODE) == O_RDONLY || (m_mode & O_ACCMODE) == O_RDWR)) {
         // When open for reading, just drop the buffered data.
         if constexpr (sizeof(size_t) >= sizeof(off_t))
             VERIFY(m_buffer.buffered_size() <= NumericLimits<off_t>::max());
@@ -104,7 +104,7 @@ void FILE::purge()
 
 size_t FILE::pending()
 {
-    if (m_mode & O_RDONLY) {
+    if ((m_mode & O_ACCMODE) == O_RDONLY || (m_mode & O_ACCMODE) == O_RDWR) {
         return 0;
     }
 

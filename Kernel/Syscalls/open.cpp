@@ -40,10 +40,10 @@ ErrorOr<FlatPtr> Process::open_impl(Userspace<Syscall::SC_open_params const*> us
         skip_pledge_verification = true;
 #endif
     if (!skip_pledge_verification) {
-        if (options & O_WRONLY)
-            TRY(require_promise(Pledge::wpath));
-        else if (options & O_RDONLY)
+        if ((options & O_ACCMODE) == O_RDONLY || (options & O_ACCMODE) == O_RDWR)
             TRY(require_promise(Pledge::rpath));
+        if ((options & O_ACCMODE) == O_WRONLY || (options & O_ACCMODE) == O_RDWR)
+            TRY(require_promise(Pledge::wpath));
 
         if (options & O_CREAT)
             TRY(require_promise(Pledge::cpath));

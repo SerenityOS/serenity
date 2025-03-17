@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc getkeymap sigaction exec tty"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/tmp", "cw"));
+    TRY(Core::System::unveil("/tmp", "rwc"));
     TRY(Core::System::unveil("/etc/WindowServer.ini", "rwc"));
     TRY(Core::System::unveil("/etc/Keyboard.ini", "r"));
     TRY(Core::System::unveil("/dev/tty", "rw"));
