@@ -1555,6 +1555,8 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
 
     auto const& tree = local_tree.has_value() ? *local_tree : global_tree;
     for (auto [i, channel] : enumerate(modular_data.channels)) {
+        if (channel.width() == 0 || channel.height() == 0)
+            continue;
 
         auto self_correcting_data = TRY(SelfCorrectingData::create(modular_data.wp_params, channel.width()));
 
