@@ -220,7 +220,7 @@ ErrorOr<void> AppFile::spawn_with_escalation(ReadonlySpan<StringView> user_argum
     } else {
         exe = executable;
     }
-    args.extend(Vector(user_arguments));
+    args.extend(user_arguments);
 
     TRY(Core::Process::spawn(exe, args.span(),
         working_directory().is_empty() ? Core::StandardPaths::home_directory() : working_directory()));

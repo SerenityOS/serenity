@@ -218,7 +218,7 @@ RefPtr<AST::Node> Parser::parse_toplevel()
             break;
 
         sequence.extend(move(result.entries));
-        positions.extend(move(result.separator_positions));
+        positions.extend(result.separator_positions.span());
     } while (result.decision == ShouldReadMoreSequences::Yes);
 
     if (sequence.is_empty())
