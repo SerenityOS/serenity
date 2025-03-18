@@ -630,3 +630,12 @@ TEST_CASE(uses_inline_capacity_when_constructed_from_span)
     for (auto& el : v)
         EXPECT(is_inline_element(el, v));
 }
+
+TEST_CASE(extend_self)
+{
+    Vector<u32> v { 1, 2, 3 };
+    // This ensures that extend will make an allocation.
+    v.shrink_to_fit();
+    v.extend(v);
+    EXPECT_EQ(v, Vector<u32>({ 1, 2, 3, 1, 2, 3 }));
+}
