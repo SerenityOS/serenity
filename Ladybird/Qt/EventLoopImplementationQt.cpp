@@ -88,6 +88,8 @@ SignalHandlers::~SignalHandlers()
     (void)::signal(m_signal_number, m_original_handler);
 }
 
+namespace {
+
 struct SignalHandlersInfo {
     HashMap<int, NonnullRefPtr<SignalHandlers>> signal_handlers;
     int next_signal_id { 0 };
@@ -97,6 +99,8 @@ static Singleton<SignalHandlersInfo> s_signals;
 SignalHandlersInfo* signals_info()
 {
     return s_signals.ptr();
+}
+
 }
 
 void SignalHandlers::dispatch()
