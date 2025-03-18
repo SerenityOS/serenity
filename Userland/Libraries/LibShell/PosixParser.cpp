@@ -240,7 +240,7 @@ ErrorOr<Optional<Token>> Parser::next_expanded_token(Optional<Reduction> startin
     while (m_token_buffer.is_empty() || m_token_buffer.last().type != Token::Type::Eof) {
         auto tokens = TRY(m_lexer.batch_next(starting_reduction));
         auto expanded = perform_expansions(move(tokens));
-        m_token_buffer.extend(expanded);
+        m_token_buffer.extend(expanded.span());
     }
 
     if (m_token_buffer.size() == m_token_index)

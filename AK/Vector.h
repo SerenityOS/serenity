@@ -266,6 +266,11 @@ public:
         MUST(try_extend(other));
     }
 
+    void extend(ReadonlySpan<StorageType> other)
+    {
+        MUST(try_extend(other));
+    }
+
 #endif
 
     ALWAYS_INLINE void append(T&& value)
@@ -563,9 +568,20 @@ public:
 
     ErrorOr<void> try_extend(Vector const& other)
     {
+        // This overload exists to make v.extend(v) work. If we only had the span overload,
+        // this would implicitly call v.span() and call try_extend(ReadonlySpan) – but when
+        // that reallocates to make room, the pointer in the span becomes invalid.
+        TRY(try_grow_capacity(size() + other.size()));
+
+        TRY(try_extend(other.span()));
+        return {};
+    }
+
+    ErrorOr<void> try_extend(ReadonlySpan<StorageType> other)
+    {
         TRY(try_grow_capacity(size() + other.size()));
         TypedTransfer<StorageType>::copy(data() + m_size, other.data(), other.size());
-        m_size += other.m_size;
+        m_size += other.size();
         return {};
     }
 
