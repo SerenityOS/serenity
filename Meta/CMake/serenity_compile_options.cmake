@@ -2,20 +2,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/common_compile_options.cmake)
 
 # The following options are sorted by the "base" name (the part excluding the initial Wno/fno or W/f).
 
-add_compile_options(-Wno-address-of-packed-member)
-add_compile_options(-Wcast-qual)
-add_compile_options(-Wdeprecated-copy)
-add_compile_options(-Wduplicated-cond)
-add_compile_options(-Wformat=2)
-add_compile_options(-Wimplicit-fallthrough)
-add_compile_options(-Wlogical-op)
-add_compile_options(-Wmisleading-indentation)
-add_compile_options(-Wnon-virtual-dtor)
-add_compile_options(-Wsuggest-override)
-add_compile_options(-Wundef)
-add_compile_options(-Wunused)
-add_compile_options(-Wwrite-strings)
-
 add_compile_options(-fno-delete-null-pointer-checks)
 add_compile_options(-ffile-prefix-map=${SerenityOS_SOURCE_DIR}=.)
 add_compile_options(-fno-omit-frame-pointer)

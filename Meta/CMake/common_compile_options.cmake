@@ -7,7 +7,21 @@ set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 add_compile_options(-Wall)
 add_compile_options(-Wextra)
+
+add_compile_options(-Wno-address-of-packed-member)
+add_compile_options(-Wcast-qual)
+add_compile_options(-Wdeprecated-copy)
+add_compile_options(-Wduplicated-cond)
+add_compile_options(-Wformat=2)
+add_compile_options(-Wimplicit-fallthrough)
+add_compile_options(-Wlogical-op)
+add_compile_options(-Wmisleading-indentation)
 add_compile_options(-Wmissing-declarations)
+add_compile_options(-Wnon-virtual-dtor)
+add_compile_options(-Wsuggest-override)
+add_compile_options(-Wundef)
+add_compile_options(-Wunused)
+add_compile_options(-Wwrite-strings)
 
 add_compile_options(-Wno-invalid-offsetof)
 
