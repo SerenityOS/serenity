@@ -936,7 +936,7 @@ public:
         return tree;
     }
 
-    LeafNode get_leaf(Vector<i32> const& properties) const
+    LeafNode get_leaf(Span<i32> properties) const
     {
         // To find the MA leaf node, the MA tree is traversed, starting at the root node tree[0]
         // and for each decision node d, testing if property[d.property] > d.value, proceeding to
@@ -1436,16 +1436,16 @@ struct ModularHeader {
     Vector<TransformInfo> transform {};
 };
 
-static ErrorOr<Vector<i32>> get_properties(Vector<Channel> const& channels, u16 i, u32 x, u32 y, i32 max_error)
-{
-    Vector<i32> properties;
+static constexpr u32 nb_base_predictors = 16;
 
+static void get_properties(FixedArray<i32>& properties, Vector<Channel> const& channels, u16 i, u32 x, u32 y, i32 max_error)
+{
     // Table H.4 - Property definitions
-    TRY(properties.try_append(i));
+    properties[0] = i;
     // FIXME: Handle other cases than GlobalModular
-    TRY(properties.try_append(0));
-    TRY(properties.try_append(y));
-    TRY(properties.try_append(x));
+    properties[1] = 0;
+    properties[2] = y;
+    properties[3] = x;
 
     i32 const W = x > 0 ? channels[i].get(x - 1, y) : (y > 0 ? channels[i].get(x, y - 1) : 0);
     i32 const N = y > 0 ? channels[i].get(x, y - 1) : W;
@@ -1454,10 +1454,10 @@ static ErrorOr<Vector<i32>> get_properties(Vector<Channel> const& channels, u16 
     i32 const NN = y > 1 ? channels[i].get(x, y - 2) : N;
     i32 const WW = x > 1 ? channels[i].get(x - 2, y) : W;
 
-    TRY(properties.try_append(abs(N)));
-    TRY(properties.try_append(abs(W)));
-    TRY(properties.try_append(N));
-    TRY(properties.try_append(W));
+    properties[4] = abs(N);
+    properties[5] = abs(W);
+    properties[6] = N;
+    properties[7] = W;
 
     // x > 0 ? W - /* (the value of property 9 at position (x - 1, y)) */ : W
     if (x > 0) {
@@ -1465,19 +1465,19 @@ static ErrorOr<Vector<i32>> get_properties(Vector<Channel> const& channels, u16 
         i32 const W_x_1 = x_1 > 0 ? channels[i].get(x_1 - 1, y) : (y > 0 ? channels[i].get(x_1, y - 1) : 0);
         i32 const N_x_1 = y > 0 ? channels[i].get(x_1, y - 1) : W_x_1;
         i32 const NW_x_1 = x_1 > 0 && y > 0 ? channels[i].get(x_1 - 1, y - 1) : W_x_1;
-        TRY(properties.try_append(W - (W_x_1 + N_x_1 - NW_x_1)));
+        properties[8] = W - (W_x_1 + N_x_1 - NW_x_1);
     } else {
-        TRY(properties.try_append(W));
+        properties[8] = W;
     }
 
-    TRY(properties.try_append(W + N - NW));
-    TRY(properties.try_append(W - NW));
-    TRY(properties.try_append(NW - N));
-    TRY(properties.try_append(N - NE));
-    TRY(properties.try_append(N - NN));
-    TRY(properties.try_append(W - WW));
+    properties[9] = W + N - NW;
+    properties[10] = W - NW;
+    properties[11] = NW - N;
+    properties[12] = N - NE;
+    properties[13] = N - NN;
+    properties[14] = W - WW;
 
-    TRY(properties.try_append(max_error));
+    properties[15] = max_error;
 
     for (i16 j = i - 1; j >= 0; j--) {
         if (channels[j].width() != channels[i].width())
@@ -1493,12 +1493,11 @@ static ErrorOr<Vector<i32>> get_properties(Vector<Channel> const& channels, u16 
         auto rN = (y > 0 ? channels[j].get(x, y - 1) : rW);
         auto rNW = (x > 0 && y > 0 ? channels[j].get(x - 1, y - 1) : rW);
         auto rG = clamp(rW + rN - rNW, min(rW, rN), max(rW, rN));
-        TRY(properties.try_append(abs(rC)));
-        TRY(properties.try_append(rC));
-        TRY(properties.try_append(abs(rC - rG)));
-        TRY(properties.try_append(rC - rG));
+        properties[nb_base_predictors + (i - 1 - j) * 4 + 0] = abs(rC);
+        properties[nb_base_predictors + (i - 1 - j) * 4 + 1] = rC;
+        properties[nb_base_predictors + (i - 1 - j) * 4 + 2] = abs(rC - rG);
+        properties[nb_base_predictors + (i - 1 - j) * 4 + 3] = rC - rG;
     }
-    return properties;
 }
 
 static i32 prediction(Neighborhood const& neighborhood, i32 self_correcting, u32 predictor)
@@ -1606,6 +1605,8 @@ static ErrorOr<ModularHeader> read_modular_header(LittleEndianInputBitStream& st
     // (in ascending order of index) as specified in H.3, skipping any channels having width or height
     // zero. Finally, the inverse transformations are applied (from last to first) as described in H.6.
 
+    auto properties = TRY(FixedArray<i32>::create(nb_base_predictors + num_channels * 4));
+
     auto const& tree = local_tree.has_value() ? *local_tree : global_tree;
     for (u16 i {}; i < num_channels; ++i) {
 
@@ -1617,7 +1618,7 @@ static ErrorOr<ModularHeader> read_modular_header(LittleEndianInputBitStream& st
 
                 auto const self_prediction = self_correcting_data.compute_predictions(neighborhood, x);
 
-                auto const properties = TRY(get_properties(image.channels(), i, x, y, self_prediction.max_error));
+                get_properties(properties, image.channels(), i, x, y, self_prediction.max_error);
                 auto const leaf_node = tree.get_leaf(properties);
                 auto diff = unpack_signed(TRY(decoder->decode_hybrid_uint(stream, leaf_node.ctx)));
                 diff = (diff * leaf_node.multiplier) + leaf_node.offset;
