@@ -21,6 +21,7 @@ set(AK_TEST_SOURCES
     TestCircularDeque.cpp
     TestCircularQueue.cpp
     TestComplex.cpp
+    TestConstrainedStream.cpp
     TestCoroutine.cpp
     TestDisjointChunks.cpp
     TestDistinctNumeric.cpp
