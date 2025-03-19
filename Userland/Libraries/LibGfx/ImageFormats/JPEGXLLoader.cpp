@@ -1369,11 +1369,21 @@ struct ModularData {
     bool use_global_tree {};
     WPHeader wp_params {};
     Vector<TransformInfo> transform {};
+    Vector<Channel> channels {};
+
+    ErrorOr<void> create_channels(Span<IntSize> frame_size)
+    {
+        TRY(channels.try_resize(frame_size.size()));
+        for (u32 i = 0; i < channels.size(); ++i)
+            channels[i] = TRY(Channel::create(frame_size[i].width(), frame_size[i].height()));
+
+        return {};
+    }
 };
 
 static constexpr u32 nb_base_predictors = 16;
 
-static void get_properties(FixedArray<i32>& properties, Vector<Channel> const& channels, u16 i, u32 x, u32 y, i32 max_error)
+static void get_properties(FixedArray<i32>& properties, Span<Channel> channels, u16 i, u32 x, u32 y, i32 max_error)
 {
     // Table H.4 - Property definitions
     properties[0] = i;
@@ -1494,11 +1504,10 @@ static Neighborhood retrieve_neighborhood(Channel const& channel, u32 x, u32 y)
 }
 
 static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& stream,
-    Image& image,
+    Span<IntSize> channels_info,
     ImageMetadata const& metadata,
     Optional<EntropyDecoder>& decoder,
-    MATree const& global_tree,
-    u16 num_channels)
+    MATree const& global_tree)
 {
     ModularData modular_data;
 
@@ -1510,12 +1519,14 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
     for (u32 i {}; i < nb_transforms; ++i)
         modular_data.transform[i] = TRY(read_transform_info(stream));
 
+    TRY(modular_data.create_channels(channels_info));
+
     if constexpr (JPEGXL_DEBUG) {
         dbgln("Decoding modular sub-stream ({} tree, {} transforms):",
             modular_data.use_global_tree ? "global"sv : "local"sv,
             nb_transforms);
 
-        for (auto const& [i, channel] : enumerate(image.channels()))
+        for (auto const& [i, channel] : enumerate(modular_data.channels))
             dbgln("- Channel {}: {}x{}", i, channel.width(), channel.height());
     }
 
@@ -1529,8 +1540,8 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
         u32 dist_multiplier {};
         // FIXME: This should start at nb_meta_channels not 0
         for (u16 i = 0; i < metadata.number_of_channels(); ++i) {
-            if (image.channels()[i].width() > dist_multiplier)
-                dist_multiplier = image.channels()[i].width();
+            if (modular_data.channels[i].width() > dist_multiplier)
+                dist_multiplier = modular_data.channels[i].width();
         }
         return dist_multiplier;
     }();
@@ -1540,33 +1551,33 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
     // (in ascending order of index) as specified in H.3, skipping any channels having width or height
     // zero. Finally, the inverse transformations are applied (from last to first) as described in H.6.
 
-    auto properties = TRY(FixedArray<i32>::create(nb_base_predictors + num_channels * 4));
+    auto properties = TRY(FixedArray<i32>::create(nb_base_predictors + modular_data.channels.size() * 4));
 
     auto const& tree = local_tree.has_value() ? *local_tree : global_tree;
-    for (u16 i {}; i < num_channels; ++i) {
+    for (auto [i, channel] : enumerate(modular_data.channels)) {
 
-        auto self_correcting_data = TRY(SelfCorrectingData::create(modular_data.wp_params, image.channels()[i].width()));
+        auto self_correcting_data = TRY(SelfCorrectingData::create(modular_data.wp_params, channel.width()));
 
-        for (u32 y {}; y < image.channels()[i].height(); y++) {
-            for (u32 x {}; x < image.channels()[i].width(); x++) {
-                auto const neighborhood = retrieve_neighborhood(image.channels()[i], x, y);
+        for (u32 y {}; y < channel.height(); y++) {
+            for (u32 x {}; x < channel.width(); x++) {
+                auto const neighborhood = retrieve_neighborhood(channel, x, y);
 
                 auto const self_prediction = self_correcting_data.compute_predictions(neighborhood, x);
 
-                get_properties(properties, image.channels(), i, x, y, self_prediction.max_error);
+                get_properties(properties, modular_data.channels, i, x, y, self_prediction.max_error);
                 auto const leaf_node = tree.get_leaf(properties);
                 auto diff = unpack_signed(TRY(decoder->decode_hybrid_uint(stream, leaf_node.ctx)));
                 diff = (diff * leaf_node.multiplier) + leaf_node.offset;
                 auto const total = diff + prediction(neighborhood, self_prediction.prediction, leaf_node.predictor);
 
                 self_correcting_data.compute_errors(x, total);
-                image.channels()[i].set(x, y, total);
+                channel.set(x, y, total);
             }
 
             self_correcting_data.register_next_row();
         }
 
-        image.channels()[i].set_decoded(true);
+        channel.set_decoded(true);
     }
 
     return modular_data;
@@ -1580,7 +1591,7 @@ struct GlobalModular {
 };
 
 static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& stream,
-    Image& image,
+    IntSize frame_size,
     FrameHeader const& frame_header,
     ImageMetadata const& metadata,
     Optional<EntropyDecoder>& entropy_decoder)
@@ -1609,7 +1620,10 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
     //        However, the decoder only decodes the first nb_meta_channels channels and any further channels
     //        that have a width and height that are both at most group_dim. At that point, it stops decoding.
     //        No inverse transforms are applied yet.
-    global_modular.modular_data = TRY(read_modular_bitstream(stream, image, metadata, entropy_decoder, global_modular.ma_tree, num_channels));
+    auto channels = TRY(FixedArray<IntSize>::create(num_channels));
+    channels.fill_with(frame_size);
+
+    global_modular.modular_data = TRY(read_modular_bitstream(stream, channels, metadata, entropy_decoder, global_modular.ma_tree));
 
     return global_modular;
 }
@@ -1691,7 +1705,7 @@ struct LfGlobal {
 };
 
 static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
-    Image& image,
+    IntSize frame_size,
     FrameHeader const& frame_header,
     ImageMetadata const& metadata,
     Optional<EntropyDecoder>& entropy_decoder)
@@ -1715,7 +1729,7 @@ static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
     if (frame_header.encoding == Encoding::kVarDCT)
         TODO();
 
-    lf_global.gmodular = TRY(read_global_modular(stream, image, frame_header, metadata, entropy_decoder));
+    lf_global.gmodular = TRY(read_global_modular(stream, frame_size, frame_header, metadata, entropy_decoder));
 
     return lf_global;
 }
@@ -1857,6 +1871,16 @@ struct Frame {
     u64 num_lf_groups {};
 
     Image image {};
+
+    ErrorOr<void> render_image()
+    {
+        auto& channels = image.channels();
+        TRY(channels.try_resize(lf_global.gmodular.modular_data.channels.size()));
+        for (u32 i = 0; i < channels.size(); ++i)
+            channels[i] = move(lf_global.gmodular.modular_data.channels[i]);
+        lf_global.gmodular.modular_data.channels = {};
+        return {};
+    }
 };
 
 static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
@@ -1908,7 +1932,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
 
     frame.image = TRY(Image::create({ frame.width, frame.height }, metadata));
 
-    frame.lf_global = TRY(read_lf_global(stream, frame.image, frame.frame_header, metadata, entropy_decoder));
+    frame.lf_global = TRY(read_lf_global(stream, { frame.width, frame.height }, frame.frame_header, metadata, entropy_decoder));
 
     for (u32 i {}; i < frame.num_lf_groups; ++i)
         TRY(read_lf_group(stream, frame.image, frame.frame_header));
@@ -1921,6 +1945,8 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     auto const& transform_infos = frame.lf_global.gmodular.modular_data.transform;
     for (u64 i {}; i < num_pass_group; ++i)
         TRY(read_pass_group(stream, frame.image, frame.frame_header, group_dim));
+
+    TRY(frame.render_image());
 
     // G.4.2 - Modular group data
     // When all modular groups are decoded, the inverse transforms are applied to
