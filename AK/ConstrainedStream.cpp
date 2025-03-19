@@ -29,7 +29,7 @@ ErrorOr<Bytes> ConstrainedStream::read_some(Bytes bytes)
 
 ErrorOr<void> ConstrainedStream::discard(size_t discarded_bytes)
 {
-    if (discarded_bytes >= m_limit)
+    if (discarded_bytes > m_limit)
         return Error::from_string_literal("Trying to discard more bytes than allowed");
 
     // Note: This will remove more bytes from the limit than intended if a failing discard yields partial results.
