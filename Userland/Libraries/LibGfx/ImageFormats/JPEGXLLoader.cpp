@@ -1534,7 +1534,8 @@ static Neighborhood retrieve_neighborhood(Channel const& channel, u32 x, u32 y)
 static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& stream,
     Span<IntSize> channels_info,
     Optional<EntropyDecoder>& decoder,
-    MATree const& global_tree)
+    MATree const& global_tree,
+    u32 group_dim)
 {
     ModularData modular_data;
 
@@ -1548,6 +1549,14 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
 
     TRY(modular_data.create_channels(channels_info));
 
+    auto will_be_decoded = [&](u32 index, Channel const& channel) {
+        if (channel.width() == 0 || channel.height() == 0)
+            return false;
+        if (index < modular_data.nb_meta_channels)
+            return true;
+        return channel.width() <= group_dim && channel.width() <= group_dim;
+    };
+
     if constexpr (JPEGXL_DEBUG) {
         dbgln("Decoding modular sub-stream ({} tree, {} transforms):",
             modular_data.use_global_tree ? "global"sv : "local"sv,
@@ -1560,7 +1569,7 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
             }
         }
         for (auto const& [i, channel] : enumerate(modular_data.channels))
-            dbgln("- Channel {}: {}x{}", i, channel.width(), channel.height());
+            dbgln("- Channel {}: {}x{}{}", i, channel.width(), channel.height(), will_be_decoded(i, channel) ? ""sv : " - skipped"sv);
     }
 
     Optional<MATree> local_tree;
@@ -1571,10 +1580,9 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
     // that are to be decoded.
     auto const dist_multiplier = [&]() {
         u32 dist_multiplier {};
-        // FIXME: Only consider the channels that are to be decoded.
-        for (u32 i = 0; i < modular_data.channels.size(); ++i) {
-            if (modular_data.channels[i].width() > dist_multiplier)
-                dist_multiplier = modular_data.channels[i].width();
+        for (auto [i, channel] : enumerate(modular_data.channels)) {
+            if (will_be_decoded(i, channel) && channel.width() > dist_multiplier)
+                dist_multiplier = channel.width();
         }
         return dist_multiplier;
     }();
@@ -1588,7 +1596,7 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
 
     auto const& tree = local_tree.has_value() ? *local_tree : global_tree;
     for (auto [i, channel] : enumerate(modular_data.channels)) {
-        if (channel.width() == 0 || channel.height() == 0)
+        if (!will_be_decoded(i, channel))
             continue;
 
         auto self_correcting_data = TRY(SelfCorrectingData::create(modular_data.wp_params, channel.width()));
@@ -1651,14 +1659,13 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
         }
     }
 
-    // FIXME: Ensure this spec comment:
-    //        However, the decoder only decodes the first nb_meta_channels channels and any further channels
-    //        that have a width and height that are both at most group_dim. At that point, it stops decoding.
-    //        No inverse transforms are applied yet.
+    // However, the decoder only decodes the first nb_meta_channels channels and any further channels
+    // that have a width and height that are both at most group_dim. At that point, it stops decoding.
+    // No inverse transforms are applied yet.
     auto channels = TRY(FixedArray<IntSize>::create(num_channels));
     channels.fill_with(frame_size);
 
-    global_modular.modular_data = TRY(read_modular_bitstream(stream, channels, entropy_decoder, global_modular.ma_tree));
+    global_modular.modular_data = TRY(read_modular_bitstream(stream, channels, entropy_decoder, global_modular.ma_tree, frame_header.group_dim()));
 
     return global_modular;
 }
