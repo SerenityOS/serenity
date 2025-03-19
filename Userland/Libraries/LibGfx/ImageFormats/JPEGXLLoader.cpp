@@ -660,6 +660,7 @@ struct FrameHeader {
     FixedArray<u8> ec_upsampling {};
 
     u8 group_size_shift { 1 };
+    u16 group_dim() const { return 128 << group_size_shift; }
     u8 x_qm_scale { 3 };
     u8 b_qm_scale { 2 };
     Passes passes {};
@@ -1866,8 +1867,7 @@ static void apply_transformation(Image& image, TransformInfo const& transformati
 /// G.3.2 - PassGroup
 static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
     Image& image,
-    FrameHeader const& frame_header,
-    u32 group_dim)
+    FrameHeader const& frame_header)
 {
     if (frame_header.encoding == Encoding::kVarDCT) {
         (void)stream;
@@ -1879,8 +1879,8 @@ static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
         // Skip meta-channels
         // FIXME: Also test if the channel has already been decoded
         //        See: nb_meta_channels in the spec
-        bool const is_meta_channel = channels[i].width() <= group_dim
-            || channels[i].height() <= group_dim
+        bool const is_meta_channel = channels[i].width() <= frame_header.group_dim()
+            || channels[i].height() <= frame_header.group_dim()
             || channels[i].hshift() >= 3
             || channels[i].vshift() >= 3;
 
@@ -1954,9 +1954,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     if (frame.frame_header.lf_level > 0)
         TODO();
 
-    // F.2 - FrameHeader
-    auto const group_dim = 128 << frame.frame_header.group_size_shift;
-
+    auto const group_dim = frame.frame_header.group_dim();
     auto const frame_width = static_cast<double>(frame.width);
     auto const frame_height = static_cast<double>(frame.height);
     frame.num_groups = ceil(frame_width / group_dim) * ceil(frame_height / group_dim);
@@ -1978,7 +1976,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     auto const num_pass_group = frame.num_groups * frame.frame_header.passes.num_passes;
     auto const& transform_infos = frame.lf_global.gmodular.modular_data.transform;
     for (u64 i {}; i < num_pass_group; ++i)
-        TRY(read_pass_group(stream, frame.image, frame.frame_header, group_dim));
+        TRY(read_pass_group(stream, frame.image, frame.frame_header));
 
     TRY(frame.render_image());
 
