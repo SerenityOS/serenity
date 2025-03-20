@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NeverDestroyed.h>
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/riscv64/IRQController.h>
 #include <Kernel/Arch/riscv64/InterruptManagement.h>
@@ -13,6 +14,7 @@
 
 namespace Kernel {
 
+static NeverDestroyed<Vector<DeviceTree::DeviceRecipe<NonnullLockRefPtr<IRQController>>>> s_recipes;
 static InterruptManagement* s_interrupt_management;
 
 bool InterruptManagement::initialized()
@@ -34,66 +36,25 @@ void InterruptManagement::initialize()
     the().find_controllers();
 }
 
+void InterruptManagement::add_recipe(DeviceTree::DeviceRecipe<NonnullLockRefPtr<IRQController>> recipe)
+{
+    s_recipes->append(move(recipe));
+}
+
 void InterruptManagement::find_controllers()
 {
-    auto const& device_tree = DeviceTree::get();
-    auto maybe_soc = device_tree.get_child("soc"sv);
-    if (!maybe_soc.has_value()) {
-        dmesgln("Interrupts: No `soc` node found in the device tree, Interrupts initialization will be skipped");
-        return;
-    }
-    auto const& soc = maybe_soc.value();
-    auto soc_address_cells = soc.get_property("#address-cells"sv).value().as<u32>();
-    auto soc_size_cells = soc.get_property("#size-cells"sv).value().as<u32>();
-    auto interrupt_controllers_seen = 0;
-    for (auto const& [node_name, node] : soc.children()) {
-        if (!node.has_property("interrupt-controller"sv))
-            continue;
-
-        interrupt_controllers_seen++;
-
-        auto maybe_compatible = node.get_property("compatible"sv);
-        if (!maybe_compatible.has_value()) {
-            dmesgln("Interrupts: Devicetree node for {} does not have a 'compatible' string, rejecting", node_name);
+    for (auto& recipe : *s_recipes) {
+        auto device_or_error = recipe.create_device();
+        if (device_or_error.is_error()) {
+            dmesgln("InterruptManagement: Failed to create interrupt controller for device \"{}\" with driver {}: {}", recipe.node_name, recipe.driver_name, device_or_error.release_error());
             continue;
         }
 
-        // Reject non sifive-compatible interrupt controllers
-        auto sifive_plic = false;
-        maybe_compatible->for_each_string([&sifive_plic](StringView compatible_string) -> IterationDecision {
-            if (compatible_string == "sifive,plic-1.0.0"sv) {
-                sifive_plic = true;
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        });
-        if (!sifive_plic)
-            continue;
-
-        auto maybe_reg = node.get_property("reg"sv);
-        if (!maybe_reg.has_value()) {
-            dmesgln("Interrupts: Devicetree node for {} does not have a physical address assigned to it, rejecting", node_name);
-            continue;
-        }
-        auto reg = maybe_reg.value();
-        auto stream = reg.as_stream();
-        FlatPtr paddr;
-        if (soc_address_cells == 1)
-            paddr = MUST(stream.read_value<BigEndian<u32>>());
-        else
-            paddr = MUST(stream.read_value<BigEndian<u64>>());
-        size_t size;
-        if (soc_size_cells == 1)
-            size = MUST(stream.read_value<BigEndian<u32>>());
-        else
-            size = MUST(stream.read_value<BigEndian<u64>>());
-        auto max_interrupt_id = node.get_property("riscv,ndev"sv).value().as<u32>();
-        m_interrupt_controllers.append(adopt_lock_ref(*new (nothrow) PLIC(PhysicalAddress(paddr), size, max_interrupt_id + 1)));
+        m_interrupt_controllers.append(device_or_error.release_value());
     }
 
-    if (interrupt_controllers_seen > 0 && m_interrupt_controllers.is_empty()) {
-        dmesgln("Interrupts: {} interrupt controllers seen, but none are compatible", interrupt_controllers_seen);
-    }
+    if (m_interrupt_controllers.is_empty())
+        dmesgln("InterruptManagement: No supported interrupt controller found in devicetree");
 }
 
 u8 InterruptManagement::acquire_mapped_interrupt_number(u8 original_irq)
