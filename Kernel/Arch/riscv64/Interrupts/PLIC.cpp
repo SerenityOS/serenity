@@ -4,12 +4,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/riscv64/InterruptManagement.h>
 #include <Kernel/Arch/riscv64/Interrupts/PLIC.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
+#include <Kernel/Firmware/DeviceTree/Driver.h>
+#include <Kernel/Firmware/DeviceTree/Management.h>
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT PLIC::PLIC(PhysicalAddress address, size_t size, u32 interrupt_count)
-    : m_registers(Memory::map_typed<RegisterMap volatile>(address, size, Memory::Region::Access::ReadWrite).release_value_but_fixme_should_propagate_errors())
+UNMAP_AFTER_INIT PLIC::PLIC(Memory::TypedMapping<RegisterMap volatile> registers, u32 interrupt_count)
+    : m_registers(move(registers))
     , m_interrupt_count(interrupt_count)
 {
     VERIFY(m_interrupt_count < 256); // TODO: Serenity currently only supports up to 256 unique interrupts, but the PLIC supports up to 1024
@@ -54,6 +58,36 @@ void PLIC::eoi(GenericInterruptHandler const& handler)
 u8 PLIC::pending_interrupt() const
 {
     return m_registers->contexts[interrupt_context].claim_complete;
+}
+
+static constinit Array const compatibles_array = {
+    "sifive,plic-1.0.0"sv,
+};
+
+DEVICETREE_DRIVER(PLICDriver, compatibles_array);
+
+// https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/sifive,plic-1.0.0.yaml
+ErrorOr<void> PLICDriver::probe(DeviceTree::Device const& device, StringView) const
+{
+    auto physical_address = TRY(device.get_resource(0)).paddr;
+
+    auto maybe_max_interrupt_id = device.node().get_property("riscv,ndev"sv);
+    if (!maybe_max_interrupt_id.has_value())
+        return EINVAL;
+    auto max_interrupt_id = maybe_max_interrupt_id->as<u32>();
+
+    DeviceTree::DeviceRecipe<NonnullLockRefPtr<IRQController>> recipe {
+        name(),
+        device.node_name(),
+        [physical_address, max_interrupt_id]() -> ErrorOr<NonnullLockRefPtr<IRQController>> {
+            auto registers_mapping = TRY(Memory::map_typed_writable<PLIC::RegisterMap volatile>(physical_address));
+            return adopt_nonnull_lock_ref_or_enomem(new (nothrow) PLIC(move(registers_mapping), max_interrupt_id + 1));
+        },
+    };
+
+    InterruptManagement::add_recipe(move(recipe));
+
+    return {};
 }
 
 }

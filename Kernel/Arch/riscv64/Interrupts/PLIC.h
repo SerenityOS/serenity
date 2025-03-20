@@ -13,7 +13,21 @@ namespace Kernel {
 
 class PLIC final : public IRQController {
 public:
-    PLIC(PhysicalAddress, size_t size, u32 interrupt_count);
+    struct RegisterMap {
+        u32 interrupt_priority[1024];
+        u32 interrupt_pending_bitmap[32];
+        u32 reserved1[992];
+        u32 interrupt_enable_bitmap[15872][32];
+        u32 reserved2[14336];
+        struct {
+            u32 priority_threshold;
+            u32 claim_complete;
+            u32 reserved3[1022];
+        } contexts[15872];
+    };
+    static_assert(AssertSize<RegisterMap, 0x4000000>());
+
+    PLIC(Memory::TypedMapping<RegisterMap volatile>, u32 interrupt_count);
 
     virtual void enable(GenericInterruptHandler const&) override;
     virtual void disable(GenericInterruptHandler const&) override;
@@ -31,20 +45,6 @@ private:
         CONTEXTS_PER_HART,
     };
     static constexpr size_t interrupt_context = (0 * CONTEXTS_PER_HART) + S_MODE_CONTEXT; // We assume we only have hart 0, change this once we support SMP
-
-    struct RegisterMap {
-        u32 interrupt_priority[1024];
-        u32 interrupt_pending_bitmap[32];
-        u32 reserved1[992];
-        u32 interrupt_enable_bitmap[15872][32];
-        u32 reserved2[14336];
-        struct {
-            u32 priority_threshold;
-            u32 claim_complete;
-            u32 reserved3[1022];
-        } contexts[15872];
-    };
-    static_assert(AssertSize<RegisterMap, 0x4000000>());
 
     void initialize();
 
