@@ -844,7 +844,10 @@ static ErrorOr<TOC> read_toc(LittleEndianInputBitStream& stream, FrameHeader con
             4211712 + TRY(stream.read_bits(30)));
 
         toc.entries[i] = new_entry;
-        toc.group_offsets[i] = (i == 0 ? 0 : toc.group_offsets[i - 1]) + new_entry;
+
+        // The decoder then computes an array group_offsets, which has 0 as its first element
+        // and subsequent group_offsets[i] are the sum of all TOC entries [0, i).
+        toc.group_offsets[i] = i == 0 ? 0 : toc.group_offsets[i - 1] + toc.entries[i - 1];
     }
 
     if (permuted_toc)
@@ -1966,6 +1969,12 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     frame.num_lf_groups = ceil(frame_width / (group_dim * 8)) * ceil(frame_height / (group_dim * 8));
 
     frame.toc = TRY(read_toc(stream, frame.frame_header, frame.num_groups, frame.num_lf_groups));
+
+    if constexpr (JPEGXL_DEBUG) {
+        dbgln("TOC: index |  size | offset");
+        for (u32 i {}; i < frame.toc.entries.size(); ++i)
+            dbgln("     {:5} | {:5} | {:6}", i, frame.toc.entries[i], frame.toc.group_offsets[i]);
+    }
 
     frame.image = TRY(Image::create({ frame.width, frame.height }, metadata));
 
