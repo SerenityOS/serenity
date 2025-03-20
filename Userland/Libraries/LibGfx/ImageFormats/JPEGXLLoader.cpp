@@ -1878,28 +1878,89 @@ static void apply_transformation(Image& image, TransformInfo const& transformati
 ///
 
 /// G.3.2 - PassGroup
+static IntRect rect_for_group(Channel const& channel, u32 group_dim, u32 group_index)
+{
+    IntRect rect(0, 0, group_dim, group_dim);
+
+    auto nb_groups_per_row = (channel.width() + group_dim - 1) / group_dim;
+    auto group_x = group_index % nb_groups_per_row;
+    rect.set_x(group_x * group_dim);
+    if (group_x == nb_groups_per_row - 1) {
+        rect.set_width(channel.width() % group_dim);
+    }
+
+    auto nb_groups_per_column = (channel.height() + group_dim - 1) / group_dim;
+    auto group_y = group_index / nb_groups_per_column;
+    rect.set_y(group_y * group_dim);
+    if (group_y == nb_groups_per_column - 1) {
+        rect.set_height(channel.height() % group_dim);
+    }
+
+    return rect;
+}
+
+static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
+    GlobalModular& global_modular,
+    FrameHeader const& frame_header,
+    u32 group_index,
+    u32 pass_index)
+{
+    u32 max_shift = 3;
+    u32 min_shift = 0;
+
+    if (pass_index != 0)
+        return Error::from_string_literal("JPEGXLLoader: Subsequent passes are not supported yet");
+
+    // for every remaining channel in the partially decoded GlobalModular image (i.e. it is not a meta-channel,
+    // the channel dimensions exceed group_dim × group_dim, and hshift < 3 or vshift < 3, and the channel has
+    // not been already decoded in a previous pass)
+    Vector<IntSize> channels_info;
+    Vector<Channel&> original_channels;
+    auto& channels = global_modular.modular_data.channels;
+    for (auto [i, channel] : enumerate(channels)) {
+        if (i < global_modular.modular_data.nb_meta_channels)
+            continue;
+        if (channels[i].width() <= frame_header.group_dim() && channels[i].height() <= frame_header.group_dim())
+            continue;
+        if (channel.hshift() >= 3 && channel.vshift() >= 3)
+            continue;
+        if (channel.decoded())
+            continue;
+        auto channel_min_shift = min(channel.hshift(), channel.vshift());
+        if (channel_min_shift < min_shift || channel_min_shift >= max_shift)
+            continue;
+
+        TRY(channels_info.try_append(rect_for_group(channel, frame_header.group_dim(), group_index).size()));
+        TRY(original_channels.try_append(channel));
+    }
+    if (channels_info.is_empty())
+        return {};
+
+    dbgln_if(JPEGXL_DEBUG, "Decoding pass {} for rectangle {}", pass_index, rect_for_group(original_channels[0], frame_header.group_dim(), group_index));
+
+    auto decoded = TRY(read_modular_bitstream(stream, channels_info, global_modular.decoder, global_modular.ma_tree, frame_header.group_dim()));
+
+    // The decoded modular group data is then copied into the partially decoded GlobalModular image in the corresponding positions.
+    for (u32 i = 0; i < original_channels.size(); ++i) {
+        auto destination = rect_for_group(original_channels[i], frame_header.group_dim(), group_index);
+        original_channels[i].copy_from(destination, decoded.channels[i]);
+    }
+
+    return {};
+}
+
 static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
-    Image& image,
-    FrameHeader const& frame_header)
+    GlobalModular& global_modular,
+    FrameHeader const& frame_header,
+    u32 group_index,
+    u32 pass_index)
 {
     if (frame_header.encoding == Encoding::kVarDCT) {
         (void)stream;
         TODO();
     }
 
-    auto& channels = image.channels();
-    for (u16 i {}; i < channels.size(); ++i) {
-        // Skip meta-channels
-        // FIXME: Also test if the channel has already been decoded
-        //        See: nb_meta_channels in the spec
-        bool const is_meta_channel = channels[i].width() <= frame_header.group_dim()
-            || channels[i].height() <= frame_header.group_dim()
-            || channels[i].hshift() >= 3
-            || channels[i].vshift() >= 3;
-
-        if (!is_meta_channel)
-            TODO();
-    }
+    TRY(read_modular_group_data(stream, global_modular, frame_header, group_index, pass_index));
 
     return {};
 }
@@ -2010,7 +2071,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
         auto section_stream = get_stream_for_section(stream, frame.toc.entries[0]);
         frame.lf_global = TRY(read_lf_global(section_stream, { frame.width, frame.height }, frame.frame_header, metadata));
         TRY(read_lf_group(section_stream, frame.image, frame.frame_header));
-        TRY(read_pass_group(section_stream, frame.image, frame.frame_header));
+        TRY(read_pass_group(section_stream, frame.lf_global.gmodular, frame.frame_header, 0, 0));
     } else {
         {
             auto lf_stream = get_stream_for_section(stream, frame.toc.entries[0]);
@@ -2030,7 +2091,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
             for (u64 group_index {}; group_index < frame.num_groups; ++group_index) {
                 auto toc_section_number = 2 + frame.num_lf_groups + pass_index * frame.num_groups + group_index;
                 auto pass_stream = get_stream_for_section(stream, frame.toc.entries[toc_section_number]);
-                TRY(read_pass_group(pass_stream, frame.image, frame.frame_header));
+                TRY(read_pass_group(pass_stream, frame.lf_global.gmodular, frame.frame_header, group_index, pass_index));
             }
         }
     }
