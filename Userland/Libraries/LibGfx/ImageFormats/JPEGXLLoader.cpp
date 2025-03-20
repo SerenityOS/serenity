@@ -1138,7 +1138,7 @@ public:
         };
     }
 
-    ErrorOr<NonnullRefPtr<Bitmap>> to_bitmap(ImageMetadata& metadata) const
+    ErrorOr<NonnullRefPtr<Bitmap>> to_bitmap(ImageMetadata const& metadata) const
     {
         // FIXME: which channel size should we use?
         auto const width = m_channels[0].width();
