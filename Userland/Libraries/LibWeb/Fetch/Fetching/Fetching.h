@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/StringView.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>

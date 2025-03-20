@@ -12,7 +12,7 @@
 
 namespace AK {
 
-char s_single_dot = '.';
+static char s_single_dot = '.';
 
 LexicalPath::LexicalPath(ByteString path)
     : m_string(canonicalized_path(move(path)))

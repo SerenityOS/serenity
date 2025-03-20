@@ -11,6 +11,7 @@
 #include <AK/MemMem.h>
 #include <AK/Stream.h>
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <stdlib.h>
 

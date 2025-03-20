@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <AK/BitCast.h>
+#include <AK/Noncopyable.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
 

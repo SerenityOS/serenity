@@ -12,7 +12,7 @@
 #include <AK/Types.h>
 #include <stdlib.h>
 
-#if defined(__unix__)
+#if defined(__unix__) && !(defined(AK_OS_SERENITY) || defined(AK_OS_BSD_GENERIC) || defined(AK_OS_HAIKU) || AK_LIBC_GLIBC_PREREQ(2, 36) || defined(OSS_FUZZ))
 #    include <unistd.h>
 #endif
 

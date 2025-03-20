@@ -10,7 +10,7 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-#include <LibCrypto/BigInt/UnsignedBigInteger.h>
+#include <LibJS/Runtime/Object.h>
 
 // FIXME: Generate these from IDL
 namespace Web::Bindings {

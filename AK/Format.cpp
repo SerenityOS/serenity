@@ -9,7 +9,6 @@
 #include <AK/FormatParser.h>
 #include <AK/GenericLexer.h>
 #include <AK/IntegralMath.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/kstdio.h>
 

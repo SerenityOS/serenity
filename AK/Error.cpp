@@ -5,6 +5,7 @@
  */
 
 #include <AK/Error.h>
+#include <AK/StdLibExtraDetails.h>
 
 #ifdef KERNEL
 #    include <AK/Format.h>
@@ -21,5 +22,9 @@ Error Error::from_string_view_or_print_error_and_return_errno(StringView string_
     return Error::from_string_view(string_literal);
 #endif
 }
+
+// Properties that Error should have:
+static_assert(IsTriviallyMoveConstructible<ErrorOr<int>>);
+static_assert(IsTriviallyDestructible<ErrorOr<int>>);
 
 }

@@ -8,6 +8,7 @@
 
 #include <AK/Concepts.h>
 #include <AK/Platform.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 namespace AK {
