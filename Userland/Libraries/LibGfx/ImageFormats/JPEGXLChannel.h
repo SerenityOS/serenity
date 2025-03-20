@@ -65,6 +65,23 @@ public:
         m_decoded = decoded;
     }
 
+    void copy_from(IntRect destination, Channel const& other)
+    {
+        VERIFY(destination.left() >= 0);
+        VERIFY(destination.top() >= 0);
+        VERIFY(static_cast<u32>(destination.right()) <= m_width);
+        VERIFY(static_cast<u32>(destination.bottom()) <= m_height);
+
+        VERIFY(static_cast<u32>(destination.width()) == other.width());
+        VERIFY(static_cast<u32>(destination.height()) == other.height());
+
+        for (i32 y = 0; y < destination.height(); ++y) {
+            for (i32 x = 0; x < destination.width(); ++x) {
+                set(x + destination.left(), y + destination.top(), other.get(x, y));
+            }
+        }
+    }
+
 private:
     u32 m_width {};
     u32 m_height {};
