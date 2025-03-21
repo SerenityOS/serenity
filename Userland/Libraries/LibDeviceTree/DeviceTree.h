@@ -313,7 +313,7 @@ public:
 
     // Handles both the "interrupts" and "interrupts-extended" properties.
     // The returned Interrupt::domain_root is always non-null.
-    ErrorOr<FixedArray<Interrupt>> interrupts(DeviceTree const& device_tree) const;
+    ErrorOr<Vector<Interrupt>> interrupts(DeviceTree const& device_tree) const;
 
     // FIXME: Stringify?
     // FIXME: Flatten?
