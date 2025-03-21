@@ -1420,8 +1420,6 @@ static void get_properties(FixedArray<i32>& properties, Span<Channel> channels, 
 {
     // Table H.4 - Property definitions
     properties[0] = i;
-    // FIXME: Handle other cases than GlobalModular
-    properties[1] = 0;
     properties[2] = y;
     properties[3] = x;
 
@@ -1540,7 +1538,8 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
     Span<IntSize> channels_info,
     Optional<EntropyDecoder>& decoder,
     MATree const& global_tree,
-    u32 group_dim)
+    u32 group_dim,
+    u32 stream_index)
 {
     ModularData modular_data;
 
@@ -1563,9 +1562,10 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
     };
 
     if constexpr (JPEGXL_DEBUG) {
-        dbgln("Decoding modular sub-stream ({} tree, {} transforms):",
+        dbgln("Decoding modular sub-stream ({} tree, {} transforms, stream_index={}):",
             modular_data.use_global_tree ? "global"sv : "local"sv,
-            nb_transforms);
+            nb_transforms,
+            stream_index);
 
         for (auto const& tr : modular_data.transform) {
             if (tr.tr == TransformInfo::TransformId::kPalette) {
@@ -1598,6 +1598,7 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
     // zero. Finally, the inverse transformations are applied (from last to first) as described in H.6.
 
     auto properties = TRY(FixedArray<i32>::create(nb_base_predictors + modular_data.channels.size() * 4));
+    properties[1] = stream_index;
 
     auto const& tree = local_tree.has_value() ? *local_tree : global_tree;
     for (auto [i, channel] : enumerate(modular_data.channels)) {
@@ -1671,7 +1672,7 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
     auto channels = TRY(FixedArray<IntSize>::create(num_channels));
     channels.fill_with(frame_size);
 
-    global_modular.modular_data = TRY(read_modular_bitstream(stream, channels, global_modular.decoder, global_modular.ma_tree, frame_header.group_dim()));
+    global_modular.modular_data = TRY(read_modular_bitstream(stream, channels, global_modular.decoder, global_modular.ma_tree, frame_header.group_dim(), 0));
 
     return global_modular;
 }
@@ -1903,7 +1904,8 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
     GlobalModular& global_modular,
     FrameHeader const& frame_header,
     u32 group_index,
-    u32 pass_index)
+    u32 pass_index,
+    u32 stream_index)
 {
     u32 max_shift = 3;
     u32 min_shift = 0;
@@ -1938,7 +1940,7 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
 
     dbgln_if(JPEGXL_DEBUG, "Decoding pass {} for rectangle {}", pass_index, rect_for_group(original_channels[0], frame_header.group_dim(), group_index));
 
-    auto decoded = TRY(read_modular_bitstream(stream, channels_info, global_modular.decoder, global_modular.ma_tree, frame_header.group_dim()));
+    auto decoded = TRY(read_modular_bitstream(stream, channels_info, global_modular.decoder, global_modular.ma_tree, frame_header.group_dim(), stream_index));
 
     // The decoded modular group data is then copied into the partially decoded GlobalModular image in the corresponding positions.
     for (u32 i = 0; i < original_channels.size(); ++i) {
@@ -1953,14 +1955,15 @@ static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
     GlobalModular& global_modular,
     FrameHeader const& frame_header,
     u32 group_index,
-    u32 pass_index)
+    u32 pass_index,
+    u32 stream_index)
 {
     if (frame_header.encoding == Encoding::kVarDCT) {
         (void)stream;
         TODO();
     }
 
-    TRY(read_modular_group_data(stream, global_modular, frame_header, group_index, pass_index));
+    TRY(read_modular_group_data(stream, global_modular, frame_header, group_index, pass_index, stream_index));
 
     return {};
 }
@@ -2071,7 +2074,10 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
         auto section_stream = get_stream_for_section(stream, frame.toc.entries[0]);
         frame.lf_global = TRY(read_lf_global(section_stream, { frame.width, frame.height }, frame.frame_header, metadata));
         TRY(read_lf_group(section_stream, frame.image, frame.frame_header));
-        TRY(read_pass_group(section_stream, frame.lf_global.gmodular, frame.frame_header, 0, 0));
+
+        // From H.4.1, ModularGroup: 1 + 3 * num_lf_groups + 17 + num_groups * pass index + group index
+        auto stream_index = 1 + 3 * frame.num_lf_groups + 17;
+        TRY(read_pass_group(section_stream, frame.lf_global.gmodular, frame.frame_header, 0, 0, stream_index));
     } else {
         {
             auto lf_stream = get_stream_for_section(stream, frame.toc.entries[0]);
@@ -2091,7 +2097,10 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
             for (u64 group_index {}; group_index < frame.num_groups; ++group_index) {
                 auto toc_section_number = 2 + frame.num_lf_groups + pass_index * frame.num_groups + group_index;
                 auto pass_stream = get_stream_for_section(stream, frame.toc.entries[toc_section_number]);
-                TRY(read_pass_group(pass_stream, frame.lf_global.gmodular, frame.frame_header, group_index, pass_index));
+
+                // From H.4.1, ModularGroup: 1 + 3 * num_lf_groups + 17 + num_groups * pass index + group index
+                auto stream_index = 1 + 3 * frame.num_lf_groups + 17 + frame.num_groups * pass_index + group_index;
+                TRY(read_pass_group(pass_stream, frame.lf_global.gmodular, frame.frame_header, group_index, pass_index, stream_index));
             }
         }
     }
