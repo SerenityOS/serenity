@@ -25,6 +25,18 @@ public:
         return channel;
     }
 
+    ErrorOr<Channel> copy() const
+    {
+        Channel other;
+        other.m_width = m_width;
+        other.m_height = m_height;
+        other.m_hshift = m_hshift;
+        other.m_vshift = m_vshift;
+        other.m_decoded = m_decoded;
+        TRY(other.m_pixels.try_extend(m_pixels));
+        return other;
+    }
+
     i32 get(u32 x, u32 y) const
     {
         return m_pixels[y * m_width + x];
