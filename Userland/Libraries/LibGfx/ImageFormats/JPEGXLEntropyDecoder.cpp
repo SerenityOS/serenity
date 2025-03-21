@@ -483,6 +483,8 @@ ErrorOr<void> EntropyDecoder::read_pre_clustered_distributions(LittleEndianInput
 
         if (use_mtf)
             TODO();
+
+        TRY(decoder.ensure_end_state());
     }
     TRY(m_configs.try_resize(num_clusters));
     return {};

@@ -73,6 +73,7 @@ ErrorOr<ByteBuffer> read_encoded_icc_stream(LittleEndianInputBitStream& stream)
         uncompressed_icc_stream[index] = TRY(decoder.decode_hybrid_uint(stream, context));
     }
 
+    TRY(decoder.ensure_end_state());
     return uncompressed_icc_stream;
 }
 ///

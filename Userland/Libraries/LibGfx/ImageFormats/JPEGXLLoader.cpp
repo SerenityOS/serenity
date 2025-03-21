@@ -933,6 +933,7 @@ public:
                 tree.m_tree.empend(leaf_node);
             }
         }
+        TRY(decoder->ensure_end_state());
 
         // Finally, the decoder reads (tree.size() + 1) / 2 pre-clustered distributions D as specified in C.1.
 
@@ -1626,6 +1627,7 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
 
         channel.set_decoded(true);
     }
+    TRY(decoder->ensure_end_state());
 
     return modular_data;
 }
@@ -1738,6 +1740,7 @@ static ErrorOr<FixedArray<Patch>> read_patches(LittleEndianInputBitStream& strea
     for (auto& patch : patches)
         patch = TRY(read_patch(stream, decoder, num_extra_channels));
 
+    TRY(decoder.ensure_end_state());
     return patches;
 }
 
