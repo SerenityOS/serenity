@@ -55,11 +55,7 @@ class EntropyDecoder {
 
 public:
     EntropyDecoder() = default;
-    ~EntropyDecoder()
-    {
-        if (m_state.has_value() && *m_state != 0x130000)
-            dbgln("JPEGXLLoader: ANS decoder left in invalid state");
-    }
+    ~EntropyDecoder() = default;
 
     static ErrorOr<EntropyDecoder> create(LittleEndianInputBitStream& stream, u32 initial_num_distrib);
 
@@ -68,6 +64,14 @@ public:
     void set_dist_multiplier(u32 dist_multiplier)
     {
         m_dist_multiplier = dist_multiplier;
+    }
+
+    ErrorOr<void> ensure_end_state()
+    {
+        if (m_state.has_value() && *m_state != 0x130000)
+            return Error::from_string_literal("JPEGXLLoader: ANS decoder left in invalid state");
+        m_state.clear();
+        return {};
     }
 
 private:
