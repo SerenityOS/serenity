@@ -2013,7 +2013,7 @@ static ErrorOr<void> read_packet_headers(JPEG2000LoadingContext& context)
     return {};
 }
 
-static u8 get_exponent(QuantizationDefault const& quantization_parameters, JPEG2000::SubBand sub_band, int resolution_level)
+static u8 get_exponent(QuantizationDefault const& quantization_parameters, JPEG2000::SubBand sub_band, int resolution_level, int N_L)
 {
     switch (quantization_parameters.quantization_style) {
     case QuantizationDefault::QuantizationStyle::NoQuantization: {
@@ -2030,8 +2030,12 @@ static u8 get_exponent(QuantizationDefault const& quantization_parameters, JPEG2
         auto const& steps = quantization_parameters.step_sizes.get<Vector<QuantizationDefault::IrreversibleStepSize>>();
 
         if (quantization_parameters.quantization_style == QuantizationDefault::QuantizationStyle::ScalarDerived) {
-            // Callers must use (E-5).
-            return steps[0].exponent;
+            // Table F.1 – Decomposition level nb for sub-band b
+            // Note: The spec suggests that this ends with n_b = 1, but if N_L is 0, we have 0LL and nothing else.
+            int n_b = resolution_level == 0 ? N_L : (N_L + 1 - resolution_level);
+            // (E-5)
+            return steps[0].exponent - N_L + n_b;
+            // This is the same as `return resolution_level == 0 ? steps[0].exponent : steps[0].exponent - (resolution_level - 1);`
         }
 
         if (sub_band == JPEG2000::SubBand::HorizontalLowpassVerticalLowpass) {
@@ -2051,21 +2055,13 @@ static int compute_M_b(JPEG2000LoadingContext& context, TileData& tile, int comp
     // "Mb = G + exp_b - 1       (E-2)
     //  where the number of guard bits G and the exponent exp_b are specified in the QCD or QCC marker segments (see A.6.4 and A.6.5)."
     auto quantization_parameters = context.quantization_parameters_for_component(tile, component_index);
-    auto exponent = get_exponent(quantization_parameters, sub_band_type, r);
-    if (quantization_parameters.quantization_style == QuantizationDefault::QuantizationStyle::ScalarDerived) {
-        // Table F.1 – Decomposition level nb for sub-band b
-        // Note: The spec suggests that this ends with n_b = 1, but if N_L is 0, we have 0LL and nothing else.
-        int n_b = r == 0 ? N_L : (N_L + 1 - r);
-        // (E-5)
-        exponent = exponent - N_L + n_b;
-        // This is the same as `if (r != 0) exponent = exponent - (r - 1);`
-    }
+    auto exponent = get_exponent(quantization_parameters, sub_band_type, r, N_L);
     return quantization_parameters.number_of_guard_bits + exponent - 1;
 }
 
 static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& context)
 {
-    auto copy_and_dequantize_if_needed = [&](JPEG2000::Span2D<float> output, ReadonlySpan<float> input, QuantizationDefault const& quantization_parameters, JPEG2000::SubBand sub_band_type, int component_index, int r) {
+    auto copy_and_dequantize_if_needed = [&](JPEG2000::Span2D<float> output, ReadonlySpan<float> input, QuantizationDefault const& quantization_parameters, JPEG2000::SubBand sub_band_type, int component_index, int r, int N_L) {
         int w = output.size.width();
         int h = output.size.height();
         VERIFY(w * h == static_cast<int>(input.size()));
@@ -2096,7 +2092,7 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
                     }
 
                     // (E-3)
-                    auto exponent = get_exponent(quantization_parameters, sub_band_type, r);
+                    auto exponent = get_exponent(quantization_parameters, sub_band_type, r, N_L);
                     float step_size = powf(2.0f, R_b - exponent) * (1.0f + mantissa / powf(2.0f, 11.0f));
 
                     // (E-6), with r chosen as 0 (see NOTE below (E-6)).
@@ -2144,7 +2140,7 @@ static ErrorOr<void> decode_bitplanes_to_coefficients(JPEG2000LoadingContext& co
             output.size = clipped_precinct_rect.size();
             output.pitch = sub_band.rect.width();
             output.data = sub_band.coefficients.span().slice((clipped_precinct_rect.y() - sub_band.rect.y()) * output.pitch + (clipped_precinct_rect.x() - sub_band.rect.x()));
-            copy_and_dequantize_if_needed(output, precinct_coefficients, context.quantization_parameters_for_component(tile, component_index), sub_band_type, component_index, r);
+            copy_and_dequantize_if_needed(output, precinct_coefficients, context.quantization_parameters_for_component(tile, component_index), sub_band_type, component_index, r, N_L);
         }
 
         return {};
