@@ -1862,13 +1862,90 @@ static void apply_rct(Span<Channel> channels, TransformInfo const& transformatio
     }
 }
 
-static ErrorOr<void> apply_transformation(Span<Channel> channels, TransformInfo const& transformation)
+// H.6.4  Palette
+static constexpr i16 kDeltaPalette[72][3] = {
+    { 0, 0, 0 }, { 4, 4, 4 }, { 11, 0, 0 }, { 0, 0, -13 }, { 0, -12, 0 }, { -10, -10, -10 },
+    { -18, -18, -18 }, { -27, -27, -27 }, { -18, -18, 0 }, { 0, 0, -32 }, { -32, 0, 0 }, { -37, -37, -37 },
+    { 0, -32, -32 }, { 24, 24, 45 }, { 50, 50, 50 }, { -45, -24, -24 }, { -24, -45, -45 }, { 0, -24, -24 },
+    { -34, -34, 0 }, { -24, 0, -24 }, { -45, -45, -24 }, { 64, 64, 64 }, { -32, 0, -32 }, { 0, -32, 0 },
+    { -32, 0, 32 }, { -24, -45, -24 }, { 45, 24, 45 }, { 24, -24, -45 }, { -45, -24, 24 }, { 80, 80, 80 },
+    { 64, 0, 0 }, { 0, 0, -64 }, { 0, -64, -64 }, { -24, -24, 45 }, { 96, 96, 96 }, { 64, 64, 0 },
+    { 45, -24, -24 }, { 34, -34, 0 }, { 112, 112, 112 }, { 24, -45, -45 }, { 45, 45, -24 }, { 0, -32, 32 },
+    { 24, -24, 45 }, { 0, 96, 96 }, { 45, -24, 24 }, { 24, -45, -24 }, { -24, -45, 24 }, { 0, -64, 0 },
+    { 96, 0, 0 }, { 128, 128, 128 }, { 64, 0, 64 }, { 144, 144, 144 }, { 96, 96, 0 }, { -36, -36, 36 },
+    { 45, -24, -45 }, { 45, -45, -24 }, { 0, 0, -96 }, { 0, 128, 128 }, { 0, 96, 0 }, { 45, 24, -45 },
+    { -128, 0, 0 }, { 24, -45, 24 }, { -45, 24, -45 }, { 64, 0, -64 }, { 64, -64, -64 }, { 96, 0, 96 },
+    { 45, -45, 24 }, { 24, 45, -45 }, { 64, 64, -64 }, { 128, 128, 0 }, { 0, 0, -128 }, { -24, 45, -45 }
+};
+
+static ErrorOr<void> apply_palette(Vector<Channel>& channel,
+    TransformInfo const& tr,
+    ImageMetadata const& metadata,
+    WPHeader const& wp_params)
+{
+    auto first = tr.begin_c + 1;
+    auto last = tr.begin_c + tr.num_c;
+    auto bitdepth = metadata.bit_depth.bits_per_sample;
+    for (u32 i = first + 1; i <= last; i++)
+        channel.insert(i, TRY(channel[first].copy()));
+    for (u32 c = 0; c < tr.num_c; c++) {
+        auto self_correcting_data = TRY(SelfCorrectingData::create(wp_params, channel[first].width()));
+
+        for (u32 y = 0; y < channel[first].height(); y++) {
+            for (u32 x = 0; x < channel[first].width(); x++) {
+                i32 index = channel[first + c].get(x, y);
+                auto is_delta = index < static_cast<i64>(tr.nb_deltas);
+                i32 value {};
+                if (index >= 0 && index < static_cast<i64>(tr.nb_colours)) {
+                    value = channel[0].get(index, c);
+                } else if (index >= static_cast<i64>(tr.nb_colours)) {
+                    index -= tr.nb_colours;
+                    if (index < 64) {
+                        value = ((index >> (2 * c)) % 4) * ((1 << bitdepth) - 1) / 4
+                            + (1 << max(0, bitdepth - 3));
+                    } else {
+                        index -= 64;
+                        for (u32 i = 0; i < c; i++)
+                            index = index / 5;
+                        value = (index % 5) * ((1 << bitdepth) - 1) / 4;
+                    }
+                } else if (c < 3) {
+                    index = (-index - 1) % 143;
+                    value = kDeltaPalette[(index + 1) >> 1][c];
+                    if ((index & 1) == 0)
+                        value = -value;
+                    if (bitdepth > 8)
+                        value <<= min(bitdepth, 24) - 8;
+                } else {
+                    value = 0;
+                }
+                channel[first + c].set(x, y, value);
+                if (is_delta) {
+                    auto const original = channel[first + c].get(x, y);
+                    auto const neighborhood = retrieve_neighborhood(channel[first + c], x, y);
+                    auto const self_prediction = self_correcting_data.compute_predictions(neighborhood, x);
+                    auto const pred = prediction(neighborhood, self_prediction.prediction, tr.d_pred);
+                    channel[first + c].set(x, y, original + pred);
+                }
+            }
+        }
+    }
+    channel.remove(0);
+    return {};
+}
+
+static ErrorOr<void> apply_transformation(
+    Vector<Channel>& channels,
+    TransformInfo const& transformation,
+    ImageMetadata const& metadata,
+    WPHeader const& wp_header)
 {
     switch (transformation.tr) {
     case TransformInfo::TransformId::kRCT:
         apply_rct(channels, transformation);
         break;
     case TransformInfo::TransformId::kPalette:
+        return apply_palette(channels, transformation, metadata, wp_header);
     case TransformInfo::TransformId::kSqueeze:
         return Error::from_string_literal("JPEGXLLoader: Unimplemented transformation");
     default:
@@ -1983,13 +2060,10 @@ struct Frame {
 
     Image image {};
 
-    ErrorOr<void> render_image()
+    ErrorOr<void> render_image(Vector<Channel>&& input_channels)
     {
-        auto& channels = image.channels();
-        TRY(channels.try_resize(lf_global.gmodular.modular_data.channels.size()));
-        for (u32 i = 0; i < channels.size(); ++i)
-            channels[i] = move(lf_global.gmodular.modular_data.channels[i]);
-        lf_global.gmodular.modular_data.channels = {};
+        // FIXME: Verify that all channels have the correct dimensions.
+        image.channels() = move(input_channels);
         return {};
     }
 };
@@ -2108,11 +2182,12 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     // G.4.2 - Modular group data
     // When all modular groups are decoded, the inverse transforms are applied to
     // the at that point fully decoded GlobalModular image, as specified in H.6.
+    auto& channels = frame.lf_global.gmodular.modular_data.channels;
     auto const& transform_infos = frame.lf_global.gmodular.modular_data.transform;
     for (auto const& transformation : transform_infos.in_reverse())
-        TRY(apply_transformation(frame.lf_global.gmodular.modular_data.channels, transformation));
+        TRY(apply_transformation(channels, transformation, metadata, frame.lf_global.gmodular.modular_data.wp_params));
 
-    TRY(frame.render_image());
+    TRY(frame.render_image(move(channels)));
 
     return frame;
 }
