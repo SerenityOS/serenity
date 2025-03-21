@@ -1826,9 +1826,8 @@ static ErrorOr<void> read_lf_group(LittleEndianInputBitStream&,
 ///
 
 /// H.6 - Transformations
-static void apply_rct(Image& image, TransformInfo const& transformation)
+static void apply_rct(Span<Channel> channels, TransformInfo const& transformation)
 {
-    auto& channels = image.channels();
     for (u32 y {}; y < channels[transformation.begin_c].height(); y++) {
         for (u32 x {}; x < channels[transformation.begin_c].width(); x++) {
 
@@ -1871,11 +1870,11 @@ static void apply_rct(Image& image, TransformInfo const& transformation)
     }
 }
 
-static ErrorOr<void> apply_transformation(Image& image, TransformInfo const& transformation)
+static ErrorOr<void> apply_transformation(Span<Channel> channels, TransformInfo const& transformation)
 {
     switch (transformation.tr) {
     case TransformInfo::TransformId::kRCT:
-        apply_rct(image, transformation);
+        apply_rct(channels, transformation);
         break;
     case TransformInfo::TransformId::kPalette:
     case TransformInfo::TransformId::kSqueeze:
@@ -2114,14 +2113,14 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
         }
     }
 
-    TRY(frame.render_image());
-
     // G.4.2 - Modular group data
     // When all modular groups are decoded, the inverse transforms are applied to
     // the at that point fully decoded GlobalModular image, as specified in H.6.
     auto const& transform_infos = frame.lf_global.gmodular.modular_data.transform;
     for (auto const& transformation : transform_infos.in_reverse())
-        TRY(apply_transformation(frame.image, transformation));
+        TRY(apply_transformation(frame.lf_global.gmodular.modular_data.channels, transformation));
+
+    TRY(frame.render_image());
 
     return frame;
 }
