@@ -175,11 +175,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
     new (&bsp_processor()) Processor();
     bsp_processor().early_initialize(0);
 
-#if ARCH(RISCV64)
-    // We implicitly assume the boot hart is hart 0 above and below
-    VERIFY(boot_info.arch_specific.boot_hart_id == 0);
-#endif
-
     // Invoke the constructors needed for the kernel heap
     for (ctor_func_t* ctor = start_heap_ctors; ctor < end_heap_ctors; ctor++)
         (*ctor)();
