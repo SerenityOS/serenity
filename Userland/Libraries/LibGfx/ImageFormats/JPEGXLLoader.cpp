@@ -1871,7 +1871,7 @@ static void apply_rct(Image& image, TransformInfo const& transformation)
     }
 }
 
-static void apply_transformation(Image& image, TransformInfo const& transformation)
+static ErrorOr<void> apply_transformation(Image& image, TransformInfo const& transformation)
 {
     switch (transformation.tr) {
     case TransformInfo::TransformId::kRCT:
@@ -1879,10 +1879,11 @@ static void apply_transformation(Image& image, TransformInfo const& transformati
         break;
     case TransformInfo::TransformId::kPalette:
     case TransformInfo::TransformId::kSqueeze:
-        TODO();
+        return Error::from_string_literal("JPEGXLLoader: Unimplemented transformation");
     default:
         VERIFY_NOT_REACHED();
     }
+    return {};
 }
 ///
 
@@ -2120,7 +2121,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     // the at that point fully decoded GlobalModular image, as specified in H.6.
     auto const& transform_infos = frame.lf_global.gmodular.modular_data.transform;
     for (auto const& transformation : transform_infos.in_reverse())
-        apply_transformation(frame.image, transformation);
+        TRY(apply_transformation(frame.image, transformation));
 
     return frame;
 }
