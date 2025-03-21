@@ -27,7 +27,7 @@ public:
     };
     static_assert(AssertSize<RegisterMap, 0x4000000>());
 
-    PLIC(Memory::TypedMapping<RegisterMap volatile>, u32 interrupt_count);
+    PLIC(Memory::TypedMapping<RegisterMap volatile>, u32 interrupt_count, size_t boot_hart_supervisor_mode_context_id);
 
     virtual void enable(GenericInterruptHandler const&) override;
     virtual void disable(GenericInterruptHandler const&) override;
@@ -39,17 +39,13 @@ public:
     virtual StringView model() const override { return "PLIC"sv; }
 
 private:
-    enum {
-        M_MODE_CONTEXT = 0,
-        S_MODE_CONTEXT,
-        CONTEXTS_PER_HART,
-    };
-    static constexpr size_t interrupt_context = (0 * CONTEXTS_PER_HART) + S_MODE_CONTEXT; // We assume we only have hart 0, change this once we support SMP
-
     void initialize();
 
     Memory::TypedMapping<RegisterMap volatile> m_registers;
     u32 m_interrupt_count { 0 };
+
+    // FIXME: Support more contexts once we support SMP on riscv64.
+    size_t m_boot_hart_supervisor_mode_context_id;
 };
 
 }
