@@ -20,6 +20,7 @@
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/Timer.h>
 #    include <Kernel/Arch/aarch64/Time/ARMv8Timer.h>
+#    include <Kernel/Arch/aarch64/Time/PL031.h>
 #elif ARCH(RISCV64)
 #    include <Kernel/Arch/riscv64/Timer.h>
 #else
@@ -258,7 +259,12 @@ UnixDateTime TimeManagement::boot_time()
 {
 #if ARCH(X86_64)
     return RTC::boot_time();
-#elif ARCH(AARCH64) || ARCH(RISCV64)
+#elif ARCH(AARCH64)
+    auto rtc = PL031::the();
+    if (!rtc)
+        return UnixDateTime::epoch();
+    return rtc->boot_time();
+#elif ARCH(RISCV64)
     // FIXME: Return correct boot time
     return UnixDateTime::epoch();
 #else
@@ -297,6 +303,9 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
         VERIFY_NOT_REACHED();
     }
 #elif ARCH(AARCH64)
+    auto rtc = PL031::the();
+    if (rtc)
+        m_epoch_time += boot_time().offset_to_epoch();
     probe_and_set_aarch64_hardware_timers();
 #elif ARCH(RISCV64)
     probe_and_set_riscv64_hardware_timers();
