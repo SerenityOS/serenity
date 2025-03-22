@@ -660,6 +660,7 @@ struct FrameHeader {
     FixedArray<u8> ec_upsampling {};
 
     u8 group_size_shift { 1 };
+    u16 group_dim { static_cast<u16>(128 << group_size_shift) };
     u8 x_qm_scale { 3 };
     u8 b_qm_scale { 2 };
     Passes passes {};
@@ -720,8 +721,10 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
                 frame_header.ec_upsampling[i] = U32(1, 2, 4, 8);
         }
 
-        if (frame_header.encoding == Encoding::kModular)
+        if (frame_header.encoding == Encoding::kModular) {
             frame_header.group_size_shift = TRY(stream.read_bits(2));
+            frame_header.group_dim = 128 << frame_header.group_size_shift;
+        }
 
         // Set x_qm_scale default value
         frame_header.x_qm_scale = metadata.xyb_encoded && frame_header.encoding == Encoding::kVarDCT ? 3 : 2;
@@ -1075,6 +1078,8 @@ static ErrorOr<TransformInfo> read_transform_info(LittleEndianInputBitStream& st
         transform_info.nb_colours = U32(TRY(stream.read_bits(8)), 256 + TRY(stream.read_bits(10)), 1280 + TRY(stream.read_bits(12)), 5376 + TRY(stream.read_bits(16)));
         transform_info.nb_deltas = U32(0, 1 + TRY(stream.read_bits(8)), 257 + TRY(stream.read_bits(10)), 1281 + TRY(stream.read_bits(16)));
         transform_info.d_pred = TRY(stream.read_bits(4));
+        dbgln_if(JPEGXL_DEBUG, "Palette transform: begin_c({}) - num_c({}) - nb_colours({}) - nb_deltas({}) - d_pred({})",
+            transform_info.begin_c, transform_info.num_c, transform_info.nb_colours, transform_info.nb_deltas, transform_info.d_pred);
     }
 
     if (transform_info.tr == TransformInfo::TransformId::kSqueeze) {
@@ -1369,13 +1374,34 @@ struct ModularData {
     bool use_global_tree {};
     WPHeader wp_params {};
     Vector<TransformInfo> transform {};
+
+    // Initially, nb_meta_channels is set to zero, but transformations can modify this value.
+    u32 nb_meta_channels {};
+
     Vector<Channel> channels {};
 
     ErrorOr<void> create_channels(Span<IntSize> frame_size)
     {
-        TRY(channels.try_resize(frame_size.size()));
+        Vector<IntSize> channel_infos {};
+        TRY(channel_infos.try_extend(frame_size));
+
+        for (auto const& tr : transform) {
+            if (tr.tr == TransformInfo::TransformId::kPalette) {
+                auto original_dimensions = channel_infos[tr.begin_c];
+                channel_infos.remove(tr.begin_c, tr.num_c);
+                TRY(channel_infos.try_insert(tr.begin_c, original_dimensions));
+                TRY(channel_infos.try_prepend({ tr.nb_colours, tr.num_c }));
+
+                if (tr.begin_c < nb_meta_channels)
+                    nb_meta_channels += 2 - tr.begin_c;
+                else
+                    nb_meta_channels += 1;
+            }
+        }
+
+        TRY(channels.try_resize(channel_infos.size()));
         for (u32 i = 0; i < channels.size(); ++i)
-            channels[i] = TRY(Channel::create(frame_size[i].width(), frame_size[i].height()));
+            channels[i] = TRY(Channel::create(channel_infos[i].width(), channel_infos[i].height()));
 
         return {};
     }
@@ -1505,9 +1531,9 @@ static Neighborhood retrieve_neighborhood(Channel const& channel, u32 x, u32 y)
 
 static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& stream,
     Span<IntSize> channels_info,
-    ImageMetadata const& metadata,
     Optional<EntropyDecoder>& decoder,
-    MATree const& global_tree)
+    MATree const& global_tree,
+    u32 group_dim)
 {
     ModularData modular_data;
 
@@ -1521,27 +1547,34 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
 
     TRY(modular_data.create_channels(channels_info));
 
+    auto will_be_decoded = [&](u32 index, Channel const& channel) {
+        if (channel.width() == 0 || channel.height() == 0)
+            return false;
+        if (index < modular_data.nb_meta_channels)
+            return true;
+        return channel.width() <= group_dim && channel.width() <= group_dim;
+    };
+
     if constexpr (JPEGXL_DEBUG) {
         dbgln("Decoding modular sub-stream ({} tree, {} transforms):",
             modular_data.use_global_tree ? "global"sv : "local"sv,
             nb_transforms);
 
         for (auto const& [i, channel] : enumerate(modular_data.channels))
-            dbgln("- Channel {}: {}x{}", i, channel.width(), channel.height());
+            dbgln("- Channel {}: {}x{}{}", i, channel.width(), channel.height(), will_be_decoded(i, channel) ? ""sv : " - skipped"sv);
     }
 
     Optional<MATree> local_tree;
     if (!modular_data.use_global_tree)
         TODO();
 
-    // where dist_multiplier is set to the largest channel width amongst all channels
-    // that are to be decoded, excluding the meta-channels.
+    // where the dist_multiplier from C.3.3 is set to the largest channel width amongst all channels
+    // that are to be decoded.
     auto const dist_multiplier = [&]() {
         u32 dist_multiplier {};
-        // FIXME: This should start at nb_meta_channels not 0
-        for (u16 i = 0; i < metadata.number_of_channels(); ++i) {
-            if (modular_data.channels[i].width() > dist_multiplier)
-                dist_multiplier = modular_data.channels[i].width();
+        for (auto [i, channel] : enumerate(modular_data.channels)) {
+            if (will_be_decoded(i, channel) && channel.width() > dist_multiplier)
+                dist_multiplier = channel.width();
         }
         return dist_multiplier;
     }();
@@ -1555,7 +1588,7 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
 
     auto const& tree = local_tree.has_value() ? *local_tree : global_tree;
     for (auto [i, channel] : enumerate(modular_data.channels)) {
-        if (channel.width() == 0 || channel.height() == 0)
+        if (!will_be_decoded(i, channel))
             continue;
 
         auto self_correcting_data = TRY(SelfCorrectingData::create(modular_data.wp_params, channel.width()));
@@ -1618,14 +1651,10 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
         }
     }
 
-    // FIXME: Ensure this spec comment:
-    //        However, the decoder only decodes the first nb_meta_channels channels and any further channels
-    //        that have a width and height that are both at most group_dim. At that point, it stops decoding.
-    //        No inverse transforms are applied yet.
     auto channels = TRY(FixedArray<IntSize>::create(num_channels));
     channels.fill_with(frame_size);
 
-    global_modular.modular_data = TRY(read_modular_bitstream(stream, channels, metadata, entropy_decoder, global_modular.ma_tree));
+    global_modular.modular_data = TRY(read_modular_bitstream(stream, channels, entropy_decoder, global_modular.ma_tree, frame_header.group_dim));
 
     return global_modular;
 }
@@ -1834,8 +1863,7 @@ static void apply_transformation(Image& image, TransformInfo const& transformati
 /// G.3.2 - PassGroup
 static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
     Image& image,
-    FrameHeader const& frame_header,
-    u32 group_dim)
+    FrameHeader const& frame_header)
 {
     if (frame_header.encoding == Encoding::kVarDCT) {
         (void)stream;
@@ -1847,8 +1875,8 @@ static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
         // Skip meta-channels
         // FIXME: Also test if the channel has already been decoded
         //        See: nb_meta_channels in the spec
-        bool const is_meta_channel = channels[i].width() <= group_dim
-            || channels[i].height() <= group_dim
+        bool const is_meta_channel = channels[i].width() <= frame_header.group_dim
+            || channels[i].height() <= frame_header.group_dim
             || channels[i].hshift() >= 3
             || channels[i].vshift() >= 3;
 
@@ -1922,9 +1950,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     if (frame.frame_header.lf_level > 0)
         TODO();
 
-    // F.2 - FrameHeader
-    auto const group_dim = 128 << frame.frame_header.group_size_shift;
-
+    auto const& group_dim = frame.frame_header.group_dim;
     auto const frame_width = static_cast<double>(frame.width);
     auto const frame_height = static_cast<double>(frame.height);
     frame.num_groups = ceil(frame_width / group_dim) * ceil(frame_height / group_dim);
@@ -1946,7 +1972,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     auto const num_pass_group = frame.num_groups * frame.frame_header.passes.num_passes;
     auto const& transform_infos = frame.lf_global.gmodular.modular_data.transform;
     for (u64 i {}; i < num_pass_group; ++i)
-        TRY(read_pass_group(stream, frame.image, frame.frame_header, group_dim));
+        TRY(read_pass_group(stream, frame.image, frame.frame_header));
 
     TRY(frame.render_image());
 
