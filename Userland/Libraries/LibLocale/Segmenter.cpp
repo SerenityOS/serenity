@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BinarySearch.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf32View.h>
 #include <LibLocale/Locale.h>
@@ -78,19 +79,12 @@ public:
         if (inclusive == Inclusive::Yes)
             ++boundary;
 
-        // FIXME: Add AK::lower_bound, use
-        Optional<size_t> new_boundary;
-        for (auto segment_boundary : m_boundaries) {
-            if (segment_boundary < boundary) {
-                new_boundary = segment_boundary;
-                continue;
-            }
-            break;
-        }
+        auto lower_bound_index = strict_lower_bound(m_boundaries.span(), boundary);
 
-        if (new_boundary.has_value())
-            m_current_boundary = new_boundary.value();
-        return new_boundary;
+        if (!lower_bound_index.has_value())
+            return OptionalNone {};
+        m_current_boundary = m_boundaries[*lower_bound_index];
+        return m_current_boundary;
     }
 
     virtual Optional<size_t> next_boundary(size_t boundary, Inclusive inclusive) override
@@ -100,18 +94,12 @@ public:
         if (inclusive == Inclusive::Yes)
             --boundary;
 
-        // FIXME: Add AK::upper_bound, use
-        Optional<size_t> new_boundary;
-        for (auto segment_boundary : m_boundaries) {
-            if (segment_boundary > boundary) {
-                new_boundary = segment_boundary;
-                break;
-            }
-        }
+        auto upper_bound_index = upper_bound(m_boundaries.span(), boundary);
 
-        if (new_boundary.has_value())
-            m_current_boundary = new_boundary.value();
-        return new_boundary;
+        if (!upper_bound_index.has_value())
+            return OptionalNone {};
+        m_current_boundary = m_boundaries[*upper_bound_index];
+        return m_current_boundary;
     }
 
     virtual void for_each_boundary(String text, SegmentationCallback callback) override
