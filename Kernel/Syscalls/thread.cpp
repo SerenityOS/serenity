@@ -41,8 +41,6 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
 
     bool is_thread_joinable = (0 == detach_state);
 
-    // FIXME: Do something with guard pages?
-
     auto thread = TRY(Thread::create(*this));
 
     // We know this thread is not the main_thread,
