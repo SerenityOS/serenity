@@ -156,3 +156,31 @@ RANDOMIZED_TEST_CASE(doesnt_find_number_that_is_not_present)
 
     EXPECT_EQ(binary_search(vec, not_present), nullptr);
 }
+
+TEST_CASE(lower_bound)
+{
+    Array const input { 1, 2, 4, 5, 5, 6 };
+
+    EXPECT_EQ(lower_bound(input, 0), 0u);
+    EXPECT_EQ(lower_bound(input, 1), 0u);
+    EXPECT_EQ(lower_bound(input, 2), 1u);
+    EXPECT_EQ(lower_bound(input, 3), 2u);
+    EXPECT_EQ(lower_bound(input, 4), 2u);
+    EXPECT_EQ(lower_bound(input, 5), 3u);
+    EXPECT_EQ(lower_bound(input, 6), 5u);
+    EXPECT(!lower_bound(input, 7).has_value());
+}
+
+TEST_CASE(upper_bound)
+{
+    Array const input { 1, 2, 4, 5, 5, 6 };
+
+    EXPECT_EQ(upper_bound(input, 0), 0u);
+    EXPECT_EQ(upper_bound(input, 1), 1u);
+    EXPECT_EQ(upper_bound(input, 2), 2u);
+    EXPECT_EQ(upper_bound(input, 3), 2u);
+    EXPECT_EQ(upper_bound(input, 4), 3u);
+    EXPECT_EQ(upper_bound(input, 5), 5u);
+    EXPECT(!upper_bound(input, 6).has_value());
+    EXPECT(!upper_bound(input, 7).has_value());
+}
