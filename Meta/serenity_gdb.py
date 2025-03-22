@@ -378,7 +378,7 @@ class AKHashMapPrettyPrinter:
         for i in range(0, val["m_capacity"]):
             bucket = buckets[i]
             # if state == Used
-            if bucket["state"] & 0xf0 == 0x10:
+            if bucket["state"] & 0xF0 == 0x10:
                 cb(bucket["storage"].cast(entry_type_ptr))
 
     @staticmethod
@@ -463,9 +463,7 @@ class FindThreadCmd(gdb.Command):
     """
 
     def __init__(self):
-        super(FindThreadCmd, self).__init__(
-            "find_thread", gdb.COMMAND_USER
-        )
+        super(FindThreadCmd, self).__init__("find_thread", gdb.COMMAND_USER)
 
     def _find_thread(self, tid):
         threads = gdb.parse_and_eval("Kernel::Thread::g_tid_map")
