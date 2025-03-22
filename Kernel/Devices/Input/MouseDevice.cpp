@@ -6,8 +6,8 @@
 
 #include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Devices/HID/Management.h>
-#include <Kernel/Devices/HID/MouseDevice.h>
+#include <Kernel/Devices/Input/Management.h>
+#include <Kernel/Devices/Input/MouseDevice.h>
 
 namespace Kernel {
 
@@ -17,7 +17,7 @@ ErrorOr<NonnullRefPtr<MouseDevice>> MouseDevice::try_to_initialize()
 }
 
 MouseDevice::MouseDevice()
-    : HIDDevice(MajorAllocation::CharacterDeviceFamily::Mouse, HIDManagement::the().generate_minor_device_number_for_mouse())
+    : InputDevice(MajorAllocation::CharacterDeviceFamily::Mouse, InputManagement::the().generate_minor_device_number_for_mouse())
 {
 }
 
@@ -49,7 +49,7 @@ ErrorOr<size_t> MouseDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer&
         auto packet = m_queue.dequeue();
 
         dbgln_if(MOUSE_DEBUG, "Mouse Read: Buttons {:x}", packet.buttons);
-        dbgln_if(MOUSE_DEBUG, "Mouse: X {}, Y {}, Z {}, W {}, Relative {}", packet.x, packet.y, packet.z, packet.w, packet.buttons);
+        dbgln_if(MOUSE_DEBUG, "Mouse: X {}, Y {}, Z {}, W {}, Relative {}", packet.x, packet.y, packet.z, packet.w, packet.is_relative);
         dbgln_if(MOUSE_DEBUG, "Mouse Read: Filter packets");
 
         size_t bytes_read_from_packet = min(remaining_space_in_buffer, sizeof(MousePacket));

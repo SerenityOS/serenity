@@ -11,7 +11,7 @@
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/Detect.h>
-#include <Kernel/Devices/HID/VirtIO/Input.h>
+#include <Kernel/Devices/Input/VirtIO/Input.h>
 #include <Kernel/Devices/Serial/VirtIO/Console.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random/VirtIO/RNG.h>

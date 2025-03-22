@@ -39,7 +39,7 @@ set(KERNEL_SOURCES
     Bus/USB/xHCI/xHCIController.cpp
     Bus/USB/xHCI/xHCIInterrupter.cpp
     Bus/USB/xHCI/xHCIRootHub.cpp
-    Bus/USB/Drivers/HID/MouseDriver.cpp
+    Bus/USB/Drivers/HID.cpp
     Bus/USB/Drivers/MassStorage/MassStorageDriver.cpp
     Bus/USB/USBConfiguration.cpp
     Bus/USB/USBController.cpp
@@ -70,13 +70,6 @@ set(KERNEL_SOURCES
     Devices/FUSEDevice.cpp
     Devices/PCISerialDevice.cpp
     Devices/SerialDevice.cpp
-    Devices/HID/KeyboardDevice.cpp
-    Devices/HID/Management.cpp
-    Devices/HID/MouseDevice.cpp
-    Devices/HID/PS2/KeyboardDevice.cpp
-    Devices/HID/PS2/MouseDevice.cpp
-    Devices/HID/USB/MouseDevice.cpp
-    Devices/HID/VirtIO/Input.cpp
     Devices/Generic/ConsoleDevice.cpp
     Devices/Generic/DeviceControlDevice.cpp
     Devices/Generic/FullDevice.cpp
@@ -113,6 +106,15 @@ set(KERNEL_SOURCES
     Devices/GPU/VirtIO/Console.cpp
     Devices/GPU/VirtIO/GPU3DDevice.cpp
     Devices/GPU/VirtIO/GraphicsAdapter.cpp
+    Devices/Input/HID/Device.cpp
+    Devices/Input/HID/KeyboardDriver.cpp
+    Devices/Input/HID/MouseDriver.cpp
+    Devices/Input/KeyboardDevice.cpp
+    Devices/Input/Management.cpp
+    Devices/Input/MouseDevice.cpp
+    Devices/Input/PS2/KeyboardDevice.cpp
+    Devices/Input/PS2/MouseDevice.cpp
+    Devices/Input/VirtIO/Input.cpp
     Devices/Loop/LoopDevice.cpp
     Devices/Serial/VirtIO/Console.cpp
     Devices/Serial/VirtIO/ConsolePort.cpp
@@ -430,8 +432,8 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
         Arch/x86_64/Time/RTC.cpp
         Arch/x86_64/PCSpeaker.cpp
 
-        Arch/x86_64/ISABus/HID/VMWareMouseDevice.cpp
         Arch/x86_64/ISABus/I8042Controller.cpp
+        Arch/x86_64/ISABus/Input/VMWareMouseDevice.cpp
         Arch/x86_64/ISABus/SerialDevice.cpp
         Arch/x86_64/PCI/Controller/PIIX4HostBridge.cpp
         Arch/x86_64/PCI/Initializer.cpp
@@ -613,6 +615,11 @@ set(ELF_SOURCES
     ../Userland/Libraries/LibELF/Image.cpp
     ../Userland/Libraries/LibELF/Relocation.cpp
     ../Userland/Libraries/LibELF/Validation.cpp
+)
+
+set(HID_SOURCES
+    ../Userland/Libraries/LibHID/ReportDescriptorParser.cpp
+    ../Userland/Libraries/LibHID/ReportParser.cpp
 )
 
 add_custom_command(
@@ -804,6 +811,7 @@ set(SOURCES
     ${DT_SOURCES}
     ${EDID_SOURCES}
     ${ELF_SOURCES}
+    ${HID_SOURCES}
     ${VT_SOURCES}
     ${CRYPTO_SOURCES}
     ${PARTITION_SOURCES}

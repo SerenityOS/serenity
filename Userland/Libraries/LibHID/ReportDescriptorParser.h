@@ -126,6 +126,7 @@ struct Field {
     size_t end_bit_index;
 
     bool is_array;
+    bool is_relative;
 
     i32 logical_minimum;
     i32 logical_maximum;
@@ -151,16 +152,18 @@ struct Report {
     Vector<Field> fields;
 };
 
-struct ParsedReportDescriptor {
-    Vector<Collection> top_level_collections;
-
-    bool uses_report_ids { false };
-
+struct ApplicationCollection : Collection {
     // The key for these HashMaps is the Report ID.
     // Report ID 0 is reserved by the HID spec. We use that ID if no Report ID items are present.
     HashMap<u8, Report> input_reports;
     HashMap<u8, Report> output_reports;
     HashMap<u8, Report> feature_reports;
+};
+
+struct ParsedReportDescriptor {
+    Vector<ApplicationCollection> application_collections;
+
+    bool uses_report_ids { false };
 };
 
 class ReportDescriptorParser {
@@ -178,6 +181,7 @@ private:
     Vector<ItemStateTable> m_item_state_table_stack;
     ItemStateTable m_current_item_state_table {};
     Collection* m_current_collection { nullptr };
+    ApplicationCollection* m_current_application_collection { nullptr };
     ParsedReportDescriptor m_parsed;
 
     SetOnce m_input_output_or_feature_item_seen;

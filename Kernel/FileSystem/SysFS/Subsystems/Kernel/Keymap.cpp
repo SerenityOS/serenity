@@ -5,7 +5,7 @@
  */
 
 #include <AK/JsonObjectSerializer.h>
-#include <Kernel/Devices/HID/Management.h>
+#include <Kernel/Devices/Input/Management.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Keymap.h>
 #include <Kernel/Sections.h>
 
@@ -24,7 +24,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<SysFSKeymap> SysFSKeymap::must_create(SysFSDirect
 ErrorOr<void> SysFSKeymap::try_generate(KBufferBuilder& builder)
 {
     auto json = TRY(JsonObjectSerializer<>::try_create(builder));
-    TRY(HIDManagement::the().keymap_data().with([&](auto const& keymap_data) {
+    TRY(InputManagement::the().keymap_data().with([&](auto const& keymap_data) {
         return json.add("keymap"sv, keymap_data.character_map_name->view());
     }));
     TRY(json.finish());

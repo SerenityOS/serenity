@@ -10,8 +10,8 @@
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Bus/SerialIO/Device.h>
-#include <Kernel/Devices/HID/Definitions.h>
-#include <Kernel/Devices/HID/KeyboardDevice.h>
+#include <Kernel/Devices/Input/Definitions.h>
+#include <Kernel/Devices/Input/KeyboardDevice.h>
 #include <Kernel/Security/Random.h>
 
 namespace Kernel {

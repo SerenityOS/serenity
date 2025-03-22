@@ -6,15 +6,15 @@
 
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/x86_64/IO.h>
-#include <Kernel/Arch/x86_64/ISABus/HID/VMWareMouseDevice.h>
 #include <Kernel/Arch/x86_64/ISABus/I8042Controller.h>
+#include <Kernel/Arch/x86_64/ISABus/Input/VMWareMouseDevice.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/SerialIO/Device.h>
-#include <Kernel/Devices/HID/KeyboardDevice.h>
-#include <Kernel/Devices/HID/MouseDevice.h>
-#include <Kernel/Devices/HID/PS2/KeyboardDevice.h>
-#include <Kernel/Devices/HID/PS2/MouseDevice.h>
-#include <Kernel/Devices/HID/ScanCodeEvent.h>
+#include <Kernel/Devices/Input/KeyboardDevice.h>
+#include <Kernel/Devices/Input/MouseDevice.h>
+#include <Kernel/Devices/Input/PS2/KeyboardDevice.h>
+#include <Kernel/Devices/Input/PS2/MouseDevice.h>
+#include <Kernel/Devices/Input/ScanCodeEvent.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
@@ -59,7 +59,7 @@ bool I8042Controller::handle_irq(Badge<I8042ControllerIRQHandler>, u8 irq_number
     return irq_process_input_buffer(port_index);
 }
 
-UNMAP_AFTER_INIT bool I8042Controller::check_existence_via_probing(Badge<HIDManagement>)
+UNMAP_AFTER_INIT bool I8042Controller::check_existence_via_probing(Badge<InputManagement>)
 {
     {
         u8 configuration = 0;

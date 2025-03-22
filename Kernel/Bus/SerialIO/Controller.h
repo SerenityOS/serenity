@@ -16,9 +16,9 @@
 
 namespace Kernel {
 
-class HIDManagement;
+class InputManagement;
 class SerialIOController : public AtomicRefCounted<SerialIOController> {
-    friend class HIDManagement;
+    friend class InputManagement;
 
 public:
     enum class DeviceCommand : u8 {

@@ -18,7 +18,7 @@
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/GPU/DisplayConnector.h>
 #include <Kernel/Devices/GPU/Management.h>
-#include <Kernel/Devices/HID/Management.h>
+#include <Kernel/Devices/Input/Management.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Library/Panic.h>
@@ -396,12 +396,12 @@ void VirtualConsole::set_active(bool active)
     m_active = active;
 
     if (active) {
-        HIDManagement::the().set_client(this);
+        InputManagement::the().set_client(this);
 
         m_console_impl.m_need_full_flush = true;
         flush_dirty_lines();
     } else {
-        HIDManagement::the().set_client(nullptr);
+        InputManagement::the().set_client(nullptr);
     }
 }
 

@@ -13,7 +13,7 @@
 
 namespace HID {
 
-ErrorOr<void> parse_input_report(ParsedReportDescriptor const& report_descriptor, ReadonlyBytes report_data, Function<ErrorOr<IterationDecision>(Field const&, i64)> callback)
+ErrorOr<void> parse_input_report(ParsedReportDescriptor const& report_descriptor, ApplicationCollection const& application_collection, ReadonlyBytes report_data, Function<ErrorOr<IterationDecision>(Field const&, i64)> callback)
 {
     u8 report_id = 0;
     if (report_descriptor.uses_report_ids) {
@@ -23,9 +23,9 @@ ErrorOr<void> parse_input_report(ParsedReportDescriptor const& report_descriptor
         report_id = report_data[0];
     }
 
-    auto maybe_report = report_descriptor.input_reports.get(report_id);
+    auto maybe_report = application_collection.input_reports.get(report_id);
     if (!maybe_report.has_value())
-        return Error::from_string_view_or_print_error_and_return_errno("Invalid Report ID"sv, EINVAL);
+        return {};
 
     for (auto const& field : maybe_report->fields) {
         // 8.4 Report Constraints: An item field cannot span more than 4 bytes in a report. For example, a 32-bit item must start on a byte boundary to satisfy this condition.
