@@ -361,7 +361,6 @@ struct SC_getkeymap_params {
 struct SC_create_thread_params {
     unsigned int detach_state = 0; // JOINABLE or DETACHED
     int schedule_priority = 30;    // THREAD_PRIORITY_NORMAL
-    // FIXME: Implement guard pages in create_thread (unreadable pages at "overflow" end of stack)
     // "If an implementation rounds up the value of guardsize to a multiple of {PAGESIZE},
     // a call to pthread_attr_getguardsize() specifying attr shall store in the guardsize
     // parameter the guard size specified by the previous pthread_attr_setguardsize() function call"
