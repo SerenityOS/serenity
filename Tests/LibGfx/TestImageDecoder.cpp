@@ -980,28 +980,32 @@ TEST_CASE(test_jpeg2000_decode_lossy)
     auto png_plugin_decoder = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(png_file->bytes()));
     auto ref_frame = TRY_OR_FAIL(expect_single_frame_of_size(*png_plugin_decoder, { 119, 101 }));
 
-    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/kakadu-lossy-rgba-u8-prog0-layers1-res6-mct.jp2"sv)));
-    EXPECT(Gfx::JPEG2000ImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
+    Array test_inputs = {
+        TEST_INPUT("jpeg2000/kakadu-lossy-rgba-u8-prog0-layers1-res6-mct.jp2"sv),
+    };
 
-    EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(119, 101));
+    for (auto test_input : test_inputs) {
+        auto file = TRY_OR_FAIL(Core::MappedFile::map(test_input));
+        EXPECT(Gfx::JPEG2000ImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
+        auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 119, 101 }));
 
-    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 119, 101 }));
-    for (int y = 0; y < frame.image->height(); ++y) {
-        for (int x = 0; x < frame.image->width(); ++x) {
-            auto pixel = frame.image->get_pixel(x, y);
-            auto ref_pixel = ref_frame.image->get_pixel(x, y);
+        for (int y = 0; y < frame.image->height(); ++y) {
+            for (int x = 0; x < frame.image->width(); ++x) {
+                auto pixel = frame.image->get_pixel(x, y);
+                auto ref_pixel = ref_frame.image->get_pixel(x, y);
 
-            // FIXME: ref.png is kakadu-lossy-rgba-u8-prog0-layers1-res6-mct.jp2 opened in Photoshop and saved as png,
-            // so the image data should be identical. Maybe lossy reconstruction isn't exact (maybe some decoders round
-            // after every IDWT level and we don't, or something like this), but being off by 5 seems high.
-            // Investigate and try to lower the threshold here, ideally probably to zero. If that happens, move the
-            // decoding data checking part of this test to test_jpeg2000_decode.
-            constexpr int Threshold = 5;
-            EXPECT(abs(pixel.red() - ref_pixel.red()) <= Threshold);
-            EXPECT(abs(pixel.green() - ref_pixel.green()) <= Threshold);
-            EXPECT(abs(pixel.blue() - ref_pixel.blue()) <= Threshold);
-            EXPECT(abs(pixel.alpha() - ref_pixel.alpha()) <= Threshold);
+                // FIXME: ref.png is kakadu-lossy-rgba-u8-prog0-layers1-res6-mct.jp2 opened in Photoshop and saved as png,
+                // so the image data should be identical. Maybe lossy reconstruction isn't exact (maybe some decoders round
+                // after every IDWT level and we don't, or something like this), but being off by 5 seems high.
+                // Investigate and try to lower the threshold here, ideally probably to zero. If that happens, move the
+                // decoding data checking part of this test to test_jpeg2000_decode.
+                constexpr int Threshold = 5;
+                EXPECT(abs(pixel.red() - ref_pixel.red()) <= Threshold);
+                EXPECT(abs(pixel.green() - ref_pixel.green()) <= Threshold);
+                EXPECT(abs(pixel.blue() - ref_pixel.blue()) <= Threshold);
+                EXPECT(abs(pixel.alpha() - ref_pixel.alpha()) <= Threshold);
+            }
         }
     }
 }
