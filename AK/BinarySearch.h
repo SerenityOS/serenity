@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
@@ -57,8 +58,50 @@ constexpr auto binary_search(
     return nullptr;
 }
 
+// Unlike their std equivalents, these two function require the entire Container to be sorted!
+// std::[lower,upper]_bound only require the array to be sorted after and before, respectively, the needle.
+
+template<typename Container, typename Needle, typename Comparator = DefaultComparator, typename Return = decltype(&Container {}[0])>
+constexpr auto lower_bound(
+    Container&& haystack,
+    Needle&& needle,
+    Comparator comparator = {}) -> Optional<size_t>
+{
+    size_t index {};
+    binary_search(haystack, needle, &index, comparator);
+    if (index == haystack.size() - 1 && comparator(needle, haystack[index]) > 0)
+        return OptionalNone {};
+    return index;
+}
+
+struct UpperBoundComparator {
+    template<typename T, typename S>
+    [[nodiscard]] constexpr int operator()(T& lhs, S& rhs)
+    {
+        if (lhs >= rhs)
+            return 1;
+        return -1;
+    }
+};
+
+template<typename Container, typename Needle, typename Comparator = UpperBoundComparator, typename Return = decltype(&Container {}[0])>
+requires IsIntegral<RemoveReference<Needle>>
+constexpr auto upper_bound(
+    Container&& haystack,
+    Needle&& needle,
+    Comparator comparator = {}) -> Optional<size_t>
+{
+    size_t index = 0;
+    binary_search(haystack, needle, &index, comparator);
+    if (index == haystack.size() - 1 && comparator(needle, haystack[index]) >= 0)
+        return OptionalNone {};
+    return index;
+}
+
 }
 
 #if USING_AK_GLOBALLY
 using AK::binary_search;
+using AK::lower_bound;
+using AK::upper_bound;
 #endif
