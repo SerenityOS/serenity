@@ -1525,6 +1525,12 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
             modular_data.use_global_tree ? "global"sv : "local"sv,
             nb_transforms);
 
+        for (auto const& tr : modular_data.transform) {
+            if (tr.tr == TransformInfo::TransformId::kPalette) {
+                dbgln("* Palette: begin_c={} - num_c={} - nb_colours={} - nb_deltas={} - d_pred={}",
+                    tr.begin_c, tr.num_c, tr.nb_colours, tr.nb_deltas, tr.d_pred);
+            }
+        }
         for (auto const& [i, channel] : enumerate(modular_data.channels))
             dbgln("- Channel {}: {}x{}", i, channel.width(), channel.height());
     }
