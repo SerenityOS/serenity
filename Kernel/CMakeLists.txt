@@ -515,6 +515,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/SafeMem.cpp
         Arch/aarch64/SmapDisabler.cpp
         Arch/aarch64/Time/ARMv8Timer.cpp
+        Arch/aarch64/Time/PL031.cpp
         Arch/aarch64/vector_table.S
 
         Arch/aarch64/PlatformInit/RaspberryPi.cpp
