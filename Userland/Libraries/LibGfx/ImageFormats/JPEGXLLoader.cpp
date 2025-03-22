@@ -1369,13 +1369,40 @@ struct ModularData {
     bool use_global_tree {};
     WPHeader wp_params {};
     Vector<TransformInfo> transform {};
+
+    // Initially, nb_meta_channels is set to zero, but transformations can modify this value.
+    u32 nb_meta_channels {};
+
     Vector<Channel> channels {};
 
     ErrorOr<void> create_channels(Span<IntSize> frame_size)
     {
-        TRY(channels.try_resize(frame_size.size()));
+        Vector<IntSize> channel_infos {};
+        TRY(channel_infos.try_extend(frame_size));
+
+        for (auto const& tr : transform) {
+            if (tr.tr == TransformInfo::TransformId::kPalette) {
+                // Let end_c = begin_c + num_c − 1. When updating the channel list as described in H.2, channels begin_c to end_c,
+                // which all have the same dimensions, are replaced with two new channels:
+                //  - one meta-channel, inserted at the beginning of the channel list and has dimensions width = nb_colours and height = num_c and hshift = vshift = −1.
+                //    This channel represents the colours or deltas of the palette.
+                //  - one channel (at the same position in the channel list as the original channels, same dimensions) which contains palette indices.
+
+                auto original_dimensions = channel_infos[tr.begin_c];
+                channel_infos.remove(tr.begin_c, tr.num_c);
+                TRY(channel_infos.try_insert(tr.begin_c, original_dimensions));
+                TRY(channel_infos.try_prepend({ tr.nb_colours, tr.num_c }));
+
+                if (tr.begin_c < nb_meta_channels)
+                    nb_meta_channels += 2 - tr.begin_c;
+                else
+                    nb_meta_channels += 1;
+            }
+        }
+
+        TRY(channels.try_resize(channel_infos.size()));
         for (u32 i = 0; i < channels.size(); ++i)
-            channels[i] = TRY(Channel::create(frame_size[i].width(), frame_size[i].height()));
+            channels[i] = TRY(Channel::create(channel_infos[i].width(), channel_infos[i].height()));
 
         return {};
     }
