@@ -133,9 +133,53 @@ ErrorOr<Node const*> Node::interrupt_domain_root(DeviceTree const& device_tree) 
     }
 }
 
-ErrorOr<FixedArray<Interrupt>> Node::interrupts(DeviceTree const& device_tree) const
+ErrorOr<Vector<Interrupt>> Node::interrupts(DeviceTree const& device_tree) const
 {
+    // 2.4.1 Properties for Interrupt Generating Devices
+    // If both interrupts-extended and interrupts are present then interrupts-extended takes precedence.
+    auto interrupts_extended_prop = get_property("interrupts-extended"sv);
+    if (interrupts_extended_prop.has_value()) {
+        Vector<Interrupt> interrupts;
+
+        auto stream = interrupts_extended_prop->as_stream();
+        while (!stream.is_eof()) {
+            auto interrupt_parent_phandle = TRY(stream.read_cell());
+            auto const* interrupt_parent = device_tree.phandle(interrupt_parent_phandle);
+            if (interrupt_parent == nullptr)
+                return Error::from_errno(ENOENT);
+
+            auto const& domain_root = *TRY(interrupt_parent->interrupt_domain_root(device_tree));
+            if (!domain_root.has_property("interrupt-controller"sv))
+                return Error::from_errno(ENOTSUP); // TODO: Handle interrupt nexuses.
+
+            auto interrupt_cells_prop = domain_root.get_property("#interrupt-cells"sv);
+            if (!interrupt_cells_prop.has_value())
+                return Error::from_errno(EINVAL);
+
+            if (interrupt_cells_prop->size() != sizeof(u32))
+                return Error::from_errno(EINVAL);
+
+            auto interrupt_cells = interrupt_cells_prop->as<u32>();
+
+            auto interrupt_identifier = TRY(stream.read_in_place<u8 const>(interrupt_cells * sizeof(u32)));
+
+            TRY(interrupts.try_append(Interrupt {
+                .domain_root = &domain_root,
+                .interrupt_identifier = interrupt_identifier,
+            }));
+        }
+
+        return interrupts;
+    }
+
+    auto interrupts_prop = get_property("interrupts"sv);
+
+    if (!interrupts_prop.has_value())
+        return Error::from_errno(EINVAL);
+
     auto const& domain_root = *TRY(interrupt_domain_root(device_tree));
+    if (!domain_root.has_property("interrupt-controller"sv))
+        return Error::from_errno(ENOTSUP); // TODO: Handle interrupt nexuses.
 
     auto interrupt_cells_prop = domain_root.get_property("#interrupt-cells"sv);
     if (!interrupt_cells_prop.has_value())
@@ -146,20 +190,12 @@ ErrorOr<FixedArray<Interrupt>> Node::interrupts(DeviceTree const& device_tree) c
 
     auto interrupt_cells = interrupt_cells_prop->as<u32>();
 
-    // TODO: Support interrupts-extended.
-
-    auto interrupts_prop = get_property("interrupts"sv);
-    if (!interrupts_prop.has_value())
-        return Error::from_errno(EINVAL);
-
     auto interrupts_raw = interrupts_prop->raw_data;
-
-    if (!domain_root.has_property("interrupt-controller"sv))
-        return Error::from_errno(ENOTSUP); // TODO: Handle interrupt nexuses
 
     auto interrupt_count = interrupts_prop->size() / (interrupt_cells * sizeof(u32));
 
-    auto interrupts = TRY(FixedArray<Interrupt>::create(interrupt_count));
+    Vector<Interrupt> interrupts;
+    TRY(interrupts.try_resize(interrupt_count));
 
     for (size_t i = 0; i < interrupt_count; i++) {
         interrupts[i] = Interrupt {
