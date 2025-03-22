@@ -982,6 +982,7 @@ TEST_CASE(test_jpeg2000_decode_lossy)
 
     Array test_inputs = {
         TEST_INPUT("jpeg2000/kakadu-lossy-rgba-u8-prog0-layers1-res6-mct.jp2"sv),
+        TEST_INPUT("jpeg2000/openjpeg-lossy-quantization-scalar-derived.jp2"sv),
     };
 
     for (auto test_input : test_inputs) {
@@ -1000,6 +1001,7 @@ TEST_CASE(test_jpeg2000_decode_lossy)
                 // after every IDWT level and we don't, or something like this), but being off by 5 seems high.
                 // Investigate and try to lower the threshold here, ideally probably to zero. If that happens, move the
                 // decoding data checking part of this test to test_jpeg2000_decode.
+                // (The lossy openjpeg file only needs a Threshold of 3 to pass.)
                 constexpr int Threshold = 5;
                 EXPECT(abs(pixel.red() - ref_pixel.red()) <= Threshold);
                 EXPECT(abs(pixel.green() - ref_pixel.green()) <= Threshold);
