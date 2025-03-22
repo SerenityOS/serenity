@@ -1075,6 +1075,8 @@ static ErrorOr<TransformInfo> read_transform_info(LittleEndianInputBitStream& st
         transform_info.nb_colours = U32(TRY(stream.read_bits(8)), 256 + TRY(stream.read_bits(10)), 1280 + TRY(stream.read_bits(12)), 5376 + TRY(stream.read_bits(16)));
         transform_info.nb_deltas = U32(0, 1 + TRY(stream.read_bits(8)), 257 + TRY(stream.read_bits(10)), 1281 + TRY(stream.read_bits(16)));
         transform_info.d_pred = TRY(stream.read_bits(4));
+        dbgln_if(JPEGXL_DEBUG, "Palette transform: begin_c({}) - num_c({}) - nb_colours({}) - nb_deltas({}) - d_pred({})",
+            transform_info.begin_c, transform_info.num_c, transform_info.nb_colours, transform_info.nb_deltas, transform_info.d_pred);
     }
 
     if (transform_info.tr == TransformInfo::TransformId::kSqueeze) {
