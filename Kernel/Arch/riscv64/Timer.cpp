@@ -49,6 +49,11 @@ void Timer::handle_interrupt()
     set_compare(current_ticks() + m_interrupt_interval);
 }
 
+void Timer::disable()
+{
+    RISCV64::CSR::clear_bits(RISCV64::CSR::Address::SIE, 1 << (to_underlying(CSR::SCAUSE::SupervisorTimerInterrupt) & ~CSR::SCAUSE_INTERRUPT_MASK));
+}
+
 u64 Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)
 {
     // Should only be called by the time keeper interrupt handler!
