@@ -6,6 +6,7 @@
 
 #include "JPEG2000Boxes.h"
 #include <AK/Function.h>
+#include <AK/IntegralMath.h>
 
 // Core coding system spec (.jp2 format): T-REC-T.800-201511-S!!PDF-E.pdf available here:
 // https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-T.800-201511-S!!PDF-E&type=items
@@ -166,8 +167,8 @@ ErrorOr<void> JPEG2000PaletteBox::read_from_stream(BoxStream& stream)
             }
 
             // Sign extend if needed.
-            if (bit_depth.is_signed && (value >> (bit_depth.depth - 1)))
-                value |= ~((1LL << bit_depth.depth) - 1);
+            if (bit_depth.is_signed)
+                value = AK::sign_extend(static_cast<u64>(value), bit_depth.depth);
 
             color.append(value);
         }

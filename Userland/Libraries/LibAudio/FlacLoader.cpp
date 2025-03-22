@@ -700,7 +700,7 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::parse_subframe(Vector<i64>& samples
         dbgln_if(AFLACLOADER_DEBUG, "  Constant subframe: {}", constant_value);
 
         VERIFY(subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample != 0);
-        i64 constant = sign_extend(static_cast<u64>(constant_value), subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample);
+        i64 constant = AK::sign_extend(static_cast<u64>(constant_value), subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample);
         for (u64 i = 0; i < m_current_frame->sample_count; ++i) {
             samples.unchecked_append(constant);
         }
@@ -754,7 +754,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_verbatim(FlacSubframe
         };
     }
     for (size_t i = 0; i < m_current_frame->sample_count; ++i) {
-        decoded.unchecked_append(sign_extend(
+        decoded.unchecked_append(AK::sign_extend(
             TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
             subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
@@ -781,7 +781,7 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& deco
     }
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
-        decoded.unchecked_append(sign_extend(
+        decoded.unchecked_append(AK::sign_extend(
             TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
             subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
@@ -793,14 +793,14 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& deco
     lpc_precision += 1;
 
     // shift needed on the data (signed!)
-    i8 lpc_shift = static_cast<i8>(sign_extend(TRY(bit_input.read_bits<u8>(5)), 5));
+    i8 lpc_shift = static_cast<i8>(AK::sign_extend(TRY(bit_input.read_bits<u8>(5)), 5));
 
     Vector<i64, 32> coefficients;
     coefficients.ensure_capacity(subframe.order);
     // read coefficients
     for (auto i = 0; i < subframe.order; ++i) {
         u64 raw_coefficient = TRY(bit_input.read_bits<u64>(lpc_precision));
-        i64 coefficient = sign_extend(raw_coefficient, lpc_precision);
+        i64 coefficient = AK::sign_extend(raw_coefficient, lpc_precision);
         coefficients.unchecked_append(coefficient);
     }
 
@@ -846,7 +846,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
     }
     // warm-up samples
     for (auto i = 0; i < subframe.order; ++i) {
-        decoded.unchecked_append(sign_extend(
+        decoded.unchecked_append(AK::sign_extend(
             TRY(bit_input.read_bits<u64>(subframe.bits_per_sample - subframe.wasted_bits_per_sample)),
             subframe.bits_per_sample - subframe.wasted_bits_per_sample));
     }
@@ -971,7 +971,7 @@ ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_rice_pa
         u8 unencoded_bps = TRY(bit_input.read_bits<u8>(5));
         if (unencoded_bps != 0) {
             for (size_t r = 0; r < residual_sample_count; ++r) {
-                rice_partition[r] = sign_extend(TRY(bit_input.read_bits<u32>(unencoded_bps)), unencoded_bps);
+                rice_partition[r] = AK::sign_extend(TRY(bit_input.read_bits<u32>(unencoded_bps)), unencoded_bps);
             }
         }
     } else {
@@ -1026,16 +1026,6 @@ ErrorOr<u64> read_utf8_char(BigEndianInputBitStream& input)
         character = (character << 6) | (current_byte & 0b00111111);
     }
     return character;
-}
-
-i64 sign_extend(u32 n, u8 size)
-{
-    // negative
-    if ((n & (1 << (size - 1))) > 0) {
-        return static_cast<i64>(n | (0xffffffffffffffffLL << size));
-    }
-    // positive
-    return n;
 }
 
 i32 rice_to_signed(u32 x)
