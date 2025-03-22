@@ -31,7 +31,7 @@ ErrorOr<FlatPtr> page_round_up(FlatPtr x);
 
 constexpr FlatPtr page_round_down(FlatPtr x)
 {
-    return ((FlatPtr)(x)) & ~(PAGE_SIZE - 1);
+    return x & ~(PAGE_SIZE - 1);
 }
 
 inline FlatPtr virtual_to_low_physical(FlatPtr virtual_)

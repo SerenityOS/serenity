@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Atomic.h>
+#include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtr.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 
