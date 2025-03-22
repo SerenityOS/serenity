@@ -963,7 +963,18 @@ TEST_CASE(test_jpeg2000_decode_unsupported)
     }
 }
 
-TEST_CASE(test_jpeg2000_icc_and_decode_lossy)
+TEST_CASE(test_jpeg2000_icc)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/kakadu-lossy-rgba-u8-prog0-layers1-res6-mct.jp2"sv)));
+    EXPECT(Gfx::JPEG2000ImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
+
+    auto icc_bytes = MUST(plugin_decoder->icc_data());
+    EXPECT(icc_bytes.has_value());
+    EXPECT_EQ(icc_bytes->size(), 3144u);
+}
+
+TEST_CASE(test_jpeg2000_decode_lossy)
 {
     auto png_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpeg2000/ref.png"sv)));
     auto png_plugin_decoder = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(png_file->bytes()));
@@ -974,10 +985,6 @@ TEST_CASE(test_jpeg2000_icc_and_decode_lossy)
     auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEG2000ImageDecoderPlugin::create(file->bytes()));
 
     EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(119, 101));
-
-    auto icc_bytes = MUST(plugin_decoder->icc_data());
-    EXPECT(icc_bytes.has_value());
-    EXPECT_EQ(icc_bytes->size(), 3144u);
 
     auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 119, 101 }));
     for (int y = 0; y < frame.image->height(); ++y) {
