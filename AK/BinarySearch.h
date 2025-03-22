@@ -71,8 +71,43 @@ constexpr auto binary_search(
     return nullptr;
 }
 
+// Unlike their std equivalents, these two function require the entire Container to be sorted!
+// std::[lower,upper]_bound only require the array to be sorted after and before, respectively, the needle.
+
+template<typename Container, typename Needle, typename Comparator = DefaultComparator, typename Return = decltype(&Container {}[0])>
+constexpr auto lower_bound(
+    Container&& haystack,
+    Needle&& needle,
+    Comparator comparator = Comparator {}) -> size_t
+{
+    size_t index {};
+    binary_search(haystack, needle, &index, comparator);
+    return index;
+}
+
+// FIXME: Relax the constraint on the type.
+//        Given the array {1, 2, 4, 5, 5, 6} and searching for 5 we want upper_bound
+//        to return 5. The binary search for 5 will return the first matching element
+//        so we will get the index 3. The workaround that I used here to be able to
+//        leverage the binary search is to look for the very next element: 6 (++needle).
+//        This however means that the input type needs to properly define a "next one",
+//        which I expressed as being an integer.
+template<typename Container, typename Needle, typename Comparator = DefaultComparator, typename Return = decltype(&Container {}[0])>
+requires IsIntegral<RemoveReference<Needle>>
+constexpr auto upper_bound(
+    Container&& haystack,
+    Needle&& needle,
+    Comparator comparator = Comparator {}) -> size_t
+{
+    size_t index {};
+    binary_search(haystack, needle + 1, &index, comparator);
+    return index;
+}
+
 }
 
 #if USING_AK_GLOBALLY
 using AK::binary_search;
+using AK::lower_bound;
+using AK::upper_bound;
 #endif
