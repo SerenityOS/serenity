@@ -1198,7 +1198,6 @@ static ErrorOr<void> parse_codestream_tile_header(JPEG2000LoadingContext& contex
     if (marker.marker != J2K_SOT)
         return Error::from_string_literal("JPEG2000ImageDecoderPlugin: Expected SOT marker");
     auto start_of_tile = TRY(read_start_of_tile_part(marker.data.value()));
-    // FIXME: Store start_of_tile on context somewhere.
 
     context.tiles.resize(max(context.tiles.size(), (size_t)start_of_tile.tile_index + 1));
     auto& tile = context.tiles[start_of_tile.tile_index];
