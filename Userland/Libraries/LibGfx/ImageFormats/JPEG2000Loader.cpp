@@ -2626,7 +2626,7 @@ static void determine_color_space(JPEG2000LoadingContext& context)
                 context.color_space = ColorSpace::CMYK;
             } else {
                 context.color_space = ColorSpace::Unsupported;
-                context.color_space_error = Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB and grayscale enumerated color space supported yet");
+                context.color_space_error = Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB, grayscale, and CMYK enumerated color spaces supported yet");
             }
         } else if (context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Restricted
             || context.color_box->method == ISOBMFF::JPEG2000ColorSpecificationBox::Method::ICC_Any) {
@@ -2646,7 +2646,7 @@ static void determine_color_space(JPEG2000LoadingContext& context)
                 context.color_space = ColorSpace::CMYK;
             } else {
                 context.color_space = ColorSpace::Unsupported;
-                context.color_space_error = Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB and grayscale ICC color space supported yet");
+                context.color_space_error = Error::from_string_literal("JPEG2000ImageDecoderPlugin: Only sRGB, grayscale, and CMYK ICC color spaces supported yet");
             }
         } else {
             context.color_space = ColorSpace::Unsupported;
