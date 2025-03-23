@@ -948,10 +948,8 @@ TEST_CASE(test_jpeg2000_decode_unsupported)
         TEST_INPUT("jpeg2000/openjpeg-lossless-RGN.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-bgra-u8.jp2"sv),
         TEST_INPUT("jpeg2000/openjpeg-lossless-rgba-u8-prog0-tile-part-index-overflow.jp2"sv),
-
-        // FIXME: See FIXME in JPEG2000ColorSpecificationBox::read_from_stream() for lab.
-        // TEST_INPUT("jpeg2000/kakadu-lossless-lab-u8-prog1-layers1-res6.jp2"sv),
-        // TEST_INPUT("jpeg2000/kakadu-lossless-lab-alpha-u8-prog1-layers1-res6.jp2"sv),
+        TEST_INPUT("jpeg2000/kakadu-lossless-lab-u8-prog1-layers1-res6.jp2"sv),
+        TEST_INPUT("jpeg2000/kakadu-lossless-lab-alpha-u8-prog1-layers1-res6.jp2"sv),
     };
 
     for (auto test_input : test_inputs) {
