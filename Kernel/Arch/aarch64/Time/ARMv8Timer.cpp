@@ -57,6 +57,11 @@ bool ARMv8Timer::handle_irq()
     return true;
 }
 
+void ARMv8Timer::disable()
+{
+    disable_irq();
+}
+
 u64 ARMv8Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool query_only)
 {
     // Should only be called by the time keeper interrupt handler!
