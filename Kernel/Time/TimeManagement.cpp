@@ -530,6 +530,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
         system_timer_tick();
     });
 
+    m_can_query_precise_time.set();
     m_time_keeper_timer = m_system_timer;
 
     return true;
