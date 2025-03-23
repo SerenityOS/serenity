@@ -105,8 +105,60 @@ ErrorOr<void> JPEG2000ColorSpecificationBox::read_from_stream(BoxStream& stream)
     approximation = TRY(stream.read_value<u8>());
     if (method == Method::Enumerated) {
         enumerated_color_space = TRY(stream.read_value<BigEndian<u32>>());
-        // FIXME: For some enumerated color spaces, there's additional data here
-        // (e.g. CIELab, see T.801 M.11.7.4.1 EP field format for the CIELab colourspace)
+
+        // M.11.7.4 EP field format and values
+        // "This field defines the format and values of the EP fields for Colour Specification boxes using the Enumerated method. If
+        //  an EP field is not defined for a particular value of the EnumCS field, then the length of the EP field shall be zero."
+
+        // M.11.7.4.1 EP field format for the CIELab colourspace
+        // "If the value of EnumCS is 14, specifying that the layer is encoded in the CIELab colourspace, then the format of the EP
+        //  field shall be as follows (see Figure M.20)"
+        if (enumerated_color_space == EnumCS::CIELab) {
+            if (!stream.is_eof()) {
+                u32 range_L = TRY(stream.read_value<BigEndian<u32>>());    // "RL" in spec.
+                u32 offset_L = TRY(stream.read_value<BigEndian<u32>>());   // "OL" in spec.
+                u32 range_A = TRY(stream.read_value<BigEndian<u32>>());    // "RA" in spec.
+                u32 offset_A = TRY(stream.read_value<BigEndian<u32>>());   // "OA" in spec.
+                u32 range_B = TRY(stream.read_value<BigEndian<u32>>());    // "RB" in spec.
+                u32 offset_B = TRY(stream.read_value<BigEndian<u32>>());   // "OB" in spec.
+                u32 illuminant = TRY(stream.read_value<BigEndian<u32>>()); // "IL" in spec.
+                // FIXME: Store and use these values eventually.
+                (void)range_L;
+                (void)offset_L;
+                (void)range_A;
+                (void)offset_A;
+                (void)range_B;
+                (void)offset_B;
+                (void)illuminant;
+            } else {
+                // "When the EP fields are omitted for the CIELab colourspace, then the following default values shall be used."
+                // FIXME
+            }
+        }
+
+        // M.11.7.4.2 EP field format for the CIEJab colourspace
+        // "If the value of EnumCS is 19, specifying that the layer is encoded in the CIEJab colourspace, then the format of the EP
+        //  field shall be as follows (see Figure M.21):"
+        if (enumerated_color_space == EnumCS::CIEJab) {
+            if (!stream.is_eof()) {
+                u32 range_J = TRY(stream.read_value<BigEndian<u32>>());  // "RJ" in spec.
+                u32 offset_J = TRY(stream.read_value<BigEndian<u32>>()); // "OJ" in spec.
+                u32 range_a = TRY(stream.read_value<BigEndian<u32>>());  // "Ra" in spec.
+                u32 offset_a = TRY(stream.read_value<BigEndian<u32>>()); // "Oa" in spec.
+                u32 range_b = TRY(stream.read_value<BigEndian<u32>>());  // "Rb" in spec.
+                u32 offset_b = TRY(stream.read_value<BigEndian<u32>>()); // "Ob" in spec.
+                // FIXME: Store and use these values eventually.
+                (void)range_J;
+                (void)offset_J;
+                (void)range_a;
+                (void)offset_a;
+                (void)range_b;
+                (void)offset_b;
+            } else {
+                // "When the EP fields are omitted for the CIEJab colourspace, then the following default values shall be used."
+                // FIXME
+            }
+        }
     } else if (method == Method::ICC_Restricted) {
         ByteBuffer local_icc_data = TRY(ByteBuffer::create_uninitialized(stream.remaining()));
         TRY(stream.read_until_filled(local_icc_data));
