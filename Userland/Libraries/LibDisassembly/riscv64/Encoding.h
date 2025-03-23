@@ -72,6 +72,81 @@ struct RawR4Type {
 
     static RawR4Type parse(u32 instruction);
 };
+struct RawCRType {
+    u8 funct4;
+    Register rd_or_rs1;
+    Register rs2;
+    u8 opcode;
+
+    static RawCRType parse(u16 instruction);
+};
+struct RawCIType {
+    u8 funct3;
+    i32 imm;
+    Register rd_or_rs1;
+    u8 opcode;
+
+    static RawCIType parse(u16 instruction);
+};
+struct RawCSSType {
+    u8 funct3;
+    i32 imm;
+    Register rs2;
+    u8 opcode;
+
+    static RawCSSType parse(u16 instruction);
+};
+struct RawCIWType {
+    u8 funct3;
+    i32 imm;
+    Register rd;
+    u8 opcode;
+
+    static RawCIWType parse(u16 instruction);
+};
+struct RawCLType {
+    u8 funct3;
+    i32 imm;
+    Register rs1;
+    Register rd;
+    u8 opcode;
+
+    static RawCLType parse(u16 instruction);
+};
+struct RawCSType {
+    u8 funct3;
+    i32 imm;
+    Register rs1;
+    Register rs2;
+    u8 opcode;
+
+    static RawCSType parse(u16 instruction);
+};
+struct RawCAType {
+    u8 funct6;
+    Register rd_or_rs1;
+    u8 funct2;
+    Register rs2;
+    u8 opcode;
+
+    static RawCAType parse(u16 instruction);
+};
+struct RawCBType {
+    u8 funct3;
+    i32 offset;
+    u8 funct2;
+    Register rs1;
+    u8 opcode;
+
+    static RawCBType parse(u16 instruction);
+};
+struct RawCJType {
+    u8 funct3;
+    i32 jump_target;
+    u8 opcode;
+
+    static RawCJType parse(u16 instruction);
+};
 
 // Table 24.1
 enum class MajorOpcode : u8 {
@@ -146,6 +221,12 @@ enum class RoundingMode : u8 {
     Invalid2 = 0b110,
     DYN = 0b111,
 };
+
+// NOTE: The funct3 used in compressed instruction formats is not the same as the one used in normal instruction formats.
+constexpr u8 extract_compressed_funct3(u16 instruction)
+{
+    return static_cast<u8>((instruction >> 13) & 0b111);
+}
 
 constexpr CompressedOpcode extract_compressed_opcode(u16 instruction)
 {
