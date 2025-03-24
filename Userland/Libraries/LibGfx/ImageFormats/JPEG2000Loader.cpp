@@ -1759,10 +1759,6 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
     //  exclusively hereinafter."
     bool is_non_zero = TRY(read_bit());
     bool is_empty = !is_non_zero;
-    if (is_empty) {
-        VERIFY(last_full_byte != 0xFF); // Can't possibly have a stuffed bit here.
-        return stream.offset();
-    }
 
     // " for each sub-band (LL or HL, LH and HH)"
     struct TemporaryCodeBlockData {
@@ -1787,7 +1783,7 @@ static ErrorOr<u32> read_one_packet_header(JPEG2000LoadingContext& context, Tile
         auto& precinct = sub_band_data.precincts[progression_data.precinct];
 
         // B.9: "Only those code-blocks that contain samples from the relevant sub-band, confined to the precinct, have any representation in the packet."
-        if (precinct.num_code_blocks_wide == 0 || precinct.num_code_blocks_high == 0)
+        if (is_empty || precinct.num_code_blocks_wide == 0 || precinct.num_code_blocks_high == 0)
             continue;
 
         temporary_sub_band_data[sub_band_index].precinct = &precinct;
