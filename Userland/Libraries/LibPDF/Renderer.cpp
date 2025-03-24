@@ -5,6 +5,7 @@
  */
 
 #include <AK/BitStream.h>
+#include <AK/GenericShorthands.h>
 #include <AK/Utf8View.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/PDFFont.h>
@@ -1248,17 +1249,8 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
         bits_per_component = 8;
     else if (!is_image_mask)
         bits_per_component = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::BitsPerComponent)));
-    switch (bits_per_component) {
-    case 1:
-    case 2:
-    case 4:
-    case 8:
-    case 16:
-        // Ok!
-        break;
-    default:
+    if (!first_is_one_of(bits_per_component, 1, 2, 4, 8, 16))
         return Error(Error::Type::MalformedPDF, "Image's /BitsPerComponent invalid");
-    }
     auto content = image->bytes();
 
     int const n_components = color_space->number_of_components();
