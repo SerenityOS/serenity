@@ -24,6 +24,8 @@
     X(BaseEncoding)               \
     X(BaseFont)                   \
     X(BitsPerComponent)           \
+    X(BitsPerCoordinate)          \
+    X(BitsPerFlag)                \
     X(BitsPerSample)              \
     X(BlackIs1)                   \
     X(BlackPoint)                 \
