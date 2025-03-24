@@ -20,6 +20,7 @@ public:
 protected:
     // ^SDHostController
     virtual SD::HostControlRegisterMap volatile* get_register_map_base_address() override { return m_registers.ptr(); }
+    virtual ErrorOr<u32> retrieve_sd_clock_frequency() override;
 
 private:
     Memory::TypedMapping<SD::HostControlRegisterMap volatile> m_registers;
