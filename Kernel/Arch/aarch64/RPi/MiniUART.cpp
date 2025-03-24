@@ -22,10 +22,12 @@ struct MiniUARTRegisters {
     u32 modem_control;
     u32 line_status;
     u32 modem_status;
+    u32 scratch;
     u32 extra_control;
     u32 extra_status;
     u32 baud_rate;
 };
+static_assert(AssertSize<MiniUARTRegisters, 0x6c - 0x40>());
 
 // "Table 8. AUX_MU_LCR_REG Register"
 enum LineControl {
