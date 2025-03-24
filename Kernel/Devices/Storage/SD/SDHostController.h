@@ -35,6 +35,7 @@ public:
 
 protected:
     virtual SD::HostControlRegisterMap volatile* get_register_map_base_address() = 0;
+    virtual ErrorOr<u32> retrieve_sd_clock_frequency();
 
 private:
     ErrorOr<NonnullRefPtr<SDMemoryCard>> try_initialize_inserted_card();
@@ -61,7 +62,6 @@ private:
     ErrorOr<void> sd_clock_supply(u32 frequency);
     ErrorOr<void> sd_clock_stop();
     ErrorOr<void> sd_clock_frequency_change(u32 frequency);
-    ErrorOr<u32> retrieve_sd_clock_frequency();
 
     struct Response {
         u32 response[4];
