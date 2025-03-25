@@ -299,15 +299,15 @@ void HostController::configure_attached_devices(PCIConfiguration& config)
         // bridge-specific handling
         config.mmio_32bit_base = align_up_to(config.mmio_32bit_base, MiB);
         config.mmio_64bit_base = align_up_to(config.mmio_64bit_base, MiB);
-        write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::MEMORY_BASE, config.mmio_32bit_base >> 16);
-        write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_BASE, config.mmio_64bit_base >> 16);
+        write16_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::MEMORY_BASE, config.mmio_32bit_base >> 16);
+        write16_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_BASE, config.mmio_64bit_base >> 16);
         write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_BASE_UPPER_32_BITS, config.mmio_64bit_base >> 32); },
         [this, &config](EnumerableDeviceIdentifier const& device_identifier) {
             // called after a bridge was recursively enumerated
             config.mmio_32bit_base = align_up_to(config.mmio_32bit_base, MiB);
             config.mmio_64bit_base = align_up_to(config.mmio_64bit_base, MiB);
-            write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::MEMORY_LIMIT, config.mmio_32bit_base >> 16);
-            write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_LIMIT, config.mmio_64bit_base >> 16);
+            write16_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::MEMORY_LIMIT, config.mmio_32bit_base >> 16);
+            write16_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_LIMIT, config.mmio_64bit_base >> 16);
             write32_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::PREFETCHABLE_MEMORY_LIMIT_UPPER_32_BITS, config.mmio_64bit_base >> 32);
             // enable bridging
             auto command_value = read16_field(device_identifier.address().bus(), device_identifier.address().device(), device_identifier.address().function(), PCI::RegisterOffset::COMMAND);
