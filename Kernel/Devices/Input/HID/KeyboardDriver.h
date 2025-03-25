@@ -31,7 +31,7 @@ private:
     // FIXME: We can't use an AK::Bitmap here, since we need to iterate over all key state bits that are different in the new state to generate key up/down events,
     //        but AK::Bitmap doesn't have a function for this.
     // "Keyboard Right GUI" is the highest currently defined Keyboard/Keypad Page Usage ID.
-    static constexpr size_t key_state_bitmap_size_in_bits = to_underlying(Usage::KeyboardRightGUI) + 1;
+    static constexpr size_t key_state_bitmap_size_in_bits = (to_underlying(Usage::KeyboardRightGUI) & 0xffff) + 1;
     using KeyStateBitmapElement = FlatPtr;
     static constexpr size_t key_state_bitmap_bits_per_element = NumericLimits<KeyStateBitmapElement>::digits();
     static constexpr size_t key_state_bitmap_array_element_count = ceil_div(key_state_bitmap_size_in_bits, key_state_bitmap_bits_per_element);
