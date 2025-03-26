@@ -1976,7 +1976,7 @@ static IntRect rect_for_group(Channel const& channel, u32 group_dim, u32 group_i
     }
 
     auto nb_groups_per_column = (channel.height() + group_dim - 1) / group_dim;
-    auto group_y = group_index / nb_groups_per_column;
+    auto group_y = group_index / nb_groups_per_row;
     rect.set_y(group_y * group_dim);
     if (group_y == nb_groups_per_column - 1) {
         rect.set_height(channel.height() % group_dim);
