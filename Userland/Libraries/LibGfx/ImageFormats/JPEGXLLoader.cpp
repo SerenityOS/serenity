@@ -2000,13 +2000,19 @@ static IntRect rect_for_group(Channel const& channel, u32 group_dim, u32 group_i
     return rect;
 }
 
+struct PassGroupOptions {
+    GlobalModular& global_modular;
+    FrameHeader const& frame_header;
+    u32 group_index;
+    u32 pass_index;
+    u32 stream_index;
+};
+
 static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
-    GlobalModular& global_modular,
-    FrameHeader const& frame_header,
-    u32 group_index,
-    u32 pass_index,
-    u32 stream_index)
+    PassGroupOptions& options)
 {
+    auto& [global_modular, frame_header, group_index, pass_index, stream_index] = options;
+
     u32 max_shift = 3;
     u32 min_shift = 0;
 
@@ -2057,18 +2063,14 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
 }
 
 static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
-    GlobalModular& global_modular,
-    FrameHeader const& frame_header,
-    u32 group_index,
-    u32 pass_index,
-    u32 stream_index)
+    PassGroupOptions&& options)
 {
-    if (frame_header.encoding == Encoding::kVarDCT) {
+    if (options.frame_header.encoding == Encoding::kVarDCT) {
         (void)stream;
         TODO();
     }
 
-    TRY(read_modular_group_data(stream, global_modular, frame_header, group_index, pass_index, stream_index));
+    TRY(read_modular_group_data(stream, options));
 
     return {};
 }
@@ -2178,8 +2180,13 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
         TRY(read_lf_group(section_stream, frame.image, frame.frame_header));
 
         // From H.4.1, ModularGroup: 1 + 3 * num_lf_groups + 17 + num_groups * pass index + group index
-        auto stream_index = 1 + 3 * frame.num_lf_groups + 17;
-        TRY(read_pass_group(section_stream, frame.lf_global.gmodular, frame.frame_header, 0, 0, stream_index));
+        u32 stream_index = 1 + 3 * frame.num_lf_groups + 17;
+        TRY(read_pass_group(section_stream,
+            { .global_modular = frame.lf_global.gmodular,
+                .frame_header = frame.frame_header,
+                .group_index = 0,
+                .pass_index = 0,
+                .stream_index = stream_index }));
     } else {
         {
             auto lf_stream = get_stream_for_section(stream, frame.toc.entries[0]);
@@ -2195,14 +2202,19 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
             TODO();
         }
 
-        for (u64 pass_index {}; pass_index < frame.frame_header.passes.num_passes; ++pass_index) {
-            for (u64 group_index {}; group_index < frame.num_groups; ++group_index) {
+        for (u32 pass_index {}; pass_index < frame.frame_header.passes.num_passes; ++pass_index) {
+            for (u32 group_index {}; group_index < frame.num_groups; ++group_index) {
                 auto toc_section_number = 2 + frame.num_lf_groups + pass_index * frame.num_groups + group_index;
                 auto pass_stream = get_stream_for_section(stream, frame.toc.entries[toc_section_number]);
 
                 // From H.4.1, ModularGroup: 1 + 3 * num_lf_groups + 17 + num_groups * pass index + group index
-                auto stream_index = 1 + 3 * frame.num_lf_groups + 17 + frame.num_groups * pass_index + group_index;
-                TRY(read_pass_group(pass_stream, frame.lf_global.gmodular, frame.frame_header, group_index, pass_index, stream_index));
+                u32 stream_index = 1 + 3 * frame.num_lf_groups + 17 + frame.num_groups * pass_index + group_index;
+                TRY(read_pass_group(pass_stream,
+                    { .global_modular = frame.lf_global.gmodular,
+                        .frame_header = frame.frame_header,
+                        .group_index = group_index,
+                        .pass_index = pass_index,
+                        .stream_index = stream_index }));
             }
         }
     }
