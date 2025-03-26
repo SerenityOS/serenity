@@ -1567,9 +1567,17 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
             nb_transforms);
 
         for (auto const& tr : modular_data.transform) {
-            if (tr.tr == TransformInfo::TransformId::kPalette) {
+            switch (tr.tr) {
+            case TransformInfo::TransformId::kRCT:
+                dbgln("* RCT: begin_c={} - rct_type={}", tr.begin_c, tr.rct_type);
+                break;
+            case TransformInfo::TransformId::kPalette:
                 dbgln("* Palette: begin_c={} - num_c={} - nb_colours={} - nb_deltas={} - d_pred={}",
                     tr.begin_c, tr.num_c, tr.nb_colours, tr.nb_deltas, tr.d_pred);
+                break;
+            case TransformInfo::TransformId::kSqueeze:
+                dbgln("* Squeeze: num_sp={}", tr.sp.size());
+                break;
             }
         }
         for (auto const& [i, channel] : enumerate(modular_data.channels))
