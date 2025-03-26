@@ -1534,13 +1534,24 @@ static Neighborhood retrieve_neighborhood(Channel const& channel, u32 x, u32 y)
     return neighborhood;
 }
 
+struct ModularOptions {
+    Span<IntSize> channels_info;
+    Optional<EntropyDecoder>& decoder;
+    MATree const& global_tree;
+    u32 group_dim {};
+    u32 stream_index {};
+};
+
 static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& stream,
-    Span<IntSize> channels_info,
-    Optional<EntropyDecoder>& decoder,
-    MATree const& global_tree,
-    u32 group_dim,
-    u32 stream_index)
+    ModularOptions&& options)
 {
+    auto [channels_info,
+        decoder,
+        global_tree,
+        group_dim,
+        stream_index]
+        = options;
+
     ModularData modular_data;
 
     modular_data.use_global_tree = TRY(stream.read_bit());
@@ -1680,7 +1691,12 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
     auto channels = TRY(FixedArray<IntSize>::create(num_channels));
     channels.fill_with(frame_size);
 
-    global_modular.modular_data = TRY(read_modular_bitstream(stream, channels, global_modular.decoder, global_modular.ma_tree, frame_header.group_dim(), 0));
+    global_modular.modular_data = TRY(read_modular_bitstream(stream,
+        { .channels_info = channels,
+            .decoder = global_modular.decoder,
+            .global_tree = global_modular.ma_tree,
+            .group_dim = frame_header.group_dim(),
+            .stream_index = 0 }));
 
     return global_modular;
 }
@@ -2025,7 +2041,12 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
 
     dbgln_if(JPEGXL_DEBUG, "Decoding pass {} for rectangle {}", pass_index, rect_for_group(original_channels[0], frame_header.group_dim(), group_index));
 
-    auto decoded = TRY(read_modular_bitstream(stream, channels_info, global_modular.decoder, global_modular.ma_tree, frame_header.group_dim(), stream_index));
+    auto decoded = TRY(read_modular_bitstream(stream,
+        { .channels_info = channels_info,
+            .decoder = global_modular.decoder,
+            .global_tree = global_modular.ma_tree,
+            .group_dim = frame_header.group_dim(),
+            .stream_index = stream_index }));
 
     // The decoded modular group data is then copied into the partially decoded GlobalModular image in the corresponding positions.
     for (u32 i = 0; i < original_channels.size(); ++i) {
