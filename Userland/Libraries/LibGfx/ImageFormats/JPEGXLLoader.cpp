@@ -1904,12 +1904,11 @@ static constexpr i16 kDeltaPalette[72][3] = {
 
 static ErrorOr<void> apply_palette(Vector<Channel>& channel,
     TransformInfo const& tr,
-    ImageMetadata const& metadata,
+    u32 bitdepth,
     WPHeader const& wp_params)
 {
     auto first = tr.begin_c + 1;
     auto last = tr.begin_c + tr.num_c;
-    auto bitdepth = metadata.bit_depth.bits_per_sample;
     for (u32 i = first + 1; i <= last; i++)
         channel.insert(i, TRY(channel[first].copy()));
     for (u32 c = 0; c < tr.num_c; c++) {
@@ -1961,7 +1960,7 @@ static ErrorOr<void> apply_palette(Vector<Channel>& channel,
 static ErrorOr<void> apply_transformation(
     Vector<Channel>& channels,
     TransformInfo const& transformation,
-    ImageMetadata const& metadata,
+    u32 bit_depth,
     WPHeader const& wp_header)
 {
     switch (transformation.tr) {
@@ -1969,7 +1968,7 @@ static ErrorOr<void> apply_transformation(
         apply_rct(channels, transformation);
         break;
     case TransformInfo::TransformId::kPalette:
-        return apply_palette(channels, transformation, metadata, wp_header);
+        return apply_palette(channels, transformation, bit_depth, wp_header);
     case TransformInfo::TransformId::kSqueeze:
         return Error::from_string_literal("JPEGXLLoader: Unimplemented transformation");
     default:
@@ -2213,8 +2212,9 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     // the at that point fully decoded GlobalModular image, as specified in H.6.
     auto& channels = frame.lf_global.gmodular.modular_data.channels;
     auto const& transform_infos = frame.lf_global.gmodular.modular_data.transform;
+    auto bits_per_sample = metadata.bit_depth.bits_per_sample;
     for (auto const& transformation : transform_infos.in_reverse())
-        TRY(apply_transformation(channels, transformation, metadata, frame.lf_global.gmodular.modular_data.wp_params));
+        TRY(apply_transformation(channels, transformation, bits_per_sample, frame.lf_global.gmodular.modular_data.wp_params));
 
     TRY(frame.render_image(move(channels)));
 
