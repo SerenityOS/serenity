@@ -1558,7 +1558,7 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
             return false;
         if (index < modular_data.nb_meta_channels)
             return true;
-        return channel.width() <= group_dim && channel.width() <= group_dim;
+        return channel.width() <= group_dim && channel.height() <= group_dim;
     };
 
     if constexpr (JPEGXL_DEBUG) {
