@@ -2075,6 +2075,17 @@ TEST_CASE(test_jxl_icc)
     verify_checkerboard(*plugin_decoder);
 }
 
+TEST_CASE(test_jxl_palette_and_groups)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jxl/palette_and_groups.jxl"sv)));
+    EXPECT(Gfx::JPEGXLImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEGXLImageDecoderPlugin::create(file->bytes()));
+
+    TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 64, 138 }));
+    auto frame = TRY_OR_FAIL(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->get_pixel(20, 130), Gfx::Color::from_string("#0b1112"sv));
+}
+
 TEST_CASE(test_dds)
 {
     Array file_names = {
