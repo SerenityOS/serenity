@@ -2039,15 +2039,11 @@ TEST_CASE(test_jxl_modular_simple_tree_upsample2_10bits)
     EXPECT_EQ(frame.image->get_pixel(42, 57), Gfx::Color::from_string("#4c0072"sv));
 }
 
-TEST_CASE(test_jxl_modular_property_8)
+static void verify_checkerboard(Gfx::ImageDecoderPlugin& decoder)
 {
-    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jxl/modular_property_8.jxl"sv)));
-    EXPECT(Gfx::JPEGXLImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEGXLImageDecoderPlugin::create(file->bytes()));
+    TRY_OR_FAIL(expect_single_frame_of_size(decoder, { 32, 32 }));
 
-    TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 32, 32 }));
-
-    auto frame = TRY_OR_FAIL(plugin_decoder->frame(0));
+    auto frame = TRY_OR_FAIL(decoder.frame(0));
     for (u8 i = 0; i < 32; ++i) {
         for (u8 j = 0; j < 32; ++j) {
             auto const color = frame.image->get_pixel(i, j);
@@ -2057,6 +2053,15 @@ TEST_CASE(test_jxl_modular_property_8)
                 EXPECT_EQ(color, Gfx::Color::Yellow);
         }
     }
+}
+
+TEST_CASE(test_jxl_modular_property_8)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jxl/modular_property_8.jxl"sv)));
+    EXPECT(Gfx::JPEGXLImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEGXLImageDecoderPlugin::create(file->bytes()));
+
+    verify_checkerboard(*plugin_decoder);
 }
 
 TEST_CASE(test_jxl_icc)
