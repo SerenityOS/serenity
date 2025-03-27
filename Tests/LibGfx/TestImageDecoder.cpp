@@ -2072,9 +2072,7 @@ TEST_CASE(test_jxl_icc)
     EXPECT(TRY_OR_FAIL(plugin_decoder->icc_data()).has_value());
     EXPECT_EQ(TRY_OR_FAIL(plugin_decoder->icc_data()).value().size(), 2644u);
 
-    // FIXME: Also make sure we can decode the image. I unfortunately was unable to create an image
-    //        with both an ICC profile and only features that we support.
-    // TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 32, 32 }));
+    verify_checkerboard(*plugin_decoder);
 }
 
 TEST_CASE(test_dds)
