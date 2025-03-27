@@ -150,7 +150,7 @@ ErrorOr<void> KeyboardDriver::on_report(ReadonlyBytes report_data)
 
         u16 usage_id = usage & 0xffff;
 
-        if (usage_id >= new_key_state.size()) {
+        if (usage_id >= key_state_bitmap_size_in_bits) {
             dbgln_if(HID_DEBUG, "HID: Unknown Keyboard/Keypad Page Usage ID: {:#x}", usage_id);
             return IterationDecision::Continue;
         }
