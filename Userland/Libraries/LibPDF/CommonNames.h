@@ -200,6 +200,7 @@
     X(UseBlackPTComp)             \
     X(UserUnit)                   \
     X(V)                          \
+    X(VerticesPerRow)             \
     X(W)                          \
     X(W2)                         \
     X(WhitePoint)                 \
