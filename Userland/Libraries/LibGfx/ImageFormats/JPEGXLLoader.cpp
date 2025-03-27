@@ -1051,7 +1051,7 @@ struct TransformInfo {
     u32 nb_deltas {};
     u8 d_pred {};
 
-    FixedArray<SqueezeParams> sp {};
+    Vector<SqueezeParams> sp {};
 };
 
 static ErrorOr<TransformInfo> read_transform_info(LittleEndianInputBitStream& stream)
@@ -1085,7 +1085,7 @@ static ErrorOr<TransformInfo> read_transform_info(LittleEndianInputBitStream& st
 
     if (transform_info.tr == TransformInfo::TransformId::kSqueeze) {
         auto const num_sq = U32(0, 1 + TRY(stream.read_bits(4)), 9 + TRY(stream.read_bits(6)), 41 + TRY(stream.read_bits(8)));
-        transform_info.sp = TRY(FixedArray<SqueezeParams>::create(num_sq));
+        TRY(transform_info.sp.try_resize(num_sq));
         for (u32 i = 0; i < num_sq; ++i)
             transform_info.sp[i] = TRY(read_squeeze_params(stream));
     }
