@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-void raspberry_pi_platform_init(StringView compatible_string)
+void raspberry_pi_3_4_platform_init(StringView compatible_string)
 {
     // We have to use a raw pointer here because this variable will be set before global constructors are called.
     static PL011* s_debug_console_uart;
@@ -72,6 +72,26 @@ void raspberry_pi_platform_init(StringView compatible_string)
     gpio.set_pin_function(25, RPi::GPIO::PinFunction::Alternate3); // SD1_DAT1
     gpio.set_pin_function(26, RPi::GPIO::PinFunction::Alternate3); // SD1_DAT2
     gpio.set_pin_function(27, RPi::GPIO::PinFunction::Alternate3); // SD1_DAT3
+}
+
+void raspberry_pi_5_platform_init(StringView)
+{
+    // We have to use a raw pointer here because this variable will be set before global constructors are called.
+    static PL011* s_debug_console_uart;
+
+    static DebugConsole const s_debug_console {
+        .write_character = [](char character) {
+            s_debug_console_uart->send(character);
+        },
+    };
+
+    // Use the dedicated debug UART (UART10) that can be connected with the Raspberry Pi Debug Probe (https://www.raspberrypi.com/documentation/microcontrollers/debug-probe.html).
+    // The GPIO UARTs are not yet accessible since they reside in the RP1, which is connected via PCIe.
+    // However, we could set "pciex4_reset=0" in config.txt to keep the PCIe root complex initialized.
+    s_debug_console_uart = MUST(PL011::initialize(PhysicalAddress { 0x10'7d00'1000 })).leak_ptr();
+    set_debug_console(&s_debug_console);
+
+    // FIXME: Don't rely on the firmware configuring the baud rate.
 }
 
 }

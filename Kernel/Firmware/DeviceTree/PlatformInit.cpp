@@ -23,9 +23,10 @@ struct PlatformInitTableEntry {
 
 static constinit auto const s_platform_init_table = to_array<PlatformInitTableEntry>({
 #if ARCH(AARCH64)
-    { "raspberrypi,3-model-b"sv, raspberry_pi_platform_init },
-    { "raspberrypi,4-model-b"sv, raspberry_pi_platform_init },
     { "linux,dummy-virt"sv, virt_platform_init },
+    { "raspberrypi,3-model-b"sv, raspberry_pi_3_4_platform_init },
+    { "raspberrypi,4-model-b"sv, raspberry_pi_3_4_platform_init },
+    { "raspberrypi,5-model-b"sv, raspberry_pi_5_platform_init },
 #endif
 });
 
