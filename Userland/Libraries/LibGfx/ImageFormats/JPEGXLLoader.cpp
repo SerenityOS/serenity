@@ -1393,6 +1393,48 @@ private:
 ///
 
 /// H.2 - Image decoding
+
+static ErrorOr<void> add_default_squeeze_params(TransformInfo& tr, Span<ChannelInfo> channels, u32 nb_meta_channels)
+{
+    // H.6.2.1  Parameters - "The default parameters (the case when sp.size() == 0) are specified by the following code:"
+
+    auto first = nb_meta_channels;
+    auto count = channels.size() - first;
+    auto w = channels[first].width;
+    auto h = channels[first].height;
+    SqueezeParams param;
+    if (count > 2 && channels[first + 1].width == w && channels[first + 1].height == h) {
+        param.begin_c = first + 1;
+        param.num_c = 2;
+        param.in_place = false;
+        param.horizontal = true;
+        tr.sp.append(param);
+        param.horizontal = false;
+        tr.sp.append(param);
+    }
+    param.begin_c = first;
+    param.num_c = count;
+    param.in_place = true;
+    if (h >= w && h > 8) {
+        param.horizontal = false;
+        tr.sp.append(param);
+        h = (h + 1) / 2;
+    }
+    while (w > 8 || h > 8) {
+        if (w > 8) {
+            param.horizontal = true;
+            tr.sp.append(param);
+            w = (w + 1) / 2;
+        }
+        if (h > 8) {
+            param.horizontal = false;
+            tr.sp.append(param);
+            h = (h + 1) / 2;
+        }
+    }
+    return {};
+}
+
 struct ModularData {
     bool use_global_tree {};
     WPHeader wp_params {};
@@ -1408,7 +1450,7 @@ struct ModularData {
         Vector<ChannelInfo> channel_infos {};
         TRY(channel_infos.try_extend(frame_size));
 
-        for (auto const& tr : transform) {
+        for (auto& tr : transform) {
             if (tr.tr == TransformInfo::TransformId::kPalette) {
                 // Let end_c = begin_c + num_c − 1. When updating the channel list as described in H.2, channels begin_c to end_c,
                 // which all have the same dimensions, are replaced with two new channels:
@@ -1425,6 +1467,48 @@ struct ModularData {
                     nb_meta_channels += 2 - tr.begin_c;
                 else
                     nb_meta_channels += 1;
+            } else if (tr.tr == TransformInfo::TransformId::kSqueeze) {
+                if (tr.sp.is_empty())
+                    TRY(add_default_squeeze_params(tr, channel_infos, nb_meta_channels));
+
+                // "Let begin = sp[i].begin_c and end = begin + sp[i].num_c − 1.
+                // The channel list is modified as specified by the following code:"
+                for (u32 i = 0; i < tr.sp.size(); i++) {
+                    auto begin = tr.sp[i].begin_c;
+                    auto end = begin + tr.sp[i].num_c - 1;
+                    auto r = tr.sp[i].in_place ? end + 1 : channel_infos.size();
+                    if (begin < nb_meta_channels) {
+                        /* sp[i].in_place is true */
+                        /* end < nb_meta_channels */
+                        if (!tr.sp[i].in_place || end >= nb_meta_channels)
+                            return Error::from_string_literal("JPEGXLLoader: Invalid values in the squeeze transform");
+                        nb_meta_channels += tr.sp[i].num_c;
+                    }
+                    for (u32 c = begin; c <= end; c++) {
+                        auto w = channel_infos[c].width;
+                        auto h = channel_infos[c].height;
+                        /* w > 0 and h > 0 */
+                        if (w == 0 || h == 0)
+                            return Error::from_string_literal("JPEGXLLoader: Can't apply the squeeze transform on a channel with a null dimension");
+
+                        ChannelInfo residu;
+                        if (tr.sp[i].horizontal) {
+                            channel_infos[c].width = (w + 1) / 2;
+                            if (channel_infos[c].hshift >= 0)
+                                channel_infos[c].hshift++;
+                            residu = channel_infos[c];
+                            residu.width = w / 2;
+                        } else {
+                            channel_infos[c].height = (h + 1) / 2;
+                            if (channel_infos[c].vshift >= 0)
+                                channel_infos[c].vshift++;
+                            residu = channel_infos[c];
+                            residu.height = h / 2;
+                        }
+                        /* Insert residu into channel at index r + c − begin */
+                        TRY(channel_infos.try_insert(r + c - begin, residu));
+                    }
+                }
             }
         }
 
