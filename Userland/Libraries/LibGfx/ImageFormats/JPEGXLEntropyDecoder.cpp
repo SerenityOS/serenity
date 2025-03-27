@@ -444,6 +444,32 @@ ErrorOr<u32> EntropyDecoder::read_symbol(LittleEndianInputBitStream& stream, u32
     return token;
 }
 
+namespace {
+
+void move_to_front(Span<u32> v, u32 index)
+{
+    auto value = v[index];
+    for (u32 i = index; i; --i)
+        v[i] = v[i - 1];
+    v[0] = value;
+}
+
+void inverse_move_to_front_transform(Vector<u32>& clusters)
+{
+    auto num_dist = clusters.size();
+    Array<u32, 256> mtf;
+    for (u32 i = 0; i < 256; ++i)
+        mtf[i] = i;
+    for (u32 i = 0; i < num_dist; ++i) {
+        u32 index = clusters[i];
+        clusters[i] = mtf[index];
+        if (index != 0)
+            move_to_front(mtf, index);
+    }
+}
+
+}
+
 ErrorOr<void> EntropyDecoder::read_pre_clustered_distributions(LittleEndianInputBitStream& stream, u32 num_distrib)
 {
     // C.2.2  Distribution clustering
@@ -482,7 +508,7 @@ ErrorOr<void> EntropyDecoder::read_pre_clustered_distributions(LittleEndianInput
         TRY(read_clusters([&]() { return decoder.decode_hybrid_uint(stream, 0); }));
 
         if (use_mtf)
-            TODO();
+            inverse_move_to_front_transform(m_clusters);
 
         TRY(decoder.ensure_end_state());
     }
