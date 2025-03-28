@@ -2145,11 +2145,11 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
         frame.height = ceil(static_cast<double>(frame.height) / frame.frame_header.upsampling);
     }
 
-    dbgln_if(JPEGXL_DEBUG, "Frame{}: {}x{} {} - type({}) - flags({}){}"sv,
+    dbgln_if(JPEGXL_DEBUG, "Frame{}: {}x{} {} - {} - flags({}){}"sv,
         frame.frame_header.name.is_empty() ? ""sv : MUST(String::formatted(" \"{}\"", frame.frame_header.name)),
         frame.width, frame.height,
         frame.frame_header.encoding,
-        to_underlying(frame.frame_header.frame_type),
+        frame.frame_header.frame_type,
         to_underlying(frame.frame_header.flags),
         frame.frame_header.is_last ? " - is_last"sv : ""sv);
 
@@ -2603,6 +2603,24 @@ struct Formatter<Gfx::Encoding> : Formatter<StringView> {
         }
 
         return Formatter<StringView>::format(builder, string);
+    }
+};
+
+template<>
+struct Formatter<Gfx::FrameHeader::FrameType> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::FrameHeader::FrameType const& header)
+    {
+        switch (header) {
+        case Gfx::FrameHeader::FrameType::kRegularFrame:
+            return Formatter<StringView>::format(builder, "RegularFrame"sv);
+        case Gfx::FrameHeader::FrameType::kLFFrame:
+            return Formatter<StringView>::format(builder, "LFFrame"sv);
+        case Gfx::FrameHeader::FrameType::kReferenceOnly:
+            return Formatter<StringView>::format(builder, "ReferenceOnly"sv);
+        case Gfx::FrameHeader::FrameType::kSkipProgressive:
+            return Formatter<StringView>::format(builder, "SkipProgressive"sv);
+        }
+        VERIFY_NOT_REACHED();
     }
 };
 
