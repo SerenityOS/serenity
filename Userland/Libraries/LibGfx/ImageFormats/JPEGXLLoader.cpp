@@ -1886,6 +1886,9 @@ struct Patch {
 
     // x[] and y[] in the spec
     FixedArray<IntPoint> positions;
+
+    // "blending: arrays of count blend mode information structures, which consists of arrays of mode, alpha_channel and clamp"
+    FixedArray<FixedArray<BlendingInfo>> blending;
 };
 
 static ErrorOr<Patch> read_patch(LittleEndianInputBitStream& stream, EntropyDecoder& decoder, u32 num_extra_channels)
@@ -1899,6 +1902,9 @@ static ErrorOr<Patch> read_patch(LittleEndianInputBitStream& stream, EntropyDeco
     patch.count = TRY(decoder.decode_hybrid_uint(stream, 7)) + 1;
 
     patch.positions = TRY(FixedArray<IntPoint>::create(patch.count));
+    patch.blending = TRY(FixedArray<FixedArray<BlendingInfo>>::create(patch.count));
+    for (auto& array : patch.blending)
+        array = TRY(FixedArray<BlendingInfo>::create(num_extra_channels + 1));
 
     for (u32 j = 0; j < patch.count; j++) {
         if (j == 0) {
@@ -1919,8 +1925,23 @@ static ErrorOr<Patch> read_patch(LittleEndianInputBitStream& stream, EntropyDeco
         /* the width x height rectangle with top-left coordinates (x, y)
            is fully contained within the frame */
 
-        if (num_extra_channels > 0)
-            return Error::from_string_literal("JPEGXLLoader: Implement reading patches for extra channels");
+        for (u32 k = 0; k < num_extra_channels + 1; k++) {
+            u8 mode = TRY(decoder.decode_hybrid_uint(stream, 5));
+
+            /* mode < 8 */
+            if (mode >= 8)
+                return Error::from_string_literal("JPEGXLLoader: Invalid mode when reading patches");
+            patch.blending[j][k].mode = static_cast<BlendingInfo::BlendMode>(mode);
+            // FIXME: The condition is supposed to be "/* there is more than 1 alpha channel */"
+            //        rather than num_extra_channels > 1
+            if (mode > 3 && num_extra_channels > 1) {
+                patch.blending[j][k].alpha_channel = TRY(decoder.decode_hybrid_uint(stream, 8));
+                // FIXME: Ensure that condition
+                /* this is a valid index of an extra channel */
+            }
+            if (mode > 2)
+                patch.blending[j][k].clamp = TRY(decoder.decode_hybrid_uint(stream, 9));
+        }
     }
 
     return patch;
