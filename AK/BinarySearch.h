@@ -45,11 +45,17 @@ constexpr auto binary_search(
 
         int comparison = comparator(needle, haystack[middle]);
 
-        if (comparison < 0)
-            if (middle != 0)
-                high = middle - 1;
-            else
+        if (comparison <= 0)
+            if (middle != 0 && high != middle)
+                high = middle;
+            else {
+                if (comparison == 0) {
+                    if (nearby_index)
+                        *nearby_index = middle;
+                    return &haystack[middle];
+                }
                 break;
+            }
         else if (comparison > 0)
             low = middle + 1;
         else {
