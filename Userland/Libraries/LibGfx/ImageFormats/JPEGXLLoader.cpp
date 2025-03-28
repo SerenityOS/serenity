@@ -2708,12 +2708,39 @@ static ErrorOr<void> apply_upsampling(Frame& frame, ImageMetadata const& metadat
     return {};
 }
 
-static ErrorOr<void> apply_image_features(Frame& frame, ImageMetadata const& metadata)
+/// K.3.2  Patches rendering
+static ErrorOr<void> apply_patches(Span<Frame> previous_frames, Frame& frame)
+{
+    auto& destination_image = frame.image;
+    for (auto const& [i, patch] : enumerate(frame.lf_global.patches)) {
+        if (patch.ref > previous_frames.size())
+            return Error::from_string_literal("JPEGXLLoader: Unable to find the requested reference frame");
+
+        auto& source_image = previous_frames[patch.ref].image;
+        auto source_rect = IntRect({ patch.x0, patch.y0 }, { patch.width, patch.height });
+        auto source_patch = TRY(source_image->get_subimage(source_rect));
+
+        for (u32 j = 0; j < patch.count; ++j) {
+            auto destination = IntRect(patch.positions[j], { patch.width, patch.height });
+            auto destination_patch = TRY(destination_image->get_subimage(destination));
+            // FIXME: "iterates over the three colour channels if c == 0 and refers to the extra channel with index c−1 otherwise"
+            TRY(source_patch.blend_into(destination_patch, patch.blending[j][0].mode));
+        }
+    }
+
+    return {};
+}
+
+static ErrorOr<void> apply_image_features(Span<Frame> previous_frames, Frame& frame, ImageMetadata const& metadata)
 {
     TRY(apply_upsampling(frame, metadata));
 
-    if (frame.frame_header.flags != FrameHeader::Flags::None)
-        TODO();
+    auto flags = frame.frame_header.flags;
+    if (flags & FrameHeader::Flags::kPatches) {
+        TRY(apply_patches(previous_frames, frame));
+    } else if (flags != FrameHeader::Flags::None) {
+        dbgln("JPEGXLLoader: Unsupported image features");
+    }
     return {};
 }
 ///
@@ -2808,7 +2835,7 @@ public:
 
         TRY(apply_restoration_filters(frame));
 
-        TRY(apply_image_features(frame, m_metadata));
+        TRY(apply_image_features(m_frames, frame, m_metadata));
 
         if (!frame_header.save_before_ct) {
             apply_colour_transformation(frame, m_metadata);
