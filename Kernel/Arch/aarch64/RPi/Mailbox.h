@@ -18,8 +18,6 @@ struct MailboxRegisters;
 // https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface
 class Mailbox {
 public:
-    Mailbox();
-
     // Base class for Mailbox messages. Implemented in subsystems that use Mailbox.
     class Message {
     protected:
@@ -51,7 +49,7 @@ public:
         u32 m_empty_tag = 0;
     };
 
-    static void initialize();
+    static ErrorOr<void> initialize(PhysicalAddress);
     static bool is_initialized();
     static Mailbox& the();
 
@@ -63,6 +61,7 @@ public:
     Memory::TypedMapping<MailboxRegisters volatile> m_registers;
 
 private:
+    Mailbox(Memory::TypedMapping<MailboxRegisters volatile> registers);
     void wait_until_we_can_write() const;
     void wait_for_reply() const;
 };

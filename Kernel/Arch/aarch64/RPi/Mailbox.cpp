@@ -4,11 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Singleton.h>
 #include <Kernel/Arch/aarch64/ASM_wrapper.h>
-#include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/Mailbox.h>
-#include <Kernel/Library/Panic.h>
 #include <Kernel/Memory/MemoryManager.h>
 
 namespace Kernel::RPi {
@@ -38,10 +35,11 @@ constexpr u32 MBOX_EMPTY = 0x4000'0000;
 
 constexpr int ARM_TO_VIDEOCORE_CHANNEL = 8;
 
-static Singleton<Mailbox> s_the;
+// We have to use a raw pointer here because this variable will be set before global constructors are called.
+static Mailbox* s_the = nullptr;
 
-Mailbox::Mailbox()
-    : m_registers(MMIO::the().peripheral<MailboxRegisters>(0xb880).release_value_but_fixme_should_propagate_errors())
+Mailbox::Mailbox(Memory::TypedMapping<MailboxRegisters volatile> registers)
+    : m_registers(move(registers))
 {
 }
 
@@ -63,20 +61,24 @@ bool Mailbox::MessageHeader::success() const
     return m_command_tag == MBOX_RESPONSE_SUCCESS;
 }
 
-void Mailbox::initialize()
+ErrorOr<void> Mailbox::initialize(PhysicalAddress physical_address)
 {
-    s_the.ensure_instance();
+    auto registers = TRY(Memory::map_typed_writable<MailboxRegisters volatile>(physical_address));
+    s_the = new (nothrow) Mailbox(move(registers));
+    if (s_the == nullptr)
+        return ENOMEM;
+    return {};
 }
 
 bool Mailbox::is_initialized()
 {
-    return s_the.is_initialized();
+    return s_the != nullptr;
 }
 
 Mailbox& Mailbox::the()
 {
     VERIFY(is_initialized());
-    return s_the;
+    return *s_the;
 }
 
 void Mailbox::wait_until_we_can_write() const
