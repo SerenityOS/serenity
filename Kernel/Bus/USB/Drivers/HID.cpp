@@ -187,6 +187,8 @@ static ErrorOr<NonnullRefPtr<HIDInterface>> initialize_hid_interface(USB::Device
 
 ErrorOr<void> HIDDriver::probe(USB::Device& device)
 {
+    bool found_and_initialized_hid_interface = false;
+
     for (auto const& configuration : device.configurations()) {
         for (auto const& interface : configuration.interfaces()) {
             if (interface.descriptor().interface_class_code != USB_CLASS_HID)
@@ -206,11 +208,12 @@ ErrorOr<void> HIDDriver::probe(USB::Device& device)
             }
 
             m_hid_interfaces.append(hid_interface_or_error.release_value());
+            found_and_initialized_hid_interface = true;
         }
 
         // FIXME: We currently always use the first configuration with at least one HID interface that we successfully initialized.
         //        Maybe check other configurations as well?
-        if (!m_hid_interfaces.is_empty())
+        if (found_and_initialized_hid_interface)
             return {};
     }
 
