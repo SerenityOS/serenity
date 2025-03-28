@@ -35,7 +35,7 @@ void raspberry_pi_3_4_platform_init(StringView compatible_string)
     else
         VERIFY_NOT_REACHED();
 
-    RPi::Mailbox::initialize();
+    MUST(RPi::Mailbox::initialize(peripheral_base_address.offset(0xb880)));
     RPi::GPIO::initialize();
     s_debug_console_uart = MUST(PL011::initialize(peripheral_base_address.offset(0x20'1000))).leak_ptr();
 
@@ -92,6 +92,9 @@ void raspberry_pi_5_platform_init(StringView)
     set_debug_console(&s_debug_console);
 
     // FIXME: Don't rely on the firmware configuring the baud rate.
+
+    MUST(RPi::Mailbox::initialize(PhysicalAddress { 0x10'7c01'3880 }));
+    RPi::Framebuffer::initialize();
 }
 
 }
