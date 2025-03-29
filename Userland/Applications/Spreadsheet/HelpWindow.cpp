@@ -83,7 +83,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 
     m_webview = splitter.add<WebView::OutOfProcessWebView>();
     m_webview->use_native_user_style_sheet();
-    m_webview->on_link_click = [this](auto& url, auto&, auto&&) {
+    m_webview->handle_custom_scheme = [this](auto& url) {
         VERIFY(url.scheme() == "spreadsheet");
         if (url.host().template has<String>() && url.host().template get<String>() == "example"sv) {
             auto example_path = URL::percent_decode(url.serialize_path());
@@ -91,7 +91,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto doc_option = m_docs.get_object(entry);
             if (!doc_option.has_value()) {
                 GUI::MessageBox::show_error(this, ByteString::formatted("No documentation entry found for '{}'", example_path));
-                return;
+                return true;
             }
             auto& doc = doc_option.value();
             auto name = url.fragment().value_or(String {});
@@ -99,13 +99,13 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto maybe_example_data = doc.get_object("example_data"sv);
             if (!maybe_example_data.has_value()) {
                 GUI::MessageBox::show_error(this, ByteString::formatted("No example data found for '{}'", example_path));
-                return;
+                return true;
             }
             auto& example_data = maybe_example_data.value();
 
             if (!example_data.has_object(name)) {
                 GUI::MessageBox::show_error(this, ByteString::formatted("Example '{}' not found for '{}'", name, example_path));
-                return;
+                return true;
             }
             auto& value = example_data.get_object(name).value();
 
@@ -119,7 +119,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto sheet = Sheet::from_json(value, widget->workbook());
             if (!sheet) {
                 GUI::MessageBox::show_error(this, ByteString::formatted("Corrupted example '{}' in '{}'", name, example_path));
-                return;
+                return true;
             }
 
             widget->add_sheet(sheet.release_nonnull());
@@ -130,6 +130,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
         } else {
             dbgln("Invalid spreadsheet action domain '{}'", url.serialized_host().release_value_but_fixme_should_propagate_errors());
         }
+        return true;
     };
 
     m_listview->on_activation = [this](auto& index) {
