@@ -1143,13 +1143,12 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(
             // 2. Set saveExtraDocumentState to false.
             saveExtraDocumentState = false;
         }
-
         // 4. Otherwise, if any of the following are true:
         //  - navigationParams is null;
         //  - FIXME: the result of should navigation response to navigation request of type in target be blocked by Content Security Policy? given navigationParams's request, navigationParams's response, navigationParams's policy container's CSP list, cspNavigationType, and navigable is "Blocked";
         //  - FIXME: navigationParams's reserved environment is non-null and the result of checking a navigation response's adherence to its embedder policy given navigationParams's response, navigable, and navigationParams's policy container's embedder policy is false; or
         //  - FIXME: the result of checking a navigation response's adherence to `X-Frame-Options` given navigationParams's response, navigable, navigationParams's policy container's CSP list, and navigationParams's origin is false,
-        if (navigation_params.has<Empty>() || navigation_params.has<NullWithError>()) {
+        else if (navigation_params.has<Empty>() || navigation_params.has<NullWithError>()) {
             // 1. Set entry's document state's document to the result of creating a document for inline content that doesn't have a DOM, given navigable, null, and navTimingType. The inline content should indicate to the user the sort of error that occurred.
             auto error_message = navigation_params.has<NullWithError>() ? navigation_params.get<NullWithError>() : "Unknown error"sv;
 
