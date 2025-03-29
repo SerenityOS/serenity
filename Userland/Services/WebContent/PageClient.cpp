@@ -861,6 +861,11 @@ Vector<Web::CSS::StyleSheetIdentifier> PageClient::list_style_sheets() const
     return results;
 }
 
+bool PageClient::handle_non_fetch_scheme(const URL::URL& url)
+{
+    return client().handle_non_fetch_scheme(m_id, url);
+}
+
 Web::DisplayListPlayerType PageClient::display_list_player_type() const
 {
     if (s_use_gpu_painter)

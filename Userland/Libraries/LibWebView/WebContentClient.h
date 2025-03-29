@@ -119,6 +119,7 @@ private:
     virtual void inspector_did_list_style_sheets(u64 page_id, Vector<Web::CSS::StyleSheetIdentifier> const& stylesheets) override;
     virtual void inspector_did_request_style_sheet_source(u64 page_id, Web::CSS::StyleSheetIdentifier const& identifier) override;
     virtual void did_get_style_sheet_source(u64 page_id, Web::CSS::StyleSheetIdentifier const& identifier, URL::URL const&, String const& source) override;
+    virtual Messages::WebContentClient::HandleNonFetchSchemeResponse handle_non_fetch_scheme(u64 page_id, const URL::URL&) override;
 
     Optional<ViewImplementation&> view_for_page_id(u64, SourceLocation = SourceLocation::current());
 
