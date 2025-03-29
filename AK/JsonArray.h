@@ -16,7 +16,10 @@ namespace AK {
 
 class JsonArray {
     template<typename Callback>
-    using CallbackErrorType = decltype(declval<Callback>()(declval<JsonValue const&>()).release_error());
+    using CallbackErrorType = decltype(declval<Callback>()(declval<JsonValue const&>()))::ErrorType;
+
+    static_assert(SameAs<CallbackErrorType<ErrorOr<void> (*)(JsonValue const&)>, Error>);
+    static_assert(SameAs<ErrorOr<void, CallbackErrorType<ErrorOr<void> (*)(JsonValue const&)>>, ErrorOr<void>>);
 
 public:
     JsonArray() = default;
