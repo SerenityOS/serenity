@@ -11,6 +11,14 @@
 // https://developer.arm.com/documentation/den0022/latest/
 namespace Kernel::PSCI {
 
+enum class Conduit {
+    Unknown,
+    SMC,
+    HVC,
+};
+
+static Conduit s_conduit = Conduit::Unknown;
+
 static bool s_is_supported = false;
 
 enum class Function : u32 {
@@ -20,6 +28,29 @@ enum class Function : u32 {
 
 static FlatPtr call(Function function, FlatPtr arg0, FlatPtr arg1, FlatPtr arg2)
 {
+    VERIFY(s_conduit != Conduit::Unknown);
+
+    if (s_conduit == Conduit::SMC) {
+        // 5.2.1 Register usage in arguments and return values
+        // "For [PSCI] versions using 64-bit parameters, the arguments are passed in X0 to X3, with return values in X0."
+        register FlatPtr x0 asm("x0") = static_cast<FlatPtr>(function);
+        register FlatPtr x1 asm("x1") = arg0;
+        register FlatPtr x2 asm("x2") = arg1;
+        register FlatPtr x3 asm("x3") = arg2;
+
+        // NOTE: x4-x17 are marked as clobbered since SMCCC 1.0 doesn't
+        // require them to be preserved across SMC or HVC calls.
+        asm volatile(
+            "smc #0"
+            : "+r"(x0), "+r"(x1), "+r"(x2), "+r"(x3)
+            :
+            : "memory", "x4", "x5", "x6", "x7", "x8", "x9", "x10", "x11", "x12", "x13", "x14", "x15", "x16", "x17");
+
+        return x0;
+    }
+
+    VERIFY(s_conduit == Conduit::HVC);
+
     // 5.2.1 Register usage in arguments and return values
     // "For [PSCI] versions using 64-bit parameters, the arguments are passed in X0 to X3, with return values in X0."
     register FlatPtr x0 asm("x0") = static_cast<FlatPtr>(function);
@@ -70,9 +101,14 @@ ErrorOr<void> PSCIDriver::probe(DeviceTree::Device const& device, StringView) co
         return EINVAL;
     }
 
-    // Currently, we only support HVC (as opposed to SMC). While SMC is very similar to HVC, only the latter has been tested so far.
-    if (method->as_string() != "hvc"sv)
+    if (method->as_string() == "smc"sv) {
+        s_conduit = Conduit::SMC;
+    } else if (method->as_string() == "hvc"sv) {
+        s_conduit = Conduit::HVC;
+    } else {
+        dbgln("PSCI: Unknown method property value: {}", method->as_string());
         return ENOTSUP;
+    }
 
     s_is_supported = true;
 
