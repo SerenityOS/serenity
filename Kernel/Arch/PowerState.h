@@ -10,7 +10,12 @@
 
 namespace Kernel {
 
-void arch_specific_reboot();
-void arch_specific_poweroff();
+enum class PowerOffOrRebootReason {
+    NoReason,
+    SystemFailure,
+};
+
+void arch_specific_reboot(PowerOffOrRebootReason);
+void arch_specific_poweroff(PowerOffOrRebootReason);
 
 }
