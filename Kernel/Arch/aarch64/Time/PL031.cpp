@@ -35,6 +35,7 @@ static constinit Array const compatibles_array = {
 
 DEVICETREE_DRIVER(PL031Driver, compatibles_array);
 
+// https://www.kernel.org/doc/Documentation/devicetree/bindings/rtc/arm,pl031.yaml
 ErrorOr<void> PL031Driver::probe(DeviceTree::Device const& device, StringView) const
 {
     if (s_rtc->has_value())
