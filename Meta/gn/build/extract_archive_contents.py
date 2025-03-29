@@ -56,14 +56,13 @@ def extract_directory(file, destination, path):
 
 def main():
     parser = argparse.ArgumentParser(
-                 epilog=__doc__,
-                 formatter_class=argparse.RawDescriptionHelpFormatter)
+        epilog=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     parser.add_argument('archive', help='input archive')
     parser.add_argument('paths', nargs='*', help='paths to extract from the archive')
-    parser.add_argument('-s', "--stamp", required=False,
-                        help='stamp file name to create after operation is done')
-    parser.add_argument('-d', "--destination", required=True,
-                        help='directory to write the extracted file to')
+    parser.add_argument('-s', "--stamp", required=False, help='stamp file name to create after operation is done')
+    parser.add_argument('-d', "--destination", required=True, help='directory to write the extracted file to')
     args = parser.parse_args()
 
     archive = pathlib.Path(args.archive)
