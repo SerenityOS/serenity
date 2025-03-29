@@ -1113,6 +1113,18 @@ public:
         return image;
     }
 
+    static ErrorOr<Image> adopt_channels(Vector<Channel>&& channels)
+    {
+        if (channels.size() > 1) {
+            if (any_of(channels, [&](auto const& channel) {
+                    return channel.width() != channels[0].width() || channel.height() != channels[0].height();
+                })) {
+                return Error::from_string_literal("JPEGXLLoader: One of the Global Modular channel has a different size");
+            }
+        }
+        return Image { move(channels) };
+    }
+
     void blend_into(Image& image, FrameHeader const& frame_header) const
     {
         // FIXME: We should use ec_blending_info when appropriate
@@ -1146,7 +1158,6 @@ public:
 
     ErrorOr<NonnullRefPtr<Bitmap>> to_bitmap(ImageMetadata const& metadata) const
     {
-        // FIXME: which channel size should we use?
         auto const width = m_channels[0].width();
         auto const height = m_channels[0].height();
 
@@ -1195,6 +1206,13 @@ public:
     }
 
 private:
+    Image() = default;
+
+    Image(Vector<Channel>&& channels)
+        : m_channels(move(channels))
+    {
+    }
+
     Vector<Channel> m_channels;
 };
 ///
@@ -2115,14 +2133,7 @@ struct Frame {
     u64 num_groups {};
     u64 num_lf_groups {};
 
-    Image image {};
-
-    ErrorOr<void> render_image(Vector<Channel>&& input_channels)
-    {
-        // FIXME: Verify that all channels have the correct dimensions.
-        image.channels() = move(input_channels);
-        return {};
-    }
+    Optional<Image> image {};
 };
 
 class AutoDepletingConstrainedStream : public ConstrainedStream {
@@ -2197,7 +2208,6 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
             dbgln("     {:5} | {:5} | {:6}", i, frame.toc.entries[i], frame.toc.group_offsets[i]);
     }
 
-    frame.image = TRY(Image::create({ frame.width, frame.height }, metadata));
     auto bits_per_sample = metadata.bit_depth.bits_per_sample;
 
     // "If num_groups == 1 and num_passes == 1, then there is a single TOC entry and a single section
@@ -2257,7 +2267,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     for (auto const& transformation : transform_infos.in_reverse())
         TRY(apply_transformation(channels, transformation, bits_per_sample, frame.lf_global.gmodular.modular_data.wp_params));
 
-    TRY(frame.render_image(move(channels)));
+    frame.image = TRY(Image::adopt_channels(move(channels)));
 
     return frame;
 }
@@ -2299,7 +2309,7 @@ static ErrorOr<void> apply_upsampling(Frame& frame, ImageMetadata const& metadat
         };
 
         // FIXME: Use ec_upsampling for extra-channels
-        for (auto& channel : frame.image.channels()) {
+        for (auto& channel : frame.image->channels()) {
             auto upsampled = TRY(Channel::create(k * channel.width(), k * channel.height()));
 
             // Loop over the original image
@@ -2385,7 +2395,7 @@ static void ycbcr_to_rgb(Image& image, u8 bits_per_sample)
 static void apply_colour_transformation(Frame& frame, ImageMetadata const& metadata)
 {
     if (frame.frame_header.do_YCbCr)
-        ycbcr_to_rgb(frame.image, metadata.bit_depth.bits_per_sample);
+        ycbcr_to_rgb(*frame.image, metadata.bit_depth.bits_per_sample);
 
     if (metadata.xyb_encoded) {
         TODO();
@@ -2455,7 +2465,7 @@ public:
             apply_colour_transformation(frame, m_metadata);
         }
 
-        TRY(render_extra_channels(frame.image, m_metadata));
+        TRY(render_extra_channels(*frame.image, m_metadata));
 
         m_frames.append(move(frame));
 
@@ -2482,7 +2492,7 @@ public:
             if (!m_image.has_value())
                 m_image = TRY(Image::create({ m_header.width, m_header.height }, m_metadata));
 
-            m_frames.last().image.blend_into(*m_image, m_frames.last().frame_header);
+            m_frames.last().image->blend_into(*m_image, m_frames.last().frame_header);
 
             m_bitmap = TRY(m_image->to_bitmap(m_metadata));
             m_image.clear();
