@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteString.h>
+#include <AK/JsonValue.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
 
 namespace Kernel {

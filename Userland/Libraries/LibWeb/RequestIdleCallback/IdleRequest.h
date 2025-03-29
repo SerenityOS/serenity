@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Forward.h>
+#include <AK/Optional.h>
 #include <AK/Types.h>
 
 namespace Web::RequestIdleCallback {

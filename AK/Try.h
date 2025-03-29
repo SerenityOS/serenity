@@ -6,8 +6,8 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/Diagnostics.h>
-#include <AK/StdLibExtras.h>
 
 // NOTE: This macro works with any result type that has the expected APIs.
 //       It's designed with AK::Result and AK::Error in mind.

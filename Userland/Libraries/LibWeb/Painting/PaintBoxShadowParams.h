@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/Painting/BordersData.h>
+#include <LibWeb/Painting/BorderRadiiData.h>
 #include <LibWeb/Painting/ShadowData.h>
 
 namespace Web::Painting {

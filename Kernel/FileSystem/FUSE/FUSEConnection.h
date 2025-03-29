@@ -7,6 +7,9 @@
 #pragma once
 
 #include <AK/Atomic.h>
+#include <AK/RefCounted.h>
+#include <Kernel/Devices/Device.h>
+#include <Kernel/Devices/FUSEDevice.h>
 #include <Kernel/FileSystem/FUSE/Definitions.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Library/KBuffer.h>

@@ -8,8 +8,8 @@
 
 #include <AK/Array.h>
 #include <AK/SIMD.h>
-#include <AK/Vector.h>
 #include <LibGPU/Config.h>
+#include <LibSoftGPU/ISA.h>
 #include <LibSoftGPU/PixelQuad.h>
 #include <LibSoftGPU/Sampler.h>
 

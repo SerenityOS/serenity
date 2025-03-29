@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/OwnPtr.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Vector.h>
 
 namespace AK {

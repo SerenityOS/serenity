@@ -18,6 +18,7 @@
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
+#include <LibShell/Execution.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <limits.h>
