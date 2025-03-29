@@ -5,10 +5,13 @@
  */
 
 #include <Kernel/Arch/aarch64/PSCI.h>
-#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
+#include <Kernel/Firmware/DeviceTree/Driver.h>
+#include <Kernel/Firmware/DeviceTree/Management.h>
 
 // https://developer.arm.com/documentation/den0022/latest/
 namespace Kernel::PSCI {
+
+static bool s_is_supported = false;
 
 enum class Function : u32 {
     SystemOff = 0x8400'0008,
@@ -37,27 +40,7 @@ static FlatPtr call(Function function, FlatPtr arg0, FlatPtr arg1, FlatPtr arg2)
 
 bool is_supported()
 {
-    // https://www.kernel.org/doc/Documentation/devicetree/bindings/arm/psci.txt
-    // FIXME: Make this a DeviceTree::Driver, and don't assume that the psci node is a child of the root node.
-    auto psci = DeviceTree::get().get_child("psci"sv);
-    if (!psci.has_value())
-        return false;
-
-    // NOTE: We reject "arm,psci" on purpose, since these old devices don't have standardized function IDs.
-    if (!psci->is_compatible_with("arm,psci-0.2"sv) && !psci->is_compatible_with("arm,psci-1.0"sv))
-        return false;
-
-    auto method = psci->get_property("method"sv);
-    if (!method.has_value()) {
-        dbgln("PSCI: No method property found");
-        return false;
-    }
-
-    // Currently, we only support HVC (as opposed to SMC). While SMC is very similar to HVC, only the latter has been tested so far.
-    if (method->as_string() != "hvc"sv)
-        return false;
-
-    return true;
+    return s_is_supported;
 }
 
 void poweroff()
@@ -68,6 +51,32 @@ void poweroff()
 void reset()
 {
     call(Function::SystemReset, 0, 0, 0);
+}
+
+static constinit Array const compatibles_array = {
+    // NOTE: We don't support "arm,psci" on purpose, since these old devices don't have standardized function IDs.
+    "arm,psci-0.2"sv,
+    "arm,psci-1.0"sv,
+};
+
+DEVICETREE_DRIVER(PSCIDriver, compatibles_array);
+
+// https://www.kernel.org/doc/Documentation/devicetree/bindings/arm/psci.txt
+ErrorOr<void> PSCIDriver::probe(DeviceTree::Device const& device, StringView) const
+{
+    auto method = device.node().get_property("method"sv);
+    if (!method.has_value()) {
+        dbgln("PSCI: No method property found");
+        return EINVAL;
+    }
+
+    // Currently, we only support HVC (as opposed to SMC). While SMC is very similar to HVC, only the latter has been tested so far.
+    if (method->as_string() != "hvc"sv)
+        return ENOTSUP;
+
+    s_is_supported = true;
+
+    return {};
 }
 
 }
