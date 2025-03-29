@@ -136,9 +136,20 @@ int pthread_create(pthread_t* thread, pthread_attr_t const* attributes, void* (*
         if (0 != (used_attributes->stack_size % required_stack_alignment))
             used_attributes->stack_size += required_stack_alignment - (used_attributes->stack_size % required_stack_alignment);
 
-        used_attributes->stack_location = mmap_with_name(nullptr, used_attributes->stack_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, 0, 0, "Thread stack");
-        if (!used_attributes->stack_location)
+        // According to POSIX, if the stack address attribute has been set in attr,
+        // then the guard size attribute is ignored: it is the application's responsibility
+        // to handle stack overflow.
+        size_t total_size = used_attributes->stack_size + used_attributes->guard_page_size;
+        void* memory_location = mmap_with_name(nullptr, total_size, used_attributes->guard_page_size == 0 ? PROT_READ | PROT_WRITE : PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_STACK, 0, 0, "Thread stack");
+        if (!memory_location)
             return -1;
+        if (used_attributes->guard_page_size > 0) {
+            if (mprotect((void*)((FlatPtr)memory_location + used_attributes->guard_page_size), used_attributes->stack_size, PROT_READ | PROT_WRITE) < 0) {
+                munmap(memory_location, total_size);
+                return -1;
+            }
+        }
+        used_attributes->stack_location = (void*)((FlatPtr)memory_location + used_attributes->guard_page_size);
     }
 
     dbgln_if(PTHREAD_DEBUG, "pthread_create: Creating thread with attributes at {}, detach state {}, priority {}, guard page size {}, stack size {}, stack location {}",
