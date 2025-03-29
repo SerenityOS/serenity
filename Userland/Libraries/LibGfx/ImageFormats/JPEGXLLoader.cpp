@@ -496,13 +496,43 @@ static ErrorOr<ImageMetadata> read_metadata_header(LittleEndianInputBitStream& s
 
 /// Table F.7 — BlendingInfo bundle
 struct BlendingInfo {
-    enum class BlendMode {
+    enum class SimpleBlendMode : u8 {
         kReplace = 0,
         kAdd = 1,
         kBlend = 2,
         kMulAdd = 3,
         kMul = 4,
     };
+
+    // This is a superset of `BlendingInfo::SimpleBlendMode` and defined in `Table K.1 — PatchBlendMode.
+    // It is only used for patches, but having it here allows us to share some code.
+    enum class BlendMode : u8 {
+        kNone = 0,
+        kReplace = 1,
+        kAdd = 2,
+        kMul = 3,
+        kBlendAbove = 4,
+        kBlendBelow = 5,
+        kMulAddAbove = 6,
+        kMulAddBelow = 7,
+    };
+
+    static BlendMode to_general_blend_mode(SimpleBlendMode simple)
+    {
+        switch (simple) {
+        case SimpleBlendMode::kReplace:
+            return BlendMode::kReplace;
+        case SimpleBlendMode::kAdd:
+            return BlendMode::kAdd;
+        case SimpleBlendMode::kBlend:
+            return BlendMode::kBlendAbove;
+        case SimpleBlendMode::kMulAdd:
+            return BlendMode::kMulAddAbove;
+        case SimpleBlendMode::kMul:
+            return BlendMode::kMul;
+        }
+        VERIFY_NOT_REACHED();
+    }
 
     BlendMode mode {};
     u8 alpha_channel {};
@@ -514,13 +544,14 @@ static ErrorOr<BlendingInfo> read_blending_info(LittleEndianInputBitStream& stre
 {
     BlendingInfo blending_info;
 
-    blending_info.mode = static_cast<BlendingInfo::BlendMode>(U32(0, 1, 2, 3 + TRY(stream.read_bits(2))));
+    auto simple = static_cast<BlendingInfo::SimpleBlendMode>(U32(0, 1, 2, 3 + TRY(stream.read_bits(2))));
+    blending_info.mode = BlendingInfo::to_general_blend_mode(simple);
 
     bool const extra = metadata.num_extra_channels > 0;
 
     if (extra) {
-        auto const blend_or_mul_add = blending_info.mode == BlendingInfo::BlendMode::kBlend
-            || blending_info.mode == BlendingInfo::BlendMode::kMulAdd;
+        auto const blend_or_mul_add = blending_info.mode == BlendingInfo::BlendMode::kBlendAbove
+            || blending_info.mode == BlendingInfo::BlendMode::kMulAddAbove;
 
         if (blend_or_mul_add)
             blending_info.alpha_channel = U32(0, 1, 2, 3 + TRY(stream.read_bits(3)));
