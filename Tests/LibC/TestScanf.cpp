@@ -15,6 +15,7 @@ typedef long long longlong;
 typedef unsigned long long unsignedlonglong;
 typedef unsigned long unsignedlong;
 typedef char charstar[32];
+typedef void* voidstar;
 
 template<typename T>
 constexpr static Array<unsigned char, 32> to_value_t(T x)
@@ -128,6 +129,7 @@ DECL_WITH_TYPE(double);
 DECL_WITH_TYPE(longdouble);
 DECL_WITH_TYPE(unsignedlong);
 DECL_WITH_TYPE(unsignedlonglong);
+DECL_WITH_TYPE(voidstar);
 
 #undef DECL_WITH_TYPE
 
@@ -151,9 +153,9 @@ TestSuite const test_suites[] {
     { "%d", "", 0, 0, {}, {} },
     { "%x", "0x519", 1, 1, { unsignedarg0 }, { to_value_t(0x519) } },
     { "%x", "0x51g", 1, 1, { unsignedarg0 }, { to_value_t(0x51u) } },
-    { "%06x", "0xabcdef", 1, 1, { unsignedarg0 }, { to_value_t(0xabcdefu) } },
+    { "%08x", "0xabcdef", 1, 1, { unsignedarg0 }, { to_value_t(0xabcdefu) } },
     { "%X", "0xCAFEBABE", 1, 1, { unsignedarg0 }, { to_value_t(0xcafebabe) } },
-    { "%04X", "0x5E4E", 1, 1, { unsignedarg0 }, { to_value_t(0x5e4e) } },
+    { "%06X", "0x5E4E", 1, 1, { unsignedarg0 }, { to_value_t(0x5e4e) } },
     { "%X", "0x51Eg", 1, 1, { unsignedarg0 }, { to_value_t(0x51e) } },
     { "\"%%%d#", "\"%42#", 1, 1, { intarg0 }, { to_value_t(42) } },
     { "  %d", "42", 1, 1, { intarg0 }, { to_value_t(42) } },
@@ -163,6 +165,7 @@ TestSuite const test_suites[] {
     { "%f", "42", 1, 1, { floatarg0 }, { to_value_t(42.0f) } },
     { "%lf", "42", 1, 1, { doublearg0 }, { to_value_t(42.0) } },
     { "%s", "42", 1, 1, { charstararg0 }, { str_to_value_t("42") } },
+    { "%s", " abc def", 1, 1, { charstararg0 }, { str_to_value_t("abc") } },
     { "%d%s", "42yoinks", 2, 2, { intarg0, charstararg0 }, { to_value_t(42), str_to_value_t("yoinks") } },
     { "%[^\n]", "aaaa\n", 1, 1, { charstararg0 }, { str_to_value_t("aaaa") } },
     { "%u.%u.%u", "3.19", 2, 3, { unsignedarg0, unsignedarg1, unsignedarg2 }, { to_value_t(3u), to_value_t(19u) } },
@@ -180,6 +183,21 @@ TestSuite const test_suites[] {
     { "%*d", "  42", 0, 0, {}, {} },
     { "%d%*1[:/]%d", "24/7", 2, 2, { intarg0, intarg1 }, { to_value_t(24), to_value_t(7) } },
     { " %[^a]", " b", 1, 1, { charstararg0 }, { str_to_value_t("b") } },
+    // Width specifiers
+    { "%1s", "ABC", 1, 1, { charstararg0 }, { str_to_value_t("A") } },
+    { "%2s", "   ABCD", 1, 1, { charstararg0 }, { str_to_value_t("AB") } },
+    { "%3s%s", "ABCDE", 2, 2, { charstararg0, charstararg1 }, { str_to_value_t("ABC"), str_to_value_t("DE") } },
+    { "%4[^\n]", "ABCDE", 1, 1, { charstararg0 }, { str_to_value_t("ABCD") } },
+    { "%4[^\n]", "  A BCDE\n", 1, 1, { charstararg0 }, { str_to_value_t("  A ") } },
+    { "%1d", "42", 1, 1, { intarg0 }, { to_value_t(4) } },
+    { "%1d", "  42", 1, 1, { intarg0 }, { to_value_t(4) } },
+    { "%1x%1x", "1a", 2, 2, { unsignedarg0, unsignedarg1 }, { to_value_t(0x1), to_value_t(0xa) } },
+    { "%2x%2x", "3a2b", 2, 2, { unsignedarg0, unsignedarg1 }, { to_value_t(0x3a), to_value_t(0x2b) } },
+    { "%1x", "0x123", 1, 1, { unsignedarg0 }, { to_value_t(0x0) } },
+    { "%1X", " ABC", 1, 1, { unsignedarg0 }, { to_value_t(0xA) } },
+    // Pointer
+    { "%p", "  0xaabbccdd", 1, 1, { voidstararg0 }, { to_value_t(0xaabbccdd) } },
+    { "%8p", "  0xaabbccdd", 1, 1, { voidstararg0 }, { to_value_t(0xaabbcc) } },
 };
 
 bool g_any_failed = false;
@@ -250,4 +268,54 @@ TEST_CASE(scanf)
 {
     for (auto& test : test_suites)
         do_one_test(test);
+}
+
+TEST_CASE(scanf_char)
+{
+    // %c should not put a null terminator
+    char buf[5] = "xxxx";
+    sscanf("abc", "%c", buf);
+    EXPECT_EQ(strcmp(buf, "axxx"), 0);
+    sscanf(" a bc", "%3c", buf);
+    EXPECT_EQ(strcmp(buf, " a x"), 0);
+}
+
+struct TestSuiteFloat {
+    char const* format;
+    char const* input;
+    double expected;
+};
+
+TestSuiteFloat const test_suites_float[] {
+    { "%f", "42.3456", 42.3456 },
+    { "%lf", "42.3456", 42.3456 },
+    { "%Lf", "42.3456", 42.3456 },
+    // Width specifiers
+    { "%3f", "4.234", 4.2 },
+    { "%3f", "  4.234", 4.2 },
+};
+
+template<typename T>
+static void do_one_test_float(TestSuiteFloat const& test)
+{
+    printf("Testing '%s' against '%s'...\n", test.input, test.format);
+    T actual;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+    sscanf(test.input, test.format, &actual);
+#pragma GCC diagnostic pop
+    EXPECT_APPROXIMATE(test.expected, actual);
+}
+
+TEST_CASE(scanf_float)
+{
+    for (auto& test : test_suites_float) {
+        char const* fmt = test.format;
+        if (strchr(fmt, 'L'))
+            do_one_test_float<long double>(test);
+        else if (strchr(fmt, 'l'))
+            do_one_test_float<double>(test);
+        else
+            do_one_test_float<float>(test);
+    }
 }
