@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/hex.png) Hex Editor - Binary file editor
 
-[Open](file:///bin/HexEditor)
+[Open](launch:///bin/HexEditor)
 
 ## Synopsis
 

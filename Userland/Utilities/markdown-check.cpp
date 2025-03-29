@@ -209,7 +209,7 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
             m_file_links.append({ file, ByteString(), StringCollector::from(*link_node.text) });
             return RecursionDecision::Recurse;
         }
-        if (url.scheme() == "file") {
+        if (url.scheme() == "file" || url.scheme() == "launch") {
             auto file_path = URL::percent_decode(url.serialize_path());
             if (file_path.contains("man"sv) && file_path.ends_with(".md"sv)) {
                 warnln("Inter-manpage link without the help:// scheme: {}\nPlease use help URLs of the form 'help://man/<section>/<subsection...>/<page>'", href);

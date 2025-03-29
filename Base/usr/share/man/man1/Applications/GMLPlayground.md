@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-gml-playground.png) GML Playground - GUI Markup Language (GML) editor
 
-[Open](file:///bin/GMLPlayground)
+[Open](launch:///bin/GMLPlayground)
 
 ## Synopsis
 

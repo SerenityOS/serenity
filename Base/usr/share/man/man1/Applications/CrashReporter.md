@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-crash-reporter.png) CrashReporter - information about crashed programs
 
-[Open](file:///bin/CrashReporter)
+[Open](launch:///bin/CrashReporter)
 
 ## Synopsis
 

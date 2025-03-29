@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-pixel-paint.png) Pixel Paint - Image Editor
 
-[Open](file:///bin/PixelPaint)
+[Open](launch:///bin/PixelPaint)
 
 ## Synopsis
 

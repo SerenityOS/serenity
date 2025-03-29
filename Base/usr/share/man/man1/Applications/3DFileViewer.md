@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-3d-file-viewer.png) 3D File Viewer
 
-[Open](file:///bin/3DFileViewer)
+[Open](launch:///bin/3DFileViewer)
 
 ## Synopsis
 

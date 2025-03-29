@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-hearts.png) Hearts - The Hearts card game
 
-[Open](file:///bin/Hearts)
+[Open](launch:///bin/Hearts)
 
 ## Synopsis
 

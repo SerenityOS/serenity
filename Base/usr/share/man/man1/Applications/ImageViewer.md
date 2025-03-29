@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-image-viewer.png) Image Viewer - SerenityOS image viewer
 
-[Open](file:///bin/ImageViewer)
+[Open](launch:///bin/ImageViewer)
 
 ## Synopsis
 

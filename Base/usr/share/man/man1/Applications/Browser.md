@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-browser.png) Browser - Serenity WWW Browser
 
-[Open](file:///bin/Browser)
+[Open](launch:///bin/Browser)
 
 ## Synopsis
 

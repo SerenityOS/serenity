@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-analog-clock.png) Analog Clock
 
-[Open](file:///bin/AnalogClock)
+[Open](launch:///bin/AnalogClock)
 
 ## Synopsis
 

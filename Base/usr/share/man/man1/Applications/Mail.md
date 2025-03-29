@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-mail.png) Mail - Serenity e-mail client
 
-[Open](file:///bin/Mail)
+[Open](launch:///bin/Mail)
 
 ## Synopsis
 

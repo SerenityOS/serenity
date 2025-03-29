@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-sql-studio.png) SQL Studio - SerenityOS SQL Manager
 
-[Open](file:///bin/SQLStudio)
+[Open](launch:///bin/SQLStudio)
 
 ## Synopsis
 

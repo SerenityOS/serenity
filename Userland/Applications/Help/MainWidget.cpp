@@ -118,8 +118,11 @@ ErrorOr<void> MainWidget::initialize(GUI::Window& window)
 
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_web_view->use_native_user_style_sheet();
-    m_web_view->handle_custom_scheme = [this](auto& url) {
-        if (url.scheme() == "file") {
+    m_web_view->handle_custom_scheme = [this](auto& custom_url) {
+        auto url = custom_url;
+        if (url.scheme() == "launch") {
+            // Treat "launch://" URLs as "file://" for use with Desktop::Launcher.
+            url.set_scheme("file"_string);
             auto path = LexicalPath { URL::percent_decode(url.serialize_path()) };
             if (!path.is_child_of(Manual::manual_base_path)) {
                 open_external(url);
