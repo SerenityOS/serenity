@@ -144,6 +144,7 @@ static Array const s_registered_mime_type = {
     MimeType { .name = "text/markdown"sv, .common_extensions = { ".md"sv }, .description = "Markdown document"sv },
     MimeType { .name = "text/plain"sv, .common_extensions = Vector(s_plaintext_suffixes.span()), .description = "plain text"sv },
     MimeType { .name = "text/x-shellscript"sv, .common_extensions = { ".sh"sv }, .description = "POSIX shell script text executable"sv, .magic_bytes = Vector<u8> { '#', '!', '/', 'b', 'i', 'n', '/', 's', 'h', '\n' } },
+    MimeType { .name = "text/gemini"sv, .common_extensions = { ".gmi"sv }, .description = "Gemtext document"sv },
 
     MimeType { .name = "video/matroska"sv, .common_extensions = { ".mkv"sv }, .description = "Matroska container"sv, .magic_bytes = Vector<u8> { 0x1A, 0x45, 0xDF, 0xA3 } },
     MimeType { .name = "video/webm"sv, .common_extensions = { ".webm"sv }, .description = "WebM video"sv },
