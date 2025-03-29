@@ -1829,7 +1829,7 @@ static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
 
 /// G.2 - LfGroup
 static ErrorOr<void> read_lf_group(LittleEndianInputBitStream&,
-    Image& image,
+    Span<Channel> channels,
     FrameHeader const& frame_header)
 {
     // LF coefficients
@@ -1838,7 +1838,7 @@ static ErrorOr<void> read_lf_group(LittleEndianInputBitStream&,
     }
 
     // ModularLfGroup
-    for (auto const& channel : image.channels()) {
+    for (auto const& channel : channels) {
         if (channel.decoded())
             continue;
 
@@ -2205,7 +2205,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     if (frame.num_groups == 1 && frame.frame_header.passes.num_passes == 1) {
         auto section_stream = get_stream_for_section(stream, frame.toc.entries[0]);
         frame.lf_global = TRY(read_lf_global(section_stream, { frame.width, frame.height }, frame.frame_header, metadata));
-        TRY(read_lf_group(section_stream, frame.image, frame.frame_header));
+        TRY(read_lf_group(section_stream, frame.lf_global.gmodular.modular_data.channels, frame.frame_header));
 
         // From H.4.1, ModularGroup: 1 + 3 * num_lf_groups + 17 + num_groups * pass index + group index
         u32 stream_index = 1 + 3 * frame.num_lf_groups + 17;
@@ -2224,7 +2224,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
 
         for (u32 i {}; i < frame.num_lf_groups; ++i) {
             auto lf_stream = get_stream_for_section(stream, frame.toc.entries[1 + i]);
-            TRY(read_lf_group(lf_stream, frame.image, frame.frame_header));
+            TRY(read_lf_group(lf_stream, frame.lf_global.gmodular.modular_data.channels, frame.frame_header));
         }
 
         if (frame.frame_header.encoding == Encoding::kVarDCT) {
