@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-colorlines.png) Color Lines
 
-[Open](file:///bin/ColorLines)
+[Open](launch:///bin/ColorLines)
 
 ## Synopsis
 

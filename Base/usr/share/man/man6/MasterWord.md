@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-masterword.png) MasterWord
 
-[Open](file:///bin/MasterWord)
+[Open](launch:///bin/MasterWord)
 
 ## Synopsis
 

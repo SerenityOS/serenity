@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-profiler.png) Profiler - Serenity process profiler
 
-[Open](file:///bin/Profiler)
+[Open](launch:///bin/Profiler)
 
 ## Synopsis
 

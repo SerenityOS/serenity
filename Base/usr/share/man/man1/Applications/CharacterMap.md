@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-character-map.png) Character Map - Unicode character viewer
 
-[Open](file:///bin/CharacterMap)
+[Open](launch:///bin/CharacterMap)
 
 ## Synopsis
 

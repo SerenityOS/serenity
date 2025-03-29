@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-eyes.png) Eyes - follow the mouse LibGUI demo
 
-[Open](file:///bin/Eyes)
+[Open](launch:///bin/Eyes)
 
 ## Synopsis
 

@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-mouse.png) Mouse Settings - Mouse settings application
 
-[Open](file:///bin/MouseSettings)
+[Open](launch:///bin/MouseSettings)
 
 ## Synopsis
 

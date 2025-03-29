@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-solitaire.png) Solitaire - The Solitaire card game
 
-[Open](file:///bin/Solitaire)
+[Open](launch:///bin/Solitaire)
 
 ## Synopsis
 

@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-calendar.png) Calendar - Serenity calendar
 
-[Open](file:///bin/Calendar)
+[Open](launch:///bin/Calendar)
 
 ## Synopsis
 

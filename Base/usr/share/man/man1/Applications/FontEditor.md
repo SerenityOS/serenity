@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-font-editor.png) FontEditor - Serenity font editor
 
-[Open](file:///bin/FontEditor)
+[Open](launch:///bin/FontEditor)
 
 ## Synopsis
 

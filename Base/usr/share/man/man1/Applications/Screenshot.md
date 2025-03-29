@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-screenshot.png) Screenshot
 
-[Open](file:///bin/Screenshot)
+[Open](launch:///bin/Screenshot)
 
 ## Synopsis
 

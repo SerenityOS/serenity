@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/certificate.png) Certificate Settings
 
-[Open](file:///bin/CertificateSettings)
+[Open](launch:///bin/CertificateSettings)
 
 ## Synopsis
 

@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-flood.png) Flood
 
-[Open](file:///bin/Flood)
+[Open](launch:///bin/Flood)
 
 ## Synopsis
 

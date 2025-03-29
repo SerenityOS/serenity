@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-help.png) Help - digital manual
 
-[Open](file:///bin/Help)
+[Open](launch:///bin/Help)
 
 ## Synopsis
 

@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-maps.png) Maps
 
-[Open](file:///bin/Maps)
+[Open](launch:///bin/Maps)
 
 ## Synopsis
 

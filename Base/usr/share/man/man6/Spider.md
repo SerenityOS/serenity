@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-spider.png) Spider - The Spider card game
 
-[Open](file:///bin/Spider)
+[Open](launch:///bin/Spider)
 
 ## Synopsis
 

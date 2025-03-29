@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-text-editor.png) TextEditor - SerenityOS text editor
 
-[Open](file:///bin/TextEditor)
+[Open](launch:///bin/TextEditor)
 
 ## Synopsis
 

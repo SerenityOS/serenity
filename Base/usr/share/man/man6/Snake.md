@@ -2,7 +2,7 @@
 
 ![Icon](/res/icons/16x16/app-snake.png) Snake
 
-[Open](file:///bin/Snake)
+[Open](launch:///bin/Snake)
 
 ## Synopsis
 
