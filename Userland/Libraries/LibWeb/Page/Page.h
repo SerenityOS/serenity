@@ -394,6 +394,8 @@ public:
     virtual void schedule_repaint() = 0;
     virtual bool is_ready_to_paint() const = 0;
 
+    virtual bool handle_non_fetch_scheme(const URL::URL&) { return false; }
+
     virtual DisplayListPlayerType display_list_player_type() const = 0;
 
 protected:

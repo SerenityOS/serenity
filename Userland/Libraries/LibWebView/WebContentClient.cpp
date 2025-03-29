@@ -724,4 +724,13 @@ Optional<ViewImplementation&> WebContentClient::view_for_page_id(u64 page_id, So
     return {};
 }
 
+Messages::WebContentClient::HandleNonFetchSchemeResponse WebContentClient::handle_non_fetch_scheme(u64 page_id, const URL::URL& url)
+{
+    if (auto view = view_for_page_id(page_id); view.has_value()) {
+        if (view->handle_custom_scheme)
+            return view->handle_custom_scheme(url);
+    }
+    return false;
+}
+
 }
