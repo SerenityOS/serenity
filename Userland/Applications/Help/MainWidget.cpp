@@ -118,37 +118,38 @@ ErrorOr<void> MainWidget::initialize(GUI::Window& window)
 
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_web_view->use_native_user_style_sheet();
-    m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
+    m_web_view->handle_custom_scheme = [this](auto& url) {
         if (url.scheme() == "file") {
             auto path = LexicalPath { URL::percent_decode(url.serialize_path()) };
             if (!path.is_child_of(Manual::manual_base_path)) {
                 open_external(url);
-                return;
+                return true;
             }
             auto browse_view_index = m_manual_model->index_from_path(path.string());
             if (browse_view_index.has_value()) {
                 dbgln("Found path _{}_ in m_manual_model at index {}", path, browse_view_index.value());
                 m_browse_view->selection().set(browse_view_index.value());
-                return;
+                return true;
             }
             m_history.push(path.string());
             auto string_path = String::from_byte_string(path.string());
             if (string_path.is_error())
-                return;
+                return true;
             open_page(string_path.value());
         } else if (url.scheme() == "help") {
             auto maybe_page = Manual::Node::try_find_from_help_url(url);
             if (maybe_page.is_error()) {
                 dbgln("Error opening page: {}", maybe_page.error());
-                return;
+                return true;
             }
             auto maybe_path = maybe_page.value()->path();
             if (maybe_path.is_error())
-                return;
+                return true;
             open_page(maybe_path.release_value());
         } else {
             open_external(url);
         }
+        return true;
     };
     m_web_view->on_context_menu_request = [this](auto screen_position) {
         m_copy_action->set_enabled(!m_web_view->selected_text().is_empty());
