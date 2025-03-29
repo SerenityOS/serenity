@@ -11,13 +11,13 @@
 
 namespace Kernel {
 
-void arch_specific_reboot()
+void arch_specific_reboot(PowerOffOrRebootReason)
 {
     if (PSCI::is_supported())
         PSCI::reset();
 }
 
-void arch_specific_poweroff()
+void arch_specific_poweroff(PowerOffOrRebootReason)
 {
     if (PSCI::is_supported())
         PSCI::poweroff();

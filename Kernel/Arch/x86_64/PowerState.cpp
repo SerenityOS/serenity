@@ -10,12 +10,12 @@
 
 namespace Kernel {
 
-void arch_specific_reboot()
+void arch_specific_reboot(PowerOffOrRebootReason)
 {
     i8042_reboot();
 }
 
-void arch_specific_poweroff()
+void arch_specific_poweroff(PowerOffOrRebootReason)
 {
     qemu_shutdown();
     virtualbox_shutdown();
