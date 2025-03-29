@@ -1534,12 +1534,22 @@ static Neighborhood retrieve_neighborhood(Channel const& channel, u32 x, u32 y)
     return neighborhood;
 }
 
+static ErrorOr<void> apply_transformation(Vector<Channel>&, TransformInfo const&, u32 bit_depth, WPHeader const&);
+
 struct ModularOptions {
     Span<IntSize> channels_info;
     Optional<EntropyDecoder>& decoder;
     MATree const& global_tree;
     u32 group_dim {};
     u32 stream_index {};
+
+    enum class ApplyTransformations : u8 {
+        No,
+        Yes,
+    };
+
+    ApplyTransformations apply_transformations { ApplyTransformations::Yes };
+    u32 bit_depth {};
 };
 
 static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& stream,
@@ -1549,7 +1559,9 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
         decoder,
         global_tree,
         group_dim,
-        stream_index]
+        stream_index,
+        should_apply_transformation,
+        bit_depth]
         = options;
 
     ModularData modular_data;
@@ -1649,6 +1661,11 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
     }
     TRY(decoder->ensure_end_state());
 
+    if (should_apply_transformation == ModularOptions::ApplyTransformations::Yes) {
+        for (auto const& tr : modular_data.transform.in_reverse())
+            TRY(apply_transformation(modular_data.channels, tr, bit_depth, modular_data.wp_params));
+    }
+
     return modular_data;
 }
 ///
@@ -1696,7 +1713,9 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
             .decoder = global_modular.decoder,
             .global_tree = global_modular.ma_tree,
             .group_dim = frame_header.group_dim(),
-            .stream_index = 0 }));
+            .stream_index = 0,
+            .apply_transformations = ModularOptions::ApplyTransformations::No,
+            .bit_depth = metadata.bit_depth.bits_per_sample }));
 
     return global_modular;
 }
@@ -2008,8 +2027,13 @@ struct PassGroupOptions {
     u32 stream_index;
 };
 
+struct PassGroupModularOptions {
+    u32 bit_depth {};
+};
+
 static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
-    PassGroupOptions& options)
+    PassGroupOptions& options,
+    PassGroupModularOptions const& modular_options)
 {
     auto& [global_modular, frame_header, group_index, pass_index, stream_index] = options;
 
@@ -2051,7 +2075,9 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
             .decoder = global_modular.decoder,
             .global_tree = global_modular.ma_tree,
             .group_dim = frame_header.group_dim(),
-            .stream_index = stream_index }));
+            .stream_index = stream_index,
+            .apply_transformations = ModularOptions::ApplyTransformations::Yes,
+            .bit_depth = modular_options.bit_depth }));
 
     // The decoded modular group data is then copied into the partially decoded GlobalModular image in the corresponding positions.
     for (u32 i = 0; i < original_channels.size(); ++i) {
@@ -2063,14 +2089,15 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
 }
 
 static ErrorOr<void> read_pass_group(LittleEndianInputBitStream& stream,
-    PassGroupOptions&& options)
+    PassGroupOptions&& options,
+    PassGroupModularOptions&& modular_options)
 {
     if (options.frame_header.encoding == Encoding::kVarDCT) {
         (void)stream;
         TODO();
     }
 
-    TRY(read_modular_group_data(stream, options));
+    TRY(read_modular_group_data(stream, options, modular_options));
 
     return {};
 }
@@ -2171,6 +2198,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     }
 
     frame.image = TRY(Image::create({ frame.width, frame.height }, metadata));
+    auto bits_per_sample = metadata.bit_depth.bits_per_sample;
 
     // "If num_groups == 1 and num_passes == 1, then there is a single TOC entry and a single section
     // containing all frame data structures."
@@ -2186,7 +2214,8 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
                 .frame_header = frame.frame_header,
                 .group_index = 0,
                 .pass_index = 0,
-                .stream_index = stream_index }));
+                .stream_index = stream_index },
+            { .bit_depth = bits_per_sample }));
     } else {
         {
             auto lf_stream = get_stream_for_section(stream, frame.toc.entries[0]);
@@ -2214,7 +2243,8 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
                         .frame_header = frame.frame_header,
                         .group_index = group_index,
                         .pass_index = pass_index,
-                        .stream_index = stream_index }));
+                        .stream_index = stream_index },
+                    { .bit_depth = bits_per_sample }));
             }
         }
     }
@@ -2224,7 +2254,6 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     // the at that point fully decoded GlobalModular image, as specified in H.6.
     auto& channels = frame.lf_global.gmodular.modular_data.channels;
     auto const& transform_infos = frame.lf_global.gmodular.modular_data.transform;
-    auto bits_per_sample = metadata.bit_depth.bits_per_sample;
     for (auto const& transformation : transform_infos.in_reverse())
         TRY(apply_transformation(channels, transformation, bits_per_sample, frame.lf_global.gmodular.modular_data.wp_params));
 
