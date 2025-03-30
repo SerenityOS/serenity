@@ -5,7 +5,6 @@
  */
 
 #include "DesktopSettingsWidget.h"
-#include <Applications/DisplaySettings/DesktopSettingsGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Desktop.h>
@@ -15,18 +14,15 @@
 
 namespace DisplaySettings {
 
-ErrorOr<NonnullRefPtr<DesktopSettingsWidget>> DesktopSettingsWidget::try_create()
+ErrorOr<void> DesktopSettingsWidget::initialize()
 {
-    auto desktop_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DesktopSettingsWidget()));
-    TRY(desktop_settings_widget->create_frame());
-    desktop_settings_widget->load_current_settings();
-    return desktop_settings_widget;
+    TRY(create_frame());
+    load_current_settings();
+    return {};
 }
 
 ErrorOr<void> DesktopSettingsWidget::create_frame()
 {
-    TRY(load_from_gml(desktop_settings_gml));
-
     m_workspace_rows_spinbox = *find_descendant_of_type_named<GUI::SpinBox>("workspace_rows_spinbox");
     m_workspace_rows_spinbox->on_change = [&](auto) {
         set_modified(true);

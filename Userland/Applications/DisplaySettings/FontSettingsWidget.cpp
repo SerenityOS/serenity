@@ -7,7 +7,6 @@
  */
 
 #include "FontSettingsWidget.h"
-#include <Applications/DisplaySettings/FontSettingsGML.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/FontPicker.h>
@@ -17,17 +16,14 @@ namespace DisplaySettings {
 
 static void update_label_with_font(GUI::Label&, Gfx::Font const&);
 
-ErrorOr<NonnullRefPtr<FontSettingsWidget>> FontSettingsWidget::try_create()
+ErrorOr<void> FontSettingsWidget::initialize()
 {
-    auto font_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FontSettingsWidget()));
-    TRY(font_settings_widget->setup_interface());
-    return font_settings_widget;
+    TRY(setup_interface());
+    return {};
 }
 
 ErrorOr<void> FontSettingsWidget::setup_interface()
 {
-    TRY(load_from_gml(font_settings_gml));
-
     auto& default_font = Gfx::FontDatabase::default_font();
     m_default_font_label = *find_descendant_of_type_named<GUI::Label>("default_font_label");
     update_label_with_font(*m_default_font_label, default_font);

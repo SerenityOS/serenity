@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2025, RatcheT2497 <ratchetnumbers@proton.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,6 +19,7 @@ class FontSettingsWidget final : public GUI::SettingsWindow::Tab {
 public:
     static ErrorOr<NonnullRefPtr<FontSettingsWidget>> try_create();
     virtual ~FontSettingsWidget() override = default;
+    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
 

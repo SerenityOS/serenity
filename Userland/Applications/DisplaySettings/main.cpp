@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     (void)TRY(window->add_tab<DisplaySettings::FontSettingsWidget>("Fonts"_string, "fonts"sv));
     (void)TRY(window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor"_string, "monitor"sv));
     (void)TRY(window->add_tab<DisplaySettings::DesktopSettingsWidget>("Workspaces"_string, "workspaces"sv));
-    (void)TRY(window->add_tab<GUI::DisplaySettings::EffectsSettingsWidget>("Effects"_string, "effects"sv));
+    (void)TRY(window->add_tab<DisplaySettings::EffectsSettingsWidget>("Effects"_string, "effects"sv));
     window->set_active_tab(selected_tab);
 
     window->set_icon(app_icon.bitmap_for_size(16));

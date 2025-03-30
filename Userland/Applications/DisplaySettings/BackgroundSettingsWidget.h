@@ -26,6 +26,7 @@ class BackgroundSettingsWidget : public GUI::SettingsWindow::Tab {
 public:
     static ErrorOr<NonnullRefPtr<BackgroundSettingsWidget>> try_create();
     virtual ~BackgroundSettingsWidget() override = default;
+    ErrorOr<void> initialize();
 
     virtual void apply_settings() override;
 

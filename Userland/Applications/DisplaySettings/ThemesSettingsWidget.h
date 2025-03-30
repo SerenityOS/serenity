@@ -23,6 +23,7 @@ class ThemesSettingsWidget final : public GUI::SettingsWindow::Tab {
 public:
     static ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> try_create();
     virtual void apply_settings() override;
+    ErrorOr<void> initialize();
 
 private:
     ErrorOr<void> setup_interface();

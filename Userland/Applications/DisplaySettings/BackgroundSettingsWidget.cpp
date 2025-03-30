@@ -9,7 +9,6 @@
 #include "BackgroundSettingsWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
-#include <Applications/DisplaySettings/BackgroundSettingsGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
 #include <LibDesktop/Launcher.h>
@@ -31,24 +30,19 @@
 
 namespace DisplaySettings {
 
-ErrorOr<NonnullRefPtr<BackgroundSettingsWidget>> BackgroundSettingsWidget::try_create()
+ErrorOr<void> BackgroundSettingsWidget::initialize()
 {
-    auto background_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BackgroundSettingsWidget()));
+    TRY(m_modes.try_append("Tile"_string));
+    TRY(m_modes.try_append("Center"_string));
+    TRY(m_modes.try_append("Stretch"_string));
 
-    TRY(background_settings_widget->m_modes.try_append("Tile"_string));
-    TRY(background_settings_widget->m_modes.try_append("Center"_string));
-    TRY(background_settings_widget->m_modes.try_append("Stretch"_string));
-
-    TRY(background_settings_widget->create_frame());
-    TRY(background_settings_widget->load_current_settings());
-
-    return background_settings_widget;
+    TRY(create_frame());
+    TRY(load_current_settings());
+    return {};
 }
 
 ErrorOr<void> BackgroundSettingsWidget::create_frame()
 {
-    TRY(load_from_gml(background_settings_gml));
-
     m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 
     m_wallpaper_view = *find_descendant_of_type_named<GUI::IconView>("wallpaper_view");

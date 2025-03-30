@@ -7,7 +7,6 @@
 
 #include "ThemesSettingsWidget.h"
 #include <AK/QuickSort.h>
-#include <Applications/DisplaySettings/ThemesSettingsGML.h>
 #include <LibCore/Directory.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/CheckBox.h>
@@ -23,13 +22,10 @@ static ErrorOr<String> get_color_scheme_name_from_pathname(StringView color_sche
     return TRY(String::from_byte_string(color_scheme_path.replace("/res/color-schemes/"sv, ""sv, ReplaceMode::FirstOnly).replace(".ini"sv, ""sv, ReplaceMode::FirstOnly)));
 }
 
-ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> ThemesSettingsWidget::try_create()
+ErrorOr<void> ThemesSettingsWidget::initialize()
 {
-    auto theme_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ThemesSettingsWidget()));
-    TRY(theme_settings_widget->load_from_gml(themes_settings_gml));
-    TRY(theme_settings_widget->setup_interface());
-
-    return theme_settings_widget;
+    TRY(setup_interface());
+    return {};
 }
 
 ErrorOr<void> ThemesSettingsWidget::setup_interface()
