@@ -393,7 +393,6 @@ class AKHashMapPrettyPrinter:
         elements = []
 
         def cb(key, value):
-            nonlocal elements
             elements.append((f"[{key}]", value))
 
         AKHashMapPrettyPrinter._iter_hashmap(self.val, cb)
