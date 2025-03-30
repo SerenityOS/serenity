@@ -31,9 +31,9 @@
 
 namespace DisplaySettings {
 
-ErrorOr<NonnullRefPtr<BackgroundSettingsWidget>> BackgroundSettingsWidget::try_create(bool& background_settings_changed)
+ErrorOr<NonnullRefPtr<BackgroundSettingsWidget>> BackgroundSettingsWidget::try_create()
 {
-    auto background_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BackgroundSettingsWidget(background_settings_changed)));
+    auto background_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BackgroundSettingsWidget()));
 
     TRY(background_settings_widget->m_modes.try_append("Tile"_string));
     TRY(background_settings_widget->m_modes.try_append("Center"_string));
@@ -43,11 +43,6 @@ ErrorOr<NonnullRefPtr<BackgroundSettingsWidget>> BackgroundSettingsWidget::try_c
     TRY(background_settings_widget->load_current_settings());
 
     return background_settings_widget;
-}
-
-BackgroundSettingsWidget::BackgroundSettingsWidget(bool& background_settings_changed)
-    : m_background_settings_changed { background_settings_changed }
-{
 }
 
 ErrorOr<void> BackgroundSettingsWidget::create_frame()
@@ -113,7 +108,6 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
             return;
         m_wallpaper_view->selection().clear();
         m_monitor_widget->set_wallpaper(MUST(String::from_byte_string(response.release_value().filename())));
-        m_background_settings_changed = true;
         set_modified(true);
     };
 
@@ -123,7 +117,6 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
     bool first_mode_change = true;
     m_mode_combo->on_change = [this, first_mode_change](auto&, const GUI::ModelIndex& index) mutable {
         m_monitor_widget->set_wallpaper_mode(m_modes.at(index.row()));
-        m_background_settings_changed = !first_mode_change;
         first_mode_change = false;
         set_modified(true);
     };
@@ -134,7 +127,6 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
     bool first_color_change = true;
     m_color_input->on_change = [this, first_color_change]() mutable {
         m_monitor_widget->set_background_color(m_color_input->color());
-        m_background_settings_changed = !first_color_change;
         first_color_change = false;
         set_modified(true);
     };
@@ -172,7 +164,6 @@ ErrorOr<void> BackgroundSettingsWidget::load_current_settings()
 
     m_color_input->set_color(palette_desktop_color, GUI::AllowCallback::No);
     m_monitor_widget->set_background_color(palette_desktop_color);
-    m_background_settings_changed = false;
 
     return {};
 }

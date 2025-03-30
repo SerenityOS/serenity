@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2025, RatcheT2497 <ratchetnumbers@proton.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,7 +21,7 @@ class ThemesSettingsWidget final : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(ThemesSettingsWidget);
 
 public:
-    static ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> try_create(bool& background_settings_changed);
+    static ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> try_create();
     virtual void apply_settings() override;
 
 private:
@@ -36,10 +37,9 @@ private:
 
     RefPtr<GUI::Button> m_cursor_themes_button;
 
-    bool& m_background_settings_changed;
     bool m_color_scheme_is_file_based = true;
 
-    ThemesSettingsWidget(bool& background_settings_changed);
+    ThemesSettingsWidget() = default;
 };
 
 }

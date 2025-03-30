@@ -2,6 +2,7 @@
  * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2025, RatcheT2497 <ratchetnumbers@proton.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,20 +24,18 @@ class BackgroundSettingsWidget : public GUI::SettingsWindow::Tab {
     C_OBJECT_ABSTRACT(BackgroundSettingsWidget);
 
 public:
-    static ErrorOr<NonnullRefPtr<BackgroundSettingsWidget>> try_create(bool& background_settings_changed);
+    static ErrorOr<NonnullRefPtr<BackgroundSettingsWidget>> try_create();
     virtual ~BackgroundSettingsWidget() override = default;
 
     virtual void apply_settings() override;
 
 private:
-    BackgroundSettingsWidget(bool& background_settings_changed);
+    BackgroundSettingsWidget() = default;
 
     ErrorOr<void> create_frame();
     ErrorOr<void> load_current_settings();
 
     Vector<String> m_modes;
-
-    bool& m_background_settings_changed;
 
     RefPtr<DisplaySettings::MonitorWidget> m_monitor_widget;
     RefPtr<GUI::IconView> m_wallpaper_view;

@@ -23,9 +23,9 @@ static ErrorOr<String> get_color_scheme_name_from_pathname(StringView color_sche
     return TRY(String::from_byte_string(color_scheme_path.replace("/res/color-schemes/"sv, ""sv, ReplaceMode::FirstOnly).replace(".ini"sv, ""sv, ReplaceMode::FirstOnly)));
 }
 
-ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> ThemesSettingsWidget::try_create(bool& background_settings_changed)
+ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> ThemesSettingsWidget::try_create()
 {
-    auto theme_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ThemesSettingsWidget(background_settings_changed)));
+    auto theme_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ThemesSettingsWidget()));
     TRY(theme_settings_widget->load_from_gml(themes_settings_gml));
     TRY(theme_settings_widget->setup_interface());
 
@@ -158,14 +158,8 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface()
     return {};
 }
 
-ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
-    : m_background_settings_changed { background_settings_changed }
-{
-}
-
 void ThemesSettingsWidget::apply_settings()
 {
-    m_background_settings_changed = false;
     auto color_scheme_path_or_error = String::formatted("/res/color-schemes/{}.ini", m_selected_color_scheme_name);
     if (color_scheme_path_or_error.is_error()) {
         GUI::MessageBox::show_error(window(), "Unable to apply changes"sv);
@@ -174,11 +168,11 @@ void ThemesSettingsWidget::apply_settings()
     auto color_scheme_path = color_scheme_path_or_error.release_value();
 
     if (!m_color_scheme_is_file_based && find_descendant_of_type_named<GUI::CheckBox>("custom_color_scheme_checkbox")->is_checked()) {
-        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, "Custom"sv);
+        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, false, "Custom"sv);
         if (!set_theme_result)
             GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);
     } else if (find_descendant_of_type_named<GUI::CheckBox>("custom_color_scheme_checkbox")->is_checked()) {
-        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, color_scheme_path.to_byte_string());
+        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, false, color_scheme_path.to_byte_string());
         if (!set_theme_result)
             GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);
     } else {
@@ -188,7 +182,7 @@ void ThemesSettingsWidget::apply_settings()
             return;
         }
         auto preferred_color_scheme_path = get_color_scheme_name_from_pathname(theme_config.release_value()->read_entry("Paths", "ColorScheme"));
-        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, OptionalNone());
+        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, false, OptionalNone());
         if (!set_theme_result || preferred_color_scheme_path.is_error()) {
             GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);
             return;

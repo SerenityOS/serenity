@@ -34,11 +34,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("app-display-settings"sv);
 
-    bool background_settings_changed = false;
-
     auto window = TRY(GUI::SettingsWindow::create("Display Settings"));
-    (void)TRY(window->add_tab<DisplaySettings::BackgroundSettingsWidget>("Background"_string, "background"sv, background_settings_changed));
-    (void)TRY(window->add_tab<DisplaySettings::ThemesSettingsWidget>("Themes"_string, "themes"sv, background_settings_changed));
+    (void)TRY(window->add_tab<DisplaySettings::BackgroundSettingsWidget>("Background"_string, "background"sv));
+    (void)TRY(window->add_tab<DisplaySettings::ThemesSettingsWidget>("Themes"_string, "themes"sv));
     (void)TRY(window->add_tab<DisplaySettings::FontSettingsWidget>("Fonts"_string, "fonts"sv));
     (void)TRY(window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor"_string, "monitor"sv));
     (void)TRY(window->add_tab<DisplaySettings::DesktopSettingsWidget>("Workspaces"_string, "workspaces"sv));
