@@ -42,10 +42,9 @@ public:
     static u32 generate_relative_ahci_controller_id(Badge<AHCIController>);
     static u32 generate_relative_sd_controller_id(Badge<SDHostController>);
 
+    ErrorOr<void> add_controller(StorageController&);
     void add_device(StorageDevice&);
     void remove_device(StorageDevice&);
-
-    static void add_recipe(DeviceTree::DeviceRecipe<NonnullRefPtr<StorageController>>);
 
 private:
     void enumerate_pci_controllers(bool nvme_poll);
