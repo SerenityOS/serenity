@@ -8,6 +8,7 @@
 
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/Device.h>
+#include <Kernel/Firmware/DeviceTree/Device.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/TypedMapping.h>
 
@@ -21,7 +22,7 @@ class MiniUART final : public CharacterDevice {
     friend class Kernel::Device;
 
 public:
-    static ErrorOr<NonnullRefPtr<MiniUART>> create();
+    static ErrorOr<NonnullRefPtr<MiniUART>> create(DeviceTree::Device::Resource registers_resource);
 
     virtual ~MiniUART() override;
 
@@ -34,7 +35,7 @@ public:
     void put_char(u8);
 
 private:
-    MiniUART();
+    MiniUART(Memory::TypedMapping<MiniUARTRegisters volatile>);
 
     // ^CharacterDevice
     virtual StringView class_name() const override { return "MiniUART"sv; }

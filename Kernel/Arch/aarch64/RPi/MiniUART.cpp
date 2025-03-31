@@ -10,6 +10,9 @@
 #include <Kernel/Arch/aarch64/RPi/MMIO.h>
 #include <Kernel/Arch/aarch64/RPi/MiniUART.h>
 #include <Kernel/Arch/aarch64/RPi/Timer.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
+#include <Kernel/Firmware/DeviceTree/Driver.h>
+#include <Kernel/Firmware/DeviceTree/Management.h>
 
 namespace Kernel::RPi {
 
@@ -50,15 +53,20 @@ enum LineStatus {
     TransmitterIdle = 1 << 6,
 };
 
-UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<MiniUART>> MiniUART::create()
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<MiniUART>> MiniUART::create(DeviceTree::Device::Resource registers_resource)
 {
-    return Device::try_create_device<MiniUART>();
+    if (registers_resource.size < sizeof(MiniUARTRegisters))
+        return EINVAL;
+
+    auto registers = TRY(Memory::map_typed_writable<MiniUARTRegisters volatile>(registers_resource.paddr));
+
+    return Device::try_create_device<MiniUART>(move(registers));
 }
 
 // FIXME: Consider not hardcoding the minor number and allocate it dynamically.
-UNMAP_AFTER_INIT MiniUART::MiniUART()
+UNMAP_AFTER_INIT MiniUART::MiniUART(Memory::TypedMapping<MiniUARTRegisters volatile> registers)
     : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Serial, 0)
-    , m_registers(MMIO::the().peripheral<MiniUARTRegisters>(0x21'5040).release_value_but_fixme_should_propagate_errors())
+    , m_registers(move(registers))
 {
     auto& gpio = GPIO::the();
     gpio.set_pin_function(40, GPIO::PinFunction::Alternate5); // TXD1
@@ -126,6 +134,22 @@ void MiniUART::set_baud_rate(u32 baud_rate)
 {
     auto system_clock = Timer::get_clock_rate(Timer::ClockID::V3D);
     m_registers->baud_rate = system_clock / (8 * baud_rate) - 1;
+}
+
+static constinit Array const compatibles_array = {
+    "brcm,bcm2835-aux-uart"sv,
+};
+
+DEVICETREE_DRIVER(BCM2835MiniUARTDriver, compatibles_array);
+
+// https://www.kernel.org/doc/Documentation/devicetree/bindings/serial/brcm,bcm2835-aux-uart.yaml
+ErrorOr<void> BCM2835MiniUARTDriver::probe(DeviceTree::Device const& device, StringView) const
+{
+    auto registers_resource = TRY(device.get_resource(0));
+
+    (void)TRY(MiniUART::create(registers_resource)).leak_ref();
+
+    return {};
 }
 
 }
