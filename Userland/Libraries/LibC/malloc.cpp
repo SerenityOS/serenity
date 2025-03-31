@@ -202,10 +202,8 @@ extern "C" {
 
 static ErrorOr<void*> os_alloc(size_t size, char const* name)
 {
-    int flags = MAP_ANONYMOUS | MAP_PRIVATE | MAP_PURGEABLE;
-#if ARCH(X86_64)
-    flags |= MAP_RANDOMIZED;
-#endif
+    int flags = MAP_ANONYMOUS | MAP_PRIVATE | MAP_PURGEABLE | MAP_RANDOMIZED;
+
     auto* ptr = serenity_mmap(nullptr, size, PROT_READ | PROT_WRITE, flags, 0, 0, ChunkedBlock::block_size, name);
     VERIFY(ptr != nullptr);
     if (ptr == MAP_FAILED) {
