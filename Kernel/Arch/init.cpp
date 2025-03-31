@@ -337,10 +337,6 @@ void init_stage2(void*)
     (void)SerialDevice::must_create(1).leak_ref();
     (void)SerialDevice::must_create(2).leak_ref();
     (void)SerialDevice::must_create(3).leak_ref();
-#elif ARCH(AARCH64)
-    // FIXME: Make MiniUART a DeviceTree::Driver.
-    if (DeviceTree::get().is_compatible_with("raspberrypi,3-model-b"sv) || DeviceTree::get().is_compatible_with("raspberrypi,4-model-b"sv))
-        (void)MUST(RPi::MiniUART::create()).leak_ref();
 #endif
 
     (void)PCSpeakerDevice::must_create().leak_ref();
