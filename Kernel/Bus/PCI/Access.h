@@ -20,6 +20,8 @@ namespace Kernel::PCI {
 
 class Access {
 public:
+    Access();
+
     static bool initialize_for_multiple_pci_domains(PhysicalAddress mcfg_table);
 
 #if ARCH(X86_64)
@@ -59,7 +61,6 @@ private:
 
     void add_host_controller(NonnullOwnPtr<HostController>);
     bool find_and_register_pci_host_bridges_from_acpi_mcfg_table(PhysicalAddress mcfg);
-    Access();
 
     mutable RecursiveSpinlock<LockRank::None> m_access_lock {};
     mutable Spinlock<LockRank::None> m_scan_lock {};

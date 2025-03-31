@@ -7,6 +7,7 @@
 #include <AK/ByteReader.h>
 #include <AK/Error.h>
 #include <AK/HashTable.h>
+#include <AK/Singleton.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/PCI/Controller/PIIX4HostBridge.h>
 #endif
@@ -24,19 +25,17 @@ namespace Kernel::PCI {
 
 #define PCI_MMIO_CONFIG_SPACE_SIZE 4096
 
-static Access* s_access;
+static Singleton<Access> s_the;
 
 Access& Access::the()
 {
-    if (s_access == nullptr) {
-        VERIFY_NOT_REACHED(); // We failed to initialize the PCI subsystem, so stop here!
-    }
-    return *s_access;
+    VERIFY(!is_disabled());
+    return *s_the;
 }
 
 bool Access::is_initialized()
 {
-    return (s_access != nullptr);
+    return s_the.is_initialized();
 }
 
 bool Access::is_hardware_disabled()
@@ -101,10 +100,10 @@ UNMAP_AFTER_INIT bool Access::find_and_register_pci_host_bridges_from_acpi_mcfg_
 UNMAP_AFTER_INIT bool Access::initialize_for_multiple_pci_domains(PhysicalAddress mcfg_table)
 {
     VERIFY(!Access::is_initialized());
-    auto* access = new Access();
-    if (!access->find_and_register_pci_host_bridges_from_acpi_mcfg_table(mcfg_table))
+    auto& access = Access::the();
+    if (!access.find_and_register_pci_host_bridges_from_acpi_mcfg_table(mcfg_table))
         return false;
-    access->rescan_hardware();
+    access.rescan_hardware();
     dbgln_if(PCI_DEBUG, "PCI: access for multiple PCI domain initialised.");
     return true;
 }
@@ -113,10 +112,10 @@ UNMAP_AFTER_INIT bool Access::initialize_for_multiple_pci_domains(PhysicalAddres
 UNMAP_AFTER_INIT bool Access::initialize_for_one_pci_domain()
 {
     VERIFY(!Access::is_initialized());
-    auto* access = new Access();
+    auto& access = Access::the();
     auto host_bridge = PIIX4HostBridge::must_create_with_io_access();
-    access->add_host_controller(move(host_bridge));
-    access->rescan_hardware();
+    access.add_host_controller(move(host_bridge));
+    access.rescan_hardware();
     dbgln_if(PCI_DEBUG, "PCI: access for one PCI domain initialised.");
     return true;
 }
@@ -149,10 +148,7 @@ UNMAP_AFTER_INIT void Access::add_host_controller(NonnullOwnPtr<HostController> 
     m_host_controllers.set(domain_number, move(controller));
 }
 
-UNMAP_AFTER_INIT Access::Access()
-{
-    s_access = this;
-}
+UNMAP_AFTER_INIT Access::Access() = default;
 
 UNMAP_AFTER_INIT void Access::configure_pci_space(HostController& host_controller, PCIConfiguration& config)
 {
