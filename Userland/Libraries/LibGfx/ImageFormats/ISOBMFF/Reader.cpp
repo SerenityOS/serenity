@@ -6,6 +6,7 @@
 
 #include "Reader.h"
 #include "JPEG2000Boxes.h"
+#include "JPEGXLBoxes.h"
 #include <AK/Function.h>
 
 namespace Gfx::ISOBMFF {
@@ -35,6 +36,12 @@ ErrorOr<BoxList> Reader::read_entire_file()
             return TRY(JPEG2000SignatureBox::create_from_stream(stream));
         case BoxType::JPEG2000UUIDInfoBox:
             return TRY(JPEG2000UUIDInfoBox::create_from_stream(stream));
+        case BoxType::JPEGXLCodestreamBox:
+            return TRY(JPEGXLCodestreamBox::create_from_stream(stream));
+        case BoxType::JPEGXLLevelBox:
+            return TRY(JPEGXLLevelBox::create_from_stream(stream));
+        case BoxType::JPEGXLSignatureBox:
+            return TRY(JPEGXLSignatureBox::create_from_stream(stream));
         case BoxType::UserExtensionBox:
             return TRY(UserExtensionBox::create_from_stream(stream));
         default:
