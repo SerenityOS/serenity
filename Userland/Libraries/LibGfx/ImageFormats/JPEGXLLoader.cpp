@@ -1137,7 +1137,7 @@ class BlendedImage {
 public:
     ErrorOr<void> blend_into(BlendedImage& image, BlendingInfo::BlendMode mode) const
     {
-        if (mode != BlendingInfo::BlendMode::kReplace)
+        if (to_underlying(mode) > 2)
             return Error::from_string_literal("JPEGXLLoder: Unsupported blend mode");
 
         auto input_rect = active_rectangle();
@@ -1150,12 +1150,12 @@ public:
             auto const& input_channel = channels()[i];
             auto& output_channel = image.channels()[i];
 
-            for (u32 y = 0; y < input_channel.height(); ++y) {
-                for (u32 x = 0; x < input_channel.width(); ++x)
-                    output_channel.set(
-                        x + output_rect.x(), y + output_rect.y(),
-                        input_channel.get(x + input_rect.x(), y + input_rect.y()));
-            }
+            if (mode == BlendingInfo::BlendMode::kNone)
+                blend_channel<BlendingInfo::BlendMode::kNone>(input_channel, input_rect, output_channel, output_rect);
+            else if (mode == BlendingInfo::BlendMode::kReplace)
+                blend_channel<BlendingInfo::BlendMode::kReplace>(input_channel, input_rect, output_channel, output_rect);
+            else if (mode == BlendingInfo::BlendMode::kAdd)
+                blend_channel<BlendingInfo::BlendMode::kAdd>(input_channel, input_rect, output_channel, output_rect);
         }
 
         return {};
@@ -1168,6 +1168,30 @@ protected:
     virtual Vector<Channel> const& channels() const = 0;
     virtual IntRect active_rectangle() const = 0;
     IntSize size() const { return active_rectangle().size(); }
+
+private:
+    template<BlendingInfo::BlendMode blend_mode>
+    void blend_channel(Channel const& input_channel, IntRect input_rect,
+        Channel& output_channel, IntRect output_rect) const
+    {
+        for (u32 y = 0; y < static_cast<u32>(input_rect.height()); ++y) {
+            for (u32 x = 0; x < static_cast<u32>(input_rect.width()); ++x) {
+                auto const old_sample = output_channel.get(x + output_rect.x(), y + output_rect.y());
+                auto const new_sample = input_channel.get(x + input_rect.x(), y + input_rect.y());
+
+                auto const sample = [&]() {
+                    // Table F.8 — BlendMode (BlendingInfo.mode)
+                    if constexpr (blend_mode == BlendingInfo::BlendMode::kNone)
+                        return old_sample;
+                    if constexpr (blend_mode == BlendingInfo::BlendMode::kReplace)
+                        return new_sample;
+                    if constexpr (blend_mode == BlendingInfo::BlendMode::kAdd)
+                        return old_sample + new_sample;
+                }();
+                output_channel.set(x + output_rect.x(), y + output_rect.y(), sample);
+            }
+        }
+    }
 };
 
 class ImageView : public BlendedImage {
