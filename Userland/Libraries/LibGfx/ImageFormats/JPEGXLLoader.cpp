@@ -1133,7 +1133,72 @@ static ErrorOr<TransformInfo> read_transform_info(LittleEndianInputBitStream& st
 ///
 
 /// Local abstractions to store the decoded image
-class Image {
+class BlendedImage {
+public:
+    ErrorOr<void> blend_into(BlendedImage& image, BlendingInfo::BlendMode mode) const
+    {
+        if (mode != BlendingInfo::BlendMode::kReplace)
+            return Error::from_string_literal("JPEGXLLoder: Unsupported blend mode");
+
+        auto input_rect = active_rectangle();
+        auto output_rect = image.active_rectangle();
+
+        if (input_rect.size() != output_rect.size())
+            return Error::from_string_literal("JPEGXLLoder: Unable to blend image with a different size");
+
+        for (u32 i = 0; i < channels().size(); ++i) {
+            auto const& input_channel = channels()[i];
+            auto& output_channel = image.channels()[i];
+
+            for (u32 y = 0; y < input_channel.height(); ++y) {
+                for (u32 x = 0; x < input_channel.width(); ++x)
+                    output_channel.set(
+                        x + output_rect.x(), y + output_rect.y(),
+                        input_channel.get(x + input_rect.x(), y + input_rect.y()));
+            }
+        }
+
+        return {};
+    }
+
+protected:
+    virtual ~BlendedImage() = default;
+
+    virtual Vector<Channel>& channels() = 0;
+    virtual Vector<Channel> const& channels() const = 0;
+    virtual IntRect active_rectangle() const = 0;
+    IntSize size() const { return active_rectangle().size(); }
+};
+
+class ImageView : public BlendedImage {
+public:
+    ImageView(Vector<Channel>& channels, IntRect active_rect)
+        : m_channels_view(channels)
+        , m_active_rect(active_rect)
+    {
+    }
+
+private:
+    virtual Vector<Channel> const& channels() const override
+    {
+        return m_channels_view;
+    }
+
+    virtual Vector<Channel>& channels() override
+    {
+        return m_channels_view;
+    }
+
+    virtual IntRect active_rectangle() const override
+    {
+        return m_active_rect;
+    }
+
+    Vector<Channel>& m_channels_view;
+    IntRect m_active_rect;
+};
+
+class Image : public BlendedImage {
 public:
     static ErrorOr<Image> create(IntSize size, ImageMetadata const& metadata)
     {
@@ -1167,35 +1232,13 @@ public:
         return Image { move(channels) };
     }
 
-    void blend_into(Image& image, FrameHeader const& frame_header) const
+    ErrorOr<ImageView> get_subimage(IntRect rectangle)
     {
-        // FIXME: We should use ec_blending_info when appropriate
+        if (rectangle.right() > size().width()
+            || rectangle.bottom() > size().height())
+            return Error::from_string_literal("JPEGXLLoader: Can't create subimage from out-of-bounds rectangle");
 
-        if (frame_header.blending_info.mode != BlendingInfo::BlendMode::kReplace)
-            TODO();
-
-        for (u16 i = 0; i < m_channels.size(); ++i) {
-            auto const& input_channel = m_channels[i];
-            auto& output_channel = image.channels()[i];
-
-            for (u32 y = 0; y < input_channel.height(); ++y) {
-                auto const corrected_y = static_cast<i64>(y) + frame_header.y0;
-                if (corrected_y < 0)
-                    continue;
-                if (corrected_y >= output_channel.height())
-                    break;
-
-                for (u32 x = 0; x < input_channel.width(); ++x) {
-                    auto const corrected_x = static_cast<i64>(x) + frame_header.x0;
-                    if (corrected_x < 0)
-                        continue;
-                    if (corrected_x >= output_channel.width())
-                        break;
-
-                    output_channel.set(corrected_x, corrected_y, input_channel.get(x, y));
-                }
-            }
-        };
+        return ImageView { m_channels, rectangle };
     }
 
     ErrorOr<NonnullRefPtr<Bitmap>> to_bitmap(ImageMetadata const& metadata) const
@@ -1247,7 +1290,12 @@ public:
         return oriented_bitmap.bitmap();
     }
 
-    Vector<Channel>& channels()
+    virtual Vector<Channel> const& channels() const override
+    {
+        return m_channels;
+    }
+
+    virtual Vector<Channel>& channels() override
     {
         return m_channels;
     }
@@ -1258,6 +1306,11 @@ private:
     Image(Vector<Channel>&& channels)
         : m_channels(move(channels))
     {
+    }
+
+    IntRect active_rectangle() const override
+    {
+        return IntRect(0, 0, m_channels[0].width(), m_channels[0].height());
     }
 
     Vector<Channel> m_channels;
@@ -2785,13 +2838,7 @@ public:
             while (!m_frames.last().frame_header.is_last)
                 TRY(decode_frame());
 
-            if (!m_image.has_value())
-                m_image = TRY(Image::create({ m_header.width, m_header.height }, m_metadata));
-
-            m_frames.last().image->blend_into(*m_image, m_frames.last().frame_header);
-
-            m_bitmap = TRY(m_image->to_bitmap(m_metadata));
-            m_image.clear();
+            TRY(render_frame());
 
             return {};
         }();
@@ -2830,14 +2877,28 @@ public:
     }
 
 private:
+    ErrorOr<void> render_frame()
+    {
+        auto final_image = TRY(Image::create({ m_header.width, m_header.height }, m_metadata));
+
+        auto& last_frame_header = m_frames.last().frame_header;
+        auto blending_mode = last_frame_header.blending_info.mode;
+        if (last_frame_header.x0 > 0 || last_frame_header.y0 > 0)
+            return Error::from_string_literal("JPEGXLLoader: Unsupported values for x0 or y0");
+
+        auto out_rectangle = IntRect(-last_frame_header.x0, -last_frame_header.y0,
+            m_header.width, m_header.height);
+        auto out_image = TRY(m_frames.last().image->get_subimage(out_rectangle));
+        TRY(out_image.blend_into(final_image, blending_mode));
+
+        m_bitmap = TRY(final_image.to_bitmap(m_metadata));
+        return {};
+    }
+
     State m_state { State::NotDecoded };
 
     LittleEndianInputBitStream m_stream;
     RefPtr<Gfx::Bitmap> m_bitmap;
-
-    // JPEG XL images can be composed of multiples sub-images, this variable is an internal
-    // representation of this blending before the final rendering (in m_bitmap)
-    Optional<Image> m_image;
 
     Vector<Frame> m_frames;
 
