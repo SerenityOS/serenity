@@ -30,9 +30,10 @@ public:
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
 
 private:
-    JPEGXLImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream>);
+    JPEGXLImageDecoderPlugin(Optional<Vector<u8>>&&, NonnullOwnPtr<FixedMemoryStream>);
 
     OwnPtr<JPEGXLLoadingContext> m_context;
+    Optional<Vector<u8>> m_jxlc_content;
 };
 
 }
