@@ -20,6 +20,9 @@ namespace Gfx::ISOBMFF {
     ENUMERATE_ONE(JPEG2000ChannelDefinitionBox, "cdef")        \
     ENUMERATE_ONE(JPEG2000ComponentMappingBox, "cmap")         \
     ENUMERATE_ONE(JPEG2000ColorSpecificationBox, "colr")       \
+    ENUMERATE_ONE(JPEGXLCodestreamBox, "jxlc")                 \
+    ENUMERATE_ONE(JPEGXLLevelBox, "jxll")                      \
+    ENUMERATE_ONE(JPEGXLSignatureBox, "JXL ")                  \
     ENUMERATE_ONE(FreeBox, "free")                             \
     ENUMERATE_ONE(FileTypeBox, "ftyp")                         \
     ENUMERATE_ONE(JPEG2000ImageHeaderBox, "ihdr")              \
