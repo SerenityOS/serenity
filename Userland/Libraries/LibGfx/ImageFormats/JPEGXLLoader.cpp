@@ -2565,9 +2565,18 @@ IntSize JPEGXLImageDecoderPlugin::size()
 
 bool JPEGXLImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    return data.size() > 2
-        && data.data()[0] == 0xFF
-        && data.data()[1] == 0x0A;
+    bool is_raw_codestream = data.starts_with(to_array<u8>({ 0xFF, 0x0A }));
+
+    // 18181-2: 9.1  JPEG XL Signature box (JXL␣)
+    static constexpr Array signature = to_array<u8>({
+        // clang-format off
+        0x00, 0x00, 0x00, 0x0C,
+        0x4A, 0x58, 0x4C, 0x20,
+        0x0D, 0x0A, 0x87, 0x0A,
+        // clang-format on
+    });
+    bool is_container = data.starts_with(signature);
+    return is_raw_codestream || is_container;
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGXLImageDecoderPlugin::create(ReadonlyBytes data)
