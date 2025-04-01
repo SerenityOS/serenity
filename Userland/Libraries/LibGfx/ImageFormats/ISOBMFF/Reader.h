@@ -16,20 +16,20 @@ namespace Gfx::ISOBMFF {
 class Reader {
 public:
     static ErrorOr<Reader> create(MaybeOwned<SeekableStream> stream);
-    static ErrorOr<Reader> create(MaybeOwned<BoxStream> stream);
+    static ErrorOr<Reader> create(MaybeOwned<ConstrainedStream> stream);
 
     ErrorOr<BoxList> read_entire_file();
 
-    using BoxCallback = Function<ErrorOr<Optional<NonnullOwnPtr<Box>>>(BoxType, BoxStream&)>;
+    using BoxCallback = Function<ErrorOr<Optional<NonnullOwnPtr<Box>>>(BoxType, ConstrainedStream&)>;
     ErrorOr<BoxList> read_entire_file(BoxCallback);
 
 private:
-    Reader(MaybeOwned<BoxStream> stream)
+    Reader(MaybeOwned<ConstrainedStream> stream)
         : m_box_stream(move(stream))
     {
     }
 
-    MaybeOwned<BoxStream> m_box_stream;
+    MaybeOwned<ConstrainedStream> m_box_stream;
 };
 
 }
