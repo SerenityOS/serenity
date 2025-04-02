@@ -30,10 +30,8 @@ public:
 #ifdef AK_COROUTINE_DESTRUCTION_BROKEN
         // FIXME: Calling `m_handle.destroy()` when a coroutine has not reached its final
         //        suspension point is scary on Clang < 19.
-        while (!m_handle.done()) {
+        while (!m_handle.done())
             m_handle.resume();
-            m_value.~Y();
-        }
 #endif
 
         m_handle.destroy();
@@ -41,6 +39,7 @@ public:
 
     SyncGenerator(SyncGenerator&& other)
         : m_handle(AK::exchange(other.m_handle, {}))
+        , m_value(move(other.m_value))
     {
         if (m_handle)
             m_handle.promise().m_generator = this;
@@ -55,24 +54,16 @@ public:
         return *this;
     }
 
-    bool is_done() const
+    bool has_next() const
     {
-        return m_handle.done();
+        return !m_handle.done();
     }
 
-    Optional<Y> next()
+    Y next()
     {
-        VERIFY(!m_handle.done());
+        Y value = m_value.release_value();
         m_handle.resume();
-        if (m_handle.done()) {
-            return {};
-        } else {
-            ScopeGuard guard = [&] { m_value.~Y(); };
-            // We must return a temporary object for RVO to be guaranteed. And a simpler version of
-            // this branch (Optional<Y> result = m_value; m_value.~Y(); return result; ) won't do
-            // it. See move_count test in TestSyncGenerator.cpp.
-            return Optional<Y> { move(m_value) };
-        }
+        return value;
     }
 
 private:
@@ -82,21 +73,21 @@ private:
             return { std::coroutine_handle<PromiseType>::from_promise(*this) };
         }
 
-        Detail::SuspendAlways initial_suspend() { return {}; }
+        Detail::SuspendNever initial_suspend() { return {}; }
         Detail::SuspendAlways final_suspend() noexcept { return {}; }
 
         void return_void() { }
 
         Detail::SuspendAlways yield_value(Y&& value)
         {
-            new (&m_generator->m_value) Y(move(value));
+            m_generator->m_value = move(value);
             return {};
         }
 
         Detail::SuspendAlways yield_value(Y const& value)
         requires IsCopyConstructible<Y>
         {
-            new (&m_generator->m_value) Y(value);
+            m_generator->m_value = value;
             return {};
         }
 
@@ -112,10 +103,7 @@ private:
     }
 
     std::coroutine_handle<PromiseType> m_handle;
-
-    union {
-        Y m_value;
-    };
+    Optional<Y> m_value;
 };
 
 }
