@@ -13,7 +13,7 @@
 namespace AK {
 
 template<typename Y>
-class SyncGenerator {
+class [[nodiscard]] SyncGenerator {
     struct PromiseType;
 
     AK_MAKE_NONCOPYABLE(SyncGenerator);
