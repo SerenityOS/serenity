@@ -579,8 +579,9 @@ double strtod(char const* str, char** endptr)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtold.html
 long double strtold(char const* str, char** endptr)
 {
-    assert(sizeof(double) == sizeof(long double));
-    return strtod(str, endptr);
+    // FIXME: eisel-lemire needs a deep overhaul to work with fp80 and fp128.
+    // For now, we just cast to long double and accept the loss of precision.
+    return static_cast<long double>(c_str_to_floating_point<double>(str, endptr));
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/strtof.html
