@@ -151,7 +151,7 @@ static ErrorOr<OwnPtr<Core::MappedFile>> convert_image_profile(LoadedImage& imag
     return icc_file;
 }
 
-static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool ppm_ascii, u8 jpeg_quality, Optional<unsigned> webp_allowed_transforms, unsigned webp_color_cache_bits, Compress::ZlibCompressionLevel png_compression_level)
+static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool force_alpha, bool ppm_ascii, u8 jpeg_quality, Optional<unsigned> webp_allowed_transforms, unsigned webp_color_cache_bits, Compress::ZlibCompressionLevel png_compression_level)
 {
     auto stream = [out_path]() -> ErrorOr<NonnullOwnPtr<Core::OutputBufferedFile>> {
         auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
@@ -180,7 +180,7 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool pp
         return {};
     }
     if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
-        TRY(Gfx::PNGWriter::encode(*TRY(stream()), *frame, { .compression_level = png_compression_level, .icc_data = image.icc_data }));
+        TRY(Gfx::PNGWriter::encode(*TRY(stream()), *frame, { .compression_level = png_compression_level, .force_alpha = force_alpha, .icc_data = image.icc_data }));
         return {};
     }
     if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
@@ -222,6 +222,7 @@ struct Options {
     bool invert_cmyk = false;
     Optional<Gfx::IntRect> crop_rect;
     bool move_alpha_to_rgb = false;
+    bool force_alpha = false;
     bool strip_alpha = false;
     StringView assign_color_profile_path;
     StringView convert_color_profile_path;
@@ -285,6 +286,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     StringView crop_rect_string;
     args_parser.add_option(crop_rect_string, "Crop to a rectangle", "crop", {}, "x,y,w,h");
     args_parser.add_option(options.move_alpha_to_rgb, "Copy alpha channel to rgb, clear alpha", "move-alpha-to-rgb", {});
+    args_parser.add_option(options.force_alpha, "Force alpha channel", "force-alpha", {});
     args_parser.add_option(options.strip_alpha, "Remove alpha channel", "strip-alpha", {});
     args_parser.add_option(options.assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
     args_parser.add_option(options.convert_color_profile_path, "Load color profile from file and convert output image from current profile to loaded profile", "convert-to-color-profile", {}, "FILE");
@@ -303,6 +305,9 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
 
     if (!crop_rect_string.is_empty())
         options.crop_rect = TRY(parse_rect_string(crop_rect_string));
+
+    if (options.force_alpha && !options.out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive))
+        return Error::from_string_literal("--force_alpha is only supported with the PNG encoder");
 
     if (png_compression_level > 3)
         return Error::from_string_view("--png-compression-level must be in [0, 3]"sv);
@@ -353,7 +358,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (options.no_output)
         return 0;
 
-    TRY(save_image(image, options.out_path, options.ppm_ascii, options.quality, options.webp_allowed_transforms, options.webp_color_cache_bits, options.png_compression_level));
+    TRY(save_image(image, options.out_path, options.force_alpha, options.ppm_ascii, options.quality, options.webp_allowed_transforms, options.webp_color_cache_bits, options.png_compression_level));
 
     return 0;
 }

@@ -23,6 +23,8 @@ class PNGChunk;
 struct PNGWriterOptions {
     Compress::ZlibCompressionLevel compression_level { Compress::ZlibCompressionLevel::Default };
 
+    bool force_alpha { false };
+
     // Data for the iCCP chunk.
     // FIXME: Allow writing cICP, sRGB, or gAMA instead too.
     Optional<ReadonlyBytes> icc_data;

@@ -362,7 +362,7 @@ static bool bitmap_has_transparency(Bitmap const& bitmap)
 
 ErrorOr<void> PNGWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
 {
-    bool has_transparency = bitmap_has_transparency(bitmap);
+    bool has_transparency = options.force_alpha || bitmap_has_transparency(bitmap);
 
     PNGWriter writer { stream };
     TRY(writer.add_png_header());
