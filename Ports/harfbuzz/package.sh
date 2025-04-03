@@ -14,6 +14,8 @@ configopts=(
 )
 
 configure() {
+    # Some ports require -fPIC for static linked harfbuzz
+    export CXXFLAGS='-fPIC'
     run mkdir -p build
     run sh -c "cd build && cmake .. ${configopts[@]}"
 }
