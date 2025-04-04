@@ -2148,6 +2148,15 @@ TEST_CASE(test_jxl_icc)
     verify_checkerboard(*plugin_decoder);
 }
 
+TEST_CASE(test_jxl_boxes)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jxl/modular_property_8_boxed.jxl"sv)));
+    EXPECT(Gfx::JPEGXLImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEGXLImageDecoderPlugin::create(file->bytes()));
+
+    verify_checkerboard(*plugin_decoder);
+}
+
 TEST_CASE(test_jxl_palette_and_groups)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jxl/palette_and_groups.jxl"sv)));
