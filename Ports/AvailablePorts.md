@@ -31,6 +31,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`c-ares`](c-ares/)                           | c-ares                                                        | 1.19.0                   | https://c-ares.org                                                   |
 | [`c-ray`](c-ray/)                             | C-Ray                                                         | 8f30eb9                  | https://github.com/vkoskiv/c-ray                                     |
 | [`ca-certificates`](ca-certificates/)         | Mozilla CA certificate store                                  | 2025-02-25               | https://curl.se/docs/caextract.html                                  |
+| [`cairo`](cairo/)                             | Cairo                                                         | 1.18.2                   | https://www.cairographics.org/                                       |
 | [`carl`](carl/)                               | Crypto Ancienne Resource Loader                               | 1.5                      | https://github.com/classilla/cryanc                                  |
 | [`cavestory`](cavestory/)                     | Cave Story                                                    | 2.6.5-1                  | https://github.com/nxengine/nxengine-evo                             |
 | [`cbonsai`](cbonsai/)                         | cbonsai                                                       | 1.3.1                    | https://gitlab.com/jallbrit/cbonsai                                  |
