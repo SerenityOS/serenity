@@ -1693,12 +1693,52 @@ TEST_CASE(test_tiff_fuzz)
 {
     Array test_inputs = {
         TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-5992525535969280"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-4568002606465024"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-4568095444238336"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-4792178760024064"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-4843377133682688"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-5141058625273856"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-5148654958608384"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-5153321679650816"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-5185775050227712"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-5355241142812672.fuzz"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-5363511089758208"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-5852152004149248"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-5903464527888384"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-6054150979780608"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-6276881913544704"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-6440082630311936.fuzz"sv),
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-6483860697186304"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-02ef887f920faad55e5ec28151d00607bf2b086b.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-05ee1cc597d59f1f9af6b45d470af975dd19333d.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-0bdf220eda18e5358776999e94c2c9d67a55db35.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-149cb59b6c0ba8ba7d2396576ed11c9f40a19713.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-31a9053415ab4e40929362b13de1ba31d7cde3a9.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-3d9cbd81749f40ea2f306d7bd43a26acbc29a2ba.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-4277841b311ac054a274dd91760d63524714f832.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-4ae44e39ec71d081fa58ab87f041729227b246d1.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-5aaaae267780d7b72e92937af8fe677d85c48b69.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-5c5d914b1ae9512e521cd9a8fb6b544503033346.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-6eadb23505a2c1759105e22e68c4e11260b8063e.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-80bb2427eef917332c2366b40fb8c2c6279313bd.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-8f0546b6fe9e107df58e805f0d02b754d14a862b.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-ac4bfed7fbcedd8e53b1fa7cf415121af882b015.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-c2f7bdc38e7d9cbaff8c8e5f99363ee25ec6dbed.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-cb47f14a856d06b5e823de8f630ec52f1e929648.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-cf6894f9b445188675a8d8dd4cd85d857947a71f.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-d2b5882aa20ec80cdb33dfe3e15365dbb6a8886a.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-eb5ac3125b129340ce5068546282ca727936eb4f.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-ece3cf3e41f99255110d605638649f99a5f2f8dd.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-f37b61114c857c656ef3a2243893cfdcae10a0e9.tiff"sv),
+        TEST_INPUT("tiff/fuzz/slow-unit-fc21cd65c6df8dcb3bfc63dc7a41d5f22ce60226.tiff"sv),
     };
 
     for (auto test_input : test_inputs) {
         auto file = TRY_OR_FAIL(Core::MappedFile::map(test_input));
-        auto plugin_decoder = TRY_OR_FAIL(Gfx::TIFFImageDecoderPlugin::create(file->bytes()));
-        auto frame_or_error = plugin_decoder->frame(0);
+        auto plugin_decoder_or_error = Gfx::TIFFImageDecoderPlugin::create(file->bytes());
+        if (plugin_decoder_or_error.is_error())
+            continue;
+        auto frame_or_error = plugin_decoder_or_error.value()->frame(0);
         EXPECT(frame_or_error.is_error());
     }
 }
