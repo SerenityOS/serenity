@@ -248,13 +248,16 @@ private:
         case PhotometricInterpretation::WhiteIsZero:
         case PhotometricInterpretation::BlackIsZero:
         case PhotometricInterpretation::RGBPalette:
+        case PhotometricInterpretation::TransparencyMask:
             return 1;
         case PhotometricInterpretation::RGB:
+        case PhotometricInterpretation::YCbCr:
+        case PhotometricInterpretation::CIELab:
             return 3;
         case PhotometricInterpretation::CMYK:
             return 4;
         default:
-            TODO();
+            VERIFY_NOT_REACHED();
         }
     }
 
