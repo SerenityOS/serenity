@@ -1689,6 +1689,20 @@ TEST_CASE(test_tiff_invalid_tag)
     EXPECT_EQ(frame.image->get_pixel(0, 9), Gfx::Color::NamedColor::White);
 }
 
+TEST_CASE(test_tiff_fuzz)
+{
+    Array test_inputs = {
+        TEST_INPUT("tiff/fuzz/clusterfuzz-testcase-minimized-FuzzTIFFLoader-5992525535969280"sv),
+    };
+
+    for (auto test_input : test_inputs) {
+        auto file = TRY_OR_FAIL(Core::MappedFile::map(test_input));
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::TIFFImageDecoderPlugin::create(file->bytes()));
+        auto frame_or_error = plugin_decoder->frame(0);
+        EXPECT(frame_or_error.is_error());
+    }
+}
+
 TEST_CASE(test_webp_simple_lossy)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("webp/simple-vp8.webp"sv)));
