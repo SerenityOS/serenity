@@ -32,7 +32,7 @@ Region::Region(NonnullLockRefPtr<VMObject> vmobject, size_t offset_in_vmobject, 
     , m_offset_in_vmobject(offset_in_vmobject)
     , m_vmobject(move(vmobject))
     , m_name(move(name))
-    , m_access(access | ((access & 0x7) << 4))
+    , m_access(access)
     , m_shared(shared)
     , m_memory_type(memory_type)
 {
@@ -44,7 +44,7 @@ Region::Region(VirtualRange const& range, NonnullLockRefPtr<VMObject> vmobject, 
     , m_offset_in_vmobject(offset_in_vmobject)
     , m_vmobject(move(vmobject))
     , m_name(move(name))
-    , m_access(access | ((access & 0x7) << 4))
+    , m_access(access)
     , m_shared(shared)
     , m_memory_type(memory_type)
 {
