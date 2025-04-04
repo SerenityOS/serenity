@@ -16,19 +16,16 @@ LayerResolutionLevelComponentPositionProgressionIterator::LayerResolutionLevelCo
     , m_generator(generator())
 
 {
-    m_next = m_generator.next();
 }
 
 bool LayerResolutionLevelComponentPositionProgressionIterator::has_next() const
 {
-    return m_next.has_value();
+    return m_generator.has_next();
 }
 
 ProgressionData LayerResolutionLevelComponentPositionProgressionIterator::next()
 {
-    auto result = m_next;
-    m_next = m_generator.next();
-    return result.value();
+    return m_generator.next();
 }
 
 SyncGenerator<ProgressionData> LayerResolutionLevelComponentPositionProgressionIterator::generator()
@@ -57,19 +54,16 @@ ResolutionLevelLayerComponentPositionProgressionIterator::ResolutionLevelLayerCo
     , m_precinct_count(move(precinct_count))
     , m_generator(generator())
 {
-    m_next = m_generator.next();
 }
 
 bool ResolutionLevelLayerComponentPositionProgressionIterator::has_next() const
 {
-    return m_next.has_value();
+    return m_generator.has_next();
 }
 
 ProgressionData ResolutionLevelLayerComponentPositionProgressionIterator::next()
 {
-    auto result = m_next;
-    m_next = m_generator.next();
-    return result.value();
+    return m_generator.next();
 }
 
 SyncGenerator<ProgressionData> ResolutionLevelLayerComponentPositionProgressionIterator::generator()
@@ -112,19 +106,16 @@ ResolutionLevelPositionComponentLayerProgressionIterator::ResolutionLevelPositio
     , m_ll_rect(move(ll_rect))
     , m_generator(generator())
 {
-    m_next = m_generator.next();
 }
 
 bool ResolutionLevelPositionComponentLayerProgressionIterator::has_next() const
 {
-    return m_next.has_value();
+    return m_generator.has_next();
 }
 
 ProgressionData ResolutionLevelPositionComponentLayerProgressionIterator::next()
 {
-    auto result = m_next;
-    m_next = m_generator.next();
-    return result.value();
+    return m_generator.next();
 }
 
 SyncGenerator<ProgressionData> ResolutionLevelPositionComponentLayerProgressionIterator::generator()
@@ -197,19 +188,16 @@ PositionComponentResolutionLevelLayerProgressionIterator::PositionComponentResol
     , m_ll_rect(move(ll_rect))
     , m_generator(generator())
 {
-    m_next = m_generator.next();
 }
 
 bool PositionComponentResolutionLevelLayerProgressionIterator::has_next() const
 {
-    return m_next.has_value();
+    return m_generator.has_next();
 }
 
 ProgressionData PositionComponentResolutionLevelLayerProgressionIterator::next()
 {
-    auto result = m_next;
-    m_next = m_generator.next();
-    return result.value();
+    return m_generator.next();
 }
 
 SyncGenerator<ProgressionData> PositionComponentResolutionLevelLayerProgressionIterator::generator()
@@ -282,19 +270,16 @@ ComponentPositionResolutionLevelLayerProgressionIterator::ComponentPositionResol
     , m_ll_rect(move(ll_rect))
     , m_generator(generator())
 {
-    m_next = m_generator.next();
 }
 
 bool ComponentPositionResolutionLevelLayerProgressionIterator::has_next() const
 {
-    return m_next.has_value();
+    return m_generator.has_next();
 }
 
 ProgressionData ComponentPositionResolutionLevelLayerProgressionIterator::next()
 {
-    auto result = m_next;
-    m_next = m_generator.next();
-    return result.value();
+    return m_generator.next();
 }
 
 SyncGenerator<ProgressionData> ComponentPositionResolutionLevelLayerProgressionIterator::generator()
