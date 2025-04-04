@@ -13,6 +13,8 @@
 #include <AK/String.h>
 #include <LibCompress/Brotli.h>
 #include <LibGfx/ImageFormats/ExifOrientedBitmap.h>
+#include <LibGfx/ImageFormats/ISOBMFF/JPEGXLBoxes.h>
+#include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
 #include <LibGfx/ImageFormats/JPEGXLChannel.h>
 #include <LibGfx/ImageFormats/JPEGXLCommon.h>
 #include <LibGfx/ImageFormats/JPEGXLEntropyDecoder.h>
@@ -2551,9 +2553,10 @@ private:
     ByteBuffer m_icc_profile;
 };
 
-JPEGXLImageDecoderPlugin::JPEGXLImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream> stream)
+JPEGXLImageDecoderPlugin::JPEGXLImageDecoderPlugin(Optional<Vector<u8>>&& jxlc_content, NonnullOwnPtr<FixedMemoryStream> stream)
+    : m_context(make<JPEGXLLoadingContext>(move(stream)))
+    , m_jxlc_content(move(jxlc_content))
 {
-    m_context = make<JPEGXLLoadingContext>(move(stream));
 }
 
 JPEGXLImageDecoderPlugin::~JPEGXLImageDecoderPlugin() = default;
@@ -2563,17 +2566,51 @@ IntSize JPEGXLImageDecoderPlugin::size()
     return m_context->size();
 }
 
-bool JPEGXLImageDecoderPlugin::sniff(ReadonlyBytes data)
+static bool is_raw_codestream(ReadonlyBytes data)
 {
     return data.size() > 2
         && data.data()[0] == 0xFF
         && data.data()[1] == 0x0A;
 }
 
+bool JPEGXLImageDecoderPlugin::sniff(ReadonlyBytes data)
+{
+    // 18181-2: 9.1  JPEG XL Signature box (JXL␣)
+    static constexpr Array signature = to_array<u8>({
+        // clang-format off
+        0x00, 0x00, 0x00, 0x0C,
+        0x4A, 0x58, 0x4C, 0x20,
+        0x0D, 0x0A, 0x87, 0x0A,
+        // clang-format on
+    });
+    bool is_container = data.size() > 12 && data.trim(12) == signature;
+    return is_raw_codestream(data) || is_container;
+}
+
+static ErrorOr<Vector<u8>> extract_codestream_from_container(NonnullOwnPtr<FixedMemoryStream> input)
+{
+    auto box_reader = TRY(ISOBMFF::Reader::create(move(input)));
+    auto box_list = TRY(box_reader.read_entire_file());
+
+    for (auto& box : box_list) {
+        if (box->box_type() == ISOBMFF::BoxType::JPEGXLCodestreamBox) {
+            auto& codestream_box = *reinterpret_cast<ISOBMFF::JPEGXLCodestreamBox*>(box.ptr());
+            return move(codestream_box.codestream);
+        }
+    }
+
+    return Error::from_string_literal("JPEGXLLoader: No jxlc box found");
+}
+
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGXLImageDecoderPlugin::create(ReadonlyBytes data)
 {
     auto stream = TRY(try_make<FixedMemoryStream>(data));
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEGXLImageDecoderPlugin(move(stream))));
+    Optional<Vector<u8>> jxlc_content;
+    if (!is_raw_codestream(data)) {
+        jxlc_content = TRY(extract_codestream_from_container(move(stream)));
+        stream = TRY(try_make<FixedMemoryStream>(jxlc_content->span()));
+    }
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JPEGXLImageDecoderPlugin(move(jxlc_content), move(stream))));
     TRY(plugin->m_context->decode_image_header());
     return plugin;
 }

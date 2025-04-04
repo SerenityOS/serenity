@@ -250,7 +250,7 @@ struct JPEG2000ResolutionBox final : public SuperBox {
 };
 
 struct JPEG2000ResolutionSubboxBase : public Box {
-    ErrorOr<void> read_from_stream(BoxStream&);
+    ErrorOr<void> read_from_stream(ConstrainedStream&);
     virtual void dump(String const& prepend) const override;
 
     u16 vertical_capture_grid_resolution_numerator { 0 };

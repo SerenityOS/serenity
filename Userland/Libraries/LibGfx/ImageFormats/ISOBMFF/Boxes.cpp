@@ -10,7 +10,7 @@
 
 namespace Gfx::ISOBMFF {
 
-ErrorOr<BoxHeader> read_box_header(BoxStream& stream)
+ErrorOr<BoxHeader> read_box_header(ConstrainedStream& stream)
 {
     BoxHeader header;
     u64 total_size = TRY(stream.read_value<BigEndian<u32>>());
@@ -36,7 +36,7 @@ void Box::dump(String const& prepend) const
     outln("{}{}", prepend, box_type());
 }
 
-ErrorOr<void> FullBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> FullBox::read_from_stream(ConstrainedStream& stream)
 {
     u32 data = TRY(stream.read_value<BigEndian<u32>>());
     // unsigned int(8) version
@@ -56,10 +56,10 @@ static String add_indent(String const& string)
     return MUST(String::formatted("{}  ", string));
 }
 
-ErrorOr<void> UnknownBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> UnknownBox::read_from_stream(ConstrainedStream& stream)
 {
     m_contents_size = stream.remaining();
-    TRY(stream.discard_remaining());
+    TRY(stream.discard(stream.remaining()));
     return {};
 }
 
@@ -71,7 +71,7 @@ void UnknownBox::dump(String const& prepend) const
     outln("{}[ {} bytes ]", prepend, m_contents_size);
 }
 
-ErrorOr<void> FileTypeBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> FileTypeBox::read_from_stream(ConstrainedStream& stream)
 {
     // unsigned int(32) major_brand;
     major_brand = TRY(stream.read_value<BigEndian<BrandIdentifier>>());
@@ -105,7 +105,7 @@ void FileTypeBox::dump(String const& prepend) const
     outln("{}{}", prepend, compatible_brands_string.string_view());
 }
 
-ErrorOr<void> SuperBox::read_from_stream(BoxStream& stream, BoxCallback box_factory)
+ErrorOr<void> SuperBox::read_from_stream(ConstrainedStream& stream, BoxCallback box_factory)
 {
     auto reader = TRY(Gfx::ISOBMFF::Reader::create(MaybeOwned { stream }));
     m_child_boxes = TRY(reader.read_entire_file(move(box_factory)));
@@ -120,7 +120,7 @@ void SuperBox::dump(String const& prepend) const
         child_box->dump(indented_prepend);
 }
 
-ErrorOr<void> UserExtensionBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> UserExtensionBox::read_from_stream(ConstrainedStream& stream)
 {
     // unsigned int(8)[16] uuid;
     TRY(stream.read_until_filled(uuid));

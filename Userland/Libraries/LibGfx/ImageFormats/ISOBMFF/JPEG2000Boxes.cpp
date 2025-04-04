@@ -13,10 +13,10 @@
 
 namespace Gfx::ISOBMFF {
 
-ErrorOr<void> JPEG2000HeaderBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000HeaderBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.5.3 JP2 Header box (superbox)
-    auto make_subbox = [](BoxType type, BoxStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
+    auto make_subbox = [](BoxType type, ConstrainedStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
         switch (type) {
         case BoxType::JPEG2000BitsPerComponentBox:
             return TRY(JPEG2000BitsPerComponentBox::create_from_stream(stream));
@@ -46,7 +46,7 @@ void JPEG2000HeaderBox::dump(String const& prepend) const
     SuperBox::dump(prepend);
 }
 
-ErrorOr<void> JPEG2000ImageHeaderBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000ImageHeaderBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.5.3.1 Image Header box
     height = TRY(stream.read_value<BigEndian<u32>>());
@@ -76,7 +76,7 @@ void JPEG2000ImageHeaderBox::dump(String const& prepend) const
     outln("{}- contains_intellectual_property_rights = {}", prepend, contains_intellectual_property_rights);
 }
 
-ErrorOr<void> JPEG2000BitsPerComponentBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000BitsPerComponentBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.5.3.2 Bits Per Component box
     while (!stream.is_eof()) {
@@ -98,7 +98,7 @@ void JPEG2000BitsPerComponentBox::dump(String const& prepend) const
     }
 }
 
-ErrorOr<void> JPEG2000ColorSpecificationBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000ColorSpecificationBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.5.3.3 Colour Specification box
     method = TRY(stream.read_value<u8>());
@@ -194,7 +194,7 @@ void JPEG2000ColorSpecificationBox::dump(String const& prepend) const
         outln("{}- icc_data = {} bytes", prepend, icc_data.size());
 }
 
-ErrorOr<void> JPEG2000PaletteBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000PaletteBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.5.3.4 Palette box
     u16 number_of_entries = TRY(stream.read_value<BigEndian<u16>>());
@@ -251,7 +251,7 @@ void JPEG2000PaletteBox::dump(String const& prepend) const
     }
 }
 
-ErrorOr<void> JPEG2000ComponentMappingBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000ComponentMappingBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.5.3.5 Component Mapping box
     // "the number of channels specified in the Component Mapping box is determined by the length of the box."
@@ -275,7 +275,7 @@ void JPEG2000ComponentMappingBox::dump(String const& prepend) const
     }
 }
 
-ErrorOr<void> JPEG2000ChannelDefinitionBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000ChannelDefinitionBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.5.3.6 Channel Definition box
     u16 count = TRY(stream.read_value<BigEndian<u16>>());
@@ -309,10 +309,10 @@ void JPEG2000ChannelDefinitionBox::dump(String const& prepend) const
     }
 }
 
-ErrorOr<void> JPEG2000ResolutionBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000ResolutionBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.5.3.7 Resolution box (superbox)
-    auto make_subbox = [](BoxType type, BoxStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
+    auto make_subbox = [](BoxType type, ConstrainedStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
         switch (type) {
         case BoxType::JPEG2000CaptureResolutionBox:
             return TRY(JPEG2000CaptureResolutionBox::create_from_stream(stream));
@@ -332,7 +332,7 @@ void JPEG2000ResolutionBox::dump(String const& prepend) const
     SuperBox::dump(prepend);
 }
 
-ErrorOr<void> JPEG2000ResolutionSubboxBase::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000ResolutionSubboxBase::read_from_stream(ConstrainedStream& stream)
 {
     vertical_capture_grid_resolution_numerator = TRY(stream.read_value<BigEndian<u16>>());
     vertical_capture_grid_resolution_denominator = TRY(stream.read_value<BigEndian<u16>>());
@@ -350,7 +350,7 @@ void JPEG2000ResolutionSubboxBase::dump(String const& prepend) const
     outln("{}- horizontal_capture_grid_resolution = {}/{} * 10^{}", prepend, horizontal_capture_grid_resolution_numerator, horizontal_capture_grid_resolution_denominator, horizontal_capture_grid_resolution_exponent);
 }
 
-ErrorOr<void> JPEG2000CaptureResolutionBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000CaptureResolutionBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.5.3.7.1 Capture Resolution box
     return JPEG2000ResolutionSubboxBase::read_from_stream(stream);
@@ -361,7 +361,7 @@ void JPEG2000CaptureResolutionBox::dump(String const& prepend) const
     JPEG2000ResolutionSubboxBase::dump(prepend);
 }
 
-ErrorOr<void> JPEG2000DefaultDisplayResolutionBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000DefaultDisplayResolutionBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.5.3.7.2 Default Display Resolution box
     return JPEG2000ResolutionSubboxBase::read_from_stream(stream);
@@ -372,7 +372,7 @@ void JPEG2000DefaultDisplayResolutionBox::dump(String const& prepend) const
     JPEG2000ResolutionSubboxBase::dump(prepend);
 }
 
-ErrorOr<void> JPEG2000ContiguousCodestreamBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000ContiguousCodestreamBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.5.4 Contiguous Codestream box
     // FIXME: It's wasteful to make a copy of all the image data here. Having just a ReadonlyBytes
@@ -389,7 +389,7 @@ void JPEG2000ContiguousCodestreamBox::dump(String const& prepend) const
     outln("{}- codestream = {} bytes", prepend, codestream.size());
 }
 
-ErrorOr<void> JPEG2000SignatureBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000SignatureBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.5.1 JPEG 2000 Signature box
     signature = TRY(stream.read_value<BigEndian<u32>>());
@@ -402,10 +402,10 @@ void JPEG2000SignatureBox::dump(String const& prepend) const
     outln("{}- signature = {:#08x}", prepend, signature);
 }
 
-ErrorOr<void> JPEG2000UUIDInfoBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000UUIDInfoBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.7.3 UUID Info boxes (superbox)
-    auto make_subbox = [](BoxType type, BoxStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
+    auto make_subbox = [](BoxType type, ConstrainedStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
         switch (type) {
         case BoxType::JPEG2000UUIDListBox:
             return TRY(JPEG2000UUIDListBox::create_from_stream(stream));
@@ -425,7 +425,7 @@ void JPEG2000UUIDInfoBox::dump(String const& prepend) const
     SuperBox::dump(prepend);
 }
 
-ErrorOr<void> JPEG2000UUIDListBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000UUIDListBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.7.3.1 UUID List box
     u16 count = TRY(stream.read_value<BigEndian<u16>>());
@@ -457,7 +457,7 @@ ErrorOr<String> JPEG2000URLBox::url_as_string() const
     return String::from_utf8(StringView { url_bytes.bytes().trim(url_bytes.size() - 1) });
 }
 
-ErrorOr<void> JPEG2000URLBox::read_from_stream(BoxStream& stream)
+ErrorOr<void> JPEG2000URLBox::read_from_stream(ConstrainedStream& stream)
 {
     // I.7.3.2 Data Entry URL box
     version_number = TRY(stream.read_value<u8>());

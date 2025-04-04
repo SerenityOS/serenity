@@ -6,6 +6,7 @@
 
 #include "Reader.h"
 #include "JPEG2000Boxes.h"
+#include "JPEGXLBoxes.h"
 #include <AK/Function.h>
 
 namespace Gfx::ISOBMFF {
@@ -13,17 +14,17 @@ namespace Gfx::ISOBMFF {
 ErrorOr<Reader> Reader::create(MaybeOwned<SeekableStream> stream)
 {
     size_t size = TRY(stream->size());
-    return Reader(make<BoxStream>(move(stream), size));
+    return Reader(make<ConstrainedStream>(move(stream), size));
 }
 
-ErrorOr<Reader> Reader::create(MaybeOwned<BoxStream> stream)
+ErrorOr<Reader> Reader::create(MaybeOwned<ConstrainedStream> stream)
 {
     return Reader(move(stream));
 }
 
 ErrorOr<BoxList> Reader::read_entire_file()
 {
-    auto make_top_level_box = [](BoxType type, BoxStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
+    auto make_top_level_box = [](BoxType type, ConstrainedStream& stream) -> ErrorOr<Optional<NonnullOwnPtr<Box>>> {
         switch (type) {
         case BoxType::FileTypeBox:
             return TRY(FileTypeBox::create_from_stream(stream));
@@ -35,13 +36,19 @@ ErrorOr<BoxList> Reader::read_entire_file()
             return TRY(JPEG2000SignatureBox::create_from_stream(stream));
         case BoxType::JPEG2000UUIDInfoBox:
             return TRY(JPEG2000UUIDInfoBox::create_from_stream(stream));
+        case BoxType::JPEGXLCodestreamBox:
+            return TRY(JPEGXLCodestreamBox::create_from_stream(stream));
+        case BoxType::JPEGXLLevelBox:
+            return TRY(JPEGXLLevelBox::create_from_stream(stream));
+        case BoxType::JPEGXLSignatureBox:
+            return TRY(JPEGXLSignatureBox::create_from_stream(stream));
         case BoxType::UserExtensionBox:
             return TRY(UserExtensionBox::create_from_stream(stream));
         default:
             return OptionalNone {};
         }
     };
-    return read_entire_file((ErrorOr<Optional<NonnullOwnPtr<Box>>>(*)(BoxType, BoxStream&))(make_top_level_box));
+    return read_entire_file((ErrorOr<Optional<NonnullOwnPtr<Box>>>(*)(BoxType, ConstrainedStream&))(make_top_level_box));
 }
 
 ErrorOr<BoxList> Reader::read_entire_file(BoxCallback box_factory)
@@ -50,7 +57,7 @@ ErrorOr<BoxList> Reader::read_entire_file(BoxCallback box_factory)
 
     while (!m_box_stream->is_eof()) {
         auto box_header = TRY(read_box_header(*m_box_stream));
-        BoxStream box_stream { MaybeOwned<Stream> { *m_box_stream }, static_cast<size_t>(box_header.contents_size) };
+        ConstrainedStream box_stream { MaybeOwned<Stream> { *m_box_stream }, static_cast<size_t>(box_header.contents_size) };
 
         auto maybe_box = TRY(box_factory(box_header.type, box_stream));
         if (maybe_box.has_value()) {
