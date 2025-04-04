@@ -17,6 +17,7 @@
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <stdio.h>
+#include <unistd.h>
 
 static u8 mac_part(Vector<ByteString> const& parts, size_t index)
 {

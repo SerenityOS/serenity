@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtr.h>
+#include <AK/Noncopyable.h>
 #include <AK/OwnPtr.h>
+#include <LibCore/EventReceiver.h>
 
 namespace Core {
 

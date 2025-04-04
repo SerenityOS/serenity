@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 
 namespace AK {

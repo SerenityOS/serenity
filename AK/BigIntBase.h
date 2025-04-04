@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/BuiltinWrappers.h>
+#include <AK/NumericLimits.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>

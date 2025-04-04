@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/StdLibExtras.h>
+#include <AK/StdLibExtraDetails.h>
 #include <AK/Types.h>
 
 namespace AK::SIMD {

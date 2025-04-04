@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/PixelUnits.h>
 

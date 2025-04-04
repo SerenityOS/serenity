@@ -6,8 +6,10 @@
 
 #pragma once
 
+#include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/HTML/PolicyContainers.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 
 namespace Web::HTML {
 

@@ -7,8 +7,6 @@
 #include <AK/Assertions.h>
 #include <AK/Format.h>
 #include <AK/Platform.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
 
 #if (defined(AK_OS_LINUX) && defined(AK_LIBC_GLIBC)) || defined(AK_OS_BSD_GENERIC) || defined(AK_OS_SOLARIS) || defined(AK_OS_HAIKU) || defined(AK_OS_GNU_HURD)
 #    define EXECINFO_BACKTRACE
@@ -17,6 +15,8 @@
 #define PRINT_ERROR(s) (void)fputs((s), stderr)
 
 #if defined(EXECINFO_BACKTRACE)
+#    include <AK/StringBuilder.h>
+#    include <AK/StringView.h>
 #    include <cxxabi.h>
 #    include <execinfo.h>
 #endif

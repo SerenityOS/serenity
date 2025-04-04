@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/Variant.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
 
