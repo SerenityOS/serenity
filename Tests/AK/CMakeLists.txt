@@ -34,6 +34,7 @@ set(AK_TEST_SOURCES
     TestFixedPoint.cpp
     TestFloatingPoint.cpp
     TestFloatingPointParsing.cpp
+    TestFloatingPointStringConversions.cpp
     TestFlyString.cpp
     TestFormat.cpp
     TestFunction.cpp
