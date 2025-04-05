@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Mon, 17 Mar 2025 20:01:53 +0000
+Subject: [PATCH] build: Reduce requested stack size to 32 MiB
+
+See: https://github.com/SerenityOS/serenity/issues/25790
+---
+ zig/build.zig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/zig/build.zig b/zig/build.zig
+index 375cb6df0974bbe939f6e1cfe42feef4e024c4c9..136bf26cb7e00faa481be5994736db8781e5f34b 100644
+--- a/zig/build.zig
++++ b/zig/build.zig
+@@ -12,7 +12,7 @@ const DevEnv = @import("src/dev.zig").Env;
+ const ValueInterpretMode = enum { direct, by_name };
+ 
+ const zig_version: std.SemanticVersion = .{ .major = 0, .minor = 15, .patch = 0 };
+-const stack_size = 46 * 1024 * 1024;
++const stack_size = 32 * 1024 * 1024;
+ 
+ pub fn build(b: *std.Build) !void {
+     const only_c = b.option(bool, "only-c", "Translate the Zig compiler to C code, with only the C backend enabled") orelse false;
