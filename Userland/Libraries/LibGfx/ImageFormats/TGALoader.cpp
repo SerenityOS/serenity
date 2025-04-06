@@ -53,7 +53,7 @@ public:
 protected:
     virtual void fill_main_tags() const override
     {
-        if (m_identifier.byte_count() != 0)
+        if (!m_identifier.is_empty())
             m_main_tags.set("Identifier"sv, m_identifier);
     }
 
@@ -109,6 +109,8 @@ ErrorOr<void> TGAImageDecoderPlugin::decode_tga_header()
         auto identifier = String::from_stream(m_context->stream, m_context->header.id_length);
         if (!identifier.is_error())
             m_context->identifier_metadata = make<TGAImageIdentifier>(identifier.release_value());
+        else
+            dbgln("FIXME: Handle non-utf8 identifiers in TGALoader");
     }
     TRY(ensure_header_validity(m_context->header, m_context->bytes.size()));
     return {};
