@@ -8,7 +8,7 @@
 
 #include <AK/Forward.h>
 #include <AK/IterationDecision.h>
-#include <AK/StdLibExtras.h>
+#include <AK/StdShim.h>
 
 namespace AK::Concepts {
 

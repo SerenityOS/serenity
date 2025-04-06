@@ -10,6 +10,7 @@
 
 #include <AK/ByteString.h>
 #include <AK/Concepts.h>
+#include <AK/Variant.h>
 #include <LibGUI/Icon.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Font.h>

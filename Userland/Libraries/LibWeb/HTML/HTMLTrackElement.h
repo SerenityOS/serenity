@@ -9,6 +9,7 @@
 
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/TextTrack.h>
+#include <LibWeb/WebIDL/Types.h>
 
 namespace Web::HTML {
 

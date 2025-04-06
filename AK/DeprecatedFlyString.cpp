@@ -7,7 +7,6 @@
 #include <AK/ByteString.h>
 #include <AK/DeprecatedFlyString.h>
 #include <AK/HashTable.h>
-#include <AK/Optional.h>
 #include <AK/Singleton.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>

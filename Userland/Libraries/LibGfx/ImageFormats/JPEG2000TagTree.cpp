@@ -5,7 +5,7 @@
  */
 
 #include <AK/Function.h>
-#include <AK/Math.h>
+#include <AK/IntegralMath.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/ImageFormats/JPEG2000TagTree.h>
 
@@ -95,7 +95,7 @@ TagTree::~TagTree() = default;
 
 ErrorOr<TagTree> TagTree::create(u32 x_count, u32 y_count)
 {
-    auto level = ceil(log2(max(x_count, y_count)));
+    auto level = AK::ceil_log2(max(x_count, y_count));
     return TagTree { TRY(TagTreeNode::create(x_count, y_count, level)) };
 }
 

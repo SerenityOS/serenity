@@ -8,10 +8,10 @@
 
 #include <AK/Assertions.h>
 #include <AK/Format.h>
-#include <AK/RefCounted.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
+#include <AK/kmalloc.h>
 
 #define NONNULLOWNPTR_SCRUB_BYTE 0xf1
 

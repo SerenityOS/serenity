@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <LibGUI/Dialog.h>
 
 namespace GUI {

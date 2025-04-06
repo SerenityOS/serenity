@@ -11,7 +11,8 @@
            and there is no guraantee does not do any floating point computations.
 #endif
 
-#include <AK/StringView.h>
+#include <AK/Concepts.h>
+#include <AK/Optional.h>
 
 namespace AK {
 

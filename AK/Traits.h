@@ -10,6 +10,7 @@
 #include <AK/Concepts.h>
 #include <AK/Forward.h>
 #include <AK/HashFunctions.h>
+#include <AK/StdLibExtras.h>
 #include <AK/StringHash.h>
 
 namespace AK {

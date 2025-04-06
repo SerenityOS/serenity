@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/NumericLimits.h>
 #include <AK/Stream.h>
 #include <AK/Types.h>
 
