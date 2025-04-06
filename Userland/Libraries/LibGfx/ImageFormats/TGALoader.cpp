@@ -43,6 +43,23 @@ static_assert(sizeof(TGAHeader) == 18);
 
 }
 
+class TGAImageIdentifier : public Gfx::Metadata {
+public:
+    TGAImageIdentifier(String identifier)
+        : m_identifier(move(identifier))
+    {
+    }
+
+protected:
+    virtual void fill_main_tags() const override
+    {
+        if (m_identifier.byte_count() != 0)
+            m_main_tags.set("Identifier"sv, m_identifier);
+    }
+
+    String m_identifier;
+};
+
 template<>
 struct AK::Traits<Gfx::TGAHeader> : public DefaultTraits<Gfx::TGAHeader> {
     static constexpr bool is_trivially_serializable() { return true; }
@@ -60,6 +77,7 @@ struct TGALoadingContext {
     FixedMemoryStream stream;
     TGAHeader header {};
     RefPtr<Gfx::Bitmap> bitmap;
+    OwnPtr<TGAImageIdentifier> identifier_metadata;
 };
 
 TGAImageDecoderPlugin::TGAImageDecoderPlugin(NonnullOwnPtr<TGALoadingContext> context)
@@ -78,7 +96,7 @@ static ErrorOr<void> ensure_header_validity(TGAHeader const& header, size_t whol
 {
     if ((header.bits_per_pixel % 8) != 0 || header.bits_per_pixel < 8 || header.bits_per_pixel > 32)
         return Error::from_string_literal("Invalid bit depth");
-    auto bytes_remaining = whole_image_stream_size - sizeof(TGAHeader);
+    auto bytes_remaining = whole_image_stream_size - sizeof(TGAHeader) - header.id_length;
     if (header.data_type_code == TGADataType::UncompressedRGB && bytes_remaining < static_cast<u64>(header.width) * header.height * (header.bits_per_pixel / 8))
         return Error::from_string_literal("Not enough data to read an image with the expected size");
     return {};
@@ -87,6 +105,11 @@ static ErrorOr<void> ensure_header_validity(TGAHeader const& header, size_t whol
 ErrorOr<void> TGAImageDecoderPlugin::decode_tga_header()
 {
     m_context->header = TRY(m_context->stream.read_value<TGAHeader>());
+    if (m_context->header.id_length > 0) {
+        auto identifier = String::from_stream(m_context->stream, m_context->header.id_length);
+        if (!identifier.is_error())
+            m_context->identifier_metadata = make<TGAImageIdentifier>(identifier.release_value());
+    }
     TRY(ensure_header_validity(m_context->header, m_context->bytes.size()));
     return {};
 }
@@ -141,6 +164,13 @@ static ErrorOr<TGAPixelPacketHeader> read_pixel_packet_header(Stream& stream)
     pixels_count_in_packet++;
     VERIFY(pixels_count_in_packet > 0);
     return TGAPixelPacketHeader { pixels_raw_in_packet, pixels_count_in_packet };
+}
+
+Optional<Metadata const&> TGAImageDecoderPlugin::metadata()
+{
+    if (m_context->identifier_metadata)
+        return *m_context->identifier_metadata;
+    return OptionalNone {};
 }
 
 ErrorOr<ImageFrameDescriptor> TGAImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
