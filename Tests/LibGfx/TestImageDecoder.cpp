@@ -1402,6 +1402,25 @@ TEST_CASE(test_targa_image_descriptor)
     }
 }
 
+TEST_CASE(test_targa_image_with_identifier)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("tga/image-with-identifier.tga"sv)));
+    EXPECT(Gfx::TGAImageDecoderPlugin::validate_before_create(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::TGAImageDecoderPlugin::create(file->bytes()));
+
+    auto metadata = plugin_decoder->metadata();
+    EXPECT(metadata.has_value());
+
+    auto& tags = metadata->main_tags();
+    EXPECT_EQ(tags.size(), 1U);
+    auto ident = tags.get("Identifier"sv);
+    EXPECT(ident.has_value());
+    EXPECT_EQ(*ident, "Hello, TGA!"sv);
+
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 24, 24 }));
+    EXPECT_EQ(frame.image->get_pixel(5, 5), Gfx::Color(40, 172, 255));
+}
+
 TEST_CASE(test_tiff_uncompressed)
 {
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("tiff/uncompressed.tiff"sv)));
