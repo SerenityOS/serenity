@@ -23,6 +23,8 @@ public:
 
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
 
+    virtual Optional<Metadata const&> metadata() override;
+
 private:
     TGAImageDecoderPlugin(NonnullOwnPtr<TGALoadingContext>);
 
