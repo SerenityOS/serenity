@@ -2055,8 +2055,8 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
 {
     auto& [global_modular, frame_header, group_index, pass_index, stream_index] = options;
 
-    u32 max_shift = 3;
-    u32 min_shift = 0;
+    i8 max_shift = 3;
+    i8 min_shift = 0;
 
     if (pass_index != 0)
         return Error::from_string_literal("JPEGXLLoader: Subsequent passes are not supported yet");
