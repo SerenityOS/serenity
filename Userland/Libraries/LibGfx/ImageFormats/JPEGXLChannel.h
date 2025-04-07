@@ -11,14 +11,30 @@
 
 namespace Gfx {
 
+struct ChannelInfo {
+    static ChannelInfo from_size(IntSize size)
+    {
+        return {
+            .width = static_cast<u32>(size.width()),
+            .height = static_cast<u32>(size.height()),
+        };
+    }
+    u32 width {};
+    u32 height {};
+    i8 hshift {};
+    i8 vshift {};
+};
+
 class Channel {
 public:
-    static ErrorOr<Channel> create(u32 width, u32 height)
+    static ErrorOr<Channel> create(ChannelInfo const& info)
     {
         Channel channel;
 
-        channel.m_width = width;
-        channel.m_height = height;
+        channel.m_width = info.width;
+        channel.m_height = info.height;
+        channel.m_hshift = info.hshift;
+        channel.m_vshift = info.vshift;
 
         TRY(channel.m_pixels.try_resize(channel.m_width * channel.m_height));
 

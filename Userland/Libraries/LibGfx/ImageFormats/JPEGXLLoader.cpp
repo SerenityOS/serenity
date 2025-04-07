@@ -1105,10 +1105,14 @@ public:
 
         for (u16 i = 0; i < metadata.number_of_channels(); ++i) {
             if (i < metadata.number_of_color_channels()) {
-                TRY(image.m_channels.try_append(TRY(Channel::create(size.width(), size.height()))));
+                TRY(image.m_channels.try_append(TRY(Channel::create(ChannelInfo::from_size(size)))));
             } else {
                 auto const dim_shift = metadata.ec_info[i - metadata.number_of_color_channels()].dim_shift;
-                TRY(image.m_channels.try_append(TRY(Channel::create(size.width() >> dim_shift, size.height() >> dim_shift))));
+                TRY(image.m_channels.try_append(TRY(Channel::create(
+                    {
+                        .width = static_cast<u32>(size.width() >> dim_shift),
+                        .height = static_cast<u32>(size.height() >> dim_shift),
+                    }))));
             }
         }
 
@@ -1401,9 +1405,9 @@ struct ModularData {
 
     Vector<Channel> channels {};
 
-    ErrorOr<void> create_channels(Span<IntSize> frame_size)
+    ErrorOr<void> create_channels(Span<ChannelInfo> frame_size)
     {
-        Vector<IntSize> channel_infos {};
+        Vector<ChannelInfo> channel_infos {};
         TRY(channel_infos.try_extend(frame_size));
 
         for (auto const& tr : transform) {
@@ -1417,7 +1421,7 @@ struct ModularData {
                 auto original_dimensions = channel_infos[tr.begin_c];
                 channel_infos.remove(tr.begin_c, tr.num_c);
                 TRY(channel_infos.try_insert(tr.begin_c, original_dimensions));
-                TRY(channel_infos.try_prepend({ tr.nb_colours, tr.num_c }));
+                TRY(channel_infos.try_prepend({ .width = tr.nb_colours, .height = tr.num_c }));
 
                 if (tr.begin_c < nb_meta_channels)
                     nb_meta_channels += 2 - tr.begin_c;
@@ -1428,7 +1432,7 @@ struct ModularData {
 
         TRY(channels.try_resize(channel_infos.size()));
         for (u32 i = 0; i < channels.size(); ++i)
-            channels[i] = TRY(Channel::create(channel_infos[i].width(), channel_infos[i].height()));
+            channels[i] = TRY(Channel::create(channel_infos[i]));
 
         return {};
     }
@@ -1557,7 +1561,7 @@ static Neighborhood retrieve_neighborhood(Channel const& channel, u32 x, u32 y)
 static ErrorOr<void> apply_transformation(Vector<Channel>&, TransformInfo const&, u32 bit_depth, WPHeader const&);
 
 struct ModularOptions {
-    Span<IntSize> channels_info;
+    Span<ChannelInfo> channels_info;
     Optional<EntropyDecoder>& decoder;
     MATree const& global_tree;
     u32 group_dim {};
@@ -1725,8 +1729,8 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
     // However, the decoder only decodes the first nb_meta_channels channels and any further channels
     // that have a width and height that are both at most group_dim. At that point, it stops decoding.
     // No inverse transforms are applied yet.
-    auto channels = TRY(FixedArray<IntSize>::create(num_channels));
-    channels.fill_with(frame_size);
+    auto channels = TRY(FixedArray<ChannelInfo>::create(num_channels));
+    channels.fill_with(ChannelInfo::from_size(frame_size));
 
     global_modular.modular_data = TRY(read_modular_bitstream(stream,
         {
@@ -2068,7 +2072,7 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
     // for every remaining channel in the partially decoded GlobalModular image (i.e. it is not a meta-channel,
     // the channel dimensions exceed group_dim × group_dim, and hshift < 3 or vshift < 3, and the channel has
     // not been already decoded in a previous pass)
-    Vector<IntSize> channels_info;
+    Vector<ChannelInfo> channels_info;
     Vector<Channel&> original_channels;
     auto& channels = global_modular.modular_data.channels;
     for (auto [i, channel] : enumerate(channels)) {
@@ -2084,7 +2088,7 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
         if (channel_min_shift < min_shift || channel_min_shift >= max_shift)
             continue;
 
-        TRY(channels_info.try_append(rect_for_group(channel, frame_header.group_dim(), group_index).size()));
+        TRY(channels_info.try_append(ChannelInfo::from_size(rect_for_group(channel, frame_header.group_dim(), group_index).size())));
         TRY(original_channels.try_append(channel));
     }
     if (channels_info.is_empty())
@@ -2320,7 +2324,7 @@ static ErrorOr<void> apply_upsampling(Frame& frame, ImageMetadata const& metadat
 
         // FIXME: Use ec_upsampling for extra-channels
         for (auto& channel : frame.image->channels()) {
-            auto upsampled = TRY(Channel::create(k * channel.width(), k * channel.height()));
+            auto upsampled = TRY(Channel::create({ .width = k * channel.width(), .height = k * channel.height() }));
 
             // Loop over the original image
             for (u32 y {}; y < channel.height(); y++) {
