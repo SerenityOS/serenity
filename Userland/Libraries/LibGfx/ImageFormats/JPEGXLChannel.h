@@ -57,12 +57,12 @@ public:
         return m_height;
     }
 
-    u32 hshift() const
+    i8 hshift() const
     {
         return m_hshift;
     }
 
-    u32 vshift() const
+    i8 vshift() const
     {
         return m_vshift;
     }
@@ -98,8 +98,8 @@ private:
     u32 m_width {};
     u32 m_height {};
 
-    u32 m_hshift {};
-    u32 m_vshift {};
+    i8 m_hshift {};
+    i8 m_vshift {};
 
     bool m_decoded { false };
 
