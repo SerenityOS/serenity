@@ -2082,6 +2082,125 @@ static ErrorOr<void> apply_palette(Vector<Channel>& channel,
     return {};
 }
 
+// H.6.2.2 - Horizontal inverse squeeze step
+static i32 tendency(i32 A, i32 B, i32 C)
+{
+    if (A >= B && B >= C) {
+        auto X = (4 * A - 3 * C - B + 6) / 12;
+        if (X - (X & 1) > 2 * (A - B))
+            X = 2 * (A - B) + 1;
+        if (X + (X & 1) > 2 * (B - C))
+            X = 2 * (B - C);
+        return X;
+    } else if (A <= B && B <= C) {
+        auto X = (4 * A - 3 * C - B - 6) / 12;
+        if (X + (X & 1) < 2 * (A - B))
+            X = 2 * (A - B) - 1;
+        if (X - (X & 1) < 2 * (B - C))
+            X = 2 * (B - C);
+        return X;
+    }
+    return 0;
+}
+
+static ErrorOr<void> horiz_isqueeze(Channel const& input_1, Channel const& input_2, Channel& output)
+{
+    // "This step takes two input channels of sizes W1 × H and W2 × H"
+    if (input_1.height() != input_2.height())
+        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
+    auto h = input_1.height();
+    auto w1 = input_1.width();
+    auto w2 = input_2.width();
+
+    // "Either W1 == W2 or W1 == W2 + 1."
+    if (w1 != w2 && w1 != w2 + 1)
+        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
+
+    // "output channel of size (W1 + W2) × H."
+    if ((w1 + w2) != output.width() || h != output.height())
+        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
+
+    for (u32 y = 0; y < h; y++) {
+        for (u32 x = 0; x < w2; x++) {
+            auto avg = input_1.get(x, y);
+            auto residu = input_2.get(x, y);
+            auto next_avg = (x + 1 < w1 ? input_1.get(x + 1, y) : avg);
+            auto left = (x > 0 ? output.get((x << 1) - 1, y) : avg);
+            auto diff = residu + tendency(left, avg, next_avg);
+            auto first = avg + diff / 2;
+            output.set(2 * x, y, first);
+            output.set(2 * x + 1, y, first - diff);
+        }
+        if (w1 > w2)
+            output.set(2 * w2, y, input_1.get(w2, y));
+    }
+    return {};
+}
+
+// H.6.2.3 -  Vertical inverse squeeze step
+static ErrorOr<void> vert_isqueeze(Channel const& input_1, Channel const& input_2, Channel& output)
+{
+    // "This step takes two input channels of sizes W × H1 and W × H2"
+    if (input_1.width() != input_2.width())
+        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
+    auto w = input_1.width();
+    auto h1 = input_1.height();
+    auto h2 = input_2.height();
+
+    // "Either H1 == H2 or H1 == H2 + 1."
+    if (h1 != h2 && h1 != h2 + 1)
+        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
+
+    // "output channel of size W × (H1 + H2)."
+    if ((h1 + h2) != output.height() || w != output.width())
+        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
+
+    for (u32 y = 0; y < h2; y++) {
+        for (u32 x = 0; x < w; x++) {
+            auto avg = input_1.get(x, y);
+            auto residu = input_2.get(x, y);
+            auto next_avg = (y + 1 < h1 ? input_1.get(x, y + 1) : avg);
+            auto top = (y > 0 ? output.get(x, (y << 1) - 1) : avg);
+            auto diff = residu + tendency(top, avg, next_avg);
+            auto first = avg + diff / 2;
+            output.set(x, 2 * y, first);
+            output.set(x, 2 * y + 1, first - diff);
+        }
+    }
+    if (h1 > h2) {
+        for (u32 x = 0; x < w; x++)
+            output.set(x, 2 * h2, input_1.get(x, h2));
+    }
+    return {};
+}
+
+static ErrorOr<void> apply_squeeze(
+    Vector<Channel>& channel,
+    TransformInfo const& transformation)
+{
+    auto const& sp = transformation.sp;
+    for (i64 i = sp.size() - 1; i >= 0; i--) {
+        auto begin = transformation.sp[i].begin_c;
+        auto end = begin + transformation.sp[i].num_c - 1;
+
+        auto r = sp[i].in_place ? end + 1 : channel.size() + begin - end - 1;
+        for (u32 c = begin; c <= end; c++) {
+            Optional<Channel> output;
+            if (sp[i].horizontal) {
+                output = TRY(channel[c].copy(IntSize(channel[c].width() + channel[r].width(), channel[c].height())));
+                TRY(horiz_isqueeze(channel[c], channel[r], *output));
+            } else {
+                output = TRY(channel[c].copy(IntSize(channel[c].width(), channel[c].height() + channel[r].height())));
+                TRY(vert_isqueeze(channel[c], channel[r], *output));
+            }
+            channel[c] = output.release_value();
+            /* Remove the channel with index r */
+            channel.remove(r);
+        }
+    }
+    return {};
+}
+
 static ErrorOr<void> apply_transformation(
     Vector<Channel>& channels,
     TransformInfo const& transformation,
@@ -2095,7 +2214,7 @@ static ErrorOr<void> apply_transformation(
     case TransformInfo::TransformId::kPalette:
         return apply_palette(channels, transformation, bit_depth, wp_header);
     case TransformInfo::TransformId::kSqueeze:
-        return Error::from_string_literal("JPEGXLLoader: Unimplemented transformation");
+        return apply_squeeze(channels, transformation);
     default:
         VERIFY_NOT_REACHED();
     }

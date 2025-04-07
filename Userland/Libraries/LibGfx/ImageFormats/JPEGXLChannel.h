@@ -41,15 +41,29 @@ public:
         return channel;
     }
 
-    ErrorOr<Channel> copy() const
+    ErrorOr<Channel> copy(Optional<IntSize> destination_size = {}) const
     {
         Channel other;
-        other.m_width = m_width;
-        other.m_height = m_height;
+
+        if (destination_size.has_value()) {
+            VERIFY(static_cast<u32>(destination_size->width()) >= m_width);
+            VERIFY(static_cast<u32>(destination_size->height()) >= m_height);
+            other.m_width = destination_size->width();
+            other.m_height = destination_size->height();
+        } else {
+            other.m_width = m_width;
+            other.m_height = m_height;
+        }
         other.m_hshift = m_hshift;
         other.m_vshift = m_vshift;
         other.m_decoded = m_decoded;
-        TRY(other.m_pixels.try_extend(m_pixels));
+
+        TRY(other.m_pixels.try_resize(other.m_width * other.m_height));
+        for (u32 y {}; y < m_height; ++y) {
+            for (u32 x {}; x < m_width; ++x)
+                other.set(x, y, get(x, y));
+        }
+
         return other;
     }
 
