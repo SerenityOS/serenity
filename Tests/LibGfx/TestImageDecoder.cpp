@@ -7,6 +7,7 @@
 
 #include <AK/ByteString.h>
 #include <LibCore/MappedFile.h>
+#include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ImageFormats/BMPLoader.h>
 #include <LibGfx/ImageFormats/DDSLoader.h>
 #include <LibGfx/ImageFormats/GIFLoader.h>
@@ -2142,8 +2143,13 @@ TEST_CASE(test_jxl_icc)
     auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jxl/icc.jxl"sv)));
     EXPECT(Gfx::JPEGXLImageDecoderPlugin::sniff(file->bytes()));
     auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEGXLImageDecoderPlugin::create(file->bytes()));
-    EXPECT(TRY_OR_FAIL(plugin_decoder->icc_data()).has_value());
-    EXPECT_EQ(TRY_OR_FAIL(plugin_decoder->icc_data()).value().size(), 2644u);
+    auto icc_data = TRY_OR_FAIL(plugin_decoder->icc_data());
+    EXPECT(icc_data.has_value());
+    EXPECT_EQ(icc_data->size(), 2644u);
+
+    auto profile = TRY_OR_FAIL(Gfx::ICC::Profile::try_load_from_externally_owned_memory(*icc_data));
+    EXPECT(profile->is_v4());
+    EXPECT(profile->primary_platform() == Gfx::ICC::PrimaryPlatform::Apple);
 
     verify_checkerboard(*plugin_decoder);
 }
