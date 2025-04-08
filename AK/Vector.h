@@ -513,8 +513,7 @@ public:
     ErrorOr<void> try_insert(size_t index, U&& value)
     requires(CanBePlacedInsideVector<U>)
     {
-        if (index > size())
-            return Error::from_errno(EINVAL);
+        VERIFY(index <= size());
         if (index == size())
             return try_append(forward<U>(value));
         TRY(try_grow_capacity(size() + 1));
