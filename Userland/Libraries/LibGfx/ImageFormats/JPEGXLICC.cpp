@@ -304,9 +304,12 @@ ErrorOr<void> read_icc_main_content(ConstrainedStream& command_stream, Stream& d
                 u8 const N = order + 1;
                 Array<u32, 3> prev {};
                 for (u8 j = 0; j < N; ++j) {
+                    // "read u(width * 8) from the output ICC profile starting from
+                    //  (stride * (j + 1)) bytes before the current output size,
+                    //  interpreted as a big-endian unsigned integer of width bytes"
                     Array<u8, 4> bytes {};
                     for (u8 k = 0; k < width; ++k)
-                        bytes[4 - width + k] = out[stride * (j + 1) + k];
+                        bytes[4 - width + k] = out[out.size() - stride * (j + 1) + k];
                     prev[j] = *bit_cast<BigEndian<u32> const*>(bytes.data());
                 }
 
