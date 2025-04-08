@@ -307,7 +307,7 @@ ErrorOr<void> read_icc_main_content(ConstrainedStream& command_stream, Stream& d
                     Array<u8, 4> bytes {};
                     for (u8 k = 0; k < width; ++k)
                         bytes[4 - width + k] = out[stride * (j + 1) + k];
-                    prev[j] = BigEndian { *bit_cast<u32*>(bytes.data()) };
+                    prev[j] = *bit_cast<BigEndian<u32> const*>(bytes.data());
                 }
 
                 u32 p;
