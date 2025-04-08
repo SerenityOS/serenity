@@ -1463,7 +1463,7 @@ struct ModularData {
                 auto original_dimensions = channel_infos[tr.begin_c];
                 channel_infos.remove(tr.begin_c, tr.num_c);
                 TRY(channel_infos.try_insert(tr.begin_c, original_dimensions));
-                TRY(channel_infos.try_prepend({ .width = tr.nb_colours, .height = tr.num_c }));
+                TRY(channel_infos.try_prepend({ .width = tr.nb_colours, .height = tr.num_c, .hshift = -1, .vshift = -1 }));
 
                 if (tr.begin_c < nb_meta_channels)
                     nb_meta_channels += 2 - tr.begin_c;
