@@ -13,8 +13,6 @@ You must be willing to wipe your disk's contents to allow for writing the Sereni
 
 At present there is no real GPU support so don't expect OpenGL, Vulkan nor accelerated video playback and encoding support. Serenity currently relies upon the multiboot or EFI GOP framebuffer on real hardware. There is no WiFi support and the network card chipsets that are currently supported: Intel e1000, Intel e1000e and Realtek 8168. The e1000 driver has only been tested with qemu and VirtualBox although it may work with NICs such as those using the Intel 82545XX, 82540XX, 82546XX or similar chipsets. Supported sound cards are Intel AC'97 and Intel HDA PCI devices.
 
-For more details on known working hardware see the [SerenityOS Hardware Compatibility List](HardwareCompatibility.md).
-
 ## Creating a Serenity GRUB disk image
 
 Before creating a Serenity disk image, you need to build the OS as described in the [SerenityOS build instructions](BuildInstructions.md). Follow those instructions up to and including running **ninja install** (`Meta/serenity.sh image <arch>`).
