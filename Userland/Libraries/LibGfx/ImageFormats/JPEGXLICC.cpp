@@ -97,9 +97,9 @@ ErrorOr<u64> read_varint(Stream& stream)
 ///
 
 /// E.4.3 - ICC header
-ErrorOr<void> read_icc_header(Stream& data_stream, ByteBuffer& out)
+ErrorOr<void> read_icc_header(Stream& data_stream, u32 output_size, ByteBuffer& out)
 {
-    u8 const header_size = min(128u, out.capacity());
+    u8 const header_size = min(128u, output_size);
 
     for (u8 i = 0; i < header_size; ++i) {
         auto const e = TRY(data_stream.read_value<u8>());
@@ -108,7 +108,7 @@ ErrorOr<void> read_icc_header(Stream& data_stream, ByteBuffer& out)
         if (i == 0 || i == 1 || i == 2 || i == 3) {
             // 'output_size[i]' means byte i of output_size encoded as an
             // unsigned 32-bit integer in big endian order
-            BigEndian const output_size_as_be { static_cast<u32>(out.capacity()) };
+            BigEndian const output_size_as_be { static_cast<u32>(output_size) };
             p = bit_cast<u8 const*>(&output_size_as_be)[i];
         } else if (i == 8) {
             p = 4;
@@ -365,7 +365,7 @@ ErrorOr<ByteBuffer> read_icc(LittleEndianInputBitStream& stream)
     ByteBuffer out;
     TRY(out.try_ensure_capacity(output_size));
 
-    TRY(read_icc_header(data_stream, out));
+    TRY(read_icc_header(data_stream, output_size, out));
 
     if (output_size <= 128)
         return out;
