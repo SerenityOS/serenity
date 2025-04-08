@@ -220,7 +220,7 @@ ErrorOr<void> read_tag_list(ConstrainedStream& command_stream, Stream& data_stre
         TRY(append_as_u32_be(out, tagstart));
         TRY(append_as_u32_be(out, tagsize));
         if (tagcode == 2) {
-            out.append("gTRX"sv.bytes());
+            out.append("gTRC"sv.bytes());
             TRY(append_as_u32_be(out, tagstart));
             TRY(append_as_u32_be(out, tagsize));
 
