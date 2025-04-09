@@ -102,7 +102,14 @@ public:
     [[nodiscard]] bool ends_with(char) const;
     [[nodiscard]] bool matches(StringView mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
     [[nodiscard]] bool matches(StringView mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
-    [[nodiscard]] bool contains(char) const;
+    [[nodiscard]] constexpr bool contains(char needle) const
+    {
+        for (char current : *this) {
+            if (current == needle)
+                return true;
+        }
+        return false;
+    }
     [[nodiscard]] bool contains(u32) const;
     [[nodiscard]] bool contains(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool equals_ignoring_ascii_case(StringView) const;

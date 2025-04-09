@@ -172,15 +172,6 @@ bool StringView::matches(StringView mask, CaseSensitivity case_sensitivity) cons
     return StringUtils::matches(*this, mask, case_sensitivity);
 }
 
-bool StringView::contains(char needle) const
-{
-    for (char current : *this) {
-        if (current == needle)
-            return true;
-    }
-    return false;
-}
-
 bool StringView::contains(u32 needle) const
 {
     // A code point should be at most four UTF-8 bytes, which easily fits into StringBuilder's inline-buffer.
