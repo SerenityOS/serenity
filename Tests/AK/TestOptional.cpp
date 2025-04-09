@@ -360,3 +360,5 @@ consteval bool test_constexpr()
     return true;
 }
 static_assert(test_constexpr());
+
+static_assert(!(Optional<int> { 1 } = {}).has_value(), "Assigning a `{}` should clear the Optional, even for scalar types^^");

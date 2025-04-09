@@ -129,6 +129,8 @@ public:
     // Note: The MoveConstructible only versions are to allow for non-move assignable types,
     //       Such as types containing a reference, as move assigning them into an Optional
     //       still makes sense
+    // Note: The Value versions are not allowing scalar types, as those would mess with the `= {}`
+    //       clearing pattern.
 
     Optional& operator=(Optional&& other)
     requires(!IsMoveConstructible<T> || !IsDestructible<T>)
@@ -159,6 +161,36 @@ public:
         m_has_value = other.m_has_value;
         if (other.has_value())
             construct_at<RemoveConst<T>>(&m_storage, other.release_value());
+
+        return *this;
+    }
+
+    template<class U = T>
+    requires(
+        !OneOf<RemoveCVReference<U>, Optional, OptionalNone>
+        && !(IsSame<U, T> && IsScalar<U>))
+    ALWAYS_INLINE constexpr Optional<T>& operator=(U&& value)
+    requires(requires(T& t, U&& u) { t = forward<U>(u); } && IsConstructible<T, U &&>)
+    {
+        if (m_has_value)
+            m_storage = forward<U>(value);
+        else
+            construct_at<RemoveConst<T>>(&m_storage, forward<U>(value));
+        m_has_value = true;
+        return *this;
+    }
+    template<class U = T>
+    requires(
+        !OneOf<RemoveCVReference<U>, Optional, OptionalNone>
+        && !(IsSame<U, T> && IsScalar<U>))
+    ALWAYS_INLINE constexpr Optional<T>& operator=(U&& value)
+    requires(!(requires(T& t, U&& u) { t = forward<U>(u); })
+        && IsConstructible<T, U &&>)
+    {
+        // Note: This one is needed, as it is a common pattern to assign to an Optional to set or replace it's contents
+        clear();
+        construct_at<RemoveConst<T>>(&m_storage, forward<U>(value));
+        m_has_value = true;
         return *this;
     }
 
