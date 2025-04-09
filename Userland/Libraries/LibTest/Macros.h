@@ -46,6 +46,14 @@ u64 randomized_runs();
         }                                                                                                     \
     } while (false)
 
+// Performs both run-time EXPECT_EQ and compile-time static_assert.
+// This also ensures that both a and b are constant expressions (e.g. usable in constexpr/consteval contexts).
+#define EXPECT_EQ_AND_STATIC_ASSERT(a, b) \
+    do {                                  \
+        static_assert(a == b);            \
+        EXPECT_EQ(a, b);                  \
+    } while (false)
+
 #define EXPECT_EQ_TRUTH(a, b)                                                                                                 \
     do {                                                                                                                      \
         auto lhs = (a);                                                                                                       \
@@ -93,6 +101,12 @@ u64 randomized_runs();
                 ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT({}) failed", __FILE__, __LINE__, #x); \
             ::Test::set_current_test_result(::Test::TestResult::Failed);                                 \
         }                                                                                                \
+    } while (false)
+
+#define EXPECT_AND_STATIC_ASSERT(x) \
+    do {                            \
+        static_assert(x);           \
+        EXPECT(x);                  \
     } while (false)
 
 #define EXPECT_APPROXIMATE_WITH_ERROR(a, b, err)                                                                \
