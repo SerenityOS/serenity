@@ -80,10 +80,8 @@ public:
 
     MoveCounter& operator=(MoveCounter&& other)
     {
-        if (this != &other) {
-            this->~MoveCounter();
-            new (this) MoveCounter(move(other));
-        }
+        if (this != &other)
+            m_move_count = exchange(other.m_move_count, 0) + 1;
         return *this;
     }
 
