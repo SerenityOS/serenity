@@ -399,6 +399,22 @@ static ErrorOr<ToneMapping> read_tone_mapping(LittleEndianInputBitStream& stream
 }
 
 struct OpsinInverseMatrix {
+    f32 inv_mat00 = 11.031566901960783;
+    f32 inv_mat01 = -9.866943921568629;
+    f32 inv_mat02 = -0.16462299647058826;
+    f32 inv_mat10 = -3.254147380392157;
+    f32 inv_mat11 = 4.418770392156863;
+    f32 inv_mat12 = -0.16462299647058826;
+    f32 inv_mat20 = -3.6588512862745097;
+    f32 inv_mat21 = 2.7129230470588235;
+    f32 inv_mat22 = 1.9459282392156863;
+    f32 opsin_bias0 = -0.0037930732552754493;
+    f32 opsin_bias1 = -0.0037930732552754493;
+    f32 opsin_bias2 = -0.0037930732552754493;
+    f32 quant_bias0 = 1 - 0.05465007330715401;
+    f32 quant_bias1 = 1 - 0.07005449891748593;
+    f32 quant_bias2 = 1 - 0.049935103337343655;
+    f32 quant_bias_numerator = 0.145;
 };
 
 static ErrorOr<OpsinInverseMatrix> read_opsin_inverse_matrix(LittleEndianInputBitStream&)
