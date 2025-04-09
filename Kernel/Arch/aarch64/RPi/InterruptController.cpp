@@ -76,7 +76,7 @@ static constinit Array const compatibles_array = {
     "brcm,bcm2836-armctrl-ic"sv,
 };
 
-DEVICETREE_DRIVER(BCM2836InterruptControllerDriver, compatibles_array);
+EARLY_DEVICETREE_DRIVER(BCM2836InterruptControllerDriver, compatibles_array);
 
 // https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm2835-armctrl-ic.txt
 ErrorOr<void> BCM2836InterruptControllerDriver::probe(DeviceTree::Device const& device, StringView) const

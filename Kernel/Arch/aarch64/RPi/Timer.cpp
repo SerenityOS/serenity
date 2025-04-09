@@ -189,7 +189,7 @@ static constinit Array const compatibles_array = {
     "brcm,bcm2835-system-timer"sv,
 };
 
-DEVICETREE_DRIVER(BCM2835TimerDriver, compatibles_array);
+EARLY_DEVICETREE_DRIVER(BCM2835TimerDriver, compatibles_array);
 
 // https://www.kernel.org/doc/Documentation/devicetree/bindings/timer/brcm,bcm2835-system-timer.txt
 ErrorOr<void> BCM2835TimerDriver::probe(DeviceTree::Device const& device, StringView) const
