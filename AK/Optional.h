@@ -135,7 +135,9 @@ public:
     requires(!IsMoveConstructible<T> || !IsDestructible<T>)
     = delete;
     ALWAYS_INLINE constexpr Optional& operator=(Optional&& other)
-    requires(IsMoveAssignable<T> && IsMoveConstructible<T> && !IsTriviallyMoveAssignable<T>)
+    requires(
+        IsMoveAssignable<T> && IsMoveConstructible<T>
+        && (!IsTriviallyMoveAssignable<T> || !IsTriviallyMoveConstructible<T> || !IsTriviallyDestructible<T>))
     {
         if (this == &other)
             return *this;
@@ -153,7 +155,9 @@ public:
     }
 
     ALWAYS_INLINE constexpr Optional& operator=(Optional&& other)
-    requires(IsMoveConstructible<T> && !IsMoveAssignable<T>)
+    requires(
+        IsMoveConstructible<T> && !IsMoveAssignable<T>
+        && (!IsTriviallyMoveConstructible<T> || !IsTriviallyDestructible<T>))
     {
         clear();
 
