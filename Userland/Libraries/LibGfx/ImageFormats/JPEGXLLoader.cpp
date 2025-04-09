@@ -3192,7 +3192,8 @@ static ErrorOr<void> apply_image_features(Span<Frame> previous_frames, Frame& fr
 ///
 
 /// L.2 - XYB + L.3 - YCbCr
-static void ycbcr_to_rgb(Image& image, u8 bits_per_sample)
+template<typename F>
+static void for_each_pixel_of_color_channels(Image& image, F color_conversion)
 {
     auto& channels = image.channels();
     VERIFY(channels.size() >= 3);
@@ -3200,18 +3201,27 @@ static void ycbcr_to_rgb(Image& image, u8 bits_per_sample)
     VERIFY(channels[0].width() == channels[1].width() && channels[1].width() == channels[2].width());
     VERIFY(channels[0].height() == channels[1].height() && channels[1].height() == channels[2].height());
 
-    auto const half_range_offset = (1 << bits_per_sample) / 2;
     for (u32 y = 0; y < channels[0].height(); ++y) {
         for (u32 x = 0; x < channels[0].width(); ++x) {
-            auto const cb = channels[0].get(x, y);
-            auto const luma = channels[1].get(x, y);
-            auto const cr = channels[2].get(x, y);
-
-            channels[0].set(x, y, luma + half_range_offset + 1.402 * cr);
-            channels[1].set(x, y, luma + half_range_offset - 0.344136 * cb - 0.714136 * cr);
-            channels[2].set(x, y, luma + half_range_offset + 1.772 * cb);
+            color_conversion(channels[0].get(x, y), channels[1].get(x, y), channels[2].get(x, y));
         }
     }
+}
+
+static void ycbcr_to_rgb(Image& image, u8 bits_per_sample)
+{
+    auto const half_range_offset = (1 << bits_per_sample) / 2;
+    auto color_conversion = [half_range_offset](i32& c1, i32& c2, i32& c3) {
+        auto const cb = c1;
+        auto const luma = c2;
+        auto const cr = c3;
+
+        c1 = luma + half_range_offset + 1.402 * cr;
+        c2 = luma + half_range_offset - 0.344136 * cb - 0.714136 * cr;
+        c3 = luma + half_range_offset + 1.772 * cb;
+    };
+
+    for_each_pixel_of_color_channels(image, move(color_conversion));
 }
 
 static void apply_colour_transformation(Frame& frame, ImageMetadata const& metadata)
