@@ -125,16 +125,36 @@ public:
         if (other.has_value())
             construct_at<RemoveConst<T>>(&m_storage, other.release_value());
     }
-    // Note: Checking for Move-Constructible to allow for reference members in T
+
+    // Note: The MoveConstructible only versions are to allow for non-move assignable types,
+    //       such as types containing a reference.
+    //       Move assigning into an Optional still makes sense in these cases,
+    //       as to replace its contents or to allow for find-like patterns through iterator helpers.
+
     Optional& operator=(Optional&& other)
     requires(!IsMoveConstructible<T> || !IsDestructible<T>)
     = delete;
     ALWAYS_INLINE constexpr Optional& operator=(Optional&& other)
-    requires(IsMoveConstructible<T> && !IsTriviallyMoveAssignable<T>)
+    requires(IsMoveAssignable<T> && IsMoveConstructible<T> && !IsTriviallyMoveAssignable<T>)
     {
         if (this == &other)
             return *this;
 
+        if (m_has_value && other.m_has_value) {
+            value() = other.release_value();
+        } else if (m_has_value) {
+            value().~T();
+            m_has_value = false;
+        } else if (other.m_has_value) {
+            construct_at<RemoveConst<T>>(&m_storage, other.release_value());
+            m_has_value = true;
+        }
+        return *this;
+    }
+
+    ALWAYS_INLINE constexpr Optional& operator=(Optional&& other)
+    requires(IsMoveConstructible<T> && !IsMoveAssignable<T>)
+    {
         clear();
 
         m_has_value = other.m_has_value;
