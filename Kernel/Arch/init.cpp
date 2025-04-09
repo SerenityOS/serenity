@@ -321,6 +321,10 @@ void init_stage2(void*)
     }
 #endif
 
+#if ARCH(AARCH64) || ARCH(RISCV64)
+    MUST(DeviceTree::Management::the().probe_drivers(DeviceTree::Driver::ProbeStage::Regular));
+#endif
+
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
     PCI::initialize();
     if (!PCI::Access::is_disabled()) {

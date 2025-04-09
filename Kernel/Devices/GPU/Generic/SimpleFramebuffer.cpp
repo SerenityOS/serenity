@@ -21,7 +21,7 @@ static constinit Array const compatibles_array = {
     "simple-framebuffer"sv,
 };
 
-DEVICETREE_DRIVER(SimpleFramebufferDriver, compatibles_array);
+EARLY_DEVICETREE_DRIVER(SimpleFramebufferDriver, compatibles_array);
 
 // https://www.kernel.org/doc/Documentation/devicetree/bindings/display/simple-framebuffer.yaml
 ErrorOr<void> SimpleFramebufferDriver::probe(DeviceTree::Device const& device, StringView) const

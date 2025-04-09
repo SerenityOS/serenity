@@ -21,6 +21,8 @@ public:
 
     ErrorOr<void> scan_node_for_devices(::DeviceTree::Node const& node);
 
+    ErrorOr<void> probe_drivers(Driver::ProbeStage);
+
 private:
     static bool attach_device_to_driver(Device&, Driver const&, StringView compatible_entry);
 

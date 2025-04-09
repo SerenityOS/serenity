@@ -184,7 +184,7 @@ static constinit Array const compatibles_array = {
     "arm,cortex-a15-gic"sv,
 };
 
-DEVICETREE_DRIVER(GICDriver, compatibles_array);
+EARLY_DEVICETREE_DRIVER(GICDriver, compatibles_array);
 
 // https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/arm,gic.yaml
 ErrorOr<void> GICDriver::probe(DeviceTree::Device const& device, StringView) const
