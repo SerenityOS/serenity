@@ -8,11 +8,10 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/StringView.h>
+#include <Kernel/DriverInitTable.h>
 #include <Kernel/Firmware/DeviceTree/Device.h>
 
 namespace Kernel::DeviceTree {
-
-using DriverInitFunction = void (*)();
 
 class Driver {
     AK_MAKE_NONCOPYABLE(Driver);
@@ -53,6 +52,6 @@ private:
         MUST(Kernel::DeviceTree::Management::register_driver(move(driver)));                                       \
     }                                                                                                              \
                                                                                                                    \
-    static Kernel::DeviceTree::DriverInitFunction driver_init_function_ptr_##driver_name [[gnu::section(".driver_init"), gnu::used]] = &driver_name::init
+    DRIVER_INIT_FUNCTION(driver_name, driver_name::init)
 
 }
