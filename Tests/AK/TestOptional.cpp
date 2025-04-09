@@ -332,6 +332,33 @@ TEST_CASE(uninitialized_constructor)
     EXPECT(!opt.value().m_default_constructed);
 }
 
+TEST_CASE(non_trivial_destructor_is_called_on_move_assignment)
+{
+    static int foo_destruction_count = 0;
+
+    struct Foo {
+        Foo() { }
+        Foo(Foo&&) = default;
+        ~Foo()
+        {
+            ++foo_destruction_count;
+        }
+
+        Foo& operator=(Foo&&) = default;
+    };
+    static_assert(!IsTriviallyMoveAssignable<Optional<Foo>>);
+
+    Optional<Foo> foo = Foo {}; // 1. The immediate value needs to be destroyed
+    Optional<Foo> foo2;
+    foo = AK::move(foo2); // 2. The move releases the value, which destroys the moved-from stored value
+
+    EXPECT_EQ(foo_destruction_count, 2);
+
+    // As Optional<Foo> does not trivially move, moved-from values are empty
+    // Ignoring the fact that we are touching a moved from value here
+    EXPECT_EQ(foo.has_value(), false);
+}
+
 consteval bool test_constexpr()
 {
     Optional<int> none;
