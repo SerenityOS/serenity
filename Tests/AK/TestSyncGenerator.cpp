@@ -106,9 +106,7 @@ TEST_CASE(move_count)
 {
     auto gen = generate2();
     auto result = gen.next();
-    // FIXME: Get this back to down to 3 after the constexpr Optional change, then:
-    // FIXME: There is no reason this cannot be 2 but for a missing `Optional<T>::operator=(T&&)` overload.
-    EXPECT_EQ(result.move_count(), 4);
-    EXPECT_EQ(gen.next().move_count(), 4);
+    EXPECT_EQ(result.move_count(), 2);
+    EXPECT_EQ(gen.next().move_count(), 2);
     EXPECT(!gen.has_next());
 }
