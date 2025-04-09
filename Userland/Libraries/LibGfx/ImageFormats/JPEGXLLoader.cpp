@@ -3240,13 +3240,64 @@ static void ycbcr_to_rgb(Image& image, u8 bits_per_sample)
     for_each_pixel_of_color_channels(image, move(color_conversion));
 }
 
+// L.2.2  Inverse XYB transform
+static void xyb_to_rgb(Frame& frame, ImageMetadata const& metadata)
+{
+    // "X, Y, B samples are converted to an RGB colour encoding as specified in this subclause,
+    // in which oim denotes metadata.opsin_inverse_matrix."
+    auto const& oim = metadata.opsin_inverse_matrix;
+    f32 to_int = (1 << metadata.bit_depth.bits_per_sample) - 1;
+    auto linear_to_srgb = [](f32 c) {
+        return c >= 0.0031308f ? 1.055f * pow(c, 0.4166666f) - 0.055f : 12.92f * c;
+    };
+    auto color_conversion = [&](i32& c1, i32& c2, i32& c3) {
+        f32 const y_ = c1;
+        f32 const x_ = c2;
+        f32 const b_ = c3;
+
+        f32 y {}, x {}, b {};
+        if (frame.frame_header.encoding == Encoding::kModular) {
+            y = y_ * frame.lf_global.lf_dequant.m_y_lf_unscaled;
+            x = x_ * frame.lf_global.lf_dequant.m_x_lf_unscaled;
+            b = (b_ + y_) * frame.lf_global.lf_dequant.m_b_lf_unscaled;
+        } else {
+            y = y_;
+            x = x_;
+            b = b_;
+        }
+
+        f32 Lgamma = y + x;
+        f32 Mgamma = y - x;
+        f32 Sgamma = b;
+        f32 itscale = 255 / metadata.tone_mapping.intensity_target;
+        f32 Lmix = (powf(Lgamma - cbrt(oim.opsin_bias0), 3) + oim.opsin_bias0) * itscale;
+        f32 Mmix = (powf(Mgamma - cbrt(oim.opsin_bias1), 3) + oim.opsin_bias1) * itscale;
+        f32 Smix = (powf(Sgamma - cbrt(oim.opsin_bias2), 3) + oim.opsin_bias2) * itscale;
+        f32 R = oim.inv_mat00 * Lmix + oim.inv_mat01 * Mmix + oim.inv_mat02 * Smix;
+        f32 G = oim.inv_mat10 * Lmix + oim.inv_mat11 * Mmix + oim.inv_mat12 * Smix;
+        f32 B = oim.inv_mat20 * Lmix + oim.inv_mat21 * Mmix + oim.inv_mat22 * Smix;
+
+        // "The resulting RGB samples correspond to sRGB primaries and a D65 white point, and the transfer function is linear."
+        // We assume sRGB everywhere, so let's apply the transfer function here.
+        R = linear_to_srgb(R);
+        G = linear_to_srgb(G);
+        B = linear_to_srgb(B);
+
+        c1 = round_to<i32>(R * to_int);
+        c2 = round_to<i32>(G * to_int);
+        c3 = round_to<i32>(B * to_int);
+    };
+
+    for_each_pixel_of_color_channels(*frame.image, move(color_conversion));
+}
+
 static void apply_colour_transformation(Frame& frame, ImageMetadata const& metadata)
 {
     if (frame.frame_header.do_YCbCr)
         ycbcr_to_rgb(*frame.image, metadata.bit_depth.bits_per_sample);
 
     if (metadata.xyb_encoded) {
-        TODO();
+        xyb_to_rgb(frame, metadata);
     } else {
         // FIXME: Do a proper color transformation with metadata.colour_encoding
     }
