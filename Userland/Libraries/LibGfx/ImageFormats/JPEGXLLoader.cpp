@@ -936,9 +936,9 @@ static ErrorOr<TOC> read_toc(LittleEndianInputBitStream& stream, FrameHeader con
 
 /// G.1.2 - LF channel dequantization weights
 struct LfChannelDequantization {
-    float m_x_lf_unscaled { 4096 };
-    float m_y_lf_unscaled { 512 };
-    float m_b_lf_unscaled { 256 };
+    f32 m_x_lf_unscaled { 1. / (32 * 128) };
+    f32 m_y_lf_unscaled { 1. / (4 * 128) };
+    f32 m_b_lf_unscaled { 1. / (2 * 128) };
 };
 
 static ErrorOr<LfChannelDequantization> read_lf_channel_dequantization(LittleEndianInputBitStream& stream)
@@ -948,9 +948,9 @@ static ErrorOr<LfChannelDequantization> read_lf_channel_dequantization(LittleEnd
     auto const all_default = TRY(stream.read_bit());
 
     if (!all_default) {
-        lf_channel_dequantization.m_x_lf_unscaled = TRY(F16(stream));
-        lf_channel_dequantization.m_y_lf_unscaled = TRY(F16(stream));
-        lf_channel_dequantization.m_b_lf_unscaled = TRY(F16(stream));
+        lf_channel_dequantization.m_x_lf_unscaled = TRY(F16(stream)) / 128;
+        lf_channel_dequantization.m_y_lf_unscaled = TRY(F16(stream)) / 128;
+        lf_channel_dequantization.m_b_lf_unscaled = TRY(F16(stream)) / 128;
     }
 
     return lf_channel_dequantization;
