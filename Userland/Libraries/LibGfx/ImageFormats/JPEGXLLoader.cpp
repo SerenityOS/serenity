@@ -2299,7 +2299,13 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
         if (channel_min_shift < min_shift || channel_min_shift >= max_shift)
             continue;
 
-        TRY(channels_info.try_append(ChannelInfo::from_size(rect_for_group(channel, frame_header.group_dim(), group_index).size())));
+        auto rect_size = rect_for_group(channel, frame_header.group_dim(), group_index).size();
+        TRY(channels_info.try_append({
+            .width = static_cast<u32>(rect_size.width()),
+            .height = static_cast<u32>(rect_size.height()),
+            .hshift = channel.hshift(),
+            .vshift = channel.vshift(),
+        }));
         TRY(original_channels.try_append(channel));
     }
     if (channels_info.is_empty())
