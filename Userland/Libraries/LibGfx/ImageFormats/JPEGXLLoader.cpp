@@ -2234,20 +2234,23 @@ static ErrorOr<void> apply_transformation(
 /// G.3.2 - PassGroup
 static IntRect rect_for_group(Channel const& channel, u32 group_dim, u32 group_index)
 {
-    IntRect rect(0, 0, group_dim, group_dim);
+    u32 horizontal_group_dim = group_dim >> channel.hshift();
+    u32 vertical_group_dim = group_dim >> channel.vshift();
 
-    auto nb_groups_per_row = (channel.width() + group_dim - 1) / group_dim;
+    IntRect rect(0, 0, horizontal_group_dim, vertical_group_dim);
+
+    auto nb_groups_per_row = (channel.width() + horizontal_group_dim - 1) / horizontal_group_dim;
     auto group_x = group_index % nb_groups_per_row;
-    rect.set_x(group_x * group_dim);
-    if (group_x == nb_groups_per_row - 1) {
-        rect.set_width(channel.width() % group_dim);
+    rect.set_x(group_x * horizontal_group_dim);
+    if (group_x == nb_groups_per_row - 1 && channel.width() % horizontal_group_dim != 0) {
+        rect.set_width(channel.width() % horizontal_group_dim);
     }
 
-    auto nb_groups_per_column = (channel.height() + group_dim - 1) / group_dim;
+    auto nb_groups_per_column = (channel.height() + vertical_group_dim - 1) / vertical_group_dim;
     auto group_y = group_index / nb_groups_per_row;
-    rect.set_y(group_y * group_dim);
-    if (group_y == nb_groups_per_column - 1) {
-        rect.set_height(channel.height() % group_dim);
+    rect.set_y(group_y * vertical_group_dim);
+    if (group_y == nb_groups_per_column - 1 && channel.height() % vertical_group_dim != 0) {
+        rect.set_height(channel.height() % vertical_group_dim);
     }
 
     return rect;
