@@ -1424,14 +1424,12 @@ static void for_each_macroblock_component(JPEGLoadingContext const& context, Vec
     }
 }
 
-static void dequantize(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static void dequantize(JPEGLoadingContext const& context, Component const& component, i16* block_component)
 {
-    for_each_macroblock_component(context, macroblocks, [&context](Component const& component, auto* block_component) {
-        auto const& table = context.quantization_tables[component.quantization_table_id];
+    auto const& quantization_table = context.quantization_tables[component.quantization_table_id];
 
-        for (u32 k = 0; k < 64; k++)
-            block_component[k] *= table[k];
-    });
+    for (u32 k = 0; k < 64; k++)
+        block_component[k] *= quantization_table[k];
 }
 
 static void inverse_dct_8x8(i16* block_component)
@@ -1589,11 +1587,9 @@ static void inverse_dct_8x8(i16* block_component)
     }
 }
 
-static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+static void inverse_dct(JPEGLoadingContext const& context, i16* block_component)
 {
-    for_each_macroblock_component(context, macroblocks, [](Component const&, i16* block_component) {
-        inverse_dct_8x8(block_component);
-    });
+    inverse_dct_8x8(block_component);
 
     // F.2.1.5 - Inverse DCT (IDCT)
     auto const level_shift = 1 << (context.frame.precision - 1);
@@ -1605,10 +1601,9 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
             return static_cast<u8>(color);
         return static_cast<u8>(color >> 4);
     };
-    for_each_macroblock_component(context, macroblocks, [&](Component const&, i16* block_component) {
-        for (u8 i = 0; i < 64; ++i)
-            block_component[i] = clamp_to_8_bits(clamp(block_component[i] + level_shift, 0, max_value));
-    });
+
+    for (u8 i = 0; i < 64; ++i)
+        block_component[i] = clamp_to_8_bits(clamp(block_component[i] + level_shift, 0, max_value));
 }
 
 static void undo_subsampling(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
@@ -1953,8 +1948,10 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
 static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
 {
     auto macroblocks = TRY(construct_macroblocks(context));
-    dequantize(context, macroblocks);
-    inverse_dct(context, macroblocks);
+    for_each_macroblock_component(context, macroblocks, [&](Component const& component, i16* block_component) {
+        dequantize(context, component, block_component);
+        inverse_dct(context, block_component);
+    });
     undo_subsampling(context, macroblocks);
     TRY(handle_color_transform(context, macroblocks));
     if (context.components.size() == 4)
