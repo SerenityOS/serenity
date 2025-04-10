@@ -1191,6 +1191,11 @@ public:
                 };
 
                 auto const color = [&]() -> Color {
+                    if (metadata.number_of_color_channels() == 1) {
+                        auto gray = to_u8(m_channels[0].get(x, y));
+                        return { gray, gray, gray };
+                    }
+
                     if (!alpha_channel.has_value()) {
                         return { to_u8(m_channels[0].get(x, y)),
                             to_u8(m_channels[1].get(x, y)),
