@@ -1732,6 +1732,15 @@ static void ycck_to_cmyk(Vector<Macroblock>& macroblocks)
     }
 }
 
+static void grayscale_to_rgb(Vector<Macroblock>& macroblocks)
+{
+    for (auto& macroblock : macroblocks) {
+        for (u8 i = 0; i < 64; ++i) {
+            macroblock.g[i] = macroblock.y[i];
+            macroblock.b[i] = macroblock.y[i];
+        }
+    }
+}
 static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     // Note: This is non-standard but some encoder still add the App14 segment for grayscale images.
@@ -1768,12 +1777,8 @@ static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, V
     if (context.components.size() == 3)
         ycbcr_to_rgb(macroblocks);
 
-    if (context.components.size() == 1) {
-        // With Cb and Cr being equal to zero, this function assign the Y
-        // value (luminosity) to R, G and B. Providing a proper conversion
-        // from grayscale to RGB.
-        ycbcr_to_rgb(macroblocks);
-    }
+    if (context.components.size() == 1)
+        grayscale_to_rgb(macroblocks);
 
     return {};
 }
