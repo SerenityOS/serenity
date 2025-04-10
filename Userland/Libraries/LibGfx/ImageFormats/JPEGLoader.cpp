@@ -1402,27 +1402,36 @@ static ErrorOr<void> skip_segment(JPEGStream& stream)
     return {};
 }
 
-static void dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
+template<CallableAs<void, Component const&, i16*> F>
+static void for_each_macroblock_component(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks, F&& component_handler)
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
             for (u32 i = 0; i < context.components.size(); i++) {
                 auto const& component = context.components[i];
 
-                auto const& table = context.quantization_tables[component.quantization_table_id];
-
                 for (u32 vfactor_i = 0; vfactor_i < component.sampling_factors.vertical; vfactor_i++) {
                     for (u32 hfactor_i = 0; hfactor_i < component.sampling_factors.horizontal; hfactor_i++) {
                         u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                         Macroblock& block = macroblocks[macroblock_index];
                         auto* block_component = get_component(block, i);
-                        for (u32 k = 0; k < 64; k++)
-                            block_component[k] *= table[k];
+
+                        component_handler(component, block_component);
                     }
                 }
             }
         }
     }
+}
+
+static void dequantize(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+{
+    for_each_macroblock_component(context, macroblocks, [&context](Component const& component, auto* block_component) {
+        auto const& table = context.quantization_tables[component.quantization_table_id];
+
+        for (u32 k = 0; k < 64; k++)
+            block_component[k] *= table[k];
+    });
 }
 
 static void inverse_dct_8x8(i16* block_component)
@@ -1582,51 +1591,24 @@ static void inverse_dct_8x8(i16* block_component)
 
 static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
-            for (u32 component_i = 0; component_i < context.components.size(); component_i++) {
-                auto& component = context.components[component_i];
-                for (u8 vfactor_i = 0; vfactor_i < component.sampling_factors.vertical; vfactor_i++) {
-                    for (u8 hfactor_i = 0; hfactor_i < component.sampling_factors.horizontal; hfactor_i++) {
-                        u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
-                        Macroblock& block = macroblocks[macroblock_index];
-                        auto* block_component = get_component(block, component_i);
-                        inverse_dct_8x8(block_component);
-                    }
-                }
-            }
-        }
-    }
+    for_each_macroblock_component(context, macroblocks, [](Component const&, i16* block_component) {
+        inverse_dct_8x8(block_component);
+    });
 
     // F.2.1.5 - Inverse DCT (IDCT)
     auto const level_shift = 1 << (context.frame.precision - 1);
     auto const max_value = (1 << context.frame.precision) - 1;
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.sampling_factors.vertical) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.sampling_factors.horizontal) {
-            for (u8 vfactor_i = 0; vfactor_i < context.sampling_factors.vertical; ++vfactor_i) {
-                for (u8 hfactor_i = 0; hfactor_i < context.sampling_factors.horizontal; ++hfactor_i) {
-                    u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
-                    for (u8 i = 0; i < 8; ++i) {
-                        for (u8 j = 0; j < 8; ++j) {
-
-                            // FIXME: This just truncate all coefficients, it's an easy way to support (read hack)
-                            //        12 bits JPEGs without rewriting all color transformations.
-                            auto const clamp_to_8_bits = [&](u16 color) -> u8 {
-                                if (context.frame.precision == 8)
-                                    return static_cast<u8>(color);
-                                return static_cast<u8>(color >> 4);
-                            };
-
-                            macroblocks[mb_index].r[i * 8 + j] = clamp_to_8_bits(clamp(macroblocks[mb_index].r[i * 8 + j] + level_shift, 0, max_value));
-                            macroblocks[mb_index].g[i * 8 + j] = clamp_to_8_bits(clamp(macroblocks[mb_index].g[i * 8 + j] + level_shift, 0, max_value));
-                            macroblocks[mb_index].b[i * 8 + j] = clamp_to_8_bits(clamp(macroblocks[mb_index].b[i * 8 + j] + level_shift, 0, max_value));
-                            macroblocks[mb_index].k[i * 8 + j] = clamp_to_8_bits(clamp(macroblocks[mb_index].k[i * 8 + j] + level_shift, 0, max_value));
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // FIXME: This just truncate all coefficients, it's an easy way to support (read hack)
+    //        12 bits JPEGs without rewriting all color transformations.
+    auto const clamp_to_8_bits = [&](u16 color) -> u8 {
+        if (context.frame.precision == 8)
+            return static_cast<u8>(color);
+        return static_cast<u8>(color >> 4);
+    };
+    for_each_macroblock_component(context, macroblocks, [&](Component const&, i16* block_component) {
+        for (u8 i = 0; i < 64; ++i)
+            block_component[i] = clamp_to_8_bits(clamp(block_component[i] + level_shift, 0, max_value));
+    });
 }
 
 static void undo_subsampling(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
