@@ -585,7 +585,12 @@ static ErrorOr<RestorationFilter> read_restoration_filter(LittleEndianInputBitSt
         if (restoration_filter.gab) {
             restoration_filter.gab_custom = TRY(stream.read_bit());
             if (restoration_filter.gab_custom) {
-                return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
+                restoration_filter.gab_x_weight1 = TRY(F16(stream));
+                restoration_filter.gab_x_weight2 = TRY(F16(stream));
+                restoration_filter.gab_y_weight1 = TRY(F16(stream));
+                restoration_filter.gab_y_weight2 = TRY(F16(stream));
+                restoration_filter.gab_b_weight1 = TRY(F16(stream));
+                restoration_filter.gab_b_weight2 = TRY(F16(stream));
             }
         }
 
@@ -605,7 +610,7 @@ static ErrorOr<RestorationFilter> read_restoration_filter(LittleEndianInputBitSt
                 return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
 
             if (encoding == Encoding::kModular)
-                return Error::from_string_literal("JPEGXLLoader: Implement custom restoration filters");
+                restoration_filter.epf_sigma_for_modular = TRY(F16(stream));
         }
 
         restoration_filter.extensions = TRY(read_extensions(stream));
