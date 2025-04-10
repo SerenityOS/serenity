@@ -2518,6 +2518,17 @@ static u32 mirror_1d(i32 coord, u32 size)
 }
 ///
 
+/// J - Restoration filters
+// J.1  General
+static ErrorOr<void> apply_restoration_filters(Frame& frame)
+{
+    auto const& frame_header = frame.frame_header;
+    if (frame_header.restoration_filter.gab || frame_header.restoration_filter.epf_iters != 0)
+        dbgln("JPEGXLLoader: FIXME: Apply restoration filters");
+    return {};
+}
+///
+
 /// K - Image features
 static ErrorOr<void> apply_upsampling(Frame& frame, ImageMetadata const& metadata)
 {
@@ -2690,8 +2701,7 @@ public:
         auto frame = TRY(read_frame(m_stream, m_header, m_metadata));
         auto const& frame_header = frame.frame_header;
 
-        if (frame_header.restoration_filter.gab || frame_header.restoration_filter.epf_iters != 0)
-            TODO();
+        TRY(apply_restoration_filters(frame));
 
         TRY(apply_image_features(frame, m_metadata));
 
