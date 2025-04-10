@@ -4,7 +4,7 @@ version='6.4.0'
 workdir="qtsvg-everywhere-src-${version}"
 useconfigure='true'
 files=(
-    "https://download.qt.io/official_releases/qt/$(cut -d. -f1,2 <<< ${version})/${version}/submodules/qtsvg-everywhere-src-${version}.tar.xz#03fdae9437d074dcfa387dc1f2c6e7e14fea0f989bf7e1aa265fd35ffc2c5b25"
+    "https://download.qt.io/archive/qt/$(cut -d. -f1,2 <<< ${version})/${version}/submodules/qtsvg-everywhere-src-${version}.tar.xz#03fdae9437d074dcfa387dc1f2c6e7e14fea0f989bf7e1aa265fd35ffc2c5b25"
 )
 configopts=(
     '-GNinja'
