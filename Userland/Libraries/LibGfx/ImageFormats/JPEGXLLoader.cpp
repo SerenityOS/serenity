@@ -1729,13 +1729,15 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
     channels.fill_with(frame_size);
 
     global_modular.modular_data = TRY(read_modular_bitstream(stream,
-        { .channels_info = channels,
+        {
+            .channels_info = channels,
             .decoder = global_modular.decoder,
             .global_tree = global_modular.ma_tree,
             .group_dim = frame_header.group_dim(),
             .stream_index = 0,
             .apply_transformations = ModularOptions::ApplyTransformations::No,
-            .bit_depth = metadata.bit_depth.bits_per_sample }));
+            .bit_depth = metadata.bit_depth.bits_per_sample,
+        }));
 
     return global_modular;
 }
@@ -2091,13 +2093,15 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
     dbgln_if(JPEGXL_DEBUG, "Decoding pass {} for rectangle {}", pass_index, rect_for_group(original_channels[0], frame_header.group_dim(), group_index));
 
     auto decoded = TRY(read_modular_bitstream(stream,
-        { .channels_info = channels_info,
+        {
+            .channels_info = channels_info,
             .decoder = global_modular.decoder,
             .global_tree = global_modular.ma_tree,
             .group_dim = frame_header.group_dim(),
             .stream_index = stream_index,
             .apply_transformations = ModularOptions::ApplyTransformations::Yes,
-            .bit_depth = modular_options.bit_depth }));
+            .bit_depth = modular_options.bit_depth,
+        }));
 
     // The decoded modular group data is then copied into the partially decoded GlobalModular image in the corresponding positions.
     for (u32 i = 0; i < original_channels.size(); ++i) {
@@ -2222,11 +2226,13 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
         // From H.4.1, ModularGroup: 1 + 3 * num_lf_groups + 17 + num_groups * pass index + group index
         u32 stream_index = 1 + 3 * frame.num_lf_groups + 17;
         TRY(read_pass_group(section_stream,
-            { .global_modular = frame.lf_global.gmodular,
+            {
+                .global_modular = frame.lf_global.gmodular,
                 .frame_header = frame.frame_header,
                 .group_index = 0,
                 .pass_index = 0,
-                .stream_index = stream_index },
+                .stream_index = stream_index,
+            },
             { .bit_depth = bits_per_sample }));
     } else {
         {
@@ -2251,11 +2257,13 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
                 // From H.4.1, ModularGroup: 1 + 3 * num_lf_groups + 17 + num_groups * pass index + group index
                 u32 stream_index = 1 + 3 * frame.num_lf_groups + 17 + frame.num_groups * pass_index + group_index;
                 TRY(read_pass_group(pass_stream,
-                    { .global_modular = frame.lf_global.gmodular,
+                    {
+                        .global_modular = frame.lf_global.gmodular,
                         .frame_header = frame.frame_header,
                         .group_index = group_index,
                         .pass_index = pass_index,
-                        .stream_index = stream_index },
+                        .stream_index = stream_index,
+                    },
                     { .bit_depth = bits_per_sample }));
             }
         }
