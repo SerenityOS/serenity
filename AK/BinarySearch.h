@@ -41,28 +41,19 @@ constexpr auto binary_search(
 
     size_t low = 0;
     size_t high = haystack.size() - 1;
-    while (low <= high) {
+    while (low != high) {
         size_t middle = low + (high - low) / 2;
-
         int comparison = comparator(needle, haystack[middle]);
-
-        if (comparison < 0)
-            if (middle != 0)
-                high = middle - 1;
-            else
-                break;
-        else if (comparison > 0)
+        if (comparison <= 0)
+            high = middle;
+        else
             low = middle + 1;
-        else {
-            if (nearby_index)
-                *nearby_index = middle;
-            return &haystack[middle];
-        }
     }
 
     if (nearby_index)
-        *nearby_index = min(low, high);
-
+        *nearby_index = high;
+    if (comparator(needle, haystack[high]) == 0)
+        return &haystack[high];
     return nullptr;
 }
 

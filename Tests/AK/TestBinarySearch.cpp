@@ -120,6 +120,19 @@ TEST_CASE(unsigned_to_signed_regression)
     EXPECT_EQ(nearby_index, 1u);
 }
 
+TEST_CASE(always_find_first_occurrence)
+{
+    Array const input { 1, 2, 2, 2, 2, 2, 2, 3 };
+
+    size_t nearby_index {};
+    EXPECT_EQ(binary_search(input, 1, &nearby_index), input.data());
+    EXPECT_EQ(nearby_index, 0u);
+    EXPECT_EQ(binary_search(input, 2, &nearby_index), input.data() + 1);
+    EXPECT_EQ(nearby_index, 1u);
+    EXPECT_EQ(binary_search(input, 3, &nearby_index), input.data() + 7);
+    EXPECT_EQ(nearby_index, 7u);
+}
+
 RANDOMIZED_TEST_CASE(finds_number_that_is_present)
 {
     GEN(vec, Gen::vector(1, 16, []() { return Gen::number_u64(); }));
