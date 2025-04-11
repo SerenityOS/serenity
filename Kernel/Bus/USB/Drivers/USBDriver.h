@@ -9,12 +9,11 @@
 #include <AK/AtomicRefCounted.h>
 #include <AK/Error.h>
 #include <AK/NonnullRefPtr.h>
+#include <Kernel/DriverInitTable.h>
 
 namespace Kernel::USB {
 
-using DriverInitFunction = void (*)();
-#define USB_DEVICE_DRIVER(driver_name) \
-    DriverInitFunction driver_init_function_ptr_##driver_name __attribute__((section(".driver_init"), used)) = &driver_name::init
+#define USB_DEVICE_DRIVER(driver_name) DRIVER_INIT_FUNCTION(driver_name, driver_name::init)
 
 class Device;
 struct USBDeviceDescriptor;

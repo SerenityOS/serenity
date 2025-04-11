@@ -42,6 +42,7 @@
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Devices/TTY/PTYMultiplexer.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
+#include <Kernel/DriverInitTable.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -97,9 +98,6 @@ extern "C" u8 start_of_safemem_text[];
 extern "C" u8 end_of_safemem_text[];
 extern "C" u8 start_of_safemem_atomic_text[];
 extern "C" u8 end_of_safemem_atomic_text[];
-
-extern "C" USB::DriverInitFunction driver_init_table_start[];
-extern "C" USB::DriverInitFunction driver_init_table_end[];
 
 extern "C" u8 end_of_kernel_image[];
 
@@ -323,6 +321,10 @@ void init_stage2(void*)
     }
 #endif
 
+#if ARCH(AARCH64) || ARCH(RISCV64)
+    MUST(DeviceTree::Management::the().probe_drivers(DeviceTree::Driver::ProbeStage::Regular));
+#endif
+
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
     PCI::initialize();
     if (!PCI::Access::is_disabled()) {
@@ -335,10 +337,6 @@ void init_stage2(void*)
     (void)SerialDevice::must_create(1).leak_ref();
     (void)SerialDevice::must_create(2).leak_ref();
     (void)SerialDevice::must_create(3).leak_ref();
-#elif ARCH(AARCH64)
-    // FIXME: Make MiniUART a DeviceTree::Driver.
-    if (DeviceTree::get().is_compatible_with("raspberrypi,3-model-b"sv) || DeviceTree::get().is_compatible_with("raspberrypi,4-model-b"sv))
-        (void)MUST(RPi::MiniUART::create()).leak_ref();
 #endif
 
     (void)PCSpeakerDevice::must_create().leak_ref();

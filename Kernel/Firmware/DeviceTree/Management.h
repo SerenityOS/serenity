@@ -21,11 +21,14 @@ public:
 
     ErrorOr<void> scan_node_for_devices(::DeviceTree::Node const& node);
 
+    ErrorOr<void> probe_drivers(Driver::ProbeStage);
+
 private:
     static bool attach_device_to_driver(Device&, Driver const&, StringView compatible_entry);
 
     Vector<NonnullOwnPtr<Driver>> m_drivers;
-    HashMap<StringView, Driver*> m_driver_map;
+    HashMap<StringView, Driver*> m_driver_by_compatible_string;
+
     HashMap<::DeviceTree::Node const*, Device> m_devices;
 };
 

@@ -29,18 +29,11 @@ ErrorOr<void> BCM2835SDHCIController::probe(DeviceTree::Device const& device, St
 {
     auto physical_address = TRY(device.get_resource(0)).paddr;
 
-    DeviceTree::DeviceRecipe<NonnullRefPtr<StorageController>> recipe {
-        name(),
-        device.node_name(),
-        [physical_address] -> ErrorOr<NonnullRefPtr<StorageController>> {
-            auto registers = TRY(Memory::map_typed_writable<SD::HostControlRegisterMap volatile>(physical_address));
-            auto sdhc = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SDHostController(move(registers))));
-            TRY(sdhc->initialize());
-            return sdhc;
-        }
-    };
+    auto registers = TRY(Memory::map_typed_writable<SD::HostControlRegisterMap volatile>(physical_address));
+    auto sdhc = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) SDHostController(move(registers))));
+    TRY(sdhc->initialize());
 
-    StorageManagement::add_recipe(move(recipe));
+    TRY(StorageManagement::the().add_controller(*sdhc));
 
     return {};
 }

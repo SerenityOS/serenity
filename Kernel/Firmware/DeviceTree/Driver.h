@@ -8,19 +8,24 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/StringView.h>
+#include <Kernel/DriverInitTable.h>
 #include <Kernel/Firmware/DeviceTree/Device.h>
 
 namespace Kernel::DeviceTree {
-
-using DriverInitFunction = void (*)();
 
 class Driver {
     AK_MAKE_NONCOPYABLE(Driver);
     AK_MAKE_NONMOVABLE(Driver);
 
 public:
-    Driver(StringView name)
+    enum class ProbeStage {
+        Early,
+        Regular,
+    };
+
+    Driver(StringView name, ProbeStage probe_stage)
         : m_driver_name(name)
+        , m_probe_stage(probe_stage)
     {
     }
 
@@ -30,15 +35,18 @@ public:
 
     StringView name() const { return m_driver_name; }
 
+    ProbeStage probe_stage() const { return m_probe_stage; }
+
 private:
     StringView const m_driver_name;
+    ProbeStage const m_probe_stage { ProbeStage::Regular };
 };
 
-#define DEVICETREE_DRIVER(driver_name, compatibles_array)                                                          \
+#define __DEVICETREE_DRIVER(driver_name, compatibles_array, probe_stage)                                           \
     class driver_name final : public Kernel::DeviceTree::Driver {                                                  \
     public:                                                                                                        \
         driver_name()                                                                                              \
-            : Kernel::DeviceTree::Driver(#driver_name##sv)                                                         \
+            : Kernel::DeviceTree::Driver(#driver_name##sv, probe_stage)                                            \
         {                                                                                                          \
         }                                                                                                          \
                                                                                                                    \
@@ -53,6 +61,9 @@ private:
         MUST(Kernel::DeviceTree::Management::register_driver(move(driver)));                                       \
     }                                                                                                              \
                                                                                                                    \
-    static Kernel::DeviceTree::DriverInitFunction driver_init_function_ptr_##driver_name [[gnu::section(".driver_init"), gnu::used]] = &driver_name::init
+    DRIVER_INIT_FUNCTION(driver_name, driver_name::init)
+
+#define DEVICETREE_DRIVER(driver_name, compatibles_array) __DEVICETREE_DRIVER(driver_name, compatibles_array, Kernel::DeviceTree::Driver::ProbeStage::Regular)
+#define EARLY_DEVICETREE_DRIVER(driver_name, compatibles_array) __DEVICETREE_DRIVER(driver_name, compatibles_array, Kernel::DeviceTree::Driver::ProbeStage::Early)
 
 }

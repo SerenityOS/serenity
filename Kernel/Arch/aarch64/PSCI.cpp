@@ -90,7 +90,7 @@ static constinit Array const compatibles_array = {
     "arm,psci-1.0"sv,
 };
 
-DEVICETREE_DRIVER(PSCIDriver, compatibles_array);
+EARLY_DEVICETREE_DRIVER(PSCIDriver, compatibles_array);
 
 // https://www.kernel.org/doc/Documentation/devicetree/bindings/arm/psci.txt
 ErrorOr<void> PSCIDriver::probe(DeviceTree::Device const& device, StringView) const

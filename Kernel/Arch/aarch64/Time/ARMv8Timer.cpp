@@ -100,7 +100,7 @@ static constinit Array const compatibles_array = {
     "arm,armv8-timer"sv,
 };
 
-DEVICETREE_DRIVER(ARMv8TimerDriver, compatibles_array);
+EARLY_DEVICETREE_DRIVER(ARMv8TimerDriver, compatibles_array);
 
 // https://www.kernel.org/doc/Documentation/devicetree/bindings/timer/arm,arch_timer.yaml
 ErrorOr<void> ARMv8TimerDriver::probe(DeviceTree::Device const& device, StringView) const

@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/NeverDestroyed.h>
 #include <AK/Platform.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
@@ -41,8 +40,6 @@ static Atomic<u32> s_controller_id;
 static Atomic<u32> s_relative_ahci_controller_id;
 static Atomic<u32> s_relative_nvme_controller_id;
 static Atomic<u32> s_relative_sd_controller_id;
-
-static NeverDestroyed<Vector<DeviceTree::DeviceRecipe<NonnullRefPtr<StorageController>>>> s_recipes;
 
 static constexpr int root_mount_flags = 0;
 
@@ -81,6 +78,12 @@ u32 StorageManagement::generate_relative_sd_controller_id(Badge<SDHostController
     return controller_id;
 }
 
+ErrorOr<void> StorageManagement::add_controller(StorageController& controller)
+{
+    TRY(m_controllers.try_append(controller));
+    return {};
+}
+
 void StorageManagement::add_device(StorageDevice& device)
 {
     m_storage_devices.append(device);
@@ -91,11 +94,6 @@ void StorageManagement::add_device(StorageDevice& device)
 void StorageManagement::remove_device(StorageDevice& device)
 {
     m_storage_devices.remove(device);
-}
-
-void StorageManagement::add_recipe(DeviceTree::DeviceRecipe<NonnullRefPtr<StorageController>> recipe)
-{
-    s_recipes->append(move(recipe));
 }
 
 UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool nvme_poll)
@@ -487,16 +485,6 @@ UNMAP_AFTER_INIT void StorageManagement::initialize(bool poll)
 {
     if (!PCI::Access::is_disabled()) {
         enumerate_pci_controllers(poll);
-    }
-
-    for (auto& recipe : *s_recipes) {
-        auto device_or_error = recipe.create_device();
-        if (device_or_error.is_error()) {
-            dmesgln("StorageManagement: Failed to create storage controller for device \"{}\" with driver {}: {}", recipe.node_name, recipe.driver_name, device_or_error.release_error());
-            continue;
-        }
-
-        m_controllers.append(device_or_error.release_value());
     }
 
     enumerate_storage_devices();
