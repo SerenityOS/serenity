@@ -120,6 +120,19 @@ TEST_CASE(unsigned_to_signed_regression)
     EXPECT_EQ(nearby_index, 1u);
 }
 
+TEST_CASE(always_find_first_occurrence)
+{
+    Array const input { 1, 2, 2, 2, 2, 2, 2, 3 };
+
+    size_t nearby_index {};
+    EXPECT_EQ(binary_search(input, 1, &nearby_index), input.data());
+    EXPECT_EQ(nearby_index, 0u);
+    EXPECT_EQ(binary_search(input, 2, &nearby_index), input.data() + 1);
+    EXPECT_EQ(nearby_index, 1u);
+    EXPECT_EQ(binary_search(input, 3, &nearby_index), input.data() + 7);
+    EXPECT_EQ(nearby_index, 7u);
+}
+
 RANDOMIZED_TEST_CASE(finds_number_that_is_present)
 {
     GEN(vec, Gen::vector(1, 16, []() { return Gen::number_u64(); }));
@@ -142,4 +155,46 @@ RANDOMIZED_TEST_CASE(doesnt_find_number_that_is_not_present)
     }
 
     EXPECT_EQ(binary_search(vec, not_present), nullptr);
+}
+
+TEST_CASE(lower_bound)
+{
+    Array const input { 1, 2, 4, 5, 5, 6 };
+
+    EXPECT_EQ(lower_bound(input, 0), 0u);
+    EXPECT_EQ(lower_bound(input, 1), 0u);
+    EXPECT_EQ(lower_bound(input, 2), 1u);
+    EXPECT_EQ(lower_bound(input, 3), 2u);
+    EXPECT_EQ(lower_bound(input, 4), 2u);
+    EXPECT_EQ(lower_bound(input, 5), 3u);
+    EXPECT_EQ(lower_bound(input, 6), 5u);
+    EXPECT(!lower_bound(input, 7).has_value());
+}
+
+TEST_CASE(strict_lower_bound)
+{
+    Array const input { 1, 2, 4, 5, 5, 6 };
+
+    EXPECT(!strict_lower_bound(input, 0).has_value());
+    EXPECT(!strict_lower_bound(input, 1).has_value());
+    EXPECT_EQ(strict_lower_bound(input, 2), 0u);
+    EXPECT_EQ(strict_lower_bound(input, 3), 1u);
+    EXPECT_EQ(strict_lower_bound(input, 4), 1u);
+    EXPECT_EQ(strict_lower_bound(input, 5), 2u);
+    EXPECT_EQ(strict_lower_bound(input, 6), 4u);
+    EXPECT_EQ(strict_lower_bound(input, 7), 5u);
+}
+
+TEST_CASE(upper_bound)
+{
+    Array const input { 1, 2, 4, 5, 5, 6 };
+
+    EXPECT_EQ(upper_bound(input, 0), 0u);
+    EXPECT_EQ(upper_bound(input, 1), 1u);
+    EXPECT_EQ(upper_bound(input, 2), 2u);
+    EXPECT_EQ(upper_bound(input, 3), 2u);
+    EXPECT_EQ(upper_bound(input, 4), 3u);
+    EXPECT_EQ(upper_bound(input, 5), 5u);
+    EXPECT(!upper_bound(input, 6).has_value());
+    EXPECT(!upper_bound(input, 7).has_value());
 }
