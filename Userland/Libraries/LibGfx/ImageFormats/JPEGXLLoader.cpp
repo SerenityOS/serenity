@@ -1053,7 +1053,7 @@ struct TransformInfo {
     u32 nb_deltas {};
     u8 d_pred {};
 
-    FixedArray<SqueezeParams> sp {};
+    Vector<SqueezeParams> sp {};
 };
 
 static ErrorOr<TransformInfo> read_transform_info(LittleEndianInputBitStream& stream)
@@ -1087,7 +1087,7 @@ static ErrorOr<TransformInfo> read_transform_info(LittleEndianInputBitStream& st
 
     if (transform_info.tr == TransformInfo::TransformId::kSqueeze) {
         auto const num_sq = U32(0, 1 + TRY(stream.read_bits(4)), 9 + TRY(stream.read_bits(6)), 41 + TRY(stream.read_bits(8)));
-        transform_info.sp = TRY(FixedArray<SqueezeParams>::create(num_sq));
+        TRY(transform_info.sp.try_resize(num_sq));
         for (u32 i = 0; i < num_sq; ++i)
             transform_info.sp[i] = TRY(read_squeeze_params(stream));
     }
@@ -1105,10 +1105,14 @@ public:
 
         for (u16 i = 0; i < metadata.number_of_channels(); ++i) {
             if (i < metadata.number_of_color_channels()) {
-                TRY(image.m_channels.try_append(TRY(Channel::create(size.width(), size.height()))));
+                TRY(image.m_channels.try_append(TRY(Channel::create(ChannelInfo::from_size(size)))));
             } else {
                 auto const dim_shift = metadata.ec_info[i - metadata.number_of_color_channels()].dim_shift;
-                TRY(image.m_channels.try_append(TRY(Channel::create(size.width() >> dim_shift, size.height() >> dim_shift))));
+                TRY(image.m_channels.try_append(TRY(Channel::create(
+                    {
+                        .width = static_cast<u32>(size.width() >> dim_shift),
+                        .height = static_cast<u32>(size.height() >> dim_shift),
+                    }))));
             }
         }
 
@@ -1391,6 +1395,48 @@ private:
 ///
 
 /// H.2 - Image decoding
+
+static ErrorOr<void> add_default_squeeze_params(TransformInfo& tr, Span<ChannelInfo> channels, u32 nb_meta_channels)
+{
+    // H.6.2.1  Parameters - "The default parameters (the case when sp.size() == 0) are specified by the following code:"
+
+    auto first = nb_meta_channels;
+    auto count = channels.size() - first;
+    auto w = channels[first].width;
+    auto h = channels[first].height;
+    SqueezeParams param;
+    if (count > 2 && channels[first + 1].width == w && channels[first + 1].height == h) {
+        param.begin_c = first + 1;
+        param.num_c = 2;
+        param.in_place = false;
+        param.horizontal = true;
+        tr.sp.append(param);
+        param.horizontal = false;
+        tr.sp.append(param);
+    }
+    param.begin_c = first;
+    param.num_c = count;
+    param.in_place = true;
+    if (h >= w && h > 8) {
+        param.horizontal = false;
+        tr.sp.append(param);
+        h = (h + 1) / 2;
+    }
+    while (w > 8 || h > 8) {
+        if (w > 8) {
+            param.horizontal = true;
+            tr.sp.append(param);
+            w = (w + 1) / 2;
+        }
+        if (h > 8) {
+            param.horizontal = false;
+            tr.sp.append(param);
+            h = (h + 1) / 2;
+        }
+    }
+    return {};
+}
+
 struct ModularData {
     bool use_global_tree {};
     WPHeader wp_params {};
@@ -1401,12 +1447,12 @@ struct ModularData {
 
     Vector<Channel> channels {};
 
-    ErrorOr<void> create_channels(Span<IntSize> frame_size)
+    ErrorOr<void> create_channels(Span<ChannelInfo> frame_size)
     {
-        Vector<IntSize> channel_infos {};
+        Vector<ChannelInfo> channel_infos {};
         TRY(channel_infos.try_extend(frame_size));
 
-        for (auto const& tr : transform) {
+        for (auto& tr : transform) {
             if (tr.tr == TransformInfo::TransformId::kPalette) {
                 // Let end_c = begin_c + num_c − 1. When updating the channel list as described in H.2, channels begin_c to end_c,
                 // which all have the same dimensions, are replaced with two new channels:
@@ -1417,18 +1463,60 @@ struct ModularData {
                 auto original_dimensions = channel_infos[tr.begin_c];
                 channel_infos.remove(tr.begin_c, tr.num_c);
                 TRY(channel_infos.try_insert(tr.begin_c, original_dimensions));
-                TRY(channel_infos.try_prepend({ tr.nb_colours, tr.num_c }));
+                TRY(channel_infos.try_prepend({ .width = tr.nb_colours, .height = tr.num_c, .hshift = -1, .vshift = -1 }));
 
                 if (tr.begin_c < nb_meta_channels)
                     nb_meta_channels += 2 - tr.begin_c;
                 else
                     nb_meta_channels += 1;
+            } else if (tr.tr == TransformInfo::TransformId::kSqueeze) {
+                if (tr.sp.is_empty())
+                    TRY(add_default_squeeze_params(tr, channel_infos, nb_meta_channels));
+
+                // "Let begin = sp[i].begin_c and end = begin + sp[i].num_c − 1.
+                // The channel list is modified as specified by the following code:"
+                for (u32 i = 0; i < tr.sp.size(); i++) {
+                    auto begin = tr.sp[i].begin_c;
+                    auto end = begin + tr.sp[i].num_c - 1;
+                    auto r = tr.sp[i].in_place ? end + 1 : channel_infos.size();
+                    if (begin < nb_meta_channels) {
+                        /* sp[i].in_place is true */
+                        /* end < nb_meta_channels */
+                        if (!tr.sp[i].in_place || end >= nb_meta_channels)
+                            return Error::from_string_literal("JPEGXLLoader: Invalid values in the squeeze transform");
+                        nb_meta_channels += tr.sp[i].num_c;
+                    }
+                    for (u32 c = begin; c <= end; c++) {
+                        auto w = channel_infos[c].width;
+                        auto h = channel_infos[c].height;
+                        /* w > 0 and h > 0 */
+                        if (w == 0 || h == 0)
+                            return Error::from_string_literal("JPEGXLLoader: Can't apply the squeeze transform on a channel with a null dimension");
+
+                        ChannelInfo residu;
+                        if (tr.sp[i].horizontal) {
+                            channel_infos[c].width = (w + 1) / 2;
+                            if (channel_infos[c].hshift >= 0)
+                                channel_infos[c].hshift++;
+                            residu = channel_infos[c];
+                            residu.width = w / 2;
+                        } else {
+                            channel_infos[c].height = (h + 1) / 2;
+                            if (channel_infos[c].vshift >= 0)
+                                channel_infos[c].vshift++;
+                            residu = channel_infos[c];
+                            residu.height = h / 2;
+                        }
+                        /* Insert residu into channel at index r + c − begin */
+                        TRY(channel_infos.try_insert(r + c - begin, residu));
+                    }
+                }
             }
         }
 
         TRY(channels.try_resize(channel_infos.size()));
         for (u32 i = 0; i < channels.size(); ++i)
-            channels[i] = TRY(Channel::create(channel_infos[i].width(), channel_infos[i].height()));
+            channels[i] = TRY(Channel::create(channel_infos[i]));
 
         return {};
     }
@@ -1557,7 +1645,7 @@ static Neighborhood retrieve_neighborhood(Channel const& channel, u32 x, u32 y)
 static ErrorOr<void> apply_transformation(Vector<Channel>&, TransformInfo const&, u32 bit_depth, WPHeader const&);
 
 struct ModularOptions {
-    Span<IntSize> channels_info;
+    Span<ChannelInfo> channels_info;
     Optional<EntropyDecoder>& decoder;
     MATree const& global_tree;
     u32 group_dim {};
@@ -1725,8 +1813,8 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
     // However, the decoder only decodes the first nb_meta_channels channels and any further channels
     // that have a width and height that are both at most group_dim. At that point, it stops decoding.
     // No inverse transforms are applied yet.
-    auto channels = TRY(FixedArray<IntSize>::create(num_channels));
-    channels.fill_with(frame_size);
+    auto channels = TRY(FixedArray<ChannelInfo>::create(num_channels));
+    channels.fill_with(ChannelInfo::from_size(frame_size));
 
     global_modular.modular_data = TRY(read_modular_bitstream(stream,
         {
@@ -1998,6 +2086,125 @@ static ErrorOr<void> apply_palette(Vector<Channel>& channel,
     return {};
 }
 
+// H.6.2.2 - Horizontal inverse squeeze step
+static i32 tendency(i32 A, i32 B, i32 C)
+{
+    if (A >= B && B >= C) {
+        auto X = (4 * A - 3 * C - B + 6) / 12;
+        if (X - (X & 1) > 2 * (A - B))
+            X = 2 * (A - B) + 1;
+        if (X + (X & 1) > 2 * (B - C))
+            X = 2 * (B - C);
+        return X;
+    } else if (A <= B && B <= C) {
+        auto X = (4 * A - 3 * C - B - 6) / 12;
+        if (X + (X & 1) < 2 * (A - B))
+            X = 2 * (A - B) - 1;
+        if (X - (X & 1) < 2 * (B - C))
+            X = 2 * (B - C);
+        return X;
+    }
+    return 0;
+}
+
+static ErrorOr<void> horiz_isqueeze(Channel const& input_1, Channel const& input_2, Channel& output)
+{
+    // "This step takes two input channels of sizes W1 × H and W2 × H"
+    if (input_1.height() != input_2.height())
+        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
+    auto h = input_1.height();
+    auto w1 = input_1.width();
+    auto w2 = input_2.width();
+
+    // "Either W1 == W2 or W1 == W2 + 1."
+    if (w1 != w2 && w1 != w2 + 1)
+        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
+
+    // "output channel of size (W1 + W2) × H."
+    if ((w1 + w2) != output.width() || h != output.height())
+        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
+
+    for (u32 y = 0; y < h; y++) {
+        for (u32 x = 0; x < w2; x++) {
+            auto avg = input_1.get(x, y);
+            auto residu = input_2.get(x, y);
+            auto next_avg = (x + 1 < w1 ? input_1.get(x + 1, y) : avg);
+            auto left = (x > 0 ? output.get((x << 1) - 1, y) : avg);
+            auto diff = residu + tendency(left, avg, next_avg);
+            auto first = avg + diff / 2;
+            output.set(2 * x, y, first);
+            output.set(2 * x + 1, y, first - diff);
+        }
+        if (w1 > w2)
+            output.set(2 * w2, y, input_1.get(w2, y));
+    }
+    return {};
+}
+
+// H.6.2.3 -  Vertical inverse squeeze step
+static ErrorOr<void> vert_isqueeze(Channel const& input_1, Channel const& input_2, Channel& output)
+{
+    // "This step takes two input channels of sizes W × H1 and W × H2"
+    if (input_1.width() != input_2.width())
+        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
+    auto w = input_1.width();
+    auto h1 = input_1.height();
+    auto h2 = input_2.height();
+
+    // "Either H1 == H2 or H1 == H2 + 1."
+    if (h1 != h2 && h1 != h2 + 1)
+        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
+
+    // "output channel of size W × (H1 + H2)."
+    if ((h1 + h2) != output.height() || w != output.width())
+        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
+
+    for (u32 y = 0; y < h2; y++) {
+        for (u32 x = 0; x < w; x++) {
+            auto avg = input_1.get(x, y);
+            auto residu = input_2.get(x, y);
+            auto next_avg = (y + 1 < h1 ? input_1.get(x, y + 1) : avg);
+            auto top = (y > 0 ? output.get(x, (y << 1) - 1) : avg);
+            auto diff = residu + tendency(top, avg, next_avg);
+            auto first = avg + diff / 2;
+            output.set(x, 2 * y, first);
+            output.set(x, 2 * y + 1, first - diff);
+        }
+    }
+    if (h1 > h2) {
+        for (u32 x = 0; x < w; x++)
+            output.set(x, 2 * h2, input_1.get(x, h2));
+    }
+    return {};
+}
+
+static ErrorOr<void> apply_squeeze(
+    Vector<Channel>& channel,
+    TransformInfo const& transformation)
+{
+    auto const& sp = transformation.sp;
+    for (i64 i = sp.size() - 1; i >= 0; i--) {
+        auto begin = transformation.sp[i].begin_c;
+        auto end = begin + transformation.sp[i].num_c - 1;
+
+        auto r = sp[i].in_place ? end + 1 : channel.size() + begin - end - 1;
+        for (u32 c = begin; c <= end; c++) {
+            Optional<Channel> output;
+            if (sp[i].horizontal) {
+                output = TRY(channel[c].copy(IntSize(channel[c].width() + channel[r].width(), channel[c].height())));
+                TRY(horiz_isqueeze(channel[c], channel[r], *output));
+            } else {
+                output = TRY(channel[c].copy(IntSize(channel[c].width(), channel[c].height() + channel[r].height())));
+                TRY(vert_isqueeze(channel[c], channel[r], *output));
+            }
+            channel[c] = output.release_value();
+            /* Remove the channel with index r */
+            channel.remove(r);
+        }
+    }
+    return {};
+}
+
 static ErrorOr<void> apply_transformation(
     Vector<Channel>& channels,
     TransformInfo const& transformation,
@@ -2011,7 +2218,7 @@ static ErrorOr<void> apply_transformation(
     case TransformInfo::TransformId::kPalette:
         return apply_palette(channels, transformation, bit_depth, wp_header);
     case TransformInfo::TransformId::kSqueeze:
-        return Error::from_string_literal("JPEGXLLoader: Unimplemented transformation");
+        return apply_squeeze(channels, transformation);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -2059,8 +2266,8 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
 {
     auto& [global_modular, frame_header, group_index, pass_index, stream_index] = options;
 
-    u32 max_shift = 3;
-    u32 min_shift = 0;
+    i8 max_shift = 3;
+    i8 min_shift = 0;
 
     if (pass_index != 0)
         return Error::from_string_literal("JPEGXLLoader: Subsequent passes are not supported yet");
@@ -2068,7 +2275,7 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
     // for every remaining channel in the partially decoded GlobalModular image (i.e. it is not a meta-channel,
     // the channel dimensions exceed group_dim × group_dim, and hshift < 3 or vshift < 3, and the channel has
     // not been already decoded in a previous pass)
-    Vector<IntSize> channels_info;
+    Vector<ChannelInfo> channels_info;
     Vector<Channel&> original_channels;
     auto& channels = global_modular.modular_data.channels;
     for (auto [i, channel] : enumerate(channels)) {
@@ -2084,7 +2291,7 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
         if (channel_min_shift < min_shift || channel_min_shift >= max_shift)
             continue;
 
-        TRY(channels_info.try_append(rect_for_group(channel, frame_header.group_dim(), group_index).size()));
+        TRY(channels_info.try_append(ChannelInfo::from_size(rect_for_group(channel, frame_header.group_dim(), group_index).size())));
         TRY(original_channels.try_append(channel));
     }
     if (channels_info.is_empty())
@@ -2320,7 +2527,7 @@ static ErrorOr<void> apply_upsampling(Frame& frame, ImageMetadata const& metadat
 
         // FIXME: Use ec_upsampling for extra-channels
         for (auto& channel : frame.image->channels()) {
-            auto upsampled = TRY(Channel::create(k * channel.width(), k * channel.height()));
+            auto upsampled = TRY(Channel::create({ .width = k * channel.width(), .height = k * channel.height() }));
 
             // Loop over the original image
             for (u32 y {}; y < channel.height(); y++) {

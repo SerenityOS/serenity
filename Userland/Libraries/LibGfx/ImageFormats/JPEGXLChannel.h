@@ -11,29 +11,59 @@
 
 namespace Gfx {
 
+struct ChannelInfo {
+    static ChannelInfo from_size(IntSize size)
+    {
+        return {
+            .width = static_cast<u32>(size.width()),
+            .height = static_cast<u32>(size.height()),
+        };
+    }
+    u32 width {};
+    u32 height {};
+    i8 hshift {};
+    i8 vshift {};
+};
+
 class Channel {
 public:
-    static ErrorOr<Channel> create(u32 width, u32 height)
+    static ErrorOr<Channel> create(ChannelInfo const& info)
     {
         Channel channel;
 
-        channel.m_width = width;
-        channel.m_height = height;
+        channel.m_width = info.width;
+        channel.m_height = info.height;
+        channel.m_hshift = info.hshift;
+        channel.m_vshift = info.vshift;
 
         TRY(channel.m_pixels.try_resize(channel.m_width * channel.m_height));
 
         return channel;
     }
 
-    ErrorOr<Channel> copy() const
+    ErrorOr<Channel> copy(Optional<IntSize> destination_size = {}) const
     {
         Channel other;
-        other.m_width = m_width;
-        other.m_height = m_height;
+
+        if (destination_size.has_value()) {
+            VERIFY(static_cast<u32>(destination_size->width()) >= m_width);
+            VERIFY(static_cast<u32>(destination_size->height()) >= m_height);
+            other.m_width = destination_size->width();
+            other.m_height = destination_size->height();
+        } else {
+            other.m_width = m_width;
+            other.m_height = m_height;
+        }
         other.m_hshift = m_hshift;
         other.m_vshift = m_vshift;
         other.m_decoded = m_decoded;
-        TRY(other.m_pixels.try_extend(m_pixels));
+
+        TRY(other.m_pixels.try_resize(other.m_width * other.m_height));
+        for (u32 y {}; y < m_height; ++y) {
+            for (u32 x {}; x < m_width; ++x)
+                other.set(x, y, get(x, y));
+        }
+
         return other;
     }
 
@@ -57,12 +87,12 @@ public:
         return m_height;
     }
 
-    u32 hshift() const
+    i8 hshift() const
     {
         return m_hshift;
     }
 
-    u32 vshift() const
+    i8 vshift() const
     {
         return m_vshift;
     }
@@ -98,8 +128,8 @@ private:
     u32 m_width {};
     u32 m_height {};
 
-    u32 m_hshift {};
-    u32 m_vshift {};
+    i8 m_hshift {};
+    i8 m_vshift {};
 
     bool m_decoded { false };
 
