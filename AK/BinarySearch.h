@@ -33,6 +33,7 @@ constexpr auto binary_search(
     Comparator comparator = Comparator {}) -> decltype(&haystack[0])
 {
     if (haystack.size() == 0) {
+        // FIXME: Refactor the function's API to make it always return a valid index.
         if (nearby_index)
             *nearby_index = 0;
         return nullptr;
