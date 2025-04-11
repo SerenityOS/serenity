@@ -87,12 +87,17 @@ SourceRange SourceCode::range_from_offsets(u32 start_offset, u32 end_offset) con
     Position current { .line = 1, .column = 1, .offset = 0 };
 
     if (!m_cached_positions.is_empty()) {
+        // FIXME: Use AK::lower_bound instead of relying on the behavior
+        //        of nearby_index.
         Position const dummy;
         size_t nearest_index = 0;
         binary_search(m_cached_positions, dummy, &nearest_index,
             [&](auto&, auto& starting_point) {
                 return start_offset - starting_point.offset;
             });
+
+        if (nearest_index > 0 && m_cached_positions[nearest_index].offset != start_offset)
+            nearest_index--;
 
         current = m_cached_positions[nearest_index];
     }
