@@ -171,6 +171,20 @@ TEST_CASE(lower_bound)
     EXPECT(!lower_bound(input, 7).has_value());
 }
 
+TEST_CASE(strict_lower_bound)
+{
+    Array const input { 1, 2, 4, 5, 5, 6 };
+
+    EXPECT(!strict_lower_bound(input, 0).has_value());
+    EXPECT(!strict_lower_bound(input, 1).has_value());
+    EXPECT_EQ(strict_lower_bound(input, 2), 0u);
+    EXPECT_EQ(strict_lower_bound(input, 3), 1u);
+    EXPECT_EQ(strict_lower_bound(input, 4), 1u);
+    EXPECT_EQ(strict_lower_bound(input, 5), 2u);
+    EXPECT_EQ(strict_lower_bound(input, 6), 4u);
+    EXPECT_EQ(strict_lower_bound(input, 7), 5u);
+}
+
 TEST_CASE(upper_bound)
 {
     Array const input { 1, 2, 4, 5, 5, 6 };
