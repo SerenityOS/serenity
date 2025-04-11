@@ -74,6 +74,24 @@ constexpr auto lower_bound(
     return index;
 }
 
+template<typename Container, typename Needle, typename Comparator = DefaultComparator, typename Return = decltype(&Container {}[0])>
+constexpr auto strict_lower_bound(
+    Container&& haystack,
+    Needle&& needle,
+    Comparator comparator = {}) -> Optional<size_t>
+{
+    // lower_bound give you the "first element x such that i ≤ x".
+    // This gives you the last element x such that x < i.
+    size_t index {};
+    binary_search(haystack, needle, &index, comparator);
+    if (index > 0 && comparator(needle, haystack[index]) <= 0)
+        index--;
+
+    if (index == 0 && comparator(needle, haystack[index]) <= 0)
+        return OptionalNone {};
+    return index;
+}
+
 struct UpperBoundComparator {
     template<typename T, typename S>
     [[nodiscard]] constexpr int operator()(T& lhs, S& rhs)
@@ -103,5 +121,6 @@ constexpr auto upper_bound(
 #if USING_AK_GLOBALLY
 using AK::binary_search;
 using AK::lower_bound;
+using AK::strict_lower_bound;
 using AK::upper_bound;
 #endif
