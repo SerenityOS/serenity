@@ -13,9 +13,7 @@ TEST_CASE(should_default_contructor_with_0s)
 {
     constexpr IPv6Address addr {};
 
-    static_assert(addr.is_zero());
-
-    EXPECT(addr.is_zero());
+    EXPECT_AND_STATIC_ASSERT(addr.is_zero());
 }
 
 TEST_CASE(should_construct_from_c_array)
@@ -25,32 +23,21 @@ TEST_CASE(should_construct_from_c_array)
         return IPv6Address(a);
     }();
 
-    static_assert(!addr.is_zero());
-
-    EXPECT(!addr.is_zero());
+    EXPECT_AND_STATIC_ASSERT(!addr.is_zero());
 }
 
 TEST_CASE(should_get_groups_by_index)
 {
     constexpr IPv6Address addr({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 });
 
-    static_assert(0x102 == addr[0]);
-    static_assert(0x304 == addr[1]);
-    static_assert(0x506 == addr[2]);
-    static_assert(0x708 == addr[3]);
-    static_assert(0x90a == addr[4]);
-    static_assert(0xb0c == addr[5]);
-    static_assert(0xd0e == addr[6]);
-    static_assert(0xf10 == addr[7]);
-
-    EXPECT_EQ(0x102, addr[0]);
-    EXPECT_EQ(0x304, addr[1]);
-    EXPECT_EQ(0x506, addr[2]);
-    EXPECT_EQ(0x708, addr[3]);
-    EXPECT_EQ(0x90a, addr[4]);
-    EXPECT_EQ(0xb0c, addr[5]);
-    EXPECT_EQ(0xd0e, addr[6]);
-    EXPECT_EQ(0xf10, addr[7]);
+    EXPECT_EQ_AND_STATIC_ASSERT(0x102, addr[0]);
+    EXPECT_EQ_AND_STATIC_ASSERT(0x304, addr[1]);
+    EXPECT_EQ_AND_STATIC_ASSERT(0x506, addr[2]);
+    EXPECT_EQ_AND_STATIC_ASSERT(0x708, addr[3]);
+    EXPECT_EQ_AND_STATIC_ASSERT(0x90a, addr[4]);
+    EXPECT_EQ_AND_STATIC_ASSERT(0xb0c, addr[5]);
+    EXPECT_EQ_AND_STATIC_ASSERT(0xd0e, addr[6]);
+    EXPECT_EQ_AND_STATIC_ASSERT(0xf10, addr[7]);
 }
 
 TEST_CASE(should_convert_to_string)
@@ -71,17 +58,17 @@ TEST_CASE(should_convert_to_string)
 
 TEST_CASE(should_make_ipv6_address_from_string)
 {
-    EXPECT(!IPv6Address::from_string(":::"sv).has_value());
-    EXPECT(!IPv6Address::from_string(":::1"sv).has_value());
-    EXPECT(!IPv6Address::from_string("1:::"sv).has_value());
-    EXPECT_EQ(IPv6Address::from_string("102:304:506:708:90a:b0c:d0e:f10"sv).value(), IPv6Address({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
-    EXPECT_EQ(IPv6Address::from_string("::"sv).value(), IPv6Address());
-    EXPECT_EQ(IPv6Address::from_string("::1"sv).value(), IPv6Address({ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }));
-    EXPECT_EQ(IPv6Address::from_string("1::"sv).value(), IPv6Address({ 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
-    EXPECT_EQ(IPv6Address::from_string("102:0:506:708:900::10"sv).value(), IPv6Address({ 1, 2, 0, 0, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 16 }));
-    EXPECT_EQ(IPv6Address::from_string("102:0:506:708:900::"sv).value(), IPv6Address({ 1, 2, 0, 0, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0 }));
-    EXPECT_EQ(IPv6Address::from_string("::304:506:708:90a:b0c:d0e:f10"sv).value(), IPv6Address({ 0, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
-    EXPECT_EQ(IPv6Address::from_string("102:304::708:90a:b0c:d0e:f10"sv).value(), IPv6Address({ 1, 2, 3, 4, 0, 0, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
+    EXPECT_AND_STATIC_ASSERT(!IPv6Address::from_string(":::"sv).has_value());
+    EXPECT_AND_STATIC_ASSERT(!IPv6Address::from_string(":::1"sv).has_value());
+    EXPECT_AND_STATIC_ASSERT(!IPv6Address::from_string("1:::"sv).has_value());
+    EXPECT_EQ_AND_STATIC_ASSERT(IPv6Address::from_string("102:304:506:708:90a:b0c:d0e:f10"sv).value(), IPv6Address({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
+    EXPECT_EQ_AND_STATIC_ASSERT(IPv6Address::from_string("::"sv).value(), IPv6Address());
+    EXPECT_EQ_AND_STATIC_ASSERT(IPv6Address::from_string("::1"sv).value(), IPv6Address({ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }));
+    EXPECT_EQ_AND_STATIC_ASSERT(IPv6Address::from_string("1::"sv).value(), IPv6Address({ 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+    EXPECT_EQ_AND_STATIC_ASSERT(IPv6Address::from_string("102:0:506:708:900::10"sv).value(), IPv6Address({ 1, 2, 0, 0, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 16 }));
+    EXPECT_EQ_AND_STATIC_ASSERT(IPv6Address::from_string("102:0:506:708:900::"sv).value(), IPv6Address({ 1, 2, 0, 0, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0 }));
+    EXPECT_EQ_AND_STATIC_ASSERT(IPv6Address::from_string("::304:506:708:90a:b0c:d0e:f10"sv).value(), IPv6Address({ 0, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
+    EXPECT_EQ_AND_STATIC_ASSERT(IPv6Address::from_string("102:304::708:90a:b0c:d0e:f10"sv).value(), IPv6Address({ 1, 2, 3, 4, 0, 0, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
 }
 
 TEST_CASE(ipv4_mapped_ipv6)
@@ -97,16 +84,16 @@ TEST_CASE(ipv4_mapped_ipv6)
 
 TEST_CASE(should_make_empty_optional_from_bad_string)
 {
-    auto const addr = IPv6Address::from_string("bad string"sv);
+    constexpr auto addr = IPv6Address::from_string("bad string"sv);
 
-    EXPECT(!addr.has_value());
+    EXPECT_AND_STATIC_ASSERT(!addr.has_value());
 }
 
 TEST_CASE(should_make_empty_optional_from_out_of_range_values)
 {
-    auto const addr = IPv6Address::from_string("::10000"sv);
+    constexpr auto addr = IPv6Address::from_string("::10000"sv);
 
-    EXPECT(!addr.has_value());
+    EXPECT_AND_STATIC_ASSERT(!addr.has_value());
 }
 
 TEST_CASE(should_only_compare_bytes_from_address)
@@ -115,13 +102,9 @@ TEST_CASE(should_only_compare_bytes_from_address)
     constexpr IPv6Address addr_b({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17 });
     constexpr IPv6Address addr_c({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17 });
 
-    static_assert(addr_a != addr_b);
-    static_assert(addr_a == addr_a);
-    static_assert(addr_b == addr_c);
-
-    EXPECT(addr_a != addr_b);
-    EXPECT(addr_a == addr_a);
-    EXPECT(addr_b == addr_c);
+    EXPECT_AND_STATIC_ASSERT(addr_a != addr_b);
+    EXPECT_AND_STATIC_ASSERT(addr_a == addr_a);
+    EXPECT_AND_STATIC_ASSERT(addr_b == addr_c);
 }
 
 TEST_CASE(subnets)
@@ -133,37 +116,37 @@ TEST_CASE(subnets)
     constexpr IPv6Address broadcast({ 0xff, 0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 });
     constexpr IPv6Address all_routers({ 0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2 });
 
-    EXPECT(loopback.is_loopback());
-    EXPECT(!all_routers.is_loopback());
+    EXPECT_AND_STATIC_ASSERT(loopback.is_loopback());
+    EXPECT_AND_STATIC_ASSERT(!all_routers.is_loopback());
 
-    EXPECT(lla.is_link_local());
-    EXPECT(ula.is_unique_local());
-    EXPECT(!lla.is_unique_local());
-    EXPECT(!ula.is_link_local());
-    EXPECT(!documentation.is_unique_local());
-    EXPECT(!documentation.is_link_local());
-    EXPECT(!broadcast.is_unique_local());
-    EXPECT(!broadcast.is_link_local());
-    EXPECT(!all_routers.is_unique_local());
-    EXPECT(!all_routers.is_link_local());
+    EXPECT_AND_STATIC_ASSERT(lla.is_link_local());
+    EXPECT_AND_STATIC_ASSERT(ula.is_unique_local());
+    EXPECT_AND_STATIC_ASSERT(!lla.is_unique_local());
+    EXPECT_AND_STATIC_ASSERT(!ula.is_link_local());
+    EXPECT_AND_STATIC_ASSERT(!documentation.is_unique_local());
+    EXPECT_AND_STATIC_ASSERT(!documentation.is_link_local());
+    EXPECT_AND_STATIC_ASSERT(!broadcast.is_unique_local());
+    EXPECT_AND_STATIC_ASSERT(!broadcast.is_link_local());
+    EXPECT_AND_STATIC_ASSERT(!all_routers.is_unique_local());
+    EXPECT_AND_STATIC_ASSERT(!all_routers.is_link_local());
 
-    EXPECT(lla.is_unicast());
-    EXPECT(ula.is_unicast());
-    EXPECT(loopback.is_unicast());
-    EXPECT(documentation.is_unicast());
-    EXPECT(broadcast.is_multicast());
-    EXPECT(all_routers.is_multicast());
+    EXPECT_AND_STATIC_ASSERT(lla.is_unicast());
+    EXPECT_AND_STATIC_ASSERT(ula.is_unicast());
+    EXPECT_AND_STATIC_ASSERT(loopback.is_unicast());
+    EXPECT_AND_STATIC_ASSERT(documentation.is_unicast());
+    EXPECT_AND_STATIC_ASSERT(broadcast.is_multicast());
+    EXPECT_AND_STATIC_ASSERT(all_routers.is_multicast());
 
-    EXPECT(!loopback.is_in_subnet(lla, 64));
-    EXPECT(lla.is_in_subnet(lla.network(64), 64));
-    EXPECT(ula.is_in_subnet(ula.network(128), 128));
-    EXPECT(loopback.is_in_subnet(loopback, 128));
-    EXPECT(documentation.is_in_subnet(documentation, 128));
-    EXPECT(broadcast.is_in_subnet(broadcast, 128));
-    EXPECT(all_routers.is_in_subnet(all_routers, 128));
-    EXPECT(!ula.is_in_subnet(lla, 64));
+    EXPECT_AND_STATIC_ASSERT(!loopback.is_in_subnet(lla, 64));
+    EXPECT_AND_STATIC_ASSERT(lla.is_in_subnet(lla.network(64), 64));
+    EXPECT_AND_STATIC_ASSERT(ula.is_in_subnet(ula.network(128), 128));
+    EXPECT_AND_STATIC_ASSERT(loopback.is_in_subnet(loopback, 128));
+    EXPECT_AND_STATIC_ASSERT(documentation.is_in_subnet(documentation, 128));
+    EXPECT_AND_STATIC_ASSERT(broadcast.is_in_subnet(broadcast, 128));
+    EXPECT_AND_STATIC_ASSERT(all_routers.is_in_subnet(all_routers, 128));
+    EXPECT_AND_STATIC_ASSERT(!ula.is_in_subnet(lla, 64));
     // Not sensible networks per IETF!
-    EXPECT(lla.is_in_subnet(ula.network(4), 4));
-    EXPECT(broadcast.is_in_subnet(all_routers.network(12), 12));
-    EXPECT(!documentation.is_in_subnet(lla, 4));
+    EXPECT_AND_STATIC_ASSERT(lla.is_in_subnet(ula.network(4), 4));
+    EXPECT_AND_STATIC_ASSERT(broadcast.is_in_subnet(all_routers.network(12), 12));
+    EXPECT_AND_STATIC_ASSERT(!documentation.is_in_subnet(lla, 4));
 }
