@@ -156,8 +156,9 @@ double EasingStyleValue::Function::evaluate_at(double input_progress, bool befor
             }
 
             // We have two samples on either side of the x value we want, so we can linearly interpolate between them.
-            auto& sample1 = cached_x_samples[nearby_index];
-            auto& sample2 = cached_x_samples[nearby_index + 1];
+            VERIFY(nearby_index > 0);
+            auto& sample1 = cached_x_samples[nearby_index - 1];
+            auto& sample2 = cached_x_samples[nearby_index];
             auto factor = (x - sample1.x) / (sample2.x - sample1.x);
             return sample1.y + factor * (sample2.y - sample1.y);
         },
