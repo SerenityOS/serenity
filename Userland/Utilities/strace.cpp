@@ -949,12 +949,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         syscall_arg_t arg3 = regs.rbx;
         syscall_arg_t arg4 = regs.rsi;
 #elif ARCH(AARCH64)
-        syscall_arg_t syscall_index = 0; // FIXME
-        syscall_arg_t arg1 = 0;          // FIXME
-        syscall_arg_t arg2 = 0;          // FIXME
-        syscall_arg_t arg3 = 0;          // FIXME
-        syscall_arg_t arg4 = 0;          // FIXME
-        TODO_AARCH64();
+        syscall_arg_t syscall_index = regs.x[8];
+        syscall_arg_t arg1 = regs.x[1];
+        syscall_arg_t arg2 = regs.x[2];
+        syscall_arg_t arg3 = regs.x[3];
+        syscall_arg_t arg4 = regs.x[4];
 #elif ARCH(RISCV64)
         syscall_arg_t syscall_index = regs.x[16];
         syscall_arg_t arg1 = regs.x[9];
@@ -976,8 +975,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #if ARCH(X86_64)
         u64 res = regs.rax;
 #elif ARCH(AARCH64)
-        u64 res = 0; // FIXME
-        TODO_AARCH64();
+        u64 res = regs.x[0];
 #elif ARCH(RISCV64)
         u64 res = regs.x[9];
 #else
