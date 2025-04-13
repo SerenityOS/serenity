@@ -128,7 +128,7 @@ static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/console"sv, 0666, 5, 1));
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/ptmx"sv, 0666, 5, 2));
     TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/tty"sv, 0666, 5, 0));
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/fuse"sv, 0666, 10, 229));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/fuse"sv, 0666, 1, 229));
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
     TRY(populate_device_node_with_symlink(DeviceNodeType::Block, "/dev/kcov"sv, 0666, 30, 0));
 #endif
