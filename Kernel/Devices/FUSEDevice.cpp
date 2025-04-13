@@ -19,7 +19,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<FUSEDevice> FUSEDevice::must_create()
 }
 
 UNMAP_AFTER_INIT FUSEDevice::FUSEDevice()
-    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::FUSE, 229)
+    : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Generic, 229)
 {
 }
 
