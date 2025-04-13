@@ -245,11 +245,15 @@ PDFErrorOr<Page> Document::get_page(u32 index)
 
     auto to_rectangle = [](NonnullRefPtr<Object> const& object) -> Rectangle {
         auto array = object->cast<ArrayObject>();
+        float x0 = array->at(0).to_float();
+        float y0 = array->at(1).to_float();
+        float x1 = array->at(2).to_float();
+        float y1 = array->at(3).to_float();
         return Rectangle {
-            array->at(0).to_float(),
-            array->at(1).to_float(),
-            array->at(2).to_float(),
-            array->at(3).to_float(),
+            min(x0, x1),
+            min(y0, y1),
+            max(x0, x1),
+            max(y0, y1),
         };
     };
 
