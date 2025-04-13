@@ -11,6 +11,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Types.h>
 #include <Kernel/API/DeviceFileTypes.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -119,18 +120,18 @@ static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
     TRY(Core::System::mount({}, -1, "/dev/loop"sv, "devloop"sv, MS_IMMUTABLE));
 
     mode_t old_mask = umask(0);
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/devctl"sv, 0660, 2, 10));
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/zero"sv, 0666, 1, 5));
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/mem"sv, 0600, 1, 1));
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/null"sv, 0666, 1, 3));
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/full"sv, 0666, 1, 7));
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/random"sv, 0666, 1, 8));
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/console"sv, 0666, 5, 1));
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/ptmx"sv, 0666, 5, 2));
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/tty"sv, 0666, 5, 0));
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/fuse"sv, 0666, 1, 229));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/devctl"sv, 0660, to_underlying(Kernel::MajorAllocation::CharacterDeviceFamily::DeviceControl), 10));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/zero"sv, 0666, to_underlying(Kernel::MajorAllocation::CharacterDeviceFamily::Generic), 5));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/mem"sv, 0600, to_underlying(Kernel::MajorAllocation::CharacterDeviceFamily::Generic), 1));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/null"sv, 0666, to_underlying(Kernel::MajorAllocation::CharacterDeviceFamily::Generic), 3));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/full"sv, 0666, to_underlying(Kernel::MajorAllocation::CharacterDeviceFamily::Generic), 7));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/random"sv, 0666, to_underlying(Kernel::MajorAllocation::CharacterDeviceFamily::Generic), 8));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/console"sv, 0666, to_underlying(Kernel::MajorAllocation::CharacterDeviceFamily::Console), 1));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/ptmx"sv, 0666, to_underlying(Kernel::MajorAllocation::CharacterDeviceFamily::Console), 2));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/tty"sv, 0666, to_underlying(Kernel::MajorAllocation::CharacterDeviceFamily::Console), 0));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Character, "/dev/fuse"sv, 0666, to_underlying(Kernel::MajorAllocation::CharacterDeviceFamily::Generic), 229));
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
-    TRY(populate_device_node_with_symlink(DeviceNodeType::Block, "/dev/kcov"sv, 0666, 30, 0));
+    TRY(populate_device_node_with_symlink(DeviceNodeType::Block, "/dev/kcov"sv, 0666, to_underlying(Kernel::MajorAllocation::BlockDeviceFamily::KCOV), 0));
 #endif
     umask(old_mask);
     TRY(Core::System::symlink("/dev/random"sv, "/dev/urandom"sv));
