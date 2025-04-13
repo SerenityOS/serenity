@@ -157,15 +157,18 @@ struct fuse_mknod_in {
     uint32_t rdev;
     uint32_t umask;
     uint32_t padding;
+    uint8_t data[];
 };
 
 struct fuse_mkdir_in {
     uint32_t mode;
     uint32_t umask;
+    uint8_t data[];
 };
 
 struct fuse_rename_in {
     uint64_t newdir;
+    uint8_t data[];
 };
 
 struct fuse_link_in {
