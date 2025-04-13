@@ -28,11 +28,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView fd_string;
     StringView target;
+    StringView mount_options;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Mount a FUSE-based filesystem");
     args_parser.add_positional_argument(fd_string, "File descriptor to mount", "fd");
     args_parser.add_positional_argument(target, "Path to mount location", "target");
+    args_parser.add_option(mount_options, "Mount options", "mount-options", 'o', "mount-options");
     args_parser.parse(arguments);
 
     if (fd_string.is_empty())
@@ -40,6 +42,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (target.is_empty())
         return Error::from_string_literal("No target passed");
+
+    if (!mount_options.is_empty())
+        dbgln("Warning: The following mount options will be ignored: {}", mount_options);
 
     auto maybe_fd = fd_string.to_number<int>();
     if (!maybe_fd.has_value())
