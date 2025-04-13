@@ -243,16 +243,20 @@ PDFErrorOr<Page> Document::get_page(u32 index)
     if (raw_page_object->contains(CommonNames::Contents))
         contents = TRY(raw_page_object->get_object(this, CommonNames::Contents));
 
+    auto to_rectangle = [](NonnullRefPtr<Object> const& object) -> Rectangle {
+        auto array = object->cast<ArrayObject>();
+        return Rectangle {
+            array->at(0).to_float(),
+            array->at(1).to_float(),
+            array->at(2).to_float(),
+            array->at(3).to_float(),
+        };
+    };
+
     Rectangle media_box;
     auto maybe_media_box_object = TRY(get_inheritable_object(CommonNames::MediaBox, raw_page_object));
     if (maybe_media_box_object.has_value()) {
-        auto media_box_array = maybe_media_box_object.value()->cast<ArrayObject>();
-        media_box = Rectangle {
-            media_box_array->at(0).to_float(),
-            media_box_array->at(1).to_float(),
-            media_box_array->at(2).to_float(),
-            media_box_array->at(3).to_float(),
-        };
+        media_box = to_rectangle(maybe_media_box_object.value());
     } else {
         // As most other libraries seem to do, we default to the standard
         // US letter size of 8.5" x 11" (612 x 792 Postscript units).
@@ -265,13 +269,7 @@ PDFErrorOr<Page> Document::get_page(u32 index)
     Rectangle crop_box;
     auto maybe_crop_box_object = TRY(get_inheritable_object(CommonNames::CropBox, raw_page_object));
     if (maybe_crop_box_object.has_value()) {
-        auto crop_box_array = maybe_crop_box_object.value()->cast<ArrayObject>();
-        crop_box = Rectangle {
-            crop_box_array->at(0).to_float(),
-            crop_box_array->at(1).to_float(),
-            crop_box_array->at(2).to_float(),
-            crop_box_array->at(3).to_float(),
-        };
+        crop_box = to_rectangle(maybe_crop_box_object.value());
     } else {
         crop_box = media_box;
     }
