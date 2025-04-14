@@ -246,6 +246,7 @@ pushd "$DIR/Build/$ARCH"
                                                  --enable-static \
                                                  --disable-shared \
                                                  --disable-nls \
+                                                 --with-system-zlib \
                                                  ${CI:+"--quiet"} || exit 1
         echo "XXX build binutils"
         buildstep "binutils/build" "$MAKE" MAKEINFO=true -j "$MAKEJOBS" || exit 1
@@ -298,6 +299,7 @@ pushd "$DIR/Build/$ARCH"
                                             --enable-threads=posix \
                                             --enable-initfini-array \
                                             --with-linker-hash-style=gnu \
+                                            --with-system-zlib \
                                             ${CI:+"--quiet"} || exit 1
 
         echo "XXX build gcc and libgcc"
