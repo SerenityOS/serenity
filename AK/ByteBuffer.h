@@ -13,6 +13,12 @@
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
 
+#ifdef AK_COMPILER_GCC
+#    pragma GCC diagnostic push
+//   GCC incorrectly claims that the size of the ByteBuffer is too small in some cases when UBSan is disabled.
+#    pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+
 namespace AK {
 namespace Detail {
 
@@ -286,15 +292,7 @@ public:
     {
         // make sure we're not told to write past the end
         VERIFY(offset + data_size <= size());
-#ifdef AK_COMPILER_GCC
-#    pragma GCC diagnostic push
-//   GCC incorrectly claims that the size of the ByteBuffer is too small in some cases on AArch64/RISC-V when UBSan is disabled.
-#    pragma GCC diagnostic ignored "-Wstringop-overflow"
-#endif
         __builtin_memmove(this->data() + offset, data, data_size);
-#ifdef AK_COMPILER_GCC
-#    pragma GCC diagnostic pop
-#endif
     }
 
     void zero_fill()
@@ -388,5 +386,9 @@ struct Traits<ByteBuffer> : public DefaultTraits<ByteBuffer> {
         return byte_buffer.bytes() == other;
     }
 };
+
+#ifdef AK_COMPILER_GCC
+#    pragma GCC diagnostic pop
+#endif
 
 }
