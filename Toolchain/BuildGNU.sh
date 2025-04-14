@@ -82,8 +82,8 @@ BINUTILS_BASE_URL="https://ftpmirror.gnu.org/gnu/binutils"
 
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
-GCC_VERSION="13.2.0"
-GCC_MD5SUM="e0e48554cc6e4f261d55ddee9ab69075"
+GCC_VERSION="14.2.0"
+GCC_MD5SUM="2268420ba02dc01821960e274711bde0"
 GCC_NAME="gcc-$GCC_VERSION"
 GCC_PKG="${GCC_NAME}.tar.xz"
 GCC_BASE_URL="https://ftpmirror.gnu.org/gnu/gcc"

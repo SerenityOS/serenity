@@ -13,10 +13,10 @@ This hack is from https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58638
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
-index bd6c4ed05cb9621f855ed15d8e0825e5fc4d2d8c..de0adb98973432cd6ee8e42adeaf5efa74546484 100755
+index d5de656cc3cd7b3a9c4b82c292263426195b157d..e2939c4d152670ce59798ba5aed02a3abbfbe628 100755
 --- a/libstdc++-v3/configure
 +++ b/libstdc++-v3/configure
-@@ -15624,8 +15624,8 @@ if test "$enable_shared" = yes; then
+@@ -15789,8 +15789,8 @@ if test "$enable_shared" = yes; then
    glibcxx_compiler_shared_flag="-D_GLIBCXX_SHARED"
  
  else
