@@ -941,6 +941,265 @@ PDFErrorOr<void> LatticeFormGouraudShading::draw(Gfx::Painter&, Gfx::AffineTrans
     return Error::rendering_unsupported_error("Cannot draw lattice-form gouraud-shaded triangle meshes yet");
 }
 
+class CoonsPatchShading final : public Shading {
+public:
+    static PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> create(Document*, NonnullRefPtr<StreamObject>, CommonEntries);
+
+    virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
+
+private:
+    using FunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
+
+    // Indexes into m_patch_data.
+    struct CoonsPatch {
+        u32 control_points[12];
+        u32 colors[4];
+    };
+
+    CoonsPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<CoonsPatch> patches, FunctionsType functions)
+        : m_common_entries(move(common_entries))
+        , m_patch_data(move(patch_data))
+        , m_patches(move(patches))
+        , m_functions(move(functions))
+    {
+    }
+
+    CommonEntries m_common_entries;
+
+    // Interleaved x0, y0, x1, y1, ..., x11, y11, c0, c1, c2, c3, ...
+    // (For flags 1-3, only 8 coordinates and 2 colors.)
+    Vector<float> m_patch_data;
+    Vector<CoonsPatch> m_patches;
+    FunctionsType m_functions;
+};
+
+PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> CoonsPatchShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
+{
+    auto shading_dict = shading_stream->dict();
+
+    // TABLE 4.34 Additional entries specific to a type 6 shading dictionary
+    // "(Required) The number of bits used to represent each geometric coordi-
+    //  nate. Valid values are 1, 2, 4, 8, 12, 16, 24, and 32."
+    int bits_per_coordinate = TRY(document->resolve(shading_dict->get_value(CommonNames::BitsPerCoordinate))).to_int();
+    if (!first_is_one_of(bits_per_coordinate, 1, 2, 4, 8, 12, 16, 24, 32))
+        return Error::malformed_error("BitsPerCoordinate invalid");
+
+    // "(Required) The number of bits used to represent each color component.
+    //  Valid values are 1, 2, 4, 8, 12, and 16."
+    int bits_per_component = TRY(document->resolve(shading_dict->get_value(CommonNames::BitsPerComponent))).to_int();
+    if (!first_is_one_of(bits_per_component, 1, 2, 4, 8, 12, 16))
+        return Error::malformed_error("BitsPerComponent invalid");
+
+    // "(Required) The number of bits used to represent the edge flag for each
+    //  patch (see below). Valid values of BitsPerFlag are 2, 4, and 8, but only the
+    //  least significant 2 bits in each flag value are used. Valid values for the edge
+    //  flag are 0, 1, 2, and 3."
+    int bits_per_flag = TRY(document->resolve(shading_dict->get_value(CommonNames::BitsPerFlag))).to_int();
+    if (!first_is_one_of(bits_per_flag, 2, 4, 8))
+        return Error::malformed_error("BitsPerFlag invalid");
+
+    // "(Required) An array of numbers specifying how to map vertex coordinates
+    //  and color components into the appropriate ranges of values. The decoding
+    //  method is similar to that used in image dictionaries (see “Decode Arrays”
+    //  on page 344). The ranges are specified as follows:
+    //
+    //      [ xmin xmax ymin ymax c1,min c1,max … cn,min cn,max ]
+    //
+    //  Note that only one pair of c values should be specified if a Function entry
+    //  is present."
+    auto decode_array = TRY(shading_dict->get_array(document, CommonNames::Decode));
+    size_t number_of_components = static_cast<size_t>(shading_dict->contains(CommonNames::Function) ? 1 : common_entries.color_space->number_of_components());
+    if (decode_array->size() != 4 + 2 * number_of_components)
+        return Error::malformed_error("Decode array must have 4 + 2 * number of components elements");
+    Vector<float> decode;
+    decode.resize(decode_array->size());
+    for (size_t i = 0; i < decode_array->size(); ++i)
+        decode[i] = decode_array->at(i).to_float();
+
+    // "(Optional) A 1-in, n-out function or an array of n 1-in, 1-out functions
+    //  (where n is the number of color components in the shading dictionary’s
+    //  color space). If this entry is present, the color data for each vertex must be
+    //  specified by a single parametric variable rather than by n separate color
+    //  components. The designated function(s) are called with each interpolated
+    //  value of the parametric variable to determine the actual color at each
+    //  point. Each input value is forced into the range interval specified for the
+    //  corresponding color component in the shading dictionary’s Decode array.
+    //  Each function’s domain must be a superset of that interval. If the value re-
+    //  turned by the function for a given color component is out of range, it is
+    //  adjusted to the nearest valid value.
+    //  This entry may not be used with an Indexed color space."
+    FunctionsType functions;
+    if (shading_dict->contains(CommonNames::Function)) {
+        if (common_entries.color_space->family() == ColorSpaceFamily::Indexed)
+            return Error::malformed_error("Function cannot be used with Indexed color space");
+
+        functions = TRY([&]() -> PDFErrorOr<FunctionsType> {
+            auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
+            if (function_object->is<ArrayObject>()) {
+                auto function_array = function_object->cast<ArrayObject>();
+                Vector<NonnullRefPtr<Function>> functions_vector;
+                if (function_array->size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
+                    return Error::malformed_error("Function array must have as many elements as color space has components");
+                for (size_t i = 0; i < function_array->size(); ++i) {
+                    auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
+                    if (TRY(function->evaluate(to_array({ decode[4] }))).size() != 1)
+                        return Error::malformed_error("Function must have 1 output component");
+                    TRY(functions_vector.try_append(move(function)));
+                }
+                return functions_vector;
+            }
+            auto function = TRY(Function::create(document, function_object));
+            if (TRY(function->evaluate(to_array({ decode[0] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
+                return Error::malformed_error("Function must have as many output components as color space");
+            return function;
+        }());
+    }
+
+    // See "Type 6 Shadings (Coons Patch Meshes)" in the PDF 1.7 spec for a description of the stream contents.
+    auto stream = FixedMemoryStream { shading_stream->bytes() };
+    BigEndianInputBitStream bitstream { MaybeOwned { stream } };
+
+    Vector<float> patch_data;
+    Vector<CoonsPatch> patches;
+
+    auto read_point = [&]() -> ErrorOr<void> {
+        u32 x = TRY(bitstream.read_bits<u32>(bits_per_coordinate));
+        u32 y = TRY(bitstream.read_bits<u32>(bits_per_coordinate));
+        TRY(patch_data.try_append(mix(decode[0], decode[1], x / (powf(2.0f, bits_per_coordinate) - 1))));
+        TRY(patch_data.try_append(mix(decode[2], decode[3], y / (powf(2.0f, bits_per_coordinate) - 1))));
+        return {};
+    };
+
+    auto read_points = [&](u32 n) -> ErrorOr<void> {
+        for (u32 i = 0; i < n; ++i)
+            TRY(read_point());
+        return {};
+    };
+
+    auto read_color = [&]() -> ErrorOr<void> {
+        for (size_t i = 0; i < number_of_components; ++i) {
+            u16 color = TRY(bitstream.read_bits<u16>(bits_per_component));
+            TRY(patch_data.try_append(mix(decode[4 + 2 * i], decode[4 + 2 * i + 1], color / (powf(2.0f, bits_per_component) - 1))));
+        }
+        return {};
+    };
+
+    auto read_colors = [&](u32 n) -> ErrorOr<void> {
+        for (u32 i = 0; i < n; ++i)
+            TRY(read_color());
+        return {};
+    };
+
+    while (!bitstream.is_eof()) {
+        u8 flag = TRY(bitstream.read_bits<u8>(bits_per_flag));
+
+        int n = patch_data.size();
+        CoonsPatch patch;
+
+        // "TABLE 4.35 Data values in a Coons patch mesh"
+        switch (flag) {
+        case 0:
+            // "x1 y1 x2 y2 x3 y3 x4 y4 x5 y5 x6 y6 x7 y7 x8 y8 x9 y9 x10 y10 x11 y11 x12 y12 c1 c2 c3 c4
+            //  New patch; no implicit values"
+            TRY(patch_data.try_ensure_capacity(patch_data.size() + 12 * 2 + 4 + number_of_components));
+            TRY(read_points(12));
+            TRY(read_colors(4));
+            for (int i = 0; i < 12; ++i)
+                patch.control_points[i] = n + 2 * i;
+            for (int i = 0; i < 4; ++i)
+                patch.colors[i] = n + 24 + number_of_components * i;
+            break;
+        case 1:
+            if (patches.is_empty())
+                return Error::malformed_error("Edge flag 1 without preceding patch");
+            // "x5 y5 x6 y6 x7 y7 x8 y8 x9 y9 x10 y10 x11 y11 x12 y12 c3 c4
+            //  Implicit values:
+            //  (x1, y1) = (x4, y4) previous
+            //  (x2, y2) = (x5, y5) previous
+            //  (x3, y3) = (x6, y6) previous
+            //  (x4, y4) = (x7, y7) previous
+            //  c1 = c2 previous
+            //  c2 = c3 previous"
+            TRY(patch_data.try_ensure_capacity(patch_data.size() + 8 * 2 + 2 + number_of_components));
+            TRY(read_points(8));
+            TRY(read_colors(2));
+            patch.control_points[0] = patches.last().control_points[3];
+            patch.control_points[1] = patches.last().control_points[4];
+            patch.control_points[2] = patches.last().control_points[5];
+            patch.control_points[3] = patches.last().control_points[6];
+            for (int i = 0; i < 8; ++i)
+                patch.control_points[i + 4] = n + 2 * i;
+            patch.colors[0] = patches.last().colors[1];
+            patch.colors[1] = patches.last().colors[2];
+            for (int i = 0; i < 2; ++i)
+                patch.colors[i + 2] = n + 16 + number_of_components * i;
+            break;
+        case 2:
+            if (patches.is_empty())
+                return Error::malformed_error("Edge flag 2 without preceding patch");
+            // "x5 y5 x6 y6 x7 y7 x8 y8 x9 y9 x10 y10 x11 y11 x12 y12 c3 c4
+            //  Implicit values:
+            //  (x1, y1) = (x7, y7) previous
+            //  (x2, y2) = (x8, y8) previous
+            //  (x3, y3) = (x9, y9) previous
+            //  (x4, y4) = (x10, y10) previous
+            //  c1 = c3 previous
+            //  c2 = c4 previous"
+            TRY(patch_data.try_ensure_capacity(patch_data.size() + 8 * 2 + 2 + number_of_components));
+            TRY(read_points(8));
+            TRY(read_colors(2));
+            patch.control_points[0] = patches.last().control_points[6];
+            patch.control_points[1] = patches.last().control_points[7];
+            patch.control_points[2] = patches.last().control_points[8];
+            patch.control_points[3] = patches.last().control_points[9];
+            for (int i = 0; i < 8; ++i)
+                patch.control_points[i + 4] = n + 2 * i;
+            patch.colors[0] = patches.last().colors[2];
+            patch.colors[1] = patches.last().colors[3];
+            for (int i = 0; i < 2; ++i)
+                patch.colors[i + 2] = n + 16 + number_of_components * i;
+            break;
+        case 3:
+            if (patches.is_empty())
+                return Error::malformed_error("Edge flag 3 without preceding patch");
+            // "x5 y5 x6 y6 x7 y7 x8 y8 x9 y9 x10 y10 x11 y11 x12 y12 c3 c4
+            //  Implicit values:
+            //  (x1, y1) = (x10, y10) previous
+            //  (x2, y2) = (x11, y11) previous
+            //  (x3, y3) = (x12, y12) previous
+            //  (x4, y4) = (x1, y1) previous
+            //  c1 = c4 previous
+            //  c2 = c1 previous"
+            TRY(patch_data.try_ensure_capacity(patch_data.size() + 8 * 2 + 2 + number_of_components));
+            TRY(read_points(8));
+            TRY(read_colors(2));
+            patch.control_points[0] = patches.last().control_points[9];
+            patch.control_points[1] = patches.last().control_points[10];
+            patch.control_points[2] = patches.last().control_points[11];
+            patch.control_points[3] = patches.last().control_points[0];
+            for (int i = 0; i < 8; ++i)
+                patch.control_points[i + 4] = n + 2 * i;
+            patch.colors[0] = patches.last().colors[3];
+            patch.colors[1] = patches.last().colors[0];
+            for (int i = 0; i < 2; ++i)
+                patch.colors[i + 2] = n + 16 + number_of_components * i;
+            break;
+        default:
+            return Error::malformed_error("Invalid edge flag");
+        }
+
+        TRY(patches.try_append(patch));
+        bitstream.align_to_byte_boundary();
+    }
+
+    return adopt_ref(*new CoonsPatchShading(move(common_entries), move(patch_data), move(patches), move(functions)));
+}
+
+PDFErrorOr<void> CoonsPatchShading::draw(Gfx::Painter&, Gfx::AffineTransform const&)
+{
+    return Error::rendering_unsupported_error("Cannot draw coons path mesh shadings yet");
+}
+
 }
 
 PDFErrorOr<NonnullRefPtr<Shading>> Shading::create(Document* document, NonnullRefPtr<Object> shading_dict_or_stream, Renderer& renderer)
@@ -982,7 +1241,9 @@ PDFErrorOr<NonnullRefPtr<Shading>> Shading::create(Document* document, NonnullRe
             return Error::malformed_error("Lattice-form Gouraud-shaded triangle mesh stream has wrong type");
         return LatticeFormGouraudShading::create(document, shading_dict_or_stream->cast<StreamObject>(), move(common_entries));
     case 6:
-        return Error::rendering_unsupported_error("Coons patch mesh not yet implemented");
+        if (!shading_dict_or_stream->is<StreamObject>())
+            return Error::malformed_error("Coons patch mesh stream has wrong type");
+        return CoonsPatchShading::create(document, shading_dict_or_stream->cast<StreamObject>(), move(common_entries));
     case 7:
         return Error::rendering_unsupported_error("Tensor-product patch mesh not yet implemented");
     }
