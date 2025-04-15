@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.22)
+
+if (NOT DEFINED SERENITY_ARCH OR NOT DEFINED SERENITY_SYSROOT)
+    message(FATAL_ERROR "SERENITY_ARCH and SERENITY_SYSROOT must be defined")
+endif()
+
+set(CMAKE_CURRENT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/Userland/Libraries/LibC")
+set(CMAKE_STAGING_PREFIX "${SERENITY_SYSROOT}")
+set(CMAKE_INSTALL_INCLUDEDIR usr/include)
+set(LIBC_LINK_HEADERS_ONLY On)
+
+include(Userland/Libraries/LibC/CMakeLists.txt)

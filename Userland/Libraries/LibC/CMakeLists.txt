@@ -1,3 +1,8 @@
+# NOTE: Besides the main build, this file is run from the link_libc_headers.cmake script. It sets
+#       correctly _only_ CMAKE_CURRENT_SOURCE_DIR, CMAKE_STAGING_PREFIX, and
+#       CMAKE_INSTALL_INCLUDEDIR variables. We detect this mode later (after header symlinking) with
+#       LIBC_LINK_HEADERS_ONLY.
+
 set(SOURCES
     arch/${SERENITY_ARCH}/fenv.cpp
     arch/${SERENITY_ARCH}/setjmp.S
@@ -268,6 +273,10 @@ foreach(RELATIVE_HEADER_PATH IN LISTS HEADERS)
     file(MAKE_DIRECTORY "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${subdirectory}")
     file(CREATE_LINK "${CMAKE_CURRENT_SOURCE_DIR}/${RELATIVE_HEADER_PATH}" "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${subdirectory}/${name}" SYMBOLIC)
 endforeach()
+
+if (LIBC_LINK_HEADERS_ONLY)
+    return()
+endif()
 
 # ===== Start files =====
 # NOTE: We link all these against NoCoverage so that we don't break ports by requiring coverage
