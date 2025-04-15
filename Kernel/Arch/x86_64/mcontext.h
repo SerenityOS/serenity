@@ -13,30 +13,30 @@ extern "C" {
 #endif
 
 struct __attribute__((packed)) __mcontext {
-    uint64_t rax;
-    uint64_t rcx;
-    uint64_t rdx;
-    uint64_t rbx;
-    uint64_t rsp;
-    uint64_t rbp;
-    uint64_t rsi;
-    uint64_t rdi;
-    uint64_t rip;
-    uint64_t r8;
-    uint64_t r9;
-    uint64_t r10;
-    uint64_t r11;
-    uint64_t r12;
-    uint64_t r13;
-    uint64_t r14;
-    uint64_t r15;
-    uint64_t rflags;
-    uint32_t cs;
-    uint32_t ss;
-    uint32_t ds;
-    uint32_t es;
-    uint32_t fs;
-    uint32_t gs;
+    __u64 rax;
+    __u64 rcx;
+    __u64 rdx;
+    __u64 rbx;
+    __u64 rsp;
+    __u64 rbp;
+    __u64 rsi;
+    __u64 rdi;
+    __u64 rip;
+    __u64 r8;
+    __u64 r9;
+    __u64 r10;
+    __u64 r11;
+    __u64 r12;
+    __u64 r13;
+    __u64 r14;
+    __u64 r15;
+    __u64 rflags;
+    __u32 cs;
+    __u32 ss;
+    __u32 ds;
+    __u32 es;
+    __u32 fs;
+    __u32 gs;
 };
 
 #ifdef __cplusplus

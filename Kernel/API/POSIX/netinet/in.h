@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-typedef uint32_t in_addr_t;
+typedef __u32 in_addr_t;
 
 #define INADDR_ANY ((in_addr_t)0)
 #define INADDR_NONE ((in_addr_t)(-1))
@@ -48,10 +48,10 @@ typedef uint32_t in_addr_t;
 #define IPPORT_RESERVED 1024
 #define IPPORT_USERRESERVED 5000
 
-typedef uint16_t in_port_t;
+typedef __u16 in_port_t;
 
 struct in_addr {
-    uint32_t s_addr;
+    __u32 s_addr;
 };
 
 struct sockaddr_in {
@@ -67,7 +67,7 @@ struct ip_mreq {
 };
 
 struct group_source_req {
-    uint32_t gsr_interface;
+    __u32 gsr_interface;
     struct sockaddr_storage gsr_group;
     struct sockaddr_storage gsr_source;
 };
@@ -96,14 +96,14 @@ struct ip_mreq_source {
 
 struct in6_addr {
     union {
-        uint8_t s6_addr[16];
-        uint32_t s6_addr32[4];
+        __u8 s6_addr[16];
+        __u32 s6_addr32[4];
     };
 };
 
 struct in6_pktinfo {
     struct in6_addr ipi6_addr;
-    uint32_t ipi6_ifindex;
+    __u32 ipi6_ifindex;
 };
 
 /* clang-format off */
@@ -117,14 +117,14 @@ extern const struct in6_addr in6addr_loopback;
 struct sockaddr_in6 {
     sa_family_t sin6_family;   // AF_INET6.
     in_port_t sin6_port;       // Port number.
-    uint32_t sin6_flowinfo;    // IPv6 traffic class and flow information.
+    __u32 sin6_flowinfo;       // IPv6 traffic class and flow information.
     struct in6_addr sin6_addr; // IPv6 address.
-    uint32_t sin6_scope_id;    // Set of interfaces for a scop
+    __u32 sin6_scope_id;       // Set of interfaces for a scop
 };
 
 struct ipv6_mreq {
     struct in6_addr ipv6mr_multiaddr;
-    uint32_t ipv6mr_interface;
+    __u32 ipv6mr_interface;
 };
 
 #ifdef __cplusplus
