@@ -204,29 +204,11 @@ popd
 
 # === COPY HEADERS ===
 
-SRC_ROOT=$($REALPATH "$DIR"/..)
-FILES=$(find \
-    "$SRC_ROOT"/Kernel/API \
-    "$SRC_ROOT"/Kernel/Arch \
-    "$SRC_ROOT"/Userland/Libraries/LibC \
-    "$SRC_ROOT"/Userland/Libraries/LibELF/ELFABI.h \
-    "$SRC_ROOT"/Userland/Libraries/LibRegex/RegexDefs.h \
-    -name '*.h' -print)
 for arch in $ARCHS; do
-    mkdir -p "$BUILD/${arch}clang"
-    pushd "$BUILD/${arch}clang"
-        for header in $FILES; do
-            target=$(echo "$header" | "$SED" \
-                -e "s|$SRC_ROOT/Kernel/|Kernel/|" \
-                -e "s|$SRC_ROOT/Userland/Libraries/LibC||" \
-                -e "s|$SRC_ROOT/Userland/Libraries/LibELF/|LibELF/|" \
-                -e "s|$SRC_ROOT/Userland/Libraries/LibRegex/|LibRegex/|")
-            mkdir -p "$(dirname "Root/usr/include/$target")"
-            buildstep "system_headers" cp "$header" "Root/usr/include/$target"
-        done
+    pushd "$DIR/.."
+        cmake -DSERENITY_ARCH="$arch" -DSERENITY_SYSROOT="$BUILD/${arch}clang/Root" -P Meta/CMake/link_libc_headers.cmake
     popd
 done
-unset SRC_ROOT
 
 # === COMPILE AND INSTALL ===
 
