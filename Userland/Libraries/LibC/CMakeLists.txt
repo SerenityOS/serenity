@@ -214,6 +214,48 @@ set(HEADERS
 
     ../LibELF/ELFABI.h
     ../LibRegex/RegexDefs.h
+
+    ../../../Kernel/API/POSIX/fcntl.h
+    ../../../Kernel/API/POSIX/errno.h
+    ../../../Kernel/API/POSIX/poll.h
+    ../../../Kernel/API/POSIX/ifaddrs.h
+    ../../../Kernel/API/POSIX/sched.h
+    ../../../Kernel/API/POSIX/signal_numbers.h
+    ../../../Kernel/API/POSIX/dirent.h
+    ../../../Kernel/API/POSIX/stdio.h
+    ../../../Kernel/API/POSIX/time.h
+    ../../../Kernel/API/POSIX/select.h
+    ../../../Kernel/API/POSIX/sys/wait.h
+    ../../../Kernel/API/POSIX/sys/statvfs.h
+    ../../../Kernel/API/POSIX/sys/limits.h
+    ../../../Kernel/API/POSIX/sys/stat.h
+    ../../../Kernel/API/POSIX/sys/times.h
+    ../../../Kernel/API/POSIX/sys/types.h
+    ../../../Kernel/API/POSIX/sys/auxv.h
+    ../../../Kernel/API/POSIX/sys/resource.h
+    ../../../Kernel/API/POSIX/sys/utsname.h
+    ../../../Kernel/API/POSIX/sys/mman.h
+    ../../../Kernel/API/POSIX/sys/time.h
+    ../../../Kernel/API/POSIX/sys/uio.h
+    ../../../Kernel/API/POSIX/sys/un.h
+    ../../../Kernel/API/POSIX/sys/ptrace.h
+    ../../../Kernel/API/POSIX/sys/socket.h
+    ../../../Kernel/API/POSIX/unistd.h
+    ../../../Kernel/API/POSIX/netinet/in.h
+    ../../../Kernel/API/POSIX/netinet/tcp.h
+    ../../../Kernel/API/POSIX/serenity.h
+    ../../../Kernel/API/POSIX/futex.h
+    ../../../Kernel/API/POSIX/net/if.h
+    ../../../Kernel/API/POSIX/net/route.h
+    ../../../Kernel/API/POSIX/net/if_arp.h
+    ../../../Kernel/API/POSIX/ucontext.h
+    ../../../Kernel/API/POSIX/termios.h
+    ../../../Kernel/API/POSIX/signal.h
+
+    ../../../Kernel/API/serenity_limits.h
+
+    ../../../Kernel/Arch/${SERENITY_ARCH}/mcontext.h
+    ../../../Kernel/Arch/mcontext.h
 )
 
 # ===== LibC headers =====
