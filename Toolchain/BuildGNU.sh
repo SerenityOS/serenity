@@ -23,12 +23,6 @@ MAKE="make"
 MD5SUM="md5sum"
 REALPATH="realpath"
 
-if command -v ginstall &>/dev/null; then
-    INSTALL=ginstall
-else
-    INSTALL=install
-fi
-
 SYSTEM_NAME="$(uname -s)"
 
 # We *most definitely* don't need debug symbols in the linker/compiler.
@@ -254,27 +248,8 @@ pushd "$DIR/Build/$ARCH"
     popd
 
     echo "XXX serenity libc headers"
-    mkdir -p "$BUILD"
-    pushd "$BUILD"
-        mkdir -p Root/usr/include/
-        SRC_ROOT=$($REALPATH "$DIR"/..)
-        FILES=$(find \
-            "$SRC_ROOT"/Kernel/API \
-            "$SRC_ROOT"/Kernel/Arch \
-            "$SRC_ROOT"/Userland/Libraries/LibC \
-            "$SRC_ROOT"/Userland/Libraries/LibELF/ELFABI.h \
-            "$SRC_ROOT"/Userland/Libraries/LibRegex/RegexDefs.h \
-            -name '*.h' -print)
-        for header in $FILES; do
-            target=$(echo "$header" | sed \
-                -e "s|$SRC_ROOT/Userland/Libraries/LibC||" \
-                -e "s|$SRC_ROOT/Kernel/|Kernel/|" \
-                -e "s|$SRC_ROOT/Userland/Libraries/LibELF/|LibELF/|" \
-                -e "s|$SRC_ROOT/Userland/Libraries/LibRegex/|LibRegex/|")
-            buildstep "system_headers" mkdir -p "$(dirname "Root/usr/include/$target")"
-            buildstep "system_headers" $INSTALL "$header" "Root/usr/include/$target"
-        done
-        unset SRC_ROOT
+    pushd "$DIR/.."
+        cmake -DSERENITY_ARCH="$ARCH" -DSERENITY_SYSROOT="$SYSROOT" -P Meta/CMake/link_libc_headers.cmake
     popd
 
     if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
