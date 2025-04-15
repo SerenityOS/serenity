@@ -293,24 +293,3 @@ target_link_libraries(DynamicLoader_LibC
     PUBLIC DynamicLoader_CompileOptions
     PRIVATE DynamicLoader_LibSystem
 )
-
-# ===== Compatibility with the GCC toolchain without TARGET_LIBC_PROVIDES_SSP =====
-# FIXME: Remove this on the next GCC toolchain version bump
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    add_custom_target(create_compat_ssp_libraries)
-    add_dependencies(Loader.so create_compat_ssp_libraries)
-
-    add_custom_command(TARGET create_compat_ssp_libraries
-        PRE_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E remove libssp.so
-        COMMAND "${CMAKE_AR}" cr libssp.a
-        WORKING_DIRECTORY "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
-    )
-
-    add_custom_command(TARGET create_compat_ssp_libraries
-        PRE_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E remove libssp_nonshared.a
-        COMMAND "${CMAKE_AR}" cr libssp_nonshared.a
-        WORKING_DIRECTORY "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
-    )
-endif()
