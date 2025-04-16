@@ -136,7 +136,7 @@ public:
 };
 
 template<typename T>
-requires(!IsLvalueReference<T>)
+requires(!IsLvalueReference<T> && !requires { Traits<T>::special_optional_empty_value; })
 class [[nodiscard]] Optional<T> : public OptionalBase<T> {
     template<typename U>
     friend class Optional;
@@ -630,6 +630,189 @@ public:
 
 private:
     RemoveReference<T>* m_pointer { nullptr };
+};
+
+template<typename T>
+requires(requires { Traits<T>::special_optional_empty_value; })
+class [[nodiscard]] Optional<T> : public OptionalBase<T> {
+
+    // Note: We need to go through this helper to not materialize a temporary at compile time
+    //       which needs to be destroyed at compile time.
+    ALWAYS_INLINE constexpr static auto the_empty_value() -> T
+    {
+        if constexpr (IsSame<decltype(Traits<T>::special_optional_empty_value), T>)
+            return Traits<T>::special_optional_empty_value;
+        else if constexpr (IsCallableWithArguments<decltype(Traits<T>::special_optional_empty_value), T>)
+            return Traits<T>::special_optional_empty_value();
+        else if constexpr (IsCallableWithArguments<decltype(Traits<T>::special_optional_empty_value), T, Badge<Optional<T>>>)
+            return Traits<T>::special_optional_empty_value(Badge<Optional<T>> {});
+    }
+
+    // Note: Some types don't like to be moved/touched when in their empty state,
+    //       so we need to special case them
+    constexpr static bool dont_move_empty = requires {
+        Traits<T>::optional_dont_move_empty;
+        requires(Traits<T>::optional_dont_move_empty);
+    };
+    // Note: Some types don't like to get their empty values assigned
+    //       but provide a swap method, which usually does not go through
+    //       that check, so let's try to leverage that when we cant move empty values
+    constexpr static bool has_swap = requires(T& t1, T& t2) { t1.swap(t2); };
+
+    // FIXME: We should investigate if we could guess trivial swappability
+    //        based on attributes the T has (see trivially relocatable/replaceable)
+    //        This might also be useful for the normal Optional implementation
+
+public:
+    ALWAYS_INLINE constexpr Optional() = default;
+    ALWAYS_INLINE constexpr Optional(OptionalNone) { }
+    template<typename U>
+    requires(IsConstructible<T, U> && !IsOneOf<RemoveCVReference<U>, Optional, OptionalNone>)
+    ALWAYS_INLINE constexpr Optional(U&& value)
+        : m_value(forward<U>(value))
+    {
+    }
+
+    ALWAYS_INLINE constexpr Optional(Optional const&) = default;
+    ALWAYS_INLINE constexpr Optional& operator=(Optional const&) = default;
+    ALWAYS_INLINE constexpr Optional(Optional&&) = default;
+    ALWAYS_INLINE constexpr Optional& operator=(Optional&&) = default;
+
+    ALWAYS_INLINE constexpr Optional(Optional const& other)
+    requires(dont_move_empty)
+        : m_value(other.has_value() ? other.value() : the_empty_value())
+    {
+    }
+    ALWAYS_INLINE constexpr Optional& operator=(Optional const& other)
+    requires(dont_move_empty)
+    {
+        if (this == &other)
+            return *this;
+
+        if (other.has_value())
+            m_value = other.value();
+        else
+            clear();
+        return *this;
+    }
+
+    ALWAYS_INLINE constexpr Optional(Optional&& other)
+    requires(dont_move_empty && !has_swap)
+        : m_value(other.has_value() ? other.release_value() : the_empty_value())
+    {
+    }
+    ALWAYS_INLINE constexpr Optional& operator=(Optional&& other)
+    requires(dont_move_empty && !has_swap)
+    {
+        if (this == &other)
+            return *this;
+
+        if (has_value() && other.has_value())
+            value() = other.release_value();
+        else if (has_value())
+            clear();
+        else if (other.has_value())
+            m_value = other.release_value();
+
+        return *this;
+    }
+
+    ALWAYS_INLINE constexpr Optional(Optional&& other)
+    requires(dont_move_empty && has_swap)
+    {
+        swap(m_value, other.m_value);
+        other.clear();
+    }
+    ALWAYS_INLINE constexpr Optional& operator=(Optional&& other)
+    requires(dont_move_empty && has_swap)
+    {
+        if (this == &other)
+            return *this;
+
+        swap(m_value, other.m_value);
+        other.clear();
+        return *this;
+    }
+
+    ALWAYS_INLINE constexpr bool operator==(Optional const& other) const
+    {
+        return has_value() == other.has_value() && (!has_value() || value() == other.value());
+    }
+
+    template<typename U>
+    requires(
+        !IsScalar<U> && IsConstructible<T, U const&>
+        && !IsOneOf<RemoveCVReference<U>, Optional, OptionalNone>)
+    ALWAYS_INLINE constexpr Optional& operator=(U const& value)
+    {
+        m_value = value;
+        return *this;
+    }
+    template<typename U>
+    requires(
+        !IsScalar<U> && IsConstructible<T, U &&>
+        && !IsOneOf<RemoveCVReference<U>, Optional, OptionalNone>)
+    ALWAYS_INLINE constexpr Optional& operator=(U&& value)
+    {
+        m_value = forward<U>(value);
+        return *this;
+    }
+
+    ALWAYS_INLINE constexpr bool has_value() const
+    {
+        return m_value != the_empty_value();
+    }
+    ALWAYS_INLINE constexpr bool has_value() const
+    requires(requires(T const& t) {{ Traits<T>::optional_has_value(t) } -> SameAs<bool>; })
+    {
+        return Traits<T>::optional_has_value(m_value);
+    }
+    ALWAYS_INLINE constexpr void clear()
+    {
+        if (has_value())
+            (void)release_value();
+    }
+
+    ALWAYS_INLINE constexpr T& value() &
+    {
+        VERIFY(has_value());
+        return m_value;
+    }
+    ALWAYS_INLINE constexpr T const& value() const&
+    {
+        VERIFY(has_value());
+        return m_value;
+    }
+
+    ALWAYS_INLINE constexpr T value() && { return release_value(); }
+
+    ALWAYS_INLINE constexpr T release_value()
+    {
+        // FIXME: What to do here when we should not move empties around,
+        //        But don't have a swap method to place it in?
+        VERIFY(has_value());
+        return exchange(m_value, the_empty_value());
+    }
+
+    ALWAYS_INLINE constexpr T release_value()
+    requires(dont_move_empty && has_swap)
+    {
+        VERIFY(has_value());
+        T value = the_empty_value();
+        value.swap(m_value);
+        return value;
+    }
+
+    template<typename... Ts>
+    requires(IsConstructible<T, Ts...>)
+    ALWAYS_INLINE constexpr void emplace(Ts&&... parameters)
+    {
+        clear();
+        m_value = T(forward<Ts>(parameters)...);
+    }
+
+private:
+    T m_value { the_empty_value() };
 };
 
 }
