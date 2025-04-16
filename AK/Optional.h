@@ -145,7 +145,7 @@ public:
 };
 
 template<typename T>
-requires(!IsLvalueReference<T>)
+requires(!IsLvalueReference<T> && !requires { Traits<T>::special_optional_empty_value; })
 class [[nodiscard]] Optional<T> : public OptionalBase<T> {
     template<typename U>
     friend class Optional;
@@ -639,6 +639,110 @@ public:
 
 private:
     RemoveReference<T>* m_pointer { nullptr };
+};
+
+template<typename T>
+requires(requires { Traits<T>::special_optional_empty_value; })
+class [[nodiscard]] Optional<T> : public OptionalBase<T> {
+
+    // Note: We need to go through this helper to not materialize a temporary at compile time
+    //       which needs to be destroyed at compile time.
+    ALWAYS_INLINE constexpr static auto the_empty_value() -> T
+    {
+        if constexpr (IsSame<decltype(Traits<T>::special_optional_empty_value), T>)
+            return Traits<T>::special_optional_empty_value;
+        else if constexpr (IsCallableWithArguments<decltype(Traits<T>::special_optional_empty_value), T>)
+            return Traits<T>::special_optional_empty_value();
+        else if constexpr (IsCallableWithArguments<decltype(Traits<T>::special_optional_empty_value), T, Badge<Optional<T>>>)
+            return Traits<T>::special_optional_empty_value(Badge<Optional<T>> {});
+    }
+    // FIXME: We should investigate if we could guess trivial swappability
+    //        based on attributes the T has (see trivially relocatable/replaceable)
+    //        This might also be useful for the normal Optional implementation
+
+public:
+    ALWAYS_INLINE constexpr Optional() = default;
+    ALWAYS_INLINE constexpr Optional(OptionalNone) { }
+    template<typename U>
+    requires(IsConstructible<T, U> && !IsOneOf<RemoveCVReference<U>, Optional, OptionalNone>)
+    ALWAYS_INLINE constexpr Optional(U&& value)
+        : m_value(forward<U>(value))
+    {
+    }
+
+    ALWAYS_INLINE constexpr Optional(Optional const&) = default;
+    ALWAYS_INLINE constexpr Optional& operator=(Optional const&) = default;
+    ALWAYS_INLINE constexpr Optional(Optional&&) = default;
+    ALWAYS_INLINE constexpr Optional& operator=(Optional&&) = default;
+
+    ALWAYS_INLINE constexpr bool operator==(Optional const& other) const
+    {
+        return has_value() == other.has_value() && (!has_value() || value() == other.value());
+    }
+
+    template<typename U>
+    requires(
+        !IsScalar<U> && IsConstructible<T, U const&>
+        && !IsOneOf<RemoveCVReference<U>, Optional, OptionalNone>)
+    ALWAYS_INLINE constexpr Optional& operator=(U const& value)
+    {
+        m_value = value;
+        return *this;
+    }
+    template<typename U>
+    requires(
+        !IsScalar<U> && IsConstructible<T, U &&>
+        && !IsOneOf<RemoveCVReference<U>, Optional, OptionalNone>)
+    ALWAYS_INLINE constexpr Optional& operator=(U&& value)
+    {
+        m_value = forward<U>(value);
+        return *this;
+    }
+
+    ALWAYS_INLINE constexpr bool has_value() const
+    {
+        return m_value != the_empty_value();
+    }
+    ALWAYS_INLINE constexpr bool has_value() const
+    requires(requires(T const& t) {{ Traits<T>::optional_has_value(t) } -> SameAs<bool>; })
+    {
+        return Traits<T>::optional_has_value(m_value);
+    }
+    ALWAYS_INLINE constexpr void clear()
+    {
+        if (has_value())
+            (void)release_value();
+    }
+
+    ALWAYS_INLINE constexpr T& value() &
+    {
+        VERIFY(has_value());
+        return m_value;
+    }
+    ALWAYS_INLINE constexpr T const& value() const&
+    {
+        VERIFY(has_value());
+        return m_value;
+    }
+
+    ALWAYS_INLINE constexpr T value() && { return release_value(); }
+
+    ALWAYS_INLINE constexpr T release_value()
+    {
+        VERIFY(has_value());
+        return exchange(m_value, the_empty_value());
+    }
+
+    template<typename... Ts>
+    requires(IsConstructible<T, Ts...>)
+    ALWAYS_INLINE constexpr void emplace(Ts&&... parameters)
+    {
+        clear();
+        construct_at<T>(&m_value, forward<Ts>(parameters)...);
+    }
+
+private:
+    T m_value { the_empty_value() };
 };
 
 }
