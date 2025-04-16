@@ -19,7 +19,7 @@ static HashMap<ByteString, NonnullOwnPtr<Protocol>>& all_protocols()
 
 Protocol* Protocol::find_by_name(ByteString const& name)
 {
-    return all_protocols().get(name).map([](auto& p) -> Protocol* { return p; }).value_or(nullptr);
+    return all_protocols().get(name).map([](auto&& p) -> Protocol* { return p; }).value_or(nullptr);
 }
 
 Protocol::Protocol(ByteString const& name)

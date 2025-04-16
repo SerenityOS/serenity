@@ -631,7 +631,7 @@ Optional<CSSNumericType> InvertCalculationNode::determine_type(PropertyID proper
     // The sub-expression’s type is the result of multiplying the left type and right type.
     // NOTE: An InvertCalculationNode only represents the right argument here, and the multiplication
     //       is handled in the parent ProductCalculationNode.
-    return m_value->determine_type(property_id).map([](auto& it) { return it.inverted(); });
+    return m_value->determine_type(property_id).map([](auto&& it) { return it.inverted(); });
 }
 
 bool InvertCalculationNode::contains_percentage() const

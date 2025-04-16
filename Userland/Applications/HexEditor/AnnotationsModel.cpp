@@ -116,7 +116,7 @@ ErrorOr<void> AnnotationsModel::load_from_file(Core::File& file)
             annotation.start_offset = start_offset.value();
         if (auto end_offset = json_object.get_u64("end_offset"sv); end_offset.has_value())
             annotation.end_offset = end_offset.value();
-        if (auto background_color = json_object.get_byte_string("background_color"sv).map([](auto& string) { return Color::from_string(string); }); background_color.has_value())
+        if (auto background_color = json_object.get_byte_string("background_color"sv).map([](auto&& string) { return Color::from_string(string); }); background_color.has_value())
             annotation.background_color = background_color->value();
         if (auto comments = json_object.get_byte_string("comments"sv); comments.has_value())
             annotation.comments = MUST(String::from_byte_string(comments.value()));
