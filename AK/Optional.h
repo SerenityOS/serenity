@@ -53,7 +53,91 @@ struct OptionalNone {
 };
 
 template<typename T>
-requires(!IsLvalueReference<T>) class [[nodiscard]] Optional<T> {
+requires(!IsLvalueReference<T>)
+class [[nodiscard]] OptionalBase {
+public:
+    using ValueType = T;
+
+    template<typename Self, SameAs<OptionalNone> V>
+    ALWAYS_INLINE constexpr Self& operator=(this Self& self, V)
+    {
+        self.clear();
+        return self;
+    }
+
+    template<typename Self>
+    [[nodiscard]] ALWAYS_INLINE constexpr T* ptr(this Self& self)
+    {
+        return self.has_value() ? &self.value() : nullptr;
+    }
+
+    template<typename Self, typename O = T, typename Fallback = O>
+    [[nodiscard]] ALWAYS_INLINE constexpr O value_or(this Self&& self, Fallback&& fallback)
+    {
+        if (self.has_value())
+            return forward<Self>(self).value();
+        return forward<Fallback>(fallback);
+    }
+
+    template<typename Self, typename Callback, typename O = T>
+    [[nodiscard]] ALWAYS_INLINE constexpr O value_or_lazy_evaluated(this Self const& self, Callback callback)
+    {
+        if (self.has_value())
+            return self.value();
+        return callback();
+    }
+
+    template<typename Self, typename Callback, typename O = T>
+    [[nodiscard]] ALWAYS_INLINE constexpr Optional<O> value_or_lazy_evaluated_optional(this Self const& self, Callback callback)
+    {
+        if (self.has_value())
+            return self.value();
+        return callback();
+    }
+
+    template<typename Self, typename Callback, typename O = T>
+    [[nodiscard]] ALWAYS_INLINE constexpr ErrorOr<O> try_value_or_lazy_evaluated(this Self const& self, Callback callback)
+    {
+        if (self.has_value())
+            return self.value();
+        return TRY(callback());
+    }
+
+    template<typename Self, typename Callback, typename O = T>
+    [[nodiscard]] ALWAYS_INLINE constexpr ErrorOr<Optional<O>> try_value_or_lazy_evaluated_optional(this Self const& self, Callback callback)
+    {
+        if (self.has_value())
+            return self.value();
+        return TRY(callback());
+    }
+
+    template<typename Self>
+    [[nodiscard]] ALWAYS_INLINE constexpr CopyConst<RemoveReference<Self>, T>& operator*(this Self&& self) { return self.value(); }
+    template<typename Self>
+    ALWAYS_INLINE constexpr CopyConst<RemoveReference<Self>, T>* operator->(this Self&& self) { return &self.value(); }
+
+    template<typename Self, typename F,
+        typename MappedType = decltype(declval<F>()(declval<T&>())),
+        auto IsErrorOr = IsSpecializationOf<MappedType, ErrorOr>,
+        typename OptionalType = Optional<ConditionallyResultType<IsErrorOr, MappedType>>>
+    ALWAYS_INLINE constexpr Conditional<IsErrorOr, ErrorOr<OptionalType>, OptionalType> map(this Self&& self, F&& mapper)
+    {
+        if constexpr (IsErrorOr) {
+            if (self.has_value())
+                return OptionalType { TRY(mapper(forward<Self>(self).value())) };
+            return OptionalType {};
+        } else {
+            if (self.has_value())
+                return OptionalType { mapper(forward<Self>(self).value()) };
+
+            return OptionalType {};
+        }
+    }
+};
+
+template<typename T>
+requires(!IsLvalueReference<T>)
+class [[nodiscard]] Optional<T> : public OptionalBase<T> {
     template<typename U>
     friend class Optional;
 
@@ -304,88 +388,6 @@ public:
         return released_value;
     }
 
-    [[nodiscard]] ALWAYS_INLINE constexpr T value_or(T const& fallback) const&
-    {
-        if (m_has_value)
-            return value();
-        return fallback;
-    }
-
-    [[nodiscard]] ALWAYS_INLINE constexpr T value_or(T&& fallback) &&
-    {
-        if (m_has_value)
-            return move(value());
-        return move(fallback);
-    }
-
-    template<typename Callback>
-    [[nodiscard]] ALWAYS_INLINE constexpr T value_or_lazy_evaluated(Callback callback) const
-    {
-        if (m_has_value)
-            return value();
-        return callback();
-    }
-
-    template<typename Callback>
-    [[nodiscard]] ALWAYS_INLINE constexpr Optional<T> value_or_lazy_evaluated_optional(Callback callback) const
-    {
-        if (m_has_value)
-            return value();
-        return callback();
-    }
-
-    template<typename Callback>
-    [[nodiscard]] ALWAYS_INLINE constexpr ErrorOr<T> try_value_or_lazy_evaluated(Callback callback) const
-    {
-        if (m_has_value)
-            return value();
-        return TRY(callback());
-    }
-
-    template<typename Callback>
-    [[nodiscard]] ALWAYS_INLINE constexpr ErrorOr<Optional<T>> try_value_or_lazy_evaluated_optional(Callback callback) const
-    {
-        if (m_has_value)
-            return value();
-        return TRY(callback());
-    }
-
-    ALWAYS_INLINE constexpr T const& operator*() const { return value(); }
-    ALWAYS_INLINE constexpr T& operator*() { return value(); }
-
-    ALWAYS_INLINE constexpr T const* operator->() const { return &value(); }
-    ALWAYS_INLINE constexpr T* operator->() { return &value(); }
-
-    template<typename F, typename MappedType = decltype(declval<F>()(declval<T&>())), auto IsErrorOr = IsSpecializationOf<MappedType, ErrorOr>, typename OptionalType = Optional<ConditionallyResultType<IsErrorOr, MappedType>>>
-    ALWAYS_INLINE constexpr Conditional<IsErrorOr, ErrorOr<OptionalType>, OptionalType> map(F&& mapper)
-    {
-        if constexpr (IsErrorOr) {
-            if (m_has_value)
-                return OptionalType { TRY(mapper(value())) };
-            return OptionalType {};
-        } else {
-            if (m_has_value)
-                return OptionalType { mapper(value()) };
-
-            return OptionalType {};
-        }
-    }
-
-    template<typename F, typename MappedType = decltype(declval<F>()(declval<T&>())), auto IsErrorOr = IsSpecializationOf<MappedType, ErrorOr>, typename OptionalType = Optional<ConditionallyResultType<IsErrorOr, MappedType>>>
-    ALWAYS_INLINE constexpr Conditional<IsErrorOr, ErrorOr<OptionalType>, OptionalType> map(F&& mapper) const
-    {
-        if constexpr (IsErrorOr) {
-            if (m_has_value)
-                return OptionalType { TRY(mapper(value())) };
-            return OptionalType {};
-        } else {
-            if (m_has_value)
-                return OptionalType { mapper(value()) };
-
-            return OptionalType {};
-        }
-    }
-
 private:
     union {
         // FIXME: GCC seems to have an issue with uninitialized unions and non trivial types,
@@ -401,6 +403,7 @@ private:
 
 template<typename T>
 requires(IsLvalueReference<T>) class [[nodiscard]] Optional<T> {
+    // Note: This can't be based on OptionalBase<T>, does not work with T&'s.
     template<typename>
     friend class Optional;
 
