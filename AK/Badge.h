@@ -15,8 +15,8 @@ class Badge {
 public:
     using Type = T;
 
-    Badge(Badge&&) = default;
-    Badge& operator=(Badge&&) = default;
+    constexpr Badge(Badge&&) = default;
+    constexpr Badge& operator=(Badge&&) = default;
 
 private:
     friend T;
