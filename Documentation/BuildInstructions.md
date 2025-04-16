@@ -12,11 +12,11 @@ sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2
 
 Optional: `fuse2fs` for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
 
-#### GCC 13 or Clang 17+
+#### GCC 14 or Clang 18+
 
-A host compiler that supports C++23 features is required for building host tools, the newer the better. Tested versions include gcc-13 and Clang 17 through 19.
+A host compiler that supports C++23 features is required for building host tools, the newer the better. Tested versions include gcc-14 and Clang 18 through 19.
 
-On Ubuntu gcc-13 is available in the repositories of 24.04 (Noble) and later.
+On Ubuntu gcc-14 is available in the repositories of 24.04 (Noble) and later.
 If you are running an older version, you will either need to upgrade, or find an alternative installation source
 (i.e. from the [ubuntu-toolchain-r/test PPA](https://launchpad.net/~ubuntu-toolchain-r/+archive/ubuntu/test)).
 
@@ -28,10 +28,10 @@ Next, update your local package information from the new repositories:
 sudo apt update
 ```
 
-Now on Ubuntu or Debian you can install gcc-13 with apt like this:
+Now on Ubuntu or Debian you can install gcc-14 with apt like this:
 
 ```console
-sudo apt install gcc-13 g++-13
+sudo apt install gcc-14 g++-14
 ```
 
 For Clang, the following packages are required (for example Clang 19). Note that the `-dev` packages are only necessary when jakt is enabled.
