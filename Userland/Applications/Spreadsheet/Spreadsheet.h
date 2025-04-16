@@ -175,16 +175,3 @@ private:
 };
 
 }
-
-namespace AK {
-
-template<>
-struct Traits<Spreadsheet::Position> : public DefaultTraits<Spreadsheet::Position> {
-    static constexpr bool is_trivial() { return false; }
-    static unsigned hash(Spreadsheet::Position const& p)
-    {
-        return p.hash();
-    }
-};
-
-}
