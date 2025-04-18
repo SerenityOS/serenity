@@ -69,9 +69,17 @@ public:
 
     [[nodiscard]] bool operator==(StringBase const&) const;
 
-    [[nodiscard]] ALWAYS_INLINE FlatPtr raw(Badge<FlyString>) const { return bit_cast<FlatPtr>(m_data); }
+    [[nodiscard]] ALWAYS_INLINE FlatPtr raw(Badge<FlyString>) const { return m_raw; }
+    template<OneOf<String, FlyString> T>
+    [[nodiscard]] ALWAYS_INLINE constexpr bool is_null(Badge<Traits<T>>) const { return m_raw; }
 
 protected:
+    // For Optional
+    constexpr explicit StringBase(nullptr_t)
+        : m_raw { 0 }
+    {
+    }
+
     template<typename Func>
     ErrorOr<void> replace_with_new_string(size_t byte_count, Func&& callback)
     {
@@ -124,6 +132,7 @@ private:
     union {
         ShortString m_short_string;
         Detail::StringData const* m_data { nullptr };
+        FlatPtr m_raw;
     };
 };
 

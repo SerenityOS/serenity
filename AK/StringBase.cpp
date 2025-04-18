@@ -117,7 +117,7 @@ ErrorOr<StringBase> StringBase::substring_from_byte_offset_with_shared_superstri
 
 void StringBase::destroy_string()
 {
-    if (!is_short_string())
+    if (!is_short_string() && m_raw != 0)
         m_data->unref();
 }
 
