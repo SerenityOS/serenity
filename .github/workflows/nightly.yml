@@ -19,7 +19,7 @@ jobs:
     uses: ./.github/workflows/serenity-template.yml
     with:
       toolchain: 'Clang'
-      os: ubuntu-22.04
+      os: ubuntu-24.04
       arch: 'x86_64'
       coverage: 'ON'
 
@@ -33,4 +33,4 @@ jobs:
     with:
       toolchain: 'GNU'
       os_name: 'Linux'
-      os: ubuntu-22.04
+      os: ubuntu-24.04

@@ -14,22 +14,22 @@ jobs:
       fail-fast: false
       matrix:
         toolchain: ['GNU', 'Clang']
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
         arch: ['x86_64']
         debug_options: ['NORMAL_DEBUG']
         include:
           - toolchain: 'GNU'
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             arch: 'aarch64'
             debug_options: 'NORMAL_DEBUG'
 
           - toolchain: 'GNU'
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             arch: 'riscv64'
             debug_options: 'NORMAL_DEBUG'
 
           - toolchain: 'GNU'
-            os: ubuntu-22.04
+            os: ubuntu-24.04
             arch: 'x86_64'
             debug_options: 'ALL_DEBUG'
 
@@ -47,7 +47,7 @@ jobs:
       fail-fast: false
       matrix:
         os_name: ['Linux']
-        os: [ubuntu-22.04]
+        os: [ubuntu-24.04]
         fuzzer: ['NO_FUZZ', 'FUZZ']
         include:
           - os_name: 'macOS'
