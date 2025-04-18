@@ -4,6 +4,7 @@ set -e
 
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
+# shellcheck source=/dev/null
 . "${script_path}/shell_include.sh"
 
 if [ "$(id -u)" != 0 ]; then
