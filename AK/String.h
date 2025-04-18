@@ -202,6 +202,11 @@ public:
     requires(IsSame<RemoveCVReference<T>, StringView>)
     static ErrorOr<String> from_byte_string(T&&) = delete;
 
+    constexpr String(Badge<Optional<String>>)
+        : StringBase(nullptr)
+    {
+    }
+
 private:
     friend class ::AK::FlyString;
 
@@ -216,6 +221,9 @@ private:
 template<>
 struct Traits<String> : public DefaultTraits<String> {
     static unsigned hash(String const&);
+
+    constexpr static auto special_optional_empty_value(Badge<Optional<String>> badge) { return String(move(badge)); }
+    constexpr static bool optional_has_value(String const& str) { return !str.is_null(Badge<Traits<String>> {}); }
 };
 
 template<>
