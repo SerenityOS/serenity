@@ -8,6 +8,7 @@
 #include <AK/FlyString.h>
 #include <AK/StringBase.h>
 #include <AK/StringData.h>
+#include <AK/Types.h>
 
 namespace AK::Detail {
 
@@ -117,7 +118,7 @@ ErrorOr<StringBase> StringBase::substring_from_byte_offset_with_shared_superstri
 
 void StringBase::destroy_string()
 {
-    if (!is_short_string())
+    if (!is_short_string() && m_data != nullptr)
         m_data->unref();
 }
 
