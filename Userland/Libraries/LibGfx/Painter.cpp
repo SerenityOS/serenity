@@ -2106,6 +2106,11 @@ static bool can_approximate_bezier_curve(FloatPoint p1, FloatPoint p2, FloatPoin
     return error <= tolerance;
 }
 
+static float approximate_bezier_curve_length(FloatPoint control_point, FloatPoint p1, FloatPoint p2)
+{
+    return p1.distance_from(control_point) + control_point.distance_from(p2);
+}
+
 // static
 void Painter::for_each_line_segment_on_bezier_curve(FloatPoint control_point, FloatPoint p1, FloatPoint p2, Function<void(FloatPoint, FloatPoint)>& callback)
 {
@@ -2113,31 +2118,37 @@ void Painter::for_each_line_segment_on_bezier_curve(FloatPoint control_point, Fl
         FloatPoint control_point;
         FloatPoint p1;
         FloatPoint p2;
+        int depth { 0 };
+
+        void split(Vector<SegmentDescriptor>& segments)
+        {
+            auto po1_midpoint = control_point + p1;
+            po1_midpoint /= 2;
+
+            auto po2_midpoint = control_point + p2;
+            po2_midpoint /= 2;
+
+            auto new_segment = po1_midpoint + po2_midpoint;
+            new_segment /= 2;
+
+            segments.append({ po2_midpoint, new_segment, p2, depth + 1 });
+            segments.append({ po1_midpoint, p1, new_segment, depth + 1 });
+        }
     };
 
-    static constexpr auto split_quadratic_bezier_curve = [](FloatPoint original_control, FloatPoint p1, FloatPoint p2, auto& segments) {
-        auto po1_midpoint = original_control + p1;
-        po1_midpoint /= 2;
-
-        auto po2_midpoint = original_control + p2;
-        po2_midpoint /= 2;
-
-        auto new_segment = po1_midpoint + po2_midpoint;
-        new_segment /= 2;
-
-        segments.append({ po2_midpoint, new_segment, p2 });
-        segments.append({ po1_midpoint, p1, new_segment });
-    };
+    // Limit splitting to the point where curves are approximately half a pixel in length.
+    int max_split_depth = ceilf(log2(approximate_bezier_curve_length(control_point, p1, p2))) + 1;
 
     Vector<SegmentDescriptor> segments;
     segments.append({ control_point, p1, p2 });
     while (!segments.is_empty()) {
         auto segment = segments.take_last();
 
-        if (can_approximate_bezier_curve(segment.p1, segment.p2, segment.control_point))
+        if (segment.depth >= max_split_depth
+            || can_approximate_bezier_curve(segment.p1, segment.p2, segment.control_point))
             callback(segment.p1, segment.p2);
         else
-            split_quadratic_bezier_curve(segment.control_point, segment.p1, segment.p2, segments);
+            segment.split(segments);
     }
 }
 
@@ -2184,6 +2195,11 @@ static bool can_approximate_cubic_bezier_curve(FloatPoint p1, FloatPoint p2, Flo
     return error <= tolerance;
 }
 
+static float approximate_cubic_bezier_curve_length(FloatPoint control_point_0, FloatPoint control_point_1, FloatPoint p1, FloatPoint p2)
+{
+    return p1.distance_from(control_point_0) + control_point_0.distance_from(control_point_1) + control_point_1.distance_from(p2);
+}
+
 // static
 void Painter::for_each_line_segment_on_cubic_bezier_curve(FloatPoint control_point_0, FloatPoint control_point_1, FloatPoint p1, FloatPoint p2, Function<void(FloatPoint, FloatPoint)>& callback)
 {
@@ -2195,33 +2211,38 @@ void Painter::for_each_line_segment_on_cubic_bezier_curve(FloatPoint control_poi
         ControlPair control_points;
         FloatPoint p1;
         FloatPoint p2;
+        int depth { 0 };
+
+        void split(Vector<SegmentDescriptor>& segments)
+        {
+            Array level_1_midpoints {
+                (p1 + control_points.control_point_0) / 2,
+                (control_points.control_point_0 + control_points.control_point_1) / 2,
+                (control_points.control_point_1 + p2) / 2,
+            };
+            Array level_2_midpoints {
+                (level_1_midpoints[0] + level_1_midpoints[1]) / 2,
+                (level_1_midpoints[1] + level_1_midpoints[2]) / 2,
+            };
+            auto level_3_midpoint = (level_2_midpoints[0] + level_2_midpoints[1]) / 2;
+
+            segments.append({ { level_2_midpoints[1], level_1_midpoints[2] }, level_3_midpoint, p2, depth + 1 });
+            segments.append({ { level_1_midpoints[0], level_2_midpoints[0] }, p1, level_3_midpoint, depth + 1 });
+        }
     };
 
-    static constexpr auto split_cubic_bezier_curve = [](ControlPair const& original_controls, FloatPoint p1, FloatPoint p2, auto& segments) {
-        Array level_1_midpoints {
-            (p1 + original_controls.control_point_0) / 2,
-            (original_controls.control_point_0 + original_controls.control_point_1) / 2,
-            (original_controls.control_point_1 + p2) / 2,
-        };
-        Array level_2_midpoints {
-            (level_1_midpoints[0] + level_1_midpoints[1]) / 2,
-            (level_1_midpoints[1] + level_1_midpoints[2]) / 2,
-        };
-        auto level_3_midpoint = (level_2_midpoints[0] + level_2_midpoints[1]) / 2;
-
-        segments.append({ { level_2_midpoints[1], level_1_midpoints[2] }, level_3_midpoint, p2 });
-        segments.append({ { level_1_midpoints[0], level_2_midpoints[0] }, p1, level_3_midpoint });
-    };
+    // Limit splitting to the point where curves are approximately half a pixel in length.
+    int max_split_depth = ceilf(log2(approximate_cubic_bezier_curve_length(control_point_0, control_point_1, p1, p2))) + 1;
 
     Vector<SegmentDescriptor> segments;
     segments.append({ { control_point_0, control_point_1 }, p1, p2 });
     while (!segments.is_empty()) {
         auto segment = segments.take_last();
-
-        if (can_approximate_cubic_bezier_curve(segment.p1, segment.p2, segment.control_points.control_point_0, segment.control_points.control_point_1))
+        if (segment.depth >= max_split_depth
+            || can_approximate_cubic_bezier_curve(segment.p1, segment.p2, segment.control_points.control_point_0, segment.control_points.control_point_1))
             callback(segment.p1, segment.p2);
         else
-            split_cubic_bezier_curve(segment.control_points, segment.p1, segment.p2, segments);
+            segment.split(segments);
     }
 }
 
