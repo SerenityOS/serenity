@@ -12,7 +12,7 @@
 
 namespace Kernel::PCI {
 
-ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node const&, StringView node_name);
+ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node const&);
 ErrorOr<void> configure_devicetree_host_controller(::DeviceTree::Node const&);
 
 }

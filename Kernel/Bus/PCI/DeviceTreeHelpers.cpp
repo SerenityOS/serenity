@@ -11,10 +11,11 @@
 
 namespace Kernel::PCI {
 
-ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node const& node, StringView node_name)
-{
-    static Optional<u32> s_domain_counter;
+static TriState s_linux_pci_domain_property_used = TriState::Unknown;
+static u32 s_next_pci_domain_number { 0 };
 
+ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node const& node)
+{
     Array<u8, 2> bus_range { 0, 255 };
     auto maybe_bus_range = node.get_property("bus-range"sv);
     if (maybe_bus_range.has_value()) {
@@ -29,23 +30,24 @@ ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node cons
         bus_range[1] = provided_bus_range[1];
     }
 
-    u32 domain_number;
+    u32 domain_number = 0;
     auto maybe_domain_number = node.get_property("linux,pci-domain"sv);
-    if (!maybe_domain_number.has_value()) {
-        // FIXME: Make a check similar to the domain counter check below
-        if (!s_domain_counter.has_value())
-            s_domain_counter = 0;
-        domain_number = s_domain_counter.value();
-        s_domain_counter = s_domain_counter.value() + 1;
-    } else {
-        if (s_domain_counter.has_value()) {
-            dmesgln("PCI: Devicetree node for {} has a PCI-domain assigned, but a previous controller did not have one assigned", node_name);
-            dmesgln("PCI: This could lead to domain collisions if handled improperly");
-            dmesgln("PCI: We will for now reject this device for now, further investigation is advised");
-            return EINVAL;
-        }
-        domain_number = maybe_domain_number.value().as<u32>();
+
+    if (s_linux_pci_domain_property_used != TriState::Unknown && static_cast<TriState>(maybe_domain_number.has_value()) != s_linux_pci_domain_property_used) {
+        dbgln("PCI: Either all or no PCI host bridge devicetree nodes must have a \"linux,pci-domain\" property");
+        return EINVAL;
     }
+
+    if (maybe_domain_number.has_value()) {
+        if (maybe_domain_number->size() != sizeof(u32))
+            return EINVAL;
+
+        domain_number = maybe_domain_number->as<u32>();
+    } else {
+        domain_number = s_next_pci_domain_number++;
+    }
+
+    s_linux_pci_domain_property_used = static_cast<TriState>(maybe_domain_number.has_value());
 
     return Domain {
         domain_number,
