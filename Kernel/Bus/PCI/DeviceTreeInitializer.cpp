@@ -50,7 +50,6 @@ void initialize()
     auto soc_address_cells = pci_host_controller_node_parent.get_property("#address-cells"sv).value().as<u32>();
     [[maybe_unused]] auto soc_size_cells = pci_host_controller_node_parent.get_property("#size-cells"sv).value().as<u32>();
 
-    Optional<u32> domain_counter;
     bool found_compatible_pci_controller = false;
     for (auto const& [name, node] : pci_host_controller_node_parent.children()) {
         if (!name.starts_with("pci"sv))
@@ -95,32 +94,7 @@ void initialize()
         }
         auto reg = maybe_reg.value();
 
-        Array<u8, 2> bus_range { 0, 255 };
-        auto maybe_bus_range = node.get_property("bus-range"sv);
-        if (maybe_bus_range.has_value()) {
-            auto provided_bus_range = maybe_bus_range.value().as<Array<BigEndian<u32>, 2>>();
-            // FIXME: Range check these
-            bus_range[0] = provided_bus_range[0];
-            bus_range[1] = provided_bus_range[1];
-        }
-
-        u32 domain;
-        auto maybe_domain = node.get_property("linux,pci-domain"sv);
-        if (!maybe_domain.has_value()) {
-            // FIXME: Make a check similar to the domain counter check below
-            if (!domain_counter.has_value())
-                domain_counter = 0;
-            domain = domain_counter.value();
-            domain_counter = domain_counter.value() + 1;
-        } else {
-            if (domain_counter.has_value()) {
-                dmesgln("PCI: Devicetree node for {} has a PCI-domain assigned, but a previous controller did not have one assigned", name);
-                dmesgln("PCI: This could lead to domain collisions if handled improperly");
-                dmesgln("PCI: We will for now reject this device for now, further investigation is advised");
-                continue;
-            }
-            domain = maybe_domain.value().as<u32>();
-        }
+        auto domain = determine_pci_domain_for_devicetree_node(node, name).release_value_but_fixme_should_propagate_errors();
 
         switch (controller_compatibility) {
         case ControllerCompatible::ECAM: {
@@ -129,14 +103,7 @@ void initialize()
             auto stream = reg.as_stream();
             FlatPtr paddr = MUST(stream.read_cells(soc_address_cells));
 
-            Access::the().add_host_controller(
-                MemoryBackedHostBridge::must_create(
-                    Domain {
-                        domain,
-                        bus_range[0],
-                        bus_range[1],
-                    },
-                    PhysicalAddress { paddr }));
+            Access::the().add_host_controller(MemoryBackedHostBridge::must_create(domain, PhysicalAddress { paddr }));
             break;
         }
         case ControllerCompatible::Unknown:
