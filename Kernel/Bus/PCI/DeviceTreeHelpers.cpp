@@ -11,11 +11,17 @@
 
 namespace Kernel::PCI {
 
+// Common properties for PCI host bridge nodes: https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-host-bridge.yaml
+// Common properties for PCI bus structure: https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-bus-common.yaml
+// PCI Bus Binding to IEEE Std 1275-1994: https://www.devicetree.org/open-firmware/bindings/pci/pci2_1.pdf
+
 static TriState s_linux_pci_domain_property_used = TriState::Unknown;
 static u32 s_next_pci_domain_number { 0 };
 
 ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node const& node)
 {
+    // PCI Bus Binding to IEEE Std 1275-1994, 3.1.2. Bus-specific Properties for Bus Nodes:
+    // ""bus-range" [...] denotes range of bus numbers controlled by this PCI bus."
     Array<u8, 2> bus_range { 0, 255 };
     auto maybe_bus_range = node.get_property("bus-range"sv);
     if (maybe_bus_range.has_value()) {
@@ -30,6 +36,14 @@ ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node cons
         bus_range[1] = provided_bus_range[1];
     }
 
+    // https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-host-bridge.yaml:
+    // linux,pci-domain:
+    // "If present this property assigns a fixed PCI domain number to a host bridge,
+    //  otherwise an unstable (across boots) unique number will be assigned.
+    //  It is required to either not set this property at all or set it for all
+    //  host bridges in the system, otherwise potentially conflicting domain numbers
+    //  may be assigned to root buses behind different host bridges.  The domain
+    //  number for each host bridge in the system must be unique."
     u32 domain_number = 0;
     auto maybe_domain_number = node.get_property("linux,pci-domain"sv);
 
