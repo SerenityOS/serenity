@@ -43,9 +43,9 @@ If this happens, run `Meta/serenity.sh rebuild x86_64` to start over from a fres
 
 ### GCC is missing or is outdated
 
-Ensure your gcc version is >= 13 with `gcc --version`. Otherwise, install it. If your gcc binary is not
+Ensure your gcc version is >= 14 with `gcc --version`. Otherwise, install it. If your gcc binary is not
 called `gcc` you have to specify the names of your C and C++ compiler when you run cmake, e.g.
-`cmake ../.. -GNinja -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13`.
+`cmake ../.. -GNinja -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14`.
 
 ### Legacy renegotiation is disabled
 
