@@ -18,8 +18,13 @@ ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node cons
     Array<u8, 2> bus_range { 0, 255 };
     auto maybe_bus_range = node.get_property("bus-range"sv);
     if (maybe_bus_range.has_value()) {
-        auto provided_bus_range = maybe_bus_range.value().as<Array<BigEndian<u32>, 2>>();
-        // FIXME: Range check these
+        if (maybe_bus_range->size() != sizeof(u32) * 2)
+            return EINVAL;
+
+        auto provided_bus_range = maybe_bus_range->as<Array<BigEndian<u32>, 2>>();
+        if (provided_bus_range[0] > 255 || provided_bus_range[1] > 255 || provided_bus_range[1] < provided_bus_range[0])
+            return EINVAL;
+
         bus_range[0] = provided_bus_range[0];
         bus_range[1] = provided_bus_range[1];
     }
