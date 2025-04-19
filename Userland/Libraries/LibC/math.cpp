@@ -737,7 +737,7 @@ long long llround(double value) NOEXCEPT
     return internal_to_integer(value, RoundingMode::ToEven);
 }
 
-long long llroundd(long double value) NOEXCEPT
+long long llroundl(long double value) NOEXCEPT
 {
     return internal_to_integer(value, RoundingMode::ToEven);
 }
