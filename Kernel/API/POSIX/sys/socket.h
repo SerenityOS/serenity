@@ -63,7 +63,7 @@ extern "C" {
 #define MSG_NOSIGNAL 0x80
 #define MSG_EOR 0x100
 
-typedef uint16_t sa_family_t;
+typedef __u16 sa_family_t;
 
 struct cmsghdr {
     socklen_t cmsg_len;

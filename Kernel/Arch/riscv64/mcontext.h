@@ -13,8 +13,8 @@ extern "C" {
 #endif
 
 struct __attribute__((packed)) __mcontext {
-    uint64_t x[31];
-    uint64_t pc;
+    __u64 x[31];
+    __u64 pc;
 };
 
 #ifdef __cplusplus

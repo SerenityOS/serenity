@@ -57,8 +57,8 @@ struct ifreq {
         struct sockaddr ifru_hwaddr;
         short ifru_flags;
         int ifru_metric;
-        int64_t ifru_vnetid;
-        uint64_t ifru_media;
+        __i64 ifru_vnetid;
+        __u64 ifru_media;
         void* ifru_data;
         unsigned int ifru_index;
     } ifr_ifru;

@@ -14,9 +14,9 @@ extern "C" {
 
 #define NCCS 32
 
-typedef uint32_t tcflag_t;
-typedef uint8_t cc_t;
-typedef uint32_t speed_t;
+typedef __u32 tcflag_t;
+typedef __u8 cc_t;
+typedef __u32 speed_t;
 
 struct termios {
     tcflag_t c_iflag;
