@@ -23,7 +23,6 @@ enum class CharacterDeviceFamily : unsigned {
     Serial = 4,
     Console = 5,
     Mouse = 10,
-    FUSE = 11,
     GPURender = 28,
     VirtualConsole = 35,
     Keyboard = 85,
@@ -40,7 +39,6 @@ static constexpr CharacterDeviceFamily s_character_device_numbers[] = {
     CharacterDeviceFamily::Serial,
     CharacterDeviceFamily::Console,
     CharacterDeviceFamily::Mouse,
-    CharacterDeviceFamily::FUSE,
     CharacterDeviceFamily::GPURender,
     CharacterDeviceFamily::VirtualConsole,
     CharacterDeviceFamily::Keyboard,
@@ -81,8 +79,6 @@ ALWAYS_INLINE StringView character_device_family_to_string_view(CharacterDeviceF
         return "console"sv;
     case CharacterDeviceFamily::Mouse:
         return "mouse"sv;
-    case CharacterDeviceFamily::FUSE:
-        return "fuse"sv;
     case CharacterDeviceFamily::GPURender:
         return "gpu-render"sv;
     case CharacterDeviceFamily::VirtualConsole:

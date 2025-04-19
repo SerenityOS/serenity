@@ -181,8 +181,8 @@ We allocate them in `Kernel/API/MajorNumberAllocation.h`, based on this set of r
     {
        switch (family) {
        ...
-       case CharacterDeviceFamily::FUSE:
-         return "fuse"sv;
+       case CharacterDeviceFamily::Generic:
+         return "generic"sv;
       ...
        }
     }
@@ -192,7 +192,7 @@ We allocate them in `Kernel/API/MajorNumberAllocation.h`, based on this set of r
     ```c++
     static constexpr CharacterDeviceFamily s_character_device_numbers[] = {
        ...
-       CharacterDeviceFamily::FUSE,
+       CharacterDeviceFamily::Generic,
        ...
     };
     ```

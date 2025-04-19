@@ -133,26 +133,7 @@ index 73abc67..666be7f 100644
  #include <stdio.h>
  #include <stdlib.h>
  #include <unistd.h>
-@@ -50,6 +54,10 @@ struct mount_opts {
- static const struct fuse_opt fuse_mount_opts[] = {
- 	{ "allow_other", offsetof(struct mount_opts, allow_other), 1 },
- 	{ "max_read=%u", offsetof(struct mount_opts, max_read), 1 },
-+#ifdef __serenity__
-+	FUSE_DUAL_OPT_KEY("allow_other",	KEY_KERN),
-+	FUSE_OPT_KEY("max_read=",		KEY_KERN),
-+#else
- 	FUSE_OPT_KEY("-r",			KEY_RO),
- 	/* standard FreeBSD mount options */
- 	FUSE_DUAL_OPT_KEY("dev",		KEY_KERN),
-@@ -95,6 +103,7 @@ static const struct fuse_opt fuse_mount_opts[] = {
- 	 * handle them
- 	 */
- 	FUSE_OPT_KEY("fsname=",			KEY_KERN),
-+#endif
- 	FUSE_OPT_END
- };
- 
-@@ -115,10 +124,12 @@ static int fuse_mount_opt_proc(void *data, const char *arg, int key,
+@@ -115,10 +119,12 @@ static int fuse_mount_opt_proc(void *data, const char *arg, int key,
  	struct mount_opts *mo = data;
  
  	switch (key) {
@@ -165,7 +146,7 @@ index 73abc67..666be7f 100644
  	case KEY_KERN:
  		return fuse_opt_add_opt(&mo->kernel_opts, arg);
  	}
-@@ -130,12 +141,19 @@ static int fuse_mount_opt_proc(void *data, const char *arg, int key,
+@@ -130,12 +136,19 @@ static int fuse_mount_opt_proc(void *data, const char *arg, int key,
  void fuse_kern_unmount(const char *mountpoint, int fd)
  {
  	close(fd);
@@ -185,7 +166,7 @@ index 73abc67..666be7f 100644
  	unsigned ibg;
  	size_t len;
  
-@@ -145,6 +163,7 @@ static int init_backgrounded(void)
+@@ -145,6 +158,7 @@ static int init_backgrounded(void)
  		return 0;
  
  	return ibg;

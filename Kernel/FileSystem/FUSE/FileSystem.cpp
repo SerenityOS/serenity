@@ -70,9 +70,22 @@ Inode& FUSE::root_inode()
     return *m_root_inode;
 }
 
-ErrorOr<void> FUSE::rename(Inode&, StringView, Inode&, StringView)
+ErrorOr<void> FUSE::rename(Inode& old_parent_inode, StringView old_basename, Inode& new_parent_inode, StringView new_basename)
 {
-    return ENOTIMPL;
+    auto payload = TRY(KBuffer::try_create_with_size("FUSE: Lookup name string"sv, sizeof(fuse_rename_in) + old_basename.length() + new_basename.length() + 2));
+    memset(payload->data(), 0, payload->size());
+    fuse_rename_in* rename_in = bit_cast<fuse_rename_in*>(payload->data());
+    rename_in->newdir = new_parent_inode.identifier().index().value();
+    memcpy(rename_in->data, old_basename.characters_without_null_termination(), old_basename.length());
+    memcpy(rename_in->data + old_basename.length() + 1, new_basename.characters_without_null_termination(), new_basename.length());
+
+    auto response = TRY(m_connection->send_request_and_wait_for_a_reply(FUSEOpcode::FUSE_RENAME, old_parent_inode.identifier().index().value(), payload->bytes()));
+
+    fuse_out_header* header = bit_cast<fuse_out_header*>(response->data());
+    if (header->error)
+        return Error::from_errno(-header->error);
+
+    return {};
 }
 
 u8 FUSE::internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const

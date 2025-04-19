@@ -91,6 +91,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`freetype`](freetype/)                       | FreeType                                                      | 2.13.2                   | https://www.freetype.org/                                            |
 | [`fribidi`](fribidi/)                         | GNU FriBidi                                                   | 1.0.16                   | https://github.com/fribidi/fribidi                                   |
 | [`frotz`](frotz/)                             | Frotz                                                         | 2.54                     | https://gitlab.com/DavidGriffith/frotz                               |
+| [`fuse-exfat`](fuse-exfat/)                   | fuse-exfat                                                    | 1.4.0                    | https://gitlab.com/relan/exfat                                       |
 | [`gawk`](gawk/)                               | GNU awk                                                       | 5.3.1                    | https://www.gnu.org/software/gawk/                                   |
 | [`gcc`](gcc/)                                 | GNU Compiler Collection                                       | 14.2.0                   | https://gcc.gnu.org/                                                 |
 | [`gdb`](gdb/)                                 | GNU Project Debugger                                          | 11.2                     | https://sourceware.org/gdb                                           |
