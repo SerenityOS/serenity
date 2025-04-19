@@ -119,7 +119,7 @@ union OpenFirmwareAddress {
         u32 : 3;                  // 0
         u32 aliased : 1;          // t
         u32 prefetchable : 1;     // p
-        u32 relocatable : 1;      // n
+        u32 non_relocatable : 1;  // n
     };
     u32 raw;
 };
