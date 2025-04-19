@@ -525,6 +525,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
 
         Arch/aarch64/Serial/PL011.cpp
 
+        Bus/PCI/DeviceTreeHelpers.cpp
         Bus/PCI/DeviceTreeInitializer.cpp
     )
 
@@ -570,6 +571,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
         Arch/riscv64/Timer.cpp
         Arch/riscv64/trap_handler.S
 
+        Bus/PCI/DeviceTreeHelpers.cpp
         Bus/PCI/DeviceTreeInitializer.cpp
     )
 
