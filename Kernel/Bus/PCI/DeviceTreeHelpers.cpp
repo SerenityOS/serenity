@@ -7,6 +7,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/HostController.h>
 #include <Kernel/Bus/PCI/DeviceTreeHelpers.h>
+#include <Kernel/Library/StdLib.h>
 #include <LibDeviceTree/DeviceTree.h>
 
 namespace Kernel::PCI {
@@ -81,44 +82,48 @@ ErrorOr<void> configure_devicetree_host_controller(::DeviceTree::Node const& nod
 
     auto const& device_tree = DeviceTree::get();
 
-    if (node.parent() == nullptr)
+    auto const* parent = node.parent();
+
+    if (parent == nullptr)
         return EINVAL;
 
-    auto parent_address_cells = node.parent()->address_cells();
+    auto maybe_ranges = node.ranges();
+    if (!maybe_ranges.is_error()) {
+        auto ranges = maybe_ranges.release_value();
 
-    auto maybe_ranges = node.get_property("ranges"sv);
-    if (maybe_ranges.has_value()) {
-        auto address_cells = node.get_property("#address-cells"sv).value().as<u32>();
-        VERIFY(address_cells == 3); // Additional cell for OpenFirmware PCI address metadata
-        auto size_cells = node.get_property("#size-cells"sv).value().as<u32>();
+        for (size_t i = 0; i < ranges.entry_count(); i++) {
+            auto range = MUST(ranges.entry(i));
 
-        auto stream = maybe_ranges.value().as_stream();
-        while (!stream.is_eof()) {
-            auto pci_address = TRY(stream.read_value<OpenFirmwareAddress>());
+            auto raw_pci_address = range.child_bus_address();
+            auto cpu_physical_address = TRY(TRY(parent->translate_child_bus_address_to_root_address(range.parent_bus_address())).as_flatptr());
+            auto range_size = TRY(range.length().as_size_t());
 
-            FlatPtr mmio_address = MUST(stream.read_cells(parent_address_cells));
-            u64 mmio_size = MUST(stream.read_cells(size_cells));
+            if (raw_pci_address.raw().size() != sizeof(OpenFirmwareAddress))
+                return EINVAL;
+
+            OpenFirmwareAddress pci_address {};
+            memcpy(&pci_address, raw_pci_address.raw().data(), sizeof(OpenFirmwareAddress));
 
             if (pci_address.space_type != OpenFirmwareAddress::SpaceType::Memory32BitSpace
                 && pci_address.space_type != OpenFirmwareAddress::SpaceType::Memory64BitSpace)
                 continue; // We currently only support memory-mapped PCI on RISC-V and AArch64
 
             // TODO: Support mapped PCI addresses
-            VERIFY(pci_address.io_or_memory_space_address == mmio_address);
+            VERIFY(pci_address.io_or_memory_space_address == cpu_physical_address);
             if (pci_address.space_type == OpenFirmwareAddress::SpaceType::Memory32BitSpace) {
                 if (pci_address.prefetchable)
                     continue; // We currently only use non-prefetchable 32-bit regions, since 64-bit regions are always prefetchable - TODO: Use 32-bit prefetchable regions if only they are available
-                if (pci_32bit_mmio_size >= mmio_size)
+                if (pci_32bit_mmio_size >= range_size)
                     continue; // We currently only use the single largest region - TODO: Use all available regions if needed
 
-                pci_32bit_mmio_base = mmio_address;
-                pci_32bit_mmio_size = mmio_size;
+                pci_32bit_mmio_base = cpu_physical_address;
+                pci_32bit_mmio_size = range_size;
             } else {
-                if (pci_64bit_mmio_size >= mmio_size)
+                if (pci_64bit_mmio_size >= range_size)
                     continue; // We currently only use the single largest region - TODO: Use all available regions if needed
 
-                pci_64bit_mmio_base = mmio_address;
-                pci_64bit_mmio_size = mmio_size;
+                pci_64bit_mmio_base = cpu_physical_address;
+                pci_64bit_mmio_size = range_size;
             }
         }
     }
