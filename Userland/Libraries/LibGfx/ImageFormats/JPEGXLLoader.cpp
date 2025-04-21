@@ -2517,8 +2517,8 @@ struct Frame {
     u64 width {};
     u64 height {};
 
-    u64 num_groups {};
-    u64 num_lf_groups {};
+    u32 num_groups {};
+    u32 num_lf_groups {};
 
     Optional<Image> image {};
 };
