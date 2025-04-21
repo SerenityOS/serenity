@@ -90,6 +90,27 @@ static void add_alpha_channel(Gfx::Bitmap& bitmap)
     }
 }
 
+static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_grayscale_bitmap()
+{
+    auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 47, 33 }));
+
+    for (int y = 0; y < bitmap->height(); ++y) {
+        for (int x = 0; x < bitmap->width(); ++x) {
+            auto gray = (x + y) * 255 / (bitmap->width() + bitmap->height());
+            bitmap->set_pixel(x, y, Gfx::Color(gray, gray, gray));
+        }
+    }
+
+    return bitmap;
+}
+
+static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_grayscale_alpha_bitmap()
+{
+    auto bitmap = TRY(create_test_grayscale_bitmap());
+    add_alpha_channel(*bitmap);
+    return bitmap;
+}
+
 static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_rgb_bitmap()
 {
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 47, 33 }));
@@ -174,6 +195,8 @@ TEST_CASE(test_jpeg)
 
 TEST_CASE(test_png)
 {
+    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_grayscale_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_grayscale_alpha_bitmap()))));
     TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
     TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }

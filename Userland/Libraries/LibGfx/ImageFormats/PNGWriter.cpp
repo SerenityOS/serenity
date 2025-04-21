@@ -214,7 +214,7 @@ union [[gnu::packed]] Pixel {
 };
 static_assert(AssertSize<Pixel, 4>());
 
-template<bool include_alpha>
+template<bool include_alpha, bool include_colors>
 static ErrorOr<void> add_image_data_to_chunk_impl(Gfx::Bitmap const& bitmap, PNGChunk& png_chunk, Compress::ZlibCompressionLevel compression_level)
 {
     ByteBuffer uncompressed_block_data;
@@ -259,7 +259,9 @@ static ErrorOr<void> add_image_data_to_chunk_impl(Gfx::Bitmap const& bitmap, PNG
 
             u32 sum_of_abs_values() const
             {
-                u32 result = sum[0] + sum[1] + sum[2];
+                u32 result = sum[0];
+                if constexpr (include_colors)
+                    result += sum[1] + sum[2];
                 if constexpr (include_alpha)
                     result += sum[3];
                 return result;
@@ -315,8 +317,10 @@ static ErrorOr<void> add_image_data_to_chunk_impl(Gfx::Bitmap const& bitmap, PNG
             auto pixel_y_minus_1 = Pixel::argb32_to_simd(scanline_minus_1[x]);
 
             auto predicted_pixel = best_filter.predict(pixel, pixel_x_minus_1, pixel_y_minus_1, pixel_xy_minus_1);
-            TRY(uncompressed_block_data.try_append(predicted_pixel[2]));
-            TRY(uncompressed_block_data.try_append(predicted_pixel[1]));
+            if constexpr (include_colors) {
+                TRY(uncompressed_block_data.try_append(predicted_pixel[2]));
+                TRY(uncompressed_block_data.try_append(predicted_pixel[1]));
+            }
             TRY(uncompressed_block_data.try_append(predicted_pixel[0]));
             if constexpr (include_alpha)
                 TRY(uncompressed_block_data.try_append(predicted_pixel[3]));
@@ -335,15 +339,15 @@ static ErrorOr<void> add_image_data_to_chunk(Gfx::Bitmap const& bitmap, PNG::Col
 {
     switch (color_type) {
     case PNG::ColorType::Greyscale:
-        VERIFY_NOT_REACHED();
+        return add_image_data_to_chunk_impl<false, false>(bitmap, png_chunk, compression_level);
     case PNG::ColorType::Truecolor:
-        return add_image_data_to_chunk_impl<false>(bitmap, png_chunk, compression_level);
+        return add_image_data_to_chunk_impl<false, true>(bitmap, png_chunk, compression_level);
     case PNG::ColorType::IndexedColor:
         VERIFY_NOT_REACHED();
     case PNG::ColorType::GreyscaleWithAlpha:
-        VERIFY_NOT_REACHED();
+        return add_image_data_to_chunk_impl<true, false>(bitmap, png_chunk, compression_level);
     case PNG::ColorType::TruecolorWithAlpha:
-        return add_image_data_to_chunk_impl<true>(bitmap, png_chunk, compression_level);
+        return add_image_data_to_chunk_impl<true, true>(bitmap, png_chunk, compression_level);
     }
     VERIFY_NOT_REACHED();
 }
@@ -375,13 +379,34 @@ static bool bitmap_has_transparency(Bitmap const& bitmap)
     return false;
 }
 
+static bool bitmap_has_color(Bitmap const& bitmap)
+{
+    for (auto pixel : bitmap) {
+        auto color = Color::from_argb(pixel);
+        if (color.red() != color.green() || color.green() != color.blue())
+            return true;
+    }
+    return false;
+}
+
+static PNG::ColorType find_color_type(Bitmap const& bitmap, bool force_alpha)
+{
+    bool has_alpha = force_alpha || bitmap_has_transparency(bitmap);
+    if (bitmap_has_color(bitmap)) {
+        if (has_alpha)
+            return PNG::ColorType::TruecolorWithAlpha;
+        return PNG::ColorType::Truecolor;
+    }
+    if (has_alpha)
+        return PNG::ColorType::GreyscaleWithAlpha;
+    return PNG::ColorType::Greyscale;
+}
+
 ErrorOr<void> PNGWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
 {
-    bool has_transparency = options.force_alpha || bitmap_has_transparency(bitmap);
-
     PNGWriter writer { stream };
     TRY(writer.add_png_header());
-    auto color_type = has_transparency ? PNG::ColorType::TruecolorWithAlpha : PNG::ColorType::Truecolor;
+    auto color_type = find_color_type(bitmap, options.force_alpha);
     TRY(writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, color_type, 0, 0, 0));
     if (options.icc_data.has_value())
         TRY(writer.add_iCCP_chunk(options.icc_data.value(), options.compression_level));
