@@ -215,7 +215,7 @@ union [[gnu::packed]] Pixel {
 static_assert(AssertSize<Pixel, 4>());
 
 template<bool include_alpha>
-static ErrorOr<void> add_image_data_to_chunk(Gfx::Bitmap const& bitmap, PNGChunk& png_chunk, Compress::ZlibCompressionLevel compression_level)
+static ErrorOr<void> add_image_data_to_chunk_impl(Gfx::Bitmap const& bitmap, PNGChunk& png_chunk, Compress::ZlibCompressionLevel compression_level)
 {
     ByteBuffer uncompressed_block_data;
     TRY(uncompressed_block_data.try_ensure_capacity(bitmap.size_in_bytes() + bitmap.height()));
@@ -331,23 +331,38 @@ static ErrorOr<void> add_image_data_to_chunk(Gfx::Bitmap const& bitmap, PNGChunk
     return png_chunk.compress_and_add(uncompressed_block_data, compression_level);
 }
 
-template<bool include_alpha>
-ErrorOr<void> PNGWriter::add_fdAT_chunk(Gfx::Bitmap const& bitmap, u32 sequence_number, Compress::ZlibCompressionLevel compression_level)
+static ErrorOr<void> add_image_data_to_chunk(Gfx::Bitmap const& bitmap, PNG::ColorType color_type, PNGChunk& png_chunk, Compress::ZlibCompressionLevel compression_level)
+{
+    switch (color_type) {
+    case PNG::ColorType::Greyscale:
+        VERIFY_NOT_REACHED();
+    case PNG::ColorType::Truecolor:
+        return add_image_data_to_chunk_impl<false>(bitmap, png_chunk, compression_level);
+    case PNG::ColorType::IndexedColor:
+        VERIFY_NOT_REACHED();
+    case PNG::ColorType::GreyscaleWithAlpha:
+        VERIFY_NOT_REACHED();
+    case PNG::ColorType::TruecolorWithAlpha:
+        return add_image_data_to_chunk_impl<true>(bitmap, png_chunk, compression_level);
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<void> PNGWriter::add_fdAT_chunk(Gfx::Bitmap const& bitmap, PNG::ColorType color_type, u32 sequence_number, Compress::ZlibCompressionLevel compression_level)
 {
     // https://www.w3.org/TR/png/#fdAT-chunk
     PNGChunk png_chunk { "fdAT"_string };
     TRY(png_chunk.reserve(bitmap.size_in_bytes() + 4));
     TRY(png_chunk.add_as_big_endian(sequence_number));
-    TRY(add_image_data_to_chunk<include_alpha>(bitmap, png_chunk, compression_level));
+    TRY(add_image_data_to_chunk(bitmap, color_type, png_chunk, compression_level));
     return add_chunk(png_chunk);
 }
 
-template<bool include_alpha>
-ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, Compress::ZlibCompressionLevel compression_level)
+ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap, PNG::ColorType color_type, Compress::ZlibCompressionLevel compression_level)
 {
     PNGChunk png_chunk { "IDAT"_string };
     TRY(png_chunk.reserve(bitmap.size_in_bytes()));
-    TRY(add_image_data_to_chunk<include_alpha>(bitmap, png_chunk, compression_level));
+    TRY(add_image_data_to_chunk(bitmap, color_type, png_chunk, compression_level));
     return add_chunk(png_chunk);
 }
 
@@ -370,10 +385,7 @@ ErrorOr<void> PNGWriter::encode(Stream& stream, Bitmap const& bitmap, Options co
     TRY(writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, color_type, 0, 0, 0));
     if (options.icc_data.has_value())
         TRY(writer.add_iCCP_chunk(options.icc_data.value(), options.compression_level));
-    if (has_transparency)
-        TRY(writer.add_IDAT_chunk<true>(bitmap, options.compression_level));
-    else
-        TRY(writer.add_IDAT_chunk<false>(bitmap, options.compression_level));
+    TRY(writer.add_IDAT_chunk(bitmap, color_type, options.compression_level));
     TRY(writer.add_IEND_chunk());
     return {};
 }
@@ -466,9 +478,9 @@ ErrorOr<void> PNGAnimationWriter::add_frame(Bitmap& bitmap, int duration_ms, Int
     m_sequence_number++;
 
     if (is_first_frame) {
-        TRY(m_writer.add_IDAT_chunk<true>(bitmap, m_options.compression_level));
+        TRY(m_writer.add_IDAT_chunk(bitmap, PNG::ColorType::TruecolorWithAlpha, m_options.compression_level));
     } else {
-        TRY(m_writer.add_fdAT_chunk<true>(bitmap, m_sequence_number, m_options.compression_level));
+        TRY(m_writer.add_fdAT_chunk(bitmap, PNG::ColorType::TruecolorWithAlpha, m_sequence_number, m_options.compression_level));
         m_sequence_number++;
     }
 

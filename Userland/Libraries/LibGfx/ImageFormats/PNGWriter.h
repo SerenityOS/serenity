@@ -51,12 +51,10 @@ private:
     ErrorOr<void> add_png_header();
     ErrorOr<void> add_acTL_chunk(u32 num_frames, u32 loop_count);
     ErrorOr<void> add_fcTL_chunk(fcTLData const& data);
-    template<bool include_alpha>
-    ErrorOr<void> add_fdAT_chunk(Gfx::Bitmap const&, u32 sequence_number, Compress::ZlibCompressionLevel);
+    ErrorOr<void> add_fdAT_chunk(Gfx::Bitmap const&, PNG::ColorType, u32 sequence_number, Compress::ZlibCompressionLevel);
     ErrorOr<void> add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG::ColorType color_type, u8 compression_method, u8 filter_method, u8 interlace_method);
     ErrorOr<void> add_iCCP_chunk(ReadonlyBytes icc_data, Compress::ZlibCompressionLevel);
-    template<bool include_alpha>
-    ErrorOr<void> add_IDAT_chunk(Gfx::Bitmap const&, Compress::ZlibCompressionLevel);
+    ErrorOr<void> add_IDAT_chunk(Gfx::Bitmap const&, PNG::ColorType, Compress::ZlibCompressionLevel);
     ErrorOr<void> add_IEND_chunk();
 };
 
