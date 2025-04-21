@@ -79,6 +79,17 @@ static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap)
     return {};
 }
 
+static void add_alpha_channel(Gfx::Bitmap& bitmap)
+{
+    for (int y = 0; y < bitmap.height(); ++y) {
+        for (int x = 0; x < bitmap.width(); ++x) {
+            Color pixel = bitmap.get_pixel(x, y);
+            pixel.set_alpha(255 - x);
+            bitmap.set_pixel(x, y, pixel);
+        }
+    }
+}
+
 static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_rgb_bitmap()
 {
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 47, 33 }));
@@ -93,15 +104,7 @@ static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_rgb_bitmap()
 static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_rgba_bitmap()
 {
     auto bitmap = TRY(create_test_rgb_bitmap());
-
-    for (int y = 0; y < bitmap->height(); ++y) {
-        for (int x = 0; x < bitmap->width(); ++x) {
-            Color pixel = bitmap->get_pixel(x, y);
-            pixel.set_alpha(255 - x);
-            bitmap->set_pixel(x, y, pixel);
-        }
-    }
-
+    add_alpha_channel(*bitmap);
     return bitmap;
 }
 
