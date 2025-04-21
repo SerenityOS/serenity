@@ -94,20 +94,19 @@ ErrorOr<void> configure_devicetree_host_controller(::DeviceTree::Node const& nod
 
         auto stream = maybe_ranges.value().as_stream();
         while (!stream.is_eof()) {
-            auto pci_address_metadata = bit_cast<OpenFirmwareAddress>(MUST(stream.read_cell()));
-            FlatPtr pci_address = MUST(stream.read_cells(2));
+            auto pci_address = TRY(stream.read_value<OpenFirmwareAddress>());
 
             FlatPtr mmio_address = MUST(stream.read_cells(parent_address_cells));
             u64 mmio_size = MUST(stream.read_cells(size_cells));
 
-            if (pci_address_metadata.space_type != OpenFirmwareAddress::SpaceType::Memory32BitSpace
-                && pci_address_metadata.space_type != OpenFirmwareAddress::SpaceType::Memory64BitSpace)
+            if (pci_address.space_type != OpenFirmwareAddress::SpaceType::Memory32BitSpace
+                && pci_address.space_type != OpenFirmwareAddress::SpaceType::Memory64BitSpace)
                 continue; // We currently only support memory-mapped PCI on RISC-V and AArch64
 
             // TODO: Support mapped PCI addresses
-            VERIFY(pci_address == mmio_address);
-            if (pci_address_metadata.space_type == OpenFirmwareAddress::SpaceType::Memory32BitSpace) {
-                if (pci_address_metadata.prefetchable)
+            VERIFY(pci_address.io_or_memory_space_address == mmio_address);
+            if (pci_address.space_type == OpenFirmwareAddress::SpaceType::Memory32BitSpace) {
+                if (pci_address.prefetchable)
                     continue; // We currently only use non-prefetchable 32-bit regions, since 64-bit regions are always prefetchable - TODO: Use 32-bit prefetchable regions if only they are available
                 if (pci_32bit_mmio_size >= mmio_size)
                     continue; // We currently only use the single largest region - TODO: Use all available regions if needed
@@ -149,14 +148,19 @@ ErrorOr<void> configure_devicetree_host_controller(::DeviceTree::Node const& nod
         VERIFY(maybe_interrupt_map_mask.value().size() == 4 * sizeof(u32));
 
         auto mask_stream = maybe_interrupt_map_mask.value().as_stream();
-        auto metadata_mask = bit_cast<OpenFirmwareAddress>(MUST(mask_stream.read_cell()));
-        u64 phyical_address_mask = MUST(mask_stream.read_cells(2));
-        // [2]: phys.mid and phys.lo mask should be 0 -> physical-address-mask = 0
-        //      0 < metadata_mask < 0xff00
-        VERIFY(phyical_address_mask == 0);
-        VERIFY(metadata_mask.raw <= 0xff00);
-        // Additionally it would be ludicrous/impossible to differentiate interrupts on registers
-        VERIFY(metadata_mask.register_ == 0);
+        auto pci_address_mask = TRY(mask_stream.read_value<OpenFirmwareAddress>());
+
+        // The "interrupt-map-mask" constraints from https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-bus-common.yaml
+        // only allow the function and device mask fields to be non-zero.
+        if (pci_address_mask.register_ != 0
+            || pci_address_mask.bus != 0
+            || pci_address_mask.space_type != static_cast<OpenFirmwareAddress::SpaceType>(0)
+            || pci_address_mask.aliased != 0
+            || pci_address_mask.prefetchable != 0
+            || pci_address_mask.non_relocatable != 0
+            || pci_address_mask.io_or_memory_space_address != 0) {
+            return EINVAL;
+        }
 
         u32 pin_mask = MUST(mask_stream.read_cell());
         // [2]: The interrupt specifier mask should be between 0 and 7
@@ -164,14 +168,13 @@ ErrorOr<void> configure_devicetree_host_controller(::DeviceTree::Node const& nod
 
         interrupt_mask = PCIInterruptSpecifier {
             .interrupt_pin = static_cast<u8>(pin_mask),
-            .function = metadata_mask.function,
-            .device = metadata_mask.device,
-            .bus = metadata_mask.bus,
+            .function = pci_address_mask.function,
+            .device = pci_address_mask.device,
+            .bus = pci_address_mask.bus,
         };
         auto map_stream = maybe_interrupt_map.value().as_stream();
         while (!map_stream.is_eof()) {
-            auto pci_address_metadata = bit_cast<OpenFirmwareAddress>(MUST(map_stream.read_cell()));
-            MUST(map_stream.discard(sizeof(u32) * 2)); // Physical Address, the mask for those is guaranteed to be 0
+            auto pci_address = TRY(map_stream.read_value<OpenFirmwareAddress>());
             u32 pin = MUST(map_stream.read_cell());
 
             u32 interrupt_controller_phandle = MUST(map_stream.read_cell());
@@ -204,13 +207,13 @@ ErrorOr<void> configure_devicetree_host_controller(::DeviceTree::Node const& nod
 #endif
 
             pin &= pin_mask;
-            pci_address_metadata.raw &= metadata_mask.raw;
+            pci_address &= pci_address_mask;
             masked_interrupt_mapping.set(
                 PCIInterruptSpecifier {
                     .interrupt_pin = static_cast<u8>(pin),
-                    .function = pci_address_metadata.function,
-                    .device = pci_address_metadata.device,
-                    .bus = pci_address_metadata.bus,
+                    .function = pci_address.function,
+                    .device = pci_address.device,
+                    .bus = pci_address.bus,
                 },
                 interrupt);
         }
