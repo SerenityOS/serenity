@@ -100,30 +100,51 @@ static constexpr u8 msix_table_bir_mask = 0x7;
 static constexpr u16 msix_table_offset_mask = 0xfff8;
 static constexpr u16 msix_control_enable = 0x8000;
 
-union OpenFirmwareAddress {
+// 2.2.1.1. Numerical Representation, https://www.devicetree.org/open-firmware/bindings/pci/pci2_1.pdf
+struct OpenFirmwareAddress {
     enum class SpaceType : u32 {
         ConfigurationSpace = 0,
         IOSpace = 1,
         Memory32BitSpace = 2,
         Memory64BitSpace = 3,
     };
-    struct {
-        // https://www.devicetree.org/open-firmware/bindings/pci/pci2_1.pdf
-        // Chapter: 2.2.1.1
-        // phys.hi cell
-        u32 register_ : 8;        // r
-        u32 function : 3;         // f
-        u32 device : 5;           // d
-        u32 bus : 8;              // b
-        SpaceType space_type : 2; // s
-        u32 : 3;                  // 0
-        u32 aliased : 1;          // t
-        u32 prefetchable : 1;     // p
-        u32 non_relocatable : 1;  // n
-    };
-    u32 raw;
+
+    // phys.hi cell
+    SpaceType space_type : 2; // s
+    u32 : 3;                  // 0
+    u32 aliased : 1;          // t
+    u32 prefetchable : 1;     // p
+    u32 non_relocatable : 1;  // n
+    u32 bus : 8;              // b
+    u32 function : 3;         // f
+    u32 device : 5;           // d
+    u32 register_ : 8;        // r
+
+    // phys.mid and phys.lo cell
+    BigEndian<u64> io_or_memory_space_address; // h+l
+
+    constexpr OpenFirmwareAddress operator&(OpenFirmwareAddress other) const
+    {
+        return OpenFirmwareAddress {
+            .space_type = static_cast<SpaceType>(to_underlying(space_type) & to_underlying(other.space_type)),
+            .aliased = static_cast<u32>(aliased & other.aliased),
+            .prefetchable = static_cast<u32>(prefetchable & other.prefetchable),
+            .non_relocatable = static_cast<u32>(non_relocatable & other.non_relocatable),
+            .bus = static_cast<u32>(bus & other.bus),
+            .function = static_cast<u32>(function & other.function),
+            .device = static_cast<u32>(device & other.device),
+            .register_ = static_cast<u32>(register_ & other.register_),
+            .io_or_memory_space_address = static_cast<u32>(io_or_memory_space_address & other.io_or_memory_space_address),
+        };
+    }
+
+    constexpr OpenFirmwareAddress& operator&=(OpenFirmwareAddress const& other)
+    {
+        *this = *this & other;
+        return *this;
+    }
 };
-static_assert(AssertSize<OpenFirmwareAddress, 4>());
+static_assert(AssertSize<OpenFirmwareAddress, 3 * sizeof(u32)>());
 
 // Taken from https://pcisig.com/sites/default/files/files/PCI_Code-ID_r_1_11__v24_Jan_2019.pdf
 enum class ClassID {
@@ -554,4 +575,10 @@ struct AK::Formatter<Kernel::PCI::HardwareID> : Formatter<FormatString> {
             builder,
             "PCI::HardwareID [{:04x}:{:04x}]"sv, value.vendor_id, value.device_id);
     }
+};
+
+template<>
+class AK::Traits<Kernel::PCI::OpenFirmwareAddress> : public DefaultTraits<Kernel::PCI::OpenFirmwareAddress> {
+public:
+    static constexpr bool is_trivially_serializable() { return true; }
 };
