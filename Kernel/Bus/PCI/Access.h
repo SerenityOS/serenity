@@ -32,6 +32,8 @@ public:
     void configure_pci_space(HostController&, PCIConfiguration&);
     void rescan_hardware();
 
+    void add_host_controller(NonnullOwnPtr<HostController>);
+
     static Access& the();
     static bool is_initialized();
     static bool is_disabled();
@@ -54,12 +56,9 @@ public:
     ErrorOr<void> add_host_controller_and_scan_for_devices(NonnullOwnPtr<HostController>);
 
 private:
-    friend void PCI::initialize();
-
     u8 read8_field(DeviceIdentifier const&, RegisterOffset field);
     u16 read16_field(DeviceIdentifier const&, RegisterOffset field);
 
-    void add_host_controller(NonnullOwnPtr<HostController>);
     bool find_and_register_pci_host_bridges_from_acpi_mcfg_table(PhysicalAddress mcfg);
 
     mutable RecursiveSpinlock<LockRank::None> m_access_lock {};
