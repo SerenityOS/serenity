@@ -186,7 +186,7 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
             return EINVAL;
         }
 
-        u32 pin_mask = MUST(mask_stream.read_cell());
+        u32 pin_mask = TRY(mask_stream.read_cell());
         // [2]: The interrupt specifier mask should be between 0 and 7
         VERIFY(pin_mask <= 7);
 
@@ -199,9 +199,9 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
         auto map_stream = maybe_interrupt_map.value().as_stream();
         while (!map_stream.is_eof()) {
             auto pci_address = TRY(map_stream.read_value<OpenFirmwareAddress>());
-            u32 pin = MUST(map_stream.read_cell());
+            u32 pin = TRY(map_stream.read_cell());
 
-            u32 interrupt_controller_phandle = MUST(map_stream.read_cell());
+            u32 interrupt_controller_phandle = TRY(map_stream.read_cell());
             auto const* interrupt_controller = device_tree.phandle(interrupt_controller_phandle);
             VERIFY(interrupt_controller);
 
@@ -210,22 +210,22 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
                 TODO();
             }
 
-            MUST(map_stream.discard(sizeof(u32) * interrupt_controller->address_cells()));
+            TRY(map_stream.discard(sizeof(u32) * interrupt_controller->address_cells()));
 
             auto interrupt_cells = interrupt_controller->get_property("#interrupt-cells"sv)->as<u32>();
 #if ARCH(RISCV64)
             VERIFY(interrupt_cells == 1 || interrupt_cells == 2);
-            u64 interrupt = MUST(map_stream.read_cells(interrupt_cells));
+            u64 interrupt = TRY(map_stream.read_cells(interrupt_cells));
 #elif ARCH(AARCH64)
             // FIXME: Don't depend on a specific interrupt descriptor format.
-            auto const& domain_root = *MUST(interrupt_controller->interrupt_domain_root(device_tree));
+            auto const& domain_root = *TRY(interrupt_controller->interrupt_domain_root(device_tree));
             if (!domain_root.is_compatible_with("arm,gic-400"sv) && !domain_root.is_compatible_with("arm,cortex-a15-gic"sv))
                 TODO();
 
             VERIFY(interrupt_cells == 3);
-            MUST(map_stream.discard(sizeof(u32))); // This is the IRQ type.
-            u64 interrupt = MUST(map_stream.read_cell()) + 32;
-            MUST(map_stream.discard(sizeof(u32))); // This is the trigger type.
+            TRY(map_stream.discard(sizeof(u32))); // This is the IRQ type.
+            u64 interrupt = TRY(map_stream.read_cell()) + 32;
+            TRY(map_stream.discard(sizeof(u32))); // This is the trigger type.
 #else
 #    error Unknown architecture
 #endif
