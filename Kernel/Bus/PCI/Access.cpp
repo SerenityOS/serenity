@@ -154,12 +154,11 @@ UNMAP_AFTER_INIT Access::Access()
     s_access = this;
 }
 
-UNMAP_AFTER_INIT void Access::configure_pci_space(PCIConfiguration& config)
+UNMAP_AFTER_INIT void Access::configure_pci_space(HostController& host_controller, PCIConfiguration& config)
 {
     SpinlockLocker locker(m_access_lock);
     SpinlockLocker scan_locker(m_scan_lock);
-    for (auto& [_, host_controller] : m_host_controllers)
-        host_controller->configure_attached_devices(config);
+    host_controller.configure_attached_devices(config);
 }
 
 UNMAP_AFTER_INIT void Access::rescan_hardware()
