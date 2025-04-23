@@ -112,7 +112,7 @@ void initialize()
 
         found_compatible_pci_controller = true;
 
-        configure_devicetree_host_controller(node).release_value_but_fixme_should_propagate_errors();
+        configure_devicetree_host_controller(node, name).release_value_but_fixme_should_propagate_errors();
     }
 
     if (!found_compatible_pci_controller) {

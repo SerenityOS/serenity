@@ -71,7 +71,7 @@ ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node cons
     };
 }
 
-ErrorOr<void> configure_devicetree_host_controller(::DeviceTree::Node const& node)
+ErrorOr<void> configure_devicetree_host_controller(::DeviceTree::Node const& node, StringView node_name)
 {
     FlatPtr pci_32bit_mmio_base = 0;
     u32 pci_32bit_mmio_size = 0;
@@ -91,6 +91,7 @@ ErrorOr<void> configure_devicetree_host_controller(::DeviceTree::Node const& nod
     if (!maybe_ranges.is_error()) {
         auto ranges = maybe_ranges.release_value();
 
+        dbgln("PCI: Address mapping for {}:", node_name);
         for (size_t i = 0; i < ranges.entry_count(); i++) {
             auto range = MUST(ranges.entry(i));
 
@@ -103,6 +104,22 @@ ErrorOr<void> configure_devicetree_host_controller(::DeviceTree::Node const& nod
 
             OpenFirmwareAddress pci_address {};
             memcpy(&pci_address, raw_pci_address.raw().data(), sizeof(OpenFirmwareAddress));
+
+            static constexpr auto space_type_names = Array {
+                "Configuration Space"sv,
+                "I/O Space"sv,
+                "32-bit-address Memory Space"sv,
+                "64-bit-address Memory Space"sv
+            };
+
+            dbgln("  CPU {:p}-{:p} => PCI {:#016x}-{:#016x} {} prefetchable={} relocatable={}",
+                cpu_physical_address,
+                cpu_physical_address + range_size,
+                pci_address.io_or_memory_space_address,
+                pci_address.io_or_memory_space_address + range_size,
+                space_type_names[to_underlying(pci_address.space_type)],
+                !!pci_address.prefetchable,
+                !pci_address.non_relocatable);
 
             if (pci_address.space_type != OpenFirmwareAddress::SpaceType::Memory32BitSpace
                 && pci_address.space_type != OpenFirmwareAddress::SpaceType::Memory64BitSpace)
