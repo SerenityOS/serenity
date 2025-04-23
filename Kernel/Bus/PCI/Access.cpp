@@ -181,7 +181,6 @@ ErrorOr<void> Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& ca
     Vector<NonnullRefPtr<DeviceIdentifier>> device_identifiers;
     {
         SpinlockLocker locker(m_access_lock);
-        VERIFY(!m_device_identifiers.is_empty());
         TRY(device_identifiers.try_extend(m_device_identifiers));
     }
     for (auto const& device_identifier : device_identifiers) {
