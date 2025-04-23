@@ -127,8 +127,11 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
                 && pci_address.space_type != OpenFirmwareAddress::SpaceType::Memory64BitSpace)
                 continue; // We currently only support memory-mapped PCI on RISC-V and AArch64
 
-            // TODO: Support mapped PCI addresses
-            VERIFY(pci_address.io_or_memory_space_address == cpu_physical_address);
+            if (pci_address.io_or_memory_space_address != cpu_physical_address) {
+                dbgln("PCI: FIXME: Support non-identity-mapped PCI ranges");
+                return ENOTSUP;
+            }
+
             if (pci_address.space_type == OpenFirmwareAddress::SpaceType::Memory32BitSpace) {
                 if (pci_address.prefetchable)
                     continue; // We currently only use non-prefetchable 32-bit regions, since 64-bit regions are always prefetchable - TODO: Use 32-bit prefetchable regions if only they are available
@@ -168,14 +171,21 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
     auto maybe_interrupt_map = node.get_property("interrupt-map"sv);
     auto maybe_interrupt_map_mask = node.get_property("interrupt-map-mask"sv);
     if (maybe_interrupt_map.has_value() && maybe_interrupt_map_mask.has_value()) {
-        VERIFY(node.get_property("#interrupt-cells"sv)->as<u32>() == 1);
-        VERIFY(maybe_interrupt_map_mask.value().size() == 4 * sizeof(u32));
+        auto maybe_interrupt_cells = node.get_property("#interrupt-cells"sv);
+        if (!maybe_interrupt_cells.has_value())
+            return EINVAL;
+
+        if (maybe_interrupt_cells->size() != sizeof(u32) || maybe_interrupt_cells->as<u32>() != 1)
+            return EINVAL;
+
+        if (maybe_interrupt_map_mask->size() != 4 * sizeof(u32))
+            return EINVAL;
 
         auto mask_stream = maybe_interrupt_map_mask.value().as_stream();
         auto pci_address_mask = TRY(mask_stream.read_value<OpenFirmwareAddress>());
 
         // The "interrupt-map-mask" constraints from https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-bus-common.yaml
-        // only allow the function and device mask fields to be non-zero.
+        // only allow the function and device mask fields to be non-zero and the interrupt specifier mask to be between 0 and 7.
         if (pci_address_mask.register_ != 0
             || pci_address_mask.bus != 0
             || pci_address_mask.space_type != static_cast<OpenFirmwareAddress::SpaceType>(0)
@@ -187,8 +197,8 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
         }
 
         u32 pin_mask = TRY(mask_stream.read_cell());
-        // [2]: The interrupt specifier mask should be between 0 and 7
-        VERIFY(pin_mask <= 7);
+        if (pin_mask > 7)
+            return EINVAL;
 
         interrupt_mask = PCIInterruptSpecifier {
             .interrupt_pin = static_cast<u8>(pin_mask),
@@ -203,7 +213,8 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
 
             u32 interrupt_controller_phandle = TRY(map_stream.read_cell());
             auto const* interrupt_controller = device_tree.phandle(interrupt_controller_phandle);
-            VERIFY(interrupt_controller);
+            if (interrupt_controller == nullptr)
+                return EINVAL;
 
             if (!interrupt_controller->has_property("interrupt-controller"sv)) {
                 dmesgln("PCI: Implement support for nested interrupt nexuses");
@@ -214,15 +225,19 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
 
             auto interrupt_cells = interrupt_controller->get_property("#interrupt-cells"sv)->as<u32>();
 #if ARCH(RISCV64)
-            VERIFY(interrupt_cells == 1 || interrupt_cells == 2);
+            if (interrupt_cells != 1 && interrupt_cells != 2)
+                return ENOTSUP;
+
             u64 interrupt = TRY(map_stream.read_cells(interrupt_cells));
 #elif ARCH(AARCH64)
             // FIXME: Don't depend on a specific interrupt descriptor format.
             auto const& domain_root = *TRY(interrupt_controller->interrupt_domain_root(device_tree));
             if (!domain_root.is_compatible_with("arm,gic-400"sv) && !domain_root.is_compatible_with("arm,cortex-a15-gic"sv))
-                TODO();
+                return ENOTSUP;
 
-            VERIFY(interrupt_cells == 3);
+            if (interrupt_cells != 3)
+                return ENOTSUP;
+
             TRY(map_stream.discard(sizeof(u32))); // This is the IRQ type.
             u64 interrupt = TRY(map_stream.read_cell()) + 32;
             TRY(map_stream.discard(sizeof(u32))); // This is the trigger type.
