@@ -27,7 +27,7 @@ public:
 #endif
 
     ErrorOr<void> fast_enumerate(Function<void(DeviceIdentifier const&)>&) const;
-    void configure_pci_space(PCIConfiguration&);
+    void configure_pci_space(HostController&, PCIConfiguration&);
     void rescan_hardware();
 
     static Access& the();

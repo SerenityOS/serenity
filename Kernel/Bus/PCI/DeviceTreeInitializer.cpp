@@ -96,6 +96,8 @@ void initialize()
 
         auto domain = determine_pci_domain_for_devicetree_node(node, name).release_value_but_fixme_should_propagate_errors();
 
+        OwnPtr<HostController> host_controller = nullptr;
+
         switch (controller_compatibility) {
         case ControllerCompatible::ECAM: {
             // FIXME: Make this use a nice helper function
@@ -103,7 +105,7 @@ void initialize()
             auto stream = reg.as_stream();
             FlatPtr paddr = MUST(stream.read_cells(soc_address_cells));
 
-            Access::the().add_host_controller(MemoryBackedHostBridge::must_create(domain, PhysicalAddress { paddr }));
+            host_controller = MemoryBackedHostBridge::must_create(domain, PhysicalAddress { paddr });
             break;
         }
         case ControllerCompatible::Unknown:
@@ -112,7 +114,9 @@ void initialize()
 
         found_compatible_pci_controller = true;
 
-        configure_devicetree_host_controller(node, name).release_value_but_fixme_should_propagate_errors();
+        configure_devicetree_host_controller(*host_controller, node, name).release_value_but_fixme_should_propagate_errors();
+
+        Access::the().add_host_controller(host_controller.release_nonnull());
     }
 
     if (!found_compatible_pci_controller) {

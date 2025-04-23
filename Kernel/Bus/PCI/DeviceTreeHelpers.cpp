@@ -73,7 +73,7 @@ ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node cons
     };
 }
 
-ErrorOr<void> configure_devicetree_host_controller(::DeviceTree::Node const& node, StringView node_name)
+ErrorOr<void> configure_devicetree_host_controller(HostController& host_controller, ::DeviceTree::Node const& node, StringView node_name)
 {
     FlatPtr pci_32bit_mmio_base = 0;
     u32 pci_32bit_mmio_size = 0;
@@ -252,7 +252,7 @@ ErrorOr<void> configure_devicetree_host_controller(::DeviceTree::Node const& nod
             move(masked_interrupt_mapping),
             interrupt_mask,
         };
-        Access::the().configure_pci_space(config);
+        Access::the().configure_pci_space(host_controller, config);
     } else {
         dmesgln("PCI: No MMIO ranges found - assuming pre-configured by bootloader");
     }
