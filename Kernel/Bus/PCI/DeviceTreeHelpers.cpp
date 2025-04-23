@@ -19,7 +19,7 @@ namespace Kernel::PCI {
 static TriState s_linux_pci_domain_property_used = TriState::Unknown;
 static u32 s_next_pci_domain_number { 0 };
 
-ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node const& node)
+ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node const& node, StringView node_name)
 {
     // PCI Bus Binding to IEEE Std 1275-1994, 3.1.2. Bus-specific Properties for Bus Nodes:
     // ""bus-range" [...] denotes range of bus numbers controlled by this PCI bus."
@@ -63,6 +63,8 @@ ErrorOr<Domain> determine_pci_domain_for_devicetree_node(::DeviceTree::Node cons
     }
 
     s_linux_pci_domain_property_used = static_cast<TriState>(maybe_domain_number.has_value());
+
+    dbgln("PCI: Assigned domain number {} for {}", domain_number, node_name);
 
     return Domain {
         domain_number,
