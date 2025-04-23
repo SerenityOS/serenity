@@ -94,7 +94,7 @@ void initialize()
         }
         auto reg = maybe_reg.value();
 
-        auto domain = determine_pci_domain_for_devicetree_node(node).release_value_but_fixme_should_propagate_errors();
+        auto domain = determine_pci_domain_for_devicetree_node(node, name).release_value_but_fixme_should_propagate_errors();
 
         switch (controller_compatibility) {
         case ControllerCompatible::ECAM: {
