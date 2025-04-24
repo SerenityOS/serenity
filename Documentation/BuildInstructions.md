@@ -146,6 +146,7 @@ For select ports you might need slightly more exotic dependencies such as:
 -   `libpython3-dev` (most prominently for boost)
 -   `lua` (for luarocks)
 -   `openjdk-17-jdk` (to compile OpenJDK)
+-   `p7zip-full` (for msttcorefonts)
 -   `rake` (to build mruby).
 
 You may also need a symlink from "/usr/bin/python" to "/usr/bin/python3"; some ports depend on "python" existing, most notably ninja.

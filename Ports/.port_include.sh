@@ -364,6 +364,9 @@ fetch_simple() {
                 run_nocd bsdtar xf "${PORT_META_DIR}/${filename}" || run_nocd unzip -qo "${PORT_META_DIR}/${filename}"
                 run touch ".${filename}_extracted"
                 ;;
+            *.exe|*.htm)
+                cp "${PORT_META_DIR}/${filename}" ./
+                ;;
             *)
                 echo "Note: no case for file $filename."
                 cp "${PORT_META_DIR}/${filename}" ./
