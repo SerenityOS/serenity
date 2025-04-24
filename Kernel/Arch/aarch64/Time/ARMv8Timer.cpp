@@ -107,7 +107,7 @@ ErrorOr<void> ARMv8TimerDriver::probe(DeviceTree::Device const& device, StringVi
 {
     auto const interrupts = TRY(device.node().interrupts(DeviceTree::get()));
 
-    if (device.node().has_property("interrupt-names"sv) || interrupts.size() != 4)
+    if (device.node().has_property("interrupt-names"sv))
         return ENOTSUP; // TODO: Support the interrupt-names property.
 
     enum class DeviceTreeTimerInterruptIndex {
@@ -118,6 +118,9 @@ ErrorOr<void> ARMv8TimerDriver::probe(DeviceTree::Device const& device, StringVi
     };
 
     // Use the EL1 virtual timer, as that timer should should be accessible to us both on device and in a VM.
+    if (interrupts.size() < (to_underlying(DeviceTreeTimerInterruptIndex::EL1Virtual) + 1))
+        return ENOTSUP;
+
     auto const& interrupt = interrupts[to_underlying(DeviceTreeTimerInterruptIndex::EL1Virtual)];
 
     // FIXME: Don't depend on a specific interrupt descriptor format and implement proper devicetree interrupt mapping/translation.
