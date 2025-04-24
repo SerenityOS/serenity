@@ -115,6 +115,10 @@ kernel=Kernel.bin
 [pi4]
 # We use UART0 as the console.
 dtoverlay=disable-bt
+
+[pi5]
+# We only support 32-bit framebuffers.
+framebuffer_depth=32
 EOF
 
 echo "serial_debug root=block100:1" >boot/cmdline.txt
