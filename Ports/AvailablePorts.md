@@ -223,6 +223,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`mpfr`](mpfr/)                               | GNU Multiple Precision Floating-Point Reliable Library (MPFR) | 4.2.1                    | https://www.mpfr.org/                                                |
 | [`mrsh`](mrsh/)                               | mrsh                                                          | cd3c3a4                  | https://mrsh.sh/                                                     |
 | [`mruby`](mruby/)                             | mruby                                                         | 3.0.0                    | https://mruby.org/                                                   |
+| [`msttcorefonts`](msttcorefonts/)             | Microsoft's TrueType core fonts                               |                          | https://corefonts.sourceforge.net/                                   |
 | [`mysthous`](mysthous/)                       | Hi-Res Adventure #1: Mystery House                            | 1.0                      | https://www.scummvm.org/games/#games-hires1                          |
 | [`nano`](nano/)                               | GNU nano                                                      | 8.2                      | https://www.nano-editor.org/                                         |
 | [`nasm`](nasm/)                               | Netwide Assembler (NASM)                                      | 2.16.03                  | https://www.nasm.us/                                                 |
