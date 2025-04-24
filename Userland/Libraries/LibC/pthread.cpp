@@ -636,6 +636,8 @@ int pthread_spin_lock(pthread_spinlock_t* lock)
 
         if (current == desired)
             return EDEADLK;
+        if (current != spinlock_unlock_sentinel)
+            continue;
 
         if (AK::atomic_compare_exchange_strong(&lock->m_lock, current, desired, AK::MemoryOrder::memory_order_acquire))
             break;
