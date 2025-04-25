@@ -61,6 +61,7 @@ private:
     static ErrorOr<void> create_unique_sfn_for(FATEntry& entry, NonnullRefPtr<SFNUtils::SFN> sfn, Vector<ByteBuffer> existing_sfns);
     static ErrorOr<void> encode_known_good_sfn_for(FATEntry& entry, StringView name);
     static ErrorOr<Vector<FATLongFileNameEntry>> create_lfn_entries(StringView name, u8 checksum);
+    static ErrorOr<void> fill_in_creation_time(FATEntry&, UnixDateTime const&);
 
     ErrorOr<RawPtr<Vector<u32>>> get_cluster_list();
     ErrorOr<Vector<u32>> compute_cluster_list(FATFS&, u32 first_cluster);
