@@ -29,7 +29,7 @@ ErrorOr<size_t> FUSEInode::read_bytes_locked(off_t offset, size_t size, UserOrKe
 
     constexpr size_t max_read_size = 0x21000 - sizeof(fuse_in_header) - sizeof(fuse_read_in);
     u64 id = TRY(try_open(false, O_RDONLY));
-    u32 nodeid = identifier().index().value();
+    u64 nodeid = identifier().index().value();
 
     size_t nread = 0;
     size_t target_size = size;
@@ -70,7 +70,7 @@ ErrorOr<size_t> FUSEInode::write_bytes_locked(off_t offset, size_t size, UserOrK
 
     constexpr size_t max_write_size = 0x21000 - sizeof(fuse_in_header) - sizeof(fuse_write_in);
     u64 id = TRY(try_open(false, O_WRONLY));
-    u32 nodeid = identifier().index().value();
+    u64 nodeid = identifier().index().value();
 
     size_t nwritten = 0;
     while (size) {
@@ -106,7 +106,7 @@ InodeMetadata FUSEInode::metadata() const
 {
     InodeMetadata metadata;
     metadata.inode = identifier();
-    u32 id = identifier().index().value();
+    u64 id = identifier().index().value();
 
     fuse_getattr_in payload {};
 
@@ -141,7 +141,7 @@ InodeMetadata FUSEInode::metadata() const
 
 ErrorOr<u64> FUSEInode::try_open(bool directory, u32 flags) const
 {
-    u32 id = identifier().index().value();
+    u64 id = identifier().index().value();
 
     fuse_open_in payload {};
     payload.flags = flags;
@@ -161,7 +161,7 @@ ErrorOr<u64> FUSEInode::try_open(bool directory, u32 flags) const
 
 ErrorOr<void> FUSEInode::try_flush(u64 id) const
 {
-    u32 nodeid = identifier().index().value();
+    u64 nodeid = identifier().index().value();
 
     fuse_flush_in payload {};
     payload.fh = id;
@@ -172,7 +172,7 @@ ErrorOr<void> FUSEInode::try_flush(u64 id) const
 
 ErrorOr<void> FUSEInode::try_release(u64 id, bool directory) const
 {
-    u32 nodeid = identifier().index().value();
+    u64 nodeid = identifier().index().value();
 
     fuse_release_in payload {};
     payload.fh = id;
@@ -195,7 +195,7 @@ static size_t get_dirent_entry_length_padded(size_t name_length)
 ErrorOr<void> FUSEInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const
 {
     u64 id = TRY(try_open(true, 0));
-    u32 nodeid = identifier().index().value();
+    u64 nodeid = identifier().index().value();
 
     fuse_read_in payload {};
     payload.fh = id;
@@ -259,7 +259,7 @@ ErrorOr<void> FUSEInode::add_child(Inode& inode, StringView name, mode_t mode)
 
 ErrorOr<NonnullRefPtr<Inode>> FUSEInode::create_child(StringView name, mode_t mode, dev_t rdev, UserID, GroupID)
 {
-    u32 id = identifier().index().value();
+    u64 id = identifier().index().value();
 
     size_t name_offset = Kernel::is_directory(mode) ? offsetof(fuse_mkdir_in, data) : offsetof(fuse_mknod_in, data);
     auto payload = TRY(KBuffer::try_create_with_size("FUSE: Create child buffer"sv, name_offset + name.length() + 1));

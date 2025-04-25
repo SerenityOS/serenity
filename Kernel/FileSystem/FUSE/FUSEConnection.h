@@ -32,7 +32,7 @@ public:
         return connection;
     }
 
-    static ErrorOr<NonnullOwnPtr<KBuffer>> create_request(FUSEOpcode opcode, u32 nodeid, u32 unique, ReadonlyBytes request_body)
+    static ErrorOr<NonnullOwnPtr<KBuffer>> create_request(FUSEOpcode opcode, u64 nodeid, u64 unique, ReadonlyBytes request_body)
     {
         size_t request_length = sizeof(fuse_in_header) + request_body.size();
         auto request = TRY(KBuffer::try_create_with_size("FUSE: Request"sv, request_length));
@@ -54,7 +54,7 @@ public:
         return request;
     }
 
-    ErrorOr<NonnullOwnPtr<KBuffer>> send_request_and_wait_for_a_reply(FUSEOpcode opcode, u32 nodeid, ReadonlyBytes request_body)
+    ErrorOr<NonnullOwnPtr<KBuffer>> send_request_and_wait_for_a_reply(FUSEOpcode opcode, u64 nodeid, ReadonlyBytes request_body)
     {
         auto* device = bit_cast<FUSEDevice*>(m_description->device());
 
@@ -63,7 +63,7 @@ public:
         if (!m_initialized)
             TRY(handle_init());
 
-        u32 unique = m_unique++;
+        u64 unique = m_unique++;
         auto request = TRY(create_request(opcode, nodeid, unique, request_body));
         auto response = TRY(device->send_request_and_wait_for_a_reply(m_description, request->bytes()));
 
@@ -87,7 +87,7 @@ private:
     {
     }
 
-    ErrorOr<void> validate_response(KBuffer const& response, u32 unique)
+    ErrorOr<void> validate_response(KBuffer const& response, u64 unique)
     {
         if (response.size() < sizeof(fuse_out_header)) {
             dmesgln("FUSE: Received a request with a malformed header");
@@ -136,7 +136,7 @@ private:
 
     NonnullRefPtr<OpenFileDescription> m_description;
     bool m_initialized { false };
-    Atomic<u32> m_unique { 0 };
+    Atomic<u64> m_unique { 0 };
 
     u32 m_major { 0 };
     u32 m_minor { 0 };
