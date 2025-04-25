@@ -87,7 +87,6 @@ public:
 private:
     T m_value;
     RecursiveSpinlock<Rank> mutable m_spinlock;
-    static constexpr LockRank const m_rank { Rank };
 };
 
 }
