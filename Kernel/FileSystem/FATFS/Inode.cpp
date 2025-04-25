@@ -19,7 +19,7 @@ ErrorOr<NonnullRefPtr<FATInode>> FATInode::create(FATFS& fs, FATEntry entry, FAT
 }
 
 FATInode::FATInode(FATFS& fs, FATEntry entry, FATEntryLocation inode_metadata_location, NonnullOwnPtr<KString> filename)
-    : Inode(fs, first_cluster(fs.m_fat_version, entry.first_cluster_low, entry.first_cluster_high))
+    : Inode(fs, inode_metadata_location.block.value() * (fs.logical_block_size() / sizeof(FATEntry)) + inode_metadata_location.entry)
     , m_entry(entry)
     , m_inode_metadata_location(inode_metadata_location)
     , m_filename(move(filename))
@@ -352,18 +352,13 @@ StringView FATInode::byte_terminated_string(StringView string, u8 fill_byte)
 
 u32 FATInode::first_cluster() const
 {
-    return first_cluster(fs().m_fat_version, m_entry.first_cluster_low, m_entry.first_cluster_high);
-}
-
-u32 FATInode::first_cluster(FATVersion const version, u16 first_cluster_low, u16 first_cluster_high)
-{
-    if (version == FATVersion::FAT32) {
-        return (static_cast<u32>(first_cluster_high) << 16) | first_cluster_low;
+    if (fs().m_fat_version == FATVersion::FAT32) {
+        return (static_cast<u32>(m_entry.first_cluster_high) << 16) | m_entry.first_cluster_low;
     }
     // The space occupied in a directory entry by `first_cluster_high` (0x14)
     // is reserved in FAT12/16, and may be used to store file meta-data.
     // As a result, do not include it on FAT12/16 file systems.
-    return first_cluster_low;
+    return m_entry.first_cluster_low;
 }
 
 ErrorOr<void> FATInode::allocate_and_add_cluster_to_chain()
