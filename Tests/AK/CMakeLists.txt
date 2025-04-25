@@ -23,6 +23,7 @@ set(AK_TEST_SOURCES
     TestComplex.cpp
     TestConstrainedStream.cpp
     TestCoroutine.cpp
+    TestDOSPackedTime.cpp
     TestDisjointChunks.cpp
     TestDistinctNumeric.cpp
     TestDoublyLinkedList.cpp

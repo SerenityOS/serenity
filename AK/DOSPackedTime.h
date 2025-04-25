@@ -32,10 +32,14 @@ union DOSPackedDate {
 static_assert(sizeof(DOSPackedDate) == 2);
 
 inline constexpr u16 first_dos_year = 1980;
+inline constexpr u32 first_dos_representable_unix_timestamp = UnixDateTime::from_unix_time_parts(1980, 1, 1, 0, 0, 0, 0).seconds_since_epoch();
+inline constexpr u64 last_dos_representable_unix_timestamp = UnixDateTime::from_unix_time_parts(2107, 12, 31, 23, 59, 59, 0).seconds_since_epoch();
 
 UnixDateTime time_from_packed_dos(DOSPackedDate, DOSPackedTime);
 DOSPackedDate to_packed_dos_date(unsigned year, unsigned month, unsigned day);
 DOSPackedTime to_packed_dos_time(unsigned hour, unsigned minute, unsigned second);
+ErrorOr<DOSPackedDate> to_packed_dos_date(UnixDateTime const&);
+ErrorOr<DOSPackedTime> to_packed_dos_time(UnixDateTime const&);
 
 }
 
