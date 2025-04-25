@@ -250,6 +250,7 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FATInode::read_block_list()
 
 ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback)
 {
+    VERIFY(m_inode_lock.is_locked());
     VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
 
     Vector<FATLongFileNameEntry> lfn_entries;
@@ -354,6 +355,7 @@ StringView FATInode::byte_terminated_string(StringView string, u8 fill_byte)
 
 u32 FATInode::first_cluster() const
 {
+    VERIFY(m_inode_lock.is_locked());
     if (fs().m_fat_version == FATVersion::FAT32) {
         return (static_cast<u32>(m_entry.first_cluster_high) << 16) | m_entry.first_cluster_low;
     }
@@ -430,6 +432,7 @@ ErrorOr<Vector<FATEntryLocation>> FATInode::allocate_entries(u32 count)
 {
     // FIXME: This function ignores unused entries, we should make use of them
     // FIXME: If we fail anywhere here, we should make sure the end entry is at the correct location
+    VERIFY(m_inode_lock.is_locked());
 
     auto blocks = TRY(read_block_list());
     auto entries = bit_cast<FATEntry*>(blocks->data());
@@ -492,6 +495,7 @@ ErrorOr<Vector<FATEntryLocation>> FATInode::allocate_entries(u32 count)
 
 ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
+    VERIFY(m_inode_lock.is_locked());
     VERIFY(offset >= 0);
     if (offset >= m_entry.file_size)
         return 0;
@@ -529,6 +533,7 @@ ErrorOr<size_t> FATInode::read_bytes_locked(off_t offset, size_t count, UserOrKe
 
 InodeMetadata FATInode::metadata() const
 {
+    MutexLocker locker(m_inode_lock);
     auto cluster_count = ceil_div(static_cast<u64>(m_entry.file_size), fs().m_device_block_size * fs().m_parameter_block->common_bpb()->sectors_per_cluster);
     return {
         .inode = identifier(),
@@ -580,6 +585,7 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::lookup(StringView name)
 
 ErrorOr<size_t> FATInode::write_bytes_locked(off_t offset, size_t size, UserOrKernelBuffer const& buffer, OpenFileDescription*)
 {
+    VERIFY(m_inode_lock.is_locked());
     dbgln_if(FAT_DEBUG, "FATInode[{}]::write_bytes_locked(): Writing size: {} offset: {}", identifier(), size, offset);
 
     u32 new_size = max(m_entry.file_size, offset + size);
@@ -619,6 +625,7 @@ ErrorOr<size_t> FATInode::write_bytes_locked(off_t offset, size_t size, UserOrKe
 
 ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mode, dev_t, UserID, GroupID)
 {
+    MutexLocker locker(m_inode_lock);
     VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
 
     dbgln_if(FAT_DEBUG, "FATInode[{}]::create_child(): creating inode \"{}\"", identifier(), name);
@@ -647,8 +654,6 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
     Vector<FATLongFileNameEntry> lfn_entries = {};
     if (!valid_sfn)
         lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
-
-    MutexLocker locker(m_inode_lock);
 
     auto entries = TRY(allocate_entries(lfn_entries.size() + 1));
 
@@ -809,6 +814,8 @@ ErrorOr<void> FATInode::chown(UserID, GroupID)
 
 ErrorOr<void> FATInode::zero_data(u64 offset, u64 count)
 {
+    VERIFY(m_inode_lock.is_locked());
+
     Vector<u8> zero_buffer;
     TRY(zero_buffer.try_resize(fs().m_device_block_size));
 
@@ -886,6 +893,8 @@ ErrorOr<void> FATInode::truncate_locked(u64 size)
 
 ErrorOr<void> FATInode::flush_metadata()
 {
+    MutexLocker locker(m_inode_lock);
+
     if (m_inode_metadata_location.block == 0)
         return {};
 
