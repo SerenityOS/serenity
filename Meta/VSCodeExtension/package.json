@@ -1,0 +1,117 @@
+{
+    "name": "serenity-dsl-syntaxhighlight",
+    "publisher": "SerenityOS",
+    "repository": {
+        "url": "https://github.com/SerenityOS/serenity",
+        "type": "git"
+    },
+    "displayName": "SerenityOS DSL Syntax Highlight",
+    "description": "Syntax Highlighting for the DSLs in SerenityOS",
+    "version": "0.4.0",
+    "engines": {
+        "vscode": "^1.58.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "keywords": [
+        "Serenity",
+        "SerenityOS",
+        "Inter Process Communication",
+        "IPC",
+        "Graphics Markup Language",
+        "GML",
+        "IDL",
+        "Web IDL"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "serenity-gml",
+                "aliases": [
+                    "Graphics Markup Language (SerenityOS)",
+                    "serenity-gml"
+                ],
+                "extensions": [
+                    ".gml"
+                ],
+                "configuration": "./language-config-gml.json"
+            },
+            {
+                "id": "serenity-ipc",
+                "aliases": [
+                    "Inter Process Communication Endpoint (SerenityOS)",
+                    "serenity-ipc"
+                ],
+                "extensions": [
+                    ".ipc"
+                ],
+                "configuration": "./language-config-ipc.json"
+            },
+            {
+                "id": "web-idl-serenity",
+                "aliases": [
+                    "Web IDL (SerenityOS)",
+                    "web-idl",
+                    "idl"
+                ],
+                "extensions": [
+                    ".idl"
+                ],
+                "configuration": "./language-config-idl.json"
+            },
+            {
+                "id": "libjs-bytecode-serenity",
+                "aliases": [
+                    "LibJS Bytecode (SerenityOS)"
+                ],
+                "extensions": [],
+                "configuration": "./language-config-libjs-bytecode.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "serenity-gml",
+                "scopeName": "source.serenity-gml",
+                "path": "./syntaxes/serenity-gml.tmLanguage.json"
+            },
+            {
+                "language": "serenity-ipc",
+                "scopeName": "source.serenity-ipc",
+                "path": "./syntaxes/serenity-ipc.tmLanguage.json"
+            },
+            {
+                "language": "web-idl-serenity",
+                "scopeName": "source.serenity-idl",
+                "path": "./syntaxes/serenity-web-idl.tmLanguage.json"
+            },
+            {
+                "language": "libjs-bytecode-serenity",
+                "scopeName": "source.libjs.bytecode",
+                "path": "./syntaxes/serenity-libjs-bytecode.tmLanguage.json"
+            }
+        ]
+    },
+    "activationEvents": [
+        "onLanguage:serenity-gml"
+    ],
+    "main": "./out/extension.js",
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./"
+    },
+    "devDependencies": {
+        "@types/node": "14.x",
+        "@types/tmp": "^0.2.1",
+        "@types/vscode": "^1.58.0",
+        "typescript": "^4.5.4"
+    },
+    "dependencies": {
+        "tmp": "^0.2.1"
+    },
+    "vsce": {
+        "yarn": false
+    },
+    "packageManager": "yarn@4.6.0+sha512.5383cc12567a95f1d668fbe762dfe0075c595b4bfff433be478dbbe24e05251a8e8c3eb992a986667c1d53b6c3a9c85b8398c35a960587fbd9fa3a0915406728"
+}
