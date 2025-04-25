@@ -73,6 +73,7 @@ set(CMD_SOURCES_CPP
     iconv.cpp
     id.cpp
     ifconfig.cpp
+    iffysign.cpp
     image.cpp
     image2bin.cpp
     imgcmp.cpp
@@ -238,7 +239,7 @@ list(APPEND REQUIRED_TARGETS
     touch tr true umount uname uniq uptime w watchfs wc which whoami xargs yes
 )
 list(APPEND RECOMMENDED_TARGETS
-    aconv adjtime aplay abench asctl bt checksum chres cksum copy fortune gzip install keymap lsdev lsirq lsof lspci lzcat man mkfs.fat mknod mktemp
+    aconv adjtime aplay abench asctl bt checksum chres cksum copy fortune gzip iffysign install keymap lsdev lsirq lsof lspci lzcat man mkfs.fat mknod mktemp
     nc netstat notify ntpquery open passwd pixelflut pls printf pro shot strings tar tt unzip wallpaper xzcat zip
 )
 
@@ -330,6 +331,7 @@ target_link_libraries(headless-browser PRIVATE LibCrypto LibFileSystem LibGemini
 target_link_libraries(hiddump PRIVATE LibHID)
 target_link_libraries(icc PRIVATE LibGfx LibMedia LibURL)
 target_link_libraries(iconv PRIVATE LibTextCodec)
+target_link_libraries(iffysign PRIVATE LibCrypto)
 target_link_libraries(image PRIVATE LibGfx)
 target_link_libraries(image2bin PRIVATE LibGfx)
 target_link_libraries(imgcmp PRIVATE LibGfx)

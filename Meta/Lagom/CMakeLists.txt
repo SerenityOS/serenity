@@ -604,6 +604,7 @@ if (BUILD_LAGOM)
 
         lagom_utility(icc SOURCES ../../Userland/Utilities/icc.cpp LIBS LibGfx LibMain LibURL)
         lagom_utility(iconv SOURCES ../../Userland/Utilities/iconv.cpp LIBS LibTextCodec LibMain)
+        lagom_utility(iffysign SOURCES ../../Userland/Utilities/iffysign.cpp LIBS LibCrypto LibMain)
         lagom_utility(image SOURCES ../../Userland/Utilities/image.cpp LIBS LibGfx LibMain)
         lagom_utility(imgcmp SOURCES ../../Userland/Utilities/imgcmp.cpp LIBS LibGfx LibMain)
         lagom_utility(isobmff SOURCES ../../Userland/Utilities/isobmff.cpp LIBS LibGfx LibMain)
