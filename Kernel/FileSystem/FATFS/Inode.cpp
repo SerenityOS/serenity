@@ -648,13 +648,15 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
     MutexLocker locker(m_inode_lock);
 
     auto entries = TRY(allocate_entries(lfn_entries.size() + 1));
-    u32 allocated_cluster = TRY(fs().allocate_cluster());
-    if (fs().m_fat_version == FATVersion::FAT32)
-        entry.first_cluster_high = allocated_cluster >> 16;
-
-    entry.first_cluster_low = allocated_cluster & 0xFFFF;
 
     if (mode & S_IFDIR) {
+        u32 allocated_cluster = TRY(fs().allocate_cluster());
+        if (fs().m_fat_version == FATVersion::FAT32)
+            entry.first_cluster_high = allocated_cluster >> 16;
+
+        entry.first_cluster_low = allocated_cluster & 0xFFFF;
+
+        // This is used for generating a directory's "." and ".." entries.
         auto create_directory_entry = [&](StringView entry_name) {
             VERIFY(entry_name.length() <= 8);
             FATEntry directory_entry {};
