@@ -710,50 +710,9 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
     return TRY(FATInode::create(fs(), entry, entries[lfn_entries.size()], lfn_entries));
 }
 
-ErrorOr<void> FATInode::add_child(Inode& inode, StringView name, mode_t mode)
+ErrorOr<void> FATInode::add_child(Inode&, StringView, mode_t)
 {
-    VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
-    VERIFY(inode.fsid() == fsid());
-
-    // FIXME: There's a lot of similar code between this function and create_child, we should try to factor out some of the common code.
-
-    dbgln_if(FAT_DEBUG, "FATInode[{}]::add_child(): appending inode {} as \"{}\"", identifier(), inode.identifier(), name);
-
-    auto entry = bit_cast<FATInode*>(&inode)->m_entry;
-
-    bool valid_sfn = SFNUtils::is_valid_sfn(name);
-
-    if (valid_sfn) {
-        TRY(encode_known_good_sfn_for(entry, name));
-    } else {
-        auto sfn = TRY(SFNUtils::create_sfn_from_lfn(name));
-        Vector<ByteBuffer> existing_sfns = TRY(collect_sfns());
-        TRY(create_unique_sfn_for(entry, move(sfn), move(existing_sfns)));
-    }
-
-    // TODO: We should set the hidden attribute if the file starts with a dot or read only (the same way Linux does this).
-    if (mode & S_IFDIR)
-        entry.attributes |= FATAttributes::Directory;
-
-    // FIXME: Set the dates
-
-    Vector<FATLongFileNameEntry> lfn_entries = {};
-    if (!valid_sfn)
-        lfn_entries = TRY(create_lfn_entries(name, lfn_entry_checksum(entry)));
-
-    MutexLocker locker(m_inode_lock);
-
-    auto entries = TRY(allocate_entries(lfn_entries.size() + 1));
-
-    // FIXME: If we fail here we should clean up the entries we wrote
-    TRY(fs().write_block(entries[lfn_entries.size()].block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&entry)), sizeof(FATEntry), entries[lfn_entries.size()].entry * sizeof(FATEntry)));
-
-    for (u32 i = 0; i < lfn_entries.size(); i++) {
-        auto location = entries[lfn_entries.size() - i - 1];
-        TRY(fs().write_block(location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&lfn_entries[i])), sizeof(FATLongFileNameEntry), location.entry * sizeof(FATLongFileNameEntry)));
-    }
-
-    return {};
+    return ENOTSUP;
 }
 
 ErrorOr<void> FATInode::remove_child_impl(StringView name, FreeClusters free_clusters)
