@@ -47,6 +47,8 @@ ErrorOr<Vector<u32>> FATInode::compute_cluster_list(FATFS& fs, u32 first_cluster
     u32 cluster = first_cluster;
 
     Vector<u32> cluster_list;
+    if (first_cluster <= 1)
+        return cluster_list;
 
     while (cluster < fs.end_of_chain_marker()) {
         dbgln_if(FAT_DEBUG, "FATInode::compute_cluster_list(): Appending cluster {} to cluster chain starting with {}", cluster, first_cluster);
@@ -800,12 +802,12 @@ ErrorOr<void> FATInode::remove_child_impl(StringView name, FreeClusters free_clu
                 for (auto const& lfn_entry_location : lfn_entry_locations)
                     TRY(fs().write_block(lfn_entry_location.block, UserOrKernelBuffer::for_kernel_buffer(bit_cast<u8*>(&unused_entry)), sizeof(FATEntry), lfn_entry_location.entry * sizeof(FATEntry)));
 
-                if (name == "."sv || name == ".."sv || free_clusters == FreeClusters::No)
-                    return {};
-
                 u32 entry_first_cluster = entry->first_cluster_low;
                 if (fs().m_fat_version == FATVersion::FAT32)
                     entry_first_cluster |= (static_cast<u32>(entry->first_cluster_high) << 16);
+
+                if (name == "."sv || name == ".."sv || free_clusters == FreeClusters::No || entry_first_cluster <= 1)
+                    return {};
 
                 auto cluster_list = TRY(compute_cluster_list(fs(), entry_first_cluster));
 
