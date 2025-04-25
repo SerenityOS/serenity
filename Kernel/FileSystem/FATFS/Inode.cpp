@@ -9,6 +9,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FATFS/Inode.h>
 #include <Kernel/Library/KBufferBuilder.h>
+#include <Kernel/Tasks/Process.h>
 
 namespace Kernel {
 
@@ -544,7 +545,7 @@ InodeMetadata FATInode::metadata() const
         .gid = 0,
         .link_count = 0,
         .atime = time_from_packed_dos(m_entry.last_accessed_date, { 0 }),
-        .ctime = time_from_packed_dos(m_entry.creation_date, m_entry.creation_time),
+        .ctime = time_from_packed_dos(m_entry.creation_date, m_entry.creation_time) + Duration::from_milliseconds(m_entry.creation_time_seconds * 10),
         .mtime = time_from_packed_dos(m_entry.modification_date, m_entry.modification_time),
         .dtime = {},
         .block_count = cluster_count * fs().m_parameter_block->common_bpb()->sectors_per_cluster,
@@ -623,6 +624,24 @@ ErrorOr<size_t> FATInode::write_bytes_locked(off_t offset, size_t size, UserOrKe
     return size;
 }
 
+ErrorOr<void> FATInode::fill_in_creation_time(FATEntry& entry, UnixDateTime const& timestamp)
+{
+    auto packed_date = TRY(to_packed_dos_date(timestamp));
+    auto packed_time = TRY(to_packed_dos_time(timestamp));
+
+    entry.creation_date = move(packed_date);
+    entry.creation_time = move(packed_time);
+
+    // NOTE: The "creation_time_seconds" field not only compensates for the fact that seconds are counted in intervals of two,
+    // it also adds in rudimentary support for millisecond precision, though this is limited to only two digits.
+    auto day_start_precision = days_since_epoch(entry.creation_date.year + AK::first_dos_year, entry.creation_date.month, entry.creation_date.day) * 86'400;
+    auto day_precision = entry.creation_time.hour * 60 * 60 + entry.creation_time.minute * 60 + entry.creation_time.second * 2;
+    entry.creation_time_seconds = (timestamp.truncated_milliseconds_since_epoch() - day_start_precision * 1000 - day_precision * 1000) / 10;
+    VERIFY(entry.creation_time_seconds < 200);
+
+    return {};
+}
+
 ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mode, dev_t, UserID, GroupID)
 {
     MutexLocker locker(m_inode_lock);
@@ -649,7 +668,12 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
     if (mode & S_IFDIR)
         entry.attributes |= FATAttributes::Directory;
 
-    // FIXME: Set the dates
+    auto now = kgettimeofday();
+    if (auto error_or_void = fill_in_creation_time(entry, now); !error_or_void.is_error()) {
+        entry.modification_date = entry.creation_date;
+        entry.modification_time = entry.creation_time;
+        entry.last_accessed_date = entry.creation_date;
+    }
 
     Vector<FATLongFileNameEntry> lfn_entries = {};
     if (!valid_sfn)
@@ -906,9 +930,36 @@ ErrorOr<void> FATInode::flush_metadata()
     return {};
 }
 
-ErrorOr<void> FATInode::update_timestamps(Optional<UnixDateTime>, Optional<UnixDateTime>, Optional<UnixDateTime>)
+ErrorOr<void> FATInode::update_timestamps(Optional<UnixDateTime> atime, Optional<UnixDateTime> ctime, Optional<UnixDateTime> mtime)
 {
-    // FIXME: Implement FATInode::update_timestamps
+    MutexLocker locker(m_inode_lock);
+
+    Optional<DOSPackedDate> packed_last_accessed_date;
+    Optional<DOSPackedDate> packed_modified_date;
+    Optional<DOSPackedTime> packed_modified_time;
+
+    if (atime.has_value())
+        packed_last_accessed_date = TRY(to_packed_dos_date(atime.value()));
+
+    if (mtime.has_value()) {
+        packed_modified_date = TRY(to_packed_dos_date(mtime.value()));
+        packed_modified_time = TRY(to_packed_dos_time(mtime.value()));
+    }
+
+    // NOTE: This is initialized after we've parsed everything else
+    // to ensure that no changes will be made if we fail to parse
+    // any of the arguments.
+    if (ctime.has_value())
+        TRY(fill_in_creation_time(m_entry, ctime.value()));
+
+    if (atime.has_value())
+        m_entry.last_accessed_date = packed_last_accessed_date.release_value();
+
+    if (mtime.has_value()) {
+        m_entry.modification_date = packed_modified_date.release_value();
+        m_entry.modification_time = packed_modified_time.release_value();
+    }
+
     return {};
 }
 
