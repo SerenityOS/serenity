@@ -623,6 +623,9 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
 
     dbgln_if(FAT_DEBUG, "FATInode[{}]::create_child(): creating inode \"{}\"", identifier(), name);
 
+    if (!Kernel::is_directory(mode) && !Kernel::is_regular_file(mode))
+        return ENOTSUP;
+
     FATEntry entry {};
 
     bool valid_sfn = SFNUtils::is_valid_sfn(name);
