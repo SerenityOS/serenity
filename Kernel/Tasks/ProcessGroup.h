@@ -44,7 +44,7 @@ private:
 
 public:
     using AllInstancesList = IntrusiveList<&ProcessGroup::m_list_node>;
-    static SpinlockProtected<AllInstancesList, LockRank::None>& all_instances();
+    static RecursiveSpinlockProtected<AllInstancesList, LockRank::None>& all_instances();
 };
 
 }

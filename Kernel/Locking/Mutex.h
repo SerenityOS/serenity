@@ -117,7 +117,7 @@ private:
         }
     };
     // FIXME: Use a specific lock rank passed by constructor.
-    SpinlockProtected<BlockedThreadLists, LockRank::None> m_blocked_thread_lists {};
+    RecursiveSpinlockProtected<BlockedThreadLists, LockRank::None> m_blocked_thread_lists {};
 
     // FIXME: See above.
     mutable Spinlock<LockRank::None> m_lock {};

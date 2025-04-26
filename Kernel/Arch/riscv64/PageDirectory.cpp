@@ -17,7 +17,7 @@
 namespace Kernel::Memory {
 
 struct SATPMap {
-    SpinlockProtected<IntrusiveRedBlackTree<&PageDirectory::m_tree_node>, LockRank::None> map {};
+    RecursiveSpinlockProtected<IntrusiveRedBlackTree<&PageDirectory::m_tree_node>, LockRank::None> map {};
 };
 
 static Singleton<SATPMap> s_satp_map;

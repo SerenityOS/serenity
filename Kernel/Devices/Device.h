@@ -66,7 +66,7 @@ public:
         return request;
     }
 
-    static SpinlockProtected<CircularQueue<DeviceEvent, 100>, LockRank::None>& event_queue();
+    static RecursiveSpinlockProtected<CircularQueue<DeviceEvent, 100>, LockRank::None>& event_queue();
     static BaseDevices* base_devices();
     static void after_inserting_device(Badge<Device>, Device&);
     static void before_device_removal(Badge<Device>, Device&);

@@ -24,11 +24,11 @@
 
 #define INCLUDE_USERSPACE_HEAP_MEMORY_IN_COREDUMPS 0
 
-static Singleton<SpinlockProtected<OwnPtr<KString>, LockRank::None>> s_coredump_directory_path;
+static Singleton<RecursiveSpinlockProtected<OwnPtr<KString>, LockRank::None>> s_coredump_directory_path;
 
 namespace Kernel {
 
-SpinlockProtected<OwnPtr<KString>, LockRank::None>& Coredump::directory_path()
+RecursiveSpinlockProtected<OwnPtr<KString>, LockRank::None>& Coredump::directory_path()
 {
     return s_coredump_directory_path;
 }

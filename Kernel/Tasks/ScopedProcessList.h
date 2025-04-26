@@ -27,16 +27,16 @@ public:
     void attach(Process&);
 
     IndexID id() const { return m_id; }
-    SpinlockProtected<IntrusiveListRelaxedConst<&Process::m_scoped_process_list_node>, LockRank::None>& attached_processes() { return m_attached_processes; }
-    SpinlockProtected<IntrusiveListRelaxedConst<&Process::m_scoped_process_list_node>, LockRank::None> const& attached_processes() const { return m_attached_processes; }
+    RecursiveSpinlockProtected<IntrusiveListRelaxedConst<&Process::m_scoped_process_list_node>, LockRank::None>& attached_processes() { return m_attached_processes; }
+    RecursiveSpinlockProtected<IntrusiveListRelaxedConst<&Process::m_scoped_process_list_node>, LockRank::None> const& attached_processes() const { return m_attached_processes; }
 
 private:
     ScopedProcessList();
 
-    SpinlockProtected<IntrusiveListRelaxedConst<&Process::m_scoped_process_list_node>, LockRank::None> m_attached_processes;
+    RecursiveSpinlockProtected<IntrusiveListRelaxedConst<&Process::m_scoped_process_list_node>, LockRank::None> m_attached_processes;
     IndexID m_id;
 
-    SpinlockProtected<size_t, LockRank::None> m_attach_count { 0 };
+    RecursiveSpinlockProtected<size_t, LockRank::None> m_attach_count { 0 };
     IntrusiveListNode<ScopedProcessList, NonnullRefPtr<ScopedProcessList>> m_list_node;
 
 public:

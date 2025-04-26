@@ -18,9 +18,9 @@
 namespace Kernel {
 
 struct AllDevicesDetails {
-    SpinlockProtected<HashMap<u64, BlockDevice*>, LockRank::None> block_devices {};
-    SpinlockProtected<HashMap<u64, CharacterDevice*>, LockRank::None> char_devices {};
-    SpinlockProtected<CircularQueue<DeviceEvent, 100>, LockRank::None> event_queue {};
+    RecursiveSpinlockProtected<HashMap<u64, BlockDevice*>, LockRank::None> block_devices {};
+    RecursiveSpinlockProtected<HashMap<u64, CharacterDevice*>, LockRank::None> char_devices {};
+    RecursiveSpinlockProtected<CircularQueue<DeviceEvent, 100>, LockRank::None> event_queue {};
     // NOTE: There's no locking on this pointer because we expect to initialize it once
     // and never touch it again.
     OwnPtr<BaseDevices> base_devices;
@@ -28,7 +28,7 @@ struct AllDevicesDetails {
 
 static Singleton<AllDevicesDetails> s_all_details;
 
-SpinlockProtected<CircularQueue<DeviceEvent, 100>, LockRank::None>& Device::event_queue()
+RecursiveSpinlockProtected<CircularQueue<DeviceEvent, 100>, LockRank::None>& Device::event_queue()
 {
     return s_all_details->event_queue;
 }

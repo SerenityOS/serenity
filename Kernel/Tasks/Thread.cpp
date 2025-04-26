@@ -33,9 +33,9 @@
 
 namespace Kernel {
 
-static Singleton<SpinlockProtected<Thread::GlobalList, LockRank::None>> s_list;
+static Singleton<RecursiveSpinlockProtected<Thread::GlobalList, LockRank::None>> s_list;
 
-SpinlockProtected<Thread::GlobalList, LockRank::None>& Thread::all_instances()
+RecursiveSpinlockProtected<Thread::GlobalList, LockRank::None>& Thread::all_instances()
 {
     return *s_list;
 }

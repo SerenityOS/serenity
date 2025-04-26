@@ -89,7 +89,7 @@ protected:
     NonnullOwnPtr<IOWindow> m_stream_io_window;
     u8 m_stream_number;
     OwnPtr<Memory::Region> m_buffer_descriptor_list;
-    SpinlockProtected<OwnPtr<Memory::Region>, LockRank::None> m_buffers;
+    RecursiveSpinlockProtected<OwnPtr<Memory::Region>, LockRank::None> m_buffers;
     size_t m_buffer_position { 0 };
     WaitQueue m_irq_queue;
     bool m_running { false };

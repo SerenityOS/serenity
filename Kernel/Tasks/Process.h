@@ -264,7 +264,7 @@ public:
     static SessionID get_sid_from_pgid(ProcessGroupID pgid);
 
     using Name = FixedStringBuffer<32>;
-    SpinlockProtected<Name, LockRank::None> const& name() const;
+    RecursiveSpinlockProtected<Name, LockRank::None> const& name() const;
     void set_name(StringView);
 
     ProcessID pid() const
@@ -637,8 +637,8 @@ public:
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
     PerformanceEventBuffer const* perf_events() const { return m_perf_event_buffer; }
 
-    SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None>& address_space() { return m_space; }
-    SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None> const& address_space() const { return m_space; }
+    RecursiveSpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None>& address_space() { return m_space; }
+    RecursiveSpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None> const& address_space() const { return m_space; }
 
     VirtualAddress signal_trampoline() const
     {
@@ -774,9 +774,9 @@ private:
         return nullptr;
     }
 
-    SpinlockProtected<Name, LockRank::None> m_name;
+    RecursiveSpinlockProtected<Name, LockRank::None> m_name;
 
-    SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None> m_space;
+    RecursiveSpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None> m_space;
 
     RecursiveSpinlock<LockRank::None> mutable m_protected_data_lock;
     AtomicEdgeAction<u32> m_protected_data_refs;
@@ -958,13 +958,13 @@ private:
     };
     ErrorOr<MountTargetContext> context_for_mount_operation(int vfs_root_context_id, StringView path);
 
-    SpinlockProtected<Thread::ListInProcess, LockRank::None>& thread_list() { return m_thread_list; }
-    SpinlockProtected<Thread::ListInProcess, LockRank::None> const& thread_list() const { return m_thread_list; }
+    RecursiveSpinlockProtected<Thread::ListInProcess, LockRank::None>& thread_list() { return m_thread_list; }
+    RecursiveSpinlockProtected<Thread::ListInProcess, LockRank::None> const& thread_list() const { return m_thread_list; }
 
     ErrorOr<NonnullRefPtr<Thread>> get_thread_from_pid_or_tid(pid_t pid_or_tid, Syscall::SchedulerParametersMode mode);
     ErrorOr<NonnullRefPtr<Thread>> get_thread_from_thread_list(pid_t tid);
 
-    SpinlockProtected<Thread::ListInProcess, LockRank::None> m_thread_list {};
+    RecursiveSpinlockProtected<Thread::ListInProcess, LockRank::None> m_thread_list {};
 
     MutexProtected<OpenFileDescriptions> m_fds;
 
@@ -978,9 +978,9 @@ private:
     KCOVInstance* m_kcov_instance { nullptr };
 #endif
 
-    SpinlockProtected<RefPtr<Custody>, LockRank::None> m_executable;
+    RecursiveSpinlockProtected<RefPtr<Custody>, LockRank::None> m_executable;
 
-    SpinlockProtected<RefPtr<Custody>, LockRank::None> m_current_directory;
+    RecursiveSpinlockProtected<RefPtr<Custody>, LockRank::None> m_current_directory;
 
     UnixDateTime const m_creation_time;
 
@@ -994,19 +994,19 @@ public:
     using AllProcessesList = IntrusiveListRelaxedConst<&Process::m_all_processes_list_node>;
 
 private:
-    SpinlockProtected<RefPtr<ScopedProcessList>, LockRank::None> m_scoped_process_list;
+    RecursiveSpinlockProtected<RefPtr<ScopedProcessList>, LockRank::None> m_scoped_process_list;
 
-    SpinlockProtected<RefPtr<VFSRootContext>, LockRank::Process> m_attached_vfs_root_context;
+    RecursiveSpinlockProtected<RefPtr<VFSRootContext>, LockRank::Process> m_attached_vfs_root_context;
 
-    SpinlockProtected<RefPtr<HostnameContext>, LockRank::Process> m_attached_hostname_context;
+    RecursiveSpinlockProtected<RefPtr<HostnameContext>, LockRank::Process> m_attached_hostname_context;
 
     Mutex m_big_lock { "Process"sv, Mutex::MutexBehavior::BigLock };
     Mutex m_ptrace_lock { "ptrace"sv };
 
-    SpinlockProtected<RefPtr<Timer>, LockRank::None> m_alarm_timer;
+    RecursiveSpinlockProtected<RefPtr<Timer>, LockRank::None> m_alarm_timer;
 
-    SpinlockProtected<UnveilData, LockRank::None> m_unveil_data;
-    SpinlockProtected<UnveilData, LockRank::None> m_exec_unveil_data;
+    RecursiveSpinlockProtected<UnveilData, LockRank::None> m_unveil_data;
+    RecursiveSpinlockProtected<UnveilData, LockRank::None> m_exec_unveil_data;
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
 
@@ -1022,7 +1022,7 @@ private:
         OwnPtr<KString> value;
     };
 
-    SpinlockProtected<Array<CoredumpProperty, 4>, LockRank::None> m_coredump_properties {};
+    RecursiveSpinlockProtected<Array<CoredumpProperty, 4>, LockRank::None> m_coredump_properties {};
     Vector<NonnullRefPtr<Thread>> m_threads_for_coredump;
 
     struct SignalActionData {
@@ -1037,7 +1037,7 @@ private:
     u8 m_protected_values_padding[PAGE_SIZE - sizeof(ProtectedValues)];
 
 public:
-    static SpinlockProtected<Process::AllProcessesList, LockRank::None>& all_instances();
+    static RecursiveSpinlockProtected<Process::AllProcessesList, LockRank::None>& all_instances();
 };
 
 // Note: Process object should be 2 pages of 4096 bytes each.

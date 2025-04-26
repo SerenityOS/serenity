@@ -70,7 +70,7 @@ private:
         InodeWatcherEvent::Type type { InodeWatcherEvent::Type::Invalid };
         OwnPtr<KString> path;
     };
-    SpinlockProtected<CircularQueue<Event, 32>, LockRank::None> m_queue;
+    RecursiveSpinlockProtected<CircularQueue<Event, 32>, LockRank::None> m_queue;
     Checked<int> m_wd_counter { 1 };
 
     // NOTE: These two hashmaps provide two different ways of reaching the same
@@ -80,7 +80,7 @@ private:
         HashMap<InodeIdentifier, WatchDescription*> inode_to_watches;
     };
 
-    mutable SpinlockProtected<WatchMaps, LockRank::None> m_watch_maps;
+    mutable RecursiveSpinlockProtected<WatchMaps, LockRank::None> m_watch_maps;
 };
 
 }

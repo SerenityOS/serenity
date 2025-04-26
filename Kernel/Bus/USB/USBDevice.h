@@ -79,7 +79,7 @@ public:
 
     ErrorOr<void> set_configuration_and_interface(USBInterface const& interface);
 
-    SpinlockProtected<RefPtr<SysFSUSBDeviceInformation>, LockRank::None>& sysfs_device_info_node(Badge<USB::Hub>) { return m_sysfs_device_info_node; }
+    RecursiveSpinlockProtected<RefPtr<SysFSUSBDeviceInformation>, LockRank::None>& sysfs_device_info_node(Badge<USB::Hub>) { return m_sysfs_device_info_node; }
 
     template<DerivedFrom<USBController> Controller>
     void set_max_packet_size(Badge<Controller>, u8 max_packet_size)
@@ -135,7 +135,7 @@ private:
     IntrusiveListNode<Device, NonnullLockRefPtr<Device>> m_hub_child_node;
 
 protected:
-    SpinlockProtected<RefPtr<SysFSUSBDeviceInformation>, LockRank::None> m_sysfs_device_info_node;
+    RecursiveSpinlockProtected<RefPtr<SysFSUSBDeviceInformation>, LockRank::None> m_sysfs_device_info_node;
 
 public:
     using List = IntrusiveList<&Device::m_hub_child_node>;

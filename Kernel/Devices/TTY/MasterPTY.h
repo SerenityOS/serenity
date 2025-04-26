@@ -48,7 +48,7 @@ private:
         return m_slave.with([](auto& slave) -> bool { return slave; });
     }
 
-    SpinlockProtected<RefPtr<SlavePTY>, LockRank::None> m_slave;
+    RecursiveSpinlockProtected<RefPtr<SlavePTY>, LockRank::None> m_slave;
     unsigned m_index;
     bool m_closed { false };
     NonnullOwnPtr<DoubleBuffer> m_buffer;

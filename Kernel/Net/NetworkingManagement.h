@@ -42,7 +42,7 @@ public:
 private:
     ErrorOr<NonnullRefPtr<NetworkAdapter>> determine_network_device(PCI::DeviceIdentifier const&) const;
 
-    SpinlockProtected<Vector<NonnullRefPtr<NetworkAdapter>>, LockRank::None> m_adapters {};
+    RecursiveSpinlockProtected<Vector<NonnullRefPtr<NetworkAdapter>>, LockRank::None> m_adapters {};
     RefPtr<NetworkAdapter> m_loopback_adapter;
 };
 

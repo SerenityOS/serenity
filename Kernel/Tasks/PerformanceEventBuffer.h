@@ -206,7 +206,7 @@ private:
     size_t m_count { 0 };
     NonnullOwnPtr<KBuffer> m_buffer;
 
-    SpinlockProtected<HashMap<NonnullOwnPtr<KString>, size_t>, LockRank::None> m_strings;
+    RecursiveSpinlockProtected<HashMap<NonnullOwnPtr<KString>, size_t>, LockRank::None> m_strings;
 };
 
 extern bool g_profiling_all_threads;

@@ -19,7 +19,7 @@ namespace Kernel {
 class Coredump {
 public:
     static ErrorOr<NonnullOwnPtr<Coredump>> try_create(NonnullRefPtr<Process>, StringView output_path);
-    static SpinlockProtected<OwnPtr<KString>, LockRank::None>& directory_path();
+    static RecursiveSpinlockProtected<OwnPtr<KString>, LockRank::None>& directory_path();
 
     ~Coredump() = default;
     ErrorOr<void> write();

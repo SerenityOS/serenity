@@ -17,7 +17,7 @@ static Atomic<u64> s_vfs_root_context_id = 0;
 UNMAP_AFTER_INIT void VFSRootContext::initialize_empty_ramfs_root_context_for_kernel_processes()
 {
     s_empty_context = &MUST(VFSRootContext::create_with_empty_ramfs()).leak_ref();
-    // NOTE: This custody is immutable, so we expose it also outside of the SpinlockProtected
+    // NOTE: This custody is immutable, so we expose it also outside of the RecursiveSpinlockProtected
     // template so it could be accessed immediately.
     s_empty_context_custody = &s_empty_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> { return *custody; }).leak_ref();
 

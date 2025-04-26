@@ -10,9 +10,9 @@
 
 namespace Kernel {
 
-static Singleton<SpinlockProtected<ProcessGroup::AllInstancesList, LockRank::None>> s_all_instances;
+static Singleton<RecursiveSpinlockProtected<ProcessGroup::AllInstancesList, LockRank::None>> s_all_instances;
 
-SpinlockProtected<ProcessGroup::AllInstancesList, LockRank::None>& ProcessGroup::all_instances()
+RecursiveSpinlockProtected<ProcessGroup::AllInstancesList, LockRank::None>& ProcessGroup::all_instances()
 {
     return s_all_instances;
 }

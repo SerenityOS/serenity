@@ -80,7 +80,7 @@ private:
 
 public:
     using AllInstancesList = IntrusiveList<&VMObject::m_list_node>;
-    static SpinlockProtected<VMObject::AllInstancesList, LockRank::None>& all_instances();
+    static RecursiveSpinlockProtected<VMObject::AllInstancesList, LockRank::None>& all_instances();
 };
 
 template<typename Callback>

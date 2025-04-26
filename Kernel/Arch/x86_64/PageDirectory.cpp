@@ -19,7 +19,7 @@
 namespace Kernel::Memory {
 
 struct CR3Map {
-    SpinlockProtected<IntrusiveRedBlackTree<&PageDirectory::m_tree_node>, LockRank::None> map {};
+    RecursiveSpinlockProtected<IntrusiveRedBlackTree<&PageDirectory::m_tree_node>, LockRank::None> map {};
 };
 
 static Singleton<CR3Map> s_cr3_map;
