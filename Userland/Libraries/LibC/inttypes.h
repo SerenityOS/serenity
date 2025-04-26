@@ -191,6 +191,8 @@ __BEGIN_DECLS
 #define SCNxFAST32 SCNx32
 #define SCNxFAST64 SCNx64
 
+intmax_t imaxabs(intmax_t);
+
 typedef struct imaxdiv_t {
     intmax_t quot;
     intmax_t rem;
