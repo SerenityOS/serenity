@@ -11,6 +11,11 @@
 
 extern "C" {
 
+intmax_t imaxabs(intmax_t n)
+{
+    return n > 0 ? n : -n;
+}
+
 imaxdiv_t imaxdiv(intmax_t numerator, intmax_t denominator)
 {
     imaxdiv_t result;
