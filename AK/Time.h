@@ -492,6 +492,7 @@ public:
     [[nodiscard]] constexpr i64 nanoseconds_since_epoch() const { return m_offset.to_nanoseconds(); }
     // Never returns a point after this UnixDateTime, since fractional seconds are cut off.
     [[nodiscard]] i64 truncated_seconds_since_epoch() const { return m_offset.to_truncated_seconds(); }
+    [[nodiscard]] i64 truncated_milliseconds_since_epoch() const { return m_offset.to_truncated_milliseconds(); }
 
     // Offsetting a UNIX time by a duration yields another UNIX time.
     constexpr UnixDateTime operator+(Duration const& other) const { return UnixDateTime { m_offset + other }; }
