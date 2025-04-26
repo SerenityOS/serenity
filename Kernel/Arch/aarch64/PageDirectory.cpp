@@ -20,7 +20,7 @@
 namespace Kernel::Memory {
 
 struct TTBR0Map {
-    SpinlockProtected<IntrusiveRedBlackTree<&PageDirectory::m_tree_node>, LockRank::None> map {};
+    RecursiveSpinlockProtected<IntrusiveRedBlackTree<&PageDirectory::m_tree_node>, LockRank::None> map {};
 };
 
 static Singleton<TTBR0Map> s_ttbr0_map;

@@ -11,9 +11,9 @@
 namespace Kernel {
 
 template<typename T, LockRank Rank>
-class SpinlockProtected {
-    AK_MAKE_NONCOPYABLE(SpinlockProtected);
-    AK_MAKE_NONMOVABLE(SpinlockProtected);
+class RecursiveSpinlockProtected {
+    AK_MAKE_NONCOPYABLE(RecursiveSpinlockProtected);
+    AK_MAKE_NONMOVABLE(RecursiveSpinlockProtected);
 
 private:
     template<typename U>
@@ -47,7 +47,7 @@ private:
 
 public:
     template<typename... Args>
-    SpinlockProtected(Args&&... args)
+    RecursiveSpinlockProtected(Args&&... args)
         : m_value(forward<Args>(args)...)
     {
     }

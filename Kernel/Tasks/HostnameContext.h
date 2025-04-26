@@ -31,8 +31,8 @@ public:
 
     static ErrorOr<NonnullRefPtr<HostnameContext>> hostname_context_for_id(int id);
 
-    SpinlockProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>, LockRank::None>& buffer() { return m_buffer; }
-    SpinlockProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>, LockRank::None> const& buffer() const { return m_buffer; }
+    RecursiveSpinlockProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>, LockRank::None>& buffer() { return m_buffer; }
+    RecursiveSpinlockProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>, LockRank::None> const& buffer() const { return m_buffer; }
 
     IndexID id() const { return m_id; }
 
@@ -44,8 +44,8 @@ private:
 
     IntrusiveListNode<HostnameContext, NonnullRefPtr<HostnameContext>> m_list_node;
 
-    SpinlockProtected<size_t, LockRank::None> m_attach_count { 0 };
-    SpinlockProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>, LockRank::None> m_buffer;
+    RecursiveSpinlockProtected<size_t, LockRank::None> m_attach_count { 0 };
+    RecursiveSpinlockProtected<FixedStringBuffer<UTSNAME_ENTRY_LEN - 1>, LockRank::None> m_buffer;
 
     IndexID m_id;
 

@@ -46,8 +46,8 @@ private:
     virtual bool can_write(OpenFileDescription const&, u64) const override;
     virtual StringView class_name() const override { return "FUSEDevice"sv; }
 
-    SpinlockProtected<HashMap<OpenFileDescription const*, Vector<FUSEInstance>>, LockRank::None> m_instances;
-    SpinlockProtected<Vector<OpenFileDescription const*>, LockRank::None> m_closing_instances;
+    RecursiveSpinlockProtected<HashMap<OpenFileDescription const*, Vector<FUSEInstance>>, LockRank::None> m_instances;
+    RecursiveSpinlockProtected<Vector<OpenFileDescription const*>, LockRank::None> m_closing_instances;
 };
 
 }

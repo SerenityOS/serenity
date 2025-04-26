@@ -307,7 +307,7 @@ private:
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_count { 0 };
 
-    SpinlockProtected<GlobalData, LockRank::None> m_global_data;
+    RecursiveSpinlockProtected<GlobalData, LockRank::None> m_global_data;
 };
 
 inline bool PhysicalRAMPage::is_shared_zero_page() const

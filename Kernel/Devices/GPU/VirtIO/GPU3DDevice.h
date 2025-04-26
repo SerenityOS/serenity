@@ -149,7 +149,7 @@ private:
     NonnullLockRefPtr<VirtIOGraphicsAdapter> m_graphics_adapter;
     // Context used for kernel operations (e.g. flushing resources to scanout)
     Graphics::VirtIOGPU::ContextID m_kernel_context_id;
-    SpinlockProtected<ContextList, LockRank::None> m_context_state_list;
+    RecursiveSpinlockProtected<ContextList, LockRank::None> m_context_state_list;
     // Memory management for backing buffers
     NonnullOwnPtr<Memory::Region> m_transfer_buffer_region;
     constexpr static size_t NUM_TRANSFER_REGION_PAGES = 1024;

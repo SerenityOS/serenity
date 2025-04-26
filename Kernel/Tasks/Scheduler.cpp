@@ -46,9 +46,9 @@ struct ThreadReadyQueues {
     Array<ThreadReadyQueue, count> queues;
 };
 
-static Singleton<SpinlockProtected<ThreadReadyQueues, LockRank::None>> g_ready_queues;
+static Singleton<RecursiveSpinlockProtected<ThreadReadyQueues, LockRank::None>> g_ready_queues;
 
-static SpinlockProtected<TotalTimeScheduled, LockRank::None> g_total_time_scheduled {};
+static RecursiveSpinlockProtected<TotalTimeScheduled, LockRank::None> g_total_time_scheduled {};
 
 static void dump_thread_list(bool = false);
 

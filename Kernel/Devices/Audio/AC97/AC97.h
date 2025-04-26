@@ -154,7 +154,7 @@ private:
 
         NonnullOwnPtr<IOWindow> m_channel_io_window;
         PCI::Address m_device_pci_address;
-        SpinlockProtected<bool, LockRank::None> m_dma_running { false };
+        RecursiveSpinlockProtected<bool, LockRank::None> m_dma_running { false };
         StringView m_name;
     };
 

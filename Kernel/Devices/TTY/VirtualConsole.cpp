@@ -29,9 +29,9 @@
 
 namespace Kernel {
 
-static Singleton<SpinlockProtected<RefPtr<VirtualConsole>, LockRank::None>> s_active_console;
-static Singleton<SpinlockProtected<RefPtr<VirtualConsole>, LockRank::None>> s_debug_console;
-static Singleton<SpinlockProtected<Array<RefPtr<VirtualConsole>, VirtualConsole::s_max_virtual_consoles>, LockRank::None>> s_consoles;
+static Singleton<RecursiveSpinlockProtected<RefPtr<VirtualConsole>, LockRank::None>> s_active_console;
+static Singleton<RecursiveSpinlockProtected<RefPtr<VirtualConsole>, LockRank::None>> s_debug_console;
+static Singleton<RecursiveSpinlockProtected<Array<RefPtr<VirtualConsole>, VirtualConsole::s_max_virtual_consoles>, LockRank::None>> s_consoles;
 
 void VirtualConsole::resolution_was_changed()
 {

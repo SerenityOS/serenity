@@ -33,8 +33,8 @@ public:
     static ErrorOr<NonnullRefPtr<VFSRootContext>> create_with_empty_ramfs();
     static ErrorOr<NonnullRefPtr<VFSRootContext>> create_empty();
 
-    SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None>& root_custody() { return m_root_custody; }
-    SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None> const& root_custody() const { return m_root_custody; }
+    RecursiveSpinlockProtected<NonnullRefPtr<Custody>, LockRank::None>& root_custody() { return m_root_custody; }
+    RecursiveSpinlockProtected<NonnullRefPtr<Custody>, LockRank::None> const& root_custody() const { return m_root_custody; }
 
     bool mount_point_exists_at_custody(Custody& mount_point);
 
@@ -88,23 +88,23 @@ private:
         return {};
     }
 
-    mutable SpinlockProtected<Details, LockRank::None> m_details {};
+    mutable RecursiveSpinlockProtected<Details, LockRank::None> m_details {};
 
-    SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None> m_root_custody;
+    RecursiveSpinlockProtected<NonnullRefPtr<Custody>, LockRank::None> m_root_custody;
 
     IntrusiveListNode<VFSRootContext, NonnullRefPtr<VFSRootContext>> m_list_node;
 
     IndexID m_id;
 
     // NOTE: This method is implemented in Kernel/FileSystem/VirtualFileSystem.cpp
-    static SpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& all_root_contexts_list();
+    static RecursiveSpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& all_root_contexts_list();
 
 public:
     using List = IntrusiveList<&VFSRootContext::m_list_node>;
 
     // NOTE: These methods are implemented in Kernel/FileSystem/VirtualFileSystem.cpp
-    static SpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& all_root_contexts_list(Badge<PowerStateSwitchTask>);
-    static SpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& all_root_contexts_list(Badge<Process>);
+    static RecursiveSpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& all_root_contexts_list(Badge<PowerStateSwitchTask>);
+    static RecursiveSpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& all_root_contexts_list(Badge<Process>);
 };
 
 }

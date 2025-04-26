@@ -10,9 +10,9 @@
 
 namespace Kernel::Memory {
 
-static Singleton<SpinlockProtected<VMObject::AllInstancesList, LockRank::None>> s_all_instances;
+static Singleton<RecursiveSpinlockProtected<VMObject::AllInstancesList, LockRank::None>> s_all_instances;
 
-SpinlockProtected<VMObject::AllInstancesList, LockRank::None>& VMObject::all_instances()
+RecursiveSpinlockProtected<VMObject::AllInstancesList, LockRank::None>& VMObject::all_instances()
 {
     return s_all_instances;
 }

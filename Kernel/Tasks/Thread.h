@@ -100,7 +100,7 @@ public:
     NO_SANITIZE_COVERAGE Process const& process() const { return m_process; }
 
     using Name = FixedStringBuffer<64>;
-    SpinlockProtected<Name, LockRank::None> const& name() const
+    RecursiveSpinlockProtected<Name, LockRank::None> const& name() const
     {
         return m_name;
     }
@@ -1224,7 +1224,7 @@ private:
 
     FPUState m_fpu_state {};
     State m_state { Thread::State::Invalid };
-    SpinlockProtected<Name, LockRank::None> m_name;
+    RecursiveSpinlockProtected<Name, LockRank::None> m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
 
     State m_stop_state { Thread::State::Invalid };
@@ -1258,7 +1258,7 @@ public:
     using ListInProcess = IntrusiveList<&Thread::m_process_thread_list_node>;
     using GlobalList = IntrusiveList<&Thread::m_global_thread_list_node>;
 
-    static SpinlockProtected<GlobalList, LockRank::None>& all_instances();
+    static RecursiveSpinlockProtected<GlobalList, LockRank::None>& all_instances();
 
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
     // Used by __sanitizer_cov_trace_pc to identify traced threads.

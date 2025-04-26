@@ -54,28 +54,28 @@ struct VirtualFileSystemDetails {
     // need to do disk access (i.e. taking Mutexes in other places) and then register that new filesystem
     // in this list, to avoid TOCTOU bugs.
     MutexProtected<FileBackedFileSystem::List> file_backed_file_systems_list {};
-    SpinlockProtected<FileSystem::List, LockRank::FileSystem> file_systems_list {};
-    SpinlockProtected<VFSRootContext::List, LockRank::FileSystem> root_contexts {};
+    RecursiveSpinlockProtected<FileSystem::List, LockRank::FileSystem> file_systems_list {};
+    RecursiveSpinlockProtected<VFSRootContext::List, LockRank::FileSystem> root_contexts {};
 };
 
 static Singleton<VirtualFileSystemDetails> s_details;
 
-SpinlockProtected<FileSystem::List, LockRank::FileSystem>& FileSystem::all_file_systems_list()
+RecursiveSpinlockProtected<FileSystem::List, LockRank::FileSystem>& FileSystem::all_file_systems_list()
 {
     return s_details->file_systems_list;
 }
 
-SpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& VFSRootContext::all_root_contexts_list()
+RecursiveSpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& VFSRootContext::all_root_contexts_list()
 {
     return s_details->root_contexts;
 }
 
-SpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& VFSRootContext::all_root_contexts_list(Badge<PowerStateSwitchTask>)
+RecursiveSpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& VFSRootContext::all_root_contexts_list(Badge<PowerStateSwitchTask>)
 {
     return s_details->root_contexts;
 }
 
-SpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& VFSRootContext::all_root_contexts_list(Badge<Process>)
+RecursiveSpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& VFSRootContext::all_root_contexts_list(Badge<Process>)
 {
     return s_details->root_contexts;
 }

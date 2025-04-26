@@ -43,7 +43,7 @@ private:
     void disable_interrupt_vector();
     explicit SharedIRQHandler(u8 interrupt_number);
     bool m_enabled { true };
-    SpinlockProtected<GenericInterruptHandler::List, LockRank::None> m_handlers;
+    RecursiveSpinlockProtected<GenericInterruptHandler::List, LockRank::None> m_handlers;
     NonnullLockRefPtr<IRQController> m_responsible_irq_controller;
 };
 }

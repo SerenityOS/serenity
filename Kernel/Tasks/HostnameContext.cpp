@@ -12,7 +12,7 @@
 namespace Kernel {
 
 static Atomic<u64> s_hostname_context_id = 0;
-static Singleton<SpinlockProtected<HostnameContext::List, LockRank::None>> s_all_instances {};
+static Singleton<RecursiveSpinlockProtected<HostnameContext::List, LockRank::None>> s_all_instances {};
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<HostnameContext>> HostnameContext::create_initial()
 {

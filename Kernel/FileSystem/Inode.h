@@ -131,7 +131,7 @@ private:
     InodeIndex m_index { 0 };
     LockWeakPtr<Memory::SharedInodeVMObject> m_shared_vmobject;
     LockWeakPtr<LocalSocket> m_bound_socket;
-    SpinlockProtected<HashTable<InodeWatcher*>, LockRank::None> m_watchers {};
+    RecursiveSpinlockProtected<HashTable<InodeWatcher*>, LockRank::None> m_watchers {};
     bool m_metadata_dirty { false };
     RefPtr<FIFO> m_fifo;
     IntrusiveListNode<Inode> m_inode_list_node;
@@ -145,11 +145,11 @@ private:
     };
 
     Thread::FlockBlockerSet m_flock_blocker_set;
-    SpinlockProtected<Vector<Flock>, LockRank::None> m_flocks {};
+    RecursiveSpinlockProtected<Vector<Flock>, LockRank::None> m_flocks {};
 
 public:
     using AllInstancesList = IntrusiveList<&Inode::m_inode_list_node>;
-    static SpinlockProtected<Inode::AllInstancesList, LockRank::None>& all_instances();
+    static RecursiveSpinlockProtected<Inode::AllInstancesList, LockRank::None>& all_instances();
 };
 
 }

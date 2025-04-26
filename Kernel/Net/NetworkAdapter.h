@@ -138,7 +138,7 @@ private:
 
     PacketList m_packet_queue;
     size_t m_packet_queue_size { 0 };
-    SpinlockProtected<PacketList, LockRank::None> m_unused_packets {};
+    RecursiveSpinlockProtected<PacketList, LockRank::None> m_unused_packets {};
     FixedStringBuffer<IFNAMSIZ> m_name;
     u32 m_packets_in { 0 };
     u32 m_bytes_in { 0 };

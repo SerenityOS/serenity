@@ -11,7 +11,7 @@
 namespace Kernel {
 
 static Atomic<u64> s_scoped_process_list_id = 0;
-static Singleton<SpinlockProtected<ScopedProcessList::List, LockRank::None>> s_all_instances {};
+static Singleton<RecursiveSpinlockProtected<ScopedProcessList::List, LockRank::None>> s_all_instances {};
 
 ErrorOr<NonnullRefPtr<ScopedProcessList>> ScopedProcessList::scoped_process_list_for_id(int id)
 {

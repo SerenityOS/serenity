@@ -40,10 +40,10 @@ struct SingletonInstanceCreator {
 #ifdef KERNEL
 
 template<typename T, Kernel::LockRank Rank>
-struct SingletonInstanceCreator<Kernel::SpinlockProtected<T, Rank>> {
-    static Kernel::SpinlockProtected<T, Rank>* create()
+struct SingletonInstanceCreator<Kernel::RecursiveSpinlockProtected<T, Rank>> {
+    static Kernel::RecursiveSpinlockProtected<T, Rank>* create()
     {
-        return new Kernel::SpinlockProtected<T, Rank> {};
+        return new Kernel::RecursiveSpinlockProtected<T, Rank> {};
     }
 };
 #endif

@@ -43,7 +43,7 @@ private:
     OwnPtr<Memory::Region> m_header_buf;
     OwnPtr<Memory::Region> m_data_buf;
 
-    SpinlockProtected<RefPtr<AsyncBlockDeviceRequest>, LockRank::None> m_current_request {};
+    RecursiveSpinlockProtected<RefPtr<AsyncBlockDeviceRequest>, LockRank::None> m_current_request {};
 };
 
 }

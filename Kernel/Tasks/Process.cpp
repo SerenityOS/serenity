@@ -53,12 +53,12 @@ extern KString* g_version_string;
 
 RecursiveSpinlock<LockRank::None> g_profiling_lock {};
 static Atomic<pid_t> next_pid;
-static Singleton<SpinlockProtected<Process::AllProcessesList, LockRank::None>> s_all_instances;
+static Singleton<RecursiveSpinlockProtected<Process::AllProcessesList, LockRank::None>> s_all_instances;
 READONLY_AFTER_INIT Memory::Region* g_signal_trampoline_region;
 
 static RawPtr<HostnameContext> s_empty_kernel_hostname_context;
 
-SpinlockProtected<Process::AllProcessesList, LockRank::None>& Process::all_instances()
+RecursiveSpinlockProtected<Process::AllProcessesList, LockRank::None>& Process::all_instances()
 {
     return *s_all_instances;
 }
@@ -1303,7 +1303,7 @@ ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(int dirfd)
     return *description->custody();
 }
 
-SpinlockProtected<Process::Name, LockRank::None> const& Process::name() const
+RecursiveSpinlockProtected<Process::Name, LockRank::None> const& Process::name() const
 {
     return m_name;
 }
