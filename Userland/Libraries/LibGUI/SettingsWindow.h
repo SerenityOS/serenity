@@ -76,7 +76,7 @@ private:
     SettingsWindow() = default;
 
     RefPtr<GUI::TabWidget> m_tab_widget;
-    HashMap<StringView, NonnullRefPtr<Tab>> m_tabs;
+    OrderedHashMap<StringView, NonnullRefPtr<Tab>> m_tabs;
 
     RefPtr<GUI::Button> m_ok_button;
     RefPtr<GUI::Button> m_cancel_button;
