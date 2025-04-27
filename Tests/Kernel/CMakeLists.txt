@@ -60,6 +60,7 @@ set(LIBTEST_BASED_SOURCES
     TestSigHandler.cpp
     TestSigWait.cpp
     TestTCPSocket.cpp
+    TestWXProtection.cpp
 )
 
 if (ENABLE_KERNEL_COVERAGE_COLLECTION)
