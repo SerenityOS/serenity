@@ -165,7 +165,6 @@ ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
 
 void ThemesSettingsWidget::apply_settings()
 {
-    m_background_settings_changed = false;
     auto color_scheme_path_or_error = String::formatted("/res/color-schemes/{}.ini", m_selected_color_scheme_name);
     if (color_scheme_path_or_error.is_error()) {
         GUI::MessageBox::show_error(window(), "Unable to apply changes"sv);
@@ -198,6 +197,7 @@ void ThemesSettingsWidget::apply_settings()
         if (color_scheme_index.has_value())
             find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combo")->set_selected_index(color_scheme_index.value());
     }
+    m_background_settings_changed = false;
 }
 
 }
