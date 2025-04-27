@@ -238,6 +238,8 @@ private:
             m_access &= ~access;
     }
 
+    void update_shadow_permission_bits(Access);
+
     [[nodiscard]] PageFaultResponse handle_cow_fault(size_t page_index);
     [[nodiscard]] PageFaultResponse handle_inode_fault(size_t page_index, bool mark_page_dirty = false);
     [[nodiscard]] PageFaultResponse handle_zero_fault(size_t page_index, PhysicalRAMPage& page_in_slot_at_time_of_fault);
