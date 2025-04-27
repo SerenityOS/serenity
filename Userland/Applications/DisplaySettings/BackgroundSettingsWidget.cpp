@@ -120,22 +120,18 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
     m_mode_combo = *find_descendant_of_type_named<GUI::ComboBox>("mode_combo");
     m_mode_combo->set_only_allow_values_from_model(true);
     m_mode_combo->set_model(*GUI::ItemListModel<String>::create(m_modes));
-    bool first_mode_change = true;
-    m_mode_combo->on_change = [this, first_mode_change](auto&, const GUI::ModelIndex& index) mutable {
+    m_mode_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         m_monitor_widget->set_wallpaper_mode(m_modes.at(index.row()));
-        m_background_settings_changed = !first_mode_change;
-        first_mode_change = false;
+        m_background_settings_changed = true;
         set_modified(true);
     };
 
     m_color_input = *find_descendant_of_type_named<GUI::ColorInput>("color_input");
     m_color_input->set_color_has_alpha_channel(false);
     m_color_input->set_color_picker_title("Select Desktop Color");
-    bool first_color_change = true;
-    m_color_input->on_change = [this, first_color_change]() mutable {
+    m_color_input->on_change = [this] {
         m_monitor_widget->set_background_color(m_color_input->color());
-        m_background_settings_changed = !first_color_change;
-        first_color_change = false;
+        m_background_settings_changed = true;
         set_modified(true);
     };
 
