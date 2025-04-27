@@ -398,6 +398,11 @@ target_link_libraries(zip PRIVATE LibArchive LibFileSystem)
 # FIXME: Link this file into headless-browser without compiling it again.
 target_sources(headless-browser PRIVATE "${SerenityOS_SOURCE_DIR}/Userland/Services/WebContent/WebDriverConnection.cpp")
 
+# Required for conditionally creating hardcoded /dev/kcov entry
+if (ENABLE_KERNEL_COVERAGE_COLLECTION)
+    target_compile_definitions(init PRIVATE ENABLE_KERNEL_COVERAGE_COLLECTION)
+endif()
+
 include("${SerenityOS_SOURCE_DIR}/Meta/Lagom/Fuzzers/fuzzers.cmake")
 
 foreach(name IN LISTS FUZZER_TARGETS)
