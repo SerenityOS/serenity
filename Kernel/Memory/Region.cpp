@@ -36,6 +36,7 @@ Region::Region(NonnullLockRefPtr<VMObject> vmobject, size_t offset_in_vmobject, 
     , m_shared(shared)
     , m_memory_type(memory_type)
 {
+    update_shadow_permission_bits(access);
     m_vmobject->add_region(*this);
 }
 
@@ -52,6 +53,7 @@ Region::Region(VirtualRange const& range, NonnullLockRefPtr<VMObject> vmobject, 
     VERIFY(m_range.size());
     VERIFY((m_range.size() % PAGE_SIZE) == 0);
 
+    update_shadow_permission_bits(access);
     m_vmobject->add_region(*this);
 }
 
@@ -692,6 +694,16 @@ RefPtr<PhysicalRAMPage>& Region::physical_page_slot(size_t index)
     VERIFY(vmobject().m_lock.is_locked_by_current_processor());
     VERIFY(index < page_count());
     return vmobject().physical_pages()[first_page_index() + index];
+}
+
+void Region::update_shadow_permission_bits(Access access)
+{
+    if (has_flag(access, Read))
+        m_has_been_readable.set();
+    if (has_flag(access, Write))
+        m_has_been_writable.set();
+    if (has_flag(access, Execute))
+        m_has_been_executable.set();
 }
 
 }
