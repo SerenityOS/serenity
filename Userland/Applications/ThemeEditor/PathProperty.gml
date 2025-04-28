@@ -1,4 +1,4 @@
-@GUI::Frame {
+@ThemeEditor::PathProperty {
     layout: @GUI::HorizontalBoxLayout {
         spacing: 4
     }

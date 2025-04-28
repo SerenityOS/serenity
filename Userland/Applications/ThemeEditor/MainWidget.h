@@ -85,6 +85,8 @@ class MainWidget final : public GUI::Widget {
 
 public:
     static ErrorOr<NonnullRefPtr<MainWidget>> try_create();
+    ErrorOr<void> initialize();
+
     virtual ~MainWidget() override = default;
 
     ErrorOr<void> initialize_menubar(GUI::Window&);
@@ -93,7 +95,7 @@ public:
     ErrorOr<void> load_from_file(ByteString const& filename, NonnullOwnPtr<Core::File> file);
 
 private:
-    explicit MainWidget(NonnullRefPtr<AlignmentModel>, NonnullRefPtr<WindowThemeModel>);
+    explicit MainWidget();
 
     virtual void drag_enter_event(GUI::DragEvent&) override;
     virtual void drop_event(GUI::DropEvent&) override;
@@ -111,7 +113,6 @@ private:
     void set_metric(Gfx::MetricRole, int);
     void set_path(Gfx::PathRole, ByteString);
     void set_window_theme(Gfx::WindowThemeRole, Gfx::WindowThemeProvider);
-
     void set_palette(Gfx::Palette);
 
     enum class PathPickerTarget {
