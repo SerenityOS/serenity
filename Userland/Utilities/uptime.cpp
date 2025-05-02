@@ -7,6 +7,8 @@
  */
 
 #include <AK/NumberFormat.h>
+#include <AK/JsonValue.h>
+#include <AK/JsonObject.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
@@ -27,7 +29,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file = TRY(Core::File::open("/sys/kernel/uptime"sv, Core::File::OpenMode::Read));
 
-    TRY(Core::System::pledge("stdio"));
+    // TRY(Core::System::pledge("stdio"));
 
     Array<u8, BUFSIZ> buffer;
     auto read_buffer = TRY(file->read_some(buffer));
@@ -46,7 +48,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto current_time = TRY(Core::DateTime::now().to_string());
         // FIXME: To match Linux and the BSDs, we should also include the number of current users,
         //        and some load averages, but these don't seem to be available yet.
-        outln("{} up {}", current_time, human_readable_digital_time(seconds));
+
+        auto utmp_file = TRY(Core::File::open("/var/run/utmp"sv, Core::File::OpenMode::Read));
+        auto utmp_contents = TRY(utmp_file->read_until_eof());
+        outln("UTMP contents: {}", StringView(utmp_contents));
+
+        auto json = TRY(AK::JsonValue::from_string(utmp_contents));
+        auto object = json.as_object();
+        auto user_count = object.size();
+
+        outln("{} users", user_count);
+
+        if (user_count == 1) {
+            outln("{} up {}, {} user", current_time, human_readable_digital_time(seconds), user_count);
+        } else {
+            outln("{} up {}, {} users", current_time, human_readable_digital_time(seconds), user_count);
+        }
     }
 
     return 0;
