@@ -41,6 +41,8 @@ private:
 
     virtual void paint_event(GUI::PaintEvent& event) override;
 
+    void load_wallpaper(String path);
+
     Gfx::IntRect m_monitor_rect;
     RefPtr<Gfx::Bitmap> m_monitor_bitmap;
     RefPtr<Gfx::Bitmap> m_desktop_bitmap;
@@ -55,14 +57,9 @@ private:
 
     bool is_different_to_current_wallpaper_path(String const& path)
     {
-        if (!m_desktop_wallpaper_path.has_value()) {
-            if (path.is_empty())
-                return false;
-            return true;
-        }
-        if (m_desktop_wallpaper_path.value() == path)
-            return false;
-        return true;
+        if (!path.is_empty())
+            return path != m_desktop_wallpaper_path;
+        return m_desktop_wallpaper_path.has_value();
     }
 };
 
