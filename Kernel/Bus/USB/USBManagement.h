@@ -25,6 +25,8 @@ public:
     static LockRefPtr<Driver> get_driver_by_name(StringView name);
     static void unregister_driver(NonnullLockRefPtr<Driver> driver);
 
+    void add_controller(NonnullLockRefPtr<USBController>);
+
     static void add_recipe(DeviceTree::DeviceRecipe<NonnullLockRefPtr<USBController>>);
 
     static Vector<NonnullLockRefPtr<Driver>>& available_drivers();

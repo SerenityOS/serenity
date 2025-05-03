@@ -11,6 +11,7 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/USB/EHCI/EHCIController.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
 #include <Kernel/Bus/USB/USBManagement.h>
@@ -18,6 +19,10 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
 #include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Sections.h>
+
+#if ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/RPi/RP1.h>
+#endif
 
 namespace Kernel::USB {
 
@@ -48,6 +53,14 @@ UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
         return;
 
     MUST(PCI::enumerate([this](PCI::DeviceIdentifier const& device_identifier) {
+#if ARCH(AARCH64)
+        if (device_identifier.hardware_id().vendor_id == PCI::VendorID::RaspberryPi && device_identifier.hardware_id().device_id == PCI::DeviceID::RaspberryPiRP1) {
+            if (auto result = RPi::RP1::try_to_initialize_xhci_controllers(device_identifier); result.is_error()) {
+                dmesgln("USBManagement: Failed to initialize RP1 xHCI controllers: {}", result.release_error());
+            }
+        }
+#endif
+
         if (device_identifier.class_code() != PCI::ClassID::SerialBus
             || device_identifier.subclass_code() != PCI::SerialBus::SubclassID::USB)
             return;
@@ -129,6 +142,11 @@ void USBManagement::unregister_driver(NonnullLockRefPtr<Driver> driver)
 USBManagement& USBManagement::the()
 {
     return *s_the;
+}
+
+void USBManagement::add_controller(NonnullLockRefPtr<USBController> controller)
+{
+    m_controllers.append(controller);
 }
 
 void USBManagement::add_recipe(DeviceTree::DeviceRecipe<NonnullLockRefPtr<USBController>> recipe)
