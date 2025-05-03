@@ -47,4 +47,7 @@ void disable_memory_space(DeviceIdentifier const&);
 // FIXME: Remove this once we can use PCI::Capability with inline buffer
 // so we don't need this method
 DeviceIdentifier const& get_device_identifier(Address address);
+
+ErrorOr<PhysicalAddress> translate_bus_address_to_host_address(DeviceIdentifier const&, BARSpaceType, u64);
+
 }

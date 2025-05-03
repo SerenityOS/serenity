@@ -264,4 +264,11 @@ u32 Access::read32_field(DeviceIdentifier const& identifier, u32 field)
     return controller.read32_field(identifier.address().bus(), identifier.address().device(), identifier.address().function(), field);
 }
 
+ErrorOr<PhysicalAddress> Access::translate_bus_address_to_host_address(DeviceIdentifier const& identifier, BARSpaceType address_space_type, u64 bus_address)
+{
+    VERIFY(m_host_controllers.contains(identifier.address().domain()));
+    auto& controller = *m_host_controllers.get(identifier.address().domain()).value();
+    return controller.translate_bus_address_to_host_address(address_space_type, bus_address);
+}
+
 }
