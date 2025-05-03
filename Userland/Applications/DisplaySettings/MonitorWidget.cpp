@@ -27,15 +27,10 @@ ErrorOr<NonnullRefPtr<MonitorWidget>> MonitorWidget::try_create()
     return monitor_widget;
 }
 
-bool MonitorWidget::set_wallpaper(String path)
+void MonitorWidget::load_wallpaper(String path)
 {
-    if (!is_different_to_current_wallpaper_path(path))
-        return false;
-
     (void)Threading::BackgroundAction<NonnullRefPtr<Gfx::Bitmap>>::construct(
         [path](auto&) -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
-            if (path.is_empty())
-                return Error::from_errno(ENOENT);
             return Gfx::Bitmap::load_from_file(path);
         },
 
@@ -52,12 +47,21 @@ bool MonitorWidget::set_wallpaper(String path)
         [this, path](Error) -> void {
             m_wallpaper_bitmap = nullptr;
         });
+}
 
-    if (path.is_empty())
+bool MonitorWidget::set_wallpaper(String path)
+{
+    if (!is_different_to_current_wallpaper_path(path))
+        return false;
+    if (path.is_empty()) {
+        m_wallpaper_bitmap = nullptr;
         m_desktop_wallpaper_path = OptionalNone();
-    else
+        m_desktop_dirty = true;
+        update();
+    } else {
+        load_wallpaper(path);
         m_desktop_wallpaper_path = path;
-
+    }
     return true;
 }
 
