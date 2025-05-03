@@ -27,10 +27,7 @@ static NeverDestroyed<Vector<DeviceTree::DeviceRecipe<NonnullLockRefPtr<USBContr
 
 READONLY_AFTER_INIT bool s_initialized_sys_fs_directory = false;
 
-UNMAP_AFTER_INIT USBManagement::USBManagement()
-{
-    enumerate_controllers();
-}
+UNMAP_AFTER_INIT USBManagement::USBManagement() = default;
 
 UNMAP_AFTER_INIT void USBManagement::enumerate_controllers()
 {
@@ -106,6 +103,7 @@ UNMAP_AFTER_INIT void USBManagement::initialize()
     }
 
     s_the.ensure_instance();
+    s_the->enumerate_controllers();
 }
 
 void USBManagement::register_driver(NonnullLockRefPtr<Driver> driver)
