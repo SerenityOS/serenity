@@ -19,6 +19,29 @@ HostController::HostController(PCI::Domain const& domain)
 {
 }
 
+ErrorOr<void> HostController::add_memory_space_window(Window const& window)
+{
+    return m_memory_space_windows.try_append(window);
+}
+
+ErrorOr<PhysicalAddress> HostController::translate_bus_address_to_host_address(BARSpaceType space_type, u64 bus_address) const
+{
+    // TODO: Support mapping IO space addresses to memory space addresses.
+    if (space_type == BARSpaceType::IOSpace)
+        return ENOTIMPL;
+
+    // If no memory space windows were defined, assume identity mapping.
+    if (m_memory_space_windows.is_empty())
+        return PhysicalAddress { bus_address };
+
+    for (auto const& window : m_memory_space_windows) {
+        if (bus_address >= window.bus_address && bus_address < (window.bus_address + window.size))
+            return PhysicalAddress { bus_address - window.bus_address + window.host_address.get() };
+    }
+
+    return EFAULT;
+}
+
 void HostController::write8_field(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u8 value)
 {
     SpinlockLocker locker(m_access_lock);

@@ -118,10 +118,11 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
                 && pci_address.space_type != OpenFirmwareAddress::SpaceType::Memory64BitSpace)
                 continue; // We currently only support memory-mapped PCI on RISC-V and AArch64
 
-            if (pci_address.io_or_memory_space_address != cpu_physical_address) {
-                dbgln("PCI: FIXME: Support non-identity-mapped PCI ranges");
-                return ENOTSUP;
-            }
+            TRY(host_controller.add_memory_space_window(HostController::Window {
+                .host_address = PhysicalAddress { cpu_physical_address },
+                .bus_address = pci_address.io_or_memory_space_address,
+                .size = range_size,
+            }));
 
             if (pci_address.space_type == OpenFirmwareAddress::SpaceType::Memory32BitSpace) {
                 if (pci_address.prefetchable)

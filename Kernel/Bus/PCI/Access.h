@@ -13,6 +13,7 @@
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Controller/HostController.h>
 #include <Kernel/Bus/PCI/Definitions.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Locking/Spinlock.h>
 
@@ -45,6 +46,8 @@ public:
     u8 read8_field(DeviceIdentifier const&, u32 field);
     u16 read16_field(DeviceIdentifier const&, u32 field);
     u32 read32_field(DeviceIdentifier const&, u32 field);
+
+    ErrorOr<PhysicalAddress> translate_bus_address_to_host_address(DeviceIdentifier const&, BARSpaceType, u64);
 
     // FIXME: Remove this once we can use PCI::Capability with inline buffer
     // so we don't need this method

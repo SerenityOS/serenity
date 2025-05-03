@@ -86,6 +86,16 @@ public:
     void enumerate_attached_devices(Function<void(EnumerableDeviceIdentifier const&)> callback, Function<void(EnumerableDeviceIdentifier const&)> post_bridge_callback = nullptr);
     void configure_attached_devices(PCIConfiguration&);
 
+    ErrorOr<PhysicalAddress> translate_bus_address_to_host_address(BARSpaceType, u64) const;
+
+    struct Window {
+        PhysicalAddress host_address;
+        u64 bus_address;
+        size_t size;
+    };
+
+    ErrorOr<void> add_memory_space_window(Window const&);
+
 private:
     void enumerate_bus(Function<void(EnumerableDeviceIdentifier const&)> const& callback, Function<void(EnumerableDeviceIdentifier const&)>& post_bridge_callback, BusNumber, bool recursive_search_into_bridges);
     void enumerate_functions(Function<void(EnumerableDeviceIdentifier const&)> const& callback, Function<void(EnumerableDeviceIdentifier const&)>& post_bridge_callback, BusNumber, DeviceNumber, FunctionNumber, bool recursive_search_into_bridges);
@@ -118,6 +128,8 @@ protected:
 
 private:
     Bitmap m_enumerated_buses;
+
+    Vector<Window> m_memory_space_windows;
 };
 
 }

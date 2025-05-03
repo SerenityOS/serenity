@@ -311,4 +311,9 @@ DeviceIdentifier const& get_device_identifier(Address address)
     return Access::the().get_device_identifier(address);
 }
 
+ErrorOr<PhysicalAddress> translate_bus_address_to_host_address(DeviceIdentifier const& identifier, BARSpaceType address_space_type, u64 bus_address)
+{
+    return Access::the().translate_bus_address_to_host_address(identifier, address_space_type, bus_address);
+}
+
 }
