@@ -212,7 +212,15 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
                 TODO();
             }
 
-            TRY(map_stream.discard(sizeof(u32) * interrupt_controller->address_cells()));
+            // The devicetree spec says that we should assume `#address-cells = <2>` if the property isn't present.
+            // Linux however defaults to `#address-cells = <0>` for interrupt parent nodes.
+            // Some devicetrees seem to expect this Linux behavior, so we have to follow it.
+            u32 interrupt_controller_address_cells = 0;
+
+            if (auto prop = interrupt_controller->get_property("#address-cells"sv); prop.has_value())
+                interrupt_controller_address_cells = prop.release_value().as<u32>();
+
+            TRY(map_stream.discard(sizeof(u32) * interrupt_controller_address_cells));
 
             auto interrupt_cells = interrupt_controller->get_property("#interrupt-cells"sv)->as<u32>();
 #if ARCH(RISCV64)
