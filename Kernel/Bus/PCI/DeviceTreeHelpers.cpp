@@ -129,13 +129,13 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
                 if (pci_32bit_mmio_size >= range_size)
                     continue; // We currently only use the single largest region - TODO: Use all available regions if needed
 
-                pci_32bit_mmio_base = cpu_physical_address;
+                pci_32bit_mmio_base = pci_address.io_or_memory_space_address;
                 pci_32bit_mmio_size = range_size;
             } else {
                 if (pci_64bit_mmio_size >= range_size)
                     continue; // We currently only use the single largest region - TODO: Use all available regions if needed
 
-                pci_64bit_mmio_base = cpu_physical_address;
+                pci_64bit_mmio_base = pci_address.io_or_memory_space_address;
                 pci_64bit_mmio_size = range_size;
             }
         }
