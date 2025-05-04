@@ -34,6 +34,18 @@ public:
 
     ReadonlyBytes raw() const { return m_raw; }
 
+    template<typename T>
+    ErrorOr<T> as() const
+    {
+        if (m_raw.size() != sizeof(T))
+            return ERANGE;
+
+        T value;
+        __builtin_memcpy(&value, m_raw.data(), sizeof(T));
+
+        return value;
+    }
+
     static Address from_flatptr(FlatPtr flatptr)
     {
         BigEndian<FlatPtr> big_endian_flatptr { flatptr };
