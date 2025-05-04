@@ -525,6 +525,8 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
 
         Arch/aarch64/Serial/PL011.cpp
 
+        Arch/aarch64/PCI/Controller/BCM2712HostController.cpp
+
         Bus/PCI/Controller/GenericECAMHostController.cpp
         Bus/PCI/DeviceTreeHelpers.cpp
         Bus/PCI/DeviceTreeInitializer.cpp
