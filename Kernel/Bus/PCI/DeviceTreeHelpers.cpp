@@ -97,15 +97,9 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
         for (size_t i = 0; i < ranges.entry_count(); i++) {
             auto range = MUST(ranges.entry(i));
 
-            auto raw_pci_address = range.child_bus_address();
+            auto pci_address = TRY(range.child_bus_address().as<OpenFirmwareAddress>());
             auto cpu_physical_address = TRY(TRY(parent->translate_child_bus_address_to_root_address(range.parent_bus_address())).as_flatptr());
             auto range_size = TRY(range.length().as_size_t());
-
-            if (raw_pci_address.raw().size() != sizeof(OpenFirmwareAddress))
-                return EINVAL;
-
-            OpenFirmwareAddress pci_address {};
-            memcpy(&pci_address, raw_pci_address.raw().data(), sizeof(OpenFirmwareAddress));
 
             static constexpr auto space_type_names = Array {
                 "Configuration Space"sv,
