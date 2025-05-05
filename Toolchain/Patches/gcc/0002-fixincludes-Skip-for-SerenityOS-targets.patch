@@ -13,7 +13,7 @@ Our headers don't have such problems, so this hack is of no use for us.
  1 file changed, 1 insertion(+)
 
 diff --git a/fixincludes/mkfixinc.sh b/fixincludes/mkfixinc.sh
-index df90720b716f2386f343f5ba46a2d8d706188dd5..a45cdd0de6833a1e632292722387be453a079053 100755
+index 7112f4dcd64b8351343f7af343271d1717bd02e2..9dcd2318a8c8f514fbf594b26e556fee4d13e9ef 100755
 --- a/fixincludes/mkfixinc.sh
 +++ b/fixincludes/mkfixinc.sh
 @@ -11,6 +11,7 @@ target=fixinc.sh
@@ -22,5 +22,5 @@ index df90720b716f2386f343f5ba46a2d8d706188dd5..a45cdd0de6833a1e632292722387be45
  case $machine in
 +    *-serenity* | \
      i?86-*-cygwin* | \
-     i?86-*-mingw32* | \
-     x86_64-*-mingw32* | \
+     *-mingw32* | \
+     powerpc-*-eabisim* | \

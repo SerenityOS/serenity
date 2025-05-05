@@ -15,15 +15,15 @@ Co-Authored-By: Philip Herron <herron.philip@googlemail.com>
 Co-Authored-By: Shannon Booth <shannon@serenityos.org>
 ---
  gcc/configure               |  3 +++
- libgcc/config.host          | 17 +++++++++++++++++
+ libgcc/config.host          | 18 ++++++++++++++++++
  libgcc/unwind-dw2-fde-dip.c |  6 ++++++
- 3 files changed, 26 insertions(+)
+ 3 files changed, 27 insertions(+)
 
 diff --git a/gcc/configure b/gcc/configure
-index abc8bfdc24432e766eb05dcd8492b65acc47a65f..0160b4e986a5f58aa30ccc6e275a31fc9ff9c2ae 100755
+index 16965953f05160ea4572957144f305cc0cce4e18..63fbeab1be55e2a9bf6718f8a6d826bb7ecf7d27 100755
 --- a/gcc/configure
 +++ b/gcc/configure
-@@ -33652,6 +33652,9 @@ case "$target" in
+@@ -33648,6 +33648,9 @@ case "$target" in
    *-linux-musl*)
      gcc_cv_target_dl_iterate_phdr=yes
      ;;
@@ -34,10 +34,10 @@ index abc8bfdc24432e766eb05dcd8492b65acc47a65f..0160b4e986a5f58aa30ccc6e275a31fc
  
  if test x$gcc_cv_target_dl_iterate_phdr = xyes; then
 diff --git a/libgcc/config.host b/libgcc/config.host
-index e75a7af647f6004ce004b4a9eb46949507727dff..3261e8e47184a3b5d6d21685e2d64f234b46bc4a 100644
+index 6a88ee5a2dd0b1386b2a5f2fbb579953f8ce9441..5fc80843a52ba80469df05fd5162964c8d7ae322 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
-@@ -1356,6 +1356,11 @@ riscv*-*-freebsd*)
+@@ -1358,6 +1358,11 @@ riscv*-*-freebsd*)
  	tmake_file="${tmake_file} riscv/t-crtstuff riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address} t-slibgcc-libgcc"
  	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o crtendS.o crtbeginT.o"
  	;;
@@ -49,7 +49,7 @@ index e75a7af647f6004ce004b4a9eb46949507727dff..3261e8e47184a3b5d6d21685e2d64f23
  riscv*-*-*)
  	tmake_file="${tmake_file} riscv/t-softfp${host_address} t-softfp riscv/t-elf riscv/t-elf${host_address}"
  	extra_parts="$extra_parts crtbegin.o crtend.o crti.o crtn.o"
-@@ -1569,6 +1574,18 @@ nvptx-*)
+@@ -1571,6 +1576,19 @@ nvptx-*)
  	tmake_file="$tmake_file nvptx/t-nvptx"
  	extra_parts="crt0.o"
  	;;
@@ -63,13 +63,14 @@ index e75a7af647f6004ce004b4a9eb46949507727dff..3261e8e47184a3b5d6d21685e2d64f23
 +	tmake_file="$tmake_file ${cpu_type}/t-aarch64"
 +	tmake_file="$tmake_file ${cpu_type}/t-lse t-slibgcc t-slibgcc-libgcc t-slibgcc-gld-nover"
 +	tmake_file="$tmake_file ${cpu_type}/t-softfp t-softfp t-crtfm"
++	md_unwind_def_header=aarch64/aarch64-unwind-def.h
 +	md_unwind_header=aarch64/aarch64-unwind.h
 +	;;
  *)
  	echo "*** Configuration ${host} not supported" 1>&2
  	exit 1
 diff --git a/libgcc/unwind-dw2-fde-dip.c b/libgcc/unwind-dw2-fde-dip.c
-index 57d0c8812b13a2bfa8ff9b5e031347ad9afd7032..729fd29d4a233950b2c836d91d02ea335875ac6b 100644
+index 5c19838e0a3c34ea3b0420c552c0100276e5aab4..01138feee2a1c2c69a931c785a6f6614b7239c0f 100644
 --- a/libgcc/unwind-dw2-fde-dip.c
 +++ b/libgcc/unwind-dw2-fde-dip.c
 @@ -57,6 +57,12 @@
