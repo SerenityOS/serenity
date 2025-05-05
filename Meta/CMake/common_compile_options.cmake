@@ -70,6 +70,11 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
     # FIXME: This warning seems useful but has too many false positives with GCC 13.
     add_compile_options(-Wno-dangling-reference)
+
+    # FIXME: This seems to produce way to many false positives with GCC 15
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "15")
+        add_compile_options(-Wno-array-bounds)
+    endif()
 endif()
 
 if (UNIX AND NOT APPLE AND NOT ENABLE_FUZZERS)
