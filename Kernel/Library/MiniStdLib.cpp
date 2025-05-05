@@ -16,18 +16,16 @@ void* memcpy(void* dest_ptr, void const* src_ptr, size_t n)
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && !(src & 0x3) && n >= 12) {
         size_t size_ts = n / sizeof(size_t);
+        n -= size_ts * sizeof(size_t);
         asm volatile(
             "rep movsq\n"
-            : "=S"(src), "=D"(dest)
-            : "S"(src), "D"(dest), "c"(size_ts)
-            : "memory");
-        n -= size_ts * sizeof(size_t);
+            : "+S"(src), "+D"(dest), "+c"(size_ts)::"memory");
         if (n == 0)
             return dest_ptr;
     }
     asm volatile(
-        "rep movsb\n" ::"S"(src), "D"(dest), "c"(n)
-        : "memory");
+        "rep movsb\n"
+        : "+S"(src), "+D"(dest), "+c"(n)::"memory");
 #else
     u8* pd = (u8*)dest_ptr;
     u8 const* ps = (u8 const*)src_ptr;
@@ -57,19 +55,19 @@ void* memset(void* dest_ptr, int c, size_t n)
     if (!(dest & 0x3) && n >= 12) {
         size_t size_ts = n / sizeof(size_t);
         size_t expanded_c = explode_byte((u8)c);
+        n -= size_ts * sizeof(size_t);
         asm volatile(
             "rep stosq\n"
-            : "=D"(dest)
-            : "D"(dest), "c"(size_ts), "a"(expanded_c)
+            : "+D"(dest), "+c"(size_ts)
+            : "a"(expanded_c)
             : "memory");
-        n -= size_ts * sizeof(size_t);
         if (n == 0)
             return dest_ptr;
     }
     asm volatile(
         "rep stosb\n"
-        : "=D"(dest), "=c"(n)
-        : "0"(dest), "1"(n), "a"(c)
+        : "+D"(dest), "+c"(n)
+        : "a"(c)
         : "memory");
 #else
     u8* pd = (u8*)dest_ptr;
