@@ -786,8 +786,8 @@ public:
 private:
 };
 
-#if defined(AK_COMPILER_CLANG)
-#pragma clang diagnostic pop
+#if defined(AK_COMPILER_CLANG) || __GNUC__ >= 15
+#pragma GCC diagnostic pop
 #endif)~~~");
 }
 
@@ -816,10 +816,11 @@ void build(StringBuilder& builder, Vector<Endpoint> const& endpoints)
 #include <LibIPC/Message.h>
 #include <LibIPC/Stub.h>
 
-#if defined(AK_COMPILER_CLANG)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdefaulted-function-deleted"
-#endif)~~~");
+#if defined(AK_COMPILER_CLANG) || __GNUC__ >= 15
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdefaulted-function-deleted"
+#endif
+)~~~");
 
     for (auto const& endpoint : endpoints)
         build_endpoint(generator.fork(), endpoint);
