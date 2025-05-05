@@ -27,7 +27,7 @@ Co-Authored-By: Shannon Booth <shannon@serenityos.org>
  4 files changed, 14 insertions(+), 6 deletions(-)
 
 diff --git a/libstdc++-v3/acinclude.m4 b/libstdc++-v3/acinclude.m4
-index 51a08bcc8b1d07d8ab9144caf80ba0406ae12fca..f1c816d2b6d5b070383a3b7d0e40d26ddb54147f 100644
+index a0094c2dd95b43abc80d78cd87b85bc39ddf9eaf..d69a9eac17b868b9c726b3d6b0d80e53d3af68ea 100644
 --- a/libstdc++-v3/acinclude.m4
 +++ b/libstdc++-v3/acinclude.m4
 @@ -1792,7 +1792,7 @@ AC_DEFUN([GLIBCXX_ENABLE_LIBSTDCXX_TIME], [
@@ -49,7 +49,7 @@ index 51a08bcc8b1d07d8ab9144caf80ba0406ae12fca..f1c816d2b6d5b070383a3b7d0e40d26d
  	;;
        *)
 diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
-index 21abaeb07788142ecbb8a252dfe0b714c7c308c9..d5de656cc3cd7b3a9c4b82c292263426195b157d 100755
+index 819a1d82876a156e27a831bdaa695d155c34e31f..0cd50a29ab76d8af432aefdcb07b43f15f70688a 100755
 --- a/libstdc++-v3/configure
 +++ b/libstdc++-v3/configure
 @@ -12003,6 +12003,11 @@ else
@@ -64,7 +64,7 @@ index 21abaeb07788142ecbb8a252dfe0b714c7c308c9..d5de656cc3cd7b3a9c4b82c292263426
    darwin*)
    # if libdl is installed we need to link against it
      { $as_echo "$as_me:${as_lineno-$LINENO}: checking for dlopen in -ldl" >&5
-@@ -16679,7 +16684,7 @@ fi
+@@ -16680,7 +16685,7 @@ fi
        dragonfly* | freebsd*)
  	enable_clocale_flag=dragonfly
  	;;
@@ -73,7 +73,7 @@ index 21abaeb07788142ecbb8a252dfe0b714c7c308c9..d5de656cc3cd7b3a9c4b82c292263426
  	enable_clocale_flag=newlib
  	;;
        *)
-@@ -21374,7 +21379,7 @@ fi
+@@ -21377,7 +21382,7 @@ fi
          ac_has_nanosleep=yes
          ac_has_sched_yield=yes
          ;;
@@ -82,7 +82,7 @@ index 21abaeb07788142ecbb8a252dfe0b714c7c308c9..d5de656cc3cd7b3a9c4b82c292263426
          ac_has_clock_monotonic=yes
          ac_has_clock_realtime=yes
          ac_has_nanosleep=yes
-@@ -28620,7 +28625,7 @@ case "${host}" in
+@@ -28654,7 +28659,7 @@ case "${host}" in
      # This is a freestanding configuration; there is nothing to do here.
      ;;
  
@@ -92,10 +92,10 @@ index 21abaeb07788142ecbb8a252dfe0b714c7c308c9..d5de656cc3cd7b3a9c4b82c292263426
  
      $as_echo "#define HAVE_ASINF 1" >>confdefs.h
 diff --git a/libstdc++-v3/configure.host b/libstdc++-v3/configure.host
-index 7bc430716168748b96053d0c4d7785268706dd1c..546c72a474c1d8dcf20c22ee09d7a0ba941b0e1c 100644
+index 253e5a9ad0dbe0698e3672cbee1c89eab8f2702d..45a22282657499d3a3c747f19110f63cbb044995 100644
 --- a/libstdc++-v3/configure.host
 +++ b/libstdc++-v3/configure.host
-@@ -297,6 +297,9 @@ case "${host_os}" in
+@@ -307,6 +307,9 @@ case "${host_os}" in
      # Use libatomic if necessary and avoid libstdc++ specific atomicity support
      atomicity_dir="cpu/generic/atomicity_builtins"
      ;;

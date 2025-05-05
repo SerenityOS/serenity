@@ -31,10 +31,10 @@ Co-Authored-By: Shannon Booth <shannon@serenityos.org>
  create mode 100644 gcc/config/serenity.opt.urls
 
 diff --git a/gcc/config.gcc b/gcc/config.gcc
-index 95c91ee02be4403567d63ac566ab8d3b956a6d74..43e2d9b03a5ce4fc2baf6a2268fdbf77467526f5 100644
+index 40b50dc969ede4418b305ca01869ec157e054283..550573f66da4982f21334a16157220c6b3bca81f 100644
 --- a/gcc/config.gcc
 +++ b/gcc/config.gcc
-@@ -722,6 +722,18 @@ x86_cpus="generic intel"
+@@ -723,6 +723,18 @@ x86_cpus="generic intel"
  
  # Common parts for widely ported systems.
  case ${target} in
@@ -53,7 +53,7 @@ index 95c91ee02be4403567d63ac566ab8d3b956a6d74..43e2d9b03a5ce4fc2baf6a2268fdbf77
  *-*-darwin*)
    tmake_file="t-darwin "
    tm_file="${tm_file} darwin.h"
-@@ -1189,6 +1201,17 @@ case ${target} in
+@@ -1186,6 +1198,17 @@ case ${target} in
  esac
  
  case ${target} in
