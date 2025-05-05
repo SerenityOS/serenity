@@ -140,7 +140,7 @@ void* memcpy(void* dest_ptr, void const* src_ptr, size_t n)
     void* original_dest = dest_ptr;
     asm volatile(
         "rep movsb"
-        : "+D"(dest_ptr), "+S"(src_ptr), "+c"(n)::"memory");
+        : "+D"(dest_ptr), "+S"(src_ptr), "+c"(n)::"cc", "memory");
     return original_dest;
 #else
     u8* pd = (u8*)dest_ptr;
