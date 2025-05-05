@@ -11,6 +11,8 @@
 
 namespace GUI {
 
+JsonArrayModel::~JsonArrayModel() = default;
+
 void JsonArrayModel::invalidate()
 {
     auto invalidate_or_error = [this]() -> ErrorOr<void> {
