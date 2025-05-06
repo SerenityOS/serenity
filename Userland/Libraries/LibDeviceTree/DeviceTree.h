@@ -263,6 +263,31 @@ public:
 
     ErrorOr<Address> translate_child_bus_address_to_parent_bus_address(Address const&) const;
 
+    struct Iterator {
+        Iterator(Ranges const& ranges, size_t index)
+            : m_ranges(ranges)
+            , m_index(index)
+        {
+        }
+
+        RangesEntry operator*() const { return MUST(m_ranges.entry(m_index)); }
+
+        Iterator& operator++()
+        {
+            ++m_index;
+            return *this;
+        }
+
+        bool operator==(Iterator const& other) const { return m_index == other.m_index; }
+
+    private:
+        Ranges const& m_ranges;
+        size_t m_index;
+    };
+
+    Iterator begin() const { return Iterator(*this, 0); }
+    Iterator end() const { return Iterator(*this, entry_count()); }
+
 private:
     ReadonlyBytes m_raw;
     Node const& m_node;
