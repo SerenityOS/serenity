@@ -15,6 +15,9 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Library/Panic.h>
 #include <Kernel/Library/StdLib.h>
+#include <Kernel/Tasks/Process.h>
+#include <Kernel/Tasks/Thread.h>
+#include <Kernel/Tasks/ThreadTracer.h>
 
 namespace Kernel {
 
@@ -82,6 +85,12 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
 
     auto esr_el1 = bit_cast<Aarch64::ESR_EL1>(trap_frame->regs->esr_el1);
     auto fault_address = Aarch64::FAR_EL1::read().virtual_address;
+    if (Aarch64::exception_class_is_breakpoint_instruction(esr_el1.EC)) {
+        // When breakpoint instruction exception is triggered, the pc is set to the address of the
+        // breakpoint instruction, so we need to increase the pc past the breakpoint instruction to
+        // stay consistent with the user‑mode debugger’s behavior.
+        trap_frame->regs->set_ip(trap_frame->regs->ip() + 4);
+    }
     Processor::enable_interrupts();
 
     if (Aarch64::exception_class_is_data_abort(esr_el1.EC) || Aarch64::exception_class_is_instruction_abort(esr_el1.EC)) {
@@ -94,6 +103,19 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
         }
     } else if (Aarch64::exception_class_is_svc_instruction_execution(esr_el1.EC)) {
         syscall_handler(trap_frame);
+    } else if (Aarch64::exception_class_is_breakpoint_instruction(esr_el1.EC)) {
+        if (trap_frame->regs->previous_mode() == ExecutionMode::User) {
+            auto* current_thread = Thread::current();
+            auto& current_process = current_thread->process();
+
+            if (auto* tracer = current_process.tracer()) {
+                tracer->set_regs(*trap_frame->regs);
+            }
+
+            current_thread->send_urgent_signal_to_self(SIGTRAP);
+        } else {
+            handle_crash(*trap_frame->regs, "Unexpected breakpoint instruction exception", SIGTRAP, false);
+        }
     } else {
         handle_crash(*trap_frame->regs, "Unexpected exception", SIGSEGV, false);
     }
