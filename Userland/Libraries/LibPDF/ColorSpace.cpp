@@ -732,10 +732,10 @@ PDFErrorOr<ColorOrStyle> IndexedColorSpace::style(ReadonlySpan<float> arguments)
     if (index < 0 || index > m_hival)
         return Error { Error::Type::MalformedPDF, "Indexed color space index out of range" };
 
-    Vector<Value, 4> components;
+    Vector<float, 4> components;
     size_t const n = m_base->number_of_components();
     for (size_t i = 0; i < n; ++i)
-        TRY(components.try_append(Value(m_lookup[index * n + i] / 255.0f)));
+        TRY(components.try_append(m_lookup[index * n + i] / 255.0f));
 
     return m_base->style(components);
 }
