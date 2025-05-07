@@ -713,9 +713,14 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* docume
         return Error { Error::Type::MalformedPDF, "Indexed color space lookup table doesn't match size" };
     }
 
+    Vector<float> lookup_float;
+    lookup_float.resize(lookup.size());
+    for (size_t i = 0; i < lookup.size(); ++i)
+        lookup_float[i] = lookup[i] / 255.0f;
+
     auto color_space = adopt_ref(*new IndexedColorSpace(move(base)));
     color_space->m_hival = hival;
-    color_space->m_lookup = move(lookup);
+    color_space->m_lookup = move(lookup_float);
     return color_space;
 }
 
@@ -732,12 +737,8 @@ PDFErrorOr<ColorOrStyle> IndexedColorSpace::style(ReadonlySpan<float> arguments)
     if (index < 0 || index > m_hival)
         return Error { Error::Type::MalformedPDF, "Indexed color space index out of range" };
 
-    Vector<float, 4> components;
     size_t const n = m_base->number_of_components();
-    for (size_t i = 0; i < n; ++i)
-        TRY(components.try_append(m_lookup[index * n + i] / 255.0f));
-
-    return m_base->style(components);
+    return m_base->style(m_lookup.span().slice(index * n, n));
 }
 
 Vector<float> IndexedColorSpace::default_decode() const
