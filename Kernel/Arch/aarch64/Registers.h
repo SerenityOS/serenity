@@ -1319,6 +1319,11 @@ static inline bool exception_class_is_breakpoint_instruction(u8 exception_class)
     return exception_class == 0x38 || exception_class == 0x3c;
 }
 
+static inline bool exception_class_is_software_step(u8 exception_class)
+{
+    return exception_class == 0x32 || exception_class == 0x33;
+}
+
 // D17.2.37 ESR_EL1, Exception Syndrome Register (EL1)
 // ISS encoding for an exception from a Data Abort
 // DFSC, bits [5:0]
