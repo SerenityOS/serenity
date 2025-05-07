@@ -229,11 +229,66 @@ public:
     [[nodiscard]] i64 to_truncated_seconds() const;
     [[nodiscard]] i64 to_truncated_milliseconds() const;
     [[nodiscard]] i64 to_truncated_microseconds() const;
+
     // Rounds away from zero (2.3s to 3s, -2.3s to -3s).
-    [[nodiscard]] i64 to_seconds() const;
-    [[nodiscard]] i64 to_milliseconds() const;
-    [[nodiscard]] i64 to_microseconds() const;
-    [[nodiscard]] i64 to_nanoseconds() const;
+    [[nodiscard]] constexpr i64 to_seconds() const
+    {
+        VERIFY(m_nanoseconds < 1'000'000'000);
+        if (m_seconds >= 0 && m_nanoseconds)
+            return Checked<i64>::saturating_add(m_seconds, 1);
+
+        return m_seconds;
+    }
+
+    [[nodiscard]] constexpr i64 to_milliseconds() const
+    {
+        VERIFY(m_nanoseconds < 1'000'000'000);
+        Checked<i64> milliseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
+        milliseconds *= 1'000;
+        milliseconds += m_nanoseconds / 1'000'000;
+        if (m_seconds >= 0 && m_nanoseconds % 1'000'000 != 0)
+            milliseconds++;
+        if (m_seconds < 0) {
+            // We dropped one second previously, put it back in now that we have handled the rounding.
+            milliseconds -= 1'000;
+        }
+        if (!milliseconds.has_overflow())
+            return milliseconds.value();
+        return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
+    }
+
+    [[nodiscard]] constexpr i64 to_microseconds() const
+    {
+        VERIFY(m_nanoseconds < 1'000'000'000);
+        Checked<i64> microseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
+        microseconds *= 1'000'000;
+        microseconds += m_nanoseconds / 1'000;
+        if (m_seconds >= 0 && m_nanoseconds % 1'000 != 0)
+            microseconds++;
+        if (m_seconds < 0) {
+            // We dropped one second previously, put it back in now that we have handled the rounding.
+            microseconds -= 1'000'000;
+        }
+        if (!microseconds.has_overflow())
+            return microseconds.value();
+        return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
+    }
+
+    [[nodiscard]] constexpr i64 to_nanoseconds() const
+    {
+        VERIFY(m_nanoseconds < 1'000'000'000);
+        Checked<i64> nanoseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
+        nanoseconds *= 1'000'000'000;
+        nanoseconds += m_nanoseconds;
+        if (m_seconds < 0) {
+            // We dropped one second previously, put it back in now that we have handled the rounding.
+            nanoseconds -= 1'000'000'000;
+        }
+        if (!nanoseconds.has_overflow())
+            return nanoseconds.value();
+        return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
+    }
+
     [[nodiscard]] timespec to_timespec() const;
     // Rounds towards -inf (it was the easiest to implement).
     [[nodiscard]] timeval to_timeval() const;
@@ -432,9 +487,9 @@ public:
 
     [[nodiscard]] constexpr Duration offset_to_epoch() const { return m_offset; }
     // May return an epoch offset *after* what this UnixDateTime contains, because rounding to seconds occurs.
-    [[nodiscard]] i64 seconds_since_epoch() const { return m_offset.to_seconds(); }
-    [[nodiscard]] i64 milliseconds_since_epoch() const { return m_offset.to_milliseconds(); }
-    [[nodiscard]] i64 nanoseconds_since_epoch() const { return m_offset.to_nanoseconds(); }
+    [[nodiscard]] constexpr i64 seconds_since_epoch() const { return m_offset.to_seconds(); }
+    [[nodiscard]] constexpr i64 milliseconds_since_epoch() const { return m_offset.to_milliseconds(); }
+    [[nodiscard]] constexpr i64 nanoseconds_since_epoch() const { return m_offset.to_nanoseconds(); }
     // Never returns a point after this UnixDateTime, since fractional seconds are cut off.
     [[nodiscard]] i64 truncated_seconds_since_epoch() const { return m_offset.to_truncated_seconds(); }
 
