@@ -110,66 +110,6 @@ i64 Duration::to_truncated_microseconds() const
     return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
 }
 
-i64 Duration::to_seconds() const
-{
-    VERIFY(m_nanoseconds < 1'000'000'000);
-    if (m_seconds >= 0 && m_nanoseconds) {
-        Checked<i64> seconds(m_seconds);
-        seconds++;
-        return seconds.has_overflow() ? 0x7fff'ffff'ffff'ffffLL : seconds.value();
-    }
-    return m_seconds;
-}
-
-i64 Duration::to_milliseconds() const
-{
-    VERIFY(m_nanoseconds < 1'000'000'000);
-    Checked<i64> milliseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
-    milliseconds *= 1'000;
-    milliseconds += m_nanoseconds / 1'000'000;
-    if (m_seconds >= 0 && m_nanoseconds % 1'000'000 != 0)
-        milliseconds++;
-    if (m_seconds < 0) {
-        // We dropped one second previously, put it back in now that we have handled the rounding.
-        milliseconds -= 1'000;
-    }
-    if (!milliseconds.has_overflow())
-        return milliseconds.value();
-    return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
-}
-
-i64 Duration::to_microseconds() const
-{
-    VERIFY(m_nanoseconds < 1'000'000'000);
-    Checked<i64> microseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
-    microseconds *= 1'000'000;
-    microseconds += m_nanoseconds / 1'000;
-    if (m_seconds >= 0 && m_nanoseconds % 1'000 != 0)
-        microseconds++;
-    if (m_seconds < 0) {
-        // We dropped one second previously, put it back in now that we have handled the rounding.
-        microseconds -= 1'000'000;
-    }
-    if (!microseconds.has_overflow())
-        return microseconds.value();
-    return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
-}
-
-i64 Duration::to_nanoseconds() const
-{
-    VERIFY(m_nanoseconds < 1'000'000'000);
-    Checked<i64> nanoseconds((m_seconds < 0) ? m_seconds + 1 : m_seconds);
-    nanoseconds *= 1'000'000'000;
-    nanoseconds += m_nanoseconds;
-    if (m_seconds < 0) {
-        // We dropped one second previously, put it back in now that we have handled the rounding.
-        nanoseconds -= 1'000'000'000;
-    }
-    if (!nanoseconds.has_overflow())
-        return nanoseconds.value();
-    return m_seconds < 0 ? -0x8000'0000'0000'0000LL : 0x7fff'ffff'ffff'ffffLL;
-}
-
 timespec Duration::to_timespec() const
 {
     VERIFY(m_nanoseconds < 1'000'000'000);
