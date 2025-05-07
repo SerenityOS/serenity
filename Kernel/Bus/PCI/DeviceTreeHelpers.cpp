@@ -91,12 +91,9 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
 
     auto maybe_ranges = node.ranges();
     if (!maybe_ranges.is_error()) {
-        auto ranges = maybe_ranges.release_value();
-
         dbgln("PCI: Address mapping for {}:", node_name);
-        for (size_t i = 0; i < ranges.entry_count(); i++) {
-            auto range = MUST(ranges.entry(i));
 
+        for (auto range : maybe_ranges.release_value()) {
             auto pci_address = TRY(range.child_bus_address().as<OpenFirmwareAddress>());
             auto cpu_physical_address = TRY(TRY(parent->translate_child_bus_address_to_root_address(range.parent_bus_address())).as_flatptr());
             auto range_size = TRY(range.length().as_size_t());
