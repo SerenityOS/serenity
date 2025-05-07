@@ -14,11 +14,11 @@ endobj
 endobj
 
 4 0 obj
-<</Type/Page/Parent 3 0 R/Resources 5 0 R/Contents 9 0 R/MediaBox[0 0 310 370]/Rotate 0>>
+<</Type/Page/Parent 3 0 R/Resources 5 0 R/Contents 15 0 R/MediaBox[0 0 370 370]/Rotate 0>>
 endobj
 
 5 0 obj
-<</ColorSpace<</MyCalRGB 6 0 R/MyLab 7 0 R/MyCalGray 8 0 R>>>>
+<</ColorSpace<</MyCalRGB 6 0 R/MyLab 7 0 R/MyCalGray 8 0 R/IndexedDeviceGray 9 0 R/IndexedMyCalRGB 10 0 R/IndexedDeviceRGB 11 0 R/IndexedDeviceCMYK 12 0 R/IndexedMyLab 13 0 R/IndexedMyCalGray 14 0 R>>>>
 endobj
 
 6 0 obj
@@ -34,7 +34,31 @@ endobj
 endobj
 
 9 0 obj
-<</Length 986>>
+[/Indexed/DeviceGray 0<FF>]
+endobj
+
+10 0 obj
+[/Indexed 6 0 R 0<FFFFFF>]
+endobj
+
+11 0 obj
+[/Indexed/DeviceRGB 0<FFFFFF>]
+endobj
+
+12 0 obj
+[/Indexed/DeviceCMYK 0<FFFFFFFF>]
+endobj
+
+13 0 obj
+[/Indexed 7 0 R 0<FFFFFF>]
+endobj
+
+14 0 obj
+[/Indexed 8 0 R 0<FF>]
+endobj
+
+15 0 obj
+<</Length 1252>>
 stream
 /DeviceGray cs
 0.2 sc  10 10 50 50 re f
@@ -42,6 +66,8 @@ stream
 0.8 sc 130 10 50 50 re f
 1.0 sc 190 10 50 50 re B
 0.0 sc 250 10 50 50 re f
+/IndexedDeviceGray cs
+0 sc 310 10 50 50 re B
 
 /MyCalRGB cs
 1 0.5 1 sc  10  70 50 50 re f
@@ -49,6 +75,8 @@ stream
 1 1 0.5 sc 130  70 50 50 re f
 1 1 1   sc 190  70 50 50 re B
 0 0 0   sc 250  70 50 50 re f
+/IndexedMyCalRGB cs
+0 sc 310 70 50 50 re B
 
 /DeviceRGB cs
 1 0.5 1 sc  10 130 50 50 re f
@@ -56,6 +84,8 @@ stream
 1 1 0.5 sc 130 130 50 50 re f
 1 1 1   sc 190 130 50 50 re B
 0 0 0   sc 250 130 50 50 re f
+/IndexedDeviceRGB cs
+0 sc 310 130 50 50 re B
 
 /DeviceCMYK cs
 0 0.5 1 0.1 sc  10 190 50 50 re f
@@ -63,6 +93,8 @@ stream
 1 0 0.5 0.1 sc 130 190 50 50 re f
 1 1 1   1   sc 190 190 50 50 re f
 0 0 0   0   sc 250 190 50 50 re B
+/IndexedDeviceCMYK cs
+0 sc 310 190 50 50 re B
 
 /MyLab cs
 80  -120 120 sc  10 250 50 50 re f
@@ -70,6 +102,8 @@ stream
 80    0    0 sc 130 250 50 50 re f
 100   0    0 sc 190 250 50 50 re B
 0     0    0 sc 250 250 50 50 re f
+/IndexedMyLab cs
+0 sc 310 250 50 50 re B
 
 /MyCalGray cs
 0.2 sc  10 310 50 50 re f
@@ -77,25 +111,34 @@ stream
 0.8 sc 130 310 50 50 re f
 1.0 sc 190 310 50 50 re B
 0.0 sc 250 310 50 50 re f
+/IndexedMyCalGray cs
+0 sc 310 310 50 50 re B
+
 
 endstream
 endobj
 
 xref
-0 10
-0000000000 00001 f 
+0 16
+0000000000 00002 f 
 0000000016 00000 n 
 0000000062 00000 n 
 0000000114 00000 n 
 0000000166 00000 n 
-0000000272 00000 n 
-0000000351 00000 n 
-0000000512 00000 n 
-0000000590 00000 n 
-0000000659 00000 n 
+0000000273 00000 n 
+0000000492 00000 n 
+0000000653 00000 n 
+0000000731 00000 n 
+0000000800 00000 n 
+0000000844 00000 n 
+0000000888 00000 n 
+0000000936 00000 n 
+0000000987 00000 n 
+0000001031 00000 n 
+0000001071 00000 n 
 
 trailer
-<</Size 10/Root 1 0 R>>
+<</Size 16/Root 1 0 R>>
 startxref
-1695
+2375
 %%EOF

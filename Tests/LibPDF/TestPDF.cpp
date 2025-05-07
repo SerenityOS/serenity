@@ -364,7 +364,7 @@ TEST_CASE(render)
     EXPECT_EQ(document->get_page_count(), 1U);
 
     auto page = MUST(document->get_page(0));
-    auto page_size = Gfx::IntSize { 310, 370 };
+    auto page_size = Gfx::IntSize { 370, 370 };
     auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
     MUST(PDF::Renderer::render(document, page, bitmap, Color::White, PDF::RenderingPreferences {}));
 
