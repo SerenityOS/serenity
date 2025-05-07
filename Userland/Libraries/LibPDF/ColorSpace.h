@@ -242,7 +242,7 @@ private:
 
     NonnullRefPtr<ColorSpace> m_base;
     int m_hival { 0 };
-    Vector<u8> m_lookup;
+    Vector<float> m_lookup;
 };
 
 class SeparationColorSpace final : public ColorSpace {
