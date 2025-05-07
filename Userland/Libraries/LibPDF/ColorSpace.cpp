@@ -703,7 +703,8 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* docume
         return Error { Error::Type::MalformedPDF, "Indexed color space expects stream or string for third arg" };
     }
 
-    size_t needed_size = (hival + 1) * base->number_of_components();
+    size_t const n = base->number_of_components();
+    size_t needed_size = (hival + 1) * n;
     if (lookup.size() - 1 == needed_size) {
         // FIXME: Could do this if lookup.size() > needed_size generally, but so far I've only seen files that had one byte too much.
         lookup.resize(needed_size);
@@ -714,9 +715,10 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> IndexedColorSpace::create(Document* docume
     }
 
     Vector<float> lookup_float;
+    auto decode = base->default_decode();
     lookup_float.resize(lookup.size());
     for (size_t i = 0; i < lookup.size(); ++i)
-        lookup_float[i] = lookup[i] / 255.0f;
+        lookup_float[i] = mix(decode[2 * (i % n)], decode[2 * (i % n) + 1], lookup[i] / 255.0f);
 
     auto color_space = adopt_ref(*new IndexedColorSpace(move(base)));
     color_space->m_hival = hival;
