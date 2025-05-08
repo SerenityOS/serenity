@@ -29,7 +29,7 @@ UNMAP_AFTER_INIT DeviceTreexHCIController::DeviceTreexHCIController(Memory::Type
 {
 }
 
-ErrorOr<NonnullOwnPtr<GenericInterruptHandler>> DeviceTreexHCIController::create_interrupter(u16 interrupter_id)
+ErrorOr<OwnPtr<GenericInterruptHandler>> DeviceTreexHCIController::create_interrupter(u16 interrupter_id)
 {
     return TRY(xHCIDeviceTreeInterrupter::create(*this, m_interrupt_number, interrupter_id));
 }

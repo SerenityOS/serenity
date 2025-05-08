@@ -20,7 +20,7 @@ private:
 
     // ^xHCIController
     virtual bool using_message_signalled_interrupts() const override { return m_using_message_signalled_interrupts; }
-    virtual ErrorOr<NonnullOwnPtr<GenericInterruptHandler>> create_interrupter(u16 interrupter_id) override;
+    virtual ErrorOr<OwnPtr<GenericInterruptHandler>> create_interrupter(u16 interrupter_id) override;
     virtual ErrorOr<void> write_dmesgln_prefix(StringBuilder& builder) const override
     {
         TRY(builder.try_appendff("xHCI: {}: "sv, m_node_name));
