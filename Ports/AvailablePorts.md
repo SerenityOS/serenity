@@ -257,6 +257,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`opusfile`](opusfile/)                       | opusfile                                                      | 0.12                     | https://opus-codec.org/                                              |
 | [`p7zip`](p7zip/)                             | p7zip                                                         | 17.04                    | https://github.com/jinfeihan57/p7zip                                 |
 | [`pacman`](pacman/)                           | Pacman                                                        | b6241a3                  | https://github.com/ebuc99/pacman                                     |
+| [`pango`](pango/)                             | Pango                                                         | 1.54.0                   | https://gitlab.gnome.org/GNOME/pango                                 |
 | [`patch`](patch/)                             | patch (GNU)                                                   | 2.7.6                    | https://savannah.gnu.org/projects/patch/                             |
 | [`patchelf`](patchelf/)                       | Utility for modifying existing ELF executables and libraries  | 0.18.0                   | https://github.com/NixOS/patchelf/                                   |
 | [`pcre`](pcre/)                               | Perl-compatible Regular Expressions (PCRE)                    | 8.45                     | https://www.pcre.org/                                                |
