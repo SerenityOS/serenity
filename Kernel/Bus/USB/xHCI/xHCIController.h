@@ -52,7 +52,7 @@ protected:
     xHCIController(Memory::TypedMapping<u8> registers_mapping);
 
     virtual bool using_message_signalled_interrupts() const = 0;
-    virtual ErrorOr<NonnullOwnPtr<GenericInterruptHandler>> create_interrupter(u16 interrupter_id) = 0;
+    virtual ErrorOr<OwnPtr<GenericInterruptHandler>> create_interrupter(u16 interrupter_id) = 0;
     virtual ErrorOr<void> write_dmesgln_prefix(StringBuilder&) const = 0;
 
 private:
@@ -63,6 +63,7 @@ private:
 
     void event_handling_thread();
     void hot_plug_thread();
+    void poll_thread();
 
     // Arbitrarily chosen to decrease allocation sizes, can be increased up to 256 if we reach this limit
     static constexpr size_t max_devices = 64;

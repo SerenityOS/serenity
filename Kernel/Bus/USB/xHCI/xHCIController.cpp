@@ -252,6 +252,10 @@ ErrorOr<void> xHCIController::initialize()
     m_using_message_signalled_interrupts = using_message_signalled_interrupts();
     m_interrupter = TRY(create_interrupter(0));
 
+    // Fall back to polling if we failed to set up interrupts for the host controller.
+    if (m_interrupter == nullptr)
+        (void)TRY(m_process->create_kernel_thread("xHCI Poll"sv, [this]() { poll_thread(); }));
+
     return start();
 }
 
@@ -1536,6 +1540,19 @@ void xHCIController::hot_plug_thread()
 
         (void)Thread::current()->sleep(Duration::from_seconds(1));
     }
+    Thread::current()->exit();
+    VERIFY_NOT_REACHED();
+}
+
+void xHCIController::poll_thread()
+{
+    static constexpr auto poll_interval = Duration::from_milliseconds(3);
+
+    while (!Process::current().is_dying()) {
+        handle_interrupt(0);
+        (void)Thread::current()->sleep(poll_interval);
+    }
+
     Thread::current()->exit();
     VERIFY_NOT_REACHED();
 }
