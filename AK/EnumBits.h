@@ -58,6 +58,13 @@
         return lhs;                                                        \
     }                                                                      \
                                                                            \
+    Prefix inline void operator|=(Enum volatile& lhs, Enum rhs)            \
+    {                                                                      \
+        using Type = UnderlyingType<Enum>;                                 \
+        lhs = static_cast<Enum>(                                           \
+            static_cast<Type>(lhs) | static_cast<Type>(rhs));              \
+    }                                                                      \
+                                                                           \
     Prefix constexpr Enum& operator&=(Enum& lhs, Enum rhs)                 \
     {                                                                      \
         using Type = UnderlyingType<Enum>;                                 \
@@ -66,12 +73,26 @@
         return lhs;                                                        \
     }                                                                      \
                                                                            \
+    Prefix inline void operator&=(Enum volatile& lhs, Enum rhs)            \
+    {                                                                      \
+        using Type = UnderlyingType<Enum>;                                 \
+        lhs = static_cast<Enum>(                                           \
+            static_cast<Type>(lhs) & static_cast<Type>(rhs));              \
+    }                                                                      \
+                                                                           \
     Prefix constexpr Enum& operator^=(Enum& lhs, Enum rhs)                 \
     {                                                                      \
         using Type = UnderlyingType<Enum>;                                 \
         lhs = static_cast<Enum>(                                           \
             static_cast<Type>(lhs) ^ static_cast<Type>(rhs));              \
         return lhs;                                                        \
+    }                                                                      \
+                                                                           \
+    Prefix inline void operator^=(Enum volatile& lhs, Enum rhs)            \
+    {                                                                      \
+        using Type = UnderlyingType<Enum>;                                 \
+        lhs = static_cast<Enum>(                                           \
+            static_cast<Type>(lhs) ^ static_cast<Type>(rhs));              \
     }                                                                      \
                                                                            \
     Prefix constexpr bool has_flag(Enum value, Enum mask)                  \
