@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Badge.h>
 #include <AK/Format.h>
 #include <AK/RefCounted.h>
 #include <AK/StdLibExtras.h>
@@ -126,7 +127,11 @@ public:
         return NonnullOwnPtr<U>(NonnullOwnPtr<U>::Adopt, static_cast<U&>(*leak_ptr()));
     }
 
+    constexpr NonnullOwnPtr(Badge<Optional<NonnullOwnPtr<T>>>) { }
+
 private:
+    friend struct Traits<NonnullOwnPtr<T>>;
+
     void clear()
     {
         auto* ptr = exchange(m_ptr, nullptr);
@@ -192,6 +197,10 @@ struct Traits<NonnullOwnPtr<T>> : public DefaultTraits<NonnullOwnPtr<T>> {
     using ConstPeekType = T const*;
     static unsigned hash(NonnullOwnPtr<T> const& p) { return ptr_hash(p.ptr()); }
     static bool equals(NonnullOwnPtr<T> const& a, NonnullOwnPtr<T> const& b) { return a.ptr() == b.ptr(); }
+
+    constexpr static auto special_optional_empty_value(Badge<Optional<NonnullOwnPtr<T>>> badge) { return NonnullOwnPtr<T>(move(badge)); }
+    constexpr static bool optional_has_value(NonnullOwnPtr<T> const& ptr) { return ptr.m_ptr != nullptr; }
+    constexpr static bool optional_dont_move_empty = true;
 };
 
 template<typename T, typename U>

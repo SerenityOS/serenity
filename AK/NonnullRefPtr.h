@@ -6,12 +6,13 @@
 
 #pragma once
 
-#define NONNULLREFPTR_SCRUB_BYTE 0xe1
-
 #include <AK/Assertions.h>
+#include <AK/Badge.h>
 #include <AK/Format.h>
 #include <AK/Traits.h>
 #include <AK/Types.h>
+
+#define NONNULLREFPTR_SCRUB_BYTE 0xe1
 
 namespace AK {
 
@@ -207,6 +208,9 @@ public:
         return m_ptr == other;
     }
 
+    constexpr NonnullRefPtr(Badge<Optional<NonnullRefPtr<T>>>)
+        : m_ptr(nullptr) {};
+
 private:
     NonnullRefPtr() = delete;
 
@@ -294,6 +298,9 @@ struct Traits<NonnullRefPtr<T>> : public DefaultTraits<NonnullRefPtr<T>> {
     using ConstPeekType = T const*;
     static unsigned hash(NonnullRefPtr<T> const& p) { return ptr_hash(p.ptr()); }
     static bool equals(NonnullRefPtr<T> const& a, NonnullRefPtr<T> const& b) { return a.ptr() == b.ptr(); }
+
+    constexpr static auto special_optional_empty_value(Badge<Optional<NonnullRefPtr<T>>> badge) { return NonnullRefPtr<T>(move(badge)); }
+    constexpr static bool optional_dont_move_empty = true;
 };
 
 }

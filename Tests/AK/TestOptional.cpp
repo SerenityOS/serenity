@@ -8,6 +8,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/ByteString.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
 
@@ -302,6 +303,29 @@ TEST_CASE(comparison_reference)
     EXPECT_NE(opt0, opt1);
     EXPECT_EQ(opt1, opt2);
     EXPECT_NE(opt1, opt3);
+}
+
+TEST_CASE(nonnull_smart_pointers)
+{
+    Optional<NonnullOwnPtr<int>> opt;
+    EXPECT_EQ(opt.has_value(), false);
+    opt = make<int>(3);
+    EXPECT_EQ(opt.has_value(), true);
+    EXPECT_EQ(*opt.value(), 3);
+
+    Optional<NonnullOwnPtr<int>> opt2 = make<int>(4);
+    EXPECT_EQ(opt2.has_value(), true);
+    EXPECT_EQ(*opt2.value(), 4);
+
+    opt = move(opt2);
+    EXPECT_EQ(opt.has_value(), true);
+    EXPECT_EQ(*opt.value(), 4);
+    EXPECT_EQ(opt2.has_value(), false);
+
+    (void)opt.release_value();
+    EXPECT_EQ(opt.has_value(), false);
+
+    // FIXME: Maybe test NonnullRefPtr, especially as that can be copied
 }
 
 TEST_CASE(uninitialized_constructor)
