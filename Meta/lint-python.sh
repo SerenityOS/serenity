@@ -5,10 +5,9 @@ set -e
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "${script_path}/.." || exit 1
 
+# Either use the Serenity base directory, or the files passed on the command line.
 if [ "$#" -eq "0" ]; then
-    mapfile -t files < <(
-        git ls-files '*.py'
-    )
+    files=(".")
 else
     files=()
     for file in "$@"; do
@@ -19,12 +18,14 @@ else
 fi
 
 if (( ${#files[@]} )); then
-    if ! command -v flake8 >/dev/null 2>&1 ; then
-        echo "flake8 is not available, but python files need linting! Either skip this script, or install flake8."
+    if ! command -v ruff >/dev/null 2>&1 ; then
+        echo "ruff is not available, but python files need linting! Either skip this script, or install ruff."
         exit 1
     fi
 
-    flake8 "${files[@]}" --max-line-length=120
+    # First run formatting, then style checks
+    ruff format "${files[@]}"
+    ruff check --fix "${files[@]}"
 else
-    echo "No py files to check."
+    echo "No Python files to check."
 fi

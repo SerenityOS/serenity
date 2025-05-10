@@ -41,23 +41,21 @@ SOURCE_EXTENSIONS = ['.cpp', '.c']
 gcc_path = None
 for serenity_arch in ['x86_64', 'aarch64']:
     candidate_gcc_path = os.path.join(
-        DIR_OF_THIS_SCRIPT, 'Toolchain',
-        'Local', serenity_arch, 'bin', f'{serenity_arch}-pc-serenity-gcc'
+        DIR_OF_THIS_SCRIPT, 'Toolchain', 'Local', serenity_arch, 'bin', f'{serenity_arch}-pc-serenity-gcc'
     )
     if os.path.isfile(candidate_gcc_path):
         gcc_path = candidate_gcc_path
         break
 
-serenity_flags = [
-    '-D__serenity__',
-    '-D__unix__'
-]
+serenity_flags = ['-D__serenity__', '-D__unix__']
 
 if gcc_path:
-    gcc_output = subprocess.check_output(
-      [gcc_path, '-E', '-Wp,-v', '-'],
-      stdin=subprocess.DEVNULL, stderr=subprocess.STDOUT
-    ).rstrip().decode('utf8').split("\n")
+    gcc_output = (
+        subprocess.check_output([gcc_path, '-E', '-Wp,-v', '-'], stdin=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        .rstrip()
+        .decode('utf8')
+        .split("\n")
+    )
 
     for line in gcc_output:
         if not line.startswith(' '):
@@ -118,5 +116,5 @@ def Settings(**kwargs):
     return {
         'flags': final_flags,
         'include_paths_relative_to_dir': DIR_OF_THIS_SCRIPT,
-        'override_filename': filename
+        'override_filename': filename,
     }
