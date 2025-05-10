@@ -1,0 +1,266 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"scopeName": "source.serenity-ipc",
+	"name": "Inter Process Communication Endpoint (SerenityOS)",
+	"patterns": [
+		{
+			"include": "#includes"
+		},
+		{
+			"include": "#endpoint"
+		},
+		{
+			"include": "#globals"
+		}
+	],
+	"repository": {
+		"includes": {
+			"patterns": [
+				{
+					"match": "\\s*((#)\\s*include)\\s+((\\<)(.*?)(\\>)|(\")(.*?)(\"))\\s*",
+					"captures": {
+						"1": {
+							"name": "keyword.control.import.serenity-ipc"
+						},
+						"2": {
+							"name": "punctuation.include.hash.serenity-ipc"
+						},
+						"3": {
+							"name": "string.quoted.include.serenity-ipc"
+						},
+						"4": {
+							"name": "punctuation.string.begin.serenity-ipc"
+						},
+						"5": {
+							"name": "string.quoted.other.lt-gt.include.serenity-ipc"
+						},
+						"6": {
+							"name": "punctuation.string.end.serenity-ipc"
+						},
+						"7": {
+							"name": "punctuation.string.begin.serenity-ipc"
+						},
+						"8": {
+							"name": "string.quoted.double.include.serenity-ipc"
+						},
+						"9": {
+							"name": "punctuation.string.end.serenity-ipc"
+						}
+					}
+				}
+			]
+		},
+		"endpoint": {
+			"name": "meta.name.class.endpoint.serenity-ipc",
+			"begin": "(endpoint)\\s+(\\p{L}[\\p{L}0-9_$]*)\\s*((\\[)(\\p{L}[\\p{L}0-9_$]*)(=)(.*?)(\\]))?(\\{)?\\s*$",
+			"beginCaptures": {
+				"1": {
+					"name": "storage.type.class.endpoint.serenity-ipc"
+				},
+				"2": {
+					"name": "entity.name.class.endpoint.serenity-ipc"
+				},
+				"3": {
+					"name": "meta.attribute.serenity-ipc"
+				},
+				"4": {
+					"name": "punctuation.bracket.begin.serenity-ipc"
+				},
+				"5": {
+					"name": "entity.other.attribute-name.serenity-ipc entity.name.attribute.serenity-ipc"
+				},
+				"6": {
+					"name": "punctuation.equals.serenity-ipc"
+				},
+				"7": {
+					"name": "constant.other.attribute.serenity-ipc"
+				},
+				"8": {
+					"name": "punctuation.bracket.end.serenity-ipc"
+				},
+				"9": {
+					"name": "punctuation.definition.brace.start.serenity-ipc"
+				}
+			},
+			"end": "(\\})",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.brace.end.serenity-ipc"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#globals"
+				},
+				{
+					"include": "#function"
+				},
+				{
+					"include": "#function-return"
+				}
+			]
+		},
+		"globals": {
+			"patterns": [
+				{
+					"name": "punctuation.definition.brace.start.serenity-ipc",
+					"match": "\\{"
+				},
+				{
+					"include": "#comments"
+				}
+			]
+		},
+		"function": {
+			"name": "meta.function.endpoint.serenity-ipc",
+			"begin": "(\\p{L}[\\p{L}0-9_$]*)\\s*(\\()",
+			"patterns": [
+				{
+					"include": "#argument-list"
+				}
+			],
+			"end": "(\\))\\s*(=\\|)?",
+			"beginCaptures": {
+				"1": {
+					"name": "entity.name.function.interface.serenity-ipc"
+				},
+				"2": {
+					"name": "punctuation.parenthesis.begin.serenity-ipc"
+				}
+			},
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.parenthesis.end.serenity-ipc"
+				},
+				"2": {
+					"name": "keyword.control.async-call.serenity-ipc"
+				}
+			}
+		},
+		"function-return": {
+			"name": "meta.return-type.serenity-ipc",
+			"begin": "(\\=\\>)\\s*(\\()?",
+			"end": "(\\))",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.control.sync-call.serenity-ipc"
+				},
+				"2": {
+					"name": "punctuation.parenthesis.begin.serenity-ipc"
+				}
+			},
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.parenthesis.end.serenity-ipc"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#argument-list"
+				}
+			]
+		},
+		"argument-list": {
+			"name": "meta.parameter.serenity-ipc",
+			"begin": "(\\s*(\\[)(\\p{L}[\\p{L}0-9_$]*)(\\])\\s)?\\s*(?=\\b|\\:)",
+			"end": "(\\p{L}[\\p{L}0-9_$]*)\\s*((?:,(?!\\)))|(?=\\)))",
+			"beginCaptures": {
+				"1": {
+					"name": "meta.attribute.serenity-ipc"
+				},
+				"2": {
+					"name": "punctuation.brackets.attribute.begin.serenity-ipc"
+				},
+				"3": {
+					"name": "entity.name.attribute.serenity-ipc"
+				},
+				"4": {
+					"name": "punctuation.brackets.attribute.end.serenity-ipc"
+				}
+			},
+			"endCaptures": {
+				"1": {
+					"name": "variable.parameter.serenity-ipc"
+				},
+				"2": {
+					"name": "punctuation.comma.parameter.serenity-ipc"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#argument-list-type"
+				}
+			]
+		},
+		"argument-list-type": {
+			"patterns": [
+				{
+					"name": "entity.name.type.primitive.serenity-ipc",
+					"match": "(([ui](8|16|32|64))|bool|double|float|int|unsigned|(unsigned\\s+int))"
+				},
+				{
+					"name": "meta.type.class.serenity-ipc",
+					"begin": "(::)|(\\p{L}[\\p{L}0-9_$]*)",
+					"beginCaptures": {
+						"1": {
+							"name": "keyword.operator.namespace.serenity-ipc"
+						},
+						"2": {
+							"name": "entity.name.type.class.serenity-ipc"
+						}
+					},
+					"end": "\\s",
+					"patterns": [
+						{
+							"include": "#typename"
+						}
+					]
+				}
+			]
+		},
+		"typename": {
+			"patterns": [
+				{
+					"begin": "(<)",
+					"end": "(>)",
+					"beginCaptures": {
+						"1": {
+							"name": "punctuation.section.angle-brackets.begin.template.call.serenity-ipc"
+						}
+					},
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.section.angle-brackets.end.template.call.serenity-ipc"
+						}
+					},
+					"patterns": [
+						{
+							"include": "#typename"
+						},
+						{
+							"match": ",",
+							"name": "punctuation.comma.type.serenity-ipc"
+						}
+					]
+				},
+				{
+					"name": "entity.name.type.class.serenity-ipc",
+					"match": "(\\p{L}[\\p{L}0-9_$]*)"
+				},
+				{
+					"name": "keyword.operator.namespace.serenity-ipc",
+					"match": "::"
+				}
+			]
+		},
+		"comments": {
+			"name": "comment.line.double-slash.serenity-ipc",
+			"match": "(//).*",
+			"captures": {
+				"1": {
+					"name": "punctuation.comment.begin.serenity-ipc"
+				}
+			}
+		}
+	}
+}
