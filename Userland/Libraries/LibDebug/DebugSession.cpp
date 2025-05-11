@@ -197,8 +197,7 @@ Optional<FlatPtr> DebugSession::peek_debug(u32 register_index) const
 bool DebugSession::insert_breakpoint(FlatPtr address)
 {
     // We insert a software breakpoint by
-    // patching the first byte of the instruction at 'address'
-    // with the breakpoint instruction (int3)
+    // patching the breakpoint instruction at 'address'
 
     if (m_breakpoints.contains(address))
         return false;
@@ -208,15 +207,13 @@ bool DebugSession::insert_breakpoint(FlatPtr address)
     if (!original_bytes.has_value())
         return false;
 
-    VERIFY((original_bytes.value() & 0xff) != BREAKPOINT_INSTRUCTION);
+    VERIFY((original_bytes.value() & BREAKPOINT_INSTRUCTION_MASK) != BREAKPOINT_INSTRUCTION);
 
     BreakPoint breakpoint { address, original_bytes.value(), BreakPointState::Disabled };
 
     m_breakpoints.set(address, breakpoint);
 
-    enable_breakpoint(breakpoint.address);
-
-    return true;
+    return enable_breakpoint(breakpoint.address);
 }
 
 bool DebugSession::disable_breakpoint(FlatPtr address)
@@ -239,7 +236,7 @@ bool DebugSession::enable_breakpoint(FlatPtr address)
 
     VERIFY(breakpoint.value().state == BreakPointState::Disabled);
 
-    if (!poke(breakpoint.value().address, (breakpoint.value().original_first_word & ~static_cast<FlatPtr>(0xff)) | BREAKPOINT_INSTRUCTION))
+    if (!poke(breakpoint.value().address, (breakpoint.value().original_first_word & ~BREAKPOINT_INSTRUCTION_MASK) | BREAKPOINT_INSTRUCTION))
         return false;
 
     auto bp = m_breakpoints.get(breakpoint.value().address).value();
