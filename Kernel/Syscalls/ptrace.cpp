@@ -257,7 +257,8 @@ ErrorOr<FlatPtr> Thread::peek_debug_register(u32 register_index)
     return data;
 #elif ARCH(AARCH64)
     (void)register_index;
-    TODO_AARCH64();
+    dbgln("FIXME: Implement Thread::peek_debug_register on AArch64");
+    return ENOTSUP;
 #elif ARCH(RISCV64)
     (void)register_index;
     dbgln("FIXME: Implement Thread::peek_debug_register on RISC-V");
@@ -293,7 +294,8 @@ ErrorOr<void> Thread::poke_debug_register(u32 register_index, FlatPtr data)
 #elif ARCH(AARCH64)
     (void)register_index;
     (void)data;
-    TODO_AARCH64();
+    dbgln("FIXME: Implement Thread::poke_debug_register on AArch64");
+    return ENOTSUP;
 #elif ARCH(RISCV64)
     (void)register_index;
     (void)data;
