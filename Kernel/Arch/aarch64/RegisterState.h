@@ -36,6 +36,11 @@ struct alignas(16) RegisterState {
         elr_el1 = value;
     }
     FlatPtr bp() const { return x[29]; }
+    FlatPtr pstate() const { return spsr_el1; }
+    void set_pstate(FlatPtr value)
+    {
+        spsr_el1 = value;
+    }
 
     ExecutionMode previous_mode() const
     {
@@ -63,6 +68,7 @@ inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_
 
     ptrace_regs.sp = kernel_regs.userspace_sp();
     ptrace_regs.pc = kernel_regs.ip();
+    ptrace_regs.spsr_el1 = kernel_regs.pstate();
 }
 
 inline void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, PtraceRegisters const& ptrace_regs)
@@ -72,6 +78,7 @@ inline void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_re
 
     kernel_regs.set_userspace_sp(ptrace_regs.sp);
     kernel_regs.set_ip(ptrace_regs.pc);
+    kernel_regs.set_pstate(ptrace_regs.spsr_el1);
 }
 
 struct DebugRegisterState {
