@@ -3,7 +3,7 @@
 ### Fedora
 
 ```console
-sudo dnf install texinfo binutils-devel curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build patch ccache rsync @"C Development Tools and Libraries" @Virtualization
+sudo dnf install texinfo binutils-devel curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build patch ccache rsync @development-tools @c-development @virtualization
 ```
 
 Optional: `e2fsprogs` package for [building images without root](https://github.com/SerenityOS/serenity/pull/11224).
