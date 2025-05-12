@@ -384,7 +384,6 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Middle) {
         start_panning(event.position());
-        set_override_cursor(Gfx::StandardCursor::Drag);
         return;
     }
 
@@ -476,6 +475,11 @@ void ImageEditor::context_menu_event(GUI::ContextMenuEvent& event)
 
 void ImageEditor::keydown_event(GUI::KeyEvent& event)
 {
+    if (event.key() == Key_Space) {
+        start_panning(m_mouse_position);
+        return;
+    }
+
     if (event.key() == Key_Delete && !m_image->selection().is_empty() && active_layer()) {
         active_layer()->erase_selection(m_image->selection());
         did_complete_action("Erase Selection"sv);
@@ -507,6 +511,14 @@ void ImageEditor::keyup_event(GUI::KeyEvent& event)
 
     if (!m_active_tool->is_overriding_alt() && event.key() == Key_LeftAlt)
         update_tool_cursor();
+
+    if (event.key() == Key_Space) {
+        stop_panning();
+
+        // The set_override_cursor is called in stop_panning, but for some reason it doesn't really reset the cursor
+        // But if it's being called here, it does reset the cursor. Weird...
+        set_override_cursor(m_active_cursor);
+    }
 
     m_active_tool->on_keyup(event);
 }
