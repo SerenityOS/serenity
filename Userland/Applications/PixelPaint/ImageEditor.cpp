@@ -4,6 +4,7 @@
  * Copyright (c) 2021-2022, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2021, David Isaksson <davidisaksson93@gmail.com>
  * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
+ * Copyright (c) 2025, TheOnlyASDK <theonlyasdk@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -384,7 +385,6 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Middle) {
         start_panning(event.position());
-        set_override_cursor(Gfx::StandardCursor::Drag);
         return;
     }
 
@@ -497,6 +497,11 @@ void ImageEditor::keydown_event(GUI::KeyEvent& event)
         return;
     }
 
+    if (event.key() == Key_Space) {
+        start_panning(m_mouse_position);
+        return;
+    }
+
     event.ignore();
 }
 
@@ -507,6 +512,9 @@ void ImageEditor::keyup_event(GUI::KeyEvent& event)
 
     if (!m_active_tool->is_overriding_alt() && event.key() == Key_LeftAlt)
         update_tool_cursor();
+
+    if (event.key() == Key_Space)
+        stop_panning();
 
     m_active_tool->on_keyup(event);
 }
