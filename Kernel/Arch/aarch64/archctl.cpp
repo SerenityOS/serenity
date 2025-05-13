@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$archctl(int option, FlatPtr arg1)
+ErrorOr<FlatPtr> Process::sys$archctl(int option, FlatPtr arg1, FlatPtr, FlatPtr)
 {
     (void)option;
     (void)arg1;
