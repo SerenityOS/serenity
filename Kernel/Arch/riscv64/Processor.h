@@ -11,6 +11,7 @@
 #include <AK/Vector.h>
 
 #include <Kernel/API/POSIX/errno.h>
+#include <Kernel/API/RISCVExtensionBitmask.h>
 #include <Kernel/Arch/DeferredCallPool.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
@@ -69,8 +70,13 @@ public:
 
     void find_and_parse_devicetree_node();
 
+    ReadonlySpan<unsigned long long> userspace_extension_bitmask() const { return m_userspace_extension_bitmask; }
+
 private:
+    void generate_userspace_extension_bitmask();
+
     Optional<ProcessorInfo> m_info;
+    Array<unsigned long long, EXTENSION_BITMASK_GROUP_COUNT> m_userspace_extension_bitmask {};
 };
 
 template<typename T>

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/RISCVExtensionBitmask.h>
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/TrapFrame.h>
@@ -626,6 +627,15 @@ void Processor::find_and_parse_devicetree_node()
 
         break;
     }
+}
+
+void Processor::generate_userspace_extension_bitmask()
+{
+#define __ENUMERATE_RISCV_EXTENSION_BITMASK_BIT(feature_name, group_id, bit_position) \
+    if (has_feature(CPUFeature::feature_name))                                        \
+        m_userspace_extension_bitmask[group_id] |= 1zu << bit_position;
+    ENUMERATE_RISCV_EXTENSION_BITMASK_BITS(__ENUMERATE_RISCV_EXTENSION_BITMASK_BIT)
+#undef __ENUMERATE_RISCV_EXTENSION
 }
 
 }
