@@ -22,6 +22,10 @@ if (SERENITYOS)
         list(APPEND SOURCES
             Arch/aarch64/tls.S
         )
+    elseif (SERENITY_ARCH STREQUAL "riscv64")
+        list(APPEND SOURCES
+            Arch/riscv64/ExtensionBitmask.cpp
+        )
     endif()
 
     add_library(DynamicLoader_LibELF STATIC ${SOURCES})
