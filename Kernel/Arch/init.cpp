@@ -77,6 +77,7 @@
 #    include <Kernel/Arch/aarch64/RPi/MiniUART.h>
 #elif ARCH(RISCV64)
 #    include <Kernel/Arch/riscv64/Delay.h>
+#    include <Kernel/Arch/riscv64/SBI.h>
 #endif
 
 #if ARCH(AARCH64) || ARCH(RISCV64)
@@ -170,6 +171,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
 
     new (&bsp_processor()) Processor();
     bsp_processor().early_initialize(0);
+
+#if ARCH(RISCV64)
+    SBI::initialize();
+#endif
 
     kmalloc_init();
 
