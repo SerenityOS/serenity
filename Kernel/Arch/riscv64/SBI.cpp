@@ -12,6 +12,11 @@ namespace Kernel::SBI {
 
 static bool s_sbi_is_legacy = false;
 
+bool is_legacy()
+{
+    return s_sbi_is_legacy;
+}
+
 static SBIErrorOr<long> sbi_ecall0(EID extension_id, u32 function_id)
 {
     register unsigned long a0 asm("a0");
