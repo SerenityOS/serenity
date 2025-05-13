@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$archctl(int option, FlatPtr arg1)
+ErrorOr<FlatPtr> Process::sys$archctl(int option, FlatPtr arg1, FlatPtr, FlatPtr)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     switch (option) {

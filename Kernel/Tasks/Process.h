@@ -503,7 +503,7 @@ public:
     ErrorOr<FlatPtr> sys$get_root_session_id(pid_t force_sid);
     ErrorOr<FlatPtr> sys$remount(Userspace<Syscall::SC_remount_params const*> user_params);
     ErrorOr<FlatPtr> sys$bindmount(Userspace<Syscall::SC_bindmount_params const*> user_params);
-    ErrorOr<FlatPtr> sys$archctl(int option, FlatPtr arg1);
+    ErrorOr<FlatPtr> sys$archctl(int option, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3);
     ErrorOr<FlatPtr> sys$unshare_create(Userspace<Syscall::SC_unshare_create_params const*>);
     ErrorOr<FlatPtr> sys$unshare_attach(Userspace<Syscall::SC_unshare_attach_params const*>);
 
