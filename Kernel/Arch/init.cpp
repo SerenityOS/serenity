@@ -229,6 +229,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
 #endif
 
 #if ARCH(RISCV64)
+    bsp_processor().find_and_parse_devicetree_node();
     init_delay_loop();
 #endif
 
