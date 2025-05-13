@@ -15,6 +15,7 @@
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 #include <Kernel/Arch/riscv64/CSR.h>
+#include <Kernel/Arch/riscv64/ProcessorInfo.h>
 #include <Kernel/Memory/VirtualAddress.h>
 
 #include <AK/Platform.h>
@@ -40,6 +41,8 @@ extern Processor* g_current_processor;
 constexpr size_t MAX_CPU_COUNT = 1;
 
 class Processor final : public ProcessorBase<Processor> {
+    friend class ProcessorBase<Processor>;
+
 public:
     template<IteratorFunction<Processor&> Callback>
     static inline IterationDecision for_each(Callback callback)
@@ -57,6 +60,15 @@ public:
         callback(*g_current_processor);
         return IterationDecision::Continue;
     }
+
+    ProcessorInfo const& info() const
+    {
+        VERIFY(m_info.has_value());
+        return m_info.value();
+    }
+
+private:
+    Optional<ProcessorInfo> m_info;
 };
 
 template<typename T>
