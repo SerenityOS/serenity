@@ -64,3 +64,12 @@ it statically into LibC/our shared objects. However, the build system
 forces no-pic/pie instead.
 
 This hack is from https://gcc.gnu.org/bugzilla/show_bug.cgi?id=58638
+
+## `0008-RISC-V-Implement-__init_riscv_feature_bits-for-Seren.patch`
+
+RISC-V: Implement __init_riscv_feature_bits for SerenityOS
+
+The SerenityOS dynamic linker provides a magic function
+"__get_riscv_feature_bits" that populates __riscv_feature_bits
+and __riscv_cpu_model.
+

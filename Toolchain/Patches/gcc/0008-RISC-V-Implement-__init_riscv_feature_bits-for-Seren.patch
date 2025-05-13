@@ -1,0 +1,65 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <sholz8530@gmail.com>
+Date: Thu, 8 May 2025 13:20:05 +0200
+Subject: [PATCH] RISC-V: Implement __init_riscv_feature_bits for SerenityOS
+
+The SerenityOS dynamic linker provides a magic function
+"__get_riscv_feature_bits" that populates __riscv_feature_bits
+and __riscv_cpu_model.
+---
+ libgcc/config/riscv/feature_bits.c | 27 +++++++++++++++++++++++++--
+ 1 file changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/libgcc/config/riscv/feature_bits.c b/libgcc/config/riscv/feature_bits.c
+index 157bcdcad69a939037f6faca3a90c2598dd61f89..8b3f45ffda99f3931ca86b0623283cf029918489 100644
+--- a/libgcc/config/riscv/feature_bits.c
++++ b/libgcc/config/riscv/feature_bits.c
+@@ -145,7 +145,7 @@ struct {
+ 
+ #define SET_EXT(EXT) features[EXT##_GROUPID] |= EXT##_BITMASK
+ 
+-#ifdef __linux
++#if defined(__linux)
+ 
+ #define __NR_riscv_hwprobe 258
+ #define RISCV_HWPROBE_KEY_MVENDORID 0
+@@ -376,6 +376,27 @@ static void __init_riscv_features_bits_linux ()
+ 
+   __riscv_feature_bits.length = RISCV_FEATURE_BITS_LENGTH;
+ }
++
++#elif defined(__serenity__)
++
++extern void __get_riscv_feature_bits(void*, void*) __attribute__((weak));
++
++static void __init_riscv_features_bits_serenity ()
++{
++  if (__get_riscv_feature_bits)
++    {
++      __riscv_feature_bits.length = RISCV_FEATURE_BITS_LENGTH;
++      __get_riscv_feature_bits (&__riscv_feature_bits, &__riscv_cpu_model);
++    }
++  else
++    {
++      __riscv_feature_bits.length = 0;
++      __riscv_cpu_model.mvendorid = 0;
++      __riscv_cpu_model.marchid = 0;
++      __riscv_cpu_model.mimpid = 0;
++    }
++}
++
+ #endif
+ 
+ 
+@@ -388,8 +409,10 @@ __init_riscv_feature_bits ()
+   if (__init)
+     return;
+ 
+-#ifdef __linux
++#if defined(__linux)
+   __init_riscv_features_bits_linux ();
++#elif defined(__serenity__)
++  __init_riscv_features_bits_serenity ();
+ #else
+   /* Unsupported, just initialize that into all zeros.  */
+   __riscv_feature_bits.length = 0;
