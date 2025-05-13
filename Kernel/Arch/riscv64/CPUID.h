@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <AK/UFixedBigInt.h>
 #include <Kernel/Arch/riscv64/Extensions.h>
+#include <LibDeviceTree/DeviceTree.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_RISCV64()
@@ -26,6 +27,7 @@ AK_MAKE_ARBITRARY_SIZED_ENUM(CPUFeature, u256,
 
 #undef __ENUMERATE_RISCV_EXTENSION
 
+CPUFeature::Type isa_extensions_property_to_cpu_features(::DeviceTree::Property isa_extensions);
 StringView cpu_feature_to_name(CPUFeature::Type const&);
 
 }
