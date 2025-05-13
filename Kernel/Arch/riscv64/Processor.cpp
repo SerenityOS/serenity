@@ -7,7 +7,9 @@
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/TrapFrame.h>
+#include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Interrupts/InterruptDisabler.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
 #include <Kernel/Tasks/Process.h>
@@ -573,6 +575,57 @@ template<typename T>
 Processor& ProcessorBase<T>::by_id(u32)
 {
     TODO_RISCV64();
+}
+
+void Processor::find_and_parse_devicetree_node()
+{
+    // https://www.kernel.org/doc/Documentation/devicetree/bindings/riscv/cpus.yaml
+    // https://www.kernel.org/doc/Documentation/devicetree/bindings/riscv/extensions.yaml
+
+    // Find the CPU node for this hart.
+    auto cpus_node = DeviceTree::get().get_child("cpus"sv);
+    if (!cpus_node.has_value())
+        PANIC("No /cpus node in devicetree");
+
+    for (auto const& [cpu_name, cpu] : cpus_node->children()) {
+        auto device_type = cpu.get_property("device_type"sv);
+        if (!device_type.has_value() || device_type->as_string() != "cpu"sv)
+            continue;
+
+        if (!cpu.is_compatible_with("riscv"sv))
+            continue;
+
+        auto reg_or_error = cpu.reg();
+        if (reg_or_error.is_error())
+            continue;
+        auto reg = reg_or_error.release_value();
+
+        if (reg.entry_count() != 1)
+            PANIC("RISC-V CPU node {} has invalid reg element count: {}", cpu_name, reg.entry_count());
+
+        auto reg_entry = MUST(reg.entry(0));
+
+        auto hart_id_or_error = reg_entry.bus_address().as_flatptr();
+        if (hart_id_or_error.is_error())
+            PANIC("RISC-V CPU node {} has invalid reg property: {:hex-dump}", cpu_name, reg_entry.bus_address().raw());
+        auto hart_id = hart_id_or_error.release_value();
+
+        // FIXME: Use the correct hart ID here once we support SMP on RISC-V.
+        if (hart_id != g_boot_info.arch_specific.boot_hart_id)
+            continue;
+
+        auto isa_extensions = cpu.get_property("riscv,isa-extensions"sv);
+        if (!isa_extensions.has_value()) {
+            dbgln("RISC-V CPU node {} doesn't have the \"riscv,isa-extensions\" property, don't know what extensions are supported", cpu_name);
+            m_features = CPUFeature::Type(0);
+            break;
+        }
+
+        m_features = isa_extensions_property_to_cpu_features(isa_extensions.value());
+        generate_userspace_extension_bitmask();
+
+        break;
+    }
 }
 
 }

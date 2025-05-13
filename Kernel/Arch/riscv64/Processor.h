@@ -67,6 +67,8 @@ public:
         return m_info.value();
     }
 
+    void find_and_parse_devicetree_node();
+
 private:
     Optional<ProcessorInfo> m_info;
 };
