@@ -200,7 +200,7 @@ size_t AnonymousVMObject::purge()
 
     m_was_purged = true;
 
-    remap_regions();
+    remap_regions_locked();
 
     return total_pages_purged;
 }
@@ -232,7 +232,7 @@ ErrorOr<void> AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged
         m_volatile = true;
         m_was_purged = false;
 
-        remap_regions();
+        remap_regions_locked();
         return {};
     }
     // When a VMObject is made non-volatile, we try to commit however many pages are not currently available.
@@ -258,7 +258,7 @@ ErrorOr<void> AnonymousVMObject::set_volatile(bool is_volatile, bool& was_purged
 
     m_volatile = false;
     m_was_purged = false;
-    remap_regions();
+    remap_regions_locked();
     return {};
 }
 

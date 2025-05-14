@@ -82,7 +82,7 @@ ErrorOr<void> SharedInodeVMObject::sync_impl(off_t offset_in_pages, size_t pages
     if (should_remap) {
         for (auto it = pages_to_flush.begin(); it != pages_to_flush.end(); ++it)
             set_page_dirty(*it, false);
-        remap_regions();
+        remap_regions_locked();
     }
 
     for (auto it = pages_to_flush.begin(); it != pages_to_flush.end(); ++it) {
