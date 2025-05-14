@@ -171,9 +171,9 @@ ErrorOr<Memory::VirtualRange> Process::remap_range_as_stack(FlatPtr address, siz
 
             // Map the new regions using our page directory (they were just allocated and don't have one).
             for (auto* adjacent_region : adjacent_regions) {
-                TRY(adjacent_region->map(space->page_directory()));
+                TRY(adjacent_region->map(space->page_directory(), Memory::ShouldLockVMObject::Yes));
             }
-            TRY(new_region->map(space->page_directory()));
+            TRY(new_region->map(space->page_directory(), Memory::ShouldLockVMObject::Yes));
 
             return range_to_remap;
         }
@@ -231,9 +231,9 @@ ErrorOr<Memory::VirtualRange> Process::remap_range_as_stack(FlatPtr address, siz
                 new_region->clear_to_zero();
 
                 // Map the new region using our page directory (they were just allocated and don't have one) if any.
-                TRY(adjacent_regions[0]->map(space->page_directory()));
+                TRY(adjacent_regions[0]->map(space->page_directory(), Memory::ShouldLockVMObject::Yes));
 
-                TRY(new_region->map(space->page_directory()));
+                TRY(new_region->map(space->page_directory(), Memory::ShouldLockVMObject::Yes));
             }
 
             return range_to_remap;

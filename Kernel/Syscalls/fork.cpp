@@ -136,7 +136,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
             for (auto& region : parent_space->region_tree().regions()) {
                 dbgln_if(FORK_DEBUG, "fork: cloning Region '{}' @ {}", region.name(), region.vaddr());
                 auto region_clone = TRY(region.try_clone());
-                TRY(region_clone->map(child_space->page_directory(), Memory::ShouldFlushTLB::No));
+                TRY(region_clone->map(child_space->page_directory(), Memory::ShouldLockVMObject::Yes, Memory::ShouldFlushTLB::No));
                 TRY(child_space->region_tree().place_specifically(*region_clone, region.range()));
                 (void)region_clone.leak_ptr();
             }

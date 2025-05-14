@@ -937,7 +937,7 @@ void MemoryManager::initialize_kasan_shadow_memory()
         auto* shadow_region = MUST(Region::create_unplaced(move(vmobject), 0, {}, Memory::Region::Access::ReadWrite)).leak_ptr();
         auto shadow_range = VirtualRange { virtual_range.base().offset(virtual_range.size() - shadow_range_size), shadow_range_size };
         MUST(global_data.region_tree.place_specifically(*shadow_region, shadow_range));
-        MUST(shadow_region->map(kernel_page_directory()));
+        MUST(shadow_region->map(kernel_page_directory(), ShouldLockVMObject::Yes));
 
         AddressSanitizer::init(shadow_region->vaddr().get());
     });
@@ -1187,7 +1187,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(
     auto vmobject = TRY(AnonymousVMObject::try_create_physically_contiguous_with_size(size, memory_type));
     auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, memory_type));
     TRY(m_global_data.with([&](auto& global_data) { return global_data.region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size); }));
-    TRY(region->map(kernel_page_directory()));
+    TRY(region->map(kernel_page_directory(), ShouldLockVMObject::Yes));
     return region;
 }
 
@@ -1231,7 +1231,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region(size_t size
     auto vmobject = TRY(AnonymousVMObject::try_create_with_size(size, strategy));
     auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, memory_type));
     TRY(m_global_data.with([&](auto& global_data) { return global_data.region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size); }));
-    TRY(region->map(kernel_page_directory()));
+    TRY(region->map(kernel_page_directory(), ShouldLockVMObject::Yes));
     return region;
 }
 
@@ -1243,7 +1243,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_physic
         name_kstring = TRY(KString::try_create(name));
     auto region = TRY(Region::create_unplaced(move(vmobject), 0, move(name_kstring), access, memory_type));
     TRY(m_global_data.with([&](auto& global_data) { return global_data.region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, pages.size() * PAGE_SIZE, PAGE_SIZE); }));
-    TRY(region->map(kernel_page_directory()));
+    TRY(region->map(kernel_page_directory(), ShouldLockVMObject::Yes));
     return region;
 }
 
@@ -1270,7 +1270,7 @@ ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_kernel_region_with_vmobje
 
     auto region = TRY(Region::create_unplaced(vmobject, 0, move(name_kstring), access, memory_type));
     TRY(m_global_data.with([&](auto& global_data) { return global_data.region_tree.place_anywhere(*region, RandomizeVirtualAddress::No, size); }));
-    TRY(region->map(kernel_page_directory()));
+    TRY(region->map(kernel_page_directory(), ShouldLockVMObject::Yes));
     return region;
 }
 
@@ -1662,7 +1662,7 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::create_identity_mapped_reg
     auto region = TRY(Memory::Region::create_unplaced(move(vmobject), 0, {}, Memory::Region::Access::ReadWriteExecute));
     Memory::VirtualRange range { VirtualAddress { (FlatPtr)address.get() }, size };
     region->m_range = range;
-    TRY(region->map(MM.kernel_page_directory()));
+    TRY(region->map(MM.kernel_page_directory(), ShouldLockVMObject::Yes));
     return region;
 }
 

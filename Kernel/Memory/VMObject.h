@@ -63,13 +63,14 @@ protected:
     template<typename Callback>
     void for_each_region(Callback);
 
+    void remap_regions_locked();
     void remap_regions();
     bool remap_regions_one_page(size_t page_index, NonnullRefPtr<PhysicalRAMPage> page);
 
     IntrusiveListNode<VMObject> m_list_node;
     FixedArray<RefPtr<PhysicalRAMPage>> m_physical_pages;
 
-    mutable RecursiveSpinlock<LockRank::None> m_lock {};
+    mutable Spinlock<LockRank::None> m_lock {};
 
 private:
     VMObject& operator=(VMObject const&) = delete;
