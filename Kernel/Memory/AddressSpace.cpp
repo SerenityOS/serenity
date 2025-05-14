@@ -84,7 +84,7 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
         for (auto* new_region : new_regions) {
             // TODO: Ideally we should do this in a way that can be rolled back on failure, as failing here
             // leaves the caller in an undefined state.
-            TRY(new_region->map(page_directory()));
+            TRY(new_region->map(page_directory(), ShouldLockVMObject::Yes));
         }
 
         PerformanceManager::add_unmap_perf_event(Process::current(), range_to_unmap);
@@ -129,7 +129,7 @@ ErrorOr<void> AddressSpace::unmap_mmap_range(VirtualAddress addr, size_t size)
     for (auto* new_region : new_regions) {
         // TODO: Ideally we should do this in a way that can be rolled back on failure, as failing here
         // leaves the caller in an undefined state.
-        TRY(new_region->map(page_directory()));
+        TRY(new_region->map(page_directory(), ShouldLockVMObject::Yes));
     }
 
     PerformanceManager::add_unmap_perf_event(Process::current(), range_to_unmap);
@@ -168,7 +168,7 @@ ErrorOr<Region*> AddressSpace::allocate_region(RandomizeVirtualAddress randomize
     } else {
         TRY(m_region_tree.place_specifically(*region, VirtualRange { requested_address, size }));
     }
-    TRY(region->map(page_directory(), ShouldFlushTLB::No));
+    TRY(region->map(page_directory(), ShouldLockVMObject::Yes, ShouldFlushTLB::No));
     return region.leak_ptr();
 }
 
@@ -220,7 +220,7 @@ ErrorOr<Region*> AddressSpace::allocate_region_with_vmobject(RandomizeVirtualAdd
         // We do still need to attach the region to the page_directory though.
         region->set_page_directory(page_directory());
     } else {
-        TRY(region->map(page_directory(), ShouldFlushTLB::No));
+        TRY(region->map(page_directory(), ShouldLockVMObject::Yes, ShouldFlushTLB::No));
     }
     remove_region_from_tree_on_failure.disarm();
     return region.leak_ptr();
