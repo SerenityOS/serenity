@@ -158,6 +158,7 @@ public:
         return size() / PAGE_SIZE;
     }
 
+    RefPtr<PhysicalRAMPage> physical_page_locked(size_t index) const;
     RefPtr<PhysicalRAMPage> physical_page(size_t index) const;
     RefPtr<PhysicalRAMPage>& physical_page_slot(size_t index);
 
@@ -178,8 +179,6 @@ public:
     [[nodiscard]] bool should_cow(size_t page_index) const;
 
     [[nodiscard]] size_t cow_pages() const;
-
-    [[nodiscard]] bool should_dirty_on_write(size_t page_index) const;
 
     void set_readable(bool b)
     {
@@ -208,6 +207,7 @@ public:
     void unmap(ShouldFlushTLB = ShouldFlushTLB::Yes);
     void unmap_with_locks_held(ShouldFlushTLB, SpinlockLocker<RecursiveSpinlock<LockRank::None>>& pd_locker);
 
+    void remap_with_locked_vmobject();
     void remap();
 
     [[nodiscard]] bool is_mapped() const { return m_page_directory != nullptr; }
@@ -224,11 +224,20 @@ public:
     void finish_handling_page_fault(Badge<MemoryManager>) { m_in_progress_page_faults--; }
 
 private:
+    enum class ShouldLockVMObject {
+        No,
+        Yes,
+    };
+
     Region();
     Region(NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, MemoryType, bool shared);
     Region(VirtualRange const&, NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, MemoryType, bool shared);
 
-    [[nodiscard]] bool remap_vmobject_page(size_t page_index, NonnullRefPtr<PhysicalRAMPage>);
+    [[nodiscard]] bool remap_vmobject_page(size_t page_index, NonnullRefPtr<PhysicalRAMPage>, ShouldLockVMObject should_lock_vmobject = ShouldLockVMObject::Yes);
+
+    [[nodiscard]] bool should_dirty_on_write(size_t page_index, ShouldLockVMObject should_lock_vmobject) const;
+
+    ErrorOr<void> map_impl(PageDirectory&, ShouldLockVMObject, ShouldFlushTLB);
 
     void set_access_bit(Access access, bool b)
     {
@@ -245,10 +254,12 @@ private:
     [[nodiscard]] PageFaultResponse handle_zero_fault(size_t page_index, PhysicalRAMPage& page_in_slot_at_time_of_fault);
     [[nodiscard]] PageFaultResponse handle_dirty_on_write_fault(size_t page_index);
 
-    [[nodiscard]] bool map_individual_page_impl(size_t page_index);
-    [[nodiscard]] bool map_individual_page_impl(size_t page_index, RefPtr<PhysicalRAMPage>);
+    [[nodiscard]] bool map_individual_page_impl(size_t page_index, ShouldLockVMObject);
+    [[nodiscard]] bool map_individual_page_impl(size_t page_index, RefPtr<PhysicalRAMPage>, ShouldLockVMObject);
     [[nodiscard]] bool map_individual_page_impl(size_t page_index, PhysicalAddress);
-    [[nodiscard]] bool map_individual_page_impl(size_t page_index, PhysicalAddress, bool readable, bool writeable);
+    [[nodiscard]] bool map_individual_page_impl(size_t page_index, PhysicalAddress, bool readable, bool writeable, ShouldLockVMObject);
+
+    void remap_impl(ShouldLockVMObject should_lock_vmobject);
 
     LockRefPtr<PageDirectory> m_page_directory;
     VirtualRange m_range;

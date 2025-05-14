@@ -77,7 +77,7 @@ int InodeVMObject::try_release_clean_pages(int page_amount)
         }
     }
     if (count)
-        remap_regions();
+        remap_regions_locked();
     return count;
 }
 
