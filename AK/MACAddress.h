@@ -18,6 +18,12 @@
 #    include <AK/ByteString.h>
 #endif
 
+namespace AK {
+
+class MACAddress;
+template<>
+struct Traits<MACAddress>;
+
 class [[gnu::packed]] MACAddress {
     static constexpr size_t s_mac_address_length = 6u;
 
@@ -108,11 +114,13 @@ private:
 
 static_assert(sizeof(MACAddress) == 6u);
 
-namespace AK {
-
 template<>
 struct Traits<MACAddress> : public DefaultTraits<MACAddress> {
     static unsigned hash(MACAddress const& address) { return string_hash((char const*)&address, sizeof(address)); }
 };
 
 }
+
+#if USING_AK_GLOBALLY
+using AK::MACAddress;
+#endif
