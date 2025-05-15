@@ -222,14 +222,6 @@ public:
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 
-    template<typename Callback>
-    void for_each_used_memory_range(Callback callback)
-    {
-        m_global_data.with([&](auto& global_data) {
-            for (auto& range : global_data.used_memory_ranges)
-                callback(range);
-        });
-    }
     bool is_allowed_to_read_physical_memory_for_userspace(PhysicalAddress, size_t read_length) const;
 
     PhysicalPageEntry& get_physical_page_entry(PhysicalAddress);
@@ -258,8 +250,8 @@ private:
         Vector<ContiguousReservedMemoryRange> reserved_memory_ranges;
     };
 
-    void initialize_physical_pages();
-    void register_reserved_ranges();
+    void initialize_physical_pages(GlobalData& global_data);
+    void register_reserved_ranges(GlobalData& global_data);
 
 #ifdef HAS_ADDRESS_SANITIZER
     void initialize_kasan_shadow_memory();
@@ -275,7 +267,7 @@ private:
     static void flush_tlb_local(VirtualAddress, size_t page_count = 1);
     static void flush_tlb(PageDirectory const*, VirtualAddress, size_t page_count = 1);
 
-    RefPtr<PhysicalRAMPage> find_free_physical_page(bool);
+    RefPtr<PhysicalRAMPage> find_free_physical_page(bool, GlobalData&);
 
     ALWAYS_INLINE u8* quickmap_page(PhysicalRAMPage& page)
     {
@@ -307,7 +299,7 @@ private:
     PhysicalPageEntry* m_physical_page_entries { nullptr };
     size_t m_physical_page_entries_count { 0 };
 
-    RecursiveSpinlockProtected<GlobalData, LockRank::None> m_global_data;
+    SpinlockProtected<GlobalData, LockRank::None> m_global_data;
 };
 
 inline bool PhysicalRAMPage::is_shared_zero_page() const
