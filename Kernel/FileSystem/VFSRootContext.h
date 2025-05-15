@@ -33,10 +33,8 @@ public:
     static ErrorOr<NonnullRefPtr<VFSRootContext>> create_with_empty_ramfs();
     static ErrorOr<NonnullRefPtr<VFSRootContext>> create_empty();
 
-    RecursiveSpinlockProtected<NonnullRefPtr<Custody>, LockRank::None>& root_custody() { return m_root_custody; }
-    RecursiveSpinlockProtected<NonnullRefPtr<Custody>, LockRank::None> const& root_custody() const { return m_root_custody; }
-
-    bool mount_point_exists_at_custody(Custody& mount_point);
+    SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None>& root_custody() { return m_root_custody; }
+    SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None> const& root_custody() const { return m_root_custody; }
 
     enum class DoBindMount {
         Yes,
@@ -81,6 +79,8 @@ private:
         IntrusiveList<&Mount::m_vfs_list_node> mounts;
     };
 
+    bool mount_point_exists_at_custody(Custody& mount_point, Details& details);
+
     static inline ErrorOr<void> validate_mount_not_immutable_while_being_used(Details& details, Mount& mount)
     {
         if (mount.is_immutable() && details.attach_count > 0)
@@ -88,23 +88,23 @@ private:
         return {};
     }
 
-    mutable RecursiveSpinlockProtected<Details, LockRank::None> m_details {};
+    mutable SpinlockProtected<Details, LockRank::None> m_details {};
 
-    RecursiveSpinlockProtected<NonnullRefPtr<Custody>, LockRank::None> m_root_custody;
+    SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None> m_root_custody;
 
     IntrusiveListNode<VFSRootContext, NonnullRefPtr<VFSRootContext>> m_list_node;
 
     IndexID m_id;
 
     // NOTE: This method is implemented in Kernel/FileSystem/VirtualFileSystem.cpp
-    static RecursiveSpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& all_root_contexts_list();
+    static SpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& all_root_contexts_list();
 
 public:
     using List = IntrusiveList<&VFSRootContext::m_list_node>;
 
     // NOTE: These methods are implemented in Kernel/FileSystem/VirtualFileSystem.cpp
-    static RecursiveSpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& all_root_contexts_list(Badge<PowerStateSwitchTask>);
-    static RecursiveSpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& all_root_contexts_list(Badge<Process>);
+    static SpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& all_root_contexts_list(Badge<PowerStateSwitchTask>);
+    static SpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& all_root_contexts_list(Badge<Process>);
 };
 
 }
