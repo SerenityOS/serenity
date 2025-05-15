@@ -237,6 +237,16 @@ public:
     Vector<float> default_decode() const override;
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::Indexed; }
 
+    NonnullRefPtr<ColorSpace> base_color_space() const { return m_base; }
+
+    PDFErrorOr<ReadonlySpan<float>> base_components(int index) const
+    {
+        if (index < 0 || index > m_hival)
+            return Error { Error::Type::MalformedPDF, "Indexed color space index out of range" };
+        size_t const n = m_base->number_of_components();
+        return m_lookup.span().slice(index * n, n);
+    }
+
 private:
     IndexedColorSpace(NonnullRefPtr<ColorSpace>);
 
