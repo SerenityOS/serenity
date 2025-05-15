@@ -5,6 +5,7 @@
  */
 
 #include <AK/BitStream.h>
+#include <AK/Enumerate.h>
 #include <AK/GenericShorthands.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector2.h>
@@ -640,11 +641,61 @@ PDFErrorOr<void> RadialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform
     return {};
 }
 
+using GouraudFunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
+using GouraudColor = Vector<float, 4>;
+
+PDFErrorOr<void> draw_gouraud_triangle(Gfx::Painter&, NonnullRefPtr<ColorSpace>, GouraudFunctionsType, Array<Gfx::FloatPoint, 3>, Array<GouraudColor, 3>)
+{
+    return Error::rendering_unsupported_error("Cannot draw Gouraud triangles yet");
+}
+
 struct Triangle {
     u32 a;
     u32 b;
     u32 c;
 };
+
+PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransform const& ctm, NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType const& functions, Vector<Triangle> const& triangles, Vector<float> const& vertex_data, size_t number_of_components)
+{
+    bool is_indexed = color_space->family() == ColorSpaceFamily::Indexed;
+    RefPtr<IndexedColorSpace> indexed_color_space;
+    if (is_indexed) {
+        indexed_color_space = static_ptr_cast<IndexedColorSpace>(color_space);
+        color_space = indexed_color_space->base_color_space();
+    }
+
+    int const n = 2 + number_of_components;
+    for (auto const& triangle : triangles) {
+        // FIXME: early-out for triangles completely outside clip
+        auto a = Gfx::FloatPoint { vertex_data[triangle.a * n], vertex_data[triangle.a * n + 1] };
+        auto b = Gfx::FloatPoint { vertex_data[triangle.b * n], vertex_data[triangle.b * n + 1] };
+        auto c = Gfx::FloatPoint { vertex_data[triangle.c * n], vertex_data[triangle.c * n + 1] };
+
+        a = ctm.map(a);
+        b = ctm.map(b);
+        c = ctm.map(c);
+
+        Array<GouraudColor, 3> colors;
+        for (auto [i, triangle_index] : enumerate(to_array<u32>({ triangle.a, triangle.b, triangle.c }))) {
+            GouraudColor color;
+            if (is_indexed) {
+                // "If ColorSpace is an Indexed color space, all color values specified in the shading
+                //  are immediately converted to the base color space. [...] Interpolation never occurs
+                //  in an Indexed color space, which is quantized and therefore inappropriate for calculations
+                //  that assume a continuous range of colors."
+                color.extend(TRY(indexed_color_space->base_components(vertex_data[triangle_index * n + 2])));
+            } else {
+                color.resize(number_of_components);
+                for (size_t j = 0; j < number_of_components; ++j)
+                    color[j] = vertex_data[triangle_index * n + 2 + j];
+            }
+            colors[i] = color;
+        }
+        TRY(draw_gouraud_triangle(painter, color_space, functions, { a, b, c }, move(colors)));
+    }
+
+    return {};
+}
 
 class FreeFormGouraudShading final : public Shading {
 public:
@@ -653,9 +704,7 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    using FunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
-
-    FreeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, size_t number_of_components, Vector<Triangle> triangles, FunctionsType functions)
+    FreeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, size_t number_of_components, Vector<Triangle> triangles, GouraudFunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_vertex_data(move(vertex_data))
         , m_number_of_components(number_of_components)
@@ -670,7 +719,7 @@ private:
     Vector<float> m_vertex_data;
     size_t m_number_of_components { 0 };
     Vector<Triangle> m_triangles;
-    FunctionsType m_functions;
+    GouraudFunctionsType m_functions;
 };
 
 PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> FreeFormGouraudShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
@@ -728,12 +777,12 @@ PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> FreeFormGouraudShading::create
     //  turned by the function for a given color component is out of range, it is
     //  adjusted to the nearest valid value.
     //  This entry may not be used with an Indexed color space."
-    FunctionsType functions;
+    GouraudFunctionsType functions;
     if (shading_dict->contains(CommonNames::Function)) {
         if (common_entries.color_space->family() == ColorSpaceFamily::Indexed)
             return Error::malformed_error("Function cannot be used with Indexed color space");
 
-        functions = TRY([&]() -> PDFErrorOr<FunctionsType> {
+        functions = TRY([&]() -> PDFErrorOr<GouraudFunctionsType> {
             auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
             if (function_object->is<ArrayObject>()) {
                 auto function_array = function_object->cast<ArrayObject>();
@@ -799,9 +848,9 @@ PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> FreeFormGouraudShading::create
     return adopt_ref(*new FreeFormGouraudShading(move(common_entries), move(vertex_data), number_of_components, move(triangles), move(functions)));
 }
 
-PDFErrorOr<void> FreeFormGouraudShading::draw(Gfx::Painter&, Gfx::AffineTransform const&)
+PDFErrorOr<void> FreeFormGouraudShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
-    return Error::rendering_unsupported_error("Cannot draw free-form gouraud-shaded triangle meshes yet");
+    return draw_gouraud_triangles(painter, ctm, m_common_entries.color_space, m_functions, m_triangles, m_vertex_data, m_number_of_components);
 }
 
 class LatticeFormGouraudShading final : public Shading {
@@ -811,9 +860,7 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    using FunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
-
-    LatticeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, size_t number_of_components, Vector<Triangle> triangles, FunctionsType functions)
+    LatticeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, size_t number_of_components, Vector<Triangle> triangles, GouraudFunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_vertex_data(move(vertex_data))
         , m_number_of_components(number_of_components)
@@ -828,7 +875,7 @@ private:
     Vector<float> m_vertex_data;
     size_t m_number_of_components { 0 };
     Vector<Triangle> m_triangles;
-    FunctionsType m_functions;
+    GouraudFunctionsType m_functions;
 };
 
 PDFErrorOr<NonnullRefPtr<LatticeFormGouraudShading>> LatticeFormGouraudShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
@@ -885,12 +932,12 @@ PDFErrorOr<NonnullRefPtr<LatticeFormGouraudShading>> LatticeFormGouraudShading::
     //  turned by the function for a given color component is out of range, it is
     //  adjusted to the nearest valid value.
     //  This entry may not be used with an Indexed color space."
-    FunctionsType functions;
+    GouraudFunctionsType functions;
     if (shading_dict->contains(CommonNames::Function)) {
         if (common_entries.color_space->family() == ColorSpaceFamily::Indexed)
             return Error::malformed_error("Function cannot be used with Indexed color space");
 
-        functions = TRY([&]() -> PDFErrorOr<FunctionsType> {
+        functions = TRY([&]() -> PDFErrorOr<GouraudFunctionsType> {
             auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
             if (function_object->is<ArrayObject>()) {
                 auto function_array = function_object->cast<ArrayObject>();
@@ -947,9 +994,9 @@ PDFErrorOr<NonnullRefPtr<LatticeFormGouraudShading>> LatticeFormGouraudShading::
     return adopt_ref(*new LatticeFormGouraudShading(move(common_entries), move(vertex_data), number_of_components, move(triangles), move(functions)));
 }
 
-PDFErrorOr<void> LatticeFormGouraudShading::draw(Gfx::Painter&, Gfx::AffineTransform const&)
+PDFErrorOr<void> LatticeFormGouraudShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
-    return Error::rendering_unsupported_error("Cannot draw lattice-form gouraud-shaded triangle meshes yet");
+    return draw_gouraud_triangles(painter, ctm, m_common_entries.color_space, m_functions, m_triangles, m_vertex_data, m_number_of_components);
 }
 
 class CoonsPatchShading final : public Shading {
