@@ -733,10 +733,6 @@ RENDERER_HANDLER(set_painting_color_and_space_to_cmyk)
 
 RENDERER_HANDLER(shade)
 {
-    auto inverse_ctm = state().ctm.inverse();
-    if (!inverse_ctm.has_value())
-        return {};
-
     VERIFY(args.size() == 1);
     auto shading_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
     auto resources = extra_resources.value_or(m_page.resources);
@@ -750,7 +746,7 @@ RENDERER_HANDLER(shade)
     auto shading = TRY(Shading::create(m_document, shading_dict_or_stream, *this));
 
     ClipRAII clip_raii { *this };
-    return shading->draw(m_painter, inverse_ctm.value());
+    return shading->draw(m_painter, state().ctm);
 }
 
 RENDERER_HANDLER(inline_image_begin)

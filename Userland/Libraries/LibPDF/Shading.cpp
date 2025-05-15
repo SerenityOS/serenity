@@ -174,8 +174,13 @@ PDFErrorOr<NonnullRefPtr<FunctionBasedShading>> FunctionBasedShading::create(Doc
     return adopt_ref(*new FunctionBasedShading(move(common_entries), domain, matrix, move(functions)));
 }
 
-PDFErrorOr<void> FunctionBasedShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& inverse_ctm)
+PDFErrorOr<void> FunctionBasedShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
+    auto maybe_inverse_ctm = ctm.inverse();
+    if (!maybe_inverse_ctm.has_value())
+        return {};
+    auto inverse_ctm = maybe_inverse_ctm.value();
+
     auto& bitmap = painter.target();
 
     auto scale = painter.scale();
@@ -321,8 +326,13 @@ PDFErrorOr<NonnullRefPtr<AxialShading>> AxialShading::create(Document* document,
     return adopt_ref(*new AxialShading(move(common_entries), start, end, t0, t1, move(functions), extend_start, extend_end));
 }
 
-PDFErrorOr<void> AxialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& inverse_ctm)
+PDFErrorOr<void> AxialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
+    auto maybe_inverse_ctm = ctm.inverse();
+    if (!maybe_inverse_ctm.has_value())
+        return {};
+    auto inverse_ctm = maybe_inverse_ctm.value();
+
     auto& bitmap = painter.target();
 
     auto scale = painter.scale();
@@ -487,8 +497,13 @@ PDFErrorOr<NonnullRefPtr<RadialShading>> RadialShading::create(Document* documen
     return adopt_ref(*new RadialShading(move(common_entries), start, start_radius, end, end_radius, t0, t1, move(functions), extend_start, extend_end));
 }
 
-PDFErrorOr<void> RadialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& inverse_ctm)
+PDFErrorOr<void> RadialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
+    auto maybe_inverse_ctm = ctm.inverse();
+    if (!maybe_inverse_ctm.has_value())
+        return {};
+    auto inverse_ctm = maybe_inverse_ctm.value();
+
     auto& bitmap = painter.target();
 
     auto scale = painter.scale();
