@@ -7,6 +7,7 @@
 #include <AK/BitStream.h>
 #include <AK/Enumerate.h>
 #include <AK/GenericShorthands.h>
+#include <LibGfx/EdgeFlagPathRasterizer.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Vector2.h>
 #include <LibPDF/ColorSpace.h>
@@ -649,9 +650,96 @@ PDFErrorOr<void> RadialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform
 using GouraudFunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
 using GouraudColor = Vector<float, 4>;
 
-PDFErrorOr<void> draw_gouraud_triangle(Gfx::Painter&, NonnullRefPtr<ColorSpace>, GouraudFunctionsType, Array<Gfx::FloatPoint, 3>, Array<GouraudColor, 3>)
+class GouraudPaintStyle final : public Gfx::PaintStyle {
+public:
+    static NonnullRefPtr<GouraudPaintStyle> create(NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors)
+    {
+        return adopt_ref(*new GouraudPaintStyle(move(color_space), move(functions), move(points), move(colors)));
+    }
+
+    // We can't override sample_color() because it doesn't receive a useful origin.
+    // Instead, override `paint()` and pass the origin to similar function.
+    // FIXME: Try changing the signature of sample_color() to receive the actual origin.
+    virtual void paint(Gfx::IntRect physical_bounding_box, PaintFunction paint) const override
+    {
+        paint([this, physical_bounding_box](Gfx::IntPoint point) { return sample_color_in_bbox(physical_bounding_box.location() + point); });
+    }
+
+private:
+    GouraudPaintStyle(NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors)
+        : m_functions(move(functions))
+        , m_color_space(move(color_space))
+        , m_points(move(points))
+        , m_colors(move(colors))
+    {
+    }
+
+    Gfx::Color sample_color_in_bbox(Gfx::IntPoint) const;
+
+    GouraudFunctionsType m_functions;
+    NonnullRefPtr<ColorSpace> m_color_space;
+    Array<Gfx::FloatPoint, 3> m_points;
+    Array<GouraudColor, 3> m_colors;
+};
+
+Gfx::Color GouraudPaintStyle::sample_color_in_bbox(Gfx::IntPoint point_in_bbox) const
 {
-    return Error::rendering_unsupported_error("Cannot draw Gouraud triangles yet");
+    auto signed_area = [](Gfx::FloatPoint a, Gfx::FloatPoint b, Gfx::FloatPoint c) {
+        return (a.x() - c.x()) * (b.y() - c.y()) - (b.x() - c.x()) * (a.y() - c.y());
+    };
+
+    auto point = Gfx::FloatPoint { point_in_bbox };
+
+    float area = signed_area(m_points[0], m_points[1], m_points[2]);
+    VERIFY(area != 0);
+    float alpha = signed_area(point, m_points[1], m_points[2]) / area;
+    float beta = signed_area(m_points[0], point, m_points[2]) / area;
+    float gamma = signed_area(m_points[0], m_points[1], point) / area;
+
+    GouraudColor color;
+    color.resize(m_color_space->number_of_components());
+
+    m_functions.visit(
+        [&](Empty) {
+            // FIXME: Technically, clamp to /Decode bound (but the color space already clamps to its bounds, which in practice is the same).
+            for (int i = 0; i < m_color_space->number_of_components(); ++i)
+                color[i] = alpha * m_colors[0][i] + beta * m_colors[1][i] + gamma * m_colors[2][i];
+        },
+        [&](Function const& function) {
+            // FIXME: Clamp to /Decode bound.
+            float input = clamp(alpha * m_colors[0][0] + beta * m_colors[1][0] + gamma * m_colors[2][0], 0.0f, 1.0f);
+            auto result = MUST(function.evaluate(to_array({ input })));
+            result.copy_to(color);
+        },
+        [&](Vector<NonnullRefPtr<Function>> const& functions) {
+            // FIXME: Clamp to /Decode bound.
+            float input = clamp(alpha * m_colors[0][0] + beta * m_colors[1][0] + gamma * m_colors[2][0], 0.0f, 1.0f);
+            for (size_t i = 0; i < functions.size(); ++i) {
+                auto result = MUST(functions[i]->evaluate(to_array({ input })));
+                color[i] = result[0];
+            }
+        });
+
+    return MUST(m_color_space->style(color)).get<Gfx::Color>();
+}
+
+void draw_gouraud_triangle(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors)
+{
+    static_assert(points.size() == 3);
+    static_assert(colors.size() == 3);
+
+    Gfx::Path triangle_path;
+    triangle_path.move_to(points[0]);
+    triangle_path.line_to(points[1]);
+    triangle_path.line_to(points[2]);
+    triangle_path.close();
+
+    auto paint_style = GouraudPaintStyle::create(move(color_space), move(functions), move(points), move(colors));
+
+    // To hide triangle edges. (Setting this to <Gfx::Sample8xAA> is useful for debugging; it makes triangle edges visible.)
+    using NoAARasterizer = Gfx::EdgeFlagPathRasterizer<Gfx::Sample8xNoAA>;
+    NoAARasterizer rasterizer(enclosing_int_rect(triangle_path.bounding_box()).size());
+    rasterizer.fill(painter, triangle_path, paint_style, 1.0f, Gfx::WindingRule::Nonzero);
 }
 
 struct Triangle {
@@ -696,7 +784,7 @@ PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransf
             }
             colors[i] = color;
         }
-        TRY(draw_gouraud_triangle(painter, color_space, functions, { a, b, c }, move(colors)));
+        draw_gouraud_triangle(painter, color_space, functions, { a, b, c }, move(colors));
     }
 
     return {};
