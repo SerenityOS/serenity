@@ -24,6 +24,10 @@
 
 namespace AK {
 
+class IPv6Address;
+template<>
+struct Traits<IPv6Address>;
+
 class [[gnu::packed]] IPv6Address {
 public:
     using in6_addr_t = u8[16];

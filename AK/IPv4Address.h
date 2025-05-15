@@ -23,6 +23,10 @@
 
 namespace AK {
 
+class IPv4Address;
+template<>
+struct Traits<IPv4Address>;
+
 class [[gnu::packed]] IPv4Address {
     enum class SubnetClass : int {
         A = 0,
