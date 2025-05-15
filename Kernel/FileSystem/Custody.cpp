@@ -14,34 +14,14 @@
 
 namespace Kernel {
 
-static Singleton<RecursiveSpinlockProtected<Custody::AllCustodiesList, LockRank::None>> s_all_instances;
-
-RecursiveSpinlockProtected<Custody::AllCustodiesList, LockRank::None>& Custody::all_instances()
+ErrorOr<NonnullRefPtr<Custody>> Custody::try_create(RefPtr<Custody> parent, StringView name, Inode& inode, int mount_flags)
 {
-    return s_all_instances;
+    auto name_kstring = TRY(KString::try_create(name));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Custody(move(parent), move(name_kstring), inode, mount_flags)));
 }
 
-ErrorOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringView name, Inode& inode, int mount_flags)
-{
-    return all_instances().with([&](auto& all_custodies) -> ErrorOr<NonnullRefPtr<Custody>> {
-        for (Custody& custody : all_custodies) {
-            if (custody.parent() == parent
-                && custody.name() == name
-                && &custody.inode() == &inode
-                && custody.mount_flags() == mount_flags) {
-                return NonnullRefPtr { custody };
-            }
-        }
-
-        auto name_kstring = TRY(KString::try_create(name));
-        auto custody = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Custody(parent, move(name_kstring), inode, mount_flags)));
-        all_custodies.prepend(*custody);
-        return custody;
-    });
-}
-
-Custody::Custody(Custody* parent, NonnullOwnPtr<KString> name, Inode& inode, int mount_flags)
-    : m_parent(parent)
+Custody::Custody(RefPtr<Custody> parent, NonnullOwnPtr<KString> name, Inode& inode, int mount_flags)
+    : m_parent(move(parent))
     , m_name(move(name))
     , m_inode(inode)
     , m_mount_flags(mount_flags)
