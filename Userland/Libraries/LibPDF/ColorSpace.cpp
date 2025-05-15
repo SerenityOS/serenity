@@ -734,13 +734,8 @@ IndexedColorSpace::IndexedColorSpace(NonnullRefPtr<ColorSpace> base)
 PDFErrorOr<ColorOrStyle> IndexedColorSpace::style(ReadonlySpan<float> arguments) const
 {
     VERIFY(arguments.size() == 1);
-
     auto index = static_cast<int>(arguments[0]);
-    if (index < 0 || index > m_hival)
-        return Error { Error::Type::MalformedPDF, "Indexed color space index out of range" };
-
-    size_t const n = m_base->number_of_components();
-    return m_base->style(m_lookup.span().slice(index * n, n));
+    return m_base->style(TRY(base_components(index)));
 }
 
 Vector<float> IndexedColorSpace::default_decode() const
