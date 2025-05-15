@@ -656,9 +656,10 @@ private:
         u32 c;
     };
 
-    FreeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, Vector<Triangle> triangles, FunctionsType functions)
+    FreeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, size_t number_of_components, Vector<Triangle> triangles, FunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_vertex_data(move(vertex_data))
+        , m_number_of_components(number_of_components)
         , m_triangles(move(triangles))
         , m_functions(move(functions))
     {
@@ -668,6 +669,7 @@ private:
 
     // Interleaved x, y, c0, c1, c2, ...
     Vector<float> m_vertex_data;
+    size_t m_number_of_components { 0 };
     Vector<Triangle> m_triangles;
     FunctionsType m_functions;
 };
@@ -795,7 +797,7 @@ PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> FreeFormGouraudShading::create
         }
     }
 
-    return adopt_ref(*new FreeFormGouraudShading(move(common_entries), move(vertex_data), move(triangles), move(functions)));
+    return adopt_ref(*new FreeFormGouraudShading(move(common_entries), move(vertex_data), number_of_components, move(triangles), move(functions)));
 }
 
 PDFErrorOr<void> FreeFormGouraudShading::draw(Gfx::Painter&, Gfx::AffineTransform const&)
@@ -819,9 +821,10 @@ private:
         u32 c;
     };
 
-    LatticeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, Vector<Triangle> triangles, FunctionsType functions)
+    LatticeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, size_t number_of_components, Vector<Triangle> triangles, FunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_vertex_data(move(vertex_data))
+        , m_number_of_components(number_of_components)
         , m_triangles(move(triangles))
         , m_functions(move(functions))
     {
@@ -831,6 +834,7 @@ private:
 
     // Interleaved x, y, c0, c1, c2, ...
     Vector<float> m_vertex_data;
+    size_t m_number_of_components { 0 };
     Vector<Triangle> m_triangles;
     FunctionsType m_functions;
 };
@@ -948,7 +952,7 @@ PDFErrorOr<NonnullRefPtr<LatticeFormGouraudShading>> LatticeFormGouraudShading::
         }
     }
 
-    return adopt_ref(*new LatticeFormGouraudShading(move(common_entries), move(vertex_data), move(triangles), move(functions)));
+    return adopt_ref(*new LatticeFormGouraudShading(move(common_entries), move(vertex_data), number_of_components, move(triangles), move(functions)));
 }
 
 PDFErrorOr<void> LatticeFormGouraudShading::draw(Gfx::Painter&, Gfx::AffineTransform const&)
