@@ -640,6 +640,12 @@ PDFErrorOr<void> RadialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform
     return {};
 }
 
+struct Triangle {
+    u32 a;
+    u32 b;
+    u32 c;
+};
+
 class FreeFormGouraudShading final : public Shading {
 public:
     static PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> create(Document*, NonnullRefPtr<StreamObject>, CommonEntries);
@@ -648,13 +654,6 @@ public:
 
 private:
     using FunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
-
-    // Indexes into m_vertex_data.
-    struct Triangle {
-        u32 a;
-        u32 b;
-        u32 c;
-    };
 
     FreeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, size_t number_of_components, Vector<Triangle> triangles, FunctionsType functions)
         : m_common_entries(move(common_entries))
@@ -813,13 +812,6 @@ public:
 
 private:
     using FunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
-
-    // Indexes into m_vertex_data.
-    struct Triangle {
-        u32 a;
-        u32 b;
-        u32 c;
-    };
 
     LatticeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, size_t number_of_components, Vector<Triangle> triangles, FunctionsType functions)
         : m_common_entries(move(common_entries))
