@@ -134,7 +134,7 @@ bool VirtualFileSystem::check_matching_absolute_path_hierarchy(Custody const& fi
     while (custody1->parent()) {
         if (!custody2->parent())
             return false;
-        if (custody1->parent().ptr() != custody2->parent().ptr())
+        if (&custody1->parent()->inode() != &custody2->parent()->inode())
             return false;
         custody1 = custody1->parent();
         custody2 = custody2->parent();
