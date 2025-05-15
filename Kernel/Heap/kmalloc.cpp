@@ -29,6 +29,11 @@ static_assert(is_power_of_two(CHUNK_SIZE));
 static constexpr size_t INITIAL_KMALLOC_MEMORY_SIZE = 16 * MiB;
 static constexpr size_t KMALLOC_DEFAULT_ALIGNMENT = 16;
 
+enum class CallerHasAcquiredLock {
+    No,
+    Yes,
+};
+
 // Treat the heap as logically separate from .bss
 __attribute__((section(".heap"))) static u8 initial_kmalloc_memory[INITIAL_KMALLOC_MEMORY_SIZE];
 
@@ -37,7 +42,10 @@ nothrow_t const nothrow;
 }
 
 // FIXME: Figure out whether this can be MemoryManager.
-static RecursiveSpinlock<LockRank::None> s_lock {}; // needs to be recursive because of dump_backtrace()
+static Spinlock<LockRank::None> s_lock {};
+
+static void* kmalloc_impl(size_t size, size_t alignment, CallerWillInitializeMemory caller_will_initialize_memory, CallerHasAcquiredLock caller_has_acquired_lock);
+void kfree_sized_impl(void* ptr, size_t size);
 
 struct KmallocSubheap {
     KmallocSubheap(u8* base, size_t size)
@@ -138,10 +146,11 @@ public:
 
     void* allocate(size_t requested_size, [[maybe_unused]] CallerWillInitializeMemory caller_will_initialize_memory)
     {
+        VERIFY(s_lock.is_locked());
         if (m_usable_blocks.is_empty()) {
             // FIXME: This allocation wastes `block_size` bytes due to the implementation of kmalloc_aligned().
             //        Handle this with a custom VM+page allocator instead of using kmalloc_aligned().
-            auto* slot = kmalloc_aligned(KmallocSlabBlock::block_size, KmallocSlabBlock::block_size);
+            auto* slot = kmalloc_impl(KmallocSlabBlock::block_size, KmallocSlabBlock::block_size, CallerWillInitializeMemory::No, CallerHasAcquiredLock::Yes);
             if (!slot) {
                 dbgln_if(KMALLOC_DEBUG, "OOM while growing slabheap ({})", m_slab_size);
                 return nullptr;
@@ -193,6 +202,7 @@ public:
 
     bool try_purge()
     {
+        VERIFY(s_lock.is_locked());
         bool did_purge = false;
 
         // Note: We cannot remove children from the list when using a structured loop,
@@ -209,7 +219,7 @@ public:
             ++block;
             block_to_remove.list_node.remove();
             block_to_remove.~KmallocSlabBlock();
-            kfree_sized(&block_to_remove, KmallocSlabBlock::block_size);
+            kfree_sized_impl(&block_to_remove, KmallocSlabBlock::block_size);
 
             did_purge = true;
         }
@@ -242,6 +252,7 @@ struct KmallocGlobalData {
     void* allocate(size_t size, size_t alignment, CallerWillInitializeMemory caller_will_initialize_memory)
     {
         VERIFY(!expansion_in_progress);
+        VERIFY(s_lock.is_locked());
 
         for (auto& slabheap : slabheaps) {
             if (size <= slabheap.slab_size() && alignment <= slabheap.slab_size())
@@ -439,7 +450,7 @@ UNMAP_AFTER_INIT void kmalloc_init()
     s_lock.initialize();
 }
 
-static void* kmalloc_impl(size_t size, size_t alignment, CallerWillInitializeMemory caller_will_initialize_memory)
+static void* kmalloc_impl(size_t size, size_t alignment, CallerWillInitializeMemory caller_will_initialize_memory, CallerHasAcquiredLock caller_has_acquired_lock)
 {
     // Catch bad callers allocating under spinlock.
     if constexpr (KMALLOC_VERIFY_NO_SPINLOCK_HELD) {
@@ -449,7 +460,10 @@ static void* kmalloc_impl(size_t size, size_t alignment, CallerWillInitializeMem
     // Alignment must be a power of two.
     VERIFY(is_power_of_two(alignment));
 
-    SpinlockLocker lock(s_lock);
+    Optional<SpinlockLocker<Spinlock<Kernel::LockRank::None>>> maybe_lock = {};
+    if (caller_has_acquired_lock == CallerHasAcquiredLock::No)
+        maybe_lock = SpinlockLocker(s_lock);
+
     ++g_kmalloc_call_count;
 
     if (g_dump_kmalloc_stacks && Kernel::g_kernel_symbols_available.was_set()) {
@@ -474,7 +488,7 @@ static void* kmalloc_impl(size_t size, size_t alignment, CallerWillInitializeMem
 
 void* kmalloc(size_t size)
 {
-    return kmalloc_impl(size, KMALLOC_DEFAULT_ALIGNMENT, CallerWillInitializeMemory::No);
+    return kmalloc_impl(size, KMALLOC_DEFAULT_ALIGNMENT, CallerWillInitializeMemory::No, CallerHasAcquiredLock::No);
 }
 
 void* kcalloc(size_t count, size_t size)
@@ -482,25 +496,20 @@ void* kcalloc(size_t count, size_t size)
     if (Checked<size_t>::multiplication_would_overflow(count, size))
         return nullptr;
     size_t new_size = count * size;
-    auto* ptr = kmalloc_impl(new_size, KMALLOC_DEFAULT_ALIGNMENT, CallerWillInitializeMemory::Yes);
+    auto* ptr = kmalloc_impl(new_size, KMALLOC_DEFAULT_ALIGNMENT, CallerWillInitializeMemory::Yes, CallerHasAcquiredLock::No);
     if (ptr)
         memset(ptr, 0, new_size);
     return ptr;
 }
 
-void kfree_sized(void* ptr, size_t size)
+void kfree_sized_impl(void* ptr, size_t size)
 {
+    VERIFY(s_lock.is_locked());
     if (!ptr)
         return;
 
     VERIFY(size > 0);
 
-    // Catch bad callers allocating under spinlock.
-    if constexpr (KMALLOC_VERIFY_NO_SPINLOCK_HELD) {
-        Processor::verify_no_spinlocks_held();
-    }
-
-    SpinlockLocker lock(s_lock);
     ++g_kfree_call_count;
     ++g_nested_kfree_calls;
 
@@ -518,6 +527,17 @@ void kfree_sized(void* ptr, size_t size)
     --g_nested_kfree_calls;
 }
 
+void kfree_sized(void* ptr, size_t size)
+{
+    // Catch bad callers allocating under spinlock.
+    if constexpr (KMALLOC_VERIFY_NO_SPINLOCK_HELD) {
+        Processor::verify_no_spinlocks_held();
+    }
+
+    SpinlockLocker lock(s_lock);
+    kfree_sized_impl(ptr, size);
+}
+
 size_t kmalloc_good_size(size_t size)
 {
     VERIFY(size > 0);
@@ -531,7 +551,7 @@ size_t kmalloc_good_size(size_t size)
 
 void* kmalloc_aligned(size_t size, size_t alignment)
 {
-    return kmalloc_impl(size, alignment, CallerWillInitializeMemory::No);
+    return kmalloc_impl(size, alignment, CallerWillInitializeMemory::No, CallerHasAcquiredLock::No);
 }
 
 void* operator new(size_t size)
