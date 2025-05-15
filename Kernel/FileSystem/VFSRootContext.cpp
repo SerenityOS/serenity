@@ -17,7 +17,7 @@ static Atomic<u64> s_vfs_root_context_id = 0;
 UNMAP_AFTER_INIT void VFSRootContext::initialize_empty_ramfs_root_context_for_kernel_processes()
 {
     s_empty_context = &MUST(VFSRootContext::create_with_empty_ramfs()).leak_ref();
-    // NOTE: This custody is immutable, so we expose it also outside of the RecursiveSpinlockProtected
+    // NOTE: This custody is immutable, so we expose it also outside of the SpinlockProtected
     // template so it could be accessed immediately.
     s_empty_context_custody = &s_empty_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> { return *custody; }).leak_ref();
 
@@ -262,12 +262,10 @@ void VFSRootContext::attach(Badge<Process>)
     });
 }
 
-bool VFSRootContext::mount_point_exists_at_custody(Custody& mount_point)
+bool VFSRootContext::mount_point_exists_at_custody(Custody& mount_point, Details& details)
 {
-    return m_details.with([&](auto& details) -> bool {
-        return any_of(details.mounts, [&mount_point](auto const& existing_mount) {
-            return existing_mount.host_custody() && VirtualFileSystem::check_matching_absolute_path_hierarchy(*existing_mount.host_custody(), mount_point);
-        });
+    return any_of(details.mounts, [&mount_point](auto const& existing_mount) {
+        return existing_mount.host_custody() && VirtualFileSystem::check_matching_absolute_path_hierarchy(*existing_mount.host_custody(), mount_point);
     });
 }
 
@@ -352,7 +350,7 @@ ErrorOr<void> VFSRootContext::add_new_mount(DoBindMount do_bind_mount, Inode& so
             dbgln("VFSRootContext({}): Bind-mounting inode {} at inode {}", id(), source.identifier(), mount_point.inode().identifier());
         }
 
-        if (mount_point_exists_at_custody(mount_point)) {
+        if (mount_point_exists_at_custody(mount_point, details)) {
             dbgln("VFSRootContext({}): Mounting unsuccessful - inode {} is already a mount-point.", id(), mount_point.inode().identifier());
             return EBUSY;
         }

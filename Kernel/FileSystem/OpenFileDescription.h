@@ -159,6 +159,6 @@ private:
         FIFO::Direction fifo_direction : 2 { FIFO::Direction::Neither };
     };
 
-    RecursiveSpinlockProtected<State, LockRank::None> m_state {};
+    SpinlockProtected<State, LockRank::None> m_state {};
 };
 }
