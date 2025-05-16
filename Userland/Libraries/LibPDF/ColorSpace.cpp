@@ -105,7 +105,7 @@ NonnullRefPtr<DeviceGrayColorSpace> DeviceGrayColorSpace::the()
 PDFErrorOr<ColorOrStyle> DeviceGrayColorSpace::style(ReadonlySpan<float> arguments) const
 {
     VERIFY(arguments.size() == 1);
-    auto gray = static_cast<u8>(arguments[0] * 255.0f);
+    auto gray = round_to<u8>(clamp(arguments[0] * 255.0f, 0.0f, 255.0f));
     return Color(gray, gray, gray);
 }
 
@@ -123,9 +123,9 @@ NonnullRefPtr<DeviceRGBColorSpace> DeviceRGBColorSpace::the()
 PDFErrorOr<ColorOrStyle> DeviceRGBColorSpace::style(ReadonlySpan<float> arguments) const
 {
     VERIFY(arguments.size() == 3);
-    auto r = static_cast<u8>(arguments[0] * 255.0f);
-    auto g = static_cast<u8>(arguments[1] * 255.0f);
-    auto b = static_cast<u8>(arguments[2] * 255.0f);
+    auto r = round_to<u8>(clamp(arguments[0] * 255.0f, 0.0f, 255.0f));
+    auto g = round_to<u8>(clamp(arguments[1] * 255.0f, 0.0f, 255.0f));
+    auto b = round_to<u8>(clamp(arguments[2] * 255.0f, 0.0f, 255.0f));
     return Color(r, g, b);
 }
 
@@ -160,10 +160,10 @@ PDFErrorOr<ColorOrStyle> DeviceCMYKColorSpace::style(ReadonlySpan<float> argumen
     VERIFY(arguments.size() == 4);
 
     u8 bytes[4];
-    bytes[0] = static_cast<u8>(arguments[0] * 255.0f);
-    bytes[1] = static_cast<u8>(arguments[1] * 255.0f);
-    bytes[2] = static_cast<u8>(arguments[2] * 255.0f);
-    bytes[3] = static_cast<u8>(arguments[3] * 255.0f);
+    bytes[0] = round_to<u8>(clamp(arguments[0] * 255.0f, 0.0f, 255.0f));
+    bytes[1] = round_to<u8>(clamp(arguments[1] * 255.0f, 0.0f, 255.0f));
+    bytes[2] = round_to<u8>(clamp(arguments[2] * 255.0f, 0.0f, 255.0f));
+    bytes[3] = round_to<u8>(clamp(arguments[3] * 255.0f, 0.0f, 255.0f));
     auto pcs = TRY(s_default_cmyk_profile->to_pcs(bytes));
 
     Array<u8, 3> output;
@@ -384,9 +384,9 @@ PDFErrorOr<ColorOrStyle> CalGrayColorSpace::style(ReadonlySpan<float> arguments)
     auto d65_normalized = convert_to_d65(scaled_black_point_xyz);
     auto srgb = convert_to_srgb(d65_normalized);
 
-    auto red = static_cast<u8>(clamp(srgb[0], 0.0f, 1.0f) * 255.0f);
-    auto green = static_cast<u8>(clamp(srgb[1], 0.0f, 1.0f) * 255.0f);
-    auto blue = static_cast<u8>(clamp(srgb[2], 0.0f, 1.0f) * 255.0f);
+    auto red = round_to<u8>(clamp(srgb[0], 0.0f, 1.0f) * 255.0f);
+    auto green = round_to<u8>(clamp(srgb[1], 0.0f, 1.0f) * 255.0f);
+    auto blue = round_to<u8>(clamp(srgb[2], 0.0f, 1.0f) * 255.0f);
 
     return Color(red, green, blue);
 }
@@ -474,9 +474,9 @@ PDFErrorOr<ColorOrStyle> CalRGBColorSpace::style(ReadonlySpan<float> arguments) 
     auto d65_normalized = convert_to_d65(scaled_black_point_xyz);
     auto srgb = convert_to_srgb(d65_normalized);
 
-    auto red = static_cast<u8>(clamp(srgb[0], 0.0f, 1.0f) * 255.0f);
-    auto green = static_cast<u8>(clamp(srgb[1], 0.0f, 1.0f) * 255.0f);
-    auto blue = static_cast<u8>(clamp(srgb[2], 0.0f, 1.0f) * 255.0f);
+    auto red = round_to<u8>(clamp(srgb[0], 0.0f, 1.0f) * 255.0f);
+    auto green = round_to<u8>(clamp(srgb[1], 0.0f, 1.0f) * 255.0f);
+    auto blue = round_to<u8>(clamp(srgb[2], 0.0f, 1.0f) * 255.0f);
 
     return Color(red, green, blue);
 }
@@ -539,7 +539,7 @@ PDFErrorOr<ColorOrStyle> ICCBasedColorSpace::style(ReadonlySpan<float> arguments
 
     m_bytes.resize(arguments.size());
     for (size_t i = 0; i < arguments.size(); ++i)
-        m_bytes[i] = static_cast<u8>(arguments[i] * 255.0f);
+        m_bytes[i] = static_cast<u8>(arguments[i] * 255.0f); // FIXME: Should probably round and clamp.
 
     auto pcs = TRY(m_profile->to_pcs(m_bytes));
     Array<u8, 3> output;
@@ -651,9 +651,9 @@ PDFErrorOr<ColorOrStyle> LabColorSpace::style(ReadonlySpan<float> arguments) con
     auto d65_normalized = convert_to_d65(scaled_black_point_xyz);
     auto srgb = convert_to_srgb(d65_normalized);
 
-    auto red = static_cast<u8>(clamp(srgb[0], 0.0f, 1.0f) * 255.0f);
-    auto green = static_cast<u8>(clamp(srgb[1], 0.0f, 1.0f) * 255.0f);
-    auto blue = static_cast<u8>(clamp(srgb[2], 0.0f, 1.0f) * 255.0f);
+    auto red = round_to<u8>(clamp(srgb[0], 0.0f, 1.0f) * 255.0f);
+    auto green = round_to<u8>(clamp(srgb[1], 0.0f, 1.0f) * 255.0f);
+    auto blue = round_to<u8>(clamp(srgb[2], 0.0f, 1.0f) * 255.0f);
 
     return Color(red, green, blue);
 }
