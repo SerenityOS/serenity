@@ -17,9 +17,9 @@ static InodeIndex loop_index_to_inode_index(unsigned loop_index)
     return loop_index + 2;
 }
 
-DevLoopFSInode::DevLoopFSInode(DevLoopFS& fs, InodeIndex index, LoopDevice& loop_device)
+DevLoopFSInode::DevLoopFSInode(DevLoopFS& fs, InodeIndex index, LockWeakPtr<LoopDevice> loop_device)
     : Inode(fs, index)
-    , m_loop_device(loop_device)
+    , m_loop_device(move(loop_device))
 {
 }
 
@@ -76,14 +76,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevLoopFSInode::lookup(StringView name)
     if (!loop_index.has_value())
         return ENOENT;
 
-    return LoopDevice::all_instances().with([&](auto& list) -> ErrorOr<NonnullRefPtr<Inode>> {
-        for (LoopDevice& loop_device : list) {
-            if (loop_device.index() != loop_index.value())
-                continue;
-            return fs().get_inode({ fsid(), loop_index_to_inode_index(loop_index.value()) });
-        }
-        return ENOENT;
-    });
+    return fs().get_inode({ fsid(), loop_index_to_inode_index(loop_index.value()) });
 }
 
 ErrorOr<void> DevLoopFSInode::flush_metadata()

@@ -59,11 +59,13 @@ ErrorOr<NonnullRefPtr<LoopDevice>> LoopDevice::create_with_file_description(Open
     if (!custody->inode().fs().supports_backing_loop_devices())
         return Error::from_errno(ENOTSUP);
 
-    return TRY(LoopDevice::all_instances().with([custody](auto& all_instances_list) -> ErrorOr<NonnullRefPtr<LoopDevice>> {
-        NonnullRefPtr<LoopDevice> device = TRY(Device::try_create_device<LoopDevice>(*custody, s_loop_device_id.fetch_add(1)));
+    NonnullRefPtr<LoopDevice> device = TRY(Device::try_create_device<LoopDevice>(*custody, s_loop_device_id.fetch_add(1)));
+
+    LoopDevice::all_instances().with([custody, device](auto& all_instances_list) {
         all_instances_list.append(*device);
-        return device;
-    }));
+    });
+
+    return device;
 }
 
 void LoopDevice::start_request(AsyncBlockDeviceRequest& request)

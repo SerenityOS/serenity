@@ -23,7 +23,7 @@ public:
     DevPtsFS const& fs() const { return static_cast<DevPtsFS const&>(Inode::fs()); }
 
 private:
-    DevPtsFSInode(DevPtsFS&, InodeIndex, SlavePTY&);
+    DevPtsFSInode(DevPtsFS&, InodeIndex, LockWeakPtr<SlavePTY>);
 
     // NOTE: This constructor is used for the root inode only.
     DevPtsFSInode(DevPtsFS&);
