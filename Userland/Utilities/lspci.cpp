@@ -25,12 +25,15 @@ static constexpr StringView format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{
 static constexpr StringView format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})"sv;
 static constexpr StringView format_region = "\tBAR {}: {} region @ {:#x}"sv;
 
-static u32 read_hex_string_from_bytebuffer(ByteBuffer const& buf)
+static ErrorOr<u32> read_hex_string_from_bytebuffer(ByteBuffer const& buf)
 {
-    // FIXME: Propagate errors.
-    return AK::StringUtils::convert_to_uint_from_hex(
-        ByteString(MUST(buf.slice(2, buf.size() - 2)).bytes()))
-        .release_value();
+    auto slice_result = TRY(buf.slice(2, buf.size() - 2));
+    auto hex_string = ByteString(slice_result.bytes());
+    auto result = AK::StringUtils::convert_to_uint_from_hex(hex_string);
+    if (!result.has_value())
+        return Error::from_string_literal("Failed to convert hex string to number");
+
+    return result.release_value();
 }
 
 static u32 convert_sysfs_value_to_uint(ByteString const& value)
@@ -125,35 +128,35 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             dbgln("Error: Could not read {}: {}", vendor_id_filename, vendor_id_contents.error());
             continue;
         }
-        u32 vendor_id = read_hex_string_from_bytebuffer(vendor_id_contents.value());
+        u32 vendor_id = TRY(read_hex_string_from_bytebuffer(vendor_id_contents.value()));
 
         auto device_id_contents = device_id_file.value()->read_until_eof();
         if (device_id_contents.is_error()) {
             dbgln("Error: Could not read {}: {}", device_id_filename, device_id_contents.error());
             continue;
         }
-        u32 device_id = read_hex_string_from_bytebuffer(device_id_contents.value());
+        u32 device_id = TRY(read_hex_string_from_bytebuffer(device_id_contents.value()));
 
         auto revision_id_contents = revision_id_file.value()->read_until_eof();
         if (revision_id_contents.is_error()) {
             dbgln("Error: Could not read {}: {}", revision_id_filename, revision_id_contents.error());
             continue;
         }
-        u32 revision_id = read_hex_string_from_bytebuffer(revision_id_contents.value());
+        u32 revision_id = TRY(read_hex_string_from_bytebuffer(revision_id_contents.value()));
 
         auto class_id_contents = class_id_file.value()->read_until_eof();
         if (class_id_contents.is_error()) {
             dbgln("Error: Could not read {}: {}", class_id_filename, class_id_contents.error());
             continue;
         }
-        u32 class_id = read_hex_string_from_bytebuffer(class_id_contents.value());
+        u32 class_id = TRY(read_hex_string_from_bytebuffer(class_id_contents.value()));
 
         auto subclass_id_contents = subclass_id_file.value()->read_until_eof();
         if (subclass_id_contents.is_error()) {
             dbgln("Error: Could not read {}: {}", subclass_id_filename, subclass_id_contents.error());
             continue;
         }
-        u32 subclass_id = read_hex_string_from_bytebuffer(subclass_id_contents.value());
+        u32 subclass_id = TRY(read_hex_string_from_bytebuffer(subclass_id_contents.value()));
 
         ByteString vendor_name;
         ByteString device_name;
@@ -190,7 +193,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 continue;
             }
 
-            u32 bar_value = read_hex_string_from_bytebuffer(bar_value_contents.value());
+            u32 bar_value = TRY(read_hex_string_from_bytebuffer(bar_value_contents.value()));
             if (bar_value == 0)
                 continue;
             bool memory_region = ((bar_value & 1) == 0);
