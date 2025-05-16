@@ -51,8 +51,13 @@ struct CommonEntries {
 
 PDFErrorOr<CommonEntries> read_common_entries(Document* document, DictObject const& shading_dict, Renderer& renderer)
 {
+    // "(Required) The color space in which color values are expressed. This may be
+    //  any device, CIE-based, or special color space except a Pattern space. See
+    //  “Color Space: Special Considerations” on page 306 for further information."
     auto color_space_object = TRY(shading_dict.get_object(document, CommonNames::ColorSpace));
     auto color_space = TRY(ColorSpace::create(document, move(color_space_object), renderer));
+    if (color_space->family() == ColorSpaceFamily::Pattern)
+        return Error::malformed_error("Shading color space must not be pattern");
 
     CommonEntries common_entries { .color_space = color_space };
 
