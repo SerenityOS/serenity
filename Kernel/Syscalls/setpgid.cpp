@@ -128,18 +128,18 @@ ErrorOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     }
     // FIXME: There are more EPERM conditions to check for here..
     auto process_group = TRY(ProcessGroup::find_or_create(new_pgid));
-    return process->with_mutable_protected_data([&process, &process_group, new_pgid](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = process->credentials();
+    return process->with_mutable_protected_data([&process_group, new_pgid](auto& protected_data) -> ErrorOr<FlatPtr> {
+        auto const& credentials = *protected_data.credentials;
 
         auto new_credentials = TRY(Credentials::create(
-            credentials->uid(),
-            credentials->gid(),
-            credentials->euid(),
-            credentials->egid(),
-            credentials->suid(),
-            credentials->sgid(),
-            credentials->extra_gids(),
-            credentials->sid(),
+            credentials.uid(),
+            credentials.gid(),
+            credentials.euid(),
+            credentials.egid(),
+            credentials.suid(),
+            credentials.sgid(),
+            credentials.extra_gids(),
+            credentials.sid(),
             new_pgid));
 
         protected_data.credentials = move(new_credentials);
