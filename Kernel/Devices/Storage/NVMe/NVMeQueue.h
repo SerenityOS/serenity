@@ -113,7 +113,7 @@ private:
     }
 
 protected:
-    RecursiveSpinlockProtected<HashMap<u16, NVMeIO>, LockRank::None> m_requests;
+    SpinlockProtected<HashMap<u16, NVMeIO>, LockRank::None> m_requests;
     NonnullOwnPtr<Memory::Region> m_rw_dma_region;
 
 private:

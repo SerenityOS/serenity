@@ -13,10 +13,10 @@
 
 namespace Kernel {
 
-static Singleton<RecursiveSpinlockProtected<LoopDevice::List, LockRank::None>> s_all_instances;
+static Singleton<SpinlockProtected<LoopDevice::List, LockRank::None>> s_all_instances;
 static Atomic<u64> s_loop_device_id { 0 };
 
-RecursiveSpinlockProtected<LoopDevice::List, LockRank::None>& LoopDevice::all_instances()
+SpinlockProtected<LoopDevice::List, LockRank::None>& LoopDevice::all_instances()
 {
     return s_all_instances;
 }
