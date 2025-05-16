@@ -101,6 +101,7 @@ protected:
     virtual void complete_current_request(u16 cmdid, u16 status);
 
 private:
+    void complete_current_request_impl(u16 cmdid, u16 status, HashMap<u16, NVMeIO>& requests);
     bool cqe_available();
     void update_cqe_head();
     void update_cq_doorbell()
