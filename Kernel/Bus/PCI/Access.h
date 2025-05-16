@@ -54,7 +54,7 @@ public:
     DeviceIdentifier const& get_device_identifier(Address address) const;
 
     Spinlock<LockRank::None> const& scan_lock() const { return m_scan_lock; }
-    RecursiveSpinlock<LockRank::None> const& access_lock() const { return m_access_lock; }
+    Spinlock<LockRank::None> const& access_lock() const { return m_access_lock; }
 
     ErrorOr<void> add_host_controller_and_scan_for_devices(NonnullOwnPtr<HostController>);
 
@@ -64,7 +64,7 @@ private:
 
     bool find_and_register_pci_host_bridges_from_acpi_mcfg_table(PhysicalAddress mcfg);
 
-    mutable RecursiveSpinlock<LockRank::None> m_access_lock {};
+    mutable Spinlock<LockRank::None> m_access_lock {};
     mutable Spinlock<LockRank::None> m_scan_lock {};
 
     HashMap<u32, NonnullOwnPtr<PCI::HostController>> m_host_controllers;
