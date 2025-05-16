@@ -90,7 +90,7 @@ public:
     ProcessID acceptor_pid() const { return m_acceptor.pid; }
     UserID acceptor_uid() const { return m_acceptor.uid; }
     GroupID acceptor_gid() const { return m_acceptor.gid; }
-    RecursiveSpinlockProtected<RefPtr<NetworkAdapter>, LockRank::None> const& bound_interface() const { return m_bound_interface; }
+    SpinlockProtected<RefPtr<NetworkAdapter>, LockRank::None> const& bound_interface() const { return m_bound_interface; }
 
     Mutex& mutex() { return m_mutex; }
 
@@ -123,7 +123,7 @@ protected:
 
     Role m_role { Role::None };
 
-    RecursiveSpinlockProtected<Optional<ErrnoCode>, LockRank::None>& so_error() { return m_so_error; }
+    SpinlockProtected<Optional<ErrnoCode>, LockRank::None>& so_error() { return m_so_error; }
 
     Error set_so_error(ErrnoCode error_code)
     {
@@ -172,13 +172,13 @@ private:
     bool m_shut_down_for_reading { false };
     bool m_shut_down_for_writing { false };
 
-    RecursiveSpinlockProtected<RefPtr<NetworkAdapter>, LockRank::None> m_bound_interface;
+    SpinlockProtected<RefPtr<NetworkAdapter>, LockRank::None> m_bound_interface;
 
     Duration m_receive_timeout {};
     Duration m_send_timeout {};
     int m_timestamp { 0 };
 
-    RecursiveSpinlockProtected<Optional<ErrnoCode>, LockRank::None> m_so_error;
+    SpinlockProtected<Optional<ErrnoCode>, LockRank::None> m_so_error;
 
     Vector<NonnullRefPtr<Socket>> m_pending;
 };

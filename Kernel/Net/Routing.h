@@ -72,7 +72,7 @@ enum class AllowBroadcast {
 
 RoutingDecision route_to(IPv4Address const& target, IPv4Address const& source, RefPtr<NetworkAdapter> const through = nullptr, AllowBroadcast = AllowBroadcast::No, AllowUsingGateway = AllowUsingGateway::Yes);
 
-RecursiveSpinlockProtected<HashMap<IPv4Address, MACAddress>, LockRank::None>& arp_table();
-RecursiveSpinlockProtected<Route::RouteList, LockRank::None>& routing_table();
+SpinlockProtected<HashMap<IPv4Address, MACAddress>, LockRank::None>& arp_table();
+SpinlockProtected<Route::RouteList, LockRank::None>& routing_table();
 
 }

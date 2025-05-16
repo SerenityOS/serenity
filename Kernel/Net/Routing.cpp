@@ -16,8 +16,8 @@
 
 namespace Kernel {
 
-static Singleton<RecursiveSpinlockProtected<HashMap<IPv4Address, MACAddress>, LockRank::None>> s_arp_table;
-static Singleton<RecursiveSpinlockProtected<Route::RouteList, LockRank::None>> s_routing_table;
+static Singleton<SpinlockProtected<HashMap<IPv4Address, MACAddress>, LockRank::None>> s_arp_table;
+static Singleton<SpinlockProtected<Route::RouteList, LockRank::None>> s_routing_table;
 
 class ARPTableBlocker final : public Thread::Blocker {
 public:
@@ -106,7 +106,7 @@ void ARPTableBlocker::will_unblock_immediately_without_blocking(UnblockImmediate
     }
 }
 
-RecursiveSpinlockProtected<HashMap<IPv4Address, MACAddress>, LockRank::None>& arp_table()
+SpinlockProtected<HashMap<IPv4Address, MACAddress>, LockRank::None>& arp_table()
 {
     return *s_arp_table;
 }
@@ -130,7 +130,7 @@ void update_arp_table(IPv4Address const& ip_addr, MACAddress const& addr, Update
     }
 }
 
-RecursiveSpinlockProtected<Route::RouteList, LockRank::None>& routing_table()
+SpinlockProtected<Route::RouteList, LockRank::None>& routing_table()
 {
     return *s_routing_table;
 }
