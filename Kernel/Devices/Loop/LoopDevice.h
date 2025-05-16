@@ -56,7 +56,7 @@ private:
 public:
     using List = IntrusiveList<&LoopDevice::m_list_node>;
 
-    static RecursiveSpinlockProtected<LoopDevice::List, LockRank::None>& all_instances();
+    static SpinlockProtected<LoopDevice::List, LockRank::None>& all_instances();
 };
 
 }
