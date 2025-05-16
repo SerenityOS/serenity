@@ -18,7 +18,7 @@ ErrorOr<FlatPtr> Process::sys$seteuid(UserID new_euid)
         return EINVAL;
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        NonnullRefPtr<Credentials> credentials = *protected_data.credentials;
 
         if (new_euid != credentials->uid() && new_euid != credentials->suid() && !credentials->is_superuser())
             return EPERM;
@@ -51,7 +51,7 @@ ErrorOr<FlatPtr> Process::sys$setegid(GroupID new_egid)
         return EINVAL;
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        NonnullRefPtr<Credentials> credentials = *protected_data.credentials;
 
         if (new_egid != credentials->gid() && new_egid != credentials->sgid() && !credentials->is_superuser())
             return EPERM;
@@ -84,7 +84,7 @@ ErrorOr<FlatPtr> Process::sys$setuid(UserID new_uid)
         return EINVAL;
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        NonnullRefPtr<Credentials> credentials = *protected_data.credentials;
 
         if (new_uid != credentials->uid() && new_uid != credentials->euid() && !credentials->is_superuser())
             return EPERM;
@@ -117,7 +117,7 @@ ErrorOr<FlatPtr> Process::sys$setgid(GroupID new_gid)
         return EINVAL;
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        NonnullRefPtr<Credentials> credentials = *protected_data.credentials;
 
         if (new_gid != credentials->gid() && new_gid != credentials->egid() && !credentials->is_superuser())
             return EPERM;
@@ -147,7 +147,7 @@ ErrorOr<FlatPtr> Process::sys$setreuid(UserID new_ruid, UserID new_euid)
     TRY(require_promise(Pledge::id));
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        NonnullRefPtr<Credentials> credentials = *protected_data.credentials;
 
         if (new_ruid == (uid_t)-1)
             new_ruid = credentials->uid();
@@ -186,7 +186,7 @@ ErrorOr<FlatPtr> Process::sys$setresuid(UserID new_ruid, UserID new_euid, UserID
     TRY(require_promise(Pledge::id));
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        NonnullRefPtr<Credentials> credentials = *protected_data.credentials;
 
         if (new_ruid == (uid_t)-1)
             new_ruid = credentials->uid();
@@ -224,7 +224,7 @@ ErrorOr<FlatPtr> Process::sys$setregid(GroupID new_rgid, GroupID new_egid)
     TRY(require_promise(Pledge::id));
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        NonnullRefPtr<Credentials> credentials = *protected_data.credentials;
 
         if (new_rgid == (gid_t)-1)
             new_rgid = credentials->gid();
@@ -260,7 +260,7 @@ ErrorOr<FlatPtr> Process::sys$setresgid(GroupID new_rgid, GroupID new_egid, Grou
     TRY(require_promise(Pledge::id));
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        NonnullRefPtr<Credentials> credentials = *protected_data.credentials;
 
         if (new_rgid == (gid_t)-1)
             new_rgid = credentials->gid();
@@ -301,7 +301,7 @@ ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<GroupID const*> 
         return EINVAL;
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        NonnullRefPtr<Credentials> credentials = *protected_data.credentials;
 
         if (!credentials->is_superuser())
             return EPERM;
