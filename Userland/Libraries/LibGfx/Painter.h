@@ -183,7 +183,7 @@ public:
 protected:
     friend GradientLine;
     friend AntiAliasingPainter;
-    template<unsigned SamplesPerPixel>
+    template<typename SubpixelSample>
     friend class EdgeFlagPathRasterizer;
 
     IntRect to_physical(IntRect const& r) const { return r.translated(translation()) * scale(); }
