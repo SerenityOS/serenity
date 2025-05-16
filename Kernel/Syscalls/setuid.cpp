@@ -18,23 +18,23 @@ ErrorOr<FlatPtr> Process::sys$seteuid(UserID new_euid)
         return EINVAL;
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        auto const& credentials = *protected_data.credentials;
 
-        if (new_euid != credentials->uid() && new_euid != credentials->suid() && !credentials->is_superuser())
+        if (new_euid != credentials.uid() && new_euid != credentials.suid() && !credentials.is_superuser())
             return EPERM;
 
         auto new_credentials = TRY(Credentials::create(
-            credentials->uid(),
-            credentials->gid(),
+            credentials.uid(),
+            credentials.gid(),
             new_euid,
-            credentials->egid(),
-            credentials->suid(),
-            credentials->sgid(),
-            credentials->extra_gids(),
-            credentials->sid(),
-            credentials->pgid()));
+            credentials.egid(),
+            credentials.suid(),
+            credentials.sgid(),
+            credentials.extra_gids(),
+            credentials.sid(),
+            credentials.pgid()));
 
-        if (credentials->euid() != new_euid)
+        if (credentials.euid() != new_euid)
             protected_data.dumpable = false;
 
         protected_data.credentials = move(new_credentials);
@@ -51,23 +51,23 @@ ErrorOr<FlatPtr> Process::sys$setegid(GroupID new_egid)
         return EINVAL;
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        auto const& credentials = *protected_data.credentials;
 
-        if (new_egid != credentials->gid() && new_egid != credentials->sgid() && !credentials->is_superuser())
+        if (new_egid != credentials.gid() && new_egid != credentials.sgid() && !credentials.is_superuser())
             return EPERM;
 
         auto new_credentials = TRY(Credentials::create(
-            credentials->uid(),
-            credentials->gid(),
-            credentials->euid(),
+            credentials.uid(),
+            credentials.gid(),
+            credentials.euid(),
             new_egid,
-            credentials->suid(),
-            credentials->sgid(),
-            credentials->extra_gids(),
-            credentials->sid(),
-            credentials->pgid()));
+            credentials.suid(),
+            credentials.sgid(),
+            credentials.extra_gids(),
+            credentials.sid(),
+            credentials.pgid()));
 
-        if (credentials->egid() != new_egid)
+        if (credentials.egid() != new_egid)
             protected_data.dumpable = false;
 
         protected_data.credentials = move(new_credentials);
@@ -84,23 +84,23 @@ ErrorOr<FlatPtr> Process::sys$setuid(UserID new_uid)
         return EINVAL;
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        auto const& credentials = *protected_data.credentials;
 
-        if (new_uid != credentials->uid() && new_uid != credentials->euid() && !credentials->is_superuser())
+        if (new_uid != credentials.uid() && new_uid != credentials.euid() && !credentials.is_superuser())
             return EPERM;
 
         auto new_credentials = TRY(Credentials::create(
             new_uid,
-            credentials->gid(),
+            credentials.gid(),
             new_uid,
-            credentials->egid(),
+            credentials.egid(),
             new_uid,
-            credentials->sgid(),
-            credentials->extra_gids(),
-            credentials->sid(),
-            credentials->pgid()));
+            credentials.sgid(),
+            credentials.extra_gids(),
+            credentials.sid(),
+            credentials.pgid()));
 
-        if (credentials->euid() != new_uid)
+        if (credentials.euid() != new_uid)
             protected_data.dumpable = false;
 
         protected_data.credentials = move(new_credentials);
@@ -117,23 +117,23 @@ ErrorOr<FlatPtr> Process::sys$setgid(GroupID new_gid)
         return EINVAL;
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        auto const& credentials = *protected_data.credentials;
 
-        if (new_gid != credentials->gid() && new_gid != credentials->egid() && !credentials->is_superuser())
+        if (new_gid != credentials.gid() && new_gid != credentials.egid() && !credentials.is_superuser())
             return EPERM;
 
         auto new_credentials = TRY(Credentials::create(
-            credentials->uid(),
+            credentials.uid(),
             new_gid,
-            credentials->euid(),
+            credentials.euid(),
             new_gid,
-            credentials->suid(),
+            credentials.suid(),
             new_gid,
-            credentials->extra_gids(),
-            credentials->sid(),
-            credentials->pgid()));
+            credentials.extra_gids(),
+            credentials.sid(),
+            credentials.pgid()));
 
-        if (credentials->egid() != new_gid)
+        if (credentials.egid() != new_gid)
             protected_data.dumpable = false;
 
         protected_data.credentials = move(new_credentials);
@@ -147,14 +147,14 @@ ErrorOr<FlatPtr> Process::sys$setreuid(UserID new_ruid, UserID new_euid)
     TRY(require_promise(Pledge::id));
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        auto const& credentials = *protected_data.credentials;
 
         if (new_ruid == (uid_t)-1)
-            new_ruid = credentials->uid();
+            new_ruid = credentials.uid();
         if (new_euid == (uid_t)-1)
-            new_euid = credentials->euid();
+            new_euid = credentials.euid();
 
-        auto ok = [&credentials](UserID id) { return id == credentials->uid() || id == credentials->euid() || id == credentials->suid(); };
+        auto ok = [&credentials](UserID id) { return id == credentials.uid() || id == credentials.euid() || id == credentials.suid(); };
         if (!ok(new_ruid) || !ok(new_euid))
             return EPERM;
 
@@ -163,16 +163,16 @@ ErrorOr<FlatPtr> Process::sys$setreuid(UserID new_ruid, UserID new_euid)
 
         auto new_credentials = TRY(Credentials::create(
             new_ruid,
-            credentials->gid(),
+            credentials.gid(),
             new_euid,
-            credentials->egid(),
-            credentials->suid(),
-            credentials->sgid(),
-            credentials->extra_gids(),
-            credentials->sid(),
-            credentials->pgid()));
+            credentials.egid(),
+            credentials.suid(),
+            credentials.sgid(),
+            credentials.extra_gids(),
+            credentials.sid(),
+            credentials.pgid()));
 
-        if (credentials->euid() != new_euid)
+        if (credentials.euid() != new_euid)
             protected_data.dumpable = false;
 
         protected_data.credentials = move(new_credentials);
@@ -186,31 +186,31 @@ ErrorOr<FlatPtr> Process::sys$setresuid(UserID new_ruid, UserID new_euid, UserID
     TRY(require_promise(Pledge::id));
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        auto const& credentials = *protected_data.credentials;
 
         if (new_ruid == (uid_t)-1)
-            new_ruid = credentials->uid();
+            new_ruid = credentials.uid();
         if (new_euid == (uid_t)-1)
-            new_euid = credentials->euid();
+            new_euid = credentials.euid();
         if (new_suid == (uid_t)-1)
-            new_suid = credentials->suid();
+            new_suid = credentials.suid();
 
-        auto ok = [&credentials](UserID id) { return id == credentials->uid() || id == credentials->euid() || id == credentials->suid(); };
-        if ((!ok(new_ruid) || !ok(new_euid) || !ok(new_suid)) && !credentials->is_superuser())
+        auto ok = [&credentials](UserID id) { return id == credentials.uid() || id == credentials.euid() || id == credentials.suid(); };
+        if ((!ok(new_ruid) || !ok(new_euid) || !ok(new_suid)) && !credentials.is_superuser())
             return EPERM;
 
         auto new_credentials = TRY(Credentials::create(
             new_ruid,
-            credentials->gid(),
+            credentials.gid(),
             new_euid,
-            credentials->egid(),
+            credentials.egid(),
             new_suid,
-            credentials->sgid(),
-            credentials->extra_gids(),
-            credentials->sid(),
-            credentials->pgid()));
+            credentials.sgid(),
+            credentials.extra_gids(),
+            credentials.sid(),
+            credentials.pgid()));
 
-        if (credentials->euid() != new_euid)
+        if (credentials.euid() != new_euid)
             protected_data.dumpable = false;
 
         protected_data.credentials = move(new_credentials);
@@ -224,29 +224,29 @@ ErrorOr<FlatPtr> Process::sys$setregid(GroupID new_rgid, GroupID new_egid)
     TRY(require_promise(Pledge::id));
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        auto const& credentials = *protected_data.credentials;
 
         if (new_rgid == (gid_t)-1)
-            new_rgid = credentials->gid();
+            new_rgid = credentials.gid();
         if (new_egid == (gid_t)-1)
-            new_egid = credentials->egid();
+            new_egid = credentials.egid();
 
-        auto ok = [&credentials](GroupID id) { return id == credentials->gid() || id == credentials->egid() || id == credentials->sgid(); };
+        auto ok = [&credentials](GroupID id) { return id == credentials.gid() || id == credentials.egid() || id == credentials.sgid(); };
         if (!ok(new_rgid) || !ok(new_egid))
             return EPERM;
 
         auto new_credentials = TRY(Credentials::create(
-            credentials->uid(),
+            credentials.uid(),
             new_rgid,
-            credentials->euid(),
+            credentials.euid(),
             new_egid,
-            credentials->suid(),
-            credentials->sgid(),
-            credentials->extra_gids(),
-            credentials->sid(),
-            credentials->pgid()));
+            credentials.suid(),
+            credentials.sgid(),
+            credentials.extra_gids(),
+            credentials.sid(),
+            credentials.pgid()));
 
-        if (credentials->egid() != new_egid)
+        if (credentials.egid() != new_egid)
             protected_data.dumpable = false;
 
         protected_data.credentials = move(new_credentials);
@@ -260,31 +260,31 @@ ErrorOr<FlatPtr> Process::sys$setresgid(GroupID new_rgid, GroupID new_egid, Grou
     TRY(require_promise(Pledge::id));
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        auto const& credentials = *protected_data.credentials;
 
         if (new_rgid == (gid_t)-1)
-            new_rgid = credentials->gid();
+            new_rgid = credentials.gid();
         if (new_egid == (gid_t)-1)
-            new_egid = credentials->egid();
+            new_egid = credentials.egid();
         if (new_sgid == (gid_t)-1)
-            new_sgid = credentials->sgid();
+            new_sgid = credentials.sgid();
 
-        auto ok = [&credentials](GroupID id) { return id == credentials->gid() || id == credentials->egid() || id == credentials->sgid(); };
-        if ((!ok(new_rgid) || !ok(new_egid) || !ok(new_sgid)) && !credentials->is_superuser())
+        auto ok = [&credentials](GroupID id) { return id == credentials.gid() || id == credentials.egid() || id == credentials.sgid(); };
+        if ((!ok(new_rgid) || !ok(new_egid) || !ok(new_sgid)) && !credentials.is_superuser())
             return EPERM;
 
         auto new_credentials = TRY(Credentials::create(
-            credentials->uid(),
+            credentials.uid(),
             new_rgid,
-            credentials->euid(),
+            credentials.euid(),
             new_egid,
-            credentials->suid(),
+            credentials.suid(),
             new_sgid,
-            credentials->extra_gids(),
-            credentials->sid(),
-            credentials->pgid()));
+            credentials.extra_gids(),
+            credentials.sid(),
+            credentials.pgid()));
 
-        if (credentials->egid() != new_egid)
+        if (credentials.egid() != new_egid)
             protected_data.dumpable = false;
 
         protected_data.credentials = move(new_credentials);
@@ -301,22 +301,22 @@ ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<GroupID const*> 
         return EINVAL;
 
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+        auto const& credentials = *protected_data.credentials;
 
-        if (!credentials->is_superuser())
+        if (!credentials.is_superuser())
             return EPERM;
 
         if (!count) {
             protected_data.credentials = TRY(Credentials::create(
-                credentials->uid(),
-                credentials->gid(),
-                credentials->euid(),
-                credentials->egid(),
-                credentials->suid(),
-                credentials->sgid(),
+                credentials.uid(),
+                credentials.gid(),
+                credentials.euid(),
+                credentials.egid(),
+                credentials.suid(),
+                credentials.sgid(),
                 {},
-                credentials->sid(),
-                credentials->pgid()));
+                credentials.sid(),
+                credentials.pgid()));
             return 0;
         }
 
@@ -326,7 +326,7 @@ ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<GroupID const*> 
 
         HashTable<GroupID> unique_extra_gids;
         for (auto& extra_gid : new_extra_gids) {
-            if (extra_gid != credentials->gid())
+            if (extra_gid != credentials.gid())
                 TRY(unique_extra_gids.try_set(extra_gid));
         }
 
@@ -336,15 +336,15 @@ ErrorOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<GroupID const*> 
         }
 
         protected_data.credentials = TRY(Credentials::create(
-            credentials->uid(),
-            credentials->gid(),
-            credentials->euid(),
-            credentials->egid(),
-            credentials->suid(),
-            credentials->sgid(),
+            credentials.uid(),
+            credentials.gid(),
+            credentials.euid(),
+            credentials.egid(),
+            credentials.suid(),
+            credentials.sgid(),
             new_extra_gids.span(),
-            credentials->sid(),
-            credentials->pgid()));
+            credentials.sid(),
+            credentials.pgid()));
         return 0;
     });
 }
