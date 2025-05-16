@@ -446,7 +446,10 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process cons
         if (custody.mount_flags() & MS_NODEV)
             return EACCES;
         auto device_type = metadata.is_block_device() ? DeviceNodeType::Block : DeviceNodeType::Character;
-        auto device = Device::acquire_by_type_and_major_minor_numbers(device_type, metadata.major_device, metadata.minor_device);
+        RefPtr<Device> device;
+        Device::run_by_type_and_major_minor_numbers(device_type, metadata.major_device, metadata.minor_device, [&](RefPtr<Device> found_device) {
+            device = move(found_device);
+        });
         if (device == nullptr) {
             return ENODEV;
         }

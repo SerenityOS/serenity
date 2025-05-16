@@ -44,7 +44,7 @@ UNMAP_AFTER_INIT void Device::initialize_base_devices()
     s_all_details->base_devices = move(base_devices);
 }
 
-RefPtr<Device> Device::acquire_by_type_and_major_minor_numbers(DeviceNodeType type, MajorNumber major, MinorNumber minor)
+void Device::run_by_type_and_major_minor_numbers(DeviceNodeType type, MajorNumber major, MinorNumber minor, Function<void(RefPtr<Device>)> const& callback)
 {
     VERIFY(type == DeviceNodeType::Block || type == DeviceNodeType::Character);
 
@@ -56,14 +56,14 @@ RefPtr<Device> Device::acquire_by_type_and_major_minor_numbers(DeviceNodeType ty
     };
 
     if (type == DeviceNodeType::Block) {
-        return s_all_details->block_devices.with([&](auto& map) -> RefPtr<Device> {
-            return find_device_in_map(map);
+        s_all_details->block_devices.with([&](auto& map) {
+            callback(find_device_in_map(map));
+        });
+    } else {
+        s_all_details->char_devices.with([&](auto& map) {
+            callback(find_device_in_map(map));
         });
     }
-
-    return s_all_details->char_devices.with([&](auto& map) -> RefPtr<Device> {
-        return find_device_in_map(map);
-    });
 }
 
 void Device::before_will_be_destroyed_remove_from_device_management()
