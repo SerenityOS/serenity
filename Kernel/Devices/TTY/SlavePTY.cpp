@@ -13,9 +13,9 @@
 
 namespace Kernel {
 
-static Singleton<RecursiveSpinlockProtected<SlavePTY::List, LockRank::None>> s_all_instances;
+static Singleton<SpinlockProtected<SlavePTY::List, LockRank::None>> s_all_instances;
 
-RecursiveSpinlockProtected<SlavePTY::List, LockRank::None>& SlavePTY::all_instances()
+SpinlockProtected<SlavePTY::List, LockRank::None>& SlavePTY::all_instances()
 {
     return s_all_instances;
 }
