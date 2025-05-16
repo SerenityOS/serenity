@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/API/DeviceFileTypes.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Loop/LoopDevice.h>
 #include <Kernel/FileSystem/DevLoopFS/FileSystem.h>
@@ -63,18 +64,23 @@ ErrorOr<NonnullRefPtr<Inode>> DevLoopFS::get_inode(InodeIdentifier inode_id) con
         return *m_root_inode;
 
     unsigned loop_index = inode_index_to_loop_index(inode_id.index());
-    auto device = Device::acquire_by_type_and_major_minor_numbers(DeviceNodeType::Block, 20, loop_index);
-    VERIFY(device);
+    LockRefPtr<LoopDevice> device;
+    Device::run_by_type_and_major_minor_numbers(DeviceNodeType::Block, to_underlying(MajorAllocation::BlockDeviceFamily::Loop), loop_index, [&](RefPtr<Device> found_device) {
+        if (!found_device)
+            return;
+        device = static_cast<LoopDevice&>(*found_device);
+    });
+    if (!device)
+        return ENOENT;
 
-    auto& loop_device = static_cast<LoopDevice&>(*device);
-    auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevLoopFSInode(const_cast<DevLoopFS&>(*this), inode_id.index(), loop_device)));
+    auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevLoopFSInode(const_cast<DevLoopFS&>(*this), inode_id.index(), device)));
     inode->m_metadata.inode = inode_id;
     inode->m_metadata.size = 0;
     inode->m_metadata.uid = 0;
     inode->m_metadata.gid = 0;
     inode->m_metadata.mode = S_IFBLK | S_IRUSR | S_IWUSR;
-    inode->m_metadata.major_device = device->major();
-    inode->m_metadata.minor_device = device->minor();
+    inode->m_metadata.major_device = to_underlying(MajorAllocation::BlockDeviceFamily::Loop);
+    inode->m_metadata.minor_device = loop_index;
     inode->m_metadata.mtime = TimeManagement::boot_time();
     return inode;
 }

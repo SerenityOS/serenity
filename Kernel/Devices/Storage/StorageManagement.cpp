@@ -346,9 +346,10 @@ UNMAP_AFTER_INIT void StorageManagement::determine_block_boot_device()
     // Note: We simply fetch the corresponding BlockDevice with the major and minor parameters.
     // We don't try to accept and resolve a partition number as it will make this code much more
     // complicated. This rule is also explained in the boot_device_addressing(7) manual page.
-    auto device = Device::acquire_by_type_and_major_minor_numbers(DeviceNodeType::Block, parameters_view[0], parameters_view[1]);
-    if (device && device->is_block_device())
-        m_boot_block_device = *static_ptr_cast<BlockDevice>(device);
+    Device::run_by_type_and_major_minor_numbers(DeviceNodeType::Block, parameters_view[0], parameters_view[1], [&](RefPtr<Device> device) {
+        if (device && device->is_block_device())
+            m_boot_block_device = *static_ptr_cast<BlockDevice>(device);
+    });
 }
 
 UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_logical_unit_number()

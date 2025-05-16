@@ -70,7 +70,7 @@ public:
     static BaseDevices* base_devices();
     static void after_inserting_device(Badge<Device>, Device&);
     static void before_device_removal(Badge<Device>, Device&);
-    static RefPtr<Device> acquire_by_type_and_major_minor_numbers(DeviceNodeType, MajorNumber, MinorNumber);
+    static void run_by_type_and_major_minor_numbers(DeviceNodeType type, MajorNumber major, MinorNumber minor, Function<void(RefPtr<Device>)> const& callback);
 
     static void initialize_base_devices();
 
