@@ -553,6 +553,16 @@ void TabWidget::mousemove_event(MouseEvent& event)
     update_bar();
 }
 
+void TabWidget::mousewheel_event(MouseEvent& event)
+{
+    auto delta = event.wheel_delta_y();
+
+    if (delta < 0)
+        activate_previous_tab();
+    else if (delta > 0)
+        activate_next_tab();
+}
+
 void TabWidget::leave_event(Core::Event&)
 {
     if (m_hovered_tab_index.has_value() || m_hovered_close_button_index.has_value()) {
