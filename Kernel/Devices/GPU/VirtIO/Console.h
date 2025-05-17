@@ -29,8 +29,9 @@ private:
     virtual void hide_cursor() override;
     virtual void show_cursor() override;
 
-    Console(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::ModeSetting current_resolution);
-    NonnullLockRefPtr<VirtIODisplayConnector> m_parent_display_connector;
+    Console(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::ModeSetting current_resolution, NonnullRefPtr<Timer> timer);
+    NonnullRefPtr<VirtIODisplayConnector> m_parent_display_connector;
+    NonnullRefPtr<Timer> m_refresh_timer;
     bool m_dirty { false };
 };
 
