@@ -6,6 +6,7 @@
 
 #include <AK/StackUnwinder.h>
 #include <AK/TemporaryChange.h>
+#include <AK/kstdio.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
@@ -109,16 +110,86 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(Bytes buffer)
     g_kernel_symbols_available.set();
 }
 
-NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksyms, PrintToScreen print_to_screen)
+// Special print helper which avoids allocating any memory at runtime.
+// This is needed because kmalloc can be made to dump backtraces, and
+// we don't want to recursively call kmalloc because that would really mess
+// with its locking.
+NEVER_INLINE static void print(PrintToScreen print_to_screen, FlatPtr address, char const* name, Optional<size_t> symbol_offset, bool kernel)
 {
-#define PRINT_LINE(fmtstr, ...)                    \
-    do {                                           \
-        if (print_to_screen == PrintToScreen::No)  \
-            dbgln(fmtstr, __VA_ARGS__);            \
-        else                                       \
-            critical_dmesgln(fmtstr, __VA_ARGS__); \
+#define PRINT_LINE(string, length)                \
+    do {                                          \
+        if (print_to_screen == PrintToScreen::No) \
+            dbgputstr(string, length);            \
+        else                                      \
+            kernelcriticalputstr(string, length); \
     } while (0)
 
+    constexpr size_t maximum_acceptable_name_length = 2047;
+
+    // This is composed of:
+    // 1. The maximum number of characters we're willing to print for the symbol name.
+    // 2. The amount of characters we need to print the FlatPtr in hexadecimal (without accounting for the 0x prefix).
+    // 3. The maximum amount of characters needed to print the offset in hexadecimal (printed without the 0x prefix).
+    // 4. The maximum amount of remaining needed characters.
+    constexpr size_t buffer_length = maximum_acceptable_name_length + sizeof(FlatPtr) * 2 + sizeof(size_t) * 2 + sizeof("Kernel + 0x   +");
+    char buffer[buffer_length];
+
+    auto insert_hex = [](char* buffer, FlatPtr address, size_t at_offset) {
+        memset(buffer + at_offset, '0', sizeof(FlatPtr) * 2);
+        size_t last_char = sizeof(FlatPtr) * 2 + at_offset - 1;
+        for (size_t i = 0; i < sizeof(FlatPtr) * 2; ++i) {
+            size_t current = address & 0xF;
+            if (current < 10)
+                buffer[last_char - i] = current + '0';
+            else
+                buffer[last_char - i] = current - 10 + 'a';
+            address /= 0x10;
+        }
+    };
+
+    if (!name || !kernel) {
+        buffer[0] = '0';
+        buffer[1] = 'x';
+        insert_hex(buffer, address, 2);
+        buffer[sizeof(FlatPtr) * 2 + 2] = '\n';
+        PRINT_LINE(buffer, sizeof(FlatPtr) * 2 + 3);
+        return;
+    }
+
+    constexpr char prelude[] = "Kernel + 0x";
+    constexpr size_t prelude_length = sizeof(prelude) - 1; // Ignore the included null-terminator.
+
+    memcpy(buffer, prelude, prelude_length);
+    insert_hex(buffer, address, prelude_length);
+    if (!symbol_offset.has_value()) {
+        size_t length = prelude_length + sizeof(FlatPtr) * 2 + 1;
+        VERIFY(length <= buffer_length);
+        buffer[length - 1] = '\n';
+        PRINT_LINE(buffer, length);
+        return;
+    }
+
+    size_t current_offset = prelude_length + sizeof(FlatPtr) * 2;
+    buffer[current_offset++] = ' ';
+    buffer[current_offset++] = ' ';
+
+    size_t name_length = min(maximum_acceptable_name_length, strlen(name));
+    memcpy(buffer + current_offset, name, name_length);
+
+    current_offset += name_length;
+
+    buffer[current_offset++] = ' ';
+    buffer[current_offset++] = '+';
+
+    insert_hex(buffer, symbol_offset.release_value(), current_offset);
+    size_t length = current_offset + sizeof(size_t) * 2 + 1;
+    VERIFY(length <= buffer_length);
+    buffer[length - 1] = '\n';
+    PRINT_LINE(buffer, length);
+}
+
+NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksyms, PrintToScreen print_to_screen)
+{
     SmapDisabler disabler;
     if (use_ksyms && !g_kernel_symbols_available.was_set())
         Processor::halt();
@@ -152,7 +223,7 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksy
 
                 recognized_symbols[recognized_symbol_count++] = { stack_frame.return_address, symbolicate_kernel_address(stack_frame.return_address) };
             } else {
-                PRINT_LINE("{:p}", stack_frame.return_address);
+                print(print_to_screen, stack_frame.return_address, nullptr, {}, false);
             }
             return IterationDecision::Continue;
         }));
@@ -166,14 +237,14 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksy
         if (!symbol.address)
             break;
         if (!symbol.symbol) {
-            PRINT_LINE("Kernel + {:p}", symbol.address - g_boot_info.kernel_load_base);
+            print(print_to_screen, symbol.address - g_boot_info.kernel_load_base, nullptr, {}, true);
             continue;
         }
         size_t offset = symbol.address - symbol.symbol->address;
         if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096)
-            PRINT_LINE("Kernel + {:p}", symbol.address - g_boot_info.kernel_load_base);
+            print(print_to_screen, symbol.address - g_boot_info.kernel_load_base, nullptr, {}, true);
         else
-            PRINT_LINE("Kernel + {:p}  {} +{:#x}", symbol.address - g_boot_info.kernel_load_base, symbol.symbol->name, offset);
+            print(print_to_screen, symbol.address - g_boot_info.kernel_load_base, symbol.symbol->name, offset, true);
     }
 }
 

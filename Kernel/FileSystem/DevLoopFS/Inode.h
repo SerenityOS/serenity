@@ -23,7 +23,7 @@ public:
     DevLoopFS const& fs() const { return static_cast<DevLoopFS const&>(Inode::fs()); }
 
 private:
-    DevLoopFSInode(DevLoopFS&, InodeIndex, LoopDevice&);
+    DevLoopFSInode(DevLoopFS&, InodeIndex, LockWeakPtr<LoopDevice>);
 
     // NOTE: This constructor is used for the root inode only.
     DevLoopFSInode(DevLoopFS&);

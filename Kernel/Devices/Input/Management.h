@@ -46,7 +46,7 @@ public:
         Keyboard::CharacterMapData character_map;
     };
 
-    RecursiveSpinlockProtected<KeymapData, LockRank::None>& keymap_data() { return m_keymap_data; }
+    SpinlockProtected<KeymapData, LockRank::None>& keymap_data() { return m_keymap_data; }
 
     u32 get_char_from_character_map(KeyEvent, u8) const;
 
@@ -60,16 +60,16 @@ private:
     size_t generate_minor_device_number_for_mouse();
     size_t generate_minor_device_number_for_keyboard();
 
-    RecursiveSpinlockProtected<KeymapData, LockRank::None> m_keymap_data {};
+    SpinlockProtected<KeymapData, LockRank::None> m_keymap_data {};
     size_t m_mouse_minor_number { 0 };
     size_t m_keyboard_minor_number { 0 };
     KeyboardClient* m_client { nullptr };
 
-    RecursiveSpinlockProtected<IntrusiveList<&SerialIOController::m_list_node>, LockRank::None> m_input_serial_io_controllers;
+    SpinlockProtected<IntrusiveList<&SerialIOController::m_list_node>, LockRank::None> m_input_serial_io_controllers;
     // NOTE: This list is used for standalone devices, like USB HID devices
     // (which are not attached via a SerialIO controller in the sense that
     // there's no specific serial IO controller to coordinate their usage).
-    RecursiveSpinlockProtected<IntrusiveList<&InputDevice::m_list_node>, LockRank::None> m_standalone_input_devices;
+    SpinlockProtected<IntrusiveList<&InputDevice::m_list_node>, LockRank::None> m_standalone_input_devices;
     Spinlock<LockRank::None> m_client_lock;
 };
 

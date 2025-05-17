@@ -282,9 +282,9 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
 
             // Map the new regions using our page directory (they were just allocated and don't have one).
             for (auto* adjacent_region : adjacent_regions) {
-                TRY(adjacent_region->map(space->page_directory()));
+                TRY(adjacent_region->map(space->page_directory(), Memory::ShouldLockVMObject::Yes));
             }
-            TRY(new_region->map(space->page_directory()));
+            TRY(new_region->map(space->page_directory(), Memory::ShouldLockVMObject::Yes));
             return 0;
         }
 
@@ -344,9 +344,9 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
 
                 // Map the new region using our page directory (they were just allocated and don't have one) if any.
                 if (adjacent_regions.size())
-                    TRY(adjacent_regions[0]->map(space->page_directory()));
+                    TRY(adjacent_regions[0]->map(space->page_directory(), Memory::ShouldLockVMObject::Yes));
 
-                TRY(new_region->map(space->page_directory()));
+                TRY(new_region->map(space->page_directory(), Memory::ShouldLockVMObject::Yes));
             }
 
             return 0;

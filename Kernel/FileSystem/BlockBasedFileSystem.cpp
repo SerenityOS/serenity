@@ -126,8 +126,8 @@ ErrorOr<void> BlockBasedFileSystem::initialize_while_locked()
     VERIFY(m_lock.is_locked());
     VERIFY(!is_initialized_while_locked());
     VERIFY(logical_block_size() != 0);
-    auto cached_block_data = TRY(KBuffer::try_create_with_size("BlockBasedFS: Cache blocks"sv, DiskCache::EntryCount * logical_block_size()));
-    auto entries_data = TRY(KBuffer::try_create_with_size("BlockBasedFS: Cache entries"sv, DiskCache::EntryCount * sizeof(CacheEntry)));
+    auto cached_block_data = TRY(KBuffer::try_create_with_size("BlockBasedFS: Cache blocks"sv, DiskCache::EntryCount * logical_block_size(), Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow));
+    auto entries_data = TRY(KBuffer::try_create_with_size("BlockBasedFS: Cache entries"sv, DiskCache::EntryCount * sizeof(CacheEntry), Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow));
     auto disk_cache = TRY(adopt_nonnull_own_or_enomem(new (nothrow) DiskCache(*this, move(cached_block_data), move(entries_data))));
 
     m_cache.with_exclusive([&](auto& cache) {

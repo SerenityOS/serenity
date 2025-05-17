@@ -66,15 +66,18 @@ ErrorOr<void> DeviceControlDevice::ioctl(OpenFileDescription&, unsigned request,
     case DEVCTL_DESTROY_LOOP_DEVICE: {
         unsigned index { 0 };
         TRY(copy_from_user(&index, static_ptr_cast<unsigned*>(arg)));
-        return LoopDevice::all_instances().with([index](auto& list) -> ErrorOr<void> {
-            for (auto& device : list) {
-                if (device.index() == index) {
-                    device.remove({});
-                    return {};
-                }
-            }
-            return Error::from_errno(ENODEV);
+
+        LockRefPtr<LoopDevice> loop_device;
+        Device::run_by_type_and_major_minor_numbers(DeviceNodeType::Block, to_underlying(MajorAllocation::BlockDeviceFamily::Loop), index, [&](RefPtr<Device> device) {
+            if (device)
+                loop_device = static_cast<LoopDevice&>(*device);
         });
+
+        if (!loop_device)
+            return Error::from_errno(ENODEV);
+
+        loop_device->remove({});
+        return {};
     }
     default:
         return Error::from_errno(EINVAL);

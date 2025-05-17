@@ -54,28 +54,28 @@ struct VirtualFileSystemDetails {
     // need to do disk access (i.e. taking Mutexes in other places) and then register that new filesystem
     // in this list, to avoid TOCTOU bugs.
     MutexProtected<FileBackedFileSystem::List> file_backed_file_systems_list {};
-    RecursiveSpinlockProtected<FileSystem::List, LockRank::FileSystem> file_systems_list {};
-    RecursiveSpinlockProtected<VFSRootContext::List, LockRank::FileSystem> root_contexts {};
+    SpinlockProtected<FileSystem::List, LockRank::FileSystem> file_systems_list {};
+    SpinlockProtected<VFSRootContext::List, LockRank::FileSystem> root_contexts {};
 };
 
 static Singleton<VirtualFileSystemDetails> s_details;
 
-RecursiveSpinlockProtected<FileSystem::List, LockRank::FileSystem>& FileSystem::all_file_systems_list()
+SpinlockProtected<FileSystem::List, LockRank::FileSystem>& FileSystem::all_file_systems_list()
 {
     return s_details->file_systems_list;
 }
 
-RecursiveSpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& VFSRootContext::all_root_contexts_list()
+SpinlockProtected<IntrusiveList<&VFSRootContext::m_list_node>, LockRank::FileSystem>& VFSRootContext::all_root_contexts_list()
 {
     return s_details->root_contexts;
 }
 
-RecursiveSpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& VFSRootContext::all_root_contexts_list(Badge<PowerStateSwitchTask>)
+SpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& VFSRootContext::all_root_contexts_list(Badge<PowerStateSwitchTask>)
 {
     return s_details->root_contexts;
 }
 
-RecursiveSpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& VFSRootContext::all_root_contexts_list(Badge<Process>)
+SpinlockProtected<VFSRootContext::List, LockRank::FileSystem>& VFSRootContext::all_root_contexts_list(Badge<Process>)
 {
     return s_details->root_contexts;
 }
@@ -134,7 +134,9 @@ bool VirtualFileSystem::check_matching_absolute_path_hierarchy(Custody const& fi
     while (custody1->parent()) {
         if (!custody2->parent())
             return false;
-        if (custody1->parent().ptr() != custody2->parent().ptr())
+        if (custody1->parent() && !custody2->parent())
+            return false;
+        if (custody1->parent() && (custody1->parent()->name() != custody2->parent()->name()))
             return false;
         custody1 = custody1->parent();
         custody2 = custody2->parent();
@@ -446,7 +448,10 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process cons
         if (custody.mount_flags() & MS_NODEV)
             return EACCES;
         auto device_type = metadata.is_block_device() ? DeviceNodeType::Block : DeviceNodeType::Character;
-        auto device = Device::acquire_by_type_and_major_minor_numbers(device_type, metadata.major_device, metadata.minor_device);
+        RefPtr<Device> device;
+        Device::run_by_type_and_major_minor_numbers(device_type, metadata.major_device, metadata.minor_device, [&](RefPtr<Device> found_device) {
+            device = move(found_device);
+        });
         if (device == nullptr) {
             return ENODEV;
         }

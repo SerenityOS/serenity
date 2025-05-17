@@ -6,6 +6,7 @@
  */
 
 #include <Kernel/API/DeviceFileTypes.h>
+#include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/TTY/SlavePTY.h>
 #include <Kernel/FileSystem/DevPtsFS/FileSystem.h>
@@ -61,18 +62,31 @@ ErrorOr<NonnullRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) cons
         return *m_root_inode;
 
     unsigned pty_index = inode_index_to_pty_index(inode_id.index());
-    auto device = Device::acquire_by_type_and_major_minor_numbers(DeviceNodeType::Character, 201, pty_index);
-    VERIFY(device);
 
-    auto& pts_device = static_cast<SlavePTY&>(*device);
-    auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), pts_device)));
+    UserID pty_uid;
+    GroupID pty_gid;
+    LockRefPtr<SlavePTY> device;
+
+    Device::run_by_type_and_major_minor_numbers(DeviceNodeType::Character, to_underlying(MajorAllocation::CharacterDeviceFamily::SlavePTY), pty_index, [&](RefPtr<Device> found_device) {
+        if (!found_device)
+            return;
+        auto& pty = static_cast<SlavePTY&>(*found_device);
+        pty_uid = pty.uid();
+        pty_gid = pty.gid();
+        device = pty;
+    });
+
+    if (!device)
+        return ENOENT;
+
+    auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), device)));
     inode->m_metadata.inode = inode_id;
     inode->m_metadata.size = 0;
-    inode->m_metadata.uid = pts_device.uid();
-    inode->m_metadata.gid = pts_device.gid();
+    inode->m_metadata.uid = pty_uid;
+    inode->m_metadata.gid = pty_gid;
     inode->m_metadata.mode = 0020600;
-    inode->m_metadata.major_device = device->major();
-    inode->m_metadata.minor_device = device->minor();
+    inode->m_metadata.major_device = to_underlying(MajorAllocation::CharacterDeviceFamily::SlavePTY);
+    inode->m_metadata.minor_device = pty_index;
     inode->m_metadata.mtime = TimeManagement::boot_time();
     return inode;
 }
