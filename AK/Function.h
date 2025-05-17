@@ -48,6 +48,12 @@ namespace AK {
 #    define IGNORE_USE_IN_ESCAPING_LAMBDA
 #endif
 
+#ifdef AK_COMPILER_GCC
+#    pragma GCC diagnostic push
+// FIXME: GCC does not like the union, thinking we access a zero-sized array out of bounds.
+#    pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
 template<typename>
 class Function;
 
@@ -173,7 +179,6 @@ private:
         virtual ~CallableWrapperBase() = default;
         // Note: This is not const to allow storing mutable lambdas.
         virtual constexpr Out call(In...) = 0;
-        virtual constexpr void destroy() = 0;
         virtual void init_and_swap(u8*, size_t) = 0;
     };
 
@@ -193,10 +198,7 @@ private:
             return m_callable(forward<In>(in)...);
         }
 
-        void constexpr destroy() final override
-        {
-            delete this;
-        }
+        constexpr ~CallableWrapper() final override = default;
 
         // NOLINTNEXTLINE(readability-non-const-parameter) False positive; destination is used in a placement new expression
         void init_and_swap(u8* destination, size_t size) final override
@@ -245,7 +247,7 @@ private:
             wrapper->~CallableWrapperBase();
         } else if (m_kind == FunctionKind::Outline) {
             VERIFY(wrapper);
-            wrapper->destroy();
+            delete wrapper;
         }
         m_kind = FunctionKind::NullPointer;
     }
@@ -334,4 +336,8 @@ private:
 #if USING_AK_GLOBALLY
 using AK::Function;
 using AK::IsCallableWithArguments;
+#endif
+
+#ifdef AK_COMPILER_GCC
+#    pragma GCC diagnostic pop
 #endif
