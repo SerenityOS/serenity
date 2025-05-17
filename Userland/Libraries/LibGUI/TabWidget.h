@@ -111,6 +111,7 @@ protected:
     virtual void mousedown_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
+    virtual void mousewheel_event(MouseEvent&) override;
     virtual void leave_event(Core::Event&) override;
     virtual void keydown_event(KeyEvent&) override;
     virtual void context_menu_event(ContextMenuEvent&) override;
