@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2025, TheOnlyASDK <theonlyasdk@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -53,6 +54,12 @@ void AbstractZoomPanWidget::scale_centered(float new_scale, Gfx::IntPoint center
 
 void AbstractZoomPanWidget::start_panning(Gfx::IntPoint position)
 {
+    // FIXME: Keyboard events are repeated like in a text input field
+    // thus needing for the following check as start_panning might get
+    // called more than one time.
+    if (m_is_panning)
+        return;
+
     m_saved_cursor = override_cursor();
     set_override_cursor(Gfx::StandardCursor::Drag);
     m_pan_start = m_origin;
