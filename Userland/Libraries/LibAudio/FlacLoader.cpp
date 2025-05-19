@@ -57,17 +57,17 @@ bool FlacLoaderPlugin::sniff(SeekableStream& stream)
     return !maybe_flac.is_error() && maybe_flac.value() == 0x664C6143; // "flaC"
 }
 
-// 11.5 STREAM
+// RFC 9639, Section 3: Stream (describes the overall structure)
 MaybeLoaderError FlacLoaderPlugin::parse_header()
 {
     BigEndianInputBitStream bit_input { MaybeOwned<Stream>(*m_stream) };
 
     // A mixture of VERIFY and the non-crashing TRY().
-#define FLAC_VERIFY(check, category, msg)                                                                           \
-    do {                                                                                                            \
-        if (!(check)) {                                                                                             \
+#define FLAC_VERIFY(check, category, msg)                                                                                \
+    do {                                                                                                                 \
+        if (!(check)) {                                                                                                  \
             return LoaderError { category, TRY(m_stream->tell()), TRY(String::formatted("FLAC header: {}", msg)) }; \
-        }                                                                                                           \
+        }                                                                                                                \
     } while (0)
 
     // Magic number
@@ -81,7 +81,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     FixedMemoryStream streaminfo_data_memory { streaminfo.data.bytes() };
     BigEndianInputBitStream streaminfo_data { MaybeOwned<Stream>(streaminfo_data_memory) };
 
-    // 11.10 METADATA_BLOCK_STREAMINFO
+    // RFC 9639, Section 4.1: STREAMINFO Block
     m_min_block_size = TRY(streaminfo_data.read_bits<u16>(16));
     FLAC_VERIFY(m_min_block_size >= 16, LoaderError::Category::Format, "Minimum block size must be 16");
     m_max_block_size = TRY(streaminfo_data.read_bits<u16>(16));
@@ -108,7 +108,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
 
     m_total_samples = TRY(streaminfo_data.read_bits<u64>(36));
     if (m_total_samples == 0) {
-        // "A value of zero here means the number of total samples is unknown."
+        // "A value of zero here means the number of total samples is unknown." (RFC 9639, Section 4.1)
         dbgln("FLAC Warning: File has unknown amount of samples, the loader will not stop before EOF");
         m_total_samples = NumericLimits<decltype(m_total_samples)>::max();
     }
@@ -152,7 +152,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     return {};
 }
 
-// 11.19. METADATA_BLOCK_PICTURE
+// RFC 9639, Section 4.6: PICTURE Block
 MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
 {
     FixedMemoryStream memory_stream { block.data.bytes() };
@@ -167,7 +167,7 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
     if (offset_before_seeking + mime_string_length >= block.data.size())
         return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "Picture MIME type exceeds available data"_fly_string };
 
-    // "The MIME type string, in printable ASCII characters 0x20-0x7E."
+    // "The MIME type string, in printable ASCII characters 0x20-0x7E." (RFC 9639, Section 4.6)
     picture.mime_string = TRY(String::from_stream(memory_stream, mime_string_length));
     for (auto code_point : picture.mime_string.code_points()) {
         if (code_point < 0x20 || code_point > 0x7E)
@@ -200,7 +200,7 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
     return {};
 }
 
-// 11.15. METADATA_BLOCK_VORBIS_COMMENT
+// RFC 9639, Section 4.4: VORBIS_COMMENT Block
 void FlacLoaderPlugin::load_vorbis_comment(FlacRawMetadataBlock& block)
 {
     auto metadata_or_error = Audio::load_vorbis_comment(block.data);
@@ -211,13 +211,13 @@ void FlacLoaderPlugin::load_vorbis_comment(FlacRawMetadataBlock& block)
     m_metadata = metadata_or_error.release_value();
 }
 
-// 11.13. METADATA_BLOCK_SEEKTABLE
+// RFC 9639, Section 4.3: SEEKTABLE Block
 MaybeLoaderError FlacLoaderPlugin::load_seektable(FlacRawMetadataBlock& block)
 {
     FixedMemoryStream memory_stream { block.data.bytes() };
     BigEndianInputBitStream seektable_bytes { MaybeOwned<Stream>(memory_stream) };
     for (size_t i = 0; i < block.length / 18; ++i) {
-        // 11.14. SEEKPOINT
+        // RFC 9639, Section 4.3.1: Seek Point
         u64 sample_index = TRY(seektable_bytes.read_bits<u64>(64));
         u64 byte_offset = TRY(seektable_bytes.read_bits<u64>(64));
         // The sample count of a seek point is not relevant to us.
@@ -236,10 +236,10 @@ MaybeLoaderError FlacLoaderPlugin::load_seektable(FlacRawMetadataBlock& block)
     return {};
 }
 
-// 11.6 METADATA_BLOCK
+// RFC 9639, Section 4: Metadata Blocks
 ErrorOr<FlacRawMetadataBlock, LoaderError> FlacLoaderPlugin::next_meta_block(BigEndianInputBitStream& bit_input)
 {
-    // 11.7 METADATA_BLOCK_HEADER
+    // METADATA_BLOCK_HEADER (as described in RFC 9639, Section 4)
     bool is_last_block = TRY(bit_input.read_bit());
     // The block type enum constants agree with the specification
     FlacMetadataBlockType type = (FlacMetadataBlockType)TRY(bit_input.read_bits<u8>(7));
@@ -364,7 +364,7 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> FlacLoaderPlugin::load_chunks(s
     return frames;
 }
 
-// 11.21. FRAME
+// RFC 9639, Section 5: Frame
 LoaderSamples FlacLoaderPlugin::next_frame()
 {
 #define FLAC_VERIFY(check, category, msg)                                                                                                    \
@@ -388,12 +388,12 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     auto header_checksum_stream = TRY(try_make<Crypto::Checksum::ChecksummingStream<FlacFrameHeaderCRC>>(MaybeOwned<Stream>(*frame_checksum_stream)));
     BigEndianInputBitStream bit_stream { MaybeOwned<Stream> { *header_checksum_stream } };
 
-    // 11.22. FRAME_HEADER
+    // RFC 9639, Section 5.1: FRAME_HEADER
     u16 sync_code = TRY(bit_stream.read_bits<u16>(14));
     FLAC_VERIFY(sync_code == 0b11111111111110, LoaderError::Category::Format, "Sync code");
     bool reserved_bit = TRY(bit_stream.read_bit());
     FLAC_VERIFY(reserved_bit == 0, LoaderError::Category::Format, "Reserved frame header bit");
-    // 11.22.2. BLOCKING STRATEGY
+    // RFC 9639, Section 5.1.1: Blocking Strategy
     [[maybe_unused]] bool blocking_strategy = TRY(bit_stream.read_bit());
 
     u32 sample_count = TRY(convert_sample_count_code(TRY(bit_stream.read_bits<u8>(4))));
@@ -409,18 +409,18 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     reserved_bit = TRY(bit_stream.read_bit());
     FLAC_VERIFY(reserved_bit == 0, LoaderError::Category::Format, "Reserved frame header end bit");
 
-    // 11.22.8. CODED NUMBER
+    // RFC 9639, Section 5.1.7: Coded Number (UTF-8)
     m_current_sample_or_frame = TRY(read_utf8_char(bit_stream));
 
     // Conditional header variables
-    // 11.22.9. BLOCK SIZE INT
+    // RFC 9639, Section 5.1.2: Block Size (variable block size codes)
     if (sample_count == FLAC_BLOCKSIZE_AT_END_OF_HEADER_8) {
         sample_count = TRY(bit_stream.read_bits<u32>(8)) + 1;
     } else if (sample_count == FLAC_BLOCKSIZE_AT_END_OF_HEADER_16) {
         sample_count = TRY(bit_stream.read_bits<u32>(16)) + 1;
     }
 
-    // 11.22.10. SAMPLE RATE INT
+    // RFC 9639, Section 5.1.3: Sample Rate (variable sample rate codes)
     if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_8) {
         frame_sample_rate = TRY(bit_stream.read_bits<u32>(8)) * 1000;
     } else if (frame_sample_rate == FLAC_SAMPLERATE_AT_END_OF_HEADER_16) {
@@ -431,7 +431,7 @@ LoaderSamples FlacLoaderPlugin::next_frame()
 
     // It does not matter whether we extract the checksum from the digest here, or extract the digest 0x00 after processing the checksum.
     auto const calculated_header_checksum = header_checksum_stream->digest();
-    // 11.22.11. FRAME CRC
+    // RFC 9639, Section 5.1.8: CRC-8 (Frame Header Checksum)
     u8 specified_header_checksum = TRY(bit_stream.read_bits<u8>(8));
     VERIFY(bit_stream.is_aligned_to_byte_boundary());
     if (specified_header_checksum != calculated_header_checksum)
@@ -465,10 +465,10 @@ LoaderSamples FlacLoaderPlugin::next_frame()
             VERIFY(subframe_samples.size() == m_current_frame->sample_count);
     }
 
-    // 11.2. Overview ("The audio data is composed of...")
+    // Align to byte boundary before FRAME_FOOTER (RFC 9639, Section 5 "Frame")
     bit_stream.align_to_byte_boundary();
 
-    // 11.23. FRAME_FOOTER
+    // RFC 9639, Section 5.3: FRAME_FOOTER (CRC-16)
     auto const calculated_frame_checksum = frame_checksum_stream->digest();
     auto const specified_frame_checksum = TRY(bit_stream.read_bits<u16>(16));
     if (calculated_frame_checksum != specified_frame_checksum)
@@ -532,7 +532,7 @@ LoaderSamples FlacLoaderPlugin::next_frame()
 #undef FLAC_VERIFY
 }
 
-// 11.22.3. INTERCHANNEL SAMPLE BLOCK SIZE
+// RFC 9639, Section 5.1.2: Block Size (interpreting sample_count_code from frame header)
 ErrorOr<u32, LoaderError> FlacLoaderPlugin::convert_sample_count_code(u8 sample_count_code)
 {
     // single codes
@@ -552,7 +552,7 @@ ErrorOr<u32, LoaderError> FlacLoaderPlugin::convert_sample_count_code(u8 sample_
     return 256 * AK::exp2(sample_count_code - 8);
 }
 
-// 11.22.4. SAMPLE RATE
+// RFC 9639, Section 5.1.3: Sample Rate (interpreting sample_rate_code from frame header)
 ErrorOr<u32, LoaderError> FlacLoaderPlugin::convert_sample_rate_code(u8 sample_rate_code)
 {
     switch (sample_rate_code) {
@@ -591,7 +591,7 @@ ErrorOr<u32, LoaderError> FlacLoaderPlugin::convert_sample_rate_code(u8 sample_r
     }
 }
 
-// 11.22.6. SAMPLE SIZE
+// RFC 9639, Section 5.1.5: Sample Size (bits per sample) (interpreting bit_depth_code from frame header)
 ErrorOr<u8, LoaderError> FlacLoaderPlugin::convert_bit_depth_code(u8 bit_depth_code)
 {
     switch (bit_depth_code) {
@@ -616,7 +616,7 @@ ErrorOr<u8, LoaderError> FlacLoaderPlugin::convert_bit_depth_code(u8 bit_depth_c
     }
 }
 
-// 11.22.5. CHANNEL ASSIGNMENT
+// RFC 9639, Section 5.1.4: Channel Assignment (related to channel_type from frame header)
 u8 frame_channel_type_to_channel_count(FlacFrameChannelType channel_type)
 {
     if (channel_type <= FlacFrameChannelType::Surround7p1)
@@ -624,7 +624,7 @@ u8 frame_channel_type_to_channel_count(FlacFrameChannelType channel_type)
     return 2;
 }
 
-// 11.25. SUBFRAME_HEADER
+// RFC 9639, Section 5.2.1: SUBFRAME_HEADER
 ErrorOr<FlacSubframeHeader, LoaderError> FlacLoaderPlugin::next_subframe_header(BigEndianInputBitStream& bit_stream, u8 channel_index)
 {
     u8 bits_per_sample = m_current_frame->bit_depth;
@@ -651,7 +651,7 @@ ErrorOr<FlacSubframeHeader, LoaderError> FlacLoaderPlugin::next_subframe_header(
     if (TRY(bit_stream.read_bit()) != 0)
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Zero bit padding"_fly_string };
 
-    // 11.25.1. SUBFRAME TYPE
+    // RFC 9639, Section 5.2.1.1: Subframe Type
     u8 subframe_code = TRY(bit_stream.read_bits<u8>(6));
     if ((subframe_code >= 0b000010 && subframe_code <= 0b000111) || (subframe_code > 0b001100 && subframe_code < 0b100000))
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Subframe type"_fly_string };
@@ -670,7 +670,7 @@ ErrorOr<FlacSubframeHeader, LoaderError> FlacLoaderPlugin::next_subframe_header(
         subframe_type = (FlacSubframeType)subframe_code;
     }
 
-    // 11.25.2. WASTED BITS PER SAMPLE FLAG
+    // RFC 9639, Section 5.2.1.2: Wasted Bits
     bool has_wasted_bits = TRY(bit_stream.read_bit());
     u8 k = 0;
     if (has_wasted_bits) {
@@ -695,7 +695,7 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::parse_subframe(Vector<i64>& samples
 
     switch (subframe_header.type) {
     case FlacSubframeType::Constant: {
-        // 11.26. SUBFRAME_CONSTANT
+        // RFC 9639, Section 5.2.2: SUBFRAME_CONSTANT
         u64 constant_value = TRY(bit_input.read_bits<u64>(subframe_header.bits_per_sample - subframe_header.wasted_bits_per_sample));
         dbgln_if(AFLACLOADER_DEBUG, "  Constant subframe: {}", constant_value);
 
@@ -739,7 +739,7 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::parse_subframe(Vector<i64>& samples
     return {};
 }
 
-// 11.29. SUBFRAME_VERBATIM
+// RFC 9639, Section 5.2.3: SUBFRAME_VERBATIM
 // Decode a subframe that isn't actually encoded, usually seen in random data
 ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_verbatim(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
@@ -762,7 +762,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_verbatim(FlacSubframe
     return decoded;
 }
 
-// 11.28. SUBFRAME_LPC
+// RFC 9639, Section 5.2.5: SUBFRAME_LPC
 // Decode a subframe encoded with a custom linear predictor coding, i.e. the subframe provides the polynomial order and coefficients
 ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
@@ -817,7 +817,8 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& deco
             // Even though FLAC operates at a maximum bit depth of 32 bits, modern encoders use super-large coefficients for maximum compression.
             // These will easily overflow 32 bits and cause strange white noise that abruptly stops intermittently (at the end of a frame).
             // The simple fix of course is to do intermediate computations in 64 bits, but we additionally use saturating arithmetic.
-            // These considerations are not in the original FLAC spec, but have been added to the IETF standard: https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03#appendix-A.3
+            // These considerations for 64-bit intermediate computations in LPC are detailed in RFC 9639, Appendix B.3 "LPC Computation".
+            // See: https://www.rfc-editor.org/rfc/rfc9639.html#appendix-B.3
             sample.saturating_add(Checked<i64>::saturating_mul(static_cast<i64>(coefficients[t]), static_cast<i64>(decoded[i - t - 1])));
         }
         decoded[i] += lpc_shift >= 0 ? (sample.value() >> lpc_shift) : (sample.value() << -lpc_shift);
@@ -826,7 +827,7 @@ ErrorOr<void, LoaderError> FlacLoaderPlugin::decode_custom_lpc(Vector<i64>& deco
     return {};
 }
 
-// 11.27. SUBFRAME_FIXED
+// RFC 9639, Section 5.2.4: SUBFRAME_FIXED
 // Decode a subframe encoded with one of the fixed linear predictor codings
 ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
@@ -870,8 +871,8 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
 
     // The coefficients for orders 0-3 originate from the SHORTEN codec:
     // http://mi.eng.cam.ac.uk/reports/svr-ftp/auto-pdf/robinson_tr156.pdf page 4
-    // The coefficients for order 4 are undocumented in the original FLAC specification(s), but can now be found in
-    // https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03#section-10.2.5
+    // The coefficients for order 4 are documented in RFC 9639, Section 5.2.4 "SUBFRAME_FIXED" (Table 4).
+    // See: https://www.rfc-editor.org/rfc/rfc9639.html#section-5.2.4
     // FIXME: Share this code with predict_fixed_lpc().
     switch (subframe.order) {
     case 0:
@@ -905,11 +906,11 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
     return decoded;
 }
 
-// 11.30. RESIDUAL
+// RFC 9639, Section 5.2.6: Residual Coding
 // Decode the residual, the "error" between the function approximation and the actual audio data
 MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
-    // 11.30.1. RESIDUAL_CODING_METHOD
+    // RFC 9639, Section 5.2.6.1: Residual Coding Method
     auto residual_mode = static_cast<FlacResidualMode>(TRY(bit_input.read_bits<u8>(2)));
     u8 partition_order = TRY(bit_input.read_bits<u8>(4));
     size_t partitions = 1 << partition_order;
@@ -924,7 +925,7 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
         return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "Block size is not evenly divisible by number of partitions"_fly_string };
 
     if (residual_mode == FlacResidualMode::Rice4Bit) {
-        // 11.30.2. RESIDUAL_CODING_METHOD_PARTITIONED_EXP_GOLOMB
+        // Corresponds to residual_coding_method '00' (4-bit Rice parameter) in RFC 9639, Section 5.2.6.1
         // decode a single Rice partition with four bits for the order k
         for (size_t i = 0; i < partitions; ++i) {
             // FIXME: Write into the decode buffer directly.
@@ -932,7 +933,7 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
             decoded.extend(move(rice_partition));
         }
     } else if (residual_mode == FlacResidualMode::Rice5Bit) {
-        // 11.30.3. RESIDUAL_CODING_METHOD_PARTITIONED_EXP_GOLOMB2
+        // Corresponds to residual_coding_method '01' (5-bit Rice parameter) in RFC 9639, Section 5.2.6.1
         // five bits equivalent
         for (size_t i = 0; i < partitions; ++i) {
             // FIXME: Write into the decode buffer directly.
@@ -945,11 +946,11 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
     return {};
 }
 
-// 11.30.2.1. EXP_GOLOMB_PARTITION and 11.30.3.1. EXP_GOLOMB2_PARTITION
+// Decoding a Rice partition as per RFC 9639, Section 5.2.6.1 "Residual Coding Method"
 // Decode a single Rice partition as part of the residual, every partition can have its own Rice parameter k
 ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
-    // 11.30.2.2. EXP GOLOMB PARTITION ENCODING PARAMETER and 11.30.3.2. EXP-GOLOMB2 PARTITION ENCODING PARAMETER
+    // Read Rice parameter 'k' (coding_parameter) as per RFC 9639, Section 5.2.6.1
     u8 k = TRY(bit_input.read_bits<u8>(partition_type));
 
     u32 residual_sample_count;
@@ -983,7 +984,8 @@ ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_rice_pa
     return rice_partition;
 }
 
-// Decode a single number encoded with Rice/Exponential-Golomb encoding (the unsigned variant)
+// Decode a single Rice-coded value (unsigned Exponential-Golomb then mapped to signed).
+// This method is used in residual coding as per RFC 9639, Section 5.2.6.1.
 ALWAYS_INLINE ErrorOr<i32> decode_unsigned_exp_golomb(u8 k, BigEndianInputBitStream& bit_input)
 {
     u8 q = 0;

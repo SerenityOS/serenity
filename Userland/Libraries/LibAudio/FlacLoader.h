@@ -29,10 +29,12 @@ ALWAYS_INLINE ErrorOr<i32> decode_unsigned_exp_golomb(u8 order, BigEndianInputBi
 // Loader for the Free Lossless Audio Codec (FLAC)
 // This loader supports all audio features of FLAC, although audio from more than two channels is discarded.
 // The loader currently supports the STREAMINFO, PADDING, and SEEKTABLE metadata blocks.
-// See: https://xiph.org/flac/documentation_format_overview.html
-//      https://xiph.org/flac/format.html (identical to IETF draft version 2)
-//      https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-02 (all section numbers refer to this specification)
-//      https://datatracker.ietf.org/doc/html/draft-ietf-cellar-flac-03 (newer IETF draft that uses incompatible numberings and names)
+// See RFC 9639 for the FLAC specification: https://www.rfc-editor.org/rfc/rfc9639.html
+//
+// Note: This loader was originally written referencing older draft specifications
+// (such as draft-ietf-cellar-flac-02) and xiph.org documentation.
+// All spec-related comments and section number references should now be updated
+// to align with RFC 9639.
 class FlacLoaderPlugin : public LoaderPlugin {
 public:
     explicit FlacLoaderPlugin(NonnullOwnPtr<SeekableStream> stream);
