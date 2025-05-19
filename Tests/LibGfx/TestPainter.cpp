@@ -6,6 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
+#include <LibGfx/EdgeFlagPathRasterizer.h>
+#include <LibGfx/PaintStyle.h>
 #include <LibGfx/Painter.h>
 
 TEST_CASE(draw_scaled_bitmap_with_transform)
@@ -60,4 +62,63 @@ TEST_CASE(draw_triangle_wave)
     Gfx::Painter painter(*bitmap);
     for (int y = -3; y < bitmap->height() + 3; ++y)
         painter.draw_triangle_wave({ 0, y }, { bitmap->width(), y }, Gfx::Color::Red, 3, 2);
+}
+
+// FIXME: Stolen from `Userland/Demos/Tubes/Tubes.cpp`; we really need something like this in `AK/Random.h`.
+static double random_double()
+{
+    return get_random<u32>() / static_cast<double>(NumericLimits<u32>::max());
+}
+
+TEST_CASE(aliased_fill)
+{
+    // Picks a random point in the bitmap, fills a triangle from each edge of the bitmap to that point,
+    // and checks that the entire bitmap is filled.
+    using NoAARasterizer = Gfx::EdgeFlagPathRasterizer<Gfx::Sample8xNoAA>;
+
+    int const w = 200;
+    int const h = 100;
+
+    auto bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { w, h }));
+    Gfx::Painter painter(*bitmap);
+    auto paint_style = TRY_OR_FAIL(Gfx::SolidColorPaintStyle::create(Gfx::Color::Black));
+
+    int failed_test_count = 0;
+    for (int i = 0; i < 1000; ++i) {
+        bitmap->fill(Gfx::Color::White);
+
+        float x = random_double() * w;
+        float y = random_double() * h;
+
+        Array<Array<Gfx::FloatPoint, 3>, 4> triangles = {
+            Array<Gfx::FloatPoint, 3> { Gfx::FloatPoint { 0, 0 }, { w, 0 }, { x, y } },
+            Array<Gfx::FloatPoint, 3> { Gfx::FloatPoint { 0, h }, { w, h }, { x, y } },
+            Array<Gfx::FloatPoint, 3> { Gfx::FloatPoint { 0, 0 }, { 0, h }, { x, y } },
+            Array<Gfx::FloatPoint, 3> { Gfx::FloatPoint { w, 0 }, { w, h }, { x, y } },
+        };
+
+        for (auto const& triangle : triangles) {
+            Gfx::Path triangle_path;
+            triangle_path.move_to(triangle[0]);
+            triangle_path.line_to(triangle[1]);
+            triangle_path.line_to(triangle[2]);
+            triangle_path.close();
+
+            NoAARasterizer rasterizer(enclosing_int_rect(triangle_path.bounding_box()).size());
+            rasterizer.fill(painter, triangle_path, paint_style, 1.0f, Gfx::WindingRule::Nonzero);
+        }
+
+        int filled_pixels_count = 0;
+        for (int y = 0; y < bitmap->height(); ++y) {
+            for (int x = 0; x < bitmap->width(); ++x) {
+                if (bitmap->get_pixel(x, y) == Gfx::Color { Gfx::Color::Black })
+                    filled_pixels_count++;
+            }
+        }
+
+        if (filled_pixels_count != w * h)
+            failed_test_count++;
+    }
+
+    EXPECT_EQ(failed_test_count, 0);
 }
