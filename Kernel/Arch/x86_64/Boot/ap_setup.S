@@ -95,17 +95,9 @@ apic_ap_start32:
     ljmpl $(ap_cpu_gdt64code - ap_cpu_gdt64), $(apic_ap_start64 - apic_ap_start + 0x8000)
 .code64
 apic_ap_start64:
-    movq (ap_cpu_kernel_map_base - apic_ap_start)(%rbp), %rbp
-    addq $0x8000, %rbp
-
     /* find our allocated stack based on the generated id */
     movq (ap_cpu_init_stacks - apic_ap_start)(%rbp, %rsi, 8), %rsp
 
-    /* Now jump from our identity mapped area into high memory */
-    movq $(1f - apic_ap_start), %rax
-    addq %rbp, %rax
-    jmp *%rax
-1:
     mov $0, %ax
     mov %ax, %ss
     mov %ax, %ds
