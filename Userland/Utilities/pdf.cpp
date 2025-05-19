@@ -16,34 +16,42 @@
 #include <LibPDF/Document.h>
 #include <LibPDF/Renderer.h>
 
-static PDF::PDFErrorOr<void> print_document_info_dict(PDF::Document& document)
+static PDF::PDFErrorOr<void> print_document_info(PDF::Document& document, bool json)
 {
+    JsonObject json_output;
+    auto emit = [&](StringView long_text, StringView json_key, StringView value) {
+        if (!json) {
+            outln("{}: {}", long_text, value);
+        } else {
+            json_output.set(json_key, value);
+        }
+    };
+
+    emit("PDF Version"sv, "version"sv, TRY(String::formatted("{}.{}", document.version().major, document.version().minor)));
+    emit("Number of pages"sv, "page_count"sv, String::number(document.get_page_count()));
+
     if (auto info_dict = TRY(document.info_dict()); info_dict.has_value()) {
         if (auto title = TRY(info_dict->title()); title.has_value())
-            outln("Title: {}", title);
+            emit("Title"sv, "title"sv, title.value());
         if (auto author = TRY(info_dict->author()); author.has_value())
-            outln("Author: {}", author);
+            emit("Author"sv, "author"sv, author.value());
         if (auto subject = TRY(info_dict->subject()); subject.has_value())
-            outln("Subject: {}", subject);
+            emit("Subject"sv, "subject"sv, subject.value());
         if (auto keywords = TRY(info_dict->keywords()); keywords.has_value())
-            outln("Keywords: {}", keywords);
+            emit("Keywords"sv, "keywords"sv, keywords.value());
         if (auto creator = TRY(info_dict->creator()); creator.has_value())
-            outln("Creator: {}", creator);
+            emit("Creator"sv, "creator"sv, creator.value());
         if (auto producer = TRY(info_dict->producer()); producer.has_value())
-            outln("Producer: {}", producer);
+            emit("Producer"sv, "producer"sv, producer.value());
         if (auto creation_date = TRY(info_dict->creation_date()); creation_date.has_value())
-            outln("Creation date: {}", creation_date);
+            emit("Creation date"sv, "creation_date"sv, creation_date.value());
         if (auto modification_date = TRY(info_dict->modification_date()); modification_date.has_value())
-            outln("Modification date: {}", modification_date);
+            emit("Modification date"sv, "modification_date"sv, modification_date.value());
     }
-    return {};
-}
 
-static PDF::PDFErrorOr<void> print_document_info(PDF::Document& document)
-{
-    outln("PDF Version: {}.{}", document.version().major, document.version().minor);
-    outln("Number of pages: {}", document.get_page_count());
-    TRY(print_document_info_dict(document));
+    if (json)
+        outln("{}", json_output.to_byte_string());
+
     return {};
 }
 
@@ -267,7 +275,7 @@ static PDF::PDFErrorOr<int> pdf_main(Main::Arguments arguments)
         return 0;
     }
 
-    TRY(print_document_info(*document));
+    TRY(print_document_info(*document, json));
 
     return 0;
 }
