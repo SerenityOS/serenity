@@ -51,7 +51,7 @@ private:
     NonnullRefPtr<Custody> const m_backing_custody;
     unsigned const m_index { 0 };
 
-    mutable IntrusiveListNode<LoopDevice, NonnullRefPtr<LoopDevice>> m_list_node;
+    mutable IntrusiveListNode<LoopDevice> m_list_node;
 
 public:
     using List = IntrusiveList<&LoopDevice::m_list_node>;
