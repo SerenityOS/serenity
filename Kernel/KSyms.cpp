@@ -13,6 +13,7 @@
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/kstdio.h>
 
 namespace Kernel {
 
@@ -111,12 +112,12 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(Bytes buffer)
 
 NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksyms, PrintToScreen print_to_screen)
 {
-#define PRINT_LINE(fmtstr, ...)                    \
-    do {                                           \
-        if (print_to_screen == PrintToScreen::No)  \
-            dbgln(fmtstr, __VA_ARGS__);            \
-        else                                       \
-            critical_dmesgln(fmtstr, __VA_ARGS__); \
+#define PRINT_LINE(string, length)                \
+    do {                                          \
+        if (print_to_screen == PrintToScreen::No) \
+            dbgputstr(string, length);            \
+        else                                      \
+            kernelcriticalputstr(string, length); \
     } while (0)
 
     SmapDisabler disabler;
@@ -152,7 +153,9 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksy
 
                 recognized_symbols[recognized_symbol_count++] = { stack_frame.return_address, symbolicate_kernel_address(stack_frame.return_address) };
             } else {
-                PRINT_LINE("{:p}", stack_frame.return_address);
+                auto message_buffer = MUST(FixedStringBuffer<19>::formatted("{:p}"sv, stack_frame.return_address));
+                auto message = message_buffer.representable_view();
+                PRINT_LINE(message.characters_without_null_termination(), message.length());
             }
             return IterationDecision::Continue;
         }));
@@ -166,14 +169,25 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksy
         if (!symbol.address)
             break;
         if (!symbol.symbol) {
-            PRINT_LINE("Kernel + {:p}", symbol.address - g_boot_info.kernel_load_base);
+            auto message_buffer = MUST(FixedStringBuffer<28>::formatted("Kernel + {:p}\n"sv, symbol.address - g_boot_info.kernel_load_base));
+            auto message = message_buffer.representable_view();
+            PRINT_LINE(message.characters_without_null_termination(), message.length());
             continue;
         }
         size_t offset = symbol.address - symbol.symbol->address;
-        if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096)
-            PRINT_LINE("Kernel + {:p}", symbol.address - g_boot_info.kernel_load_base);
-        else
-            PRINT_LINE("Kernel + {:p}  {} +{:#x}", symbol.address - g_boot_info.kernel_load_base, symbol.symbol->name, offset);
+        if (symbol.symbol->address == g_highest_kernel_symbol_address && offset > 4096) {
+            auto message_buffer = MUST(FixedStringBuffer<28>::formatted("Kernel + {:p}\n"sv, symbol.address - g_boot_info.kernel_load_base));
+            auto message = message_buffer.representable_view();
+            PRINT_LINE(message.characters_without_null_termination(), message.length());
+        } else {
+            constexpr auto buffer_size = 255;
+            constexpr auto maximum_printable_name_length = buffer_size - (sizeof("Kernel + 0x   +\n") - 1 + sizeof(FlatPtr) * 4);
+            size_t symbol_name_length = strlen(symbol.symbol->name);
+            auto symbol_name = StringView(symbol.symbol->name, min(symbol_name_length, maximum_printable_name_length));
+            auto message_buffer = MUST(FixedStringBuffer<buffer_size>::formatted("Kernel + {:p}  {} +{:#x}\n"sv, symbol.address - g_boot_info.kernel_load_base, symbol_name, offset));
+            auto message = message_buffer.representable_view();
+            PRINT_LINE(message.characters_without_null_termination(), message.length());
+        }
     }
 }
 
