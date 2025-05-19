@@ -41,8 +41,6 @@ struct Multiboot1BootInfo {
 
     PhysicalAddress start_of_prekernel_image { 0 };
     PhysicalAddress end_of_prekernel_image { 0 };
-
-    PhysicalAddress boot_pd0 { 0 };
 };
 
 struct PreInitBootInfo {
