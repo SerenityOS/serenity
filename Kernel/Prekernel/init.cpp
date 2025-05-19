@@ -228,7 +228,7 @@ extern "C" [[noreturn]] void init()
     info.boot_pml4t = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pml4t) };
 #endif
     info.boot_pdpt = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pdpt) };
-    info.boot_method_specific.multiboot1.boot_pd0 = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pd0) };
+    info.arch_specific.boot_pd0 = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pd0) };
     info.boot_pd_kernel = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pd_kernel) };
     info.boot_pd_kernel_pt1023 = bit_cast<Memory::PageTableEntry*>(adjust_by_mapping_base(boot_pd_kernel_pt1023));
 

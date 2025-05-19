@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Memory/PhysicalAddress.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_X86()
@@ -14,6 +15,7 @@ VALIDATE_IS_X86()
 namespace Kernel {
 
 struct ArchSpecificBootInfo {
+    PhysicalAddress boot_pd0 { 0 };
 };
 
 }

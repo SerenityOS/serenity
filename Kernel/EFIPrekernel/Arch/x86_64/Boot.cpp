@@ -125,9 +125,15 @@ void arch_prepare_boot(void* root_page_table, BootInfo& boot_info)
     if (maybe_kernel_pdpt.is_error())
         PANIC("Could not find the kernel page directory pointer table: {}", maybe_kernel_pdpt.release_error());
 
+    // setup_ap_boot_environment() needs a page directory for address 0x8000.
+    auto maybe_page_directory_0 = get_or_insert_page_table(root_page_table, 0, 1);
+    if (maybe_page_directory_0.is_error())
+        PANIC("Could not insert page directory 0: {}", maybe_page_directory_0.release_error());
+
     boot_info.boot_pml4t = PhysicalAddress { bit_cast<PhysicalPtr>(root_page_table) };
     boot_info.boot_pdpt = PhysicalAddress { bit_cast<PhysicalPtr>(maybe_kernel_pdpt.value()) };
     boot_info.boot_pd_kernel = PhysicalAddress { bit_cast<PhysicalPtr>(maybe_kernel_page_directory.value()) };
+    boot_info.arch_specific.boot_pd0 = PhysicalAddress { bit_cast<PhysicalPtr>(maybe_page_directory_0.value()) };
 }
 
 [[noreturn]] void arch_enter_kernel(void* root_page_table, FlatPtr kernel_entry_vaddr, FlatPtr kernel_stack_pointer, FlatPtr boot_info_vaddr)
