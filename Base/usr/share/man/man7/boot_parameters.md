@@ -82,6 +82,8 @@ List of options:
 
 -   **`nvme_poll`** - This parameter configures the NVMe drive to use polling instead of interrupt driven completion.
 
+-   **`xhci_poll`** - This parameter configures the xHCI driver to use polling instead of interrupt driven completion.
+
 -   **`system_mode`** - This parameter is not interpreted by the Kernel, and is made available at `/sys/kernel/system_mode`. SystemServer uses it to select the set of services that should be started. Common values are:
 
     -   **`graphical`** (default) - Boots the system in the normal graphical mode.
