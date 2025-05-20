@@ -200,6 +200,11 @@ bool CommandLine::is_nvme_polling_enabled() const
     return contains("nvme_poll"sv);
 }
 
+bool CommandLine::is_xhci_polling_enabled() const
+{
+    return contains("xhci_poll"sv);
+}
+
 UNMAP_AFTER_INIT AcpiFeatureLevel CommandLine::acpi_feature_level() const
 {
     auto value = kernel_command_line().lookup("acpi"sv).value_or("limited"sv);
