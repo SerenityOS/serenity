@@ -710,7 +710,7 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
 
         // NOTE: While setting the first cluster of the ".." entry to that of the current entry
         // is _usually_ the right thing to do, we're actually supposed to set it to 0 if we are
-        // dealing with the root directory. This isn't an issues when dealing with FAT12 or FAT16,
+        // dealing with the root directory. This isn't an issue when dealing with FAT12 or FAT16,
         // since the root directory's first cluster is always 0, but it's something to account for
         // when working with FAT32.
         switch (fs().m_fat_version) {
