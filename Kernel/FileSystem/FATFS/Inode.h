@@ -64,7 +64,7 @@ private:
     static ErrorOr<void> fill_in_creation_time(FATEntry&, UnixDateTime const&);
 
     ErrorOr<RawPtr<Vector<u32>>> get_cluster_list();
-    ErrorOr<Vector<u32>> compute_cluster_list(FATFS&, u32 first_cluster);
+    ErrorOr<Vector<u32>> compute_cluster_list();
     ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> get_block_list();
     ErrorOr<NonnullOwnPtr<KBuffer>> read_block_list();
     ErrorOr<RefPtr<FATInode>> traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback);
