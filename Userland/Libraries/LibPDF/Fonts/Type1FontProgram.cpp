@@ -497,6 +497,7 @@ ErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes con
 
                         auto& flex = state.flex_sequence;
 
+                        // FIXME: This should probably call the flex() lambda.
                         path.cubic_bezier_curve_to(
                             { flex[2], flex[3] },
                             { flex[4], flex[5] },
@@ -539,18 +540,7 @@ ErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes con
                 case SetCurrentPoint: {
                     auto y = pop();
                     auto x = pop();
-
-                    // FIXME: Gfx::Path behaves weirdly if a cubic_bezier_curve_to(a, b, c)
-                    //        is followed by move(c). Figure out why, fix in Gfx::Path, then
-                    //        remove this check here.
-                    //        Run `Build/lagom/bin/pdf --render out.png Tests/LibPDF/type1.pdf`
-                    //        as test -- if the output looks good, then all's good. At the moment,
-                    //        the output looks broken without the if here.
-                    Gfx::FloatPoint new_point { x, y };
-                    if (state.point != new_point) {
-                        state.point = new_point;
-                        path.move_to(state.point);
-                    }
+                    state.point = { x, y };
                     state.sp = 0;
                     break;
                 }
