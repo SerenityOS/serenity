@@ -35,24 +35,23 @@ ErrorOr<RawPtr<Vector<u32>>> FATInode::get_cluster_list()
     if (m_cluster_list.has_value())
         return &m_cluster_list.value();
 
-    m_cluster_list = TRY(compute_cluster_list(fs(), first_cluster()));
+    m_cluster_list = TRY(compute_cluster_list());
     return &m_cluster_list.value();
 }
 
-ErrorOr<Vector<u32>> FATInode::compute_cluster_list(FATFS& fs, u32 first_cluster)
+ErrorOr<Vector<u32>> FATInode::compute_cluster_list()
 {
     VERIFY(m_inode_lock.is_locked());
 
-    dbgln_if(FAT_DEBUG, "FATInode::compute_cluster_list(): computing block list starting with cluster {}", first_cluster);
-
-    u32 cluster = first_cluster;
+    u32 cluster = first_cluster();
+    dbgln_if(FAT_DEBUG, "FATInode::compute_cluster_list(): computing block list starting with cluster {}", cluster);
 
     Vector<u32> cluster_list;
-    if (first_cluster <= 1)
+    if (cluster <= 1)
         return cluster_list;
 
-    while (cluster < fs.end_of_chain_marker()) {
-        dbgln_if(FAT_DEBUG, "FATInode::compute_cluster_list(): Appending cluster {} to cluster chain starting with {}", cluster, first_cluster);
+    while (cluster < fs().end_of_chain_marker()) {
+        dbgln_if(FAT_DEBUG, "FATInode::compute_cluster_list(): Appending cluster {} to cluster chain", cluster);
 
         TRY(cluster_list.try_append(cluster));
 
@@ -73,7 +72,7 @@ ErrorOr<Vector<u32>> FATInode::compute_cluster_list(FATFS& fs, u32 first_cluster
         }
 
         // Look up the next cluster to read, or read End of Chain marker from table.
-        cluster = TRY(fs.fat_read(cluster));
+        cluster = TRY(fs().fat_read(cluster));
     }
 
     return cluster_list;
@@ -805,12 +804,16 @@ ErrorOr<void> FATInode::remove_child_impl(StringView name, FreeClusters free_clu
                 if (name == "."sv || name == ".."sv || free_clusters == FreeClusters::No || entry_first_cluster <= 1 || entry_first_cluster >= fs().end_of_chain_marker())
                     return {};
 
-                auto cluster_list = TRY(compute_cluster_list(fs(), entry_first_cluster));
+                u32 cluster = entry_first_cluster;
+                u32 clusters_read = 0;
+                while (cluster < fs().end_of_chain_marker()) {
+                    u32 current_cluster = cluster;
+                    cluster = TRY(fs().fat_read(cluster));
+                    TRY(fs().fat_write(current_cluster, 0));
+                    ++clusters_read;
+                }
 
-                for (auto cluster : cluster_list)
-                    TRY(fs().fat_write(cluster, 0));
-
-                TRY(fs().notify_clusters_freed(cluster_list.first(), cluster_list.size()));
+                TRY(fs().notify_clusters_freed(entry_first_cluster, clusters_read));
 
                 return {};
             }
