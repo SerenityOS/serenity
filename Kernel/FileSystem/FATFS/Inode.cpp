@@ -799,7 +799,10 @@ ErrorOr<void> FATInode::remove_child_impl(StringView name, FreeClusters free_clu
                 if (fs().m_fat_version == FATVersion::FAT32)
                     entry_first_cluster |= (static_cast<u32>(entry->first_cluster_high) << 16);
 
-                if (name == "."sv || name == ".."sv || free_clusters == FreeClusters::No || entry_first_cluster <= 1)
+                // Note that it isn't valid to set the first cluster to an end of chain marker,
+                // so if we do find an entry that does that, we just skip freeing any clusters
+                // to avoid doing needless damage.
+                if (name == "."sv || name == ".."sv || free_clusters == FreeClusters::No || entry_first_cluster <= 1 || entry_first_cluster >= fs().end_of_chain_marker())
                     return {};
 
                 auto cluster_list = TRY(compute_cluster_list(fs(), entry_first_cluster));
