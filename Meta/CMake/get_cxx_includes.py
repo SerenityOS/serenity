@@ -4,10 +4,10 @@ import subprocess
 import sys
 
 
-def get_includes_from_version_output(compiler):
+def get_includes_from_version_output(compiler, target_args):
     try:
         output = subprocess.check_output(
-            [compiler, "-xc++", "/dev/null", "-E", "-Wp,-v"], stderr=subprocess.STDOUT
+            [compiler, *target_args, "-xc++", "/dev/null", "-E", "-Wp,-v"], stderr=subprocess.STDOUT
         )
     except subprocess.CalledProcessError as e:
         print("Error getting includes from compiler version output: " + e.output)
@@ -29,13 +29,13 @@ def get_includes_from_version_output(compiler):
     return includes
 
 
-def get_includes_from_preprocessor_output(compiler, test_file):
+def get_includes_from_preprocessor_output(compiler, test_file, target_args):
     try:
         output = subprocess.check_output(
-            [compiler, "-E", test_file], stderr=subprocess.STDOUT
+            [compiler, *target_args, "-E", test_file], stderr=subprocess.STDOUT
         )
     except subprocess.CalledProcessError as e:
-        print("Error getting includes from preprocessor output: " + e.output)
+        print(b"Error getting includes from preprocessor output: " + e.output)
         sys.exit(1)
 
     includes = []
@@ -61,6 +61,9 @@ def convert_includes_to_dirs(includes):
         while not os.path.isdir(include_dir):
             include_dir = os.path.dirname(include_dir)
 
+        if os.path.basename(include_dir).startswith(b"_"):
+            continue
+
         dirs.append(include_dir)
 
     return dirs
@@ -72,6 +75,7 @@ def main():
     )
 
     parser.add_argument("--compiler", required=True, help="Specify C++ compiler to extract includes from")
+    parser.add_argument("--target", help="Specify target platform for compiler")
 
     parser.add_argument(
         "--test-file", required=True, help="Specify the path to the test file containing '#include' directives"
@@ -80,15 +84,25 @@ def main():
     args = parser.parse_args()
     compiler = args.compiler
     test_file = args.test_file
+    target = args.target
 
-    includes = get_includes_from_version_output(compiler)
-    system_includes = get_includes_from_preprocessor_output(compiler, test_file)
+    target_args = []
+    if target is not None and target != "":
+        target_args = [f"--target={target}"]
+
+    includes = get_includes_from_version_output(compiler, target_args)
+    system_includes = get_includes_from_preprocessor_output(compiler, test_file, target_args)
     system_includes = convert_includes_to_dirs(system_includes)
 
-    print(
-        ";".join(entry.decode("utf-8") for entry in set(includes + system_includes)),
-        end="",
-    )
+    out = []
+    seen = set()
+    for p in system_includes + includes:
+        if p in seen:
+            continue
+        seen.add(p)
+        out.append(p.decode("utf-8"))
+
+    print(";".join(out), end="")
 
 
 if __name__ == "__main__":

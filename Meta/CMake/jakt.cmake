@@ -82,6 +82,7 @@ execute_process(
     COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_LIST_DIR}/get_cxx_includes.py
         --compiler ${CMAKE_CXX_COMPILER}
         --test-file "${CMAKE_BINARY_DIR}/jakt_test.cpp"
+        --target "${CMAKE_CXX_COMPILER_TARGET}"
     OUTPUT_VARIABLE CXX_SYSTEM_INCLUDES_CLEAN
 )
 
@@ -141,6 +142,12 @@ function(add_jakt_executable target source)
 
     set(extra_cpp_flags "--extra-cpp-flag-std=c++2b") # FIXME: CMake should be setting this, but sometimes (e.g. macOS /usr/bin/c++ for lagom) it doesn't;
                                                       #        Passing it here allows us to build on AppleClang 15, and if CMake starts setting it, it will be overridden by later flags.
+
+    if (os STREQUAL "serenity")
+        list(APPEND extra_cpp_flags "--extra-cpp-flag-D__serenity__")
+        list(APPEND extra_cpp_flags "--extra-cpp-flag-D__unix")
+        list(APPEND extra_cpp_flags "--extra-cpp-flag-D__unix__")
+    endif()
     foreach(flag IN LISTS compile_flags)
         list(APPEND extra_cpp_flags "--extra-cpp-flag${flag}")
     endforeach()

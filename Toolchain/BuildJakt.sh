@@ -90,10 +90,10 @@ buildstep_ninja() {
 
 mkdir -p "$DIR/Tarballs"
 
-JAKT_COMMIT_HASH="2f484d9a5e4fd82a855ac6b276846a26a33edc30"
+JAKT_COMMIT_HASH="249e76e75e4872d97217673d127569f98371b4eb"
 JAKT_NAME="jakt-${JAKT_COMMIT_HASH}"
 JAKT_TARBALL="${JAKT_NAME}.tar.gz"
-JAKT_GIT_URL="https://github.com/serenityos/jakt"
+JAKT_GIT_URL="https://github.com/alimpfard/jakt"
 
 function already_available() {
     local TOOLCHAIN="$1"; shift
