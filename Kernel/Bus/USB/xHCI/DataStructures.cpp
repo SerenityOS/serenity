@@ -86,7 +86,7 @@ StringView enum_to_string(TransferRequestBlock::CompletionCode completion_code)
     case TransferRequestBlock::CompletionCode::Split_Transaction_Error:
         return "Split Transaction Error"sv;
     default:
-        VERIFY_NOT_REACHED();
+        return "Unknown"sv;
     }
 }
 
@@ -160,7 +160,7 @@ StringView enum_to_string(TransferRequestBlock::TRBType trb_type)
     case TransferRequestBlock::TRBType::Microframe_Index_Wrap_Event:
         return "Microframe Index Wrap Event"sv;
     default:
-        VERIFY_NOT_REACHED();
+        return "Unknown"sv;
     }
 }
 
