@@ -8,11 +8,11 @@
 
 #include <sys/arch/aarch64/regs.h>
 
-#include <Kernel/Security/ExecutionMode.h>
-
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/aarch64/ASM_wrapper.h>
+#include <Kernel/Security/ExecutionMode.h>
 
 VALIDATE_IS_AARCH64()
 
@@ -83,6 +83,22 @@ inline void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_re
 }
 
 struct DebugRegisterState {
+    u64 mdscr_el1;
 };
+
+inline void read_debug_registers_into(DebugRegisterState& state)
+{
+    state.mdscr_el1 = Aarch64::Asm::get_mdscr_el1();
+}
+
+inline void write_debug_registers_from(DebugRegisterState const& state)
+{
+    Aarch64::Asm::set_mdscr_el1(state.mdscr_el1);
+}
+
+inline void clear_debug_registers()
+{
+    Aarch64::Asm::set_mdscr_el1(0);
+}
 
 }
