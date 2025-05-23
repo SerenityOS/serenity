@@ -374,3 +374,7 @@
 #ifndef XHCI_DEBUG
 #cmakedefine01 XHCI_DEBUG
 #endif
+
+#ifndef XHCI_VERBOSE_DEBUG
+#cmakedefine01 XHCI_VERBOSE_DEBUG
+#endif
