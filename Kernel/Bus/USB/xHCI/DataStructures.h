@@ -14,6 +14,8 @@
 namespace Kernel::USB::xHCI {
 
 union TransferRequestBlock {
+    void dump(StringView prefix) const;
+
     enum class TRBType : u32 {
         Normal = 1,
         Setup_Stage = 2,

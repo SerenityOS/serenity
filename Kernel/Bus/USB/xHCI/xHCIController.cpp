@@ -344,6 +344,13 @@ void xHCIController::enqueue_command(TransferRequestBlock& transfer_request_bloc
     transfer_request_block.generic.cycle_bit = m_command_ring_producer_cycle_state;
     m_command_ring[m_command_ring_enqueue_index] = transfer_request_block;
 
+    if constexpr (XHCI_VERBOSE_DEBUG) {
+        auto vaddr = VirtualAddress { &m_command_ring[m_command_ring_enqueue_index] };
+        auto paddr = m_command_and_event_rings_region->physical_page(0)->paddr().offset(offsetof(CommandAndEventRings, command_ring) + (m_command_ring_enqueue_index * sizeof(TransferRequestBlock)));
+        dbgln("-> enqueue_command: {} @ {} {}", enum_to_string(m_command_ring[m_command_ring_enqueue_index].generic.transfer_request_block_type), vaddr, paddr);
+        m_command_ring[m_command_ring_enqueue_index].dump("->     "sv);
+    }
+
     m_command_ring_enqueue_index++;
 
     if (m_command_ring_enqueue_index == (command_ring_size - 1)) {
@@ -741,12 +748,21 @@ ErrorOr<void> xHCIController::enqueue_transfer(u8 slot, u8 endpoint, Pipe::Direc
         return ENOBUFS;
     endpoint_ring.free_transfer_request_blocks -= transfer_request_blocks.size();
 
+    dbgln_if(XHCI_VERBOSE_DEBUG, "-> enqueue_transfer slot={} endpoint={} dir={}:", slot, endpoint, to_underlying(direction));
+
     auto* ring_memory = endpoint_ring.ring_vaddr();
     auto first_trb_index = endpoint_ring.enqueue_index;
     auto last_trb_index = 0u;
     for (auto i = 0u; i < transfer_request_blocks.size(); i++) {
         transfer_request_blocks[i].generic.cycle_bit = endpoint_ring.producer_cycle_state ^ (i == 0);
         ring_memory[endpoint_ring.enqueue_index] = transfer_request_blocks[i];
+
+        if constexpr (XHCI_VERBOSE_DEBUG) {
+            auto vaddr = VirtualAddress { &ring_memory[endpoint_ring.enqueue_index] };
+            auto paddr = PhysicalAddress { endpoint_ring.ring_paddr() + (endpoint_ring.enqueue_index * sizeof(TransferRequestBlock)) };
+            dbgln("->     {}: {} @ {} {}", i, enum_to_string(ring_memory[endpoint_ring.enqueue_index].generic.transfer_request_block_type), vaddr, paddr);
+            ring_memory[endpoint_ring.enqueue_index].dump("->         "sv);
+        }
 
         last_trb_index = endpoint_ring.enqueue_index;
         endpoint_ring.enqueue_index++;
@@ -1346,12 +1362,29 @@ void xHCIController::event_handling_thread()
 {
     while (!Process::current().is_dying()) {
         m_event_queue.wait_forever("xHCI"sv);
+
+        bool header_printed = false;
+
         // Handle up to ring-size events each time
         for (auto i = 0u; i < event_ring_segment_size; ++i) {
             // If the Cycle bit of the Event TRB pointed to by the Event Ring Dequeue Pointer equals CCS, then the Event TRB is a valid event,
             // software processes it and advances the Event Ring Dequeue Pointer.
             if (m_event_ring_segment[m_event_ring_dequeue_index].generic.cycle_bit != m_event_ring_consumer_cycle_state)
                 break;
+
+            if constexpr (XHCI_VERBOSE_DEBUG) {
+                auto const& trb = m_event_ring_segment[m_event_ring_dequeue_index];
+
+                if (!header_printed) {
+                    dbgln("<- Event(s):");
+                    header_printed = true;
+                }
+
+                auto vaddr = VirtualAddress { &trb };
+                auto paddr = m_command_and_event_rings_region->physical_page(0)->paddr().offset(offsetof(CommandAndEventRings, event_ring_segment) + (m_event_ring_dequeue_index * sizeof(TransferRequestBlock)));
+                dbgln("<-     {}: {} @ {} {}", i, enum_to_string(trb.generic.transfer_request_block_type), vaddr, paddr);
+                trb.dump("<-         "sv);
+            }
 
             auto event_type = m_event_ring_segment[m_event_ring_dequeue_index].generic.transfer_request_block_type;
             switch (event_type) {
