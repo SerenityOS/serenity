@@ -791,6 +791,165 @@ PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransf
     return {};
 }
 
+static void draw_gouraud_quad(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType functions, Array<Gfx::FloatPoint, 4> points, Array<GouraudColor, 4> colors)
+{
+    // FIXME: https://gpuopen.com/learn/bilinear-interpolation-quadrilateral-barycentric-coordinates/ / https://jcgt.org/published/0011/03/04/paper.pdf instead.
+    draw_gouraud_triangle(painter, color_space, functions, { points[0], points[1], points[3] }, { colors[0], colors[1], colors[3] });
+    draw_gouraud_triangle(painter, color_space, functions, { points[0], points[2], points[3] }, { colors[0], colors[2], colors[3] });
+}
+
+struct GouraudBezierPatch {
+    Array<Gfx::FloatPoint, 16> points {};
+    Array<GouraudColor, 4> colors {};
+};
+
+static void draw_gouraud_bezier_patch(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType functions, GouraudBezierPatch const& patch, int depth = 0)
+{
+    auto const& points = patch.points;
+    auto const& colors = patch.colors;
+
+    // FIXME: This is very naive. Instead, compute error from linear patch and adaptively subdivide based on that error.
+    //        Figure out a way to deal with T-junctions.
+    if (depth == 5) {
+        draw_gouraud_quad(painter, color_space, functions, { points[0], points[3], points[12], points[15] }, colors);
+        return;
+    }
+
+    auto lerp = [](GouraudColor a, GouraudColor b, float t) {
+        GouraudColor c;
+        c.resize(a.size());
+        for (size_t i = 0; i < a.size(); ++i)
+            c[i] = mix(a[i], b[i], t);
+        return c;
+    };
+
+    GouraudBezierPatch new_patch;
+    auto& new_points = new_patch.points;
+    auto& new_colors = new_patch.colors;
+
+    // FIXME: Use separable De Casteljau's to do fewer additions and multiplications.
+
+    // Lower left.
+    // clang-format off
+    new_points[0]  =  points[0];
+    new_points[1]  = (points[0] + points[1]) / 2.0f;
+    new_points[2]  = (points[0] + points[1] * 2 + points[2]) / 4.0f;
+    new_points[3]  = (points[0] + points[1] * 3 + points[2] * 3 + points[3]) / 8.0f;
+
+    new_points[4]  = (points[0] + points[4]) / 2.0f;
+    new_points[5]  = (points[0] + points[4] +  points[1] + points[5]) / 4.0f;
+    new_points[6]  = (points[0] + points[4] + (points[1] + points[5]) * 2 +  points[2] + points[6]) / 8.0f;
+    new_points[7]  = (points[0] + points[4] + (points[1] + points[5]) * 3 + (points[2] + points[6]) * 3 + points[3] + points[7]) / 16.0f;
+
+    new_points[8]  = (points[0] + points[4] * 2 + points[8]) / 4.0f;
+    new_points[9]  = (points[0] + points[4] * 2 + points[8] +  points[1] + points[5] * 2 + points[9]) / 8.0f;
+    new_points[10] = (points[0] + points[4] * 2 + points[8] + (points[1] + points[5] * 2 + points[9]) * 2 +  points[2] + points[6] * 2 + points[10]) / 16.0f;
+    new_points[11] = (points[0] + points[4] * 2 + points[8] + (points[1] + points[5] * 2 + points[9]) * 3 + (points[2] + points[6] * 2 + points[10]) * 3 + points[3] + points[7] * 2 + points[11]) / 32.0f;
+
+    new_points[12] = (points[0] + points[4] * 3 + points[8] * 3 + points[12]) / 8.0f;
+    new_points[13] = (points[0] + points[4] * 3 + points[8] * 3 + points[12] +  points[1] + points[5] * 3 + points[9] * 3 + points[13]) / 16.0f;
+    new_points[14] = (points[0] + points[4] * 3 + points[8] * 3 + points[12] + (points[1] + points[5] * 3 + points[9] * 3 + points[13]) * 2 +  points[2] + points[6] * 3 + points[10] * 3 + points[14]) / 32.0f;
+    new_points[15] = (points[0] + points[4] * 3 + points[8] * 3 + points[12] + (points[1] + points[5] * 3 + points[9] * 3 + points[13]) * 3 + (points[2] + points[6] * 3 + points[10] * 3 + points[14]) * 3 + points[3] + points[7] * 3 + points[11] * 3 + points[15]) / 64.0f;
+    // clang-format on
+
+    new_colors[0] = colors[0];
+    new_colors[1] = lerp(colors[0], colors[1], 0.5f);
+    new_colors[2] = lerp(colors[0], colors[2], 0.5f);
+    new_colors[3] = lerp(lerp(colors[0], colors[1], 0.5f), lerp(colors[2], colors[3], 0.5f), 0.5f);
+
+    draw_gouraud_bezier_patch(painter, color_space, functions, new_patch, depth + 1);
+
+    // Lower right.
+    // clang-format off
+    new_points[0]  = (points[0] + points[1] * 3 + points[2] * 3 + points[3]) / 8.0f;
+    new_points[1]  = (points[1] + points[2] * 2 + points[3]) / 4.0f;
+    new_points[2]  = (points[2] + points[3]) / 2.0f;
+    new_points[3]  =  points[3];
+
+    new_points[4]  = (points[0] + points[4] + (points[1] + points[5]) * 3 + (points[2] + points[6]) * 3 + points[3] + points[7]) / 16.0f;
+    new_points[5]  = (points[1] + points[5] + (points[2] + points[6]) * 2 +  points[3] + points[7]) / 8.0f;
+    new_points[6]  = (points[2] + points[6] + points[3] + points[7]) / 4.0f;
+    new_points[7]  = (points[3] + points[7]) / 2.0f;
+
+    new_points[8]  = (points[0] + points[4] * 2 + points[ 8] + (points[1] + points[5] * 2 + points[ 9]) * 3 + (points[2] + points[6] * 2 + points[10]) * 3 + points[3] + points[7] * 2 + points[11]) / 32.0f;
+    new_points[9]  = (points[1] + points[5] * 2 + points[ 9] + (points[2] + points[6] * 2 + points[10]) * 2 +  points[3] + points[7] * 2 + points[11]) / 16.0f;
+    new_points[10] = (points[2] + points[6] * 2 + points[10] +  points[3] + points[7] * 2 + points[11]) / 8.0f;
+    new_points[11] = (points[3] + points[7] * 2 + points[11]) / 4.0f;
+
+    new_points[12] = (points[0] + points[4] * 3 + points[ 8] * 3 + points[12] + (points[1] + points[5] * 3 + points[9] * 3 + points[13]) * 3 + (points[2] + points[6] * 3 + points[10] * 3 + points[14]) * 3 + points[3] + points[7] * 3 + points[11] * 3 + points[15]) / 64.0f;
+    new_points[13] = (points[1] + points[5] * 3 + points[ 9] * 3 + points[13] + (points[2] + points[6] * 3 + points[10] * 3 + points[14]) * 2 + points[3] + points[7] * 3 + points[11] * 3 + points[15]) / 32.0f;
+    new_points[14] = (points[2] + points[6] * 3 + points[10] * 3 + points[14] + points[3] + points[7] * 3 + points[11] * 3 + points[15]) / 16.0f;
+    new_points[15] = (points[3] + points[7] * 3 + points[11] * 3 + points[15]) / 8.0f;
+    // clang-format on
+
+    new_colors[0] = lerp(colors[0], colors[1], 0.5f);
+    new_colors[1] = colors[1];
+    new_colors[2] = lerp(lerp(colors[0], colors[1], 0.5f), lerp(colors[2], colors[3], 0.5f), 0.5f);
+    new_colors[3] = lerp(colors[1], colors[3], 0.5f);
+
+    draw_gouraud_bezier_patch(painter, color_space, functions, new_patch, depth + 1);
+
+    // Upper left.
+    // clang-format off
+    new_points[12] =  points[12];
+    new_points[13] = (points[12] + points[13]) / 2.0f;
+    new_points[14] = (points[12] + points[13] * 2 + points[14]) / 4.0f;
+    new_points[15] = (points[12] + points[13] * 3 + points[14] * 3 + points[15]) / 8.0f;
+
+    new_points[8]  = (points[12] + points[8]) / 2.0f;
+    new_points[9]  = (points[12] + points[8] +  points[13] + points[9]) / 4.0f;
+    new_points[10] = (points[12] + points[8] + (points[13] + points[9]) * 2 + points[14] + points[10]) / 8.0f;
+    new_points[11] = (points[12] + points[8] + (points[13] + points[9]) * 3 + (points[14] + points[10]) * 3 + points[15] + points[11]) / 16.0f;
+
+    new_points[4]  = (points[12] + points[8] * 2 + points[4]) / 4.0f;
+    new_points[5]  = (points[12] + points[8] * 2 + points[4] +  points[13] + points[9] * 2 + points[5]) / 8.0f;
+    new_points[6]  = (points[12] + points[8] * 2 + points[4] + (points[13] + points[9] * 2 + points[5]) * 2 +  points[14] + points[10] * 2 + points[6]) / 16.0f;
+    new_points[7]  = (points[12] + points[8] * 2 + points[4] + (points[13] + points[9] * 2 + points[5]) * 3 + (points[14] + points[10] * 2 + points[6]) * 3 + points[15] + points[11] * 2 + points[7]) / 32.0f;
+
+    new_points[0]  = (points[12] + points[8] * 3 + points[4] * 3 + points[0]) / 8.0f;
+    new_points[1]  = (points[12] + points[8] * 3 + points[4] * 3 + points[0] +  points[13] + points[9] * 3 + points[5] * 3 + points[1]) / 16.0f;
+    new_points[2]  = (points[12] + points[8] * 3 + points[4] * 3 + points[0] + (points[13] + points[9] * 3 + points[5] * 3 + points[1]) * 2 +  points[14] + points[10] * 3 + points[6] * 3 + points[2]) / 32.0f;
+    new_points[3]  = (points[12] + points[8] * 3 + points[4] * 3 + points[0] + (points[13] + points[9] * 3 + points[5] * 3 + points[1]) * 3 + (points[14] + points[10] * 3 + points[6] * 3 + points[2]) * 3 + points[15] + points[11] * 3 + points[7] * 3 + points[3]) / 64.0f;
+    // clang-format on
+
+    new_colors[0] = lerp(colors[0], colors[2], 0.5f);
+    new_colors[1] = lerp(lerp(colors[0], colors[1], 0.5f), lerp(colors[2], colors[3], 0.5f), 0.5f);
+    new_colors[2] = colors[2];
+    new_colors[3] = lerp(colors[2], colors[3], 0.5f);
+
+    draw_gouraud_bezier_patch(painter, color_space, functions, new_patch, depth + 1);
+
+    // Upper right.
+    // clang-format off
+    new_points[12] = (points[12] + points[13] * 3 + points[14] * 3 + points[15]) / 8.0f;
+    new_points[13] = (points[13] + points[14] * 2 + points[15]) / 4.0f;
+    new_points[14] = (points[14] + points[15]) / 2.0f;
+    new_points[15] =  points[15];
+
+    new_points[8]  = (points[12] + points[ 8] + (points[13] + points[ 9]) * 3 + (points[14] + points[10]) * 3 + points[15] + points[11]) / 16.0f;
+    new_points[9]  = (points[13] + points[ 9] + (points[14] + points[10]) * 2 +  points[15] + points[11]) / 8.0f;
+    new_points[10] = (points[14] + points[10] +  points[15] + points[11]) / 4.0f;
+    new_points[11] = (points[15] + points[11]) / 2.0f;
+
+    new_points[4]  = (points[12] + points[ 8] * 2 + points[4] + (points[13] + points[ 9] * 2 + points[5]) * 3 + (points[14] + points[10] * 2 + points[6]) * 3 + points[15] + points[11] * 2 + points[7]) / 32.0f;
+    new_points[5]  = (points[13] + points[ 9] * 2 + points[5] + (points[14] + points[10] * 2 + points[6]) * 2 +  points[15] + points[11] * 2 + points[7]) / 16.0f;
+    new_points[6]  = (points[14] + points[10] * 2 + points[6] +  points[15] + points[11] * 2 + points[7]) / 8.0f;
+    new_points[7]  = (points[15] + points[11] * 2 + points[7]) / 4.0f;
+
+    new_points[0]  = (points[12] + points[ 8] * 3 + points[4] * 3 + points[0] + (points[13] + points[ 9] * 3 + points[5] * 3 + points[1]) * 3 + (points[14] + points[10] * 3 + points[6] * 3 + points[2]) * 3 + points[15] + points[11] * 3 + points[7] * 3 + points[3]) / 64.0f;
+    new_points[1]  = (points[13] + points[ 9] * 3 + points[5] * 3 + points[1] + (points[14] + points[10] * 3 + points[6] * 3 + points[2]) * 2 +  points[15] + points[11] * 3 + points[7] * 3 + points[3]) / 32.0f;
+    new_points[2]  = (points[14] + points[10] * 3 + points[6] * 3 + points[2] +  points[15] + points[11] * 3 + points[7] * 3 + points[3]) / 16.0f;
+    new_points[3]  = (points[15] + points[11] * 3 + points[7] * 3 + points[3]) / 8.0f;
+    // clang-format on
+
+    new_colors[0] = lerp(lerp(colors[0], colors[1], 0.5f), lerp(colors[2], colors[3], 0.5f), 0.5f);
+    new_colors[1] = lerp(colors[1], colors[3], 0.5f);
+    new_colors[2] = lerp(colors[2], colors[3], 0.5f);
+    new_colors[3] = colors[3];
+
+    draw_gouraud_bezier_patch(painter, color_space, functions, new_patch, depth + 1);
+}
+
 class FreeFormGouraudShading final : public Shading {
 public:
     static PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> create(Document*, NonnullRefPtr<StreamObject>, CommonEntries);
@@ -1343,9 +1502,89 @@ PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> CoonsPatchShading::create(Document*
     return adopt_ref(*new CoonsPatchShading(move(common_entries), move(patch_data), move(patches), move(functions)));
 }
 
-PDFErrorOr<void> CoonsPatchShading::draw(Gfx::Painter&, Gfx::AffineTransform const&)
+PDFErrorOr<void> CoonsPatchShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
-    return Error::rendering_unsupported_error("Cannot draw coons path mesh shadings yet");
+    NonnullRefPtr<ColorSpace> color_space = m_common_entries.color_space;
+    size_t const number_of_components = !m_functions.has<Empty>() ? 1 : color_space->number_of_components();
+
+    bool is_indexed = color_space->family() == ColorSpaceFamily::Indexed;
+    RefPtr<IndexedColorSpace> indexed_color_space;
+    if (is_indexed) {
+        indexed_color_space = static_ptr_cast<IndexedColorSpace>(color_space);
+        color_space = indexed_color_space->base_color_space();
+    }
+
+    for (auto& patch : m_patches) {
+        GouraudBezierPatch bezier_patch;
+        auto& control_points = bezier_patch.points;
+
+        for (size_t i = 0; i < 4; ++i)
+            control_points[i] = ctm.map(Gfx::FloatPoint { m_patch_data[patch.control_points[i]], m_patch_data[patch.control_points[i] + 1] });
+
+        for (size_t i = 0; i < 3; ++i)
+            control_points[7 + i * 4] = ctm.map(Gfx::FloatPoint { m_patch_data[patch.control_points[4 + i]], m_patch_data[patch.control_points[4 + i] + 1] });
+        for (size_t i = 0; i < 3; ++i)
+            control_points[14 - i] = ctm.map(Gfx::FloatPoint { m_patch_data[patch.control_points[7 + i]], m_patch_data[patch.control_points[7 + i] + 1] });
+
+        control_points[8] = ctm.map(Gfx::FloatPoint { m_patch_data[patch.control_points[10]], m_patch_data[patch.control_points[10] + 1] });
+        control_points[4] = ctm.map(Gfx::FloatPoint { m_patch_data[patch.control_points[11]], m_patch_data[patch.control_points[11] + 1] });
+
+        // "The Coons patch (type 6) is actually a special case of the tensor-product patch
+        //  (type 7) in which the four internal control points (p11 , p12 , p21 , p22 ) are implicitly
+        //  defined by the boundary curves. The values of the internal control points are giv-
+        //  en by these equations:"
+        auto p = [&](int c, int r) -> Gfx::FloatPoint& { return bezier_patch.points[c + 4 * r]; };
+
+        p(1, 1) = (1.0f / 9.0f)
+            * (-4.0f * p(0, 0)
+                + 6.0f * (p(0, 1) + p(1, 0))
+                - 2.0f * (p(0, 3) + p(3, 0))
+                + 3.0f * (p(3, 1) + p(1, 3))
+                - 1.0f * p(3, 3));
+
+        p(1, 2) = (1.0f / 9.0f)
+            * (-4.0f * p(0, 3)
+                + 6.0f * (p(0, 2) + p(1, 3))
+                - 2.0f * (p(0, 0) + p(3, 3))
+                + 3.0f * (p(3, 2) + p(1, 0))
+                - 1.0f * p(3, 0));
+
+        p(2, 1) = (1.0f / 9.0f)
+            * (-4.0f * p(3, 0)
+                + 6.0f * (p(3, 1) + p(2, 0))
+                - 2.0f * (p(3, 3) + p(0, 0))
+                + 3.0f * (p(0, 1) + p(2, 3))
+                - 1.0f * p(0, 3));
+
+        p(2, 2) = (1.0f / 9.0f)
+            * (-4.0f * p(3, 3)
+                + 6.0f * (p(3, 2) + p(2, 3))
+                - 2.0f * (p(3, 0) + p(0, 3))
+                + 3.0f * (p(0, 2) + p(2, 0))
+                - 1.0f * p(0, 0));
+
+        for (size_t i = 0; i < 4; ++i) {
+            GouraudColor color;
+
+            if (is_indexed) {
+                // "If ColorSpace is an Indexed color space, all color values specified in the shading
+                //  are immediately converted to the base color space. [...] Interpolation never occurs
+                //  in an Indexed color space, which is quantized and therefore inappropriate for calculations
+                //  that assume a continuous range of colors."
+                color.extend(TRY(indexed_color_space->base_components(m_patch_data[patch.colors[i]])));
+            } else {
+                color.resize(number_of_components);
+                for (size_t j = 0; j < number_of_components; ++j)
+                    color[j] = m_patch_data[patch.colors[i] + j];
+            }
+
+            bezier_patch.colors[i] = color;
+        }
+
+        swap(bezier_patch.colors[2], bezier_patch.colors[3]); // Coons order goes counter-clockwise, bezier patch in scanline order.
+        draw_gouraud_bezier_patch(painter, color_space, m_functions, bezier_patch);
+    }
+    return {};
 }
 
 class TensorProductPatchShading final : public Shading {
@@ -1653,9 +1892,44 @@ PDFErrorOr<NonnullRefPtr<TensorProductPatchShading>> TensorProductPatchShading::
     return adopt_ref(*new TensorProductPatchShading(move(common_entries), move(patch_data), move(patches), move(functions)));
 }
 
-PDFErrorOr<void> TensorProductPatchShading::draw(Gfx::Painter&, Gfx::AffineTransform const&)
+PDFErrorOr<void> TensorProductPatchShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
-    return Error::rendering_unsupported_error("Cannot draw tensor-product path mesh shadings yet");
+    NonnullRefPtr<ColorSpace> color_space = m_common_entries.color_space;
+    size_t const number_of_components = !m_functions.has<Empty>() ? 1 : color_space->number_of_components();
+    bool is_indexed = color_space->family() == ColorSpaceFamily::Indexed;
+    RefPtr<IndexedColorSpace> indexed_color_space;
+    if (is_indexed) {
+        indexed_color_space = static_ptr_cast<IndexedColorSpace>(color_space);
+        color_space = indexed_color_space->base_color_space();
+    }
+
+    for (auto& patch : m_patches) {
+        GouraudBezierPatch bezier_patch;
+
+        for (size_t i = 0; i < 16; ++i)
+            bezier_patch.points[i] = ctm.map(Gfx::FloatPoint { m_patch_data[patch.control_points[i]], m_patch_data[patch.control_points[i] + 1] });
+
+        for (size_t i = 0; i < 4; ++i) {
+            GouraudColor color;
+
+            if (is_indexed) {
+                // "If ColorSpace is an Indexed color space, all color values specified in the shading
+                //  are immediately converted to the base color space. [...] Interpolation never occurs
+                //  in an Indexed color space, which is quantized and therefore inappropriate for calculations
+                //  that assume a continuous range of colors."
+                color.extend(TRY(indexed_color_space->base_components(m_patch_data[patch.colors[i]])));
+            } else {
+                color.resize(number_of_components);
+                for (size_t j = 0; j < number_of_components; ++j)
+                    color[j] = m_patch_data[patch.colors[i] + j];
+            }
+
+            bezier_patch.colors[i] = color;
+        }
+
+        draw_gouraud_bezier_patch(painter, color_space, m_functions, bezier_patch);
+    }
+    return {};
 }
 
 }
