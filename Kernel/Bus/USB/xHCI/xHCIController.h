@@ -136,33 +136,41 @@ private:
 
     size_t context_entry_size() const { return m_large_contexts ? 64 : 32; }
     size_t input_context_size() const { return context_entry_size() * 33; }
+
     u8* input_context(u8 slot, u8 index) const
     {
         auto* base = m_slots_state[slot - 1].input_context_region->vaddr().as_ptr();
         return base + (context_entry_size() * index);
     }
+
     InputControlContext* input_control_context(u8 slot) const
     {
         return reinterpret_cast<InputControlContext*>(input_context(slot, 0));
     }
+
     SlotContext* input_slot_context(u8 slot) const
     {
         return reinterpret_cast<SlotContext*>(input_context(slot, 1));
     }
+
     EndpointContext* input_endpoint_context(u8 slot, u8 endpoint, Pipe::Direction direction) const
     {
         return reinterpret_cast<EndpointContext*>(input_context(slot, endpoint_index(endpoint, direction) + 1));
     }
+
     size_t device_context_size() const { return context_entry_size() * 32; }
+
     u8* device_context(u8 slot, u8 index) const
     {
         auto* base = m_slots_state[slot - 1].device_context_region->vaddr().as_ptr();
         return base + (context_entry_size() * index);
     }
+
     SlotContext* device_slot_context(u8 slot) const
     {
         return reinterpret_cast<SlotContext*>(device_context(slot, 0));
     }
+
     EndpointContext* device_endpoint_context(u8 slot, u8 endpoint, Pipe::Direction direction) const
     {
         return reinterpret_cast<EndpointContext*>(device_context(slot, endpoint_index(endpoint, direction)));
