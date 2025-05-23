@@ -493,7 +493,7 @@ ErrorOr<Type1FontProgram::Glyph> Type1FontProgram::parse_glyph(ReadonlyBytes con
                         state.postscript_stack[state.postscript_sp++] = x;
 
                         if (state.flex_index != 14)
-                            break;
+                            return AK::Error::from_string_literal("Unexpected stack size for othersubr 0");
 
                         auto& flex = state.flex_sequence;
 
