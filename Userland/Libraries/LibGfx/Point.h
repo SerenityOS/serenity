@@ -267,6 +267,10 @@ private:
     T m_x { 0 };
     T m_y { 0 };
 };
+
+template<typename T>
+[[nodiscard]] Point<T> operator*(T factor, Point<T> const& p) { return { factor * p.x(), factor * p.y() }; }
+
 using IntPoint = Point<int>;
 using FloatPoint = Point<float>;
 
