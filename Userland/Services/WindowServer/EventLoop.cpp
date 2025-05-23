@@ -98,7 +98,7 @@ void EventLoop::refresh_mouse_devices()
 
         auto mouse_notifier = Core::Notifier::construct(mouse_fd, Core::Notifier::Type::Read);
         mouse_notifier->on_activation = [this, mouse_fd] { drain_mouse(mouse_fd); };
-        m_keyboard_devices.append({ mouse_fd, mouse_notifier });
+        m_mouse_devices.append({ mouse_fd, mouse_notifier });
     }
 }
 
