@@ -748,8 +748,9 @@ struct Triangle {
     u32 c;
 };
 
-PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransform const& ctm, NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType const& functions, Vector<Triangle> const& triangles, Vector<float> const& vertex_data, size_t number_of_components)
+PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransform const& ctm, NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType const& functions, Vector<Triangle> const& triangles, Vector<float> const& vertex_data)
 {
+    size_t const number_of_components = !functions.has<Empty>() ? 1 : color_space->number_of_components();
     bool is_indexed = color_space->family() == ColorSpaceFamily::Indexed;
     RefPtr<IndexedColorSpace> indexed_color_space;
     if (is_indexed) {
@@ -797,10 +798,9 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    FreeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, size_t number_of_components, Vector<Triangle> triangles, GouraudFunctionsType functions)
+    FreeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, Vector<Triangle> triangles, GouraudFunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_vertex_data(move(vertex_data))
-        , m_number_of_components(number_of_components)
         , m_triangles(move(triangles))
         , m_functions(move(functions))
     {
@@ -810,7 +810,6 @@ private:
 
     // Interleaved x, y, c0, c1, c2, ...
     Vector<float> m_vertex_data;
-    size_t m_number_of_components { 0 };
     Vector<Triangle> m_triangles;
     GouraudFunctionsType m_functions;
 };
@@ -938,12 +937,12 @@ PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> FreeFormGouraudShading::create
         }
     }
 
-    return adopt_ref(*new FreeFormGouraudShading(move(common_entries), move(vertex_data), number_of_components, move(triangles), move(functions)));
+    return adopt_ref(*new FreeFormGouraudShading(move(common_entries), move(vertex_data), move(triangles), move(functions)));
 }
 
 PDFErrorOr<void> FreeFormGouraudShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
-    return draw_gouraud_triangles(painter, ctm, m_common_entries.color_space, m_functions, m_triangles, m_vertex_data, m_number_of_components);
+    return draw_gouraud_triangles(painter, ctm, m_common_entries.color_space, m_functions, m_triangles, m_vertex_data);
 }
 
 class LatticeFormGouraudShading final : public Shading {
@@ -953,10 +952,9 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    LatticeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, size_t number_of_components, Vector<Triangle> triangles, GouraudFunctionsType functions)
+    LatticeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, Vector<Triangle> triangles, GouraudFunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_vertex_data(move(vertex_data))
-        , m_number_of_components(number_of_components)
         , m_triangles(move(triangles))
         , m_functions(move(functions))
     {
@@ -966,7 +964,6 @@ private:
 
     // Interleaved x, y, c0, c1, c2, ...
     Vector<float> m_vertex_data;
-    size_t m_number_of_components { 0 };
     Vector<Triangle> m_triangles;
     GouraudFunctionsType m_functions;
 };
@@ -1084,12 +1081,12 @@ PDFErrorOr<NonnullRefPtr<LatticeFormGouraudShading>> LatticeFormGouraudShading::
         }
     }
 
-    return adopt_ref(*new LatticeFormGouraudShading(move(common_entries), move(vertex_data), number_of_components, move(triangles), move(functions)));
+    return adopt_ref(*new LatticeFormGouraudShading(move(common_entries), move(vertex_data), move(triangles), move(functions)));
 }
 
 PDFErrorOr<void> LatticeFormGouraudShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
-    return draw_gouraud_triangles(painter, ctm, m_common_entries.color_space, m_functions, m_triangles, m_vertex_data, m_number_of_components);
+    return draw_gouraud_triangles(painter, ctm, m_common_entries.color_space, m_functions, m_triangles, m_vertex_data);
 }
 
 class CoonsPatchShading final : public Shading {
