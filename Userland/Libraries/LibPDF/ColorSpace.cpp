@@ -535,11 +535,11 @@ PDFErrorOr<ColorOrStyle> ICCBasedColorSpace::style(ReadonlySpan<float> arguments
     }
 
     if (m_map.has_value())
-        return m_map->map(FloatVector3 { arguments[0], arguments[1], arguments[2] });
+        return m_map->map(FloatVector3 { clamp(arguments[0], 0.0f, 1.0f), clamp(arguments[1], 0.0f, 1.0f), clamp(arguments[2], 0.0f, 1.0f) });
 
     m_bytes.resize(arguments.size());
     for (size_t i = 0; i < arguments.size(); ++i)
-        m_bytes[i] = static_cast<u8>(arguments[i] * 255.0f); // FIXME: Should probably round and clamp.
+        m_bytes[i] = round_to<u8>(clamp(arguments[i] * 255.0f, 0.0f, 255.0f));
 
     auto pcs = TRY(m_profile->to_pcs(m_bytes));
     Array<u8, 3> output;
