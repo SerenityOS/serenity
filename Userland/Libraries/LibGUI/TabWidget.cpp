@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Peter Elliott <pelliott@serenityos.org>
  * Copyright (c) 2022, Cameron Youell <cameronyouell@gmail.com>
+ * Copyright (c) 2025, TheOnlyASDK <theonlyasdk@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -551,6 +552,18 @@ void TabWidget::mousemove_event(MouseEvent& event)
     m_hovered_tab_index = hovered_tab;
     m_hovered_close_button_index = hovered_close_button;
     update_bar();
+}
+
+void TabWidget::mousewheel_event(MouseEvent& event)
+{
+    if (event.shift()) {
+        auto delta = event.wheel_delta_y();
+
+        if (delta < 0)
+            activate_previous_tab();
+        else if (delta > 0)
+            activate_next_tab();
+    }
 }
 
 void TabWidget::leave_event(Core::Event&)
