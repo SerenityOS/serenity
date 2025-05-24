@@ -35,45 +35,40 @@ ErrorOr<RawPtr<Vector<u32>>> FATInode::get_cluster_list()
     if (m_cluster_list.has_value())
         return &m_cluster_list.value();
 
-    m_cluster_list = TRY(compute_cluster_list(fs(), first_cluster()));
+    m_cluster_list = TRY(compute_cluster_list());
     return &m_cluster_list.value();
 }
 
-ErrorOr<Vector<u32>> FATInode::compute_cluster_list(FATFS& fs, u32 first_cluster)
+ErrorOr<Vector<u32>> FATInode::compute_cluster_list()
 {
     VERIFY(m_inode_lock.is_locked());
 
-    dbgln_if(FAT_DEBUG, "FATInode::compute_cluster_list(): computing block list starting with cluster {}", first_cluster);
-
-    u32 cluster = first_cluster;
+    u32 cluster = first_cluster();
+    dbgln_if(FAT_DEBUG, "FATInode::compute_cluster_list(): computing block list starting with cluster {}", cluster);
 
     Vector<u32> cluster_list;
-    if (first_cluster <= 1)
-        return cluster_list;
+    if (cluster <= 1) {
+        // Clusters 0 and 1 are reserved in the FAT, and their entries in the FAT will not
+        // point to another valid cluster in the chain. When we're dealing with the root
+        // directory, we use `cluster == 0` as a signal to read the root directory region
+        // blocks on FAT12/16 file systems. (`fs().first_block_of_cluster` will return the
+        // appropriate block/sectors to read given `cluster == 0`).
+        // When we're not dealing with the root directory, `cluster == 0` signals that the
+        // given entry has no allocated clusters, which is why we return an empty cluster
+        // list in that case.
+        if (this == &fs().root_inode())
+            TRY(cluster_list.try_append(cluster));
 
-    while (cluster < fs.end_of_chain_marker()) {
-        dbgln_if(FAT_DEBUG, "FATInode::compute_cluster_list(): Appending cluster {} to cluster chain starting with {}", cluster, first_cluster);
+        return cluster_list;
+    }
+
+    while (cluster < fs().end_of_chain_marker()) {
+        dbgln_if(FAT_DEBUG, "FATInode::compute_cluster_list(): Appending cluster {} to cluster chain", cluster);
 
         TRY(cluster_list.try_append(cluster));
 
-        // Clusters 0 and 1 are reserved in the FAT, and their entries in the FAT will
-        // not point to another valid cluster in the chain (Cluster 0 typically holds
-        // the "FAT ID" field with some flags, Cluster 1 should be the end of chain
-        // marker).
-        // Internally, we use `cluster == 0` to represent the root directory Inode,
-        // which is a signal to read the root directory region blocks on FAT12/16
-        // file systems. (`fs().first_block_of_cluster` will return the appropriate
-        // block/sectors to read given cluster == 0).
-        // Therefore, we read one set of sectors for these invalid cluster numbers,
-        // and then terminate the loop becuase the FAT entry at `cluster` for these
-        // values does not represent the next step in the chain (because there is
-        // nothing else to read).
-        if (cluster <= 1) {
-            break;
-        }
-
         // Look up the next cluster to read, or read End of Chain marker from table.
-        cluster = TRY(fs.fat_read(cluster));
+        cluster = TRY(fs().fat_read(cluster));
     }
 
     return cluster_list;
@@ -710,7 +705,7 @@ ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView name, mode_t mod
 
         // NOTE: While setting the first cluster of the ".." entry to that of the current entry
         // is _usually_ the right thing to do, we're actually supposed to set it to 0 if we are
-        // dealing with the root directory. This isn't an issues when dealing with FAT12 or FAT16,
+        // dealing with the root directory. This isn't an issue when dealing with FAT12 or FAT16,
         // since the root directory's first cluster is always 0, but it's something to account for
         // when working with FAT32.
         switch (fs().m_fat_version) {
@@ -799,15 +794,22 @@ ErrorOr<void> FATInode::remove_child_impl(StringView name, FreeClusters free_clu
                 if (fs().m_fat_version == FATVersion::FAT32)
                     entry_first_cluster |= (static_cast<u32>(entry->first_cluster_high) << 16);
 
-                if (name == "."sv || name == ".."sv || free_clusters == FreeClusters::No || entry_first_cluster <= 1)
+                // Note that it isn't valid to set the first cluster to an end of chain marker,
+                // so if we do find an entry that does that, we just skip freeing any clusters
+                // to avoid doing needless damage.
+                if (name == "."sv || name == ".."sv || free_clusters == FreeClusters::No || entry_first_cluster <= 1 || entry_first_cluster >= fs().end_of_chain_marker())
                     return {};
 
-                auto cluster_list = TRY(compute_cluster_list(fs(), entry_first_cluster));
+                u32 cluster = entry_first_cluster;
+                u32 clusters_read = 0;
+                while (cluster < fs().end_of_chain_marker()) {
+                    u32 current_cluster = cluster;
+                    cluster = TRY(fs().fat_read(cluster));
+                    TRY(fs().fat_write(current_cluster, 0));
+                    ++clusters_read;
+                }
 
-                for (auto cluster : cluster_list)
-                    TRY(fs().fat_write(cluster, 0));
-
-                TRY(fs().notify_clusters_freed(cluster_list.first(), cluster_list.size()));
+                TRY(fs().notify_clusters_freed(entry_first_cluster, clusters_read));
 
                 return {};
             }
