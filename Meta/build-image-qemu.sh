@@ -3,6 +3,10 @@ set -e
 
 SCRIPT_DIR="$(dirname "${0}")"
 
+# Prepend the QEMU and e2fsprogs toolchain directories so we pick up their tools from there
+PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"
+PATH="$SCRIPT_DIR/../Toolchain/Local/e2fsprogs/bin:$PATH"
+
 # shellcheck source=/dev/null
 . "${SCRIPT_DIR}/shell_include.sh"
 
@@ -29,9 +33,6 @@ if [ "$(id -u)" != 0 ]; then
 else
     : "${SUDO_UID:=0}" "${SUDO_GID:=0}"
 fi
-
-# Prepend the toolchain qemu directory so we pick up QEMU from there
-PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"
 
 INODE_SIZE=256
 INODE_COUNT=$(($(inode_usage "$SERENITY_SOURCE_DIR/Base") + $(inode_usage Root)))
