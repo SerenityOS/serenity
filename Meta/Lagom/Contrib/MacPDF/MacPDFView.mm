@@ -48,7 +48,7 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
         [](void* p, void const*, size_t) {
             (void)adopt_ref(*reinterpret_cast<Gfx::Bitmap*>(p));
         });
-    auto space = CGColorSpaceCreateDeviceRGB();
+    static auto space = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
     auto cgbmp = CGImageCreate(bitmap.width(), bitmap.height(), 8,
         32, bitmap.pitch(), space,
         info, data, nullptr, false, kCGRenderingIntentDefault);
