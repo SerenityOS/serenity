@@ -56,7 +56,7 @@ private:
 
     unsigned m_current_minor_number { 0 };
 
-    RecursiveSpinlockProtected<IntrusiveList<&DisplayConnector::m_list_node>, LockRank::None> m_display_connector_nodes {};
+    SpinlockProtected<IntrusiveList<&DisplayConnector::m_list_node>, LockRank::None> m_display_connector_nodes {};
 };
 
 }
