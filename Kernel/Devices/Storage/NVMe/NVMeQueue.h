@@ -18,6 +18,7 @@
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>
+#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {
 
