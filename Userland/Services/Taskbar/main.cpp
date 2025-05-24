@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "GlobalMenuWindow.h"
 #include "ShutdownDialog.h"
 #include "TaskbarWindow.h"
 #include <AK/Debug.h>
@@ -58,19 +59,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::pledge("stdio recvfd sendfd proc exec rpath"));
 
-    auto window = TRY(TaskbarWindow::create());
+    auto taskbar = TRY(TaskbarWindow::create());
 
-    auto menu = TRY(build_system_menu(*window));
+    auto menu = TRY(build_system_menu(*taskbar));
     menu->realize_menu_if_needed();
-    window->add_system_menu(menu);
-
-    window->show();
-
-    window->make_window_manager(
+    taskbar->add_system_menu(menu);
+    taskbar->show();
+    taskbar->make_window_manager(
         WindowServer::WMEventMask::WindowStateChanges
         | WindowServer::WMEventMask::WindowRemovals
         | WindowServer::WMEventMask::WindowIconChanges
         | WindowServer::WMEventMask::WorkspaceChanges);
+
+    auto global_menu = TRY(GlobalMenuWindow::try_create());
 
     return app->exec();
 }
