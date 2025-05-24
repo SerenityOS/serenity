@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2025, TheOnlyASDK <theonlyasdk@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -474,6 +475,18 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     layout_menu->add_action(*m_layout_ruler_action);
 
     view_menu->add_separator();
+
+    view_menu->add_action(GUI::CommonActions::make_zoom_in_action([&](auto&) {
+        auto& font = m_editor->font();
+        auto new_size = clamp(font.presentation_size() + 1, 5, 40);
+        m_editor->set_font_size(new_size);
+    }));
+
+    view_menu->add_action(GUI::CommonActions::make_zoom_out_action([&](auto&) {
+        auto& font = m_editor->font();
+        auto new_size = clamp(font.presentation_size() - 1, 5, 40);
+        m_editor->set_font_size(new_size);
+    }));
 
     view_menu->add_action(GUI::Action::create("Change &Font...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"sv)),
         [&](auto&) {
