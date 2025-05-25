@@ -6,6 +6,7 @@
  */
 
 #include <AK/ScopeGuard.h>
+#include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
@@ -113,6 +114,34 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
 
         tracer->set_regs(regs);
         copy_ptrace_registers_into_kernel_registers(peer_saved_registers, regs);
+        break;
+    }
+
+    case PT_SINGLESTEP: {
+        auto& peer_saved_registers = peer->get_register_dump_from_stack();
+        // Verify that the saved registers are in usermode context
+        if (peer_saved_registers.previous_mode() != ExecutionMode::User)
+            return EPERM;
+
+#if ARCH(X86_64)
+        // Single stepping works by setting the x86 TF flag bit in the eflags register.
+        // This flag causes the cpu to enter single-stepping mode, which causes
+        // Interrupt 1 (debug interrupt) to be emitted after every instruction.
+        // To single step the program, we set the TF flag and continue the debuggee.
+        constexpr u32 TRAP_FLAG = 0x100;
+        peer_saved_registers.rflags |= TRAP_FLAG;
+#elif ARCH(AARCH64)
+        // Single stepping on AArch64 works by setting the SS flag in the SPSR_EL1 register.
+        // When an exception return is executed in EL1, the value of SPSR_EL1.SS is copied
+        // to PSTATE.SS. To enable single stepping, the MDSCR_EL1.SS must also be set to 1.
+        peer_saved_registers.spsr_el1 |= Aarch64::SPSR_EL1_SS_FLAG;
+        peer->debug_register_state().mdscr_el1 |= Aarch64::MDSCR_EL1_SS_FLAG;
+#elif ARCH(RISCV64)
+        TODO_RISCV64();
+#else
+#    error Unknown architecture
+#endif
+        tracer->set_regs(peer_saved_registers);
         break;
     }
 

@@ -362,24 +362,10 @@ int DebugSession::continue_debuggee_and_wait(ContinueType type)
 
 FlatPtr DebugSession::single_step()
 {
-    // Single stepping works by setting the x86 TRAP flag bit in the eflags register.
-    // This flag causes the cpu to enter single-stepping mode, which causes
-    // Interrupt 1 (debug interrupt) to be emitted after every instruction.
-    // To single step the program, we set the TRAP flag and continue the debuggee.
-    // After the debuggee has stopped, we clear the TRAP flag.
-
-    auto regs = get_registers();
-#if ARCH(X86_64)
-    constexpr u32 TRAP_FLAG = 0x100;
-    regs.rflags |= TRAP_FLAG;
-#elif ARCH(AARCH64)
-    TODO_AARCH64();
-#elif ARCH(RISCV64)
-    TODO_RISCV64();
-#else
-#    error Unknown architecture
-#endif
-    set_registers(regs);
+    if (ptrace(PT_SINGLESTEP, m_debuggee_pid, 0, 0) < 0) {
+        perror("PT_SINGLESTEP");
+        VERIFY_NOT_REACHED();
+    }
 
     continue_debuggee();
 
@@ -388,17 +374,19 @@ FlatPtr DebugSession::single_step()
         VERIFY_NOT_REACHED();
     }
 
-    regs = get_registers();
+    auto regs = get_registers();
 #if ARCH(X86_64)
+    // After the debuggee has stopped, we clear the TRAP flag.
+    // TODO: Maybe do this in another place?
+    constexpr u32 TRAP_FLAG = 0x100;
     regs.rflags &= ~(TRAP_FLAG);
+    set_registers(regs);
 #elif ARCH(AARCH64)
-    TODO_AARCH64();
 #elif ARCH(RISCV64)
     TODO_RISCV64();
 #else
 #    error Unknown architecture
 #endif
-    set_registers(regs);
     return regs.ip();
 }
 
