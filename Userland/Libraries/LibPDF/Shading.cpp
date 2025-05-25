@@ -305,14 +305,14 @@ PDFErrorOr<NonnullRefPtr<AxialShading>> AxialShading::create(Document* document,
                 return Error::malformed_error("Function array must have as many elements as color space has components");
             for (size_t i = 0; i < function_array->size(); ++i) {
                 auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
-                if (TRY(function->evaluate(to_array({ 0.0f }))).size() != 1)
+                if (TRY(function->evaluate(to_array({ t0 }))).size() != 1)
                     return Error::malformed_error("Function must have 1 output component");
                 TRY(functions_vector.try_append(move(function)));
             }
             return functions_vector;
         }
         auto function = TRY(Function::create(document, function_object));
-        if (TRY(function->evaluate(to_array({ 0.0f }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
+        if (TRY(function->evaluate(to_array({ t0 }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
             return Error::malformed_error("Function must have as many output components as color space");
         return function;
     }());
@@ -476,14 +476,14 @@ PDFErrorOr<NonnullRefPtr<RadialShading>> RadialShading::create(Document* documen
                 return Error::malformed_error("Function array must have as many elements as color space has components");
             for (size_t i = 0; i < function_array->size(); ++i) {
                 auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
-                if (TRY(function->evaluate(to_array({ 0.0f }))).size() != 1)
+                if (TRY(function->evaluate(to_array({ t0 }))).size() != 1)
                     return Error::malformed_error("Function must have 1 output component");
                 TRY(functions_vector.try_append(move(function)));
             }
             return functions_vector;
         }
         auto function = TRY(Function::create(document, function_object));
-        if (TRY(function->evaluate(to_array({ 0.0f }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
+        if (TRY(function->evaluate(to_array({ t0 }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
             return Error::malformed_error("Function must have as many output components as color space");
         return function;
     }());
