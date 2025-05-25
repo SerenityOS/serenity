@@ -99,14 +99,18 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
         syscall_handler(trap_frame);
     } else if (Aarch64::exception_class_is_breakpoint_instruction(esr_el1.EC) || Aarch64::exception_class_is_software_step(esr_el1.EC)) {
         if (trap_frame->regs->previous_mode() == ExecutionMode::User) {
-            // When breakpoint instruction exception is triggered, the ip is set to the address of the breakpoint instruction,
-            // so we need to increase the ip past the breakpoint instruction to stay consistent with the user‑mode debugger’s behavior.
-            if (Aarch64::exception_class_is_breakpoint_instruction(esr_el1.EC)) {
-                trap_frame->regs->set_ip(trap_frame->regs->ip() + 4);
-            }
-
             auto* current_thread = Thread::current();
             auto& current_process = current_thread->process();
+
+            if (Aarch64::exception_class_is_breakpoint_instruction(esr_el1.EC)) {
+                // When breakpoint instruction exception is triggered, the pc is set to the address of the
+                // breakpoint instruction, so we need to increase the pc past the breakpoint instruction to
+                // stay consistent with the user‑mode debugger’s behavior.
+                trap_frame->regs->set_ip(trap_frame->regs->ip() + 4);
+            } else {
+                // Clear the software step bit in the MDSCR_EL1 register to disable software step.
+                clear_debug_registers();
+            }
 
             if (auto* tracer = current_process.tracer()) {
                 tracer->set_regs(*trap_frame->regs);
