@@ -1049,7 +1049,7 @@ PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> FreeFormGouraudShading::create
                 return functions_vector;
             }
             auto function = TRY(Function::create(document, function_object));
-            if (TRY(function->evaluate(to_array({ decode[0] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
+            if (TRY(function->evaluate(to_array({ decode[4] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
                 return Error::malformed_error("Function must have as many output components as color space");
             return function;
         }());
@@ -1202,7 +1202,7 @@ PDFErrorOr<NonnullRefPtr<LatticeFormGouraudShading>> LatticeFormGouraudShading::
                 return functions_vector;
             }
             auto function = TRY(Function::create(document, function_object));
-            if (TRY(function->evaluate(to_array({ decode[0] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
+            if (TRY(function->evaluate(to_array({ decode[4] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
                 return Error::malformed_error("Function must have as many output components as color space");
             return function;
         }());
@@ -1354,7 +1354,7 @@ PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> CoonsPatchShading::create(Document*
                 return functions_vector;
             }
             auto function = TRY(Function::create(document, function_object));
-            if (TRY(function->evaluate(to_array({ decode[0] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
+            if (TRY(function->evaluate(to_array({ decode[4] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
                 return Error::malformed_error("Function must have as many output components as color space");
             return function;
         }());
@@ -1709,7 +1709,7 @@ PDFErrorOr<NonnullRefPtr<TensorProductPatchShading>> TensorProductPatchShading::
                 return functions_vector;
             }
             auto function = TRY(Function::create(document, function_object));
-            if (TRY(function->evaluate(to_array({ decode[0] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
+            if (TRY(function->evaluate(to_array({ decode[4] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
                 return Error::malformed_error("Function must have as many output components as color space");
             return function;
         }());
