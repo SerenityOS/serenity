@@ -82,7 +82,7 @@ inline void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_re
 }
 
 struct DebugRegisterState {
-    u64 mdscr_el1;
+    u64 mdscr_el1 = 0;
 };
 
 inline void read_debug_registers_into(DebugRegisterState& state)
