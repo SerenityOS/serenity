@@ -89,6 +89,33 @@ PDFErrorOr<CommonEntries> read_common_entries(Document* document, DictObject con
     return common_entries;
 }
 
+using ShadingFunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
+
+static PDFErrorOr<ShadingFunctionsType> read_shading_functions(Document* document, NonnullRefPtr<DictObject> shading_dict, NonnullRefPtr<ColorSpace> color_space, float function_input)
+{
+    if (color_space->family() == ColorSpaceFamily::Indexed)
+        return Error::malformed_error("Function cannot be used with Indexed color space");
+
+    auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
+    if (function_object->is<ArrayObject>()) {
+        auto function_array = function_object->cast<ArrayObject>();
+        Vector<NonnullRefPtr<Function>> functions_vector;
+        if (function_array->size() != static_cast<size_t>(color_space->number_of_components()))
+            return Error::malformed_error("Function array must have as many elements as color space has components");
+        for (size_t i = 0; i < function_array->size(); ++i) {
+            auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
+            if (TRY(function->evaluate(to_array({ function_input }))).size() != 1)
+                return Error::malformed_error("Function must have 1 output component");
+            TRY(functions_vector.try_append(move(function)));
+        }
+        return functions_vector;
+    }
+    auto function = TRY(Function::create(document, function_object));
+    if (TRY(function->evaluate(to_array({ function_input }))).size() != static_cast<size_t>(color_space->number_of_components()))
+        return Error::malformed_error("Function must have as many output components as color space");
+    return function;
+}
+
 class FunctionBasedShading final : public Shading {
 public:
     static PDFErrorOr<NonnullRefPtr<FunctionBasedShading>> create(Document*, NonnullRefPtr<DictObject>, CommonEntries);
@@ -647,38 +674,11 @@ PDFErrorOr<void> RadialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform
     return {};
 }
 
-using GouraudFunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
-
-static PDFErrorOr<GouraudFunctionsType> read_gouraud_functions(Document* document, NonnullRefPtr<DictObject> shading_dict, NonnullRefPtr<ColorSpace> color_space, float function_input)
-{
-    if (color_space->family() == ColorSpaceFamily::Indexed)
-        return Error::malformed_error("Function cannot be used with Indexed color space");
-
-    auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
-    if (function_object->is<ArrayObject>()) {
-        auto function_array = function_object->cast<ArrayObject>();
-        Vector<NonnullRefPtr<Function>> functions_vector;
-        if (function_array->size() != static_cast<size_t>(color_space->number_of_components()))
-            return Error::malformed_error("Function array must have as many elements as color space has components");
-        for (size_t i = 0; i < function_array->size(); ++i) {
-            auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
-            if (TRY(function->evaluate(to_array({ function_input }))).size() != 1)
-                return Error::malformed_error("Function must have 1 output component");
-            TRY(functions_vector.try_append(move(function)));
-        }
-        return functions_vector;
-    }
-    auto function = TRY(Function::create(document, function_object));
-    if (TRY(function->evaluate(to_array({ function_input }))).size() != static_cast<size_t>(color_space->number_of_components()))
-        return Error::malformed_error("Function must have as many output components as color space");
-    return function;
-}
-
 using GouraudColor = Vector<float, 4>;
 
 class GouraudPaintStyle final : public Gfx::PaintStyle {
 public:
-    static NonnullRefPtr<GouraudPaintStyle> create(NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors)
+    static NonnullRefPtr<GouraudPaintStyle> create(NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors)
     {
         return adopt_ref(*new GouraudPaintStyle(move(color_space), move(functions), move(points), move(colors)));
     }
@@ -692,7 +692,7 @@ public:
     }
 
 private:
-    GouraudPaintStyle(NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors)
+    GouraudPaintStyle(NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors)
         : m_functions(move(functions))
         , m_color_space(move(color_space))
         , m_points(move(points))
@@ -702,7 +702,7 @@ private:
 
     Gfx::Color sample_color_in_bbox(Gfx::IntPoint) const;
 
-    GouraudFunctionsType m_functions;
+    ShadingFunctionsType m_functions;
     NonnullRefPtr<ColorSpace> m_color_space;
     Array<Gfx::FloatPoint, 3> m_points;
     Array<GouraudColor, 3> m_colors;
@@ -749,7 +749,7 @@ Gfx::Color GouraudPaintStyle::sample_color_in_bbox(Gfx::IntPoint point_in_bbox) 
     return MUST(m_color_space->style(color)).get<Gfx::Color>();
 }
 
-void draw_gouraud_triangle(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors)
+void draw_gouraud_triangle(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors)
 {
     static_assert(points.size() == 3);
     static_assert(colors.size() == 3);
@@ -774,7 +774,7 @@ struct Triangle {
     u32 c;
 };
 
-PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransform const& ctm, NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType const& functions, Vector<Triangle> const& triangles, Vector<float> const& vertex_data)
+PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransform const& ctm, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType const& functions, Vector<Triangle> const& triangles, Vector<float> const& vertex_data)
 {
     size_t const number_of_components = !functions.has<Empty>() ? 1 : color_space->number_of_components();
     bool is_indexed = color_space->family() == ColorSpaceFamily::Indexed;
@@ -817,7 +817,7 @@ PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransf
     return {};
 }
 
-static void draw_gouraud_quad(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType functions, Array<Gfx::FloatPoint, 4> points, Array<GouraudColor, 4> colors)
+static void draw_gouraud_quad(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 4> points, Array<GouraudColor, 4> colors)
 {
     // FIXME: https://gpuopen.com/learn/bilinear-interpolation-quadrilateral-barycentric-coordinates/ / https://jcgt.org/published/0011/03/04/paper.pdf instead.
     draw_gouraud_triangle(painter, color_space, functions, { points[0], points[1], points[3] }, { colors[0], colors[1], colors[3] });
@@ -829,7 +829,7 @@ struct GouraudBezierPatch {
     Array<GouraudColor, 4> colors {};
 };
 
-static void draw_gouraud_bezier_patch(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, GouraudFunctionsType functions, GouraudBezierPatch const& patch, int depth = 0)
+static void draw_gouraud_bezier_patch(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, GouraudBezierPatch const& patch, int depth = 0)
 {
     auto const& points = patch.points;
     auto const& colors = patch.colors;
@@ -983,7 +983,7 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    FreeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, Vector<Triangle> triangles, GouraudFunctionsType functions)
+    FreeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, Vector<Triangle> triangles, ShadingFunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_vertex_data(move(vertex_data))
         , m_triangles(move(triangles))
@@ -996,7 +996,7 @@ private:
     // Interleaved x, y, c0, c1, c2, ...
     Vector<float> m_vertex_data;
     Vector<Triangle> m_triangles;
-    GouraudFunctionsType m_functions;
+    ShadingFunctionsType m_functions;
 };
 
 PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> FreeFormGouraudShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
@@ -1054,9 +1054,9 @@ PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> FreeFormGouraudShading::create
     //  turned by the function for a given color component is out of range, it is
     //  adjusted to the nearest valid value.
     //  This entry may not be used with an Indexed color space."
-    GouraudFunctionsType functions;
+    ShadingFunctionsType functions;
     if (shading_dict->contains(CommonNames::Function))
-        functions = TRY(read_gouraud_functions(document, shading_dict, common_entries.color_space, decode[4]));
+        functions = TRY(read_shading_functions(document, shading_dict, common_entries.color_space, decode[4]));
 
     // See "Type 4 Shadings (Free-Form Gouraud-Shaded Triangle Meshes)" in the PDF 1.7 spec for a description of the stream contents.
     auto stream = FixedMemoryStream { shading_stream->bytes() };
@@ -1114,7 +1114,7 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    LatticeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, Vector<Triangle> triangles, GouraudFunctionsType functions)
+    LatticeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, Vector<Triangle> triangles, ShadingFunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_vertex_data(move(vertex_data))
         , m_triangles(move(triangles))
@@ -1127,7 +1127,7 @@ private:
     // Interleaved x, y, c0, c1, c2, ...
     Vector<float> m_vertex_data;
     Vector<Triangle> m_triangles;
-    GouraudFunctionsType m_functions;
+    ShadingFunctionsType m_functions;
 };
 
 PDFErrorOr<NonnullRefPtr<LatticeFormGouraudShading>> LatticeFormGouraudShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
@@ -1184,9 +1184,9 @@ PDFErrorOr<NonnullRefPtr<LatticeFormGouraudShading>> LatticeFormGouraudShading::
     //  turned by the function for a given color component is out of range, it is
     //  adjusted to the nearest valid value.
     //  This entry may not be used with an Indexed color space."
-    GouraudFunctionsType functions;
+    ShadingFunctionsType functions;
     if (shading_dict->contains(CommonNames::Function))
-        functions = TRY(read_gouraud_functions(document, shading_dict, common_entries.color_space, decode[4]));
+        functions = TRY(read_shading_functions(document, shading_dict, common_entries.color_space, decode[4]));
 
     // See "Type 5 Shadings (Lattice-Form Gouraud-Shaded Triangle Meshes)" in the PDF 1.7 spec for a description of the stream contents.
     auto stream = FixedMemoryStream { shading_stream->bytes() };
@@ -1241,7 +1241,7 @@ private:
         u32 colors[4];
     };
 
-    CoonsPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<CoonsPatch> patches, GouraudFunctionsType functions)
+    CoonsPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<CoonsPatch> patches, ShadingFunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_patch_data(move(patch_data))
         , m_patches(move(patches))
@@ -1255,7 +1255,7 @@ private:
     // (For flags 1-3, only 8 coordinates and 2 colors.)
     Vector<float> m_patch_data;
     Vector<CoonsPatch> m_patches;
-    GouraudFunctionsType m_functions;
+    ShadingFunctionsType m_functions;
 };
 
 PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> CoonsPatchShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
@@ -1313,9 +1313,9 @@ PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> CoonsPatchShading::create(Document*
     //  turned by the function for a given color component is out of range, it is
     //  adjusted to the nearest valid value.
     //  This entry may not be used with an Indexed color space."
-    GouraudFunctionsType functions;
+    ShadingFunctionsType functions;
     if (shading_dict->contains(CommonNames::Function))
-        functions = TRY(read_gouraud_functions(document, shading_dict, common_entries.color_space, decode[4]));
+        functions = TRY(read_shading_functions(document, shading_dict, common_entries.color_space, decode[4]));
 
     // See "Type 6 Shadings (Coons Patch Meshes)" in the PDF 1.7 spec for a description of the stream contents.
     auto stream = FixedMemoryStream { shading_stream->bytes() };
@@ -1564,7 +1564,7 @@ private:
         u32 colors[4];
     };
 
-    TensorProductPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<TensorProductPatch> patches, GouraudFunctionsType functions)
+    TensorProductPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<TensorProductPatch> patches, ShadingFunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_patch_data(move(patch_data))
         , m_patches(move(patches))
@@ -1578,7 +1578,7 @@ private:
     // (For flags 1-3, only 12 coordinates and 2 colors.)
     Vector<float> m_patch_data;
     Vector<TensorProductPatch> m_patches;
-    GouraudFunctionsType m_functions;
+    ShadingFunctionsType m_functions;
 };
 
 PDFErrorOr<NonnullRefPtr<TensorProductPatchShading>> TensorProductPatchShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
@@ -1645,9 +1645,9 @@ PDFErrorOr<NonnullRefPtr<TensorProductPatchShading>> TensorProductPatchShading::
     //  turned by the function for a given color component is out of range, it is
     //  adjusted to the nearest valid value.
     //  This entry may not be used with an Indexed color space."
-    GouraudFunctionsType functions;
+    ShadingFunctionsType functions;
     if (shading_dict->contains(CommonNames::Function))
-        functions = TRY(read_gouraud_functions(document, shading_dict, common_entries.color_space, decode[4]));
+        functions = TRY(read_shading_functions(document, shading_dict, common_entries.color_space, decode[4]));
 
     // See "Type 6 Shadings (Coons Patch Meshes)" in the PDF 1.7 spec for a description of the stream contents.
     auto stream = FixedMemoryStream { shading_stream->bytes() };
