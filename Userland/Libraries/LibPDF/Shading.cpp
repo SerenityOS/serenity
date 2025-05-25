@@ -648,6 +648,32 @@ PDFErrorOr<void> RadialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform
 }
 
 using GouraudFunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
+
+static PDFErrorOr<GouraudFunctionsType> read_gouraud_functions(Document* document, NonnullRefPtr<DictObject> shading_dict, NonnullRefPtr<ColorSpace> color_space, float function_input)
+{
+    if (color_space->family() == ColorSpaceFamily::Indexed)
+        return Error::malformed_error("Function cannot be used with Indexed color space");
+
+    auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
+    if (function_object->is<ArrayObject>()) {
+        auto function_array = function_object->cast<ArrayObject>();
+        Vector<NonnullRefPtr<Function>> functions_vector;
+        if (function_array->size() != static_cast<size_t>(color_space->number_of_components()))
+            return Error::malformed_error("Function array must have as many elements as color space has components");
+        for (size_t i = 0; i < function_array->size(); ++i) {
+            auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
+            if (TRY(function->evaluate(to_array({ function_input }))).size() != 1)
+                return Error::malformed_error("Function must have 1 output component");
+            TRY(functions_vector.try_append(move(function)));
+        }
+        return functions_vector;
+    }
+    auto function = TRY(Function::create(document, function_object));
+    if (TRY(function->evaluate(to_array({ function_input }))).size() != static_cast<size_t>(color_space->number_of_components()))
+        return Error::malformed_error("Function must have as many output components as color space");
+    return function;
+}
+
 using GouraudColor = Vector<float, 4>;
 
 class GouraudPaintStyle final : public Gfx::PaintStyle {
@@ -1029,31 +1055,8 @@ PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> FreeFormGouraudShading::create
     //  adjusted to the nearest valid value.
     //  This entry may not be used with an Indexed color space."
     GouraudFunctionsType functions;
-    if (shading_dict->contains(CommonNames::Function)) {
-        if (common_entries.color_space->family() == ColorSpaceFamily::Indexed)
-            return Error::malformed_error("Function cannot be used with Indexed color space");
-
-        functions = TRY([&]() -> PDFErrorOr<GouraudFunctionsType> {
-            auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
-            if (function_object->is<ArrayObject>()) {
-                auto function_array = function_object->cast<ArrayObject>();
-                Vector<NonnullRefPtr<Function>> functions_vector;
-                if (function_array->size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-                    return Error::malformed_error("Function array must have as many elements as color space has components");
-                for (size_t i = 0; i < function_array->size(); ++i) {
-                    auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
-                    if (TRY(function->evaluate(to_array({ decode[4] }))).size() != 1)
-                        return Error::malformed_error("Function must have 1 output component");
-                    TRY(functions_vector.try_append(move(function)));
-                }
-                return functions_vector;
-            }
-            auto function = TRY(Function::create(document, function_object));
-            if (TRY(function->evaluate(to_array({ decode[4] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-                return Error::malformed_error("Function must have as many output components as color space");
-            return function;
-        }());
-    }
+    if (shading_dict->contains(CommonNames::Function))
+        functions = TRY(read_gouraud_functions(document, shading_dict, common_entries.color_space, decode[4]));
 
     // See "Type 4 Shadings (Free-Form Gouraud-Shaded Triangle Meshes)" in the PDF 1.7 spec for a description of the stream contents.
     auto stream = FixedMemoryStream { shading_stream->bytes() };
@@ -1182,31 +1185,8 @@ PDFErrorOr<NonnullRefPtr<LatticeFormGouraudShading>> LatticeFormGouraudShading::
     //  adjusted to the nearest valid value.
     //  This entry may not be used with an Indexed color space."
     GouraudFunctionsType functions;
-    if (shading_dict->contains(CommonNames::Function)) {
-        if (common_entries.color_space->family() == ColorSpaceFamily::Indexed)
-            return Error::malformed_error("Function cannot be used with Indexed color space");
-
-        functions = TRY([&]() -> PDFErrorOr<GouraudFunctionsType> {
-            auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
-            if (function_object->is<ArrayObject>()) {
-                auto function_array = function_object->cast<ArrayObject>();
-                Vector<NonnullRefPtr<Function>> functions_vector;
-                if (function_array->size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-                    return Error::malformed_error("Function array must have as many elements as color space has components");
-                for (size_t i = 0; i < function_array->size(); ++i) {
-                    auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
-                    if (TRY(function->evaluate(to_array({ decode[4] }))).size() != 1)
-                        return Error::malformed_error("Function must have 1 output component");
-                    TRY(functions_vector.try_append(move(function)));
-                }
-                return functions_vector;
-            }
-            auto function = TRY(Function::create(document, function_object));
-            if (TRY(function->evaluate(to_array({ decode[4] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-                return Error::malformed_error("Function must have as many output components as color space");
-            return function;
-        }());
-    }
+    if (shading_dict->contains(CommonNames::Function))
+        functions = TRY(read_gouraud_functions(document, shading_dict, common_entries.color_space, decode[4]));
 
     // See "Type 5 Shadings (Lattice-Form Gouraud-Shaded Triangle Meshes)" in the PDF 1.7 spec for a description of the stream contents.
     auto stream = FixedMemoryStream { shading_stream->bytes() };
@@ -1334,31 +1314,8 @@ PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> CoonsPatchShading::create(Document*
     //  adjusted to the nearest valid value.
     //  This entry may not be used with an Indexed color space."
     GouraudFunctionsType functions;
-    if (shading_dict->contains(CommonNames::Function)) {
-        if (common_entries.color_space->family() == ColorSpaceFamily::Indexed)
-            return Error::malformed_error("Function cannot be used with Indexed color space");
-
-        functions = TRY([&]() -> PDFErrorOr<GouraudFunctionsType> {
-            auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
-            if (function_object->is<ArrayObject>()) {
-                auto function_array = function_object->cast<ArrayObject>();
-                Vector<NonnullRefPtr<Function>> functions_vector;
-                if (function_array->size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-                    return Error::malformed_error("Function array must have as many elements as color space has components");
-                for (size_t i = 0; i < function_array->size(); ++i) {
-                    auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
-                    if (TRY(function->evaluate(to_array({ decode[4] }))).size() != 1)
-                        return Error::malformed_error("Function must have 1 output component");
-                    TRY(functions_vector.try_append(move(function)));
-                }
-                return functions_vector;
-            }
-            auto function = TRY(Function::create(document, function_object));
-            if (TRY(function->evaluate(to_array({ decode[4] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-                return Error::malformed_error("Function must have as many output components as color space");
-            return function;
-        }());
-    }
+    if (shading_dict->contains(CommonNames::Function))
+        functions = TRY(read_gouraud_functions(document, shading_dict, common_entries.color_space, decode[4]));
 
     // See "Type 6 Shadings (Coons Patch Meshes)" in the PDF 1.7 spec for a description of the stream contents.
     auto stream = FixedMemoryStream { shading_stream->bytes() };
@@ -1689,31 +1646,8 @@ PDFErrorOr<NonnullRefPtr<TensorProductPatchShading>> TensorProductPatchShading::
     //  adjusted to the nearest valid value.
     //  This entry may not be used with an Indexed color space."
     GouraudFunctionsType functions;
-    if (shading_dict->contains(CommonNames::Function)) {
-        if (common_entries.color_space->family() == ColorSpaceFamily::Indexed)
-            return Error::malformed_error("Function cannot be used with Indexed color space");
-
-        functions = TRY([&]() -> PDFErrorOr<GouraudFunctionsType> {
-            auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
-            if (function_object->is<ArrayObject>()) {
-                auto function_array = function_object->cast<ArrayObject>();
-                Vector<NonnullRefPtr<Function>> functions_vector;
-                if (function_array->size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-                    return Error::malformed_error("Function array must have as many elements as color space has components");
-                for (size_t i = 0; i < function_array->size(); ++i) {
-                    auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
-                    if (TRY(function->evaluate(to_array({ decode[4] }))).size() != 1)
-                        return Error::malformed_error("Function must have 1 output component");
-                    TRY(functions_vector.try_append(move(function)));
-                }
-                return functions_vector;
-            }
-            auto function = TRY(Function::create(document, function_object));
-            if (TRY(function->evaluate(to_array({ decode[4] }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-                return Error::malformed_error("Function must have as many output components as color space");
-            return function;
-        }());
-    }
+    if (shading_dict->contains(CommonNames::Function))
+        functions = TRY(read_gouraud_functions(document, shading_dict, common_entries.color_space, decode[4]));
 
     // See "Type 6 Shadings (Coons Patch Meshes)" in the PDF 1.7 spec for a description of the stream contents.
     auto stream = FixedMemoryStream { shading_stream->bytes() };
