@@ -90,8 +90,9 @@ PDFErrorOr<CommonEntries> read_common_entries(Document* document, DictObject con
 }
 
 using ShadingFunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
+using NonemptyShadingFunctionsType = Variant<NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
 
-static PDFErrorOr<ShadingFunctionsType> read_shading_functions(Document* document, NonnullRefPtr<DictObject> shading_dict, NonnullRefPtr<ColorSpace> color_space, float function_input)
+static PDFErrorOr<NonemptyShadingFunctionsType> read_shading_functions(Document* document, NonnullRefPtr<DictObject> shading_dict, NonnullRefPtr<ColorSpace> color_space, float function_input)
 {
     if (color_space->family() == ColorSpaceFamily::Indexed)
         return Error::malformed_error("Function cannot be used with Indexed color space");
@@ -266,9 +267,7 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    using FunctionsType = Variant<NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
-
-    AxialShading(CommonEntries common_entries, Gfx::FloatPoint start, Gfx::FloatPoint end, float t0, float t1, FunctionsType functions, bool extend_start, bool extend_end)
+    AxialShading(CommonEntries common_entries, Gfx::FloatPoint start, Gfx::FloatPoint end, float t0, float t1, NonemptyShadingFunctionsType functions, bool extend_start, bool extend_end)
         : m_common_entries(move(common_entries))
         , m_start(start)
         , m_end(end)
@@ -285,7 +284,7 @@ private:
     Gfx::FloatPoint m_end;
     float m_t0 { 0.0f };
     float m_t1 { 1.0f };
-    FunctionsType m_functions;
+    NonemptyShadingFunctionsType m_functions;
     bool m_extend_start { false };
     bool m_extend_end { false };
 };
@@ -323,26 +322,7 @@ PDFErrorOr<NonnullRefPtr<AxialShading>> AxialShading::create(Document* document,
     //  fined by the Domain entry. Each function’s domain must be a superset of that of
     //  the shading dictionary. If the value returned by the function for a given color
     //  component is out of range, it is adjusted to the nearest valid value."
-    FunctionsType functions = TRY([&]() -> PDFErrorOr<FunctionsType> {
-        auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
-        if (function_object->is<ArrayObject>()) {
-            auto function_array = function_object->cast<ArrayObject>();
-            Vector<NonnullRefPtr<Function>> functions_vector;
-            if (function_array->size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-                return Error::malformed_error("Function array must have as many elements as color space has components");
-            for (size_t i = 0; i < function_array->size(); ++i) {
-                auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
-                if (TRY(function->evaluate(to_array({ t0 }))).size() != 1)
-                    return Error::malformed_error("Function must have 1 output component");
-                TRY(functions_vector.try_append(move(function)));
-            }
-            return functions_vector;
-        }
-        auto function = TRY(Function::create(document, function_object));
-        if (TRY(function->evaluate(to_array({ t0 }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-            return Error::malformed_error("Function must have as many output components as color space");
-        return function;
-    }());
+    auto functions = TRY(read_shading_functions(document, shading_dict, common_entries.color_space, t0));
 
     // "(Optional) An array of two boolean values specifying whether to extend the
     //  shading beyond the starting and ending points of the axis, respectively. Default
@@ -428,9 +408,7 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    using FunctionsType = Variant<NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
-
-    RadialShading(CommonEntries common_entries, Gfx::FloatPoint start, float start_radius, Gfx::FloatPoint end, float end_radius, float t0, float t1, FunctionsType functions, bool extend_start, bool extend_end)
+    RadialShading(CommonEntries common_entries, Gfx::FloatPoint start, float start_radius, Gfx::FloatPoint end, float end_radius, float t0, float t1, NonemptyShadingFunctionsType functions, bool extend_start, bool extend_end)
         : m_common_entries(move(common_entries))
         , m_start(start)
         , m_start_radius(start_radius)
@@ -451,7 +429,7 @@ private:
     float m_end_radius { 0.0f };
     float m_t0 { 0.0f };
     float m_t1 { 1.0f };
-    FunctionsType m_functions;
+    NonemptyShadingFunctionsType m_functions;
     bool m_extend_start { false };
     bool m_extend_end { false };
 };
@@ -494,26 +472,7 @@ PDFErrorOr<NonnullRefPtr<RadialShading>> RadialShading::create(Document* documen
     //  a superset of that of the shading dictionary. If the value returned by the function
     //  for a given color component is out of range, it is adjusted to the nearest valid val-
     //  ue."
-    FunctionsType functions = TRY([&]() -> PDFErrorOr<FunctionsType> {
-        auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
-        if (function_object->is<ArrayObject>()) {
-            auto function_array = function_object->cast<ArrayObject>();
-            Vector<NonnullRefPtr<Function>> functions_vector;
-            if (function_array->size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-                return Error::malformed_error("Function array must have as many elements as color space has components");
-            for (size_t i = 0; i < function_array->size(); ++i) {
-                auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
-                if (TRY(function->evaluate(to_array({ t0 }))).size() != 1)
-                    return Error::malformed_error("Function must have 1 output component");
-                TRY(functions_vector.try_append(move(function)));
-            }
-            return functions_vector;
-        }
-        auto function = TRY(Function::create(document, function_object));
-        if (TRY(function->evaluate(to_array({ t0 }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-            return Error::malformed_error("Function must have as many output components as color space");
-        return function;
-    }());
+    auto functions = TRY(read_shading_functions(document, shading_dict, common_entries.color_space, t0));
 
     // "(Optional) An array of two boolean values specifying whether to extend the
     //  shading beyond the starting and ending circles, respectively. Default value:
