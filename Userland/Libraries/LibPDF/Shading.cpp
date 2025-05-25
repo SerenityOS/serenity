@@ -1255,15 +1255,13 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    using FunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
-
     // Indexes into m_patch_data.
     struct CoonsPatch {
         u32 control_points[12];
         u32 colors[4];
     };
 
-    CoonsPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<CoonsPatch> patches, FunctionsType functions)
+    CoonsPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<CoonsPatch> patches, GouraudFunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_patch_data(move(patch_data))
         , m_patches(move(patches))
@@ -1277,7 +1275,7 @@ private:
     // (For flags 1-3, only 8 coordinates and 2 colors.)
     Vector<float> m_patch_data;
     Vector<CoonsPatch> m_patches;
-    FunctionsType m_functions;
+    GouraudFunctionsType m_functions;
 };
 
 PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> CoonsPatchShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
@@ -1335,12 +1333,12 @@ PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> CoonsPatchShading::create(Document*
     //  turned by the function for a given color component is out of range, it is
     //  adjusted to the nearest valid value.
     //  This entry may not be used with an Indexed color space."
-    FunctionsType functions;
+    GouraudFunctionsType functions;
     if (shading_dict->contains(CommonNames::Function)) {
         if (common_entries.color_space->family() == ColorSpaceFamily::Indexed)
             return Error::malformed_error("Function cannot be used with Indexed color space");
 
-        functions = TRY([&]() -> PDFErrorOr<FunctionsType> {
+        functions = TRY([&]() -> PDFErrorOr<GouraudFunctionsType> {
             auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
             if (function_object->is<ArrayObject>()) {
                 auto function_array = function_object->cast<ArrayObject>();
@@ -1594,8 +1592,6 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    using FunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
-
     // Indexes into m_patch_data.
     struct TensorProductPatch {
         // Pij (col i, row j) is at index:
@@ -1611,7 +1607,7 @@ private:
         u32 colors[4];
     };
 
-    TensorProductPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<TensorProductPatch> patches, FunctionsType functions)
+    TensorProductPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<TensorProductPatch> patches, GouraudFunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_patch_data(move(patch_data))
         , m_patches(move(patches))
@@ -1625,7 +1621,7 @@ private:
     // (For flags 1-3, only 12 coordinates and 2 colors.)
     Vector<float> m_patch_data;
     Vector<TensorProductPatch> m_patches;
-    FunctionsType m_functions;
+    GouraudFunctionsType m_functions;
 };
 
 PDFErrorOr<NonnullRefPtr<TensorProductPatchShading>> TensorProductPatchShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
@@ -1692,12 +1688,12 @@ PDFErrorOr<NonnullRefPtr<TensorProductPatchShading>> TensorProductPatchShading::
     //  turned by the function for a given color component is out of range, it is
     //  adjusted to the nearest valid value.
     //  This entry may not be used with an Indexed color space."
-    FunctionsType functions;
+    GouraudFunctionsType functions;
     if (shading_dict->contains(CommonNames::Function)) {
         if (common_entries.color_space->family() == ColorSpaceFamily::Indexed)
             return Error::malformed_error("Function cannot be used with Indexed color space");
 
-        functions = TRY([&]() -> PDFErrorOr<FunctionsType> {
+        functions = TRY([&]() -> PDFErrorOr<GouraudFunctionsType> {
             auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
             if (function_object->is<ArrayObject>()) {
                 auto function_array = function_object->cast<ArrayObject>();
