@@ -9,6 +9,7 @@
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/aarch64/InterruptManagement.h>
+#include <Kernel/Arch/aarch64/Registers.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
@@ -103,10 +104,17 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
         }
     } else if (Aarch64::exception_class_is_svc_instruction_execution(esr_el1.EC)) {
         syscall_handler(trap_frame);
-    } else if (Aarch64::exception_class_is_breakpoint_instruction(esr_el1.EC)) {
+    } else if (Aarch64::exception_class_is_breakpoint_instruction(esr_el1.EC) || Aarch64::exception_class_is_software_step(esr_el1.EC)) {
         if (trap_frame->regs->previous_mode() == ExecutionMode::User) {
             auto* current_thread = Thread::current();
             auto& current_process = current_thread->process();
+
+            if (Aarch64::exception_class_is_software_step(esr_el1.EC)) {
+                // Clear the software step bit in the MDSCR_EL1 register to disable software step.
+                read_debug_registers_into(current_thread->debug_register_state());
+                current_thread->debug_register_state().mdscr_el1 &= ~Aarch64::MDSCR_EL1_SS_FLAG;
+                write_debug_registers_from(current_thread->debug_register_state());
+            }
 
             if (auto* tracer = current_process.tracer()) {
                 tracer->set_regs(*trap_frame->regs);
@@ -114,7 +122,10 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
 
             current_thread->send_urgent_signal_to_self(SIGTRAP);
         } else {
-            handle_crash(*trap_frame->regs, "Unexpected breakpoint instruction exception", SIGTRAP, false);
+            if (Aarch64::exception_class_is_breakpoint_instruction(esr_el1.EC))
+                handle_crash(*trap_frame->regs, "Unexpected breakpoint instruction exception", SIGTRAP, false);
+            if (Aarch64::exception_class_is_software_step(esr_el1.EC))
+                handle_crash(*trap_frame->regs, "Unexpected software step exception", SIGTRAP, false);
         }
     } else {
         handle_crash(*trap_frame->regs, "Unexpected exception", SIGSEGV, false);

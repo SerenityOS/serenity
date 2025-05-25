@@ -1511,4 +1511,8 @@ struct alignas(u64) CPACR_EL1 {
 };
 static_assert(sizeof(CPACR_EL1) == 8);
 
+constexpr u64 SPSR_EL1_SS_FLAG = 1 << 21; // Single-step bit in SPSR_EL1
+
+constexpr u64 MDSCR_EL1_SS_FLAG = 1 << 0; // Single-step bit in MDSCR_EL1
+
 }
