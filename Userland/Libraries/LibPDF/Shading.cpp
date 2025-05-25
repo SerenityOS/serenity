@@ -92,7 +92,7 @@ PDFErrorOr<CommonEntries> read_common_entries(Document* document, DictObject con
 using ShadingFunctionsType = Variant<Empty, NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
 using NonemptyShadingFunctionsType = Variant<NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
 
-static PDFErrorOr<NonemptyShadingFunctionsType> read_shading_functions(Document* document, NonnullRefPtr<DictObject> shading_dict, NonnullRefPtr<ColorSpace> color_space, float function_input)
+static PDFErrorOr<NonemptyShadingFunctionsType> read_shading_functions(Document* document, NonnullRefPtr<DictObject> shading_dict, NonnullRefPtr<ColorSpace> color_space, ReadonlySpan<float> function_input)
 {
     if (color_space->family() == ColorSpaceFamily::Indexed)
         return Error::malformed_error("Function cannot be used with Indexed color space");
@@ -105,16 +105,21 @@ static PDFErrorOr<NonemptyShadingFunctionsType> read_shading_functions(Document*
             return Error::malformed_error("Function array must have as many elements as color space has components");
         for (size_t i = 0; i < function_array->size(); ++i) {
             auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
-            if (TRY(function->evaluate(to_array({ function_input }))).size() != 1)
+            if (TRY(function->evaluate(function_input)).size() != 1)
                 return Error::malformed_error("Function must have 1 output component");
             TRY(functions_vector.try_append(move(function)));
         }
         return functions_vector;
     }
     auto function = TRY(Function::create(document, function_object));
-    if (TRY(function->evaluate(to_array({ function_input }))).size() != static_cast<size_t>(color_space->number_of_components()))
+    if (TRY(function->evaluate(function_input)).size() != static_cast<size_t>(color_space->number_of_components()))
         return Error::malformed_error("Function must have as many output components as color space");
     return function;
+}
+
+static PDFErrorOr<NonemptyShadingFunctionsType> read_shading_functions(Document* document, NonnullRefPtr<DictObject> shading_dict, NonnullRefPtr<ColorSpace> color_space, float function_input)
+{
+    return read_shading_functions(document, shading_dict, color_space, Array { function_input });
 }
 
 class FunctionBasedShading final : public Shading {
@@ -124,9 +129,7 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    using FunctionsType = Variant<NonnullRefPtr<Function>, Vector<NonnullRefPtr<Function>>>;
-
-    FunctionBasedShading(CommonEntries common_entries, Gfx::FloatRect domain, Gfx::AffineTransform matrix, FunctionsType functions)
+    FunctionBasedShading(CommonEntries common_entries, Gfx::FloatRect domain, Gfx::AffineTransform matrix, NonemptyShadingFunctionsType functions)
         : m_common_entries(move(common_entries))
         , m_domain(domain)
         , m_matrix(matrix)
@@ -137,7 +140,7 @@ private:
     CommonEntries m_common_entries;
     Gfx::FloatRect m_domain;
     Gfx::AffineTransform m_matrix;
-    FunctionsType m_functions;
+    NonemptyShadingFunctionsType m_functions;
 };
 
 PDFErrorOr<NonnullRefPtr<FunctionBasedShading>> FunctionBasedShading::create(Document* document, NonnullRefPtr<DictObject> shading_dict, CommonEntries common_entries)
@@ -185,26 +188,7 @@ PDFErrorOr<NonnullRefPtr<FunctionBasedShading>> FunctionBasedShading::create(Doc
     //  function’s domain must be a superset of that of the shading dictionary. If the val-
     //  ue returned by the function for a given color component is out of range, it is ad-
     //  justed to the nearest valid value."
-    FunctionsType functions = TRY([&]() -> PDFErrorOr<FunctionsType> {
-        auto function_object = TRY(shading_dict->get_object(document, CommonNames::Function));
-        if (function_object->is<ArrayObject>()) {
-            auto function_array = function_object->cast<ArrayObject>();
-            Vector<NonnullRefPtr<Function>> functions_vector;
-            if (function_array->size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-                return Error::malformed_error("Function array must have as many elements as color space has components");
-            for (size_t i = 0; i < function_array->size(); ++i) {
-                auto function = TRY(Function::create(document, TRY(document->resolve_to<Object>(function_array->at(i)))));
-                if (TRY(function->evaluate(to_array({ domain.x(), domain.y() }))).size() != 1)
-                    return Error::malformed_error("Function must have 1 output component");
-                TRY(functions_vector.try_append(move(function)));
-            }
-            return functions_vector;
-        }
-        auto function = TRY(Function::create(document, function_object));
-        if (TRY(function->evaluate(to_array({ domain.x(), domain.y() }))).size() != static_cast<size_t>(common_entries.color_space->number_of_components()))
-            return Error::malformed_error("Function must have as many output components as color space");
-        return function;
-    }());
+    auto functions = TRY(read_shading_functions(document, shading_dict, common_entries.color_space, Array { domain.x(), domain.y() }));
 
     return adopt_ref(*new FunctionBasedShading(move(common_entries), domain, matrix, move(functions)));
 }
