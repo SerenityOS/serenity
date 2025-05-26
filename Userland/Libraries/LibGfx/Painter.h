@@ -12,6 +12,7 @@
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
+#include <LibGfx/EdgeFlagPathRasterizer.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Gradients.h>
@@ -140,8 +141,19 @@ public:
 
     void stroke_path(Path const&, Color, int thickness);
 
-    void fill_path(Path const&, Color, WindingRule rule = WindingRule::Nonzero);
-    void fill_path(Path const&, PaintStyle const& paint_style, float opacity = 1.0f, WindingRule rule = WindingRule::Nonzero);
+    template<typename SampleMode = Sample8xAA>
+    void fill_path(Path const& path, Color color, WindingRule winding_rule = WindingRule::Nonzero)
+    {
+        EdgeFlagPathRasterizer<SampleMode> rasterizer(path_bounds(path));
+        rasterizer.fill(*this, path, color, winding_rule);
+    }
+
+    template<typename SampleMode = Sample8xAA>
+    void fill_path(Path const& path, PaintStyle const& paint_style, float opacity = 1.0f, WindingRule winding_rule = WindingRule::Nonzero)
+    {
+        EdgeFlagPathRasterizer<SampleMode> rasterizer(path_bounds(path));
+        rasterizer.fill(*this, path, paint_style, opacity, winding_rule);
+    }
 
     Font const& font() const
     {

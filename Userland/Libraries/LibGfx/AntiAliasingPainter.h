@@ -8,6 +8,7 @@
 
 #include <LibGfx/Color.h>
 #include <LibGfx/CornerRadius.h>
+#include <LibGfx/EdgeFlagPathRasterizer.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/LineStyle.h>
 #include <LibGfx/PaintStyle.h>
@@ -38,8 +39,19 @@ public:
         draw_line(line.a(), line.b(), color, thickness, style, alternate_color, line_length_mode);
     }
 
-    void fill_path(Path const&, Color, WindingRule rule = WindingRule::Nonzero);
-    void fill_path(Path const&, PaintStyle const& paint_style, float opacity = 1.0f, WindingRule rule = WindingRule::Nonzero);
+    template<typename SampleMode = Sample32xAA>
+    void fill_path(Path const& path, Color color, WindingRule winding_rule = WindingRule::Nonzero)
+    {
+        EdgeFlagPathRasterizer<SampleMode> rasterizer(path_bounds(path));
+        rasterizer.fill(m_underlying_painter, path, color, winding_rule, m_transform.translation());
+    }
+
+    template<typename SampleMode = Sample32xAA>
+    void fill_path(Path const& path, PaintStyle const& paint_style, float opacity = 1.0f, WindingRule winding_rule = WindingRule::Nonzero)
+    {
+        EdgeFlagPathRasterizer<SampleMode> rasterizer(path_bounds(path));
+        rasterizer.fill(m_underlying_painter, path, paint_style, opacity, winding_rule, m_transform.translation());
+    }
 
     void stroke_path(Path const&, Color, Path::StrokeStyle const& stroke_style);
     void stroke_path(Path const&, PaintStyle const& paint_style, Path::StrokeStyle const&, float opacity = 1.0f);

@@ -329,4 +329,9 @@ private:
     Optional<SplitLines> m_split_lines {};
 };
 
+inline IntSize path_bounds(Gfx::Path const& path)
+{
+    return enclosing_int_rect(path.bounding_box()).size();
+}
+
 }

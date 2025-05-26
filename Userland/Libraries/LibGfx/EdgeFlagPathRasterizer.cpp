@@ -8,7 +8,6 @@
 #include <AK/Debug.h>
 #include <AK/IntegralMath.h>
 #include <AK/Types.h>
-#include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/EdgeFlagPathRasterizer.h>
 #include <LibGfx/Painter.h>
 
@@ -431,39 +430,6 @@ FLATTEN __attribute__((hot)) void EdgeFlagPathRasterizer<SubpixelSample>::write_
     };
     switch_on_color_or_function(
         color_or_function, write_scanline_with_fast_fills, write_scanline_pixelwise);
-}
-
-static IntSize path_bounds(Gfx::Path const& path)
-{
-    return enclosing_int_rect(path.bounding_box()).size();
-}
-
-// Note: The AntiAliasingPainter and Painter now perform the same antialiasing,
-// since it would be harder to turn it off for the standard painter.
-// The samples are reduced to 8 for Gfx::Painter though as a "speedy" option.
-
-void Painter::fill_path(Path const& path, Color color, WindingRule winding_rule)
-{
-    EdgeFlagPathRasterizer<Sample8xAA> rasterizer(path_bounds(path));
-    rasterizer.fill(*this, path, color, winding_rule);
-}
-
-void Painter::fill_path(Path const& path, PaintStyle const& paint_style, float opacity, WindingRule winding_rule)
-{
-    EdgeFlagPathRasterizer<Sample8xAA> rasterizer(path_bounds(path));
-    rasterizer.fill(*this, path, paint_style, opacity, winding_rule);
-}
-
-void AntiAliasingPainter::fill_path(Path const& path, Color color, WindingRule winding_rule)
-{
-    EdgeFlagPathRasterizer<Sample32xAA> rasterizer(path_bounds(path));
-    rasterizer.fill(m_underlying_painter, path, color, winding_rule, m_transform.translation());
-}
-
-void AntiAliasingPainter::fill_path(Path const& path, PaintStyle const& paint_style, float opacity, WindingRule winding_rule)
-{
-    EdgeFlagPathRasterizer<Sample32xAA> rasterizer(path_bounds(path));
-    rasterizer.fill(m_underlying_painter, path, paint_style, opacity, winding_rule, m_transform.translation());
 }
 
 template class EdgeFlagPathRasterizer<Sample8xAA>;
