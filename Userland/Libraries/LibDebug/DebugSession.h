@@ -141,7 +141,8 @@ private:
     // AArch64 breakpoint instruction "brk #0"
     static constexpr u32 BREAKPOINT_INSTRUCTION = 0xd4200000;
 #elif ARCH(RISCV64)
-    TODO_RISCV64();
+    // RISC-V breakpoint instruction "ebreak"
+    static constexpr u32 BREAKPOINT_INSTRUCTION = 0x00100073;
 #else
 #    error Unknown architecture
 #endif
