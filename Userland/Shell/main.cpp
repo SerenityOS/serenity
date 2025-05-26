@@ -57,7 +57,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         editor = Line::Editor::construct(move(configuration));
-        editor->initialize();
 
         shell = Shell::Shell::construct(*editor, attempt_interactive, posix_mode);
         s_shell = shell.ptr();
@@ -69,9 +68,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         sigaddset(&blocked, SIGTTOU);
         sigaddset(&blocked, SIGTTIN);
         pthread_sigmask(SIG_BLOCK, &blocked, nullptr);
-
-        shell->termios = editor->termios();
-        shell->default_termios = editor->default_termios();
 
         editor->on_display_refresh = [&](auto& editor) {
             editor.strip_styles();
@@ -266,6 +262,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
+    editor->initialize();
+    shell->termios = editor->termios();
+    shell->default_termios = editor->default_termios();
     shell->add_child(*editor);
 
     Core::EventLoop::current().post_event(*shell, make<Core::CustomEvent>(Shell::Shell::ShellEventType::ReadLine));
