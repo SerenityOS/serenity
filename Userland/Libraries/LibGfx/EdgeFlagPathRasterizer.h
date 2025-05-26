@@ -20,13 +20,6 @@ namespace Gfx {
 
 namespace Detail {
 
-static auto constexpr coverage_lut = [] {
-    Array<u8, 256> coverage_lut {};
-    for (u32 sample = 0; sample <= 255; sample++)
-        coverage_lut[sample] = AK::popcount(sample);
-    return coverage_lut;
-}();
-
 template<unsigned SampleCount>
 struct NoAA {
     static inline constexpr unsigned SamplesPerPixel = SampleCount;
@@ -58,11 +51,6 @@ struct Sample2x : AAMode<2> {
         (0.0f / 2.0f),
         (1.0f / 2.0f),
     };
-
-    static u8 compute_coverage(Type sample)
-    {
-        return coverage_lut[sample];
-    }
 };
 
 // See paper for diagrams for how these offsets work, but they allow for nicely spread out samples in each pixel.
@@ -79,11 +67,6 @@ struct Sample8x : AAMode<8> {
         (7.0f / 8.0f),
         (2.0f / 8.0f),
     };
-
-    static u8 compute_coverage(Type sample)
-    {
-        return coverage_lut[sample];
-    }
 };
 
 template<template<unsigned SamplesPerPixel> class AAMode>
@@ -108,13 +91,6 @@ struct Sample16x : AAMode<16> {
         (5.0f / 16.0f),
         (13.0f / 16.0f),
     };
-
-    static u8 compute_coverage(Type sample)
-    {
-        return (
-            coverage_lut[(sample >> 0) & 0xff]
-            + coverage_lut[(sample >> 8) & 0xff]);
-    }
 };
 
 template<template<unsigned SamplesPerPixel> class AAMode>
@@ -154,15 +130,6 @@ struct Sample32x : AAMode<32> {
         (2.0f / 32.0f),
         (19.0f / 32.0f),
     };
-
-    static u8 compute_coverage(Type sample)
-    {
-        return (
-            coverage_lut[(sample >> 0) & 0xff]
-            + coverage_lut[(sample >> 8) & 0xff]
-            + coverage_lut[(sample >> 16) & 0xff]
-            + coverage_lut[(sample >> 24) & 0xff]);
-    }
 };
 
 struct Edge {
