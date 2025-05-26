@@ -20,6 +20,22 @@
 
 namespace Gfx {
 
+static auto constexpr coverage_lut = [] {
+    Array<u8, 256> coverage_lut {};
+    for (u32 sample = 0; sample <= 255; sample++)
+        coverage_lut[sample] = AK::popcount(sample);
+    return coverage_lut;
+}();
+
+template<Integral SampleType>
+static u8 compute_coverage(SampleType sample)
+{
+    u8 coverage = 0;
+    for (unsigned i = 0; i < sizeof(SampleType); i++)
+        coverage += coverage_lut[(sample >> (i * 8)) & 0xff];
+    return coverage;
+}
+
 static Vector<Detail::Edge> prepare_edges(ReadonlySpan<FloatLine> lines, unsigned samples_per_pixel, FloatPoint origin,
     int top_clip_scanline, int bottom_clip_scanline, int& min_edge_y, int& max_edge_y)
 {
@@ -362,7 +378,7 @@ void EdgeFlagPathRasterizer<SubpixelSample>::write_pixel(BitmapFormat format, AR
     if (!sample)
         return;
     auto dest_x = offset + m_blit_origin.x();
-    auto coverage = SubpixelSample::compute_coverage(sample);
+    auto coverage = compute_coverage(sample);
     auto paint_color = scanline_color(scanline, offset, SubpixelSample::coverage_to_alpha(coverage), color_or_function);
     scanline_ptr[dest_x] = color_for_format(format, scanline_ptr[dest_x]).blend(paint_color).value();
 }
