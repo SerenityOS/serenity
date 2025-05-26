@@ -141,14 +141,14 @@ public:
 
     void stroke_path(Path const&, Color, int thickness);
 
-    template<typename SampleMode = Sample8xAA>
+    template<typename SampleMode = SampleAA>
     void fill_path(Path const& path, Color color, WindingRule winding_rule = WindingRule::Nonzero)
     {
         EdgeFlagPathRasterizer<SampleMode> rasterizer(path_bounds(path));
         rasterizer.fill(*this, path, color, winding_rule);
     }
 
-    template<typename SampleMode = Sample8xAA>
+    template<typename SampleMode = SampleAA>
     void fill_path(Path const& path, PaintStyle const& paint_style, float opacity = 1.0f, WindingRule winding_rule = WindingRule::Nonzero)
     {
         EdgeFlagPathRasterizer<SampleMode> rasterizer(path_bounds(path));

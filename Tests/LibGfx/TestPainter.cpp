@@ -74,7 +74,6 @@ TEST_CASE(aliased_fill)
 {
     // Picks a random point in the bitmap, fills a triangle from each edge of the bitmap to that point,
     // and checks that the entire bitmap is filled.
-    using NoAARasterizer = Gfx::EdgeFlagPathRasterizer<Gfx::Sample8xNoAA>;
 
     int const w = 200;
     int const h = 100;
@@ -104,8 +103,7 @@ TEST_CASE(aliased_fill)
             triangle_path.line_to(triangle[2]);
             triangle_path.close();
 
-            NoAARasterizer rasterizer(enclosing_int_rect(triangle_path.bounding_box()).size());
-            rasterizer.fill(painter, triangle_path, paint_style, 1.0f, Gfx::WindingRule::Nonzero);
+            painter.fill_path<Gfx::SampleNoAA>(triangle_path, paint_style);
         }
 
         int filled_pixels_count = 0;
