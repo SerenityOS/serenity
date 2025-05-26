@@ -264,6 +264,10 @@ using Sample32xAA = Detail::Sample32x<Detail::AA>;
 using Sample2xNoAA = Detail::Sample2x<Detail::NoAA>;
 using Sample8xNoAA = Detail::Sample8x<Detail::NoAA>;
 
+// The default sample types for antialiased/non-antialiased modes.
+using SampleAA = Sample8xAA;
+using SampleNoAA = Sample2xNoAA;
+
 extern template class EdgeFlagPathRasterizer<Sample8xAA>;
 extern template class EdgeFlagPathRasterizer<Sample16xAA>;
 extern template class EdgeFlagPathRasterizer<Sample32xAA>;
