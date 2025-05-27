@@ -11,18 +11,18 @@
 
 __BEGIN_DECLS
 
-void __pthread_fork_prepare(void);
-void __pthread_fork_child(void);
-void __pthread_fork_parent(void);
-void __pthread_fork_atfork_register_prepare(void (*)(void));
-void __pthread_fork_atfork_register_parent(void (*)(void));
-void __pthread_fork_atfork_register_child(void (*)(void));
+__attribute__((visibility("hidden"))) void __pthread_fork_prepare(void);
+__attribute__((visibility("hidden"))) void __pthread_fork_child(void);
+__attribute__((visibility("hidden"))) void __pthread_fork_parent(void);
+__attribute__((visibility("hidden"))) void __pthread_fork_atfork_register_prepare(void (*)(void));
+__attribute__((visibility("hidden"))) void __pthread_fork_atfork_register_parent(void (*)(void));
+__attribute__((visibility("hidden"))) void __pthread_fork_atfork_register_child(void (*)(void));
 
-int __pthread_mutex_lock_pessimistic_np(pthread_mutex_t*);
+__attribute__((visibility("hidden"))) int __pthread_mutex_lock_pessimistic_np(pthread_mutex_t*);
 
 typedef void (*KeyDestructor)(void*);
 
-void __pthread_key_destroy_for_current_thread(void);
+__attribute__((visibility("hidden"))) void __pthread_key_destroy_for_current_thread(void);
 
 #define __PTHREAD_MUTEX_NORMAL 0
 #define __PTHREAD_MUTEX_RECURSIVE 1

@@ -13,11 +13,12 @@ __BEGIN_DECLS
 
 typedef void (*AtExitFunction)(void*);
 
+// NOTE: Ideally these symbols would be hidden but some of them are needed by crt0, ubsan, and the dynamic linker.
 extern void __libc_init();
 extern void __malloc_init(void);
 extern void __stdio_init(void);
 extern void __begin_atexit_locking(void);
-extern void _init(void);
+
 extern bool __environ_is_malloced;
 extern bool __stdio_is_initialized;
 extern bool __heap_is_stable;

@@ -35,11 +35,11 @@ using PthreadAttrImpl = Syscall::SC_create_thread_params;
 static constexpr size_t required_stack_alignment = 4 * MiB;
 static constexpr size_t highest_reasonable_guard_size = 32 * PAGE_SIZE;
 
-__thread void* s_stack_location;
-__thread size_t s_stack_size;
+static __thread void* s_stack_location;
+static __thread size_t s_stack_size;
 
-__thread int s_thread_cancel_state = PTHREAD_CANCEL_ENABLE;
-__thread int s_thread_cancel_type = PTHREAD_CANCEL_DEFERRED;
+static __thread int s_thread_cancel_state = PTHREAD_CANCEL_ENABLE;
+static __thread int s_thread_cancel_type = PTHREAD_CANCEL_DEFERRED;
 
 #define __RETURN_PTHREAD_ERROR(rc) \
     return ((rc) < 0 ? -(rc) : 0)
@@ -49,9 +49,9 @@ struct CleanupHandler {
     void* argument;
 };
 
-static thread_local SinglyLinkedList<CleanupHandler> cleanup_handlers;
+static thread_local SinglyLinkedList<CleanupHandler> s_cleanup_handlers;
 
-static __thread bool pending_cancellation = false;
+static __thread bool s_pending_cancellation = false;
 
 [[gnu::weak]] extern ErrorOr<FlatPtr> __create_new_tls_region() asm("__create_new_tls_region");
 [[gnu::weak]] extern ErrorOr<void> __free_tls_region(FlatPtr thread_pointer) asm("__free_tls_region");
@@ -166,8 +166,8 @@ int pthread_create(pthread_t* thread, pthread_attr_t const* attributes, void* (*
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_exit.html
 void pthread_exit(void* value_ptr)
 {
-    while (!cleanup_handlers.is_empty()) {
-        auto handler = cleanup_handlers.take_first();
+    while (!s_cleanup_handlers.is_empty()) {
+        auto handler = s_cleanup_handlers.take_first();
         handler.routine(handler.argument);
     }
 
@@ -182,7 +182,7 @@ void __pthread_maybe_cancel()
         return;
 
     // Check if a cancellation request is pending.
-    if (!pending_cancellation)
+    if (!s_pending_cancellation)
         return;
 
     // Exit the thread via `pthread_exit`. This handles passing the
@@ -194,15 +194,15 @@ void __pthread_maybe_cancel()
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cleanup_push.html
 void pthread_cleanup_push(void (*routine)(void*), void* arg)
 {
-    cleanup_handlers.prepend({ routine, arg });
+    s_cleanup_handlers.prepend({ routine, arg });
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cleanup_pop.html
 void pthread_cleanup_pop(int execute)
 {
-    VERIFY(!cleanup_handlers.is_empty());
+    VERIFY(!s_cleanup_handlers.is_empty());
 
-    auto handler = cleanup_handlers.take_first();
+    auto handler = s_cleanup_handlers.take_first();
 
     if (execute)
         handler.routine(handler.argument);
@@ -545,7 +545,7 @@ static void pthread_cancel_signal_handler(int signal)
     // Note: We don't handle PTHREAD_CANCEL_ASYNCHRONOUS any different from PTHREAD_CANCEL_DEFERRED,
     // since ASYNCHRONOUS just means that the thread can be cancelled at any time (instead of just
     // at the next cancellation point) and it seems to be generally discouraged to use it at all.
-    pending_cancellation = true;
+    s_pending_cancellation = true;
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_cancel.html

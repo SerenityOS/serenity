@@ -249,13 +249,13 @@ enum class CallerWillInitializeMemory {
 };
 
 #ifndef NO_TLS
-__thread bool s_allocation_enabled = true;
+__thread bool __allocation_enabled = true;
 #endif
 
 static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializeMemory caller_will_initialize_memory)
 {
 #ifndef NO_TLS
-    VERIFY(s_allocation_enabled);
+    VERIFY(__allocation_enabled);
 #endif
 
     // Align must be a power of 2.
@@ -397,7 +397,7 @@ static ErrorOr<void*> malloc_impl(size_t size, size_t align, CallerWillInitializ
 static void free_impl(void* ptr)
 {
 #ifndef NO_TLS
-    VERIFY(s_allocation_enabled);
+    VERIFY(__allocation_enabled);
 #endif
 
     ScopedValueRollback rollback(errno);

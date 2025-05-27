@@ -13,6 +13,6 @@
 
 __BEGIN_DECLS
 
-int __utimens(int fd, char const* path, struct timespec const times[2], int flag);
+__attribute__((visibility("hidden"))) int __utimens(int fd, char const* path, struct timespec const times[2], int flag);
 
 __END_DECLS

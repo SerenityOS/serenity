@@ -26,7 +26,7 @@ struct SpecificTable {
 
 static KeyTable s_keys;
 
-__thread SpecificTable t_specifics;
+static __thread SpecificTable s_specifics;
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_key_create.html
 int pthread_key_create(pthread_key_t* key, KeyDestructor destructor)
@@ -62,7 +62,7 @@ void* pthread_getspecific(pthread_key_t key)
         return nullptr;
     if (key >= max_keys)
         return nullptr;
-    return t_specifics.values[key];
+    return s_specifics.values[key];
 }
 
 // https://pubs.opengroup.org/onlinepubs/009695399/functions/pthread_setspecific.html
@@ -73,7 +73,7 @@ int pthread_setspecific(pthread_key_t key, void const* value)
     if (key >= max_keys)
         return EINVAL;
 
-    t_specifics.values[key] = const_cast<void*>(value);
+    s_specifics.values[key] = const_cast<void*>(value);
     return 0;
 }
 
@@ -91,7 +91,7 @@ void __pthread_key_destroy_for_current_thread()
     for (size_t destruct_iteration = 0; destruct_iteration < PTHREAD_DESTRUCTOR_ITERATIONS; ++destruct_iteration) {
         bool any_nonnull_destructors = false;
         for (size_t key_index = 0; key_index < num_used_keys; ++key_index) {
-            void* value = exchange(t_specifics.values[key_index], nullptr);
+            void* value = exchange(s_specifics.values[key_index], nullptr);
 
             if (value && s_keys.destructors[key_index]) {
                 any_nonnull_destructors = true;
