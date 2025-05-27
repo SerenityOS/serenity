@@ -21,7 +21,7 @@ static constexpr size_t num_size_classes = (sizeof(size_classes) / sizeof(unsign
 
 #ifndef NO_TLS
 extern "C" {
-extern __thread bool s_allocation_enabled;
+extern __thread bool __allocation_enabled;
 }
 #endif
 

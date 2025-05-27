@@ -16,9 +16,9 @@
 extern "C" {
 
 #ifdef NO_TLS
-int errno_storage;
+static int s_errno_storage;
 #else
-__thread int errno_storage;
+static __thread int s_errno_storage;
 #endif
 bool __environ_is_malloced = false;
 bool __stdio_is_initialized = false;
@@ -31,7 +31,7 @@ uintptr_t __stack_chk_guard;
 
 int* __errno_location()
 {
-    return &errno_storage;
+    return &s_errno_storage;
 }
 
 void __libc_init()

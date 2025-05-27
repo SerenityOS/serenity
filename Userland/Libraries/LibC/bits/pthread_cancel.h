@@ -17,7 +17,7 @@ inline void __pthread_maybe_cancel(void)
 {
 }
 #else
-void __pthread_maybe_cancel(void);
+__attribute__((visibility("hidden"))) void __pthread_maybe_cancel(void);
 #endif
 
 __END_DECLS

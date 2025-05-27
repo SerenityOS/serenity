@@ -41,7 +41,7 @@ private:
         return Processor::current_thread()->get_allocation_enabled();
 #elif defined(AK_OS_SERENITY)
         // This extern thread-local lives in our LibC, which doesn't exist on other systems.
-        return s_allocation_enabled;
+        return __allocation_enabled;
 #else
         return true;
 #endif
@@ -52,7 +52,7 @@ private:
 #if defined(KERNEL)
         Processor::current_thread()->set_allocation_enabled(value);
 #elif defined(AK_OS_SERENITY)
-        s_allocation_enabled = value;
+        __allocation_enabled = value;
 #else
         (void)value;
 #endif
