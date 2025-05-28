@@ -537,6 +537,19 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
     #       by the compiler. The CPU cannot access global variables without the MMU as the kernel is linked for a virtual address in high memory.
     set_source_files_properties(${SOURCES_RUNNING_WITHOUT_MMU} PROPERTIES COMPILE_FLAGS "-fno-stack-protector -fno-sanitize=all")
 elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+    set(extensions_header "${CMAKE_CURRENT_BINARY_DIR}/Arch/riscv64/Extensions.h")
+
+    add_custom_command(
+        OUTPUT "${extensions_header}"
+        COMMAND ${Python3_EXECUTABLE} "${SerenityOS_SOURCE_DIR}/Meta/riscv_extensions_generator.py" "${SerenityOS_SOURCE_DIR}/Meta/riscv-extensions.txt" -o "${extensions_header}"
+        DEPENDS "${SerenityOS_SOURCE_DIR}/Meta/riscv_extensions_generator.py" "${SerenityOS_SOURCE_DIR}/Meta/riscv-extensions.txt"
+        VERBATIM
+    )
+
+    add_custom_target(generate_riscv_extensions_header DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/Arch/riscv64/Extensions.h")
+
     set(SOURCES_RUNNING_WITHOUT_MMU
         Arch/riscv64/MMU.cpp
         Arch/riscv64/pre_init.cpp
@@ -549,6 +562,8 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
         ${SOURCES_RUNNING_WITHOUT_MMU}
+
+        "${extensions_header}"
 
         Arch/Processor.cpp
         kprintf.cpp
