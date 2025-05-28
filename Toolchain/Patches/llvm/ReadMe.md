@@ -9,6 +9,11 @@ This makes the compiler look for libraries and headers in the right
 places, and enables some security mitigations like stack-smashing
 protection and position-independent code by default.
 
+Co-authored-by: kleines Filmröllchen <filmroellchen@serenityos.org>
+Co-authored-by: Andrew Kaster <akaster@serenityos.org>
+Co-authored-by: Daniel Bertalan <dani@danielbertalan.dev>
+Co-authored-by: Dan Klishch <danilklishch@gmail.com>
+
 ## `0002-llvm-Add-support-for-building-LLVM-on-SerenityOS.patch`
 
 Add support for building LLVM on SerenityOS
@@ -22,6 +27,7 @@ POSIX shm is not supported by SerenityOS yet, so disable it in Orc.
 
 Serenity gives each thread a default of 1MiB of stack. Increase the
 default stack size for llvm applications when running on SerenityOS.
+
 
 ## `0003-tools-Support-building-shared-libLLVM-and-libClang-f.patch`
 
