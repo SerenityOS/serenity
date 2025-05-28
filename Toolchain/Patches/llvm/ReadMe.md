@@ -61,3 +61,12 @@ LibC, namely:
 * Use libc++'s builtin character type table instead of the one provided
   by LibC as there's a lot of extra porting work to convince the rest of
   locale.cpp to use our character type table properly.
+
+## `0006-RISCV-Implement-__init_riscv_feature_bits-for-Sereni.patch`
+
+Implement __init_riscv_feature_bits for SerenityOS
+
+The SerenityOS dynamic linker provides a magic function
+"__get_riscv_feature_bits" that populates __riscv_feature_bits
+and __riscv_cpu_model.
+
