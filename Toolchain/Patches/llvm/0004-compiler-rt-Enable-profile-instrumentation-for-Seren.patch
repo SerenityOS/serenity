@@ -14,7 +14,7 @@ enough to linux to use the pre-canned InstrProfiling implementation.
  5 files changed, 27 insertions(+), 3 deletions(-)
 
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
-index 7d95fe55a0fd..a5660cbf9e52 100644
+index 7d95fe55a0fde623720e5974a860826753f4bf1f..a5660cbf9e5220bdcc3bc1b3daeaa04df1395e38 100644
 --- a/clang/lib/Driver/ToolChains/Serenity.cpp
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
 @@ -172,6 +172,9 @@ void tools::serenity::Linker::ConstructJob(Compilation &C, const JobAction &JA,
@@ -28,7 +28,7 @@ index 7d95fe55a0fd..a5660cbf9e52 100644
    C.addCommand(std::make_unique<Command>(JA, *this,
                                           ResponseFileSupport::AtFileCurCP(),
 diff --git a/clang/test/Driver/instrprof-ld.c b/clang/test/Driver/instrprof-ld.c
-index a96bba4a1e76..4b099da9e2d2 100644
+index a96bba4a1e763ce4a8ca1ef11f29bcf49ccff10a..4b099da9e2d2f0986636976a05443c943c481304 100644
 --- a/clang/test/Driver/instrprof-ld.c
 +++ b/clang/test/Driver/instrprof-ld.c
 @@ -54,6 +54,15 @@
@@ -66,7 +66,7 @@ index a96bba4a1e76..4b099da9e2d2 100644
  // RUN:     --target=x86_64-apple-darwin14 -fprofile-instr-generate -fuse-ld=ld \
  // RUN:     -resource-dir=%S/Inputs/resource_dir \
 diff --git a/compiler-rt/cmake/config-ix.cmake b/compiler-rt/cmake/config-ix.cmake
-index cf729c3adb1f..76d42499daf0 100644
+index cf729c3adb1f5f52df18b672f93788284d41f308..76d42499daf02eab55eff96bda4228d09d0e26fb 100644
 --- a/compiler-rt/cmake/config-ix.cmake
 +++ b/compiler-rt/cmake/config-ix.cmake
 @@ -836,7 +836,7 @@ else()
@@ -79,7 +79,7 @@ index cf729c3adb1f..76d42499daf0 100644
  else()
    set(COMPILER_RT_HAS_PROFILE FALSE)
 diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
-index 5b230c1b2006..3641479114d6 100644
+index 5b230c1b2006237735a6caf2fe1a9e30bc47ff96..3641479114d6edad968a9f30252a1b9d3535ac89 100644
 --- a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 +++ b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 @@ -8,7 +8,8 @@
@@ -93,7 +93,7 @@ index 5b230c1b2006..3641479114d6 100644
  #if !defined(_AIX) && !defined(__wasm__)
  #include <elf.h>
 diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
-index 29e570b9fba9..483b836b0a55 100644
+index 29e570b9fba920a0f8085c7d636c52133a7a2200..483b836b0a55a5ea87f9263d3363960dd689be4c 100644
 --- a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
 +++ b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
 @@ -9,7 +9,7 @@
