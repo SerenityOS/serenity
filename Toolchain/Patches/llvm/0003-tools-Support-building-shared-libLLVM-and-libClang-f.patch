@@ -16,7 +16,7 @@ it, and the ELF sections that store version data would just waste space.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
-index e82cda307ddf..ffb11803c545 100644
+index e82cda307ddfd053fa1434c955b3a37e54f864c5..ffb11803c545b29d7eeef9ef04d7daea4b22aea2 100644
 --- a/llvm/cmake/modules/HandleLLVMOptions.cmake
 +++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
 @@ -222,7 +222,7 @@ if(WIN32)
@@ -29,7 +29,7 @@ index e82cda307ddf..ffb11803c545 100644
    else()
      set(LLVM_HAVE_LINK_VERSION_SCRIPT 1)
 diff --git a/llvm/tools/llvm-shlib/CMakeLists.txt b/llvm/tools/llvm-shlib/CMakeLists.txt
-index ede3c5034e04..dcef1e89845d 100644
+index ede3c5034e045f7739aa7d1d06d8ec508cc8f9dd..dcef1e89845de3c985d98b58537f2693006f4e2a 100644
 --- a/llvm/tools/llvm-shlib/CMakeLists.txt
 +++ b/llvm/tools/llvm-shlib/CMakeLists.txt
 @@ -57,7 +57,7 @@ if(LLVM_BUILD_LLVM_DYLIB)

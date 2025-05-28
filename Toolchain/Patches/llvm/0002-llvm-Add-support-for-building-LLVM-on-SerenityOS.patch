@@ -25,7 +25,7 @@ Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
  6 files changed, 20 insertions(+), 5 deletions(-)
 
 diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
-index 5db06ccdadbe..e82cda307ddf 100644
+index 5db06ccdadbebffb3d3eafe0e2b59594438147fe..e82cda307ddfd053fa1434c955b3a37e54f864c5 100644
 --- a/llvm/cmake/modules/HandleLLVMOptions.cmake
 +++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
 @@ -550,6 +550,9 @@ elseif(MINGW OR CYGWIN)
@@ -39,7 +39,7 @@ index 5db06ccdadbe..e82cda307ddf 100644
  
  option(LLVM_ENABLE_WARNINGS "Enable compiler warnings." ON)
 diff --git a/llvm/include/llvm/ADT/bit.h b/llvm/include/llvm/ADT/bit.h
-index c42b5e686bdc..ad4ad534f40c 100644
+index c42b5e686bdc9cf3da71d8edaddc08216fe5fb2a..ad4ad534f40cc60568ea9e4c953df8d4c64fe535 100644
 --- a/llvm/include/llvm/ADT/bit.h
 +++ b/llvm/include/llvm/ADT/bit.h
 @@ -29,7 +29,7 @@
@@ -52,7 +52,7 @@ index c42b5e686bdc..ad4ad534f40c 100644
  #elif defined(_AIX)
  #include <sys/machine.h>
 diff --git a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
-index 944fca000d61..492ceb2d2ece 100644
+index 944fca000d61f7d88d39116729f8f4028d530204..492ceb2d2ecef8aeaf5c29245c68e2ac6651480a 100644
 --- a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
 +++ b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
 @@ -218,7 +218,8 @@ SharedMemoryMapper::Create(ExecutorProcessControl &EPC, SymbolAddrs SAs) {
@@ -66,7 +66,7 @@ index 944fca000d61..492ceb2d2ece 100644
    EPC.callSPSWrapperAsync<
        rt::SPSExecutorSharedMemoryMapperServiceReserveSignature>(
 diff --git a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
-index 4fbf232008c8..579b5c7c40ea 100644
+index 4fbf232008c89e2cc3555cc40617524f8da8350e..579b5c7c40eadd6c9b5a1f42fa877b18f6bed178 100644
 --- a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
 +++ b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
 @@ -50,7 +50,8 @@ static DWORD getWindowsProtectionFlags(MemProt MP) {
@@ -80,7 +80,7 @@ index 4fbf232008c8..579b5c7c40ea 100644
  #if defined(LLVM_ON_UNIX)
  
 diff --git a/llvm/lib/Support/Unix/Path.inc b/llvm/lib/Support/Unix/Path.inc
-index 6004e007c0c7..8564c69a28a2 100644
+index 6004e007c0c7a03e4c40118aeb738b92a3e71fee..8564c69a28a25b21aa96049361326fa84aa7e3b9 100644
 --- a/llvm/lib/Support/Unix/Path.inc
 +++ b/llvm/lib/Support/Unix/Path.inc
 @@ -107,7 +107,7 @@ typedef uint_t uint;
@@ -103,7 +103,7 @@ index 6004e007c0c7..8564c69a28a2 100644
    // statvfs::f_basetype contains a null-terminated FSType name of the mounted
    // target
 diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.inc
-index 0708df1eed0a..a6103e357593 100644
+index 0708df1eed0a3a8493e57b45ef4b7e55e68f9c4e..a6103e357593062a5fc9e1119cbe228ed5095ad5 100644
 --- a/llvm/lib/Support/Unix/Program.inc
 +++ b/llvm/lib/Support/Unix/Program.inc
 @@ -342,7 +342,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,

@@ -28,7 +28,7 @@ LibC, namely:
  create mode 100644 libcxx/include/__locale_dir/locale_base_api/serenity.h
 
 diff --git a/libcxx/include/CMakeLists.txt b/libcxx/include/CMakeLists.txt
-index 8dac823503d7..2c02534f0151 100644
+index 8dac823503d73f51d5fb23e79f9f880a7580887b..2c02534f0151c3f11543235c8f055513c4ce747b 100644
 --- a/libcxx/include/CMakeLists.txt
 +++ b/libcxx/include/CMakeLists.txt
 @@ -506,6 +506,7 @@ set(files
@@ -40,7 +40,7 @@ index 8dac823503d7..2c02534f0151 100644
    __locale_dir/support/apple.h
    __locale_dir/support/bsd_like.h
 diff --git a/libcxx/include/__config b/libcxx/include/__config
-index a866a7e65183..5b8bc958cd26 100644
+index a866a7e6518379a48e85027a1f77956045ffc6e8..5b8bc958cd267d88bafef5a522356b0870f21a21 100644
 --- a/libcxx/include/__config
 +++ b/libcxx/include/__config
 @@ -825,7 +825,8 @@ typedef __char32_t char32_t;
@@ -63,7 +63,7 @@ index a866a7e65183..5b8bc958cd26 100644
  #  endif
  
 diff --git a/libcxx/include/__cxx03/__support/ibm/locale_mgmt_zos.h b/libcxx/include/__cxx03/__support/ibm/locale_mgmt_zos.h
-index 9fa8f8c9088e..2a9cbec71ea6 100644
+index 9fa8f8c9088e1fc42408dca5b8d046668a0fc101..2a9cbec71ea6e6692152cf787891762c39f65625 100644
 --- a/libcxx/include/__cxx03/__support/ibm/locale_mgmt_zos.h
 +++ b/libcxx/include/__cxx03/__support/ibm/locale_mgmt_zos.h
 @@ -10,7 +10,7 @@
@@ -76,7 +76,7 @@ index 9fa8f8c9088e..2a9cbec71ea6 100644
  #  include <__cxx03/string>
  
 diff --git a/libcxx/include/__locale_dir/locale_base_api.h b/libcxx/include/__locale_dir/locale_base_api.h
-index c1e73caeecce..12611341eb8e 100644
+index c1e73caeecced96b6472c57f91d94bc6d535d589..12611341eb8e74c22942e30790d571e0100db053 100644
 --- a/libcxx/include/__locale_dir/locale_base_api.h
 +++ b/libcxx/include/__locale_dir/locale_base_api.h
 @@ -133,6 +133,8 @@
@@ -90,7 +90,7 @@ index c1e73caeecce..12611341eb8e 100644
  #  include <__locale_dir/locale_base_api/bsd_locale_fallbacks.h>
 diff --git a/libcxx/include/__locale_dir/locale_base_api/serenity.h b/libcxx/include/__locale_dir/locale_base_api/serenity.h
 new file mode 100644
-index 000000000000..13abb601dcb7
+index 0000000000000000000000000000000000000000..13abb601dcb75d1459df0b943ef6ca3e911c8e46
 --- /dev/null
 +++ b/libcxx/include/__locale_dir/locale_base_api/serenity.h
 @@ -0,0 +1,22 @@
@@ -117,7 +117,7 @@ index 000000000000..13abb601dcb7
 +
 +#endif // _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
 diff --git a/libcxx/include/__support/ibm/locale_mgmt_zos.h b/libcxx/include/__support/ibm/locale_mgmt_zos.h
-index 5fc04b6b4b29..787cc04d5792 100644
+index 5fc04b6b4b2990c1a5f5b7fae083108c27e907b5..787cc04d57929537d73d871ffd10d1467c3565cf 100644
 --- a/libcxx/include/__support/ibm/locale_mgmt_zos.h
 +++ b/libcxx/include/__support/ibm/locale_mgmt_zos.h
 @@ -10,7 +10,7 @@
@@ -130,7 +130,7 @@ index 5fc04b6b4b29..787cc04d5792 100644
  #  include <string>
  
 diff --git a/libcxx/include/locale b/libcxx/include/locale
-index 5af674d19414..3f8526776beb 100644
+index 5af674d19414b45ef066cfeac9c9c69f85fab00d..3f8526776beb4c036232ab0786a512bfdd124cc8 100644
 --- a/libcxx/include/locale
 +++ b/libcxx/include/locale
 @@ -224,7 +224,7 @@ template <class charT> class messages_byname;
@@ -143,7 +143,7 @@ index 5af674d19414..3f8526776beb 100644
  #        include <nl_types.h>
  #      else
 diff --git a/libcxx/src/CMakeLists.txt b/libcxx/src/CMakeLists.txt
-index 4e9bf900af4c..ea40148ae278 100644
+index 4e9bf900af4c53ba885be708482277eb97371c13..ea40148ae2784bfa8c6a6045440eb91d8ddb87b7 100644
 --- a/libcxx/src/CMakeLists.txt
 +++ b/libcxx/src/CMakeLists.txt
 @@ -113,6 +113,10 @@ elseif(ZOS)
@@ -158,7 +158,7 @@ index 4e9bf900af4c..ea40148ae278 100644
  
  if (LIBCXX_ENABLE_FILESYSTEM)
 diff --git a/libcxx/src/include/config_elast.h b/libcxx/src/include/config_elast.h
-index 7edff2d9375d..ba24e85be8d0 100644
+index 7edff2d9375d46f465a1d72b916b1ccb1a555724..ba24e85be8d0a2b4502d5986377081c1bcd036ee 100644
 --- a/libcxx/src/include/config_elast.h
 +++ b/libcxx/src/include/config_elast.h
 @@ -37,6 +37,8 @@
@@ -171,7 +171,7 @@ index 7edff2d9375d..ba24e85be8d0 100644
  #  define _LIBCPP_ELAST 1160
  #elif defined(_LIBCPP_MSVCRT_LIKE)
 diff --git a/libcxx/src/support/ibm/xlocale_zos.cpp b/libcxx/src/support/ibm/xlocale_zos.cpp
-index 136999ec0b02..23a56c0f5867 100644
+index 136999ec0b02f8171bbd8d170aca2b68f7d65681..23a56c0f586728e37ee89bba608b1853983bcb94 100644
 --- a/libcxx/src/support/ibm/xlocale_zos.cpp
 +++ b/libcxx/src/support/ibm/xlocale_zos.cpp
 @@ -7,7 +7,9 @@

@@ -43,7 +43,7 @@ Co-authored-by: Dan Klishch <danilklishch@gmail.com>
  create mode 100644 clang/test/Driver/serenity.cpp
 
 diff --git a/clang/lib/Basic/Targets.cpp b/clang/lib/Basic/Targets.cpp
-index 281aebdb1c35..c9da76cae09b 100644
+index 281aebdb1c35d328c39dd4122355f13d57fab943..c9da76cae09be0163d0a8308b3a8e39c4fd512f1 100644
 --- a/clang/lib/Basic/Targets.cpp
 +++ b/clang/lib/Basic/Targets.cpp
 @@ -170,6 +170,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
@@ -87,7 +87,7 @@ index 281aebdb1c35..c9da76cae09b 100644
        return std::make_unique<X86_64TargetInfo>(Triple, Opts);
      }
 diff --git a/clang/lib/Basic/Targets/OSTargets.h b/clang/lib/Basic/Targets/OSTargets.h
-index 991efd2bde01..0b67528245fd 100644
+index 991efd2bde01f4660742dd8fd427b611679571c5..0b67528245fd960ad4c3879c0c77e80911c0fdc7 100644
 --- a/clang/lib/Basic/Targets/OSTargets.h
 +++ b/clang/lib/Basic/Targets/OSTargets.h
 @@ -1040,6 +1040,23 @@ public:
@@ -115,7 +115,7 @@ index 991efd2bde01..0b67528245fd 100644
  } // namespace clang
  #endif // LLVM_CLANG_LIB_BASIC_TARGETS_OSTARGETS_H
 diff --git a/clang/lib/Driver/CMakeLists.txt b/clang/lib/Driver/CMakeLists.txt
-index 5bdb6614389c..0b147a4754db 100644
+index 5bdb6614389cffcce642f90252e605ad6e4fe9e0..0b147a4754dbead6134ad9994bc2c6fbedc78da2 100644
 --- a/clang/lib/Driver/CMakeLists.txt
 +++ b/clang/lib/Driver/CMakeLists.txt
 @@ -75,6 +75,7 @@ add_clang_library(clangDriver
@@ -127,7 +127,7 @@ index 5bdb6614389c..0b147a4754db 100644
    ToolChains/SPIRV.cpp
    ToolChains/SPIRVOpenMP.cpp
 diff --git a/clang/lib/Driver/Driver.cpp b/clang/lib/Driver/Driver.cpp
-index 87855fdb7997..2549f5940ff4 100644
+index 87855fdb7997105d8d425b4c8690b072d3c6cde7..2549f5940ff4f4973810831691c4c2e00f1e0507 100644
 --- a/clang/lib/Driver/Driver.cpp
 +++ b/clang/lib/Driver/Driver.cpp
 @@ -45,6 +45,7 @@
@@ -149,7 +149,7 @@ index 87855fdb7997..2549f5940ff4 100644
        TC = std::make_unique<toolchains::Solaris>(*this, Target, Args);
        break;
 diff --git a/clang/lib/Driver/ToolChain.cpp b/clang/lib/Driver/ToolChain.cpp
-index acf9d264d631..5653b07368c4 100644
+index acf9d264d631b33f048e90b7f81ea8ad771c84d9..5653b07368c4e31947f1f7e4e8acde66aeeb862a 100644
 --- a/clang/lib/Driver/ToolChain.cpp
 +++ b/clang/lib/Driver/ToolChain.cpp
 @@ -702,6 +702,8 @@ StringRef ToolChain::getOSLibName() const {
@@ -173,7 +173,7 @@ index acf9d264d631..5653b07368c4 100644
          unwindLibType = ToolChain::UNW_None;
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
 new file mode 100644
-index 000000000000..7d95fe55a0fd
+index 0000000000000000000000000000000000000000..7d95fe55a0fde623720e5974a860826753f4bf1f
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
 @@ -0,0 +1,208 @@
@@ -387,7 +387,7 @@ index 000000000000..7d95fe55a0fd
 +}
 diff --git a/clang/lib/Driver/ToolChains/Serenity.h b/clang/lib/Driver/ToolChains/Serenity.h
 new file mode 100644
-index 000000000000..2a1f685cb662
+index 0000000000000000000000000000000000000000..2a1f685cb6623e080a2c141dfc3790efdb09419c
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.h
 @@ -0,0 +1,84 @@
@@ -476,7 +476,7 @@ index 000000000000..2a1f685cb662
 +
 +#endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SERENITY_H
 diff --git a/clang/lib/Lex/InitHeaderSearch.cpp b/clang/lib/Lex/InitHeaderSearch.cpp
-index bb2a21356fa8..6a8922661285 100644
+index bb2a21356fa8fe615526c4f50edd98644ac40ce0..6a892266128550d8a3bdab4364b9935ca235ac80 100644
 --- a/clang/lib/Lex/InitHeaderSearch.cpp
 +++ b/clang/lib/Lex/InitHeaderSearch.cpp
 @@ -300,6 +300,7 @@ bool InitHeaderSearch::ShouldAddDefaultIncludePaths(
@@ -489,21 +489,21 @@ index bb2a21356fa8..6a8922661285 100644
    case llvm::Triple::WASI:
 diff --git a/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/include/c++/v1/.keep b/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/include/c++/v1/.keep
 new file mode 100644
-index 000000000000..e69de29bb2d1
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/include/x86_64-pc-serenity/c++/v1/.keep b/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/include/x86_64-pc-serenity/c++/v1/.keep
 new file mode 100644
-index 000000000000..e69de29bb2d1
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crt0.o b/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crt0.o
 new file mode 100644
-index 000000000000..e69de29bb2d1
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crt0_shared.o b/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/lib/crt0_shared.o
 new file mode 100644
-index 000000000000..e69de29bb2d1
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/local/.keep b/clang/test/Driver/Inputs/serenity_x86_64_tree/usr/local/.keep
 new file mode 100644
-index 000000000000..e69de29bb2d1
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 diff --git a/clang/test/Driver/pic.c b/clang/test/Driver/pic.c
-index f5d074542279..0438ef621ef5 100644
+index f5d0745422790629bb5dc55812df2f28e4ae9bb1..0438ef621ef5559898ab401124ad1ac76a3c2ee4 100644
 --- a/clang/test/Driver/pic.c
 +++ b/clang/test/Driver/pic.c
 @@ -329,3 +329,9 @@
@@ -517,7 +517,7 @@ index f5d074542279..0438ef621ef5 100644
 +// RUN: %clang -c %s --target=aarch64-pc-serenity -### 2>&1 \
 +// RUN:   | FileCheck %s --check-prefix=CHECK-PIE2
 diff --git a/clang/test/Driver/save-stats.c b/clang/test/Driver/save-stats.c
-index ad7867a99168..94d93dc23920 100644
+index ad7867a9916860b6c425d4c79ba8e6db8bc8b7da..94d93dc23920cf414e1342f62251e7f89f52a60d 100644
 --- a/clang/test/Driver/save-stats.c
 +++ b/clang/test/Driver/save-stats.c
 @@ -32,6 +32,8 @@
@@ -531,7 +531,7 @@ index ad7867a99168..94d93dc23920 100644
  // CHECK-LTO: "-plugin-opt=stats-file=save-stats.stats"
 diff --git a/clang/test/Driver/serenity.cpp b/clang/test/Driver/serenity.cpp
 new file mode 100644
-index 000000000000..c36370f0d22e
+index 0000000000000000000000000000000000000000..c36370f0d22e5081b74a6224c408ac717da9a29e
 --- /dev/null
 +++ b/clang/test/Driver/serenity.cpp
 @@ -0,0 +1,199 @@
