@@ -173,9 +173,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
     new (&bsp_processor()) Processor();
     bsp_processor().early_initialize(0);
 
-    // Invoke the constructors needed for the kernel heap
-    for (ctor_func_t* ctor = start_heap_ctors; ctor < end_heap_ctors; ctor++)
-        (*ctor)();
     kmalloc_init();
 
     load_kernel_symbol_table();
