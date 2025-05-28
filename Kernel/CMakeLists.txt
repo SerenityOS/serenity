@@ -13,10 +13,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "riscv64")
     set(KERNEL_ARCH riscv64)
 endif()
 
-set(KERNEL_HEAP_SOURCES
-    Heap/kmalloc.cpp
-)
-
 set(KERNEL_SOURCES
     Arch/init.cpp
     Arch/DeferredCallPool.cpp
@@ -247,6 +243,7 @@ set(KERNEL_SOURCES
     Firmware/DeviceTree/DeviceTree.cpp
     Firmware/DeviceTree/Management.cpp
     Firmware/DeviceTree/PlatformInit.cpp
+    Heap/kmalloc.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IRQHandler.cpp
     Interrupts/PCIIRQHandler.cpp
@@ -827,9 +824,6 @@ set(SOURCES
 
 add_compile_definitions(KERNEL)
 
-add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
-target_link_libraries(kernel_heap PUBLIC GenericClangPlugin)
-
 add_executable(Kernel ${SOURCES})
 add_dependencies(Kernel generate_EscapeSequenceStateMachine.h generate_version_header)
 target_link_libraries(Kernel PUBLIC GenericClangPlugin)
@@ -876,15 +870,12 @@ if (ENABLE_KERNEL_LTO)
     check_ipo_supported()
     add_definitions(-DENABLE_KERNEL_LTO)
     set_property(TARGET Kernel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-    if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-        set_property(TARGET kernel_heap PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-    endif()
 endif()
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_link_libraries(Kernel PRIVATE kernel_heap gcc)
+    target_link_libraries(Kernel PRIVATE gcc)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
-    target_link_libraries(Kernel PRIVATE kernel_heap clang_rt.builtins)
+    target_link_libraries(Kernel PRIVATE clang_rt.builtins)
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
