@@ -9,9 +9,23 @@
 #include <AK/ArbitrarySizedEnum.h>
 #include <AK/Types.h>
 #include <AK/UFixedBigInt.h>
+#include <Kernel/Arch/riscv64/Extensions.h>
 
 #include <AK/Platform.h>
 VALIDATE_IS_RISCV64()
 
+namespace Kernel {
+
+#define __ENUMERATE_RISCV_EXTENSION(name, _, cpu_feature_index) name = CPUFeature(1u) << cpu_feature_index,
+
+// clang-format off
 AK_MAKE_ARBITRARY_SIZED_ENUM(CPUFeature, u256,
-    __End = CPUFeature(1u) << 255u) // SENTINEL VALUE
+    ENUMERATE_RISCV_EXTENSIONS(__ENUMERATE_RISCV_EXTENSION)
+    __End = CPUFeature(1u) << 255u)
+// clang-format on
+
+#undef __ENUMERATE_RISCV_EXTENSION
+
+StringView cpu_feature_to_name(CPUFeature::Type const&);
+
+}
