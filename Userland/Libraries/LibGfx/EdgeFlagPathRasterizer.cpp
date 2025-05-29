@@ -435,6 +435,7 @@ FLATTEN __attribute__((hot)) void EdgeFlagPathRasterizer<SubpixelSample>::write_
 template class EdgeFlagPathRasterizer<Sample8xAA>;
 template class EdgeFlagPathRasterizer<Sample16xAA>;
 template class EdgeFlagPathRasterizer<Sample32xAA>;
+template class EdgeFlagPathRasterizer<Sample2xNoAA>;
 template class EdgeFlagPathRasterizer<Sample8xNoAA>;
 
 }
