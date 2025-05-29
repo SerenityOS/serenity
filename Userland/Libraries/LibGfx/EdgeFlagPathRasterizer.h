@@ -50,6 +50,21 @@ struct AA {
     }
 };
 
+// 2-bit sample (mainly for use with NoAA).
+template<template<unsigned SamplesPerPixel> class AAMode>
+struct Sample2x : AAMode<2> {
+    using Type = u8;
+    static constexpr Array nrooks_subpixel_offsets {
+        (0.0f / 2.0f),
+        (1.0f / 2.0f),
+    };
+
+    static u8 compute_coverage(Type sample)
+    {
+        return coverage_lut[sample];
+    }
+};
+
 // See paper for diagrams for how these offsets work, but they allow for nicely spread out samples in each pixel.
 template<template<unsigned SamplesPerPixel> class AAMode>
 struct Sample8x : AAMode<8> {
@@ -246,11 +261,13 @@ private:
 using Sample8xAA = Detail::Sample8x<Detail::AA>;
 using Sample16xAA = Detail::Sample16x<Detail::AA>;
 using Sample32xAA = Detail::Sample32x<Detail::AA>;
+using Sample2xNoAA = Detail::Sample2x<Detail::NoAA>;
 using Sample8xNoAA = Detail::Sample8x<Detail::NoAA>;
 
 extern template class EdgeFlagPathRasterizer<Sample8xAA>;
 extern template class EdgeFlagPathRasterizer<Sample16xAA>;
 extern template class EdgeFlagPathRasterizer<Sample32xAA>;
+extern template class EdgeFlagPathRasterizer<Sample2xNoAA>;
 extern template class EdgeFlagPathRasterizer<Sample8xNoAA>;
 
 }
