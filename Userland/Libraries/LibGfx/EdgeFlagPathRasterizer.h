@@ -22,7 +22,7 @@ namespace Detail {
 
 template<unsigned SampleCount>
 struct NoAA {
-    static inline constexpr unsigned SamplesPerPixel = SampleCount;
+    static constexpr unsigned SamplesPerPixel = SampleCount;
 
     static u8 coverage_to_alpha(u8 coverage)
     {
@@ -32,7 +32,7 @@ struct NoAA {
 
 template<unsigned SampleCount>
 struct AA {
-    static inline constexpr unsigned SamplesPerPixel = SampleCount;
+    static constexpr unsigned SamplesPerPixel = SampleCount;
 
     static u8 coverage_to_alpha(u8 coverage)
     {
@@ -71,7 +71,6 @@ struct Sample8x : AAMode<8> {
 
 template<template<unsigned SamplesPerPixel> class AAMode>
 struct Sample16x : AAMode<16> {
-    static inline constexpr unsigned SamplesPerPixel = 8;
     using Type = u16;
     static constexpr Array nrooks_subpixel_offsets {
         (1.0f / 16.0f),
@@ -153,7 +152,7 @@ public:
 
 private:
     using SampleType = typename SubpixelSample::Type;
-    static inline constexpr unsigned SamplesPerPixel = SubpixelSample::SamplesPerPixel;
+    static constexpr unsigned SamplesPerPixel = SubpixelSample::SamplesPerPixel;
 
     struct EdgeExtent {
         int min_x;
