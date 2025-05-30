@@ -12,6 +12,7 @@
 #include <Kernel/Bus/USB/xHCI/xHCIRootHub.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Memory/TypedMapping.h>
+#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel::USB {
 

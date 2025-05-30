@@ -155,7 +155,12 @@ ErrorOr<void> VFSRootContext::pivot_root(FileBackedFileSystem::List& file_backed
             mounted_count++;
             // NOTE: Now fill the root custody with a valid custody for the new root mount.
             m_root_custody.with([&root_mount_point](auto& custody) {
-                custody = move(root_mount_point);
+                // NOTE: We can't assign here, as that would destroy the original custody;
+                //       Which would inevitably call the destructor of some Inode, which requires
+                //       a mutex lock, which we can't do here, as we are under a spinlock.
+                //       The swap delays the destruction of the original custody
+                //       until we leave the function propper and we are under no extra locks.
+                swap(custody, root_mount_point);
             });
             return {};
         });
