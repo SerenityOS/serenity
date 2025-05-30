@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
 import gdb
+import gdb.printing
 import gdb.types
 import re
 
