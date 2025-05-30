@@ -58,7 +58,7 @@ private:
 
 public:
     using List = IntrusiveList<&SlavePTY::m_list_node>;
-    static RecursiveSpinlockProtected<SlavePTY::List, LockRank::None>& all_instances();
+    static SpinlockProtected<SlavePTY::List, LockRank::None>& all_instances();
 };
 
 }

@@ -61,7 +61,7 @@ private:
     Details const m_details;
 
     RefPtr<Custody> const m_host_custody;
-    RecursiveSpinlockProtected<int, LockRank::None> m_flags { 0 };
+    SpinlockProtected<int, LockRank::None> m_flags { 0 };
 
     SetOnce m_immutable;
 

@@ -59,22 +59,25 @@ ErrorOr<void> DeviceControlDevice::ioctl(OpenFileDescription&, unsigned request,
         unsigned fd { 0 };
         TRY(copy_from_user(&fd, static_ptr_cast<unsigned*>(arg)));
         auto file_description = TRY(Process::current().open_file_description(fd));
-        auto device = TRY(LoopDevice::create_with_file_description(file_description));
-        unsigned index = device->index();
+        auto& device = TRY(LoopDevice::create_with_file_description(file_description)).leak_ref();
+        unsigned index = device.index();
         return copy_to_user(static_ptr_cast<unsigned*>(arg), &index);
     }
     case DEVCTL_DESTROY_LOOP_DEVICE: {
         unsigned index { 0 };
         TRY(copy_from_user(&index, static_ptr_cast<unsigned*>(arg)));
-        return LoopDevice::all_instances().with([index](auto& list) -> ErrorOr<void> {
-            for (auto& device : list) {
-                if (device.index() == index) {
-                    device.remove({});
-                    return {};
-                }
+
+        bool found = false;
+        Device::run_by_type_and_major_minor_numbers(DeviceNodeType::Block, to_underlying(MajorAllocation::BlockDeviceFamily::Loop), index, [&](RefPtr<Device> device) {
+            if (device) {
+                found = true;
+                static_cast<LoopDevice&>(*device).unref();
             }
-            return Error::from_errno(ENODEV);
         });
+        if (!found)
+            return Error::from_errno(ENODEV);
+
+        return {};
     }
     default:
         return Error::from_errno(EINVAL);

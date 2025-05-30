@@ -22,9 +22,9 @@ DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs)
 {
 }
 
-DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, InodeIndex index, SlavePTY& pty)
+DevPtsFSInode::DevPtsFSInode(DevPtsFS& fs, InodeIndex index, LockWeakPtr<SlavePTY> pty)
     : Inode(fs, index)
-    , m_pty(pty)
+    , m_pty(move(pty))
 {
 }
 
@@ -82,14 +82,7 @@ ErrorOr<NonnullRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
     if (!pty_index.has_value())
         return ENOENT;
 
-    return SlavePTY::all_instances().with([&](auto& list) -> ErrorOr<NonnullRefPtr<Inode>> {
-        for (SlavePTY& slave_pty : list) {
-            if (slave_pty.index() != pty_index.value())
-                continue;
-            return fs().get_inode({ fsid(), pty_index_to_inode_index(pty_index.value()) });
-        }
-        return ENOENT;
-    });
+    return fs().get_inode({ fsid(), pty_index_to_inode_index(pty_index.value()) });
 }
 
 ErrorOr<void> DevPtsFSInode::flush_metadata()
