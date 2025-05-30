@@ -619,11 +619,30 @@ PDFErrorOr<void> RadialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform
 
 using GouraudColor = Vector<float, 4>;
 
+struct GouraudBounds {
+    GouraudColor min;
+    GouraudColor max;
+};
+
+static GouraudBounds bounds_from_decode_array(ReadonlySpan<float> decode_array)
+{
+    VERIFY(decode_array.size() % 2 == 0);
+    size_t number_of_components = decode_array.size() / 2;
+    GouraudBounds bounds;
+    bounds.min.resize(number_of_components);
+    bounds.max.resize(number_of_components);
+    for (size_t i = 0; i < number_of_components; ++i) {
+        bounds.min[i] = decode_array[i * 2];
+        bounds.max[i] = decode_array[i * 2 + 1];
+    }
+    return bounds;
+}
+
 class GouraudPaintStyle final : public Gfx::PaintStyle {
 public:
-    static NonnullRefPtr<GouraudPaintStyle> create(NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors)
+    static NonnullRefPtr<GouraudPaintStyle> create(NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors, GouraudBounds bounds)
     {
-        return adopt_ref(*new GouraudPaintStyle(move(color_space), move(functions), move(points), move(colors)));
+        return adopt_ref(*new GouraudPaintStyle(move(color_space), move(functions), move(points), move(colors), move(bounds)));
     }
 
     // We can't override sample_color() because it doesn't receive a useful origin.
@@ -635,11 +654,12 @@ public:
     }
 
 private:
-    GouraudPaintStyle(NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors)
+    GouraudPaintStyle(NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors, GouraudBounds bounds)
         : m_functions(move(functions))
         , m_color_space(move(color_space))
         , m_points(move(points))
         , m_colors(move(colors))
+        , m_bounds(move(bounds))
     {
     }
 
@@ -649,6 +669,7 @@ private:
     NonnullRefPtr<ColorSpace> m_color_space;
     Array<Gfx::FloatPoint, 3> m_points;
     Array<GouraudColor, 3> m_colors;
+    GouraudBounds m_bounds;
 };
 
 Gfx::Color GouraudPaintStyle::sample_color_in_bbox(Gfx::IntPoint point_in_bbox) const
@@ -670,19 +691,16 @@ Gfx::Color GouraudPaintStyle::sample_color_in_bbox(Gfx::IntPoint point_in_bbox) 
 
     m_functions.visit(
         [&](Empty) {
-            // FIXME: Technically, clamp to /Decode bound (but the color space already clamps to its bounds, which in practice is the same).
             for (int i = 0; i < m_color_space->number_of_components(); ++i)
-                color[i] = alpha * m_colors[0][i] + beta * m_colors[1][i] + gamma * m_colors[2][i];
+                color[i] = clamp(alpha * m_colors[0][i] + beta * m_colors[1][i] + gamma * m_colors[2][i], m_bounds.min[i], m_bounds.max[i]);
         },
         [&](Function const& function) {
-            // FIXME: Clamp to /Decode bound.
-            float input = clamp(alpha * m_colors[0][0] + beta * m_colors[1][0] + gamma * m_colors[2][0], 0.0f, 1.0f);
+            float input = clamp(alpha * m_colors[0][0] + beta * m_colors[1][0] + gamma * m_colors[2][0], m_bounds.min[0], m_bounds.max[0]);
             auto result = MUST(function.evaluate(to_array({ input })));
             result.copy_to(color);
         },
         [&](Vector<NonnullRefPtr<Function>> const& functions) {
-            // FIXME: Clamp to /Decode bound.
-            float input = clamp(alpha * m_colors[0][0] + beta * m_colors[1][0] + gamma * m_colors[2][0], 0.0f, 1.0f);
+            float input = clamp(alpha * m_colors[0][0] + beta * m_colors[1][0] + gamma * m_colors[2][0], m_bounds.min[0], m_bounds.max[0]);
             for (size_t i = 0; i < functions.size(); ++i) {
                 auto result = MUST(functions[i]->evaluate(to_array({ input })));
                 color[i] = result[0];
@@ -692,7 +710,7 @@ Gfx::Color GouraudPaintStyle::sample_color_in_bbox(Gfx::IntPoint point_in_bbox) 
     return MUST(m_color_space->style(color)).get<Gfx::Color>();
 }
 
-void draw_gouraud_triangle(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors)
+void draw_gouraud_triangle(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors, GouraudBounds const& bounds)
 {
     static_assert(points.size() == 3);
     static_assert(colors.size() == 3);
@@ -703,7 +721,7 @@ void draw_gouraud_triangle(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> colo
     triangle_path.line_to(points[2]);
     triangle_path.close();
 
-    auto paint_style = GouraudPaintStyle::create(move(color_space), move(functions), move(points), move(colors));
+    auto paint_style = GouraudPaintStyle::create(move(color_space), move(functions), move(points), move(colors), bounds);
 
     // To hide triangle edges. (Setting this to <Gfx::SampleAA> is useful for debugging; it makes triangle edges visible.)
     painter.fill_path<Gfx::SampleNoAA>(triangle_path, paint_style);
@@ -715,7 +733,7 @@ struct Triangle {
     u32 c;
 };
 
-PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransform const& ctm, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType const& functions, Vector<Triangle> const& triangles, Vector<float> const& vertex_data)
+PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransform const& ctm, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType const& functions, Vector<Triangle> const& triangles, Vector<float> const& vertex_data, GouraudBounds bounds)
 {
     size_t const number_of_components = !functions.has<Empty>() ? 1 : color_space->number_of_components();
     bool is_indexed = color_space->family() == ColorSpaceFamily::Indexed;
@@ -723,6 +741,7 @@ PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransf
     if (is_indexed) {
         indexed_color_space = static_ptr_cast<IndexedColorSpace>(color_space);
         color_space = indexed_color_space->base_color_space();
+        bounds = bounds_from_decode_array(color_space->default_decode());
     }
 
     int const n = 2 + number_of_components;
@@ -752,17 +771,17 @@ PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransf
             }
             colors[i] = color;
         }
-        draw_gouraud_triangle(painter, color_space, functions, { a, b, c }, move(colors));
+        draw_gouraud_triangle(painter, color_space, functions, { a, b, c }, move(colors), move(bounds));
     }
 
     return {};
 }
 
-static void draw_gouraud_quad(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 4> points, Array<GouraudColor, 4> colors)
+static void draw_gouraud_quad(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 4> points, Array<GouraudColor, 4> colors, GouraudBounds const& bounds)
 {
     // FIXME: https://gpuopen.com/learn/bilinear-interpolation-quadrilateral-barycentric-coordinates/ / https://jcgt.org/published/0011/03/04/paper.pdf instead.
-    draw_gouraud_triangle(painter, color_space, functions, { points[0], points[1], points[3] }, { colors[0], colors[1], colors[3] });
-    draw_gouraud_triangle(painter, color_space, functions, { points[0], points[2], points[3] }, { colors[0], colors[2], colors[3] });
+    draw_gouraud_triangle(painter, color_space, functions, { points[0], points[1], points[3] }, { colors[0], colors[1], colors[3] }, bounds);
+    draw_gouraud_triangle(painter, color_space, functions, { points[0], points[2], points[3] }, { colors[0], colors[2], colors[3] }, bounds);
 }
 
 struct GouraudBezierPatch {
@@ -770,7 +789,7 @@ struct GouraudBezierPatch {
     Array<GouraudColor, 4> colors {};
 };
 
-static void draw_gouraud_bezier_patch(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, GouraudBezierPatch const& patch, int depth = 0)
+static void draw_gouraud_bezier_patch(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, GouraudBezierPatch const& patch, GouraudBounds const& bounds, int depth = 0)
 {
     auto const& points = patch.points;
     auto const& colors = patch.colors;
@@ -778,7 +797,7 @@ static void draw_gouraud_bezier_patch(Gfx::Painter& painter, NonnullRefPtr<Color
     // FIXME: This is very naive. Instead, compute error from linear patch and adaptively subdivide based on that error.
     //        Figure out a way to deal with T-junctions.
     if (depth == 5) {
-        draw_gouraud_quad(painter, color_space, functions, { points[0], points[3], points[12], points[15] }, colors);
+        draw_gouraud_quad(painter, color_space, functions, { points[0], points[3], points[12], points[15] }, colors, bounds);
         return;
     }
 
@@ -824,7 +843,7 @@ static void draw_gouraud_bezier_patch(Gfx::Painter& painter, NonnullRefPtr<Color
     new_colors[2] = lerp(colors[0], colors[2], 0.5f);
     new_colors[3] = lerp(lerp(colors[0], colors[1], 0.5f), lerp(colors[2], colors[3], 0.5f), 0.5f);
 
-    draw_gouraud_bezier_patch(painter, color_space, functions, new_patch, depth + 1);
+    draw_gouraud_bezier_patch(painter, color_space, functions, new_patch, bounds, depth + 1);
 
     // Lower right.
     // clang-format off
@@ -854,7 +873,7 @@ static void draw_gouraud_bezier_patch(Gfx::Painter& painter, NonnullRefPtr<Color
     new_colors[2] = lerp(lerp(colors[0], colors[1], 0.5f), lerp(colors[2], colors[3], 0.5f), 0.5f);
     new_colors[3] = lerp(colors[1], colors[3], 0.5f);
 
-    draw_gouraud_bezier_patch(painter, color_space, functions, new_patch, depth + 1);
+    draw_gouraud_bezier_patch(painter, color_space, functions, new_patch, bounds, depth + 1);
 
     // Upper left.
     // clang-format off
@@ -884,7 +903,7 @@ static void draw_gouraud_bezier_patch(Gfx::Painter& painter, NonnullRefPtr<Color
     new_colors[2] = colors[2];
     new_colors[3] = lerp(colors[2], colors[3], 0.5f);
 
-    draw_gouraud_bezier_patch(painter, color_space, functions, new_patch, depth + 1);
+    draw_gouraud_bezier_patch(painter, color_space, functions, new_patch, bounds, depth + 1);
 
     // Upper right.
     // clang-format off
@@ -914,7 +933,7 @@ static void draw_gouraud_bezier_patch(Gfx::Painter& painter, NonnullRefPtr<Color
     new_colors[2] = lerp(colors[2], colors[3], 0.5f);
     new_colors[3] = colors[3];
 
-    draw_gouraud_bezier_patch(painter, color_space, functions, new_patch, depth + 1);
+    draw_gouraud_bezier_patch(painter, color_space, functions, new_patch, bounds, depth + 1);
 }
 
 class FreeFormGouraudShading final : public Shading {
@@ -924,11 +943,12 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    FreeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, Vector<Triangle> triangles, ShadingFunctionsType functions)
+    FreeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, Vector<Triangle> triangles, ShadingFunctionsType functions, GouraudBounds bounds)
         : m_common_entries(move(common_entries))
         , m_vertex_data(move(vertex_data))
         , m_triangles(move(triangles))
         , m_functions(move(functions))
+        , m_bounds(move(bounds))
     {
     }
 
@@ -938,6 +958,7 @@ private:
     Vector<float> m_vertex_data;
     Vector<Triangle> m_triangles;
     ShadingFunctionsType m_functions;
+    GouraudBounds m_bounds;
 };
 
 PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> FreeFormGouraudShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
@@ -1040,12 +1061,13 @@ PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> FreeFormGouraudShading::create
         }
     }
 
-    return adopt_ref(*new FreeFormGouraudShading(move(common_entries), move(vertex_data), move(triangles), move(functions)));
+    GouraudBounds bounds = bounds_from_decode_array(decode.span().slice(4));
+    return adopt_ref(*new FreeFormGouraudShading(move(common_entries), move(vertex_data), move(triangles), move(functions), move(bounds)));
 }
 
 PDFErrorOr<void> FreeFormGouraudShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
-    return draw_gouraud_triangles(painter, ctm, m_common_entries.color_space, m_functions, m_triangles, m_vertex_data);
+    return draw_gouraud_triangles(painter, ctm, m_common_entries.color_space, m_functions, m_triangles, m_vertex_data, m_bounds);
 }
 
 class LatticeFormGouraudShading final : public Shading {
@@ -1055,11 +1077,12 @@ public:
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
-    LatticeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, Vector<Triangle> triangles, ShadingFunctionsType functions)
+    LatticeFormGouraudShading(CommonEntries common_entries, Vector<float> vertex_data, Vector<Triangle> triangles, ShadingFunctionsType functions, GouraudBounds bounds)
         : m_common_entries(move(common_entries))
         , m_vertex_data(move(vertex_data))
         , m_triangles(move(triangles))
         , m_functions(move(functions))
+        , m_bounds(move(bounds))
     {
     }
 
@@ -1069,6 +1092,7 @@ private:
     Vector<float> m_vertex_data;
     Vector<Triangle> m_triangles;
     ShadingFunctionsType m_functions;
+    GouraudBounds m_bounds;
 };
 
 PDFErrorOr<NonnullRefPtr<LatticeFormGouraudShading>> LatticeFormGouraudShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
@@ -1161,12 +1185,13 @@ PDFErrorOr<NonnullRefPtr<LatticeFormGouraudShading>> LatticeFormGouraudShading::
         }
     }
 
-    return adopt_ref(*new LatticeFormGouraudShading(move(common_entries), move(vertex_data), move(triangles), move(functions)));
+    GouraudBounds bounds = bounds_from_decode_array(decode.span().slice(4));
+    return adopt_ref(*new LatticeFormGouraudShading(move(common_entries), move(vertex_data), move(triangles), move(functions), move(bounds)));
 }
 
 PDFErrorOr<void> LatticeFormGouraudShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
-    return draw_gouraud_triangles(painter, ctm, m_common_entries.color_space, m_functions, m_triangles, m_vertex_data);
+    return draw_gouraud_triangles(painter, ctm, m_common_entries.color_space, m_functions, m_triangles, m_vertex_data, m_bounds);
 }
 
 class CoonsPatchShading final : public Shading {
@@ -1182,11 +1207,12 @@ private:
         u32 colors[4];
     };
 
-    CoonsPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<CoonsPatch> patches, ShadingFunctionsType functions)
+    CoonsPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<CoonsPatch> patches, ShadingFunctionsType functions, GouraudBounds bounds)
         : m_common_entries(move(common_entries))
         , m_patch_data(move(patch_data))
         , m_patches(move(patches))
         , m_functions(move(functions))
+        , m_bounds(move(bounds))
     {
     }
 
@@ -1197,6 +1223,7 @@ private:
     Vector<float> m_patch_data;
     Vector<CoonsPatch> m_patches;
     ShadingFunctionsType m_functions;
+    GouraudBounds m_bounds;
 };
 
 PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> CoonsPatchShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
@@ -1395,7 +1422,8 @@ PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> CoonsPatchShading::create(Document*
         bitstream.align_to_byte_boundary();
     }
 
-    return adopt_ref(*new CoonsPatchShading(move(common_entries), move(patch_data), move(patches), move(functions)));
+    GouraudBounds bounds = bounds_from_decode_array(decode.span().slice(4));
+    return adopt_ref(*new CoonsPatchShading(move(common_entries), move(patch_data), move(patches), move(functions), move(bounds)));
 }
 
 PDFErrorOr<void> CoonsPatchShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
@@ -1405,9 +1433,11 @@ PDFErrorOr<void> CoonsPatchShading::draw(Gfx::Painter& painter, Gfx::AffineTrans
 
     bool is_indexed = color_space->family() == ColorSpaceFamily::Indexed;
     RefPtr<IndexedColorSpace> indexed_color_space;
+    auto bounds = m_bounds;
     if (is_indexed) {
         indexed_color_space = static_ptr_cast<IndexedColorSpace>(color_space);
         color_space = indexed_color_space->base_color_space();
+        bounds = bounds_from_decode_array(color_space->default_decode());
     }
 
     for (auto& patch : m_patches) {
@@ -1478,7 +1508,7 @@ PDFErrorOr<void> CoonsPatchShading::draw(Gfx::Painter& painter, Gfx::AffineTrans
         }
 
         swap(bezier_patch.colors[2], bezier_patch.colors[3]); // Coons order goes counter-clockwise, bezier patch in scanline order.
-        draw_gouraud_bezier_patch(painter, color_space, m_functions, bezier_patch);
+        draw_gouraud_bezier_patch(painter, color_space, m_functions, bezier_patch, bounds);
     }
     return {};
 }
@@ -1505,11 +1535,12 @@ private:
         u32 colors[4];
     };
 
-    TensorProductPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<TensorProductPatch> patches, ShadingFunctionsType functions)
+    TensorProductPatchShading(CommonEntries common_entries, Vector<float> patch_data, Vector<TensorProductPatch> patches, ShadingFunctionsType functions, GouraudBounds bounds)
         : m_common_entries(move(common_entries))
         , m_patch_data(move(patch_data))
         , m_patches(move(patches))
         , m_functions(move(functions))
+        , m_bounds(move(bounds))
     {
     }
 
@@ -1520,6 +1551,7 @@ private:
     Vector<float> m_patch_data;
     Vector<TensorProductPatch> m_patches;
     ShadingFunctionsType m_functions;
+    GouraudBounds m_bounds;
 };
 
 PDFErrorOr<NonnullRefPtr<TensorProductPatchShading>> TensorProductPatchShading::create(Document* document, NonnullRefPtr<StreamObject> shading_stream, CommonEntries common_entries)
@@ -1760,7 +1792,8 @@ PDFErrorOr<NonnullRefPtr<TensorProductPatchShading>> TensorProductPatchShading::
         bitstream.align_to_byte_boundary();
     }
 
-    return adopt_ref(*new TensorProductPatchShading(move(common_entries), move(patch_data), move(patches), move(functions)));
+    GouraudBounds bounds = bounds_from_decode_array(decode.span().slice(4));
+    return adopt_ref(*new TensorProductPatchShading(move(common_entries), move(patch_data), move(patches), move(functions), move(bounds)));
 }
 
 PDFErrorOr<void> TensorProductPatchShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
@@ -1769,9 +1802,11 @@ PDFErrorOr<void> TensorProductPatchShading::draw(Gfx::Painter& painter, Gfx::Aff
     size_t const number_of_components = !m_functions.has<Empty>() ? 1 : color_space->number_of_components();
     bool is_indexed = color_space->family() == ColorSpaceFamily::Indexed;
     RefPtr<IndexedColorSpace> indexed_color_space;
+    auto bounds = m_bounds;
     if (is_indexed) {
         indexed_color_space = static_ptr_cast<IndexedColorSpace>(color_space);
         color_space = indexed_color_space->base_color_space();
+        bounds = bounds_from_decode_array(color_space->default_decode());
     }
 
     for (auto& patch : m_patches) {
@@ -1798,7 +1833,7 @@ PDFErrorOr<void> TensorProductPatchShading::draw(Gfx::Painter& painter, Gfx::Aff
             bezier_patch.colors[i] = color;
         }
 
-        draw_gouraud_bezier_patch(painter, color_space, m_functions, bezier_patch);
+        draw_gouraud_bezier_patch(painter, color_space, m_functions, bezier_patch, bounds);
     }
     return {};
 }
