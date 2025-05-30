@@ -22,8 +22,12 @@ set(TEST_FILES
     paths.pdf
     pattern.pdf
     rotate.pdf
+    shade-coons.pdf
     shade-function.pdf
+    shade-gouraud-free.pdf
+    shade-gouraud-lattice.pdf
     shade-radial.pdf
+    shade-tensor.pdf
     standard-14-fonts.pdf
     text.pdf
     type1.pdf
