@@ -100,28 +100,13 @@ class AKFixedArrayPrinter:
     def __init__(self, val):
         self.val = val
 
-    def get_storage(self):
-        storage = self.val["m_storage"]
-
-        return None if int(storage) == 0 else storage
-
     def to_string(self):
-        storage = self.get_storage()
-        if storage is not None:
-            size = storage["size"]
-        else:
-            size = 0
-
+        size = self.val["m_size"]
         return f'{AKFixedArrayPrinter.prettyprint_type(self.val.type)} of size {size}'
 
     def children(self):
-        storage = self.get_storage()
-
-        if storage is None:
-            return []
-        else:
-            size = storage["size"]
-            elements = storage["elements"]
+        size = self.val["m_size"]
+        elements = self.val["m_elements"]
 
         # Very arbitrary limit, just to catch UAF'd and garbage vector values with a silly number of elements
         if size > 373373:
