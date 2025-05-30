@@ -468,15 +468,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     export_submenu->add_action(GUI::Action::create("As &BMP...",
         [&](GUI::Action&) {
-            save_image(ImageType::BMP, ".bmp"sv);
+            save_image(ImageType::BMP, "bmp"sv);
         }));
     export_submenu->add_action(GUI::Action::create("As &PNG...", { Mod_Ctrl | Mod_Shift, Key_S },
         [&](GUI::Action&) {
-            save_image(ImageType::PNG, ".png"sv);
+            save_image(ImageType::PNG, "png"sv);
         }));
     export_submenu->add_action(GUI::Action::create("As &QOI...",
         [&](GUI::Action&) {
-            save_image(ImageType::QOI, ".qoi"sv);
+            save_image(ImageType::QOI, "qoi"sv);
         }));
 
     export_submenu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"sv)));
