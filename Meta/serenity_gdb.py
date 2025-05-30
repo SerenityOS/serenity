@@ -25,6 +25,8 @@ def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
         return AKDistinctNumeric
     elif klass == 'AK::FixedArray':
         return AKFixedArrayPrinter
+    elif klass == 'AK::FixedStringBuffer':
+        return AKFixedStringBuffer
     elif klass == 'AK::HashMap':
         return AKHashMapPrettyPrinter
     elif klass == 'AK::RefCounted':
@@ -118,6 +120,22 @@ class AKFixedArrayPrinter:
     def prettyprint_type(cls, type):
         template_type = type.template_argument(0)
         return f'AK::FixedArray<{handler_class_for_type(template_type).prettyprint_type(template_type)}>'
+
+
+class AKFixedStringBuffer:
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        if int(self.val["m_stored_length"]) == 0:
+            return '""'
+        else:
+            return '"' + self.val["m_storage"]["__data"].string(length=self.val["m_stored_length"]) + '"'
+
+    @classmethod
+    def prettyprint_type(cls, type):
+        size = type.template_argument(0)
+        return f'AK::FixedStringBuffer<{size}>'
 
 
 class AKRefCounted:
