@@ -175,7 +175,7 @@ class AKStringView:
         if int(self.val["m_length"]) == 0:
             return '""'
         else:
-            return self.val["m_characters"].string(length=self.val["m_length"])
+            return '"' + self.val["m_characters"].string(length=self.val["m_length"]) + '"'
 
     @classmethod
     def prettyprint_type(cls, type):
