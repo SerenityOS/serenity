@@ -8,6 +8,9 @@ import gdb.types
 import re
 
 
+void_ptr = gdb.lookup_type('void').pointer()
+
+
 def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
     typename = str(type.tag)
 
@@ -21,6 +24,8 @@ def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
         return AKArray
     elif klass == 'AK::Atomic':
         return AKAtomic
+    elif klass == 'AK::Detail::IntrusiveList':
+        return AKIntrusiveList
     elif klass == 'AK::DistinctNumeric':
         return AKDistinctNumeric
     elif klass == 'AK::FixedArray':
@@ -76,6 +81,32 @@ class AKAtomic:
     def prettyprint_type(cls, type):
         contained_type = type.template_argument(0)
         return f'AK::Atomic<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
+
+
+class AKIntrusiveList:
+    def __init__(self, val: gdb.Value):
+        self.val = val
+        self.element_type = self.val.type.template_argument(0)
+        self.node_member_offset = int(self.val.type.template_argument(2).cast(void_ptr))
+
+    def _node_to_value(self, node_ptr: gdb.Value) -> gdb.Value:
+        return (node_ptr.cast(void_ptr) - self.node_member_offset).cast(self.element_type.pointer()).dereference()
+
+    def to_string(self):
+        return AKIntrusiveList.prettyprint_type(self.val.type)
+
+    def children(self):
+        current = self.val["m_storage"]["m_first"]
+        i = 0
+        while current != 0:
+            yield f"[{i}]", self._node_to_value(current)
+            current = current["m_next"]
+            i += 1
+
+    @classmethod
+    def prettyprint_type(cls, type):
+        element_type = type.template_argument(0)
+        return f'AK::IntrusiveList<{handler_class_for_type(element_type).prettyprint_type(element_type)}>'
 
 
 class AKDistinctNumeric:
