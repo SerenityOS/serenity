@@ -33,11 +33,11 @@
 
 namespace Kernel {
 
-static Singleton<RecursiveSpinlockProtected<Thread::GlobalList, LockRank::None>> s_list;
+static Singleton<RecursiveSpinlockProtected<Thread::GlobalList, LockRank::None>> s_thread_list;
 
 RecursiveSpinlockProtected<Thread::GlobalList, LockRank::None>& Thread::all_instances()
 {
-    return *s_list;
+    return *s_thread_list;
 }
 
 ErrorOr<NonnullRefPtr<Thread>> Thread::create(NonnullRefPtr<Process> process)
