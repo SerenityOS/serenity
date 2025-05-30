@@ -212,6 +212,7 @@ set(CMD_SOURCES_CPP
     watchfs.cpp
     wc.cpp
     which.cpp
+    who.cpp
     whoami.cpp
     wsctl.cpp
     xargs.cpp
