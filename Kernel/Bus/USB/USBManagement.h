@@ -27,8 +27,6 @@ public:
 
     void add_controller(NonnullLockRefPtr<USBController>);
 
-    static void add_recipe(DeviceTree::DeviceRecipe<NonnullLockRefPtr<USBController>>);
-
     static Vector<NonnullLockRefPtr<Driver>>& available_drivers();
 
 private:
