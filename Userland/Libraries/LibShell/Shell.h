@@ -330,8 +330,8 @@ public:
 
     bool posix_mode() const { return m_in_posix_mode; }
 
-    struct termios termios;
-    struct termios default_termios;
+    Optional<struct termios> termios;
+    Optional<struct termios> default_termios;
     bool was_interrupted { false };
     bool was_resized { false };
 

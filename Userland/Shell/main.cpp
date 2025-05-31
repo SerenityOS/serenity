@@ -240,6 +240,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         shell->cache_path();
     }
 
+    editor->initialize();
+    shell->termios = editor->termios();
+    shell->default_termios = editor->default_termios();
+
     Vector<String> args_to_pass;
     TRY(args_to_pass.try_ensure_capacity(script_args.size()));
     for (auto& arg : script_args)
@@ -262,9 +266,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    editor->initialize();
-    shell->termios = editor->termios();
-    shell->default_termios = editor->default_termios();
     shell->add_child(*editor);
 
     Core::EventLoop::current().post_event(*shell, make<Core::CustomEvent>(Shell::Shell::ShellEventType::ReadLine));
