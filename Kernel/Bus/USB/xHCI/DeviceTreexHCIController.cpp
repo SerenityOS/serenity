@@ -60,15 +60,8 @@ ErrorOr<void> DeviceTreexHCIControllerDriver::probe(DeviceTree::Device const& de
     // GIC interrupts 32-1019 are for SPIs, so add 32 to get the GIC interrupt ID.
     auto interrupt_number = (reinterpret_cast<BigEndian<u32> const*>(interrupt.interrupt_identifier.data())[1]) + 32;
 
-    DeviceTree::DeviceRecipe<NonnullLockRefPtr<USBController>> recipe {
-        name(),
-        device.node_name(),
-        [registers_resource, node_name = device.node_name(), interrupt_number] {
-            return DeviceTreexHCIController::try_to_initialize(registers_resource, node_name, interrupt_number);
-        },
-    };
-
-    USBManagement::add_recipe(move(recipe));
+    auto controller = TRY(DeviceTreexHCIController::try_to_initialize(registers_resource, device.node_name(), interrupt_number));
+    USB::USBManagement::the().add_controller(controller);
 
     return {};
 }
