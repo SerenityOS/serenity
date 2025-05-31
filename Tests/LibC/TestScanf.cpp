@@ -26,7 +26,8 @@ constexpr static Array<unsigned char, 32> to_value_t(T x)
         T t;
     };
 
-    auto value = Value { .t = x };
+    Value value { .v = { 0 } };
+    value.t = x;
 
     return {
         value.v[0],
