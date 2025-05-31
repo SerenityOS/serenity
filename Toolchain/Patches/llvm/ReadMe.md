@@ -9,6 +9,11 @@ This makes the compiler look for libraries and headers in the right
 places, and enables some security mitigations like stack-smashing
 protection and position-independent code by default.
 
+Co-authored-by: kleines Filmröllchen <filmroellchen@serenityos.org>
+Co-authored-by: Andrew Kaster <akaster@serenityos.org>
+Co-authored-by: Daniel Bertalan <dani@danielbertalan.dev>
+Co-authored-by: Dan Klishch <danilklishch@gmail.com>
+
 ## `0002-llvm-Add-support-for-building-LLVM-on-SerenityOS.patch`
 
 Add support for building LLVM on SerenityOS
@@ -22,6 +27,7 @@ POSIX shm is not supported by SerenityOS yet, so disable it in Orc.
 
 Serenity gives each thread a default of 1MiB of stack. Increase the
 default stack size for llvm applications when running on SerenityOS.
+
 
 ## `0003-tools-Support-building-shared-libLLVM-and-libClang-f.patch`
 
@@ -55,3 +61,12 @@ LibC, namely:
 * Use libc++'s builtin character type table instead of the one provided
   by LibC as there's a lot of extra porting work to convince the rest of
   locale.cpp to use our character type table properly.
+
+## `0006-RISCV-Implement-__init_riscv_feature_bits-for-Sereni.patch`
+
+Implement __init_riscv_feature_bits for SerenityOS
+
+The SerenityOS dynamic linker provides a magic function
+"__get_riscv_feature_bits" that populates __riscv_feature_bits
+and __riscv_cpu_model.
+

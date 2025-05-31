@@ -15,6 +15,9 @@
 
 namespace Kernel::SBI {
 
+// Returns true if the SBI version is 0.1.
+bool is_legacy();
+
 // Chapter 3. Binary Encoding
 enum class SBIError : long {
     // SBI_SUCCESS: Completed successfully
