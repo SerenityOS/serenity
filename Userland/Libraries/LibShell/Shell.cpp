@@ -665,7 +665,9 @@ int Shell::run_command(StringView cmd, Optional<SourcePosition> source_position_
         return 1;
     }
 
-    tcgetattr(0, &termios);
+    struct termios current_termios;
+    tcgetattr(0, &current_termios);
+    termios = current_termios;
 
     (void)command->run(*this);
 
@@ -836,8 +838,8 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
 
         close(sync_pipe[0]);
 
-        if (!m_is_subshell && command.should_wait)
-            tcsetattr(0, TCSANOW, &default_termios);
+        if (default_termios.has_value() && !m_is_subshell && command.should_wait)
+            tcsetattr(0, TCSANOW, &*default_termios);
 
         m_is_subshell = true;
 
@@ -1182,7 +1184,8 @@ void Shell::restore_ios()
 {
     if (m_is_subshell)
         return;
-    tcsetattr(0, TCSANOW, &termios);
+    if (termios.has_value())
+        tcsetattr(0, TCSANOW, &*termios);
     tcsetpgrp(STDOUT_FILENO, m_pid);
     tcsetpgrp(STDIN_FILENO, m_pid);
 }
