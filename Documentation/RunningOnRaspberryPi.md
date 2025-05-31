@@ -10,22 +10,24 @@ This is for development purposes only - Serenity doesn't currently boot on Raspb
 
 ### Step 1: Set Up Serenity
 
-Please follow [build instructions](BuildInstructions.md) to download and build Serenity. Make sure everything builds successfully for x86.
+Please follow [build instructions](BuildInstructions.md) to download and build Serenity.
 
 ### Step 2: Build and run in emulator
 
-Use the following command to build and run the AArch64 version of the system:
+Use the following command to build and run the AArch64 version of the system in an emulated Pi 3:
 
 ```console
-Meta/serenity.sh run aarch64
+SERENITY_RUN=raspi3b Meta/serenity.sh run aarch64
 ```
 
-It should build Serenity and open a QEMU window, similar to the x86 version. You should see some messages in the terminal.
+Replace `raspi3b` with `raspi4b` if you want a Pi 4.
+
+It should build Serenity and open a QEMU window. It should reach the desktop after some time.
 
 You can also run it under gdb with:
 
 ```console
-Meta/serenity.sh gdb aarch64
+SERENITY_RUN=raspi3b Meta/serenity.sh gdb aarch64
 ```
 
 ## Running on real hardware using an SD card
