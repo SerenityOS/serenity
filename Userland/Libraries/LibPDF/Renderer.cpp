@@ -1085,6 +1085,7 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
     if (dict->contains(CommonNames::RI))
         TRY(handle_set_color_rendering_intent(Array { dict->get_value(CommonNames::RI) }));
 
+    // Overprint control.
     // FIXME: OP
     // FIXME: op
     // FIXME: OPM
@@ -1092,12 +1093,19 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
     if (dict->contains(CommonNames::Font))
         return Error::rendering_unsupported_error("Setting font via graphics state dictionary not yet supported");
 
+    // Black generation.
     // FIXME: BG
     // FIXME: BG2
+
+    // Undercolor removal.
     // FIXME: UCR
     // FIXME: UCR2
+
+    // Transfer function.
     // FIXME: TR
     // FIXME: TR2
+
+    // Halftone dictionary.
     // FIXME: HT
 
     if (dict->contains(CommonNames::FL))
@@ -1105,12 +1113,16 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
 
     // FIXME: SM
     // FIXME: SA
+
+    // Transparent imaging model.
     // FIXME: BM
     // FIXME: SMask
     // FIXME: CA
     // FIXME: ca
     // FIXME: AIS
     // FIXME: TK
+
+    // PDF 2.0 additions.
     // FIXME: UseBlackPtComp
     // FIXME: HTO
 
