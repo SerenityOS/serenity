@@ -505,6 +505,20 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> Renderer::get_font(FontCacheKey const& key)
     return font;
 }
 
+PDFErrorOr<void> Renderer::set_font(NonnullRefPtr<DictObject> font_dictionary, float font_size)
+{
+    text_state().font_size = font_size;
+
+    auto& text_rendering_matrix = calculate_text_rendering_matrix();
+    auto cache_font_size = text_rendering_matrix.x_scale() * text_state().font_size / text_state().horizontal_scaling;
+
+    FontCacheKey cache_key { move(font_dictionary), cache_font_size };
+    text_state().font = TRY(get_font(cache_key));
+
+    m_text_rendering_matrix_is_dirty = true;
+    return {};
+}
+
 RENDERER_HANDLER(text_set_font)
 {
     auto resources = extra_resources.value_or(m_page.resources);
@@ -513,16 +527,7 @@ RENDERER_HANDLER(text_set_font)
     auto target_font_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
     auto font_dictionary = MUST(fonts_dictionary->get_dict(m_document, target_font_name));
 
-    text_state().font_size = args[1].to_float();
-
-    auto& text_rendering_matrix = calculate_text_rendering_matrix();
-    auto font_size = text_rendering_matrix.x_scale() * text_state().font_size / text_state().horizontal_scaling;
-
-    FontCacheKey cache_key { move(font_dictionary), font_size };
-    text_state().font = TRY(get_font(cache_key));
-
-    m_text_rendering_matrix_is_dirty = true;
-    return {};
+    return set_font(font_dictionary, args[1].to_float());
 }
 
 RENDERER_HANDLER(text_set_rendering_mode)
