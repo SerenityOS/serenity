@@ -189,8 +189,8 @@ private:
 
     Gfx::AffineTransform calculate_image_space_transformation(Gfx::IntSize);
 
-    PDFErrorOr<void> set_font(NonnullRefPtr<DictObject> font_dictionary, float font_size);
     PDFErrorOr<NonnullRefPtr<PDFFont>> get_font(FontCacheKey const&);
+    PDFErrorOr<void> set_font(NonnullRefPtr<DictObject> font_dictionary, float font_size);
 
     class ScopedState;
 
