@@ -1088,7 +1088,10 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
     // FIXME: OP
     // FIXME: op
     // FIXME: OPM
-    // FIXME: Font
+
+    if (dict->contains(CommonNames::Font))
+        return Error::rendering_unsupported_error("Setting font via graphics state dictionary not yet supported");
+
     // FIXME: BG
     // FIXME: BG2
     // FIXME: UCR
