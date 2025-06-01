@@ -77,7 +77,7 @@ struct GraphicsState {
     ColorOrStyle stroke_style { Color::Black };
     ColorOrStyle paint_style { Color::Black };
     ByteString color_rendering_intent { "RelativeColorimetric"sv };
-    float flatness_tolerance { 0.0f };
+    float flatness_tolerance { 1.0f };
     float line_width { 1.0f };
     LineCapStyle line_cap_style { LineCapStyle::ButtCap };
     LineJoinStyle line_join_style { LineJoinStyle::Miter };
