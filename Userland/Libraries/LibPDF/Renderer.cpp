@@ -507,16 +507,16 @@ PDFErrorOr<NonnullRefPtr<PDFFont>> Renderer::get_font(FontCacheKey const& key)
 
 RENDERER_HANDLER(text_set_font)
 {
+    auto resources = extra_resources.value_or(m_page.resources);
+    auto fonts_dictionary = MUST(resources->get_dict(m_document, CommonNames::Font));
+
     auto target_font_name = MUST(m_document->resolve_to<NameObject>(args[0]))->name();
+    auto font_dictionary = MUST(fonts_dictionary->get_dict(m_document, target_font_name));
 
     text_state().font_size = args[1].to_float();
 
     auto& text_rendering_matrix = calculate_text_rendering_matrix();
     auto font_size = text_rendering_matrix.x_scale() * text_state().font_size / text_state().horizontal_scaling;
-
-    auto resources = extra_resources.value_or(m_page.resources);
-    auto fonts_dictionary = MUST(resources->get_dict(m_document, CommonNames::Font));
-    auto font_dictionary = MUST(fonts_dictionary->get_dict(m_document, target_font_name));
 
     FontCacheKey cache_key { move(font_dictionary), font_size };
     text_state().font = TRY(get_font(cache_key));
