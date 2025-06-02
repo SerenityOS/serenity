@@ -69,6 +69,11 @@ struct ClippingPaths {
     Gfx::Path next;
 };
 
+enum class AlphaSource {
+    Opacity,
+    Shape,
+};
+
 struct GraphicsState {
     Gfx::AffineTransform ctm;
     ClippingPaths clipping_paths;
@@ -84,6 +89,10 @@ struct GraphicsState {
     float miter_limit { 10.0f };
     LineDashPattern line_dash_pattern { {}, 0 };
     TextState text_state {};
+
+    float stroke_alpha_constant { 1.0f };
+    float paint_alpha_constant { 1.0f };
+    AlphaSource alpha_source { AlphaSource::Opacity };
 };
 
 struct RenderingPreferences {

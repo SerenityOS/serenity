@@ -1117,10 +1117,18 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
     // Transparent imaging model.
     // FIXME: BM
     // FIXME: SMask
-    // FIXME: CA
-    // FIXME: ca
-    // FIXME: AIS
-    // FIXME: TK
+
+    if (dict->contains(CommonNames::CA))
+        state().stroke_alpha_constant = dict->get_value(CommonNames::CA).to_float();
+
+    if (dict->contains(CommonNames::ca))
+        state().paint_alpha_constant = dict->get_value(CommonNames::ca).to_float();
+
+    if (dict->contains(CommonNames::AIS)) // "alpha is shape"
+        state().alpha_source = dict->get_value(CommonNames::AIS).get<bool>() ? AlphaSource::Shape : AlphaSource::Opacity;
+
+    if (dict->contains(CommonNames::TK))
+        state().text_state.knockout = dict->get_value(CommonNames::TK).get<bool>();
 
     // PDF 2.0 additions.
     // FIXME: UseBlackPtComp
