@@ -327,7 +327,7 @@ void Renderer::end_path_paint()
 void Renderer::stroke_current_path()
 {
     if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style());
+        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style(), state().stroke_alpha_constant);
     } else {
         m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), stroke_style());
     }
@@ -336,7 +336,7 @@ void Renderer::stroke_current_path()
 void Renderer::fill_current_path(Gfx::WindingRule winding_rule)
 {
     if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, winding_rule);
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), state().paint_alpha_constant, winding_rule);
     } else {
         m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), winding_rule);
     }
@@ -344,6 +344,12 @@ void Renderer::fill_current_path(Gfx::WindingRule winding_rule)
 
 void Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding_rule)
 {
+    // Note: Just drawing the stroke on top of the fill is incorrect if the stroke is not opaque.
+    // See "Special Path-Painting Considerations" on page 569 of the PDF 1.7 spec:
+    // We're supposed to draw the stroke first, and then the fill only on pixels that weren't already stroked.
+    // (The spec says this in the language of knockout groups.)
+    // Having said that, while Acrobat Reader and PDFium get this right, PDF.js and Preview.app do not.
+    // FIXME: Once we have support for transparency groups, do this per spec.
     auto path_end = m_current_path.end();
     m_current_path.close_all_subpaths();
     fill_current_path(winding_rule);
@@ -718,7 +724,7 @@ RENDERER_HANDLER(set_painting_space)
 
 RENDERER_HANDLER(set_stroking_color)
 {
-    state().stroke_style = TRY(state().stroke_color_space->style(args));
+    state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->style(args)), state().stroke_alpha_constant);
     return {};
 }
 
@@ -731,13 +737,13 @@ RENDERER_HANDLER(set_stroking_color_extended)
         return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
     }
 
-    state().stroke_style = TRY(state().stroke_color_space->style(args));
+    state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->style(args)), state().stroke_alpha_constant);
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color)
 {
-    state().paint_style = TRY(state().paint_color_space->style(args));
+    state().paint_style = style_with_alpha(TRY(state().paint_color_space->style(args)), state().paint_alpha_constant);
     return {};
 }
 
@@ -750,49 +756,49 @@ RENDERER_HANDLER(set_painting_color_extended)
         return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
     }
 
-    state().paint_style = TRY(state().paint_color_space->style(args));
+    state().paint_style = style_with_alpha(TRY(state().paint_color_space->style(args)), state().paint_alpha_constant);
     return {};
 }
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_gray)
 {
     state().stroke_color_space = DeviceGrayColorSpace::the();
-    state().stroke_style = TRY(state().stroke_color_space->style(args));
+    state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->style(args)), state().stroke_alpha_constant);
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_gray)
 {
     state().paint_color_space = DeviceGrayColorSpace::the();
-    state().paint_style = TRY(state().paint_color_space->style(args));
+    state().paint_style = style_with_alpha(TRY(state().paint_color_space->style(args)), state().paint_alpha_constant);
     return {};
 }
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_rgb)
 {
     state().stroke_color_space = DeviceRGBColorSpace::the();
-    state().stroke_style = TRY(state().stroke_color_space->style(args));
+    state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->style(args)), state().stroke_alpha_constant);
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_rgb)
 {
     state().paint_color_space = DeviceRGBColorSpace::the();
-    state().paint_style = TRY(state().paint_color_space->style(args));
+    state().paint_style = style_with_alpha(TRY(state().paint_color_space->style(args)), state().paint_alpha_constant);
     return {};
 }
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_cmyk)
 {
     state().stroke_color_space = TRY(DeviceCMYKColorSpace::the());
-    state().stroke_style = TRY(state().stroke_color_space->style(args));
+    state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->style(args)), state().stroke_alpha_constant);
     return {};
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_cmyk)
 {
     state().paint_color_space = TRY(DeviceCMYKColorSpace::the());
-    state().paint_style = TRY(state().paint_color_space->style(args));
+    state().paint_style = style_with_alpha(TRY(state().paint_color_space->style(args)), state().paint_alpha_constant);
     return {};
 }
 
@@ -1249,11 +1255,15 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
         }
     }
 
-    if (dict->contains(CommonNames::CA))
+    if (dict->contains(CommonNames::CA)) {
         state().stroke_alpha_constant = dict->get_value(CommonNames::CA).to_float();
+        state().stroke_style = style_with_alpha(state().stroke_style, state().stroke_alpha_constant);
+    }
 
-    if (dict->contains(CommonNames::ca))
+    if (dict->contains(CommonNames::ca)) {
         state().paint_alpha_constant = dict->get_value(CommonNames::ca).to_float();
+        state().paint_style = style_with_alpha(state().paint_style, state().paint_alpha_constant);
+    }
 
     if (dict->contains(CommonNames::AIS)) // "alpha is shape"
         state().alpha_source = dict->get_value(CommonNames::AIS).get<bool>() ? AlphaSource::Shape : AlphaSource::Opacity;
