@@ -530,6 +530,81 @@ RENDERER_HANDLER(text_set_font)
     return set_font(font_dictionary, args[1].to_float());
 }
 
+PDFErrorOr<void> Renderer::set_blend_mode(ReadonlySpan<Value> args)
+{
+    // "the application should use the first blend mode in the array that it recognizes (or Normal if it recognizes none of them)."
+    for (auto const& arg : args) {
+        auto name = TRY(m_document->resolve_to<NameObject>(arg))->name();
+        if (name == CommonNames::Normal) {
+            state().blend_mode = BlendMode::Normal;
+            return {};
+        }
+        if (name == CommonNames::Multiply) {
+            state().blend_mode = BlendMode::Multiply;
+            return {};
+        }
+        if (name == CommonNames::Screen) {
+            state().blend_mode = BlendMode::Screen;
+            return {};
+        }
+        if (name == CommonNames::Overlay) {
+            state().blend_mode = BlendMode::Overlay;
+            return {};
+        }
+        if (name == CommonNames::Darken) {
+            state().blend_mode = BlendMode::Darken;
+            return {};
+        }
+        if (name == CommonNames::Lighten) {
+            state().blend_mode = BlendMode::Lighten;
+            return {};
+        }
+        if (name == CommonNames::ColorDodge) {
+            state().blend_mode = BlendMode::ColorDodge;
+            return {};
+        }
+        if (name == CommonNames::ColorBurn) {
+            state().blend_mode = BlendMode::ColorBurn;
+            return {};
+        }
+        if (name == CommonNames::HardLight) {
+            state().blend_mode = BlendMode::HardLight;
+            return {};
+        }
+        if (name == CommonNames::SoftLight) {
+            state().blend_mode = BlendMode::SoftLight;
+            return {};
+        }
+        if (name == CommonNames::Difference) {
+            state().blend_mode = BlendMode::Difference;
+            return {};
+        }
+        if (name == CommonNames::Exclusion) {
+            state().blend_mode = BlendMode::Exclusion;
+            return {};
+        }
+        if (name == CommonNames::Hue) {
+            state().blend_mode = BlendMode::Hue;
+            return {};
+        }
+        if (name == CommonNames::Saturation) {
+            state().blend_mode = BlendMode::Saturation;
+            return {};
+        }
+        if (name == CommonNames::Color) {
+            state().blend_mode = BlendMode::Color;
+            return {};
+        }
+        if (name == CommonNames::Luminosity) {
+            state().blend_mode = BlendMode::Luminosity;
+            return {};
+        }
+        dbgln("Unknown blend mode: {}", name);
+    }
+    state().blend_mode = BlendMode::Normal;
+    return {};
+}
+
 RENDERER_HANDLER(text_set_rendering_mode)
 {
     text_state().rendering_mode = static_cast<TextRenderingMode>(args[0].get<int>());
@@ -1115,7 +1190,15 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
     // FIXME: SA
 
     // Transparent imaging model.
-    // FIXME: BM
+
+    if (dict->contains(CommonNames::BM)) {
+        auto args = TRY(dict->get_object(m_document, CommonNames::BM));
+        if (args->is<ArrayObject>())
+            TRY(set_blend_mode(args->cast<ArrayObject>()->elements()));
+        else
+            TRY(set_blend_mode(Array { Value { args->cast<NameObject>() } }));
+    }
+
     // FIXME: SMask
 
     if (dict->contains(CommonNames::CA))

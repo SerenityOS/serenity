@@ -69,6 +69,28 @@ struct ClippingPaths {
     Gfx::Path next;
 };
 
+enum class BlendMode {
+    // TABLE 7.2 Standard separable blend modes
+    Normal,
+    Multiply,
+    Screen,
+    Overlay,
+    Darken,
+    Lighten,
+    ColorDodge,
+    ColorBurn,
+    HardLight,
+    SoftLight,
+    Difference,
+    Exclusion,
+
+    // TABLE 7.3 Standard nonseparable blend modes
+    Hue,
+    Saturation,
+    Color,
+    Luminosity,
+};
+
 enum class AlphaSource {
     Opacity,
     Shape,
@@ -90,6 +112,7 @@ struct GraphicsState {
     LineDashPattern line_dash_pattern { {}, 0 };
     TextState text_state {};
 
+    BlendMode blend_mode { BlendMode::Normal };
     float stroke_alpha_constant { 1.0f };
     float paint_alpha_constant { 1.0f };
     AlphaSource alpha_source { AlphaSource::Opacity };
@@ -200,6 +223,8 @@ private:
 
     PDFErrorOr<NonnullRefPtr<PDFFont>> get_font(FontCacheKey const&);
     PDFErrorOr<void> set_font(NonnullRefPtr<DictObject> font_dictionary, float font_size);
+
+    PDFErrorOr<void> set_blend_mode(ReadonlySpan<Value>);
 
     class ScopedState;
 
