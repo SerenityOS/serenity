@@ -103,8 +103,8 @@
     X(FontFile2)                  \
     X(FontFile3)                  \
     X(FontMatrix)                 \
-    X(FunctionType)               \
     X(Function)                   \
+    X(FunctionType)               \
     X(Functions)                  \
     X(Gamma)                      \
     X(H)                          \
@@ -169,8 +169,8 @@
     X(Registry)                   \
     X(Resources)                  \
     X(Root)                       \
-    X(Rows)                       \
     X(Rotate)                     \
+    X(Rows)                       \
     X(RunLengthDecode)            \
     X(S)                          \
     X(SA)                         \
