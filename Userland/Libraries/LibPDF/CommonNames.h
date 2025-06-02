@@ -45,6 +45,9 @@
     X(CalGray)                    \
     X(CalRGB)                     \
     X(CharProcs)                  \
+    X(Color)                      \
+    X(ColorBurn)                  \
+    X(ColorDodge)                 \
     X(ColorSpace)                 \
     X(Colors)                     \
     X(Columns)                    \
@@ -60,6 +63,7 @@
     X(DW)                         \
     X(DW2)                        \
     X(DamagedRowsBeforeError)     \
+    X(Darken)                     \
     X(Decode)                     \
     X(DecodeParms)                \
     X(DescendantFonts)            \
@@ -69,6 +73,7 @@
     X(DeviceGray)                 \
     X(DeviceN)                    \
     X(DeviceRGB)                  \
+    X(Difference)                 \
     X(Differences)                \
     X(Domain)                     \
     X(E)                          \
@@ -80,6 +85,7 @@
     X(EncryptMetadata)            \
     X(EndOfBlock)                 \
     X(EndOfLine)                  \
+    X(Exclusion)                  \
     X(ExtGState)                  \
     X(Extend)                     \
     X(F)                          \
@@ -110,7 +116,9 @@
     X(H)                          \
     X(HT)                         \
     X(HTO)                        \
+    X(HardLight)                  \
     X(Height)                     \
+    X(Hue)                        \
     X(ICCBased)                   \
     X(ID)                         \
     X(Image)                      \
@@ -137,17 +145,21 @@
     X(Length1)                    \
     X(Length2)                    \
     X(Length3)                    \
+    X(Lighten)                    \
     X(Limits)                     \
     X(Linearized)                 \
+    X(Luminosity)                 \
     X(ML)                         \
     X(Mask)                       \
     X(Matrix)                     \
     X(MediaBox)                   \
     X(MissingWidth)               \
     X(ModDate)                    \
+    X(Multiply)                   \
     X(N)                          \
     X(Names)                      \
     X(Next)                       \
+    X(Normal)                     \
     X(O)                          \
     X(OE)                         \
     X(OP)                         \
@@ -155,6 +167,7 @@
     X(Order)                      \
     X(Ordering)                   \
     X(Outlines)                   \
+    X(Overlay)                    \
     X(P)                          \
     X(Pages)                      \
     X(Parent)                     \
@@ -177,10 +190,13 @@
     X(SM)                         \
     X(SMask)                      \
     X(SMaskInData)                \
+    X(Saturation)                 \
+    X(Screen)                     \
     X(Separation)                 \
     X(Shading)                    \
     X(ShadingType)                \
     X(Size)                       \
+    X(SoftLight)                  \
     X(StmF)                       \
     X(StrF)                       \
     X(Subject)                    \
