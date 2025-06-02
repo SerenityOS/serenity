@@ -215,6 +215,13 @@ private:
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_resources(Value const&, NonnullRefPtr<DictObject>);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_document(NonnullRefPtr<Object>);
 
+    static ColorOrStyle style_with_alpha(ColorOrStyle style, float alpha)
+    {
+        if (style.has<Color>())
+            return style.get<Color>().with_alpha(round_to<u8>(clamp(alpha * 255, 0, 255)));
+        return style;
+    }
+
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }
     ALWAYS_INLINE TextState& text_state() { return state().text_state; }
 
