@@ -17,6 +17,7 @@
     X(AntiAlias)                  \
     X(Author)                     \
     X(BBox)                       \
+    X(BC)                         \
     X(BG)                         \
     X(BG2)                        \
     X(BM)                         \
@@ -112,6 +113,7 @@
     X(Function)                   \
     X(FunctionType)               \
     X(Functions)                  \
+    X(G)                          \
     X(Gamma)                      \
     X(H)                          \
     X(HT)                         \
@@ -121,6 +123,7 @@
     X(Hue)                        \
     X(ICCBased)                   \
     X(ID)                         \
+    X(Identity)                   \
     X(Image)                      \
     X(ImageMask)                  \
     X(Index)                      \
@@ -159,6 +162,7 @@
     X(N)                          \
     X(Names)                      \
     X(Next)                       \
+    X(None)                       \
     X(Normal)                     \
     X(O)                          \
     X(OE)                         \

@@ -113,6 +113,20 @@ struct GraphicsState {
     TextState text_state {};
 
     BlendMode blend_mode { BlendMode::Normal };
+
+    struct SMask {
+        // TABLE 7.10 Entries in a soft-mask dictionary
+        enum class Type {
+            Alpha,
+            Luminosity,
+        };
+        Type type { Type::Alpha };
+        NonnullRefPtr<StreamObject> group;
+        Vector<float, 4> background_color { 0.0f, 0.0f, 0.0f, 0.0f };
+        RefPtr<Function> transfer_function {}; // nullptr means identity function.
+    };
+    Optional<SMask> soft_mask {};
+
     float stroke_alpha_constant { 1.0f };
     float paint_alpha_constant { 1.0f };
     AlphaSource alpha_source { AlphaSource::Opacity };
