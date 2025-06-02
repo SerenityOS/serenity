@@ -1136,6 +1136,57 @@ Gfx::Path::StrokeStyle Renderer::stroke_style() const
     return { line_width(), line_cap_style(), line_join_style(), state().miter_limit, move(dash_pattern), dash_phase };
 }
 
+static PDFErrorOr<GraphicsState::SMask> read_smask_dict(NonnullRefPtr<Document> document, NonnullRefPtr<DictObject> dict)
+{
+    // PDF 1.7 spec, TABLE 7.10 Entries in a soft-mask dictionary
+
+    if (dict->contains(CommonNames::Type)) {
+        auto type = TRY(dict->get_name(document, CommonNames::Type));
+        if (type->name() != CommonNames::Mask)
+            return Error::malformed_error("Soft mask dictionary has invalid /Type: {}", type->name());
+    }
+
+    auto group = TRY(dict->get_stream(document, CommonNames::G));
+    // FIXME: Validate if group is a transparency group XObject here?
+
+    GraphicsState::SMask smask { .group = group };
+
+    smask.type = TRY([&]() -> PDFErrorOr<GraphicsState::SMask::Type> {
+        if (!dict->contains(CommonNames::S))
+            return Error::malformed_error("Missing required /S in soft mask dictionary");
+        auto s = TRY(dict->get_name(document, CommonNames::S))->name();
+        if (s == "Alpha")
+            return GraphicsState::SMask::Type::Alpha;
+        if (s == "Luminosity")
+            return GraphicsState::SMask::Type::Luminosity;
+        return Error::malformed_error("Unknown value for /S in soft mask dictionary: {}", s);
+    }());
+
+    if (dict->contains(CommonNames::BC)) {
+        // FIXME: If we validate group further up, we could validate number of components against
+        // the group's color space, and maybe set background_color the color space's default color
+        // if there's no explicit /BC entry.
+        auto background_color = TRY(dict->get_array(document, CommonNames::BC));
+        for (auto& component : background_color->elements())
+            smask.background_color.append(component.to_float());
+    }
+
+    if (dict->contains(CommonNames::TR)) {
+        auto function = TRY(dict->get_object(document, CommonNames::TR));
+        if (function->is<NameObject>()) {
+            auto name = function->cast<NameObject>()->name();
+            if (name != CommonNames::Identity)
+                return Error::malformed_error("Unknown soft mask transfer function name: {}", name);
+            // A nullptr value means identity.
+            smask.transfer_function = nullptr;
+        } else {
+            smask.transfer_function = TRY(Function::create(document, function));
+        }
+    }
+
+    return smask;
+}
+
 PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)
 {
     // ISO 32000 (PDF 2.0), 8.4.5 Graphics state parameter dictionaries
@@ -1199,7 +1250,19 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
             TRY(set_blend_mode(Array { Value { args->cast<NameObject>() } }));
     }
 
-    // FIXME: SMask
+    if (dict->contains(CommonNames::SMask)) {
+        auto smask = TRY(dict->get_object(m_document, CommonNames::SMask));
+        if (smask->is<NameObject>()) {
+            // "The name None may be specified in place of a soft-mask dictionary, denoting the absence
+            //  of a soft mask. In this case, the mask shape or opacity is implicitly 1.0 everywhere."
+            auto name = smask->cast<NameObject>()->name();
+            if (name != CommonNames::None)
+                return Error::malformed_error("Unknown soft mask name: {}", name);
+            state().soft_mask = {};
+        } else {
+            state().soft_mask = TRY(read_smask_dict(*m_document, smask->cast<DictObject>()));
+        }
+    }
 
     if (dict->contains(CommonNames::CA))
         state().stroke_alpha_constant = dict->get_value(CommonNames::CA).to_float();
