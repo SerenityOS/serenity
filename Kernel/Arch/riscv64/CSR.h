@@ -21,6 +21,17 @@ namespace Kernel::RISCV64::CSR {
 
 // 2.2 CSR Listing
 enum class Address : u16 {
+    // Unprivileged Vector CSRs
+    VSTART_ = 0x008,
+    VCSR = 0x00f,
+    VL = 0xc20,
+    VTYPE = 0xc21,
+    VLENB = 0xc22,
+
+    // Unprivileged Counters/Timers
+    CYCLE = 0xc00,
+    TIME = 0xc01,
+
     // Supervisor Trap Setup
     SSTATUS = 0x100,
     SIE = 0x104,
@@ -28,10 +39,6 @@ enum class Address : u16 {
 
     // Supervisor Protection and Translation
     SATP = 0x180,
-
-    // Unprivileged Counters/Timers
-    CYCLE = 0xc00,
-    TIME = 0xc01,
 };
 
 template<Address address>

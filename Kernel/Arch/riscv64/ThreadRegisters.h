@@ -60,6 +60,9 @@ struct ThreadRegisters {
 
         sstatus.FS = RISCV64::CSR::SSTATUS::FloatingPointStatus::Initial;
 
+        if (Processor::current().has_feature(CPUFeature::V))
+            sstatus.VS = RISCV64::CSR::SSTATUS::VectorStatus::Initial;
+
         sstatus.SPP = is_kernel_process ? RISCV64::CSR::SSTATUS::PrivilegeMode::Supervisor : RISCV64::CSR::SSTATUS::PrivilegeMode::User;
         sstatus.UXL = RISCV64::CSR::SSTATUS::XLEN::Bits64;
     }

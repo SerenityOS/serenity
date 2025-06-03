@@ -22,6 +22,82 @@ extern "C" u8 asm_trap_handler[];
 
 Processor* g_current_processor;
 
+static void store_vector_state(FPUState* fpu_state)
+{
+    fpu_state->vstart = RISCV64::CSR::read<RISCV64::CSR::Address::VSTART_>();
+    fpu_state->vcsr = RISCV64::CSR::read<RISCV64::CSR::Address::VCSR>();
+    fpu_state->vl = RISCV64::CSR::read<RISCV64::CSR::Address::VL>();
+    fpu_state->vtype = RISCV64::CSR::read<RISCV64::CSR::Address::VTYPE>();
+
+    asm volatile(R"(
+    .option push
+    .option arch, +v
+
+        csrr t0, vlenb
+        slli t0, t0, 3    # 8 registers at once (2^3 = 8)
+        csrw vstart, zero
+
+        # Save v0-v7.
+        vs8r.v v0, (%0)
+        add %0, %0, t0
+
+        # Save v8-v15.
+        vs8r.v v8, (%0)
+        add %0, %0, t0
+
+        # Save v16-v23.
+        vs8r.v v16, (%0)
+        add %0, %0, t0
+
+        # Save v24-v31.
+        vs8r.v v24, (%0)
+
+    .option pop
+    )" ::"r"(fpu_state->v)
+                 : "t0", "memory");
+}
+
+static void load_vector_state(FPUState* fpu_state)
+{
+    asm volatile(R"(
+    .option push
+    .option arch, +v
+
+        csrr t0, vlenb
+        slli t0, t0, 3    # 8 registers at once (2^3 = 8)
+        csrw vstart, zero
+
+        # Restore v0-v7.
+        vl8r.v v0, (%0)
+        add %0, %0, t0
+
+        # Restore v8-v15.
+        vl8r.v v8, (%0)
+        add %0, %0, t0
+
+        # Restore v16-v23.
+        vl8r.v v16, (%0)
+        add %0, %0, t0
+
+        # Restore v24-v31.
+        vl8r.v v24, (%0)
+
+    .option pop
+    )" ::"r"(fpu_state->v)
+                 : "t0", "memory");
+
+    RISCV64::CSR::write<RISCV64::CSR::Address::VSTART_>(fpu_state->vstart);
+    RISCV64::CSR::write<RISCV64::CSR::Address::VCSR>(fpu_state->vcsr);
+
+    asm volatile(R"(
+    .option push
+    .option arch, +v
+        vsetvl zero, %[vl], %[vtype]
+    .option pop
+    )" ::[vl] "r"(fpu_state->vl),
+        [vtype] "r"(fpu_state->vtype));
+}
+
 static void store_fpu_state(FPUState* fpu_state)
 {
     asm volatile(
@@ -61,6 +137,9 @@ static void store_fpu_state(FPUState* fpu_state)
         "csrr t0, fcsr \n"
         "sd t0, 32*8(%0) \n" ::"r"(fpu_state)
         : "t0", "memory");
+
+    if (Processor::current().has_feature(CPUFeature::V))
+        store_vector_state(fpu_state);
 }
 
 static void load_fpu_state(FPUState* fpu_state)
@@ -102,6 +181,9 @@ static void load_fpu_state(FPUState* fpu_state)
         "ld t0, 32*8(%0) \n"
         "csrw fcsr, t0 \n" ::"r"(fpu_state)
         : "t0", "memory");
+
+    if (Processor::current().has_feature(CPUFeature::V))
+        load_vector_state(fpu_state);
 }
 
 template<typename T>
@@ -124,13 +206,6 @@ void ProcessorBase<T>::initialize(u32)
     auto* self = static_cast<Processor*>(this);
 
     self->m_info.emplace();
-
-    // Enable the FPU
-    auto sstatus = RISCV64::CSR::SSTATUS::read();
-    sstatus.FS = RISCV64::CSR::SSTATUS::FloatingPointStatus::Initial;
-    RISCV64::CSR::SSTATUS::write(sstatus);
-
-    store_fpu_state(&s_clean_fpu_state);
 
     RISCV64::CSR::write<RISCV64::CSR::Address::STVEC>(bit_cast<FlatPtr>(+asm_trap_handler));
 
@@ -626,6 +701,24 @@ void Processor::find_and_parse_devicetree_node()
 
         m_info->build_isa_string(*this);
         dmesgln("CPU[{}]: ISA: {}", id(), m_info->isa_string());
+
+        // Enable the floating-point unit and vector extension.
+        auto sstatus = RISCV64::CSR::SSTATUS::read();
+
+        sstatus.FS = RISCV64::CSR::SSTATUS::FloatingPointStatus::Initial;
+        if (has_feature(CPUFeature::V))
+            sstatus.VS = RISCV64::CSR::SSTATUS::VectorStatus::Initial;
+
+        RISCV64::CSR::SSTATUS::write(sstatus);
+
+        if (has_feature(CPUFeature::V)) {
+            auto vlenb = RISCV64::CSR::read<RISCV64::CSR::Address::VLENB>();
+            if (vlenb > MAX_SUPPORTED_VLENB)
+                PANIC("Unsupported vector register size: {} bits", vlenb * 8);
+            dmesgln("CPU[{}]: VLEN={}", id(), vlenb * 8);
+        }
+
+        store_fpu_state(&s_clean_fpu_state);
 
         generate_userspace_extension_bitmask();
 
