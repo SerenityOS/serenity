@@ -308,43 +308,48 @@ static inline ErrorOr<void> normalize_flock(OpenFileDescription const& descripti
     return {};
 }
 
-bool Inode::can_apply_flock(flock const& new_lock, Optional<OpenFileDescription const&> description) const
+bool Inode::can_apply_flock_impl(flock const& new_lock, Optional<OpenFileDescription const&> description, Vector<Flock> const& flocks) const
 {
     VERIFY(new_lock.l_whence == SEEK_SET);
 
     if (new_lock.l_type == F_UNLCK)
         return true;
 
+    for (auto const& lock : flocks) {
+        if (!range_overlap(lock.start, lock.len, new_lock.l_start, new_lock.l_len))
+            continue;
+
+        // There are two cases where we can attempt downgrade:
+        //
+        // 1) We're the owner of this lock. The downgrade will immediately
+        //    succeed.
+        // 2) We're not the owner of this lock. Our downgrade attempt will
+        //    fail, and the thread will start blocking on an FlockBlocker.
+        //
+        // For the first case, we get the description from try_apply_flock
+        // below. For the second case, the check below would always be
+        // false, so there is no need to store the description in the
+        // blocker in the first place.
+        if (new_lock.l_type == F_RDLCK && lock.type == F_WRLCK)
+            return description.has_value() && lock.owner == &description.value() && lock.start == new_lock.l_start && lock.len == new_lock.l_len;
+
+        if (new_lock.l_type == F_WRLCK)
+            return false;
+    }
+    return true;
+}
+
+bool Inode::can_apply_flock(flock const& new_lock, Optional<OpenFileDescription const&> description) const
+{
     return m_flocks.with([&](auto& flocks) {
-        for (auto const& lock : flocks) {
-            if (!range_overlap(lock.start, lock.len, new_lock.l_start, new_lock.l_len))
-                continue;
-
-            // There are two cases where we can attempt downgrade:
-            //
-            // 1) We're the owner of this lock. The downgrade will immediately
-            //    succeed.
-            // 2) We're not the owner of this lock. Our downgrade attempt will
-            //    fail, and the thread will start blocking on an FlockBlocker.
-            //
-            // For the first case, we get the description from try_apply_flock
-            // below. For the second case, the check below would always be
-            // false, so there is no need to store the description in the
-            // blocker in the first place.
-            if (new_lock.l_type == F_RDLCK && lock.type == F_WRLCK)
-                return description.has_value() && lock.owner == &description.value() && lock.start == new_lock.l_start && lock.len == new_lock.l_len;
-
-            if (new_lock.l_type == F_WRLCK)
-                return false;
-        }
-        return true;
+        return can_apply_flock_impl(new_lock, description, flocks);
     });
 }
 
 ErrorOr<bool> Inode::try_apply_flock(Process const& process, OpenFileDescription const& description, flock const& new_lock)
 {
     return m_flocks.with([&](auto& flocks) -> ErrorOr<bool> {
-        if (!can_apply_flock(new_lock, description))
+        if (!can_apply_flock_impl(new_lock, description, flocks))
             return false;
 
         bool did_manipulate_lock = false;
