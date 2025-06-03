@@ -155,6 +155,7 @@ function(add_jakt_executable target source)
     set(sysroot_arg)
     if (CMAKE_SYSROOT)
         set(sysroot_arg "--extra-cpp-flag--sysroot=${CMAKE_SYSROOT}")
+        set(sysroot_arg "--extra-cpp-flag-isystem${CMAKE_SYSROOT}/usr/include")
     endif()
 
     add_custom_command(
@@ -170,13 +171,13 @@ function(add_jakt_executable target source)
             --link-archive ${main_output_name}
             --runtime-library-path ${JAKT_LIBRARY_BASE}
             --dep-file ${depfile}
-            ${sysroot_arg}
             ${extra_cpp_flags}
             --extra-cpp-flag-Wno-unused-parameter
             --extra-cpp-flag-Wno-unused-variable
             --extra-cpp-flag-Wno-unused-value
             ${configs}
             ${includes}
+            ${sysroot_arg}
             ${extra_cpp_sources}
             "${source_abs}"
         DEPFILE ${depfile}
@@ -223,7 +224,6 @@ function(serenity_jakt_app target_name source)
             ${PROJECT_BINARY_DIR}/Userland/Services
             ${PROJECT_BINARY_DIR}/Userland/Libraries
             ${PROJECT_BINARY_DIR}/Userland
-            ${CMAKE_SYSROOT}/usr/include
             ${SERENITY_JAKT_EXECUTABLE_INCLUDES}
         CONFIGS ${SERENITY_JAKT_EXECUTABLE_CONFIGS}
         LINK_LIBRARIES ${SERENITY_JAKT_EXECUTABLE_LINK_LIBRARIES}
@@ -249,7 +249,6 @@ function(serenity_jakt_executable target_name)
             ${PROJECT_BINARY_DIR}/Userland/Services
             ${PROJECT_BINARY_DIR}/Userland/Libraries
             ${PROJECT_BINARY_DIR}/Userland
-            ${CMAKE_SYSROOT}/usr/include
             ${SERENITY_JAKT_EXECUTABLE_INCLUDES}
         CONFIGS ${SERENITY_JAKT_EXECUTABLE_CONFIGS}
         LINK_LIBRARIES ${SERENITY_JAKT_EXECUTABLE_LINK_LIBRARIES}
