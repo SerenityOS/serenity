@@ -623,6 +623,10 @@ void Processor::find_and_parse_devicetree_node()
         }
 
         m_features = isa_extensions_property_to_cpu_features(isa_extensions.value());
+
+        m_info->build_isa_string(*this);
+        dmesgln("CPU[{}]: ISA: {}", id(), m_info->isa_string());
+
         generate_userspace_extension_bitmask();
 
         break;
