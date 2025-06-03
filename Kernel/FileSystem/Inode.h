@@ -125,6 +125,15 @@ protected:
     virtual ErrorOr<void> truncate_locked(u64) { return {}; }
 
 private:
+    struct Flock {
+        off_t start;
+        off_t len;
+        OpenFileDescription const* owner;
+        pid_t pid;
+        short type;
+    };
+
+    bool can_apply_flock_impl(flock const&, Optional<OpenFileDescription const&>, Vector<Flock> const& flocks) const;
     ErrorOr<bool> try_apply_flock(Process const&, OpenFileDescription const&, flock const&);
 
     FileSystem& m_file_system;
@@ -135,14 +144,6 @@ private:
     bool m_metadata_dirty { false };
     RefPtr<FIFO> m_fifo;
     IntrusiveListNode<Inode> m_inode_list_node;
-
-    struct Flock {
-        off_t start;
-        off_t len;
-        OpenFileDescription const* owner;
-        pid_t pid;
-        short type;
-    };
 
     Thread::FlockBlockerSet m_flock_blocker_set;
     RecursiveSpinlockProtected<Vector<Flock>, LockRank::None> m_flocks {};
