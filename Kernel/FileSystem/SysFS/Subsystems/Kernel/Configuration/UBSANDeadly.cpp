@@ -27,6 +27,10 @@ bool SysFSUBSANDeadly::value() const
 
 ErrorOr<void> SysFSUBSANDeadly::set_value(bool new_value)
 {
+#if ENABLE_KERNEL_UNDEFINED_SANITIZER_ALWAYS_DEADLY
+    return EPERM;
+#endif
+
     AK::UBSanitizer::g_ubsan_is_deadly = new_value;
     return {};
 }
