@@ -85,6 +85,12 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
 
     auto esr_el1 = bit_cast<Aarch64::ESR_EL1>(trap_frame->regs->esr_el1);
     auto fault_address = Aarch64::FAR_EL1::read().virtual_address;
+    if (Aarch64::exception_class_is_breakpoint_instruction(esr_el1.EC)) {
+        // When breakpoint instruction exception is triggered, the pc is set to the address of the
+        // breakpoint instruction, so we need to increase the pc past the breakpoint instruction to
+        // stay consistent with the user‑mode debugger’s behavior.
+        trap_frame->regs->set_ip(trap_frame->regs->ip() + 4);
+    }
     Processor::enable_interrupts();
 
     if (Aarch64::exception_class_is_data_abort(esr_el1.EC) || Aarch64::exception_class_is_instruction_abort(esr_el1.EC)) {
@@ -102,12 +108,7 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
             auto* current_thread = Thread::current();
             auto& current_process = current_thread->process();
 
-            if (Aarch64::exception_class_is_breakpoint_instruction(esr_el1.EC)) {
-                // When breakpoint instruction exception is triggered, the pc is set to the address of the
-                // breakpoint instruction, so we need to increase the pc past the breakpoint instruction to
-                // stay consistent with the user‑mode debugger’s behavior.
-                trap_frame->regs->set_ip(trap_frame->regs->ip() + 4);
-            } else {
+            if (Aarch64::exception_class_is_software_step(esr_el1.EC)) {
                 // Clear the software step bit in the MDSCR_EL1 register to disable software step.
                 clear_debug_registers();
             }
