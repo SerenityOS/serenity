@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Platform.h>
 #include <AK/Types.h>
 
 #include <Kernel/Sections.h>
@@ -21,7 +22,7 @@
 namespace Kernel {
 
 // This function has to fit into one page as it will be identity mapped.
-[[gnu::aligned(PAGE_SIZE)]] [[noreturn]] static void enter_kernel_helper(FlatPtr cr3, FlatPtr kernel_entry, FlatPtr kernel_sp, FlatPtr boot_info_vaddr)
+[[gnu::aligned(PAGE_SIZE)]] [[noreturn]] NEVER_INLINE static void enter_kernel_helper(FlatPtr cr3, FlatPtr kernel_entry, FlatPtr kernel_sp, FlatPtr boot_info_vaddr)
 {
     register FlatPtr rdi asm("rdi") = boot_info_vaddr;
     asm volatile(R"(
