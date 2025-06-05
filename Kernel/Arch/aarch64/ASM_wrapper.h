@@ -98,10 +98,10 @@ inline void enter_el2_from_el3()
     //       the processor is set up to use SP_EL2 when jumping into EL2.
     asm volatile("    mov x0, sp\n"
                  "    msr sp_el2, x0\n"
-                 "    adr x0, entered_el2\n"
+                 "    adr x0, 1f\n"
                  "    msr elr_el3, x0\n"
                  "    eret\n"
-                 "entered_el2:" ::
+                 "1:" ::
                      : "x0");
 }
 
@@ -111,10 +111,10 @@ inline void enter_el1_from_el2()
     //       the processor is set up to use SP_EL1 when jumping into EL1.
     asm volatile("    mov x0, sp\n"
                  "    msr sp_el1, x0\n"
-                 "    adr x0, entered_el1\n"
+                 "    adr x0, 1f\n"
                  "    msr elr_el2, x0\n"
                  "    eret\n"
-                 "entered_el1:" ::
+                 "1:" ::
                      : "x0");
 }
 
@@ -123,9 +123,9 @@ inline u64 read_rndrrs()
     u64 value = 0;
 
     asm volatile(
-        "retry:\n"
+        "1:\n"
         "mrs %[value], s3_3_c2_c4_1 \n" // encoded RNDRRS register
-        "b.eq retry\n"
+        "b.eq 1b\n"
         : [value] "=r"(value));
 
     return value;
