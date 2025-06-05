@@ -489,6 +489,7 @@ public:
     ErrorOr<FlatPtr> sys$unveil(Userspace<Syscall::SC_unveil_params const*>);
     ErrorOr<FlatPtr> sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
     ErrorOr<FlatPtr> sys$perf_register_string(Userspace<char const*>, size_t);
+    ErrorOr<FlatPtr> sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_params const*> user_params);
     ErrorOr<FlatPtr> sys$get_stack_bounds(Userspace<FlatPtr*> stack_base, Userspace<size_t*> stack_size);
     ErrorOr<FlatPtr> sys$ptrace(Userspace<Syscall::SC_ptrace_params const*>);
     ErrorOr<FlatPtr> sys$sendfd(int sockfd, int fd);
