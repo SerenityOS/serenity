@@ -28,30 +28,36 @@ Optional<PhysicalAddress> find_rsdp_in_ia_pc_specific_memory_locations()
     }
 
     // On some systems the RSDP may be located in ACPI NVS or reclaimable memory regions
-    Optional<PhysicalAddress> rsdp;
+    Vector<Memory::PhysicalMemoryRange> potential_ranges;
     MM.for_each_physical_memory_range([&](auto& memory_range) {
         if (!(memory_range.type == Memory::PhysicalMemoryRangeType::ACPI_NVS || memory_range.type == Memory::PhysicalMemoryRangeType::ACPI_Reclaimable))
             return IterationDecision::Continue;
 
-        Memory::MappedROM mapping;
+        potential_ranges.append(memory_range);
+        return IterationDecision::Continue;
+    });
+
+    for (auto const& memory_range : potential_ranges) {
         auto region_size_or_error = Memory::page_round_up(memory_range.length);
         if (region_size_or_error.is_error())
-            return IterationDecision::Continue;
+            continue;
+
         auto region_or_error = MM.allocate_mmio_kernel_region(memory_range.start, region_size_or_error.value(), {}, Memory::Region::Access::Read);
         if (region_or_error.is_error())
-            return IterationDecision::Continue;
+            continue;
+
+        Memory::MappedROM mapping;
         mapping.region = region_or_error.release_value();
         mapping.offset = memory_range.start.offset_in_page();
         mapping.size = memory_range.length;
         mapping.paddr = memory_range.start;
 
-        rsdp = mapping.find_chunk_starting_with(signature, 16);
+        auto rsdp = mapping.find_chunk_starting_with(signature, 16);
         if (rsdp.has_value())
-            return IterationDecision::Break;
+            return rsdp;
+    }
 
-        return IterationDecision::Continue;
-    });
-    return rsdp;
+    return {};
 }
 
 }
