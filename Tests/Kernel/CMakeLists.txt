@@ -47,6 +47,7 @@ set(LIBTEST_BASED_SOURCES
     TestSFNUtilities.cpp
     TestSharedInodeVMObject.cpp
     TestPosixFallocate.cpp
+    TestPosixSpawn.cpp
     TestPrivateInodeVMObject.cpp
     TestKernelAlarm.cpp
     TestKernelFilePermissions.cpp
