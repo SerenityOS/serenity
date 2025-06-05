@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,12 +19,14 @@
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/SystemTheme.h>
+#include <Services/Taskbar/GlobalMenuWindow.h>
 #include <Services/Taskbar/TaskbarWindow.h>
 #include <WindowServer/Animation.h>
 #include <WindowServer/AppletManager.h>
 #include <WindowServer/Button.h>
 #include <WindowServer/ConnectionFromClient.h>
 #include <WindowServer/Cursor.h>
+#include <WindowServer/GlobalMenu.h>
 #include <WindowServer/WindowClientEndpoint.h>
 
 namespace WindowServer {
@@ -419,6 +422,8 @@ void WindowManager::remove_window(Window& window)
 
     if (m_tile_window_overlay && m_tile_window_overlay->is_window(window))
         stop_tile_window_animation();
+
+    GlobalMenu::the().handle_active_window_closed();
 }
 
 void WindowManager::greet_window_manager(WMConnectionFromClient& conn)
@@ -503,6 +508,8 @@ void WindowManager::tell_wms_window_state_changed(Window& window)
         tell_wm_about_window(conn, window);
         return IterationDecision::Continue;
     });
+
+    GlobalMenu::the().handle_active_window_changed();
 }
 
 void WindowManager::tell_wms_window_icon_changed(Window& window)
@@ -511,6 +518,8 @@ void WindowManager::tell_wms_window_icon_changed(Window& window)
         tell_wm_about_window_icon(conn, window);
         return IterationDecision::Continue;
     });
+
+    GlobalMenu::the().handle_active_window_changed();
 }
 
 void WindowManager::tell_wms_window_rect_changed(Window& window)
@@ -597,6 +606,14 @@ static bool window_type_has_title(WindowType type)
 }
 
 void WindowManager::notify_modified_changed(Window& window)
+{
+    if (m_switcher->is_visible())
+        m_switcher->refresh();
+
+    tell_wms_window_state_changed(window);
+}
+
+void WindowManager::notify_menubar_changed(Window& window)
 {
     if (m_switcher->is_visible())
         m_switcher->refresh();
@@ -1456,6 +1473,12 @@ void WindowManager::process_mouse_event(MouseEvent& event)
         || hitting_menu_in_window_with_active_menu) {
 
         if (!hitting_menu_in_window_with_active_menu) {
+            // Normally, we don't send events to windows if there is a foreground menu active.
+            // However, we want to override this behavior for the global menu so that you can
+            // switch menus by just moving your mouse after you've already opened one submenu.
+            if (GlobalMenu::the().enabled() && GlobalMenu::the().has_active_menu())
+                GlobalMenu::the().dispatch_event(event);
+
             MenuManager::the().dispatch_event(event);
             return;
         }
@@ -1532,8 +1555,15 @@ Gfx::IntRect WindowManager::desktop_rect(Screen const& screen) const
     if (active_fullscreen_window())
         return Screen::main().rect(); // TODO: we should support fullscreen windows on any screen
     auto screen_rect = screen.rect();
-    if (screen.is_main_screen())
+    if (screen.is_main_screen()) {
+        // FIXME: handle custom Taskbar & GlobalMenu locations.
         screen_rect.set_height(screen.height() - TaskbarWindow::taskbar_height());
+
+        if (GlobalMenu::the().enabled()) {
+            screen_rect.set_height(screen_rect.height() - GlobalMenuWindow::global_menu_height());
+            screen_rect.set_y(GlobalMenuWindow::global_menu_height());
+        }
+    }
     return screen_rect;
 }
 
@@ -1541,7 +1571,6 @@ Gfx::IntRect WindowManager::arena_rect_for_type(Screen& screen, WindowType type)
 {
     switch (type) {
     case WindowType::Desktop:
-        return Screen::bounding_rect();
     case WindowType::Normal:
         return desktop_rect(screen);
     case WindowType::Menu:
@@ -2203,6 +2232,7 @@ bool WindowManager::update_theme(ByteString theme_path, ByteString theme_name, b
     if (!sync_config_to_disk())
         return false;
     invalidate_after_theme_or_font_change();
+    GlobalMenu::the().handle_active_window_changed();
     return true;
 }
 
@@ -2301,9 +2331,10 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint desir
         auto& screen = Screen::closest_to_location(desired);
         auto available_rect = desktop_rect(screen);
         point = overlap_window->position() + shift;
+        // FIXME: handle custom Taskbar & GlobalMenu locations.
         point = { point.x() % screen.width(),
             (point.y() >= available_rect.height())
-                ? palette().window_theme().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette())
+                ? palette().window_theme().titlebar_height(Gfx::WindowTheme::WindowType::Normal, Gfx::WindowTheme::WindowMode::Other, palette()) + (GlobalMenu::the().enabled() ? GlobalMenuWindow::global_menu_height() : 0)
                 : point.y() };
     } else {
         point = desired;

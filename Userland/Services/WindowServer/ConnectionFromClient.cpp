@@ -692,7 +692,8 @@ void ConnectionFromClient::create_window(i32 window_id, i32 process_id, Gfx::Int
             window->refresh_client_size();
     }
     if (window->type() == WindowType::Desktop) {
-        window->set_rect(Screen::bounding_rect());
+        // FIXME: Use the window's screen.
+        window->set_rect(WindowManager::the().desktop_rect(Screen::main()));
         window->recalculate_rect();
     }
     window->set_alpha_hit_threshold(alpha_hit_threshold);

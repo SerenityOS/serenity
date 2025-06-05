@@ -233,6 +233,8 @@ MultiScaleBitmaps const* WindowFrame::shadow_bitmap() const
         if (!m_window.has_forced_shadow())
             return nullptr;
         return s_active_window_shadow;
+    case WindowType::GlobalMenu:
+        return nullptr;
     default:
         if (!WindowManager::the().system_effects().window_shadow())
             return nullptr;

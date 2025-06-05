@@ -10,6 +10,7 @@
 #include "DesktopSettingsWidget.h"
 #include "EffectsSettingsWidget.h"
 #include "FontSettingsWidget.h"
+#include "InterfaceSettingsWidget.h"
 #include "MonitorSettingsWidget.h"
 #include "ThemesSettingsWidget.h"
 #include <LibConfig/Client.h>
@@ -25,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath cpath wpath unix proc exec"));
 
     auto app = TRY(GUI::Application::create(arguments));
-    Config::pledge_domain("WindowManager");
+    Config::pledge_domains({ "WindowManager", "Taskbar" });
 
     StringView selected_tab;
     Core::ArgsParser args_parser;
@@ -43,9 +44,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     (void)TRY(window->add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor"_string, "monitor"sv));
     (void)TRY(window->add_tab<DisplaySettings::DesktopSettingsWidget>("Workspaces"_string, "workspaces"sv));
     (void)TRY(window->add_tab<GUI::DisplaySettings::EffectsSettingsWidget>("Effects"_string, "effects"sv));
+    (void)TRY(window->add_tab<GUI::DisplaySettings::InterfaceSettingsWidget>("Interface"_string, "interface"sv));
     window->set_active_tab(selected_tab);
 
     window->set_icon(app_icon.bitmap_for_size(16));
+    // FIXME: Support overflowing tabs
+    window->resize(440, 570);
 
     window->show();
     return app->exec();
