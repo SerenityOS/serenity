@@ -6,7 +6,7 @@ use_fresh_config_sub='true'
 use_fresh_config_guess='true'
 config_sub_paths=("support/config.sub")
 config_guess_paths=("support/config.guess")
-configopts=("--disable-nls" "--without-bash-malloc")
+configopts=("--disable-nls" "--without-bash-malloc" "CFLAGS=-std=c17" "CFLAGS_FOR_BUILD=-std=c17")
 launcher_name='Bash'
 launcher_category='&Utilities'
 launcher_command='/usr/local/bin/bash'
