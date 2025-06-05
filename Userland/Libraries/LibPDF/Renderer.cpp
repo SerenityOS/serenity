@@ -1650,9 +1650,14 @@ PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
         }
     }
 
+    // Per 7.2.6 Shape and Opacity Computations: object, mask, and constant shape and opacity values are multiplied together,
+    // so we should use both mask and graphics state constant opacity when drawing the bitmap.
+    // 7.5.3 Specifying Shape and Opacity, Mask Shape and Opacity suggests that an image has either object or mask shape and opacity, but not both.
+    float opacity = state().paint_alpha_constant;
+
     auto image_space = calculate_image_space_transformation(image_bitmap.bitmap->size());
     auto image_rect = Gfx::FloatRect { image_bitmap.bitmap->rect() };
-    m_painter.draw_scaled_bitmap_with_transform(image_bitmap.bitmap->rect(), image_bitmap.bitmap, image_rect, image_space);
+    m_painter.draw_scaled_bitmap_with_transform(image_bitmap.bitmap->rect(), image_bitmap.bitmap, image_rect, image_space, opacity);
     return {};
 }
 
