@@ -36,6 +36,7 @@ enum class Address : u16 {
     SSTATUS = 0x100,
     SIE = 0x104,
     STVEC = 0x105,
+    STIMECMP = 0x14d,
 
     // Supervisor Protection and Translation
     SATP = 0x180,
