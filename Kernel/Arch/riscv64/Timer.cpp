@@ -82,6 +82,11 @@ u64 Timer::update_time(u64& seconds_since_boot, u32& ticks_this_second, bool que
 
 void Timer::set_compare(u64 compare)
 {
+    if (Processor::current().has_feature(CPUFeature::Sstc)) {
+        RISCV64::CSR::write<RISCV64::CSR::Address::STIMECMP>(compare);
+        return;
+    }
+
     if (SBI::Timer::set_timer(compare).is_error())
         MUST(SBI::Legacy::set_timer(compare));
 }
