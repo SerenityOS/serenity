@@ -13,8 +13,6 @@ TEST_CASE(should_default_contructor_with_0s)
 {
     constexpr IPv6Address addr {};
 
-    static_assert(addr.is_zero());
-
     EXPECT(addr.is_zero());
 }
 
@@ -25,23 +23,12 @@ TEST_CASE(should_construct_from_c_array)
         return IPv6Address(a);
     }();
 
-    static_assert(!addr.is_zero());
-
     EXPECT(!addr.is_zero());
 }
 
 TEST_CASE(should_get_groups_by_index)
 {
     constexpr IPv6Address addr({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 });
-
-    static_assert(0x102 == addr[0]);
-    static_assert(0x304 == addr[1]);
-    static_assert(0x506 == addr[2]);
-    static_assert(0x708 == addr[3]);
-    static_assert(0x90a == addr[4]);
-    static_assert(0xb0c == addr[5]);
-    static_assert(0xd0e == addr[6]);
-    static_assert(0xf10 == addr[7]);
 
     EXPECT_EQ(0x102, addr[0]);
     EXPECT_EQ(0x304, addr[1]);
@@ -84,6 +71,23 @@ TEST_CASE(should_make_ipv6_address_from_string)
     EXPECT_EQ(IPv6Address::from_string("102:304::708:90a:b0c:d0e:f10"sv).value(), IPv6Address({ 1, 2, 3, 4, 0, 0, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
 }
 
+consteval bool constexpr_ipv6_address_parsing()
+{
+    static_assert(!IPv6Address::from_string(":::"sv).has_value());
+    static_assert(!IPv6Address::from_string(":::1"sv).has_value());
+    static_assert(!IPv6Address::from_string("1:::"sv).has_value());
+    static_assert(IPv6Address::from_string("102:304:506:708:90a:b0c:d0e:f10"sv).value() == IPv6Address({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
+    static_assert(IPv6Address::from_string("::"sv).value() == IPv6Address());
+    static_assert(IPv6Address::from_string("::1"sv).value() == IPv6Address({ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }));
+    static_assert(IPv6Address::from_string("1::"sv).value() == IPv6Address({ 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }));
+    static_assert(IPv6Address::from_string("102:0:506:708:900::10"sv).value() == IPv6Address({ 1, 2, 0, 0, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 16 }));
+    static_assert(IPv6Address::from_string("102:0:506:708:900::"sv).value() == IPv6Address({ 1, 2, 0, 0, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0 }));
+    static_assert(IPv6Address::from_string("::304:506:708:90a:b0c:d0e:f10"sv).value() == IPv6Address({ 0, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
+    static_assert(IPv6Address::from_string("102:304::708:90a:b0c:d0e:f10"sv).value() == IPv6Address({ 1, 2, 3, 4, 0, 0, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }));
+    return true;
+}
+static_assert(constexpr_ipv6_address_parsing());
+
 TEST_CASE(ipv4_mapped_ipv6)
 {
     auto ipv4_address_to_map = IPv4Address::from_string("192.168.0.1"sv).release_value();
@@ -97,14 +101,14 @@ TEST_CASE(ipv4_mapped_ipv6)
 
 TEST_CASE(should_make_empty_optional_from_bad_string)
 {
-    auto const addr = IPv6Address::from_string("bad string"sv);
+    constexpr auto addr = IPv6Address::from_string("bad string"sv);
 
     EXPECT(!addr.has_value());
 }
 
 TEST_CASE(should_make_empty_optional_from_out_of_range_values)
 {
-    auto const addr = IPv6Address::from_string("::10000"sv);
+    constexpr auto addr = IPv6Address::from_string("::10000"sv);
 
     EXPECT(!addr.has_value());
 }
@@ -114,10 +118,6 @@ TEST_CASE(should_only_compare_bytes_from_address)
     constexpr IPv6Address addr_a({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 });
     constexpr IPv6Address addr_b({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17 });
     constexpr IPv6Address addr_c({ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17 });
-
-    static_assert(addr_a != addr_b);
-    static_assert(addr_a == addr_a);
-    static_assert(addr_b == addr_c);
 
     EXPECT(addr_a != addr_b);
     EXPECT(addr_a == addr_a);
