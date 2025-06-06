@@ -116,6 +116,41 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
         break;
     }
 
+    case PT_SINGLESTEP: {
+        if (!tracer->has_regs())
+            return EINVAL;
+
+        auto regs = tracer->regs();
+#if ARCH(X86_64)
+        // Single stepping works by setting the x86 TRAP flag bit in the eflags register.
+        // This flag causes the cpu to enter single-stepping mode, which causes
+        // Interrupt 1 (debug interrupt) to be emitted after every instruction.
+        // To single step the program, we set the TRAP flag and continue the debuggee.
+        constexpr u32 TRAP_FLAG = 0x100;
+        regs.rflags |= TRAP_FLAG;
+#elif ARCH(AARCH64)
+        // Single stepping on AArch64 works by setting the SS flag in the SPSR_EL1 register.
+        // When an exception return is executed in EL1, the value of SPSR_EL1.SS is copied
+        // to PSTATE.SS. To enable single stepping, the MDSCR_EL1.SS must also be set to 1.
+        constexpr u32 SS_FLAG = 0x200000;
+        regs.spsr_el1 |= SS_FLAG;
+        peer->debug_register_state().mdscr_el1 |= 0x1;
+#elif ARCH(RISCV64)
+        TODO_RISCV64();
+#else
+#    error Unknown architecture
+#endif
+
+        auto& peer_saved_registers = peer->get_register_dump_from_stack();
+        // Verify that the saved registers are in usermode context
+        if (peer_saved_registers.previous_mode() != ExecutionMode::User)
+            return EFAULT;
+
+        tracer->set_regs(regs);
+        copy_ptrace_registers_into_kernel_registers(peer_saved_registers, regs);
+        break;
+    }
+
     case PT_PEEK: {
         auto data = TRY(peer->process().peek_user_data(Userspace<FlatPtr const*> { (FlatPtr)params.addr }));
         TRY(copy_to_user((FlatPtr*)params.data, &data));
@@ -257,7 +292,8 @@ ErrorOr<FlatPtr> Thread::peek_debug_register(u32 register_index)
     return data;
 #elif ARCH(AARCH64)
     (void)register_index;
-    TODO_AARCH64();
+    dbgln("FIXME: Implement Thread::peek_debug_register on AARCH64");
+    return ENOTSUP;
 #elif ARCH(RISCV64)
     (void)register_index;
     dbgln("FIXME: Implement Thread::peek_debug_register on RISC-V");
@@ -293,7 +329,8 @@ ErrorOr<void> Thread::poke_debug_register(u32 register_index, FlatPtr data)
 #elif ARCH(AARCH64)
     (void)register_index;
     (void)data;
-    TODO_AARCH64();
+    dbgln("FIXME: Implement Thread::poke_debug_register on AARCH64");
+    return ENOTSUP;
 #elif ARCH(RISCV64)
     (void)register_index;
     (void)data;
