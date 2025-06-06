@@ -33,16 +33,55 @@ extern "C" void dbgputstr(char const* characters, size_t length)
 
     Vector<char16_t, 256> utf16_string;
     StringView string_view { characters, length };
+    
+    for (size_t i = 0; i < string_view.length();) {
+        char32_t code_point = 0;
+        size_t bytes_consumed = 0;
 
-    // FIXME: Support non-ASCII messages
-    for (auto c : string_view) {
-        if (c == '\n') {
+        unsigned char c = string_view[i];
+        if (c < 0x80) {
+            code_point = c;
+            bytes_consumed = 1;
+        } else if ((c & 0xE0) == 0xC0) {
+            if (i + 1 >= string_view.length())
+                break;
+            code_point = ((c & 0x1F) << 6) | (string_view[i + 1] & 0x3F);
+            bytes_consumed = 2;
+        } else if ((c & 0xF0) == 0xE0) {
+            if (i + 2 >= string_view.length())
+                break;
+            code_point = ((c & 0x0F) << 12) | ((string_view[i + 1] & 0x3F) << 6) | (string_view[i + 2] & 0x3F);
+            bytes_consumed = 3;
+        } else if ((c & 0xF8) == 0xF0) {
+            if (i + 3 >= string_view.length())
+                break;
+            code_point = ((c & 0x07) << 18) | ((string_view[i + 1] & 0x3F) << 12) | ((string_view[i + 2] & 0x3F) << 6) | (string_view[i + 3] & 0x3F);
+            bytes_consumed = 4;
+        } else {
+            i++;
+            continue;
+        }
+
+        if (code_point == '\n') {
             if (utf16_string.try_append(u'\r').is_error())
                 return;
         }
 
-        if (utf16_string.try_append(c).is_error())
-            return;
+        if (code_point <= 0xFFFF) {
+            if (utf16_string.try_append(static_cast<char16_t>(code_point)).is_error())
+                return;
+        } else if (code_point <= 0x10FFFF) {
+            code_point -= 0x10000;
+            char16_t high_surrogate = 0xD800 | ((code_point >> 10) & 0x3FF);
+            char16_t low_surrogate = 0xDC00 | (code_point & 0x3FF);
+            if (utf16_string.try_append(high_surrogate).is_error() || utf16_string.try_append(low_surrogate).is_error())
+                return;
+        } else {
+            i += bytes_consumed;
+            continue;
+        }
+
+        i += bytes_consumed;
     }
 
     if (utf16_string.try_append(0).is_error())
