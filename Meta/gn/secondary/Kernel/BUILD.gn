@@ -10,6 +10,7 @@ declare_args() {
 
   # Enable UBSAN for kernel objects. Detects undefined behavior and traps.
   enable_kernel_undefined_sanitizer = true
+  enable_kernel_undefined_sanitizer_always_deadly = true
 }
 
 group("Kernel") {
@@ -137,6 +138,9 @@ config("Kernel_config") {
   if (enable_kernel_undefined_sanitizer) {
     cflags_cc += [ "-fsanitize=undefined" ]
     ldflags = [ "-fsanitize=undefined" ]
+    if (enable_kernel_undefined_sanitizer_always_deadly) {
+      cflags_cc += [ "-fno-sanitize-recover=undefined" ]
+    }
   }
 
   cflags_cc += [

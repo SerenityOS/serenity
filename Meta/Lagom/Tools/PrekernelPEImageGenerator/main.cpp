@@ -404,10 +404,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             SHT_GNU_HASH,
         });
 
+        static constexpr Array section_names_to_discard = to_array<StringView>({
+            // FIXME: Why do we get these?
+            ".eh_frame_hdr"sv,
+            ".eh_frame"sv,
+        });
+
         if (elf_image.machine() == EM_RISCV && elf_section.type() == SHT_RISCV_ATTRIBUTES)
             return;
 
         if (section_types_to_discard.contains_slow(elf_section.type()))
+            return;
+        if (section_names_to_discard.contains_slow(elf_section.name()))
             return;
 
         // Don't add sections with address 0 or without the ALLOC flag, as they won't appear in memory.
