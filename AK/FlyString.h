@@ -15,6 +15,9 @@
 
 namespace AK {
 
+template<>
+struct Traits<FlyString>;
+
 class FlyString {
     AK_MAKE_DEFAULT_MOVABLE(FlyString);
     AK_MAKE_DEFAULT_COPYABLE(FlyString);
@@ -79,6 +82,12 @@ public:
         return (... || this->operator==(forward<Ts>(strings)));
     }
 
+    constexpr FlyString(Badge<Optional<FlyString>>)
+        : m_data(nullptr)
+    {
+    }
+    ALWAYS_INLINE constexpr bool is_null(Badge<Traits<FlyString>> badge) { return m_data.is_null(move(badge)); }
+
 private:
     explicit FlyString(Detail::StringBase data)
         : m_data(move(data))
@@ -91,6 +100,9 @@ private:
 template<>
 struct Traits<FlyString> : public DefaultTraits<FlyString> {
     static unsigned hash(FlyString const&);
+
+    constexpr static auto special_optional_empty_value(Badge<Optional<FlyString>> badge) { return FlyString(move(badge)); }
+    constexpr static bool optional_has_value(String const& str) { return !str.is_null(Badge<Traits<FlyString>> {}); }
 };
 
 template<>
