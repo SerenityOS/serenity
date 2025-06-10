@@ -8,6 +8,7 @@ foreach(source IN LISTS TEST_SOURCES)
 endforeach()
 
 set(TEST_FILES
+    clip.pdf
     colorspaces.pdf
     complex.pdf
     encoding.pdf
