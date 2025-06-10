@@ -9,11 +9,11 @@ Usage :
 % open foo.pdf
 """
 
-from dataclasses import dataclass
 import argparse
 import struct
 import textwrap
 
+from dataclasses import dataclass
 
 PageInformation = 48
 EndOfFile = 51

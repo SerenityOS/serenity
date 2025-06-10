@@ -3,11 +3,11 @@
 import os
 import sys
 
+from collections import namedtuple
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urljoin
 from urllib.request import urlopen
-from collections import namedtuple
 
 wpt_base_url = 'https://wpt.live/'
 wpt_import_path = 'Tests/LibWeb/Text/input/wpt-import'
@@ -69,7 +69,7 @@ def modify_sources(files):
         page_source = page_source.replace('/fonts/ahem.css', '../' * parent_folder_count + 'fonts/ahem.css')
 
         # Iterate all scripts and overwrite the src attribute
-        for i, src_value in enumerate(src_values):
+        for src_value in src_values:
             if src_value.startswith('/'):
                 new_src_value = parent_folder_path + src_value[1::]
                 page_source = page_source.replace(src_value, new_src_value)

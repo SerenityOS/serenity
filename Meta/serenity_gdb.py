@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: BSD-2-Clause
 
+import re
+
 import gdb
 import gdb.printing
 import gdb.types
-import re
-
 
 void_ptr = gdb.lookup_type('void').pointer()
 

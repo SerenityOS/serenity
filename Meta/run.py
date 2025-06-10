@@ -9,16 +9,23 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 import sys
-from dataclasses import dataclass, field
-from enum import Enum, unique
-from itertools import chain, repeat
-from os import access, environ
+
+from dataclasses import dataclass
+from dataclasses import field
+from enum import Enum
+from enum import unique
+from itertools import chain
+from itertools import repeat
+from os import access
+from os import environ
 from pathlib import Path
 from shutil import which
 from subprocess import run
-from typing import Any, Callable, Literal
-import shlex
+from typing import Any
+from typing import Callable
+from typing import Literal
 
 QEMU_MINIMUM_REQUIRED_MAJOR_VERSION = 6
 QEMU_MINIMUM_REQUIRED_MINOR_VERSION = 2
@@ -328,8 +335,8 @@ def determine_machine_type() -> MachineType:
     if provided_machine_type is not None:
         try:
             value = MachineType(provided_machine_type)
-        except ValueError:
-            raise RunError(f"{provided_machine_type} is not a valid SerenityOS machine type")
+        except ValueError as e:
+            raise RunError(f"{provided_machine_type} is not a valid SerenityOS machine type") from e
         return value
     return MachineType.Default
 
@@ -339,8 +346,8 @@ def determine_boot_drive_type() -> BootDriveType:
     if provided_boot_drive_type is not None:
         try:
             value = BootDriveType(provided_boot_drive_type)
-        except ValueError:
-            raise RunError(f"{provided_boot_drive_type} is not a valid SerenityOS boot drive type")
+        except ValueError as e:
+            raise RunError(f"{provided_boot_drive_type} is not a valid SerenityOS boot drive type") from e
         return value
     return BootDriveType.NVMe
 
@@ -499,8 +506,8 @@ def set_up_cpu_count(config: Configuration):
     if provided_cpu_count is not None:
         try:
             config.cpu_count = int(provided_cpu_count)
-        except ValueError:
-            raise RunError(f"Non-integer CPU count {provided_cpu_count}")
+        except ValueError as e:
+            raise RunError(f"Non-integer CPU count {provided_cpu_count}") from e
 
     if config.cpu_count is not None and config.qemu_cpu is not None and config.cpu_count <= 8:
         # -x2apic is not a flag, but disables x2APIC for easier testing on lower CPU counts.
@@ -587,8 +594,8 @@ def set_up_screens(config: Configuration):
     provided_screen_count_unparsed = environ.get("SERENITY_SCREENS", "1")
     try:
         config.screen_count = int(provided_screen_count_unparsed)
-    except ValueError:
-        raise RunError(f"Invalid screen count {provided_screen_count_unparsed}")
+    except ValueError as e:
+        raise RunError(f"Invalid screen count {provided_screen_count_unparsed}") from e
 
     provided_display_backend = environ.get("SERENITY_QEMU_DISPLAY_BACKEND")
     if provided_display_backend is not None:

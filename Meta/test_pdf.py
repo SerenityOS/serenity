@@ -23,7 +23,6 @@ import random
 import re
 import subprocess
 
-
 Result = collections.namedtuple('Result', ['filename', 'returncode', 'stdout', 'stderr'])
 
 

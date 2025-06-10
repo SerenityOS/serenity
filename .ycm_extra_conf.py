@@ -33,6 +33,7 @@
 
 import os
 import subprocess
+
 import ycm_core
 
 DIR_OF_THIS_SCRIPT = os.path.abspath(os.path.dirname(__file__))
