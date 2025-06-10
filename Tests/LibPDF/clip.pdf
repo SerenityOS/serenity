@@ -1,0 +1,133 @@
+%PDF-1.7
+%µ¶
+
+1 0 obj
+<</Type/Catalog/Pages 2 0 R>>
+endobj
+
+2 0 obj
+<</Type/Pages/Kids[3 0 R]/Count 1>>
+endobj
+
+3 0 obj
+<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 400]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>/Shading<</Sh1 6 0 R>>>>>>
+endobj
+
+4 0 obj
+<</Length 1169>>
+stream
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Hat at top (circle intersected with rect)
+q
+150 430 m
+205 430 250 385 250 330 c
+250 274 205 230 150 230 c
+ 94 230  50 274  50 330 c
+ 50 385  94 430 150 430 c
+h
+W n
+
+q
+0.9 0.1 -0.1 0.9 0 0 cm
+0 340 400 50 re
+Q
+W n
+
+/Sh1 sh
+Q
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Star in middle
+
+% Left: clip applied first, path drawn second.
+% Path is clipped by clip.
+q
+0.6 0 0 0.6 -5 90 cm
+150 370 m 57 101 l 288 279 l 12 279 l 243 101 l h
+W* n
+
+150 370 m 57 101 l 288 279 l 12 279 l 243 101 l h
+/DeviceRGB CS
+1 0 0 RG
+0.5 0 0.5 rg
+1 J
+[8 12] 0 d
+4 w
+B
+
+% 2nd path is clipped too.
+0 1 1 rg
+0 260 400 30 re
+f
+
+Q
+
+% Right: clip applied when path is drawn. Doesn't affect path.
+% Path is not clipped by clip.
+q
+0.6 0 0 0.6 120 50 cm
+150 370 m 57 101 l 288 279 l 12 279 l 243 101 l h
+W*
+
+/DeviceRGB CS
+0 0 1 RG
+0.5 0 0.5 rg
+2 J
+[8 12] 0 d
+4 w
+B
+
+% 2nd path is clipped.
+0 1 1 rg
+0 260 400 30 re
+f
+
+Q
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Text at bottom
+q
+BT
+  /F1 100 Tf
+  50 25 Td
+  7 Tr
+  (Clip) Tj
+ET
+
+% FIXME: Remove this rect clip once LibPDF cna handle `7 Tr`.
+50 2 200 100 re W n
+
+/Sh1 sh
+Q
+
+endstream
+endobj
+
+5 0 obj
+<</Type/Font/Subtype/Type1/Name/F1/BaseFont/Helvetica-Bold>>
+endobj
+
+6 0 obj
+<</ShadingType 2/ColorSpace/DeviceRGB/Coords[50 50 350 350]/Function 7 0 R/Extend[true true]>>
+endobj
+
+7 0 obj
+<</FunctionType 2/Domain[0 1]/C0[1 0 0]/C1[0 0 1]/N 1>>
+endobj
+
+xref
+0 8
+0000000000 65536 f 
+0000000016 00000 n 
+0000000062 00000 n 
+0000000114 00000 n 
+0000000249 00000 n 
+0000001469 00000 n 
+0000001546 00000 n 
+0000001657 00000 n 
+
+trailer
+<</Size 8/Root 1 0 R>>
+startxref
+1729
+%%EOF
