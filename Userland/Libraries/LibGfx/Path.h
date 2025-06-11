@@ -297,6 +297,15 @@ public:
         *this = Path {};
     }
 
+    void trim(PathSegmentIterator new_end)
+    {
+        if (end() == new_end)
+            return;
+        m_points.shrink(new_end.m_point_index);
+        m_commands.shrink(new_end.m_command_index);
+        invalidate_split_lines();
+    }
+
 private:
     void approximate_elliptical_arc_with_cubic_beziers(FloatPoint center, FloatSize radii, float x_axis_rotation, float theta, float theta_delta);
 
