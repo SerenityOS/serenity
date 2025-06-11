@@ -14,7 +14,7 @@ endobj
 endobj
 
 4 0 obj
-<</Length 1169>>
+<</Length 1427>>
 stream
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Hat at top (circle intersected with rect)
@@ -27,10 +27,17 @@ q
 h
 W n
 
-q
-0.9 0.1 -0.1 0.9 0 0 cm
-0 340 400 50 re
-Q
+% Rotating a rect in a local graphics state doesn't work,
+% since the transform is supposed to be applied at path paint
+% time, not at path construction time.
+% FIXME: We (and Preview.app) get this wrong.
+% q
+% 0.9 0.1 -0.1 0.9 0 0 cm
+% 0 340 400 50 re
+% Q
+
+-30 310 m 330 350 l 325 395 l -35 355 l h
+
 W n
 
 /Sh1 sh
@@ -100,6 +107,7 @@ ET
 /Sh1 sh
 Q
 
+
 endstream
 endobj
 
@@ -122,12 +130,12 @@ xref
 0000000062 00000 n 
 0000000114 00000 n 
 0000000249 00000 n 
-0000001469 00000 n 
-0000001546 00000 n 
-0000001657 00000 n 
+0000001727 00000 n 
+0000001804 00000 n 
+0000001915 00000 n 
 
 trailer
 <</Size 8/Root 1 0 R>>
 startxref
-1729
+1987
 %%EOF
