@@ -14,7 +14,7 @@ endobj
 endobj
 
 4 0 obj
-<</Length 2981>>
+<</Length 3069>>
 stream
 /DeviceRGB CS
 
@@ -340,16 +340,17 @@ q
 Q
 
 % Dashed rect with 0 dash length
-
+q
 [ 0 10 ] 0 d
 1 J
 0 1 0 SC
 155 45 30 30 re
 S
+Q
 
 % Dashed rects with different cap styles. The last one also has a no-op negative
 % scale factor.
-
+q
 1 w
 [ 2 2 ] 1 d
 0 J
@@ -371,6 +372,16 @@ S
 0 1 0 SC
 -195 -5 -30 -30 re
 S
+Q
+
+% Triangle with missing side
+/DeviceRGB cs
+0 1 0 rg
+230 15 m
+250 30 l
+260 5 l
+B
+
 
 endstream
 endobj
@@ -386,5 +397,5 @@ xref
 trailer
 <</Size 5/Root 2 0 R>>
 startxref
-3236
+3324
 %%EOF
