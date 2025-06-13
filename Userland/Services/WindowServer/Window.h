@@ -315,7 +315,7 @@ public:
     void set_frameless(bool);
     bool is_frameless() const { return m_frameless; }
 
-    bool should_show_menubar() const { return m_should_show_menubar; }
+    bool should_show_menubar() const;
 
     Optional<int> progress() const { return m_progress; }
     void set_progress(Optional<int>);

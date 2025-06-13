@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2022, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <WindowServer/AppletManager.h>
 #include <WindowServer/ConnectionFromClient.h>
+#include <WindowServer/GlobalMenu.h>
 #include <WindowServer/Screen.h>
 #include <WindowServer/WMConnectionFromClient.h>
 
@@ -24,6 +26,7 @@ WMConnectionFromClient::~WMConnectionFromClient()
     // The WM has gone away, so take away the applet manager (cause there's nowhere
     // to draw it in).
     AppletManager::the().set_position({});
+    GlobalMenu::the().set_rect({});
 }
 
 void WMConnectionFromClient::die()
@@ -48,6 +51,35 @@ void WMConnectionFromClient::set_applet_area_position(Gfx::IntPoint position)
             dbgln("WMConnectionFromClient::set_applet_area_position: {}", result.error());
         }
     });
+}
+
+void WMConnectionFromClient::set_global_menu_area_enabled(bool enabled)
+{
+    if (m_window_id < 0) {
+        did_misbehave("SetGlobalMenuAreaEnabled: WM didn't assign window as manager yet");
+        // FIXME: return ok boolean?
+        return;
+    }
+
+    GlobalMenu::the().set_enabled(enabled);
+
+    ByteString error_message;
+    WindowManager::the().set_screen_layout(WindowManager::the().get_screen_layout(), false, error_message);
+    if (!error_message.is_empty())
+        dbgln("SetGlobalMenuAreaEnabled: {}", error_message);
+
+    WindowManager::the().invalidate_after_theme_or_font_change();
+}
+
+void WMConnectionFromClient::set_global_menu_area_rect(Gfx::IntRect const& rect)
+{
+    if (m_window_id < 0) {
+        did_misbehave("SetGlobalMenuAreaRect: WM didn't assign window as manager yet");
+        // FIXME: return ok boolean?
+        return;
+    }
+
+    GlobalMenu::the().set_rect(rect);
 }
 
 void WMConnectionFromClient::set_active_window(i32 client_id, i32 window_id)
