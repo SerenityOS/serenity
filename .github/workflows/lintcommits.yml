@@ -7,7 +7,7 @@ on: [pull_request_target]
 
 jobs:
   lint_commits:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     if: always() && github.repository == 'SerenityOS/serenity'
 
     steps:
