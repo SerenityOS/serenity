@@ -11,6 +11,7 @@ configopts=(
     '--with-shared'
     '--without-ada'
     '--enable-widec'
+    'CFLAGS=-std=c17'
 )
 files=(
     "https://invisible-mirror.net/archives/ncurses/ncurses-${version}.tar.gz#136d91bc269a9a5785e5f9e980bc76ab57428f604ce3e5a5a90cebc767971cc6"
