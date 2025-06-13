@@ -57,6 +57,7 @@ There are some optional features that can be enabled during compilation that are
 
 -   `ENABLE_ADDRESS_SANITIZER` and `ENABLE_KERNEL_ADDRESS_SANITIZER`: builds in runtime checks for memory corruption bugs (like buffer overflows and memory leaks) in Lagom test cases and the kernel, respectively.
 -   `ENABLE_KERNEL_UNDEFINED_SANITIZER`: builds in runtime checks for detecting undefined behavior in the kernel.
+-   `ENABLE_KERNEL_UNDEFINED_SANITIZER_ALWAYS_DEADLY`: makes the aforementioned runtime checks always deadly, as seen by the compiler.
 -   `ENABLE_KERNEL_COVERAGE_COLLECTION`: enables the KCOV API and kernel coverage collection instrumentation. Only useful for coverage guided kernel fuzzing.
 -   `ENABLE_USERSPACE_COVERAGE_COLLECTION`: enables coverage collection instrumentation for userspace. Currently only works with a Clang build.
 -   `ENABLE_MEMORY_SANITIZER`: enables runtime checks for uninitialized memory accesses in Lagom test cases.
