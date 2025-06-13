@@ -31,9 +31,7 @@ def get_includes_from_version_output(compiler, target_args):
 
 def get_includes_from_preprocessor_output(compiler, test_file, target_args):
     try:
-        output = subprocess.check_output(
-            [compiler, *target_args, "-E", test_file], stderr=subprocess.STDOUT
-        )
+        output = subprocess.check_output([compiler, *target_args, "-E", test_file], stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         print(b"Error getting includes from preprocessor output: " + e.output)
         sys.exit(1)
@@ -70,9 +68,7 @@ def convert_includes_to_dirs(includes):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Extract System Includes from C++ Compiler"
-    )
+    parser = argparse.ArgumentParser(description="Extract System Includes from C++ Compiler")
 
     parser.add_argument("--compiler", required=True, help="Specify C++ compiler to extract includes from")
     parser.add_argument("--target", help="Specify target platform for compiler")
