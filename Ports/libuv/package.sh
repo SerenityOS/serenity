@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=libuv
-version=1.44.1
+version=1.51.0
 useconfigure=true
 files=(
-    "https://github.com/libuv/libuv/archive/refs/tags/v$version.tar.gz#e91614e6dc2dd0bfdd140ceace49438882206b7a6fb00b8750914e67a9ed6d6b"
+    "https://github.com/libuv/libuv/archive/refs/tags/v$version.tar.gz#27e55cf7083913bfb6826ca78cde9de7647cded648d35f24163f2d31bb9f51cd"
 )
 configopts=("-DCMAKE_TOOLCHAIN_FILE=${SERENITY_BUILD_DIR}/CMakeToolchain.txt" "-GNinja" "-DCMAKE_BUILD_WITH_INSTALL_RPATH=true")
 

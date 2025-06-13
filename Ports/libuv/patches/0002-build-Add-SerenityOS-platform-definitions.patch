@@ -8,10 +8,10 @@ Subject: [PATCH] build: Add SerenityOS platform definitions
  1 file changed, 15 insertions(+)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index ac52412..d285ed9 100644
+index 73d5aff8926ed586e3489aba77ea1414e63b072b..c8425957cbd4d4ba28f0c0135b8c49f00c5dd507 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -378,6 +378,21 @@ if(CMAKE_SYSTEM_NAME STREQUAL "QNX")
+@@ -432,6 +432,21 @@ if(CMAKE_SYSTEM_NAME STREQUAL "QNX")
    list(APPEND uv_libraries socket)
  endif()
  
@@ -32,4 +32,4 @@ index ac52412..d285ed9 100644
 +
  if(APPLE OR CMAKE_SYSTEM_NAME MATCHES "DragonFly|FreeBSD|Linux|NetBSD|OpenBSD")
    list(APPEND uv_test_libraries util)
- endif()
+   list(APPEND uv_libraries m)

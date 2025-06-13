@@ -5,15 +5,15 @@ Subject: [PATCH] build: Add platform-specific stubs and implementations
 
 ---
  CMakeLists.txt           |   2 +
- src/unix/serenity-core.c | 112 +++++++++++++++++++++++++++++++++++++++
- 2 files changed, 114 insertions(+)
+ src/unix/serenity-core.c | 116 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 118 insertions(+)
  create mode 100644 src/unix/serenity-core.c
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index d285ed9..10fbd7f 100644
+index c8425957cbd4d4ba28f0c0135b8c49f00c5dd507..4684ee906aa7d477b44ca4ed7cd43cf34ab5bb34 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -387,9 +387,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "SerenityOS")
+@@ -441,9 +441,11 @@ if(CMAKE_SYSTEM_NAME STREQUAL "SerenityOS")
      src/unix/posix-poll.c
      src/unix/no-fsevents.c
      src/unix/no-proctitle.c
@@ -27,10 +27,10 @@ index d285ed9..10fbd7f 100644
  
 diff --git a/src/unix/serenity-core.c b/src/unix/serenity-core.c
 new file mode 100644
-index 0000000..5c34b75
+index 0000000000000000000000000000000000000000..48fa813c57c5c420bee46ea78aa674c7be4aee73
 --- /dev/null
 +++ b/src/unix/serenity-core.c
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,116 @@
 +#include "uv.h"
 +#include "internal.h"
 +
@@ -142,4 +142,8 @@ index 0000000..5c34b75
 +int uv_resident_set_memory(size_t* rss) {
 +  *rss = 0;
 +  return 0;
++}
++
++uint64_t uv_get_available_memory(void) {
++  return uv_get_free_memory();
 +}
