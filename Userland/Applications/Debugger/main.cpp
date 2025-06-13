@@ -256,8 +256,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 #if ARCH(X86_64)
         FlatPtr const ip = regs.rip;
 #elif ARCH(AARCH64)
-        FlatPtr const ip = 0; // FIXME
-        TODO_AARCH64();
+        FlatPtr const ip = regs.pc;
 #elif ARCH(RISCV64)
         FlatPtr const ip = regs.pc;
 #else
