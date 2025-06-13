@@ -7,4 +7,4 @@ files=(
 useconfigure='true'
 use_fresh_config_sub='true'
 config_sub_paths=("build-aux/config.sub" "libcharset/build-aux/config.sub")
-configopts=("--enable-shared" "--disable-nls")
+configopts=("--enable-shared" "--disable-nls" "CFLAGS=-std=c17")
