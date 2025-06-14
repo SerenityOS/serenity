@@ -30,10 +30,10 @@ ErrorOr<size_t> SysFSSystemBooleanVariable::write_bytes(off_t, size_t count, Use
     if (count != 1)
         return Error::from_errno(EINVAL);
     if (value == '0') {
-        set_value(false);
+        TRY(set_value(false));
         return 1;
     } else if (value == '1') {
-        set_value(true);
+        TRY(set_value(true));
         return 1;
     }
     return Error::from_errno(EINVAL);
