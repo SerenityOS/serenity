@@ -24,9 +24,11 @@ bool SysFSUBSANDeadly::value() const
 {
     return AK::UBSanitizer::g_ubsan_is_deadly;
 }
-void SysFSUBSANDeadly::set_value(bool new_value)
+
+ErrorOr<void> SysFSUBSANDeadly::set_value(bool new_value)
 {
     AK::UBSanitizer::g_ubsan_is_deadly = new_value;
+    return {};
 }
 
 }

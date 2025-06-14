@@ -29,7 +29,7 @@ protected:
     {
     }
     virtual bool value() const = 0;
-    virtual void set_value(bool new_value) = 0;
+    virtual ErrorOr<void> set_value(bool new_value) = 0;
 
 private:
     // ^SysFSGlobalInformation
