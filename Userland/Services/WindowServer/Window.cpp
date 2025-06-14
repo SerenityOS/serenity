@@ -21,6 +21,7 @@
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/SessionManagement.h>
 #include <LibKeyboard/CharacterMap.h>
+#include <WindowServer/GlobalMenu.h>
 
 namespace WindowServer {
 
@@ -534,7 +535,11 @@ void Window::handle_keydown_event(KeyEvent const& event)
                 });
 
                 if (menu_to_open) {
-                    frame().open_menubar_menu(*menu_to_open);
+                    if (GlobalMenu::the().enabled())
+                        GlobalMenu::the().open_menubar_menu(menu_to_open);
+                    else
+                        frame().open_menubar_menu(*menu_to_open);
+
                     if (!menu_to_open->is_empty())
                         menu_to_open->set_hovered_index(0);
                     return;
@@ -733,18 +738,20 @@ void Window::ensure_window_menu()
         m_window_menu_move_item->set_icon(&move_icon());
         m_window_menu->add_item(move(move_item));
 
-        m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
-
         auto roll_up_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::ToggleWindowRollUp, "&Roll Up");
         m_window_menu_roll_up_item = roll_up_item.ptr();
         m_window_menu_roll_up_item->set_checked(!m_should_show_window_content);
         roll_up_item->set_checkable(true);
         m_window_menu->add_item(move(roll_up_item));
 
-        auto menubar_visibility_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::ToggleMenubarVisibility, "Menu &Bar");
-        m_window_menu_menubar_visibility_item = menubar_visibility_item.ptr();
-        menubar_visibility_item->set_checkable(true);
-        m_window_menu->add_item(move(menubar_visibility_item));
+        if (!GlobalMenu::the().enabled()) {
+            m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
+
+            auto menubar_visibility_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::ToggleMenubarVisibility, "Menu &Bar");
+            m_window_menu_menubar_visibility_item = menubar_visibility_item.ptr();
+            menubar_visibility_item->set_checkable(true);
+            m_window_menu->add_item(move(menubar_visibility_item));
+        }
 
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
@@ -855,8 +862,11 @@ void Window::popup_window_menu(Gfx::IntPoint position, WindowMenuDefaultAction d
     m_window_menu_maximize_item->set_default(default_action == WindowMenuDefaultAction::Maximize || default_action == WindowMenuDefaultAction::Restore);
     m_window_menu_maximize_item->set_icon(is_maximized() ? &restore_icon() : &maximize_icon());
     m_window_menu_close_item->set_default(default_action == WindowMenuDefaultAction::Close);
-    m_window_menu_menubar_visibility_item->set_enabled(m_menubar.has_menus());
-    m_window_menu_menubar_visibility_item->set_checked(m_menubar.has_menus() && m_should_show_menubar);
+
+    if (!GlobalMenu::the().enabled()) {
+        m_window_menu_menubar_visibility_item->set_enabled(m_menubar.has_menus());
+        m_window_menu_menubar_visibility_item->set_checked(m_menubar.has_menus() && m_should_show_menubar);
+    }
 
     m_window_menu->popup(position);
 }
@@ -1116,13 +1126,19 @@ void Window::add_menu(Menu& menu)
     m_menubar.add_menu(menu, rect());
     Compositor::the().invalidate_occlusions();
     frame().invalidate();
+
+    WindowManager::the().notify_menubar_changed(*this);
 }
 
 void Window::invalidate_menubar()
 {
     if (!m_should_show_menubar || !m_menubar.has_menus())
         return;
-    frame().invalidate_menubar();
+
+    if (GlobalMenu::the().enabled())
+        GlobalMenu::the().invalidate();
+    else
+        frame().invalidate_menubar();
 }
 
 void Window::set_modified(bool modified)
@@ -1162,6 +1178,14 @@ ErrorOr<Optional<ByteString>> Window::compute_title_username(ConnectionFromClien
     if (login_session_stat.value().uid == client_stat.value().uid)
         return Optional<ByteString> {};
     return client_stat.value().username;
+}
+
+bool Window::should_show_menubar() const
+{
+    if (GlobalMenu::the().enabled())
+        return false;
+
+    return m_should_show_menubar;
 }
 
 }
