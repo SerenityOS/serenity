@@ -153,7 +153,7 @@ public:
         auto* node = new (nothrow) Node(forward<U>(value));
         if (!node)
             return Error::from_errno(ENOMEM);
-        m_size_policy.increase_size(value);
+        m_size_policy.increase_size(node->value);
         if (!m_head) {
             m_head = node;
             m_tail = node;
