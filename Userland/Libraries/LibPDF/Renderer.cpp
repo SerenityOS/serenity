@@ -59,26 +59,10 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::apply_page_rotation(NonnullRefPtr<
     return bitmap;
 }
 
-static void rect_path(Gfx::Path& path, float x, float y, float width, float height)
-{
-    path.move_to({ x, y });
-    path.line_to({ x + width, y });
-    path.line_to({ x + width, y + height });
-    path.line_to({ x, y + height });
-    path.close();
-}
-
-template<typename T>
-static void rect_path(Gfx::Path& path, Gfx::Rect<T> rect)
-{
-    return rect_path(path, rect.x(), rect.y(), rect.width(), rect.height());
-}
-
-template<typename T>
-static Gfx::Path rect_path(Gfx::Rect<T> const& rect)
+static Gfx::Path rect_path(Gfx::FloatRect const& rect)
 {
     Gfx::Path path;
-    rect_path(path, rect);
+    path.rect(rect);
     return path;
 }
 
@@ -237,14 +221,14 @@ RENDERER_HANDLER(set_graphics_state_from_dict)
 
 RENDERER_HANDLER(path_move)
 {
-    m_current_path.move_to(map(args[0].to_float(), args[1].to_float()));
+    m_current_path.move_to(Gfx::FloatPoint(args[0].to_float(), args[1].to_float()));
     return {};
 }
 
 RENDERER_HANDLER(path_line)
 {
     VERIFY(!m_current_path.is_empty());
-    m_current_path.line_to(map(args[0].to_float(), args[1].to_float()));
+    m_current_path.line_to(Gfx::FloatPoint(args[0].to_float(), args[1].to_float()));
     return {};
 }
 
@@ -252,9 +236,9 @@ RENDERER_HANDLER(path_cubic_bezier_curve)
 {
     VERIFY(args.size() == 6);
     m_current_path.cubic_bezier_curve_to(
-        map(args[0].to_float(), args[1].to_float()),
-        map(args[2].to_float(), args[3].to_float()),
-        map(args[4].to_float(), args[5].to_float()));
+        Gfx::FloatPoint(args[0].to_float(), args[1].to_float()),
+        Gfx::FloatPoint(args[2].to_float(), args[3].to_float()),
+        Gfx::FloatPoint(args[4].to_float(), args[5].to_float()));
     return {};
 }
 
@@ -265,8 +249,8 @@ RENDERER_HANDLER(path_cubic_bezier_curve_no_first_control)
     auto current_point = m_current_path.last_point();
     m_current_path.cubic_bezier_curve_to(
         current_point,
-        map(args[0].to_float(), args[1].to_float()),
-        map(args[2].to_float(), args[3].to_float()));
+        Gfx::FloatPoint(args[0].to_float(), args[1].to_float()),
+        Gfx::FloatPoint(args[2].to_float(), args[3].to_float()));
     return {};
 }
 
@@ -274,8 +258,8 @@ RENDERER_HANDLER(path_cubic_bezier_curve_no_second_control)
 {
     VERIFY(args.size() == 4);
     VERIFY(!m_current_path.is_empty());
-    auto first_control_point = map(args[0].to_float(), args[1].to_float());
-    auto second_control_point = map(args[2].to_float(), args[3].to_float());
+    Gfx::FloatPoint first_control_point(args[0].to_float(), args[1].to_float());
+    Gfx::FloatPoint second_control_point(args[2].to_float(), args[3].to_float());
     m_current_path.cubic_bezier_curve_to(
         first_control_point,
         second_control_point,
@@ -291,11 +275,8 @@ RENDERER_HANDLER(path_close)
 
 RENDERER_HANDLER(path_append_rect)
 {
-    auto rect = Gfx::FloatRect(args[0].to_float(), args[1].to_float(), args[2].to_float(), args[3].to_float());
-    // Note: The path of the rectangle is mapped (rather than the rectangle).
-    // This is because negative width/heights are possible, and result in different
-    // winding orders, but this is lost by Gfx::AffineTransform::map().
-    m_current_path.append_path(map(rect_path(rect)));
+    Gfx::FloatRect rect(args[0].to_float(), args[1].to_float(), args[2].to_float(), args[3].to_float());
+    m_current_path.rect(rect);
     return {};
 }
 
@@ -323,6 +304,7 @@ void Renderer::begin_path_paint()
 {
     if (m_rendering_preferences.clip_paths)
         activate_clip();
+    m_current_path.transform(state().ctm);
 }
 
 void Renderer::end_path_paint()
@@ -447,7 +429,7 @@ RENDERER_HANDLER(path_intersect_clip_nonzero)
 {
     // FIXME: Support arbitrary path clipping in Path and utilize that here
     auto next_clipping_bbox = state().clipping_paths.next.bounding_box();
-    next_clipping_bbox.intersect(m_current_path.bounding_box());
+    next_clipping_bbox.intersect(state().ctm.map(m_current_path.bounding_box()));
     state().clipping_paths.next = rect_path(next_clipping_bbox);
     return {};
 }
@@ -1580,7 +1562,7 @@ void Renderer::show_empty_image(Gfx::IntSize size)
 {
     auto image_space_transformation = calculate_image_space_transformation(size);
     auto image_border = image_space_transformation.map(Gfx::IntRect { {}, size });
-    m_painter.stroke_path(rect_path(image_border), Color::Black, 1);
+    m_painter.stroke_path(rect_path(image_border.to_type<float>()), Color::Black, 1);
 }
 
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> apply_alpha_channel(NonnullRefPtr<Gfx::Bitmap> image_bitmap, NonnullRefPtr<Gfx::Bitmap const> mask_bitmap, bool invert_alpha = false)
