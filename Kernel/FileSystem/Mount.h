@@ -27,9 +27,9 @@ public:
     };
 
     // NOTE: This constructor is valid for VFSRootContext root inodes (as for the "/" directory)
-    Mount(NonnullRefPtr<Inode> source, int flags);
+    Mount(NonnullRefPtr<Inode> const& source, int flags);
 
-    Mount(NonnullRefPtr<Inode> source, NonnullRefPtr<Custody> host_custody, int flags);
+    Mount(NonnullRefPtr<Inode> const& source, NonnullRefPtr<Custody> host_custody, int flags);
 
     RefPtr<Inode const> host() const;
     RefPtr<Inode> host();
