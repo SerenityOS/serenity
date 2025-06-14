@@ -31,3 +31,7 @@ It does not currently support installing and uninstalling packages. To install t
 # Query the ports database for the serenity-theming package
 $ pkg -q serenity-theming
 ```
+
+## See Also
+
+-   [`iffysign`(1)](help://man/1/iffysign)
