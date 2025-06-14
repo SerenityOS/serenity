@@ -55,7 +55,6 @@ public:
         VERIFY(!is_empty());
         auto& slot = elements()[m_head];
         T value = move(slot);
-        slot.~T();
         m_head = (m_head + 1) % Capacity;
         --m_size;
         return value;
