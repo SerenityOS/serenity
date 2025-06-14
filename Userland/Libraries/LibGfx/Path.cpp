@@ -430,6 +430,7 @@ void Path::transform(AffineTransform const& transform)
 {
     for (auto& point : m_points)
         point = transform.map(point);
+    invalidate_split_lines();
 }
 
 void Path::append_path(Path const& path, AppendRelativeToLastPoint relative_to_last_point)
