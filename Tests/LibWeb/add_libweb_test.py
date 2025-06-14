@@ -4,6 +4,7 @@ This script will create a new test file and expectations in the Tests/LibWeb dir
 """
 
 import argparse
+
 from pathlib import Path
 
 TEST_DIR = Path(__file__).resolve().parent
@@ -33,12 +34,12 @@ def create_text_test(test_name: str, is_async: bool = False) -> None:
     path_to_include_js = "../" * num_sub_levels + "include.js"
 
     # Create input and expected files
-    input_file.write_text(fR"""<!DOCTYPE html>
+    input_file.write_text(Rf"""<!DOCTYPE html>
 <script src="{path_to_include_js}"></script>
 <script>
-    {f"asyncTest(async (done)" if is_async else "test(()"} => {{
+    {"asyncTest(async (done)" if is_async else "test(()"} => {{
         println("Expected println() output");
-    {f"    done();" if is_async else ""}
+    {"    done();" if is_async else ""}
     }});
 </script>
 """)
