@@ -59,26 +59,10 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Renderer::apply_page_rotation(NonnullRefPtr<
     return bitmap;
 }
 
-static void rect_path(Gfx::Path& path, float x, float y, float width, float height)
-{
-    path.move_to({ x, y });
-    path.line_to({ x + width, y });
-    path.line_to({ x + width, y + height });
-    path.line_to({ x, y + height });
-    path.close();
-}
-
-template<typename T>
-static void rect_path(Gfx::Path& path, Gfx::Rect<T> rect)
-{
-    return rect_path(path, rect.x(), rect.y(), rect.width(), rect.height());
-}
-
-template<typename T>
-static Gfx::Path rect_path(Gfx::Rect<T> const& rect)
+static Gfx::Path rect_path(Gfx::FloatRect const& rect)
 {
     Gfx::Path path;
-    rect_path(path, rect);
+    path.rect(rect);
     return path;
 }
 
@@ -292,7 +276,7 @@ RENDERER_HANDLER(path_close)
 RENDERER_HANDLER(path_append_rect)
 {
     Gfx::FloatRect rect(args[0].to_float(), args[1].to_float(), args[2].to_float(), args[3].to_float());
-    m_current_path.append_path(rect_path(rect));
+    m_current_path.rect(rect);
     return {};
 }
 
@@ -1578,7 +1562,7 @@ void Renderer::show_empty_image(Gfx::IntSize size)
 {
     auto image_space_transformation = calculate_image_space_transformation(size);
     auto image_border = image_space_transformation.map(Gfx::IntRect { {}, size });
-    m_painter.stroke_path(rect_path(image_border), Color::Black, 1);
+    m_painter.stroke_path(rect_path(image_border.to_type<float>()), Color::Black, 1);
 }
 
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> apply_alpha_channel(NonnullRefPtr<Gfx::Bitmap> image_bitmap, NonnullRefPtr<Gfx::Bitmap const> mask_bitmap, bool invert_alpha = false)
