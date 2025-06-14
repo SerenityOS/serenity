@@ -9,6 +9,8 @@
 #ifndef KERNEL
 #    include <sys/cdefs.h>
 #    include <sys/types.h>
+#else
+#    include <AK/Types.h>
 #endif
 
 #ifdef __cplusplus
