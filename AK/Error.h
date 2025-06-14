@@ -152,33 +152,50 @@ public:
     }
 
     ALWAYS_INLINE constexpr ErrorOr(ErrorOr&& other)
-    requires(!Detail::IsTriviallyMoveConstructible<T> || !Detail::IsTriviallyMoveConstructible<E>)
+    requires(!IsTriviallyMoveConstructible<T> || !IsTriviallyMoveConstructible<E>)
         : m_is_error(other.m_is_error)
     {
         if (other.is_error())
-            construct_at<E>(&m_error, other.release_error());
+            construct_at<E>(&m_error, forward<ErrorOr>(other).release_error());
         else
-            construct_at<T>(&m_value, other.release_value());
+            construct_at<T>(&m_value, forward<ErrorOr>(other).release_value());
     }
     ALWAYS_INLINE constexpr ErrorOr(ErrorOr&& other) = default;
 
     ALWAYS_INLINE constexpr ErrorOr& operator=(ErrorOr&& other)
-    requires(!Detail::IsTriviallyMoveConstructible<T> || !Detail::IsTriviallyMoveConstructible<E>)
+    requires(!IsTriviallyMoveConstructible<T> || !IsTriviallyMoveConstructible<E>)
     {
         if (this == &other)
             return *this;
 
-        if (m_is_error)
-            m_error.~ErrorType();
-        else
-            m_value.~T();
-
-        if (other.is_error())
-            construct_at<E>(&m_error, other.release_error());
-        else
-            construct_at<T>(&m_value, other.release_value());
-
+        bool was_error = m_is_error;
         m_is_error = other.m_is_error;
+        if (was_error) {
+            if (other.is_error()) {
+                if constexpr (IsMoveAssignable<E>) {
+                    m_error = forward<ErrorOr>(other).release_error();
+                } else {
+                    m_error.~ErrorType();
+                    construct_at<E>(&m_error, forward<ErrorOr>(other).release_error());
+                }
+            } else {
+                m_error.~ErrorType();
+                m_value = forward<ErrorOr>(other).release_value();
+            }
+        } else {
+            if (other.is_error()) {
+                m_value.~T();
+                construct_at<E>(&m_error, forward<ErrorOr>(other).release_error());
+            } else {
+                if constexpr (IsMoveAssignable<T>) {
+                    m_value = forward<ErrorOr>(other).release_value();
+                } else {
+                    m_value.~T();
+                    construct_at<T>(&m_value, forward<ErrorOr>(other).release_value());
+                }
+            }
+        }
+
         return *this;
     }
     ALWAYS_INLINE constexpr ErrorOr& operator=(ErrorOr&& other) = default;
@@ -192,21 +209,21 @@ public:
         : m_is_error(value.is_error())
     {
         if (value.is_error())
-            construct_at<E>(&m_error, value.release_error());
+            construct_at<E>(&m_error, forward<ErrorOr<U, ErrorType>>(value).release_error());
         else
-            construct_at<T>(&m_value, value.release_value());
+            construct_at<T>(&m_value, forward<ErrorOr<U, ErrorType>>(value).release_value());
     }
 
     template<typename U>
     ALWAYS_INLINE constexpr ErrorOr(U&& value)
-    requires(requires { T(declval<U>()); } && !IsSame<U, ErrorType>)
+    requires(IsConstructible<T, U> && !IsSame<U, ErrorType>)
         : m_value(forward<U>(value))
         , m_is_error(false)
     {
     }
     template<typename U>
     ALWAYS_INLINE constexpr ErrorOr(U&& error)
-    requires(requires { ErrorType(declval<RemoveCVReference<U>>()); } && !IsSame<U, T>)
+    requires(IsConstructible<E, U> && !IsSame<U, T>)
         : m_error(forward<U>(error))
         , m_is_error(true)
     {
@@ -254,7 +271,7 @@ public:
     }
 
     ~ErrorOr()
-    requires(!Detail::IsDestructible<T> || !Detail::IsDestructible<ErrorType>)
+    requires(!IsDestructible<T> || !IsDestructible<ErrorType>)
     = delete;
 
     ALWAYS_INLINE constexpr ~ErrorOr()
