@@ -25,10 +25,12 @@ bool SysFSCapsLockRemap::value() const
     SpinlockLocker locker(m_lock);
     return g_caps_lock_remapped_to_ctrl.load();
 }
-void SysFSCapsLockRemap::set_value(bool new_value)
+
+ErrorOr<void> SysFSCapsLockRemap::set_value(bool new_value)
 {
     SpinlockLocker locker(m_lock);
     g_caps_lock_remapped_to_ctrl.exchange(new_value);
+    return {};
 }
 
 }

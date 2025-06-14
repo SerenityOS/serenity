@@ -23,9 +23,11 @@ bool SysFSKASANDeadly::value() const
 {
     return AddressSanitizer::g_kasan_is_deadly;
 }
-void SysFSKASANDeadly::set_value(bool new_value)
+
+ErrorOr<void> SysFSKASANDeadly::set_value(bool new_value)
 {
     AddressSanitizer::g_kasan_is_deadly = new_value;
+    return {};
 }
 
 }
