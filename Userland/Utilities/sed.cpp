@@ -946,51 +946,52 @@ static ErrorOr<void> run(Vector<File>& inputs, Script& script, bool suppress_def
     StringBuilder hold_space;
     StringBuilder read_command_file_contents;
 
-    // TODO: extend to multiple input files
-    auto& input = inputs[0];
     auto stdout = TRY(File::create_from_stdout());
 
-    // main loop
-    while (input.has_next()) {
-        if (!read_command_file_contents.is_empty() && !suppress_default_output)
-            // FIXME: Should we use `out' instead?
-            outln("{}", read_command_file_contents.string_view());
-        read_command_file_contents.clear();
+    // Process each input file
+    for (auto& input : inputs) {
+        // main loop
+        while (input.has_next()) {
+            if (!read_command_file_contents.is_empty() && !suppress_default_output)
+                // FIXME: Should we use `out' instead?
+                outln("{}", read_command_file_contents.string_view());
+            read_command_file_contents.clear();
 
-        // Avoid potential last, empty line
-        auto line = TRY(input.next());
-        auto is_last_line = !input.has_next();
-        if (is_last_line && line.is_empty())
-            break;
-
-        // TODO: "Reading from input shall be skipped if a <newline> was in the pattern space prior to a D command ending the previous cycle"
-        pattern_space.append(line);
-
-        // Turn commands on/off depending on selection. We need
-        for (auto& command : script.commands())
-            command.enable_for(pattern_space.string_view(), input.line_number(), is_last_line);
-
-        // Go, go, go!
-        CycleDecision cycle_decision = CycleDecision::None;
-        for (auto& command : script.commands()) {
-            if (!command.is_enabled())
-                continue;
-            auto command_cycle_decision = TRY(apply(command, pattern_space, hold_space, read_command_file_contents, input, stdout, suppress_default_output));
-            if (command_cycle_decision == CycleDecision::Next || command_cycle_decision == CycleDecision::Quit) {
-                cycle_decision = command_cycle_decision;
+            // Avoid potential last, empty line
+            auto line = TRY(input.next());
+            auto is_last_line = !input.has_next();
+            if (is_last_line && line.is_empty())
                 break;
+
+            // TODO: "Reading from input shall be skipped if a <newline> was in the pattern space prior to a D command ending the previous cycle"
+            pattern_space.append(line);
+
+            // Turn commands on/off depending on selection. We need
+            for (auto& command : script.commands())
+                command.enable_for(pattern_space.string_view(), input.line_number(), is_last_line);
+
+            // Go, go, go!
+            CycleDecision cycle_decision = CycleDecision::None;
+            for (auto& command : script.commands()) {
+                if (!command.is_enabled())
+                    continue;
+                auto command_cycle_decision = TRY(apply(command, pattern_space, hold_space, read_command_file_contents, input, stdout, suppress_default_output));
+                if (command_cycle_decision == CycleDecision::Next || command_cycle_decision == CycleDecision::Quit) {
+                    cycle_decision = command_cycle_decision;
+                    break;
+                }
             }
+
+            if (cycle_decision == CycleDecision::Next)
+                continue;
+
+            if (!suppress_default_output)
+                TRY(write_pattern_space(stdout, pattern_space));
+            pattern_space.clear();
+
+            if (cycle_decision == CycleDecision::Quit)
+                break;
         }
-
-        if (cycle_decision == CycleDecision::Next)
-            continue;
-
-        if (!suppress_default_output)
-            TRY(write_pattern_space(stdout, pattern_space));
-        pattern_space.clear();
-
-        if (cycle_decision == CycleDecision::Quit)
-            break;
     }
     return {};
 }
@@ -1066,6 +1067,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     }
 
     Vector<File> inputs;
+
     for (auto const& filename : pos_args) {
         if (filename == "-"sv) {
             inputs.empend(TRY(File::create_from_stdin()));
