@@ -101,9 +101,13 @@ Plan9FSMessage::Plan9FSMessage(Plan9FS& fs, Type type)
 }
 
 Plan9FSMessage::Plan9FSMessage(NonnullOwnPtr<KBuffer>&& buffer)
-    : m_built { move(buffer), Decoder({ buffer->bytes() }) }
-    , m_have_been_built(true)
+    : m_have_been_built(true)
 {
+    // FIXME: Urgh, best do this in the constructor, but we need the pointer to the buffer
+    //        which we cant access through buffer, after we have moved it.
+    auto* buffer_ptr = buffer.ptr();
+    new (&m_built) decltype(m_built) { move(buffer), Decoder({ buffer_ptr->bytes() }) };
+
     u32 size;
     u8 raw_type;
     *this >> size >> raw_type >> m_tag;
