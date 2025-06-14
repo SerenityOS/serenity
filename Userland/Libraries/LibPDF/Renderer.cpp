@@ -237,14 +237,14 @@ RENDERER_HANDLER(set_graphics_state_from_dict)
 
 RENDERER_HANDLER(path_move)
 {
-    m_current_path.move_to(map(args[0].to_float(), args[1].to_float()));
+    m_current_path.move_to(Gfx::FloatPoint(args[0].to_float(), args[1].to_float()));
     return {};
 }
 
 RENDERER_HANDLER(path_line)
 {
     VERIFY(!m_current_path.is_empty());
-    m_current_path.line_to(map(args[0].to_float(), args[1].to_float()));
+    m_current_path.line_to(Gfx::FloatPoint(args[0].to_float(), args[1].to_float()));
     return {};
 }
 
@@ -252,9 +252,9 @@ RENDERER_HANDLER(path_cubic_bezier_curve)
 {
     VERIFY(args.size() == 6);
     m_current_path.cubic_bezier_curve_to(
-        map(args[0].to_float(), args[1].to_float()),
-        map(args[2].to_float(), args[3].to_float()),
-        map(args[4].to_float(), args[5].to_float()));
+        Gfx::FloatPoint(args[0].to_float(), args[1].to_float()),
+        Gfx::FloatPoint(args[2].to_float(), args[3].to_float()),
+        Gfx::FloatPoint(args[4].to_float(), args[5].to_float()));
     return {};
 }
 
@@ -265,8 +265,8 @@ RENDERER_HANDLER(path_cubic_bezier_curve_no_first_control)
     auto current_point = m_current_path.last_point();
     m_current_path.cubic_bezier_curve_to(
         current_point,
-        map(args[0].to_float(), args[1].to_float()),
-        map(args[2].to_float(), args[3].to_float()));
+        Gfx::FloatPoint(args[0].to_float(), args[1].to_float()),
+        Gfx::FloatPoint(args[2].to_float(), args[3].to_float()));
     return {};
 }
 
@@ -274,8 +274,8 @@ RENDERER_HANDLER(path_cubic_bezier_curve_no_second_control)
 {
     VERIFY(args.size() == 4);
     VERIFY(!m_current_path.is_empty());
-    auto first_control_point = map(args[0].to_float(), args[1].to_float());
-    auto second_control_point = map(args[2].to_float(), args[3].to_float());
+    Gfx::FloatPoint first_control_point(args[0].to_float(), args[1].to_float());
+    Gfx::FloatPoint second_control_point(args[2].to_float(), args[3].to_float());
     m_current_path.cubic_bezier_curve_to(
         first_control_point,
         second_control_point,
@@ -291,11 +291,8 @@ RENDERER_HANDLER(path_close)
 
 RENDERER_HANDLER(path_append_rect)
 {
-    auto rect = Gfx::FloatRect(args[0].to_float(), args[1].to_float(), args[2].to_float(), args[3].to_float());
-    // Note: The path of the rectangle is mapped (rather than the rectangle).
-    // This is because negative width/heights are possible, and result in different
-    // winding orders, but this is lost by Gfx::AffineTransform::map().
-    m_current_path.append_path(map(rect_path(rect)));
+    Gfx::FloatRect rect(args[0].to_float(), args[1].to_float(), args[2].to_float(), args[3].to_float());
+    m_current_path.append_path(rect_path(rect));
     return {};
 }
 
@@ -323,6 +320,7 @@ void Renderer::begin_path_paint()
 {
     if (m_rendering_preferences.clip_paths)
         activate_clip();
+    m_current_path.transform(state().ctm);
 }
 
 void Renderer::end_path_paint()
@@ -447,7 +445,7 @@ RENDERER_HANDLER(path_intersect_clip_nonzero)
 {
     // FIXME: Support arbitrary path clipping in Path and utilize that here
     auto next_clipping_bbox = state().clipping_paths.next.bounding_box();
-    next_clipping_bbox.intersect(m_current_path.bounding_box());
+    next_clipping_bbox.intersect(state().ctm.map(m_current_path.bounding_box()));
     state().clipping_paths.next = rect_path(next_clipping_bbox);
     return {};
 }
