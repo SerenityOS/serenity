@@ -428,6 +428,11 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
+
+    // Make sure we eventually return to caller process address space
+    ScopeGuard guard = [] {
+        Memory::MemoryManager::enter_process_address_space(Process::current());
+    };
     auto main_program_metadata = main_program_description->metadata();
     // NOTE: Don't allow running SUID binaries at all if we are in a jail.
     if (Process::current().is_jailed() && (main_program_metadata.is_setuid() || main_program_metadata.is_setgid()))
