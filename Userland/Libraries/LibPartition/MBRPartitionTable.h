@@ -7,13 +7,14 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/StdLibExtraDetails.h>
 #include <LibPartition/PartitionTable.h>
 
 namespace Partition {
 
 class MBRPartitionTable : public PartitionTable {
 public:
-    struct [[gnu::packed]] Entry {
+    struct Entry {
         u8 status;
         u8 chs1[3];
         u8 type;
@@ -21,6 +22,7 @@ public:
         u32 offset;
         u32 length;
     };
+    static_assert(AssertSize<Entry, 16>());
     struct [[gnu::packed]] Header {
         u8 code1[218];
         u16 ts_zero;
@@ -34,6 +36,7 @@ public:
         Entry entry[4];
         u16 mbr_signature;
     };
+    static_assert(AssertSize<Header, 512>());
 
 public:
     ~MBRPartitionTable();
@@ -57,7 +60,7 @@ private:
     bool m_valid { false };
     bool m_header_valid { false };
     u32 const m_start_lba;
-    ByteBuffer m_cached_header;
+    Header m_cached_header;
 };
 
 }
