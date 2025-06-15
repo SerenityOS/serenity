@@ -26,10 +26,11 @@ bool SysFSDumpKmallocStacks::value() const
     return g_dump_kmalloc_stacks;
 }
 
-void SysFSDumpKmallocStacks::set_value(bool new_value)
+ErrorOr<void> SysFSDumpKmallocStacks::set_value(bool new_value)
 {
     SpinlockLocker locker(m_lock);
     g_dump_kmalloc_stacks = new_value;
+    return {};
 }
 
 }

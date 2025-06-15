@@ -188,8 +188,8 @@ void __ubsan_handle_implicit_conversion(ImplicitConversionData const& data, Valu
     print_location(data.location);
 }
 
-void __ubsan_handle_invalid_builtin(InvalidBuiltinData const) __attribute__((used));
-void __ubsan_handle_invalid_builtin(InvalidBuiltinData const data)
+void __ubsan_handle_invalid_builtin(InvalidBuiltinData const&) __attribute__((used));
+void __ubsan_handle_invalid_builtin(InvalidBuiltinData const& data)
 {
     critical_dmesgln("KUBSAN: passing invalid argument");
     print_location(data.location);
@@ -214,5 +214,152 @@ void __ubsan_handle_function_type_mismatch(FunctionTypeMismatchData const& data)
 {
     critical_dmesgln("KUBSAN: call to function through pointer to incorrect function type {}", data.type.name());
     print_location(data.location);
+}
+
+void __ubsan_handle_load_invalid_value_abort(InvalidValueData const&, ValueHandle) __attribute__((used, noreturn));
+void __ubsan_handle_load_invalid_value_abort(InvalidValueData const& val, ValueHandle handle)
+{
+    __ubsan_handle_load_invalid_value(val, handle);
+    Processor::halt();
+}
+
+void __ubsan_handle_nonnull_arg_abort(NonnullArgData const&) __attribute__((used, noreturn));
+void __ubsan_handle_nonnull_arg_abort(NonnullArgData const& arg)
+{
+    __ubsan_handle_nonnull_arg(arg);
+    Processor::halt();
+}
+
+void __ubsan_handle_nullability_arg_abort(NonnullArgData const&) __attribute__((used, noreturn));
+void __ubsan_handle_nullability_arg_abort(NonnullArgData const& arg)
+{
+    __ubsan_handle_nullability_arg(arg);
+    Processor::halt();
+}
+
+void __ubsan_handle_nonnull_return_v1_abort(NonnullReturnData const&, SourceLocation const&) __attribute__((used, noreturn));
+void __ubsan_handle_nonnull_return_v1_abort(NonnullReturnData const& data, SourceLocation const& location)
+{
+    __ubsan_handle_nonnull_return_v1(data, location);
+    Processor::halt();
+}
+
+void __ubsan_handle_nullability_return_v1_abort(NonnullReturnData const& data, SourceLocation const& location) __attribute__((used, noreturn));
+void __ubsan_handle_nullability_return_v1_abort(NonnullReturnData const& data, SourceLocation const& location)
+{
+    __ubsan_handle_nullability_return_v1(data, location);
+    Processor::halt();
+}
+
+void __ubsan_handle_vla_bound_not_positive_abort(VLABoundData const&, ValueHandle) __attribute__((used, noreturn));
+void __ubsan_handle_vla_bound_not_positive_abort(VLABoundData const& data, ValueHandle handle)
+{
+    __ubsan_handle_vla_bound_not_positive(data, handle);
+    Processor::halt();
+}
+
+void __ubsan_handle_add_overflow_abort(OverflowData const&, ValueHandle lhs, ValueHandle rhs) __attribute__((used, noreturn));
+void __ubsan_handle_add_overflow_abort(OverflowData const& data, ValueHandle lhs, ValueHandle rhs)
+{
+    __ubsan_handle_add_overflow(data, lhs, rhs);
+    Processor::halt();
+}
+
+void __ubsan_handle_sub_overflow_abort(OverflowData const&, ValueHandle lhs, ValueHandle rhs) __attribute__((used, noreturn));
+void __ubsan_handle_sub_overflow_abort(OverflowData const& data, ValueHandle lhs, ValueHandle rhs)
+{
+    __ubsan_handle_sub_overflow(data, lhs, rhs);
+    Processor::halt();
+}
+
+void __ubsan_handle_negate_overflow_abort(OverflowData const&, ValueHandle) __attribute__((used, noreturn));
+void __ubsan_handle_negate_overflow_abort(OverflowData const& data, ValueHandle value)
+{
+    __ubsan_handle_negate_overflow(data, value);
+    Processor::halt();
+}
+
+void __ubsan_handle_mul_overflow_abort(OverflowData const&, ValueHandle lhs, ValueHandle rhs) __attribute__((used, noreturn));
+void __ubsan_handle_mul_overflow_abort(OverflowData const& data, ValueHandle lhs, ValueHandle rhs)
+{
+    __ubsan_handle_mul_overflow(data, lhs, rhs);
+    Processor::halt();
+}
+
+void __ubsan_handle_shift_out_of_bounds_abort(ShiftOutOfBoundsData const&, ValueHandle lhs, ValueHandle rhs) __attribute__((used, noreturn));
+void __ubsan_handle_shift_out_of_bounds_abort(ShiftOutOfBoundsData const& data, ValueHandle lhs, ValueHandle rhs)
+{
+    __ubsan_handle_shift_out_of_bounds(data, lhs, rhs);
+    Processor::halt();
+}
+
+void __ubsan_handle_divrem_overflow_abort(OverflowData const&, ValueHandle lhs, ValueHandle rhs) __attribute__((used, noreturn));
+void __ubsan_handle_divrem_overflow_abort(OverflowData const& data, ValueHandle lhs, ValueHandle rhs)
+{
+    __ubsan_handle_divrem_overflow(data, lhs, rhs);
+    Processor::halt();
+}
+
+void __ubsan_handle_out_of_bounds_abort(OutOfBoundsData const&, ValueHandle) __attribute__((used, noreturn));
+void __ubsan_handle_out_of_bounds_abort(OutOfBoundsData const& data, ValueHandle value)
+{
+    __ubsan_handle_out_of_bounds(data, value);
+    Processor::halt();
+}
+
+void __ubsan_handle_type_mismatch_v1_abort(TypeMismatchData const&, ValueHandle) __attribute__((used, noreturn));
+void __ubsan_handle_type_mismatch_v1_abort(TypeMismatchData const& data, ValueHandle value)
+{
+    __ubsan_handle_type_mismatch_v1(data, value);
+    Processor::halt();
+}
+
+void __ubsan_handle_alignment_assumption_abort(AlignmentAssumptionData const&, ValueHandle, ValueHandle, ValueHandle) __attribute__((used, noreturn));
+void __ubsan_handle_alignment_assumption_abort(AlignmentAssumptionData const& data, ValueHandle pointer, ValueHandle alignment, ValueHandle offset)
+{
+    __ubsan_handle_alignment_assumption(data, pointer, alignment, offset);
+    Processor::halt();
+}
+
+void __ubsan_handle_builtin_unreachable_abort(UnreachableData const&) __attribute__((used, noreturn));
+void __ubsan_handle_builtin_unreachable_abort(UnreachableData const& data)
+{
+    __ubsan_handle_builtin_unreachable(data);
+    Processor::halt();
+}
+
+void __ubsan_handle_missing_return_abort(UnreachableData const&) __attribute__((used, noreturn));
+void __ubsan_handle_missing_return_abort(UnreachableData const& data)
+{
+    __ubsan_handle_missing_return(data);
+    Processor::halt();
+}
+
+void __ubsan_handle_implicit_conversion_abort(ImplicitConversionData const&, ValueHandle, ValueHandle) __attribute__((used, noreturn));
+void __ubsan_handle_implicit_conversion_abort(ImplicitConversionData const& data, ValueHandle from, ValueHandle to)
+{
+    __ubsan_handle_implicit_conversion(data, from, to);
+    Processor::halt();
+}
+
+void __ubsan_handle_invalid_builtin_abort(InvalidBuiltinData const&) __attribute__((used, noreturn));
+void __ubsan_handle_invalid_builtin_abort(InvalidBuiltinData const& data)
+{
+    __ubsan_handle_invalid_builtin(data);
+    Processor::halt();
+}
+
+void __ubsan_handle_pointer_overflow_abort(PointerOverflowData const&, ValueHandle, ValueHandle) __attribute__((used, noreturn));
+void __ubsan_handle_pointer_overflow_abort(PointerOverflowData const& data, ValueHandle base, ValueHandle result)
+{
+    __ubsan_handle_pointer_overflow(data, base, result);
+    Processor::halt();
+}
+
+void __ubsan_handle_function_type_mismatch_abort(FunctionTypeMismatchData const&) __attribute__((used, noreturn));
+void __ubsan_handle_function_type_mismatch_abort(FunctionTypeMismatchData const& data)
+{
+    __ubsan_handle_function_type_mismatch(data);
+    Processor::halt();
 }
 }

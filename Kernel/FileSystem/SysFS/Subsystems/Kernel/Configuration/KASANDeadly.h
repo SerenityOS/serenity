@@ -20,7 +20,7 @@ public:
 
 private:
     virtual bool value() const override;
-    virtual void set_value(bool new_value) override;
+    virtual ErrorOr<void> set_value(bool new_value) override;
 
     explicit SysFSKASANDeadly(SysFSDirectory const&);
 };
