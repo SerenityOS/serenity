@@ -29,6 +29,8 @@ set(SOURCES
     ../../AK/StringUtils.cpp
     ../../AK/StringView.cpp
 )
+# UBSAN handlers should not get sanitized themselves
+set_source_files_properties(../Prekernel/UBSanitizer.cpp PROPERTIES COMPILE_FLAGS "-fno-sanitize=undefined")
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(SOURCES
