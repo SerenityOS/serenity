@@ -804,6 +804,7 @@ endif()
 if (ENABLE_KERNEL_UNDEFINED_SANITIZER)
     # Kernel Undefined Behavior Sanitizer (KUBSAN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+    set_source_files_properties(Security/UBSanitizer.cpp PROPERTIES COMPILE_FLAGS "-fno-sanitize=undefined")
 endif()
 
 if (ENABLE_KERNEL_ADDRESS_SANITIZER)
