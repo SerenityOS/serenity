@@ -46,32 +46,51 @@ protected:
         , m_pitch(pitch)
     {
         m_cursor_overriden_pixels.fill(0);
+
+        if(!m_in_memory_buffer){
+            m_in_memory_buffer_size = height * framebuffer_pitch();
+            m_in_memory_buffer = (u8*)kmalloc(m_in_memory_buffer_size);
+            memset(m_in_memory_buffer, 0,m_in_memory_buffer_size);
+        }
+        
     }
     virtual u8* framebuffer_data() = 0;
     size_t framebuffer_pitch() const { return m_pitch; }
     virtual void clear_glyph(size_t x, size_t y);
-
+    
     union FramebufferOffset {
         u8* bytes;
         u32* pixels;
     };
     FramebufferOffset framebuffer_offset(size_t x, size_t y);
-    void flush_glyph(size_t x, size_t y);
+    FramebufferOffset inmembuffer_offset(size_t x, size_t y);
 
+    void flush_glyph(size_t x, size_t y);
+    
     size_t const m_glyph_spacing { 1 };
     size_t const m_glyph_columns { 8 };
     size_t const m_glyph_rows { 16 };
-
+    
     Array<u32, 8> m_cursor_overriden_pixels;
-
+    
     size_t m_pitch;
+    
+    //in_memory_buffer for scrolling
+    int m_in_memory_buffer_size;
+    u8* m_in_memory_buffer {nullptr};
+    
+    ~GenericFramebufferConsoleImpl(){
+        if(m_in_memory_buffer!=nullptr){
+            kfree_sized(m_in_memory_buffer , m_in_memory_buffer_size);
+        }
+    }
 };
 
 class GenericFramebufferConsole : public GenericFramebufferConsoleImpl {
-public:
+    public:
     virtual void clear(size_t x, size_t y, size_t length) override;
     virtual void write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical = false) override;
-
+    
     virtual void enable() override;
     virtual void disable() override;
 
