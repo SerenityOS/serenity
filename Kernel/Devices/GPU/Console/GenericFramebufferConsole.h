@@ -56,6 +56,8 @@ protected:
         u32* pixels;
     };
     FramebufferOffset framebuffer_offset(size_t x, size_t y);
+    FramebufferOffset inMemBuffer_offset(size_t x, size_t y);
+
     void flush_glyph(size_t x, size_t y);
 
     size_t const m_glyph_spacing { 1 };
@@ -65,6 +67,10 @@ protected:
     Array<u32, 8> m_cursor_overriden_pixels;
 
     size_t m_pitch;
+
+    //in memory buffer for scrolling
+    int inMemBufferSize;
+    u8 inMemBuffer[];
 };
 
 class GenericFramebufferConsole : public GenericFramebufferConsoleImpl {
