@@ -10,8 +10,8 @@
 // /!\ Read setjmp.h before modifying this file!
 //
 
-#define DID_SAVE_SIGNAL_MASK_SLOT (14 * 8)
-#define SAVED_SIGNAL_MASK_SLOT    (14 * 8 + 4)
+#define DID_SAVE_SIGNAL_MASK_SLOT (26 * 8)
+#define SAVED_SIGNAL_MASK_SLOT    (26 * 8 + 4)
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/setjmp.html
 // int setjmp(jmp_buf env)
