@@ -128,6 +128,7 @@ PDFErrorsOr<void> Renderer::render()
         }
     }
 
+    copy_current_clip_path_content_to_output();
     show_clipping_paths();
 
     if (!errors.errors().is_empty())
@@ -307,7 +308,53 @@ RENDERER_HANDLER(path_append_rect)
     return {};
 }
 
-PDFErrorOr<void> Renderer::add_clip_path(Gfx::WindingRule)
+PDFErrorOr<void> Renderer::prepare_clipped_bitmap_painter()
+{
+    if (!m_clipped_bitmap)
+        m_clipped_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, m_bitmap->size()));
+
+    m_clipped_bitmap_painter = Gfx::Painter { *m_clipped_bitmap };
+    m_clipped_bitmap_anti_aliasing_painter = Gfx::AntiAliasingPainter { *m_clipped_bitmap_painter };
+
+    auto r = state().clipping_state.clip_bounding_box;
+    m_clipped_bitmap_painter->add_clip_rect(r);
+
+    // Need to copy what's currently on the page so that transparent things in the clipped area are blended on top of the right things.
+    m_clipped_bitmap_painter->blit(r.location(), *m_bitmap, r);
+
+    return {};
+}
+
+static void apply_clip(Gfx::Bitmap& bitmap, Gfx::IntRect bitmap_rect, Gfx::Bitmap const& clip_alpha, Gfx::IntRect clip_rect)
+{
+    VERIFY(bitmap.size() == bitmap_rect.size() || (bitmap_rect.is_empty() && bitmap.size() == Gfx::IntSize(1, 1)));
+    VERIFY(clip_alpha.size() == clip_rect.size() || (clip_rect.is_empty() && clip_alpha.size() == Gfx::IntSize(1, 1)));
+    auto rect = bitmap_rect.intersected(clip_rect);
+
+    for (int y = rect.top(); y < rect.bottom(); ++y) {
+        for (int x = rect.left(); x < rect.right(); ++x) {
+            Gfx::IntPoint point { x, y };
+            auto pixel = bitmap.get_pixel(point - bitmap_rect.location());
+            auto alpha = clip_alpha.get_pixel(point - clip_rect.location());
+            pixel.set_alpha(pixel.alpha() * alpha.alpha() / 255);
+            bitmap.set_pixel(point - bitmap_rect.location(), pixel);
+        }
+    }
+}
+
+void Renderer::copy_current_clip_path_content_to_output()
+{
+    if (state().clipping_state.clip_path_alpha) {
+        auto r = state().clipping_state.clip_bounding_box;
+        apply_clip(*m_clipped_bitmap, m_clipped_bitmap->rect(), *state().clipping_state.clip_path_alpha, r);
+        m_painter.blit(r.location(), *m_clipped_bitmap, r);
+    }
+
+    m_clipped_bitmap_painter = {};
+    m_clipped_bitmap_anti_aliasing_painter = {};
+}
+
+PDFErrorOr<void> Renderer::add_clip_path(Gfx::WindingRule winding_rule)
 {
     if (m_rendering_preferences.show_clipping_paths)
         m_clip_paths_to_show_for_debugging.append(m_current_path);
@@ -315,24 +362,49 @@ PDFErrorOr<void> Renderer::add_clip_path(Gfx::WindingRule)
     if (!m_rendering_preferences.apply_clip)
         return {};
 
-    // FIXME: Support arbitrary path clipping in Path and use that here
+    // If the clip is a rectangle that is larger than the current clip's bounding box, we can ignore it.
+    // This is important for performance, because many PDFs add a clip for the whole page before other clips,
+    // and we don't want to allocate a whole-page bitmap for those.
+    if (auto maybe_rect = m_current_path.as_rect(); maybe_rect.has_value()) {
+        auto rect = Gfx::enclosing_int_rect(maybe_rect.value());
+        if (rect.contains(state().clipping_state.clip_bounding_box))
+            return {};
+    }
+
+    // About to set new clip; flush old one if needed.
+    copy_current_clip_path_content_to_output();
+
     auto next_clipping_bbox = Gfx::enclosing_int_rect(m_current_path.bounding_box());
     next_clipping_bbox.intersect(state().clipping_state.clip_bounding_box);
-    state().clipping_state.clip_bounding_box = next_clipping_bbox;
 
+    auto clip_path_alpha = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, next_clipping_bbox.is_empty() ? Gfx::IntSize { 1, 1 } : next_clipping_bbox.size()));
+
+    m_current_path.close_all_subpaths();
+    Gfx::Painter clip_painter(*clip_path_alpha);
+    Gfx::AntiAliasingPainter aa_clip_painter(clip_painter);
+    clip_painter.translate(-next_clipping_bbox.location());
+    aa_clip_painter.fill_path(m_current_path, Color::Black, winding_rule);
+
+    if (state().clipping_state.clip_path_alpha)
+        apply_clip(*clip_path_alpha, next_clipping_bbox, *state().clipping_state.clip_path_alpha, state().clipping_state.clip_bounding_box);
+
+    state().clipping_state.clip_path_alpha = move(clip_path_alpha);
+    state().clipping_state.clip_bounding_box = next_clipping_bbox;
     state().clipping_state.has_own_clip = true;
-    m_painter.add_clip_rect(state().clipping_state.clip_bounding_box);
+
+    TRY(prepare_clipped_bitmap_painter());
     return {};
 }
 
 void Renderer::finalize_clip_before_graphics_state_restore()
 {
-    m_painter.clear_clip_rect();
+    copy_current_clip_path_content_to_output();
 }
 
 PDFErrorOr<void> Renderer::restore_previous_clip_after_graphics_state_restore()
 {
-    m_painter.add_clip_rect(state().clipping_state.clip_bounding_box);
+    if (state().clipping_state.clip_path_alpha)
+        TRY(prepare_clipped_bitmap_painter());
     return {};
 }
 
@@ -1040,12 +1112,12 @@ RENDERER_HANDLER(compatibility_end)
 
 Gfx::Painter& Renderer::painter()
 {
-    return m_painter;
+    return m_clipped_bitmap_painter.has_value() ? *m_clipped_bitmap_painter : m_painter;
 }
 
 Gfx::AntiAliasingPainter& Renderer::anti_aliasing_painter()
 {
-    return m_anti_aliasing_painter;
+    return m_clipped_bitmap_anti_aliasing_painter.has_value() ? *m_clipped_bitmap_anti_aliasing_painter : m_anti_aliasing_painter;
 }
 
 template<typename T>
