@@ -231,8 +231,7 @@ int main(int argc, char** argv)
 #if ARCH(X86_64)
             asm volatile("mov %%eax, %%esp" ::"a"(makeshift_stack_pointer));
 #elif ARCH(AARCH64)
-            (void)makeshift_stack_pointer;
-            TODO_AARCH64();
+            asm volatile("mov sp, %0" :: "r"(makeshift_stack_pointer));
 #elif ARCH(RISCV64)
             asm volatile("mv sp, %0" :: "r"(makeshift_stack_pointer));
 #else
@@ -249,8 +248,7 @@ int main(int argc, char** argv)
 #if ARCH(X86_64)
             asm volatile("mov %%eax, %%esp" ::"a"(bad_stack_pointer));
 #elif ARCH(AARCH64)
-            (void)bad_stack_pointer;
-            TODO_AARCH64();
+            asm volatile("mov sp, %0" :: "r"(bad_stack_pointer));
 #elif ARCH(RISCV64)
             asm volatile("mv sp, %0" :: "r"(bad_stack_pointer));
 #else
@@ -272,8 +270,8 @@ int main(int argc, char** argv)
             asm volatile("movq %%rax, %%rsp" ::"a"(bad_stack_pointer));
             asm volatile("pushq $0");
 #elif ARCH(AARCH64)
-            (void)bad_stack_pointer;
-            TODO_AARCH64();
+            asm volatile("mov sp, %0" :: "r"(bad_stack_pointer));
+            asm volatile("str xzr, [sp]");
 #elif ARCH(RISCV64)
             asm volatile("mv sp, %0" :: "r"(bad_stack_pointer));
             asm volatile("sd zero, (sp)");
@@ -310,8 +308,11 @@ int main(int argc, char** argv)
 #if ARCH(X86_64)
             ptr[0] = 0xc3; // ret
 #elif ARCH(AARCH64)
-            (void)ptr;
-            TODO_AARCH64();
+            // ret
+            ptr[0] = 0xc0;
+            ptr[1] = 0x03;
+            ptr[2] = 0x5f;
+            ptr[3] = 0xd6;
 #elif ARCH(RISCV64)
             // ret / jalr x0, 0(x1)
             ptr[0] = 0x67;
@@ -332,7 +333,7 @@ int main(int argc, char** argv)
 #if ARCH(X86_64)
             asm volatile("str %eax");
 #elif ARCH(AARCH64)
-            TODO_AARCH64();
+            asm volatile("eret");
 #elif ARCH(RISCV64)
             asm volatile("sret");
 #else
