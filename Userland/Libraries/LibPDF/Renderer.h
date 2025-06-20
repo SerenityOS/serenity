@@ -67,6 +67,7 @@ struct TextState {
 struct ClippingState {
     Gfx::IntRect clip_bounding_box;
     bool has_own_clip { false };
+    RefPtr<Gfx::Bitmap> clip_path_alpha {};
 };
 
 struct TransparencyGroupAttributes {
@@ -188,6 +189,9 @@ private:
     PDFErrorOr<void> handle_text_next_line_show_string(ReadonlySpan<Value> args, Optional<NonnullRefPtr<DictObject>> = {});
     PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(ReadonlySpan<Value> args, Optional<NonnullRefPtr<DictObject>> = {});
 
+    PDFErrorOr<void> prepare_clipped_bitmap_painter();
+    void copy_current_clip_path_content_to_output();
+
     PDFErrorOr<void> add_clip_path(Gfx::WindingRule);
     void finalize_clip_before_graphics_state_restore();
     PDFErrorOr<void> restore_previous_clip_after_graphics_state_restore();
@@ -253,6 +257,11 @@ private:
 
     RefPtr<Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
+
+    RefPtr<Gfx::Bitmap> m_clipped_bitmap;
+    Optional<Gfx::Painter> m_clipped_bitmap_painter;
+    Optional<Gfx::AntiAliasingPainter> m_clipped_bitmap_anti_aliasing_painter;
+
     Page const& m_page;
     Gfx::Painter m_painter;
     Gfx::AntiAliasingPainter m_anti_aliasing_painter;
