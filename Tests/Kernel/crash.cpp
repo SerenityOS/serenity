@@ -38,8 +38,8 @@ int main(int argc, char** argv)
 
     bool do_all_crash_types = false;
     bool do_segmentation_violation = false;
-    // RISC-V does not trap divisions by zero, see M extension version 2.0, subsection 2 and table 1.
-#if !ARCH(RISCV64)
+    // Division by zero only causes an exception on x86-64.
+#if ARCH(X86_64)
     bool do_division_by_zero = false;
 #endif
     bool do_illegal_instruction = false;
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
         "(i.e., Kernel or UE) by crashing in many different ways.");
     args_parser.add_option(do_all_crash_types, "Test that all (except -U) of the following crash types crash as expected (default behavior)", nullptr, 'A');
     args_parser.add_option(do_segmentation_violation, "Perform a segmentation violation by dereferencing an invalid pointer", nullptr, 's');
-#if !ARCH(RISCV64)
+#if ARCH(X86_64)
     args_parser.add_option(do_division_by_zero, "Perform a division by zero", nullptr, 'd');
 #endif
     args_parser.add_option(do_illegal_instruction, "Execute an illegal CPU instruction", nullptr, 'i');
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-#if !ARCH(RISCV64)
+#if ARCH(X86_64)
     if (do_division_by_zero || do_all_crash_types) {
         any_failures |= !Crash("Division by zero", []() {
             int volatile lala = 10;
