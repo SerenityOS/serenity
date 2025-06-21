@@ -77,7 +77,7 @@ public:
     void for_each_needed_library(F) const;
 
     VirtualAddress base_address() const { return m_base_address; }
-    Vector<LoadedSegment> const text_segments() const { return m_text_segments; }
+    Vector<LoadedSegment> const& text_segments() const { return m_text_segments; }
     bool is_dynamic() const { return image().is_dynamic(); }
 
     static Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&);

@@ -16,6 +16,27 @@
 
 namespace ELF {
 
+struct GNUHashTable {
+    GNUHashTable(u32 const* table)
+    {
+        n_buckets = table[0];
+        n_omitted_symbols = table[1];
+        bloom_size = table[2];
+        bloom_shift = table[3];
+        bloom_words = { reinterpret_cast<BloomWord const*>(&table[4]), bloom_size };
+        buckets = { &table[4 + bloom_size], n_buckets };
+        chains = &table[4 + bloom_size + n_buckets];
+    }
+    using BloomWord = FlatPtr;
+    u32 n_buckets;
+    u32 n_omitted_symbols;
+    u32 bloom_size;
+    u32 bloom_shift;
+    Span<BloomWord const> bloom_words;
+    Span<u32 const> buckets;
+    u32 const* chains;
+};
+
 DynamicObject::DynamicObject(ByteString const& filepath, VirtualAddress base_address, VirtualAddress dynamic_section_address)
     : m_filepath(filepath)
     , m_base_address(base_address)
@@ -227,28 +248,21 @@ void DynamicObject::parse()
     // Determine amount of symbols by finding the chain with the highest
     // starting index and walking this chain until the end to find the
     // maximum index = amount of symbols.
-    using BloomWord = FlatPtr;
-    size_t const num_buckets = hash_table_begin[0];
-    size_t const num_omitted_symbols = hash_table_begin[1];
-    u32 const num_maskwords = hash_table_begin[2];
-    BloomWord const* bloom_words = reinterpret_cast<BloomWord const*>(&hash_table_begin[4]);
-    u32 const* const buckets = reinterpret_cast<u32 const*>(&bloom_words[num_maskwords]);
-    u32 const* const chains = &buckets[num_buckets];
+    auto [n_buckets, n_omitted_symbols, n_maskwords, bloom_size, bloom_words, buckets, chains] = GNUHashTable(hash_table_begin);
 
     size_t highest_chain_idx = 0;
-    for (size_t i = 0; i < num_buckets; i++) {
-        if (buckets[i] > highest_chain_idx) {
-            highest_chain_idx = buckets[i];
-        }
+    for (auto bucket : buckets) {
+        if (bucket > highest_chain_idx)
+            highest_chain_idx = bucket;
     }
 
-    if (highest_chain_idx < num_omitted_symbols) {
+    if (highest_chain_idx < n_omitted_symbols) {
         m_symbol_count = 0;
         return;
     }
 
     size_t amount_symbols = highest_chain_idx;
-    u32 const* last_chain = &chains[highest_chain_idx - num_omitted_symbols];
+    u32 const* last_chain = &chains[highest_chain_idx - n_omitted_symbols];
     while ((*(last_chain++) & 1) == 0) {
         amount_symbols++;
     }
@@ -352,24 +366,17 @@ auto DynamicObject::HashSection::lookup_sysv_symbol(StringView name, u32 hash_va
 auto DynamicObject::HashSection::lookup_gnu_symbol(StringView name, u32 hash_value) const -> Optional<Symbol>
 {
     // Algorithm reference: https://ent-voy.blogspot.com/2011/02/
-    using BloomWord = FlatPtr;
+    using BloomWord = GNUHashTable::BloomWord;
     constexpr size_t bloom_word_size = sizeof(BloomWord) * 8;
 
     u32 const* hash_table_begin = (u32*)address().as_ptr();
+    auto [num_buckets, num_omitted_symbols, num_maskwords, bloom_shift, bloom_words, buckets, chains] = GNUHashTable(hash_table_begin);
 
-    size_t const num_buckets = hash_table_begin[0];
-    size_t const num_omitted_symbols = hash_table_begin[1];
-    u32 const num_maskwords = hash_table_begin[2];
     // This works because num_maskwords is required to be a power of 2
     u32 const num_maskwords_bitmask = num_maskwords - 1;
-    u32 const shift2 = hash_table_begin[3];
-
-    BloomWord const* bloom_words = (BloomWord const*)&hash_table_begin[4];
-    u32 const* const buckets = (u32 const*)&bloom_words[num_maskwords];
-    u32 const* const chains = &buckets[num_buckets];
 
     BloomWord hash1 = hash_value;
-    BloomWord hash2 = hash1 >> shift2;
+    BloomWord hash2 = hash1 >> bloom_shift;
     BloomWord const bitmask = ((BloomWord)1 << (hash1 % bloom_word_size)) | ((BloomWord)1 << (hash2 % bloom_word_size));
 
     if ((bloom_words[(hash1 / bloom_word_size) & num_maskwords_bitmask] & bitmask) != bitmask)
