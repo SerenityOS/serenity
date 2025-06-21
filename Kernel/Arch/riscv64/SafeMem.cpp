@@ -162,7 +162,7 @@ safe_atomic_compare_exchange_relaxed_ins_2:
 .global safe_atomic_compare_exchange_relaxed_faulted
 safe_atomic_compare_exchange_relaxed_faulted:
 )"
-                 : [result] "=&r"(result), "+r"(error)
+                 : [result] "=&r"(result), "+&r"(error)
                  : [var_ptr] "r"(var), [expected_ptr] "r"(&expected), [desired] "r"(desired)
                  : "memory", "t0", "t1", "t2");
     if (error != 0)
