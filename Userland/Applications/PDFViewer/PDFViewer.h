@@ -63,7 +63,7 @@ public:
 
     PageViewMode page_view_mode() const { return m_page_view_mode; }
     void set_page_view_mode(PageViewMode);
-    bool show_rendering_diagnostics() const { return m_rendering_preferences.show_diagnostics; }
+    bool show_rendering_diagnostics() const { return m_show_rendering_diagnostics; }
     void set_show_rendering_diagnostics(bool);
     bool show_clipping_paths() const { return m_rendering_preferences.show_clipping_paths; }
     void set_show_clipping_paths(bool);
@@ -107,6 +107,7 @@ private:
     PageDimensionCache m_page_dimension_cache;
     PageViewMode m_page_view_mode;
     PDF::RenderingPreferences m_rendering_preferences;
+    bool m_show_rendering_diagnostics { false };
 
     Gfx::IntPoint m_pan_starting_position;
     int m_rotations { 0 };

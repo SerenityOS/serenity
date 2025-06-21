@@ -136,7 +136,6 @@ struct RenderingPreferences {
     bool show_clipping_paths { false };
     bool show_images { true };
     bool show_hidden_text { false };
-    bool show_diagnostics { false };
 
     bool clip_images { true };
     bool clip_paths { true };
