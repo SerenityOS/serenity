@@ -196,6 +196,7 @@ enum class NeedsBigProcessLock {
     S(unveil, NeedsBigProcessLock::No)                     \
     S(utime, NeedsBigProcessLock::No)                      \
     S(utimensat, NeedsBigProcessLock::No)                  \
+    S(posix_spawn, NeedsBigProcessLock::No)                \
     S(waitid, NeedsBigProcessLock::Yes)                    \
     S(write, NeedsBigProcessLock::Yes)                     \
     S(pwritev, NeedsBigProcessLock::Yes)                   \
@@ -484,6 +485,17 @@ struct SC_utimensat_params {
     StringArgument path;
     struct timespec const* times;
     int flag;
+};
+
+struct SC_posix_spawn_params {
+    StringArgument path;
+    StringListArgument arguments;
+    StringListArgument environment;
+    Userspace<void const*> attr_data;
+    size_t attr_data_size;
+    Userspace<void const*> serialized_file_actions_data;
+    size_t serialized_file_actions_data_size;
+    int exec_type;
 };
 
 struct SC_futimens_params {
