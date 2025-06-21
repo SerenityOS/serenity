@@ -76,6 +76,7 @@ shared_library("LibGfx") {
     "ImageFormats/ILBMLoader.cpp",
     "ImageFormats/ISOBMFF/Boxes.cpp",
     "ImageFormats/ISOBMFF/JPEG2000Boxes.cpp",
+    "ImageFormats/ISOBMFF/JPEGXLBoxes.cpp",
     "ImageFormats/ISOBMFF/Reader.cpp",
     "ImageFormats/ImageDecoder.cpp",
     "ImageFormats/JBIG2Loader.cpp",
