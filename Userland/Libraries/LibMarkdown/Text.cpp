@@ -668,7 +668,8 @@ NonnullOwnPtr<Text::Node> Text::parse_link(Vector<Token>::ConstIterator& tokens)
 
     StringBuilder address;
 
-    bool is_escaped = *(tokens + 1) == "<"sv;
+    auto next = tokens + 1;
+    bool is_escaped = !next.is_end() && *next == "<"sv;
     // Don't add the angle bracket to the address.
     if (is_escaped)
         tokens++;
