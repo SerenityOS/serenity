@@ -150,4 +150,17 @@ inline void flush_data_cache(FlatPtr start, size_t size)
                      : "memory");
 }
 
+inline FlatPtr get_mdscr_el1()
+{
+    FlatPtr mdscr_el1;
+    asm volatile("mrs %[value], mdscr_el1\n"
+                 : [value] "=r"(mdscr_el1));
+    return mdscr_el1;
+}
+
+inline void set_mdscr_el1(FlatPtr mdscr_el1)
+{
+    asm volatile("msr mdscr_el1, %[value]" ::[value] "r"(mdscr_el1));
+}
+
 }
