@@ -1997,7 +1997,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
         true);
 
     Vector<Line::CompletionSuggestion> suggestions;
-    auto timer = Core::Timer::create_single_shot(300, [&] {
+    auto timer = Core::Timer::create_single_shot(3000, [&] {
         Core::EventLoop::current().quit(1);
     });
     timer->start();
