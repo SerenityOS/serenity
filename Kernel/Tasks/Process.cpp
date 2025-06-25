@@ -484,8 +484,9 @@ void signal_trampoline_dummy()
         "asm_signal_trampoline:\n"
 
         // Store a0 (return value from a syscall) into the register slot, such that we can return the correct value in sys$sigreturn.
-        "lui t0, %%hi(%[offset_to_return_value_slot])\n" // FIXME: Move the return value slot before the FPUState to avoid having an extra lui here.
-        "sd a0, %%lo(%[offset_to_return_value_slot])(sp)\n"
+        "lui t0, %%hi(%[offset_to_return_value_slot])\n" // FIXME: Move the return value slot before the FPUState to avoid having an extra lui+add pair here.
+        "add t0, t0, sp\n"
+        "sd a0, %%lo(%[offset_to_return_value_slot])(t0)\n"
         // Load the handler address into t0.
         "ld t0, 0(sp)\n"
         // Load the signal number into the first argument.
