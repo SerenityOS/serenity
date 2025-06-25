@@ -8,7 +8,7 @@ Everyone is welcome to work on the project, and while we have lots of fun, it's 
 
 ## Communication
 
-Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
+Join our Discord server: [SerenityOS Discord](https://serenityos.org/discord)
 
 ## Issue policy
 

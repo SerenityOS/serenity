@@ -30,7 +30,7 @@ This is a roughly categorized list of pages relating to SerenityOS and its subpr
 
 ## Social
 
--   [Discord Server](https://discord.gg/serenityos)
+-   [Discord Server](https://serenityos.org/discord)
 -   [serenityos.social](https://serenityos.social/), unofficial Mastodon instance run by [networkException](https://serenityos.social/@networkexception) and [Linus Groh](https://serenityos.social/@linusg)
 -   [Map of Developers and Users](https://usermap.serenityos.org/)
 -   YouTube Channels
