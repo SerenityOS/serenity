@@ -11,7 +11,7 @@ launcher_name='Bash'
 launcher_category='&Utilities'
 launcher_command='/usr/local/bin/bash'
 launcher_run_in_terminal='true'
-icon_file='https://static-00.iconduck.com/assets.00/bash-icon-224x256-qo4a7ex6.png'
+#icon_file=FIXME
 files=(
     "https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz#9599b22ecd1d5787ad7d3b7bf0c59f312b3396d1e281175dd1f8a4014da621ff"
 )
