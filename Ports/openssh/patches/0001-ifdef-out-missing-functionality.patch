@@ -4,6 +4,7 @@ Date: Sat, 30 Apr 2022 10:58:10 +0000
 Subject: [PATCH] ifdef out missing functionality
 
 Co-Authored-By: Luke <luke.wilde@live.co.uk>
+Co-Authored-By: Oskar Skog <oskar@oskog97.com>
 Co-Authored-By: Patrick Meyer <git@the-space.agency>
 Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
 ---
@@ -25,17 +26,17 @@ Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
  servconf.c                           |  2 ++
  ssh-add.c                            |  4 ++++
  ssh-agent.c                          |  2 ++
- ssh-keygen.c                         | 11 +++++++++++
+ ssh-keygen.c                         | 13 +++++++++++++
  ssh-keyscan.c                        |  2 ++
  ssh-pkcs11-client.c                  |  8 +++++++-
  ssh-sk-client.c                      |  4 ++++
  sshbuf-misc.c                        |  2 ++
  sshconnect.c                         | 10 ++++++++--
  sshkey.c                             |  4 ++++
- 25 files changed, 91 insertions(+), 10 deletions(-)
+ 25 files changed, 93 insertions(+), 10 deletions(-)
 
 diff --git a/atomicio.c b/atomicio.c
-index 7650733..7a195f5 100644
+index 765073357f67342f8b5f21ac869629c0c9260c7a..7a195f5abe8df53a17ed0a20671d027c5978f991 100644
 --- a/atomicio.c
 +++ b/atomicio.c
 @@ -119,7 +119,7 @@ atomiciov6(ssize_t (*f) (int, const struct iovec *, int), int fd,
@@ -48,7 +49,7 @@ index 7650733..7a195f5 100644
  #else
  	pfd.events = POLLIN|POLLOUT;
 diff --git a/defines.h b/defines.h
-index 279e509..5fb970a 100644
+index 279e509aae22e4e2824a15c9be4dac7f89a5be5c..5fb970a186ac375da4c737b7edff187320ce735b 100644
 --- a/defines.h
 +++ b/defines.h
 @@ -55,8 +55,13 @@ enum
@@ -66,7 +67,7 @@ index 279e509..5fb970a 100644
  # define IPTOS_LOWDELAY          0x10
  # define IPTOS_THROUGHPUT        0x08
 diff --git a/dns.c b/dns.c
-index f2310be..f39db58 100644
+index f2310bec2b08865ef14dd2f334ec5f96ecc8d71b..f39db585ae3122dab44eba0ddb4c1fa8ac1278d8 100644
 --- a/dns.c
 +++ b/dns.c
 @@ -25,6 +25,8 @@
@@ -85,7 +86,7 @@ index f2310be..f39db58 100644
 +
 +#endif
 diff --git a/dns.h b/dns.h
-index c9b61c4..2b9f153 100644
+index c9b61c4f28f89659a34ba1b6ee903e9e2d91fb7d..2b9f153c84f1b7adb273d1352fede728f23912d6 100644
 --- a/dns.h
 +++ b/dns.h
 @@ -25,6 +25,8 @@
@@ -104,7 +105,7 @@ index c9b61c4..2b9f153 100644
 +
 +#endif
 diff --git a/hostfile.c b/hostfile.c
-index bd49e3a..34030f1 100644
+index bd49e3ac7c48b12f09316a028e471019b7ea3b4c..34030f1da19db07207afa0a5efcadba6effcff00 100644
 --- a/hostfile.c
 +++ b/hostfile.c
 @@ -44,7 +44,9 @@
@@ -118,7 +119,7 @@ index bd49e3a..34030f1 100644
  #include <stdio.h>
  #include <stdlib.h>
 diff --git a/includes.h b/includes.h
-index 6d17ef6..eef913a 100644
+index 6d17ef6da9338cfd0de8c044f2a1483991c166e4..eef913a348d04323e42e3ec4a3ddb585db4df4a0 100644
 --- a/includes.h
 +++ b/includes.h
 @@ -109,7 +109,9 @@
@@ -132,7 +133,7 @@ index 6d17ef6..eef913a 100644
  # include <rpc/types.h> /* For INADDR_LOOPBACK */
  #endif
 diff --git a/loginrec.c b/loginrec.c
-index 4f21499..574e3a1 100644
+index 4f21499586afc5d87f2d28f639cb725e366cd25e..574e3a1af5aaaebf9a8befc55fc028db47d095b4 100644
 --- a/loginrec.c
 +++ b/loginrec.c
 @@ -461,7 +461,7 @@ login_write(struct logininfo *li)
@@ -172,7 +173,7 @@ index 4f21499..574e3a1 100644
  /* if we have the wherewithall, use pututxline etc. */
  # if !defined(DISABLE_PUTUTXLINE) && defined(HAVE_SETUTXENT) && \
 diff --git a/misc.c b/misc.c
-index 85d2236..bc06094 100644
+index 85d22369505dc81ad0a55af304ef751cccfa960a..bc0609405500ae905523b5ec55478a7c4c87d3eb 100644
 --- a/misc.c
 +++ b/misc.c
 @@ -44,7 +44,9 @@
@@ -186,7 +187,7 @@ index 85d2236..bc06094 100644
  #include <netinet/tcp.h>
  #include <arpa/inet.h>
 diff --git a/openbsd-compat/getrrsetbyname-ldns.c b/openbsd-compat/getrrsetbyname-ldns.c
-index 4647b62..d684f6f 100644
+index 4647b623b8621a97b6790504e20b3fca7b3f84b7..d684f6fbac27cca4db6a87bb0aea0ece8e33d7e9 100644
 --- a/openbsd-compat/getrrsetbyname-ldns.c
 +++ b/openbsd-compat/getrrsetbyname-ldns.c
 @@ -43,6 +43,8 @@
@@ -205,7 +206,7 @@ index 4647b62..d684f6f 100644
 +
 +#endif
 diff --git a/openbsd-compat/getrrsetbyname.c b/openbsd-compat/getrrsetbyname.c
-index cc1f8ae..57999ed 100644
+index cc1f8ae519ebe8747acd2189fa6cf081f4c3f84b..57999ed45ca016559ad9aa4e547c4c58e0dc02eb 100644
 --- a/openbsd-compat/getrrsetbyname.c
 +++ b/openbsd-compat/getrrsetbyname.c
 @@ -45,6 +45,8 @@
@@ -224,7 +225,7 @@ index cc1f8ae..57999ed 100644
 +
 +#endif
 diff --git a/openbsd-compat/getrrsetbyname.h b/openbsd-compat/getrrsetbyname.h
-index 1283f55..0b33705 100644
+index 1283f55062e0cc5ebdb323cb68c4b02d125d2be5..0b33705e3a460a845999b2855f21d3cc0e4a497e 100644
 --- a/openbsd-compat/getrrsetbyname.h
 +++ b/openbsd-compat/getrrsetbyname.h
 @@ -45,6 +45,8 @@
@@ -243,7 +244,7 @@ index 1283f55..0b33705 100644
 +
 +#endif
 diff --git a/openbsd-compat/mktemp.c b/openbsd-compat/mktemp.c
-index ac922c1..1ebb975 100644
+index ac922c1ecbe5c579233cf1ba44c98bfd59e31def..1ebb975d1823008d888b45b74fd7edeccf35f71a 100644
 --- a/openbsd-compat/mktemp.c
 +++ b/openbsd-compat/mktemp.c
 @@ -34,7 +34,7 @@
@@ -256,7 +257,7 @@ index ac922c1..1ebb975 100644
  #define MKTEMP_NAME	0
  #define MKTEMP_FILE	1
 diff --git a/readconf.c b/readconf.c
-index f26faba..56122d8 100644
+index f26fabaa6af465f927c021eeb651815afad0d37d..56122d8fb2792514e483bd9ecce27a4eb12df2ed 100644
 --- a/readconf.c
 +++ b/readconf.c
 @@ -21,7 +21,9 @@
@@ -284,7 +285,7 @@ index f26faba..56122d8 100644
  	case oStrictHostKeyChecking:
  		intptr = &options->strict_host_key_checking;
 diff --git a/regress/netcat.c b/regress/netcat.c
-index 20ec3f5..55e087e 100644
+index 20ec3f5954faad76dba6615bdba18bbf8d3dc9f3..55e087e02aa51d4b95f6c79f5e23a092adf05e60 100644
 --- a/regress/netcat.c
 +++ b/regress/netcat.c
 @@ -1384,7 +1384,9 @@ usage(int ret)
@@ -298,7 +299,7 @@ index 20ec3f5..55e087e 100644
  #define SOCKS_PORT	"1080"
  #define HTTP_PROXY_PORT	"3128"
 diff --git a/sandbox-pledge.c b/sandbox-pledge.c
-index 302f1cf..693a443 100644
+index 302f1cfedd3dab43e7f53870b37515f0ad6970b7..693a443770c3dfac2ef88d1fd24f6dfe10860d8d 100644
 --- a/sandbox-pledge.c
 +++ b/sandbox-pledge.c
 @@ -21,7 +21,9 @@
@@ -312,7 +313,7 @@ index 302f1cf..693a443 100644
  #include <sys/wait.h>
  
 diff --git a/servconf.c b/servconf.c
-index 9d9681f..c418509 100644
+index 9d9681f15acfb130ee0f3e0c77bcf1edb34952d0..c4185091e53954add94b47f7a9342b0fd1e11703 100644
 --- a/servconf.c
 +++ b/servconf.c
 @@ -21,7 +21,9 @@
@@ -326,7 +327,7 @@ index 9d9681f..c418509 100644
  #ifdef HAVE_NET_ROUTE_H
  #include <net/route.h>
 diff --git a/ssh-add.c b/ssh-add.c
-index 7555477..ea8e27c 100644
+index 7555477482766e4464ab92bcbf19a879fe28d4f1..ea8e27c8a18f12098fef77ba310d1e356aafbd96 100644
 --- a/ssh-add.c
 +++ b/ssh-add.c
 @@ -577,6 +577,7 @@ lock_agent(int agent_fd, int lock)
@@ -362,7 +363,7 @@ index 7555477..ea8e27c 100644
  		char buf[PATH_MAX];
  		struct passwd *pw;
 diff --git a/ssh-agent.c b/ssh-agent.c
-index 03ae2b0..c1b6350 100644
+index 03ae2b022eedf1334e55f229dec1f4743eababe1..c1b6350dfe9a1c6eedfc5cbaacd7b47b6957e334 100644
 --- a/ssh-agent.c
 +++ b/ssh-agent.c
 @@ -2146,10 +2146,12 @@ main(int ac, char **av)
@@ -379,7 +380,7 @@ index 03ae2b0..c1b6350 100644
  	parent_pid = getpid();
  
 diff --git a/ssh-keygen.c b/ssh-keygen.c
-index d62fab3..1443c9c 100644
+index d62fab3e818a7016af904cbf8843022d25f3fa0d..64c87a20af0aafd060da515c677b590f8f4215ed 100644
 --- a/ssh-keygen.c
 +++ b/ssh-keygen.c
 @@ -1471,6 +1471,7 @@ do_change_passphrase(struct passwd *pw)
@@ -463,8 +464,19 @@ index d62fab3..1443c9c 100644
  	default:
  		if ((r = sshkey_generate(type, bits, &private)) != 0)
  			fatal("sshkey_generate failed");
+@@ -3858,8 +3869,10 @@ main(int argc, char **argv)
+ 		free(fp);
+ 	}
+ 
++#ifndef __serenity__
+ 	if (sk_attestation_path != NULL)
+ 		save_attestation(attest, sk_attestation_path);
++#endif
+ 
+ 	sshbuf_free(attest);
+ 	sshkey_free(public);
 diff --git a/ssh-keyscan.c b/ssh-keyscan.c
-index d29a03b..e6aac3d 100644
+index d29a03b4e68a82772010786f5b93dd50cbc86cb9..e6aac3db105adbe88c854e91da7be9e3fb66049e 100644
 --- a/ssh-keyscan.c
 +++ b/ssh-keyscan.c
 @@ -313,7 +313,9 @@ keyprint_one(const char *host, struct sshkey *key)
@@ -478,7 +490,7 @@ index d29a03b..e6aac3d 100644
  	}
  
 diff --git a/ssh-pkcs11-client.c b/ssh-pkcs11-client.c
-index cfd833d..de8fb90 100644
+index cfd833d74054f45098c2aa1f8dcbc057ca042cee..de8fb904de7de30153dbf3d751bc529a65158f5e 100644
 --- a/ssh-pkcs11-client.c
 +++ b/ssh-pkcs11-client.c
 @@ -241,6 +241,7 @@ wrap_key(struct sshkey *k)
@@ -511,7 +523,7 @@ index cfd833d..de8fb90 100644
  
  	if ((msg = sshbuf_new()) == NULL)
 diff --git a/ssh-sk-client.c b/ssh-sk-client.c
-index 321fe53..984aa6a 100644
+index 321fe53a2d9195b04ede36d32e71e7529b5af209..984aa6a01757ea9875b043e247a4c370a4f0e3b1 100644
 --- a/ssh-sk-client.c
 +++ b/ssh-sk-client.c
 @@ -15,6 +15,8 @@
@@ -530,7 +542,7 @@ index 321fe53..984aa6a 100644
 +
 +#endif
 diff --git a/sshbuf-misc.c b/sshbuf-misc.c
-index 9c5c42b..1759ed2 100644
+index 9c5c42bba70ac1042c080da1744ddeb2274a6dfb..1759ed2a1d1413a916ac2bcf347dbc544ee6156b 100644
 --- a/sshbuf-misc.c
 +++ b/sshbuf-misc.c
 @@ -28,7 +28,9 @@
@@ -544,7 +556,7 @@ index 9c5c42b..1759ed2 100644
  #include <unistd.h>
  
 diff --git a/sshconnect.c b/sshconnect.c
-index ebecc83..81df612 100644
+index ebecc83747bbb6704c9b1bcf8e72f7b9c2b7a24b..81df6126821bfd021fba6e6f584c1a77c754e4c5 100644
 --- a/sshconnect.c
 +++ b/sshconnect.c
 @@ -106,6 +106,7 @@ expand_proxy_command(const char *proxy_command, const char *user,
@@ -596,7 +608,7 @@ index ebecc83..81df612 100644
  	    RDRW, 0, options.user_hostfiles, options.num_user_hostfiles,
  	    options.system_hostfiles, options.num_system_hostfiles,
 diff --git a/sshkey.c b/sshkey.c
-index f1e9200..564ff40 100644
+index f1e92003b7e40df63743b79924f9a18b5f8d6c66..564ff40d080c22e09750f5129d479707c02b6f4a 100644
 --- a/sshkey.c
 +++ b/sshkey.c
 @@ -42,7 +42,9 @@
