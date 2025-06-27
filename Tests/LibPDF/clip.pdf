@@ -14,16 +14,16 @@ endobj
 endobj
 
 4 0 obj
-<</Length 1427>>
+<</Length 2218>>
 stream
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Hat at top (circle intersected with rect)
+% Hat at top left (circle intersected with rect)
 q
-150 430 m
-205 430 250 385 250 330 c
-250 274 205 230 150 230 c
- 94 230  50 274  50 330 c
- 50 385  94 430 150 430 c
+110 430 m
+165 430 210 385 210 330 c
+210 274 165 230 110 230 c
+ 54 230  10 274  10 330 c
+ 10 385  54 430 110 430 c
 h
 W n
 
@@ -36,11 +36,80 @@ W n
 % 0 340 400 50 re
 % Q
 
--30 310 m 330 350 l 325 395 l -35 355 l h
+-70 310 m 290 350 l 285 395 l -75 355 l h
 
 W n
 
 /Sh1 sh
+Q
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Test pattern at top right
+
+q
+/DeviceRGB CS
+0.5 0 0.5 rg
+
+% Reference line.
+220 380 70 10 re
+f
+
+% Use both W and W*, last one wins. Test both orders.
+
+% W W*
+q
+220 370 40 10 re
+250 370 40 10 re
+W W* f
+0 1 1 rg
+210 370 90 5 re
+f
+Q
+
+% W* W
+q
+220 360 40 10 re
+250 360 40 10 re
+W* W f
+0 1 1 rg
+210 360 90 5 re
+f
+Q
+
+% Check if "add clip at path" stored in graphics state? (`q W Q`)
+% It shouldn't be.
+q
+220 350 70 10 re
+q W Q
+f
+0 0.5 0.5 rg
+210 350 90 5 re
+f
+Q
+
+% Is clip created at path paint time, or sooner?
+
+% 1. Add transform after % W but before f:
+q
+220 350 70 10 re
+W
+1 0 0 1 0 -10 cm
+f
+0 1 1 rg
+210 350 90 5 re
+f
+Q
+
+% 2. Push context before drawing path and pop after:
+q
+240 330 30 10 re
+W
+q f Q
+0 1 1 rg
+220 330 70 5 re
+f
+Q
+
 Q
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -107,7 +176,6 @@ ET
 /Sh1 sh
 Q
 
-
 endstream
 endobj
 
@@ -130,12 +198,12 @@ xref
 0000000062 00000 n 
 0000000114 00000 n 
 0000000249 00000 n 
-0000001727 00000 n 
-0000001804 00000 n 
-0000001915 00000 n 
+0000002518 00000 n 
+0000002595 00000 n 
+0000002706 00000 n 
 
 trailer
 <</Size 8/Root 1 0 R>>
 startxref
-1987
+2778
 %%EOF
