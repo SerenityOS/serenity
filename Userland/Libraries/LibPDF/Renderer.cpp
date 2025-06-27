@@ -317,6 +317,8 @@ void Renderer::end_path_paint()
         m_add_path_as_clip = AddPathAsClip::No;
     }
 
+    // "Once a path has been painted, it is no longer defined; there is then no current path
+    //  until a new one is begun with the m or re operator."
     m_current_path.clear();
     if (m_rendering_preferences.clip_paths)
         deactivate_clip();

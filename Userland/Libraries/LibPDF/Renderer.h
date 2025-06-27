@@ -247,6 +247,8 @@ private:
     Gfx::AntiAliasingPainter m_anti_aliasing_painter;
     RenderingPreferences m_rendering_preferences;
 
+    // "In PDF (unlike PostScript), the current path is not part of the graphics state and is not saved and
+    //  restored along with the other graphics state parameters."
     Gfx::Path m_current_path;
     enum class AddPathAsClip {
         No,
