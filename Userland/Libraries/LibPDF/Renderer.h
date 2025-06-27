@@ -66,7 +66,6 @@ struct TextState {
 
 struct ClippingPaths {
     Gfx::Path current;
-    Gfx::Path next;
 };
 
 enum class BlendMode {
@@ -250,6 +249,13 @@ private:
     RenderingPreferences m_rendering_preferences;
 
     Gfx::Path m_current_path;
+    enum class AddPathAsClip {
+        No,
+        Nonzero,
+        EvenOdd,
+    };
+    AddPathAsClip m_add_path_as_clip { AddPathAsClip::No };
+
     Vector<GraphicsState> m_graphics_state_stack;
     Gfx::AffineTransform m_text_matrix;
     Gfx::AffineTransform m_text_line_matrix;
