@@ -95,7 +95,7 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
     userspace_matrix.translate(0.0f, -height);
 
     auto initial_clipping_path = rect_path(userspace_matrix.map(Gfx::FloatRect(0, 0, width, height)));
-    m_graphics_state_stack.append(GraphicsState { userspace_matrix, { initial_clipping_path, initial_clipping_path } });
+    m_graphics_state_stack.append(GraphicsState { userspace_matrix, { initial_clipping_path } });
 
     m_bitmap->fill(background_color);
 }
@@ -293,7 +293,6 @@ void Renderer::activate_clip()
 void Renderer::deactivate_clip()
 {
     m_painter.clear_clip_rect();
-    state().clipping_paths.current = state().clipping_paths.next;
 }
 
 ///
@@ -309,6 +308,15 @@ void Renderer::begin_path_paint()
 
 void Renderer::end_path_paint()
 {
+    if (m_add_path_as_clip != AddPathAsClip::No) {
+        // FIXME: Support arbitrary path clipping in Path and use that here
+        auto next_clipping_bbox = m_current_path.bounding_box();
+        next_clipping_bbox.intersect(state().clipping_paths.current.bounding_box());
+        state().clipping_paths.current = rect_path(next_clipping_bbox);
+
+        m_add_path_as_clip = AddPathAsClip::No;
+    }
+
     m_current_path.clear();
     if (m_rendering_preferences.clip_paths)
         deactivate_clip();
@@ -427,17 +435,14 @@ RENDERER_HANDLER(path_end)
 
 RENDERER_HANDLER(path_intersect_clip_nonzero)
 {
-    // FIXME: Support arbitrary path clipping in Path and utilize that here
-    auto next_clipping_bbox = state().clipping_paths.next.bounding_box();
-    next_clipping_bbox.intersect(state().ctm.map(m_current_path.bounding_box()));
-    state().clipping_paths.next = rect_path(next_clipping_bbox);
+    m_add_path_as_clip = AddPathAsClip::Nonzero;
     return {};
 }
 
 RENDERER_HANDLER(path_intersect_clip_evenodd)
 {
-    // FIXME: Should have different behavior than path_intersect_clip_nonzero
-    return handle_path_intersect_clip_nonzero(args);
+    m_add_path_as_clip = AddPathAsClip::EvenOdd;
+    return {};
 }
 
 RENDERER_HANDLER(text_begin)
