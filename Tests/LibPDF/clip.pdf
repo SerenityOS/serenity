@@ -14,7 +14,7 @@ endobj
 endobj
 
 4 0 obj
-<</Length 2218>>
+<</Length 2226>>
 stream
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Hat at top left (circle intersected with rect)
@@ -124,7 +124,7 @@ W* n
 
 150 370 m 57 101 l 288 279 l 12 279 l 243 101 l h
 /DeviceRGB CS
-1 0 0 RG
+0 1 1 RG
 0.5 0 0.5 rg
 1 J
 [8 12] 0 d
@@ -132,7 +132,7 @@ W* n
 B
 
 % 2nd path is clipped too.
-0 1 1 rg
+0 0.5 0.5 rg
 0 260 400 30 re
 f
 
@@ -146,15 +146,15 @@ q
 W*
 
 /DeviceRGB CS
-0 0 1 RG
+0 1 1 RG
 0.5 0 0.5 rg
-2 J
+1 J
 [8 12] 0 d
 4 w
 B
 
 % 2nd path is clipped.
-0 1 1 rg
+0 0.5 0.5 rg
 0 260 400 30 re
 f
 
@@ -198,12 +198,12 @@ xref
 0000000062 00000 n 
 0000000114 00000 n 
 0000000249 00000 n 
-0000002518 00000 n 
-0000002595 00000 n 
-0000002706 00000 n 
+0000002526 00000 n 
+0000002603 00000 n 
+0000002714 00000 n 
 
 trailer
 <</Size 8/Root 1 0 R>>
 startxref
-2778
+2786
 %%EOF
