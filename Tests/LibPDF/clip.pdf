@@ -14,7 +14,7 @@ endobj
 endobj
 
 4 0 obj
-<</Length 2226>>
+<</Length 2288>>
 stream
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Hat at top left (circle intersected with rect)
@@ -136,6 +136,13 @@ B
 0 260 400 30 re
 f
 
+% Text is clipped.
+BT
+  /F1 24 Tf
+  130 317 Td
+  (Hey) Tj
+ET
+
 Q
 
 % Right: clip applied when path is drawn. Doesn't affect path.
@@ -198,12 +205,12 @@ xref
 0000000062 00000 n 
 0000000114 00000 n 
 0000000249 00000 n 
-0000002526 00000 n 
-0000002603 00000 n 
-0000002714 00000 n 
+0000002588 00000 n 
+0000002665 00000 n 
+0000002776 00000 n 
 
 trailer
 <</Size 8/Root 1 0 R>>
 startxref
-2786
+2848
 %%EOF
