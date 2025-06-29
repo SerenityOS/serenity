@@ -134,8 +134,19 @@ public:
 private:
     explicit DebugSession(pid_t, ByteString source_root, Function<void(float)> on_initialization_progress = {});
 
+#if ARCH(X86_64)
     // x86 breakpoint instruction "int3"
     static constexpr u8 BREAKPOINT_INSTRUCTION = 0xcc;
+#elif ARCH(AARCH64)
+    // AArch64 breakpoint instruction "brk #0"
+    static constexpr u32 BREAKPOINT_INSTRUCTION = 0xd4200000;
+#elif ARCH(RISCV64)
+    // RISC-V breakpoint instruction "ebreak"
+    static constexpr u32 BREAKPOINT_INSTRUCTION = 0x00100073;
+#else
+#    error Unknown architecture
+#endif
+    static constexpr FlatPtr BREAKPOINT_INSTRUCTION_MASK = (1ull << (sizeof(BREAKPOINT_INSTRUCTION) * 8)) - 1;
 
     ErrorOr<void> update_loaded_libs();
 
@@ -191,8 +202,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
 #if ARCH(X86_64)
         FlatPtr current_instruction = regs.rip;
 #elif ARCH(AARCH64)
-        FlatPtr current_instruction;
-        TODO_AARCH64();
+        FlatPtr current_instruction = regs.pc;
 #elif ARCH(RISCV64)
         FlatPtr current_instruction = regs.pc;
 #else
@@ -217,8 +227,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
 #if ARCH(X86_64)
                 FlatPtr current_ebp = regs.rbp;
 #elif ARCH(AARCH64)
-                FlatPtr current_ebp;
-                TODO_AARCH64();
+                FlatPtr current_ebp = regs.bp();
 #elif ARCH(RISCV64)
                 FlatPtr current_ebp = regs.bp();
 #else
@@ -250,7 +259,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
         Optional<BreakPoint> current_breakpoint;
 
         if (state == State::FreeRun || state == State::Syscall) {
-            current_breakpoint = m_breakpoints.get(current_instruction - 1).copy();
+            current_breakpoint = m_breakpoints.get(current_instruction - sizeof(BREAKPOINT_INSTRUCTION)).copy();
             if (current_breakpoint.has_value())
                 state = State::FreeRun;
         } else {
@@ -260,17 +269,14 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
         if (current_breakpoint.has_value()) {
             // We want to make the breakpoint transparent to the user of the debugger.
             // To achieve this, we perform two rollbacks:
-            // 1. Set regs.eip to point at the actual address of the instruction we broke on.
-            //    regs.eip currently points to one byte after the address of the original instruction,
-            //    because the cpu has just executed the INT3 we patched into the instruction.
-            // 2. We restore the original first byte of the instruction,
-            //    because it was patched with INT3.
+            // 1. Set pc to point at the actual address of the instruction we broke on.
+            //    pc currently points to the instruction after the original instruction.
+            // 2. We restore the original instruction, because it was patched with a breakpoint instruction.
             auto breakpoint_addr = bit_cast<FlatPtr>(current_breakpoint.value().address);
 #if ARCH(X86_64)
             regs.rip = breakpoint_addr;
 #elif ARCH(AARCH64)
-            (void)breakpoint_addr;
-            TODO_AARCH64();
+            regs.pc = breakpoint_addr;
 #elif ARCH(RISCV64)
             regs.pc = breakpoint_addr;
 #else
@@ -304,13 +310,13 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
             if (m_breakpoints.contains(current_breakpoint_address)) {
                 // The current breakpoint was removed to make it transparent to the user.
                 // We now want to re-enable it - the code execution flow could hit it again.
-                // To re-enable the breakpoint, we first perform a single step and execute the
-                // instruction of the breakpoint, and then redo the INT3 patch in its first byte.
+                // To re-enable the breakpoint, we first perform a single step to execute the
+                // original instruction, and then redo the breakpoint instruction patch.
 
                 // If the user manually inserted a breakpoint at the current instruction,
                 // we need to disable that breakpoint because we want to singlestep over that
                 // instruction (we re-enable it again later anyways).
-                if (m_breakpoints.contains(current_breakpoint_address) && m_breakpoints.get(current_breakpoint_address).value().state == BreakPointState::Enabled) {
+                if (m_breakpoints.get(current_breakpoint_address).value().state == BreakPointState::Enabled) {
                     disable_breakpoint(current_breakpoint.value().address);
                 }
                 auto stopped_address = single_step();
