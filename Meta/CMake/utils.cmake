@@ -261,6 +261,7 @@ function(download_file_multisource urls path)
         message(FATAL_ERROR "${path} does not exist, and unable to download it")
     endif()
 
+    # If the file already exists in the cache, skip downloading.
     if (EXISTS "${path}" AND "${DOWNLOAD_VERSION}" STREQUAL "")
         return() # Assume the current version is up-to-date.
     endif()
