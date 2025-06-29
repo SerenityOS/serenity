@@ -252,8 +252,6 @@ private:
     bool m_window_scaling_supported { false };
     size_t m_send_window_scale { 0 };
 
-    bool m_no_delay { false };
-
     IntrusiveListNode<TCPSocket> m_retransmit_list_node;
 
     Optional<IPv4SocketTuple> m_registered_socket_tuple;
