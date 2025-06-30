@@ -405,7 +405,8 @@ void Path::segmentize_path()
             break;
         }
         case PathSegment::ClosePath: {
-            subpath_end_indices.append(segments.size() - 1);
+            if (subpath_end_indices.is_empty() || subpath_end_indices.last() != segments.size() - 1)
+                subpath_end_indices.append(segments.size() - 1);
             break;
         }
         }
@@ -735,6 +736,7 @@ Path Path::stroke_to_fill(StrokeStyle const& style) const
         return Path {};
 
     auto subpath_end_indices = split_lines_subbpath_end_indices();
+    size_t current_subpath_end_indices_cursor = 0;
 
     // Paths can be disconnected, which a pain to deal with, so split it up.
     // Also filter out duplicate points here (but keep one-point paths around
@@ -743,25 +745,31 @@ Path Path::stroke_to_fill(StrokeStyle const& style) const
     Vector<bool> segment_is_closed;
     segments.append({ lines.first().a() });
     for (auto const& [line_index, line] : enumerate(lines)) {
-        if (line.a() == segments.last().last()) {
+        bool previous_line_closed_segment = false;
+        if (subpath_end_indices.size() > current_subpath_end_indices_cursor)
+            previous_line_closed_segment = subpath_end_indices[current_subpath_end_indices_cursor] == line_index - 1;
+
+        if (line.a() == segments.last().last() && !previous_line_closed_segment) {
             if (line.a() != line.b())
                 segments.last().append(line.b());
         } else {
-            if (subpath_end_indices.size() >= segments.size())
-                segment_is_closed.append(subpath_end_indices[segments.size() - 1] == line_index);
-            else
-                segment_is_closed.append(false);
+            segment_is_closed.append(previous_line_closed_segment);
+            if (previous_line_closed_segment)
+                current_subpath_end_indices_cursor++;
             segments.append({ line.a() });
             if (line.a() != line.b())
                 segments.last().append(line.b());
         }
     }
     if (segment_is_closed.size() < segments.size()) {
-        if (subpath_end_indices.size() >= segments.size())
-            segment_is_closed.append(subpath_end_indices[segments.size() - 1] == lines.size() - 1);
-        else
-            segment_is_closed.append(false);
+        bool previous_line_closed_segment = false;
+        if (subpath_end_indices.size() > current_subpath_end_indices_cursor)
+            previous_line_closed_segment = subpath_end_indices[current_subpath_end_indices_cursor] == lines.size() - 1;
+        segment_is_closed.append(previous_line_closed_segment);
+        if (previous_line_closed_segment)
+            current_subpath_end_indices_cursor++;
         VERIFY(segment_is_closed.size() == segments.size());
+        VERIFY(current_subpath_end_indices_cursor == subpath_end_indices.size());
     }
 
     if (!style.dash_pattern.is_empty())
