@@ -14,7 +14,7 @@ endobj
 endobj
 
 4 0 obj
-<</Length 3250>>
+<</Length 3373>>
 stream
 /DeviceRGB CS
 
@@ -400,6 +400,17 @@ h
 h
 S
 
+% A path where a 'close' is followed by a no-op move.
+4 w
+175 115 m
+195 145 l
+215 115 l
+175 115 l
+h
+175 115 m
+199 130 l
+S
+
 endstream
 endobj
 
@@ -414,5 +425,5 @@ xref
 trailer
 <</Size 5/Root 2 0 R>>
 startxref
-3505
+3628
 %%EOF
