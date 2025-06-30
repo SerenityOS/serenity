@@ -14,7 +14,7 @@ endobj
 endobj
 
 4 0 obj
-<</Length 3223>>
+<</Length 3250>>
 stream
 /DeviceRGB CS
 
@@ -217,13 +217,14 @@ q
 S
 Q
 
-% Closed triangle, facing up.
+% Closed triangle, facing up. (Closed twice, in fact.)
 0 J
 1 0 0 SC
 280 130 m
 340 130 l
 310 170 l
 280 130 l
+h
 h
 S
 
@@ -413,5 +414,5 @@ xref
 trailer
 <</Size 5/Root 2 0 R>>
 startxref
-3478
+3505
 %%EOF
