@@ -131,4 +131,11 @@ path:nth-of-type(3) {
   <path d="M230,285 L250,270 L260,295" stroke="blue" fill="green"
         style="stroke-width: 4" />
 
+  <!-- A single path with multiple segments (closed, open, closed): -->
+  <path d="M10,270 L20,290 L30,270 z
+           M30,295 L40,275 L50,295
+           M50,270 L60,290 L70,270 z"
+        stroke="blue" fill="none" stroke-linejoin="round"
+        style="stroke-width: 8"  />
+
 </svg>
