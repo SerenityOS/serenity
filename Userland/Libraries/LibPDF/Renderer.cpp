@@ -324,14 +324,19 @@ void Renderer::end_path_paint()
         deactivate_clip();
 }
 
-RENDERER_HANDLER(path_stroke)
+void Renderer::stroke_current_path()
 {
-    begin_path_paint();
     if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
         m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style());
     } else {
         m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), stroke_style());
     }
+}
+
+RENDERER_HANDLER(path_stroke)
+{
+    begin_path_paint();
+    stroke_current_path();
     end_path_paint();
     return {};
 }
@@ -386,11 +391,7 @@ RENDERER_HANDLER(path_fill_stroke_nonzero)
     }
     // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
     m_current_path.trim(path_end);
-    if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style());
-    } else {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), stroke_style());
-    }
+    stroke_current_path();
     end_path_paint();
     return {};
 }
@@ -407,11 +408,7 @@ RENDERER_HANDLER(path_fill_stroke_evenodd)
     }
     // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
     m_current_path.trim(path_end);
-    if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style());
-    } else {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), stroke_style());
-    }
+    stroke_current_path();
     end_path_paint();
     return {};
 }
