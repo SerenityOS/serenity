@@ -333,6 +333,15 @@ void Renderer::stroke_current_path()
     }
 }
 
+void Renderer::fill_current_path(Gfx::WindingRule winding_rule)
+{
+    if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, winding_rule);
+    } else {
+        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), winding_rule);
+    }
+}
+
 RENDERER_HANDLER(path_stroke)
 {
     begin_path_paint();
@@ -352,11 +361,7 @@ RENDERER_HANDLER(path_fill_nonzero)
 {
     begin_path_paint();
     m_current_path.close_all_subpaths();
-    if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::WindingRule::Nonzero);
-    } else {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::WindingRule::Nonzero);
-    }
+    fill_current_path(Gfx::WindingRule::Nonzero);
     end_path_paint();
     return {};
 }
@@ -370,11 +375,7 @@ RENDERER_HANDLER(path_fill_evenodd)
 {
     begin_path_paint();
     m_current_path.close_all_subpaths();
-    if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::WindingRule::EvenOdd);
-    } else {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::WindingRule::EvenOdd);
-    }
+    fill_current_path(Gfx::WindingRule::EvenOdd);
     end_path_paint();
     return {};
 }
@@ -384,11 +385,7 @@ RENDERER_HANDLER(path_fill_stroke_nonzero)
     begin_path_paint();
     auto path_end = m_current_path.end();
     m_current_path.close_all_subpaths();
-    if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::WindingRule::Nonzero);
-    } else {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::WindingRule::Nonzero);
-    }
+    fill_current_path(Gfx::WindingRule::Nonzero);
     // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
     m_current_path.trim(path_end);
     stroke_current_path();
@@ -401,11 +398,7 @@ RENDERER_HANDLER(path_fill_stroke_evenodd)
     begin_path_paint();
     auto path_end = m_current_path.end();
     m_current_path.close_all_subpaths();
-    if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), 1.0, Gfx::WindingRule::EvenOdd);
-    } else {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), Gfx::WindingRule::EvenOdd);
-    }
+    fill_current_path(Gfx::WindingRule::EvenOdd);
     // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
     m_current_path.trim(path_end);
     stroke_current_path();
