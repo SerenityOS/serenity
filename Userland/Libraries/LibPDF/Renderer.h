@@ -200,6 +200,7 @@ private:
     void end_path_paint();
     void stroke_current_path();
     void fill_current_path(Gfx::WindingRule);
+    void fill_and_stroke_current_path(Gfx::WindingRule);
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
     PDFErrorOr<void> show_text(ByteString const&);
 
