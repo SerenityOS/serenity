@@ -342,6 +342,16 @@ void Renderer::fill_current_path(Gfx::WindingRule winding_rule)
     }
 }
 
+void Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding_rule)
+{
+    auto path_end = m_current_path.end();
+    m_current_path.close_all_subpaths();
+    fill_current_path(winding_rule);
+    // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
+    m_current_path.trim(path_end);
+    stroke_current_path();
+}
+
 RENDERER_HANDLER(path_stroke)
 {
     begin_path_paint();
@@ -383,12 +393,7 @@ RENDERER_HANDLER(path_fill_evenodd)
 RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
     begin_path_paint();
-    auto path_end = m_current_path.end();
-    m_current_path.close_all_subpaths();
-    fill_current_path(Gfx::WindingRule::Nonzero);
-    // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
-    m_current_path.trim(path_end);
-    stroke_current_path();
+    fill_and_stroke_current_path(Gfx::WindingRule::Nonzero);
     end_path_paint();
     return {};
 }
@@ -396,12 +401,7 @@ RENDERER_HANDLER(path_fill_stroke_nonzero)
 RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
     begin_path_paint();
-    auto path_end = m_current_path.end();
-    m_current_path.close_all_subpaths();
-    fill_current_path(Gfx::WindingRule::EvenOdd);
-    // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
-    m_current_path.trim(path_end);
-    stroke_current_path();
+    fill_and_stroke_current_path(Gfx::WindingRule::EvenOdd);
     end_path_paint();
     return {};
 }
