@@ -61,7 +61,7 @@ constexpr auto binary_search(
 // Unlike their std equivalents, these two function require the entire Container to be sorted!
 // std::[lower,upper]_bound only require the array to be sorted after and before, respectively, the needle.
 
-template<typename Container, typename Needle, typename Comparator = DefaultComparator, typename Return = decltype(&Container {}[0])>
+template<typename Container, typename Needle, typename Comparator = DefaultComparator>
 constexpr auto lower_bound(
     Container&& haystack,
     Needle&& needle,
@@ -74,7 +74,7 @@ constexpr auto lower_bound(
     return index;
 }
 
-template<typename Container, typename Needle, typename Comparator = DefaultComparator, typename Return = decltype(&Container {}[0])>
+template<typename Container, typename Needle, typename Comparator = DefaultComparator>
 constexpr auto strict_lower_bound(
     Container&& haystack,
     Needle&& needle,
@@ -102,7 +102,7 @@ struct UpperBoundComparator {
     }
 };
 
-template<typename Container, typename Needle, typename Comparator = UpperBoundComparator, typename Return = decltype(&Container {}[0])>
+template<typename Container, typename Needle, typename Comparator = UpperBoundComparator>
 requires IsIntegral<RemoveReference<Needle>>
 constexpr auto upper_bound(
     Container&& haystack,
