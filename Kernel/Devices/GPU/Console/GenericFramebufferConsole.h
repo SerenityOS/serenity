@@ -46,6 +46,13 @@ protected:
         , m_pitch(pitch)
     {
         m_cursor_overriden_pixels.fill(0);
+
+        if (!m_backbuffer.size()) {
+
+            m_backbuffer.resize(max_row());
+            for (size_t row = 0; row < max_row(); row++)
+                m_backbuffer[row].resize(max_column());
+        }
     }
     virtual u8* framebuffer_data() = 0;
     size_t framebuffer_pitch() const { return m_pitch; }
@@ -63,6 +70,14 @@ protected:
     size_t const m_glyph_rows { 16 };
 
     Array<u32, 8> m_cursor_overriden_pixels;
+
+    struct Character {
+        char character;
+        Color background;
+        Color foreground;
+    };
+
+    Vector<Vector<Character>> m_backbuffer;
 
     size_t m_pitch;
 };
