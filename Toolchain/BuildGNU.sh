@@ -237,8 +237,7 @@ pushd "$DIR/Build/$ARCH"
         buildstep "binutils/configure" "$DIR"/Tarballs/$BINUTILS_NAME/configure --prefix="$PREFIX" \
                                                  --target="$TARGET" \
                                                  --with-sysroot="$SYSROOT" \
-                                                 --enable-static \
-                                                 --disable-shared \
+                                                 --disable-host-shared \
                                                  --disable-nls \
                                                  --with-system-zlib \
                                                  ${CI:+"--quiet"} || exit 1
@@ -266,8 +265,7 @@ pushd "$DIR/Build/$ARCH"
                                             --with-sysroot="$SYSROOT" \
                                             --disable-nls \
                                             --disable-libstdcxx-pch \
-                                            --enable-static \
-                                            --disable-shared \
+                                            --disable-host-shared \
                                             --enable-languages=c,c++,objc,obj-c++ \
                                             --enable-default-pie \
                                             --enable-lto \
