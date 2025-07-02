@@ -523,76 +523,46 @@ RENDERER_HANDLER(text_set_font)
 
 PDFErrorOr<void> Renderer::set_blend_mode(ReadonlySpan<Value> args)
 {
-    // "the application should use the first blend mode in the array that it recognizes (or Normal if it recognizes none of them)."
-    for (auto const& arg : args) {
-        auto name = TRY(m_document->resolve_to<NameObject>(arg))->name();
-        if (name == CommonNames::Normal) {
-            state().blend_mode = BlendMode::Normal;
-            return {};
+    state().blend_mode = TRY([&]() -> PDFErrorOr<BlendMode> {
+        // "the application should use the first blend mode in the array that it recognizes (or Normal if it recognizes none of them)."
+        for (auto const& arg : args) {
+            auto name = TRY(m_document->resolve_to<NameObject>(arg))->name();
+            if (name == CommonNames::Normal)
+                return BlendMode::Normal;
+            if (name == CommonNames::Multiply)
+                return BlendMode::Multiply;
+            if (name == CommonNames::Screen)
+                return BlendMode::Screen;
+            if (name == CommonNames::Overlay)
+                return BlendMode::Overlay;
+            if (name == CommonNames::Darken)
+                return BlendMode::Darken;
+            if (name == CommonNames::Lighten)
+                return BlendMode::Lighten;
+            if (name == CommonNames::ColorDodge)
+                return BlendMode::ColorDodge;
+            if (name == CommonNames::ColorBurn)
+                return BlendMode::ColorBurn;
+            if (name == CommonNames::HardLight)
+                return BlendMode::HardLight;
+            if (name == CommonNames::SoftLight)
+                return BlendMode::SoftLight;
+            if (name == CommonNames::Difference)
+                return BlendMode::Difference;
+            if (name == CommonNames::Exclusion)
+                return BlendMode::Exclusion;
+            if (name == CommonNames::Hue)
+                return BlendMode::Hue;
+            if (name == CommonNames::Saturation)
+                return BlendMode::Saturation;
+            if (name == CommonNames::Color)
+                return BlendMode::Color;
+            if (name == CommonNames::Luminosity)
+                return BlendMode::Luminosity;
+            dbgln("Unknown blend mode: {}", name);
         }
-        if (name == CommonNames::Multiply) {
-            state().blend_mode = BlendMode::Multiply;
-            return {};
-        }
-        if (name == CommonNames::Screen) {
-            state().blend_mode = BlendMode::Screen;
-            return {};
-        }
-        if (name == CommonNames::Overlay) {
-            state().blend_mode = BlendMode::Overlay;
-            return {};
-        }
-        if (name == CommonNames::Darken) {
-            state().blend_mode = BlendMode::Darken;
-            return {};
-        }
-        if (name == CommonNames::Lighten) {
-            state().blend_mode = BlendMode::Lighten;
-            return {};
-        }
-        if (name == CommonNames::ColorDodge) {
-            state().blend_mode = BlendMode::ColorDodge;
-            return {};
-        }
-        if (name == CommonNames::ColorBurn) {
-            state().blend_mode = BlendMode::ColorBurn;
-            return {};
-        }
-        if (name == CommonNames::HardLight) {
-            state().blend_mode = BlendMode::HardLight;
-            return {};
-        }
-        if (name == CommonNames::SoftLight) {
-            state().blend_mode = BlendMode::SoftLight;
-            return {};
-        }
-        if (name == CommonNames::Difference) {
-            state().blend_mode = BlendMode::Difference;
-            return {};
-        }
-        if (name == CommonNames::Exclusion) {
-            state().blend_mode = BlendMode::Exclusion;
-            return {};
-        }
-        if (name == CommonNames::Hue) {
-            state().blend_mode = BlendMode::Hue;
-            return {};
-        }
-        if (name == CommonNames::Saturation) {
-            state().blend_mode = BlendMode::Saturation;
-            return {};
-        }
-        if (name == CommonNames::Color) {
-            state().blend_mode = BlendMode::Color;
-            return {};
-        }
-        if (name == CommonNames::Luminosity) {
-            state().blend_mode = BlendMode::Luminosity;
-            return {};
-        }
-        dbgln("Unknown blend mode: {}", name);
-    }
-    state().blend_mode = BlendMode::Normal;
+        return BlendMode::Normal;
+    }());
     return {};
 }
 
