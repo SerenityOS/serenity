@@ -1371,6 +1371,27 @@ PDFErrorOr<void> Renderer::show_text(ByteString const& string)
     if (!text_state().font)
         return Error::rendering_unsupported_error("Can't draw text because an invalid font was in use");
 
+    switch (text_state().rendering_mode) {
+    case TextRenderingMode::Fill:
+        // Handled below.
+        break;
+    case TextRenderingMode::Stroke:
+        return Error::rendering_unsupported_error("Text rendering mode Stroke not yet supported");
+    case TextRenderingMode::FillThenStroke:
+        return Error::rendering_unsupported_error("Text rendering mode FillThenStroke not yet supported");
+    case TextRenderingMode::Invisible:
+        // Handled below.
+        break;
+    case TextRenderingMode::FillAndClip:
+        return Error::rendering_unsupported_error("Text rendering mode FillAndClip not yet supported");
+    case TextRenderingMode::StrokeAndClip:
+        return Error::rendering_unsupported_error("Text rendering mode StrokeAndClip not yet supported");
+    case TextRenderingMode::FillStrokeAndClip:
+        return Error::rendering_unsupported_error("Text rendering mode FillStrokeAndClip not yet supported");
+    case TextRenderingMode::Clip:
+        return Error::rendering_unsupported_error("Text rendering mode Clip not yet supported");
+    }
+
     auto start_position = Gfx::FloatPoint { 0.0f, 0.0f };
     auto end_position = TRY(text_state().font->draw_string(painter(), start_position, string, *this));
 
