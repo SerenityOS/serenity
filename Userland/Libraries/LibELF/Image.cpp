@@ -367,22 +367,25 @@ Optional<Image::Symbol> Image::find_demangled_function(StringView name) const
 
 Image::SortedSymbol* Image::find_sorted_symbol(FlatPtr address) const
 {
+    if (symbol_count() == 0)
+        return nullptr;
+
     if (m_sorted_symbols.is_empty())
         sort_symbols();
 
-    size_t index = 0;
-    binary_search(m_sorted_symbols, nullptr, &index, [&address](auto, auto& candidate) {
-        if (address < candidate.address)
-            return -1;
-        else if (address > candidate.address)
+    auto maybe_index = upper_bound(m_sorted_symbols, address, [address](auto, auto const& candidate) {
+        if (address >= candidate.address)
             return 1;
-        else
-            return 0;
+        return -1;
     });
-    // FIXME: The error path here feels strange, index == 0 means error but what about symbol #0?
-    if (index == 0)
+
+    if (!maybe_index.has_value())
+        return &m_sorted_symbols.last();
+
+    if (maybe_index.value() == 0)
         return nullptr;
-    return &m_sorted_symbols[index];
+
+    return &m_sorted_symbols[maybe_index.value() - 1];
 }
 
 Optional<Image::Symbol> Image::find_symbol(FlatPtr address, u32* out_offset) const
