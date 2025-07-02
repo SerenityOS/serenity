@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='scummvm'
 useconfigure='true'
-version='2.8.1'
+version='2.9.1'
 files=(
-    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz#7e97f4a13d22d570b70c9b357c941999be71deb9186039c87d82bbd9c20727b7"
+    "https://downloads.scummvm.org/frs/scummvm/${version}/scummvm-${version}.tar.xz#6a82f36afa9de758ab1dd377101a26a53f12417cbfd350bb8e5d7fd5b8c257e3"
 )
 depends=(
     'freetype'
@@ -16,6 +16,7 @@ depends=(
     'SDL2'
 )
 configopts=(
+    '--disable-seq-midi'
     '--enable-engine=monkey4'
     '--enable-release'
     "--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
