@@ -1255,12 +1255,12 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
         }
     }
 
-    if (dict->contains(CommonNames::CA)) {
+    if (dict->contains(CommonNames::CA) && m_rendering_preferences.use_constant_alpha) {
         state().stroke_alpha_constant = dict->get_value(CommonNames::CA).to_float();
         state().stroke_style = style_with_alpha(state().stroke_style, state().stroke_alpha_constant);
     }
 
-    if (dict->contains(CommonNames::ca)) {
+    if (dict->contains(CommonNames::ca) && m_rendering_preferences.use_constant_alpha) {
         state().paint_alpha_constant = dict->get_value(CommonNames::ca).to_float();
         state().paint_style = style_with_alpha(state().paint_style, state().paint_alpha_constant);
     }

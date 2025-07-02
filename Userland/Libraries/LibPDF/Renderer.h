@@ -140,6 +140,8 @@ struct RenderingPreferences {
     bool clip_paths { true };
     bool clip_text { true };
 
+    bool use_constant_alpha { true };
+
     unsigned hash() const
     {
         return static_cast<unsigned>(show_clipping_paths) | static_cast<unsigned>(show_images) << 1;

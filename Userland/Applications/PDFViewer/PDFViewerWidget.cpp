@@ -295,6 +295,11 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
     });
     toggle_clip_text->set_checked(m_viewer->clip_text());
     debug_menu->add_action(toggle_clip_text);
+    auto toggle_use_constant_alpha = GUI::Action::create_checkable("Use &Constant Alpha", [&](auto& action) {
+        m_viewer->set_use_constant_alpha(action.is_checked());
+    });
+    toggle_use_constant_alpha->set_checked(m_viewer->use_constant_alpha());
+    debug_menu->add_action(toggle_use_constant_alpha);
 
     auto help_menu = window.add_menu("&Help"_string);
     help_menu->add_action(GUI::CommonActions::make_command_palette_action(&window));

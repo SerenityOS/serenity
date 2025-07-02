@@ -77,6 +77,8 @@ public:
     void set_clip_paths(bool);
     bool clip_text() const { return m_rendering_preferences.clip_text; }
     void set_clip_text(bool);
+    bool use_constant_alpha() const { return m_rendering_preferences.use_constant_alpha; }
+    void set_use_constant_alpha(bool);
 
 protected:
     PDFViewer();
