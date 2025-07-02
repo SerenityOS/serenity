@@ -668,6 +668,43 @@ PDFErrorOr<void> Renderer::set_blend_mode(ReadonlySpan<Value> args)
         }
         return BlendMode::Normal;
     }());
+
+    switch (state().blend_mode) {
+    case BlendMode::Normal:
+        // Handled below.
+        break;
+    case BlendMode::Multiply:
+        return Error::rendering_unsupported_error("Blend mode Multiply not yet implemented");
+    case BlendMode::Screen:
+        return Error::rendering_unsupported_error("Blend mode Screen not yet implemented");
+    case BlendMode::Overlay:
+        return Error::rendering_unsupported_error("Blend mode Overlay not yet implemented");
+    case BlendMode::Darken:
+        return Error::rendering_unsupported_error("Blend mode Darken not yet implemented");
+    case BlendMode::Lighten:
+        return Error::rendering_unsupported_error("Blend mode Lighten not yet implemented");
+    case BlendMode::ColorDodge:
+        return Error::rendering_unsupported_error("Blend mode ColorDodge not yet implemented");
+    case BlendMode::ColorBurn:
+        return Error::rendering_unsupported_error("Blend mode ColorBurn not yet implemented");
+    case BlendMode::HardLight:
+        return Error::rendering_unsupported_error("Blend mode HardLight not yet implemented");
+    case BlendMode::SoftLight:
+        return Error::rendering_unsupported_error("Blend mode SoftLight not yet implemented");
+    case BlendMode::Difference:
+        return Error::rendering_unsupported_error("Blend mode Difference not yet implemented");
+    case BlendMode::Exclusion:
+        return Error::rendering_unsupported_error("Blend mode Exclusion not yet implemented");
+    case BlendMode::Hue:
+        return Error::rendering_unsupported_error("Blend mode Hue not yet implemented");
+    case BlendMode::Saturation:
+        return Error::rendering_unsupported_error("Blend mode Saturation not yet implemented");
+    case BlendMode::Color:
+        return Error::rendering_unsupported_error("Blend mode Color not yet implemented");
+    case BlendMode::Luminosity:
+        return Error::rendering_unsupported_error("Blend mode Luminosity not yet implemented");
+    }
+
     return {};
 }
 
