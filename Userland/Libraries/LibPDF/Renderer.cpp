@@ -1535,7 +1535,7 @@ Gfx::AffineTransform Renderer::calculate_image_space_transformation(Gfx::IntSize
     return image_space;
 }
 
-void Renderer::show_empty_image(Gfx::IntSize size)
+void Renderer::paint_empty_image(Gfx::IntSize size)
 {
     auto image_space_transformation = calculate_image_space_transformation(size);
     auto image_border = image_space_transformation.map(Gfx::IntRect { {}, size });
@@ -1581,7 +1581,7 @@ PDFErrorOr<void> Renderer::paint_image_xobject(NonnullRefPtr<StreamObject> image
     if (!m_rendering_preferences.show_images) {
         auto width = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Width)));
         auto height = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Height)));
-        show_empty_image({ width, height });
+        paint_empty_image({ width, height });
         return {};
     }
     auto image_bitmap = TRY(load_image(image));
