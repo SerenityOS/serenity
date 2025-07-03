@@ -68,6 +68,12 @@ struct ClippingPaths {
     Gfx::Path current;
 };
 
+struct TransparencyGroupAttributes {
+    RefPtr<ColorSpace> color_space;
+    bool is_isolated { false };
+    bool is_knockout { false };
+};
+
 enum class BlendMode {
     // TABLE 7.2 Standard separable blend modes
     Normal,
@@ -212,6 +218,7 @@ private:
     };
     PDFErrorOr<LoadedImage> load_image(NonnullRefPtr<StreamObject>);
     PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> make_mask_bitmap_from_array(NonnullRefPtr<ArrayObject>, NonnullRefPtr<StreamObject>);
+    PDFErrorOr<TransparencyGroupAttributes> read_transparency_group_attributes(NonnullRefPtr<DictObject>);
     PDFErrorOr<void> paint_form_xobject(NonnullRefPtr<StreamObject>);
     PDFErrorOr<void> paint_image_xobject(NonnullRefPtr<StreamObject>);
     void paint_empty_image(Gfx::IntSize);

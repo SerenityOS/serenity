@@ -1250,12 +1250,56 @@ PDFErrorOr<void> Renderer::show_text(ByteString const& string)
     return {};
 }
 
+PDFErrorOr<TransparencyGroupAttributes> Renderer::read_transparency_group_attributes(NonnullRefPtr<DictObject> group_dict)
+{
+    // TABLE 7.13 Additional entries specific to a transparency group attributes dictionary
+    TransparencyGroupAttributes attributes;
+
+    auto name = TRY(group_dict->get_name(m_document, CommonNames::S))->name();
+    if (name != CommonNames::Transparency)
+        return Error::malformed_error("Invalid transparency group /S: {}", name);
+
+    if (group_dict->contains(CommonNames::CS)) {
+        auto color_space_object = TRY(group_dict->get_object(m_document, CommonNames::CS));
+        auto color_space = TRY(get_color_space_from_document(color_space_object));
+
+        // "These restrictions exclude Lab and lightness-chromaticity ICCBased color spac-
+        //  es, as well as the special color spaces Pattern, Indexed, Separation, and DeviceN."
+        if (color_space->family() == ColorSpaceFamily::Lab
+            || color_space->family() == ColorSpaceFamily::Pattern
+            || color_space->family() == ColorSpaceFamily::Indexed
+            || color_space->family() == ColorSpaceFamily::Separation
+            || color_space->family() == ColorSpaceFamily::DeviceN) {
+            // FIXME: Reject Lab and lightness-chromaticity ICCBased color spaces.
+            return Error::malformed_error("Invalid transparency group /CS");
+        }
+
+        attributes.color_space = color_space;
+    }
+
+    if (group_dict->contains(CommonNames::I))
+        attributes.is_isolated = TRY(m_document->resolve_to<bool>(group_dict->get_value(CommonNames::I)));
+
+    if (group_dict->contains(CommonNames::K))
+        attributes.is_knockout = TRY(m_document->resolve_to<bool>(group_dict->get_value(CommonNames::K)));
+
+    return attributes;
+}
+
 PDFErrorOr<void> Renderer::paint_form_xobject(NonnullRefPtr<StreamObject> form)
 {
     Optional<NonnullRefPtr<DictObject>> xobject_resources {};
     if (form->dict()->contains(CommonNames::Resources)) {
         xobject_resources = TRY(form->dict()->get_dict(m_document, CommonNames::Resources));
     }
+
+    Optional<TransparencyGroupAttributes> transparency_group_attributes;
+    if (form->dict()->contains(CommonNames::Group)) {
+        auto group = TRY(form->dict()->get_dict(m_document, CommonNames::Group));
+        transparency_group_attributes = TRY(read_transparency_group_attributes(group));
+    }
+
+    // FIXME: If transparency_group_attributes.has_value(), paint as transparency group.
 
     ScopedState scoped_state { *this };
 
