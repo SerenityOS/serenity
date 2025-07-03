@@ -940,7 +940,7 @@ RENDERER_HANDLER(inline_image_end)
     auto expanded_inline_stream = TRY(expand_inline_image_abbreviations(inline_stream, resources, m_document));
     TRY(m_document->unfilter_stream(expanded_inline_stream));
 
-    TRY(show_image(expanded_inline_stream));
+    TRY(paint_image_xobject(expanded_inline_stream));
     return {};
 }
 
@@ -959,7 +959,7 @@ RENDERER_HANDLER(paint_xobject)
 
     auto subtype = MUST(xobject->dict()->get_name(m_document, CommonNames::Subtype))->name();
     if (subtype == CommonNames::Image) {
-        TRY(show_image(xobject));
+        TRY(paint_image_xobject(xobject));
         return {};
     }
 
@@ -1570,7 +1570,7 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> apply_alpha_channel(NonnullRefPtr<Gfx
     return image_bitmap;
 }
 
-PDFErrorOr<void> Renderer::show_image(NonnullRefPtr<StreamObject> image)
+PDFErrorOr<void> Renderer::paint_image_xobject(NonnullRefPtr<StreamObject> image)
 {
     auto image_dict = image->dict();
 
