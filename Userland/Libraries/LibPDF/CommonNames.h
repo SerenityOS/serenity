@@ -43,6 +43,7 @@
     X(CIDFontType2)               \
     X(CIDSystemInfo)              \
     X(CIDToGIDMap)                \
+    X(CS)                         \
     X(CalGray)                    \
     X(CalRGB)                     \
     X(CharProcs)                  \
@@ -115,12 +116,14 @@
     X(Functions)                  \
     X(G)                          \
     X(Gamma)                      \
+    X(Group)                      \
     X(H)                          \
     X(HT)                         \
     X(HTO)                        \
     X(HardLight)                  \
     X(Height)                     \
     X(Hue)                        \
+    X(I)                          \
     X(ICCBased)                   \
     X(ID)                         \
     X(Identity)                   \
@@ -212,6 +215,7 @@
     X(TR2)                        \
     X(Title)                      \
     X(ToUnicode)                  \
+    X(Transparency)               \
     X(Type)                       \
     X(Type1C)                     \
     X(U)                          \
