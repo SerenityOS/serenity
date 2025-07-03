@@ -1254,14 +1254,14 @@ PDFErrorOr<void> Renderer::paint_form_xobject(NonnullRefPtr<StreamObject> form)
 {
     Optional<NonnullRefPtr<DictObject>> xobject_resources {};
     if (form->dict()->contains(CommonNames::Resources)) {
-        xobject_resources = form->dict()->get_dict(m_document, CommonNames::Resources).value();
+        xobject_resources = TRY(form->dict()->get_dict(m_document, CommonNames::Resources));
     }
 
     ScopedState scoped_state { *this };
 
     Vector<Value> matrix;
     if (form->dict()->contains(CommonNames::Matrix)) {
-        matrix = form->dict()->get_array(m_document, CommonNames::Matrix).value()->elements();
+        matrix = TRY(form->dict()->get_array(m_document, CommonNames::Matrix))->elements();
     } else {
         matrix = Vector { Value { 1 }, Value { 0 }, Value { 0 }, Value { 1 }, Value { 0 }, Value { 0 } };
     }
