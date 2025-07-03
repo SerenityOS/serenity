@@ -213,7 +213,7 @@ private:
     PDFErrorOr<LoadedImage> load_image(NonnullRefPtr<StreamObject>);
     PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> make_mask_bitmap_from_array(NonnullRefPtr<ArrayObject>, NonnullRefPtr<StreamObject>);
     PDFErrorOr<void> paint_image_xobject(NonnullRefPtr<StreamObject>);
-    void show_empty_image(Gfx::IntSize);
+    void paint_empty_image(Gfx::IntSize);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_resources(Value const&, NonnullRefPtr<DictObject>);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_document(NonnullRefPtr<Object>);
 
