@@ -952,30 +952,13 @@ RENDERER_HANDLER(paint_xobject)
     auto xobjects_dict = TRY(resources->get_dict(m_document, CommonNames::XObject));
     auto xobject = TRY(xobjects_dict->get_stream(m_document, xobject_name));
 
-    Optional<NonnullRefPtr<DictObject>> xobject_resources {};
-    if (xobject->dict()->contains(CommonNames::Resources)) {
-        xobject_resources = xobject->dict()->get_dict(m_document, CommonNames::Resources).value();
-    }
-
     auto subtype = MUST(xobject->dict()->get_name(m_document, CommonNames::Subtype))->name();
     if (subtype == CommonNames::Image) {
         TRY(paint_image_xobject(xobject));
         return {};
     }
 
-    ScopedState scoped_state { *this };
-
-    Vector<Value> matrix;
-    if (xobject->dict()->contains(CommonNames::Matrix)) {
-        matrix = xobject->dict()->get_array(m_document, CommonNames::Matrix).value()->elements();
-    } else {
-        matrix = Vector { Value { 1 }, Value { 0 }, Value { 0 }, Value { 1 }, Value { 0 }, Value { 0 } };
-    }
-    MUST(handle_concatenate_matrix(matrix));
-    auto operators = TRY(Parser::parse_operators(m_document, xobject->bytes()));
-    for (auto& op : operators)
-        TRY(handle_operator(op, xobject_resources));
-    return {};
+    return paint_form_xobject(xobject);
 }
 
 RENDERER_HANDLER(marked_content_point)
@@ -1264,6 +1247,28 @@ PDFErrorOr<void> Renderer::show_text(ByteString const& string)
     auto delta = end_position - start_position;
     m_text_rendering_matrix_is_dirty = true;
     m_text_matrix.translate(delta);
+    return {};
+}
+
+PDFErrorOr<void> Renderer::paint_form_xobject(NonnullRefPtr<StreamObject> form)
+{
+    Optional<NonnullRefPtr<DictObject>> xobject_resources {};
+    if (form->dict()->contains(CommonNames::Resources)) {
+        xobject_resources = form->dict()->get_dict(m_document, CommonNames::Resources).value();
+    }
+
+    ScopedState scoped_state { *this };
+
+    Vector<Value> matrix;
+    if (form->dict()->contains(CommonNames::Matrix)) {
+        matrix = form->dict()->get_array(m_document, CommonNames::Matrix).value()->elements();
+    } else {
+        matrix = Vector { Value { 1 }, Value { 0 }, Value { 0 }, Value { 1 }, Value { 0 }, Value { 0 } };
+    }
+    MUST(handle_concatenate_matrix(matrix));
+    auto operators = TRY(Parser::parse_operators(m_document, form->bytes()));
+    for (auto& op : operators)
+        TRY(handle_operator(op, xobject_resources));
     return {};
 }
 
