@@ -52,6 +52,7 @@ typedef struct {
     sigset_t sigmask;
 } posix_spawnattr_t;
 
+static int posix_spawn_syscall(pid_t*, char const* path, char* const argv[], char* const envp[]);
 int posix_spawn(pid_t*, char const*, posix_spawn_file_actions_t const*, posix_spawnattr_t const*, char* const argv[], char* const envp[]);
 int posix_spawnp(pid_t*, char const*, posix_spawn_file_actions_t const*, posix_spawnattr_t const*, char* const argv[], char* const envp[]);
 
