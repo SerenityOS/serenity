@@ -9,16 +9,23 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 import sys
-from dataclasses import dataclass, field
-from enum import Enum, unique
-from itertools import chain, repeat
-from os import access, environ
+
+from dataclasses import dataclass
+from dataclasses import field
+from enum import Enum
+from enum import unique
+from itertools import chain
+from itertools import repeat
+from os import access
+from os import environ
 from pathlib import Path
 from shutil import which
 from subprocess import run
-from typing import Any, Callable, Literal
-import shlex
+from typing import Any
+from typing import Callable
+from typing import Literal
 
 QEMU_MINIMUM_REQUIRED_MAJOR_VERSION = 6
 QEMU_MINIMUM_REQUIRED_MINOR_VERSION = 2
@@ -328,8 +335,8 @@ def determine_machine_type() -> MachineType:
     if provided_machine_type is not None:
         try:
             value = MachineType(provided_machine_type)
-        except ValueError:
-            raise RunError(f"{provided_machine_type} is not a valid SerenityOS machine type")
+        except ValueError as e:
+            raise RunError(f"{provided_machine_type} is not a valid SerenityOS machine type") from e
         return value
     return MachineType.Default
 
@@ -339,8 +346,8 @@ def determine_boot_drive_type() -> BootDriveType:
     if provided_boot_drive_type is not None:
         try:
             value = BootDriveType(provided_boot_drive_type)
-        except ValueError:
-            raise RunError(f"{provided_boot_drive_type} is not a valid SerenityOS boot drive type")
+        except ValueError as e:
+            raise RunError(f"{provided_boot_drive_type} is not a valid SerenityOS boot drive type") from e
         return value
     return BootDriveType.NVMe
 
@@ -436,8 +443,7 @@ def set_up_virtualization_support(config: Configuration):
     if provided_virtualization_enable is not None:
         config.virtualization_support = provided_virtualization_enable == "1"
     elif host_arch_matches(config.architecture) and not config.machine_type.is_raspberry_pi():
-        config.virtualization_support = (config.qemu_kind in [QEMUKind.NativeWindows, QEMUKind.MacOS]
-                                         or kvm_usable())
+        config.virtualization_support = config.qemu_kind in [QEMUKind.NativeWindows, QEMUKind.MacOS] or kvm_usable()
 
     # FIXME: Booting with KVM on aarch64 is broken, so disable it for now.
     # FIXME: QEMU on Windows on ARM does not support WHPX yet
@@ -500,8 +506,8 @@ def set_up_cpu_count(config: Configuration):
     if provided_cpu_count is not None:
         try:
             config.cpu_count = int(provided_cpu_count)
-        except ValueError:
-            raise RunError(f"Non-integer CPU count {provided_cpu_count}")
+        except ValueError as e:
+            raise RunError(f"Non-integer CPU count {provided_cpu_count}") from e
 
     if config.cpu_count is not None and config.qemu_cpu is not None and config.cpu_count <= 8:
         # -x2apic is not a flag, but disables x2APIC for easier testing on lower CPU counts.
@@ -521,10 +527,12 @@ def set_up_spice(config: Configuration):
     if use_non_qemu_spice and "spicevmc" in chardev_info:
         config.spice_arguments = ["-chardev", "spicevmc,id=vdagent,name=vdagent"]
     elif "qemu-vdagent" in chardev_info:
-        config.extra_arguments.extend([
-            "-chardev",
-            "qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent",
-        ])
+        config.extra_arguments.extend(
+            [
+                "-chardev",
+                "qemu-vdagent,clipboard=on,mouse=off,id=vdagent,name=vdagent",
+            ]
+        )
 
     if use_non_qemu_spice and "spice" in chardev_info:
         config.spice_arguments.extend(["-spice", "port=5930,agent-mouse=off,disable-ticketing=on"])
@@ -586,8 +594,8 @@ def set_up_screens(config: Configuration):
     provided_screen_count_unparsed = environ.get("SERENITY_SCREENS", "1")
     try:
         config.screen_count = int(provided_screen_count_unparsed)
-    except ValueError:
-        raise RunError(f"Invalid screen count {provided_screen_count_unparsed}")
+    except ValueError as e:
+        raise RunError(f"Invalid screen count {provided_screen_count_unparsed}") from e
 
     provided_display_backend = environ.get("SERENITY_QEMU_DISPLAY_BACKEND")
     if provided_display_backend is not None:
@@ -667,10 +675,12 @@ def set_up_boot_drive(config: Configuration):
         config.kernel_cmdline.append("root=ahci0:0:0")
     if config.boot_drive_type == BootDriveType.NVMe:
         if config.architecture == Arch.x86_64:
-            config.add_devices([
-                "i82801b11-bridge,id=bridge4",
-                "nvme,serial=deadbeef,drive=boot-drive,bus=bridge4,logical_block_size=4096,physical_block_size=4096",
-            ])
+            config.add_devices(
+                [
+                    "i82801b11-bridge,id=bridge4",
+                    "nvme,serial=deadbeef,drive=boot-drive,bus=bridge4,logical_block_size=4096,physical_block_size=4096",
+                ]
+            )
             config.kernel_cmdline.append("root=nvme0:1:0")
         else:
             config.add_devices(["nvme,serial=deadbeef,drive=boot-drive"])
@@ -767,12 +777,7 @@ def set_up_machine_devices(config: Configuration):
             if config.machine_type == MachineType.RaspberryPi4B:
                 dtb_path = str(caches_path / "bcm2711-rpi-4-b.dtb")
 
-            config.extra_arguments.extend(
-                [
-                    "-serial", "stdio",
-                    "-dtb", dtb_path
-                ]
-            )
+            config.extra_arguments.extend(["-serial", "stdio", "-dtb", dtb_path])
             config.qemu_cpu = None
             return
 
