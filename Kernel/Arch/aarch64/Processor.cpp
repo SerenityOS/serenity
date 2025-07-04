@@ -441,6 +441,15 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     Processor::restore_critical(in_critical);
 
     load_fpu_state(&to_thread->fpu_state());
+
+    if (from_thread->process().is_traced())
+        read_debug_registers_into(from_thread->debug_register_state());
+
+    if (to_thread->process().is_traced()) {
+        write_debug_registers_from(to_thread->debug_register_state());
+    } else {
+        clear_debug_registers();
+    }
 }
 
 template<typename T>
