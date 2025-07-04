@@ -24,6 +24,42 @@
 
 namespace AK {
 
+namespace Details {
+
+// constexpr version of StringUtils::convert_to_uint_from_hex which cannot be constexpr
+// thanks to trimming functionality and a circular dependency on StringView.
+constexpr Optional<u16> convert_to_u16_from_hex(StringView string)
+{
+    if (string.is_empty())
+        return {};
+
+    u16 value = 0;
+    auto const count = string.length();
+    constexpr u16 upper_bound = NumericLimits<u16>::max();
+
+    for (size_t i = 0; i < count; i++) {
+        char digit = string[i];
+        u8 digit_val;
+        if (value > (upper_bound >> 4))
+            return {};
+
+        if (digit >= '0' && digit <= '9') {
+            digit_val = digit - '0';
+        } else if (digit >= 'a' && digit <= 'f') {
+            digit_val = 10 + (digit - 'a');
+        } else if (digit >= 'A' && digit <= 'F') {
+            digit_val = 10 + (digit - 'A');
+        } else {
+            return {};
+        }
+
+        value = (value << 4) + digit_val;
+    }
+    return value;
+}
+
+}
+
 class [[gnu::packed]] IPv6Address {
 public:
     using in6_addr_t = u8[16];
@@ -50,9 +86,9 @@ public:
     constexpr u16 operator[](int i) const { return group(i); }
 
 #ifdef KERNEL
-    ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const
+    constexpr ErrorOr<NonnullOwnPtr<Kernel::KString>> to_string() const
 #else
-    ErrorOr<String> to_string() const
+    constexpr ErrorOr<String> to_string() const
 #endif
     {
         if (is_zero()) {
@@ -120,37 +156,54 @@ public:
 #endif
     }
 
-    static Optional<IPv6Address> from_string(StringView string)
+    static constexpr Optional<IPv6Address> from_string(StringView string)
     {
         if (string.is_null())
             return {};
 
-        auto const parts = string.split_view(':', SplitBehavior::KeepEmpty);
+        // Manual split_at(':', KeepEmpty) implementation, since the StringView one is not constexpr.
+        Array<StringView, 9> parts_creator;
+        size_t current_part = 0;
+        size_t current_part_start = 0;
+        for (size_t index = 0; index < string.length(); ++index) {
+            auto const character = string[index];
+            if (character == ':') {
+                // terminate current part
+                parts_creator[current_part] = string.substring_view(current_part_start, index - current_part_start);
+                ++current_part;
+                current_part_start = index + 1;
+                if (current_part >= parts_creator.size()) {
+                    // We may have 9 parts if the address is compressed
+                    // at the beginning or end, e.g. by substituting the
+                    // leading or trailing 0 with a : character. Otherwise,
+                    // the maximum number of parts is 8, which we validate
+                    // when expanding the compression.
+                    return {};
+                }
+            }
+        }
+        if (current_part_start != string.length())
+            parts_creator[current_part] = string.substring_view(current_part_start, string.length() - current_part_start);
+
+        auto const parts = parts_creator.span().trim(current_part + 1);
+
         if (parts.is_empty())
             return {};
-        if (parts.size() > 9) {
-            // We may have 9 parts if the address is compressed
-            // at the beginning or end, e.g. by substituting the
-            // leading or trailing 0 with a : character. Otherwise,
-            // the maximum number of parts is 8, which we validate
-            // when expanding the compression.
-            return {};
-        }
-        if (parts.size() >= 4 && parts[parts.size() - 1].contains('.')) {
+        if (parts.size() >= 4 && parts.last().contains('.')) {
             // Check if this may be an ipv4 mapped address
             auto is_ipv4_prefix = [&]() {
-                auto separator_part = parts[parts.size() - 2].trim_whitespace();
+                auto separator_part = parts[parts.size() - 2];
                 if (separator_part.is_empty())
                     return false;
-                auto separator_value = StringUtils::convert_to_uint_from_hex(separator_part);
+                auto separator_value = Details::convert_to_u16_from_hex(separator_part);
                 if (!separator_value.has_value() || separator_value.value() != 0xffff)
                     return false;
                 // TODO: this allows multiple compression tags "::" in the prefix, which is technically not legal
                 for (size_t i = 0; i < parts.size() - 2; i++) {
-                    auto part = parts[i].trim_whitespace();
+                    auto part = parts[i];
                     if (part.is_empty())
                         continue;
-                    auto value = StringUtils::convert_to_uint_from_hex(part);
+                    auto value = Details::convert_to_u16_from_hex(part);
                     if (!value.has_value() || value.value() != 0)
                         return false;
                 }
@@ -170,7 +223,7 @@ public:
         int have_groups = 0;
         bool found_compressed = false;
         for (size_t i = 0; i < parts.size();) {
-            auto trimmed_part = parts[i].trim_whitespace();
+            auto trimmed_part = parts[i];
             if (trimmed_part.is_empty()) {
                 if (found_compressed)
                     return {};
@@ -178,7 +231,7 @@ public:
                 bool is_leading = (i == 0);
                 bool is_trailing = false;
                 for (size_t j = i + 1; j < parts.size(); j++) {
-                    if (!parts[j].trim_whitespace().is_empty())
+                    if (!parts[j].is_empty())
                         break;
                     empty_parts++;
                     if (j == parts.size() - 1)
@@ -205,8 +258,8 @@ public:
             } else {
                 i++;
             }
-            auto part = StringUtils::convert_to_uint_from_hex(trimmed_part);
-            if (!part.has_value() || part.value() > 0xffff)
+            auto part = Details::convert_to_u16_from_hex(trimmed_part);
+            if (!part.has_value())
                 return {};
 
             if (++have_groups > 8)
@@ -244,7 +297,7 @@ public:
         return true;
     }
 
-    Optional<IPv4Address> ipv4_mapped_address() const
+    constexpr Optional<IPv4Address> ipv4_mapped_address() const
     {
         if (is_ipv4_mapped())
             return IPv4Address(m_data[12], m_data[13], m_data[14], m_data[15]);
@@ -252,7 +305,7 @@ public:
     }
 
     // https://datatracker.ietf.org/doc/html/rfc4291#section-2.5.3
-    [[nodiscard]] static IPv6Address loopback()
+    [[nodiscard]] constexpr static IPv6Address loopback()
     {
         return IPv6Address({ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 });
     }
