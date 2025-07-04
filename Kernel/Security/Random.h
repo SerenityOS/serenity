@@ -13,6 +13,7 @@
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Locking/Mutex.h>
+#include <Kernel/Tasks/WaitQueue.h>
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Cipher/Cipher.h>
 #include <LibCrypto/Hash/SHA2.h>
