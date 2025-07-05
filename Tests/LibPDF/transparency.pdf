@@ -1,0 +1,138 @@
+%PDF-1.7
+%µ¶
+
+1 0 obj
+<</Type/Catalog/Pages 2 0 R>>
+endobj
+
+2 0 obj
+<</Type/Pages/Kids[3 0 R]/Count 1>>
+endobj
+
+3 0 obj
+<</Type/Page/Parent 2 0 R/MediaBox[0 0 230 140]/Contents 4 0 R/Resources<</ExtGState<</GS1 8 0 R>>/Font<</F1 5 0 R>>/Shading<</Sh1 6 0 R>>>>>>
+endobj
+
+4 0 obj
+<</Length 932>>
+stream
+% Draw a checkerboard background.
+% FIXME: Use a repeating tiling pattern for this once we support that.
+0.9 0.9 0.9 rg
+
+0 0 25 25 re
+50 0 25 25 re
+100 0 25 25 re
+150 0 25 25 re
+200 0 25 25 re
+
+25 25 25 25 re
+75 25 25 25 re
+125 25 25 25 re
+175 25 25 25 re
+225 25 25 25 re
+
+0 50 25 25 re
+50 50 25 25 re
+100 50 25 25 re
+150 50 25 25 re
+200 50 25 25 re
+
+25 75 25 25 re
+75 75 25 25 re
+125 75 25 25 re
+175 75 25 25 re
+225 75 25 25 re
+
+0 100 25 25 re
+50 100 25 25 re
+100 100 25 25 re
+150 100 25 25 re
+200 100 25 25 re
+
+25 125 25 25 re
+75 125 25 25 re
+125 125 25 25 re
+175 125 25 25 re
+225 125 25 25 re
+
+f
+
+% Test drawing various things with transparency.
+
+/GS1 gs
+
+% Image.
+q
+50 0 0 50 20 70 cm
+BI
+/BPC 8
+/CS /RGB
+/F /AHx
+/W 2
+/H 2
+ID
+0055AA 00AA55
+AA0055 5500AA >
+EI
+Q
+
+% Text.
+0 1 0 rg
+BT
+  /F1 24 Tf
+  80 70 Td
+  (Hey) Tj
+ET
+
+% Path.
+0.5 0 0.5 RG
+140 85 70 20 re
+160 70 30 50 re
+10 w
+1 j
+B*
+
+% Shading.
+q
+20 20 190 30 re
+W n
+/Sh1 sh
+Q
+
+endstream
+endobj
+
+5 0 obj
+<</Type/Font/Subtype/Type1/Name/F1/BaseFont/Helvetica-Bold>>
+endobj
+
+6 0 obj
+<</ShadingType 2/ColorSpace/DeviceRGB/Coords[20 20 150 150]/Function 7 0 R/Extend[true true]>>
+endobj
+
+7 0 obj
+<</FunctionType 2/Domain[0 1]/C0[1 0 0]/C1[0 0 1]/N 1>>
+endobj
+
+8 0 obj
+<</CA .2/ca .6>>
+endobj
+
+xref
+0 9
+0000000000 65536 f 
+0000000016 00000 n 
+0000000062 00000 n 
+0000000114 00000 n 
+0000000273 00000 n 
+0000001255 00000 n 
+0000001332 00000 n 
+0000001443 00000 n 
+0000001515 00000 n 
+
+trailer
+<</Size 9/Root 1 0 R>>
+startxref
+1548
+%%EOF

@@ -38,8 +38,8 @@ int main(int argc, char** argv)
 
     bool do_all_crash_types = false;
     bool do_segmentation_violation = false;
-    // RISC-V does not trap divisions by zero, see M extension version 2.0, subsection 2 and table 1.
-#if !ARCH(RISCV64)
+    // Division by zero only causes an exception on x86-64.
+#if ARCH(X86_64)
     bool do_division_by_zero = false;
 #endif
     bool do_illegal_instruction = false;
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
         "(i.e., Kernel or UE) by crashing in many different ways.");
     args_parser.add_option(do_all_crash_types, "Test that all (except -U) of the following crash types crash as expected (default behavior)", nullptr, 'A');
     args_parser.add_option(do_segmentation_violation, "Perform a segmentation violation by dereferencing an invalid pointer", nullptr, 's');
-#if !ARCH(RISCV64)
+#if ARCH(X86_64)
     args_parser.add_option(do_division_by_zero, "Perform a division by zero", nullptr, 'd');
 #endif
     args_parser.add_option(do_illegal_instruction, "Execute an illegal CPU instruction", nullptr, 'i');
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
-#if !ARCH(RISCV64)
+#if ARCH(X86_64)
     if (do_division_by_zero || do_all_crash_types) {
         any_failures |= !Crash("Division by zero", []() {
             int volatile lala = 10;
@@ -231,8 +231,7 @@ int main(int argc, char** argv)
 #if ARCH(X86_64)
             asm volatile("mov %%eax, %%esp" ::"a"(makeshift_stack_pointer));
 #elif ARCH(AARCH64)
-            (void)makeshift_stack_pointer;
-            TODO_AARCH64();
+            asm volatile("mov sp, %0" :: "r"(makeshift_stack_pointer));
 #elif ARCH(RISCV64)
             asm volatile("mv sp, %0" :: "r"(makeshift_stack_pointer));
 #else
@@ -249,8 +248,7 @@ int main(int argc, char** argv)
 #if ARCH(X86_64)
             asm volatile("mov %%eax, %%esp" ::"a"(bad_stack_pointer));
 #elif ARCH(AARCH64)
-            (void)bad_stack_pointer;
-            TODO_AARCH64();
+            asm volatile("mov sp, %0" :: "r"(bad_stack_pointer));
 #elif ARCH(RISCV64)
             asm volatile("mv sp, %0" :: "r"(bad_stack_pointer));
 #else
@@ -272,8 +270,8 @@ int main(int argc, char** argv)
             asm volatile("movq %%rax, %%rsp" ::"a"(bad_stack_pointer));
             asm volatile("pushq $0");
 #elif ARCH(AARCH64)
-            (void)bad_stack_pointer;
-            TODO_AARCH64();
+            asm volatile("mov sp, %0" :: "r"(bad_stack_pointer));
+            asm volatile("str xzr, [sp]");
 #elif ARCH(RISCV64)
             asm volatile("mv sp, %0" :: "r"(bad_stack_pointer));
             asm volatile("sd zero, (sp)");
@@ -310,8 +308,11 @@ int main(int argc, char** argv)
 #if ARCH(X86_64)
             ptr[0] = 0xc3; // ret
 #elif ARCH(AARCH64)
-            (void)ptr;
-            TODO_AARCH64();
+            // ret
+            ptr[0] = 0xc0;
+            ptr[1] = 0x03;
+            ptr[2] = 0x5f;
+            ptr[3] = 0xd6;
 #elif ARCH(RISCV64)
             // ret / jalr x0, 0(x1)
             ptr[0] = 0x67;
@@ -332,7 +333,7 @@ int main(int argc, char** argv)
 #if ARCH(X86_64)
             asm volatile("str %eax");
 #elif ARCH(AARCH64)
-            TODO_AARCH64();
+            asm volatile("eret");
 #elif ARCH(RISCV64)
             asm volatile("sret");
 #else

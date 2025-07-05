@@ -150,4 +150,19 @@ for (let angle = 0; angle < 360; angle += 15) {
   ctx.stroke();
 }
 
+// Non-closed path, first filled, then stroked
+
+ctx.fillStyle = "gray";
+ctx.beginPath();
+ctx.moveTo(centerX - 30, centerY);
+ctx.lineTo(centerX, centerY + 30);
+ctx.lineTo(centerX + 30, centerY + 15);
+ctx.fill();
+
+ctx.beginPath();
+ctx.moveTo(centerX - 30, centerY);
+ctx.lineTo(centerX, centerY + 30);
+ctx.lineTo(centerX + 30, centerY + 15);
+ctx.stroke();
+
 </script>

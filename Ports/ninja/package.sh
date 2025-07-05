@@ -10,7 +10,7 @@ build() {
     LDFLAGS="--sysroot=${SERENITY_INSTALL_ROOT}" \
     # platform=linux is close enough.
     run ./configure.py --bootstrap --platform='linux'
-    run strip ninja
+    run "$STRIP" ninja
 }
 
 install() {

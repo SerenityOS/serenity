@@ -38,7 +38,7 @@ bool MBRPartitionTable::read_boot_record()
 {
     if (block_size() != 512)
         return false;
-    auto maybe_error = m_device.read_block(m_start_lba, m_cached_header.bytes());
+    auto maybe_error = m_device.read_block(m_start_lba, Bytes { &m_cached_header, sizeof(Header) });
     m_header_valid = !maybe_error.is_error();
     return m_header_valid;
 }
@@ -46,16 +46,15 @@ bool MBRPartitionTable::read_boot_record()
 MBRPartitionTable::MBRPartitionTable(PartitionableDevice device, u32 start_lba)
     : PartitionTable(move(device))
     , m_start_lba(start_lba)
-    , m_cached_header(ByteBuffer::create_zeroed(block_size()).release_value_but_fixme_should_propagate_errors()) // FIXME: Do something sensible if this fails because of OOM.
 {
     if (!read_boot_record() || !initialize())
         return;
 
     m_header_valid = true;
 
-    auto& header = this->header();
+    auto const& header = this->header();
     for (size_t index = 0; index < 4; index++) {
-        auto& entry = header.entry[index];
+        auto entry = header.entry[index];
         if (entry.offset == 0x00) {
             continue;
         }
@@ -71,14 +70,13 @@ MBRPartitionTable::MBRPartitionTable(PartitionableDevice device, u32 start_lba)
 MBRPartitionTable::MBRPartitionTable(PartitionableDevice device)
     : PartitionTable(move(device))
     , m_start_lba(0)
-    , m_cached_header(ByteBuffer::create_zeroed(block_size()).release_value_but_fixme_should_propagate_errors()) // FIXME: Do something sensible if this fails because of OOM.
 {
     if (!read_boot_record() || contains_ebr() || is_protective_mbr() || !initialize())
         return;
 
-    auto& header = this->header();
+    auto const& header = this->header();
     for (size_t index = 0; index < 4; index++) {
-        auto& entry = header.entry[index];
+        auto entry = header.entry[index];
         if (entry.offset == 0x00) {
             continue;
         }
@@ -95,13 +93,13 @@ MBRPartitionTable::~MBRPartitionTable() = default;
 
 MBRPartitionTable::Header const& MBRPartitionTable::header() const
 {
-    return *(MBRPartitionTable::Header const*)m_cached_header.data();
+    return m_cached_header;
 }
 
 bool MBRPartitionTable::initialize()
 {
-    auto& header = this->header();
-    dbgln_if(MBR_DEBUG, "Master Boot Record: mbr_signature={:#08x}", header.mbr_signature);
+    auto const& header = this->header();
+    dbgln_if(MBR_DEBUG, "Master Boot Record: mbr_signature={:#08x}", (u16)header.mbr_signature);
     if (header.mbr_signature != MBR_SIGNATURE) {
         dbgln("Master Boot Record: invalid signature");
         return false;

@@ -49,9 +49,9 @@ EBRPartitionTable::EBRPartitionTable(PartitionableDevice device)
 
     VERIFY(partitions_count() == 0);
 
-    auto& header = this->header();
+    auto const& header = this->header();
     for (size_t index = 0; index < 4; index++) {
-        auto& entry = header.entry[index];
+        auto entry = header.entry[index];
         // Start enumerating all logical partitions
         if (entry.type == 0xf) {
             auto checked_ebr = MBRPartitionTable::try_to_initialize(m_device.clone_unowned(), entry.offset);

@@ -14,7 +14,7 @@ endobj
 endobj
 
 4 0 obj
-<</Length 3069>>
+<</Length 3373>>
 stream
 /DeviceRGB CS
 
@@ -217,13 +217,14 @@ q
 S
 Q
 
-% Closed triangle, facing up.
+% Closed triangle, facing up. (Closed twice, in fact.)
 0 J
 1 0 0 SC
 280 130 m
 340 130 l
 310 170 l
 280 130 l
+h
 h
 S
 
@@ -382,6 +383,33 @@ Q
 260 5 l
 B
 
+% A single path with multiple segments (closed, open, closed):
+1 j
+8 w
+10 30 m
+20 10 l
+30 30 l
+h
+30 5 m
+40 25 l
+50 5 l
+% no h
+50 30 m
+60 10 l
+70 30 l
+h
+S
+
+% A path where a 'close' is followed by a no-op move.
+4 w
+175 115 m
+195 145 l
+215 115 l
+175 115 l
+h
+175 115 m
+199 130 l
+S
 
 endstream
 endobj
@@ -397,5 +425,5 @@ xref
 trailer
 <</Size 5/Root 2 0 R>>
 startxref
-3324
+3628
 %%EOF

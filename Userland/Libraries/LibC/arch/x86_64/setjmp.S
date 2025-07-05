@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <bits/sighow.h>
-
 //
 // /!\ Read setjmp.h before modifying this file!
 //

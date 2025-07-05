@@ -95,6 +95,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`gawk`](gawk/)                               | GNU awk                                                       | 5.3.1                    | https://www.gnu.org/software/gawk/                                   |
 | [`gcc`](gcc/)                                 | GNU Compiler Collection                                       | 15.1.0                   | https://gcc.gnu.org/                                                 |
 | [`gdb`](gdb/)                                 | GNU Project Debugger                                          | 11.2                     | https://sourceware.org/gdb                                           |
+| [`gdk-pixbuf`](gdk-pixbuf/)                   | GdkPixbuf                                                     | 2.42.12                  | https://gitlab.gnome.org/GNOME/gdk-pixbuf/                           |
 | [`gemrb`](gemrb/)                             | GemRB                                                         | 0.9.2                    | https://gemrb.org/                                                   |
 | [`genemu`](genemu/)                           | Genesis / MegaDrive Emulator                                  | e39f690                  | https://github.com/rasky/genemu                                      |
 | [`genext2fs`](genext2fs/)                     | genext2fs                                                     | 1.5.0                    | https://github.com/bestouff/genext2fs                                |
@@ -298,7 +299,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`rvvm`](rvvm/)                               | RVVM - The RISC-V Virtual Machine                             | 0.6                      | https://github.com/LekKit/RVVM                                       |
 | [`sam`](sam/)                                 | Software Automatic Mouth (SAM)                                | c86ea39                  | https://github.com/vidarh/SAM                                        |
 | [`schismtracker`](schismtracker/)             | Schism Tracker                                                | 20240523                 | https://schismtracker.org/                                           |
-| [`scummvm`](scummvm/)                         | ScummVM                                                       | 2.8.1                    | https://www.scummvm.org/                                             |
+| [`scummvm`](scummvm/)                         | ScummVM                                                       | 2.9.1                    | https://www.scummvm.org/                                             |
 | [`sdl12-compat`](sdl12-compat/)               | SDL2 compatibility layer for SDL 1.2 games                    | 1.2.64                   | https://github.com/libsdl-org/sdl12-compat/                          |
 | [`SDL2`](SDL2/)                               | Simple DirectMedia Layer (SDL2)                               | 2.32.0                   | https://github.com/libsdl-org/SDL                                    |
 | [`SDL2-GNUBoy`](SDL2-GNUBoy/)                 | SDL2 GNUBoy                                                   | 1.2.1                    | https://github.com/AlexOberhofer/SDL2-GNUBoy                         |

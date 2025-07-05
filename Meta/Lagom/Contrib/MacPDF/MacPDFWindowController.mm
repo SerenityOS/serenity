@@ -161,6 +161,11 @@
     [_pdfView toggleClipText:sender];
 }
 
+- (IBAction)toggleUseConstantAlpha:(id)sender
+{
+    [_pdfView toggleUseConstantAlpha:sender];
+}
+
 - (IBAction)toggleShowImages:(id)sender
 {
     [_pdfView toggleShowImages:sender];

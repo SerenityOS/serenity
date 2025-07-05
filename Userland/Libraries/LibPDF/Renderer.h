@@ -66,7 +66,12 @@ struct TextState {
 
 struct ClippingPaths {
     Gfx::Path current;
-    Gfx::Path next;
+};
+
+struct TransparencyGroupAttributes {
+    RefPtr<ColorSpace> color_space;
+    bool is_isolated { false };
+    bool is_knockout { false };
 };
 
 enum class BlendMode {
@@ -136,11 +141,12 @@ struct RenderingPreferences {
     bool show_clipping_paths { false };
     bool show_images { true };
     bool show_hidden_text { false };
-    bool show_diagnostics { false };
 
     bool clip_images { true };
     bool clip_paths { true };
     bool clip_text { true };
+
+    bool use_constant_alpha { true };
 
     unsigned hash() const
     {
@@ -200,6 +206,9 @@ private:
 
     void begin_path_paint();
     void end_path_paint();
+    void stroke_current_path();
+    void fill_current_path(Gfx::WindingRule);
+    void fill_and_stroke_current_path(Gfx::WindingRule);
     PDFErrorOr<void> set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
     PDFErrorOr<void> show_text(ByteString const&);
 
@@ -209,10 +218,19 @@ private:
     };
     PDFErrorOr<LoadedImage> load_image(NonnullRefPtr<StreamObject>);
     PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> make_mask_bitmap_from_array(NonnullRefPtr<ArrayObject>, NonnullRefPtr<StreamObject>);
-    PDFErrorOr<void> show_image(NonnullRefPtr<StreamObject>);
-    void show_empty_image(Gfx::IntSize);
+    PDFErrorOr<TransparencyGroupAttributes> read_transparency_group_attributes(NonnullRefPtr<DictObject>);
+    PDFErrorOr<void> paint_form_xobject(NonnullRefPtr<StreamObject>);
+    PDFErrorOr<void> paint_image_xobject(NonnullRefPtr<StreamObject>);
+    void paint_empty_image(Gfx::IntSize);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_resources(Value const&, NonnullRefPtr<DictObject>);
     PDFErrorOr<NonnullRefPtr<ColorSpace>> get_color_space_from_document(NonnullRefPtr<Object>);
+
+    static ColorOrStyle style_with_alpha(ColorOrStyle style, float alpha)
+    {
+        if (style.has<Color>())
+            return style.get<Color>().with_alpha(round_to<u8>(clamp(alpha * 255, 0, 255)));
+        return style;
+    }
 
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }
     ALWAYS_INLINE TextState& text_state() { return state().text_state; }
@@ -249,7 +267,16 @@ private:
     Gfx::AntiAliasingPainter m_anti_aliasing_painter;
     RenderingPreferences m_rendering_preferences;
 
+    // "In PDF (unlike PostScript), the current path is not part of the graphics state and is not saved and
+    //  restored along with the other graphics state parameters."
     Gfx::Path m_current_path;
+    enum class AddPathAsClip {
+        No,
+        Nonzero,
+        EvenOdd,
+    };
+    AddPathAsClip m_add_path_as_clip { AddPathAsClip::No };
+
     Vector<GraphicsState> m_graphics_state_stack;
     Gfx::AffineTransform m_text_matrix;
     Gfx::AffineTransform m_text_line_matrix;

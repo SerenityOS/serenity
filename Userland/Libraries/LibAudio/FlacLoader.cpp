@@ -9,6 +9,7 @@
 #include <AK/DeprecatedFlyString.h>
 #include <AK/FixedArray.h>
 #include <AK/Format.h>
+#include <AK/Forward.h>
 #include <AK/IntegralMath.h>
 #include <AK/Math.h>
 #include <AK/MemoryStream.h>
@@ -146,7 +147,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
         ++total_meta_blocks;
     }
 
-    dbgln_if(AFLACLOADER_DEBUG, "Parsed FLAC header: blocksize {}-{}{}, framesize {}-{}, {}Hz, {}bit, {} channels, {} samples total ({:.2f}s), MD5 {}, data start at {:x} bytes, {} headers total (skipped {})", m_min_block_size, m_max_block_size, is_fixed_blocksize_stream() ? " (constant)" : "", m_min_frame_size, m_max_frame_size, m_sample_rate, pcm_bits_per_sample(m_sample_format), m_num_channels, m_total_samples, static_cast<float>(m_total_samples) / static_cast<float>(m_sample_rate), m_md5_checksum, m_data_start_location, total_meta_blocks, total_meta_blocks - meta_blocks_parsed);
+    dbgln_if(AFLACLOADER_DEBUG, "Parsed FLAC header: blocksize {}-{}{}, framesize {}-{}, {}Hz, {}bit, {} channels, {} samples total ({:.2f}s), MD5 {:hex-dump}, data start at {:x} bytes, {} headers total (skipped {})", m_min_block_size, m_max_block_size, is_fixed_blocksize_stream() ? " (constant)" : "", m_min_frame_size, m_max_frame_size, m_sample_rate, pcm_bits_per_sample(m_sample_format), m_num_channels, m_total_samples, static_cast<float>(m_total_samples) / static_cast<float>(m_sample_rate), ReadonlyBytes { m_md5_checksum }, m_data_start_location, total_meta_blocks, total_meta_blocks - meta_blocks_parsed);
     TRY(m_seektable.insert_seek_point({ 0, 0 }));
 
     return {};

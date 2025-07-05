@@ -34,6 +34,9 @@ constexpr u64 DESCRIPTOR_MASK = ~0b11;
 
 constexpr u64 ACCESS_FLAG = 1 << 10;
 
+// UXN (Unprivileged Execute-never) and PXN (Privileged Execute-never)
+constexpr u64 EXECUTE_NEVER = (1uz << 54) | (1uz << 53);
+
 // shareability
 constexpr u64 OUTER_SHAREABLE = (2 << 8);
 constexpr u64 INNER_SHAREABLE = (3 << 8);
@@ -86,9 +89,6 @@ public:
 
     bool is_global() const { TODO_AARCH64(); }
     void set_global(bool) { }
-
-    bool is_execute_disabled() const { TODO_AARCH64(); }
-    void set_execute_disabled(bool) { }
 
 private:
     void set_bit(u64 bit, bool value)
@@ -146,7 +146,7 @@ public:
     void set_global(bool) { }
 
     bool is_execute_disabled() const { TODO_AARCH64(); }
-    void set_execute_disabled(bool) { }
+    void set_execute_disabled(bool b) { set_bit(EXECUTE_NEVER, b); }
 
     bool is_null() const { return m_raw == 0; }
     void clear() { m_raw = 0; }

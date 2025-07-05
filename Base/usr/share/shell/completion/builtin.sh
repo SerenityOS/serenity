@@ -10,14 +10,17 @@ _complete_unalias() {
         name="$names[-1]"
     }
     invariant="${length $name}"
+    output=''
     for $(alias | grep "^$name") {
         n=${regex_replace '"' '\"' ${regex_replace '\\([^\\])' '\1' ${regex_replace '=.*' '' "$it"}}}
         v=${regex_replace '"' '\"' ${regex_replace '\\([^\\])' '\1' ${regex_replace '[^=]*=' '' "$it"}}}
-        echo '{"kind":"plain","completion":"'"$n"'", "trailing_trivia":" ", "display_trivia":"'"$v"'", "invariant_offset": '$invariant'}'
+        output="$output"'{"kind":"plain","completion":"'"$n"'", "trailing_trivia":" ", "display_trivia":"'"$v"'", "invariant_offset": '$invariant'}'"\n"
     }
+    echo -n "$output"
 }
 
 __complete_job_spec() {
+    output=''
     match $1 as hint {
         %?* as (name) {
             for $(jobs | grep "$name") {
@@ -26,7 +29,7 @@ __complete_job_spec() {
                     [*]\ * as (i _) { id=$i }
                     * { continue }
                 }
-                echo '{"kind":"plain","static_offset":'"${length "?$name"}"',"invariant_offset":0,"completion":"'"$id"'"}'
+                output="$output"'{"kind":"plain","static_offset":'"${length "?$name"}"',"invariant_offset":0,"completion":"'"$id"'"}'"\n"
             }
         }
         %* as (id) {
@@ -37,7 +40,7 @@ __complete_job_spec() {
                     [*]\ * as (i _) { id=$i }
                     * { continue }
                 }
-                echo '{"kind":"plain","static_offset":0,"invariant_offset":'"$invariant"',"completion":"'"$id"'"}'
+                output="$output"'{"kind":"plain","static_offset":0,"invariant_offset":'"$invariant"',"completion":"'"$id"'"}'"\n"
             }
         }
         (?<pid>^\d+$) {
@@ -49,7 +52,7 @@ __complete_job_spec() {
                     "*$pid* *" as (_ i rest) { id="$pid$i" description="$rest" }
                     * { continue }
                 }
-                echo '{"kind":"plain","static_offset":0,"invariant_offset":'"$invariant"',"completion":"'"$id"'","display_trivia":"'"$description"'"}'
+                output="$output"'{"kind":"plain","static_offset":0,"invariant_offset":'"$invariant"',"completion":"'"$id"'","display_trivia":"'"$description"'"}'"\n"
             }
         }
         * as (name) {
@@ -61,10 +64,11 @@ __complete_job_spec() {
                     (?: *(?<pid>\d+) (?<rest>.*)) { id="$pid" description="$rest" }
                     * { continue }
                 }
-                echo '{"kind":"plain","static_offset":'"$static"',"invariant_offset":0,"completion":"'"$id"'","display_trivia":"'"$description"'","allow_commit_without_listing":false}'
+                output="$output"'{"kind":"plain","static_offset":'"$static"',"invariant_offset":0,"completion":"'"$id"'","display_trivia":"'"$description"'","allow_commit_without_listing":false}'"\n"
             }
         }
     }
+    echo -n "$output"
 }
 
 _complete_kill() {
@@ -84,7 +88,9 @@ _complete_cd() {
         results=$(glob "$*[-1]*/")
     }
 
+    output=''
     for $results {
-        echo '{"kind":"plain","static_offset":0,"invariant_offset":'"$invariant_offset"',"completion":"'"${remove_suffix / $it}"'","trailing_trivia":"/"}'
+        output="$output"'{"kind":"plain","static_offset":0,"invariant_offset":'"$invariant_offset"',"completion":"'"${remove_suffix / $it}"'","trailing_trivia":"/"}'"\n"
     }
+    echo -n "$output"
 }

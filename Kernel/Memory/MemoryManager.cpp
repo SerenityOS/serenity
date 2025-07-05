@@ -1085,12 +1085,12 @@ void MemoryManager::validate_syscall_preconditions(Process& process, RegisterSta
         VirtualAddress ip = VirtualAddress { regs.ip() };
         auto* calling_region = MM.find_user_region_from_vaddr(*space, ip);
         if (!calling_region) {
-            dbgln("Syscall from {:p} which has no associated region", ip);
+            dbgln("Syscall from {} which has no associated region", ip);
             return unlock_and_handle_crash("Syscall from unknown region", SIGSEGV);
         }
 
         if (calling_region->is_writable()) {
-            dbgln("Syscall from writable memory at {:p}", ip);
+            dbgln("Syscall from writable memory at {}", ip);
             return unlock_and_handle_crash("Syscall from writable memory", SIGSEGV);
         }
 

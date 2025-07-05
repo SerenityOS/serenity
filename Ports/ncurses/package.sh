@@ -11,6 +11,7 @@ configopts=(
     '--with-shared'
     '--without-ada'
     '--enable-widec'
+    "--with-strip-program=$STRIP"
     'CFLAGS=-std=c17'
 )
 files=(

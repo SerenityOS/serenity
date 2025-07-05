@@ -8,7 +8,7 @@ Everyone is welcome to work on the project, and while we have lots of fun, it's 
 
 ## Communication
 
-Join our Discord server: [SerenityOS Discord](https://discord.gg/serenityos)
+Join our Discord server: [SerenityOS Discord](https://serenityos.org/discord)
 
 ## Issue policy
 
@@ -92,11 +92,9 @@ Ping them right away if it's something urgent! If it's less urgent, advertise yo
 -   [@AtkinsSJ](https://github.com/AtkinsSJ)
 -   [@BertalanD](https://github.com/BertalanD)
 -   [@GMTA](https://github.com/gmta)
--   [@kalenikaliaksandr](https://github.com/kalenikaliaksandr)
 -   [@Lubrsi](https://github.com/Lubrsi)
 -   [@nico](https://github.com/nico)
 -   [@spholz](https://github.com/spholz)
--   [@tcl3](https://github.com/tcl3)
 -   [@timschumi](https://github.com/timschumi)
 -   [@trflynn89](https://github.com/trflynn89)
 

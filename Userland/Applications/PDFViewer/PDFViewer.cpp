@@ -49,10 +49,12 @@ PDFViewer::PDFViewer()
     m_rendering_preferences.show_clipping_paths = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowClippingPaths"sv, false);
     m_rendering_preferences.show_images = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowImages"sv, true);
     m_rendering_preferences.show_hidden_text = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowHiddenText"sv, false);
-    m_rendering_preferences.show_diagnostics = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowDiagnostics"sv, false);
     m_rendering_preferences.clip_images = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ClipImages"sv, true);
     m_rendering_preferences.clip_paths = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ClipPaths"sv, true);
     m_rendering_preferences.clip_text = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ClipText"sv, true);
+    m_rendering_preferences.use_constant_alpha = Config::read_bool("PDFViewer"sv, "Rendering"sv, "UseConstantAlpha"sv, true);
+
+    m_show_rendering_diagnostics = Config::read_bool("PDFViewer"sv, "Rendering"sv, "ShowDiagnostics"sv, false);
 }
 
 PDF::PDFErrorOr<void> PDFViewer::set_document(RefPtr<PDF::Document> document)
@@ -174,7 +176,7 @@ void PDFViewer::set_current_page(u32 current_page)
 
 void PDFViewer::set_show_rendering_diagnostics(bool show_diagnostics)
 {
-    m_rendering_preferences.show_diagnostics = show_diagnostics;
+    m_show_rendering_diagnostics = show_diagnostics;
     Config::write_bool("PDFViewer"sv, "Rendering"sv, "ShowDiagnostics"sv, show_diagnostics);
     update();
 }
@@ -218,6 +220,13 @@ void PDFViewer::set_clip_text(bool clip_text)
 {
     m_rendering_preferences.clip_text = clip_text;
     Config::write_bool("PDFViewer"sv, "Rendering"sv, "ClipText"sv, clip_text);
+    update();
+}
+
+void PDFViewer::set_use_constant_alpha(bool use_constant_alpha)
+{
+    m_rendering_preferences.use_constant_alpha = use_constant_alpha;
+    Config::write_bool("PDFViewer"sv, "Rendering"sv, "UseConstantAlpha"sv, use_constant_alpha);
     update();
 }
 

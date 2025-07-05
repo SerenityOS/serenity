@@ -63,8 +63,8 @@ path:nth-of-type(3) {
   <path d="M240,210 L270,250 L300,210 h-60" stroke="red"
         stroke-linecap="butt" fill="none" stroke-linejoin="bevel" />
 
-  <!-- Closed triangle, facing up. -->
-  <path d="M280,170 h60 L310,130 L280,170 Z" stroke="red"
+  <!-- Closed triangle, facing up. (Closed twice, in fact.) -->
+  <path d="M280,170 h60 L310,130 L280,170 Z Z" stroke="red"
         stroke-linecap="butt" fill="none" />
 
   <!-- Very short and wide line. -->
@@ -126,5 +126,22 @@ path:nth-of-type(3) {
       <rect x="-225" y="-295" width="30" height="30" fill="none" stroke="green"
             style="stroke-linecap: square" stroke-dashoffset="1" stroke-dasharray="2 2" stroke-width="1" />
   </g>
+
+  <!-- Triangle with missing side -->
+  <path d="M230,285 L250,270 L260,295" stroke="blue" fill="green"
+        style="stroke-width: 4" />
+
+  <!-- A single path with multiple segments (closed, open, closed): -->
+  <path d="M10,270 L20,290 L30,270 z
+           M30,295 L40,275 L50,295
+           M50,270 L60,290 L70,270 z"
+        stroke="blue" fill="none" stroke-linejoin="round"
+        style="stroke-width: 8"  />
+
+  <!-- A path where a 'close' is followed by a no-op move. -->
+  <path d="M175,185 L195,155 L215,185 L175,185 z
+           M175,185 L199,170"
+        stroke="blue" fill="none" stroke-linejoin="round"
+        style="stroke-width: 4"  />
 
 </svg>
