@@ -248,7 +248,7 @@ void BackgroundSettingsWidget::apply_settings()
 {
     // We need to provide an empty path (not OptionalNone) to set_wallpaper to save a solid color wallpaper.
     auto wallpaper_path = m_monitor_widget->wallpaper().value_or(""sv);
-    if (!GUI::Desktop::the().set_wallpaper(m_monitor_widget->wallpaper_bitmap(), wallpaper_path)) {
+    if (!GUI::Desktop::the().set_wallpaper(wallpaper_path)) {
         if (!wallpaper_path.is_empty())
             GUI::MessageBox::show_error(window(), MUST(String::formatted("Unable to load file {} as wallpaper", wallpaper_path)));
         else
