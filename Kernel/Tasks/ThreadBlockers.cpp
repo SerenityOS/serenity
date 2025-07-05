@@ -359,8 +359,6 @@ bool Thread::SelectBlocker::setup_blocker()
     for (auto& fd_entry : m_fds) {
         fd_entry.unblocked_flags = FileBlocker::BlockFlags::None;
 
-        if (!should_block)
-            continue;
         if (!fd_entry.description) {
             should_block = false;
             continue;
@@ -401,8 +399,6 @@ bool Thread::SelectBlocker::unblock_if_conditions_are_met(bool from_add_blocker,
 
     {
         SpinlockLocker lock(m_lock);
-        if (m_did_unblock)
-            return false;
 
         VERIFY(fd_info.description);
         auto unblock_flags = fd_info.description->should_unblock(fd_info.block_flags);
