@@ -10,11 +10,11 @@ endobj
 endobj
 
 3 0 obj
-<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 400]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>/Shading<</Sh1 6 0 R>>>>>>
+<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 400]/Contents 4 0 R/Resources<</ExtGState<</GS1<</ca .6>>>>/Font<</F1 5 0 R>>/Shading<</Sh1 6 0 R>>>>>>
 endobj
 
 4 0 obj
-<</Length 2385>>
+<</Length 2803>>
 stream
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Hat at top left (circle intersected with rect)
@@ -42,6 +42,41 @@ W n
 W n
 
 /Sh1 sh
+Q
+
+% Nested transparent (round)rects on top of the hat:
+q
+/GS1 gs
+0 1 0 rg
+
+% `140 310 50 50 re` as roundrect:
+150 310 m
+180 310 l
+190 310 190 310 190 320 c
+190 350 l
+190 360 190 360 180 360 c
+150 360 l
+140 360 140 360 140 350 c
+140 320 l
+140 310 140 310 150 310 c
+h
+W
+f
+
+  q
+  1 0 0 rg
+  120 300 40 50 re
+  W f
+
+  0 0 1 rg
+  150 330 40 10 re
+  f
+  Q
+
+0 0 1 rg
+150 315 40 10 re
+f
+
 Q
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -219,13 +254,13 @@ xref
 0000000016 00000 n 
 0000000062 00000 n 
 0000000114 00000 n 
-0000000249 00000 n 
-0000002685 00000 n 
-0000002762 00000 n 
-0000002873 00000 n 
+0000000277 00000 n 
+0000003131 00000 n 
+0000003208 00000 n 
+0000003319 00000 n 
 
 trailer
 <</Size 8/Root 1 0 R>>
 startxref
-2945
+3391
 %%EOF
