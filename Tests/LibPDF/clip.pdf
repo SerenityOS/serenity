@@ -28,9 +28,10 @@ h
 W n
 
 % Rotating a rect in a local graphics state doesn't work,
-% since the transform is supposed to be applied at path paint
+% since the transform is be applied at path paint
 % time, not at path construction time.
-% FIXME: We (and Preview.app) get this wrong.
+% So instead of using `re` in a rotated frame, manually rotate
+% the rect and use `m` and `l`.
 % q
 % 0.9 0.1 -0.1 0.9 0 0 cm
 % 0 340 400 50 re
