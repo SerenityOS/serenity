@@ -50,6 +50,10 @@ ErrorOr<int> serenity_main(Main::Arguments)
     RequestServer::HttpProtocol::install();
     RequestServer::HttpsProtocol::install();
 
+    ScopeGuard destroy_thread_pool_on_exit = [] {
+        RequestServer::ConnectionFromClient::destroy_thread_pool();
+    };
+
     auto client = TRY(IPC::take_over_accepted_client_from_system_server<RequestServer::ConnectionFromClient>());
 
     return event_loop.exec();

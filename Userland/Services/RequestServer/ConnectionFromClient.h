@@ -32,6 +32,8 @@ public:
     void did_progress_request(Badge<Request>, Request&);
     void did_request_certificates(Badge<Request>, Request&);
 
+    static void destroy_thread_pool();
+
     template<typename Pool>
     struct Looper : public Threading::ThreadPoolLooper<Pool> {
         Looper(int pipe_fd)
