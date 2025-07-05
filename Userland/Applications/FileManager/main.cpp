@@ -586,6 +586,11 @@ ErrorOr<int> run_in_desktop_mode()
     // nullptr to Desktop::set_wallpaper.
     GUI::Desktop::the().load_current_wallpaper();
 
+    // Update wallpaper if desktop resolution changes.
+    GUI::Desktop::the().on_receive_screen_rects([&](auto&) {
+        GUI::Desktop::the().load_current_wallpaper();
+    });
+
     window->show();
     return GUI::Application::the()->exec();
 }
