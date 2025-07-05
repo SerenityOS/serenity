@@ -34,6 +34,9 @@ public:
     ByteString wallpaper_path() const;
     RefPtr<Gfx::Bitmap> wallpaper_bitmap() const;
     bool set_wallpaper(RefPtr<Gfx::Bitmap const> wallpaper_bitmap, Optional<StringView> path);
+    bool apply_wallpaper(RefPtr<Gfx::Bitmap const> wallpaper_bitmap, Optional<StringView> path);
+    bool set_wallpaper(StringView path) { return set_wallpaper({}, path); }
+    bool load_current_wallpaper();
 
     void set_system_effects(Vector<bool> effects) { m_system_effects = { effects }; }
     SystemEffects const& system_effects() const { return m_system_effects; }

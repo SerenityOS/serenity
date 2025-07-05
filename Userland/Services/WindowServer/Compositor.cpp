@@ -308,12 +308,11 @@ void Compositor::compose()
         check_restore_cursor_back(cursor_screen, cursor_rect);
 
     auto paint_wallpaper = [&](Screen& screen, Gfx::Painter& painter, Gfx::IntRect const& rect, Gfx::IntRect const& screen_rect) {
+        // FIXME: If the wallpaper is opaque and covers the whole rect, no need to fill with color!
+        painter.fill_rect(rect, background_color);
         if (m_wallpaper) {
             if (m_wallpaper_mode == WallpaperMode::Center) {
                 Gfx::IntPoint offset { (screen.width() - m_wallpaper->width()) / 2, (screen.height() - m_wallpaper->height()) / 2 };
-
-                // FIXME: If the wallpaper is opaque and covers the whole rect, no need to fill with color!
-                painter.fill_rect(rect, background_color);
                 painter.blit_offset(rect.location(), *m_wallpaper, rect.translated(-screen_rect.location()), offset);
             } else if (m_wallpaper_mode == WallpaperMode::Tile) {
                 painter.draw_tiled_bitmap(rect, *m_wallpaper);
@@ -323,8 +322,6 @@ void Compositor::compose()
             } else {
                 VERIFY_NOT_REACHED();
             }
-        } else {
-            painter.fill_rect(rect, background_color);
         }
     };
 
