@@ -279,7 +279,8 @@ void do_set_wallpaper(ByteString const& file_path, GUI::Window* window)
         GUI::MessageBox::show(window, ByteString::formatted("Failed to set {} as wallpaper.", file_path), "Failed to set wallpaper"sv, GUI::MessageBox::Type::Error);
     };
 
-    auto bitmap_or_error = Gfx::Bitmap::load_from_file(file_path);
+    constexpr auto scale_factor = 1;
+    auto bitmap_or_error = Gfx::Bitmap::load_from_file(file_path, scale_factor, GUI::Desktop::the().rect().size());
     if (bitmap_or_error.is_error()) {
         show_error();
         return;
@@ -572,33 +573,18 @@ ErrorOr<int> run_in_desktop_mode()
             desktop_view_context_menu->popup(event.screen_position());
         }
     };
-
     struct BackgroundWallpaperListener : Config::Listener {
         virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override
         {
-            if (domain == "WindowManager" && group == "Background" && key == "Wallpaper") {
-                if (value.is_empty()) {
-                    GUI::Desktop::the().set_wallpaper(nullptr, {});
-                    return;
-                }
-                auto wallpaper_bitmap_or_error = Gfx::Bitmap::load_from_file(value);
-                if (wallpaper_bitmap_or_error.is_error())
-                    dbgln("Failed to load wallpaper bitmap from path: {}", wallpaper_bitmap_or_error.error());
-                else
-                    GUI::Desktop::the().set_wallpaper(wallpaper_bitmap_or_error.release_value(), {});
-            }
+            if (domain == "WindowManager" && group == "Background" && key == "Wallpaper")
+                GUI::Desktop::the().apply_wallpaper(nullptr, value);
         }
     } wallpaper_listener;
 
-    auto selected_wallpaper = Config::read_string("WindowManager"sv, "Background"sv, "Wallpaper"sv, ""sv);
-    RefPtr<Gfx::Bitmap> wallpaper_bitmap {};
-    if (!selected_wallpaper.is_empty()) {
-        wallpaper_bitmap = TRY(Gfx::Bitmap::load_from_file(selected_wallpaper));
-    }
     // This sets the wallpaper at startup, even if there is no wallpaper, the
     // desktop should still show the background color. It's fine to pass a
     // nullptr to Desktop::set_wallpaper.
-    GUI::Desktop::the().set_wallpaper(wallpaper_bitmap, {});
+    GUI::Desktop::the().load_current_wallpaper();
 
     window->show();
     return GUI::Application::the()->exec();

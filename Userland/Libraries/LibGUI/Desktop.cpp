@@ -59,13 +59,28 @@ RefPtr<Gfx::Bitmap> Desktop::wallpaper_bitmap() const
     return ConnectionToWindowServer::the().get_wallpaper().bitmap();
 }
 
-bool Desktop::set_wallpaper(RefPtr<Gfx::Bitmap const> wallpaper_bitmap, Optional<StringView> path)
+bool Desktop::apply_wallpaper(RefPtr<Gfx::Bitmap const> wallpaper_bitmap, Optional<StringView> path)
 {
     if (m_is_setting_desktop_wallpaper)
         return false;
 
+    if (!wallpaper_bitmap && path.has_value() && !path->is_empty()) {
+        constexpr auto scale_factor = 1;
+        auto maybe_wallpaper_bitmap = Gfx::Bitmap::load_from_file(*path, scale_factor, rect().size());
+        if (maybe_wallpaper_bitmap.is_error()) {
+            dbgln("Failed to load wallpaper bitmap from path: {}", maybe_wallpaper_bitmap.error());
+            return false;
+        }
+        wallpaper_bitmap = maybe_wallpaper_bitmap.release_value();
+    }
+
     TemporaryChange is_setting_desktop_wallpaper_change(m_is_setting_desktop_wallpaper, true);
-    auto result = ConnectionToWindowServer::the().set_wallpaper(wallpaper_bitmap ? wallpaper_bitmap->to_shareable_bitmap() : Gfx::ShareableBitmap {});
+    return ConnectionToWindowServer::the().set_wallpaper(wallpaper_bitmap ? wallpaper_bitmap->to_shareable_bitmap() : Gfx::ShareableBitmap {});
+}
+
+bool Desktop::set_wallpaper(RefPtr<Gfx::Bitmap const> wallpaper_bitmap, Optional<StringView> path)
+{
+    bool result = apply_wallpaper(wallpaper_bitmap, path);
 
     if (result && path.has_value()) {
         dbgln("Saving wallpaper path '{}' to ConfigServer", *path);
@@ -73,6 +88,12 @@ bool Desktop::set_wallpaper(RefPtr<Gfx::Bitmap const> wallpaper_bitmap, Optional
     }
 
     return result;
+}
+
+bool Desktop::load_current_wallpaper()
+{
+    auto current_wallpaper = Config::read_string("WindowManager"sv, "Background"sv, "Wallpaper"sv, ""sv);
+    return apply_wallpaper({}, current_wallpaper);
 }
 
 }

@@ -30,8 +30,9 @@ ErrorOr<NonnullRefPtr<MonitorWidget>> MonitorWidget::try_create()
 void MonitorWidget::load_wallpaper(String path)
 {
     (void)Threading::BackgroundAction<NonnullRefPtr<Gfx::Bitmap>>::construct(
-        [path](auto&) -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
-            return Gfx::Bitmap::load_from_file(path);
+        [path, this](auto&) -> ErrorOr<NonnullRefPtr<Gfx::Bitmap>> {
+            constexpr auto scale_factor = 1;
+            return Gfx::Bitmap::load_from_file(path, scale_factor, m_monitor_rect.size());
         },
 
         [this, path](NonnullRefPtr<Gfx::Bitmap> bitmap) -> ErrorOr<void> {

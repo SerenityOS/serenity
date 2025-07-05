@@ -11,6 +11,7 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ConnectionToWindowServer.h>
+#include <LibGUI/Desktop.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
