@@ -34,7 +34,8 @@ public:
     }
     ~ScopedState()
     {
-        m_renderer.m_graphics_state_stack.shrink(m_starting_stack_depth);
+        while (m_renderer.m_graphics_state_stack.size() > m_starting_stack_depth)
+            MUST(m_renderer.handle_restore_state({}));
     }
 
 private:
