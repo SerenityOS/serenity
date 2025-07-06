@@ -306,6 +306,8 @@ public:
         invalidate_split_lines();
     }
 
+    Optional<FloatRect> as_rect() const;
+
 private:
     void approximate_elliptical_arc_with_cubic_beziers(FloatPoint center, FloatSize radii, float x_axis_rotation, float theta, float theta_delta);
 

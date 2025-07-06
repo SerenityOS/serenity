@@ -371,6 +371,26 @@ ByteString Path::to_byte_string() const
     return builder.to_byte_string();
 }
 
+Optional<FloatRect> Path::as_rect() const
+{
+    if (m_commands.size() != 6 || m_points.size() != 5)
+        return {};
+    if (m_commands[0] != PathSegment::MoveTo
+        || m_commands[1] != PathSegment::LineTo
+        || m_commands[2] != PathSegment::LineTo
+        || m_commands[3] != PathSegment::LineTo
+        || m_commands[4] != PathSegment::LineTo
+        || m_commands[5] != PathSegment::ClosePath)
+        return {};
+    VERIFY(m_points[0] == m_points[4]);
+    if (m_points[0].y() != m_points[1].y()
+        || m_points[1].x() != m_points[2].x()
+        || m_points[2].y() != m_points[3].y()
+        || m_points[3].x() != m_points[0].x())
+        return {};
+    return FloatRect::from_two_points(m_points[0], m_points[2]);
+}
+
 void Path::segmentize_path()
 {
     Vector<FloatLine> segments;
