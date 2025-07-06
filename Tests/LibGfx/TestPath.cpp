@@ -155,3 +155,31 @@ TEST_CASE(path_to_string)
         EXPECT_EQ(path.to_byte_string(), "M 10,10 L 20,20 Q 30,30 40,40 C 50,50 60,60 10,10");
     }
 }
+
+TEST_CASE(as_rect)
+{
+    {
+        Gfx::FloatRect rect { 10, 20, 30, 40 };
+        Gfx::Path path;
+        path.rect(rect);
+        EXPECT_EQ(path.as_rect(), rect);
+    }
+
+    {
+        Gfx::Path path;
+        path.move_to({ 10, 20 });
+        path.line_to({ 40, 20 });
+        path.line_to({ 40, 60 });
+        path.line_to({ 10, 60 });
+        path.close();
+        EXPECT_EQ(path.as_rect(), Gfx::FloatRect(10, 20, 30, 40));
+    }
+
+    {
+        Gfx::Path path;
+        path.move_to({ 10, 10 });
+        path.line_to({ 20, 10 });
+        path.line_to({ 20, 20 });
+        EXPECT(!path.as_rect().has_value());
+    }
+}
