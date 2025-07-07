@@ -104,10 +104,16 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
 void Renderer::show_clipping_paths()
 {
     Gfx::Path::StrokeStyle stroke_style;
-    stroke_style.thickness = 1.0f;
-    for (auto const& path : m_clip_paths_to_show_for_debugging)
-        m_anti_aliasing_painter.stroke_path(path, Color::Black, stroke_style);
-    m_clip_paths_to_show_for_debugging.clear();
+    stroke_style.thickness = 6.0f;
+
+    auto dash_style = stroke_style;
+    dash_style.cap_style = Gfx::Path::CapStyle::Butt;
+    dash_style.dash_pattern = { 12, 12 };
+
+    for (auto const& path : m_clip_paths_to_show_for_debugging) {
+        m_anti_aliasing_painter.stroke_path(path, Gfx::Color { 0xff, 0x6b, 0x6b }, stroke_style);
+        m_anti_aliasing_painter.stroke_path(path, Gfx::Color { 0x4e, 0xcd, 0xc4 }, dash_style);
+    }
 }
 
 PDFErrorsOr<void> Renderer::render()
