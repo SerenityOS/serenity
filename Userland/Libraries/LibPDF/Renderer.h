@@ -286,6 +286,10 @@ private:
     Gfx::AffineTransform mutable m_text_rendering_matrix;
 
     HashMap<FontCacheKey, NonnullRefPtr<PDFFont>> m_font_cache;
+
+    // Only used for m_rendering_preferences.show_clipping_paths.
+    void show_clipping_paths();
+    Vector<Gfx::Path> m_clip_paths_to_show_for_debugging;
 };
 
 }

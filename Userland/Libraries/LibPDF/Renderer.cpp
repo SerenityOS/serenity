@@ -101,6 +101,15 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
     m_bitmap->fill(background_color);
 }
 
+void Renderer::show_clipping_paths()
+{
+    Gfx::Path::StrokeStyle stroke_style;
+    stroke_style.thickness = 1.0f;
+    for (auto const& path : m_clip_paths_to_show_for_debugging)
+        m_anti_aliasing_painter.stroke_path(path, Color::Black, stroke_style);
+    m_clip_paths_to_show_for_debugging.clear();
+}
+
 PDFErrorsOr<void> Renderer::render()
 {
     auto operators = TRY(Parser::parse_operators(m_document, TRY(m_page.page_contents(*m_document))));
@@ -112,6 +121,9 @@ PDFErrorsOr<void> Renderer::render()
             errors.add_error(maybe_error.release_error());
         }
     }
+
+    show_clipping_paths();
+
     if (!errors.errors().is_empty())
         return errors;
     return {};
@@ -285,9 +297,6 @@ void Renderer::activate_clip()
 {
     auto bounding_box = state().clipping_paths.current.bounding_box().to_type<int>();
     m_painter.clear_clip_rect();
-    if (m_rendering_preferences.show_clipping_paths) {
-        m_painter.draw_rect(bounding_box, Color::Black);
-    }
     m_painter.add_clip_rect(bounding_box);
 }
 
@@ -310,6 +319,9 @@ void Renderer::begin_path_paint()
 void Renderer::end_path_paint()
 {
     if (m_add_path_as_clip != AddPathAsClip::No) {
+        if (m_rendering_preferences.show_clipping_paths)
+            m_clip_paths_to_show_for_debugging.append(m_current_path);
+
         // FIXME: Support arbitrary path clipping in Path and use that here
         auto next_clipping_bbox = m_current_path.bounding_box();
         next_clipping_bbox.intersect(state().clipping_paths.current.bounding_box());
