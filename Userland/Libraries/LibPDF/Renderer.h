@@ -233,6 +233,9 @@ private:
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }
     ALWAYS_INLINE TextState& text_state() { return state().text_state; }
 
+    Gfx::Painter& painter();
+    Gfx::AntiAliasingPainter& anti_aliasing_painter();
+
     template<typename T>
     ALWAYS_INLINE Gfx::Point<T> map(T x, T y) const;
 
