@@ -336,11 +336,15 @@ void Renderer::stroke_current_path()
 
 void Renderer::fill_current_path(Gfx::WindingRule winding_rule)
 {
+    auto path_end = m_current_path.end();
+    m_current_path.close_all_subpaths();
     if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
         anti_aliasing_painter().fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), state().paint_alpha_constant, winding_rule);
     } else {
         anti_aliasing_painter().fill_path(m_current_path, state().paint_style.get<Color>(), winding_rule);
     }
+    // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
+    m_current_path.trim(path_end);
 }
 
 void Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding_rule)
@@ -351,11 +355,7 @@ void Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding_rule)
     // (The spec says this in the language of knockout groups.)
     // Having said that, while Acrobat Reader and PDFium get this right, PDF.js and Preview.app do not.
     // FIXME: Once we have support for transparency groups, do this per spec.
-    auto path_end = m_current_path.end();
-    m_current_path.close_all_subpaths();
     fill_current_path(winding_rule);
-    // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
-    m_current_path.trim(path_end);
     stroke_current_path();
 }
 
@@ -377,7 +377,6 @@ RENDERER_HANDLER(path_close_and_stroke)
 RENDERER_HANDLER(path_fill_nonzero)
 {
     begin_path_paint();
-    m_current_path.close_all_subpaths();
     fill_current_path(Gfx::WindingRule::Nonzero);
     end_path_paint();
     return {};
@@ -391,7 +390,6 @@ RENDERER_HANDLER(path_fill_nonzero_deprecated)
 RENDERER_HANDLER(path_fill_evenodd)
 {
     begin_path_paint();
-    m_current_path.close_all_subpaths();
     fill_current_path(Gfx::WindingRule::EvenOdd);
     end_path_paint();
     return {};
