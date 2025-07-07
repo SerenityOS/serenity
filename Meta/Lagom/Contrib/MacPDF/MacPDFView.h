@@ -27,9 +27,7 @@
 - (IBAction)goToPreviousPage:(id)sender;
 
 - (IBAction)toggleShowClippingPaths:(id)sender;
-- (IBAction)toggleClipImages:(id)sender;
-- (IBAction)toggleClipPaths:(id)sender;
-- (IBAction)toggleClipText:(id)sender;
+- (IBAction)toggleApplyClip:(id)sender;
 - (IBAction)toggleUseConstantAlpha:(id)sender;
 - (IBAction)toggleShowImages:(id)sender;
 - (IBAction)toggleShowHiddenText:(id)sender;

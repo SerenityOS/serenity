@@ -146,19 +146,9 @@
     [_pdfView toggleShowClippingPaths:sender];
 }
 
-- (IBAction)toggleClipImages:(id)sender
+- (IBAction)toggleApplyClip:(id)sender
 {
-    [_pdfView toggleClipImages:sender];
-}
-
-- (IBAction)toggleClipPaths:(id)sender
-{
-    [_pdfView toggleClipPaths:sender];
-}
-
-- (IBAction)toggleClipText:(id)sender
-{
-    [_pdfView toggleClipText:sender];
+    [_pdfView toggleApplyClip:sender];
 }
 
 - (IBAction)toggleUseConstantAlpha:(id)sender

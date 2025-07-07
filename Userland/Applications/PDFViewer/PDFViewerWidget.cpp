@@ -265,7 +265,7 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
     });
     toggle_show_diagnostics->set_checked(m_viewer->show_rendering_diagnostics());
     debug_menu->add_action(toggle_show_diagnostics);
-    auto toggle_show_clipping_paths = GUI::Action::create_checkable("Show &Clipping Paths", [&](auto& action) {
+    auto toggle_show_clipping_paths = GUI::Action::create_checkable("Show Clipping &Paths", [&](auto& action) {
         m_viewer->set_show_clipping_paths(action.is_checked());
     });
     toggle_show_clipping_paths->set_checked(m_viewer->show_clipping_paths());
@@ -280,22 +280,12 @@ ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
     });
     toggle_show_hidden_text->set_checked(m_viewer->show_hidden_text());
     debug_menu->add_action(toggle_show_hidden_text);
-    auto toggle_clip_images = GUI::Action::create_checkable("Clip I&mages", [&](auto& action) {
-        m_viewer->set_clip_images(action.is_checked());
+    auto toggle_apply_clip = GUI::Action::create_checkable("Apply &Clip", [&](auto& action) {
+        m_viewer->set_apply_clip(action.is_checked());
     });
-    toggle_clip_images->set_checked(m_viewer->clip_images());
-    debug_menu->add_action(toggle_clip_images);
-    auto toggle_clip_paths = GUI::Action::create_checkable("Clip &Paths", [&](auto& action) {
-        m_viewer->set_clip_paths(action.is_checked());
-    });
-    toggle_clip_paths->set_checked(m_viewer->clip_paths());
-    debug_menu->add_action(toggle_clip_paths);
-    auto toggle_clip_text = GUI::Action::create_checkable("Clip &Text", [&](auto& action) {
-        m_viewer->set_clip_text(action.is_checked());
-    });
-    toggle_clip_text->set_checked(m_viewer->clip_text());
-    debug_menu->add_action(toggle_clip_text);
-    auto toggle_use_constant_alpha = GUI::Action::create_checkable("Use &Constant Alpha", [&](auto& action) {
+    toggle_apply_clip->set_checked(m_viewer->apply_clip());
+    debug_menu->add_action(toggle_apply_clip);
+    auto toggle_use_constant_alpha = GUI::Action::create_checkable("Use Constant &Alpha", [&](auto& action) {
         m_viewer->set_use_constant_alpha(action.is_checked());
     });
     toggle_use_constant_alpha->set_checked(m_viewer->use_constant_alpha());
