@@ -302,7 +302,7 @@ void Renderer::deactivate_clip()
 
 void Renderer::begin_path_paint()
 {
-    if (m_rendering_preferences.clip_paths)
+    if (m_rendering_preferences.apply_clip)
         activate_clip();
     m_current_path.transform(state().ctm);
 }
@@ -321,7 +321,7 @@ void Renderer::end_path_paint()
     // "Once a path has been painted, it is no longer defined; there is then no current path
     //  until a new one is begun with the m or re operator."
     m_current_path.clear();
-    if (m_rendering_preferences.clip_paths)
+    if (m_rendering_preferences.apply_clip)
         deactivate_clip();
 }
 
@@ -1238,7 +1238,7 @@ PDFErrorOr<void> Renderer::show_text(ByteString const& string)
         return Error::rendering_unsupported_error("Can't draw text because an invalid font was in use");
 
     OwnPtr<ClipRAII> clip_raii;
-    if (m_rendering_preferences.clip_text)
+    if (m_rendering_preferences.apply_clip)
         clip_raii = make<ClipRAII>(*this);
 
     auto start_position = Gfx::FloatPoint { 0.0f, 0.0f };
@@ -1625,7 +1625,7 @@ PDFErrorOr<void> Renderer::paint_image_xobject(NonnullRefPtr<StreamObject> image
     auto image_dict = image->dict();
 
     OwnPtr<ClipRAII> clip_raii;
-    if (m_rendering_preferences.clip_images)
+    if (m_rendering_preferences.apply_clip)
         clip_raii = make<ClipRAII>(*this);
 
     if (!m_rendering_preferences.show_images) {

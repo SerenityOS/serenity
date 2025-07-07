@@ -670,22 +670,10 @@
                                     <action selector="toggleShowClippingPaths:" target="-1" id="ZXz-gM-52n"/>
                                 </connections>
                             </menuItem>
-                            <menuItem title="Clip Images" state="on" id="os0-En-UkL">
+                            <menuItem title="Apply Clip" state="on" id="os0-En-UkL">
                                 <modifierMask key="keyEquivalentModifierMask"/>
                                 <connections>
-                                    <action selector="toggleClipImages:" target="-1" id="bHz-O3-V8K"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Clip Paths" state="on" id="KB8-Ld-jv8">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="toggleClipPaths:" target="-1" id="pZu-tJ-RFh"/>
-                                </connections>
-                            </menuItem>
-                            <menuItem title="Clip Text" state="on" id="u58-eB-op8">
-                                <modifierMask key="keyEquivalentModifierMask"/>
-                                <connections>
-                                    <action selector="toggleClipText:" target="-1" id="qxg-tH-KXd"/>
+                                    <action selector="toggleApplyClip:" target="-1" id="bHz-O3-V8K"/>
                                 </connections>
                             </menuItem>
                             <menuItem title="Use Constant Alpha" state="on" id="DXr-ru-y6D">

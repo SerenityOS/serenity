@@ -169,16 +169,8 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
         [item setState:_preferences.show_clipping_paths ? NSControlStateValueOn : NSControlStateValueOff];
         return _doc ? YES : NO;
     }
-    if ([item action] == @selector(toggleClipImages:)) {
-        [item setState:_preferences.clip_images ? NSControlStateValueOn : NSControlStateValueOff];
-        return _doc ? YES : NO;
-    }
-    if ([item action] == @selector(toggleClipPaths:)) {
-        [item setState:_preferences.clip_paths ? NSControlStateValueOn : NSControlStateValueOff];
-        return _doc ? YES : NO;
-    }
-    if ([item action] == @selector(toggleClipText:)) {
-        [item setState:_preferences.clip_text ? NSControlStateValueOn : NSControlStateValueOff];
+    if ([item action] == @selector(toggleApplyClip:)) {
+        [item setState:_preferences.apply_clip ? NSControlStateValueOn : NSControlStateValueOff];
         return _doc ? YES : NO;
     }
     if ([item action] == @selector(toggleUseConstantAlpha:)) {
@@ -204,26 +196,10 @@ static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
     }
 }
 
-- (IBAction)toggleClipImages:(id)sender
+- (IBAction)toggleApplyClip:(id)sender
 {
     if (_doc) {
-        _preferences.clip_images = !_preferences.clip_images;
-        [self invalidateCachedBitmap];
-    }
-}
-
-- (IBAction)toggleClipPaths:(id)sender
-{
-    if (_doc) {
-        _preferences.clip_paths = !_preferences.clip_paths;
-        [self invalidateCachedBitmap];
-    }
-}
-
-- (IBAction)toggleClipText:(id)sender
-{
-    if (_doc) {
-        _preferences.clip_text = !_preferences.clip_text;
+        _preferences.apply_clip = !_preferences.apply_clip;
         [self invalidateCachedBitmap];
     }
 }

@@ -142,9 +142,7 @@ struct RenderingPreferences {
     bool show_images { true };
     bool show_hidden_text { false };
 
-    bool clip_images { true };
-    bool clip_paths { true };
-    bool clip_text { true };
+    bool apply_clip { true };
 
     bool use_constant_alpha { true };
 
