@@ -328,18 +328,18 @@ void Renderer::end_path_paint()
 void Renderer::stroke_current_path()
 {
     if (state().stroke_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style(), state().stroke_alpha_constant);
+        anti_aliasing_painter().stroke_path(m_current_path, state().stroke_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), stroke_style(), state().stroke_alpha_constant);
     } else {
-        m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_style.get<Color>(), stroke_style());
+        anti_aliasing_painter().stroke_path(m_current_path, state().stroke_style.get<Color>(), stroke_style());
     }
 }
 
 void Renderer::fill_current_path(Gfx::WindingRule winding_rule)
 {
     if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), state().paint_alpha_constant, winding_rule);
+        anti_aliasing_painter().fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), state().paint_alpha_constant, winding_rule);
     } else {
-        m_anti_aliasing_painter.fill_path(m_current_path, state().paint_style.get<Color>(), winding_rule);
+        anti_aliasing_painter().fill_path(m_current_path, state().paint_style.get<Color>(), winding_rule);
     }
 }
 
@@ -788,7 +788,7 @@ RENDERER_HANDLER(shade)
     auto shading = TRY(Shading::create(m_document, shading_dict_or_stream, *this));
 
     ClipRAII clip_raii { *this };
-    return shading->draw(m_painter, state().ctm);
+    return shading->draw(painter(), state().ctm);
 }
 
 RENDERER_HANDLER(inline_image_begin)
@@ -1005,6 +1005,16 @@ RENDERER_HANDLER(compatibility_end)
 {
     // See comment in compatibility_begin.
     return {};
+}
+
+Gfx::Painter& Renderer::painter()
+{
+    return m_painter;
+}
+
+Gfx::AntiAliasingPainter& Renderer::anti_aliasing_painter()
+{
+    return m_anti_aliasing_painter;
 }
 
 template<typename T>
@@ -1242,7 +1252,7 @@ PDFErrorOr<void> Renderer::show_text(ByteString const& string)
         clip_raii = make<ClipRAII>(*this);
 
     auto start_position = Gfx::FloatPoint { 0.0f, 0.0f };
-    auto end_position = TRY(text_state().font->draw_string(m_painter, start_position, string, *this));
+    auto end_position = TRY(text_state().font->draw_string(painter(), start_position, string, *this));
 
     // Update text matrix.
     auto delta = end_position - start_position;
@@ -1589,7 +1599,7 @@ void Renderer::paint_empty_image(Gfx::IntSize size)
 {
     auto image_space_transformation = calculate_image_space_transformation(size);
     auto image_border = image_space_transformation.map(Gfx::IntRect { {}, size });
-    m_painter.stroke_path(rect_path(image_border.to_type<float>()), Color::Black, 1);
+    painter().stroke_path(rect_path(image_border.to_type<float>()), Color::Black, 1);
 }
 
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> apply_alpha_channel(NonnullRefPtr<Gfx::Bitmap> image_bitmap, NonnullRefPtr<Gfx::Bitmap const> mask_bitmap, bool invert_alpha = false)
@@ -1672,7 +1682,7 @@ PDFErrorOr<void> Renderer::paint_image_xobject(NonnullRefPtr<StreamObject> image
 
     auto image_space = calculate_image_space_transformation(image_bitmap.bitmap->size());
     auto image_rect = Gfx::FloatRect { image_bitmap.bitmap->rect() };
-    m_painter.draw_scaled_bitmap_with_transform(image_bitmap.bitmap->rect(), image_bitmap.bitmap, image_rect, image_space, opacity);
+    painter().draw_scaled_bitmap_with_transform(image_bitmap.bitmap->rect(), image_bitmap.bitmap, image_rect, image_space, opacity);
     return {};
 }
 
