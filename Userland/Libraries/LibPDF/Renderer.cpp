@@ -316,7 +316,7 @@ void Renderer::add_clip_path(Gfx::WindingRule)
         return;
 
     // FIXME: Support arbitrary path clipping in Path and use that here
-    auto next_clipping_bbox = m_current_path.bounding_box().to_type<int>();
+    auto next_clipping_bbox = Gfx::enclosing_int_rect(m_current_path.bounding_box());
     next_clipping_bbox.intersect(state().clipping_state.clip_bounding_box);
     state().clipping_state.clip_bounding_box = next_clipping_bbox;
 
