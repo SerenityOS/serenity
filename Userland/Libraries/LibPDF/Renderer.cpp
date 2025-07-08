@@ -158,12 +158,20 @@ PDFErrorOr<void> Renderer::handle_operator(Operator const& op, Optional<NonnullR
 RENDERER_HANDLER(save_state)
 {
     m_graphics_state_stack.append(state());
+    state().clipping_paths.has_own_clip = false;
     return {};
 }
 
 RENDERER_HANDLER(restore_state)
 {
+    bool popped_state_had_own_clip = state().clipping_paths.has_own_clip;
+    if (popped_state_had_own_clip)
+        finalize_clip_before_graphics_state_restore();
+
     m_graphics_state_stack.take_last();
+
+    if (popped_state_had_own_clip)
+        restore_previous_clip_after_graphics_state_restore();
     return {};
 }
 
@@ -299,27 +307,33 @@ RENDERER_HANDLER(path_append_rect)
     return {};
 }
 
-void Renderer::activate_clip()
-{
-    auto bounding_box = state().clipping_paths.current.bounding_box().to_type<int>();
-    m_painter.clear_clip_rect();
-    m_painter.add_clip_rect(bounding_box);
-}
-
-void Renderer::deactivate_clip()
-{
-    m_painter.clear_clip_rect();
-}
-
 void Renderer::add_clip_path(Gfx::WindingRule)
 {
     if (m_rendering_preferences.show_clipping_paths)
         m_clip_paths_to_show_for_debugging.append(m_current_path);
 
+    if (!m_rendering_preferences.apply_clip)
+        return;
+
     // FIXME: Support arbitrary path clipping in Path and use that here
     auto next_clipping_bbox = m_current_path.bounding_box();
     next_clipping_bbox.intersect(state().clipping_paths.current.bounding_box());
     state().clipping_paths.current = rect_path(next_clipping_bbox);
+
+    state().clipping_paths.has_own_clip = true;
+    auto bounding_box = state().clipping_paths.current.bounding_box().to_type<int>();
+    m_painter.add_clip_rect(bounding_box);
+}
+
+void Renderer::finalize_clip_before_graphics_state_restore()
+{
+    m_painter.clear_clip_rect();
+}
+
+void Renderer::restore_previous_clip_after_graphics_state_restore()
+{
+    auto bounding_box = state().clipping_paths.current.bounding_box().to_type<int>();
+    m_painter.add_clip_rect(bounding_box);
 }
 
 ///
@@ -328,8 +342,6 @@ void Renderer::add_clip_path(Gfx::WindingRule)
 
 void Renderer::begin_path_paint()
 {
-    if (m_rendering_preferences.apply_clip)
-        activate_clip();
     m_current_path.transform(state().ctm);
 }
 
@@ -343,8 +355,6 @@ void Renderer::end_path_paint()
     // "Once a path has been painted, it is no longer defined; there is then no current path
     //  until a new one is begun with the m or re operator."
     m_current_path.clear();
-    if (m_rendering_preferences.apply_clip)
-        deactivate_clip();
 }
 
 void Renderer::stroke_current_path()
@@ -807,7 +817,6 @@ RENDERER_HANDLER(shade)
     auto shading_dict_or_stream = TRY(shading_resource_dict->get_object(m_document, shading_name));
     auto shading = TRY(Shading::create(m_document, shading_dict_or_stream, *this));
 
-    ClipRAII clip_raii { *this };
     return shading->draw(painter(), state().ctm);
 }
 
@@ -1267,10 +1276,6 @@ PDFErrorOr<void> Renderer::show_text(ByteString const& string)
     if (!text_state().font)
         return Error::rendering_unsupported_error("Can't draw text because an invalid font was in use");
 
-    OwnPtr<ClipRAII> clip_raii;
-    if (m_rendering_preferences.apply_clip)
-        clip_raii = make<ClipRAII>(*this);
-
     auto start_position = Gfx::FloatPoint { 0.0f, 0.0f };
     auto end_position = TRY(text_state().font->draw_string(painter(), start_position, string, *this));
 
@@ -1653,10 +1658,6 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> apply_alpha_channel(NonnullRefPtr<Gfx
 PDFErrorOr<void> Renderer::paint_image_xobject(NonnullRefPtr<StreamObject> image)
 {
     auto image_dict = image->dict();
-
-    OwnPtr<ClipRAII> clip_raii;
-    if (m_rendering_preferences.apply_clip)
-        clip_raii = make<ClipRAII>(*this);
 
     if (!m_rendering_preferences.show_images) {
         auto width = TRY(m_document->resolve_to<int>(image_dict->get_value(CommonNames::Width)));

@@ -66,6 +66,7 @@ struct TextState {
 
 struct ClippingPaths {
     Gfx::Path current;
+    bool has_own_clip { false };
 };
 
 struct TransparencyGroupAttributes {
@@ -187,22 +188,9 @@ private:
     PDFErrorOr<void> handle_text_next_line_show_string(ReadonlySpan<Value> args, Optional<NonnullRefPtr<DictObject>> = {});
     PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(ReadonlySpan<Value> args, Optional<NonnullRefPtr<DictObject>> = {});
 
-    class ClipRAII {
-    public:
-        ClipRAII(Renderer& renderer)
-            : m_renderer(renderer)
-        {
-            m_renderer.activate_clip();
-        }
-        ~ClipRAII() { m_renderer.deactivate_clip(); }
-
-    private:
-        Renderer& m_renderer;
-    };
-    void activate_clip();
-    void deactivate_clip();
-
     void add_clip_path(Gfx::WindingRule);
+    void finalize_clip_before_graphics_state_restore();
+    void restore_previous_clip_after_graphics_state_restore();
 
     void begin_path_paint();
     void end_path_paint();
