@@ -95,7 +95,7 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
     userspace_matrix.multiply(vertical_reflection_matrix);
     userspace_matrix.translate(0.0f, -height);
 
-    auto initial_clipping_path = rect_path(userspace_matrix.map(Gfx::FloatRect(0, 0, width, height)));
+    auto initial_clipping_path = bitmap->rect();
     m_graphics_state_stack.append(GraphicsState { userspace_matrix, { initial_clipping_path } });
 
     m_bitmap->fill(background_color);
@@ -316,13 +316,12 @@ void Renderer::add_clip_path(Gfx::WindingRule)
         return;
 
     // FIXME: Support arbitrary path clipping in Path and use that here
-    auto next_clipping_bbox = m_current_path.bounding_box();
-    next_clipping_bbox.intersect(state().clipping_state.current.bounding_box());
-    state().clipping_state.current = rect_path(next_clipping_bbox);
+    auto next_clipping_bbox = m_current_path.bounding_box().to_type<int>();
+    next_clipping_bbox.intersect(state().clipping_state.clip_bounding_box);
+    state().clipping_state.clip_bounding_box = next_clipping_bbox;
 
     state().clipping_state.has_own_clip = true;
-    auto bounding_box = state().clipping_state.current.bounding_box().to_type<int>();
-    m_painter.add_clip_rect(bounding_box);
+    m_painter.add_clip_rect(state().clipping_state.clip_bounding_box);
 }
 
 void Renderer::finalize_clip_before_graphics_state_restore()
@@ -332,8 +331,7 @@ void Renderer::finalize_clip_before_graphics_state_restore()
 
 void Renderer::restore_previous_clip_after_graphics_state_restore()
 {
-    auto bounding_box = state().clipping_state.current.bounding_box().to_type<int>();
-    m_painter.add_clip_rect(bounding_box);
+    m_painter.add_clip_rect(state().clipping_state.clip_bounding_box);
 }
 
 ///
