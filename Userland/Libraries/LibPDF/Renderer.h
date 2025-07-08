@@ -188,12 +188,12 @@ private:
     PDFErrorOr<void> handle_text_next_line_show_string(ReadonlySpan<Value> args, Optional<NonnullRefPtr<DictObject>> = {});
     PDFErrorOr<void> handle_text_next_line_show_string_set_spacing(ReadonlySpan<Value> args, Optional<NonnullRefPtr<DictObject>> = {});
 
-    void add_clip_path(Gfx::WindingRule);
+    PDFErrorOr<void> add_clip_path(Gfx::WindingRule);
     void finalize_clip_before_graphics_state_restore();
-    void restore_previous_clip_after_graphics_state_restore();
+    PDFErrorOr<void> restore_previous_clip_after_graphics_state_restore();
 
     void begin_path_paint();
-    void end_path_paint();
+    PDFErrorOr<void> end_path_paint();
     void stroke_current_path();
     void fill_current_path(Gfx::WindingRule);
     void fill_and_stroke_current_path(Gfx::WindingRule);
