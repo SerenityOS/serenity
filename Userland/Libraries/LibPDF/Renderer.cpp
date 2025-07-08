@@ -171,7 +171,7 @@ RENDERER_HANDLER(restore_state)
     m_graphics_state_stack.take_last();
 
     if (popped_state_had_own_clip)
-        restore_previous_clip_after_graphics_state_restore();
+        TRY(restore_previous_clip_after_graphics_state_restore());
     return {};
 }
 
@@ -307,13 +307,13 @@ RENDERER_HANDLER(path_append_rect)
     return {};
 }
 
-void Renderer::add_clip_path(Gfx::WindingRule)
+PDFErrorOr<void> Renderer::add_clip_path(Gfx::WindingRule)
 {
     if (m_rendering_preferences.show_clipping_paths)
         m_clip_paths_to_show_for_debugging.append(m_current_path);
 
     if (!m_rendering_preferences.apply_clip)
-        return;
+        return {};
 
     // FIXME: Support arbitrary path clipping in Path and use that here
     auto next_clipping_bbox = Gfx::enclosing_int_rect(m_current_path.bounding_box());
@@ -322,6 +322,7 @@ void Renderer::add_clip_path(Gfx::WindingRule)
 
     state().clipping_state.has_own_clip = true;
     m_painter.add_clip_rect(state().clipping_state.clip_bounding_box);
+    return {};
 }
 
 void Renderer::finalize_clip_before_graphics_state_restore()
@@ -329,9 +330,10 @@ void Renderer::finalize_clip_before_graphics_state_restore()
     m_painter.clear_clip_rect();
 }
 
-void Renderer::restore_previous_clip_after_graphics_state_restore()
+PDFErrorOr<void> Renderer::restore_previous_clip_after_graphics_state_restore()
 {
     m_painter.add_clip_rect(state().clipping_state.clip_bounding_box);
+    return {};
 }
 
 ///
@@ -343,16 +345,18 @@ void Renderer::begin_path_paint()
     m_current_path.transform(state().ctm);
 }
 
-void Renderer::end_path_paint()
+PDFErrorOr<void> Renderer::end_path_paint()
 {
     if (m_add_path_as_clip != AddPathAsClip::No) {
-        add_clip_path(m_add_path_as_clip == AddPathAsClip::Nonzero ? Gfx::WindingRule::Nonzero : Gfx::WindingRule::EvenOdd);
+        TRY(add_clip_path(m_add_path_as_clip == AddPathAsClip::Nonzero ? Gfx::WindingRule::Nonzero : Gfx::WindingRule::EvenOdd));
         m_add_path_as_clip = AddPathAsClip::No;
     }
 
     // "Once a path has been painted, it is no longer defined; there is then no current path
     //  until a new one is begun with the m or re operator."
     m_current_path.clear();
+
+    return {};
 }
 
 void Renderer::stroke_current_path()
@@ -393,7 +397,7 @@ RENDERER_HANDLER(path_stroke)
 {
     begin_path_paint();
     stroke_current_path();
-    end_path_paint();
+    TRY(end_path_paint());
     return {};
 }
 
@@ -408,7 +412,7 @@ RENDERER_HANDLER(path_fill_nonzero)
 {
     begin_path_paint();
     fill_current_path(Gfx::WindingRule::Nonzero);
-    end_path_paint();
+    TRY(end_path_paint());
     return {};
 }
 
@@ -421,7 +425,7 @@ RENDERER_HANDLER(path_fill_evenodd)
 {
     begin_path_paint();
     fill_current_path(Gfx::WindingRule::EvenOdd);
-    end_path_paint();
+    TRY(end_path_paint());
     return {};
 }
 
@@ -429,7 +433,7 @@ RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
     begin_path_paint();
     fill_and_stroke_current_path(Gfx::WindingRule::Nonzero);
-    end_path_paint();
+    TRY(end_path_paint());
     return {};
 }
 
@@ -437,7 +441,7 @@ RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
     begin_path_paint();
     fill_and_stroke_current_path(Gfx::WindingRule::EvenOdd);
-    end_path_paint();
+    TRY(end_path_paint());
     return {};
 }
 
@@ -456,7 +460,7 @@ RENDERER_HANDLER(path_close_fill_stroke_evenodd)
 RENDERER_HANDLER(path_end)
 {
     begin_path_paint();
-    end_path_paint();
+    TRY(end_path_paint());
     return {};
 }
 
