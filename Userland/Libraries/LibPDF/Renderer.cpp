@@ -311,6 +311,17 @@ void Renderer::deactivate_clip()
     m_painter.clear_clip_rect();
 }
 
+void Renderer::add_clip_path(Gfx::WindingRule)
+{
+    if (m_rendering_preferences.show_clipping_paths)
+        m_clip_paths_to_show_for_debugging.append(m_current_path);
+
+    // FIXME: Support arbitrary path clipping in Path and use that here
+    auto next_clipping_bbox = m_current_path.bounding_box();
+    next_clipping_bbox.intersect(state().clipping_paths.current.bounding_box());
+    state().clipping_paths.current = rect_path(next_clipping_bbox);
+}
+
 ///
 // Path painting operations
 ///
@@ -325,14 +336,7 @@ void Renderer::begin_path_paint()
 void Renderer::end_path_paint()
 {
     if (m_add_path_as_clip != AddPathAsClip::No) {
-        if (m_rendering_preferences.show_clipping_paths)
-            m_clip_paths_to_show_for_debugging.append(m_current_path);
-
-        // FIXME: Support arbitrary path clipping in Path and use that here
-        auto next_clipping_bbox = m_current_path.bounding_box();
-        next_clipping_bbox.intersect(state().clipping_paths.current.bounding_box());
-        state().clipping_paths.current = rect_path(next_clipping_bbox);
-
+        add_clip_path(m_add_path_as_clip == AddPathAsClip::Nonzero ? Gfx::WindingRule::Nonzero : Gfx::WindingRule::EvenOdd);
         m_add_path_as_clip = AddPathAsClip::No;
     }
 

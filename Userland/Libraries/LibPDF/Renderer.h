@@ -202,6 +202,8 @@ private:
     void activate_clip();
     void deactivate_clip();
 
+    void add_clip_path(Gfx::WindingRule);
+
     void begin_path_paint();
     void end_path_paint();
     void stroke_current_path();
