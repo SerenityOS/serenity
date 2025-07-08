@@ -65,7 +65,7 @@ struct TextState {
 };
 
 struct ClippingState {
-    Gfx::Path current;
+    Gfx::IntRect clip_bounding_box;
     bool has_own_clip { false };
 };
 
