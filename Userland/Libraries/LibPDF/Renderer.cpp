@@ -158,13 +158,13 @@ PDFErrorOr<void> Renderer::handle_operator(Operator const& op, Optional<NonnullR
 RENDERER_HANDLER(save_state)
 {
     m_graphics_state_stack.append(state());
-    state().clipping_paths.has_own_clip = false;
+    state().clipping_state.has_own_clip = false;
     return {};
 }
 
 RENDERER_HANDLER(restore_state)
 {
-    bool popped_state_had_own_clip = state().clipping_paths.has_own_clip;
+    bool popped_state_had_own_clip = state().clipping_state.has_own_clip;
     if (popped_state_had_own_clip)
         finalize_clip_before_graphics_state_restore();
 
@@ -317,11 +317,11 @@ void Renderer::add_clip_path(Gfx::WindingRule)
 
     // FIXME: Support arbitrary path clipping in Path and use that here
     auto next_clipping_bbox = m_current_path.bounding_box();
-    next_clipping_bbox.intersect(state().clipping_paths.current.bounding_box());
-    state().clipping_paths.current = rect_path(next_clipping_bbox);
+    next_clipping_bbox.intersect(state().clipping_state.current.bounding_box());
+    state().clipping_state.current = rect_path(next_clipping_bbox);
 
-    state().clipping_paths.has_own_clip = true;
-    auto bounding_box = state().clipping_paths.current.bounding_box().to_type<int>();
+    state().clipping_state.has_own_clip = true;
+    auto bounding_box = state().clipping_state.current.bounding_box().to_type<int>();
     m_painter.add_clip_rect(bounding_box);
 }
 
@@ -332,7 +332,7 @@ void Renderer::finalize_clip_before_graphics_state_restore()
 
 void Renderer::restore_previous_clip_after_graphics_state_restore()
 {
-    auto bounding_box = state().clipping_paths.current.bounding_box().to_type<int>();
+    auto bounding_box = state().clipping_state.current.bounding_box().to_type<int>();
     m_painter.add_clip_rect(bounding_box);
 }
 

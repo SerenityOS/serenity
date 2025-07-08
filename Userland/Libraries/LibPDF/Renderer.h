@@ -64,7 +64,7 @@ struct TextState {
     bool knockout { true };
 };
 
-struct ClippingPaths {
+struct ClippingState {
     Gfx::Path current;
     bool has_own_clip { false };
 };
@@ -104,7 +104,7 @@ enum class AlphaSource {
 
 struct GraphicsState {
     Gfx::AffineTransform ctm;
-    ClippingPaths clipping_paths;
+    ClippingState clipping_state;
     RefPtr<ColorSpace> stroke_color_space { DeviceGrayColorSpace::the() };
     RefPtr<ColorSpace> paint_color_space { DeviceGrayColorSpace::the() };
     ColorOrStyle stroke_style { Color::Black };
