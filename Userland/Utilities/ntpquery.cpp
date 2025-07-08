@@ -24,6 +24,26 @@
 #include <sys/uio.h>
 #include <time.h>
 
+// Clang doesn’t like musl libc’s definitions of CMSG_NXTHDR for the purposes of strict sign comparisons.
+// This is a long-standing issue and hasn’t been fixed in several years,
+// so we work around it here by ignoring the warning.
+// See for example: https://github.com/nginx/unit/issues/936
+//                  https://github.com/dotnet/runtime/issues/16438
+//                  https://git.openembedded.org/meta-openembedded/tree/meta-oe/recipes-devtools/breakpad/breakpad/0001-Turn-off-sign-compare-for-musl-libc.patch
+//                  https://github.com/dotnet/corefx/blob/57ff88bb75a0/src/Native/Unix/System.Native/pal_networking.c#L811-L829
+//                  https://patchwork.yoctoproject.org/project/oe/patch/20220407191438.3696227-1-stefan@datenfreihafen.org/
+static cmsghdr* NXT_CMSG_NXTHDR(msghdr* msg, cmsghdr* cmsg)
+{
+#ifdef AK_COMPILER_CLANG
+#    pragma clang diagnostic push
+#    pragma clang diagnostic ignored "-Wsign-compare"
+#endif
+    return CMSG_NXTHDR(msg, cmsg);
+#ifdef AK_COMPILER_CLANG
+#    pragma clang diagnostic pop
+#endif
+}
+
 // An NtpTimestamp is a 64-bit integer that's a 32.32 binary-fixed point number.
 // The integral part in the upper 32 bits represents seconds since 1900-01-01.
 // The fractional part in the lower 32 bits stores fractional bits times 2 ** 32.
@@ -216,7 +236,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
     VERIFY(cmsg->cmsg_level == SOL_SOCKET);
     VERIFY(cmsg->cmsg_type == SCM_TIMESTAMP);
-    VERIFY(!CMSG_NXTHDR(&msg, cmsg));
+    VERIFY(!NXT_CMSG_NXTHDR(&msg, cmsg));
     timeval kernel_receive_time;
     memcpy(&kernel_receive_time, CMSG_DATA(cmsg), sizeof(kernel_receive_time));
 #endif
