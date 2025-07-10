@@ -1194,25 +1194,22 @@ Gfx::Path::StrokeStyle Renderer::stroke_style() const
     return { line_width(), line_cap_style(), line_join_style(), state().miter_limit, move(dash_pattern), dash_phase };
 }
 
-static PDFErrorOr<GraphicsState::SMask> read_smask_dict(NonnullRefPtr<Document> document, NonnullRefPtr<DictObject> dict)
+PDFErrorOr<GraphicsState::SMask> Renderer::read_smask_dict(NonnullRefPtr<DictObject> dict)
 {
     // PDF 1.7 spec, TABLE 7.10 Entries in a soft-mask dictionary
 
+    // "Type (name) (Optional)"
     if (dict->contains(CommonNames::Type)) {
-        auto type = TRY(dict->get_name(document, CommonNames::Type));
+        auto type = TRY(dict->get_name(m_document, CommonNames::Type));
         if (type->name() != CommonNames::Mask)
             return Error::malformed_error("Soft mask dictionary has invalid /Type: {}", type->name());
     }
 
-    auto group = TRY(dict->get_stream(document, CommonNames::G));
-    // FIXME: Validate if group is a transparency group XObject here?
-
-    GraphicsState::SMask smask { .group = group };
-
-    smask.type = TRY([&]() -> PDFErrorOr<GraphicsState::SMask::Type> {
+    // "S (name) (Required)"
+    auto type = TRY([&]() -> PDFErrorOr<GraphicsState::SMask::Type> {
         if (!dict->contains(CommonNames::S))
             return Error::malformed_error("Missing required /S in soft mask dictionary");
-        auto s = TRY(dict->get_name(document, CommonNames::S))->name();
+        auto s = TRY(dict->get_name(m_document, CommonNames::S))->name();
         if (s == "Alpha")
             return GraphicsState::SMask::Type::Alpha;
         if (s == "Luminosity")
@@ -1220,17 +1217,33 @@ static PDFErrorOr<GraphicsState::SMask> read_smask_dict(NonnullRefPtr<Document> 
         return Error::malformed_error("Unknown value for /S in soft mask dictionary: {}", s);
     }());
 
+    // "G (stream) (Required)"
+    auto group = TRY(dict->get_stream(m_document, CommonNames::G));
+    if (!group->dict()->contains(CommonNames::Group))
+        return Error::malformed_error("Soft mask group is missing /Group");
+    auto group_attributes = TRY(read_transparency_group_attributes(TRY(group->dict()->get_dict(m_document, CommonNames::Group))));
+
+    // "If the subtype S is Luminosity, the group attributes dictionary
+    //  must contain a CS entry defining the color space in which the compositing
+    //  computation is to be performed."
+    if (type == GraphicsState::SMask::Type::Luminosity && !group_attributes.color_space)
+        return Error::malformed_error("Soft mask group attributes dictionary must contain /CS for Luminosity SMask");
+
+    GraphicsState::SMask smask { .type = type, .group = group, .group_attributes = group_attributes };
+
+    // "BC (array) (Optional)"
     if (dict->contains(CommonNames::BC)) {
         // FIXME: If we validate group further up, we could validate number of components against
         // the group's color space, and maybe set background_color the color space's default color
         // if there's no explicit /BC entry.
-        auto background_color = TRY(dict->get_array(document, CommonNames::BC));
+        auto background_color = TRY(dict->get_array(m_document, CommonNames::BC));
         for (auto& component : background_color->elements())
             smask.background_color.append(component.to_float());
     }
 
+    // "BC (function or name) (Optional)"
     if (dict->contains(CommonNames::TR)) {
-        auto function = TRY(dict->get_object(document, CommonNames::TR));
+        auto function = TRY(dict->get_object(m_document, CommonNames::TR));
         if (function->is<NameObject>()) {
             auto name = function->cast<NameObject>()->name();
             if (name != CommonNames::Identity)
@@ -1238,7 +1251,7 @@ static PDFErrorOr<GraphicsState::SMask> read_smask_dict(NonnullRefPtr<Document> 
             // A nullptr value means identity.
             smask.transfer_function = nullptr;
         } else {
-            smask.transfer_function = TRY(Function::create(document, function));
+            smask.transfer_function = TRY(Function::create(m_document, function));
         }
     }
 
@@ -1318,7 +1331,7 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
                 return Error::malformed_error("Unknown soft mask name: {}", name);
             state().soft_mask = {};
         } else {
-            state().soft_mask = TRY(read_smask_dict(*m_document, smask->cast<DictObject>()));
+            state().soft_mask = TRY(read_smask_dict(smask->cast<DictObject>()));
         }
     }
 
