@@ -13,6 +13,11 @@
 
 namespace Kernel {
 
+struct [[nodiscard]] SpinLockKey {
+    InterruptsState interrupts_state { InterruptsState::Disabled };
+    bool affect_lock_rank { false };
+};
+
 template<LockRank Rank>
 class Spinlock {
     AK_MAKE_NONCOPYABLE(Spinlock);
@@ -21,25 +26,24 @@ class Spinlock {
 public:
     Spinlock() = default;
 
-    InterruptsState lock()
+    SpinLockKey lock()
     {
         InterruptsState previous_interrupts_state = Processor::interrupts_state();
         Processor::enter_critical();
         Processor::disable_interrupts();
         while (m_lock.exchange(1, AK::memory_order_acquire) != 0)
             Processor::wait_check();
-        track_lock_acquire(m_rank);
-        return previous_interrupts_state;
+        return { previous_interrupts_state, track_lock_acquire(m_rank) };
     }
 
-    void unlock(InterruptsState previous_interrupts_state)
+    void unlock(SpinLockKey key)
     {
         VERIFY(is_locked());
-        track_lock_release(m_rank);
+        track_lock_release(m_rank, key.affect_lock_rank);
         m_lock.store(0, AK::memory_order_release);
 
         Processor::leave_critical();
-        Processor::restore_interrupts_state(previous_interrupts_state);
+        Processor::restore_interrupts_state(key.interrupts_state);
     }
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const
@@ -51,6 +55,8 @@ public:
     {
         m_lock.store(0, AK::memory_order_relaxed);
     }
+
+    constexpr LockRank rank() { return Rank; }
 
 private:
     Atomic<u8> m_lock { 0 };
@@ -65,7 +71,7 @@ class RecursiveSpinlock {
 public:
     RecursiveSpinlock() = default;
 
-    InterruptsState lock()
+    SpinLockKey lock()
     {
         InterruptsState previous_interrupts_state = Processor::interrupts_state();
         Processor::disable_interrupts();
@@ -79,24 +85,25 @@ public:
             Processor::wait_check();
             expected = 0;
         }
+        bool did_affect_lock_rank = false;
         if (m_recursions == 0)
-            track_lock_acquire(m_rank);
+            did_affect_lock_rank = track_lock_acquire(m_rank);
         m_recursions++;
-        return previous_interrupts_state;
+        return { previous_interrupts_state, did_affect_lock_rank };
     }
 
-    void unlock(InterruptsState previous_interrupts_state)
+    void unlock(SpinLockKey key)
     {
         VERIFY_INTERRUPTS_DISABLED();
         VERIFY(m_recursions > 0);
         VERIFY(m_lock.load(AK::memory_order_relaxed) == FlatPtr(&Processor::current()));
         if (--m_recursions == 0) {
-            track_lock_release(m_rank);
+            track_lock_release(m_rank, key.affect_lock_rank);
             m_lock.store(0, AK::memory_order_release);
         }
 
         Processor::leave_critical();
-        Processor::restore_interrupts_state(previous_interrupts_state);
+        Processor::restore_interrupts_state(key.interrupts_state);
     }
 
     [[nodiscard]] ALWAYS_INLINE bool is_locked() const
@@ -113,6 +120,8 @@ public:
     {
         m_lock.store(0, AK::memory_order_relaxed);
     }
+
+    constexpr LockRank rank() { return Rank; }
 
 private:
     Atomic<FlatPtr> m_lock { 0 };
@@ -132,24 +141,24 @@ public:
         : m_lock(&lock)
     {
         VERIFY(m_lock);
-        m_previous_interrupts_state = m_lock->lock();
+        m_key = m_lock->lock();
         m_have_lock = true;
     }
 
     SpinlockLocker(SpinlockLocker&& from)
         : m_lock(from.m_lock)
-        , m_previous_interrupts_state(from.m_previous_interrupts_state)
+        , m_key(from.m_key)
         , m_have_lock(from.m_have_lock)
     {
         from.m_lock = nullptr;
-        from.m_previous_interrupts_state = InterruptsState::Disabled;
+        from.m_key = {};
         from.m_have_lock = false;
     }
 
     ~SpinlockLocker()
     {
         if (m_lock && m_have_lock) {
-            m_lock->unlock(m_previous_interrupts_state);
+            m_lock->unlock(m_key);
         }
     }
 
@@ -157,7 +166,7 @@ public:
     {
         VERIFY(m_lock);
         VERIFY(!m_have_lock);
-        m_previous_interrupts_state = m_lock->lock();
+        m_key = m_lock->lock();
         m_have_lock = true;
     }
 
@@ -165,8 +174,8 @@ public:
     {
         VERIFY(m_lock);
         VERIFY(m_have_lock);
-        m_lock->unlock(m_previous_interrupts_state);
-        m_previous_interrupts_state = InterruptsState::Disabled;
+        m_lock->unlock(m_key);
+        m_key = {};
         m_have_lock = false;
     }
 
@@ -177,7 +186,7 @@ public:
 
 private:
     LockType* m_lock { nullptr };
-    InterruptsState m_previous_interrupts_state { InterruptsState::Disabled };
+    SpinLockKey m_key {};
     bool m_have_lock { false };
 };
 
