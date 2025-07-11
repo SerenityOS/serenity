@@ -11,14 +11,14 @@
 
 namespace Kernel {
 
-Mount::Mount(NonnullRefPtr<Inode> source, int flags)
-    : m_details(Mount::Details(source->fs(), move(source)))
+Mount::Mount(NonnullRefPtr<Inode> const& source, int flags)
+    : m_details(Mount::Details(source->fs(), source))
 {
     set_flags(flags);
 }
 
-Mount::Mount(NonnullRefPtr<Inode> source, NonnullRefPtr<Custody> host_custody, int flags)
-    : m_details(Mount::Details(source->fs(), move(source)))
+Mount::Mount(NonnullRefPtr<Inode> const& source, NonnullRefPtr<Custody> host_custody, int flags)
+    : m_details(Mount::Details(source->fs(), source))
     , m_host_custody(move(host_custody))
 {
     set_flags(flags);
