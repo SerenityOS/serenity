@@ -936,6 +936,9 @@ RENDERER_HANDLER(shade)
         TRY(add_clip_path(bbox_path, Gfx::WindingRule::Nonzero));
     }
 
+    if (state().paint_alpha_constant < 1.0f)
+        return Error::rendering_unsupported_error("Non-opaque shadings not yet supported");
+
     return shading->draw(painter(), state().ctm);
 }
 
