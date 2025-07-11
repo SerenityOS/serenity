@@ -1377,6 +1377,7 @@ PDFErrorOr<void> Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject
             state().soft_mask = {};
         } else {
             state().soft_mask = TRY(read_smask_dict(smask->cast<DictObject>()));
+            return Error::rendering_unsupported_error("/SMask in graphics state dict not yet supported");
         }
     }
 
