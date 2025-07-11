@@ -453,7 +453,7 @@ void Renderer::fill_current_path(Gfx::WindingRule winding_rule)
     m_current_path.trim(path_end);
 }
 
-void Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding_rule)
+PDFErrorOr<void> Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding_rule)
 {
     // Note: Just drawing the stroke on top of the fill is incorrect if the stroke is not opaque.
     // See "Special Path-Painting Considerations" on page 569 of the PDF 1.7 spec:
@@ -461,8 +461,11 @@ void Renderer::fill_and_stroke_current_path(Gfx::WindingRule winding_rule)
     // (The spec says this in the language of knockout groups.)
     // Having said that, while Acrobat Reader and PDFium get this right, PDF.js and Preview.app do not.
     // FIXME: Once we have support for transparency groups, do this per spec.
+    if (state().stroke_alpha_constant < 1.0f)
+        return Error::rendering_unsupported_error("Non-opaque stroke with fill not yet supported");
     fill_current_path(winding_rule);
     stroke_current_path();
+    return {};
 }
 
 RENDERER_HANDLER(path_stroke)
@@ -504,7 +507,7 @@ RENDERER_HANDLER(path_fill_evenodd)
 RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
     begin_path_paint();
-    fill_and_stroke_current_path(Gfx::WindingRule::Nonzero);
+    TRY(fill_and_stroke_current_path(Gfx::WindingRule::Nonzero));
     TRY(end_path_paint());
     return {};
 }
@@ -512,7 +515,7 @@ RENDERER_HANDLER(path_fill_stroke_nonzero)
 RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
     begin_path_paint();
-    fill_and_stroke_current_path(Gfx::WindingRule::EvenOdd);
+    TRY(fill_and_stroke_current_path(Gfx::WindingRule::EvenOdd));
     TRY(end_path_paint());
     return {};
 }
