@@ -1488,6 +1488,7 @@ PDFErrorOr<void> Renderer::paint_form_xobject(NonnullRefPtr<StreamObject> form)
     if (form->dict()->contains(CommonNames::Group)) {
         auto group = TRY(form->dict()->get_dict(m_document, CommonNames::Group));
         transparency_group_attributes = TRY(read_transparency_group_attributes(group));
+        return Error::rendering_unsupported_error("Transparency groups not yet supported");
     }
 
     // FIXME: If transparency_group_attributes.has_value(), paint as transparency group.
