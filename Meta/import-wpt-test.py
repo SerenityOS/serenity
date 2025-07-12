@@ -3,11 +3,11 @@
 import os
 import sys
 
+from collections import namedtuple
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urljoin
 from urllib.request import urlopen
-from collections import namedtuple
 
 wpt_base_url = 'https://wpt.live/'
 wpt_import_path = 'Tests/LibWeb/Text/input/wpt-import'
@@ -18,7 +18,6 @@ src_values = []
 
 
 class ScriptSrcValueFinder(HTMLParser):
-
     def handle_starttag(self, tag, attrs):
         if tag == "script":
             attr_dict = dict(attrs)
@@ -50,6 +49,7 @@ def map_to_path(sources, is_resource=True, resource_path=None):
     def path_mapper(x):
         output_path = wpt_base_url + x.__str__().replace(wpt_import_path, '')
         return PathMapping(output_path, x.absolute())
+
     filepaths = list(map(path_mapper, filepaths))
 
     return filepaths
@@ -59,7 +59,7 @@ def modify_sources(files):
     for file in files:
         # Get the distance to the wpt-imports folder
         folder_index = str(file).find(wpt_import_path)
-        non_prefixed_path = str(file)[folder_index + len(wpt_import_path):]
+        non_prefixed_path = str(file)[folder_index + len(wpt_import_path) :]
         parent_folder_count = len(Path(non_prefixed_path).parent.parts) - 1
         parent_folder_path = '../' * parent_folder_count
 
@@ -69,7 +69,7 @@ def modify_sources(files):
         page_source = page_source.replace('/fonts/ahem.css', '../' * parent_folder_count + 'fonts/ahem.css')
 
         # Iterate all scripts and overwrite the src attribute
-        for i, src_value in enumerate(src_values):
+        for src_value in src_values:
             if src_value.startswith('/'):
                 new_src_value = parent_folder_path + src_value[1::]
                 page_source = page_source.replace(src_value, new_src_value)
