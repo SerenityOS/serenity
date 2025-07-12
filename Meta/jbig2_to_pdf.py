@@ -110,7 +110,8 @@ def main():
         epilog=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("image", help="Input image")
-    parser.add_argument("-o", "--output", help="Path to output PDF")
+    parser.add_argument("-o", "--output", help="Path to output PDF",
+                        required=True)
     args = parser.parse_args()
 
     with open(args.image, 'rb') as f:
