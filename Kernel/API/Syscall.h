@@ -136,6 +136,7 @@ enum class NeedsBigProcessLock {
     S(pledge, NeedsBigProcessLock::No)                     \
     S(poll, NeedsBigProcessLock::No)                       \
     S(posix_fallocate, NeedsBigProcessLock::No)            \
+    S(posix_spawn, NeedsBigProcessLock::Yes)               \
     S(prctl, NeedsBigProcessLock::No)                      \
     S(profiling_disable, NeedsBigProcessLock::Yes)         \
     S(profiling_enable, NeedsBigProcessLock::Yes)          \
@@ -484,6 +485,16 @@ struct SC_utimensat_params {
     StringArgument path;
     struct timespec const* times;
     int flag;
+};
+
+struct SC_posix_spawn_params {
+    StringArgument path;
+    StringListArgument arguments;
+    StringListArgument environment;
+    Userspace<void const*> attr_data;
+    size_t attr_data_size;
+    Userspace<void const*> serialized_file_actions_data;
+    size_t serialized_file_actions_data_size;
 };
 
 struct SC_futimens_params {
