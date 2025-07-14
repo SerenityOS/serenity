@@ -126,7 +126,7 @@ inline u64 read_rndrrs()
         "1:\n"
         "mrs %[value], s3_3_c2_c4_1 \n" // encoded RNDRRS register
         "b.eq 1b\n"
-        : [value] "=r"(value));
+        : [value] "=r"(value)::"cc");
 
     return value;
 }
