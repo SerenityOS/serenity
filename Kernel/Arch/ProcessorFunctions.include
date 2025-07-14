@@ -32,4 +32,6 @@ template void ProcessorBase<Processor>::switch_context(Thread*& from_thread, Thr
 template void ProcessorBase<Processor>::assume_context(Thread& thread, InterruptsState new_interrupts_state);
 template FlatPtr ProcessorBase<Processor>::init_context(Thread& thread, bool leave_crit);
 template u32 ProcessorBase<Processor>::smp_wake_n_idle_processors(u32 wake_count);
+template void ProcessorBase<Processor>::store_fpu_state(FPUState&);
+template void ProcessorBase<Processor>::load_fpu_state(FPUState const&);
 }

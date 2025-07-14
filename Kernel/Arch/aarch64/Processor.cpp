@@ -31,6 +31,18 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __a
 Processor* g_current_processor;
 
 template<typename T>
+void ProcessorBase<T>::store_fpu_state(FPUState& fpu_state)
+{
+    ::store_fpu_state(&fpu_state);
+}
+
+template<typename T>
+void ProcessorBase<T>::load_fpu_state(FPUState const& fpu_state)
+{
+    ::load_fpu_state(&fpu_state);
+}
+
+template<typename T>
 void ProcessorBase<T>::early_initialize(u32 cpu)
 {
     VERIFY(g_current_processor == nullptr);
@@ -56,7 +68,7 @@ void ProcessorBase<T>::initialize(u32)
     if (!has_feature(CPUFeature::RNG))
         dmesgln("CPU[{}]: {} not detected, randomness will be poor", m_cpu, cpu_feature_to_description(CPUFeature::RNG));
 
-    store_fpu_state(&s_clean_fpu_state);
+    store_fpu_state(s_clean_fpu_state);
 
     Aarch64::Asm::load_el1_vector_table(+vector_table_el1);
 
@@ -425,7 +437,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     Processor::set_current_thread(*to_thread);
 
-    store_fpu_state(&from_thread->fpu_state());
+    Processor::store_fpu_state(from_thread->fpu_state());
 
     auto& from_regs = from_thread->regs();
     auto& to_regs = to_thread->regs();
@@ -440,7 +452,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     VERIFY(in_critical > 0);
     Processor::restore_critical(in_critical);
 
-    load_fpu_state(&to_thread->fpu_state());
+    Processor::load_fpu_state(to_thread->fpu_state());
 
     if (from_thread->process().is_traced())
         read_debug_registers_into(from_thread->debug_register_state());
