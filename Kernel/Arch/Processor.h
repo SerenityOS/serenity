@@ -161,6 +161,8 @@ public:
         return m_virtual_address_bit_width;
     }
 
+    static void store_fpu_state(FPUState&);
+    static void load_fpu_state(FPUState const&);
     ALWAYS_INLINE static FPUState const& clean_fpu_state() { return s_clean_fpu_state; }
 
     static void deferred_call_queue(Function<void()> callback);

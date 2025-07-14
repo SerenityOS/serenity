@@ -17,6 +17,6 @@ struct [[gnu::aligned(16)]] FPUState {
 };
 
 extern "C" void store_fpu_state(FPUState* fpu_state);
-extern "C" void load_fpu_state(FPUState* fpu_state);
+extern "C" void load_fpu_state(FPUState const* fpu_state);
 
 }

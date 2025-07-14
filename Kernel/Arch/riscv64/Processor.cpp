@@ -22,12 +22,12 @@ extern "C" u8 asm_trap_handler[];
 
 Processor* g_current_processor;
 
-static void store_vector_state(FPUState* fpu_state)
+static void store_vector_state(FPUState& fpu_state)
 {
-    fpu_state->vstart = RISCV64::CSR::read<RISCV64::CSR::Address::VSTART_>();
-    fpu_state->vcsr = RISCV64::CSR::read<RISCV64::CSR::Address::VCSR>();
-    fpu_state->vl = RISCV64::CSR::read<RISCV64::CSR::Address::VL>();
-    fpu_state->vtype = RISCV64::CSR::read<RISCV64::CSR::Address::VTYPE>();
+    fpu_state.vstart = RISCV64::CSR::read<RISCV64::CSR::Address::VSTART_>();
+    fpu_state.vcsr = RISCV64::CSR::read<RISCV64::CSR::Address::VCSR>();
+    fpu_state.vl = RISCV64::CSR::read<RISCV64::CSR::Address::VL>();
+    fpu_state.vtype = RISCV64::CSR::read<RISCV64::CSR::Address::VTYPE>();
 
     asm volatile(R"(
     .option push
@@ -53,11 +53,11 @@ static void store_vector_state(FPUState* fpu_state)
         vs8r.v v24, (%0)
 
     .option pop
-    )" ::"r"(fpu_state->v)
+    )" ::"r"(fpu_state.v)
                  : "t0", "memory");
 }
 
-static void load_vector_state(FPUState* fpu_state)
+static void load_vector_state(FPUState const& fpu_state)
 {
     asm volatile(R"(
     .option push
@@ -83,22 +83,23 @@ static void load_vector_state(FPUState* fpu_state)
         vl8r.v v24, (%0)
 
     .option pop
-    )" ::"r"(fpu_state->v)
+    )" ::"r"(fpu_state.v)
                  : "t0", "memory");
 
-    RISCV64::CSR::write<RISCV64::CSR::Address::VSTART_>(fpu_state->vstart);
-    RISCV64::CSR::write<RISCV64::CSR::Address::VCSR>(fpu_state->vcsr);
+    RISCV64::CSR::write<RISCV64::CSR::Address::VSTART_>(fpu_state.vstart);
+    RISCV64::CSR::write<RISCV64::CSR::Address::VCSR>(fpu_state.vcsr);
 
     asm volatile(R"(
     .option push
     .option arch, +v
         vsetvl zero, %[vl], %[vtype]
     .option pop
-    )" ::[vl] "r"(fpu_state->vl),
-        [vtype] "r"(fpu_state->vtype));
+    )" ::[vl] "r"(fpu_state.vl),
+        [vtype] "r"(fpu_state.vtype));
 }
 
-static void store_fpu_state(FPUState* fpu_state)
+template<typename T>
+void ProcessorBase<T>::store_fpu_state(FPUState& fpu_state)
 {
     asm volatile(
         "fsd f0, 0*8(%0) \n"
@@ -135,14 +136,15 @@ static void store_fpu_state(FPUState* fpu_state)
         "fsd f31, 31*8(%0) \n"
 
         "csrr t0, fcsr \n"
-        "sd t0, 32*8(%0) \n" ::"r"(fpu_state)
+        "sd t0, 32*8(%0) \n" ::"r"(&fpu_state)
         : "t0", "memory");
 
     if (Processor::current().has_feature(CPUFeature::V))
         store_vector_state(fpu_state);
 }
 
-static void load_fpu_state(FPUState* fpu_state)
+template<typename T>
+void ProcessorBase<T>::load_fpu_state(FPUState const& fpu_state)
 {
     asm volatile(
         "fld f0, 0*8(%0) \n"
@@ -179,7 +181,7 @@ static void load_fpu_state(FPUState* fpu_state)
         "fld f31, 31*8(%0) \n"
 
         "ld t0, 32*8(%0) \n"
-        "csrw fcsr, t0 \n" ::"r"(fpu_state)
+        "csrw fcsr, t0 \n" ::"r"(&fpu_state)
         : "t0", "memory");
 
     if (Processor::current().has_feature(CPUFeature::V))
@@ -585,7 +587,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
 
     Processor::set_current_thread(*to_thread);
 
-    store_fpu_state(&from_thread->fpu_state());
+    Processor::store_fpu_state(from_thread->fpu_state());
 
     auto& from_regs = from_thread->regs();
     auto& to_regs = to_thread->regs();
@@ -600,7 +602,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     VERIFY(in_critical > 0);
     Processor::restore_critical(in_critical);
 
-    load_fpu_state(&to_thread->fpu_state());
+    Processor::load_fpu_state(to_thread->fpu_state());
 }
 
 NAKED void thread_context_first_enter()
@@ -718,7 +720,7 @@ void Processor::find_and_parse_devicetree_node()
             dmesgln("CPU[{}]: VLEN={}", id(), vlenb * 8);
         }
 
-        store_fpu_state(&s_clean_fpu_state);
+        store_fpu_state(s_clean_fpu_state);
 
         generate_userspace_extension_bitmask();
 
