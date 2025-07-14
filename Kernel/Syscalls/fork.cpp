@@ -129,6 +129,8 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 #    error Unknown architecture
 #endif
 
+    Processor::store_fpu_state(child_first_thread->fpu_state());
+
     TRY(address_space().with([&](auto& parent_space) {
         return child->address_space().with([&](auto& child_space) -> ErrorOr<void> {
             if (parent_space->enforces_syscall_regions())
