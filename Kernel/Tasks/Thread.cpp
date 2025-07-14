@@ -1203,7 +1203,6 @@ ErrorOr<NonnullRefPtr<Thread>> Thread::clone(NonnullRefPtr<Process> process)
     auto clone = TRY(Thread::create(move(process)));
     m_signal_action_masks.span().copy_to(clone->m_signal_action_masks);
     clone->m_signal_mask = m_signal_mask;
-    clone->m_fpu_state = m_fpu_state;
     clone->m_arch_specific_data = m_arch_specific_data;
     return clone;
 }
