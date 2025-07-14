@@ -1730,7 +1730,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(Half
         // FIXME: This is untested; I haven't found a sample that uses HENABLESKIP yet.
         //        But generic_region_decoding_procedure() currently doesn't implement skip_pattern anyways
         //        and errors out on it, so we'll notice when this gets hit.
-        skip_pattern_storage = TRY(BitBuffer::create(inputs.pattern_width, inputs.pattern_height));
+        skip_pattern_storage = TRY(BitBuffer::create(inputs.grayscale_width, inputs.grayscale_height));
         skip_pattern = *skip_pattern_storage;
 
         // 6.6.5.1 Computing HSKIP
