@@ -2125,6 +2125,16 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     return {};
 }
 
+static ErrorOr<void> decode_immediate_lossless_text_region(JBIG2LoadingContext& context, SegmentData const& segment)
+{
+    // 7.4.3 Text region segment syntax
+    // "The data parts of all three of the text region segment types ("intermediate text region", "immediate text region" and
+    //  "immediate lossless text region") are coded identically, but are acted upon differently, see 8.2."
+    // But 8.2 only describes a difference between intermediate and immediate regions as far as I can tell,
+    // and calling the immediate text region handler for immediate lossless text regions seems to do the right thing (?).
+    return decode_immediate_text_region(context, segment);
+}
+
 static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData& segment)
 {
     // 7.4.4 Pattern dictionary segment syntax
@@ -2371,6 +2381,16 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     return {};
 }
 
+static ErrorOr<void> decode_immediate_lossless_generic_region(JBIG2LoadingContext& context, SegmentData const& segment)
+{
+    // 7.4.6 Generic region segment syntax
+    // "The data parts of all three of the generic region segment types ("intermediate generic region", "immediate generic region" and
+    //  "immediate lossless generic region") are coded identically, but are acted upon differently, see 8.2."
+    // But 8.2 only describes a difference between intermediate and immediate regions as far as I can tell,
+    // and calling the immediate generic region handler for immediate generic lossless regions seems to do the right thing (?).
+    return decode_immediate_generic_region(context, segment);
+}
+
 static ErrorOr<void> decode_intermediate_generic_refinement_region(JBIG2LoadingContext&, SegmentData const&)
 {
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate generic refinement region yet");
@@ -2551,13 +2571,10 @@ static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
             TRY(decode_intermediate_text_region(context, segment));
             break;
         case SegmentType::ImmediateTextRegion:
-        case SegmentType::ImmediateLosslessTextRegion:
-            // 7.4.3 Text region segment syntax
-            // "The data parts of all three of the text region segment types ("intermediate text region", "immediate text region" and
-            //  "immediate lossless text region") are coded identically, but are acted upon differently, see 8.2."
-            // But 8.2 only describes a difference between intermediate and immediate regions as far as I can tell,
-            // and calling the immediate text region handler for immediate lossless text regions seems to do the right thing (?).
             TRY(decode_immediate_text_region(context, segment));
+            break;
+        case SegmentType::ImmediateLosslessTextRegion:
+            TRY(decode_immediate_lossless_text_region(context, segment));
             break;
         case SegmentType::PatternDictionary:
             TRY(decode_pattern_dictionary(context, segment));
@@ -2575,13 +2592,10 @@ static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
             TRY(decode_intermediate_generic_region(context, segment));
             break;
         case SegmentType::ImmediateGenericRegion:
-        case SegmentType::ImmediateLosslessGenericRegion:
-            // 7.4.6 Generic region segment syntax
-            // "The data parts of all three of the generic region segment types ("intermediate generic region", "immediate generic region" and
-            //  "immediate lossless generic region") are coded identically, but are acted upon differently, see 8.2."
-            // But 8.2 only describes a difference between intermediate and immediate regions as far as I can tell,
-            // and calling the immediate generic region handler for immediate generic lossless regions seems to do the right thing (?).
             TRY(decode_immediate_generic_region(context, segment));
+            break;
+        case SegmentType::ImmediateLosslessGenericRegion:
+            TRY(decode_immediate_lossless_generic_region(context, segment));
             break;
         case SegmentType::IntermediateGenericRefinementRegion:
             TRY(decode_intermediate_generic_refinement_region(context, segment));
