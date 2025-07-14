@@ -2291,9 +2291,14 @@ static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& conte
     return {};
 }
 
-static ErrorOr<void> decode_immediate_lossless_halftone_region(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_immediate_lossless_halftone_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate lossless halftone region yet");
+    // 7.4.5 Halftone region segment syntax
+    // "The data parts of all three of the halftone region segment types ("intermediate halftone region", "immediate halftone
+    //  region" and "immediate lossless halftone region") are coded identically, but are acted upon differently, see 8.2."
+    // But 8.2 only describes a difference between intermediate and immediate regions as far as I can tell,
+    // and calling the immediate generic region handler for immediate generic lossless regions seems to do the right thing (?).
+    return decode_immediate_halftone_region(context, segment);
 }
 
 static ErrorOr<void> decode_intermediate_generic_region(JBIG2LoadingContext&, SegmentData const&)
