@@ -57,9 +57,10 @@ static PDF::PDFErrorOr<void> print_document_info(PDF::Document& document, bool j
 
 static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_page(PDF::Document& document, PDF::Page const& page)
 {
-    auto page_size = Gfx::IntSize { 800, round_to<int>(800 * page.media_box.height() / page.media_box.width()) };
+    int const size = 800;
+    auto page_size = Gfx::IntSize { size, round_to<int>(size * page.media_box.height() / page.media_box.width()) };
     if (int rotation_count = (page.rotate / 90) % 4; rotation_count % 2 == 1)
-        page_size = Gfx::IntSize { round_to<int>(800 * page.media_box.width() / page.media_box.height()), 800 };
+        page_size = Gfx::IntSize { round_to<int>(size * page.media_box.width() / page.media_box.height()), size };
 
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
 
