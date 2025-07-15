@@ -20,6 +20,7 @@ set(SOURCES
     Checksum/Adler32.cpp
     Checksum/cksum.cpp
     Checksum/CRC32.cpp
+    Checksum/IPv4Header.cpp
     Cipher/AES.cpp
     Cipher/ChaCha20.cpp
     Curves/Curve25519.cpp
