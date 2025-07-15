@@ -365,14 +365,10 @@ static void composite_bitbuffer(BitBuffer& out, BitBuffer const& bitmap, Gfx::In
 
     size_t start_x = 0, end_x = bitmap.width();
     size_t start_y = 0, end_y = bitmap.height();
-    if (position.x() < 0) {
+    if (position.x() < 0)
         start_x = -position.x();
-        position.set_x(0);
-    }
-    if (position.y() < 0) {
+    if (position.y() < 0)
         start_y = -position.y();
-        position.set_y(0);
-    }
     if (position.x() + bitmap.width() > out.width())
         end_x = out.width() - position.x();
     if (position.y() + bitmap.height() > out.height())
