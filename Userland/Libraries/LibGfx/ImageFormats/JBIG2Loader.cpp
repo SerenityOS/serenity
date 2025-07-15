@@ -790,8 +790,8 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     for (int i = 0; i < number_of_adaptive_template_pixels; ++i)
         TRY(check_valid_adaptive_template_pixel(inputs.adaptive_template_pixels[i]));
 
-    if (inputs.skip_pattern.has_value())
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode USESKIP yet");
+    if (inputs.skip_pattern.has_value() && (inputs.skip_pattern->width() != inputs.region_width || inputs.skip_pattern->height() != inputs.region_height))
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid USESKIP dimensions");
 
     static constexpr auto get_pixel = [](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> bool {
         if (x < 0 || x >= (int)buffer->width() || y < 0)
@@ -926,7 +926,10 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
         for (size_t x = 0; x < inputs.region_width; ++x) {
             // "i) If USESKIP is 1 and the pixel in the bitmap SKIP at the location corresponding to the current pixel is 1,
             //     then set the current pixel to 0."
-            // FIXME
+            if (inputs.skip_pattern.has_value() && inputs.skip_pattern->get_bit(x, y)) {
+                result->set_bit(x, y, false);
+                continue;
+            }
 
             // "ii) Otherwise:"
             u16 context = compute_context(result, inputs.adaptive_template_pixels, x, y);
@@ -1747,9 +1750,6 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(Half
     Optional<BitBuffer const&> skip_pattern;
     OwnPtr<BitBuffer> skip_pattern_storage;
     if (inputs.enable_skip) {
-        // FIXME: This is untested; I haven't found a sample that uses HENABLESKIP yet.
-        //        But generic_region_decoding_procedure() currently doesn't implement skip_pattern anyways
-        //        and errors out on it, so we'll notice when this gets hit.
         skip_pattern_storage = TRY(BitBuffer::create(inputs.grayscale_width, inputs.grayscale_height));
         skip_pattern = *skip_pattern_storage;
 
