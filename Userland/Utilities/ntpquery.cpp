@@ -216,7 +216,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
     VERIFY(cmsg->cmsg_level == SOL_SOCKET);
     VERIFY(cmsg->cmsg_type == SCM_TIMESTAMP);
-    VERIFY(!CMSG_NXTHDR(&msg, cmsg));
+    AK_IGNORE_DIAGNOSTIC("-Wsign-compare", VERIFY(!CMSG_NXTHDR(&msg, cmsg)));
     timeval kernel_receive_time;
     memcpy(&kernel_receive_time, CMSG_DATA(cmsg), sizeof(kernel_receive_time));
 #endif
