@@ -72,7 +72,7 @@ safe_memset_faulted:
 )"
                  : [dest_ptr] "+&r"(dest_ptr), [result] "+&r"(result), "+&r"(fault_at_in_x3)
                  : [n] "r"(n), [c] "r"(c)
-                 : "memory", "x4");
+                 : "memory", "x4", "cc");
     return result != 0;
 }
 
@@ -100,7 +100,7 @@ safe_strnlen_faulted:
 )"
                  : [result] "+&r"(result), "+&r"(fault_at_in_x2)
                  : [str] "r"(str), [max_n] "r"(max_n)
-                 : "memory", "w3");
+                 : "memory", "w3", "cc");
     return result;
 }
 
@@ -131,7 +131,7 @@ safe_memcpy_faulted:
 )"
                  : [result] "+&r"(result), "+&r"(fault_at_in_x3)
                  : [dest_ptr] "r"(dest_ptr), [src_ptr] "r"(src_ptr), [n] "r"(n)
-                 : "memory", "x4", "w5");
+                 : "memory", "x4", "w5", "cc");
     return result != 0;
 }
 
@@ -165,7 +165,7 @@ safe_atomic_compare_exchange_relaxed_faulted:
 )"
                  : [result] "=&r"(result), "+&r"(error)
                  : [var_ptr] "r"(var), [expected_ptr] "r"(&expected), [desired] "r"(desired)
-                 : "memory", "w3", "w4", "w5");
+                 : "memory", "w3", "w4", "w5", "cc");
     if (error != 0)
         return {};
     return static_cast<bool>(result);
