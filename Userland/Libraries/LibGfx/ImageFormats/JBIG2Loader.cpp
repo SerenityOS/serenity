@@ -360,41 +360,34 @@ enum class CombinationOperator {
 
 static void composite_bitbuffer(BitBuffer& out, BitBuffer const& bitmap, Gfx::IntPoint position, CombinationOperator operator_)
 {
-    if (!IntRect { position, { bitmap.width(), bitmap.height() } }.intersects(IntRect { { 0, 0 }, { out.width(), out.height() } }))
+    IntRect bitmap_rect { position, { bitmap.width(), bitmap.height() } };
+    IntRect out_rect { { 0, 0 }, { out.width(), out.height() } };
+
+    IntRect clip_rect = bitmap_rect.intersected(out_rect);
+    if (clip_rect.is_empty())
         return;
 
-    size_t start_x = 0, end_x = bitmap.width();
-    size_t start_y = 0, end_y = bitmap.height();
-    if (position.x() < 0)
-        start_x = -position.x();
-    if (position.y() < 0)
-        start_y = -position.y();
-    if (position.x() + bitmap.width() > out.width())
-        end_x = out.width() - position.x();
-    if (position.y() + bitmap.height() > out.height())
-        end_y = out.height() - position.y();
-
-    for (size_t y = start_y; y < end_y; ++y) {
-        for (size_t x = start_x; x < end_x; ++x) {
-            bool bit = bitmap.get_bit(x, y);
+    for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
+        for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
+            bool bit = bitmap.get_bit(x - position.x(), y - position.y());
             switch (operator_) {
             case CombinationOperator::Or:
-                bit = bit || out.get_bit(position.x() + x, position.y() + y);
+                bit = bit || out.get_bit(x, y);
                 break;
             case CombinationOperator::And:
-                bit = bit && out.get_bit(position.x() + x, position.y() + y);
+                bit = bit && out.get_bit(x, y);
                 break;
             case CombinationOperator::Xor:
-                bit = bit ^ out.get_bit(position.x() + x, position.y() + y);
+                bit = bit ^ out.get_bit(x, y);
                 break;
             case CombinationOperator::XNor:
-                bit = !(bit ^ out.get_bit(position.x() + x, position.y() + y));
+                bit = !(bit ^ out.get_bit(x, y));
                 break;
             case CombinationOperator::Replace:
                 // Nothing to do.
                 break;
             }
-            out.set_bit(position.x() + x, position.y() + y, bit);
+            out.set_bit(x, y, bit);
         }
     }
 }
