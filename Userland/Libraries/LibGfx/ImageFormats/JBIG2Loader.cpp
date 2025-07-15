@@ -1641,8 +1641,10 @@ struct GrayscaleInputParameters {
     QMArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
-static ErrorOr<Vector<u8>> grayscale_image_decoding_procedure(GrayscaleInputParameters const& inputs, ReadonlyBytes data, Vector<QMArithmeticDecoder::Context>& contexts)
+static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputParameters const& inputs, ReadonlyBytes data, Vector<QMArithmeticDecoder::Context>& contexts)
 {
+    VERIFY(inputs.bpp < 64);
+
     // FIXME: Support this. generic_region_decoding_procedure() currently doesn't tell us how much data it
     //        reads for MMR bitmaps, so we can't currently read more than one MMR bitplane here.
     if (inputs.uses_mmr)
@@ -1702,11 +1704,11 @@ static ErrorOr<Vector<u8>> grayscale_image_decoding_procedure(GrayscaleInputPara
 
     // "4) For each (x, y), set:
     //     GSVALS [x, y] = sum_{J = 0}^{GSBPP - 1} GSPLANES[J][x,y] × 2**J)"
-    Vector<u8> result;
+    Vector<u64> result;
     result.resize(inputs.width * inputs.height);
     for (u32 y = 0; y < inputs.height; ++y) {
         for (u32 x = 0; x < inputs.width; ++x) {
-            u8 value = 0;
+            u64 value = 0;
             for (int j = 0; j < inputs.bpp; ++j) {
                 if (bitplanes[j]->get_bit(x, y))
                     value |= 1 << j;
@@ -1777,7 +1779,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(Half
     }
 
     // "3) Set HBPP to ⌈log2 (HNUMPATS)⌉."
-    u8 bits_per_pattern = ceil(log2(inputs.patterns.size()));
+    u32 bits_per_pattern = ceil(log2(inputs.patterns.size()));
 
     // "4) Decode an image GI of size HGW by HGH with HBPP bits per pixel using the gray-scale image decoding
     //     procedure as described in Annex C. Set the parameters to this decoding procedure as shown in Table 23.
@@ -1786,6 +1788,9 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(Half
     grayscale_inputs.uses_mmr = inputs.uses_mmr;
     grayscale_inputs.width = inputs.grayscale_width;
     grayscale_inputs.height = inputs.grayscale_height;
+    // HBPP is a 32-bit word in Table 22, Table 23 says to copy it to GSBPP, and according to Table C.1 GSBPP is 6 bits.
+    if (bits_per_pattern >= 64)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Too many patterns for grayscale image decoding");
     grayscale_inputs.bpp = bits_per_pattern;
     grayscale_inputs.skip_pattern = skip_pattern;
     grayscale_inputs.template_id = inputs.halftone_template;
@@ -1823,7 +1828,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(Half
                 //      If any part of a decoded pattern, when placed at location (x, y) lies outside the actual halftone-
                 //      coded bitmap, then this part of the pattern shall be ignored in the process of combining the
                 //      pattern with the bitmap."
-                u8 grayscale_value = grayscale_image[n_g + m_g * inputs.grayscale_width];
+                auto grayscale_value = grayscale_image[n_g + m_g * inputs.grayscale_width];
                 if (grayscale_value >= inputs.patterns.size())
                     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Grayscale value out of range");
                 auto const& pattern = inputs.patterns[grayscale_value];
