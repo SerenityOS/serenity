@@ -35,7 +35,7 @@ static ErrorOr<int> kill_all(StringView process_name, unsigned const signum)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    unsigned signum = SIGTERM;
+    int signum = SIGTERM;
     int name_argi = 1;
 
     if (arguments.argc != 2 && arguments.argc != 3)
@@ -47,22 +47,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (arguments.argv[1][0] != '-')
             print_usage_and_exit();
 
-        Optional<unsigned> number;
-
-        if (is_ascii_alpha(arguments.argv[1][1])) {
-            int value = getsignalbyname(&arguments.argv[1][1]);
-            if (value > 0 && value < NSIG)
-                number = value;
-        }
-
-        if (!number.has_value())
-            number = arguments.strings[1].substring_view(1).to_number<unsigned>();
-
-        if (!number.has_value()) {
+        StringView signal_name_view(arguments.argv[1] + 1, strlen(arguments.argv[1] + 1));
+        ByteString signal_name = signal_name_view.starts_with("SIG"sv) ? signal_name_view.substring_view(3) : signal_name_view;
+        if (str2sig(signal_name.characters(), &signum) != 0) {
             warnln("'{}' is not a valid signal name or number", &arguments.argv[1][1]);
             return 2;
         }
-        signum = number.value();
     }
 
     return kill_all(arguments.strings[name_argi], signum);

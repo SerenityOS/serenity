@@ -717,8 +717,8 @@ static void format_dbgputstr(FormattedSyscallBuilder& builder, char* characters,
 static void format_kill(FormattedSyscallBuilder& builder, pid_t pid_or_pgid, int signal)
 {
     builder.add_argument(pid_or_pgid);
-    auto* signal_name = getsignalname(signal);
-    if (signal_name)
+    char signal_name[SIG2STR_MAX] = { 0 };
+    if (sig2str(signal, signal_name) == 0)
         builder.add_argument(signal_name);
     else
         builder.add_argument(signal);
