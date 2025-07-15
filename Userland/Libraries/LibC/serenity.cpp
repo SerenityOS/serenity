@@ -132,21 +132,6 @@ int getkeymap(char* name_buffer, size_t name_buffer_size, u32* map, u32* shift_m
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-u16 internet_checksum(void const* ptr, size_t count)
-{
-    u32 checksum = 0;
-    auto* w = (u16 const*)ptr;
-    while (count > 1) {
-        checksum += ntohs(*w++);
-        if (checksum & 0x80000000)
-            checksum = (checksum & 0xffff) | (checksum >> 16);
-        count -= 2;
-    }
-    while (checksum >> 16)
-        checksum = (checksum & 0xffff) + (checksum >> 16);
-    return htons(~checksum);
-}
-
 int serenity_open(char const* path, size_t path_length, int options, ...)
 {
     if (!path) {
