@@ -793,8 +793,6 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     if (inputs.skip_pattern.has_value())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode USESKIP yet");
 
-    auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
-
     static constexpr auto get_pixel = [](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> bool {
         if (x < 0 || x >= (int)buffer->width() || y < 0)
             return false;
@@ -897,12 +895,25 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
 
     // 6.2.5.7 Decoding the bitmap
     QMArithmeticDecoder& decoder = *inputs.arithmetic_decoder;
-    bool ltp = false; // "LTP" in spec. "Line (uses) Typical Prediction" maybe?
+
+    // "1) Set:
+    //         LTP = 0"
+    bool ltp = false; // "Line (uses) Typical Prediction" maybe?
+
+    // " 2) Create a bitmap GBREG of width GBW and height GBH pixels."
+    auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
+
+    // "3) Decode each row as follows:"
     for (size_t y = 0; y < inputs.region_height; ++y) {
+        // "a) If all GBH rows have been decoded then the decoding is complete; proceed to step 4)."
+        // "b) If TPGDON is 1, then decode a bit using the arithmetic entropy coder..."
         if (inputs.is_typical_prediction_used) {
             // "SLTP" in spec. "Swap LTP" or "Switch LTP" maybe?
             bool sltp = decoder.get_next_bit(contexts[sltp_context]);
             ltp = ltp ^ sltp;
+
+            // "c) If LTP = 1 then set every pixel of the current row of GBREG equal to the corresponding pixel of the row
+            //     immediately above."
             if (ltp) {
                 for (size_t x = 0; x < inputs.region_width; ++x)
                     result->set_bit(x, y, get_pixel(result, (int)x, (int)y - 1));
@@ -910,13 +921,22 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
             }
         }
 
+        // "d) If LTP = 0 then, from left to right, decode each pixel of the current row of GBREG. The procedure for each
+        //     pixel is as follows:"
         for (size_t x = 0; x < inputs.region_width; ++x) {
+            // "i) If USESKIP is 1 and the pixel in the bitmap SKIP at the location corresponding to the current pixel is 1,
+            //     then set the current pixel to 0."
+            // FIXME
+
+            // "ii) Otherwise:"
             u16 context = compute_context(result, inputs.adaptive_template_pixels, x, y);
             bool bit = decoder.get_next_bit(contexts[context]);
             result->set_bit(x, y, bit);
         }
     }
 
+    // "4) After all the rows have been decoded, the current contents of the bitmap GBREG are the results that shall be
+    //     obtained by every decoder, whether it performs this exact sequence of steps or not."
     return result;
 }
 
