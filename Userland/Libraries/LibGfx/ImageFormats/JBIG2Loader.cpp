@@ -2049,10 +2049,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     u8 default_pixel_value = (text_region_segment_flags >> 9) & 1; // "SBDEFPIXEL" in spec.
 
     u8 delta_s_offset_value = (text_region_segment_flags >> 10) & 0x1f; // "SBDSOFFSET" in spec.
-    i8 delta_s_offset = delta_s_offset_value;
-    if (delta_s_offset_value & 0x10) {
-        delta_s_offset = AK::sign_extend(delta_s_offset_value, 5);
-    }
+    i8 delta_s_offset = AK::sign_extend(delta_s_offset_value, 5);
 
     u8 refinement_template = (text_region_segment_flags >> 15) != 0; // "SBRTEMPLATE" in spec.
     if (!uses_refinement_coding && refinement_template != 0)
