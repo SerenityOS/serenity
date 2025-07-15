@@ -143,7 +143,7 @@ int sigpending(sigset_t* set)
 }
 
 // Signal 0 (the null signal) and Signal 32 (SIGCANCEL) are deliberately set to null here.
-// They are not intended to be resolved by strsignal(), getsignalname() or getsignalbyname().
+// They are not intended to be resolved by strsignal(), sig2str() or str2sig().
 #define ENUMERATE_SIGNALS                                  \
     __ENUMERATE_SIGNAL(nullptr, nullptr)                   \
     __ENUMERATE_SIGNAL("HUP", "Hangup")                    \
@@ -236,36 +236,6 @@ int sigtimedwait(sigset_t const* set, siginfo_t* info, struct timespec const* ti
 
     int rc = syscall(Syscall::SC_sigtimedwait, set, info, timeout);
     __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int getsignalbyname(char const* name)
-{
-    VERIFY(name);
-    StringView name_sv { name, strlen(name) };
-    for (size_t i = 1; i < NSIG; ++i) {
-        if (!sys_signame[i])
-            continue;
-
-        StringView signal_name { sys_signame[i], strlen(sys_signame[i]) };
-        if (signal_name == name_sv || (name_sv.starts_with("SIG"sv) && signal_name == name_sv.substring_view(3)))
-            return i;
-    }
-    errno = EINVAL;
-    return -1;
-}
-
-char const* getsignalname(int signal)
-{
-    if (signal <= 0 || signal >= NSIG) {
-        errno = EINVAL;
-        return nullptr;
-    }
-
-    auto const* result = sys_signame[signal];
-    if (!result)
-        errno = EINVAL;
-
-    return result;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9799919799/functions/sig2str.html

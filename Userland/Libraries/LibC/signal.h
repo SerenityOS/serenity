@@ -37,8 +37,6 @@ int sigtimedwait(sigset_t const*, siginfo_t*, struct timespec const*);
 int sigwait(sigset_t const*, int*);
 int sigwaitinfo(sigset_t const*, siginfo_t*);
 int raise(int sig);
-int getsignalbyname(char const*);
-char const* getsignalname(int);
 int sig2str(int signum, char* str);
 int str2sig(char const* __restrict__ str, int* __restrict__ pnum);
 
