@@ -90,7 +90,7 @@ constexpr MakeSigned<T> sign_extend(T value, u8 bits)
 {
     // C++ considers the shift by sizeof(T) * 8 UB, and it doesn’t make logical sense to sign-extend 0 bits anyways.
     VERIFY(bits > 0);
-    return static_cast<MakeSigned<T>>((static_cast<i64>(value << (sizeof(T) * 8 - bits))) >> (sizeof(T) * 8 - bits));
+    return static_cast<MakeSigned<T>>(value << (sizeof(T) * 8 - bits)) >> (sizeof(T) * 8 - bits);
 }
 
 }

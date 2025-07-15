@@ -131,3 +131,21 @@ TEST_CASE(clamp_to)
     EXPECT_EQ(AK::clamp_to<i64>(-9223372036854775808.0), NumericLimits<i64>::min());
     EXPECT_EQ(AK::clamp_to<i64>(9223372036854775807.0), NumericLimits<i64>::max());
 }
+
+TEST_CASE(sign_extend)
+{
+    EXPECT_EQ((AK::sign_extend(0b00001u, 5)), 1);
+    EXPECT_EQ((AK::sign_extend(0b01111u, 5)), 15);
+    EXPECT_EQ((AK::sign_extend(0b11111u, 5)), -1);
+    EXPECT_EQ((AK::sign_extend(0b10000u, 5)), -16);
+    EXPECT_EQ((AK::sign_extend(static_cast<u8>(0b10000u), 5)), -16);
+
+    EXPECT_EQ((AK::sign_extend(0x0000u, 16)), 0);
+    EXPECT_EQ((AK::sign_extend(0x7fffu, 16)), 32767);
+    EXPECT_EQ((AK::sign_extend(0xffffu, 16)), -1);
+    EXPECT_EQ((AK::sign_extend(0x8000u, 16)), -32768);
+    EXPECT_EQ((AK::sign_extend(static_cast<u16>(0x8000u), 16)), -32768);
+
+    EXPECT_EQ((AK::sign_extend(0xffff'ffff'ffff'ffffull, 64)), -1);
+    EXPECT_EQ((AK::sign_extend(0xffff'ffff'ffffull, 48)), -1);
+}
