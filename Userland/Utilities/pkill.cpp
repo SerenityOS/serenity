@@ -70,15 +70,9 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             if (signal_string.is_empty())
                 return false;
 
-            if (is_ascii_alpha(signal_string[0]))
-                signal = getsignalbyname(&signal_string[0]);
-            else if (auto maybe_signal = signal_string.to_number<int>(); maybe_signal.has_value())
-                signal = maybe_signal.value();
+            ByteString signal_byte_string = signal_string.starts_with("SIG"sv) ? signal_string.substring_view(3) : signal_string;
 
-            if (signal <= 0 || signal >= NSIG)
-                return false;
-
-            return true;
+            return (str2sig(signal_byte_string.characters(), &signal) == 0);
         },
     });
     args_parser.add_option(Core::ArgsParser::Option {
