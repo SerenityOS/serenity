@@ -133,6 +133,7 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
 #elif ARCH(AARCH64)
     builder.appendff("Stack pointer   sp={:p}\n", regs.sp);
     builder.appendff("Program counter pc={:p}\n", regs.pc);
+    builder.appendff("Process state   pstate={:p}\n", regs.spsr_el1);
     builder.appendff(" x0={:p}  x1={:p}  x2={:p}  x3={:p}  x4={:p}\n", regs.x[0], regs.x[1], regs.x[2], regs.x[3], regs.x[4]);
     builder.appendff(" x5={:p}  x6={:p}  x7={:p}  x8={:p}  x9={:p}\n", regs.x[5], regs.x[6], regs.x[7], regs.x[8], regs.x[9]);
     builder.appendff("x10={:p} x11={:p} x12={:p} x13={:p} x14={:p}\n", regs.x[10], regs.x[11], regs.x[12], regs.x[13], regs.x[14]);
