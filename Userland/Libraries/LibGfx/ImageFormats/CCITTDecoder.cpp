@@ -673,13 +673,11 @@ ErrorOr<ByteBuffer> decode_ccitt_group4(ReadonlyBytes bytes, u32 image_width, u3
     CCITTStatus status;
     TRY(status.current_line.try_empend(ccitt_black, image_width));
 
-    u32 i {};
-    while (!status.has_reached_eol && (image_height == 0 || i < image_height)) {
+    for (u32 i = 0; !status.has_reached_eol && (image_height == 0 || i < image_height); ++i) {
         if (options.encoded_byte_aligned == EncodedByteAligned::Yes)
             bit_stream->align_to_byte_boundary();
 
         status = TRY(decode_single_ccitt_2d_line(*bit_stream, *decoded_bits, move(status.current_line), image_width, options));
-        ++i;
     }
 
     return output_stream->read_until_eof();
