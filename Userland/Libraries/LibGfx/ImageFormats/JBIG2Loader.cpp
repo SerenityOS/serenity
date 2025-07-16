@@ -362,10 +362,7 @@ static void composite_bitbuffer(BitBuffer& out, BitBuffer const& bitmap, Gfx::In
 {
     IntRect bitmap_rect { position, { bitmap.width(), bitmap.height() } };
     IntRect out_rect { { 0, 0 }, { out.width(), out.height() } };
-
     IntRect clip_rect = bitmap_rect.intersected(out_rect);
-    if (clip_rect.is_empty())
-        return;
 
     for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
         for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
