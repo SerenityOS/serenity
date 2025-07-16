@@ -43,12 +43,20 @@ static void handle_print_registers(PtraceRegisters const& regs)
 #if ARCH(X86_64)
     outln("rax={:p} rbx={:p} rcx={:p} rdx={:p}", regs.rax, regs.rbx, regs.rcx, regs.rdx);
     outln("rsp={:p} rbp={:p} rsi={:p} rdi={:p}", regs.rsp, regs.rbp, regs.rsi, regs.rdi);
-    outln("r8 ={:p} r9 ={:p} r10={:p} r11={:p}", regs.r8, regs.r9, regs.r10, regs.r11);
+    outln(" r8={:p}  r9={:p} r10={:p} r11={:p}", regs.r8, regs.r9, regs.r10, regs.r11);
     outln("r12={:p} r13={:p} r14={:p} r15={:p}", regs.r12, regs.r13, regs.r14, regs.r15);
     outln("rip={:p} rflags={:p}", regs.rip, regs.rflags);
 #elif ARCH(AARCH64)
-    (void)regs;
-    TODO_AARCH64();
+    outln("Stack pointer   sp={:p}", regs.sp);
+    outln("Program counter pc={:p}", regs.pc);
+    outln("Process state   pstate={:p}", regs.spsr_el1);
+    outln(" x0={:p}  x1={:p}  x2={:p}  x3={:p}  x4={:p}", regs.x[0], regs.x[1], regs.x[2], regs.x[3], regs.x[4]);
+    outln(" x5={:p}  x6={:p}  x7={:p}  x8={:p}  x9={:p}", regs.x[5], regs.x[6], regs.x[7], regs.x[8], regs.x[9]);
+    outln("x10={:p} x11={:p} x12={:p} x13={:p} x14={:p}", regs.x[10], regs.x[11], regs.x[12], regs.x[13], regs.x[14]);
+    outln("x15={:p} x16={:p} x17={:p} x18={:p} x19={:p}", regs.x[15], regs.x[16], regs.x[17], regs.x[18], regs.x[19]);
+    outln("x20={:p} x21={:p} x22={:p} x23={:p} x24={:p}", regs.x[20], regs.x[21], regs.x[22], regs.x[23], regs.x[24]);
+    outln("x25={:p} x26={:p} x27={:p} x28={:p} x29={:p}", regs.x[25], regs.x[26], regs.x[27], regs.x[28], regs.x[29]);
+    outln("x30={:p}", regs.x[30]);
 #elif ARCH(RISCV64)
     outln("Program counter pc={:p}", regs.pc);
     outln("ra={:p} sp={:p} gp={:p} tp={:p} fp={:p}", regs.x[0], regs.x[1], regs.x[2], regs.x[3], regs.x[7]);
