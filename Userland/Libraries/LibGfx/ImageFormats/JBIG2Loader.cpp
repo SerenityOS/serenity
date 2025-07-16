@@ -1680,12 +1680,7 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
 
         // "b) For each pixel (x, y) in GSPLANES[J], set:
         //     GSPLANES[J][x, y] = GSPLANES[J + 1][x, y] XOR GSPLANES[J][x, y]"
-        for (u32 y = 0; y < inputs.height; ++y) {
-            for (u32 x = 0; x < inputs.width; ++x) {
-                bool bit = bitplanes[j + 1]->get_bit(x, y) ^ bitplanes[j]->get_bit(x, y);
-                bitplanes[j]->set_bit(x, y, bit);
-            }
-        }
+        composite_bitbuffer(*bitplanes[j], *bitplanes[j + 1], { 0, 0 }, CombinationOperator::Xor);
 
         // "c) Set J = J – 1."
         j = j - 1;
