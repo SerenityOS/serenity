@@ -360,31 +360,31 @@ enum class CombinationOperator {
 
 static void composite_bitbuffer(BitBuffer& out, BitBuffer const& bitmap, Gfx::IntPoint position, CombinationOperator operator_)
 {
+    static constexpr auto combine = [](bool dst, bool src, CombinationOperator op) -> bool {
+        switch (op) {
+        case CombinationOperator::Or:
+            return dst || src;
+        case CombinationOperator::And:
+            return dst && src;
+        case CombinationOperator::Xor:
+            return dst ^ src;
+        case CombinationOperator::XNor:
+            return !(dst ^ src);
+        case CombinationOperator::Replace:
+            return src;
+        }
+        VERIFY_NOT_REACHED();
+    };
+
     IntRect bitmap_rect { position, { bitmap.width(), bitmap.height() } };
     IntRect out_rect { { 0, 0 }, { out.width(), out.height() } };
     IntRect clip_rect = bitmap_rect.intersected(out_rect);
 
     for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
         for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
-            bool bit = bitmap.get_bit(x - position.x(), y - position.y());
-            switch (operator_) {
-            case CombinationOperator::Or:
-                bit = bit || out.get_bit(x, y);
-                break;
-            case CombinationOperator::And:
-                bit = bit && out.get_bit(x, y);
-                break;
-            case CombinationOperator::Xor:
-                bit = bit ^ out.get_bit(x, y);
-                break;
-            case CombinationOperator::XNor:
-                bit = !(bit ^ out.get_bit(x, y));
-                break;
-            case CombinationOperator::Replace:
-                // Nothing to do.
-                break;
-            }
-            out.set_bit(x, y, bit);
+            bool src_bit = bitmap.get_bit(x - position.x(), y - position.y());
+            bool dst_bit = out.get_bit(x, y);
+            out.set_bit(x, y, combine(dst_bit, src_bit, operator_));
         }
     }
 }
