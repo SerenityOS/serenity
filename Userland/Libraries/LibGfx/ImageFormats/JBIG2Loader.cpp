@@ -859,6 +859,21 @@ static ErrorOr<void> validate_segment_combination_operator_consistency(JBIG2Load
     return {};
 }
 
+// 7.4.10 End of stripe segment syntax
+struct [[gnu::packed]] EndOfStripeSegment {
+    // "The segment data of an end of stripe segment consists of one four-byte value, specifying the Y coordinate of the end row."
+    BigEndian<u32> y_coordinate;
+};
+static_assert(AssertSize<EndOfStripeSegment, 4>());
+
+static ErrorOr<EndOfStripeSegment> decode_end_of_stripe_segment(ReadonlyBytes data)
+{
+    // 7.4.8 Page information segment syntax
+    if (data.size() != sizeof(EndOfStripeSegment))
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of strip segment has wrong size");
+    return *(EndOfStripeSegment const*)data.data();
+}
+
 static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
 {
     // We only decode the first page at the moment.
@@ -2790,13 +2805,10 @@ static ErrorOr<void> decode_end_of_page(JBIG2LoadingContext&, SegmentData const&
 static ErrorOr<void> decode_end_of_stripe(JBIG2LoadingContext&, SegmentData const& segment)
 {
     // 7.4.10 End of stripe segment syntax
-    // "The segment data of an end of stripe segment consists of one four-byte value, specifying the Y coordinate of the end row."
-    if (segment.data.size() != 4)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of strip segment has wrong size");
+    auto end_of_stripe = TRY(decode_end_of_stripe_segment(segment.data));
 
     // FIXME: Once we implement support for images with initially indeterminate height, we need these values to determine the height at the end.
-    u32 y_coordinate = *reinterpret_cast<BigEndian<u32> const*>(segment.data.data());
-    dbgln_if(JBIG2_DEBUG, "End of stripe: y={}", y_coordinate);
+    dbgln_if(JBIG2_DEBUG, "End of stripe: y={}", end_of_stripe.y_coordinate);
 
     return {};
 }
