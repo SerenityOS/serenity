@@ -358,6 +358,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-tpgdon.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-customat-tpgdon.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-mmr.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-template1.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-template1-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-template1-tpgdon.jbig2"sv),
