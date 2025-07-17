@@ -106,7 +106,7 @@ static ErrorOr<void> strip_alpha(LoadedImage& image)
         return Error::from_string_literal("Can't --strip-alpha with invalid bitmaps");
     case Gfx::BitmapFormat::RGBA8888:
         // No image decoder currently produces bitmaps with this format.
-        // If that ever changes, preferrably fix the image decoder to use BGRA8888 instead :)
+        // If that ever changes, preferably fix the image decoder to use BGRA8888 instead :)
         // If there's a good reason for not doing that, implement support for this, I suppose.
         return Error::from_string_literal("--strip-alpha not implemented for RGBA8888");
     case Gfx::BitmapFormat::BGRA8888:
