@@ -410,6 +410,7 @@ struct JBIG2LoadingContext {
 
     Organization organization { Organization::Sequential };
     Page page;
+    u32 current_page_number { 1 };
 
     Optional<u32> number_of_pages;
 
@@ -704,7 +705,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
     // We only decode the first page at the moment.
     bool found_size = false;
     for (auto const& segment : context.segments) {
-        if (segment.header.type != SegmentType::PageInformation || segment.header.page_association != 1)
+        if (segment.header.type != SegmentType::PageInformation || segment.header.page_association != context.current_page_number)
             continue;
         auto page_information = TRY(decode_page_information_segment(segment.data));
 
@@ -734,8 +735,8 @@ static ErrorOr<void> warn_about_multiple_pages(JBIG2LoadingContext& context)
         pages.append(segment.header.page_association);
     }
 
-    // scan_for_page_size() already checked that there's a page 1.
-    VERIFY(seen_pages.contains(1));
+    // scan_for_page_size() already checked that we have the current page.
+    VERIFY(seen_pages.contains(context.current_page_number));
     if (pages.size() == 1)
         return {};
 
@@ -746,7 +747,7 @@ static ErrorOr<void> warn_about_multiple_pages(JBIG2LoadingContext& context)
         builder.appendff(" {}", pages[i]);
     if (i != pages.size())
         builder.append(" ..."sv);
-    builder.append("). We will only render page 1."sv);
+    builder.appendff("). We will only render page {}."sv, context.current_page_number);
     dbgln("JBIG2ImageDecoderPlugin: {}", TRY(builder.to_string()));
 
     return {};
@@ -2616,7 +2617,7 @@ static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
     for (size_t i = 0; i < context.segments.size(); ++i) {
         auto& segment = context.segments[i];
 
-        if (segment.header.page_association != 0 && segment.header.page_association != 1)
+        if (segment.header.page_association != 0 && segment.header.page_association != context.current_page_number)
             continue;
 
         switch (segment.header.type) {
