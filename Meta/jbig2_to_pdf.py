@@ -27,6 +27,7 @@ def dedent(b):
 class SegmentHeader:
     segment_header_size: int
     type: int
+    associated_page: int
     bytes: bytes
     data_size: int
     data: bytes
@@ -51,8 +52,10 @@ def read_segment_header(data, offset):
     segment_header_size = 4 + 1 + 1 + ref_size * referred_segments_count
 
     if segment_page_association_size_is_32_bits:
+        page, = struct.unpack_from('>I', data, offset + segment_header_size)
         segment_header_size += 4
     else:
+        page = data[offset + segment_header_size]
         segment_header_size += 1
 
     data_size, = struct.unpack_from('>I', data, offset + segment_header_size)
@@ -61,7 +64,7 @@ def read_segment_header(data, offset):
     segment_header_size += 4
 
     bytes = data[offset:offset + segment_header_size]
-    return SegmentHeader(segment_header_size, type, bytes, data_size, None)
+    return SegmentHeader(segment_header_size, type, page, bytes, data_size, None)
 
 
 def read_segment_headers(data, is_random_access):
