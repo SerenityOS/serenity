@@ -16,7 +16,7 @@ namespace Kernel {
 // the lock order violation and respond appropriately (crash with error).
 //
 // A thread holding a lower ranked lock cannot acquire a lock of a greater or equal rank.
-enum class LockRank : int {
+enum class LockRank : unsigned {
     // Special marker for locks which haven't been annotated yet.
     // Note: This should be removed once all locks are annotated.
     None = 0x000,
@@ -34,10 +34,18 @@ enum class LockRank : int {
     // Process locks are the highest rank, as they normally are taken
     // first thing when processing syscalls.
     Process = 0x010,
+
+    // Mutexes need to be taken before spinlocks, so they get their own LockRank.
+    Mutex = 0x020,
 };
 
 AK_ENUM_BITWISE_OPERATORS(LockRank);
 
-void track_lock_acquire(LockRank);
-void track_lock_release(LockRank);
+enum class DidAcquireLockRank : bool {
+    No,
+    Yes,
+};
+
+[[nodiscard]] DidAcquireLockRank track_lock_acquire(LockRank);
+void track_lock_release(LockRank, DidAcquireLockRank);
 }
