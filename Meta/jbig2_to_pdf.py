@@ -122,10 +122,11 @@ def main():
 
     # strip jbig2 header
     image_data = image_data[8:]
-    is_random_access = image_data[0] & 1 == 0
-    if image_data[0] & 2 == 0:
-        image_data = image_data[4:]
+    flags = image_data[0]
     image_data = image_data[1:]
+    is_random_access = flags & 1 == 0
+    if flags & 2 == 0:
+        image_data = image_data[4:]
 
     segment_headers = read_segment_headers(image_data, is_random_access)
 
