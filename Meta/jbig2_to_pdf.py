@@ -18,6 +18,7 @@ import textwrap
 
 PageInformation = 48
 EndOfPage = 49
+EndOfStripe = 50
 EndOfFile = 51
 
 
@@ -109,10 +110,16 @@ def reserialize(segment_headers):
 
 
 def get_dimensions(segment_headers):
-    for segment_header in segment_headers:
-        if segment_header.type != PageInformation:
-            continue
-        return struct.unpack_from('>II', segment_header.data)
+    for i, segment_header in enumerate(segment_headers):
+        if segment_header.type == PageInformation:
+            w, h = struct.unpack_from('>II', segment_header.data)
+            if h != 0xffff_ffff:
+                return w, h
+        if segment_header.type == EndOfPage:
+            if segment_headers[i - 1].type != EndOfStripe:
+                raise Exception('EndOfPage not preceded by EndOfStripe')
+            y, = struct.unpack_from('>I', segment_headers[i - 1].data)
+            return w, y + 1
     raise Exception('did not find PageInformation')
 
 
@@ -155,9 +162,8 @@ def main():
 
     pages = collections.defaultdict(list)
     for h in segment_headers:
-        if h.associated_page == 0 or h.type == EndOfPage:
-            continue
-        pages[h.associated_page].append(h)
+        if h.associated_page != 0:
+            pages[h.associated_page].append(h)
 
     p = 4 if global_segments else 3
 
@@ -205,10 +211,10 @@ def main():
 
     for page in pages:
         segment_headers = pages[page]
-
         width, height = get_dimensions(segment_headers)
         print(f'dims {width}x{height}')
 
+        segment_headers = [h for h in segment_headers if h.type != EndOfPage]
         image_data = reserialize(segment_headers)
 
         operators = dedent(b'''\
