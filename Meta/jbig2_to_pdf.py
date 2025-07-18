@@ -140,11 +140,17 @@ def main():
     #  written to the XObject, the value of its segment page association field should be
     #  set to 1."
     # [...]
-    # FIXME: "If the bit stream contains global segments (segments whose segment page asso-
+    # "If the bit stream contains global segments (segments whose segment page asso-
     #  ciation field contains 0), these segments must be placed in a separate PDF
     #  stream, and the filter parameter listed in Table 3.10 should refer to that stream."
+    global_segments = [h for h in segment_headers
+                       if h.associated_page == 0 and h.type != EndOfFile]
     segment_headers = [h for h in segment_headers
-                       if h.associated_page in [0, 1] and h.type not in [EndOfFile, EndOfPage]]
+                       if h.associated_page == 1 and h.type != EndOfPage]
+
+    global_entry = b''
+    if global_segments:
+        global_entry = b'\n                /DecodeParms <</JBIG2Globals 6 0 R>>'
 
     width, height = get_dimensions(segment_headers)
     print(f'dims {width}x{height}')
@@ -216,17 +222,32 @@ def main():
                 /Width %d
                 /Height %d
                 /ColorSpace /DeviceGray
-                /Filter /JBIG2Decode
+                /Filter /JBIG2Decode%b
                 /BitsPerComponent 1
               >>
               stream
-              ''' % (len(image_data), width, height)) +
+              ''' % (len(image_data), width, height, global_entry)) +
             image_data +
             dedent(b'''
               endstream
               endobj
               '''),
             ]
+
+    if global_segments:
+        global_segment_data = reserialize(global_segments)
+        objs += [
+            dedent(b'''\
+              6 0 obj
+              <</Length %d>>
+              stream
+              ''' % len(global_segment_data)) +
+            global_segment_data +
+            dedent(b'''
+              endstream
+              endobj
+              '''),
+        ]
 
     with open(args.output, 'wb') as f:
         f.write(start)
