@@ -16,6 +16,7 @@ import textwrap
 
 
 PageInformation = 48
+EndOfPage = 49
 EndOfFile = 51
 
 
@@ -130,7 +131,20 @@ def main():
 
     segment_headers = read_segment_headers(image_data, is_random_access)
 
-    segment_headers = [h for h in segment_headers if h.associated_page in [0, 1]]
+    # "The JBIG2 file header, end-of-page segments, and end-of-file segment are not
+    #  used in PDF. These should be removed before the PDF objects described below
+    #  are created."
+    # [...]
+    # FIXME: "In the image XObject, however, the
+    #  segment’s page number should always be 1; that is, when each such segment is
+    #  written to the XObject, the value of its segment page association field should be
+    #  set to 1."
+    # [...]
+    # FIXME: "If the bit stream contains global segments (segments whose segment page asso-
+    #  ciation field contains 0), these segments must be placed in a separate PDF
+    #  stream, and the filter parameter listed in Table 3.10 should refer to that stream."
+    segment_headers = [h for h in segment_headers
+                       if h.associated_page in [0, 1] and h.type not in [EndOfFile, EndOfPage]]
 
     width, height = get_dimensions(segment_headers)
     print(f'dims {width}x{height}')
