@@ -11,6 +11,7 @@ Usage :
 
 from dataclasses import dataclass
 import argparse
+import collections
 import struct
 import textwrap
 
@@ -145,27 +146,21 @@ def main():
     #  stream, and the filter parameter listed in Table 3.10 should refer to that stream."
     global_segments = [h for h in segment_headers
                        if h.associated_page == 0 and h.type != EndOfFile]
-    segment_headers = [h for h in segment_headers
-                       if h.associated_page == 1 and h.type != EndOfPage]
+
+    pages = collections.defaultdict(list)
+    for h in segment_headers:
+        if h.associated_page == 0 or h.type == EndOfPage:
+            continue
+        pages[h.associated_page].append(h)
+
+    p = 4 if global_segments else 3
+
+    print(f'{len(pages)} pages')
+    page_refs = b' '.join([b'%d 0 R' % (p + 3 * i) for i in range(len(pages))])
 
     global_entry = b''
     if global_segments:
-        global_entry = b'\n                /DecodeParms <</JBIG2Globals 6 0 R>>'
-
-    width, height = get_dimensions(segment_headers)
-    print(f'dims {width}x{height}')
-
-    image_data = reserialize(segment_headers)
-
-    start = dedent(b'''\
-              %PDF-1.4
-              %\265\266
-
-              ''')
-
-    operators = dedent(b'''\
-                  %d 0 0 %d 0 0 cm
-                  /Im Do''' % (width, height))
+        global_entry = b'\n                /DecodeParms <</JBIG2Globals 3 0 R>>'
 
     objs = [dedent(b'''\
               1 0 obj
@@ -180,33 +175,62 @@ def main():
               2 0 obj
               <<
                 /Type /Pages
-                /Kids [3 0 R]
-                /Count 1
+                /Kids [%b]
+                /Count %d
               >>
               endobj
-              '''),
+              ''' % (page_refs, len(pages))),
+            ]
 
+    if global_segments:
+        global_segment_data = reserialize(global_segments)
+        objs += [
             dedent(b'''\
               3 0 obj
+              <</Length %d>>
+              stream
+              ''' % len(global_segment_data)) +
+            global_segment_data +
+            dedent(b'''
+              endstream
+              endobj
+              '''),
+        ]
+
+    for page in pages:
+        segment_headers = pages[page]
+
+        width, height = get_dimensions(segment_headers)
+        print(f'dims {width}x{height}')
+
+        image_data = reserialize(segment_headers)
+
+        operators = dedent(b'''\
+                      %d 0 0 %d 0 0 cm
+                      /Im Do''' % (width, height))
+
+        objs += [
+            dedent(b'''\
+              %d 0 obj
               <<
                 /Type /Page
                 /Parent 2 0 R
                 /MediaBox [0 0 %d %d]
-                /Contents 4 0 R
+                /Contents %d 0 R
                 /Resources <<
                   /XObject <<
-                    /Im 5 0 R
+                    /Im %d 0 R
                   >>
                 >>
               >>
               endobj
-              ''' % (width, height)),
+              ''' % (p, width, height, p + 1, p + 2)),
 
             dedent(b'''\
-              4 0 obj
+              %d 0 obj
               <</Length %d>>
               stream
-              ''' % len(operators)) +
+              ''' % (p + 1, len(operators))) +
             operators +
             dedent(b'''
               endstream
@@ -214,7 +238,7 @@ def main():
               '''),
 
             dedent(b'''\
-              5 0 obj
+              %d 0 obj
               <<
                 /Length %d
                 /Type /XObject
@@ -226,28 +250,21 @@ def main():
                 /BitsPerComponent 1
               >>
               stream
-              ''' % (len(image_data), width, height, global_entry)) +
+              ''' % (p + 2, len(image_data), width, height, global_entry)) +
             image_data +
             dedent(b'''
               endstream
               endobj
               '''),
-            ]
-
-    if global_segments:
-        global_segment_data = reserialize(global_segments)
-        objs += [
-            dedent(b'''\
-              6 0 obj
-              <</Length %d>>
-              stream
-              ''' % len(global_segment_data)) +
-            global_segment_data +
-            dedent(b'''
-              endstream
-              endobj
-              '''),
         ]
+
+        p += 3
+
+    start = dedent(b'''\
+              %PDF-1.4
+              %\265\266
+
+              ''')
 
     with open(args.output, 'wb') as f:
         f.write(start)
