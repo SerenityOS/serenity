@@ -92,7 +92,7 @@ def read_segment_headers(data, is_random_access):
     return segment_headers
 
 
-def random_access_to_sequential(segment_headers):
+def reserialize(segment_headers):
     out_data = bytes()
     for segment_header in segment_headers:
         out_data += segment_header.bytes
@@ -130,11 +130,12 @@ def main():
 
     segment_headers = read_segment_headers(image_data, is_random_access)
 
+    segment_headers = [h for h in segment_headers if h.associated_page in [0, 1]]
+
     width, height = get_dimensions(segment_headers)
     print(f'dims {width}x{height}')
 
-    if is_random_access:
-        image_data = random_access_to_sequential(segment_headers)
+    image_data = reserialize(segment_headers)
 
     start = dedent(b'''\
               %PDF-1.4
