@@ -52,6 +52,7 @@ def read_segment_header(data, offset):
     else:
         ref_size = 4
     segment_header_size = 4 + 1 + 1 + ref_size * referred_segments_count
+    pre_page_size = segment_header_size
 
     if segment_page_association_size_is_32_bits:
         page, = struct.unpack_from('>I', data, offset + segment_header_size)
@@ -66,6 +67,11 @@ def read_segment_header(data, offset):
     segment_header_size += 4
 
     bytes = data[offset:offset + segment_header_size]
+    if page != 0:
+        if segment_page_association_size_is_32_bits:
+            bytes = bytes[:pre_page_size] + b'\0\0\0\1' + bytes[pre_page_size + 4:]
+        else:
+            bytes = bytes[:pre_page_size] + b'\1' + bytes[pre_page_size + 1:]
     return SegmentHeader(segment_header_size, type, page, bytes, data_size, None)
 
 
@@ -136,7 +142,7 @@ def main():
     #  used in PDF. These should be removed before the PDF objects described below
     #  are created."
     # [...]
-    # FIXME: "In the image XObject, however, the
+    # "In the image XObject, however, the
     #  segment’s page number should always be 1; that is, when each such segment is
     #  written to the XObject, the value of its segment page association field should be
     #  set to 1."
