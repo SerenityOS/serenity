@@ -2421,12 +2421,6 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
     // "1) Decode the page information segment.""
     auto page_information = TRY(decode_page_information_segment(segment.data));
 
-    bool page_is_striped = (page_information.striping_information & 0x80) != 0;
-    if (page_information.bitmap_height == 0xffff'ffff && !page_is_striped)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-striped bitmaps of indeterminate height not allowed");
-
-    u16 maximum_stripe_height = page_information.striping_information & 0x7F;
-
     bool is_eventually_lossless = page_information.flags & 1;
     bool might_contain_refinements = (page_information.flags >> 1) & 1;
     u8 default_color = (page_information.flags >> 2) & 1;
@@ -2435,6 +2429,12 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
     bool direct_region_segments_override_default_combination_operator = (page_information.flags >> 6) & 1;
     bool might_contain_coloured_segment = (page_information.flags >> 7) & 1;
     context.page.default_combination_operator = static_cast<CombinationOperator>(default_combination_operator);
+
+    bool page_is_striped = (page_information.striping_information & 0x80) != 0;
+    if (page_information.bitmap_height == 0xffff'ffff && !page_is_striped)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-striped bitmaps of indeterminate height not allowed");
+
+    u16 maximum_stripe_height = page_information.striping_information & 0x7F;
 
     dbgln_if(JBIG2_DEBUG, "Page information: width={}, height={}, is_striped={}, max_stripe_height={}", page_information.bitmap_width, page_information.bitmap_height, page_is_striped, maximum_stripe_height);
     dbgln_if(JBIG2_DEBUG, "Page information: flags={:#02x}", page_information.flags);
