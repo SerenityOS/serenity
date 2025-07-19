@@ -2426,12 +2426,25 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-striped bitmaps of indeterminate height not allowed");
 
     u16 maximum_stripe_height = page_information.striping_information & 0x7F;
+
+    bool is_eventually_lossless = page_information.flags & 1;
+    bool might_contain_refinements = (page_information.flags >> 1) & 1;
     u8 default_color = (page_information.flags >> 2) & 1;
     u8 default_combination_operator = (page_information.flags >> 3) & 3;
+    bool requires_auxiliary_buffers = (page_information.flags >> 5) & 1;
+    bool direct_region_segments_override_default_combination_operator = (page_information.flags >> 6) & 1;
+    bool might_contain_coloured_segment = (page_information.flags >> 7) & 1;
     context.page.default_combination_operator = static_cast<CombinationOperator>(default_combination_operator);
 
-    dbgln_if(JBIG2_DEBUG, "Page information: width={}, height={}, is_striped={}, max_stripe_height={}, default_color={}, default_combination_operator={}", page_information.bitmap_width, page_information.bitmap_height, page_is_striped, maximum_stripe_height, default_color, default_combination_operator);
-
+    dbgln_if(JBIG2_DEBUG, "Page information: width={}, height={}, is_striped={}, max_stripe_height={}", page_information.bitmap_width, page_information.bitmap_height, page_is_striped, maximum_stripe_height);
+    dbgln_if(JBIG2_DEBUG, "Page information: flags={:#02x}", page_information.flags);
+    dbgln_if(JBIG2_DEBUG, "    is_eventually_lossless={}", is_eventually_lossless);
+    dbgln_if(JBIG2_DEBUG, "    might_contain_refinements={}", might_contain_refinements);
+    dbgln_if(JBIG2_DEBUG, "    default_color={}", default_color);
+    dbgln_if(JBIG2_DEBUG, "    default_combination_operator={}", (int)default_combination_operator);
+    dbgln_if(JBIG2_DEBUG, "    requires_auxiliary_buffers={}", requires_auxiliary_buffers);
+    dbgln_if(JBIG2_DEBUG, "    direct_region_segments_override_default_combination_operator={}", direct_region_segments_override_default_combination_operator);
+    dbgln_if(JBIG2_DEBUG, "    might_contain_coloured_segment={}", might_contain_coloured_segment);
     // FIXME: Do something with the other fields in page_information.
 
     // "2) Create the page buffer, of the size given in the page information segment.
