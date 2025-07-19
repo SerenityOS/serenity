@@ -2430,11 +2430,11 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
     bool might_contain_coloured_segment = (page_information.flags >> 7) & 1;
     context.page.default_combination_operator = static_cast<CombinationOperator>(default_combination_operator);
 
-    bool page_is_striped = (page_information.striping_information & 0x80) != 0;
+    bool page_is_striped = (page_information.striping_information & 0x8000) != 0;
     if (page_information.bitmap_height == 0xffff'ffff && !page_is_striped)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-striped bitmaps of indeterminate height not allowed");
 
-    u16 maximum_stripe_height = page_information.striping_information & 0x7F;
+    u16 maximum_stripe_height = page_information.striping_information & 0x7FFF;
 
     dbgln_if(JBIG2_DEBUG, "Page information: width={}, height={}, is_striped={}, max_stripe_height={}", page_information.bitmap_width, page_information.bitmap_height, page_is_striped, maximum_stripe_height);
     dbgln_if(JBIG2_DEBUG, "Page information: flags={:#02x}", page_information.flags);
