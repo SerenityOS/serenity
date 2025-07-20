@@ -395,6 +395,8 @@ struct Page {
     // This is never CombinationOperator::Replace for Pages.
     CombinationOperator default_combination_operator { CombinationOperator::Or };
 
+    bool direct_region_segments_override_default_combination_operator { false };
+
     OwnPtr<BitBuffer> bits;
 };
 
@@ -677,6 +679,24 @@ static ErrorOr<PageInformationSegment> decode_page_information_segment(ReadonlyB
     if (data.size() != sizeof(PageInformationSegment))
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid page information segment size");
     return *(PageInformationSegment const*)data.data();
+}
+
+static ErrorOr<void> validate_segment_combination_operator_consistency(JBIG2LoadingContext& context, RegionSegmentInformationField const& information_field)
+{
+    // 7.4.8.5 Page segment flags
+    // "NOTE 1 – All region segments, except for refinement region segments, are direct region segments. Because of the requirements
+    //  in 7.4.7.5 restricting the external combination operators of refinement region segments, if this bit is 0, then refinement region
+    //  segments associated with this page that refer to no region segments must have an external combination operator of REPLACE,
+    //  and all other region segments associated with this page must have the external combination operator specified by this page's
+    //  "Page default combination operator"."
+
+    if (context.page.direct_region_segments_override_default_combination_operator)
+        return {};
+
+    if (information_field.external_combination_operator() != context.page.default_combination_operator)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment combination operator does not match page default combination operator, despite page information segment claiming it would");
+
+    return {};
 }
 
 static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
@@ -2052,6 +2072,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     data = data.slice(sizeof(information_field));
 
     dbgln_if(JBIG2_DEBUG, "Text region: width={}, height={}, x={}, y={}, flags={:#x}", information_field.width, information_field.height, information_field.x_location, information_field.y_location, information_field.flags);
+    TRY(validate_segment_combination_operator_consistency(context, information_field));
 
     FixedMemoryStream stream(data);
 
@@ -2226,6 +2247,7 @@ static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& conte
     data = data.slice(sizeof(information_field));
 
     dbgln_if(JBIG2_DEBUG, "Halftone region: width={}, height={}, x={}, y={}, flags={:#x}", information_field.width, information_field.height, information_field.x_location, information_field.y_location, information_field.flags);
+    TRY(validate_segment_combination_operator_consistency(context, information_field));
 
     FixedMemoryStream stream(data);
 
@@ -2338,6 +2360,7 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     data = data.slice(sizeof(information_field));
 
     dbgln_if(JBIG2_DEBUG, "Generic region: width={}, height={}, x={}, y={}, flags={:#x}", information_field.width, information_field.height, information_field.x_location, information_field.y_location, information_field.flags);
+    TRY(validate_segment_combination_operator_consistency(context, information_field));
 
     // 7.4.6.2 Generic region segment flags
     if (data.is_empty())
@@ -2444,6 +2467,7 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
 
     u8 default_color = page_information.default_color();
     context.page.default_combination_operator = page_information.default_combination_operator();
+    context.page.direct_region_segments_override_default_combination_operator = page_information.direct_region_segments_override_default_combination_operator();
 
     if (page_information.bitmap_height == 0xffff'ffff && !page_information.page_is_striped())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-striped bitmaps of indeterminate height not allowed");
@@ -2455,9 +2479,8 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
     dbgln_if(JBIG2_DEBUG, "    default_color={}", default_color);
     dbgln_if(JBIG2_DEBUG, "    default_combination_operator={}", (int)context.page.default_combination_operator);
     dbgln_if(JBIG2_DEBUG, "    requires_auxiliary_buffers={}", page_information.requires_auxiliary_buffers());
-    dbgln_if(JBIG2_DEBUG, "    direct_region_segments_override_default_combination_operator={}", page_information.direct_region_segments_override_default_combination_operator());
+    dbgln_if(JBIG2_DEBUG, "    direct_region_segments_override_default_combination_operator={}", context.page.direct_region_segments_override_default_combination_operator);
     dbgln_if(JBIG2_DEBUG, "    might_contain_coloured_segment={}", page_information.might_contain_coloured_segments());
-    // FIXME: Do something with the other fields in page_information.
 
     // "2) Create the page buffer, of the size given in the page information segment.
     //
