@@ -18,7 +18,7 @@
 
 namespace Gfx {
 
-void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, LineStyle style, Color, LineLengthMode line_length_mode)
+void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, LineStyle style, Color)
 {
     // FIXME: Implement this :P
     VERIFY(style == LineStyle::Solid);
@@ -26,117 +26,11 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     if (color.alpha() == 0)
         return;
 
-    // FIMXE:
-    // This is not a proper line drawing algorithm.
-    // It's hack-ish AA rotated rectangle painting.
-    // There's probably more optimal ways to achieve this
-    // (though this still runs faster than the previous AA-line code)
-    //
-    // If you, reading this comment, know a better way that:
-    //  1. Does not overpaint (i.e. painting a line with transparency looks correct)
-    //  2. Has square end points (i.e. the line is a rectangle)
-    //  3. Has good anti-aliasing
-    //  4. Is less hacky than this
-    //
-    // Please delete this code and implement it!
+    Path line;
+    line.move_to(actual_from);
+    line.line_to(actual_to);
 
-    int int_thickness = AK::ceil(thickness);
-    auto mapped_from = m_transform.map(actual_from);
-    auto mapped_to = m_transform.map(actual_to);
-    auto distance = mapped_to.distance_from(mapped_from);
-    auto length = distance + (line_length_mode == LineLengthMode::PointToPoint);
-
-    // Axis-aligned lines:
-    if (mapped_from.y() == mapped_to.y()) {
-        auto start_point = (mapped_from.x() < mapped_to.x() ? mapped_from : mapped_to).translated(0, -int_thickness / 2);
-        return fill_rect(Gfx::FloatRect(start_point, { length, thickness }), color);
-    }
-    if (mapped_from.x() == mapped_to.x()) {
-        auto start_point = (mapped_from.y() < mapped_to.y() ? mapped_from : mapped_to).translated(-int_thickness / 2, 0);
-        return fill_rect(Gfx::FloatRect(start_point, { thickness, length }), color);
-    }
-
-    // The painting only works for the positive XY quadrant (because that is easier).
-    // So flip things around until we're there:
-    bool flip_x = false;
-    bool flip_y = false;
-    if (mapped_to.x() < mapped_from.x() && mapped_to.y() < mapped_from.y())
-        swap(mapped_to, mapped_from);
-    if ((flip_x = mapped_to.x() < mapped_from.x()))
-        mapped_to.set_x(2 * mapped_from.x() - mapped_to.x());
-    if ((flip_y = mapped_to.y() < mapped_from.y()))
-        mapped_to.set_y(2 * mapped_from.y() - mapped_to.y());
-
-    auto delta = mapped_to - mapped_from;
-    auto line_angle_radians = AK::atan2(delta.y(), delta.x()) - 0.5f * AK::Pi<float>;
-    float sin_inverse_angle;
-    float cos_inverse_angle;
-    AK::sincos(-line_angle_radians, sin_inverse_angle, cos_inverse_angle);
-
-    auto inverse_rotate_point = [=](FloatPoint point) {
-        return Gfx::FloatPoint(
-            point.x() * cos_inverse_angle - point.y() * sin_inverse_angle,
-            point.y() * cos_inverse_angle + point.x() * sin_inverse_angle);
-    };
-
-    Gfx::FloatRect line_rect({ -(thickness * 255) / 2.0f, 0 }, Gfx::FloatSize(thickness * 255, length * 255));
-
-    auto gradient = delta.y() / delta.x();
-    // Work out how long we need to scan along the X-axis to reach the other side of the line.
-    // E.g. for a vertical line this would be `thickness', in general it is this:
-    int scan_line_length = AK::ceil(AK::sqrt((gradient * gradient + 1) * thickness * thickness) / gradient);
-
-    auto x_gradient = 1 / gradient;
-    int x_step = floorf(x_gradient);
-
-    float x_error = 0;
-    float x_error_per_y = x_gradient - x_step;
-
-    auto y_offset = int_thickness + 1;
-    auto x_offset = int(x_gradient * y_offset);
-    int const line_start_x = mapped_from.x();
-    int const line_start_y = mapped_from.y();
-    int const line_end_x = mapped_to.x();
-    int const line_end_y = mapped_to.y();
-
-    auto set_pixel = [=, this](int x, int y, Gfx::Color color) {
-        // FIXME: The lines seem slightly off (<= 1px) when flipped.
-        if (flip_x)
-            x = 2 * line_start_x - x;
-        if (flip_y)
-            y = 2 * line_start_y - y;
-        m_underlying_painter.set_pixel(x, y, color, true);
-    };
-
-    // Scan a bit extra to avoid issues from the x_error:
-    int const overscan = max(x_step, 1) * 2 + 1;
-    int x = line_start_x - x_offset;
-    int const center_offset = (scan_line_length + 1) / 2;
-    for (int y = line_start_y - y_offset; y < line_end_y + y_offset; y += 1) {
-        for (int i = -overscan; i < scan_line_length + overscan; i++) {
-            int scan_x_pos = x + i - center_offset;
-            // Avoid scanning over pixels definitely outside the line:
-            int dx = (line_start_x - int_thickness) - (scan_x_pos + 1);
-            if (dx > 0) {
-                i += dx;
-                continue;
-            }
-            if (line_end_x + int_thickness <= scan_x_pos - 1)
-                break;
-            auto sample = inverse_rotate_point(Gfx::FloatPoint(scan_x_pos - line_start_x, y - line_start_y));
-            Gfx::FloatRect sample_px(sample * 255, Gfx::FloatSize(255, 255));
-            sample_px.intersect(line_rect);
-            auto alpha = (sample_px.width() * sample_px.height()) / 255.0f;
-            alpha = (alpha * color.alpha()) / 255;
-            set_pixel(scan_x_pos, y, color.with_alpha(alpha));
-        }
-        x += x_step;
-        x_error += x_error_per_y;
-        if (x_error > 1.0f) {
-            x_error -= 1.0f;
-            x += 1;
-        }
-    }
+    stroke_path(line, color, Path::StrokeStyle { .thickness = thickness, .cap_style = Path::CapStyle::Square, .join_style = Path::JoinStyle::Miter });
 }
 
 void AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Color color, int thickness)
@@ -181,21 +75,21 @@ void AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Col
     }
 }
 
-void AntiAliasingPainter::draw_line(IntPoint actual_from, IntPoint actual_to, Color color, float thickness, LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
+void AntiAliasingPainter::draw_line(IntPoint actual_from, IntPoint actual_to, Color color, float thickness, LineStyle style, Color alternate_color)
 {
-    draw_line(actual_from.to_type<float>(), actual_to.to_type<float>(), color, thickness, style, alternate_color, line_length_mode);
+    draw_line(actual_from.to_type<float>(), actual_to.to_type<float>(), color, thickness, style, alternate_color);
 }
 
-void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, LineStyle style, Color alternate_color, LineLengthMode line_length_mode)
+void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, LineStyle style, Color alternate_color)
 {
     if (style == LineStyle::Dotted)
         return draw_dotted_line(actual_from.to_rounded<int>(), actual_to.to_rounded<int>(), color, static_cast<int>(round(thickness)));
-    draw_anti_aliased_line(actual_from, actual_to, color, thickness, style, alternate_color, line_length_mode);
+    draw_anti_aliased_line(actual_from, actual_to, color, thickness, style, alternate_color);
 }
 
 void AntiAliasingPainter::stroke_path(Path const& path, Color color, Path::StrokeStyle const& stroke_style)
 {
-    if (stroke_style.thickness <= 0)
+    if (stroke_style.thickness <= 0 || color.alpha() == 0)
         return;
     // FIXME: Cache this? Probably at a higher level such as in LibWeb?
     fill_path(path.stroke_to_fill(stroke_style), color);
@@ -203,7 +97,7 @@ void AntiAliasingPainter::stroke_path(Path const& path, Color color, Path::Strok
 
 void AntiAliasingPainter::stroke_path(Path const& path, Gfx::PaintStyle const& paint_style, Path::StrokeStyle const& stroke_style, float opacity)
 {
-    if (stroke_style.thickness <= 0)
+    if (stroke_style.thickness <= 0 || opacity <= 0)
         return;
     // FIXME: Cache this? Probably at a higher level such as in LibWeb?
     fill_path(path.stroke_to_fill(stroke_style), paint_style, opacity);
