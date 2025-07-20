@@ -25,18 +25,11 @@ public:
     {
     }
 
-    enum class LineLengthMode {
-        // E.g. A line from 0,1 -> 2,1 is 3px long
-        PointToPoint,
-        // E.g. A line from 0,1 -> 2,1 is 2px long
-        Distance
-    };
-
-    void draw_line(IntPoint, IntPoint, Color, float thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
-    void draw_line(FloatPoint, FloatPoint, Color, float thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent, LineLengthMode line_length_mode = LineLengthMode::PointToPoint);
-    void draw_line(FloatLine line, Color color, float thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent, LineLengthMode line_length_mode = LineLengthMode::PointToPoint)
+    void draw_line(IntPoint, IntPoint, Color, float thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent);
+    void draw_line(FloatPoint, FloatPoint, Color, float thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent);
+    void draw_line(FloatLine line, Color color, float thickness = 1, LineStyle style = LineStyle::Solid, Color alternate_color = Color::Transparent)
     {
-        draw_line(line.a(), line.b(), color, thickness, style, alternate_color, line_length_mode);
+        draw_line(line.a(), line.b(), color, thickness, style, alternate_color);
     }
 
     template<typename SampleMode = Sample32xAA>
@@ -90,7 +83,7 @@ private:
 
     Range draw_ellipse_part(IntPoint a_rect, int radius_a, int radius_b, Color alternate_color, bool flip_x_and_y, Optional<Range> x_clip, BlendMode blend_mode);
 
-    void draw_anti_aliased_line(FloatPoint, FloatPoint, Color, float thickness, LineStyle, Color, LineLengthMode);
+    void draw_anti_aliased_line(FloatPoint, FloatPoint, Color, float thickness, LineStyle, Color);
     void draw_dotted_line(IntPoint, IntPoint, Gfx::Color, int thickness);
 
     Painter& m_underlying_painter;
