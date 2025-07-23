@@ -908,7 +908,7 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
     return decoded;
 }
 
-// Section 9.2.7:
+// Section 9.2.7: Coded Residual
 // Decode the residual, the "error" between the function approximation and the actual audio data
 MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
