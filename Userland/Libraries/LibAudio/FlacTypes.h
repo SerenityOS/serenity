@@ -39,7 +39,7 @@ using IBMCRC = Crypto::Checksum::CRC16<ibm_polynomial>;
 
 static constexpr size_t flac_seekpoint_size = (64 + 64 + 16) / 8;
 
-// Section 8.1: Metadata Block Header (Block Type)
+// Section 8.1: Metadata Block Header
 enum class FlacMetadataBlockType : u8 {
     STREAMINFO = 0,     // Important data about the audio format
     PADDING = 1,        // Non-data block to be ignored
@@ -67,7 +67,7 @@ enum class FlacFrameChannelType : u8 {
     // others are reserved
 };
 
-// Section 9.2.1: Subframe Header (Subframe Type)
+// Section 9.2.1: Subframe Header
 enum class FlacSubframeType : u8 {
     Constant = 0,
     Verbatim = 1,
@@ -76,13 +76,13 @@ enum class FlacSubframeType : u8 {
     // others are reserved
 };
 
-// Section 9.2.7: Coded Residual (Residual Coding Method)
+// Section 9.2.7: Coded Residual
 enum class FlacResidualMode : u8 {
     Rice4Bit = 0,
     Rice5Bit = 1,
 };
 
-// Section 8: Metadata Block Format
+// Section 8: File-Level Metadata
 struct FlacRawMetadataBlock {
     bool is_last_block;
     FlacMetadataBlockType type;
@@ -135,7 +135,7 @@ struct FlacFrameHeader {
     ErrorOr<void> write_to_stream(Stream&) const;
 };
 
-// Section 9.2: Subframe Format
+// Section 9.2: Subframes
 struct FlacSubframeHeader {
     FlacSubframeType type;
     // order for fixed and LPC subframes

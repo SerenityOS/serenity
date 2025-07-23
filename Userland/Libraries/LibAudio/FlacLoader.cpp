@@ -132,7 +132,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
             TRY(load_picture(block));
             break;
         case FlacMetadataBlockType::APPLICATION:
-            // Note: Application IDs are now registered with IANA in the 
+            // Note: Application IDs are now registered with IANA in the
             // "FLAC Application Metadata Block IDs" registry (Section 12.2).
             dbgln("FLAC Warning: Unknown 'Application' metadata block encountered.");
             [[fallthrough]];
@@ -468,7 +468,7 @@ LoaderSamples FlacLoaderPlugin::next_frame()
             VERIFY(subframe_samples.size() == m_current_frame->sample_count);
     }
 
-    // Section 4: Conceptual Overview ("The audio data is composed of...")
+    // Section 4: Conceptual Overview
     bit_stream.align_to_byte_boundary();
 
     // Section 9.3: Frame Footer
@@ -654,7 +654,7 @@ ErrorOr<FlacSubframeHeader, LoaderError> FlacLoaderPlugin::next_subframe_header(
     if (TRY(bit_stream.read_bit()) != 0)
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Zero bit padding"_fly_string };
 
-    // Section 9.2.1: Subframe Header (Subframe Type)
+    // Section 9.2.1: Subframe Header
     u8 subframe_code = TRY(bit_stream.read_bits<u8>(6));
     if ((subframe_code >= 0b000010 && subframe_code <= 0b000111) || (subframe_code > 0b001100 && subframe_code < 0b100000))
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Subframe type"_fly_string };
@@ -908,11 +908,11 @@ ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_fixed_lpc(FlacSubfram
     return decoded;
 }
 
-// Section 9.2.7: Coded Residual
+// Section 9.2.7:
 // Decode the residual, the "error" between the function approximation and the actual audio data
 MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
-    // Section 9.2.7: Residual Coding Method
+    // Section 9.2.7: Coded Residual
     auto residual_mode = static_cast<FlacResidualMode>(TRY(bit_input.read_bits<u8>(2)));
     u8 partition_order = TRY(bit_input.read_bits<u8>(4));
     size_t partitions = 1 << partition_order;
@@ -927,7 +927,7 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
         return LoaderError { LoaderError::Category::Format, TRY(m_stream->tell()), "Block size is not evenly divisible by number of partitions"_fly_string };
 
     if (residual_mode == FlacResidualMode::Rice4Bit) {
-        // Section 9.2.7: Rice coding with 4-bit parameters
+        // Section 9.2.7.2: Rice coding
         // decode a single Rice partition with four bits for the order k
         for (size_t i = 0; i < partitions; ++i) {
             // FIXME: Write into the decode buffer directly.
@@ -935,7 +935,7 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
             decoded.extend(move(rice_partition));
         }
     } else if (residual_mode == FlacResidualMode::Rice5Bit) {
-        // Section 9.2.7: Rice coding with 5-bit parameters
+        // Section 9.2.7.2: Rice coding
         // five bits equivalent
         for (size_t i = 0; i < partitions; ++i) {
             // FIXME: Write into the decode buffer directly.
@@ -948,11 +948,11 @@ MaybeLoaderError FlacLoaderPlugin::decode_residual(Vector<i64>& decoded, FlacSub
     return {};
 }
 
-// Section 9.2.7: Rice partition decoding
+// Section 9.2.7.2: Rice coding
 // Decode a single Rice partition as part of the residual, every partition can have its own Rice parameter k
 ALWAYS_INLINE ErrorOr<Vector<i64>, LoaderError> FlacLoaderPlugin::decode_rice_partition(u8 partition_type, u32 partitions, u32 partition_index, FlacSubframeHeader& subframe, BigEndianInputBitStream& bit_input)
 {
-    // Section 9.2.7: Rice parameter encoding
+    // Section 9.2.7.2: Rice coding
     u8 k = TRY(bit_input.read_bits<u8>(partition_type));
 
     u32 residual_sample_count;
