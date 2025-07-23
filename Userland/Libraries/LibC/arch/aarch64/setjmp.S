@@ -17,6 +17,8 @@
 // int _setjmp(jmp_buf env)
 .global _setjmp
 .global setjmp
+.type _setjmp, @function
+.type setjmp, @function
 _setjmp:
 setjmp:
     mov x1, #0                               // Set savemask argument to 0
@@ -24,6 +26,7 @@ setjmp:
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigsetjmp.html
 // int sigsetjmp(sigjmp_buf env, int savemask)
 .global sigsetjmp
+.type sigsetjmp, @function
 sigsetjmp:
     str w1, [x0, #DID_SAVE_SIGNAL_MASK_SLOT] // Store savemask into did_save_signal_mask
     str wzr, [x0, #SAVED_SIGNAL_MASK_SLOT]   // Clear saved_signal_mask
@@ -59,6 +62,8 @@ sigsetjmp:
 
 .global _longjmp
 .global longjmp
+.type _longjmp, @function
+.type longjmp, @function
 _longjmp:
 longjmp:
     ldp x19, x20, [x0, #(0 * 8)]             // Restore registers
