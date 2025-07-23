@@ -20,11 +20,11 @@ On AArch64, we set `COMMONPAGESIZE` to enable RELRO support.
  ld/Makefile.am                       |  3 +++
  ld/Makefile.in                       |  6 ++++++
  ld/configure.tgt                     |  9 +++++++++
- ld/emulparams/aarch64serenity.sh     |  5 +++++
+ ld/emulparams/aarch64serenity.sh     |  6 ++++++
  ld/emulparams/elf64lriscvserenity.sh |  2 ++
  ld/emulparams/elf_serenity.sh        |  1 +
  ld/emulparams/elf_x86_64_serenity.sh |  2 ++
- 11 files changed, 46 insertions(+), 1 deletion(-)
+ 11 files changed, 47 insertions(+), 1 deletion(-)
  create mode 100644 gas/config/te-serenity.h
  create mode 100644 ld/emulparams/aarch64serenity.sh
  create mode 100644 ld/emulparams/elf64lriscvserenity.sh
@@ -226,15 +226,16 @@ index ea01ccf9a1b7f959b25768397057e33a990541cb..c0f81114d44aef3deccd63c6325c60fa
  			targ_extra_libpath=$targ_extra_emuls
 diff --git a/ld/emulparams/aarch64serenity.sh b/ld/emulparams/aarch64serenity.sh
 new file mode 100644
-index 0000000000000000000000000000000000000000..23aed1440a033e2ac06536f43c1bacaf98832b92
+index 0000000000000000000000000000000000000000..8c037db13bf0f3808aac497572e5ea3dc2a6f92d
 --- /dev/null
 +++ b/ld/emulparams/aarch64serenity.sh
-@@ -0,0 +1,5 @@
+@@ -0,0 +1,6 @@
 +source_sh ${srcdir}/emulparams/aarch64elf.sh
 +source_sh ${srcdir}/emulparams/elf_serenity.sh
 +
 +COMMONPAGESIZE="CONSTANT (COMMONPAGESIZE)"
 +unset EMBEDDED
++unset STACK_ADDR
 diff --git a/ld/emulparams/elf64lriscvserenity.sh b/ld/emulparams/elf64lriscvserenity.sh
 new file mode 100644
 index 0000000000000000000000000000000000000000..8bcbea812b49363cf4e2e94e1554998277b21cb1
