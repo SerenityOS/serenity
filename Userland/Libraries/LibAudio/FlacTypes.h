@@ -17,29 +17,29 @@
 namespace Audio {
 
 // These are not the actual values stored in the file! They are marker constants instead, only used temporarily in the decoder.
-// 11.22.3. INTERCHANNEL SAMPLE BLOCK SIZE
+// Section 9.1.1: Block Size Bits
 #define FLAC_BLOCKSIZE_AT_END_OF_HEADER_8 0xffffffff
 #define FLAC_BLOCKSIZE_AT_END_OF_HEADER_16 0xfffffffe
-// 11.22.4. SAMPLE RATE
+// Section 9.1.2: Sample Rate Bits
 #define FLAC_SAMPLERATE_AT_END_OF_HEADER_8 0xffffffff
 #define FLAC_SAMPLERATE_AT_END_OF_HEADER_16 0xfffffffe
 #define FLAC_SAMPLERATE_AT_END_OF_HEADER_16X10 0xfffffffd
 
 constexpr StringView flac_magic = "fLaC"sv;
 
-// 11.22.11. FRAME CRC
+// Section 9.1.8: Frame Header CRC
 // The polynomial used here is known as CRC-8-CCITT.
 static constexpr u8 flac_polynomial = 0x07;
 using FlacFrameHeaderCRC = Crypto::Checksum::CRC8<flac_polynomial>;
 
-// 11.23. FRAME_FOOTER
+// Section 9.3: Frame Footer
 // The polynomial used here is known as CRC-16-IBM.
 static constexpr u16 ibm_polynomial = 0xA001;
 using IBMCRC = Crypto::Checksum::CRC16<ibm_polynomial>;
 
 static constexpr size_t flac_seekpoint_size = (64 + 64 + 16) / 8;
 
-// 11.8 BLOCK_TYPE (7 bits)
+// Section 8.1: Metadata Block Header
 enum class FlacMetadataBlockType : u8 {
     STREAMINFO = 0,     // Important data about the audio format
     PADDING = 1,        // Non-data block to be ignored
@@ -51,7 +51,7 @@ enum class FlacMetadataBlockType : u8 {
     INVALID = 127,      // Error
 };
 
-// 11.22.5. CHANNEL ASSIGNMENT
+// Section 9.1.3: Channels Bits
 enum class FlacFrameChannelType : u8 {
     Mono = 0,
     Stereo = 1,
@@ -67,7 +67,7 @@ enum class FlacFrameChannelType : u8 {
     // others are reserved
 };
 
-// 11.25.1. SUBFRAME TYPE
+// Section 9.2.1: Subframe Header
 enum class FlacSubframeType : u8 {
     Constant = 0,
     Verbatim = 1,
@@ -76,13 +76,13 @@ enum class FlacSubframeType : u8 {
     // others are reserved
 };
 
-// 11.30.1. RESIDUAL_CODING_METHOD
+// Section 9.2.7: Coded Residual
 enum class FlacResidualMode : u8 {
     Rice4Bit = 0,
     Rice5Bit = 1,
 };
 
-// 11.6. METADATA_BLOCK
+// Section 8: File-Level Metadata
 struct FlacRawMetadataBlock {
     bool is_last_block;
     FlacMetadataBlockType type;
@@ -120,7 +120,7 @@ enum class BlockSizeCategory : u8 {
     S32768 = 0b1111,
 };
 
-// 11.22. FRAME_HEADER
+// Section 9.1: Frame Header
 struct FlacFrameHeader {
     u32 sample_rate;
     // Referred to as “block size” in the specification.
@@ -135,7 +135,7 @@ struct FlacFrameHeader {
     ErrorOr<void> write_to_stream(Stream&) const;
 };
 
-// 11.25. SUBFRAME_HEADER
+// Section 9.2: Subframes
 struct FlacSubframeHeader {
     FlacSubframeType type;
     // order for fixed and LPC subframes
