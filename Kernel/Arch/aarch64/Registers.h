@@ -739,11 +739,6 @@ struct alignas(u64) TCR_EL1 {
 
         return tcr_el1;
     }
-
-    static constexpr TCR_EL1 reset_value()
-    {
-        return {};
-    }
 };
 static_assert(sizeof(TCR_EL1) == 8);
 
