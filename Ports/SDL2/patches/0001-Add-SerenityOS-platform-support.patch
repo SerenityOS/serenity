@@ -58,7 +58,7 @@ Co-Authored-By: sdomi <ja@sdomi.pl>
  create mode 100644 src/video/serenity/SDL_serenityvideo.h
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 30ff00adf93878c328f534ca6a3acdd082d8f1dd..20a0d6bf23a2b665265c63fdcbf6958a6f2ae94d 100644
+index d65157f565009ea6085cc1bab8a54a36edbd4f7a..ec62a4353542b88349913ef713a97d47529b933c 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -6,7 +6,7 @@ endif()
@@ -132,7 +132,7 @@ index 4aaae46f6f74428949f32922308f48bd1316e7c1..9491448493b88c7bd54e3fbfcb9e518d
  		os=`echo "$os" | sed -e 's|sunos5|solaris2|'`
  		;;
 diff --git a/cmake/sdlchecks.cmake b/cmake/sdlchecks.cmake
-index ac36cfa2d7ed1d9655ddbf9d9338d791f5f4dc23..1fbc636a4fcfa406b4615c010cbf167990c02985 100644
+index ea4c0ff4300ea8dcffad6af9da57ac10d120bc04..172fc896e32902a947788ef11ac3dd67d49c62f4 100644
 --- a/cmake/sdlchecks.cmake
 +++ b/cmake/sdlchecks.cmake
 @@ -809,6 +809,26 @@ macro(CheckDirectFB)
@@ -470,10 +470,10 @@ index 2a930da2f5e77ea083690fc25fae45d79c8695de..cadafcf5d4f279593b283d58114a282b
  {
      return isblank(x);
 diff --git a/src/video/SDL_sysvideo.h b/src/video/SDL_sysvideo.h
-index 22bca8a222c929f27face7e77835d1f96c63c0c4..d7a6f5c450b4ee8952ed3887e50caf2f4408e027 100644
+index faf598be388b8b5e4b03819f38199dd24a962f31..34043616c2109a63399ba537c35b377a46097c74 100644
 --- a/src/video/SDL_sysvideo.h
 +++ b/src/video/SDL_sysvideo.h
-@@ -485,6 +485,7 @@ extern VideoBootStrap OFFSCREEN_bootstrap;
+@@ -484,6 +484,7 @@ extern VideoBootStrap OFFSCREEN_bootstrap;
  extern VideoBootStrap NGAGE_bootstrap;
  extern VideoBootStrap OS2DIVE_bootstrap;
  extern VideoBootStrap OS2VMAN_bootstrap;
@@ -482,7 +482,7 @@ index 22bca8a222c929f27face7e77835d1f96c63c0c4..d7a6f5c450b4ee8952ed3887e50caf2f
  /* Use SDL_OnVideoThread() sparingly, to avoid regressions in use cases that currently happen to work */
  extern SDL_bool SDL_OnVideoThread(void);
 diff --git a/src/video/SDL_video.c b/src/video/SDL_video.c
-index 01023753c6e49967e33d4f402e2272040a31190d..fcf6e50737387094646101d30b81c4a30c625eb9 100644
+index 2f6c631d12f40e130a306453624847bd876365d6..f7a95969c042e7af2bbbdb7f276c079156d1cf51 100644
 --- a/src/video/SDL_video.c
 +++ b/src/video/SDL_video.c
 @@ -72,6 +72,9 @@
@@ -495,7 +495,7 @@ index 01023753c6e49967e33d4f402e2272040a31190d..fcf6e50737387094646101d30b81c4a3
  #ifdef SDL_VIDEO_DRIVER_COCOA
      &COCOA_bootstrap,
  #endif
-@@ -4345,6 +4348,10 @@ void SDL_WM_SetIcon(SDL_Surface * icon, Uint8 * mask)
+@@ -4343,6 +4346,10 @@ void SDL_WM_SetIcon(SDL_Surface * icon, Uint8 * mask)
      }
  }
  #endif
