@@ -399,6 +399,21 @@ TEST_CASE(test_jbig2_decode)
     }
 }
 
+TEST_CASE(test_annex_h_jbig2)
+{
+    // https://www.itu.int/rec/T-REC-T.88-201808-I
+    // H.1 Datastream example
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jbig2/annex-h.jbig2"sv)));
+    EXPECT(Gfx::JBIG2ImageDecoderPlugin::sniff(file->bytes()));
+    auto decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
+
+    // FIXME: This should be 3.
+    EXPECT_EQ(decoder->frame_count(), 1u);
+
+    // FIXME: Decode this successfully.
+    EXPECT(decoder->frame(0).is_error());
+}
+
 TEST_CASE(test_qm_arithmetic_decoder)
 {
     // https://www.itu.int/rec/T-REC-T.88-201808-I
