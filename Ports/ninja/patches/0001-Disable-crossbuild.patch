@@ -9,11 +9,11 @@ Subject: [PATCH] Disable crossbuild
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/configure.py b/configure.py
-index cded265..134db91 100755
+index 03b5ce42721540f9a056b82c5c0d639e8b84828d..fb3a4356dba0a737657b14f6518ad8d0e386039c 100755
 --- a/configure.py
 +++ b/configure.py
-@@ -687,7 +687,7 @@ n.build('all', 'phony', all_targets)
- n.close()
+@@ -783,7 +783,7 @@ n.build('all', 'phony', all_targets)
+ n.close()  # type: ignore # Item "Bootstrap" of "Writer | Bootstrap" has no attribute "close"
  print('wrote %s.' % BUILD_FILENAME)
  
 -if options.bootstrap:

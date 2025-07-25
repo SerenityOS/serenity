@@ -8,10 +8,10 @@ Subject: [PATCH] Disable load average calculation
  1 file changed, 3 insertions(+)
 
 diff --git a/src/util.cc b/src/util.cc
-index c76f730..5ec2bb8 100644
+index aeb1ce414430ec375206a4b53da993a496493502..80b00d018f03dad994d1525fd560f6cebb6b56e5 100644
 --- a/src/util.cc
 +++ b/src/util.cc
-@@ -588,11 +588,14 @@ double GetLoadAverage() {
+@@ -980,11 +980,14 @@ double GetLoadAverage() {
  #else
  double GetLoadAverage() {
    double loadavg[3] = { 0.0f, 0.0f, 0.0f };
