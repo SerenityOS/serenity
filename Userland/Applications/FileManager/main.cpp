@@ -64,6 +64,7 @@ static void do_copy(Vector<ByteString> const& selected_file_paths, FileOperation
 static void do_paste(ByteString const& target_directory, GUI::Window* window);
 static void do_create_link(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
 static void do_create_zip_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
+static void do_create_tar_gz_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
 static void do_create_archive(ByteString const& executable_name, Vector<ByteString>& arguments, ByteString const& extension, Vector<ByteString> const& selected_file_paths, GUI::Window* window);
 static void do_set_wallpaper(ByteString const& file_path, GUI::Window* window);
 static void do_unzip_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
@@ -228,6 +229,15 @@ void do_create_zip_archive(Vector<ByteString> const& selected_file_paths, GUI::W
     arguments.append("-r");
     arguments.append("-f");
     do_create_archive("/bin/zip", arguments, ".zip", selected_file_paths, window);
+}
+
+void do_create_tar_gz_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window)
+{
+    auto arguments = Vector<ByteString>();
+    arguments.append("-c");
+    arguments.append("-z");
+    arguments.append("-f");
+    do_create_archive("/bin/tar", arguments, ".tar.gz", selected_file_paths, window);
 }
 
 void do_create_archive(ByteString const& executable_name, Vector<ByteString>& arguments, ByteString const& extension, Vector<ByteString> const& selected_file_paths, GUI::Window* window)
@@ -425,6 +435,18 @@ ErrorOr<int> run_in_desktop_mode()
             },
             window);
 
+    auto create_tar_gz_archive_action
+        = GUI::Action::create(
+            ".tar.&gz",
+            [&](GUI::Action const&) {
+                auto paths = directory_view->selected_file_paths();
+                if (paths.is_empty())
+                    return;
+
+                do_create_tar_gz_archive(paths, directory_view->window());
+            },
+            window);
+
     auto unzip_archive_action
         = GUI::Action::create(
             "E&xtract Here",
@@ -558,6 +580,7 @@ ErrorOr<int> run_in_desktop_mode()
                     archive_menu->set_icon(archive_icon_or_error.value());
                 }
                 archive_menu->add_action(create_zip_archive_action);
+                archive_menu->add_action(create_tar_gz_archive_action);
 
                 file_context_menu->add_separator();
 
@@ -878,6 +901,19 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
             },
             window);
 
+    auto create_tar_gz_archive_action
+        = GUI::Action::create(
+            ".tar.&gz",
+            [&](GUI::Action const&) {
+                auto paths = directory_view->selected_file_paths();
+                if (paths.is_empty())
+                    return;
+
+                do_create_tar_gz_archive(paths, directory_view->window());
+                refresh_tree_view();
+            },
+            window);
+
     auto unzip_archive_action
         = GUI::Action::create(
             "E&xtract Here",
@@ -1188,6 +1224,7 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     auto archive_menu = directory_context_menu->add_submenu("Create &Archive"_string);
     archive_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-archive.png"sv)));
     archive_menu->add_action(create_zip_archive_action);
+    archive_menu->add_action(create_tar_gz_archive_action);
 
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
@@ -1247,6 +1284,7 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
                     archive_menu->set_icon(archive_icon_or_error.value());
                 }
                 archive_menu->add_action(create_zip_archive_action);
+                archive_menu->add_action(create_tar_gz_archive_action);
 
                 file_context_menu->add_separator();
 
