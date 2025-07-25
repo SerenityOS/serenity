@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ninja'
-version='1.12.1'
+version='1.13.1'
 files=(
-    "https://github.com/ninja-build/ninja/archive/v${version}.tar.gz#821bdff48a3f683bc4bb3b6f0b5fe7b2d647cf65d52aeb63328c91a6c6df285a"
+    "https://github.com/ninja-build/ninja/archive/v${version}.tar.gz#f0055ad0369bf2e372955ba55128d000cfcc21777057806015b45e4accbebf23"
 )
 
 build() {

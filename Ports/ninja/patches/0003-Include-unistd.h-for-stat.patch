@@ -8,7 +8,7 @@ Subject: [PATCH] Include unistd.h for stat()
  1 file changed, 1 insertion(+)
 
 diff --git a/src/disk_interface.cc b/src/disk_interface.cc
-index 49af001..cb1fad5 100644
+index ffd4ee57bd6a0ec939f9067f55a96ba32369491f..c7d89c17e6c4be5766ff1e5c2825af9d096915c1 100644
 --- a/src/disk_interface.cc
 +++ b/src/disk_interface.cc
 @@ -21,6 +21,7 @@
@@ -18,4 +18,4 @@ index 49af001..cb1fad5 100644
 +#include <unistd.h>
  
  #ifdef _WIN32
- #include <sstream>
+ #include <direct.h>  // _mkdir
