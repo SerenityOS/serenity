@@ -162,6 +162,8 @@ void PresenterWidget::set_file(StringView file_name)
         set_min_size(m_current_presentation->normative_size());
         m_web_view->load_html(MUST(m_current_presentation->render()));
         update_slides_actions();
+
+        this->resize_web_view(window()->size());
     }
 }
 
