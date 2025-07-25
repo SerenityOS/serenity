@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='bash'
-version='5.2.37'
+version='5.3'
 useconfigure='true'
 use_fresh_config_sub='true'
 use_fresh_config_guess='true'
@@ -13,7 +13,7 @@ launcher_command='/usr/local/bin/bash'
 launcher_run_in_terminal='true'
 #icon_file=FIXME
 files=(
-    "https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz#9599b22ecd1d5787ad7d3b7bf0c59f312b3396d1e281175dd1f8a4014da621ff"
+    "https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz#62dd49c44c399ed1b3f7f731e87a782334d834f08e098a35f2c87547d5dbb269"
 )
 depends=(
     'readline'

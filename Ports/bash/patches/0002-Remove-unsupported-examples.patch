@@ -1,23 +1,26 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Fabian Dellwing <fabian.dellwing@gmail.com>
 Date: Mon, 24 Apr 2023 18:54:29 +0200
-Subject: [PATCH] Remove getopt from examples
+Subject: [PATCH] Remove unsupported examples
 
-We currently fail to build getconf.c because we are missing libintl.h and don't support multiple needed syscalls (from around 300 total syscalls).
+- getconf: we are missing libintl.h and don't support multiple needed
+  syscalls (from around 300 total syscalls)
+- strptime: no strptime() in time.h
+- fltexpr: 'implicit declaration of function' build error
 ---
  examples/loadables/Makefile.in | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/examples/loadables/Makefile.in b/examples/loadables/Makefile.in
-index 956f018933f861ff157841f42247a778f04ba909..4852f0419cb2ae039e2b5a403d66eff7975ede25 100644
+index 19976b541f47108e3922cc08b1a6bccb87118ace..ec2e19878f22cdea9559082e4bf2f7b556e45f0f 100644
 --- a/examples/loadables/Makefile.in
 +++ b/examples/loadables/Makefile.in
-@@ -104,7 +104,7 @@ INC = -I. -I.. -I$(topdir) -I$(topdir)/lib -I$(topdir)/builtins -I${srcdir} \
+@@ -103,7 +103,7 @@ INC = -I. -I.. -I$(topdir) -I$(topdir)/lib -I$(topdir)/builtins -I${srcdir} \
  ALLPROG = print truefalse sleep finfo logname basename dirname fdflags \
  	  tty pathchk tee head mkdir rmdir mkfifo mktemp printenv id whoami \
  	  uname sync push ln unlink realpath strftime mypid setpgid seq rm \
--	  accept csv dsv cut stat getconf
-+	  accept csv dsv cut stat
+-	  accept csv dsv cut stat getconf kv strptime chmod fltexpr
++	  accept csv dsv cut stat kv chmod
  OTHERPROG = necho hello cat pushd asort
  
- all:	$(SHOBJ_STATUS)
+ SUBDIRS = perl
