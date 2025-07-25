@@ -17,7 +17,7 @@ static library into a shared library.
  1 file changed, 34 insertions(+)
 
 diff --git a/configure b/configure
-index 9afa3e1..2ed54b6 100755
+index 905a7666a5a78b10c5a41ced20cfbe0bc25e2b0b..018326a71e485d962ef9d4a25c88758592b5c229 100755
 --- a/configure
 +++ b/configure
 @@ -5729,6 +5729,10 @@ tpf*)
