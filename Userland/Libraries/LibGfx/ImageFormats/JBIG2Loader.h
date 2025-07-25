@@ -23,6 +23,7 @@ public:
 
     virtual IntSize size() override;
 
+    virtual size_t frame_count() override;
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
 
     static ErrorOr<ByteBuffer> decode_embedded(Vector<ReadonlyBytes>);

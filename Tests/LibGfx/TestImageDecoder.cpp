@@ -407,11 +407,12 @@ TEST_CASE(test_annex_h_jbig2)
     EXPECT(Gfx::JBIG2ImageDecoderPlugin::sniff(file->bytes()));
     auto decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
 
-    // FIXME: This should be 3.
-    EXPECT_EQ(decoder->frame_count(), 1u);
+    EXPECT_EQ(decoder->frame_count(), 3u);
 
-    // FIXME: Decode this successfully.
+    // FIXME: Decode these successfully.
     EXPECT(decoder->frame(0).is_error());
+    EXPECT(decoder->frame(1).is_error());
+    EXPECT(decoder->frame(2).is_error());
 }
 
 TEST_CASE(test_qm_arithmetic_decoder)
