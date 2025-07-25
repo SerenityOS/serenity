@@ -1,0 +1,38 @@
+import("//Tests/unittest.gni")
+
+tests = [
+  "BenchmarkGfxPainter",
+  "BenchmarkJPEGLoader",
+  "BenchmarkPNG",
+  "TestColor",
+  "TestDeltaE",
+  "TestFontHandling",
+  "TestGfxBitmap",
+  "TestICCProfile",
+  "TestImageDecoder",
+  "TestImageWriter",
+  "TestMedianCut",
+  "TestPainter",
+  "TestParseISOBMFF",
+  "TestPath",
+  "TestRect",
+  "TestScalingFunctions",
+  "TestWOFF",
+  "TestWOFF2",
+]
+
+foreach(test_name, tests) {
+  unittest(test_name) {
+    include_dirs = [ "//Userland/Libraries" ]
+    sources = [ test_name + ".cpp" ]
+    deps = [ "//Userland/Libraries/LibGfx" ]
+  }
+}
+
+group("LibGfx") {
+  deps = []
+  foreach(test_name, tests) {
+    deps += [ ":" + test_name ]
+  }
+  testonly = true
+}

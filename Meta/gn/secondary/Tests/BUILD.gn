@@ -1,6 +1,7 @@
 group("Tests") {
   deps = [
     "//Tests/AK",
+    "//Tests/LibGfx",
     "//Tests/LibJS",
     "//Tests/LibURL",
     "//Tests/LibWeb",
