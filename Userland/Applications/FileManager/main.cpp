@@ -240,36 +240,29 @@ void do_create_archive(Vector<ByteString> const& selected_file_paths, GUI::Windo
         if (!AK::StringUtils::ends_with(archive_name, ".zip"sv, CaseSensitivity::CaseSensitive))
             path_builder.append(".zip"sv);
     }
-    auto output_path = path_builder.to_byte_string();
 
-    pid_t zip_pid = fork();
-    if (zip_pid < 0) {
-        perror("fork");
-        VERIFY_NOT_REACHED();
+    auto arguments = Vector<ByteString>();
+    arguments.append("-r");
+    arguments.append("-f");
+    arguments.append(path_builder.to_byte_string());
+    for (auto const& path : selected_file_paths) {
+        arguments.append(LexicalPath::relative_path(path, output_directory_path.dirname()));
     }
 
-    if (!zip_pid) {
-        Vector<ByteString> relative_paths;
-        Vector<char const*> arg_list;
-        arg_list.append("/bin/zip");
-        arg_list.append("-r");
-        arg_list.append("-f");
-        arg_list.append(output_path.characters());
-        for (auto const& path : selected_file_paths) {
-            relative_paths.append(LexicalPath::relative_path(path, output_directory_path.dirname()));
-            arg_list.append(relative_paths.last().characters());
-        }
-        arg_list.append(nullptr);
-        int rc = execvp("/bin/zip", const_cast<char* const*>(arg_list.data()));
-        if (rc < 0) {
-            perror("execvp");
-            _exit(1);
-        }
-    } else {
-        int status;
-        int rc = waitpid(zip_pid, &status, 0);
-        if (rc < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0)
-            GUI::MessageBox::show(window, "Could not create archive"sv, "Archive Error"sv, GUI::MessageBox::Type::Error);
+    auto process_or_error = Core::Process::spawn({
+        .executable = "/bin/zip",
+        .arguments = arguments,
+    });
+
+    if (process_or_error.is_error()) {
+        GUI::MessageBox::show(window, "Failed to start archive process"sv, "Archive Error"sv, GUI::MessageBox::Type::Error);
+        return;
+    }
+
+    auto did_exit_with_success = process_or_error.value().wait_for_termination();
+    if (did_exit_with_success.is_error() || !did_exit_with_success.value()) {
+        GUI::MessageBox::show(window, "Archive process exited unsuccessfully"sv, "Archive Error"sv, GUI::MessageBox::Type::Error);
+        return;
     }
 }
 
