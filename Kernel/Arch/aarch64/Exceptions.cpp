@@ -63,7 +63,7 @@ static void drop_el2_to_el1()
 
 static void setup_el1()
 {
-    Aarch64::SCTLR_EL1 system_control_register_el1 = Aarch64::SCTLR_EL1::reset_value();
+    Aarch64::SCTLR_EL1 system_control_register_el1 = Aarch64::SCTLR_EL1::default_value();
 
     // FIXME: Enable memory access alignment check when userspace will not execute unaligned memory accesses anymore.
     //        See: https://github.com/SerenityOS/serenity/issues/17516

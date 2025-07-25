@@ -810,20 +810,25 @@ struct alignas(u64) SCTLR_EL1 {
         return sctlr;
     }
 
-    static constexpr SCTLR_EL1 reset_value()
+    static constexpr SCTLR_EL1 default_value()
     {
         SCTLR_EL1 system_control_register_el1 = {};
+
+        // Our defaults:
         system_control_register_el1.SA = 1;
         system_control_register_el1.SA0 = 1;
+        system_control_register_el1.IESB = 1;
+
+        // Fields that are RES1 if no extensions are supported:
         system_control_register_el1.ITD = 1;
         system_control_register_el1.SED = 1;
         system_control_register_el1.EOS = 1;
         system_control_register_el1.TSCXT = 1;
-        system_control_register_el1.IESB = 1;
         system_control_register_el1.EIS = 1;
         system_control_register_el1.SPAN = 1;
-        system_control_register_el1.LSMAOE = 1;
         system_control_register_el1.nTLSMD = 1;
+        system_control_register_el1.LSMAOE = 1;
+
         return system_control_register_el1;
     }
 };
