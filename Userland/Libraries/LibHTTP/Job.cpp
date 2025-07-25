@@ -34,6 +34,11 @@ struct SyncStreamAsyncWrapper final : public AsyncInputStream {
     {
     }
 
+    ~SyncStreamAsyncWrapper()
+    {
+        m_stream->on_ready_to_read = nullptr;
+    }
+
     virtual void reset() override
     {
     }
