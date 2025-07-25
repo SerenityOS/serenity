@@ -10,7 +10,7 @@ Subject: [PATCH] Add a serenity-specific makefile
 
 diff --git a/config/mh-serenity b/config/mh-serenity
 new file mode 100644
-index 0000000..53d6780
+index 0000000000000000000000000000000000000000..53d6780d68bc855bdade442921440fdfaf0d9d03
 --- /dev/null
 +++ b/config/mh-serenity
 @@ -0,0 +1,87 @@
