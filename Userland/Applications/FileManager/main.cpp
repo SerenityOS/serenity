@@ -413,10 +413,9 @@ ErrorOr<int> run_in_desktop_mode()
         window);
     copy_action->set_enabled(false);
 
-    auto create_archive_action
+    auto create_zip_archive_action
         = GUI::Action::create(
-            "Create &Archive",
-            TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-archive.png"sv)),
+            ".&zip",
             [&](GUI::Action const&) {
                 auto paths = directory_view->selected_file_paths();
                 if (paths.is_empty())
@@ -552,7 +551,14 @@ ErrorOr<int> run_in_desktop_mode()
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view->delete_action());
                 file_context_menu->add_action(directory_view->rename_action());
-                file_context_menu->add_action(create_archive_action);
+
+                auto archive_menu = file_context_menu->add_submenu("Create &Archive"_string);
+                auto archive_icon_or_error = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-archive.png"sv);
+                if (!archive_icon_or_error.is_error()) {
+                    archive_menu->set_icon(archive_icon_or_error.value());
+                }
+                archive_menu->add_action(create_zip_archive_action);
+
                 file_context_menu->add_separator();
 
                 if (Gfx::Bitmap::is_path_a_supported_image_format(node.name)) {
@@ -859,10 +865,9 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
             },
             window);
 
-    auto create_archive_action
+    auto create_zip_archive_action
         = GUI::Action::create(
-            "Create &Archive",
-            TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-archive.png"sv)),
+            ".&zip",
             [&](GUI::Action const&) {
                 auto paths = directory_view->selected_file_paths();
                 if (paths.is_empty())
@@ -1179,7 +1184,11 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     directory_context_menu->add_action(directory_view->delete_action());
     directory_context_menu->add_action(directory_view->rename_action());
     directory_context_menu->add_action(shortcut_action);
-    directory_context_menu->add_action(create_archive_action);
+
+    auto archive_menu = directory_context_menu->add_submenu("Create &Archive"_string);
+    archive_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-archive.png"sv)));
+    archive_menu->add_action(create_zip_archive_action);
+
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
 
@@ -1231,7 +1240,14 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
                 file_context_menu->add_action(directory_view->delete_action());
                 file_context_menu->add_action(directory_view->rename_action());
                 file_context_menu->add_action(shortcut_action);
-                file_context_menu->add_action(create_archive_action);
+
+                auto archive_menu = file_context_menu->add_submenu("Create &Archive"_string);
+                auto archive_icon_or_error = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-archive.png"sv);
+                if (!archive_icon_or_error.is_error()) {
+                    archive_menu->set_icon(archive_icon_or_error.value());
+                }
+                archive_menu->add_action(create_zip_archive_action);
+
                 file_context_menu->add_separator();
 
                 if (Gfx::Bitmap::is_path_a_supported_image_format(node.name)) {
