@@ -63,7 +63,8 @@ static ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, Byt
 static void do_copy(Vector<ByteString> const& selected_file_paths, FileOperation file_operation);
 static void do_paste(ByteString const& target_directory, GUI::Window* window);
 static void do_create_link(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
-static void do_create_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
+static void do_create_zip_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
+static void do_create_archive(ByteString const& executable_name, Vector<ByteString>& arguments, ByteString const& extension, Vector<ByteString> const& selected_file_paths, GUI::Window* window);
 static void do_set_wallpaper(ByteString const& file_path, GUI::Window* window);
 static void do_unzip_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
 static void show_properties(ByteString const& container_dir_path, ByteString const& path, Vector<ByteString> const& selected, GUI::Window* window);
@@ -221,7 +222,15 @@ void do_create_link(Vector<ByteString> const& selected_file_paths, GUI::Window* 
     }
 }
 
-void do_create_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window)
+void do_create_zip_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window)
+{
+    auto arguments = Vector<ByteString>();
+    arguments.append("-r");
+    arguments.append("-f");
+    do_create_archive("/bin/zip", arguments, ".zip", selected_file_paths, window);
+}
+
+void do_create_archive(ByteString const& executable_name, Vector<ByteString>& arguments, ByteString const& extension, Vector<ByteString> const& selected_file_paths, GUI::Window* window)
 {
     String archive_name;
     if (GUI::InputBox::show(window, archive_name, "Enter name:"sv, "Create Archive"sv) != GUI::InputBox::ExecResult::OK)
@@ -234,23 +243,20 @@ void do_create_archive(Vector<ByteString> const& selected_file_paths, GUI::Windo
     path_builder.append('/');
     if (archive_name.is_empty()) {
         path_builder.append(output_directory_path.parent().basename());
-        path_builder.append(".zip"sv);
+        path_builder.append(extension);
     } else {
         path_builder.append(archive_name);
-        if (!AK::StringUtils::ends_with(archive_name, ".zip"sv, CaseSensitivity::CaseSensitive))
-            path_builder.append(".zip"sv);
+        if (!AK::StringUtils::ends_with(archive_name, extension, CaseSensitivity::CaseSensitive))
+            path_builder.append(extension);
     }
 
-    auto arguments = Vector<ByteString>();
-    arguments.append("-r");
-    arguments.append("-f");
     arguments.append(path_builder.to_byte_string());
     for (auto const& path : selected_file_paths) {
         arguments.append(LexicalPath::relative_path(path, output_directory_path.dirname()));
     }
 
     auto process_or_error = Core::Process::spawn({
-        .executable = "/bin/zip",
+        .executable = executable_name,
         .arguments = arguments,
     });
 
@@ -416,7 +422,7 @@ ErrorOr<int> run_in_desktop_mode()
                 if (paths.is_empty())
                     return;
 
-                do_create_archive(paths, directory_view->window());
+                do_create_zip_archive(paths, directory_view->window());
             },
             window);
 
@@ -862,7 +868,7 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
                 if (paths.is_empty())
                     return;
 
-                do_create_archive(paths, directory_view->window());
+                do_create_zip_archive(paths, directory_view->window());
                 refresh_tree_view();
             },
             window);
