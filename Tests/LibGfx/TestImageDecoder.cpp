@@ -384,6 +384,22 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-texttopright.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-texttoprighttranspose.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-texttranspose.jbig2"sv),
+        // Missing tests, because there's no easy way to generate them:
+        // - halftone (code support added in #23864)
+        // - lossless halftone (code support added in #26043)
+        // - rotated halftone (code support added in #26044)
+        // - coverage for different segment combination operators (or and xor xnor replace),
+        //   with both background colors
+        // Missing tests for things that aren't implemented yet:
+        // - striping, especially with initially unknown page height
+        // - huffman symbol regions
+        // - symbols with REFAGGNINST > 1
+        // - huffman text regions
+        // - intermediate regions
+        // - standalone refinement regions
+        // - exttemplate
+        // - colors
+        // (test_annex_h_jbig2 covers a subset of these, but having standalone files would be nice.)
     };
 
     for (auto test_input : test_inputs) {
