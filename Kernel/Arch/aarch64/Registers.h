@@ -834,6 +834,108 @@ struct alignas(u64) SCTLR_EL1 {
 };
 static_assert(sizeof(SCTLR_EL1) == 8);
 
+// https://developer.arm.com/documentation/ddi0601/2025-06/AArch64-Registers/SCTLR-EL2--System-Control-Register--EL2-
+// System Control Register
+struct alignas(u64) SCTLR_EL2 {
+    u64 M : 1;
+    u64 A : 1;
+    u64 C : 1;
+    u64 SA : 1;
+    u64 SA0 : 1;
+    u64 CP15BEN : 1;
+    u64 nAA : 1;
+    u64 ITD : 1;
+    u64 SED : 1;
+    u64 _reserved9 : 1 = 0;
+    u64 EnRCTX : 1;
+    u64 EOS : 1;
+    u64 I : 1;
+    u64 EnDB : 1;
+    u64 DZE : 1;
+    u64 UCT : 1;
+    u64 nTWI : 1;
+    u64 _reserved17 : 1 = 0;
+    u64 nTWE : 1;
+    u64 WXN : 1;
+    u64 TSCXT : 1;
+    u64 IESB : 1;
+    u64 EIS : 1;
+    u64 SPAN : 1;
+    u64 E0E : 1;
+    u64 EE : 1;
+    u64 UCI : 1;
+    u64 EnDA : 1;
+    u64 nTLSMD : 1;
+    u64 LSMAOE : 1;
+    u64 EnIB : 1;
+    u64 EnIA : 1;
+    u64 CMOW : 1;
+    u64 MSCEn : 1;
+    u64 EnFPM : 1;
+    u64 BT0 : 1;
+    u64 BT1 : 1;
+    u64 ITFSB : 1;
+    u64 TCF0 : 2;
+    u64 TCF : 2;
+    u64 ATA0 : 1;
+    u64 ATA : 1;
+    u64 DSSBS : 1;
+    u64 TWEDEn : 1;
+    u64 TWEDEL : 4;
+    u64 TMT0 : 1;
+    u64 TMT : 1;
+    u64 TME0 : 1;
+    u64 TME : 1;
+    u64 EnASR : 1;
+    u64 EnAS0 : 1;
+    u64 EnALS : 1;
+    u64 EPAN : 1;
+    u64 TCSO0 : 1;
+    u64 TCSO : 1;
+    u64 EnTP2 : 1;
+    u64 NMI : 1;
+    u64 SPINTMASK : 1;
+    u64 TIDCP : 1;
+
+    static inline void write(SCTLR_EL2 sctlr_el2)
+    {
+        asm volatile("msr sctlr_el2, %[value]" ::[value] "r"(sctlr_el2));
+    }
+
+    static inline SCTLR_EL2 read()
+    {
+        SCTLR_EL2 sctlr;
+
+        asm volatile("mrs %[value], sctlr_el2"
+                     : [value] "=r"(sctlr));
+
+        return sctlr;
+    }
+
+    static constexpr SCTLR_EL2 default_value()
+    {
+        SCTLR_EL2 system_control_register_el2 = {};
+
+        // Our defaults:
+        system_control_register_el2.SA = 1;
+        system_control_register_el2.IESB = 1;
+
+        // Fields that are RES1 if no extensions are supported:
+        system_control_register_el2.SA0 = 1;
+        system_control_register_el2.CP15BEN = 1;
+        system_control_register_el2.EOS = 1;
+        system_control_register_el2.nTWI = 1;
+        system_control_register_el2.nTWE = 1;
+        system_control_register_el2.EIS = 1;
+        system_control_register_el2.SPAN = 1;
+        system_control_register_el2.nTLSMD = 1;
+        system_control_register_el2.LSMAOE = 1;
+
+        return system_control_register_el2;
+    }
+};
+static_assert(sizeof(SCTLR_EL2) == 8);
+
 // https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/MIDR-EL1--Main-ID-Register?lang=en
 // MIDR_EL1, Main ID Register
 struct alignas(u64) MIDR_EL1 {
