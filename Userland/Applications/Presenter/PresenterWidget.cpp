@@ -32,23 +32,7 @@ void PresenterWidget::resize_event(GUI::ResizeEvent& event)
 {
     Widget::resize_event(event);
 
-    if (!m_current_presentation)
-        return;
-
-    auto normative_size = m_current_presentation->normative_size().to_type<float>();
-    float widget_ratio = static_cast<float>(event.size().width()) / static_cast<float>(event.size().height());
-    float wh_ratio = normative_size.width() / normative_size.height();
-
-    Gfx::IntRect rect;
-    if (widget_ratio >= wh_ratio) {
-        rect.set_width(static_cast<int>(ceilf(static_cast<float>(event.size().height()) * wh_ratio)));
-        rect.set_height(event.size().height());
-    } else {
-        float hw_ratio = normative_size.height() / normative_size.width();
-        rect.set_width(event.size().width());
-        rect.set_height(static_cast<int>(ceilf(static_cast<float>(event.size().width()) * hw_ratio)));
-    }
-    m_web_view->set_relative_rect(rect.centered_within(this->rect()));
+    this->resize_web_view(event.size());
 }
 
 ErrorOr<void> PresenterWidget::initialize_menubar()
@@ -124,6 +108,27 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     help_menu->add_action(GUI::CommonActions::make_about_action("Presenter"_string, GUI::Icon::default_icon("app-presenter"sv)));
 
     return {};
+}
+
+void PresenterWidget::resize_web_view(Gfx::IntSize const& size)
+{
+    if (!m_current_presentation)
+        return;
+
+    auto normative_size = m_current_presentation->normative_size().to_type<float>();
+    float widget_ratio = static_cast<float>(size.width()) / static_cast<float>(size.height());
+    float wh_ratio = normative_size.width() / normative_size.height();
+
+    Gfx::IntRect rect;
+    if (widget_ratio >= wh_ratio) {
+        rect.set_width(static_cast<int>(ceilf(static_cast<float>(size.height()) * wh_ratio)));
+        rect.set_height(size.height());
+    } else {
+        float hw_ratio = normative_size.height() / normative_size.width();
+        rect.set_width(size.width());
+        rect.set_height(static_cast<int>(ceilf(static_cast<float>(size.width()) * hw_ratio)));
+    }
+    m_web_view->set_relative_rect(rect.centered_within(this->rect()));
 }
 
 void PresenterWidget::update_web_view()

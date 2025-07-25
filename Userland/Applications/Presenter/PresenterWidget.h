@@ -38,6 +38,7 @@ protected:
     virtual void resize_event(GUI::ResizeEvent&) override;
 
 private:
+    void resize_web_view(Gfx::IntSize const& size);
     void update_web_view();
     void update_slides_actions();
 
