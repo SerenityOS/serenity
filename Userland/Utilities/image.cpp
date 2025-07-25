@@ -27,8 +27,11 @@ struct LoadedImage {
     Optional<ReadonlyBytes> icc_data;
 };
 
-static ErrorOr<LoadedImage> load_image(RefPtr<Gfx::ImageDecoder> const& decoder, int frame_index)
+static ErrorOr<LoadedImage> load_image(RefPtr<Gfx::ImageDecoder> const& decoder, Optional<int> maybe_frame_index)
 {
+    if (decoder->frame_count() > 1 && !maybe_frame_index.has_value())
+        dbgln("image has {} frames, defaulting to `--frame-index 0`", decoder->frame_count());
+
     auto internal_format = decoder->natural_frame_format();
 
     auto bitmap = TRY([&]() -> ErrorOr<AnyBitmap> {
@@ -36,7 +39,7 @@ static ErrorOr<LoadedImage> load_image(RefPtr<Gfx::ImageDecoder> const& decoder,
         case Gfx::NaturalFrameFormat::RGB:
         case Gfx::NaturalFrameFormat::Grayscale:
         case Gfx::NaturalFrameFormat::Vector:
-            return TRY(decoder->frame(frame_index)).image;
+            return TRY(decoder->frame(maybe_frame_index.value_or(0))).image;
         case Gfx::NaturalFrameFormat::CMYK:
             return RefPtr(TRY(decoder->cmyk_frame()));
         }
@@ -218,7 +221,7 @@ struct Options {
     StringView in_path;
     StringView out_path;
     bool no_output = false;
-    int frame_index = 0;
+    Optional<int> frame_index;
     bool invert_cmyk = false;
     Optional<Gfx::IntRect> crop_rect;
     bool move_alpha_to_rgb = false;
