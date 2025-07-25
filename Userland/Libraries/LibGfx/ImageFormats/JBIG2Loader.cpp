@@ -413,6 +413,7 @@ struct JBIG2LoadingContext {
     u32 current_page_number { 1 };
 
     Optional<u32> number_of_pages;
+    Vector<u32> page_numbers;
 
     Vector<SegmentData> segments;
     HashMap<u32, u32> segments_by_number;
@@ -721,7 +722,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
     return {};
 }
 
-static ErrorOr<void> warn_about_multiple_pages(JBIG2LoadingContext& context)
+static ErrorOr<void> scan_for_page_numbers(JBIG2LoadingContext& context)
 {
     HashTable<u32> seen_pages;
     Vector<u32> pages;
@@ -735,21 +736,10 @@ static ErrorOr<void> warn_about_multiple_pages(JBIG2LoadingContext& context)
         pages.append(segment.header.page_association);
     }
 
-    // scan_for_page_size() already checked that we have the current page.
-    VERIFY(seen_pages.contains(context.current_page_number));
-    if (pages.size() == 1)
-        return {};
+    if (context.number_of_pages.has_value() && context.number_of_pages.value() != pages.size())
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Number of pages in file header does not match number of pages found in segments");
 
-    StringBuilder builder;
-    builder.appendff("JBIG2 file contains {} pages ({}", pages.size(), pages[0]);
-    size_t i;
-    for (i = 1; i < min(pages.size(), 10); ++i)
-        builder.appendff(" {}", pages[i]);
-    if (i != pages.size())
-        builder.append(" ..."sv);
-    builder.appendff("). We will only render page {}."sv, context.current_page_number);
-    dbgln("JBIG2ImageDecoderPlugin: {}", TRY(builder.to_string()));
-
+    context.page_numbers = move(pages);
     return {};
 }
 
@@ -2612,8 +2602,6 @@ static ErrorOr<void> decode_extension(JBIG2LoadingContext&, SegmentData const& s
 
 static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
 {
-    TRY(warn_about_multiple_pages(context));
-
     for (size_t i = 0; i < context.segments.size(); ++i) {
         auto& segment = context.segments[i];
 
@@ -2722,18 +2710,28 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JBIG2ImageDecoderPlugin::create(Reado
     TRY(decode_segment_headers(*plugin->m_context, data));
 
     TRY(scan_for_page_size(*plugin->m_context));
+    TRY(scan_for_page_numbers(*plugin->m_context));
 
     return plugin;
 }
 
+size_t JBIG2ImageDecoderPlugin::frame_count()
+{
+    return m_context->page_numbers.size();
+}
+
 ErrorOr<ImageFrameDescriptor> JBIG2ImageDecoderPlugin::frame(size_t index, Optional<IntSize>)
 {
-    // FIXME: Use this for multi-page JBIG2 files?
-    if (index != 0)
+    if (index >= frame_count())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid frame index");
 
     if (m_context->state == JBIG2LoadingContext::State::Error)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Decoding failed");
+
+    if (m_context->current_page_number != m_context->page_numbers[index]) {
+        m_context->current_page_number = m_context->page_numbers[index];
+        m_context->state = JBIG2LoadingContext::State::NotDecoded;
+    }
 
     if (m_context->state < JBIG2LoadingContext::State::Decoded) {
         auto result = decode_data(*m_context);
@@ -2757,6 +2755,11 @@ ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyByte
         TRY(decode_segment_headers(*plugin->m_context, segment_data));
 
     TRY(scan_for_page_size(*plugin->m_context));
+    TRY(scan_for_page_numbers(*plugin->m_context));
+
+    if (plugin->frame_count() != 1)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Embedded JBIG2 data must have exactly one page");
+
     TRY(decode_data(*plugin->m_context));
 
     return plugin->m_context->page.bits->to_byte_buffer();
