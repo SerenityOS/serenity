@@ -8,10 +8,10 @@ Subject: [PATCH] Set host to serenity in configure
  1 file changed, 2 insertions(+)
 
 diff --git a/configure b/configure
-index a2ff7e4..8283dc9 100755
+index 5bac9bf59d39c1805619901cb3389a9a810a4789..2e96592569579200c534ac2abf5b9b0afd59a060 100755
 --- a/configure
 +++ b/configure
-@@ -5274,6 +5274,8 @@ x86_64-*-cygwin)
+@@ -5828,6 +5828,8 @@ x86_64-*-cygwin)
  	else
  		icu_cv_host_frag=mh-cygwin-msvc
  	fi ;;
