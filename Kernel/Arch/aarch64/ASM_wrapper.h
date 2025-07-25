@@ -9,7 +9,10 @@
 
 #pragma once
 
-#include <Kernel/Arch/Processor.h>
+#ifndef PREKERNEL
+#    include <Kernel/Arch/Processor.h>
+#endif
+
 #include <Kernel/Arch/aarch64/Registers.h>
 
 namespace Kernel::Aarch64::Asm {
@@ -79,6 +82,7 @@ inline ExceptionLevel get_current_exception_level()
     return static_cast<ExceptionLevel>(current_exception_level);
 }
 
+#ifndef PREKERNEL
 inline void wait_cycles(int n)
 {
     // FIXME: Make timer-based.
@@ -86,6 +90,7 @@ inline void wait_cycles(int n)
         Processor::pause();
     }
 }
+#endif
 
 inline void load_el1_vector_table(void* vector_table)
 {
