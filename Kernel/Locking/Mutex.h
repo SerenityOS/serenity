@@ -10,11 +10,13 @@
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
 #include <AK/HashMap.h>
+#include <AK/Noncopyable.h>
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/LockLocation.h>
 #include <Kernel/Locking/LockMode.h>
-#include <Kernel/Tasks/WaitQueue.h>
+#include <Kernel/Locking/LockRank.h>
+#include <Kernel/Tasks/Thread.h>
 
 namespace Kernel {
 
@@ -26,6 +28,11 @@ class Mutex {
 
 public:
     using Mode = LockMode;
+    // FIXME: Allow some customization
+    //  Note: Currently this is the LockRank of the internal Spinlock
+    //  Note: Making this a template would currently mess with Threads and our implementation
+    //        As we currently include Thread.h and Thread uses Mutexes in its API
+    constexpr static LockRank Rank = LockRank::Mutex;
 
     // FIXME: remove this after annihilating Process::m_big_lock
     enum class MutexBehavior {
@@ -40,6 +47,7 @@ public:
     }
     ~Mutex() = default;
 
+    // FIXME: Maybe this should also have a more permanent effect on the lock rank and return some kind of key
     void lock(Mode mode = Mode::Exclusive, LockLocation const& location = LockLocation::current());
     void restore_exclusive_lock(u32, LockLocation const& location = LockLocation::current());
 
@@ -83,7 +91,7 @@ private:
     using BigLockBlockedThreadList = IntrusiveList<&Thread::m_big_lock_blocked_threads_list_node>;
 
     // FIXME: Allow any lock rank.
-    void block(Thread&, Mode, SpinlockLocker<Spinlock<LockRank::None>>&, u32);
+    void block(Thread&, Mode, SpinlockLocker<Spinlock<Rank>>&, u32);
     void unblock_waiters(Mode);
 
     StringView m_name;
@@ -120,7 +128,7 @@ private:
     RecursiveSpinlockProtected<BlockedThreadLists, LockRank::None> m_blocked_thread_lists {};
 
     // FIXME: See above.
-    mutable Spinlock<LockRank::None> m_lock {};
+    mutable Spinlock<Rank> m_lock {};
 
 #if LOCK_SHARED_UPGRADE_DEBUG
     HashMap<uintptr_t, u32> m_shared_holders_map;
