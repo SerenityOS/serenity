@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BitStream.h>
 #include <AK/Debug.h>
 #include <AK/IntegralMath.h>
 #include <AK/Utf16View.h>
@@ -147,6 +148,126 @@ u32 ArithmeticIntegerIDDecoder::decode()
     }
     prev = prev - (1 << m_code_length);
     return prev;
+}
+
+struct Code {
+    u16 prefix_length {};         // "PREFLEN" in spec.
+    u8 range_length {};           // "RANGELEN" in spec.
+    Optional<i32> first_value {}; // First number in "VAL" in spec.
+    u16 code {};                  // "Encoding" in spec.
+};
+
+class HuffmanTable {
+public:
+    enum class StandardTable {
+        B_1,  // Standard Huffman table A
+        B_2,  // Standard Huffman table B
+        B_3,  // Standard Huffman table C
+        B_4,  // Standard Huffman table D
+        B_5,  // Standard Huffman table E
+        B_6,  // Standard Huffman table F
+        B_7,  // Standard Huffman table G
+        B_8,  // Standard Huffman table H
+        B_9,  // Standard Huffman table I
+        B_10, // Standard Huffman table J
+        B_11, // Standard Huffman table K
+        B_12, // Standard Huffman table L
+        B_13, // Standard Huffman table M
+        B_14, // Standard Huffman table N
+        B_15, // Standard Huffman table O
+    };
+    static ErrorOr<HuffmanTable*> standard_huffman_table(StandardTable);
+
+    // Returns OptionalNone for OOB.
+    ErrorOr<Optional<i32>> read_symbol(BigEndianInputBitStream&) const;
+
+    // Will never return OOB.
+    ErrorOr<i32> read_symbol_non_oob(BigEndianInputBitStream&) const;
+
+private:
+    HuffmanTable(ReadonlySpan<Code> codes, bool has_oob_symbol = false)
+        : m_codes(codes)
+        , m_has_oob_symbol(has_oob_symbol)
+    {
+    }
+
+    ErrorOr<Optional<i32>> read_symbol_internal(BigEndianInputBitStream&) const;
+
+    ReadonlySpan<Code> m_codes;
+    bool m_has_oob_symbol { false };
+};
+
+ErrorOr<HuffmanTable*> HuffmanTable::standard_huffman_table(StandardTable kind)
+{
+    switch (kind) {
+    case StandardTable::B_1:
+        return Error::from_string_literal("Standard table A not yet supported");
+    case StandardTable::B_2:
+        return Error::from_string_literal("Standard table B not yet supported");
+    case StandardTable::B_3:
+        return Error::from_string_literal("Standard table C not yet supported");
+    case StandardTable::B_4:
+        return Error::from_string_literal("Standard table D not yet supported");
+    case StandardTable::B_5:
+        return Error::from_string_literal("Standard table E not yet supported");
+    case StandardTable::B_6:
+        return Error::from_string_literal("Standard table F not yet supported");
+    case StandardTable::B_7:
+        return Error::from_string_literal("Standard table G not yet supported");
+    case StandardTable::B_8:
+        return Error::from_string_literal("Standard table H not yet supported");
+    case StandardTable::B_9:
+        return Error::from_string_literal("Standard table I not yet supported");
+    case StandardTable::B_10:
+        return Error::from_string_literal("Standard table J not yet supported");
+    case StandardTable::B_11:
+        return Error::from_string_literal("Standard table K not yet supported");
+    case StandardTable::B_12:
+        return Error::from_string_literal("Standard table L not yet supported");
+    case StandardTable::B_13:
+        return Error::from_string_literal("Standard table M not yet supported");
+    case StandardTable::B_14:
+        return Error::from_string_literal("Standard table N not yet supported");
+    case StandardTable::B_15:
+        return Error::from_string_literal("Standard table O not yet supported");
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<Optional<i32>> HuffmanTable::read_symbol_internal(BigEndianInputBitStream& stream) const
+{
+    // FIXME: Use an approach that doesn't require a full scan for every bit. See Compress::CanonicalCodes.
+    u16 code_word = 0;
+    u8 code_size = 0;
+    while (true) {
+        code_word = (code_word << 1) | TRY(stream.read_bit());
+        code_size++;
+        for (auto const& code : m_codes) {
+            if (code.prefix_length == code_size && code.code == code_word) {
+                if (!code.first_value.has_value())
+                    return code.first_value; // OOB
+
+                i32 value = 0;
+                for (u8 i = 0; i < code.range_length; ++i)
+                    value = (value << 1) | TRY(stream.read_bit());
+                return value + code.first_value.value();
+            }
+        }
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<Optional<i32>> HuffmanTable::read_symbol(BigEndianInputBitStream& stream) const
+{
+    VERIFY(m_has_oob_symbol);
+    return read_symbol_internal(stream);
+}
+
+ErrorOr<i32> HuffmanTable::read_symbol_non_oob(BigEndianInputBitStream& stream) const
+{
+    VERIFY(!m_has_oob_symbol);
+    auto result = TRY(read_symbol_internal(stream));
+    return result.value();
 }
 
 }
