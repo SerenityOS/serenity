@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2024, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2024-2025, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/BitStream.h>
 #include <AK/Debug.h>
+#include <AK/Enumerate.h>
 #include <AK/IntegralMath.h>
 #include <AK/Utf16View.h>
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
@@ -876,22 +877,98 @@ static ErrorOr<EndOfStripeSegment> decode_end_of_stripe_segment(ReadonlyBytes da
 
 static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
 {
-    // We only decode the first page at the moment.
-    bool found_size = false;
-    for (auto const& segment : context.segments) {
-        if (segment.header.type != SegmentType::PageInformation || segment.header.page_association != context.current_page_number)
+    // This implements just enough of "8.2 Page image composition" to figure out the size of the current page.
+    // The spec describes a slightly more complicated approach to make streaming work,
+    // but we require all input data to be available anyway, so can just scan through all EndOfStripe segments.
+
+    size_t page_info_count = 0;
+    bool has_initially_unknown_height = false;
+    bool found_end_of_page = false;
+    bool page_is_striped = false;
+    u16 max_stripe_height = 0;
+    Optional<int> height_at_end_of_last_stripe;
+    Optional<size_t> last_end_of_stripe_index;
+    for (auto const& [segment_index, segment] : enumerate(context.segments)) {
+        if (segment.header.page_association != context.current_page_number)
             continue;
-        auto page_information = TRY(decode_page_information_segment(segment.data));
 
-        // FIXME: We're supposed to compute this from the striping information if it's not set.
-        if (page_information.bitmap_height == 0xffff'ffff)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle unknown page height yet");
+        // Quirk: Files in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfPage with a page.
+        if (found_end_of_page && segment.header.type != SegmentType::EndOfFile)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Found segment after EndOfPage");
 
-        context.page.size = { page_information.bitmap_width, page_information.bitmap_height };
-        found_size = true;
+        if (segment.header.type == SegmentType::PageInformation) {
+            if (++page_info_count > 1)
+                return Error::from_string_literal("JBIG2: Multiple PageInformation segments");
+
+            auto page_information = TRY(decode_page_information_segment(segment.data));
+            page_is_striped = page_information.page_is_striped();
+            max_stripe_height = page_information.maximum_stripe_height();
+
+            context.page.size = { page_information.bitmap_width, page_information.bitmap_height };
+            has_initially_unknown_height = page_information.bitmap_height == 0xffff'ffff;
+            if (has_initially_unknown_height && !page_information.page_is_striped())
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-striped bitmaps of indeterminate height not allowed");
+        } else if (segment.header.type == SegmentType::EndOfStripe) {
+            if (page_info_count == 0)
+                return Error::from_string_literal("JBIG2: EndOfStripe before PageInformation");
+            if (!page_is_striped)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Found EndOfStripe for non-striped page");
+            auto end_of_stripe = TRY(decode_end_of_stripe_segment(segment.data));
+
+            int new_height = end_of_stripe.y_coordinate + 1;
+
+            if (has_initially_unknown_height) {
+                if (height_at_end_of_last_stripe.has_value() && new_height < height_at_end_of_last_stripe.value())
+                    return Error::from_string_literal("JBIG2ImageDecoderPlugin: EndOfStripe Y coordinate is not increasing");
+                context.page.size.set_height(new_height);
+            } else if (new_height > context.page.size.height()) {
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: EndOfStripe Y coordinate larger than page height");
+            }
+
+            int stripe_height = new_height - height_at_end_of_last_stripe.value_or(0);
+            VERIFY(stripe_height >= 0);
+            if (stripe_height > max_stripe_height)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: EndOfStripe Y coordinate larger than maximum stripe height");
+
+            height_at_end_of_last_stripe = new_height;
+            last_end_of_stripe_index = segment_index;
+        } else if (segment.header.type == SegmentType::EndOfPage) {
+            if (segment.data.size() != 0)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of page segment has non-zero size");
+            found_end_of_page = true;
+            if (page_is_striped && (!last_end_of_stripe_index.has_value() || segment_index != last_end_of_stripe_index.value() + 1))
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of page segment not preceded by end of stripe segment on striped page");
+        }
     }
-    if (!found_size)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: No page information segment found for page 1");
+
+    if (page_info_count == 0)
+        return Error::from_string_literal("JBIG2: Missing PageInformation segment");
+
+    if (page_is_striped) {
+        if (!height_at_end_of_last_stripe.has_value())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Striped page without EndOfStripe segment");
+        if (has_initially_unknown_height)
+            context.page.size.set_height(height_at_end_of_last_stripe.value());
+
+        // `!=` is not true, e.g. in ignition.pdf the last stripe is shorter than the page height.
+        if (!has_initially_unknown_height && height_at_end_of_last_stripe.value() > context.page.size.height())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Stripes are higher than page height");
+    }
+
+    if (context.organization == Organization::Embedded) {
+        // PDF 1.7 spec, 3.3.6 JBIG2Decode Filter
+        // "The JBIG2 file header, end-of-page segments, and end-of-file segment are not
+        //  used in PDF. These should be removed before the PDF objects described below
+        //  are created."
+        if (found_end_of_page)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unexpected EndOfPage segment in embedded stream");
+    } else {
+        // 7.4.9 End of page segment syntax
+        // "Each page must have exactly one end of page segment associated with it."
+        if (!found_end_of_page)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Missing EndOfPage segment");
+    }
+
     return {};
 }
 
@@ -2781,10 +2858,9 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
     //     If the page height is unknown, then this is not possible. However, in this case the page must be striped,
     //     and the maximum stripe height specified, and the initial page buffer can be created with height initially
     //     equal to this maximum stripe height."
-    size_t height = page_information.bitmap_height;
-    if (height == 0xffff'ffff)
-        height = page_information.maximum_stripe_height();
-    context.page.bits = TRY(BitBuffer::create(page_information.bitmap_width, height));
+    // ...but we don't care about streaming input (yet?), so scan_for_page_size() already looked at all segment headers
+    // and filled in context.page.size from page information and end of stripe segments.
+    context.page.bits = TRY(BitBuffer::create(context.page.size.width(), context.page.size.height()));
 
     // "3) Fill the page buffer with the page's default pixel value."
     context.page.bits->fill(default_color != 0);
@@ -2797,8 +2873,8 @@ static ErrorOr<void> decode_end_of_page(JBIG2LoadingContext&, SegmentData const&
     // 7.4.9 End of page segment syntax
     if (segment.data.size() != 0)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of page segment has non-zero size");
-    // FIXME: If the page had unknown height, check that previous segment was end-of-stripe.
-    // FIXME: Maybe mark page as completed and error if we see more segments for it?
+
+    // Actual processing of this segment is in scan_for_page_size().
     return {};
 }
 
@@ -2807,7 +2883,7 @@ static ErrorOr<void> decode_end_of_stripe(JBIG2LoadingContext&, SegmentData cons
     // 7.4.10 End of stripe segment syntax
     auto end_of_stripe = TRY(decode_end_of_stripe_segment(segment.data));
 
-    // FIXME: Once we implement support for images with initially indeterminate height, we need these values to determine the height at the end.
+    // The data in these segments is used in scan_for_page_size().
     dbgln_if(JBIG2_DEBUG, "End of stripe: y={}", end_of_stripe.y_coordinate);
 
     return {};
