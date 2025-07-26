@@ -389,12 +389,12 @@ TEST_CASE(test_jbig2_decode)
         // - lossless halftone (code support added in #26043)
         // - rotated halftone (code support added in #26044)
         // - halftone with graymap with > 256 entries (code support added in #26044 too)
+        // - striping, especially with initially unknown page height (code support added in #26067)
         // - huffman symbol regions (code support added in #26068)
         // - coverage for different segment combination operators (or and xor xnor replace),
         //   with both background colors
         // Missing tests for things that aren't implemented yet:
         // - halftone with MMR graymap
-        // - striping, especially with initially unknown page height
         // - symbols with REFAGGNINST > 1
         // - huffman text regions
         // - intermediate regions
