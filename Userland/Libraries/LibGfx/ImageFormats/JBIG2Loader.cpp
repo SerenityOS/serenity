@@ -157,6 +157,35 @@ struct Code {
     u16 code {};                  // "Encoding" in spec.
 };
 
+// Table B.1 – Standard Huffman table A
+constexpr Array standard_huffman_table_A = {
+    Code { 1, 4, 0, 0b0 },
+    Code { 2, 8, 16, 0b10 },
+    Code { 3, 16, 272, 0b110 },
+    Code { 3, 32, 65808, 0b111 },
+};
+
+// Table B.2 – Standard Huffman table B
+constexpr Array standard_huffman_table_B = {
+    Code { 1, 0, 0, 0b0 },
+    Code { 2, 0, 1, 0b10 },
+    Code { 3, 0, 2, 0b110 },
+    Code { 4, 3, 3, 0b1110 },
+    Code { 5, 6, 11, 0b11110 },
+    Code { 6, 32, 75, 0b111110 },
+    Code { 6, 0, OptionalNone {}, 0b111111 },
+};
+
+// Table B.4 – Standard Huffman table D
+constexpr Array standard_huffman_table_D = {
+    Code { 1, 0, 1, 0b0 },
+    Code { 2, 0, 2, 0b10 },
+    Code { 3, 0, 3, 0b110 },
+    Code { 4, 3, 4, 0b1110 },
+    Code { 5, 6, 12, 0b11110 },
+    Code { 5, 32, 76, 0b11111 },
+};
+
 class HuffmanTable {
 public:
     enum class StandardTable {
@@ -200,14 +229,20 @@ private:
 ErrorOr<HuffmanTable*> HuffmanTable::standard_huffman_table(StandardTable kind)
 {
     switch (kind) {
-    case StandardTable::B_1:
-        return Error::from_string_literal("Standard table A not yet supported");
-    case StandardTable::B_2:
-        return Error::from_string_literal("Standard table B not yet supported");
+    case StandardTable::B_1: {
+        static HuffmanTable standard_table_A(standard_huffman_table_A);
+        return &standard_table_A;
+    }
+    case StandardTable::B_2: {
+        static HuffmanTable standard_table_B(standard_huffman_table_B, true);
+        return &standard_table_B;
+    }
     case StandardTable::B_3:
         return Error::from_string_literal("Standard table C not yet supported");
-    case StandardTable::B_4:
-        return Error::from_string_literal("Standard table D not yet supported");
+    case StandardTable::B_4: {
+        static HuffmanTable standard_table_D(standard_huffman_table_D);
+        return &standard_table_D;
+    }
     case StandardTable::B_5:
         return Error::from_string_literal("Standard table E not yet supported");
     case StandardTable::B_6:
@@ -349,6 +384,8 @@ public:
 
     size_t width() const { return m_width; }
     size_t height() const { return m_height; }
+
+    Bytes bytes() { return m_bits.bytes(); }
 
 private:
     BitBuffer(ByteBuffer, size_t width, size_t height, size_t pitch);
@@ -1497,7 +1534,11 @@ struct SymbolDictionaryDecodingInputParameters {
     u32 number_of_new_symbols { 0 };      // "SDNUMNEWSYMS" in spec.
     u32 number_of_exported_symbols { 0 }; // "SDNUMEXSYMS" in spec.
 
-    // FIXME: SDHUFFDH, SDHUFFDW, SDHUFFBMSIZE, SDHUFFAGGINST
+    // Only set if uses_huffman_encoding is true.
+    JBIG2::HuffmanTable* delta_height_table;               // "SDHUFFDH" in spec.
+    JBIG2::HuffmanTable* delta_width_table;                // "SDHUFFDW" in spec.
+    JBIG2::HuffmanTable* bitmap_size_table;                // "SDHUFFBMSIZE" in spec.
+    JBIG2::HuffmanTable* number_of_symbol_instances_table; // "SDHUFFAGGINST" in spec.
 
     u8 symbol_template { 0 };                                 // "SDTEMPLATE" in spec.
     Array<AdaptiveTemplatePixel, 4> adaptive_template_pixels; // "SDATX" / "SDATY" in spec.
@@ -1509,30 +1550,41 @@ struct SymbolDictionaryDecodingInputParameters {
 // 6.5 Symbol Dictionary Decoding Procedure
 static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedure(SymbolDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data)
 {
-    if (inputs.uses_huffman_encoding)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode huffman symbol dictionaries yet");
-
-    auto decoder = TRY(QMArithmeticDecoder::initialize(data));
+    Optional<FixedMemoryStream> stream;
+    Optional<BigEndianInputBitStream> bit_stream;
+    Optional<QMArithmeticDecoder> decoder;
     Vector<QMArithmeticDecoder::Context> contexts;
-    contexts.resize(1 << number_of_context_bits_for_template(inputs.symbol_template));
+    if (inputs.uses_huffman_encoding) {
+        stream = FixedMemoryStream { data };
+        bit_stream = BigEndianInputBitStream { MaybeOwned { stream.value() } };
+    } else {
+        decoder = TRY(QMArithmeticDecoder::initialize(data));
+        contexts.resize(1 << number_of_context_bits_for_template(inputs.symbol_template));
+    }
 
     // 6.5.6 Height class delta height
     // "If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFDH.
     //  If SDHUFF is 0, decode a value using the IADH integer arithmetic decoding procedure (see Annex A)."
-    // FIXME: Implement support for SDHUFF = 1.
-    JBIG2::ArithmeticIntegerDecoder delta_height_integer_decoder(decoder);
+    Optional<JBIG2::ArithmeticIntegerDecoder> delta_height_integer_decoder;
+    if (!inputs.uses_huffman_encoding)
+        delta_height_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_delta_height = [&]() -> ErrorOr<i32> {
-        return delta_height_integer_decoder.decode_non_oob();
+        if (inputs.uses_huffman_encoding)
+            return inputs.delta_height_table->read_symbol_non_oob(*bit_stream);
+        return delta_height_integer_decoder->decode_non_oob();
     };
 
     // 6.5.7 Delta width
     // "If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFDW.
     //  If SDHUFF is 0, decode a value using the IADW integer arithmetic decoding procedure (see Annex A).
     //  In either case it is possible that the result of this decoding is the out-of-band value OOB."
-    // FIXME: Implement support for SDHUFF = 1.
-    JBIG2::ArithmeticIntegerDecoder delta_width_integer_decoder(decoder);
-    auto read_delta_width = [&]() -> Optional<i32> {
-        return delta_width_integer_decoder.decode();
+    Optional<JBIG2::ArithmeticIntegerDecoder> delta_width_integer_decoder;
+    if (!inputs.uses_huffman_encoding)
+        delta_width_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+    auto read_delta_width = [&]() -> ErrorOr<Optional<i32>> {
+        if (inputs.uses_huffman_encoding)
+            return inputs.delta_width_table->read_symbol(*bit_stream);
+        return delta_width_integer_decoder->decode();
     };
 
     // 6.5.8 Symbol bitmap
@@ -1542,11 +1594,12 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     // 6.5.8.2.1 Number of symbol instances in aggregation
     // If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFAGGINST.
     // If SDHUFF is 0, decode a value using the IAAI integer arithmetic decoding procedure (see Annex A).
-    // FIXME: Implement support for SDHUFF = 1.
     Optional<JBIG2::ArithmeticIntegerDecoder> number_of_symbol_instances_decoder;
     auto read_number_of_symbol_instances = [&]() -> ErrorOr<i32> {
+        if (inputs.uses_huffman_encoding)
+            return inputs.number_of_symbol_instances_table->read_symbol_non_oob(*bit_stream);
         if (!number_of_symbol_instances_decoder.has_value())
-            number_of_symbol_instances_decoder = JBIG2::ArithmeticIntegerDecoder(decoder);
+            number_of_symbol_instances_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
         return number_of_symbol_instances_decoder->decode_non_oob();
     };
 
@@ -1563,6 +1616,11 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     Vector<NonnullRefPtr<Symbol>> new_symbols;
 
     auto read_symbol_bitmap = [&](u32 width, u32 height) -> ErrorOr<NonnullOwnPtr<BitBuffer>> {
+        // 6.5.8 Symbol bitmap
+        if (inputs.uses_huffman_encoding)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode generic symbol bitmaps with huffman encoding");
+
+        // 6.5.8.1 Direct-coded symbol bitmap
         // "If SDREFAGG is 0, then decode the symbol's bitmap using a generic region decoding procedure as described in 6.2.
         //  Set the parameters to this decoding procedure as shown in Table 16."
         if (!inputs.uses_refinement_or_aggregate_coding) {
@@ -1575,7 +1633,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             generic_inputs.is_extended_reference_template_used = false; // Missing from spec in table 16.
             for (int i = 0; i < 4; ++i)
                 generic_inputs.adaptive_template_pixels[i] = inputs.adaptive_template_pixels[i];
-            generic_inputs.arithmetic_decoder = &decoder;
+            generic_inputs.arithmetic_decoder = &decoder.value();
             return generic_region_decoding_procedure(generic_inputs, {}, contexts);
         }
 
@@ -1602,15 +1660,15 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unexpected number of symbol instances");
 
         if (!id_decoder.has_value())
-            id_decoder = JBIG2::ArithmeticIntegerIDDecoder(decoder, code_length);
+            id_decoder = JBIG2::ArithmeticIntegerIDDecoder(decoder.value(), code_length);
         u32 symbol_id = id_decoder->decode();
 
         if (!refinement_x_offset_decoder.has_value())
-            refinement_x_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder);
+            refinement_x_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
         i32 refinement_x_offset = TRY(refinement_x_offset_decoder->decode_non_oob());
 
         if (!refinement_y_offset_decoder.has_value())
-            refinement_y_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder);
+            refinement_y_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
         i32 refinement_y_offset = TRY(refinement_y_offset_decoder->decode_non_oob());
 
         if (symbol_id >= inputs.input_symbols.size() && symbol_id - inputs.input_symbols.size() >= new_symbols.size())
@@ -1629,7 +1687,46 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
         if (refinement_contexts.is_empty())
             refinement_contexts.resize(1 << (inputs.refinement_template == 0 ? 13 : 10));
-        return generic_refinement_region_decoding_procedure(refinement_inputs, decoder, refinement_contexts);
+        return generic_refinement_region_decoding_procedure(refinement_inputs, decoder.value(), refinement_contexts);
+    };
+
+    auto read_height_class_collective_bitmap = [&](u32 total_width, u32 height) -> ErrorOr<NonnullOwnPtr<BitBuffer>> {
+        // 6.5.9 Height class collective bitmap
+        // "1) Read the size in bytes using the SDHUFFBMSIZE Huffman table. Let BMSIZE be the value decoded."
+        auto bitmap_size = TRY(inputs.bitmap_size_table->read_symbol_non_oob(*bit_stream));
+
+        // "2) Skip over any bits remaining in the last byte read."
+        bit_stream->align_to_byte_boundary();
+
+        NonnullOwnPtr<BitBuffer> result = TRY([&]() -> ErrorOr<NonnullOwnPtr<BitBuffer>> {
+            // "3) If BMSIZE is zero, then the bitmap is stored uncompressed, and the actual size in bytes is:
+            //
+            //         HCHEIGHT * ceil_div(TOTWIDTH, 8)
+            //
+            //     Decode the bitmap by reading this many bytes and treating it as HCHEIGHT rows of TOTWIDTH pixels, each
+            //     row padded out to a byte boundary with 0-7 0 bits."
+            if (bitmap_size == 0) {
+                auto result = TRY(BitBuffer::create(total_width, height));
+                TRY(bit_stream->read_until_filled(result->bytes()));
+                return result;
+            }
+            // "4) Otherwise, decode the bitmap using a generic bitmap decoding procedure as described in 6.2. Set the
+            //     parameters to this decoding procedure as shown in Table 19."
+            // Table 19 – Parameters used to decode a height class collective bitmap
+            GenericRegionDecodingInputParameters generic_inputs;
+            generic_inputs.is_modified_modified_read = true;
+            generic_inputs.region_width = total_width;
+            generic_inputs.region_height = height;
+
+            ReadonlyBytes bitmap_data = data.slice(stream->offset(), bitmap_size);
+            TRY(stream->discard(bitmap_size));
+            return generic_region_decoding_procedure(generic_inputs, bitmap_data, contexts);
+        }());
+
+        // "5) Skip over any bits remaining in the last byte read."
+        // Already done above. This step allowed us to slice the data in step 4.
+
+        return result;
     };
 
     // 6.5.5 Decoding the symbol dictionary
@@ -1637,7 +1734,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     // Done above read_symbol_bitmap's definition.
 
     // "2) If SDHUFF is 1 and SDREFAGG is 0, create an array SDNEWSYMWIDTHS of integers, having SDNUMNEWSYMS entries."
-    // FIXME: Implement support for SDHUFF = 1.
+    Vector<u32> new_symbol_widths;
 
     // "3) Set:
     //      HCHEIGHT = 0
@@ -1661,7 +1758,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         // "c) Decode each symbol within the height class as follows:"
         while (true) {
             // "i) Decode the delta width for the symbol as described in 6.5.7."
-            auto opt_delta_width = read_delta_width();
+            auto opt_delta_width = TRY(read_delta_width());
             // "   If the result of this decoding is OOB then all the symbols in this height class have been decoded; proceed to step 4 d)."
             if (!opt_delta_width.has_value())
                 break;
@@ -1677,29 +1774,57 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             // "ii) If SDHUFF is 0 or SDREFAGG is 1, then decode the symbol's bitmap as described in 6.5.8.
             //      Let BS be the decoded bitmap (this bitmap has width SYMWIDTH and height HCHEIGHT). Set:
             //          SDNEWSYMS[NSYMSDECODED] = BS"
-            // FIXME: Implement support for SDHUFF = 1.
             // FIXME: Doing this eagerly is pretty wasteful. Decode on demand instead?
-            auto bitmap = TRY(read_symbol_bitmap(symbol_width, height_class_height));
-            new_symbols.append(Symbol::create(move(bitmap)));
+            if (!inputs.uses_huffman_encoding || inputs.uses_refinement_or_aggregate_coding) {
+                auto bitmap = TRY(read_symbol_bitmap(symbol_width, height_class_height));
+                new_symbols.append(Symbol::create(move(bitmap)));
+            }
 
             // "iii) If SDHUFF is 1 and SDREFAGG is 0, then set:
             //      SDNEWSYMWIDTHS[NSYMSDECODED] = SYMWIDTH"
-            // FIXME: Implement support for SDHUFF = 1.
-            (void)total_width;
-            (void)height_class_first_symbol;
+            if (inputs.uses_huffman_encoding && !inputs.uses_refinement_or_aggregate_coding)
+                new_symbol_widths.append(symbol_width);
 
             // "iv) Set:
             //      NSYMSDECODED = NSYMSDECODED + 1"
             number_of_symbols_decoded++;
         }
-        // "d) If SDHUFF is 1 and SDREFAGG is 0, [...long text elided...]"
-        // FIXME: Implement support for SDHUFF = 1.
+
+        // "d) If SDHUFF is 1 and SDREFAGG is 0, then decode the height class collective bitmap as described
+        //     in 6.5.9. Let BHC be the decoded bitmap. This bitmap has width TOTWIDTH and height
+        //     HCHEIGHT. Break up the bitmap BHC as follows to obtain the symbols
+        //     SDNEWSYMS[HCFIRSTSYM] through SDNEWSYMS[NSYMSDECODED – 1].
+        //
+        //     BHC contains the NSYMSDECODED – HCFIRSTSYM symbols concatenated left-to-right, with no
+        //     intervening gaps. For each I between HCFIRSTSYM and NSYMSDECODED – 1:
+        //
+        //     • the width of SDNEWSYMS[I] is the value of SDNEWSYMWIDTHS[I];
+        //     • the height of SDNEWSYMS[I] is HCHEIGHT; and
+        //     • the bitmap SDNEWSYMS[I] can be obtained by extracting the columns of BHC from:
+        //
+        //           sum(J=HCFIRSTSYM to I-1, SDNEWSYMWIDTHS[J]) to sum(J=HCFIRSTSYM to I-1, SDNEWSYMWIDTHS[J])^(-1)"
+        // Note: I think the spec means "...to sum(J=HCFIRSTSYM to I, SDNEWSYMWIDTHS[J]) - 1" in the last sentence.
+        if (inputs.uses_huffman_encoding && !inputs.uses_refinement_or_aggregate_coding) {
+            auto collective_bitmap = TRY(read_height_class_collective_bitmap(total_width, height_class_height));
+            u32 current_column = 0;
+            for (size_t i = height_class_first_symbol; i < number_of_symbols_decoded; ++i) {
+                auto width = new_symbol_widths[i];
+                IntRect symbol_rect { static_cast<int>(current_column), 0, static_cast<int>(width), static_cast<int>(height_class_height) };
+                new_symbols.append(Symbol::create(TRY(collective_bitmap->subbitmap(symbol_rect))));
+                current_column += width;
+            }
+        }
     }
 
     // "5) Determine which symbol bitmaps are exported from this symbol dictionary, as described in 6.5.10. These
     //     bitmaps can be drawn from the symbols that are used as input to the symbol dictionary decoding
     //     procedure as well as the new symbols produced by the decoding procedure."
-    JBIG2::ArithmeticIntegerDecoder export_integer_decoder(decoder);
+    Optional<JBIG2::HuffmanTable*> export_table;
+    Optional<JBIG2::ArithmeticIntegerDecoder> export_integer_decoder;
+    if (inputs.uses_huffman_encoding)
+        export_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
+    else
+        export_integer_decoder = JBIG2::ArithmeticIntegerDecoder { decoder.value() };
 
     // 6.5.10 Exported symbols
     Vector<bool> export_flags;
@@ -1714,8 +1839,11 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     do {
         // "2) Decode a value using Table B.1 if SDHUFF is 1, or the IAEX integer arithmetic decoding procedure if
         //  SDHUFF is 0. Let EXRUNLENGTH be the decoded value."
-        // FIXME: Implement support for SDHUFF = 1.
-        i32 export_run_length = TRY(export_integer_decoder.decode_non_oob());
+        i32 export_run_length;
+        if (inputs.uses_huffman_encoding)
+            export_run_length = TRY(export_table.value()->read_symbol_non_oob(*bit_stream));
+        else
+            export_run_length = TRY(export_integer_decoder->decode_non_oob());
 
         // "3) Set EXFLAGS[EXINDEX] through EXFLAGS[EXINDEX + EXRUNLENGTH – 1] to CUREXFLAG.
         //  If EXRUNLENGTH = 0, then this step does not change any values."
@@ -2040,24 +2168,60 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
     bool uses_refinement_or_aggregate_coding = (flags & 2) != 0; // "SDREFAGG" in spec.
 
     u8 huffman_table_selection_for_height_differences = (flags >> 2) & 0b11; // "SDHUFFDH" in spec.
-    if (huffman_table_selection_for_height_differences == 2)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid huffman_table_selection_for_height_differences");
     if (!uses_huffman_encoding && huffman_table_selection_for_height_differences != 0)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid huffman_table_selection_for_height_differences");
 
+    JBIG2::HuffmanTable* delta_height_table = nullptr;
+    if (uses_huffman_encoding) {
+        if (huffman_table_selection_for_height_differences == 0)
+            delta_height_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_4));
+        else if (huffman_table_selection_for_height_differences == 1)
+            delta_height_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_5));
+        else if (huffman_table_selection_for_height_differences == 2)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid huffman_table_selection_for_height_differences");
+        else if (huffman_table_selection_for_height_differences == 3)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+    }
+
     u8 huffman_table_selection_for_width_differences = (flags >> 4) & 0b11; // "SDHUFFDW" in spec.
-    if (huffman_table_selection_for_width_differences == 2)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid huffman_table_selection_for_width_differences");
     if (!uses_huffman_encoding && huffman_table_selection_for_width_differences != 0)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid huffman_table_selection_for_width_differences");
+
+    JBIG2::HuffmanTable* delta_width_table = nullptr;
+    if (uses_huffman_encoding) {
+        if (huffman_table_selection_for_width_differences == 0)
+            delta_width_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_2));
+        else if (huffman_table_selection_for_width_differences == 1)
+            delta_width_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_3));
+        else if (huffman_table_selection_for_width_differences == 2)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid huffman_table_selection_for_height_differences");
+        else if (huffman_table_selection_for_width_differences == 3)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+    }
 
     bool uses_user_supplied_size_table = (flags >> 6) & 1; // "SDHUFFBMSIZE" in spec.
     if (!uses_huffman_encoding && uses_user_supplied_size_table)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid uses_user_supplied_size_table");
 
+    JBIG2::HuffmanTable* bitmap_size_table = nullptr;
+    if (uses_huffman_encoding) {
+        if (!uses_user_supplied_size_table)
+            bitmap_size_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
+        else
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+    }
+
     bool uses_user_supplied_aggregate_table = (flags >> 7) & 1; // "SDHUFFAGGINST" in spec.
     if (!uses_huffman_encoding && uses_user_supplied_aggregate_table)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid uses_user_supplied_aggregate_table");
+
+    JBIG2::HuffmanTable* number_of_symbol_instances_table = nullptr;
+    if (uses_huffman_encoding) {
+        if (!uses_user_supplied_aggregate_table)
+            number_of_symbol_instances_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
+        else
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+    }
 
     bool bitmap_coding_context_used = (flags >> 8) & 1;
     if (uses_huffman_encoding && !uses_refinement_or_aggregate_coding && bitmap_coding_context_used)
@@ -2154,7 +2318,10 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
     inputs.input_symbols = move(symbols);
     inputs.number_of_new_symbols = number_of_new_symbols;
     inputs.number_of_exported_symbols = number_of_exported_symbols;
-    // FIXME: SDHUFFDH, SDHUFFDW, SDHUFFBMSIZE, SDHUFFAGGINST
+    inputs.delta_height_table = delta_height_table;
+    inputs.delta_width_table = delta_width_table;
+    inputs.bitmap_size_table = bitmap_size_table;
+    inputs.number_of_symbol_instances_table = number_of_symbol_instances_table;
     inputs.symbol_template = template_used;
     inputs.adaptive_template_pixels = adaptive_template;
     inputs.refinement_template = refinement_template_used;
