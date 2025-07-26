@@ -21,6 +21,7 @@
                 font_fixed_width: true
                 mode: "DisplayOnly"
                 focus_policy: "NoFocus"
+                text_alignment: "CenterRight"
             }
 
             @GUI::Widget {
@@ -30,6 +31,7 @@
                     name: "label"
                     fixed_width: 35
                     fixed_height: 27
+                    frame_style: "SunkenContainer"
                 }
 
                 @GUI::Widget {
