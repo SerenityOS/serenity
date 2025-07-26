@@ -244,6 +244,7 @@ constexpr Array common_make_up_codes = {
 template<typename T, size_t Size>
 Optional<T> get_code_from_table(Array<T, Size> const& array, u16 code_word, u8 code_size)
 {
+    // FIXME: Use an approach that doesn't require a full scan for every bit. See Compress::CanonicalCodes.
     for (auto const& code : array) {
         if (code.code_length == code_size && code.code == code_word)
             return code;
