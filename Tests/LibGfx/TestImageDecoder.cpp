@@ -388,11 +388,11 @@ TEST_CASE(test_jbig2_decode)
         // - halftone (code support added in #23864)
         // - lossless halftone (code support added in #26043)
         // - rotated halftone (code support added in #26044)
+        // - huffman symbol regions (code support added in #26068)
         // - coverage for different segment combination operators (or and xor xnor replace),
         //   with both background colors
         // Missing tests for things that aren't implemented yet:
         // - striping, especially with initially unknown page height
-        // - huffman symbol regions
         // - symbols with REFAGGNINST > 1
         // - huffman text regions
         // - intermediate regions
@@ -425,9 +425,13 @@ TEST_CASE(test_annex_h_jbig2)
 
     EXPECT_EQ(decoder->frame_count(), 3u);
 
-    // FIXME: Decode these successfully.
+    // FIXME: Decode this successfully.
     EXPECT(decoder->frame(0).is_error());
-    EXPECT(decoder->frame(1).is_error());
+
+    auto frame_2 = TRY_OR_FAIL(decoder->frame(1));
+    EXPECT_EQ(frame_2.image->size(), Gfx::IntSize(64, 56));
+
+    // FIXME: Decode this successfully.
     EXPECT(decoder->frame(2).is_error());
 }
 
