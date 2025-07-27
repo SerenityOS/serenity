@@ -1,4 +1,4 @@
-ENTRY(start)
+ENTRY(init)
 
 #define PF_X 0x1
 #define PF_W 0x2
