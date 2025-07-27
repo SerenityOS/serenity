@@ -21,7 +21,7 @@
 TEST_CASE(parse_value)
 {
     // document isn't really used for anything, only to check there's no security_handler.
-    auto file = MUST(Core::MappedFile::map("linearized.pdf"sv));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("linearized.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
 
     auto contents = "<50607><10\n>"sv;
@@ -41,7 +41,7 @@ TEST_CASE(parse_value)
 
 TEST_CASE(linearized_pdf)
 {
-    auto file = MUST(Core::MappedFile::map("linearized.pdf"sv));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("linearized.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 1U);
@@ -49,7 +49,7 @@ TEST_CASE(linearized_pdf)
 
 TEST_CASE(non_linearized_pdf)
 {
-    auto file = MUST(Core::MappedFile::map("non-linearized.pdf"sv));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("non-linearized.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 1U);
@@ -57,7 +57,7 @@ TEST_CASE(non_linearized_pdf)
 
 TEST_CASE(complex_pdf)
 {
-    auto file = MUST(Core::MappedFile::map("complex.pdf"sv));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("complex.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 3U);
@@ -72,7 +72,7 @@ TEST_CASE(empty_file_issue_10702)
 
 TEST_CASE(encoding)
 {
-    auto file = MUST(Core::MappedFile::map("encoding.pdf"sv));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("encoding.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 1U);
@@ -91,7 +91,7 @@ TEST_CASE(encoding)
 
 TEST_CASE(offset)
 {
-    auto file = MUST(Core::MappedFile::map("offset.pdf"sv));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("offset.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 1U);
@@ -106,7 +106,7 @@ TEST_CASE(truncated_pdf_header_issue_10717)
 
 TEST_CASE(encrypted_with_aes)
 {
-    auto file = MUST(Core::MappedFile::map("password-is-sup.pdf"sv));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("password-is-sup.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     EXPECT(document->security_handler()->try_provide_user_password("sup"sv));
     MUST(document->initialize());
@@ -119,7 +119,7 @@ TEST_CASE(encrypted_with_aes)
 
 TEST_CASE(encrypted_object_stream)
 {
-    auto file = MUST(Core::MappedFile::map("encryption_nocopy.pdf"sv));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("encryption_nocopy.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 1U);
@@ -131,7 +131,7 @@ TEST_CASE(encrypted_object_stream)
 
 TEST_CASE(resolve_indirect_reference_during_parsing)
 {
-    auto file = MUST(Core::MappedFile::map("jbig2-globals.pdf"sv));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("jbig2-globals.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 1U);
@@ -148,7 +148,7 @@ TEST_CASE(malformed_pdf_document)
     };
 
     for (auto test_input : test_inputs) {
-        auto file = MUST(Core::MappedFile::map(test_input));
+        auto file = TRY_OR_FAIL(Core::MappedFile::map(test_input));
         auto document_or_error = PDF::Document::create(file->bytes());
         EXPECT(document_or_error.is_error());
     }
@@ -358,7 +358,7 @@ TEST_CASE(render)
     Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::formatted("{}/Root/res", source_root))));
 #endif
 
-    auto file = MUST(Core::MappedFile::map("colorspaces.pdf"sv));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("colorspaces.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 1U);
@@ -395,7 +395,7 @@ TEST_CASE(render_jpeg2000_indexed)
     Core::ResourceImplementation::install(make<Core::ResourceImplementationFile>(MUST(String::formatted("{}/Root/res", source_root))));
 #endif
 
-    auto file = MUST(Core::MappedFile::map("jpeg2000-indexed-small.pdf"sv));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("jpeg2000-indexed-small.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 1U);
