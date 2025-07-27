@@ -87,14 +87,7 @@ UNMAP_AFTER_INIT static void load_kernel_symbols_from_data(Bytes buffer)
         }
         auto& ksym = s_symbols[current_symbol_index];
 
-#if ARCH(AARCH64)
-        // Currently, the AArch64 kernel is linked at a high virtual memory address, instead
-        // of zero, so the address of a symbol does not need to be offset by the g_boot_info.kernel_load_base.
-        ksym.address = address;
-#else
         ksym.address = g_boot_info.kernel_load_base + address;
-#endif
-
         ksym.name = start_of_name;
 
         *bufptr = '\0';
