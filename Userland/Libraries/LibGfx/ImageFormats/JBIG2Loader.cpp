@@ -152,7 +152,7 @@ u32 ArithmeticIntegerIDDecoder::decode()
 }
 
 struct Code {
-    u16 prefix_length {};         // "PREFLEN" in spec.
+    u16 prefix_length {};         // "PREFLEN" in spec. High bit set for lower range table line.
     u8 range_length {};           // "RANGELEN" in spec.
     Optional<i32> first_value {}; // First number in "VAL" in spec.
     u16 code {};                  // "Encoding" in spec.
@@ -185,6 +185,111 @@ constexpr Array standard_huffman_table_D = {
     Code { 4, 3, 4, 0b1110 },
     Code { 5, 6, 12, 0b11110 },
     Code { 5, 32, 76, 0b11111 },
+};
+
+// Table B.6 – Standard Huffman table F
+constexpr Array standard_huffman_table_F = {
+    Code { 5, 10, -2048, 0b11100 },
+    Code { 4, 9, -1024, 0b1000 },
+    Code { 4, 8, -512, 0b1001 },
+    Code { 4, 7, -256, 0b1010 },
+    Code { 5, 6, -128, 0b11101 },
+    Code { 5, 5, -64, 0b11110 },
+    Code { 4, 5, -32, 0b1011 },
+    Code { 2, 7, 0, 0b00 },
+    Code { 3, 7, 128, 0b010 },
+    Code { 3, 8, 256, 0b011 },
+    Code { 4, 9, 512, 0b1100 },
+    Code { 4, 10, 1024, 0b1101 },
+    Code { 6 | 0x8000, 32, -2049, 0b111110 },
+    Code { 6, 32, 2048, 0b111111 },
+};
+
+// Table B.7 – Standard Huffman table G
+constexpr Array standard_huffman_table_G = {
+    Code { 4, 9, -1024, 0b1000 },
+    Code { 3, 8, -512, 0b000 },
+    Code { 4, 7, -256, 0b1001 },
+    Code { 5, 6, -128, 0b11010 },
+    Code { 5, 5, -64, 0b11011 },
+    Code { 4, 5, -32, 0b1010 },
+    Code { 4, 5, 0, 0b1011 },
+    Code { 5, 5, 32, 0b11100 },
+    Code { 5, 6, 64, 0b11101 },
+    Code { 4, 7, 128, 0b1100 },
+    Code { 3, 8, 256, 0b001 },
+    Code { 3, 9, 512, 0b010 },
+    Code { 3, 10, 1024, 0b011 },
+    Code { 5 | 0x8000, 32, -1025, 0b11110 },
+    Code { 5, 32, 2048, 0b11111 },
+};
+
+// Table B.8 – Standard Huffman table H
+constexpr Array standard_huffman_table_H = {
+    Code { 8, 3, -15, 0b11111100 },
+    Code { 9, 1, -7, 0b111111100 },
+    Code { 8, 1, -5, 0b11111101 },
+    Code { 9, 0, -3, 0b111111101 },
+    Code { 7, 0, -2, 0b1111100 },
+    Code { 4, 0, -1, 0b1010 },
+    Code { 2, 1, 0, 0b00 },
+    Code { 5, 0, 2, 0b11010 },
+    Code { 6, 0, 3, 0b111010 },
+    Code { 3, 4, 4, 0b100 },
+    Code { 6, 1, 20, 0b111011 },
+    Code { 4, 4, 22, 0b1011 },
+    Code { 4, 5, 38, 0b1100 },
+    Code { 5, 6, 70, 0b11011 },
+    Code { 5, 7, 134, 0b11100 },
+    Code { 6, 7, 262, 0b111100 },
+    Code { 7, 8, 390, 0b1111101 },
+    Code { 6, 10, 646, 0b111101 },
+    Code { 9 | 0x8000, 32, -16, 0b111111110 },
+    Code { 9, 32, 1670, 0b111111111 },
+    Code { 2, 0, OptionalNone {}, 0b01 },
+};
+
+// Table B.11 – Standard Huffman table K
+constexpr Array standard_huffman_table_K = {
+    Code { 1, 0, 1, 0b0 },
+    Code { 2, 1, 2, 0b10 },
+    Code { 4, 0, 4, 0b1100 },
+    Code { 4, 1, 5, 0b1101 },
+    Code { 5, 1, 7, 0b11100 },
+    Code { 5, 2, 9, 0b11101 },
+    Code { 6, 2, 13, 0b111100 },
+    Code { 7, 2, 17, 0b1111010 },
+    Code { 7, 3, 21, 0b1111011 },
+    Code { 7, 4, 29, 0b1111100 },
+    Code { 7, 5, 45, 0b1111101 },
+    Code { 7, 6, 77, 0b1111110 },
+    Code { 7, 32, 141, 0b1111111 },
+};
+
+// Table B.12 – Standard Huffman table L
+constexpr Array standard_huffman_table_L = {
+    Code { 1, 0, 1, 0b0 },
+    Code { 2, 0, 2, 0b10 },
+    Code { 3, 1, 3, 0b110 },
+    Code { 5, 0, 5, 0b11100 },
+    Code { 5, 1, 6, 0b11101 },
+    Code { 6, 1, 8, 0b111100 },
+    Code { 7, 0, 10, 0b1111010 },
+    Code { 7, 1, 11, 0b1111011 },
+    Code { 7, 2, 13, 0b1111100 },
+    Code { 7, 3, 17, 0b1111101 },
+    Code { 7, 4, 25, 0b1111110 },
+    Code { 8, 5, 41, 0b11111110 },
+    Code { 8, 32, 73, 0b11111111 },
+};
+
+// Table B.14 – Standard Huffman table N
+constexpr Array standard_huffman_table_N = {
+    Code { 3, 0, -2, 0b100 },
+    Code { 3, 0, -1, 0b101 },
+    Code { 1, 0, 0, 0b0 },
+    Code { 3, 0, 1, 0b110 },
+    Code { 3, 0, 2, 0b111 },
 };
 
 class HuffmanTable {
@@ -246,24 +351,36 @@ ErrorOr<HuffmanTable*> HuffmanTable::standard_huffman_table(StandardTable kind)
     }
     case StandardTable::B_5:
         return Error::from_string_literal("Standard table E not yet supported");
-    case StandardTable::B_6:
-        return Error::from_string_literal("Standard table F not yet supported");
-    case StandardTable::B_7:
-        return Error::from_string_literal("Standard table G not yet supported");
-    case StandardTable::B_8:
-        return Error::from_string_literal("Standard table H not yet supported");
+    case StandardTable::B_6: {
+        static HuffmanTable standard_table_F(standard_huffman_table_F);
+        return &standard_table_F;
+    }
+    case StandardTable::B_7: {
+        static HuffmanTable standard_table_G(standard_huffman_table_G);
+        return &standard_table_G;
+    }
+    case StandardTable::B_8: {
+        static HuffmanTable standard_table_H(standard_huffman_table_H, true);
+        return &standard_table_H;
+    }
     case StandardTable::B_9:
         return Error::from_string_literal("Standard table I not yet supported");
     case StandardTable::B_10:
         return Error::from_string_literal("Standard table J not yet supported");
-    case StandardTable::B_11:
-        return Error::from_string_literal("Standard table K not yet supported");
-    case StandardTable::B_12:
-        return Error::from_string_literal("Standard table L not yet supported");
+    case StandardTable::B_11: {
+        static HuffmanTable standard_table_K(standard_huffman_table_K);
+        return &standard_table_K;
+    }
+    case StandardTable::B_12: {
+        static HuffmanTable standard_table_L(standard_huffman_table_L);
+        return &standard_table_L;
+    }
     case StandardTable::B_13:
         return Error::from_string_literal("Standard table M not yet supported");
-    case StandardTable::B_14:
-        return Error::from_string_literal("Standard table N not yet supported");
+    case StandardTable::B_14: {
+        static HuffmanTable standard_table_N(standard_huffman_table_N);
+        return &standard_table_N;
+    }
     case StandardTable::B_15:
         return Error::from_string_literal("Standard table O not yet supported");
     }
@@ -279,13 +396,16 @@ ErrorOr<Optional<i32>> HuffmanTable::read_symbol_internal(BigEndianInputBitStrea
         code_word = (code_word << 1) | TRY(stream.read_bit());
         code_size++;
         for (auto const& code : m_codes) {
-            if (code.prefix_length == code_size && code.code == code_word) {
+            if ((code.prefix_length & 0x7fff) == code_size && code.code == code_word) {
                 if (!code.first_value.has_value())
                     return code.first_value; // OOB
 
-                i32 value = 0;
+                i32 value = 0; // "HTOFFSET" in spec.
                 for (u8 i = 0; i < code.range_length; ++i)
                     value = (value << 1) | TRY(stream.read_bit());
+
+                if (code.prefix_length & 0x8000)
+                    return code.first_value.value() - value;
                 return value + code.first_value.value();
             }
         }
