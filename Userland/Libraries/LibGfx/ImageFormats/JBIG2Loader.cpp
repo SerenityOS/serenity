@@ -155,7 +155,7 @@ struct Code {
     u16 prefix_length {};         // "PREFLEN" in spec. High bit set for lower range table line.
     u8 range_length {};           // "RANGELEN" in spec.
     Optional<i32> first_value {}; // First number in "VAL" in spec.
-    u16 code {};                  // "Encoding" in spec.
+    u32 code {};                  // "Encoding" in spec.
 };
 
 // Table B.1 – Standard Huffman table A
@@ -319,13 +319,13 @@ public:
     // Will never return OOB.
     ErrorOr<i32> read_symbol_non_oob(BigEndianInputBitStream&) const;
 
-private:
     HuffmanTable(ReadonlySpan<Code> codes, bool has_oob_symbol = false)
         : m_codes(codes)
         , m_has_oob_symbol(has_oob_symbol)
     {
     }
 
+private:
     ErrorOr<Optional<i32>> read_symbol_internal(BigEndianInputBitStream&) const;
 
     ReadonlySpan<Code> m_codes;
@@ -390,7 +390,7 @@ ErrorOr<HuffmanTable*> HuffmanTable::standard_huffman_table(StandardTable kind)
 ErrorOr<Optional<i32>> HuffmanTable::read_symbol_internal(BigEndianInputBitStream& stream) const
 {
     // FIXME: Use an approach that doesn't require a full scan for every bit. See Compress::CanonicalCodes.
-    u16 code_word = 0;
+    u32 code_word = 0;
     u8 code_size = 0;
     while (true) {
         code_word = (code_word << 1) | TRY(stream.read_bit());
@@ -1431,7 +1431,9 @@ struct TextRegionDecodingInputParameters {
     u32 size_of_symbol_instance_strips { 0 }; // "SBSTRIPS" in spec.
     // "SBNUMSYMS" is `symbols.size()` below.
 
-    // FIXME: SBSYMCODES
+    // Only set if uses_huffman_encoding is true.
+    JBIG2::HuffmanTable const* symbol_id_table { nullptr }; // "SBSYMCODES" in spec.
+
     u32 id_symbol_code_length { 0 };       // "SBSYMCODELEN" in spec.
     Vector<NonnullRefPtr<Symbol>> symbols; // "SBNUMSYMS" / "SBSYMS" in spec.
     u8 default_pixel { 0 };                // "SBDEFPIXEL" in spec.
@@ -2564,6 +2566,70 @@ static ErrorOr<void> decode_intermediate_text_region(JBIG2LoadingContext&, Segme
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate text region yet");
 }
 
+static ErrorOr<Vector<u32>> assign_huffman_codes(ReadonlyBytes code_lengths)
+{
+    // FIXME: Use shared huffman code, instead of using this algorithm from the spec.
+
+    // B.3 Assigning the prefix codes
+    // code_lengths is "PREFLEN" in spec, code_lengths.size is "NTEMP".
+    Vector<u32> codes; // "CODES" in spec.
+    TRY(codes.try_resize(code_lengths.size()));
+
+    // "1) Build a histogram in the array LENCOUNT counting the number of times each prefix length value
+    //     occurs in PREFLEN: LENCOUNT[I] is the number of times that the value I occurs in the array
+    //     PREFLEN."
+    Array<u32, 32> length_counts {}; // "LENCOUNT" in spec.
+    for (auto length : code_lengths) {
+        VERIFY(length < 32);
+        length_counts[length]++;
+    }
+
+    // "2) Let LENMAX be the largest value for which LENCOUNT[LENMAX] > 0. Set:
+    //         CURLEN = 1
+    //         FIRSTCODE[0] = 0
+    //         LENCOUNT[0] = 0"
+    size_t highest_length_index = 0; // "LENMAX" in spec.
+    for (auto const& [i, count] : enumerate(length_counts)) {
+        if (count > 0)
+            highest_length_index = i;
+    }
+    size_t current_length = 1;           // "CURLEN" in spec.
+    Array<u32, 32> first_code_at_length; // "FIRSTCODE" in spec.
+    first_code_at_length[0] = 0;
+    length_counts[0] = 0;
+
+    // "3) While CURLEN ≤ LENMAX, perform the following operations:"
+    while (current_length <= highest_length_index) {
+        // "a) Set:
+        //         FIRSTCODE[CURLEN] = (FIRSTCODE[CURLEN – 1] + LENCOUNT[CURLEN – 1]) × 2
+        //         CURCODE = FIRSTCODE[CURLEN]
+        //         CURTEMP = 0"
+        first_code_at_length[current_length] = (first_code_at_length[current_length - 1] + length_counts[current_length - 1]) * 2;
+        u32 current_code = first_code_at_length[current_length]; // "CURCODE" in spec.
+        size_t i = 0;                                            // "CURTEMP" in spec.
+
+        // "b) While CURTEMP < NTEMP, perform the following operations:"
+        while (i < code_lengths.size()) {
+            // "i) If PREFLEN[CURTEMP] = CURLEN, then set:
+            //         CODES[CURTEMP] = CURCODE
+            //         CURCODE = CURCODE + 1"
+            if (code_lengths[i] == current_length) {
+                codes[i] = current_code;
+                current_code++;
+            }
+
+            // "ii) Set CURTEMP = CURTEMP + 1"
+            i++;
+        }
+
+        // "c) Set:
+        //         CURLEN = CURLEN + 1"
+        current_length++;
+    }
+
+    return codes;
+}
+
 static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
     // 7.4.3 Text region segment syntax
@@ -2693,9 +2759,6 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid text region segment Huffman flags");
     }
 
-    if (uses_huffman_encoding)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode huffman text regions yet");
-
     // 7.4.3.1.3 Text region refinement AT flags
     // "This field is only present if SBREFINE is 1 and SBRTEMPLATE is 0."
     Array<AdaptiveTemplatePixel, 2> adaptive_refinement_template {};
@@ -2709,20 +2772,9 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     // 7.4.3.1.4 Number of symbol instances (SBNUMINSTANCES)
     u32 number_of_symbol_instances = TRY(stream.read_value<BigEndian<u32>>());
 
-    // 7.4.3.1.5 Text region segment symbol ID Huffman decoding table
-    // "It is only present if SBHUFF is 1."
-    // FIXME: Support this eventually.
-
-    dbgln_if(JBIG2_DEBUG, "Text region: uses_huffman_encoding={}, uses_refinement_coding={}, strip_size={}, reference_corner={}, is_transposed={}", uses_huffman_encoding, uses_refinement_coding, strip_size, reference_corner, is_transposed);
-    dbgln_if(JBIG2_DEBUG, "Text region: combination_operator={}, default_pixel_value={}, delta_s_offset={}, refinement_template={}, number_of_symbol_instances={}", combination_operator, default_pixel_value, delta_s_offset, refinement_template, number_of_symbol_instances);
-    dbgln_if(JBIG2_DEBUG, "Text region: number_of_symbol_instances={}", number_of_symbol_instances);
-
-    // 7.4.3.2 Decoding a text region segment
-    // "1) Interpret its header, as described in 7.4.3.1."
-    // Done!
-
-    // "2) Decode (or retrieve the results of decoding) any referred-to symbol dictionary and tables segments."
-    Vector<NonnullRefPtr<Symbol>> symbols;
+    // Retrieve referred-to symbols. The spec does this later, but the number of symbols is needed
+    // to decode the symbol ID Huffman table.
+    Vector<NonnullRefPtr<Symbol>> symbols; // `symbols.size()` is "SBNUMSYMS" in spec.
     for (auto referred_to_segment_number : segment.header.referred_to_segment_numbers) {
         auto opt_referred_to_segment = context.segments_by_number.get(referred_to_segment_number);
         if (!opt_referred_to_segment.has_value())
@@ -2733,6 +2785,95 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Text segment referred-to segment without symbols");
         symbols.extend(referred_to_segment.symbols.value());
     }
+
+    // 7.4.3.1.5 Text region segment symbol ID Huffman decoding table
+    // "It is only present if SBHUFF is 1."
+    Vector<JBIG2::Code> symbol_id_codes;
+    Optional<JBIG2::HuffmanTable> symbol_id_table_storage;
+    JBIG2::HuffmanTable const* symbol_id_table = nullptr;
+    if (uses_huffman_encoding) {
+        // 7.4.3.1.7 Symbol ID Huffman table decoding
+        auto bit_stream = BigEndianInputBitStream { MaybeOwned { stream } };
+
+        // "1) Read the code lengths for RUNCODE0 through RUNCODE34; each is stored as a four-bit value."
+        Array<u8, 35> code_length_lengths {};
+        for (size_t i = 0; i < code_length_lengths.size(); ++i)
+            code_length_lengths[i] = TRY(bit_stream.read_bits<u8>(4));
+
+        // "2) Given the lengths, assign Huffman codes for RUNCODE0 through RUNCODE34 using the algorithm
+        //     in B.3."
+        auto code_length_codes = TRY(assign_huffman_codes(code_length_lengths));
+
+        Vector<JBIG2::Code, 35> code_lengths_entries;
+        for (auto const& [i, length] : enumerate(code_length_lengths)) {
+            if (length == 0)
+                continue;
+            JBIG2::Code code { .prefix_length = length, .range_length = 0, .first_value = i, .code = code_length_codes[i] };
+            code_lengths_entries.append(code);
+        }
+        JBIG2::HuffmanTable code_lengths_table { code_lengths_entries };
+
+        Vector<u8> code_lengths;
+        do {
+            // "3) Read a Huffman code using this assignment. This decodes into one of RUNCODE0 through
+            //     RUNCODE34. If it is RUNCODE32, read two additional bits. If it is RUNCODE33, read three
+            //     additional bits. If it is RUNCODE34, read seven additional bits."
+            auto code = TRY(code_lengths_table.read_symbol_non_oob(bit_stream));
+            u8 repeats = 0;
+            if (code == 32)
+                repeats = TRY(bit_stream.read_bits<u8>(2)) + 3;
+            else if (code == 33)
+                repeats = TRY(bit_stream.read_bits<u8>(3)) + 3;
+            else if (code == 34)
+                repeats = TRY(bit_stream.read_bits<u8>(7)) + 11;
+
+            // "4) Interpret the RUNCODE code and the additional bits (if any) according to Table 29. This gives the
+            //     symbol ID code lengths for one or more symbols."
+            // Note: The spec means "Table 32" here.
+            if (code < 32) {
+                code_lengths.append(code);
+            } else if (code == 32) {
+                if (code_lengths.is_empty())
+                    return Error::from_string_literal("JBIG2ImageDecoderPlugin: RUNCODE32 without previous code");
+                auto last_value = code_lengths.last();
+                for (size_t i = 0; i < repeats; ++i)
+                    code_lengths.append(last_value);
+            } else if (code == 33 || code == 34) {
+                for (size_t i = 0; i < repeats; ++i)
+                    code_lengths.append(0);
+            }
+
+            // "5) Repeat steps 3) and 4) until the symbol ID code lengths for all SBNUMSYMS symbols have been
+            //     determined."
+        } while (code_lengths.size() < symbols.size());
+
+        // "6) Skip over the remaining bits in the last byte read, so that the actual text region decoding procedure begins
+        //     on a byte boundary."
+        // Done automatically by the BigEndianInputBitStream wrapping `stream`.
+
+        // "7) Assign a Huffman code to each symbol by applying the algorithm in B.3 to the symbol ID code lengths
+        //     just decoded. The result is the symbol ID Huffman table SBSYMCODES."
+        auto codes = TRY(assign_huffman_codes(code_lengths));
+        for (auto const& [i, length] : enumerate(code_lengths)) {
+            if (length == 0)
+                continue;
+            JBIG2::Code code { .prefix_length = length, .range_length = 0, .first_value = i, .code = codes[i] };
+            symbol_id_codes.append(code);
+        }
+        symbol_id_table_storage = JBIG2::HuffmanTable { symbol_id_codes };
+        symbol_id_table = &symbol_id_table_storage.value();
+    }
+
+    dbgln_if(JBIG2_DEBUG, "Text region: uses_huffman_encoding={}, uses_refinement_coding={}, strip_size={}, reference_corner={}, is_transposed={}", uses_huffman_encoding, uses_refinement_coding, strip_size, reference_corner, is_transposed);
+    dbgln_if(JBIG2_DEBUG, "Text region: combination_operator={}, default_pixel_value={}, delta_s_offset={}, refinement_template={}, number_of_symbol_instances={}", combination_operator, default_pixel_value, delta_s_offset, refinement_template, number_of_symbol_instances);
+    dbgln_if(JBIG2_DEBUG, "Text region: number_of_symbol_instances={}", number_of_symbol_instances);
+
+    // 7.4.3.2 Decoding a text region segment
+    // "1) Interpret its header, as described in 7.4.3.1."
+    // Done!
+
+    // "2) Decode (or retrieve the results of decoding) any referred-to symbol dictionary and tables segments."
+    // Done further up, since it's needed to decode the symbol ID Huffman table already.
 
     // "3) As described in E.3.7, reset all the arithmetic coding statistics to zero."
     // FIXME
@@ -2750,6 +2891,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     inputs.region_height = information_field.height;
     inputs.number_of_instances = number_of_symbol_instances;
     inputs.size_of_symbol_instance_strips = strip_size;
+    inputs.symbol_id_table = symbol_id_table;
     inputs.id_symbol_code_length = ceil(log2(symbols.size()));
     inputs.symbols = move(symbols);
     inputs.first_s_table = first_s_table;
