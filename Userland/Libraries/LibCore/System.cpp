@@ -429,10 +429,9 @@ ErrorOr<Optional<struct spwd>> getspnam(StringView name)
 {
     errno = 0;
     ::setspent();
-    while (auto* spwd = ::getspent()) {
-        if (spwd->sp_namp == name)
-            return *spwd;
-    }
+    ByteString name_string = name;
+    if (auto* spwd = ::getspnam(name_string.characters()))
+        return *spwd;
     if (errno)
         return Error::from_syscall("getspnam"sv, -errno);
     return Optional<struct spwd> {};
