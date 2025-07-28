@@ -294,11 +294,17 @@ ErrorOr<ByteString> Account::generate_shadow_file() const
 {
     StringBuilder builder;
 
-    setspent();
+    FILE* shadow_file = fopen("/etc/shadow", "r");
+    if (!shadow_file)
+        return Error::from_errno(errno);
+
+    ScopeGuard file_guard { [&] {
+        fclose(shadow_file);
+    } };
 
     struct spwd* p;
     errno = 0;
-    while ((p = getspent())) {
+    while ((p = fgetspent(shadow_file))) {
         if (p->sp_namp == m_username) {
             if (m_deleted)
                 continue;
@@ -315,7 +321,6 @@ ErrorOr<ByteString> Account::generate_shadow_file() const
             (p->sp_expire == -1) ? "" : ByteString::formatted("{}", p->sp_expire),
             (p->sp_flag == 0) ? "" : ByteString::formatted("{}", p->sp_flag));
     }
-    endspent();
 
     if (errno)
         return Error::from_errno(errno);
