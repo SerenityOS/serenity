@@ -25,6 +25,7 @@ struct spwd {
 };
 
 struct spwd* getspent(void);
+struct spwd* fgetspent(FILE* stream);
 void setspent(void);
 void endspent(void);
 struct spwd* getspnam(char const* name);
