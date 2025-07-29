@@ -105,7 +105,6 @@ ALWAYS_INLINE ErrorOr<void> unveil(nullptr_t, nullptr_t)
 }
 
 #if !defined(AK_OS_BSD_GENERIC)
-ErrorOr<Optional<struct spwd>> getspent();
 ErrorOr<Optional<struct spwd>> getspnam(StringView name);
 #endif
 
