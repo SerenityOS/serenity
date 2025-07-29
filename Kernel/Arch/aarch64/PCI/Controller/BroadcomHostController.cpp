@@ -69,9 +69,9 @@ static_assert(AssertSize<Registers, 0x9310>());
 AK_ENUM_BITWISE_OPERATORS(Registers::Control)
 AK_ENUM_BITWISE_OPERATORS(Registers::State)
 
-class BCM2712HostController : public HostController {
+class BroadcomHostController : public HostController {
 public:
-    static ErrorOr<NonnullOwnPtr<BCM2712HostController>> create(DeviceTree::Device const& device);
+    static ErrorOr<NonnullOwnPtr<BroadcomHostController>> create(DeviceTree::Device const& device);
 
 private:
     ErrorOr<VirtualAddress> map_config_space_for(BusNumber, DeviceNumber, FunctionNumber);
@@ -84,12 +84,12 @@ private:
     virtual u16 read16_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
     virtual u32 read32_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
 
-    explicit BCM2712HostController(PCI::Domain const&, Memory::TypedMapping<Registers volatile>);
+    explicit BroadcomHostController(PCI::Domain const&, Memory::TypedMapping<Registers volatile>);
 
     Memory::TypedMapping<Registers volatile> m_registers;
 };
 
-ErrorOr<NonnullOwnPtr<BCM2712HostController>> BCM2712HostController::create(DeviceTree::Device const& device)
+ErrorOr<NonnullOwnPtr<BroadcomHostController>> BroadcomHostController::create(DeviceTree::Device const& device)
 {
     auto domain = TRY(determine_pci_domain_for_devicetree_node(device.node(), device.node_name()));
     auto registers_resource = TRY(device.get_resource(0));
@@ -144,16 +144,16 @@ ErrorOr<NonnullOwnPtr<BCM2712HostController>> BCM2712HostController::create(Devi
 
     dbgln("{}: Link up", device.node_name());
 
-    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) BCM2712HostController(domain, move(registers))));
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) BroadcomHostController(domain, move(registers))));
 }
 
-BCM2712HostController::BCM2712HostController(PCI::Domain const& domain, Memory::TypedMapping<Registers volatile> registers)
+BroadcomHostController::BroadcomHostController(PCI::Domain const& domain, Memory::TypedMapping<Registers volatile> registers)
     : HostController(domain)
     , m_registers(move(registers))
 {
 }
 
-ErrorOr<VirtualAddress> BCM2712HostController::map_config_space_for(BusNumber bus, DeviceNumber device, FunctionNumber function)
+ErrorOr<VirtualAddress> BroadcomHostController::map_config_space_for(BusNumber bus, DeviceNumber device, FunctionNumber function)
 {
     if (bus == 0) {
         if (device != 0 || function != 0)
@@ -168,7 +168,7 @@ ErrorOr<VirtualAddress> BCM2712HostController::map_config_space_for(BusNumber bu
     return VirtualAddress { bit_cast<FlatPtr>(&m_registers->config_space_window) };
 }
 
-void BCM2712HostController::write8_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u8 value)
+void BroadcomHostController::write8_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u8 value)
 {
     VERIFY(m_access_lock.is_locked());
 
@@ -179,7 +179,7 @@ void BCM2712HostController::write8_field_locked(BusNumber bus, DeviceNumber devi
     *reinterpret_cast<u8 volatile*>(vaddr_or_error.release_value().offset(field).as_ptr()) = value;
 }
 
-void BCM2712HostController::write16_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u16 value)
+void BroadcomHostController::write16_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u16 value)
 {
     VERIFY(m_access_lock.is_locked());
     VERIFY(field % sizeof(u16) == 0);
@@ -191,7 +191,7 @@ void BCM2712HostController::write16_field_locked(BusNumber bus, DeviceNumber dev
     *reinterpret_cast<u16 volatile*>(vaddr_or_error.release_value().offset(field).as_ptr()) = value;
 }
 
-void BCM2712HostController::write32_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u32 value)
+void BroadcomHostController::write32_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field, u32 value)
 {
     VERIFY(m_access_lock.is_locked());
     VERIFY(field % sizeof(u32) == 0);
@@ -203,7 +203,7 @@ void BCM2712HostController::write32_field_locked(BusNumber bus, DeviceNumber dev
     *reinterpret_cast<u32 volatile*>(vaddr_or_error.release_value().offset(field).as_ptr()) = value;
 }
 
-u8 BCM2712HostController::read8_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
+u8 BroadcomHostController::read8_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
 {
     VERIFY(m_access_lock.is_locked());
 
@@ -214,7 +214,7 @@ u8 BCM2712HostController::read8_field_locked(BusNumber bus, DeviceNumber device,
     return *reinterpret_cast<u8 volatile*>(vaddr_or_error.release_value().offset(field).as_ptr());
 }
 
-u16 BCM2712HostController::read16_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
+u16 BroadcomHostController::read16_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
 {
     VERIFY(m_access_lock.is_locked());
     VERIFY(field % sizeof(u16) == 0);
@@ -226,7 +226,7 @@ u16 BCM2712HostController::read16_field_locked(BusNumber bus, DeviceNumber devic
     return *reinterpret_cast<u16 volatile*>(vaddr_or_error.release_value().offset(field).as_ptr());
 }
 
-u32 BCM2712HostController::read32_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
+u32 BroadcomHostController::read32_field_locked(BusNumber bus, DeviceNumber device, FunctionNumber function, u32 field)
 {
     VERIFY(m_access_lock.is_locked());
     VERIFY(field % sizeof(u32) == 0);
@@ -242,15 +242,15 @@ static constinit Array const compatibles_array = {
     "brcm,bcm2712-pcie"sv,
 };
 
-DEVICETREE_DRIVER(BCM2712PCIeHostControllerDriver, compatibles_array);
+DEVICETREE_DRIVER(BroadcomPCIeHostControllerDriver, compatibles_array);
 
 // https://www.kernel.org/doc/Documentation/devicetree/bindings/pci/brcm%2Cstb-pcie.yaml
-ErrorOr<void> BCM2712PCIeHostControllerDriver::probe(DeviceTree::Device const& device, StringView) const
+ErrorOr<void> BroadcomPCIeHostControllerDriver::probe(DeviceTree::Device const& device, StringView) const
 {
     if (kernel_command_line().is_pci_disabled())
         return {};
 
-    auto host_controller = TRY(BCM2712HostController::create(device));
+    auto host_controller = TRY(BroadcomHostController::create(device));
 
     TRY(configure_devicetree_host_controller(*host_controller, device.node(), device.node_name()));
     Access::the().add_host_controller(move(host_controller));
