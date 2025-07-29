@@ -7,7 +7,6 @@ SCRIPT_DIR="$(dirname "${0}")"
 PATH="$SCRIPT_DIR/../Toolchain/Local/qemu/bin:$PATH"
 PATH="$SCRIPT_DIR/../Toolchain/Local/e2fsprogs/bin:$PATH"
 
-# shellcheck source=/dev/null
 . "${SCRIPT_DIR}/shell_include.sh"
 
 USE_FUSE2FS=0

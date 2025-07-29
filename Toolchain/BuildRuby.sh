@@ -5,7 +5,6 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# shellcheck source=/dev/null
 . "${DIR}/../Meta/shell_include.sh"
 
 exit_if_running_as_root "Do not run BuildRuby.sh as root, parts of your Toolchain directory will become root-owned"
@@ -14,7 +13,6 @@ PREFIX_DIR="$DIR/Local/ruby"
 BUILD_DIR="$DIR/Build/ruby"
 TARBALLS_DIR="$DIR/Tarballs"
 
-# shellcheck source=/dev/null
 source "$DIR/../Ports/ruby/version.sh"
 
 mkdir -p "${TARBALLS_DIR}"

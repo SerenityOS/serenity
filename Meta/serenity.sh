@@ -79,7 +79,6 @@ fi
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# shellcheck source=/dev/null
 . "${DIR}/shell_include.sh"
 
 exit_if_running_as_root "Do not run serenity.sh as root, your Build directory will become root-owned"
@@ -95,7 +94,6 @@ else
     die "Unknown host architecture: $host_arch"
 fi
 
-# shellcheck source=/dev/null
 . "${DIR}/find_compiler.sh"
 
 if [ -n "$1" ]; then
