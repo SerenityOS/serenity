@@ -156,6 +156,8 @@ struct Code {
     u8 range_length {};           // "RANGELEN" in spec.
     Optional<i32> first_value {}; // First number in "VAL" in spec.
     u32 code {};                  // "Encoding" in spec.
+
+    constexpr static int LowerRangeBit = 0x8000;
 };
 
 // Table B.1 – Standard Huffman table A
@@ -201,7 +203,7 @@ constexpr Array standard_huffman_table_F = {
     Code { 3, 8, 256, 0b011 },
     Code { 4, 9, 512, 0b1100 },
     Code { 4, 10, 1024, 0b1101 },
-    Code { 6 | 0x8000, 32, -2049, 0b111110 },
+    Code { 6 | Code::LowerRangeBit, 32, -2049, 0b111110 },
     Code { 6, 32, 2048, 0b111111 },
 };
 
@@ -220,7 +222,7 @@ constexpr Array standard_huffman_table_G = {
     Code { 3, 8, 256, 0b001 },
     Code { 3, 9, 512, 0b010 },
     Code { 3, 10, 1024, 0b011 },
-    Code { 5 | 0x8000, 32, -1025, 0b11110 },
+    Code { 5 | Code::LowerRangeBit, 32, -1025, 0b11110 },
     Code { 5, 32, 2048, 0b11111 },
 };
 
@@ -244,7 +246,7 @@ constexpr Array standard_huffman_table_H = {
     Code { 6, 7, 262, 0b111100 },
     Code { 7, 8, 390, 0b1111101 },
     Code { 6, 10, 646, 0b111101 },
-    Code { 9 | 0x8000, 32, -16, 0b111111110 },
+    Code { 9 | Code::LowerRangeBit, 32, -16, 0b111111110 },
     Code { 9, 32, 1670, 0b111111111 },
     Code { 2, 0, OptionalNone {}, 0b01 },
 };
@@ -270,7 +272,7 @@ constexpr Array standard_huffman_table_I = {
     Code { 6, 8, 523, 0b111100 },
     Code { 7, 9, 779, 0b1111101 },
     Code { 6, 11, 1291, 0b111101 },
-    Code { 9 | 0x8000, 32, -32, 0b111111110 },
+    Code { 9 | Code::LowerRangeBit, 32, -32, 0b111111110 },
     Code { 9, 32, 3339, 0b111111111 },
     Code { 2, 0, OptionalNone {}, 0b00 },
 };
@@ -295,7 +297,7 @@ constexpr Array standard_huffman_table_J = {
     Code { 6, 9, 582, 0b111011 },
     Code { 6, 10, 1094, 0b111100 },
     Code { 7, 11, 2118, 0b1111101 },
-    Code { 8 | 0x8000, 32, -22, 0b11111110 },
+    Code { 8 | Code::LowerRangeBit, 32, -22, 0b11111110 },
     Code { 8, 32, 4166, 0b11111111 },
     Code { 2, 0, OptionalNone {}, 0b10 },
 };
@@ -472,7 +474,7 @@ ErrorOr<Optional<i32>> HuffmanTable::read_symbol_internal(BigEndianInputBitStrea
         code_word = (code_word << 1) | TRY(stream.read_bit());
         code_size++;
         for (auto const& code : m_codes) {
-            if ((code.prefix_length & 0x7fff) == code_size && code.code == code_word) {
+            if ((code.prefix_length & ~Code::LowerRangeBit) == code_size && code.code == code_word) {
                 if (!code.first_value.has_value())
                     return code.first_value; // OOB
 
@@ -480,7 +482,7 @@ ErrorOr<Optional<i32>> HuffmanTable::read_symbol_internal(BigEndianInputBitStrea
                 for (u8 i = 0; i < code.range_length; ++i)
                     value = (value << 1) | TRY(stream.read_bit());
 
-                if (code.prefix_length & 0x8000)
+                if (code.prefix_length & Code::LowerRangeBit)
                     return code.first_value.value() - value;
                 return value + code.first_value.value();
             }
@@ -3513,7 +3515,7 @@ static ErrorOr<void> decode_tables(JBIG2LoadingContext&, SegmentData& segment)
 
         JBIG2::Code code { .prefix_length = length, .range_length = range_lengths[i], .first_value = range_lows[i], .code = codes[i] };
         if (i == prefix_lengths.size() - (has_out_of_band ? 3 : 2))
-            code.prefix_length |= 0x8000;
+            code.prefix_length |= JBIG2::Code::LowerRangeBit;
         table_codes.append(code);
     }
 
