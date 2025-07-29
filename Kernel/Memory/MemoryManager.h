@@ -269,11 +269,11 @@ private:
 
     RefPtr<PhysicalRAMPage> find_free_physical_page(bool, GlobalData&);
 
-    ALWAYS_INLINE u8* quickmap_page(PhysicalRAMPage& page)
+    ALWAYS_INLINE u8* quickmap_page(PhysicalRAMPage& page, MemoryType memory_type = Memory::MemoryType::Normal)
     {
-        return quickmap_page(page.paddr());
+        return quickmap_page(page.paddr(), memory_type);
     }
-    u8* quickmap_page(PhysicalAddress const&);
+    u8* quickmap_page(PhysicalAddress, MemoryType = Memory::MemoryType::Normal);
     void unquickmap_page();
 
     PageDirectoryEntry* quickmap_pd(PageDirectory&, size_t pdpt_index);

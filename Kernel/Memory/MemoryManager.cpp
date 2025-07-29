@@ -1537,7 +1537,7 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
     return (PageTableEntry*)vaddr.get();
 }
 
-u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
+u8* MemoryManager::quickmap_page(PhysicalAddress physical_address, MemoryType memory_type)
 {
     VERIFY_INTERRUPTS_DISABLED();
     auto& mm_data = get_data();
@@ -1548,6 +1548,7 @@ u8* MemoryManager::quickmap_page(PhysicalAddress const& physical_address)
 
     auto& pte = g_boot_info.boot_pd_kernel_pt1023[pte_idx];
     if (pte.physical_page_base() != physical_address.get()) {
+        pte.set_memory_type(memory_type);
         pte.set_physical_page_base(physical_address.get());
         pte.set_present(true);
         pte.set_writable(true);
