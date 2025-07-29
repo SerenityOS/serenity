@@ -152,10 +152,10 @@ u32 ArithmeticIntegerIDDecoder::decode()
 }
 
 struct Code {
-    u16 prefix_length {};         // "PREFLEN" in spec.
+    u16 prefix_length {};         // "PREFLEN" in spec. High bit set for lower range table line.
     u8 range_length {};           // "RANGELEN" in spec.
     Optional<i32> first_value {}; // First number in "VAL" in spec.
-    u16 code {};                  // "Encoding" in spec.
+    u32 code {};                  // "Encoding" in spec.
 };
 
 // Table B.1 – Standard Huffman table A
@@ -187,6 +187,179 @@ constexpr Array standard_huffman_table_D = {
     Code { 5, 32, 76, 0b11111 },
 };
 
+// Table B.6 – Standard Huffman table F
+constexpr Array standard_huffman_table_F = {
+    Code { 5, 10, -2048, 0b11100 },
+    Code { 4, 9, -1024, 0b1000 },
+    Code { 4, 8, -512, 0b1001 },
+    Code { 4, 7, -256, 0b1010 },
+    Code { 5, 6, -128, 0b11101 },
+    Code { 5, 5, -64, 0b11110 },
+    Code { 4, 5, -32, 0b1011 },
+    Code { 2, 7, 0, 0b00 },
+    Code { 3, 7, 128, 0b010 },
+    Code { 3, 8, 256, 0b011 },
+    Code { 4, 9, 512, 0b1100 },
+    Code { 4, 10, 1024, 0b1101 },
+    Code { 6 | 0x8000, 32, -2049, 0b111110 },
+    Code { 6, 32, 2048, 0b111111 },
+};
+
+// Table B.7 – Standard Huffman table G
+constexpr Array standard_huffman_table_G = {
+    Code { 4, 9, -1024, 0b1000 },
+    Code { 3, 8, -512, 0b000 },
+    Code { 4, 7, -256, 0b1001 },
+    Code { 5, 6, -128, 0b11010 },
+    Code { 5, 5, -64, 0b11011 },
+    Code { 4, 5, -32, 0b1010 },
+    Code { 4, 5, 0, 0b1011 },
+    Code { 5, 5, 32, 0b11100 },
+    Code { 5, 6, 64, 0b11101 },
+    Code { 4, 7, 128, 0b1100 },
+    Code { 3, 8, 256, 0b001 },
+    Code { 3, 9, 512, 0b010 },
+    Code { 3, 10, 1024, 0b011 },
+    Code { 5 | 0x8000, 32, -1025, 0b11110 },
+    Code { 5, 32, 2048, 0b11111 },
+};
+
+// Table B.8 – Standard Huffman table H
+constexpr Array standard_huffman_table_H = {
+    Code { 8, 3, -15, 0b11111100 },
+    Code { 9, 1, -7, 0b111111100 },
+    Code { 8, 1, -5, 0b11111101 },
+    Code { 9, 0, -3, 0b111111101 },
+    Code { 7, 0, -2, 0b1111100 },
+    Code { 4, 0, -1, 0b1010 },
+    Code { 2, 1, 0, 0b00 },
+    Code { 5, 0, 2, 0b11010 },
+    Code { 6, 0, 3, 0b111010 },
+    Code { 3, 4, 4, 0b100 },
+    Code { 6, 1, 20, 0b111011 },
+    Code { 4, 4, 22, 0b1011 },
+    Code { 4, 5, 38, 0b1100 },
+    Code { 5, 6, 70, 0b11011 },
+    Code { 5, 7, 134, 0b11100 },
+    Code { 6, 7, 262, 0b111100 },
+    Code { 7, 8, 390, 0b1111101 },
+    Code { 6, 10, 646, 0b111101 },
+    Code { 9 | 0x8000, 32, -16, 0b111111110 },
+    Code { 9, 32, 1670, 0b111111111 },
+    Code { 2, 0, OptionalNone {}, 0b01 },
+};
+
+// Table B.9 – Standard Huffman table I
+constexpr Array standard_huffman_table_I = {
+    Code { 8, 4, -31, 0b11111100 },
+    Code { 9, 2, -15, 0b111111100 },
+    Code { 8, 2, -11, 0b11111101 },
+    Code { 9, 1, -7, 0b111111101 },
+    Code { 7, 1, -5, 0b1111100 },
+    Code { 4, 1, -3, 0b1010 },
+    Code { 3, 1, -1, 0b010 },
+    Code { 3, 1, 1, 0b011 },
+    Code { 5, 1, 3, 0b11010 },
+    Code { 6, 1, 5, 0b111010 },
+    Code { 3, 5, 7, 0b100 },
+    Code { 6, 2, 39, 0b111011 },
+    Code { 4, 5, 43, 0b1011 },
+    Code { 4, 6, 75, 0b1100 },
+    Code { 5, 7, 139, 0b11011 },
+    Code { 5, 8, 267, 0b11100 },
+    Code { 6, 8, 523, 0b111100 },
+    Code { 7, 9, 779, 0b1111101 },
+    Code { 6, 11, 1291, 0b111101 },
+    Code { 9 | 0x8000, 32, -32, 0b111111110 },
+    Code { 9, 32, 3339, 0b111111111 },
+    Code { 2, 0, OptionalNone {}, 0b00 },
+};
+
+// Table B.10 – Standard Huffman table J
+constexpr Array standard_huffman_table_J = {
+    Code { 7, 4, -21, 0b1111010 },
+    Code { 8, 0, -5, 0b11111100 },
+    Code { 7, 0, -4, 0b1111011 },
+    Code { 5, 0, -3, 0b11000 },
+    Code { 2, 2, -2, 0b00 },
+    Code { 5, 0, 2, 0b11001 },
+    Code { 6, 0, 3, 0b110110 },
+    Code { 7, 0, 4, 0b1111100 },
+    Code { 8, 0, 5, 0b11111101 },
+    Code { 2, 6, 6, 0b01 },
+    Code { 5, 5, 70, 0b11010 },
+    Code { 6, 5, 102, 0b110111 },
+    Code { 6, 6, 134, 0b111000 },
+    Code { 6, 7, 198, 0b111001 },
+    Code { 6, 8, 326, 0b111010 },
+    Code { 6, 9, 582, 0b111011 },
+    Code { 6, 10, 1094, 0b111100 },
+    Code { 7, 11, 2118, 0b1111101 },
+    Code { 8 | 0x8000, 32, -22, 0b11111110 },
+    Code { 8, 32, 4166, 0b11111111 },
+    Code { 2, 0, OptionalNone {}, 0b10 },
+};
+
+// Table B.11 – Standard Huffman table K
+constexpr Array standard_huffman_table_K = {
+    Code { 1, 0, 1, 0b0 },
+    Code { 2, 1, 2, 0b10 },
+    Code { 4, 0, 4, 0b1100 },
+    Code { 4, 1, 5, 0b1101 },
+    Code { 5, 1, 7, 0b11100 },
+    Code { 5, 2, 9, 0b11101 },
+    Code { 6, 2, 13, 0b111100 },
+    Code { 7, 2, 17, 0b1111010 },
+    Code { 7, 3, 21, 0b1111011 },
+    Code { 7, 4, 29, 0b1111100 },
+    Code { 7, 5, 45, 0b1111101 },
+    Code { 7, 6, 77, 0b1111110 },
+    Code { 7, 32, 141, 0b1111111 },
+};
+
+// Table B.12 – Standard Huffman table L
+constexpr Array standard_huffman_table_L = {
+    Code { 1, 0, 1, 0b0 },
+    Code { 2, 0, 2, 0b10 },
+    Code { 3, 1, 3, 0b110 },
+    Code { 5, 0, 5, 0b11100 },
+    Code { 5, 1, 6, 0b11101 },
+    Code { 6, 1, 8, 0b111100 },
+    Code { 7, 0, 10, 0b1111010 },
+    Code { 7, 1, 11, 0b1111011 },
+    Code { 7, 2, 13, 0b1111100 },
+    Code { 7, 3, 17, 0b1111101 },
+    Code { 7, 4, 25, 0b1111110 },
+    Code { 8, 5, 41, 0b11111110 },
+    Code { 8, 32, 73, 0b11111111 },
+};
+
+// Table B.13 – Standard Huffman table M
+constexpr Array standard_huffman_table_M = {
+    Code { 1, 0, 1, 0b0 },
+    Code { 3, 0, 2, 0b100 },
+    Code { 4, 0, 3, 0b1100 },
+    Code { 5, 0, 4, 0b11100 },
+    Code { 4, 1, 5, 0b1101 },
+    Code { 3, 3, 7, 0b101 },
+    Code { 6, 1, 15, 0b111010 },
+    Code { 6, 2, 17, 0b111011 },
+    Code { 6, 3, 21, 0b111100 },
+    Code { 6, 4, 29, 0b111101 },
+    Code { 6, 5, 45, 0b111110 },
+    Code { 7, 6, 77, 0b1111110 },
+    Code { 7, 32, 141, 0b1111111 },
+};
+
+// Table B.14 – Standard Huffman table N
+constexpr Array standard_huffman_table_N = {
+    Code { 3, 0, -2, 0b100 },
+    Code { 3, 0, -1, 0b101 },
+    Code { 1, 0, 0, 0b0 },
+    Code { 3, 0, 1, 0b110 },
+    Code { 3, 0, 2, 0b111 },
+};
+
 class HuffmanTable {
 public:
     enum class StandardTable {
@@ -214,13 +387,13 @@ public:
     // Will never return OOB.
     ErrorOr<i32> read_symbol_non_oob(BigEndianInputBitStream&) const;
 
-private:
     HuffmanTable(ReadonlySpan<Code> codes, bool has_oob_symbol = false)
         : m_codes(codes)
         , m_has_oob_symbol(has_oob_symbol)
     {
     }
 
+private:
     ErrorOr<Optional<i32>> read_symbol_internal(BigEndianInputBitStream&) const;
 
     ReadonlySpan<Code> m_codes;
@@ -246,24 +419,42 @@ ErrorOr<HuffmanTable*> HuffmanTable::standard_huffman_table(StandardTable kind)
     }
     case StandardTable::B_5:
         return Error::from_string_literal("Standard table E not yet supported");
-    case StandardTable::B_6:
-        return Error::from_string_literal("Standard table F not yet supported");
-    case StandardTable::B_7:
-        return Error::from_string_literal("Standard table G not yet supported");
-    case StandardTable::B_8:
-        return Error::from_string_literal("Standard table H not yet supported");
-    case StandardTable::B_9:
-        return Error::from_string_literal("Standard table I not yet supported");
-    case StandardTable::B_10:
-        return Error::from_string_literal("Standard table J not yet supported");
-    case StandardTable::B_11:
-        return Error::from_string_literal("Standard table K not yet supported");
-    case StandardTable::B_12:
-        return Error::from_string_literal("Standard table L not yet supported");
-    case StandardTable::B_13:
-        return Error::from_string_literal("Standard table M not yet supported");
-    case StandardTable::B_14:
-        return Error::from_string_literal("Standard table N not yet supported");
+    case StandardTable::B_6: {
+        static HuffmanTable standard_table_F(standard_huffman_table_F);
+        return &standard_table_F;
+    }
+    case StandardTable::B_7: {
+        static HuffmanTable standard_table_G(standard_huffman_table_G);
+        return &standard_table_G;
+    }
+    case StandardTable::B_8: {
+        static HuffmanTable standard_table_H(standard_huffman_table_H, true);
+        return &standard_table_H;
+    }
+    case StandardTable::B_9: {
+        static HuffmanTable standard_table_I(standard_huffman_table_I, true);
+        return &standard_table_I;
+    }
+    case StandardTable::B_10: {
+        static HuffmanTable standard_table_J(standard_huffman_table_J, true);
+        return &standard_table_J;
+    }
+    case StandardTable::B_11: {
+        static HuffmanTable standard_table_K(standard_huffman_table_K);
+        return &standard_table_K;
+    }
+    case StandardTable::B_12: {
+        static HuffmanTable standard_table_L(standard_huffman_table_L);
+        return &standard_table_L;
+    }
+    case StandardTable::B_13: {
+        static HuffmanTable standard_table_M(standard_huffman_table_M);
+        return &standard_table_M;
+    }
+    case StandardTable::B_14: {
+        static HuffmanTable standard_table_N(standard_huffman_table_N);
+        return &standard_table_N;
+    }
     case StandardTable::B_15:
         return Error::from_string_literal("Standard table O not yet supported");
     }
@@ -273,19 +464,22 @@ ErrorOr<HuffmanTable*> HuffmanTable::standard_huffman_table(StandardTable kind)
 ErrorOr<Optional<i32>> HuffmanTable::read_symbol_internal(BigEndianInputBitStream& stream) const
 {
     // FIXME: Use an approach that doesn't require a full scan for every bit. See Compress::CanonicalCodes.
-    u16 code_word = 0;
+    u32 code_word = 0;
     u8 code_size = 0;
     while (true) {
         code_word = (code_word << 1) | TRY(stream.read_bit());
         code_size++;
         for (auto const& code : m_codes) {
-            if (code.prefix_length == code_size && code.code == code_word) {
+            if ((code.prefix_length & 0x7fff) == code_size && code.code == code_word) {
                 if (!code.first_value.has_value())
                     return code.first_value; // OOB
 
-                i32 value = 0;
+                i32 value = 0; // "HTOFFSET" in spec.
                 for (u8 i = 0; i < code.range_length; ++i)
                     value = (value << 1) | TRY(stream.read_bit());
+
+                if (code.prefix_length & 0x8000)
+                    return code.first_value.value() - value;
                 return value + code.first_value.value();
             }
         }
@@ -1311,7 +1505,9 @@ struct TextRegionDecodingInputParameters {
     u32 size_of_symbol_instance_strips { 0 }; // "SBSTRIPS" in spec.
     // "SBNUMSYMS" is `symbols.size()` below.
 
-    // FIXME: SBSYMCODES
+    // Only set if uses_huffman_encoding is true.
+    JBIG2::HuffmanTable const* symbol_id_table { nullptr }; // "SBSYMCODES" in spec.
+
     u32 id_symbol_code_length { 0 };       // "SBSYMCODELEN" in spec.
     Vector<NonnullRefPtr<Symbol>> symbols; // "SBNUMSYMS" / "SBSYMS" in spec.
     u8 default_pixel { 0 };                // "SBDEFPIXEL" in spec.
@@ -1329,7 +1525,16 @@ struct TextRegionDecodingInputParameters {
     Corner reference_corner { Corner::TopLeft }; // "REFCORNER" in spec.
 
     i8 delta_s_offset { 0 }; // "SBDSOFFSET" in spec.
-    // FIXME: SBHUFFFS, SBHUFFFDS, SBHUFFDT, SBHUFFRDW, SBHUFFRDH, SBHUFFRDX, SBHUFFRDY, SBHUFFRSIZE
+
+    // Only set if uses_huffman_encoding is true.
+    JBIG2::HuffmanTable const* first_s_table { nullptr };                 // "SBHUFFFS" in spec.
+    JBIG2::HuffmanTable const* subsequent_s_table { nullptr };            // "SBHUFFDS" in spec.
+    JBIG2::HuffmanTable const* delta_t_table { nullptr };                 // "SBHUFFDT" in spec.
+    JBIG2::HuffmanTable const* refinement_delta_width_table { nullptr };  // "SBHUFFRDW" in spec.
+    JBIG2::HuffmanTable const* refinement_delta_height_table { nullptr }; // "SBHUFFRDH" in spec.
+    JBIG2::HuffmanTable const* refinement_x_offset_table { nullptr };     // "SBHUFFRDX" in spec.
+    JBIG2::HuffmanTable const* refinement_y_offset_table { nullptr };     // "SBHUFFRDY" in spec.
+    JBIG2::HuffmanTable const* refinement_size_table { nullptr };         // "SBHUFFRSIZE" in spec.
 
     u8 refinement_template { 0 };                                        // "SBRTEMPLATE" in spec.
     Array<AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels; // "SBRATX" / "SBRATY" in spec.
@@ -1339,89 +1544,128 @@ struct TextRegionDecodingInputParameters {
 // 6.4 Text Region Decoding Procedure
 static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, ReadonlyBytes data)
 {
-    if (inputs.uses_huffman_encoding)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode huffman text regions yet");
-
-    auto decoder = TRY(QMArithmeticDecoder::initialize(data));
+    Optional<FixedMemoryStream> stream;
+    Optional<BigEndianInputBitStream> bit_stream;
+    Optional<QMArithmeticDecoder> decoder;
+    Vector<QMArithmeticDecoder::Context> contexts;
+    if (inputs.uses_huffman_encoding) {
+        stream = FixedMemoryStream { data };
+        bit_stream = BigEndianInputBitStream { MaybeOwned { stream.value() } };
+    } else {
+        decoder = TRY(QMArithmeticDecoder::initialize(data));
+    }
 
     // 6.4.6 Strip delta T
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFDT and multiply the resulting value by SBSTRIPS.
     //  If SBHUFF is 0, decode a value using the IADT integer arithmetic decoding procedure (see Annex A) and multiply the resulting value by SBSTRIPS."
-    // FIXME: Implement support for SBHUFF = 1.
-    JBIG2::ArithmeticIntegerDecoder delta_t_integer_decoder(decoder);
+    Optional<JBIG2::ArithmeticIntegerDecoder> delta_t_integer_decoder;
+    if (!inputs.uses_huffman_encoding)
+        delta_t_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_delta_t = [&]() -> ErrorOr<i32> {
-        return TRY(delta_t_integer_decoder.decode_non_oob()) * inputs.size_of_symbol_instance_strips;
+        if (inputs.uses_huffman_encoding)
+            return TRY(inputs.delta_t_table->read_symbol_non_oob(*bit_stream)) * inputs.size_of_symbol_instance_strips;
+        return TRY(delta_t_integer_decoder->decode_non_oob()) * inputs.size_of_symbol_instance_strips;
     };
 
     // 6.4.7 First symbol instance S coordinate
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFFS.
     //  If SBHUFF is 0, decode a value using the IAFS integer arithmetic decoding procedure (see Annex A)."
-    // FIXME: Implement support for SBHUFF = 1.
-    JBIG2::ArithmeticIntegerDecoder first_s_integer_decoder(decoder);
+    Optional<JBIG2::ArithmeticIntegerDecoder> first_s_integer_decoder;
+    if (!inputs.uses_huffman_encoding)
+        first_s_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_first_s = [&]() -> ErrorOr<i32> {
-        return first_s_integer_decoder.decode_non_oob();
+        if (inputs.uses_huffman_encoding)
+            return inputs.first_s_table->read_symbol_non_oob(*bit_stream);
+        return first_s_integer_decoder->decode_non_oob();
     };
 
     // 6.4.8 Subsequent symbol instance S coordinate
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFDS.
     //  If SBHUFF is 0, decode a value using the IADS integer arithmetic decoding procedure (see Annex A).
     //  In either case it is possible that the result of this decoding is the out-of-band value OOB.""
-    // FIXME: Implement support for SBHUFF = 1.
-    JBIG2::ArithmeticIntegerDecoder subsequent_s_integer_decoder(decoder);
-    auto read_subsequent_s = [&]() -> Optional<i32> {
-        return subsequent_s_integer_decoder.decode();
+    Optional<JBIG2::ArithmeticIntegerDecoder> subsequent_s_integer_decoder;
+    if (!inputs.uses_huffman_encoding)
+        subsequent_s_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+    auto read_subsequent_s = [&]() -> ErrorOr<Optional<i32>> {
+        if (inputs.uses_huffman_encoding)
+            return inputs.subsequent_s_table->read_symbol(*bit_stream);
+        return subsequent_s_integer_decoder->decode();
     };
 
     // 6.4.9 Symbol instance T coordinate
     // "If SBSTRIPS == 1, then the value decoded is always zero. Otherwise:
     //  • If SBHUFF is 1, decode a value by reading ceil(log2(SBSTRIPS)) bits directly from the bitstream.
     //  • If SBHUFF is 0, decode a value using the IAIT integer arithmetic decoding procedure (see Annex A)."
-    // FIXME: Implement support for SBHUFF = 1.
-    JBIG2::ArithmeticIntegerDecoder instance_t_integer_decoder(decoder);
+    Optional<JBIG2::ArithmeticIntegerDecoder> instance_t_integer_decoder;
+    if (!inputs.uses_huffman_encoding)
+        instance_t_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_instance_t = [&]() -> ErrorOr<i32> {
         if (inputs.size_of_symbol_instance_strips == 1)
             return 0;
-        return instance_t_integer_decoder.decode_non_oob();
+        if (inputs.uses_huffman_encoding)
+            return TRY(bit_stream->read_bits(ceil(log2(inputs.size_of_symbol_instance_strips))));
+        return instance_t_integer_decoder->decode_non_oob();
     };
 
     // 6.4.10 Symbol instance symbol ID
     // "If SBHUFF is 1, decode a value by reading one bit at a time until the resulting bit string is equal to one of the entries in
     //  SBSYMCODES. The resulting value, which is IDI, is the index of the entry in SBSYMCODES that is read.
     //  If SBHUFF is 0, decode a value using the IAID integer arithmetic decoding procedure (see Annex A). Set IDI to the
-    //  resulting value.""
-    // FIXME: Implement support for SBHUFF = 1.
-    JBIG2::ArithmeticIntegerIDDecoder id_decoder(decoder, inputs.id_symbol_code_length);
-
-    // 6.4.11.1 Symbol instance refinement delta width
-    // FIXME: Implement support for SBHUFF = 1.
-    JBIG2::ArithmeticIntegerDecoder refinement_delta_width_decoder(decoder);
-    auto read_refinement_delta_width = [&]() -> ErrorOr<i32> {
-        return refinement_delta_width_decoder.decode_non_oob();
+    //  resulting value."
+    Optional<JBIG2::ArithmeticIntegerIDDecoder> id_decoder;
+    if (!inputs.uses_huffman_encoding)
+        id_decoder = JBIG2::ArithmeticIntegerIDDecoder(decoder.value(), inputs.id_symbol_code_length);
+    auto read_symbol_id = [&]() -> ErrorOr<u32> {
+        if (inputs.uses_huffman_encoding)
+            return inputs.symbol_id_table->read_symbol_non_oob(*bit_stream);
+        return id_decoder->decode();
     };
 
-    // 6.4.11.2 Symbol instance refinement delta width
-    // FIXME: Implement support for SBHUFF = 1.
-    JBIG2::ArithmeticIntegerDecoder refinement_delta_height_decoder(decoder);
+    // 6.4.11.1 Symbol instance refinement delta width
+    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_delta_width_decoder;
+    if (!inputs.uses_huffman_encoding)
+        refinement_delta_width_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+    auto read_refinement_delta_width = [&]() -> ErrorOr<i32> {
+        if (inputs.uses_huffman_encoding)
+            return inputs.refinement_delta_width_table->read_symbol_non_oob(*bit_stream);
+        return refinement_delta_width_decoder->decode_non_oob();
+    };
+
+    // 6.4.11.2 Symbol instance refinement delta height
+    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_delta_height_decoder;
+    if (!inputs.uses_huffman_encoding)
+        refinement_delta_height_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_refinement_delta_height = [&]() -> ErrorOr<i32> {
-        return refinement_delta_height_decoder.decode_non_oob();
+        if (inputs.uses_huffman_encoding)
+            return inputs.refinement_delta_height_table->read_symbol_non_oob(*bit_stream);
+        return refinement_delta_height_decoder->decode_non_oob();
     };
 
     // 6.4.11.3 Symbol instance refinement X offset
-    // FIXME: Implement support for SBHUFF = 1.
-    JBIG2::ArithmeticIntegerDecoder refinement_x_offset_decoder(decoder);
+    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_x_offset_decoder;
+    if (!inputs.uses_huffman_encoding)
+        refinement_x_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_refinement_x_offset = [&]() -> ErrorOr<i32> {
-        return refinement_x_offset_decoder.decode_non_oob();
+        if (inputs.uses_huffman_encoding)
+            return inputs.refinement_x_offset_table->read_symbol_non_oob(*bit_stream);
+        return refinement_x_offset_decoder->decode_non_oob();
     };
 
     // 6.4.11.4 Symbol instance refinement Y offset
-    // FIXME: Implement support for SBHUFF = 1.
-    JBIG2::ArithmeticIntegerDecoder refinement_y_offset_decoder(decoder);
+    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_y_offset_decoder;
+    if (!inputs.uses_huffman_encoding)
+        refinement_y_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_refinement_y_offset = [&]() -> ErrorOr<i32> {
-        return refinement_y_offset_decoder.decode_non_oob();
+        if (inputs.uses_huffman_encoding)
+            return inputs.refinement_y_offset_table->read_symbol_non_oob(*bit_stream);
+        return refinement_y_offset_decoder->decode_non_oob();
     };
 
     // 6.4.11 Symbol instance bitmap
-    JBIG2::ArithmeticIntegerDecoder has_refinement_image_decoder(decoder);
+    Optional<JBIG2::ArithmeticIntegerDecoder> has_refinement_image_decoder;
+    if (!inputs.uses_huffman_encoding)
+        has_refinement_image_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+
     Vector<QMArithmeticDecoder::Context> refinement_contexts;
     if (inputs.uses_refinement_coding)
         refinement_contexts.resize(1 << (inputs.refinement_template == 0 ? 13 : 10));
@@ -1435,12 +1679,18 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
         if (inputs.uses_refinement_coding) {
             // "• If SBHUFF is 1, then read one bit and set RI to the value of that bit.
             //  • If SBHUFF is 0, then decode one bit using the IARI integer arithmetic decoding procedure and set RI to the value of that bit."
-            // FIXME: Implement support for SBHUFF = 1.
-            has_refinement_image = TRY(has_refinement_image_decoder.decode_non_oob());
+            if (inputs.uses_huffman_encoding)
+                has_refinement_image = TRY(bit_stream->read_bit());
+            else
+                has_refinement_image = TRY(has_refinement_image_decoder->decode_non_oob());
         }
 
+        // "If RI is 0 then set the symbol instance bitmap IBI to SBSYMS[IDI]."
         if (!has_refinement_image)
             return &symbol;
+
+        if (inputs.uses_huffman_encoding)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode refinement images with huffman encoding yet");
 
         auto refinement_delta_width = TRY(read_refinement_delta_width());
         auto refinement_delta_height = TRY(read_refinement_delta_height());
@@ -1465,7 +1715,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
         refinement_inputs.reference_y_offset = floor_div(refinement_delta_height, 2) + refinement_y_offset;
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
-        refinement_result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, decoder, refinement_contexts));
+        refinement_result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, decoder.value(), refinement_contexts));
         return refinement_result.ptr();
     };
 
@@ -1516,7 +1766,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
                 cur_s = first_s;
                 is_first_symbol = false;
             } else {
-                auto subsequent_s = read_subsequent_s();
+                auto subsequent_s = TRY(read_subsequent_s());
                 if (!subsequent_s.has_value())
                     break;
                 i32 instance_delta_s = subsequent_s.value();
@@ -1529,7 +1779,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
             i32 t_instance = strip_t + cur_t;
 
             //     "iv) Decode the symbol instance's symbol ID as described in 6.4.10. Let IDI be the decoded value."
-            u32 id = id_decoder.decode();
+            u32 id = TRY(read_symbol_id());
 
             //     "v) Determine the symbol instance's bitmap IBI as described in 6.4.11. The width and height of this
             //         bitmap shall be denoted as WI and HI respectively."
@@ -2435,6 +2685,70 @@ static ErrorOr<void> decode_intermediate_text_region(JBIG2LoadingContext&, Segme
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate text region yet");
 }
 
+static ErrorOr<Vector<u32>> assign_huffman_codes(ReadonlyBytes code_lengths)
+{
+    // FIXME: Use shared huffman code, instead of using this algorithm from the spec.
+
+    // B.3 Assigning the prefix codes
+    // code_lengths is "PREFLEN" in spec, code_lengths.size is "NTEMP".
+    Vector<u32> codes; // "CODES" in spec.
+    TRY(codes.try_resize(code_lengths.size()));
+
+    // "1) Build a histogram in the array LENCOUNT counting the number of times each prefix length value
+    //     occurs in PREFLEN: LENCOUNT[I] is the number of times that the value I occurs in the array
+    //     PREFLEN."
+    Array<u32, 32> length_counts {}; // "LENCOUNT" in spec.
+    for (auto length : code_lengths) {
+        VERIFY(length < 32);
+        length_counts[length]++;
+    }
+
+    // "2) Let LENMAX be the largest value for which LENCOUNT[LENMAX] > 0. Set:
+    //         CURLEN = 1
+    //         FIRSTCODE[0] = 0
+    //         LENCOUNT[0] = 0"
+    size_t highest_length_index = 0; // "LENMAX" in spec.
+    for (auto const& [i, count] : enumerate(length_counts)) {
+        if (count > 0)
+            highest_length_index = i;
+    }
+    size_t current_length = 1;           // "CURLEN" in spec.
+    Array<u32, 32> first_code_at_length; // "FIRSTCODE" in spec.
+    first_code_at_length[0] = 0;
+    length_counts[0] = 0;
+
+    // "3) While CURLEN ≤ LENMAX, perform the following operations:"
+    while (current_length <= highest_length_index) {
+        // "a) Set:
+        //         FIRSTCODE[CURLEN] = (FIRSTCODE[CURLEN – 1] + LENCOUNT[CURLEN – 1]) × 2
+        //         CURCODE = FIRSTCODE[CURLEN]
+        //         CURTEMP = 0"
+        first_code_at_length[current_length] = (first_code_at_length[current_length - 1] + length_counts[current_length - 1]) * 2;
+        u32 current_code = first_code_at_length[current_length]; // "CURCODE" in spec.
+        size_t i = 0;                                            // "CURTEMP" in spec.
+
+        // "b) While CURTEMP < NTEMP, perform the following operations:"
+        while (i < code_lengths.size()) {
+            // "i) If PREFLEN[CURTEMP] = CURLEN, then set:
+            //         CODES[CURTEMP] = CURCODE
+            //         CURCODE = CURCODE + 1"
+            if (code_lengths[i] == current_length) {
+                codes[i] = current_code;
+                current_code++;
+            }
+
+            // "ii) Set CURTEMP = CURTEMP + 1"
+            i++;
+        }
+
+        // "c) Set:
+        //         CURLEN = CURLEN + 1"
+        current_length++;
+    }
+
+    return codes;
+}
+
 static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
     // 7.4.3 Text region segment syntax
@@ -2470,9 +2784,99 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
 
     // 7.4.3.1.2 Text region segment Huffman flags
     // "This field is only present if SBHUFF is 1."
-    // FIXME: Support this eventually.
-    if (uses_huffman_encoding)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode huffman text regions yet");
+    JBIG2::HuffmanTable const* first_s_table = nullptr;
+    JBIG2::HuffmanTable const* subsequent_s_table = nullptr;
+    JBIG2::HuffmanTable const* delta_t_table = nullptr;
+    JBIG2::HuffmanTable const* refinement_delta_width_table = nullptr;
+    JBIG2::HuffmanTable const* refinement_delta_height_table = nullptr;
+    JBIG2::HuffmanTable const* refinement_x_offset_table = nullptr;
+    JBIG2::HuffmanTable const* refinement_y_offset_table = nullptr;
+    JBIG2::HuffmanTable const* refinement_size_table = nullptr;
+    if (uses_huffman_encoding) {
+        u16 huffman_flags = TRY(stream.read_value<BigEndian<u16>>());
+
+        auto first_s_selection = (huffman_flags >> 0) & 0b11; // "SBHUFFFS" in spec.
+        if (first_s_selection == 0)
+            first_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_6));
+        else if (first_s_selection == 1)
+            first_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_7));
+        else if (first_s_selection == 2)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid first_s_table");
+        else if (first_s_selection == 3)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+
+        auto subsequent_s_selection = (huffman_flags >> 2) & 0b11; // "SBHUFFDS" in spec.
+        if (subsequent_s_selection == 0)
+            subsequent_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_8));
+        else if (subsequent_s_selection == 1)
+            subsequent_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_9));
+        else if (subsequent_s_selection == 2)
+            subsequent_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_10));
+        else if (subsequent_s_selection == 3)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+
+        auto delta_t_selection = (huffman_flags >> 4) & 0b11; // "SBHUFFDT" in spec.
+        if (delta_t_selection == 0)
+            delta_t_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_11));
+        else if (delta_t_selection == 1)
+            delta_t_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_12));
+        else if (delta_t_selection == 2)
+            delta_t_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_13));
+        else if (delta_t_selection == 3)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+
+        if (!uses_refinement_coding && (huffman_flags & 0x7fc0) != 0)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Huffman flags have refinement bits set but refinement bit is not set");
+
+        auto refinement_delta_width_selection = (huffman_flags >> 6) & 0b11; // "SBHUFFRDW" in spec.
+        if (refinement_delta_width_selection == 0)
+            refinement_delta_width_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_14));
+        else if (refinement_delta_width_selection == 1)
+            refinement_delta_width_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_15));
+        else if (refinement_delta_width_selection == 2)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement_delta_width_table");
+        else if (refinement_delta_width_selection == 3)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+
+        auto refinement_delta_height_selection = (huffman_flags >> 8) & 0b11; // "SBHUFFRDH" in spec.
+        if (refinement_delta_height_selection == 0)
+            refinement_delta_height_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_14));
+        else if (refinement_delta_height_selection == 1)
+            refinement_delta_height_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_15));
+        else if (refinement_delta_height_selection == 2)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement_delta_height_table");
+        else if (refinement_delta_height_selection == 3)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+
+        auto refinement_x_offset_selection = (huffman_flags >> 10) & 0b11; // "SBHUFFRDX" in spec.
+        if (refinement_x_offset_selection == 0)
+            refinement_x_offset_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_14));
+        else if (refinement_x_offset_selection == 1)
+            refinement_x_offset_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_15));
+        else if (refinement_x_offset_selection == 2)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement_x_offset_table");
+        else if (refinement_x_offset_selection == 3)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+
+        auto refinement_y_offset_selection = (huffman_flags >> 12) & 0b11; // "SBHUFFRDY" in spec.
+        if (refinement_y_offset_selection == 0)
+            refinement_y_offset_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_14));
+        else if (refinement_y_offset_selection == 1)
+            refinement_y_offset_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_15));
+        else if (refinement_y_offset_selection == 2)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement_y_offset_table");
+        else if (refinement_y_offset_selection == 3)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+
+        auto refinement_size_selection = (huffman_flags >> 14) & 0b1; // "SBHUFFRSIZE" in spec.
+        if (refinement_size_selection == 0)
+            refinement_size_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
+        else if (refinement_size_selection == 1)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+
+        if (huffman_flags & 0x8000)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid text region segment Huffman flags");
+    }
 
     // 7.4.3.1.3 Text region refinement AT flags
     // "This field is only present if SBREFINE is 1 and SBRTEMPLATE is 0."
@@ -2487,20 +2891,9 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     // 7.4.3.1.4 Number of symbol instances (SBNUMINSTANCES)
     u32 number_of_symbol_instances = TRY(stream.read_value<BigEndian<u32>>());
 
-    // 7.4.3.1.5 Text region segment symbol ID Huffman decoding table
-    // "It is only present if SBHUFF is 1."
-    // FIXME: Support this eventually.
-
-    dbgln_if(JBIG2_DEBUG, "Text region: uses_huffman_encoding={}, uses_refinement_coding={}, strip_size={}, reference_corner={}, is_transposed={}", uses_huffman_encoding, uses_refinement_coding, strip_size, reference_corner, is_transposed);
-    dbgln_if(JBIG2_DEBUG, "Text region: combination_operator={}, default_pixel_value={}, delta_s_offset={}, refinement_template={}, number_of_symbol_instances={}", combination_operator, default_pixel_value, delta_s_offset, refinement_template, number_of_symbol_instances);
-    dbgln_if(JBIG2_DEBUG, "Text region: number_of_symbol_instances={}", number_of_symbol_instances);
-
-    // 7.4.3.2 Decoding a text region segment
-    // "1) Interpret its header, as described in 7.4.3.1."
-    // Done!
-
-    // "2) Decode (or retrieve the results of decoding) any referred-to symbol dictionary and tables segments."
-    Vector<NonnullRefPtr<Symbol>> symbols;
+    // Retrieve referred-to symbols. The spec does this later, but the number of symbols is needed
+    // to decode the symbol ID Huffman table.
+    Vector<NonnullRefPtr<Symbol>> symbols; // `symbols.size()` is "SBNUMSYMS" in spec.
     for (auto referred_to_segment_number : segment.header.referred_to_segment_numbers) {
         auto opt_referred_to_segment = context.segments_by_number.get(referred_to_segment_number);
         if (!opt_referred_to_segment.has_value())
@@ -2511,6 +2904,95 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Text segment referred-to segment without symbols");
         symbols.extend(referred_to_segment.symbols.value());
     }
+
+    // 7.4.3.1.5 Text region segment symbol ID Huffman decoding table
+    // "It is only present if SBHUFF is 1."
+    Vector<JBIG2::Code> symbol_id_codes;
+    Optional<JBIG2::HuffmanTable> symbol_id_table_storage;
+    JBIG2::HuffmanTable const* symbol_id_table = nullptr;
+    if (uses_huffman_encoding) {
+        // 7.4.3.1.7 Symbol ID Huffman table decoding
+        auto bit_stream = BigEndianInputBitStream { MaybeOwned { stream } };
+
+        // "1) Read the code lengths for RUNCODE0 through RUNCODE34; each is stored as a four-bit value."
+        Array<u8, 35> code_length_lengths {};
+        for (size_t i = 0; i < code_length_lengths.size(); ++i)
+            code_length_lengths[i] = TRY(bit_stream.read_bits<u8>(4));
+
+        // "2) Given the lengths, assign Huffman codes for RUNCODE0 through RUNCODE34 using the algorithm
+        //     in B.3."
+        auto code_length_codes = TRY(assign_huffman_codes(code_length_lengths));
+
+        Vector<JBIG2::Code, 35> code_lengths_entries;
+        for (auto const& [i, length] : enumerate(code_length_lengths)) {
+            if (length == 0)
+                continue;
+            JBIG2::Code code { .prefix_length = length, .range_length = 0, .first_value = i, .code = code_length_codes[i] };
+            code_lengths_entries.append(code);
+        }
+        JBIG2::HuffmanTable code_lengths_table { code_lengths_entries };
+
+        Vector<u8> code_lengths;
+        do {
+            // "3) Read a Huffman code using this assignment. This decodes into one of RUNCODE0 through
+            //     RUNCODE34. If it is RUNCODE32, read two additional bits. If it is RUNCODE33, read three
+            //     additional bits. If it is RUNCODE34, read seven additional bits."
+            auto code = TRY(code_lengths_table.read_symbol_non_oob(bit_stream));
+            u8 repeats = 0;
+            if (code == 32)
+                repeats = TRY(bit_stream.read_bits<u8>(2)) + 3;
+            else if (code == 33)
+                repeats = TRY(bit_stream.read_bits<u8>(3)) + 3;
+            else if (code == 34)
+                repeats = TRY(bit_stream.read_bits<u8>(7)) + 11;
+
+            // "4) Interpret the RUNCODE code and the additional bits (if any) according to Table 29. This gives the
+            //     symbol ID code lengths for one or more symbols."
+            // Note: The spec means "Table 32" here.
+            if (code < 32) {
+                code_lengths.append(code);
+            } else if (code == 32) {
+                if (code_lengths.is_empty())
+                    return Error::from_string_literal("JBIG2ImageDecoderPlugin: RUNCODE32 without previous code");
+                auto last_value = code_lengths.last();
+                for (size_t i = 0; i < repeats; ++i)
+                    code_lengths.append(last_value);
+            } else if (code == 33 || code == 34) {
+                for (size_t i = 0; i < repeats; ++i)
+                    code_lengths.append(0);
+            }
+
+            // "5) Repeat steps 3) and 4) until the symbol ID code lengths for all SBNUMSYMS symbols have been
+            //     determined."
+        } while (code_lengths.size() < symbols.size());
+
+        // "6) Skip over the remaining bits in the last byte read, so that the actual text region decoding procedure begins
+        //     on a byte boundary."
+        // Done automatically by the BigEndianInputBitStream wrapping `stream`.
+
+        // "7) Assign a Huffman code to each symbol by applying the algorithm in B.3 to the symbol ID code lengths
+        //     just decoded. The result is the symbol ID Huffman table SBSYMCODES."
+        auto codes = TRY(assign_huffman_codes(code_lengths));
+        for (auto const& [i, length] : enumerate(code_lengths)) {
+            if (length == 0)
+                continue;
+            JBIG2::Code code { .prefix_length = length, .range_length = 0, .first_value = i, .code = codes[i] };
+            symbol_id_codes.append(code);
+        }
+        symbol_id_table_storage = JBIG2::HuffmanTable { symbol_id_codes };
+        symbol_id_table = &symbol_id_table_storage.value();
+    }
+
+    dbgln_if(JBIG2_DEBUG, "Text region: uses_huffman_encoding={}, uses_refinement_coding={}, strip_size={}, reference_corner={}, is_transposed={}", uses_huffman_encoding, uses_refinement_coding, strip_size, reference_corner, is_transposed);
+    dbgln_if(JBIG2_DEBUG, "Text region: combination_operator={}, default_pixel_value={}, delta_s_offset={}, refinement_template={}, number_of_symbol_instances={}", combination_operator, default_pixel_value, delta_s_offset, refinement_template, number_of_symbol_instances);
+    dbgln_if(JBIG2_DEBUG, "Text region: number_of_symbol_instances={}", number_of_symbol_instances);
+
+    // 7.4.3.2 Decoding a text region segment
+    // "1) Interpret its header, as described in 7.4.3.1."
+    // Done!
+
+    // "2) Decode (or retrieve the results of decoding) any referred-to symbol dictionary and tables segments."
+    // Done further up, since it's needed to decode the symbol ID Huffman table already.
 
     // "3) As described in E.3.7, reset all the arithmetic coding statistics to zero."
     // FIXME
@@ -2528,9 +3010,17 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     inputs.region_height = information_field.height;
     inputs.number_of_instances = number_of_symbol_instances;
     inputs.size_of_symbol_instance_strips = strip_size;
+    inputs.symbol_id_table = symbol_id_table;
     inputs.id_symbol_code_length = ceil(log2(symbols.size()));
     inputs.symbols = move(symbols);
-    // FIXME: Huffman tables.
+    inputs.first_s_table = first_s_table;
+    inputs.subsequent_s_table = subsequent_s_table;
+    inputs.delta_t_table = delta_t_table;
+    inputs.refinement_delta_width_table = refinement_delta_width_table;
+    inputs.refinement_delta_height_table = refinement_delta_height_table;
+    inputs.refinement_x_offset_table = refinement_x_offset_table;
+    inputs.refinement_y_offset_table = refinement_y_offset_table;
+    inputs.refinement_size_table = refinement_size_table;
     inputs.refinement_template = refinement_template;
     inputs.refinement_adaptive_template_pixels = adaptive_refinement_template;
 
