@@ -9,7 +9,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # serenity | lagom
 FINAL_TARGET="${1:-serenity}"
 
-# shellcheck source=/dev/null
 . "${DIR}/../Meta/shell_include.sh"
 
 exit_if_running_as_root "Do not run BuildJakt.sh as root, your Build directory will become root-owned"
