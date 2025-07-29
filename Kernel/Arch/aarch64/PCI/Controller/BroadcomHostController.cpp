@@ -15,7 +15,9 @@
 
 namespace Kernel::PCI {
 
-// This driver requires the host controller to be already initialized by the firmware.
+// This driver requires that the host controller is already initialized.
+// On the Pi 5, the firmware initializes it for us. It only asserts PERST# before starting the OS, so we just need to deassert it.
+// On the Pi 4, you need to boot with EDK II. The standard Raspberry Pi firmware does not initialize the host controller.
 
 // This host controller is not ECAM-compliant.
 // The config space is accessible through a single 4K window that can be mapped to any bus/device/function.
@@ -71,7 +73,12 @@ AK_ENUM_BITWISE_OPERATORS(Registers::State)
 
 class BroadcomHostController : public HostController {
 public:
-    static ErrorOr<NonnullOwnPtr<BroadcomHostController>> create(DeviceTree::Device const& device);
+    enum class Model {
+        BCM2711,
+        BCM2712,
+    };
+
+    static ErrorOr<NonnullOwnPtr<BroadcomHostController>> create(DeviceTree::Device const& device, Model);
 
 private:
     ErrorOr<VirtualAddress> map_config_space_for(BusNumber, DeviceNumber, FunctionNumber);
@@ -84,12 +91,13 @@ private:
     virtual u16 read16_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
     virtual u32 read32_field_locked(BusNumber, DeviceNumber, FunctionNumber, u32 field) override;
 
-    explicit BroadcomHostController(PCI::Domain const&, Memory::TypedMapping<Registers volatile>);
+    explicit BroadcomHostController(Model model, PCI::Domain const&, Memory::TypedMapping<Registers volatile>);
 
+    Model m_model { Model::BCM2711 };
     Memory::TypedMapping<Registers volatile> m_registers;
 };
 
-ErrorOr<NonnullOwnPtr<BroadcomHostController>> BroadcomHostController::create(DeviceTree::Device const& device)
+ErrorOr<NonnullOwnPtr<BroadcomHostController>> BroadcomHostController::create(DeviceTree::Device const& device, Model model)
 {
     auto domain = TRY(determine_pci_domain_for_devicetree_node(device.node(), device.node_name()));
     auto registers_resource = TRY(device.get_resource(0));
@@ -128,27 +136,34 @@ ErrorOr<NonnullOwnPtr<BroadcomHostController>> BroadcomHostController::create(De
         break;
     }
 
-    // Deassert PERST# to initialize the link.
-    registers->control |= Registers::Control::PERST_N;
+    if (model == Model::BCM2712) {
+        // Deassert PERST# to initialize the link.
+        registers->control |= Registers::Control::PERST_N;
 
-    microseconds_delay(100'000);
+        microseconds_delay(100'000);
+    } else if (model == Model::BCM2711) {
+        // We expect that PERST# is already deasserted on the Pi 4.
+    }
 
     // Check the link state.
     if ((registers->state & Registers::State::LinkUp) != Registers::State::LinkUp) {
         dbgln("{}: Link down", device.node_name());
 
-        // We failed to initialize the link; assert PERST# again.
-        registers->control &= ~Registers::Control::PERST_N;
+        if (model == Model::BCM2712) {
+            // We failed to initialize the link; assert PERST# again.
+            registers->control &= ~Registers::Control::PERST_N;
+        }
         return EIO;
     }
 
     dbgln("{}: Link up", device.node_name());
 
-    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) BroadcomHostController(domain, move(registers))));
+    return TRY(adopt_nonnull_own_or_enomem(new (nothrow) BroadcomHostController(model, domain, move(registers))));
 }
 
-BroadcomHostController::BroadcomHostController(PCI::Domain const& domain, Memory::TypedMapping<Registers volatile> registers)
+BroadcomHostController::BroadcomHostController(Model model, PCI::Domain const& domain, Memory::TypedMapping<Registers volatile> registers)
     : HostController(domain)
+    , m_model(model)
     , m_registers(move(registers))
 {
 }
@@ -161,6 +176,10 @@ ErrorOr<VirtualAddress> BroadcomHostController::map_config_space_for(BusNumber b
 
         return m_registers.base_address();
     }
+
+    // Accessing any other device on bus 1 causes SError interrupts on the Pi 4.
+    if (m_model == Model::BCM2711 && bus == 1 && device != 0)
+        return EINVAL;
 
     u32 const address = (bus.value() << 20) | (device.value() << 15) | (function.value() << 12);
     m_registers->config_space_window_address = address;
@@ -239,18 +258,27 @@ u32 BroadcomHostController::read32_field_locked(BusNumber bus, DeviceNumber devi
 }
 
 static constinit Array const compatibles_array = {
+    "brcm,bcm2711-pcie"sv,
     "brcm,bcm2712-pcie"sv,
 };
 
 DEVICETREE_DRIVER(BroadcomPCIeHostControllerDriver, compatibles_array);
 
 // https://www.kernel.org/doc/Documentation/devicetree/bindings/pci/brcm%2Cstb-pcie.yaml
-ErrorOr<void> BroadcomPCIeHostControllerDriver::probe(DeviceTree::Device const& device, StringView) const
+ErrorOr<void> BroadcomPCIeHostControllerDriver::probe(DeviceTree::Device const& device, StringView compatible) const
 {
     if (kernel_command_line().is_pci_disabled())
         return {};
 
-    auto host_controller = TRY(BroadcomHostController::create(device));
+    BroadcomHostController::Model model;
+    if (compatible == "brcm,bcm2711-pcie"sv)
+        model = BroadcomHostController::Model::BCM2711;
+    else if (compatible == "brcm,bcm2712-pcie"sv)
+        model = BroadcomHostController::Model::BCM2712;
+    else
+        VERIFY_NOT_REACHED();
+
+    auto host_controller = TRY(BroadcomHostController::create(device, model));
 
     TRY(configure_devicetree_host_controller(*host_controller, device.node(), device.node_name()));
     Access::the().add_host_controller(move(host_controller));
