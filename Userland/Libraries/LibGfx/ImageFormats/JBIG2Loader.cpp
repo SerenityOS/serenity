@@ -383,6 +383,23 @@ constexpr Array standard_huffman_table_N = {
     Code { 3, 0, 2, 0b111 },
 };
 
+// Table B.15 – Standard Huffman table O
+constexpr Array standard_huffman_table_O = {
+    Code { 7, 4, -24, 0b1111100 },
+    Code { 6, 2, -8, 0b111100 },
+    Code { 5, 1, -4, 0b11100 },
+    Code { 4, 0, -2, 0b1100 },
+    Code { 3, 0, -1, 0b100 },
+    Code { 1, 0, 0, 0b0 },
+    Code { 3, 0, 1, 0b101 },
+    Code { 4, 0, 2, 0b1101 },
+    Code { 5, 1, 3, 0b11101 },
+    Code { 6, 2, 5, 0b111101 },
+    Code { 7, 4, 9, 0b1111101 },
+    Code { 7 | Code::LowerRangeBit, 32, -25, 0b1111110 },
+    Code { 7, 32, 25, 0b1111111 },
+};
+
 class HuffmanTable {
 public:
     enum class StandardTable {
@@ -484,8 +501,10 @@ ErrorOr<HuffmanTable*> HuffmanTable::standard_huffman_table(StandardTable kind)
         static HuffmanTable standard_table_N(standard_huffman_table_N);
         return &standard_table_N;
     }
-    case StandardTable::B_15:
-        return Error::from_string_literal("Standard table O not yet supported");
+    case StandardTable::B_15: {
+        static HuffmanTable standard_table_O(standard_huffman_table_O);
+        return &standard_table_O;
+    }
     }
     VERIFY_NOT_REACHED();
 }
