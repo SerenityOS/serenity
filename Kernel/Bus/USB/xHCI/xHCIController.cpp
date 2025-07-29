@@ -176,7 +176,10 @@ ErrorOr<void> xHCIController::initialize()
         m_scratchpad_buffers_array_region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up(requested_scratchpad_buffers * sizeof(u64))), "xHCI Scratchpad Buffers Array"sv, Memory::Region::Access::ReadWrite));
         auto* scratchpad_buffers_array = reinterpret_cast<u64*>(m_scratchpad_buffers_array_region->vaddr().as_ptr());
         for (auto i = 0; i < requested_scratchpad_buffers; ++i) {
-            auto page = TRY(MM.allocate_physical_page());
+            // FIXME: Use MemoryType::NonCacheable once we have a generic memory fence abstraction.
+            //        We need to ensure the zeroing of the page is visible before the DCBAAP write.
+            //        On AArch64, this should be a DSB ST fence.
+            auto page = TRY(MM.allocate_physical_page(Memory::MemoryManager::ShouldZeroFill::Yes, nullptr, Memory::MemoryType::IO));
             scratchpad_buffers_array[i] = page->paddr().get();
             TRY(m_scratchpad_buffers.try_append(move(page)));
         }
