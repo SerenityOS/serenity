@@ -1386,7 +1386,7 @@ NonnullRefPtr<PhysicalRAMPage> MemoryManager::allocate_committed_physical_page(B
     return page.release_nonnull();
 }
 
-ErrorOr<NonnullRefPtr<PhysicalRAMPage>> MemoryManager::allocate_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge)
+ErrorOr<NonnullRefPtr<PhysicalRAMPage>> MemoryManager::allocate_physical_page(ShouldZeroFill should_zero_fill, bool* did_purge, MemoryType memory_type_for_zero_fill)
 {
     return m_global_data.with([&](auto& global_data) -> ErrorOr<NonnullRefPtr<PhysicalRAMPage>> {
         auto page = find_free_physical_page(false, global_data);
@@ -1432,9 +1432,7 @@ ErrorOr<NonnullRefPtr<PhysicalRAMPage>> MemoryManager::allocate_physical_page(Sh
         }
 
         if (should_zero_fill == ShouldZeroFill::Yes) {
-            // FIXME: To prevent aliasing memory with different memory types, this page should be mapped using the same memory type it will use later for the actual mapping.
-            //        (See the comment above the memset in allocate_contiguous_physical_pages.)
-            auto* ptr = quickmap_page(*page);
+            auto* ptr = quickmap_page(*page, memory_type_for_zero_fill);
             memset(ptr, 0, PAGE_SIZE);
             unquickmap_page();
         }

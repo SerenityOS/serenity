@@ -166,7 +166,7 @@ public:
     void uncommit_physical_pages(Badge<CommittedPhysicalPageSet>, size_t page_count);
 
     NonnullRefPtr<PhysicalRAMPage> allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill = ShouldZeroFill::Yes);
-    ErrorOr<NonnullRefPtr<PhysicalRAMPage>> allocate_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
+    ErrorOr<NonnullRefPtr<PhysicalRAMPage>> allocate_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr, MemoryType memory_type_for_zero_fill = MemoryType::Normal);
     ErrorOr<Vector<NonnullRefPtr<PhysicalRAMPage>>> allocate_contiguous_physical_pages(size_t size, MemoryType memory_type_for_zero_fill);
     void deallocate_physical_page(PhysicalAddress);
 
