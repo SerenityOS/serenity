@@ -415,16 +415,6 @@ ErrorOr<void> profiling_free_buffer(pid_t pid)
 #endif
 
 #if !defined(AK_OS_BSD_GENERIC)
-ErrorOr<Optional<struct spwd>> getspent()
-{
-    errno = 0;
-    if (auto* spwd = ::getspent())
-        return *spwd;
-    if (errno)
-        return Error::from_syscall("getspent"sv, -errno);
-    return Optional<struct spwd> {};
-}
-
 ErrorOr<Optional<struct spwd>> getspnam(StringView name)
 {
     errno = 0;
