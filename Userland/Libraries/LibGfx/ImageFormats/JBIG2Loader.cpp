@@ -175,6 +175,19 @@ constexpr Array standard_huffman_table_B = {
     Code { 6, 0, OptionalNone {}, 0b111111 },
 };
 
+// Table B.3 – Standard Huffman table C
+constexpr Array standard_huffman_table_C = {
+    Code { 8, 8, -256, 0b11111110 },
+    Code { 1, 0, 0, 0b0 },
+    Code { 2, 0, 1, 0b10 },
+    Code { 3, 0, 2, 0b110 },
+    Code { 4, 3, 3, 0b1110 },
+    Code { 5, 6, 11, 0b11110 },
+    Code { 8 | Code::LowerRangeBit, 32, -257, 0b11111111 },
+    Code { 7, 32, 75, 0b1111110 },
+    Code { 6, 0, OptionalNone {}, 0b111110 },
+};
+
 // Table B.4 – Standard Huffman table D
 constexpr Array standard_huffman_table_D = {
     Code { 1, 0, 1, 0b0 },
@@ -411,8 +424,10 @@ ErrorOr<HuffmanTable*> HuffmanTable::standard_huffman_table(StandardTable kind)
         static HuffmanTable standard_table_B(standard_huffman_table_B, true);
         return &standard_table_B;
     }
-    case StandardTable::B_3:
-        return Error::from_string_literal("Standard table C not yet supported");
+    case StandardTable::B_3: {
+        static HuffmanTable standard_table_C(standard_huffman_table_C, true);
+        return &standard_table_C;
+    }
     case StandardTable::B_4: {
         static HuffmanTable standard_table_D(standard_huffman_table_D);
         return &standard_table_D;
