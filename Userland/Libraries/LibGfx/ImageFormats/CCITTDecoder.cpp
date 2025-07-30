@@ -478,20 +478,21 @@ ErrorOr<CCITTStatus> decode_single_ccitt_2d_line(
     u32 column {};
     u32 remainder_from_pass_mode {};
 
+    auto reference_line_span = reference_line.span();
     auto const next_change_on_reference_line = [&]() -> ErrorOr<Change> {
         // 4.2.1.3.1 Definition of changing picture elements
         Optional<Change> next_change {}; // This is referred to as b1 in the spec.
         u32 offset {};
         while (!next_change.has_value()) {
-            if (reference_line.is_empty() || reference_line.size() <= offset)
+            if (reference_line_span.is_empty() || reference_line_span.size() <= offset)
                 return Error::from_string_literal("CCITTDecoder: Corrupted stream");
-            auto const change = reference_line[0 + offset];
+            auto const change = reference_line_span[0 + offset];
             // 4.2.1.3.4 Processing the first and last picture elements in a line
             // "The first starting picture element a0 on each coding line is imaginarily set at a position just
             // before the first picture element, and is regarded as a white picture element."
             // To emulate this behavior we check for column == 0 here.
             if (change.column <= column && column != 0) {
-                reference_line.take_first();
+                reference_line_span = reference_line_span.slice(1);
                 continue;
             }
             if (change.color != current_color || change.column == image_width)
