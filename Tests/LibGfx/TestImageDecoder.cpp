@@ -392,7 +392,7 @@ TEST_CASE(test_jbig2_decode)
         // - striping, especially with initially unknown page height (code support added in #26067)
         // - huffman symbol regions (code support added in #26068)
         // - huffman text regions (code support added in #26075)
-        // - huffman regions with custom huffman tables (code support added in #26078)
+        // - huffman regions with custom huffman tables (code support added in #26078, #26081)
         // - coverage for different segment combination operators (or and xor xnor replace),
         //   with both background colors
         // Missing tests for things that aren't implemented yet:

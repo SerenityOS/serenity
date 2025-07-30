@@ -2507,6 +2507,31 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
 {
     // 7.4.2 Symbol dictionary segment syntax
 
+    // Retrieve referred-to symbols and tables. The spec does this later,
+    // but having the custom tables available is convenient for collecting huffman tables below.
+    Vector<NonnullRefPtr<Symbol>> symbols;
+    Vector<JBIG2::HuffmanTable const*> custom_tables;
+    for (auto referred_to_segment_number : segment.header.referred_to_segment_numbers) {
+        auto opt_referred_to_segment = context.segments_by_number.get(referred_to_segment_number);
+        if (!opt_referred_to_segment.has_value())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol segment refers to non-existent segment");
+        dbgln_if(JBIG2_DEBUG, "Symbol segment refers to segment id {} index {}", referred_to_segment_number, opt_referred_to_segment.value());
+        auto const& referred_to_segment = context.segments[opt_referred_to_segment.value()];
+        if (referred_to_segment.symbols.has_value())
+            symbols.extend(referred_to_segment.symbols.value());
+        else if (referred_to_segment.huffman_table.has_value())
+            custom_tables.append(&referred_to_segment.huffman_table.value());
+        else
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol segment referred-to segment without symbols or huffman table");
+    }
+
+    u8 custom_table_index = 0;
+    auto custom_table = [&custom_tables, &custom_table_index]() -> ErrorOr<JBIG2::HuffmanTable const*> {
+        if (custom_table_index >= custom_tables.size())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman table index out of range");
+        return custom_tables[custom_table_index++];
+    };
+
     // 7.4.2.1 Symbol dictionary segment data header
     FixedMemoryStream stream(segment.data);
 
@@ -2528,7 +2553,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
         else if (huffman_table_selection_for_height_differences == 2)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid huffman_table_selection_for_height_differences");
         else if (huffman_table_selection_for_height_differences == 3)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+            delta_height_table = TRY(custom_table());
     }
 
     u8 huffman_table_selection_for_width_differences = (flags >> 4) & 0b11; // "SDHUFFDW" in spec.
@@ -2544,7 +2569,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
         else if (huffman_table_selection_for_width_differences == 2)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid huffman_table_selection_for_height_differences");
         else if (huffman_table_selection_for_width_differences == 3)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+            delta_width_table = TRY(custom_table());
     }
 
     bool uses_user_supplied_size_table = (flags >> 6) & 1; // "SDHUFFBMSIZE" in spec.
@@ -2556,7 +2581,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
         if (!uses_user_supplied_size_table)
             bitmap_size_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
         else
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+            bitmap_size_table = TRY(custom_table());
     }
 
     bool uses_user_supplied_aggregate_table = (flags >> 7) & 1; // "SDHUFFAGGINST" in spec.
@@ -2568,7 +2593,21 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
         if (!uses_user_supplied_aggregate_table)
             number_of_symbol_instances_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
         else
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+            number_of_symbol_instances_table = TRY(custom_table());
+    }
+
+    if (custom_table_index != custom_tables.size())
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Not all referred custom tables used");
+
+    if (uses_huffman_encoding) {
+        if (!delta_width_table->has_oob_symbol())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom SDHUFFDW table must have OOB symbol");
+
+        if (delta_height_table->has_oob_symbol()
+            || bitmap_size_table->has_oob_symbol()
+            || number_of_symbol_instances_table->has_oob_symbol()) {
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables must not have OOB symbol");
+        }
     }
 
     bool bitmap_coding_context_used = (flags >> 8) & 1;
@@ -2636,17 +2675,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
     // Done!
 
     // "2) Decode (or retrieve the results of decoding) any referred-to symbol dictionary and tables segments."
-    Vector<NonnullRefPtr<Symbol>> symbols;
-    for (auto referred_to_segment_number : segment.header.referred_to_segment_numbers) {
-        auto opt_referred_to_segment = context.segments_by_number.get(referred_to_segment_number);
-        if (!opt_referred_to_segment.has_value())
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol segment refers to non-existent segment");
-        dbgln_if(JBIG2_DEBUG, "Symbol segment refers to segment id {} index {}", referred_to_segment_number, opt_referred_to_segment.value());
-        auto const& referred_to_segment = context.segments[opt_referred_to_segment.value()];
-        if (!referred_to_segment.symbols.has_value())
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol segment referred-to segment without symbols");
-        symbols.extend(referred_to_segment.symbols.value());
-    }
+    // Done further up already.
 
     // "3) If the "bitmap coding context used" bit in the header was 1, ..."
     if (bitmap_coding_context_used)
