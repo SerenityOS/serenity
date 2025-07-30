@@ -700,6 +700,10 @@ struct SegmentData {
 
     // Set on pattern segments after they've been decoded.
     Optional<Vector<NonnullRefPtr<Symbol>>> patterns;
+
+    // Set on code table segments after they've been decoded.
+    Optional<Vector<JBIG2::Code>> codes;
+    Optional<JBIG2::HuffmanTable> huffman_table;
 };
 
 // 7.4.8.5 Page segment flags
@@ -950,7 +954,7 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
     if (segment_headers.size() != segment_datas.size())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment headers and segment datas have different sizes");
     for (size_t i = 0; i < segment_headers.size(); ++i) {
-        context.segments.append({ segment_headers[i], segment_datas[i], {}, {} });
+        context.segments.append({ segment_headers[i], segment_datas[i], {}, {}, {}, {} });
         context.segments_by_number.set(segment_headers[i].segment_number, context.segments.size() - 1);
     }
 
@@ -3392,9 +3396,102 @@ static ErrorOr<void> decode_profiles(JBIG2LoadingContext&, SegmentData const&)
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode profiles yet");
 }
 
-static ErrorOr<void> decode_tables(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_tables(JBIG2LoadingContext&, SegmentData& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode tables yet");
+    // B.2 Code table structure
+    FixedMemoryStream stream { segment.data };
+
+    // "1) Decode the code table flags field as described in B.2.1. This sets the values HTOOB, HTPS and HTRS."
+    u8 flags = TRY(stream.read_value<u8>());
+    if (flags & 0x80)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid code table flags");
+    bool has_out_of_band = flags & 1;             // "HTOOB" in spec.
+    u8 prefix_bit_count = ((flags >> 1) & 7) + 1; // "HTPS" (hash table prefix size) in spec.
+    u8 range_bit_count = ((flags >> 4) & 7) + 1;  // "HTRS" (hash table range size) in spec.
+    dbgln_if(JBIG2_DEBUG, "Tables: has_out_of_band={}, prefix_bit_count={}, range_bit_count={}", has_out_of_band, prefix_bit_count, range_bit_count);
+
+    // "2) Decode the code table lowest value field as described in B.2.2. Let HTLOW be the value decoded."
+    i32 lowest_value = TRY(stream.read_value<BigEndian<i32>>()); // "HTLOW" in spec.
+    dbgln_if(JBIG2_DEBUG, "Tables: lower bound={}", lowest_value);
+
+    // "3) Decode the code table highest value field as described in B.2.3. Let HTHIGH be the value decoded."
+    i32 highest_value = TRY(stream.read_value<BigEndian<i32>>()); // "HTHIGH" in spec.
+    dbgln_if(JBIG2_DEBUG, "Tables: One more than upper bound={}", highest_value);
+
+    // "4) Set:
+    //         CURRANGELOW = HTLOW
+    //         NTEMP = 0"
+    i32 value = lowest_value; // "CURRANGELOW" in spec.
+    auto bit_stream = BigEndianInputBitStream { MaybeOwned { stream } };
+
+    // "5) Decode each table line as follows:"
+    Vector<u8> prefix_lengths;
+    Vector<u8> range_lengths;
+    Vector<Optional<i32>> range_lows;
+    do {
+        // "a) Read HTPS bits. Set PREFLEN[NTEMP] to the value decoded."
+        u8 prefix_length = TRY(bit_stream.read_bits<u8>(prefix_bit_count));
+        TRY(prefix_lengths.try_append(prefix_length));
+
+        // "b) Read HTRS bits. Let RANGELEN[NTEMP] be the value decoded."
+        u8 range_length = TRY(bit_stream.read_bits<u8>(range_bit_count));
+        TRY(range_lengths.try_append(range_length));
+
+        // "c) Set:
+        //         RANGELOW[NTEMP] = CURRANGELOW
+        //         CURRANGELOW = CURRANGELOW + 2 ** RANGELEN[NTEMP]
+        //         NTEMP = NTEMP + 1"
+        TRY(range_lows.try_append(value));
+        value += 1 << range_length;
+
+        // "d) If CURRANGELOW ≥ HTHIGH then proceed to step 6)."
+    } while (value < highest_value);
+
+    // "6) Read HTPS bits. Let LOWPREFLEN be the value read."
+    u8 prefix_length = TRY(bit_stream.read_bits<u8>(prefix_bit_count)); // "LOWPREFLEN" in spec.
+
+    // "7) [...] This is the lower range table line for this table."
+    TRY(prefix_lengths.try_append(prefix_length));
+    TRY(range_lengths.try_append(32));
+    TRY(range_lows.try_append(lowest_value - 1));
+
+    // "8) Read HTPS bits. Let HIGHPREFLEN be the value read."
+    prefix_length = TRY(bit_stream.read_bits<u8>(prefix_bit_count)); // "HIGHPREFLEN" in spec.
+
+    // "9) [...] This is the upper range table line for this table."
+    TRY(prefix_lengths.try_append(prefix_length));
+    TRY(range_lengths.try_append(32));
+    TRY(range_lows.try_append(highest_value));
+
+    // "10) If HTOOB is 1, then:"
+    if (has_out_of_band) {
+        // "a) Read HTPS bits. Let OOBPREFLEN be the value read.""
+        prefix_length = TRY(bit_stream.read_bits<u8>(prefix_bit_count)); // "OOBPREFLEN" in spec.
+
+        // "b) [...] This is the out-of-band table line for this table. Note that there is no range associated with this value."
+        TRY(prefix_lengths.try_append(prefix_length));
+        TRY(range_lengths.try_append(0));
+        TRY(range_lows.try_append(OptionalNone {}));
+    }
+
+    // "11) Create the prefix codes using the algorithm described in B.3."
+    auto codes = TRY(assign_huffman_codes(prefix_lengths));
+
+    Vector<JBIG2::Code> table_codes;
+    for (auto const& [i, length] : enumerate(prefix_lengths)) {
+        if (length == 0)
+            continue;
+
+        JBIG2::Code code { .prefix_length = length, .range_length = range_lengths[i], .first_value = range_lows[i], .code = codes[i] };
+        if (i == prefix_lengths.size() - (has_out_of_band ? 3 : 2))
+            code.prefix_length |= 0x8000;
+        table_codes.append(code);
+    }
+
+    segment.codes = move(table_codes);
+    segment.huffman_table = JBIG2::HuffmanTable { segment.codes->span(), has_out_of_band };
+
+    return {};
 }
 
 static ErrorOr<void> decode_color_palette(JBIG2LoadingContext&, SegmentData const&)
