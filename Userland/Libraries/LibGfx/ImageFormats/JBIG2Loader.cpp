@@ -381,6 +381,8 @@ public:
     };
     static ErrorOr<HuffmanTable*> standard_huffman_table(StandardTable);
 
+    bool has_oob_symbol() const { return m_has_oob_symbol; }
+
     // Returns OptionalNone for OOB.
     ErrorOr<Optional<i32>> read_symbol(BigEndianInputBitStream&) const;
 
@@ -2786,6 +2788,24 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     if (!uses_refinement_coding && refinement_template != 0)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement_template");
 
+    // Retrieve referred-to symbols and tables. The spec does this later, but the number of symbols is needed to decode the symbol ID Huffman table,
+    // and having the custom tables available is convenient for handling 7.4.3.1.2 below.
+    Vector<NonnullRefPtr<Symbol>> symbols; // `symbols.size()` is "SBNUMSYMS" in spec.
+    Vector<JBIG2::HuffmanTable const*> custom_tables;
+    for (auto referred_to_segment_number : segment.header.referred_to_segment_numbers) {
+        auto opt_referred_to_segment = context.segments_by_number.get(referred_to_segment_number);
+        if (!opt_referred_to_segment.has_value())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Text segment refers to non-existent segment");
+        dbgln_if(JBIG2_DEBUG, "Text segment refers to segment id {} index {}", referred_to_segment_number, opt_referred_to_segment.value());
+        auto const& referred_to_segment = context.segments[opt_referred_to_segment.value()];
+        if (referred_to_segment.symbols.has_value())
+            symbols.extend(referred_to_segment.symbols.value());
+        else if (referred_to_segment.huffman_table.has_value())
+            custom_tables.append(&referred_to_segment.huffman_table.value());
+        else
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Text segment referred-to segment without symbols or huffman table");
+    }
+
     // 7.4.3.1.2 Text region segment Huffman flags
     // "This field is only present if SBHUFF is 1."
     JBIG2::HuffmanTable const* first_s_table = nullptr;
@@ -2799,6 +2819,13 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     if (uses_huffman_encoding) {
         u16 huffman_flags = TRY(stream.read_value<BigEndian<u16>>());
 
+        u8 custom_table_index = 0;
+        auto custom_table = [&custom_tables, &custom_table_index]() -> ErrorOr<JBIG2::HuffmanTable const*> {
+            if (custom_table_index >= custom_tables.size())
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman table index out of range");
+            return custom_tables[custom_table_index++];
+        };
+
         auto first_s_selection = (huffman_flags >> 0) & 0b11; // "SBHUFFFS" in spec.
         if (first_s_selection == 0)
             first_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_6));
@@ -2807,7 +2834,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
         else if (first_s_selection == 2)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid first_s_table");
         else if (first_s_selection == 3)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+            first_s_table = TRY(custom_table());
 
         auto subsequent_s_selection = (huffman_flags >> 2) & 0b11; // "SBHUFFDS" in spec.
         if (subsequent_s_selection == 0)
@@ -2817,7 +2844,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
         else if (subsequent_s_selection == 2)
             subsequent_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_10));
         else if (subsequent_s_selection == 3)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+            subsequent_s_table = TRY(custom_table());
 
         auto delta_t_selection = (huffman_flags >> 4) & 0b11; // "SBHUFFDT" in spec.
         if (delta_t_selection == 0)
@@ -2827,7 +2854,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
         else if (delta_t_selection == 2)
             delta_t_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_13));
         else if (delta_t_selection == 3)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+            delta_t_table = TRY(custom_table());
 
         if (!uses_refinement_coding && (huffman_flags & 0x7fc0) != 0)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Huffman flags have refinement bits set but refinement bit is not set");
@@ -2840,7 +2867,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
         else if (refinement_delta_width_selection == 2)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement_delta_width_table");
         else if (refinement_delta_width_selection == 3)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+            refinement_delta_width_table = TRY(custom_table());
 
         auto refinement_delta_height_selection = (huffman_flags >> 8) & 0b11; // "SBHUFFRDH" in spec.
         if (refinement_delta_height_selection == 0)
@@ -2850,7 +2877,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
         else if (refinement_delta_height_selection == 2)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement_delta_height_table");
         else if (refinement_delta_height_selection == 3)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+            refinement_delta_height_table = TRY(custom_table());
 
         auto refinement_x_offset_selection = (huffman_flags >> 10) & 0b11; // "SBHUFFRDX" in spec.
         if (refinement_x_offset_selection == 0)
@@ -2860,7 +2887,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
         else if (refinement_x_offset_selection == 2)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement_x_offset_table");
         else if (refinement_x_offset_selection == 3)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+            refinement_x_offset_table = TRY(custom_table());
 
         auto refinement_y_offset_selection = (huffman_flags >> 12) & 0b11; // "SBHUFFRDY" in spec.
         if (refinement_y_offset_selection == 0)
@@ -2870,13 +2897,29 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
         else if (refinement_y_offset_selection == 2)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement_y_offset_table");
         else if (refinement_y_offset_selection == 3)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+            refinement_y_offset_table = TRY(custom_table());
 
         auto refinement_size_selection = (huffman_flags >> 14) & 0b1; // "SBHUFFRSIZE" in spec.
         if (refinement_size_selection == 0)
             refinement_size_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
         else if (refinement_size_selection == 1)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables not yet supported");
+            refinement_size_table = TRY(custom_table());
+
+        if (custom_table_index != custom_tables.size())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Not all referred custom tables used");
+
+        if (!subsequent_s_table->has_oob_symbol())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom SBHUFFDS table must have OOB symbol");
+
+        if (first_s_table->has_oob_symbol()
+            || delta_t_table->has_oob_symbol()
+            || refinement_delta_width_table->has_oob_symbol()
+            || refinement_delta_height_table->has_oob_symbol()
+            || refinement_x_offset_table->has_oob_symbol()
+            || refinement_y_offset_table->has_oob_symbol()
+            || refinement_size_table->has_oob_symbol()) {
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Custom Huffman tables must not have OOB symbol");
+        }
 
         if (huffman_flags & 0x8000)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid text region segment Huffman flags");
@@ -2894,20 +2937,6 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
 
     // 7.4.3.1.4 Number of symbol instances (SBNUMINSTANCES)
     u32 number_of_symbol_instances = TRY(stream.read_value<BigEndian<u32>>());
-
-    // Retrieve referred-to symbols. The spec does this later, but the number of symbols is needed
-    // to decode the symbol ID Huffman table.
-    Vector<NonnullRefPtr<Symbol>> symbols; // `symbols.size()` is "SBNUMSYMS" in spec.
-    for (auto referred_to_segment_number : segment.header.referred_to_segment_numbers) {
-        auto opt_referred_to_segment = context.segments_by_number.get(referred_to_segment_number);
-        if (!opt_referred_to_segment.has_value())
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Text segment refers to non-existent segment");
-        dbgln_if(JBIG2_DEBUG, "Text segment refers to segment id {} index {}", referred_to_segment_number, opt_referred_to_segment.value());
-        auto const& referred_to_segment = context.segments[opt_referred_to_segment.value()];
-        if (!referred_to_segment.symbols.has_value())
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Text segment referred-to segment without symbols");
-        symbols.extend(referred_to_segment.symbols.value());
-    }
 
     // 7.4.3.1.5 Text region segment symbol ID Huffman decoding table
     // "It is only present if SBHUFF is 1."
