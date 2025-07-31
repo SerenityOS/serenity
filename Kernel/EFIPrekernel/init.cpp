@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteBuffer.h>
+#include <AK/ScopeGuard.h>
+
 #include <Kernel/Firmware/EFI/EFI.h>
 #include <Kernel/Firmware/EFI/Protocols/LoadedImage.h>
 #include <Kernel/Firmware/EFI/SystemTable.h>
@@ -14,6 +17,7 @@
 #include <Kernel/EFIPrekernel/ConfigurationTable.h>
 #include <Kernel/EFIPrekernel/DebugOutput.h>
 #include <Kernel/EFIPrekernel/EFIPrekernel.h>
+#include <Kernel/EFIPrekernel/Filesystem.h>
 #include <Kernel/EFIPrekernel/GOP.h>
 #include <Kernel/EFIPrekernel/Panic.h>
 #include <Kernel/EFIPrekernel/Relocation.h>
@@ -49,27 +53,32 @@ extern "C" [[noreturn]] void __stack_chk_fail()
     PANIC("Stack protector failure, stack smashing detected!");
 }
 
-static void convert_and_map_cmdline(EFI::LoadedImageProtocol* loaded_image_protocol, void* root_page_table, BootInfo& boot_info)
+static char* allocate_and_map_cmdline_buffer(void* root_page_table, size_t length)
+{
+    // Allocate pages for the cmdline buffer and map it to KERNEL_CMDLINE_VADDR.
+    // TODO: KASLR
+    EFI::PhysicalAddress buffer_paddr = 0;
+    if (auto status = g_efi_system_table->boot_services->allocate_pages(EFI::AllocateType::AnyPages, EFI::MemoryType::LoaderData, pages_needed(length), &buffer_paddr); status != EFI::Status::Success)
+        PANIC("Failed to allocate pages for the cmdline buffer: {}", status);
+
+    if (auto result = map_pages(root_page_table, KERNEL_CMDLINE_VADDR, buffer_paddr, pages_needed(length), Access::Read); result.is_error())
+        PANIC("Failed to map the cmdline buffer: {}", result.release_error());
+
+    return bit_cast<char*>(buffer_paddr);
+}
+
+static void set_cmdline_from_load_options(EFI::LoadedImageProtocol* loaded_image_protocol, void* root_page_table, BootInfo& boot_info)
 {
     // Get the cmdline from loaded_image_protocol->load_options.
     // FIXME: Support non-ASCII characters.
 
-    if (loaded_image_protocol->load_options_size == 0 || loaded_image_protocol->load_options == nullptr)
-        return;
+    VERIFY(loaded_image_protocol->load_options_size != 0);
+    VERIFY(loaded_image_protocol->load_options != nullptr);
 
     char16_t* load_options_ucs_2 = reinterpret_cast<char16_t*>(loaded_image_protocol->load_options);
     size_t cmdline_length = loaded_image_protocol->load_options_size / sizeof(char16_t);
 
-    // Allocate pages for the cmdline buffer and map it to KERNEL_CMDLINE_VADDR.
-    // TODO: KASLR
-    EFI::PhysicalAddress cmdline_buffer_paddr = 0;
-    if (auto status = g_efi_system_table->boot_services->allocate_pages(EFI::AllocateType::AnyPages, EFI::MemoryType::LoaderData, pages_needed(cmdline_length), &cmdline_buffer_paddr); status != EFI::Status::Success)
-        PANIC("Failed to allocate pages for the cmdline buffer: {}", status);
-
-    if (auto result = map_pages(root_page_table, KERNEL_CMDLINE_VADDR, cmdline_buffer_paddr, pages_needed(cmdline_length), Access::Read); result.is_error())
-        PANIC("Failed to map the cmdline buffer: {}", result.release_error());
-
-    char* cmdline_buffer = bit_cast<char*>(cmdline_buffer_paddr);
+    char* cmdline_buffer = allocate_and_map_cmdline_buffer(root_page_table, cmdline_length);
 
     size_t actual_length = 0;
     for (size_t i = 0; i < cmdline_length && load_options_ucs_2[i] != u'\0'; i++) {
@@ -77,7 +86,47 @@ static void convert_and_map_cmdline(EFI::LoadedImageProtocol* loaded_image_proto
         actual_length++;
     }
 
+    dbgln("Kernel cmdline (from load options): \"{}\"", StringView { cmdline_buffer, actual_length });
+
     boot_info.cmdline = StringView { bit_cast<char*>(KERNEL_CMDLINE_VADDR), actual_length };
+}
+
+static void set_cmdline_from_cmdline_file(EFI::FileProtocol* root_directory, void* root_page_table, BootInfo& boot_info)
+{
+    auto cmdline_file_or_error = open_file(root_directory, u"cmdline.txt", EFI::FileOpenMode::Read);
+    if (cmdline_file_or_error.is_error()) {
+        dbgln("Failed to open cmdline.txt: {}", cmdline_file_or_error.release_error());
+        return;
+    }
+    auto* cmdline_file = cmdline_file_or_error.release_value();
+
+    ScopeGuard close_cmdline_file = [cmdline_file] { (void)close_file(cmdline_file); };
+
+    auto cmdline_or_error = read_entire_file(cmdline_file);
+    if (cmdline_or_error.is_error()) {
+        dbgln("Failed to read cmdline.txt: {}", cmdline_or_error.release_error());
+        return;
+    }
+    auto cmdline = cmdline_or_error.release_value();
+
+    // The cmdline.txt file might contain a trailing newline or other whitespace, so remove it.
+    auto trimmed_cmdline = StringView { cmdline }.trim_whitespace();
+
+    dbgln("Kernel cmdline (from cmdline.txt): \"{}\"", trimmed_cmdline);
+
+    char* cmdline_buffer = allocate_and_map_cmdline_buffer(root_page_table, trimmed_cmdline.length());
+    __builtin_memcpy(cmdline_buffer, trimmed_cmdline.characters_without_null_termination(), trimmed_cmdline.length());
+
+    boot_info.cmdline = StringView { bit_cast<char*>(KERNEL_CMDLINE_VADDR), trimmed_cmdline.length() };
+}
+
+static void set_cmdline(EFI::FileProtocol* root_directory, EFI::LoadedImageProtocol* loaded_image_protocol, void* root_page_table, BootInfo& boot_info)
+{
+    // Prefer setting the cmdline from our load options and fall back to reading it from cmdline.txt.
+    if (loaded_image_protocol->load_options_size != 0 && loaded_image_protocol->load_options != nullptr)
+        set_cmdline_from_load_options(loaded_image_protocol, root_page_table, boot_info);
+    else if (root_directory != nullptr)
+        set_cmdline_from_cmdline_file(root_directory, root_page_table, boot_info);
 }
 
 static void map_kernel_image(void* root_page_table, ELF::Image const& kernel_elf_image, ReadonlyBytes kernel_elf_image_data, FlatPtr kernel_load_base)
@@ -277,6 +326,13 @@ extern "C" EFIAPI EFI::Status init(EFI::Handle image_handle, EFI::SystemTable* s
     // EFI_GRAPHICS_OUTPUT_PROTOCOL.SetMode() clears the screen, so do this as early as possible.
     init_gop_and_populate_framebuffer_boot_info(*boot_info);
 
+    EFI::FileProtocol* root_directory = nullptr;
+    auto root_directory_or_error = open_root_directory(loaded_image_protocol);
+    if (root_directory_or_error.is_error())
+        dbgln("Failed to open the root directory: {}", root_directory_or_error.release_error());
+    else
+        root_directory = root_directory_or_error.release_value();
+
     dbgln("Mapping the kernel image...");
     map_kernel_image(root_page_table, kernel_elf_image, kernel_elf_image_data, boot_info->kernel_load_base);
 
@@ -284,8 +340,11 @@ extern "C" EFIAPI EFI::Status init(EFI::Handle image_handle, EFI::SystemTable* s
     perform_kernel_relocations(kernel_elf_image, kernel_elf_image_data, boot_info->kernel_load_base);
 
     set_up_kernel_stack(root_page_table);
-    convert_and_map_cmdline(loaded_image_protocol, root_page_table, *boot_info);
+    set_cmdline(root_directory, loaded_image_protocol, root_page_table, *boot_info);
     populate_firmware_boot_info(boot_info);
+
+    if (root_directory != nullptr)
+        (void)close_file(root_directory);
 
     arch_prepare_boot(root_page_table, *boot_info);
 
