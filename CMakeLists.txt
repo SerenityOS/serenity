@@ -77,6 +77,12 @@ add_custom_target(qemu-image
     USES_TERMINAL
 )
 
+add_custom_target(uefi-image
+    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-uefi.sh"
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/uefi_disk_image
+    USES_TERMINAL
+)
+
 if("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_custom_target(grub-image
         COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-grub.sh"
