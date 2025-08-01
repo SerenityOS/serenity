@@ -273,12 +273,18 @@ void GenericFramebufferConsoleImpl::clear_glyph(size_t x, size_t y)
         memset(offset_in_framebuffer.pixels, 0, (m_glyph_columns + m_glyph_spacing) * sizeof(u32));
         offset_in_framebuffer.bytes += framebuffer_pitch();
     }
+    m_backbuffer[y][x] = { '\0', Color::Black, Color::Black };
     flush_glyph(x, y);
 }
 
 void GenericFramebufferConsoleImpl::enable()
 {
     memset(framebuffer_data(), 0, height() * framebuffer_pitch());
+
+    for (size_t row = 0; row < max_row(); row++)
+        for (size_t column = 0; column < max_column(); column++)
+            m_backbuffer[row][column] = { '\0', Color::Black, Color::Black };
+
     m_enabled.store(true);
 }
 
@@ -289,18 +295,20 @@ void GenericFramebufferConsoleImpl::disable()
 
 void GenericFramebufferConsoleImpl::scroll_up()
 {
+
     for (size_t row = 1; row < max_row(); row++) {
-        auto prev_line = framebuffer_offset(0, row - 1);
-        auto line = framebuffer_offset(0, row);
-        for (size_t glyph_row = 0; glyph_row < m_glyph_rows; glyph_row++) {
-            memmove(prev_line.pixels, line.pixels, width() * sizeof(*line.pixels));
-            prev_line.bytes += framebuffer_pitch();
-            line.bytes += framebuffer_pitch();
+        for (size_t column = 0; column < max_column(); column++) {
+
+            char ch = m_backbuffer[row][column].character;
+            Color bg = m_backbuffer[row][column].background;
+            Color fg = m_backbuffer[row][column].foreground;
+
+            m_backbuffer[row - 1][column] = m_backbuffer[row][column];
+            write(column, row - 1, ch, bg, fg, true);
         }
     }
-
     for (size_t column = 0; column < max_column(); column++)
-        clear_glyph(column, m_y);
+        clear_glyph(column, max_row() - 1);
 }
 
 void GenericFramebufferConsoleImpl::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical)
@@ -340,6 +348,9 @@ void GenericFramebufferConsoleImpl::write(size_t x, size_t y, char ch, Color bac
             offset_in_framebuffer.pixels[m_glyph_columns + spacing_column] = background_color;
         offset_in_framebuffer.bytes += framebuffer_pitch();
     }
+    m_backbuffer[y][x].character = ch;
+    m_backbuffer[y][x].background = background;
+    m_backbuffer[y][x].foreground = foreground;
     flush_glyph(x, y);
 
     m_x = x + 1;
