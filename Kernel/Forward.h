@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-enum class LockRank;
+enum class LockRank : unsigned;
 
 class BlockDevice;
 class CharacterDevice;
