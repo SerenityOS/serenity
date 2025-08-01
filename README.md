@@ -2,7 +2,7 @@
 
 Graphical Unix-like operating system for 64-bit x86, Arm, and RISC-V computers.
 
-[![GitHub Actions Status](https://github.com/SerenityOS/serenity/workflows/Build,%20lint,%20and%20test/badge.svg)](https://github.com/SerenityOS/serenity/actions?query=workflow%3A"Build%2C%20lint%2C%20and%20test")
+[![GitHub Actions Status](https://github.com/SerenityOS/serenity/actions/workflows/ci.yml/badge.svg)](https://github.com/SerenityOS/serenity/actions/workflows/ci.yml)
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/serenity.svg)](https://issues.oss-fuzz.com/issues?q=project:serenity)
 [![Discord](https://img.shields.io/discord/830522505605283862.svg?logo=discord&logoColor=white&logoWidth=20&labelColor=7289DA&label=Discord&color=17cf48)](https://serenityos.org/discord)
 
