@@ -1047,7 +1047,6 @@ void MemoryManager::release_pte(PageDirectory& page_directory, VirtualAddress va
 
 UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
 {
-    dmesgln("Initialize MMU");
     ProcessorSpecific<MemoryManagerData>::initialize();
 
     if (cpu == 0) {
