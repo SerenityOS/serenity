@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <syscall.h>
 #include <unistd.h>
 
 struct posix_spawn_file_actions_state {
@@ -98,9 +99,73 @@ extern "C" {
     _exit(127);
 }
 
+static int posix_spawn_syscall(pid_t* out_pid, char const* path, char* const argv[], char* const envp[])
+{
+    if (!path || !argv || !argv[0])
+        return EINVAL;
+
+    Syscall::SC_posix_spawn_params posix_spawn_params;
+
+    // 1. Prepare path (Syscall::StringArgument)
+    posix_spawn_params.path.characters = path;
+    posix_spawn_params.path.length = strlen(path);
+
+    // 2. Prepare argv (Syscall::StringListArgument)
+    //    This requires iterating argv, calling strlen on each, and storing them in a
+    //    temporary array of Syscall::StringArgument.
+    Vector<Syscall::StringArgument, 32> argv_string_args; // Max 32 args for temp buffer
+    size_t argc = 0;
+    for (argc = 0; argv[argc] != nullptr; ++argc) {
+        if (argc >= argv_string_args.capacity()) { // Or a saner general limit
+            // E2BIG if too many arguments for our temporary buffer or system limits
+            return E2BIG;
+        }
+        argv_string_args.unchecked_append({ argv[argc], strlen(argv[argc]) });
+    }
+    posix_spawn_params.arguments.strings = argv_string_args.is_empty() ? nullptr : argv_string_args.data();
+    posix_spawn_params.arguments.length = argv_string_args.size();
+
+    // 3. Prepare envp (Syscall::StringListArgument)
+    Vector<Syscall::StringArgument, 32> envp_string_args; // Max 32 envs for temp buffer
+    size_t envc = 0;
+    if (envp) {
+        for (envc = 0; envp[envc] != nullptr; ++envc) {
+            if (envc >= envp_string_args.capacity()) {
+                return E2BIG; // Too many environment variables
+            }
+            envp_string_args.unchecked_append({ envp[envc], strlen(envp[envc]) });
+        }
+    }
+    posix_spawn_params.environment.strings = envp_string_args.is_empty() ? nullptr : envp_string_args.data();
+    posix_spawn_params.environment.length = envp_string_args.size();
+
+    posix_spawn_params.attr_data = nullptr;
+    posix_spawn_params.attr_data_size = 0;
+
+    posix_spawn_params.serialized_file_actions_data = nullptr;
+    posix_spawn_params.serialized_file_actions_data_size = 0;
+
+    pid_t child_pid = syscall(SC_posix_spawn, &posix_spawn_params);
+
+    if (child_pid < 0) {
+        // syscall will set errno
+        return errno;
+    }
+
+    if (out_pid)
+        *out_pid = child_pid;
+    return 0;
+}
+
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn.html
 int posix_spawn(pid_t* out_pid, char const* path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const argv[], char* const envp[])
 {
+    // If we file_actions and spawnattr are nulled, call efficient posix_spawn syscall; otherwise, default to fork() + exec() libc wrapper
+    if (!file_actions && !attr) {
+        posix_spawn_syscall(out_pid, path, argv, envp);
+        return 0;
+    }
+
     pid_t child_pid = fork();
     if (child_pid < 0)
         return errno;
