@@ -70,8 +70,16 @@ public:
     [[nodiscard]] bool operator==(StringBase const&) const;
 
     [[nodiscard]] ALWAYS_INLINE FlatPtr raw(Badge<FlyString>) const { return bit_cast<FlatPtr>(m_data); }
+    template<OneOf<String, FlyString> T>
+    [[nodiscard]] ALWAYS_INLINE constexpr bool is_null(Badge<Traits<T>>) const { return m_data == nullptr; }
 
 protected:
+    // For Optional
+    constexpr explicit StringBase(nullptr_t)
+        : m_data { nullptr }
+    {
+    }
+
     template<typename Func>
     ErrorOr<void> replace_with_new_string(size_t byte_count, Func&& callback)
     {
