@@ -63,7 +63,10 @@ static ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, Byt
 static void do_copy(Vector<ByteString> const& selected_file_paths, FileOperation file_operation);
 static void do_paste(ByteString const& target_directory, GUI::Window* window);
 static void do_create_link(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
-static void do_create_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
+static void do_create_zip_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
+static void do_create_tar_gz_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
+static void do_create_tar_lzma_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
+static void do_create_archive(ByteString const& executable_name, Vector<ByteString>& arguments, ByteString const& extension, Vector<ByteString> const& selected_file_paths, GUI::Window* window);
 static void do_set_wallpaper(ByteString const& file_path, GUI::Window* window);
 static void do_unzip_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
 static void show_properties(ByteString const& container_dir_path, ByteString const& path, Vector<ByteString> const& selected, GUI::Window* window);
@@ -221,7 +224,33 @@ void do_create_link(Vector<ByteString> const& selected_file_paths, GUI::Window* 
     }
 }
 
-void do_create_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window)
+void do_create_zip_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window)
+{
+    auto arguments = Vector<ByteString>();
+    arguments.append("-r");
+    arguments.append("-f");
+    do_create_archive("/bin/zip", arguments, ".zip", selected_file_paths, window);
+}
+
+void do_create_tar_gz_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window)
+{
+    auto arguments = Vector<ByteString>();
+    arguments.append("-c");
+    arguments.append("-z");
+    arguments.append("-f");
+    do_create_archive("/bin/tar", arguments, ".tar.gz", selected_file_paths, window);
+}
+
+void do_create_tar_lzma_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window)
+{
+    auto arguments = Vector<ByteString>();
+    arguments.append("-c");
+    arguments.append("--lzma");
+    arguments.append("-f");
+    do_create_archive("/bin/tar", arguments, ".tar.lzma", selected_file_paths, window);
+}
+
+void do_create_archive(ByteString const& executable_name, Vector<ByteString>& arguments, ByteString const& extension, Vector<ByteString> const& selected_file_paths, GUI::Window* window)
 {
     String archive_name;
     if (GUI::InputBox::show(window, archive_name, "Enter name:"sv, "Create Archive"sv) != GUI::InputBox::ExecResult::OK)
@@ -234,42 +263,32 @@ void do_create_archive(Vector<ByteString> const& selected_file_paths, GUI::Windo
     path_builder.append('/');
     if (archive_name.is_empty()) {
         path_builder.append(output_directory_path.parent().basename());
-        path_builder.append(".zip"sv);
+        path_builder.append(extension);
     } else {
         path_builder.append(archive_name);
-        if (!AK::StringUtils::ends_with(archive_name, ".zip"sv, CaseSensitivity::CaseSensitive))
-            path_builder.append(".zip"sv);
-    }
-    auto output_path = path_builder.to_byte_string();
-
-    pid_t zip_pid = fork();
-    if (zip_pid < 0) {
-        perror("fork");
-        VERIFY_NOT_REACHED();
+        if (!AK::StringUtils::ends_with(archive_name, extension, CaseSensitivity::CaseSensitive))
+            path_builder.append(extension);
     }
 
-    if (!zip_pid) {
-        Vector<ByteString> relative_paths;
-        Vector<char const*> arg_list;
-        arg_list.append("/bin/zip");
-        arg_list.append("-r");
-        arg_list.append("-f");
-        arg_list.append(output_path.characters());
-        for (auto const& path : selected_file_paths) {
-            relative_paths.append(LexicalPath::relative_path(path, output_directory_path.dirname()));
-            arg_list.append(relative_paths.last().characters());
-        }
-        arg_list.append(nullptr);
-        int rc = execvp("/bin/zip", const_cast<char* const*>(arg_list.data()));
-        if (rc < 0) {
-            perror("execvp");
-            _exit(1);
-        }
-    } else {
-        int status;
-        int rc = waitpid(zip_pid, &status, 0);
-        if (rc < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0)
-            GUI::MessageBox::show(window, "Could not create archive"sv, "Archive Error"sv, GUI::MessageBox::Type::Error);
+    arguments.append(path_builder.to_byte_string());
+    for (auto const& path : selected_file_paths) {
+        arguments.append(LexicalPath::relative_path(path, output_directory_path.dirname()));
+    }
+
+    auto process_or_error = Core::Process::spawn({
+        .executable = executable_name,
+        .arguments = arguments,
+    });
+
+    if (process_or_error.is_error()) {
+        GUI::MessageBox::show(window, "Failed to start archive process"sv, "Archive Error"sv, GUI::MessageBox::Type::Error);
+        return;
+    }
+
+    auto did_exit_with_success = process_or_error.value().wait_for_termination();
+    if (did_exit_with_success.is_error() || !did_exit_with_success.value()) {
+        GUI::MessageBox::show(window, "Archive process exited unsuccessfully"sv, "Archive Error"sv, GUI::MessageBox::Type::Error);
+        return;
     }
 }
 
@@ -414,16 +433,39 @@ ErrorOr<int> run_in_desktop_mode()
         window);
     copy_action->set_enabled(false);
 
-    auto create_archive_action
+    auto create_zip_archive_action
         = GUI::Action::create(
-            "Create &Archive",
-            TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-archive.png"sv)),
+            ".&zip",
             [&](GUI::Action const&) {
                 auto paths = directory_view->selected_file_paths();
                 if (paths.is_empty())
                     return;
 
-                do_create_archive(paths, directory_view->window());
+                do_create_zip_archive(paths, directory_view->window());
+            },
+            window);
+
+    auto create_tar_gz_archive_action
+        = GUI::Action::create(
+            ".tar.&gz",
+            [&](GUI::Action const&) {
+                auto paths = directory_view->selected_file_paths();
+                if (paths.is_empty())
+                    return;
+
+                do_create_tar_gz_archive(paths, directory_view->window());
+            },
+            window);
+
+    auto create_tar_lzma_archive_action
+        = GUI::Action::create(
+            ".tar.&lzma",
+            [&](GUI::Action const&) {
+                auto paths = directory_view->selected_file_paths();
+                if (paths.is_empty())
+                    return;
+
+                do_create_tar_lzma_archive(paths, directory_view->window());
             },
             window);
 
@@ -553,7 +595,16 @@ ErrorOr<int> run_in_desktop_mode()
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view->delete_action());
                 file_context_menu->add_action(directory_view->rename_action());
-                file_context_menu->add_action(create_archive_action);
+
+                auto archive_menu = file_context_menu->add_submenu("Create &Archive"_string);
+                auto archive_icon_or_error = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-archive.png"sv);
+                if (!archive_icon_or_error.is_error()) {
+                    archive_menu->set_icon(archive_icon_or_error.value());
+                }
+                archive_menu->add_action(create_zip_archive_action);
+                archive_menu->add_action(create_tar_gz_archive_action);
+                archive_menu->add_action(create_tar_lzma_archive_action);
+
                 file_context_menu->add_separator();
 
                 if (Gfx::Bitmap::is_path_a_supported_image_format(node.name)) {
@@ -860,16 +911,41 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
             },
             window);
 
-    auto create_archive_action
+    auto create_zip_archive_action
         = GUI::Action::create(
-            "Create &Archive",
-            TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-archive.png"sv)),
+            ".&zip",
             [&](GUI::Action const&) {
                 auto paths = directory_view->selected_file_paths();
                 if (paths.is_empty())
                     return;
 
-                do_create_archive(paths, directory_view->window());
+                do_create_zip_archive(paths, directory_view->window());
+                refresh_tree_view();
+            },
+            window);
+
+    auto create_tar_gz_archive_action
+        = GUI::Action::create(
+            ".tar.&gz",
+            [&](GUI::Action const&) {
+                auto paths = directory_view->selected_file_paths();
+                if (paths.is_empty())
+                    return;
+
+                do_create_tar_gz_archive(paths, directory_view->window());
+                refresh_tree_view();
+            },
+            window);
+
+    auto create_tar_lzma_archive_action
+        = GUI::Action::create(
+            ".tar.&lzma",
+            [&](GUI::Action const&) {
+                auto paths = directory_view->selected_file_paths();
+                if (paths.is_empty())
+                    return;
+
+                do_create_tar_lzma_archive(paths, directory_view->window());
                 refresh_tree_view();
             },
             window);
@@ -1180,7 +1256,13 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     directory_context_menu->add_action(directory_view->delete_action());
     directory_context_menu->add_action(directory_view->rename_action());
     directory_context_menu->add_action(shortcut_action);
-    directory_context_menu->add_action(create_archive_action);
+
+    auto archive_menu = directory_context_menu->add_submenu("Create &Archive"_string);
+    archive_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-archive.png"sv)));
+    archive_menu->add_action(create_zip_archive_action);
+    archive_menu->add_action(create_tar_gz_archive_action);
+    archive_menu->add_action(create_tar_lzma_archive_action);
+
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
 
@@ -1232,7 +1314,16 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
                 file_context_menu->add_action(directory_view->delete_action());
                 file_context_menu->add_action(directory_view->rename_action());
                 file_context_menu->add_action(shortcut_action);
-                file_context_menu->add_action(create_archive_action);
+
+                auto archive_menu = file_context_menu->add_submenu("Create &Archive"_string);
+                auto archive_icon_or_error = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-archive.png"sv);
+                if (!archive_icon_or_error.is_error()) {
+                    archive_menu->set_icon(archive_icon_or_error.value());
+                }
+                archive_menu->add_action(create_zip_archive_action);
+                archive_menu->add_action(create_tar_gz_archive_action);
+                archive_menu->add_action(create_tar_lzma_archive_action);
+
                 file_context_menu->add_separator();
 
                 if (Gfx::Bitmap::is_path_a_supported_image_format(node.name)) {
