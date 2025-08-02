@@ -271,6 +271,7 @@ Optional<Code> get_terminal_code(Color color, u16 code_word, u8 code_size)
 
 constexpr auto const ccitt_white = Color::NamedColor::White;
 constexpr auto const ccitt_black = Color::NamedColor::Black;
+constexpr u32 EOFB = 0x001001;
 
 Color invert(Color current_color)
 {
@@ -448,8 +449,6 @@ ErrorOr<void> ensure_invalid_result_is_actually_eol(BigEndianInputBitStream& inp
         // what we are trying to detect/read here. As we already read 12 bytes from
         // partially_read_eol and remaining_eol, we need to realign ourselves first.
         // [1] 2.4.1.1 End-of-facsimile block
-
-        static constexpr u32 EOFB = 0x001001;
 
         u8 fill_bits_length = (12 + input_bit_stream.bits_until_next_byte_boundary()) % 8;
         u8 to_read = fill_bits_length + 12;
@@ -684,6 +683,12 @@ ErrorOr<ByteBuffer> decode_ccitt_group4(Stream& stream, u32 image_width, u32 ima
         status = TRY(decode_single_ccitt_2d_line(*bit_stream, *decoded_bits, move(status.current_line), image_width, options));
         if (options.encoded_byte_aligned == EncodedByteAligned::Yes)
             bit_stream->align_to_byte_boundary();
+    }
+
+    if (!status.has_reached_eol && options.has_end_of_block == Group4Options::HasEndOfBlock::Yes) {
+        auto potential_eofb = TRY(bit_stream->read_bits(24));
+        if (potential_eofb != EOFB)
+            return Error::from_string_literal("CCITTDecoder: Missing EOFB");
     }
 
     return output_stream->read_until_eof();
