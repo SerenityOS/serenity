@@ -377,7 +377,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         }
 
         for (auto& region : global_data.physical_regions) {
-            dmesgln("MM: User physical region: {} - {} (size {:#x})", region->lower(), region->upper().offset(-1), PAGE_SIZE * region->size());
+            dmesgln("MM: Physical region: {} - {} (size {:#x})", region->lower(), region->upper().offset(-1), PAGE_SIZE * region->size());
             region->initialize_zones();
         }
     });
