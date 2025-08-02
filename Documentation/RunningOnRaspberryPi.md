@@ -35,8 +35,6 @@ SERENITY_RUN=raspi3b Meta/serenity.sh gdb aarch64
 
 ## Running on real hardware using a USB drive
 
-### Step 0: Build a SerenityOS disk image for Raspberry Pis
-
 In order to create a disk image, you first need to build SerenityOS by running
 
 ```console
@@ -68,6 +66,11 @@ Write this image to the USB drive you want to use to boot Serenity using a comma
 ```console
 sudo cp Build/aarch64/<disk image> /dev/<usb drive> && sync
 ```
+
+## Serial debug output
+
+Debug output is written to the serial console if `serial_debug` is included in the cmdline.
+If you followed the above instructions, this option should already be enabled.
 
 ### Step 1: Connect your Raspberry Pi to your PC using a UART cable
 
