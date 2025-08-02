@@ -1225,18 +1225,21 @@ struct GenericRegionDecodingInputParameters {
     Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels; // "GBATX" / "GBATY" in spec.
     // FIXME: GBCOLS, GBCOMBOP, COLEXTFLAG
 
+    // If is_modified_modified_read is true, generic_region_decoding_procedure() reads data off this stream.
+    Stream* stream { nullptr };
+
     // If is_modified_modified_read is false, generic_region_decoding_procedure() reads data off this decoder.
     QMArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
 // 6.2 Generic region decoding procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Vector<QMArithmeticDecoder::Context>& contexts)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, Vector<QMArithmeticDecoder::Context>& contexts)
 {
     if (inputs.is_modified_modified_read) {
         dbgln_if(JBIG2_DEBUG, "JBIG2ImageDecoderPlugin: MMR image data");
 
         // 6.2.6 Decoding using MMR coding
-        auto buffer = TRY(CCITT::decode_ccitt_group4(data, inputs.region_width, inputs.region_height));
+        auto buffer = TRY(CCITT::decode_ccitt_group4(*inputs.stream, inputs.region_width, inputs.region_height));
         auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
         size_t bytes_per_row = ceil_div(inputs.region_width, 8);
         if (buffer.size() != bytes_per_row * inputs.region_height)
@@ -1984,7 +1987,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             for (int i = 0; i < 4; ++i)
                 generic_inputs.adaptive_template_pixels[i] = inputs.adaptive_template_pixels[i];
             generic_inputs.arithmetic_decoder = &decoder.value();
-            return generic_region_decoding_procedure(generic_inputs, {}, contexts);
+            return generic_region_decoding_procedure(generic_inputs, contexts);
         }
 
         // 6.5.8.2 Refinement/aggregate-coded symbol bitmap
@@ -2070,7 +2073,9 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
 
             ReadonlyBytes bitmap_data = data.slice(stream->offset(), bitmap_size);
             TRY(stream->discard(bitmap_size));
-            return generic_region_decoding_procedure(generic_inputs, bitmap_data, contexts);
+            FixedMemoryStream bitmap_stream { bitmap_data };
+            generic_inputs.stream = &bitmap_stream;
+            return generic_region_decoding_procedure(generic_inputs, contexts);
         }());
 
         // "5) Skip over any bits remaining in the last byte read."
@@ -2286,6 +2291,9 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
     generic_inputs.adaptive_template_pixels[3].y = -2;
     generic_inputs.arithmetic_decoder = inputs.arithmetic_decoder;
 
+    FixedMemoryStream stream { data };
+    generic_inputs.stream = &stream;
+
     // C.5 Decoding the gray-scale image
     // "The gray-scale image is obtained by decoding GSBPP bitplanes. These bitplanes are denoted (from least significant to
     //  most significant) GSPLANES[0], GSPLANES[1], . . . , GSPLANES[GSBPP – 1]. The bitplanes are Gray-coded, so
@@ -2295,7 +2303,7 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
 
     // "1) Decode GSPLANES[GSBPP – 1] using the generic region decoding procedure. The parameters to the
     //     generic region decoding procedure are as shown in Table C.4."
-    bitplanes[inputs.bpp - 1] = TRY(generic_region_decoding_procedure(generic_inputs, data, contexts));
+    bitplanes[inputs.bpp - 1] = TRY(generic_region_decoding_procedure(generic_inputs, contexts));
 
     // "2) Set J = GSBPP – 2."
     int j = inputs.bpp - 2;
@@ -2304,7 +2312,7 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
     while (j >= 0) {
         // "a) Decode GSPLANES[J] using the generic region decoding procedure. The parameters to the generic
         //     region decoding procedure are as shown in Table C.4."
-        bitplanes[j] = TRY(generic_region_decoding_procedure(generic_inputs, data, contexts));
+        bitplanes[j] = TRY(generic_region_decoding_procedure(generic_inputs, contexts));
 
         // "b) For each pixel (x, y) in GSPLANES[J], set:
         //     GSPLANES[J][x, y] = GSPLANES[J + 1][x, y] XOR GSPLANES[J][x, y]"
@@ -2485,13 +2493,17 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_proced
     generic_inputs.adaptive_template_pixels[3].x = -2;
     generic_inputs.adaptive_template_pixels[3].y = -2;
 
+    Optional<FixedMemoryStream> stream;
     Optional<QMArithmeticDecoder> decoder;
-    if (!inputs.uses_mmr) {
+    if (inputs.uses_mmr) {
+        stream = FixedMemoryStream { data };
+        generic_inputs.stream = &stream.value();
+    } else {
         decoder = TRY(QMArithmeticDecoder::initialize(data));
         generic_inputs.arithmetic_decoder = &decoder.value();
     }
 
-    auto bitmap = TRY(generic_region_decoding_procedure(generic_inputs, data, contexts));
+    auto bitmap = TRY(generic_region_decoding_procedure(generic_inputs, contexts));
 
     Vector<NonnullRefPtr<Symbol>> patterns;
     for (u32 gray = 0; gray <= inputs.gray_max; ++gray) {
@@ -3339,13 +3351,17 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     inputs.skip_pattern = OptionalNone {};
     inputs.adaptive_template_pixels = adaptive_template_pixels;
 
+    Optional<FixedMemoryStream> stream;
     Optional<QMArithmeticDecoder> decoder;
-    if (!uses_mmr) {
+    if (uses_mmr) {
+        stream = FixedMemoryStream { data };
+        inputs.stream = &stream.value();
+    } else {
         decoder = TRY(QMArithmeticDecoder::initialize(data));
         inputs.arithmetic_decoder = &decoder.value();
     }
 
-    auto result = TRY(generic_region_decoding_procedure(inputs, data, contexts));
+    auto result = TRY(generic_region_decoding_procedure(inputs, contexts));
 
     // 8.2 Page image composition step 5)
     if (information_field.x_location + information_field.width > (u32)context.page.size.width()
