@@ -48,14 +48,14 @@ enum class UsedMemoryRangeType {
     __Count,
 };
 
-static constexpr StringView UserMemoryRangeTypeNames[] {
+static constexpr StringView used_memory_range_type_names[] {
     "Low memory"sv,
     "Kernel"sv,
     "Boot module"sv,
     "Physical Pages"sv,
     "SMBIOS"sv,
 };
-static_assert(array_size(UserMemoryRangeTypeNames) == to_underlying(UsedMemoryRangeType::__Count));
+static_assert(array_size(used_memory_range_type_names) == to_underlying(UsedMemoryRangeType::__Count));
 
 struct UsedMemoryRange {
     UsedMemoryRangeType type {};
