@@ -1225,6 +1225,11 @@ struct GenericRegionDecodingInputParameters {
     Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels; // "GBATX" / "GBATY" in spec.
     // FIXME: GBCOLS, GBCOMBOP, COLEXTFLAG
 
+    enum RequireEOFBAfterMMR {
+        No,
+        Yes,
+    } require_eof_after_mmr { RequireEOFBAfterMMR::No };
+
     // If is_modified_modified_read is true, generic_region_decoding_procedure() reads data off this stream.
     Stream* stream { nullptr };
 
@@ -1239,7 +1244,16 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
         dbgln_if(JBIG2_DEBUG, "JBIG2ImageDecoderPlugin: MMR image data");
 
         // 6.2.6 Decoding using MMR coding
-        auto buffer = TRY(CCITT::decode_ccitt_group4(*inputs.stream, inputs.region_width, inputs.region_height));
+        // "If the number of bytes contained in the encoded bitmap is known in advance, then it is permissible for the data
+        //  stream not to contain an EOFB (000000000001000000000001) at the end of the MMR-encoded data."
+        CCITT::Group4Options options;
+        if (inputs.require_eof_after_mmr == GenericRegionDecodingInputParameters::RequireEOFBAfterMMR::Yes)
+            options.has_end_of_block = CCITT::Group4Options::HasEndOfBlock::Yes;
+
+        // "An invocation of the generic region decoding procedure with MMR equal to 1 shall consume an integral number of
+        //  bytes, beginning and ending on a byte boundary."
+        // This means we can pass in a stream to CCITT::decode_ccitt_group4() and that can use a bit stream internally.
+        auto buffer = TRY(CCITT::decode_ccitt_group4(*inputs.stream, inputs.region_width, inputs.region_height, options));
         auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
         size_t bytes_per_row = ceil_div(inputs.region_width, 8);
         if (buffer.size() != bytes_per_row * inputs.region_height)
@@ -2267,11 +2281,6 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
 {
     VERIFY(inputs.bpp < 64);
 
-    // FIXME: Support this. generic_region_decoding_procedure() currently doesn't tell us how much data it
-    //        reads for MMR bitmaps, so we can't currently read more than one MMR bitplane here.
-    if (inputs.uses_mmr)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode MMR grayscale images yet");
-
     // Table C.4 – Parameters used to decode a bitplane of the gray-scale image
     GenericRegionDecodingInputParameters generic_inputs;
     generic_inputs.is_modified_modified_read = inputs.uses_mmr;
@@ -2290,6 +2299,12 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
     generic_inputs.adaptive_template_pixels[3].x = -2;
     generic_inputs.adaptive_template_pixels[3].y = -2;
     generic_inputs.arithmetic_decoder = inputs.arithmetic_decoder;
+
+    // An MMR graymap is the only case where the size of the a generic region is not known in advance,
+    // and where the data is immediately followed by more MMR data. We need to have the MMR decoder
+    // skip the EOFB marker at the end, so that the following bitplanes can be decoded.
+    // See 6.2.6 Decoding using MMR coding.
+    generic_inputs.require_eof_after_mmr = GenericRegionDecodingInputParameters::RequireEOFBAfterMMR::Yes;
 
     FixedMemoryStream stream { data };
     generic_inputs.stream = &stream;

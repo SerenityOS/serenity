@@ -428,11 +428,16 @@ TEST_CASE(test_annex_h_jbig2)
 
     EXPECT_EQ(decoder->frame_count(), 3u);
 
-    // FIXME: Decode this successfully.
-    EXPECT(decoder->frame(0).is_error());
+    auto frame_1 = TRY_OR_FAIL(decoder->frame(0));
+    EXPECT_EQ(frame_1.image->size(), Gfx::IntSize(64, 56));
 
     auto frame_2 = TRY_OR_FAIL(decoder->frame(1));
     EXPECT_EQ(frame_2.image->size(), Gfx::IntSize(64, 56));
+
+    // The first two frames decode to the same image.
+    for (int y = 0; y < frame_1.image->height(); ++y)
+        for (int x = 0; x < frame_1.image->width(); ++x)
+            EXPECT_EQ(frame_1.image->get_pixel(x, y), frame_2.image->get_pixel(x, y));
 
     // FIXME: Decode this successfully.
     EXPECT(decoder->frame(2).is_error());
