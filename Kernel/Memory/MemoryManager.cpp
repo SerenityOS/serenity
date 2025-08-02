@@ -293,11 +293,11 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
             VERIFY_NOT_REACHED();
 
         // Now we need to setup the physical regions we will use later
-        struct ContiguousPhysicalVirtualRange {
+        struct ContiguousPhysicalRange {
             PhysicalAddress lower;
             PhysicalAddress upper;
         };
-        Optional<ContiguousPhysicalVirtualRange> last_contiguous_physical_range;
+        Optional<ContiguousPhysicalRange> last_contiguous_physical_range;
         for (auto range : global_data.physical_memory_ranges) {
             if (range.type != PhysicalMemoryRangeType::Usable)
                 continue;
@@ -344,7 +344,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
                         // FIXME: OOM?
                         global_data.physical_regions.append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull());
                     }
-                    last_contiguous_physical_range = ContiguousPhysicalVirtualRange { .lower = addr, .upper = addr };
+                    last_contiguous_physical_range = ContiguousPhysicalRange { .lower = addr, .upper = addr };
                 } else {
                     last_contiguous_physical_range->upper = addr;
                 }
@@ -699,11 +699,6 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_multiboot(MemoryManager::G
 
     auto const* mmap_begin = g_boot_info.boot_method_specific.multiboot1.memory_map;
     auto const* mmap_end = g_boot_info.boot_method_specific.multiboot1.memory_map + g_boot_info.boot_method_specific.multiboot1.memory_map_count;
-
-    struct ContiguousPhysicalVirtualRange {
-        PhysicalAddress lower;
-        PhysicalAddress upper;
-    };
 
     for (auto const* mmap = mmap_begin; mmap < mmap_end; mmap++) {
         // We have to copy these onto the stack, because we take a reference to these when printing them out,
