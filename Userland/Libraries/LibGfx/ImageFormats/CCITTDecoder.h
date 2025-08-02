@@ -76,5 +76,6 @@ struct Group4Options {
 };
 
 ErrorOr<ByteBuffer> decode_ccitt_group4(ReadonlyBytes bytes, u32 image_width, u32 image_height, Group4Options const& = {});
+ErrorOr<ByteBuffer> decode_ccitt_group4(Stream&, u32 image_width, u32 image_height, Group4Options const& = {});
 
 }

@@ -664,8 +664,13 @@ ErrorOr<ByteBuffer> decode_ccitt_group3(ReadonlyBytes bytes, u32 image_width, u3
 
 ErrorOr<ByteBuffer> decode_ccitt_group4(ReadonlyBytes bytes, u32 image_width, u32 image_height, Group4Options const& options)
 {
-    auto strip_stream = make<FixedMemoryStream>(bytes);
-    auto bit_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(*strip_stream));
+    auto stream = make<FixedMemoryStream>(bytes);
+    return decode_ccitt_group4(*stream, image_width, image_height, options);
+}
+
+ErrorOr<ByteBuffer> decode_ccitt_group4(Stream& stream, u32 image_width, u32 image_height, Group4Options const& options)
+{
+    auto bit_stream = make<BigEndianInputBitStream>(MaybeOwned<Stream>(stream));
 
     auto output_stream = make<AllocatingMemoryStream>();
     auto decoded_bits = make<BigEndianOutputBitStream>(MaybeOwned<Stream>(*output_stream));
