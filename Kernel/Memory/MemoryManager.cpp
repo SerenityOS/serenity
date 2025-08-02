@@ -373,7 +373,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         global_data.system_memory_info.physical_pages_uncommitted = global_data.system_memory_info.physical_pages;
 
         for (auto& used_range : global_data.used_memory_ranges) {
-            dmesgln("MM: {} range @ {} - {} (size {:#x})", UserMemoryRangeTypeNames[to_underlying(used_range.type)], used_range.start, used_range.end.offset(-1), used_range.end.as_ptr() - used_range.start.as_ptr());
+            dmesgln("MM: {} range @ {} - {} (size {:#x})", used_memory_range_type_names[to_underlying(used_range.type)], used_range.start, used_range.end.offset(-1), used_range.end.as_ptr() - used_range.start.as_ptr());
         }
 
         for (auto& region : global_data.physical_regions) {
