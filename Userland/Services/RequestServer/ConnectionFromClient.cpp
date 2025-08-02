@@ -47,12 +47,7 @@ struct ThreadPoolEntry {
 static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
 static IDAllocator s_client_ids;
 static ThreadPipeFds s_thread_pipe_fds {};
-static Threading::ThreadPool<ThreadPoolEntry, ConnectionFromClient::Looper> s_thread_pool {
-    [](ThreadPoolEntry entry) {
-        entry.client->worker_do_work(move(entry.work));
-    },
-    {}, s_thread_pipe_fds.fds[0]
-};
+static OwnPtr<Threading::ThreadPool<ThreadPoolEntry, ConnectionFromClient::Looper>> s_thread_pool;
 
 ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionFromClient<RequestClientEndpoint, RequestServerEndpoint>(*this, move(socket), s_client_ids.allocate())
@@ -245,7 +240,14 @@ Messages::RequestServer::ConnectNewClientResponse ConnectionFromClient::connect_
 
 void ConnectionFromClient::enqueue(Work work)
 {
-    s_thread_pool.submit({ *this, move(work) });
+    if (!s_thread_pool) {
+        s_thread_pool = adopt_own(*new (nothrow) Threading::ThreadPool<ThreadPoolEntry, ConnectionFromClient::Looper>(
+            [](ThreadPoolEntry entry) {
+                entry.client->worker_do_work(move(entry.work));
+            },
+            {}, s_thread_pipe_fds.fds[0]));
+    }
+    s_thread_pool->submit({ *this, move(work) });
     auto nwritten = write(s_thread_pipe_fds[1], "x", 1); // notify the worker threads
     if (nwritten < 0) {
         VERIFY_NOT_REACHED();
@@ -427,6 +429,11 @@ Messages::RequestServer::WebsocketSetCertificateResponse ConnectionFromClient::w
 void ConnectionFromClient::dump_connection_info()
 {
     ConnectionCache::dump_jobs();
+}
+
+void ConnectionFromClient::destroy_thread_pool()
+{
+    s_thread_pool.clear();
 }
 
 }
