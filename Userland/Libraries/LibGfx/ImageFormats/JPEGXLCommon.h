@@ -70,6 +70,7 @@ ALWAYS_INLINE ErrorOr<f32> F16(LittleEndianInputBitStream& stream)
 {
 #if defined(OSS_FUZZ)
     // FIXME: Use the below code path on oss-fuzz once it supports _Float16.
+    (void)stream;
     return Error::from_string_literal("oss-fuzz does not yet support _Float16");
 #else
     u16 const bits16 = TRY(stream.read_bits(16));
