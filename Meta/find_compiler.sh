@@ -28,24 +28,59 @@ is_supported_compiler() {
 }
 
 find_newest_compiler() {
-    local BEST_VERSION=0
-    local BEST_CANDIDATE=""
-    for CANDIDATE in "$@"; do
-        if ! command -v "$CANDIDATE" >/dev/null 2>&1; then
-            continue
-        fi
-        if ! $CANDIDATE -dumpversion >/dev/null 2>&1; then
-            continue
-        fi
-        local VERSION=""
-        VERSION="$($CANDIDATE -dumpversion)"
-        local MAJOR_VERSION="${VERSION%%.*}"
+    COMPILER_NAME="$1"
+    if [ -z "$COMPILER_NAME" ]; then
+        echo "Error: No compiler name provided."
+        return 1
+    fi
+
+    shift
+
+    BEST_VERSION=0
+    BEST_COMPILER=""
+
+    COMPILER_CANDIDATES=""
+    if command -v "$COMPILER_NAME" >/dev/null 2>&1; then
+        COMPILER_CANDIDATES="$COMPILER_NAME"
+    fi
+
+    if [ $# -gt 0 ]; then
+        COMPILER_CANDIDATES="$COMPILER_CANDIDATES $*"
+    fi
+
+    for DIR in $(echo "$PATH" | tr ':' ' '); do
+        for BIN in "$DIR"/"${COMPILER_NAME}"-[0-9]*; do
+            [ -x "$BIN" ] && COMPILER_CANDIDATES="$COMPILER_CANDIDATES $BIN"
+        done
+    done
+
+    for COMPILER in $COMPILER_CANDIDATES; do
+        [ -x "$COMPILER" ] || continue
+        VERSION="$($COMPILER -dumpversion 2>/dev/null || echo 0)"
+        MAJOR_VERSION="${VERSION%%.*}"
+
+        case "$MAJOR_VERSION" in
+            ''|*[!0-9]*) continue ;;
+        esac
+
         if [ "$MAJOR_VERSION" -gt "$BEST_VERSION" ]; then
-            BEST_VERSION=$MAJOR_VERSION
-            BEST_CANDIDATE="$CANDIDATE"
+            BEST_VERSION="$MAJOR_VERSION"
+            BEST_COMPILER="$COMPILER"
         fi
     done
-    HOST_COMPILER=$BEST_CANDIDATE
+
+    if [ -z "$BEST_COMPILER" ]; then
+        echo "No suitable $COMPILER_NAME compiler found."
+        return 1
+    fi
+
+    if ! is_supported_compiler "$BEST_COMPILER"; then
+        echo "Best candidate $BEST_COMPILER is not supported."
+        return 1
+    fi
+
+    HOST_COMPILER="$BEST_COMPILER"
+    echo "Selected compiler: $HOST_COMPILER (version $BEST_VERSION)"
 }
 
 pick_host_compiler() {
@@ -56,14 +91,14 @@ pick_host_compiler() {
         return
     fi
 
-    find_newest_compiler clang clang-17 clang-18 /opt/homebrew/opt/llvm/bin/clang
+    find_newest_compiler clang /opt/homebrew/opt/llvm/bin/clang
     if is_supported_compiler "$HOST_COMPILER"; then
         export CC="${HOST_COMPILER}"
         export CXX="${HOST_COMPILER/clang/clang++}"
         return
     fi
 
-    find_newest_compiler egcc gcc gcc-13 gcc-14 /usr/local/bin/gcc-{13,14} /opt/homebrew/bin/gcc-{13,14}
+    find_newest_compiler egcc gcc gcc-14 gcc-13 /usr/local/bin/gcc-{14,13} /opt/homebrew/bin/gcc-{14,13}
     if is_supported_compiler "$HOST_COMPILER"; then
         export CC="${HOST_COMPILER}"
         export CXX="${HOST_COMPILER/gcc/g++}"
