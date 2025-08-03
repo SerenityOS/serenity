@@ -8,10 +8,10 @@ Subject: [PATCH] zlib: Fix implicit write() method declaration error
  1 file changed, 1 insertion(+)
 
 diff --git a/zlib/gzguts.h b/zlib/gzguts.h
-index 57faf37165a3546c3d0a783457a51e7dedff49ae..3c700c2a908cf4f675299fb4769f905533945831 100644
+index eba72085bb756bc4fac374c59e8f5fdd1e660eab..4fe9d4811185b38c08114858212d9a35ad7b4e21 100644
 --- a/zlib/gzguts.h
 +++ b/zlib/gzguts.h
-@@ -19,6 +19,7 @@
+@@ -18,6 +18,7 @@
  #endif
  
  #include <stdio.h>

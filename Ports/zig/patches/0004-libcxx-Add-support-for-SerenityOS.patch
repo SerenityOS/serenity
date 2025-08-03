@@ -1,0 +1,164 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: sin-ack <sin-ack@protonmail.com>
+Date: Tue, 27 Sep 2022 00:08:46 +0000
+Subject: [PATCH] [libcxx] Add support for SerenityOS
+
+This commit teaches libc++ about what features are available in our
+LibC, namely:
+* We do not have locale support, so no-op shims should be used in place
+  of the C locale API.
+* The number of errno constants defined by us is given by the value of
+  the `ELAST` macro.
+* Multithreading is implemented though the pthread library.
+* Use libc++'s builtin character type table instead of the one provided
+  by LibC as there's a lot of extra porting work to convince the rest of
+  locale.cpp to use our character type table properly.
+
+This commit is an adaptation of the LLVM patch by Daniel Bertalan to fit
+the layout of the zig-bootstrap project.
+
+Co-Authored-By: Daniel Bertalan <dani@danielbertalan.dev>
+Co-Authored-By: Linus Groh <mail@linusgroh.de>
+---
+ zig/lib/libcxx/include/__config               |  5 +++--
+ .../include/__locale_dir/locale_base_api.h    |  2 ++
+ .../__locale_dir/locale_base_api/serenity.h   | 22 +++++++++++++++++++
+ .../include/__support/ibm/locale_mgmt_zos.h   |  2 +-
+ zig/lib/libcxx/include/locale                 |  2 +-
+ zig/lib/libcxx/src/include/config_elast.h     |  2 ++
+ .../libcxx/src/support/ibm/xlocale_zos.cpp    |  2 ++
+ zig/src/libs/libcxx.zig                       |  3 ++-
+ 8 files changed, 35 insertions(+), 5 deletions(-)
+ create mode 100644 zig/lib/libcxx/include/__locale_dir/locale_base_api/serenity.h
+
+diff --git a/zig/lib/libcxx/include/__config b/zig/lib/libcxx/include/__config
+index fec323f8125f78a678817dbf5c7572689f7135cb..b44e066de1ef4cb147b476f69d87384c0e80e5b4 100644
+--- a/zig/lib/libcxx/include/__config
++++ b/zig/lib/libcxx/include/__config
+@@ -825,7 +825,8 @@ typedef __char32_t char32_t;
+         defined(__APPLE__) ||                                                                                          \
+         defined(__MVS__) ||                                                                                            \
+         defined(_AIX) ||                                                                                               \
+-        defined(__EMSCRIPTEN__)
++        defined(__EMSCRIPTEN__) ||                                                                                     \
++        defined(__serenity__)
+ // clang-format on
+ #      undef _LIBCPP_HAS_THREAD_API_PTHREAD
+ #      define _LIBCPP_HAS_THREAD_API_PTHREAD 1
+@@ -908,7 +909,7 @@ typedef __char32_t char32_t;
+ #  endif
+ 
+ #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
+-      _LIBCPP_HAS_MUSL_LIBC || defined(__OpenBSD__) || defined(__LLVM_LIBC__)
++      _LIBCPP_HAS_MUSL_LIBC || defined(__OpenBSD__) || defined(__LLVM_LIBC__) || defined(__serenity__)
+ #    define _LIBCPP_PROVIDES_DEFAULT_RUNE_TABLE
+ #  endif
+ 
+diff --git a/zig/lib/libcxx/include/__locale_dir/locale_base_api.h b/zig/lib/libcxx/include/__locale_dir/locale_base_api.h
+index 538b194ec35a6a5ffc76ed6b464a5cb8b464ee53..a9b1843cd1f070f95ade925a8afc0bd7b02263c7 100644
+--- a/zig/lib/libcxx/include/__locale_dir/locale_base_api.h
++++ b/zig/lib/libcxx/include/__locale_dir/locale_base_api.h
+@@ -135,6 +135,8 @@
+ #    include <__locale_dir/locale_base_api/openbsd.h>
+ #  elif defined(__wasi__) || _LIBCPP_HAS_MUSL_LIBC
+ #    include <__locale_dir/locale_base_api/musl.h>
++#  elif defined(__serenity__)
++#    include <__locale_dir/locale_base_api/serenity.h>
+ #  endif
+ 
+ #  include <__locale_dir/locale_base_api/bsd_locale_fallbacks.h>
+diff --git a/zig/lib/libcxx/include/__locale_dir/locale_base_api/serenity.h b/zig/lib/libcxx/include/__locale_dir/locale_base_api/serenity.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..13abb601dcb75d1459df0b943ef6ca3e911c8e46
+--- /dev/null
++++ b/zig/lib/libcxx/include/__locale_dir/locale_base_api/serenity.h
+@@ -0,0 +1,22 @@
++//===----------------------------------------------------------------------===//
++//
++// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
++// See https://llvm.org/LICENSE.txt for license information.
++// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
++#define _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
++
++#include <stddef.h>
++
++#include <__support/ibm/locale_mgmt_zos.h>
++#include <__support/xlocale/__posix_l_fallback.h>
++#include <__support/xlocale/__strtonum_fallback.h>
++#include <clocale>
++#include <cstdlib>
++#include <ctype.h>
++#include <cwctype>
++
++#endif // _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
+diff --git a/zig/lib/libcxx/include/__support/ibm/locale_mgmt_zos.h b/zig/lib/libcxx/include/__support/ibm/locale_mgmt_zos.h
+index 5fc04b6b4b2990c1a5f5b7fae083108c27e907b5..787cc04d57929537d73d871ffd10d1467c3565cf 100644
+--- a/zig/lib/libcxx/include/__support/ibm/locale_mgmt_zos.h
++++ b/zig/lib/libcxx/include/__support/ibm/locale_mgmt_zos.h
+@@ -10,7 +10,7 @@
+ #ifndef _LIBCPP___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
+ #define _LIBCPP___SUPPORT_IBM_LOCALE_MGMT_ZOS_H
+ 
+-#if defined(__MVS__)
++#if defined(__MVS__) || defined(__serenity__)
+ #  include <locale.h>
+ #  include <string>
+ 
+diff --git a/zig/lib/libcxx/include/locale b/zig/lib/libcxx/include/locale
+index 5af674d19414b45ef066cfeac9c9c69f85fab00d..3f8526776beb4c036232ab0786a512bfdd124cc8 100644
+--- a/zig/lib/libcxx/include/locale
++++ b/zig/lib/libcxx/include/locale
+@@ -224,7 +224,7 @@ template <class charT> class messages_byname;
+ 
+ #    if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+ // Most unix variants have catopen.  These are the specific ones that don't.
+-#      if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__)
++#      if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
+ #        define _LIBCPP_HAS_CATOPEN 1
+ #        include <nl_types.h>
+ #      else
+diff --git a/zig/lib/libcxx/src/include/config_elast.h b/zig/lib/libcxx/src/include/config_elast.h
+index 7edff2d9375d46f465a1d72b916b1ccb1a555724..ba24e85be8d0a2b4502d5986377081c1bcd036ee 100644
+--- a/zig/lib/libcxx/src/include/config_elast.h
++++ b/zig/lib/libcxx/src/include/config_elast.h
+@@ -37,6 +37,8 @@
+ #  define _LIBCPP_ELAST 4095
+ #elif defined(__APPLE__)
+ // No _LIBCPP_ELAST needed on Apple
++#elif defined(__serenity__)
++// No _LIBCPP_ELAST needed on SerenityOS
+ #elif defined(__MVS__)
+ #  define _LIBCPP_ELAST 1160
+ #elif defined(_LIBCPP_MSVCRT_LIKE)
+diff --git a/zig/lib/libcxx/src/support/ibm/xlocale_zos.cpp b/zig/lib/libcxx/src/support/ibm/xlocale_zos.cpp
+index 136999ec0b02f8171bbd8d170aca2b68f7d65681..23a56c0f586728e37ee89bba608b1853983bcb94 100644
+--- a/zig/lib/libcxx/src/support/ibm/xlocale_zos.cpp
++++ b/zig/lib/libcxx/src/support/ibm/xlocale_zos.cpp
+@@ -7,7 +7,9 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include <__assert>
++#ifndef __serenity__
+ #include <__support/ibm/xlocale.h>
++#endif
+ #include <sstream>
+ #include <vector>
+ 
+diff --git a/zig/src/libs/libcxx.zig b/zig/src/libs/libcxx.zig
+index 12c9bdedde1f6fc246ad8f647ac83413c341e15c..6f04bc2a4208932b0eaad587af288055dff42422 100644
+--- a/zig/src/libs/libcxx.zig
++++ b/zig/src/libs/libcxx.zig
+@@ -198,7 +198,8 @@ pub fn buildLibCxx(comp: *Compilation, prog_node: std.Progress.Node) BuildError!
+             continue;
+         if (std.mem.startsWith(u8, cxx_src, "src/support/win32/") and target.os.tag != .windows)
+             continue;
+-        if (std.mem.startsWith(u8, cxx_src, "src/support/ibm/") and target.os.tag != .zos)
++        // SerenityOS uses a patched version of src/support/ibm/xlocale_zos.cpp
++        if (std.mem.startsWith(u8, cxx_src, "src/support/ibm/") and (target.os.tag != .zos and target.os.tag != .serenity))
+             continue;
+ 
+         var cflags = std.ArrayList([]const u8).init(arena);

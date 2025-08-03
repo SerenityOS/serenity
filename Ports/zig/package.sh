@@ -1,38 +1,57 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='zig'
-version='0.12.0-dev.141+ddf5859c2'
+version='0.15.0-dev.1380+e98aeeb73'
 files=(
-    'https://github.com/ziglang/zig-bootstrap/archive/34644ad5032c58e39327d33d7f96d63d7c330003.tar.gz#e502ae17b01f03c627927d60b2e26b5f7f83b0e8be27b6ef55511d52e5892ccf'
-    'https://github.com/ziglang/zig/archive/ddf5859c22527c6bf5d8bb13310db996fcc58874.tar.gz#9adaf787b6233cfbe784d2d8a72398784f3742e2f5ac700cbd59ba952f9491ad'
+    'https://github.com/ziglang/zig-bootstrap/archive/de424301411b3a34a8a908d8dca01a1d29f2c6df.tar.gz#f344c005f44976124bdad801b1de8f8b9b33b59ac006c95b1caa37d0ab917425'
+    'https://github.com/ziglang/zig/archive/e98aeeb73fba942c8e061bb8158ed073a7b19e1d.tar.gz#b0c9da0cf761873e0eb01bd97b1b8643b80a106a9cdba79cf8443638a7e8155a'
 )
 
 # The actual directory to build in.
-workdir='zig-bootstrap-34644ad5032c58e39327d33d7f96d63d7c330003'
+workdir='zig-bootstrap-de424301411b3a34a8a908d8dca01a1d29f2c6df'
 # The newer Zig directory we move into the workdir.
-zigdir='zig-ddf5859c22527c6bf5d8bb13310db996fcc58874'
+zigdir='zig-e98aeeb73fba942c8e061bb8158ed073a7b19e1d'
+
+# TODO: This should probably be exported by .hosted_defs.sh for convenience
+ports_dir=$(realpath "$(dirname "${BASH_SOURCE[0]}")/..")
+
+# The patched Zig build script uses this to set gcc_dir in the generated libc_installation.txt
+export SERENITY_GCC_VERSION="$("${ports_dir}/gcc/package.sh" showproperty version)"
 
 post_fetch() {
+    # NOTE: Running this multiple times is a massive footgun as patches only get applied once,
+    #       the next time we'd end up with a clean copy of the original Zig sources.
+    if [ -f "${workdir}/.post-fetch-executed" ]; then
+        return
+    fi
+    run touch .post-fetch-executed
+
     # Move the newer version of Zig into the bootstrap
     run rm -rf zig
-    run mv "../${zigdir}" zig
+    run cp -r "../${zigdir}" zig
 
-    # Copy the scripts that the build process will use
-    run mkdir -p out
-    run cp -r "${PORT_META_DIR}/scripts" out/
+    # Copy libSystem definitions which are required on macOS, once we set $ZIG_LIBC it will no
+    # longer be found in its original place
+    run cp zig/lib/libc/darwin/libSystem.tbd "${DESTDIR}/usr/lib/"
 }
 
 build() {
+    local gcc_lib_dir="${DESTDIR}/usr/local/lib/gcc/${SERENITY_ARCH}-pc-serenity/${SERENITY_GCC_VERSION}"
+
+    if [ ! -f "${gcc_lib_dir}/crtbeginS.o" ] || [ ! -f "${gcc_lib_dir}/crtendS.o" ]; then
+        echo "crtbeginS.o or crtendS.o could not be found, ensure the GCC port is installed."
+        exit 1
+    fi
+
     host_env
-    cd "${workdir}"
-    ./build "${SERENITY_ARCH}-serenity-none" "native"
+    run ./build "${SERENITY_ARCH}-serenity-none" "native"
 }
 
 install() {
-    zig_install_dir="${workdir}/out/zig-${SERENITY_ARCH}-serenity-none-native"
+    local zig_install_dir="out/zig-${SERENITY_ARCH}-serenity-none-native"
 
-    mkdir -p "${DESTDIR}/usr/local/bin/."
-    mkdir -p "${DESTDIR}/usr/local/lib/."
-    cp -rv "${zig_install_dir}/zig" "${DESTDIR}/usr/local/bin/"
-    cp -rv "${zig_install_dir}/lib/"* "${DESTDIR}/usr/local/lib/"
+    run mkdir -p "${DESTDIR}/usr/local/bin/."
+    run mkdir -p "${DESTDIR}/usr/local/lib/."
+    run cp -rv "${zig_install_dir}/zig" "${DESTDIR}/usr/local/bin/"
+    run cp -rv "${zig_install_dir}/lib/." "${DESTDIR}/usr/local/lib/"
 }

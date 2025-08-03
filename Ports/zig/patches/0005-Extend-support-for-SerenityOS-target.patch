@@ -1,0 +1,315 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: sin-ack <sin-ack@users.noreply.github.com>
+Date: Sun, 16 Jul 2023 17:34:51 +0300
+Subject: [PATCH] Extend support for SerenityOS target
+
+Co-Authored-By: Linus Groh <mail@linusgroh.de>
+---
+ zig/lib/std/Build/Watch.zig          | 12 ++++-
+ zig/lib/std/c.zig                    |  2 +-
+ zig/lib/std/debug/Dwarf/abi.zig      | 17 ++++++-
+ zig/lib/std/debug/SelfInfo.zig       |  7 +--
+ zig/lib/std/fs/Dir.zig               | 73 ++++++++++++++++++++++++++++
+ zig/lib/std/zig/LibCInstallation.zig | 26 ++++++++--
+ zig/src/Compilation/Config.zig       |  1 +
+ 7 files changed, 127 insertions(+), 11 deletions(-)
+
+diff --git a/zig/lib/std/Build/Watch.zig b/zig/lib/std/Build/Watch.zig
+index 4bd301e01e85455443b8c216d50cb830825d55f4..b3196bc3bc99d989b6c4b4a8809f5cdcd344edf2 100644
+--- a/zig/lib/std/Build/Watch.zig
++++ b/zig/lib/std/Build/Watch.zig
+@@ -845,7 +845,17 @@ const Os = switch (builtin.os.tag) {
+             });
+         }
+     },
+-    else => void,
++    else => struct {
++        fn init() !Watch {
++            @panic("Not supported");
++        }
++        fn update(_: *Watch, _: Allocator, _: []const *Step) !void {
++            @panic("Not supported");
++        }
++        fn wait(_: *Watch, _: Allocator, _: Timeout) !WaitResult {
++            @panic("Not supported");
++        }
++    },
+ };
+ 
+ pub fn init() !Watch {
+diff --git a/zig/lib/std/c.zig b/zig/lib/std/c.zig
+index 6a0289f5f0c234ee4601d84a469f726751f445aa..61be1f0ae18bde46df5c6941f7be94eb7df44dc6 100644
+--- a/zig/lib/std/c.zig
++++ b/zig/lib/std/c.zig
+@@ -10903,7 +10903,7 @@ pub const LC = enum(c_int) {
+ 
+ pub extern "c" fn setlocale(category: LC, locale: ?[*:0]const u8) ?[*:0]const u8;
+ 
+-pub const getcontext = if (builtin.target.abi.isAndroid() or builtin.target.os.tag == .openbsd or builtin.target.os.tag == .haiku)
++pub const getcontext = if (builtin.target.abi.isAndroid() or native_os == .openbsd or native_os == .haiku or native_os == .serenity)
+ {} // libc does not implement getcontext
+     else if (native_os == .linux and builtin.target.abi.isMusl())
+         linux.getcontext
+diff --git a/zig/lib/std/debug/Dwarf/abi.zig b/zig/lib/std/debug/Dwarf/abi.zig
+index b8b644e026a5845553070cebf5faaf5a9bce2a63..b805a254ee8a93d49beecd960fd773953b0525a3 100644
+--- a/zig/lib/std/debug/Dwarf/abi.zig
++++ b/zig/lib/std/debug/Dwarf/abi.zig
+@@ -203,7 +203,7 @@ pub fn regBytes(
+                     mem.asBytes(&ucontext_ptr.mcontext.fpregs.xmm[i - 17]),
+                 else => error.InvalidRegister,
+             },
+-            .freebsd => switch (reg_number) {
++            .freebsd, .serenity => switch (reg_number) {
+                 0 => mem.asBytes(&ucontext_ptr.mcontext.rax),
+                 1 => mem.asBytes(&ucontext_ptr.mcontext.rdx),
+                 2 => mem.asBytes(&ucontext_ptr.mcontext.rcx),
+@@ -327,6 +327,12 @@ pub fn regBytes(
+                 34 => mem.asBytes(&ucontext_ptr.sc_spsr),
+                 else => error.InvalidRegister,
+             },
++            .serenity => switch (reg_number) {
++                0...30 => mem.asBytes(&ucontext_ptr.mcontext.x[reg_number]),
++                31 => mem.asBytes(&ucontext_ptr.mcontext.sp),
++                32 => mem.asBytes(&ucontext_ptr.mcontext.pc),
++                else => error.InvalidRegister,
++            },
+             else => switch (reg_number) {
+                 0...30 => mem.asBytes(&ucontext_ptr.mcontext.regs[reg_number]),
+                 31 => mem.asBytes(&ucontext_ptr.mcontext.sp),
+@@ -334,6 +340,15 @@ pub fn regBytes(
+                 else => error.InvalidRegister,
+             },
+         },
++        .riscv64 => switch (builtin.os.tag) {
++            .serenity => switch (reg_number) {
++                0 => mem.asBytes(&0),
++                1...31 => mem.asBytes(&ucontext_ptr.mcontext.x[reg_number]),
++                32 => mem.asBytes(&ucontext_ptr.mcontext.pc),
++                else => error.InvalidRegister,
++            },
++            else => error.UnimplementedOs,
++        },
+         else => error.UnimplementedArch,
+     };
+ }
+diff --git a/zig/lib/std/debug/SelfInfo.zig b/zig/lib/std/debug/SelfInfo.zig
+index 3e60e86ed33ec9268e6fdc52244b7d506bbff439..457f14994e71365794a569d0259a3a9c9c70f6ab 100644
+--- a/zig/lib/std/debug/SelfInfo.zig
++++ b/zig/lib/std/debug/SelfInfo.zig
+@@ -53,6 +53,7 @@ pub fn open(allocator: Allocator) OpenError!SelfInfo {
+             .solaris,
+             .illumos,
+             .windows,
++            .serenity,
+             => return try SelfInfo.init(allocator),
+             else => return error.UnsupportedOperatingSystem,
+         }
+@@ -794,7 +795,7 @@ pub const Module = switch (native_os) {
+             };
+         }
+     },
+-    .linux, .netbsd, .freebsd, .dragonfly, .openbsd, .haiku, .solaris, .illumos => Dwarf.ElfModule,
++    .linux, .netbsd, .freebsd, .dragonfly, .openbsd, .haiku, .solaris, .illumos, .serenity => Dwarf.ElfModule,
+     .wasi, .emscripten => struct {
+         pub fn deinit(self: *@This(), allocator: Allocator) void {
+             _ = self;
+@@ -1812,7 +1813,7 @@ pub fn supportsUnwinding(target: *const std.Target) bool {
+             else => false,
+         },
+         .x86_64 => switch (target.os.tag) {
+-            .linux, .netbsd, .freebsd, .openbsd, .macos, .ios, .solaris, .illumos => true,
++            .linux, .netbsd, .freebsd, .openbsd, .macos, .ios, .solaris, .illumos, .serenity => true,
+             else => false,
+         },
+         .arm, .armeb, .thumb, .thumbeb => switch (target.os.tag) {
+@@ -1820,7 +1821,7 @@ pub fn supportsUnwinding(target: *const std.Target) bool {
+             else => false,
+         },
+         .aarch64, .aarch64_be => switch (target.os.tag) {
+-            .linux, .netbsd, .freebsd, .macos, .ios => true,
++            .linux, .netbsd, .freebsd, .macos, .ios, .serenity => true,
+             else => false,
+         },
+         // Unwinding is possible on other targets but this implementation does
+diff --git a/zig/lib/std/fs/Dir.zig b/zig/lib/std/fs/Dir.zig
+index 16418d216fb0628e5836b451f0821668c57c3688..159b6d6335ee26758996ec7177bdca657edd7105 100644
+--- a/zig/lib/std/fs/Dir.zig
++++ b/zig/lib/std/fs/Dir.zig
+@@ -239,6 +239,74 @@ pub const Iterator = switch (native_os) {
+             self.first_iter = true;
+         }
+     },
++    .serenity => struct {
++        dir: Dir,
++        dir_ptr: *posix.system.DIR,
++
++        const Self = @This();
++
++        pub const Error = IteratorError;
++
++        pub fn next(self: *Self) Error!?Entry {
++            const errno_location = posix.system._errno();
++            start_over: while (true) {
++                // HACK: readdir_r currently doesn't work properly on
++                //       SerenityOS. Until it does, we need to rely on
++                //       readdir which has legacy errno behavior.
++                const saved_errno = errno_location.*;
++                errno_location.* = 0;
++                const entry = posix.system.readdir(self.dir_ptr);
++                if (entry == null) {
++                    if (errno_location.* != 0) {
++                        switch (posix.errno(-1)) {
++                            .OVERFLOW => unreachable,
++                            .BADF => unreachable,
++                            .NOENT => unreachable,
++                            else => |err| return posix.unexpectedErrno(err),
++                        }
++                    }
++
++                    // No error, just end of directory.
++                    errno_location.* = saved_errno;
++                    return null;
++                }
++
++                const name = mem.sliceTo(@as([*:0]u8, @ptrCast(&entry.?.name)), 0);
++                if (mem.eql(u8, name, ".") or mem.eql(u8, name, ".."))
++                    continue :start_over;
++
++                const stat_info = posix.fstatat(
++                    self.dir.fd,
++                    name,
++                    posix.AT.SYMLINK_NOFOLLOW,
++                ) catch |err| switch (err) {
++                    error.NameTooLong => unreachable,
++                    error.SymLinkLoop => unreachable,
++                    error.FileNotFound => unreachable, // lost the race
++                    else => |e| return e,
++                };
++                const entry_kind: Entry.Kind = switch (stat_info.mode & posix.S.IFMT) {
++                    posix.S.IFIFO => .named_pipe,
++                    posix.S.IFCHR => .character_device,
++                    posix.S.IFDIR => .directory,
++                    posix.S.IFBLK => .block_device,
++                    posix.S.IFREG => .file,
++                    posix.S.IFLNK => .sym_link,
++                    posix.S.IFSOCK => .unix_domain_socket,
++                    else => .unknown,
++                };
++                return Entry{
++                    .name = name,
++                    .kind = entry_kind,
++                };
++            }
++        }
++
++        pub fn reset(self: *Self) void {
++            // FIXME: Very small chance this may fail.
++            self.dir_ptr = posix.system.fdopendir(self.dir.fd).?;
++        }
++    },
+     .haiku => struct {
+         dir: Dir,
+         buf: [@sizeOf(DirEnt) + posix.PATH_MAX]u8 align(@alignOf(DirEnt)),
+@@ -636,6 +704,11 @@ fn iterateImpl(self: Dir, first_iter_start_value: bool) Iterator {
+             .buf = undefined,
+             .first_iter = first_iter_start_value,
+         },
++        .serenity => return Iterator{
++            .dir = self,
++            // FIXME: Very small chance this may fail.
++            .dir_ptr = posix.system.fdopendir(self.fd).?,
++        },
+         .haiku => return Iterator{
+             .dir = self,
+             .offset = 0,
+diff --git a/zig/lib/std/zig/LibCInstallation.zig b/zig/lib/std/zig/LibCInstallation.zig
+index 3e03d1ff2e747bd6ba46ca1d06b65f4c3eba7e3c..8269c8db36571d2f0f4400bea3208fad2f6c9efa 100644
+--- a/zig/lib/std/zig/LibCInstallation.zig
++++ b/zig/lib/std/zig/LibCInstallation.zig
+@@ -101,7 +101,7 @@ pub fn parse(
+         return error.ParseError;
+     }
+ 
+-    if (self.gcc_dir == null and os_tag == .haiku) {
++    if (self.gcc_dir == null and (os_tag == .haiku or os_tag == .serenity)) {
+         log.err("gcc_dir may not be empty for {s}", .{@tagName(os_tag)});
+         return error.ParseError;
+     }
+@@ -196,8 +196,12 @@ pub fn findNative(args: FindNativeOptions) FindError!LibCInstallation {
+         try self.findNativeCrtDirWindows(args, sdk);
+     } else if (is_haiku) {
+         try self.findNativeIncludeDirPosix(args);
+-        try self.findNativeGccDirHaiku(args);
++        try self.findNativeGccDirPosix(args);
+         self.crt_dir = try args.allocator.dupeZ(u8, "/system/develop/lib");
++    } else if (is_serenity) {
++        try self.findNativeIncludeDirPosix(args);
++        try self.findNativeGccDirPosix(args);
++        self.crt_dir = try args.allocator.dupeZ(u8, "/usr/lib");
+     } else if (builtin.target.os.tag.isSolarish()) {
+         // There is only one libc, and its headers/libraries are always in the same spot.
+         self.include_dir = try args.allocator.dupeZ(u8, "/usr/include");
+@@ -308,7 +312,7 @@ fn findNativeIncludeDirPosix(self: *LibCInstallation, args: FindNativeOptions) F
+     const include_dir_example_file = if (is_haiku) "posix/stdlib.h" else "stdlib.h";
+     const sys_include_dir_example_file = if (is_windows)
+         "sys\\types.h"
+-    else if (is_haiku)
++    else if (is_haiku or is_serenity)
+         "errno.h"
+     else
+         "sys/errno.h";
+@@ -452,7 +456,7 @@ fn findNativeCrtDirPosix(self: *LibCInstallation, args: FindNativeOptions) FindE
+     });
+ }
+ 
+-fn findNativeGccDirHaiku(self: *LibCInstallation, args: FindNativeOptions) FindError!void {
++fn findNativeGccDirPosix(self: *LibCInstallation, args: FindNativeOptions) FindError!void {
+     self.gcc_dir = try ccPrintFileName(.{
+         .allocator = args.allocator,
+         .search_basename = "crtbeginS.o",
+@@ -947,6 +951,17 @@ pub const CrtBasenames = struct {
+                 },
+                 .static_exe, .static_pie => .{},
+             },
++            .serenity => switch (mode) {
++                .dynamic_lib => .{
++                    .crtbegin = "crtbeginS.o",
++                    .crtend = "crtendS.o",
++                },
++                .dynamic_exe, .dynamic_pie, .static_exe, .static_pie => .{
++                    .crt0 = "crt0.o",
++                    .crtbegin = "crtbeginS.o",
++                    .crtend = "crtendS.o",
++                },
++            },
+             else => .{},
+         };
+     }
+@@ -991,7 +1006,7 @@ pub fn resolveCrtPaths(
+                 .crtn = if (crt_basenames.crtn) |basename| try crt_dir_path.join(arena, basename) else null,
+             };
+         },
+-        .haiku => {
++        .haiku, .serenity => {
+             const gcc_dir_path: Path = .{
+                 .root_dir = std.Build.Cache.Directory.cwd(),
+                 .sub_path = lci.gcc_dir orelse return error.LibCInstallationMissingCrtDir,
+@@ -1027,5 +1042,6 @@ const Path = std.Build.Cache.Path;
+ const is_darwin = builtin.target.os.tag.isDarwin();
+ const is_windows = builtin.target.os.tag == .windows;
+ const is_haiku = builtin.target.os.tag == .haiku;
++const is_serenity = builtin.target.os.tag == .serenity;
+ 
+ const log = std.log.scoped(.libc_installation);
+diff --git a/zig/src/Compilation/Config.zig b/zig/src/Compilation/Config.zig
+index d8751251da9e24db98c79f7964e0ea1a9bde78c8..ace78931e7d2a3f066463f8f0f8953c882803aa9 100644
+--- a/zig/src/Compilation/Config.zig
++++ b/zig/src/Compilation/Config.zig
+@@ -340,6 +340,7 @@ pub fn resolve(options: Options) ResolveError!Config {
+         break :b if (options.output_mode == .Exe) switch (target.os.tag) {
+             .fuchsia,
+             .openbsd,
++            .serenity,
+             => true,
+             else => target.os.tag.isDarwin(),
+         } else false;
