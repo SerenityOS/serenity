@@ -10,7 +10,7 @@ Co-Authored-By: Rodrigo Tobar <rtobarc@gmail.com>
  1 file changed, 7 insertions(+)
 
 diff --git a/Configurations/shared-info.pl b/Configurations/shared-info.pl
-index edd16f405594a7e0d25d479e7e04272679bf8061..04852a65793c2ad4f53615d9c6c054ea0760e80a 100644
+index caf6f901261f74d217984366a98df9d8128cc9c6..144038bad47eb3544bb848074bc513263a113c27 100644
 --- a/Configurations/shared-info.pl
 +++ b/Configurations/shared-info.pl
 @@ -39,6 +39,13 @@ my %shared_info;
@@ -25,5 +25,5 @@ index edd16f405594a7e0d25d479e7e04272679bf8061..04852a65793c2ad4f53615d9c6c054ea
 +        shared_defflag        => "-Wl,-Map=",
 +    },
      'bsd-gcc-shared' => sub { return $shared_info{'linux-shared'}; },
-     'darwin-shared' => {
-         module_ldflags        => '-bundle',
+     'bsd-gcc-nodef-shared' => sub { 
+         return {

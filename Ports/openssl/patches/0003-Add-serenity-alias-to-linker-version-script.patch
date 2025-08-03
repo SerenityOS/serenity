@@ -10,7 +10,7 @@ to the solaris configuration.
  1 file changed, 1 insertion(+)
 
 diff --git a/util/mkdef.pl b/util/mkdef.pl
-index d9534674cde1ed722cbf665692b9efc541f1d01a..28976aafe65b97dfd6bab7c460cc0f9648d33ebd 100755
+index 309f908b3eadb13c5943d5a82e29b1cc2f4c52ee..5bbc08a21bb70389fd992e412ec462bcdce2bd7b 100755
 --- a/util/mkdef.pl
 +++ b/util/mkdef.pl
 @@ -113,6 +113,7 @@ my %OS_data = (
