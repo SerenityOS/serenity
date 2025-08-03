@@ -26,6 +26,8 @@ mkShell.override { stdenv = gccStdenv; } {
       texinfo
       unzip
       wget
+      # For building Jakt
+      llvmPackages_19.llvm
       # For building and installing ports
       autoconf
       automake
