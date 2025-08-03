@@ -9,10 +9,10 @@ Serenity is missing dn_expand so include a stub for it
  1 file changed, 6 insertions(+)
 
 diff --git a/gio/gthreadedresolver.c b/gio/gthreadedresolver.c
-index 3a48b27..8d51967 100644
+index e1b572c54da3ca4904748a72a71f66d898fc5006..86d20dc209d70356d8565070fd44c1b1695a5fb6 100644
 --- a/gio/gthreadedresolver.c
 +++ b/gio/gthreadedresolver.c
-@@ -462,6 +462,12 @@ typedef struct {
+@@ -760,6 +760,12 @@ typedef struct {
  
  /* From bionic/libc/private/resolv_private.h */
  int dn_expand(const u_char *, const u_char *, const u_char *, char *, int);

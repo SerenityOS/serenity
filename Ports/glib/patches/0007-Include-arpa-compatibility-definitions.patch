@@ -10,10 +10,10 @@ include it.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/gio/gthreadedresolver.c b/gio/gthreadedresolver.c
-index aeeb40e..3a48b27 100644
+index 988015b7a441d46cd9cbb2ff09f9482152907686..e1b572c54da3ca4904748a72a71f66d898fc5006 100644
 --- a/gio/gthreadedresolver.c
 +++ b/gio/gthreadedresolver.c
-@@ -394,7 +394,7 @@ lookup_by_address_finish (GResolver     *resolver,
+@@ -692,7 +692,7 @@ lookup_by_address_finish (GResolver     *resolver,
  
  #if defined(G_OS_UNIX)
  

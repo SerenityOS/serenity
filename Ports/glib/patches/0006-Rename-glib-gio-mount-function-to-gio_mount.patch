@@ -9,10 +9,10 @@ Somehow glib picks up on Serenity's mount function and gets confused
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/gio/gio-tool-mount.c b/gio/gio-tool-mount.c
-index c624268..24723c5 100644
+index 6838775e4100fa194707ce3e3c9f2370ba59f581..80b51644160b3f2251b2e4f6d067ce919720d312 100644
 --- a/gio/gio-tool-mount.c
 +++ b/gio/gio-tool-mount.c
-@@ -330,7 +330,11 @@ new_mount_op (void)
+@@ -367,7 +367,11 @@ new_mount_op (void)
  
  
  static void
@@ -24,7 +24,7 @@ index c624268..24723c5 100644
  {
    GMountOperation *op;
  
-@@ -1241,7 +1245,7 @@ handle_mount (int argc, char *argv[], gboolean do_help)
+@@ -1278,7 +1282,7 @@ handle_mount (int argc, char *argv[], gboolean do_help)
            else if (mount_eject)
              eject (file);
            else

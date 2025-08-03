@@ -9,11 +9,11 @@ Subject: [PATCH] Include 'strings.h' for strcasecmp
  2 files changed, 6 insertions(+)
 
 diff --git a/glib/glib-init.c b/glib/glib-init.c
-index e7b4984..340b358 100644
+index 0d0ee80d83fd250994bf38cda9bf7827d90c8689..74a582ad5a23f9553d684020674443b66c049f40 100644
 --- a/glib/glib-init.c
 +++ b/glib/glib-init.c
-@@ -26,6 +26,9 @@
- #include "gconstructor.h"
+@@ -30,6 +30,9 @@
+ #include "gconstructorprivate.h"
  #include "gmem.h"       /* for g_mem_gc_friendly */
  
 +#ifdef __serenity__
@@ -23,10 +23,10 @@ index e7b4984..340b358 100644
  #include <stdlib.h>
  #include <stdio.h>
 diff --git a/glib/gstrfuncs.c b/glib/gstrfuncs.c
-index 9273533..de22330 100644
+index f0c305d30e039859c44c2d1332982d465ae27b68..1fdf9d87571ee2d14ef61cea56167f53195cd18b 100644
 --- a/glib/gstrfuncs.c
 +++ b/glib/gstrfuncs.c
-@@ -32,6 +32,9 @@
+@@ -34,6 +34,9 @@
  #include <stdio.h>
  #include <stdlib.h>
  #include <locale.h>

@@ -9,10 +9,10 @@ Serenity does not have IPV6 support so disable it
  1 file changed, 2 insertions(+)
 
 diff --git a/meson.build b/meson.build
-index 0034898..26ece5a 100644
+index 33dc52e5744f3f1859cff89e0de805f21c25fcb6..d8b1e0762c9450652548dd13b06c82380477a7d9 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -1840,6 +1840,8 @@ endforeach
+@@ -2057,6 +2057,8 @@ endforeach
  
  if host_system == 'windows'
    have_ipv6 = true

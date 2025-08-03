@@ -8,10 +8,10 @@ Subject: [PATCH] Do not flag support for extended attributes (xattr)
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/meson.build b/meson.build
-index 6a7ea498e55d51f0fb7547160be7f87e95708039..40f9351ef98943871549911f69ecae7218743366 100644
+index d8b1e0762c9450652548dd13b06c82380477a7d9..ac5dc864948e819318a56e5067ec89551c459578 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -2164,7 +2164,7 @@ if host_system == 'linux'
+@@ -2394,7 +2394,7 @@ if host_system == 'linux'
  endif
  
  xattr_dep = []
