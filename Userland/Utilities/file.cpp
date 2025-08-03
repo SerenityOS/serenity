@@ -167,6 +167,7 @@ static constexpr Array s_pattern_with_specialized_functions {
     PatternAndFunction { "extra/elf"sv, elf_details },
     PatternAndFunction { "audio/*"sv, audio_details },
     PatternAndFunction { "image/*"sv, image_details },
+    PatternAndFunction { "application/dicom"sv, image_details },
 };
 
 static ErrorOr<Optional<String>> get_description_from_mime_type(StringView mime, StringView path)
