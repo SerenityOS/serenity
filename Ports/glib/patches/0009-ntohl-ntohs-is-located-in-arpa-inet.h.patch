@@ -10,10 +10,10 @@ needs is included in 'netinet/in.h'.
  1 file changed, 5 insertions(+)
 
 diff --git a/gio/xdgmime/xdgmimecache.c b/gio/xdgmime/xdgmimecache.c
-index f80f122..45220cc 100644
+index 7e9b29fadb33c2960eb3981753c94dc41ed3b0bf..8fb32200651265a357835fd70e27f5ae8cd73ee3 100644
 --- a/gio/xdgmime/xdgmimecache.c
 +++ b/gio/xdgmime/xdgmimecache.c
-@@ -38,7 +38,12 @@
+@@ -22,7 +22,12 @@
  #include <fnmatch.h>
  #include <assert.h>
  

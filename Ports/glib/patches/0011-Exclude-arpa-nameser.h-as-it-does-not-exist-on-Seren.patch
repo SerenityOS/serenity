@@ -8,10 +8,10 @@ Subject: [PATCH] Exclude arpa/nameser.h as it does not exist on Serenity
  1 file changed, 2 insertions(+)
 
 diff --git a/gio/gnetworking.h.in b/gio/gnetworking.h.in
-index 2fa95ff..1d138cf 100644
+index 3dddd90245730b4b154d19e47217173a2855f41e..b0221af91cf2e1769c87982f9442fbb9f50a0cfd 100644
 --- a/gio/gnetworking.h.in
 +++ b/gio/gnetworking.h.in
-@@ -43,7 +43,9 @@
+@@ -46,7 +46,9 @@
  #include <net/if.h>
  
  #include <arpa/inet.h>
@@ -20,4 +20,4 @@ index 2fa95ff..1d138cf 100644
 +#endif
  @NAMESER_COMPAT_INCLUDE@
  
- #ifndef T_SRV
+ #ifndef __GI_SCANNER__

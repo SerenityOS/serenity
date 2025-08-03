@@ -8,10 +8,10 @@ Subject: [PATCH] 'poll.h' is located at root, not 'sys/poll.h'
  1 file changed, 14 insertions(+), 4 deletions(-)
 
 diff --git a/meson.build b/meson.build
-index a330b7b..0034898 100644
+index ba401be66972f6b57a5188a338918798d605ddb6..33dc52e5744f3f1859cff89e0de805f21c25fcb6 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -1758,7 +1758,11 @@ g_have_gnuc_varargs = cc.compiles('''
+@@ -1975,7 +1975,11 @@ g_have_gnuc_varargs = cc.compiles('''
  if cc.has_header('alloca.h')
    glibconfig_conf.set('GLIB_HAVE_ALLOCA_H', true)
  endif
@@ -24,7 +24,7 @@ index a330b7b..0034898 100644
  has_systypes = cc.has_header('sys/types.h')
  if has_syspoll
    glibconfig_conf.set('GLIB_HAVE_SYS_POLL_H', true)
-@@ -1766,9 +1770,15 @@ endif
+@@ -1983,9 +1987,15 @@ endif
  has_winsock2 = cc.has_header('winsock2.h')
  
  if has_syspoll and has_systypes

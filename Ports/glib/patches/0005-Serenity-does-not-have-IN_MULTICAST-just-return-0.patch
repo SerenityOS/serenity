@@ -9,10 +9,10 @@ Since Serenity does not have IN_MULTICAST we just return 0
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/gio/ginetaddress.c b/gio/ginetaddress.c
-index ada32f8..7a0a0c2 100644
+index c5274a0f59698eedfad0ed5f624a7bd20f22a5d1..2c68d594fd5da22a507042399561fe0246967bb4 100644
 --- a/gio/ginetaddress.c
 +++ b/gio/ginetaddress.c
-@@ -746,8 +746,11 @@ g_inet_address_get_is_multicast (GInetAddress *address)
+@@ -862,8 +862,11 @@ g_inet_address_get_is_multicast (GInetAddress *address)
    if (address->priv->family == AF_INET)
      {
        guint32 addr4 = g_ntohl (address->priv->addr.ipv4.s_addr);
