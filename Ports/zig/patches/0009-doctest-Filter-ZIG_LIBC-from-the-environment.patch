@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: sin-ack <sin-ack@users.noreply.github.com>
+Date: Sun, 16 Jul 2023 22:00:18 +0300
+Subject: [PATCH] doctest: Filter ZIG_LIBC from the environment
+
+This environment variable can leak into the doctest builds and cause
+them to look for the host libraries in the target libc locations.
+---
+ zig/tools/doctest.zig | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/zig/tools/doctest.zig b/zig/tools/doctest.zig
+index 9cb402465b4b53bb9a3f73c7cf256db22cba8be7..b45a618a9aea75c9e1c1b149fd67295d8a3ed769 100644
+--- a/zig/tools/doctest.zig
++++ b/zig/tools/doctest.zig
+@@ -121,6 +121,11 @@ fn printOutput(
+     var env_map = try process.getEnvMap(arena);
+     try env_map.put("CLICOLOR_FORCE", "1");
+ 
++    // If we're cross-compiling Zig, it's possible that a different libc
++    // location is set via ZIG_LIBC. Since doctests are to execute on the
++    // host exclusively, we filter this variable out.
++    env_map.remove("ZIG_LIBC");
++
+     const host = try std.zig.system.resolveTargetQuery(.{});
+     const obj_ext = builtin.object_format.fileExt(builtin.cpu.arch);
+     const print = std.debug.print;

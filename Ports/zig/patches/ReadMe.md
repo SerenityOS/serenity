@@ -1,20 +1,6 @@
 # Patches for zig on SerenityOS
 
-## `0001-Support-Add-support-for-building-LLVM-on-SerenityOS.patch`
-
-Add support for building LLVM on SerenityOS
-
-Adds SerenityOS `#ifdef`s for platform-specific code.
-
-We stub out wait4, as SerenityOS doesn't support querying a child
-process's resource usage information.
-
-## `0002-Triple-Add-triple-for-SerenityOS.patch`
-
-Add triple for SerenityOS
-
-
-## `0003-Driver-Add-support-for-SerenityOS.patch`
+## `0001-clang-Add-support-for-SerenityOS.patch`
 
 Add support for SerenityOS
 
@@ -24,17 +10,37 @@ places, and enables some security mitigations like stack-smashing
 protection and position-independent code by default.
 
 Co-authored-by: kleines Filmröllchen <filmroellchen@serenityos.org>
+Co-authored-by: Andrew Kaster <akaster@serenityos.org>
+Co-authored-by: Daniel Bertalan <dani@danielbertalan.dev>
+Co-authored-by: Dan Klishch <danilklishch@gmail.com>
 
-## `0004-Driver-Default-to-ftls-model-initial-exec-on-Serenit.patch`
+## `0002-llvm-Add-support-for-building-LLVM-on-SerenityOS.patch`
 
-Default to -ftls-model=initial-exec on SerenityOS
+Add support for building LLVM on SerenityOS
 
-This is a hack to make Clang use the initial-exec TLS model instead of
-the default local-exec when building code for Serenity.
+Adds SerenityOS `#ifdef`s for platform-specific code.
 
-This patch should be removed when we implement proper TLS support.
+We stub out wait4, as SerenityOS doesn't support querying a child
+process's resource usage information.
 
-## `0005-libc-Add-support-for-SerenityOS.patch`
+POSIX shm is not supported by SerenityOS yet, so disable it in Orc.
+
+Serenity gives each thread a default of 1MiB of stack. Increase the
+default stack size for llvm applications when running on SerenityOS.
+
+
+## `0003-tools-Support-building-shared-libLLVM-and-libClang-f.patch`
+
+Support building shared libLLVM and libClang for SerenityOS
+
+This patch tells CMake that the --whole-archive linker option should be
+used for specifying the archives whose members will constitute these
+shared libraries.
+
+Symbol versioning is disabled, as the SerenityOS loader doesn't support
+it, and the ELF sections that store version data would just waste space.
+
+## `0004-libcxx-Add-support-for-SerenityOS.patch`
 
 Add support for SerenityOS
 
@@ -53,77 +59,41 @@ This commit is an adaptation of the LLVM patch by Daniel Bertalan to fit
 the layout of the zig-bootstrap project.
 
 
-## `0006-cmake-Allow-undefined-symbols-on-SerenityOS.patch`
+## `0005-Extend-support-for-SerenityOS-target.patch`
 
-Allow undefined symbols on SerenityOS
-
-Allow undefined symbols in LLVM libraries, which is needed because only
-stubs are available for SerenityOS libraries when libc++ and libunwind
-are built.
-
-## `0007-cmake-Support-building-shared-libLLVM-and-libClang-f.patch`
-
-Support building shared libLLVM and libClang for SerenityOS
-
-This patch tells CMake that the --whole-archive linker option should be
-used for specifying the archives whose members will constitute these
-shared libraries.
-
-Symbol versioning is disabled, as the SerenityOS loader doesn't support
-it, and the ELF sections that store version data would just waste space.
-
-## `0008-Add-SerenityOS-to-config.guess.patch`
-
-Add SerenityOS to config.guess
+Extend support for SerenityOS target
 
 
-## `0009-llvm-Prevent-the-use-of-POSIX-shm-on-SerenityOS.patch`
-
-Prevent the use of POSIX shm on SerenityOS
-
-POSIX shm is not supported by SerenityOS yet, so this causes a
-compilation error.
-
-## `0010-cmake-Increase-the-default-stack-size-when-running-o.patch`
-
-cmake: Increase the default stack size when running on SerenityOS
-
-
-## `0011-Add-SerenityOS-target.patch`
-
-Add SerenityOS target
-
-Named "serenity" within the code to match what LLVM says.
-
-## `0012-Implement-SerenityOS-support-in-std.patch`
-
-Implement SerenityOS support in std
-
-
-## `0013-build-Adjust-build-process-for-SerenityOS.patch`
+## `0006-build-Adjust-build-process-for-SerenityOS.patch`
 
 build: Adjust build process for SerenityOS
 
 
-## `0014-zlib-Fix-implicit-write-method-declaration-error.patch`
+## `0007-zlib-Fix-implicit-write-method-declaration-error.patch`
 
 zlib: Fix implicit write() method declaration error
 
 
-## `0015-build-Remove-unsupported-zig-linker-flag-z-seperate-.patch`
+## `0008-build-Remove-unsupported-zig-linker-flag-z-separate-.patch`
 
-build: Remove unsupported zig linker flag -z seperate-code
+build: Remove unsupported zig linker flag -z separate-code
 
 
-## `0016-docgen-Filter-ZIG_LIBC-from-the-environment.patch`
+## `0009-doctest-Filter-ZIG_LIBC-from-the-environment.patch`
 
-docgen: Filter ZIG_LIBC from the environment
+doctest: Filter ZIG_LIBC from the environment
 
 This environment variable can leak into the doctest builds and cause
 them to look for the host libraries in the target libc locations.
 
-## `0017-build-Set-Zig-version-to-0.12.0-dev.141-ddf5859c2.patch`
+## `0010-build-Set-Zig-version-to-0.15.0-dev.1380-e98aeeb73.patch`
 
-build: Set Zig version to 0.12.0-dev.141+ddf5859c2
+build: Set Zig version to 0.15.0-dev.1380+e98aeeb73
 
+
+## `0011-build-Reduce-requested-stack-size-to-32-MiB.patch`
+
+build: Reduce requested stack size to 32 MiB
+
+See: https://github.com/SerenityOS/serenity/issues/25790
 
