@@ -8,10 +8,10 @@ Subject: [PATCH] Disable pcre2test's `-S` flag on serenity
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/pcre2test.c b/src/pcre2test.c
-index ea52a20..e9454c4 100644
+index 80ab4f809760f5aa7dfdb32d3e70beec3806dd39..2521a0561a09e4ca45536d266c8afe457cc90a85 100644
 --- a/src/pcre2test.c
 +++ b/src/pcre2test.c
-@@ -8917,7 +8917,7 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
+@@ -9620,7 +9620,7 @@ while (argc > 1 && argv[op][0] == '-' && argv[op][1] != 0)
    else if (strcmp(arg, "-S") == 0 && argc > 2 &&
        ((uli = strtoul(argv[op+1], &endptr, 10)), *endptr == 0))
      {
