@@ -13,10 +13,10 @@ are included, but on Serenity, it breaks our definition of the
  1 file changed, 4 deletions(-)
 
 diff --git a/cmake/config.h.in b/cmake/config.h.in
-index 2778909eab08167d505b4cda708bb177af0f9531..faea315896c47f38e17ac9eeaf1ccf005d546b7f 100644
+index f39a18fc1b42dd095336da037ad751b741a5aae8..f599e924af43e194a4b55b2505dc4438612a9347 100644
 --- a/cmake/config.h.in
 +++ b/cmake/config.h.in
-@@ -202,10 +202,6 @@ typedef int pid_t;
+@@ -205,10 +205,6 @@ typedef int pid_t;
  #  define O_TEXT 0
  #endif
  
