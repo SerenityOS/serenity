@@ -4,14 +4,20 @@ Date: Sat, 2 Apr 2022 19:14:23 -0500
 Subject: [PATCH] Add definitions for serenity to configure
 
 ---
- configure | 4 ++++
- 1 file changed, 4 insertions(+)
+ configure | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/configure b/configure
-index e242e73..1f60a1a 100755
+index c1fb599f053b4d5c8e92733298933e29255ec0bf..4f5274af5b7f498eca092da917028e4d37c647e8 100755
 --- a/configure
 +++ b/configure
-@@ -729,6 +729,10 @@ case $host_os in
+@@ -1,4 +1,4 @@
+-#!/bin/bash
++#!/usr/bin/env bash
+ 
+ if test x"$1" = x"-h" -o x"$1" = x"--help" ; then
+ cat <<EOF
+@@ -730,6 +730,10 @@ case $host_os in
      *haiku*)
          SYS="HAIKU"
          ;;
