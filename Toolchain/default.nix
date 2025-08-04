@@ -35,6 +35,7 @@ mkShell.override { stdenv = gccStdenv; } {
       imagemagick
       libtool
       meson
+      wayland-scanner
       # For development
       # NOTE: The unwrapped clang package is used because the one installed by `clang-tools`
       #       adds extra include and resource directories that conflict with serenity's custom toolchain.

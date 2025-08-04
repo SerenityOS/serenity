@@ -4,12 +4,12 @@ Date: Sat, 11 Feb 2023 13:52:12 -0700
 Subject: [PATCH] Remove unsupported OS features
 
 ---
- src/wayland-os.c | 18 ------------------
+ src/wayland-os.c | 19 -------------------
  src/wayland-os.h |  3 ---
- 2 files changed, 21 deletions(-)
+ 2 files changed, 22 deletions(-)
 
 diff --git a/src/wayland-os.c b/src/wayland-os.c
-index a9066cae9c93b607ea92ad1da1746f3b37a2bcb3..4872c4837c67178f46e3ab05d9006a8c512664cc 100644
+index f00ead4b95e6e207002a665b813d84b6135213dc..ae30aa5bb2b472dd21f7b0c0e0907d7fa0a05ba6 100644
 --- a/src/wayland-os.c
 +++ b/src/wayland-os.c
 @@ -33,7 +33,6 @@
@@ -20,7 +20,15 @@ index a9066cae9c93b607ea92ad1da1746f3b37a2bcb3..4872c4837c67178f46e3ab05d9006a8c
  #include <sys/mman.h>
  #include <sys/un.h>
  #ifdef HAVE_SYS_UCRED_H
-@@ -188,23 +187,6 @@ wl_os_recvmsg_cloexec(int sockfd, struct msghdr *msg, int flags)
+@@ -46,7 +45,6 @@
+ int (*wl_fcntl)(int fildes, int cmd, ...) = fcntl;
+ int (*wl_socket)(int domain, int type, int protocol) = socket;
+ ssize_t (*wl_recvmsg)(int socket, struct msghdr *message, int flags) = recvmsg;
+-int (*wl_epoll_create1)(int flags) = epoll_create1;
+ 
+ static int
+ set_cloexec_or_close(int fd)
+@@ -198,23 +196,6 @@ wl_os_recvmsg_cloexec(int sockfd, struct msghdr *msg, int flags)
  	return recvmsg_cloexec_fallback(sockfd, msg, flags);
  }
  
@@ -30,7 +38,7 @@ index a9066cae9c93b607ea92ad1da1746f3b37a2bcb3..4872c4837c67178f46e3ab05d9006a8c
 -	int fd;
 -
 -#ifdef EPOLL_CLOEXEC
--	fd = epoll_create1(EPOLL_CLOEXEC);
+-	fd = wl_epoll_create1(EPOLL_CLOEXEC);
 -	if (fd >= 0)
 -		return fd;
 -	if (errno != EINVAL)
