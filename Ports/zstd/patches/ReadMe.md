@@ -10,8 +10,3 @@ Fix linker soname flags
 Make platform.h understand that serenity is posix-compliant
 
 
-## `0003-Include-stdio.h-in-programs-util.h.patch`
-
-Include stdio.h in `programs/util.h`
-
-

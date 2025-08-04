@@ -5,24 +5,26 @@ Subject: [PATCH] Fix linker soname flags
 
 Co-Authored-By: EWouters <6179932+EWouters@users.noreply.github.com>
 ---
- lib/Makefile | 20 ++++----------------
- 1 file changed, 4 insertions(+), 16 deletions(-)
+ lib/Makefile | 22 ++++------------------
+ 1 file changed, 4 insertions(+), 18 deletions(-)
 
 diff --git a/lib/Makefile b/lib/Makefile
-index ef20218..e4766c9 100644
+index a6a0eb09d821823487d89512e042859d5a6d1b95..22abb4dd831819e6983a8759d6ff1489e687b0ab 100644
 --- a/lib/Makefile
 +++ b/lib/Makefile
-@@ -69,22 +69,10 @@ endif
+@@ -73,24 +73,10 @@ endif
  
  # macOS linker doesn't support -soname, and use different extension
  # see : https://developer.apple.com/library/mac/documentation/DeveloperTools/Conceptual/DynamicLibraries/100-Articles/DynamicLibraryDesignGuidelines.html
--ifeq ($(UNAME), Darwin)
+-UNAME_TARGET_SYSTEM ?= $(UNAME)
+-
+-ifeq ($(UNAME_TARGET_SYSTEM), Darwin)
 -  SHARED_EXT = dylib
 -  SHARED_EXT_MAJOR = $(LIBVER_MAJOR).$(SHARED_EXT)
 -  SHARED_EXT_VER = $(LIBVER).$(SHARED_EXT)
 -  SONAME_FLAGS = -install_name $(LIBDIR)/libzstd.$(SHARED_EXT_MAJOR) -compatibility_version $(LIBVER_MAJOR) -current_version $(LIBVER)
 -else
--  ifeq ($(UNAME), AIX)
+-  ifeq ($(UNAME_TARGET_SYSTEM), AIX)
 -    SONAME_FLAGS =
 -  else
 -    SONAME_FLAGS = -Wl,-soname=libzstd.$(SHARED_EXT).$(LIBVER_MAJOR)
