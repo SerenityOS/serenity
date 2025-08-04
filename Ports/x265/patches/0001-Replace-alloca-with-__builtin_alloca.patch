@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Mon, 4 Aug 2025 23:58:38 +0100
+Subject: [PATCH] Replace alloca() with __builtin_alloca()
+
+---
+ source/x265cli.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/source/x265cli.cpp b/source/x265cli.cpp
+index 6ca6fb495205f7e72a75c2093f2ae097d5c90a59..4b239abffaff04de577cf1da08d593198866ed33 100755
+--- a/source/x265cli.cpp
++++ b/source/x265cli.cpp
+@@ -1138,7 +1138,7 @@ namespace X265_NS {
+         }
+ 
+         rewind(zoneFile);
+-        char **args = (char**)alloca(256 * sizeof(char *));
++        char **args = (char**)__builtin_alloca(256 * sizeof(char *));
+         param->rc.zones = x265_zone_alloc(param->rc.zonefileCount, 1);;
+         for (int i = 0; i < param->rc.zonefileCount; i++)
+         {
+@@ -1494,4 +1494,4 @@ namespace X265_NS {
+ 
+ #ifdef __cplusplus
+ }
+-#endif
+\ No newline at end of file
++#endif
