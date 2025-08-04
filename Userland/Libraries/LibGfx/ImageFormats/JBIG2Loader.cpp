@@ -36,28 +36,26 @@ namespace JBIG2 {
 // Annex A, Arithmetic integer decoding procedure
 class ArithmeticIntegerDecoder {
 public:
-    ArithmeticIntegerDecoder(QMArithmeticDecoder&);
+    ArithmeticIntegerDecoder();
 
     // A.2 Procedure for decoding values (except IAID)
     // Returns OptionalNone for OOB.
-    Optional<i32> decode();
+    Optional<i32> decode(QMArithmeticDecoder&);
 
     // Returns Error for OOB.
-    ErrorOr<i32> decode_non_oob();
+    ErrorOr<i32> decode_non_oob(QMArithmeticDecoder&);
 
 private:
-    QMArithmeticDecoder& m_decoder;
     u16 PREV { 0 };
     Vector<QMArithmeticDecoder::Context> contexts;
 };
 
-ArithmeticIntegerDecoder::ArithmeticIntegerDecoder(QMArithmeticDecoder& decoder)
-    : m_decoder(decoder)
+ArithmeticIntegerDecoder::ArithmeticIntegerDecoder()
 {
     contexts.resize(1 << 9);
 }
 
-Optional<int> ArithmeticIntegerDecoder::decode()
+Optional<int> ArithmeticIntegerDecoder::decode(QMArithmeticDecoder& decoder)
 {
     // A.2 Procedure for decoding values (except IAID)
     // "1) Set:
@@ -67,7 +65,7 @@ Optional<int> ArithmeticIntegerDecoder::decode()
     // "2) Follow the flowchart in Figure A.1. Decode each bit with CX equal to "IAx + PREV" where "IAx" represents the identifier
     //     of the current arithmetic integer decoding procedure, "+" represents concatenation, and the rightmost 9 bits of PREV are used."
     auto decode_bit = [&]() {
-        bool D = m_decoder.get_next_bit(contexts[PREV & 0x1FF]);
+        bool D = decoder.get_next_bit(contexts[PREV & 0x1FF]);
         // "3) After each bit is decoded:
         //     If PREV < 256 set:
         //         PREV = (PREV << 1) OR D
@@ -111,9 +109,9 @@ Optional<int> ArithmeticIntegerDecoder::decode()
     return S ? -V : V;
 }
 
-ErrorOr<i32> ArithmeticIntegerDecoder::decode_non_oob()
+ErrorOr<i32> ArithmeticIntegerDecoder::decode_non_oob(QMArithmeticDecoder& decoder)
 {
-    auto result = decode();
+    auto result = decode(decoder);
     if (!result.has_value())
         return Error::from_string_literal("ArithmeticIntegerDecoder: Unexpected OOB");
     return result.value();
@@ -121,30 +119,28 @@ ErrorOr<i32> ArithmeticIntegerDecoder::decode_non_oob()
 
 class ArithmeticIntegerIDDecoder {
 public:
-    ArithmeticIntegerIDDecoder(QMArithmeticDecoder&, u32 code_length);
+    explicit ArithmeticIntegerIDDecoder(u32 code_length);
 
     // A.3 The IAID decoding procedure
-    u32 decode();
+    u32 decode(QMArithmeticDecoder&);
 
 private:
-    QMArithmeticDecoder& m_decoder;
     u32 m_code_length { 0 };
     Vector<QMArithmeticDecoder::Context> contexts;
 };
 
-ArithmeticIntegerIDDecoder::ArithmeticIntegerIDDecoder(QMArithmeticDecoder& decoder, u32 code_length)
-    : m_decoder(decoder)
-    , m_code_length(code_length)
+ArithmeticIntegerIDDecoder::ArithmeticIntegerIDDecoder(u32 code_length)
+    : m_code_length(code_length)
 {
     contexts.resize(1 << (code_length + 1));
 }
 
-u32 ArithmeticIntegerIDDecoder::decode()
+u32 ArithmeticIntegerIDDecoder::decode(QMArithmeticDecoder& decoder)
 {
     // A.3 The IAID decoding procedure
     u32 prev = 1;
     for (u8 i = 0; i < m_code_length; ++i) {
-        bool bit = m_decoder.get_next_bit(contexts[prev]);
+        bool bit = decoder.get_next_bit(contexts[prev]);
         prev = (prev << 1) | bit;
     }
     prev = prev - (1 << m_code_length);
@@ -1585,11 +1581,11 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  If SBHUFF is 0, decode a value using the IADT integer arithmetic decoding procedure (see Annex A) and multiply the resulting value by SBSTRIPS."
     Optional<JBIG2::ArithmeticIntegerDecoder> delta_t_integer_decoder; // "IADT" in spec.
     if (!inputs.uses_huffman_encoding)
-        delta_t_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+        delta_t_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_delta_t = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return TRY(inputs.delta_t_table->read_symbol_non_oob(*bit_stream)) * inputs.size_of_symbol_instance_strips;
-        return TRY(delta_t_integer_decoder->decode_non_oob()) * inputs.size_of_symbol_instance_strips;
+        return TRY(delta_t_integer_decoder->decode_non_oob(*decoder)) * inputs.size_of_symbol_instance_strips;
     };
 
     // 6.4.7 First symbol instance S coordinate
@@ -1597,11 +1593,11 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  If SBHUFF is 0, decode a value using the IAFS integer arithmetic decoding procedure (see Annex A)."
     Optional<JBIG2::ArithmeticIntegerDecoder> first_s_integer_decoder; // "IAFS" in spec.
     if (!inputs.uses_huffman_encoding)
-        first_s_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+        first_s_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_first_s = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.first_s_table->read_symbol_non_oob(*bit_stream);
-        return first_s_integer_decoder->decode_non_oob();
+        return first_s_integer_decoder->decode_non_oob(*decoder);
     };
 
     // 6.4.8 Subsequent symbol instance S coordinate
@@ -1610,11 +1606,11 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  In either case it is possible that the result of this decoding is the out-of-band value OOB.""
     Optional<JBIG2::ArithmeticIntegerDecoder> subsequent_s_integer_decoder; // "IADS" in spec.
     if (!inputs.uses_huffman_encoding)
-        subsequent_s_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+        subsequent_s_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_subsequent_s = [&]() -> ErrorOr<Optional<i32>> {
         if (inputs.uses_huffman_encoding)
             return inputs.subsequent_s_table->read_symbol(*bit_stream);
-        return subsequent_s_integer_decoder->decode();
+        return subsequent_s_integer_decoder->decode(*decoder);
     };
 
     // 6.4.9 Symbol instance T coordinate
@@ -1623,13 +1619,13 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  • If SBHUFF is 0, decode a value using the IAIT integer arithmetic decoding procedure (see Annex A)."
     Optional<JBIG2::ArithmeticIntegerDecoder> instance_t_integer_decoder; // "IAIT" in spec.
     if (!inputs.uses_huffman_encoding)
-        instance_t_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+        instance_t_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_instance_t = [&]() -> ErrorOr<i32> {
         if (inputs.size_of_symbol_instance_strips == 1)
             return 0;
         if (inputs.uses_huffman_encoding)
             return TRY(bit_stream->read_bits(ceil(log2(inputs.size_of_symbol_instance_strips))));
-        return instance_t_integer_decoder->decode_non_oob();
+        return instance_t_integer_decoder->decode_non_oob(*decoder);
     };
 
     // 6.4.10 Symbol instance symbol ID
@@ -1639,11 +1635,11 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  resulting value."
     Optional<JBIG2::ArithmeticIntegerIDDecoder> id_decoder; // "IAID" in spec.
     if (!inputs.uses_huffman_encoding)
-        id_decoder = JBIG2::ArithmeticIntegerIDDecoder(decoder.value(), inputs.id_symbol_code_length);
+        id_decoder = JBIG2::ArithmeticIntegerIDDecoder(inputs.id_symbol_code_length);
     auto read_symbol_id = [&]() -> ErrorOr<u32> {
         if (inputs.uses_huffman_encoding)
             return inputs.symbol_id_table->read_symbol_non_oob(*bit_stream);
-        return id_decoder->decode();
+        return id_decoder->decode(*decoder);
     };
 
     // 6.4.11.1 Symbol instance refinement delta width
@@ -1651,11 +1647,11 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  If SBHUFF is 0, decode a value using the IARDW integer arithmetic decoding procedure (see Annex A)."
     Optional<JBIG2::ArithmeticIntegerDecoder> refinement_delta_width_decoder; // "IARDW" in spec.
     if (!inputs.uses_huffman_encoding)
-        refinement_delta_width_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+        refinement_delta_width_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_refinement_delta_width = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.refinement_delta_width_table->read_symbol_non_oob(*bit_stream);
-        return refinement_delta_width_decoder->decode_non_oob();
+        return refinement_delta_width_decoder->decode_non_oob(*decoder);
     };
 
     // 6.4.11.2 Symbol instance refinement delta height
@@ -1663,11 +1659,11 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  If SBHUFF is 0, decode a value using the IARDH integer arithmetic decoding procedure (see Annex A)."
     Optional<JBIG2::ArithmeticIntegerDecoder> refinement_delta_height_decoder; // "IARDH" in spec.
     if (!inputs.uses_huffman_encoding)
-        refinement_delta_height_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+        refinement_delta_height_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_refinement_delta_height = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.refinement_delta_height_table->read_symbol_non_oob(*bit_stream);
-        return refinement_delta_height_decoder->decode_non_oob();
+        return refinement_delta_height_decoder->decode_non_oob(*decoder);
     };
 
     // 6.4.11.3 Symbol instance refinement X offset
@@ -1675,11 +1671,11 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  If SBHUFF is 0, decode a value using the IARDX integer arithmetic decoding procedure (see Annex A)."
     Optional<JBIG2::ArithmeticIntegerDecoder> refinement_x_offset_decoder; // "IARDX" in spec.
     if (!inputs.uses_huffman_encoding)
-        refinement_x_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+        refinement_x_offset_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_refinement_x_offset = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.refinement_x_offset_table->read_symbol_non_oob(*bit_stream);
-        return refinement_x_offset_decoder->decode_non_oob();
+        return refinement_x_offset_decoder->decode_non_oob(*decoder);
     };
 
     // 6.4.11.4 Symbol instance refinement Y offset
@@ -1687,17 +1683,17 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  If SBHUFF is 0, decode a value using the IARDY integer arithmetic decoding procedure (see Annex A)."
     Optional<JBIG2::ArithmeticIntegerDecoder> refinement_y_offset_decoder; // "IARDY" in spec.
     if (!inputs.uses_huffman_encoding)
-        refinement_y_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+        refinement_y_offset_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_refinement_y_offset = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.refinement_y_offset_table->read_symbol_non_oob(*bit_stream);
-        return refinement_y_offset_decoder->decode_non_oob();
+        return refinement_y_offset_decoder->decode_non_oob(*decoder);
     };
 
     // 6.4.11 Symbol instance bitmap
     Optional<JBIG2::ArithmeticIntegerDecoder> has_refinement_image_decoder; // "IARI" in spec.
     if (!inputs.uses_huffman_encoding)
-        has_refinement_image_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+        has_refinement_image_decoder = JBIG2::ArithmeticIntegerDecoder {};
 
     Vector<QMArithmeticDecoder::Context> refinement_contexts;
     if (inputs.uses_refinement_coding)
@@ -1715,7 +1711,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
             if (inputs.uses_huffman_encoding)
                 has_refinement_image = TRY(bit_stream->read_bit());
             else
-                has_refinement_image = TRY(has_refinement_image_decoder->decode_non_oob());
+                has_refinement_image = TRY(has_refinement_image_decoder->decode_non_oob(*decoder));
         }
 
         // "If RI is 0 then set the symbol instance bitmap IBI to SBSYMS[IDI]."
@@ -1942,11 +1938,11 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     //  If SDHUFF is 0, decode a value using the IADH integer arithmetic decoding procedure (see Annex A)."
     Optional<JBIG2::ArithmeticIntegerDecoder> delta_height_integer_decoder; // "IADH" in spec.
     if (!inputs.uses_huffman_encoding)
-        delta_height_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+        delta_height_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_delta_height = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.delta_height_table->read_symbol_non_oob(*bit_stream);
-        return delta_height_integer_decoder->decode_non_oob();
+        return delta_height_integer_decoder->decode_non_oob(*decoder);
     };
 
     // 6.5.7 Delta width
@@ -1955,11 +1951,11 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     //  In either case it is possible that the result of this decoding is the out-of-band value OOB."
     Optional<JBIG2::ArithmeticIntegerDecoder> delta_width_integer_decoder; // "IADW" in spec.
     if (!inputs.uses_huffman_encoding)
-        delta_width_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
+        delta_width_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_delta_width = [&]() -> ErrorOr<Optional<i32>> {
         if (inputs.uses_huffman_encoding)
             return inputs.delta_width_table->read_symbol(*bit_stream);
-        return delta_width_integer_decoder->decode();
+        return delta_width_integer_decoder->decode(*decoder);
     };
 
     // 6.5.8 Symbol bitmap
@@ -1974,8 +1970,8 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         if (inputs.uses_huffman_encoding)
             return inputs.number_of_symbol_instances_table->read_symbol_non_oob(*bit_stream);
         if (!number_of_symbol_instances_decoder.has_value())
-            number_of_symbol_instances_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
-        return number_of_symbol_instances_decoder->decode_non_oob();
+            number_of_symbol_instances_decoder = JBIG2::ArithmeticIntegerDecoder {};
+        return number_of_symbol_instances_decoder->decode_non_oob(*decoder);
     };
 
     // 6.5.8.1 Direct-coded symbol bitmap
@@ -2035,16 +2031,16 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unexpected number of symbol instances");
 
         if (!id_decoder.has_value())
-            id_decoder = JBIG2::ArithmeticIntegerIDDecoder(decoder.value(), code_length);
-        u32 symbol_id = id_decoder->decode();
+            id_decoder = JBIG2::ArithmeticIntegerIDDecoder(code_length);
+        u32 symbol_id = id_decoder->decode(*decoder);
 
         if (!refinement_x_offset_decoder.has_value())
-            refinement_x_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
-        i32 refinement_x_offset = TRY(refinement_x_offset_decoder->decode_non_oob());
+            refinement_x_offset_decoder = JBIG2::ArithmeticIntegerDecoder {};
+        i32 refinement_x_offset = TRY(refinement_x_offset_decoder->decode_non_oob(*decoder));
 
         if (!refinement_y_offset_decoder.has_value())
-            refinement_y_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
-        i32 refinement_y_offset = TRY(refinement_y_offset_decoder->decode_non_oob());
+            refinement_y_offset_decoder = JBIG2::ArithmeticIntegerDecoder {};
+        i32 refinement_y_offset = TRY(refinement_y_offset_decoder->decode_non_oob(*decoder));
 
         if (symbol_id >= inputs.input_symbols.size() && symbol_id - inputs.input_symbols.size() >= new_symbols.size())
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Refinement/aggregate symbol ID out of range");
@@ -2201,7 +2197,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     if (inputs.uses_huffman_encoding)
         export_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
     else
-        export_integer_decoder = JBIG2::ArithmeticIntegerDecoder { decoder.value() };
+        export_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
 
     // 6.5.10 Exported symbols
     Vector<bool> export_flags;
@@ -2220,7 +2216,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         if (inputs.uses_huffman_encoding)
             export_run_length = TRY(export_table.value()->read_symbol_non_oob(*bit_stream));
         else
-            export_run_length = TRY(export_integer_decoder->decode_non_oob());
+            export_run_length = TRY(export_integer_decoder->decode_non_oob(*decoder));
 
         // "3) Set EXFLAGS[EXINDEX] through EXFLAGS[EXINDEX + EXRUNLENGTH – 1] to CUREXFLAG.
         //  If EXRUNLENGTH = 0, then this step does not change any values."
