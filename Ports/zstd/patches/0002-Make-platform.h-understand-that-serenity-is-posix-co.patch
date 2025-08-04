@@ -9,10 +9,10 @@ Co-Authored-By: Brian Callahan <bcallah@openbsd.org>
  1 file changed, 5 insertions(+), 1 deletion(-)
 
 diff --git a/programs/platform.h b/programs/platform.h
-index b858e3b..8628c05 100644
+index e2cc1c3e65f6c6d6a9e49948ca577520acbdb0a7..c85864506d2efa49efa2c9adb1b44e0d39f161c8 100644
 --- a/programs/platform.h
 +++ b/programs/platform.h
-@@ -98,7 +98,11 @@ extern "C" {
+@@ -91,7 +91,11 @@
  #    endif
  #    include <unistd.h>  /* declares _POSIX_VERSION */
  #    if defined(_POSIX_VERSION)  /* POSIX compliant */

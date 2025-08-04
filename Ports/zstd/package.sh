@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='zstd'
-version='1.5.6'
+version='1.5.7'
 files=(
-    "https://github.com/facebook/zstd/releases/download/v${version}/zstd-${version}.tar.gz#8c29e06cf42aacc1eafc4077ae2ec6c6fcb96a626157e0593d5e82a34fd403c1"
+    "https://github.com/facebook/zstd/releases/download/v${version}/zstd-${version}.tar.gz#eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3"
 )
 useconfigure='true'
 
