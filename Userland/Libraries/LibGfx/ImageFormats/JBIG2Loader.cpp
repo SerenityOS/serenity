@@ -1583,7 +1583,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     // 6.4.6 Strip delta T
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFDT and multiply the resulting value by SBSTRIPS.
     //  If SBHUFF is 0, decode a value using the IADT integer arithmetic decoding procedure (see Annex A) and multiply the resulting value by SBSTRIPS."
-    Optional<JBIG2::ArithmeticIntegerDecoder> delta_t_integer_decoder;
+    Optional<JBIG2::ArithmeticIntegerDecoder> delta_t_integer_decoder; // "IADT" in spec.
     if (!inputs.uses_huffman_encoding)
         delta_t_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_delta_t = [&]() -> ErrorOr<i32> {
@@ -1595,7 +1595,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     // 6.4.7 First symbol instance S coordinate
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFFS.
     //  If SBHUFF is 0, decode a value using the IAFS integer arithmetic decoding procedure (see Annex A)."
-    Optional<JBIG2::ArithmeticIntegerDecoder> first_s_integer_decoder;
+    Optional<JBIG2::ArithmeticIntegerDecoder> first_s_integer_decoder; // "IAFS" in spec.
     if (!inputs.uses_huffman_encoding)
         first_s_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_first_s = [&]() -> ErrorOr<i32> {
@@ -1608,7 +1608,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFDS.
     //  If SBHUFF is 0, decode a value using the IADS integer arithmetic decoding procedure (see Annex A).
     //  In either case it is possible that the result of this decoding is the out-of-band value OOB.""
-    Optional<JBIG2::ArithmeticIntegerDecoder> subsequent_s_integer_decoder;
+    Optional<JBIG2::ArithmeticIntegerDecoder> subsequent_s_integer_decoder; // "IADS" in spec.
     if (!inputs.uses_huffman_encoding)
         subsequent_s_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_subsequent_s = [&]() -> ErrorOr<Optional<i32>> {
@@ -1621,7 +1621,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     // "If SBSTRIPS == 1, then the value decoded is always zero. Otherwise:
     //  • If SBHUFF is 1, decode a value by reading ceil(log2(SBSTRIPS)) bits directly from the bitstream.
     //  • If SBHUFF is 0, decode a value using the IAIT integer arithmetic decoding procedure (see Annex A)."
-    Optional<JBIG2::ArithmeticIntegerDecoder> instance_t_integer_decoder;
+    Optional<JBIG2::ArithmeticIntegerDecoder> instance_t_integer_decoder; // "IAIT" in spec.
     if (!inputs.uses_huffman_encoding)
         instance_t_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_instance_t = [&]() -> ErrorOr<i32> {
@@ -1637,7 +1637,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  SBSYMCODES. The resulting value, which is IDI, is the index of the entry in SBSYMCODES that is read.
     //  If SBHUFF is 0, decode a value using the IAID integer arithmetic decoding procedure (see Annex A). Set IDI to the
     //  resulting value."
-    Optional<JBIG2::ArithmeticIntegerIDDecoder> id_decoder;
+    Optional<JBIG2::ArithmeticIntegerIDDecoder> id_decoder; // "IAID" in spec.
     if (!inputs.uses_huffman_encoding)
         id_decoder = JBIG2::ArithmeticIntegerIDDecoder(decoder.value(), inputs.id_symbol_code_length);
     auto read_symbol_id = [&]() -> ErrorOr<u32> {
@@ -1647,7 +1647,9 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     };
 
     // 6.4.11.1 Symbol instance refinement delta width
-    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_delta_width_decoder;
+    // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFRDW.
+    //  If SBHUFF is 0, decode a value using the IARDW integer arithmetic decoding procedure (see Annex A)."
+    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_delta_width_decoder; // "IARDW" in spec.
     if (!inputs.uses_huffman_encoding)
         refinement_delta_width_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_refinement_delta_width = [&]() -> ErrorOr<i32> {
@@ -1657,7 +1659,9 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     };
 
     // 6.4.11.2 Symbol instance refinement delta height
-    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_delta_height_decoder;
+    // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFRDH.
+    //  If SBHUFF is 0, decode a value using the IARDH integer arithmetic decoding procedure (see Annex A)."
+    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_delta_height_decoder; // "IARDH" in spec.
     if (!inputs.uses_huffman_encoding)
         refinement_delta_height_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_refinement_delta_height = [&]() -> ErrorOr<i32> {
@@ -1667,7 +1671,9 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     };
 
     // 6.4.11.3 Symbol instance refinement X offset
-    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_x_offset_decoder;
+    // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFRDX.
+    //  If SBHUFF is 0, decode a value using the IARDX integer arithmetic decoding procedure (see Annex A)."
+    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_x_offset_decoder; // "IARDX" in spec.
     if (!inputs.uses_huffman_encoding)
         refinement_x_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_refinement_x_offset = [&]() -> ErrorOr<i32> {
@@ -1677,7 +1683,9 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     };
 
     // 6.4.11.4 Symbol instance refinement Y offset
-    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_y_offset_decoder;
+    // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFRDY.
+    //  If SBHUFF is 0, decode a value using the IARDY integer arithmetic decoding procedure (see Annex A)."
+    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_y_offset_decoder; // "IARDY" in spec.
     if (!inputs.uses_huffman_encoding)
         refinement_y_offset_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_refinement_y_offset = [&]() -> ErrorOr<i32> {
@@ -1687,7 +1695,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     };
 
     // 6.4.11 Symbol instance bitmap
-    Optional<JBIG2::ArithmeticIntegerDecoder> has_refinement_image_decoder;
+    Optional<JBIG2::ArithmeticIntegerDecoder> has_refinement_image_decoder; // "IARI" in spec.
     if (!inputs.uses_huffman_encoding)
         has_refinement_image_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
 
@@ -1932,7 +1940,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     // 6.5.6 Height class delta height
     // "If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFDH.
     //  If SDHUFF is 0, decode a value using the IADH integer arithmetic decoding procedure (see Annex A)."
-    Optional<JBIG2::ArithmeticIntegerDecoder> delta_height_integer_decoder;
+    Optional<JBIG2::ArithmeticIntegerDecoder> delta_height_integer_decoder; // "IADH" in spec.
     if (!inputs.uses_huffman_encoding)
         delta_height_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_delta_height = [&]() -> ErrorOr<i32> {
@@ -1945,7 +1953,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     // "If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFDW.
     //  If SDHUFF is 0, decode a value using the IADW integer arithmetic decoding procedure (see Annex A).
     //  In either case it is possible that the result of this decoding is the out-of-band value OOB."
-    Optional<JBIG2::ArithmeticIntegerDecoder> delta_width_integer_decoder;
+    Optional<JBIG2::ArithmeticIntegerDecoder> delta_width_integer_decoder; // "IADW" in spec.
     if (!inputs.uses_huffman_encoding)
         delta_width_integer_decoder = JBIG2::ArithmeticIntegerDecoder(decoder.value());
     auto read_delta_width = [&]() -> ErrorOr<Optional<i32>> {
@@ -1961,7 +1969,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     // 6.5.8.2.1 Number of symbol instances in aggregation
     // If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFAGGINST.
     // If SDHUFF is 0, decode a value using the IAAI integer arithmetic decoding procedure (see Annex A).
-    Optional<JBIG2::ArithmeticIntegerDecoder> number_of_symbol_instances_decoder;
+    Optional<JBIG2::ArithmeticIntegerDecoder> number_of_symbol_instances_decoder; // "IAAI" in spec.
     auto read_number_of_symbol_instances = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.number_of_symbol_instances_table->read_symbol_non_oob(*bit_stream);
@@ -1971,9 +1979,9 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     };
 
     // 6.5.8.1 Direct-coded symbol bitmap
-    Optional<JBIG2::ArithmeticIntegerIDDecoder> id_decoder;
-    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_x_offset_decoder;
-    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_y_offset_decoder;
+    Optional<JBIG2::ArithmeticIntegerIDDecoder> id_decoder;                // "IAID" in spec.
+    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_x_offset_decoder; // "IARDX" in spec.
+    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_y_offset_decoder; // "IARDY" in spec.
 
     // FIXME: When we implement REFAGGNINST > 1 support, do these need to be shared with
     // text_region_decoding_procedure() then?
