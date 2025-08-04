@@ -10,6 +10,7 @@
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ImageFormats/BMPLoader.h>
 #include <LibGfx/ImageFormats/DDSLoader.h>
+#include <LibGfx/ImageFormats/DICOMLoader.h>
 #include <LibGfx/ImageFormats/GIFLoader.h>
 #include <LibGfx/ImageFormats/ICOLoader.h>
 #include <LibGfx/ImageFormats/ILBMLoader.h>
@@ -2237,4 +2238,22 @@ TEST_CASE(test_dds)
         auto plugin_decoder = TRY_OR_FAIL(Gfx::DDSImageDecoderPlugin::create(file->bytes()));
         TRY_OR_FAIL(expect_single_frame(*plugin_decoder));
     }
+}
+
+TEST_CASE(test_dicom)
+{
+    // This is used as a reference
+    auto reference_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("pnm/buggie-raw.pgm"sv)));
+    auto reference_decoder = TRY_OR_FAIL(Gfx::PGMImageDecoderPlugin::create(reference_file->bytes()));
+    auto reference_frame = TRY_OR_FAIL(reference_decoder->frame(0));
+
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("dicom/buggie.dcm"sv)));
+    EXPECT(Gfx::DICOMImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::DICOMImageDecoderPlugin::create(file->bytes()));
+
+    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 100, 220 }));
+
+    for (int y = 0; y < frame.image->height(); ++y)
+        for (int x = 0; x < frame.image->width(); ++x)
+            EXPECT_EQ(frame.image->get_pixel(x, y), reference_frame.image->get_pixel(x, y));
 }
