@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='ffmpeg'
-version='7.0.2'
+version='7.1.1'
 useconfigure='true'
 depends=(
     'bzip2'
@@ -12,7 +12,7 @@ depends=(
     'xz'
 )
 files=(
-    "https://ffmpeg.org/releases/ffmpeg-${version}.tar.gz#1233b3a93dd7517cc3c56b72a67f64041c044848d981e3deff4bebffa25f1054"
+    "https://ffmpeg.org/releases/ffmpeg-${version}.tar.gz#9a6e57a446b671012612aaeb9df5126794d5ac8f2015ca220934f99a6a4e0601"
 )
 installopts=(
     "INSTALL_TOP=${SERENITY_INSTALL_ROOT}/usr/local"
