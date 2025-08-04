@@ -8,10 +8,10 @@ Subject: [PATCH] Use native wayland-scanner
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/src/meson.build b/src/meson.build
-index c20d9b9df042004bcbe0e1ae466c409bd51d3f82..2eafcdfb04ff05ab86eefcc06e8566d09e52cbfb 100644
+index e9f041c2a6b43f46b7408c8123c909e5b482c738..9140db6bac1fcfdb800607a2540cc7a33b7962fc 100644
 --- a/src/meson.build
 +++ b/src/meson.build
-@@ -78,8 +78,7 @@ if get_option('scanner')
+@@ -81,8 +81,7 @@ if get_option('scanner')
  endif
  
  if meson.is_cross_build() or not get_option('scanner')

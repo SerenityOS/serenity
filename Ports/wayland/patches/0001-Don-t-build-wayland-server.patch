@@ -5,11 +5,11 @@ Subject: [PATCH] Don't build wayland-server
 
 ---
  meson.build     |  4 ++--
- src/meson.build | 54 -------------------------------------------------
- 2 files changed, 2 insertions(+), 56 deletions(-)
+ src/meson.build | 55 -------------------------------------------------
+ 2 files changed, 2 insertions(+), 57 deletions(-)
 
 diff --git a/meson.build b/meson.build
-index 8bb47c258228985667f1c6e0cc4ed64a02fa777a..52bf93bb278c75ee77bd3fcb29810752a1bc4ded 100644
+index ef34ba4a5511d7ccf25edd1c048752a737f9bca9..3b9c66693b1028bdd738d7d09284000582d597ce 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -80,8 +80,8 @@ if get_option('libraries')
@@ -24,10 +24,10 @@ index 8bb47c258228985667f1c6e0cc4ed64a02fa777a..52bf93bb278c75ee77bd3fcb29810752
  	]
  
 diff --git a/src/meson.build b/src/meson.build
-index a8a1d2ba979411a09fd754ef9b8ddf44a6f74653..c20d9b9df042004bcbe0e1ae466c409bd51d3f82 100644
+index 984e34abccc095890e5e05fde4f11dbf99967ab8..e9f041c2a6b43f46b7408c8123c909e5b482c738 100644
 --- a/src/meson.build
 +++ b/src/meson.build
-@@ -167,58 +167,6 @@ if get_option('libraries')
+@@ -170,59 +170,6 @@ if get_option('libraries')
  		error('We probably need to bump the SONAME of libwayland-server and -client')
  	endif
  
@@ -73,9 +73,10 @@ index a8a1d2ba979411a09fd754ef9b8ddf44a6f74653..c20d9b9df042004bcbe0e1ae466c409b
 -		description: 'Server side implementation of the Wayland protocol',
 -		version: meson.project_version(),
 -		filebase: 'wayland-server',
+-		libraries: mathlib_dep,
 -		variables: [
 -			'datarootdir=' + join_paths('${prefix}', get_option('datadir')),
--			'pkgdatadir=' + join_paths('${datarootdir}', meson.project_name())
+-			'pkgdatadir=' + join_paths('${pc_sysrootdir}${datarootdir}', meson.project_name())
 -		]
 -	)
 -
@@ -86,7 +87,7 @@ index a8a1d2ba979411a09fd754ef9b8ddf44a6f74653..c20d9b9df042004bcbe0e1ae466c409b
  	wayland_client = library(
  		'wayland-client',
  		sources: [
-@@ -269,8 +217,6 @@ if get_option('libraries')
+@@ -274,8 +221,6 @@ if get_option('libraries')
  
  	install_headers([
  		'wayland-util.h',

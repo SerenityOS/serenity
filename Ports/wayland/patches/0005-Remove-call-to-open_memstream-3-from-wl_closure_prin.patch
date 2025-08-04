@@ -8,10 +8,10 @@ Subject: [PATCH] Remove call to open_memstream(3) from wl_closure_print
  1 file changed, 1 insertion(+), 10 deletions(-)
 
 diff --git a/src/connection.c b/src/connection.c
-index bf976762df7d31205a4945cf6df0963c5f27c70a..1adf30fdd2b5e211dbbe69607f4c97eff182d99b 100644
+index 3ef8688d7b06e6797de852533e1db2b54107623e..9d676011cdaa2ae1aa0a32d3c4136a341563618b 100644
 --- a/src/connection.c
 +++ b/src/connection.c
-@@ -1273,12 +1273,8 @@ wl_closure_print(struct wl_closure *closure, struct wl_object *target,
+@@ -1503,12 +1503,8 @@ wl_closure_print(struct wl_closure *closure, struct wl_object *target,
  	unsigned int time;
  	uint32_t nval;
  	FILE *f;
@@ -25,7 +25,7 @@ index bf976762df7d31205a4945cf6df0963c5f27c70a..1adf30fdd2b5e211dbbe69607f4c97ef
  
  	clock_gettime(CLOCK_REALTIME, &tp);
  	time = (tp.tv_sec * 1000000L) + (tp.tv_nsec / 1000);
-@@ -1354,11 +1350,6 @@ wl_closure_print(struct wl_closure *closure, struct wl_object *target,
+@@ -1588,11 +1584,6 @@ wl_closure_print(struct wl_closure *closure, struct wl_object *target,
  	}
  
  	fprintf(f, ")\n");
