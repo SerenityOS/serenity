@@ -35,6 +35,7 @@ mkShell.override { stdenv = gccStdenv; } {
       imagemagick
       libtool
       meson
+      nasm
       wayland-scanner
       # For development
       # NOTE: The unwrapped clang package is used because the one installed by `clang-tools`
