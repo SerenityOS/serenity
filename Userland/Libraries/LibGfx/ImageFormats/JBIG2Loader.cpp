@@ -1218,7 +1218,7 @@ struct GenericRegionDecodingInputParameters {
     u32 region_width { 0 };                   // "GBW" in spec.
     u32 region_height { 0 };                  // "GBH" in spec.
     u8 gb_template { 0 };
-    bool is_typical_prediction_used { false };          // "TPGDON" in spec.
+    bool is_typical_prediction_used { false };          // "TPGRON" in spec.
     bool is_extended_reference_template_used { false }; // "EXTTEMPLATE" in spec.
     Optional<BitBuffer const&> skip_pattern;            // "USESKIP", "SKIP" in spec.
 
