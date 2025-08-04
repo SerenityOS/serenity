@@ -396,6 +396,7 @@ TEST_CASE(test_jbig2_decode)
         // - coverage for different segment combination operators (or and xor xnor replace),
         //   with both background colors
         // Missing tests for things that aren't implemented yet:
+        // - TPGRON set in refinement region
         // - halftone with MMR graymap
         // - symbols with REFAGGNINST > 1
         // - intermediate regions
