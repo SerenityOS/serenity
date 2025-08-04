@@ -27,7 +27,7 @@ mkShell.override { stdenv = gccStdenv; } {
       unzip
       wget
       # For building Jakt
-      llvmPackages_19.llvm
+      llvmPackages_20.llvm
       # For building and installing ports
       autoconf
       automake
@@ -39,7 +39,7 @@ mkShell.override { stdenv = gccStdenv; } {
       # NOTE: The unwrapped clang package is used because the one installed by `clang-tools`
       #       adds extra include and resource directories that conflict with serenity's custom toolchain.
       # FIXME: Go back to the `clang-tools` package once https://github.com/NixOS/nixpkgs/pull/354755 is merged.
-      llvmPackages_19.clang-unwrapped
+      llvmPackages_20.clang-unwrapped
       nodePackages.prettier
       pre-commit
     ]
