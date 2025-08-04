@@ -643,6 +643,15 @@ TEST_CASE(test_jpeg_random_bytes_between_segments)
     TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 16, 16 }));
 }
 
+TEST_CASE(test_jpeg_non_conventional_app_id)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jpg/non_ascii_app.jpg"sv)));
+    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+
+    TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 80, 80 }));
+}
+
 TEST_CASE(test_jpeg2000_spec_annex_j_10_bitplane_decoding)
 {
     // J.10.4 Arithmetic-coded compressed data

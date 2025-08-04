@@ -1222,7 +1222,7 @@ static ErrorOr<void> read_app_marker(JPEGStream& stream, JPEGLoadingContext& con
         TRY(builder.try_append(c));
     }
 
-    auto app_id = TRY(builder.to_string());
+    auto app_id = builder.to_byte_string();
 
     if (app_marker_number == 1 && app_id == "Exif"sv)
         return read_exif(stream, context, bytes_to_read);
