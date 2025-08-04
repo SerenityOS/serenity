@@ -386,6 +386,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-texttranspose.jbig2"sv),
         // Missing tests, because there's no easy way to generate them:
         // - halftone (code support added in #23864)
+        // - halftone with MMR graymap (code support added in #26094)
         // - lossless halftone (code support added in #26043)
         // - rotated halftone (code support added in #26044)
         // - halftone with graymap with > 256 entries (code support added in #26044 too)
@@ -396,11 +397,10 @@ TEST_CASE(test_jbig2_decode)
         // - coverage for different segment combination operators (or and xor xnor replace),
         //   with both background colors
         // Missing tests for things that aren't implemented yet:
-        // - TPGRON set in refinement region
-        // - halftone with MMR graymap
         // - symbols with REFAGGNINST > 1
         // - intermediate regions
         // - standalone refinement regions
+        //   - TPGRON set in refinement region (only reachable in standalone refinement regions)
         // - exttemplate
         // - colors
         // (test_annex_h_jbig2 covers a subset of these, but having standalone files would be nice.)
