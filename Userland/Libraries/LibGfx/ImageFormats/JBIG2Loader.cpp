@@ -2705,7 +2705,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
     dbgln_if(JBIG2_DEBUG, "Symbol dictionary: number_of_new_symbols={}", number_of_new_symbols);
 
     // 7.4.2.1.6 Symbol dictionary segment Huffman table selection
-    // FIXME
+    // We currently do this as part of handling 7.4.2.1.1 a bit further up.
 
     // 7.4.2.2 Decoding a symbol dictionary segment
     // "1) Interpret its header, as described in 7.4.2.1."
@@ -2723,7 +2723,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
     // Nothing to do.
 
     // "5) Reset the arithmetic coding statistics for all the contexts of all the arithmetic integer coders to zero."
-    // FIXME
+    // We currently do this by keeping the statistics as locals in symbol_dictionary_decoding_procedure().
 
     // "6) Invoke the symbol dictionary decoding procedure described in 6.5, with the parameters to the symbol dictionary decoding procedure set as shown in Table 31."
     SymbolDictionaryDecodingInputParameters inputs;
@@ -3094,7 +3094,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     // Done further up, since it's needed to decode the symbol ID Huffman table already.
 
     // "3) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    // FIXME
+    // We currently do this by keeping the statistics as locals in text_region_decoding_procedure().
 
     // "4) Invoke the text region decoding procedure described in 6.4, with the parameters to the text region decoding procedure set as shown in Table 34."
     TextRegionDecodingInputParameters inputs;
