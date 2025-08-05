@@ -1577,7 +1577,6 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     Optional<FixedMemoryStream> stream;
     Optional<BigEndianInputBitStream> bit_stream;
     Optional<QMArithmeticDecoder> decoder;
-    Vector<QMArithmeticDecoder::Context> contexts;
     if (inputs.uses_huffman_encoding) {
         stream = FixedMemoryStream { data };
         bit_stream = BigEndianInputBitStream { MaybeOwned { stream.value() } };
