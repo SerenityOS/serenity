@@ -502,16 +502,6 @@ ErrorOr<i32> HuffmanTable::read_symbol_non_oob(BigEndianInputBitStream& stream) 
 
 }
 
-static u8 number_of_context_bits_for_template(u8 template_)
-{
-    if (template_ == 0)
-        return 16;
-    if (template_ == 1)
-        return 13;
-    VERIFY(template_ == 2 || template_ == 3);
-    return 10;
-}
-
 // JBIG2 spec, Annex D, D.4.1 ID string
 static constexpr u8 id_string[] = { 0x97, 0x4A, 0x42, 0x32, 0x0D, 0x0A, 0x1A, 0x0A };
 
@@ -1233,8 +1223,28 @@ struct GenericRegionDecodingInputParameters {
     QMArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
+struct GenericContexts {
+    GenericContexts(u8 template_)
+    {
+        contexts.resize(1 << number_of_context_bits_for_template(template_));
+    }
+
+    Vector<QMArithmeticDecoder::Context> contexts;
+
+private:
+    static u8 number_of_context_bits_for_template(u8 template_)
+    {
+        if (template_ == 0)
+            return 16;
+        if (template_ == 1)
+            return 13;
+        VERIFY(template_ == 2 || template_ == 3);
+        return 10;
+    }
+};
+
 // 6.2 Generic region decoding procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, Vector<QMArithmeticDecoder::Context>& contexts)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, Optional<GenericContexts>& maybe_contexts)
 {
     if (inputs.is_modified_modified_read) {
         dbgln_if(JBIG2_DEBUG, "JBIG2ImageDecoderPlugin: MMR image data");
@@ -1264,6 +1274,8 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
         }
         return result;
     }
+
+    auto& contexts = maybe_contexts.value();
 
     // 6.2.5 Decoding using a template and arithmetic coding
     if (inputs.is_extended_reference_template_used)
@@ -1392,7 +1404,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
         // "b) If TPGDON is 1, then decode a bit using the arithmetic entropy coder..."
         if (inputs.is_typical_prediction_used) {
             // "SLTP" in spec. "Swap LTP" or "Switch LTP" maybe?
-            bool sltp = decoder.get_next_bit(contexts[sltp_context]);
+            bool sltp = decoder.get_next_bit(contexts.contexts[sltp_context]);
             ltp = ltp ^ sltp;
 
             // "c) If LTP = 1 then set every pixel of the current row of GBREG equal to the corresponding pixel of the row
@@ -1416,7 +1428,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
 
             // "ii) Otherwise:"
             u16 context = compute_context(result, inputs.adaptive_template_pixels, x, y);
-            bool bit = decoder.get_next_bit(contexts[context]);
+            bool bit = decoder.get_next_bit(contexts.contexts[context]);
             result->set_bit(x, y, bit);
         }
     }
@@ -1929,13 +1941,13 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     Optional<FixedMemoryStream> stream;
     Optional<BigEndianInputBitStream> bit_stream;
     Optional<QMArithmeticDecoder> decoder;
-    Vector<QMArithmeticDecoder::Context> contexts;
+    Optional<GenericContexts> contexts;
     if (inputs.uses_huffman_encoding) {
         stream = FixedMemoryStream { data };
         bit_stream = BigEndianInputBitStream { MaybeOwned { stream.value() } };
     } else {
         decoder = TRY(QMArithmeticDecoder::initialize(data));
-        contexts.resize(1 << number_of_context_bits_for_template(inputs.symbol_template));
+        contexts = GenericContexts { inputs.symbol_template };
     }
 
     // 6.5.6 Height class delta height
@@ -2286,7 +2298,7 @@ struct GrayscaleInputParameters {
     QMArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
-static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputParameters const& inputs, ReadonlyBytes data, Vector<QMArithmeticDecoder::Context>& contexts)
+static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputParameters const& inputs, ReadonlyBytes data, Optional<GenericContexts>& contexts)
 {
     VERIFY(inputs.bpp < 64);
 
@@ -2385,7 +2397,7 @@ struct HalftoneRegionDecodingInputParameters {
 };
 
 // 6.6 Halftone Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(HalftoneRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Vector<QMArithmeticDecoder::Context>& contexts)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(HalftoneRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Optional<GenericContexts>& contexts)
 {
     // 6.6.5 Decoding the halftone region
     // "1) Fill a bitmap HTREG, of the size given by HBW and HBH, with the HDEFPIXEL value."
@@ -2497,7 +2509,7 @@ struct PatternDictionaryDecodingInputParameters {
 };
 
 // 6.7 Pattern Dictionary Decoding Procedure
-static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_procedure(PatternDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data, Vector<QMArithmeticDecoder::Context>& contexts)
+static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_procedure(PatternDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data, Optional<GenericContexts>& contexts)
 {
     // Table 27 – Parameters used to decode a pattern dictionary's collective bitmap
     GenericRegionDecodingInputParameters generic_inputs;
@@ -3178,9 +3190,9 @@ static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData
     // Done!
 
     // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    Vector<QMArithmeticDecoder::Context> contexts;
+    Optional<GenericContexts> contexts;
     if (!uses_mmr)
-        contexts.resize(1 << number_of_context_bits_for_template(hd_template));
+        contexts = GenericContexts { hd_template };
 
     // "3) Invoke the pattern dictionary decoding procedure described in 6.7, with the parameters to the pattern
     //     dictionary decoding procedure set as shown in Table 35."
@@ -3269,9 +3281,9 @@ static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& conte
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment without patterns");
 
     // "3) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    Vector<QMArithmeticDecoder::Context> contexts;
+    Optional<GenericContexts> contexts;
     if (!uses_mmr)
-        contexts.resize(1 << number_of_context_bits_for_template(template_used));
+        contexts = GenericContexts { template_used };
 
     // "4) Invoke the halftone region decoding procedure described in 6.6, with the parameters to the halftone
     //     region decoding procedure set as shown in Table 36."
@@ -3363,8 +3375,9 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     // "1) Interpret its header, as described in 7.4.6.1"
     // Done above.
     // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    Vector<QMArithmeticDecoder::Context> contexts;
-    contexts.resize(1 << number_of_context_bits_for_template(arithmetic_coding_template));
+    Optional<GenericContexts> contexts;
+    if (!uses_mmr)
+        contexts = GenericContexts { arithmetic_coding_template };
 
     // "3) Invoke the generic region decoding procedure described in 6.2, with the parameters to the generic region decoding procedure set as shown in Table 37."
     GenericRegionDecodingInputParameters inputs;
