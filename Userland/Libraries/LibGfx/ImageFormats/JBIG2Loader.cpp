@@ -1572,7 +1572,7 @@ struct TextRegionDecodingInputParameters {
 };
 
 // 6.4 Text Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, ReadonlyBytes data)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Optional<RefinementContexts>& refinement_contexts)
 {
     Optional<FixedMemoryStream> stream;
     Optional<BigEndianInputBitStream> bit_stream;
@@ -1704,9 +1704,6 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     if (!inputs.uses_huffman_encoding)
         has_refinement_image_decoder = JBIG2::ArithmeticIntegerDecoder {};
 
-    Optional<RefinementContexts> refinement_contexts;
-    if (inputs.uses_refinement_coding)
-        refinement_contexts = RefinementContexts(inputs.refinement_template);
     OwnPtr<BitBuffer> refinement_result;
     auto read_bitmap = [&](u32 id) -> ErrorOr<BitBuffer const*> {
         if (id >= inputs.symbols.size())
@@ -3099,7 +3096,9 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     // Done further up, since it's needed to decode the symbol ID Huffman table already.
 
     // "3) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    // We currently do this by keeping the statistics as locals in text_region_decoding_procedure().
+    Optional<RefinementContexts> refinement_contexts;
+    if (uses_refinement_coding)
+        refinement_contexts = RefinementContexts { refinement_template };
 
     // "4) Invoke the text region decoding procedure described in 6.4, with the parameters to the text region decoding procedure set as shown in Table 34."
     TextRegionDecodingInputParameters inputs;
@@ -3128,7 +3127,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     inputs.refinement_template = refinement_template;
     inputs.refinement_adaptive_template_pixels = adaptive_refinement_template;
 
-    auto result = TRY(text_region_decoding_procedure(inputs, data.slice(TRY(stream.tell()))));
+    auto result = TRY(text_region_decoding_procedure(inputs, data.slice(TRY(stream.tell())), refinement_contexts));
 
     composite_bitbuffer(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
 
