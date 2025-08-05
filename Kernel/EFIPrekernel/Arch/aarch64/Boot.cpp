@@ -162,6 +162,7 @@ void arch_prepare_boot(void* root_page_table, BootInfo& boot_info)
     Aarch64::MAIR_EL1 mair_el1 = {};
     mair_el1.Attr[0] = 0xFF;       // Normal memory
     mair_el1.Attr[1] = 0b00000100; // Device-nGnRE memory (non-cacheable)
+    mair_el1.Attr[2] = 0b01000100; // Normal Non-cacheable
 
     // Address translation configuration
     Aarch64::TCR_EL1 tcr_el1 = {};
