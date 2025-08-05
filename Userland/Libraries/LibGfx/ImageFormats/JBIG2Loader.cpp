@@ -1439,8 +1439,17 @@ struct GenericRefinementRegionDecodingInputParameters {
     Array<AdaptiveTemplatePixel, 2> adaptive_template_pixels; // "GRATX" / "GRATY" in spec.
 };
 
+struct RefinementContexts {
+    explicit RefinementContexts(u8 refinement_template)
+    {
+        contexts.resize(1 << (refinement_template == 0 ? 13 : 10));
+    }
+
+    Vector<QMArithmeticDecoder::Context> contexts;
+};
+
 // 6.3 Generic Refinement Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, QMArithmeticDecoder& decoder, Vector<QMArithmeticDecoder::Context>& contexts)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, QMArithmeticDecoder& decoder, RefinementContexts& contexts)
 {
     VERIFY(inputs.gr_template == 0 || inputs.gr_template == 1);
 
@@ -1507,7 +1516,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_proc
     for (size_t y = 0; y < result->height(); ++y) {
         for (size_t x = 0; x < result->width(); ++x) {
             u16 context = compute_context(inputs.adaptive_template_pixels, *inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, *result, x, y);
-            bool bit = decoder.get_next_bit(contexts[context]);
+            bool bit = decoder.get_next_bit(contexts.contexts[context]);
             result->set_bit(x, y, bit);
         }
     }
@@ -1695,9 +1704,9 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     if (!inputs.uses_huffman_encoding)
         has_refinement_image_decoder = JBIG2::ArithmeticIntegerDecoder {};
 
-    Vector<QMArithmeticDecoder::Context> refinement_contexts;
+    Optional<RefinementContexts> refinement_contexts;
     if (inputs.uses_refinement_coding)
-        refinement_contexts.resize(1 << (inputs.refinement_template == 0 ? 13 : 10));
+        refinement_contexts = RefinementContexts(inputs.refinement_template);
     OwnPtr<BitBuffer> refinement_result;
     auto read_bitmap = [&](u32 id) -> ErrorOr<BitBuffer const*> {
         if (id >= inputs.symbols.size())
@@ -1744,7 +1753,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
         refinement_inputs.reference_y_offset = floor_div(refinement_delta_height, 2) + refinement_y_offset;
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
-        refinement_result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, decoder.value(), refinement_contexts));
+        refinement_result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, decoder.value(), refinement_contexts.value()));
         return refinement_result.ptr();
     };
 
@@ -1981,7 +1990,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
 
     // FIXME: When we implement REFAGGNINST > 1 support, do these need to be shared with
     // text_region_decoding_procedure() then?
-    Vector<QMArithmeticDecoder::Context> refinement_contexts;
+    Optional<RefinementContexts> refinement_contexts;
 
     // This belongs in 6.5.5 1) below, but also needs to be captured by read_bitmap here.
     Vector<NonnullRefPtr<Symbol>> new_symbols;
@@ -2056,9 +2065,9 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         refinement_inputs.reference_y_offset = refinement_y_offset;
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
-        if (refinement_contexts.is_empty())
-            refinement_contexts.resize(1 << (inputs.refinement_template == 0 ? 13 : 10));
-        return generic_refinement_region_decoding_procedure(refinement_inputs, decoder.value(), refinement_contexts);
+        if (!refinement_contexts.has_value())
+            refinement_contexts = RefinementContexts(inputs.refinement_template);
+        return generic_refinement_region_decoding_procedure(refinement_inputs, decoder.value(), refinement_contexts.value());
     };
 
     auto read_height_class_collective_bitmap = [&](u32 total_width, u32 height) -> ErrorOr<NonnullOwnPtr<BitBuffer>> {
