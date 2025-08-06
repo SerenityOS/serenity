@@ -394,10 +394,10 @@ TEST_CASE(test_jbig2_decode)
         // - huffman symbol regions (code support added in #26068)
         // - huffman text regions (code support added in #26075)
         // - huffman regions with custom huffman tables (code support added in #26078, #26081)
+        // - symbols with REFAGGNINST > 1 (code support added in #26107)
         // - coverage for different segment combination operators (or and xor xnor replace),
         //   with both background colors
         // Missing tests for things that aren't implemented yet:
-        // - symbols with REFAGGNINST > 1
         // - intermediate regions
         // - standalone refinement regions
         //   - TPGRON set in refinement region (only reachable in standalone refinement regions)
@@ -440,8 +440,13 @@ TEST_CASE(test_annex_h_jbig2)
         for (int x = 0; x < frame_1.image->width(); ++x)
             EXPECT_EQ(frame_1.image->get_pixel(x, y), frame_2.image->get_pixel(x, y));
 
-    // FIXME: Decode this successfully.
-    EXPECT(decoder->frame(2).is_error());
+    auto frame_3 = TRY_OR_FAIL(decoder->frame(2));
+    EXPECT_EQ(frame_3.image->size(), Gfx::IntSize(37, 8));
+
+    // The third frame is a subrect of the first two.
+    for (int y = 0; y < frame_3.image->height(); ++y)
+        for (int x = 0; x < frame_3.image->width(); ++x)
+            EXPECT_EQ(frame_3.image->get_pixel(x, y), frame_2.image->get_pixel(x + 4, y + 1));
 }
 
 TEST_CASE(test_qm_arithmetic_decoder)
