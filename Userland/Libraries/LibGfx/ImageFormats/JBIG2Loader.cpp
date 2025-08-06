@@ -1581,6 +1581,12 @@ struct TextRegionDecodingInputParameters {
     u8 refinement_template { 0 };                                        // "SBRTEMPLATE" in spec.
     Array<AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels; // "SBRATX" / "SBRATY" in spec.
     // FIXME: COLEXTFLAG, SBCOLS
+
+    // If uses_huffman_encoding is true, generic_region_decoding_procedure() reads data off this stream.
+    Stream* stream { nullptr };
+
+    // If uses_huffman_encoding is false, generic_region_decoding_procedure() reads data off this decoder.
+    QMArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
 struct TextContexts {
@@ -1602,16 +1608,14 @@ struct TextContexts {
 };
 
 // 6.4 Text Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Optional<TextContexts>& text_contexts, Optional<RefinementContexts>& refinement_contexts)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, Optional<TextContexts>& text_contexts, Optional<RefinementContexts>& refinement_contexts)
 {
-    Optional<FixedMemoryStream> stream;
     Optional<BigEndianInputBitStream> bit_stream;
-    Optional<QMArithmeticDecoder> decoder;
+    QMArithmeticDecoder* decoder = nullptr;
     if (inputs.uses_huffman_encoding) {
-        stream = FixedMemoryStream { data };
-        bit_stream = BigEndianInputBitStream { MaybeOwned { stream.value() } };
+        bit_stream = BigEndianInputBitStream { MaybeOwned { *inputs.stream } };
     } else {
-        decoder = TRY(QMArithmeticDecoder::initialize(data));
+        decoder = inputs.arithmetic_decoder;
     }
 
     // 6.4.6 Strip delta T
@@ -1748,7 +1752,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
         refinement_inputs.reference_y_offset = floor_div(refinement_delta_height, 2) + refinement_y_offset;
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
-        refinement_result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, decoder.value(), refinement_contexts.value()));
+        refinement_result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, *decoder, refinement_contexts.value()));
         return refinement_result.ptr();
     };
 
@@ -3129,7 +3133,15 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     inputs.refinement_template = refinement_template;
     inputs.refinement_adaptive_template_pixels = adaptive_refinement_template;
 
-    auto result = TRY(text_region_decoding_procedure(inputs, data.slice(TRY(stream.tell())), text_contexts, refinement_contexts));
+    Optional<QMArithmeticDecoder> decoder;
+    if (uses_huffman_encoding) {
+        inputs.stream = &stream;
+    } else {
+        decoder = TRY(QMArithmeticDecoder::initialize(data.slice(TRY(stream.tell()))));
+        inputs.arithmetic_decoder = &decoder.value();
+    }
+
+    auto result = TRY(text_region_decoding_procedure(inputs, text_contexts, refinement_contexts));
 
     composite_bitbuffer(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
 
