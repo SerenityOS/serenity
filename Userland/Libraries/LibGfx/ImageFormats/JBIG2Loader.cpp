@@ -1583,8 +1583,26 @@ struct TextRegionDecodingInputParameters {
     // FIXME: COLEXTFLAG, SBCOLS
 };
 
+struct TextContexts {
+    explicit TextContexts(u32 id_symbol_code_length)
+        : id_decoder(id_symbol_code_length)
+    {
+    }
+
+    JBIG2::ArithmeticIntegerDecoder delta_t_integer_decoder;         // "IADT" in spec.
+    JBIG2::ArithmeticIntegerDecoder first_s_integer_decoder;         // "IAFS" in spec.
+    JBIG2::ArithmeticIntegerDecoder subsequent_s_integer_decoder;    // "IADS" in spec.
+    JBIG2::ArithmeticIntegerDecoder instance_t_integer_decoder;      // "IAIT" in spec.
+    JBIG2::ArithmeticIntegerIDDecoder id_decoder;                    // "IAID" in spec.
+    JBIG2::ArithmeticIntegerDecoder refinement_delta_width_decoder;  // "IARDW" in spec.
+    JBIG2::ArithmeticIntegerDecoder refinement_delta_height_decoder; // "IARDH" in spec.
+    JBIG2::ArithmeticIntegerDecoder refinement_x_offset_decoder;     // "IARDX" in spec.
+    JBIG2::ArithmeticIntegerDecoder refinement_y_offset_decoder;     // "IARDY" in spec.
+    JBIG2::ArithmeticIntegerDecoder has_refinement_image_decoder;    // "IARI" in spec.
+};
+
 // 6.4 Text Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Optional<RefinementContexts>& refinement_contexts)
+static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Optional<TextContexts>& text_contexts, Optional<RefinementContexts>& refinement_contexts)
 {
     Optional<FixedMemoryStream> stream;
     Optional<BigEndianInputBitStream> bit_stream;
@@ -1599,53 +1617,41 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     // 6.4.6 Strip delta T
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFDT and multiply the resulting value by SBSTRIPS.
     //  If SBHUFF is 0, decode a value using the IADT integer arithmetic decoding procedure (see Annex A) and multiply the resulting value by SBSTRIPS."
-    Optional<JBIG2::ArithmeticIntegerDecoder> delta_t_integer_decoder; // "IADT" in spec.
-    if (!inputs.uses_huffman_encoding)
-        delta_t_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_delta_t = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return TRY(inputs.delta_t_table->read_symbol_non_oob(*bit_stream)) * inputs.size_of_symbol_instance_strips;
-        return TRY(delta_t_integer_decoder->decode_non_oob(*decoder)) * inputs.size_of_symbol_instance_strips;
+        return TRY(text_contexts->delta_t_integer_decoder.decode_non_oob(*decoder)) * inputs.size_of_symbol_instance_strips;
     };
 
     // 6.4.7 First symbol instance S coordinate
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFFS.
     //  If SBHUFF is 0, decode a value using the IAFS integer arithmetic decoding procedure (see Annex A)."
-    Optional<JBIG2::ArithmeticIntegerDecoder> first_s_integer_decoder; // "IAFS" in spec.
-    if (!inputs.uses_huffman_encoding)
-        first_s_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_first_s = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.first_s_table->read_symbol_non_oob(*bit_stream);
-        return first_s_integer_decoder->decode_non_oob(*decoder);
+        return text_contexts->first_s_integer_decoder.decode_non_oob(*decoder);
     };
 
     // 6.4.8 Subsequent symbol instance S coordinate
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFDS.
     //  If SBHUFF is 0, decode a value using the IADS integer arithmetic decoding procedure (see Annex A).
     //  In either case it is possible that the result of this decoding is the out-of-band value OOB.""
-    Optional<JBIG2::ArithmeticIntegerDecoder> subsequent_s_integer_decoder; // "IADS" in spec.
-    if (!inputs.uses_huffman_encoding)
-        subsequent_s_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_subsequent_s = [&]() -> ErrorOr<Optional<i32>> {
         if (inputs.uses_huffman_encoding)
             return inputs.subsequent_s_table->read_symbol(*bit_stream);
-        return subsequent_s_integer_decoder->decode(*decoder);
+        return text_contexts->subsequent_s_integer_decoder.decode(*decoder);
     };
 
     // 6.4.9 Symbol instance T coordinate
     // "If SBSTRIPS == 1, then the value decoded is always zero. Otherwise:
     //  • If SBHUFF is 1, decode a value by reading ceil(log2(SBSTRIPS)) bits directly from the bitstream.
     //  • If SBHUFF is 0, decode a value using the IAIT integer arithmetic decoding procedure (see Annex A)."
-    Optional<JBIG2::ArithmeticIntegerDecoder> instance_t_integer_decoder; // "IAIT" in spec.
-    if (!inputs.uses_huffman_encoding)
-        instance_t_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_instance_t = [&]() -> ErrorOr<i32> {
         if (inputs.size_of_symbol_instance_strips == 1)
             return 0;
         if (inputs.uses_huffman_encoding)
             return TRY(bit_stream->read_bits(ceil(log2(inputs.size_of_symbol_instance_strips))));
-        return instance_t_integer_decoder->decode_non_oob(*decoder);
+        return text_contexts->instance_t_integer_decoder.decode_non_oob(*decoder);
     };
 
     // 6.4.10 Symbol instance symbol ID
@@ -1653,68 +1659,49 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     //  SBSYMCODES. The resulting value, which is IDI, is the index of the entry in SBSYMCODES that is read.
     //  If SBHUFF is 0, decode a value using the IAID integer arithmetic decoding procedure (see Annex A). Set IDI to the
     //  resulting value."
-    Optional<JBIG2::ArithmeticIntegerIDDecoder> id_decoder; // "IAID" in spec.
-    if (!inputs.uses_huffman_encoding)
-        id_decoder = JBIG2::ArithmeticIntegerIDDecoder(inputs.id_symbol_code_length);
     auto read_symbol_id = [&]() -> ErrorOr<u32> {
         if (inputs.uses_huffman_encoding)
             return inputs.symbol_id_table->read_symbol_non_oob(*bit_stream);
-        return id_decoder->decode(*decoder);
+        return text_contexts->id_decoder.decode(*decoder);
     };
 
     // 6.4.11.1 Symbol instance refinement delta width
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFRDW.
     //  If SBHUFF is 0, decode a value using the IARDW integer arithmetic decoding procedure (see Annex A)."
-    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_delta_width_decoder; // "IARDW" in spec.
-    if (!inputs.uses_huffman_encoding)
-        refinement_delta_width_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_refinement_delta_width = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.refinement_delta_width_table->read_symbol_non_oob(*bit_stream);
-        return refinement_delta_width_decoder->decode_non_oob(*decoder);
+        return text_contexts->refinement_delta_width_decoder.decode_non_oob(*decoder);
     };
 
     // 6.4.11.2 Symbol instance refinement delta height
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFRDH.
     //  If SBHUFF is 0, decode a value using the IARDH integer arithmetic decoding procedure (see Annex A)."
-    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_delta_height_decoder; // "IARDH" in spec.
-    if (!inputs.uses_huffman_encoding)
-        refinement_delta_height_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_refinement_delta_height = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.refinement_delta_height_table->read_symbol_non_oob(*bit_stream);
-        return refinement_delta_height_decoder->decode_non_oob(*decoder);
+        return text_contexts->refinement_delta_height_decoder.decode_non_oob(*decoder);
     };
 
     // 6.4.11.3 Symbol instance refinement X offset
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFRDX.
     //  If SBHUFF is 0, decode a value using the IARDX integer arithmetic decoding procedure (see Annex A)."
-    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_x_offset_decoder; // "IARDX" in spec.
-    if (!inputs.uses_huffman_encoding)
-        refinement_x_offset_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_refinement_x_offset = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.refinement_x_offset_table->read_symbol_non_oob(*bit_stream);
-        return refinement_x_offset_decoder->decode_non_oob(*decoder);
+        return text_contexts->refinement_x_offset_decoder.decode_non_oob(*decoder);
     };
 
     // 6.4.11.4 Symbol instance refinement Y offset
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFRDY.
     //  If SBHUFF is 0, decode a value using the IARDY integer arithmetic decoding procedure (see Annex A)."
-    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_y_offset_decoder; // "IARDY" in spec.
-    if (!inputs.uses_huffman_encoding)
-        refinement_y_offset_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_refinement_y_offset = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.refinement_y_offset_table->read_symbol_non_oob(*bit_stream);
-        return refinement_y_offset_decoder->decode_non_oob(*decoder);
+        return text_contexts->refinement_y_offset_decoder.decode_non_oob(*decoder);
     };
 
     // 6.4.11 Symbol instance bitmap
-    Optional<JBIG2::ArithmeticIntegerDecoder> has_refinement_image_decoder; // "IARI" in spec.
-    if (!inputs.uses_huffman_encoding)
-        has_refinement_image_decoder = JBIG2::ArithmeticIntegerDecoder {};
-
     OwnPtr<BitBuffer> refinement_result;
     auto read_bitmap = [&](u32 id) -> ErrorOr<BitBuffer const*> {
         if (id >= inputs.symbols.size())
@@ -1728,7 +1715,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
             if (inputs.uses_huffman_encoding)
                 has_refinement_image = TRY(bit_stream->read_bit());
             else
-                has_refinement_image = TRY(has_refinement_image_decoder->decode_non_oob(*decoder));
+                has_refinement_image = TRY(text_contexts->has_refinement_image_decoder.decode_non_oob(*decoder));
         }
 
         // "If RI is 0 then set the symbol instance bitmap IBI to SBSYMS[IDI]."
@@ -3107,6 +3094,10 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     // Done further up, since it's needed to decode the symbol ID Huffman table already.
 
     // "3) As described in E.3.7, reset all the arithmetic coding statistics to zero."
+    u32 id_symbol_code_length = ceil(log2(symbols.size()));
+    Optional<TextContexts> text_contexts;
+    if (!uses_huffman_encoding)
+        text_contexts = TextContexts { id_symbol_code_length };
     Optional<RefinementContexts> refinement_contexts;
     if (uses_refinement_coding)
         refinement_contexts = RefinementContexts { refinement_template };
@@ -3125,7 +3116,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     inputs.number_of_instances = number_of_symbol_instances;
     inputs.size_of_symbol_instance_strips = strip_size;
     inputs.symbol_id_table = symbol_id_table;
-    inputs.id_symbol_code_length = ceil(log2(symbols.size()));
+    inputs.id_symbol_code_length = id_symbol_code_length;
     inputs.symbols = move(symbols);
     inputs.first_s_table = first_s_table;
     inputs.subsequent_s_table = subsequent_s_table;
@@ -3138,7 +3129,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     inputs.refinement_template = refinement_template;
     inputs.refinement_adaptive_template_pixels = adaptive_refinement_template;
 
-    auto result = TRY(text_region_decoding_procedure(inputs, data.slice(TRY(stream.tell())), refinement_contexts));
+    auto result = TRY(text_region_decoding_procedure(inputs, data.slice(TRY(stream.tell())), text_contexts, refinement_contexts));
 
     composite_bitbuffer(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
 
