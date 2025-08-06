@@ -3809,6 +3809,7 @@ ErrorOr<ImageFrameDescriptor> JBIG2ImageDecoderPlugin::frame(size_t index, Optio
     if (m_context->current_page_number != m_context->page_numbers[index]) {
         m_context->current_page_number = m_context->page_numbers[index];
         m_context->state = JBIG2LoadingContext::State::NotDecoded;
+        TRY(scan_for_page_size(*m_context));
     }
 
     if (m_context->state == JBIG2LoadingContext::State::Error)
