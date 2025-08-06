@@ -1983,12 +1983,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     };
 
     // 6.5.8.1 Direct-coded symbol bitmap
-    Optional<JBIG2::ArithmeticIntegerIDDecoder> id_decoder;                // "IAID" in spec.
-    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_x_offset_decoder; // "IARDX" in spec.
-    Optional<JBIG2::ArithmeticIntegerDecoder> refinement_y_offset_decoder; // "IARDY" in spec.
-
-    // FIXME: When we implement REFAGGNINST > 1 support, do these need to be shared with
-    // text_region_decoding_procedure() then?
+    Optional<TextContexts> text_contexts;
     Optional<RefinementContexts> refinement_contexts;
 
     // This belongs in 6.5.5 1) below, but also needs to be captured by read_bitmap here.
@@ -2021,34 +2016,58 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         auto number_of_symbol_instances = TRY(read_number_of_symbol_instances()); // "REFAGGNINST" in spec.
         dbgln_if(JBIG2_DEBUG, "Number of symbol instances: {}", number_of_symbol_instances);
 
-        if (number_of_symbol_instances > 1) {
-            // "2) If REFAGGNINST is greater than one, then decode the bitmap itself using a text region decoding procedure
-            //     as described in 6.4. Set the parameters to this decoding procedure as shown in Table 17."
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode symbol bitmaps with more than one symbol instance yet");
-        }
-
-        // "3) If REFAGGNINST is equal to one, then decode the bitmap as described in 6.5.8.2.2."
-
         // 6.5.8.2.3 Setting SBSYMCODES and SBSYMCODELEN
         // FIXME: Implement support for SDHUFF = 1
         u32 code_length = ceil(log2(inputs.input_symbols.size() + inputs.number_of_new_symbols));
+
+        if (!text_contexts.has_value())
+            text_contexts = TextContexts { code_length };
+        if (!refinement_contexts.has_value())
+            refinement_contexts = RefinementContexts(inputs.refinement_template);
+
+        if (number_of_symbol_instances > 1) {
+            // "2) If REFAGGNINST is greater than one, then decode the bitmap itself using a text region decoding procedure
+            //     as described in 6.4. Set the parameters to this decoding procedure as shown in Table 17."
+
+            // Table 17 – Parameters used to decode a symbol's bitmap using refinement/aggregate decoding
+            TextRegionDecodingInputParameters text_inputs;
+            text_inputs.uses_huffman_encoding = inputs.uses_huffman_encoding;
+            text_inputs.uses_refinement_coding = true;
+            text_inputs.region_width = width;
+            text_inputs.region_height = height;
+            text_inputs.number_of_instances = number_of_symbol_instances;
+            text_inputs.size_of_symbol_instance_strips = 1;
+            text_inputs.id_symbol_code_length = code_length;
+
+            // 6.5.8.2.4 Setting SBSYMS
+            // "Set SBSYMS to an array of SDNUMINSYMS + NSYMSDECODED symbols, formed by concatenating the array
+            //  SDINSYMS and the first NSYMSDECODED entries of the array SDNEWSYMS."
+            text_inputs.symbols.extend(inputs.input_symbols);
+            text_inputs.symbols.extend(new_symbols);
+
+            text_inputs.default_pixel = 0;
+            text_inputs.operator_ = CombinationOperator::Or;
+            text_inputs.is_transposed = false;
+            text_inputs.reference_corner = TextRegionDecodingInputParameters::Corner::TopLeft;
+            text_inputs.delta_s_offset = 0;
+            // FIXME: Huffman tables.
+            text_inputs.refinement_template = inputs.refinement_template;
+            text_inputs.refinement_adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
+
+            text_inputs.arithmetic_decoder = &decoder.value();
+            return text_region_decoding_procedure(text_inputs, text_contexts, refinement_contexts);
+        }
+
+        // "3) If REFAGGNINST is equal to one, then decode the bitmap as described in 6.5.8.2.2."
 
         // 6.5.8.2.2 Decoding a bitmap when REFAGGNINST = 1
         // FIXME: This is missing some steps for the SDHUFF = 1 case.
         if (number_of_symbol_instances != 1)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unexpected number of symbol instances");
 
-        if (!id_decoder.has_value())
-            id_decoder = JBIG2::ArithmeticIntegerIDDecoder(code_length);
-        u32 symbol_id = id_decoder->decode(*decoder);
-
-        if (!refinement_x_offset_decoder.has_value())
-            refinement_x_offset_decoder = JBIG2::ArithmeticIntegerDecoder {};
-        i32 refinement_x_offset = TRY(refinement_x_offset_decoder->decode_non_oob(*decoder));
-
-        if (!refinement_y_offset_decoder.has_value())
-            refinement_y_offset_decoder = JBIG2::ArithmeticIntegerDecoder {};
-        i32 refinement_y_offset = TRY(refinement_y_offset_decoder->decode_non_oob(*decoder));
+        u32 symbol_id = text_contexts->id_decoder.decode(*decoder);
+        i32 refinement_x_offset = TRY(text_contexts->refinement_x_offset_decoder.decode_non_oob(*decoder));
+        i32 refinement_y_offset = TRY(text_contexts->refinement_y_offset_decoder.decode_non_oob(*decoder));
 
         if (symbol_id >= inputs.input_symbols.size() && symbol_id - inputs.input_symbols.size() >= new_symbols.size())
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Refinement/aggregate symbol ID out of range");
@@ -2064,8 +2083,6 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         refinement_inputs.reference_y_offset = refinement_y_offset;
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
-        if (!refinement_contexts.has_value())
-            refinement_contexts = RefinementContexts(inputs.refinement_template);
         return generic_refinement_region_decoding_procedure(refinement_inputs, decoder.value(), refinement_contexts.value());
     };
 
