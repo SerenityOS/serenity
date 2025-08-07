@@ -39,6 +39,8 @@ int sigwaitinfo(sigset_t const*, siginfo_t*);
 int raise(int sig);
 int getsignalbyname(char const*);
 char const* getsignalname(int);
+int sig2str(int signum, char* str);
+int str2sig(char const* __restrict__ str, int* __restrict__ pnum);
 
 extern char const* sys_siglist[NSIG];
 extern char const* sys_signame[NSIG];

@@ -267,4 +267,78 @@ char const* getsignalname(int signal)
 
     return result;
 }
+
+// https://pubs.opengroup.org/onlinepubs/9799919799/functions/sig2str.html
+int sig2str(int signum, char* str)
+{
+    VERIFY(str);
+
+    // If signum is equal to 0, the behavior is unspecified.
+    if (signum <= 0)
+        return -1;
+
+    // If signum is a valid, supported signal number (...), the sig2str()
+    // function shall return 0; otherwise, if signum is not equal to 0, it shall
+    // return -1.
+    if (signum < 0 || signum >= NSIG)
+        return -1;
+
+    // If signum is equal to one of the symbolic constants listed in the table
+    // of signal numbers in <signal.h>, the stored signal name shall be the
+    // name of the symbolic constant without the SIG prefix.
+    if (sys_signame[signum]) {
+        size_t signal_string_length = strlen(sys_signame[signum]);
+        memcpy(str, sys_signame[signum], signal_string_length);
+        str[signal_string_length] = 0;
+        return 0;
+    }
+
+    // FIXME: Handle realtime signals.
+
+    return -1;
+}
+
+// https://pubs.opengroup.org/onlinepubs/9799919799/functions/str2sig.html
+int str2sig(char const* __restrict__ str, int* __restrict__ pnum)
+{
+    VERIFY(str);
+    VERIFY(pnum);
+
+    // If str points to a string containing the name of one of the symbolic
+    // constants listed in the table of signal numbers in <signal.h>, without
+    // the SIG prefix, the stored signal number shall be equal to the value of
+    // the symbolic constant.
+    for (int i = 1; i < NSIG; ++i) {
+        if (!sys_signame[i])
+            continue;
+        if (strcmp(str, sys_signame[i]) == 0) {
+            *pnum = i;
+            return 0;
+        }
+    }
+
+    // FIXME: Handle realtime signals.
+
+    // If str points to a string containing a decimal representation of a valid,
+    // supported signal number, the value stored in the location pointed to by
+    // pnum shall be equal to that number.
+    int parsed_number = 0;
+    for (size_t i = 0; str[i]; ++i) {
+        if (str[i] < '0' || str[i] > '9')
+            return -1;
+        parsed_number = (parsed_number * 10) + (str[i] - '0');
+    }
+
+    // If str points to a string containing a decimal representation of the
+    // value 0 and the string was not returned by a previous successful call
+    // to sig2str() with a signum argument of 0, the behavior is unspecified.
+    if (parsed_number <= 0)
+        return -1;
+
+    if (parsed_number >= NSIG || !sys_signame[parsed_number])
+        return -1;
+
+    *pnum = parsed_number;
+    return 0;
+}
 }
