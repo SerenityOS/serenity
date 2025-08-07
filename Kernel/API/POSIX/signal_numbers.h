@@ -40,3 +40,7 @@
 #define SIGSYS 31
 #define SIGCANCEL 32
 #define NSIG 33
+
+// sig2str doesn't include the SIG prefix, but it does include a null
+// terminator, so this is (strlen(longest string) - 3 + 1).
+#define SIG2STR_MAX 7
