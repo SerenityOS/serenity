@@ -49,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int pid_argi = 1;
     if (argc == 3) {
         pid_argi = 2;
-        if (strings[1][0] != '-')
+        if (strings[1][0] != '-' || strings[1].length() <= 1)
             print_usage_and_exit();
 
         Optional<unsigned> number;
