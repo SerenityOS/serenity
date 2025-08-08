@@ -1926,6 +1926,13 @@ struct SymbolDictionaryDecodingInputParameters {
     Array<AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels; // "SDRATX" / "SDRATY" in spec.
 };
 
+struct SymbolContexts {
+    JBIG2::ArithmeticIntegerDecoder delta_height_integer_decoder;       // "IADH" in spec.
+    JBIG2::ArithmeticIntegerDecoder delta_width_integer_decoder;        // "IADW" in spec.
+    JBIG2::ArithmeticIntegerDecoder number_of_symbol_instances_decoder; // "IAAI" in spec.
+    JBIG2::ArithmeticIntegerDecoder export_integer_decoder;             // "IAEX" in spec.
+};
+
 // 6.5 Symbol Dictionary Decoding Procedure
 static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedure(SymbolDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data)
 {
@@ -1933,37 +1940,33 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     Optional<BigEndianInputBitStream> bit_stream;
     Optional<QMArithmeticDecoder> decoder;
     Optional<GenericContexts> contexts;
+    Optional<SymbolContexts> symbol_contexts;
     if (inputs.uses_huffman_encoding) {
         stream = FixedMemoryStream { data };
         bit_stream = BigEndianInputBitStream { MaybeOwned { stream.value() } };
     } else {
         decoder = TRY(QMArithmeticDecoder::initialize(data));
         contexts = GenericContexts { inputs.symbol_template };
+        symbol_contexts = SymbolContexts {};
     }
 
     // 6.5.6 Height class delta height
     // "If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFDH.
     //  If SDHUFF is 0, decode a value using the IADH integer arithmetic decoding procedure (see Annex A)."
-    Optional<JBIG2::ArithmeticIntegerDecoder> delta_height_integer_decoder; // "IADH" in spec.
-    if (!inputs.uses_huffman_encoding)
-        delta_height_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_delta_height = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.delta_height_table->read_symbol_non_oob(*bit_stream);
-        return delta_height_integer_decoder->decode_non_oob(*decoder);
+        return symbol_contexts->delta_height_integer_decoder.decode_non_oob(*decoder);
     };
 
     // 6.5.7 Delta width
     // "If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFDW.
     //  If SDHUFF is 0, decode a value using the IADW integer arithmetic decoding procedure (see Annex A).
     //  In either case it is possible that the result of this decoding is the out-of-band value OOB."
-    Optional<JBIG2::ArithmeticIntegerDecoder> delta_width_integer_decoder; // "IADW" in spec.
-    if (!inputs.uses_huffman_encoding)
-        delta_width_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
     auto read_delta_width = [&]() -> ErrorOr<Optional<i32>> {
         if (inputs.uses_huffman_encoding)
             return inputs.delta_width_table->read_symbol(*bit_stream);
-        return delta_width_integer_decoder->decode(*decoder);
+        return symbol_contexts->delta_width_integer_decoder.decode(*decoder);
     };
 
     // 6.5.8 Symbol bitmap
@@ -1977,9 +1980,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     auto read_number_of_symbol_instances = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.number_of_symbol_instances_table->read_symbol_non_oob(*bit_stream);
-        if (!number_of_symbol_instances_decoder.has_value())
-            number_of_symbol_instances_decoder = JBIG2::ArithmeticIntegerDecoder {};
-        return number_of_symbol_instances_decoder->decode_non_oob(*decoder);
+        return symbol_contexts->number_of_symbol_instances_decoder.decode_non_oob(*decoder);
     };
 
     // 6.5.8.1 Direct-coded symbol bitmap
@@ -2218,11 +2219,8 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     //     bitmaps can be drawn from the symbols that are used as input to the symbol dictionary decoding
     //     procedure as well as the new symbols produced by the decoding procedure."
     Optional<JBIG2::HuffmanTable*> export_table;
-    Optional<JBIG2::ArithmeticIntegerDecoder> export_integer_decoder;
     if (inputs.uses_huffman_encoding)
         export_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
-    else
-        export_integer_decoder = JBIG2::ArithmeticIntegerDecoder {};
 
     // 6.5.10 Exported symbols
     Vector<bool> export_flags;
@@ -2241,7 +2239,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         if (inputs.uses_huffman_encoding)
             export_run_length = TRY(export_table.value()->read_symbol_non_oob(*bit_stream));
         else
-            export_run_length = TRY(export_integer_decoder->decode_non_oob(*decoder));
+            export_run_length = TRY(symbol_contexts->export_integer_decoder.decode_non_oob(*decoder));
 
         // "3) Set EXFLAGS[EXINDEX] through EXFLAGS[EXINDEX + EXRUNLENGTH – 1] to CUREXFLAG.
         //  If EXRUNLENGTH = 0, then this step does not change any values."
