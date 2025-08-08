@@ -30,6 +30,7 @@ set(TEST_SOURCES
     TestRealpath.cpp
     TestScanf.cpp
     TestSearch.cpp
+    TestSignal.cpp
     TestSnprintf.cpp
     TestStackSmash.cpp
     TestStdio.cpp
