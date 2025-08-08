@@ -19,13 +19,10 @@ if (ENABLE_QT)
     target_sources(WebContent PRIVATE
         ../Qt/EventLoopImplementationQt.cpp
         ../Qt/EventLoopImplementationQtEventTarget.cpp
-        ../Qt/RequestManagerQt.cpp
         ../Qt/StringUtils.cpp
-        ../Qt/WebSocketQt.cpp
-        ../Qt/WebSocketImplQt.cpp
         main.cpp
     )
-    target_link_libraries(WebContent PRIVATE Qt::Core Qt::Network)
+    target_link_libraries(WebContent PRIVATE Qt::Core)
     target_compile_definitions(WebContent PRIVATE HAVE_QT=1)
     set_target_properties(WebContent PROPERTIES AUTOMOC ON)
 else()

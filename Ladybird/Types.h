@@ -30,11 +30,6 @@ enum class IsLayoutTestMode {
     Yes
 };
 
-enum class UseLagomNetworking {
-    No,
-    Yes
-};
-
 enum class WaitForDebugger {
     No,
     Yes
@@ -67,7 +62,6 @@ struct WebContentOptions {
     EnableGPUPainting enable_gpu_painting { EnableGPUPainting::No };
     EnableExperimentalCPUTransforms enable_experimental_cpu_transforms { EnableExperimentalCPUTransforms::No };
     IsLayoutTestMode is_layout_test_mode { IsLayoutTestMode::No };
-    UseLagomNetworking use_lagom_networking { UseLagomNetworking::Yes };
     WaitForDebugger wait_for_debugger { WaitForDebugger::No };
     LogAllJSExceptions log_all_js_exceptions { LogAllJSExceptions::No };
     EnableIDLTracing enable_idl_tracing { EnableIDLTracing::No };

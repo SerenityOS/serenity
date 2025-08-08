@@ -28,7 +28,6 @@
 
 #if defined(HAVE_QT)
 #    include <Ladybird/Qt/EventLoopImplementationQt.h>
-#    include <Ladybird/Qt/RequestManagerQt.h>
 #    include <QCoreApplication>
 #endif
 
@@ -40,12 +39,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     int request_server_socket { -1 };
     StringView serenity_resource_root;
-    bool use_lagom_networking { false };
 
     Core::ArgsParser args_parser;
     args_parser.add_option(request_server_socket, "File descriptor of the request server socket", "request-server-socket", 's', "request-server-socket");
     args_parser.add_option(serenity_resource_root, "Absolute path to directory for serenity resources", "serenity-resource-root", 'r', "serenity-resource-root");
-    args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking");
     args_parser.parse(arguments);
 
 #if defined(HAVE_QT)
@@ -60,12 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Web::Platform::FontPlugin::install(*new Web::Platform::FontPluginSerenity);
 
-#if defined(HAVE_QT)
-    if (!use_lagom_networking)
-        Web::ResourceLoader::initialize(Ladybird::RequestManagerQt::create());
-    else
-#endif
-        TRY(initialize_lagom_networking(request_server_socket));
+    TRY(initialize_lagom_networking(request_server_socket));
 
     TRY(Web::Bindings::initialize_main_thread_vm(Web::HTML::EventLoop::Type::Worker));
 
