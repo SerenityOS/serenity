@@ -1939,14 +1939,14 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     Optional<FixedMemoryStream> stream;
     Optional<BigEndianInputBitStream> bit_stream;
     Optional<QMArithmeticDecoder> decoder;
-    Optional<GenericContexts> contexts;
+    Optional<GenericContexts> generic_contexts;
     Optional<SymbolContexts> symbol_contexts;
     if (inputs.uses_huffman_encoding) {
         stream = FixedMemoryStream { data };
         bit_stream = BigEndianInputBitStream { MaybeOwned { stream.value() } };
     } else {
         decoder = TRY(QMArithmeticDecoder::initialize(data));
-        contexts = GenericContexts { inputs.symbol_template };
+        generic_contexts = GenericContexts { inputs.symbol_template };
         symbol_contexts = SymbolContexts {};
     }
 
@@ -2009,7 +2009,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             for (int i = 0; i < 4; ++i)
                 generic_inputs.adaptive_template_pixels[i] = inputs.adaptive_template_pixels[i];
             generic_inputs.arithmetic_decoder = &decoder.value();
-            return generic_region_decoding_procedure(generic_inputs, contexts);
+            return generic_region_decoding_procedure(generic_inputs, generic_contexts);
         }
 
         // 6.5.8.2 Refinement/aggregate-coded symbol bitmap
@@ -2119,7 +2119,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             TRY(stream->discard(bitmap_size));
             FixedMemoryStream bitmap_stream { bitmap_data };
             generic_inputs.stream = &bitmap_stream;
-            return generic_region_decoding_procedure(generic_inputs, contexts);
+            return generic_region_decoding_procedure(generic_inputs, generic_contexts);
         }());
 
         // "5) Skip over any bits remaining in the last byte read."
