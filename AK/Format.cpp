@@ -1165,7 +1165,7 @@ void vdbg(StringView fmtstr, TypeErasedFormatParams& params, bool newline)
         } else {
             builder.appendff("\033[34;1m[Kernel]\033[0m: ");
         }
-#elif !defined(AK_OS_WINDOWS)
+#else
         auto process_name = process_name_for_logging();
         if (!process_name.is_empty()) {
             struct timespec ts = {};

@@ -23,7 +23,7 @@ asm(".section .rodata\n"
     "brotli_dictionary_data:\n");
 #endif
 asm(".incbin \"" __FILE__ ".dict.bin\"\n"
-#if (!defined(AK_OS_WINDOWS) && !defined(AK_OS_EMSCRIPTEN))
+#if !defined(AK_OS_EMSCRIPTEN)
     ".previous\n");
 #else
 );

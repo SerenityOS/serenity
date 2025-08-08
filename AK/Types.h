@@ -142,11 +142,6 @@ using pid_t = int;
 #    ifdef __ptrdiff_t
 using __ptrdiff_t = __PTRDIFF_TYPE__;
 #    endif
-
-#    if defined(AK_OS_WINDOWS)
-using ssize_t = AK::Detail::MakeSigned<size_t>;
-using mode_t = unsigned short;
-#    endif
 #endif
 
 using FlatPtr = AK::Detail::Conditional<sizeof(void*) == 8, u64, u32>;

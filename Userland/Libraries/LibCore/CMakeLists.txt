@@ -65,7 +65,7 @@ set(SOURCES
     TCPServer.cpp
     UDPServer.cpp
 )
-if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
+if (NOT ANDROID AND NOT EMSCRIPTEN)
     list(APPEND SOURCES
         Account.cpp
         FilePermissionsMask.cpp
@@ -73,7 +73,7 @@ if (NOT ANDROID AND NOT WIN32 AND NOT EMSCRIPTEN)
         Group.cpp
     )
 endif()
-if (NOT WIN32 AND NOT EMSCRIPTEN)
+if (NOT EMSCRIPTEN)
     list(APPEND SOURCES LocalServer.cpp)
 endif()
 

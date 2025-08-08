@@ -45,7 +45,7 @@
 #    define AK_IS_ARCH_WASM32() 0
 #endif
 
-#if (defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 8) || defined(_WIN64)
+#if (defined(__SIZEOF_POINTER__) && __SIZEOF_POINTER__ == 8)
 #    define AK_ARCH_64_BIT
 #else
 #    define AK_ARCH_32_BIT
@@ -121,10 +121,6 @@
 
 #if defined(__MACH__)
 #    define AK_OS_MACH
-#endif
-
-#if defined(_WIN32) || defined(_WIN64)
-#    define AK_OS_WINDOWS
 #endif
 
 #if defined(__EMSCRIPTEN__)
@@ -251,18 +247,9 @@
 #endif
 
 #ifndef AK_OS_SERENITY
-#    ifdef AK_OS_WINDOWS
-// FIXME: No idea where to get this, but it's 4096 anyway :^)
-#        define PAGE_SIZE 4096
-#    else
-#        include <unistd.h>
-#        undef PAGE_SIZE
-#        define PAGE_SIZE sysconf(_SC_PAGESIZE)
-#    endif
-#endif
-
-#if defined(AK_OS_WINDOWS)
-#    define CLOCK_MONOTONIC_COARSE CLOCK_MONOTONIC
+#    include <unistd.h>
+#    undef PAGE_SIZE
+#    define PAGE_SIZE sysconf(_SC_PAGESIZE)
 #endif
 
 #if defined(AK_OS_BSD_GENERIC) && !defined(AK_OS_FREEBSD) || defined(AK_OS_HAIKU)
