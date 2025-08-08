@@ -987,6 +987,9 @@ static ErrorOr<RegionSegmentInformationField> decode_region_segment_information_
     if (result.is_color_bitmap() && result.external_combination_operator() != CombinationOperator::Replace)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid colored region segment information field operator");
 
+    if (result.is_color_bitmap())
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: COLEXTFLAG=1 not yet implemented");
+
     return result;
 }
 
