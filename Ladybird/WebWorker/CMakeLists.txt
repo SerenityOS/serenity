@@ -9,7 +9,6 @@ set(WEBWORKER_SOURCES
 )
 
 add_library(webworker STATIC ${WEBWORKER_SOURCES})
-set_target_properties(webworker PROPERTIES AUTOMOC OFF AUTORCC OFF AUTOUIC OFF)
 
 target_include_directories(webworker PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 target_include_directories(webworker PRIVATE ${SERENITY_SOURCE_DIR}/Userland/)
@@ -29,6 +28,7 @@ if (ENABLE_QT)
     target_link_libraries(WebWorker PRIVATE Qt::Core Qt::Network)
     target_link_libraries(WebWorker PRIVATE webworker LibWebSocket)
     target_compile_definitions(WebWorker PRIVATE HAVE_QT=1)
+    set_target_properties(WebWorker PROPERTIES AUTOMOC ON)
 
 else()
     add_executable(WebWorker main.cpp)
