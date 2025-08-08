@@ -4,10 +4,7 @@ import("//Ladybird/moc_qt_objects.gni")
 import("//Meta/gn/build/libs/pulse/enable.gni")
 
 moc_qt_objects("generate_moc") {
-  sources = [
-    "//Ladybird/Qt/EventLoopImplementationQtEventTarget.h",
-    "//Ladybird/Qt/RequestManagerQt.h",
-  ]
+  sources = [ "//Ladybird/Qt/EventLoopImplementationQtEventTarget.h" ]
 }
 
 link_qt("WebContent_qt") {
@@ -64,10 +61,7 @@ executable("WebContent") {
     sources += [
       "//Ladybird/Qt/EventLoopImplementationQt.cpp",
       "//Ladybird/Qt/EventLoopImplementationQtEventTarget.cpp",
-      "//Ladybird/Qt/RequestManagerQt.cpp",
       "//Ladybird/Qt/StringUtils.cpp",
-      "//Ladybird/Qt/WebSocketImplQt.cpp",
-      "//Ladybird/Qt/WebSocketQt.cpp",
     ]
 
     sources += get_target_outputs(":generate_moc")
