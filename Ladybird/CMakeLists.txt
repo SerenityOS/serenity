@@ -85,13 +85,6 @@ else()
     serenity_option(ENABLE_QT ON CACHE BOOL "Build ladybird application using Qt GUI")
 endif()
 
-if (ENABLE_QT)
-    set(CMAKE_AUTOMOC ON)
-    set(CMAKE_AUTORCC ON)
-    set(CMAKE_AUTOUIC ON)
-    find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
-endif()
-
 set(SOURCES
     HelperProcess.cpp
     Utilities.cpp
@@ -103,6 +96,7 @@ set(LADYBIRD_HEADERS
 )
 
 if (ENABLE_QT)
+    find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network)
     qt_add_executable(ladybird ${SOURCES})
     target_sources(ladybird PRIVATE
         Qt/Application.cpp
@@ -126,6 +120,7 @@ if (ENABLE_QT)
         Qt/main.cpp
     )
     target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets)
+    set_target_properties(ladybird PROPERTIES AUTOMOC ON AUTORCC ON)
 elseif (APPLE)
     add_executable(ladybird MACOSX_BUNDLE
         ${SOURCES}
