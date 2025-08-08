@@ -37,7 +37,6 @@
 
 #if defined(HAVE_QT)
 #    include <Ladybird/Qt/EventLoopImplementationQt.h>
-#    include <Ladybird/Qt/RequestManagerQt.h>
 #    include <QCoreApplication>
 #endif
 
@@ -93,7 +92,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int request_server_socket { -1 };
     bool is_layout_test_mode = false;
     bool expose_internals_object = false;
-    bool use_lagom_networking = false;
     bool use_gpu_painting = false;
     bool use_experimental_cpu_transform_support = false;
     bool wait_for_debugger = false;
@@ -107,7 +105,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(request_server_socket, "File descriptor of the socket for the RequestServer connection", "request-server-socket", 'r', "request_server_socket");
     args_parser.add_option(is_layout_test_mode, "Is layout test mode", "layout-test-mode");
     args_parser.add_option(expose_internals_object, "Expose internals object", "expose-internals-object");
-    args_parser.add_option(use_lagom_networking, "Enable Lagom servers for networking", "use-lagom-networking");
     args_parser.add_option(use_gpu_painting, "Enable GPU painting", "use-gpu-painting");
     args_parser.add_option(use_experimental_cpu_transform_support, "Enable experimental CPU transform support", "experimental-cpu-transforms");
     args_parser.add_option(wait_for_debugger, "Wait for debugger", "wait-for-debugger");
@@ -146,12 +143,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 #endif
 
-#if defined(HAVE_QT)
-    if (!use_lagom_networking)
-        Web::ResourceLoader::initialize(Ladybird::RequestManagerQt::create());
-    else
-#endif
-        TRY(initialize_lagom_networking(request_server_socket));
+    TRY(initialize_lagom_networking(request_server_socket));
 
     Web::HTML::Window::set_internals_object_exposed(expose_internals_object);
 
