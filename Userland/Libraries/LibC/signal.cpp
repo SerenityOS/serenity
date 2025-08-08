@@ -258,6 +258,9 @@ int sig2str(int signum, char* str)
     // name of the symbolic constant without the SIG prefix.
     if (sys_signame[signum]) {
         size_t signal_string_length = strlen(sys_signame[signum]);
+        // SIG2STR_MAX includes the null terminator while strlen does not,
+        // so the length must be at most SIG2STR_MAX - 1.
+        VERIFY(signal_string_length < SIG2STR_MAX);
         memcpy(str, sys_signame[signum], signal_string_length);
         str[signal_string_length] = 0;
         return 0;
