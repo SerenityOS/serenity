@@ -12,7 +12,6 @@ mkShell.override { stdenv = gcc13Stdenv; } {
     pkg-config
     qt6.qtbase
     qt6.qtbase.dev
-    qt6.qtmultimedia
     qt6.qttools
     qt6.qtwayland
     qt6.qtwayland.dev

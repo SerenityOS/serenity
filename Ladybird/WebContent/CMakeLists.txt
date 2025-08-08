@@ -28,18 +28,6 @@ if (ENABLE_QT)
     target_link_libraries(WebContent PRIVATE Qt::Core Qt::Network)
     target_compile_definitions(WebContent PRIVATE HAVE_QT=1)
     set_target_properties(WebContent PROPERTIES AUTOMOC ON)
-
-    if (NOT HAVE_PULSEAUDIO)
-        find_package(Qt6 REQUIRED COMPONENTS Multimedia)
-
-        target_sources(WebContent PRIVATE
-            ../Qt/AudioCodecPluginQt.cpp
-            ../Qt/AudioThread.cpp
-        )
-
-        target_link_libraries(WebContent PRIVATE Qt::Multimedia)
-        target_compile_definitions(WebContent PRIVATE HAVE_QT_MULTIMEDIA=1)
-    endif()
 else()
     set(LIB_TYPE STATIC)
     if (IOS)
