@@ -978,6 +978,8 @@ public:
         auto const num_pre_clustered_distributions = (tree.m_tree.size() + 1) / 2;
         decoder = TRY(EntropyDecoder::create(stream, num_pre_clustered_distributions));
 
+        tree.save_self_correction_usage();
+
         return tree;
     }
 
@@ -1003,7 +1005,29 @@ public:
         }
     }
 
+    bool use_self_correcting_predictor() const
+    {
+        return m_use_self_correcting_predictor;
+    }
+
 private:
+    void save_self_correction_usage()
+    {
+        for (auto const& node : m_tree) {
+            // We are looking for usage of the Self Correction predictor, so this includes both the
+            // 'max_error' property and the 'Self-correcting' predictor, They are given as index 15
+            // in Table H.4 — Property definitions and index 6 in Table H.3 — Modular predictors respectively.
+            auto const use_max_error = node.has<DecisionNode>() && node.get<DecisionNode>().property == 15;
+            auto const use_self_correcting = node.has<LeafNode>() && node.get<LeafNode>().predictor == 6;
+            if (use_max_error || use_self_correcting) {
+                m_use_self_correcting_predictor = true;
+                return;
+            }
+        }
+
+        m_use_self_correcting_predictor = false;
+    }
+
     struct DecisionNode {
         u64 property {};
         i64 value {};
@@ -1012,6 +1036,8 @@ private:
     };
 
     Vector<Variant<DecisionNode, LeafNode>> m_tree;
+
+    bool m_use_self_correcting_predictor { true };
 };
 ///
 
@@ -1868,7 +1894,9 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
             for (u32 x {}; x < channel.width(); x++) {
                 auto const neighborhood = retrieve_neighborhood(channel, x, y);
 
-                auto const self_prediction = self_correcting_data.compute_predictions(neighborhood, x);
+                SelfCorrectingData::Predictions self_prediction {};
+                if (tree.use_self_correcting_predictor())
+                    self_prediction = self_correcting_data.compute_predictions(neighborhood, x);
 
                 get_properties(properties, modular_data.channels, i, x, y, self_prediction.max_error);
                 auto const leaf_node = tree.get_leaf(properties);
@@ -1876,7 +1904,8 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
                 diff = (diff * leaf_node.multiplier) + leaf_node.offset;
                 auto const total = diff + prediction(neighborhood, self_prediction.prediction, leaf_node.predictor);
 
-                self_correcting_data.compute_errors(x, total);
+                if (tree.use_self_correcting_predictor())
+                    self_correcting_data.compute_errors(x, total);
                 channel.set(x, y, total);
             }
 
