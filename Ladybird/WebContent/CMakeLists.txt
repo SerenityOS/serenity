@@ -27,6 +27,7 @@ if (ENABLE_QT)
     )
     target_link_libraries(WebContent PRIVATE Qt::Core Qt::Network)
     target_compile_definitions(WebContent PRIVATE HAVE_QT=1)
+    set_target_properties(WebContent PROPERTIES AUTOMOC ON)
 
     if (NOT HAVE_PULSEAUDIO)
         find_package(Qt6 REQUIRED COMPONENTS Multimedia)
