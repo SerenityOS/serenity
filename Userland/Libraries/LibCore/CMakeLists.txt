@@ -65,16 +65,14 @@ set(SOURCES
     TCPServer.cpp
     UDPServer.cpp
 )
-if (NOT ANDROID AND NOT EMSCRIPTEN)
+if (NOT EMSCRIPTEN)
     list(APPEND SOURCES
         Account.cpp
         FilePermissionsMask.cpp
         GetPassword.cpp
         Group.cpp
+        LocalServer.cpp
     )
-endif()
-if (NOT EMSCRIPTEN)
-    list(APPEND SOURCES LocalServer.cpp)
 endif()
 
 # FIXME: Implement Core::FileWatcher for *BSD and Windows.
@@ -112,8 +110,4 @@ if (APPLE)
     target_link_libraries(LibCore PUBLIC "-framework CoreFoundation")
     target_link_libraries(LibCore PUBLIC "-framework CoreServices")
     target_link_libraries(LibCore PUBLIC "-framework Foundation")
-endif()
-
-if (ANDROID)
-    target_link_libraries(LibCore PRIVATE log)
 endif()

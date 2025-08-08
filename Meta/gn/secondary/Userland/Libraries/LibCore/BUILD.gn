@@ -41,6 +41,8 @@ source_set("sources") {
   include_dirs = [ "//Userland/Libraries" ]
   deps = [ "//AK" ]
   sources = [
+    "Account.cpp",
+    "Account.h",
     "AnonymousBuffer.cpp",
     "AnonymousBuffer.h",
     "Command.cpp",
@@ -61,6 +63,14 @@ source_set("sources") {
     "EventLoopImplementationUnix.h",
     "EventReceiver.cpp",
     "EventReceiver.h",
+    "FilePermissionsMask.cpp",
+    "FilePermissionsMask.h",
+    "GetPassword.cpp",
+    "GetPassword.h",
+    "Group.cpp",
+    "Group.h",
+    "LocalServer.cpp",
+    "LocalServer.h",
     "LockFile.cpp",
     "LockFile.h",
     "MappedFile.cpp",
@@ -104,20 +114,6 @@ source_set("sources") {
     "UDPServer.h",
     "UmaskScope.h",
   ]
-  if (current_os != "android") {
-    sources += [
-      "Account.cpp",
-      "Account.h",
-      "FilePermissionsMask.cpp",
-      "FilePermissionsMask.h",
-      "GetPassword.cpp",
-      "GetPassword.h",
-      "Group.cpp",
-      "Group.h",
-      "LocalServer.cpp",
-      "LocalServer.h",
-    ]
-  }
   if (current_os == "mac") {
     sources += [ "MachPort.cpp" ]
   }
@@ -160,7 +156,7 @@ source_set("filewatcher") {
 shared_library("LibCore") {
   libs = []
 
-  if (current_os == "linux" || current_os == "android") {
+  if (current_os == "linux") {
     libs += [ "dl" ]
   }
   if (current_os == "linux") {

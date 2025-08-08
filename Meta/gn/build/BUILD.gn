@@ -164,7 +164,7 @@ config("compiler_defaults") {
     }
   }
   if (sysroot != "") {
-    if (current_os != "mac" && current_os != "android") {
+    if (current_os != "mac") {
       cflags += [ "--sysroot=" + rebase_path(sysroot, root_build_dir) ]
       ldflags += [ "--sysroot=" + rebase_path(sysroot, root_build_dir) ]
     }
@@ -196,7 +196,7 @@ config("no_exceptions") {
 }
 
 config("zdefs") {
-  if (current_os != "mac" && current_os != "android") {
+  if (current_os != "mac") {
     ldflags = [ "-Wl,-z,defs" ]
   }
 }
