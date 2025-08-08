@@ -1229,7 +1229,7 @@ struct GenericContexts {
         contexts.resize(1 << number_of_context_bits_for_template(template_));
     }
 
-    Vector<QMArithmeticDecoder::Context> contexts;
+    Vector<QMArithmeticDecoder::Context> contexts; // "GB" (+ binary suffix) in spec.
 
 private:
     static u8 number_of_context_bits_for_template(u8 template_)
@@ -1457,7 +1457,7 @@ struct RefinementContexts {
         contexts.resize(1 << (refinement_template == 0 ? 13 : 10));
     }
 
-    Vector<QMArithmeticDecoder::Context> contexts;
+    Vector<QMArithmeticDecoder::Context> contexts; // "GR" (+ binary suffix) in spec.
 };
 
 // 6.3 Generic Refinement Region Decoding Procedure
