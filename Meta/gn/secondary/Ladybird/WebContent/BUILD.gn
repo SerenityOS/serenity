@@ -1,18 +1,4 @@
-import("//Ladybird/enable_qt.gni")
-import("//Ladybird/link_qt.gni")
-import("//Ladybird/moc_qt_objects.gni")
 import("//Meta/gn/build/libs/pulse/enable.gni")
-
-moc_qt_objects("generate_moc") {
-  sources = [ "//Ladybird/Qt/EventLoopImplementationQtEventTarget.h" ]
-}
-
-link_qt("WebContent_qt") {
-  qt_components = [
-    "Core",
-    "Network",
-  ]
-}
 
 executable("WebContent") {
   configs += [ "//Ladybird:ladybird_config" ]
@@ -54,19 +40,6 @@ executable("WebContent") {
     "//Userland/Services/WebContent/WebDriverConnection.cpp",
     "main.cpp",
   ]
-
-  if (enable_qt) {
-    defines = [ "HAVE_QT" ]
-    configs += [ ":WebContent_qt" ]
-    sources += [
-      "//Ladybird/Qt/EventLoopImplementationQt.cpp",
-      "//Ladybird/Qt/EventLoopImplementationQtEventTarget.cpp",
-      "//Ladybird/Qt/StringUtils.cpp",
-    ]
-
-    sources += get_target_outputs(":generate_moc")
-    deps += [ ":generate_moc" ]
-  }
 
   if (current_os == "linux" || current_os == "mac") {
     cflags_cc = [ "-DHAS_ACCELERATED_GRAPHICS" ]

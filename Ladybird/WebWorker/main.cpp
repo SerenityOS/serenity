@@ -26,11 +26,6 @@
 #include <LibWebView/WebSocketClientAdapter.h>
 #include <WebWorker/ConnectionFromClient.h>
 
-#if defined(HAVE_QT)
-#    include <Ladybird/Qt/EventLoopImplementationQt.h>
-#    include <QCoreApplication>
-#endif
-
 static ErrorOr<void> initialize_lagom_networking(int request_server_socket);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -45,10 +40,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(serenity_resource_root, "Absolute path to directory for serenity resources", "serenity-resource-root", 'r', "serenity-resource-root");
     args_parser.parse(arguments);
 
-#if defined(HAVE_QT)
-    QCoreApplication app(arguments.argc, arguments.argv);
-    Core::EventLoopManager::install(*new Ladybird::EventLoopManagerQt);
-#endif
     Core::EventLoop event_loop;
 
     platform_init();
