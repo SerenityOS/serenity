@@ -35,11 +35,6 @@
 #include <WebContent/PageClient.h>
 #include <WebContent/WebDriverConnection.h>
 
-#if defined(HAVE_QT)
-#    include <Ladybird/Qt/EventLoopImplementationQt.h>
-#    include <QCoreApplication>
-#endif
-
 #if defined(AK_OS_MACOS)
 #    include <LibCore/Platform/ProcessStatisticsMach.h>
 #endif
@@ -64,11 +59,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     AK::set_rich_debug_enabled(true);
 
-#if defined(HAVE_QT)
-    QCoreApplication app(arguments.argc, arguments.argv);
-
-    Core::EventLoopManager::install(*new Ladybird::EventLoopManagerQt);
-#endif
     Core::EventLoop event_loop;
 
     platform_init();

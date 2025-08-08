@@ -310,6 +310,11 @@ serenity_cherry_picks.add('50dc1c3c19b82af797c79b5aa694b3ac7f0114bb')
 # PR https://github.com/SerenityOS/serenity/pull/26114
 serenity_cherry_picks.add('1b324f3ae11d4f5750d89183f97bb3b3b2b4f801')
 
+# WebContent and WebWorker stopped linking to Qt in the last commit of
+# https://github.com/LadybirdBrowser/ladybird/pull/5331 and in serenity's
+# PR https://github.com/SerenityOS/serenity/pull/26114
+serenity_cherry_picks.add('62c5f4b822d62d6be8905dafc84341370491cd1e')
+
 # Define a list of pull request IDs that should never be merged
 # and the reasons why they shouldn't be merged.
 # We fairly likely don't want the PRs in here (but it isn't 100% set
