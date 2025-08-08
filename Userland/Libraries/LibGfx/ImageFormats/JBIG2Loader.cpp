@@ -412,12 +412,14 @@ ErrorOr<HuffmanTable*> HuffmanTable::standard_huffman_table(StandardTable kind)
         return &standard_table_B;
     }
     case StandardTable::B_3:
+        // If you find a file using this, get the table from #26104.
         return Error::from_string_literal("Standard table C not yet supported");
     case StandardTable::B_4: {
         static HuffmanTable standard_table_D(standard_huffman_table_D);
         return &standard_table_D;
     }
     case StandardTable::B_5:
+        // If you find a file using this, get the table from #26104.
         return Error::from_string_literal("Standard table E not yet supported");
     case StandardTable::B_6: {
         static HuffmanTable standard_table_F(standard_huffman_table_F);
@@ -456,6 +458,7 @@ ErrorOr<HuffmanTable*> HuffmanTable::standard_huffman_table(StandardTable kind)
         return &standard_table_N;
     }
     case StandardTable::B_15:
+        // If you find a file using this, get the table from #26104.
         return Error::from_string_literal("Standard table O not yet supported");
     }
     VERIFY_NOT_REACHED();
