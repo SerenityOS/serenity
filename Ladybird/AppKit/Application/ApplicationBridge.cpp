@@ -59,7 +59,9 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ApplicationBridge::launch_web_
 ErrorOr<IPC::File> ApplicationBridge::launch_web_worker()
 {
     auto web_worker_paths = TRY(get_paths_for_helper_process("WebWorker"sv));
-    auto worker_client = TRY(launch_web_worker_process(web_worker_paths, m_impl->request_server_client));
+
+    VERIFY(!m_impl->request_server_client.is_null());
+    auto worker_client = TRY(launch_web_worker_process(web_worker_paths, m_impl->request_server_client.release_nonnull()));
 
     return worker_client->dup_socket();
 }

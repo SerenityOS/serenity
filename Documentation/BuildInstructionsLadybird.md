@@ -7,12 +7,10 @@
 
 Qt6 development packages and a C++23 capable compiler are required. g++-13 or clang-17 are required at a minimum for c++23 support.
 
-NOTE: In all of the below lists of packages, the Qt6 multimedia package is not needed if your Linux system supports PulseAudio.
-
 On Debian/Ubuntu required packages include, but are not limited to:
 
 ```
-sudo apt install build-essential cmake libgl1-mesa-dev ninja-build qt6-base-dev qt6-tools-dev-tools qt6-multimedia-dev ccache
+sudo apt install build-essential cmake libgl1-mesa-dev ninja-build qt6-base-dev qt6-tools-dev-tools ccache
 ```
 
 For Ubuntu 20.04 and above, ensure that the Qt6 Wayland packages are available:
@@ -24,19 +22,19 @@ sudo apt install qt6-wayland
 On Arch Linux/Manjaro:
 
 ```
-sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayland qt6-multimedia ccache
+sudo pacman -S --needed base-devel cmake libgl ninja qt6-base qt6-tools qt6-wayland ccache
 ```
 
 On Fedora or derivatives:
 
 ```
-sudo dnf install cmake libglvnd-devel ninja-build qt6-qtbase-devel qt6-qttools-devel qt6-qtwayland-devel qt6-qtmultimedia-devel ccache
+sudo dnf install cmake libglvnd-devel ninja-build qt6-qtbase-devel qt6-qttools-devel qt6-qtwayland-devel ccache
 ```
 
 On openSUSE:
 
 ```
-sudo zypper install cmake libglvnd-devel ninja qt6-base-devel qt6-multimedia-devel qt6-tools-devel qt6-wayland-devel ccache
+sudo zypper install cmake libglvnd-devel ninja qt6-base-devel qt6-tools-devel qt6-wayland-devel ccache
 ```
 
 On NixOS or with Nix:
@@ -83,7 +81,7 @@ pfexec pkg install cmake ninja clang-17 libglvnd qt6
 On Haiku:
 
 ```
-pkgman install cmake ninja cmd:python3 qt6_base_devel qt6_multimedia_devel qt6_tools_devel openal_devel
+pkgman install cmake ninja cmd:python3 qt6_base_devel qt6_tools_devel openal_devel
 ```
 
 On Windows:

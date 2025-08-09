@@ -230,6 +230,7 @@ icons_16x16 = [
   "//Base/res/icons/16x16/app-system-monitor.png",
   "//Base/res/icons/16x16/audio-volume-high.png",
   "//Base/res/icons/16x16/audio-volume-muted.png",
+  "//Base/res/icons/16x16/box.png",
   "//Base/res/icons/16x16/close-tab.png",
   "//Base/res/icons/16x16/edit-copy.png",
   "//Base/res/icons/16x16/filetype-css.png",
