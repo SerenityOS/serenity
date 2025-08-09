@@ -18,11 +18,27 @@
 
 namespace Gfx {
 
-void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, LineStyle style, Color)
+void AntiAliasingPainter::draw_line(IntPoint actual_from, IntPoint actual_to, Color color, float thickness, LineStyle style, Color alternate_color)
 {
-    // FIXME: Implement this :P
-    VERIFY(style == LineStyle::Solid);
+    draw_line(actual_from.to_type<float>(), actual_to.to_type<float>(), color, thickness, style, alternate_color);
+}
 
+static Path::StrokeStyle line_style_to_stroke_style(LineStyle style, float thickness)
+{
+    switch (style) {
+    case LineStyle::Solid:
+        return Path::StrokeStyle { .thickness = thickness, .cap_style = Path::CapStyle::Butt, .join_style = Path::JoinStyle::Miter };
+    case LineStyle::Dotted:
+        // FIXME: 0.2f is arbitrarily chosen as it still looks okay at 1px thickness. Drawing dots is a little awkward as the round caps don't factor into the dash length.
+        return Path::StrokeStyle { .thickness = thickness, .cap_style = Path::CapStyle::Round, .join_style = Path::JoinStyle::Round, .dash_pattern = { 0.2f, thickness * 2 } };
+    case LineStyle::Dashed:
+        return Path::StrokeStyle { .thickness = thickness, .cap_style = Path::CapStyle::Butt, .join_style = Path::JoinStyle::Miter, .dash_pattern = { thickness, thickness } };
+    }
+    VERIFY_NOT_REACHED();
+}
+
+void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, LineStyle style, Color)
+{
     if (color.alpha() == 0)
         return;
 
@@ -30,61 +46,7 @@ void AntiAliasingPainter::draw_anti_aliased_line(FloatPoint actual_from, FloatPo
     line.move_to(actual_from);
     line.line_to(actual_to);
 
-    stroke_path(line, color, Path::StrokeStyle { .thickness = thickness, .cap_style = Path::CapStyle::Square, .join_style = Path::JoinStyle::Miter });
-}
-
-void AntiAliasingPainter::draw_dotted_line(IntPoint point1, IntPoint point2, Color color, int thickness)
-{
-    // AA circles don't really work below a radius of 2px.
-    if (thickness < 4)
-        return m_underlying_painter.draw_line(point1, point2, color, thickness, LineStyle::Dotted);
-
-    auto draw_spaced_dots = [&](int start, int end, auto to_point) {
-        int step = thickness * 2;
-        if (start > end)
-            swap(start, end);
-        int delta = end - start;
-        int dots = delta / step;
-        if (dots == 0)
-            return;
-        int fudge_per_dot = 0;
-        int extra_fudge = 0;
-        if (dots > 3) {
-            // Fudge the numbers so the last dot is drawn at the `end' point (otherwise you can get lines cuts short).
-            // You need at least a handful of dots to do this.
-            int fudge = delta % step;
-            fudge_per_dot = fudge / dots;
-            extra_fudge = fudge % dots;
-        }
-        for (int dot = start; dot <= end; dot += (step + fudge_per_dot + (extra_fudge > 0))) {
-            fill_circle(to_point(dot), thickness / 2, color);
-            --extra_fudge;
-        }
-    };
-
-    if (point1.y() == point2.y()) {
-        draw_spaced_dots(point1.x(), point2.x(), [&](int dot_x) {
-            return IntPoint { dot_x, point1.y() };
-        });
-    } else if (point1.x() == point2.x()) {
-        draw_spaced_dots(point1.y(), point2.y(), [&](int dot_y) {
-            return IntPoint { point1.x(), dot_y };
-        });
-    } else {
-        TODO();
-    }
-}
-
-void AntiAliasingPainter::draw_line(IntPoint actual_from, IntPoint actual_to, Color color, float thickness, LineStyle style, Color alternate_color)
-{
-    draw_line(actual_from.to_type<float>(), actual_to.to_type<float>(), color, thickness, style, alternate_color);
-}
-
-void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to, Color color, float thickness, LineStyle style, Color alternate_color)
-{
-    if (style == LineStyle::Dotted)
-        return draw_dotted_line(actual_from.to_rounded<int>(), actual_to.to_rounded<int>(), color, static_cast<int>(round(thickness)));
-    draw_anti_aliased_line(actual_from, actual_to, color, thickness, style, alternate_color);
+    stroke_path(line, color, line_style_to_stroke_style(style, thickness));
 }
 
 void AntiAliasingPainter::stroke_path(Path const& path, Color color, Path::StrokeStyle const& stroke_style)
