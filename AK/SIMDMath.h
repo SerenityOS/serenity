@@ -56,7 +56,8 @@ ALWAYS_INLINE static f32x4 clamp(f32x4 v, f32x4 min, f32x4 max)
     return v < min ? min : (v > max ? max : v);
 }
 
-ALWAYS_INLINE static f32x4 clamp(f32x4 v, float min, float max)
+template<SIMDVector V, typename U = ElementOf<V>>
+ALWAYS_INLINE static V clamp(V v, U min, U max)
 {
     return v < min ? min : (v > max ? max : v);
 }
