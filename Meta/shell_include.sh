@@ -83,9 +83,11 @@ get_number_of_processing_units() {
   ($number_of_processing_units)
 }
 
-# Discover how to get apparent size from `du`. GNU/BusyBox du has --apparent-size / -b, BSD/Darwin du has `-A`.
+# Discover how to get apparent size from `du`. GNU/BusyBox du has --apparent-size / -b, uutils has to use --apparent-size due to a -b bug, BSD/Darwin du has `-A`.
 if du --help 2>&1 | grep -qE "GNU coreutils|BusyBox"; then
     DU_APPARENT_SIZE_FLAG="-b"
+elif du -V 2>&1 | grep -qE "uutils"; then
+    DU_APPARENT_SIZE_FLAG="--apparent-size"
 else
     DU_APPARENT_SIZE_FLAG="-A"
 fi
