@@ -39,6 +39,13 @@ INODE_COUNT=$((INODE_COUNT + 2000))  # Some additional inodes for toolchain file
 DISK_SIZE_BYTES=$((($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) ) * 1024 * 1024))
 DISK_SIZE_BYTES=$((DISK_SIZE_BYTES + (INODE_COUNT * INODE_SIZE)))
 
+# Cap disk size to 2TB (2 * 1024^4 bytes)
+MAX_DISK_SIZE_BYTES=$((2 * 1024 * 1024 * 1024 * 1024))
+if [ "$DISK_SIZE_BYTES" -gt "$MAX_DISK_SIZE_BYTES" ]; then
+    echo "Capping disk size to 2TB to avoid mke2fs overflow"
+    DISK_SIZE_BYTES=$MAX_DISK_SIZE_BYTES
+fi
+
 if [ -z "$SERENITY_DISK_SIZE_BYTES" ]; then
     # Try to use heuristics to guess a good disk size and inode count.
     # The disk must notably fit:
