@@ -29,8 +29,7 @@ static Path::StrokeStyle line_style_to_stroke_style(LineStyle style, float thick
     case LineStyle::Solid:
         return Path::StrokeStyle { .thickness = thickness, .cap_style = Path::CapStyle::Butt, .join_style = Path::JoinStyle::Miter };
     case LineStyle::Dotted:
-        // FIXME: 0.2f is arbitrarily chosen as it still looks okay at 1px thickness. Drawing dots is a little awkward as the round caps don't factor into the dash length.
-        return Path::StrokeStyle { .thickness = thickness, .cap_style = Path::CapStyle::Round, .join_style = Path::JoinStyle::Round, .dash_pattern = { 0.2f, thickness * 2 } };
+        return Path::StrokeStyle { .thickness = thickness, .cap_style = Path::CapStyle::Round, .join_style = Path::JoinStyle::Round, .dash_pattern = { 0, ceil(thickness / 2) * 4 } };
     case LineStyle::Dashed:
         return Path::StrokeStyle { .thickness = thickness, .cap_style = Path::CapStyle::Butt, .join_style = Path::JoinStyle::Miter, .dash_pattern = { thickness, thickness } };
     }
@@ -45,7 +44,6 @@ void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to
     Path line;
     line.move_to(actual_from);
     line.line_to(actual_to);
-
     stroke_path(line, color, line_style_to_stroke_style(style, thickness));
 }
 
