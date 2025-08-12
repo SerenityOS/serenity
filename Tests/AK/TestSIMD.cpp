@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/SIMD.h>
+#include <AK/SIMDFormat.h>
 #include <AK/SIMDMath.h>
 
 // See the comment in <AK/SIMDMath.h>
@@ -48,4 +49,10 @@ TEST_CASE(clamp)
     EXPECT(v2[1] == 0);
     EXPECT(v2[2] == 0);
     EXPECT(v2[3] == 5);
+}
+
+TEST_CASE(format)
+{
+    AK::SIMD::f32x4 v1 = { .2f, .4f, .6f, .8f };
+    EXPECT(MUST(String::formatted("{}", v1)) == "{0.2, 0.4, 0.6, 0.8}"sv);
 }
