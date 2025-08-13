@@ -1424,8 +1424,13 @@ PDFErrorOr<void> Renderer::paint_form_xobject(NonnullRefPtr<StreamObject> form)
 
     // FIXME: If transparency_group_attributes.has_value(), paint as transparency group.
 
+    // 4.9 Form XObjects
+    // "When the Do operator is applied to a form XObject, it does the following tasks:"
+    // "1. Saves the current graphics state, as if by invoking the q operator"
     ScopedState scoped_state { *this };
 
+    // "2. Concatenates the matrix from the form dictionary’s Matrix entry with the cur-
+    //     rent transformation matrix (CTM)"
     Vector<Value> matrix;
     if (form->dict()->contains(CommonNames::Matrix)) {
         matrix = TRY(form->dict()->get_array(m_document, CommonNames::Matrix))->elements();
@@ -1433,9 +1438,18 @@ PDFErrorOr<void> Renderer::paint_form_xobject(NonnullRefPtr<StreamObject> form)
         matrix = Vector { Value { 1 }, Value { 0 }, Value { 0 }, Value { 1 }, Value { 0 }, Value { 0 } };
     }
     MUST(handle_concatenate_matrix(matrix));
+
+    // "3. Clips according to the form dictionary’s BBox entry"
+    // FIXME
+
+    // "4. Paints the graphics objects specified in the form’s content stream"
     auto operators = TRY(Parser::parse_operators(m_document, form->bytes()));
     for (auto& op : operators)
         TRY(handle_operator(op, xobject_resources));
+
+    // "5. Restores the saved graphics state, as if by invoking the Q operator"
+    // Done by ScopedState destructor.
+
     return {};
 }
 
