@@ -13,6 +13,7 @@ set(TEST_FILES
     complex.pdf
     encoding.pdf
     encryption_nocopy.pdf
+    group.pdf
     jbig2-globals.pdf
     jpeg2000-indexed-small.pdf
     linearized.pdf
