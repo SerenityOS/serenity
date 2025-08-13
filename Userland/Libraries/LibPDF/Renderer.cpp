@@ -1440,7 +1440,15 @@ PDFErrorOr<void> Renderer::paint_form_xobject(NonnullRefPtr<StreamObject> form)
     MUST(handle_concatenate_matrix(matrix));
 
     // "3. Clips according to the form dictionary’s BBox entry"
-    // FIXME
+    auto bbox_array = TRY(form->dict()->get_array(m_document, CommonNames::BBox));
+    if (bbox_array->size() != 4)
+        return Error::malformed_error("BBox must have 4 elements");
+    auto bbox = Gfx::FloatRect::from_two_points(
+        { bbox_array->at(0).to_float(), bbox_array->at(1).to_float() },
+        { bbox_array->at(2).to_float(), bbox_array->at(3).to_float() });
+    auto bbox_path = rect_path(bbox);
+    bbox_path.transform(state().ctm);
+    TRY(add_clip_path(bbox_path, Gfx::WindingRule::Nonzero));
 
     // "4. Paints the graphics objects specified in the form’s content stream"
     auto operators = TRY(Parser::parse_operators(m_document, form->bytes()));
