@@ -123,6 +123,7 @@ class FunctionBasedShading final : public Shading {
 public:
     static PDFErrorOr<NonnullRefPtr<FunctionBasedShading>> create(Document*, NonnullRefPtr<DictObject>, CommonEntries);
 
+    virtual Optional<Gfx::FloatRect> bounding_box() const override { return m_common_entries.b_box; }
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
@@ -210,8 +211,6 @@ PDFErrorOr<void> FunctionBasedShading::draw(Gfx::Painter& painter, Gfx::AffineTr
         return Error::malformed_error("Matrix is not invertible");
     auto to_domain = maybe_to_domain.value();
 
-    // FIXME: Do something with m_common_entries.b_box if it's set.
-
     for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
         for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
             Gfx::FloatPoint shading_point = inverse_ctm.map(Gfx::FloatPoint { x, y } / scale);
@@ -245,6 +244,7 @@ class AxialShading final : public Shading {
 public:
     static PDFErrorOr<NonnullRefPtr<AxialShading>> create(Document*, NonnullRefPtr<DictObject>, CommonEntries);
 
+    virtual Optional<Gfx::FloatRect> bounding_box() const override { return m_common_entries.b_box; }
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
@@ -336,8 +336,6 @@ PDFErrorOr<void> AxialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform 
     Vector<float, 4> color_components;
     color_components.resize(m_common_entries.color_space->number_of_components());
 
-    // FIXME: Do something with m_common_entries.b_box if it's set.
-
     for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
         for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
             Gfx::FloatPoint pdf = inverse_ctm.map(Gfx::FloatPoint { x, y } / scale);
@@ -386,6 +384,7 @@ class RadialShading final : public Shading {
 public:
     static PDFErrorOr<NonnullRefPtr<RadialShading>> create(Document*, NonnullRefPtr<DictObject>, CommonEntries);
 
+    virtual Optional<Gfx::FloatRect> bounding_box() const override { return m_common_entries.b_box; }
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
@@ -485,8 +484,6 @@ PDFErrorOr<void> RadialShading::draw(Gfx::Painter& painter, Gfx::AffineTransform
 
     Vector<float, 4> color_components;
     color_components.resize(m_common_entries.color_space->number_of_components());
-
-    // FIXME: Do something with m_common_entries.b_box if it's set.
 
     // FIXME: Use smaller box if the circles are nested and the outer circle is not extended.
 
@@ -937,6 +934,7 @@ class FreeFormGouraudShading final : public Shading {
 public:
     static PDFErrorOr<NonnullRefPtr<FreeFormGouraudShading>> create(Document*, NonnullRefPtr<StreamObject>, CommonEntries);
 
+    virtual Optional<Gfx::FloatRect> bounding_box() const override { return m_common_entries.b_box; }
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
@@ -1071,6 +1069,7 @@ class LatticeFormGouraudShading final : public Shading {
 public:
     static PDFErrorOr<NonnullRefPtr<LatticeFormGouraudShading>> create(Document*, NonnullRefPtr<StreamObject>, CommonEntries);
 
+    virtual Optional<Gfx::FloatRect> bounding_box() const override { return m_common_entries.b_box; }
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
@@ -1195,6 +1194,7 @@ class CoonsPatchShading final : public Shading {
 public:
     static PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> create(Document*, NonnullRefPtr<StreamObject>, CommonEntries);
 
+    virtual Optional<Gfx::FloatRect> bounding_box() const override { return m_common_entries.b_box; }
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:
@@ -1514,6 +1514,7 @@ class TensorProductPatchShading final : public Shading {
 public:
     static PDFErrorOr<NonnullRefPtr<TensorProductPatchShading>> create(Document*, NonnullRefPtr<StreamObject>, CommonEntries);
 
+    virtual Optional<Gfx::FloatRect> bounding_box() const override { return m_common_entries.b_box; }
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) override;
 
 private:

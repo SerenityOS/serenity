@@ -20,6 +20,7 @@ public:
 
     virtual ~Shading() = default;
 
+    virtual Optional<Gfx::FloatRect> bounding_box() const = 0;
     virtual PDFErrorOr<void> draw(Gfx::Painter&, Gfx::AffineTransform const&) = 0;
 };
 
