@@ -5,40 +5,16 @@ Subject: [PATCH] Extend support for SerenityOS target
 
 Co-Authored-By: Linus Groh <mail@linusgroh.de>
 ---
- zig/lib/std/Build/Watch.zig          | 12 ++++-
  zig/lib/std/c.zig                    |  2 +-
  zig/lib/std/debug/Dwarf/abi.zig      | 17 ++++++-
  zig/lib/std/debug/SelfInfo.zig       |  7 +--
  zig/lib/std/fs/Dir.zig               | 73 ++++++++++++++++++++++++++++
  zig/lib/std/zig/LibCInstallation.zig | 26 ++++++++--
  zig/src/Compilation/Config.zig       |  1 +
- 7 files changed, 127 insertions(+), 11 deletions(-)
+ 6 files changed, 116 insertions(+), 10 deletions(-)
 
-diff --git a/zig/lib/std/Build/Watch.zig b/zig/lib/std/Build/Watch.zig
-index 4bd301e01e85455443b8c216d50cb830825d55f4..b3196bc3bc99d989b6c4b4a8809f5cdcd344edf2 100644
---- a/zig/lib/std/Build/Watch.zig
-+++ b/zig/lib/std/Build/Watch.zig
-@@ -845,7 +845,17 @@ const Os = switch (builtin.os.tag) {
-             });
-         }
-     },
--    else => void,
-+    else => struct {
-+        fn init() !Watch {
-+            @panic("Not supported");
-+        }
-+        fn update(_: *Watch, _: Allocator, _: []const *Step) !void {
-+            @panic("Not supported");
-+        }
-+        fn wait(_: *Watch, _: Allocator, _: Timeout) !WaitResult {
-+            @panic("Not supported");
-+        }
-+    },
- };
- 
- pub fn init() !Watch {
 diff --git a/zig/lib/std/c.zig b/zig/lib/std/c.zig
-index 6a0289f5f0c234ee4601d84a469f726751f445aa..61be1f0ae18bde46df5c6941f7be94eb7df44dc6 100644
+index 09ffd854369a60567b9d20c1cfbcaa46c97d01c7..c87c68effa901ff2321179e392e58d9a745ca584 100644
 --- a/zig/lib/std/c.zig
 +++ b/zig/lib/std/c.zig
 @@ -10903,7 +10903,7 @@ pub const LC = enum(c_int) {
@@ -93,7 +69,7 @@ index b8b644e026a5845553070cebf5faaf5a9bce2a63..b805a254ee8a93d49beecd960fd77395
      };
  }
 diff --git a/zig/lib/std/debug/SelfInfo.zig b/zig/lib/std/debug/SelfInfo.zig
-index 3e60e86ed33ec9268e6fdc52244b7d506bbff439..457f14994e71365794a569d0259a3a9c9c70f6ab 100644
+index 3f1514a957e1096fa59121e599beb76a6a638225..d7bffce61b230b12ddf9751ae1b3197eb1d26474 100644
 --- a/zig/lib/std/debug/SelfInfo.zig
 +++ b/zig/lib/std/debug/SelfInfo.zig
 @@ -53,6 +53,7 @@ pub fn open(allocator: Allocator) OpenError!SelfInfo {
@@ -223,7 +199,7 @@ index 16418d216fb0628e5836b451f0821668c57c3688..159b6d6335ee26758996ec7177bdca65
              .dir = self,
              .offset = 0,
 diff --git a/zig/lib/std/zig/LibCInstallation.zig b/zig/lib/std/zig/LibCInstallation.zig
-index 3e03d1ff2e747bd6ba46ca1d06b65f4c3eba7e3c..8269c8db36571d2f0f4400bea3208fad2f6c9efa 100644
+index 010239b076921bb7e5a47c308b02c6282cc559b7..4b12c829d15a85ac45714ffd66da7b70a087e9ae 100644
 --- a/zig/lib/std/zig/LibCInstallation.zig
 +++ b/zig/lib/std/zig/LibCInstallation.zig
 @@ -101,7 +101,7 @@ pub fn parse(

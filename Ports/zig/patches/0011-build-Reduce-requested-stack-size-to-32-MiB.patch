@@ -9,7 +9,7 @@ See: https://github.com/SerenityOS/serenity/issues/25790
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/zig/build.zig b/zig/build.zig
-index 95c97f29b64f1d965605487e8f143591dd0694ef..90cfdf9826efeb479d4b8989820ecab483cdd01d 100644
+index ace08e740b08a679cd96400910b61fc7154428b0..6ad6fd29fadf04a429055cd98bdf9297d4d9474f 100644
 --- a/zig/build.zig
 +++ b/zig/build.zig
 @@ -12,7 +12,7 @@ const DevEnv = @import("src/dev.zig").Env;
