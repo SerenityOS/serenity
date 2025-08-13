@@ -193,7 +193,7 @@ private:
     PDFErrorOr<void> prepare_clipped_bitmap_painter();
     void copy_current_clip_path_content_to_output();
 
-    PDFErrorOr<void> add_clip_path(Gfx::WindingRule);
+    PDFErrorOr<void> add_clip_path(Gfx::Path, Gfx::WindingRule);
     void finalize_clip_before_graphics_state_restore();
     PDFErrorOr<void> restore_previous_clip_after_graphics_state_restore();
 

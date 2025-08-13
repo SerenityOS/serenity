@@ -354,10 +354,10 @@ void Renderer::copy_current_clip_path_content_to_output()
     m_clipped_bitmap_anti_aliasing_painter = {};
 }
 
-PDFErrorOr<void> Renderer::add_clip_path(Gfx::WindingRule winding_rule)
+PDFErrorOr<void> Renderer::add_clip_path(Gfx::Path clip_path, Gfx::WindingRule winding_rule)
 {
     if (m_rendering_preferences.show_clipping_paths)
-        m_clip_paths_to_show_for_debugging.append(m_current_path);
+        m_clip_paths_to_show_for_debugging.append(clip_path);
 
     if (!m_rendering_preferences.apply_clip)
         return {};
@@ -365,7 +365,7 @@ PDFErrorOr<void> Renderer::add_clip_path(Gfx::WindingRule winding_rule)
     // If the clip is a rectangle that is larger than the current clip's bounding box, we can ignore it.
     // This is important for performance, because many PDFs add a clip for the whole page before other clips,
     // and we don't want to allocate a whole-page bitmap for those.
-    if (auto maybe_rect = m_current_path.as_rect(); maybe_rect.has_value()) {
+    if (auto maybe_rect = clip_path.as_rect(); maybe_rect.has_value()) {
         auto rect = Gfx::enclosing_int_rect(maybe_rect.value());
         if (rect.contains(state().clipping_state.clip_bounding_box))
             return {};
@@ -374,16 +374,16 @@ PDFErrorOr<void> Renderer::add_clip_path(Gfx::WindingRule winding_rule)
     // About to set new clip; flush old one if needed.
     copy_current_clip_path_content_to_output();
 
-    auto next_clipping_bbox = Gfx::enclosing_int_rect(m_current_path.bounding_box());
+    auto next_clipping_bbox = Gfx::enclosing_int_rect(clip_path.bounding_box());
     next_clipping_bbox.intersect(state().clipping_state.clip_bounding_box);
 
     auto clip_path_alpha = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, next_clipping_bbox.is_empty() ? Gfx::IntSize { 1, 1 } : next_clipping_bbox.size()));
 
-    m_current_path.close_all_subpaths();
+    clip_path.close_all_subpaths();
     Gfx::Painter clip_painter(*clip_path_alpha);
     Gfx::AntiAliasingPainter aa_clip_painter(clip_painter);
     clip_painter.translate(-next_clipping_bbox.location());
-    aa_clip_painter.fill_path(m_current_path, Color::Black, winding_rule);
+    aa_clip_painter.fill_path(clip_path, Color::Black, winding_rule);
 
     if (state().clipping_state.clip_path_alpha)
         apply_clip(*clip_path_alpha, next_clipping_bbox, *state().clipping_state.clip_path_alpha, state().clipping_state.clip_bounding_box);
@@ -420,7 +420,7 @@ void Renderer::begin_path_paint()
 PDFErrorOr<void> Renderer::end_path_paint()
 {
     if (m_add_path_as_clip != AddPathAsClip::No) {
-        TRY(add_clip_path(m_add_path_as_clip == AddPathAsClip::Nonzero ? Gfx::WindingRule::Nonzero : Gfx::WindingRule::EvenOdd));
+        TRY(add_clip_path(move(m_current_path), m_add_path_as_clip == AddPathAsClip::Nonzero ? Gfx::WindingRule::Nonzero : Gfx::WindingRule::EvenOdd));
         m_add_path_as_clip = AddPathAsClip::No;
     }
 
