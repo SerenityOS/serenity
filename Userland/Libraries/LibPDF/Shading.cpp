@@ -74,12 +74,9 @@ PDFErrorOr<CommonEntries> read_common_entries(Document* document, DictObject con
         auto bbox_array = TRY(shading_dict.get_array(document, CommonNames::BBox));
         if (bbox_array->size() != 4)
             return Error::malformed_error("BBox must have 4 elements");
-        Gfx::FloatRect bbox {
-            bbox_array->at(0).to_float(),
-            bbox_array->at(1).to_float(),
-            bbox_array->at(2).to_float(),
-            bbox_array->at(3).to_float(),
-        };
+        auto bbox = Gfx::FloatRect::from_two_points(
+            { bbox_array->at(0).to_float(), bbox_array->at(1).to_float() },
+            { bbox_array->at(2).to_float(), bbox_array->at(3).to_float() });
         common_entries.b_box = bbox;
     }
 
