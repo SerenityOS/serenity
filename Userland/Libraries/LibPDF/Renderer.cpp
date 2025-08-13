@@ -891,6 +891,14 @@ RENDERER_HANDLER(shade)
     auto shading_dict_or_stream = TRY(shading_resource_dict->get_object(m_document, shading_name));
     auto shading = TRY(Shading::create(m_document, shading_dict_or_stream, *this));
 
+    Optional<ScopedState> scoped_state;
+    if (auto maybe_bbox = shading->bounding_box(); maybe_bbox.has_value()) {
+        scoped_state = ScopedState { *this };
+        auto bbox_path = rect_path(maybe_bbox.value());
+        bbox_path.transform(state().ctm);
+        TRY(add_clip_path(bbox_path, Gfx::WindingRule::Nonzero));
+    }
+
     return shading->draw(painter(), state().ctm);
 }
 
