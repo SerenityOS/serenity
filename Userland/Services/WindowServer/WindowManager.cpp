@@ -2125,6 +2125,15 @@ Gfx::IntRect WindowManager::tiled_window_rect(Window const& window, Optional<Scr
         rect.set_y(rect.y() + window_rect.y() - window_frame_rect.y());
         rect.set_height(rect.height() - window_frame_rect.height() + window_rect.height());
     }
+
+    Gfx::IntSize minimum_size = window.minimum_size();
+    if (rect.height() < minimum_size.height()) {
+        rect.set_height(minimum_size.height());
+    }
+    if (rect.width() < minimum_size.width()) {
+        rect.set_width(minimum_size.width());
+    }
+
     return rect;
 }
 
