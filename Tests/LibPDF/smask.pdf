@@ -1,0 +1,69 @@
+%PDF-1.7
+%µ¶
+
+1 0 obj
+<</Type/Catalog/Pages 2 0 R>>
+endobj
+
+2 0 obj
+<</Type/Pages/Kids[3 0 R]/Count 1>>
+endobj
+
+3 0 obj
+<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 400]/Contents 4 0 R/Resources<</ExtGState<</GS1<</SMask 5 0 R>>>>>>>>
+endobj
+
+4 0 obj
+<</Length 131>>
+stream
+0.2 0.3 0.8 rg
+5 5 250 40 re f
+25 180 250 40 re f
+45 355 250 40 re f
+
+/GS1 gs
+
+0.2 1.0 0.3 rg
+10 10 80 380 re f
+210 10 80 380 re f
+
+endstream
+endobj
+
+5 0 obj
+<</Type/Mask/S/Luminosity/G 6 0 R>>
+endobj
+
+6 0 obj
+<</Subtype/Form/BBox[0 0 300 400]/Length 7/Group<</Type/Group/S/Transparency/CS/DeviceRGB>>/Resources<</Shading<</Sh 7 0 R>>>>>>
+stream
+/Sh sh
+
+endstream
+endobj
+
+7 0 obj
+<</AntiAlias false/ColorSpace/DeviceRGB/Coords[30 30 270 370]/Domain[0 1]/Extend[true true]/Function 8 0 R/ShadingType 2>>
+endobj
+
+8 0 obj
+<</FunctionType 2/Domain[0 1]/Range[0 1 0 1 0 1]/C0[0 .3 0]/C1[1 1 1]/N 1>>
+endobj
+
+xref
+0 9
+0000000000 65536 f 
+0000000016 00000 n 
+0000000062 00000 n 
+0000000114 00000 n 
+0000000243 00000 n 
+0000000424 00000 n 
+0000000476 00000 n 
+0000000646 00000 n 
+0000000785 00000 n 
+
+trailer
+<</Size 9/Root 1 0 R>>
+startxref
+877
+%%EOF

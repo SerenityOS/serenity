@@ -29,6 +29,7 @@ set(TEST_FILES
     shade-gouraud-lattice.pdf
     shade-radial.pdf
     shade-tensor.pdf
+    smask.pdf
     standard-14-fonts.pdf
     text.pdf
     type1.pdf
