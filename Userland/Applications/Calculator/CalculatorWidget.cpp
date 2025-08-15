@@ -21,12 +21,9 @@ ErrorOr<void> CalculatorWidget::initialize()
 {
     m_entry = *find_descendant_of_type_named<GUI::TextBox>("entry_textbox");
     // FIXME: Use GML for this.
-    m_entry->set_relative_rect(5, 5, 244, 26);
-    m_entry->set_text_alignment(Gfx::TextAlignment::CenterRight);
 
     // FIXME: Use GML for this.
     m_label = *find_descendant_of_type_named<GUI::Label>("label");
-    m_label->set_frame_style(Gfx::FrameStyle::SunkenContainer);
 
     for (int i = 0; i < 10; i++) {
         m_digit_button[i] = *find_descendant_of_type_named<GUI::Button>(TRY(String::formatted("{}_button", i)));
