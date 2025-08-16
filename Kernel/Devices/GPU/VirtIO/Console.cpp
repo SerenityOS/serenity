@@ -15,14 +15,12 @@ constexpr static AK::Duration refresh_interval = AK::Duration::from_milliseconds
 NonnullLockRefPtr<Console> Console::initialize(VirtIODisplayConnector& parent_display_connector)
 {
     auto current_resolution = parent_display_connector.current_mode_setting();
-    auto refresh_timer = adopt_nonnull_ref_or_enomem(new (nothrow) Timer()).release_value_but_fixme_should_propagate_errors();
-    return adopt_lock_ref(*new Console(parent_display_connector, current_resolution, refresh_timer));
+    return adopt_lock_ref(*new Console(parent_display_connector, current_resolution));
 }
 
-Console::Console(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::ModeSetting current_resolution, NonnullRefPtr<Timer> refresh_timer)
+Console::Console(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::ModeSetting current_resolution)
     : GenericFramebufferConsole(current_resolution.horizontal_active, current_resolution.vertical_active, current_resolution.horizontal_stride)
     , m_parent_display_connector(parent_display_connector)
-    , m_refresh_timer(move(refresh_timer))
 {
     // NOTE: Clear the framebuffer, in case it's left with some garbage.
     memset(framebuffer_data(), 0, current_resolution.horizontal_stride * current_resolution.vertical_active);
@@ -69,7 +67,8 @@ void Console::flush(size_t, size_t, size_t, size_t)
 
 void Console::enqueue_refresh_timer()
 {
-    TimerQueue::the().add_timer_without_id(*m_refresh_timer, CLOCK_MONOTONIC, refresh_interval, [this]() {
+    auto refresh_timer = adopt_nonnull_ref_or_enomem(new (nothrow) Timer()).release_value_but_fixme_should_propagate_errors();
+    refresh_timer->setup(CLOCK_MONOTONIC, refresh_interval, [this]() {
         if (m_enabled.load() && m_dirty) {
             MUST(g_io_work->try_queue([this]() {
                 {
@@ -82,6 +81,7 @@ void Console::enqueue_refresh_timer()
         }
         enqueue_refresh_timer();
     });
+    TimerQueue::the().add_timer(move(refresh_timer));
 }
 
 void Console::enable()
