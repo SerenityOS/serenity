@@ -317,13 +317,12 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
     int space_for_fds = (msg.msg_controllen - current_cmsg_len - sizeof(struct cmsghdr)) / sizeof(int);
     if (space_for_fds > 0 && socket.is_local()) {
         auto& local_socket = static_cast<LocalSocket&>(socket);
-        auto descriptions = TRY(local_socket.recvfds(description, space_for_fds));
-        Vector<int> fdnums;
-        for (auto& description : descriptions) {
+        Vector<int, 128> fdnums;
+        TRY(local_socket.recvfds(description, space_for_fds, [&](auto const& description) -> ErrorOr<void> {
             auto fd_allocation = TRY(m_fds.with_exclusive([](auto& fds) { return fds.allocate(); }));
-            m_fds.with_exclusive([&](auto& fds) { fds[fd_allocation.fd].set(*description, 0); });
-            fdnums.append(fd_allocation.fd);
-        }
+            m_fds.with_exclusive([&](auto& fds) { fds[fd_allocation.fd].set(description, 0); });
+            return fdnums.try_append(fd_allocation.fd);
+        }));
         if (!fdnums.is_empty())
             TRY(try_add_cmsg(SOL_SOCKET, SCM_RIGHTS, fdnums.data(), fdnums.size() * sizeof(int)));
     }

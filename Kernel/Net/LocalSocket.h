@@ -29,7 +29,7 @@ public:
 
     ErrorOr<void> sendfd(OpenFileDescription const& socket_description, NonnullRefPtr<OpenFileDescription> passing_description);
     ErrorOr<NonnullRefPtr<OpenFileDescription>> recvfd(OpenFileDescription const& socket_description);
-    ErrorOr<Vector<NonnullRefPtr<OpenFileDescription>>> recvfds(OpenFileDescription const& socket_description, int n);
+    ErrorOr<void> recvfds(OpenFileDescription const& socket_description, int n, Function<ErrorOr<void>(OpenFileDescription&)> callback);
 
     static void for_each(Function<void(LocalSocket const&)>);
     static ErrorOr<void> try_for_each(Function<ErrorOr<void>(LocalSocket const&)>);
