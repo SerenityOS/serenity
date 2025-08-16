@@ -21,11 +21,12 @@ public:
     virtual void enable() override;
 
 private:
-    void enqueue_refresh_timer();
+    void refresh_task();
     virtual u8* framebuffer_data() override;
 
     VMWareFramebufferConsole(VMWareDisplayConnector const& parent_display_connector, DisplayConnector::ModeSetting current_resolution);
     LockRefPtr<VMWareDisplayConnector> m_parent_display_connector;
+    RefPtr<Process> m_refresh_process;
     bool m_dirty { false };
 };
 

@@ -24,7 +24,9 @@ Console::Console(VirtIODisplayConnector const& parent_display_connector, Display
 {
     // NOTE: Clear the framebuffer, in case it's left with some garbage.
     memset(framebuffer_data(), 0, current_resolution.horizontal_stride * current_resolution.vertical_active);
-    enqueue_refresh_timer();
+
+    auto [process, _] = Process::create_kernel_process("Console Refresh Task"sv, [this]() { refresh_task(); }).release_value_but_fixme_should_propagate_errors();
+    m_refresh_process = move(process);
 }
 
 void Console::set_resolution(size_t width, size_t height, size_t pitch)
@@ -65,10 +67,9 @@ void Console::flush(size_t, size_t, size_t, size_t)
     m_dirty = true;
 }
 
-void Console::enqueue_refresh_timer()
+void Console::refresh_task()
 {
-    auto refresh_timer = adopt_nonnull_ref_or_enomem(new (nothrow) Timer()).release_value_but_fixme_should_propagate_errors();
-    refresh_timer->setup(CLOCK_MONOTONIC, refresh_interval, [this]() {
+    while (1) {
         if (m_enabled.load() && m_dirty) {
             MUST(g_io_work->try_queue([this]() {
                 {
@@ -79,9 +80,8 @@ void Console::enqueue_refresh_timer()
                 m_dirty = false;
             }));
         }
-        enqueue_refresh_timer();
-    });
-    TimerQueue::the().add_timer(move(refresh_timer));
+        (void)Thread::current()->sleep(refresh_interval);
+    }
 }
 
 void Console::enable()
