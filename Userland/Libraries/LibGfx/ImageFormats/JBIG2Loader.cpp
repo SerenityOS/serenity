@@ -1121,6 +1121,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
 
             int stripe_height = new_height - height_at_end_of_last_stripe.value_or(0);
             VERIFY(stripe_height >= 0);
+            dbgln_if(JBIG2_DEBUG, "stripe_height={}, max_stripe_height={}", stripe_height, max_stripe_height);
             if (stripe_height > max_stripe_height)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: EndOfStripe Y coordinate larger than maximum stripe height");
 
