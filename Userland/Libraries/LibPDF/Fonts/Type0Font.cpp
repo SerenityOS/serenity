@@ -60,16 +60,16 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType0>> CIDFontType0::create(Document* document,
         }
     }
 
-    if (!font_program) {
-        // FIXME: Should we use a fallback font? How common is this for type 0 fonts?
-        return Error::malformed_error("CIDFontType0: missing FontFile3");
-    }
-
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) CIDFontType0(move(font_program))));
 }
 
 PDFErrorOr<void> CIDFontType0::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 cid, Renderer const& renderer)
 {
+    if (!m_font_program) {
+        // FIXME: Should we use a fallback font? How common is this for type 0 fonts?
+        return Error::malformed_error("CIDFontType0: missing FontFile3");
+    }
+
     // ISO 32000 (PDF 2.0) 9.7.4.2 Glyph selection in CIDFonts
     // "When the CIDFont contains an embedded font program that is represented in the Compact Font Format (CFF),
     //  the FontFile3 entry in the font descriptor (...) shall be either CIDFontType0C or OpenType.
