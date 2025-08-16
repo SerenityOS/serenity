@@ -21,7 +21,8 @@ VMWareFramebufferConsole::VMWareFramebufferConsole(VMWareDisplayConnector const&
     : GenericFramebufferConsole(current_resolution.horizontal_active, current_resolution.vertical_active, current_resolution.horizontal_stride)
     , m_parent_display_connector(parent_display_connector)
 {
-    enqueue_refresh_timer();
+    auto [process, _] = Process::create_kernel_process("Console Refresh Task"sv, [this]() { refresh_task(); }).release_value_but_fixme_should_propagate_errors();
+    m_refresh_process = move(process);
 }
 
 void VMWareFramebufferConsole::set_resolution(size_t width, size_t height, size_t pitch)
@@ -37,19 +38,17 @@ void VMWareFramebufferConsole::flush(size_t, size_t, size_t, size_t)
     m_dirty = true;
 }
 
-void VMWareFramebufferConsole::enqueue_refresh_timer()
+void VMWareFramebufferConsole::refresh_task()
 {
-    auto refresh_timer = adopt_nonnull_ref_or_enomem(new (nothrow) Timer()).release_value_but_fixme_should_propagate_errors();
-    refresh_timer->setup(CLOCK_MONOTONIC, refresh_interval, [this]() {
+    while (1) {
         if (m_enabled.load() && m_dirty) {
             MUST(g_io_work->try_queue([this]() {
                 MUST(m_parent_display_connector->flush_first_surface());
                 m_dirty = false;
             }));
         }
-        enqueue_refresh_timer();
-    });
-    TimerQueue::the().add_timer(move(refresh_timer));
+        (void)Thread::current()->sleep(refresh_interval);
+    }
 }
 
 void VMWareFramebufferConsole::enable()
