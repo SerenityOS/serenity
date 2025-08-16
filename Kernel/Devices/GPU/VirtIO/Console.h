@@ -23,15 +23,15 @@ public:
     virtual void set_cursor(size_t x, size_t y) override;
 
 private:
-    void enqueue_refresh_timer();
+    void refresh_task();
     virtual u8* framebuffer_data() override;
 
     virtual void hide_cursor() override;
     virtual void show_cursor() override;
 
-    Console(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::ModeSetting current_resolution, NonnullRefPtr<Timer> timer);
-    NonnullRefPtr<VirtIODisplayConnector> m_parent_display_connector;
-    NonnullRefPtr<Timer> m_refresh_timer;
+    Console(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::ModeSetting current_resolution);
+    NonnullLockRefPtr<VirtIODisplayConnector> m_parent_display_connector;
+    RefPtr<Process> m_refresh_process;
     bool m_dirty { false };
 };
 

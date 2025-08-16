@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/Delay.h>
 #include <Kernel/Devices/GPU/VirtIO/Console.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
 #include <Kernel/Tasks/WorkQueue.h>
@@ -15,18 +16,18 @@ constexpr static AK::Duration refresh_interval = AK::Duration::from_milliseconds
 NonnullLockRefPtr<Console> Console::initialize(VirtIODisplayConnector& parent_display_connector)
 {
     auto current_resolution = parent_display_connector.current_mode_setting();
-    auto refresh_timer = adopt_nonnull_ref_or_enomem(new (nothrow) Timer()).release_value_but_fixme_should_propagate_errors();
-    return adopt_lock_ref(*new Console(parent_display_connector, current_resolution, refresh_timer));
+    return adopt_lock_ref(*new Console(parent_display_connector, current_resolution));
 }
 
-Console::Console(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::ModeSetting current_resolution, NonnullRefPtr<Timer> refresh_timer)
+Console::Console(VirtIODisplayConnector const& parent_display_connector, DisplayConnector::ModeSetting current_resolution)
     : GenericFramebufferConsole(current_resolution.horizontal_active, current_resolution.vertical_active, current_resolution.horizontal_stride)
     , m_parent_display_connector(parent_display_connector)
-    , m_refresh_timer(move(refresh_timer))
 {
     // NOTE: Clear the framebuffer, in case it's left with some garbage.
     memset(framebuffer_data(), 0, current_resolution.horizontal_stride * current_resolution.vertical_active);
-    enqueue_refresh_timer();
+
+    auto [process, _] = Process::create_kernel_process("Console Refresh Task"sv, [this]() { refresh_task(); }).release_value_but_fixme_should_propagate_errors();
+    m_refresh_process = move(process);
 }
 
 void Console::set_resolution(size_t width, size_t height, size_t pitch)
@@ -67,9 +68,9 @@ void Console::flush(size_t, size_t, size_t, size_t)
     m_dirty = true;
 }
 
-void Console::enqueue_refresh_timer()
+void Console::refresh_task()
 {
-    TimerQueue::the().add_timer_without_id(*m_refresh_timer, CLOCK_MONOTONIC, refresh_interval, [this]() {
+    while (1) {
         if (m_enabled.load() && m_dirty) {
             MUST(g_io_work->try_queue([this]() {
                 {
@@ -80,8 +81,8 @@ void Console::enqueue_refresh_timer()
                 m_dirty = false;
             }));
         }
-        enqueue_refresh_timer();
-    });
+        (void)Thread::current()->sleep(refresh_interval);
+    }
 }
 
 void Console::enable()

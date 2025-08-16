@@ -535,10 +535,9 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> LocalSocket::recvfd(OpenFileDescript
     return queue.take_first();
 }
 
-ErrorOr<Vector<NonnullRefPtr<OpenFileDescription>>> LocalSocket::recvfds(OpenFileDescription const& socket_description, int n)
+ErrorOr<void> LocalSocket::recvfds(OpenFileDescription const& socket_description, int n, Function<ErrorOr<void>(OpenFileDescription&)> callback)
 {
     MutexLocker locker(mutex());
-    Vector<NonnullRefPtr<OpenFileDescription>> fds;
 
     auto role = this->role(socket_description);
     if (role != Role::Connected && role != Role::Accepted)
@@ -549,10 +548,10 @@ ErrorOr<Vector<NonnullRefPtr<OpenFileDescription>>> LocalSocket::recvfds(OpenFil
         if (queue.is_empty())
             break;
 
-        fds.append(queue.take_first());
+        TRY(callback(*queue.take_first()));
     }
 
-    return fds;
+    return {};
 }
 
 ErrorOr<void> LocalSocket::try_set_path(StringView path)
