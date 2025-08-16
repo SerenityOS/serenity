@@ -1436,6 +1436,12 @@ PDFErrorOr<void> Renderer::show_text(ByteString const& string)
         return Error::rendering_unsupported_error("Text rendering mode Clip not yet supported");
     }
 
+    {
+        auto text_matrix = calculate_text_rendering_matrix();
+        if (text_matrix.b() != 0.0f || text_matrix.c() != 0.0f)
+            return Error::rendering_unsupported_error("Non-diagonal text rendering matrix not yet supported");
+    }
+
     auto start_position = Gfx::FloatPoint { 0.0f, 0.0f };
     auto end_position = TRY(text_state().font->draw_string(painter(), start_position, string, *this));
 
