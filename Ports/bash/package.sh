@@ -13,7 +13,7 @@ launcher_command='/usr/local/bin/bash'
 launcher_run_in_terminal='true'
 #icon_file=FIXME
 files=(
-    "https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz#62dd49c44c399ed1b3f7f731e87a782334d834f08e098a35f2c87547d5dbb269"
+    "https://ftpmirror.gnu.org/gnu/bash/bash-${version}.tar.gz#0d5cd86965f869a26cf64f4b71be7b96f90a3ba8b3d74e27e8e9d9d5550f31ba"
 )
 depends=(
     'readline'
