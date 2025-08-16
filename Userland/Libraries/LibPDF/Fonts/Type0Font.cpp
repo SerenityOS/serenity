@@ -282,6 +282,8 @@ static PDFErrorOr<NonnullOwnPtr<Type0CMap>> make_cmap(NonnullRefPtr<Object> cons
     if (!cmap_value->is<NameObject>())
         return Error::rendering_unsupported_error("Type0 font: support for general type 0 cmaps not yet implemented");
 
+    // FIXME: Add additional encodings from https://github.com/adobe-type-tools/cmap-resources
+    // Spec: https://adobe-type-tools.github.io/font-tech-notes/pdfs/5014.CIDFont_Spec.pdf (5 CMap Tutorial, page 41 onwards)
     auto cmap_name = cmap_value->cast<NameObject>()->name();
     if (cmap_name != CommonNames::IdentityH && cmap_name != CommonNames::IdentityV)
         return Error::rendering_unsupported_error("Type0 font: unimplemented named type 0 cmap {}", cmap_name);
