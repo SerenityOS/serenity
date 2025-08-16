@@ -276,17 +276,47 @@ public:
     }
 };
 
-static PDFErrorOr<NonnullOwnPtr<Type0CMap>> make_cmap(NonnullRefPtr<Object> const& cmap_value)
+class UnimplementedGeneralType0CMap : public Type0CMap {
+public:
+    UnimplementedGeneralType0CMap()
+        : Type0CMap(WritingMode::Horizontal)
+    {
+    }
+
+    virtual PDFErrorOr<NonnullOwnPtr<CIDIterator>> iterate(ReadonlyBytes) const override
+    {
+        return Error::rendering_unsupported_error("Type0 font: support for general type 0 cmaps not yet implemented");
+    }
+};
+
+class UnimplementedNamedType0CMap : public Type0CMap {
+public:
+    UnimplementedNamedType0CMap(DeprecatedFlyString name)
+        : Type0CMap(WritingMode::Horizontal)
+        , m_name(name)
+    {
+    }
+
+    virtual PDFErrorOr<NonnullOwnPtr<CIDIterator>> iterate(ReadonlyBytes) const override
+    {
+        return Error::rendering_unsupported_error("Type0 font: unimplemented named type 0 cmap {}", m_name);
+    }
+
+private:
+    DeprecatedFlyString m_name;
+};
+
+static NonnullOwnPtr<Type0CMap> make_cmap(NonnullRefPtr<Object> const& cmap_value)
 {
     // FIXME: Support arbitrary CMaps
     if (!cmap_value->is<NameObject>())
-        return Error::rendering_unsupported_error("Type0 font: support for general type 0 cmaps not yet implemented");
+        return make<UnimplementedGeneralType0CMap>();
 
     // FIXME: Add additional encodings from https://github.com/adobe-type-tools/cmap-resources
     // Spec: https://adobe-type-tools.github.io/font-tech-notes/pdfs/5014.CIDFont_Spec.pdf (5 CMap Tutorial, page 41 onwards)
     auto cmap_name = cmap_value->cast<NameObject>()->name();
     if (cmap_name != CommonNames::IdentityH && cmap_name != CommonNames::IdentityV)
-        return Error::rendering_unsupported_error("Type0 font: unimplemented named type 0 cmap {}", cmap_name);
+        return make<UnimplementedNamedType0CMap>(cmap_name);
 
     WritingMode writing_mode = cmap_name.ends_with("-H"sv) ? WritingMode::Horizontal : WritingMode::Vertical;
 
@@ -299,7 +329,7 @@ PDFErrorOr<void> Type0Font::initialize(Document* document, NonnullRefPtr<DictObj
 
     m_base_font_name = TRY(dict->get_name(document, CommonNames::BaseFont))->name();
 
-    m_cmap = TRY(make_cmap(TRY(dict->get_object(document, CommonNames::Encoding))));
+    m_cmap = make_cmap(TRY(dict->get_object(document, CommonNames::Encoding)));
 
     auto descendant_font_value = TRY(dict->get_array(document, CommonNames::DescendantFonts));
     auto descendant_font = TRY(descendant_font_value->get_dict_at(document, 0));
