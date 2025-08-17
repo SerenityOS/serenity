@@ -110,16 +110,25 @@ bool Mailbox::send_queue(void* queue, u32 queue_size)
 
     wait_until_we_can_write();
 
-    // The mailbox message is 32-bit based, so this assumes that message is in the first 4 GiB.
-    // FIXME: Memory::virtual_to_low_physical only works for the initial kernel mappings (including the stack).
-    //        Sending mailbox messages that are on the stack (which is most of them) won't work as soon as we enter init_stage2.
-    //        We should instead use MM DMA functions to allocate memory for transferring messages.
-    u32 queue_paddr = Memory::virtual_to_low_physical(bit_cast<FlatPtr>(queue));
-    u32 request = static_cast<u32>(queue_paddr & ~0xF) | (channel & 0xF);
+    // FIXME: Use MM to allocate a DMA region instead of reserving some static memory.
+    //        The DMA engines in the Pi 4 and 5 can only access memory below 1 GiB (see bcm2711-peripherals.pdf, 1.2.4 Legacy master addresses),
+    //        so we need to make MM reserve low memory for DMA and add functions that can give you memory regions that are below a given address limit.
+    //        Using MM would also allow us to map this region as MemoryType::NonCacheable, so we don't need to flush the data cache manually.
+    alignas(16) static u8 transfer_buffer[4096];
 
-    // The queue buffer might point to normal cached memory, so flush any writes that are in cache and not visible to VideoCore.
-    Aarch64::Asm::flush_data_cache((FlatPtr)queue, queue_size);
+    if (queue_size > sizeof(transfer_buffer))
+        return false;
 
+    u32 transfer_buffer_paddr = Memory::virtual_to_low_physical(bit_cast<FlatPtr>(&transfer_buffer));
+
+    if (transfer_buffer_paddr + queue_size > (1 * GiB))
+        return false;
+
+    memcpy(transfer_buffer, queue, queue_size);
+
+    Aarch64::Asm::flush_data_cache(bit_cast<FlatPtr>(&transfer_buffer), queue_size);
+
+    u32 request = static_cast<u32>(transfer_buffer_paddr & ~0xF) | (channel & 0xF);
     m_registers->write_data = request;
 
     for (;;) {
@@ -127,11 +136,11 @@ bool Mailbox::send_queue(void* queue, u32 queue_size)
 
         u32 response = m_registers->read_data;
         // We keep at most one message in flight and do synchronous communication, so response will always be == request for us.
-        if (response == request)
+        if (response == request) {
+            memcpy(queue, transfer_buffer, queue_size);
             return message_header->success();
+        }
     }
-
-    return true;
 }
 
 class QueryFirmwareVersionMboxMessage : RPi::Mailbox::Message {
@@ -147,7 +156,7 @@ public:
 
 u32 Mailbox::query_firmware_version()
 {
-    struct __attribute__((aligned(16))) {
+    struct {
         MessageHeader header;
         QueryFirmwareVersionMboxMessage query_firmware_version;
         MessageTail tail;
