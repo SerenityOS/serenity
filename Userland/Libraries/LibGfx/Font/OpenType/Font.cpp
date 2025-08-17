@@ -323,7 +323,7 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     }
 
     Optional<Kern> kern {};
-    if (opt_kern_slice.has_value())
+    if (!(options.skip_tables & Options::SkipTables::Kern) && opt_kern_slice.has_value())
         kern = TRY(Kern::from_slice(opt_kern_slice.value()));
 
     Optional<Fpgm> fpgm;
