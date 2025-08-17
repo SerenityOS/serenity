@@ -77,6 +77,21 @@ static void do_draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float wi
     }
 }
 
+static void do_draw_glyph_with_postscript_name(Gfx::Painter& painter, Gfx::FloatPoint point, float width, StringView postscript_name, Gfx::Font const& font, ColorOrStyle const& style)
+{
+    // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
+    auto position = point.translated(0, -font.pixel_metrics().ascent);
+
+    if (style.has<Color>()) {
+        painter.draw_glyph_with_postscript_name(position, postscript_name, font, style.get<Color>());
+    } else {
+        // FIXME: Bounding box and sample point look to be pretty wrong
+        style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(Gfx::IntRect(position.x(), position.y(), width, 0), [&](auto sample) {
+            painter.draw_glyph_with_postscript_name(position, postscript_name, font, sample(Gfx::IntPoint(position.x(), position.y())));
+        });
+    }
+}
+
 PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
     auto style = renderer.state().paint_style;
@@ -118,8 +133,12 @@ PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPo
 
         // "In either of the cases above, if the glyph name cannot be mapped as specified, the glyph name is looked up
         //  in the font program’s “post” table (if one is present) and the associated glyph description is used."
-        // FIXME: Implement this.
-        return Error::rendering_unsupported_error("Looking up glyph in 'post' table not yet implemented");
+        if (m_font->contains_glyph_for_postscript_name(char_name)) {
+            do_draw_glyph_with_postscript_name(painter, point, width, char_name, *m_font, style);
+            return {};
+        }
+
+        return Error::malformed_error("Failed to draw glyph with postscript name");
     } else if (m_high_byte.has_value()) {
         // "When the font has no Encoding entry, or the font descriptor’s Symbolic flag is set (in which case the
         //  Encoding entry is ignored), the following occurs:
@@ -148,7 +167,9 @@ Optional<float> TrueTypePainter::get_glyph_width(u8 char_code) const
     // FIXME: Make this use the full char_code lookup method used in draw_glyph() once that's complete.
     auto char_name = m_encoding->get_name(char_code);
     u32 unicode = glyph_name_to_unicode(char_name, m_is_zapf_dingbats).value_or(char_code);
-    return m_font->glyph_width(unicode);
+    if (m_font->contains_glyph(unicode))
+        return m_font->glyph_width(unicode);
+    return m_font->glyph_width_for_postscript_name(char_name);
 }
 
 void TrueTypePainter::set_font_size(float font_size)
