@@ -268,10 +268,25 @@ ErrorOr<NonnullRefPtr<SDMemoryCard>> SDHostController::try_initialize_inserted_c
     auto send_csd_response = TRY(wait_for_response());
     auto csd = bit_cast<SD::CardSpecificDataRegister>(send_csd_response.response);
 
-    u32 block_count = (csd.device_size + 1) * (1 << (csd.device_size_multiplier + 2));
-    u32 block_size = (1 << csd.max_read_data_block_length);
-    u64 capacity = static_cast<u64>(block_count) * block_size;
-    u64 card_capacity_in_blocks = capacity / block_len;
+    u64 card_capacity_in_blocks = 0;
+    if (csd.csd_structure == 0) {
+        // SDSC card
+
+        // PLSS 5.3.2: "CSD Register (CSD Version 1.0)" "C_SIZE"
+        u32 block_count = (csd.v1p0.device_size + 1) * (1 << (csd.v1p0.device_size_multiplier + 2)); // "BLOCKNR" in spec
+        u32 block_size = (1 << csd.v1p0.max_read_data_block_length);                                 // "BLOCK_LEN" in spec
+        u64 capacity = static_cast<u64>(block_count) * block_size;                                   // "memory capacity" in spec
+        card_capacity_in_blocks = capacity / block_len;
+    } else if (csd.csd_structure == 1) {
+        // SDHC or SDXC card
+
+        // PLSS 5.3.3 "CSD Register (CSD Version 2.0)" "C_SIZE"
+        u64 capacity = (csd.v2p0.device_size + 1) * (512 * KiB); // "memory capacity" in spec
+        card_capacity_in_blocks = capacity / block_len;
+    } else {
+        dbgln("SDHC: Unsupported CSD structure version: {}", csd.csd_structure);
+        return ENOTSUP;
+    }
 
     if (m_registers->capabilities.high_speed) {
         dbgln("SDHC: Enabling High Speed mode");

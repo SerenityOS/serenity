@@ -257,6 +257,14 @@ union CardSpecificDataRegister {
     u64 raw[2];
 
     struct [[gnu::packed]] {
+        u32 : 32;
+        u32 : 32;
+        u32 : 32;
+        u32 : 22;
+        u32 csd_structure : 2;
+    };
+
+    struct [[gnu::packed]] {
         // Note that the physical layer spec says there are 7 bits of checksum and 1 reserved bit here,
         // but they are removed
         u32 : 1;
@@ -293,7 +301,42 @@ union CardSpecificDataRegister {
         u32 data_read_access_time1 : 8;
         u32 : 6;
         u32 csd_structure : 2;
-    };
+    } v1p0;
+
+    struct [[gnu::packed]] {
+        // Note that the physical layer spec says there are 7 bits of checksum and 1 reserved bit here,
+        // but they are removed
+        u32 : 1;
+        u32 write_protection_until_power_cycle : 1;
+        u32 file_format : 2; // Fixed value for CSD version 2.0
+        u32 temporary_write_protection : 1;
+        u32 permanent_write_protection : 1;
+        u32 copy_flag : 1;
+        u32 file_format_group : 1; // Fixed value for CSD version 2.0
+        u32 : 5;
+        u32 partial_blocks_for_write_allowed : 1; // Fixed value for CSD version 2.0
+        u32 max_write_data_block_length : 4;      // Fixed value for CSD version 2.0
+        u32 write_speed_factor : 3;               // Fixed value for CSD version 2.0
+        u32 : 2;
+        u32 write_protect_group_enable : 1; // Fixed value for CSD version 2.0
+        u32 write_protect_group_size : 7;   // Fixed value for CSD version 2.0
+        u32 erase_sector_size : 7;          // Fixed value for CSD version 2.0
+        u32 erase_single_block_enable : 1;  // Fixed value for CSD version 2.0
+        u32 : 1;
+        u32 device_size : 22;
+        u32 : 6;
+        u32 dsr_implemented : 1;
+        u32 read_block_misalignment : 1;         // Fixed value for CSD version 2.0
+        u32 write_block_misalignment : 1;        // Fixed value for CSD version 2.0
+        u32 partial_blocks_for_read_allowed : 1; // Fixed value for CSD version 2.0
+        u32 max_read_data_block_length : 4;      // Fixed value for CSD version 2.0
+        u32 card_command_classes : 12;
+        u32 max_data_transfer_rate : 8; // Fixed value for CSD version 2.0
+        u32 data_read_access_time2 : 8; // Fixed value for CSD version 2.0
+        u32 data_read_access_time1 : 8; // Fixed value for CSD version 2.0
+        u32 : 6;
+        u32 csd_structure : 2;
+    } v2p0;
 };
 static_assert(AssertSize<CardSpecificDataRegister, 16>());
 
