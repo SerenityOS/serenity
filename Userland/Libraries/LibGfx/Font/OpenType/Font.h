@@ -36,7 +36,7 @@ struct FontOptions {
         // If set, do not try to read the 'name' table. family() and variant() will return empty strings.
         Name = 1 << 0,
 
-        // If set, tolerate a missing or broken 'hmtx' table. This will make glyph_metrics() return 0 for everyting and is_fixed_width() return true.
+        // If set, tolerate a missing or broken 'hmtx' table. This will make glyph_metrics() return 0 for everything and is_fixed_width() return true.
         Hmtx = 1 << 1,
 
         // If set, tolerate a missing or broken 'OS/2' table. metrics(), resolve_ascender_and_descender(), weight(), width(), and slope() will return different values.
