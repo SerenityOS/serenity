@@ -41,6 +41,9 @@ struct FontOptions {
 
         // If set, tolerate a missing or broken 'OS/2' table. metrics(), resolve_ascender_and_descender(), weight(), width(), and slope() will return different values.
         OS2 = 1 << 2,
+
+        // If set, do not try to read the 'kern' table. glyphs_horizontal_kerning() will return 0.
+        Kern = 1 << 3,
     };
     u32 skip_tables { 0 };
 };

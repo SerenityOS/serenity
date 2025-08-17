@@ -20,7 +20,8 @@ class Renderer;
 // these tables in some cases. Skip reading these tables.
 constexpr u32 pdf_skipped_opentype_tables = OpenType::FontOptions::SkipTables::Name
     | OpenType::FontOptions::SkipTables::Hmtx
-    | OpenType::FontOptions::SkipTables::OS2;
+    | OpenType::FontOptions::SkipTables::OS2
+    | OpenType::FontOptions::SkipTables::Kern;
 
 enum class WritingMode {
     Horizontal,
