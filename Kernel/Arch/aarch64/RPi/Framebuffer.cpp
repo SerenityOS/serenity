@@ -21,7 +21,7 @@ Framebuffer::Framebuffer()
     m_depth = 32;
     m_initialized = false;
 
-    struct __attribute__((aligned(16))) {
+    struct {
         Mailbox::MessageHeader header;
         FramebufferSetPhysicalSizeMboxMessage set_physical_size;
         FramebufferSetVirtualSizeMboxMessage set_virtual_size;

@@ -136,7 +136,7 @@ public:
 
 u32 Timer::set_clock_rate(ClockID clock_id, u32 rate_hz, bool skip_setting_turbo)
 {
-    struct __attribute__((aligned(16))) {
+    struct {
         Mailbox::MessageHeader header;
         SetClockRateMboxMessage set_clock_rate;
         Mailbox::MessageTail tail;
@@ -169,7 +169,7 @@ public:
 
 u32 Timer::get_clock_rate(ClockID clock_id)
 {
-    struct __attribute__((aligned(16))) {
+    struct {
         Mailbox::MessageHeader header;
         GetClockRateMboxMessage get_clock_rate;
         Mailbox::MessageTail tail;
