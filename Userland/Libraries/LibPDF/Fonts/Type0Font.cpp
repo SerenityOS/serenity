@@ -187,16 +187,16 @@ PDFErrorOr<NonnullOwnPtr<CIDFontType2>> CIDFontType2::create(Document* document,
         font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, point_size, point_size));
     }
 
-    if (!font) {
-        // FIXME: Should we use a fallback font? How common is this for type 0 fonts?
-        return Error::malformed_error("CIDFontType2: missing FontFile2");
-    }
-
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) CIDFontType2(move(font))));
 }
 
 PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 char_code, Renderer const& renderer)
 {
+    if (!m_font) {
+        // FIXME: Should we use a fallback font? How common is this for type 0 fonts?
+        return Error::malformed_error("CIDFontType2: missing FontFile2");
+    }
+
     // ISO 32000 (PDF 2.0) 9.7.4.2 Glyph selection in CIDFonts
     // "For Type 2, the CIDFont program is actually a TrueType font program, which has no native notion of CIDs.
     //  In a TrueType font program, glyph descriptions are identified by glyph index values.
@@ -231,7 +231,8 @@ PDFErrorOr<void> CIDFontType2::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint
 
 void CIDFontType2::set_font_size(float font_size)
 {
-    m_font = m_font->scaled_with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
+    if (m_font)
+        m_font = m_font->scaled_with_size((font_size * POINTS_PER_INCH) / DEFAULT_DPI);
 }
 
 Type0Font::Type0Font() = default;
