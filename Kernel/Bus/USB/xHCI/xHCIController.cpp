@@ -155,7 +155,6 @@ ErrorOr<void> xHCIController::initialize()
 
     auto [process, event_handler_thread] = TRY(Process::create_kernel_process("xHCI Controller"sv, [this]() { event_handling_thread(); }));
     event_handler_thread->set_name("xHCI Event Handling"sv);
-    (void)TRY(process->create_kernel_thread("xHCI Hot Plug"sv, [this]() { hot_plug_thread(); }));
     m_process = move(process);
 
     m_large_contexts = m_capability_registers.capability_parameters_1.context_size;
@@ -305,6 +304,8 @@ ErrorOr<void> xHCIController::start()
     m_root_hub = TRY(xHCIRootHub::try_create(*this));
     TRY(m_root_hub->setup({}));
     dmesgln_xhci("Initialized root hub");
+    VERIFY(m_process);
+    (void)TRY(m_process->create_kernel_thread("xHCI Hot Plug"sv, [this]() { hot_plug_thread(); }));
     return {};
 }
 
@@ -1538,9 +1539,7 @@ void xHCIController::event_handling_thread()
 void xHCIController::hot_plug_thread()
 {
     while (!Process::current().is_dying()) {
-        if (m_root_hub)
-            m_root_hub->check_for_port_updates();
-
+        m_root_hub->check_for_port_updates();
         (void)Thread::current()->sleep(Duration::from_seconds(1));
     }
     Thread::current()->exit();
