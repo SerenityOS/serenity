@@ -40,6 +40,13 @@ constexpr u32 high_speed_enable = 1 << 2;
 constexpr u32 dma_select_adma2_32 = 0b10 << 3;
 constexpr u32 dma_select_adma2_64 = 0b11 << 3;
 
+// In sub-register "Power Control"
+// SD Bus Voltage Select for VDD1 = 3.3V, SD Bus Power for VDD1 = On
+constexpr u32 sd_vdd1_bus_voltage_select_and_power_mask = 0xf << 8;
+constexpr u32 sd_vdd1_bus_voltage_select_3v0 = 0b1100 << 8;
+constexpr u32 sd_vdd1_bus_voltage_select_3v3 = 0b1110 << 8;
+constexpr u32 sd_vdd1_bus_power = 0b1 << 8;
+
 // In "m_registers->host_configuration_1"
 // In sub-register "Clock Control"
 constexpr u32 internal_clock_enable = 1 << 0;
@@ -144,6 +151,36 @@ ErrorOr<NonnullRefPtr<SDMemoryCard>> SDHostController::try_initialize_inserted_c
 {
     if (!is_card_inserted())
         return ENODEV;
+
+    // SDHC 3.3 "SD Bus Power Control"
+    // 1. By reading the Capabilities register, get the support voltage of the Host Controller.
+    u32 maximum_supported_bus_voltage_select = 0;
+    if (m_registers->capabilities.three_point_three_volt == 1) {
+        maximum_supported_bus_voltage_select = sd_vdd1_bus_voltage_select_3v3;
+    } else if (m_registers->capabilities.three_point_zero_volt == 1) {
+        maximum_supported_bus_voltage_select = sd_vdd1_bus_voltage_select_3v0;
+    } else {
+        // FIXME: Support other voltages. This requires changes to the handling of CMD8 and ACMD41.
+        dbgln("FIXME: Support voltages other than 3.3V/3.0V");
+        return ENOTSUP;
+    }
+
+    // 2. Set SD Bus Voltage Select in the Power Control register with maximum voltage that the Host
+    //    Controller supports.
+    // 3. Set SD Bus Power in the Power Control register to 1.
+    m_registers->host_configuration_0 = (m_registers->host_configuration_0 & ~sd_vdd1_bus_voltage_select_and_power_mask) | maximum_supported_bus_voltage_select | sd_vdd1_bus_power;
+
+    // 4. Get the OCR value of all function internal of SD card.
+    // (This is done when we get the ACMD41 response.)
+
+    // FIXME: 5. Judge whether SD Bus voltage needs to be changed or not. In case where SD Bus voltage
+    //           needs to be changed, go to step (6). In case where SD Bus voltage does not need to be
+    //           changed, go to 'End'.
+    // FIXME: 6. Set SD Bus Power in the Power Control register to 0 for clearing this bit. The card requires
+    //           voltage rising from 0 volt to detect it correctly. The Host Driver shall clear SD Bus Power before
+    //           changing voltage by setting SD Bus Voltage Select.
+    // FIXME: 7. Set SD Bus Voltage Select in the Power Control register.
+    // FIXME: 8. Set SD Bus Power in the Power Control register to 1.
 
     // PLSS 4.2: "Card Identification Mode"
     // "After power-on ...the cards are initialized with ... 400KHz clock frequency."
@@ -519,7 +556,6 @@ ErrorOr<void> SDHostController::sd_clock_frequency_change(u32 new_frequency)
 
 ErrorOr<void> SDHostController::reset_host_controller()
 {
-    m_registers->host_configuration_0 = 0;
     m_registers->host_configuration_1 = m_registers->host_configuration_1 | software_reset_for_all;
     if (!retry_with_timeout(
             [&] {
