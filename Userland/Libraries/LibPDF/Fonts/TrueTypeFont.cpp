@@ -119,7 +119,7 @@ PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPo
         // "In either of the cases above, if the glyph name cannot be mapped as specified, the glyph name is looked up
         //  in the font program’s “post” table (if one is present) and the associated glyph description is used."
         // FIXME: Implement this.
-        return Error::rendering_unsupported_error("Looking up glyph in 'post' table not yet implemented.");
+        return Error::rendering_unsupported_error("Looking up glyph in 'post' table not yet implemented");
     } else if (m_high_byte.has_value()) {
         // "When the font has no Encoding entry, or the font descriptor’s Symbolic flag is set (in which case the
         //  Encoding entry is ignored), the following occurs:
