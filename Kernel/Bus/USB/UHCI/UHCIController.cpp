@@ -80,7 +80,6 @@ ErrorOr<void> UHCIController::initialize()
     dmesgln_pci(*this, "Interrupt line: {}", interrupt_number());
 
     TRY(spawn_async_poll_process());
-    TRY(spawn_port_process());
 
     TRY(reset());
     return start();
@@ -267,6 +266,7 @@ ErrorOr<void> UHCIController::start()
 
     m_root_hub = TRY(UHCIRootHub::try_create(*this));
     TRY(m_root_hub->setup({}));
+    TRY(spawn_port_process());
     return {};
 }
 
@@ -685,9 +685,7 @@ ErrorOr<void> UHCIController::spawn_port_process()
 {
     TRY(Process::create_kernel_process("UHCI Hot Plug Task"sv, [&] {
         while (!Process::current().is_dying()) {
-            if (m_root_hub)
-                m_root_hub->check_for_port_updates();
-
+            m_root_hub->check_for_port_updates();
             (void)Thread::current()->sleep(Duration::from_seconds(1));
         }
         Process::current().sys$exit(0);
