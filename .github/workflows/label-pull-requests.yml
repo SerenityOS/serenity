@@ -15,7 +15,7 @@ jobs:
     if: always() && github.repository == 'SerenityOS/serenity'
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Label pull request
         uses: actions/github-script@v7
