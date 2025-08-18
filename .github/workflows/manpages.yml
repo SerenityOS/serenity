@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-22.04
     if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: r-lib/actions/setup-pandoc@v2
         with:
           pandoc-version: '2.13'
