@@ -41,30 +41,25 @@ In order to create a disk image, you first need to build SerenityOS by running
 Meta/serenity.sh build aarch64
 ```
 
-To create a disk image for the Raspberry Pi 3 and 5, run
-
-```console
-ninja -C Build/aarch64 raspberry-pi-image
-```
-
-For the Pi 4, booting with EDK II is currently required to enable USB support.
-Start by building EDK II for the Pi 4 with
+If you want to use the disk image with a Pi 4, you first need to build EDK II.
+Booting with EDK II is currently required to enable USB support on the Pi 4.
 
 ```console
 Toolchain/BuildEDK2.sh rpi4
 ```
 
-After you built EDK II, you can create a SerenityOS disk image with EDK II by running
+To create a disk image for the Raspberry Pi 3, 4, and 5, run:
+(This target will automatically set up config.txt to use EDK II for Pi 4 if you built EDK II in the previous step.)
 
 ```console
-ninja -C Build/aarch64 raspberry-pi-4-edk2-image
+ninja -C Build/aarch64 raspberry-pi-image
 ```
 
-The generated disk image will be written to `Build/aarch64/raspberry_pi_disk_image` or `Build/aarch64/raspberry_pi_4_uefi_disk_image`.
+The generated disk image will be written to `Build/aarch64/raspberry_pi_disk_image`.
 Write this image to the USB drive you want to use to boot Serenity using a command such as:
 
 ```console
-sudo cp Build/aarch64/<disk image> /dev/<usb drive> && sync
+sudo cp Build/aarch64/raspberry_pi_disk_image /dev/<usb drive> && sync
 ```
 
 ## Serial debug output
