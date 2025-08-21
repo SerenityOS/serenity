@@ -14,6 +14,7 @@
 #include <Kernel/Bus/PCI/Controller/HostController.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Bus/PCI/Device.h>
+#include <Kernel/Bus/PCI/Driver.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Locking/Spinlock.h>
 
@@ -39,6 +40,10 @@ public:
     static bool is_initialized();
     static bool is_disabled();
     static bool is_hardware_disabled();
+
+    static ErrorOr<void> register_driver(NonnullOwnPtr<Driver>&&);
+
+    ErrorOr<void> probe_drivers();
 
     void write8_field(DeviceIdentifier const&, u32 field, u8 value);
     void write16_field(DeviceIdentifier const&, u32 field, u16 value);
