@@ -8,8 +8,11 @@
 #include <AK/Find.h>
 #include <AK/Platform.h>
 #include <Kernel/Arch/Delay.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
+#include <Kernel/Bus/PCI/Driver.h>
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
+#include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Library/StdLib.h>
@@ -906,6 +909,23 @@ ErrorOr<void> UHCIController::clear_port_feature(Badge<UHCIRootHub>, u8 port, Hu
     else
         write_portsc2(port_data);
 
+    return {};
+}
+
+PCI_DRIVER(UHCIDriver);
+
+ErrorOr<void> UHCIDriver::probe(PCI::DeviceIdentifier const& pci_device_identifier) const
+{
+    if (kernel_command_line().disable_usb() || kernel_command_line().disable_uhci_controller())
+        return EPERM;
+
+    if (pci_device_identifier.class_code() != PCI::ClassID::SerialBus
+        || pci_device_identifier.subclass_code() != PCI::SerialBus::SubclassID::USB
+        || pci_device_identifier.prog_if() != PCI::SerialBus::USBProgIf::UHCI)
+        return ENOTSUP;
+
+    auto controller = TRY(UHCIController::try_to_initialize(pci_device_identifier));
+    USB::USBManagement::the().add_controller(controller);
     return {};
 }
 

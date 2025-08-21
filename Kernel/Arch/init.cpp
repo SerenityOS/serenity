@@ -356,7 +356,6 @@ void init_stage2(void*)
 
     auto boot_profiling = kernel_command_line().is_boot_profiling_enabled();
 
-    USB::USBManagement::initialize();
     SysFSFirmwareDirectory::initialize();
 
     if (!PCI::Access::is_disabled()) {
