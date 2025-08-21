@@ -330,6 +330,7 @@ void init_stage2(void*)
     PCI::initialize();
     if (!PCI::Access::is_disabled()) {
         PCISerialDevice::detect();
+        MUST(PCI::Access::the().probe_drivers());
     }
 
 #if ARCH(X86_64)

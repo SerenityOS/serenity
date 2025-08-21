@@ -7,6 +7,7 @@
 #include <AK/ByteReader.h>
 #include <AK/Error.h>
 #include <AK/HashTable.h>
+#include <AK/NeverDestroyed.h>
 #include <AK/Singleton.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/PCI/Controller/PIIX4HostBridge.h>
@@ -26,6 +27,7 @@ namespace Kernel::PCI {
 #define PCI_MMIO_CONFIG_SPACE_SIZE 4096
 
 static Singleton<Access> s_the;
+static NeverDestroyed<Vector<NonnullOwnPtr<Driver>>> s_available_drivers;
 
 Access& Access::the()
 {
@@ -46,6 +48,43 @@ bool Access::is_hardware_disabled()
 bool Access::is_disabled()
 {
     return g_pci_access_is_disabled_from_commandline.was_set() || g_pci_access_io_probe_failed.was_set();
+}
+
+ErrorOr<void> Access::register_driver(NonnullOwnPtr<Driver>&& driver)
+{
+    TRY(s_available_drivers->try_append(move(driver)));
+    return {};
+}
+
+ErrorOr<void> Access::probe_drivers()
+{
+    Vector<NonnullRefPtr<DeviceIdentifier>> device_identifiers;
+    {
+        SpinlockLocker locker(m_access_lock);
+        TRY(device_identifiers.try_extend(m_device_identifiers));
+    }
+
+    for (auto& device_identifier : device_identifiers) {
+        device_identifier->driver({}).with([device_identifier](Driver const*& current_driver) {
+            if (current_driver != nullptr)
+                return;
+
+            for (auto const& driver : *s_available_drivers) {
+                auto probe_result = driver->probe(device_identifier);
+                if (probe_result.is_error()) {
+                    if (probe_result.error().code() != ENOTSUP)
+                        dmesgln("PCI: Failed to probe {} on {}: {}", driver->name(), device_identifier->address(), probe_result.error());
+                    continue;
+                }
+
+                current_driver = driver.ptr();
+                dbgln("PCI: Attached device {} to driver {}", device_identifier->address(), driver->name());
+                break;
+            }
+        });
+    }
+
+    return {};
 }
 
 UNMAP_AFTER_INIT bool Access::find_and_register_pci_host_bridges_from_acpi_mcfg_table(PhysicalAddress mcfg_table)

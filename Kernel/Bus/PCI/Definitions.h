@@ -15,6 +15,7 @@
 #include <AK/Vector.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Locking/Spinlock.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 
 namespace Kernel::PCI {
@@ -511,6 +512,8 @@ public:
     u8 count {};
 };
 
+class Driver;
+
 class DeviceIdentifier
     : public RefCounted<DeviceIdentifier>
     , public EnumerableDeviceIdentifier {
@@ -529,6 +532,8 @@ public:
 
     Spinlock<LockRank::None>& operation_lock() { return m_operation_lock; }
     Spinlock<LockRank::None>& operation_lock() const { return m_operation_lock; }
+
+    SpinlockProtected<Driver const*, LockRank::None>& driver(Badge<Access>) { return m_driver; }
 
     virtual ~DeviceIdentifier() = default;
 
@@ -551,6 +556,8 @@ private:
     mutable Spinlock<LockRank::None> m_operation_lock;
     MSIxInfo m_msix_info {};
     MSIInfo m_msi_info {};
+
+    SpinlockProtected<Driver const*, LockRank::None> m_driver;
 };
 
 class Domain;
