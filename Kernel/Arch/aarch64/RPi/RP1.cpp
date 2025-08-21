@@ -5,7 +5,10 @@
  */
 
 #include <Kernel/Arch/aarch64/RPi/RP1.h>
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/BarMapping.h>
+#include <Kernel/Bus/PCI/Driver.h>
+#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/USB/xHCI/xHCIController.h>
 #include <Kernel/Interrupts/IRQHandler.h>
@@ -71,6 +74,20 @@ ErrorOr<void> RP1::try_to_initialize_xhci_controllers(PCI::DeviceIdentifier cons
     USB::USBManagement::the().add_controller(usbhost1);
 
     return {};
+}
+
+PCI_DRIVER(RP1Driver);
+
+ErrorOr<void> RP1Driver::probe(PCI::DeviceIdentifier const& pci_device_identifier) const
+{
+    if (kernel_command_line().disable_usb())
+        return EPERM;
+
+    if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::RaspberryPi
+        || pci_device_identifier.hardware_id().device_id != PCI::DeviceID::RaspberryPiRP1)
+        return ENOTSUP;
+
+    return RP1::try_to_initialize_xhci_controllers(pci_device_identifier);
 }
 
 }

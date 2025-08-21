@@ -17,8 +17,6 @@ class USBManagement {
 
 public:
     USBManagement();
-    static bool initialized();
-    static void initialize();
     static USBManagement& the();
 
     static void register_driver(NonnullLockRefPtr<Driver> driver);
@@ -30,8 +28,6 @@ public:
     static Vector<NonnullLockRefPtr<Driver>>& available_drivers();
 
 private:
-    void enumerate_controllers();
-
     USBController::List m_controllers;
 };
 

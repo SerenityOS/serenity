@@ -4,9 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/BarMapping.h>
+#include <Kernel/Bus/PCI/Driver.h>
 #include <Kernel/Bus/USB/EHCI/EHCIController.h>
+#include <Kernel/Bus/USB/USBManagement.h>
 
 namespace Kernel::USB::EHCI {
 
@@ -77,6 +80,25 @@ ErrorOr<void> EHCIController::initialize()
     //       * Enable Software routing (CF)
     //       * Maybe configure port power
 
+    return {};
+}
+
+PCI_DRIVER(EHCIDriver);
+
+ErrorOr<void> EHCIDriver::probe(PCI::DeviceIdentifier const& pci_device_identifier) const
+{
+    if (kernel_command_line().disable_usb())
+        return EPERM;
+
+    if (pci_device_identifier.class_code() != PCI::ClassID::SerialBus
+        || pci_device_identifier.subclass_code() != PCI::SerialBus::SubclassID::USB
+        || pci_device_identifier.prog_if() != PCI::SerialBus::USBProgIf::EHCI)
+        return ENOTSUP;
+
+    dmesgln("USB: EHCI controller found at {} is currently not fully supported.", pci_device_identifier.address());
+
+    auto controller = TRY(EHCIController::try_to_initialize(pci_device_identifier));
+    USB::USBManagement::the().add_controller(controller);
     return {};
 }
 
