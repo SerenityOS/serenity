@@ -4,7 +4,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 
 This list is also available at [ports.serenityos.net](https://ports.serenityos.net)
 
-| Port                                          | Name                                                          | Version                   | Website                                                              |
+| Port                                          | Name                                                          | Version (blank means git) | Website                                                              |
 | --------------------------------------------- | ------------------------------------------------------------- | ------------------------- | -------------------------------------------------------------------- |
 | [`abseil`](abseil/)                           | Abseil Common Libraries                                       | 20230802.0                | https://abseil.io/                                                   |
 | [`aclock`](aclock/)                           | aclock                                                        | 2.3                       | https://github.com/tenox7/aclock                                     |
