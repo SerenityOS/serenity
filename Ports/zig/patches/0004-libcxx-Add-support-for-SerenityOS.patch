@@ -149,7 +149,7 @@ index 136999ec0b02f8171bbd8d170aca2b68f7d65681..23a56c0f586728e37ee89bba608b1853
  #include <vector>
  
 diff --git a/zig/src/libs/libcxx.zig b/zig/src/libs/libcxx.zig
-index be73fb7ea453fb7c1fe54cb104c69dedbc0df352..eee2f5b8350902ca48ee55205b84c3c63d4d6a37 100644
+index 40da4dd92ff7ff991d803f3e7386e89b44278442..f1d13b2346f33d8236932e460819e7fd09ef5c5e 100644
 --- a/zig/src/libs/libcxx.zig
 +++ b/zig/src/libs/libcxx.zig
 @@ -198,7 +198,8 @@ pub fn buildLibCxx(comp: *Compilation, prog_node: std.Progress.Node) BuildError!
@@ -161,4 +161,4 @@ index be73fb7ea453fb7c1fe54cb104c69dedbc0df352..eee2f5b8350902ca48ee55205b84c3c6
 +        if (std.mem.startsWith(u8, cxx_src, "src/support/ibm/") and (target.os.tag != .zos and target.os.tag != .serenity))
              continue;
  
-         var cflags = std.ArrayList([]const u8).init(arena);
+         var cflags = std.array_list.Managed([]const u8).init(arena);

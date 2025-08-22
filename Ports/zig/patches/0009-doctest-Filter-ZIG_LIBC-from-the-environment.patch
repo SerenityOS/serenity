@@ -10,7 +10,7 @@ them to look for the host libraries in the target libc locations.
  1 file changed, 5 insertions(+)
 
 diff --git a/zig/tools/doctest.zig b/zig/tools/doctest.zig
-index 3fe0bb4708bf54fb71bfd7352c3dfcdab88b7dea..22c5ab06092d7f9197620bed9f458994cdd44b75 100644
+index a762b8d0b94d7b415b47f9b7bdbca1c6fe19177c..bb969ebe0feeba15845cbd96ceb2789873faa2a0 100644
 --- a/zig/tools/doctest.zig
 +++ b/zig/tools/doctest.zig
 @@ -122,6 +122,11 @@ fn printOutput(
