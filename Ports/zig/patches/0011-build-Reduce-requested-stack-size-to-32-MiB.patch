@@ -9,13 +9,13 @@ See: https://github.com/SerenityOS/serenity/issues/25790
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/zig/build.zig b/zig/build.zig
-index ace08e740b08a679cd96400910b61fc7154428b0..6ad6fd29fadf04a429055cd98bdf9297d4d9474f 100644
+index 5696dd44f36476f82b5534ce3b43f002f57deb27..36f75d526447916e9a0c5e0af8ebb7d9094f7d92 100644
 --- a/zig/build.zig
 +++ b/zig/build.zig
-@@ -12,7 +12,7 @@ const DevEnv = @import("src/dev.zig").Env;
+@@ -11,7 +11,7 @@ const DevEnv = @import("src/dev.zig").Env;
  const ValueInterpretMode = enum { direct, by_name };
  
- const zig_version: std.SemanticVersion = .{ .major = 0, .minor = 15, .patch = 0 };
+ const zig_version: std.SemanticVersion = .{ .major = 0, .minor = 16, .patch = 0 };
 -const stack_size = 46 * 1024 * 1024;
 +const stack_size = 32 * 1024 * 1024;
  

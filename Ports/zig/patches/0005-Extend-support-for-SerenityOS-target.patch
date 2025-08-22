@@ -14,10 +14,10 @@ Co-Authored-By: Linus Groh <mail@linusgroh.de>
  6 files changed, 116 insertions(+), 10 deletions(-)
 
 diff --git a/zig/lib/std/c.zig b/zig/lib/std/c.zig
-index 09ffd854369a60567b9d20c1cfbcaa46c97d01c7..c87c68effa901ff2321179e392e58d9a745ca584 100644
+index a8ad12212d756e2a3d018aff0aee31819489a47c..417d30bf44e0b9b58c28fe58306795f3dc7cb09e 100644
 --- a/zig/lib/std/c.zig
 +++ b/zig/lib/std/c.zig
-@@ -10903,7 +10903,7 @@ pub const LC = enum(c_int) {
+@@ -10947,7 +10947,7 @@ pub const LC = enum(c_int) {
  
  pub extern "c" fn setlocale(category: LC, locale: ?[*:0]const u8) ?[*:0]const u8;
  
@@ -199,7 +199,7 @@ index 16418d216fb0628e5836b451f0821668c57c3688..159b6d6335ee26758996ec7177bdca65
              .dir = self,
              .offset = 0,
 diff --git a/zig/lib/std/zig/LibCInstallation.zig b/zig/lib/std/zig/LibCInstallation.zig
-index 010239b076921bb7e5a47c308b02c6282cc559b7..4b12c829d15a85ac45714ffd66da7b70a087e9ae 100644
+index 7f6b89ddfc4ea63fe4f2ce41b818e3da24eae439..657db75125ec0f61c12c2978fb6f7226e0343ac5 100644
 --- a/zig/lib/std/zig/LibCInstallation.zig
 +++ b/zig/lib/std/zig/LibCInstallation.zig
 @@ -101,7 +101,7 @@ pub fn parse(
