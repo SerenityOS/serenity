@@ -130,7 +130,6 @@ ErrorOr<void> AudioPlayerLoop::write_wav_if_needed()
         m_audio_client->async_pause_playback();
         TRY(m_wav_writer.with_locked([this](auto& wav_writer) -> ErrorOr<void> {
             m_track_manager.reset();
-            m_track_manager.set_should_loop(false);
             do {
                 // FIXME: This progress detection is crude, but it works for now.
                 m_wav_percent_written.store(static_cast<int>(static_cast<float>(m_track_manager.transport()->time()) / roll_length * 100.0f));
@@ -140,7 +139,6 @@ ErrorOr<void> AudioPlayerLoop::write_wav_if_needed()
             // FIXME: Make sure that the new TrackManager APIs aren't as bad.
             m_wav_percent_written.store(100);
             m_track_manager.reset();
-            m_track_manager.set_should_loop(true);
             TRY(wav_writer.finalize());
 
             return {};
