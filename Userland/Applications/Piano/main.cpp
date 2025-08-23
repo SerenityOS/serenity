@@ -27,6 +27,38 @@
 #include <LibMain/Main.h>
 #include <LibThreading/MutexProtected.h>
 
+static ErrorOr<void> export_wav(StringView save_path, TrackManager& track_manager, Atomic<int>& wav_percent_written, ExportProgressWindow& wav_progress_window)
+{
+    Audio::WavWriter wav_writer;
+    TRY(wav_writer.set_file(save_path));
+
+    auto wav_buffer = TRY(FixedArray<DSP::Sample>::create(sample_count));
+
+    wav_progress_window.set_filename(save_path);
+    wav_progress_window.show();
+
+    Threading::MutexLocker lock(track_manager.playback_lock());
+
+    auto old_time = track_manager.transport()->time();
+    track_manager.transport()->set_time(0);
+    ScopeGuard cleanup = [&]() {
+        track_manager.transport()->set_time(old_time);
+        if (wav_progress_window.is_visible())
+            wav_progress_window.close();
+    };
+
+    do {
+        // FIXME: This progress detection is crude, but it works for now.
+        wav_percent_written.store(static_cast<int>(static_cast<float>(track_manager.transport()->time()) / roll_length * 100.0f));
+        track_manager.fill_buffer(wav_buffer);
+        TRY(wav_writer.write_samples(wav_buffer.span()));
+    } while (track_manager.transport()->time());
+
+    TRY(wav_writer.finalize());
+    wav_percent_written.store(100);
+    return {};
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio thread proc rpath cpath wpath recvfd sendfd unix"));
@@ -34,13 +66,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::create(arguments));
 
     TrackManager track_manager;
-
-    Threading::MutexProtected<Audio::WavWriter> wav_writer;
-    Optional<ByteString> save_path;
-    Atomic<bool> need_to_write_wav = false;
-    Atomic<int> wav_percent_written = 0;
-
-    auto audio_loop = AudioPlayerLoop::construct(track_manager, need_to_write_wav, wav_percent_written, wav_writer);
+    auto audio_loop = AudioPlayerLoop::construct(track_manager);
 
     auto app_icon = GUI::Icon::default_icon("app-piano"sv);
     auto window = GUI::Window::construct();
@@ -51,6 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->save_size_and_position_on_close("Piano"sv, "Window"sv);
     window->set_icon(app_icon.bitmap_for_size(16));
 
+    Atomic<int> wav_percent_written = 0;
     auto wav_progress_window = ExportProgressWindow::construct(*window, wav_percent_written);
     TRY(wav_progress_window->initialize());
 
@@ -62,22 +89,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(GUI::Action::create("Export...", { Mod_Ctrl, Key_E }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/file-export.png"sv)), [&](const GUI::Action&) {
-        save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "wav");
+        Optional<ByteString> save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "wav");
         if (!save_path.has_value())
             return;
-        ByteString error;
-        wav_writer.with_locked([&](auto& wav_writer) {
-            auto error_or_void = wav_writer.set_file(save_path.value());
-            if (error_or_void.is_error())
-                error = ByteString::formatted("Failed to export WAV file: {}", error_or_void.error());
-        });
-        if (!error.is_empty()) {
-            GUI::MessageBox::show_error(window, error);
-            return;
-        }
-        need_to_write_wav = true;
-        wav_progress_window->set_filename(save_path.value());
-        wav_progress_window->show();
+
+        auto maybe_error = export_wav(save_path.value(), track_manager, wav_percent_written, *wav_progress_window);
+        if (maybe_error.is_error())
+            GUI::MessageBox::show_error(window, ByteString::formatted("Failed to export WAV file: {}", maybe_error.release_error()));
     }));
     file_menu->add_separator();
     file_menu->add_action(GUI::CommonActions::make_quit_action([](auto&) {

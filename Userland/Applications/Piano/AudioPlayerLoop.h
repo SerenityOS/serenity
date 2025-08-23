@@ -11,7 +11,6 @@
 #include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/Resampler.h>
 #include <LibAudio/Sample.h>
-#include <LibAudio/WavWriter.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventReceiver.h>
 #include <LibDSP/Music.h>
@@ -31,11 +30,10 @@ public:
     bool is_playing() const { return m_should_play_audio; }
 
 private:
-    AudioPlayerLoop(TrackManager& track_manager, Atomic<bool>& need_to_write_wav, Atomic<int>& wav_percent_written, Threading::MutexProtected<Audio::WavWriter>& wav_writer);
+    AudioPlayerLoop(TrackManager& track_manager);
 
     intptr_t pipeline_thread_main();
     ErrorOr<void> send_audio_to_server();
-    ErrorOr<void> write_wav_if_needed();
 
     TrackManager& m_track_manager;
     FixedArray<DSP::Sample> m_buffer;
@@ -44,8 +42,4 @@ private:
 
     Atomic<bool> m_should_play_audio { true };
     Atomic<bool> m_exit_requested { false };
-
-    Atomic<bool>& m_need_to_write_wav;
-    Atomic<int>& m_wav_percent_written;
-    Threading::MutexProtected<Audio::WavWriter>& m_wav_writer;
 };
