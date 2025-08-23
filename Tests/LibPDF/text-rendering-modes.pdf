@@ -28,6 +28,9 @@ endobj
         /CA .2
         /ca .8
       >>
+      /GS2 <<
+        /ca .4
+      >>
     >>
     /Font <<
       /F1 5 0 R
@@ -41,7 +44,7 @@ endobj
 
 4 0 obj
 <<
-  /Length 508
+  /Length 540
 >>
 stream
 5 w
@@ -85,6 +88,7 @@ BT
 (4 Tr) Tj
 ET
 1 0 0 1 0 -10 cm
+/GS2 gs
 /F Do
 Q
 
@@ -95,6 +99,7 @@ BT
 (5 Tr) Tj
 ET
 1 0 0 1 0 -10 cm
+/GS2 gs
 /F Do
 Q
 
@@ -105,6 +110,7 @@ BT
 (6 Tr) Tj
 ET
 1 0 0 1 0 -10 cm
+/GS2 gs
 /F Do
 Q
 
@@ -115,6 +121,7 @@ BT
 (7 Tr) Tj
 ET
 1 0 0 1 0 -10 cm
+/GS2 gs
 /F Do
 Q
 
@@ -134,17 +141,21 @@ endobj
 6 0 obj
 <<
   /Subtype /Form
-  /BBox [ 0 0 250 150 ]
-  /Length 604
+  /BBox [ 0 0 250 100 ]
+  /Group <<
+    /Type /Group
+    /S /Transparency
+  >>
+  /Length 437
 >>
 stream
-0.4 g
-0 0 250 150 re f
+0.9 g
+0 0 250 100 re f
 
 % Draw a checkerboard.
 % FIXME: Use a repeating tiling pattern for this once we support that.
 
-0.9 g
+0.2 g
 
 0 0 25 25 re
 50 0 25 25 re
@@ -170,18 +181,6 @@ stream
 175 75 25 25 re
 225 75 25 25 re
 
-0 100 25 25 re
-50 100 25 25 re
-100 100 25 25 re
-150 100 25 25 re
-200 100 25 25 re
-
-25 125 25 25 re
-75 125 25 25 re
-125 125 25 25 re
-175 125 25 25 re
-225 125 25 25 re
-
 f
 
 endstream
@@ -193,9 +192,9 @@ xref
 0000000016 00000 n 
 0000000070 00000 n 
 0000000136 00000 n 
-0000000407 00000 n 
-0000000969 00000 n 
-0000001088 00000 n 
+0000000445 00000 n 
+0000001039 00000 n 
+0000001158 00000 n 
 
 trailer
 <<
@@ -203,5 +202,5 @@ trailer
   /Root 1 0 R
 >>
 startxref
-1787
+1745
 %%EOF
