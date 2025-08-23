@@ -62,7 +62,7 @@ NonnullOwnPtr<TrueTypePainter> TrueTypePainter::create(Document* document, Nonnu
     return adopt_own(*new TrueTypePainter { move(font), move(encoding), encoding_is_mac_roman_or_win_ansi, containing_pdf_font.is_nonsymbolic(), high_byte, is_zapf_dingbats });
 }
 
-static void do_draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 unicode, Gfx::Font const& font, ColorOrStyle const& style)
+static void do_draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 unicode, Gfx::ScaledFont const& font, ColorOrStyle const& style)
 {
     // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
     auto position = point.translated(0, -font.pixel_metrics().ascent);
@@ -77,7 +77,7 @@ static void do_draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float wi
     }
 }
 
-static void do_draw_glyph_with_postscript_name(Gfx::Painter& painter, Gfx::FloatPoint point, float width, StringView postscript_name, Gfx::Font const& font, ColorOrStyle const& style)
+static void do_draw_glyph_with_postscript_name(Gfx::Painter& painter, Gfx::FloatPoint point, float width, StringView postscript_name, Gfx::ScaledFont const& font, ColorOrStyle const& style)
 {
     // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
     auto position = point.translated(0, -font.pixel_metrics().ascent);
