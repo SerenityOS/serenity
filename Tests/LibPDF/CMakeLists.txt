@@ -33,6 +33,7 @@ set(TEST_FILES
     smask.pdf
     standard-14-fonts.pdf
     text.pdf
+    text-rendering-modes.pdf
     type1.pdf
     type3.pdf
     wide-gamut-only.pdf
