@@ -43,7 +43,6 @@ public:
 
     void fill_buffer(FixedArray<DSP::Sample>&);
     void reset();
-    void set_should_loop(bool b) { m_should_loop = b; }
     void add_track();
     int next_track_index() const;
 
@@ -54,6 +53,4 @@ private:
     size_t m_current_track { 0 };
 
     FixedArray<DSP::Sample> m_temporary_track_buffer;
-
-    bool m_should_loop { true };
 };
