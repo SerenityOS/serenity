@@ -1,0 +1,207 @@
+%PDF-1.3
+%µ¶
+
+1 0 obj
+<<
+  /Type /Catalog
+  /Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+  /Type /Pages
+  /Kids [ 3 0 R ]
+  /Count 1
+>>
+endobj
+
+3 0 obj
+<<
+  /Type /Page
+  /Parent 2 0 R
+  /MediaBox [ 0 0 440 440 ]
+  /Contents 4 0 R
+  /Resources <<
+    /ExtGState <<
+      /GS1 <<
+        /CA .2
+        /ca .8
+      >>
+    >>
+    /Font <<
+      /F1 5 0 R
+    >>
+    /XObject <<
+      /F 6 0 R
+    >>
+  >>
+>>
+endobj
+
+4 0 obj
+<<
+  /Length 508
+>>
+stream
+5 w
+0 1 1 rg
+1 0 1 RG
+/GS1 gs
+
+/F1 100 Tf
+1 0 0 1 20 420 cm
+
+1 0 0 1 0 -100 cm
+BT
+0 Tr
+(0 Tr) Tj
+ET
+
+1 0 0 1 0 -100 cm
+BT
+1 Tr
+(1 Tr) Tj
+ET
+
+1 0 0 1 0 -100 cm
+BT
+2 Tr
+(2 Tr) Tj
+ET
+
+1 0 0 1 0 -100 cm
+BT
+3 Tr
+(3 Tr) Tj
+ET
+
+1 0 0 1 220 400 cm
+
+1 0 0 1 0 -100 cm
+q
+BT
+4 Tr
+(4 Tr) Tj
+ET
+1 0 0 1 0 -10 cm
+/F Do
+Q
+
+1 0 0 1 0 -100 cm
+q
+BT
+5 Tr
+(5 Tr) Tj
+ET
+1 0 0 1 0 -10 cm
+/F Do
+Q
+
+1 0 0 1 0 -100 cm
+q
+BT
+6 Tr
+(6 Tr) Tj
+ET
+1 0 0 1 0 -10 cm
+/F Do
+Q
+
+1 0 0 1 0 -100 cm
+q
+BT
+7 Tr
+(7 Tr) Tj
+ET
+1 0 0 1 0 -10 cm
+/F Do
+Q
+
+endstream
+endobj
+
+5 0 obj
+<<
+  /Type /Font
+  /Subtype /Type1
+  /Name /F1
+  /BaseFont /Helvetica
+  /Encoding /MacRomanEncoding
+>>
+endobj
+
+6 0 obj
+<<
+  /Subtype /Form
+  /BBox [ 0 0 250 150 ]
+  /Length 604
+>>
+stream
+0.4 g
+0 0 250 150 re f
+
+% Draw a checkerboard.
+% FIXME: Use a repeating tiling pattern for this once we support that.
+
+0.9 g
+
+0 0 25 25 re
+50 0 25 25 re
+100 0 25 25 re
+150 0 25 25 re
+200 0 25 25 re
+
+25 25 25 25 re
+75 25 25 25 re
+125 25 25 25 re
+175 25 25 25 re
+225 25 25 25 re
+
+0 50 25 25 re
+50 50 25 25 re
+100 50 25 25 re
+150 50 25 25 re
+200 50 25 25 re
+
+25 75 25 25 re
+75 75 25 25 re
+125 75 25 25 re
+175 75 25 25 re
+225 75 25 25 re
+
+0 100 25 25 re
+50 100 25 25 re
+100 100 25 25 re
+150 100 25 25 re
+200 100 25 25 re
+
+25 125 25 25 re
+75 125 25 25 re
+125 125 25 25 re
+175 125 25 25 re
+225 125 25 25 re
+
+f
+
+endstream
+endobj
+
+xref
+0 7
+0000000000 65536 f 
+0000000016 00000 n 
+0000000070 00000 n 
+0000000136 00000 n 
+0000000407 00000 n 
+0000000969 00000 n 
+0000001088 00000 n 
+
+trailer
+<<
+  /Size 7
+  /Root 1 0 R
+>>
+startxref
+1787
+%%EOF
