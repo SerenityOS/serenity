@@ -103,17 +103,6 @@ add_custom_command(
     COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
 )
 
-# FIXME: These files are never needed (and Clang driver never references them) but GCC might need
-#        some convincing that this is the case.
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    add_library(crt0_shared STATIC crt0_shared.cpp)
-    target_link_libraries(crt0_shared PRIVATE NoCoverage)
-    add_custom_command(
-        TARGET crt0_shared POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
-    )
-endif()
-
 # ===== LibC =====
 # Prevent GCC from removing null checks by marking the `FILE*` argument non-null
 set_source_files_properties(stdio.cpp PROPERTIES COMPILE_FLAGS "-fno-builtin-fputc -fno-builtin-fputs -fno-builtin-fwrite")
@@ -127,9 +116,6 @@ endif()
 
 serenity_libc(LibC c)
 add_dependencies(LibC crt0 LibUBSanitizer)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    add_dependencies(LibC crt0_shared)
-endif()
 target_link_libraries(LibC PRIVATE LibSystem LibTimeZone)
 target_link_options(LibC PRIVATE -nolibc)
 
