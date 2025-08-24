@@ -26,14 +26,13 @@ UNMAP_AFTER_INIT void PCISerial16550::detect()
 
             for (size_t i = 0; i < board_definition.port_count; i++) {
                 auto port_registers_io_window = first_offset_registers_io_window->create_from_io_window_with_offset(board_definition.port_size * i).release_value_but_fixme_should_propagate_errors();
-                auto serial_device = new Serial16550(move(port_registers_io_window), current_device_minor++);
+                auto serial_device = Device::try_create_device<Serial16550>(move(port_registers_io_window), current_device_minor++).release_value_but_fixme_should_propagate_errors();
                 if (board_definition.baud_rate != Serial16550::Baud::Baud38400) // non-default baud
                     serial_device->set_baud(board_definition.baud_rate);
 
                 // If this is the first port of the first pci serial device, store it as the debug PCI serial port (TODO: Make this configurable somehow?)
                 if (!is_available())
-                    s_the = serial_device;
-                // NOTE: We intentionally leak the reference to serial_device here.
+                    s_the = &serial_device.leak_ref(); // NOTE: We intentionally leak the reference to serial_device here.
             }
 
             dmesgln("PCISerial16550: Found {} @ {}", board_definition.name, device_identifier.address());
