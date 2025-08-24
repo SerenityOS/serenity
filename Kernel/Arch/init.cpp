@@ -328,10 +328,8 @@ void init_stage2(void*)
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
     PCI::initialize();
-    if (!PCI::Access::is_disabled()) {
-        PCINS16550::detect();
+    if (!PCI::Access::is_disabled())
         MUST(PCI::Access::the().probe_drivers());
-    }
 
 #if ARCH(X86_64)
     if (!is_serial_debug_enabled())
