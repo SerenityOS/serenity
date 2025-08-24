@@ -37,8 +37,7 @@
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
 #    include <Kernel/Devices/KCOVDevice.h>
 #endif
-#include <Kernel/Devices/PCISerialDevice.h>
-#include <Kernel/Devices/SerialDevice.h>
+#include <Kernel/Devices/Serial/16550/PCISerial16550.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Devices/TTY/PTYMultiplexer.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
@@ -71,6 +70,7 @@
 #    include <Kernel/Arch/x86_64/Hypervisor/VMWareBackdoor.h>
 #    include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #    include <Kernel/Arch/x86_64/Interrupts/PIC.h>
+#    include <Kernel/Devices/Serial/16550/Serial16550.h>
 #elif ARCH(AARCH64)
 #    include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #    include <Kernel/Arch/aarch64/RPi/Mailbox.h>
@@ -329,16 +329,16 @@ void init_stage2(void*)
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
     PCI::initialize();
     if (!PCI::Access::is_disabled()) {
-        PCISerialDevice::detect();
+        PCISerial16550::detect();
         MUST(PCI::Access::the().probe_drivers());
     }
 
 #if ARCH(X86_64)
     if (!is_serial_debug_enabled())
-        (void)SerialDevice::must_create(0).leak_ref();
-    (void)SerialDevice::must_create(1).leak_ref();
-    (void)SerialDevice::must_create(2).leak_ref();
-    (void)SerialDevice::must_create(3).leak_ref();
+        (void)Serial16550::must_create(0).leak_ref();
+    (void)Serial16550::must_create(1).leak_ref();
+    (void)Serial16550::must_create(2).leak_ref();
+    (void)Serial16550::must_create(3).leak_ref();
 #endif
 
     (void)PCSpeakerDevice::must_create().leak_ref();

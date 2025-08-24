@@ -64,8 +64,6 @@ set(KERNEL_SOURCES
     Devices/CharacterDevice.cpp
     Devices/Device.cpp
     Devices/FUSEDevice.cpp
-    Devices/PCISerialDevice.cpp
-    Devices/SerialDevice.cpp
     Devices/Generic/ConsoleDevice.cpp
     Devices/Generic/DeviceControlDevice.cpp
     Devices/Generic/FullDevice.cpp
@@ -112,6 +110,8 @@ set(KERNEL_SOURCES
     Devices/Input/PS2/MouseDevice.cpp
     Devices/Input/VirtIO/Input.cpp
     Devices/Loop/LoopDevice.cpp
+    Devices/Serial/16550/PCISerial16550.cpp
+    Devices/Serial/16550/Serial16550.cpp
     Devices/Serial/VirtIO/Console.cpp
     Devices/Serial/VirtIO/ConsolePort.cpp
     Devices/Storage/AHCI/ATADevice.cpp
@@ -431,7 +431,7 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 
         Arch/x86_64/ISABus/I8042Controller.cpp
         Arch/x86_64/ISABus/Input/VMWareMouseDevice.cpp
-        Arch/x86_64/ISABus/SerialDevice.cpp
+        Arch/x86_64/ISABus/Serial16550.cpp
         Arch/x86_64/PCI/Controller/PIIX4HostBridge.cpp
         Arch/x86_64/PCI/Initializer.cpp
         Arch/x86_64/PCI/MSI.cpp
