@@ -21,6 +21,7 @@ struct DataElement {
     u16 element_number {};
 
     Array<u8, 2> value_representation {};
+    StringView value_representation_as_string { value_representation.span() };
 
     u32 value_length {};
 
@@ -43,9 +44,8 @@ ErrorOr<DataElement> read_data_element(Stream& stream, ShouldInterpretValue shou
     element.element_number = TRY(stream.read_value<u16>());
 
     TRY(stream.read_until_filled(element.value_representation));
-    auto vr = StringView { element.value_representation.span() };
 
-    if (vr_with_small_length.contains_slow(vr)) {
+    if (vr_with_small_length.contains_slow(element.value_representation_as_string)) {
         // "for VRs of AE, [...], UL and US the Value Length Field is the 16-bit unsigned integer
         // following the two byte VR Field (Table 7.1-2)."
         element.value_length = TRY(stream.read_value<u16>());
@@ -60,9 +60,9 @@ ErrorOr<DataElement> read_data_element(Stream& stream, ShouldInterpretValue shou
     }
 
     if (should_interpret_value == ShouldInterpretValue::Yes) {
-        if (vr == "UL") {
+        if (element.value_representation_as_string == "UL") {
             element.value = TRY(stream.read_value<u32>());
-        } else if (vr == "US") {
+        } else if (element.value_representation_as_string == "US") {
             element.value = TRY(stream.read_value<u16>());
         } else {
             // This is not a known type, let's skip the bytes for now.
