@@ -100,7 +100,7 @@ index 0000000000000000000000000000000000000000..53a4b8e93b74b4808a4bfed91c4d5558
 +#define PTRDIFF_TYPE    (TARGET_64BIT ? "long int" : "int")
 diff --git a/gcc/config/serenity.h b/gcc/config/serenity.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..7ee040c395e7bd404aa1f2b112e9248c556fca2a
+index 0000000000000000000000000000000000000000..effbe4bfb4c35db4785491e1628e6af9c0c87bf0
 --- /dev/null
 +++ b/gcc/config/serenity.h
 @@ -0,0 +1,50 @@
@@ -120,11 +120,11 @@ index 0000000000000000000000000000000000000000..7ee040c395e7bd404aa1f2b112e9248c
 +/* Files that are linked before user code.
 +   The %s tells GCC to look for these files in the library directory. */
 +#undef STARTFILE_SPEC
-+#define STARTFILE_SPEC "%{!shared:crt0.o%s} crti.o%s %{shared: %{!fbuilding-libgcc:crt0_shared.o%s}} %{shared|static-pie|!no-pie:crtbeginS.o%s; :crtbegin.o%s}"
++#define STARTFILE_SPEC "%{!shared:crt0.o%s} %{shared: %{!fbuilding-libgcc:crt0_shared.o%s}} %{shared|static-pie|!no-pie:crtbeginS.o%s; :crtbegin.o%s}"
 +
 +/* Files that are linked after user code. */
 +#undef ENDFILE_SPEC
-+#define ENDFILE_SPEC "%{shared|static-pie|!no-pie:crtendS.o%s; :crtend.o%s} crtn.o%s"
++#define ENDFILE_SPEC "%{shared|static-pie|!no-pie:crtendS.o%s; :crtend.o%s}"
 +
 +#define TARGET_LIBC_PROVIDES_SSP
 +
