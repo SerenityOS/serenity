@@ -243,7 +243,7 @@ ErrorOr<void> PropertiesWindow::create_file_type_specific_tabs(GUI::TabWidget& t
     if (mime_type.starts_with("font/"sv) || m_path.ends_with(".font"sv))
         return create_font_tab(tab_widget, move(mapped_file), mime_type);
 
-    if (mime_type.starts_with("image/"sv))
+    if (mime_type.starts_with("image/"sv) || mime_type.ends_with("dicom"sv))
         return create_image_tab(tab_widget, move(mapped_file), mime_type);
 
     if (mime_type == "application/pdf"sv)
