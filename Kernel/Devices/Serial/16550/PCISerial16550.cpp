@@ -45,6 +45,16 @@ static constexpr BoardDefinition board_definitions[] = {
     { { PCI::VendorID::WCH, 0x3253 }, "WCH CH382 2S"sv, 2, 0, 0xC0, 8, Serial16550::Baud::Baud115200 }
 };
 
+static constexpr BoardDefinition generic_board_definition = {
+    .device_id = { 0xffff, 0xffff },
+    .name = "Generic 16550-compatible UART"sv,
+    .port_count = 1,
+    .pci_bar = 0,
+    .first_offset = 0,
+    .port_size = 8,
+    .baud_rate = Serial16550::Baud::Baud115200,
+};
+
 size_t s_current_device_minor = 4;
 
 PCI_DRIVER(Serial16550Driver);
@@ -78,6 +88,17 @@ ErrorOr<void> Serial16550Driver::probe(PCI::DeviceIdentifier const& pci_device_i
             continue;
 
         initialize_serial_device(board_definition);
+        return {};
+    }
+
+    // If we don't have a special board definition for this device and it's 16550-compatible, use a generic board definition.
+    if (first_is_one_of(pci_device_identifier.prog_if(),
+            PCI::SimpleCommunication::SerialControllerProgIf::CompatbileWith16550,
+            PCI::SimpleCommunication::SerialControllerProgIf::CompatbileWith16650,
+            PCI::SimpleCommunication::SerialControllerProgIf::CompatbileWith16750,
+            PCI::SimpleCommunication::SerialControllerProgIf::CompatbileWith16850,
+            PCI::SimpleCommunication::SerialControllerProgIf::CompatbileWith16950)) {
+        initialize_serial_device(generic_board_definition);
         return {};
     }
 
