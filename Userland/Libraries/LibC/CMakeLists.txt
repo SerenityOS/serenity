@@ -112,20 +112,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         TARGET crt0_shared POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0_shared> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0_shared.o
     )
-
-    add_library(crti STATIC arch/${SERENITY_ARCH}/crti.S)
-    target_link_libraries(crti PRIVATE NoCoverage)
-    add_custom_command(
-        TARGET crti POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crti> ${CMAKE_INSTALL_PREFIX}/usr/lib/crti.o
-    )
-
-    add_library(crtn STATIC arch/${SERENITY_ARCH}/crtn.S)
-    target_link_libraries(crtn PRIVATE NoCoverage)
-    add_custom_command(
-        TARGET crtn POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crtn> ${CMAKE_INSTALL_PREFIX}/usr/lib/crtn.o
-    )
 endif()
 
 # ===== LibC =====
@@ -142,7 +128,7 @@ endif()
 serenity_libc(LibC c)
 add_dependencies(LibC crt0 LibUBSanitizer)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    add_dependencies(LibC crti crt0_shared crtn)
+    add_dependencies(LibC crt0_shared)
 endif()
 target_link_libraries(LibC PRIVATE LibSystem LibTimeZone)
 target_link_options(LibC PRIVATE -nolibc)
