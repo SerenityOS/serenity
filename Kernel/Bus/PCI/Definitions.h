@@ -244,6 +244,24 @@ enum class SubclassID {
 
 }
 
+namespace SimpleCommunication {
+
+enum class SubclassID {
+    SerialController = 0x00,
+};
+
+enum class SerialControllerProgIf {
+    GenericXTCompatible = 0x00,
+    CompatbileWith16450 = 0x01,
+    CompatbileWith16550 = 0x02,
+    CompatbileWith16650 = 0x03,
+    CompatbileWith16750 = 0x04,
+    CompatbileWith16850 = 0x05,
+    CompatbileWith16950 = 0x06,
+};
+
+}
+
 namespace Base {
 
 enum class SubclassID {
@@ -407,11 +425,13 @@ AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Network::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Display::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Multimedia::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Bridge::SubclassID);
+AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, SimpleCommunication::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Base::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, SerialBus::SubclassID);
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, ProgrammingInterface);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(ProgrammingInterface, MassStorage::SATAProgIF);
+AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(ProgrammingInterface, SimpleCommunication::SerialControllerProgIf);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(ProgrammingInterface, SerialBus::USBProgIf);
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, RevisionID);

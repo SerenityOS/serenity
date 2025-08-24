@@ -11,13 +11,13 @@
 
 namespace Kernel {
 
-class SerialDevice final : public CharacterDevice {
+class NS16550 final : public CharacterDevice {
     friend class Device;
 
 public:
-    static NonnullRefPtr<SerialDevice> must_create(size_t com_number);
+    static NonnullRefPtr<NS16550> must_create(size_t com_number);
 
-    virtual ~SerialDevice() override;
+    virtual ~NS16550() override;
 
     // ^CharacterDevice
     virtual bool can_read(OpenFileDescription const&, u64) const override;
@@ -51,6 +51,8 @@ public:
         Baud57600 = 2,
         Baud115200 = 1
     };
+
+    void set_baud(Baud);
 
     enum ParitySelect {
         None = 0x00 << 3,
@@ -104,16 +106,13 @@ public:
     };
 
 private:
-    SerialDevice(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor);
-
-    friend class PCISerialDevice;
+    NS16550(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor);
 
     // ^CharacterDevice
-    virtual StringView class_name() const override { return "SerialDevice"sv; }
+    virtual StringView class_name() const override { return "NS16550"sv; }
 
     void initialize();
     void set_interrupts(bool interrupt_enable);
-    void set_baud(Baud);
     void set_fifo_control(u8 fifo_control);
     void set_line_control(ParitySelect, StopBits, WordLength);
     void set_break_enable(bool break_enable);
