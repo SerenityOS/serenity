@@ -52,6 +52,8 @@ public:
         Baud115200 = 1
     };
 
+    void set_baud(Baud);
+
     enum ParitySelect {
         None = 0x00 << 3,
         Odd = 0x01 << 3,
@@ -106,14 +108,11 @@ public:
 private:
     Serial16550(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor);
 
-    friend class PCISerial16550;
-
     // ^CharacterDevice
     virtual StringView class_name() const override { return "Serial16550"sv; }
 
     void initialize();
     void set_interrupts(bool interrupt_enable);
-    void set_baud(Baud);
     void set_fifo_control(u8 fifo_control);
     void set_line_control(ParitySelect, StopBits, WordLength);
     void set_break_enable(bool break_enable);
