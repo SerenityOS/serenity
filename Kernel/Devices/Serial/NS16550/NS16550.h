@@ -11,13 +11,13 @@
 
 namespace Kernel {
 
-class SerialDevice final : public CharacterDevice {
+class NS16550 final : public CharacterDevice {
     friend class Device;
 
 public:
-    static NonnullRefPtr<SerialDevice> must_create(size_t com_number);
+    static NonnullRefPtr<NS16550> must_create(size_t com_number);
 
-    virtual ~SerialDevice() override;
+    virtual ~NS16550() override;
 
     // ^CharacterDevice
     virtual bool can_read(OpenFileDescription const&, u64) const override;
@@ -104,12 +104,12 @@ public:
     };
 
 private:
-    SerialDevice(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor);
+    NS16550(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor);
 
-    friend class PCISerialDevice;
+    friend class PCINS16550;
 
     // ^CharacterDevice
-    virtual StringView class_name() const override { return "SerialDevice"sv; }
+    virtual StringView class_name() const override { return "NS16550"sv; }
 
     void initialize();
     void set_interrupts(bool interrupt_enable);
