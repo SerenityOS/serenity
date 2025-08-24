@@ -82,9 +82,9 @@ NonnullOwnPtr<InstructionImpl> parse_op_fp(u32 instruction)
     }
     case 0b0100000: {
         if (raw_parts.funct7 == 0b0100000 && raw_parts.rs2 == 1)
-            return adopt_own(*new ConvertFloat(ConvertFloat::Operation::SingleToDouble, rounding_mode, as_float_register(raw_parts.rs1), as_float_register(raw_parts.rd)));
-        if (raw_parts.funct7 == 0b0100001 && raw_parts.rs2 == 0)
             return adopt_own(*new ConvertFloat(ConvertFloat::Operation::DoubleToSingle, rounding_mode, as_float_register(raw_parts.rs1), as_float_register(raw_parts.rd)));
+        if (raw_parts.funct7 == 0b0100001 && raw_parts.rs2 == 0)
+            return adopt_own(*new ConvertFloat(ConvertFloat::Operation::SingleToDouble, rounding_mode, as_float_register(raw_parts.rs1), as_float_register(raw_parts.rd)));
         return adopt_own(*new (nothrow) UnknownInstruction);
     }
     case 0b1110000: {
