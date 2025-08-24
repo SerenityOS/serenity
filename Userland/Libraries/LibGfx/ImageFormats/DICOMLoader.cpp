@@ -196,7 +196,7 @@ public:
         return m_size;
     }
 
-    RefPtr<Bitmap> bitmap()
+    RefPtr<Bitmap> bitmap() const
     {
         return m_bitmap;
     }
