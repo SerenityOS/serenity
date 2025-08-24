@@ -37,7 +37,6 @@
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
 #    include <Kernel/Devices/KCOVDevice.h>
 #endif
-#include <Kernel/Devices/Serial/16550/PCISerial16550.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
 #include <Kernel/Devices/TTY/PTYMultiplexer.h>
 #include <Kernel/Devices/TTY/VirtualConsole.h>
@@ -328,10 +327,8 @@ void init_stage2(void*)
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
     PCI::initialize();
-    if (!PCI::Access::is_disabled()) {
-        PCISerial16550::detect();
+    if (!PCI::Access::is_disabled())
         MUST(PCI::Access::the().probe_drivers());
-    }
 
 #if ARCH(X86_64)
     if (!is_serial_debug_enabled())

@@ -244,6 +244,14 @@ enum class SubclassID {
 
 }
 
+namespace SimpleCommunication {
+
+enum class SubclassID {
+    SerialController = 0x00,
+};
+
+}
+
 namespace Base {
 
 enum class SubclassID {
@@ -407,6 +415,7 @@ AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Network::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Display::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Multimedia::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Bridge::SubclassID);
+AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, SimpleCommunication::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, Base::SubclassID);
 AK_MAKE_DISTINCT_NUMERIC_COMPARABLE_TO_ENUM(SubclassCode, SerialBus::SubclassID);
 
