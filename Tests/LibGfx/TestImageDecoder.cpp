@@ -615,7 +615,8 @@ TEST_CASE(test_jpeg_grayscale_with_weird_mcu_and_reset_marker)
 TEST_CASE(test_jpeg_malformed_header)
 {
     Array test_inputs = {
-        TEST_INPUT("jpg/oss-fuzz-testcase-59785.jpg"sv)
+        TEST_INPUT("jpg/oss-fuzz-testcase-59785.jpg"sv),
+        TEST_INPUT("jpg/clusterfuzz-testcase-minimized-FuzzJPEGLoader-5874221639335936"sv)
     };
 
     for (auto test_input : test_inputs) {

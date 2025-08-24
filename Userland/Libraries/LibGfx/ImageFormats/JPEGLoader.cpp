@@ -216,7 +216,7 @@ public:
 
     ErrorOr<void> read_until_filled(Bytes bytes)
     {
-        auto const copied = m_buffer.span().slice(m_byte_offset).copy_trimmed_to(bytes);
+        auto const copied = m_buffer.span().trim(m_current_size).slice(m_byte_offset).copy_trimmed_to(bytes);
         m_byte_offset += copied;
 
         if (copied < bytes.size()) {
