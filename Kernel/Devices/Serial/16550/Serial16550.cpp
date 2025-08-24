@@ -7,13 +7,13 @@
 
 #include <Kernel/API/MajorNumberAllocation.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Devices/SerialDevice.h>
+#include <Kernel/Devices/Serial/16550/Serial16550.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
 
-SerialDevice::SerialDevice(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor)
+Serial16550::Serial16550(NonnullOwnPtr<IOWindow> registers_io_window, unsigned minor)
     : CharacterDevice(MajorAllocation::CharacterDeviceFamily::Serial, minor)
     , m_registers_io_window(move(registers_io_window))
 {
@@ -24,14 +24,14 @@ SerialDevice::SerialDevice(NonnullOwnPtr<IOWindow> registers_io_window, unsigned
     set_modem_control(RequestToSend | DataTerminalReady);
 }
 
-SerialDevice::~SerialDevice() = default;
+Serial16550::~Serial16550() = default;
 
-bool SerialDevice::can_read(OpenFileDescription const&, u64) const
+bool Serial16550::can_read(OpenFileDescription const&, u64) const
 {
     return (get_line_status() & DataReady) != 0;
 }
 
-ErrorOr<size_t> SerialDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
+ErrorOr<size_t> Serial16550::read(OpenFileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
     if (!size)
         return 0;
@@ -47,12 +47,12 @@ ErrorOr<size_t> SerialDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer
     });
 }
 
-bool SerialDevice::can_write(OpenFileDescription const&, u64) const
+bool Serial16550::can_write(OpenFileDescription const&, u64) const
 {
     return (get_line_status() & EmptyTransmitterHoldingRegister) != 0;
 }
 
-ErrorOr<size_t> SerialDevice::write(OpenFileDescription& description, u64, UserOrKernelBuffer const& buffer, size_t size)
+ErrorOr<size_t> Serial16550::write(OpenFileDescription& description, u64, UserOrKernelBuffer const& buffer, size_t size)
 {
     if (!size)
         return 0;
@@ -68,7 +68,7 @@ ErrorOr<size_t> SerialDevice::write(OpenFileDescription& description, u64, UserO
     });
 }
 
-void SerialDevice::put_char(char ch)
+void Serial16550::put_char(char ch)
 {
     while ((get_line_status() & EmptyTransmitterHoldingRegister) == 0)
         Processor::wait_check();
@@ -81,14 +81,14 @@ void SerialDevice::put_char(char ch)
     m_last_put_char_was_carriage_return = (ch == '\r');
 }
 
-void SerialDevice::set_interrupts(bool interrupt_enable)
+void Serial16550::set_interrupts(bool interrupt_enable)
 {
     m_interrupt_enable = interrupt_enable;
 
     m_registers_io_window->write8(1, interrupt_enable);
 }
 
-void SerialDevice::set_baud(Baud baud)
+void Serial16550::set_baud(Baud baud)
 {
     m_baud = baud;
 
@@ -98,13 +98,13 @@ void SerialDevice::set_baud(Baud baud)
     m_registers_io_window->write8(3, m_registers_io_window->read8(3) & 0x7f); // turn off DLAB
 }
 
-void SerialDevice::set_fifo_control(u8 fifo_control)
+void Serial16550::set_fifo_control(u8 fifo_control)
 {
     m_fifo_control = fifo_control;
     m_registers_io_window->write8(2, fifo_control);
 }
 
-void SerialDevice::set_line_control(ParitySelect parity_select, StopBits stop_bits, WordLength word_length)
+void Serial16550::set_line_control(ParitySelect parity_select, StopBits stop_bits, WordLength word_length)
 {
     m_parity_select = parity_select;
     m_stop_bits = stop_bits;
@@ -113,21 +113,21 @@ void SerialDevice::set_line_control(ParitySelect parity_select, StopBits stop_bi
     m_registers_io_window->write8(3, (m_registers_io_window->read8(3) & ~0x3f) | parity_select | stop_bits | word_length);
 }
 
-void SerialDevice::set_break_enable(bool break_enable)
+void Serial16550::set_break_enable(bool break_enable)
 {
     m_break_enable = break_enable;
 
     m_registers_io_window->write8(3, m_registers_io_window->read8(3) & (break_enable ? 0xff : 0xbf));
 }
 
-void SerialDevice::set_modem_control(u8 modem_control)
+void Serial16550::set_modem_control(u8 modem_control)
 {
     m_modem_control = modem_control;
 
     m_registers_io_window->write8(4, modem_control);
 }
 
-u8 SerialDevice::get_line_status() const
+u8 Serial16550::get_line_status() const
 {
     return m_registers_io_window->read8(5);
 }
