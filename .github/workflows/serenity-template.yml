@@ -87,7 +87,7 @@ jobs:
 
       - name: Build jakt toolchain
         if: ${{ steps.cache-restore.output.jakt_prebuilt_hit != 'true' }}
-        run: ARCH="${{ inputs.arch }}" CXX=g++-13 ${{ github.workspace }}/Toolchain/BuildJakt.sh
+        run: ARCH="${{ inputs.arch }}" CXX=g++-14 ${{ github.workspace }}/Toolchain/BuildJakt.sh
 
       - name: Create Build Environment
         if: ${{ inputs.debug_options == 'ALL_DEBUG' }}
@@ -98,8 +98,8 @@ jobs:
             -DSERENITY_ARCH=${{ inputs.arch }} \
             -DSERENITY_TOOLCHAIN=${{ inputs.toolchain }} \
             -DBUILD_LAGOM=ON \
-            -DCMAKE_C_COMPILER=gcc-13 \
-            -DCMAKE_CXX_COMPILER=g++-13 \
+            -DCMAKE_C_COMPILER=gcc-14 \
+            -DCMAKE_CXX_COMPILER=g++-14 \
             -DENABLE_ALL_DEBUG_FACILITIES=ON \
             -DENABLE_PCI_IDS_DOWNLOAD=OFF \
             -DENABLE_USB_IDS_DOWNLOAD=OFF
@@ -115,8 +115,8 @@ jobs:
           cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
             -DSERENITY_ARCH=${{ inputs.arch }} \
             -DSERENITY_TOOLCHAIN=${{ inputs.toolchain }} \
-            -DCMAKE_C_COMPILER=gcc-13 \
-            -DCMAKE_CXX_COMPILER=g++-13 \
+            -DCMAKE_C_COMPILER=gcc-14 \
+            -DCMAKE_CXX_COMPILER=g++-14 \
             -DENABLE_UNDEFINED_SANITIZER=ON \
             -DUNDEFINED_BEHAVIOR_IS_FATAL=ON \
             -DENABLE_USERSPACE_COVERAGE_COLLECTION=${{ inputs.coverage }} \

@@ -67,8 +67,8 @@ jobs:
               echo "host_cc=clang-18" >> "$GITHUB_OUTPUT"
               echo "host_cxx=clang++-18" >> "$GITHUB_OUTPUT"
             elif ${{ inputs.toolchain == 'GNU' }} ; then
-              echo "host_cc=gcc-13" >> "$GITHUB_OUTPUT"
-              echo "host_cxx=g++-13" >> "$GITHUB_OUTPUT"
+              echo "host_cc=gcc-14" >> "$GITHUB_OUTPUT"
+              echo "host_cxx=g++-14" >> "$GITHUB_OUTPUT"
             fi
           elif ${{ inputs.os_name == 'macOS' }} ; then
             echo "host_cc=$(brew --prefix llvm@18)/bin/clang" >> "$GITHUB_OUTPUT"
@@ -82,7 +82,7 @@ jobs:
 
       - name: Build jakt toolchain
         if: ${{ steps.cache-restore.output.jakt_prebuilt_hit != 'true' }}
-        run: "ARCH=\"${{ inputs.arch }}\" CXX=g++-13 ${{ github.workspace }}/Toolchain/BuildJakt.sh lagom"
+        run: "ARCH=\"${{ inputs.arch }}\" CXX=g++-14 ${{ github.workspace }}/Toolchain/BuildJakt.sh lagom"
 
 
       - name: Create Build Environment
@@ -110,8 +110,8 @@ jobs:
             -DBUILD_LAGOM=OFF \
             -DCMAKE_INSTALL_PREFIX=tool-install \
             -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/caches \
-            -DCMAKE_C_COMPILER=gcc-13 \
-            -DCMAKE_CXX_COMPILER=g++-13 \
+            -DCMAKE_C_COMPILER=gcc-14 \
+            -DCMAKE_CXX_COMPILER=g++-14 \
             -Dpackage=LagomTools
 
           ninja -C tools-build install
