@@ -683,6 +683,7 @@ if (BUILD_LAGOM)
             AK
             LibCrypto
             LibCompress
+            LibDisassembly
             LibGL
             LibGfx
             LibHID
