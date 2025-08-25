@@ -275,14 +275,40 @@ u64 Ext2FS::inodes_per_group() const
     return EXT2_INODES_PER_GROUP(&super_block());
 }
 
+u64 Ext2FS::blocks_per_group() const
+{
+    return EXT2_BLOCKS_PER_GROUP(&super_block());
+}
+
+// Get the maximum on-disk size for all inodes.
 u64 Ext2FS::inode_size() const
 {
     return EXT2_INODE_SIZE(&super_block());
 }
 
-u64 Ext2FS::blocks_per_group() const
+// Get the provided inode's logical size (which may be smaller [but not
+// greater] than the global maximum on-disk size). This is conceptually
+// a forward-compatibility measure to ensure that new extensions can be
+// added without requiring a full reformat.
+u64 Ext2FS::usable_inode_size(ext2_inode_large const& inode) const
 {
-    return EXT2_BLOCKS_PER_GROUP(&super_block());
+    u64 physical_inode_size = inode_size();
+    VERIFY(physical_inode_size >= EXT2_GOOD_OLD_INODE_SIZE);
+
+    if (physical_inode_size == EXT2_GOOD_OLD_INODE_SIZE) {
+        // The i_extra_isize record doesn't exist on these old filesystems.
+        return EXT2_GOOD_OLD_INODE_SIZE;
+    }
+
+    u64 logical_inode_size = EXT2_GOOD_OLD_INODE_SIZE + inode.i_extra_isize;
+    if (logical_inode_size > sizeof(ext2_inode_large)) {
+        // We don't know how to handle this/these extra record(s), so just
+        // pretend that they don't exist. This also prevents inodes from
+        // claiming to be larger than what is physically possible.
+        return sizeof(ext2_inode_large);
+    }
+
+    return logical_inode_size;
 }
 
 ErrorOr<void> Ext2FS::write_ext2_inode(InodeIndex inode, ext2_inode_large const& e2inode)
@@ -295,10 +321,7 @@ ErrorOr<void> Ext2FS::write_ext2_inode(InodeIndex inode, ext2_inode_large const&
     Vector<u8> inode_storage;
     TRY(inode_storage.try_resize(inode_size()));
 
-    size_t used_inode_size = inode_size() > EXT2_GOOD_OLD_INODE_SIZE ? EXT2_GOOD_OLD_INODE_SIZE + e2inode.i_extra_isize : inode_size();
-    VERIFY(used_inode_size >= EXT2_GOOD_OLD_INODE_SIZE && used_inode_size <= inode_size());
-
-    memcpy(inode_storage.data(), &e2inode, min(used_inode_size, sizeof(ext2_inode_large)));
+    memcpy(inode_storage.data(), &e2inode, usable_inode_size(e2inode));
 
     auto buffer = UserOrKernelBuffer::for_kernel_buffer(inode_storage.data());
     return write_block(block_index, buffer, inode_size(), offset);
