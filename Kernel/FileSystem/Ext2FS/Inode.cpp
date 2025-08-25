@@ -38,16 +38,6 @@ u8 Ext2FSInode::to_ext2_file_type(mode_t mode)
     return EXT2_FT_UNKNOWN;
 }
 
-bool Ext2FSInode::is_within_inode_bounds(FlatPtr base, FlatPtr value_offset, size_t value_size) const
-{
-    if (value_offset - base - value_size < EXT2_GOOD_OLD_INODE_SIZE)
-        return true;
-
-    VERIFY(static_cast<u64>(EXT2_GOOD_OLD_INODE_SIZE + m_raw_inode.i_extra_isize) <= fs().inode_size());
-
-    return value_offset - base + value_size <= static_cast<u64>(EXT2_GOOD_OLD_INODE_SIZE + m_raw_inode.i_extra_isize);
-}
-
 ErrorOr<void> Ext2FSInode::write_singly_indirect_block_pointer(BlockBasedFileSystem::BlockIndex logical_block_index, BlockBasedFileSystem::BlockIndex on_disk_index)
 {
     auto const entries_per_block = EXT2_ADDR_PER_BLOCK(&fs().super_block());
@@ -428,24 +418,25 @@ InodeMetadata Ext2FSInode::metadata() const
     metadata.gid = inode_gid(m_raw_inode);
     metadata.link_count = m_raw_inode.i_links_count;
 
-    auto decode_time = [this](u32 const& time, u32 const& time_extra) {
-        // NOTE: All the *_extra fields have to be bounds-checked in case we have oddly-sized inodes.
-        // This is simply a correctness measure, since an OOB read wouldn't happen anyway due to the
-        // fact that we always store the raw inode as an ext2_inode_large.
-        if (is_within_inode_bounds(bit_cast<FlatPtr>(&m_raw_inode), bit_cast<FlatPtr>(&time_extra), sizeof(time_extra))) {
-            time_t seconds = decode_seconds_with_extra(time, time_extra);
-            u32 nanoseconds = decode_nanoseconds_from_extra(time_extra);
-            return UnixDateTime::from_unix_timespec({ .tv_sec = seconds, .tv_nsec = nanoseconds });
-        }
-
-        return UnixDateTime::from_seconds_since_epoch(static_cast<i32>(time));
+    auto decode_time_with_extra = [](u32 const& time, u32 const& time_extra) {
+        time_t seconds = decode_seconds_with_extra(time, time_extra);
+        u32 nanoseconds = decode_nanoseconds_from_extra(time_extra);
+        return UnixDateTime::from_unix_timespec({ .tv_sec = seconds, .tv_nsec = nanoseconds });
     };
 
-    metadata.atime = decode_time(m_raw_inode.i_atime, m_raw_inode.i_atime_extra);
-    metadata.mtime = decode_time(m_raw_inode.i_mtime, m_raw_inode.i_mtime_extra);
+    u64 usable_size = fs().usable_inode_size(m_raw_inode);
+    if (offsetof(ext2_inode_large, i_atime_extra) + sizeof(m_raw_inode.i_atime_extra) <= usable_size)
+        metadata.atime = decode_time_with_extra(m_raw_inode.i_atime, m_raw_inode.i_atime_extra);
+    else
+        metadata.atime = UnixDateTime::from_seconds_since_epoch(static_cast<i32>(m_raw_inode.i_atime));
+
+    if (offsetof(ext2_inode_large, i_mtime_extra) + sizeof(m_raw_inode.i_mtime_extra) <= usable_size)
+        metadata.mtime = decode_time_with_extra(m_raw_inode.i_mtime, m_raw_inode.i_mtime_extra);
+    else
+        metadata.mtime = UnixDateTime::from_seconds_since_epoch(static_cast<i32>(m_raw_inode.i_mtime));
 
     // NOTE: There's no i_dtime_extra, so we use i_ctime_extra to approximate the right epoch for metadata.dtime.
-    if (is_within_inode_bounds(bit_cast<FlatPtr>(&m_raw_inode), bit_cast<FlatPtr>(&m_raw_inode.i_ctime_extra), sizeof(m_raw_inode.i_ctime_extra))) {
+    if (offsetof(ext2_inode_large, i_ctime_extra) + sizeof(m_raw_inode.i_ctime_extra) <= usable_size) {
         time_t ctime_seconds = decode_seconds_with_extra(m_raw_inode.i_ctime, m_raw_inode.i_ctime_extra);
         u32 ctime_nanoseconds = decode_nanoseconds_from_extra(m_raw_inode.i_ctime_extra);
 
@@ -883,11 +874,13 @@ ErrorOr<void> Ext2FSInode::update_timestamps(Optional<UnixDateTime> atime, Optio
     MutexLocker locker(m_inode_lock);
     if (fs().is_readonly())
         return EROFS;
-    if (atime.value_or({}).to_timespec().tv_sec > NumericLimits<i32>::max() && !is_within_inode_bounds(bit_cast<FlatPtr>(&m_raw_inode), bit_cast<FlatPtr>(&m_raw_inode.i_atime_extra), sizeof(m_raw_inode.i_atime_extra)))
+
+    size_t usable_size = fs().usable_inode_size(m_raw_inode);
+    if (atime.value_or({}).to_timespec().tv_sec > NumericLimits<i32>::max() && offsetof(ext2_inode_large, i_atime_extra) + sizeof(m_raw_inode.i_atime_extra) > usable_size)
         return EINVAL;
-    if (ctime.value_or({}).to_timespec().tv_sec > NumericLimits<i32>::max() && !is_within_inode_bounds(bit_cast<FlatPtr>(&m_raw_inode), bit_cast<FlatPtr>(&m_raw_inode.i_ctime_extra), sizeof(m_raw_inode.i_ctime_extra)))
+    if (ctime.value_or({}).to_timespec().tv_sec > NumericLimits<i32>::max() && offsetof(ext2_inode_large, i_ctime_extra) + sizeof(m_raw_inode.i_ctime_extra) > usable_size)
         return EINVAL;
-    if (mtime.value_or({}).to_timespec().tv_sec > NumericLimits<i32>::max() && !is_within_inode_bounds(bit_cast<FlatPtr>(&m_raw_inode), bit_cast<FlatPtr>(&m_raw_inode.i_mtime_extra), sizeof(m_raw_inode.i_mtime_extra)))
+    if (mtime.value_or({}).to_timespec().tv_sec > NumericLimits<i32>::max() && offsetof(ext2_inode_large, i_mtime_extra) + sizeof(m_raw_inode.i_mtime_extra) > usable_size)
         return EINVAL;
 
     auto maybe_encode_time = [](auto const& source, u32& time, u32& time_extra) {

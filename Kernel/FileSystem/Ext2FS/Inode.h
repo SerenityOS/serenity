@@ -46,8 +46,6 @@ private:
     virtual ErrorOr<void> truncate_locked(u64) override;
     virtual ErrorOr<int> get_block_address(int) override;
 
-    bool is_within_inode_bounds(FlatPtr base, FlatPtr value_offset, size_t value_size) const;
-
     static u8 to_ext2_file_type(mode_t mode);
 
     static time_t decode_seconds_with_extra(i32 seconds, u32 extra) { return (extra & EXT4_EPOCH_MASK) ? static_cast<time_t>(seconds) + (static_cast<time_t>(extra & EXT4_EPOCH_MASK) << 32) : static_cast<time_t>(seconds); }

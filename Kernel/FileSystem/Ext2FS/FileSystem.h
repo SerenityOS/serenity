@@ -78,6 +78,7 @@ private:
     u64 inodes_per_group() const;
     u64 blocks_per_group() const;
     u64 inode_size() const;
+    u64 usable_inode_size(ext2_inode_large const&) const;
 
     ErrorOr<NonnullRefPtr<Ext2FSInode>> build_root_inode() const;
 
