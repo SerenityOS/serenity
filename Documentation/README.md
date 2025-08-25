@@ -81,6 +81,10 @@ Make sure to read the basic [Build Instructions](BuildInstructions.md) first.
 -   [Graphics Subsystem](Kernel/GraphicsSubsystem.md)
 -   [Kernel Development Patterns & Guidelines](Kernel/DevelopmentGuidelines.md)
 
+## Architecture Ports
+
+-   [RISC-V](RISC-V.md)
+
 ## Applications
 
 Documentation for SerenityOS applications and utilities can be found in [the man pages](https://man.serenityos.org/).
