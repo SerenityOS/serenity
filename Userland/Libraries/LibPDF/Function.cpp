@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericShorthands.h>
 #include <AK/NonnullOwnPtr.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
@@ -102,18 +103,7 @@ SampledFunction::create(Document* document, Vector<Bound> domain, Optional<Vecto
     if (!dict->contains(CommonNames::BitsPerSample))
         return Error { Error::Type::MalformedPDF, "Function type 0 requires /BitsPerSample" };
     auto bits_per_sample = TRY(document->resolve_to<int>(dict->get_value(CommonNames::BitsPerSample)));
-    switch (bits_per_sample) {
-    case 1:
-    case 2:
-    case 4:
-    case 8:
-    case 12:
-    case 16:
-    case 24:
-    case 32:
-        // Ok!
-        break;
-    default:
+    if (!first_is_one_of(bits_per_sample, 1, 2, 4, 8, 12, 16, 24, 32)) {
         dbgln("invalid /BitsPerSample {}", bits_per_sample);
         return Error { Error::Type::MalformedPDF, "Function type 0 has invalid /BitsPerSample" };
     }
