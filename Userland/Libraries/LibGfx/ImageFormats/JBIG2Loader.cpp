@@ -1086,7 +1086,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
         if (segment.header.page_association != context.current_page_number)
             continue;
 
-        // Quirk: Files in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfPage with a page.
+        // Quirk: Files in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfFile with a page.
         if (found_end_of_page && segment.header.type != SegmentType::EndOfFile)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Found segment after EndOfPage");
 
