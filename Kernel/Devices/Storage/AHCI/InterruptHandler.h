@@ -17,7 +17,6 @@
 #include <Kernel/Memory/PhysicalRAMPage.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Security/Random.h>
-#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {
 
