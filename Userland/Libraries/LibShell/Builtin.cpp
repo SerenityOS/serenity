@@ -450,6 +450,7 @@ ErrorOr<int> Shell::builtin_cd(Main::Arguments arguments)
         }
     }
 
+    auto const requested_path_is_absolute = !new_path.is_empty() && new_path.starts_with('/');
     auto real_path_or_error = FileSystem::real_path(new_path);
     if (real_path_or_error.is_error()) {
         warnln("Invalid path '{}'", new_path);
@@ -460,20 +461,37 @@ ErrorOr<int> Shell::builtin_cd(Main::Arguments arguments)
     if (cd_history.is_empty() || cd_history.last() != real_path)
         cd_history.enqueue(real_path);
 
-    auto path_relative_to_current_directory = LexicalPath::relative_path(real_path, cwd);
-    if (path_relative_to_current_directory.is_empty())
-        path_relative_to_current_directory = real_path;
-    char const* path = path_relative_to_current_directory.characters();
+    ByteString path_to_chdir;
+    if (!requested_path_is_absolute)
+        path_to_chdir = LexicalPath::relative_path(real_path, cwd);
+    else
+        path_to_chdir = real_path;
+    char const* path = path_to_chdir.characters();
 
-    int rc = chdir(path);
-    if (rc < 0) {
-        if (errno == ENOTDIR) {
-            warnln("Not a directory: {}", path);
-        } else {
-            warnln("chdir({}) failed: {}", path, strerror(errno));
+    Function<int(bool)> do_chdir = [&](bool tried_lexical_resolution) -> int {
+        int rc = chdir(path);
+        if (rc < 0) {
+            if (errno == ENOTDIR) {
+                warnln("Not a directory: {}", path);
+            } else {
+                if (!tried_lexical_resolution && !path_to_chdir.starts_with('/')) {
+                    // Resolve lexically then try again.
+                    auto new_path = LexicalPath::join(cwd, path_to_chdir).string();
+                    if (new_path != path_to_chdir) {
+                        real_path = move(new_path);
+                        path = real_path.characters();
+                        return do_chdir(true);
+                    }
+                }
+                warnln("chdir({}) failed: {}", path, strerror(errno));
+            }
+            return 1;
         }
+        return 0;
+    };
+    if (do_chdir(false) != 0)
         return 1;
-    }
+
     setenv("OLDPWD", cwd.characters(), 1);
     cwd = move(real_path);
     setenv("PWD", cwd.characters(), 1);
