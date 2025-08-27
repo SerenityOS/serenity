@@ -442,10 +442,10 @@ public:
         bool m_did_unblock { false };
     };
 
-    class WaitQueueBlocker final : public Blocker {
+    class DeprecatedWaitQueueBlocker final : public Blocker {
     public:
-        explicit WaitQueueBlocker(WaitQueue&, StringView block_reason = {});
-        virtual ~WaitQueueBlocker();
+        explicit DeprecatedWaitQueueBlocker(DeprecatedWaitQueue&, StringView block_reason = {});
+        virtual ~DeprecatedWaitQueueBlocker();
 
         virtual Type blocker_type() const override { return Type::Queue; }
         virtual StringView state_string() const override { return m_block_reason.is_null() ? m_block_reason : "Queue"sv; }
@@ -455,7 +455,7 @@ public:
         bool unblock();
 
     protected:
-        WaitQueue& m_wait_queue;
+        DeprecatedWaitQueue& m_wait_queue;
         StringView m_block_reason;
         bool m_did_unblock { false };
     };
@@ -825,10 +825,10 @@ public:
     void unblock(u8 signal = 0);
 
     template<class... Args>
-    Thread::BlockResult wait_on(WaitQueue& wait_queue, Thread::BlockTimeout const& timeout, Args&&... args)
+    Thread::BlockResult wait_on(DeprecatedWaitQueue& wait_queue, Thread::BlockTimeout const& timeout, Args&&... args)
     {
         VERIFY(this == Thread::current());
-        return block<Thread::WaitQueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
+        return block<Thread::DeprecatedWaitQueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
     }
 
     BlockResult sleep(clockid_t, Duration const&, Duration* = nullptr);
@@ -1094,7 +1094,7 @@ private:
     IntrusiveListNode<Thread> m_process_thread_list_node;
     int m_runnable_priority { -1 };
 
-    friend class WaitQueue;
+    friend class DeprecatedWaitQueue;
 
     class JoinBlockerSet final : public BlockerSet {
     public:

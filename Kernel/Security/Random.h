@@ -13,7 +13,7 @@
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Library/StdLib.h>
 #include <Kernel/Locking/Mutex.h>
-#include <Kernel/Tasks/WaitQueue.h>
+#include <Kernel/Tasks/DeprecatedWaitQueue.h>
 #include <LibCrypto/Cipher/AES.h>
 #include <LibCrypto/Cipher/Cipher.h>
 #include <LibCrypto/Hash/SHA2.h>
@@ -132,7 +132,7 @@ public:
     void wake_if_ready();
 
 private:
-    WaitQueue m_seed_queue;
+    DeprecatedWaitQueue m_seed_queue;
 };
 
 class EntropySource {

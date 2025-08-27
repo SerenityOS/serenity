@@ -19,6 +19,7 @@ class Coredump;
 class Credentials;
 class CustodyBase;
 class Custody;
+class DeprecatedWaitQueue;
 class Device;
 class DeviceControlDevice;
 class DiskCache;
@@ -70,7 +71,6 @@ class RAMFSInode;
 class UDPSocket;
 class UserOrKernelBuffer;
 class VFSRootContext;
-class WaitQueue;
 class WorkQueue;
 
 namespace Memory {

@@ -11,7 +11,7 @@
 #include <AK/IntrusiveList.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/SpinlockProtected.h>
-#include <Kernel/Tasks/WaitQueue.h>
+#include <Kernel/Tasks/DeprecatedWaitQueue.h>
 
 namespace Kernel {
 
@@ -62,7 +62,7 @@ private:
     void do_queue(WorkItem&);
 
     RefPtr<Thread> m_thread;
-    WaitQueue m_wait_queue;
+    DeprecatedWaitQueue m_wait_queue;
     RecursiveSpinlockProtected<IntrusiveList<&WorkItem::m_node>, LockRank::None> m_items {};
 };
 
