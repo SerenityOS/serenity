@@ -394,6 +394,7 @@ set(KERNEL_SOURCES
     Tasks/Thread.cpp
     Tasks/ThreadBlockers.cpp
     Tasks/ThreadTracer.cpp
+    Tasks/WaitQueue.cpp
     Tasks/WorkQueue.cpp
     Time/TimeManagement.cpp
     Time/TimerQueue.cpp
