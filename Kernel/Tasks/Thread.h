@@ -859,6 +859,9 @@ public:
     FlatPtr kernel_stack_top() const { return m_kernel_stack_top; }
 
     void set_state(State, u8 = 0);
+    void override_stop_state(State);
+
+    void set_manual_block_handling(bool);
 
     [[nodiscard]] bool is_initialized() const { return m_initialized; }
     void set_initialized(bool initialized) { m_initialized = initialized; }
@@ -1191,6 +1194,7 @@ private:
     IntrusiveListNode<Thread> m_blocked_threads_list_node;
     LockRank m_lock_rank_mask {};
     bool m_allocation_enabled { true };
+    bool m_manual_block_handling { false };
     ArchSpecificThreadData m_arch_specific_data;
 
     // FIXME: remove this after annihilating Process::m_big_lock
