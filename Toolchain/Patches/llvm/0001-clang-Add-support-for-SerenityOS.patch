@@ -16,13 +16,13 @@ Co-authored-by: Andrew Kaster <akaster@serenityos.org>
 Co-authored-by: Daniel Bertalan <dani@danielbertalan.dev>
 Co-authored-by: Dan Klishch <danilklishch@gmail.com>
 ---
- clang/lib/Basic/Targets.cpp                   |  12 +
+ clang/lib/Basic/Targets.cpp                   |  12 ++
  clang/lib/Basic/Targets/OSTargets.h           |  17 ++
  clang/lib/Driver/CMakeLists.txt               |   1 +
  clang/lib/Driver/Driver.cpp                   |   4 +
  clang/lib/Driver/ToolChain.cpp                |   5 +-
- clang/lib/Driver/ToolChains/Serenity.cpp      | 208 ++++++++++++++++++
- clang/lib/Driver/ToolChains/Serenity.h        |  84 +++++++
+ clang/lib/Driver/ToolChains/Serenity.cpp      | 198 +++++++++++++++++
+ clang/lib/Driver/ToolChains/Serenity.h        |  84 ++++++++
  clang/lib/Lex/InitHeaderSearch.cpp            |   1 +
  .../usr/include/c++/v1/.keep                  |   0
  .../include/x86_64-pc-serenity/c++/v1/.keep   |   0
@@ -31,8 +31,8 @@ Co-authored-by: Dan Klishch <danilklishch@gmail.com>
  .../serenity_x86_64_tree/usr/local/.keep      |   0
  clang/test/Driver/pic.c                       |   6 +
  clang/test/Driver/save-stats.c                |   2 +
- clang/test/Driver/serenity.cpp                | 199 +++++++++++++++++
- 16 files changed, 538 insertions(+), 1 deletion(-)
+ clang/test/Driver/serenity.cpp                | 199 ++++++++++++++++++
+ 16 files changed, 528 insertions(+), 1 deletion(-)
  create mode 100644 clang/lib/Driver/ToolChains/Serenity.cpp
  create mode 100644 clang/lib/Driver/ToolChains/Serenity.h
  create mode 100644 clang/test/Driver/Inputs/serenity_x86_64_tree/usr/include/c++/v1/.keep
@@ -43,10 +43,10 @@ Co-authored-by: Dan Klishch <danilklishch@gmail.com>
  create mode 100644 clang/test/Driver/serenity.cpp
 
 diff --git a/clang/lib/Basic/Targets.cpp b/clang/lib/Basic/Targets.cpp
-index 281aebdb1c35d328c39dd4122355f13d57fab943..c9da76cae09be0163d0a8308b3a8e39c4fd512f1 100644
+index 5d11578893c66d2ec5f8ef40617e49d4fad615dc..0cc3e60a383c380999a845f325f97a8ee7011e1f 100644
 --- a/clang/lib/Basic/Targets.cpp
 +++ b/clang/lib/Basic/Targets.cpp
-@@ -170,6 +170,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
+@@ -173,6 +173,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
      case llvm::Triple::OpenBSD:
        return std::make_unique<OpenBSDTargetInfo<AArch64leTargetInfo>>(Triple,
                                                                        Opts);
@@ -56,17 +56,17 @@ index 281aebdb1c35d328c39dd4122355f13d57fab943..c9da76cae09be0163d0a8308b3a8e39c
      case llvm::Triple::Win32:
        switch (Triple.getEnvironment()) {
        case llvm::Triple::GNU:
-@@ -466,6 +469,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
-         return std::make_unique<OHOSTargetInfo<RISCV64TargetInfo>>(Triple,
-                                                                    Opts);
-       }
+@@ -472,6 +475,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
+     case llvm::Triple::Managarm:
+       return std::make_unique<ManagarmTargetInfo<RISCV64TargetInfo>>(Triple,
+                                                                      Opts);
 +    case llvm::Triple::Serenity:
 +      return std::make_unique<SerenityTargetInfo<RISCV64TargetInfo>>(Triple,
 +                                                                     Opts);
      default:
        return std::make_unique<RISCV64TargetInfo>(Triple, Opts);
      }
-@@ -591,6 +597,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
+@@ -597,6 +603,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
        return std::make_unique<MCUX86_32TargetInfo>(Triple, Opts);
      case llvm::Triple::Hurd:
        return std::make_unique<HurdTargetInfo<X86_32TargetInfo>>(Triple, Opts);
@@ -76,10 +76,10 @@ index 281aebdb1c35d328c39dd4122355f13d57fab943..c9da76cae09be0163d0a8308b3a8e39c
      default:
        return std::make_unique<X86_32TargetInfo>(Triple, Opts);
      }
-@@ -654,6 +663,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
-       return std::make_unique<PS5OSTargetInfo<X86_64TargetInfo>>(Triple, Opts);
-     case llvm::Triple::Hurd:
-       return std::make_unique<HurdTargetInfo<X86_64TargetInfo>>(Triple, Opts);
+@@ -663,6 +672,9 @@ std::unique_ptr<TargetInfo> AllocateTarget(const llvm::Triple &Triple,
+     case llvm::Triple::Managarm:
+       return std::make_unique<ManagarmTargetInfo<X86_64TargetInfo>>(Triple,
+                                                                     Opts);
 +    case llvm::Triple::Serenity:
 +      return std::make_unique<SerenityTargetInfo<X86_64TargetInfo>>(Triple,
 +                                                                    Opts);
@@ -87,10 +87,10 @@ index 281aebdb1c35d328c39dd4122355f13d57fab943..c9da76cae09be0163d0a8308b3a8e39c
        return std::make_unique<X86_64TargetInfo>(Triple, Opts);
      }
 diff --git a/clang/lib/Basic/Targets/OSTargets.h b/clang/lib/Basic/Targets/OSTargets.h
-index 991efd2bde01f4660742dd8fd427b611679571c5..0b67528245fd960ad4c3879c0c77e80911c0fdc7 100644
+index c1a68f464e83124aa0d75680dfaf84f4dfb76e0c..0c9a854f09ec9754cdb10ad7e052afb10953ab68 100644
 --- a/clang/lib/Basic/Targets/OSTargets.h
 +++ b/clang/lib/Basic/Targets/OSTargets.h
-@@ -1040,6 +1040,23 @@ public:
+@@ -1070,6 +1070,23 @@ public:
    }
  };
  
@@ -115,22 +115,22 @@ index 991efd2bde01f4660742dd8fd427b611679571c5..0b67528245fd960ad4c3879c0c77e809
  } // namespace clang
  #endif // LLVM_CLANG_LIB_BASIC_TARGETS_OSTARGETS_H
 diff --git a/clang/lib/Driver/CMakeLists.txt b/clang/lib/Driver/CMakeLists.txt
-index 5bdb6614389cffcce642f90252e605ad6e4fe9e0..0b147a4754dbead6134ad9994bc2c6fbedc78da2 100644
+index 0268ec49eaf119e0d459e8747491684b1ce11675..1d2b39cb60fccbd6579c15b24d4c636d7cb23907 100644
 --- a/clang/lib/Driver/CMakeLists.txt
 +++ b/clang/lib/Driver/CMakeLists.txt
-@@ -75,6 +75,7 @@ add_clang_library(clangDriver
+@@ -76,6 +76,7 @@ add_clang_library(clangDriver
+   ToolChains/OHOS.cpp
    ToolChains/OpenBSD.cpp
    ToolChains/PS4CPU.cpp
-   ToolChains/RISCVToolchain.cpp
 +  ToolChains/Serenity.cpp
    ToolChains/Solaris.cpp
    ToolChains/SPIRV.cpp
    ToolChains/SPIRVOpenMP.cpp
 diff --git a/clang/lib/Driver/Driver.cpp b/clang/lib/Driver/Driver.cpp
-index 87855fdb7997105d8d425b4c8690b072d3c6cde7..2549f5940ff4f4973810831691c4c2e00f1e0507 100644
+index 55748c0bce91872c37d782214110fe1d8b9deb7a..75f5578d06e56f026f7575262565789eb2b0f614 100644
 --- a/clang/lib/Driver/Driver.cpp
 +++ b/clang/lib/Driver/Driver.cpp
-@@ -45,6 +45,7 @@
+@@ -46,6 +46,7 @@
  #include "ToolChains/SPIRV.h"
  #include "ToolChains/SPIRVOpenMP.h"
  #include "ToolChains/SYCL.h"
@@ -138,9 +138,9 @@ index 87855fdb7997105d8d425b4c8690b072d3c6cde7..2549f5940ff4f4973810831691c4c2e0
  #include "ToolChains/Solaris.h"
  #include "ToolChains/TCE.h"
  #include "ToolChains/UEFI.h"
-@@ -6663,6 +6664,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
-     case llvm::Triple::Fuchsia:
-       TC = std::make_unique<toolchains::Fuchsia>(*this, Target, Args);
+@@ -6850,6 +6851,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
+     case llvm::Triple::Managarm:
+       TC = std::make_unique<toolchains::Managarm>(*this, Target, Args);
        break;
 +    case llvm::Triple::Serenity:
 +      TC = std::make_unique<toolchains::Serenity>(*this, Target, Args);
@@ -149,10 +149,10 @@ index 87855fdb7997105d8d425b4c8690b072d3c6cde7..2549f5940ff4f4973810831691c4c2e0
        TC = std::make_unique<toolchains::Solaris>(*this, Target, Args);
        break;
 diff --git a/clang/lib/Driver/ToolChain.cpp b/clang/lib/Driver/ToolChain.cpp
-index acf9d264d631b33f048e90b7f81ea8ad771c84d9..5653b07368c4e31947f1f7e4e8acde66aeeb862a 100644
+index 07a3ae925f96df53678e138c294d9c5d7db950ae..d737380a681511cfc47da24f0b46947b0729faac 100644
 --- a/clang/lib/Driver/ToolChain.cpp
 +++ b/clang/lib/Driver/ToolChain.cpp
-@@ -702,6 +702,8 @@ StringRef ToolChain::getOSLibName() const {
+@@ -696,6 +696,8 @@ StringRef ToolChain::getOSLibName() const {
      return "sunos";
    case llvm::Triple::AIX:
      return "aix";
@@ -161,7 +161,7 @@ index acf9d264d631b33f048e90b7f81ea8ad771c84d9..5653b07368c4e31947f1f7e4e8acde66
    default:
      return getOS();
    }
-@@ -1225,7 +1227,8 @@ ToolChain::UnwindLibType ToolChain::GetUnwindLibType(
+@@ -1335,7 +1337,8 @@ ToolChain::UnwindLibType ToolChain::GetUnwindLibType(
    else if (LibName == "platform" || LibName == "") {
      ToolChain::RuntimeLibType RtLibType = GetRuntimeLibType(Args);
      if (RtLibType == ToolChain::RLT_CompilerRT) {
@@ -173,10 +173,10 @@ index acf9d264d631b33f048e90b7f81ea8ad771c84d9..5653b07368c4e31947f1f7e4e8acde66
          unwindLibType = ToolChain::UNW_None;
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..7d95fe55a0fde623720e5974a860826753f4bf1f
+index 0000000000000000000000000000000000000000..b3b9a593749bae9c69eb2afa706433303398198b
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,208 @@
+@@ -0,0 +1,198 @@
 +//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -186,8 +186,8 @@ index 0000000000000000000000000000000000000000..7d95fe55a0fde623720e5974a8608267
 +//===----------------------------------------------------------------------===//
 +
 +#include "Serenity.h"
-+#include "CommonArgs.h"
 +#include "clang/Config/config.h"
++#include "clang/Driver/CommonArgs.h"
 +#include "clang/Driver/Compilation.h"
 +#include "clang/Driver/Driver.h"
 +#include "clang/Driver/Options.h"
@@ -285,19 +285,9 @@ index 0000000000000000000000000000000000000000..7d95fe55a0fde623720e5974a8608267
 +
 +  TC.AddFilePathLibArgs(Args, CmdArgs);
 +
-+  if (D.isUsingLTO()) {
-+    assert(!Inputs.empty() && "Must have at least one input.");
-+    // Find the first filename InputInfo object.
-+    auto const *Input = llvm::find_if(
-+        Inputs, [](const InputInfo &II) -> bool { return II.isFilename(); });
-+    if (Input == Inputs.end())
-+      // For a very rare case, all of the inputs to the linker are
-+      // InputArg. If that happens, just use the first InputInfo.
-+      Input = Inputs.begin();
-+
-+    addLTOOptions(TC, Args, CmdArgs, Output, *Input,
++  if (D.isUsingLTO())
++    addLTOOptions(TC, Args, CmdArgs, Output, Inputs,
 +                  D.getLTOMode() == LTOK_Thin);
-+  }
 +
 +  Args.addAllArgs(CmdArgs, {options::OPT_T_Group, options::OPT_s,
 +                            options::OPT_t, options::OPT_r});
@@ -476,10 +466,10 @@ index 0000000000000000000000000000000000000000..2a1f685cb6623e080a2c141dfc3790ef
 +
 +#endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SERENITY_H
 diff --git a/clang/lib/Lex/InitHeaderSearch.cpp b/clang/lib/Lex/InitHeaderSearch.cpp
-index bb2a21356fa8fe615526c4f50edd98644ac40ce0..6a892266128550d8a3bdab4364b9935ca235ac80 100644
+index 3e22b4001bde770167ca19c40d3849817adaf3ef..57012e5997d788ffedfe8fa83f25404e717fdcb2 100644
 --- a/clang/lib/Lex/InitHeaderSearch.cpp
 +++ b/clang/lib/Lex/InitHeaderSearch.cpp
-@@ -300,6 +300,7 @@ bool InitHeaderSearch::ShouldAddDefaultIncludePaths(
+@@ -228,6 +228,7 @@ bool InitHeaderSearch::ShouldAddDefaultIncludePaths(
    case llvm::Triple::PS4:
    case llvm::Triple::PS5:
    case llvm::Triple::RTEMS:

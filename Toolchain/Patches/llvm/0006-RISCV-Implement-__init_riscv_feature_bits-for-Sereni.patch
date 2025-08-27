@@ -13,11 +13,11 @@ and __riscv_cpu_model.
  3 files changed, 24 insertions(+), 5 deletions(-)
 
 diff --git a/clang/include/clang/Basic/DiagnosticFrontendKinds.td b/clang/include/clang/Basic/DiagnosticFrontendKinds.td
-index f3593f5313340b4425907cb0dcc09afdba105bda..69b2472d95dc5bd19bd4e922a6402cb2017589cd 100644
+index 8a8db27490f0677ff6c5d23ce3c4d16cb448c48a..d152a7c519eaba04b41ba9924da61d48499d2f1c 100644
 --- a/clang/include/clang/Basic/DiagnosticFrontendKinds.td
 +++ b/clang/include/clang/Basic/DiagnosticFrontendKinds.td
-@@ -380,7 +380,7 @@ def err_ast_action_on_llvm_ir : Error<
-   DefaultFatal;
+@@ -386,7 +386,7 @@ def err_ast_action_on_llvm_ir : Error<
+ def err_invalid_llvm_ir : Error<"invalid LLVM IR input: %0">;
  
  def err_os_unsupport_riscv_fmv : Error<
 -  "function multiversioning is currently only supported on Linux">;
@@ -26,10 +26,10 @@ index f3593f5313340b4425907cb0dcc09afdba105bda..69b2472d95dc5bd19bd4e922a6402cb2
  def warn_hlsl_langstd_minimal :
    Warning<"support for HLSL language version %0 is incomplete, "
 diff --git a/clang/lib/CodeGen/CodeGenFunction.cpp b/clang/lib/CodeGen/CodeGenFunction.cpp
-index 08165e0b28406a0c1f6534852629294677874ff2..f56ebdb738dd513fb72046bd6d6bac4c541632e8 100644
+index 776a646ceb32fa7689c80e9837f1955dc4ce93ea..32f80e1b21f5f1683a09126eab24a8ccf25ea8a3 100644
 --- a/clang/lib/CodeGen/CodeGenFunction.cpp
 +++ b/clang/lib/CodeGen/CodeGenFunction.cpp
-@@ -2937,8 +2937,9 @@ void CodeGenFunction::EmitMultiVersionResolver(
+@@ -2987,8 +2987,9 @@ void CodeGenFunction::EmitMultiVersionResolver(
  void CodeGenFunction::EmitRISCVMultiVersionResolver(
      llvm::Function *Resolver, ArrayRef<FMVResolverOption> Options) {
  
@@ -42,10 +42,10 @@ index 08165e0b28406a0c1f6534852629294677874ff2..f56ebdb738dd513fb72046bd6d6bac4c
      return;
    }
 diff --git a/compiler-rt/lib/builtins/cpu_model/riscv.c b/compiler-rt/lib/builtins/cpu_model/riscv.c
-index 6879c2ad482641aad783afc0b44e431c988909cd..bb5bdb3249051b6161c433e412af9f54ad8e7d6c 100644
+index c02f6e9961ca427cf8c3c9692a8c4b36577c84d2..1392ea7787e1c7a991b6e20480c1cd0096f4c714 100644
 --- a/compiler-rt/lib/builtins/cpu_model/riscv.c
 +++ b/compiler-rt/lib/builtins/cpu_model/riscv.c
-@@ -325,7 +325,23 @@ static void initRISCVFeature(struct riscv_hwprobe Hwprobes[]) {
+@@ -339,7 +339,23 @@ static void initRISCVFeature(struct riscv_hwprobe Hwprobes[]) {
      __riscv_feature_bits.features[i] = features[i];
  }
  
@@ -70,7 +70,7 @@ index 6879c2ad482641aad783afc0b44e431c988909cd..bb5bdb3249051b6161c433e412af9f54
  
  static int FeaturesBitCached = 0;
  
-@@ -362,7 +378,9 @@ void __init_riscv_feature_bits(void *PlatformArgs) {
+@@ -376,7 +392,9 @@ void __init_riscv_feature_bits(void *PlatformArgs) {
      return;
  
    initRISCVFeature(Hwprobes);
