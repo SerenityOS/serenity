@@ -106,7 +106,7 @@ public:
 protected:
     virtual bool is_strict_mode() const final { return m_strict; }
 
-    virtual Completion ordinary_call_evaluate_body();
+    Completion ordinary_call_evaluate_body();
 
 private:
     ECMAScriptFunctionObject(DeprecatedFlyString name, ByteString source_text, Statement const& ecmascript_code, Vector<FunctionParameter> parameters, i32 m_function_length, Vector<DeprecatedFlyString> local_variables_names, Environment* parent_environment, PrivateEnvironment* private_environment, Object& prototype, FunctionKind, bool is_strict, FunctionParsingInsights, bool is_arrow_function, Variant<PropertyKey, PrivateName, Empty> class_field_initializer_name);

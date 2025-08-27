@@ -72,7 +72,7 @@ public:
 
     void enumerate_static_tables(Function<void(StringView, PhysicalAddress, size_t)>);
 
-    virtual bool have_8042() const
+    bool have_8042() const
     {
         return m_x86_specific_flags.keyboard_8042;
     }

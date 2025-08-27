@@ -29,7 +29,7 @@ public:
     static int taskbar_icon_size() { return 16; }
 
     virtual void config_string_did_change(StringView, StringView, StringView, StringView) override;
-    virtual void add_system_menu(NonnullRefPtr<GUI::Menu> system_menu);
+    void add_system_menu(NonnullRefPtr<GUI::Menu> system_menu);
 
 private:
     explicit TaskbarWindow();
