@@ -16,6 +16,7 @@
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
+#include <Kernel/Tasks/WaitQueue.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/kstdio.h>
 
@@ -32,8 +33,8 @@ static u32 time_slice_for(Thread const& thread)
 }
 
 READONLY_AFTER_INIT Thread* g_finalizer;
-READONLY_AFTER_INIT DeprecatedWaitQueue* g_finalizer_wait_queue;
-Atomic<bool> g_finalizer_has_work { false };
+READONLY_AFTER_INIT WaitQueue* g_finalizer_wait_queue;
+SpinlockProtected<bool, LockRank::None> g_finalizer_has_work;
 READONLY_AFTER_INIT static Process* s_colonel_process;
 
 struct ThreadReadyQueue {
@@ -376,9 +377,11 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
     VERIFY(Processor::is_initialized()); // sanity check
     VERIFY(TimeManagement::is_initialized());
 
-    g_finalizer_wait_queue = new DeprecatedWaitQueue;
+    g_finalizer_wait_queue = new WaitQueue;
 
-    g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
+    g_finalizer_has_work.with([](auto& has_work) {
+        has_work = false;
+    });
     auto [colonel_process, idle_thread] = MUST(Process::create_kernel_process("colonel"sv, idle_loop, nullptr, 1, Process::RegisterProcess::No));
     s_colonel_process = &colonel_process.leak_ref();
     idle_thread->set_priority(THREAD_PRIORITY_MIN);
@@ -477,8 +480,10 @@ void Scheduler::invoke_async()
 
 void Scheduler::notify_finalizer()
 {
-    if (!g_finalizer_has_work.exchange(true, AK::MemoryOrder::memory_order_acq_rel))
-        g_finalizer_wait_queue->wake_all();
+    g_finalizer_has_work.with([](auto& has_work) {
+        has_work = true;
+        g_finalizer_wait_queue->notify_all();
+    });
 }
 
 void Scheduler::idle_loop(void*)

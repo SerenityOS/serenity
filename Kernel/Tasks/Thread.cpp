@@ -577,8 +577,11 @@ void Thread::finalize_dying_threads()
             auto result = dying_threads.try_append(&thread);
             // We ignore allocation failures above the first 32 guaranteed thread slots, and
             // just flag our future-selves to finalize these threads at a later point
-            if (result.is_error())
-                g_finalizer_has_work.store(true, AK::MemoryOrder::memory_order_release);
+            if (result.is_error()) {
+                g_finalizer_has_work.with([](bool& has_work) {
+                    has_work = true;
+                });
+            }
         });
     }
     for (auto* thread : dying_threads) {
