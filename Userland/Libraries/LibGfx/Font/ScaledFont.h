@@ -74,7 +74,7 @@ public:
     virtual String qualified_name() const override { return MUST(String::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope())); }
     virtual String human_readable_name() const override { return MUST(String::formatted("{} {} {}", family(), variant(), presentation_size())); }
 
-    virtual NonnullRefPtr<ScaledFont> scaled_with_size(float point_size) const;
+    NonnullRefPtr<ScaledFont> scaled_with_size(float point_size) const;
     virtual NonnullRefPtr<Font> with_size(float point_size) const override;
 
     virtual bool has_color_bitmaps() const override { return m_font->has_color_bitmaps(); }

@@ -43,7 +43,7 @@ public:
     {
     }
 
-    virtual ~ConservativeVector() = default;
+    ~ConservativeVector() = default;
 
     ConservativeVector(ConservativeVector const& other)
         : ConservativeVectorBase(*other.m_heap)

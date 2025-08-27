@@ -44,7 +44,7 @@ public:
     {
     }
 
-    virtual ~MarkedVector() = default;
+    ~MarkedVector() = default;
 
     MarkedVector(MarkedVector const& other)
         : MarkedVectorBase(*other.m_heap)

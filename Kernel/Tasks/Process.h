@@ -222,7 +222,7 @@ public:
 
     ~Process();
 
-    virtual void remove_from_secondary_lists();
+    void remove_from_secondary_lists();
 
     template<typename EntryFunction>
     ErrorOr<NonnullRefPtr<Thread>> create_kernel_thread(StringView name, EntryFunction entry, u32 priority = THREAD_PRIORITY_NORMAL, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true)
