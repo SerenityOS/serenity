@@ -10,10 +10,13 @@
 
 namespace Kernel {
 
+class WaitQueue;
+
 template<typename T, typename Lock>
 class SpinlockProtectedBase {
     AK_MAKE_NONCOPYABLE(SpinlockProtectedBase);
     AK_MAKE_NONMOVABLE(SpinlockProtectedBase);
+    friend class WaitQueue;
 
 private:
     template<typename U>
