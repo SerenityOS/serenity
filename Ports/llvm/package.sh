@@ -57,6 +57,7 @@ configure() {
         -DCOMPILER_RT_OS_DIR=serenity \
         -DCROSS_TOOLCHAIN_FLAGS_NATIVE="-DCMAKE_C_COMPILER=$CC;-DCMAKE_CXX_COMPILER=$CXX" \
         -DHAVE_LIBRT=OFF \
+        -DLLVM_APPEND_VC_REV=OFF \
         -DLLVM_DEFAULT_TARGET_TRIPLE=$SERENITY_ARCH-pc-serenity \
         -DLLVM_ENABLE_PROJECTS="clang;lld;compiler-rt" \
         -DLLVM_HAVE_LIBXAR=OFF \
