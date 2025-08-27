@@ -73,7 +73,7 @@ private:
     OwnPtr<Memory::RingBuffer> m_control_transmit_buffer;
     OwnPtr<Memory::RingBuffer> m_control_receive_buffer;
 
-    WaitQueue m_control_wait_queue;
+    DeprecatedWaitQueue m_control_wait_queue;
 
     static unsigned next_device_id;
 };

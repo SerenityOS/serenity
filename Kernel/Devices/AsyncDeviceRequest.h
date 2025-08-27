@@ -10,9 +10,9 @@
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
+#include <Kernel/Tasks/DeprecatedWaitQueue.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Thread.h>
-#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {
 
@@ -160,7 +160,7 @@ private:
 
     AsyncDeviceSubRequestList m_sub_requests_pending;
     AsyncDeviceSubRequestList m_sub_requests_complete;
-    WaitQueue m_queue;
+    DeprecatedWaitQueue m_queue;
     LockWeakPtr<Process> const m_process;
     void* m_private { nullptr };
     mutable Spinlock<LockRank::None> m_lock {};

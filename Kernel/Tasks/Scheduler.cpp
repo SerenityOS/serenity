@@ -32,7 +32,7 @@ static u32 time_slice_for(Thread const& thread)
 }
 
 READONLY_AFTER_INIT Thread* g_finalizer;
-READONLY_AFTER_INIT WaitQueue* g_finalizer_wait_queue;
+READONLY_AFTER_INIT DeprecatedWaitQueue* g_finalizer_wait_queue;
 Atomic<bool> g_finalizer_has_work { false };
 READONLY_AFTER_INIT static Process* s_colonel_process;
 
@@ -376,7 +376,7 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
     VERIFY(Processor::is_initialized()); // sanity check
     VERIFY(TimeManagement::is_initialized());
 
-    g_finalizer_wait_queue = new WaitQueue;
+    g_finalizer_wait_queue = new DeprecatedWaitQueue;
 
     g_finalizer_has_work.store(false, AK::MemoryOrder::memory_order_release);
     auto [colonel_process, idle_thread] = MUST(Process::create_kernel_process("colonel"sv, idle_loop, nullptr, 1, Process::RegisterProcess::No));
