@@ -71,6 +71,7 @@ class RAMFSInode;
 class UDPSocket;
 class UserOrKernelBuffer;
 class VFSRootContext;
+class WaitQueue;
 class WorkQueue;
 
 namespace Memory {
