@@ -14,10 +14,10 @@ enough to linux to use the pre-canned InstrProfiling implementation.
  5 files changed, 27 insertions(+), 3 deletions(-)
 
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
-index 7d95fe55a0fde623720e5974a860826753f4bf1f..a5660cbf9e5220bdcc3bc1b3daeaa04df1395e38 100644
+index b3b9a593749bae9c69eb2afa706433303398198b..9009ab5d6a499defa5f88651215f0ccf072edbe7 100644
 --- a/clang/lib/Driver/ToolChains/Serenity.cpp
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -172,6 +172,9 @@ void tools::serenity::Linker::ConstructJob(Compilation &C, const JobAction &JA,
+@@ -162,6 +162,9 @@ void tools::serenity::Linker::ConstructJob(Compilation &C, const JobAction &JA,
      CmdArgs.push_back(Args.MakeArgString(crtend_path));
    }
  
@@ -66,7 +66,7 @@ index a96bba4a1e763ce4a8ca1ef11f29bcf49ccff10a..4b099da9e2d2f0986636976a05443c94
  // RUN:     --target=x86_64-apple-darwin14 -fprofile-instr-generate -fuse-ld=ld \
  // RUN:     -resource-dir=%S/Inputs/resource_dir \
 diff --git a/compiler-rt/cmake/config-ix.cmake b/compiler-rt/cmake/config-ix.cmake
-index cf729c3adb1f5f52df18b672f93788284d41f308..76d42499daf02eab55eff96bda4228d09d0e26fb 100644
+index e3310b1ff0e2ceaac82a0269d61d30b1a8badaf9..365072cc7b7db59568cc75ae9e5d992645bbef98 100644
 --- a/compiler-rt/cmake/config-ix.cmake
 +++ b/compiler-rt/cmake/config-ix.cmake
 @@ -836,7 +836,7 @@ else()
@@ -79,7 +79,7 @@ index cf729c3adb1f5f52df18b672f93788284d41f308..76d42499daf02eab55eff96bda4228d0
  else()
    set(COMPILER_RT_HAS_PROFILE FALSE)
 diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
-index 5b230c1b2006237735a6caf2fe1a9e30bc47ff96..3641479114d6edad968a9f30252a1b9d3535ac89 100644
+index 558b7fc8cad62a5d64c35317712098029ee63802..45389ae2787a0185097dade108ecf71790bec6ba 100644
 --- a/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 +++ b/compiler-rt/lib/profile/InstrProfilingPlatformLinux.c
 @@ -8,7 +8,8 @@
@@ -93,7 +93,7 @@ index 5b230c1b2006237735a6caf2fe1a9e30bc47ff96..3641479114d6edad968a9f30252a1b9d
  #if !defined(_AIX) && !defined(__wasm__)
  #include <elf.h>
 diff --git a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
-index 29e570b9fba920a0f8085c7d636c52133a7a2200..483b836b0a55a5ea87f9263d3363960dd689be4c 100644
+index 19414ab78b3bea97b746660d8c8c9e3837b31218..03cb13161f803a3f6fb94260b6b8ce72c2a4eb8b 100644
 --- a/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
 +++ b/compiler-rt/lib/profile/InstrProfilingPlatformOther.c
 @@ -9,7 +9,7 @@
