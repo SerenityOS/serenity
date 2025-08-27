@@ -14,7 +14,7 @@
 #include <Kernel/Devices/Audio/IntelHDA/Format.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Locking/SpinlockProtected.h>
-#include <Kernel/Tasks/WaitQueue.h>
+#include <Kernel/Tasks/DeprecatedWaitQueue.h>
 
 namespace Kernel::Audio::IntelHDA {
 
@@ -91,7 +91,7 @@ protected:
     OwnPtr<Memory::Region> m_buffer_descriptor_list;
     RecursiveSpinlockProtected<OwnPtr<Memory::Region>, LockRank::None> m_buffers;
     size_t m_buffer_position { 0 };
-    WaitQueue m_irq_queue;
+    DeprecatedWaitQueue m_irq_queue;
     bool m_running { false };
     FormatParameters m_format_parameters;
 };

@@ -9,7 +9,7 @@
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/Library/DoubleBuffer.h>
 #include <Kernel/Locking/Mutex.h>
-#include <Kernel/Tasks/WaitQueue.h>
+#include <Kernel/Tasks/DeprecatedWaitQueue.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -54,8 +54,8 @@ private:
 
     int m_fifo_id { 0 };
 
-    WaitQueue m_read_open_queue;
-    WaitQueue m_write_open_queue;
+    DeprecatedWaitQueue m_read_open_queue;
+    DeprecatedWaitQueue m_write_open_queue;
     Mutex m_open_lock;
 };
 

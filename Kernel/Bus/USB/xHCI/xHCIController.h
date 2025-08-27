@@ -12,7 +12,7 @@
 #include <Kernel/Bus/USB/xHCI/xHCIRootHub.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Tasks/WaitQueue.h>
+#include <Kernel/Tasks/DeprecatedWaitQueue.h>
 
 namespace Kernel::USB {
 
@@ -1063,7 +1063,7 @@ private:
         u32 end_index { 0 };
     };
     struct SyncPendingTransfer : public PendingTransfer {
-        WaitQueue wait_queue;
+        DeprecatedWaitQueue wait_queue;
         TransferRequestBlock::CompletionCode completion_code { TransferRequestBlock::CompletionCode::Invalid };
         u32 remainder { 0 };
     };
@@ -1170,7 +1170,7 @@ private:
     DoorbellRegisters volatile& m_doorbell_registers;
 
     RefPtr<Process> m_process;
-    WaitQueue m_event_queue;
+    DeprecatedWaitQueue m_event_queue;
 
     bool m_using_message_signalled_interrupts { false };
     bool m_large_contexts { false };
@@ -1182,7 +1182,7 @@ private:
     Vector<NonnullOwnPtr<PeriodicPendingTransfer>> m_active_periodic_transfers;
 
     Spinlock<LockRank::None> m_command_lock;
-    WaitQueue m_command_completion_queue;
+    DeprecatedWaitQueue m_command_completion_queue;
     TransferRequestBlock m_command_result_transfer_request_block {};
     u32 m_command_ring_enqueue_index { 0 };
     u8 m_command_ring_producer_cycle_state { 1 };

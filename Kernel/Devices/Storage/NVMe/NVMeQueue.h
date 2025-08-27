@@ -18,7 +18,7 @@
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Tasks/WaitQueue.h>
+#include <Kernel/Tasks/DeprecatedWaitQueue.h>
 
 namespace Kernel {
 
@@ -130,7 +130,7 @@ private:
     Span<NVMeSubmission> m_sqe_array;
     OwnPtr<Memory::Region> m_sq_dma_region;
     Span<NVMeCompletion> m_cqe_array;
-    WaitQueue m_sync_wait_queue;
+    DeprecatedWaitQueue m_sync_wait_queue;
     Doorbell m_db_regs;
     NonnullRefPtr<Memory::PhysicalRAMPage const> const m_rw_dma_page;
 };

@@ -62,7 +62,7 @@ void NetworkTask_main(void*)
 {
     delayed_ack_sockets = new HashTable<NonnullRefPtr<TCPSocket>>;
 
-    WaitQueue packet_wait_queue;
+    DeprecatedWaitQueue packet_wait_queue;
     int pending_packets = 0;
     NetworkingManagement::the().for_each([&](auto& adapter) {
         dmesgln("NetworkTask: {} network adapter found: hw={}", adapter.class_name(), adapter.mac_address().to_string());
