@@ -20,7 +20,7 @@ namespace Kernel {
 struct RegisterState;
 
 extern Thread* g_finalizer;
-extern WaitQueue* g_finalizer_wait_queue;
+extern DeprecatedWaitQueue* g_finalizer_wait_queue;
 extern Atomic<bool> g_finalizer_has_work;
 extern RecursiveSpinlock<LockRank::None> g_scheduler_lock;
 

@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-class WaitQueue final : public Thread::BlockerSet {
+class DeprecatedWaitQueue final : public Thread::BlockerSet {
 public:
     u32 wake_one();
     u32 wake_n(u32 wake_count);
@@ -21,13 +21,13 @@ public:
     template<class... Args>
     Thread::BlockResult wait_on(Thread::BlockTimeout const& timeout, Args&&... args)
     {
-        return Thread::current()->block<Thread::WaitQueueBlocker>(timeout, *this, forward<Args>(args)...);
+        return Thread::current()->block<Thread::DeprecatedWaitQueueBlocker>(timeout, *this, forward<Args>(args)...);
     }
 
     template<class... Args>
     void wait_forever(Args&&... args)
     {
-        (void)Thread::current()->block<Thread::WaitQueueBlocker>({}, *this, forward<Args>(args)...);
+        (void)Thread::current()->block<Thread::DeprecatedWaitQueueBlocker>({}, *this, forward<Args>(args)...);
     }
 
 protected:
