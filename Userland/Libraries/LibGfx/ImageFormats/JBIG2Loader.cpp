@@ -506,14 +506,14 @@ ErrorOr<i32> HuffmanTable::read_symbol_non_oob(BigEndianInputBitStream& stream) 
 
 }
 
-class BitBuffer {
+class BilevelImage {
 public:
-    static ErrorOr<NonnullOwnPtr<BitBuffer>> create(size_t width, size_t height);
+    static ErrorOr<NonnullOwnPtr<BilevelImage>> create(size_t width, size_t height);
     bool get_bit(size_t x, size_t y) const;
     void set_bit(size_t x, size_t y, bool b);
     void fill(bool b);
 
-    ErrorOr<NonnullOwnPtr<BitBuffer>> subbitmap(Gfx::IntRect const& rect) const;
+    ErrorOr<NonnullOwnPtr<BilevelImage>> subbitmap(Gfx::IntRect const& rect) const;
 
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_gfx_bitmap() const;
     ErrorOr<ByteBuffer> to_byte_buffer() const;
@@ -524,7 +524,7 @@ public:
     Bytes bytes() { return m_bits.bytes(); }
 
 private:
-    BitBuffer(ByteBuffer, size_t width, size_t height, size_t pitch);
+    BilevelImage(ByteBuffer, size_t width, size_t height, size_t pitch);
 
     ByteBuffer m_bits;
     size_t m_width { 0 };
@@ -532,14 +532,14 @@ private:
     size_t m_pitch { 0 };
 };
 
-ErrorOr<NonnullOwnPtr<BitBuffer>> BitBuffer::create(size_t width, size_t height)
+ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::create(size_t width, size_t height)
 {
     size_t pitch = ceil_div(width, static_cast<size_t>(8));
     auto bits = TRY(ByteBuffer::create_uninitialized(pitch * height));
-    return adopt_nonnull_own_or_enomem(new (nothrow) BitBuffer(move(bits), width, height, pitch));
+    return adopt_nonnull_own_or_enomem(new (nothrow) BilevelImage(move(bits), width, height, pitch));
 }
 
-bool BitBuffer::get_bit(size_t x, size_t y) const
+bool BilevelImage::get_bit(size_t x, size_t y) const
 {
     VERIFY(x < m_width);
     VERIFY(y < m_height);
@@ -550,7 +550,7 @@ bool BitBuffer::get_bit(size_t x, size_t y) const
     return byte != 0;
 }
 
-void BitBuffer::set_bit(size_t x, size_t y, bool b)
+void BilevelImage::set_bit(size_t x, size_t y, bool b)
 {
     VERIFY(x < m_width);
     VERIFY(y < m_height);
@@ -565,14 +565,14 @@ void BitBuffer::set_bit(size_t x, size_t y, bool b)
     m_bits[y * m_pitch + byte_offset] = byte;
 }
 
-void BitBuffer::fill(bool b)
+void BilevelImage::fill(bool b)
 {
     u8 fill_byte = b ? 0xff : 0;
     for (auto& byte : m_bits.bytes())
         byte = fill_byte;
 }
 
-ErrorOr<NonnullOwnPtr<BitBuffer>> BitBuffer::subbitmap(Gfx::IntRect const& rect) const
+ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::subbitmap(Gfx::IntRect const& rect) const
 {
     VERIFY(rect.x() >= 0);
     VERIFY(rect.width() >= 0);
@@ -589,7 +589,7 @@ ErrorOr<NonnullOwnPtr<BitBuffer>> BitBuffer::subbitmap(Gfx::IntRect const& rect)
     return subbitmap;
 }
 
-ErrorOr<NonnullRefPtr<Gfx::Bitmap>> BitBuffer::to_gfx_bitmap() const
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> BilevelImage::to_gfx_bitmap() const
 {
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { m_width, m_height }));
     for (size_t y = 0; y < m_height; ++y) {
@@ -601,12 +601,12 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> BitBuffer::to_gfx_bitmap() const
     return bitmap;
 }
 
-ErrorOr<ByteBuffer> BitBuffer::to_byte_buffer() const
+ErrorOr<ByteBuffer> BilevelImage::to_byte_buffer() const
 {
     return ByteBuffer::copy(m_bits);
 }
 
-BitBuffer::BitBuffer(ByteBuffer bits, size_t width, size_t height, size_t pitch)
+BilevelImage::BilevelImage(ByteBuffer bits, size_t width, size_t height, size_t pitch)
     : m_bits(move(bits))
     , m_width(width)
     , m_height(height)
@@ -616,20 +616,20 @@ BitBuffer::BitBuffer(ByteBuffer bits, size_t width, size_t height, size_t pitch)
 
 class Symbol : public RefCounted<Symbol> {
 public:
-    static NonnullRefPtr<Symbol> create(NonnullOwnPtr<BitBuffer> bitmap)
+    static NonnullRefPtr<Symbol> create(NonnullOwnPtr<BilevelImage> bitmap)
     {
         return adopt_ref(*new Symbol(move(bitmap)));
     }
 
-    BitBuffer const& bitmap() const { return *m_bitmap; }
+    BilevelImage const& bitmap() const { return *m_bitmap; }
 
 private:
-    Symbol(NonnullOwnPtr<BitBuffer> bitmap)
+    Symbol(NonnullOwnPtr<BilevelImage> bitmap)
         : m_bitmap(move(bitmap))
     {
     }
 
-    NonnullOwnPtr<BitBuffer> m_bitmap;
+    NonnullOwnPtr<BilevelImage> m_bitmap;
 };
 
 struct SegmentData {
@@ -647,7 +647,7 @@ struct SegmentData {
     Optional<JBIG2::HuffmanTable> huffman_table;
 };
 
-static void composite_bitbuffer(BitBuffer& out, BitBuffer const& bitmap, Gfx::IntPoint position, JBIG2::CombinationOperator operator_)
+static void composite_bitbuffer(BilevelImage& out, BilevelImage const& bitmap, Gfx::IntPoint position, JBIG2::CombinationOperator operator_)
 {
     static constexpr auto combine = [](bool dst, bool src, JBIG2::CombinationOperator op) -> bool {
         switch (op) {
@@ -686,7 +686,7 @@ struct Page {
 
     bool direct_region_segments_override_default_combination_operator { false };
 
-    OwnPtr<BitBuffer> bits;
+    OwnPtr<BilevelImage> bits;
 };
 
 struct JBIG2LoadingContext {
@@ -1125,7 +1125,7 @@ struct GenericRegionDecodingInputParameters {
     u8 gb_template { 0 };
     bool is_typical_prediction_used { false };          // "TPGDON" in spec.
     bool is_extended_reference_template_used { false }; // "EXTTEMPLATE" in spec.
-    Optional<BitBuffer const&> skip_pattern;            // "USESKIP", "SKIP" in spec.
+    Optional<BilevelImage const&> skip_pattern;         // "USESKIP", "SKIP" in spec.
 
     Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels; // "GBATX" / "GBATY" in spec.
     // FIXME: GBCOLS, GBCOMBOP, COLEXTFLAG
@@ -1163,7 +1163,7 @@ private:
 };
 
 // 6.2 Generic region decoding procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, Optional<GenericContexts>& maybe_contexts)
+static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, Optional<GenericContexts>& maybe_contexts)
 {
     if (inputs.is_modified_modified_read) {
         dbgln_if(JBIG2_DEBUG, "JBIG2ImageDecoderPlugin: MMR image data");
@@ -1179,12 +1179,12 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
         //  bytes, beginning and ending on a byte boundary."
         // This means we can pass in a stream to CCITT::decode_ccitt_group4() and that can use a bit stream internally.
         auto buffer = TRY(CCITT::decode_ccitt_group4(*inputs.stream, inputs.region_width, inputs.region_height, options));
-        auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
+        auto result = TRY(BilevelImage::create(inputs.region_width, inputs.region_height));
         size_t bytes_per_row = ceil_div(inputs.region_width, 8);
         if (buffer.size() != bytes_per_row * inputs.region_height)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Decoded MMR data has wrong size");
 
-        // FIXME: Could probably just copy the ByteBuffer directly into the BitBuffer's internal ByteBuffer instead.
+        // FIXME: Could probably just copy the ByteBuffer directly into the BilevelImage's internal ByteBuffer instead.
         for (size_t y = 0; y < inputs.region_height; ++y) {
             for (size_t x = 0; x < inputs.region_width; ++x) {
                 bool bit = buffer[y * bytes_per_row + x / 8] & (1 << (7 - x % 8));
@@ -1207,14 +1207,14 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     if (inputs.skip_pattern.has_value() && (inputs.skip_pattern->width() != inputs.region_width || inputs.skip_pattern->height() != inputs.region_height))
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid USESKIP dimensions");
 
-    static constexpr auto get_pixel = [](NonnullOwnPtr<BitBuffer> const& buffer, int x, int y) -> bool {
+    static constexpr auto get_pixel = [](NonnullOwnPtr<BilevelImage> const& buffer, int x, int y) -> bool {
         if (x < 0 || x >= (int)buffer->width() || y < 0)
             return false;
         return buffer->get_bit(x, y);
     };
 
     // Figure 3(a) – Template when GBTEMPLATE = 0 and EXTTEMPLATE = 0,
-    constexpr auto compute_context_0 = [](NonnullOwnPtr<BitBuffer> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
+    constexpr auto compute_context_0 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         for (int i = 0; i < 4; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[i].x, y + adaptive_pixels[i].y);
@@ -1228,7 +1228,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     };
 
     // Figure 4 – Template when GBTEMPLATE = 1
-    auto compute_context_1 = [](NonnullOwnPtr<BitBuffer> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
+    auto compute_context_1 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
         for (int i = 0; i < 4; ++i)
@@ -1241,7 +1241,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     };
 
     // Figure 5 – Template when GBTEMPLATE = 2
-    auto compute_context_2 = [](NonnullOwnPtr<BitBuffer> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
+    auto compute_context_2 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
         for (int i = 0; i < 3; ++i)
@@ -1254,7 +1254,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     };
 
     // Figure 6 – Template when GBTEMPLATE = 3
-    auto compute_context_3 = [](NonnullOwnPtr<BitBuffer> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
+    auto compute_context_3 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
         for (int i = 0; i < 5; ++i)
@@ -1264,7 +1264,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
         return result;
     };
 
-    u16 (*compute_context)(NonnullOwnPtr<BitBuffer> const&, ReadonlySpan<AdaptiveTemplatePixel>, int, int);
+    u16 (*compute_context)(NonnullOwnPtr<BilevelImage> const&, ReadonlySpan<AdaptiveTemplatePixel>, int, int);
     if (inputs.gb_template == 0)
         compute_context = compute_context_0;
     else if (inputs.gb_template == 1)
@@ -1315,7 +1315,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_region_decoding_procedure(Gener
     bool ltp = false; // "Line (uses) Typical Prediction" maybe?
 
     // " 2) Create a bitmap GBREG of width GBW and height GBH pixels."
-    auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
+    auto result = TRY(BilevelImage::create(inputs.region_width, inputs.region_height));
 
     // "3) Decode each row as follows:"
     for (size_t y = 0; y < inputs.region_height; ++y) {
@@ -1363,7 +1363,7 @@ struct GenericRefinementRegionDecodingInputParameters {
     u32 region_width { 0 };                                   // "GRW" in spec.
     u32 region_height { 0 };                                  // "GRH" in spec.
     u8 gr_template { 0 };                                     // "GRTEMPLATE" in spec.
-    BitBuffer const* reference_bitmap { nullptr };            // "GRREFERENCE" in spec.
+    BilevelImage const* reference_bitmap { nullptr };         // "GRREFERENCE" in spec.
     i32 reference_x_offset { 0 };                             // "GRREFERENCEDX" in spec.
     i32 reference_y_offset { 0 };                             // "GRREFERENCEDY" in spec.
     bool is_typical_prediction_used { false };                // "TPGRON" in spec.
@@ -1380,7 +1380,7 @@ struct RefinementContexts {
 };
 
 // 6.3 Generic Refinement Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, QMArithmeticDecoder& decoder, RefinementContexts& contexts)
+static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, QMArithmeticDecoder& decoder, RefinementContexts& contexts)
 {
     VERIFY(inputs.gr_template == 0 || inputs.gr_template == 1);
 
@@ -1394,14 +1394,14 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_proc
     // GRTEMPLATE 1 never uses adaptive pixels.
 
     // 6.3.5.3 Fixed templates and adaptive templates
-    static constexpr auto get_pixel = [](BitBuffer const& buffer, int x, int y) -> bool {
+    static constexpr auto get_pixel = [](BilevelImage const& buffer, int x, int y) -> bool {
         if (x < 0 || x >= (int)buffer.width() || y < 0 || y >= (int)buffer.height())
             return false;
         return buffer.get_bit(x, y);
     };
 
     // Figure 12 – 13-pixel refinement template showing the AT pixels at their nominal locations
-    constexpr auto compute_context_0 = [](ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, BitBuffer const& reference, int reference_x, int reference_y, BitBuffer const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_0 = [](ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, BilevelImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
         u16 result = 0;
 
         for (int dy = -1; dy <= 1; ++dy) {
@@ -1422,7 +1422,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_proc
     };
 
     // Figure 13 – 10-pixel refinement template
-    constexpr auto compute_context_1 = [](ReadonlySpan<AdaptiveTemplatePixel>, BitBuffer const& reference, int reference_x, int reference_y, BitBuffer const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_1 = [](ReadonlySpan<AdaptiveTemplatePixel>, BilevelImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
         u16 result = 0;
 
         for (int dy = -1; dy <= 1; ++dy) {
@@ -1443,7 +1443,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> generic_refinement_region_decoding_proc
     auto compute_context = inputs.gr_template == 0 ? compute_context_0 : compute_context_1;
 
     // 6.3.5.6 Decoding the refinement bitmap
-    auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
+    auto result = TRY(BilevelImage::create(inputs.region_width, inputs.region_height));
     for (size_t y = 0; y < result->height(); ++y) {
         for (size_t x = 0; x < result->width(); ++x) {
             u16 context = compute_context(inputs.adaptive_template_pixels, *inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, *result, x, y);
@@ -1527,7 +1527,7 @@ struct TextContexts {
 };
 
 // 6.4 Text Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, Optional<TextContexts>& text_contexts, Optional<RefinementContexts>& refinement_contexts)
+static ErrorOr<NonnullOwnPtr<BilevelImage>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, Optional<TextContexts>& text_contexts, Optional<RefinementContexts>& refinement_contexts)
 {
     Optional<BigEndianInputBitStream> bit_stream;
     QMArithmeticDecoder* decoder = nullptr;
@@ -1625,8 +1625,8 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     };
 
     // 6.4.11 Symbol instance bitmap
-    OwnPtr<BitBuffer> refinement_result;
-    auto read_bitmap = [&](u32 id) -> ErrorOr<BitBuffer const*> {
+    OwnPtr<BilevelImage> refinement_result;
+    auto read_bitmap = [&](u32 id) -> ErrorOr<BilevelImage const*> {
         if (id >= inputs.symbols.size())
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol ID out of range");
         auto const& symbol = inputs.symbols[id]->bitmap();
@@ -1678,7 +1678,7 @@ static ErrorOr<NonnullOwnPtr<BitBuffer>> text_region_decoding_procedure(TextRegi
     // 6.4.5 Decoding the text region
 
     // "1) Fill a bitmap SBREG, of the size given by SBW and SBH, with the SBDEFPIXEL value."
-    auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
+    auto result = TRY(BilevelImage::create(inputs.region_width, inputs.region_height));
     if (inputs.default_pixel != 0)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle SBDEFPIXEL not equal to 0 yet");
     result->fill(inputs.default_pixel != 0);
@@ -1909,7 +1909,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     // This belongs in 6.5.5 1) below, but also needs to be captured by read_bitmap here.
     Vector<NonnullRefPtr<Symbol>> new_symbols;
 
-    auto read_symbol_bitmap = [&](u32 width, u32 height) -> ErrorOr<NonnullOwnPtr<BitBuffer>> {
+    auto read_symbol_bitmap = [&](u32 width, u32 height) -> ErrorOr<NonnullOwnPtr<BilevelImage>> {
         // 6.5.8 Symbol bitmap
         if (inputs.uses_huffman_encoding)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode generic symbol bitmaps with huffman encoding");
@@ -2006,7 +2006,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         return generic_refinement_region_decoding_procedure(refinement_inputs, decoder.value(), refinement_contexts.value());
     };
 
-    auto read_height_class_collective_bitmap = [&](u32 total_width, u32 height) -> ErrorOr<NonnullOwnPtr<BitBuffer>> {
+    auto read_height_class_collective_bitmap = [&](u32 total_width, u32 height) -> ErrorOr<NonnullOwnPtr<BilevelImage>> {
         // 6.5.9 Height class collective bitmap
         // "1) Read the size in bytes using the SDHUFFBMSIZE Huffman table. Let BMSIZE be the value decoded."
         auto bitmap_size = TRY(inputs.bitmap_size_table->read_symbol_non_oob(*bit_stream));
@@ -2014,7 +2014,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         // "2) Skip over any bits remaining in the last byte read."
         bit_stream->align_to_byte_boundary();
 
-        NonnullOwnPtr<BitBuffer> result = TRY([&]() -> ErrorOr<NonnullOwnPtr<BitBuffer>> {
+        NonnullOwnPtr<BilevelImage> result = TRY([&]() -> ErrorOr<NonnullOwnPtr<BilevelImage>> {
             // "3) If BMSIZE is zero, then the bitmap is stored uncompressed, and the actual size in bytes is:
             //
             //         HCHEIGHT * ceil_div(TOTWIDTH, 8)
@@ -2022,7 +2022,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             //     Decode the bitmap by reading this many bytes and treating it as HCHEIGHT rows of TOTWIDTH pixels, each
             //     row padded out to a byte boundary with 0-7 0 bits."
             if (bitmap_size == 0) {
-                auto result = TRY(BitBuffer::create(total_width, height));
+                auto result = TRY(BilevelImage::create(total_width, height));
                 TRY(bit_stream->read_until_filled(result->bytes()));
                 return result;
             }
@@ -2212,7 +2212,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
 struct GrayscaleInputParameters {
     bool uses_mmr { false }; // "GSMMR" in spec.
 
-    Optional<BitBuffer const&> skip_pattern; // "GSUSESKIP" / "GSKIP" in spec.
+    Optional<BilevelImage const&> skip_pattern; // "GSUSESKIP" / "GSKIP" in spec.
 
     u8 bpp { 0 };         // "GSBPP" in spec.
     u32 width { 0 };      // "GSW" in spec.
@@ -2259,7 +2259,7 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
     // "The gray-scale image is obtained by decoding GSBPP bitplanes. These bitplanes are denoted (from least significant to
     //  most significant) GSPLANES[0], GSPLANES[1], . . . , GSPLANES[GSBPP – 1]. The bitplanes are Gray-coded, so
     //  that each bitplane's true value is equal to its coded value XORed with the next-more-significant bitplane."
-    Vector<OwnPtr<BitBuffer>> bitplanes;
+    Vector<OwnPtr<BilevelImage>> bitplanes;
     bitplanes.resize(inputs.bpp);
 
     // "1) Decode GSPLANES[GSBPP – 1] using the generic region decoding procedure. The parameters to the
@@ -2322,18 +2322,18 @@ struct HalftoneRegionDecodingInputParameters {
 };
 
 // 6.6 Halftone Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BitBuffer>> halftone_region_decoding_procedure(HalftoneRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Optional<GenericContexts>& contexts)
+static ErrorOr<NonnullOwnPtr<BilevelImage>> halftone_region_decoding_procedure(HalftoneRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Optional<GenericContexts>& contexts)
 {
     // 6.6.5 Decoding the halftone region
     // "1) Fill a bitmap HTREG, of the size given by HBW and HBH, with the HDEFPIXEL value."
-    auto result = TRY(BitBuffer::create(inputs.region_width, inputs.region_height));
+    auto result = TRY(BilevelImage::create(inputs.region_width, inputs.region_height));
     result->fill(inputs.default_pixel_value);
 
     // "2) If HENABLESKIP equals 1, compute a bitmap HSKIP as shown in 6.6.5.1."
-    Optional<BitBuffer const&> skip_pattern;
-    OwnPtr<BitBuffer> skip_pattern_storage;
+    Optional<BilevelImage const&> skip_pattern;
+    OwnPtr<BilevelImage> skip_pattern_storage;
     if (inputs.enable_skip) {
-        skip_pattern_storage = TRY(BitBuffer::create(inputs.grayscale_width, inputs.grayscale_height));
+        skip_pattern_storage = TRY(BilevelImage::create(inputs.grayscale_width, inputs.grayscale_height));
         skip_pattern = *skip_pattern_storage;
 
         // 6.6.5.1 Computing HSKIP
@@ -3406,7 +3406,7 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
     //     equal to this maximum stripe height."
     // ...but we don't care about streaming input (yet?), so scan_for_page_size() already looked at all segment headers
     // and filled in context.page.size from page information and end of stripe segments.
-    context.page.bits = TRY(BitBuffer::create(context.page.size.width(), context.page.size.height()));
+    context.page.bits = TRY(BilevelImage::create(context.page.size.width(), context.page.size.height()));
 
     // "3) Fill the page buffer with the page's default pixel value."
     context.page.bits->fill(default_color != 0);
