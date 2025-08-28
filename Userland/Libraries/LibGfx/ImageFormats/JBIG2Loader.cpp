@@ -3482,7 +3482,7 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
     if (page_information.bitmap_height == 0xffff'ffff && !page_information.page_is_striped())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-striped bitmaps of indeterminate height not allowed");
 
-    dbgln_if(JBIG2_DEBUG, "Page information: width={}, height={}, is_striped={}, max_stripe_size={}", page_information.bitmap_width, page_information.bitmap_height, page_information.page_is_striped(), page_information.maximum_stripe_size());
+    dbgln_if(JBIG2_DEBUG, "Page information: width={}, height={}, x_resolution={}, y_resolution={}, is_striped={}, max_stripe_size={}", page_information.bitmap_width, page_information.bitmap_height, page_information.page_x_resolution, page_information.page_y_resolution, page_information.page_is_striped(), page_information.maximum_stripe_size());
     dbgln_if(JBIG2_DEBUG, "Page information flags: {:#02x}", page_information.flags);
     dbgln_if(JBIG2_DEBUG, "    is_eventually_lossless={}", page_information.is_eventually_lossless());
     dbgln_if(JBIG2_DEBUG, "    might_contain_refinements={}", page_information.might_contain_refinements());
