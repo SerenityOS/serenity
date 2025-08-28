@@ -839,6 +839,11 @@ static ErrorOr<SegmentHeader> decode_segment_header(SeekableStream& stream)
             referred_to_segment_number = TRY(stream.read_value<BigEndian<u16>>());
         else
             referred_to_segment_number = TRY(stream.read_value<BigEndian<u32>>());
+
+        // "If a segment refers to other segments, it must refer to only segments with lower segment numbers."
+        if (referred_to_segment_number >= segment_number)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Referred-to segment number too large");
+
         referred_to_segment_numbers.append(referred_to_segment_number);
         dbgln_if(JBIG2_DEBUG, "Referred-to segment number: {}", referred_to_segment_number);
     }
