@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2023-2025, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +12,7 @@
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/ImageFormats/GIFWriter.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibGfx/ImageFormats/JBIG2Writer.h>
 #include <LibGfx/ImageFormats/JPEGWriter.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ImageFormats/PortableFormatWriter.h>
@@ -176,6 +177,10 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool fo
 
     if (out_path.ends_with(".gif"sv, CaseSensitivity::CaseInsensitive)) {
         TRY(Gfx::GIFWriter::encode(*TRY(stream()), *frame));
+        return {};
+    }
+    if (out_path.ends_with(".jb2"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jbig2"sv, CaseSensitivity::CaseInsensitive)) {
+        TRY(Gfx::JBIG2Writer::encode(*TRY(stream()), *frame));
         return {};
     }
     if (out_path.ends_with(".jpg"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".jpeg"sv, CaseSensitivity::CaseInsensitive)) {
