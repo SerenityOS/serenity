@@ -11,6 +11,7 @@
 #include <AK/Utf16View.h>
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
 #include <LibGfx/ImageFormats/JBIG2Loader.h>
+#include <LibGfx/ImageFormats/JBIG2Shared.h>
 #include <LibGfx/ImageFormats/QMArithmeticDecoder.h>
 #include <LibTextCodec/Decoder.h>
 
@@ -505,59 +506,6 @@ ErrorOr<i32> HuffmanTable::read_symbol_non_oob(BigEndianInputBitStream& stream) 
 
 }
 
-// JBIG2 spec, Annex D, D.4.1 ID string
-static constexpr u8 id_string[] = { 0x97, 0x4A, 0x42, 0x32, 0x0D, 0x0A, 0x1A, 0x0A };
-
-// 7.3 Segment types
-enum SegmentType {
-    SymbolDictionary = 0,
-    IntermediateTextRegion = 4,
-    ImmediateTextRegion = 6,
-    ImmediateLosslessTextRegion = 7,
-    PatternDictionary = 16,
-    IntermediateHalftoneRegion = 20,
-    ImmediateHalftoneRegion = 22,
-    ImmediateLosslessHalftoneRegion = 23,
-    IntermediateGenericRegion = 36,
-    ImmediateGenericRegion = 38,
-    ImmediateLosslessGenericRegion = 39,
-    IntermediateGenericRefinementRegion = 40,
-    ImmediateGenericRefinementRegion = 42,
-    ImmediateLosslessGenericRefinementRegion = 43,
-    PageInformation = 48,
-    EndOfPage = 49,
-    EndOfStripe = 50,
-    EndOfFile = 51,
-    Profiles = 52,
-    Tables = 53,
-    ColorPalette = 54,
-    Extension = 62,
-};
-
-// Annex D
-enum class Organization {
-    // D.1 Sequential organization
-    Sequential,
-
-    // D.2 Random-access organization
-    RandomAccess,
-
-    // D.3 Embedded organization
-    Embedded,
-};
-
-struct SegmentHeader {
-    u32 segment_number { 0 };
-    SegmentType type { SegmentType::Extension };
-    Vector<u32> referred_to_segment_numbers;
-
-    // 7.2.6 Segment page association
-    // "The first page must be numbered "1". This field may contain a value of zero; this value indicates that this segment is not associated with any page."
-    u32 page_association { 0 };
-
-    Optional<u32> data_length;
-};
-
 class BitBuffer {
 public:
     static ErrorOr<NonnullOwnPtr<BitBuffer>> create(size_t width, size_t height);
@@ -685,7 +633,7 @@ private:
 };
 
 struct SegmentData {
-    SegmentHeader header;
+    JBIG2::SegmentHeader header;
     ReadonlyBytes data;
 
     // Set on dictionary segments after they've been decoded.
@@ -699,28 +647,19 @@ struct SegmentData {
     Optional<JBIG2::HuffmanTable> huffman_table;
 };
 
-// 7.4.8.5 Page segment flags
-enum class CombinationOperator {
-    Or = 0,
-    And = 1,
-    Xor = 2,
-    XNor = 3,
-    Replace = 4,
-};
-
-static void composite_bitbuffer(BitBuffer& out, BitBuffer const& bitmap, Gfx::IntPoint position, CombinationOperator operator_)
+static void composite_bitbuffer(BitBuffer& out, BitBuffer const& bitmap, Gfx::IntPoint position, JBIG2::CombinationOperator operator_)
 {
-    static constexpr auto combine = [](bool dst, bool src, CombinationOperator op) -> bool {
+    static constexpr auto combine = [](bool dst, bool src, JBIG2::CombinationOperator op) -> bool {
         switch (op) {
-        case CombinationOperator::Or:
+        case JBIG2::CombinationOperator::Or:
             return dst || src;
-        case CombinationOperator::And:
+        case JBIG2::CombinationOperator::And:
             return dst && src;
-        case CombinationOperator::Xor:
+        case JBIG2::CombinationOperator::Xor:
             return dst ^ src;
-        case CombinationOperator::XNor:
+        case JBIG2::CombinationOperator::XNor:
             return !(dst ^ src);
-        case CombinationOperator::Replace:
+        case JBIG2::CombinationOperator::Replace:
             return src;
         }
         VERIFY_NOT_REACHED();
@@ -743,7 +682,7 @@ struct Page {
     IntSize size;
 
     // This is never CombinationOperator::Replace for Pages.
-    CombinationOperator default_combination_operator { CombinationOperator::Or };
+    JBIG2::CombinationOperator default_combination_operator { JBIG2::CombinationOperator::Or };
 
     bool direct_region_segments_override_default_combination_operator { false };
 
@@ -758,7 +697,7 @@ struct JBIG2LoadingContext {
     };
     State state { State::NotDecoded };
 
-    Organization organization { Organization::Sequential };
+    JBIG2::Organization organization { JBIG2::Organization::Sequential };
     Page page;
     u32 current_page_number { 1 };
 
@@ -774,14 +713,14 @@ static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context, ReadonlyB
     if (!JBIG2ImageDecoderPlugin::sniff(data))
         return Error::from_string_literal("JBIG2LoadingContext: Invalid JBIG2 header");
 
-    FixedMemoryStream stream(data.slice(sizeof(id_string)));
+    FixedMemoryStream stream(data.slice(sizeof(JBIG2::id_string)));
 
     // D.4.2 File header flags
     u8 header_flags = TRY(stream.read_value<u8>());
     if (header_flags & 0b11110000)
         return Error::from_string_literal("JBIG2LoadingContext: Invalid header flags");
-    context.organization = (header_flags & 1) ? Organization::Sequential : Organization::RandomAccess;
-    dbgln_if(JBIG2_DEBUG, "JBIG2LoadingContext: Organization: {} ({})", (int)context.organization, context.organization == Organization::Sequential ? "Sequential" : "Random-access");
+    context.organization = (header_flags & 1) ? JBIG2::Organization::Sequential : JBIG2::Organization::RandomAccess;
+    dbgln_if(JBIG2_DEBUG, "JBIG2LoadingContext: Organization: {} ({})", (int)context.organization, context.organization == JBIG2::Organization::Sequential ? "Sequential" : "Random-access");
     bool has_known_number_of_pages = (header_flags & 2) ? false : true;
     bool uses_templates_with_12_AT_pixels = (header_flags & 4) ? true : false;
     bool contains_colored_region_segments = (header_flags & 8) ? true : false;
@@ -799,7 +738,7 @@ static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context, ReadonlyB
     return {};
 }
 
-static ErrorOr<SegmentHeader> decode_segment_header(SeekableStream& stream)
+static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& stream)
 {
     // 7.2.2 Segment number
     u32 segment_number = TRY(stream.read_value<BigEndian<u32>>());
@@ -807,7 +746,7 @@ static ErrorOr<SegmentHeader> decode_segment_header(SeekableStream& stream)
 
     // 7.2.3 Segment header flags
     u8 flags = TRY(stream.read_value<u8>());
-    SegmentType type = static_cast<SegmentType>(flags & 0b11'1111);
+    JBIG2::SegmentType type = static_cast<JBIG2::SegmentType>(flags & 0b11'1111);
     dbgln_if(JBIG2_DEBUG, "Segment type: {}", (int)type);
     bool segment_page_association_size_is_32_bits = (flags & 0b100'0000) != 0;
     bool segment_retained_only_by_itself_and_extension_segments = (flags & 0b1000'00000) != 0;
@@ -870,10 +809,10 @@ static ErrorOr<SegmentHeader> decode_segment_header(SeekableStream& stream)
     Optional<u32> opt_data_length;
     if (data_length != 0xffff'ffff)
         opt_data_length = data_length;
-    else if (type != ImmediateGenericRegion)
+    else if (type != JBIG2::SegmentType::ImmediateGenericRegion)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unknown data length only allowed for ImmediateGenericRegion");
 
-    return SegmentHeader { segment_number, type, move(referred_to_segment_numbers), segment_page_association, opt_data_length };
+    return JBIG2::SegmentHeader { segment_number, type, move(referred_to_segment_numbers), segment_page_association, opt_data_length };
 }
 
 static ErrorOr<size_t> scan_for_immediate_generic_region_size(ReadonlyBytes data)
@@ -914,7 +853,7 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
     FixedMemoryStream stream(data);
 
     Vector<ReadonlyBytes> segment_datas;
-    auto store_and_skip_segment_data = [&](SegmentHeader const& segment_header) -> ErrorOr<void> {
+    auto store_and_skip_segment_data = [&](JBIG2::SegmentHeader const& segment_header) -> ErrorOr<void> {
         size_t start_offset = TRY(stream.tell());
         u32 data_length = TRY(segment_header.data_length.try_value_or_lazy_evaluated([&]() {
             return scan_for_immediate_generic_region_size(data.slice(start_offset));
@@ -931,20 +870,20 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
         return {};
     };
 
-    Vector<SegmentHeader> segment_headers;
+    Vector<JBIG2::SegmentHeader> segment_headers;
     while (!stream.is_eof()) {
         auto segment_header = TRY(decode_segment_header(stream));
         segment_headers.append(segment_header);
 
-        if (context.organization != Organization::RandomAccess)
+        if (context.organization != JBIG2::Organization::RandomAccess)
             TRY(store_and_skip_segment_data(segment_header));
 
         // Required per spec for files with RandomAccess organization.
-        if (segment_header.type == SegmentType::EndOfFile)
+        if (segment_header.type == JBIG2::SegmentType::EndOfFile)
             break;
     }
 
-    if (context.organization == Organization::RandomAccess) {
+    if (context.organization == JBIG2::Organization::RandomAccess) {
         for (auto const& segment_header : segment_headers)
             TRY(store_and_skip_segment_data(segment_header));
     }
@@ -967,10 +906,10 @@ struct [[gnu::packed]] RegionSegmentInformationField {
     BigEndian<u32> y_location;
     u8 flags;
 
-    CombinationOperator external_combination_operator() const
+    JBIG2::CombinationOperator external_combination_operator() const
     {
         VERIFY((flags & 0x7) <= 4);
-        return static_cast<CombinationOperator>(flags & 0x7);
+        return static_cast<JBIG2::CombinationOperator>(flags & 0x7);
     }
 
     bool is_color_bitmap() const
@@ -992,7 +931,7 @@ static ErrorOr<RegionSegmentInformationField> decode_region_segment_information_
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid region segment information field operator");
 
     // NOTE 3 – If the colour extension flag (COLEXTFLAG) is equal to 1, the external combination operator must be REPLACE.
-    if (result.is_color_bitmap() && result.external_combination_operator() != CombinationOperator::Replace)
+    if (result.is_color_bitmap() && result.external_combination_operator() != JBIG2::CombinationOperator::Replace)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid colored region segment information field operator");
 
     if (result.is_color_bitmap())
@@ -1001,44 +940,12 @@ static ErrorOr<RegionSegmentInformationField> decode_region_segment_information_
     return result;
 }
 
-// 7.4.8 Page information segment syntax
-struct [[gnu::packed]] PageInformationSegment {
-    BigEndian<u32> bitmap_width;
-    BigEndian<u32> bitmap_height;
-    BigEndian<u32> page_x_resolution; // In pixels/meter.
-    BigEndian<u32> page_y_resolution; // In pixels/meter.
-    u8 flags;
-    BigEndian<u16> striping_information;
-
-    bool is_eventually_lossless() const { return flags & 1; }
-    bool might_contain_refinements() const { return (flags >> 1) & 1; }
-    u8 default_color() const { return (flags >> 2) & 1; }
-
-    CombinationOperator default_combination_operator() const
-    {
-        return static_cast<CombinationOperator>((flags >> 3) & 3);
-    }
-
-    bool requires_auxiliary_buffers() const { return (flags >> 5) & 1; }
-
-    bool direct_region_segments_override_default_combination_operator() const
-    {
-        return (flags >> 6) & 1;
-    }
-
-    bool might_contain_coloured_segments() const { return (flags >> 7) & 1; }
-
-    bool page_is_striped() const { return (striping_information & 0x8000) != 0; }
-    u16 maximum_stripe_size() const { return striping_information & 0x7FFF; }
-};
-static_assert(AssertSize<PageInformationSegment, 19>());
-
-static ErrorOr<PageInformationSegment> decode_page_information_segment(ReadonlyBytes data)
+static ErrorOr<JBIG2::PageInformationSegment> decode_page_information_segment(ReadonlyBytes data)
 {
     // 7.4.8 Page information segment syntax
-    if (data.size() != sizeof(PageInformationSegment))
+    if (data.size() != sizeof(JBIG2::PageInformationSegment))
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid page information segment size");
-    return *(PageInformationSegment const*)data.data();
+    return *(JBIG2::PageInformationSegment const*)data.data();
 }
 
 static ErrorOr<void> validate_segment_combination_operator_consistency(JBIG2LoadingContext& context, RegionSegmentInformationField const& information_field)
@@ -1092,10 +999,10 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
             continue;
 
         // Quirk: Files in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfFile with a page.
-        if (found_end_of_page && segment.header.type != SegmentType::EndOfFile)
+        if (found_end_of_page && segment.header.type != JBIG2::SegmentType::EndOfFile)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Found segment after EndOfPage");
 
-        if (segment.header.type == SegmentType::PageInformation) {
+        if (segment.header.type == JBIG2::SegmentType::PageInformation) {
             if (++page_info_count > 1)
                 return Error::from_string_literal("JBIG2: Multiple PageInformation segments");
 
@@ -1107,7 +1014,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
             has_initially_unknown_height = page_information.bitmap_height == 0xffff'ffff;
             if (has_initially_unknown_height && !page_information.page_is_striped())
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-striped bitmaps of indeterminate height not allowed");
-        } else if (segment.header.type == SegmentType::EndOfStripe) {
+        } else if (segment.header.type == JBIG2::SegmentType::EndOfStripe) {
             if (page_info_count == 0)
                 return Error::from_string_literal("JBIG2: EndOfStripe before PageInformation");
             if (!page_is_striped)
@@ -1132,7 +1039,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
 
             height_at_end_of_last_stripe = new_height;
             last_end_of_stripe_index = segment_index;
-        } else if (segment.header.type == SegmentType::EndOfPage) {
+        } else if (segment.header.type == JBIG2::SegmentType::EndOfPage) {
             if (segment.data.size() != 0)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of page segment has non-zero size");
             found_end_of_page = true;
@@ -1155,7 +1062,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Stripes are higher than page height");
     }
 
-    if (context.organization == Organization::Embedded) {
+    if (context.organization == JBIG2::Organization::Embedded) {
         // PDF 1.7 spec, 3.3.6 JBIG2Decode Filter
         // "The JBIG2 file header, end-of-page segments, and end-of-file segment are not
         //  used in PDF. These should be removed before the PDF objects described below
@@ -1566,7 +1473,7 @@ struct TextRegionDecodingInputParameters {
     Vector<NonnullRefPtr<Symbol>> symbols; // "SBNUMSYMS" / "SBSYMS" in spec.
     u8 default_pixel { 0 };                // "SBDEFPIXEL" in spec.
 
-    CombinationOperator operator_ { CombinationOperator::Or }; // "SBCOMBOP" in spec.
+    JBIG2::CombinationOperator operator_ { JBIG2::CombinationOperator::Or }; // "SBCOMBOP" in spec.
 
     bool is_transposed { false }; // "TRANSPOSED" in spec.
 
@@ -2059,7 +1966,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             text_inputs.symbols.extend(new_symbols);
 
             text_inputs.default_pixel = 0;
-            text_inputs.operator_ = CombinationOperator::Or;
+            text_inputs.operator_ = JBIG2::CombinationOperator::Or;
             text_inputs.is_transposed = false;
             text_inputs.reference_corner = TextRegionDecodingInputParameters::Corner::TopLeft;
             text_inputs.delta_s_offset = 0;
@@ -2370,7 +2277,7 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
 
         // "b) For each pixel (x, y) in GSPLANES[J], set:
         //     GSPLANES[J][x, y] = GSPLANES[J + 1][x, y] XOR GSPLANES[J][x, y]"
-        composite_bitbuffer(*bitplanes[j], *bitplanes[j + 1], { 0, 0 }, CombinationOperator::Xor);
+        composite_bitbuffer(*bitplanes[j], *bitplanes[j + 1], { 0, 0 }, JBIG2::CombinationOperator::Xor);
 
         // "c) Set J = J – 1."
         j = j - 1;
@@ -2396,22 +2303,22 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
 // 6.6.2 Input parameters
 // Table 20 – Parameters for the halftone region decoding procedure
 struct HalftoneRegionDecodingInputParameters {
-    u32 region_width { 0 };                                               // "HBW" in spec.
-    u32 region_height { 0 };                                              // "HBH" in spec.
-    bool uses_mmr { false };                                              // "HMMR" in spec.
-    u8 halftone_template { 0 };                                           // "HTEMPLATE" in spec.
-    Vector<NonnullRefPtr<Symbol>> patterns;                               // "HNUMPATS" / "HPATS" in spec.
-    bool default_pixel_value { false };                                   // "HDEFPIXEL" in spec.
-    CombinationOperator combination_operator { CombinationOperator::Or }; // "HCOMBOP" in spec.
-    bool enable_skip { false };                                           // "HENABLESKIP" in spec.
-    u32 grayscale_width { 0 };                                            // "HGW" in spec.
-    u32 grayscale_height { 0 };                                           // "HGH" in spec.
-    i32 grid_origin_x_offset { 0 };                                       // "HGX" in spec.
-    i32 grid_origin_y_offset { 0 };                                       // "HGY" in spec.
-    u16 grid_vector_x { 0 };                                              // "HRY" in spec.
-    u16 grid_vector_y { 0 };                                              // "HRX" in spec.
-    u8 pattern_width { 0 };                                               // "HPW" in spec.
-    u8 pattern_height { 0 };                                              // "HPH" in spec.
+    u32 region_width { 0 };                                                             // "HBW" in spec.
+    u32 region_height { 0 };                                                            // "HBH" in spec.
+    bool uses_mmr { false };                                                            // "HMMR" in spec.
+    u8 halftone_template { 0 };                                                         // "HTEMPLATE" in spec.
+    Vector<NonnullRefPtr<Symbol>> patterns;                                             // "HNUMPATS" / "HPATS" in spec.
+    bool default_pixel_value { false };                                                 // "HDEFPIXEL" in spec.
+    JBIG2::CombinationOperator combination_operator { JBIG2::CombinationOperator::Or }; // "HCOMBOP" in spec.
+    bool enable_skip { false };                                                         // "HENABLESKIP" in spec.
+    u32 grayscale_width { 0 };                                                          // "HGW" in spec.
+    u32 grayscale_height { 0 };                                                         // "HGH" in spec.
+    i32 grid_origin_x_offset { 0 };                                                     // "HGX" in spec.
+    i32 grid_origin_y_offset { 0 };                                                     // "HGY" in spec.
+    u16 grid_vector_x { 0 };                                                            // "HRY" in spec.
+    u16 grid_vector_y { 0 };                                                            // "HRX" in spec.
+    u8 pattern_width { 0 };                                                             // "HPW" in spec.
+    u8 pattern_height { 0 };                                                            // "HPH" in spec.
 };
 
 // 6.6 Halftone Region Decoding Procedure
@@ -3138,7 +3045,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     inputs.uses_huffman_encoding = uses_huffman_encoding;
     inputs.uses_refinement_coding = uses_refinement_coding;
     inputs.default_pixel = default_pixel_value;
-    inputs.operator_ = static_cast<CombinationOperator>(combination_operator);
+    inputs.operator_ = static_cast<JBIG2::CombinationOperator>(combination_operator);
     inputs.is_transposed = is_transposed;
     inputs.reference_corner = static_cast<TextRegionDecodingInputParameters::Corner>(reference_corner);
     inputs.delta_s_offset = delta_s_offset;
@@ -3324,7 +3231,7 @@ static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& conte
     inputs.uses_mmr = uses_mmr;
     inputs.halftone_template = template_used;
     inputs.enable_skip = enable_skip;
-    inputs.combination_operator = static_cast<CombinationOperator>(combination_operator);
+    inputs.combination_operator = static_cast<JBIG2::CombinationOperator>(combination_operator);
     inputs.default_pixel_value = default_pixel_value;
     inputs.grayscale_width = gray_width;
     inputs.grayscale_height = gray_height;
@@ -3717,73 +3624,73 @@ static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
             continue;
 
         switch (segment.header.type) {
-        case SegmentType::SymbolDictionary:
+        case JBIG2::SegmentType::SymbolDictionary:
             TRY(decode_symbol_dictionary(context, segment));
             break;
-        case SegmentType::IntermediateTextRegion:
+        case JBIG2::SegmentType::IntermediateTextRegion:
             TRY(decode_intermediate_text_region(context, segment));
             break;
-        case SegmentType::ImmediateTextRegion:
+        case JBIG2::SegmentType::ImmediateTextRegion:
             TRY(decode_immediate_text_region(context, segment));
             break;
-        case SegmentType::ImmediateLosslessTextRegion:
+        case JBIG2::SegmentType::ImmediateLosslessTextRegion:
             TRY(decode_immediate_lossless_text_region(context, segment));
             break;
-        case SegmentType::PatternDictionary:
+        case JBIG2::SegmentType::PatternDictionary:
             TRY(decode_pattern_dictionary(context, segment));
             break;
-        case SegmentType::IntermediateHalftoneRegion:
+        case JBIG2::SegmentType::IntermediateHalftoneRegion:
             TRY(decode_intermediate_halftone_region(context, segment));
             break;
-        case SegmentType::ImmediateHalftoneRegion:
+        case JBIG2::SegmentType::ImmediateHalftoneRegion:
             TRY(decode_immediate_halftone_region(context, segment));
             break;
-        case SegmentType::ImmediateLosslessHalftoneRegion:
+        case JBIG2::SegmentType::ImmediateLosslessHalftoneRegion:
             TRY(decode_immediate_lossless_halftone_region(context, segment));
             break;
-        case SegmentType::IntermediateGenericRegion:
+        case JBIG2::SegmentType::IntermediateGenericRegion:
             TRY(decode_intermediate_generic_region(context, segment));
             break;
-        case SegmentType::ImmediateGenericRegion:
+        case JBIG2::SegmentType::ImmediateGenericRegion:
             TRY(decode_immediate_generic_region(context, segment));
             break;
-        case SegmentType::ImmediateLosslessGenericRegion:
+        case JBIG2::SegmentType::ImmediateLosslessGenericRegion:
             TRY(decode_immediate_lossless_generic_region(context, segment));
             break;
-        case SegmentType::IntermediateGenericRefinementRegion:
+        case JBIG2::SegmentType::IntermediateGenericRefinementRegion:
             TRY(decode_intermediate_generic_refinement_region(context, segment));
             break;
-        case SegmentType::ImmediateGenericRefinementRegion:
+        case JBIG2::SegmentType::ImmediateGenericRefinementRegion:
             TRY(decode_immediate_generic_refinement_region(context, segment));
             break;
-        case SegmentType::ImmediateLosslessGenericRefinementRegion:
+        case JBIG2::SegmentType::ImmediateLosslessGenericRefinementRegion:
             TRY(decode_immediate_lossless_generic_refinement_region(context, segment));
             break;
-        case SegmentType::PageInformation:
+        case JBIG2::SegmentType::PageInformation:
             TRY(decode_page_information(context, segment));
             break;
-        case SegmentType::EndOfPage:
+        case JBIG2::SegmentType::EndOfPage:
             TRY(decode_end_of_page(context, segment));
             break;
-        case SegmentType::EndOfStripe:
+        case JBIG2::SegmentType::EndOfStripe:
             TRY(decode_end_of_stripe(context, segment));
             break;
-        case SegmentType::EndOfFile:
+        case JBIG2::SegmentType::EndOfFile:
             TRY(decode_end_of_file(context, segment));
             // "If a file contains an end of file segment, it must be the last segment."
             if (i != context.segments.size() - 1)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of file segment not last segment");
             break;
-        case SegmentType::Profiles:
+        case JBIG2::SegmentType::Profiles:
             TRY(decode_profiles(context, segment));
             break;
-        case SegmentType::Tables:
+        case JBIG2::SegmentType::Tables:
             TRY(decode_tables(context, segment));
             break;
-        case SegmentType::ColorPalette:
+        case JBIG2::SegmentType::ColorPalette:
             TRY(decode_color_palette(context, segment));
             break;
-        case SegmentType::Extension:
+        case JBIG2::SegmentType::Extension:
             TRY(decode_extension(context, segment));
             break;
         }
@@ -3806,7 +3713,7 @@ IntSize JBIG2ImageDecoderPlugin::size()
 
 bool JBIG2ImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
-    return data.starts_with(id_string);
+    return data.starts_with(JBIG2::id_string);
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JBIG2ImageDecoderPlugin::create(ReadonlyBytes data)
@@ -3814,7 +3721,7 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JBIG2ImageDecoderPlugin::create(Reado
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin()));
     TRY(decode_jbig2_header(*plugin->m_context, data));
 
-    data = data.slice(sizeof(id_string) + sizeof(u8) + (plugin->m_context->number_of_pages.has_value() ? sizeof(u32) : 0));
+    data = data.slice(sizeof(JBIG2::id_string) + sizeof(u8) + (plugin->m_context->number_of_pages.has_value() ? sizeof(u32) : 0));
     TRY(decode_segment_headers(*plugin->m_context, data));
 
     TRY(scan_for_page_size(*plugin->m_context));
@@ -3858,7 +3765,7 @@ ErrorOr<ImageFrameDescriptor> JBIG2ImageDecoderPlugin::frame(size_t index, Optio
 ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyBytes> data)
 {
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin()));
-    plugin->m_context->organization = Organization::Embedded;
+    plugin->m_context->organization = JBIG2::Organization::Embedded;
 
     for (auto const& segment_data : data)
         TRY(decode_segment_headers(*plugin->m_context, segment_data));

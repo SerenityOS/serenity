@@ -1,0 +1,110 @@
+/*
+ * Copyright (c) 2025, Nico Weber <thakis@chromium.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <AK/Endian.h>
+#include <AK/Optional.h>
+#include <AK/Types.h>
+#include <AK/Vector.h>
+
+namespace Gfx::JBIG2 {
+
+// JBIG2 spec, Annex D, D.4.1 ID string
+inline constexpr u8 id_string[] = { 0x97, 0x4A, 0x42, 0x32, 0x0D, 0x0A, 0x1A, 0x0A };
+
+// 7.3 Segment types
+enum SegmentType {
+    SymbolDictionary = 0,
+    IntermediateTextRegion = 4,
+    ImmediateTextRegion = 6,
+    ImmediateLosslessTextRegion = 7,
+    PatternDictionary = 16,
+    IntermediateHalftoneRegion = 20,
+    ImmediateHalftoneRegion = 22,
+    ImmediateLosslessHalftoneRegion = 23,
+    IntermediateGenericRegion = 36,
+    ImmediateGenericRegion = 38,
+    ImmediateLosslessGenericRegion = 39,
+    IntermediateGenericRefinementRegion = 40,
+    ImmediateGenericRefinementRegion = 42,
+    ImmediateLosslessGenericRefinementRegion = 43,
+    PageInformation = 48,
+    EndOfPage = 49,
+    EndOfStripe = 50,
+    EndOfFile = 51,
+    Profiles = 52,
+    Tables = 53,
+    ColorPalette = 54,
+    Extension = 62,
+};
+
+// Annex D
+enum class Organization {
+    // D.1 Sequential organization
+    Sequential,
+
+    // D.2 Random-access organization
+    RandomAccess,
+
+    // D.3 Embedded organization
+    Embedded,
+};
+
+struct SegmentHeader {
+    u32 segment_number { 0 };
+    SegmentType type { SegmentType::Extension };
+    Vector<u32> referred_to_segment_numbers;
+
+    // 7.2.6 Segment page association
+    // "The first page must be numbered "1". This field may contain a value of zero; this value indicates that this segment is not associated with any page."
+    u32 page_association { 0 };
+
+    Optional<u32> data_length;
+};
+
+// 7.4.8.5 Page segment flags
+enum class CombinationOperator {
+    Or = 0,
+    And = 1,
+    Xor = 2,
+    XNor = 3,
+    Replace = 4,
+};
+
+// 7.4.8 Page information segment syntax
+struct [[gnu::packed]] PageInformationSegment {
+    BigEndian<u32> bitmap_width;
+    BigEndian<u32> bitmap_height;
+    BigEndian<u32> page_x_resolution; // In pixels/meter.
+    BigEndian<u32> page_y_resolution; // In pixels/meter.
+    u8 flags;
+    BigEndian<u16> striping_information;
+
+    bool is_eventually_lossless() const { return flags & 1; }
+    bool might_contain_refinements() const { return (flags >> 1) & 1; }
+    u8 default_color() const { return (flags >> 2) & 1; }
+
+    CombinationOperator default_combination_operator() const
+    {
+        return static_cast<CombinationOperator>((flags >> 3) & 3);
+    }
+
+    bool requires_auxiliary_buffers() const { return (flags >> 5) & 1; }
+
+    bool direct_region_segments_override_default_combination_operator() const
+    {
+        return (flags >> 6) & 1;
+    }
+
+    bool might_contain_coloured_segments() const { return (flags >> 7) & 1; }
+
+    bool page_is_striped() const { return (striping_information & 0x8000) != 0; }
+    u16 maximum_stripe_size() const { return striping_information & 0x7FFF; }
+};
+static_assert(AssertSize<PageInformationSegment, 19>());
+
+}
