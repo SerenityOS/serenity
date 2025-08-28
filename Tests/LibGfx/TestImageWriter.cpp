@@ -14,6 +14,8 @@
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/ImageFormats/GIFLoader.h>
 #include <LibGfx/ImageFormats/GIFWriter.h>
+#include <LibGfx/ImageFormats/JBIG2Loader.h>
+#include <LibGfx/ImageFormats/JBIG2Writer.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/JPEGWriter.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
@@ -185,6 +187,16 @@ TEST_CASE(test_gif_animated)
     auto const frame_3 = TRY_OR_FAIL(decoder->frame(2));
     EXPECT_EQ(frame_3.duration, 200);
     expect_bitmaps_equal(*frame_3.image, bitmap_3);
+}
+
+TEST_CASE(test_jbig2)
+{
+    auto bilevel_bitmap = TRY_OR_FAIL(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 47, 33 }));
+
+    bilevel_bitmap->fill(Gfx::Color::NamedColor::White);
+    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(bilevel_bitmap)));
+
+    // FIXME: Implement and test roundtripping more than purely white bitmaps.
 }
 
 TEST_CASE(test_jpeg)
