@@ -610,11 +610,6 @@ static void __call_fini_functions()
                 (*fini_end)();
             }
         }
-
-        if (object->has_fini_section()) {
-            auto fini_function = object->fini_section_function();
-            (fini_function)();
-        }
     }
 }
 

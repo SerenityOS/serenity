@@ -249,18 +249,12 @@ public:
     typedef void (*FinalizationFunction)();
     typedef Elf_Addr (*IfuncResolver)();
 
-    bool has_init_section() const { return m_init_offset != 0; }
     bool has_init_array_section() const { return m_init_array_offset != 0; }
-    Section init_section() const;
-    InitializationFunction init_section_function() const;
     Section init_array_section() const;
 
     bool is_pie() const { return m_is_pie; }
 
-    bool has_fini_section() const { return m_fini_offset != 0; }
     bool has_fini_array_section() const { return m_fini_array_offset != 0; }
-    Section fini_section() const;
-    FinalizationFunction fini_section_function() const;
     Section fini_array_section() const;
 
     HashSection hash_section() const
@@ -348,9 +342,6 @@ private:
     unsigned m_symbol_count { 0 };
 
     // Begin Section information collected from DT_* entries
-    FlatPtr m_init_offset { 0 };
-    FlatPtr m_fini_offset { 0 };
-
     FlatPtr m_init_array_offset { 0 };
     size_t m_init_array_size { 0 };
     FlatPtr m_fini_array_offset { 0 };

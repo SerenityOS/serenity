@@ -80,11 +80,11 @@ void DynamicObject::parse()
     for_each_dynamic_entry([&](DynamicEntry const& entry) {
         switch (entry.tag()) {
         case DT_INIT:
-            m_init_offset = entry.ptr() - m_elf_base_address.get();
-            break;
+            dbgln("DynamicObject: Object has obsolete DT_INIT dynamic array tag");
+            VERIFY_NOT_REACHED();
         case DT_FINI:
-            m_fini_offset = entry.ptr() - m_elf_base_address.get();
-            break;
+            dbgln("DynamicObject: Object has obsolete DT_FINI dynamic array tag");
+            VERIFY_NOT_REACHED();
         case DT_INIT_ARRAY:
             m_init_array_offset = entry.ptr() - m_elf_base_address.get();
             break;
@@ -278,16 +278,6 @@ DynamicObject::Symbol DynamicObject::symbol(unsigned index) const
     return Symbol(*this, index, *symbol_entry);
 }
 
-DynamicObject::Section DynamicObject::init_section() const
-{
-    return Section(*this, m_init_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_INIT"sv);
-}
-
-DynamicObject::Section DynamicObject::fini_section() const
-{
-    return Section(*this, m_fini_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_FINI"sv);
-}
-
 DynamicObject::Section DynamicObject::init_array_section() const
 {
     return Section(*this, m_init_array_offset, m_init_array_size, sizeof(void (*)()), "DT_INIT_ARRAY"sv);
@@ -404,18 +394,6 @@ StringView DynamicObject::symbol_string_table_string(Elf_Word index) const
 char const* DynamicObject::raw_symbol_string_table_string(Elf_Word index) const
 {
     return (char const*)base_address().offset(m_string_table_offset + index).as_ptr();
-}
-
-DynamicObject::InitializationFunction DynamicObject::init_section_function() const
-{
-    VERIFY(has_init_section());
-    return (InitializationFunction)init_section().address().as_ptr();
-}
-
-DynamicObject::FinalizationFunction DynamicObject::fini_section_function() const
-{
-    VERIFY(has_fini_section());
-    return (FinalizationFunction)fini_section().address().as_ptr();
 }
 
 char const* DynamicObject::name_for_dtag(Elf_Sword d_tag)
