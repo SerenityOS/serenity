@@ -647,7 +647,7 @@ struct SegmentData {
     Optional<JBIG2::HuffmanTable> huffman_table;
 };
 
-static void composite_bitbuffer(BilevelImage& out, BilevelImage const& bitmap, Gfx::IntPoint position, JBIG2::CombinationOperator operator_)
+static void composite_bilevel_image(BilevelImage& out, BilevelImage const& bitmap, Gfx::IntPoint position, JBIG2::CombinationOperator operator_)
 {
     static constexpr auto combine = [](bool dst, bool src, JBIG2::CombinationOperator op) -> bool {
         switch (op) {
@@ -1794,7 +1794,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> text_region_decoding_procedure(TextR
             //         pixel in SBREG, using the combination operator specified by SBCOMBOP. Write the results
             //         of each combination into that pixel in SBREG."
             dbgln_if(JBIG2_DEBUG, "combining symbol {} ({}x{}) at ({}, {}) with operator {}", id, symbol.width(), symbol.height(), s_instance, t_instance, (int)inputs.operator_);
-            composite_bitbuffer(*result, symbol, { s_instance, t_instance }, inputs.operator_);
+            composite_bilevel_image(*result, symbol, { s_instance, t_instance }, inputs.operator_);
 
             //     "xi) Update CURS as follows:
             //          • If TRANSPOSED is 0, and REFCORNER is TOPLEFT or BOTTOMLEFT, set:
@@ -2277,7 +2277,7 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
 
         // "b) For each pixel (x, y) in GSPLANES[J], set:
         //     GSPLANES[J][x, y] = GSPLANES[J + 1][x, y] XOR GSPLANES[J][x, y]"
-        composite_bitbuffer(*bitplanes[j], *bitplanes[j + 1], { 0, 0 }, JBIG2::CombinationOperator::Xor);
+        composite_bilevel_image(*bitplanes[j], *bitplanes[j + 1], { 0, 0 }, JBIG2::CombinationOperator::Xor);
 
         // "c) Set J = J – 1."
         j = j - 1;
@@ -2413,7 +2413,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> halftone_region_decoding_procedure(H
                 if (grayscale_value >= inputs.patterns.size())
                     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Grayscale value out of range");
                 auto const& pattern = inputs.patterns[grayscale_value];
-                composite_bitbuffer(*result, pattern->bitmap(), { x, y }, inputs.combination_operator);
+                composite_bilevel_image(*result, pattern->bitmap(), { x, y }, inputs.combination_operator);
             }
         }
     }
@@ -3077,7 +3077,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
 
     auto result = TRY(text_region_decoding_procedure(inputs, text_contexts, refinement_contexts));
 
-    composite_bitbuffer(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
+    composite_bilevel_image(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
 
     return {};
 }
@@ -3244,7 +3244,7 @@ static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& conte
     inputs.pattern_height = inputs.patterns[0]->bitmap().height();
     auto result = TRY(halftone_region_decoding_procedure(inputs, data, contexts));
 
-    composite_bitbuffer(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
+    composite_bilevel_image(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
 
     return {};
 }
@@ -3345,7 +3345,7 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Region bounds outsize of page bounds");
     }
 
-    composite_bitbuffer(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
+    composite_bilevel_image(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
 
     return {};
 }
