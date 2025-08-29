@@ -104,6 +104,7 @@ void QMArithmeticDecoder::INITDEC()
 {
     // E.3.5 Initialization of the decoder (INITDEC)
     // Figure G.1 – Initialization of the software conventions decoder
+    // (Annex G replacement for Figure E.20 – Initialization of the decoder)
 
     // "BP, the pointer to the compressed data, is initialized to BPST (pointing to the first compressed byte)."
     auto const BPST = 0;
@@ -121,6 +122,7 @@ u8 QMArithmeticDecoder::DECODE()
 {
     // E.3.2 Decoding a decision (DECODE)
     // Figure G.2 – Decoding an MPS or an LPS in the software-conventions decoder
+    // (Annex G replacement for Figure E.15 – Decoding an MPS or an LPS)
     u8 D;
     A = A - Qe(I(CX));
     if (C < ((u32)A << 16)) { // `(C_high < A)` in spec
@@ -191,6 +193,7 @@ void QMArithmeticDecoder::BYTEIN()
 {
     // E.3.4 Compressed data input (BYTEIN)
     // Figure G.3 – Inserting a new byte into the C register in the software-conventions decoder
+    // (Annex G replacement for Figure E.19 – BYTEIN procedure for decoder)
     if (B() == 0xFF) {
         if (B(1) > 0x8F) {
             CT = 8;
