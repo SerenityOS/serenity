@@ -84,7 +84,7 @@ bool QMArithmeticDecoder::get_next_bit(Context& context)
 {
     CX = &context;
     // Useful for comparing to Table H.1 – Encoder and decoder trace data.
-    // dbg("I={} MPS={} A={:#x} C={:#x} CT={} B={:#x}", I(CX), MPS(CX), A, C, CT, B());
+    // dbg("I={} MPS={} A={:#X} C={:#08X} CT={} B={:#X}", I(CX), MPS(CX), A, C, CT, B());
     u8 D = DECODE();
     // dbgln(" -> D={}", D);
     return D;
