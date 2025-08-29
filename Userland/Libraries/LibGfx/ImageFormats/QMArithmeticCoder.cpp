@@ -68,6 +68,11 @@ constexpr auto qe_table = to_array<QeEntry>({
     { 0x5601, 46, 46, 0 },
 });
 
+static u16 Qe(u16 index) { return qe_table[index].qe; }
+static u8 NMPS(u16 index) { return qe_table[index].nmps; }
+static u8 NLPS(u16 index) { return qe_table[index].nlps; }
+static u8 SWITCH(u16 index) { return qe_table[index].switch_flag; }
+
 ErrorOr<QMArithmeticDecoder> QMArithmeticDecoder::initialize(ReadonlyBytes data)
 {
     QMArithmeticDecoder decoder { data };
@@ -84,11 +89,6 @@ bool QMArithmeticDecoder::get_next_bit(Context& context)
     // dbgln(" -> D={}", D);
     return D;
 }
-
-u16 QMArithmeticDecoder::Qe(u16 index) { return qe_table[index].qe; }
-u8 QMArithmeticDecoder::NMPS(u16 index) { return qe_table[index].nmps; }
-u8 QMArithmeticDecoder::NLPS(u16 index) { return qe_table[index].nlps; }
-u8 QMArithmeticDecoder::SWITCH(u16 index) { return qe_table[index].switch_flag; }
 
 u8 QMArithmeticDecoder::B(size_t offset) const
 {
