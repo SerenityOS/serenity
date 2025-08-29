@@ -7,14 +7,64 @@
 #pragma once
 
 #include <AK/Span.h>
+#include <AK/Vector.h>
 
 namespace Gfx {
 
-// This is the arithmetic decoder described in Annex E of the JBIG2 spec.
+// These are the arithmetic coder and decoder described in Annex E of the JBIG2 spec.
 // See JBIG2Loader.cpp for the JBIG2 spec link.
 //
 // It's also used in JPEG2000 and also described in Annex C of the JPEG2000 spec.
 // See JPEG2000Loader.cpp for the JPEG2000 spec link.
+
+// E.2 Description of the arithmetic encoder
+class QMArithmeticEncoder {
+public:
+    struct Context {
+        u8 I { 0 };      // Index I stored for context CX (E.2.4)
+        u8 is_mps { 0 }; // "More probable symbol" (E.1.1). 0 or 1.
+    };
+
+    static ErrorOr<QMArithmeticEncoder> initialize(u8 byte_before_first_encoded_byte);
+
+    void encode_bit(u8 bit, Context& context);
+    ErrorOr<ByteBuffer> finalize();
+
+private:
+    void emit();
+
+    // The code below uses names from the spec, so that the algorithms look exactly like the flowcharts in the spec.
+
+    // Abbreviations:
+    // "CX": "Context" (E.1)
+    // "D": "Decision" (as in "encoder input" / "decoder output") (E.1)
+    // "I(CX)": "Index I stored for context CX" (E.2.4)
+    // "MPS": "More probable symbol" (E.1.1)
+    // "LPS": "Less probable symbol" (E.1.1)
+
+    void INITENC(u8 byte_before_first_encoded_byte);
+    void ENCODE(u8 D);
+    void CODE1();
+    void CODE0();
+    void CODELPS();
+    void CODEMPS();
+    void RENORME();
+    void BYTEOUT();
+    void FLUSH();
+    void SETBITS();
+
+    u8 B { 0 }; // Byte being constructed for output.
+    Vector<u8> m_output_bytes;
+
+    u32 C { 0 };
+    u16 A { 0 }; // Current value of the fraction. Fixed precision; 0x8000 is equivalent to 0.75.
+
+    u8 CT { 0 }; // Count of the number of bits in C.
+
+    Context* CX { nullptr };
+    static u8& I(Context* cx) { return cx->I; }
+    static u8& MPS(Context* cx) { return cx->is_mps; }
+};
 
 // E.3 Arithmetic decoding procedure, but with the changes described in
 // Annex G Arithmetic decoding procedure (software conventions).
