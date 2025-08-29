@@ -19,7 +19,14 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     auto launcher = LaunchServer::Launcher();
     launcher.load_handlers();
-    launcher.load_config(TRY(Core::ConfigFile::open_for_app("LaunchServer")));
+
+    // Load system wide config
+    launcher.load_config(TRY(Core::ConfigFile::open_for_system("LaunchServer")));
+
+    // Try to load user config
+    if (auto app_config = Core::ConfigFile::open_for_app("LaunchServer"); !app_config.is_error()) {
+        launcher.load_config(app_config.release_value());
+    }
 
     TRY(Core::System::pledge("stdio accept rpath proc exec"));
 
