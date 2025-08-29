@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteBuffer.h>
 #include <AK/Error.h>
 #include <LibGfx/ImageFormats/QMArithmeticCoder.h>
 
@@ -72,6 +73,214 @@ static u16 Qe(u16 index) { return qe_table[index].qe; }
 static u8 NMPS(u16 index) { return qe_table[index].nmps; }
 static u8 NLPS(u16 index) { return qe_table[index].nlps; }
 static u8 SWITCH(u16 index) { return qe_table[index].switch_flag; }
+
+ErrorOr<QMArithmeticEncoder> QMArithmeticEncoder::initialize(u8 byte_before_first_encoded_byte)
+{
+    QMArithmeticEncoder encoder;
+    encoder.INITENC(byte_before_first_encoded_byte);
+    return encoder;
+}
+
+void QMArithmeticEncoder::encode_bit(u8 bit, Context& context)
+{
+    CX = &context;
+
+    // Useful for comparing to Table H.1 – Encoder and decoder trace data.
+    // dbg("D={} I={} MPS={} Qe={:#04X} A={:#X} C={:#08X} CT={} B={:#X}", bit, I(CX), MPS(CX), Qe(I(CX)), A, C, CT, B);
+    ENCODE(bit);
+    // dbgln();
+}
+
+void QMArithmeticEncoder::emit()
+{
+    // dbg(" OUT={:#x}", B);
+    m_output_bytes.append(B);
+}
+
+ErrorOr<ByteBuffer> QMArithmeticEncoder::finalize()
+{
+    FLUSH();
+
+    // The spec starts BP at BPST - 1. We have no BP and append to m_output_bytes every time the spec tells us to increment BP,
+    // so we must skip the first byte in m_output_bytes.
+    return ByteBuffer::copy(m_output_bytes.span().slice(1));
+}
+
+void QMArithmeticEncoder::INITENC(u8 byte_before_first_encoded_byte)
+{
+    // E.2.8 Initialization of the encoder (INITENC)
+    // Figure E.10 – Initialization of the encoder
+
+    A = 0x8000;
+    C = 0;
+
+    // The spec has `BP = BPST - 1;` here, which means we set the B (output) pointer to before the first encoded byte.
+    B = byte_before_first_encoded_byte;
+
+    CT = 12;
+
+    if (B == 0xFF)
+        CT = 13;
+}
+
+void QMArithmeticEncoder::ENCODE(u8 D)
+{
+    // E.2.2 Encoding a decision (ENCODE)
+    // Figure E.3 – ENCODE procedure
+    if (D == 0)
+        CODE0();
+    else
+        CODE1();
+}
+
+void QMArithmeticEncoder::CODE1()
+{
+    // E.2.3 Encoding a 1 or 0 (CODE1 and CODE0)
+    // Figure E.4 – CODE1 procedure
+    if (MPS(CX) == 1)
+        CODEMPS();
+    else
+        CODELPS();
+}
+
+void QMArithmeticEncoder::CODE0()
+{
+    // E.2.3 Encoding a 1 or 0 (CODE1 and CODE0)
+    // Figure E.5 – CODE0 procedure
+    if (MPS(CX) == 0)
+        CODEMPS();
+    else
+        CODELPS();
+}
+
+void QMArithmeticEncoder::CODELPS()
+{
+    // E.2.4 Encoding an MPS or LPS (CODEMPS and CODELPS)
+    // Figure E.6 – CODELPS procedure with conditional MPS/LPS exchange
+    A = A - Qe(I(CX));
+
+    if (A < Qe(I(CX)))
+        C = C + Qe(I(CX));
+    else
+        A = Qe(I(CX));
+
+    if (SWITCH(I(CX)) == 1)
+        MPS(CX) = 1 - MPS(CX);
+
+    I(CX) = NLPS(I(CX));
+
+    RENORME();
+}
+
+void QMArithmeticEncoder::CODEMPS()
+{
+    // E.2.4 Encoding an MPS or LPS (CODEMPS and CODELPS)
+    // Figure E.7 – CODEMPS procedure with conditional MPS/LPS exchange
+    A = A - Qe(I(CX));
+
+    if ((A & 0x8000) == 0) {
+        if (A < Qe(I(CX)))
+            A = Qe(I(CX));
+        else
+            C = C + Qe(I(CX));
+        I(CX) = NMPS(I(CX));
+        RENORME();
+    } else {
+        C = C + Qe(I(CX));
+    }
+}
+
+void QMArithmeticEncoder::RENORME()
+{
+    // E.2.6 Renormalization in the encoder (RENORME)
+    // Figure E.8 – Encoder renormalization procedure
+    // Note: The diagram in the spec is wrong! The A / C / CT updates have to be part of the loop, but aren't in the spec.
+    // This is correct in Figure C.8 – Encoder renormalization procedure in Annex C of the JPEG2000 spec.
+    do {
+        A = A << 1;
+        C = C << 1;
+        CT = CT - 1;
+
+        if (CT == 0)
+            BYTEOUT();
+    } while ((A & 0x8000) == 0);
+}
+
+void QMArithmeticEncoder::BYTEOUT()
+{
+    // E.2.7 Compressed data output (BYTEOUT)
+    // Figure E.9 – BYTEOUT procedure for encoder
+
+    auto emit_with_bit_stuffing = [&]() {
+        // Box in lower right of Figure E.9.
+        emit(); // "BP = BP + 1" in spec.
+        B = C >> 20;
+
+        // Note: The spec incorrectly has 0x7F'FFFF instead of 0xF'FFFF in Figure E.9.
+        // This is fixed in Figure C.9 – BYTEOUT procedure for encoder in Annex C of the JPEG2000 spec.
+        // Without the fix, the encoder would emit 0x38 instead of 0x37 for the 23rd byte emitted in Table H.1.
+        C = C & 0xF'FFFF;
+        CT = 7;
+    };
+
+    auto emit_without_bit_stuffing = [&]() {
+        // Box in lower left of Figure E.9.
+        emit(); // "BP = BP + 1" in spec.
+        B = C >> 19;
+        C = C & 0x7'FFFF;
+        CT = 8;
+    };
+
+    if (B == 0xFF) {
+        emit_with_bit_stuffing();
+        return;
+    }
+
+    if (C < 0x800'0000) {
+        emit_without_bit_stuffing();
+        return;
+    }
+
+    B = B + 1;
+    if (B == 0xFF) {
+        C = C & 0x7FF'FFFF;
+        emit_with_bit_stuffing();
+        return;
+    }
+
+    emit_without_bit_stuffing();
+}
+
+void QMArithmeticEncoder::FLUSH()
+{
+    // E.2.9 Termination of encoding (FLUSH)
+    // Figure E.11 – FLUSH procedure
+    SETBITS();
+    C = C << CT;
+    BYTEOUT();
+    C = C << CT;
+    BYTEOUT();
+    if (B != 0xFF) {
+        emit(); // BP = BP + 1 in spec.
+        B = 0xFF;
+    }
+
+    // FIXME: "Optionally remove trailing 0x7FFF pairs following the leading 0xFF"
+
+    emit(); // BP = BP + 1 in spec.
+    B = 0xAC;
+    emit(); // BP = BP + 1 in spec.
+}
+
+void QMArithmeticEncoder::SETBITS()
+{
+    // E.2.9 Termination of encoding (FLUSH)
+    // Figure E.12 – Setting the final bits in the C register
+    auto TEMPC = C + A;
+    C = C | 0xFFFF;
+    if (C >= TEMPC)
+        C = C - 0x8000;
+}
 
 ErrorOr<QMArithmeticDecoder> QMArithmeticDecoder::initialize(ReadonlyBytes data)
 {

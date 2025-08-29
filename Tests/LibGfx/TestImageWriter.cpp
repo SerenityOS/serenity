@@ -20,6 +20,7 @@
 #include <LibGfx/ImageFormats/JPEGWriter.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
+#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
 #include <LibGfx/ImageFormats/QOILoader.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
@@ -303,6 +304,39 @@ TEST_CASE(test_qoi)
 {
     TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
     TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+}
+
+TEST_CASE(test_qm_arithmetic_encoder)
+{
+    // https://www.itu.int/rec/T-REC-T.88-201808-I
+    // H.2 Test sequence for arithmetic coder
+    // clang-format off
+    constexpr auto input = to_array<u8>({
+        0x00, 0x02, 0x00, 0x51, 0x00, 0x00, 0x00, 0xC0,
+        0x03, 0x52, 0x87, 0x2A, 0xAA, 0xAA, 0xAA, 0xAA,
+        0x82, 0xC0, 0x20, 0x00, 0xFC, 0xD7, 0x9E, 0xF6,
+        0xBF, 0x7F, 0xED, 0x90, 0x4F, 0x46, 0xA3, 0xBF
+    });
+    constexpr auto output = to_array<u8>({
+        0x84, 0xC7, 0x3B, 0xFC, 0xE1, 0xA1, 0x43, 0x04,
+        0x02, 0x20, 0x00, 0x00, 0x41, 0x0D, 0xBB, 0x86,
+        0xF4, 0x31, 0x7F, 0xFF, 0x88, 0xFF, 0x37, 0x47,
+        0x1A, 0xDB, 0x6A, 0xDF, 0xFF, 0xAC
+        });
+    // clang-format on
+
+    // "For this entire test, a single value of CX is used. I(CX) is initially 0 and MPS(CX) is initially 0."
+    Gfx::QMArithmeticEncoder::Context context { 0, 0 };
+
+    // "The value of the byte before the first byte in the output buffer is assumed to be 0x00, making the initial value of B 0x00."
+    auto encoder = TRY_OR_FAIL(Gfx::QMArithmeticEncoder::initialize(0x00));
+
+    FixedMemoryStream input_stream { input };
+    BigEndianInputBitStream input_bit_stream { MaybeOwned { input_stream } };
+    while (!input_bit_stream.is_eof())
+        encoder.encode_bit(TRY_OR_FAIL(input_bit_stream.read_bit()), context);
+    auto encoded = TRY_OR_FAIL(encoder.finalize());
+    EXPECT_EQ(encoded.span(), output.span());
 }
 
 TEST_CASE(test_webp)
