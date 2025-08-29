@@ -92,7 +92,7 @@ static void add_alpha_channel(Gfx::Bitmap& bitmap)
     }
 }
 
-static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_grayscale_bitmap()
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> create_test_grayscale_bitmap()
 {
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 47, 33 }));
 
@@ -106,14 +106,14 @@ static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_grayscale_bitmap()
     return bitmap;
 }
 
-static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_grayscale_alpha_bitmap()
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> create_test_grayscale_alpha_bitmap()
 {
     auto bitmap = TRY(create_test_grayscale_bitmap());
     add_alpha_channel(*bitmap);
     return bitmap;
 }
 
-static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_rgb_bitmap()
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> create_test_rgb_bitmap()
 {
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 47, 33 }));
 
@@ -124,7 +124,7 @@ static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_rgb_bitmap()
     return bitmap;
 }
 
-static ErrorOr<AK::NonnullRefPtr<Gfx::Bitmap>> create_test_rgba_bitmap()
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> create_test_rgba_bitmap()
 {
     auto bitmap = TRY(create_test_rgb_bitmap());
     add_alpha_channel(*bitmap);
