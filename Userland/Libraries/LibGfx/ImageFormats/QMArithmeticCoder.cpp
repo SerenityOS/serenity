@@ -5,7 +5,7 @@
  */
 
 #include <AK/Error.h>
-#include <LibGfx/ImageFormats/QMArithmeticDecoder.h>
+#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
 
 namespace Gfx {
 
