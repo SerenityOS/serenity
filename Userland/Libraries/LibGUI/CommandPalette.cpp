@@ -179,6 +179,7 @@ CommandPalette::CommandPalette(GUI::Window& parent_window, ScreenPosition screen
     set_window_type(GUI::WindowType::Popup);
     set_window_mode(GUI::WindowMode::Modeless);
     set_blocks_emoji_input(true);
+    set_forced_shadow(true);
     resize(450, 300);
 
     collect_actions(parent_window);
