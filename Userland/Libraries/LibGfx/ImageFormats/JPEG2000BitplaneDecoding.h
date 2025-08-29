@@ -9,7 +9,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
 #include <LibGfx/ImageFormats/JPEG2000Span2D.h>
-#include <LibGfx/ImageFormats/QMArithmeticDecoder.h>
+#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
 
 namespace Gfx::JPEG2000 {
 

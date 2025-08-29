@@ -12,7 +12,7 @@
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
 #include <LibGfx/ImageFormats/JBIG2Loader.h>
 #include <LibGfx/ImageFormats/JBIG2Shared.h>
-#include <LibGfx/ImageFormats/QMArithmeticDecoder.h>
+#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
 #include <LibTextCodec/Decoder.h>
 
 // Spec: ITU-T_T_88__08_2018.pdf in the zip file here:

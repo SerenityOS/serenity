@@ -28,7 +28,7 @@
 #include <LibGfx/ImageFormats/PGMLoader.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibGfx/ImageFormats/PPMLoader.h>
-#include <LibGfx/ImageFormats/QMArithmeticDecoder.h>
+#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
 #include <LibGfx/ImageFormats/TGALoader.h>
 #include <LibGfx/ImageFormats/TIFFLoader.h>
 #include <LibGfx/ImageFormats/TIFFMetadata.h>
