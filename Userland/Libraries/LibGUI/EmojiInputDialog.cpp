@@ -54,6 +54,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     set_window_type(GUI::WindowType::Popup);
     set_window_mode(GUI::WindowMode::Modeless);
     set_blocks_emoji_input(true);
+    set_forced_shadow(true);
     resize(410, 300);
 
     auto& scrollable_container = *main_widget->find_descendant_of_type_named<GUI::ScrollableContainerWidget>("scrollable_container"sv);
