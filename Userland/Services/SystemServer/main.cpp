@@ -101,21 +101,23 @@ static ErrorOr<void> determine_system_mode()
 
 static ErrorOr<void> activate_services(Core::ConfigFile const& config)
 {
+    Vector<NonnullRefPtr<Service>> services_to_activate;
     for (auto const& name : config.groups()) {
         auto service = TRY(Service::try_create(config, name));
         if (service->is_enabled_for_system_mode(g_system_mode)) {
             TRY(service->setup_sockets());
             g_services.append(move(service));
+            services_to_activate.append(g_services.last());
         }
     }
-    // After we've set them all up, activate them!
-    dbgln("Activating {} services...", g_services.size());
-    for (auto& service : g_services) {
+
+    // After we've set them all up, activate only those just added!
+    dbgln("Activating {} services...", services_to_activate.size());
+    for (auto& service : services_to_activate) {
         dbgln_if(SYSTEMSERVER_DEBUG, "Activating {}", service->name());
         if (auto result = service->activate(); result.is_error())
             dbgln("{}: {}", service->name(), result.release_error());
     }
-
     return {};
 }
 
@@ -148,10 +150,15 @@ static ErrorOr<void> activate_base_services_based_on_system_mode()
 
 static ErrorOr<void> activate_user_services_based_on_system_mode()
 {
-    // Read our config and instantiate services.
+    // Read system wide user config and instantiate services.
     // This takes care of setting up sockets.
-    auto config = TRY(Core::ConfigFile::open_for_app("SystemServer"));
+    auto config = TRY(Core::ConfigFile::open_for_system("SystemServerUser"));
     TRY(activate_services(*config));
+
+    // Try to read user config and instantiate services.
+    if (auto config = Core::ConfigFile::open_for_app("SystemServer"); !config.is_error()) {
+        TRY(activate_services(config.release_value()));
+    }
     return {};
 }
 
