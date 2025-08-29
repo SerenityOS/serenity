@@ -66,10 +66,6 @@ private:
     Context* CX { nullptr };
     static u8& I(Context* cx) { return cx->I; }
     static u8& MPS(Context* cx) { return cx->is_mps; }
-    static u16 Qe(u16);
-    static u8 NMPS(u16);
-    static u8 NLPS(u16);
-    static u8 SWITCH(u16);
 };
 
 }
