@@ -799,33 +799,12 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
     return {};
 }
 
-// 7.4.1 Region segment information field
-struct [[gnu::packed]] RegionSegmentInformationField {
-    BigEndian<u32> width;
-    BigEndian<u32> height;
-    BigEndian<u32> x_location;
-    BigEndian<u32> y_location;
-    u8 flags;
-
-    JBIG2::CombinationOperator external_combination_operator() const
-    {
-        VERIFY((flags & 0x7) <= 4);
-        return static_cast<JBIG2::CombinationOperator>(flags & 0x7);
-    }
-
-    bool is_color_bitmap() const
-    {
-        return (flags & 0x8) != 0;
-    }
-};
-static_assert(AssertSize<RegionSegmentInformationField, 17>());
-
-static ErrorOr<RegionSegmentInformationField> decode_region_segment_information_field(ReadonlyBytes data)
+static ErrorOr<JBIG2::RegionSegmentInformationField> decode_region_segment_information_field(ReadonlyBytes data)
 {
     // 7.4.8 Page information segment syntax
-    if (data.size() < sizeof(RegionSegmentInformationField))
+    if (data.size() < sizeof(JBIG2::RegionSegmentInformationField))
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid region segment information field size");
-    auto result = *(RegionSegmentInformationField const*)data.data();
+    auto result = *(JBIG2::RegionSegmentInformationField const*)data.data();
     if ((result.flags & 0b1111'0000) != 0)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid region segment information field flags");
     if ((result.flags & 0x7) > 4)
@@ -849,7 +828,7 @@ static ErrorOr<JBIG2::PageInformationSegment> decode_page_information_segment(Re
     return *(JBIG2::PageInformationSegment const*)data.data();
 }
 
-static ErrorOr<void> validate_segment_combination_operator_consistency(JBIG2LoadingContext& context, RegionSegmentInformationField const& information_field)
+static ErrorOr<void> validate_segment_combination_operator_consistency(JBIG2LoadingContext& context, JBIG2::RegionSegmentInformationField const& information_field)
 {
     // 7.4.8.5 Page segment flags
     // "NOTE 1 – All region segments, except for refinement region segments, are direct region segments. Because of the requirements

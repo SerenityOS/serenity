@@ -75,6 +75,27 @@ enum class CombinationOperator {
     Replace = 4,
 };
 
+// 7.4.1 Region segment information field
+struct [[gnu::packed]] RegionSegmentInformationField {
+    BigEndian<u32> width;
+    BigEndian<u32> height;
+    BigEndian<u32> x_location;
+    BigEndian<u32> y_location;
+    u8 flags;
+
+    CombinationOperator external_combination_operator() const
+    {
+        VERIFY((flags & 0x7) <= 4);
+        return static_cast<CombinationOperator>(flags & 0x7);
+    }
+
+    bool is_color_bitmap() const
+    {
+        return (flags & 0x8) != 0;
+    }
+};
+static_assert(AssertSize<RegionSegmentInformationField, 17>());
+
 // 7.4.8 Page information segment syntax
 struct [[gnu::packed]] PageInformationSegment {
     BigEndian<u32> bitmap_width;
