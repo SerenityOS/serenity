@@ -39,33 +39,17 @@ DOSPackedTime to_packed_dos_time(unsigned hour, unsigned minute, unsigned second
     return time;
 }
 
-// FIXME: Improve these naive algorithms.
 ErrorOr<DOSPackedDate> to_packed_dos_date(UnixDateTime const& unix_date_time)
 {
     auto truncated_seconds_since_epoch = unix_date_time.truncated_seconds_since_epoch();
     if (truncated_seconds_since_epoch < first_dos_representable_unix_timestamp || truncated_seconds_since_epoch > static_cast<i64>(last_dos_representable_unix_timestamp))
         return EINVAL;
 
-    auto years_since_epoch = 0;
-    auto leftover_seconds = truncated_seconds_since_epoch;
-    while (leftover_seconds >= days_in_year(years_since_epoch + 1970) * seconds_per_day) {
-        leftover_seconds -= days_in_year(years_since_epoch + 1970) * seconds_per_day;
-        ++years_since_epoch;
-    }
+    u64 days_since_epoch = truncated_seconds_since_epoch / seconds_per_day;
 
-    auto month_of_year = 1;
-    for (; month_of_year <= 12; ++month_of_year) {
-        auto seconds_in_current_month = days_in_month(years_since_epoch + 1970, month_of_year) * seconds_per_day;
-        if (leftover_seconds < seconds_in_current_month)
-            break;
-        leftover_seconds -= seconds_in_current_month;
-    }
+    auto [year, month, day] = days_since_epoch_to_date(days_since_epoch);
 
-    VERIFY(month_of_year <= 12);
-
-    auto day = leftover_seconds / seconds_per_day + 1;
-
-    return to_packed_dos_date(years_since_epoch + 1970, month_of_year, day);
+    return to_packed_dos_date(year, month, day);
 }
 
 ErrorOr<DOSPackedTime> to_packed_dos_time(UnixDateTime const& unix_date_time)
