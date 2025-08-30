@@ -96,6 +96,22 @@ struct [[gnu::packed]] RegionSegmentInformationField {
 };
 static_assert(AssertSize<RegionSegmentInformationField, 17>());
 
+struct AdaptiveTemplatePixel {
+    i8 x { 0 };
+    i8 y { 0 };
+};
+
+// Figure 7 – Field to which AT pixel locations are restricted
+inline ErrorOr<void> check_valid_adaptive_template_pixel(AdaptiveTemplatePixel const& adaptive_template_pixel)
+{
+    // Don't have to check < -127 or > 127: The offsets are stored in an i8, so they can't be out of those bounds.
+    if (adaptive_template_pixel.y > 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Adaptive pixel y too big");
+    if (adaptive_template_pixel.y == 0 && adaptive_template_pixel.x > -1)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Adaptive pixel x too big");
+    return {};
+}
+
 // 7.4.8 Page information segment syntax
 struct [[gnu::packed]] PageInformationSegment {
     BigEndian<u32> bitmap_width;

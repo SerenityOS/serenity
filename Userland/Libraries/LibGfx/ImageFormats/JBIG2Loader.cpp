@@ -980,22 +980,6 @@ static ErrorOr<void> scan_for_page_numbers(JBIG2LoadingContext& context)
     return {};
 }
 
-struct AdaptiveTemplatePixel {
-    i8 x { 0 };
-    i8 y { 0 };
-};
-
-// Figure 7 – Field to which AT pixel locations are restricted
-static ErrorOr<void> check_valid_adaptive_template_pixel(AdaptiveTemplatePixel const& adaptive_template_pixel)
-{
-    // Don't have to check < -127 or > 127: The offsets are stored in an i8, so they can't be out of those bounds.
-    if (adaptive_template_pixel.y > 0)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Adaptive pixel y too big");
-    if (adaptive_template_pixel.y == 0 && adaptive_template_pixel.x > -1)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Adaptive pixel x too big");
-    return {};
-}
-
 // 6.2.2 Input parameters
 // Table 2 – Parameters for the generic region decoding procedure
 struct GenericRegionDecodingInputParameters {
@@ -1007,7 +991,7 @@ struct GenericRegionDecodingInputParameters {
     bool is_extended_reference_template_used { false }; // "EXTTEMPLATE" in spec.
     Optional<BilevelImage const&> skip_pattern;         // "USESKIP", "SKIP" in spec.
 
-    Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels; // "GBATX" / "GBATY" in spec.
+    Array<JBIG2::AdaptiveTemplatePixel, 12> adaptive_template_pixels; // "GBATX" / "GBATY" in spec.
     // FIXME: GBCOLS, GBCOMBOP, COLEXTFLAG
 
     enum RequireEOFBAfterMMR {
@@ -1094,7 +1078,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     };
 
     // Figure 3(a) – Template when GBTEMPLATE = 0 and EXTTEMPLATE = 0,
-    constexpr auto compute_context_0 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
+    constexpr auto compute_context_0 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         for (int i = 0; i < 4; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[i].x, y + adaptive_pixels[i].y);
@@ -1108,7 +1092,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     };
 
     // Figure 4 – Template when GBTEMPLATE = 1
-    auto compute_context_1 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
+    auto compute_context_1 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
         for (int i = 0; i < 4; ++i)
@@ -1121,7 +1105,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     };
 
     // Figure 5 – Template when GBTEMPLATE = 2
-    auto compute_context_2 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
+    auto compute_context_2 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
         for (int i = 0; i < 3; ++i)
@@ -1134,7 +1118,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     };
 
     // Figure 6 – Template when GBTEMPLATE = 3
-    auto compute_context_3 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
+    auto compute_context_3 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
         for (int i = 0; i < 5; ++i)
@@ -1144,7 +1128,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
         return result;
     };
 
-    u16 (*compute_context)(NonnullOwnPtr<BilevelImage> const&, ReadonlySpan<AdaptiveTemplatePixel>, int, int);
+    u16 (*compute_context)(NonnullOwnPtr<BilevelImage> const&, ReadonlySpan<JBIG2::AdaptiveTemplatePixel>, int, int);
     if (inputs.gb_template == 0)
         compute_context = compute_context_0;
     else if (inputs.gb_template == 1)
@@ -1240,14 +1224,14 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
 // 6.3.2 Input parameters
 // Table 6 – Parameters for the generic refinement region decoding procedure
 struct GenericRefinementRegionDecodingInputParameters {
-    u32 region_width { 0 };                                   // "GRW" in spec.
-    u32 region_height { 0 };                                  // "GRH" in spec.
-    u8 gr_template { 0 };                                     // "GRTEMPLATE" in spec.
-    BilevelImage const* reference_bitmap { nullptr };         // "GRREFERENCE" in spec.
-    i32 reference_x_offset { 0 };                             // "GRREFERENCEDX" in spec.
-    i32 reference_y_offset { 0 };                             // "GRREFERENCEDY" in spec.
-    bool is_typical_prediction_used { false };                // "TPGRON" in spec.
-    Array<AdaptiveTemplatePixel, 2> adaptive_template_pixels; // "GRATX" / "GRATY" in spec.
+    u32 region_width { 0 };                                          // "GRW" in spec.
+    u32 region_height { 0 };                                         // "GRH" in spec.
+    u8 gr_template { 0 };                                            // "GRTEMPLATE" in spec.
+    BilevelImage const* reference_bitmap { nullptr };                // "GRREFERENCE" in spec.
+    i32 reference_x_offset { 0 };                                    // "GRREFERENCEDX" in spec.
+    i32 reference_y_offset { 0 };                                    // "GRREFERENCEDY" in spec.
+    bool is_typical_prediction_used { false };                       // "TPGRON" in spec.
+    Array<JBIG2::AdaptiveTemplatePixel, 2> adaptive_template_pixels; // "GRATX" / "GRATY" in spec.
 };
 
 struct RefinementContexts {
@@ -1281,7 +1265,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_refinement_region_decoding_p
     };
 
     // Figure 12 – 13-pixel refinement template showing the AT pixels at their nominal locations
-    constexpr auto compute_context_0 = [](ReadonlySpan<AdaptiveTemplatePixel> adaptive_pixels, BilevelImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_0 = [](ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, BilevelImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
         u16 result = 0;
 
         for (int dy = -1; dy <= 1; ++dy) {
@@ -1302,7 +1286,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_refinement_region_decoding_p
     };
 
     // Figure 13 – 10-pixel refinement template
-    constexpr auto compute_context_1 = [](ReadonlySpan<AdaptiveTemplatePixel>, BilevelImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_1 = [](ReadonlySpan<JBIG2::AdaptiveTemplatePixel>, BilevelImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
         u16 result = 0;
 
         for (int dy = -1; dy <= 1; ++dy) {
@@ -1377,8 +1361,8 @@ struct TextRegionDecodingInputParameters {
     JBIG2::HuffmanTable const* refinement_y_offset_table { nullptr };     // "SBHUFFRDY" in spec.
     JBIG2::HuffmanTable const* refinement_size_table { nullptr };         // "SBHUFFRSIZE" in spec.
 
-    u8 refinement_template { 0 };                                        // "SBRTEMPLATE" in spec.
-    Array<AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels; // "SBRATX" / "SBRATY" in spec.
+    u8 refinement_template { 0 };                                               // "SBRTEMPLATE" in spec.
+    Array<JBIG2::AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels; // "SBRATX" / "SBRATY" in spec.
     // FIXME: COLEXTFLAG, SBCOLS
 
     // If uses_huffman_encoding is true, generic_region_decoding_procedure() reads data off this stream.
@@ -1718,11 +1702,11 @@ struct SymbolDictionaryDecodingInputParameters {
     JBIG2::HuffmanTable const* bitmap_size_table;                // "SDHUFFBMSIZE" in spec.
     JBIG2::HuffmanTable const* number_of_symbol_instances_table; // "SDHUFFAGGINST" in spec.
 
-    u8 symbol_template { 0 };                                 // "SDTEMPLATE" in spec.
-    Array<AdaptiveTemplatePixel, 4> adaptive_template_pixels; // "SDATX" / "SDATY" in spec.
+    u8 symbol_template { 0 };                                        // "SDTEMPLATE" in spec.
+    Array<JBIG2::AdaptiveTemplatePixel, 4> adaptive_template_pixels; // "SDATX" / "SDATY" in spec.
 
-    u8 refinement_template { 0 };                                        // "SDRTEMPLATE" in spec;
-    Array<AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels; // "SDRATX" / "SDRATY" in spec.
+    u8 refinement_template { 0 };                                               // "SDRTEMPLATE" in spec;
+    Array<JBIG2::AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels; // "SDRATX" / "SDRATY" in spec.
 };
 
 struct SymbolContexts {
@@ -2485,7 +2469,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid symbol dictionary flags");
 
     // 7.4.2.1.2 Symbol dictionary AT flags
-    Array<AdaptiveTemplatePixel, 4> adaptive_template {};
+    Array<JBIG2::AdaptiveTemplatePixel, 4> adaptive_template {};
     if (!uses_huffman_encoding) {
         int number_of_adaptive_template_pixels = template_used == 0 ? 4 : 1;
         for (int i = 0; i < number_of_adaptive_template_pixels; ++i) {
@@ -2495,7 +2479,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
     }
 
     // 7.4.2.1.3 Symbol dictionary refinement AT flags
-    Array<AdaptiveTemplatePixel, 2> adaptive_refinement_template {};
+    Array<JBIG2::AdaptiveTemplatePixel, 2> adaptive_refinement_template {};
     if (uses_refinement_or_aggregate_coding && refinement_template_used == 0) {
         for (size_t i = 0; i < adaptive_refinement_template.size(); ++i) {
             adaptive_refinement_template[i].x = TRY(stream.read_value<i8>());
@@ -2811,7 +2795,7 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
 
     // 7.4.3.1.3 Text region refinement AT flags
     // "This field is only present if SBREFINE is 1 and SBRTEMPLATE is 0."
-    Array<AdaptiveTemplatePixel, 2> adaptive_refinement_template {};
+    Array<JBIG2::AdaptiveTemplatePixel, 2> adaptive_refinement_template {};
     if (uses_refinement_coding && refinement_template == 0) {
         for (size_t i = 0; i < adaptive_refinement_template.size(); ++i) {
             adaptive_refinement_template[i].x = TRY(stream.read_value<i8>());
@@ -3187,7 +3171,7 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     data = data.slice(sizeof(flags));
 
     // 7.4.6.3 Generic region segment AT flags
-    Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels {};
+    Array<JBIG2::AdaptiveTemplatePixel, 12> adaptive_template_pixels {};
     if (!uses_mmr) {
         dbgln_if(JBIG2_DEBUG, "Non-MMR generic region, GBTEMPLATE={} TPGDON={} EXTTEMPLATE={}", arithmetic_coding_template, typical_prediction_generic_decoding_on, uses_extended_reference_template);
 
