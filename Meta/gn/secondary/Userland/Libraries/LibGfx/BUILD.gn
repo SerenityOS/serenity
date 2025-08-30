@@ -68,6 +68,7 @@ shared_library("LibGfx") {
     "ImageFormats/AnimationWriter.cpp",
     "ImageFormats/BMPLoader.cpp",
     "ImageFormats/BMPWriter.cpp",
+    "ImageFormats/BilevelImage.cpp",
     "ImageFormats/BooleanDecoder.cpp",
     "ImageFormats/CCITTDecoder.cpp",
     "ImageFormats/DDSLoader.cpp",

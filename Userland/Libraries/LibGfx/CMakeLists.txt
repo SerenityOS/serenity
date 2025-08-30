@@ -39,6 +39,7 @@ set(SOURCES
     ICC/TagTypes.cpp
     ICC/WellKnownProfiles.cpp
     ImageFormats/AnimationWriter.cpp
+    ImageFormats/BilevelImage.cpp
     ImageFormats/BMPLoader.cpp
     ImageFormats/BMPWriter.cpp
     ImageFormats/BooleanDecoder.cpp
