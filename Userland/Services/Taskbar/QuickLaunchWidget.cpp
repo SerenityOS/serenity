@@ -320,11 +320,18 @@ void QuickLaunchWidget::load_entries(bool save)
 
     Vector<ConfigEntry> config_entries;
     auto keys = Config::list_keys(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES);
-    for (auto& name : keys) {
-        auto value = Config::read_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, name);
-        auto values = value.split(':');
-
-        config_entries.append({ values[0].to_number<int>().release_value(), values[1] });
+    if (!keys.is_empty()) {
+        for (auto& name : keys) {
+            auto value = Config::read_string(CONFIG_DOMAIN, CONFIG_GROUP_ENTRIES, name);
+            auto values = value.split(':');
+            config_entries.append({ values[0].to_number<int>().release_value(), values[1] });
+        }
+    } else {
+        // Default entries when no config is found
+        config_entries.append({ 0, "Browser.af" });
+        config_entries.append({ 1, "FileManager.af" });
+        config_entries.append({ 2, "Terminal.af" });
+        config_entries.append({ 3, "TextEditor.af" });
     }
 
     quick_sort(config_entries, [](ConfigEntry const& a, ConfigEntry const& b) {
