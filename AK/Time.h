@@ -124,6 +124,7 @@ constexpr i64 days_since_epoch(int year, int month, int day)
     return years_to_days_since_epoch(year) + day_of_year(year, month, day);
 }
 
+#ifndef KERNEL
 constexpr i64 seconds_since_epoch_to_year(i64 seconds)
 {
     constexpr double seconds_per_year = 60.0 * 60.0 * 24.0 * 365.2425;
@@ -140,6 +141,7 @@ constexpr i64 seconds_since_epoch_to_year(i64 seconds)
     auto years_since_epoch = static_cast<double>(seconds) / seconds_per_year;
     return 1970 + round_down(years_since_epoch);
 }
+#endif
 
 // Represents a duration in a "safe" way.
 // Minimum: -(2**63) seconds, 0 nanoseconds
@@ -676,7 +678,9 @@ using AK::days_since_epoch;
 using AK::Duration;
 using AK::is_leap_year;
 using AK::MonotonicTime;
+#    ifndef KERNEL
 using AK::seconds_since_epoch_to_year;
+#    endif
 using AK::timespec_add;
 using AK::timespec_add_timeval;
 using AK::timespec_sub;
