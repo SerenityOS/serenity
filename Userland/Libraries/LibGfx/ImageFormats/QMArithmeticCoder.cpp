@@ -69,6 +69,8 @@ constexpr auto qe_table = to_array<QeEntry>({
     { 0x5601, 46, 46, 0 },
 });
 
+static u8& I(QMArithmeticCoderContext* cx) { return cx->I; }
+static u8& MPS(QMArithmeticCoderContext* cx) { return cx->is_mps; }
 static u16 Qe(u16 index) { return qe_table[index].qe; }
 static u8 NMPS(u16 index) { return qe_table[index].nmps; }
 static u8 NLPS(u16 index) { return qe_table[index].nlps; }
@@ -81,7 +83,7 @@ ErrorOr<QMArithmeticEncoder> QMArithmeticEncoder::initialize(u8 byte_before_firs
     return encoder;
 }
 
-void QMArithmeticEncoder::encode_bit(u8 bit, Context& context)
+void QMArithmeticEncoder::encode_bit(u8 bit, QMArithmeticCoderContext& context)
 {
     CX = &context;
 
@@ -289,7 +291,7 @@ ErrorOr<QMArithmeticDecoder> QMArithmeticDecoder::initialize(ReadonlyBytes data)
     return decoder;
 }
 
-bool QMArithmeticDecoder::get_next_bit(Context& context)
+bool QMArithmeticDecoder::get_next_bit(QMArithmeticCoderContext& context)
 {
     CX = &context;
     // Useful for comparing to Table H.1 – Encoder and decoder trace data.
