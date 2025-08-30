@@ -11,6 +11,7 @@
 #include <AK/Badge.h>
 #include <AK/Checked.h>
 #include <AK/Platform.h>
+#include <AK/Tuple.h>
 #include <AK/Types.h>
 
 #if defined(AK_OS_SERENITY) && defined(KERNEL)
@@ -142,6 +143,37 @@ constexpr i64 seconds_since_epoch_to_year(i64 seconds)
     return 1970 + round_down(years_since_epoch);
 }
 #endif
+
+template<typename T>
+constexpr Tuple<T, u8, u8> days_since_epoch_to_date(T days)
+{
+    // Adapted from https://howardhinnant.github.io/date_algorithms.html#civil_from_days
+    static_assert(NumericLimits<T>::digits() >= 20, "This algorithm has not been ported to a 16 bit signed integer");
+
+    // An era is a 400 year period.
+    constexpr u32 last_day_of_year_three = 4 * 365;
+    constexpr u32 days_in_first_hundred_era_years = 365 * 100 + 100 / 4 - 1;
+    constexpr u64 era_days = 365 * 400 + 100 - 3;
+    constexpr u32 last_day_of_era = era_days - 1;
+    constexpr u32 era_month_offset = 2;
+
+    // Shift the epoch from 1970-01-01 to 0000-03-01.
+    VERIFY(days <= NumericLimits<T>::max() - 719468);
+    days += 719468;
+
+    T era = (days >= 0 ? days : days - last_day_of_era) / era_days;
+    u32 day_of_era = days - era * era_days;
+    u32 year_of_era = (day_of_era - day_of_era / last_day_of_year_three + day_of_era / days_in_first_hundred_era_years - day_of_era / last_day_of_era) / 365;
+    // The latter part of this comes from accounting for leap years (the year 400 need not be accounted for, because an era only has 400 years in total).
+    u32 day_of_year_of_era = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    // Starting from March 1st, not January 1st.
+    u32 month_of_era = (5 * day_of_year_of_era + 2) / 153;
+    u32 day = day_of_year_of_era - (153 * month_of_era + 2) / 5 + 1;
+    u32 month = month_of_era < 10 ? month_of_era + 3 : month_of_era - 9;
+    T year = (static_cast<T>(year_of_era) + era * 400) + (month <= era_month_offset);
+
+    return { year, month, day };
+}
 
 // Represents a duration in a "safe" way.
 // Minimum: -(2**63) seconds, 0 nanoseconds
@@ -681,6 +713,7 @@ using AK::MonotonicTime;
 #    ifndef KERNEL
 using AK::seconds_since_epoch_to_year;
 #    endif
+using AK::days_since_epoch_to_date;
 using AK::timespec_add;
 using AK::timespec_add_timeval;
 using AK::timespec_sub;
