@@ -123,7 +123,7 @@ char* ctime_r(time_t const* t, char* buf)
     return asctime_r(localtime_r(t, &tm_buf), buf);
 }
 
-static int const __seconds_per_day = 60 * 60 * 24;
+static time_t const __seconds_per_day = 60 * 60 * 24;
 
 static bool is_valid_time(time_t timestamp)
 {
@@ -147,29 +147,29 @@ static struct tm* time_to_tm(struct tm* tm, time_t t, StringView time_zone)
         t += offset->seconds;
     }
 
-    int year = 1970;
-    for (; t >= days_in_year(year) * __seconds_per_day; ++year)
-        t -= days_in_year(year) * __seconds_per_day;
-    for (; t < 0; --year)
-        t += days_in_year(year - 1) * __seconds_per_day;
+    i64 day_offset_to_epoch = t >= 0 ? t / __seconds_per_day : floor_div(t, __seconds_per_day);
+    auto [year, month, day] = days_since_epoch_to_date(day_offset_to_epoch);
+
     tm->tm_year = year - 1900;
+    tm->tm_yday = day_of_year(year, month, day);
 
-    VERIFY(t >= 0);
-    int days = t / __seconds_per_day;
-    tm->tm_yday = days;
-    int remaining = t % __seconds_per_day;
-    tm->tm_sec = remaining % 60;
-    remaining /= 60;
-    tm->tm_min = remaining % 60;
-    tm->tm_hour = remaining / 60;
-
-    int month;
-    for (month = 1; month < 12 && days >= days_in_month(year, month); ++month)
-        days -= days_in_month(year, month);
-
-    tm->tm_mday = days + 1;
+    tm->tm_mday = day;
     tm->tm_wday = day_of_week(year, month, tm->tm_mday);
     tm->tm_mon = month - 1;
+
+    auto mod = [](i64 a, i64 b) {
+        return (a % b + b) % b;
+    };
+
+    t = mod(t, __seconds_per_day);
+
+    VERIFY(t >= 0);
+    VERIFY(t < __seconds_per_day);
+
+    tm->tm_sec = t % 60;
+    t /= 60;
+    tm->tm_min = t % 60;
+    tm->tm_hour = t / 60;
 
     return tm;
 }
