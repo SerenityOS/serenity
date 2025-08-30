@@ -12,6 +12,7 @@
 #include <AK/Types.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Locking/Spinlock.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/UnixTypes.h>
 
@@ -21,7 +22,7 @@ struct RegisterState;
 
 extern Thread* g_finalizer;
 extern WaitQueue* g_finalizer_wait_queue;
-extern Atomic<bool> g_finalizer_has_work;
+extern SpinlockProtected<bool, LockRank::None> g_finalizer_has_work;
 extern RecursiveSpinlock<LockRank::None> g_scheduler_lock;
 
 struct TotalTimeScheduled {

@@ -120,20 +120,20 @@ bool Thread::JoinBlocker::unblock(void* value, bool from_add_blocker)
     return true;
 }
 
-Thread::WaitQueueBlocker::WaitQueueBlocker(WaitQueue& wait_queue, StringView block_reason)
+Thread::DeprecatedWaitQueueBlocker::DeprecatedWaitQueueBlocker(DeprecatedWaitQueue& wait_queue, StringView block_reason)
     : m_wait_queue(wait_queue)
     , m_block_reason(block_reason)
 {
 }
 
-bool Thread::WaitQueueBlocker::setup_blocker()
+bool Thread::DeprecatedWaitQueueBlocker::setup_blocker()
 {
     return add_to_blocker_set(m_wait_queue);
 }
 
-Thread::WaitQueueBlocker::~WaitQueueBlocker() = default;
+Thread::DeprecatedWaitQueueBlocker::~DeprecatedWaitQueueBlocker() = default;
 
-bool Thread::WaitQueueBlocker::unblock()
+bool Thread::DeprecatedWaitQueueBlocker::unblock()
 {
     {
         SpinlockLocker lock(m_lock);

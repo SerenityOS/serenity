@@ -143,6 +143,7 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
         VERIFY_NOT_REACHED();
     }
 
+    VERIFY(!m_manual_block_handling);
     m_blocker = &blocker;
 
     if (auto& block_timeout = blocker.override_timeout(timeout); !block_timeout.is_infinite()) {
@@ -247,6 +248,7 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock<LockRank::None>>
     auto& big_lock = process().big_lock();
     VERIFY((&lock == &big_lock && m_blocking_mutex != &big_lock) || !m_blocking_mutex);
 
+    VERIFY(!m_manual_block_handling);
     auto* previous_blocking_mutex = m_blocking_mutex;
     m_blocking_mutex = &lock;
     m_lock_requested_count = lock_count;
@@ -278,6 +280,7 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock<LockRank::None>>
 
         SpinlockLocker block_lock2(m_block_lock);
         VERIFY(!m_blocking_mutex);
+        VERIFY(!m_manual_block_handling);
         m_blocking_mutex = previous_blocking_mutex;
         break;
     }
@@ -291,6 +294,7 @@ u32 Thread::unblock_from_mutex(Kernel::Mutex& mutex)
     SpinlockLocker block_lock(m_block_lock);
 
     VERIFY(!Processor::current_in_irq());
+    VERIFY(!m_manual_block_handling);
     VERIFY(m_blocking_mutex == &mutex);
 
     dbgln_if(THREAD_DEBUG, "Thread {} unblocked from Mutex {}", *this, &mutex);
@@ -523,7 +527,8 @@ StringView Thread::state_string() const
             return "Mutex"sv;
         if (m_blocker)
             return m_blocker->state_string();
-        VERIFY_NOT_REACHED();
+
+        return "Blocked"sv;
     }
     }
     PANIC("Thread::state_string(): Invalid state: {}", (int)state());
@@ -581,8 +586,11 @@ void Thread::finalize_dying_threads()
             auto result = dying_threads.try_append(&thread);
             // We ignore allocation failures above the first 32 guaranteed thread slots, and
             // just flag our future-selves to finalize these threads at a later point
-            if (result.is_error())
-                g_finalizer_has_work.store(true, AK::MemoryOrder::memory_order_release);
+            if (result.is_error()) {
+                g_finalizer_has_work.with([](bool& has_work) {
+                    has_work = true;
+                });
+            }
         });
     }
     for (auto* thread : dying_threads) {
@@ -897,7 +905,7 @@ void Thread::resume_from_stopped()
         if (m_blocker || m_blocking_mutex) {
             // Hasn't been unblocked yet
             set_state(Thread::State::Blocked, 0);
-        } else {
+        } else if (!m_manual_block_handling) {
             // Was unblocked while stopped
             set_state(Thread::State::Runnable);
         }
@@ -1274,6 +1282,19 @@ void Thread::set_state(State new_state, u8 stop_signal)
             Scheduler::notify_finalizer();
         }
     }
+}
+
+void Thread::override_stop_state(State new_stop_state)
+{
+    VERIFY(m_stop_state != State::Invalid);
+    m_stop_state = new_stop_state;
+}
+
+void Thread::set_manual_block_handling(bool enabled)
+{
+    SpinlockLocker block_lock(m_block_lock);
+    VERIFY(!m_blocker && !m_blocking_mutex);
+    m_manual_block_handling = enabled;
 }
 
 struct RecognizedSymbol {
