@@ -305,6 +305,12 @@ inline constexpr bool IsConst = false;
 template<class T>
 inline constexpr bool IsConst<T const> = true;
 
+template<class T>
+inline constexpr bool IsVolatile = false;
+
+template<class T>
+inline constexpr bool IsVolatile<T volatile> = true;
+
 template<typename T>
 inline constexpr bool IsEnum = __is_enum(T);
 
@@ -678,6 +684,7 @@ using AK::Detail::IsTriviallyMoveConstructible;
 using AK::Detail::IsUnion;
 using AK::Detail::IsUnsigned;
 using AK::Detail::IsVoid;
+using AK::Detail::IsVolatile;
 using AK::Detail::MakeIndexSequence;
 using AK::Detail::MakeIntegerSequence;
 using AK::Detail::MakeSigned;
