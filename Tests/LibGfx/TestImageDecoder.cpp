@@ -473,7 +473,7 @@ TEST_CASE(test_qm_arithmetic_decoder)
     // clang-format on
 
     // "For this entire test, a single value of CX is used. I(CX) is initially 0 and MPS(CX) is initially 0."
-    Gfx::QMArithmeticDecoder::Context context { 0, 0 };
+    Gfx::QMArithmeticCoderContext context { 0, 0 };
     auto decoder = MUST(Gfx::QMArithmeticDecoder::initialize(input));
 
     for (auto expected : output) {

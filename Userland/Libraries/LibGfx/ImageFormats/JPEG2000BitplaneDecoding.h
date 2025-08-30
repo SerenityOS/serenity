@@ -102,9 +102,9 @@ inline ErrorOr<void> decode_code_block(Span2D<float> result, SubBand sub_band, i
 
     int pass { 0 };
 
-    QMArithmeticDecoder::Context uniform_context;
-    QMArithmeticDecoder::Context run_length_context;
-    Array<QMArithmeticDecoder::Context, 17> all_other_contexts {};
+    QMArithmeticCoderContext uniform_context;
+    QMArithmeticCoderContext run_length_context;
+    Array<QMArithmeticCoderContext, 17> all_other_contexts {};
 
     QMArithmeticDecoder arithmetic_decoder = TRY(QMArithmeticDecoder::initialize(segments[0]));
 
