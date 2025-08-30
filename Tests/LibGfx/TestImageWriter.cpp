@@ -197,7 +197,15 @@ TEST_CASE(test_jbig2)
     bilevel_bitmap->fill(Gfx::Color::NamedColor::White);
     TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(bilevel_bitmap)));
 
-    // FIXME: Implement and test roundtripping more than purely white bitmaps.
+    bilevel_bitmap->fill(Gfx::Color::NamedColor::Black);
+    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(bilevel_bitmap)));
+
+    for (int y = 0; y < bilevel_bitmap->height(); ++y) {
+        for (int x = 0; x < bilevel_bitmap->width(); ++x) {
+            bilevel_bitmap->set_pixel(x, y, (x + y) % 2 == 0 ? Gfx::Color::NamedColor::Black : Gfx::Color::NamedColor::White);
+        }
+    }
+    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(bilevel_bitmap)));
 }
 
 TEST_CASE(test_jpeg)
