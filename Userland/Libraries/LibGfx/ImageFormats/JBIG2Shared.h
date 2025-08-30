@@ -10,6 +10,7 @@
 #include <AK/Optional.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
 
 namespace Gfx::JBIG2 {
 
@@ -111,6 +112,26 @@ inline ErrorOr<void> check_valid_adaptive_template_pixel(AdaptiveTemplatePixel c
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Adaptive pixel x too big");
     return {};
 }
+
+struct GenericContexts {
+    GenericContexts(u8 template_)
+    {
+        contexts.resize(1 << number_of_context_bits_for_template(template_));
+    }
+
+    Vector<QMArithmeticCoderContext> contexts; // "GB" (+ binary suffix) in spec.
+
+private:
+    static u8 number_of_context_bits_for_template(u8 template_)
+    {
+        if (template_ == 0)
+            return 16;
+        if (template_ == 1)
+            return 13;
+        VERIFY(template_ == 2 || template_ == 3);
+        return 10;
+    }
+};
 
 // 7.4.8 Page information segment syntax
 struct [[gnu::packed]] PageInformationSegment {
