@@ -34,10 +34,10 @@ private:
     virtual Messages::ConfigServer::ReadI32ValueResponse read_i32_value([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group, [[maybe_unused]] ByteString const& key) override;
     virtual Messages::ConfigServer::ReadU32ValueResponse read_u32_value([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group, [[maybe_unused]] ByteString const& key) override;
     virtual Messages::ConfigServer::ReadBoolValueResponse read_bool_value([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group, [[maybe_unused]] ByteString const& key) override;
-    virtual void write_string_value([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group, [[maybe_unused]] ByteString const& key, [[maybe_unused]] ByteString const& value) override;
-    virtual void write_i32_value([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group, [[maybe_unused]] ByteString const& key, [[maybe_unused]] i32 value) override;
-    virtual void write_u32_value([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group, [[maybe_unused]] ByteString const& key, [[maybe_unused]] u32 value) override;
-    virtual void write_bool_value([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group, [[maybe_unused]] ByteString const& key, [[maybe_unused]] bool value) override;
+    virtual void write_string_value([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group, [[maybe_unused]] ByteString const& key, [[maybe_unused]] ByteString const& value, bool notify) override;
+    virtual void write_i32_value([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group, [[maybe_unused]] ByteString const& key, [[maybe_unused]] i32 value, bool notify) override;
+    virtual void write_u32_value([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group, [[maybe_unused]] ByteString const& key, [[maybe_unused]] u32 value, bool notify) override;
+    virtual void write_bool_value([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group, [[maybe_unused]] ByteString const& key, [[maybe_unused]] bool value, bool notify) override;
     virtual void remove_key_entry([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group, [[maybe_unused]] ByteString const& key) override;
     virtual void remove_group_entry([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group) override;
     virtual void add_group_entry([[maybe_unused]] ByteString const& domain, [[maybe_unused]] ByteString const& group) override;

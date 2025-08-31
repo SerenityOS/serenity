@@ -226,7 +226,7 @@ void ConnectionFromClient::start_or_restart_sync_timer()
         m_sync_timer->start();
 }
 
-void ConnectionFromClient::write_string_value(ByteString const& domain, ByteString const& group, ByteString const& key, ByteString const& value)
+void ConnectionFromClient::write_string_value(ByteString const& domain, ByteString const& group, ByteString const& key, ByteString const& value, bool notify)
 {
     if (!validate_access(domain, group, key))
         return;
@@ -240,12 +240,14 @@ void ConnectionFromClient::write_string_value(ByteString const& domain, ByteStri
     m_dirty_domains.set(domain);
     start_or_restart_sync_timer();
 
-    for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ConnectionFromClient& connection) {
-        connection.async_notify_changed_string_value(domain, group, key, value);
-    });
+    if (notify) {
+        for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ConnectionFromClient& connection) {
+            connection.async_notify_changed_string_value(domain, group, key, value);
+        });
+    }
 }
 
-void ConnectionFromClient::write_i32_value(ByteString const& domain, ByteString const& group, ByteString const& key, i32 value)
+void ConnectionFromClient::write_i32_value(ByteString const& domain, ByteString const& group, ByteString const& key, i32 value, bool notify)
 {
     if (!validate_access(domain, group, key))
         return;
@@ -259,12 +261,14 @@ void ConnectionFromClient::write_i32_value(ByteString const& domain, ByteString 
     m_dirty_domains.set(domain);
     start_or_restart_sync_timer();
 
-    for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ConnectionFromClient& connection) {
-        connection.async_notify_changed_i32_value(domain, group, key, value);
-    });
+    if (notify) {
+        for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ConnectionFromClient& connection) {
+            connection.async_notify_changed_i32_value(domain, group, key, value);
+        });
+    }
 }
 
-void ConnectionFromClient::write_u32_value(ByteString const& domain, ByteString const& group, ByteString const& key, u32 value)
+void ConnectionFromClient::write_u32_value(ByteString const& domain, ByteString const& group, ByteString const& key, u32 value, bool notify)
 {
     if (!validate_access(domain, group, key))
         return;
@@ -278,12 +282,14 @@ void ConnectionFromClient::write_u32_value(ByteString const& domain, ByteString 
     m_dirty_domains.set(domain);
     start_or_restart_sync_timer();
 
-    for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ConnectionFromClient& connection) {
-        connection.async_notify_changed_u32_value(domain, group, key, value);
-    });
+    if (notify) {
+        for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ConnectionFromClient& connection) {
+            connection.async_notify_changed_u32_value(domain, group, key, value);
+        });
+    }
 }
 
-void ConnectionFromClient::write_bool_value(ByteString const& domain, ByteString const& group, ByteString const& key, bool value)
+void ConnectionFromClient::write_bool_value(ByteString const& domain, ByteString const& group, ByteString const& key, bool value, bool notify)
 {
     if (!validate_access(domain, group, key))
         return;
@@ -297,9 +303,11 @@ void ConnectionFromClient::write_bool_value(ByteString const& domain, ByteString
     m_dirty_domains.set(domain);
     start_or_restart_sync_timer();
 
-    for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ConnectionFromClient& connection) {
-        connection.async_notify_changed_bool_value(domain, group, key, value);
-    });
+    if (notify) {
+        for_each_monitoring_connection(domain, this, [&domain, &group, &key, &value](ConnectionFromClient& connection) {
+            connection.async_notify_changed_bool_value(domain, group, key, value);
+        });
+    }
 }
 
 void ConnectionFromClient::remove_key_entry(ByteString const& domain, ByteString const& group, ByteString const& key)
