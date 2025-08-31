@@ -10,7 +10,7 @@
 
 namespace GUI {
 
-class EmojiInputDialogWidget : public GUI::Widget {
+class EmojiInputDialogWidget : public GUI::Frame {
     C_OBJECT_ABSTRACT(EmojiInputDialogWidget)
 
 public:
