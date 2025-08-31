@@ -116,7 +116,10 @@ void RectangularOverlay::render(Gfx::Painter& painter, Screen const& screen)
         if (auto* shadow_bitmap = WindowManager::the().overlay_rect_shadow()) {
             Gfx::StylePainter::paint_simple_rect_shadow(bitmap_painter, new_bitmap->rect(), shadow_bitmap->bitmap(scale_factor), true, true);
         } else {
-            bitmap_painter.fill_rect(new_bitmap->rect(), Color(Color::Black).with_alpha(0xcc));
+            // When no overlay rect shadow is defined use default window frame and dark background
+            // This is because all current overlays have white text and assume a dark background color
+            bitmap_painter.fill_rect(new_bitmap->rect(), Color::Black);
+            Gfx::StylePainter::current().paint_window_frame(bitmap_painter, new_bitmap->rect(), WindowManager::the().palette());
         }
         render_overlay_bitmap(bitmap_painter);
         m_rendered_bitmaps->add_bitmap(scale_factor, move(new_bitmap));
