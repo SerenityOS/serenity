@@ -168,6 +168,7 @@ ErrorOr<Core::AnonymousBuffer> load_system_theme(Core::ConfigFile const& file, O
     ENCODE_PATH(TooltipShadow, true);
     if (!color_scheme.has_value())
         ENCODE_PATH(ColorScheme, true);
+    ENCODE_PATH(OverlayRectShadow, true);
 
 #undef __ENUMERATE_COLOR_ROLE
 #define __ENUMERATE_COLOR_ROLE(role)                                    \

@@ -59,7 +59,8 @@ static PropertyTab const window_tab {
                 { Gfx::ColorRole::ActiveWindowTitle },
                 { Gfx::ColorRole::ActiveWindowTitleShadow },
                 { Gfx::ColorRole::ActiveWindowTitleStripes },
-                { Gfx::PathRole::ActiveWindowShadow } } },
+                { Gfx::PathRole::ActiveWindowShadow },
+                { Gfx::PathRole::OverlayRectShadow } } },
 
         { "Inactive Window",
             { { Gfx::ColorRole::InactiveWindowBorder1 },
@@ -454,6 +455,7 @@ ErrorOr<Core::AnonymousBuffer> MainWidget::encode()
     ENCODE_PATH(TaskbarShadow, true);
     ENCODE_PATH(MenuShadow, true);
     ENCODE_PATH(TooltipShadow, true);
+    ENCODE_PATH(OverlayRectShadow, true);
 
     return buffer;
 }

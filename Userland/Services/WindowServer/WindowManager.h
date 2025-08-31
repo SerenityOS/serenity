@@ -68,6 +68,7 @@ public:
 
     RefPtr<Core::ConfigFile> config() const { return m_config; }
     void reload_config();
+    void load_overlay_rect_shadow();
 
     void add_window(Window&);
     void remove_window(Window&);
