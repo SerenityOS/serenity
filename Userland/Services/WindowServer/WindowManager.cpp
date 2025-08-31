@@ -89,6 +89,14 @@ void WindowManager::reload_config()
     m_cursor_highlight_color = Color::from_string(g_config->read_entry("Mouse", "CursorHighlightColor")).value_or(default_highlight_color);
     apply_cursor_theme(g_config->read_entry("Mouse", "CursorTheme", "Default"));
 
+    load_overlay_rect_shadow();
+    Compositor::the().invalidate_after_theme_or_font_change();
+    WindowFrame::reload_config();
+    load_system_effects();
+}
+
+void WindowManager::load_overlay_rect_shadow()
+{
     auto reload_graphic = [&](RefPtr<MultiScaleBitmaps>& bitmap, ByteString const& name) {
         if (bitmap) {
             if (!bitmap->load(name))
@@ -97,13 +105,7 @@ void WindowManager::reload_config()
             bitmap = MultiScaleBitmaps::create(name);
         }
     };
-
-    reload_graphic(m_overlay_rect_shadow, g_config->read_entry("Graphics", "OverlayRectShadow"));
-    Compositor::the().invalidate_after_theme_or_font_change();
-
-    WindowFrame::reload_config();
-
-    load_system_effects();
+    reload_graphic(m_overlay_rect_shadow, palette().overlay_rect_shadow_path());
 }
 
 Gfx::Font const& WindowManager::font() const
@@ -2168,6 +2170,7 @@ void WindowManager::set_accepts_drag(bool accepts)
 
 void WindowManager::invalidate_after_theme_or_font_change()
 {
+    load_overlay_rect_shadow();
     Compositor::the().set_background_color(g_config->read_entry("Background", "Color", palette().desktop_background().to_byte_string()));
     WindowFrame::reload_config();
     for_each_window_stack([&](auto& window_stack) {
