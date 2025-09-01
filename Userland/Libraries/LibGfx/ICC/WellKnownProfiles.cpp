@@ -38,7 +38,7 @@ static ErrorOr<NonnullRefPtr<XYZTagData>> XYZ_data(XYZ xyz)
     return try_make_ref_counted<XYZTagData>(0, 0, move(xyzs));
 }
 
-ErrorOr<NonnullRefPtr<TagData>> sRGB_curve()
+ErrorOr<NonnullRefPtr<ParametricCurveTagData>> sRGB_curve()
 {
     // Numbers from https://en.wikipedia.org/wiki/SRGB#From_sRGB_to_CIE_XYZ
     Array<S15Fixed16, 7> curve_parameters = { 2.4, 1 / 1.055, 0.055 / 1.055, 1 / 12.92, 0.04045 };
