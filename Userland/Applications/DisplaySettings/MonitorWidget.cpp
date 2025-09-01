@@ -146,6 +146,13 @@ void MonitorWidget::redraw_desktop_if_needed()
         painter.draw_tiled_bitmap(m_desktop_bitmap->rect(), *scaled_bitmap);
     } else if (m_desktop_wallpaper_mode == "Stretch"sv) {
         painter.draw_scaled_bitmap(m_desktop_bitmap->rect(), *m_wallpaper_bitmap, m_wallpaper_bitmap->rect(), 1.f, Gfx::ScalingMode::BilinearBlend);
+    } else if (m_desktop_wallpaper_mode == "Fill"sv) {
+        auto wallpaper_rect = m_wallpaper_bitmap->rect();
+        auto scale_x = static_cast<float>(m_desktop_bitmap->width()) / wallpaper_rect.width();
+        auto scale_y = static_cast<float>(m_desktop_bitmap->height()) / wallpaper_rect.height();
+        auto new_size = (wallpaper_rect.size().to_type<float>() * max(scale_x, scale_y)).to_type<int>();
+        auto stretched_rect = Gfx::IntRect({}, new_size).centered_within(m_desktop_bitmap->rect());
+        painter.draw_scaled_bitmap(stretched_rect, *m_wallpaper_bitmap, wallpaper_rect, 1.0f, Gfx::ScalingMode::BilinearBlend);
     } else {
         VERIFY_NOT_REACHED();
     }
