@@ -398,6 +398,8 @@ TEST_CASE(test_jbig2_decode)
         // - symbols with REFAGGNINST > 1 (code support added in #26107)
         // - coverage for different segment combination operators (or and xor xnor replace),
         //   with both background colors
+        // - immediate generic region of unknown size and larger height in region segment information field
+        //   than in number of rows stored after data (code support added in #26173)
         // Missing tests for things that aren't implemented yet:
         // - intermediate regions
         // - standalone refinement regions
