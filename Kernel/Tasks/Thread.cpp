@@ -502,9 +502,9 @@ auto Thread::sleep_until(clockid_t clock_id, Duration const& deadline) -> BlockR
     return Thread::current()->block<Thread::SleepBlocker>({}, Thread::BlockTimeout(true, &deadline, nullptr, clock_id));
 }
 
-StringView Thread::state_string() const
+StringView Thread::state_string(Thread::State state)
 {
-    switch (state()) {
+    switch (state) {
     case Thread::State::Invalid:
         return "Invalid"sv;
     case Thread::State::Runnable:
@@ -517,7 +517,16 @@ StringView Thread::state_string() const
         return "Dead"sv;
     case Thread::State::Stopped:
         return "Stopped"sv;
-    case Thread::State::Blocked: {
+    case Thread::State::Blocked:
+        return "Blocked"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+StringView Thread::state_string() const
+{
+    auto thread_state = state();
+    if (thread_state == Thread::State::Blocked) {
         SpinlockLocker block_lock(m_block_lock);
         if (m_blocking_mutex)
             return "Mutex"sv;
@@ -525,8 +534,7 @@ StringView Thread::state_string() const
             return m_blocker->state_string();
         VERIFY_NOT_REACHED();
     }
-    }
-    PANIC("Thread::state_string(): Invalid state: {}", (int)state());
+    return state_string(thread_state);
 }
 
 void Thread::finalize()
