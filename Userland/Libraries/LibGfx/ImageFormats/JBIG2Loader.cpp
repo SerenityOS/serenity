@@ -855,6 +855,14 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
     Vector<ReadonlyBytes> segment_datas;
     auto store_and_skip_segment_data = [&](JBIG2::SegmentHeader const& segment_header) -> ErrorOr<void> {
         size_t start_offset = TRY(stream.tell());
+
+        // 7.2.7 Segment data length
+        // "If the segment's type is "Immediate generic region", then the length field may contain the value 0xFFFFFFFF."
+        // It sounds like this is not even allowed for ImmediateLosslessGenericRegion.
+        // It's used in 0000033.pdf pages 1-2, and 0000600.pdf pages 1-3 (only with ImmediateGenericRegion).
+        if (!segment_header.data_length.has_value() && segment_header.type != JBIG2::SegmentType::ImmediateGenericRegion)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment data length must be known for non-ImmediateGenericRegion segments");
+
         u32 data_length = TRY(segment_header.data_length.try_value_or_lazy_evaluated([&]() {
             return scan_for_immediate_generic_region_size(data.slice(start_offset));
         }));
@@ -3269,6 +3277,26 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
     // 7.4.6 Generic region segment syntax
     auto data = segment.data;
     auto information_field = TRY(decode_region_segment_information_field(data));
+
+    // "As a special case, as noted in 7.2.7, an immediate generic region segment may have an unknown length. In this case, it
+    //  is also possible that the segment may contain fewer rows of bitmap data than are indicated in the segment's region
+    //  segment information field.
+    //  In order for the decoder to correctly decode the segment, it needs to read the four-byte row count field, which is stored
+    //  in the last four bytes of the segment's data part. [...] The row count field contains the actual number of rows contained in
+    //  this segment; it must be no greater than the region segment bitmap height value in the segment's region segment
+    //  information field."
+    // scan_for_immediate_generic_region_size() made `data` the right size for this case, just need to get the rows from the end.
+    if (!segment.header.data_length.has_value()) {
+        auto last_four_bytes = data.slice_from_end(4);
+        u32 row_count = (last_four_bytes[0] << 24) | (last_four_bytes[1] << 16) | (last_four_bytes[2] << 8) | last_four_bytes[3];
+        if (row_count > information_field.height)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Row count after data for immediate generic region greater than region segment height");
+        if (row_count != information_field.height)
+            dbgln_if(JBIG2_DEBUG, "JBIG2ImageDecoderPlugin: Changing row count from {} to {}", information_field.height, row_count);
+        information_field.height = row_count;
+        data = data.slice(0, data.size() - 4);
+    }
+
     data = data.slice(sizeof(information_field));
 
     dbgln_if(JBIG2_DEBUG, "Generic region: width={}, height={}, x={}, y={}, flags={:#x}", information_field.width, information_field.height, information_field.x_location, information_field.y_location, information_field.flags);
