@@ -400,6 +400,7 @@ TEST_CASE(test_jbig2_decode)
         //   with both background colors
         // - immediate generic region of unknown size and larger height in region segment information field
         //   than in number of rows stored after data (code support added in #26173)
+        // - negative position in composition (code support added in #26046)
         // Missing tests for things that aren't implemented yet:
         // - intermediate regions
         // - standalone refinement regions
