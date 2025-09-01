@@ -164,6 +164,7 @@ executable("ladybird_executable") {
       ":ladybird_copy_icons_32x32",
       ":ladybird_copy_icons_browser",
       ":ladybird_copy_themes",
+      ":ladybird_copy_web_about_pages",
       ":ladybird_copy_web_resources",
       ":ladybird_copy_web_templates",
     ]
@@ -279,10 +280,13 @@ themes = [
 ]
 
 web_resources = [
-  "//Base/res/ladybird/about.html",
   "//Base/res/ladybird/inspector.css",
   "//Base/res/ladybird/inspector.js",
-  "//Base/res/ladybird/newtab.html",
+]
+
+web_about_pages = [
+  "//Base/res/ladybird/about-pages/about.html",
+  "//Base/res/ladybird/about-pages/newtab.html",
 ]
 
 web_templates = [
@@ -331,6 +335,13 @@ if (current_os != "mac") {
   copy("ladybird_copy_web_resources") {
     sources = web_resources
     outputs = [ "$root_out_dir/share/Lagom/ladybird/{{source_file_part}}" ]
+  }
+
+  copy("ladybird_copy_web_about_pages") {
+    sources = web_about_pages
+    outputs = [
+      "$root_out_dir/share/Lagom/ladybird/about-pages/{{source_file_part}}",
+    ]
   }
 
   copy("ladybird_copy_web_templates") {
@@ -493,6 +504,12 @@ if (current_os != "mac") {
     outputs = [ "{{bundle_resources_dir}}/ladybird/{{source_file_part}}" ]
   }
 
+  bundle_data("ladybird_web_about_pages") {
+    sources = web_about_pages
+    outputs =
+        [ "{{bundle_resources_dir}}/ladybird/about-pages/{{source_file_part}}" ]
+  }
+
   bundle_data("ladybird_web_templates") {
     sources = web_templates
     outputs =
@@ -557,6 +574,7 @@ if (current_os != "mac") {
       ":ladybird_icons_32x32",
       ":ladybird_icons_browser",
       ":ladybird_themes",
+      ":ladybird_web_about_pages",
       ":ladybird_web_resources",
       ":ladybird_web_templates",
     ]
