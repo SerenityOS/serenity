@@ -101,6 +101,7 @@ public:
     ErrorOr<void> rotate(Gfx::RotationDirection direction);
     ErrorOr<void> crop(Gfx::IntRect const& rect);
     ErrorOr<void> resize(Gfx::IntSize new_size, Gfx::ScalingMode scaling_mode);
+    ErrorOr<void> convert_to_bilevel(Gfx::DitheringAlgorithm);
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
 

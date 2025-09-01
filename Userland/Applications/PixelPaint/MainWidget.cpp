@@ -15,6 +15,7 @@
 #include "FilterParams.h"
 #include "ImageMasking.h"
 #include "LevelsDialog.h"
+#include "ModeBilevelDialog.h"
 #include "ResizeImageDialog.h"
 #include <AK/String.h>
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
@@ -616,6 +617,23 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     });
 
     m_image_menu = window.add_menu("&Image"_string);
+    auto mode_submenu = m_image_menu->add_submenu("&Mode"_string);
+    mode_submenu->add_action(GUI::Action::create(
+        "&Bilevel...", [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto dialog = PixelPaint::ModeBilevelDialog::construct(&window);
+            if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
+                auto image_resize_or_error = editor->image().convert_to_bilevel(dialog->dithering_algorithm());
+                if (image_resize_or_error.is_error()) {
+                    GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to convert to bilevel: {}", image_resize_or_error.release_error())));
+                    return;
+                }
+                editor->did_complete_action("Convert to Bilevel"sv);
+            }
+        }));
+    m_image_menu->add_separator();
+
     m_image_menu->add_action(GUI::Action::create(
         "Flip Image &Vertically", g_icon_bag.edit_flip_vertical, [&](auto&) {
             auto* editor = current_image_editor();
