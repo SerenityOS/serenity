@@ -18,6 +18,7 @@
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Icon.h>
@@ -52,7 +53,15 @@ ByteString g_webdriver_content_ipc_path;
 
 static ErrorOr<void> load_content_filters()
 {
-    auto file = TRY(Core::File::open(TRY(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory())), Core::File::OpenMode::Read));
+    auto path = TRY(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()));
+    if (!FileSystem::exists(path)) {
+        auto default_file = TRY(Core::File::open("/res/ladybird/default-config/BrowserContentFilters.txt"sv, Core::File::OpenMode::Read));
+        auto contents = TRY(default_file->read_until_eof());
+        auto new_file = TRY(Core::File::open(path, Core::File::OpenMode::Write));
+        TRY(new_file->write_until_depleted(contents));
+    }
+
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
     auto ad_filter_list = TRY(Core::InputBufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
 
@@ -72,7 +81,15 @@ static ErrorOr<void> load_content_filters()
 
 static ErrorOr<void> load_autoplay_allowlist()
 {
-    auto file = TRY(Core::File::open(TRY(String::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory())), Core::File::OpenMode::Read));
+    auto path = TRY(String::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory()));
+    if (!FileSystem::exists(path)) {
+        auto default_file = TRY(Core::File::open("/res/ladybird/default-config/BrowserAutoplayAllowlist.txt"sv, Core::File::OpenMode::Read));
+        auto contents = TRY(default_file->read_until_eof());
+        auto new_file = TRY(Core::File::open(path, Core::File::OpenMode::Write));
+        TRY(new_file->write_until_depleted(contents));
+    }
+
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
     auto allowlist = TRY(Core::InputBufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
 

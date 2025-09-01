@@ -11,6 +11,7 @@
 #include <Applications/BrowserSettings/Defaults.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Forward.h>
@@ -18,15 +19,23 @@
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
 
-ErrorOr<String> DomainListModel::filter_list_file_path() const
+StringView DomainListModel::filter_list_file_path() const
 {
-    return String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory());
+    return "BrowserContentFilters.txt"sv;
 }
 
 ErrorOr<void> DomainListModel::load()
 {
     // FIXME: This should be somewhat shared with Browser.
-    auto file = TRY(Core::File::open(TRY(filter_list_file_path()), Core::File::OpenMode::Read));
+    auto path = TRY(String::formatted("{}/{}", Core::StandardPaths::config_directory(), filter_list_file_path()));
+    if (!FileSystem::exists(path)) {
+        auto default_file = TRY(Core::File::open(TRY(String::formatted("/res/ladybird/default-config/{}", filter_list_file_path())), Core::File::OpenMode::Read));
+        auto contents = TRY(default_file->read_until_eof());
+        auto new_file = TRY(Core::File::open(path, Core::File::OpenMode::Write));
+        TRY(new_file->write_until_depleted(contents));
+    }
+
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
     auto content_filter_list = TRY(Core::InputBufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
 
@@ -54,7 +63,8 @@ ErrorOr<void> DomainListModel::save()
     for (auto const& domain : m_domain_list)
         TRY(builder.try_appendff("{}\n", domain));
 
-    auto file = TRY(Core::File::open(TRY(filter_list_file_path()), Core::File::OpenMode::Write));
+    auto path = TRY(String::formatted("{}/{}", Core::StandardPaths::config_directory(), filter_list_file_path()));
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Write));
     TRY(file->write_until_depleted(TRY(builder.to_byte_buffer()).bytes()));
     return {};
 }

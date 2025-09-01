@@ -38,4 +38,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Browser ICON app-browser)
-target_link_libraries(Browser PRIVATE LibCore LibWebView LibWeb LibProtocol LibGUI LibDesktop LibConfig LibGfx LibIPC LibJS LibLocale LibMain LibSyntax LibURL)
+target_link_libraries(Browser PRIVATE LibCore LibFileSystem LibWebView LibWeb LibProtocol LibGUI LibDesktop LibConfig LibGfx LibIPC LibJS LibLocale LibMain LibSyntax LibURL)

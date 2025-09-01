@@ -15,9 +15,9 @@
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
 
-ErrorOr<String> AutoplayAllowlistModel::filter_list_file_path() const
+StringView AutoplayAllowlistModel::filter_list_file_path() const
 {
-    return String::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory());
+    return "BrowserAutoplayAllowlist.txt"sv;
 }
 
 void AutoplayAllowlistModel::reset_default_values()

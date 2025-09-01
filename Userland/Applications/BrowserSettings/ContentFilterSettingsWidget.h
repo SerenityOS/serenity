@@ -14,7 +14,7 @@
 
 class DomainListModel : public GUI::Model {
 public:
-    virtual ErrorOr<String> filter_list_file_path() const;
+    virtual StringView filter_list_file_path() const;
     ErrorOr<void> load();
     ErrorOr<void> save();
     virtual void reset_default_values();

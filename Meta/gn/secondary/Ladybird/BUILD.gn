@@ -157,7 +157,6 @@ executable("ladybird_executable") {
     deps += [ "//Userland/Libraries/LibThreading" ]
   } else {
     data_deps += [
-      ":ladybird_copy_config_resources",
       ":ladybird_copy_emoji",
       ":ladybird_copy_fonts",
       ":ladybird_copy_icons_16x16",
@@ -165,6 +164,7 @@ executable("ladybird_executable") {
       ":ladybird_copy_icons_browser",
       ":ladybird_copy_themes",
       ":ladybird_copy_web_about_pages",
+      ":ladybird_copy_web_default_config",
       ":ladybird_copy_web_resources",
       ":ladybird_copy_web_templates",
     ]
@@ -289,16 +289,16 @@ web_about_pages = [
   "//Base/res/ladybird/about-pages/newtab.html",
 ]
 
+web_default_config = [
+  "$root_build_dir/cacert.pem",
+  "//Base/res/ladybird/default-config/BrowserAutoplayAllowlist.txt",
+  "//Base/res/ladybird/default-config/BrowserContentFilters.txt",
+]
+
 web_templates = [
   "//Base/res/ladybird/templates/directory.html",
   "//Base/res/ladybird/templates/error.html",
   "//Base/res/ladybird/templates/version.html",
-]
-
-config_resources = [
-  "$root_build_dir/cacert.pem",
-  "//Base/home/anon/.config/BrowserAutoplayAllowlist.txt",
-  "//Base/home/anon/.config/BrowserContentFilters.txt",
 ]
 
 if (current_os != "mac") {
@@ -344,16 +344,18 @@ if (current_os != "mac") {
     ]
   }
 
+  copy("ladybird_web_default_config") {
+    public_deps = [ "//Userland/Libraries/LibTLS:ca_certificates_download" ]
+    sources = web_default_config
+    outputs = [
+      "$root_out_dir/share/Lagom/ladybird/default-config/{{source_file_part}}",
+    ]
+  }
+
   copy("ladybird_copy_web_templates") {
     sources = web_templates
     outputs =
         [ "$root_out_dir/share/Lagom/ladybird/templates/{{source_file_part}}" ]
-  }
-
-  copy("ladybird_copy_config_resources") {
-    public_deps = [ "//Userland/Libraries/LibTLS:ca_certificates_download" ]
-    sources = config_resources
-    outputs = [ "$root_out_dir/share/Lagom/ladybird/{{source_file_part}}" ]
   }
 } else {
   # macOS bundle steps
@@ -510,16 +512,17 @@ if (current_os != "mac") {
         [ "{{bundle_resources_dir}}/ladybird/about-pages/{{source_file_part}}" ]
   }
 
+  bundle_data("ladybird_web_default_config") {
+    sources = web_default_config
+    outputs = [
+      "{{bundle_resources_dir}}/ladybird/default-config/{{source_file_part}}",
+    ]
+  }
+
   bundle_data("ladybird_web_templates") {
     sources = web_templates
     outputs =
         [ "{{bundle_resources_dir}}/ladybird/templates/{{source_file_part}}" ]
-  }
-
-  bundle_data("ladybird_config_resources") {
-    public_deps = [ "//Userland/Libraries/LibTLS:ca_certificates_download" ]
-    sources = config_resources
-    outputs = [ "{{bundle_resources_dir}}/ladybird/{{source_file_part}}" ]
   }
 
   action("ladybird_create_icon") {
@@ -566,7 +569,6 @@ if (current_os != "mac") {
       ":ladybird_bundle_executables",
       ":ladybird_bundle_info_plist",
       ":ladybird_bundle_libs",
-      ":ladybird_config_resources",
       ":ladybird_emoji",
       ":ladybird_fonts",
       ":ladybird_icon",
@@ -575,6 +577,7 @@ if (current_os != "mac") {
       ":ladybird_icons_browser",
       ":ladybird_themes",
       ":ladybird_web_about_pages",
+      ":ladybird_web_default_config",
       ":ladybird_web_resources",
       ":ladybird_web_templates",
     ]
