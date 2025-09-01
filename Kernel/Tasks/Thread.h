@@ -787,6 +787,7 @@ public:
     ThreadRegisters const& regs() const { return m_regs; }
 
     State state() const { return m_state; }
+    static StringView state_string(State);
     StringView state_string() const;
 
     ArchSpecificThreadData& arch_specific_data() { return m_arch_specific_data; }
