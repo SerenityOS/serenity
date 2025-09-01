@@ -14,6 +14,7 @@
 #include <AK/Try.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/ImageFormats/BilevelImage.h>
 #include <LibGfx/Painter.h>
 
 namespace PixelPaint {
@@ -270,6 +271,16 @@ ErrorOr<void> Layer::scale(Gfx::IntRect const& new_rect, Gfx::ScalingMode scalin
     m_content_bitmap = move(scaled_content_bitmap);
 
     set_location(new_rect.location());
+    did_modify_bitmap({}, notify_clients);
+
+    return {};
+}
+
+ErrorOr<void> Layer::convert_to_bilevel(Gfx::DitheringAlgorithm dithering_algorithm, NotifyClients notify_clients)
+{
+    auto bilevel_content_bitmap = TRY(TRY(Gfx::BilevelImage::create_from_bitmap(*m_content_bitmap, dithering_algorithm))->to_gfx_bitmap());
+
+    m_content_bitmap = move(bilevel_content_bitmap);
     did_modify_bitmap({}, notify_clients);
 
     return {};

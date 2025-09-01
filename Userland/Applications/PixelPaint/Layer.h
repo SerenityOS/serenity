@@ -80,6 +80,7 @@ public:
     ErrorOr<void> rotate(Gfx::RotationDirection direction, NotifyClients notify_clients = NotifyClients::Yes);
     ErrorOr<void> crop(Gfx::IntRect const& rect, NotifyClients notify_clients = NotifyClients::Yes);
     ErrorOr<void> scale(Gfx::IntRect const& new_rect, Gfx::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::Yes);
+    ErrorOr<void> convert_to_bilevel(Gfx::DitheringAlgorithm dithering_algorithm, NotifyClients notify_clients = NotifyClients::Yes);
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
     Optional<Gfx::IntRect> editing_mask_bounding_rect() const;

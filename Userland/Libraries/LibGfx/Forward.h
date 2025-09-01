@@ -70,6 +70,7 @@ using FloatSize = Size<float>;
 using FloatQuad = Quad<float>;
 
 enum class BitmapFormat;
+enum class DitheringAlgorithm;
 enum class ColorRole;
 enum class TextAlignment;
 

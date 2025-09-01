@@ -723,6 +723,37 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::ScalingMode scaling_mode
     return {};
 }
 
+ErrorOr<void> Image::convert_to_bilevel(Gfx::DitheringAlgorithm dithering_algorithm)
+{
+    Vector<NonnullRefPtr<Layer>> bilevel_layers;
+    TRY(bilevel_layers.try_ensure_capacity(m_layers.size()));
+
+    VERIFY(m_layers.size() > 0);
+
+    size_t selected_layer_index = 0;
+    for (size_t i = 0; i < m_layers.size(); ++i) {
+        auto& layer = m_layers[i];
+        auto new_layer = TRY(Layer::create_snapshot(*this, layer));
+
+        if (layer->is_selected())
+            selected_layer_index = i;
+
+        TRY(new_layer->convert_to_bilevel(dithering_algorithm, Layer::NotifyClients::No));
+
+        bilevel_layers.unchecked_append(new_layer);
+    }
+
+    m_layers = move(bilevel_layers);
+    for (auto& layer : m_layers)
+        layer->did_modify_bitmap({}, Layer::NotifyClients::Yes);
+
+    select_layer(m_layers[selected_layer_index]);
+
+    did_change();
+
+    return {};
+}
+
 Color Image::color_at(Gfx::IntPoint point) const
 {
     Color color;

@@ -8,6 +8,7 @@ serenity_component(
 stringify_gml(PixelPaintWindow.gml PixelPaintWindowGML.h pixel_paint_window_gml)
 stringify_gml(EditGuideDialog.gml EditGuideDialogGML.h edit_guide_dialog_gml)
 stringify_gml(FilterGallery.gml FilterGalleryGML.h filter_gallery_gml)
+stringify_gml(ModeBilevelDialog.gml ModeBilevelDialogGML.h mode_bilevel_dialog_gml)
 stringify_gml(ResizeImageDialog.gml ResizeImageDialogGML.h resize_image_dialog_gml)
 stringify_gml(LevelsDialog.gml LevelsDialogGML.h levels_dialog_gml)
 stringify_gml(LuminosityMasking.gml LuminosityMaskingGML.h luminosity_masking_gml)
@@ -48,6 +49,7 @@ set(SOURCES
     LevelsDialog.cpp
     MainWidget.cpp
     Mask.cpp
+    ModeBilevelDialog.cpp
     PaletteWidget.cpp
     ProjectLoader.cpp
     ResizeImageDialog.cpp
@@ -86,6 +88,7 @@ set(GENERATED_SOURCES
     Filters/MedianSettingsGML.h
     LevelsDialogGML.h
     LuminosityMaskingGML.h
+    ModeBilevelDialogGML.h
     PixelPaintWindowGML.h
     ResizeImageDialogGML.h
 )
