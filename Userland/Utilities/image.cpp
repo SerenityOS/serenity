@@ -10,6 +10,7 @@
 #include <LibCore/MimeData.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
+#include <LibGfx/ImageFormats/BilevelImage.h>
 #include <LibGfx/ImageFormats/GIFWriter.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/ImageFormats/JBIG2Writer.h>
@@ -116,6 +117,23 @@ static ErrorOr<void> strip_alpha(LoadedImage& image)
     case Gfx::BitmapFormat::BGRA8888:
     case Gfx::BitmapFormat::BGRx8888:
         frame->strip_alpha_channel();
+    }
+    return {};
+}
+
+static ErrorOr<void> to_bilevel(LoadedImage& image, Gfx::DitheringAlgorithm algorithm)
+{
+    if (!image.bitmap.has<RefPtr<Gfx::Bitmap>>())
+        return Error::from_string_literal("Can't --to-bilevel with CMYK bitmaps");
+    auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
+
+    switch (frame->format()) {
+    case Gfx::BitmapFormat::Invalid:
+        return Error::from_string_literal("Can't --to-bilevel with invalid bitmaps");
+    case Gfx::BitmapFormat::RGBA8888:
+    case Gfx::BitmapFormat::BGRA8888:
+    case Gfx::BitmapFormat::BGRx8888:
+        frame = RefPtr { TRY(TRY(Gfx::BilevelImage::create_from_bitmap(*frame, algorithm))->to_gfx_bitmap()) };
     }
     return {};
 }
@@ -238,6 +256,7 @@ struct Options {
     Compress::ZlibCompressionLevel png_compression_level { Compress::ZlibCompressionLevel::Default };
     bool ppm_ascii = false;
     u8 quality = 75;
+    Optional<Gfx::DitheringAlgorithm> to_bilevel;
     unsigned webp_color_cache_bits = 6;
     Optional<unsigned> webp_allowed_transforms;
 };
@@ -299,6 +318,28 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     args_parser.add_option(options.assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
     args_parser.add_option(options.convert_color_profile_path, "Load color profile from file and convert output image from current profile to loaded profile", "convert-to-color-profile", {}, "FILE");
     args_parser.add_option(options.strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
+
+    Optional<Gfx::DitheringAlgorithm> to_bilevel;
+    args_parser.add_option({
+        Core::ArgsParser::OptionArgumentMode::Optional,
+        "Convert to bilevel image, with optionally explicit dithering algorithm",
+        "to-bilevel",
+        {},
+        "global-threshold, floyd-steinberg",
+        [&to_bilevel](StringView s) {
+            if (s.is_empty())
+                to_bilevel = Gfx::DitheringAlgorithm::FloydSteinberg;
+            else if (s == "global-threshold"sv)
+                to_bilevel = Gfx::DitheringAlgorithm::None;
+            else if (s == "floyd-steinberg"sv)
+                to_bilevel = Gfx::DitheringAlgorithm::FloydSteinberg;
+            else
+                return false;
+            return true;
+        },
+        Core::ArgsParser::OptionHideMode::None,
+    });
+
     auto png_compression_level = static_cast<unsigned>(Compress::ZlibCompressionLevel::Default);
     args_parser.add_option(png_compression_level, "PNG compression level, in [0, 3]. Higher values take longer and produce smaller outputs. Default: 2", "png-compression-level", {}, {});
     args_parser.add_option(options.ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
@@ -320,6 +361,8 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     if (png_compression_level > 3)
         return Error::from_string_view("--png-compression-level must be in [0, 3]"sv);
     options.png_compression_level = static_cast<Compress::ZlibCompressionLevel>(png_compression_level);
+
+    options.to_bilevel = to_bilevel;
 
     if (webp_allowed_transforms != "default"sv)
         options.webp_allowed_transforms = TRY(parse_webp_allowed_transforms_string(webp_allowed_transforms));
@@ -350,6 +393,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (options.strip_alpha)
         TRY(strip_alpha(image));
+
+    if (options.to_bilevel.has_value())
+        TRY(to_bilevel(image, options.to_bilevel.value()));
 
     OwnPtr<Core::MappedFile> icc_file;
     if (!options.assign_color_profile_path.is_empty()) {
