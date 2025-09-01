@@ -55,7 +55,7 @@ static ErrorOr<void> load_content_filters()
 {
     auto path = TRY(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()));
     if (!FileSystem::exists(path)) {
-        auto default_file = TRY(Core::File::open("/res/ladybird/default-config/BrowserContentFilters.txt"sv, Core::File::OpenMode::Read));
+        auto default_file = TRY(Core::File::open("/res/browser/default-config/BrowserContentFilters.txt"sv, Core::File::OpenMode::Read));
         auto contents = TRY(default_file->read_until_eof());
         auto new_file = TRY(Core::File::open(path, Core::File::OpenMode::Write));
         TRY(new_file->write_until_depleted(contents));
@@ -83,7 +83,7 @@ static ErrorOr<void> load_autoplay_allowlist()
 {
     auto path = TRY(String::formatted("{}/BrowserAutoplayAllowlist.txt", Core::StandardPaths::config_directory()));
     if (!FileSystem::exists(path)) {
-        auto default_file = TRY(Core::File::open("/res/ladybird/default-config/BrowserAutoplayAllowlist.txt"sv, Core::File::OpenMode::Read));
+        auto default_file = TRY(Core::File::open("/res/browser/default-config/BrowserAutoplayAllowlist.txt"sv, Core::File::OpenMode::Read));
         auto contents = TRY(default_file->read_until_eof());
         auto new_file = TRY(Core::File::open(path, Core::File::OpenMode::Write));
         TRY(new_file->write_until_depleted(contents));
