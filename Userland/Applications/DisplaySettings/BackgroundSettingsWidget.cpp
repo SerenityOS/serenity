@@ -38,6 +38,7 @@ ErrorOr<NonnullRefPtr<BackgroundSettingsWidget>> BackgroundSettingsWidget::try_c
     TRY(background_settings_widget->m_modes.try_append("Tile"_string));
     TRY(background_settings_widget->m_modes.try_append("Center"_string));
     TRY(background_settings_widget->m_modes.try_append("Stretch"_string));
+    TRY(background_settings_widget->m_modes.try_append("Fill"_string));
 
     TRY(background_settings_widget->create_frame());
     TRY(background_settings_widget->load_current_settings());
@@ -168,7 +169,7 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
         this);
     m_context_menu->add_action(*m_copy_action);
 
-    m_wallpaper_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
+    m_wallpaper_view->on_context_menu_request = [&](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
         if (index.is_valid()) {
             m_context_menu->popup(event.screen_position(), m_show_in_file_manager_action);
         }
@@ -193,7 +194,7 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
     m_mode_combo = *find_descendant_of_type_named<GUI::ComboBox>("mode_combo");
     m_mode_combo->set_only_allow_values_from_model(true);
     m_mode_combo->set_model(*GUI::ItemListModel<String>::create(m_modes));
-    m_mode_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
+    m_mode_combo->on_change = [this](auto&, GUI::ModelIndex const& index) {
         m_monitor_widget->set_wallpaper_mode(m_modes.at(index.row()));
         m_background_settings_changed = true;
         set_modified(true);
