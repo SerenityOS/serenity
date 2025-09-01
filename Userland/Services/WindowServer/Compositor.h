@@ -30,7 +30,6 @@ enum class WallpaperMode {
     Center,
     Stretch,
     Fill,
-    Unchecked
 };
 
 struct CompositorScreenData {
@@ -232,7 +231,7 @@ private:
     Gfx::DisjointIntRectSet m_opaque_wallpaper_rects;
     Gfx::DisjointIntRectSet m_transparent_wallpaper_rects;
 
-    WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
+    WallpaperMode m_wallpaper_mode { WallpaperMode::Center };
     RefPtr<Gfx::Bitmap const> m_wallpaper;
 
     Cursor const* m_current_cursor { nullptr };
