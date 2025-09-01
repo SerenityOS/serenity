@@ -95,6 +95,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
+        if (!account.value().extra_gids().contains_slow(getgrnam("window")->gr_gid)) {
+            window->set_fail_message("Can't log in: user is not in 'window' group."sv);
+            dbgln("failed graphical login for user {}: not in 'window' group", username);
+            return;
+        }
+
         window->set_username(""sv);
         window->hide();
 
