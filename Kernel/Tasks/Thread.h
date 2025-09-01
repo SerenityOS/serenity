@@ -1226,8 +1226,6 @@ private:
     RecursiveSpinlockProtected<Name, LockRank::None> m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
 
-    State m_stop_state { Thread::State::Invalid };
-
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
     bool m_initialized { false };
