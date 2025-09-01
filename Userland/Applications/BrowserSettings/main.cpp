@@ -26,10 +26,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(selected_tab, "Tab, one of 'browser' or 'content-filtering'", "open-tab", 't', "tab");
     args_parser.parse(arguments);
 
+    TRY(Core::System::unveil("/home", "rwc"));
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/home", "r"));
-    TRY(Core::System::unveil("/home/anon/.config/BrowserAutoplayAllowlist.txt", "rwc"));
-    TRY(Core::System::unveil("/home/anon/.config/BrowserContentFilters.txt", "rwc"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = GUI::Icon::default_icon("app-browser"sv);
