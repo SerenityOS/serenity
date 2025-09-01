@@ -18,6 +18,17 @@ Defines a container widget that will group its child widgets together so that th
 
 `@GUI::DynamicWidgetContainer`
 
+## Detached Window Cleanup
+
+It is important to close all open detached windows when the main application window is closed:
+
+```cpp
+window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+    GUI::DynamicWidgetContainer::close_all_detached_windows();
+    return GUI::Window::CloseRequestDecision::Close;
+};
+```
+
 ## Examples
 
 Simple container:
