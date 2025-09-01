@@ -280,25 +280,25 @@ themes = [
 ]
 
 web_resources = [
-  "//Base/res/ladybird/inspector.css",
-  "//Base/res/ladybird/inspector.js",
+  "//Base/res/browser/inspector.css",
+  "//Base/res/browser/inspector.js",
 ]
 
 web_about_pages = [
-  "//Base/res/ladybird/about-pages/about.html",
-  "//Base/res/ladybird/about-pages/newtab.html",
+  "//Base/res/browser/about-pages/about.html",
+  "//Base/res/browser/about-pages/newtab.html",
 ]
 
 web_default_config = [
   "$root_build_dir/cacert.pem",
-  "//Base/res/ladybird/default-config/BrowserAutoplayAllowlist.txt",
-  "//Base/res/ladybird/default-config/BrowserContentFilters.txt",
+  "//Base/res/browser/default-config/BrowserAutoplayAllowlist.txt",
+  "//Base/res/browser/default-config/BrowserContentFilters.txt",
 ]
 
 web_templates = [
-  "//Base/res/ladybird/templates/directory.html",
-  "//Base/res/ladybird/templates/error.html",
-  "//Base/res/ladybird/templates/version.html",
+  "//Base/res/browser/templates/directory.html",
+  "//Base/res/browser/templates/error.html",
+  "//Base/res/browser/templates/version.html",
 ]
 
 if (current_os != "mac") {
@@ -334,28 +334,27 @@ if (current_os != "mac") {
 
   copy("ladybird_copy_web_resources") {
     sources = web_resources
-    outputs = [ "$root_out_dir/share/Lagom/ladybird/{{source_file_part}}" ]
+    outputs = [ "$root_out_dir/share/Lagom/browser/{{source_file_part}}" ]
   }
 
   copy("ladybird_copy_web_about_pages") {
     sources = web_about_pages
-    outputs = [
-      "$root_out_dir/share/Lagom/ladybird/about-pages/{{source_file_part}}",
-    ]
+    outputs =
+        [ "$root_out_dir/share/Lagom/browser/about-pages/{{source_file_part}}" ]
   }
 
   copy("ladybird_web_default_config") {
     public_deps = [ "//Userland/Libraries/LibTLS:ca_certificates_download" ]
     sources = web_default_config
     outputs = [
-      "$root_out_dir/share/Lagom/ladybird/default-config/{{source_file_part}}",
+      "$root_out_dir/share/Lagom/browser/default-config/{{source_file_part}}",
     ]
   }
 
   copy("ladybird_copy_web_templates") {
     sources = web_templates
     outputs =
-        [ "$root_out_dir/share/Lagom/ladybird/templates/{{source_file_part}}" ]
+        [ "$root_out_dir/share/Lagom/browser/templates/{{source_file_part}}" ]
   }
 } else {
   # macOS bundle steps
@@ -503,26 +502,26 @@ if (current_os != "mac") {
 
   bundle_data("ladybird_web_resources") {
     sources = web_resources
-    outputs = [ "{{bundle_resources_dir}}/ladybird/{{source_file_part}}" ]
+    outputs = [ "{{bundle_resources_dir}}/browser/{{source_file_part}}" ]
   }
 
   bundle_data("ladybird_web_about_pages") {
     sources = web_about_pages
     outputs =
-        [ "{{bundle_resources_dir}}/ladybird/about-pages/{{source_file_part}}" ]
+        [ "{{bundle_resources_dir}}/browser/about-pages/{{source_file_part}}" ]
   }
 
   bundle_data("ladybird_web_default_config") {
     sources = web_default_config
     outputs = [
-      "{{bundle_resources_dir}}/ladybird/default-config/{{source_file_part}}",
+      "{{bundle_resources_dir}}/browser/default-config/{{source_file_part}}",
     ]
   }
 
   bundle_data("ladybird_web_templates") {
     sources = web_templates
     outputs =
-        [ "{{bundle_resources_dir}}/ladybird/templates/{{source_file_part}}" ]
+        [ "{{bundle_resources_dir}}/browser/templates/{{source_file_part}}" ]
   }
 
   action("ladybird_create_icon") {

@@ -83,10 +83,10 @@ set(WEB_TEMPLATES
     error.html
     version.html
 )
-list(TRANSFORM WEB_RESOURCES PREPEND "${SERENITY_SOURCE_DIR}/Base/res/ladybird/")
-list(TRANSFORM WEB_ABOUT_PAGES PREPEND "${SERENITY_SOURCE_DIR}/Base/res/ladybird/about-pages/")
-list(TRANSFORM WEB_DEFAULT_CONFIG PREPEND "${SERENITY_SOURCE_DIR}/Base/res/ladybird/default-config/")
-list(TRANSFORM WEB_TEMPLATES PREPEND "${SERENITY_SOURCE_DIR}/Base/res/ladybird/templates/")
+list(TRANSFORM WEB_RESOURCES PREPEND "${SERENITY_SOURCE_DIR}/Base/res/browser/")
+list(TRANSFORM WEB_ABOUT_PAGES PREPEND "${SERENITY_SOURCE_DIR}/Base/res/browser/about-pages/")
+list(TRANSFORM WEB_DEFAULT_CONFIG PREPEND "${SERENITY_SOURCE_DIR}/Base/res/browser/default-config/")
+list(TRANSFORM WEB_TEMPLATES PREPEND "${SERENITY_SOURCE_DIR}/Base/res/browser/templates/")
 
 set(THEMES
     Default.ini
@@ -159,23 +159,23 @@ function(copy_resources_to_build base_directory bundle_target)
         DESTINATION ${base_directory} TARGET ${bundle_target}
     )
 
-    copy_resource_set(ladybird RESOURCES ${WEB_RESOURCES}
+    copy_resource_set(browser RESOURCES ${WEB_RESOURCES}
         DESTINATION ${base_directory} TARGET ${bundle_target}
     )
 
-    copy_resource_set(ladybird/about-pages RESOURCES ${WEB_ABOUT_PAGES}
+    copy_resource_set(browser/about-pages RESOURCES ${WEB_ABOUT_PAGES}
         DESTINATION ${base_directory} TARGET ${bundle_target}
     )
 
-    copy_resource_set(ladybird/default-config RESOURCES ${WEB_DEFAULT_CONFIG}
+    copy_resource_set(browser/default-config RESOURCES ${WEB_DEFAULT_CONFIG}
         DESTINATION ${base_directory} TARGET ${bundle_target}
     )
 
-    copy_resource_set(ladybird/templates RESOURCES ${WEB_TEMPLATES}
+    copy_resource_set(browser/templates RESOURCES ${WEB_TEMPLATES}
         DESTINATION ${base_directory} TARGET ${bundle_target}
     )
 
-    copy_resource_set(ladybird RESOURCES ${DOWNLOADED_RESOURCES}
+    copy_resource_set(browser RESOURCES ${DOWNLOADED_RESOURCES}
         DESTINATION ${base_directory} TARGET ${bundle_target}
     )
 
@@ -189,9 +189,9 @@ function(install_ladybird_resources destination component)
     install(FILES ${32x32_ICONS} DESTINATION "${destination}/icons/32x32" COMPONENT ${component})
     install(FILES ${BROWSER_ICONS} DESTINATION "${destination}/icons/browser" COMPONENT ${component})
     install(FILES ${THEMES} DESTINATION "${destination}/themes" COMPONENT ${component})
-    install(FILES ${WEB_RESOURCES} DESTINATION "${destination}/ladybird" COMPONENT ${component})
-    install(FILES ${WEB_ABOUT_PAGES} DESTINATION "${destination}/ladybird/about-pages" COMPONENT ${component})
-    install(FILES ${WEB_DEFAULT_CONFIG} DESTINATION "${destination}/ladybird/default-config" COMPONENT ${component})
-    install(FILES ${WEB_TEMPLATES} DESTINATION "${destination}/ladybird/templates" COMPONENT ${component})
-    install(FILES ${DOWNLOADED_RESOURCES} DESTINATION "${destination}/ladybird" COMPONENT ${component})
+    install(FILES ${WEB_RESOURCES} DESTINATION "${destination}/browser" COMPONENT ${component})
+    install(FILES ${WEB_ABOUT_PAGES} DESTINATION "${destination}/browser/about-pages" COMPONENT ${component})
+    install(FILES ${WEB_DEFAULT_CONFIG} DESTINATION "${destination}/browser/default-config" COMPONENT ${component})
+    install(FILES ${WEB_TEMPLATES} DESTINATION "${destination}/browser/templates" COMPONENT ${component})
+    install(FILES ${DOWNLOADED_RESOURCES} DESTINATION "${destination}/browser" COMPONENT ${component})
 endfunction()
