@@ -391,8 +391,7 @@ static ErrorOr<void> encode_immediate_lossless_generic_region(JBIG2WritingContex
     TRY(encode_region_segment_information_field(stream, region_information));
 
     u8 flags = 0;
-    bool uses_mmr = false; // FIXME: Add an option for this.
-    if (uses_mmr)
+    if (inputs.is_modified_modified_read)
         flags |= 1;
     flags |= (inputs.gb_template & 3) << 1;
     if (inputs.is_typical_prediction_used)
