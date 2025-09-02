@@ -703,7 +703,7 @@ static Threading::MutexProtected<RefPtr<ImageDecoderClient::Client>> s_image_dec
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
 {
     Core::EventLoop event_loop;
-    Gfx::IntSize const thumbnail_size { 32, 32 };
+    Gfx::IntSize const thumbnail_size { 240, 240 };
 
     auto file = TRY(Core::MappedFile::map(path));
     auto decoded_image = TRY(s_image_decoder_client.with_locked([=, &file](auto& maybe_client) -> ErrorOr<Optional<ImageDecoderClient::DecodedImage>> {
@@ -726,9 +726,12 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
 
     auto bitmap = decoded_image.value().frames[0].bitmap;
 
-    auto thumbnail = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, thumbnail_size));
+    Gfx::IntSize actual_thumbnail_size = thumbnail_size;
+    if (bitmap->width() >= 32 && bitmap->height() >= 32 && bitmap->width() < thumbnail_size.width() && bitmap->height() < thumbnail_size.height())
+        actual_thumbnail_size = { min(bitmap->width(), bitmap->height()), min(bitmap->width(), bitmap->height()) };
+    auto thumbnail = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, actual_thumbnail_size));
 
-    double scale = min(thumbnail_size.width() / (double)bitmap->width(), thumbnail_size.height() / (double)bitmap->height());
+    double scale = min(actual_thumbnail_size.width() / (double)bitmap->width(), actual_thumbnail_size.height() / (double)bitmap->height());
     auto destination = Gfx::IntRect(0, 0, (int)(bitmap->width() * scale), (int)(bitmap->height() * scale)).centered_within(thumbnail->rect());
 
     Painter painter(thumbnail);
