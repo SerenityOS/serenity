@@ -613,19 +613,19 @@ static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context, ReadonlyB
     if (header_flags & 0b11110000)
         return Error::from_string_literal("JBIG2LoadingContext: Invalid header flags");
     context.organization = (header_flags & 1) ? JBIG2::Organization::Sequential : JBIG2::Organization::RandomAccess;
-    dbgln_if(JBIG2_DEBUG, "JBIG2LoadingContext: Organization: {} ({})", (int)context.organization, context.organization == JBIG2::Organization::Sequential ? "Sequential" : "Random-access");
+    dbgln_if(JBIG2_DEBUG, "JBIG2 Header: Organization: {} ({})", (int)context.organization, context.organization == JBIG2::Organization::Sequential ? "Sequential" : "Random-access");
     bool has_known_number_of_pages = (header_flags & 2) ? false : true;
     bool uses_templates_with_12_AT_pixels = (header_flags & 4) ? true : false;
     bool contains_colored_region_segments = (header_flags & 8) ? true : false;
 
-    // FIXME: Do something with these?
-    (void)uses_templates_with_12_AT_pixels;
-    (void)contains_colored_region_segments;
+    dbgln_if(JBIG2_DEBUG, "    has_known_number_of_pages={}", has_known_number_of_pages);
+    dbgln_if(JBIG2_DEBUG, "    uses_templates_with_12_AT_pixels={}", uses_templates_with_12_AT_pixels);
+    dbgln_if(JBIG2_DEBUG, "    contains_colored_region_segments={}", contains_colored_region_segments);
 
     // D.4.3 Number of pages
     if (has_known_number_of_pages) {
         context.number_of_pages = TRY(stream.read_value<BigEndian<u32>>());
-        dbgln_if(JBIG2_DEBUG, "JBIG2LoadingContext: Number of pages: {}", context.number_of_pages.value());
+        dbgln_if(JBIG2_DEBUG, "  number of pages: {}", context.number_of_pages.value());
     }
 
     return {};
