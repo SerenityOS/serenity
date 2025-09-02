@@ -8,6 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibMain/Main.h>
@@ -95,9 +96,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
+        // NOTE: Check if a user is in the 'window' group and has a home folder,
+        //       these are requirements to boot into the desktop.
         if (!account.value().extra_gids().contains_slow(getgrnam("window")->gr_gid)) {
             window->set_fail_message("Can't log in: user is not in 'window' group."sv);
             dbgln("failed graphical login for user {}: not in 'window' group", username);
+            return;
+        }
+        auto home_dir = account.value().home_directory();
+        if (home_dir.is_empty() || !FileSystem::is_directory(home_dir)) {
+            window->set_fail_message("Can't log in: user has no home directory."sv);
+            dbgln("failed graphical login for user {}: no home directory", username);
             return;
         }
 
