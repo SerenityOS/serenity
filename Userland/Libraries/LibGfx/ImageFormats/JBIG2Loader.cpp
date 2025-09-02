@@ -628,6 +628,8 @@ static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context, ReadonlyB
         dbgln_if(JBIG2_DEBUG, "  number of pages: {}", context.number_of_pages.value());
     }
 
+    dbgln_if(JBIG2_DEBUG, "");
+
     return {};
 }
 
@@ -723,6 +725,8 @@ static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& strea
         opt_data_length = data_length;
     else if (type != JBIG2::SegmentType::ImmediateGenericRegion)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unknown data length only allowed for ImmediateGenericRegion");
+
+    dbgln_if(JBIG2_DEBUG, "");
 
     return JBIG2::SegmentHeader { segment_number, type, retention_flag, move(referred_to_segment_numbers), move(referred_to_segment_retention_flags), segment_page_association, opt_data_length };
 }
@@ -3303,6 +3307,8 @@ static ErrorOr<void> decode_end_of_page(JBIG2LoadingContext&, SegmentData const&
     if (segment.data.size() != 0)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of page segment has non-zero size");
 
+    dbgln_if(JBIG2_DEBUG, "End of page");
+
     // Actual processing of this segment is in scan_for_page_size().
     return {};
 }
@@ -3323,6 +3329,9 @@ static ErrorOr<void> decode_end_of_file(JBIG2LoadingContext&, SegmentData const&
     // 7.4.11 End of file segment syntax
     if (segment.data.size() != 0)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of file segment has non-zero size");
+
+    dbgln_if(JBIG2_DEBUG, "End of file");
+
     return {};
 }
 
@@ -3444,6 +3453,8 @@ static ErrorOr<void> decode_extension(JBIG2LoadingContext&, SegmentData const& s
         MultiByteCodedComment = 0x20000002,
     };
     u32 type = TRY(stream.read_value<BigEndian<u32>>());
+
+    dbgln_if(JBIG2_DEBUG, "Extension, type {:#x}", type);
 
     auto read_string = [&]<class T>() -> ErrorOr<Vector<T>> {
         Vector<T> result;
@@ -3577,6 +3588,8 @@ static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
             TRY(decode_extension(context, segment));
             break;
         }
+
+        dbgln_if(JBIG2_DEBUG, "");
     }
 
     return {};
