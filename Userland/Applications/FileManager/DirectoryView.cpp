@@ -357,6 +357,15 @@ void DirectoryView::set_view_mode_from_string(ByteString const& mode)
     }
 }
 
+void DirectoryView::set_icon_view_icon_size(Gfx::IntSize size)
+{
+    if (m_mode == Mode::Desktop)
+        return;
+
+    if (m_icon_view)
+        m_icon_view->set_icon_size(size);
+}
+
 void DirectoryView::config_string_did_change(StringView domain, StringView group, StringView key, StringView value)
 {
     if (domain != "FileManager" || group != "DirectoryView")
@@ -368,11 +377,24 @@ void DirectoryView::config_string_did_change(StringView domain, StringView group
     }
 }
 
+void DirectoryView::config_i32_did_change(StringView domain, StringView group, StringView key, i32 value)
+{
+    if (domain != "FileManager" || group != "DirectoryView")
+        return;
+
+    if (key == "IconSize") {
+        set_icon_view_icon_size({ value, value });
+        return;
+    }
+}
+
 void DirectoryView::set_view_mode(ViewMode mode)
 {
     if (m_view_mode == mode)
         return;
     m_view_mode = mode;
+    if (on_view_mode_change)
+        on_view_mode_change(mode);
     update();
     if (mode == ViewMode::Table) {
         set_active_widget(m_table_view);
@@ -677,5 +699,4 @@ void DirectoryView::handle_drop(GUI::ModelIndex const& index, GUI::DropEvent con
     if (has_accepted_drop && on_accepted_drop)
         on_accepted_drop();
 }
-
 }

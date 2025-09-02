@@ -49,6 +49,13 @@ public:
         Normal,
     };
 
+    enum class ViewMode {
+        Invalid,
+        Table,
+        Columns,
+        Icon
+    };
+
     virtual ~DirectoryView() override;
 
     bool open(ByteString const& path);
@@ -72,17 +79,14 @@ public:
     Function<void(StringView)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
     Function<void()> on_accepted_drop;
+    Function<void(ViewMode)> on_view_mode_change;
 
-    enum ViewMode {
-        Invalid,
-        Table,
-        Columns,
-        Icon
-    };
     void set_view_mode(ViewMode);
     ViewMode view_mode() const { return m_view_mode; }
 
     void set_view_mode_from_string(ByteString const&);
+
+    void set_icon_view_icon_size(Gfx::IntSize size);
 
     GUI::AbstractView& current_view()
     {
@@ -134,6 +138,7 @@ public:
 
     // ^Config::Listener
     virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override;
+    virtual void config_i32_did_change(StringView domain, StringView group, StringView key, i32 value) override;
 
 private:
     explicit DirectoryView(Mode);
@@ -161,7 +166,7 @@ private:
     bool can_modify_current_selection();
 
     Mode m_mode { Mode::Normal };
-    ViewMode m_view_mode { Invalid };
+    ViewMode m_view_mode { ViewMode::Invalid };
 
     NonnullRefPtr<GUI::FileSystemModel> m_model;
     NonnullRefPtr<GUI::SortingProxyModel> m_sorting_model;
