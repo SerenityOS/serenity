@@ -27,11 +27,10 @@ public:
     FlowDirection flow_direction() const { return m_flow_direction; }
     void set_flow_direction(FlowDirection);
 
-    int horizontal_padding() const { return m_horizontal_padding; }
-
     virtual void scroll_into_view(ModelIndex const&, bool scroll_horizontally = true, bool scroll_vertically = true) override;
 
     Gfx::IntSize effective_item_size() const { return m_effective_item_size; }
+    void set_icon_size(Gfx::IntSize size);
 
     bool always_wrap_item_labels() const { return m_always_wrap_item_labels; }
     void set_always_wrap_item_labels(bool value) { m_always_wrap_item_labels = value; }
@@ -151,11 +150,11 @@ private:
     void remove_item_selection(ItemData&);
     void toggle_selection(ItemData&);
 
-    int m_horizontal_padding { 5 };
     int m_model_column { 0 };
     int m_visual_column_count { 0 };
     int m_visual_row_count { 0 };
 
+    Gfx::IntSize m_icon_size { 32, 32 };
     Gfx::IntSize m_effective_item_size { 80, 80 };
 
     bool m_always_wrap_item_labels { false };
