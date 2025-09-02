@@ -58,7 +58,11 @@ enum class Organization {
 struct SegmentHeader {
     u32 segment_number { 0 };
     SegmentType type { SegmentType::Extension };
+    bool retention_flag { false };
+
+    // These two have the same size.
     Vector<u32> referred_to_segment_numbers;
+    Vector<bool> referred_to_segment_retention_flags;
 
     // 7.2.6 Segment page association
     // "The first page must be numbered "1". This field may contain a value of zero; this value indicates that this segment is not associated with any page."

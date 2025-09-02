@@ -652,13 +652,32 @@ static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& strea
     u32 count_of_referred_to_segments = referred_to_segment_count_and_retention_flags >> 5;
     if (count_of_referred_to_segments == 5 || count_of_referred_to_segments == 6)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid count_of_referred_to_segments");
-    u32 extra_count = 0;
+
+    bool retention_flag = false;
+    Vector<bool> referred_to_segment_retention_flags;
     if (count_of_referred_to_segments == 7) {
         TRY(stream.seek(-1, SeekMode::FromCurrentPosition));
         count_of_referred_to_segments = TRY(stream.read_value<BigEndian<u32>>()) & 0x1FFF'FFFF;
-        extra_count = ceil_div(count_of_referred_to_segments + 1, 8);
-        TRY(stream.seek(extra_count, SeekMode::FromCurrentPosition));
+
+        LittleEndianInputBitStream bit_stream { MaybeOwned { stream } };
+        u32 bit_count = ceil_div(count_of_referred_to_segments + 1, 8) * 8;
+        retention_flag = TRY(bit_stream.read_bit());
+        for (u32 i = 0; i < count_of_referred_to_segments; ++i)
+            referred_to_segment_retention_flags.append(TRY(bit_stream.read_bit()));
+        for (u32 i = count_of_referred_to_segments; i < bit_count; ++i) {
+            if (TRY(bit_stream.read_bit()))
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid referred-to segment retention flag");
+        }
+    } else {
+        retention_flag = referred_to_segment_count_and_retention_flags & 1;
+        for (u32 i = 1; i < count_of_referred_to_segments + 1; ++i)
+            referred_to_segment_retention_flags.append((referred_to_segment_count_and_retention_flags >> i) & 1);
+        for (u32 i = count_of_referred_to_segments + 1; i < 5; ++i) {
+            if ((referred_to_segment_count_and_retention_flags >> i) & 1)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid referred-to segment retention flag");
+        }
     }
+    dbgln_if(JBIG2_DEBUG, "Retained: {}", retention_flag);
     dbgln_if(JBIG2_DEBUG, "Referred-to segment count: {}", count_of_referred_to_segments);
 
     // 7.2.5 Referred-to segment numbers
@@ -677,7 +696,7 @@ static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& strea
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Referred-to segment number too large");
 
         referred_to_segment_numbers.append(referred_to_segment_number);
-        dbgln_if(JBIG2_DEBUG, "Referred-to segment number: {}", referred_to_segment_number);
+        dbgln_if(JBIG2_DEBUG, "Referred-to segment number: {}, retained {}", referred_to_segment_number, referred_to_segment_retention_flags[i]);
     }
 
     // 7.2.6 Segment page association
@@ -705,7 +724,7 @@ static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& strea
     else if (type != JBIG2::SegmentType::ImmediateGenericRegion)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unknown data length only allowed for ImmediateGenericRegion");
 
-    return JBIG2::SegmentHeader { segment_number, type, move(referred_to_segment_numbers), segment_page_association, opt_data_length };
+    return JBIG2::SegmentHeader { segment_number, type, retention_flag, move(referred_to_segment_numbers), move(referred_to_segment_retention_flags), segment_page_association, opt_data_length };
 }
 
 static ErrorOr<size_t> scan_for_immediate_generic_region_size(ReadonlyBytes data)
