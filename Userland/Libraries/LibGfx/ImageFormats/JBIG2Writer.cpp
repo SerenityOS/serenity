@@ -8,6 +8,7 @@
 // https://www.itu.int/rec/T-REC-T.88-201808-I
 // JBIG2Loader.cpp has many spec notes.
 
+#include <AK/BitStream.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Stream.h>
@@ -290,19 +291,28 @@ static ErrorOr<void> encode_segment_header(Stream& stream, JBIG2::SegmentHeader 
     TRY(stream.write_value<u8>(flags));
 
     // 7.2.4 Referred-to segment count and retention flags
+    VERIFY(header.referred_to_segment_numbers.size() == header.referred_to_segment_retention_flags.size());
     if (header.referred_to_segment_numbers.size() <= 4) {
         u8 count_and_retention_flags = 0;
         count_and_retention_flags |= header.referred_to_segment_numbers.size() << 5;
-        // FIXME: Set retention flags properly?
+        if (header.retention_flag)
+            count_and_retention_flags |= 1;
+        for (size_t i = 0; i < header.referred_to_segment_numbers.size(); ++i) {
+            if (header.referred_to_segment_retention_flags[i])
+                count_and_retention_flags |= 1 << (i + 1);
+        }
         TRY(stream.write_value<u8>(count_and_retention_flags));
     } else {
         if (header.referred_to_segment_numbers.size() >= (1 << 28))
             return Error::from_string_literal("JBIG2Writer: Too many referred-to segments");
         u32 count_of_referred_to_segments = header.referred_to_segment_numbers.size();
         TRY(stream.write_value<BigEndian<u32>>(count_of_referred_to_segments | 7 << 28));
-        // FIXME: Set retention flags properly?
-        for (u32 i = 0; i < ceil_div(count_of_referred_to_segments + 1, 8u); i++)
-            TRY(stream.write_value<u8>(0));
+
+        LittleEndianOutputBitStream bit_stream { MaybeOwned { stream } };
+        TRY(bit_stream.write_bits(header.retention_flag, 1));
+        for (size_t i = 0; i < header.referred_to_segment_numbers.size(); ++i)
+            TRY(bit_stream.write_bits(header.referred_to_segment_retention_flags[i], 1));
+        TRY(bit_stream.flush_buffer_to_stream());
     }
 
     // 7.2.5 Referred-to segment numbers
