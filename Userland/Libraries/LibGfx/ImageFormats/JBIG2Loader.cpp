@@ -644,8 +644,8 @@ static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& strea
     bool segment_page_association_size_is_32_bits = (flags & 0b100'0000) != 0;
     bool segment_retained_only_by_itself_and_extension_segments = (flags & 0b1000'00000) != 0;
 
-    // FIXME: Do something with this?
-    (void)segment_retained_only_by_itself_and_extension_segments;
+    dbgln_if(JBIG2_DEBUG, "Page association size is 32 bits: {}", segment_page_association_size_is_32_bits);
+    dbgln_if(JBIG2_DEBUG, "Page retained only by itself and extension segments: {}", segment_retained_only_by_itself_and_extension_segments);
 
     // 7.2.4 Referred-to segment count and retention flags
     u8 referred_to_segment_count_and_retention_flags = TRY(stream.read_value<u8>());
