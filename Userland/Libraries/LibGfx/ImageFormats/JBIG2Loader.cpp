@@ -816,7 +816,9 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment headers and segment datas have different sizes");
     for (size_t i = 0; i < segment_headers.size(); ++i) {
         context.segments.append({ segment_headers[i], segment_datas[i], {}, {}, {}, {} });
-        context.segments_by_number.set(segment_headers[i].segment_number, context.segments.size() - 1);
+
+        if (context.segments_by_number.set(segment_headers[i].segment_number, context.segments.size() - 1) != HashSetResult::InsertedNewEntry)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Duplicate segment number");
     }
 
     return {};
