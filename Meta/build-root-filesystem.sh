@@ -52,7 +52,7 @@ fi
 # the permissions needed in the image.
 chmod -R g+rX,o+rX "$SERENITY_SOURCE_DIR"/Base/* mnt/
 
-chmod 660 mnt/etc/WindowServer.ini
+chmod 664 mnt/etc/WindowServer.ini
 chown $window_uid:$window_gid mnt/etc/WindowServer.ini
 echo "/bin/sh" > mnt/etc/shells
 
