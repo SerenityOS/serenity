@@ -123,7 +123,7 @@ void DynamicWidgetContainer::set_view_state(ViewState state)
         (void)detach_widgets();
 
     if (persist_state())
-        Config::write_i32(config_domain(), "DynamicWidgetContainers"sv, section_label(), to_underlying(state));
+        Config::write_i32(config_domain(), "DynamicWidgetContainers"sv, encode_config_key(), to_underlying(state));
 }
 
 void DynamicWidgetContainer::restore_view_state()
@@ -133,9 +133,9 @@ void DynamicWidgetContainer::restore_view_state()
 
     deferred_invoke([&]() {
         if (is_container_with_individual_order()) {
-            auto order_or_error = JsonValue::from_string(Config::read_string(config_domain(), "DynamicWidgetContainers"sv, section_label()));
+            auto order_or_error = JsonValue::from_string(Config::read_string(config_domain(), "DynamicWidgetContainers"sv, encode_config_key()));
             if (order_or_error.is_error() || !order_or_error.value().is_array()) {
-                Config::remove_key(config_domain(), "DynamicWidgetContainers"sv, section_label());
+                Config::remove_key(config_domain(), "DynamicWidgetContainers"sv, encode_config_key());
                 return;
             }
 
@@ -166,7 +166,7 @@ void DynamicWidgetContainer::restore_view_state()
             for (auto const& child : new_child_order)
                 add_child(*child);
         } else {
-            int persisted_state = Config::read_i32(config_domain(), "DynamicWidgetContainers"sv, section_label(), to_underlying(ViewState::Expanded));
+            int persisted_state = Config::read_i32(config_domain(), "DynamicWidgetContainers"sv, encode_config_key(), to_underlying(ViewState::Expanded));
             set_view_state(static_cast<ViewState>(persisted_state));
         }
         update();
@@ -446,7 +446,12 @@ void DynamicWidgetContainer::swap_widget_positions(NonnullRefPtr<Core::EventRece
     for (auto& child : child_containers())
         new_widget_order.must_append(child.section_label());
 
-    Config::write_string(config_domain(), "DynamicWidgetContainers"sv, section_label(), new_widget_order.serialized<StringBuilder>());
+    Config::write_string(config_domain(), "DynamicWidgetContainers"sv, encode_config_key(), new_widget_order.serialized<StringBuilder>());
+}
+
+String DynamicWidgetContainer::encode_config_key() const
+{
+    return MUST(String::from_byte_string(section_label().replace(" "sv, ""sv, ReplaceMode::All)));
 }
 
 void DynamicWidgetContainer::update_control_button_visibility()
