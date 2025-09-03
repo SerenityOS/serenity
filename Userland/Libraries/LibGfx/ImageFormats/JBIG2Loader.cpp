@@ -625,7 +625,7 @@ static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context, ReadonlyB
     // D.4.3 Number of pages
     if (has_known_number_of_pages) {
         context.number_of_pages = TRY(stream.read_value<BigEndian<u32>>());
-        dbgln_if(JBIG2_DEBUG, "  number of pages: {}", context.number_of_pages.value());
+        dbgln_if(JBIG2_DEBUG, "    number of pages: {}", context.number_of_pages.value());
     }
 
     dbgln_if(JBIG2_DEBUG, "");
