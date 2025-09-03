@@ -232,6 +232,8 @@ public:
     void set_blocks_emoji_input(bool b) { m_blocks_emoji_input = b; }
     bool blocks_emoji_input() const { return m_blocks_emoji_input; }
 
+    void set_is_detached_widget_window(bool b) { m_is_detached_widget_window = b; }
+
     void set_always_on_top(bool always_on_top = true);
 
     enum class ShortcutPropagationBoundary {
@@ -330,6 +332,7 @@ private:
     bool m_resizing { false };
     bool m_auto_shrink { false };
     bool m_save_size_and_position_on_close { false };
+    bool m_is_detached_widget_window { false };
     StringView m_save_domain;
     StringView m_save_group;
 

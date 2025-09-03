@@ -51,10 +51,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_main_widget(hex_editor_widget);
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
-        if (hex_editor_widget->request_close()) {
-            GUI::DynamicWidgetContainer::close_all_detached_windows();
+        if (hex_editor_widget->request_close())
             return GUI::Window::CloseRequestDecision::Close;
-        }
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
