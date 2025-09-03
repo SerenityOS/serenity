@@ -58,7 +58,7 @@ public:
     void set_forced_shadow(bool);
 
     bool is_resizable() const { return m_resizable; }
-    void set_resizable(bool resizable) { m_resizable = resizable; }
+    void set_resizable(bool resizable);
 
     bool is_obeying_widget_min_size() { return m_obey_widget_min_size; }
     void set_obey_widget_min_size(bool);

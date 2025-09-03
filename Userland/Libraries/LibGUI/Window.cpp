@@ -22,6 +22,7 @@
 #include <LibGUI/MenuItem.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
@@ -1188,6 +1189,18 @@ void Window::set_forced_shadow(bool shadow)
     if (!is_visible())
         return;
     ConnectionToWindowServer::the().async_set_forced_shadow(m_window_id, shadow);
+}
+
+void Window::set_resizable(bool resizable)
+{
+    m_resizable = resizable;
+
+    if (auto* main_widget = this->main_widget(); main_widget) {
+        main_widget->for_each_child_of_type<Statusbar>([&](auto& statusbar) {
+            statusbar.update_corner_visibility();
+            return IterationDecision::Continue;
+        });
+    }
 }
 
 void Window::set_obey_widget_min_size(bool obey_widget_min_size)

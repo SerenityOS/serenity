@@ -6,6 +6,7 @@
  */
 
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Event.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/ResizeCorner.h>
 #include <LibGUI/Statusbar.h>
@@ -131,11 +132,15 @@ void Statusbar::paint_event(PaintEvent& event)
 
 void Statusbar::resize_event(ResizeEvent& event)
 {
+    update_corner_visibility();
+    Widget::resize_event(event);
+}
+
+void Statusbar::update_corner_visibility()
+{
     if (auto* window = this->window()) {
         m_corner->set_visible(window->is_resizable() && !window->is_maximized());
     }
-
-    Widget::resize_event(event);
 }
 
 Statusbar::Segment::Segment()

@@ -64,6 +64,7 @@ public:
 
     Segment& segment(size_t index) { return m_segments.at(index); }
     void set_segment_count(size_t);
+    void update_corner_visibility();
 
 protected:
     explicit Statusbar(int segment_count = 1);
