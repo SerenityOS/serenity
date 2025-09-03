@@ -55,10 +55,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(main_widget->initialize_menubar(*window));
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
-        if (main_widget->request_close()) {
-            GUI::DynamicWidgetContainer::close_all_detached_windows();
+        if (main_widget->request_close())
             return GUI::Window::CloseRequestDecision::Close;
-        }
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 

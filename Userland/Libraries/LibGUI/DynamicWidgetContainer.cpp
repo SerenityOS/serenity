@@ -229,6 +229,7 @@ ErrorOr<void> DynamicWidgetContainer::detach_widgets()
         auto detached_window = TRY(GUI::Window::try_create());
         detached_window->set_title(section_label().to_byte_string());
         detached_window->set_window_type(WindowType::Normal);
+        detached_window->set_is_detached_widget_window(true);
         if (has_detached_size())
             detached_window->resize(detached_size());
         else

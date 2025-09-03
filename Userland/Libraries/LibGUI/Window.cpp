@@ -18,6 +18,7 @@
 #include <LibGUI/ConnectionToWindowManagerServer.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Desktop.h>
+#include <LibGUI/DynamicWidgetContainer.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/MenuItem.h>
 #include <LibGUI/Menubar.h>
@@ -155,6 +156,10 @@ void Window::close()
     hide();
     if (m_save_size_and_position_on_close)
         save_size_and_position(m_save_domain, m_save_group);
+
+    if (!m_is_detached_widget_window)
+        DynamicWidgetContainer::close_all_detached_windows();
+
     if (on_close)
         on_close();
 }

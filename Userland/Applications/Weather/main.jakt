@@ -194,11 +194,6 @@ fn main() {
     mut view = window.set_main_widget<UnderlyingClassTypeOf<View>>().self()
     window.resize(width: 800, height: 600)
 
-    window.on_close_request = fn() -> GUI::Window::CloseRequestDecision {
-        GUI::DynamicWidgetContainer::close_all_detached_windows()
-        return GUI::Window::CloseRequestDecision::Close
-    }
-
     view.initialize()
     window.show()
 
