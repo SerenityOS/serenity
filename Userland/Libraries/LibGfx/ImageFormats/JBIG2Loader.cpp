@@ -764,6 +764,44 @@ static ErrorOr<size_t> scan_for_immediate_generic_region_size(ReadonlyBytes data
     return size;
 }
 
+static ErrorOr<void> validate_segment_header_retention_flags(Vector<JBIG2::SegmentHeader> const& segment_headers)
+{
+    // "If the retain bit for this segment value is 0, then no segment may refer to this segment.
+    //  If the retain bit for the first referred-to segment value is 0, then no segment after this one may refer to the first segment
+    //  that this segment refers to (i.e., this segment is the last segment that refers to that other segment)"
+    HashTable<int> dead_segments;
+
+    for (auto const& header : segment_headers) {
+        if (header.retention_flag) {
+            // Guaranteed because decode_segment_header() guarantees referred_to_segment_numbers are larger than segment_number.
+            VERIFY(!dead_segments.contains(header.segment_number));
+        } else {
+            if (dead_segments.set(header.segment_number) != HashSetResult::InsertedNewEntry)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid segment retention flags");
+        }
+
+        for (auto const& [i, referred_to_segment_number] : enumerate(header.referred_to_segment_numbers)) {
+            // Quirk: t89-halftone/*-stripe.jb2 have one PatternDictionary and then one ImmediateHalftoneRegion per stripe,
+            // but each ImmediateHalftoneRegion (incorrectly?) sets the retention flag for the PatternDictionary to 0.
+            // For now, just skip this check for ImmediateHalftoneRegion segments.
+            if (dead_segments.contains(referred_to_segment_number) && header.type != JBIG2::SegmentType::ImmediateHalftoneRegion)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment refers to dead segment");
+
+            auto const referred_to_segment_retention_flag = header.referred_to_segment_retention_flags[i];
+            if (referred_to_segment_retention_flag) {
+                if (dead_segments.contains(referred_to_segment_number))
+                    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment retention flags tried to revive dead segment");
+            } else {
+                dead_segments.set(referred_to_segment_number);
+            }
+        }
+    }
+
+    // It is not true that all segments are marked as dead at the end of the file.
+
+    return {};
+}
+
 static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, ReadonlyBytes data)
 {
     FixedMemoryStream stream(data);
@@ -820,6 +858,8 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
         if (context.segments_by_number.set(segment_headers[i].segment_number, context.segments.size() - 1) != HashSetResult::InsertedNewEntry)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Duplicate segment number");
     }
+
+    TRY(validate_segment_header_retention_flags(segment_headers));
 
     return {};
 }
