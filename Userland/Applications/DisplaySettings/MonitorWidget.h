@@ -17,7 +17,7 @@ class MonitorWidget final : public GUI::Widget {
 
 public:
     static ErrorOr<NonnullRefPtr<MonitorWidget>> try_create();
-    bool set_wallpaper(String path);
+    bool set_wallpaper(ByteString path);
     Optional<StringView> wallpaper() const;
 
     void set_wallpaper_mode(String mode);
@@ -41,21 +41,21 @@ private:
 
     virtual void paint_event(GUI::PaintEvent& event) override;
 
-    void load_wallpaper(String path);
+    void load_wallpaper(ByteString path);
 
     Gfx::IntRect m_monitor_rect;
     RefPtr<Gfx::Bitmap> m_monitor_bitmap;
     RefPtr<Gfx::Bitmap> m_desktop_bitmap;
     bool m_desktop_dirty { true };
 
-    Optional<String> m_desktop_wallpaper_path;
+    Optional<ByteString> m_desktop_wallpaper_path;
     RefPtr<Gfx::Bitmap> m_wallpaper_bitmap;
     String m_desktop_wallpaper_mode;
     Gfx::IntSize m_desktop_resolution;
     int m_desktop_scale_factor { 1 };
     Gfx::Color m_desktop_color;
 
-    bool is_different_to_current_wallpaper_path(String const& path)
+    bool is_different_to_current_wallpaper_path(ByteString const& path)
     {
         if (!path.is_empty())
             return path != m_desktop_wallpaper_path;

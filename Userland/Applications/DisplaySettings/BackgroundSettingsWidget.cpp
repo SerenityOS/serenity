@@ -134,15 +134,10 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
     m_wallpaper_view = *find_descendant_of_type_named<GUI::IconView>("wallpaper_view");
     m_wallpaper_view->set_model(WallpapersModel::create());
     m_wallpaper_view->on_selection_change = [this] {
-        String path;
+        ByteString path;
         if (!m_wallpaper_view->selection().is_empty()) {
             auto index = m_wallpaper_view->selection().first();
-            auto path_or_error = String::from_byte_string(static_cast<WallpapersModel*>(m_wallpaper_view->model())->full_path(index));
-            if (path_or_error.is_error()) {
-                GUI::MessageBox::show_error(window(), "Unable to load wallpaper"sv);
-                return;
-            }
-            path = path_or_error.release_value();
+            path = static_cast<WallpapersModel*>(m_wallpaper_view->model())->full_path(index);
         }
 
         m_monitor_widget->set_wallpaper(path);
@@ -186,7 +181,7 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
         if (response.is_error())
             return;
         m_wallpaper_view->selection().clear();
-        m_monitor_widget->set_wallpaper(MUST(String::from_byte_string(response.release_value().filename())));
+        m_monitor_widget->set_wallpaper(response.release_value().filename());
         m_background_settings_changed = true;
         set_modified(true);
     };
@@ -216,8 +211,8 @@ ErrorOr<void> BackgroundSettingsWidget::load_current_settings()
 {
     auto ws_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini"));
 
-    auto selected_wallpaper = TRY(String::from_byte_string(Config::read_string("WindowManager"sv, "Background"sv, "Wallpaper"sv, ""sv)));
-    auto index = static_cast<WallpapersModel*>(m_wallpaper_view->model())->index_for_path(selected_wallpaper.to_byte_string());
+    auto selected_wallpaper = GUI::Desktop::the().wallpaper_path();
+    auto index = static_cast<WallpapersModel*>(m_wallpaper_view->model())->index_for_path(selected_wallpaper);
     m_wallpaper_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
     m_monitor_widget->set_wallpaper(selected_wallpaper);
 
