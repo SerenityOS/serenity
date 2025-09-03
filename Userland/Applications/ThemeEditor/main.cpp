@@ -72,7 +72,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->restore_size_and_position("ThemeEditor"sv, "Window"sv, { { 820, 520 } });
     window->save_size_and_position_on_close("ThemeEditor"sv, "Window"sv);
-    window->set_resizable(false);
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
     return app->exec();
