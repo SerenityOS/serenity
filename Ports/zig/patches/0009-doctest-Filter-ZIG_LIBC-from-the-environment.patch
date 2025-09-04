@@ -10,10 +10,10 @@ them to look for the host libraries in the target libc locations.
  1 file changed, 5 insertions(+)
 
 diff --git a/zig/tools/doctest.zig b/zig/tools/doctest.zig
-index a762b8d0b94d7b415b47f9b7bdbca1c6fe19177c..bb969ebe0feeba15845cbd96ceb2789873faa2a0 100644
+index ccdbc6b065c9b6c6fae58aea742c9df973bcf36a..cf4b0ae4426c6d41a751f6d04ce0e772895455c5 100644
 --- a/zig/tools/doctest.zig
 +++ b/zig/tools/doctest.zig
-@@ -122,6 +122,11 @@ fn printOutput(
+@@ -123,6 +123,11 @@ fn printOutput(
      var env_map = try process.getEnvMap(arena);
      try env_map.put("CLICOLOR_FORCE", "1");
  

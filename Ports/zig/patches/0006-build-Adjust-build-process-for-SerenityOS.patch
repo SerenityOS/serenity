@@ -8,7 +8,7 @@ Subject: [PATCH] build: Adjust build process for SerenityOS
  1 file changed, 34 insertions(+), 1 deletion(-)
 
 diff --git a/build b/build
-index 5a807c1a31ac357de2dcae8ca937652a62e6e23e..0a71c76353fdbed4b2de884879a1a406ccab78ce 100755
+index b2ae31140a658aff69861b296fdb8baf96909c5d..4efb47a6a16bbfe516b37bc4f7dc328326097fdf 100755
 --- a/build
 +++ b/build
 @@ -19,6 +19,7 @@ case $TARGET_OS_CMAKE in
@@ -19,7 +19,7 @@ index 5a807c1a31ac357de2dcae8ca937652a62e6e23e..0a71c76353fdbed4b2de884879a1a406
    native) TARGET_OS_CMAKE="";;
  esac
  
-@@ -68,6 +69,36 @@ cmake "$ROOTDIR/zig" \
+@@ -66,6 +67,36 @@ cmake "$ROOTDIR/zig" \
    -DCMAKE_BUILD_TYPE=Release \
    -DZIG_VERSION="$ZIG_VERSION"
  cmake --build . --target install
@@ -56,7 +56,7 @@ index 5a807c1a31ac357de2dcae8ca937652a62e6e23e..0a71c76353fdbed4b2de884879a1a406
  
  # Now we have Zig as a cross compiler.
  ZIG="$ROOTDIR/out/host/bin/zig"
-@@ -88,7 +119,8 @@ cmake "$ROOTDIR/zlib" \
+@@ -86,7 +117,8 @@ cmake "$ROOTDIR/zlib" \
    -DCMAKE_LINK_DEPENDS_USE_LINKER=OFF \
    -DCMAKE_RC_COMPILER="$ROOTDIR/out/host/bin/llvm-rc" \
    -DCMAKE_AR="$ROOTDIR/out/host/bin/llvm-ar" \
@@ -66,7 +66,7 @@ index 5a807c1a31ac357de2dcae8ca937652a62e6e23e..0a71c76353fdbed4b2de884879a1a406
  cmake --build . --target install
  
  # Same deal for zstd.
-@@ -152,6 +184,7 @@ cmake "$ROOTDIR/llvm" \
+@@ -150,6 +182,7 @@ cmake "$ROOTDIR/llvm" \
    -DCMAKE_RC_COMPILER="$ROOTDIR/out/host/bin/llvm-rc" \
    -DCMAKE_AR="$ROOTDIR/out/host/bin/llvm-ar" \
    -DCMAKE_RANLIB="$ROOTDIR/out/host/bin/llvm-ranlib" \

@@ -14,10 +14,10 @@ Co-Authored-By: Linus Groh <mail@linusgroh.de>
  6 files changed, 116 insertions(+), 10 deletions(-)
 
 diff --git a/zig/lib/std/c.zig b/zig/lib/std/c.zig
-index a8ad12212d756e2a3d018aff0aee31819489a47c..417d30bf44e0b9b58c28fe58306795f3dc7cb09e 100644
+index 516185878b62624fb329934a2cbb488f2ca7d98d..66893ba58e01faa24be77c7f19ad4ddd3e35b0e9 100644
 --- a/zig/lib/std/c.zig
 +++ b/zig/lib/std/c.zig
-@@ -10947,7 +10947,7 @@ pub const LC = enum(c_int) {
+@@ -10969,7 +10969,7 @@ pub const LC = enum(c_int) {
  
  pub extern "c" fn setlocale(category: LC, locale: ?[*:0]const u8) ?[*:0]const u8;
  
@@ -27,7 +27,7 @@ index a8ad12212d756e2a3d018aff0aee31819489a47c..417d30bf44e0b9b58c28fe58306795f3
      else if (native_os == .linux and builtin.target.abi.isMusl())
          linux.getcontext
 diff --git a/zig/lib/std/debug/Dwarf/abi.zig b/zig/lib/std/debug/Dwarf/abi.zig
-index b8b644e026a5845553070cebf5faaf5a9bce2a63..b805a254ee8a93d49beecd960fd773953b0525a3 100644
+index c5e509c7b0f944049d83637012be29f730764d3a..6917b25f603574ba4def19e6b9fd3a2845e227d1 100644
 --- a/zig/lib/std/debug/Dwarf/abi.zig
 +++ b/zig/lib/std/debug/Dwarf/abi.zig
 @@ -203,7 +203,7 @@ pub fn regBytes(
@@ -69,7 +69,7 @@ index b8b644e026a5845553070cebf5faaf5a9bce2a63..b805a254ee8a93d49beecd960fd77395
      };
  }
 diff --git a/zig/lib/std/debug/SelfInfo.zig b/zig/lib/std/debug/SelfInfo.zig
-index 3f1514a957e1096fa59121e599beb76a6a638225..d7bffce61b230b12ddf9751ae1b3197eb1d26474 100644
+index f77d14b913d21878f2eebaab082c727206e122ba..fdae46333ce8b80e33a41b5058a84178e2f693bb 100644
 --- a/zig/lib/std/debug/SelfInfo.zig
 +++ b/zig/lib/std/debug/SelfInfo.zig
 @@ -53,6 +53,7 @@ pub fn open(allocator: Allocator) OpenError!SelfInfo {
@@ -80,7 +80,7 @@ index 3f1514a957e1096fa59121e599beb76a6a638225..d7bffce61b230b12ddf9751ae1b3197e
              => return try SelfInfo.init(allocator),
              else => return error.UnsupportedOperatingSystem,
          }
-@@ -794,7 +795,7 @@ pub const Module = switch (native_os) {
+@@ -798,7 +799,7 @@ pub const Module = switch (native_os) {
              };
          }
      },
@@ -89,7 +89,7 @@ index 3f1514a957e1096fa59121e599beb76a6a638225..d7bffce61b230b12ddf9751ae1b3197e
      .wasi, .emscripten => struct {
          pub fn deinit(self: *@This(), allocator: Allocator) void {
              _ = self;
-@@ -1812,7 +1813,7 @@ pub fn supportsUnwinding(target: *const std.Target) bool {
+@@ -1807,7 +1808,7 @@ pub fn supportsUnwinding(target: *const std.Target) bool {
              else => false,
          },
          .x86_64 => switch (target.os.tag) {
@@ -98,7 +98,7 @@ index 3f1514a957e1096fa59121e599beb76a6a638225..d7bffce61b230b12ddf9751ae1b3197e
              else => false,
          },
          .arm, .armeb, .thumb, .thumbeb => switch (target.os.tag) {
-@@ -1820,7 +1821,7 @@ pub fn supportsUnwinding(target: *const std.Target) bool {
+@@ -1815,7 +1816,7 @@ pub fn supportsUnwinding(target: *const std.Target) bool {
              else => false,
          },
          .aarch64, .aarch64_be => switch (target.os.tag) {
@@ -108,7 +108,7 @@ index 3f1514a957e1096fa59121e599beb76a6a638225..d7bffce61b230b12ddf9751ae1b3197e
          },
          // Unwinding is possible on other targets but this implementation does
 diff --git a/zig/lib/std/fs/Dir.zig b/zig/lib/std/fs/Dir.zig
-index 16418d216fb0628e5836b451f0821668c57c3688..159b6d6335ee26758996ec7177bdca657edd7105 100644
+index d097573122eb9d9ae0e6e78936bb8720d3a9bc91..a2baf34716f5fb8b79a6ec7d93ef579d8a42d4b5 100644
 --- a/zig/lib/std/fs/Dir.zig
 +++ b/zig/lib/std/fs/Dir.zig
 @@ -239,6 +239,74 @@ pub const Iterator = switch (native_os) {
@@ -199,7 +199,7 @@ index 16418d216fb0628e5836b451f0821668c57c3688..159b6d6335ee26758996ec7177bdca65
              .dir = self,
              .offset = 0,
 diff --git a/zig/lib/std/zig/LibCInstallation.zig b/zig/lib/std/zig/LibCInstallation.zig
-index 7f6b89ddfc4ea63fe4f2ce41b818e3da24eae439..657db75125ec0f61c12c2978fb6f7226e0343ac5 100644
+index 0414d32ee7d661c9202ad90a47c9adca637aa563..ae0cadf537cbe2bf3e48fea26b5ef4a87f4d1af5 100644
 --- a/zig/lib/std/zig/LibCInstallation.zig
 +++ b/zig/lib/std/zig/LibCInstallation.zig
 @@ -101,7 +101,7 @@ pub fn parse(

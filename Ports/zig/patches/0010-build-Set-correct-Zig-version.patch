@@ -11,15 +11,15 @@ patch the version too.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/build b/build
-index 2250ef15a49cf1b21e463f05fb4a4556cb569363..41e35c0ca36dfec43500409ab19921e5450a7ff4 100755
+index b1e6ec59fea5dc6826d3c503fbdade9b132ac4b2..2a59d03935077aeb6e62e3228971aa20869ad4c3 100755
 --- a/build
 +++ b/build
 @@ -7,7 +7,7 @@ TARGET="$1" # Example: riscv64-linux-gnu
  MCPU="$2" # Examples: `baseline`, `native`, `generic+v7a`, or `arm1176jzf_s`
  
  ROOTDIR="$(pwd)"
--ZIG_VERSION="0.15.0-dev.1601+c1483eb05"
-+ZIG_VERSION="0.16.0-dev.9+8248597a2"
+-ZIG_VERSION="0.16.0-dev.157+7fdd60df1"
++ZIG_VERSION="0.16.0-dev.164+bc7955306"
  
  TARGET_OS_AND_ABI=${TARGET#*-} # Example: linux-gnu
  

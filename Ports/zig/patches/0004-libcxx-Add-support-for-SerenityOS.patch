@@ -23,8 +23,8 @@ Co-Authored-By: Linus Groh <mail@linusgroh.de>
  zig/lib/libcxx/include/__config               |  5 +++--
  .../include/__locale_dir/locale_base_api.h    |  2 ++
  .../__locale_dir/locale_base_api/serenity.h   | 22 +++++++++++++++++++
+ .../libcxx/include/__locale_dir/messages.h    |  2 +-
  .../include/__support/ibm/locale_mgmt_zos.h   |  2 +-
- zig/lib/libcxx/include/locale                 |  2 +-
  zig/lib/libcxx/src/include/config_elast.h     |  2 ++
  .../libcxx/src/support/ibm/xlocale_zos.cpp    |  2 ++
  zig/src/libs/libcxx.zig                       |  3 ++-
@@ -32,10 +32,10 @@ Co-Authored-By: Linus Groh <mail@linusgroh.de>
  create mode 100644 zig/lib/libcxx/include/__locale_dir/locale_base_api/serenity.h
 
 diff --git a/zig/lib/libcxx/include/__config b/zig/lib/libcxx/include/__config
-index fec323f8125f78a678817dbf5c7572689f7135cb..b44e066de1ef4cb147b476f69d87384c0e80e5b4 100644
+index 41cb6ac3b68909a53ff2e91ce8e25d36b878ca0c..a0c82b477a074f3eb67efaf200905d2026b50586 100644
 --- a/zig/lib/libcxx/include/__config
 +++ b/zig/lib/libcxx/include/__config
-@@ -825,7 +825,8 @@ typedef __char32_t char32_t;
+@@ -842,7 +842,8 @@ typedef __char32_t char32_t;
          defined(__APPLE__) ||                                                                                          \
          defined(__MVS__) ||                                                                                            \
          defined(_AIX) ||                                                                                               \
@@ -45,7 +45,7 @@ index fec323f8125f78a678817dbf5c7572689f7135cb..b44e066de1ef4cb147b476f69d87384c
  // clang-format on
  #      undef _LIBCPP_HAS_THREAD_API_PTHREAD
  #      define _LIBCPP_HAS_THREAD_API_PTHREAD 1
-@@ -908,7 +909,7 @@ typedef __char32_t char32_t;
+@@ -925,7 +926,7 @@ typedef __char32_t char32_t;
  #  endif
  
  #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
@@ -55,18 +55,18 @@ index fec323f8125f78a678817dbf5c7572689f7135cb..b44e066de1ef4cb147b476f69d87384c
  #  endif
  
 diff --git a/zig/lib/libcxx/include/__locale_dir/locale_base_api.h b/zig/lib/libcxx/include/__locale_dir/locale_base_api.h
-index 538b194ec35a6a5ffc76ed6b464a5cb8b464ee53..a9b1843cd1f070f95ade925a8afc0bd7b02263c7 100644
+index 5e6c69e95e72272e364eaede55f84e102a5c7fb9..4c0dc7894f343bb67217b263461cee38767f65cc 100644
 --- a/zig/lib/libcxx/include/__locale_dir/locale_base_api.h
 +++ b/zig/lib/libcxx/include/__locale_dir/locale_base_api.h
-@@ -135,6 +135,8 @@
- #    include <__locale_dir/locale_base_api/openbsd.h>
- #  elif defined(__wasi__) || _LIBCPP_HAS_MUSL_LIBC
- #    include <__locale_dir/locale_base_api/musl.h>
-+#  elif defined(__serenity__)
-+#    include <__locale_dir/locale_base_api/serenity.h>
- #  endif
- 
- #  include <__locale_dir/locale_base_api/bsd_locale_fallbacks.h>
+@@ -136,6 +136,8 @@
+ #      include <__locale_dir/locale_base_api/android.h>
+ #    elif defined(__OpenBSD__)
+ #      include <__locale_dir/locale_base_api/openbsd.h>
++#    elif defined(__serenity__)
++#      include <__locale_dir/locale_base_api/serenity.h>
+ #    elif defined(__wasi__) || _LIBCPP_HAS_MUSL_LIBC
+ #      include <__locale_dir/locale_base_api/musl.h>
+ #    endif
 diff --git a/zig/lib/libcxx/include/__locale_dir/locale_base_api/serenity.h b/zig/lib/libcxx/include/__locale_dir/locale_base_api/serenity.h
 new file mode 100644
 index 0000000000000000000000000000000000000000..13abb601dcb75d1459df0b943ef6ca3e911c8e46
@@ -95,6 +95,19 @@ index 0000000000000000000000000000000000000000..13abb601dcb75d1459df0b943ef6ca3e
 +#include <cwctype>
 +
 +#endif // _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
+diff --git a/zig/lib/libcxx/include/__locale_dir/messages.h b/zig/lib/libcxx/include/__locale_dir/messages.h
+index c04bf04025ff0ab99370bc201a5cf14f475aa485..0a9ee60e0e6bd02061ab0ffd04d096e4fab65976 100644
+--- a/zig/lib/libcxx/include/__locale_dir/messages.h
++++ b/zig/lib/libcxx/include/__locale_dir/messages.h
+@@ -22,7 +22,7 @@
+ 
+ #  if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+ // Most unix variants have catopen.  These are the specific ones that don't.
+-#    if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__)
++#    if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
+ #      define _LIBCPP_HAS_CATOPEN 1
+ #      include <nl_types.h>
+ #    else
 diff --git a/zig/lib/libcxx/include/__support/ibm/locale_mgmt_zos.h b/zig/lib/libcxx/include/__support/ibm/locale_mgmt_zos.h
 index 5fc04b6b4b2990c1a5f5b7fae083108c27e907b5..787cc04d57929537d73d871ffd10d1467c3565cf 100644
 --- a/zig/lib/libcxx/include/__support/ibm/locale_mgmt_zos.h
@@ -108,19 +121,6 @@ index 5fc04b6b4b2990c1a5f5b7fae083108c27e907b5..787cc04d57929537d73d871ffd10d146
  #  include <locale.h>
  #  include <string>
  
-diff --git a/zig/lib/libcxx/include/locale b/zig/lib/libcxx/include/locale
-index 5af674d19414b45ef066cfeac9c9c69f85fab00d..3f8526776beb4c036232ab0786a512bfdd124cc8 100644
---- a/zig/lib/libcxx/include/locale
-+++ b/zig/lib/libcxx/include/locale
-@@ -224,7 +224,7 @@ template <class charT> class messages_byname;
- 
- #    if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
- // Most unix variants have catopen.  These are the specific ones that don't.
--#      if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__)
-+#      if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
- #        define _LIBCPP_HAS_CATOPEN 1
- #        include <nl_types.h>
- #      else
 diff --git a/zig/lib/libcxx/src/include/config_elast.h b/zig/lib/libcxx/src/include/config_elast.h
 index 7edff2d9375d46f465a1d72b916b1ccb1a555724..ba24e85be8d0a2b4502d5986377081c1bcd036ee 100644
 --- a/zig/lib/libcxx/src/include/config_elast.h

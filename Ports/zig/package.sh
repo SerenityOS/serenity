@@ -1,16 +1,16 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 
 port='zig'
-version='0.16.0-dev.9+8248597a2'
+version='0.16.0-dev.172+a11dfaf61'
 files=(
-    'https://github.com/ziglang/zig-bootstrap/archive/c6bc9398c72c7a63fe9420a9055dcfd1845bc266.tar.gz#ff051150d10333a6dfaa91173d79b10498cf3d77a09bb27cbcc8818ed3127013'
-    'https://github.com/ziglang/zig/archive/8248597a2726663a89e31896f0e9751db5b9db82.tar.gz#3e0937fda9cb822cfb6f88c0315658664262480f367beec62c3abeed93200db4'
+    'https://github.com/ziglang/zig-bootstrap/archive/72469a02edf7a64339d19d24d677cde9bc74c874.tar.gz#acb65327026266246fde1054d759941b1b8d465f2f11b4329f2d753b34635e93'
+    'https://github.com/ziglang/zig/archive/a11dfaf61aa83df6c58b647e20c1a03d2e767f7b.tar.gz#64060ce040fdaf0a5eaf7eb8de573c9e134baa7b08be717fad4ae5b71a1966c0'
 )
 
 # The actual directory to build in.
-workdir='zig-bootstrap-c6bc9398c72c7a63fe9420a9055dcfd1845bc266'
+workdir='zig-bootstrap-72469a02edf7a64339d19d24d677cde9bc74c874'
 # The newer Zig directory we move into the workdir.
-zigdir='zig-8248597a2726663a89e31896f0e9751db5b9db82'
+zigdir='zig-a11dfaf61aa83df6c58b647e20c1a03d2e767f7b'
 
 # TODO: This should probably be exported by .hosted_defs.sh for convenience
 ports_dir=$(realpath "$(dirname "${BASH_SOURCE[0]}")/..")
