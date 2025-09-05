@@ -71,6 +71,8 @@ MapWidget::MapWidget(Options const& options)
     , m_scale_max_width(options.scale_max_width)
     , m_attribution_enabled(options.attribution_enabled)
 {
+    Config::monitor_domain("Maps");
+
     m_request_client = Protocol::RequestClient::try_create().release_value_but_fixme_should_propagate_errors();
     if (options.attribution_enabled) {
         auto attribution_text = options.attribution_text.value_or(MUST(String::from_byte_string(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderAttributionText"sv, Maps::default_tile_provider_attribution_text))));
