@@ -26,38 +26,41 @@
         }
     }
 
-    // Start, empty and places are toggled in visibility
-    @GUI::Frame {
-        name: "start_container"
-        frame_style: "SunkenPanel"
-        layout: @GUI::VerticalBoxLayout {
-            margins: [4]
+    @GUI::StackWidget {
+        name: "stack_widget"
+
+        @GUI::Frame {
+            name: "start_container"
+            frame_style: "SunkenPanel"
+            layout: @GUI::VerticalBoxLayout {
+                margins: [4]
+            }
+
+            @GUI::Label {
+                text: "Enter a search query to search for places..."
+                text_alignment: "CenterLeft"
+            }
         }
 
-        @GUI::Label {
-            text: "Enter a search query to search for places..."
-            text_alignment: "CenterLeft"
-        }
-    }
+        @GUI::Frame {
+            name: "empty_container"
+            frame_style: "SunkenPanel"
+            layout: @GUI::VerticalBoxLayout {
+                margins: [4]
+            }
 
-    @GUI::Frame {
-        name: "empty_container"
-        frame_style: "SunkenPanel"
-        layout: @GUI::VerticalBoxLayout {
-            margins: [4]
+            @GUI::Label {
+                text: "Can't find any places with the search query"
+                text_alignment: "CenterLeft"
+            }
         }
 
-        @GUI::Label {
-            text: "Can't find any places with the search query"
-            text_alignment: "CenterLeft"
+        @GUI::ListView {
+            name: "places_list"
+            horizontal_padding: 6
+            vertical_padding: 4
+            should_hide_unnecessary_scrollbars: true
+            alternating_row_colors: false
         }
-    }
-
-    @GUI::ListView {
-        name: "places_list"
-        horizontal_padding: 6
-        vertical_padding: 4
-        should_hide_unnecessary_scrollbars: true
-        alternating_row_colors: false
     }
 }

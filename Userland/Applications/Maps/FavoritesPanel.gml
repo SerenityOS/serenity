@@ -2,9 +2,7 @@
     min_width: 100
     preferred_width: 200
     max_width: 350
-    layout: @GUI::VerticalBoxLayout {}
 
-    // Empty and favorites are toggled in visibility
     @GUI::Frame {
         name: "empty_container"
         frame_style: "SunkenPanel"

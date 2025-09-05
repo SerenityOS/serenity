@@ -8,10 +8,11 @@
 
 #include "FavoritesModel.h"
 #include <LibGUI/ListView.h>
+#include <LibGUI/StackWidget.h>
 
 namespace Maps {
 
-class FavoritesPanel final : public GUI::Widget {
+class FavoritesPanel final : public GUI::StackWidget {
     C_OBJECT(FavoritesPanel)
 
 public:
@@ -26,10 +27,9 @@ public:
     Function<void(Vector<Favorite> const&)> on_favorites_change;
     Function<void(Favorite const&)> on_selected_favorite_change;
 
-protected:
+private:
     FavoritesPanel() = default;
 
-private:
     ErrorOr<void> edit_favorite(GUI::ModelIndex const& index);
     void favorites_changed();
 
