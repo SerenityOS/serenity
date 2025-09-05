@@ -17,7 +17,7 @@ namespace HackStudio {
 
 class ProjectTemplate : public RefCounted<ProjectTemplate> {
 public:
-    static ByteString templates_path() { return "/res/devel/templates"; }
+    static ByteString templates_path() { return "/usr/share/HackStudio/templates"; }
 
     static RefPtr<ProjectTemplate> load_from_manifest(ByteString const& manifest_path);
 

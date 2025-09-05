@@ -135,11 +135,11 @@ if [ -f mnt/bin/network-settings ]; then
 fi
 
 chmod 600 mnt/etc/shadow
-chmod 755 mnt/res/devel/templates/*.postcreate
+chmod 755 mnt/usr/share/HackStudio/templates/*.postcreate
 echo "done"
 
 printf "creating initial filesystem structure... "
-for dir in bin etc proc mnt tmp boot www var/run usr/local usr/Ports usr/bin; do
+for dir in bin etc proc mnt tmp boot var/run usr/local usr/Ports usr/bin; do
     mkdir -p mnt/$dir
 done
 chmod 700 mnt/boot
