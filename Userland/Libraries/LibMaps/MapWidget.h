@@ -138,7 +138,10 @@ protected:
     RefPtr<Protocol::RequestClient> request_client() const { return m_request_client; }
 
 private:
+    // ^Config::Listener
     virtual void config_string_did_change(StringView domain, StringView group, StringView key, StringView value) override;
+    virtual void config_key_was_removed(StringView domain, StringView group, StringView key) override;
+
     virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
@@ -193,6 +196,7 @@ private:
     int m_last_mouse_x { 0 };
     int m_last_mouse_y { 0 };
     bool m_first_image_loaded { false };
+    bool m_tile_provider_invalid { false };
     bool m_connection_failed { false };
     OrderedHashMap<TileKey, RefPtr<Gfx::Bitmap>> m_tiles;
     Vector<Marker> m_markers;
