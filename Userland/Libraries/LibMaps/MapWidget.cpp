@@ -97,6 +97,7 @@ void MapWidget::config_string_did_change(StringView domain, StringView group, St
 
     if (key == "TileProviderUrlFormat") {
         // When config tile provider changes clear all active requests and loaded tiles
+        m_tile_provider_invalid = false;
         m_default_tile_provider = MUST(String::from_utf8(value));
         m_first_image_loaded = false;
         m_active_requests.clear();
@@ -105,7 +106,6 @@ void MapWidget::config_string_did_change(StringView domain, StringView group, St
     }
 
     if (key == "TileProviderAttributionText") {
-        // Update attribution panel text when it exists
         for (auto& panel : m_panels) {
             if (panel.name == "attribution") {
                 panel.text = MUST(String::from_utf8(value));
@@ -116,10 +116,34 @@ void MapWidget::config_string_did_change(StringView domain, StringView group, St
     }
 
     if (key == "TileProviderAttributionUrl") {
-        // Update attribution panel url when it exists
         for (auto& panel : m_panels) {
             if (panel.name == "attribution") {
                 panel.url = URL::URL(value);
+                return;
+            }
+        }
+    }
+}
+
+void MapWidget::config_key_was_removed(StringView domain, StringView group, StringView key)
+{
+    if (domain != "Maps" || group != "MapWidget")
+        return;
+
+    if (key == "TileProviderAttributionText") {
+        for (auto& panel : m_panels) {
+            if (panel.name == "attribution") {
+                panel.text = MUST(String::from_utf8(Maps::default_tile_provider_attribution_text));
+                return;
+            }
+        }
+        update();
+    }
+
+    if (key == "TileProviderAttributionUrl") {
+        for (auto& panel : m_panels) {
+            if (panel.name == "attribution") {
+                panel.url = URL::URL(Maps::default_tile_provider_attribution_url);
                 return;
             }
         }
@@ -134,7 +158,7 @@ void MapWidget::doubleclick_event(GUI::MouseEvent& event)
 
 void MapWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    if (m_connection_failed)
+    if (m_tile_provider_invalid || m_connection_failed)
         return;
 
     if (event.button() == GUI::MouseButton::Primary) {
@@ -153,7 +177,7 @@ void MapWidget::mousedown_event(GUI::MouseEvent& event)
 
 void MapWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    if (m_connection_failed)
+    if (m_tile_provider_invalid || m_connection_failed)
         return;
 
     if (m_dragging) {
@@ -198,7 +222,7 @@ void MapWidget::mousemove_event(GUI::MouseEvent& event)
 
 void MapWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    if (m_connection_failed)
+    if (m_tile_provider_invalid || m_connection_failed)
         return;
 
     // Stop map tiles dragging
@@ -221,7 +245,7 @@ void MapWidget::mouseup_event(GUI::MouseEvent& event)
 
 void MapWidget::mousewheel_event(GUI::MouseEvent& event)
 {
-    if (m_connection_failed)
+    if (m_tile_provider_invalid || m_connection_failed)
         return;
 
     int new_zoom = event.wheel_delta_y() > 0 ? m_zoom - 1 : m_zoom + 1;
@@ -317,10 +341,19 @@ void MapWidget::process_tile_queue()
     auto tile_key = m_tile_queue.dequeue();
 
     // Start HTTP GET request to load image
+    auto tile_provider_url = MUST(String::formatted(m_tile_provider.value_or(m_default_tile_provider), tile_key.zoom, tile_key.x, tile_key.y));
+    URL::URL url(tile_provider_url);
+    if (!url.is_valid()) {
+        m_tile_provider_invalid = true;
+        dbgln("Tile provider is invalid url: '{}'", tile_provider_url);
+        update();
+        return;
+    }
+
     HTTP::HeaderMap headers;
     headers.set("User-Agent", "SerenityOS Maps");
     headers.set("Accept", "image/png");
-    URL::URL url(MUST(String::formatted(m_tile_provider.value_or(m_default_tile_provider), tile_key.zoom, tile_key.x, tile_key.y)));
+
     auto request = m_request_client->start_request("GET", url, headers, {});
     VERIFY(!request.is_null());
 
@@ -338,7 +371,7 @@ void MapWidget::process_tile_queue()
                 m_first_image_loaded = true;
                 m_connection_failed = true;
             }
-            dbgln("Maps: Can't load image: {}", url);
+            dbgln("Can't load image: '{}'", url);
             return;
         }
         m_first_image_loaded = true;
@@ -346,7 +379,7 @@ void MapWidget::process_tile_queue()
         // Decode loaded PNG image data
         auto decoder_or_err = Gfx::ImageDecoder::try_create_for_raw_bytes(payload, "image/png");
         if (decoder_or_err.is_error() || !decoder_or_err.value() || (decoder_or_err.value()->frame_count() == 0)) {
-            dbgln("Maps: Can't decode image: {}", url);
+            dbgln("Can't decode image: '{}'", url);
             return;
         }
         auto decoder = decoder_or_err.release_value();
@@ -602,6 +635,9 @@ void MapWidget::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.add_clip_rect(frame_inner_rect());
     painter.fill_rect(frame_inner_rect(), map_background_color);
+
+    if (m_tile_provider_invalid)
+        return painter.draw_text(frame_inner_rect(), "Tile provider URL is invalid :^("sv, Gfx::TextAlignment::Center, panel_foreground_color);
 
     if (m_connection_failed)
         return painter.draw_text(frame_inner_rect(), "Failed to fetch map tiles :^("sv, Gfx::TextAlignment::Center, panel_foreground_color);
