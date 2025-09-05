@@ -46,42 +46,62 @@ Vector<ByteString> Client::list_groups(StringView domain)
 
 ByteString Client::read_string(StringView domain, StringView group, StringView key, StringView fallback)
 {
-    return read_string_value(domain, group, key).value_or(fallback);
+    if (auto value = read_string_value(domain, group, key); value.has_value())
+        return value.value();
+
+    // Write back default value, so that config files are complete
+    write_string_value(domain, group, key, fallback, false);
+    return fallback;
 }
 
 i32 Client::read_i32(StringView domain, StringView group, StringView key, i32 fallback)
 {
-    return read_i32_value(domain, group, key).value_or(fallback);
+    if (auto value = read_i32_value(domain, group, key); value.has_value())
+        return value.value();
+
+    // Write back default value, so that config files are complete
+    write_i32_value(domain, group, key, fallback, false);
+    return fallback;
 }
 
 u32 Client::read_u32(StringView domain, StringView group, StringView key, u32 fallback)
 {
-    return read_u32_value(domain, group, key).value_or(fallback);
+    if (auto value = read_u32_value(domain, group, key); value.has_value())
+        return value.value();
+
+    // Write back default value, so that config files are complete
+    write_u32_value(domain, group, key, fallback, false);
+    return fallback;
 }
 
 bool Client::read_bool(StringView domain, StringView group, StringView key, bool fallback)
 {
-    return read_bool_value(domain, group, key).value_or(fallback);
+    if (auto value = read_bool_value(domain, group, key); value.has_value())
+        return value.value();
+
+    // Write back default value, so that config files are complete
+    write_bool_value(domain, group, key, fallback, false);
+    return fallback;
 }
 
 void Client::write_string(StringView domain, StringView group, StringView key, StringView value)
 {
-    write_string_value(domain, group, key, value);
+    write_string_value(domain, group, key, value, true);
 }
 
 void Client::write_i32(StringView domain, StringView group, StringView key, i32 value)
 {
-    write_i32_value(domain, group, key, value);
+    write_i32_value(domain, group, key, value, true);
 }
 
 void Client::write_u32(StringView domain, StringView group, StringView key, u32 value)
 {
-    write_u32_value(domain, group, key, value);
+    write_u32_value(domain, group, key, value, true);
 }
 
 void Client::write_bool(StringView domain, StringView group, StringView key, bool value)
 {
-    write_bool_value(domain, group, key, value);
+    write_bool_value(domain, group, key, value, true);
 }
 
 void Client::remove_key(StringView domain, StringView group, StringView key)
