@@ -47,6 +47,8 @@ public:
     ErrorOr<void> load_from_file(Core::File&);
 
 private:
+    FavoritesModel() = default;
+
     Vector<Favorite> m_favorites;
 };
 

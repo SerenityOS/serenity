@@ -116,8 +116,7 @@ ErrorOr<void> FavoritesPanel::edit_favorite(GUI::ModelIndex const& index)
 void FavoritesPanel::favorites_changed()
 {
     // Update UI
-    m_empty_container->set_visible(m_model->row_count() == 0);
-    m_favorites_list->set_visible(m_model->row_count() > 0);
+    set_active_widget(m_model->row_count() == 0 ? m_empty_container : m_favorites_list);
     on_favorites_change(m_model->favorites());
 
     // Save favorites
