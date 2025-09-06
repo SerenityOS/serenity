@@ -442,10 +442,10 @@ public:
         bool m_did_unblock { false };
     };
 
-    class WaitQueueBlocker final : public Blocker {
+    class DeprecatedWaitQueueBlocker final : public Blocker {
     public:
-        explicit WaitQueueBlocker(WaitQueue&, StringView block_reason = {});
-        virtual ~WaitQueueBlocker();
+        explicit DeprecatedWaitQueueBlocker(DeprecatedWaitQueue&, StringView block_reason = {});
+        virtual ~DeprecatedWaitQueueBlocker();
 
         virtual Type blocker_type() const override { return Type::Queue; }
         virtual StringView state_string() const override { return m_block_reason.is_null() ? m_block_reason : "Queue"sv; }
@@ -455,7 +455,7 @@ public:
         bool unblock();
 
     protected:
-        WaitQueue& m_wait_queue;
+        DeprecatedWaitQueue& m_wait_queue;
         StringView m_block_reason;
         bool m_did_unblock { false };
     };
@@ -825,10 +825,10 @@ public:
     void unblock(u8 signal = 0);
 
     template<class... Args>
-    Thread::BlockResult wait_on(WaitQueue& wait_queue, Thread::BlockTimeout const& timeout, Args&&... args)
+    Thread::BlockResult wait_on(DeprecatedWaitQueue& wait_queue, Thread::BlockTimeout const& timeout, Args&&... args)
     {
         VERIFY(this == Thread::current());
-        return block<Thread::WaitQueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
+        return block<Thread::DeprecatedWaitQueueBlocker>(timeout, wait_queue, forward<Args>(args)...);
     }
 
     BlockResult sleep(clockid_t, Duration const&, Duration* = nullptr);
@@ -859,6 +859,9 @@ public:
     FlatPtr kernel_stack_top() const { return m_kernel_stack_top; }
 
     void set_state(State, u8 = 0);
+    void override_stop_state(State);
+
+    void set_manual_block_handling(bool);
 
     [[nodiscard]] bool is_initialized() const { return m_initialized; }
     void set_initialized(bool initialized) { m_initialized = initialized; }
@@ -1095,7 +1098,7 @@ private:
     IntrusiveListNode<Thread> m_process_thread_list_node;
     int m_runnable_priority { -1 };
 
-    friend class WaitQueue;
+    friend class DeprecatedWaitQueue;
 
     class JoinBlockerSet final : public BlockerSet {
     public:
@@ -1191,6 +1194,7 @@ private:
     IntrusiveListNode<Thread> m_blocked_threads_list_node;
     LockRank m_lock_rank_mask {};
     bool m_allocation_enabled { true };
+    bool m_manual_block_handling { false };
     ArchSpecificThreadData m_arch_specific_data;
 
     // FIXME: remove this after annihilating Process::m_big_lock
