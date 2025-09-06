@@ -529,6 +529,8 @@ struct SegmentData {
     JBIG2::SegmentHeader header;
     ReadonlyBytes data;
 
+    auto type() const { return header.type; }
+
     // Valid after decode_segment_headers().
     Vector<SegmentData*> referred_to_segments;
 
@@ -956,10 +958,10 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
             continue;
 
         // Quirk: Files in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfFile with a page.
-        if (found_end_of_page && segment.header.type != JBIG2::SegmentType::EndOfFile)
+        if (found_end_of_page && segment.type() != JBIG2::SegmentType::EndOfFile)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Found segment after EndOfPage");
 
-        if (segment.header.type == JBIG2::SegmentType::PageInformation) {
+        if (segment.type() == JBIG2::SegmentType::PageInformation) {
             if (++page_info_count > 1)
                 return Error::from_string_literal("JBIG2: Multiple PageInformation segments");
 
@@ -971,7 +973,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
             has_initially_unknown_height = page_information.bitmap_height == 0xffff'ffff;
             if (has_initially_unknown_height && !page_information.page_is_striped())
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-striped bitmaps of indeterminate height not allowed");
-        } else if (segment.header.type == JBIG2::SegmentType::EndOfStripe) {
+        } else if (segment.type() == JBIG2::SegmentType::EndOfStripe) {
             if (page_info_count == 0)
                 return Error::from_string_literal("JBIG2: EndOfStripe before PageInformation");
             if (!page_is_striped)
@@ -996,7 +998,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
 
             height_at_end_of_last_stripe = new_height;
             last_end_of_stripe_index = segment_index;
-        } else if (segment.header.type == JBIG2::SegmentType::EndOfPage) {
+        } else if (segment.type() == JBIG2::SegmentType::EndOfPage) {
             if (segment.data.size() != 0)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of page segment has non-zero size");
             found_end_of_page = true;
@@ -3557,7 +3559,7 @@ static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
         if (segment.header.page_association != 0 && segment.header.page_association != context.current_page_number)
             continue;
 
-        switch (segment.header.type) {
+        switch (segment.type()) {
         case JBIG2::SegmentType::SymbolDictionary:
             TRY(decode_symbol_dictionary(context, segment));
             break;
