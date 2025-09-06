@@ -1136,7 +1136,9 @@ static ErrorOr<JBIG2::RegionSegmentInformationField> decode_region_segment_infor
     if (result.is_color_bitmap() && result.external_combination_operator() != JBIG2::CombinationOperator::Replace)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid colored region segment information field operator");
 
-    // FIXME: Support colors one day. Update validate_segment_header_references() when allowing this.
+    // FIXME: Support colors one day.
+    // Update validate_segment_header_references() when allowing this.
+    // Check that is_color_bitmap is only true if contains_colored_region_segments in the JBIG2 file header is set then.
     if (result.is_color_bitmap())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: COLEXTFLAG=1 not yet implemented");
 
