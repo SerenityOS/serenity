@@ -19,4 +19,4 @@ set(SOURCES
 )
 
 serenity_app(BrowserSettings ICON app-browser)
-target_link_libraries(BrowserSettings PRIVATE LibCore LibGfx LibGUI LibConfig LibMain LibWebView LibURL)
+target_link_libraries(BrowserSettings PRIVATE LibCore LibFileSystem LibGfx LibGUI LibConfig LibMain LibWebView LibURL)
