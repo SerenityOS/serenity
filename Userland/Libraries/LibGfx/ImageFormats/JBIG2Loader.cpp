@@ -7,6 +7,7 @@
 #include <AK/BitStream.h>
 #include <AK/Debug.h>
 #include <AK/Enumerate.h>
+#include <AK/GenericShorthands.h>
 #include <AK/IntegralMath.h>
 #include <AK/Utf16View.h>
 #include <LibGfx/ImageFormats/BilevelImage.h>
@@ -749,9 +750,6 @@ static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& strea
     u32 data_length = TRY(stream.read_value<BigEndian<u32>>());
     dbgln_if(JBIG2_DEBUG, "Segment data length: {}", data_length);
 
-    // FIXME: Add some validity checks:
-    // - 7.3.1 Rules for segment references
-
     Optional<u32> opt_data_length;
     if (data_length != 0xffff'ffff)
         opt_data_length = data_length;
@@ -861,6 +859,156 @@ static bool is_region_segment(JBIG2::SegmentType type)
     }
 }
 
+static bool is_intermediate_region_segment(JBIG2::SegmentType type)
+{
+    switch (type) {
+    case JBIG2::SegmentType::IntermediateTextRegion:
+    case JBIG2::SegmentType::IntermediateHalftoneRegion:
+    case JBIG2::SegmentType::IntermediateGenericRegion:
+    case JBIG2::SegmentType::IntermediateGenericRefinementRegion:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static ErrorOr<void> validate_segment_header_references(JBIG2LoadingContext const& context)
+{
+    // 7.3.1 Rules for segment references
+
+    HashMap<u32, u32> intermediate_region_segment_references;
+    for (auto const& segment : context.segments) {
+        // "• An intermediate region segment may only be referred to by one other non-extension segment; it may be
+        //    referred to by any number of extension segments."
+        for (auto const* referred_to_segment : segment.referred_to_segments) {
+            if (!is_intermediate_region_segment(referred_to_segment->type()) || segment.type() == JBIG2::SegmentType::Extension)
+                continue;
+            if (intermediate_region_segment_references.set(referred_to_segment->header.segment_number, segment.header.segment_number) != HashSetResult::InsertedNewEntry)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Intermediate region segment referred to by multiple non-extension segments");
+        }
+
+        // "• A segment of type "symbol dictionary" (type 0) may refer to any number of segments of type "symbol
+        //    dictionary" and to up to four segments of type "tables"."
+        if (segment.type() == JBIG2::SegmentType::SymbolDictionary) {
+            u32 table_count = 0;
+            for (auto const* referred_to_segment : segment.referred_to_segments) {
+                if (!first_is_one_of(referred_to_segment->type(), JBIG2::SegmentType::SymbolDictionary, JBIG2::SegmentType::Tables))
+                    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol dictionary segment refers to invalid segment type");
+                if (referred_to_segment->type() == JBIG2::SegmentType::Tables)
+                    table_count++;
+            }
+            if (table_count > 4)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol dictionary segment refers to too many tables segments");
+        }
+
+        // "• A segment of type "intermediate text region", "immediate text region" or "immediate lossless text
+        //    region" (type 4, 6 or 7) may refer to any number of segments of type "symbol dictionary" and to up to
+        //    eight segments of type "tables". Additionally, it may refer to any number of segments of type "colour
+        //    palette segment", if it has COLEXTFLAG = 1 in its region segment flags."
+        // Note: decode_region_segment_information_field() currently rejects COLEXTFLAG = 1, so that part is not implemented.
+        if (first_is_one_of(segment.type(),
+                JBIG2::SegmentType::IntermediateTextRegion,
+                JBIG2::SegmentType::ImmediateTextRegion,
+                JBIG2::SegmentType::ImmediateLosslessTextRegion)) {
+            u32 table_count = 0;
+            for (auto const* referred_to_segment : segment.referred_to_segments) {
+                if (!first_is_one_of(referred_to_segment->type(), JBIG2::SegmentType::SymbolDictionary,
+                        JBIG2::SegmentType::Tables))
+                    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Text region segment refers to invalid segment type");
+                if (referred_to_segment->type() == JBIG2::SegmentType::Tables)
+                    table_count++;
+            }
+            if (table_count > 8)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Text region segment refers to too many tables segments");
+        }
+
+        // "• A segment of type "pattern dictionary" (type 16) must not refer to any other segment."
+        if (segment.type() == JBIG2::SegmentType::PatternDictionary && !segment.header.referred_to_segment_numbers.is_empty())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Pattern dictionary segment refers to other segments");
+
+        // "• A segment of type "intermediate halftone region", "immediate halftone region" or "immediate lossless
+        //    halftone region" (type 20, 22 or 23) must refer to exactly one segment, and this segment must be of type
+        //    "pattern dictionary"."
+        if (first_is_one_of(segment.type(),
+                JBIG2::SegmentType::IntermediateHalftoneRegion,
+                JBIG2::SegmentType::ImmediateHalftoneRegion,
+                JBIG2::SegmentType::ImmediateLosslessHalftoneRegion)) {
+            if (segment.referred_to_segments.size() != 1)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone region segment must refer to exactly one pattern dictionary segment");
+            if (segment.referred_to_segments[0]->type() != JBIG2::SegmentType::PatternDictionary)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone region segment refers to non-pattern dictionary segment");
+        }
+
+        // "• A segment of type "intermediate generic region", "immediate generic region" or "immediate lossless
+        //    generic region" (type 36, 38 or 39) must not refer to any other segment. If it has COLEXTFLAG = 1 in
+        //    its region segment flags, however, it may refer to any number of segments of the type "colour palette
+        //   segment"."
+        // Note: decode_region_segment_information_field() currently rejects COLEXTFLAG = 1, so that part is not implemented.
+        if (first_is_one_of(segment.type(),
+                JBIG2::SegmentType::IntermediateGenericRegion,
+                JBIG2::SegmentType::ImmediateGenericRegion,
+                JBIG2::SegmentType::ImmediateLosslessGenericRegion)
+            && !segment.header.referred_to_segment_numbers.is_empty()) {
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Generic region segment refers to other segments");
+        }
+
+        // "• A segment of type "intermediate generic refinement region" (type 40) must refer to exactly one other
+        //    segment. This other segment must be an intermediate region segment."
+        if (segment.type() == JBIG2::SegmentType::IntermediateGenericRefinementRegion) {
+            if (segment.referred_to_segments.size() != 1)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Intermediate generic refinement region must refer to exactly one segment");
+            if (!is_intermediate_region_segment(segment.referred_to_segments[0]->type()))
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Intermediate generic refinement region refers to non-region segment");
+        }
+
+        // "• A segment of type "immediate generic refinement region" or "immediate lossless generic refinement
+        //    region" (type 42 or 43) may refer to either zero other segments or exactly one other segment. If it refers
+        //    to one other segment then that segment must be an intermediate region segment."
+        if (first_is_one_of(segment.type(),
+                JBIG2::SegmentType::ImmediateGenericRefinementRegion,
+                JBIG2::SegmentType::ImmediateLosslessGenericRefinementRegion)) {
+            if (segment.referred_to_segments.size() > 1)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Immediate generic refinement region must refer to zero or one segment");
+            if (segment.referred_to_segments.size() == 1 && !is_intermediate_region_segment(segment.referred_to_segments[0]->type()))
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Immediate generic refinement region refers to non-region segment");
+        }
+
+        // "• A segment of type "page information" (type 48) must not refer to any other segments."
+        if (segment.type() == JBIG2::SegmentType::PageInformation && !segment.header.referred_to_segment_numbers.is_empty())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Page information segment refers to other segments");
+
+        // "• A segment of type "end of page" (type 49) must not refer to any other segments."
+        if (segment.type() == JBIG2::SegmentType::EndOfPage && !segment.header.referred_to_segment_numbers.is_empty())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of page segment refers to other segments");
+
+        // "• A segment of type "end of stripe" (type 50) must not refer to any other segments."
+        if (segment.type() == JBIG2::SegmentType::EndOfStripe && !segment.header.referred_to_segment_numbers.is_empty())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of stripe segment refers to other segments");
+
+        // "• A segment of type "end of file" (type 51) must not refer to any other segments."
+        if (segment.type() == JBIG2::SegmentType::EndOfFile && !segment.header.referred_to_segment_numbers.is_empty())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of file segment refers to other segments");
+
+        // "• A segment of type "profiles" (type 52) must not refer to any other segments."
+        if (segment.type() == JBIG2::SegmentType::Profiles && !segment.header.referred_to_segment_numbers.is_empty())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Profiles segment refers to other segments");
+
+        // "• A segment of type "tables" (type 53) must not refer to any other segments."
+        if (segment.type() == JBIG2::SegmentType::Tables && !segment.header.referred_to_segment_numbers.is_empty())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Tables segment refers to other segments");
+
+        // "• A segment of type "extension" (type 62) may refer to any number of segments of any type, unless the
+        //    extension segment's type imposes some restriction."
+        // Nothing to check.
+
+        // "• A segment of type "colour palette" (type 54) must not refer to any other segments."
+        if (segment.type() == JBIG2::SegmentType::ColorPalette && !segment.header.referred_to_segment_numbers.is_empty())
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Colour palette segment refers to other segments");
+    }
+
+    return {};
+}
+
 static ErrorOr<void> validate_segment_header_page_associations(JBIG2LoadingContext const& context)
 {
     // 7.3.2 Rules for page associations
@@ -967,6 +1115,7 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
     }
 
     TRY(validate_segment_header_retention_flags(segment_headers));
+    TRY(validate_segment_header_references(context));
     TRY(validate_segment_header_page_associations(context));
 
     return {};
@@ -987,6 +1136,7 @@ static ErrorOr<JBIG2::RegionSegmentInformationField> decode_region_segment_infor
     if (result.is_color_bitmap() && result.external_combination_operator() != JBIG2::CombinationOperator::Replace)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid colored region segment information field operator");
 
+    // FIXME: Support colors one day. Update validate_segment_header_references() when allowing this.
     if (result.is_color_bitmap())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: COLEXTFLAG=1 not yet implemented");
 
@@ -3213,8 +3363,7 @@ static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& conte
     // Done!
 
     // "2) Decode (or retrieve the results of decoding) the referred-to pattern dictionary segment."
-    if (segment.referred_to_segments.size() != 1)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment refers to wrong number of segments");
+    VERIFY(segment.referred_to_segments.size() == 1);
     dbgln_if(JBIG2_DEBUG, "Halftone segment refers to segment id {}", segment.referred_to_segments[0]->header.segment_number);
     Vector<NonnullRefPtr<Symbol>> patterns = segment.referred_to_segments[0]->patterns.value();
     if (patterns.is_empty())
