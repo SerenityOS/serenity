@@ -716,7 +716,6 @@ static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& strea
 
     // FIXME: Add some validity checks:
     // - check type is valid
-    // - check referred_to_segment_numbers are smaller than segment_number
     // - 7.3.1 Rules for segment references
     // - 7.3.2 Rules for page associations
 
