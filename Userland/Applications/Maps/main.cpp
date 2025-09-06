@@ -36,8 +36,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/tmp/session/%sid/portal/request", "rw"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    Config::monitor_domain("Maps");
-
     // Window
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-maps"sv));
     auto window = GUI::Window::construct();

@@ -10,6 +10,7 @@
 #include <LibGUI/Frame.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/ListView.h>
+#include <LibGUI/StackWidget.h>
 #include <LibGUI/TextBox.h>
 #include <LibMaps/MapWidget.h>
 #include <LibProtocol/Request.h>
@@ -42,6 +43,7 @@ private:
     RefPtr<Protocol::Request> m_request;
     RefPtr<GUI::TextBox> m_search_textbox;
     RefPtr<GUI::Button> m_search_button;
+    RefPtr<GUI::StackWidget> m_stack_widget;
     RefPtr<GUI::Frame> m_start_container;
     RefPtr<GUI::Frame> m_empty_container;
     RefPtr<GUI::ListView> m_places_list;

@@ -23,7 +23,7 @@ public:
 private:
     MapsSettingsWidget() = default;
 
-    void set_tile_provider(StringView url);
+    void set_tile_provider(StringView tile_provider_url_format);
 
     RefPtr<GUI::ComboBox> m_tile_provider_combobox;
     RefPtr<GUI::Widget> m_custom_tile_provider_group;

@@ -15,12 +15,10 @@ ErrorOr<void> SearchPanel::initialize()
 
     m_search_textbox = *find_descendant_of_type_named<GUI::TextBox>("search_textbox");
     m_search_button = *find_descendant_of_type_named<GUI::Button>("search_button");
+    m_stack_widget = *find_descendant_of_type_named<GUI::StackWidget>("stack_widget");
     m_start_container = *find_descendant_of_type_named<GUI::Frame>("start_container");
     m_empty_container = *find_descendant_of_type_named<GUI::Frame>("empty_container");
     m_places_list = *find_descendant_of_type_named<GUI::ListView>("places_list");
-
-    m_empty_container->set_visible(false);
-    m_places_list->set_visible(false);
 
     m_search_textbox->on_return_pressed = [this]() {
         search(MUST(String::from_byte_string(m_search_textbox->text())));
@@ -44,12 +42,9 @@ void SearchPanel::search(StringView query)
 {
     // Show start container when empty query
     if (query.is_empty()) {
-        m_start_container->set_visible(true);
-        m_empty_container->set_visible(false);
-        m_places_list->set_visible(false);
+        m_stack_widget->set_active_widget(m_start_container);
         return;
     }
-    m_start_container->set_visible(false);
 
     // Start HTTP GET request to load people.json
     HTTP::HeaderMap headers;
@@ -78,8 +73,7 @@ void SearchPanel::search(StringView query)
         // Show empty label when no places are found
         auto json_places = result.release_value().as_array();
         if (json_places.size() == 0) {
-            m_empty_container->set_visible(true);
-            m_places_list->set_visible(false);
+            m_stack_widget->set_active_widget(m_empty_container);
             return;
         }
 
@@ -109,9 +103,8 @@ void SearchPanel::search(StringView query)
         on_places_change(m_places);
 
         // Update and show places list
-        m_empty_container->set_visible(false);
         m_places_list->set_model(*GUI::ItemListModel<String>::create(m_places_names));
-        m_places_list->set_visible(true);
+        m_stack_widget->set_active_widget(m_places_list);
     });
 
     request->on_certificate_requested = []() -> Protocol::Request::CertificateAndKey { return {}; };

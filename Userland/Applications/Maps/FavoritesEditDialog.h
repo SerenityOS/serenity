@@ -14,6 +14,9 @@ class FavoritesEditDialog final : public GUI::Widget {
     C_OBJECT(FavoritesEditDialog)
 public:
     static ErrorOr<NonnullRefPtr<FavoritesEditDialog>> try_create();
+
+private:
+    FavoritesEditDialog() = default;
 };
 
 }
