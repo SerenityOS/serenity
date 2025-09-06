@@ -529,6 +529,9 @@ struct SegmentData {
     JBIG2::SegmentHeader header;
     ReadonlyBytes data;
 
+    // Valid after decode_segment_headers().
+    Vector<SegmentData*> referred_to_segments;
+
     // Set on dictionary segments after they've been decoded.
     Optional<Vector<NonnullRefPtr<Symbol>>> symbols;
 
@@ -598,7 +601,6 @@ struct JBIG2LoadingContext {
     Vector<u32> page_numbers;
 
     Vector<SegmentData> segments;
-    HashMap<u32, u32> segments_by_number;
 };
 
 static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context, ReadonlyBytes data)
@@ -851,11 +853,22 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
 
     if (segment_headers.size() != segment_datas.size())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment headers and segment datas have different sizes");
-    for (size_t i = 0; i < segment_headers.size(); ++i) {
-        context.segments.append({ segment_headers[i], segment_datas[i], {}, {}, {}, {} });
 
-        if (context.segments_by_number.set(segment_headers[i].segment_number, context.segments.size() - 1) != HashSetResult::InsertedNewEntry)
+    HashMap<u32, u32> segments_by_number;
+    for (size_t i = 0; i < segment_headers.size(); ++i) {
+        context.segments.append({ segment_headers[i], segment_datas[i], {}, {}, {}, {}, {} });
+
+        if (segments_by_number.set(segment_headers[i].segment_number, context.segments.size() - 1) != HashSetResult::InsertedNewEntry)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Duplicate segment number");
+    }
+
+    for (auto& segment : context.segments) {
+        for (auto referred_to_segment_number : segment.header.referred_to_segment_numbers) {
+            auto opt_referred_to_segment = segments_by_number.get(referred_to_segment_number);
+            if (!opt_referred_to_segment.has_value())
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment refers to non-existing segment");
+            segment.referred_to_segments.append(&context.segments[opt_referred_to_segment.value()]);
+        }
     }
 
     TRY(validate_segment_header_retention_flags(segment_headers));
@@ -2386,7 +2399,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_proced
     return patterns;
 }
 
-static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, SegmentData& segment)
+static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData& segment)
 {
     // 7.4.2 Symbol dictionary segment syntax
 
@@ -2394,16 +2407,12 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
     // but having the custom tables available is convenient for collecting huffman tables below.
     Vector<NonnullRefPtr<Symbol>> symbols;
     Vector<JBIG2::HuffmanTable const*> custom_tables;
-    for (auto referred_to_segment_number : segment.header.referred_to_segment_numbers) {
-        auto opt_referred_to_segment = context.segments_by_number.get(referred_to_segment_number);
-        if (!opt_referred_to_segment.has_value())
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol segment refers to non-existent segment");
-        dbgln_if(JBIG2_DEBUG, "Symbol segment refers to segment id {} index {}", referred_to_segment_number, opt_referred_to_segment.value());
-        auto const& referred_to_segment = context.segments[opt_referred_to_segment.value()];
-        if (referred_to_segment.symbols.has_value())
-            symbols.extend(referred_to_segment.symbols.value());
-        else if (referred_to_segment.huffman_table.has_value())
-            custom_tables.append(&referred_to_segment.huffman_table.value());
+    for (auto const* referred_to_segment : segment.referred_to_segments) {
+        dbgln_if(JBIG2_DEBUG, "Symbol segment refers to segment id {}", referred_to_segment->header.segment_number);
+        if (referred_to_segment->symbols.has_value())
+            symbols.extend(referred_to_segment->symbols.value());
+        else if (referred_to_segment->huffman_table.has_value())
+            custom_tables.append(&referred_to_segment->huffman_table.value());
         else
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol segment referred-to segment without symbols or huffman table");
     }
@@ -2704,16 +2713,12 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     // and having the custom tables available is convenient for handling 7.4.3.1.2 below.
     Vector<NonnullRefPtr<Symbol>> symbols; // `symbols.size()` is "SBNUMSYMS" in spec.
     Vector<JBIG2::HuffmanTable const*> custom_tables;
-    for (auto referred_to_segment_number : segment.header.referred_to_segment_numbers) {
-        auto opt_referred_to_segment = context.segments_by_number.get(referred_to_segment_number);
-        if (!opt_referred_to_segment.has_value())
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Text segment refers to non-existent segment");
-        dbgln_if(JBIG2_DEBUG, "Text segment refers to segment id {} index {}", referred_to_segment_number, opt_referred_to_segment.value());
-        auto const& referred_to_segment = context.segments[opt_referred_to_segment.value()];
-        if (referred_to_segment.symbols.has_value())
-            symbols.extend(referred_to_segment.symbols.value());
-        else if (referred_to_segment.huffman_table.has_value())
-            custom_tables.append(&referred_to_segment.huffman_table.value());
+    for (auto const* referred_to_segment : segment.referred_to_segments) {
+        dbgln_if(JBIG2_DEBUG, "Text segment refers to segment id {}", referred_to_segment->header.segment_number);
+        if (referred_to_segment->symbols.has_value())
+            symbols.extend(referred_to_segment->symbols.value());
+        else if (referred_to_segment->huffman_table.has_value())
+            custom_tables.append(&referred_to_segment->huffman_table.value());
         else
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Text segment referred-to segment without symbols or huffman table");
     }
@@ -3112,16 +3117,10 @@ static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& conte
     // Done!
 
     // "2) Decode (or retrieve the results of decoding) the referred-to pattern dictionary segment."
-    if (segment.header.referred_to_segment_numbers.size() != 1)
+    if (segment.referred_to_segments.size() != 1)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment refers to wrong number of segments");
-    auto opt_referred_to_segment = context.segments_by_number.get(segment.header.referred_to_segment_numbers[0]);
-    if (!opt_referred_to_segment.has_value())
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment refers to non-existent segment");
-    dbgln_if(JBIG2_DEBUG, "Halftone segment refers to segment id {} index {}", segment.header.referred_to_segment_numbers[0], opt_referred_to_segment.value());
-    auto const& referred_to_segment = context.segments[opt_referred_to_segment.value()];
-    if (!referred_to_segment.patterns.has_value())
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment referred-to segment without patterns");
-    Vector<NonnullRefPtr<Symbol>> patterns = referred_to_segment.patterns.value();
+    dbgln_if(JBIG2_DEBUG, "Halftone segment refers to segment id {}", segment.referred_to_segments[0]->header.segment_number);
+    Vector<NonnullRefPtr<Symbol>> patterns = segment.referred_to_segments[0]->patterns.value();
     if (patterns.is_empty())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment without patterns");
 
