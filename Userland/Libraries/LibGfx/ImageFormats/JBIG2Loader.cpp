@@ -721,7 +721,6 @@ static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& strea
     // FIXME: Add some validity checks:
     // - check type is valid
     // - 7.3.1 Rules for segment references
-    // - 7.3.2 Rules for page associations
 
     Optional<u32> opt_data_length;
     if (data_length != 0xffff'ffff)
@@ -805,6 +804,70 @@ static ErrorOr<void> validate_segment_header_retention_flags(Vector<JBIG2::Segme
     return {};
 }
 
+static bool is_region_segment(JBIG2::SegmentType type)
+{
+    // 7.3 Segment types
+    // "The segments of types "intermediate text region", "immediate text region", "immediate lossless text region",
+    //  "intermediate halftone region", "immediate halftone region", "immediate lossless halftone region", "intermediate
+    //  generic region", "immediate generic region" , "immediate lossless generic region", "intermediate generic refinement
+    //  region", "immediate generic refinement region", and "immediate lossless generic refinement region" are collectively
+    //  referred to as "region segments"."
+    switch (type) {
+    case JBIG2::SegmentType::IntermediateTextRegion:
+    case JBIG2::SegmentType::ImmediateTextRegion:
+    case JBIG2::SegmentType::ImmediateLosslessTextRegion:
+    case JBIG2::SegmentType::IntermediateHalftoneRegion:
+    case JBIG2::SegmentType::ImmediateHalftoneRegion:
+    case JBIG2::SegmentType::ImmediateLosslessHalftoneRegion:
+    case JBIG2::SegmentType::IntermediateGenericRegion:
+    case JBIG2::SegmentType::ImmediateGenericRegion:
+    case JBIG2::SegmentType::ImmediateLosslessGenericRegion:
+    case JBIG2::SegmentType::IntermediateGenericRefinementRegion:
+    case JBIG2::SegmentType::ImmediateGenericRefinementRegion:
+    case JBIG2::SegmentType::ImmediateLosslessGenericRefinementRegion:
+        return true;
+    default:
+        return false;
+    }
+}
+
+static ErrorOr<void> validate_segment_header_page_associations(JBIG2LoadingContext const& context)
+{
+    // 7.3.2 Rules for page associations
+    for (auto const& segment : context.segments) {
+        // "Every region segment must be associated with some page (i.e., have a non-zero page association field). "Page
+        //  information",  "end of page" and "end of stripe" segments must be associated with some page. "End of file" segments
+        //  must not be associated with any page. Segments of other types may be associated with a page or not."
+        if (is_region_segment(segment.type())
+            || first_is_one_of(segment.type(), JBIG2::SegmentType::PageInformation, JBIG2::SegmentType::EndOfPage, JBIG2::SegmentType::EndOfStripe)) {
+            if (segment.header.page_association == 0)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Region, page information, end of page or end of stripe segment with no page association");
+        }
+        // Quirk: `042_*.jb2`, `amb_*.jb2` in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfFile with a page,
+        // so don't check for that.
+
+        // "If a segment is not associated with any page, then it must not refer to any segment that is associated with any page."
+        if (segment.header.page_association == 0) {
+            for (auto const* referred_to_segment : segment.referred_to_segments) {
+                if (referred_to_segment->header.page_association != 0)
+                    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment not associated with a page refers to segment associated with a page");
+            }
+        }
+
+        // "If a segment is associated with a page, then it may refer to segments that are not associated with any page, and to
+        //  segments that are associated with the same page. It must not refer to any segment that is associated with a different
+        //  page."
+        if (segment.header.page_association != 0) {
+            for (auto const* referred_to_segment : segment.referred_to_segments) {
+                if (referred_to_segment->header.page_association != 0 && referred_to_segment->header.page_association != segment.header.page_association)
+                    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment refers to segment associated with a different page");
+            }
+        }
+    }
+
+    return {};
+}
+
 static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, ReadonlyBytes data)
 {
     FixedMemoryStream stream(data);
@@ -874,6 +937,7 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
     }
 
     TRY(validate_segment_header_retention_flags(segment_headers));
+    TRY(validate_segment_header_page_associations(context));
 
     return {};
 }
@@ -957,7 +1021,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
         if (segment.header.page_association != context.current_page_number)
             continue;
 
-        // Quirk: Files in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfFile with a page.
+        // Quirk: `042_*.jb2`, `amb_*.jb2` in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfFile with a page.
         if (found_end_of_page && segment.type() != JBIG2::SegmentType::EndOfFile)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Found segment after EndOfPage");
 
