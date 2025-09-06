@@ -788,6 +788,7 @@ public:
     ThreadRegisters const& regs() const { return m_regs; }
 
     State state() const { return m_state; }
+    static StringView state_string(State);
     StringView state_string() const;
 
     ArchSpecificThreadData& arch_specific_data() { return m_arch_specific_data; }
@@ -1226,8 +1227,6 @@ private:
     State m_state { Thread::State::Invalid };
     RecursiveSpinlockProtected<Name, LockRank::None> m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
-
-    State m_stop_state { Thread::State::Invalid };
 
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
