@@ -14,7 +14,7 @@ enough to linux to use the pre-canned InstrProfiling implementation.
  5 files changed, 27 insertions(+), 3 deletions(-)
 
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
-index b3b9a593749bae9c69eb2afa706433303398198b..9009ab5d6a499defa5f88651215f0ccf072edbe7 100644
+index 52d7789fd92cf667c99577a3f7e3ba940ee789ad..07f785eb4de117d4631ad2021044bd7df91d91af 100644
 --- a/clang/lib/Driver/ToolChains/Serenity.cpp
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
 @@ -162,6 +162,9 @@ void tools::serenity::Linker::ConstructJob(Compilation &C, const JobAction &JA,
