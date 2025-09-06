@@ -918,20 +918,24 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages(GlobalData& globa
 #ifdef HAS_ADDRESS_SANITIZER
 void MemoryManager::initialize_kasan_shadow_memory()
 {
-    m_global_data.with([&](auto& global_data) {
-        // We map every 8 bytes of normal memory to 1 byte of shadow memory, so we need a 1/9 of total memory for the shadow memory.
-        auto virtual_range = global_data.region_tree.total_range();
-        auto shadow_range_size = MUST(page_round_up(ceil_div(virtual_range.size(), 9ul)));
-        dbgln("MM: Reserving {} bytes for KASAN shadow memory", shadow_range_size);
-
-        auto vmobject = MUST(AnonymousVMObject::try_create_with_size(shadow_range_size, AllocationStrategy::AllocateNow));
-        auto* shadow_region = MUST(Region::create_unplaced(move(vmobject), 0, {}, Memory::Region::Access::ReadWrite)).leak_ptr();
-        auto shadow_range = VirtualRange { virtual_range.base().offset(virtual_range.size() - shadow_range_size), shadow_range_size };
-        MUST(global_data.region_tree.place_specifically(*shadow_region, shadow_range));
-        MUST(shadow_region->map(kernel_page_directory()));
-
-        AddressSanitizer::init(shadow_region->vaddr().get());
+    // This is called early enough that locking doesn't actually matter, so lets just bypass the spinlock to avoid deadlocks.
+    GlobalData* global_data = nullptr;
+    m_global_data.with([&](auto& data) {
+        global_data = &data;
     });
+
+    // We map every 8 bytes of normal memory to 1 byte of shadow memory, so we need a 1/9 of total memory for the shadow memory.
+    auto virtual_range = global_data->region_tree.total_range();
+    auto shadow_range_size = MUST(page_round_up(ceil_div(virtual_range.size(), 9ul)));
+    dbgln("MM: Reserving {} bytes for KASAN shadow memory", shadow_range_size);
+
+    auto vmobject = MUST(AnonymousVMObject::try_create_with_size(shadow_range_size, AllocationStrategy::AllocateNow));
+    auto* shadow_region = MUST(Region::create_unplaced(move(vmobject), 0, {}, Memory::Region::Access::ReadWrite)).leak_ptr();
+    auto shadow_range = VirtualRange { virtual_range.base().offset(virtual_range.size() - shadow_range_size), shadow_range_size };
+    MUST(global_data->region_tree.place_specifically(*shadow_region, shadow_range));
+    MUST(shadow_region->map(kernel_page_directory()));
+
+    AddressSanitizer::init(shadow_region->vaddr().get());
 }
 #endif
 
