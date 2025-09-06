@@ -47,6 +47,24 @@ void IconView::scroll_into_view(ModelIndex const& index, bool scroll_horizontall
     AbstractScrollableWidget::scroll_into_view(item_rect(index.row()), scroll_horizontally, scroll_vertically);
 }
 
+void IconView::set_icon_size(Gfx::IntSize icon_size)
+{
+    if (m_icon_size == icon_size)
+        return;
+    m_icon_size = icon_size;
+
+    auto effective_item_size = icon_size;
+    effective_item_size += { 16 * 2, (16 * 2) + 6 + 12 };
+    effective_item_size.set_width(max(effective_item_size.width(), 80));
+    effective_item_size.set_height(max(effective_item_size.height(), 80));
+    m_effective_item_size = effective_item_size;
+
+    m_item_data_cache.clear();
+    m_item_data_cache_valid = false;
+    update_content_size();
+    update();
+}
+
 void IconView::resize_event(ResizeEvent& event)
 {
     AbstractView::resize_event(event);
@@ -424,7 +442,7 @@ void IconView::did_change_cursor_index(ModelIndex const& old_index, ModelIndex c
 void IconView::get_item_rects(int item_index, ItemData& item_data, Gfx::Font const& font) const
 {
     auto item_rect = this->item_rect(item_index);
-    item_data.icon_rect = Gfx::IntRect(0, 0, 32, 32).centered_within(item_rect);
+    item_data.icon_rect = Gfx::IntRect(0, 0, m_icon_size.width(), m_icon_size.height()).centered_within(item_rect);
     item_data.icon_offset_y = -font.pixel_size_rounded_up() - 6;
     item_data.icon_rect.translate_by(0, item_data.icon_offset_y);
 
@@ -519,18 +537,18 @@ void IconView::paint_event(PaintEvent& event)
         auto icon = item_data.index.data(ModelRole::Icon);
 
         if (icon.is_icon()) {
-            if (auto bitmap = icon.as_icon().bitmap_for_size(item_data.icon_rect.width())) {
-                Gfx::IntRect destination = bitmap->rect();
-                destination.center_within(item_data.icon_rect);
-
+            if (auto bitmap = icon.as_icon().bitmap_for_size(m_icon_size.width())) {
                 if (item_data.selected) {
+                    auto tinted_bitmap = bitmap->clone().release_value_but_fixme_should_propagate_errors();
+                    Painter tinted_bitmap_painter(*tinted_bitmap);
                     auto tint = selection_color.with_alpha(100);
-                    painter.blit_filtered(destination.location(), *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });
+                    tinted_bitmap_painter.blit_filtered({ 0, 0 }, *bitmap, bitmap->rect(), [&](auto src) { return src.blend(tint); });
+                    painter.draw_scaled_bitmap(item_data.icon_rect, *tinted_bitmap, tinted_bitmap->rect());
                 } else if (m_hovered_index.is_valid() && m_hovered_index == item_data.index) {
-                    painter.blit_brightened(destination.location(), *bitmap, bitmap->rect());
+                    painter.draw_scaled_bitmap(item_data.icon_rect, *bitmap, bitmap->rect());
                 } else {
                     auto opacity = item_data.index.data(ModelRole::IconOpacity).as_float_or(1.0f);
-                    painter.blit(destination.location(), *bitmap, bitmap->rect(), opacity);
+                    painter.draw_scaled_bitmap(item_data.icon_rect, *bitmap, bitmap->rect(), opacity);
                 }
             }
         }
