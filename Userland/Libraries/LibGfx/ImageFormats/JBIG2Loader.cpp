@@ -1466,7 +1466,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> text_region_decoding_procedure(TextR
     // 6.4.8 Subsequent symbol instance S coordinate
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFDS.
     //  If SBHUFF is 0, decode a value using the IADS integer arithmetic decoding procedure (see Annex A).
-    //  In either case it is possible that the result of this decoding is the out-of-band value OOB.""
+    //  In either case it is possible that the result of this decoding is the out-of-band value OOB."
     auto read_subsequent_s = [&]() -> ErrorOr<Optional<i32>> {
         if (inputs.uses_huffman_encoding)
             return inputs.subsequent_s_table->read_symbol(*bit_stream);
@@ -3307,7 +3307,7 @@ static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, Segme
 {
     // 7.4.8 Page information segment syntax and 8.1 Decoder model steps 1) - 3).
 
-    // "1) Decode the page information segment.""
+    // "1) Decode the page information segment."
     auto page_information = TRY(decode_page_information_segment(segment.data));
 
     u8 default_color = page_information.default_color();
@@ -3450,7 +3450,7 @@ static ErrorOr<void> decode_tables(JBIG2LoadingContext&, SegmentData& segment)
 
     // "10) If HTOOB is 1, then:"
     if (has_out_of_band) {
-        // "a) Read HTPS bits. Let OOBPREFLEN be the value read.""
+        // "a) Read HTPS bits. Let OOBPREFLEN be the value read."
         prefix_length = TRY(bit_stream.read_bits<u8>(prefix_bit_count)); // "OOBPREFLEN" in spec.
 
         // "b) [...] This is the out-of-band table line for this table. Note that there is no range associated with this value."
