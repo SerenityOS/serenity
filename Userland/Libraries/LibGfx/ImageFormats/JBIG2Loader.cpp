@@ -637,6 +637,37 @@ static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context, ReadonlyB
     return {};
 }
 
+static ErrorOr<JBIG2::SegmentType> to_segment_type(u8 type_int)
+{
+    auto type = static_cast<JBIG2::SegmentType>(type_int);
+    switch (type) {
+    case JBIG2::SegmentType::SymbolDictionary:
+    case JBIG2::SegmentType::IntermediateTextRegion:
+    case JBIG2::SegmentType::ImmediateTextRegion:
+    case JBIG2::SegmentType::ImmediateLosslessTextRegion:
+    case JBIG2::SegmentType::PatternDictionary:
+    case JBIG2::SegmentType::IntermediateHalftoneRegion:
+    case JBIG2::SegmentType::ImmediateHalftoneRegion:
+    case JBIG2::SegmentType::ImmediateLosslessHalftoneRegion:
+    case JBIG2::SegmentType::IntermediateGenericRegion:
+    case JBIG2::SegmentType::ImmediateGenericRegion:
+    case JBIG2::SegmentType::ImmediateLosslessGenericRegion:
+    case JBIG2::SegmentType::IntermediateGenericRefinementRegion:
+    case JBIG2::SegmentType::ImmediateGenericRefinementRegion:
+    case JBIG2::SegmentType::ImmediateLosslessGenericRefinementRegion:
+    case JBIG2::SegmentType::PageInformation:
+    case JBIG2::SegmentType::EndOfPage:
+    case JBIG2::SegmentType::EndOfStripe:
+    case JBIG2::SegmentType::EndOfFile:
+    case JBIG2::SegmentType::Profiles:
+    case JBIG2::SegmentType::Tables:
+    case JBIG2::SegmentType::ColorPalette:
+    case JBIG2::SegmentType::Extension:
+        return type;
+    }
+    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid segment type");
+}
+
 static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& stream)
 {
     // 7.2.2 Segment number
@@ -645,7 +676,7 @@ static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& strea
 
     // 7.2.3 Segment header flags
     u8 flags = TRY(stream.read_value<u8>());
-    JBIG2::SegmentType type = static_cast<JBIG2::SegmentType>(flags & 0b11'1111);
+    JBIG2::SegmentType type = TRY(to_segment_type(flags & 0b11'1111));
     dbgln_if(JBIG2_DEBUG, "Segment type: {}", (int)type);
     bool segment_page_association_size_is_32_bits = (flags & 0b100'0000) != 0;
     bool segment_retained_only_by_itself_and_extension_segments = (flags & 0b1000'00000) != 0;
@@ -719,7 +750,6 @@ static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& strea
     dbgln_if(JBIG2_DEBUG, "Segment data length: {}", data_length);
 
     // FIXME: Add some validity checks:
-    // - check type is valid
     // - 7.3.1 Rules for segment references
 
     Optional<u32> opt_data_length;
