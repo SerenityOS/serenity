@@ -21,8 +21,8 @@ Co-authored-by: Dan Klishch <danilklishch@gmail.com>
  clang/lib/Driver/CMakeLists.txt               |   1 +
  clang/lib/Driver/Driver.cpp                   |   4 +
  clang/lib/Driver/ToolChain.cpp                |   5 +-
- clang/lib/Driver/ToolChains/Serenity.cpp      | 198 +++++++++++++++++
- clang/lib/Driver/ToolChains/Serenity.h        |  84 ++++++++
+ clang/lib/Driver/ToolChains/Serenity.cpp      | 202 ++++++++++++++++++
+ clang/lib/Driver/ToolChains/Serenity.h        |  86 ++++++++
  clang/lib/Lex/InitHeaderSearch.cpp            |   1 +
  .../usr/include/c++/v1/.keep                  |   0
  .../include/x86_64-pc-serenity/c++/v1/.keep   |   0
@@ -31,8 +31,8 @@ Co-authored-by: Dan Klishch <danilklishch@gmail.com>
  .../serenity_x86_64_tree/usr/local/.keep      |   0
  clang/test/Driver/pic.c                       |   6 +
  clang/test/Driver/save-stats.c                |   2 +
- clang/test/Driver/serenity.cpp                | 199 ++++++++++++++++++
- 16 files changed, 528 insertions(+), 1 deletion(-)
+ clang/test/Driver/serenity.cpp                | 199 +++++++++++++++++
+ 16 files changed, 534 insertions(+), 1 deletion(-)
  create mode 100644 clang/lib/Driver/ToolChains/Serenity.cpp
  create mode 100644 clang/lib/Driver/ToolChains/Serenity.h
  create mode 100644 clang/test/Driver/Inputs/serenity_x86_64_tree/usr/include/c++/v1/.keep
@@ -173,10 +173,10 @@ index 07a3ae925f96df53678e138c294d9c5d7db950ae..d737380a681511cfc47da24f0b46947b
          unwindLibType = ToolChain::UNW_None;
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..b3b9a593749bae9c69eb2afa706433303398198b
+index 0000000000000000000000000000000000000000..52d7789fd92cf667c99577a3f7e3ba940ee789ad
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
-@@ -0,0 +1,198 @@
+@@ -0,0 +1,202 @@
 +//===---- Serenity.cpp - SerenityOS ToolChain Implementation ----*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -347,6 +347,10 @@ index 0000000000000000000000000000000000000000..b3b9a593749bae9c69eb2afa70643330
 +                                         Exec, CmdArgs, Inputs, Output));
 +}
 +
++SanitizerMask Serenity::getSupportedSanitizers() const {
++  return ToolChain::getSupportedSanitizers() | SanitizerKind::KernelAddress;
++}
++
 +Serenity::Serenity(const Driver &D, const llvm::Triple &Triple,
 +                   const ArgList &Args)
 +    : Generic_ELF(D, Triple, Args) {
@@ -377,10 +381,10 @@ index 0000000000000000000000000000000000000000..b3b9a593749bae9c69eb2afa70643330
 +}
 diff --git a/clang/lib/Driver/ToolChains/Serenity.h b/clang/lib/Driver/ToolChains/Serenity.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..2a1f685cb6623e080a2c141dfc3790efdb09419c
+index 0000000000000000000000000000000000000000..6f86c30da8ca1e552102bf305d6ffcc78a7ccca7
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.h
-@@ -0,0 +1,84 @@
+@@ -0,0 +1,86 @@
 +//===---- Serenity.h - SerenityOS ToolChain Implementation ------*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -443,6 +447,8 @@ index 0000000000000000000000000000000000000000..2a1f685cb6623e080a2c141dfc3790ef
 +  bool isPICDefault() const override { return true; }
 +  bool isPIEDefault(const llvm::opt::ArgList &) const override { return true; }
 +  bool isPICDefaultForced() const override { return false; }
++
++  SanitizerMask getSupportedSanitizers() const override;
 +
 +  bool IsMathErrnoDefault() const override { return false; }
 +
