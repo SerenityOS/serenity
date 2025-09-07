@@ -45,10 +45,7 @@ public:
     void set_enabled(bool);
     bool is_enabled() const { return m_list_node.is_in_list(); }
 
-    virtual void theme_changed()
-    {
-        rect_changed(m_rect);
-    }
+    virtual void theme_changed() { invalidate(); }
 
     bool invalidate();
 
@@ -107,6 +104,8 @@ protected:
 
     void clear_bitmaps();
     virtual void rect_changed(Gfx::IntRect const&) override;
+
+    virtual void theme_changed() override { invalidate_content(); }
 
     void invalidate_content();
 
