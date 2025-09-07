@@ -78,6 +78,8 @@ namespace Gfx {
     C(MovingWindowTitle)           \
     C(MovingWindowTitleShadow)     \
     C(MovingWindowTitleStripes)    \
+    C(OverlayText)                 \
+    C(OverlayBackground)           \
     C(PlaceholderText)             \
     C(Red)                         \
     C(RubberBandBorder)            \
