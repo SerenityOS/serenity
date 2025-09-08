@@ -124,6 +124,7 @@ private:
     static constexpr StringView CONFIG_DOMAIN = "Taskbar"sv;
     static constexpr StringView CONFIG_GROUP_ENTRIES = "QuickLaunch_Entries"sv;
     static constexpr StringView OLD_CONFIG_GROUP_ENTRIES = "QuickLaunch"sv;
+    static constexpr int MINIMUM_DRAG_DISTANCE = 6;
     static constexpr int BUTTON_SIZE = 24;
 
     explicit QuickLaunchWidget();
