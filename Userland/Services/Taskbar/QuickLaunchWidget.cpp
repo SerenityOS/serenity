@@ -193,7 +193,9 @@ void QuickLaunchWidget::mousemove_event(GUI::MouseEvent& event)
     m_mouse_pos = event.position();
     for_each_entry([&](NonnullOwnPtr<QuickLaunchEntry> const& entry, Gfx::IntRect rect) {
         entry->set_hovered(rect.contains(event.position()));
-        if (entry->is_pressed())
+
+        int drag_distance = AK::abs(event.x() - (rect.x() - m_grab_offset));
+        if (entry->is_pressed() && drag_distance > MINIMUM_DRAG_DISTANCE)
             m_dragging = true;
 
         if (entry->is_hovered())
