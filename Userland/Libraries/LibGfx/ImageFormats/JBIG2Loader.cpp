@@ -1562,9 +1562,6 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_refinement_region_decoding_p
 {
     VERIFY(inputs.gr_template == 0 || inputs.gr_template == 1);
 
-    if (inputs.is_typical_prediction_used)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode typical prediction in generic refinement regions yet");
-
     if (inputs.gr_template == 0) {
         TRY(check_valid_adaptive_template_pixel(inputs.adaptive_template_pixels[0]));
         // inputs.adaptive_template_pixels[1] is allowed to contain any value.
@@ -1620,13 +1617,64 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_refinement_region_decoding_p
 
     auto compute_context = inputs.gr_template == 0 ? compute_context_0 : compute_context_1;
 
+    // Figure 14 – Reused context for coding the SLTP value when GRTEMPLATE is 0
+    constexpr u16 sltp_context_for_template_0 = 0b000'010'000'000'0;
+
+    // Figure 15 – Reused context for coding the SLTP value when GRTEMPLATE is 1
+    constexpr u16 sltp_context_for_template_1 = 0b0'010'00'000'0;
+
+    u16 const sltp_context = inputs.gr_template == 0 ? sltp_context_for_template_0 : sltp_context_for_template_1;
+
     // 6.3.5.6 Decoding the refinement bitmap
+
+    // "1) Set LTP = 0."
+    bool ltp = false; // "Line (uses) Typical Prediction" maybe?
+
+    // "2) Create a bitmap GRREG of width GRW and height GRH pixels."
     auto result = TRY(BilevelImage::create(inputs.region_width, inputs.region_height));
+
+    // "3) Decode each row as follows:"
     for (size_t y = 0; y < result->height(); ++y) {
-        for (size_t x = 0; x < result->width(); ++x) {
-            u16 context = compute_context(inputs.adaptive_template_pixels, *inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, *result, x, y);
-            bool bit = decoder.get_next_bit(contexts.contexts[context]);
-            result->set_bit(x, y, bit);
+        // "a) If all GRH rows have been decoded, then the decoding is complete; proceed to step 4)."
+        // "b) If TPGRON is 1, then decode a bit using the arithmetic entropy coder..."
+        if (inputs.is_typical_prediction_used) {
+            // "SLTP" in spec. "Swap LTP" or "Switch LTP" maybe?
+            bool sltp = decoder.get_next_bit(contexts.contexts[sltp_context]);
+            ltp = ltp ^ sltp;
+        }
+
+        if (!ltp) {
+            // "c) If LTP = 0 then, from left to right, explicitly decode all pixels of the current row of GRREG. The
+            //     procedure for each pixel is as follows:"
+            for (size_t x = 0; x < result->width(); ++x) {
+                u16 context = compute_context(inputs.adaptive_template_pixels, *inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, *result, x, y);
+                bool bit = decoder.get_next_bit(contexts.contexts[context]);
+                result->set_bit(x, y, bit);
+            }
+        } else {
+            // "d) If LTP = 1 then, from left to right, implicitly decode certain pixels of the current row of GRREG,
+            //     and explicitly decode the rest. The procedure for each pixel is as follows:"
+            for (size_t x = 0; x < result->width(); ++x) {
+                // "TPGRPIX", "TPGRVAL" in spec.
+                bool prediction = get_pixel(*inputs.reference_bitmap, x - inputs.reference_x_offset - 1, y - inputs.reference_y_offset - 1);
+                bool have_prediction = true;
+                for (int dy = -1; dy <= 1; ++dy) {
+                    for (int dx = -1; dx <= 1; ++dx) {
+                        if (get_pixel(*inputs.reference_bitmap, x - inputs.reference_x_offset + dx, y - inputs.reference_y_offset + dy) != prediction)
+                            have_prediction = false;
+                    }
+                }
+
+                // TPGRON must be 1 if LTP is set. (The spec has an explicit "TPGRON is 1 AND" check here, but it is pointless.)
+                VERIFY(inputs.is_typical_prediction_used);
+                if (have_prediction) {
+                    result->set_bit(x, y, prediction);
+                } else {
+                    u16 context = compute_context(inputs.adaptive_template_pixels, *inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, *result, x, y);
+                    bool bit = decoder.get_next_bit(contexts.contexts[context]);
+                    result->set_bit(x, y, bit);
+                }
+            }
         }
     }
 
