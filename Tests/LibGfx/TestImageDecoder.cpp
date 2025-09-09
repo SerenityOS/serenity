@@ -401,12 +401,21 @@ TEST_CASE(test_jbig2_decode)
         // - immediate generic region of unknown size and larger height in region segment information field
         //   than in number of rows stored after data (code support added in #26173)
         // - negative position in composition (code support added in #26046)
-        // Missing tests for things that aren't implemented yet:
-        // - intermediate regions
-        // - standalone refinement regions
+        // - intermediate text regions (code support added in #26197)
+        // - intermediate halftone regions (code support added in #26197)
+        // - intermediate direct regions (code support added in #26197)
+        // - immediate refinement regions referring to a direct region (code support added in #26197)
+        // - immediate refinement regions referring to a direct region (code support added in #26197)
         //   - TPGRON set in refinement region (only reachable in standalone refinement regions)
+        // Missing tests for things that aren't implemented yet:
+        // - immediate refinement regions not referring to a direct region (i.e. refining the page)
+        // - immediate lossless refinement regions
+        // - intermediate refinement regions
+        // - intermediate regions not covering the full page
         // - exttemplate
         // - colors
+        // - huffman text region using refinement (RI = 1)
+        // - huffman symbol region using refinement (SDREFAGG = 1)
         // (test_annex_h_jbig2 covers a subset of these, but having standalone files would be nice.)
     };
 
