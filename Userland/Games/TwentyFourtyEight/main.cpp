@@ -61,7 +61,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::write_i32("2048"sv, ""sv, "target_tile"sv, target_tile);
     Config::write_bool("2048"sv, ""sv, "evil_ai"sv, evil_ai);
 
-    window->set_double_buffering_enabled(false);
     window->set_title("2048");
     window->resize(315, 336);
 

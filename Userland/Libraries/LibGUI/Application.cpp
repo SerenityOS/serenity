@@ -159,7 +159,6 @@ void Application::show_tooltip(String tooltip, Widget const* tooltip_source_widg
     m_tooltip_source_widget = tooltip_source_widget;
     if (!m_tooltip_window) {
         m_tooltip_window = TooltipWindow::construct();
-        m_tooltip_window->set_double_buffering_enabled(false);
     }
     m_tooltip_window->set_tooltip(move(tooltip));
 
@@ -180,7 +179,6 @@ void Application::show_tooltip_immediately(String tooltip, Widget const* tooltip
     m_tooltip_source_widget = tooltip_source_widget;
     if (!m_tooltip_window) {
         m_tooltip_window = TooltipWindow::construct();
-        m_tooltip_window->set_double_buffering_enabled(false);
     }
     m_tooltip_window->set_tooltip(move(tooltip));
 

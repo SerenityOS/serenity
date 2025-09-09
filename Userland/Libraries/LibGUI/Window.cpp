@@ -452,10 +452,10 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
     }
     VERIFY(!rects.is_empty());
 
-    // Throw away our backing store if its size is different, and we've stopped resizing or double buffering is disabled.
+    // Throw away our backing store if its size is different, and we've stopped resizing.
     // This ensures that we shrink the backing store after a resize, and that we do not get flickering artifacts when
     // directly painting into a shared active backing store.
-    if (m_back_store && (!m_resizing || !m_double_buffering_enabled) && m_back_store->size() != event.window_size())
+    if (m_back_store && !m_resizing && m_back_store->size() != event.window_size())
         m_back_store = nullptr;
 
     // Discard our backing store if it's unable to contain the new window size. Smaller is fine though, that prevents
@@ -480,10 +480,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
     }
     m_back_store->set_visible_size(event.window_size());
 
-    if (m_double_buffering_enabled)
-        flip(rects);
-    else if (created_new_backing_store)
-        set_current_backing_store(*m_back_store, true);
+    flip(rects);
 
     if (is_visible())
         ConnectionToWindowServer::the().async_did_finish_painting(m_window_id, rects);
@@ -922,12 +919,6 @@ void Window::set_has_alpha_channel(bool value)
 
     ConnectionToWindowServer::the().async_set_window_has_alpha_channel(m_window_id, value);
     update();
-}
-
-void Window::set_double_buffering_enabled(bool value)
-{
-    VERIFY(!is_visible());
-    m_double_buffering_enabled = value;
 }
 
 void Window::set_alpha_hit_threshold(float threshold)
