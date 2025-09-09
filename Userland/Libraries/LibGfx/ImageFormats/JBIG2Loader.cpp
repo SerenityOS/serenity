@@ -527,6 +527,12 @@ private:
 };
 
 struct SegmentData {
+    SegmentData(JBIG2::SegmentHeader header, ReadonlyBytes data)
+        : header(header)
+        , data(data)
+    {
+    }
+
     JBIG2::SegmentHeader header;
     ReadonlyBytes data;
 
@@ -1099,7 +1105,7 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
 
     HashMap<u32, u32> segments_by_number;
     for (size_t i = 0; i < segment_headers.size(); ++i) {
-        context.segments.append({ segment_headers[i], segment_datas[i], {}, {}, {}, {}, {} });
+        context.segments.append({ segment_headers[i], segment_datas[i] });
 
         if (segments_by_number.set(segment_headers[i].segment_number, context.segments.size() - 1) != HashSetResult::InsertedNewEntry)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Duplicate segment number");
