@@ -538,7 +538,7 @@ struct SegmentData {
 
     auto type() const { return header.type; }
 
-    // Valid after decode_segment_headers().
+    // Valid after complete_decoding_all_segment_headers().
     Vector<SegmentData*> referred_to_segments;
 
     // Set on dictionary segments after they've been decoded.
@@ -803,14 +803,16 @@ static ErrorOr<size_t> scan_for_immediate_generic_region_size(ReadonlyBytes data
     return size;
 }
 
-static ErrorOr<void> validate_segment_header_retention_flags(Vector<JBIG2::SegmentHeader> const& segment_headers)
+static ErrorOr<void> validate_segment_header_retention_flags(JBIG2LoadingContext const& context)
 {
     // "If the retain bit for this segment value is 0, then no segment may refer to this segment.
     //  If the retain bit for the first referred-to segment value is 0, then no segment after this one may refer to the first segment
     //  that this segment refers to (i.e., this segment is the last segment that refers to that other segment)"
     HashTable<int> dead_segments;
 
-    for (auto const& header : segment_headers) {
+    for (auto const& segment : context.segments) {
+        auto const& header = segment.header;
+
         if (header.retention_flag) {
             // Guaranteed because decode_segment_header() guarantees referred_to_segment_numbers are larger than segment_number.
             VERIFY(!dead_segments.contains(header.segment_number));
@@ -1106,11 +1108,17 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
     if (segment_headers.size() != segment_datas.size())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment headers and segment datas have different sizes");
 
-    HashMap<u32, u32> segments_by_number;
-    for (size_t i = 0; i < segment_headers.size(); ++i) {
+    for (size_t i = 0; i < segment_headers.size(); ++i)
         context.segments.append({ segment_headers[i], segment_datas[i] });
 
-        if (segments_by_number.set(segment_headers[i].segment_number, context.segments.size() - 1) != HashSetResult::InsertedNewEntry)
+    return {};
+}
+
+static ErrorOr<void> complete_decoding_all_segment_headers(JBIG2LoadingContext& context)
+{
+    HashMap<u32, u32> segments_by_number;
+    for (auto const& [i, segment] : enumerate(context.segments)) {
+        if (segments_by_number.set(segment.header.segment_number, i) != HashSetResult::InsertedNewEntry)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Duplicate segment number");
     }
 
@@ -1123,7 +1131,7 @@ static ErrorOr<void> decode_segment_headers(JBIG2LoadingContext& context, Readon
         }
     }
 
-    TRY(validate_segment_header_retention_flags(segment_headers));
+    TRY(validate_segment_header_retention_flags(context));
     TRY(validate_segment_header_references(context));
     TRY(validate_segment_header_page_associations(context));
 
@@ -4069,6 +4077,7 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JBIG2ImageDecoderPlugin::create(Reado
 
     data = data.slice(sizeof(JBIG2::id_string) + sizeof(u8) + (plugin->m_context->number_of_pages.has_value() ? sizeof(u32) : 0));
     TRY(decode_segment_headers(*plugin->m_context, data));
+    TRY(complete_decoding_all_segment_headers(*plugin->m_context));
 
     TRY(scan_for_page_size(*plugin->m_context));
     TRY(scan_for_page_numbers(*plugin->m_context));
@@ -4115,6 +4124,7 @@ ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyByte
 
     for (auto const& segment_data : data)
         TRY(decode_segment_headers(*plugin->m_context, segment_data));
+    TRY(complete_decoding_all_segment_headers(*plugin->m_context));
 
     TRY(scan_for_page_size(*plugin->m_context));
     TRY(scan_for_page_numbers(*plugin->m_context));
