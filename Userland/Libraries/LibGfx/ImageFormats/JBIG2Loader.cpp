@@ -3589,9 +3589,74 @@ static ErrorOr<void> decode_intermediate_generic_refinement_region(JBIG2LoadingC
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate generic refinement region yet");
 }
 
-static ErrorOr<void> decode_immediate_generic_refinement_region(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_immediate_generic_refinement_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate generic refinement region yet");
+    // 7.4.7 Generic refinement region syntax
+    auto data = segment.data;
+    auto information_field = TRY(decode_region_segment_information_field(data));
+    data = data.slice(sizeof(information_field));
+
+    dbgln_if(JBIG2_DEBUG, "Generic refinement region: width={}, height={}, x={}, y={}, flags={:#x}", information_field.width, information_field.height, information_field.x_location, information_field.y_location, information_field.flags);
+    TRY(validate_segment_combination_operator_consistency(context, information_field));
+
+    FixedMemoryStream stream(data);
+
+    // 7.4.7.2 Generic refinement region segment flags
+    u8 flags = TRY(stream.read_value<u8>());
+    u8 arithmetic_coding_template = flags & 1;                        // "GRTEMPLATE"
+    bool typical_prediction_generic_refinement_on = (flags >> 1) & 1; // "TPGRON"; "TPGR" is short for "Typical Prediction for Generic Refinement coding"
+    if (flags & 0b1111'1100)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement flags");
+
+    dbgln_if(JBIG2_DEBUG, "GRTEMPLATE={} TPRDON={}", arithmetic_coding_template, typical_prediction_generic_refinement_on);
+
+    // 7.4.7.3 Generic refinement region segment AT flags
+    Array<JBIG2::AdaptiveTemplatePixel, 2> adaptive_template_pixels {};
+    if (arithmetic_coding_template == 0) {
+        for (size_t i = 0; i < 2; ++i) {
+            adaptive_template_pixels[i].x = TRY(stream.read_value<i8>());
+            adaptive_template_pixels[i].y = TRY(stream.read_value<i8>());
+            dbgln_if(JBIG2_DEBUG, "GRAT{}: {}, {}", i, adaptive_template_pixels[i].x, adaptive_template_pixels[i].y);
+        }
+    }
+
+    // 7.4.7.5 Decoding a generic refinement region segment
+    // "1) Interpret its header as described in 7.4.7.1."
+    // Done above.
+    // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
+    RefinementContexts contexts { arithmetic_coding_template };
+
+    // "3) Determine the buffer associated with the region segment that this segment refers to."
+    // Details described in 7.4.7.4 Reference bitmap selection.
+    BilevelImage const* reference_bitmap = nullptr;
+    VERIFY(segment.referred_to_segments.size() <= 1);
+    if (segment.referred_to_segments.size() == 1) {
+        reference_bitmap = segment.referred_to_segments[0]->aux_buffer.ptr();
+    } else {
+        // When adding support for this and for intermediate generic refinement regions, make sure to only allow
+        // this case for immediate generic refinement regions.
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Generic refinement region without reference segment not yet implemented");
+    }
+
+    // "4) Invoke the generic refinement region decoding procedure described in 6.3, with the parameters to the
+    //     generic refinement region decoding procedure set as shown in Table 38."
+    data = data.slice(TRY(stream.tell()));
+    GenericRefinementRegionDecodingInputParameters inputs;
+    inputs.region_width = information_field.width;
+    inputs.region_height = information_field.height;
+    inputs.gr_template = arithmetic_coding_template;
+    inputs.reference_bitmap = reference_bitmap;
+    inputs.reference_x_offset = 0;
+    inputs.reference_y_offset = 0;
+    inputs.is_typical_prediction_used = typical_prediction_generic_refinement_on;
+    inputs.adaptive_template_pixels = adaptive_template_pixels;
+
+    auto decoder = TRY(QMArithmeticDecoder::initialize(data));
+    auto result = TRY(generic_refinement_region_decoding_procedure(inputs, decoder, contexts));
+
+    composite_bilevel_image(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
+
+    return {};
 }
 
 static ErrorOr<void> decode_immediate_lossless_generic_refinement_region(JBIG2LoadingContext&, SegmentData const&)
