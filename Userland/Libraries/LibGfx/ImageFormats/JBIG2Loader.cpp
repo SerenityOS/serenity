@@ -550,6 +550,9 @@ struct SegmentData {
     // Set on code table segments after they've been decoded.
     Optional<Vector<JBIG2::Code>> codes;
     Optional<JBIG2::HuffmanTable> huffman_table;
+
+    // Set on intermediate direct region segments after they've been decoded.
+    OwnPtr<Gfx::BilevelImage> aux_buffer;
 };
 
 static void composite_bilevel_image(BilevelImage& out, BilevelImage const& bitmap, Gfx::IntPoint position, JBIG2::CombinationOperator operator_)
@@ -2861,9 +2864,27 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData&
     return {};
 }
 
-static ErrorOr<void> decode_intermediate_text_region(JBIG2LoadingContext&, SegmentData const&)
+struct DirectRegionResult {
+    JBIG2::RegionSegmentInformationField information_field;
+    NonnullOwnPtr<BilevelImage> bitmap;
+};
+
+static void handle_immediate_direct_region(JBIG2LoadingContext& context, DirectRegionResult const& result)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate text region yet");
+    // 8.2 Page image composition, 5a.
+    composite_bilevel_image(*context.page.bits, *result.bitmap, { result.information_field.x_location, result.information_field.y_location }, result.information_field.external_combination_operator());
+}
+
+static ErrorOr<void> handle_intermediate_direct_region(JBIG2LoadingContext&, SegmentData& segment, DirectRegionResult& result)
+{
+    // 8.2 Page image composition, 5b.
+    VERIFY(result.bitmap->width() == result.information_field.width);
+    VERIFY(result.bitmap->height() == result.information_field.height);
+    if (result.information_field.x_location != 0 || result.information_field.y_location != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle intermediate direct region with non-zero x/y location yet");
+
+    segment.aux_buffer = move(result.bitmap);
+    return {};
 }
 
 static ErrorOr<Vector<u32>> assign_huffman_codes(ReadonlyBytes code_lengths)
@@ -2930,7 +2951,7 @@ static ErrorOr<Vector<u32>> assign_huffman_codes(ReadonlyBytes code_lengths)
     return codes;
 }
 
-static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, SegmentData const& segment)
+static ErrorOr<DirectRegionResult> decode_text_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
     // 7.4.3 Text region segment syntax
     auto data = segment.data;
@@ -3243,9 +3264,19 @@ static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, 
     }
 
     auto result = TRY(text_region_decoding_procedure(inputs, text_contexts, refinement_contexts));
+    return DirectRegionResult { .information_field = information_field, .bitmap = move(result) };
+}
 
-    composite_bilevel_image(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
+static ErrorOr<void> decode_intermediate_text_region(JBIG2LoadingContext& context, SegmentData& segment)
+{
+    auto result = TRY(decode_text_region(context, segment));
+    return handle_intermediate_direct_region(context, segment, result);
+}
 
+static ErrorOr<void> decode_immediate_text_region(JBIG2LoadingContext& context, SegmentData const& segment)
+{
+    auto result = TRY(decode_text_region(context, segment));
+    handle_immediate_direct_region(context, result);
     return {};
 }
 
@@ -3313,12 +3344,7 @@ static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData
     return {};
 }
 
-static ErrorOr<void> decode_intermediate_halftone_region(JBIG2LoadingContext&, SegmentData const&)
-{
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate halftone region yet");
-}
-
-static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& context, SegmentData const& segment)
+static ErrorOr<DirectRegionResult> decode_halftone_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
     // 7.4.5 Halftone region segment syntax
     auto data = segment.data;
@@ -3404,8 +3430,19 @@ static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& conte
     inputs.pattern_height = inputs.patterns[0]->bitmap().height();
     auto result = TRY(halftone_region_decoding_procedure(inputs, data, contexts));
 
-    composite_bilevel_image(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
+    return DirectRegionResult { .information_field = information_field, .bitmap = move(result) };
+}
 
+static ErrorOr<void> decode_intermediate_halftone_region(JBIG2LoadingContext& context, SegmentData& segment)
+{
+    auto result = TRY(decode_halftone_region(context, segment));
+    return handle_intermediate_direct_region(context, segment, result);
+}
+
+static ErrorOr<void> decode_immediate_halftone_region(JBIG2LoadingContext& context, SegmentData const& segment)
+{
+    auto result = TRY(decode_halftone_region(context, segment));
+    handle_immediate_direct_region(context, result);
     return {};
 }
 
@@ -3419,12 +3456,7 @@ static ErrorOr<void> decode_immediate_lossless_halftone_region(JBIG2LoadingConte
     return decode_immediate_halftone_region(context, segment);
 }
 
-static ErrorOr<void> decode_intermediate_generic_region(JBIG2LoadingContext&, SegmentData const&)
-{
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate generic region yet");
-}
-
-static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& context, SegmentData const& segment)
+static ErrorOr<DirectRegionResult> decode_generic_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
     // 7.4.6 Generic region segment syntax
     auto data = segment.data;
@@ -3526,8 +3558,19 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Region bounds outsize of page bounds");
     }
 
-    composite_bilevel_image(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
+    return DirectRegionResult { .information_field = information_field, .bitmap = move(result) };
+}
 
+static ErrorOr<void> decode_intermediate_generic_region(JBIG2LoadingContext& context, SegmentData& segment)
+{
+    auto result = TRY(decode_generic_region(context, segment));
+    return handle_intermediate_direct_region(context, segment, result);
+}
+
+static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& context, SegmentData const& segment)
+{
+    auto result = TRY(decode_generic_region(context, segment));
+    handle_immediate_direct_region(context, result);
     return {};
 }
 
