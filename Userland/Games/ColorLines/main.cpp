@@ -43,7 +43,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = GUI::Window::construct();
 
-    window->set_double_buffering_enabled(false);
     window->set_title(title.bytes_as_string_view());
     window->resize(436, 481);
     window->set_resizable(false);

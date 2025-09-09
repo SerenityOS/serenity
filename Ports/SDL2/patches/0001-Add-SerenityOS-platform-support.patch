@@ -913,7 +913,7 @@ new file mode 100644
 index 0000000000000000000000000000000000000000..64f956a456730cfd99998566810c04df64a1bfa0
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,659 @@
+@@ -0,0 +1,658 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -1345,7 +1345,6 @@ index 0000000000000000000000000000000000000000..64f956a456730cfd99998566810c04df
 +
 +    auto w = new SerenityPlatformWindow(window);
 +    window->driverdata = w;
-+    w->window()->set_double_buffering_enabled(false);
 +    w->widget()->set_fill_with_background_color(false);
 +    w->window()->set_main_widget(w->widget());
 +    w->window()->on_close_request = [window] {

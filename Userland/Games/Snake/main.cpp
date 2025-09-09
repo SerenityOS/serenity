@@ -48,7 +48,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = GUI::Window::construct();
 
-    window->set_double_buffering_enabled(false);
     window->set_title("Snake");
     window->resize(324, 345);
 
