@@ -3484,6 +3484,7 @@ static ErrorOr<void> decode_immediate_generic_region(JBIG2LoadingContext& contex
         for (size_t i = 0; i < number_of_adaptive_template_pixels; ++i) {
             adaptive_template_pixels[i].x = static_cast<i8>(data[2 * i]);
             adaptive_template_pixels[i].y = static_cast<i8>(data[2 * i + 1]);
+            dbgln_if(JBIG2_DEBUG, "GBAT{}: {}, {}", i, adaptive_template_pixels[i].x, adaptive_template_pixels[i].y);
         }
         data = data.slice(2 * number_of_adaptive_template_pixels);
     }
