@@ -14,7 +14,7 @@ configopts=(
     '-DALSOFT_BACKEND_SDL2=ON'
 )
 files=(
-    "https://openal-soft.org/openal-releases/openal-soft-${version}.tar.bz2#796f4b89134c4e57270b7f0d755f0fa3435b90da437b745160a49bd41c845b21"
+    "https://github.com/kcat/openal-soft/releases/download/${version}/openal-soft-${version}.tar.bz2#796f4b89134c4e57270b7f0d755f0fa3435b90da437b745160a49bd41c845b21"
 )
 
 configure() {
