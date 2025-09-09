@@ -79,7 +79,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::write_i32("Flood"sv, ""sv, "board_rows"sv, board_rows);
     Config::write_i32("Flood"sv, ""sv, "board_columns"sv, board_columns);
 
-    window->set_double_buffering_enabled(false);
     window->set_title("Flood");
     window->resize(304, 325);
 

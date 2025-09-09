@@ -445,7 +445,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto window = GUI::Window::construct();
-    window->set_double_buffering_enabled(false);
     window->set_title("Mandelbrot");
     window->set_obey_widget_min_size(false);
     window->set_minimum_size(320, 240);
