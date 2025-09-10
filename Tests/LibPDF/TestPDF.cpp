@@ -141,6 +141,19 @@ TEST_CASE(resolve_indirect_reference_during_parsing)
     EXPECT_EQ(jbig2_stream->bytes().size(), 20'000U);
 }
 
+TEST_CASE(jbig2_embedded_organization_cross_chunk_reference)
+{
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("jbig2-globals.pdf"sv));
+    auto document = MUST(PDF::Document::create(file->bytes()));
+    MUST(document->initialize());
+    EXPECT_EQ(document->get_page_count(), 1U);
+
+    auto page = MUST(document->get_page(0));
+    auto page_size = Gfx::IntSize { 399, 400 };
+    auto bitmap = TRY_OR_FAIL(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, page_size));
+    MUST(PDF::Renderer::render(document, page, bitmap, Color::White, PDF::RenderingPreferences {}));
+}
+
 TEST_CASE(malformed_pdf_document)
 {
     Array test_inputs = {
