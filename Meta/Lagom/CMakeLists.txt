@@ -584,6 +584,7 @@ if (BUILD_LAGOM)
         endif()
 
         lagom_utility(gml-format SOURCES ../../Userland/Utilities/gml-format.cpp LIBS LibGUI LibMain)
+        lagom_utility(gron SOURCES ../../Userland/Utilities/gron.cpp LIBS LibMain)
         lagom_utility(gzip SOURCES ../../Userland/Utilities/gzip.cpp LIBS LibCompress LibMain)
 
         # Work around bug in JetBrains distributed CMake 3.27.2 where this causes infinite recursion in
