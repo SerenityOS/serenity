@@ -613,6 +613,10 @@ struct JBIG2LoadingContext {
     Vector<u32> page_numbers;
 
     Vector<SegmentData> segments;
+
+    // Files from the Power JBIG2 tests have a few quirks.
+    // Since they're useful for coverage, detect these files and be more lenient.
+    bool is_power_jbig2_file { false };
 };
 
 static ErrorOr<void> decode_jbig2_header(JBIG2LoadingContext& context, ReadonlyBytes data)
@@ -803,6 +807,28 @@ static ErrorOr<size_t> scan_for_immediate_generic_region_size(ReadonlyBytes data
     return size;
 }
 
+static void identify_power_jbig2_files(JBIG2LoadingContext& context)
+{
+    for (auto const& segment : context.segments) {
+        auto signature_data_1 = "\x20\0\0\0"
+                                "Source\0"
+                                "Power JBIG-2 Encoder - The University of British Columba and Image Power Inc.\0"
+                                "Version\0"
+                                "1.0.0\0"
+                                "\0"sv;
+        auto signature_data_2 = "\x20\0\0\0"
+                                "Source\0"
+                                "Power JBIG-2 Encoder - The University of British Columbia and Image Power Inc.\0"
+                                "Version\0"
+                                "1.0.0\0"
+                                "\0"sv;
+        if (segment.type() == JBIG2::SegmentType::Extension && (segment.data == signature_data_1.bytes() || segment.data == signature_data_2.bytes())) {
+            context.is_power_jbig2_file = true;
+            return;
+        }
+    }
+}
+
 static ErrorOr<void> validate_segment_header_retention_flags(JBIG2LoadingContext const& context)
 {
     // "If the retain bit for this segment value is 0, then no segment may refer to this segment.
@@ -824,8 +850,7 @@ static ErrorOr<void> validate_segment_header_retention_flags(JBIG2LoadingContext
         for (auto const& [i, referred_to_segment_number] : enumerate(header.referred_to_segment_numbers)) {
             // Quirk: t89-halftone/*-stripe.jb2 have one PatternDictionary and then one ImmediateHalftoneRegion per stripe,
             // but each ImmediateHalftoneRegion (incorrectly?) sets the retention flag for the PatternDictionary to 0.
-            // For now, just skip this check for ImmediateHalftoneRegion segments.
-            if (dead_segments.contains(referred_to_segment_number) && header.type != JBIG2::SegmentType::ImmediateHalftoneRegion)
+            if (dead_segments.contains(referred_to_segment_number) && !context.is_power_jbig2_file)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment refers to dead segment");
 
             auto const referred_to_segment_retention_flag = header.referred_to_segment_retention_flags[i];
@@ -1032,8 +1057,9 @@ static ErrorOr<void> validate_segment_header_page_associations(JBIG2LoadingConte
             if (segment.header.page_association == 0)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: Region, page information, end of page or end of stripe segment with no page association");
         }
-        // Quirk: `042_*.jb2`, `amb_*.jb2` in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfFile with a page,
-        // so don't check for that.
+        // Quirk: `042_*.jb2`, `amb_*.jb2` in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfFile with a page.
+        if (segment.type() == JBIG2::SegmentType::EndOfFile && segment.header.page_association != 0 && !context.is_power_jbig2_file)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of file segment with page association");
 
         // "If a segment is not associated with any page, then it must not refer to any segment that is associated with any page."
         if (segment.header.page_association == 0) {
@@ -1131,6 +1157,8 @@ static ErrorOr<void> complete_decoding_all_segment_headers(JBIG2LoadingContext& 
         }
     }
 
+    identify_power_jbig2_files(context);
+
     TRY(validate_segment_header_retention_flags(context));
     TRY(validate_segment_header_references(context));
     TRY(validate_segment_header_page_associations(context));
@@ -1221,7 +1249,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
             continue;
 
         // Quirk: `042_*.jb2`, `amb_*.jb2` in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfFile with a page.
-        if (found_end_of_page && segment.type() != JBIG2::SegmentType::EndOfFile)
+        if (found_end_of_page && !(segment.type() == JBIG2::SegmentType::EndOfFile && context.is_power_jbig2_file))
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Found segment after EndOfPage");
 
         if (segment.type() == JBIG2::SegmentType::PageInformation) {
@@ -2712,7 +2740,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_proced
     return patterns;
 }
 
-static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData& segment)
+static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, SegmentData& segment)
 {
     // 7.4.2 Symbol dictionary segment syntax
 
@@ -2828,7 +2856,9 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext&, SegmentData&
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid template_used");
 
     u8 refinement_template_used = (flags >> 12) & 0b11; // "SDREFTEMPLATE" in spec.
-    if (!uses_refinement_or_aggregate_coding && refinement_template_used != 0)
+
+    // Quirk: 042_22.jb2 does not set SDREFAGG but it does set SDREFTEMPLATE.
+    if (!uses_refinement_or_aggregate_coding && refinement_template_used != 0 && !context.is_power_jbig2_file)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement_template_used");
 
     if (flags & 0b1110'0000'0000'0000)
@@ -3104,7 +3134,8 @@ static ErrorOr<DirectRegionResult> decode_text_region(JBIG2LoadingContext& conte
         else if (delta_t_selection == 3)
             delta_t_table = TRY(custom_table());
 
-        if (!uses_refinement_coding && (huffman_flags & 0x7fc0) != 0)
+        // Quirk: 042_11.jb2 has refinement huffman table bits set but the SBREFINE bit is not set.
+        if (!uses_refinement_coding && (huffman_flags & 0x7fc0) != 0 && !context.is_power_jbig2_file)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Huffman flags have refinement bits set but refinement bit is not set");
 
         auto refinement_delta_width_selection = (huffman_flags >> 6) & 0b11; // "SBHUFFRDW" in spec.
