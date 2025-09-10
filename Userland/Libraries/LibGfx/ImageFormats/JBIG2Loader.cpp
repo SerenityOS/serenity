@@ -847,6 +847,22 @@ static void identify_power_jbig2_files(JBIG2LoadingContext& context)
     }
 }
 
+static ErrorOr<void> validate_segment_order(JBIG2LoadingContext const& context)
+{
+    // 7.1 General description
+    // "In the sequential and random-access organizations (see D.1 and D.2), the segments must appear in the file in increasing order
+    //  of their segment numbers. However, in the embedded organization (see D.3), this is not the case"
+    // "NOTE – It is possible for there to be gaps in the segment numbering"
+    if (context.organization == JBIG2::Organization::Embedded)
+        return {};
+
+    for (size_t i = 1; i < context.segments.size(); ++i)
+        if (context.segments[i - 1].header.segment_number > context.segments[i].header.segment_number)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segments out of order");
+
+    return {};
+}
+
 static ErrorOr<void> validate_segment_header_retention_flags(JBIG2LoadingContext const& context)
 {
     // "If the retain bit for this segment value is 0, then no segment may refer to this segment.
@@ -1177,6 +1193,7 @@ static ErrorOr<void> complete_decoding_all_segment_headers(JBIG2LoadingContext& 
 
     identify_power_jbig2_files(context);
 
+    TRY(validate_segment_order(context));
     TRY(validate_segment_header_retention_flags(context));
     TRY(validate_segment_header_references(context));
     TRY(validate_segment_header_page_associations(context));
