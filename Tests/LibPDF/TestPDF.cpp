@@ -131,7 +131,7 @@ TEST_CASE(encrypted_object_stream)
 
 TEST_CASE(resolve_indirect_reference_during_parsing)
 {
-    auto file = TRY_OR_FAIL(Core::MappedFile::map("jbig2-globals.pdf"sv));
+    auto file = TRY_OR_FAIL(Core::MappedFile::map("jbig2-globals-indirect-reference.pdf"sv));
     auto document = MUST(PDF::Document::create(file->bytes()));
     MUST(document->initialize());
     EXPECT_EQ(document->get_page_count(), 1U);
