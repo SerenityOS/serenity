@@ -14,7 +14,7 @@ set(TEST_FILES
     encoding.pdf
     encryption_nocopy.pdf
     group.pdf
-    jbig2-globals.pdf
+    jbig2-globals-indirect-reference.pdf
     jpeg2000-indexed-small.pdf
     linearized.pdf
     non-linearized.pdf
