@@ -1231,16 +1231,12 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
     switch (log2_of_block_size) {
     case 2:
         return reconstruct_templated<2>(plane, block_context, transform_block_x, transform_block_y, transform_set);
-        break;
     case 3:
         return reconstruct_templated<3>(plane, block_context, transform_block_x, transform_block_y, transform_set);
-        break;
     case 4:
         return reconstruct_templated<4>(plane, block_context, transform_block_x, transform_block_y, transform_set);
-        break;
     case 5:
         return reconstruct_templated<5>(plane, block_context, transform_block_x, transform_block_y, transform_set);
-        break;
     default:
         VERIFY_NOT_REACHED();
     }
