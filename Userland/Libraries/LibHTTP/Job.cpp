@@ -195,21 +195,20 @@ Coroutine<void> Job::flush_received_buffers()
 
     while (m_buffered_size > 0) {
         dbgln_if(JOB_DEBUG, "Job: Flushing received buffers: have {} bytes in {} buffers for {}", m_buffered_size, m_received_buffers.size(), m_request.url());
-        for (size_t i = 0; i < m_received_buffers.size(); ++i) {
-            auto& payload = m_received_buffers[i]->pending_flush;
+        if (!m_received_buffers.is_empty()) {
+            auto& payload = m_received_buffers[0]->pending_flush;
             auto result = co_await do_write(payload);
-            if (result.is_error())
-                break;
-            auto written = result.release_value();
-            m_buffered_size -= written;
-            if (written == payload.size()) {
-                // FIXME: Make this a take-first-friendly object?
-                (void)m_received_buffers.take_first();
-                break;
+            if (!result.is_error()) {
+                auto written = result.release_value();
+                m_buffered_size -= written;
+                if (written == payload.size()) {
+                    // FIXME: Make this a take-first-friendly object?
+                    (void)m_received_buffers.take_first();
+                } else {
+                    VERIFY(written < payload.size());
+                    payload = payload.slice(written, payload.size() - written);
+                }
             }
-            VERIFY(written < payload.size());
-            payload = payload.slice(written, payload.size() - written);
-            break;
         }
         dbgln_if(JOB_DEBUG, "Job: Flushing received buffers done: have {} bytes in {} buffers for {}", m_buffered_size, m_received_buffers.size(), m_request.url());
     }
