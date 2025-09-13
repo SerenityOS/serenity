@@ -25,6 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(selected_tab, "Tab, one of 'cards' or 'chess'", "open-tab", 't', "tab");
     args_parser.parse(arguments);
 
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
     TRY(Core::System::unveil("/res", "r"));
     // Both of these are used by the GUI::FileSystemModel in CardSettingsWidget.
     TRY(Core::System::unveil("/etc/passwd", "r"));
