@@ -19,6 +19,7 @@ class Coredump;
 class Credentials;
 class CustodyBase;
 class Custody;
+class DeprecatedWaitQueue;
 class Device;
 class DeviceControlDevice;
 class DiskCache;
