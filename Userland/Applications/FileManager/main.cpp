@@ -39,6 +39,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/PathBreadcrumbbar.h>
 #include <LibGUI/Progressbar.h>
+#include <LibGUI/Slider.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Toolbar.h>
@@ -644,6 +645,27 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     auto& progressbar = *widget->find_descendant_of_type_named<GUI::Progressbar>("progressbar");
     progressbar.set_format(GUI::Progressbar::Format::ValueSlashMax);
     progressbar.set_frame_style(Gfx::FrameStyle::SunkenPanel);
+
+    // Icon view size slider
+    auto& icon_view_size_slider = *widget->find_descendant_of_type_named<GUI::Slider>("icon_view_size");
+
+    auto set_icon_view_icon_size = [&](i32 icon_size) {
+        icon_view_size_slider.set_value(icon_size);
+        directory_view->set_icon_view_icon_size({ icon_size, icon_size });
+        Config::write_i32("FileManager"sv, "DirectoryView"sv, "IconSize"sv, icon_size);
+    };
+    set_icon_view_icon_size(Config::read_i32("FileManager"sv, "DirectoryView"sv, "IconSize"sv, 32));
+    icon_view_size_slider.on_change = [&](auto value) { set_icon_view_icon_size(value); };
+
+    icon_view_size_slider.set_visible(Config::read_string("FileManager"sv, "DirectoryView"sv, "ViewMode"sv, "Icon"sv) == "Icon"sv);
+    directory_view->on_view_mode_change = [&](auto mode) {
+        if (mode == DirectoryView::ViewMode::Icon) {
+            icon_view_size_slider.set_visible(true);
+        } else {
+            icon_view_size_slider.set_visible(false);
+            set_icon_view_icon_size(32);
+        }
+    };
 
     auto refresh_tree_view = [&] {
         directories_model->invalidate();
