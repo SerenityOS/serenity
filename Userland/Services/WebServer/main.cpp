@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     static auto const default_listen_address = "0.0.0.0"_string;
     static auto const default_port = 8000;
-    static auto const default_document_root_path = "/www"_string;
+    static auto const default_document_root_path = "/var/www"_string;
 
     ByteString listen_address = default_listen_address.to_byte_string();
     int port = default_port;

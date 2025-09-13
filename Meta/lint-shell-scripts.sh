@@ -13,7 +13,7 @@ if [ "$#" -eq "0" ]; then
             ':!:Tests/LibShell' \
             ':!:Base/home/anon/Tests' \
             ':!:Base/root/generate_manpages.sh' \
-            ':!:Base/usr/share/shell' \
+            ':!:Base/usr/share/Shell' \
             ':!:Base/etc/shellrc' \
     )
 else
