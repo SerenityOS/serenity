@@ -28,10 +28,8 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Palette.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 namespace GUI {
 
@@ -57,52 +55,10 @@ public:
     Gfx::IntSize visible_size() const { return m_visible_size; }
     void set_visible_size(Gfx::IntSize visible_size) { m_visible_size = visible_size; }
 
-    [[nodiscard]] bool is_volatile() const { return m_volatile; }
-
-    void set_volatile()
-    {
-        if (m_volatile)
-            return;
-#ifdef AK_OS_SERENITY
-        int rc = madvise(m_bitmap->scanline_u8(0), m_bitmap->data_size(), MADV_SET_VOLATILE);
-        if (rc < 0) {
-            perror("madvise(MADV_SET_VOLATILE)");
-            VERIFY_NOT_REACHED();
-        }
-#endif
-        m_volatile = true;
-    }
-
-    // Returns true if making the bitmap non-volatile succeeded. `was_purged` indicates status of contents.
-    // Returns false if there was not enough memory.
-    [[nodiscard]] bool set_nonvolatile(bool& was_purged)
-    {
-        if (!m_volatile) {
-            was_purged = false;
-            return true;
-        }
-
-#ifdef AK_OS_SERENITY
-        int rc = madvise(m_bitmap->scanline_u8(0), m_bitmap->data_size(), MADV_SET_NONVOLATILE);
-        if (rc < 0) {
-            if (errno == ENOMEM) {
-                was_purged = true;
-                return false;
-            }
-            perror("madvise(MADV_SET_NONVOLATILE)");
-            VERIFY_NOT_REACHED();
-        }
-        was_purged = rc != 0;
-#endif
-        m_volatile = false;
-        return true;
-    }
-
 private:
     NonnullRefPtr<Gfx::Bitmap> m_bitmap;
     i32 const m_serial;
     Gfx::IntSize m_visible_size;
-    bool m_volatile { false };
 };
 
 static NeverDestroyed<HashTable<Window*>> all_windows;
@@ -496,10 +452,10 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
     }
     VERIFY(!rects.is_empty());
 
-    // Throw away our backing store if its size is different, and we've stopped resizing or double buffering is disabled.
+    // Throw away our backing store if its size is different, and we've stopped resizing.
     // This ensures that we shrink the backing store after a resize, and that we do not get flickering artifacts when
     // directly painting into a shared active backing store.
-    if (m_back_store && (!m_resizing || !m_double_buffering_enabled) && m_back_store->size() != event.window_size())
+    if (m_back_store && !m_resizing && m_back_store->size() != event.window_size())
         m_back_store = nullptr;
 
     // Discard our backing store if it's unable to contain the new window size. Smaller is fine though, that prevents
@@ -511,24 +467,6 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
     if (!m_back_store) {
         m_back_store = create_backing_store(backing_store_size(event.window_size())).release_value_but_fixme_should_propagate_errors();
         created_new_backing_store = true;
-    } else if (m_double_buffering_enabled) {
-        bool was_purged = false;
-        bool bitmap_has_memory = m_back_store->set_nonvolatile(was_purged);
-        if (!bitmap_has_memory) {
-            // We didn't have enough memory to make the bitmap non-volatile!
-            // Fall back to single-buffered mode for this window.
-            // FIXME: Once we have a way to listen for system memory pressure notifications,
-            //        it would be cool to transition back into double-buffered mode once
-            //        the coast is clear.
-            dbgln("Not enough memory to make backing store non-volatile. Falling back to single-buffered mode.");
-            m_double_buffering_enabled = false;
-            m_back_store = move(m_front_store);
-            created_new_backing_store = true;
-        } else if (was_purged) {
-            // The backing store bitmap was cleared, but it does have memory.
-            // Act as if it's a new backing store so the entire window gets repainted.
-            created_new_backing_store = true;
-        }
     }
 
     if (created_new_backing_store) {
@@ -542,10 +480,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
     }
     m_back_store->set_visible_size(event.window_size());
 
-    if (m_double_buffering_enabled)
-        flip(rects);
-    else if (created_new_backing_store)
-        set_current_backing_store(*m_back_store, true);
+    flip(rects);
 
     if (is_visible())
         ConnectionToWindowServer::the().async_did_finish_painting(m_window_id, rects);
@@ -986,12 +921,6 @@ void Window::set_has_alpha_channel(bool value)
     update();
 }
 
-void Window::set_double_buffering_enabled(bool value)
-{
-    VERIFY(!is_visible());
-    m_double_buffering_enabled = value;
-}
-
 void Window::set_alpha_hit_threshold(float threshold)
 {
     if (threshold < 0.0f)
@@ -1048,7 +977,6 @@ void Window::flip(Vector<Gfx::IntRect, 32> const& dirty_rects)
     if (!m_back_store || m_back_store->size() != m_front_store->size()) {
         m_back_store = create_backing_store(m_front_store->size()).release_value_but_fixme_should_propagate_errors();
         memcpy(m_back_store->bitmap().scanline(0), m_front_store->bitmap().scanline(0), m_front_store->bitmap().size_in_bytes());
-        m_back_store->set_volatile();
         return;
     }
 
@@ -1056,8 +984,6 @@ void Window::flip(Vector<Gfx::IntRect, 32> const& dirty_rects)
     Painter painter(m_back_store->bitmap());
     for (auto& dirty_rect : dirty_rects)
         painter.blit(dirty_rect.location(), m_front_store->bitmap(), dirty_rect, 1.0f, false);
-
-    m_back_store->set_volatile();
 }
 
 ErrorOr<NonnullOwnPtr<WindowBackingStore>> Window::create_backing_store(Gfx::IntSize size)
@@ -1299,28 +1225,6 @@ void Window::notify_state_changed(Badge<ConnectionToWindowServer>, bool minimize
     m_visible_for_timer_purposes = !minimized && !occluded;
 
     m_maximized = maximized;
-
-    // When double buffering is enabled, minimization/occlusion means we can mark the front bitmap volatile (in addition to the back bitmap.)
-    // When double buffering is disabled, there is only the back bitmap (which we can now mark volatile!)
-    auto& store = m_double_buffering_enabled ? m_front_store : m_back_store;
-    if (!store)
-        return;
-    if (minimized || occluded) {
-        store->set_volatile();
-    } else {
-        bool was_purged = false;
-        bool bitmap_has_memory = store->set_nonvolatile(was_purged);
-        if (!bitmap_has_memory) {
-            // Not enough memory to make the bitmap non-volatile. Lose the bitmap and schedule an update.
-            // Let the paint system figure out what to do.
-            store = nullptr;
-            update();
-        } else if (was_purged) {
-            // The bitmap memory was purged by the kernel, but we have all-new zero-filled pages.
-            // Schedule an update to regenerate the bitmap.
-            update();
-        }
-    }
 }
 
 Action* Window::action_for_shortcut(Shortcut const& shortcut)
