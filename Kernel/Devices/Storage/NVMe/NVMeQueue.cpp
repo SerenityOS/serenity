@@ -160,7 +160,7 @@ u16 NVMeQueue::submit_sync_sqe(NVMeSubmission& sub)
     });
     submit_sqe(sub);
 
-    // FIXME: Only sync submissions (usually used for admin commands) use a WaitQueue based IO. Eventually we need to
+    // FIXME: Only sync submissions (usually used for admin commands) use a DeprecatedWaitQueue based IO. Eventually we need to
     //  move this logic into the block layer instead of sprinkling them in the driver code.
     m_sync_wait_queue.wait_forever("NVMe sync submit"sv);
     return cmd_status;
