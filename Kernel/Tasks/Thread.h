@@ -41,7 +41,7 @@ namespace Kernel {
 
 class Timer;
 
-enum class DispatchSignalResult {
+enum class [[nodiscard]] DispatchSignalResult {
     Deferred = 0,
     Yield,
     Terminate,

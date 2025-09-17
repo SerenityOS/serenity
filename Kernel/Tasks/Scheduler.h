@@ -29,6 +29,11 @@ struct TotalTimeScheduled {
     u64 total_kernel { 0 };
 };
 
+enum class [[nodiscard]] ShouldYield {
+    Yes,
+    No,
+};
+
 class Scheduler {
 public:
     static void initialize();
@@ -36,9 +41,9 @@ public:
     static void set_idle_thread(Thread* idle_thread);
     static void timer_tick();
     [[noreturn]] static void start();
-    static void pick_next();
+    static ShouldYield pick_next();
     static void yield();
-    static void context_switch(Thread*);
+    static ShouldYield context_switch(Thread*);
     static void enter_current(Thread& prev_thread);
     static void leave_on_first_switch(InterruptsState);
     static void prepare_after_exec();
