@@ -680,22 +680,14 @@ void Thread::WaitBlocker::will_unblock_immediately_without_blocking(UnblockImmed
 
 void Thread::WaitBlocker::was_unblocked(bool)
 {
-    bool got_sigchld, try_unblock;
+    bool try_unblock;
     {
         SpinlockLocker lock(m_lock);
         try_unblock = !m_did_unblock;
-        got_sigchld = m_got_sigchild;
     }
 
     if (try_unblock)
         Process::current().wait_blocker_set().try_unblock(*this);
-
-    // If we were interrupted by SIGCHLD (which gets special handling
-    // here) we're not going to return with EINTR. But we're going to
-    // deliver SIGCHLD (only) here.
-    auto* current_thread = Thread::current();
-    if (got_sigchld && current_thread->state() != State::Stopped)
-        current_thread->try_dispatch_one_pending_signal(SIGCHLD);
 }
 
 void Thread::WaitBlocker::do_was_disowned()
@@ -713,11 +705,7 @@ void Thread::WaitBlocker::do_set_result(siginfo_t const& result)
 
     if (do_get_interrupted_by_signal() == SIGCHLD) {
         // This makes it so that wait() will return normally despite the
-        // fact that SIGCHLD was delivered. Calling do_clear_interrupted_by_signal
-        // will disable dispatching signals in Thread::block and prevent
-        // it from returning with EINTR. We will then manually dispatch
-        // SIGCHLD (and only SIGCHLD) in was_unblocked.
-        m_got_sigchild = true;
+        // fact that SIGCHLD was delivered.
         do_clear_interrupted_by_signal();
     }
 }

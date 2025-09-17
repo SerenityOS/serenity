@@ -669,7 +669,6 @@ public:
         ErrorOr<siginfo_t>& m_result;
         Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> const m_waitee;
         bool m_did_unblock { false };
-        bool m_got_sigchild { false };
     };
 
     class WaitBlockerSet final : public BlockerSet {
