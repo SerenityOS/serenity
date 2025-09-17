@@ -1199,24 +1199,13 @@ ErrorOr<NonnullRefPtr<Thread>> Thread::clone(NonnullRefPtr<Process> process)
 
 void Thread::set_state(State new_state, u8 stop_signal)
 {
-    State previous_state;
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
     if (new_state == m_state)
         return;
 
-    {
-        previous_state = m_state;
-        if (previous_state == Thread::State::Invalid) {
-            // If we were *just* created, we may have already pending signals
-            if (has_unmasked_pending_signals()) {
-                dbgln_if(THREAD_DEBUG, "Dispatch pending signals to new thread {}", *this);
-                dispatch_one_pending_signal();
-            }
-        }
-
-        m_state = new_state;
-        dbgln_if(THREAD_DEBUG, "Set thread {} state to {}", *this, state_string());
-    }
+    State previous_state = m_state;
+    m_state = new_state;
+    dbgln_if(THREAD_DEBUG, "Set thread {} state to {}", *this, state_string());
 
     if (previous_state == Thread::State::Runnable) {
         Scheduler::dequeue_runnable_thread(*this);
