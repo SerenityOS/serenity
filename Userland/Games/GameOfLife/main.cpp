@@ -50,7 +50,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     size_t board_columns = 35;
     size_t board_rows = 35;
 
-    window->set_double_buffering_enabled(false);
     window->set_title("Game of Life");
 
     auto main_widget = TRY(GameOfLife::MainWidget::try_create());
