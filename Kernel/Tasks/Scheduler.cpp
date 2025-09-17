@@ -200,7 +200,7 @@ UNMAP_AFTER_INIT void Scheduler::start()
     VERIFY_NOT_REACHED();
 }
 
-void Scheduler::pick_next()
+ShouldYield Scheduler::pick_next()
 {
     VERIFY_INTERRUPTS_DISABLED();
 
@@ -236,7 +236,7 @@ void Scheduler::pick_next()
     critical.leave();
 
     thread_to_schedule.set_ticks_left(time_slice_for(thread_to_schedule));
-    context_switch(&thread_to_schedule);
+    return context_switch(&thread_to_schedule);
 }
 
 void Scheduler::yield()
@@ -254,10 +254,12 @@ void Scheduler::yield()
         return;
     }
 
-    Scheduler::pick_next();
+    auto result = pick_next();
+    while (result == ShouldYield::Yes)
+        result = pick_next();
 }
 
-void Scheduler::context_switch(Thread* thread)
+ShouldYield Scheduler::context_switch(Thread* thread)
 {
     thread->did_schedule();
 
@@ -265,7 +267,7 @@ void Scheduler::context_switch(Thread* thread)
     VERIFY(from_thread);
 
     if (from_thread == thread)
-        return;
+        return ShouldYield::No;
 
     // If the last process hasn't blocked (still marked as running),
     // mark it as runnable for the next round, unless it's supposed
@@ -303,7 +305,7 @@ void Scheduler::context_switch(Thread* thread)
 
     {
         SpinlockLocker lock(thread->get_lock());
-        thread->dispatch_one_pending_signal();
+        return thread->dispatch_one_pending_signal() == DispatchSignalResult::Yield ? ShouldYield::Yes : ShouldYield::No;
     }
 }
 
@@ -466,8 +468,11 @@ void Scheduler::invoke_async()
     // Since this function is called when leaving critical sections (such
     // as a Spinlock), we need to check if we're not already doing this
     // to prevent recursion
-    if (!Processor::current_in_scheduler())
-        pick_next();
+    if (!Processor::current_in_scheduler()) {
+        auto result = pick_next();
+        while (result == ShouldYield::Yes)
+            result = pick_next();
+    }
 }
 
 void Scheduler::notify_finalizer()
