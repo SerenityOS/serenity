@@ -41,7 +41,7 @@ namespace Kernel {
 
 class Timer;
 
-enum class DispatchSignalResult {
+enum class [[nodiscard]] DispatchSignalResult {
     Deferred = 0,
     Yield,
     Terminate,
@@ -669,7 +669,6 @@ public:
         ErrorOr<siginfo_t>& m_result;
         Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> const m_waitee;
         bool m_did_unblock { false };
-        bool m_got_sigchild { false };
     };
 
     class WaitBlockerSet final : public BlockerSet {
@@ -788,6 +787,7 @@ public:
     ThreadRegisters const& regs() const { return m_regs; }
 
     State state() const { return m_state; }
+    static StringView state_string(State);
     StringView state_string() const;
 
     ArchSpecificThreadData& arch_specific_data() { return m_arch_specific_data; }
@@ -1226,8 +1226,6 @@ private:
     State m_state { Thread::State::Invalid };
     RecursiveSpinlockProtected<Name, LockRank::None> m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
-
-    State m_stop_state { Thread::State::Invalid };
 
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };

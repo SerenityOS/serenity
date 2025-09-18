@@ -132,16 +132,10 @@ Thread::BlockResult Thread::block_impl(BlockTimeout const& timeout, Blocker& blo
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> timeout_unblocked(false);
     bool timer_was_added = false;
 
-    switch (state()) {
-    case Thread::State::Stopped:
-        // It's possible that we were requested to be stopped!
-        break;
-    case Thread::State::Running:
-        VERIFY(m_blocker == nullptr);
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
+    if (state() != Thread::State::Running)
+        PANIC("Attempting to block with invalid thread state - {}", state_string());
+
+    VERIFY(m_blocker == nullptr);
 
     m_blocker = &blocker;
 
@@ -229,17 +223,10 @@ void Thread::block(Kernel::Mutex& lock, SpinlockLocker<Spinlock<LockRank::None>>
     SpinlockLocker scheduler_lock(g_scheduler_lock);
     SpinlockLocker block_lock(m_block_lock);
 
-    switch (state()) {
-    case Thread::State::Stopped:
-        // It's possible that we were requested to be stopped!
-        break;
-    case Thread::State::Running:
-        VERIFY(m_blocker == nullptr);
-        break;
-    default:
-        dbgln("Error: Attempting to block with invalid thread state - {}", state_string());
-        VERIFY_NOT_REACHED();
-    }
+    if (state() != Thread::State::Running)
+        PANIC("Attempting to block with invalid thread state - {}", state_string());
+
+    VERIFY(m_blocker == nullptr);
 
     // If we're blocking on the big-lock we may actually be in the process
     // of unblocking from another lock. If that's the case m_blocking_mutex
@@ -502,9 +489,9 @@ auto Thread::sleep_until(clockid_t clock_id, Duration const& deadline) -> BlockR
     return Thread::current()->block<Thread::SleepBlocker>({}, Thread::BlockTimeout(true, &deadline, nullptr, clock_id));
 }
 
-StringView Thread::state_string() const
+StringView Thread::state_string(Thread::State state)
 {
-    switch (state()) {
+    switch (state) {
     case Thread::State::Invalid:
         return "Invalid"sv;
     case Thread::State::Runnable:
@@ -517,7 +504,16 @@ StringView Thread::state_string() const
         return "Dead"sv;
     case Thread::State::Stopped:
         return "Stopped"sv;
-    case Thread::State::Blocked: {
+    case Thread::State::Blocked:
+        return "Blocked"sv;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+StringView Thread::state_string() const
+{
+    auto thread_state = state();
+    if (thread_state == Thread::State::Blocked) {
         SpinlockLocker block_lock(m_block_lock);
         if (m_blocking_mutex)
             return "Mutex"sv;
@@ -525,8 +521,7 @@ StringView Thread::state_string() const
             return m_blocker->state_string();
         VERIFY_NOT_REACHED();
     }
-    }
-    PANIC("Thread::state_string(): Invalid state: {}", (int)state());
+    return state_string(thread_state);
 }
 
 void Thread::finalize()
@@ -889,21 +884,10 @@ static ErrorOr<void> copy_value_on_user_stack(FlatPtr& stack, T const& data)
 
 void Thread::resume_from_stopped()
 {
-    VERIFY(is_stopped());
-    VERIFY(m_stop_state != State::Invalid);
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
-    if (m_stop_state == Thread::State::Blocked) {
-        SpinlockLocker block_lock(m_block_lock);
-        if (m_blocker || m_blocking_mutex) {
-            // Hasn't been unblocked yet
-            set_state(Thread::State::Blocked, 0);
-        } else {
-            // Was unblocked while stopped
-            set_state(Thread::State::Runnable);
-        }
-    } else {
-        set_state(m_stop_state, 0);
-    }
+    VERIFY(is_stopped());
+
+    set_state(Thread::State::Runnable, 0);
 }
 
 DispatchSignalResult Thread::dispatch_signal(u8 signal)
@@ -1209,29 +1193,17 @@ ErrorOr<NonnullRefPtr<Thread>> Thread::clone(NonnullRefPtr<Process> process)
 
 void Thread::set_state(State new_state, u8 stop_signal)
 {
-    State previous_state;
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
     if (new_state == m_state)
-        return;
+        PANIC("Thread {} is already {}", *this, state_string());
 
-    {
-        previous_state = m_state;
-        if (previous_state == Thread::State::Invalid) {
-            // If we were *just* created, we may have already pending signals
-            if (has_unmasked_pending_signals()) {
-                dbgln_if(THREAD_DEBUG, "Dispatch pending signals to new thread {}", *this);
-                dispatch_one_pending_signal();
-            }
-        }
-
-        m_state = new_state;
-        dbgln_if(THREAD_DEBUG, "Set thread {} state to {}", *this, state_string());
-    }
+    State previous_state = m_state;
+    m_state = new_state;
+    dbgln_if(THREAD_DEBUG, "Set thread {} state to {}", *this, state_string());
 
     if (previous_state == Thread::State::Runnable) {
         Scheduler::dequeue_runnable_thread(*this);
     } else if (previous_state == Thread::State::Stopped) {
-        m_stop_state = State::Invalid;
         auto& process = this->process();
         if (process.set_stopped(false)) {
             process.for_each_thread([&](auto& thread) {
@@ -1254,8 +1226,9 @@ void Thread::set_state(State new_state, u8 stop_signal)
         Scheduler::enqueue_runnable_thread(*this);
         Processor::smp_wake_n_idle_processors(1);
     } else if (m_state == Thread::State::Stopped) {
-        // We don't want to restore to Running state, only Runnable!
-        m_stop_state = previous_state != Thread::State::Running ? previous_state : Thread::State::Runnable;
+        if (previous_state != Thread::State::Running)
+            PANIC("Attempting to stop with invalid thread state - {}", state_string(previous_state));
+
         auto& process = this->process();
         if (!process.set_stopped(true)) {
             // Note that we don't explicitly stop peer threads, we let them stop on their own the next time they
