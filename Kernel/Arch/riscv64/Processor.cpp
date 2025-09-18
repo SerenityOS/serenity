@@ -522,7 +522,6 @@ void ProcessorBase::exit_trap(TrapFrame& trap)
     // ScopedCritical here.
     m_in_critical = m_in_critical + 1;
 
-    // FIXME: Figure out if we need prev_irq_level, see duplicated code in Kernel/Arch/x86/common/Processor.cpp
     m_in_irq = 0;
 
     // Process the deferred call queue. Among other things, this ensures

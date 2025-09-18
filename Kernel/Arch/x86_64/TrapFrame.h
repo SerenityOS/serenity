@@ -16,7 +16,6 @@ namespace Kernel {
 struct RegisterState;
 
 struct TrapFrame {
-    FlatPtr prev_irq_level;
     TrapFrame* next_trap;
     RegisterState* regs; // must be last
 
@@ -27,7 +26,7 @@ struct TrapFrame {
     TrapFrame& operator=(TrapFrame&&) = delete;
 };
 
-#define TRAP_FRAME_SIZE (3 * 8)
+#define TRAP_FRAME_SIZE (2 * 8)
 
 static_assert(AssertSize<TrapFrame, TRAP_FRAME_SIZE>());
 
