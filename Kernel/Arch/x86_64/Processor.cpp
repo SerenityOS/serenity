@@ -795,8 +795,7 @@ void ProcessorBase::exit_trap(TrapFrame& trap)
     // ScopedCritical here.
     m_in_critical = m_in_critical + 1;
 
-    VERIFY(m_in_irq >= trap.prev_irq_level);
-    m_in_irq = trap.prev_irq_level;
+    m_in_irq = 0;
 
     if (s_smp_enabled)
         self->smp_process_pending_messages();
@@ -1421,7 +1420,6 @@ FlatPtr ProcessorBase::init_context(Thread& thread, bool leave_crit)
     stack_top -= sizeof(TrapFrame);
     TrapFrame& trap = *reinterpret_cast<TrapFrame*>(stack_top);
     trap.regs = &iretframe;
-    trap.prev_irq_level = 0;
     trap.next_trap = nullptr;
 
     stack_top -= sizeof(u64); // pointer to TrapFrame
