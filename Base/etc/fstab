@@ -7,8 +7,6 @@
 /home	/home	bind	immutable,bind,nodev,nosuid
 /root	/root	bind	immutable,bind,nodev,nosuid
 /var	/var	bind	immutable,bind,nodev,nosuid
-/www	/www	bind	immutable,bind,nodev,nosuid
 /usr/Tests	/usr/Tests	bind	immutable,bind,nodev,ro
 /usr/local	/usr/local	bind	immutable,bind,nodev,nosuid
 /usr/Ports	/usr/Ports	bind	immutable,bind,nodev,nosuid
-
