@@ -19,6 +19,12 @@ ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::create(size_t width, size_t h
     return adopt_nonnull_own_or_enomem(new (nothrow) BilevelImage(move(bits), width, height, pitch));
 }
 
+ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::create_from_byte_buffer(ByteBuffer bitmap, size_t width, size_t height)
+{
+    size_t pitch = ceil_div(width, static_cast<size_t>(8));
+    return adopt_nonnull_own_or_enomem(new (nothrow) BilevelImage(move(bitmap), width, height, pitch));
+}
+
 bool BilevelImage::get_bit(size_t x, size_t y) const
 {
     VERIFY(x < m_width);

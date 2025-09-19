@@ -22,6 +22,7 @@ enum class DitheringAlgorithm {
 class BilevelImage {
 public:
     static ErrorOr<NonnullOwnPtr<BilevelImage>> create(size_t width, size_t height);
+    static ErrorOr<NonnullOwnPtr<BilevelImage>> create_from_byte_buffer(ByteBuffer bitmap, size_t width, size_t height);
     static ErrorOr<NonnullOwnPtr<BilevelImage>> create_from_bitmap(Gfx::Bitmap const& bitmap, DitheringAlgorithm dithering_algorithm);
 
     bool get_bit(size_t x, size_t y) const;
