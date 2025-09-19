@@ -257,7 +257,7 @@ struct ModeCode {
 };
 
 // Table 4/T.4 – Two-dimensional code table
-constexpr Array node_codes = to_array<ModeCode>({
+constexpr Array mode_codes = to_array<ModeCode>({
     { 4, Mode::Pass, 0b0001 },
     { 3, Mode::Horizontal, 0b001 },
     { 1, Mode::Vertical_0, 0b1 },

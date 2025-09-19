@@ -147,7 +147,7 @@ ErrorOr<Variant<ModeCode, InvalidResult>> read_mode(BigEndianInputBitStream& inp
         potential_code |= TRY(input_bit_stream.read_bit());
         ++size;
 
-        if (auto const maybe_mode = get_code_from_table(node_codes, potential_code, size); maybe_mode.has_value())
+        if (auto const maybe_mode = get_code_from_table(mode_codes, potential_code, size); maybe_mode.has_value())
             return *maybe_mode;
     }
 
