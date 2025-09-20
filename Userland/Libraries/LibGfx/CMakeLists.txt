@@ -43,6 +43,7 @@ set(SOURCES
     ImageFormats/BMPLoader.cpp
     ImageFormats/BMPWriter.cpp
     ImageFormats/BooleanDecoder.cpp
+    ImageFormats/CCITTEncoder.cpp
     ImageFormats/CCITTDecoder.cpp
     ImageFormats/DDSLoader.cpp
     ImageFormats/DICOMLoader.cpp
