@@ -51,7 +51,7 @@ jobs:
         fuzzer: ['NO_FUZZ', 'FUZZ']
         include:
           - os_name: 'macOS'
-            os: macos-14
+            os: macos-15
             fuzzer: 'NO_FUZZ'
 
     uses: ./.github/workflows/lagom-template.yml
