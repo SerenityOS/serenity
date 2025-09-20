@@ -13,8 +13,14 @@ namespace Gfx {
 
 enum class DitheringAlgorithm {
     None,
+
+    Bayer2x2,
+    Bayer4x4,
+    Bayer8x8,
+
     FloydSteinberg,
-    // FIXME: Add Atkinson, Bayer in 2-3 sizes, BlueNoise, Hilbert / Peano space-filling, ...
+
+    // FIXME: Add Atkinson, BlueNoise, Hilbert / Peano space-filling, ...
     // https://surma.dev/things/ditherpunk/
     // https://tannerhelland.com/2012/12/28/dithering-eleven-algorithms-source-code.html
 };
