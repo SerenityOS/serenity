@@ -139,6 +139,29 @@ static u8 compute_otsu_threshold(Array<u32, 256> const& histogram)
     return threshold;
 }
 
+template<unsigned N>
+static constexpr Array<u32, (1 << N) * (1 << N)> make_bayer_matrix()
+{
+    constexpr auto size = 1u << N;
+    Array<u32, size * size> result {};
+    for (size_t i = 0; i < N; ++i) {
+        auto slice_size = 1u << i;
+        for (size_t y = 0; y < slice_size; ++y) {
+            for (size_t x = 0; x < slice_size; ++x) {
+                u32 v = result[y * size + x];
+                result[y * size + x] = 4 * v;
+                result[y * size + x + slice_size] = 4 * v + 2;
+                result[(y + slice_size) * size + x] = 4 * v + 3;
+                result[(y + slice_size) * size + x + slice_size] = 4 * v + 1;
+            }
+        }
+    }
+    return result;
+}
+static constexpr auto bayer_matrix_2x2 = make_bayer_matrix<1>();
+static constexpr auto bayer_matrix_4x4 = make_bayer_matrix<2>();
+static constexpr auto bayer_matrix_8x8 = make_bayer_matrix<3>();
+
 ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::create_from_bitmap(Gfx::Bitmap const& bitmap, DitheringAlgorithm dithering_algorithm)
 {
     auto gray_bitmap = TRY(ByteBuffer::create_uninitialized(bitmap.width() * bitmap.height()));
@@ -169,6 +192,34 @@ ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::create_from_bitmap(Gfx::Bitma
             }
         }
         break;
+    case DitheringAlgorithm::Bayer2x2:
+    case DitheringAlgorithm::Bayer4x4:
+    case DitheringAlgorithm::Bayer8x8: {
+        auto bayer_matrix = [&]() {
+            switch (dithering_algorithm) {
+            case DitheringAlgorithm::Bayer2x2:
+                return bayer_matrix_2x2.span();
+            case DitheringAlgorithm::Bayer4x4:
+                return bayer_matrix_4x4.span();
+            case DitheringAlgorithm::Bayer8x8:
+                return bayer_matrix_8x8.span();
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }();
+
+        auto n = static_cast<int>(sqrt(bayer_matrix.size()));
+        VERIFY(is_power_of_two(n));
+        auto mask = n - 1;
+
+        for (int y = 0, i = 0; y < bitmap.height(); ++y) {
+            for (int x = 0; x < bitmap.width(); ++x, ++i) {
+                u8 threshold = (bayer_matrix[(y & mask) * n + (x & mask)] * 255) / ((n * n) - 1);
+                bilevel_image->set_bit(x, y, gray_bitmap[i] > threshold ? 0 : 1);
+            }
+        }
+        break;
+    }
     case DitheringAlgorithm::FloydSteinberg: {
         struct Factor {
             int offset;
