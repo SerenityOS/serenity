@@ -850,14 +850,14 @@ void TextEditor::paint_event(PaintEvent& event)
                 }
             }
 
-            if (m_visualize_trailing_whitespace && line.ends_in_whitespace()) {
+            size_t end_of_visual_line = (start_of_visual_line + visual_line_text.length());
+            if (m_visualize_trailing_whitespace && line.ends_in_whitespace() && (cursor().line() != line_index || cursor().column() < end_of_visual_line)) {
                 size_t physical_column;
                 auto last_non_whitespace_column = line.last_non_whitespace_column();
                 if (last_non_whitespace_column.has_value())
                     physical_column = last_non_whitespace_column.value() + 1;
                 else
                     physical_column = 0;
-                size_t end_of_visual_line = (start_of_visual_line + visual_line_text.length());
                 if (physical_column < end_of_visual_line) {
                     physical_column -= multiline_trailing_space_offset.value_or(0);
 
