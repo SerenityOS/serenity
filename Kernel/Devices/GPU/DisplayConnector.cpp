@@ -182,52 +182,56 @@ ErrorOr<void> DisplayConnector::initialize_edid_for_generic_monitor(Optional<Arr
         raw_manufacturer_id[1] = manufacturer_id_string_packed_bytes[0];
     }
 
+    // https://en.wikipedia.org/wiki/Extended_Display_Identification_Data#EDID_1.4_data_format
     Array<u8, 128> virtual_monitor_edid = {
-        0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, /* header */
-        raw_manufacturer_id[1], raw_manufacturer_id[0], /* manufacturer */
-        0x00, 0x00,                                     /* product code */
-        0x00, 0x00, 0x00, 0x00,                         /* serial number goes here */
-        0x01,                                           /* week of manufacture */
-        0x00,                                           /* year of manufacture */
-        0x01, 0x03,                                     /* EDID version */
-        0x80,                                           /* capabilities - digital */
-        0x00,                                           /* horiz. res in cm, zero for projectors */
-        0x00,                                           /* vert. res in cm */
-        0x78,                                           /* display gamma (120 == 2.2). */
-        0xEE,                                           /* features (standby, suspend, off, RGB, std */
-                                                        /* colour space, preferred timing mode) */
-        0xEE, 0x91, 0xA3, 0x54, 0x4C, 0x99, 0x26, 0x0F, 0x50, 0x54,
-        /* chromaticity for standard colour space. */
-        0x21, 0x08, 0x00, /* default timings: 640x480@60, 800x600@60, 1024x768@60 */
-        0xd1, 0xc0,       /* standard timing 1920x1080 @ 60 Hz */
-        0xb3, 0x00,       /* standard timing 1680x1050 @ 60 Hz */
-        0xa9, 0xc0,       /* standard timing 1600x900 @ 60 Hz */
-        0x95, 0x00,       /* standard timing 1440x900 @ 60 Hz */
-        0x8b, 0xc0,       /* standard timing 1360x768 @ 60 Hz */
-        0x81, 0x80,       /* standard timing 1280x1024 @ 60 Hz */
-        0x81, 0x40,       /* standard timing 1280x960 @ 60 Hz */
-        0x81, 0xc0,       /* standard timing 1280x720 @ 60 Hz */
+        0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00,             // Header
+        raw_manufacturer_id[1], raw_manufacturer_id[0],             // Manufacturer ID
+        0x00, 0x00,                                                 // Manufacturer product code
+        0x00, 0x00, 0x00, 0x00,                                     // Serial number
+        0x01,                                                       // Week of manufacture
+        0x00,                                                       // Year of manufacture
+        0x01, 0x03,                                                 // EDID version: 1.3
+        0x80,                                                       // Video input parameters bitmap: digital, undefined bit depth, undefined video interface
+        0x00,                                                       // Horizontal screen size, in centimeters
+        0x00,                                                       // Vertical screen size, in centimeters
+        0x78,                                                       // Display gamma: 2.2
+        0xEE,                                                       // Supported features bitmap: DPMS standby, DPMS suspend, DPMS active-off, RGB 4:4:4 + YCrCb 4:4:4, sRGB color space, preferred timing mode specified in descriptor block 1
+        0xEE, 0x91, 0xA3, 0x54, 0x4C, 0x99, 0x26, 0x0F, 0x50, 0x54, // Chromaticity coordinates for sRGB
+        0x21, 0x08, 0x00,                                           // Established timing bitmap: 640x480@60, 800x600@60, 1024x768@60
+        0xd1, 0xc0,                                                 // Standard timing: 1920x1080 @ 60 Hz
+        0xb3, 0x00,                                                 // Standard timing: 1680x1050 @ 60 Hz
+        0xa9, 0xc0,                                                 // Standard timing: 1600x900 @ 60 Hz
+        0x95, 0x00,                                                 // Standard timing: 1440x900 @ 60 Hz
+        0x8b, 0xc0,                                                 // Standard timing: 1360x768 @ 60 Hz
+        0x81, 0x80,                                                 // Standard timing: 1280x1024 @ 60 Hz
+        0x81, 0x40,                                                 // Standard timing: 1280x960 @ 60 Hz
+        0x81, 0xc0,                                                 // Standard timing: 1280x720 @ 60 Hz
+
+        // Preferred timing descriptor
         0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x06, 0x00, 0x02, 0x02,
         0x02, 0x02,
-        /* descriptor block 1 goes below */
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        /* descriptor block 2, monitor ranges */
+
+        // Descriptor 2: Display Range Limits: 0-200Hz vertical, 0-200KHz horizontal, 1000MHz pixel clock
         0x00, 0x00, 0x00, 0xFD, 0x00,
         0x00, 0xC8, 0x00, 0xC8, 0x64, 0x00, 0x0A, 0x20, 0x20, 0x20,
         0x20, 0x20,
-        /* 0-200Hz vertical, 0-200KHz horizontal, 1000MHz pixel clock */
         0x20,
-        /* descriptor block 3, monitor name */
+
+        // Descriptor 3: Monitor Desciptor (Monitor name)
         0x00, 0x00, 0x00, 0xFC, 0x00,
         'G', 'e', 'n', 'e', 'r', 'i', 'c', 'S', 'c', 'r', 'e', 'e', 'n',
-        /* descriptor block 4: dummy data */
+
+        // Descriptor 4: Monitor Desciptor (Dummy identifier)
         0x00, 0x00, 0x00, 0x10, 0x00,
         0x0A, 0x20, 0x20, 0x20, 0x20, 0x20,
         0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
         0x20,
-        0x00, /* number of extensions */
-        0x00  /* checksum goes here */
+
+        0x00, // Number of extensions to follow: 0
+        0x00  // Checksum
     };
+
     // Note: Fix checksum to avoid warnings about checksum mismatch.
     size_t checksum = 0;
     // Note: Read all 127 bytes to add them to the checksum. Byte 128 is zeroed so
