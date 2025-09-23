@@ -80,6 +80,7 @@ set(CMD_SOURCES_CPP
     init.cpp
     install.cpp
     isobmff.cpp
+    jbig2-from-json.cpp
     js.cpp
     json.cpp
     kcov-example.cpp
@@ -336,6 +337,7 @@ target_link_libraries(imgcmp PRIVATE LibGfx)
 target_link_libraries(ini PRIVATE LibFileSystem)
 target_link_libraries(install-bin PRIVATE LibFileSystem)
 target_link_libraries(isobmff PRIVATE LibGfx)
+target_link_libraries(jbig2-from-json PRIVATE LibGfx)
 target_link_libraries(js PRIVATE LibCrypto LibJS LibLine LibLocale LibTextCodec)
 target_link_libraries(keymap PRIVATE LibKeyboard)
 target_link_libraries(less PRIVATE LibLine)

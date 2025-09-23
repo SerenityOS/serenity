@@ -238,19 +238,16 @@ struct JBIG2WritingContext {
 
 }
 
-static ErrorOr<void> encode_jbig2_header(Stream& stream)
+static ErrorOr<void> encode_jbig2_header(Stream& stream, JBIG2::FileHeaderData const& header)
 {
     TRY(stream.write_until_depleted(JBIG2::id_string));
 
     // D.4.2 File header flags
     u8 header_flags = 0;
 
-    // FIXME: Make an option for this.
-    JBIG2::Organization organization = JBIG2::Organization::Sequential;
+    JBIG2::Organization organization = header.organization;
     if (organization == JBIG2::Organization::Sequential)
         header_flags |= 1;
-
-    bool has_known_number_of_pages = true;
 
     // FIXME: Add an option for this.
     bool uses_templates_with_12_AT_pixels = false;
@@ -258,7 +255,7 @@ static ErrorOr<void> encode_jbig2_header(Stream& stream)
     // FIXME: Maybe add support for colors one day.
     bool contains_colored_region_segments = false;
 
-    if (!has_known_number_of_pages)
+    if (!header.number_of_pages.has_value())
         header_flags |= 2;
 
     if (uses_templates_with_12_AT_pixels)
@@ -270,8 +267,8 @@ static ErrorOr<void> encode_jbig2_header(Stream& stream)
     TRY(stream.write_value<u8>(header_flags));
 
     // D.4.3 Number of pages
-    if (has_known_number_of_pages)
-        TRY(stream.write_value<BigEndian<u32>>(1));
+    if (header.number_of_pages.has_value())
+        TRY(stream.write_value<BigEndian<u32>>(header.number_of_pages.value()));
 
     return {};
 }
@@ -435,6 +432,17 @@ static ErrorOr<void> encode_immediate_lossless_generic_region(JBIG2WritingContex
     return {};
 }
 
+static ErrorOr<void> encode_page_information_data(Stream& stream, JBIG2::PageInformationSegment const& page_information)
+{
+    TRY(stream.write_value<BigEndian<u32>>(page_information.bitmap_width));
+    TRY(stream.write_value<BigEndian<u32>>(page_information.bitmap_height));
+    TRY(stream.write_value<BigEndian<u32>>(page_information.page_x_resolution));
+    TRY(stream.write_value<BigEndian<u32>>(page_information.page_y_resolution));
+    TRY(stream.write_value<u8>(page_information.flags));
+    TRY(stream.write_value<BigEndian<u16>>(page_information.striping_information));
+    return {};
+}
+
 static ErrorOr<void> encode_page_information(JBIG2WritingContext& context, Stream& stream, JBIG2::PageInformationSegment const& page_information)
 {
     // 7.4.8 Page information segment syntax
@@ -445,14 +453,7 @@ static ErrorOr<void> encode_page_information(JBIG2WritingContext& context, Strea
     page_information_segment_header.data_length = sizeof(JBIG2::PageInformationSegment);
     TRY(encode_segment_header(stream, page_information_segment_header));
 
-    TRY(stream.write_value<BigEndian<u32>>(page_information.bitmap_width));
-    TRY(stream.write_value<BigEndian<u32>>(page_information.bitmap_height));
-    TRY(stream.write_value<BigEndian<u32>>(page_information.page_x_resolution));
-    TRY(stream.write_value<BigEndian<u32>>(page_information.page_y_resolution));
-    TRY(stream.write_value<u8>(page_information.flags));
-    TRY(stream.write_value<BigEndian<u16>>(page_information.striping_information));
-
-    return {};
+    return encode_page_information_data(stream, page_information);
 }
 
 static ErrorOr<void> encode_end_of_page(JBIG2WritingContext& context, Stream& stream)
@@ -510,7 +511,11 @@ ErrorOr<void> JBIG2Writer::encode(Stream& stream, Bitmap const& bitmap, Options 
     auto bilevel_image = TRY(BilevelImage::create_from_bitmap(bitmap, DitheringAlgorithm::FloydSteinberg));
 
     JBIG2WritingContext context { .options = options, .bilevel_image = *bilevel_image };
-    TRY(encode_jbig2_header(stream));
+
+    JBIG2::FileHeaderData header;
+    header.organization = JBIG2::Organization::Sequential;
+    header.number_of_pages = 1;
+    TRY(encode_jbig2_header(stream, header));
 
     JBIG2::PageInformationSegment page_info;
     TRY(fill_page_information(context, page_info));
@@ -519,6 +524,54 @@ ErrorOr<void> JBIG2Writer::encode(Stream& stream, Bitmap const& bitmap, Options 
     TRY(encode_immediate_lossless_generic_region(context, stream));
 
     TRY(encode_end_of_page(context, stream));
+
+    return {};
+}
+
+static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& segment_data)
+{
+    Vector<u8> scratch_buffer;
+
+    auto encoded_data = TRY(segment_data.data.visit(
+        [&scratch_buffer](JBIG2::PageInformationSegment const& page_information) -> ErrorOr<ReadonlyBytes> {
+            TRY(scratch_buffer.try_resize(sizeof(JBIG2::PageInformationSegment)));
+            FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
+            TRY(encode_page_information_data(stream, page_information));
+            return scratch_buffer;
+        },
+        [](JBIG2::EndOfPageSegmentData const&) -> ErrorOr<ReadonlyBytes> {
+            return ReadonlyBytes {};
+        }));
+
+    JBIG2::SegmentHeader header;
+    header.segment_number = segment_data.header.segment_number;
+    header.type = segment_data.data.visit(
+        [](JBIG2::PageInformationSegment const&) { return JBIG2::SegmentType::PageInformation; },
+        [](JBIG2::EndOfPageSegmentData const&) { return JBIG2::SegmentType::EndOfPage; });
+    header.retention_flag = segment_data.header.retention_flag;
+    for (auto const& reference : segment_data.header.referred_to_segments) {
+        header.referred_to_segment_numbers.append(reference.segment_number);
+        header.referred_to_segment_retention_flags.append(reference.retention_flag);
+    }
+    header.page_association = segment_data.header.page_association;
+    header.data_length = encoded_data.size(); // FIXME: Make optional for immediate generic regions.
+
+    TRY(encode_segment_header(stream, header));
+    TRY(stream.write_until_depleted(encoded_data));
+
+    return {};
+}
+
+ErrorOr<void> JBIG2Writer::encode_with_explicit_data(Stream& stream, JBIG2::FileData const& file_data)
+{
+    if (file_data.header.organization != JBIG2::Organization::Sequential)
+        return Error::from_string_literal("can only encode sequential files yet");
+
+    TRY(encode_jbig2_header(stream, file_data.header));
+
+    for (auto const& segment : file_data.segments) {
+        TRY(encode_segment(stream, segment));
+    }
 
     return {};
 }
