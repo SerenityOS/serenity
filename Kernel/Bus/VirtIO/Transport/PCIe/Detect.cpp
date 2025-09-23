@@ -29,11 +29,6 @@ UNMAP_AFTER_INIT void detect_pci_instances()
         if (device_identifier.hardware_id().vendor_id != PCI::VendorID::VirtIO)
             return;
         switch (device_identifier.hardware_id().device_id) {
-        case PCI::DeviceID::VirtIOEntropy: {
-            auto& rng = RNG::must_create_for_pci_instance(device_identifier).leak_ref();
-            MUST(rng.initialize_virtio_resources());
-            break;
-        }
         case PCI::DeviceID::VirtIOGPU: {
             // This should have been initialized by the graphics subsystem
             break;
