@@ -64,15 +64,15 @@ jobs:
         run: |
           if ${{ inputs.os_name == 'Linux' }} ; then
             if ${{ inputs.toolchain == 'Clang' }} ; then
-              echo "host_cc=clang-18" >> "$GITHUB_OUTPUT"
-              echo "host_cxx=clang++-18" >> "$GITHUB_OUTPUT"
+              echo "host_cc=clang-21" >> "$GITHUB_OUTPUT"
+              echo "host_cxx=clang++-21" >> "$GITHUB_OUTPUT"
             elif ${{ inputs.toolchain == 'GNU' }} ; then
               echo "host_cc=gcc-13" >> "$GITHUB_OUTPUT"
               echo "host_cxx=g++-13" >> "$GITHUB_OUTPUT"
             fi
           elif ${{ inputs.os_name == 'macOS' }} ; then
-            echo "host_cc=$(brew --prefix llvm@18)/bin/clang" >> "$GITHUB_OUTPUT"
-            echo "host_cxx=$(brew --prefix llvm@18)/bin/clang++" >> "$GITHUB_OUTPUT"
+            echo "host_cc=$(brew --prefix llvm@21)/bin/clang" >> "$GITHUB_OUTPUT"
+            echo "host_cxx=$(brew --prefix llvm@21)/bin/clang++" >> "$GITHUB_OUTPUT"
           fi
 
       # https://github.com/actions/runner-images/issues/9330
