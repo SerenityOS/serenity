@@ -41,6 +41,9 @@ ErrorOr<void> MonitorSettingsWidget::create_resolution_list()
         // Try to collect all supported resolutions for the main screen
         auto resolutions = TRY(edid.value().supported_resolutions());
         for (auto& resolution : resolutions) {
+            if (resolution.width == 0 || resolution.height == 0)
+                continue;
+
             dbgln("Adding EDID supported resolution: {}x{}", resolution.width, resolution.height);
             TRY(m_resolutions.try_append({ resolution.width, resolution.height }));
         }
