@@ -18,7 +18,6 @@
 #include <Kernel/Bus/USB/Drivers/USBDriver.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/VirtIO/Device.h>
-#include <Kernel/Bus/VirtIO/Transport/PCIe/Detect.h>
 #include <Kernel/Devices/Audio/Management.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/FUSEDevice.h>
@@ -354,10 +353,6 @@ void init_stage2(void*)
     auto boot_profiling = kernel_command_line().is_boot_profiling_enabled();
 
     SysFSFirmwareDirectory::initialize();
-
-    if (!PCI::Access::is_disabled()) {
-        VirtIO::detect_pci_instances();
-    }
 
     NetworkingManagement::the().initialize();
 
