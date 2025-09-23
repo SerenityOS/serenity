@@ -9,11 +9,13 @@
 // JBIG2Loader.cpp has many spec notes.
 
 #include <AK/BitStream.h>
+#include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Stream.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/BilevelImage.h>
+#include <LibGfx/ImageFormats/CCITTEncoder.h>
 #include <LibGfx/ImageFormats/JBIG2Writer.h>
 #include <LibGfx/ImageFormats/QMArithmeticCoder.h>
 
@@ -48,8 +50,12 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
     auto width = inputs.image.width();
     auto height = inputs.image.height();
 
-    if (inputs.is_modified_modified_read)
-        return Error::from_string_literal("JBIG2Writer: Cannot encode MMR yet");
+    if (inputs.is_modified_modified_read) {
+        // FIXME: It's a bit wasteful to re-convert the BilevelImage to a Bitmap here.
+        AllocatingMemoryStream output_stream;
+        TRY(Gfx::CCITT::Group4Encoder::encode(output_stream, TRY(inputs.image.to_gfx_bitmap())));
+        return output_stream.read_until_eof();
+    }
 
     auto& contexts = maybe_contexts.value();
 
@@ -368,9 +374,13 @@ static ErrorOr<void> encode_immediate_lossless_generic_region(JBIG2WritingContex
     inputs.adaptive_template_pixels[3] = { 1, -1 };
     inputs.require_eof_after_mmr = GenericRegionEncodingInputParameters::RequireEOFBAfterMMR::No;
 
-    int number_of_adaptive_template_pixels = inputs.gb_template == 0 ? 4 : 1;
+    int number_of_adaptive_template_pixels = 0;
+    if (!inputs.is_modified_modified_read)
+        number_of_adaptive_template_pixels = inputs.gb_template == 0 ? 4 : 1;
 
-    Optional<JBIG2::GenericContexts> contexts = JBIG2::GenericContexts { inputs.gb_template };
+    Optional<JBIG2::GenericContexts> contexts;
+    if (!inputs.is_modified_modified_read)
+        contexts = JBIG2::GenericContexts { inputs.gb_template };
     auto data = TRY(generic_region_encoding_procedure(inputs, contexts));
 
     // 7.4.6 Generic region segment syntax
@@ -402,12 +412,15 @@ static ErrorOr<void> encode_immediate_lossless_generic_region(JBIG2WritingContex
 
     u8 flags = 0;
     if (inputs.is_modified_modified_read)
-        flags |= 1;
-    flags |= (inputs.gb_template & 3) << 1;
-    if (inputs.is_typical_prediction_used)
-        flags |= 0x8;
-    if (inputs.is_extended_reference_template_used)
-        flags |= 0x10;
+        flags |= 1; // "MMR"
+    if (!inputs.is_modified_modified_read) {
+        // The spec only requires GBTEMPLATE to be 0 if MMR is set, but it seems nicer to set TPGDON and EXTTEMPLATE to 0 too then.
+        flags |= (inputs.gb_template & 3) << 1; // "GBTEMPLATE"
+        if (inputs.is_typical_prediction_used)
+            flags |= 0x8; // "TPGDON"
+        if (inputs.is_extended_reference_template_used)
+            flags |= 0x10; // "EXTTEMPLATE"
+    }
     TRY(stream.write_value<u8>(flags));
 
     for (int i = 0; i < number_of_adaptive_template_pixels; ++i) {
