@@ -6,6 +6,8 @@
 
 #include <AK/Span.h>
 #include <AK/String.h>
+#include <Kernel/Bus/PCI/Driver.h>
+#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
 #include <Kernel/Devices/Input/Management.h>
 #include <Kernel/Devices/Input/VirtIO/EvDevDefinitions.h>
@@ -441,6 +443,22 @@ void Input::handle_event(VirtIOInputEvent const& event)
         dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown event type: {:#x}", event.type);
         break;
     }
+}
+
+PCI_DRIVER(VirtIOInputDriver);
+
+ErrorOr<void> VirtIOInputDriver::probe(PCI::DeviceIdentifier const& pci_device_identifier) const
+{
+    if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::VirtIO
+        || pci_device_identifier.hardware_id().device_id != PCI::DeviceID::VirtIOInput)
+        return ENOTSUP;
+
+    auto input = Input::must_create_for_pci_instance(pci_device_identifier);
+    TRY(input->initialize_virtio_resources());
+
+    (void)input.leak_ref();
+
+    return {};
 }
 
 }

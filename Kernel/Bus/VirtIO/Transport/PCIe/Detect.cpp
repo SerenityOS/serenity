@@ -37,11 +37,6 @@ UNMAP_AFTER_INIT void detect_pci_instances()
             // This should have been initialized by the storage subsystem
             break;
         }
-        case PCI::DeviceID::VirtIOInput: {
-            auto& input = Input::must_create_for_pci_instance(device_identifier).leak_ref();
-            MUST(input.initialize_virtio_resources());
-            break;
-        }
         default:
             dbgln_if(VIRTIO_DEBUG, "VirtIO: Unknown VirtIO device with ID: {}", device_identifier.hardware_id().device_id);
             break;
