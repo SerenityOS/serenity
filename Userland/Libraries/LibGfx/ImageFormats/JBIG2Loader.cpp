@@ -3613,7 +3613,13 @@ static ErrorOr<DirectRegionResult> decode_generic_region(JBIG2LoadingContext& co
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: No segment data");
     u8 flags = data[0];
     bool uses_mmr = (flags & 1) != 0;
-    u8 arithmetic_coding_template = (flags >> 1) & 3;               // "GBTEMPLATE"
+
+    // "GBTEMPLATE"
+    // "If MMR is 1 then this field must contain the value zero."
+    u8 arithmetic_coding_template = (flags >> 1) & 3;
+    if (uses_mmr && arithmetic_coding_template != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid GBTEMPLATE");
+
     bool typical_prediction_generic_decoding_on = (flags >> 3) & 1; // "TPGDON"; "TPGD" is short for "Typical Prediction for Generic Direct coding"
     bool uses_extended_reference_template = (flags >> 4) & 1;       // "EXTTEMPLATE"
     if (flags & 0b1110'0000)
