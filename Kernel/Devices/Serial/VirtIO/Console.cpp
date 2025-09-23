@@ -5,6 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Bus/PCI/Driver.h>
+#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Serial/VirtIO/Console.h>
@@ -236,4 +238,21 @@ void Console::send_open_control_message(unsigned port_number, bool open)
     };
     write_control_message(port_open);
 }
+
+PCI_DRIVER(VirtIOConsoleDriver);
+
+ErrorOr<void> VirtIOConsoleDriver::probe(PCI::DeviceIdentifier const& pci_device_identifier) const
+{
+    if (pci_device_identifier.hardware_id().vendor_id != PCI::VendorID::VirtIO
+        || pci_device_identifier.hardware_id().device_id != PCI::DeviceID::VirtIOConsole)
+        return ENOTSUP;
+
+    auto console = Console::must_create_for_pci_instance(pci_device_identifier);
+    TRY(console->initialize_virtio_resources());
+
+    (void)console.leak_ref();
+
+    return {};
+}
+
 }
