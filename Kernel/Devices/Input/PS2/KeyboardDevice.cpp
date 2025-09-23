@@ -52,7 +52,7 @@ static constexpr KeyCodeEntry shifted_scan_code_set1_key_map[0x100] = {
     { Key_Invalid, 0xFF },        { Key_Escape, 1 },                    { Key_ExclamationPoint, 2 },      { Key_AtSign, 3 },
     { Key_Hashtag, 4 },           { Key_Dollar, 5 },                    { Key_Percent, 6 },               { Key_Circumflex, 7 },
     { Key_Ampersand, 8 },         { Key_Asterisk, 9 },                  { Key_LeftParen, 0x0A },          { Key_RightParen, 0x0B },
-    { Key_Underscore, 0xC },      { Key_Plus, 0x4E },                   { Key_Backspace, 0x0E },          { Key_Tab, 0x0F },
+    { Key_Underscore, 0xC },      { Key_Plus, 0x0D },                   { Key_Backspace, 0x0E },          { Key_Tab, 0x0F },
     { Key_Q, 0x10 },              { Key_W, 0x11 },                      { Key_E, 0x12 },                  { Key_R, 0x13 },
     { Key_T, 0x14 },              { Key_Y, 0x15 },                      { Key_U, 0x16 },                  { Key_I, 0x17 },
     { Key_O, 0x18 },              { Key_P, 0x19 },                      { Key_LeftBrace, 0x1A },          { Key_RightBrace, 0x1B },
