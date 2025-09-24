@@ -65,6 +65,13 @@ static ErrorOr<Gfx::JBIG2::FileHeaderData> jbig2_header_from_json(JsonObject con
     return header;
 }
 
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_file_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    if (object.has_value())
+        return Error::from_string_literal("end_of_file segment should have no \"data\" object");
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::EndOfFileSegmentData {} };
+}
+
 static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_page_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
 {
     if (object.has_value())
@@ -598,6 +605,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
     if (!type_string.has_value())
         return Error::from_string_literal("segment missing \"type\"");
 
+    if (type_string == "end_of_file")
+        return jbig2_end_of_file_from_json(header, segment_data_object);
     if (type_string == "end_of_page")
         return jbig2_end_of_page_from_json(header, segment_data_object);
     if (type_string == "generic_region")

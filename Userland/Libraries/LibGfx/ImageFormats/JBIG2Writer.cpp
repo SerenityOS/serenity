@@ -462,6 +462,9 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
             TRY(encode_page_information_data(stream, page_information));
             return scratch_buffer;
         },
+        [](JBIG2::EndOfFileSegmentData const&) -> ErrorOr<ReadonlyBytes> {
+            return ReadonlyBytes {};
+        },
         [](JBIG2::EndOfPageSegmentData const&) -> ErrorOr<ReadonlyBytes> {
             return ReadonlyBytes {};
         }));
@@ -472,6 +475,7 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
         [](JBIG2::ImmediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateGenericRegion; },
         [](JBIG2::ImmediateLosslessGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessGenericRegion; },
         [](JBIG2::PageInformationSegment const&) { return JBIG2::SegmentType::PageInformation; },
+        [](JBIG2::EndOfFileSegmentData const&) { return JBIG2::SegmentType::EndOfFile; },
         [](JBIG2::EndOfPageSegmentData const&) { return JBIG2::SegmentType::EndOfPage; });
     header.retention_flag = segment_data.header.retention_flag;
     for (auto const& reference : segment_data.header.referred_to_segments) {

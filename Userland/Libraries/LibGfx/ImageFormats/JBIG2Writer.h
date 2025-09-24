@@ -52,11 +52,12 @@ struct ImmediateLosslessGenericRegionSegmentData {
     GenericRegionSegmentData generic_region;
 };
 
+struct EndOfFileSegmentData { };
 struct EndOfPageSegmentData { };
 
 struct SegmentData {
     SegmentHeaderData header;
-    Variant<JBIG2::PageInformationSegment, EndOfPageSegmentData, ImmediateGenericRegionSegmentData, ImmediateLosslessGenericRegionSegmentData> data;
+    Variant<JBIG2::PageInformationSegment, EndOfFileSegmentData, EndOfPageSegmentData, ImmediateGenericRegionSegmentData, ImmediateLosslessGenericRegionSegmentData> data;
 };
 
 struct FileHeaderData {
