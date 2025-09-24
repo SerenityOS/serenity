@@ -598,6 +598,14 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
             return Error::from_string_literal("expected uint for \"page_association\"");
         }
 
+        if (key == "retained"sv) {
+            if (auto retained = object.get_bool(); retained.has_value()) {
+                header.retention_flag = retained.value();
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"retained\"");
+        }
+
         if (key == "data"sv) {
             if (object.is_object()) {
                 segment_data_object = object.as_object();
