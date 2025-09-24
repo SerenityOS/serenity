@@ -582,6 +582,14 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
             return Error::from_string_literal("expected string for \"type\"");
         }
 
+        if (key == "force_32_bit_page_association"sv) {
+            if (auto force_32_bit_page_association = object.get_bool(); force_32_bit_page_association.has_value()) {
+                header.force_32_bit_page_association = force_32_bit_page_association.value();
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"force_32_bit_page_association\"");
+        }
+
         if (key == "page_association"sv) {
             if (auto page_association = object.get_u32(); page_association.has_value()) {
                 header.page_association = page_association.value();

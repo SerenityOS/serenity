@@ -35,6 +35,8 @@ struct SegmentHeaderData {
     // 7.2.6 Segment page association
     // "The first page must be numbered "1". This field may contain a value of zero; this value indicates that this segment is not associated with any page."
     u32 page_association { 0 };
+
+    bool force_32_bit_page_association { false };
 };
 
 struct GenericRegionSegmentData {

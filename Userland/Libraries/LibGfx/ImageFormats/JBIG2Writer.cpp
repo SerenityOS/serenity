@@ -263,15 +263,19 @@ static ErrorOr<void> encode_jbig2_header(Stream& stream, JBIG2::FileHeaderData c
     return {};
 }
 
-static ErrorOr<void> encode_segment_header(Stream& stream, JBIG2::SegmentHeader const& header)
+enum class PageAssociationSize {
+    Auto,
+    Force32Bit,
+};
+
+static ErrorOr<void> encode_segment_header(Stream& stream, JBIG2::SegmentHeader const& header, PageAssociationSize page_association_size)
 {
     // 7.2.2 Segment number
     TRY(stream.write_value<BigEndian<u32>>(header.segment_number));
 
     // 7.2.3 Segment header flags
 
-    // FIXME: Add an option to force this.
-    bool segment_page_association_size_is_32_bits = header.page_association >= 256;
+    bool segment_page_association_size_is_32_bits = header.page_association >= 256 || page_association_size == PageAssociationSize::Force32Bit;
 
     bool segment_retained_only_by_itself_and_extension_segments = false; // FIXME: Compute?
 
@@ -485,7 +489,8 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     header.page_association = segment_data.header.page_association;
     header.data_length = encoded_data.size(); // FIXME: Make optional for immediate generic regions.
 
-    TRY(encode_segment_header(stream, header));
+    auto page_association_size = segment_data.header.force_32_bit_page_association ? PageAssociationSize::Force32Bit : PageAssociationSize::Auto;
+    TRY(encode_segment_header(stream, header, page_association_size));
     TRY(stream.write_until_depleted(encoded_data));
 
     return {};
