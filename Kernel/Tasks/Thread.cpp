@@ -779,16 +779,6 @@ DispatchSignalResult Thread::dispatch_one_pending_signal()
     return dispatch_signal(signal);
 }
 
-DispatchSignalResult Thread::try_dispatch_one_pending_signal(u8 signal)
-{
-    VERIFY(signal != 0);
-    SpinlockLocker scheduler_lock(g_scheduler_lock);
-    u32 signal_candidates = pending_signals_for_state() & ~m_signal_mask;
-    if ((signal_candidates & (1 << (signal - 1))) == 0)
-        return DispatchSignalResult::Continue;
-    return dispatch_signal(signal);
-}
-
 enum class DefaultSignalAction {
     Terminate,
     Ignore,
