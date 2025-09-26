@@ -27,11 +27,17 @@ ModeBilevelDialog::ModeBilevelDialog(GUI::Window* parent_window)
 
     enum class DitheringMethodIndex {
         None = 0,
+        Bayer2x2,
+        Bayer4x4,
+        Bayer8x8,
         FloydSteinberg,
     };
 
     static constexpr AK::Array dithering_strings = {
         "Global Threshold"sv,
+        "Bayer 2x2"sv,
+        "Bayer 4x4"sv,
+        "Bayer 8x8"sv,
         "Floyd-Steinberg"sv
     };
 
@@ -39,6 +45,12 @@ ModeBilevelDialog::ModeBilevelDialog(GUI::Window* parent_window)
         switch (m_dithering_algorithm) {
         case Gfx::DitheringAlgorithm::None:
             return DitheringMethodIndex::None;
+        case Gfx::DitheringAlgorithm::Bayer2x2:
+            return DitheringMethodIndex::Bayer2x2;
+        case Gfx::DitheringAlgorithm::Bayer4x4:
+            return DitheringMethodIndex::Bayer4x4;
+        case Gfx::DitheringAlgorithm::Bayer8x8:
+            return DitheringMethodIndex::Bayer8x8;
         case Gfx::DitheringAlgorithm::FloydSteinberg:
             return DitheringMethodIndex::FloydSteinberg;
         }
@@ -55,6 +67,12 @@ ModeBilevelDialog::ModeBilevelDialog(GUI::Window* parent_window)
             switch (dithering_method_index) {
             case DitheringMethodIndex::None:
                 return Gfx::DitheringAlgorithm::None;
+            case DitheringMethodIndex::Bayer2x2:
+                return Gfx::DitheringAlgorithm::Bayer2x2;
+            case DitheringMethodIndex::Bayer4x4:
+                return Gfx::DitheringAlgorithm::Bayer4x4;
+            case DitheringMethodIndex::Bayer8x8:
+                return Gfx::DitheringAlgorithm::Bayer8x8;
             case DitheringMethodIndex::FloydSteinberg:
                 return Gfx::DitheringAlgorithm::FloydSteinberg;
             }
