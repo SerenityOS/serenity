@@ -888,6 +888,9 @@ public:
 
     [[nodiscard]] bool is_in_alternative_signal_stack() const;
 
+    [[nodiscard]] bool was_interrupted() const { return m_was_interrupted; }
+    void clear_interrupted() { m_was_interrupted = false; }
+
     FPUState& fpu_state() { return m_fpu_state; }
 
     unsigned syscall_count() const { return m_syscall_count; }
@@ -1233,6 +1236,7 @@ private:
     bool m_is_crashing { false };
     bool m_is_promise_violation_pending { false };
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
+    Atomic<bool> m_was_interrupted { false };
     Atomic<u32> m_nested_profiler_calls { 0 };
 
     NonnullRefPtr<Timer> const m_block_timer;
