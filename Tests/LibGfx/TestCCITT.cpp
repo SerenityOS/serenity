@@ -10,8 +10,6 @@
 #include <LibGfx/ImageFormats/CCITTEncoder.h>
 #include <LibTest/TestCase.h>
 
-// The test case are generated from the three strips contained in Tests/LibGfx/test-inputs/tiff/ccitt4.tiff.
-
 namespace {
 
 void test_roundtrip(ReadonlyBytes encoded, u32 width, u32 height)
@@ -28,7 +26,9 @@ void test_roundtrip(ReadonlyBytes encoded, u32 width, u32 height)
 
 }
 
-TEST_CASE(round_trip_1)
+// The round_trip_ccitt4_n test cases are generated from the three strips contained in Tests/LibGfx/test-inputs/tiff/ccitt4.tiff.
+
+TEST_CASE(round_trip_ccitt4_1)
 {
     auto encoded = to_array<u8>({
         // clang-format off
@@ -50,7 +50,7 @@ TEST_CASE(round_trip_1)
     test_roundtrip(encoded, 400, 128);
 }
 
-TEST_CASE(round_trip_2)
+TEST_CASE(round_trip_ccitt4_2)
 {
     auto encoded = to_array<u8>({
         // clang-format off
@@ -70,7 +70,7 @@ TEST_CASE(round_trip_2)
     test_roundtrip(encoded, 400, 128);
 }
 
-TEST_CASE(round_trip_3)
+TEST_CASE(round_trip_ccitt4_3)
 {
     auto encoded = to_array<u8>({ 0x26, 0xC6, 0xA7, 0x85, 0x1F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFC, 0x0, 0x40, 0x4 });
     test_roundtrip(encoded, 400, 44);
