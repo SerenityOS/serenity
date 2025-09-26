@@ -45,11 +45,19 @@ struct GenericRegionSegmentData {
     NonnullOwnPtr<BilevelImage> image;
 };
 
+struct ImmediateGenericRegionSegmentData {
+    GenericRegionSegmentData generic_region;
+};
+
+struct ImmediateLosslessGenericRegionSegmentData {
+    GenericRegionSegmentData generic_region;
+};
+
 struct EndOfPageSegmentData { };
 
 struct SegmentData {
     SegmentHeaderData header;
-    Variant<JBIG2::PageInformationSegment, EndOfPageSegmentData, GenericRegionSegmentData> data;
+    Variant<JBIG2::PageInformationSegment, EndOfPageSegmentData, ImmediateGenericRegionSegmentData, ImmediateLosslessGenericRegionSegmentData> data;
 };
 
 struct FileHeaderData {
