@@ -70,6 +70,24 @@ static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& obje
     u8 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "is_eventually_lossless"sv) {
+            if (auto is_eventually_lossless = value.get_bool(); is_eventually_lossless.has_value()) {
+                if (is_eventually_lossless.value())
+                    flags |= 1u;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"is_eventually_lossless\"");
+        }
+
+        if (key == "might_contain_refinements"sv) {
+            if (auto might_contain_refinements = value.get_bool(); might_contain_refinements.has_value()) {
+                if (might_contain_refinements.value())
+                    flags |= 1u << 1;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"might_contain_refinements\"");
+        }
+
         if (key == "default_color"sv) {
             if (value.is_string()) {
                 auto const& s = value.as_string();
@@ -81,7 +99,53 @@ static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& obje
                     return Error::from_string_literal("expected \"white\" or \"black\" for \"default_color\"");
                 return {};
             }
-            return Error::from_string_literal("expected 0 or 1 for \"default_color\"");
+            return Error::from_string_literal("expected \"white\" or \"black\" for \"default_color\"");
+        }
+
+        if (key == "default_combination_operator"sv) {
+            if (value.is_string()) {
+                // "replace" is only valid in a region segment information's external_combination_operator, not here.
+                auto const& s = value.as_string();
+                if (s == "or"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Or) << 3;
+                else if (s == "and"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::And) << 3;
+                else if (s == "xor"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Xor) << 3;
+                else if (s == "xnor"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::XNor) << 3;
+                else
+                    return Error::from_string_literal("expected \"or\", \"and\", \"xor\", or \"xnor\" for \"default_combination_operator\"");
+                return {};
+            }
+            return Error::from_string_literal("expected \"or\", \"and\", \"xor\", or \"xnor\" for \"default_combination_operator\"");
+        }
+
+        if (key == "requires_auxiliary_buffers"sv) {
+            if (auto requires_auxiliary_buffers = value.get_bool(); requires_auxiliary_buffers.has_value()) {
+                if (requires_auxiliary_buffers.value())
+                    flags |= 1u << 5;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"requires_auxiliary_buffers\"");
+        }
+
+        if (key == "direct_region_segments_override_default_combination_operator"sv) {
+            if (auto direct_region_segments_override_default_combination_operator = value.get_bool(); direct_region_segments_override_default_combination_operator.has_value()) {
+                if (direct_region_segments_override_default_combination_operator.value())
+                    flags |= 1u << 6;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"direct_region_segments_override_default_combination_operator\"");
+        }
+
+        if (key == "might_contain_coloured_segments"sv) {
+            if (auto might_contain_coloured_segments = value.get_bool(); might_contain_coloured_segments.has_value()) {
+                if (might_contain_coloured_segments.value())
+                    flags |= 1u << 7;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"might_contain_coloured_segments\"");
         }
 
         dbgln("page_information flag key {}", key);
