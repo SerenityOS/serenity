@@ -182,7 +182,7 @@ private:
     bool m_double_rate_pcm_enabled { false };
     NonnullOwnPtr<IOWindow> m_mixer_io_window;
     NonnullOwnPtr<IOWindow> m_bus_io_window;
-    WaitQueue m_irq_queue;
+    DeprecatedWaitQueue m_irq_queue;
     OwnPtr<Memory::Region> m_output_buffer;
     u8 m_output_buffer_page_count { 4 };
     u8 m_output_buffer_page_index { 0 };

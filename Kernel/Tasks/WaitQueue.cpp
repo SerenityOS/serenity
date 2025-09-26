@@ -1,96 +1,99 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2025, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Debug.h>
-#include <Kernel/Tasks/Thread.h>
+#include <AK/Badge.h>
+#include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/WaitQueue.h>
+
+// This is essentially an implementation of https://read.seas.harvard.edu/cs1610/2025/doc/wait-queues
 
 namespace Kernel {
 
-bool WaitQueue::should_add_blocker(Thread::Blocker& b, void*)
+void WaitQueue::notify_all()
 {
-    VERIFY(m_lock.is_locked());
-    VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
-    if (m_wake_requested) {
-        m_wake_requested = false;
-        dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: do not block thread {}", this, b.thread());
-        return false;
+    SpinlockLocker queue_lock { m_lock };
+    while (!m_waiters.is_empty()) {
+        Waiter& waiter = *m_waiters.take_first();
+        waiter.notify({});
     }
-    dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: should block thread {}", this, b.thread());
-    return true;
 }
 
-u32 WaitQueue::wake_one()
+void WaitQueue::notify_one()
 {
-    u32 did_wake = 0;
-    SpinlockLocker lock(m_lock);
-    dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_one", this);
-    bool did_unblock_one = unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void*, bool& stop_iterating) {
-        VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
-        auto& blocker = static_cast<Thread::WaitQueueBlocker&>(b);
-        dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_one unblocking {}", this, blocker.thread());
-        if (blocker.unblock()) {
-            stop_iterating = true;
-            did_wake = 1;
-            return true;
-        }
-        return false;
-    });
-    m_wake_requested = !did_unblock_one;
-    dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_one woke {} threads", this, did_wake);
-    return did_wake;
+    SpinlockLocker queue_lock { m_lock };
+    if (m_waiters.is_empty())
+        return;
+
+    Waiter& waiter = *m_waiters.take_first();
+    waiter.notify({});
 }
 
-u32 WaitQueue::wake_n(u32 wake_count)
+void WaitQueue::Waiter::notify(Badge<WaitQueue>)
 {
-    if (wake_count == 0)
-        return 0; // should we assert instead?
-    SpinlockLocker lock(m_lock);
-    dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_n({})", this, wake_count);
-    u32 did_wake = 0;
+    VERIFY(m_association.has_value());
+    SpinlockLocker scheduler_lock(g_scheduler_lock);
+    auto& thread = *m_association->thread;
 
-    bool did_unblock_some = unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void*, bool& stop_iterating) {
-        VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
-        auto& blocker = static_cast<Thread::WaitQueueBlocker&>(b);
-        dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_n unblocking {}", this, blocker.thread());
-        VERIFY(did_wake < wake_count);
-        if (blocker.unblock()) {
-            if (++did_wake >= wake_count)
-                stop_iterating = true;
-            return true;
-        }
-        return false;
-    });
-    m_wake_requested = !did_unblock_some;
-    dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_n({}) woke {} threads", this, wake_count, did_wake);
-    return did_wake;
+    VERIFY(thread.state() == Thread::State::Blocked);
+    thread.set_state(Thread::State::Runnable);
 }
 
-u32 WaitQueue::wake_all()
+void WaitQueue::Waiter::prepare(WaitQueue& wait_queue)
 {
-    SpinlockLocker lock(m_lock);
+    auto* current_thread = Thread::current();
+    VERIFY(current_thread);
 
-    dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_all", this);
-    u32 did_wake = 0;
+    m_association = { wait_queue, *current_thread };
+    SpinlockLocker queue_lock { wait_queue.m_lock };
+    {
+        SpinlockLocker scheduler_lock(g_scheduler_lock);
+        current_thread->set_state(Thread::State::Blocked);
+    }
+    wait_queue.m_waiters.append(*this);
+}
 
-    bool did_unblock_any = unblock_all_blockers_whose_conditions_are_met_locked([&](Thread::Blocker& b, void*, bool&) {
-        VERIFY(b.blocker_type() == Thread::Blocker::Type::Queue);
-        auto& blocker = static_cast<Thread::WaitQueueBlocker&>(b);
+void WaitQueue::Waiter::maybe_remove_self_from_queue()
+{
+    VERIFY(m_association.has_value());
+    auto& wait_queue = m_association->wait_queue;
+    VERIFY(wait_queue.m_lock.is_locked());
 
-        dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_all unblocking {}", this, blocker.thread());
+    if (m_wait_queue_list_node.is_in_list())
+        m_wait_queue_list_node.remove();
+}
 
-        if (blocker.unblock()) {
-            did_wake++;
-            return true;
-        }
-        return false;
-    });
-    m_wake_requested = !did_unblock_any;
-    dbgln_if(WAITQUEUE_DEBUG, "WaitQueue @ {}: wake_all woke {} threads", this, did_wake);
-    return did_wake;
+void WaitQueue::Waiter::maybe_block()
+{
+    VERIFY(m_association.has_value());
+
+    bool blocked = false;
+    {
+        SpinlockLocker scheduler_lock(g_scheduler_lock);
+        blocked = m_association->thread->state() == Thread::State::Blocked;
+    }
+    if (blocked)
+        Scheduler::yield();
+
+    SpinlockLocker queue_lock { m_association->wait_queue.m_lock };
+    maybe_remove_self_from_queue();
+}
+
+void WaitQueue::Waiter::clear()
+{
+    VERIFY(m_association.has_value());
+
+    SpinlockLocker queue_lock { m_association->wait_queue.m_lock };
+    maybe_remove_self_from_queue();
+
+    auto& thread = *m_association->thread;
+    SpinlockLocker scheduler_lock(g_scheduler_lock);
+    if (thread.state() == Thread::State::Blocked)
+        thread.set_state(Thread::State::Runnable);
+
+    m_association = {};
 }
 
 }

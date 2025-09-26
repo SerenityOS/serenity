@@ -379,6 +379,7 @@ set(KERNEL_SOURCES
     Devices/TTY/VirtualConsole.cpp
     Tasks/Coredump.cpp
     Tasks/CrashHandler.cpp
+    Tasks/DeprecatedWaitQueue.cpp
     Tasks/FinalizerTask.cpp
     Tasks/FutexQueue.cpp
     Tasks/HostnameContext.cpp

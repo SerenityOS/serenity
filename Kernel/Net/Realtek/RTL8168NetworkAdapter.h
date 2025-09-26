@@ -219,6 +219,6 @@ private:
     u16 m_tx_free_index { 0 };
     bool m_link_up { false };
     EntropySource m_entropy_source;
-    WaitQueue m_wait_queue;
+    DeprecatedWaitQueue m_wait_queue;
 };
 }
