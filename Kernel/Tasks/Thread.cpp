@@ -519,7 +519,6 @@ StringView Thread::state_string() const
             return "Mutex"sv;
         if (m_blocker)
             return m_blocker->state_string();
-        VERIFY_NOT_REACHED();
     }
     return state_string(thread_state);
 }
