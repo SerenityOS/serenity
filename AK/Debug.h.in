@@ -38,6 +38,10 @@
 #    cmakedefine01 CANVAS_RENDERING_CONTEXT_2D_DEBUG
 #endif
 
+#ifndef CCITT_DEBUG
+#    cmakedefine01 CCITT_DEBUG
+#endif
+
 #ifndef CFF_DEBUG
 #    cmakedefine01 CFF_DEBUG
 #endif

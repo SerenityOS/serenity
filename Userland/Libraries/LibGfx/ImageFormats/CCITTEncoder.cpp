@@ -6,6 +6,7 @@
 
 #include "CCITTEncoder.h"
 #include <AK/BitStream.h>
+#include <AK/Debug.h>
 #include <AK/Math.h>
 #include <LibGfx/ImageFormats/CCITTCommon.h>
 
@@ -90,6 +91,7 @@ ErrorOr<void> encode_pass_mode(BigEndianOutputBitStream& bit_stream, EncodingSta
         }
     };
 
+    dbg_if(CCITT_DEBUG, "pass {}, ", status.b2->column - (status.a0.has_value() ? status.a0->column : 0));
     return {};
 }
 
@@ -125,6 +127,8 @@ ErrorOr<void> encode_vertical_mode(BigEndianOutputBitStream& bit_stream, Encodin
 
     // "Put a0 on a1."
     status.a0 = status.a1;
+
+    dbg_if(CCITT_DEBUG, "vertical {},", distance);
     return {};
 }
 
@@ -180,9 +184,11 @@ ErrorOr<void> encode_horizontal_mode(BigEndianOutputBitStream& bit_stream, Encod
         auto a0_column = status.a0.map([](auto const& change) { return change.column; }).value_or(0);
         TRY(encode_white_length(bit_stream, status.a1.column - a0_column));
         TRY(encode_black_length(bit_stream, a2.column - status.a1.column));
+        dbg_if(CCITT_DEBUG, "horizontal white({}) black({}),", status.a1.column - a0_column, a2.column - status.a1.column);
     } else {
         TRY(encode_black_length(bit_stream, status.a1.column - status.a0->column));
         TRY(encode_white_length(bit_stream, a2.column - status.a1.column));
+        dbg_if(CCITT_DEBUG, "horizontal black({}) white({}),", status.a1.column - status.a0->column, a2.column - status.a1.column);
     }
 
     // "Put a0 on a2."
@@ -210,6 +216,8 @@ ErrorOr<void> Group4Encoder::encode(Stream& stream, Bitmap const& bitmap)
 
         EncodingStatus status;
 
+        dbg_if(CCITT_DEBUG, "Line {}:", y);
+
         while (true) {
             // "Detect a1, b1, b2."
             update_status(status, last_line_span, current_line_span);
@@ -236,6 +244,8 @@ ErrorOr<void> Group4Encoder::encode(Stream& stream, Bitmap const& bitmap)
 
         // "Reference line for next coding line."
         last_line = move(current_line);
+
+        dbgln_if(CCITT_DEBUG, "");
     }
 
     // EOFB.
