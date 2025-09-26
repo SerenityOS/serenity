@@ -1,0 +1,43 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+        {
+            "segment_number": 1,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "image_data": {
+                    "from_file": "bitmap.bmp"
+                },
+                "flags": {
+                    "gb_template": 3,
+                    "use_typical_prediction": true
+                },
+                "adaptive_template_pixels": [
+                    17,
+                    -2
+                ]
+            }
+        },
+        {
+            "segment_number": 2,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}
