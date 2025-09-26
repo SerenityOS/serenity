@@ -32,6 +32,7 @@ ErrorOr<ReferenceLine> get_reference_line(Bitmap const& bitmap, u32 line)
     }
 
     TRY(reference_line.try_empend(invert(last_color), static_cast<u32>(bitmap.width())));
+    TRY(reference_line.try_empend(invert(last_color), static_cast<u32>(bitmap.width())));
 
     return reference_line;
 }
