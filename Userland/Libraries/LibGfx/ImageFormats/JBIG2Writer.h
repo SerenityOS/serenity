@@ -7,8 +7,10 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Variant.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/ImageFormats/BilevelImage.h>
 #include <LibGfx/ImageFormats/JBIG2Shared.h>
 
 namespace Gfx {
@@ -36,11 +38,18 @@ struct SegmentHeaderData {
     u32 page_association { 0 };
 };
 
+struct GenericRegionSegmentData {
+    RegionSegmentInformationField region_segment_information {};
+    u8 flags { 0 };
+    Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels {};
+    NonnullOwnPtr<BilevelImage> image;
+};
+
 struct EndOfPageSegmentData { };
 
 struct SegmentData {
     SegmentHeaderData header;
-    Variant<JBIG2::PageInformationSegment, EndOfPageSegmentData> data;
+    Variant<JBIG2::PageInformationSegment, EndOfPageSegmentData, GenericRegionSegmentData> data;
 };
 
 struct FileHeaderData {
