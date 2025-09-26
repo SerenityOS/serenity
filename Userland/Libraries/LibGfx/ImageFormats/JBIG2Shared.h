@@ -86,7 +86,7 @@ struct [[gnu::packed]] RegionSegmentInformationField {
     BigEndian<u32> height;
     BigEndian<u32> x_location;
     BigEndian<u32> y_location;
-    u8 flags;
+    u8 flags { 0 };
 
     CombinationOperator external_combination_operator() const
     {
@@ -143,7 +143,7 @@ struct [[gnu::packed]] PageInformationSegment {
     BigEndian<u32> bitmap_height;
     BigEndian<u32> page_x_resolution; // In pixels/meter.
     BigEndian<u32> page_y_resolution; // In pixels/meter.
-    u8 flags;
+    u8 flags { 0 };
     BigEndian<u16> striping_information;
 
     bool is_eventually_lossless() const { return flags & 1; }

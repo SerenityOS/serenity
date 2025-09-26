@@ -16,7 +16,6 @@
 namespace Gfx {
 
 struct JBIG2EncoderOptions {
-    JBIG2::CombinationOperator default_combination_operator { JBIG2::CombinationOperator::Or };
 };
 
 // Structs in this namespace can be used to explicitly construct JBIG2 files with a certain structure.
