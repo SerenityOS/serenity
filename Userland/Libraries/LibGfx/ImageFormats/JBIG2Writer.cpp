@@ -191,15 +191,12 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
         // "a) If all GBH rows have been decoded then the decoding is complete; proceed to step 4)."
         // "b) If TPGDON is 1, then decode a bit using the arithmetic entropy coder..."
         if (inputs.is_typical_prediction_used) {
-            bool is_line_identical_to_previous_line = false;
-            if (y > 0) {
-                // "i) If the current row of GBREG is identical to the row immediately above, then SLTP = 1; otherwise SLTP = 0."
-                is_line_identical_to_previous_line = true;
-                for (size_t x = 0; x < width; ++x) {
-                    if (inputs.image.get_bit(x, y) != inputs.image.get_bit(x, y - 1)) {
-                        is_line_identical_to_previous_line = false;
-                        break;
-                    }
+            // "i) If the current row of GBREG is identical to the row immediately above, then SLTP = 1; otherwise SLTP = 0."
+            bool is_line_identical_to_previous_line = true;
+            for (size_t x = 0; x < width; ++x) {
+                if (inputs.image.get_bit(x, y) != get_pixel(inputs.image, (int)x, (int)y - 1)) {
+                    is_line_identical_to_previous_line = false;
+                    break;
                 }
             }
 
