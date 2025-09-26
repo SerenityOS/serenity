@@ -1457,6 +1457,9 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid USESKIP dimensions");
 
     static constexpr auto get_pixel = [](NonnullOwnPtr<BilevelImage> const& buffer, int x, int y) -> bool {
+        // 6.2.5.2 Coding order and edge conventions
+        // "• All pixels lying outside the bounds of the actual bitmap have the value 0."
+        // We don't have to check y >= buffer->height() because check_valid_adaptive_template_pixel() rejects y > 0.
         if (x < 0 || x >= (int)buffer->width() || y < 0)
             return false;
         return buffer->get_bit(x, y);

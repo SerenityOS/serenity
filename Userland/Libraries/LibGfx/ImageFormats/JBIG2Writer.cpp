@@ -74,6 +74,9 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
         return Error::from_string_literal("JBIG2Writer: Cannot encode USESKIP yet");
 
     static constexpr auto get_pixel = [](BilevelImage const& buffer, int x, int y) -> bool {
+        // 6.2.5.2 Coding order and edge conventions
+        // "• All pixels lying outside the bounds of the actual bitmap have the value 0."
+        // We don't have to check y >= buffer->height() because check_valid_adaptive_template_pixel() rejects y > 0.
         if (x < 0 || x >= (int)buffer.width() || y < 0)
             return false;
         return buffer.get_bit(x, y);
