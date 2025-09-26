@@ -90,6 +90,7 @@ private:
     void unregister_open_window(NonnullRefPtr<GUI::Window>);
     void set_render_as_move_target(bool);
     void swap_widget_positions(NonnullRefPtr<Core::EventReceiver> source, Gfx::IntPoint destination_positon);
+    String encode_config_key() const;
 
     void handle_mousemove_event(MouseEvent&);
     void handle_mouseup_event(MouseEvent&);
