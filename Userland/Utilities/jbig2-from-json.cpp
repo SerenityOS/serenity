@@ -6,14 +6,21 @@
 
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/LexicalPath.h>
 #include <AK/MemoryStream.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
+#include <LibCore/MimeData.h>
 #include <LibCore/System.h>
 #include <LibGfx/ImageFormats/BilevelImage.h>
 #include <LibGfx/ImageFormats/JBIG2Loader.h>
 #include <LibGfx/ImageFormats/JBIG2Shared.h>
 #include <LibGfx/ImageFormats/JBIG2Writer.h>
+
+struct ToJSONOptions {
+    StringView input_path;
+};
 
 static ErrorOr<Gfx::JBIG2::Organization> jbig2_organization_from_json(JsonValue const& value)
 {
@@ -63,6 +70,331 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_page_from_json(Gfx::JBIG2::
     if (object.has_value())
         return Error::from_string_literal("end_of_page segment should have no \"data\" object");
     return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::EndOfPageSegmentData {} };
+}
+
+static ErrorOr<NonnullOwnPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOptions const& options, JsonObject const& object)
+{
+    OwnPtr<Gfx::BilevelImage> image;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "from_file") {
+            if (value.is_string()) {
+                ByteString base_directory = LexicalPath { options.input_path }.dirname();
+                auto path = LexicalPath::absolute_path(base_directory, value.as_string());
+                auto file_or_error = Core::MappedFile::map(path);
+                if (file_or_error.is_error()) {
+                    dbgln("could not open {}", path);
+                    return file_or_error.release_error();
+                }
+                auto file = file_or_error.release_value();
+                auto guessed_mime_type = Core::guess_mime_type_based_on_filename(path);
+                auto decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes(), guessed_mime_type));
+                if (!decoder)
+                    return Error::from_string_literal("could not find decoder for input file");
+                auto bitmap = TRY(decoder->frame(0)).image;
+                image = TRY(Gfx::BilevelImage::create_from_bitmap(*bitmap, Gfx::DitheringAlgorithm::FloydSteinberg));
+                return {};
+            }
+            return Error::from_string_literal("expected string for \"from_file\"");
+        }
+
+        dbgln("image_data key {}", key);
+        return Error::from_string_literal("unknown image_data key");
+    }));
+
+    if (!image)
+        return Error::from_string_literal("no image data in image_data; add \"from_file\" key");
+
+    return image.release_nonnull();
+}
+
+static ErrorOr<u8> jbig2_region_segment_information_flags_from_json(JsonObject const& object)
+{
+    u8 flags = 0;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "external_combination_operator"sv) {
+            if (value.is_string()) {
+                auto const& s = value.as_string();
+                if (s == "or"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Or);
+                else if (s == "and"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::And);
+                else if (s == "xor"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Xor);
+                else if (s == "xnor"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::XNor);
+                else if (s == "replace"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Replace);
+                else
+                    return Error::from_string_literal("expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"external_combination_operator\"");
+                return {};
+            }
+            return Error::from_string_literal("expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"external_combination_operator\"");
+        }
+
+        dbgln("region_segment_information flag key {}", key);
+        return Error::from_string_literal("unknown region_segment_information flag key");
+    }));
+
+    return flags;
+}
+
+struct RegionSegmentInformatJSON {
+    Gfx::JBIG2::RegionSegmentInformationField region_segment_information {};
+    bool use_width_from_image { false };
+    bool use_height_from_image { false };
+};
+
+static ErrorOr<RegionSegmentInformatJSON> jbig2_region_segment_information_from_json(JsonObject const& object)
+{
+    RegionSegmentInformatJSON result;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "width"sv) {
+            if (auto width = value.get_u32(); width.has_value()) {
+                result.region_segment_information.width = width.value();
+                return {};
+            }
+            if (value.is_string()) {
+                if (value.as_string() == "from_image_data"sv) {
+                    result.use_width_from_image = true;
+                    return {};
+                }
+                return Error::from_string_literal("expected \"from_image_data\" for \"width\" when it is a string");
+            }
+            return Error::from_string_literal("expected u32 or string for \"width\"");
+        }
+
+        if (key == "height"sv) {
+            if (auto height = value.get_u32(); height.has_value()) {
+                result.region_segment_information.height = height.value();
+                return {};
+            }
+            if (value.is_string()) {
+                if (value.as_string() == "from_image_data"sv) {
+                    result.use_height_from_image = true;
+                    return {};
+                }
+                return Error::from_string_literal("expected \"from_image_data\" for \"height\" when it is a string");
+            }
+            return Error::from_string_literal("expected u32 or string for \"height\"");
+        }
+
+        if (key == "x"sv) {
+            if (auto x = value.get_u32(); x.has_value()) {
+                result.region_segment_information.x_location = x.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"x\"");
+        }
+
+        if (key == "y"sv) {
+            if (auto y = value.get_u32(); y.has_value()) {
+                result.region_segment_information.y_location = y.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"y\"");
+        }
+
+        if (key == "flags"sv) {
+            if (value.is_object()) {
+                u8 flags = TRY(jbig2_region_segment_information_flags_from_json(value.as_object()));
+                result.region_segment_information.flags = flags;
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"flags\"");
+        }
+
+        dbgln("region_segment_information key {}", key);
+        return Error::from_string_literal("unknown region_segment_information key");
+    }));
+    return result;
+}
+
+static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object)
+{
+    u8 flags = 0;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "is_modified_read_read"sv) {
+            if (auto is_modified_read_read = value.get_bool(); is_modified_read_read.has_value()) {
+                if (is_modified_read_read.value())
+                    flags |= 1u;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"is_modified_read_read\"");
+        }
+
+        if (key == "gb_template"sv) {
+            if (auto gb_template = value.get_uint(); gb_template.has_value()) {
+                if (gb_template.value() > 3)
+                    return Error::from_string_literal("expected 0, 1, 2, or 3 for \"gb_template\"");
+                flags |= gb_template.value() << 1;
+                return {};
+            }
+            return Error::from_string_literal("expected uint for \"gb_template\"");
+        }
+
+        if (key == "use_typical_prediction"sv) {
+            if (auto use_typical_prediction = value.get_bool(); use_typical_prediction.has_value()) {
+                if (use_typical_prediction.value())
+                    flags |= 1u << 3;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"use_typical_prediction\"");
+        }
+
+        if (key == "use_extended_template"sv) {
+            if (auto use_extended_template = value.get_bool(); use_extended_template.has_value()) {
+                if (use_extended_template.value())
+                    flags |= 1u << 4;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"use_extended_template\"");
+        }
+
+        dbgln("generic_region flag key {}", key);
+        return Error::from_string_literal("unknown generic_region flag key");
+    }));
+
+    bool uses_mmr = flags & 1;
+    if (uses_mmr && (flags & ~1) != 0)
+        return Error::from_string_literal("if is_modified_read_read is true, other flags must be false");
+
+    return flags;
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_generic_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    if (!object.has_value())
+        return Error::from_string_literal("generic_region segment should have \"data\" object");
+
+    RegionSegmentInformatJSON region_segment_information;
+    region_segment_information.use_width_from_image = true;
+    region_segment_information.use_height_from_image = true;
+    u8 flags = 0;
+    Vector<i8> adaptive_template_pixels;
+    OwnPtr<Gfx::BilevelImage> image;
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& object) -> ErrorOr<void> {
+        if (key == "region_segment_information"sv) {
+            if (object.is_object()) {
+                region_segment_information = TRY(jbig2_region_segment_information_from_json(object.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"region_segment_information\"");
+        }
+
+        if (key == "flags"sv) {
+            if (object.is_object()) {
+                flags = TRY(jbig2_generic_region_flags_from_json(object.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"flags\"");
+        }
+
+        if (key == "adaptive_template_pixels"sv) {
+            if (object.is_array()) {
+                auto const& adaptive_template_pixels_json = object.as_array();
+                for (auto const& value : adaptive_template_pixels_json.values()) {
+                    if (auto pixel = value.get_i32(); pixel.has_value()) {
+                        if (pixel.value() < -128 || pixel.value() > 127)
+                            return Error::from_string_literal("expected i8 for \"adaptive_template_pixels\" elements");
+                        adaptive_template_pixels.append(static_cast<i8>(pixel.value()));
+                        continue;
+                    }
+                    return Error::from_string_literal("expected array of i8 for \"adaptive_template_pixels\"");
+                }
+                return {};
+            }
+            return Error::from_string_literal("expected array for \"adaptive_template_pixels\"");
+        }
+
+        if (key == "image_data"sv) {
+            if (object.is_object()) {
+                image = TRY(jbig2_image_from_json(options, object.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"image_data\"");
+        }
+
+        dbgln("generic_region key {}", key);
+        return Error::from_string_literal("unknown generic_region key");
+    }));
+
+    if (!image)
+        return Error::from_string_literal("generic_region \"data\" object missing required key \"image_data\"");
+
+    if (region_segment_information.use_width_from_image)
+        region_segment_information.region_segment_information.width = image->width();
+    if (region_segment_information.use_height_from_image)
+        region_segment_information.region_segment_information.height = image->height();
+
+    if (region_segment_information.region_segment_information.width != image->width() || region_segment_information.region_segment_information.height != image->height()) {
+        dbgln("generic_region's region_segment_information width/height: {}x{}, image dimensions: {}x{}",
+            region_segment_information.region_segment_information.width, region_segment_information.region_segment_information.height,
+            image->width(), image->height());
+        return Error::from_string_literal("generic_region's region_segment_information width/height do not match image dimensions");
+    }
+
+    bool uses_mmr = flags & 1;
+    bool use_extended_template = (flags >> 4) & 1;
+    u8 gb_template = (flags >> 1) & 3;
+    if (adaptive_template_pixels.is_empty() && !uses_mmr) {
+        // Default to Table 5 – The nominal values of the AT pixel locations
+        if (gb_template == 0) {
+            if (use_extended_template) {
+                adaptive_template_pixels = {
+                    // clang-format off
+                    -2, 0,
+                    0, -2,
+                    -2, -1,
+                    -1, -2,
+                    1, -2,
+                    2, -1,
+                    -3, 0,
+                    -4, 0,
+                    2, -2,
+                    3, -1,
+                    -2, -2,
+                    -3, -1,
+                    // clang-format on
+                };
+            } else {
+                adaptive_template_pixels = {
+                    // clang-format off
+                    3, -1,
+                    -3, -1,
+                    2, -2,
+                    -2, -2,
+                    // clang-format on
+                };
+            }
+        } else if (gb_template == 1) {
+            adaptive_template_pixels = { 3, -1 };
+        } else {
+            adaptive_template_pixels = { 2, -1 };
+        }
+    }
+
+    size_t number_of_adaptive_template_pixels = 0;
+    if (!uses_mmr) {
+        if (gb_template == 0)
+            number_of_adaptive_template_pixels = use_extended_template ? 12 : 4;
+        else
+            number_of_adaptive_template_pixels = 1;
+    }
+    if (adaptive_template_pixels.size() != number_of_adaptive_template_pixels * 2) {
+        dbgln("expected {} entries, got {}", number_of_adaptive_template_pixels * 2, adaptive_template_pixels.size());
+        return Error::from_string_literal("generic_region \"data\" object has wrong number of \"adaptive_template_pixels\"");
+    }
+    Array<Gfx::JBIG2::AdaptiveTemplatePixel, 12> template_pixels {};
+    for (size_t i = 0; i < number_of_adaptive_template_pixels; ++i) {
+        template_pixels[i].x = adaptive_template_pixels[2 * i];
+        template_pixels[i].y = adaptive_template_pixels[2 * i + 1];
+    }
+
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::GenericRegionSegmentData { region_segment_information.region_segment_information, flags, template_pixels, image.release_nonnull() } };
 }
 
 static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& object)
@@ -209,7 +541,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
     return Gfx::JBIG2::SegmentData { header, data };
 }
 
-static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(JsonObject const& segment_object)
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions const& options, JsonObject const& segment_object)
 {
     Gfx::JBIG2::SegmentHeaderData header;
 
@@ -258,6 +590,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(JsonObject const
 
     if (type_string == "end_of_page")
         return jbig2_end_of_page_from_json(header, segment_data_object);
+    if (type_string == "generic_region")
+        return jbig2_generic_region_from_json(options, header, segment_data_object);
     if (type_string == "page_information")
         return jbig2_page_information_from_json(header, segment_data_object);
 
@@ -265,20 +599,20 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(JsonObject const
     return Error::from_string_literal("segment has unknown type");
 }
 
-static ErrorOr<Vector<Gfx::JBIG2::SegmentData>> jbig2_segments_from_json(JsonArray const& segments_array)
+static ErrorOr<Vector<Gfx::JBIG2::SegmentData>> jbig2_segments_from_json(ToJSONOptions const& options, JsonArray const& segments_array)
 {
     Vector<Gfx::JBIG2::SegmentData> segments;
 
     for (auto const& segment_value : segments_array.values()) {
         if (!segment_value.is_object())
             return Error::from_string_literal("segment should be object");
-        segments.append(TRY(jbig2_segment_from_json(segment_value.as_object())));
+        segments.append(TRY(jbig2_segment_from_json(options, segment_value.as_object())));
     }
 
     return segments;
 }
 
-static ErrorOr<Gfx::JBIG2::FileData> jbig2_data_from_json(JsonValue const& json)
+static ErrorOr<Gfx::JBIG2::FileData> jbig2_data_from_json(ToJSONOptions const& options, JsonValue const& json)
 {
     Gfx::JBIG2::FileData jbig2;
 
@@ -292,7 +626,7 @@ static ErrorOr<Gfx::JBIG2::FileData> jbig2_data_from_json(JsonValue const& json)
         return Error::from_string_literal("top-level should have \"global_header\" object");
 
     if (auto segments = object.get_array("segments"sv); segments.has_value())
-        jbig2.segments = TRY(jbig2_segments_from_json(segments.value()));
+        jbig2.segments = TRY(jbig2_segments_from_json(options, segments.value()));
     else
         return Error::from_string_literal("top-level should have \"segments\" array");
 
@@ -319,10 +653,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto file_contents = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(file_contents));
 
-    AllocatingMemoryStream stream;
-    auto jbig2 = TRY(jbig2_data_from_json(json));
-    TRY(Gfx::JBIG2Writer::encode_with_explicit_data(stream, jbig2));
+    ToJSONOptions options { .input_path = in_path };
+    auto jbig2 = TRY(jbig2_data_from_json(options, json));
 
+    AllocatingMemoryStream stream;
+    TRY(Gfx::JBIG2Writer::encode_with_explicit_data(stream, jbig2));
     auto jbig2_data = TRY(stream.read_until_eof());
 
     // Only write images that decode correctly.
