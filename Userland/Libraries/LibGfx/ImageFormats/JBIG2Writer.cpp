@@ -228,16 +228,6 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
     return encoder.finalize();
 }
 
-namespace {
-
-struct JBIG2WritingContext {
-    JBIG2Writer::Options options;
-    Gfx::BilevelImage const& bilevel_image;
-    u32 next_segment_number { 0 };
-};
-
-}
-
 static ErrorOr<void> encode_jbig2_header(Stream& stream, JBIG2::FileHeaderData const& header)
 {
     TRY(stream.write_until_depleted(JBIG2::id_string));
@@ -357,81 +347,6 @@ static ErrorOr<void> encode_region_segment_information_field(Stream& stream, JBI
     return {};
 }
 
-static ErrorOr<void> encode_immediate_lossless_generic_region(JBIG2WritingContext& context, Stream& stream)
-{
-    // FIXME: Add options for MMR, GBTEMPLATE, TPGDON, EXTTEMPLATE, USESKIP, GBATX/GBATY.
-    GenericRegionEncodingInputParameters inputs { .image = context.bilevel_image };
-    inputs.is_modified_modified_read = false;
-    inputs.gb_template = 0;
-    inputs.is_typical_prediction_used = true;
-    inputs.is_extended_reference_template_used = false;
-    inputs.adaptive_template_pixels[0] = { -1, -1 };
-    inputs.adaptive_template_pixels[1] = { 0, -1 };
-    inputs.adaptive_template_pixels[2] = { -1, 0 };
-    inputs.adaptive_template_pixels[3] = { 1, -1 };
-    inputs.require_eof_after_mmr = GenericRegionEncodingInputParameters::RequireEOFBAfterMMR::No;
-
-    int number_of_adaptive_template_pixels = 0;
-    if (!inputs.is_modified_modified_read)
-        number_of_adaptive_template_pixels = inputs.gb_template == 0 ? 4 : 1;
-
-    Optional<JBIG2::GenericContexts> contexts;
-    if (!inputs.is_modified_modified_read)
-        contexts = JBIG2::GenericContexts { inputs.gb_template };
-    auto data = TRY(generic_region_encoding_procedure(inputs, contexts));
-
-    // 7.4.6 Generic region segment syntax
-    JBIG2::SegmentHeader generic_region_segment_header;
-    generic_region_segment_header.segment_number = context.next_segment_number++;
-    generic_region_segment_header.type = JBIG2::SegmentType::ImmediateLosslessGenericRegion;
-    generic_region_segment_header.page_association = 1;
-
-    // FIXME: Add option to set size to OptionalNone for immediate generic regions (7.2.7).
-    // FIXME: Add option to write too-high height in region information field if data_length is OptionalNone
-    //        (the actual height is written after the data then).
-    generic_region_segment_header.data_length = sizeof(JBIG2::RegionSegmentInformationField) + 1 + 2 * number_of_adaptive_template_pixels + data.size();
-    TRY(encode_segment_header(stream, generic_region_segment_header));
-
-    JBIG2::RegionSegmentInformationField region_information;
-    region_information.width = context.bilevel_image.width();
-    region_information.height = context.bilevel_image.height();
-    region_information.x_location = 0;
-    region_information.y_location = 0;
-    region_information.flags = 0;
-
-    JBIG2::CombinationOperator combination_operator = context.options.default_combination_operator;
-    region_information.flags |= static_cast<u8>(combination_operator);
-    bool is_color_bitmap = false; // FIXME: Add support for colors one day.
-    if (is_color_bitmap)
-        region_information.flags |= 0x8;
-
-    TRY(encode_region_segment_information_field(stream, region_information));
-
-    u8 flags = 0;
-    if (inputs.is_modified_modified_read)
-        flags |= 1; // "MMR"
-    if (!inputs.is_modified_modified_read) {
-        // The spec only requires GBTEMPLATE to be 0 if MMR is set, but it seems nicer to set TPGDON and EXTTEMPLATE to 0 too then.
-        flags |= (inputs.gb_template & 3) << 1; // "GBTEMPLATE"
-        if (inputs.is_typical_prediction_used)
-            flags |= 0x8; // "TPGDON"
-        if (inputs.is_extended_reference_template_used)
-            flags |= 0x10; // "EXTTEMPLATE"
-    }
-    TRY(stream.write_value<u8>(flags));
-
-    for (int i = 0; i < number_of_adaptive_template_pixels; ++i) {
-        TRY(stream.write_value<i8>(inputs.adaptive_template_pixels[i].x));
-        TRY(stream.write_value<i8>(inputs.adaptive_template_pixels[i].y));
-    }
-    TRY(stream.write_until_depleted(data));
-
-    if (!generic_region_segment_header.data_length.has_value())
-        TRY(stream.write_value<BigEndian<u32>>(region_information.height));
-
-    return {};
-}
-
 static ErrorOr<void> encode_page_information_data(Stream& stream, JBIG2::PageInformationSegment const& page_information)
 {
     TRY(stream.write_value<BigEndian<u32>>(page_information.bitmap_width));
@@ -443,89 +358,51 @@ static ErrorOr<void> encode_page_information_data(Stream& stream, JBIG2::PageInf
     return {};
 }
 
-static ErrorOr<void> encode_page_information(JBIG2WritingContext& context, Stream& stream, JBIG2::PageInformationSegment const& page_information)
-{
-    // 7.4.8 Page information segment syntax
-    JBIG2::SegmentHeader page_information_segment_header;
-    page_information_segment_header.segment_number = context.next_segment_number++;
-    page_information_segment_header.type = JBIG2::SegmentType::PageInformation;
-    page_information_segment_header.page_association = 1;
-    page_information_segment_header.data_length = sizeof(JBIG2::PageInformationSegment);
-    TRY(encode_segment_header(stream, page_information_segment_header));
-
-    return encode_page_information_data(stream, page_information);
-}
-
-static ErrorOr<void> encode_end_of_page(JBIG2WritingContext& context, Stream& stream)
-{
-    // 7.4.9 End of page segment syntax
-    JBIG2::SegmentHeader end_of_page;
-    end_of_page.segment_number = context.next_segment_number++;
-    end_of_page.type = JBIG2::SegmentType::EndOfPage;
-    end_of_page.page_association = 1;
-    end_of_page.data_length = 0;
-    return encode_segment_header(stream, end_of_page);
-}
-
-static ErrorOr<void> fill_page_information(JBIG2WritingContext& context, JBIG2::PageInformationSegment& page_information)
-{
-    page_information.bitmap_width = context.bilevel_image.width();
-    page_information.bitmap_height = context.bilevel_image.height();
-    page_information.page_x_resolution = 0;
-    page_information.page_y_resolution = 0;
-
-    page_information.flags = 0;
-
-    bool is_eventually_lossless = true;
-    bool might_contain_refinements = false;
-
-    // FIXME: Make options for this.
-    u8 default_color = 0; // 0 = white, 1 = black
-
-    bool requires_auxiliary_buffers = false;                                   // FIXME: Compute?
-    bool direct_region_segments_override_default_combination_operator = false; // FIXME: Compute?
-    bool might_contain_coloured_segments = false;                              // FIXME: Add support for colors one day.
-
-    if (is_eventually_lossless)
-        page_information.flags |= 1;
-    if (might_contain_refinements)
-        page_information.flags |= 2;
-    page_information.flags |= (default_color & 1) << 2;
-    if (context.options.default_combination_operator == JBIG2::CombinationOperator::Replace)
-        return Error::from_string_literal("JBIG2Writer: 'Replace' is invalid operator at page level");
-    page_information.flags |= static_cast<u8>(context.options.default_combination_operator) << 3;
-
-    if (requires_auxiliary_buffers)
-        page_information.flags |= 0x20;
-    if (direct_region_segments_override_default_combination_operator)
-        page_information.flags |= 0x40;
-    if (might_contain_coloured_segments)
-        page_information.flags |= 0x80;
-
-    page_information.striping_information = 0; // FIXME: Optionally stripe eventually.
-    return {};
-}
-
-ErrorOr<void> JBIG2Writer::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
+ErrorOr<void> JBIG2Writer::encode(Stream& stream, Bitmap const& bitmap, Options const&)
 {
     auto bilevel_image = TRY(BilevelImage::create_from_bitmap(bitmap, DitheringAlgorithm::FloydSteinberg));
 
-    JBIG2WritingContext context { .options = options, .bilevel_image = *bilevel_image };
+    JBIG2::FileData jbig2;
+    jbig2.header.number_of_pages = 1;
+    jbig2.header.organization = JBIG2::Organization::Sequential;
 
-    JBIG2::FileHeaderData header;
-    header.organization = JBIG2::Organization::Sequential;
-    header.number_of_pages = 1;
-    TRY(encode_jbig2_header(stream, header));
+    u32 next_segment_number { 0 };
+    auto next_segment_header = [&next_segment_number]() {
+        JBIG2::SegmentHeaderData header;
+        header.segment_number = next_segment_number++;
+        header.page_association = 1;
+        return header;
+    };
 
-    JBIG2::PageInformationSegment page_info;
-    TRY(fill_page_information(context, page_info));
-    TRY(encode_page_information(context, stream, page_info));
+    Gfx::JBIG2::PageInformationSegment page_info {};
+    page_info.bitmap_width = bilevel_image->width();
+    page_info.bitmap_height = bilevel_image->height();
+    page_info.flags = 1; // "eventually lossless" bit set, default pixel value white, default combination operator OR.
+    jbig2.segments.append(JBIG2::SegmentData {
+        .header = next_segment_header(),
+        .data = page_info,
+    });
 
-    TRY(encode_immediate_lossless_generic_region(context, stream));
+    JBIG2::GenericRegionSegmentData generic_region { .image = move(bilevel_image) };
+    generic_region.region_segment_information.width = generic_region.image->width();
+    generic_region.region_segment_information.height = generic_region.image->height();
+    generic_region.region_segment_information.flags = 0;
+    generic_region.adaptive_template_pixels[0] = { -1, -1 };
+    generic_region.adaptive_template_pixels[1] = { 0, -1 };
+    generic_region.adaptive_template_pixels[2] = { -1, 0 };
+    generic_region.adaptive_template_pixels[3] = { 1, -1 };
+    generic_region.flags = 1u << 3; // TPGDON, gb_template 0.
+    jbig2.segments.append(JBIG2::SegmentData {
+        .header = next_segment_header(),
+        .data = JBIG2::ImmediateGenericRegionSegmentData { .generic_region = move(generic_region) },
+    });
 
-    TRY(encode_end_of_page(context, stream));
+    jbig2.segments.append(JBIG2::SegmentData {
+        .header = next_segment_header(),
+        .data = JBIG2::EndOfPageSegmentData {},
+    });
 
-    return {};
+    return encode_with_explicit_data(stream, jbig2);
 }
 
 static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const& generic_region, Vector<u8>& scratch_buffer)
