@@ -42,6 +42,16 @@
         @GUI::Progressbar {
             name: "progressbar"
             text: "Generating thumbnails: "
+            preferred_width: 200
+            visible: false
+        }
+
+        @GUI::Slider {
+            name: "icon_view_size"
+            orientation: "Horizontal"
+            max: 240
+            min: 16
+            preferred_width: 100
             visible: false
         }
     }

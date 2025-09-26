@@ -52,16 +52,23 @@ Gfx::Bitmap const* IconImpl::bitmap_for_size(int size) const
     if (it != m_bitmaps.end())
         return it->value.ptr();
 
-    int best_diff_so_far = INT32_MAX;
-    Gfx::Bitmap const* best_fit = nullptr;
-    for (auto& it : m_bitmaps) {
-        int abs_diff = abs(it.key - size);
-        if (abs_diff < best_diff_so_far) {
-            best_diff_so_far = abs_diff;
-            best_fit = it.value.ptr();
+    Gfx::Bitmap const* smallest_fit = nullptr;
+    int smallest_size = INT32_MAX;
+    Gfx::Bitmap const* largest_fit = nullptr;
+    int largest_size = 0;
+    for (auto const& it : m_bitmaps) {
+        if (it.key < smallest_size && it.key >= size) {
+            smallest_fit = it.value.ptr();
+            smallest_size = it.key;
+        }
+        if (it.key > largest_size) {
+            largest_fit = it.value.ptr();
+            largest_size = it.key;
         }
     }
-    return best_fit;
+    if (smallest_fit)
+        return smallest_fit;
+    return largest_fit;
 }
 
 void IconImpl::set_bitmap_for_size(int size, RefPtr<Gfx::Bitmap const>&& bitmap)
