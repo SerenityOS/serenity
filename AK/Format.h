@@ -818,6 +818,12 @@ using AK::CheckedFormatString;
 using AK::FormatIfSupported;
 using AK::FormatString;
 
+#    define dbg_if(flag, fmt, ...)       \
+        do {                             \
+            if constexpr (flag)          \
+                dbg(fmt, ##__VA_ARGS__); \
+        } while (0)
+
 #    define dbgln_if(flag, fmt, ...)       \
         do {                               \
             if constexpr (flag)            \
