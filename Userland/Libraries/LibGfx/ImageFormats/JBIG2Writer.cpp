@@ -387,10 +387,10 @@ ErrorOr<void> JBIG2Writer::encode(Stream& stream, Bitmap const& bitmap, Options 
     generic_region.region_segment_information.width = generic_region.image->width();
     generic_region.region_segment_information.height = generic_region.image->height();
     generic_region.region_segment_information.flags = 0;
-    generic_region.adaptive_template_pixels[0] = { -1, -1 };
-    generic_region.adaptive_template_pixels[1] = { 0, -1 };
-    generic_region.adaptive_template_pixels[2] = { -1, 0 };
-    generic_region.adaptive_template_pixels[3] = { 1, -1 };
+    generic_region.adaptive_template_pixels[0] = { 3, -1 };
+    generic_region.adaptive_template_pixels[1] = { -3, -1 };
+    generic_region.adaptive_template_pixels[2] = { 2, -2 };
+    generic_region.adaptive_template_pixels[3] = { -2, -2 };
     generic_region.flags = 1u << 3; // TPGDON, gb_template 0.
     jbig2.segments.append(JBIG2::SegmentData {
         .header = next_segment_header(),
