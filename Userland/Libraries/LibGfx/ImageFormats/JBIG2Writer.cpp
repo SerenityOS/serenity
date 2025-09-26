@@ -571,8 +571,12 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     Vector<u8> scratch_buffer;
 
     auto encoded_data = TRY(segment_data.data.visit(
-        [&scratch_buffer](JBIG2::GenericRegionSegmentData const& generic_region) -> ErrorOr<ReadonlyBytes> {
-            TRY(encode_generic_region(generic_region, scratch_buffer));
+        [&scratch_buffer](JBIG2::ImmediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_generic_region(generic_region_wrapper.generic_region, scratch_buffer));
+            return scratch_buffer;
+        },
+        [&scratch_buffer](JBIG2::ImmediateLosslessGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_generic_region(generic_region_wrapper.generic_region, scratch_buffer));
             return scratch_buffer;
         },
         [&scratch_buffer](JBIG2::PageInformationSegment const& page_information) -> ErrorOr<ReadonlyBytes> {
@@ -588,7 +592,8 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     JBIG2::SegmentHeader header;
     header.segment_number = segment_data.header.segment_number;
     header.type = segment_data.data.visit(
-        [](JBIG2::GenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateGenericRegion; },
+        [](JBIG2::ImmediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateGenericRegion; },
+        [](JBIG2::ImmediateLosslessGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessGenericRegion; },
         [](JBIG2::PageInformationSegment const&) { return JBIG2::SegmentType::PageInformation; },
         [](JBIG2::EndOfPageSegmentData const&) { return JBIG2::SegmentType::EndOfPage; });
     header.retention_flag = segment_data.header.retention_flag;

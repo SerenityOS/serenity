@@ -265,7 +265,7 @@ static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object
     return flags;
 }
 
-static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_generic_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_json(ToJSONOptions const& options, Optional<JsonObject const&> object)
 {
     if (!object.has_value())
         return Error::from_string_literal("generic_region segment should have \"data\" object");
@@ -394,7 +394,17 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_generic_region_from_json(ToJSONOpt
         template_pixels[i].y = adaptive_template_pixels[2 * i + 1];
     }
 
-    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::GenericRegionSegmentData { region_segment_information.region_segment_information, flags, template_pixels, image.release_nonnull() } };
+    return Gfx::JBIG2::GenericRegionSegmentData { region_segment_information.region_segment_information, flags, template_pixels, image.release_nonnull() };
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_generic_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateGenericRegionSegmentData { TRY(jbig2_generic_region_from_json(options, object)) } };
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_lossless_generic_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateLosslessGenericRegionSegmentData { TRY(jbig2_generic_region_from_json(options, object)) } };
 }
 
 static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& object)
@@ -591,7 +601,9 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
     if (type_string == "end_of_page")
         return jbig2_end_of_page_from_json(header, segment_data_object);
     if (type_string == "generic_region")
-        return jbig2_generic_region_from_json(options, header, segment_data_object);
+        return jbig2_immediate_generic_region_from_json(options, header, segment_data_object);
+    if (type_string == "lossless_generic_region")
+        return jbig2_immediate_lossless_generic_region_from_json(options, header, segment_data_object);
     if (type_string == "page_information")
         return jbig2_page_information_from_json(header, segment_data_object);
 
