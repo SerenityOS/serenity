@@ -323,24 +323,26 @@ void Thread::unblock(u8 signal)
         return;
     if (m_blocking_mutex)
         return;
-    VERIFY(m_blocker);
-    if (signal != 0) {
-        if (is_handling_page_fault()) {
-            // Don't let signals unblock threads that are blocked inside a page fault handler.
-            // This prevents threads from EINTR'ing the inode read in an inode page fault.
-            // FIXME: There's probably a better way to solve this.
-            return;
+    if (m_blocker) {
+        if (signal != 0) {
+            if (is_handling_page_fault()) {
+                // Don't let signals unblock threads that are blocked inside a page fault handler.
+                // This prevents threads from EINTR'ing the inode read in an inode page fault.
+                // FIXME: There's probably a better way to solve this.
+                return;
+            }
+            if (!m_blocker->can_be_interrupted() && !m_should_die)
+                return;
+            m_blocker->set_interrupted_by_signal(signal);
         }
-        if (!m_blocker->can_be_interrupted() && !m_should_die)
-            return;
-        m_blocker->set_interrupted_by_signal(signal);
+        m_blocker = nullptr;
+    } else {
+        m_was_interrupted = true;
     }
-    m_blocker = nullptr;
     if (Thread::current() == this) {
         set_state(Thread::State::Running);
         return;
     }
-    VERIFY(m_state != Thread::State::Runnable && m_state != Thread::State::Running);
     set_state(Thread::State::Runnable);
 }
 
