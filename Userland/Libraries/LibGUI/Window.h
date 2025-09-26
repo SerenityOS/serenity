@@ -72,7 +72,6 @@ public:
     bool is_closeable() const { return m_closeable; }
     void set_closeable(bool closeable) { m_closeable = closeable; }
 
-    void set_double_buffering_enabled(bool);
     void set_has_alpha_channel(bool);
     bool has_alpha_channel() const { return m_has_alpha_channel; }
 
@@ -313,7 +312,6 @@ private:
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> m_cursor { Gfx::StandardCursor::None };
     AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> m_effective_cursor { Gfx::StandardCursor::None };
     bool m_has_alpha_channel { false };
-    bool m_double_buffering_enabled { true };
     bool m_resizable { true };
     bool m_obey_widget_min_size { true };
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
