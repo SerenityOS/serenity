@@ -933,7 +933,20 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
 
     Optional<size_t> minimum_stack_size {};
     auto interpreter_description = TRY(find_elf_interpreter_for_executable(*description, path->view(), *main_program_header, metadata.size, minimum_stack_size));
-    return do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, previous_interrupts_state, *main_program_header, minimum_stack_size);
+    TRY(do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, previous_interrupts_state, *main_program_header, minimum_stack_size));
+
+    VERIFY_INTERRUPTS_DISABLED();
+    VERIFY(Processor::in_critical() == 1);
+
+    auto* current_thread = Thread::current();
+    if (current_thread != new_main_thread) {
+        // NOTE: This code path is taken in the non-sys$execve case, i.e when the kernel spawns
+        //       a userspace process directly (such as /bin/init on startup) or during sys$posix_spawn.
+        Processor::restore_interrupts_state(previous_interrupts_state);
+        Processor::leave_critical();
+    }
+
+    return {};
 }
 
 ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*> user_params)
@@ -995,24 +1008,17 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
     VERIFY(Processor::in_critical());
 
     auto* current_thread = Thread::current();
-    if (current_thread == new_main_thread) {
-        // We need to enter the scheduler lock before changing the state
-        // and it will be released after the context switch into that
-        // thread. We should also still be in our critical section
-        VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
-        VERIFY(Processor::in_critical() == 1);
-        g_scheduler_lock.lock();
-        VERIFY(current_thread->state() == Thread::State::Running);
-        Processor::assume_context(*current_thread, previous_interrupts_state);
-        VERIFY_NOT_REACHED();
-    }
+    VERIFY(current_thread == new_main_thread);
 
-    // NOTE: This code path is taken in the non-syscall case, i.e when the kernel spawns
-    //       a userspace process directly (such as /bin/SystemServer on startup)
-
-    Processor::restore_interrupts_state(previous_interrupts_state);
-    Processor::leave_critical();
-    return 0;
+    // We need to enter the scheduler lock before changing the state
+    // and it will be released after the context switch into that
+    // thread. We should also still be in our critical section
+    VERIFY(!g_scheduler_lock.is_locked_by_current_processor());
+    VERIFY(Processor::in_critical() == 1);
+    g_scheduler_lock.lock();
+    VERIFY(current_thread->state() == Thread::State::Running);
+    Processor::assume_context(*current_thread, previous_interrupts_state);
+    VERIFY_NOT_REACHED();
 }
 
 }
