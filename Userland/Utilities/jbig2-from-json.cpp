@@ -280,6 +280,7 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
     RegionSegmentInformatJSON region_segment_information;
     region_segment_information.use_width_from_image = true;
     region_segment_information.use_height_from_image = true;
+    Optional<u32> real_height_for_generic_region_of_initially_unknown_size;
     u8 flags = 0;
     Vector<i8> adaptive_template_pixels;
     OwnPtr<Gfx::BilevelImage> image;
@@ -290,6 +291,14 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
                 return {};
             }
             return Error::from_string_literal("expected object for \"region_segment_information\"");
+        }
+
+        if (key == "real_height_for_generic_region_of_initially_unknown_size"sv) {
+            if (auto real_height_for_generic_region_of_initially_unknown_size_json = object.get_u32(); real_height_for_generic_region_of_initially_unknown_size_json.has_value()) {
+                real_height_for_generic_region_of_initially_unknown_size = real_height_for_generic_region_of_initially_unknown_size_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"real_height_for_generic_region_of_initially_unknown_size\"");
         }
 
         if (key == "flags"sv) {
@@ -337,9 +346,11 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
     if (region_segment_information.use_height_from_image)
         region_segment_information.region_segment_information.height = image->height();
 
-    if (region_segment_information.region_segment_information.width != image->width() || region_segment_information.region_segment_information.height != image->height()) {
-        dbgln("generic_region's region_segment_information width/height: {}x{}, image dimensions: {}x{}",
+    if (region_segment_information.region_segment_information.width != image->width()
+        || real_height_for_generic_region_of_initially_unknown_size.value_or(region_segment_information.region_segment_information.height) != image->height()) {
+        dbgln("generic_region's region_segment_information width/height: {}x{}{}, image dimensions: {}x{}",
             region_segment_information.region_segment_information.width, region_segment_information.region_segment_information.height,
+            real_height_for_generic_region_of_initially_unknown_size.has_value() ? MUST(String::formatted("(overridden with {})", real_height_for_generic_region_of_initially_unknown_size.value())) : ""sv,
             image->width(), image->height());
         return Error::from_string_literal("generic_region's region_segment_information width/height do not match image dimensions");
     }
@@ -401,12 +412,15 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         template_pixels[i].y = adaptive_template_pixels[2 * i + 1];
     }
 
-    return Gfx::JBIG2::GenericRegionSegmentData { region_segment_information.region_segment_information, flags, template_pixels, image.release_nonnull() };
+    return Gfx::JBIG2::GenericRegionSegmentData { region_segment_information.region_segment_information, flags, template_pixels, image.release_nonnull(), real_height_for_generic_region_of_initially_unknown_size };
 }
 
 static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_generic_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
 {
-    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateGenericRegionSegmentData { TRY(jbig2_generic_region_from_json(options, object)) } };
+    auto result = TRY(jbig2_generic_region_from_json(options, object));
+    if (header.is_immediate_generic_region_of_initially_unknown_size != result.real_height_for_generic_region_of_initially_unknown_size.has_value())
+        return Error::from_string_literal("is_immediate_generic_region_of_initially_unknown_size and data.real_height_for_generic_region_of_initially_unknown_size must be set together");
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateGenericRegionSegmentData { move(result) } };
 }
 
 static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_lossless_generic_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
@@ -590,6 +604,14 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
             return Error::from_string_literal("expected bool for \"force_32_bit_page_association\"");
         }
 
+        if (key == "is_immediate_generic_region_of_initially_unknown_size"sv) {
+            if (auto is_immediate_generic_region_of_initially_unknown_size = object.get_bool(); is_immediate_generic_region_of_initially_unknown_size.has_value()) {
+                header.is_immediate_generic_region_of_initially_unknown_size = is_immediate_generic_region_of_initially_unknown_size.value();
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"is_immediate_generic_region_of_initially_unknown_size\"");
+        }
+
         if (key == "page_association"sv) {
             if (auto page_association = object.get_u32(); page_association.has_value()) {
                 header.page_association = page_association.value();
@@ -620,6 +642,9 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
 
     if (!type_string.has_value())
         return Error::from_string_literal("segment missing \"type\"");
+
+    if (header.is_immediate_generic_region_of_initially_unknown_size && type_string != "generic_region"sv)
+        return Error::from_string_literal("is_immediate_generic_region_of_initially_unknown_size can only be set for type \"generic_region\"");
 
     if (type_string == "end_of_file")
         return jbig2_end_of_file_from_json(header, segment_data_object);

@@ -37,6 +37,7 @@ struct SegmentHeaderData {
     u32 page_association { 0 };
 
     bool force_32_bit_page_association { false };
+    bool is_immediate_generic_region_of_initially_unknown_size { false };
 };
 
 struct GenericRegionSegmentData {
@@ -44,6 +45,7 @@ struct GenericRegionSegmentData {
     u8 flags { 0 };
     Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels {};
     NonnullOwnPtr<BilevelImage> image;
+    Optional<u32> real_height_for_generic_region_of_initially_unknown_size {};
 };
 
 struct ImmediateGenericRegionSegmentData {

@@ -434,7 +434,7 @@ static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const
         return Error::from_string_literal("JBIG2Writer: GBTEMPLATE=0 EXTTEMPLATE=1 not yet implemented");
     }
 
-    TRY(scratch_buffer.try_resize(sizeof(JBIG2::RegionSegmentInformationField) + 1 + 2 * number_of_adaptive_template_pixels + data.size()));
+    TRY(scratch_buffer.try_resize(sizeof(JBIG2::RegionSegmentInformationField) + 1 + 2 * number_of_adaptive_template_pixels + data.size() + (generic_region.real_height_for_generic_region_of_initially_unknown_size.has_value() ? 4 : 0)));
     FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
 
     TRY(encode_region_segment_information_field(stream, generic_region.region_segment_information));
@@ -444,6 +444,8 @@ static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const
         TRY(stream.write_value<i8>(generic_region.adaptive_template_pixels[i].y));
     }
     TRY(stream.write_until_depleted(data));
+    if (generic_region.real_height_for_generic_region_of_initially_unknown_size.has_value())
+        TRY(stream.write_value<BigEndian<u32>>(generic_region.real_height_for_generic_region_of_initially_unknown_size.value()));
     return {};
 }
 
@@ -487,7 +489,7 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
         header.referred_to_segment_retention_flags.append(reference.retention_flag);
     }
     header.page_association = segment_data.header.page_association;
-    header.data_length = encoded_data.size(); // FIXME: Make optional for immediate generic regions.
+    header.data_length = segment_data.header.is_immediate_generic_region_of_initially_unknown_size ? 0xffff'ffff : encoded_data.size();
 
     auto page_association_size = segment_data.header.force_32_bit_page_association ? PageAssociationSize::Force32Bit : PageAssociationSize::Auto;
     TRY(encode_segment_header(stream, header, page_association_size));

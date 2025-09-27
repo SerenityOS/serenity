@@ -1,0 +1,41 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+        {
+            "segment_number": 1,
+            "type": "generic_region",
+            "is_immediate_generic_region_of_initially_unknown_size": true,
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "width": "from_image_data",
+                    "height": 450
+                },
+                "real_height_for_generic_region_of_initially_unknown_size": 400,
+                "image_data": {
+                    "from_file": "bitmap.bmp"
+                }
+            }
+        },
+        {
+            "segment_number": 2,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}

@@ -357,6 +357,7 @@ TEST_CASE(test_jbig2_decode)
     Array test_inputs = {
         TEST_INPUT("jbig2/bitmap.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-p32-eof.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-initially-unknown-size.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-tpgdon.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-customat-tpgdon.jbig2"sv),
@@ -399,8 +400,6 @@ TEST_CASE(test_jbig2_decode)
         // - symbols with REFAGGNINST > 1 (code support added in #26107)
         // - coverage for different segment combination operators (or and xor xnor replace),
         //   with both background colors
-        // - immediate generic region of unknown size and larger height in region segment information field
-        //   than in number of rows stored after data (code support added in #26173)
         // - negative position in composition (code support added in #26046)
         // - intermediate text regions (code support added in #26197)
         // - intermediate halftone regions (code support added in #26197)
