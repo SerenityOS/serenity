@@ -64,7 +64,8 @@ def read_segment_header(data, offset):
 
     data_size, = struct.unpack_from('>I', data, offset + segment_header_size)
     if data_size == 0xffff_ffff:
-        raise Exception('cannot handle indeterminate length')
+        if type not in [36, 38, 39]:
+            raise Exception('unknown segment size only allowed for generic regions')
     segment_header_size += 4
 
     bytes = data[offset:offset + segment_header_size]
@@ -76,6 +77,19 @@ def read_segment_header(data, offset):
     return SegmentHeader(segment_header_size, type, page, bytes, data_size, None)
 
 
+def get_data_size(segment_header, data, offset):
+    if segment_header.data_size != 0xffff_ffff:
+        return segment_header.data_size
+
+    if len(data) - offset < 23:
+        raise Exception('not enough data for segment of unknown size')
+
+    is_mmr = data[offset] & 1 != 0
+    end_sequence = b'\x00\x00' if is_mmr else b'\xff\xac'
+    index = data.index(end_sequence, offset + 19, len(data) - 4)
+    return index - offset + len(end_sequence) + 4
+
+
 def read_segment_headers(data, is_random_access):
     offset = 0
 
@@ -85,8 +99,9 @@ def read_segment_headers(data, is_random_access):
         offset += segment_header.segment_header_size
 
         if not is_random_access:
-            segment_header.data = data[offset:offset + segment_header.data_size]
-            offset += segment_header.data_size
+            data_size = get_data_size(segment_header, data, offset)
+            segment_header.data = data[offset:offset + data_size]
+            offset += data_size
 
         segment_headers.append(segment_header)
 
@@ -95,8 +110,9 @@ def read_segment_headers(data, is_random_access):
 
     if is_random_access:
         for segment_header in segment_headers:
-            segment_header.data = data[offset:offset + segment_header.data_size]
-            offset += segment_header.data_size
+            data_size = get_data_size(segment_header, data, offset)
+            segment_header.data = data[offset:offset + data_size]
+            offset += data_size
 
     return segment_headers
 
