@@ -17,17 +17,17 @@ namespace Gfx {
 // It's also used in JPEG2000 and also described in Annex C of the JPEG2000 spec.
 // See JPEG2000Loader.cpp for the JPEG2000 spec link.
 
-struct QMArithmeticCoderContext {
+struct MQArithmeticCoderContext {
     u8 I { 0 };      // Index I stored for context CX (E.2.4)
     u8 is_mps { 0 }; // "More probable symbol" (E.1.1). 0 or 1.
 };
 
 // E.2 Description of the arithmetic encoder
-class QMArithmeticEncoder {
+class MQArithmeticEncoder {
 public:
-    static ErrorOr<QMArithmeticEncoder> initialize(u8 byte_before_first_encoded_byte);
+    static ErrorOr<MQArithmeticEncoder> initialize(u8 byte_before_first_encoded_byte);
 
-    void encode_bit(u8 bit, QMArithmeticCoderContext& context);
+    void encode_bit(u8 bit, MQArithmeticCoderContext& context);
     ErrorOr<ByteBuffer> finalize();
 
 private:
@@ -61,20 +61,20 @@ private:
 
     u8 CT { 0 }; // Count of the number of bits in C.
 
-    QMArithmeticCoderContext* CX { nullptr };
+    MQArithmeticCoderContext* CX { nullptr };
 };
 
 // E.3 Arithmetic decoding procedure, but with the changes described in
 // Annex G Arithmetic decoding procedure (software conventions).
 // Exposed for testing.
-class QMArithmeticDecoder {
+class MQArithmeticDecoder {
 public:
-    static ErrorOr<QMArithmeticDecoder> initialize(ReadonlyBytes data);
+    static ErrorOr<MQArithmeticDecoder> initialize(ReadonlyBytes data);
 
-    bool get_next_bit(QMArithmeticCoderContext& context);
+    bool get_next_bit(MQArithmeticCoderContext& context);
 
 private:
-    QMArithmeticDecoder(ReadonlyBytes data)
+    MQArithmeticDecoder(ReadonlyBytes data)
         : m_data(data)
     {
     }
@@ -106,7 +106,7 @@ private:
 
     u8 CT { 0 }; // Count of the number of bits in C.
 
-    QMArithmeticCoderContext* CX { nullptr };
+    MQArithmeticCoderContext* CX { nullptr };
 };
 
 }
