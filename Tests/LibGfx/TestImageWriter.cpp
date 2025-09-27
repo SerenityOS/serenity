@@ -18,9 +18,9 @@
 #include <LibGfx/ImageFormats/JBIG2Writer.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/JPEGWriter.h>
+#include <LibGfx/ImageFormats/MQArithmeticCoder.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
-#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
 #include <LibGfx/ImageFormats/QOILoader.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
@@ -334,10 +334,10 @@ TEST_CASE(test_qm_arithmetic_encoder)
     // clang-format on
 
     // "For this entire test, a single value of CX is used. I(CX) is initially 0 and MPS(CX) is initially 0."
-    Gfx::QMArithmeticCoderContext context { 0, 0 };
+    Gfx::MQArithmeticCoderContext context { 0, 0 };
 
     // "The value of the byte before the first byte in the output buffer is assumed to be 0x00, making the initial value of B 0x00."
-    auto encoder = TRY_OR_FAIL(Gfx::QMArithmeticEncoder::initialize(0x00));
+    auto encoder = TRY_OR_FAIL(Gfx::MQArithmeticEncoder::initialize(0x00));
 
     FixedMemoryStream input_stream { input };
     BigEndianInputBitStream input_bit_stream { MaybeOwned { input_stream } };

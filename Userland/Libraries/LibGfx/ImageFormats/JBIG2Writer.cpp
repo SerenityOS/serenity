@@ -17,7 +17,7 @@
 #include <LibGfx/ImageFormats/BilevelImage.h>
 #include <LibGfx/ImageFormats/CCITTEncoder.h>
 #include <LibGfx/ImageFormats/JBIG2Writer.h>
-#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
+#include <LibGfx/ImageFormats/MQArithmeticCoder.h>
 
 namespace Gfx {
 
@@ -174,7 +174,7 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
     }(inputs.gb_template);
 
     // 6.2.5.7 Decoding the bitmap
-    QMArithmeticEncoder encoder = TRY(QMArithmeticEncoder::initialize(0));
+    MQArithmeticEncoder encoder = TRY(MQArithmeticEncoder::initialize(0));
 
     // "1) Set:
     //         LTP = 0"

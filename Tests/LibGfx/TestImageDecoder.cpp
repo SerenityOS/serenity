@@ -23,12 +23,12 @@
 #include <LibGfx/ImageFormats/JPEG2000TagTree.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibGfx/ImageFormats/JPEGXLLoader.h>
+#include <LibGfx/ImageFormats/MQArithmeticCoder.h>
 #include <LibGfx/ImageFormats/PAMLoader.h>
 #include <LibGfx/ImageFormats/PBMLoader.h>
 #include <LibGfx/ImageFormats/PGMLoader.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibGfx/ImageFormats/PPMLoader.h>
-#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
 #include <LibGfx/ImageFormats/TGALoader.h>
 #include <LibGfx/ImageFormats/TIFFLoader.h>
 #include <LibGfx/ImageFormats/TIFFMetadata.h>
@@ -482,8 +482,8 @@ TEST_CASE(test_qm_arithmetic_decoder)
     // clang-format on
 
     // "For this entire test, a single value of CX is used. I(CX) is initially 0 and MPS(CX) is initially 0."
-    Gfx::QMArithmeticCoderContext context { 0, 0 };
-    auto decoder = MUST(Gfx::QMArithmeticDecoder::initialize(input));
+    Gfx::MQArithmeticCoderContext context { 0, 0 };
+    auto decoder = MUST(Gfx::MQArithmeticDecoder::initialize(input));
 
     for (auto expected : output) {
         u8 actual = 0;

@@ -14,7 +14,7 @@
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
 #include <LibGfx/ImageFormats/JBIG2Loader.h>
 #include <LibGfx/ImageFormats/JBIG2Shared.h>
-#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
+#include <LibGfx/ImageFormats/MQArithmeticCoder.h>
 #include <LibTextCodec/Decoder.h>
 
 // Spec: ITU-T_T_88__08_2018.pdf in the zip file here:
@@ -43,14 +43,14 @@ public:
 
     // A.2 Procedure for decoding values (except IAID)
     // Returns OptionalNone for OOB.
-    Optional<i32> decode(QMArithmeticDecoder&);
+    Optional<i32> decode(MQArithmeticDecoder&);
 
     // Returns Error for OOB.
-    ErrorOr<i32> decode_non_oob(QMArithmeticDecoder&);
+    ErrorOr<i32> decode_non_oob(MQArithmeticDecoder&);
 
 private:
     u16 PREV { 0 };
-    Vector<QMArithmeticCoderContext> contexts;
+    Vector<MQArithmeticCoderContext> contexts;
 };
 
 ArithmeticIntegerDecoder::ArithmeticIntegerDecoder()
@@ -58,7 +58,7 @@ ArithmeticIntegerDecoder::ArithmeticIntegerDecoder()
     contexts.resize(1 << 9);
 }
 
-Optional<int> ArithmeticIntegerDecoder::decode(QMArithmeticDecoder& decoder)
+Optional<int> ArithmeticIntegerDecoder::decode(MQArithmeticDecoder& decoder)
 {
     // A.2 Procedure for decoding values (except IAID)
     // "1) Set:
@@ -112,7 +112,7 @@ Optional<int> ArithmeticIntegerDecoder::decode(QMArithmeticDecoder& decoder)
     return S ? -V : V;
 }
 
-ErrorOr<i32> ArithmeticIntegerDecoder::decode_non_oob(QMArithmeticDecoder& decoder)
+ErrorOr<i32> ArithmeticIntegerDecoder::decode_non_oob(MQArithmeticDecoder& decoder)
 {
     auto result = decode(decoder);
     if (!result.has_value())
@@ -125,11 +125,11 @@ public:
     explicit ArithmeticIntegerIDDecoder(u32 code_length);
 
     // A.3 The IAID decoding procedure
-    u32 decode(QMArithmeticDecoder&);
+    u32 decode(MQArithmeticDecoder&);
 
 private:
     u32 m_code_length { 0 };
-    Vector<QMArithmeticCoderContext> contexts;
+    Vector<MQArithmeticCoderContext> contexts;
 };
 
 ArithmeticIntegerIDDecoder::ArithmeticIntegerIDDecoder(u32 code_length)
@@ -138,7 +138,7 @@ ArithmeticIntegerIDDecoder::ArithmeticIntegerIDDecoder(u32 code_length)
     contexts.resize(1 << (code_length + 1));
 }
 
-u32 ArithmeticIntegerIDDecoder::decode(QMArithmeticDecoder& decoder)
+u32 ArithmeticIntegerIDDecoder::decode(MQArithmeticDecoder& decoder)
 {
     // A.3 The IAID decoding procedure
     u32 prev = 1;
@@ -1408,7 +1408,7 @@ struct GenericRegionDecodingInputParameters {
     Stream* stream { nullptr };
 
     // If is_modified_modified_read is false, generic_region_decoding_procedure() reads data off this decoder.
-    QMArithmeticDecoder* arithmetic_decoder { nullptr };
+    MQArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
 // 6.2 Generic region decoding procedure
@@ -1557,7 +1557,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     }(inputs.gb_template);
 
     // 6.2.5.7 Decoding the bitmap
-    QMArithmeticDecoder& decoder = *inputs.arithmetic_decoder;
+    MQArithmeticDecoder& decoder = *inputs.arithmetic_decoder;
 
     // "1) Set:
     //         LTP = 0"
@@ -1625,11 +1625,11 @@ struct RefinementContexts {
         contexts.resize(1 << (refinement_template == 0 ? 13 : 10));
     }
 
-    Vector<QMArithmeticCoderContext> contexts; // "GR" (+ binary suffix) in spec.
+    Vector<MQArithmeticCoderContext> contexts; // "GR" (+ binary suffix) in spec.
 };
 
 // 6.3 Generic Refinement Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, QMArithmeticDecoder& decoder, RefinementContexts& contexts)
+static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, MQArithmeticDecoder& decoder, RefinementContexts& contexts)
 {
     VERIFY(inputs.gr_template == 0 || inputs.gr_template == 1);
 
@@ -1802,7 +1802,7 @@ struct TextRegionDecodingInputParameters {
     Stream* stream { nullptr };
 
     // If uses_huffman_encoding is false, generic_region_decoding_procedure() reads data off this decoder.
-    QMArithmeticDecoder* arithmetic_decoder { nullptr };
+    MQArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
 struct TextContexts {
@@ -1827,7 +1827,7 @@ struct TextContexts {
 static ErrorOr<NonnullOwnPtr<BilevelImage>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, Optional<TextContexts>& text_contexts, Optional<RefinementContexts>& refinement_contexts)
 {
     Optional<BigEndianInputBitStream> bit_stream;
-    QMArithmeticDecoder* decoder = nullptr;
+    MQArithmeticDecoder* decoder = nullptr;
     if (inputs.uses_huffman_encoding) {
         bit_stream = BigEndianInputBitStream { MaybeOwned { *inputs.stream } };
     } else {
@@ -2154,14 +2154,14 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
 {
     Optional<FixedMemoryStream> stream;
     Optional<BigEndianInputBitStream> bit_stream;
-    Optional<QMArithmeticDecoder> decoder;
+    Optional<MQArithmeticDecoder> decoder;
     Optional<JBIG2::GenericContexts> generic_contexts;
     Optional<SymbolContexts> symbol_contexts;
     if (inputs.uses_huffman_encoding) {
         stream = FixedMemoryStream { data };
         bit_stream = BigEndianInputBitStream { MaybeOwned { stream.value() } };
     } else {
-        decoder = TRY(QMArithmeticDecoder::initialize(data));
+        decoder = TRY(MQArithmeticDecoder::initialize(data));
         generic_contexts = JBIG2::GenericContexts { inputs.symbol_template };
         symbol_contexts = SymbolContexts {};
     }
@@ -2517,7 +2517,7 @@ struct GrayscaleInputParameters {
     u8 template_id { 0 }; // "GSTEMPLATE" in spec.
 
     // If uses_mmr is false, grayscale_image_decoding_procedure() reads data off this decoder.
-    QMArithmeticDecoder* arithmetic_decoder { nullptr };
+    MQArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
 static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputParameters const& inputs, ReadonlyBytes data, Optional<JBIG2::GenericContexts>& contexts)
@@ -2673,9 +2673,9 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> halftone_region_decoding_procedure(H
     grayscale_inputs.skip_pattern = skip_pattern;
     grayscale_inputs.template_id = inputs.halftone_template;
 
-    Optional<QMArithmeticDecoder> decoder;
+    Optional<MQArithmeticDecoder> decoder;
     if (!inputs.uses_mmr) {
-        decoder = TRY(QMArithmeticDecoder::initialize(data));
+        decoder = TRY(MQArithmeticDecoder::initialize(data));
         grayscale_inputs.arithmetic_decoder = &decoder.value();
     }
 
@@ -2752,12 +2752,12 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_proced
     generic_inputs.adaptive_template_pixels[3].y = -2;
 
     Optional<FixedMemoryStream> stream;
-    Optional<QMArithmeticDecoder> decoder;
+    Optional<MQArithmeticDecoder> decoder;
     if (inputs.uses_mmr) {
         stream = FixedMemoryStream { data };
         generic_inputs.stream = &stream.value();
     } else {
-        decoder = TRY(QMArithmeticDecoder::initialize(data));
+        decoder = TRY(MQArithmeticDecoder::initialize(data));
         generic_inputs.arithmetic_decoder = &decoder.value();
     }
 
@@ -3377,11 +3377,11 @@ static ErrorOr<DirectRegionResult> decode_text_region(JBIG2LoadingContext& conte
     inputs.refinement_template = refinement_template;
     inputs.refinement_adaptive_template_pixels = adaptive_refinement_template;
 
-    Optional<QMArithmeticDecoder> decoder;
+    Optional<MQArithmeticDecoder> decoder;
     if (uses_huffman_encoding) {
         inputs.stream = &stream;
     } else {
-        decoder = TRY(QMArithmeticDecoder::initialize(data.slice(TRY(stream.tell()))));
+        decoder = TRY(MQArithmeticDecoder::initialize(data.slice(TRY(stream.tell()))));
         inputs.arithmetic_decoder = &decoder.value();
     }
 
@@ -3669,12 +3669,12 @@ static ErrorOr<DirectRegionResult> decode_generic_region(JBIG2LoadingContext& co
     inputs.adaptive_template_pixels = adaptive_template_pixels;
 
     Optional<FixedMemoryStream> stream;
-    Optional<QMArithmeticDecoder> decoder;
+    Optional<MQArithmeticDecoder> decoder;
     if (uses_mmr) {
         stream = FixedMemoryStream { data };
         inputs.stream = &stream.value();
     } else {
-        decoder = TRY(QMArithmeticDecoder::initialize(data));
+        decoder = TRY(MQArithmeticDecoder::initialize(data));
         inputs.arithmetic_decoder = &decoder.value();
     }
 
@@ -3779,7 +3779,7 @@ static ErrorOr<void> decode_immediate_generic_refinement_region(JBIG2LoadingCont
     inputs.is_typical_prediction_used = typical_prediction_generic_refinement_on;
     inputs.adaptive_template_pixels = adaptive_template_pixels;
 
-    auto decoder = TRY(QMArithmeticDecoder::initialize(data));
+    auto decoder = TRY(MQArithmeticDecoder::initialize(data));
     auto result = TRY(generic_refinement_region_decoding_procedure(inputs, decoder, contexts));
 
     composite_bilevel_image(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
