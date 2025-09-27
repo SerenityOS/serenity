@@ -66,6 +66,7 @@ set(SOURCES
     ImageFormats/JPEGXLICC.cpp
     ImageFormats/JPEGXLLoader.cpp
     ImageFormats/JPEGWriter.cpp
+    ImageFormats/MQArithmeticCoder.cpp
     ImageFormats/PBMLoader.cpp
     ImageFormats/PGMLoader.cpp
     ImageFormats/PNGLoader.cpp
@@ -73,7 +74,6 @@ set(SOURCES
     ImageFormats/PortableFormatWriter.cpp
     ImageFormats/PAMLoader.cpp
     ImageFormats/PPMLoader.cpp
-    ImageFormats/QMArithmeticCoder.cpp
     ImageFormats/QOILoader.cpp
     ImageFormats/QOIWriter.cpp
     ImageFormats/TGALoader.cpp

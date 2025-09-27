@@ -6,7 +6,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Error.h>
-#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
+#include <LibGfx/ImageFormats/MQArithmeticCoder.h>
 
 namespace Gfx {
 
@@ -69,21 +69,21 @@ constexpr auto qe_table = to_array<QeEntry>({
     { 0x5601, 46, 46, 0 },
 });
 
-static u8& I(QMArithmeticCoderContext* cx) { return cx->I; }
-static u8& MPS(QMArithmeticCoderContext* cx) { return cx->is_mps; }
+static u8& I(MQArithmeticCoderContext* cx) { return cx->I; }
+static u8& MPS(MQArithmeticCoderContext* cx) { return cx->is_mps; }
 static u16 Qe(u16 index) { return qe_table[index].qe; }
 static u8 NMPS(u16 index) { return qe_table[index].nmps; }
 static u8 NLPS(u16 index) { return qe_table[index].nlps; }
 static u8 SWITCH(u16 index) { return qe_table[index].switch_flag; }
 
-ErrorOr<QMArithmeticEncoder> QMArithmeticEncoder::initialize(u8 byte_before_first_encoded_byte)
+ErrorOr<MQArithmeticEncoder> MQArithmeticEncoder::initialize(u8 byte_before_first_encoded_byte)
 {
-    QMArithmeticEncoder encoder;
+    MQArithmeticEncoder encoder;
     encoder.INITENC(byte_before_first_encoded_byte);
     return encoder;
 }
 
-void QMArithmeticEncoder::encode_bit(u8 bit, QMArithmeticCoderContext& context)
+void MQArithmeticEncoder::encode_bit(u8 bit, MQArithmeticCoderContext& context)
 {
     CX = &context;
 
@@ -93,13 +93,13 @@ void QMArithmeticEncoder::encode_bit(u8 bit, QMArithmeticCoderContext& context)
     // dbgln();
 }
 
-void QMArithmeticEncoder::emit()
+void MQArithmeticEncoder::emit()
 {
     // dbg(" OUT={:#x}", B);
     m_output_bytes.append(B);
 }
 
-ErrorOr<ByteBuffer> QMArithmeticEncoder::finalize()
+ErrorOr<ByteBuffer> MQArithmeticEncoder::finalize()
 {
     FLUSH();
 
@@ -108,7 +108,7 @@ ErrorOr<ByteBuffer> QMArithmeticEncoder::finalize()
     return ByteBuffer::copy(m_output_bytes.span().slice(1));
 }
 
-void QMArithmeticEncoder::INITENC(u8 byte_before_first_encoded_byte)
+void MQArithmeticEncoder::INITENC(u8 byte_before_first_encoded_byte)
 {
     // E.2.8 Initialization of the encoder (INITENC)
     // Figure E.10 – Initialization of the encoder
@@ -125,7 +125,7 @@ void QMArithmeticEncoder::INITENC(u8 byte_before_first_encoded_byte)
         CT = 13;
 }
 
-void QMArithmeticEncoder::ENCODE(u8 D)
+void MQArithmeticEncoder::ENCODE(u8 D)
 {
     // E.2.2 Encoding a decision (ENCODE)
     // Figure E.3 – ENCODE procedure
@@ -135,7 +135,7 @@ void QMArithmeticEncoder::ENCODE(u8 D)
         CODE1();
 }
 
-void QMArithmeticEncoder::CODE1()
+void MQArithmeticEncoder::CODE1()
 {
     // E.2.3 Encoding a 1 or 0 (CODE1 and CODE0)
     // Figure E.4 – CODE1 procedure
@@ -145,7 +145,7 @@ void QMArithmeticEncoder::CODE1()
         CODELPS();
 }
 
-void QMArithmeticEncoder::CODE0()
+void MQArithmeticEncoder::CODE0()
 {
     // E.2.3 Encoding a 1 or 0 (CODE1 and CODE0)
     // Figure E.5 – CODE0 procedure
@@ -155,7 +155,7 @@ void QMArithmeticEncoder::CODE0()
         CODELPS();
 }
 
-void QMArithmeticEncoder::CODELPS()
+void MQArithmeticEncoder::CODELPS()
 {
     // E.2.4 Encoding an MPS or LPS (CODEMPS and CODELPS)
     // Figure E.6 – CODELPS procedure with conditional MPS/LPS exchange
@@ -174,7 +174,7 @@ void QMArithmeticEncoder::CODELPS()
     RENORME();
 }
 
-void QMArithmeticEncoder::CODEMPS()
+void MQArithmeticEncoder::CODEMPS()
 {
     // E.2.4 Encoding an MPS or LPS (CODEMPS and CODELPS)
     // Figure E.7 – CODEMPS procedure with conditional MPS/LPS exchange
@@ -192,7 +192,7 @@ void QMArithmeticEncoder::CODEMPS()
     }
 }
 
-void QMArithmeticEncoder::RENORME()
+void MQArithmeticEncoder::RENORME()
 {
     // E.2.6 Renormalization in the encoder (RENORME)
     // Figure E.8 – Encoder renormalization procedure
@@ -208,7 +208,7 @@ void QMArithmeticEncoder::RENORME()
     } while ((A & 0x8000) == 0);
 }
 
-void QMArithmeticEncoder::BYTEOUT()
+void MQArithmeticEncoder::BYTEOUT()
 {
     // E.2.7 Compressed data output (BYTEOUT)
     // Figure E.9 – BYTEOUT procedure for encoder
@@ -253,7 +253,7 @@ void QMArithmeticEncoder::BYTEOUT()
     emit_without_bit_stuffing();
 }
 
-void QMArithmeticEncoder::FLUSH()
+void MQArithmeticEncoder::FLUSH()
 {
     // E.2.9 Termination of encoding (FLUSH)
     // Figure E.11 – FLUSH procedure
@@ -274,7 +274,7 @@ void QMArithmeticEncoder::FLUSH()
     emit(); // BP = BP + 1 in spec.
 }
 
-void QMArithmeticEncoder::SETBITS()
+void MQArithmeticEncoder::SETBITS()
 {
     // E.2.9 Termination of encoding (FLUSH)
     // Figure E.12 – Setting the final bits in the C register
@@ -284,14 +284,14 @@ void QMArithmeticEncoder::SETBITS()
         C = C - 0x8000;
 }
 
-ErrorOr<QMArithmeticDecoder> QMArithmeticDecoder::initialize(ReadonlyBytes data)
+ErrorOr<MQArithmeticDecoder> MQArithmeticDecoder::initialize(ReadonlyBytes data)
 {
-    QMArithmeticDecoder decoder { data };
+    MQArithmeticDecoder decoder { data };
     decoder.INITDEC();
     return decoder;
 }
 
-bool QMArithmeticDecoder::get_next_bit(QMArithmeticCoderContext& context)
+bool MQArithmeticDecoder::get_next_bit(MQArithmeticCoderContext& context)
 {
     CX = &context;
     // Useful for comparing to Table H.1 – Encoder and decoder trace data.
@@ -301,7 +301,7 @@ bool QMArithmeticDecoder::get_next_bit(QMArithmeticCoderContext& context)
     return D;
 }
 
-u8 QMArithmeticDecoder::B(size_t offset) const
+u8 MQArithmeticDecoder::B(size_t offset) const
 {
     // E.2.10 Minimization of the compressed data
     // "the convention is used in the decoder that when a marker code is encountered,
@@ -311,7 +311,7 @@ u8 QMArithmeticDecoder::B(size_t offset) const
     return m_data[BP + offset];
 }
 
-void QMArithmeticDecoder::INITDEC()
+void MQArithmeticDecoder::INITDEC()
 {
     // E.3.5 Initialization of the decoder (INITDEC)
     // Figure G.1 – Initialization of the software conventions decoder
@@ -329,7 +329,7 @@ void QMArithmeticDecoder::INITDEC()
     A = 0x8000;
 }
 
-u8 QMArithmeticDecoder::DECODE()
+u8 MQArithmeticDecoder::DECODE()
 {
     // E.3.2 Decoding a decision (DECODE)
     // Figure G.2 – Decoding an MPS or an LPS in the software-conventions decoder
@@ -351,7 +351,7 @@ u8 QMArithmeticDecoder::DECODE()
     return D;
 }
 
-u8 QMArithmeticDecoder::MPS_EXCHANGE()
+u8 MQArithmeticDecoder::MPS_EXCHANGE()
 {
     // Figure E.16 – Decoder MPS path conditional exchange procedure
     u8 D;
@@ -368,7 +368,7 @@ u8 QMArithmeticDecoder::MPS_EXCHANGE()
     return D;
 }
 
-u8 QMArithmeticDecoder::LPS_EXCHANGE()
+u8 MQArithmeticDecoder::LPS_EXCHANGE()
 {
     // Figure E.17 – Decoder LPS path conditional exchange procedure
     u8 D;
@@ -387,7 +387,7 @@ u8 QMArithmeticDecoder::LPS_EXCHANGE()
     return D;
 }
 
-void QMArithmeticDecoder::RENORMD()
+void MQArithmeticDecoder::RENORMD()
 {
     // E.3.3 Renormalization in the decoder (RENORMD)
     // Figure E.18 – Decoder renormalization procedure
@@ -400,7 +400,7 @@ void QMArithmeticDecoder::RENORMD()
     } while ((A & 0x8000) == 0);
 }
 
-void QMArithmeticDecoder::BYTEIN()
+void MQArithmeticDecoder::BYTEIN()
 {
     // E.3.4 Compressed data input (BYTEIN)
     // Figure G.3 – Inserting a new byte into the C register in the software-conventions decoder

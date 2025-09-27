@@ -9,7 +9,7 @@
 #include <AK/Vector.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
 #include <LibGfx/ImageFormats/JPEG2000Span2D.h>
-#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
+#include <LibGfx/ImageFormats/MQArithmeticCoder.h>
 
 namespace Gfx::JPEG2000 {
 
@@ -102,11 +102,11 @@ inline ErrorOr<void> decode_code_block(Span2D<float> result, SubBand sub_band, i
 
     int pass { 0 };
 
-    QMArithmeticCoderContext uniform_context;
-    QMArithmeticCoderContext run_length_context;
-    Array<QMArithmeticCoderContext, 17> all_other_contexts {};
+    MQArithmeticCoderContext uniform_context;
+    MQArithmeticCoderContext run_length_context;
+    Array<MQArithmeticCoderContext, 17> all_other_contexts {};
 
-    QMArithmeticDecoder arithmetic_decoder = TRY(QMArithmeticDecoder::initialize(segments[0]));
+    MQArithmeticDecoder arithmetic_decoder = TRY(MQArithmeticDecoder::initialize(segments[0]));
 
     auto reset_contexts = [&]() {
         // Table D.7 – Initial states for all contexts
@@ -554,7 +554,7 @@ inline ErrorOr<void> decode_code_block(Span2D<float> result, SubBand sub_band, i
             set_current_raw_segment(segment_index_from_pass_index(options, pass));
         } else if (options.uses_termination_on_each_coding_pass
             || (options.uses_selective_arithmetic_coding_bypass && pass >= 10 && pass_type == PassType::Cleanup)) {
-            arithmetic_decoder = TRY(QMArithmeticDecoder::initialize(segments[segment_index_from_pass_index(options, pass)]));
+            arithmetic_decoder = TRY(MQArithmeticDecoder::initialize(segments[segment_index_from_pass_index(options, pass)]));
         }
 
         // D0, Is this the first bit-plane for the code-block?

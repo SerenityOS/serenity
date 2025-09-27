@@ -10,7 +10,7 @@
 #include <AK/Optional.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <LibGfx/ImageFormats/QMArithmeticCoder.h>
+#include <LibGfx/ImageFormats/MQArithmeticCoder.h>
 
 namespace Gfx::JBIG2 {
 
@@ -123,7 +123,7 @@ struct GenericContexts {
         contexts.resize(1 << number_of_context_bits_for_template(template_));
     }
 
-    Vector<QMArithmeticCoderContext> contexts; // "GB" (+ binary suffix) in spec.
+    Vector<MQArithmeticCoderContext> contexts; // "GB" (+ binary suffix) in spec.
 
 private:
     static u8 number_of_context_bits_for_template(u8 template_)
