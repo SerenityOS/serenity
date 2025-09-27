@@ -200,11 +200,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             dbgln("{}", res.release_error());
     } else if (sid != pid) {
         if (getpgid(pid) != pid) {
+#ifdef AK_OS_MACOS
+            // The best we can do is start a new process group and forget about being a session leader,
+            // As macOS (or rather, `login` on macOS) refuses to hand over the terminal.
+            if (auto res = Core::System::setpgid(pid, pid); res.is_error())
+                dbgln("{}", res.release_error());
+#else
             if (auto res = Core::System::setpgid(pid, sid); res.is_error())
                 dbgln("{}", res.release_error());
-
             if (auto res = Core::System::setsid(); res.is_error())
                 dbgln("{}", res.release_error());
+#endif
         }
     }
 
