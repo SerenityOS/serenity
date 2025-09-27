@@ -143,7 +143,7 @@ static ErrorOr<pid_t> posix_spawn_syscall(char const* path, char* const argv[], 
 int posix_spawn(pid_t* out_pid, char const* path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const argv[], char* const envp[])
 {
     // FIXME: Support file_actions and spawnattr in the posix_spawn syscall.
-    if (!file_actions && !attr) {
+    if ((!file_actions || file_actions->state->actions.is_empty()) && !attr) {
         auto child_pid_or_error = posix_spawn_syscall(path, argv, envp);
         if (child_pid_or_error.is_error())
             return child_pid_or_error.error().code();
