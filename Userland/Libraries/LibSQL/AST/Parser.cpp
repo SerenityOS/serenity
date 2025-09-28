@@ -901,9 +901,24 @@ NonnullRefPtr<ColumnDefinition> Parser::parse_column_definition()
         // https://www.sqlite.org/datatype3.html: If no type is specified then the column has affinity BLOB.
         : create_ast_node<TypeName>("BLOB", Vector<NonnullRefPtr<SignedNumber>> {});
 
-    // FIXME: Parse "column-constraint".
+    // Parse column constraints
+    bool is_unique = false;
+    while (match(TokenType::Unique) || match(TokenType::Constraint)) {
+        if (consume_if(TokenType::Unique)) {
+            is_unique = true;
+        } else if (consume_if(TokenType::Constraint)) {
+            // Skip constraint name if present
+            if (match(TokenType::Identifier))
+                consume();
 
-    return create_ast_node<ColumnDefinition>(move(name), move(type_name));
+            if (consume_if(TokenType::Unique)) {
+                is_unique = true;
+            }
+            // TODO: Add support for other constraints like NOT NULL, PRIMARY KEY, etc.
+        }
+    }
+
+    return create_ast_node<ColumnDefinition>(move(name), move(type_name), is_unique);
 }
 
 NonnullRefPtr<TypeName> Parser::parse_type_name()
