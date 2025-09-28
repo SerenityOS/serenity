@@ -199,7 +199,7 @@ ErrorOr<void> encode_horizontal_mode(BigEndianOutputBitStream& bit_stream, Encod
 
 }
 
-ErrorOr<void> Group4Encoder::encode(Stream& stream, Bitmap const& bitmap)
+ErrorOr<void> Group4Encoder::encode(Stream& stream, Bitmap const& bitmap, Group4EncodingOptions const& options)
 {
     auto bit_stream = make<BigEndianOutputBitStream>(MaybeOwned<Stream>(stream));
 
@@ -250,7 +250,8 @@ ErrorOr<void> Group4Encoder::encode(Stream& stream, Bitmap const& bitmap)
     }
 
     // EOFB.
-    TRY(bit_stream->write_bits(EOFB, 24));
+    if (options.append_eofb == Group4EncodingOptions::AppendEOFB::Yes)
+        TRY(bit_stream->write_bits(EOFB, 24));
 
     // Pad bits.
     TRY(bit_stream->align_to_byte_boundary());

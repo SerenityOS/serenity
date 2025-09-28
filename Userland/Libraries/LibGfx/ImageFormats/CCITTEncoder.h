@@ -11,9 +11,18 @@
 
 namespace Gfx::CCITT {
 
+struct Group4EncodingOptions {
+    enum class AppendEOFB : u8 {
+        No,
+        Yes,
+    };
+
+    AppendEOFB append_eofb { AppendEOFB::Yes };
+};
+
 class Group4Encoder {
 public:
-    static ErrorOr<void> encode(Stream&, Bitmap const&);
+    static ErrorOr<void> encode(Stream&, Bitmap const&, Group4EncodingOptions const& = {});
 
 private:
     ~Group4Encoder() = delete;
