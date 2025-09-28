@@ -53,7 +53,7 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
     if (inputs.is_modified_modified_read) {
         // FIXME: It's a bit wasteful to re-convert the BilevelImage to a Bitmap here.
         AllocatingMemoryStream output_stream;
-        TRY(Gfx::CCITT::Group4Encoder::encode(output_stream, TRY(inputs.image.to_gfx_bitmap())));
+        TRY(Gfx::CCITT::Group4Encoder::encode(output_stream, TRY(inputs.image.to_gfx_bitmap()), { CCITT::Group4EncodingOptions::AppendEOFB::No }));
         return output_stream.read_until_eof();
     }
 
