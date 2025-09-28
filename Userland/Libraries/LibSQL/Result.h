@@ -65,7 +65,8 @@ constexpr char const* command_tag(SQLCommand command)
     S(StatementUnavailable, "Statement with id '{}' Unavailable")                                 \
     S(SyntaxError, "Syntax Error")                                                                \
     S(TableDoesNotExist, "Table '{}' does not exist")                                             \
-    S(TableExists, "Table '{}' already exist")
+    S(TableExists, "Table '{}' already exist")                                                    \
+    S(UniqueConstraintViolated, "Unique constraint violated on column '{}'")
 
 enum class SQLErrorCode {
 #undef __ENUMERATE_SQL_ERROR
@@ -130,3 +131,11 @@ template<typename ValueType>
 using ResultOr = ErrorOr<ValueType, Result>;
 
 }
+
+template<>
+struct AK::Formatter<SQL::Result> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, SQL::Result const& result)
+    {
+        return Formatter<StringView>::format(builder, result.error_string());
+    }
+};

@@ -200,10 +200,12 @@ ErrorOr<Vector<Row>> Database::match(TableDef& table, Key const& key)
     return ret;
 }
 
-ErrorOr<void> Database::insert(Row& row)
+ResultOr<void> Database::insert(Row& row)
 {
     VERIFY(m_table_cache.get(row.table().key().hash()).has_value());
-    // TODO: implement table constraints such as unique, foreign key, etc.
+
+    // TODO implement other table constraints such as foreign key, default, etc.
+    TRY(check_unique_constraints(row));
 
     row.set_block_index(m_heap->request_new_block_index());
     row.set_next_block_index(row.table().block_index());
@@ -218,7 +220,7 @@ ErrorOr<void> Database::insert(Row& row)
     return {};
 }
 
-ErrorOr<void> Database::remove(Row& row)
+ResultOr<void> Database::remove(Row& row)
 {
     auto& table = row.table();
     VERIFY(m_table_cache.get(table.key().hash()).has_value());
@@ -249,15 +251,45 @@ ErrorOr<void> Database::remove(Row& row)
     return {};
 }
 
-ErrorOr<void> Database::update(Row& tuple)
+ResultOr<void> Database::update(Row& tuple)
 {
     VERIFY(m_table_cache.get(tuple.table().key().hash()).has_value());
-    // TODO: implement table constraints such as unique, foreign key, etc.
+
+    // TODO: implement other table constraints such as foreign key, default, etc.
+    TRY(check_unique_constraints(tuple));
 
     m_serializer.reset();
     m_serializer.serialize_and_write<Tuple>(tuple);
 
     // TODO update indexes defined on table.
+    return {};
+}
+
+ResultOr<void> Database::check_unique_constraints(Row const& row)
+{
+    auto const& table = row.table();
+
+    // Check each column for unique constraints
+    for (auto const& column : table.columns()) {
+        if (!column->unique())
+            continue;
+
+        auto column_value = row[column->name()];
+        if (column_value.is_null())
+            continue; // NULL values are allowed in UNIQUE columns (multiple NULLs are OK)
+
+        auto all_rows = TRY(select_all(const_cast<TableDef&>(table)));
+        for (auto const& existing_row : all_rows) {
+            if (existing_row.block_index() == row.block_index())
+                continue;
+
+            auto existing_value = existing_row[column->name()];
+            if (!existing_value.is_null() && existing_value == column_value) {
+                return Result { SQLCommand::Insert, SQLErrorCode::UniqueConstraintViolated, column->name() };
+            }
+        }
+    }
+
     return {};
 }
 
