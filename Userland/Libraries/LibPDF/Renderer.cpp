@@ -1616,11 +1616,12 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
 
         auto const bytes_per_line = ceil_div(width, 8);
         for (int y = 0; y < height; ++y) {
+            u32* scanline = bitmap->scanline(y);
             for (int x = 0; x < width; ++x) {
                 auto byte = content[y * bytes_per_line + x / 8];
                 auto bit = 7 - (x % 8);
                 auto color = colors[(byte >> bit) & 1];
-                bitmap->set_pixel(x, y, color);
+                scanline[x] = color.value();
             }
         }
 
