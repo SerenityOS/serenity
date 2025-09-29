@@ -156,11 +156,14 @@ struct RegionSegmentInformatJSON {
 static ErrorOr<RegionSegmentInformatJSON> jbig2_region_segment_information_from_json(JsonObject const& object)
 {
     RegionSegmentInformatJSON result;
+    result.use_width_from_image = true;
+    result.use_height_from_image = true;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "width"sv) {
             if (auto width = value.get_u32(); width.has_value()) {
                 result.region_segment_information.width = width.value();
+                result.use_width_from_image = false;
                 return {};
             }
             if (value.is_string()) {
@@ -176,6 +179,7 @@ static ErrorOr<RegionSegmentInformatJSON> jbig2_region_segment_information_from_
         if (key == "height"sv) {
             if (auto height = value.get_u32(); height.has_value()) {
                 result.region_segment_information.height = height.value();
+                result.use_height_from_image = false;
                 return {};
             }
             if (value.is_string()) {
