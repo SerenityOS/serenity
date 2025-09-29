@@ -129,13 +129,13 @@ void InputManagement::attach_standalone_input_device(InputDevice& device)
     });
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> InputManagement::enumerate()
+#if ARCH(X86_64)
+UNMAP_AFTER_INIT ErrorOr<void> InputManagement::initialize_i8042_controller()
 {
     // FIXME: When we have USB HID support, we should ensure that we disable
     // emulation of the PS/2 controller if it was set by the BIOS.
     // If ACPI indicates we have an i8042 controller and the USB controller was
     // set to emulate PS/2, we should not initialize the PS/2 controller.
-#if ARCH(X86_64)
     auto has_i8042_controller = false;
     auto i8042_controller = TRY(I8042Controller::create());
     switch (kernel_command_line().i8042_presence_mode()) {
@@ -173,16 +173,9 @@ UNMAP_AFTER_INIT ErrorOr<void> InputManagement::enumerate()
     m_input_serial_io_controllers.with([&](auto& list) {
         list.append(i8042_controller);
     });
-#endif
     return {};
 }
-
-UNMAP_AFTER_INIT ErrorOr<void> InputManagement::initialize()
-{
-    VERIFY(!s_the.is_initialized());
-    s_the.ensure_instance();
-    return s_the->enumerate();
-}
+#endif
 
 InputManagement& InputManagement::the()
 {
