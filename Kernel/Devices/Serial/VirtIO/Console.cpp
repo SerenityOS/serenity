@@ -17,10 +17,10 @@ namespace Kernel::VirtIO {
 
 unsigned Console::next_device_id = 0;
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<Console> Console::must_create_for_pci_instance(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<Console>> Console::create_for_pci_instance(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    auto pci_transport_link = MUST(PCIeTransportLink::create(pci_device_identifier));
-    return adopt_lock_ref_if_nonnull(new (nothrow) Console(move(pci_transport_link))).release_nonnull();
+    auto pci_transport_link = TRY(PCIeTransportLink::create(pci_device_identifier));
+    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Console(move(pci_transport_link))));
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> Console::initialize_virtio_resources()
@@ -247,7 +247,7 @@ ErrorOr<void> VirtIOConsoleDriver::probe(PCI::DeviceIdentifier const& pci_device
         || pci_device_identifier.hardware_id().device_id != PCI::DeviceID::VirtIOConsole)
         return ENOTSUP;
 
-    auto console = Console::must_create_for_pci_instance(pci_device_identifier);
+    auto console = TRY(Console::create_for_pci_instance(pci_device_identifier));
     TRY(console->initialize_virtio_resources());
 
     (void)console.leak_ref();

@@ -22,7 +22,7 @@ class Input final
     : public AtomicRefCounted<Input>
     , public VirtIO::Device {
 public:
-    static NonnullLockRefPtr<Input> must_create_for_pci_instance(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullLockRefPtr<Input>> create_for_pci_instance(PCI::DeviceIdentifier const&);
     ~Input() override = default;
 
     ErrorOr<void> initialize_virtio_resources() override;

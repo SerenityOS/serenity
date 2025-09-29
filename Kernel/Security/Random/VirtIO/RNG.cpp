@@ -12,10 +12,10 @@
 
 namespace Kernel::VirtIO {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<RNG> RNG::must_create_for_pci_instance(PCI::DeviceIdentifier const& device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<RNG>> RNG::create_for_pci_instance(PCI::DeviceIdentifier const& device_identifier)
 {
-    auto pci_transport_link = MUST(PCIeTransportLink::create(device_identifier));
-    return adopt_lock_ref_if_nonnull(new RNG(move(pci_transport_link))).release_nonnull();
+    auto pci_transport_link = TRY(PCIeTransportLink::create(device_identifier));
+    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) RNG(move(pci_transport_link))));
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> RNG::initialize_virtio_resources()
@@ -82,7 +82,7 @@ ErrorOr<void> VirtIOEntropyDriver::probe(PCI::DeviceIdentifier const& pci_device
         || pci_device_identifier.hardware_id().device_id != PCI::DeviceID::VirtIOEntropy)
         return ENOTSUP;
 
-    auto rng = RNG::must_create_for_pci_instance(pci_device_identifier);
+    auto rng = TRY(RNG::create_for_pci_instance(pci_device_identifier));
     TRY(rng->initialize_virtio_resources());
 
     (void)rng.leak_ref();
