@@ -412,7 +412,13 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         template_pixels[i].y = adaptive_template_pixels[2 * i + 1];
     }
 
-    return Gfx::JBIG2::GenericRegionSegmentData { region_segment_information.region_segment_information, flags, template_pixels, image.release_nonnull(), real_height_for_generic_region_of_initially_unknown_size };
+    return Gfx::JBIG2::GenericRegionSegmentData {
+        region_segment_information.region_segment_information,
+        flags,
+        template_pixels,
+        image.release_nonnull(),
+        real_height_for_generic_region_of_initially_unknown_size,
+    };
 }
 
 static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_generic_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
