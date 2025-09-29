@@ -35,10 +35,11 @@ class InputManagement {
 
 public:
     InputManagement();
-    static ErrorOr<void> initialize();
     static InputManagement& the();
 
-    ErrorOr<void> enumerate();
+#if ARCH(X86_64)
+    ErrorOr<void> initialize_i8042_controller();
+#endif
 
     struct KeymapData {
         KeymapData();

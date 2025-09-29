@@ -342,8 +342,8 @@ void init_stage2(void*)
 
 #if ARCH(X86_64)
     VMWareBackdoor::the(); // don't wait until first mouse packet
+    MUST(InputManagement::the().initialize_i8042_controller());
 #endif
-    MUST(InputManagement::initialize());
 
     GraphicsManagement::the().initialize();
     VirtualConsole::initialize_consoles();
