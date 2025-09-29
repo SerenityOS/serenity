@@ -40,13 +40,13 @@ static ErrorOr<Gfx::JBIG2::FileHeaderData> jbig2_header_from_json(JsonObject con
 {
     Gfx::JBIG2::FileHeaderData header;
 
-    TRY(header_object.try_for_each_member([&](StringView key, JsonValue const& object) -> ErrorOr<void> {
+    TRY(header_object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "number_of_pages"sv) {
-            if (auto number_of_pages = object.get_u32(); number_of_pages.has_value()) {
+            if (auto number_of_pages = value.get_u32(); number_of_pages.has_value()) {
                 header.number_of_pages = number_of_pages.value();
                 return {};
             }
-            if (object.is_null()) {
+            if (value.is_null()) {
                 header.number_of_pages = {};
                 return {};
             }
@@ -54,7 +54,7 @@ static ErrorOr<Gfx::JBIG2::FileHeaderData> jbig2_header_from_json(JsonObject con
         }
 
         if (key == "organization"sv) {
-            header.organization = TRY(jbig2_organization_from_json(object));
+            header.organization = TRY(jbig2_organization_from_json(value));
             return {};
         }
 
@@ -284,17 +284,17 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
     u8 flags = 0;
     Vector<i8> adaptive_template_pixels;
     OwnPtr<Gfx::BilevelImage> image;
-    TRY(object->try_for_each_member([&](StringView key, JsonValue const& object) -> ErrorOr<void> {
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "region_segment_information"sv) {
-            if (object.is_object()) {
-                region_segment_information = TRY(jbig2_region_segment_information_from_json(object.as_object()));
+            if (value.is_object()) {
+                region_segment_information = TRY(jbig2_region_segment_information_from_json(value.as_object()));
                 return {};
             }
             return Error::from_string_literal("expected object for \"region_segment_information\"");
         }
 
         if (key == "real_height_for_generic_region_of_initially_unknown_size"sv) {
-            if (auto real_height_for_generic_region_of_initially_unknown_size_json = object.get_u32(); real_height_for_generic_region_of_initially_unknown_size_json.has_value()) {
+            if (auto real_height_for_generic_region_of_initially_unknown_size_json = value.get_u32(); real_height_for_generic_region_of_initially_unknown_size_json.has_value()) {
                 real_height_for_generic_region_of_initially_unknown_size = real_height_for_generic_region_of_initially_unknown_size_json.value();
                 return {};
             }
@@ -302,16 +302,16 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         }
 
         if (key == "flags"sv) {
-            if (object.is_object()) {
-                flags = TRY(jbig2_generic_region_flags_from_json(object.as_object()));
+            if (value.is_object()) {
+                flags = TRY(jbig2_generic_region_flags_from_json(value.as_object()));
                 return {};
             }
             return Error::from_string_literal("expected object for \"flags\"");
         }
 
         if (key == "adaptive_template_pixels"sv) {
-            if (object.is_array()) {
-                auto const& adaptive_template_pixels_json = object.as_array();
+            if (value.is_array()) {
+                auto const& adaptive_template_pixels_json = value.as_array();
                 for (auto const& value : adaptive_template_pixels_json.values()) {
                     if (auto pixel = value.get_i32(); pixel.has_value()) {
                         if (pixel.value() < -128 || pixel.value() > 127)
@@ -327,8 +327,8 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         }
 
         if (key == "image_data"sv) {
-            if (object.is_object()) {
-                image = TRY(jbig2_image_from_json(options, object.as_object()));
+            if (value.is_object()) {
+                image = TRY(jbig2_image_from_json(options, value.as_object()));
                 return {};
             }
             return Error::from_string_literal("expected object for \"image_data\"");
@@ -525,9 +525,9 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
 
     Gfx::JBIG2::PageInformationSegment data {};
 
-    TRY(object->try_for_each_member([&](StringView key, JsonValue const& object) -> ErrorOr<void> {
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "page_width"sv) {
-            if (auto page_width = object.get_u32(); page_width.has_value()) {
+            if (auto page_width = value.get_u32(); page_width.has_value()) {
                 data.bitmap_width = page_width.value();
                 return {};
             }
@@ -535,7 +535,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
         }
 
         if (key == "page_height"sv) {
-            if (auto page_height = object.get_u32(); page_height.has_value()) {
+            if (auto page_height = value.get_u32(); page_height.has_value()) {
                 data.bitmap_height = page_height.value();
                 return {};
             }
@@ -543,7 +543,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
         }
 
         if (key == "page_x_resolution"sv) {
-            if (auto page_x_resolution = object.get_u32(); page_x_resolution.has_value()) {
+            if (auto page_x_resolution = value.get_u32(); page_x_resolution.has_value()) {
                 data.page_x_resolution = page_x_resolution.value();
                 return {};
             }
@@ -551,15 +551,15 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
         }
 
         if (key == "page_y_resolution"sv) {
-            if (auto page_y_resolution = object.get_u32(); page_y_resolution.has_value()) {
+            if (auto page_y_resolution = value.get_u32(); page_y_resolution.has_value()) {
                 data.page_y_resolution = page_y_resolution.value();
                 return {};
             }
             return Error::from_string_literal("expected uint for \"page_y_resolution\"");
         }
         if (key == "flags"sv) {
-            if (object.is_object()) {
-                data.flags = TRY(jbig2_page_information_flags_from_json(object.as_object()));
+            if (value.is_object()) {
+                data.flags = TRY(jbig2_page_information_flags_from_json(value.as_object()));
                 return {};
             }
             return Error::from_string_literal("expected object for \"flags\"");
@@ -579,9 +579,9 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
     Optional<ByteString> type_string;
     Optional<JsonObject const&> segment_data_object;
 
-    TRY(segment_object.try_for_each_member([&](StringView key, JsonValue const& object) -> ErrorOr<void> {
+    TRY(segment_object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "segment_number"sv) {
-            if (auto segment_number = object.get_u32(); segment_number.has_value()) {
+            if (auto segment_number = value.get_u32(); segment_number.has_value()) {
                 header.segment_number = segment_number.value();
                 return {};
             }
@@ -589,15 +589,15 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         }
 
         if (key == "type"sv) {
-            if (object.is_string()) {
-                type_string = object.as_string();
+            if (value.is_string()) {
+                type_string = value.as_string();
                 return {};
             }
             return Error::from_string_literal("expected string for \"type\"");
         }
 
         if (key == "force_32_bit_page_association"sv) {
-            if (auto force_32_bit_page_association = object.get_bool(); force_32_bit_page_association.has_value()) {
+            if (auto force_32_bit_page_association = value.get_bool(); force_32_bit_page_association.has_value()) {
                 header.force_32_bit_page_association = force_32_bit_page_association.value();
                 return {};
             }
@@ -605,7 +605,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         }
 
         if (key == "is_immediate_generic_region_of_initially_unknown_size"sv) {
-            if (auto is_immediate_generic_region_of_initially_unknown_size = object.get_bool(); is_immediate_generic_region_of_initially_unknown_size.has_value()) {
+            if (auto is_immediate_generic_region_of_initially_unknown_size = value.get_bool(); is_immediate_generic_region_of_initially_unknown_size.has_value()) {
                 header.is_immediate_generic_region_of_initially_unknown_size = is_immediate_generic_region_of_initially_unknown_size.value();
                 return {};
             }
@@ -613,7 +613,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         }
 
         if (key == "page_association"sv) {
-            if (auto page_association = object.get_u32(); page_association.has_value()) {
+            if (auto page_association = value.get_u32(); page_association.has_value()) {
                 header.page_association = page_association.value();
                 return {};
             }
@@ -621,7 +621,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         }
 
         if (key == "retained"sv) {
-            if (auto retained = object.get_bool(); retained.has_value()) {
+            if (auto retained = value.get_bool(); retained.has_value()) {
                 header.retention_flag = retained.value();
                 return {};
             }
@@ -629,8 +629,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         }
 
         if (key == "data"sv) {
-            if (object.is_object()) {
-                segment_data_object = object.as_object();
+            if (value.is_object()) {
+                segment_data_object = value.as_object();
                 return {};
             }
             return Error::from_string_literal("expected object for \"data\"");
