@@ -99,9 +99,9 @@ void MQArithmeticEncoder::emit()
     m_output_bytes.append(B);
 }
 
-ErrorOr<ByteBuffer> MQArithmeticEncoder::finalize()
+ErrorOr<ByteBuffer> MQArithmeticEncoder::finalize(Trailing7FFFHandling trailing_7FFF_handling)
 {
-    FLUSH();
+    FLUSH(trailing_7FFF_handling);
 
     // The spec starts BP at BPST - 1. We have no BP and append to m_output_bytes every time the spec tells us to increment BP,
     // so we must skip the first byte in m_output_bytes.
@@ -253,7 +253,7 @@ void MQArithmeticEncoder::BYTEOUT()
     emit_without_bit_stuffing();
 }
 
-void MQArithmeticEncoder::FLUSH()
+void MQArithmeticEncoder::FLUSH(Trailing7FFFHandling trailing_7FFF_handling)
 {
     // E.2.9 Termination of encoding (FLUSH)
     // Figure E.11 – FLUSH procedure
@@ -267,9 +267,23 @@ void MQArithmeticEncoder::FLUSH()
         B = 0xFF;
     }
 
-    // FIXME: "Optionally remove trailing 0x7FFF pairs following the leading 0xFF"
+    // "Optionally remove trailing 0x7FFF pairs following the leading 0xFF"
+    // This is a quote from Figure E.11 – FLUSH procedure on page 129.
+    // It's apparently not marked as text in the PDF and PDF "Search" doesn't find it.
+    // Due to how we do emission, we do this after the next emit(), which writes the final 0xFF.
 
     emit(); // BP = BP + 1 in spec.
+
+    if (trailing_7FFF_handling == Trailing7FFFHandling::Remove) {
+        while (m_output_bytes.size() >= 3
+            && m_output_bytes[m_output_bytes.size() - 1] == 0xFF
+            && m_output_bytes[m_output_bytes.size() - 2] == 0x7F
+            && m_output_bytes[m_output_bytes.size() - 3] == 0xFF) {
+            m_output_bytes.take_last();
+            m_output_bytes.take_last();
+        }
+    }
+
     B = 0xAC;
     emit(); // BP = BP + 1 in spec.
 }

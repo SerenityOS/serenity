@@ -225,7 +225,7 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
     // "4) After all the rows have been decoded, the current contents of the bitmap GBREG are the results that shall be
     //     obtained by every decoder, whether it performs this exact sequence of steps or not."
     // In the encoding case, this means the compressed data is complete.
-    return encoder.finalize();
+    return encoder.finalize(MQArithmeticEncoder::Trailing7FFFHandling::Keep);
 }
 
 static ErrorOr<void> encode_jbig2_header(Stream& stream, JBIG2::FileHeaderData const& header)

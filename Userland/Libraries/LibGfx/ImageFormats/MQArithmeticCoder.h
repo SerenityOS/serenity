@@ -28,7 +28,12 @@ public:
     static ErrorOr<MQArithmeticEncoder> initialize(u8 byte_before_first_encoded_byte);
 
     void encode_bit(u8 bit, MQArithmeticCoderContext& context);
-    ErrorOr<ByteBuffer> finalize();
+
+    enum class Trailing7FFFHandling : u8 {
+        Keep,
+        Remove,
+    };
+    ErrorOr<ByteBuffer> finalize(Trailing7FFFHandling);
 
 private:
     void emit();
@@ -50,7 +55,7 @@ private:
     void CODEMPS();
     void RENORME();
     void BYTEOUT();
-    void FLUSH();
+    void FLUSH(Trailing7FFFHandling);
     void SETBITS();
 
     u8 B { 0 }; // Byte being constructed for output.
