@@ -163,10 +163,10 @@ static constexpr auto shifted_evdev_key_map = to_array<KeyCodeEntry const>({
 });
 // clang-format on
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<Input> Input::must_create_for_pci_instance(PCI::DeviceIdentifier const& device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<Input>> Input::create_for_pci_instance(PCI::DeviceIdentifier const& device_identifier)
 {
-    auto pci_transport_link = MUST(PCIeTransportLink::create(device_identifier));
-    return adopt_lock_ref_if_nonnull(new Input(move(pci_transport_link))).release_nonnull();
+    auto pci_transport_link = TRY(PCIeTransportLink::create(device_identifier));
+    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Input(move(pci_transport_link))));
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> Input::initialize_virtio_resources()
@@ -453,7 +453,7 @@ ErrorOr<void> VirtIOInputDriver::probe(PCI::DeviceIdentifier const& pci_device_i
         || pci_device_identifier.hardware_id().device_id != PCI::DeviceID::VirtIOInput)
         return ENOTSUP;
 
-    auto input = Input::must_create_for_pci_instance(pci_device_identifier);
+    auto input = TRY(Input::create_for_pci_instance(pci_device_identifier));
     TRY(input->initialize_virtio_resources());
 
     (void)input.leak_ref();

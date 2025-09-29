@@ -19,7 +19,7 @@ class RNG final
     : public AtomicRefCounted<RNG>
     , public VirtIO::Device {
 public:
-    static NonnullLockRefPtr<RNG> must_create_for_pci_instance(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullLockRefPtr<RNG>> create_for_pci_instance(PCI::DeviceIdentifier const&);
     virtual ~RNG() override = default;
 
     virtual ErrorOr<void> initialize_virtio_resources() override;
