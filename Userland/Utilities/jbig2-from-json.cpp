@@ -283,6 +283,7 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
     Optional<u32> real_height_for_generic_region_of_initially_unknown_size;
     u8 flags = 0;
     Vector<i8> adaptive_template_pixels;
+    Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
     OwnPtr<Gfx::BilevelImage> image;
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "region_segment_information"sv) {
@@ -324,6 +325,17 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
                 return {};
             }
             return Error::from_string_literal("expected array for \"adaptive_template_pixels\"");
+        }
+
+        if (key == "strip_trailing_7fffs"sv) {
+            if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
+                if (strip_trailing_7fffs.value())
+                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
+                else
+                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"strip_trailing_7fffs\"");
         }
 
         if (key == "image_data"sv) {
@@ -418,6 +430,8 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         template_pixels,
         image.release_nonnull(),
         real_height_for_generic_region_of_initially_unknown_size,
+        trailing_7fff_handling,
+
     };
 }
 

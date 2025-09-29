@@ -39,6 +39,8 @@ struct GenericRegionEncodingInputParameters {
         No,
         Yes,
     } require_eof_after_mmr { RequireEOFBAfterMMR::No };
+
+    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
 };
 
 }
@@ -225,7 +227,7 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
     // "4) After all the rows have been decoded, the current contents of the bitmap GBREG are the results that shall be
     //     obtained by every decoder, whether it performs this exact sequence of steps or not."
     // In the encoding case, this means the compressed data is complete.
-    return encoder.finalize(MQArithmeticEncoder::Trailing7FFFHandling::Keep);
+    return encoder.finalize(inputs.trailing_7fff_handling);
 }
 
 static ErrorOr<void> encode_jbig2_header(Stream& stream, JBIG2::FileHeaderData const& header)
@@ -418,6 +420,7 @@ static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const
     inputs.is_extended_reference_template_used = (generic_region.flags >> 4) & 1;
     inputs.adaptive_template_pixels = generic_region.adaptive_template_pixels;
     inputs.require_eof_after_mmr = GenericRegionEncodingInputParameters::RequireEOFBAfterMMR::No;
+    inputs.trailing_7fff_handling = generic_region.trailing_7fff_handling;
     Optional<JBIG2::GenericContexts> contexts;
     if (!inputs.is_modified_modified_read)
         contexts = JBIG2::GenericContexts { inputs.gb_template };
