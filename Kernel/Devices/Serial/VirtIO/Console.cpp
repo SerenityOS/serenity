@@ -17,10 +17,10 @@ namespace Kernel::VirtIO {
 
 unsigned Console::next_device_id = 0;
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<Console>> Console::create_for_pci_instance(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<Console>> Console::create_for_pci_instance(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     auto pci_transport_link = TRY(PCIeTransportLink::create(pci_device_identifier));
-    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Console(move(pci_transport_link))));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Console(move(pci_transport_link))));
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> Console::initialize_virtio_resources()

@@ -12,10 +12,10 @@
 
 namespace Kernel::VirtIO {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<RNG>> RNG::create_for_pci_instance(PCI::DeviceIdentifier const& device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<RNG>> RNG::create_for_pci_instance(PCI::DeviceIdentifier const& device_identifier)
 {
     auto pci_transport_link = TRY(PCIeTransportLink::create(device_identifier));
-    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) RNG(move(pci_transport_link))));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RNG(move(pci_transport_link))));
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> RNG::initialize_virtio_resources()

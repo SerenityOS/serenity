@@ -163,10 +163,10 @@ static constexpr auto shifted_evdev_key_map = to_array<KeyCodeEntry const>({
 });
 // clang-format on
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<Input>> Input::create_for_pci_instance(PCI::DeviceIdentifier const& device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<Input>> Input::create_for_pci_instance(PCI::DeviceIdentifier const& device_identifier)
 {
     auto pci_transport_link = TRY(PCIeTransportLink::create(device_identifier));
-    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Input(move(pci_transport_link))));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Input(move(pci_transport_link))));
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> Input::initialize_virtio_resources()
