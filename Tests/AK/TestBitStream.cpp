@@ -132,6 +132,25 @@ TEST_CASE(big_endian_bit_stream_input_output_match)
     }
 }
 
+TEST_CASE(big_endian_bits_until_next_byte_boundary)
+{
+    auto memory_stream = make<AllocatingMemoryStream>();
+    BigEndianOutputBitStream bit_write_stream { MaybeOwned<Stream>(*memory_stream) };
+    BigEndianInputBitStream bit_read_stream { MaybeOwned<Stream>(*memory_stream) };
+
+    MUST(bit_write_stream.write_bits(0b1101001000100001u, 16));
+    EXPECT(bit_read_stream.bits_until_next_byte_boundary() == 0);
+
+    MUST(bit_read_stream.read_bit());
+    EXPECT(bit_read_stream.bits_until_next_byte_boundary() == 7);
+
+    MUST(bit_read_stream.read_bits<u8>(3));
+    EXPECT(bit_read_stream.bits_until_next_byte_boundary() == 4);
+
+    MUST(bit_read_stream.read_bits<u8>(4));
+    EXPECT(bit_read_stream.bits_until_next_byte_boundary() == 0);
+}
+
 TEST_CASE(bit_reads_beyond_stream_limits)
 {
     Array<u8, 1> const test_data { 0xFF };
