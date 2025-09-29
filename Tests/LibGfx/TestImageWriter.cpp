@@ -343,8 +343,38 @@ TEST_CASE(test_qm_arithmetic_encoder)
     BigEndianInputBitStream input_bit_stream { MaybeOwned { input_stream } };
     while (!input_bit_stream.is_eof())
         encoder.encode_bit(TRY_OR_FAIL(input_bit_stream.read_bit()), context);
-    auto encoded = TRY_OR_FAIL(encoder.finalize());
+    auto encoded = TRY_OR_FAIL(encoder.finalize(Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep));
     EXPECT_EQ(encoded.span(), output.span());
+}
+
+TEST_CASE(test_qm_arithmetic_encoder_7FFF_handling)
+{
+    constexpr auto input = Array<u8, 65536>::from_repeated_value(0xff);
+
+    constexpr auto output_keep_7FFF = to_array<u8>({ 0xff, 0x7f, 0xff, 0x7f, 0xff, 0xac });
+    constexpr auto output_remove_7FFF = to_array<u8>({ 0xff, 0xac });
+
+    {
+        Gfx::MQArithmeticCoderContext context { 0, 0 };
+        auto encoder = TRY_OR_FAIL(Gfx::MQArithmeticEncoder::initialize(0x00));
+        FixedMemoryStream input_stream { input };
+        BigEndianInputBitStream input_bit_stream { MaybeOwned { input_stream } };
+        while (!input_bit_stream.is_eof())
+            encoder.encode_bit(TRY_OR_FAIL(input_bit_stream.read_bit()), context);
+        auto encoded = TRY_OR_FAIL(encoder.finalize(Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep));
+        EXPECT_EQ(encoded.span(), output_keep_7FFF.span());
+    }
+
+    {
+        Gfx::MQArithmeticCoderContext context { 0, 0 };
+        auto encoder = TRY_OR_FAIL(Gfx::MQArithmeticEncoder::initialize(0x00));
+        FixedMemoryStream input_stream { input };
+        BigEndianInputBitStream input_bit_stream { MaybeOwned { input_stream } };
+        while (!input_bit_stream.is_eof())
+            encoder.encode_bit(TRY_OR_FAIL(input_bit_stream.read_bit()), context);
+        auto encoded = TRY_OR_FAIL(encoder.finalize(Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove));
+        EXPECT_EQ(encoded.span(), output_remove_7FFF.span());
+    }
 }
 
 TEST_CASE(test_webp)
