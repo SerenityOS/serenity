@@ -374,6 +374,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-template3-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-template3-tpgdon.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-template3-customat-tpgdon.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-trailing-7fff-stripped.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-negative-sbdsoffset.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine.jbig2"sv),
