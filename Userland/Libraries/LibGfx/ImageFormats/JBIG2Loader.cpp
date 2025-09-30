@@ -1428,18 +1428,12 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
         //  bytes, beginning and ending on a byte boundary."
         // This means we can pass in a stream to CCITT::decode_ccitt_group4() and that can use a bit stream internally.
         auto buffer = TRY(CCITT::decode_ccitt_group4(*inputs.stream, inputs.region_width, inputs.region_height, options));
-        auto result = TRY(BilevelImage::create(inputs.region_width, inputs.region_height));
+
         size_t bytes_per_row = ceil_div(inputs.region_width, 8);
         if (buffer.size() != bytes_per_row * inputs.region_height)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Decoded MMR data has wrong size");
 
-        // FIXME: Could probably just copy the ByteBuffer directly into the BilevelImage's internal ByteBuffer instead.
-        for (size_t y = 0; y < inputs.region_height; ++y) {
-            for (size_t x = 0; x < inputs.region_width; ++x) {
-                bool bit = buffer[y * bytes_per_row + x / 8] & (1 << (7 - x % 8));
-                result->set_bit(x, y, bit);
-            }
-        }
+        auto result = TRY(BilevelImage::create_from_byte_buffer(move(buffer), inputs.region_width, inputs.region_height));
         return result;
     }
 
