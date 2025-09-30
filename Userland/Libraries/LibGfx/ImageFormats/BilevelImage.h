@@ -31,8 +31,32 @@ public:
     static ErrorOr<NonnullOwnPtr<BilevelImage>> create_from_byte_buffer(ByteBuffer bitmap, size_t width, size_t height);
     static ErrorOr<NonnullOwnPtr<BilevelImage>> create_from_bitmap(Gfx::Bitmap const& bitmap, DitheringAlgorithm dithering_algorithm);
 
-    bool get_bit(size_t x, size_t y) const;
-    void set_bit(size_t x, size_t y, bool b);
+    ALWAYS_INLINE bool get_bit(size_t x, size_t y) const
+    {
+        VERIFY(x < m_width);
+        VERIFY(y < m_height);
+        size_t byte_offset = x / 8;
+        size_t bit_offset = x % 8;
+        u8 byte = m_bits[y * m_pitch + byte_offset];
+        byte = (byte >> (8 - 1 - bit_offset)) & 1;
+        return byte != 0;
+    }
+
+    ALWAYS_INLINE void set_bit(size_t x, size_t y, bool b)
+    {
+        VERIFY(x < m_width);
+        VERIFY(y < m_height);
+        size_t byte_offset = x / 8;
+        size_t bit_offset = x % 8;
+        u8 byte = m_bits[y * m_pitch + byte_offset];
+        u8 mask = 1u << (8 - 1 - bit_offset);
+        if (b)
+            byte |= mask;
+        else
+            byte &= ~mask;
+        m_bits[y * m_pitch + byte_offset] = byte;
+    }
+
     void fill(bool b);
 
     ErrorOr<NonnullOwnPtr<BilevelImage>> subbitmap(Gfx::IntRect const& rect) const;

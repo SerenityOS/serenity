@@ -25,32 +25,6 @@ ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::create_from_byte_buffer(ByteB
     return adopt_nonnull_own_or_enomem(new (nothrow) BilevelImage(move(bitmap), width, height, pitch));
 }
 
-bool BilevelImage::get_bit(size_t x, size_t y) const
-{
-    VERIFY(x < m_width);
-    VERIFY(y < m_height);
-    size_t byte_offset = x / 8;
-    size_t bit_offset = x % 8;
-    u8 byte = m_bits[y * m_pitch + byte_offset];
-    byte = (byte >> (8 - 1 - bit_offset)) & 1;
-    return byte != 0;
-}
-
-void BilevelImage::set_bit(size_t x, size_t y, bool b)
-{
-    VERIFY(x < m_width);
-    VERIFY(y < m_height);
-    size_t byte_offset = x / 8;
-    size_t bit_offset = x % 8;
-    u8 byte = m_bits[y * m_pitch + byte_offset];
-    u8 mask = 1u << (8 - 1 - bit_offset);
-    if (b)
-        byte |= mask;
-    else
-        byte &= ~mask;
-    m_bits[y * m_pitch + byte_offset] = byte;
-}
-
 void BilevelImage::fill(bool b)
 {
     u8 fill_byte = b ? 0xff : 0;
