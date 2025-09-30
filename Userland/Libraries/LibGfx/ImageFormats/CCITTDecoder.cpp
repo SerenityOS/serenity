@@ -200,6 +200,12 @@ ErrorOr<CCITTStatus> decode_single_ccitt_2d_line(
     Group4Options const& options = {})
 {
     CCITTStatus status {};
+
+    // status.current_line stores the color changes in the line. In the worst case scenario,
+    // the image is a checkerboard and there is a color change at every pixel (+1 for the
+    // right edge), so let's pre-allocate for this scenario.
+    TRY(status.current_line.try_ensure_capacity(image_width + 1));
+
     Color current_color { ccitt_white };
     u32 column {};
     u32 remainder_from_pass_mode {};
@@ -240,7 +246,7 @@ ErrorOr<CCITTStatus> decode_single_ccitt_2d_line(
         current_color = invert(current_color);
         remainder_from_pass_mode = 0;
 
-        TRY(status.current_line.try_empend(current_color, column));
+        status.current_line.unchecked_append({ current_color, column });
         return {};
     };
 
