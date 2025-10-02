@@ -1,5 +1,7 @@
 ENTRY(start)
 
+ASSERT(CONSTANT(MAXPAGESIZE) == 4K, "The Prekernel linker script assumes a max page size of 4K");
+
 PHDRS
 {
   boot_text PT_LOAD ;
