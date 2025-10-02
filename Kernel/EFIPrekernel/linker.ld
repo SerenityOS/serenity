@@ -1,5 +1,7 @@
 ENTRY(init)
 
+ASSERT(CONSTANT(MAXPAGESIZE) == 4K, "The EFIPrekernel linker script only supports a max page size of 4K, as the UEFI spec requires 4K pages.");
+
 SECTIONS
 {
     /* This is symbol is used to tell the PrekernelPEImageGenerator that the PE base address is 0 */
