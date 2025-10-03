@@ -58,6 +58,37 @@ void BilevelImage::fill(bool b)
         byte = fill_byte;
 }
 
+void BilevelImage::composite_onto(BilevelImage& out, IntPoint position, CompositionType operator_) const
+{
+    static constexpr auto combine = [](bool dst, bool src, CompositionType op) -> bool {
+        switch (op) {
+        case CompositionType::Or:
+            return dst || src;
+        case CompositionType::And:
+            return dst && src;
+        case CompositionType::Xor:
+            return dst ^ src;
+        case CompositionType::XNor:
+            return !(dst ^ src);
+        case CompositionType::Replace:
+            return src;
+        }
+        VERIFY_NOT_REACHED();
+    };
+
+    IntRect bitmap_rect { position, { m_width, m_height } };
+    IntRect out_rect { { 0, 0 }, { out.width(), out.height() } };
+    IntRect clip_rect = bitmap_rect.intersected(out_rect);
+
+    for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
+        for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
+            bool src_bit = get_bit(x - position.x(), y - position.y());
+            bool dst_bit = out.get_bit(x, y);
+            out.set_bit(x, y, combine(dst_bit, src_bit, operator_));
+        }
+    }
+}
+
 ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::subbitmap(Gfx::IntRect const& rect) const
 {
     VERIFY(rect.x() >= 0);

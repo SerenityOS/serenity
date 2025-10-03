@@ -35,6 +35,16 @@ public:
     void set_bit(size_t x, size_t y, bool b);
     void fill(bool b);
 
+    enum class CompositionType : u8 {
+        Or = 0,
+        And = 1,
+        Xor = 2,
+        XNor = 3,
+        Replace = 4,
+    };
+
+    void composite_onto(BilevelImage& out, IntPoint position, CompositionType) const;
+
     ErrorOr<NonnullOwnPtr<BilevelImage>> subbitmap(Gfx::IntRect const& rect) const;
 
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_gfx_bitmap() const;

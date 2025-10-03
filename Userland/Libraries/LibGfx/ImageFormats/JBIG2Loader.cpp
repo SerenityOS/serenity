@@ -573,37 +573,6 @@ struct SegmentData {
     OwnPtr<Gfx::BilevelImage> aux_buffer;
 };
 
-static void composite_bilevel_image(BilevelImage& out, BilevelImage const& bitmap, Gfx::IntPoint position, JBIG2::CombinationOperator operator_)
-{
-    static constexpr auto combine = [](bool dst, bool src, JBIG2::CombinationOperator op) -> bool {
-        switch (op) {
-        case JBIG2::CombinationOperator::Or:
-            return dst || src;
-        case JBIG2::CombinationOperator::And:
-            return dst && src;
-        case JBIG2::CombinationOperator::Xor:
-            return dst ^ src;
-        case JBIG2::CombinationOperator::XNor:
-            return !(dst ^ src);
-        case JBIG2::CombinationOperator::Replace:
-            return src;
-        }
-        VERIFY_NOT_REACHED();
-    };
-
-    IntRect bitmap_rect { position, { bitmap.width(), bitmap.height() } };
-    IntRect out_rect { { 0, 0 }, { out.width(), out.height() } };
-    IntRect clip_rect = bitmap_rect.intersected(out_rect);
-
-    for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
-        for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
-            bool src_bit = bitmap.get_bit(x - position.x(), y - position.y());
-            bool dst_bit = out.get_bit(x, y);
-            out.set_bit(x, y, combine(dst_bit, src_bit, operator_));
-        }
-    }
-}
-
 struct Page {
     IntSize size;
 
@@ -1755,6 +1724,23 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_refinement_region_decoding_p
     return result;
 }
 
+static constexpr BilevelImage::CompositionType to_composition_type(JBIG2::CombinationOperator operator_)
+{
+    switch (operator_) {
+    case JBIG2::CombinationOperator::Or:
+        return BilevelImage::CompositionType::Or;
+    case JBIG2::CombinationOperator::And:
+        return BilevelImage::CompositionType::And;
+    case JBIG2::CombinationOperator::Xor:
+        return BilevelImage::CompositionType::Xor;
+    case JBIG2::CombinationOperator::XNor:
+        return BilevelImage::CompositionType::XNor;
+    case JBIG2::CombinationOperator::Replace:
+        return BilevelImage::CompositionType::Replace;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 // 6.4.2 Input parameters
 // Table 9 – Parameters for the text region decoding procedure
 struct TextRegionDecodingInputParameters {
@@ -2094,7 +2080,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> text_region_decoding_procedure(TextR
             //         pixel in SBREG, using the combination operator specified by SBCOMBOP. Write the results
             //         of each combination into that pixel in SBREG."
             dbgln_if(JBIG2_DEBUG, "combining symbol {} ({}x{}) at ({}, {}) with operator {}", id, symbol.width(), symbol.height(), s_instance, t_instance, (int)inputs.operator_);
-            composite_bilevel_image(*result, symbol, { s_instance, t_instance }, inputs.operator_);
+            symbol.composite_onto(*result, { s_instance, t_instance }, to_composition_type(inputs.operator_));
 
             //     "xi) Update CURS as follows:
             //          • If TRANSPOSED is 0, and REFCORNER is TOPLEFT or BOTTOMLEFT, set:
@@ -2577,7 +2563,7 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
 
         // "b) For each pixel (x, y) in GSPLANES[J], set:
         //     GSPLANES[J][x, y] = GSPLANES[J + 1][x, y] XOR GSPLANES[J][x, y]"
-        composite_bilevel_image(*bitplanes[j], *bitplanes[j + 1], { 0, 0 }, JBIG2::CombinationOperator::Xor);
+        bitplanes[j + 1]->composite_onto(*bitplanes[j], { 0, 0 }, BilevelImage::CompositionType::Xor);
 
         // "c) Set J = J – 1."
         j = j - 1;
@@ -2713,7 +2699,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> halftone_region_decoding_procedure(H
                 if (grayscale_value >= inputs.patterns.size())
                     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Grayscale value out of range");
                 auto const& pattern = inputs.patterns[grayscale_value];
-                composite_bilevel_image(*result, pattern->bitmap(), { x, y }, inputs.combination_operator);
+                pattern->bitmap().composite_onto(*result, { x, y }, to_composition_type(inputs.combination_operator));
             }
         }
     }
@@ -2996,7 +2982,10 @@ struct DirectRegionResult {
 static void handle_immediate_direct_region(JBIG2LoadingContext& context, DirectRegionResult const& result)
 {
     // 8.2 Page image composition, 5a.
-    composite_bilevel_image(*context.page.bits, *result.bitmap, { result.information_field.x_location, result.information_field.y_location }, result.information_field.external_combination_operator());
+    result.bitmap->composite_onto(
+        *context.page.bits,
+        { result.information_field.x_location, result.information_field.y_location },
+        to_composition_type(result.information_field.external_combination_operator()));
 }
 
 static ErrorOr<void> handle_intermediate_direct_region(JBIG2LoadingContext&, SegmentData& segment, DirectRegionResult& result)
@@ -3785,7 +3774,10 @@ static ErrorOr<void> decode_immediate_generic_refinement_region(JBIG2LoadingCont
     auto decoder = TRY(MQArithmeticDecoder::initialize(data));
     auto result = TRY(generic_refinement_region_decoding_procedure(inputs, decoder, contexts));
 
-    composite_bilevel_image(*context.page.bits, *result, { information_field.x_location, information_field.y_location }, information_field.external_combination_operator());
+    result->composite_onto(
+        *context.page.bits,
+        { information_field.x_location, information_field.y_location },
+        to_composition_type(information_field.external_combination_operator()));
 
     return {};
 }
