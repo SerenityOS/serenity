@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
- * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
+ * Copyright (c) 2025, Mahmoud Abumandour <ma.mandourr@gmail.com>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -71,18 +71,21 @@ private:
 
 class ColumnDefinition : public ASTNode {
 public:
-    ColumnDefinition(ByteString name, NonnullRefPtr<TypeName> type_name)
+    ColumnDefinition(ByteString name, NonnullRefPtr<TypeName> type_name, bool unique = false)
         : m_name(move(name))
         , m_type_name(move(type_name))
+        , m_unique(unique)
     {
     }
 
     ByteString const& name() const { return m_name; }
     NonnullRefPtr<TypeName> const& type_name() const { return m_type_name; }
+    bool unique() const { return m_unique; }
 
 private:
     ByteString m_name;
     NonnullRefPtr<TypeName> m_type_name;
+    bool m_unique { false };
 };
 
 class CommonTableExpression : public ASTNode {

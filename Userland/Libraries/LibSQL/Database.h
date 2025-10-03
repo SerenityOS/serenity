@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
- * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
+ * Copyright (c) 2025, Mahmoud Abumandour <ma.mandourr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,12 +43,13 @@ public:
 
     ErrorOr<Vector<Row>> select_all(TableDef&);
     ErrorOr<Vector<Row>> match(TableDef&, Key const&);
-    ErrorOr<void> insert(Row&);
-    ErrorOr<void> remove(Row&);
-    ErrorOr<void> update(Row&);
+    ResultOr<void> insert(Row&);
+    ResultOr<void> remove(Row&);
+    ResultOr<void> update(Row&);
 
 private:
     explicit Database(NonnullRefPtr<Heap>);
+    ResultOr<void> check_unique_constraints(Row const& row);
 
     bool m_open { false };
     NonnullRefPtr<Heap> m_heap;

@@ -28,7 +28,7 @@ ResultOr<ResultSet> CreateTable::execute(ExecutionContext& context) const
         else
             return Result { SQLCommand::Create, SQLErrorCode::InvalidType, column->type_name()->name() };
 
-        table_def->append_column(column->name(), type);
+        table_def->append_column(column->name(), type, column->unique());
     }
 
     if (auto result = context.database->add_table(*table_def); result.is_error()) {
