@@ -59,8 +59,7 @@ static PropertyTab const window_tab {
                 { Gfx::ColorRole::ActiveWindowTitle },
                 { Gfx::ColorRole::ActiveWindowTitleShadow },
                 { Gfx::ColorRole::ActiveWindowTitleStripes },
-                { Gfx::PathRole::ActiveWindowShadow },
-                { Gfx::PathRole::OverlayRectShadow } } },
+                { Gfx::PathRole::ActiveWindowShadow } } },
 
         { "Inactive Window",
             { { Gfx::ColorRole::InactiveWindowBorder1 },
@@ -87,6 +86,11 @@ static PropertyTab const window_tab {
         { "Contents",
             { { Gfx::ColorRole::Window },
                 { Gfx::ColorRole::WindowText } } },
+
+        { "Overlays",
+            { { Gfx::ColorRole::OverlayBackground },
+                { Gfx::ColorRole::OverlayText },
+                { Gfx::PathRole::OverlayRectShadow } } },
 
         { "Desktop",
             { { Gfx::ColorRole::DesktopBackground },

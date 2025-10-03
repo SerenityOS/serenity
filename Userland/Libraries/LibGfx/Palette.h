@@ -125,6 +125,8 @@ public:
     Color focus_outline() const { return color(ColorRole::FocusOutline); }
     Color tray() const { return color(ColorRole::Tray); }
     Color tray_text() const { return color(ColorRole::TrayText); }
+    Color overlay_background() const { return color(ColorRole::OverlayBackground); }
+    Color overlay_text() const { return color(ColorRole::OverlayText); }
 
     Color link() const { return color(ColorRole::Link); }
     Color active_link() const { return color(ColorRole::ActiveLink); }
