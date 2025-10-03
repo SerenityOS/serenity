@@ -32,10 +32,11 @@ void BilevelImage::fill(bool b)
         byte = fill_byte;
 }
 
-void BilevelImage::composite_onto(BilevelImage& out, IntPoint position, CompositionType operator_) const
+template<BilevelImage::CompositionType operator_>
+void BilevelImage::composite_onto(BilevelImage& out, IntPoint position) const
 {
-    static constexpr auto combine = [](bool dst, bool src, CompositionType op) -> bool {
-        switch (op) {
+    static constexpr auto combine = [](bool dst, bool src) -> bool {
+        switch (operator_) {
         case CompositionType::Or:
             return dst || src;
         case CompositionType::And:
@@ -58,8 +59,29 @@ void BilevelImage::composite_onto(BilevelImage& out, IntPoint position, Composit
         for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
             bool src_bit = get_bit(x - position.x(), y - position.y());
             bool dst_bit = out.get_bit(x, y);
-            out.set_bit(x, y, combine(dst_bit, src_bit, operator_));
+            out.set_bit(x, y, combine(dst_bit, src_bit));
         }
+    }
+}
+
+void BilevelImage::composite_onto(BilevelImage& out, IntPoint position, CompositionType operator_) const
+{
+    switch (operator_) {
+    case CompositionType::Or:
+        composite_onto<CompositionType::Or>(out, position);
+        break;
+    case CompositionType::And:
+        composite_onto<CompositionType::And>(out, position);
+        break;
+    case CompositionType::Xor:
+        composite_onto<CompositionType::Xor>(out, position);
+        break;
+    case CompositionType::XNor:
+        composite_onto<CompositionType::XNor>(out, position);
+        break;
+    case CompositionType::Replace:
+        composite_onto<CompositionType::Replace>(out, position);
+        break;
     }
 }
 
