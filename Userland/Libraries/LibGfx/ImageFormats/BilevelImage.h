@@ -58,6 +58,9 @@ public:
 private:
     BilevelImage(ByteBuffer, size_t width, size_t height, size_t pitch);
 
+    template<CompositionType>
+    void composite_onto(BilevelImage& out, IntPoint position) const;
+
     ByteBuffer m_bits;
     size_t m_width { 0 };
     size_t m_height { 0 };
