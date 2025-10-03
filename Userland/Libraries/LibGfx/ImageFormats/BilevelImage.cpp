@@ -61,16 +61,20 @@ void BilevelImage::fill(bool b)
 template<BilevelImage::CompositionType operator_>
 void BilevelImage::composite_onto(BilevelImage& out, IntPoint position) const
 {
-    static constexpr auto combine = [](bool dst, bool src) -> bool {
+    static constexpr auto combine = [](auto dst, auto src) -> decltype(dst) {
         switch (operator_) {
         case CompositionType::Or:
-            return dst || src;
+            return dst | src;
         case CompositionType::And:
-            return dst && src;
+            return dst & src;
         case CompositionType::Xor:
             return dst ^ src;
         case CompositionType::XNor:
-            return !(dst ^ src);
+            // Clang is not happy with using ~ on a bool, even if it's fine with our use case.
+            if constexpr (SameAs<decltype(dst), bool>)
+                return !(dst ^ src);
+            else
+                return ~(dst ^ src);
         case CompositionType::Replace:
             return src;
         }
