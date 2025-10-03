@@ -15,6 +15,7 @@
 
 #include <AK/Function.h>
 #include <AK/Vector.h>
+#include <LibFileSystem/FileSystem.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -168,18 +169,27 @@ int posix_spawn(pid_t* out_pid, char const* path, posix_spawn_file_actions_t con
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawnp.html
 int posix_spawnp(pid_t* out_pid, char const* file, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const argv[], char* const envp[])
 {
-    // FIXME: Use the posix_spawn syscall here.
+    if (strchr(file, '/') != nullptr)
+        return posix_spawn(out_pid, file, file_actions, attr, argv, envp);
 
-    pid_t child_pid = fork();
-    if (child_pid < 0)
-        return errno;
+    ByteString path = getenv("PATH");
+    if (path.is_empty())
+        path = DEFAULT_PATH;
 
-    if (child_pid != 0) {
-        *out_pid = child_pid;
-        return 0;
-    }
+    int rc = ENOENT;
 
-    posix_spawn_child(file, file_actions, attr, argv, envp, execvpe);
+    path.view().for_each_split_view(":"sv, SplitBehavior::Nothing, [out_pid, file, file_actions, attr, argv, envp, &rc](auto const directory) -> IterationDecision {
+        auto absolute_path = ByteString::formatted("{}/{}", directory, file);
+
+        if (access(absolute_path.characters(), X_OK) == 0) {
+            rc = posix_spawn(out_pid, absolute_path.characters(), file_actions, attr, argv, envp);
+            return IterationDecision::Break;
+        }
+
+        return IterationDecision::Continue;
+    });
+
+    return rc;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn_file_actions_addchdir.html
