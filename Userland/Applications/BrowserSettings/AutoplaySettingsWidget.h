@@ -17,7 +17,7 @@
 
 class AutoplayAllowlistModel : public DomainListModel {
 public:
-    virtual ErrorOr<String> filter_list_file_path() const override;
+    virtual StringView filter_list_file_path() const override;
     virtual void reset_default_values() override;
 };
 
