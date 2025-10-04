@@ -37,7 +37,9 @@ void WaitQueue::Waiter::notify(Badge<WaitQueue>)
     SpinlockLocker scheduler_lock(g_scheduler_lock);
     auto& thread = *m_association->thread;
 
+    SpinlockLocker lock(g_scheduler_lock);
     VERIFY(thread.state() == Thread::State::Blocked);
+    VERIFY(&thread != Thread::current());
     thread.set_state(Thread::State::Runnable);
 }
 
@@ -90,8 +92,12 @@ void WaitQueue::Waiter::clear()
 
     auto& thread = *m_association->thread;
     SpinlockLocker scheduler_lock(g_scheduler_lock);
-    if (thread.state() == Thread::State::Blocked)
-        thread.set_state(Thread::State::Runnable);
+    if (thread.state() == Thread::State::Blocked) {
+        if (&thread == Thread::current())
+            thread.set_state(Thread::State::Running);
+        else
+            thread.set_state(Thread::State::Runnable);
+    }
 
     m_association = {};
 }
