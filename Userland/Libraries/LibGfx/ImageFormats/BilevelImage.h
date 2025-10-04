@@ -59,6 +59,16 @@ public:
 
     void fill(bool b);
 
+    enum class CompositionType : u8 {
+        Or = 0,
+        And = 1,
+        Xor = 2,
+        XNor = 3,
+        Replace = 4,
+    };
+
+    void composite_onto(BilevelImage& out, IntPoint position, CompositionType) const;
+
     ErrorOr<NonnullOwnPtr<BilevelImage>> subbitmap(Gfx::IntRect const& rect) const;
 
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_gfx_bitmap() const;
@@ -71,6 +81,9 @@ public:
 
 private:
     BilevelImage(ByteBuffer, size_t width, size_t height, size_t pitch);
+
+    template<CompositionType>
+    void composite_onto(BilevelImage& out, IntPoint position) const;
 
     ByteBuffer m_bits;
     size_t m_width { 0 };

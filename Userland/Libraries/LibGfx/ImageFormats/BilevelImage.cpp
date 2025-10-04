@@ -32,6 +32,63 @@ void BilevelImage::fill(bool b)
         byte = fill_byte;
 }
 
+template<BilevelImage::CompositionType operator_>
+void BilevelImage::composite_onto(BilevelImage& out, IntPoint position) const
+{
+    static constexpr auto combine = [](auto dst, auto src) -> decltype(dst) {
+        switch (operator_) {
+        case CompositionType::Or:
+            return dst | src;
+        case CompositionType::And:
+            return dst & src;
+        case CompositionType::Xor:
+            return dst ^ src;
+        case CompositionType::XNor:
+            // Clang is not happy with using ~ on a bool, even if it's fine with our use case.
+            if constexpr (SameAs<decltype(dst), bool>)
+                return !(dst ^ src);
+            else
+                return ~(dst ^ src);
+        case CompositionType::Replace:
+            return src;
+        }
+        VERIFY_NOT_REACHED();
+    };
+
+    IntRect bitmap_rect { position, { m_width, m_height } };
+    IntRect out_rect { { 0, 0 }, { out.width(), out.height() } };
+    IntRect clip_rect = bitmap_rect.intersected(out_rect);
+
+    for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
+        for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
+            bool src_bit = get_bit(x - position.x(), y - position.y());
+            bool dst_bit = out.get_bit(x, y);
+            out.set_bit(x, y, combine(dst_bit, src_bit));
+        }
+    }
+}
+
+void BilevelImage::composite_onto(BilevelImage& out, IntPoint position, CompositionType operator_) const
+{
+    switch (operator_) {
+    case CompositionType::Or:
+        composite_onto<CompositionType::Or>(out, position);
+        break;
+    case CompositionType::And:
+        composite_onto<CompositionType::And>(out, position);
+        break;
+    case CompositionType::Xor:
+        composite_onto<CompositionType::Xor>(out, position);
+        break;
+    case CompositionType::XNor:
+        composite_onto<CompositionType::XNor>(out, position);
+        break;
+    case CompositionType::Replace:
+        composite_onto<CompositionType::Replace>(out, position);
+        break;
+    }
+}
+
 ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::subbitmap(Gfx::IntRect const& rect) const
 {
     VERIFY(rect.x() >= 0);
