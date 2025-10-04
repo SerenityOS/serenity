@@ -79,9 +79,61 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_page_from_json(Gfx::JBIG2::
     return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::EndOfPageSegmentData {} };
 }
 
+struct JSONRect {
+    Optional<u32> x;
+    Optional<u32> y;
+    Optional<u32> width;
+    Optional<u32> height;
+};
+
+static ErrorOr<JSONRect> jbig2_rect_from_json(JsonObject const& object)
+{
+    JSONRect rect;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "x"sv) {
+            if (auto x = value.get_u32(); x.has_value()) {
+                rect.x = x.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"x\"");
+        }
+
+        if (key == "y"sv) {
+            if (auto y = value.get_u32(); y.has_value()) {
+                rect.y = y.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"y\"");
+        }
+
+        if (key == "width"sv) {
+            if (auto width = value.get_u32(); width.has_value()) {
+                rect.width = width.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"width\"");
+        }
+
+        if (key == "height"sv) {
+            if (auto height = value.get_u32(); height.has_value()) {
+                rect.height = height.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"height\"");
+        }
+
+        dbgln("rect key {}", key);
+        return Error::from_string_literal("unknown rect key");
+    }));
+
+    return rect;
+}
+
 static ErrorOr<NonnullOwnPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOptions const& options, JsonObject const& object)
 {
     OwnPtr<Gfx::BilevelImage> image;
+    JSONRect crop_rect;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "from_file") {
@@ -105,12 +157,36 @@ static ErrorOr<NonnullOwnPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
             return Error::from_string_literal("expected string for \"from_file\"");
         }
 
+        if (key == "crop") {
+            if (value.is_object()) {
+                crop_rect = TRY(jbig2_rect_from_json(value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"crop\"");
+        }
+
         dbgln("image_data key {}", key);
         return Error::from_string_literal("unknown image_data key");
     }));
 
     if (!image)
         return Error::from_string_literal("no image data in image_data; add \"from_file\" key");
+
+    if (crop_rect.x.has_value() || crop_rect.y.has_value() || crop_rect.width.has_value() || crop_rect.height.has_value()) {
+        u32 crop_x = crop_rect.x.value_or(0);
+        u32 crop_y = crop_rect.y.value_or(0);
+        u32 crop_width = crop_rect.width.value_or(image->width() - crop_x);
+        u32 crop_height = crop_rect.height.value_or(image->height() - crop_y);
+        if (crop_x + crop_width > image->width() || crop_y + crop_height > image->height())
+            return Error::from_string_literal("crop rectangle out of bounds");
+
+        auto cropped_image = TRY(Gfx::BilevelImage::create(crop_width, crop_height));
+        for (u32 y = 0; y < crop_height; ++y)
+            for (u32 x = 0; x < crop_width; ++x)
+                cropped_image->set_bit(x, y, image->get_bit(x + crop_x, y + crop_y));
+
+        image = move(cropped_image);
+    }
 
     return image.release_nonnull();
 }
