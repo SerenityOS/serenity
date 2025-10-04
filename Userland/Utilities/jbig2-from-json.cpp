@@ -50,7 +50,7 @@ static ErrorOr<Gfx::JBIG2::FileHeaderData> jbig2_header_from_json(JsonObject con
                 header.number_of_pages = {};
                 return {};
             }
-            return Error::from_string_literal("expected uint or `null` for \"number_of_pages\"");
+            return Error::from_string_literal("expected u32 or `null` for \"number_of_pages\"");
         }
 
         if (key == "organization"sv) {
@@ -646,7 +646,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
                 data.bitmap_width = page_width.value();
                 return {};
             }
-            return Error::from_string_literal("expected uint for \"page_width\"");
+            return Error::from_string_literal("expected u32 for \"page_width\"");
         }
 
         if (key == "page_height"sv) {
@@ -654,7 +654,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
                 data.bitmap_height = page_height.value();
                 return {};
             }
-            return Error::from_string_literal("expected uint for \"page_height\"");
+            return Error::from_string_literal("expected u32 for \"page_height\"");
         }
 
         if (key == "page_x_resolution"sv) {
@@ -662,7 +662,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
                 data.page_x_resolution = page_x_resolution.value();
                 return {};
             }
-            return Error::from_string_literal("expected uint for \"page_x_resolution\"");
+            return Error::from_string_literal("expected u32 for \"page_x_resolution\"");
         }
 
         if (key == "page_y_resolution"sv) {
@@ -670,7 +670,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
                 data.page_y_resolution = page_y_resolution.value();
                 return {};
             }
-            return Error::from_string_literal("expected uint for \"page_y_resolution\"");
+            return Error::from_string_literal("expected u32 for \"page_y_resolution\"");
         }
         if (key == "flags"sv) {
             if (value.is_object()) {
@@ -700,7 +700,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
                 header.segment_number = segment_number.value();
                 return {};
             }
-            return Error::from_string_literal("expected uint for \"segment_number\"");
+            return Error::from_string_literal("expected u32 for \"segment_number\"");
         }
 
         if (key == "type"sv) {
@@ -732,7 +732,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
                 header.page_association = page_association.value();
                 return {};
             }
-            return Error::from_string_literal("expected uint for \"page_association\"");
+            return Error::from_string_literal("expected u32 for \"page_association\"");
         }
 
         if (key == "retained"sv) {
