@@ -407,7 +407,6 @@ TEST_CASE(test_jbig2_decode)
         // - intermediate halftone regions (code support added in #26197)
         // - intermediate direct regions (code support added in #26197)
         // - immediate refinement regions referring to a direct region (code support added in #26197)
-        // - immediate refinement regions referring to a direct region (code support added in #26197)
         //   - TPGRON set in refinement region (only reachable in standalone refinement regions)
         // Missing tests for things that aren't implemented yet:
         // - immediate refinement regions not referring to a direct region (i.e. refining the page)
