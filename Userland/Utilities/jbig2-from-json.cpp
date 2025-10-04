@@ -134,6 +134,7 @@ static ErrorOr<NonnullOwnPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
 {
     OwnPtr<Gfx::BilevelImage> image;
     JSONRect crop_rect;
+    bool invert = false;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "from_file") {
@@ -165,6 +166,14 @@ static ErrorOr<NonnullOwnPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
             return Error::from_string_literal("expected object for \"crop\"");
         }
 
+        if (key == "invert") {
+            if (auto invert_value = value.get_bool(); invert_value.has_value()) {
+                invert = invert_value.value();
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"invert\"");
+        }
+
         dbgln("image_data key {}", key);
         return Error::from_string_literal("unknown image_data key");
     }));
@@ -186,6 +195,12 @@ static ErrorOr<NonnullOwnPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
                 cropped_image->set_bit(x, y, image->get_bit(x + crop_x, y + crop_y));
 
         image = move(cropped_image);
+    }
+
+    if (invert) {
+        for (u32 y = 0; y < image->height(); ++y)
+            for (u32 x = 0; x < image->width(); ++x)
+                image->set_bit(x, y, !image->get_bit(x, y));
     }
 
     return image.release_nonnull();
