@@ -1,0 +1,141 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "default_color": "black",
+                    "direct_region_segments_override_default_combination_operator": true
+                }
+            }
+        },
+        {
+            "segment_number": 1,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "x": 0,
+                    "y": 0,
+                    "flags": {
+                        "external_combination_operator": "and"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 141,
+                        "height": 400
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 2,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "x": 0,
+                    "y": 0,
+                    "flags": {
+                        "external_combination_operator": "and"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 141,
+                        "height": 400
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 3,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "x": 141,
+                    "y": 0,
+                    "flags": {
+                        "external_combination_operator": "xnor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 141,
+                        "y": 0,
+                        "width": 258,
+                        "height": 400
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 4,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 190,
+                    "flags": {
+                        "external_combination_operator": "xnor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 5,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 190,
+                    "flags": {
+                        "external_combination_operator": "xnor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 6,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}

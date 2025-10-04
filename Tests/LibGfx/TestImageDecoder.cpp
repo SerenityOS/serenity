@@ -358,6 +358,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-p32-eof.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-initially-unknown-size.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-composite-and-xnor.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-composite-or-xor-replace.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-tpgdon.jbig2"sv),
@@ -401,8 +402,6 @@ TEST_CASE(test_jbig2_decode)
         // - huffman text regions (code support added in #26075)
         // - huffman regions with custom huffman tables (code support added in #26078, #26081)
         // - symbols with REFAGGNINST > 1 (code support added in #26107)
-        // - coverage for different segment combination operators (and xnor),
-        //   with both background colors
         // - negative position in composition (code support added in #26046)
         // - intermediate text regions (code support added in #26197)
         // - intermediate halftone regions (code support added in #26197)
