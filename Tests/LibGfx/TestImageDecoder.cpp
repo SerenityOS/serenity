@@ -366,6 +366,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-mmr.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-stripe.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-stripe-initially-unknown-height.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-stripe-last-implicit.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-stripe-single.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-template1.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-template1-customat.jbig2"sv),
