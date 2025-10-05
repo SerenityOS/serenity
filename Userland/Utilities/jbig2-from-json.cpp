@@ -633,6 +633,37 @@ static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& obje
     return flags;
 }
 
+static ErrorOr<u16> jbig2_page_information_striping_information_from_json(JsonObject const& object)
+{
+    u16 striping_information = 0;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "is_striped"sv) {
+            if (auto is_striped = value.get_bool(); is_striped.has_value()) {
+                if (is_striped.value())
+                    striping_information |= 0x8000u;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"is_striped\"");
+        }
+
+        if (key == "maximum_stripe_size"sv) {
+            if (auto maximum_stripe_size = value.get_u32(); maximum_stripe_size.has_value()) {
+                if (maximum_stripe_size.value() > 0x7FFF)
+                    return Error::from_string_literal("maximum_stripe_size should be <= 32767");
+                striping_information |= maximum_stripe_size.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"maximum_stripe_size\"");
+        }
+
+        dbgln("page_information striping_information key {}", key);
+        return Error::from_string_literal("unknown page_information striping_information key");
+    }));
+
+    return striping_information;
+}
+
 static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
 {
     if (!object.has_value())
@@ -678,6 +709,14 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
                 return {};
             }
             return Error::from_string_literal("expected object for \"flags\"");
+        }
+
+        if (key == "striping_information"sv) {
+            if (value.is_object()) {
+                data.striping_information = TRY(jbig2_page_information_striping_information_from_json(value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"striping_information\"");
         }
 
         dbgln("page_information key {}", key);
