@@ -1254,11 +1254,21 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
                 return Error::from_string_literal("JBIG2: Multiple PageInformation segments");
 
             auto page_information = TRY(decode_page_information_segment(segment.data));
+
+            // 7.4.8.6 Page striping information
+            // "the maximum size of each stripe (the distance between an end of stripe segment's end row and the end row of the previous
+            //  end of stripe segment, or 0 in the case of the first end of stripe segment) must be no more than the page's maximum
+            //  stripe size."
+            // This means that the first stripe can be one taller than maximum_stripe_size, but all subsequent stripes must not be.
+            // FIXME: Be stricter about subsequent stripes.
             page_is_striped = page_information.page_is_striped();
             max_stripe_height = page_information.maximum_stripe_size() + 1;
 
             context.page.size = { page_information.bitmap_width, page_information.bitmap_height };
             has_initially_unknown_height = page_information.bitmap_height == 0xffff'ffff;
+
+            // "If the page's bitmap height is unknown (indicated by a page bitmap height of 0xFFFFFFFF) then the "page is striped"
+            //  bit must be 1."
             if (has_initially_unknown_height && !page_information.page_is_striped())
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-striped bitmaps of indeterminate height not allowed");
         } else if (segment.type() == JBIG2::SegmentType::EndOfStripe) {
