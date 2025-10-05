@@ -1309,7 +1309,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
             if (segment.data.size() != 0)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of page segment has non-zero size");
             found_end_of_page = true;
-            if (page_is_striped && (!last_end_of_stripe_index.has_value() || segment_index != last_end_of_stripe_index.value() + 1))
+            if (page_is_striped && has_initially_unknown_height && (!last_end_of_stripe_index.has_value() || segment_index != last_end_of_stripe_index.value() + 1))
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of page segment not preceded by end of stripe segment on striped page");
         }
     }
