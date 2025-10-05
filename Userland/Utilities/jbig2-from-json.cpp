@@ -79,6 +79,32 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_page_from_json(Gfx::JBIG2::
     return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::EndOfPageSegmentData {} };
 }
 
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_stripe_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    if (!object.has_value())
+        return Error::from_string_literal("end_of_stripe segment needs a \"data\" object");
+
+    Optional<u32> y_coordinate;
+
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "y_coordinate"sv) {
+            if (auto y = value.get_u32(); y.has_value()) {
+                y_coordinate = y.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"y_coordinate\"");
+        }
+
+        dbgln("end_of_stripe key {}", key);
+        return Error::from_string_literal("unknown end_of_stripe key");
+    }));
+
+    if (!y_coordinate.has_value())
+        return Error::from_string_literal("end_of_stripe segment missing required \"y_coordinate\" key");
+
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::EndOfStripeSegment { y_coordinate.value() } };
+}
+
 struct JSONRect {
     Optional<u32> x;
     Optional<u32> y;
@@ -804,6 +830,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         return jbig2_end_of_file_from_json(header, segment_data_object);
     if (type_string == "end_of_page")
         return jbig2_end_of_page_from_json(header, segment_data_object);
+    if (type_string == "end_of_stripe")
+        return jbig2_end_of_stripe_from_json(header, segment_data_object);
     if (type_string == "generic_region")
         return jbig2_immediate_generic_region_from_json(options, header, segment_data_object);
     if (type_string == "lossless_generic_region")

@@ -62,7 +62,7 @@ struct EndOfPageSegmentData { };
 
 struct SegmentData {
     SegmentHeaderData header;
-    Variant<JBIG2::PageInformationSegment, EndOfFileSegmentData, EndOfPageSegmentData, ImmediateGenericRegionSegmentData, ImmediateLosslessGenericRegionSegmentData> data;
+    Variant<PageInformationSegment, EndOfFileSegmentData, EndOfPageSegmentData, EndOfStripeSegment, ImmediateGenericRegionSegmentData, ImmediateLosslessGenericRegionSegmentData> data;
 };
 
 struct FileHeaderData {
