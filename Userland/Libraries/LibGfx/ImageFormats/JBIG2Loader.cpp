@@ -1266,8 +1266,14 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
                 return Error::from_string_literal("JBIG2: EndOfStripe before PageInformation");
             if (!page_is_striped)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: Found EndOfStripe for non-striped page");
-            auto end_of_stripe = TRY(decode_end_of_stripe_segment(segment.data));
 
+            // 7.4.10 End of stripe segment syntax
+            // "An end of stripe segment states that the encoder has finished coding a portion of the page with which the segment is
+            //  associated, and will not revisit it. It specifies the Y coordinate of a row of the page; no segment following the end of
+            //  stripe may modify any portion of the page bitmap that lines on or above that row; furthermore, no segment preceding
+            //  the end of stripe may modify any portion of the page bitmap that lies below that row. This row is called the "end row"
+            //  of the stripe."
+            auto end_of_stripe = TRY(decode_end_of_stripe_segment(segment.data));
             int new_height = end_of_stripe.y_coordinate + 1;
 
             if (has_initially_unknown_height) {
@@ -1278,8 +1284,11 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: EndOfStripe Y coordinate larger than page height");
             }
 
+            // "The end row specified by an end of stripe segment must lie below any previous end row for that page."
             int stripe_height = new_height - height_at_end_of_last_stripe.value_or(0);
-            VERIFY(stripe_height >= 0);
+            if (stripe_height <= 0)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: EndOfStripe Y coordinate is not increasing");
+
             dbgln_if(JBIG2_DEBUG, "stripe_height={}, max_stripe_height={}", stripe_height, max_stripe_height);
             if (stripe_height > max_stripe_height)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: EndOfStripe Y coordinate larger than maximum stripe height");
