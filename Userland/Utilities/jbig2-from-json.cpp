@@ -711,7 +711,11 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
                 data.bitmap_height = page_height.value();
                 return {};
             }
-            return Error::from_string_literal("expected u32 for \"page_height\"");
+            if (value.is_null()) {
+                data.bitmap_height = 0xffff'ffff;
+                return {};
+            }
+            return Error::from_string_literal("expected u32 or null for \"page_height\"");
         }
 
         if (key == "page_x_resolution"sv) {
