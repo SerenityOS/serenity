@@ -476,6 +476,12 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
         },
         [](JBIG2::EndOfPageSegmentData const&) -> ErrorOr<ReadonlyBytes> {
             return ReadonlyBytes {};
+        },
+        [&scratch_buffer](JBIG2::EndOfStripeSegment const& end_of_stripe) -> ErrorOr<ReadonlyBytes> {
+            TRY(scratch_buffer.try_resize(sizeof(JBIG2::EndOfStripeSegment)));
+            FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
+            TRY(stream.write_value<BigEndian<u32>>(end_of_stripe.y_coordinate));
+            return scratch_buffer;
         }));
 
     JBIG2::SegmentHeader header;
@@ -485,7 +491,8 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
         [](JBIG2::ImmediateLosslessGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessGenericRegion; },
         [](JBIG2::PageInformationSegment const&) { return JBIG2::SegmentType::PageInformation; },
         [](JBIG2::EndOfFileSegmentData const&) { return JBIG2::SegmentType::EndOfFile; },
-        [](JBIG2::EndOfPageSegmentData const&) { return JBIG2::SegmentType::EndOfPage; });
+        [](JBIG2::EndOfPageSegmentData const&) { return JBIG2::SegmentType::EndOfPage; },
+        [](JBIG2::EndOfStripeSegment const&) { return JBIG2::SegmentType::EndOfStripe; });
     header.retention_flag = segment_data.header.retention_flag;
     for (auto const& reference : segment_data.header.referred_to_segments) {
         header.referred_to_segment_numbers.append(reference.segment_number);
