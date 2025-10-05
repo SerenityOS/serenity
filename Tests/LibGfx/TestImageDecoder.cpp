@@ -365,6 +365,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-customat-tpgdon.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-mmr.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-stripe.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-stripe-initially-unknown-height.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-template1.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-template1-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-template1-tpgdon.jbig2"sv),
@@ -398,7 +399,6 @@ TEST_CASE(test_jbig2_decode)
         // - lossless halftone (code support added in #26043)
         // - rotated halftone (code support added in #26044)
         // - halftone with graymap with > 256 entries (code support added in #26044 too)
-        // - striping, especially with initially unknown page height (code support added in #26067)
         // - huffman symbol regions (code support added in #26068)
         // - huffman text regions (code support added in #26075)
         // - huffman regions with custom huffman tables (code support added in #26078, #26081)
