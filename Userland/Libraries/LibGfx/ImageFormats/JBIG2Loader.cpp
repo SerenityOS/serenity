@@ -1220,19 +1220,12 @@ static ErrorOr<void> validate_segment_combination_operator_consistency(JBIG2Load
     return {};
 }
 
-// 7.4.10 End of stripe segment syntax
-struct [[gnu::packed]] EndOfStripeSegment {
-    // "The segment data of an end of stripe segment consists of one four-byte value, specifying the Y coordinate of the end row."
-    BigEndian<u32> y_coordinate;
-};
-static_assert(AssertSize<EndOfStripeSegment, 4>());
-
-static ErrorOr<EndOfStripeSegment> decode_end_of_stripe_segment(ReadonlyBytes data)
+static ErrorOr<JBIG2::EndOfStripeSegment> decode_end_of_stripe_segment(ReadonlyBytes data)
 {
     // 7.4.8 Page information segment syntax
-    if (data.size() != sizeof(EndOfStripeSegment))
+    if (data.size() != sizeof(JBIG2::EndOfStripeSegment))
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of strip segment has wrong size");
-    return *(EndOfStripeSegment const*)data.data();
+    return *(JBIG2::EndOfStripeSegment const*)data.data();
 }
 
 static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)

@@ -169,4 +169,11 @@ struct [[gnu::packed]] PageInformationSegment {
 };
 static_assert(AssertSize<PageInformationSegment, 19>());
 
+// 7.4.10 End of stripe segment syntax
+struct [[gnu::packed]] EndOfStripeSegment {
+    // "The segment data of an end of stripe segment consists of one four-byte value, specifying the Y coordinate of the end row."
+    BigEndian<u32> y_coordinate;
+};
+static_assert(AssertSize<EndOfStripeSegment, 4>());
+
 }
