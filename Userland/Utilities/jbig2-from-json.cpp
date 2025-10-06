@@ -156,9 +156,9 @@ static ErrorOr<JSONRect> jbig2_rect_from_json(JsonObject const& object)
     return rect;
 }
 
-static ErrorOr<NonnullOwnPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOptions const& options, JsonObject const& object)
+static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOptions const& options, JsonObject const& object)
 {
-    OwnPtr<Gfx::BilevelImage> image;
+    RefPtr<Gfx::BilevelImage> image;
     JSONRect crop_rect;
     bool invert = false;
 
@@ -405,7 +405,7 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
     u8 flags = 0;
     Vector<i8> adaptive_template_pixels;
     Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
-    OwnPtr<Gfx::BilevelImage> image;
+    RefPtr<Gfx::BilevelImage> image;
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "region_segment_information"sv) {
             if (value.is_object()) {

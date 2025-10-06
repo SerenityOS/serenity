@@ -528,7 +528,7 @@ ErrorOr<i32> HuffmanTable::read_symbol_non_oob(BigEndianInputBitStream& stream) 
 
 class Symbol : public RefCounted<Symbol> {
 public:
-    static NonnullRefPtr<Symbol> create(NonnullOwnPtr<BilevelImage> bitmap)
+    static NonnullRefPtr<Symbol> create(NonnullRefPtr<BilevelImage> bitmap)
     {
         return adopt_ref(*new Symbol(move(bitmap)));
     }
@@ -536,12 +536,12 @@ public:
     BilevelImage const& bitmap() const { return *m_bitmap; }
 
 private:
-    Symbol(NonnullOwnPtr<BilevelImage> bitmap)
+    Symbol(NonnullRefPtr<BilevelImage> bitmap)
         : m_bitmap(move(bitmap))
     {
     }
 
-    NonnullOwnPtr<BilevelImage> m_bitmap;
+    NonnullRefPtr<BilevelImage> m_bitmap;
 };
 
 struct SegmentData {
@@ -570,7 +570,7 @@ struct SegmentData {
     Optional<JBIG2::HuffmanTable> huffman_table;
 
     // Set on intermediate direct region segments after they've been decoded.
-    OwnPtr<Gfx::BilevelImage> aux_buffer;
+    RefPtr<BilevelImage> aux_buffer;
 };
 
 struct Page {
@@ -581,7 +581,7 @@ struct Page {
 
     bool direct_region_segments_override_default_combination_operator { false };
 
-    OwnPtr<BilevelImage> bits;
+    RefPtr<BilevelImage> bits;
 };
 
 struct JBIG2LoadingContext {
@@ -1403,7 +1403,7 @@ struct GenericRegionDecodingInputParameters {
 };
 
 // 6.2 Generic region decoding procedure
-static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, Optional<JBIG2::GenericContexts>& maybe_contexts)
+static ErrorOr<NonnullRefPtr<BilevelImage>> generic_region_decoding_procedure(GenericRegionDecodingInputParameters const& inputs, Optional<JBIG2::GenericContexts>& maybe_contexts)
 {
     if (inputs.is_modified_modified_read) {
         dbgln_if(JBIG2_DEBUG, "JBIG2ImageDecoderPlugin: MMR image data");
@@ -1441,7 +1441,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     if (inputs.skip_pattern.has_value() && (inputs.skip_pattern->width() != inputs.region_width || inputs.skip_pattern->height() != inputs.region_height))
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid USESKIP dimensions");
 
-    static constexpr auto get_pixel = [](NonnullOwnPtr<BilevelImage> const& buffer, int x, int y) -> bool {
+    static constexpr auto get_pixel = [](NonnullRefPtr<BilevelImage> const& buffer, int x, int y) -> bool {
         // 6.2.5.2 Coding order and edge conventions
         // "• All pixels lying outside the bounds of the actual bitmap have the value 0."
         // We don't have to check y >= buffer->height() because check_valid_adaptive_template_pixel() rejects y > 0.
@@ -1451,7 +1451,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     };
 
     // Figure 3(a) – Template when GBTEMPLATE = 0 and EXTTEMPLATE = 0,
-    constexpr auto compute_context_0 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
+    constexpr auto compute_context_0 = [](NonnullRefPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         for (int i = 0; i < 4; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[i].x, y + adaptive_pixels[i].y);
@@ -1465,7 +1465,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     };
 
     // Figure 4 – Template when GBTEMPLATE = 1
-    auto compute_context_1 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
+    auto compute_context_1 = [](NonnullRefPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
         for (int i = 0; i < 4; ++i)
@@ -1478,7 +1478,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     };
 
     // Figure 5 – Template when GBTEMPLATE = 2
-    auto compute_context_2 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
+    auto compute_context_2 = [](NonnullRefPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
         for (int i = 0; i < 3; ++i)
@@ -1491,7 +1491,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     };
 
     // Figure 6 – Template when GBTEMPLATE = 3
-    auto compute_context_3 = [](NonnullOwnPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
+    auto compute_context_3 = [](NonnullRefPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
         for (int i = 0; i < 5; ++i)
@@ -1501,7 +1501,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_region_decoding_procedure(Ge
         return result;
     };
 
-    u16 (*compute_context)(NonnullOwnPtr<BilevelImage> const&, ReadonlySpan<JBIG2::AdaptiveTemplatePixel>, int, int);
+    u16 (*compute_context)(NonnullRefPtr<BilevelImage> const&, ReadonlySpan<JBIG2::AdaptiveTemplatePixel>, int, int);
     if (inputs.gb_template == 0)
         compute_context = compute_context_0;
     else if (inputs.gb_template == 1)
@@ -1617,7 +1617,7 @@ struct RefinementContexts {
 };
 
 // 6.3 Generic Refinement Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BilevelImage>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, MQArithmeticDecoder& decoder, RefinementContexts& contexts)
+static ErrorOr<NonnullRefPtr<BilevelImage>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, MQArithmeticDecoder& decoder, RefinementContexts& contexts)
 {
     VERIFY(inputs.gr_template == 0 || inputs.gr_template == 1);
 
@@ -1829,7 +1829,7 @@ struct TextContexts {
 };
 
 // 6.4 Text Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BilevelImage>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, Optional<TextContexts>& text_contexts, Optional<RefinementContexts>& refinement_contexts)
+static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, Optional<TextContexts>& text_contexts, Optional<RefinementContexts>& refinement_contexts)
 {
     Optional<BigEndianInputBitStream> bit_stream;
     MQArithmeticDecoder* decoder = nullptr;
@@ -1927,7 +1927,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> text_region_decoding_procedure(TextR
     };
 
     // 6.4.11 Symbol instance bitmap
-    OwnPtr<BilevelImage> refinement_result;
+    RefPtr<BilevelImage> refinement_result;
     auto read_bitmap = [&](u32 id) -> ErrorOr<BilevelImage const*> {
         if (id >= inputs.symbols.size())
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol ID out of range");
@@ -2211,7 +2211,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     // This belongs in 6.5.5 1) below, but also needs to be captured by read_bitmap here.
     Vector<NonnullRefPtr<Symbol>> new_symbols;
 
-    auto read_symbol_bitmap = [&](u32 width, u32 height) -> ErrorOr<NonnullOwnPtr<BilevelImage>> {
+    auto read_symbol_bitmap = [&](u32 width, u32 height) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
         // 6.5.8 Symbol bitmap
         if (inputs.uses_huffman_encoding)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode generic symbol bitmaps with huffman encoding");
@@ -2308,7 +2308,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         return generic_refinement_region_decoding_procedure(refinement_inputs, decoder.value(), refinement_contexts.value());
     };
 
-    auto read_height_class_collective_bitmap = [&](u32 total_width, u32 height) -> ErrorOr<NonnullOwnPtr<BilevelImage>> {
+    auto read_height_class_collective_bitmap = [&](u32 total_width, u32 height) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
         // 6.5.9 Height class collective bitmap
         // "1) Read the size in bytes using the SDHUFFBMSIZE Huffman table. Let BMSIZE be the value decoded."
         auto bitmap_size = TRY(inputs.bitmap_size_table->read_symbol_non_oob(*bit_stream));
@@ -2316,7 +2316,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         // "2) Skip over any bits remaining in the last byte read."
         bit_stream->align_to_byte_boundary();
 
-        NonnullOwnPtr<BilevelImage> result = TRY([&]() -> ErrorOr<NonnullOwnPtr<BilevelImage>> {
+        NonnullRefPtr<BilevelImage> result = TRY([&]() -> ErrorOr<NonnullRefPtr<BilevelImage>> {
             // "3) If BMSIZE is zero, then the bitmap is stored uncompressed, and the actual size in bytes is:
             //
             //         HCHEIGHT * ceil_div(TOTWIDTH, 8)
@@ -2561,7 +2561,7 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
     // "The gray-scale image is obtained by decoding GSBPP bitplanes. These bitplanes are denoted (from least significant to
     //  most significant) GSPLANES[0], GSPLANES[1], . . . , GSPLANES[GSBPP – 1]. The bitplanes are Gray-coded, so
     //  that each bitplane's true value is equal to its coded value XORed with the next-more-significant bitplane."
-    Vector<OwnPtr<BilevelImage>> bitplanes;
+    Vector<RefPtr<BilevelImage>> bitplanes;
     bitplanes.resize(inputs.bpp);
 
     // "1) Decode GSPLANES[GSBPP – 1] using the generic region decoding procedure. The parameters to the
@@ -2624,7 +2624,7 @@ struct HalftoneRegionDecodingInputParameters {
 };
 
 // 6.6 Halftone Region Decoding Procedure
-static ErrorOr<NonnullOwnPtr<BilevelImage>> halftone_region_decoding_procedure(HalftoneRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Optional<JBIG2::GenericContexts>& contexts)
+static ErrorOr<NonnullRefPtr<BilevelImage>> halftone_region_decoding_procedure(HalftoneRegionDecodingInputParameters const& inputs, ReadonlyBytes data, Optional<JBIG2::GenericContexts>& contexts)
 {
     // 6.6.5 Decoding the halftone region
     // "1) Fill a bitmap HTREG, of the size given by HBW and HBH, with the HDEFPIXEL value."
@@ -2633,7 +2633,7 @@ static ErrorOr<NonnullOwnPtr<BilevelImage>> halftone_region_decoding_procedure(H
 
     // "2) If HENABLESKIP equals 1, compute a bitmap HSKIP as shown in 6.6.5.1."
     Optional<BilevelImage const&> skip_pattern;
-    OwnPtr<BilevelImage> skip_pattern_storage;
+    RefPtr<BilevelImage> skip_pattern_storage;
     if (inputs.enable_skip) {
         skip_pattern_storage = TRY(BilevelImage::create(inputs.grayscale_width, inputs.grayscale_height));
         skip_pattern = *skip_pattern_storage;
@@ -2992,7 +2992,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
 
 struct DirectRegionResult {
     JBIG2::RegionSegmentInformationField information_field;
-    NonnullOwnPtr<BilevelImage> bitmap;
+    NonnullRefPtr<BilevelImage> bitmap;
 };
 
 static void handle_immediate_direct_region(JBIG2LoadingContext& context, DirectRegionResult const& result)

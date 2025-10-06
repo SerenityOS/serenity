@@ -44,7 +44,7 @@ struct GenericRegionSegmentData {
     RegionSegmentInformationField region_segment_information {};
     u8 flags { 0 };
     Array<AdaptiveTemplatePixel, 12> adaptive_template_pixels {};
-    NonnullOwnPtr<BilevelImage> image;
+    NonnullRefPtr<BilevelImage> image;
     Optional<u32> real_height_for_generic_region_of_initially_unknown_size {};
     MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
 };

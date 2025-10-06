@@ -12,17 +12,17 @@
 
 namespace Gfx {
 
-ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::create(size_t width, size_t height)
+ErrorOr<NonnullRefPtr<BilevelImage>> BilevelImage::create(size_t width, size_t height)
 {
     size_t pitch = ceil_div(width, static_cast<size_t>(8));
     auto bits = TRY(ByteBuffer::create_uninitialized(pitch * height));
-    return adopt_nonnull_own_or_enomem(new (nothrow) BilevelImage(move(bits), width, height, pitch));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BilevelImage(move(bits), width, height, pitch));
 }
 
-ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::create_from_byte_buffer(ByteBuffer bitmap, size_t width, size_t height)
+ErrorOr<NonnullRefPtr<BilevelImage>> BilevelImage::create_from_byte_buffer(ByteBuffer bitmap, size_t width, size_t height)
 {
     size_t pitch = ceil_div(width, static_cast<size_t>(8));
-    return adopt_nonnull_own_or_enomem(new (nothrow) BilevelImage(move(bitmap), width, height, pitch));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) BilevelImage(move(bitmap), width, height, pitch));
 }
 
 void BilevelImage::fill(bool b)
@@ -96,7 +96,7 @@ void BilevelImage::composite_onto(BilevelImage& out, IntPoint position, Composit
     }
 }
 
-ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::subbitmap(Gfx::IntRect const& rect) const
+ErrorOr<NonnullRefPtr<BilevelImage>> BilevelImage::subbitmap(Gfx::IntRect const& rect) const
 {
     VERIFY(rect.x() >= 0);
     VERIFY(rect.width() >= 0);
@@ -206,7 +206,7 @@ static constexpr auto bayer_matrix_2x2 = make_bayer_matrix<1>();
 static constexpr auto bayer_matrix_4x4 = make_bayer_matrix<2>();
 static constexpr auto bayer_matrix_8x8 = make_bayer_matrix<3>();
 
-ErrorOr<NonnullOwnPtr<BilevelImage>> BilevelImage::create_from_bitmap(Gfx::Bitmap const& bitmap, DitheringAlgorithm dithering_algorithm)
+ErrorOr<NonnullRefPtr<BilevelImage>> BilevelImage::create_from_bitmap(Gfx::Bitmap const& bitmap, DitheringAlgorithm dithering_algorithm)
 {
     auto gray_bitmap = TRY(ByteBuffer::create_uninitialized(bitmap.width() * bitmap.height()));
     for (int y = 0, i = 0; y < bitmap.height(); ++y) {
