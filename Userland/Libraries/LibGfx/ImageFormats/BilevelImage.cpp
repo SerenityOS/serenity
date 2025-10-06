@@ -61,9 +61,16 @@ void BilevelImage::composite_onto(BilevelImage& out, IntPoint position) const
 
     for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
         for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
-            bool src_bit = get_bit(x - position.x(), y - position.y());
-            bool dst_bit = out.get_bit(x, y);
-            out.set_bit(x, y, combine(dst_bit, src_bit));
+            if (x % 8 == 0 && position.x() % 8 == 0 && clip_rect.right() - x > 8) {
+                auto& src = m_bits[(y - position.y()) * m_pitch + (x - position.x()) / 8];
+                auto& dst = out.m_bits[y * out.m_pitch + x / 8];
+                dst = combine(dst, src);
+                x += 7;
+            } else {
+                bool src_bit = get_bit(x - position.x(), y - position.y());
+                bool dst_bit = out.get_bit(x, y);
+                out.set_bit(x, y, combine(dst_bit, src_bit));
+            }
         }
     }
 }
