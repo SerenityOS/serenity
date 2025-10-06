@@ -1323,16 +1323,18 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
         return Error::from_string_literal("JBIG2: Missing PageInformation segment");
 
     if (page_is_striped) {
-        if (!height_at_end_of_last_stripe.has_value())
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Striped page without EndOfStripe segment");
         if (has_initially_unknown_height) {
+            // "A page whose height was originally unknown must contain at least one end of stripe segment."
+            if (!height_at_end_of_last_stripe.has_value())
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Striped page of initially unknown height without EndOfStripe segment");
+
             if (last_end_of_stripe_index.value() != last_not_end_of_page_segment_index.value())
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: Page not ended by end of stripe segment on striped page with initially unknown height");
             context.page.size.set_height(height_at_end_of_last_stripe.value());
         }
 
         // `!=` is not true, e.g. in ignition.pdf the last stripe is shorter than the page height.
-        if (!has_initially_unknown_height && height_at_end_of_last_stripe.value() > context.page.size.height())
+        if (!has_initially_unknown_height && height_at_end_of_last_stripe.has_value() && height_at_end_of_last_stripe.value() > context.page.size.height())
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Stripes are higher than page height");
     }
 
