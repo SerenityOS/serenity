@@ -9,6 +9,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/RefCounted.h>
 #include <LibGfx/Forward.h>
+#include <LibGfx/Rect.h>
 
 namespace Gfx {
 
@@ -25,6 +26,8 @@ enum class DitheringAlgorithm {
     // https://surma.dev/things/ditherpunk/
     // https://tannerhelland.com/2012/12/28/dithering-eleven-algorithms-source-code.html
 };
+
+class BilevelSubImage;
 
 class BilevelImage : public RefCounted<BilevelImage> {
 public:
@@ -70,7 +73,7 @@ public:
 
     void composite_onto(BilevelImage& out, IntPoint position, CompositionType) const;
 
-    ErrorOr<NonnullRefPtr<BilevelImage>> subbitmap(Gfx::IntRect const& rect) const;
+    BilevelSubImage subbitmap(Gfx::IntRect const& rect) const;
 
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_gfx_bitmap() const;
     ErrorOr<ByteBuffer> to_byte_buffer() const;
@@ -81,15 +84,41 @@ public:
     Bytes bytes() { return m_bits.bytes(); }
 
 private:
-    BilevelImage(ByteBuffer, size_t width, size_t height, size_t pitch);
+    template<OneOf<BilevelImage, BilevelSubImage> InputType, BilevelImage::CompositionType operator_>
+    friend void composite_onto(InputType const& in, BilevelImage& out, IntPoint position);
 
-    template<CompositionType>
-    void composite_onto(BilevelImage& out, IntPoint position) const;
+    BilevelImage(ByteBuffer, size_t width, size_t height, size_t pitch);
 
     ByteBuffer m_bits;
     size_t m_width { 0 };
     size_t m_height { 0 };
     size_t m_pitch { 0 };
+};
+
+class BilevelSubImage {
+public:
+    BilevelSubImage(NonnullRefPtr<BilevelImage const> image, IntRect active_rect)
+        : m_source(move(image))
+        , m_active_rect(active_rect)
+    {
+    }
+
+    ALWAYS_INLINE bool get_bit(size_t x, size_t y) const
+    {
+        return m_source->get_bit(m_active_rect.x() + x, m_active_rect.y() + y);
+    }
+
+    void composite_onto(BilevelImage& out, IntPoint position, BilevelImage::CompositionType) const;
+
+    size_t width() const { return m_active_rect.width(); }
+    size_t height() const { return m_active_rect.height(); }
+
+private:
+    template<OneOf<BilevelImage, BilevelSubImage> InputType, BilevelImage::CompositionType operator_>
+    friend void composite_onto(InputType const& in, BilevelImage& out, IntPoint position);
+
+    NonnullRefPtr<BilevelImage const> m_source;
+    IntRect m_active_rect;
 };
 
 }

@@ -32,42 +32,54 @@ void BilevelImage::fill(bool b)
         byte = fill_byte;
 }
 
-template<BilevelImage::CompositionType operator_>
-void BilevelImage::composite_onto(BilevelImage& out, IntPoint position) const
+template<OneOf<BilevelImage, BilevelSubImage> InputType, BilevelImage::CompositionType operator_>
+void composite_onto(InputType const& in, BilevelImage& out, IntPoint position)
 {
     static constexpr auto combine = [](auto dst, auto src) -> decltype(dst) {
         switch (operator_) {
-        case CompositionType::Or:
+        case BilevelImage::CompositionType::Or:
             return dst | src;
-        case CompositionType::And:
+        case BilevelImage::CompositionType::And:
             return dst & src;
-        case CompositionType::Xor:
+        case BilevelImage::CompositionType::Xor:
             return dst ^ src;
-        case CompositionType::XNor:
+        case BilevelImage::CompositionType::XNor:
             // Clang is not happy with using ~ on a bool, even if it's fine with our use case.
             if constexpr (SameAs<decltype(dst), bool>)
                 return !(dst ^ src);
             else
                 return ~(dst ^ src);
-        case CompositionType::Replace:
+        case BilevelImage::CompositionType::Replace:
             return src;
         }
         VERIFY_NOT_REACHED();
     };
 
-    IntRect bitmap_rect { position, { m_width, m_height } };
+    IntRect bitmap_rect { position, { in.width(), in.height() } };
     IntRect out_rect { { 0, 0 }, { out.width(), out.height() } };
     IntRect clip_rect = bitmap_rect.intersected(out_rect);
 
     for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
         for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
-            if (x % 8 == 0 && position.x() % 8 == 0 && clip_rect.right() - x > 8) {
-                auto& src = m_bits[(y - position.y()) * m_pitch + (x - position.x()) / 8];
+            bool const can_use_byte = [&]() {
+                if constexpr (IsSame<InputType, BilevelImage>)
+                    return x % 8 == 0 && position.x() % 8 == 0 && clip_rect.right() - x > 8;
+                else
+                    return x % 8 == 0 && (position.x() + in.m_active_rect.x()) % 8 == 0 && clip_rect.right() - x > 8;
+            }();
+
+            if (can_use_byte) {
+                auto const& src = [&]() {
+                    if constexpr (IsSame<InputType, BilevelImage>)
+                        return in.m_bits[(y - position.y()) * in.m_pitch + (x - position.x()) / 8];
+                    else
+                        return in.m_source->m_bits[(y - position.y() + in.m_active_rect.y()) * in.m_source->m_pitch + (x - position.x() + in.m_active_rect.x()) / 8];
+                }();
                 auto& dst = out.m_bits[y * out.m_pitch + x / 8];
                 dst = combine(dst, src);
                 x += 7;
             } else {
-                bool src_bit = get_bit(x - position.x(), y - position.y());
+                bool src_bit = in.get_bit(x - position.x(), y - position.y());
                 bool dst_bit = out.get_bit(x, y);
                 out.set_bit(x, y, combine(dst_bit, src_bit));
             }
@@ -75,28 +87,39 @@ void BilevelImage::composite_onto(BilevelImage& out, IntPoint position) const
     }
 }
 
-void BilevelImage::composite_onto(BilevelImage& out, IntPoint position, CompositionType operator_) const
+template<OneOf<BilevelImage, BilevelSubImage> InputType>
+static void composite_onto(InputType const& in, BilevelImage& out, IntPoint position, BilevelImage::CompositionType operator_)
 {
     switch (operator_) {
-    case CompositionType::Or:
-        composite_onto<CompositionType::Or>(out, position);
+    case BilevelImage::CompositionType::Or:
+        composite_onto<InputType, BilevelImage::CompositionType::Or>(in, out, position);
         break;
-    case CompositionType::And:
-        composite_onto<CompositionType::And>(out, position);
+    case BilevelImage::CompositionType::And:
+        composite_onto<InputType, BilevelImage::CompositionType::And>(in, out, position);
         break;
-    case CompositionType::Xor:
-        composite_onto<CompositionType::Xor>(out, position);
+    case BilevelImage::CompositionType::Xor:
+        composite_onto<InputType, BilevelImage::CompositionType::Xor>(in, out, position);
         break;
-    case CompositionType::XNor:
-        composite_onto<CompositionType::XNor>(out, position);
+    case BilevelImage::CompositionType::XNor:
+        composite_onto<InputType, BilevelImage::CompositionType::XNor>(in, out, position);
         break;
-    case CompositionType::Replace:
-        composite_onto<CompositionType::Replace>(out, position);
+    case BilevelImage::CompositionType::Replace:
+        composite_onto<InputType, BilevelImage::CompositionType::Replace>(in, out, position);
         break;
     }
 }
 
-ErrorOr<NonnullRefPtr<BilevelImage>> BilevelImage::subbitmap(Gfx::IntRect const& rect) const
+void BilevelImage::composite_onto(BilevelImage& out, IntPoint position, CompositionType operator_) const
+{
+    ::Gfx::composite_onto(*this, out, position, operator_);
+}
+
+void BilevelSubImage::composite_onto(BilevelImage& out, IntPoint position, BilevelImage::CompositionType operator_) const
+{
+    ::Gfx::composite_onto(*this, out, position, operator_);
+}
+
+BilevelSubImage BilevelImage::subbitmap(Gfx::IntRect const& rect) const
 {
     VERIFY(rect.x() >= 0);
     VERIFY(rect.width() >= 0);
@@ -106,11 +129,7 @@ ErrorOr<NonnullRefPtr<BilevelImage>> BilevelImage::subbitmap(Gfx::IntRect const&
     VERIFY(rect.height() >= 0);
     VERIFY(static_cast<size_t>(rect.bottom()) <= height());
 
-    auto subbitmap = TRY(create(rect.width(), rect.height()));
-    for (int y = 0; y < rect.height(); ++y)
-        for (int x = 0; x < rect.width(); ++x)
-            subbitmap->set_bit(x, y, get_bit(rect.x() + x, rect.y() + y));
-    return subbitmap;
+    return BilevelSubImage { *this, rect };
 }
 
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> BilevelImage::to_gfx_bitmap() const
