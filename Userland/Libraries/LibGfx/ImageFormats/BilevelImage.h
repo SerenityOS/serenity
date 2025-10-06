@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/RefCounted.h>
 #include <LibGfx/Forward.h>
 
 namespace Gfx {
@@ -25,11 +26,11 @@ enum class DitheringAlgorithm {
     // https://tannerhelland.com/2012/12/28/dithering-eleven-algorithms-source-code.html
 };
 
-class BilevelImage {
+class BilevelImage : public RefCounted<BilevelImage> {
 public:
-    static ErrorOr<NonnullOwnPtr<BilevelImage>> create(size_t width, size_t height);
-    static ErrorOr<NonnullOwnPtr<BilevelImage>> create_from_byte_buffer(ByteBuffer bitmap, size_t width, size_t height);
-    static ErrorOr<NonnullOwnPtr<BilevelImage>> create_from_bitmap(Gfx::Bitmap const& bitmap, DitheringAlgorithm dithering_algorithm);
+    static ErrorOr<NonnullRefPtr<BilevelImage>> create(size_t width, size_t height);
+    static ErrorOr<NonnullRefPtr<BilevelImage>> create_from_byte_buffer(ByteBuffer bitmap, size_t width, size_t height);
+    static ErrorOr<NonnullRefPtr<BilevelImage>> create_from_bitmap(Gfx::Bitmap const& bitmap, DitheringAlgorithm dithering_algorithm);
 
     ALWAYS_INLINE bool get_bit(size_t x, size_t y) const
     {
@@ -69,7 +70,7 @@ public:
 
     void composite_onto(BilevelImage& out, IntPoint position, CompositionType) const;
 
-    ErrorOr<NonnullOwnPtr<BilevelImage>> subbitmap(Gfx::IntRect const& rect) const;
+    ErrorOr<NonnullRefPtr<BilevelImage>> subbitmap(Gfx::IntRect const& rect) const;
 
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_gfx_bitmap() const;
     ErrorOr<ByteBuffer> to_byte_buffer() const;
