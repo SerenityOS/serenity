@@ -1246,7 +1246,10 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
             continue;
 
         // Quirk: `042_*.jb2`, `amb_*.jb2` in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfFile with a page.
-        if (found_end_of_page && !(segment.type() == JBIG2::SegmentType::EndOfFile && context.is_power_jbig2_file))
+        if (segment.type() == JBIG2::SegmentType::EndOfFile && context.is_power_jbig2_file)
+            continue;
+
+        if (found_end_of_page)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Found segment after EndOfPage");
 
         if (segment.type() == JBIG2::SegmentType::PageInformation) {
