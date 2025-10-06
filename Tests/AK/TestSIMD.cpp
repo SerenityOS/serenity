@@ -13,6 +13,25 @@
 // See the comment in <AK/SIMDMath.h>
 #pragma GCC diagnostic ignored "-Wpsabi"
 
+TEST_CASE(expand_to)
+{
+    auto v1 = AK::SIMD::expand_to<AK::SIMD::u8x2>(static_cast<u8>(1));
+    static_assert(AK::SIMD::vector_length<decltype(v1)> == 2);
+    EXPECT(v1[0] == 1 && v1[0] == v1[1]);
+
+    auto v2 = AK::SIMD::expand_to<AK::SIMD::u8x32>(static_cast<u8>(2));
+    static_assert(AK::SIMD::vector_length<decltype(v2)> == 32);
+    EXPECT(v2[0] == 2);
+    for (u8 i = 1; i < AK::SIMD::vector_length<decltype(v2)>; ++i)
+        EXPECT(v2[i - 1] == v2[i]);
+
+    auto v3 = AK::SIMD::expand_to<AK::SIMD::i32x8>(-1);
+    static_assert(AK::SIMD::vector_length<decltype(v3)> == 8);
+    EXPECT(v3[0] == -1);
+    for (u8 i = 1; i < AK::SIMD::vector_length<decltype(v3)>; ++i)
+        EXPECT(v3[i - 1] == v3[i]);
+}
+
 TEST_CASE(exp)
 {
     AK::SIMD::f32x4 v = { .2f, .4f, .6f, .8f };
