@@ -528,20 +528,20 @@ ErrorOr<i32> HuffmanTable::read_symbol_non_oob(BigEndianInputBitStream& stream) 
 
 class Symbol : public RefCounted<Symbol> {
 public:
-    static NonnullRefPtr<Symbol> create(NonnullRefPtr<BilevelImage> bitmap)
+    static NonnullRefPtr<Symbol> create(BilevelSubImage bitmap)
     {
         return adopt_ref(*new Symbol(move(bitmap)));
     }
 
-    BilevelImage const& bitmap() const { return *m_bitmap; }
+    BilevelSubImage const& bitmap() const { return m_bitmap; }
 
 private:
-    Symbol(NonnullRefPtr<BilevelImage> bitmap)
+    Symbol(BilevelSubImage bitmap)
         : m_bitmap(move(bitmap))
     {
     }
 
-    NonnullRefPtr<BilevelImage> m_bitmap;
+    BilevelSubImage m_bitmap;
 };
 
 struct SegmentData {
@@ -1600,7 +1600,7 @@ struct GenericRefinementRegionDecodingInputParameters {
     u32 region_width { 0 };                                          // "GRW" in spec.
     u32 region_height { 0 };                                         // "GRH" in spec.
     u8 gr_template { 0 };                                            // "GRTEMPLATE" in spec.
-    BilevelImage const* reference_bitmap { nullptr };                // "GRREFERENCE" in spec.
+    BilevelSubImage const* reference_bitmap { nullptr };             // "GRREFERENCE" in spec.
     i32 reference_x_offset { 0 };                                    // "GRREFERENCEDX" in spec.
     i32 reference_y_offset { 0 };                                    // "GRREFERENCEDY" in spec.
     bool is_typical_prediction_used { false };                       // "TPGRON" in spec.
@@ -1628,14 +1628,14 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> generic_refinement_region_decoding_p
     // GRTEMPLATE 1 never uses adaptive pixels.
 
     // 6.3.5.3 Fixed templates and adaptive templates
-    static constexpr auto get_pixel = [](BilevelImage const& buffer, int x, int y) -> bool {
+    static constexpr auto get_pixel = [](auto const& buffer, int x, int y) -> bool {
         if (x < 0 || x >= (int)buffer.width() || y < 0 || y >= (int)buffer.height())
             return false;
         return buffer.get_bit(x, y);
     };
 
     // Figure 12 – 13-pixel refinement template showing the AT pixels at their nominal locations
-    constexpr auto compute_context_0 = [](ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, BilevelImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_0 = [](ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, BilevelSubImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
         u16 result = 0;
 
         for (int dy = -1; dy <= 1; ++dy) {
@@ -1656,7 +1656,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> generic_refinement_region_decoding_p
     };
 
     // Figure 13 – 10-pixel refinement template
-    constexpr auto compute_context_1 = [](ReadonlySpan<JBIG2::AdaptiveTemplatePixel>, BilevelImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_1 = [](ReadonlySpan<JBIG2::AdaptiveTemplatePixel>, BilevelSubImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
         u16 result = 0;
 
         for (int dy = -1; dy <= 1; ++dy) {
@@ -1927,8 +1927,8 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
     };
 
     // 6.4.11 Symbol instance bitmap
-    RefPtr<BilevelImage> refinement_result;
-    auto read_bitmap = [&](u32 id) -> ErrorOr<BilevelImage const*> {
+    Optional<BilevelSubImage> refinement_result;
+    auto read_bitmap = [&](u32 id) -> ErrorOr<BilevelSubImage const*> {
         if (id >= inputs.symbols.size())
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol ID out of range");
         auto const& symbol = inputs.symbols[id]->bitmap();
@@ -1973,8 +1973,9 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
         refinement_inputs.reference_y_offset = floor_div(refinement_delta_height, 2) + refinement_y_offset;
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
-        refinement_result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, *decoder, refinement_contexts.value()));
-        return refinement_result.ptr();
+        auto result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, *decoder, refinement_contexts.value()));
+        refinement_result = result->subbitmap(IntRect(0, 0, result->width(), result->height()));
+        return &refinement_result.value();
     };
 
     // 6.4.5 Decoding the text region
@@ -2397,7 +2398,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             // FIXME: Doing this eagerly is pretty wasteful. Decode on demand instead?
             if (!inputs.uses_huffman_encoding || inputs.uses_refinement_or_aggregate_coding) {
                 auto bitmap = TRY(read_symbol_bitmap(symbol_width, height_class_height));
-                new_symbols.append(Symbol::create(move(bitmap)));
+                new_symbols.append(Symbol::create(bitmap->subbitmap(IntRect(0, 0, bitmap->width(), bitmap->height()))));
             }
 
             // "iii) If SDHUFF is 1 and SDREFAGG is 0, then set:
@@ -2430,7 +2431,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             for (size_t i = height_class_first_symbol; i < number_of_symbols_decoded; ++i) {
                 auto width = new_symbol_widths[i];
                 IntRect symbol_rect { static_cast<int>(current_column), 0, static_cast<int>(width), static_cast<int>(height_class_height) };
-                new_symbols.append(Symbol::create(TRY(collective_bitmap->subbitmap(symbol_rect))));
+                new_symbols.append(Symbol::create(collective_bitmap->subbitmap(symbol_rect)));
                 current_column += width;
             }
         }
@@ -2771,7 +2772,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_proced
     Vector<NonnullRefPtr<Symbol>> patterns;
     for (u32 gray = 0; gray <= inputs.gray_max; ++gray) {
         int x = gray * inputs.width;
-        auto pattern = TRY(bitmap->subbitmap({ x, 0, static_cast<int>(inputs.width), static_cast<int>(inputs.height) }));
+        auto pattern = bitmap->subbitmap({ x, 0, static_cast<int>(inputs.width), static_cast<int>(inputs.height) });
         patterns.append(Symbol::create(move(pattern)));
     }
 
@@ -3781,7 +3782,8 @@ static ErrorOr<void> decode_immediate_generic_refinement_region(JBIG2LoadingCont
     inputs.region_width = information_field.width;
     inputs.region_height = information_field.height;
     inputs.gr_template = arithmetic_coding_template;
-    inputs.reference_bitmap = reference_bitmap;
+    auto subbitmap = reference_bitmap->subbitmap(IntRect(0, 0, reference_bitmap->width(), reference_bitmap->height()));
+    inputs.reference_bitmap = &subbitmap;
     inputs.reference_x_offset = 0;
     inputs.reference_y_offset = 0;
     inputs.is_typical_prediction_used = typical_prediction_generic_refinement_on;
