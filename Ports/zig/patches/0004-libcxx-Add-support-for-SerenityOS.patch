@@ -149,10 +149,10 @@ index 136999ec0b02f8171bbd8d170aca2b68f7d65681..23a56c0f586728e37ee89bba608b1853
  #include <vector>
  
 diff --git a/zig/src/libs/libcxx.zig b/zig/src/libs/libcxx.zig
-index 40da4dd92ff7ff991d803f3e7386e89b44278442..f1d13b2346f33d8236932e460819e7fd09ef5c5e 100644
+index 4e39d1e03a8daff279bda98ea642be5f2dc06fa1..aa21d23fe52d691094b469e87c32d5de37e1f403 100644
 --- a/zig/src/libs/libcxx.zig
 +++ b/zig/src/libs/libcxx.zig
-@@ -198,7 +198,8 @@ pub fn buildLibCxx(comp: *Compilation, prog_node: std.Progress.Node) BuildError!
+@@ -203,7 +203,8 @@ pub fn buildLibCxx(comp: *Compilation, prog_node: std.Progress.Node) BuildError!
              continue;
          if (std.mem.startsWith(u8, cxx_src, "src/support/win32/") and target.os.tag != .windows)
              continue;
