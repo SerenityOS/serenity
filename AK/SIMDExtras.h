@@ -14,19 +14,37 @@ namespace AK::SIMD {
 
 // SIMD Vector Expansion
 
+namespace Detail {
+
+template<SIMDVector V, typename T, size_t... Is>
+requires(SameAs<T, ElementOf<V>>)
+ALWAYS_INLINE static constexpr V expand_to_impl(T t, IndexSequence<Is...> const&)
+{
+    return V { ((void)Is, t)... };
+}
+
+}
+
+template<SIMDVector V, typename T>
+requires(SameAs<T, ElementOf<V>>)
+ALWAYS_INLINE static constexpr V expand_to(T t)
+{
+    return Detail::expand_to_impl<V>(t, MakeIndexSequence<vector_length<V>>());
+}
+
 ALWAYS_INLINE static constexpr f32x4 expand4(float f)
 {
-    return f32x4 { f, f, f, f };
+    return expand_to<f32x4>(f);
 }
 
 ALWAYS_INLINE static constexpr i32x4 expand4(i32 i)
 {
-    return i32x4 { i, i, i, i };
+    return expand_to<i32x4>(i);
 }
 
 ALWAYS_INLINE static constexpr u32x4 expand4(u32 u)
 {
-    return u32x4 { u, u, u, u };
+    return expand_to<u32x4>(u);
 }
 
 // Masking
