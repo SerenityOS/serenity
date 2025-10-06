@@ -1241,6 +1241,7 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
     u16 max_stripe_height = 0;
     Optional<int> height_at_end_of_last_stripe;
     Optional<size_t> last_end_of_stripe_index;
+    Optional<size_t> last_not_end_of_page_segment_index;
     for (auto const& [segment_index, segment] : enumerate(context.segments)) {
         if (segment.header.page_association != context.current_page_number)
             continue;
@@ -1251,6 +1252,9 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
 
         if (found_end_of_page)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Found segment after EndOfPage");
+
+        if (segment.type() != JBIG2::SegmentType::EndOfPage)
+            last_not_end_of_page_segment_index = segment_index;
 
         if (segment.type() == JBIG2::SegmentType::PageInformation) {
             if (++page_info_count > 1)
@@ -1312,8 +1316,6 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
             if (segment.data.size() != 0)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of page segment has non-zero size");
             found_end_of_page = true;
-            if (page_is_striped && has_initially_unknown_height && (!last_end_of_stripe_index.has_value() || segment_index != last_end_of_stripe_index.value() + 1))
-                return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of page segment not preceded by end of stripe segment on striped page");
         }
     }
 
@@ -1323,8 +1325,11 @@ static ErrorOr<void> scan_for_page_size(JBIG2LoadingContext& context)
     if (page_is_striped) {
         if (!height_at_end_of_last_stripe.has_value())
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Striped page without EndOfStripe segment");
-        if (has_initially_unknown_height)
+        if (has_initially_unknown_height) {
+            if (last_end_of_stripe_index.value() != last_not_end_of_page_segment_index.value())
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Page not ended by end of stripe segment on striped page with initially unknown height");
             context.page.size.set_height(height_at_end_of_last_stripe.value());
+        }
 
         // `!=` is not true, e.g. in ignition.pdf the last stripe is shorter than the page height.
         if (!has_initially_unknown_height && height_at_end_of_last_stripe.value() > context.page.size.height())
