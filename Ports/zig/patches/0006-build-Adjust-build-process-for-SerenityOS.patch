@@ -8,7 +8,7 @@ Subject: [PATCH] build: Adjust build process for SerenityOS
  1 file changed, 34 insertions(+), 1 deletion(-)
 
 diff --git a/build b/build
-index b2ae31140a658aff69861b296fdb8baf96909c5d..4efb47a6a16bbfe516b37bc4f7dc328326097fdf 100755
+index f5ec57529f689fe4848592c7a5b35b221a83cf6a..965ce0265515d0c50ec32746962a87f5198c41b2 100755
 --- a/build
 +++ b/build
 @@ -19,6 +19,7 @@ case $TARGET_OS_CMAKE in

@@ -5,108 +5,11 @@ Subject: [PATCH] Extend support for SerenityOS target
 
 Co-Authored-By: Linus Groh <mail@linusgroh.de>
 ---
- zig/lib/std/c.zig                    |  2 +-
- zig/lib/std/debug/Dwarf/abi.zig      | 17 ++++++-
- zig/lib/std/debug/SelfInfo.zig       |  7 +--
  zig/lib/std/fs/Dir.zig               | 73 ++++++++++++++++++++++++++++
  zig/lib/std/zig/LibCInstallation.zig | 26 ++++++++--
  zig/src/Compilation/Config.zig       |  1 +
- 6 files changed, 116 insertions(+), 10 deletions(-)
+ 3 files changed, 95 insertions(+), 5 deletions(-)
 
-diff --git a/zig/lib/std/c.zig b/zig/lib/std/c.zig
-index 516185878b62624fb329934a2cbb488f2ca7d98d..66893ba58e01faa24be77c7f19ad4ddd3e35b0e9 100644
---- a/zig/lib/std/c.zig
-+++ b/zig/lib/std/c.zig
-@@ -10969,7 +10969,7 @@ pub const LC = enum(c_int) {
- 
- pub extern "c" fn setlocale(category: LC, locale: ?[*:0]const u8) ?[*:0]const u8;
- 
--pub const getcontext = if (builtin.target.abi.isAndroid() or builtin.target.os.tag == .openbsd or builtin.target.os.tag == .haiku)
-+pub const getcontext = if (builtin.target.abi.isAndroid() or native_os == .openbsd or native_os == .haiku or native_os == .serenity)
- {} // libc does not implement getcontext
-     else if (native_os == .linux and builtin.target.abi.isMusl())
-         linux.getcontext
-diff --git a/zig/lib/std/debug/Dwarf/abi.zig b/zig/lib/std/debug/Dwarf/abi.zig
-index c5e509c7b0f944049d83637012be29f730764d3a..6917b25f603574ba4def19e6b9fd3a2845e227d1 100644
---- a/zig/lib/std/debug/Dwarf/abi.zig
-+++ b/zig/lib/std/debug/Dwarf/abi.zig
-@@ -203,7 +203,7 @@ pub fn regBytes(
-                     mem.asBytes(&ucontext_ptr.mcontext.fpregs.xmm[i - 17]),
-                 else => error.InvalidRegister,
-             },
--            .freebsd => switch (reg_number) {
-+            .freebsd, .serenity => switch (reg_number) {
-                 0 => mem.asBytes(&ucontext_ptr.mcontext.rax),
-                 1 => mem.asBytes(&ucontext_ptr.mcontext.rdx),
-                 2 => mem.asBytes(&ucontext_ptr.mcontext.rcx),
-@@ -327,6 +327,12 @@ pub fn regBytes(
-                 34 => mem.asBytes(&ucontext_ptr.sc_spsr),
-                 else => error.InvalidRegister,
-             },
-+            .serenity => switch (reg_number) {
-+                0...30 => mem.asBytes(&ucontext_ptr.mcontext.x[reg_number]),
-+                31 => mem.asBytes(&ucontext_ptr.mcontext.sp),
-+                32 => mem.asBytes(&ucontext_ptr.mcontext.pc),
-+                else => error.InvalidRegister,
-+            },
-             else => switch (reg_number) {
-                 0...30 => mem.asBytes(&ucontext_ptr.mcontext.regs[reg_number]),
-                 31 => mem.asBytes(&ucontext_ptr.mcontext.sp),
-@@ -334,6 +340,15 @@ pub fn regBytes(
-                 else => error.InvalidRegister,
-             },
-         },
-+        .riscv64 => switch (builtin.os.tag) {
-+            .serenity => switch (reg_number) {
-+                0 => mem.asBytes(&0),
-+                1...31 => mem.asBytes(&ucontext_ptr.mcontext.x[reg_number]),
-+                32 => mem.asBytes(&ucontext_ptr.mcontext.pc),
-+                else => error.InvalidRegister,
-+            },
-+            else => error.UnimplementedOs,
-+        },
-         else => error.UnimplementedArch,
-     };
- }
-diff --git a/zig/lib/std/debug/SelfInfo.zig b/zig/lib/std/debug/SelfInfo.zig
-index f77d14b913d21878f2eebaab082c727206e122ba..fdae46333ce8b80e33a41b5058a84178e2f693bb 100644
---- a/zig/lib/std/debug/SelfInfo.zig
-+++ b/zig/lib/std/debug/SelfInfo.zig
-@@ -53,6 +53,7 @@ pub fn open(allocator: Allocator) OpenError!SelfInfo {
-             .solaris,
-             .illumos,
-             .windows,
-+            .serenity,
-             => return try SelfInfo.init(allocator),
-             else => return error.UnsupportedOperatingSystem,
-         }
-@@ -798,7 +799,7 @@ pub const Module = switch (native_os) {
-             };
-         }
-     },
--    .linux, .netbsd, .freebsd, .dragonfly, .openbsd, .haiku, .solaris, .illumos => Dwarf.ElfModule,
-+    .linux, .netbsd, .freebsd, .dragonfly, .openbsd, .haiku, .solaris, .illumos, .serenity => Dwarf.ElfModule,
-     .wasi, .emscripten => struct {
-         pub fn deinit(self: *@This(), allocator: Allocator) void {
-             _ = self;
-@@ -1807,7 +1808,7 @@ pub fn supportsUnwinding(target: *const std.Target) bool {
-             else => false,
-         },
-         .x86_64 => switch (target.os.tag) {
--            .linux, .netbsd, .freebsd, .openbsd, .macos, .ios, .solaris, .illumos => true,
-+            .linux, .netbsd, .freebsd, .openbsd, .macos, .ios, .solaris, .illumos, .serenity => true,
-             else => false,
-         },
-         .arm, .armeb, .thumb, .thumbeb => switch (target.os.tag) {
-@@ -1815,7 +1816,7 @@ pub fn supportsUnwinding(target: *const std.Target) bool {
-             else => false,
-         },
-         .aarch64, .aarch64_be => switch (target.os.tag) {
--            .linux, .netbsd, .freebsd, .macos, .ios => true,
-+            .linux, .netbsd, .freebsd, .macos, .ios, .serenity => true,
-             else => false,
-         },
-         // Unwinding is possible on other targets but this implementation does
 diff --git a/zig/lib/std/fs/Dir.zig b/zig/lib/std/fs/Dir.zig
 index d097573122eb9d9ae0e6e78936bb8720d3a9bc91..a2baf34716f5fb8b79a6ec7d93ef579d8a42d4b5 100644
 --- a/zig/lib/std/fs/Dir.zig
@@ -278,10 +181,10 @@ index 0414d32ee7d661c9202ad90a47c9adca637aa563..ae0cadf537cbe2bf3e48fea26b5ef4a8
  
  const log = std.log.scoped(.libc_installation);
 diff --git a/zig/src/Compilation/Config.zig b/zig/src/Compilation/Config.zig
-index d8751251da9e24db98c79f7964e0ea1a9bde78c8..ace78931e7d2a3f066463f8f0f8953c882803aa9 100644
+index a4f8eefab7a376797bc71487f212505e5b488ced..2bc983bb28e3f8c29fe373a59ffb363aa3a2ec4c 100644
 --- a/zig/src/Compilation/Config.zig
 +++ b/zig/src/Compilation/Config.zig
-@@ -340,6 +340,7 @@ pub fn resolve(options: Options) ResolveError!Config {
+@@ -463,6 +463,7 @@ pub fn resolve(options: Options) ResolveError!Config {
          break :b if (options.output_mode == .Exe) switch (target.os.tag) {
              .fuchsia,
              .openbsd,
