@@ -526,24 +526,6 @@ ErrorOr<i32> HuffmanTable::read_symbol_non_oob(BigEndianInputBitStream& stream) 
 
 }
 
-class Symbol : public RefCounted<Symbol> {
-public:
-    static NonnullRefPtr<Symbol> create(BilevelSubImage bitmap)
-    {
-        return adopt_ref(*new Symbol(move(bitmap)));
-    }
-
-    BilevelSubImage const& bitmap() const { return m_bitmap; }
-
-private:
-    Symbol(BilevelSubImage bitmap)
-        : m_bitmap(move(bitmap))
-    {
-    }
-
-    BilevelSubImage m_bitmap;
-};
-
 struct SegmentData {
     SegmentData(JBIG2::SegmentHeader header, ReadonlyBytes data)
         : header(header)
@@ -560,10 +542,10 @@ struct SegmentData {
     Vector<SegmentData*> referred_to_segments;
 
     // Set on dictionary segments after they've been decoded.
-    Optional<Vector<NonnullRefPtr<Symbol>>> symbols;
+    Optional<Vector<BilevelSubImage>> symbols;
 
     // Set on pattern segments after they've been decoded.
-    Optional<Vector<NonnullRefPtr<Symbol>>> patterns;
+    Optional<Vector<BilevelSubImage>> patterns;
 
     // Set on code table segments after they've been decoded.
     Optional<Vector<JBIG2::Code>> codes;
@@ -1771,9 +1753,9 @@ struct TextRegionDecodingInputParameters {
     // Only set if uses_huffman_encoding is true.
     JBIG2::HuffmanTable const* symbol_id_table { nullptr }; // "SBSYMCODES" in spec.
 
-    u32 id_symbol_code_length { 0 };       // "SBSYMCODELEN" in spec.
-    Vector<NonnullRefPtr<Symbol>> symbols; // "SBNUMSYMS" / "SBSYMS" in spec.
-    u8 default_pixel { 0 };                // "SBDEFPIXEL" in spec.
+    u32 id_symbol_code_length { 0 }; // "SBSYMCODELEN" in spec.
+    Vector<BilevelSubImage> symbols; // "SBNUMSYMS" / "SBSYMS" in spec.
+    u8 default_pixel { 0 };          // "SBDEFPIXEL" in spec.
 
     JBIG2::CombinationOperator operator_ { JBIG2::CombinationOperator::Or }; // "SBCOMBOP" in spec.
 
@@ -1931,7 +1913,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
     auto read_bitmap = [&](u32 id) -> ErrorOr<BilevelSubImage const*> {
         if (id >= inputs.symbols.size())
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Symbol ID out of range");
-        auto const& symbol = inputs.symbols[id]->bitmap();
+        auto const& symbol = inputs.symbols[id];
 
         bool has_refinement_image = false; // "R_I" in spec.
         if (inputs.uses_refinement_coding) {
@@ -2130,7 +2112,7 @@ struct SymbolDictionaryDecodingInputParameters {
     bool uses_huffman_encoding { false };               // "SDHUFF" in spec.
     bool uses_refinement_or_aggregate_coding { false }; // "SDREFAGG" in spec.
 
-    Vector<NonnullRefPtr<Symbol>> input_symbols; // "SDNUMINSYMS", "SDINSYMS" in spec.
+    Vector<BilevelSubImage> input_symbols; // "SDNUMINSYMS", "SDINSYMS" in spec.
 
     u32 number_of_new_symbols { 0 };      // "SDNUMNEWSYMS" in spec.
     u32 number_of_exported_symbols { 0 }; // "SDNUMEXSYMS" in spec.
@@ -2156,7 +2138,7 @@ struct SymbolContexts {
 };
 
 // 6.5 Symbol Dictionary Decoding Procedure
-static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedure(SymbolDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data)
+static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(SymbolDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data)
 {
     Optional<FixedMemoryStream> stream;
     Optional<BigEndianInputBitStream> bit_stream;
@@ -2210,7 +2192,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
     Optional<RefinementContexts> refinement_contexts;
 
     // This belongs in 6.5.5 1) below, but also needs to be captured by read_bitmap here.
-    Vector<NonnullRefPtr<Symbol>> new_symbols;
+    Vector<BilevelSubImage> new_symbols;
 
     auto read_symbol_bitmap = [&](u32 width, u32 height) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
         // 6.5.8 Symbol bitmap
@@ -2295,13 +2277,13 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
         if (symbol_id >= inputs.input_symbols.size() && symbol_id - inputs.input_symbols.size() >= new_symbols.size())
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Refinement/aggregate symbol ID out of range");
 
-        auto IBO = (symbol_id < inputs.input_symbols.size()) ? inputs.input_symbols[symbol_id] : new_symbols[symbol_id - inputs.input_symbols.size()];
+        auto const& IBO = (symbol_id < inputs.input_symbols.size()) ? inputs.input_symbols[symbol_id] : new_symbols[symbol_id - inputs.input_symbols.size()];
         // Table 18 – Parameters used to decode a symbol's bitmap when REFAGGNINST = 1
         GenericRefinementRegionDecodingInputParameters refinement_inputs;
         refinement_inputs.region_width = width;
         refinement_inputs.region_height = height;
         refinement_inputs.gr_template = inputs.refinement_template;
-        refinement_inputs.reference_bitmap = &IBO->bitmap();
+        refinement_inputs.reference_bitmap = &IBO;
         refinement_inputs.reference_x_offset = refinement_x_offset;
         refinement_inputs.reference_y_offset = refinement_y_offset;
         refinement_inputs.is_typical_prediction_used = false;
@@ -2398,7 +2380,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             // FIXME: Doing this eagerly is pretty wasteful. Decode on demand instead?
             if (!inputs.uses_huffman_encoding || inputs.uses_refinement_or_aggregate_coding) {
                 auto bitmap = TRY(read_symbol_bitmap(symbol_width, height_class_height));
-                new_symbols.append(Symbol::create(bitmap->subbitmap(IntRect(0, 0, bitmap->width(), bitmap->height()))));
+                new_symbols.append(bitmap->subbitmap(IntRect(0, 0, bitmap->width(), bitmap->height())));
             }
 
             // "iii) If SDHUFF is 1 and SDREFAGG is 0, then set:
@@ -2431,7 +2413,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
             for (size_t i = height_class_first_symbol; i < number_of_symbols_decoded; ++i) {
                 auto width = new_symbol_widths[i];
                 IntRect symbol_rect { static_cast<int>(current_column), 0, static_cast<int>(width), static_cast<int>(height_class_height) };
-                new_symbols.append(Symbol::create(collective_bitmap->subbitmap(symbol_rect)));
+                new_symbols.append(collective_bitmap->subbitmap(symbol_rect));
                 current_column += width;
             }
         }
@@ -2479,7 +2461,7 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> symbol_dictionary_decoding_procedu
 
     // "6) The array EXFLAGS now contains 1 for each symbol that is exported from the dictionary, and 0 for each
     //  symbol that is not exported."
-    Vector<NonnullRefPtr<Symbol>> exported_symbols;
+    Vector<BilevelSubImage> exported_symbols;
 
     // "7) Set:
     //      I = 0
@@ -2610,7 +2592,7 @@ struct HalftoneRegionDecodingInputParameters {
     u32 region_height { 0 };                                                            // "HBH" in spec.
     bool uses_mmr { false };                                                            // "HMMR" in spec.
     u8 halftone_template { 0 };                                                         // "HTEMPLATE" in spec.
-    Vector<NonnullRefPtr<Symbol>> patterns;                                             // "HNUMPATS" / "HPATS" in spec.
+    Vector<BilevelSubImage> patterns;                                                   // "HNUMPATS" / "HPATS" in spec.
     bool default_pixel_value { false };                                                 // "HDEFPIXEL" in spec.
     JBIG2::CombinationOperator combination_operator { JBIG2::CombinationOperator::Or }; // "HCOMBOP" in spec.
     bool enable_skip { false };                                                         // "HENABLESKIP" in spec.
@@ -2716,7 +2698,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> halftone_region_decoding_procedure(H
                 if (grayscale_value >= inputs.patterns.size())
                     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Grayscale value out of range");
                 auto const& pattern = inputs.patterns[grayscale_value];
-                pattern->bitmap().composite_onto(*result, { x, y }, to_composition_type(inputs.combination_operator));
+                pattern.composite_onto(*result, { x, y }, to_composition_type(inputs.combination_operator));
             }
         }
     }
@@ -2737,7 +2719,7 @@ struct PatternDictionaryDecodingInputParameters {
 };
 
 // 6.7 Pattern Dictionary Decoding Procedure
-static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_procedure(PatternDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data, Optional<JBIG2::GenericContexts>& contexts)
+static ErrorOr<Vector<BilevelSubImage>> pattern_dictionary_decoding_procedure(PatternDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data, Optional<JBIG2::GenericContexts>& contexts)
 {
     // Table 27 – Parameters used to decode a pattern dictionary's collective bitmap
     GenericRegionDecodingInputParameters generic_inputs;
@@ -2769,11 +2751,11 @@ static ErrorOr<Vector<NonnullRefPtr<Symbol>>> pattern_dictionary_decoding_proced
 
     auto bitmap = TRY(generic_region_decoding_procedure(generic_inputs, contexts));
 
-    Vector<NonnullRefPtr<Symbol>> patterns;
+    Vector<BilevelSubImage> patterns;
     for (u32 gray = 0; gray <= inputs.gray_max; ++gray) {
         int x = gray * inputs.width;
         auto pattern = bitmap->subbitmap({ x, 0, static_cast<int>(inputs.width), static_cast<int>(inputs.height) });
-        patterns.append(Symbol::create(move(pattern)));
+        patterns.append(move(pattern));
     }
 
     dbgln_if(JBIG2_DEBUG, "Pattern dictionary: {} patterns", patterns.size());
@@ -2787,7 +2769,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
 
     // Retrieve referred-to symbols and tables. The spec does this later,
     // but having the custom tables available is convenient for collecting huffman tables below.
-    Vector<NonnullRefPtr<Symbol>> symbols;
+    Vector<BilevelSubImage> symbols;
     Vector<JBIG2::HuffmanTable const*> custom_tables;
     for (auto const* referred_to_segment : segment.referred_to_segments) {
         dbgln_if(JBIG2_DEBUG, "Symbol segment refers to segment id {}", referred_to_segment->header.segment_number);
@@ -3116,7 +3098,7 @@ static ErrorOr<DirectRegionResult> decode_text_region(JBIG2LoadingContext& conte
 
     // Retrieve referred-to symbols and tables. The spec does this later, but the number of symbols is needed to decode the symbol ID Huffman table,
     // and having the custom tables available is convenient for handling 7.4.3.1.2 below.
-    Vector<NonnullRefPtr<Symbol>> symbols; // `symbols.size()` is "SBNUMSYMS" in spec.
+    Vector<BilevelSubImage> symbols; // `symbols.size()` is "SBNUMSYMS" in spec.
     Vector<JBIG2::HuffmanTable const*> custom_tables;
     for (auto const* referred_to_segment : segment.referred_to_segments) {
         dbgln_if(JBIG2_DEBUG, "Text segment refers to segment id {}", referred_to_segment->header.segment_number);
@@ -3530,7 +3512,7 @@ static ErrorOr<DirectRegionResult> decode_halftone_region(JBIG2LoadingContext& c
     // "2) Decode (or retrieve the results of decoding) the referred-to pattern dictionary segment."
     VERIFY(segment.referred_to_segments.size() == 1);
     dbgln_if(JBIG2_DEBUG, "Halftone segment refers to segment id {}", segment.referred_to_segments[0]->header.segment_number);
-    Vector<NonnullRefPtr<Symbol>> patterns = segment.referred_to_segments[0]->patterns.value();
+    Vector<BilevelSubImage> patterns = segment.referred_to_segments[0]->patterns.value();
     if (patterns.is_empty())
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Halftone segment without patterns");
 
@@ -3557,8 +3539,8 @@ static ErrorOr<DirectRegionResult> decode_halftone_region(JBIG2LoadingContext& c
     inputs.grid_vector_x = grid_vector_x;
     inputs.grid_vector_y = grid_vector_y;
     inputs.patterns = move(patterns);
-    inputs.pattern_width = inputs.patterns[0]->bitmap().width();
-    inputs.pattern_height = inputs.patterns[0]->bitmap().height();
+    inputs.pattern_width = inputs.patterns[0].width();
+    inputs.pattern_height = inputs.patterns[0].height();
     auto result = TRY(halftone_region_decoding_procedure(inputs, data, contexts));
 
     return DirectRegionResult { .information_field = information_field, .bitmap = move(result) };
