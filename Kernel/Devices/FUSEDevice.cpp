@@ -131,32 +131,38 @@ ErrorOr<size_t> FUSEDevice::write(OpenFileDescription& description, u64, UserOrK
     });
 }
 
-ErrorOr<NonnullOwnPtr<KBuffer>> FUSEDevice::send_request_and_wait_for_a_reply(OpenFileDescription const& description, Bytes bytes)
+ErrorOr<void> FUSEDevice::queue_request(OpenFileDescription const& description, Bytes bytes, InstanceTracker& instances)
 {
     VERIFY(bytes.size() >= sizeof(fuse_in_header) && bytes.size() <= 0x21000);
-    u64 unique = bit_cast<fuse_in_header*>(bytes.data())->unique;
 
+    auto instance_iterator = instances.active_instances.find(&description);
+    VERIFY(instance_iterator != instances.active_instances.end());
+    auto& requests_for_instance = (*instance_iterator).value;
+
+    TRY(requests_for_instance.try_append({
+        &description,
+        TRY(KBuffer::try_create_with_size("FUSE: Pending request buffer"sv, 0x21000)),
+        TRY(KBuffer::try_create_with_size("FUSE: Response buffer"sv, 0x21000)),
+    }));
+
+    auto& instance = requests_for_instance.last();
+
+    memset(instance.pending_request->data(), 0, instance.pending_request->size());
+    memcpy(instance.pending_request->data(), bytes.data(), bytes.size());
+    instance.buffer_ready = true;
+
+    return {};
+}
+
+ErrorOr<NonnullOwnPtr<KBuffer>> FUSEDevice::send_request_and_wait_for_a_reply(OpenFileDescription const& description, Bytes bytes)
+{
     TRY(m_instances.with([&](auto& instances) -> ErrorOr<void> {
-        auto instance_iterator = instances.active_instances.find(&description);
-        VERIFY(instance_iterator != instances.active_instances.end());
-        auto& requests_for_instance = (*instance_iterator).value;
-
-        TRY(requests_for_instance.try_append({
-            &description,
-            TRY(KBuffer::try_create_with_size("FUSE: Pending request buffer"sv, 0x21000)),
-            TRY(KBuffer::try_create_with_size("FUSE: Response buffer"sv, 0x21000)),
-        }));
-
-        auto& instance = requests_for_instance.last();
-
-        memset(instance.pending_request->data(), 0, instance.pending_request->size());
-        memcpy(instance.pending_request->data(), bytes.data(), bytes.size());
-        instance.buffer_ready = true;
-
-        return {};
+        return queue_request(description, bytes, instances);
     }));
 
     evaluate_block_conditions();
+
+    u64 unique = bit_cast<fuse_in_header*>(bytes.data())->unique;
 
     while (true) {
         auto error_or_buffer = m_instances.with([&](auto& instances) -> ErrorOr<NonnullOwnPtr<KBuffer>> {
