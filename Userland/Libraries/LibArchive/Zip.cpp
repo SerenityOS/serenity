@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2025, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -94,7 +94,10 @@ ErrorOr<bool> Zip::for_each_member(Function<ErrorOr<IterationDecision>(ZipMember
         member.crc32 = central_directory_record.crc32;
         member.modification_time = central_directory_record.modification_time;
         member.modification_date = central_directory_record.modification_date;
-        member.is_directory = central_directory_record.external_attributes & zip_directory_external_attribute || member.name.bytes_as_string_view().ends_with('/'); // FIXME: better directory detection
+        member.is_directory = central_directory_record.external_attributes.msdos & zip_directory_msdos_attribute || member.name.bytes_as_string_view().ends_with('/'); // FIXME: better directory detection
+        if (central_directory_record.made_by_version.made_by == ZipMadeBy::Unix) {
+            member.mode = static_cast<mode_t>(central_directory_record.external_attributes.unix);
+        }
 
         if (TRY(callback(member)) == IterationDecision::Break)
             return false;
@@ -158,7 +161,7 @@ ErrorOr<void> ZipOutputStream::add_member(ZipMember const& member)
     return local_file_header.write(*m_stream);
 }
 
-ErrorOr<ZipOutputStream::MemberInformation> ZipOutputStream::add_member_from_stream(StringView path, Stream& stream, Optional<Core::DateTime> const& modification_time)
+ErrorOr<ZipOutputStream::MemberInformation> ZipOutputStream::add_member_from_stream(StringView path, Stream& stream, Optional<Core::DateTime> const& modification_time, Optional<mode_t> mode)
 {
     auto buffer = TRY(stream.read_until_eof());
 
@@ -190,13 +193,14 @@ ErrorOr<ZipOutputStream::MemberInformation> ZipOutputStream::add_member_from_str
     Crypto::Checksum::CRC32 checksum { buffer.bytes() };
     member.crc32 = checksum.digest();
     member.is_directory = false;
+    member.mode = mode;
 
     TRY(add_member(member));
 
     return MemberInformation { compression_ratio, compressed_size };
 }
 
-ErrorOr<void> ZipOutputStream::add_directory(StringView name, Optional<Core::DateTime> const& modification_time)
+ErrorOr<void> ZipOutputStream::add_directory(StringView name, Optional<Core::DateTime> const& modification_time, Optional<mode_t> mode)
 {
     Archive::ZipMember member {};
     member.name = TRY(String::from_utf8(name));
@@ -205,6 +209,7 @@ ErrorOr<void> ZipOutputStream::add_directory(StringView name, Optional<Core::Dat
     member.uncompressed_size = 0;
     member.crc32 = 0;
     member.is_directory = true;
+    member.mode = mode;
 
     if (modification_time.has_value()) {
         member.modification_date = to_packed_dos_date(modification_time->year(), modification_time->month(), modification_time->day());
@@ -224,7 +229,7 @@ ErrorOr<void> ZipOutputStream::finish()
     for (ZipMember const& member : m_members) {
         auto zip_version = minimum_version_needed(member.compression_method);
         CentralDirectoryRecord central_directory_record {
-            .made_by_version = zip_version,
+            .made_by_version = { .version = static_cast<u8>(zip_version), .made_by = ZipMadeBy::Unix },
             .minimum_version = zip_version,
             .general_purpose_flags = { .flags = 0 },
             .compression_method = member.compression_method,
@@ -238,7 +243,10 @@ ErrorOr<void> ZipOutputStream::finish()
             .comment_length = 0,
             .start_disk = 0,
             .internal_attributes = 0,
-            .external_attributes = member.is_directory ? zip_directory_external_attribute : 0,
+            .external_attributes = {
+                .msdos = static_cast<u16>(member.is_directory ? zip_directory_msdos_attribute : 0),
+                .unix = static_cast<u16>(member.mode.value_or(0)),
+            },
             .local_file_header_offset = file_header_offset, // FIXME: we assume the wrapped output stream was never written to before us
             .name = reinterpret_cast<u8 const*>(member.name.bytes_as_string_view().characters_without_null_termination()),
             .extra_data = nullptr,

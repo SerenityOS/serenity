@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andrés Vieira <anvieiravazquez@gmail.com>
+ * Copyright (c) 2025, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -44,7 +45,8 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
         return true;
     }
     MUST(Core::Directory::create(LexicalPath(zip_member.name.to_byte_string()).parent(), Core::Directory::CreateDirectories::Yes));
-    auto new_file_or_error = Core::File::open(zip_member.name.to_byte_string(), Core::File::OpenMode::Write);
+    mode_t file_permissions = zip_member.mode.value_or(0644) & 0777;
+    auto new_file_or_error = Core::File::open(zip_member.name.to_byte_string(), Core::File::OpenMode::Write, file_permissions);
     if (new_file_or_error.is_error()) {
         warnln("Can't write file {}: {}", zip_member.name, new_file_or_error.release_error());
         return false;
@@ -196,6 +198,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (adjust_modification_time(directory).is_error()) {
             warnln("Failed setting modification time for directory {}", directory.name);
             return 1;
+        }
+
+        if (directory.mode.has_value()) {
+            if (Core::System::chmod(directory.name, directory.mode.value() & 0777).is_error()) {
+                warnln("Failed setting permissions for directory {}", directory.name);
+                return 1;
+            }
         }
     }
 
