@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2025, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,6 +33,7 @@ static bool read_helper(ReadonlyBytes buffer, T* self)
 }
 
 // NOTE: Due to the format of zip files compression is streamed and decompression is random access.
+// Zip format specification: https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
 
 static constexpr auto signature_length = 4;
 
@@ -109,10 +110,18 @@ union ZipGeneralPurposeFlags {
 };
 static_assert(sizeof(ZipGeneralPurposeFlags) == sizeof(u16));
 
+enum class ZipMadeBy : u8 {
+    MSDOS = 0,
+    Unix = 3,
+};
+
 struct [[gnu::packed]] CentralDirectoryRecord {
     static constexpr Array<u8, signature_length> signature = { 0x50, 0x4b, 0x01, 0x02 }; // 'PK\x01\x02'
 
-    u16 made_by_version;
+    struct {
+        u8 version;
+        ZipMadeBy made_by;
+    } made_by_version;
     u16 minimum_version;
     ZipGeneralPurposeFlags general_purpose_flags;
     ZipCompressionMethod compression_method;
@@ -126,7 +135,10 @@ struct [[gnu::packed]] CentralDirectoryRecord {
     u16 comment_length;
     u16 start_disk;
     u16 internal_attributes;
-    u32 external_attributes;
+    struct {
+        u16 msdos;
+        u16 unix;
+    } external_attributes;
     u32 local_file_header_offset;
     u8 const* name;
     u8 const* extra_data;
@@ -182,7 +194,7 @@ struct [[gnu::packed]] CentralDirectoryRecord {
         return signature.size() + (sizeof(CentralDirectoryRecord) - (sizeof(u8*) * 3)) + name_length + extra_data_length + comment_length;
     }
 };
-static constexpr u32 zip_directory_external_attribute = 1 << 4;
+static constexpr u16 zip_directory_msdos_attribute = 1 << 4;
 
 struct [[gnu::packed]] LocalFileHeader {
     static constexpr Array<u8, signature_length> signature = { 0x50, 0x4b, 0x03, 0x04 }; // 'PK\x03\x04'
@@ -250,6 +262,7 @@ struct ZipMember {
     bool is_directory;
     DOSPackedTime modification_time;
     DOSPackedDate modification_date;
+    Optional<mode_t> mode;
 };
 
 class Zip {
@@ -282,11 +295,11 @@ public:
     ZipOutputStream(NonnullOwnPtr<Stream>);
 
     ErrorOr<void> add_member(ZipMember const&);
-    ErrorOr<MemberInformation> add_member_from_stream(StringView, Stream&, Optional<Core::DateTime> const& = {});
+    ErrorOr<MemberInformation> add_member_from_stream(StringView, Stream&, Optional<Core::DateTime> const& = {}, Optional<mode_t> mode = {});
 
     // NOTE: This does not add any of the files within the directory,
     //       it just adds an entry for it.
-    ErrorOr<void> add_directory(StringView, Optional<Core::DateTime> const& = {});
+    ErrorOr<void> add_directory(StringView, Optional<Core::DateTime> const& = {}, Optional<mode_t> mode = {});
 
     ErrorOr<void> finish();
 
