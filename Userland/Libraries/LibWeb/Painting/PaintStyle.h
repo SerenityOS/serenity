@@ -51,7 +51,7 @@ public:
     ReadonlySpan<ColorStop> color_stops() const { return m_color_stops; }
     Optional<float> repeat_length() const { return m_repeat_length; }
 
-    virtual ~SVGGradientPaintStyle() {};
+    virtual ~SVGGradientPaintStyle() = default;
 
 protected:
     Vector<ColorStop, 4> m_color_stops;

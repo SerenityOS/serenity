@@ -18,7 +18,7 @@ public:
     static NonnullRefPtr<PCIDeviceAttributeSysFSComponent> create(PCIDeviceSysFSDirectory const& device, PCI::RegisterOffset offset, size_t field_bytes_width);
 
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
-    virtual ~PCIDeviceAttributeSysFSComponent() {};
+    virtual ~PCIDeviceAttributeSysFSComponent() = default;
 
     virtual StringView name() const override;
 

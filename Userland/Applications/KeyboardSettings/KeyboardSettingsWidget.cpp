@@ -115,7 +115,7 @@ private:
 
 class KeymapModel final : public GUI::Model {
 public:
-    KeymapModel() {};
+    KeymapModel() = default;
 
     int row_count(GUI::ModelIndex const&) const override { return m_data.size(); }
     int column_count(GUI::ModelIndex const&) const override { return 1; }

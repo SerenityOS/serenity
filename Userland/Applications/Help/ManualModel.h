@@ -19,7 +19,7 @@ public:
         return adopt_nonnull_ref_or_enomem(new (nothrow) ManualModel);
     }
 
-    virtual ~ManualModel() override {};
+    virtual ~ManualModel() override = default;
 
     Optional<GUI::ModelIndex> index_from_path(StringView) const;
 

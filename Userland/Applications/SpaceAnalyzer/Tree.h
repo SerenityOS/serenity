@@ -49,7 +49,7 @@ public:
     {
         return adopt_nonnull_own_or_enomem(new (nothrow) Tree(move(root_name)));
     }
-    ~Tree() {};
+    ~Tree() = default;
 
     TreeNode& root()
     {
