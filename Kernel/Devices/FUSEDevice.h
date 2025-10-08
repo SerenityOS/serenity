@@ -10,6 +10,7 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/SpinlockProtected.h>
+#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel {
 
@@ -42,6 +43,7 @@ private:
         NonnullOwnPtr<KBuffer> pending_request;
         NonnullOwnPtr<KBuffer> response;
         bool buffer_ready = false;
+        bool timed_out = false;
         bool response_ready = false;
         bool expecting_header = true;
     };
@@ -53,6 +55,7 @@ private:
 
     ErrorOr<void> queue_request(OpenFileDescription const& description, Bytes bytes, InstanceTracker& instances);
 
+    WaitQueue instance_queue {};
     SpinlockProtected<InstanceTracker, LockRank::None> m_instances;
 };
 

@@ -280,6 +280,10 @@ struct fuse_init_out {
     uint32_t unused[7];
 };
 
+struct fuse_interrupt_in {
+    uint64_t unique;
+};
+
 struct fuse_in_header {
     uint32_t len;
     uint32_t opcode;

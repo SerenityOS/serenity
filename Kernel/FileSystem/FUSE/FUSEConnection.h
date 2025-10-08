@@ -65,12 +65,31 @@ public:
 
         u64 unique = m_unique++;
         auto request = TRY(create_request(opcode, nodeid, unique, request_body));
-        auto response = TRY(device->send_request_and_wait_for_a_reply(m_description, request->bytes()));
+        auto response_or_error = device->send_request_and_wait_for_a_reply(m_description, request->bytes());
+
+        OwnPtr<KBuffer> response = nullptr;
+
+        if (response_or_error.is_error()) {
+            if (response_or_error.error().code() == EINTR) {
+                u64 interrupt_unique = m_unique++;
+                fuse_interrupt_in interrupt_request_body { unique };
+                ReadonlyBytes interrupt_request_bytes { &interrupt_request_body, sizeof(fuse_interrupt_in) };
+                auto interrupt_request = TRY(create_request(FUSEOpcode::FUSE_INTERRUPT, nodeid, interrupt_unique, interrupt_request_bytes));
+                response = TRY(device->send_request_and_wait_for_a_reply(m_description, interrupt_request->bytes()));
+                unique = interrupt_unique;
+            } else {
+                return response_or_error.release_error();
+            }
+        } else {
+            response = response_or_error.release_value();
+        }
+
+        VERIFY(response);
 
         if (validate_response(*response, unique).is_error())
             return Error::from_errno(EIO);
 
-        return response;
+        return response.release_nonnull();
     }
 
     ~FUSEConnection()

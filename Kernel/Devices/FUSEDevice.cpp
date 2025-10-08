@@ -10,6 +10,7 @@
 #include <Kernel/Devices/FUSEDevice.h>
 #include <Kernel/FileSystem/FUSE/Definitions.h>
 #include <Kernel/FileSystem/FUSE/FUSEConnection.h>
+#include <Kernel/Time/TimerQueue.h>
 
 namespace Kernel {
 
@@ -110,10 +111,12 @@ ErrorOr<size_t> FUSEDevice::write(OpenFileDescription& description, u64, UserOrK
             dbgln_if(FUSE_DEBUG, "header: length: {}, error: {}, unique: {}", header.len, header.error, header.unique);
             memcpy(instance.response->data(), &header, sizeof(fuse_out_header));
 
-            if (header.len > sizeof(fuse_out_header))
+            if (header.len > sizeof(fuse_out_header)) {
                 instance.expecting_header = false;
-            else
+            } else {
                 instance.response_ready = true;
+                instance_queue.notify_all();
+            }
         } else {
             fuse_out_header* existing_header = bit_cast<fuse_out_header*>(instance.response->data());
 
@@ -122,6 +125,7 @@ ErrorOr<size_t> FUSEDevice::write(OpenFileDescription& description, u64, UserOrK
                 return Error::from_errno(EINVAL);
 
             instance.response_ready = true;
+            instance_queue.notify_all();
             u64 length = existing_header->len - sizeof(fuse_out_header);
             dbgln_if(FUSE_DEBUG, "request: response length: {}", length);
             TRY(buffer.read(instance.response->data() + sizeof(fuse_out_header), 0, length));
@@ -164,40 +168,71 @@ ErrorOr<NonnullOwnPtr<KBuffer>> FUSEDevice::send_request_and_wait_for_a_reply(Op
 
     u64 unique = bit_cast<fuse_in_header*>(bytes.data())->unique;
 
-    while (true) {
-        auto error_or_buffer = m_instances.with([&](auto& instances) -> ErrorOr<NonnullOwnPtr<KBuffer>> {
+    ErrorOr<OwnPtr<KBuffer>> reply_or_error = nullptr;
+    auto receive_reply = [&](auto& instances) -> bool {
+        auto instance_iterator = instances.active_instances.find(&description);
+        VERIFY(instance_iterator != instances.active_instances.end());
+        auto& requests_for_instance = (*instance_iterator).value;
+
+        for (size_t i = 0; i < requests_for_instance.size(); ++i) {
+            if (bit_cast<fuse_in_header*>(requests_for_instance[i].pending_request->data())->unique != unique)
+                continue;
+            if (requests_for_instance[i].timed_out) {
+                requests_for_instance.remove(i);
+                reply_or_error = ETIMEDOUT;
+                return true;
+            }
+            if (!requests_for_instance[i].response_ready)
+                continue;
+            reply_or_error = KBuffer::try_create_with_bytes("FUSEDevice: Response"sv, requests_for_instance[i].response->bytes());
+            requests_for_instance.remove(i);
+            return true;
+        }
+
+        return false;
+    };
+
+    auto set_timed_out = [&]() {
+        m_instances.with([&](auto& instances) {
             auto instance_iterator = instances.active_instances.find(&description);
             VERIFY(instance_iterator != instances.active_instances.end());
             auto& requests_for_instance = (*instance_iterator).value;
-            Optional<size_t> ready_index;
 
-            for (size_t i = 0; i < requests_for_instance.size(); ++i) {
-                if (requests_for_instance[i].response_ready) {
-                    if (requests_for_instance[i].response->size() < sizeof(fuse_out_header))
-                        continue;
-                    if (bit_cast<fuse_out_header*>(requests_for_instance[i].response->data())->unique != unique)
-                        continue;
-                    ready_index = i;
-                    break;
-                }
+            for (auto& request : requests_for_instance) {
+                if (bit_cast<fuse_in_header*>(request.pending_request->data())->unique != unique)
+                    continue;
+                request.timed_out = true;
+                break;
             }
-
-            if (!ready_index.has_value())
-                return EAGAIN;
-
-            auto result = KBuffer::try_create_with_bytes("FUSEDevice: Response"sv, requests_for_instance[*ready_index].response->bytes());
-            requests_for_instance.remove(*ready_index);
-
-            return result;
         });
+        instance_queue.notify_all();
+    };
 
-        if (error_or_buffer.is_error() && error_or_buffer.error().code() == EAGAIN) {
-            Scheduler::yield();
-            continue;
-        }
+    auto timer = TRY(try_make_ref_counted<Timer>());
 
-        return error_or_buffer;
+    auto deadline = TimeManagement::the().current_time(CLOCK_MONOTONIC_COARSE) + Duration::from_seconds(1);
+    auto timer_was_added = TimerQueue::the().add_timer_without_id(*timer, CLOCK_MONOTONIC_COARSE, deadline, [&] {
+        set_timed_out();
+    });
+
+    if (!timer_was_added)
+        // Somehow, the deadline elapsed before the timer was queued.
+        // Deal with that by just running the handler manually.
+        set_timed_out();
+
+    auto wait_status = instance_queue.wait_until(m_instances, receive_reply);
+    TimerQueue::the().cancel_timer(*timer);
+
+    if (wait_status.is_error()) {
+        VERIFY(wait_status.error().code() == EINTR);
+        return wait_status.release_error();
     }
+
+    if (reply_or_error.is_error())
+        return reply_or_error.release_error();
+
+    auto reply = reply_or_error.release_value();
+    return reply.release_nonnull();
 }
 
 void FUSEDevice::shutdown_for_description(OpenFileDescription const& description)
