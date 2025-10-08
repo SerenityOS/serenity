@@ -74,6 +74,7 @@ public:
     void composite_onto(BilevelImage& out, IntPoint position, CompositionType) const;
 
     BilevelSubImage subbitmap(Gfx::IntRect const& rect) const;
+    BilevelSubImage as_subbitmap() const;
 
     ErrorOr<NonnullRefPtr<Gfx::Bitmap>> to_gfx_bitmap() const;
     ErrorOr<ByteBuffer> to_byte_buffer() const;
