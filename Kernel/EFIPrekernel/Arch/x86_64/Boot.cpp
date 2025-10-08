@@ -76,9 +76,9 @@ namespace Kernel {
         .8byte .Lgdt                  /* base address */
     .previous
     )"
-                 :
-                 : "r"(rdi), [cr3] "r"(cr3), [kernel_sp] "r"(kernel_sp), [kernel_entry] "r"(kernel_entry)
-                 : "rax", "memory");
+        :
+        : "r"(rdi), [cr3] "r"(cr3), [kernel_sp] "r"(kernel_sp), [kernel_entry] "r"(kernel_entry)
+        : "rax", "memory");
 
     __builtin_unreachable();
 }

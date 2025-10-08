@@ -158,12 +158,12 @@ struct Options {
         return typ { __VA_ARGS__ };          \
     }                                        \
     typ name = default_##name();             \
-    Options& set_##name(typ new_value)&      \
+    Options& set_##name(typ new_value) &     \
     {                                        \
         name = move(new_value);              \
         return *this;                        \
     }                                        \
-    Options&& set_##name(typ new_value)&&    \
+    Options&& set_##name(typ new_value) &&   \
     {                                        \
         name = move(new_value);              \
         return move(*this);                  \
@@ -190,8 +190,8 @@ struct Options {
     OPTION_WITH_DEFAULTS(bool, validate_certificates, true)
     OPTION_WITH_DEFAULTS(bool, allow_self_signed_certificates, false)
     OPTION_WITH_DEFAULTS(Optional<Vector<Certificate>>, root_certificates, )
-    OPTION_WITH_DEFAULTS(Function<void(AlertDescription)>, alert_handler, [](auto) {})
-    OPTION_WITH_DEFAULTS(Function<void()>, finish_callback, [] {})
+    OPTION_WITH_DEFAULTS(Function<void(AlertDescription)>, alert_handler, [](auto) { })
+    OPTION_WITH_DEFAULTS(Function<void()>, finish_callback, [] { })
     OPTION_WITH_DEFAULTS(Function<Vector<Certificate>()>, certificate_provider, [] { return Vector<Certificate> {}; })
     OPTION_WITH_DEFAULTS(bool, enable_extended_master_secret, true)
 

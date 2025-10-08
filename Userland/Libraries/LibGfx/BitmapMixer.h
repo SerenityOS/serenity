@@ -18,7 +18,9 @@ public:
     };
 
     BitmapMixer(Bitmap& bitmap)
-        : m_bitmap(bitmap) {};
+        : m_bitmap(bitmap)
+    {
+    }
 
     void mix_with(Bitmap&, MixingMethod);
 

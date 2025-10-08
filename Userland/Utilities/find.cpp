@@ -56,8 +56,7 @@ struct FileData {
     // The file's basename, relative to the directory.
     char const* basename { nullptr };
     // Optionally, cached information as returned by stat/lstat/fstatat.
-    struct stat stat {
-    };
+    struct stat stat {};
     bool stat_is_valid : 1 { false };
     // File type as returned from readdir(), or DT_UNKNOWN.
     unsigned char d_type { DT_UNKNOWN };

@@ -16,7 +16,9 @@ public:
     virtual StringView filter_name() const override { return "Laplacian Cardinal"sv; }
 
     LaplaceCardinal(ImageEditor* editor)
-        : Filter(editor) {};
+        : Filter(editor)
+    {
+    }
 };
 
 }

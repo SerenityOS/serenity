@@ -393,7 +393,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 
     // FIXME: Maybe seek mode should be in an options dialog instead. The playback menu may get crowded.
     //        For now, leave it here for convenience.
-    m_use_fast_seeking = GUI::Action::create_checkable("&Fast Seeking", [&](auto&) {});
+    m_use_fast_seeking = GUI::Action::create_checkable("&Fast Seeking", [&](auto&) { });
     playback_menu->add_action(*m_use_fast_seeking);
     set_seek_mode(Media::PlaybackManager::DEFAULT_SEEK_MODE);
 

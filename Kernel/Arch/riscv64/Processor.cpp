@@ -54,7 +54,7 @@ static void store_vector_state(FPUState& fpu_state)
 
     .option pop
     )" ::"r"(fpu_state.v)
-                 : "t0", "memory");
+        : "t0", "memory");
 }
 
 static void load_vector_state(FPUState const& fpu_state)
@@ -84,7 +84,7 @@ static void load_vector_state(FPUState const& fpu_state)
 
     .option pop
     )" ::"r"(fpu_state.v)
-                 : "t0", "memory");
+        : "t0", "memory");
 
     RISCV64::CSR::write<RISCV64::CSR::Address::VSTART_>(fpu_state.vstart);
     RISCV64::CSR::write<RISCV64::CSR::Address::VCSR>(fpu_state.vcsr);
@@ -230,9 +230,9 @@ void ProcessorBase<T>::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
     auto addr = vaddr.get();
     while (page_count > 0) {
         asm volatile("sfence.vma %0"
-                     :
-                     : "r"(addr)
-                     : "memory");
+            :
+            : "r"(addr)
+            : "memory");
         addr += PAGE_SIZE;
         page_count--;
     }

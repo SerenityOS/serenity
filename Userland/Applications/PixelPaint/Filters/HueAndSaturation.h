@@ -18,7 +18,9 @@ public:
     virtual StringView filter_name() const override { return "Hue/Saturation"sv; }
 
     HueAndSaturation(ImageEditor* editor)
-        : InplaceFilter(editor) {};
+        : InplaceFilter(editor)
+    {
+    }
 
 private:
     float m_hue { 0 };

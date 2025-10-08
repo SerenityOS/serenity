@@ -50,7 +50,7 @@ protected:
         return *m_inactive_window_icon;
     }
 
-    virtual void palette_changed() {};
+    virtual void palette_changed() { }
 
 private:
     virtual void paint_preview(GUI::PaintEvent&) = 0;

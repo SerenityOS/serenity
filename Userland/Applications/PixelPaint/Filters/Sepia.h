@@ -18,7 +18,9 @@ public:
     virtual StringView filter_name() const override { return "Sepia"sv; }
 
     Sepia(ImageEditor* editor)
-        : Filter(editor) {};
+        : Filter(editor)
+    {
+    }
 
 private:
     float m_amount { 1.0f };

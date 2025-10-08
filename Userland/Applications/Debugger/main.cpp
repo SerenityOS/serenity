@@ -245,8 +245,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     g_debug_session = create_debug_session(command, pid_to_debug);
 
-    struct sigaction sa {
-    };
+    struct sigaction sa {};
     sa.sa_handler = handle_sigint;
     TRY(Core::System::sigaction(SIGINT, &sa, nullptr));
 

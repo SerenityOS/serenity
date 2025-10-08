@@ -18,10 +18,10 @@
 #define TRY_OR_THROW_PARSE_ERROR(expr) ({                                              \
     /* Ignore -Wshadow to allow nesting the macro. */                                  \
     AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                   \
-                         auto&& _value_or_error = expr;)                               \
+        auto&& _value_or_error = expr;)                                                \
     if (_value_or_error.is_error()) {                                                  \
         AK_IGNORE_DIAGNOSTIC("-Wshadow",                                               \
-                             auto _error = _value_or_error.release_error();)           \
+            auto _error = _value_or_error.release_error();)                            \
         if (_error.is_errno() && _error.code() == ENOMEM)                              \
             return create<AST::SyntaxError>("OOM"_string);                             \
         return create<AST::SyntaxError>(MUST(String::formatted("Error: {}", _error))); \
@@ -32,11 +32,11 @@
 #define TRY_OR_RESOLVE_TO_ERROR_STRING(expr) ({                                   \
     /* Ignore -Wshadow to allow nesting the macro. */                             \
     AK_IGNORE_DIAGNOSTIC("-Wshadow",                                              \
-                         auto&& _value_or_error = expr;                           \
-                         String _string_value;)                                   \
+        auto&& _value_or_error = expr;                                            \
+        String _string_value;)                                                    \
     if (_value_or_error.is_error()) {                                             \
         AK_IGNORE_DIAGNOSTIC("-Wshadow",                                          \
-                             auto _error = _value_or_error.release_error();)      \
+            auto _error = _value_or_error.release_error();)                       \
         if (_error.is_errno() && _error.code() == ENOMEM)                         \
             _string_value = "OOM"_string;                                         \
         else                                                                      \
@@ -45,16 +45,16 @@
     _value_or_error.is_error() ? _string_value : _value_or_error.release_value(); \
 })
 
-#define TRY_OR(expr, catch_expr) ({                                          \
-    /* Ignore -Wshadow to allow nesting the macro. */                        \
-    AK_IGNORE_DIAGNOSTIC("-Wshadow",                                         \
-                         auto&& _value_or_error = expr;)                     \
-    if (_value_or_error.is_error()) {                                        \
-        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                     \
-                             auto _error = _value_or_error.release_error();) \
-        catch_expr;                                                          \
-    }                                                                        \
-    _value_or_error.release_value();                                         \
+#define TRY_OR(expr, catch_expr) ({                         \
+    /* Ignore -Wshadow to allow nesting the macro. */       \
+    AK_IGNORE_DIAGNOSTIC("-Wshadow",                        \
+        auto&& _value_or_error = expr;)                     \
+    if (_value_or_error.is_error()) {                       \
+        AK_IGNORE_DIAGNOSTIC("-Wshadow",                    \
+            auto _error = _value_or_error.release_error();) \
+        catch_expr;                                         \
+    }                                                       \
+    _value_or_error.release_value();                        \
 })
 
 namespace Shell {

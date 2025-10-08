@@ -36,7 +36,9 @@ struct ClassViewNode {
     ClassViewNode* parent { nullptr };
 
     explicit ClassViewNode(StringView name)
-        : name(name) {};
+        : name(name)
+    {
+    }
 };
 
 class ClassViewModel final : public GUI::Model {

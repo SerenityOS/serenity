@@ -49,9 +49,9 @@ namespace Kernel {
         wfi
         j 1b
     )"
-                 :
-                 : "r"(a0), "r"(sp), [satp] "r"(satp), [kernel_sp] "r"(kernel_sp), [kernel_entry] "r"(kernel_entry)
-                 : "t0", "memory");
+        :
+        : "r"(a0), "r"(sp), [satp] "r"(satp), [kernel_sp] "r"(kernel_sp), [kernel_entry] "r"(kernel_entry)
+        : "t0", "memory");
 
     __builtin_unreachable();
 }

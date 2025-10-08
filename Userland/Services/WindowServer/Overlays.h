@@ -57,7 +57,7 @@ protected:
 
     void set_rect(Gfx::IntRect const&);
 
-    virtual void rect_changed(Gfx::IntRect const&) {};
+    virtual void rect_changed(Gfx::IntRect const&) { }
 
 private:
     [[nodiscard]] bool apply_render_rect()

@@ -24,9 +24,9 @@ static SBIErrorOr<long> sbi_ecall0(EID extension_id, u32 function_id)
     register unsigned long a6 asm("a6") = function_id;
     register unsigned long a7 asm("a7") = to_underlying(extension_id);
     asm volatile("ecall"
-                 : "=r"(a0), "=r"(a1)
-                 : "r"(a6), "r"(a7)
-                 : "memory");
+        : "=r"(a0), "=r"(a1)
+        : "r"(a6), "r"(a7)
+        : "memory");
     if (a0 == to_underlying(SBIError::Success))
         return static_cast<long>(a1);
 
@@ -40,9 +40,9 @@ static SBIErrorOr<long> sbi_ecall1(EID extension_id, u32 function_id, unsigned l
     register unsigned long a6 asm("a6") = function_id;
     register unsigned long a7 asm("a7") = to_underlying(extension_id);
     asm volatile("ecall"
-                 : "+r"(a0), "=r"(a1)
-                 : "r"(a0), "r"(a6), "r"(a7)
-                 : "memory");
+        : "+r"(a0), "=r"(a1)
+        : "r"(a0), "r"(a6), "r"(a7)
+        : "memory");
     if (a0 == to_underlying(SBIError::Success))
         return static_cast<long>(a1);
 
@@ -56,9 +56,9 @@ static SBIErrorOr<long> sbi_ecall2(EID extension_id, u32 function_id, unsigned l
     register unsigned long a6 asm("a6") = function_id;
     register unsigned long a7 asm("a7") = to_underlying(extension_id);
     asm volatile("ecall"
-                 : "+r"(a0), "+r"(a1)
-                 : "r"(a0), "r"(a1), "r"(a6), "r"(a7)
-                 : "memory");
+        : "+r"(a0), "+r"(a1)
+        : "r"(a0), "r"(a1), "r"(a6), "r"(a7)
+        : "memory");
     if (a0 == to_underlying(SBIError::Success))
         return static_cast<long>(a1);
 
@@ -112,9 +112,9 @@ static long sbi_legacy_ecall0(LegacyEID extension_id)
     register unsigned long a0 asm("a0");
     register unsigned long a7 asm("a7") = to_underlying(extension_id);
     asm volatile("ecall"
-                 : "=r"(a0)
-                 : "r"(a7)
-                 : "memory");
+        : "=r"(a0)
+        : "r"(a7)
+        : "memory");
     return static_cast<long>(a0);
 }
 
@@ -123,9 +123,9 @@ static long sbi_legacy_ecall1(LegacyEID extension_id, unsigned long arg0)
     register unsigned long a0 asm("a0") = arg0;
     register unsigned long a7 asm("a7") = to_underlying(extension_id);
     asm volatile("ecall"
-                 : "+r"(a0)
-                 : "r"(a0), "r"(a7)
-                 : "memory");
+        : "+r"(a0)
+        : "r"(a0), "r"(a7)
+        : "memory");
     return static_cast<long>(a0);
 }
 

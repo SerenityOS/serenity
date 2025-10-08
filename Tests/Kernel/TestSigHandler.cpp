@@ -18,7 +18,7 @@ static void signal_handler(int)
 
 TEST_CASE(default_handlers)
 {
-    struct sigaction current_action { };
+    struct sigaction current_action {};
 
     int rc = sigaction(SIGUSR2, nullptr, &current_action);
 
@@ -37,7 +37,7 @@ TEST_CASE(handlers_after_fork)
     pid_t pid = fork();
 
     if (pid == 0) {
-        struct sigaction current_action { };
+        struct sigaction current_action {};
         rc = sigaction(SIGUSR2, nullptr, &current_action);
         EXPECT_EQ(rc, 0);
         EXPECT_EQ(current_action.sa_handler, signal_handler);

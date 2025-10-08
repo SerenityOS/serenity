@@ -48,7 +48,7 @@ ErrorOr<BoxList> Reader::read_entire_file()
             return OptionalNone {};
         }
     };
-    return read_entire_file((ErrorOr<Optional<NonnullOwnPtr<Box>>>(*)(BoxType, ConstrainedStream&))(make_top_level_box));
+    return read_entire_file((ErrorOr<Optional<NonnullOwnPtr<Box>>> (*)(BoxType, ConstrainedStream&))(make_top_level_box));
 }
 
 ErrorOr<BoxList> Reader::read_entire_file(BoxCallback box_factory)

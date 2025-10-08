@@ -19,7 +19,9 @@ struct MountInfo {
 class TreeNode final {
 public:
     TreeNode(ByteString name)
-        : m_name(move(name)) {};
+        : m_name(move(name))
+    {
+    }
 
     ByteString name() const { return m_name; }
     i64 area() const { return m_area; }
@@ -58,6 +60,8 @@ public:
 
 private:
     Tree(ByteString root_name)
-        : m_root(move(root_name)) {};
+        : m_root(move(root_name))
+    {
+    }
     TreeNode m_root;
 };

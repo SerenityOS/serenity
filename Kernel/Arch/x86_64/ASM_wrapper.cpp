@@ -18,8 +18,8 @@ UNMAP_AFTER_INIT u64 read_xcr0()
 {
     u32 eax, edx;
     asm volatile("xgetbv"
-                 : "=a"(eax), "=d"(edx)
-                 : "c"(XCR_XFEATURE_ENABLED_MASK));
+        : "=a"(eax), "=d"(edx)
+        : "c"(XCR_XFEATURE_ENABLED_MASK));
     return eax + ((u64)edx << 32);
 }
 
@@ -35,7 +35,7 @@ void stac()
     if (!Processor::current().has_feature(CPUFeature::SMAP))
         return;
     asm volatile("stac" ::
-                     : "cc");
+            : "cc");
 }
 
 void clac()
@@ -43,7 +43,7 @@ void clac()
     if (!Processor::current().has_feature(CPUFeature::SMAP))
         return;
     asm volatile("clac" ::
-                     : "cc");
+            : "cc");
 }
 
 UNMAP_AFTER_INIT void write_cr0(FlatPtr value)
@@ -83,7 +83,7 @@ void write_cr3(FlatPtr cr3)
 {
     // NOTE: If you're here from a GPF crash, it's very likely that a PDPT entry is incorrect, not this!
     asm volatile("mov %%rax, %%cr3" ::"a"(cr3)
-                 : "memory");
+        : "memory");
 }
 
 FlatPtr read_cr4()
