@@ -132,6 +132,11 @@ BilevelSubImage BilevelImage::subbitmap(Gfx::IntRect const& rect) const
     return BilevelSubImage { *this, rect };
 }
 
+BilevelSubImage BilevelImage::as_subbitmap() const
+{
+    return subbitmap(IntRect(0, 0, m_width, m_height));
+}
+
 ErrorOr<NonnullRefPtr<Gfx::Bitmap>> BilevelImage::to_gfx_bitmap() const
 {
     auto bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { m_width, m_height }));

@@ -1956,7 +1956,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
         auto result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, *decoder, refinement_contexts.value()));
-        refinement_result = result->subbitmap(IntRect(0, 0, result->width(), result->height()));
+        refinement_result = result->as_subbitmap();
         return &refinement_result.value();
     };
 
@@ -2380,7 +2380,7 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
             // FIXME: Doing this eagerly is pretty wasteful. Decode on demand instead?
             if (!inputs.uses_huffman_encoding || inputs.uses_refinement_or_aggregate_coding) {
                 auto bitmap = TRY(read_symbol_bitmap(symbol_width, height_class_height));
-                new_symbols.append(bitmap->subbitmap(IntRect(0, 0, bitmap->width(), bitmap->height())));
+                new_symbols.append(bitmap->as_subbitmap());
             }
 
             // "iii) If SDHUFF is 1 and SDREFAGG is 0, then set:
@@ -3764,7 +3764,7 @@ static ErrorOr<void> decode_immediate_generic_refinement_region(JBIG2LoadingCont
     inputs.region_width = information_field.width;
     inputs.region_height = information_field.height;
     inputs.gr_template = arithmetic_coding_template;
-    auto subbitmap = reference_bitmap->subbitmap(IntRect(0, 0, reference_bitmap->width(), reference_bitmap->height()));
+    auto subbitmap = reference_bitmap->as_subbitmap();
     inputs.reference_bitmap = &subbitmap;
     inputs.reference_x_offset = 0;
     inputs.reference_y_offset = 0;
