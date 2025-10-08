@@ -51,6 +51,8 @@ private:
         Vector<OpenFileDescription const*> closing_instances;
     };
 
+    ErrorOr<void> queue_request(OpenFileDescription const& description, Bytes bytes, InstanceTracker& instances);
+
     SpinlockProtected<InstanceTracker, LockRank::None> m_instances;
 };
 
