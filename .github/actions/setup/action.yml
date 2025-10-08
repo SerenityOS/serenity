@@ -24,18 +24,18 @@ runs:
         set -e
 
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main'
+        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-20 main'
 
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 
         sudo apt-get update
-        sudo apt-get install ccache clang-18 clang++-18 clang-format-18 lld-18 gcc-13 g++-13 libstdc++-13-dev ninja-build unzip qt6-base-dev qt6-tools-dev-tools libqt6svg6-dev qt6-multimedia-dev libgl1-mesa-dev libpulse-dev libssl-dev libegl1-mesa-dev libclang-18-dev
+        sudo apt-get install ccache clang-20 clang++-20 clang-format-20 lld-20 gcc-13 g++-13 libstdc++-13-dev ninja-build unzip qt6-base-dev qt6-tools-dev-tools libqt6svg6-dev qt6-multimedia-dev libgl1-mesa-dev libpulse-dev libssl-dev libegl1-mesa-dev libclang-20-dev
 
         sudo apt-get remove clang-{13,14,15} clang++-{13,14,15} libclang-{13,14,15}-dev llvm-{13,14,15}
-        sudo apt-get install clang-18 clang++-18 llvm-18 llvm-18-dev
+        sudo apt-get install clang-20 clang++-20 llvm-20 llvm-20-dev
 
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-20 100
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-20 100
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
 
@@ -63,14 +63,14 @@ runs:
         set -e
 
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-18 main'
+        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-20 main'
 
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 
         sudo apt-get update
         sudo apt-get remove clang-{13,14,15} clang++-{13,14,15} libclang-{13,14,15}-dev llvm-{13,14,15}
-        sudo apt-get install clang-format-18 ccache e2fsprogs gcc-13 g++-13 libstdc++-13-dev libmpfr-dev libmpc-dev ninja-build optipng qemu-utils qemu-system-i386 unzip generate-ninja libegl1-mesa-dev
-        sudo apt-get install clang-18 clang++-18 llvm-18 llvm-18-dev
+        sudo apt-get install clang-format-20 ccache e2fsprogs gcc-13 g++-13 libstdc++-13-dev libmpfr-dev libmpc-dev ninja-build optipng qemu-utils qemu-system-i386 unzip generate-ninja libegl1-mesa-dev
+        sudo apt-get install clang-20 clang++-20 llvm-20 llvm-20-dev
 
     - name: Enable KVM group perms
       if: ${{ inputs.os == 'Serenity' }}
