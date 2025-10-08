@@ -37,8 +37,13 @@ void WaitQueue::Waiter::notify(Badge<WaitQueue>)
     auto& thread = *m_association->thread;
 
     SpinlockLocker scheduler_lock(g_scheduler_lock);
-    VERIFY(thread.state() == Thread::State::Blocked);
     VERIFY(&thread != Thread::current());
+    // The thread might already be runnable if it has already
+    // been notified, but has not yet been scheduled again.
+    if (thread.state() == Thread::State::Runnable)
+        return;
+
+    VERIFY(thread.state() == Thread::State::Blocked);
     thread.set_state(Thread::State::Runnable);
 }
 
