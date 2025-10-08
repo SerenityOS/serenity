@@ -176,7 +176,7 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<ParserError>> SourceTextModule::pa
                                      [&](ImportEntry const& import_entry) {
                                          return import_entry.local_name == entry.local_or_import_name;
                                      })
-                       .is_end());
+                    .is_end());
             default_export = export_statement;
         }
 

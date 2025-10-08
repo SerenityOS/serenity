@@ -70,9 +70,9 @@ safe_memset_ins:
 .global safe_memset_faulted
 safe_memset_faulted:
 )"
-                 : [dest_ptr] "+&r"(dest_ptr), [result] "+&r"(result), "+&r"(fault_at_in_x3)
-                 : [n] "r"(n), [c] "r"(c)
-                 : "memory", "x4", "cc");
+        : [dest_ptr] "+&r"(dest_ptr), [result] "+&r"(result), "+&r"(fault_at_in_x3)
+        : [n] "r"(n), [c] "r"(c)
+        : "memory", "x4", "cc");
     return result != 0;
 }
 
@@ -98,9 +98,9 @@ safe_strnlen_ins:
 .global safe_strnlen_faulted
 safe_strnlen_faulted:
 )"
-                 : [result] "+&r"(result), "+&r"(fault_at_in_x2)
-                 : [str] "r"(str), [max_n] "r"(max_n)
-                 : "memory", "w3", "cc");
+        : [result] "+&r"(result), "+&r"(fault_at_in_x2)
+        : [str] "r"(str), [max_n] "r"(max_n)
+        : "memory", "w3", "cc");
     return result;
 }
 
@@ -129,9 +129,9 @@ safe_memcpy_ins_2:
 .global safe_memcpy_faulted
 safe_memcpy_faulted:
 )"
-                 : [result] "+&r"(result), "+&r"(fault_at_in_x3)
-                 : [dest_ptr] "r"(dest_ptr), [src_ptr] "r"(src_ptr), [n] "r"(n)
-                 : "memory", "x4", "w5", "cc");
+        : [result] "+&r"(result), "+&r"(fault_at_in_x3)
+        : [dest_ptr] "r"(dest_ptr), [src_ptr] "r"(src_ptr), [n] "r"(n)
+        : "memory", "x4", "w5", "cc");
     return result != 0;
 }
 
@@ -163,9 +163,9 @@ safe_atomic_compare_exchange_relaxed_ins_2:
 .global safe_atomic_compare_exchange_relaxed_faulted
 safe_atomic_compare_exchange_relaxed_faulted:
 )"
-                 : [result] "=&r"(result), "+&r"(error)
-                 : [var_ptr] "r"(var), [expected_ptr] "r"(&expected), [desired] "r"(desired)
-                 : "memory", "w3", "w4", "w5", "cc");
+        : [result] "=&r"(result), "+&r"(error)
+        : [var_ptr] "r"(var), [expected_ptr] "r"(&expected), [desired] "r"(desired)
+        : "memory", "w3", "w4", "w5", "cc");
     if (error != 0)
         return {};
     return static_cast<bool>(result);
@@ -183,9 +183,9 @@ safe_atomic_load_relaxed_ins:
 .global safe_atomic_load_relaxed_faulted
 safe_atomic_load_relaxed_faulted:
 )"
-                 : [result] "=r"(result), "+r"(error)
-                 : [var_ptr] "r"(var)
-                 : "memory");
+        : [result] "=r"(result), "+r"(error)
+        : [var_ptr] "r"(var)
+        : "memory");
     if (error != 0)
         return {};
     return result;
@@ -209,9 +209,9 @@ safe_atomic_fetch_add_relaxed_ins_2:
 .global safe_atomic_fetch_add_relaxed_faulted
 safe_atomic_fetch_add_relaxed_faulted:
 )"
-                 : [result] "=&r"(result), "+&r"(error)
-                 : [val] "r"(val), [var_ptr] "r"(var)
-                 : "memory", "w2", "w3");
+        : [result] "=&r"(result), "+&r"(error)
+        : [val] "r"(val), [var_ptr] "r"(var)
+        : "memory", "w2", "w3");
     if (error != 0)
         return {};
     return result;
@@ -234,9 +234,9 @@ safe_atomic_exchange_relaxed_ins_2:
 .global safe_atomic_exchange_relaxed_faulted
 safe_atomic_exchange_relaxed_faulted:
 )"
-                 : [result] "=&r"(result), "+&r"(error)
-                 : [desired] "r"(desired), [var_ptr] "r"(var)
-                 : "memory", "w2");
+        : [result] "=&r"(result), "+&r"(error)
+        : [desired] "r"(desired), [var_ptr] "r"(var)
+        : "memory", "w2");
     if (error != 0)
         return {};
     return result;
@@ -253,9 +253,9 @@ safe_atomic_store_relaxed_ins:
 .global safe_atomic_store_relaxed_faulted
 safe_atomic_store_relaxed_faulted:
 )"
-                 : "+r"(error)
-                 : [desired] "r"(desired), [var_ptr] "r"(var)
-                 : "memory");
+        : "+r"(error)
+        : [desired] "r"(desired), [var_ptr] "r"(var)
+        : "memory");
     return error == 0;
 }
 

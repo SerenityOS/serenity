@@ -116,7 +116,7 @@ struct RoundedDuration {
 
 template<typename StructT, typename ValueT>
 struct TemporalDurationRecordField {
-    ValueT StructT::*field_name { nullptr };
+    ValueT StructT::* field_name { nullptr };
     PropertyKey property_name;
 };
 

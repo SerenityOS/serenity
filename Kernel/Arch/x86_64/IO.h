@@ -23,8 +23,8 @@ inline u8 in8(u16 port)
 {
     u8 value;
     asm volatile("inb %1, %0"
-                 : "=a"(value)
-                 : "Nd"(port));
+        : "=a"(value)
+        : "Nd"(port));
     return value;
 }
 
@@ -32,8 +32,8 @@ inline u16 in16(u16 port)
 {
     u16 value;
     asm volatile("inw %1, %0"
-                 : "=a"(value)
-                 : "Nd"(port));
+        : "=a"(value)
+        : "Nd"(port));
     return value;
 }
 
@@ -41,8 +41,8 @@ inline u32 in32(u16 port)
 {
     u32 value;
     asm volatile("inl %1, %0"
-                 : "=a"(value)
-                 : "Nd"(port));
+        : "=a"(value)
+        : "Nd"(port));
     return value;
 }
 

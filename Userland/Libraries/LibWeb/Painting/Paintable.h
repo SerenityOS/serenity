@@ -219,7 +219,7 @@ public:
 
     Gfx::AffineTransform compute_combined_css_transform() const;
 
-    virtual void resolve_paint_properties() {};
+    virtual void resolve_paint_properties() { }
 
 protected:
     explicit Paintable(Layout::Node const&);

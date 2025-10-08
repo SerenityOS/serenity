@@ -38,9 +38,9 @@ namespace Kernel {
 
         br %[kernel_entry]
     )"
-                 :
-                 : "r"(x0), "r"(sp), [sctlr_el1] "r"(sctlr_el1), [kernel_sp] "r"(kernel_sp), [kernel_entry] "r"(kernel_entry)
-                 : "memory");
+        :
+        : "r"(x0), "r"(sp), [sctlr_el1] "r"(sctlr_el1), [kernel_sp] "r"(kernel_sp), [kernel_entry] "r"(kernel_entry)
+        : "memory");
 
     __builtin_unreachable();
 }
@@ -257,10 +257,10 @@ void arch_prepare_boot(void* root_page_table, BootInfo& boot_info)
         mov x3, %[boot_info_vaddr]
         b enter_kernel_helper
     )" ::[current_el] "r"(current_el),
-                 [sctlr_el2] "r"(sctlr_el2), [hcr_el2] "r"(hcr_el2), [spsr_el2] "r"(spsr_el2),
-                 [sctlr_el1] "r"(sctlr_el1), [root_page_table] "r"(root_page_table), [mair_el1] "r"(mair_el1), [tcr_el1] "r"(tcr_el1),
-                 [sctlr_el1_mmu_on] "r"(sctlr_el1_mmu_on), [kernel_entry_vaddr] "r"(kernel_entry_vaddr), [kernel_stack_pointer] "r"(kernel_stack_pointer), [boot_info_vaddr] "r"(boot_info_vaddr)
-                 : "memory", "cc", "x0", "x1", "x2", "x3");
+        [sctlr_el2] "r"(sctlr_el2), [hcr_el2] "r"(hcr_el2), [spsr_el2] "r"(spsr_el2),
+        [sctlr_el1] "r"(sctlr_el1), [root_page_table] "r"(root_page_table), [mair_el1] "r"(mair_el1), [tcr_el1] "r"(tcr_el1),
+        [sctlr_el1_mmu_on] "r"(sctlr_el1_mmu_on), [kernel_entry_vaddr] "r"(kernel_entry_vaddr), [kernel_stack_pointer] "r"(kernel_stack_pointer), [boot_info_vaddr] "r"(boot_info_vaddr)
+        : "memory", "cc", "x0", "x1", "x2", "x3");
 
     __builtin_unreachable();
 }

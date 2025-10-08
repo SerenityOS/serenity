@@ -35,7 +35,7 @@ ConnectionToServer::ConnectionToServer(NonnullOwnPtr<Core::LocalSocket> socket)
             Threading::MutexLocker const locker(m_enqueuer_loop_destruction);
             m_enqueuer_loop = nullptr;
         }
-        return (intptr_t) nullptr;
+        return (intptr_t)nullptr;
     }))
 {
     update_good_sleep_time();

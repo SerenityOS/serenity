@@ -69,7 +69,7 @@ struct TemporalTimeLikeRecord {
 
 template<typename StructT, typename ValueT>
 struct TemporalTimeLikeRecordField {
-    ValueT StructT::*field_name { nullptr };
+    ValueT StructT::* field_name { nullptr };
     PropertyKey property_name;
 };
 

@@ -37,7 +37,7 @@ inline FlatPtr get_ttbr0_el1()
 {
     FlatPtr ttbr0_el1;
     asm volatile("mrs %[value], ttbr0_el1\n"
-                 : [value] "=r"(ttbr0_el1));
+        : [value] "=r"(ttbr0_el1));
     return ttbr0_el1;
 }
 
@@ -76,7 +76,7 @@ inline ExceptionLevel get_current_exception_level()
     u64 current_exception_level;
 
     asm volatile("mrs  %[value], CurrentEL"
-                 : [value] "=r"(current_exception_level));
+        : [value] "=r"(current_exception_level));
 
     current_exception_level = (current_exception_level >> 2) & 0x3;
     return static_cast<ExceptionLevel>(current_exception_level);
@@ -140,7 +140,7 @@ inline FlatPtr get_cache_line_size()
 {
     FlatPtr ctr_el0;
     asm volatile("mrs %[value], ctr_el0"
-                 : [value] "=r"(ctr_el0));
+        : [value] "=r"(ctr_el0));
     auto log2_size = (ctr_el0 >> 16) & 0xF;
     return 1 << log2_size;
 }
@@ -150,16 +150,16 @@ inline void flush_data_cache(FlatPtr start, size_t size)
     auto const cache_size = get_cache_line_size();
     for (FlatPtr addr = align_down_to(start, cache_size); addr < start + size; addr += cache_size)
         asm volatile("dc civac, %[addr]" ::[addr] "r"(addr)
-                     : "memory");
+            : "memory");
     asm volatile("dsb sy" ::
-                     : "memory");
+            : "memory");
 }
 
 inline FlatPtr get_mdscr_el1()
 {
     FlatPtr mdscr_el1;
     asm volatile("mrs %[value], mdscr_el1\n"
-                 : [value] "=r"(mdscr_el1));
+        : [value] "=r"(mdscr_el1));
     return mdscr_el1;
 }
 

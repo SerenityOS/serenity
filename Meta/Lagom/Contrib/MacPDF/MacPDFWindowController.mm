@@ -194,7 +194,7 @@
 - (void)pageChanged
 {
     [self.window setSubtitle:
-                     [NSString stringWithFormat:@"Page %d of %d", [_pdfView page], _pdfDocument.pdf->get_page_count()]];
+            [NSString stringWithFormat:@"Page %d of %d", [_pdfView page], _pdfDocument.pdf->get_page_count()]];
 }
 
 #pragma mark - NSToolbarDelegate

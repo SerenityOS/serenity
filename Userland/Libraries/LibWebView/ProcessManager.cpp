@@ -71,7 +71,7 @@ void ProcessManager::initialize()
     // FIXME: Should we change this to call EventLoop::register_signal?
     //        Note that only EventLoopImplementationUnix has a working register_signal
 
-    struct sigaction action { };
+    struct sigaction action {};
     action.sa_flags = SA_RESTART;
     action.sa_sigaction = [](int, auto*, auto) {
         s_received_sigchld = 1;

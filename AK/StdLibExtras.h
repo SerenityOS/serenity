@@ -155,7 +155,7 @@ requires(IsIntegral<T>)
 {
     if (!is_constant_evaluated()) {
         asm volatile(""
-                     : "+r"(value));
+            : "+r"(value));
     }
 }
 
@@ -165,9 +165,9 @@ requires(!IsIntegral<T>)
 {
     if (!is_constant_evaluated()) {
         asm volatile(""
-                     :
-                     : "m"(value)
-                     : "memory");
+            :
+            : "m"(value)
+            : "memory");
     }
 }
 

@@ -194,8 +194,8 @@ ByteString BigFraction::to_byte_string(unsigned rounding_threshold) const
     auto const number_of_digits = [](auto integer) {
         unsigned size = 1;
         for (auto division_result = integer.divided_by(UnsignedBigInteger { 10 });
-             division_result.remainder == UnsignedBigInteger { 0 } && division_result.quotient != UnsignedBigInteger { 0 };
-             division_result = division_result.quotient.divided_by(UnsignedBigInteger { 10 })) {
+            division_result.remainder == UnsignedBigInteger { 0 } && division_result.quotient != UnsignedBigInteger { 0 };
+            division_result = division_result.quotient.divided_by(UnsignedBigInteger { 10 })) {
             ++size;
         }
         return size;

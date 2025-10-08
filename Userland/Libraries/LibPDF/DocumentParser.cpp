@@ -704,7 +704,7 @@ PDFErrorOr<Vector<DocumentParser::PageOffsetHintTableEntry>> DocumentParser::par
     auto bits_required_for_greatest_shared_obj_identifier = hint_table.bits_required_for_greatest_shared_obj_identifier;
     auto bits_required_for_fraction_numerator = hint_table.bits_required_for_fraction_numerator;
 
-    auto parse_int_entry = [&](u32 PageOffsetHintTableEntry::*field, u32 bit_size) -> ErrorOr<void> {
+    auto parse_int_entry = [&](u32 PageOffsetHintTableEntry::* field, u32 bit_size) -> ErrorOr<void> {
         if (bit_size <= 0)
             return {};
 
@@ -716,7 +716,7 @@ PDFErrorOr<Vector<DocumentParser::PageOffsetHintTableEntry>> DocumentParser::par
         return {};
     };
 
-    auto parse_vector_entry = [&](Vector<u32> PageOffsetHintTableEntry::*field, u32 bit_size) -> ErrorOr<void> {
+    auto parse_vector_entry = [&](Vector<u32> PageOffsetHintTableEntry::* field, u32 bit_size) -> ErrorOr<void> {
         if (bit_size <= 0)
             return {};
 

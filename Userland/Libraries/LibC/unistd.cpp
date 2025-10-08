@@ -1068,7 +1068,7 @@ char* getpass(char const* prompt)
             close(tty);
         });
 
-        struct termios backup { };
+        struct termios backup {};
         if (tcgetattr(tty, &backup) < 0)
             return nullptr;
 

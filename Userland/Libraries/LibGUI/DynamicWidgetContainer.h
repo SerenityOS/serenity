@@ -50,7 +50,7 @@ public:
 
 protected:
     explicit DynamicWidgetContainer(Gfx::Orientation = Gfx::Orientation::Vertical);
-    virtual void paint_event(PaintEvent&) override {};
+    virtual void paint_event(PaintEvent&) override { }
     virtual void second_paint_event(PaintEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void child_event(Core::ChildEvent&) override;

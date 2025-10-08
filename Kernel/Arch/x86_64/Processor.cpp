@@ -65,14 +65,14 @@ void ProcessorBase<T>::store_fpu_state(FPUState& fpu_state)
         // The specific state components saved correspond to the bits set in the requested-feature bitmap (RFBM), which is the logical-AND of EDX:EAX and XCR0.
         // https://www.moritz.systems/blog/how-debuggers-work-getting-and-setting-x86-registers-part-2/
         asm volatile("xsave %0\n"
-                     : "=m"(fpu_state)
-                     : "a"(static_cast<u32>(SIMD::StateComponent::AVX | SIMD::StateComponent::SSE | SIMD::StateComponent::X87)), "d"(0u));
+            : "=m"(fpu_state)
+            : "a"(static_cast<u32>(SIMD::StateComponent::AVX | SIMD::StateComponent::SSE | SIMD::StateComponent::X87)), "d"(0u));
     } else if (Processor::current().has_feature(CPUFeature::FXSR)) {
         asm volatile("fxsave %0"
-                     : "=m"(fpu_state));
+            : "=m"(fpu_state));
     } else {
         asm volatile("fnsave %0"
-                     : "=m"(fpu_state));
+            : "=m"(fpu_state));
     }
 }
 
@@ -768,7 +768,7 @@ void Processor::flush_gdt()
     m_gdtr.address = m_gdt;
     m_gdtr.limit = (m_gdt_length * 8) - 1;
     asm volatile("lgdt %0" ::"m"(m_gdtr)
-                 : "memory");
+        : "memory");
 }
 
 DescriptorTablePointer const& Processor::get_gdtr()
@@ -848,9 +848,9 @@ void ProcessorBase<T>::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
     auto ptr = vaddr.as_ptr();
     while (page_count > 0) {
         asm volatile("invlpg %0"
-                     :
-                     : "m"(*ptr)
-                     : "memory");
+            :
+            : "m"(*ptr)
+            : "memory");
         ptr += PAGE_SIZE;
         page_count--;
     }

@@ -39,7 +39,9 @@ public:
 protected:
     TCPOption(TCPOptionKind kind, u8 length)
         : m_kind(kind)
-        , m_length(length) {};
+        , m_length(length)
+    {
+    }
 
 private:
     TCPOptionKind m_kind { TCPOptionKind::End };

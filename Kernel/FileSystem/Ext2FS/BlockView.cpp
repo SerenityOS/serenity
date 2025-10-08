@@ -12,7 +12,9 @@ namespace Kernel {
 static constexpr size_t max_blocks_in_view = 16384; // 2^14
 
 Ext2FSBlockView::Ext2FSBlockView(Ext2FSInode& inode)
-    : m_inode(inode) {};
+    : m_inode(inode)
+{
+}
 
 ErrorOr<void> Ext2FSBlockView::ensure_block(BlockBasedFileSystem::BlockIndex block)
 {

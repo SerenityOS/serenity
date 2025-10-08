@@ -25,7 +25,9 @@ public:
 private:
     CertificateStoreProxyModel(NonnullRefPtr<Model> source, NonnullRefPtr<GUI::TableView> view)
         : SortingProxyModel(move(source))
-        , m_parent_table_view(move(view)) {};
+        , m_parent_table_view(move(view))
+    {
+    }
 
     NonnullRefPtr<GUI::TableView> m_parent_table_view;
 };
@@ -60,7 +62,7 @@ public:
     virtual ~CertificateStoreWidget() override = default;
     static ErrorOr<NonnullRefPtr<CertificateStoreWidget>> try_create();
     ErrorOr<void> initialize();
-    virtual void apply_settings() override {};
+    virtual void apply_settings() override { }
 
 private:
     CertificateStoreWidget() = default;
