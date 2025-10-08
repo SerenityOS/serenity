@@ -28,7 +28,7 @@ public:
     static NonnullRefPtr<DisplayConnectorAttributeSysFSComponent> must_create(DisplayConnectorSysFSDirectory const& device_directory, Type);
 
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
-    virtual ~DisplayConnectorAttributeSysFSComponent() {};
+    virtual ~DisplayConnectorAttributeSysFSComponent() = default;
 
     virtual StringView name() const override;
 

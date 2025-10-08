@@ -92,7 +92,7 @@ public:
 protected:
     virtual bool is_root_directory() const { return false; }
 
-    SysFSDirectory() {};
+    SysFSDirectory() = default;
     explicit SysFSDirectory(SysFSDirectory const& parent_directory);
     ChildList m_child_components {};
 };

@@ -18,7 +18,7 @@ public:
     static NonnullRefPtr<PCIDeviceExpansionROMSysFSComponent> create(PCIDeviceSysFSDirectory const& device);
 
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
-    virtual ~PCIDeviceExpansionROMSysFSComponent() {};
+    virtual ~PCIDeviceExpansionROMSysFSComponent() = default;
 
     virtual StringView name() const override { return "rom"sv; }
 

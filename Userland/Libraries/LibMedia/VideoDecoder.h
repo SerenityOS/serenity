@@ -16,7 +16,7 @@ namespace Media {
 
 class VideoDecoder {
 public:
-    virtual ~VideoDecoder() {};
+    virtual ~VideoDecoder() = default;
 
     virtual DecoderErrorOr<void> receive_sample(Duration timestamp, ReadonlyBytes sample) = 0;
     DecoderErrorOr<void> receive_sample(Duration timestamp, ByteBuffer const& sample) { return receive_sample(timestamp, sample.span()); }

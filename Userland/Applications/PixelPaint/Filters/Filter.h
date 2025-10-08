@@ -26,7 +26,7 @@ public:
 
     virtual StringView filter_name() const = 0;
 
-    virtual ~Filter() {};
+    virtual ~Filter() = default;
 
     Filter(ImageEditor* editor);
 

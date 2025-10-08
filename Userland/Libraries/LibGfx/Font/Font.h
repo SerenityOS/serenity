@@ -154,7 +154,7 @@ public:
 
     virtual NonnullRefPtr<Font> clone() const = 0;
     virtual ErrorOr<NonnullRefPtr<Font>> try_clone() const = 0;
-    virtual ~Font() {};
+    virtual ~Font() = default;
 
     virtual FontPixelMetrics pixel_metrics() const = 0;
 

@@ -91,7 +91,7 @@ class DialogButton final : public Button {
     C_OBJECT(DialogButton);
 
 public:
-    virtual ~DialogButton() override {};
+    virtual ~DialogButton() override = default;
     explicit DialogButton(String text = {})
         : Button(move(text))
     {

@@ -37,7 +37,7 @@ class MainWidget : public GUI::Widget {
     C_OBJECT(MainWidget);
 
 public:
-    virtual ~MainWidget() {};
+    virtual ~MainWidget() = default;
 
     ErrorOr<void> initialize_menubar(GUI::Window&);
 

@@ -24,7 +24,7 @@ public:
     static NonnullRefPtr<StorageDeviceAttributeSysFSComponent> must_create(StorageDeviceSysFSDirectory const& device_directory, Type);
 
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
-    virtual ~StorageDeviceAttributeSysFSComponent() {};
+    virtual ~StorageDeviceAttributeSysFSComponent() = default;
 
     virtual StringView name() const override;
 

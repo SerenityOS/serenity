@@ -14,7 +14,7 @@ class NVMePollQueue : public NVMeQueue {
 public:
     static ErrorOr<NonnullLockRefPtr<NVMePollQueue>> try_create(NonnullOwnPtr<Memory::Region> rw_dma_region, NonnullRefPtr<Memory::PhysicalRAMPage> rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Doorbell db_regs);
     void submit_sqe(NVMeSubmission& submission) override;
-    virtual ~NVMePollQueue() override {};
+    virtual ~NVMePollQueue() override = default;
 
 protected:
     NVMePollQueue(NonnullOwnPtr<Memory::Region> rw_dma_region, NonnullRefPtr<Memory::PhysicalRAMPage> rw_dma_page, u16 qid, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, OwnPtr<Memory::Region> sq_dma_region, Doorbell db_regs);
