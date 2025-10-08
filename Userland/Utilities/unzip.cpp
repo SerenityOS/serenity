@@ -32,6 +32,14 @@ static ErrorOr<void> adjust_modification_time(Archive::ZipMember const& zip_memb
     return Core::System::utime(zip_member.name, buf);
 }
 
+static ErrorOr<void> adjust_permissions(Archive::ZipMember const& zip_member)
+{
+    if (zip_member.mode.has_value())
+        return Core::System::chmod(zip_member.name, zip_member.mode.value() & 0777);
+
+    return {};
+}
+
 static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 {
     if (zip_member.is_directory) {
@@ -87,6 +95,11 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 
     if (adjust_modification_time(zip_member).is_error()) {
         warnln("Failed setting modification_time for file {}", zip_member.name);
+        return false;
+    }
+
+    if (adjust_permissions(zip_member).is_error()) {
+        warnln("Failed setting permissions for file {}", zip_member.name);
         return false;
     }
 
@@ -195,6 +208,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (auto& directory : zip_directories) {
         if (adjust_modification_time(directory).is_error()) {
             warnln("Failed setting modification time for directory {}", directory.name);
+            return 1;
+        }
+
+        if (adjust_permissions(directory).is_error()) {
+            warnln("Failed setting permissions for directory {}", directory.name);
             return 1;
         }
     }
