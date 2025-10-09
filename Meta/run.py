@@ -509,6 +509,10 @@ def set_up_cpu_count(config: Configuration):
 
 
 def set_up_spice(config: Configuration):
+    # FIXME: Re-enable SPICE by default once #26210 is fixed.
+    if environ.get("SERENITY_QEMU_SPICE") != "1":
+        return
+
     # Only the default machine has virtio-serial (required for the spice agent).
     if config.machine_type != MachineType.Default:
         return
