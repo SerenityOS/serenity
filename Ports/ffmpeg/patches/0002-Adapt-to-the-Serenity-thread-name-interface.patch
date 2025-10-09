@@ -1,5 +1,5 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?S=C3=B6nke=20Holz?= <sholz8530@gmail.com>
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <soenke.holz@serenityos.org>
 Date: Mon, 30 Sep 2024 09:19:14 +0200
 Subject: [PATCH] Adapt to the Serenity thread name interface
 

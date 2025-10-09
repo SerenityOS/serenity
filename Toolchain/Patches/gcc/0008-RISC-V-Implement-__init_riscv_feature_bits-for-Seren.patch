@@ -1,5 +1,5 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?S=C3=B6nke=20Holz?= <sholz8530@gmail.com>
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <soenke.holz@serenityos.org>
 Date: Thu, 8 May 2025 13:20:05 +0200
 Subject: [PATCH] RISC-V: Implement __init_riscv_feature_bits for SerenityOS
 

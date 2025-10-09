@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Nico Weber <thakis@chromium.org>
- * Copyright (c) 2025, Sönke Holz <sholz8530@gmail.com>
+ * Copyright (c) 2025, Sönke Holz <soenke.holz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */

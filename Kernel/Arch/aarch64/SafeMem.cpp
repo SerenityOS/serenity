@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2022, Timon Kruiper <timonkruiper@gmail.com>
  * Copyright (c) 2023, Daniel Bertalan <dani@danielbertalan.dev>
- * Copyright (c) 2025, Sönke Holz <sholz8530@gmail.com>
+ * Copyright (c) 2025, Sönke Holz <soenke.holz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
