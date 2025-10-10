@@ -1432,17 +1432,26 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> generic_region_decoding_procedure(Ge
         return buffer->get_bit(x, y);
     };
 
+    static constexpr auto get_pixels = [](NonnullRefPtr<BilevelImage> const& buffer, int x, int y, u8 width) -> u8 {
+        if (x + width < 0 || x >= (int)buffer->width() || y < 0)
+            return 0;
+        auto corrected_x = max(x, 0);
+        auto right_end = x + width;
+        auto corrected_right_end = min(right_end, buffer->width());
+        auto in_bounds = corrected_right_end - corrected_x;
+        auto res = buffer->get_bits(corrected_x, y, in_bounds);
+        res <<= (right_end - corrected_right_end);
+        return res;
+    };
+
     // Figure 3(a) – Template when GBTEMPLATE = 0 and EXTTEMPLATE = 0,
     constexpr auto compute_context_0 = [](NonnullRefPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         for (int i = 0; i < 4; ++i)
             result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[i].x, y + adaptive_pixels[i].y);
-        for (int i = 0; i < 3; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 2);
-        for (int i = 0; i < 5; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y - 1);
-        for (int i = 0; i < 4; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 4 + i, y);
+        result = (result << 3) | get_pixels(buffer, x - 1, y - 2, 3);
+        result = (result << 5) | get_pixels(buffer, x - 2, y - 1, 5);
+        result = (result << 4) | get_pixels(buffer, x - 4, y, 4);
         return result;
     };
 
@@ -1450,12 +1459,9 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     auto compute_context_1 = [](NonnullRefPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
-        for (int i = 0; i < 4; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 2);
-        for (int i = 0; i < 5; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y - 1);
-        for (int i = 0; i < 3; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 3 + i, y);
+        result = (result << 4) | get_pixels(buffer, x - 1, y - 2, 4);
+        result = (result << 5) | get_pixels(buffer, x - 2, y - 1, 5);
+        result = (result << 3) | get_pixels(buffer, x - 3, y, 3);
         return result;
     };
 
@@ -1463,12 +1469,9 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     auto compute_context_2 = [](NonnullRefPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
-        for (int i = 0; i < 3; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 2);
-        for (int i = 0; i < 4; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y - 1);
-        for (int i = 0; i < 2; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 2 + i, y);
+        result = (result << 3) | get_pixels(buffer, x - 1, y - 2, 3);
+        result = (result << 4) | get_pixels(buffer, x - 2, y - 1, 4);
+        result = (result << 2) | get_pixels(buffer, x - 2, y, 2);
         return result;
     };
 
@@ -1476,10 +1479,8 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     auto compute_context_3 = [](NonnullRefPtr<BilevelImage> const& buffer, ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, int x, int y) -> u16 {
         u16 result = 0;
         result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
-        for (int i = 0; i < 5; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 3 + i, y - 1);
-        for (int i = 0; i < 4; ++i)
-            result = (result << 1) | (u16)get_pixel(buffer, x - 4 + i, y);
+        result = (result << 5) | get_pixels(buffer, x - 3, y - 1, 5);
+        result = (result << 4) | get_pixels(buffer, x - 4, y, 4);
         return result;
     };
 
