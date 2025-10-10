@@ -4,20 +4,7 @@ set -e
 
 OUTPUT_FILE=$1
 
-if command -v git >/dev/null; then
-    if git status >/dev/null 2>&1; then
-        GIT_HASH=$( (git log --pretty=format:'%h' -n 1 | cut -c1-7) || true )
-        # There is at least one modified file as reported by git.
-        if git status --porcelain=v2 | head | grep -Ei '^1' >/dev/null; then
-            GIT_HASH="${GIT_HASH}-modified"
-        fi
-    else
-        GIT_HASH=unknown
-    fi
-else
-    GIT_HASH=unknown
-fi
-
+GIT_HASH=$(git describe --exclude '*' --always --dirty=-modified 2>/dev/null || echo "unknown")
 
 cat << EOF > "$OUTPUT_FILE"
 /*
