@@ -52,16 +52,7 @@ public:
     };
 
     LatLng center() const { return m_center; }
-    void set_center(LatLng const& center)
-    {
-        // Wrap longitude to keep it inside [-180, 180].
-        auto longitude = AK::fmod(AK::fmod(center.longitude + 180, 360.) + 360, 360.) - 180;
-        m_center = {
-            min(max(center.latitude, -LATITUDE_MAX), LATITUDE_MAX),
-            longitude,
-        };
-        update();
-    }
+    void set_center(LatLng const& center);
 
     int zoom() const { return m_zoom; }
     void set_zoom(int zoom);
