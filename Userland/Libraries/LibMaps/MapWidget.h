@@ -54,9 +54,11 @@ public:
     LatLng center() const { return m_center; }
     void set_center(LatLng const& center)
     {
+        // Wrap longitude to keep it inside [-180, 180].
+        auto longitude = AK::fmod(AK::fmod(center.longitude + 180, 360.) + 360, 360.) - 180;
         m_center = {
             min(max(center.latitude, -LATITUDE_MAX), LATITUDE_MAX),
-            min(max(center.longitude, -180.0), 180.0)
+            longitude,
         };
         update();
     }
