@@ -46,6 +46,25 @@ public:
         return byte != 0;
     }
 
+    ALWAYS_INLINE u8 get_bits(size_t x, size_t y, u8 width) const
+    {
+        VERIFY(x + width <= m_width);
+        VERIFY(y < m_height);
+        VERIFY(width <= 8);
+        size_t byte_offset = x / 8;
+        size_t bit_offset = x % 8;
+        if (auto distance = bit_offset + width; distance > 8) {
+            u16 bytes = m_bits[y * m_pitch + byte_offset] << 8;
+            bytes |= m_bits[y * m_pitch + byte_offset + 1];
+            bytes >>= 16 - distance;
+            return bytes & ((1 << width) - 1);
+        } else {
+            u8 byte = m_bits[y * m_pitch + byte_offset];
+            byte >>= 8 - distance;
+            return byte & ((1 << width) - 1);
+        }
+    }
+
     ALWAYS_INLINE void set_bit(size_t x, size_t y, bool b)
     {
         VERIFY(x < m_width);
