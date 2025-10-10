@@ -85,9 +85,12 @@ MapWidget::MapWidget(Options const& options)
 
 void MapWidget::set_center(LatLng const& center)
 {
+    // Wrap longitude to keep it inside [-180, 180].
+    auto longitude = AK::wrap_to_range(center.longitude, 180);
+
     m_center = {
         min(max(center.latitude, -LATITUDE_MAX), LATITUDE_MAX),
-        min(max(center.longitude, -180.0), 180.0)
+        longitude,
     };
     update();
 }
@@ -493,12 +496,15 @@ void MapWidget::paint_map(GUI::Painter& painter)
     // plus one additional tile to account for the width() / 2 in CenterOutwardsIterable.
     int grid_width = width() / TILE_SIZE + 3;
     int grid_height = height() / TILE_SIZE + 3;
+
+    i32 number_of_tiles_per_axes = pow(2, m_zoom);
+
     for (auto const delta : CenterOutwardsIterable { grid_width, grid_height }) {
         int tile_x = center_tile_x + delta.x();
         int tile_y = center_tile_y + delta.y();
 
         // Only draw tiles that exist
-        if (tile_x < 0 || tile_y < 0 || tile_x > pow(2, m_zoom) - 1 || tile_y > pow(2, m_zoom) - 1)
+        if (tile_y < 0 || tile_y >= number_of_tiles_per_axes)
             continue;
 
         auto tile_rect = Gfx::IntRect {
@@ -507,6 +513,10 @@ void MapWidget::paint_map(GUI::Painter& painter)
             TILE_SIZE,
             TILE_SIZE,
         };
+
+        // Make the tiles wrap horizontally.
+        tile_x = mod(tile_x, number_of_tiles_per_axes);
+
         if (!tile_rect.intersects(frame_inner_rect()))
             continue;
 
