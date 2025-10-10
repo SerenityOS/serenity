@@ -921,7 +921,8 @@ void Process::finalize()
         }
     }
 
-    unblock_waiters(Thread::WaitBlocker::UnblockFlags::Terminated);
+    if (is_fully_initialized())
+        unblock_waiters(Thread::WaitBlocker::UnblockFlags::Terminated);
 
     m_space.with([](auto& space) { space->remove_all_regions({}); });
 
@@ -930,7 +931,8 @@ void Process::finalize()
     // reference if there are still waiters around, or whenever the last
     // waitable states are consumed. Unless there is no parent around
     // anymore, in which case we'll just drop it right away.
-    m_wait_blocker_set.finalize();
+    if (is_fully_initialized())
+        m_wait_blocker_set.finalize();
 }
 
 void Process::disowned_by_waiter(Process& process)
