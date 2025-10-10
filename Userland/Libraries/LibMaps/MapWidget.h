@@ -52,14 +52,7 @@ public:
     };
 
     LatLng center() const { return m_center; }
-    void set_center(LatLng const& center)
-    {
-        m_center = {
-            min(max(center.latitude, -LATITUDE_MAX), LATITUDE_MAX),
-            min(max(center.longitude, -180.0), 180.0)
-        };
-        update();
-    }
+    void set_center(LatLng const& center);
 
     int zoom() const { return m_zoom; }
     void set_zoom(int zoom);

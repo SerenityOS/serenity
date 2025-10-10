@@ -83,6 +83,15 @@ MapWidget::MapWidget(Options const& options)
     m_default_tile_provider = MUST(String::from_byte_string(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderUrlFormat"sv, Maps::default_tile_provider_url_format)));
 }
 
+void MapWidget::set_center(LatLng const& center)
+{
+    m_center = {
+        min(max(center.latitude, -LATITUDE_MAX), LATITUDE_MAX),
+        min(max(center.longitude, -180.0), 180.0)
+    };
+    update();
+}
+
 void MapWidget::set_zoom(int zoom)
 {
     m_zoom = min(max(zoom, ZOOM_MIN), ZOOM_MAX);
