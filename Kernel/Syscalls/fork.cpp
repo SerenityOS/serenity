@@ -32,9 +32,6 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         child_first_thread->set_state(Thread::State::Dying);
     };
 
-    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
-    child->ref();
-
     TRY(m_unveil_data.with([&](auto& parent_unveil_data) -> ErrorOr<void> {
         return child->m_unveil_data.with([&](auto& child_unveil_data) -> ErrorOr<void> {
             child_unveil_data.state = parent_unveil_data.state;
@@ -158,6 +155,9 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     });
 
     Process::register_new(*child);
+
+    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
+    child->ref();
 
     PerformanceManager::add_process_created_event(*child);
 
