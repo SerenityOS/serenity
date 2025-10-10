@@ -142,6 +142,7 @@ private:
     virtual void mousewheel_event(GUI::MouseEvent&) override;
     virtual void context_menu_event(GUI::ContextMenuEvent& event) override;
     virtual void paint_event(GUI::PaintEvent&) override;
+    virtual void resize_event(GUI::ResizeEvent&) override;
 
     void set_zoom_for_mouse_event(int zoom, GUI::MouseEvent&);
 
