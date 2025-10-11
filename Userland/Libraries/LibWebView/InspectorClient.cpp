@@ -20,8 +20,8 @@
 
 namespace WebView {
 
-static constexpr auto INSPECTOR_CSS = "resource://ladybird/inspector.css"sv;
-static constexpr auto INSPECTOR_JS = "resource://ladybird/inspector.js"sv;
+static constexpr auto INSPECTOR_CSS = "resource://browser/inspector.css"sv;
+static constexpr auto INSPECTOR_JS = "resource://browser/inspector.js"sv;
 
 static ErrorOr<JsonValue> parse_json_tree(StringView json)
 {
