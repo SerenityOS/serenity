@@ -15,6 +15,7 @@
 
 #include <AK/Function.h>
 #include <AK/Vector.h>
+#include <LibFileSystem/FileSystem.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -168,7 +169,29 @@ int posix_spawn(pid_t* out_pid, char const* path, posix_spawn_file_actions_t con
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawnp.html
 int posix_spawnp(pid_t* out_pid, char const* file, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const argv[], char* const envp[])
 {
-    // FIXME: Use the posix_spawn syscall here.
+    if (strchr(file, '/') != nullptr)
+        return posix_spawn(out_pid, file, file_actions, attr, argv, envp);
+
+    if ((!file_actions || file_actions->state->actions.is_empty()) && !attr) {
+        // FIXME: This is currently not OOM-safe because ByteString does not handle OOMs!
+
+        ByteString path = getenv("PATH");
+        if (path.is_empty())
+            path = DEFAULT_PATH;
+
+        int rc = ENOENT;
+
+        path.view().for_each_split_view(":"sv, SplitBehavior::Nothing, [out_pid, file, file_actions, attr, argv, envp, &rc](auto const directory) -> IterationDecision {
+            auto absolute_path = ByteString::formatted("{}/{}", directory, file);
+
+            rc = posix_spawn(out_pid, absolute_path.characters(), file_actions, attr, argv, envp);
+            if (rc == ENOENT)
+                return IterationDecision::Continue;
+            return IterationDecision::Break;
+        });
+
+        return rc;
+    }
 
     pid_t child_pid = fork();
     if (child_pid < 0)

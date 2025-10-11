@@ -695,6 +695,12 @@ private:
     friend class Region;
     friend class PerformanceManager;
 
+    bool is_fully_initialized() const
+    {
+        // A process is considered fully initialized once Process::register_new() has added it to the global process list.
+        return m_all_processes_list_node.is_in_list();
+    }
+
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
 

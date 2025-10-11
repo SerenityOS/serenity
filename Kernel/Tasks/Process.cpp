@@ -908,8 +908,9 @@ void Process::finalize()
     m_state.store(State::Dead, AK::MemoryOrder::memory_order_release);
 
     {
-        if (auto parent_process = Process::from_pid_ignoring_process_lists(ppid())) {
-            if (parent_process->is_user_process() && (parent_process->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
+        if (is_fully_initialized()) {
+            auto parent_process = Process::from_pid_ignoring_process_lists(ppid());
+            if (parent_process && parent_process->is_user_process() && (parent_process->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) != SA_NOCLDWAIT)
                 (void)parent_process->send_signal(SIGCHLD, this);
         }
     }
@@ -921,7 +922,8 @@ void Process::finalize()
         }
     }
 
-    unblock_waiters(Thread::WaitBlocker::UnblockFlags::Terminated);
+    if (is_fully_initialized())
+        unblock_waiters(Thread::WaitBlocker::UnblockFlags::Terminated);
 
     m_space.with([](auto& space) { space->remove_all_regions({}); });
 
@@ -930,7 +932,8 @@ void Process::finalize()
     // reference if there are still waiters around, or whenever the last
     // waitable states are consumed. Unless there is no parent around
     // anymore, in which case we'll just drop it right away.
-    m_wait_blocker_set.finalize();
+    if (is_fully_initialized())
+        m_wait_blocker_set.finalize();
 }
 
 void Process::disowned_by_waiter(Process& process)

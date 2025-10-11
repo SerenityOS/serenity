@@ -100,6 +100,11 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
     // A child created via posix_spawn inherits a copy of its parent's signal mask
     child_first_thread->update_signal_mask(Thread::current()->signal_mask());
 
+    Thread* new_main_thread = nullptr;
+    InterruptsState previous_interrupts_state = InterruptsState::Enabled;
+    TRY(child->exec(move(path), move(arguments), move(environment), new_main_thread, previous_interrupts_state));
+    thread_finalizer_guard.disarm();
+
     m_scoped_process_list.with([&](auto const& list_ptr) {
         if (list_ptr) {
             child->m_scoped_process_list.with([&](auto& child_list_ptr) {
@@ -108,11 +113,6 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
             list_ptr->attach(*child);
         }
     });
-
-    Thread* new_main_thread = nullptr;
-    InterruptsState previous_interrupts_state = InterruptsState::Enabled;
-    TRY(child->exec(move(path), move(arguments), move(environment), new_main_thread, previous_interrupts_state));
-    thread_finalizer_guard.disarm();
 
     Process::register_new(*child);
 
