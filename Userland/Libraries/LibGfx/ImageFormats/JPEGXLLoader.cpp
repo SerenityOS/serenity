@@ -19,6 +19,7 @@
 #include <LibGfx/ImageFormats/JPEGXLCommon.h>
 #include <LibGfx/ImageFormats/JPEGXLEntropyDecoder.h>
 #include <LibGfx/ImageFormats/JPEGXLLoader.h>
+#include <LibGfx/Matrix3x3.h>
 
 namespace Gfx {
 
@@ -2755,12 +2756,104 @@ static u32 mirror_1d(i32 coord, u32 size)
 ///
 
 /// J - Restoration filters
+
+// J.3  Gabor-like transform
+using GaborWeights = Array<float, 2>;
+
+static FloatMatrix3x3 construct_gabor_like_filter(GaborWeights weights)
+{
+    FloatMatrix3x3 filter {};
+
+    // "the unnormalized weight for the center is 1"
+    filter(1, 1) = 1;
+
+    // "its four neighbours (top, bottom, left, right) are restoration_filter.gab_C_weight1"
+    filter(0, 1) = weights[0];
+    filter(1, 0) = weights[0];
+    filter(1, 2) = weights[0];
+    filter(2, 1) = weights[0];
+
+    // "and the four corners (top-left, top-right, bottom-left, bottom-right) are restoration_filter.gab_C_weight2."
+    filter(0, 0) = weights[1];
+    filter(0, 2) = weights[1];
+    filter(2, 0) = weights[1];
+    filter(2, 2) = weights[1];
+
+    // These weights are rescaled uniformly before convolution, such that the nine kernel weights sum to 1.
+    return filter / filter.element_sum();
+}
+
+static FloatMatrix3x3 extract_matrix_from_channel(Channel const& channel, u32 x, u32 y)
+{
+    FloatMatrix3x3 m;
+    auto x_minus_1 = x == 0 ? mirror_1d(x, channel.width()) : x - 1;
+    auto x_plus_1 = x == channel.width() - 1 ? mirror_1d(x, channel.width()) : x + 1;
+
+    auto y_minus_1 = y == 0 ? mirror_1d(y, channel.height()) : y - 1;
+    auto y_plus_1 = y == channel.height() - 1 ? mirror_1d(y, channel.height()) : y + 1;
+
+    m(0, 0) = channel.get(x_minus_1, y_minus_1);
+    m(0, 1) = channel.get(x, y_minus_1);
+    m(0, 2) = channel.get(x_plus_1, y_minus_1);
+    m(1, 0) = channel.get(x_minus_1, y);
+    m(1, 1) = channel.get(x, y);
+    m(1, 2) = channel.get(x_plus_1, y);
+    m(2, 0) = channel.get(x_minus_1, y_plus_1);
+    m(2, 1) = channel.get(x, y_plus_1);
+    m(2, 2) = channel.get(x_plus_1, y_plus_1);
+
+    return m;
+}
+
+static ErrorOr<void> apply_gabor_like_on_channel(Channel& channel, GaborWeights weights, u8 bits_per_sample)
+{
+    auto filter = construct_gabor_like_filter(weights);
+    auto out = TRY(channel.copy());
+    // FIXME: Use f32 channels for the whole rendering pipeline!
+    f32 float_convert = (1 << bits_per_sample) - 1;
+    for (u32 y = 0; y < channel.height(); ++y) {
+        for (u32 x = 0; x < channel.width(); ++x) {
+            auto source = extract_matrix_from_channel(channel, x, y);
+            source = source / float_convert;
+            auto result = source.hadamard_product(filter).element_sum();
+            result = result * float_convert;
+            out.set(x, y, result);
+        }
+    }
+    channel = move(out);
+    return {};
+}
+
+static ErrorOr<void> apply_gabor_like_filter(Frame& frame, u8 bits_per_sample)
+{
+    auto const& restoration_filter = frame.frame_header.restoration_filter;
+    Array<GaborWeights, 3> weights {
+        GaborWeights { restoration_filter.gab_x_weight1, restoration_filter.gab_x_weight2 },
+        GaborWeights { restoration_filter.gab_y_weight1, restoration_filter.gab_y_weight2 },
+        GaborWeights { restoration_filter.gab_b_weight1, restoration_filter.gab_b_weight2 },
+    };
+    for (auto [i, channel] : enumerate(frame.image->channels())) {
+        TRY(apply_gabor_like_on_channel(channel, weights[i], bits_per_sample));
+        if (i > 2)
+            break;
+    }
+    return {};
+}
+
 // J.1  General
-static ErrorOr<void> apply_restoration_filters(Frame& frame)
+static ErrorOr<void> apply_restoration_filters(Frame& frame, u8 bits_per_sample)
 {
     auto const& frame_header = frame.frame_header;
-    if (frame_header.restoration_filter.gab || frame_header.restoration_filter.epf_iters != 0)
-        dbgln("JPEGXLLoader: FIXME: Apply restoration filters");
+    if constexpr (JPEGXL_DEBUG) {
+        dbgln("Restoration filters:");
+        dbgln(" * Gab: {}", frame_header.restoration_filter.gab);
+        dbgln(" * EPF: {}", frame_header.restoration_filter.epf_iters);
+    }
+
+    if (frame_header.restoration_filter.gab)
+        TRY(apply_gabor_like_filter(frame, bits_per_sample));
+    if (frame_header.restoration_filter.epf_iters != 0)
+        dbgln("JPEGXLLoader: FIXME: Apply edge preserving filters");
     return {};
 }
 ///
@@ -2964,7 +3057,7 @@ public:
         auto frame = TRY(read_frame(m_stream, m_header, m_metadata));
         auto const& frame_header = frame.frame_header;
 
-        TRY(apply_restoration_filters(frame));
+        TRY(apply_restoration_filters(frame, m_metadata.bit_depth.bits_per_sample));
 
         TRY(apply_image_features(m_frames, frame, m_metadata));
 
