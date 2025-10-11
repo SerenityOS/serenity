@@ -238,4 +238,30 @@ private:
 
 }
 
+namespace AK {
+
+template<size_t N, typename T>
+struct Formatter<Gfx::Matrix<N, T>> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::Matrix<N, T> const& value)
+    {
+        TRY(Formatter<FormatString>::format(builder, "[ "sv));
+        for (u32 i = 0; i < N; ++i) {
+            TRY(Formatter<FormatString>::format(builder, "[ "sv));
+
+            for (u32 j = 0; j < N; ++j) {
+                TRY(Formatter<FormatString>::format(builder, "{}"sv, value(i, j)));
+                if (j != N - 1)
+                    TRY(Formatter<FormatString>::format(builder, ", "sv, value(i, j)));
+            }
+            TRY(Formatter<FormatString>::format(builder, " ]"sv));
+            if (i != N - 1)
+                TRY(Formatter<FormatString>::format(builder, ",\n"sv));
+        }
+
+        return Formatter<FormatString>::format(builder, " ]\n"sv);
+    }
+};
+
+}
+
 using Gfx::Matrix;
