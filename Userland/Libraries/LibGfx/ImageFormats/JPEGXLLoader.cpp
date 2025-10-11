@@ -2105,6 +2105,92 @@ static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
 }
 ///
 
+/// Helpers to decode groups for the GlobalModular
+static IntRect rect_for_group(Channel const& channel, u32 group_dim, u32 group_index)
+{
+    u32 horizontal_group_dim = group_dim >> channel.hshift();
+    u32 vertical_group_dim = group_dim >> channel.vshift();
+
+    IntRect rect(0, 0, horizontal_group_dim, vertical_group_dim);
+
+    auto nb_groups_per_row = (channel.width() + horizontal_group_dim - 1) / horizontal_group_dim;
+    auto group_x = group_index % nb_groups_per_row;
+    rect.set_x(group_x * horizontal_group_dim);
+    if (group_x == nb_groups_per_row - 1 && channel.width() % horizontal_group_dim != 0) {
+        rect.set_width(channel.width() % horizontal_group_dim);
+    }
+
+    auto nb_groups_per_column = (channel.height() + vertical_group_dim - 1) / vertical_group_dim;
+    auto group_y = group_index / nb_groups_per_row;
+    rect.set_y(group_y * vertical_group_dim);
+    if (group_y == nb_groups_per_column - 1 && channel.height() % vertical_group_dim != 0) {
+        rect.set_height(channel.height() % vertical_group_dim);
+    }
+
+    return rect;
+}
+
+struct GroupOptions {
+    GlobalModular& global_modular;
+    FrameHeader const& frame_header;
+    u32 group_index {};
+    u32 stream_index {};
+    u32 bit_depth {};
+    u32 group_dim {};
+};
+
+template<CallableAs<bool, u32, Channel&> F1, CallableAs<void, Channel&> F2>
+static ErrorOr<void> read_group_data(
+    LittleEndianInputBitStream& stream,
+    GroupOptions&& options,
+    F1&& match_decode_conditions,
+    F2&& debug_print)
+{
+    auto& [global_modular, frame_header, group_index, stream_index, bit_depth, group_dim] = options;
+
+    Vector<ChannelInfo> channels_info;
+    Vector<Channel&> original_channels;
+    auto& channels = global_modular.modular_data.channels;
+    for (auto [i, channel] : enumerate(channels)) {
+        if (!match_decode_conditions(i, channel))
+            continue;
+
+        auto rect_size = rect_for_group(channel, group_dim, group_index).size();
+        TRY(channels_info.try_append({
+            .width = static_cast<u32>(rect_size.width()),
+            .height = static_cast<u32>(rect_size.height()),
+            .hshift = channel.hshift(),
+            .vshift = channel.vshift(),
+        }));
+        TRY(original_channels.try_append(channel));
+    }
+    if (channels_info.is_empty())
+        return {};
+
+    if constexpr (JPEGXL_DEBUG)
+        debug_print(original_channels[0]);
+
+    auto decoded = TRY(read_modular_bitstream(stream,
+        {
+            .channels_info = channels_info,
+            .decoder = global_modular.decoder,
+            .global_tree = global_modular.ma_tree,
+            .group_dim = group_dim,
+            .stream_index = stream_index,
+            .apply_transformations = ModularOptions::ApplyTransformations::Yes,
+            .bit_depth = bit_depth,
+        }));
+
+    // The decoded modular group data is then copied into the partially decoded GlobalModular image in the corresponding positions.
+    for (u32 i = 0; i < original_channels.size(); ++i) {
+        auto destination = rect_for_group(original_channels[i], group_dim, group_index);
+        original_channels[i].copy_from(destination, decoded.channels[i]);
+    }
+
+    return {};
+}
+///
+
 /// G.2 - LfGroup
 static ErrorOr<void> read_lf_group(LittleEndianInputBitStream&,
     Span<Channel> channels,
@@ -2392,30 +2478,6 @@ static ErrorOr<void> apply_transformation(
 ///
 
 /// G.3.2 - PassGroup
-static IntRect rect_for_group(Channel const& channel, u32 group_dim, u32 group_index)
-{
-    u32 horizontal_group_dim = group_dim >> channel.hshift();
-    u32 vertical_group_dim = group_dim >> channel.vshift();
-
-    IntRect rect(0, 0, horizontal_group_dim, vertical_group_dim);
-
-    auto nb_groups_per_row = (channel.width() + horizontal_group_dim - 1) / horizontal_group_dim;
-    auto group_x = group_index % nb_groups_per_row;
-    rect.set_x(group_x * horizontal_group_dim);
-    if (group_x == nb_groups_per_row - 1 && channel.width() % horizontal_group_dim != 0) {
-        rect.set_width(channel.width() % horizontal_group_dim);
-    }
-
-    auto nb_groups_per_column = (channel.height() + vertical_group_dim - 1) / vertical_group_dim;
-    auto group_y = group_index / nb_groups_per_row;
-    rect.set_y(group_y * vertical_group_dim);
-    if (group_y == nb_groups_per_column - 1 && channel.height() % vertical_group_dim != 0) {
-        rect.set_height(channel.height() % vertical_group_dim);
-    }
-
-    return rect;
-}
-
 struct PassGroupOptions {
     GlobalModular& global_modular;
     FrameHeader const& frame_header;
@@ -2443,52 +2505,32 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
     // for every remaining channel in the partially decoded GlobalModular image (i.e. it is not a meta-channel,
     // the channel dimensions exceed group_dim × group_dim, and hshift < 3 or vshift < 3, and the channel has
     // not been already decoded in a previous pass)
-    Vector<ChannelInfo> channels_info;
-    Vector<Channel&> original_channels;
-    auto& channels = global_modular.modular_data.channels;
-    for (auto [i, channel] : enumerate(channels)) {
+    auto match_decoding_conditions = [&](u32 i, auto const& channel) {
         if (i < global_modular.modular_data.nb_meta_channels)
-            continue;
-        if (channels[i].width() <= frame_header.group_dim() && channels[i].height() <= frame_header.group_dim())
-            continue;
+            return false;
+        if (channel.width() <= frame_header.group_dim() && channel.height() <= frame_header.group_dim())
+            return false;
         if (channel.hshift() >= 3 && channel.vshift() >= 3)
-            continue;
+            return false;
         if (channel.decoded())
-            continue;
+            return false;
         auto channel_min_shift = min(channel.hshift(), channel.vshift());
         if (channel_min_shift < min_shift || channel_min_shift >= max_shift)
-            continue;
+            return false;
+        return true;
+    };
 
-        auto rect_size = rect_for_group(channel, frame_header.group_dim(), group_index).size();
-        TRY(channels_info.try_append({
-            .width = static_cast<u32>(rect_size.width()),
-            .height = static_cast<u32>(rect_size.height()),
-            .hshift = channel.hshift(),
-            .vshift = channel.vshift(),
-        }));
-        TRY(original_channels.try_append(channel));
-    }
-    if (channels_info.is_empty())
-        return {};
-
-    dbgln_if(JPEGXL_DEBUG, "Decoding pass {} for rectangle {}", pass_index, rect_for_group(original_channels[0], frame_header.group_dim(), group_index));
-
-    auto decoded = TRY(read_modular_bitstream(stream,
+    TRY(read_group_data(stream,
         {
-            .channels_info = channels_info,
-            .decoder = global_modular.decoder,
-            .global_tree = global_modular.ma_tree,
-            .group_dim = frame_header.group_dim(),
+            .global_modular = global_modular,
+            .frame_header = frame_header,
+            .group_index = group_index,
             .stream_index = stream_index,
-            .apply_transformations = ModularOptions::ApplyTransformations::Yes,
             .bit_depth = modular_options.bit_depth,
-        }));
-
-    // The decoded modular group data is then copied into the partially decoded GlobalModular image in the corresponding positions.
-    for (u32 i = 0; i < original_channels.size(); ++i) {
-        auto destination = rect_for_group(original_channels[i], frame_header.group_dim(), group_index);
-        original_channels[i].copy_from(destination, decoded.channels[i]);
-    }
+            .group_dim = frame_header.group_dim(),
+        },
+        move(match_decoding_conditions),
+        [&](auto& first_channel) { dbgln_if(JPEGXL_DEBUG, "Decoding pass {} for rectangle {}", options.pass_index, rect_for_group(first_channel, frame_header.group_dim(), group_index)); }));
 
     return {};
 }
