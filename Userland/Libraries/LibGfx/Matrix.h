@@ -215,6 +215,38 @@ public:
         return result;
     }
 
+    [[nodiscard]] constexpr T sum() const
+    {
+        T s = 0;
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j)
+                s += m_elements[j][i];
+        }
+        return s;
+    }
+
+    [[nodiscard]] constexpr Matrix normalized() const
+    {
+        auto normalized = *this;
+        auto sum_ = sum();
+
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j)
+                normalized.m_elements[j][i] /= sum_;
+        }
+        return normalized;
+    }
+
+    [[nodiscard]] constexpr Matrix hadamard_product(Matrix const& matrix)
+    {
+        Matrix product;
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j)
+                product.m_elements[i][j] = m_elements[i][j] * matrix.m_elements[i][j];
+        }
+        return product;
+    }
+
     template<size_t U>
     [[nodiscard]] constexpr Matrix<U, T> submatrix_from_topleft() const
     requires(U > 0 && U < N)
