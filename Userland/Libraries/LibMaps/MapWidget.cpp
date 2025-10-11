@@ -83,11 +83,46 @@ MapWidget::MapWidget(Options const& options)
     m_default_tile_provider = MUST(String::from_byte_string(Config::read_string("Maps"sv, "MapWidget"sv, "TileProviderUrlFormat"sv, Maps::default_tile_provider_url_format)));
 }
 
+void MapWidget::set_center(LatLng const& center)
+{
+    // Wrap longitude to keep it inside [-180, 180].
+    auto longitude = AK::fmod(AK::fmod(center.longitude + 180, 360.) + 360, 360.) - 180;
+
+    // Clamp latitude to never display gray areas above or under the map.
+    auto latitude = center.latitude;
+    double const half_screen_height = height() / 2;
+
+    auto bottom_in_tiles = latitude_to_tile_y(-LATITUDE_MAX, m_zoom);
+    auto map_height = bottom_in_tiles * TILE_SIZE;
+    if (map_height < height()) {
+        // The window is too tall for the map, let's keep it centered.
+        latitude = 0;
+    } else {
+        // Otherwise, we prevent panning too far up or down.
+        auto distance_to_top_in_px = latitude_to_tile_y(center.latitude, m_zoom) * TILE_SIZE;
+        if (distance_to_top_in_px < half_screen_height) {
+            auto latitude_in_tiles = half_screen_height / TILE_SIZE;
+            latitude = tile_y_to_latitude(latitude_in_tiles, m_zoom);
+        }
+
+        auto distance_to_bottom_in_tiles = bottom_in_tiles - latitude_to_tile_y(latitude, m_zoom);
+        auto distance_to_bottom_in_px = distance_to_bottom_in_tiles * TILE_SIZE;
+        if (distance_to_bottom_in_px < height() / 2) {
+            auto latitude_in_tiles = half_screen_height / TILE_SIZE;
+            latitude = tile_y_to_latitude(bottom_in_tiles - latitude_in_tiles, m_zoom);
+        }
+    }
+
+    m_center = { latitude, longitude };
+    update();
+}
+
 void MapWidget::set_zoom(int zoom)
 {
     m_zoom = min(max(zoom, ZOOM_MIN), ZOOM_MAX);
     clear_tile_queue();
-    update();
+    // We may need to move the center in order to keep the map into the frame.
+    set_center(m_center);
 }
 
 void MapWidget::config_string_did_change(StringView domain, StringView group, StringView key, StringView value)
@@ -484,12 +519,15 @@ void MapWidget::paint_map(GUI::Painter& painter)
     // plus one additional tile to account for the width() / 2 in CenterOutwardsIterable.
     int grid_width = width() / TILE_SIZE + 3;
     int grid_height = height() / TILE_SIZE + 3;
+
+    i32 number_of_tiles_per_axes = pow(2, m_zoom);
+
     for (auto const delta : CenterOutwardsIterable { grid_width, grid_height }) {
         int tile_x = center_tile_x + delta.x();
         int tile_y = center_tile_y + delta.y();
 
         // Only draw tiles that exist
-        if (tile_x < 0 || tile_y < 0 || tile_x > pow(2, m_zoom) - 1 || tile_y > pow(2, m_zoom) - 1)
+        if (tile_y < 0 || tile_y >= number_of_tiles_per_axes)
             continue;
 
         auto tile_rect = Gfx::IntRect {
@@ -498,6 +536,12 @@ void MapWidget::paint_map(GUI::Painter& painter)
             TILE_SIZE,
             TILE_SIZE,
         };
+
+        // Make the tiles wrap horizontally.
+        tile_x = tile_x % number_of_tiles_per_axes;
+        if (tile_x < 0)
+            tile_x += number_of_tiles_per_axes;
+
         if (!tile_rect.intersects(frame_inner_rect()))
             continue;
 
@@ -646,6 +690,12 @@ void MapWidget::paint_event(GUI::PaintEvent& event)
     if (m_scale_enabled)
         paint_scale(painter);
     paint_panels(painter);
+}
+
+void MapWidget::resize_event(GUI::ResizeEvent&)
+{
+    // We may need to move the center in order to keep the map into the frame.
+    set_center(m_center);
 }
 
 }
