@@ -199,13 +199,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (auto res = Core::System::setsid(); res.is_error())
             dbgln("{}", res.release_error());
     } else if (sid != pid) {
-        if (getpgid(pid) != pid) {
-            if (auto res = Core::System::setpgid(pid, sid); res.is_error())
-                dbgln("{}", res.release_error());
-
-            if (auto res = Core::System::setsid(); res.is_error())
-                dbgln("{}", res.release_error());
-        }
+        if (auto res = Core::System::setpgid(pid, pid); res.is_error())
+            dbgln("{}", res.release_error());
     }
 
     auto execute_file = !file_to_read_from.is_empty() && "-"sv != file_to_read_from;
