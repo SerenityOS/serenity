@@ -182,6 +182,8 @@ public:
             m_image_width = m_metadata.image_width().value();
         if (m_metadata.predictor().has_value())
             m_predictor = m_metadata.predictor().value();
+        if (m_metadata.color_map().has_value())
+            m_color_map = m_metadata.color_map().release_value();
         m_alpha_channel_index = alpha_channel_index();
     }
 
@@ -320,16 +322,14 @@ private:
             u64 const green_offset = 1 * size;
             u64 const blue_offset = 2 * size;
 
-            auto const color_map = *m_metadata.color_map();
-
-            if (blue_offset + index >= color_map.size())
+            if (blue_offset + index >= m_color_map.size())
                 return Error::from_string_literal("TIFFImageDecoderPlugin: Color index is out of range");
 
             // FIXME: ColorMap's values are always 16-bits, stop truncating them when we support 16 bits bitmaps
             return Color(
-                color_map[red_offset + index] >> 8,
-                color_map[green_offset + index] >> 8,
-                color_map[blue_offset + index] >> 8,
+                m_color_map[red_offset + index] >> 8,
+                m_color_map[green_offset + index] >> 8,
+                m_color_map[blue_offset + index] >> 8,
                 alpha);
         }
 
@@ -778,6 +778,7 @@ private:
     Vector<u32, 4> m_bits_per_sample {};
     u32 m_image_width {};
     Predictor m_predictor {};
+    Vector<u32> m_color_map;
 
     Optional<u8> m_alpha_channel_index {};
 };
