@@ -215,6 +215,38 @@ public:
         return result;
     }
 
+    [[nodiscard]] constexpr T sum() const
+    {
+        T s = 0;
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j)
+                s += m_elements[j][i];
+        }
+        return s;
+    }
+
+    [[nodiscard]] constexpr Matrix normalized() const
+    {
+        auto normalized = *this;
+        auto sum_ = sum();
+
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j)
+                normalized.m_elements[j][i] /= sum_;
+        }
+        return normalized;
+    }
+
+    [[nodiscard]] constexpr Matrix hadamard_product(Matrix const& matrix)
+    {
+        Matrix product;
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j)
+                product.m_elements[i][j] = m_elements[i][j] * matrix.m_elements[i][j];
+        }
+        return product;
+    }
+
     template<size_t U>
     [[nodiscard]] constexpr Matrix<U, T> submatrix_from_topleft() const
     requires(U > 0 && U < N)
@@ -234,6 +266,32 @@ public:
 
 private:
     T m_elements[N][N];
+};
+
+}
+
+namespace AK {
+
+template<size_t N, typename T>
+struct Formatter<Gfx::Matrix<N, T>> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::Matrix<N, T> const& value)
+    {
+        TRY(Formatter<FormatString>::format(builder, "[ "sv));
+        for (u32 i = 0; i < N; ++i) {
+            TRY(Formatter<FormatString>::format(builder, "[ "sv));
+
+            for (u32 j = 0; j < N; ++j) {
+                TRY(Formatter<FormatString>::format(builder, "{}"sv, value(i, j)));
+                if (j != N - 1)
+                    TRY(Formatter<FormatString>::format(builder, ", "sv, value(i, j)));
+            }
+            TRY(Formatter<FormatString>::format(builder, " ]"sv));
+            if (i != N - 1)
+                TRY(Formatter<FormatString>::format(builder, ",\n"sv));
+        }
+
+        return Formatter<FormatString>::format(builder, " ]\n"sv);
+    }
 };
 
 }
