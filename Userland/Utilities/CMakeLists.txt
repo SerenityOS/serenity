@@ -182,6 +182,7 @@ set(CMD_SOURCES_CPP
     test-pthread.cpp
     test-unveil.cpp
     test.cpp
+    timeout.cpp
     test_env.cpp
     timezone.cpp
     top.cpp
