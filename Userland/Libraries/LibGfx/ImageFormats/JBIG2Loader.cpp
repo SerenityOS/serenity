@@ -979,7 +979,7 @@ static ErrorOr<void> validate_segment_header_references(JBIG2LoadingContext cons
             if (segment.referred_to_segments.size() != 1)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: Intermediate generic refinement region must refer to exactly one segment");
             if (!is_intermediate_region_segment(segment.referred_to_segments[0]->type()))
-                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Intermediate generic refinement region refers to non-region segment");
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Intermediate generic refinement region does not refer to intermediate region segment");
         }
 
         // "• A segment of type "immediate generic refinement region" or "immediate lossless generic refinement
@@ -991,7 +991,7 @@ static ErrorOr<void> validate_segment_header_references(JBIG2LoadingContext cons
             if (segment.referred_to_segments.size() > 1)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: Immediate generic refinement region must refer to zero or one segment");
             if (segment.referred_to_segments.size() == 1 && !is_intermediate_region_segment(segment.referred_to_segments[0]->type()))
-                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Immediate generic refinement region refers to non-region segment");
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Immediate generic refinement region does not refer to intermediate region segment");
         }
 
         // "• A segment of type "page information" (type 48) must not refer to any other segments."
