@@ -756,6 +756,56 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
     return Gfx::JBIG2::SegmentData { header, data };
 }
 
+static ErrorOr<Gfx::JBIG2::SegmentHeaderData::Reference> jbig2_referred_to_segment_from_json(JsonObject const& object)
+{
+    Gfx::JBIG2::SegmentHeaderData::Reference reference;
+    bool has_retention_flag = false;
+    bool has_segment_number = false;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "retained"sv) {
+            if (auto retained = value.get_bool(); retained.has_value()) {
+                reference.retention_flag = retained.value();
+                has_retention_flag = true;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"retained\"");
+        }
+
+        if (key == "segment_number"sv) {
+            if (auto segment_number = value.get_u32(); segment_number.has_value()) {
+                reference.segment_number = segment_number.value();
+                has_segment_number = true;
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"segment_number\"");
+        }
+
+        dbgln("referred_to_segment key {}", key);
+        return Error::from_string_literal("unknown referred_to_segments entry key");
+    }));
+
+    if (!has_retention_flag)
+        return Error::from_string_literal("referred_to_segment missing \"retained\"");
+    if (!has_segment_number)
+        return Error::from_string_literal("referred_to_segment missing \"segment_number\"");
+
+    return reference;
+}
+
+static ErrorOr<Vector<Gfx::JBIG2::SegmentHeaderData::Reference>> jbig2_referred_to_segments_from_json(JsonArray const& array)
+{
+    Vector<Gfx::JBIG2::SegmentHeaderData::Reference> referred_to_segments;
+
+    for (auto const& value : array.values()) {
+        if (!value.is_object())
+            return Error::from_string_literal("referred_to_segments elements should be objects");
+        TRY(referred_to_segments.try_append(TRY(jbig2_referred_to_segment_from_json(value.as_object()))));
+    }
+
+    return referred_to_segments;
+}
+
 static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions const& options, JsonObject const& segment_object)
 {
     Gfx::JBIG2::SegmentHeaderData header;
@@ -802,6 +852,14 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
                 return {};
             }
             return Error::from_string_literal("expected u32 for \"page_association\"");
+        }
+
+        if (key == "referred_to_segments"sv) {
+            if (value.is_array()) {
+                header.referred_to_segments = TRY(jbig2_referred_to_segments_from_json(value.as_array()));
+                return {};
+            }
+            return Error::from_string_literal("expected array for \"referred_to_segments\"");
         }
 
         if (key == "retained"sv) {
