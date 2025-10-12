@@ -6,6 +6,7 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/Hex.h>
 #include <AK/MemMem.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
@@ -180,19 +181,12 @@ Optional<T> convert_to_uint_from_hex(StringView str, TrimWhitespace trim_whitesp
 
     for (size_t i = 0; i < count; i++) {
         char digit = string[i];
-        u8 digit_val;
         if (value > (upper_bound >> 4))
             return {};
 
-        if (digit >= '0' && digit <= '9') {
-            digit_val = digit - '0';
-        } else if (digit >= 'a' && digit <= 'f') {
-            digit_val = 10 + (digit - 'a');
-        } else if (digit >= 'A' && digit <= 'F') {
-            digit_val = 10 + (digit - 'A');
-        } else {
+        auto digit_val = decode_hex_digit(digit);
+        if (digit_val == 255)
             return {};
-        }
 
         value = (value << 4) + digit_val;
     }
