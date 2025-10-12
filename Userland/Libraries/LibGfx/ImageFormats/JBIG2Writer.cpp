@@ -9,6 +9,7 @@
 // JBIG2Loader.cpp has many spec notes.
 
 #include <AK/BitStream.h>
+#include <AK/HashMap.h>
 #include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StdLibExtras.h>
@@ -228,6 +229,170 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
     // "4) After all the rows have been decoded, the current contents of the bitmap GBREG are the results that shall be
     //     obtained by every decoder, whether it performs this exact sequence of steps or not."
     // In the encoding case, this means the compressed data is complete.
+    return encoder.finalize(inputs.trailing_7fff_handling);
+}
+
+namespace {
+
+// Similar to 6.3.2 Input parameters, but with an input image.
+struct GenericRefinementRegionEncodingInputParameters {
+    BilevelImage const& image;                                          // Of dimensions "GRW" x "GRH" in spec terms.
+    u8 gr_template { 0 };                                               // "GRTEMPLATE" in spec.
+    BilevelImage const* reference_bitmap { nullptr };                   // "GRREFERENCE" in spec.
+    i32 reference_x_offset { 0 };                                       // "GRREFERENCEDX" in spec.
+    i32 reference_y_offset { 0 };                                       // "GRREFERENCEDY" in spec.
+    bool is_typical_prediction_used { false };                          // "TPGRON" in spec.
+    Array<JBIG2::AdaptiveTemplatePixel, 2> adaptive_template_pixels {}; // "GRATX" / "GRATY" in spec.
+    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+};
+
+struct RefinementContexts {
+    explicit RefinementContexts(u8 refinement_template)
+    {
+        contexts.resize(1 << (refinement_template == 0 ? 13 : 10));
+    }
+
+    Vector<MQArithmeticCoderContext> contexts; // "GR" (+ binary suffix) in spec.
+};
+
+}
+
+// 6.3 Generic Refinement Region Decoding Procedure, but in backwards.
+static ErrorOr<ByteBuffer> generic_refinement_region_encoding_procedure(GenericRefinementRegionEncodingInputParameters& inputs, MQArithmeticEncoder& encoder, RefinementContexts& contexts)
+{
+    // FIXME: Try to come up with a way to share more code with generic_refinement_region_decoding_procedure().
+    auto width = inputs.image.width();
+    auto height = inputs.image.height();
+
+    VERIFY(inputs.gr_template == 0 || inputs.gr_template == 1);
+
+    if (inputs.gr_template == 0) {
+        TRY(check_valid_adaptive_template_pixel(inputs.adaptive_template_pixels[0]));
+        // inputs.adaptive_template_pixels[1] is allowed to contain any value.
+    }
+    // GRTEMPLATE 1 never uses adaptive pixels.
+
+    // 6.3.5.3 Fixed templates and adaptive templates
+    static constexpr auto get_pixel = [](auto const& buffer, int x, int y) -> bool {
+        if (x < 0 || x >= (int)buffer.width() || y < 0 || y >= (int)buffer.height())
+            return false;
+        return buffer.get_bit(x, y);
+    };
+
+    // Figure 12 – 13-pixel refinement template showing the AT pixels at their nominal locations
+    constexpr auto compute_context_0 = [](ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, BilevelImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
+        u16 result = 0;
+
+        for (int dy = -1; dy <= 1; ++dy) {
+            for (int dx = -1; dx <= 1; ++dx) {
+                if (dy == -1 && dx == -1)
+                    result = (result << 1) | (u16)get_pixel(reference, reference_x + adaptive_pixels[1].x, reference_y + adaptive_pixels[1].y);
+                else
+                    result = (result << 1) | (u16)get_pixel(reference, reference_x + dx, reference_y + dy);
+            }
+        }
+
+        result = (result << 1) | (u16)get_pixel(buffer, x + adaptive_pixels[0].x, y + adaptive_pixels[0].y);
+        for (int i = 0; i < 2; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x + i, y - 1);
+        result = (result << 1) | (u16)get_pixel(buffer, x - 1, y);
+
+        return result;
+    };
+
+    // Figure 13 – 10-pixel refinement template
+    constexpr auto compute_context_1 = [](ReadonlySpan<JBIG2::AdaptiveTemplatePixel>, BilevelImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
+        u16 result = 0;
+
+        for (int dy = -1; dy <= 1; ++dy) {
+            for (int dx = -1; dx <= 1; ++dx) {
+                if ((dy == -1 && (dx == -1 || dx == 1)) || (dy == 1 && dx == -1))
+                    continue;
+                result = (result << 1) | (u16)get_pixel(reference, reference_x + dx, reference_y + dy);
+            }
+        }
+
+        for (int i = 0; i < 3; ++i)
+            result = (result << 1) | (u16)get_pixel(buffer, x - 1 + i, y - 1);
+        result = (result << 1) | (u16)get_pixel(buffer, x - 1, y);
+
+        return result;
+    };
+
+    auto compute_context = inputs.gr_template == 0 ? compute_context_0 : compute_context_1;
+
+    // Figure 14 – Reused context for coding the SLTP value when GRTEMPLATE is 0
+    constexpr u16 sltp_context_for_template_0 = 0b000'010'000'000'0;
+
+    // Figure 15 – Reused context for coding the SLTP value when GRTEMPLATE is 1
+    constexpr u16 sltp_context_for_template_1 = 0b0'010'00'000'0;
+
+    u16 const sltp_context = inputs.gr_template == 0 ? sltp_context_for_template_0 : sltp_context_for_template_1;
+
+    // 6.3.5.6 Decoding the refinement bitmap
+
+    // "1) Set LTP = 0."
+    bool ltp = false; // "Line (uses) Typical Prediction" maybe?
+
+    // "2) Create a bitmap GRREG of width GRW and height GRH pixels."
+    // auto result = TRY(BilevelImage::create(inputs.region_width, inputs.region_height));
+
+    // "3) Decode each row as follows:"
+    for (size_t y = 0; y < height; ++y) {
+        auto predict = [&](size_t x, size_t y) -> Optional<bool> {
+            // "• a 3 × 3 pixel array in the reference bitmap (Figure 16), centred at the location
+            //    corresponding to the current pixel, contains pixels all of the same value."
+            bool prediction = get_pixel(*inputs.reference_bitmap, x - inputs.reference_x_offset - 1, y - inputs.reference_y_offset - 1);
+            for (int dy = -1; dy <= 1; ++dy)
+                for (int dx = -1; dx <= 1; ++dx)
+                    if (get_pixel(*inputs.reference_bitmap, x - inputs.reference_x_offset + dx, y - inputs.reference_y_offset + dy) != prediction)
+                        return {};
+            return prediction;
+        };
+
+        // "a) If all GRH rows have been decoded, then the decoding is complete; proceed to step 4)."
+        // "b) If TPGRON is 1, then decode a bit using the arithmetic entropy coder..."
+        if (inputs.is_typical_prediction_used) {
+            // "SLTP" in spec. "Swap LTP" or "Switch LTP" maybe?
+            bool line_can_be_predicted = true;
+            for (size_t x = 0; x < width; ++x) {
+                // "TPGRPIX", "TPGRVAL" in spec.
+                auto prediction = predict(x, y);
+                if (prediction.has_value() && inputs.image.get_bit(x, y) != prediction.value()) {
+                    line_can_be_predicted = false;
+                    break;
+                }
+            }
+
+            bool sltp = ltp ^ line_can_be_predicted;
+            encoder.encode_bit(sltp, contexts.contexts[sltp_context]);
+            ltp = ltp ^ sltp;
+        }
+
+        if (!ltp) {
+            // "c) If LTP = 0 then, from left to right, explicitly decode all pixels of the current row of GRREG. The
+            //     procedure for each pixel is as follows:"
+            for (size_t x = 0; x < width; ++x) {
+                u16 context = compute_context(inputs.adaptive_template_pixels, *inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, inputs.image, x, y);
+                encoder.encode_bit(inputs.image.get_bit(x, y), contexts.contexts[context]);
+            }
+        } else {
+            // "d) If LTP = 1 then, from left to right, implicitly decode certain pixels of the current row of GRREG,
+            //     and explicitly decode the rest. The procedure for each pixel is as follows:"
+            for (size_t x = 0; x < width; ++x) {
+                // "TPGRPIX", "TPGRVAL" in spec.
+                auto prediction = predict(x, y);
+
+                // TPGRON must be 1 if LTP is set. (The spec has an explicit "TPGRON is 1 AND" check here, but it is pointless.)
+                VERIFY(inputs.is_typical_prediction_used);
+                if (!prediction.has_value()) {
+                    u16 context = compute_context(inputs.adaptive_template_pixels, *inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, inputs.image, x, y);
+                    encoder.encode_bit(inputs.image.get_bit(x, y), contexts.contexts[context]);
+                }
+            }
+        }
+    }
+
     return encoder.finalize(inputs.trailing_7fff_handling);
 }
 
@@ -453,7 +618,52 @@ static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const
     return {};
 }
 
-static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& segment_data)
+static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRegionSegmentData const& generic_refinement_region, JBIG2::SegmentHeaderData const& header, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id, Vector<u8>& scratch_buffer)
+{
+    if (header.referred_to_segments.size() > 1)
+        return Error::from_string_literal("JBIG2Writer: Generic refinement region must refer to at most one segment");
+    if (header.referred_to_segments.size() == 0)
+        return Error::from_string_literal("JBIG2Writer: Generic refinement region refining page not yet implemented");
+
+    auto maybe_segment = segment_by_id.get(header.referred_to_segments[0].segment_number);
+    if (!maybe_segment.has_value())
+        return Error::from_string_literal("JBIG2Writer: Could not find referred-to segment for generic refinement region");
+    auto const& referred_to_segment = *maybe_segment.value();
+
+    auto const* reference_bitmap = TRY(referred_to_segment.data.visit(
+        [](JBIG2::IntermediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<BilevelImage const*> {
+            return generic_region_wrapper.generic_region.image;
+        },
+        [](auto const&) -> ErrorOr<BilevelImage const*> {
+            return Error::from_string_literal("JBIG2Writer: Generic refinement region can only refer to intermediate region segments");
+        }));
+
+    GenericRefinementRegionEncodingInputParameters inputs { .image = *generic_refinement_region.image };
+    inputs.gr_template = generic_refinement_region.flags & 1;
+    inputs.reference_bitmap = reference_bitmap;
+    inputs.is_typical_prediction_used = (generic_refinement_region.flags >> 1) & 1;
+    inputs.adaptive_template_pixels = generic_refinement_region.adaptive_template_pixels;
+    inputs.trailing_7fff_handling = generic_refinement_region.trailing_7fff_handling;
+    RefinementContexts contexts { inputs.gr_template };
+    MQArithmeticEncoder encoder = TRY(MQArithmeticEncoder::initialize(0));
+    auto data = TRY(generic_refinement_region_encoding_procedure(inputs, encoder, contexts));
+
+    int number_of_adaptive_template_pixels = inputs.gr_template == 0 ? 2 : 0;
+
+    TRY(scratch_buffer.try_resize(sizeof(JBIG2::RegionSegmentInformationField) + 1 + 2 * number_of_adaptive_template_pixels + data.size()));
+    FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
+
+    TRY(encode_region_segment_information_field(stream, generic_refinement_region.region_segment_information));
+    TRY(stream.write_value<u8>(generic_refinement_region.flags));
+    for (int i = 0; i < number_of_adaptive_template_pixels; ++i) {
+        TRY(stream.write_value<i8>(generic_refinement_region.adaptive_template_pixels[i].x));
+        TRY(stream.write_value<i8>(generic_refinement_region.adaptive_template_pixels[i].y));
+    }
+    TRY(stream.write_until_depleted(data));
+    return {};
+}
+
+static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& segment_data, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id)
 {
     Vector<u8> scratch_buffer;
 
@@ -468,6 +678,14 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
         },
         [&scratch_buffer](JBIG2::IntermediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<ReadonlyBytes> {
             TRY(encode_generic_region(generic_region_wrapper.generic_region, scratch_buffer));
+            return scratch_buffer;
+        },
+        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_generic_refinement_region(generic_refinement_region_wrapper.generic_refinement_region, segment_data.header, segment_by_id, scratch_buffer));
+            return scratch_buffer;
+        },
+        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateLosslessGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_generic_refinement_region(generic_refinement_region_wrapper.generic_refinement_region, segment_data.header, segment_by_id, scratch_buffer));
             return scratch_buffer;
         },
         [&scratch_buffer](JBIG2::PageInformationSegment const& page_information) -> ErrorOr<ReadonlyBytes> {
@@ -495,6 +713,8 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
         [](JBIG2::ImmediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateGenericRegion; },
         [](JBIG2::ImmediateLosslessGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessGenericRegion; },
         [](JBIG2::IntermediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::IntermediateGenericRegion; },
+        [](JBIG2::ImmediateGenericRefinementRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateGenericRefinementRegion; },
+        [](JBIG2::ImmediateLosslessGenericRefinementRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessGenericRefinementRegion; },
         [](JBIG2::PageInformationSegment const&) { return JBIG2::SegmentType::PageInformation; },
         [](JBIG2::EndOfFileSegmentData const&) { return JBIG2::SegmentType::EndOfFile; },
         [](JBIG2::EndOfPageSegmentData const&) { return JBIG2::SegmentType::EndOfPage; },
@@ -517,12 +737,18 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
 ErrorOr<void> JBIG2Writer::encode_with_explicit_data(Stream& stream, JBIG2::FileData const& file_data)
 {
     if (file_data.header.organization != JBIG2::Organization::Sequential)
-        return Error::from_string_literal("can only encode sequential files yet");
+        return Error::from_string_literal("JBIG2Writer: Can only encode sequential files yet");
 
     TRY(encode_jbig2_header(stream, file_data.header));
 
+    HashMap<u32, JBIG2::SegmentData const*> segment_by_id;
     for (auto const& segment : file_data.segments) {
-        TRY(encode_segment(stream, segment));
+        if (segment_by_id.set(segment.header.segment_number, &segment) != HashSetResult::InsertedNewEntry)
+            return Error::from_string_literal("JBIG2Writer: Duplicate segment number");
+    }
+
+    for (auto const& segment : file_data.segments) {
+        TRY(encode_segment(stream, segment, segment_by_id));
     }
 
     return {};

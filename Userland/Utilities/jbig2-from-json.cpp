@@ -574,6 +574,158 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_intermediate_generic_region_from_j
     return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::IntermediateGenericRegionSegmentData { TRY(jbig2_generic_region_from_json(options, object)) } };
 }
 
+static ErrorOr<u8> jbig2_refinement_region_flags_from_json(JsonObject const& object)
+{
+    u8 flags = 0;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "gr_template"sv) {
+            if (auto gr_template = value.get_uint(); gr_template.has_value()) {
+                if (gr_template.value() > 1)
+                    return Error::from_string_literal("expected 0 or 1 for \"gr_template\"");
+                flags |= gr_template.value();
+                return {};
+            }
+            return Error::from_string_literal("expected uint for \"gr_template\"");
+        }
+
+        if (key == "use_typical_prediction"sv) {
+            if (auto use_typical_prediction = value.get_bool(); use_typical_prediction.has_value()) {
+                if (use_typical_prediction.value())
+                    flags |= 1u << 1;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"use_typical_prediction\"");
+        }
+
+        dbgln("generic_refinement_region flag key {}", key);
+        return Error::from_string_literal("unknown refinement_region flag key");
+    }));
+
+    return flags;
+}
+
+static ErrorOr<Gfx::JBIG2::GenericRefinementRegionSegmentData> jbig2_generic_refinement_region_from_json(ToJSONOptions const& options, Optional<JsonObject const&> object)
+{
+    if (!object.has_value())
+        return Error::from_string_literal("generic_refinement_region segment should have \"data\" object");
+
+    RegionSegmentInformatJSON region_segment_information;
+    region_segment_information.use_width_from_image = true;
+    region_segment_information.use_height_from_image = true;
+    u8 flags = 0;
+    Vector<i8> adaptive_template_pixels;
+    Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+    RefPtr<Gfx::BilevelImage> image;
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "region_segment_information"sv) {
+            if (value.is_object()) {
+                region_segment_information = TRY(jbig2_region_segment_information_from_json(value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"region_segment_information\"");
+        }
+
+        if (key == "flags"sv) {
+            if (value.is_object()) {
+                flags = TRY(jbig2_refinement_region_flags_from_json(value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"flags\"");
+        }
+
+        if (key == "adaptive_template_pixels"sv) {
+            if (value.is_array()) {
+                auto const& adaptive_template_pixels_json = value.as_array();
+                for (auto const& value : adaptive_template_pixels_json.values()) {
+                    if (auto pixel = value.get_i32(); pixel.has_value()) {
+                        if (pixel.value() < -128 || pixel.value() > 127)
+                            return Error::from_string_literal("expected i8 for \"adaptive_template_pixels\" elements");
+                        adaptive_template_pixels.append(static_cast<i8>(pixel.value()));
+                        continue;
+                    }
+                    return Error::from_string_literal("expected array of i8 for \"adaptive_template_pixels\"");
+                }
+                return {};
+            }
+            return Error::from_string_literal("expected array for \"adaptive_template_pixels\"");
+        }
+
+        if (key == "strip_trailing_7fffs"sv) {
+            if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
+                if (strip_trailing_7fffs.value())
+                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
+                else
+                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"strip_trailing_7fffs\"");
+        }
+
+        if (key == "image_data"sv) {
+            if (value.is_object()) {
+                image = TRY(jbig2_image_from_json(options, value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"image_data\"");
+        }
+
+        dbgln("generic_refinement_region key {}", key);
+        return Error::from_string_literal("unknown refinement_region key");
+    }));
+
+    if (!image)
+        return Error::from_string_literal("generic_refinement_region \"data\" object missing required key \"image_data\"");
+
+    if (region_segment_information.use_width_from_image)
+        region_segment_information.region_segment_information.width = image->width();
+    if (region_segment_information.use_height_from_image)
+        region_segment_information.region_segment_information.height = image->height();
+
+    if (region_segment_information.region_segment_information.width != image->width()
+        || region_segment_information.region_segment_information.height != image->height()) {
+        dbgln("generic_refinement_region's region_segment_information width/height: {}x{}, image dimensions: {}x{}",
+            region_segment_information.region_segment_information.width, region_segment_information.region_segment_information.height,
+            image->width(), image->height());
+        return Error::from_string_literal("generic_refinement_region's region_segment_information width/height do not match image dimensions");
+    }
+
+    u8 gr_template = flags & 1;
+    if (adaptive_template_pixels.is_empty() && gr_template == 0) {
+        // Default to Figure 12 – 13-pixel refinement template showing the AT pixels at their nominal locations
+        adaptive_template_pixels = { -1, -1, -1, -1 };
+    }
+
+    size_t number_of_adaptive_template_pixels = gr_template == 0 ? 2 : 0;
+    if (adaptive_template_pixels.size() != number_of_adaptive_template_pixels * 2) {
+        dbgln("expected {} entries, got {}", number_of_adaptive_template_pixels * 2, adaptive_template_pixels.size());
+        return Error::from_string_literal("generic_refinement_region \"data\" object has wrong number of \"adaptive_template_pixels\"");
+    }
+    Array<Gfx::JBIG2::AdaptiveTemplatePixel, 2> template_pixels {};
+    for (size_t i = 0; i < number_of_adaptive_template_pixels; ++i) {
+        template_pixels[i].x = adaptive_template_pixels[2 * i];
+        template_pixels[i].y = adaptive_template_pixels[2 * i + 1];
+    }
+
+    return Gfx::JBIG2::GenericRefinementRegionSegmentData {
+        region_segment_information.region_segment_information,
+        flags,
+        template_pixels,
+        image.release_nonnull(),
+        trailing_7fff_handling,
+    };
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_generic_refinement_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateGenericRefinementRegionSegmentData { TRY(jbig2_generic_refinement_region_from_json(options, object)) } };
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_lossless_generic_refinement_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateLosslessGenericRefinementRegionSegmentData { TRY(jbig2_generic_refinement_region_from_json(options, object)) } };
+}
+
 static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& object)
 {
     u8 flags = 0;
@@ -905,6 +1057,10 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         return jbig2_immediate_lossless_generic_region_from_json(options, header, segment_data_object);
     if (type_string == "intermediate_generic_region")
         return jbig2_intermediate_generic_region_from_json(options, header, segment_data_object);
+    if (type_string == "generic_refinement_region")
+        return jbig2_immediate_generic_refinement_region_from_json(options, header, segment_data_object);
+    if (type_string == "lossless_generic_refinement_region")
+        return jbig2_immediate_lossless_generic_refinement_region_from_json(options, header, segment_data_object);
     if (type_string == "page_information")
         return jbig2_page_information_from_json(header, segment_data_object);
 
