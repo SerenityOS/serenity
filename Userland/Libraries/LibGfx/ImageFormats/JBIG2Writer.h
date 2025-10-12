@@ -61,6 +61,22 @@ struct IntermediateGenericRegionSegmentData {
     GenericRegionSegmentData generic_region;
 };
 
+struct GenericRefinementRegionSegmentData {
+    RegionSegmentInformationField region_segment_information {};
+    u8 flags { 0 };
+    Array<AdaptiveTemplatePixel, 2> adaptive_template_pixels {};
+    NonnullRefPtr<BilevelImage> image;
+    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+};
+
+struct ImmediateGenericRefinementRegionSegmentData {
+    GenericRefinementRegionSegmentData generic_refinement_region;
+};
+
+struct ImmediateLosslessGenericRefinementRegionSegmentData {
+    GenericRefinementRegionSegmentData generic_refinement_region;
+};
+
 struct EndOfFileSegmentData { };
 struct EndOfPageSegmentData { };
 
@@ -73,7 +89,9 @@ struct SegmentData {
         EndOfStripeSegment,
         ImmediateGenericRegionSegmentData,
         ImmediateLosslessGenericRegionSegmentData,
-        IntermediateGenericRegionSegmentData>
+        IntermediateGenericRegionSegmentData,
+        ImmediateGenericRefinementRegionSegmentData,
+        ImmediateLosslessGenericRefinementRegionSegmentData>
         data;
 };
 
