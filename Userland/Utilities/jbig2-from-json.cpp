@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Hex.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
@@ -156,15 +157,28 @@ static ErrorOr<JSONRect> jbig2_rect_from_json(JsonObject const& object)
     return rect;
 }
 
-static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOptions const& options, JsonObject const& object)
+static ErrorOr<Variant<NonnullRefPtr<Gfx::BilevelImage>, ByteBuffer>> jbig2_image_from_json(ToJSONOptions const& options, JsonObject const& object)
 {
-    RefPtr<Gfx::BilevelImage> image;
+    Variant<Empty, NonnullRefPtr<Gfx::BilevelImage>, ByteBuffer> image;
     JSONRect crop_rect;
     bool invert = false;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "raw_hex_data") {
+            if (value.is_string()) {
+                if (!image.has<Empty>())
+                    return Error::from_string_literal("only one of \"from_file\" and \"raw_hex_data\" allowed");
+                image = TRY(decode_hex(value.as_string()));
+                return {};
+            }
+            return Error::from_string_literal("expected string for \"raw_hex_data\"");
+        }
+
         if (key == "from_file") {
             if (value.is_string()) {
+                if (!image.has<Empty>())
+                    return Error::from_string_literal("only one of \"from_file\" and \"raw_hex_data\" allowed");
+
                 ByteString base_directory = LexicalPath { options.input_path }.dirname();
                 auto path = LexicalPath::absolute_path(base_directory, value.as_string());
                 auto file_or_error = Core::MappedFile::map(path);
@@ -204,32 +218,42 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
         return Error::from_string_literal("unknown image_data key");
     }));
 
-    if (!image)
-        return Error::from_string_literal("no image data in image_data; add \"from_file\" key");
+    return move(image).visit(
+        [](Empty const&) -> ErrorOr<Variant<NonnullRefPtr<Gfx::BilevelImage>, ByteBuffer>> {
+            return Error::from_string_literal("no image data in image_data; add \"from_file\" or \"raw_hex_data\" key");
+        },
+        [&](NonnullRefPtr<Gfx::BilevelImage> image) -> ErrorOr<Variant<NonnullRefPtr<Gfx::BilevelImage>, ByteBuffer>> {
+            if (crop_rect.x.has_value() || crop_rect.y.has_value() || crop_rect.width.has_value() || crop_rect.height.has_value()) {
+                u32 crop_x = crop_rect.x.value_or(0);
+                u32 crop_y = crop_rect.y.value_or(0);
+                u32 crop_width = crop_rect.width.value_or(image->width() - crop_x);
+                u32 crop_height = crop_rect.height.value_or(image->height() - crop_y);
+                if (crop_x + crop_width > image->width() || crop_y + crop_height > image->height())
+                    return Error::from_string_literal("crop rectangle out of bounds");
 
-    if (crop_rect.x.has_value() || crop_rect.y.has_value() || crop_rect.width.has_value() || crop_rect.height.has_value()) {
-        u32 crop_x = crop_rect.x.value_or(0);
-        u32 crop_y = crop_rect.y.value_or(0);
-        u32 crop_width = crop_rect.width.value_or(image->width() - crop_x);
-        u32 crop_height = crop_rect.height.value_or(image->height() - crop_y);
-        if (crop_x + crop_width > image->width() || crop_y + crop_height > image->height())
-            return Error::from_string_literal("crop rectangle out of bounds");
+                auto cropped_image = TRY(Gfx::BilevelImage::create(crop_width, crop_height));
+                for (u32 y = 0; y < crop_height; ++y)
+                    for (u32 x = 0; x < crop_width; ++x)
+                        cropped_image->set_bit(x, y, image->get_bit(x + crop_x, y + crop_y));
 
-        auto cropped_image = TRY(Gfx::BilevelImage::create(crop_width, crop_height));
-        for (u32 y = 0; y < crop_height; ++y)
-            for (u32 x = 0; x < crop_width; ++x)
-                cropped_image->set_bit(x, y, image->get_bit(x + crop_x, y + crop_y));
+                image = move(cropped_image);
+            }
 
-        image = move(cropped_image);
-    }
+            if (invert) {
+                for (u32 y = 0; y < image->height(); ++y)
+                    for (u32 x = 0; x < image->width(); ++x)
+                        image->set_bit(x, y, !image->get_bit(x, y));
+            }
 
-    if (invert) {
-        for (u32 y = 0; y < image->height(); ++y)
-            for (u32 x = 0; x < image->width(); ++x)
-                image->set_bit(x, y, !image->get_bit(x, y));
-    }
-
-    return image.release_nonnull();
+            return image;
+        },
+        [&](ByteBuffer buf) -> ErrorOr<Variant<NonnullRefPtr<Gfx::BilevelImage>, ByteBuffer>> {
+            if (crop_rect.x.has_value() || crop_rect.y.has_value() || crop_rect.width.has_value() || crop_rect.height.has_value())
+                return Error::from_string_literal("\"crop\" not allowed with \"raw_hex_data\"");
+            if (invert)
+                return Error::from_string_literal("\"invert\" not allowed with \"raw_hex_data\"");
+            return buf;
+        });
 }
 
 static ErrorOr<u8> jbig2_region_segment_information_flags_from_json(JsonObject const& object)
@@ -405,7 +429,7 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
     u8 flags = 0;
     Vector<i8> adaptive_template_pixels;
     Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
-    RefPtr<Gfx::BilevelImage> image;
+    Variant<Empty, NonnullRefPtr<Gfx::BilevelImage>, ByteBuffer> image;
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "region_segment_information"sv) {
             if (value.is_object()) {
@@ -471,22 +495,33 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         return Error::from_string_literal("unknown generic_region key");
     }));
 
-    if (!image)
-        return Error::from_string_literal("generic_region \"data\" object missing required key \"image_data\"");
+    auto nonempty_image = TRY(move(image).visit(
+        [](Empty const&) -> ErrorOr<Variant<NonnullRefPtr<Gfx::BilevelImage>, ByteBuffer>> {
+            return Error::from_string_literal("generic_region \"data\" object missing required key \"image_data\"");
+        },
+        [&](NonnullRefPtr<Gfx::BilevelImage> image) -> ErrorOr<Variant<NonnullRefPtr<Gfx::BilevelImage>, ByteBuffer>> {
+            if (region_segment_information.use_width_from_image)
+                region_segment_information.region_segment_information.width = image->width();
+            if (region_segment_information.use_height_from_image)
+                region_segment_information.region_segment_information.height = image->height();
 
-    if (region_segment_information.use_width_from_image)
-        region_segment_information.region_segment_information.width = image->width();
-    if (region_segment_information.use_height_from_image)
-        region_segment_information.region_segment_information.height = image->height();
-
-    if (region_segment_information.region_segment_information.width != image->width()
-        || real_height_for_generic_region_of_initially_unknown_size.value_or(region_segment_information.region_segment_information.height) != image->height()) {
-        dbgln("generic_region's region_segment_information width/height: {}x{}{}, image dimensions: {}x{}",
-            region_segment_information.region_segment_information.width, region_segment_information.region_segment_information.height,
-            real_height_for_generic_region_of_initially_unknown_size.has_value() ? MUST(String::formatted("(overridden with {})", real_height_for_generic_region_of_initially_unknown_size.value())) : ""sv,
-            image->width(), image->height());
-        return Error::from_string_literal("generic_region's region_segment_information width/height do not match image dimensions");
-    }
+            if (region_segment_information.region_segment_information.width != image->width()
+                || real_height_for_generic_region_of_initially_unknown_size.value_or(region_segment_information.region_segment_information.height) != image->height()) {
+                dbgln("generic_region's region_segment_information width/height: {}x{}{}, image dimensions: {}x{}",
+                    region_segment_information.region_segment_information.width, region_segment_information.region_segment_information.height,
+                    real_height_for_generic_region_of_initially_unknown_size.has_value() ? MUST(String::formatted("(overridden with {})", real_height_for_generic_region_of_initially_unknown_size.value())) : ""sv,
+                    image->width(), image->height());
+                return Error::from_string_literal("generic_region's region_segment_information width/height do not match image dimensions");
+            }
+            return image;
+        },
+        [&](ByteBuffer buf) -> ErrorOr<Variant<NonnullRefPtr<Gfx::BilevelImage>, ByteBuffer>> {
+            if (region_segment_information.use_width_from_image)
+                return Error::from_string_literal("\"width\" cannot be \"from_image_data\" when \"image_data\" is \"raw_hex_data\"");
+            if (region_segment_information.use_height_from_image)
+                return Error::from_string_literal("\"height\" cannot be \"from_image_data\" when \"image_data\" is \"raw_hex_data\"");
+            return buf;
+        }));
 
     bool uses_mmr = flags & 1;
     bool use_extended_template = (flags >> 4) & 1;
@@ -549,7 +584,7 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         region_segment_information.region_segment_information,
         flags,
         template_pixels,
-        image.release_nonnull(),
+        move(nonempty_image),
         real_height_for_generic_region_of_initially_unknown_size,
         trailing_7fff_handling,
 

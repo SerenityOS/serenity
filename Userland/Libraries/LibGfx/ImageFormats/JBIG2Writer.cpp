@@ -390,8 +390,8 @@ ErrorOr<void> JBIG2Writer::encode(Stream& stream, Bitmap const& bitmap, Options 
     });
 
     JBIG2::GenericRegionSegmentData generic_region { .image = move(bilevel_image) };
-    generic_region.region_segment_information.width = generic_region.image->width();
-    generic_region.region_segment_information.height = generic_region.image->height();
+    generic_region.region_segment_information.width = generic_region.image.get<NonnullRefPtr<BilevelImage>>()->width();
+    generic_region.region_segment_information.height = generic_region.image.get<NonnullRefPtr<BilevelImage>>()->height();
     generic_region.region_segment_information.flags = 0;
     generic_region.adaptive_template_pixels[0] = { 3, -1 };
     generic_region.adaptive_template_pixels[1] = { -3, -1 };
@@ -413,24 +413,34 @@ ErrorOr<void> JBIG2Writer::encode(Stream& stream, Bitmap const& bitmap, Options 
 
 static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const& generic_region, Vector<u8>& scratch_buffer)
 {
-    GenericRegionEncodingInputParameters inputs { .image = *generic_region.image };
-    inputs.is_modified_modified_read = generic_region.flags & 1;
-    inputs.gb_template = (generic_region.flags >> 1) & 3;
-    inputs.is_typical_prediction_used = (generic_region.flags >> 3) & 1;
-    inputs.is_extended_reference_template_used = (generic_region.flags >> 4) & 1;
-    inputs.adaptive_template_pixels = generic_region.adaptive_template_pixels;
-    inputs.require_eof_after_mmr = GenericRegionEncodingInputParameters::RequireEOFBAfterMMR::No;
-    inputs.trailing_7fff_handling = generic_region.trailing_7fff_handling;
-    Optional<JBIG2::GenericContexts> contexts;
-    if (!inputs.is_modified_modified_read)
-        contexts = JBIG2::GenericContexts { inputs.gb_template };
-    auto data = TRY(generic_region_encoding_procedure(inputs, contexts));
+    bool is_modified_modified_read = generic_region.flags & 1;
+    u8 gb_template = (generic_region.flags >> 1) & 3;
+    bool is_extended_reference_template_used = (generic_region.flags >> 4) & 1;
+    ByteBuffer data;
+    data = TRY(generic_region.image.visit(
+        [&](NonnullRefPtr<BilevelImage> const& image) -> ErrorOr<ByteBuffer> {
+            GenericRegionEncodingInputParameters inputs { .image = image };
+            inputs.is_modified_modified_read = is_modified_modified_read;
+            inputs.gb_template = gb_template;
+            inputs.is_typical_prediction_used = (generic_region.flags >> 3) & 1;
+            inputs.is_extended_reference_template_used = is_extended_reference_template_used;
+            inputs.adaptive_template_pixels = generic_region.adaptive_template_pixels;
+            inputs.require_eof_after_mmr = GenericRegionEncodingInputParameters::RequireEOFBAfterMMR::No;
+            inputs.trailing_7fff_handling = generic_region.trailing_7fff_handling;
+            Optional<JBIG2::GenericContexts> contexts;
+            if (!inputs.is_modified_modified_read)
+                contexts = JBIG2::GenericContexts { inputs.gb_template };
+            return generic_region_encoding_procedure(inputs, contexts);
+        },
+        [](ByteBuffer const& data) -> ErrorOr<ByteBuffer> {
+            return data;
+        }));
 
     int number_of_adaptive_template_pixels = 0;
-    if (!inputs.is_modified_modified_read)
-        number_of_adaptive_template_pixels = inputs.gb_template == 0 ? 4 : 1;
+    if (!is_modified_modified_read)
+        number_of_adaptive_template_pixels = gb_template == 0 ? 4 : 1;
 
-    if (inputs.gb_template == 0 && inputs.is_extended_reference_template_used) {
+    if (gb_template == 0 && is_extended_reference_template_used) {
         // This was added in T.88 Amendment 2 (https://www.itu.int/rec/T-REC-T.88-200306-S!Amd2/en) mid-2003.
         // I haven't seen it being used in the wild, and the spec says "32-byte field as shown below" and then shows 24 bytes,
         // so it's not clear how much data to write.
