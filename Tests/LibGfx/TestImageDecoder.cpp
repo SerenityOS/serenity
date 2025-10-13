@@ -383,6 +383,11 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-template3-customat-tpgdon.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-trailing-7fff-stripped.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-trailing-7fff-stripped-harder.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-refine.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-refine-customat.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-refine-tpgron.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-refine-template1.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-refine-template1-tpgron.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-negative-sbdsoffset.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine.jbig2"sv),
@@ -410,8 +415,6 @@ TEST_CASE(test_jbig2_decode)
         // - intermediate text regions (code support added in #26197)
         // - intermediate halftone regions (code support added in #26197)
         // - intermediate direct regions (code support added in #26197)
-        // - immediate refinement regions referring to a direct region (code support added in #26197)
-        //   - TPGRON set in refinement region (only reachable in standalone refinement regions)
         // Missing tests for things that aren't implemented yet:
         // - immediate refinement regions not referring to a direct region (i.e. refining the page)
         // - immediate lossless refinement regions
