@@ -383,6 +383,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-template3-customat-tpgdon.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-trailing-7fff-stripped.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-trailing-7fff-stripped-harder.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-trailing-7fff-stripped-harder-refine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-tpgron.jbig2"sv),
