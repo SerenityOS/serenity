@@ -3568,7 +3568,7 @@ static ErrorOr<void> decode_immediate_lossless_halftone_region(JBIG2LoadingConte
     // "The data parts of all three of the halftone region segment types ("intermediate halftone region", "immediate halftone
     //  region" and "immediate lossless halftone region") are coded identically, but are acted upon differently, see 8.2."
     // But 8.2 only describes a difference between intermediate and immediate regions as far as I can tell,
-    // and calling the immediate generic region handler for immediate generic lossless regions seems to do the right thing (?).
+    // and calling the immediate halftone region handler for immediate lossless halftone regions seems to do the right thing (?).
     return decode_immediate_halftone_region(context, segment);
 }
 
