@@ -62,7 +62,14 @@ struct EndOfPageSegmentData { };
 
 struct SegmentData {
     SegmentHeaderData header;
-    Variant<PageInformationSegment, EndOfFileSegmentData, EndOfPageSegmentData, EndOfStripeSegment, ImmediateGenericRegionSegmentData, ImmediateLosslessGenericRegionSegmentData> data;
+    Variant<
+        PageInformationSegment,
+        EndOfFileSegmentData,
+        EndOfPageSegmentData,
+        EndOfStripeSegment,
+        ImmediateGenericRegionSegmentData,
+        ImmediateLosslessGenericRegionSegmentData>
+        data;
 };
 
 struct FileHeaderData {
