@@ -92,6 +92,13 @@ constexpr T mix(T const& v1, T const& v2, U const& interpolation) // aka lerp
     return v1 + (v2 - v1) * interpolation;
 }
 
+template<typename T>
+constexpr T mod(T const& a, IdentityType<T> const& b)
+{
+    VERIFY(b != 0);
+    return (a % b + b) % b;
+}
+
 template<typename T, typename U>
 constexpr T ceil_div(T a, U b)
 {
@@ -207,6 +214,7 @@ using AK::is_power_of_two;
 using AK::max;
 using AK::min;
 using AK::mix;
+using AK::mod;
 using AK::move;
 using AK::RawPtr;
 using AK::round_up_to_power_of_two;
