@@ -57,6 +57,10 @@ struct ImmediateLosslessGenericRegionSegmentData {
     GenericRegionSegmentData generic_region;
 };
 
+struct IntermediateGenericRegionSegmentData {
+    GenericRegionSegmentData generic_region;
+};
+
 struct EndOfFileSegmentData { };
 struct EndOfPageSegmentData { };
 
@@ -68,7 +72,8 @@ struct SegmentData {
         EndOfPageSegmentData,
         EndOfStripeSegment,
         ImmediateGenericRegionSegmentData,
-        ImmediateLosslessGenericRegionSegmentData>
+        ImmediateLosslessGenericRegionSegmentData,
+        IntermediateGenericRegionSegmentData>
         data;
 };
 
