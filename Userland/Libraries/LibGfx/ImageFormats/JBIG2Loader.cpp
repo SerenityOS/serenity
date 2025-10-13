@@ -1700,6 +1700,9 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> generic_refinement_region_decoding_p
                 // "TPGRPIX", "TPGRVAL" in spec.
                 bool prediction = get_pixel(*inputs.reference_bitmap, x - inputs.reference_x_offset - 1, y - inputs.reference_y_offset - 1);
                 bool have_prediction = true;
+
+                // "• a 3 × 3 pixel array in the reference bitmap (Figure 16), centred at the location
+                //    corresponding to the current pixel, contains pixels all of the same value."
                 for (int dy = -1; dy <= 1; ++dy) {
                     for (int dx = -1; dx <= 1; ++dx) {
                         if (get_pixel(*inputs.reference_bitmap, x - inputs.reference_x_offset + dx, y - inputs.reference_y_offset + dy) != prediction)
