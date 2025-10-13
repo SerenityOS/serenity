@@ -11,6 +11,18 @@
 
 namespace Gfx {
 
+/// 5.2 - Mirroring
+static u32 mirror_1d(i32 coord, u32 size)
+{
+    if (coord < 0)
+        return mirror_1d(-coord - 1, size);
+    else if (static_cast<u32>(coord) >= size)
+        return mirror_1d(2 * size - 1 - coord, size);
+    else
+        return coord;
+}
+///
+
 struct ChannelInfo {
     static ChannelInfo from_size(IntSize size)
     {
@@ -72,6 +84,13 @@ public:
 
     i32 get(u32 x, u32 y) const
     {
+        return m_pixels[y * m_width + x];
+    }
+
+    i32 get_mirrored(i64 x, i64 y) const
+    {
+        x = mirror_1d(x, width());
+        y = mirror_1d(y, height());
         return m_pixels[y * m_width + x];
     }
 
