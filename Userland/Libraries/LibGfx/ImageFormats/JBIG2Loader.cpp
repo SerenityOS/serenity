@@ -3702,7 +3702,7 @@ static ErrorOr<void> decode_immediate_lossless_generic_region(JBIG2LoadingContex
     // "The data parts of all three of the generic region segment types ("intermediate generic region", "immediate generic region" and
     //  "immediate lossless generic region") are coded identically, but are acted upon differently, see 8.2."
     // But 8.2 only describes a difference between intermediate and immediate regions as far as I can tell,
-    // and calling the immediate generic region handler for immediate generic lossless regions seems to do the right thing (?).
+    // and calling the immediate generic region handler for immediate lossless generic regions seems to do the right thing (?).
     return decode_immediate_generic_region(context, segment);
 }
 
