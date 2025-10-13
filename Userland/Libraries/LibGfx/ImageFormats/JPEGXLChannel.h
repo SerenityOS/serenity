@@ -85,6 +85,31 @@ public:
         return other;
     }
 
+    template<OneOf<i32, f32> OtherT>
+    requires(!SameAs<T, OtherT>)
+    ErrorOr<Channel<OtherT>> as(u8 bits_per_sample) const
+    {
+        Channel<OtherT> other {};
+
+        other.m_width = m_width;
+        other.m_height = m_height;
+        other.m_hshift = m_hshift;
+        other.m_vshift = m_vshift;
+        other.m_decoded = m_decoded;
+
+        TRY(other.m_pixels.try_resize(other.m_width * other.m_height));
+        for (u32 y {}; y < m_height; ++y) {
+            for (u32 x {}; x < m_width; ++x) {
+                if constexpr (IsSame<OtherT, f32>)
+                    other.set(x, y, static_cast<f32>(get(x, y)) / ((1 << bits_per_sample) - 1));
+                else
+                    other.set(x, y, round(get(x, y) * ((1 << bits_per_sample) - 1)));
+            }
+        }
+
+        return other;
+    }
+
     T get(u32 x, u32 y) const
     {
         return m_pixels[y * m_width + x];
@@ -150,6 +175,9 @@ public:
     }
 
 private:
+    template<OneOf<i32, f32>>
+    friend class Channel;
+
     Channel() = default;
 
     u32 m_width {};
@@ -166,5 +194,6 @@ private:
 }
 
 using Channel = Detail::Channel<i32>;
+using FloatChannel = Detail::Channel<f32>;
 
 }
