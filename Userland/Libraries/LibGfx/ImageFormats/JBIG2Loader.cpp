@@ -1698,22 +1698,21 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> generic_refinement_region_decoding_p
             //     and explicitly decode the rest. The procedure for each pixel is as follows:"
             for (size_t x = 0; x < result->width(); ++x) {
                 // "TPGRPIX", "TPGRVAL" in spec.
-                bool prediction = get_pixel(*inputs.reference_bitmap, x - inputs.reference_x_offset - 1, y - inputs.reference_y_offset - 1);
-                bool have_prediction = true;
-
-                // "• a 3 × 3 pixel array in the reference bitmap (Figure 16), centred at the location
-                //    corresponding to the current pixel, contains pixels all of the same value."
-                for (int dy = -1; dy <= 1; ++dy) {
-                    for (int dx = -1; dx <= 1; ++dx) {
-                        if (get_pixel(*inputs.reference_bitmap, x - inputs.reference_x_offset + dx, y - inputs.reference_y_offset + dy) != prediction)
-                            have_prediction = false;
-                    }
-                }
+                auto prediction = [&](size_t x, size_t y) -> Optional<bool> {
+                    // "• a 3 × 3 pixel array in the reference bitmap (Figure 16), centred at the location
+                    //    corresponding to the current pixel, contains pixels all of the same value."
+                    bool prediction = get_pixel(*inputs.reference_bitmap, x - inputs.reference_x_offset - 1, y - inputs.reference_y_offset - 1);
+                    for (int dy = -1; dy <= 1; ++dy)
+                        for (int dx = -1; dx <= 1; ++dx)
+                            if (get_pixel(*inputs.reference_bitmap, x - inputs.reference_x_offset + dx, y - inputs.reference_y_offset + dy) != prediction)
+                                return {};
+                    return prediction;
+                }(x, y);
 
                 // TPGRON must be 1 if LTP is set. (The spec has an explicit "TPGRON is 1 AND" check here, but it is pointless.)
                 VERIFY(inputs.is_typical_prediction_used);
-                if (have_prediction) {
-                    result->set_bit(x, y, prediction);
+                if (prediction.has_value()) {
+                    result->set_bit(x, y, prediction.value());
                 } else {
                     u16 context = compute_context(inputs.adaptive_template_pixels, *inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, *result, x, y);
                     bool bit = decoder.get_next_bit(contexts.contexts[context]);
