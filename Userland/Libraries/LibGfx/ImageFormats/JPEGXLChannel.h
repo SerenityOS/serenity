@@ -37,6 +37,9 @@ struct ChannelInfo {
     i8 vshift {};
 };
 
+namespace Detail {
+
+template<OneOf<i32, f32> T>
 class Channel {
     AK_MAKE_NONCOPYABLE(Channel);
     AK_MAKE_DEFAULT_MOVABLE(Channel);
@@ -82,19 +85,19 @@ public:
         return other;
     }
 
-    i32 get(u32 x, u32 y) const
+    T get(u32 x, u32 y) const
     {
         return m_pixels[y * m_width + x];
     }
 
-    i32 get_mirrored(i64 x, i64 y) const
+    T get_mirrored(i64 x, i64 y) const
     {
         x = mirror_1d(x, width());
         y = mirror_1d(y, height());
         return m_pixels[y * m_width + x];
     }
 
-    void set(u32 x, u32 y, i32 value)
+    void set(u32 x, u32 y, T value)
     {
         m_pixels[y * m_width + x] = value;
     }
@@ -157,7 +160,11 @@ private:
 
     bool m_decoded { false };
 
-    Vector<i32> m_pixels {};
+    Vector<T> m_pixels {};
 };
+
+}
+
+using Channel = Detail::Channel<i32>;
 
 }
