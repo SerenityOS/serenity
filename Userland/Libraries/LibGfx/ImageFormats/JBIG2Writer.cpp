@@ -194,6 +194,7 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
         // "b) If TPGDON is 1, then decode a bit using the arithmetic entropy coder..."
         if (inputs.is_typical_prediction_used) {
             // "i) If the current row of GBREG is identical to the row immediately above, then SLTP = 1; otherwise SLTP = 0."
+            // FIXME: If skip_pattern is set, we should probably ignore skipped pixels here.
             bool is_line_identical_to_previous_line = true;
             for (size_t x = 0; x < width; ++x) {
                 if (inputs.image.get_bit(x, y) != get_pixel(inputs.image, (int)x, (int)y - 1)) {
