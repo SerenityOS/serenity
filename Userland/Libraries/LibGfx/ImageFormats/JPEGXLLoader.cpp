@@ -2743,18 +2743,6 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
 }
 ///
 
-/// 5.2 - Mirroring
-static u32 mirror_1d(i32 coord, u32 size)
-{
-    if (coord < 0)
-        return mirror_1d(-coord - 1, size);
-    else if (static_cast<u32>(coord) >= size)
-        return mirror_1d(2 * size - 1 - coord, size);
-    else
-        return coord;
-}
-///
-
 /// J - Restoration filters
 
 // J.3  Gabor-like transform
@@ -2904,10 +2892,7 @@ static ErrorOr<void> apply_upsampling(Frame& frame, ImageMetadata const& metadat
                                     auto const maximum = max(i, j);
                                     auto const index = 5 * k * minimum / 2 - minimum * (minimum - 1) / 2 + maximum - minimum;
 
-                                    auto const origin_sample_x = mirror_1d(x + ix - 2, channel.width());
-                                    auto const origin_sample_y = mirror_1d(y + iy - 2, channel.height());
-
-                                    auto const origin_sample = channel.get(origin_sample_x, origin_sample_y);
+                                    auto const origin_sample = channel.get_mirrored(x + ix - 2, y + iy - 2);
 
                                     W_min = min(W_min, origin_sample);
                                     W_max = max(W_max, origin_sample);
