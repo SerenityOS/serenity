@@ -36,3 +36,12 @@ TEST_CASE(pow)
     EXPECT_EQ(AK::pow(1., -9223372036854775808.0), 1.);
     EXPECT_EQ(AK::pow(1., -9223372036854777856.0), 1.);
 }
+
+TEST_CASE(wrap_to_range)
+{
+    EXPECT_EQ(AK::wrap_to_range(-185., 180.), 175.);
+    EXPECT_EQ(AK::wrap_to_range(185., 180.), -175.);
+    EXPECT_EQ(AK::wrap_to_range(85., 180.), 85.);
+    EXPECT_EQ(AK::wrap_to_range(0., 180.), 0.);
+    EXPECT_EQ(AK::wrap_to_range(-85., 180.), -85.);
+}

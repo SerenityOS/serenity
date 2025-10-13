@@ -1284,6 +1284,13 @@ constexpr I clamp_to(T value)
     return value;
 }
 
+// Wrap a to keep it in the range [-b, b].
+template<typename T>
+constexpr T wrap_to_range(T a, IdentityType<T> b)
+{
+    return fmod(fmod(a + b, 2 * b) + 2 * b, 2 * b) - b;
+}
+
 #undef CONSTEXPR_STATE
 #undef AARCH64_INSTRUCTION
 }
