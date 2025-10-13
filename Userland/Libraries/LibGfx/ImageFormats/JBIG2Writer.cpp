@@ -465,6 +465,10 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
             TRY(encode_generic_region(generic_region_wrapper.generic_region, scratch_buffer));
             return scratch_buffer;
         },
+        [&scratch_buffer](JBIG2::IntermediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_generic_region(generic_region_wrapper.generic_region, scratch_buffer));
+            return scratch_buffer;
+        },
         [&scratch_buffer](JBIG2::PageInformationSegment const& page_information) -> ErrorOr<ReadonlyBytes> {
             TRY(scratch_buffer.try_resize(sizeof(JBIG2::PageInformationSegment)));
             FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
@@ -489,6 +493,7 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     header.type = segment_data.data.visit(
         [](JBIG2::ImmediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateGenericRegion; },
         [](JBIG2::ImmediateLosslessGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessGenericRegion; },
+        [](JBIG2::IntermediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::IntermediateGenericRegion; },
         [](JBIG2::PageInformationSegment const&) { return JBIG2::SegmentType::PageInformation; },
         [](JBIG2::EndOfFileSegmentData const&) { return JBIG2::SegmentType::EndOfFile; },
         [](JBIG2::EndOfPageSegmentData const&) { return JBIG2::SegmentType::EndOfPage; },
