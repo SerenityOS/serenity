@@ -3785,9 +3785,15 @@ static ErrorOr<void> decode_immediate_generic_refinement_region(JBIG2LoadingCont
     return {};
 }
 
-static ErrorOr<void> decode_immediate_lossless_generic_refinement_region(JBIG2LoadingContext&, SegmentData const&)
+static ErrorOr<void> decode_immediate_lossless_generic_refinement_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode immediate lossless generic refinement region yet");
+    // 7.4.7 Generic refinement region syntax
+    // "The data parts of all three of the generic refinement region segment types ("intermediate generic refinement region",
+    //  "immediate generic refinement region" and "immediate lossless generic refinement region") are coded identically, but
+    //  are acted upon differently, see 8.2."
+    // But 8.2 only describes a difference between intermediate and immediate regions as far as I can tell,
+    // and calling the immediate generic refinement region handler for immediate lossless generic refinement regions seems to do the right thing (?).
+    return decode_immediate_generic_refinement_region(context, segment);
 }
 
 static ErrorOr<void> decode_page_information(JBIG2LoadingContext& context, SegmentData const& segment)
