@@ -112,9 +112,7 @@ void WindowSwitcher::on_key_event(KeyEvent const& event)
     if (!event.shift()) {
         new_selected_index = (m_selected_index + 1) % static_cast<int>(m_windows.size());
     } else {
-        new_selected_index = (m_selected_index - 1) % static_cast<int>(m_windows.size());
-        if (new_selected_index < 0)
-            new_selected_index = static_cast<int>(m_windows.size()) - 1;
+        new_selected_index = mod(m_selected_index - 1, static_cast<int>(m_windows.size()));
     }
     VERIFY(new_selected_index < static_cast<int>(m_windows.size()));
 

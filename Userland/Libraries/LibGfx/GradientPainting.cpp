@@ -108,8 +108,7 @@ public:
                 auto current_loc = loc + m_start_offset;
                 auto gradient_len = static_cast<i64>(m_gradient_line_colors.size());
                 if (m_repeat_mode == RepeatMode::Repeat) {
-                    auto color_loc = current_loc % gradient_len;
-                    return color_loc < 0 ? gradient_len + color_loc : color_loc;
+                    return mod(current_loc, gradient_len);
                 } else if (m_repeat_mode == RepeatMode::Reflect) {
                     auto color_loc = AK::abs(current_loc % gradient_len);
                     auto repeats = current_loc / gradient_len;

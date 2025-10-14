@@ -119,11 +119,6 @@ static inline BigAllocator (&big_allocators())[1]
 // chunk. It has no bearing on the rest of the allocator, especially for
 // regular malloc.
 
-static inline unsigned long modulo(long a, long b)
-{
-    return (b + (a % b)) % b;
-}
-
 struct EuclideanResult {
     long x;
     long y;
@@ -160,12 +155,12 @@ static inline bool block_has_aligned_chunk(long align, long bytes_per_chunk, lon
 
     // Solve the linear congruence n*bytes_per_chunk = -sizeof(ChunkedBlock) (mod align).
     auto [x, y, gcd] = extended_euclid(bytes_per_chunk % align, align);
-    long constant = modulo(-sizeof(ChunkedBlock), align);
+    long constant = mod(-sizeof(ChunkedBlock), align);
     if (constant % gcd != 0)
         // No solution. Chunk size is probably a multiple of align.
         return false;
 
-    long n = modulo(x * (constant / gcd), align);
+    long n = mod(x * (constant / gcd), align);
     if (x < 0)
         n = (n + align / gcd) % align;
 

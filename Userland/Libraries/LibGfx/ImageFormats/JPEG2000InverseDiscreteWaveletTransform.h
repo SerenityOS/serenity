@@ -259,9 +259,6 @@ inline void _1D_EXTR(Transformation transformation, IDWTOutput& a, int start, in
     // (F-4)
     // PSE is short for "Period Symmetric Extension".
     auto PSE = [](int i, int i0, int i1) {
-        auto mod = [](int a, int b) {
-            return (a % b + b) % b;
-        };
         return i0 + min(mod(i - i0, 2 * (i1 - i0 - 1)), 2 * (i1 - i0 - 1) - mod(i - i0, 2 * (i1 - i0 - 1)));
     };
 

@@ -157,10 +157,6 @@ static struct tm* time_to_tm(struct tm* tm, time_t t, StringView time_zone)
     tm->tm_wday = day_of_week(year, month, tm->tm_mday);
     tm->tm_mon = month - 1;
 
-    auto mod = [](i64 a, i64 b) {
-        return (a % b + b) % b;
-    };
-
     t = mod(t, __seconds_per_day);
 
     VERIFY(t >= 0);
