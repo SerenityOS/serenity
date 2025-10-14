@@ -3711,7 +3711,7 @@ static ErrorOr<void> decode_intermediate_generic_refinement_region(JBIG2LoadingC
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate generic refinement region yet");
 }
 
-static ErrorOr<void> decode_immediate_generic_refinement_region(JBIG2LoadingContext& context, SegmentData const& segment)
+static ErrorOr<RegionResult> decode_generic_refinement_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
     // 7.4.7 Generic refinement region syntax
     auto data = segment.data;
@@ -3776,11 +3776,18 @@ static ErrorOr<void> decode_immediate_generic_refinement_region(JBIG2LoadingCont
 
     auto decoder = TRY(MQArithmeticDecoder::initialize(data));
     auto result = TRY(generic_refinement_region_decoding_procedure(inputs, decoder, contexts));
+    return RegionResult { .information_field = information_field, .bitmap = move(result) };
+}
 
-    result->composite_onto(
+static ErrorOr<void> decode_immediate_generic_refinement_region(JBIG2LoadingContext& context, SegmentData const& segment)
+{
+    auto result = TRY(decode_generic_refinement_region(context, segment));
+
+    // 8.2 Page image composition, 5d.
+    result.bitmap->composite_onto(
         *context.page.bits,
-        { information_field.x_location, information_field.y_location },
-        to_composition_type(information_field.external_combination_operator()));
+        { result.information_field.x_location, result.information_field.y_location },
+        to_composition_type(result.information_field.external_combination_operator()));
 
     return {};
 }
