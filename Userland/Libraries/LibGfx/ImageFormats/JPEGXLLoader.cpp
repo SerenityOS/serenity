@@ -2771,7 +2771,7 @@ static FloatMatrix3x3 construct_gabor_like_filter(GaborWeights weights)
     return filter / filter.element_sum();
 }
 
-static FloatMatrix3x3 extract_matrix_from_channel(Channel const& channel, u32 x, u32 y)
+static FloatMatrix3x3 extract_matrix_from_channel(FloatChannel const& channel, u32 x, u32 y)
 {
     FloatMatrix3x3 m;
     auto x_minus_1 = x == 0 ? mirror_1d(x, channel.width()) : x - 1;
@@ -2793,18 +2793,14 @@ static FloatMatrix3x3 extract_matrix_from_channel(Channel const& channel, u32 x,
     return m;
 }
 
-static ErrorOr<void> apply_gabor_like_on_channel(Channel& channel, GaborWeights weights, u8 bits_per_sample)
+static ErrorOr<void> apply_gabor_like_on_channel(FloatChannel& channel, GaborWeights weights)
 {
     auto filter = construct_gabor_like_filter(weights);
     auto out = TRY(channel.copy());
-    // FIXME: Use f32 channels for the whole rendering pipeline!
-    f32 float_convert = (1 << bits_per_sample) - 1;
     for (u32 y = 0; y < channel.height(); ++y) {
         for (u32 x = 0; x < channel.width(); ++x) {
             auto source = extract_matrix_from_channel(channel, x, y);
-            source = source / float_convert;
             auto result = source.hadamard_product(filter).element_sum();
-            result = result * float_convert;
             out.set(x, y, result);
         }
     }
@@ -2812,36 +2808,69 @@ static ErrorOr<void> apply_gabor_like_on_channel(Channel& channel, GaborWeights 
     return {};
 }
 
-static ErrorOr<void> apply_gabor_like_filter(Frame& frame, u8 bits_per_sample)
+static ErrorOr<void> apply_gabor_like_filter(RestorationFilter const& restoration_filter, Span<FloatChannel> channels)
 {
-    auto const& restoration_filter = frame.frame_header.restoration_filter;
     Array<GaborWeights, 3> weights {
         GaborWeights { restoration_filter.gab_x_weight1, restoration_filter.gab_x_weight2 },
         GaborWeights { restoration_filter.gab_y_weight1, restoration_filter.gab_y_weight2 },
         GaborWeights { restoration_filter.gab_b_weight1, restoration_filter.gab_b_weight2 },
     };
-    for (auto [i, channel] : enumerate(frame.image->channels())) {
-        TRY(apply_gabor_like_on_channel(channel, weights[i], bits_per_sample));
+    for (auto [i, channel] : enumerate(channels)) {
+        TRY(apply_gabor_like_on_channel(channel, weights[i]));
         if (i > 2)
             break;
     }
     return {};
 }
 
-// J.1  General
-static ErrorOr<void> apply_restoration_filters(Frame& frame, u8 bits_per_sample)
+struct SplitChannels {
+    Vector<FloatChannel> color_channels {};
+    Vector<Channel> extra_channels {};
+};
+
+template<typename T2, typename T1>
+static ErrorOr<Vector<Detail::Channel<T2>>> convert_channels(Span<Detail::Channel<T1>> const& channels, u8 bits_per_sample)
+{
+    Vector<Detail::Channel<T2>> new_channels;
+    TRY(new_channels.try_ensure_capacity(channels.size()));
+    for (u32 i = 0; i < channels.size(); ++i)
+        new_channels.append(TRY(channels[i].template as<T2>(bits_per_sample)));
+    return new_channels;
+}
+
+static ErrorOr<SplitChannels> extract_color_channels(ImageMetadata const& metadata, Image& image)
+{
+    auto all_channels = move(image.channels());
+    auto f32_color_channels = TRY(convert_channels<f32>(all_channels.span().trim(metadata.number_of_color_channels()), metadata.bit_depth.bits_per_sample));
+    all_channels.remove(0, metadata.number_of_color_channels());
+    return SplitChannels { move(f32_color_channels), move(all_channels) };
+}
+
+// J.1 - General
+static ErrorOr<void> apply_restoration_filters(Frame& frame, ImageMetadata const& metadata)
 {
     auto const& frame_header = frame.frame_header;
-    if constexpr (JPEGXL_DEBUG) {
-        dbgln("Restoration filters:");
-        dbgln(" * Gab: {}", frame_header.restoration_filter.gab);
-        dbgln(" * EPF: {}", frame_header.restoration_filter.epf_iters);
+
+    if (frame_header.restoration_filter.gab || frame_header.restoration_filter.epf_iters != 0) {
+        if constexpr (JPEGXL_DEBUG) {
+            dbgln("Restoration filters:");
+            dbgln(" * Gab: {}", frame_header.restoration_filter.gab);
+            dbgln(" * EPF: {}", frame_header.restoration_filter.epf_iters);
+        }
+
+        // FIXME: Clarify where we should actually do the i32 -> f32 convertion.
+        auto channels = TRY(extract_color_channels(metadata, *frame.image));
+
+        if (frame_header.restoration_filter.gab)
+            TRY(apply_gabor_like_filter(frame.frame_header.restoration_filter, channels.color_channels));
+        if (frame_header.restoration_filter.epf_iters != 0)
+            dbgln("JPEGXLLoader: FIXME: Apply edge preserving filters");
+
+        auto i32_channels = TRY(convert_channels<i32>(channels.color_channels.span(), metadata.bit_depth.bits_per_sample));
+        TRY(i32_channels.try_extend(move(channels.extra_channels)));
+        frame.image = TRY(Image::adopt_channels(move(i32_channels)));
     }
 
-    if (frame_header.restoration_filter.gab)
-        TRY(apply_gabor_like_filter(frame, bits_per_sample));
-    if (frame_header.restoration_filter.epf_iters != 0)
-        dbgln("JPEGXLLoader: FIXME: Apply edge preserving filters");
     return {};
 }
 ///
@@ -3043,7 +3072,7 @@ public:
         auto frame = TRY(read_frame(m_stream, m_header, m_metadata));
         auto const& frame_header = frame.frame_header;
 
-        TRY(apply_restoration_filters(frame, m_metadata.bit_depth.bits_per_sample));
+        TRY(apply_restoration_filters(frame, m_metadata));
 
         TRY(apply_image_features(m_frames, frame, m_metadata));
 
