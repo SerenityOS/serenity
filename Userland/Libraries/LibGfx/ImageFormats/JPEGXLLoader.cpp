@@ -1659,9 +1659,9 @@ struct ModularData {
             }
         }
 
-        TRY(channels.try_resize(channel_infos.size()));
-        for (u32 i = 0; i < channels.size(); ++i)
-            channels[i] = TRY(Channel::create(channel_infos[i]));
+        TRY(channels.try_ensure_capacity(channel_infos.size()));
+        for (u32 i = 0; i < channel_infos.size(); ++i)
+            channels.append(TRY(Channel::create(channel_infos[i])));
 
         return {};
     }

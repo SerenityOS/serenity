@@ -26,6 +26,9 @@ struct ChannelInfo {
 };
 
 class Channel {
+    AK_MAKE_NONCOPYABLE(Channel);
+    AK_MAKE_DEFAULT_MOVABLE(Channel);
+
 public:
     static ErrorOr<Channel> create(ChannelInfo const& info)
     {
@@ -125,6 +128,8 @@ public:
     }
 
 private:
+    Channel() = default;
+
     u32 m_width {};
     u32 m_height {};
 
