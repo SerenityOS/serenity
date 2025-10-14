@@ -726,6 +726,11 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_lossless_generic_refinem
     return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateLosslessGenericRefinementRegionSegmentData { TRY(jbig2_generic_refinement_region_from_json(options, object)) } };
 }
 
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_intermediate_generic_refinement_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::IntermediateGenericRefinementRegionSegmentData { TRY(jbig2_generic_refinement_region_from_json(options, object)) } };
+}
+
 static ErrorOr<u8> jbig2_page_information_flags_from_json(JsonObject const& object)
 {
     u8 flags = 0;
@@ -1061,6 +1066,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         return jbig2_immediate_generic_refinement_region_from_json(options, header, segment_data_object);
     if (type_string == "lossless_generic_refinement_region")
         return jbig2_immediate_lossless_generic_refinement_region_from_json(options, header, segment_data_object);
+    if (type_string == "intermediate_generic_refinement_region")
+        return jbig2_intermediate_generic_refinement_region_from_json(options, header, segment_data_object);
     if (type_string == "page_information")
         return jbig2_page_information_from_json(header, segment_data_object);
 

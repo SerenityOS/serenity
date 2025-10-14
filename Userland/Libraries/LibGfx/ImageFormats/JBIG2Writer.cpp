@@ -634,6 +634,9 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
         [](JBIG2::IntermediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<BilevelImage const*> {
             return generic_region_wrapper.generic_region.image;
         },
+        [](JBIG2::IntermediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<BilevelImage const*> {
+            return generic_refinement_region_wrapper.generic_refinement_region.image;
+        },
         [](auto const&) -> ErrorOr<BilevelImage const*> {
             return Error::from_string_literal("JBIG2Writer: Generic refinement region can only refer to intermediate region segments");
         }));
@@ -688,6 +691,10 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
             TRY(encode_generic_refinement_region(generic_refinement_region_wrapper.generic_refinement_region, segment_data.header, segment_by_id, scratch_buffer));
             return scratch_buffer;
         },
+        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::IntermediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_generic_refinement_region(generic_refinement_region_wrapper.generic_refinement_region, segment_data.header, segment_by_id, scratch_buffer));
+            return scratch_buffer;
+        },
         [&scratch_buffer](JBIG2::PageInformationSegment const& page_information) -> ErrorOr<ReadonlyBytes> {
             TRY(scratch_buffer.try_resize(sizeof(JBIG2::PageInformationSegment)));
             FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
@@ -715,6 +722,7 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
         [](JBIG2::IntermediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::IntermediateGenericRegion; },
         [](JBIG2::ImmediateGenericRefinementRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateGenericRefinementRegion; },
         [](JBIG2::ImmediateLosslessGenericRefinementRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessGenericRefinementRegion; },
+        [](JBIG2::IntermediateGenericRefinementRegionSegmentData const&) { return JBIG2::SegmentType::IntermediateGenericRefinementRegion; },
         [](JBIG2::PageInformationSegment const&) { return JBIG2::SegmentType::PageInformation; },
         [](JBIG2::EndOfFileSegmentData const&) { return JBIG2::SegmentType::EndOfFile; },
         [](JBIG2::EndOfPageSegmentData const&) { return JBIG2::SegmentType::EndOfPage; },

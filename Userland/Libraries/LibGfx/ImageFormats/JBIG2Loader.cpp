@@ -551,7 +551,7 @@ struct SegmentData {
     Optional<Vector<JBIG2::Code>> codes;
     Optional<JBIG2::HuffmanTable> huffman_table;
 
-    // Set on intermediate direct region segments after they've been decoded.
+    // Set on intermediate region segments after they've been decoded.
     RefPtr<BilevelImage> aux_buffer;
 };
 
@@ -3706,11 +3706,6 @@ static ErrorOr<void> decode_immediate_lossless_generic_region(JBIG2LoadingContex
     return decode_immediate_generic_region(context, segment);
 }
 
-static ErrorOr<void> decode_intermediate_generic_refinement_region(JBIG2LoadingContext&, SegmentData const&)
-{
-    return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode intermediate generic refinement region yet");
-}
-
 static ErrorOr<RegionResult> decode_generic_refinement_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
     // 7.4.7 Generic refinement region syntax
@@ -3777,6 +3772,20 @@ static ErrorOr<RegionResult> decode_generic_refinement_region(JBIG2LoadingContex
     auto decoder = TRY(MQArithmeticDecoder::initialize(data));
     auto result = TRY(generic_refinement_region_decoding_procedure(inputs, decoder, contexts));
     return RegionResult { .information_field = information_field, .bitmap = move(result) };
+}
+
+static ErrorOr<void> decode_intermediate_generic_refinement_region(JBIG2LoadingContext& context, SegmentData& segment)
+{
+    auto result = TRY(decode_generic_refinement_region(context, segment));
+
+    // 8.2 Page image composition, 5e.
+    VERIFY(result.bitmap->width() == result.information_field.width);
+    VERIFY(result.bitmap->height() == result.information_field.height);
+    if (result.information_field.x_location != 0 || result.information_field.y_location != 0)
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle intermediate direct region with non-zero x/y location yet");
+
+    segment.aux_buffer = move(result.bitmap);
+    return {};
 }
 
 static ErrorOr<void> decode_immediate_generic_refinement_region(JBIG2LoadingContext& context, SegmentData const& segment)

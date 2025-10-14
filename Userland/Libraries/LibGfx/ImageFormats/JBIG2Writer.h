@@ -77,6 +77,10 @@ struct ImmediateLosslessGenericRefinementRegionSegmentData {
     GenericRefinementRegionSegmentData generic_refinement_region;
 };
 
+struct IntermediateGenericRefinementRegionSegmentData {
+    GenericRefinementRegionSegmentData generic_refinement_region;
+};
+
 struct EndOfFileSegmentData { };
 struct EndOfPageSegmentData { };
 
@@ -91,7 +95,8 @@ struct SegmentData {
         ImmediateLosslessGenericRegionSegmentData,
         IntermediateGenericRegionSegmentData,
         ImmediateGenericRefinementRegionSegmentData,
-        ImmediateLosslessGenericRefinementRegionSegmentData>
+        ImmediateLosslessGenericRefinementRegionSegmentData,
+        IntermediateGenericRefinementRegionSegmentData>
         data;
 };
 
