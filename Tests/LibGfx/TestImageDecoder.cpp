@@ -387,6 +387,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-refine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-lossless.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-refine-refine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-tpgron.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-template1.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-template1-tpgron.jbig2"sv),
@@ -419,7 +420,6 @@ TEST_CASE(test_jbig2_decode)
         // - intermediate direct regions (code support added in #26197)
         // Missing tests for things that aren't implemented yet:
         // - immediate refinement regions not referring to a direct region (i.e. refining the page)
-        // - intermediate refinement regions
         // - intermediate regions not covering the full page
         // - exttemplate
         // - colors
