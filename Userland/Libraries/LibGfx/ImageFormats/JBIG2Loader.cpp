@@ -2976,12 +2976,12 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
     return {};
 }
 
-struct DirectRegionResult {
+struct RegionResult {
     JBIG2::RegionSegmentInformationField information_field;
     NonnullRefPtr<BilevelImage> bitmap;
 };
 
-static void handle_immediate_direct_region(JBIG2LoadingContext& context, DirectRegionResult const& result)
+static void handle_immediate_direct_region(JBIG2LoadingContext& context, RegionResult const& result)
 {
     // 8.2 Page image composition, 5a.
     result.bitmap->composite_onto(
@@ -2990,7 +2990,7 @@ static void handle_immediate_direct_region(JBIG2LoadingContext& context, DirectR
         to_composition_type(result.information_field.external_combination_operator()));
 }
 
-static ErrorOr<void> handle_intermediate_direct_region(JBIG2LoadingContext&, SegmentData& segment, DirectRegionResult& result)
+static ErrorOr<void> handle_intermediate_direct_region(JBIG2LoadingContext&, SegmentData& segment, RegionResult& result)
 {
     // 8.2 Page image composition, 5b.
     VERIFY(result.bitmap->width() == result.information_field.width);
@@ -3066,7 +3066,7 @@ static ErrorOr<Vector<u32>> assign_huffman_codes(ReadonlyBytes code_lengths)
     return codes;
 }
 
-static ErrorOr<DirectRegionResult> decode_text_region(JBIG2LoadingContext& context, SegmentData const& segment)
+static ErrorOr<RegionResult> decode_text_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
     // 7.4.3 Text region segment syntax
     auto data = segment.data;
@@ -3380,7 +3380,7 @@ static ErrorOr<DirectRegionResult> decode_text_region(JBIG2LoadingContext& conte
     }
 
     auto result = TRY(text_region_decoding_procedure(inputs, text_contexts, refinement_contexts));
-    return DirectRegionResult { .information_field = information_field, .bitmap = move(result) };
+    return RegionResult { .information_field = information_field, .bitmap = move(result) };
 }
 
 static ErrorOr<void> decode_intermediate_text_region(JBIG2LoadingContext& context, SegmentData& segment)
@@ -3460,7 +3460,7 @@ static ErrorOr<void> decode_pattern_dictionary(JBIG2LoadingContext&, SegmentData
     return {};
 }
 
-static ErrorOr<DirectRegionResult> decode_halftone_region(JBIG2LoadingContext& context, SegmentData const& segment)
+static ErrorOr<RegionResult> decode_halftone_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
     // 7.4.5 Halftone region segment syntax
     auto data = segment.data;
@@ -3546,7 +3546,7 @@ static ErrorOr<DirectRegionResult> decode_halftone_region(JBIG2LoadingContext& c
     inputs.pattern_height = inputs.patterns[0].height();
     auto result = TRY(halftone_region_decoding_procedure(inputs, data, contexts));
 
-    return DirectRegionResult { .information_field = information_field, .bitmap = move(result) };
+    return RegionResult { .information_field = information_field, .bitmap = move(result) };
 }
 
 static ErrorOr<void> decode_intermediate_halftone_region(JBIG2LoadingContext& context, SegmentData& segment)
@@ -3572,7 +3572,7 @@ static ErrorOr<void> decode_immediate_lossless_halftone_region(JBIG2LoadingConte
     return decode_immediate_halftone_region(context, segment);
 }
 
-static ErrorOr<DirectRegionResult> decode_generic_region(JBIG2LoadingContext& context, SegmentData const& segment)
+static ErrorOr<RegionResult> decode_generic_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
     // 7.4.6 Generic region segment syntax
     auto data = segment.data;
@@ -3680,7 +3680,7 @@ static ErrorOr<DirectRegionResult> decode_generic_region(JBIG2LoadingContext& co
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Region bounds outsize of page bounds");
     }
 
-    return DirectRegionResult { .information_field = information_field, .bitmap = move(result) };
+    return RegionResult { .information_field = information_field, .bitmap = move(result) };
 }
 
 static ErrorOr<void> decode_intermediate_generic_region(JBIG2LoadingContext& context, SegmentData& segment)
