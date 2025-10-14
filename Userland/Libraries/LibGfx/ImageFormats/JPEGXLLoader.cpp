@@ -2810,16 +2810,15 @@ static ErrorOr<void> apply_gabor_like_on_channel(FloatChannel& channel, GaborWei
 
 static ErrorOr<void> apply_gabor_like_filter(RestorationFilter const& restoration_filter, Span<FloatChannel> channels)
 {
+    VERIFY(channels.size() == 3);
+
     Array<GaborWeights, 3> weights {
         GaborWeights { restoration_filter.gab_x_weight1, restoration_filter.gab_x_weight2 },
         GaborWeights { restoration_filter.gab_y_weight1, restoration_filter.gab_y_weight2 },
         GaborWeights { restoration_filter.gab_b_weight1, restoration_filter.gab_b_weight2 },
     };
-    for (auto [i, channel] : enumerate(channels)) {
+    for (auto [i, channel] : enumerate(channels))
         TRY(apply_gabor_like_on_channel(channel, weights[i]));
-        if (i > 2)
-            break;
-    }
     return {};
 }
 
@@ -2846,6 +2845,16 @@ static ErrorOr<SplitChannels> extract_color_channels(ImageMetadata const& metada
     return SplitChannels { move(f32_color_channels), move(all_channels) };
 }
 
+static ErrorOr<void> ensure_enough_color_channels(Vector<FloatChannel>& channels)
+{
+    if (channels.size() == 3)
+        return {};
+    VERIFY(channels.size() == 1);
+    TRY(channels.try_append(TRY(channels[0].copy())));
+    TRY(channels.try_append(TRY(channels[0].copy())));
+    return {};
+}
+
 // J.1 - General
 static ErrorOr<void> apply_restoration_filters(Frame& frame, ImageMetadata const& metadata)
 {
@@ -2860,12 +2869,16 @@ static ErrorOr<void> apply_restoration_filters(Frame& frame, ImageMetadata const
 
         // FIXME: Clarify where we should actually do the i32 -> f32 convertion.
         auto channels = TRY(extract_color_channels(metadata, *frame.image));
+        TRY(ensure_enough_color_channels(channels.color_channels));
 
         if (frame_header.restoration_filter.gab)
             TRY(apply_gabor_like_filter(frame.frame_header.restoration_filter, channels.color_channels));
         if (frame_header.restoration_filter.epf_iters != 0)
             dbgln("JPEGXLLoader: FIXME: Apply edge preserving filters");
 
+        // Remove unwanted color channels if the image is greyscale.
+        if (metadata.number_of_color_channels() == 1)
+            channels.color_channels.remove(1, 2);
         auto i32_channels = TRY(convert_channels<i32>(channels.color_channels.span(), metadata.bit_depth.bits_per_sample));
         TRY(i32_channels.try_extend(move(channels.extra_channels)));
         frame.image = TRY(Image::adopt_channels(move(i32_channels)));
