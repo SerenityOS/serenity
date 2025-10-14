@@ -238,6 +238,7 @@ write_cmake_config("ak_debug_gen") {
     "CACHE_DEBUG=",
     "CALLBACK_MACHINE_DEBUG=",
     "CANVAS_RENDERING_CONTEXT_2D_DEBUG=",
+    "CCITT_DEBUG=",
     "CFF_DEBUG=",
     "CMAKE_DEBUG=",
     "COMPOSE_DEBUG=",
