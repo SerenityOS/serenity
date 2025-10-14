@@ -128,6 +128,30 @@ TEST_CASE(mix)
     EXPECT_APPROXIMATE(mix(b, a, 1.0), 1.0);
 }
 
+TEST_CASE(mod)
+{
+    EXPECT_EQ(mod(5, 3), 2);
+    EXPECT_EQ(mod(-5, 3), 1);
+    EXPECT_EQ(-5 % 3, -2);
+    EXPECT_EQ(mod(5, -3), -1);
+    EXPECT_EQ(5 % -3, 2);
+    EXPECT_EQ(mod(-5, -3), -2);
+    EXPECT_EQ(-5 % -3, -2);
+
+    EXPECT_EQ(mod(4, 2), 0);
+    EXPECT_EQ(mod(-4, 2), 0);
+    EXPECT_EQ(mod(4, -2), 0);
+    EXPECT_EQ(mod(-4, -2), 0);
+
+    EXPECT_EQ(mod(1, 1), 0);
+    EXPECT_EQ(mod(-1, 1), 0);
+    EXPECT_EQ(mod(1, -1), 0);
+    EXPECT_EQ(mod(-1, -1), 0);
+
+    EXPECT_EQ(mod(0, 5), 0);
+    EXPECT_EQ(mod(0, -5), 0);
+}
+
 TEST_CASE(swap)
 {
     int i = 4;

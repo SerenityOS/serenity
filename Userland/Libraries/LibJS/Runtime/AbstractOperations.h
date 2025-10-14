@@ -301,7 +301,7 @@ auto modulo(T x, U y)
         auto r = fmod(x, y);
         return r < 0 ? r + y : r;
     } else {
-        return ((x % y) + y) % y;
+        return AK::mod(x, y);
     }
 }
 
