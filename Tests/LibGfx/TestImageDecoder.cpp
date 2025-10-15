@@ -359,7 +359,9 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-p32-eof.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-initially-unknown-size.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-composite-and-xnor.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-composite-and-xnor-refine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-composite-or-xor-replace.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-composite-or-xor-replace-refine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-tpgdon.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-customat-tpgdon.jbig2"sv),
@@ -420,7 +422,6 @@ TEST_CASE(test_jbig2_decode)
         // - intermediate direct regions (code support added in #26197)
         // Missing tests for things that aren't implemented yet:
         // - immediate refinement regions not referring to a direct region (i.e. refining the page)
-        // - intermediate regions not covering the full page
         // - exttemplate
         // - colors
         // - huffman text region using refinement (RI = 1)
