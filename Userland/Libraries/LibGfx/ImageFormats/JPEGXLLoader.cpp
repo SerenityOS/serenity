@@ -24,11 +24,18 @@
 namespace Gfx {
 
 // This is not specified
+static ErrorOr<void> read_non_aligned(LittleEndianInputBitStream& stream, Bytes bytes)
+{
+    for (u8& byte : bytes)
+        byte = TRY(stream.read_bits(8));
+    return {};
+}
+
 static ErrorOr<String> read_string(LittleEndianInputBitStream& stream)
 {
     auto const name_length = U32(0, TRY(stream.read_bits(4)), 16 + TRY(stream.read_bits(5)), 48 + TRY(stream.read_bits(10)));
     auto string_buffer = TRY(FixedArray<u8>::create(name_length));
-    TRY(stream.read_until_filled(string_buffer));
+    TRY(read_non_aligned(stream, string_buffer));
     return String::from_utf8(StringView { string_buffer });
 }
 
