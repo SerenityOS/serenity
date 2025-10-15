@@ -368,8 +368,12 @@ static ErrorOr<ExtraChannelInfo> read_extra_channel_info(LittleEndianInputBitStr
             extra_channel_info.alpha_associated = TRY(stream.read_bit());
     }
 
-    if (extra_channel_info.type != ExtraChannelInfo::ExtraChannelType::kAlpha) {
-        TODO();
+    if (extra_channel_info.type == ExtraChannelInfo::ExtraChannelType::kSpotColour) {
+        return Error::from_string_literal("JPEGXLLoader: Read extra channel info for SpotColour");
+    }
+
+    if (extra_channel_info.type == ExtraChannelInfo::ExtraChannelType::kCFA) {
+        return Error::from_string_literal("JPEGXLLoader: Read extra channel info for CFA");
     }
 
     return extra_channel_info;
