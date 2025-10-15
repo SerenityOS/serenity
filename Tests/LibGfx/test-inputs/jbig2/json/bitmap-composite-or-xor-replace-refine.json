@@ -1,0 +1,548 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "default_color": "white",
+                    "direct_region_segments_override_default_combination_operator": true
+                }
+            }
+        },
+        {
+            "segment_number": 1,
+            "type": "intermediate_generic_region",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "region_segment_information": {
+                    "x": 55,
+                    "y": 112,
+                    "flags": {
+                        "external_combination_operator": "or"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 55,
+                        "y": 112,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 2,
+            "type": "intermediate_generic_refinement_region",
+            "page_association": 1,
+            "retained": true,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 55,
+                    "y": 112,
+                    "flags": {
+                        "external_combination_operator": "or"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 55,
+                        "y": 112,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 3,
+            "type": "generic_refinement_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 2,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 55,
+                    "y": 112,
+                    "flags": {
+                        "external_combination_operator": "or"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 55,
+                        "y": 112,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 4,
+            "type": "intermediate_generic_region",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "region_segment_information": {
+                    "x": 55,
+                    "y": 112,
+                    "flags": {
+                        "external_combination_operator": "or"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 55,
+                        "y": 112,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 5,
+            "type": "intermediate_generic_refinement_region",
+            "page_association": 1,
+            "retained": true,
+            "referred_to_segments": [
+                {
+                    "segment_number": 4,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 55,
+                    "y": 112,
+                    "flags": {
+                        "external_combination_operator": "or"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 55,
+                        "y": 112,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 6,
+            "type": "lossless_generic_refinement_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 5,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 55,
+                    "y": 112,
+                    "flags": {
+                        "external_combination_operator": "or"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 55,
+                        "y": 112,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 7,
+            "type": "intermediate_generic_region",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "region_segment_information": {
+                    "x": 64,
+                    "y": 269,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 8,
+            "type": "intermediate_generic_refinement_region",
+            "page_association": 1,
+            "retained": true,
+            "referred_to_segments": [
+                {
+                    "segment_number": 7,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 64,
+                    "y": 269,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 9,
+            "type": "generic_refinement_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 8,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 64,
+                    "y": 269,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 10,
+            "type": "intermediate_generic_region",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 190,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 11,
+            "type": "intermediate_generic_refinement_region",
+            "page_association": 1,
+            "retained": true,
+            "referred_to_segments": [
+                {
+                    "segment_number": 10,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 190,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 12,
+            "type": "generic_refinement_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 11,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 190,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 13,
+            "type": "intermediate_generic_region",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 190,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 14,
+            "type": "intermediate_generic_refinement_region",
+            "page_association": 1,
+            "retained": true,
+            "referred_to_segments": [
+                {
+                    "segment_number": 13,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 190,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 15,
+            "type": "lossless_generic_refinement_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 14,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 190,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 16,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "x": 141,
+                    "y": 0,
+                    "flags": {
+                        "external_combination_operator": "or"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 141,
+                        "y": 0,
+                        "width": 258,
+                        "height": 400
+                    },
+                    "invert": true
+                }
+            }
+        },
+        {
+            "segment_number": 17,
+            "type": "intermediate_generic_region",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "region_segment_information": {
+                    "x": 141,
+                    "y": 0,
+                    "flags": {
+                        "external_combination_operator": "replace"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 141,
+                        "y": 0,
+                        "width": 258,
+                        "height": 400
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 18,
+            "type": "intermediate_generic_refinement_region",
+            "page_association": 1,
+            "retained": true,
+            "referred_to_segments": [
+                {
+                    "segment_number": 17,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 141,
+                    "y": 0,
+                    "flags": {
+                        "external_combination_operator": "replace"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 141,
+                        "y": 0,
+                        "width": 258,
+                        "height": 400
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 19,
+            "type": "generic_refinement_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 18,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 141,
+                    "y": 0,
+                    "flags": {
+                        "external_combination_operator": "replace"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 141,
+                        "y": 0,
+                        "width": 258,
+                        "height": 400
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 20,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}

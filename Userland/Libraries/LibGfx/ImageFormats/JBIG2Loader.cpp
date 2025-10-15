@@ -553,6 +553,7 @@ struct SegmentData {
 
     // Set on intermediate region segments after they've been decoded.
     RefPtr<BilevelImage> aux_buffer;
+    JBIG2::RegionSegmentInformationField aux_buffer_information_field;
 };
 
 struct Page {
@@ -2995,10 +2996,8 @@ static ErrorOr<void> handle_intermediate_direct_region(JBIG2LoadingContext&, Seg
     // 8.2 Page image composition, 5b.
     VERIFY(result.bitmap->width() == result.information_field.width);
     VERIFY(result.bitmap->height() == result.information_field.height);
-    if (result.information_field.x_location != 0 || result.information_field.y_location != 0)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle intermediate direct region with non-zero x/y location yet");
-
     segment.aux_buffer = move(result.bitmap);
+    segment.aux_buffer_information_field = result.information_field;
     return {};
 }
 
@@ -3740,15 +3739,37 @@ static ErrorOr<RegionResult> decode_generic_refinement_region(JBIG2LoadingContex
     // 7.4.7.5 Decoding a generic refinement region segment
     // "1) Interpret its header as described in 7.4.7.1."
     // Done above.
+
+    VERIFY(segment.referred_to_segments.size() <= 1);
+
+    // "If this segment does not refer to another region segment then its external combination operator must be REPLACE."
+    if (segment.referred_to_segments.is_empty()) {
+        if (information_field.external_combination_operator() != JBIG2::CombinationOperator::Replace)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Generic refinement region without reference segment must use REPLACE operator");
+    }
+    // "If it does refer to another region segment, then this segment's region bitmap size, location, and external combination operator
+    //  must be equal to that other segment's region bitmap size, location, and external combination operator."
+    else {
+        auto const& other_information_field = segment.referred_to_segments[0]->aux_buffer_information_field;
+        if (information_field.width != other_information_field.width
+            || information_field.height != other_information_field.height
+            || information_field.x_location != other_information_field.x_location
+            || information_field.y_location != other_information_field.y_location
+            || information_field.external_combination_operator() != other_information_field.external_combination_operator()) {
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Generic refinement region with reference segment must match size, location and combination operator of referenced segment");
+        }
+    }
+
     // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
     RefinementContexts contexts { arithmetic_coding_template };
 
     // "3) Determine the buffer associated with the region segment that this segment refers to."
     // Details described in 7.4.7.4 Reference bitmap selection.
     BilevelImage const* reference_bitmap = nullptr;
-    VERIFY(segment.referred_to_segments.size() <= 1);
     if (segment.referred_to_segments.size() == 1) {
         reference_bitmap = segment.referred_to_segments[0]->aux_buffer.ptr();
+        VERIFY(reference_bitmap->width() == segment.referred_to_segments[0]->aux_buffer_information_field.width);
+        VERIFY(reference_bitmap->height() == segment.referred_to_segments[0]->aux_buffer_information_field.height);
     } else {
         // When adding support for this and for intermediate generic refinement regions, make sure to only allow
         // this case for immediate generic refinement regions.
@@ -3781,10 +3802,8 @@ static ErrorOr<void> decode_intermediate_generic_refinement_region(JBIG2LoadingC
     // 8.2 Page image composition, 5e.
     VERIFY(result.bitmap->width() == result.information_field.width);
     VERIFY(result.bitmap->height() == result.information_field.height);
-    if (result.information_field.x_location != 0 || result.information_field.y_location != 0)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle intermediate direct region with non-zero x/y location yet");
-
     segment.aux_buffer = move(result.bitmap);
+    segment.aux_buffer_information_field = result.information_field;
     return {};
 }
 
