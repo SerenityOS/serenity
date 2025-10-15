@@ -3036,8 +3036,9 @@ public:
         m_header = TRY(read_size_header(m_stream));
         m_metadata = TRY(read_metadata_header(m_stream));
 
-        dbgln_if(JPEGXL_DEBUG, "Decoding a JPEG XL image with size {}x{} and {} channels, bit-depth={}.",
-            m_header.width, m_header.height, m_metadata.number_of_channels(), m_metadata.bit_depth.bits_per_sample);
+        dbgln_if(JPEGXL_DEBUG, "Decoding a JPEG XL image with size {}x{} and {} channels, bit-depth={}{}.",
+            m_header.width, m_header.height, m_metadata.number_of_channels(), m_metadata.bit_depth.bits_per_sample,
+            m_metadata.colour_encoding.want_icc ? ", icc_profile"sv : ""sv);
 
         m_state = State::HeaderDecoded;
 
