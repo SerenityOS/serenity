@@ -1362,6 +1362,11 @@ public:
         return m_channels;
     }
 
+    IntRect rect() const
+    {
+        return active_rectangle();
+    }
+
 private:
     Image() = default;
 
@@ -3296,16 +3301,21 @@ private:
     {
         auto final_image = TRY(Image::create({ m_header.width, m_header.height }, m_metadata));
 
-        auto& last_frame_header = m_frames.last().frame_header;
-        auto blending_mode = last_frame_header.blending_info.mode;
-        if (last_frame_header.x0 > 0 || last_frame_header.y0 > 0)
-            return Error::from_string_literal("JPEGXLLoader: Unsupported values for x0 or y0");
+        auto& frame = m_frames.last();
+        auto blending_mode = frame.frame_header.blending_info.mode;
 
-        auto out_rectangle = IntRect(-last_frame_header.x0, -last_frame_header.y0,
-            m_header.width, m_header.height);
-        auto out_image = TRY(m_frames.last().image->get_subimage(out_rectangle));
-        TRY(out_image.blend_into(final_image, blending_mode));
+        // "If x0 or y0 is negative, or the frame extends beyond the right or bottom
+        // edge of the image, only the intersection of the frame with the image is
+        // updated and contributes to the decoded image."
+        IntRect frame_rect = frame.image->rect();
+        auto image_rect = IntRect::intersection(frame_rect.translated(IntPoint { frame.frame_header.x0, frame.frame_header.y0 }), final_image.rect());
+        frame_rect.set_x(-min(frame.frame_header.x0, 0));
+        frame_rect.set_y(-min(frame.frame_header.y0, 0));
+        frame_rect.set_size(image_rect.size());
 
+        auto frame_out = TRY(frame.image->get_subimage(frame_rect));
+        auto image_out = TRY(final_image.get_subimage(image_rect));
+        TRY(frame_out.blend_into(image_out, blending_mode));
         m_bitmap = TRY(final_image.to_bitmap(m_metadata));
         return {};
     }
