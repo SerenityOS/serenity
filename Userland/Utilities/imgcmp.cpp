@@ -65,6 +65,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView write_diff_image_path;
     args_parser.add_option(write_diff_image_path, "Write image that highlights differing pixels", "write-diff-image", {}, "FILE");
 
+    bool should_count = false;
+    args_parser.add_option(should_count, "Report the number of differing pixels", "count", {});
+
     StringView first_image_path;
     args_parser.add_positional_argument(first_image_path, "Path to first input image", "FILE1");
 
@@ -86,16 +89,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(save_image(diff_image, write_diff_image_path));
     }
 
+    u64 number_of_differences = 0;
     for (int y = 0; y < first_image->physical_height(); ++y) {
         for (int x = 0; x < first_image->physical_width(); ++x) {
             auto first_pixel = first_image->get_pixel(x, y);
             auto second_pixel = second_image->get_pixel(x, y);
             if (first_pixel != second_pixel) {
-                warnln("different pixel at ({}, {}), {} vs {}", x, y, first_pixel, second_pixel);
-                return 1;
+                if (number_of_differences == 0)
+                    warnln("different pixel at ({}, {}), {} vs {}", x, y, first_pixel, second_pixel);
+                if (!should_count)
+                    return 1;
+                number_of_differences++;
             }
         }
     }
+    if (should_count)
+        warnln("number of differing pixels: {}", number_of_differences);
 
     return 0;
 }
