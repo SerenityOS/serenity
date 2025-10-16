@@ -552,7 +552,6 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         image.release_nonnull(),
         real_height_for_generic_region_of_initially_unknown_size,
         trailing_7fff_handling,
-
     };
 }
 
