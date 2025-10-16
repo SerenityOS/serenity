@@ -598,7 +598,7 @@ static ErrorOr<u8> jbig2_refinement_region_flags_from_json(JsonObject const& obj
         }
 
         dbgln("generic_refinement_region flag key {}", key);
-        return Error::from_string_literal("unknown refinement_region flag key");
+        return Error::from_string_literal("unknown generic_refinement_region flag key");
     }));
 
     return flags;
@@ -670,7 +670,7 @@ static ErrorOr<Gfx::JBIG2::GenericRefinementRegionSegmentData> jbig2_generic_ref
         }
 
         dbgln("generic_refinement_region key {}", key);
-        return Error::from_string_literal("unknown refinement_region key");
+        return Error::from_string_literal("unknown generic_refinement_region key");
     }));
 
     if (!image)
