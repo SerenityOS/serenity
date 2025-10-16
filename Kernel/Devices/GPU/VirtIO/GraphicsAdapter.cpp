@@ -6,6 +6,7 @@
 
 #include <AK/BinaryBufferWriter.h>
 #include <Kernel/Arch/Delay.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
@@ -417,7 +418,7 @@ ErrorOr<void> VirtIOGraphicsAdapter::synchronous_virtio_gpu_command(size_t micro
     chain.add_buffer_to_chain(buffer_start, request_size, VirtIO::BufferType::DeviceReadable);
     chain.add_buffer_to_chain(buffer_start.offset(request_size), response_size, VirtIO::BufferType::DeviceWritable);
     supply_chain_and_notify(CONTROLQ, chain);
-    full_memory_barrier();
+    full_memory_fence();
     size_t current_time = 0;
     ScopeGuard clear_used_buffers([&] {
         queue.discard_used_buffers();

@@ -9,6 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/Delay.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/BarMapping.h>
@@ -36,7 +37,7 @@ ErrorOr<void> AHCIController::reset()
 
         dbgln_if(AHCI_DEBUG, "{}: AHCI Controller reset", device_identifier().address());
 
-        full_memory_barrier();
+        full_memory_fence();
         size_t retry = 0;
 
         // Note: The HBA is locked or hung if we waited more than 1 second!
@@ -49,9 +50,9 @@ ErrorOr<void> AHCIController::reset()
             retry++;
         }
         // Note: Turn on AHCI HBA and Global HBA Interrupts.
-        full_memory_barrier();
+        full_memory_fence();
         hba().control_regs.ghc = (1 << 31) | (1 << 1);
-        full_memory_barrier();
+        full_memory_fence();
     }
 
     // Note: According to the AHCI spec the PI register indicates which ports are exposed by the HBA.
