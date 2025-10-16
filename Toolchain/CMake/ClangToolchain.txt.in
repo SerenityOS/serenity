@@ -33,8 +33,16 @@ set(SERENITY_CXXFILT ${TOOLCHAIN_PATH}/llvm-cxxfilt)
 #        which doesn't work when using static linking.
 #        Instead, just tell CMake directly that the compiler works fine, so that it doesn't have to run
 #        a compile check before the build.
+#        This also means that the "Detecting C{,XX} compiler ABI info" step fails, so we need to set
+#        some variables manually. There may be more variables that aren't set, but those don't seem to be
+#        necessary at the time of writing this. We only support 64-bit little endian systems, so set the
+#        values accordingly.
 set(CMAKE_C_COMPILER_WORKS TRUE)
+set(CMAKE_C_SIZEOF_DATA_PTR 8)
+set(CMAKE_C_BYTE_ORDER LITTLE_ENDIAN)
 set(CMAKE_CXX_COMPILER_WORKS TRUE)
+set(CMAKE_CXX_SIZEOF_DATA_PTR 8)
+set(CMAKE_CXX_BYTE_ORDER LITTLE_ENDIAN)
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
