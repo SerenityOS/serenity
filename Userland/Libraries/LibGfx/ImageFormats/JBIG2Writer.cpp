@@ -578,6 +578,45 @@ ErrorOr<void> JBIG2Writer::encode(Stream& stream, Bitmap const& bitmap, Options 
     return encode_with_explicit_data(stream, jbig2);
 }
 
+static ErrorOr<void> encode_pattern_dictionary(JBIG2::PatternDictionarySegmentData const& pattern_dictionary, Vector<u8>& scratch_buffer)
+{
+    if (pattern_dictionary.image->width() != (pattern_dictionary.gray_max + 1) * pattern_dictionary.pattern_width)
+        return Error::from_string_literal("JBIG2Writer: Pattern dictionary image has wrong width");
+    if (pattern_dictionary.image->height() != pattern_dictionary.pattern_height)
+        return Error::from_string_literal("JBIG2Writer: Pattern dictionary image has wrong height");
+
+    // Table 27 – Parameters used to decode a pattern dictionary's collective bitmap
+    GenericRegionEncodingInputParameters inputs { .image = *pattern_dictionary.image };
+    inputs.is_modified_modified_read = pattern_dictionary.flags & 1;
+    inputs.gb_template = (pattern_dictionary.flags >> 1) & 3;
+    inputs.is_typical_prediction_used = false;
+    inputs.is_extended_reference_template_used = false;
+    inputs.adaptive_template_pixels[0].x = -pattern_dictionary.pattern_width;
+    inputs.adaptive_template_pixels[0].y = 0;
+    inputs.adaptive_template_pixels[1].x = -3;
+    inputs.adaptive_template_pixels[1].y = -1;
+    inputs.adaptive_template_pixels[2].x = 2;
+    inputs.adaptive_template_pixels[2].y = -2;
+    inputs.adaptive_template_pixels[3].x = -2;
+    inputs.adaptive_template_pixels[3].y = -2;
+    inputs.require_eof_after_mmr = GenericRegionEncodingInputParameters::RequireEOFBAfterMMR::No;
+    inputs.trailing_7fff_handling = pattern_dictionary.trailing_7fff_handling;
+    Optional<JBIG2::GenericContexts> contexts;
+    if (!inputs.is_modified_modified_read)
+        contexts = JBIG2::GenericContexts { inputs.gb_template };
+    auto data = TRY(generic_region_encoding_procedure(inputs, contexts));
+
+    TRY(scratch_buffer.try_resize(3 * 1 + 4 + data.size()));
+    FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
+
+    TRY(stream.write_value<u8>(pattern_dictionary.flags));
+    TRY(stream.write_value<u8>(pattern_dictionary.pattern_width));
+    TRY(stream.write_value<u8>(pattern_dictionary.pattern_height));
+    TRY(stream.write_value<BigEndian<u32>>(pattern_dictionary.gray_max));
+    TRY(stream.write_until_depleted(data));
+    return {};
+}
+
 static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const& generic_region, Vector<u8>& scratch_buffer)
 {
     GenericRegionEncodingInputParameters inputs { .image = *generic_region.image };
@@ -672,6 +711,10 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     Vector<u8> scratch_buffer;
 
     auto encoded_data = TRY(segment_data.data.visit(
+        [&scratch_buffer](JBIG2::PatternDictionarySegmentData const& pattern_dictionary) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_pattern_dictionary(pattern_dictionary, scratch_buffer));
+            return scratch_buffer;
+        },
         [&scratch_buffer](JBIG2::ImmediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<ReadonlyBytes> {
             TRY(encode_generic_region(generic_region_wrapper.generic_region, scratch_buffer));
             return scratch_buffer;
@@ -718,6 +761,7 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     JBIG2::SegmentHeader header;
     header.segment_number = segment_data.header.segment_number;
     header.type = segment_data.data.visit(
+        [](JBIG2::PatternDictionarySegmentData const&) { return JBIG2::SegmentType::PatternDictionary; },
         [](JBIG2::ImmediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateGenericRegion; },
         [](JBIG2::ImmediateLosslessGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessGenericRegion; },
         [](JBIG2::IntermediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::IntermediateGenericRegion; },
