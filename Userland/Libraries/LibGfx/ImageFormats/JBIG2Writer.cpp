@@ -403,6 +403,118 @@ static ErrorOr<ByteBuffer> generic_refinement_region_encoding_procedure(GenericR
     return encoder.finalize(inputs.trailing_7fff_handling);
 }
 
+namespace {
+
+// C.2 Input parameters
+// Table C.1 – Parameters for the gray-scale image decoding procedure
+struct GrayscaleInputParameters {
+    bool uses_mmr { false }; // "GSMMR" in spec.
+
+    Vector<u64> const& grayscale_image;
+    Optional<BilevelImage const&> skip_pattern; // "GSUSESKIP" / "GSKIP" in spec.
+
+    u8 bpp { 0 };         // "GSBPP" in spec.
+    u32 width { 0 };      // "GSW" in spec.
+    u32 height { 0 };     // "GSH" in spec.
+    u8 template_id { 0 }; // "GSTEMPLATE" in spec.
+
+    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+};
+
+}
+
+// C.5 Decoding the gray-scale image, but in reverse.
+static ErrorOr<ByteBuffer> grayscale_image_encoding_procedure(GrayscaleInputParameters const& inputs, Optional<JBIG2::GenericContexts>& contexts)
+{
+    VERIFY(inputs.bpp < 64);
+
+    if (inputs.grayscale_image.size() != inputs.width * inputs.height)
+        return Error::from_string_literal("JBIG2Writer: Halftone graymap size does not match dimensions");
+
+    auto bitplane = TRY(BilevelImage::create(inputs.width, inputs.height));
+
+    // Table C.4 – Parameters used to decode a bitplane of the gray-scale image
+    GenericRegionEncodingInputParameters generic_inputs { .image = *bitplane, .skip_pattern = inputs.skip_pattern };
+    generic_inputs.is_modified_modified_read = inputs.uses_mmr;
+    generic_inputs.gb_template = inputs.template_id;
+    generic_inputs.is_typical_prediction_used = false;
+    generic_inputs.is_extended_reference_template_used = false; // Missing from spec.
+    generic_inputs.adaptive_template_pixels[0].x = inputs.template_id <= 1 ? 3 : 2;
+    generic_inputs.adaptive_template_pixels[0].y = -1;
+    generic_inputs.adaptive_template_pixels[1].x = -3;
+    generic_inputs.adaptive_template_pixels[1].y = -1;
+    generic_inputs.adaptive_template_pixels[2].x = 2;
+    generic_inputs.adaptive_template_pixels[2].y = -2;
+    generic_inputs.adaptive_template_pixels[3].x = -2;
+    generic_inputs.adaptive_template_pixels[3].y = -2;
+
+    // An MMR graymap is the only case where the size of the a generic region is not known in advance,
+    // and where the data is immediately followed by more MMR data. We need to have the MMR encoder
+    // write EOFB markers at the end, so that the following bitplanes can be decoded.
+    // See 6.2.6 Decoding using MMR coding.
+    generic_inputs.require_eof_after_mmr = GenericRegionEncodingInputParameters::RequireEOFBAfterMMR::Yes;
+
+    AllocatingMemoryStream mmr_output_stream;
+    Optional<MQArithmeticEncoder> arithmetic_encoder;
+    if (generic_inputs.is_modified_modified_read) {
+        generic_inputs.stream = &mmr_output_stream;
+    } else {
+        arithmetic_encoder = TRY(MQArithmeticEncoder::initialize(0));
+        generic_inputs.arithmetic_encoder = &arithmetic_encoder.value();
+    }
+
+    // C.5 Decoding the gray-scale image
+    // "The gray-scale image is obtained by decoding GSBPP bitplanes. These bitplanes are denoted (from least significant to
+    //  most significant) GSPLANES[0], GSPLANES[1], . . . , GSPLANES[GSBPP – 1]. The bitplanes are Gray-coded, so
+    //  that each bitplane's true value is equal to its coded value XORed with the next-more-significant bitplane."
+
+    for (u32 y = 0; y < inputs.height; ++y)
+        for (u32 x = 0; x < inputs.width; ++x)
+            if (inputs.grayscale_image[y * inputs.width + x] >= (1ull << inputs.bpp))
+                return Error::from_string_literal("JBIG2Writer: Halftone region graymap entry too large for number of patterns");
+
+    // "1) Decode GSPLANES[GSBPP – 1] using the generic region decoding procedure. The parameters to the
+    //     generic region decoding procedure are as shown in Table C.4."
+    for (u32 y = 0; y < inputs.height; ++y) {
+        for (u32 x = 0; x < inputs.width; ++x) {
+            bool bit_is_set = (inputs.grayscale_image[y * inputs.width + x] & (1 << (inputs.bpp - 1))) != 0;
+            bitplane->set_bit(x, y, bit_is_set);
+        }
+    }
+
+    TRY(generic_region_encoding_procedure(generic_inputs, contexts));
+
+    // "2) Set J = GSBPP – 2."
+    int j = inputs.bpp - 2;
+
+    // "3) While J >= 0, perform the following steps:"
+    while (j >= 0) {
+        // "a) Decode GSPLANES[J] using the generic region decoding procedure. The parameters to the generic
+        //     region decoding procedure are as shown in Table C.4."
+        // "b) For each pixel (x, y) in GSPLANES[J], set:
+        //     GSPLANES[J][x, y] = GSPLANES[J + 1][x, y] XOR GSPLANES[J][x, y]"
+        for (u32 y = 0; y < inputs.height; ++y) {
+            for (u32 x = 0; x < inputs.width; ++x) {
+                bool bit_is_set = (inputs.grayscale_image[y * inputs.width + x] & (1 << j)) != 0;
+                bit_is_set ^= (inputs.grayscale_image[y * inputs.width + x] & (1 << (j + 1))) != 0;
+                bitplane->set_bit(x, y, bit_is_set);
+            }
+        }
+
+        TRY(generic_region_encoding_procedure(generic_inputs, contexts));
+
+        // "c) Set J = J – 1."
+        j = j - 1;
+    }
+
+    // "4) For each (x, y), set:
+    //     GSVALS [x, y] = sum_{J = 0}^{GSBPP - 1} GSPLANES[J][x,y] × 2**J)"
+
+    if (generic_inputs.is_modified_modified_read)
+        return TRY(mmr_output_stream.read_until_eof());
+    return TRY(arithmetic_encoder->finalize(inputs.trailing_7fff_handling));
+}
+
 static ErrorOr<void> encode_jbig2_header(Stream& stream, JBIG2::FileHeaderData const& header)
 {
     TRY(stream.write_until_depleted(JBIG2::id_string));
@@ -584,6 +696,56 @@ ErrorOr<void> JBIG2Writer::encode(Stream& stream, Bitmap const& bitmap, Options 
     return encode_with_explicit_data(stream, jbig2);
 }
 
+static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData const& halftone_region, JBIG2::SegmentHeaderData const& header, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id, Vector<u8>& scratch_buffer)
+{
+    if (header.referred_to_segments.size() != 1)
+        return Error::from_string_literal("JBIG2Writer: Halftone region must refer to exactly one segment");
+
+    auto maybe_segment = segment_by_id.get(header.referred_to_segments[0].segment_number);
+    if (!maybe_segment.has_value())
+        return Error::from_string_literal("JBIG2Writer: Could not find referred-to segment for halftone region");
+    auto const& referred_to_segment = *maybe_segment.value();
+    if (!referred_to_segment.data.has<JBIG2::PatternDictionarySegmentData>())
+        return Error::from_string_literal("JBIG2Writer: Halftone region must refer to a pattern dictionary segment");
+    auto const& pattern_dictionary = referred_to_segment.data.get<JBIG2::PatternDictionarySegmentData>();
+
+    // FIXME: Add a halftone_region_encoding_procedure()? For now, it's just inlined here.
+    u32 bits_per_pattern = ceil(log2(pattern_dictionary.gray_max + 1));
+
+    // FIXME: Implement support for enable_skip.
+    Optional<BilevelImage const&> skip_pattern;
+    bool const enable_skip = ((halftone_region.flags >> 3) & 1) != 0;
+    if (enable_skip)
+        return Error::from_string_literal("JBIG2Writer: Halftone region skip pattern not yet implemented");
+
+    GrayscaleInputParameters inputs { .grayscale_image = halftone_region.grayscale_image, .skip_pattern = skip_pattern };
+    inputs.uses_mmr = halftone_region.flags & 1;
+    inputs.skip_pattern = skip_pattern;
+    inputs.bpp = bits_per_pattern;
+    inputs.width = halftone_region.grayscale_width;
+    inputs.height = halftone_region.grayscale_height;
+    inputs.template_id = (halftone_region.flags >> 1) & 3;
+    inputs.trailing_7fff_handling = halftone_region.trailing_7fff_handling;
+    Optional<JBIG2::GenericContexts> contexts;
+    if (!inputs.uses_mmr)
+        contexts = JBIG2::GenericContexts { inputs.template_id };
+    auto data = TRY(grayscale_image_encoding_procedure(inputs, contexts));
+
+    TRY(scratch_buffer.try_resize(sizeof(JBIG2::RegionSegmentInformationField) + 1 + 2 * 4 * 2 * 2 + data.size()));
+    FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
+
+    TRY(encode_region_segment_information_field(stream, halftone_region.region_segment_information));
+    TRY(stream.write_value<u8>(halftone_region.flags));
+    TRY(stream.write_value<BigEndian<u32>>(halftone_region.grayscale_width));
+    TRY(stream.write_value<BigEndian<u32>>(halftone_region.grayscale_height));
+    TRY(stream.write_value<BigEndian<i32>>(halftone_region.grid_offset_x_times_256));
+    TRY(stream.write_value<BigEndian<i32>>(halftone_region.grid_offset_y_times_256));
+    TRY(stream.write_value<BigEndian<u16>>(halftone_region.grid_vector_x_times_256));
+    TRY(stream.write_value<BigEndian<u16>>(halftone_region.grid_vector_y_times_256));
+    TRY(stream.write_until_depleted(data));
+    return {};
+}
+
 static ErrorOr<void> encode_pattern_dictionary(JBIG2::PatternDictionarySegmentData const& pattern_dictionary, Vector<u8>& scratch_buffer)
 {
     if (pattern_dictionary.image->width() != (pattern_dictionary.gray_max + 1) * pattern_dictionary.pattern_width)
@@ -741,6 +903,14 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     Vector<u8> scratch_buffer;
 
     auto encoded_data = TRY(segment_data.data.visit(
+        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateHalftoneRegionSegmentData const& halftone_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_halftone_region(halftone_region_wrapper.halftone_region, segment_data.header, segment_by_id, scratch_buffer));
+            return scratch_buffer;
+        },
+        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateLosslessHalftoneRegionSegmentData const& halftone_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_halftone_region(halftone_region_wrapper.halftone_region, segment_data.header, segment_by_id, scratch_buffer));
+            return scratch_buffer;
+        },
         [&scratch_buffer](JBIG2::PatternDictionarySegmentData const& pattern_dictionary) -> ErrorOr<ReadonlyBytes> {
             TRY(encode_pattern_dictionary(pattern_dictionary, scratch_buffer));
             return scratch_buffer;
@@ -791,6 +961,8 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     JBIG2::SegmentHeader header;
     header.segment_number = segment_data.header.segment_number;
     header.type = segment_data.data.visit(
+        [](JBIG2::ImmediateHalftoneRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateHalftoneRegion; },
+        [](JBIG2::ImmediateLosslessHalftoneRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessHalftoneRegion; },
         [](JBIG2::PatternDictionarySegmentData const&) { return JBIG2::SegmentType::PatternDictionary; },
         [](JBIG2::ImmediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateGenericRegion; },
         [](JBIG2::ImmediateLosslessGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessGenericRegion; },
