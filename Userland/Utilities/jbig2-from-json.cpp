@@ -232,6 +232,123 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
     return image.release_nonnull();
 }
 
+static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& object)
+{
+    u8 flags = 0;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "is_modified_read_read"sv) {
+            if (auto is_modified_read_read = value.get_bool(); is_modified_read_read.has_value()) {
+                if (is_modified_read_read.value())
+                    flags |= 1u;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"is_modified_read_read\"");
+        }
+
+        if (key == "pd_template"sv) {
+            if (auto pd_template = value.get_uint(); pd_template.has_value()) {
+                if (pd_template.value() > 3)
+                    return Error::from_string_literal("expected 0, 1, 2, or 3 for \"pd_template\"");
+                flags |= pd_template.value() << 1;
+                return {};
+            }
+            return Error::from_string_literal("expected uint for \"pd_template\"");
+        }
+
+        dbgln("pattern_dictionary flag key {}", key);
+        return Error::from_string_literal("unknown pattern_dictionary flag key");
+    }));
+
+    return flags;
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    if (!object.has_value())
+        return Error::from_string_literal("pattern_dictionary segment should have \"data\" object");
+
+    u8 flags = 0;
+    u8 pattern_width = 0;
+    u8 pattern_height = 0;
+    u32 gray_max = 0;
+    Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+    RefPtr<Gfx::BilevelImage> image;
+
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "flags"sv) {
+            if (value.is_object()) {
+                flags = TRY(jbig2_pattern_dictionary_flags_from_json(value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"flags\"");
+        }
+
+        if (key == "pattern_width"sv) {
+            if (auto pattern_width_json = value.get_u32(); pattern_width_json.has_value()) {
+                if (pattern_width_json.value() == 0 || pattern_width_json.value() > 255)
+                    return Error::from_string_literal("expected non-zero u8 for \"pattern_width\"");
+                pattern_width = pattern_width_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u8 for \"pattern_width\"");
+        }
+
+        if (key == "pattern_height"sv) {
+            if (auto pattern_height_json = value.get_u32(); pattern_height_json.has_value()) {
+                if (pattern_height_json.value() == 0 || pattern_height_json.value() > 255)
+                    return Error::from_string_literal("expected non-zero u8 for \"pattern_height\"");
+                pattern_height = pattern_height_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u8 for \"pattern_height\"");
+        }
+
+        if (key == "gray_max"sv) {
+            if (auto gray_max_json = value.get_u32(); gray_max_json.has_value()) {
+                gray_max = gray_max_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"gray_max_\"");
+        }
+
+        if (key == "strip_trailing_7fffs"sv) {
+            if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
+                if (strip_trailing_7fffs.value())
+                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
+                else
+                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"strip_trailing_7fffs\"");
+        }
+
+        // FIXME: Make this more flexible.
+        if (key == "image_data"sv) {
+            if (value.is_object()) {
+                image = TRY(jbig2_image_from_json(options, value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"image_data\"");
+        }
+
+        dbgln("pattern_dictionary key {}", key);
+        return Error::from_string_literal("unknown pattern_dictionary key");
+    }));
+
+    return Gfx::JBIG2::SegmentData {
+        header,
+        Gfx::JBIG2::PatternDictionarySegmentData {
+            flags,
+            pattern_width,
+            pattern_height,
+            gray_max,
+            image.release_nonnull(),
+            trailing_7fff_handling,
+        }
+    };
+}
+
 static ErrorOr<u8> jbig2_region_segment_information_flags_from_json(JsonObject const& object)
 {
     u8 flags = 0;
@@ -1055,6 +1172,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         return jbig2_end_of_page_from_json(header, segment_data_object);
     if (type_string == "end_of_stripe")
         return jbig2_end_of_stripe_from_json(header, segment_data_object);
+    if (type_string == "pattern_dictionary")
+        return jbig2_pattern_dictionary_from_json(options, header, segment_data_object);
     if (type_string == "generic_region")
         return jbig2_immediate_generic_region_from_json(options, header, segment_data_object);
     if (type_string == "lossless_generic_region")
