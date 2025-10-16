@@ -5,6 +5,7 @@
  */
 
 #include <AK/Atomic.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Library/MiniStdLib.h>
 
@@ -74,7 +75,7 @@ QueueChain Queue::pop_used_buffer_chain(size_t& used)
         return QueueChain(*this);
     }
 
-    full_memory_barrier();
+    full_memory_fence();
 
     // Determine used length
     used = m_device->rings[m_used_tail % m_queue_size].length;
@@ -180,7 +181,7 @@ void QueueChain::submit_to_queue()
     auto next_index = m_queue.m_driver_index_shadow % m_queue.m_queue_size;
     m_queue.m_driver->rings[next_index] = m_start_of_chain_index.value();
     m_queue.m_driver_index_shadow++;
-    full_memory_barrier();
+    full_memory_fence();
     m_queue.m_driver->index = m_queue.m_driver_index_shadow;
 
     // Reset internal chain state

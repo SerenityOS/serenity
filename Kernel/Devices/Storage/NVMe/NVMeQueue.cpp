@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Arch/Delay.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeController.h>
 #include <Kernel/Devices/Storage/NVMe/NVMeInterruptQueue.h>
 #include <Kernel/Devices/Storage/NVMe/NVMePollQueue.h>
@@ -181,7 +182,7 @@ void NVMeQueue::read(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32 
         requests.set(sub.cmdid, { request, nullptr });
     });
 
-    full_memory_barrier();
+    full_memory_fence();
     submit_sqe(sub);
 }
 
@@ -206,7 +207,7 @@ void NVMeQueue::write(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32
         return;
     }
 
-    full_memory_barrier();
+    full_memory_fence();
     submit_sqe(sub);
 }
 

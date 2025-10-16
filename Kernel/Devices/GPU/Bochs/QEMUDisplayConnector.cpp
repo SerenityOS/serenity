@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/GPU/Bochs/QEMUDisplayConnector.h>
@@ -91,32 +92,32 @@ void QEMUDisplayConnector::set_framebuffer_to_big_endian_format()
 {
     VERIFY(m_modeset_lock.is_locked());
     dbgln_if(BXVGA_DEBUG, "QEMUDisplayConnector set_framebuffer_to_big_endian_format");
-    full_memory_barrier();
+    full_memory_fence();
     if (m_registers->extension_regs.region_size == 0xFFFFFFFF || m_registers->extension_regs.region_size == 0)
         return;
-    full_memory_barrier();
+    full_memory_fence();
     m_registers->extension_regs.framebuffer_byteorder = BOCHS_DISPLAY_BIG_ENDIAN;
-    full_memory_barrier();
+    full_memory_fence();
 }
 
 void QEMUDisplayConnector::set_framebuffer_to_little_endian_format()
 {
     VERIFY(m_modeset_lock.is_locked());
     dbgln_if(BXVGA_DEBUG, "QEMUDisplayConnector set_framebuffer_to_little_endian_format");
-    full_memory_barrier();
+    full_memory_fence();
     if (m_registers->extension_regs.region_size == 0xFFFFFFFF || m_registers->extension_regs.region_size == 0)
         return;
-    full_memory_barrier();
+    full_memory_fence();
     m_registers->extension_regs.framebuffer_byteorder = BOCHS_DISPLAY_LITTLE_ENDIAN;
-    full_memory_barrier();
+    full_memory_fence();
 }
 
 ErrorOr<void> QEMUDisplayConnector::unblank()
 {
     SpinlockLocker locker(m_modeset_lock);
-    full_memory_barrier();
+    full_memory_fence();
     m_registers->vga_ioports[0] = 0x20;
-    full_memory_barrier();
+    full_memory_fence();
     return {};
 }
 
@@ -139,15 +140,15 @@ ErrorOr<void> QEMUDisplayConnector::set_mode_setting(ModeSetting const& mode_set
 
     dbgln_if(BXVGA_DEBUG, "QEMUDisplayConnector resolution registers set to - {}x{}", width, height);
     m_registers->bochs_regs.enable = 0;
-    full_memory_barrier();
+    full_memory_fence();
     m_registers->bochs_regs.xres = width;
     m_registers->bochs_regs.yres = height;
     m_registers->bochs_regs.virt_width = width;
     m_registers->bochs_regs.virt_height = height * 2;
     m_registers->bochs_regs.bpp = 32;
-    full_memory_barrier();
+    full_memory_fence();
     m_registers->bochs_regs.enable = to_underlying(BochsFramebufferSettings::Enabled) | to_underlying(BochsFramebufferSettings::LinearFramebuffer);
-    full_memory_barrier();
+    full_memory_fence();
     m_registers->bochs_regs.bank = 0;
     if (index_id().value() == VBE_DISPI_ID5) {
         set_framebuffer_to_little_endian_format();
