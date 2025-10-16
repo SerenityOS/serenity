@@ -232,6 +232,114 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
     return image.release_nonnull();
 }
 
+static ErrorOr<u8> jbig2_region_segment_information_flags_from_json(JsonObject const& object)
+{
+    u8 flags = 0;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "external_combination_operator"sv) {
+            if (value.is_string()) {
+                auto const& s = value.as_string();
+                if (s == "or"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Or);
+                else if (s == "and"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::And);
+                else if (s == "xor"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Xor);
+                else if (s == "xnor"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::XNor);
+                else if (s == "replace"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Replace);
+                else
+                    return Error::from_string_literal("expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"external_combination_operator\"");
+                return {};
+            }
+            return Error::from_string_literal("expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"external_combination_operator\"");
+        }
+
+        dbgln("region_segment_information flag key {}", key);
+        return Error::from_string_literal("unknown region_segment_information flag key");
+    }));
+
+    return flags;
+}
+
+struct RegionSegmentInformatJSON {
+    Gfx::JBIG2::RegionSegmentInformationField region_segment_information {};
+    bool use_width_from_image { false };
+    bool use_height_from_image { false };
+};
+
+static ErrorOr<RegionSegmentInformatJSON> jbig2_region_segment_information_from_json(JsonObject const& object)
+{
+    RegionSegmentInformatJSON result;
+    result.use_width_from_image = true;
+    result.use_height_from_image = true;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "width"sv) {
+            if (auto width = value.get_u32(); width.has_value()) {
+                result.region_segment_information.width = width.value();
+                result.use_width_from_image = false;
+                return {};
+            }
+            if (value.is_string()) {
+                if (value.as_string() == "from_image_data"sv) {
+                    result.use_width_from_image = true;
+                    return {};
+                }
+                return Error::from_string_literal("expected \"from_image_data\" for \"width\" when it is a string");
+            }
+            return Error::from_string_literal("expected u32 or string for \"width\"");
+        }
+
+        if (key == "height"sv) {
+            if (auto height = value.get_u32(); height.has_value()) {
+                result.region_segment_information.height = height.value();
+                result.use_height_from_image = false;
+                return {};
+            }
+            if (value.is_string()) {
+                if (value.as_string() == "from_image_data"sv) {
+                    result.use_height_from_image = true;
+                    return {};
+                }
+                return Error::from_string_literal("expected \"from_image_data\" for \"height\" when it is a string");
+            }
+            return Error::from_string_literal("expected u32 or string for \"height\"");
+        }
+
+        if (key == "x"sv) {
+            if (auto x = value.get_u32(); x.has_value()) {
+                result.region_segment_information.x_location = x.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"x\"");
+        }
+
+        if (key == "y"sv) {
+            if (auto y = value.get_u32(); y.has_value()) {
+                result.region_segment_information.y_location = y.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"y\"");
+        }
+
+        if (key == "flags"sv) {
+            if (value.is_object()) {
+                u8 flags = TRY(jbig2_region_segment_information_flags_from_json(value.as_object()));
+                result.region_segment_information.flags = flags;
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"flags\"");
+        }
+
+        dbgln("region_segment_information key {}", key);
+        return Error::from_string_literal("unknown region_segment_information key");
+    }));
+    return result;
+}
+
 static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& object)
 {
     u8 flags = 0;
@@ -347,114 +455,6 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
             trailing_7fff_handling,
         }
     };
-}
-
-static ErrorOr<u8> jbig2_region_segment_information_flags_from_json(JsonObject const& object)
-{
-    u8 flags = 0;
-
-    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "external_combination_operator"sv) {
-            if (value.is_string()) {
-                auto const& s = value.as_string();
-                if (s == "or"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Or);
-                else if (s == "and"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::And);
-                else if (s == "xor"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Xor);
-                else if (s == "xnor"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::XNor);
-                else if (s == "replace"sv)
-                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Replace);
-                else
-                    return Error::from_string_literal("expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"external_combination_operator\"");
-                return {};
-            }
-            return Error::from_string_literal("expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"external_combination_operator\"");
-        }
-
-        dbgln("region_segment_information flag key {}", key);
-        return Error::from_string_literal("unknown region_segment_information flag key");
-    }));
-
-    return flags;
-}
-
-struct RegionSegmentInformatJSON {
-    Gfx::JBIG2::RegionSegmentInformationField region_segment_information {};
-    bool use_width_from_image { false };
-    bool use_height_from_image { false };
-};
-
-static ErrorOr<RegionSegmentInformatJSON> jbig2_region_segment_information_from_json(JsonObject const& object)
-{
-    RegionSegmentInformatJSON result;
-    result.use_width_from_image = true;
-    result.use_height_from_image = true;
-
-    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "width"sv) {
-            if (auto width = value.get_u32(); width.has_value()) {
-                result.region_segment_information.width = width.value();
-                result.use_width_from_image = false;
-                return {};
-            }
-            if (value.is_string()) {
-                if (value.as_string() == "from_image_data"sv) {
-                    result.use_width_from_image = true;
-                    return {};
-                }
-                return Error::from_string_literal("expected \"from_image_data\" for \"width\" when it is a string");
-            }
-            return Error::from_string_literal("expected u32 or string for \"width\"");
-        }
-
-        if (key == "height"sv) {
-            if (auto height = value.get_u32(); height.has_value()) {
-                result.region_segment_information.height = height.value();
-                result.use_height_from_image = false;
-                return {};
-            }
-            if (value.is_string()) {
-                if (value.as_string() == "from_image_data"sv) {
-                    result.use_height_from_image = true;
-                    return {};
-                }
-                return Error::from_string_literal("expected \"from_image_data\" for \"height\" when it is a string");
-            }
-            return Error::from_string_literal("expected u32 or string for \"height\"");
-        }
-
-        if (key == "x"sv) {
-            if (auto x = value.get_u32(); x.has_value()) {
-                result.region_segment_information.x_location = x.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u32 for \"x\"");
-        }
-
-        if (key == "y"sv) {
-            if (auto y = value.get_u32(); y.has_value()) {
-                result.region_segment_information.y_location = y.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u32 for \"y\"");
-        }
-
-        if (key == "flags"sv) {
-            if (value.is_object()) {
-                u8 flags = TRY(jbig2_region_segment_information_flags_from_json(value.as_object()));
-                result.region_segment_information.flags = flags;
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"flags\"");
-        }
-
-        dbgln("region_segment_information key {}", key);
-        return Error::from_string_literal("unknown region_segment_information key");
-    }));
-    return result;
 }
 
 static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object)
