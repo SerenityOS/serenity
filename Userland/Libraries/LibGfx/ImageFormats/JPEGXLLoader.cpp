@@ -439,6 +439,11 @@ struct ImageMetadata {
         return number_of_color_channels() + num_extra_channels;
     }
 
+    Optional<u16> black_channel() const
+    {
+        return first_extra_channel_matching([](auto& info) { return info.type == ExtraChannelInfo::ExtraChannelType::kBlack; });
+    }
+
     Optional<u16> alpha_channel() const
     {
         return first_extra_channel_matching([](auto& info) { return info.type == ExtraChannelInfo::ExtraChannelType::kAlpha; });
@@ -1320,6 +1325,33 @@ public:
             return Error::from_string_literal("JPEGXLLoader: Can't create subimage from out-of-bounds rectangle");
 
         return ImageView { m_channels, rectangle };
+    }
+
+    ErrorOr<NonnullRefPtr<CMYKBitmap>> to_cmyk_bitmap(ImageMetadata const& metadata) const
+    {
+        auto const width = m_channels[0].width();
+        auto const height = m_channels[0].height();
+
+        if (metadata.bit_depth.bits_per_sample != 8)
+            return Error::from_string_literal("JPEGXLLoader: Unsupported bit-depth for CMYK image");
+
+        auto const orientation = static_cast<TIFF::Orientation>(metadata.orientation);
+        auto oriented_bitmap = TRY(ExifOrientedCMYKBitmap::create(orientation, { width, height }));
+
+        auto const black_channel = *metadata.black_channel();
+
+        for (u32 y {}; y < height; ++y) {
+            for (u32 x {}; x < width; ++x) {
+                CMYK const color = CMYK(
+                    255 - clamp(m_channels[0].get(x, y), 0, 255),
+                    255 - clamp(m_channels[1].get(x, y), 0, 255),
+                    255 - clamp(m_channels[2].get(x, y), 0, 255),
+                    255 - clamp(m_channels[black_channel].get(x, y), 0, 255));
+                oriented_bitmap.set_pixel(x, y, color);
+            }
+        }
+
+        return oriented_bitmap.bitmap();
     }
 
     ErrorOr<NonnullRefPtr<Bitmap>> to_bitmap(ImageMetadata const& metadata) const
@@ -3143,9 +3175,19 @@ public:
         return m_bitmap;
     }
 
+    RefPtr<CMYKBitmap> cmyk_bitmap() const
+    {
+        return m_cmyk_bitmap;
+    }
+
     ByteBuffer const& icc_profile() const
     {
         return m_icc_profile;
+    }
+
+    bool is_cmyk() const
+    {
+        return any_of(m_metadata.ec_info, [](auto& info) { return info.type == ExtraChannelInfo::ExtraChannelType::kBlack; });
     }
 
 private:
@@ -3168,7 +3210,11 @@ private:
         auto frame_out = TRY(frame.image->get_subimage(frame_rect));
         auto image_out = TRY(final_image.get_subimage(image_rect));
         TRY(frame_out.blend_into(image_out, blending_mode));
-        m_bitmap = TRY(final_image.to_bitmap(m_metadata));
+
+        if (is_cmyk())
+            m_cmyk_bitmap = TRY(final_image.to_cmyk_bitmap(m_metadata));
+        else
+            m_bitmap = TRY(final_image.to_bitmap(m_metadata));
         return {};
     }
 
@@ -3176,6 +3222,7 @@ private:
 
     LittleEndianInputBitStream m_stream;
     RefPtr<Gfx::Bitmap> m_bitmap;
+    RefPtr<Gfx::CMYKBitmap> m_cmyk_bitmap;
 
     Vector<Frame> m_frames;
 
@@ -3275,6 +3322,9 @@ ErrorOr<ImageFrameDescriptor> JPEGXLImageDecoderPlugin::frame(size_t index, Opti
 
     if (m_context->state() < JPEGXLLoadingContext::State::FrameDecoded)
         TRY(m_context->decode());
+
+    if (m_context->cmyk_bitmap() && !m_context->bitmap())
+        return ImageFrameDescriptor { TRY(m_context->cmyk_bitmap()->to_low_quality_rgb()), 0 };
 
     return ImageFrameDescriptor { m_context->bitmap(), 0 };
 }
