@@ -6,6 +6,7 @@
  */
 
 #include <Kernel/Arch/Delay.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBRequest.h>
@@ -349,7 +350,7 @@ void xHCIController::enqueue_command(TransferRequestBlock& transfer_request_bloc
         m_command_ring_producer_cycle_state ^= 1;
     }
 
-    atomic_thread_fence(MemoryOrder::memory_order_seq_cst);
+    full_memory_fence();
 
     ring_command_doorbell();
 }
@@ -760,11 +761,11 @@ ErrorOr<void> xHCIController::enqueue_transfer(u8 slot, u8 endpoint, Pipe::Direc
     pending_transfer.end_index = last_trb_index;
     endpoint_ring.pending_transfers.append(pending_transfer);
 
-    atomic_thread_fence(MemoryOrder::memory_order_seq_cst);
+    full_memory_fence();
 
     ring_memory[first_trb_index].generic.cycle_bit ^= 1;
 
-    atomic_thread_fence(MemoryOrder::memory_order_seq_cst);
+    full_memory_fence();
 
     ring_endpoint_doorbell(slot, endpoint, direction);
 
@@ -1479,7 +1480,7 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
             auto& sync_pending_transfer = static_cast<SyncPendingTransfer&>(pending_transfer);
             sync_pending_transfer.completion_code = transfer_request_block.transfer_event.completion_code;
             sync_pending_transfer.remainder = transfer_request_block.transfer_event.transfer_request_block_transfer_length;
-            atomic_thread_fence(MemoryOrder::memory_order_seq_cst);
+            full_memory_fence();
             sync_pending_transfer.wait_queue.wake_all();
         } else {
             auto& periodic_pending_transfer = static_cast<PeriodicPendingTransfer&>(pending_transfer);
@@ -1512,7 +1513,7 @@ void xHCIController::event_handling_thread()
                 // We only process a single command at a time (and the caller holds the m_command_lock throughout), so we only ever have a single
                 // active command result.
                 m_command_result_transfer_request_block = m_event_ring_segment[m_event_ring_dequeue_index];
-                atomic_thread_fence(MemoryOrder::memory_order_seq_cst);
+                full_memory_fence();
                 m_command_completion_queue.wake_all();
                 break;
             case TransferRequestBlock::TRBType::Port_Status_Change_Event:
