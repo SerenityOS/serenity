@@ -340,6 +340,232 @@ static ErrorOr<RegionSegmentInformatJSON> jbig2_region_segment_information_from_
     return result;
 }
 
+static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& object)
+{
+    u8 flags = 0;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "is_modified_read_read"sv) {
+            if (auto is_modified_read_read = value.get_bool(); is_modified_read_read.has_value()) {
+                if (is_modified_read_read.value())
+                    flags |= 1u;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"is_modified_read_read\"");
+        }
+
+        if (key == "ht_template"sv) {
+            if (auto ht_template = value.get_uint(); ht_template.has_value()) {
+                if (ht_template.value() > 3)
+                    return Error::from_string_literal("expected 0, 1, 2, or 3 for \"ht_template\"");
+                flags |= ht_template.value() << 1;
+                return {};
+            }
+            return Error::from_string_literal("expected uint for \"gb_template\"");
+        }
+
+        if (key == "enable_skip"sv) {
+            if (auto enable_skip = value.get_bool(); enable_skip.has_value()) {
+                if (enable_skip.value())
+                    flags |= 1u << 3;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"enable_skip\"");
+        }
+
+        if (key == "combination_operator"sv) {
+            if (value.is_string()) {
+                auto const& s = value.as_string();
+                if (s == "or"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Or) << 4;
+                else if (s == "and"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::And) << 4;
+                else if (s == "xor"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Xor) << 4;
+                else if (s == "xnor"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::XNor) << 4;
+                else if (s == "replace"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Replace) << 4;
+                else
+                    return Error::from_string_literal("expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"combination_operator\"");
+                return {};
+            }
+            return Error::from_string_literal("expected \"or\", \"and\", \"xor\", \"xnor\", or \"replace\" for \"combination_operator\"");
+        }
+
+        if (key == "default_pixel_value"sv) {
+            if (value.is_string()) {
+                auto const& s = value.as_string();
+                if (s == "white"sv)
+                    flags |= 0;
+                else if (s == "black"sv)
+                    flags |= 1u << 7;
+                else
+                    return Error::from_string_literal("expected \"white\" or \"black\" for \"default_pixel_value\"");
+                return {};
+            }
+            return Error::from_string_literal("expected \"white\" or \"black\" for \"default_pixel_value\"");
+        }
+
+        dbgln("halftone_region flag key {}", key);
+        return Error::from_string_literal("unknown halftone_region flag key");
+    }));
+
+    bool uses_mmr = flags & 1;
+    u8 ht_template = (flags >> 1) & 3;
+    if (uses_mmr && ht_template != 0)
+        return Error::from_string_literal("if is_modified_read_read is true, ht_template must be 0");
+
+    return flags;
+}
+
+static ErrorOr<Vector<u64>> jbig2_halftone_graymap_from_json(ToJSONOptions const&, JsonObject const& object)
+{
+    Vector<u64> graymap;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "array") {
+            if (value.is_array()) {
+                for (auto const& row : value.as_array().values()) {
+                    if (!row.is_array())
+                        return Error::from_string_literal("expected array for \"array\" entries");
+
+                    for (auto const& element : row.as_array().values()) {
+                        if (auto value = element.get_u64(); value.has_value()) {
+                            TRY(graymap.try_append(value.value()));
+                            continue;
+                        }
+                        return Error::from_string_literal("expected u64 for \"graymap_data\" elements");
+                    }
+                }
+                return {};
+            }
+            return Error::from_string_literal("expected array for \"array\"");
+        }
+
+        dbgln("graymap_data key {}", key);
+        return Error::from_string_literal("unknown graymap_data key");
+    }));
+
+    return graymap;
+}
+
+static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from_json(ToJSONOptions const& options, Optional<JsonObject const&> object)
+{
+    if (!object.has_value())
+        return Error::from_string_literal("generic_region segment should have \"data\" object");
+
+    Gfx::JBIG2::HalftoneRegionSegmentData halftone_region;
+
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "region_segment_information"sv) {
+            if (value.is_object()) {
+                auto region_segment_information = TRY(jbig2_region_segment_information_from_json(value.as_object()));
+                if (region_segment_information.use_width_from_image || region_segment_information.use_height_from_image)
+                    return Error::from_string_literal("can't use \"from_image\" with halftone_region");
+                halftone_region.region_segment_information = region_segment_information.region_segment_information;
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"region_segment_information\"");
+        }
+
+        if (key == "flags"sv) {
+            if (value.is_object()) {
+                halftone_region.flags = TRY(jbig2_halftone_region_flags_from_json(value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"flags\"");
+        }
+
+        if (key == "grayscale_width"sv) {
+            if (auto grayscale_width = value.get_u32(); grayscale_width.has_value()) {
+                halftone_region.grayscale_width = grayscale_width.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"grayscale_width\"");
+        }
+
+        if (key == "grayscale_height"sv) {
+            if (auto grayscale_height = value.get_u32(); grayscale_height.has_value()) {
+                halftone_region.grayscale_height = grayscale_height.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"grayscale_height\"");
+        }
+
+        if (key == "grid_offset_x_times_256"sv) {
+            if (auto grid_offset_x = value.get_i32(); grid_offset_x.has_value()) {
+                halftone_region.grid_offset_x_times_256 = grid_offset_x.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"grid_offset_x\"");
+        }
+
+        if (key == "grid_offset_y_times_256"sv) {
+            if (auto grid_offset_y = value.get_i32(); grid_offset_y.has_value()) {
+                halftone_region.grid_offset_y_times_256 = grid_offset_y.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"grid_offset_y\"");
+        }
+
+        if (key == "grid_vector_x_times_256"sv) {
+            if (auto grid_vector_x = value.get_u32(); grid_vector_x.has_value()) {
+                if (grid_vector_x.value() > 0xffff)
+                    return Error::from_string_literal("expected u16 for \"grid_vector_x\"");
+                halftone_region.grid_vector_x_times_256 = grid_vector_x.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u16 for \"grid_vector_x\"");
+        }
+
+        if (key == "grid_vector_y_times_256"sv) {
+            if (auto grid_vector_y = value.get_u32(); grid_vector_y.has_value()) {
+                if (grid_vector_y.value() > 0xffff)
+                    return Error::from_string_literal("expected u16 for \"grid_vector_y\"");
+                halftone_region.grid_vector_y_times_256 = grid_vector_y.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u16 for \"grid_vector_y\"");
+        }
+
+        if (key == "strip_trailing_7fffs"sv) {
+            if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
+                if (strip_trailing_7fffs.value())
+                    halftone_region.trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
+                else
+                    halftone_region.trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"strip_trailing_7fffs\"");
+        }
+
+        if (key == "graymap_data"sv) {
+            if (value.is_object()) {
+                halftone_region.grayscale_image = TRY(jbig2_halftone_graymap_from_json(options, value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"graymap_data\"");
+        }
+
+        dbgln("halftone_region key {}", key);
+        return Error::from_string_literal("unknown halftone_region key");
+    }));
+
+    return halftone_region;
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_halftone_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    auto result = TRY(jbig2_halftone_region_from_json(options, object));
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateHalftoneRegionSegmentData { move(result) } };
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_lossless_halftone_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateLosslessHalftoneRegionSegmentData { TRY(jbig2_halftone_region_from_json(options, object)) } };
+}
+
 static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& object)
 {
     u8 flags = 0;
@@ -1172,6 +1398,10 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         return jbig2_end_of_page_from_json(header, segment_data_object);
     if (type_string == "end_of_stripe")
         return jbig2_end_of_stripe_from_json(header, segment_data_object);
+    if (type_string == "halftone_region")
+        return jbig2_immediate_halftone_region_from_json(options, header, segment_data_object);
+    if (type_string == "lossless_halftone_region")
+        return jbig2_immediate_lossless_halftone_region_from_json(options, header, segment_data_object);
     if (type_string == "pattern_dictionary")
         return jbig2_pattern_dictionary_from_json(options, header, segment_data_object);
     if (type_string == "generic_region")
