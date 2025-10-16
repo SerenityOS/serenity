@@ -64,6 +64,9 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     add_compile_options(-Wno-vla-cxx-extension)
     add_compile_options(-Wno-coroutine-missing-unhandled-exception)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_compile_options(-Wcast-align)
+    add_compile_options(-Wdouble-promotion)
+
     # Only ignore expansion-to-defined for g++, clang's implementation doesn't complain about function-like macros
     add_compile_options(-Wno-expansion-to-defined)
     add_compile_options(-Wno-literal-suffix)
