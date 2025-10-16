@@ -441,11 +441,16 @@ struct ImageMetadata {
 
     Optional<u16> alpha_channel() const
     {
+        return first_extra_channel_matching([](auto& info) { return info.type == ExtraChannelInfo::ExtraChannelType::kAlpha; });
+    }
+
+private:
+    Optional<u16> first_extra_channel_matching(auto&& condition) const
+    {
         for (u16 i = 0; i < ec_info.size(); ++i) {
-            if (ec_info[i].type == ExtraChannelInfo::ExtraChannelType::kAlpha)
+            if (condition(ec_info[i]))
                 return i + number_of_color_channels();
         }
-
         return OptionalNone {};
     }
 };
