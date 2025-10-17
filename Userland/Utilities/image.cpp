@@ -8,7 +8,9 @@
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
+#include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
+#include <LibGfx/ICC/WellKnownProfiles.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/ImageFormats/BilevelImage.h>
 #include <LibGfx/ImageFormats/GIFWriter.h>
@@ -138,18 +140,26 @@ static ErrorOr<void> to_bilevel(LoadedImage& image, Gfx::DitheringAlgorithm algo
     return {};
 }
 
-static ErrorOr<OwnPtr<Core::MappedFile>> convert_image_profile(LoadedImage& image, StringView convert_color_profile_path, OwnPtr<Core::MappedFile> maybe_source_icc_file)
+static ErrorOr<Variant<NonnullOwnPtr<Core::MappedFile>, ByteBuffer>> convert_image_profile(LoadedImage& image, StringView convert_color_profile_path, OwnPtr<Core::MappedFile> maybe_source_icc_file)
 {
     if (!image.icc_data.has_value())
         return Error::from_string_literal("No source color space embedded in image. Pass one with --assign-color-profile.");
 
     auto source_icc_file = move(maybe_source_icc_file);
     auto source_icc_data = image.icc_data.value();
-    auto icc_file = TRY(Core::MappedFile::map(convert_color_profile_path));
-    image.icc_data = icc_file->bytes();
+    auto handle = TRY(([&]() -> ErrorOr<Variant<NonnullOwnPtr<Core::MappedFile>, ByteBuffer>> {
+        if (convert_color_profile_path == "sRGB"sv) {
+            auto buffer = TRY(Gfx::ICC::encode(TRY(Gfx::ICC::sRGB())));
+            image.icc_data = buffer.span();
+            return buffer;
+        }
+        auto icc_file = TRY(Core::MappedFile::map(convert_color_profile_path));
+        image.icc_data = icc_file->bytes();
+        return icc_file;
+    }()));
 
     auto source_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(source_icc_data));
-    auto destination_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_file->bytes()));
+    auto destination_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(*image.icc_data));
 
     if (destination_profile->data_color_space() != Gfx::ICC::ColorSpace::RGB)
         return Error::from_string_literal("Can only convert to RGB at the moment, but destination color space is not RGB");
@@ -170,7 +180,7 @@ static ErrorOr<OwnPtr<Core::MappedFile>> convert_image_profile(LoadedImage& imag
         TRY(destination_profile->convert_image(*frame, *source_profile));
     }
 
-    return icc_file;
+    return handle;
 }
 
 static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool force_alpha, bool ppm_ascii, u8 jpeg_quality, Optional<unsigned> webp_allowed_transforms, unsigned webp_color_cache_bits, Compress::ZlibCompressionLevel png_compression_level)
@@ -316,7 +326,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     args_parser.add_option(options.force_alpha, "Force alpha channel", "force-alpha", {});
     args_parser.add_option(options.strip_alpha, "Remove alpha channel", "strip-alpha", {});
     args_parser.add_option(options.assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
-    args_parser.add_option(options.convert_color_profile_path, "Load color profile from file and convert output image from current profile to loaded profile", "convert-to-color-profile", {}, "FILE");
+    args_parser.add_option(options.convert_color_profile_path, "Load color profile and convert output image from current profile to loaded profile", "convert-to-color-profile", {}, "(FILE | \"sRGB\")");
     args_parser.add_option(options.strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
 
     Optional<Gfx::DitheringAlgorithm> to_bilevel;
@@ -409,8 +419,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         image.icc_data = icc_file->bytes();
     }
 
+    Variant<Empty, NonnullOwnPtr<Core::MappedFile>, ByteBuffer> icc_data;
     if (!options.convert_color_profile_path.is_empty())
-        icc_file = TRY(convert_image_profile(image, options.convert_color_profile_path, move(icc_file)));
+        icc_data = TRY(convert_image_profile(image, options.convert_color_profile_path, move(icc_file)));
 
     if (options.strip_color_profile)
         image.icc_data.clear();
