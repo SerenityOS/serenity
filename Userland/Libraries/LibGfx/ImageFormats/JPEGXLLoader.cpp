@@ -3500,6 +3500,23 @@ ErrorOr<ImageFrameDescriptor> JPEGXLImageDecoderPlugin::frame(size_t index, Opti
     return ImageFrameDescriptor { m_context->bitmap(), 0 };
 }
 
+ErrorOr<NonnullRefPtr<CMYKBitmap>> JPEGXLImageDecoderPlugin::cmyk_frame()
+{
+    if (m_context->state() == JPEGXLLoadingContext::State::Error)
+        return Error::from_string_literal("JPEGXLImageDecoderPlugin: Decoding failed");
+
+    if (m_context->state() < JPEGXLLoadingContext::State::FrameDecoded)
+        TRY(m_context->decode());
+
+    VERIFY(m_context->cmyk_bitmap() && !m_context->bitmap());
+    return *m_context->cmyk_bitmap();
+}
+
+NaturalFrameFormat JPEGXLImageDecoderPlugin::natural_frame_format() const
+{
+    return m_context->is_cmyk() ? NaturalFrameFormat::CMYK : NaturalFrameFormat::RGB;
+}
+
 ErrorOr<Optional<ReadonlyBytes>> JPEGXLImageDecoderPlugin::icc_data()
 {
     if (m_context->state() < JPEGXLLoadingContext::State::ICCProfileDecoded)
