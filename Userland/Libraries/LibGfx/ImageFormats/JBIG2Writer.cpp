@@ -41,13 +41,17 @@ struct GenericRegionEncodingInputParameters {
         Yes,
     } require_eof_after_mmr { RequireEOFBAfterMMR::No };
 
-    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+    // If is_modified_modified_read is true, generic_region_encoding_procedure() writes data to this stream.
+    Stream* stream { nullptr };
+
+    // If is_modified_modified_read is false, generic_region_encoding_procedure() writes data to this encoder.
+    MQArithmeticEncoder* arithmetic_encoder { nullptr };
 };
 
 }
 
 // 6.2 Generic region decoding procedure, but in backwards.
-static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodingInputParameters const& inputs, Optional<JBIG2::GenericContexts>& maybe_contexts)
+static ErrorOr<void> generic_region_encoding_procedure(GenericRegionEncodingInputParameters const& inputs, Optional<JBIG2::GenericContexts>& maybe_contexts)
 {
     // FIXME: Try to come up with a way to share more code with generic_region_decoding_procedure().
     auto width = inputs.image.width();
@@ -55,9 +59,8 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
 
     if (inputs.is_modified_modified_read) {
         // FIXME: It's a bit wasteful to re-convert the BilevelImage to a Bitmap here.
-        AllocatingMemoryStream output_stream;
-        TRY(Gfx::CCITT::Group4Encoder::encode(output_stream, TRY(inputs.image.to_gfx_bitmap()), { CCITT::Group4EncodingOptions::AppendEOFB::No }));
-        return output_stream.read_until_eof();
+        TRY(Gfx::CCITT::Group4Encoder::encode(*inputs.stream, TRY(inputs.image.to_gfx_bitmap()), { CCITT::Group4EncodingOptions::AppendEOFB::No }));
+        return {};
     }
 
     auto& contexts = maybe_contexts.value();
@@ -181,7 +184,7 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
     }(inputs.gb_template);
 
     // 6.2.5.7 Decoding the bitmap
-    MQArithmeticEncoder encoder = TRY(MQArithmeticEncoder::initialize(0));
+    MQArithmeticEncoder& encoder = *inputs.arithmetic_encoder;
 
     // "1) Set:
     //         LTP = 0"
@@ -230,7 +233,7 @@ static ErrorOr<ByteBuffer> generic_region_encoding_procedure(GenericRegionEncodi
     // "4) After all the rows have been decoded, the current contents of the bitmap GBREG are the results that shall be
     //     obtained by every decoder, whether it performs this exact sequence of steps or not."
     // In the encoding case, this means the compressed data is complete.
-    return encoder.finalize(inputs.trailing_7fff_handling);
+    return {};
 }
 
 namespace {
@@ -600,11 +603,23 @@ static ErrorOr<void> encode_pattern_dictionary(JBIG2::PatternDictionarySegmentDa
     inputs.adaptive_template_pixels[3].x = -2;
     inputs.adaptive_template_pixels[3].y = -2;
     inputs.require_eof_after_mmr = GenericRegionEncodingInputParameters::RequireEOFBAfterMMR::No;
-    inputs.trailing_7fff_handling = pattern_dictionary.trailing_7fff_handling;
+
+    AllocatingMemoryStream mmr_output_stream;
     Optional<JBIG2::GenericContexts> contexts;
-    if (!inputs.is_modified_modified_read)
+    Optional<MQArithmeticEncoder> arithmetic_encoder;
+    if (inputs.is_modified_modified_read) {
+        inputs.stream = &mmr_output_stream;
+    } else {
         contexts = JBIG2::GenericContexts { inputs.gb_template };
-    auto data = TRY(generic_region_encoding_procedure(inputs, contexts));
+        arithmetic_encoder = TRY(MQArithmeticEncoder::initialize(0));
+        inputs.arithmetic_encoder = &arithmetic_encoder.value();
+    }
+    TRY(generic_region_encoding_procedure(inputs, contexts));
+    ByteBuffer data;
+    if (inputs.is_modified_modified_read)
+        data = TRY(mmr_output_stream.read_until_eof());
+    else
+        data = TRY(arithmetic_encoder->finalize(pattern_dictionary.trailing_7fff_handling));
 
     TRY(scratch_buffer.try_resize(3 * 1 + 4 + data.size()));
     FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
@@ -626,11 +641,23 @@ static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const
     inputs.is_extended_reference_template_used = (generic_region.flags >> 4) & 1;
     inputs.adaptive_template_pixels = generic_region.adaptive_template_pixels;
     inputs.require_eof_after_mmr = GenericRegionEncodingInputParameters::RequireEOFBAfterMMR::No;
-    inputs.trailing_7fff_handling = generic_region.trailing_7fff_handling;
+
+    AllocatingMemoryStream mmr_output_stream;
     Optional<JBIG2::GenericContexts> contexts;
-    if (!inputs.is_modified_modified_read)
+    Optional<MQArithmeticEncoder> arithmetic_encoder;
+    if (inputs.is_modified_modified_read) {
+        inputs.stream = &mmr_output_stream;
+    } else {
         contexts = JBIG2::GenericContexts { inputs.gb_template };
-    auto data = TRY(generic_region_encoding_procedure(inputs, contexts));
+        arithmetic_encoder = TRY(MQArithmeticEncoder::initialize(0));
+        inputs.arithmetic_encoder = &arithmetic_encoder.value();
+    }
+    TRY(generic_region_encoding_procedure(inputs, contexts));
+    ByteBuffer data;
+    if (inputs.is_modified_modified_read)
+        data = TRY(mmr_output_stream.read_until_eof());
+    else
+        data = TRY(arithmetic_encoder->finalize(generic_region.trailing_7fff_handling));
 
     int number_of_adaptive_template_pixels = 0;
     if (!inputs.is_modified_modified_read)
