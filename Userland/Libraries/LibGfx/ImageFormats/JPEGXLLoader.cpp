@@ -455,6 +455,18 @@ private:
     }
 };
 
+static ErrorOr<void> ensure_metadata_correctness(ImageMetadata const& metadata)
+{
+    // "This includes CMYK colour spaces; in that case, the RGB components are interpreted as
+    // CMY where 0 means full ink, want_icc is true (see Table E.1), and there is an extra channel
+    // of type kBlack (see Table D.9)."
+    bool should_be_cmyk = any_of(metadata.ec_info, [](auto& info) { return info.type == ExtraChannelInfo::ExtraChannelType::kBlack; });
+    if (should_be_cmyk && !metadata.colour_encoding.want_icc)
+        return Error::from_string_literal("JPEGXLLoader: Seemingly CMYK image doesn't have an ICC profile");
+
+    return {};
+}
+
 static ErrorOr<ImageMetadata> read_metadata_header(LittleEndianInputBitStream& stream)
 {
     ImageMetadata metadata;
@@ -506,6 +518,8 @@ static ErrorOr<ImageMetadata> read_metadata_header(LittleEndianInputBitStream& s
 
     if (metadata.cw_mask != 0)
         TODO();
+
+    TRY(ensure_metadata_correctness(metadata));
 
     return metadata;
 }
