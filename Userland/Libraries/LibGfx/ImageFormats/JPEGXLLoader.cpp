@@ -3362,21 +3362,25 @@ private:
     {
         auto final_image = TRY(Image::create({ m_header.width, m_header.height }, m_metadata));
 
-        auto& frame = m_frames.last();
-        auto blending_mode = frame.frame_header.blending_info.mode;
+        for (auto& frame : m_frames) {
+            if (frame.frame_header.frame_type != FrameHeader::FrameType::kRegularFrame)
+                continue;
 
-        // "If x0 or y0 is negative, or the frame extends beyond the right or bottom
-        // edge of the image, only the intersection of the frame with the image is
-        // updated and contributes to the decoded image."
-        IntRect frame_rect = frame.image->rect();
-        auto image_rect = IntRect::intersection(frame_rect.translated(IntPoint { frame.frame_header.x0, frame.frame_header.y0 }), final_image.rect());
-        frame_rect.set_x(-min(frame.frame_header.x0, 0));
-        frame_rect.set_y(-min(frame.frame_header.y0, 0));
-        frame_rect.set_size(image_rect.size());
+            auto blending_mode = frame.frame_header.blending_info.mode;
 
-        auto frame_out = TRY(frame.image->get_subimage(frame_rect));
-        auto image_out = TRY(final_image.get_subimage(image_rect));
-        TRY(frame_out.blend_into(image_out, blending_mode));
+            // "If x0 or y0 is negative, or the frame extends beyond the right or bottom
+            // edge of the image, only the intersection of the frame with the image is
+            // updated and contributes to the decoded image."
+            IntRect frame_rect = frame.image->rect();
+            auto image_rect = IntRect::intersection(frame_rect.translated(IntPoint { frame.frame_header.x0, frame.frame_header.y0 }), final_image.rect());
+            frame_rect.set_x(-min(frame.frame_header.x0, 0));
+            frame_rect.set_y(-min(frame.frame_header.y0, 0));
+            frame_rect.set_size(image_rect.size());
+
+            auto frame_out = TRY(frame.image->get_subimage(frame_rect));
+            auto image_out = TRY(final_image.get_subimage(image_rect));
+            TRY(frame_out.blend_into(image_out, blending_mode));
+        }
 
         if (is_cmyk())
             m_cmyk_bitmap = TRY(final_image.to_cmyk_bitmap(m_metadata));
