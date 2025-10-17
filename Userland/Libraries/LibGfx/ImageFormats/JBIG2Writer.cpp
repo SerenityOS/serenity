@@ -2275,13 +2275,19 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
     if (header.referred_to_segments.size() > 1)
         return Error::from_string_literal("JBIG2Writer: Generic refinement region must refer to at most one segment");
 
-    auto collect_related_segments = [&context](u32 page, u32 segment_number) {
+    enum class CollectionBehavior {
+        ExcludeSelf,
+        IncludeSelf,
+    };
+    auto collect_related_segments = [&context](u32 page, u32 segment_number, CollectionBehavior behavior) {
         Vector<ReadonlyBytes> preceding_segments_on_same_page;
         bool found = false;
         for (auto const& segment : context.segments) {
             if (segment.header.page_association == 0 || segment.header.page_association == page) {
                 auto const& data = context.segment_data_by_id.get(segment.header.segment_number);
                 if (segment.header.segment_number == segment_number) {
+                    if (behavior == CollectionBehavior::IncludeSelf)
+                        preceding_segments_on_same_page.append(data->data);
                     found = true;
                     break;
                 }
@@ -2303,12 +2309,21 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
             auto const& referred_to_segment = *maybe_segment.value();
 
             return TRY(referred_to_segment.data.visit(
+                           [&]<OneOf<JBIG2::IntermediateTextRegionSegmentData, JBIG2::IntermediateHalftoneRegionSegmentData> T>(T const&) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
+                               auto related_segments_on_same_page = collect_related_segments(referred_to_segment.header.page_association, referred_to_segment.header.segment_number, CollectionBehavior::IncludeSelf);
+                               auto bitmap = TRY(JBIG2ImageDecoderPlugin::decode_embedded_intermediate_region_segment(related_segments_on_same_page, referred_to_segment.header.segment_number));
+                               return bitmap;
+                           },
+
+                           // Optimization: IntermediateGenericRegionSegmentData, IntermediateGenericRefinementRegionSegmentData could also use
+                           // the implementation above, but since we happen to have the final bitmap at hand for them, just return it immediately.
                            [](JBIG2::IntermediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
                                return generic_region_wrapper.generic_region.image;
                            },
                            [](JBIG2::IntermediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
                                return generic_refinement_region_wrapper.generic_refinement_region.image;
                            },
+
                            [](auto const&) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
                                return Error::from_string_literal("JBIG2Writer: Generic refinement region can only refer to intermediate region segments");
                            }))
@@ -2319,7 +2334,7 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
         //  contents of the page buffer (see clause 8), restricted to the area of the page buffer specified by this segment's region
         //  segment information field."
         VERIFY(header.referred_to_segments.size() == 0);
-        auto preceding_segments_on_same_page = collect_related_segments(header.page_association, header.segment_number);
+        auto preceding_segments_on_same_page = collect_related_segments(header.page_association, header.segment_number, CollectionBehavior::ExcludeSelf);
         auto bitmap = TRY(JBIG2ImageDecoderPlugin::decode_embedded(preceding_segments_on_same_page));
         return bitmap->subbitmap(generic_refinement_region.region_segment_information.rect());
     }());
@@ -2550,6 +2565,10 @@ static ErrorOr<SerializedSegmentData> encode_segment(JBIG2::SegmentData const& s
             TRY(encode_text_region(text_region_wrapper.text_region, segment_data.header, context, scratch_buffer));
             return scratch_buffer;
         },
+        [&scratch_buffer, &segment_data, &context](JBIG2::IntermediateTextRegionSegmentData const& text_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_text_region(text_region_wrapper.text_region, segment_data.header, context, scratch_buffer));
+            return scratch_buffer;
+        },
         [&scratch_buffer](JBIG2::PatternDictionarySegmentData const& pattern_dictionary) -> ErrorOr<ReadonlyBytes> {
             TRY(encode_pattern_dictionary(pattern_dictionary, scratch_buffer));
             return scratch_buffer;
@@ -2559,6 +2578,10 @@ static ErrorOr<SerializedSegmentData> encode_segment(JBIG2::SegmentData const& s
             return scratch_buffer;
         },
         [&scratch_buffer, &segment_data, &context](JBIG2::ImmediateLosslessHalftoneRegionSegmentData const& halftone_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_halftone_region(halftone_region_wrapper.halftone_region, segment_data.header, context, scratch_buffer));
+            return scratch_buffer;
+        },
+        [&scratch_buffer, &segment_data, &context](JBIG2::IntermediateHalftoneRegionSegmentData const& halftone_region_wrapper) -> ErrorOr<ReadonlyBytes> {
             TRY(encode_halftone_region(halftone_region_wrapper.halftone_region, segment_data.header, context, scratch_buffer));
             return scratch_buffer;
         },
@@ -2619,9 +2642,11 @@ static ErrorOr<SerializedSegmentData> encode_segment(JBIG2::SegmentData const& s
         [](JBIG2::SymbolDictionarySegmentData const&) { return JBIG2::SegmentType::SymbolDictionary; },
         [](JBIG2::ImmediateTextRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateTextRegion; },
         [](JBIG2::ImmediateLosslessTextRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessTextRegion; },
+        [](JBIG2::IntermediateTextRegionSegmentData const&) { return JBIG2::SegmentType::IntermediateTextRegion; },
         [](JBIG2::PatternDictionarySegmentData const&) { return JBIG2::SegmentType::PatternDictionary; },
         [](JBIG2::ImmediateHalftoneRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateHalftoneRegion; },
         [](JBIG2::ImmediateLosslessHalftoneRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessHalftoneRegion; },
+        [](JBIG2::IntermediateHalftoneRegionSegmentData const&) { return JBIG2::SegmentType::IntermediateHalftoneRegion; },
         [](JBIG2::ImmediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateGenericRegion; },
         [](JBIG2::ImmediateLosslessGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessGenericRegion; },
         [](JBIG2::IntermediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::IntermediateGenericRegion; },
