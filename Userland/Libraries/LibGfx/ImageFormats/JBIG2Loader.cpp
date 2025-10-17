@@ -2512,6 +2512,7 @@ struct GrayscaleInputParameters {
     MQArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
+// C.5 Decoding the gray-scale image
 static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputParameters const& inputs, ReadonlyBytes data, Optional<JBIG2::GenericContexts>& contexts)
 {
     VERIFY(inputs.bpp < 64);
@@ -2544,7 +2545,6 @@ static ErrorOr<Vector<u64>> grayscale_image_decoding_procedure(GrayscaleInputPar
     FixedMemoryStream stream { data };
     generic_inputs.stream = &stream;
 
-    // C.5 Decoding the gray-scale image
     // "The gray-scale image is obtained by decoding GSBPP bitplanes. These bitplanes are denoted (from least significant to
     //  most significant) GSPLANES[0], GSPLANES[1], . . . , GSPLANES[GSBPP – 1]. The bitplanes are Gray-coded, so
     //  that each bitplane's true value is equal to its coded value XORed with the next-more-significant bitplane."
