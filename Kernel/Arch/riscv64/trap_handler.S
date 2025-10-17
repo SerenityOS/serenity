@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Sönke Holz <sholz830@gmail.com>
+ * Copyright (c) 2024, Sönke Holz <soenke.holz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
