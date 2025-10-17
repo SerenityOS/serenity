@@ -149,6 +149,10 @@ struct ImmediateLosslessTextRegionSegmentData {
     TextRegionSegmentData text_region;
 };
 
+struct IntermediateTextRegionSegmentData {
+    TextRegionSegmentData text_region;
+};
+
 struct PatternDictionarySegmentData {
     u8 flags { 0 };
     u8 pattern_width { 0 };
@@ -185,6 +189,10 @@ struct ImmediateHalftoneRegionSegmentData {
 };
 
 struct ImmediateLosslessHalftoneRegionSegmentData {
+    HalftoneRegionSegmentData halftone_region;
+};
+
+struct IntermediateHalftoneRegionSegmentData {
     HalftoneRegionSegmentData halftone_region;
 };
 
@@ -263,9 +271,11 @@ struct SegmentData {
         SymbolDictionarySegmentData,
         ImmediateTextRegionSegmentData,
         ImmediateLosslessTextRegionSegmentData,
+        IntermediateTextRegionSegmentData,
         PatternDictionarySegmentData,
         ImmediateHalftoneRegionSegmentData,
         ImmediateLosslessHalftoneRegionSegmentData,
+        IntermediateHalftoneRegionSegmentData,
         ImmediateGenericRegionSegmentData,
         ImmediateLosslessGenericRegionSegmentData,
         IntermediateGenericRegionSegmentData,

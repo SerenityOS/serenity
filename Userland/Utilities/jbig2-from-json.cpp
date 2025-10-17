@@ -1324,6 +1324,11 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_lossless_text_region_fro
     return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateLosslessTextRegionSegmentData { TRY(jbig2_text_region_from_json(options, object)) } };
 }
 
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_intermediate_text_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::IntermediateTextRegionSegmentData { TRY(jbig2_text_region_from_json(options, object)) } };
+}
+
 static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& object)
 {
     u8 flags = 0;
@@ -1762,6 +1767,11 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_halftone_region_from_jso
 static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_lossless_halftone_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
 {
     return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateLosslessHalftoneRegionSegmentData { TRY(jbig2_halftone_region_from_json(options, object)) } };
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_intermediate_halftone_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::IntermediateHalftoneRegionSegmentData { TRY(jbig2_halftone_region_from_json(options, object)) } };
 }
 
 static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object)
@@ -2664,12 +2674,16 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         return jbig2_immediate_text_region_from_json(options, header, segment_data_object);
     if (type_string == "lossless_text_region")
         return jbig2_immediate_lossless_text_region_from_json(options, header, segment_data_object);
+    if (type_string == "intermediate_text_region")
+        return jbig2_intermediate_text_region_from_json(options, header, segment_data_object);
     if (type_string == "pattern_dictionary")
         return jbig2_pattern_dictionary_from_json(options, header, segment_data_object);
     if (type_string == "halftone_region")
         return jbig2_immediate_halftone_region_from_json(options, header, segment_data_object);
     if (type_string == "lossless_halftone_region")
         return jbig2_immediate_lossless_halftone_region_from_json(options, header, segment_data_object);
+    if (type_string == "intermediate_halftone_region")
+        return jbig2_intermediate_halftone_region_from_json(options, header, segment_data_object);
     if (type_string == "generic_region")
         return jbig2_immediate_generic_region_from_json(options, header, segment_data_object);
     if (type_string == "lossless_generic_region")
