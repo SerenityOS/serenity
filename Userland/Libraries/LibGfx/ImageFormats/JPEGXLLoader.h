@@ -28,6 +28,8 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index, Optional<IntSize> ideal_size = {}) override;
+    virtual NaturalFrameFormat natural_frame_format() const override;
+    virtual ErrorOr<NonnullRefPtr<CMYKBitmap>> cmyk_frame() override;
 
 private:
     JPEGXLImageDecoderPlugin(Optional<Vector<u8>>&&, NonnullOwnPtr<FixedMemoryStream>);
