@@ -50,7 +50,7 @@ struct GenericRegionEncodingInputParameters {
 
 }
 
-// 6.2 Generic region decoding procedure, but in backwards.
+// 6.2 Generic region decoding procedure, but in reverse.
 static ErrorOr<void> generic_region_encoding_procedure(GenericRegionEncodingInputParameters const& inputs, Optional<JBIG2::GenericContexts>& maybe_contexts)
 {
     // FIXME: Try to come up with a way to share more code with generic_region_decoding_procedure().
@@ -264,7 +264,7 @@ struct RefinementContexts {
 
 }
 
-// 6.3 Generic Refinement Region Decoding Procedure, but in backwards.
+// 6.3 Generic Refinement Region Decoding Procedure, but in reverse.
 static ErrorOr<ByteBuffer> generic_refinement_region_encoding_procedure(GenericRefinementRegionEncodingInputParameters& inputs, MQArithmeticEncoder& encoder, RefinementContexts& contexts)
 {
     // FIXME: Try to come up with a way to share more code with generic_refinement_region_decoding_procedure().
