@@ -59,7 +59,10 @@ static ErrorOr<void> generic_region_encoding_procedure(GenericRegionEncodingInpu
 
     if (inputs.is_modified_modified_read) {
         // FIXME: It's a bit wasteful to re-convert the BilevelImage to a Bitmap here.
-        TRY(Gfx::CCITT::Group4Encoder::encode(*inputs.stream, TRY(inputs.image.to_gfx_bitmap()), { CCITT::Group4EncodingOptions::AppendEOFB::No }));
+        auto append_eofb = CCITT::Group4EncodingOptions::AppendEOFB::No;
+        if (inputs.require_eof_after_mmr == GenericRegionEncodingInputParameters::RequireEOFBAfterMMR::Yes)
+            append_eofb = CCITT::Group4EncodingOptions::AppendEOFB::Yes;
+        TRY(Gfx::CCITT::Group4Encoder::encode(*inputs.stream, TRY(inputs.image.to_gfx_bitmap()), { append_eofb }));
         return {};
     }
 
