@@ -27,6 +27,7 @@
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibGfx/CharacterBitmap.h>
+#include <LibGfx/Font/ScaledFont.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
 #include <LibGfx/Quad.h>
@@ -1371,14 +1372,14 @@ FLATTEN void Painter::draw_glyph(FloatPoint point, u32 code_point, Font const& f
     draw_glyph_internal(point, glyph_position, top_left, glyph, color);
 }
 
-FLATTEN void Painter::draw_glyph_with_postscript_name(FloatPoint point, StringView name, Font const& font, Color color)
+FLATTEN void Painter::draw_glyph_via_glyph_id(FloatPoint point, Gfx::ScaledFont const& font, u32 glyph_id, Color color)
 {
-    auto left_bearing = font.glyph_left_bearing_for_postscript_name(name);
-    if (!left_bearing.has_value())
-        return;
-    auto top_left = point + FloatPoint(left_bearing.value(), 0);
+    auto top_left = point + Gfx::FloatPoint(font.glyph_metrics(glyph_id).left_side_bearing, 0);
     auto glyph_position = Gfx::GlyphRasterPosition::get_nearest_fit_for(top_left);
-    auto glyph = font.glyph_for_postscript_name(name, glyph_position.subpixel_offset).value();
+    auto maybe_glyph = font.glyph_for_id(glyph_id, glyph_position.subpixel_offset);
+    if (!maybe_glyph.has_value())
+        return;
+    auto glyph = maybe_glyph.release_value();
     draw_glyph_internal(point, glyph_position, top_left, glyph, color);
 }
 
