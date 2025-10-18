@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
- * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
+ * Copyright (c) 2025, Mahmoud Abumandour <ma.mandourr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -65,7 +65,8 @@ constexpr char const* command_tag(SQLCommand command)
     S(StatementUnavailable, "Statement with id '{}' Unavailable")                                 \
     S(SyntaxError, "Syntax Error")                                                                \
     S(TableDoesNotExist, "Table '{}' does not exist")                                             \
-    S(TableExists, "Table '{}' already exist")
+    S(TableExists, "Table '{}' already exist")                                                    \
+    S(UniqueConstraintViolated, "Unique constraint violated on column '{}'")
 
 enum class SQLErrorCode {
 #undef __ENUMERATE_SQL_ERROR
@@ -130,3 +131,11 @@ template<typename ValueType>
 using ResultOr = ErrorOr<ValueType, Result>;
 
 }
+
+template<>
+struct AK::Formatter<SQL::Result> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, SQL::Result const& result)
+    {
+        return Formatter<StringView>::format(builder, result.error_string());
+    }
+};
