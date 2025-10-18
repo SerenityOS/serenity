@@ -20,6 +20,8 @@ public:
     Optional<float> get_glyph_width(u8 char_code) const;
     void set_font_size(float font_size);
 
+    PDFErrorOr<void> append_glyph_path(Gfx::Path&, Gfx::FloatPoint point, u8 char_code, Renderer const&);
+
 private:
     TrueTypePainter(AK::NonnullRefPtr<Gfx::ScaledFont>, NonnullRefPtr<Encoding>, bool encoding_is_mac_roman_or_win_ansi, bool is_nonsymbolic, Optional<u8> high_byte, bool is_zapf_dingbats);
 
@@ -39,6 +41,8 @@ public:
     Optional<float> get_glyph_width(u8 char_code) const override;
     void set_font_size(float font_size) override;
     PDFErrorOr<void> draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u8, Renderer const&) override;
+
+    PDFErrorOr<void> append_glyph_path(Gfx::Path&, Gfx::FloatPoint point, u8 char_code, Renderer const&) override;
 
     DeprecatedFlyString base_font_name() const { return m_base_font_name; }
 
