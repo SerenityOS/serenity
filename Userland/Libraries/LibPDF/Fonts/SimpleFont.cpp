@@ -101,6 +101,36 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::append_text_path(Gfx::Path& path, Gfx::F
 
 PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
 {
+    auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
+    // Fast path: Use cached bitmap glyphs.
+    if (text_rendering_matrix.is_identity_or_translation_or_scale(Gfx::AffineTransform::AllowNegativeScaling::Yes))
+        return draw_axis_aligned_glyphs(painter, position, string, renderer);
+    // Slow path: Create a Gfx::Path for the string, transform it, then draw it. This handles arbitrary transforms.
+    if (auto end_position = draw_transformed_glyphs(painter, position, string, renderer); !end_position.is_error())
+        return end_position;
+    // Fallback to axis aligned glyphs in case `append_path` is unimplemented. This won't look correct.
+    return draw_axis_aligned_glyphs(painter, position, string, renderer);
+}
+
+PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_transformed_glyphs(Gfx::Painter& painter, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
+{
+    Gfx::Path text_path;
+    Gfx::AntiAliasingPainter aa_painter(painter);
+    auto horizontal_scaling = renderer.text_state().horizontal_scaling;
+    auto text_rendering_matrix = renderer.calculate_text_rendering_matrix();
+    auto end_position = TRY(append_text_path(text_path, position, string, renderer));
+    // FIXME: This is a bit janky, but the font is already scaled by `m_text_rendering_matrix.x_scale() / horizontal_scaling`,
+    // which is included in `m_text_rendering_matrix`. So, we must scale it by the reciprocal. Also, the y-axis is flipped.
+    text_path.transform(text_rendering_matrix.multiply(
+        Gfx::AffineTransform {}
+            .set_scale(1 / text_rendering_matrix.x_scale() * horizontal_scaling,
+                -1 / text_rendering_matrix.x_scale() * horizontal_scaling)));
+    Renderer::fill_path_with_style(aa_painter, text_path, renderer.state().paint_style, renderer.state().paint_alpha_constant);
+    return end_position;
+}
+
+PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_axis_aligned_glyphs(Gfx::Painter& painter, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
+{
     auto horizontal_scaling = renderer.text_state().horizontal_scaling;
     auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
     return for_each_glyph_position(position, string, renderer, [&](Gfx::FloatPoint glyph_position, float glyph_width, u8 char_code) {
@@ -110,5 +140,4 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::
         return draw_glyph(painter, glyph_render_position, glyph_width, char_code, renderer);
     });
 }
-
 }

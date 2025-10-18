@@ -179,6 +179,15 @@ public:
 
     bool show_hidden_text() const { return m_rendering_preferences.show_hidden_text; }
 
+    static void fill_path_with_style(Gfx::AntiAliasingPainter& painter, Gfx::Path const& path, ColorOrStyle const& style, float paint_style_opacity = 1.0f, Gfx::WindingRule winding_rule = Gfx::WindingRule::Nonzero)
+    {
+        if (auto* paint_style = style.get_pointer<NonnullRefPtr<Gfx::PaintStyle>>()) {
+            painter.fill_path(path, *paint_style, paint_style_opacity, winding_rule);
+        } else {
+            painter.fill_path(path, style.get<Color>(), winding_rule);
+        }
+    }
+
 private:
     Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>, Color background_color, RenderingPreferences);
 
