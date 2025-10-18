@@ -36,10 +36,6 @@ public:
 
     virtual void set_font_size(float font_size) = 0;
     virtual PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&) = 0;
-    virtual PDFErrorOr<Gfx::FloatPoint> append_text_path(Gfx::Path&, Gfx::FloatPoint, ByteString const&, Renderer const&)
-    {
-        return Error { Error::Type::RenderingUnsupported, "append_text_path not implemented for font" };
-    }
 
     virtual WritingMode writing_mode() const { return WritingMode::Horizontal; }
 
