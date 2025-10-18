@@ -46,17 +46,18 @@ PDFErrorOr<void> SimpleFont::initialize(Document* document, NonnullRefPtr<DictOb
     return {};
 }
 
-PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, ByteString const& string, Renderer const& renderer)
+template<typename Callback>
+PDFErrorOr<Gfx::FloatPoint> SimpleFont::for_each_glyph_position(Gfx::FloatPoint glyph_position, ByteString const& string, Renderer const& renderer, Callback callback)
 {
     auto horizontal_scaling = renderer.text_state().horizontal_scaling;
-
     auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
 
     // TrueType fonts are prescaled to text_rendering_matrix.x_scale() * text_state().font_size / horizontal_scaling,
     // cf `Renderer::text_set_font()`. That's the width we get back from `get_glyph_width()` if we use a fallback
     // (or built-in) font. Scale the width size too, so the m_width.get() codepath is consistent.
-    auto const font_size = text_rendering_matrix.x_scale() * renderer.text_state().font_size / horizontal_scaling;
+    auto font_scale = 1 / text_rendering_matrix.x_scale() * horizontal_scaling;
 
+    auto const font_size = renderer.text_state().font_size;
     auto character_spacing = renderer.text_state().character_spacing;
     auto word_spacing = renderer.text_state().word_spacing;
 
@@ -67,20 +68,14 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::
         if (auto width = m_widths.get(char_code); width.has_value())
             glyph_width = font_size * width.value() * m_font_matrix.x_scale();
         else if (auto width = get_glyph_width(char_code); width.has_value())
-            glyph_width = width.value();
+            glyph_width = font_scale * width.value();
         else
             glyph_width = font_size * m_missing_width * m_font_matrix.x_scale();
 
-        if (renderer.text_state().rendering_mode != TextRenderingMode::Invisible || renderer.show_hidden_text()) {
-            Gfx::FloatPoint glyph_render_position = text_rendering_matrix.map(glyph_position);
-            TRY(draw_glyph(painter, glyph_render_position, glyph_width, char_code, renderer));
-        }
+        if (renderer.text_state().rendering_mode != TextRenderingMode::Invisible || renderer.show_hidden_text())
+            TRY(callback(glyph_position, glyph_width, char_code));
 
-        // glyph_width is scaled by `text_rendering_matrix.x_scale() * renderer.text_state().font_size / horizontal_scaling`,
-        // but it should only be scaled by `renderer.text_state().font_size`.
-        // FIXME: Having to divide here isn't pretty. Refactor things so that this isn't needed.
-        auto tx = glyph_width / text_rendering_matrix.x_scale() * horizontal_scaling;
-        tx += character_spacing;
+        auto tx = glyph_width + character_spacing;
 
         // ISO 32000 (PDF 2.0), 9.3.3 Wordspacing
         // "Word spacing shall be applied to every occurrence of the single-byte character code 32
@@ -92,6 +87,28 @@ PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::
         glyph_position += { tx, 0.0f };
     }
     return glyph_position;
+}
+
+PDFErrorOr<Gfx::FloatPoint> SimpleFont::append_text_path(Gfx::Path& path, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
+{
+    auto horizontal_scaling = renderer.text_state().horizontal_scaling;
+    auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
+    return for_each_glyph_position(position, string, renderer, [&](Gfx::FloatPoint glyph_position, float, u8 char_code) {
+        // The glyph position is in terms of the `renderer.text_state().font_size`, so we need to scale it to the requested font size.
+        return append_glyph_path(path, glyph_position.scaled(text_rendering_matrix.x_scale() / horizontal_scaling, 1), char_code, renderer);
+    });
+}
+
+PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::FloatPoint position, ByteString const& string, Renderer const& renderer)
+{
+    auto horizontal_scaling = renderer.text_state().horizontal_scaling;
+    auto const& text_rendering_matrix = renderer.calculate_text_rendering_matrix();
+    return for_each_glyph_position(position, string, renderer, [&](Gfx::FloatPoint glyph_position, float glyph_width, u8 char_code) {
+        Gfx::FloatPoint glyph_render_position = text_rendering_matrix.map(glyph_position);
+        // Glyph width is in terms of the `renderer.text_state().font_size`, so we need to scale it to the render size.
+        glyph_width *= text_rendering_matrix.x_scale() / horizontal_scaling;
+        return draw_glyph(painter, glyph_render_position, glyph_width, char_code, renderer);
+    });
 }
 
 }
