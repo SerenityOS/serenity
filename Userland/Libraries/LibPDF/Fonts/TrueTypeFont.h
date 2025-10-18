@@ -23,6 +23,9 @@ public:
 private:
     TrueTypePainter(AK::NonnullRefPtr<Gfx::ScaledFont>, NonnullRefPtr<Encoding>, bool encoding_is_mac_roman_or_win_ansi, bool is_nonsymbolic, Optional<u8> high_byte, bool is_zapf_dingbats);
 
+    using GlyphID = Optional<u32>;
+    PDFErrorOr<GlyphID> resolve_glyph_id_for_char_code(u8 char_code);
+
     NonnullRefPtr<Gfx::ScaledFont> m_font;
     NonnullRefPtr<Encoding> m_encoding;
     bool m_encoding_is_mac_roman_or_win_ansi { false };

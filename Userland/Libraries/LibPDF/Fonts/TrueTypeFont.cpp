@@ -62,40 +62,23 @@ NonnullOwnPtr<TrueTypePainter> TrueTypePainter::create(Document* document, Nonnu
     return adopt_own(*new TrueTypePainter { move(font), move(encoding), encoding_is_mac_roman_or_win_ansi, containing_pdf_font.is_nonsymbolic(), high_byte, is_zapf_dingbats });
 }
 
-static void do_draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 unicode, Gfx::ScaledFont const& font, ColorOrStyle const& style)
+static void do_draw_glyph(Gfx::Painter& painter, u32 glyph_id, Gfx::FloatPoint point, float width, Gfx::ScaledFont const& font, ColorOrStyle const& style)
 {
     // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
     auto position = point.translated(0, -font.pixel_metrics().ascent);
 
     if (style.has<Color>()) {
-        painter.draw_glyph(position, unicode, font, style.get<Color>());
+        painter.draw_glyph_via_glyph_id(position, font, glyph_id, style.get<Color>());
     } else {
         // FIXME: Bounding box and sample point look to be pretty wrong
         style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(Gfx::IntRect(position.x(), position.y(), width, 0), [&](auto sample) {
-            painter.draw_glyph(position, unicode, font, sample(Gfx::IntPoint(position.x(), position.y())));
+            painter.draw_glyph_via_glyph_id(position, font, glyph_id, sample(Gfx::IntPoint(position.x(), position.y())));
         });
     }
 }
 
-static void do_draw_glyph_with_postscript_name(Gfx::Painter& painter, Gfx::FloatPoint point, float width, StringView postscript_name, Gfx::ScaledFont const& font, ColorOrStyle const& style)
+PDFErrorOr<TrueTypePainter::GlyphID> TrueTypePainter::resolve_glyph_id_for_char_code(u8 char_code)
 {
-    // Undo shift in Glyf::Glyph::append_simple_path() via OpenType::Font::rasterize_glyph().
-    auto position = point.translated(0, -font.pixel_metrics().ascent);
-
-    if (style.has<Color>()) {
-        painter.draw_glyph_with_postscript_name(position, postscript_name, font, style.get<Color>());
-    } else {
-        // FIXME: Bounding box and sample point look to be pretty wrong
-        style.get<NonnullRefPtr<Gfx::PaintStyle>>()->paint(Gfx::IntRect(position.x(), position.y(), width, 0), [&](auto sample) {
-            painter.draw_glyph_with_postscript_name(position, postscript_name, font, sample(Gfx::IntPoint(position.x(), position.y())));
-        });
-    }
-}
-
-PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
-{
-    auto style = renderer.state().paint_style;
-
     // 5.5.5 Character Encoding, Encodings for TrueType Fonts
     u32 unicode;
 
@@ -126,17 +109,13 @@ PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPo
         // FIXME: Implement (1, 0) subtable support.
         auto char_name = m_encoding->get_name(char_code);
         u32 unicode = glyph_name_to_unicode(char_name, m_is_zapf_dingbats).value_or(char_code);
-        if (m_font->contains_glyph(unicode)) {
-            do_draw_glyph(painter, point, width, unicode, *m_font, style);
-            return {};
-        }
+        if (m_font->contains_glyph(unicode))
+            return m_font->glyph_id_for_code_point(unicode);
 
         // "In either of the cases above, if the glyph name cannot be mapped as specified, the glyph name is looked up
         //  in the font program’s “post” table (if one is present) and the associated glyph description is used."
-        if (m_font->contains_glyph_for_postscript_name(char_name)) {
-            do_draw_glyph_with_postscript_name(painter, point, width, char_name, *m_font, style);
-            return {};
-        }
+        if (m_font->contains_glyph_for_postscript_name(char_name))
+            return m_font->glyph_id_for_postscript_name(char_name);
 
         return Error::malformed_error("Failed to draw glyph with postscript name");
     } else if (m_high_byte.has_value()) {
@@ -158,7 +137,14 @@ PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPo
         unicode = glyph_name_to_unicode(char_name, m_is_zapf_dingbats).value_or(char_code);
     }
 
-    do_draw_glyph(painter, point, width, unicode, *m_font, style);
+    return m_font->glyph_id_for_code_point(unicode);
+}
+
+PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
+{
+    auto glyph_id = TRY(resolve_glyph_id_for_char_code(char_code));
+    if (glyph_id.has_value())
+        do_draw_glyph(painter, *glyph_id, point, width, m_font, renderer.state().paint_style);
     return {};
 }
 
