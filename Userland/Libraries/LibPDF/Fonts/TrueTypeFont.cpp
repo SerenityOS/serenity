@@ -148,6 +148,16 @@ PDFErrorOr<void> TrueTypePainter::draw_glyph(Gfx::Painter& painter, Gfx::FloatPo
     return {};
 }
 
+PDFErrorOr<void> TrueTypePainter::append_glyph_path(Gfx::Path& path, Gfx::FloatPoint point, u8 char_code, Renderer const&)
+{
+    auto glyph_id = TRY(resolve_glyph_id_for_char_code(char_code));
+    if (glyph_id.has_value()) {
+        path.move_to(point.translated(m_font->glyph_metrics(*glyph_id).left_side_bearing, -m_font->pixel_metrics().ascent));
+        m_font->append_glyph_path_to(path, *glyph_id);
+    }
+    return {};
+}
+
 Optional<float> TrueTypePainter::get_glyph_width(u8 char_code) const
 {
     // FIXME: Make this use the full char_code lookup method used in draw_glyph() once that's complete.
@@ -206,6 +216,11 @@ void TrueTypeFont::set_font_size(float font_size)
 PDFErrorOr<void> TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const& renderer)
 {
     return m_font_painter->draw_glyph(painter, point, width, char_code, renderer);
+}
+
+PDFErrorOr<void> TrueTypeFont::append_glyph_path(Gfx::Path& path, Gfx::FloatPoint point, u8 char_code, Renderer const& renderer)
+{
+    return m_font_painter->append_glyph_path(path, point, char_code, renderer);
 }
 
 }

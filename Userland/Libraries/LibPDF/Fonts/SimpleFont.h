@@ -14,17 +14,26 @@ namespace PDF {
 class SimpleFont : public PDFFont {
 public:
     PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint, ByteString const&, Renderer const&) override;
+    PDFErrorOr<Gfx::FloatPoint> append_text_path(Gfx::Path&, Gfx::FloatPoint, ByteString const&, Renderer const&) override;
 
 protected:
     PDFErrorOr<void> initialize(Document* document, NonnullRefPtr<DictObject> const& dict, float font_size) override;
     virtual Optional<float> get_glyph_width(u8 char_code) const = 0;
     virtual PDFErrorOr<void> draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Renderer const&) = 0;
+    virtual PDFErrorOr<void> append_glyph_path(Gfx::Path&, Gfx::FloatPoint, u8, Renderer const&)
+    {
+        return Error { Error::Type::RenderingUnsupported, "append_glyph_path not implemented for font" };
+    }
+
     RefPtr<Encoding>& encoding() { return m_encoding; }
     RefPtr<Encoding> const& encoding() const { return m_encoding; }
 
     Gfx::AffineTransform& font_matrix() { return m_font_matrix; }
 
 private:
+    template<typename Callback>
+    PDFErrorOr<Gfx::FloatPoint> for_each_glyph_position(Gfx::FloatPoint, ByteString const&, Renderer const&, Callback callback);
+
     RefPtr<Encoding> m_encoding;
     RefPtr<StreamObject> m_to_unicode;
     HashMap<u8, u16> m_widths;
