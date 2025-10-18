@@ -451,20 +451,11 @@ void Renderer::stroke_current_path()
     }
 }
 
-static void do_fill_path(Gfx::AntiAliasingPainter& painter, Gfx::Path const& path, ColorOrStyle const& style, float paint_style_opacity = 1.0f, Gfx::WindingRule winding_rule = Gfx::WindingRule::Nonzero)
-{
-    if (auto* paint_style = style.get_pointer<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        painter.fill_path(path, *paint_style, paint_style_opacity, winding_rule);
-    } else {
-        painter.fill_path(path, style.get<Color>(), winding_rule);
-    }
-}
-
 void Renderer::fill_current_path(Gfx::WindingRule winding_rule)
 {
     auto path_end = m_current_path.end();
     m_current_path.close_all_subpaths();
-    do_fill_path(anti_aliasing_painter(), m_current_path, state().paint_style, state().paint_alpha_constant, winding_rule);
+    fill_path_with_style(anti_aliasing_painter(), m_current_path, state().paint_style, state().paint_alpha_constant, winding_rule);
     // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
     m_current_path.trim(path_end);
 }
@@ -1380,28 +1371,7 @@ PDFErrorOr<void> Renderer::show_text(ByteString const& string)
         return Error::rendering_unsupported_error("Can't draw text because an invalid font was in use");
 
     auto start_position = Gfx::FloatPoint { 0.0f, 0.0f };
-    auto end_position = start_position;
-
-    if (m_text_rendering_matrix.is_identity_or_translation_or_scale(Gfx::AffineTransform::AllowNegativeScaling::No)) {
-        // Fast path: Use cached bitmap glyphs.
-        end_position = TRY(text_state().font->draw_string(painter(), start_position, string, *this));
-    } else {
-        Gfx::Path text_path;
-        // Slow path: Create a Gfx::Path for the string, transform it, then draw it. This handles arbitrary transforms.
-        if (auto maybe_end = text_state().font->append_text_path(text_path, start_position, string, *this); !maybe_end.is_error()) {
-            end_position = maybe_end.release_value();
-            // FIXME: This is a bit janky, but the font is already scaled by `m_text_rendering_matrix.x_scale() / horizontal_scaling`,
-            // which is included in `m_text_rendering_matrix`. So, we must scale it by the reciprocal. Also, the y-axis is flipped.
-            text_path.transform(m_text_rendering_matrix.multiply(
-                Gfx::AffineTransform {}
-                    .set_scale(1 / m_text_rendering_matrix.x_scale() * text_state().horizontal_scaling,
-                        -1 / m_text_rendering_matrix.x_scale() * text_state().horizontal_scaling)));
-            do_fill_path(anti_aliasing_painter(), text_path, state().paint_style, state().paint_alpha_constant);
-        } else {
-            // Fallback to the fast path in case `append_path` is unimplemented.
-            end_position = TRY(text_state().font->draw_string(painter(), start_position, string, *this));
-        }
-    }
+    auto end_position = TRY(text_state().font->draw_string(painter(), start_position, string, *this));
 
     // Update text matrix.
     auto delta = end_position - start_position;
