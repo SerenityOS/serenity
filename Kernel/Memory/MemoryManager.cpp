@@ -9,6 +9,7 @@
 #include <AK/QuickSort.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/CPU.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/RegisterState.h>
@@ -1189,6 +1190,11 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_page(S
 {
     auto page = TRY(allocate_physical_page());
     dma_buffer_page = page;
+
+    // Ensure that the zeroing of the DMA pages is visible for devices.
+    // Use a full memory fence, as a device could theoretically start reading from this DMA region when we issue an MMIO load, so we need to prevent reordering of both loads and stores.
+    full_memory_fence();
+
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behavior by default)
     return allocate_kernel_region_with_physical_pages({ &page, 1 }, name, access, memory_type);
 }
@@ -1204,6 +1210,11 @@ ErrorOr<NonnullOwnPtr<Memory::Region>> MemoryManager::allocate_dma_buffer_pages(
 {
     VERIFY(!(size % PAGE_SIZE));
     dma_buffer_pages = TRY(allocate_contiguous_physical_pages(size, memory_type));
+
+    // Ensure that the zeroing of the DMA pages is visible for devices.
+    // Use a full memory fence, as a device could theoretically start reading from this DMA region when we issue an MMIO load, so we need to prevent reordering of both loads and stores.
+    full_memory_fence();
+
     // Do not enable Cache for this region as physical memory transfers are performed (Most architectures have this behavior by default)
     return allocate_kernel_region_with_physical_pages(dma_buffer_pages, name, access, memory_type);
 }

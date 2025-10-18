@@ -22,12 +22,6 @@ static inline void atomic_thread_fence(MemoryOrder order) noexcept
     return __atomic_thread_fence(order);
 }
 
-static inline void full_memory_barrier() noexcept
-{
-    atomic_signal_fence(AK::MemoryOrder::memory_order_acq_rel);
-    atomic_thread_fence(AK::MemoryOrder::memory_order_acq_rel);
-}
-
 template<typename T>
 static inline T atomic_exchange(T volatile* var, T desired, MemoryOrder order = memory_order_seq_cst) noexcept
 {
@@ -502,5 +496,4 @@ public:
 
 #if USING_AK_GLOBALLY
 using AK::Atomic;
-using AK::full_memory_barrier;
 #endif

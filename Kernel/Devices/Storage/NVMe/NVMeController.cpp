@@ -9,6 +9,7 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/Interrupts.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Boot/CommandLine.h>
 #include <Kernel/Bus/PCI/API.h>
@@ -110,7 +111,7 @@ ErrorOr<void> NVMeController::reset_controller()
 
     m_controller_regs->cc = cc;
 
-    full_memory_barrier();
+    full_memory_fence();
 
     // Wait until the RDY bit is cleared
     if (!wait_for_ready(false))
@@ -136,7 +137,7 @@ ErrorOr<void> NVMeController::start_controller()
 
     m_controller_regs->cc = cc;
 
-    full_memory_barrier();
+    full_memory_fence();
 
     // Wait until the RDY bit is set
     if (!wait_for_ready(true))

@@ -9,6 +9,7 @@
 
 #include <AK/Atomic.h>
 #include <Kernel/Arch/Delay.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Devices/Storage/AHCI/ATADiskDevice.h>
 #include <Kernel/Devices/Storage/AHCI/Port.h>
 #include <Kernel/Devices/Storage/StorageManagement.h>
@@ -200,14 +201,14 @@ bool AHCIPort::reset()
         dmesgln("AHCI Port {}: Disabled by firmware ", representative_port_index());
         return false;
     }
-    full_memory_barrier();
+    full_memory_fence();
     m_interrupt_enable.clear();
     m_interrupt_status.clear();
-    full_memory_barrier();
+    full_memory_fence();
     start_fis_receiving();
-    full_memory_barrier();
+    full_memory_fence();
     clear_sata_error_register();
-    full_memory_barrier();
+    full_memory_fence();
     if (!initiate_sata_reset()) {
         return false;
     }
@@ -243,10 +244,10 @@ bool AHCIPort::initialize()
     m_interrupt_status.clear();
     m_interrupt_enable.set_all();
 
-    full_memory_barrier();
+    full_memory_fence();
     // This actually enables the port...
     start_command_list_processing();
-    full_memory_barrier();
+    full_memory_fence();
 
     size_t logical_sector_size = 512;
     size_t physical_sector_size = 512;
@@ -361,16 +362,16 @@ void AHCIPort::rebase()
     VERIFY(m_hard_lock.is_locked());
     VERIFY(!m_command_list_page.is_null() && !m_fis_receive_page.is_null());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Rebasing.", representative_port_index());
-    full_memory_barrier();
+    full_memory_fence();
     stop_command_list_processing();
     stop_fis_receiving();
-    full_memory_barrier();
+    full_memory_fence();
 
     // Try to wait 1 second for HBA to clear Command List Running and FIS Receive Running
     wait_until_condition_met_or_timeout(1000, 1000, [this]() -> bool {
         return !(m_port_registers.cmd & (1 << 15)) && !(m_port_registers.cmd & (1 << 14));
     });
-    full_memory_barrier();
+    full_memory_fence();
     m_port_registers.clbu = 0;
     m_port_registers.clb = m_command_list_page->paddr().get();
     m_port_registers.fbu = 0;
@@ -548,7 +549,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
             fis.command = ATA_CMD_READ_DMA_EXT;
     }
 
-    full_memory_barrier();
+    full_memory_fence();
 
     fis.device = ATA_USE_LBA_ADDRESSING;
     fis.header.port_muliplier = (u8)FIS::HeaderAttributes::C;
@@ -565,9 +566,9 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     if (!spin_until_ready())
         return false;
 
-    full_memory_barrier();
+    full_memory_fence();
     mark_command_header_ready_to_process(unused_command_header.value());
-    full_memory_barrier();
+    full_memory_fence();
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Do a {}, lba {}, block count {} @ {}, ended", representative_port_index(), direction == AsyncBlockDeviceRequest::RequestType::Write ? "write" : "read", lba, block_count, m_dma_buffers[0]->paddr());
     return true;
@@ -612,10 +613,10 @@ bool AHCIPort::identify_device()
     m_interrupt_enable.clear();
     m_interrupt_status.clear();
 
-    full_memory_barrier();
+    full_memory_fence();
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Marking command header at index {} as ready to identify device", representative_port_index(), unused_command_header.value());
     m_port_registers.ci = 1 << unused_command_header.value();
-    full_memory_barrier();
+    full_memory_fence();
 
     size_t time_elapsed = 0;
     bool success = false;
@@ -753,7 +754,7 @@ bool AHCIPort::initiate_sata_reset()
     VERIFY(m_hard_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Initiate SATA reset", representative_port_index());
     stop_command_list_processing();
-    full_memory_barrier();
+    full_memory_fence();
 
     // Note: The AHCI specification says to wait now a 500 milliseconds
     // Try to wait 1 second for HBA to clear Command List Running
@@ -761,15 +762,15 @@ bool AHCIPort::initiate_sata_reset()
         return !(m_port_registers.cmd & (1 << 15));
     });
 
-    full_memory_barrier();
+    full_memory_fence();
     spin_up();
-    full_memory_barrier();
+    full_memory_fence();
     set_interface_state(AHCI::DeviceDetectionInitialization::PerformInterfaceInitializationSequence);
     // The AHCI specification says to wait now a 1 millisecond
     microseconds_delay(1000);
-    full_memory_barrier();
+    full_memory_fence();
     set_interface_state(AHCI::DeviceDetectionInitialization::NoActionRequested);
-    full_memory_barrier();
+    full_memory_fence();
 
     wait_until_condition_met_or_timeout(10, 1000, [this]() -> bool {
         return is_phy_enabled();
@@ -777,7 +778,7 @@ bool AHCIPort::initiate_sata_reset()
 
     dmesgln("AHCI Port {}: {}", representative_port_index(), try_disambiguate_sata_status());
 
-    full_memory_barrier();
+    full_memory_fence();
     clear_sata_error_register();
     return (m_port_registers.ssts & 0xf) == 3;
 }

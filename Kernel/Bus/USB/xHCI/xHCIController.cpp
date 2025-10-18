@@ -6,6 +6,7 @@
  */
 
 #include <Kernel/Arch/Delay.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBRequest.h>
@@ -175,10 +176,8 @@ ErrorOr<void> xHCIController::initialize()
         m_scratchpad_buffers_array_region = TRY(MM.allocate_dma_buffer_pages(MUST(Memory::page_round_up(requested_scratchpad_buffers * sizeof(u64))), "xHCI Scratchpad Buffers Array"sv, Memory::Region::Access::ReadWrite));
         auto* scratchpad_buffers_array = reinterpret_cast<u64*>(m_scratchpad_buffers_array_region->vaddr().as_ptr());
         for (auto i = 0; i < requested_scratchpad_buffers; ++i) {
-            // FIXME: Use MemoryType::NonCacheable once we have a generic memory fence abstraction.
-            //        We need to ensure the zeroing of the page is visible before the DCBAAP write.
-            //        On AArch64, this should be a DSB ST fence.
-            auto page = TRY(MM.allocate_physical_page(Memory::MemoryManager::ShouldZeroFill::Yes, nullptr, Memory::MemoryType::IO));
+            auto page = TRY(MM.allocate_physical_page(Memory::MemoryManager::ShouldZeroFill::Yes, nullptr, Memory::MemoryType::NonCacheable));
+
             scratchpad_buffers_array[i] = page->paddr().get();
             TRY(m_scratchpad_buffers.try_append(move(page)));
         }
@@ -186,6 +185,10 @@ ErrorOr<void> xHCIController::initialize()
     } else {
         m_device_context_base_address_array[0] = 0;
     }
+
+    // Ensure the zeroing of the scratchpad buffer pages is visible before the DCBAAP write.
+    store_memory_fence();
+
     auto device_context_base_address_array_pointer = m_device_context_base_address_array_region->physical_page(0)->paddr().get();
     m_operational_registers.device_context_base_address_array_pointer.low = device_context_base_address_array_pointer;
     m_operational_registers.device_context_base_address_array_pointer.high = device_context_base_address_array_pointer >> 32;
@@ -347,7 +350,7 @@ void xHCIController::enqueue_command(TransferRequestBlock& transfer_request_bloc
         m_command_ring_producer_cycle_state ^= 1;
     }
 
-    atomic_thread_fence(MemoryOrder::memory_order_seq_cst);
+    full_memory_fence();
 
     ring_command_doorbell();
 }
@@ -758,11 +761,11 @@ ErrorOr<void> xHCIController::enqueue_transfer(u8 slot, u8 endpoint, Pipe::Direc
     pending_transfer.end_index = last_trb_index;
     endpoint_ring.pending_transfers.append(pending_transfer);
 
-    atomic_thread_fence(MemoryOrder::memory_order_seq_cst);
+    full_memory_fence();
 
     ring_memory[first_trb_index].generic.cycle_bit ^= 1;
 
-    atomic_thread_fence(MemoryOrder::memory_order_seq_cst);
+    full_memory_fence();
 
     ring_endpoint_doorbell(slot, endpoint, direction);
 
@@ -1477,7 +1480,7 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
             auto& sync_pending_transfer = static_cast<SyncPendingTransfer&>(pending_transfer);
             sync_pending_transfer.completion_code = transfer_request_block.transfer_event.completion_code;
             sync_pending_transfer.remainder = transfer_request_block.transfer_event.transfer_request_block_transfer_length;
-            atomic_thread_fence(MemoryOrder::memory_order_seq_cst);
+            full_memory_fence();
             sync_pending_transfer.wait_queue.wake_all();
         } else {
             auto& periodic_pending_transfer = static_cast<PeriodicPendingTransfer&>(pending_transfer);
@@ -1510,7 +1513,7 @@ void xHCIController::event_handling_thread()
                 // We only process a single command at a time (and the caller holds the m_command_lock throughout), so we only ever have a single
                 // active command result.
                 m_command_result_transfer_request_block = m_event_ring_segment[m_event_ring_dequeue_index];
-                atomic_thread_fence(MemoryOrder::memory_order_seq_cst);
+                full_memory_fence();
                 m_command_completion_queue.wake_all();
                 break;
             case TransferRequestBlock::TRBType::Port_Status_Change_Event:

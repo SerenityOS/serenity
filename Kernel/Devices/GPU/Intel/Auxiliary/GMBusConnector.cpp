@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Arch/Delay.h>
+#include <Kernel/Arch/MemoryFences.h>
 #include <Kernel/Devices/GPU/Intel/Auxiliary/GMBusConnector.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 
@@ -40,9 +41,9 @@ bool GMBusConnector::wait_for(GMBusStatus desired_status, size_t milliseconds_ti
     while (1) {
         if (milliseconds_timeout < milliseconds_passed)
             return false;
-        full_memory_barrier();
+        full_memory_fence();
         u32 status = m_gmbus_registers->status;
-        full_memory_barrier();
+        full_memory_fence();
         VERIFY(!(status & (1 << 10))); // error happened
         switch (desired_status) {
         case GMBusStatus::HardwareReady:
@@ -65,11 +66,11 @@ ErrorOr<void> GMBusConnector::write(unsigned address, u32 data)
 {
     VERIFY(address < 256);
     SpinlockLocker locker(m_access_lock);
-    full_memory_barrier();
+    full_memory_fence();
     m_gmbus_registers->data = data;
-    full_memory_barrier();
+    full_memory_fence();
     m_gmbus_registers->command = ((address << 1) | (1 << 16) | (GMBusCycle::Wait << 25) | (1 << 30));
-    full_memory_barrier();
+    full_memory_fence();
     if (!wait_for(GMBusStatus::TransactionCompletion, 250))
         return Error::from_errno(EBUSY);
     return {};
@@ -96,9 +97,9 @@ ErrorOr<void> GMBusConnector::read(unsigned address, u8* buf, size_t length)
     SpinlockLocker locker(m_access_lock);
     size_t nread = 0;
     auto read_set = [&] {
-        full_memory_barrier();
+        full_memory_fence();
         u32 data = m_gmbus_registers->data;
-        full_memory_barrier();
+        full_memory_fence();
         for (size_t index = 0; index < 4; index++) {
             if (nread == length)
                 break;
@@ -107,9 +108,9 @@ ErrorOr<void> GMBusConnector::read(unsigned address, u8* buf, size_t length)
         }
     };
 
-    full_memory_barrier();
+    full_memory_fence();
     m_gmbus_registers->command = (1 | (address << 1) | (length << 16) | (GMBusCycle::Wait << 25) | (1 << 30));
-    full_memory_barrier();
+    full_memory_fence();
     while (nread < length) {
         if (!wait_for(GMBusStatus::HardwareReady, 250))
             return Error::from_errno(EBUSY);
