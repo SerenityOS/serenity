@@ -30,6 +30,7 @@ set(KERNEL_SOURCES
     Bus/USB/EHCI/EHCIController.cpp
     Bus/USB/UHCI/UHCIController.cpp
     Bus/USB/UHCI/UHCIRootHub.cpp
+    Bus/USB/xHCI/DataStructures.cpp
     Bus/USB/xHCI/DeviceTreexHCIController.cpp
     Bus/USB/xHCI/PCIxHCIController.cpp
     Bus/USB/xHCI/xHCIController.cpp
