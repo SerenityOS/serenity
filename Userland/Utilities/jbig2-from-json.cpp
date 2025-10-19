@@ -617,7 +617,11 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
     u32 gray_max = 0;
     Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
     RefPtr<Gfx::BilevelImage> image;
-    bool tile_image = false;
+    enum class Method {
+        None,
+        DistinctImageTiles,
+    };
+    Method method = Method::None;
 
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "flags"sv) {
@@ -676,19 +680,22 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
             return Error::from_string_literal("expected object for \"image_data\"");
         }
 
-        if (key == "tile_image"sv) {
-            if (auto tile_image_json = value.get_bool(); tile_image_json.has_value()) {
-                tile_image = tile_image_json.value();
-                return {};
+        if (key == "method"sv) {
+            if (value.is_string()) {
+                auto const& method_json = value.as_string();
+                if (method_json == "distinct_image_tiles"sv) {
+                    method = Method::DistinctImageTiles;
+                    return {};
+                }
             }
-            return Error::from_string_literal("expected bool for \"tile_image\"");
+            return Error::from_string_literal("expected \"distinct_image_tiles\" for \"method\"");
         }
 
         dbgln("pattern_dictionary key {}", key);
         return Error::from_string_literal("unknown pattern_dictionary key");
     }));
 
-    if (tile_image) {
+    if (method == Method::DistinctImageTiles) {
         auto number_of_tiles_in_x = ceil_div(image->width(), static_cast<size_t>(pattern_width));
         auto number_of_tiles_in_y = ceil_div(image->height(), static_cast<size_t>(pattern_height));
         auto number_of_tiles = number_of_tiles_in_x * number_of_tiles_in_y;

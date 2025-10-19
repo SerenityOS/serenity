@@ -25,7 +25,7 @@
                 "pattern_width": 16,
                 "pattern_height": 16,
                 "gray_max": 624,
-                "tile_image": true,
+                "method": "distinct_image_tiles",
                 "image_data": {
                     "from_file": "bitmap.bmp"
                 }
