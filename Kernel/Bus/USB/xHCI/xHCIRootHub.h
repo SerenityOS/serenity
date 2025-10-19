@@ -12,7 +12,7 @@
 #include <Kernel/Bus/USB/USBTransfer.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 
-namespace Kernel::USB {
+namespace Kernel::USB::xHCI {
 
 class xHCIController;
 

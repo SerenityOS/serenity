@@ -6,7 +6,7 @@
 
 #include <Kernel/Bus/USB/xHCI/xHCIInterrupter.h>
 
-namespace Kernel::USB {
+namespace Kernel::USB::xHCI {
 
 ErrorOr<NonnullOwnPtr<xHCIPCIInterrupter>> xHCIPCIInterrupter::create(PCIxHCIController& controller, u16 interrupter_id)
 {

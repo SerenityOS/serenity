@@ -14,7 +14,7 @@
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Tasks/DeprecatedWaitQueue.h>
 
-namespace Kernel::USB {
+namespace Kernel::USB::xHCI {
 
 class xHCIPCIInterrupter;
 class xHCIDeviceTreeInterrupter;

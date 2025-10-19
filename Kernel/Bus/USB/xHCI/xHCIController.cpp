@@ -14,7 +14,7 @@
 #include <Kernel/Bus/USB/xHCI/xHCIInterrupter.h>
 #include <Kernel/Tasks/Process.h>
 
-namespace Kernel::USB {
+namespace Kernel::USB::xHCI {
 
 UNMAP_AFTER_INIT xHCIController::xHCIController(Memory::TypedMapping<u8> registers_mapping)
     : m_registers_mapping(move(registers_mapping))

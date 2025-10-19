@@ -9,7 +9,7 @@
 #include <Kernel/Bus/USB/xHCI/xHCIController.h>
 #include <Kernel/Firmware/DeviceTree/Device.h>
 
-namespace Kernel::USB {
+namespace Kernel::USB::xHCI {
 
 class DeviceTreexHCIController final : public xHCIController {
 public:

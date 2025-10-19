@@ -10,7 +10,7 @@
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/Bus/USB/xHCI/xHCIController.h>
 
-namespace Kernel::USB {
+namespace Kernel::USB::xHCI {
 
 static USBDeviceDescriptor xhci_root_hub_device_descriptor = {
     {
