@@ -293,6 +293,8 @@ private:
     // Only used for m_rendering_preferences.show_clipping_paths.
     void show_clipping_paths();
     Vector<Gfx::Path> m_clip_paths_to_show_for_debugging;
+    // Used to offset the PaintStyle's origin when rendering a pattern.
+    RefPtr<Gfx::PaintStyle> m_original_paint_style;
 };
 
 }
