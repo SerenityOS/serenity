@@ -415,6 +415,12 @@ PDFErrorOr<void> Renderer::restore_previous_clip_after_graphics_state_restore()
 void Renderer::begin_path_paint()
 {
     m_current_path.transform(state().ctm);
+    if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
+        VERIFY(!m_original_paint_style);
+        m_original_paint_style = state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>();
+        auto translation = Gfx::AffineTransform().translate(m_current_path.bounding_box().x(), m_current_path.bounding_box().y());
+        state().paint_style = { MUST(Gfx::OffsetPaintStyle::create(state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), translation)) };
+    }
 }
 
 PDFErrorOr<void> Renderer::end_path_paint()
@@ -422,6 +428,11 @@ PDFErrorOr<void> Renderer::end_path_paint()
     if (m_add_path_as_clip != AddPathAsClip::No) {
         TRY(add_clip_path(move(m_current_path), m_add_path_as_clip == AddPathAsClip::Nonzero ? Gfx::WindingRule::Nonzero : Gfx::WindingRule::EvenOdd));
         m_add_path_as_clip = AddPathAsClip::No;
+    }
+
+    if (m_original_paint_style) {
+        state().paint_style = m_original_paint_style.release_nonnull();
+        m_original_paint_style = nullptr;
     }
 
     // "Once a path has been painted, it is no longer defined; there is then no current path
