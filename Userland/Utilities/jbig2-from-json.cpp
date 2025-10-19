@@ -545,7 +545,16 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
                 halftone_region.grayscale_image = TRY(jbig2_halftone_graymap_from_json(options, value.as_object()));
                 return {};
             }
-            return Error::from_string_literal("expected object for \"graymap_data\"");
+            if (value.is_string()) {
+                if (value.as_string() == "identity_tile_indices"sv) {
+                    halftone_region.grayscale_image.clear();
+                    u32 num_pixels = halftone_region.grayscale_width * halftone_region.grayscale_height;
+                    for (u32 i = 0; i < num_pixels; ++i)
+                        TRY(halftone_region.grayscale_image.try_append(i));
+                    return {};
+                }
+            }
+            return Error::from_string_literal("expected object or \"identity_tile_indices\" for \"graymap_data\"");
         }
 
         dbgln("halftone_region key {}", key);
@@ -608,6 +617,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
     u32 gray_max = 0;
     Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
     RefPtr<Gfx::BilevelImage> image;
+    bool tile_image = false;
 
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "flags"sv) {
@@ -666,9 +676,39 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
             return Error::from_string_literal("expected object for \"image_data\"");
         }
 
+        if (key == "tile_image"sv) {
+            if (auto tile_image_json = value.get_bool(); tile_image_json.has_value()) {
+                tile_image = tile_image_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"tile_image\"");
+        }
+
         dbgln("pattern_dictionary key {}", key);
         return Error::from_string_literal("unknown pattern_dictionary key");
     }));
+
+    if (tile_image) {
+        auto number_of_tiles_in_x = ceil_div(image->width(), static_cast<size_t>(pattern_width));
+        auto number_of_tiles_in_y = ceil_div(image->height(), static_cast<size_t>(pattern_height));
+        auto number_of_tiles = number_of_tiles_in_x * number_of_tiles_in_y;
+        auto tiled_image = TRY(Gfx::BilevelImage::create(pattern_width * number_of_tiles, pattern_height));
+        tiled_image->fill(false);
+
+        dbgln("Tiling pattern dictionary image into {}x{} tiles", number_of_tiles_in_x, number_of_tiles_in_y);
+        Gfx::IntRect bitmap_rect { 0, 0, static_cast<int>(image->width()), static_cast<int>(image->height()) };
+        for (size_t tile_y = 0, tile_index = 0; tile_y < number_of_tiles_in_y; ++tile_y) {
+            for (size_t tile_x = 0; tile_x < number_of_tiles_in_x; ++tile_x, ++tile_index) {
+                Gfx::IntPoint source_position { static_cast<int>(tile_x * pattern_width), static_cast<int>(tile_y * pattern_height) };
+                Gfx::IntRect source_rect { source_position, { pattern_width, pattern_height } };
+                source_rect = source_rect.intersected(bitmap_rect);
+                auto source = image->subbitmap(source_rect);
+                Gfx::IntPoint destination_position { static_cast<int>(tile_index * pattern_width), 0 };
+                source.composite_onto(*tiled_image, destination_position, Gfx::BilevelImage::CompositionType::Replace);
+            }
+        }
+        image = move(tiled_image);
+    }
 
     return Gfx::JBIG2::SegmentData {
         header,

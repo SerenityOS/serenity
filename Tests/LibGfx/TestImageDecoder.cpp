@@ -393,6 +393,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-refine-tpgron.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-template1.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-template1-tpgron.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-halftone.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-negative-sbdsoffset.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine.jbig2"sv),
@@ -406,12 +407,12 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-texttopright.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-texttoprighttranspose.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-texttranspose.jbig2"sv),
-        // Missing tests, because there's no easy way to generate them:
-        // - halftone (code support added in #23864)
+        // Missing tests, in part because there's no easy way to generate them:
         // - halftone with MMR graymap (code support added in #26094)
         // - lossless halftone (code support added in #26043)
         // - rotated halftone (code support added in #26044)
-        // - halftone with graymap with > 256 entries (code support added in #26044 too)
+        // - composition test for halftone regions
+        // - intermediate halftone / refinement of halftone regions
         // - huffman symbol regions (code support added in #26068)
         // - huffman text regions (code support added in #26075)
         // - huffman regions with custom huffman tables (code support added in #26078, #26081)
