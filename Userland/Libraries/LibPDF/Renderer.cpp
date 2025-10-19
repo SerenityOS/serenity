@@ -805,13 +805,7 @@ RENDERER_HANDLER(set_stroking_color)
 
 RENDERER_HANDLER(set_stroking_color_extended)
 {
-    // FIXME: Handle Pattern color spaces
-    auto last_arg = args.last();
-    if (last_arg.has<NonnullRefPtr<Object>>() && last_arg.get<NonnullRefPtr<Object>>()->is<NameObject>()) {
-        dbgln("pattern space {}", last_arg.get<NonnullRefPtr<Object>>()->cast<NameObject>()->name());
-        return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
-    }
-
+    // FIXME: Pattern color spaces might need extra resources
     state().stroke_style = style_with_alpha(TRY(state().stroke_color_space->style(args)), state().stroke_alpha_constant);
     return {};
 }
@@ -824,13 +818,6 @@ RENDERER_HANDLER(set_painting_color)
 
 RENDERER_HANDLER(set_painting_color_extended)
 {
-    // FIXME: Handle Pattern color spaces
-    auto last_arg = args.last();
-    if (last_arg.has<NonnullRefPtr<Object>>() && last_arg.get<NonnullRefPtr<Object>>()->is<NameObject>()) {
-        dbgln("pattern space {}", last_arg.get<NonnullRefPtr<Object>>()->cast<NameObject>()->name());
-        return Error::rendering_unsupported_error("Pattern color spaces not yet implemented");
-    }
-
     state().paint_style = style_with_alpha(TRY(state().paint_color_space->style(args)), state().paint_alpha_constant);
     return {};
 }
@@ -1060,10 +1047,15 @@ RENDERER_HANDLER(paint_xobject)
 {
     VERIFY(args.size() > 0);
     auto resources = extra_resources.value_or(m_page.resources);
+    if (!resources->contains(CommonNames::XObject))
+        return Error::malformed_error("XObject resource dictionary missing");
+
     auto xobject_name = args[0].get<NonnullRefPtr<Object>>()->cast<NameObject>()->name();
     auto xobjects_dict = TRY(resources->get_dict(m_document, CommonNames::XObject));
-    auto xobject = TRY(xobjects_dict->get_stream(m_document, xobject_name));
+    if (!xobjects_dict->contains(xobject_name))
+        return Error::malformed_error("XObject resource dictionary does not contain {}", xobject_name);
 
+    auto xobject = TRY(xobjects_dict->get_stream(m_document, xobject_name));
     auto subtype = MUST(xobject->dict()->get_name(m_document, CommonNames::Subtype))->name();
     if (subtype == CommonNames::Image) {
         TRY(paint_image_xobject(xobject));
@@ -1561,7 +1553,7 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
 
     // "(Required for images, except those that use the JPXDecode filter; not allowed for image masks) [...]
     //  it can be any type of color space except Pattern."
-    NonnullRefPtr<ColorSpace> color_space = DeviceGrayColorSpace::the();
+    NonnullRefPtr<ColorSpaceWithFloatArgs> color_space = DeviceGrayColorSpace::the();
     if (!is_image_mask) {
         // "If ColorSpace is not present in the image dictionary, the color space informa-
         //  tion in the JPEG2000 data is used."
@@ -1570,7 +1562,7 @@ PDFErrorOr<Renderer::LoadedImage> Renderer::load_image(NonnullRefPtr<StreamObjec
         if (!image_dict->contains(CommonNames::ColorSpace) && is_jpeg2000)
             return Error(Error::Type::RenderingUnsupported, "Using color space from jpeg2000 image not yet implemented");
         auto color_space_object = MUST(image_dict->get_object(m_document, CommonNames::ColorSpace));
-        color_space = TRY(get_color_space_from_document(color_space_object));
+        color_space = verify_cast<ColorSpaceWithFloatArgs>(*TRY(get_color_space_from_document(color_space_object)));
     }
 
     auto color_rendering_intent = state().color_rendering_intent;

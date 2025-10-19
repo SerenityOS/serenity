@@ -23,7 +23,7 @@ namespace {
 struct CommonEntries {
     // "(Required) The color space in which color values are expressed. This may be
     //  any device, CIE-based, or special color space except a Pattern space."
-    AK::NonnullRefPtr<ColorSpace> color_space;
+    AK::NonnullRefPtr<ColorSpaceWithFloatArgs> color_space;
 
     // "(Optional) An array of color components appropriate to the color space,
     //  specifying a single background color value. If present, this color is used, be-
@@ -60,7 +60,7 @@ PDFErrorOr<CommonEntries> read_common_entries(Document* document, DictObject con
     if (color_space->family() == ColorSpaceFamily::Pattern)
         return Error::malformed_error("Shading color space must not be pattern");
 
-    CommonEntries common_entries { .color_space = color_space };
+    CommonEntries common_entries { .color_space = verify_cast<ColorSpaceWithFloatArgs>(*color_space) };
 
     if (shading_dict.contains(CommonNames::Background)) {
         auto background_array = TRY(shading_dict.get_array(document, CommonNames::Background));
@@ -634,7 +634,7 @@ static GouraudBounds bounds_from_decode_array(ReadonlySpan<float> decode_array)
 
 class GouraudPaintStyle final : public Gfx::PaintStyle {
 public:
-    static NonnullRefPtr<GouraudPaintStyle> create(NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors, GouraudBounds bounds)
+    static NonnullRefPtr<GouraudPaintStyle> create(NonnullRefPtr<ColorSpaceWithFloatArgs> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors, GouraudBounds bounds)
     {
         return adopt_ref(*new GouraudPaintStyle(move(color_space), move(functions), move(points), move(colors), move(bounds)));
     }
@@ -648,7 +648,7 @@ public:
     }
 
 private:
-    GouraudPaintStyle(NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors, GouraudBounds bounds)
+    GouraudPaintStyle(NonnullRefPtr<ColorSpaceWithFloatArgs> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors, GouraudBounds bounds)
         : m_functions(move(functions))
         , m_color_space(move(color_space))
         , m_points(move(points))
@@ -660,7 +660,7 @@ private:
     Gfx::Color sample_color_in_bbox(Gfx::IntPoint) const;
 
     ShadingFunctionsType m_functions;
-    NonnullRefPtr<ColorSpace> m_color_space;
+    NonnullRefPtr<ColorSpaceWithFloatArgs> m_color_space;
     Array<Gfx::FloatPoint, 3> m_points;
     Array<GouraudColor, 3> m_colors;
     GouraudBounds m_bounds;
@@ -704,7 +704,7 @@ Gfx::Color GouraudPaintStyle::sample_color_in_bbox(Gfx::IntPoint point_in_bbox) 
     return MUST(m_color_space->style(color)).get<Gfx::Color>();
 }
 
-void draw_gouraud_triangle(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors, GouraudBounds const& bounds)
+void draw_gouraud_triangle(Gfx::Painter& painter, NonnullRefPtr<ColorSpaceWithFloatArgs> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 3> points, Array<GouraudColor, 3> colors, GouraudBounds const& bounds)
 {
     static_assert(points.size() == 3);
     static_assert(colors.size() == 3);
@@ -727,7 +727,7 @@ struct Triangle {
     u32 c;
 };
 
-PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransform const& ctm, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType const& functions, Vector<Triangle> const& triangles, Vector<float> const& vertex_data, GouraudBounds bounds)
+PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransform const& ctm, NonnullRefPtr<ColorSpaceWithFloatArgs> color_space, ShadingFunctionsType const& functions, Vector<Triangle> const& triangles, Vector<float> const& vertex_data, GouraudBounds bounds)
 {
     size_t const number_of_components = !functions.has<Empty>() ? 1 : color_space->number_of_components();
     bool is_indexed = color_space->family() == ColorSpaceFamily::Indexed;
@@ -771,7 +771,7 @@ PDFErrorOr<void> draw_gouraud_triangles(Gfx::Painter& painter, Gfx::AffineTransf
     return {};
 }
 
-static void draw_gouraud_quad(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 4> points, Array<GouraudColor, 4> colors, GouraudBounds const& bounds)
+static void draw_gouraud_quad(Gfx::Painter& painter, NonnullRefPtr<ColorSpaceWithFloatArgs> color_space, ShadingFunctionsType functions, Array<Gfx::FloatPoint, 4> points, Array<GouraudColor, 4> colors, GouraudBounds const& bounds)
 {
     // FIXME: https://gpuopen.com/learn/bilinear-interpolation-quadrilateral-barycentric-coordinates/ / https://jcgt.org/published/0011/03/04/paper.pdf instead.
     draw_gouraud_triangle(painter, color_space, functions, { points[0], points[1], points[3] }, { colors[0], colors[1], colors[3] }, bounds);
@@ -783,7 +783,7 @@ struct GouraudBezierPatch {
     Array<GouraudColor, 4> colors {};
 };
 
-static void draw_gouraud_bezier_patch(Gfx::Painter& painter, NonnullRefPtr<ColorSpace> color_space, ShadingFunctionsType functions, GouraudBezierPatch const& patch, GouraudBounds const& bounds, int depth = 0)
+static void draw_gouraud_bezier_patch(Gfx::Painter& painter, NonnullRefPtr<ColorSpaceWithFloatArgs> color_space, ShadingFunctionsType functions, GouraudBezierPatch const& patch, GouraudBounds const& bounds, int depth = 0)
 {
     auto const& points = patch.points;
     auto const& colors = patch.colors;
@@ -1425,7 +1425,7 @@ PDFErrorOr<NonnullRefPtr<CoonsPatchShading>> CoonsPatchShading::create(Document*
 
 PDFErrorOr<void> CoonsPatchShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
-    NonnullRefPtr<ColorSpace> color_space = m_common_entries.color_space;
+    NonnullRefPtr<ColorSpaceWithFloatArgs> color_space = m_common_entries.color_space;
     size_t const number_of_components = !m_functions.has<Empty>() ? 1 : color_space->number_of_components();
 
     bool is_indexed = color_space->family() == ColorSpaceFamily::Indexed;
@@ -1796,7 +1796,7 @@ PDFErrorOr<NonnullRefPtr<TensorProductPatchShading>> TensorProductPatchShading::
 
 PDFErrorOr<void> TensorProductPatchShading::draw(Gfx::Painter& painter, Gfx::AffineTransform const& ctm)
 {
-    NonnullRefPtr<ColorSpace> color_space = m_common_entries.color_space;
+    NonnullRefPtr<ColorSpaceWithFloatArgs> color_space = m_common_entries.color_space;
     size_t const number_of_components = !m_functions.has<Empty>() ? 1 : color_space->number_of_components();
     bool is_indexed = color_space->family() == ColorSpaceFamily::Indexed;
     RefPtr<IndexedColorSpace> indexed_color_space;

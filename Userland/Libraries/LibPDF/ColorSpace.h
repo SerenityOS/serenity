@@ -66,21 +66,27 @@ public:
 
     virtual ~ColorSpace() = default;
 
-    virtual PDFErrorOr<ColorOrStyle> style(ReadonlySpan<float> arguments) const = 0;
-    virtual PDFErrorOr<ColorOrStyle> style(ReadonlySpan<Value> arguments) const
-    {
-        Vector<float, 4> float_arguments;
-        for (auto& argument : arguments)
-            float_arguments.append(argument.to_float());
-        return style(float_arguments);
-    }
+    virtual PDFErrorOr<ColorOrStyle> style(ReadonlySpan<Value> arguments) const = 0;
 
     virtual int number_of_components() const = 0;
     virtual Vector<float> default_decode() const = 0; // "TABLE 4.40 Default Decode arrays"
     virtual ColorSpaceFamily const& family() const = 0;
 };
 
-class DeviceGrayColorSpace final : public ColorSpace {
+class ColorSpaceWithFloatArgs : public ColorSpace {
+public:
+    virtual PDFErrorOr<ColorOrStyle> style(ReadonlySpan<float> arguments) const = 0;
+
+    PDFErrorOr<ColorOrStyle> style(ReadonlySpan<Value> arguments) const override
+    {
+        Vector<float, 4> float_arguments;
+        for (auto& argument : arguments)
+            float_arguments.append(argument.to_float());
+        return style(float_arguments);
+    }
+};
+
+class DeviceGrayColorSpace final : public ColorSpaceWithFloatArgs {
 public:
     static NonnullRefPtr<DeviceGrayColorSpace> the();
 
@@ -95,7 +101,7 @@ private:
     DeviceGrayColorSpace() = default;
 };
 
-class DeviceRGBColorSpace final : public ColorSpace {
+class DeviceRGBColorSpace final : public ColorSpaceWithFloatArgs {
 public:
     static NonnullRefPtr<DeviceRGBColorSpace> the();
 
@@ -110,7 +116,7 @@ private:
     DeviceRGBColorSpace() = default;
 };
 
-class DeviceCMYKColorSpace final : public ColorSpace {
+class DeviceCMYKColorSpace final : public ColorSpaceWithFloatArgs {
 public:
     static ErrorOr<NonnullRefPtr<DeviceCMYKColorSpace>> the();
 
@@ -125,7 +131,7 @@ private:
     DeviceCMYKColorSpace() = default;
 };
 
-class DeviceNColorSpace final : public ColorSpace {
+class DeviceNColorSpace final : public ColorSpaceWithFloatArgs {
 public:
     static PDFErrorOr<NonnullRefPtr<DeviceNColorSpace>> create(Document*, Vector<Value>&& parameters, Renderer&);
 
@@ -145,7 +151,7 @@ private:
     Vector<Value> mutable m_tint_output_values;
 };
 
-class CalGrayColorSpace final : public ColorSpace {
+class CalGrayColorSpace final : public ColorSpaceWithFloatArgs {
 public:
     static PDFErrorOr<NonnullRefPtr<CalGrayColorSpace>> create(Document*, Vector<Value>&& parameters);
 
@@ -164,7 +170,7 @@ private:
     float m_gamma { 1 };
 };
 
-class CalRGBColorSpace final : public ColorSpace {
+class CalRGBColorSpace final : public ColorSpaceWithFloatArgs {
 public:
     static PDFErrorOr<NonnullRefPtr<CalRGBColorSpace>> create(Document*, Vector<Value>&& parameters);
 
@@ -184,7 +190,7 @@ private:
     Array<float, 9> m_matrix { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
 };
 
-class ICCBasedColorSpace final : public ColorSpace {
+class ICCBasedColorSpace final : public ColorSpaceWithFloatArgs {
 public:
     static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, Vector<Value>&& parameters, Renderer&);
 
@@ -207,7 +213,7 @@ private:
     Optional<Gfx::ICC::MatrixMatrixConversion> m_map;
 };
 
-class LabColorSpace final : public ColorSpace {
+class LabColorSpace final : public ColorSpaceWithFloatArgs {
 public:
     static PDFErrorOr<NonnullRefPtr<LabColorSpace>> create(Document*, Vector<Value>&& parameters);
 
@@ -226,7 +232,7 @@ private:
     Array<float, 4> m_range { -100, 100, -100, 100 };
 };
 
-class IndexedColorSpace final : public ColorSpace {
+class IndexedColorSpace final : public ColorSpaceWithFloatArgs {
 public:
     static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, Vector<Value>&& parameters, Renderer&);
 
@@ -237,7 +243,7 @@ public:
     Vector<float> default_decode() const override;
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::Indexed; }
 
-    NonnullRefPtr<ColorSpace> base_color_space() const { return m_base; }
+    NonnullRefPtr<ColorSpaceWithFloatArgs> base_color_space() const { return m_base; }
 
     PDFErrorOr<ReadonlySpan<float>> base_components(int index) const
     {
@@ -248,14 +254,14 @@ public:
     }
 
 private:
-    IndexedColorSpace(NonnullRefPtr<ColorSpace>);
+    IndexedColorSpace(NonnullRefPtr<ColorSpaceWithFloatArgs>);
 
-    NonnullRefPtr<ColorSpace> m_base;
+    NonnullRefPtr<ColorSpaceWithFloatArgs> m_base;
     int m_hival { 0 };
     Vector<float> m_lookup;
 };
 
-class SeparationColorSpace final : public ColorSpace {
+class SeparationColorSpace final : public ColorSpaceWithFloatArgs {
 public:
     static PDFErrorOr<NonnullRefPtr<SeparationColorSpace>> create(Document*, Vector<Value>&& parameters, Renderer&);
 
@@ -274,4 +280,24 @@ private:
     NonnullRefPtr<Function> m_tint_transform;
     Vector<Value> mutable m_tint_output_values;
 };
+
+class PatternColorSpace final : public ColorSpace {
+public:
+    static NonnullRefPtr<PatternColorSpace> create(Renderer& renderer);
+    ~PatternColorSpace() override = default;
+
+    PDFErrorOr<ColorOrStyle> style(ReadonlySpan<Value> arguments) const override;
+    int number_of_components() const override;
+    Vector<float> default_decode() const override;
+    ColorSpaceFamily const& family() const override { return ColorSpaceFamily::Pattern; }
+
+private:
+    PatternColorSpace(Renderer& renderer)
+        : m_renderer(renderer)
+    {
+    }
+
+    Renderer& m_renderer;
+};
+
 }
