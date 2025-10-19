@@ -15,7 +15,7 @@
 
 namespace Kernel::RPi {
 
-class RP1xHCIController final : public USB::xHCIController {
+class RP1xHCIController final : public USB::xHCI::xHCIController {
 public:
     static ErrorOr<NonnullLockRefPtr<RP1xHCIController>> try_to_initialize(PhysicalAddress, size_t index, size_t interrupt_number);
 

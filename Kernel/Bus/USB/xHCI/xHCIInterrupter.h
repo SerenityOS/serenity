@@ -13,7 +13,7 @@
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Interrupts/PCIIRQHandler.h>
 
-namespace Kernel::USB {
+namespace Kernel::USB::xHCI {
 
 class xHCIPCIInterrupter final : public PCI::IRQHandler {
 public:

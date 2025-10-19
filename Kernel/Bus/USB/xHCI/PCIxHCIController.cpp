@@ -14,7 +14,7 @@
 #include <Kernel/Bus/USB/xHCI/PCIxHCIController.h>
 #include <Kernel/Bus/USB/xHCI/xHCIInterrupter.h>
 
-namespace Kernel::USB {
+namespace Kernel::USB::xHCI {
 
 ErrorOr<NonnullLockRefPtr<PCIxHCIController>> PCIxHCIController::try_to_initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {

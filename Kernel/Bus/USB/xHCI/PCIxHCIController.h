@@ -11,7 +11,7 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Bus/USB/xHCI/xHCIController.h>
 
-namespace Kernel::USB {
+namespace Kernel::USB::xHCI {
 
 class PCIxHCIController final
     : public xHCIController

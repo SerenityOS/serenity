@@ -11,7 +11,7 @@
 #include <Kernel/Firmware/DeviceTree/Driver.h>
 #include <Kernel/Firmware/DeviceTree/Management.h>
 
-namespace Kernel::USB {
+namespace Kernel::USB::xHCI {
 
 ErrorOr<NonnullLockRefPtr<DeviceTreexHCIController>> DeviceTreexHCIController::try_to_initialize(DeviceTree::Device::Resource registers_resource, StringView node_name, size_t interrupt_number)
 {
