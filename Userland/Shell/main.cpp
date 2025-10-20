@@ -167,6 +167,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool should_format_live = false;
     bool keep_open = false;
     bool posix_mode = (LexicalPath::basename(arguments.strings[0]) == "sh"sv);
+    bool force_interactive = false;
+    bool force_login_shell = false;
 
     Core::ArgsParser parser;
     parser.add_option(command_to_run, "String to read commands from", "command-string", 'c', "command-string");
@@ -174,12 +176,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_option(format, "Format the given file into stdout and exit", "format", 0, "file");
     parser.add_option(should_format_live, "Enable live formatting", "live-formatting", 'f');
     parser.add_option(keep_open, "Keep the shell open after running the specified command or file", "keep-open");
+    parser.add_option(force_interactive, "Force an interactive shell, implies --keep-open", "interactive", 'i');
+    parser.add_option(force_login_shell, "Ignored, for sh compatibility", "login", 'l');
     parser.add_option(posix_mode, "Behave like a POSIX-compatible shell", "posix");
     parser.add_positional_argument(file_to_read_from, "File to read commands from", "file", Core::ArgsParser::Required::No);
     parser.add_positional_argument(script_args, "Extra arguments to pass to the script (via $* and co)", "argument", Core::ArgsParser::Required::No);
 
     parser.set_stop_on_first_non_option(true);
     parser.parse(arguments);
+
+    keep_open &= force_interactive;
 
     if (!file_to_read_from.is_null())
         skip_rc_files = true;
@@ -215,7 +221,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto execute_file = !file_to_read_from.is_empty() && "-"sv != file_to_read_from;
-    attempt_interactive = !execute_file && (command_to_run.is_empty() || keep_open);
+    attempt_interactive = force_interactive || (!execute_file && (command_to_run.is_empty() || keep_open));
 
     if (keep_open && command_to_run.is_empty() && !execute_file) {
         warnln("Option --keep-open can only be used in combination with -c or when specifying a file to execute.");
