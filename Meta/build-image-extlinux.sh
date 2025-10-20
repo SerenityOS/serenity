@@ -30,7 +30,7 @@ for dir in "/usr/lib/syslinux/bios" "/usr/lib/syslinux" "/usr/share/syslinux"; d
         break
     fi
 done
-if [ -z $syslinux_dir ]; then
+if [ -z "$syslinux_dir" ]; then
     echo "can't find syslinux directory"
     exit 1
 fi
@@ -96,7 +96,7 @@ mkdir -p mnt/boot/extlinux
 extlinux --install mnt/boot/extlinux
 cp "$extlinux_cfg" mnt/boot/extlinux/extlinux.conf
 for module in mboot.c32 menu.c32 libutil.c32 libcom32.c32; do
-    cp $syslinux_dir/$module mnt/boot/extlinux/
+    cp "$syslinux_dir"/"$module" mnt/boot/extlinux/
 done
-dd bs=440 count=1 conv=notrunc if=$syslinux_dir/mbr.bin of="$dev"
+dd bs=440 count=1 conv=notrunc if="$syslinux_dir"/mbr.bin of="$dev"
 echo "done"
