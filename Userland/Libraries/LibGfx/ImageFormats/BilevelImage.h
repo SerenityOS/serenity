@@ -133,6 +133,8 @@ public:
     size_t width() const { return m_active_rect.width(); }
     size_t height() const { return m_active_rect.height(); }
 
+    bool operator==(BilevelSubImage const& other) const;
+
 private:
     template<OneOf<BilevelImage, BilevelSubImage> InputType, BilevelImage::CompositionType operator_>
     friend void composite_onto(InputType const& in, BilevelImage& out, IntPoint position);
@@ -142,3 +144,9 @@ private:
 };
 
 }
+
+template<>
+class AK::Traits<Gfx::BilevelSubImage> : public DefaultTraits<Gfx::BilevelSubImage> {
+public:
+    static unsigned hash(Gfx::BilevelSubImage const&);
+};
