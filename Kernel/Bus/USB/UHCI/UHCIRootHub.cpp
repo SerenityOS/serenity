@@ -113,12 +113,12 @@ ErrorOr<size_t> UHCIRootHub::handle_control_transfer(Transfer& transfer)
     auto* request_data = transfer.buffer().as_ptr() + sizeof(USBRequestData);
 
     if constexpr (UHCI_DEBUG) {
-        dbgln("UHCIRootHub: Received control transfer.");
-        dbgln("UHCIRootHub: Request Type: {:#02x}", request.request_type);
-        dbgln("UHCIRootHub: Request: {:#02x}", request.request);
-        dbgln("UHCIRootHub: Value: {:#04x}", request.value);
-        dbgln("UHCIRootHub: Index: {:#04x}", request.index);
-        dbgln("UHCIRootHub: Length: {:#04x}", request.length);
+        dbgln("UHCIRootHub: Received control transfer:");
+        dbgln("UHCIRootHub:     bmRequestType: {:#02x}", request.request_type);
+        dbgln("UHCIRootHub:     bRequest: {:#02x}", request.request);
+        dbgln("UHCIRootHub:     wValue: {:#04x}", request.value);
+        dbgln("UHCIRootHub:     wIndex: {:#04x}", request.index);
+        dbgln("UHCIRootHub:     wLength: {:#04x}", request.length);
     }
 
     size_t length = 0;

@@ -129,12 +129,12 @@ ErrorOr<size_t> xHCIRootHub::handle_control_transfer(Transfer& transfer)
     auto* request_data = transfer.buffer().as_ptr() + sizeof(USBRequestData);
 
     if constexpr (XHCI_DEBUG) {
-        dbgln("xHCIRootHub: Received control transfer.");
-        dbgln("xHCIRootHub: Request Type: {:#02x}", request.request_type);
-        dbgln("xHCIRootHub: Request: {:#02x}", request.request);
-        dbgln("xHCIRootHub: Value: {:#04x}", request.value);
-        dbgln("xHCIRootHub: Index: {:#04x}", request.index);
-        dbgln("xHCIRootHub: Length: {:#04x}", request.length);
+        dbgln("xHCIRootHub: Received control transfer:");
+        dbgln("xHCIRootHub:     bmRequestType: {:#02x}", request.request_type);
+        dbgln("xHCIRootHub:     bRequest: {:#02x}", request.request);
+        dbgln("xHCIRootHub:     wValue: {:#04x}", request.value);
+        dbgln("xHCIRootHub:     wIndex: {:#04x}", request.index);
+        dbgln("xHCIRootHub:     wLength: {:#04x}", request.length);
     }
 
     size_t length = 0;
