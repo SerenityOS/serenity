@@ -119,6 +119,20 @@ void BilevelSubImage::composite_onto(BilevelImage& out, IntPoint position, Bilev
     ::Gfx::composite_onto(*this, out, position, operator_);
 }
 
+bool BilevelSubImage::operator==(BilevelSubImage const& other) const
+{
+    if (width() != other.width() || height() != other.height())
+        return false;
+
+    for (size_t y = 0; y < height(); ++y) {
+        for (size_t x = 0; x < width(); ++x) {
+            if (get_bit(x, y) != other.get_bit(x, y))
+                return false;
+        }
+    }
+    return true;
+}
+
 BilevelSubImage BilevelImage::subbitmap(Gfx::IntRect const& rect) const
 {
     VERIFY(rect.x() >= 0);
@@ -320,4 +334,16 @@ ErrorOr<NonnullRefPtr<BilevelImage>> BilevelImage::create_from_bitmap(Gfx::Bitma
     return bilevel_image;
 }
 
+}
+
+unsigned AK::Traits<Gfx::BilevelSubImage>::hash(Gfx::BilevelSubImage const& image)
+{
+    unsigned hash = 0;
+    for (size_t y = 0; y < image.height(); ++y) {
+        for (size_t x = 0; x < image.width(); ++x) {
+            auto value_hash = Traits<bool>::hash(image.get_bit(x, y));
+            hash = pair_int_hash(hash, value_hash);
+        }
+    }
+    return hash;
 }
