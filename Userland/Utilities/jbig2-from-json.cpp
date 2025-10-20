@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Enumerate.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
@@ -615,11 +616,13 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
     u8 pattern_width = 0;
     u8 pattern_height = 0;
     u32 gray_max = 0;
+    bool gray_max_from_tiles = false;
     Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
     RefPtr<Gfx::BilevelImage> image;
     enum class Method {
         None,
         DistinctImageTiles,
+        UniqueImageTiles,
     };
     Method method = Method::None;
 
@@ -657,7 +660,13 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
                 gray_max = gray_max_json.value();
                 return {};
             }
-            return Error::from_string_literal("expected u32 for \"gray_max\"");
+            if (value.is_string()) {
+                if (value.as_string() == "from_tiles"sv) {
+                    gray_max_from_tiles = true;
+                    return {};
+                }
+            }
+            return Error::from_string_literal("expected u32 or \"from_tiles\" for \"gray_max\"");
         }
 
         if (key == "strip_trailing_7fffs"sv) {
@@ -687,6 +696,10 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
                     method = Method::DistinctImageTiles;
                     return {};
                 }
+                if (method_json == "unique_image_tiles"sv) {
+                    method = Method::UniqueImageTiles;
+                    return {};
+                }
             }
             return Error::from_string_literal("expected \"distinct_image_tiles\" for \"method\"");
         }
@@ -695,14 +708,17 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
         return Error::from_string_literal("unknown pattern_dictionary key");
     }));
 
-    if (method == Method::DistinctImageTiles) {
+    if (gray_max_from_tiles && method == Method::None)
+        return Error::from_string_literal("can't use \"from_tiles\" for gray_max without using a tiling method");
+
+    if (method == Method::DistinctImageTiles || method == Method::UniqueImageTiles) {
         auto number_of_tiles_in_x = ceil_div(image->width(), static_cast<size_t>(pattern_width));
         auto number_of_tiles_in_y = ceil_div(image->height(), static_cast<size_t>(pattern_height));
-        auto number_of_tiles = number_of_tiles_in_x * number_of_tiles_in_y;
-        auto tiled_image = TRY(Gfx::BilevelImage::create(pattern_width * number_of_tiles, pattern_height));
-        tiled_image->fill(false);
 
-        dbgln("Tiling pattern dictionary image into {}x{} tiles", number_of_tiles_in_x, number_of_tiles_in_y);
+        // FIXME: For UniqueImageTiles at the edge, we could use a custom hasher/comparator to match existing full tiles
+        //        by ignoring pixels outside the clipped tile rect.
+        Vector<Gfx::BilevelSubImage> tiles;
+        HashTable<Gfx::BilevelSubImage> saw_tile;
         Gfx::IntRect bitmap_rect { 0, 0, static_cast<int>(image->width()), static_cast<int>(image->height()) };
         for (size_t tile_y = 0, tile_index = 0; tile_y < number_of_tiles_in_y; ++tile_y) {
             for (size_t tile_x = 0; tile_x < number_of_tiles_in_x; ++tile_x, ++tile_index) {
@@ -710,10 +726,21 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
                 Gfx::IntRect source_rect { source_position, { pattern_width, pattern_height } };
                 source_rect = source_rect.intersected(bitmap_rect);
                 auto source = image->subbitmap(source_rect);
-                Gfx::IntPoint destination_position { static_cast<int>(tile_index * pattern_width), 0 };
-                source.composite_onto(*tiled_image, destination_position, Gfx::BilevelImage::CompositionType::Replace);
+                if (method == Method::DistinctImageTiles || saw_tile.set(source) == HashSetResult::InsertedNewEntry)
+                    TRY(tiles.try_append(source));
             }
         }
+
+        auto tiled_image = TRY(Gfx::BilevelImage::create(pattern_width * tiles.size(), pattern_height));
+        tiled_image->fill(false);
+        for (auto const& [i, tile] : enumerate(tiles)) {
+            Gfx::IntPoint destination_position { static_cast<int>(i * pattern_width), 0 };
+            tile.composite_onto(*tiled_image, destination_position, Gfx::BilevelImage::CompositionType::Replace);
+        }
+
+        if (gray_max_from_tiles)
+            gray_max = tiles.size() - 1;
+
         image = move(tiled_image);
     }
 
