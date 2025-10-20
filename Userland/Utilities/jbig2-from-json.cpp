@@ -653,7 +653,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
                 gray_max = gray_max_json.value();
                 return {};
             }
-            return Error::from_string_literal("expected u32 for \"gray_max_\"");
+            return Error::from_string_literal("expected u32 for \"gray_max\"");
         }
 
         if (key == "strip_trailing_7fffs"sv) {
