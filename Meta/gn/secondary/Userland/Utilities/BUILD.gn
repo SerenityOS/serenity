@@ -8,6 +8,18 @@ executable("base64") {
   ]
 }
 
+executable("icc") {
+  sources = [ "icc.cpp" ]
+  include_dirs = [ "//Userland/Libraries" ]
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibCore",
+    "//Userland/Libraries/LibGfx",
+    "//Userland/Libraries/LibMain",
+    "//Userland/Libraries/LibURL",
+  ]
+}
+
 executable("image") {
   sources = [ "image.cpp" ]
   include_dirs = [ "//Userland/Libraries" ]
