@@ -394,6 +394,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-refine-template1.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-template1-tpgron.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone-10bpp.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-halftone-10bpp-mmr.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-negative-sbdsoffset.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine.jbig2"sv),
@@ -408,7 +409,6 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-texttoprighttranspose.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-texttranspose.jbig2"sv),
         // Missing tests, in part because there's no easy way to generate them:
-        // - halftone with MMR graymap (code support added in #26094)
         // - lossless halftone (code support added in #26043)
         // - rotated halftone (code support added in #26044)
         // - composition test for halftone regions
