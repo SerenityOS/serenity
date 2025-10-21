@@ -93,3 +93,13 @@ TEST_CASE(round_trip_sunset)
     });
     test_roundtrip(encoded, 1024, 5);
 }
+
+TEST_CASE(round_trip_jbig2_crash)
+{
+    auto encoded = to_array<u8>({
+        // clang-format off
+        0x23, 0xe5, 0xf2, 0xf8, 0x25, 0x00, 0x10, 0x01
+        // clang-format on
+    });
+    test_roundtrip(encoded, 16, 1);
+}

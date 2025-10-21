@@ -208,6 +208,7 @@ ErrorOr<void> Group4Encoder::encode(Stream& stream, Bitmap const& bitmap, Group4
     ReferenceLine last_line;
     // "White reference line."
     TRY(last_line.try_empend(ccitt_black, static_cast<u32>(bitmap.width())));
+    TRY(last_line.try_empend(ccitt_white, static_cast<u32>(bitmap.width())));
 
     for (u32 y = 0; y < static_cast<u32>(bitmap.height()); ++y) {
         auto current_line = TRY(get_reference_line(bitmap, y));
