@@ -345,13 +345,13 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
     u8 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "is_modified_read_read"sv) {
-            if (auto is_modified_read_read = value.get_bool(); is_modified_read_read.has_value()) {
-                if (is_modified_read_read.value())
+        if (key == "is_modified_modified_read"sv) {
+            if (auto is_modified_modified_read = value.get_bool(); is_modified_modified_read.has_value()) {
+                if (is_modified_modified_read.value())
                     flags |= 1u;
                 return {};
             }
-            return Error::from_string_literal("expected bool for \"is_modified_read_read\"");
+            return Error::from_string_literal("expected bool for \"is_modified_modified_read\"");
         }
 
         if (key == "ht_template"sv) {
@@ -414,7 +414,7 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
     bool uses_mmr = flags & 1;
     u8 ht_template = (flags >> 1) & 3;
     if (uses_mmr && ht_template != 0)
-        return Error::from_string_literal("if is_modified_read_read is true, ht_template must be 0");
+        return Error::from_string_literal("if is_modified_modified_read is true, ht_template must be 0");
 
     return flags;
 }
@@ -580,13 +580,13 @@ static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& ob
     u8 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "is_modified_read_read"sv) {
-            if (auto is_modified_read_read = value.get_bool(); is_modified_read_read.has_value()) {
-                if (is_modified_read_read.value())
+        if (key == "is_modified_modified_read"sv) {
+            if (auto is_modified_modified_read = value.get_bool(); is_modified_modified_read.has_value()) {
+                if (is_modified_modified_read.value())
                     flags |= 1u;
                 return {};
             }
-            return Error::from_string_literal("expected bool for \"is_modified_read_read\"");
+            return Error::from_string_literal("expected bool for \"is_modified_modified_read\"");
         }
 
         if (key == "pd_template"sv) {
@@ -728,13 +728,13 @@ static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object
     u8 flags = 0;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "is_modified_read_read"sv) {
-            if (auto is_modified_read_read = value.get_bool(); is_modified_read_read.has_value()) {
-                if (is_modified_read_read.value())
+        if (key == "is_modified_modified_read"sv) {
+            if (auto is_modified_modified_read = value.get_bool(); is_modified_modified_read.has_value()) {
+                if (is_modified_modified_read.value())
                     flags |= 1u;
                 return {};
             }
-            return Error::from_string_literal("expected bool for \"is_modified_read_read\"");
+            return Error::from_string_literal("expected bool for \"is_modified_modified_read\"");
         }
 
         if (key == "gb_template"sv) {
@@ -771,7 +771,7 @@ static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object
 
     bool uses_mmr = flags & 1;
     if (uses_mmr && (flags & ~1) != 0)
-        return Error::from_string_literal("if is_modified_read_read is true, other flags must be false");
+        return Error::from_string_literal("if is_modified_modified_read is true, other flags must be false");
 
     return flags;
 }
