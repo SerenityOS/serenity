@@ -2213,7 +2213,7 @@ struct GroupOptions {
     u32 group_dim {};
 };
 
-template<CallableAs<bool, u32, Channel&> F1, CallableAs<void, Channel&> F2>
+template<CallableAs<bool, Channel const&> F1, CallableAs<void, Channel&> F2>
 static ErrorOr<void> read_group_data(
     LittleEndianInputBitStream& stream,
     GroupOptions&& options,
@@ -2225,8 +2225,8 @@ static ErrorOr<void> read_group_data(
     Vector<ChannelInfo> channels_info;
     Vector<Channel&> original_channels;
     auto& channels = global_modular.modular_data.channels;
-    for (auto [i, channel] : enumerate(channels)) {
-        if (!match_decode_conditions(i, channel))
+    for (auto& channel : channels) {
+        if (!match_decode_conditions(channel))
             continue;
 
         auto rect_size = rect_for_group(channel, group_dim, group_index).size();
@@ -2287,7 +2287,7 @@ static ErrorOr<void> read_lf_group(LittleEndianInputBitStream& stream,
     // ModularLfGroup
     u32 lf_group_dim = frame_header.group_dim() * 8;
 
-    auto match_decoding_conditions = [](u32, Channel& channel) {
+    auto match_decoding_conditions = [](Channel const& channel) {
         if (channel.decoded())
             return false;
         if (channel.hshift() < 3 || channel.vshift() < 3)
@@ -2599,13 +2599,7 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
     // for every remaining channel in the partially decoded GlobalModular image (i.e. it is not a meta-channel,
     // the channel dimensions exceed group_dim × group_dim, and hshift < 3 or vshift < 3, and the channel has
     // not been already decoded in a previous pass)
-    auto match_decoding_conditions = [&](u32 i, auto const& channel) {
-        if (i < global_modular.modular_data.nb_meta_channels)
-            return false;
-        if (channel.width() <= frame_header.group_dim() && channel.height() <= frame_header.group_dim())
-            return false;
-        if (channel.hshift() >= 3 && channel.vshift() >= 3)
-            return false;
+    auto match_decoding_conditions = [&](auto const& channel) {
         if (channel.decoded())
             return false;
         auto channel_min_shift = min(channel.hshift(), channel.vshift());
