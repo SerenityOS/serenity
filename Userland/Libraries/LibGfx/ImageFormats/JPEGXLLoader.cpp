@@ -2772,8 +2772,11 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
                                          }));
         }
 
-        if (frame.frame_header.encoding == Encoding::kVarDCT) {
-            TODO();
+        {
+            auto hf_global_stream = get_stream_for_section(stream, frame.toc.entries[1 + frame.num_lf_groups]);
+            if (frame.frame_header.encoding == Encoding::kVarDCT) {
+                return Error::from_string_literal("JPEGXLLoader: Read HFGlobal for VarDCT frames");
+            }
         }
 
         for (u32 pass_index {}; pass_index < frame.frame_header.passes.num_passes; ++pass_index) {
