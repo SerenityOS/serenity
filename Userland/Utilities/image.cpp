@@ -141,6 +141,21 @@ static ErrorOr<void> to_bilevel(LoadedImage& image, Gfx::DitheringAlgorithm algo
     return {};
 }
 
+static ErrorOr<void> load_icc_profile(LoadedImage& image, StringView color_profile_path)
+{
+    image.icc_handle = TRY(([&]() -> ErrorOr<Variant<NonnullOwnPtr<Core::MappedFile>, ByteBuffer>> {
+        if (color_profile_path == "sRGB"sv) {
+            auto buffer = TRY(Gfx::ICC::encode(TRY(Gfx::ICC::sRGB())));
+            image.icc_data = buffer.span();
+            return buffer;
+        }
+        auto icc_file = TRY(Core::MappedFile::map(color_profile_path));
+        image.icc_data = icc_file->bytes();
+        return icc_file;
+    }()));
+    return {};
+}
+
 static ErrorOr<void> convert_image_profile(LoadedImage& image, StringView convert_color_profile_path)
 {
     if (!image.icc_data.has_value())
@@ -148,16 +163,7 @@ static ErrorOr<void> convert_image_profile(LoadedImage& image, StringView conver
 
     auto source_icc_handle = move(image.icc_handle);
     auto source_icc_data = image.icc_data.value();
-    image.icc_handle = TRY(([&]() -> ErrorOr<Variant<NonnullOwnPtr<Core::MappedFile>, ByteBuffer>> {
-        if (convert_color_profile_path == "sRGB"sv) {
-            auto buffer = TRY(Gfx::ICC::encode(TRY(Gfx::ICC::sRGB())));
-            image.icc_data = buffer.span();
-            return buffer;
-        }
-        auto icc_file = TRY(Core::MappedFile::map(convert_color_profile_path));
-        image.icc_data = icc_file->bytes();
-        return icc_file;
-    }()));
+    TRY(load_icc_profile(image, convert_color_profile_path));
 
     auto source_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(source_icc_data));
     auto destination_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(*image.icc_data));
