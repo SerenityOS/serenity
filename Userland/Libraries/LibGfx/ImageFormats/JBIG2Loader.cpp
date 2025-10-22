@@ -2882,7 +2882,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
     if (uses_huffman_encoding && template_used != 0)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid template_used");
 
-    u8 refinement_template_used = (flags >> 12) & 0b11; // "SDREFTEMPLATE" in spec.
+    u8 refinement_template_used = (flags >> 12) & 1; // "SDREFTEMPLATE" in spec.
 
     // Quirk: 042_22.jb2 does not set SDREFAGG but it does set SDREFTEMPLATE.
     if (!uses_refinement_or_aggregate_coding && refinement_template_used != 0 && !context.is_power_jbig2_file)
