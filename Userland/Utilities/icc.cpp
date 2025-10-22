@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Enumerate.h>
 #include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
@@ -227,6 +228,31 @@ static ErrorOr<void> print_profile_measurement(Gfx::ICC::Profile const& profile)
     return {};
 }
 
+static ErrorOr<void> print_color_as_sRGB(StringView color, Gfx::ICC::Profile const& profile)
+{
+    auto split = color.split_view(',');
+
+    if (number_of_components_in_color_space(profile.data_color_space()) != split.size())
+        return Error::from_string_literal("unexpected number of color in color string");
+
+    Vector<u8, 4> channels;
+    for (auto [i, channel] : enumerate(split)) {
+        auto maybe_number = channel.to_number<u8>();
+        if (!maybe_number.has_value())
+            return Error::from_string_literal("unable to parse color string");
+        channels.append(*maybe_number);
+    }
+
+    auto srgb_profile = TRY(Gfx::ICC::sRGB());
+    auto pcs = TRY(profile.to_pcs(channels));
+    Array<u8, 3> out_color_buffer {};
+    TRY(srgb_profile->from_pcs(profile, pcs, out_color_buffer));
+    auto out_color = Color { out_color_buffer[0], out_color_buffer[1], out_color_buffer[2] };
+    outln("{} in sRGB is {}", channels, out_color);
+
+    return {};
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
@@ -248,6 +274,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool measure = false;
     args_parser.add_option(measure, "For RGB ICC profiles, print perceptually smallest and largest color step", "measure");
+
+    StringView color_to_convert;
+    args_parser.add_option(color_to_convert, "Convert a color from the given profile to sRGB", "color-to-sRGB", 0, "c1, c2, c3[, c4]");
 
     bool force_print = false;
     args_parser.add_option(force_print, "Print profile even when writing ICC files", "print");
@@ -312,6 +341,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
         TRY(print_profile_measurement(*profile));
+    }
+
+    if (!color_to_convert.is_empty()) {
+        TRY(print_color_as_sRGB(color_to_convert, *profile));
+        return 0;
     }
 
     bool do_print = (dump_out_path.is_empty() && reencode_out_path.is_empty() && !measure) || force_print;
