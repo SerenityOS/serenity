@@ -29,6 +29,7 @@ struct LoadedImage {
     AnyBitmap bitmap;
 
     Optional<ReadonlyBytes> icc_data;
+    Variant<Empty, NonnullOwnPtr<Core::MappedFile>, ByteBuffer> icc_handle {};
 };
 
 static ErrorOr<LoadedImage> load_image(RefPtr<Gfx::ImageDecoder> const& decoder, Optional<int> maybe_frame_index)
@@ -140,14 +141,14 @@ static ErrorOr<void> to_bilevel(LoadedImage& image, Gfx::DitheringAlgorithm algo
     return {};
 }
 
-static ErrorOr<Variant<NonnullOwnPtr<Core::MappedFile>, ByteBuffer>> convert_image_profile(LoadedImage& image, StringView convert_color_profile_path, OwnPtr<Core::MappedFile> maybe_source_icc_file)
+static ErrorOr<void> convert_image_profile(LoadedImage& image, StringView convert_color_profile_path)
 {
     if (!image.icc_data.has_value())
         return Error::from_string_literal("No source color space embedded in image. Pass one with --assign-color-profile.");
 
-    auto source_icc_file = move(maybe_source_icc_file);
+    auto source_icc_handle = move(image.icc_handle);
     auto source_icc_data = image.icc_data.value();
-    auto handle = TRY(([&]() -> ErrorOr<Variant<NonnullOwnPtr<Core::MappedFile>, ByteBuffer>> {
+    image.icc_handle = TRY(([&]() -> ErrorOr<Variant<NonnullOwnPtr<Core::MappedFile>, ByteBuffer>> {
         if (convert_color_profile_path == "sRGB"sv) {
             auto buffer = TRY(Gfx::ICC::encode(TRY(Gfx::ICC::sRGB())));
             image.icc_data = buffer.span();
@@ -180,7 +181,7 @@ static ErrorOr<Variant<NonnullOwnPtr<Core::MappedFile>, ByteBuffer>> convert_ima
         TRY(destination_profile->convert_image(*frame, *source_profile));
     }
 
-    return handle;
+    return {};
 }
 
 static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool force_alpha, bool ppm_ascii, u8 jpeg_quality, Optional<unsigned> webp_allowed_transforms, unsigned webp_color_cache_bits, Compress::ZlibCompressionLevel png_compression_level)
@@ -413,15 +414,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (options.to_bilevel.has_value())
         TRY(to_bilevel(image, options.to_bilevel.value()));
 
-    OwnPtr<Core::MappedFile> icc_file;
     if (!options.assign_color_profile_path.is_empty()) {
-        icc_file = TRY(Core::MappedFile::map(options.assign_color_profile_path));
+        auto icc_file = TRY(Core::MappedFile::map(options.assign_color_profile_path));
         image.icc_data = icc_file->bytes();
+        image.icc_handle = move(icc_file);
     }
 
-    Variant<Empty, NonnullOwnPtr<Core::MappedFile>, ByteBuffer> icc_data;
     if (!options.convert_color_profile_path.is_empty())
-        icc_data = TRY(convert_image_profile(image, options.convert_color_profile_path, move(icc_file)));
+        TRY(convert_image_profile(image, options.convert_color_profile_path));
 
     if (options.strip_color_profile)
         image.icc_data.clear();
