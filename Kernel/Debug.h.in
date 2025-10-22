@@ -11,12 +11,12 @@
 #cmakedefine01 AC97_DEBUG
 #endif
 
-#ifndef AHCI_DEBUG
-#cmakedefine01 AHCI_DEBUG
-#endif
-
 #ifndef ACPI_DEBUG
 #cmakedefine01 ACPI_DEBUG
+#endif
+
+#ifndef AHCI_DEBUG
+#cmakedefine01 AHCI_DEBUG
 #endif
 
 #ifndef APIC_DEBUG
@@ -91,12 +91,12 @@
 #cmakedefine01 FUSE_DEBUG
 #endif
 
-#ifndef FUTEX_DEBUG
-#cmakedefine01 FUTEX_DEBUG
-#endif
-
 #ifndef FUTEXQUEUE_DEBUG
 #cmakedefine01 FUTEXQUEUE_DEBUG
+#endif
+
+#ifndef FUTEX_DEBUG
+#cmakedefine01 FUTEX_DEBUG
 #endif
 
 #ifndef HID_DEBUG
@@ -111,12 +111,12 @@
 #cmakedefine01 HPET_DEBUG
 #endif
 
-#ifndef ICMP_DEBUG
-#cmakedefine01 ICMP_DEBUG
-#endif
-
 #ifndef ICMPV6_DEBUG
 #cmakedefine01 ICMPV6_DEBUG
+#endif
+
+#ifndef ICMP_DEBUG
+#cmakedefine01 ICMP_DEBUG
 #endif
 
 #ifndef INTEL_GRAPHICS_DEBUG
@@ -131,12 +131,28 @@
 #cmakedefine01 INTERRUPT_DEBUG
 #endif
 
+#ifndef IOAPIC_DEBUG
+#cmakedefine01 IOAPIC_DEBUG
+#endif
+
 #ifndef IO_DEBUG
 #cmakedefine01 IO_DEBUG
 #endif
 
-#ifndef IOAPIC_DEBUG
-#cmakedefine01 IOAPIC_DEBUG
+#ifndef IPV4_DEBUG
+#cmakedefine01 IPV4_DEBUG
+#endif
+
+#ifndef IPV4_SOCKET_DEBUG
+#cmakedefine01 IPV4_SOCKET_DEBUG
+#endif
+
+#ifndef IPV6_DEBUG
+#cmakedefine01 IPV6_DEBUG
+#endif
+
+#ifndef IRQ_DEBUG
+#cmakedefine01 IRQ_DEBUG
 #endif
 
 #ifndef ISO9660_DEBUG
@@ -145,22 +161,6 @@
 
 #ifndef ISO9660_VERY_DEBUG
 #cmakedefine01 ISO9660_VERY_DEBUG
-#endif
-
-#ifndef IPV4_DEBUG
-#cmakedefine01 IPV4_DEBUG
-#endif
-
-#ifndef IPV6_DEBUG
-#cmakedefine01 IPV6_DEBUG
-#endif
-
-#ifndef IPV4_SOCKET_DEBUG
-#cmakedefine01 IPV4_SOCKET_DEBUG
-#endif
-
-#ifndef IRQ_DEBUG
-#cmakedefine01 IRQ_DEBUG
 #endif
 
 #ifndef KEYBOARD_DEBUG
@@ -211,12 +211,12 @@
 #cmakedefine01 MASTERPTY_DEBUG
 #endif
 
-#ifndef MOUSE_DEBUG
-#cmakedefine01 MOUSE_DEBUG
-#endif
-
 #ifndef MEMORY_DEVICE_DEBUG
 #cmakedefine01 MEMORY_DEVICE_DEBUG
+#endif
+
+#ifndef MOUSE_DEBUG
+#cmakedefine01 MOUSE_DEBUG
 #endif
 
 #ifndef MULTIPROCESSOR_DEBUG
@@ -343,12 +343,12 @@
 #cmakedefine01 USB_DEBUG
 #endif
 
-#ifndef VFS_DEBUG
-#cmakedefine01 VFS_DEBUG
+#ifndef USB_MASS_STORAGE_DEBUG
+#cmakedefine01 USB_MASS_STORAGE_DEBUG
 #endif
 
-#ifndef VMWARE_BACKDOOR_DEBUG
-#cmakedefine01 VMWARE_BACKDOOR_DEBUG
+#ifndef VFS_DEBUG
+#cmakedefine01 VFS_DEBUG
 #endif
 
 #ifndef VIRTIO_DEBUG
@@ -357,6 +357,10 @@
 
 #ifndef VIRTUAL_CONSOLE_DEBUG
 #cmakedefine01 VIRTUAL_CONSOLE_DEBUG
+#endif
+
+#ifndef VMWARE_BACKDOOR_DEBUG
+#cmakedefine01 VMWARE_BACKDOOR_DEBUG
 #endif
 
 #ifndef WAITBLOCK_DEBUG
@@ -369,8 +373,4 @@
 
 #ifndef XHCI_DEBUG
 #cmakedefine01 XHCI_DEBUG
-#endif
-
-#ifndef USB_MASS_STORAGE_DEBUG
-#cmakedefine01 USB_MASS_STORAGE_DEBUG
 #endif
