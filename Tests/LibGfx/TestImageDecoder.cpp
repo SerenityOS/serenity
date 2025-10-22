@@ -423,6 +423,9 @@ TEST_CASE(test_jbig2_decode)
         // - intermediate direct regions (code support added in #26197)
         // Missing tests for things that aren't implemented yet:
         // - immediate refinement regions not referring to a direct region (i.e. refining the page)
+        // - huffman-coded symbols with SDREFAGG = 1
+        //   - REFAGGNINST = 1 case
+        //   - REFAGGNINST > 1 case
         // - exttemplate
         // - colors
         // - huffman text region using refinement (RI = 1)
