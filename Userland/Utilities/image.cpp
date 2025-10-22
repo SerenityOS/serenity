@@ -332,7 +332,7 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
     args_parser.add_option(options.move_alpha_to_rgb, "Copy alpha channel to rgb, clear alpha", "move-alpha-to-rgb", {});
     args_parser.add_option(options.force_alpha, "Force alpha channel", "force-alpha", {});
     args_parser.add_option(options.strip_alpha, "Remove alpha channel", "strip-alpha", {});
-    args_parser.add_option(options.assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
+    args_parser.add_option(options.assign_color_profile_path, "Load color profile and assign it to output image", "assign-color-profile", {}, "(FILE | \"sRGB\")");
     args_parser.add_option(options.convert_color_profile_path, "Load color profile and convert output image from current profile to loaded profile", "convert-to-color-profile", {}, "(FILE | \"sRGB\")");
     args_parser.add_option(options.strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
 
@@ -420,11 +420,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (options.to_bilevel.has_value())
         TRY(to_bilevel(image, options.to_bilevel.value()));
 
-    if (!options.assign_color_profile_path.is_empty()) {
-        auto icc_file = TRY(Core::MappedFile::map(options.assign_color_profile_path));
-        image.icc_data = icc_file->bytes();
-        image.icc_handle = move(icc_file);
-    }
+    if (!options.assign_color_profile_path.is_empty())
+        TRY(load_icc_profile(image, options.assign_color_profile_path));
 
     if (!options.convert_color_profile_path.is_empty())
         TRY(convert_image_profile(image, options.convert_color_profile_path));
