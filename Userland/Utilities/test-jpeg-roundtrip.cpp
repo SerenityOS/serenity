@@ -52,8 +52,11 @@ static ErrorOr<float> perceived_distance_in_sRGB(Gfx::Color a, Gfx::Color b)
 }
 
 struct Stats {
+    int number_of_tests {};
     float max_delta {};
+    float delta_sum {};
     int max_number_of_iterations {};
+    int number_of_iterations_sum {};
 };
 
 static ErrorOr<void> test(Gfx::Color color, Stats& stats)
@@ -64,6 +67,9 @@ static ErrorOr<void> test(Gfx::Color color, Stats& stats)
 
     outln("color {} converges to {} after saving {} times, delta {}", color, fixpoint.fixpoint, fixpoint.number_of_iterations, perceived_distance);
 
+    stats.number_of_tests++;
+    stats.delta_sum += perceived_distance;
+    stats.number_of_iterations_sum += fixpoint.number_of_iterations;
     stats.max_delta = max(stats.max_delta, perceived_distance);
     stats.max_number_of_iterations = max(stats.max_number_of_iterations, fixpoint.number_of_iterations);
 
@@ -99,6 +105,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(test(Gfx::Color::White, stats));
 
     outln();
+    outln("average delta {}, average number of iterations {}", stats.delta_sum / stats.number_of_tests, stats.number_of_iterations_sum / stats.number_of_tests);
     outln("max delta {}, max number of iterations {}", stats.max_delta, stats.max_number_of_iterations);
 
     return 0;
