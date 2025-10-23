@@ -1334,6 +1334,165 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
     return Gfx::JBIG2::SegmentData { header, data };
 }
 
+static ErrorOr<u8> jbig2_tables_flags_from_json(JsonObject const& object)
+{
+    u8 flags = 0;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "has_out_of_band_symbol"sv) {
+            if (auto has_out_of_band_symbol = value.get_bool(); has_out_of_band_symbol.has_value()) {
+                if (has_out_of_band_symbol.value())
+                    flags |= 1u;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"has_out_of_band_symbol\"");
+        }
+
+        if (key == "prefix_bit_count"sv) {
+            if (auto prefix_bit_count = value.get_u32(); prefix_bit_count.has_value()) {
+                if (prefix_bit_count.value() == 0 || prefix_bit_count.value() > 8)
+                    return Error::from_string_literal("expected 1..8 for \"prefix_bit_count\"");
+                flags |= (prefix_bit_count.value() - 1) << 1;
+                return {};
+            }
+            return Error::from_string_literal("expected 1..8 for \"prefix_bit_count\"");
+        }
+
+        if (key == "range_bit_count"sv) {
+            if (auto range_bit_count = value.get_u32(); range_bit_count.has_value()) {
+                if (range_bit_count.value() == 0 || range_bit_count.value() > 8)
+                    return Error::from_string_literal("expected 1..8 for \"range_bit_count\"");
+                flags |= (range_bit_count.value() - 1) << 4;
+                return {};
+            }
+            return Error::from_string_literal("expected 1..8 for \"range_bit_count\"");
+        }
+
+        dbgln("tables flag key {}", key);
+        return Error::from_string_literal("unknown tables flag key");
+    }));
+
+    return flags;
+}
+
+static ErrorOr<Vector<Gfx::JBIG2::TablesData::Entry>> jbig2_tables_entries_from_json(JsonArray const& array)
+{
+    Vector<Gfx::JBIG2::TablesData::Entry> entries;
+
+    for (auto const& value : array.values()) {
+        if (value.is_object()) {
+            Gfx::JBIG2::TablesData::Entry entry;
+
+            TRY(value.as_object().try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+                if (key == "prefix_length"sv) {
+                    if (auto prefix_length = value.get_u32(); prefix_length.has_value()) {
+                        entry.prefix_length = prefix_length.value();
+                        return {};
+                    }
+                    return Error::from_string_literal("expected u32 for \"prefix_length\"");
+                }
+
+                if (key == "range_length"sv) {
+                    if (auto range_length = value.get_u32(); range_length.has_value()) {
+                        entry.range_length = range_length.value();
+                        return {};
+                    }
+                    return Error::from_string_literal("expected u32 for \"range_length\"");
+                }
+
+                dbgln("tables entry key {}", key);
+                return Error::from_string_literal("unknown tables entry key");
+            }));
+
+            entries.append(entry);
+            continue;
+        }
+        return Error::from_string_literal("tables entries should be objects");
+    }
+
+    return entries;
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_tables_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    if (!object.has_value())
+        return Error::from_string_literal("page_information segment should have \"data\" object");
+
+    Gfx::JBIG2::TablesData data {};
+
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "flags"sv) {
+            if (value.is_object()) {
+                data.flags = TRY(jbig2_tables_flags_from_json(value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"flags\"");
+        }
+
+        if (key == "lowest_value"sv) {
+            if (auto lowest_value = value.get_i32(); lowest_value.has_value()) {
+                data.lowest_value = lowest_value.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"lowest_value\"");
+        }
+
+        if (key == "highest_value"sv) {
+            if (auto highest_value = value.get_i32(); highest_value.has_value()) {
+                data.highest_value = highest_value.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"highest_value\"");
+        }
+
+        if (key == "entries"sv) {
+            if (value.is_array()) {
+                data.entries = TRY(jbig2_tables_entries_from_json(value.as_array()));
+                return {};
+            }
+            return Error::from_string_literal("expected array for \"entries\"");
+        }
+
+        if (key == "lower_range_prefix_length"sv) {
+            if (auto lower_range_prefix_length = value.get_u32(); lower_range_prefix_length.has_value()) {
+                if (lower_range_prefix_length.value() > 255)
+                    return Error::from_string_literal("expected u8 for \"lower_range_prefix_length\"");
+                data.lower_range_prefix_length = lower_range_prefix_length.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u8 for \"lower_range_prefix_length\"");
+        }
+
+        if (key == "upper_range_prefix_length"sv) {
+            if (auto upper_range_prefix_length = value.get_u32(); upper_range_prefix_length.has_value()) {
+                if (upper_range_prefix_length.value() > 255)
+                    return Error::from_string_literal("expected u8 for \"upper_range_prefix_length\"");
+                data.upper_range_prefix_length = upper_range_prefix_length.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u8 for \"upper_range_prefix_length\"");
+        }
+
+        if (key == "out_of_band_prefix_length"sv) {
+            if (auto out_of_band_prefix_length = value.get_u32(); out_of_band_prefix_length.has_value()) {
+                if (out_of_band_prefix_length.value() > 255)
+                    return Error::from_string_literal("expected u8 for \"out_of_band_prefix_length\"");
+                data.out_of_band_prefix_length = out_of_band_prefix_length.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u8 for \"out_of_band_prefix_length\"");
+        }
+
+        dbgln("tables key {}", key);
+        return Error::from_string_literal("unknown tables key");
+    }));
+
+    if (data.out_of_band_prefix_length != 0 && (data.flags & 1) == 0)
+        return Error::from_string_literal("out_of_band_prefix_length is non-zero, but has_out_of_band_symbol is false in flags");
+
+    return Gfx::JBIG2::SegmentData { header, data };
+}
+
 static ErrorOr<Gfx::JBIG2::SegmentHeaderData::Reference> jbig2_referred_to_segment_from_json(JsonObject const& object)
 {
     Gfx::JBIG2::SegmentHeaderData::Reference reference;
@@ -1492,6 +1651,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         return jbig2_intermediate_generic_refinement_region_from_json(options, header, segment_data_object);
     if (type_string == "page_information")
         return jbig2_page_information_from_json(header, segment_data_object);
+    if (type_string == "tables")
+        return jbig2_tables_from_json(header, segment_data_object);
 
     dbgln("segment type {}", type_string);
     return Error::from_string_literal("segment has unknown type");
