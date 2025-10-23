@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Math.h>
+
 // These names are defined in B.1.1.3 - Marker assignments
 
 #define JPEG_APPN0 0XFFE0
@@ -108,6 +110,19 @@ struct Macroblock {
     };
 
     T k[64] = { 0 };
+
+    Macroblock<i16> as_i16() const
+    requires(IsSame<T, f32>)
+    {
+        Macroblock<i16> result {};
+        for (u8 i = 0; i < 64; ++i) {
+            result.y[i] = round_to<i16>(y[i]);
+            result.cb[i] = round_to<i16>(cb[i]);
+            result.cr[i] = round_to<i16>(cr[i]);
+            result.k[i] = round_to<i16>(k[i]);
+        }
+        return result;
+    }
 };
 }
 
