@@ -89,23 +89,29 @@ constexpr static u8 zigzag_map[64] {
  * an 8x8 block of RGB values before encoding, and 8x8 block of YCbCr values when
  * we're done decoding the huffman stream.
  */
+namespace Detail {
+template<OneOf<i16, f32> T>
 struct Macroblock {
     union {
-        i16 y[64] = { 0 };
-        i16 r[64];
+        T y[64] = { 0 };
+        T r[64];
     };
 
     union {
-        i16 cb[64] = { 0 };
-        i16 g[64];
+        T cb[64] = { 0 };
+        T g[64];
     };
 
     union {
-        i16 cr[64] = { 0 };
-        i16 b[64];
+        T cr[64] = { 0 };
+        T b[64];
     };
 
-    i16 k[64] = { 0 };
+    T k[64] = { 0 };
 };
+}
+
+using Macroblock = Detail::Macroblock<i16>;
+using FloatMacroblock = Detail::Macroblock<f32>;
 
 }
