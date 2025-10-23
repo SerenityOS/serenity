@@ -1189,7 +1189,7 @@ void Thread::set_state(State new_state, u8 stop_signal)
 {
     VERIFY(g_scheduler_lock.is_locked_by_current_processor());
     if (new_state == m_state)
-        PANIC("Thread {} is already {}", *this, state_string());
+        PANIC("Thread {} is already {}", *this, state_string());
 
     State previous_state = m_state;
     m_state = new_state;
