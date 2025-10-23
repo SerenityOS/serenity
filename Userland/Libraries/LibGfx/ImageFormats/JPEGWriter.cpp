@@ -161,11 +161,11 @@ public:
         return {};
     }
 
-    static Array<double, 64> create_cosine_lookup_table()
+    static Array<f32, 64> create_cosine_lookup_table()
     {
-        static constexpr double pi_over_16 = AK::Pi<double> / 16;
+        static constexpr f32 pi_over_16 = AK::Pi<f32> / 16;
 
-        Array<double, 64> table;
+        Array<f32, 64> table;
 
         for (u8 u = 0; u < 8; ++u) {
             for (u8 x = 0; x < 8; ++x)
@@ -186,9 +186,9 @@ public:
                 // Conversion from YCbCr to RGB isn't specified in the first JPEG specification but in the JFIF extension:
                 // See: https://www.itu.int/rec/dologin_pub.asp?lang=f&id=T-REC-T.871-201105-I!!PDF-E&type=items
                 // 7 - Conversion to and from RGB
-                auto const y_ = clamp(0.299 * r + 0.587 * g + 0.114 * b, 0, 255);
-                auto const cb = clamp(-0.1687 * r - 0.3313 * g + 0.5 * b + 128, 0, 255);
-                auto const cr = clamp(0.5 * r - 0.4187 * g - 0.0813 * b + 128, 0, 255);
+                auto const y_ = clamp(0.299f * r + 0.587f * g + 0.114f * b, 0, 255);
+                auto const cb = clamp(-0.1687f * r - 0.3313f * g + 0.5f * b + 128, 0, 255);
+                auto const cr = clamp(0.5f * r - 0.4187f * g - 0.0813f * b + 128, 0, 255);
 
                 // A.3.1 - Level shift
                 macroblock.y[i] = y_ - 128;
@@ -215,11 +215,11 @@ public:
         for (auto& macroblock : m_macroblocks) {
             constexpr double inverse_sqrt_2 = M_SQRT1_2;
 
-            auto const convert_one_component = [&](i16 component[], QuantizationTable const& table) {
-                Array<i16, 64> result {};
+            auto const convert_one_component = [&](f32 component[], QuantizationTable const& table) {
+                Array<f32, 64> result {};
 
                 auto const sum_xy = [&](u8 u, u8 v) {
-                    double sum {};
+                    f32 sum {};
                     for (u8 y {}; y < 8; ++y) {
                         for (u8 x {}; x < 8; ++x)
                             sum += component[y * 8 + x] * cosine_table[u * 8 + x] * cosine_table[v * 8 + y];
@@ -228,17 +228,17 @@ public:
                 };
 
                 for (u8 v {}; v < 8; ++v) {
-                    double const cv = v == 0 ? inverse_sqrt_2 : 1;
+                    f32 const cv = v == 0 ? inverse_sqrt_2 : 1;
                     for (u8 u {}; u < 8; ++u) {
                         auto const table_index = v * 8 + u;
 
-                        double const cu = u == 0 ? inverse_sqrt_2 : 1;
+                        f32 const cu = u == 0 ? inverse_sqrt_2 : 1;
 
                         // A.3.3 - FDCT and IDCT
-                        double const fdct = cu * cv * sum_xy(u, v) / 4;
+                        f32 const fdct = cu * cv * sum_xy(u, v) / 4;
 
                         // A.3.4 - DCT coefficient quantization
-                        i16 const quantized = round(fdct / table.table[table_index]);
+                        f32 const quantized = fdct / table.table[table_index];
 
                         result[table_index] = quantized;
                     }
@@ -258,7 +258,9 @@ public:
 
     ErrorOr<void> write_huffman_stream(Mode mode)
     {
-        for (auto& macroblock : m_macroblocks) {
+        for (auto& float_macroblock : m_macroblocks) {
+            auto macroblock = float_macroblock.as_i16();
+
             TRY(encode_dc(dc_luminance_huffman_table, macroblock.y, 0));
             TRY(encode_ac(ac_luminance_huffman_table, macroblock.y));
 
@@ -399,7 +401,7 @@ private:
     QuantizationTable m_luminance_quantization_table {};
     QuantizationTable m_chrominance_quantization_table {};
 
-    Vector<Macroblock> m_macroblocks {};
+    Vector<FloatMacroblock> m_macroblocks {};
     Array<i16, 4> m_last_dc_values {};
 
     JPEGBigEndianOutputBitStream m_bit_stream;
