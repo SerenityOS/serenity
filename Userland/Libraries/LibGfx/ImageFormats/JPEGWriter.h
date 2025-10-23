@@ -12,8 +12,14 @@
 namespace Gfx {
 
 struct JPEGEncoderOptions {
+    enum class UseDeringing : u8 {
+        Yes,
+        No,
+    };
+
     Optional<ReadonlyBytes> icc_data;
     u8 quality { 75 };
+    UseDeringing use_deringing { UseDeringing::Yes };
 };
 
 class JPEGWriter {
