@@ -339,43 +339,41 @@ private:
 
     ErrorOr<void> encode_ac(OutputHuffmanTable const& ac_table, i16 const component[])
     {
-        {
-            // F.2 - Procedure for sequential encoding of AC coefficients with Huffman coding
-            u32 k {};
-            u32 r {};
+        // F.2 - Procedure for sequential encoding of AC coefficients with Huffman coding
+        u32 k {};
+        u32 r {};
 
-            while (k < 63) {
-                k++;
+        while (k < 63) {
+            k++;
 
-                auto coefficient = component[zigzag_map[k]];
-                if (coefficient == 0) {
-                    if (k == 63) {
-                        TRY(write_symbol(ac_table.from_input_byte(0x00)));
-                        break;
-                    }
-                    r += 1;
-                    continue;
+            auto coefficient = component[zigzag_map[k]];
+            if (coefficient == 0) {
+                if (k == 63) {
+                    TRY(write_symbol(ac_table.from_input_byte(0x00)));
+                    break;
                 }
-
-                while (r > 15) {
-                    TRY(write_symbol(ac_table.from_input_byte(0xF0)));
-                    r -= 16;
-                }
-
-                {
-                    // F.3 - Sequential encoding of a non-zero AC coefficient
-                    auto const ssss = csize(coefficient);
-                    auto const rs = (r << 4) + ssss;
-                    TRY(write_symbol(ac_table.from_input_byte(rs)));
-
-                    if (coefficient < 0)
-                        coefficient -= 1;
-
-                    TRY(m_bit_stream.write_bits<u16>(coefficient, ssss));
-                }
-
-                r = 0;
+                r += 1;
+                continue;
             }
+
+            while (r > 15) {
+                TRY(write_symbol(ac_table.from_input_byte(0xF0)));
+                r -= 16;
+            }
+
+            {
+                // F.3 - Sequential encoding of a non-zero AC coefficient
+                auto const ssss = csize(coefficient);
+                auto const rs = (r << 4) + ssss;
+                TRY(write_symbol(ac_table.from_input_byte(rs)));
+
+                if (coefficient < 0)
+                    coefficient -= 1;
+
+                TRY(m_bit_stream.write_bits<u16>(coefficient, ssss));
+            }
+
+            r = 0;
         }
         return {};
     }
