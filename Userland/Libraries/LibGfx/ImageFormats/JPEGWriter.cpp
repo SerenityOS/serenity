@@ -123,18 +123,9 @@ public:
                 auto const pixel_offset = vertical_pixel_offset * 8 + horizontal_pixel_offset;
 
                 auto const original_pixel = bitmap.get_pixel(x, y);
-
-                // Conversion from YCbCr to RGB isn't specified in the first JPEG specification but in the JFIF extension:
-                // See: https://www.itu.int/rec/dologin_pub.asp?lang=f&id=T-REC-T.871-201105-I!!PDF-E&type=items
-                // 7 - Conversion to and from RGB
-                auto const y_ = clamp(0.299 * original_pixel.red() + 0.587 * original_pixel.green() + 0.114 * original_pixel.blue(), 0, 255);
-                auto const cb = clamp(-0.1687 * original_pixel.red() - 0.3313 * original_pixel.green() + 0.5 * original_pixel.blue() + 128, 0, 255);
-                auto const cr = clamp(0.5 * original_pixel.red() - 0.4187 * original_pixel.green() - 0.0813 * original_pixel.blue() + 128, 0, 255);
-
-                // A.3.1 - Level shift
-                macroblock.r[pixel_offset] = y_ - 128;
-                macroblock.g[pixel_offset] = cb - 128;
-                macroblock.b[pixel_offset] = cr - 128;
+                macroblock.r[pixel_offset] = original_pixel.red();
+                macroblock.g[pixel_offset] = original_pixel.green();
+                macroblock.b[pixel_offset] = original_pixel.blue();
             }
         }
 
@@ -160,26 +151,10 @@ public:
 
                 auto const original_pixel = bitmap.scanline(y)[x];
 
-                // To get YCCK, the CMY part is converted to RGB (ignoring the K component), and then the RGB is converted to YCbCr.
-                // r is `255 - c` (and similar for g/m b/y), but with the Adobe YCCK color transform marker, the CMY
-                // channels are stored inverted, which cancels out: 255 - (255 - x) == x.
-                // K is stored as-is (meaning it's inverted once for the color transform).
-                u8 r = original_pixel.c;
-                u8 g = original_pixel.m;
-                u8 b = original_pixel.y;
-                u8 k = 255 - original_pixel.k;
-
-                // See: https://www.itu.int/rec/dologin_pub.asp?lang=f&id=T-REC-T.871-201105-I!!PDF-E&type=items
-                // 7 - Conversion to and from RGB
-                auto const y_ = clamp(0.299 * r + 0.587 * g + 0.114 * b, 0, 255);
-                auto const cb = clamp(-0.1687 * r - 0.3313 * g + 0.5 * b + 128, 0, 255);
-                auto const cr = clamp(0.5 * r - 0.4187 * g - 0.0813 * b + 128, 0, 255);
-
-                // A.3.1 - Level shift
-                macroblock.r[pixel_offset] = y_ - 128;
-                macroblock.g[pixel_offset] = cb - 128;
-                macroblock.b[pixel_offset] = cr - 128;
-                macroblock.k[pixel_offset] = k - 128;
+                macroblock.r[pixel_offset] = original_pixel.c;
+                macroblock.g[pixel_offset] = original_pixel.m;
+                macroblock.b[pixel_offset] = original_pixel.y;
+                macroblock.k[pixel_offset] = original_pixel.k;
             }
         }
 
@@ -198,6 +173,39 @@ public:
         }
 
         return table;
+    }
+
+    void convert_to_ycbcr(Mode mode)
+    {
+        for (auto& macroblock : m_macroblocks) {
+            for (u8 i = 0; i < 64; ++i) {
+                auto r = macroblock.r[i];
+                auto g = macroblock.g[i];
+                auto b = macroblock.b[i];
+
+                // Conversion from YCbCr to RGB isn't specified in the first JPEG specification but in the JFIF extension:
+                // See: https://www.itu.int/rec/dologin_pub.asp?lang=f&id=T-REC-T.871-201105-I!!PDF-E&type=items
+                // 7 - Conversion to and from RGB
+                auto const y_ = clamp(0.299 * r + 0.587 * g + 0.114 * b, 0, 255);
+                auto const cb = clamp(-0.1687 * r - 0.3313 * g + 0.5 * b + 128, 0, 255);
+                auto const cr = clamp(0.5 * r - 0.4187 * g - 0.0813 * b + 128, 0, 255);
+
+                // A.3.1 - Level shift
+                macroblock.y[i] = y_ - 128;
+                macroblock.cb[i] = cb - 128;
+                macroblock.cr[i] = cr - 128;
+
+                if (mode == Mode::CMYK) {
+                    // To get YCCK, the CMY part is converted to RGB (ignoring the K component), and then the RGB is converted to YCbCr.
+                    // r is `255 - c` (and similar for g/m b/y), but with the Adobe YCCK color transform marker, the CMY
+                    // channels are stored inverted, which cancels out: 255 - (255 - x) == x.
+                    // K is stored as-is (meaning it's inverted once for the color transform).
+                    macroblock.k[i] = 255 - macroblock.k[i];
+                    // A.3.1 - Level shift
+                    macroblock.k[i] -= 128;
+                }
+            }
+        }
     }
 
     void fdct_and_quantization(Mode mode)
@@ -625,6 +633,7 @@ ErrorOr<void> add_headers(Stream& stream, JPEGEncodingContext& context, JPEGWrit
 
 ErrorOr<void> add_image(Stream& stream, JPEGEncodingContext& context, Mode mode)
 {
+    context.convert_to_ycbcr(mode);
     context.fdct_and_quantization(mode);
     TRY(context.write_huffman_stream(mode));
     TRY(add_end_of_image(stream));
