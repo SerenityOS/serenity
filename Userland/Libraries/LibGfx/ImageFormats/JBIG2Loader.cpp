@@ -3957,6 +3957,8 @@ static ErrorOr<void> decode_tables(JBIG2LoadingContext&, SegmentData& segment)
         u8 range_length = TRY(bit_stream.read_bits<u8>(range_bit_count));
         TRY(range_lengths.try_append(range_length));
 
+        dbgln_if(JBIG2_DEBUG, "Tables[{}]: prefix_length={}, range_length={}, range_low={}", prefix_lengths.size() - 1, prefix_length, range_length, value);
+
         // "c) Set:
         //         RANGELOW[NTEMP] = CURRANGELOW
         //         CURRANGELOW = CURRANGELOW + 2 ** RANGELEN[NTEMP]
@@ -3970,6 +3972,8 @@ static ErrorOr<void> decode_tables(JBIG2LoadingContext&, SegmentData& segment)
     // "6) Read HTPS bits. Let LOWPREFLEN be the value read."
     u8 prefix_length = TRY(bit_stream.read_bits<u8>(prefix_bit_count)); // "LOWPREFLEN" in spec.
 
+    dbgln_if(JBIG2_DEBUG, "lower: prefix_length={}", prefix_length);
+
     // "7) [...] This is the lower range table line for this table."
     TRY(prefix_lengths.try_append(prefix_length));
     TRY(range_lengths.try_append(32));
@@ -3977,6 +3981,8 @@ static ErrorOr<void> decode_tables(JBIG2LoadingContext&, SegmentData& segment)
 
     // "8) Read HTPS bits. Let HIGHPREFLEN be the value read."
     prefix_length = TRY(bit_stream.read_bits<u8>(prefix_bit_count)); // "HIGHPREFLEN" in spec.
+
+    dbgln_if(JBIG2_DEBUG, "upper: prefix_length={}", prefix_length);
 
     // "9) [...] This is the upper range table line for this table."
     TRY(prefix_lengths.try_append(prefix_length));
@@ -3987,6 +3993,8 @@ static ErrorOr<void> decode_tables(JBIG2LoadingContext&, SegmentData& segment)
     if (has_out_of_band) {
         // "a) Read HTPS bits. Let OOBPREFLEN be the value read."
         prefix_length = TRY(bit_stream.read_bits<u8>(prefix_bit_count)); // "OOBPREFLEN" in spec.
+
+        dbgln_if(JBIG2_DEBUG, "oob: prefix_length={}", prefix_length);
 
         // "b) [...] This is the out-of-band table line for this table. Note that there is no range associated with this value."
         TRY(prefix_lengths.try_append(prefix_length));
