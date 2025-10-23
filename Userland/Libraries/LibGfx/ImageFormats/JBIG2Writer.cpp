@@ -898,6 +898,83 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
     return {};
 }
 
+// B.2 Code table structure, but in reverse
+static ErrorOr<void> encode_tables(JBIG2::TablesData const& tables, Vector<u8>& scratch_buffer)
+{
+    bool has_out_of_band = tables.flags & 1;             // "HTOOB" in spec.
+    u8 prefix_bit_count = ((tables.flags >> 1) & 7) + 1; // "HTPS" (hash table prefix size) in spec.
+    u8 range_bit_count = ((tables.flags >> 4) & 7) + 1;  // "HTRS" (hash table range size) in spec.
+
+    AllocatingMemoryStream output_stream;
+
+    // "1) Decode the code table flags field as described in B.2.1. This sets the values HTOOB, HTPS and HTRS."
+    TRY(output_stream.write_value<u8>(tables.flags));
+
+    // "2) Decode the code table lowest value field as described in B.2.2. Let HTLOW be the value decoded."
+    TRY(output_stream.write_value<BigEndian<i32>>(tables.lowest_value));
+
+    // "3) Decode the code table highest value field as described in B.2.3. Let HTHIGH be the value decoded."
+    TRY(output_stream.write_value<BigEndian<i32>>(tables.highest_value));
+
+    auto bit_stream = BigEndianOutputBitStream { MaybeOwned { output_stream } };
+
+    auto write_prefix_length = [&](u8 length) -> ErrorOr<void> {
+        if (length >= (1 << prefix_bit_count))
+            return Error::from_string_literal("JBIG2Writer: Table prefix length too large for bit count");
+        TRY(bit_stream.write_bits<u8>(length, prefix_bit_count));
+        return {};
+    };
+
+    // "4) Set:
+    //         CURRANGELOW = HTLOW
+    //         NTEMP = 0"
+    i32 value = tables.lowest_value;
+    size_t i = 0;
+    do {
+        if (i >= tables.entries.size())
+            return Error::from_string_literal("JBIG2Writer: Not enough table entries");
+
+        // "a) Read HTPS bits."
+        TRY(write_prefix_length(tables.entries[i].prefix_length));
+
+        // "b) Read HTRS bits."
+        if (tables.entries[i].range_length >= (1 << range_bit_count))
+            return Error::from_string_literal("JBIG2Writer: Table range length too large for bit count");
+        TRY(bit_stream.write_bits<u8>(tables.entries[i].range_length, range_bit_count));
+
+        // "c) Set:
+        //         RANGELOW[NTEMP] = CURRANGELOW
+        //         CURRANGELOW = CURRANGELOW + 2 ** RANGELEN[NTEMP]
+        //         NTEMP = NTEMP + 1"
+        value += 1 << tables.entries[i].range_length;
+        i++;
+
+        // "d) If CURRANGELOW ≥ HTHIGH then proceed to step 6)."
+    } while (value < tables.highest_value);
+
+    if (i != tables.entries.size())
+        return Error::from_string_literal("JBIG2Writer: Too many table entries");
+
+    // "6) Read HTPS bits. Let LOWPREFLEN be the value read."
+    // "7) [...] This is the lower range table line for this table."
+    TRY(write_prefix_length(tables.lower_range_prefix_length));
+
+    // "8) Read HTPS bits. Let HIGHPREFLEN be the value read."
+    // "9) [...] This is the upper range table line for this table."
+    TRY(write_prefix_length(tables.upper_range_prefix_length));
+
+    // "10) If HTOOB is 1, then:"
+    if (has_out_of_band) {
+        // "a) Read HTPS bits. Let OOBPREFLEN be the value read."
+        TRY(write_prefix_length(tables.out_of_band_prefix_length));
+    }
+
+    TRY(bit_stream.align_to_byte_boundary());
+
+    TRY(scratch_buffer.try_extend(TRY(output_stream.read_until_eof())));
+    return {};
+}
+
 static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& segment_data, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id)
 {
     Vector<u8> scratch_buffer;
@@ -956,6 +1033,10 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
             FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
             TRY(stream.write_value<BigEndian<u32>>(end_of_stripe.y_coordinate));
             return scratch_buffer;
+        },
+        [&scratch_buffer](JBIG2::TablesData const& tables) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_tables(tables, scratch_buffer));
+            return scratch_buffer;
         }));
 
     JBIG2::SegmentHeader header;
@@ -973,7 +1054,8 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
         [](JBIG2::PageInformationSegment const&) { return JBIG2::SegmentType::PageInformation; },
         [](JBIG2::EndOfFileSegmentData const&) { return JBIG2::SegmentType::EndOfFile; },
         [](JBIG2::EndOfPageSegmentData const&) { return JBIG2::SegmentType::EndOfPage; },
-        [](JBIG2::EndOfStripeSegment const&) { return JBIG2::SegmentType::EndOfStripe; });
+        [](JBIG2::EndOfStripeSegment const&) { return JBIG2::SegmentType::EndOfStripe; },
+        [](JBIG2::TablesData const&) { return JBIG2::SegmentType::Tables; });
     header.retention_flag = segment_data.header.retention_flag;
     for (auto const& reference : segment_data.header.referred_to_segments) {
         header.referred_to_segment_numbers.append(reference.segment_number);

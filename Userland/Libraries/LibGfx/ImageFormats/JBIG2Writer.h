@@ -118,6 +118,21 @@ struct IntermediateGenericRefinementRegionSegmentData {
 struct EndOfFileSegmentData { };
 struct EndOfPageSegmentData { };
 
+struct TablesData {
+    u8 flags { 0 };
+    i32 lowest_value { 0 };
+    i32 highest_value { 0 };
+    struct Entry {
+        u8 prefix_length { 0 };
+        u8 range_length { 0 };
+    };
+    Vector<Entry> entries;
+
+    u8 lower_range_prefix_length { 0 };
+    u8 upper_range_prefix_length { 0 };
+    u8 out_of_band_prefix_length { 0 };
+};
+
 struct SegmentData {
     SegmentHeaderData header;
     Variant<
@@ -133,7 +148,8 @@ struct SegmentData {
         IntermediateGenericRegionSegmentData,
         ImmediateGenericRefinementRegionSegmentData,
         ImmediateLosslessGenericRefinementRegionSegmentData,
-        IntermediateGenericRefinementRegionSegmentData>
+        IntermediateGenericRefinementRegionSegmentData,
+        TablesData>
         data;
 };
 
