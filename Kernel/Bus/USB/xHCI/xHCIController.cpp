@@ -368,8 +368,19 @@ void xHCIController::enqueue_command(TransferRequestBlock& transfer_request_bloc
 void xHCIController::execute_command(TransferRequestBlock& transfer_request_block)
 {
     MutexLocker const locker(m_command_mutex);
+
     enqueue_command(transfer_request_block);
-    m_command_completion_queue.wait_forever();
+
+    // If the current process isn't a kernel process, we could receive signals and would therefore need to handle wait_until failing.
+    VERIFY(Process::current().is_kernel_process());
+
+    MUST(m_command_completion_queue.wait_until(m_current_command_complete, [](bool& current_command_complete) {
+        if (!current_command_complete)
+            return false;
+        current_command_complete = false;
+        return true;
+    }));
+
     transfer_request_block = m_command_result_transfer_request_block;
 }
 
@@ -1415,7 +1426,8 @@ void xHCIController::event_handling_thread()
                 // active command result.
                 m_command_result_transfer_request_block = m_event_ring_segment[m_event_ring_dequeue_index];
                 full_memory_fence();
-                m_command_completion_queue.wake_all();
+                m_current_command_complete.with([](bool& current_command_complete) { current_command_complete = true; });
+                m_command_completion_queue.notify_one();
                 break;
             case TransferRequestBlock::TRBType::Port_Status_Change_Event:
                 dbgln_if(XHCI_DEBUG, "Port status change detected by controller");

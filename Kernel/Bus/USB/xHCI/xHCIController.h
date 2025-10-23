@@ -15,6 +15,7 @@
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Tasks/DeprecatedWaitQueue.h>
+#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel::USB::xHCI {
 
@@ -230,7 +231,8 @@ private:
     Vector<NonnullOwnPtr<PeriodicPendingTransfer>> m_active_periodic_transfers;
 
     Mutex m_command_mutex;
-    DeprecatedWaitQueue m_command_completion_queue;
+    SpinlockProtected<bool, LockRank::None> m_current_command_complete { false };
+    WaitQueue m_command_completion_queue;
     TransferRequestBlock m_command_result_transfer_request_block {};
     u32 m_command_ring_enqueue_index { 0 };
     u8 m_command_ring_producer_cycle_state { 1 };
