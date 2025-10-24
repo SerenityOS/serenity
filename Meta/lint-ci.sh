@@ -24,6 +24,7 @@ for cmd in \
         Meta/check-debug-flags.sh \
         Meta/check-emoji.py \
         Meta/check-idl-files.py \
+        Meta/check-jbig2-json.sh \
         Meta/check-markdown.sh \
         Meta/check-newlines-at-eof.py \
         Meta/check-png-sizes.sh \
