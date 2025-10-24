@@ -270,6 +270,8 @@ public:
             }
         }
         m_macroblocks.clear();
+
+        TRY(find_optimal_huffman_tables());
         return {};
     }
 
@@ -337,6 +339,19 @@ private:
         return m_bit_stream.write_bits(symbol.word, symbol.code_length);
     }
 
+    ErrorOr<void> append_symbol(Symbol symbol)
+    {
+        auto& stat_table = [&]() -> auto& {
+            if (symbol.component_id == 0 || symbol.component_id == 3) {
+                return symbol.is_dc ? m_symbol_stats[0] : m_symbol_stats[1];
+            }
+            return symbol.is_dc ? m_symbol_stats[2] : m_symbol_stats[3];
+        }();
+        stat_table[symbol.byte] += 1;
+        TRY(m_symbols_and_bits.try_append(symbol));
+        return {};
+    }
+
     ErrorOr<void> encode_dc(i16 const component[], u8 component_id)
     {
         // F.1.2.1.3 - Huffman encoding procedures for DC coefficients
@@ -344,7 +359,7 @@ private:
         m_last_dc_values[component_id] = component[0];
 
         auto const size = csize(diff);
-        TRY(m_symbols_and_bits.try_append(Symbol { .byte = size, .component_id = component_id, .is_dc = true }));
+        TRY(append_symbol({ .byte = size, .component_id = component_id, .is_dc = true }));
 
         if (diff < 0)
             diff -= 1;
@@ -365,7 +380,7 @@ private:
             auto coefficient = component[zigzag_map[k]];
             if (coefficient == 0) {
                 if (k == 63) {
-                    TRY(m_symbols_and_bits.try_append(Symbol { .byte = 0x00, .component_id = component_id, .is_dc = false }));
+                    TRY(append_symbol({ .byte = 0x00, .component_id = component_id, .is_dc = false }));
                     break;
                 }
                 r += 1;
@@ -373,7 +388,7 @@ private:
             }
 
             while (r > 15) {
-                TRY(m_symbols_and_bits.try_append(Symbol { .byte = 0xF0, .component_id = component_id, .is_dc = false }));
+                TRY(append_symbol({ .byte = 0xF0, .component_id = component_id, .is_dc = false }));
                 r -= 16;
             }
 
@@ -381,7 +396,7 @@ private:
                 // F.3 - Sequential encoding of a non-zero AC coefficient
                 auto const ssss = csize(coefficient);
                 u8 const rs = (r << 4) + ssss;
-                TRY(m_symbols_and_bits.try_append(Symbol { .byte = rs, .component_id = component_id, .is_dc = false }));
+                TRY(append_symbol({ .byte = rs, .component_id = component_id, .is_dc = false }));
 
                 if (coefficient < 0)
                     coefficient -= 1;
@@ -414,6 +429,187 @@ private:
         return {};
     }
 
+    static void find_smallest_frequencies(Array<u32, 257> const& frequencies, u16& v1, Optional<u16>& v2)
+    {
+        // FIXME: A min-heap with a custom comparator should be able to do the trick.
+
+        // "The procedure “Find V1 for least value of FREQ(V1) > 0” always selects the value
+        // with the largest value of V1 when more than one V1 with the same frequency occurs.
+        // The reserved code point is then guaranteed to be in the longest code word category."
+
+        u16 index_min {};
+        u16 second_index_min {};
+        u32 freq_min = NumericLimits<u32>::max();
+        u32 second_freq_min = NumericLimits<u32>::max();
+
+        for (auto [i, freq] : enumerate(frequencies)) {
+            if (freq == 0)
+                continue;
+            if (freq <= freq_min) {
+                second_index_min = index_min;
+                second_freq_min = freq_min;
+                index_min = i;
+                freq_min = freq;
+            } else if (freq <= second_freq_min) {
+                second_index_min = i;
+                second_freq_min = freq;
+            }
+        }
+
+        v1 = index_min;
+        if (second_freq_min != NumericLimits<u32>::max())
+            v2 = second_index_min;
+        else
+            v2.clear();
+    }
+
+    static Array<u8, 257> find_huffman_code_size(Array<u32, 257> frequencies)
+    {
+        // "Before starting the procedure, the values of FREQ are collected for V = 0 to 255
+        // and the FREQ value for V = 256 is set to 1."
+        frequencies[256] = 1;
+
+        // "the entries in CODESIZE are all set to 0"
+        Array<u8, 257> code_size {};
+
+        // "the indices in OTHERS are set to –1"
+        Array<i16, 257> others {};
+        others.fill(-1);
+
+        // Figure K.1 – Procedure to find Huffman code sizes
+        while (true) {
+            u16 v1 {};
+            Optional<u16> maybe_v2 {};
+            find_smallest_frequencies(frequencies, v1, maybe_v2);
+            if (!maybe_v2.has_value())
+                break;
+
+            auto v2 = maybe_v2.value();
+
+            frequencies[v1] += frequencies[v2];
+            frequencies[v2] = 0;
+
+        increment_v1_code_size:
+            code_size[v1] += 1;
+
+            if (others[v1] != -1) {
+                v1 = others[v1];
+                goto increment_v1_code_size;
+            }
+
+            others[v1] = v2;
+
+        increment_v2_code_size:
+            code_size[v2] += 1;
+            if (others[v2] != -1) {
+                v2 = others[v2];
+                goto increment_v2_code_size;
+            }
+        }
+
+        return code_size;
+    }
+
+    static void adjust_bits(Array<u8, 257>& bits)
+    {
+        // Figure K.3 – Procedure for limiting code lengths to 16 bits
+        u16 i = 32;
+        while (true) {
+            if (bits[i] > 0) {
+                auto j = i - 1;
+                do {
+                    j--;
+                } while (bits[j] == 0);
+
+                bits[i] = bits[i] - 2;
+                bits[i - 1] = bits[i - 1] + 1;
+                bits[j + 1] = bits[j + 1] + 2;
+                bits[j] = bits[j] - 1;
+            } else {
+                i -= 1;
+                if (i != 16)
+                    continue;
+
+                while (bits[i] == 0)
+                    --i;
+                bits[i] -= 1;
+                break;
+            }
+        }
+    }
+
+    static Array<u8, 257> count_bits(Array<u8, 257> const& code_size)
+    {
+        // "The count for each size is contained in the list, BITS. The counts in BITS are zero
+        // at the start of the procedure."
+        Array<u8, 257> bits {};
+
+        // Figure K.2 – Procedure to find the number of codes of each size
+        for (u16 i = 0; i < 257; ++i) {
+            if (code_size[i] == 0)
+                continue;
+            bits[code_size[i]] += 1;
+        }
+        adjust_bits(bits);
+
+        return bits;
+    }
+
+    static Vector<u8, 256> sort_input(Array<u8, 257> const& code_size)
+    {
+        // "Figure K.4 – Sorting of input values according to code size"
+        Vector<u8, 256> huffval {};
+        for (u8 i = 1; i <= 32; ++i) {
+            for (u16 j = 0; j <= 255; ++j) {
+                if (code_size[j] == i)
+                    huffval.append(j);
+            }
+        }
+        return huffval;
+    }
+
+    static ErrorOr<OutputHuffmanTable> compute_optimal_table(Array<u32, 257> const& distribution)
+    {
+        // K.2 A procedure for generating the lists which specify a Huffman code table
+
+        auto code_size = find_huffman_code_size(distribution);
+
+        auto bits = count_bits(code_size);
+
+        // "The input values are sorted according to code size"
+        auto huffval = sort_input(code_size);
+
+        // "At this point, the list of code lengths (BITS) and the list of values
+        // (HUFFVAL) can be used to generate the code tables."
+
+        Vector<OutputHuffmanTable::Symbol, 16> symbols;
+        u16 code = 0;
+        u32 symbol_index = 0;
+        for (auto [encoded_size, number_of_codes] : enumerate(bits)) {
+            for (u8 i = 0; i < number_of_codes; i++) {
+                TRY(symbols.try_append({ .input_byte = huffval[symbol_index], .code_length = static_cast<u8>(encoded_size), .word = code }));
+                code++;
+                symbol_index++;
+            }
+            code <<= 1;
+        }
+
+        return OutputHuffmanTable { move(symbols) };
+    }
+
+    ErrorOr<void> find_optimal_huffman_tables()
+    {
+        dc_luminance_huffman_table = TRY(compute_optimal_table(m_symbol_stats[0]));
+        dc_luminance_huffman_table.id = (0 << 4) | 0;
+        ac_luminance_huffman_table = TRY(compute_optimal_table(m_symbol_stats[1]));
+        ac_luminance_huffman_table.id = (1 << 4) | 0;
+        dc_chrominance_huffman_table = TRY(compute_optimal_table(m_symbol_stats[2]));
+        dc_chrominance_huffman_table.id = (0 << 4) | 1;
+        ac_chrominance_huffman_table = TRY(compute_optimal_table(m_symbol_stats[3]));
+        ac_chrominance_huffman_table.id = (1 << 4) | 1;
+        return {};
+    }
+
     static u8 csize(i16 coefficient)
     {
         VERIFY(coefficient >= -2047 && coefficient <= 2047);
@@ -430,6 +626,7 @@ private:
     Vector<FloatMacroblock> m_macroblocks {};
     Array<i16, 4> m_last_dc_values {};
 
+    Array<Array<u32, 257>, 4> m_symbol_stats {};
     Vector<SymbolOrRawBits> m_symbols_and_bits {};
 
     JPEGBigEndianOutputBitStream m_bit_stream;
@@ -629,14 +826,8 @@ ErrorOr<void> add_scan_header(Stream& stream, Mode mode)
     return {};
 }
 
-ErrorOr<void> add_headers(Stream& stream, JPEGEncodingContext& context, JPEGWriter::Options const& options, IntSize size, Mode mode)
+ErrorOr<void> add_headers(Stream& stream, JPEGEncodingContext const& context, JPEGWriter::Options const& options, IntSize size, Mode mode)
 {
-    context.dc_luminance_huffman_table = s_default_dc_luminance_huffman_table;
-    context.dc_chrominance_huffman_table = s_default_dc_chrominance_huffman_table;
-
-    context.ac_luminance_huffman_table = s_default_ac_luminance_huffman_table;
-    context.ac_chrominance_huffman_table = s_default_ac_chrominance_huffman_table;
-
     TRY(add_start_of_image(stream));
 
     if (options.icc_data.has_value())
