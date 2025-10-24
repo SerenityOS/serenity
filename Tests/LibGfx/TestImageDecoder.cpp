@@ -326,28 +326,6 @@ TEST_CASE(test_ilbm_malformed_frame)
     }
 }
 
-TEST_CASE(test_jbig2_black_47x23)
-{
-    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jbig2/black_47x23.jbig2"sv)));
-    EXPECT(Gfx::JBIG2ImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
-
-    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 47, 23 }));
-    for (auto pixel : *frame.image)
-        EXPECT_EQ(pixel, Gfx::Color(Gfx::Color::Black).value());
-}
-
-TEST_CASE(test_jbig2_white_47x23)
-{
-    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jbig2/white_47x23.jbig2"sv)));
-    EXPECT(Gfx::JBIG2ImageDecoderPlugin::sniff(file->bytes()));
-    auto plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
-
-    auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 47, 23 }));
-    for (auto pixel : *frame.image)
-        EXPECT_EQ(pixel, Gfx::Color(Gfx::Color::White).value());
-}
-
 TEST_CASE(test_jbig2_decode)
 {
     auto bmp_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("bmp/bitmap.bmp"sv)));
