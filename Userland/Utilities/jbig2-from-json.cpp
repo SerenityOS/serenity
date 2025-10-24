@@ -1493,6 +1493,58 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_tables_from_json(Gfx::JBIG2::Segme
     return Gfx::JBIG2::SegmentData { header, data };
 }
 
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_extension_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    if (!object.has_value())
+        return Error::from_string_literal("extension segment should have \"data\" object");
+
+    Gfx::JBIG2::ExtensionData data {};
+
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "type"sv) {
+            if (value.is_string()) {
+                auto type = value.as_string();
+                if (type == "single_byte_coded_comment"sv) {
+                    data.type = Gfx::JBIG2::ExtensionType::SingleByteCodedComment;
+                    return {};
+                }
+                if (type == "multi_byte_coded_comment"sv) {
+                    data.type = Gfx::JBIG2::ExtensionType::MultiByteCodedComment;
+                    return {};
+                }
+            }
+            return Error::from_string_literal("expected \"single_byte_coded_comment\" or \"multi_byte_coded_comment\" for \"type\"");
+        }
+
+        if (key == "entries"sv) {
+            if (value.is_array()) {
+                for (auto const& entry : value.as_array().values()) {
+                    if (!entry.is_array())
+                        return Error::from_string_literal("expected array for \"entries\" elements");
+                    auto const& entry_array = entry.as_array();
+                    if (entry_array.values().size() != 2)
+                        return Error::from_string_literal("expected 2 elements in \"entries\" elements");
+                    if (!entry_array.values()[0].is_string())
+                        return Error::from_string_literal("expected string for \"entries\" element 0");
+                    if (!entry_array.values()[1].is_string())
+                        return Error::from_string_literal("expected string for \"entries\" element 1");
+                    TRY(data.entries.try_append({
+                        TRY(String::from_byte_string(entry_array.values()[0].as_string())),
+                        TRY(String::from_byte_string(entry_array.values()[1].as_string())),
+                    }));
+                }
+                return {};
+            }
+            return Error::from_string_literal("expected array for \"entries\"");
+        }
+
+        dbgln("extension key {}", key);
+        return Error::from_string_literal("unknown extension key");
+    }));
+
+    return Gfx::JBIG2::SegmentData { header, data };
+}
+
 static ErrorOr<Gfx::JBIG2::SegmentHeaderData::Reference> jbig2_referred_to_segment_from_json(JsonObject const& object)
 {
     Gfx::JBIG2::SegmentHeaderData::Reference reference;
@@ -1653,6 +1705,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         return jbig2_page_information_from_json(header, segment_data_object);
     if (type_string == "tables")
         return jbig2_tables_from_json(header, segment_data_object);
+    if (type_string == "extension")
+        return jbig2_extension_from_json(header, segment_data_object);
 
     dbgln("segment type {}", type_string);
     return Error::from_string_literal("segment has unknown type");
