@@ -980,18 +980,10 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
         Desktop::Launcher::open(URL::create_with_file_scheme(directory_view->path()));
     });
 
-    auto mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv)), [&](GUI::Action const&) {
-        directory_view->mkdir_action().activate();
-    });
-
-    auto touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv)), [&](GUI::Action const&) {
-        directory_view->touch_action().activate();
-    });
-
     auto file_menu = window->add_menu("&File"_string);
     file_menu->add_action(new_window_action);
-    file_menu->add_action(mkdir_action);
-    file_menu->add_action(touch_action);
+    file_menu->add_action(directory_view->mkdir_action());
+    file_menu->add_action(directory_view->touch_action());
     file_menu->add_action(focus_dependent_delete_action);
     file_menu->add_action(directory_view->rename_action());
     file_menu->add_separator();
@@ -1073,8 +1065,8 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     main_toolbar.add_action(directory_view->open_terminal_action());
 
     main_toolbar.add_separator();
-    main_toolbar.add_action(mkdir_action);
-    main_toolbar.add_action(touch_action);
+    main_toolbar.add_action(directory_view->mkdir_action());
+    main_toolbar.add_action(directory_view->touch_action());
     main_toolbar.add_separator();
 
     main_toolbar.add_action(focus_dependent_delete_action);
@@ -1116,8 +1108,8 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
             }
         }
 
-        mkdir_action->set_enabled(can_write_in_path);
-        touch_action->set_enabled(can_write_in_path);
+        directory_view->mkdir_action().set_enabled(can_write_in_path);
+        directory_view->touch_action().set_enabled(can_write_in_path);
         paste_action->set_enabled(can_write_in_path && GUI::Clipboard::the().fetch_mime_type() == "text/uri-list");
         go_forward_action->set_enabled(directory_view->path_history_position() < directory_view->path_history_size() - 1);
         go_back_action->set_enabled(directory_view->path_history_position() > 0);
@@ -1170,8 +1162,8 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
 
-    directory_view_context_menu->add_action(mkdir_action);
-    directory_view_context_menu->add_action(touch_action);
+    directory_view_context_menu->add_action(directory_view->mkdir_action());
+    directory_view_context_menu->add_action(directory_view->touch_action());
     directory_view_context_menu->add_action(paste_action);
     directory_view_context_menu->add_action(directory_view->open_terminal_action());
     directory_view_context_menu->add_separator();
@@ -1182,8 +1174,8 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     tree_view_directory_context_menu->add_action(open_in_new_window_action);
     tree_view_directory_context_menu->add_action(open_in_new_terminal_action);
     tree_view_directory_context_menu->add_separator();
-    tree_view_directory_context_menu->add_action(mkdir_action);
-    tree_view_directory_context_menu->add_action(touch_action);
+    tree_view_directory_context_menu->add_action(directory_view->mkdir_action());
+    tree_view_directory_context_menu->add_action(directory_view->touch_action());
     tree_view_directory_context_menu->add_action(cut_action);
     tree_view_directory_context_menu->add_action(copy_action);
     tree_view_directory_context_menu->add_action(copy_path_action);
