@@ -4032,10 +4032,6 @@ static ErrorOr<void> decode_extension(JBIG2LoadingContext&, SegmentData const& s
     // 7.4.14 Extension segment syntax
     FixedMemoryStream stream { segment.data };
 
-    enum ExtensionType {
-        SingleByteCodedComment = 0x20000000,
-        MultiByteCodedComment = 0x20000002,
-    };
     u32 type = TRY(stream.read_value<BigEndian<u32>>());
 
     dbgln_if(JBIG2_DEBUG, "Extension, type {:#x}", type);
@@ -4050,7 +4046,7 @@ static ErrorOr<void> decode_extension(JBIG2LoadingContext&, SegmentData const& s
     };
 
     switch (type) {
-    case SingleByteCodedComment: {
+    case to_underlying(JBIG2::ExtensionType::SingleByteCodedComment): {
         // 7.4.15.1 Single-byte coded comment
         // Pairs of zero-terminated ISO/IEC 8859-1 (latin1) pairs, terminated by another \0.
         while (true) {
@@ -4068,7 +4064,7 @@ static ErrorOr<void> decode_extension(JBIG2LoadingContext&, SegmentData const& s
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Trailing data after SingleByteCodedComment");
         return {};
     }
-    case MultiByteCodedComment: {
+    case to_underlying(JBIG2::ExtensionType::MultiByteCodedComment): {
         // 7.4.15.2 Multi-byte coded comment
         // Pairs of (two-byte-)zero-terminated UCS-2 pairs, terminated by another \0\0.
         while (true) {
