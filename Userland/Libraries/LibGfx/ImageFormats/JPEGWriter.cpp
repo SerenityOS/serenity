@@ -257,7 +257,7 @@ public:
         }
     }
 
-    ErrorOr<void> write_huffman_stream(Mode mode)
+    ErrorOr<void> huffman_encode_macroblocks(Mode mode)
     {
         for (auto& float_macroblock : m_macroblocks) {
             auto macroblock = float_macroblock.as_i16();
@@ -270,22 +270,20 @@ public:
             }
         }
         m_macroblocks.clear();
-
-        TRY(write_symbols_to_stream());
-
-        TRY(m_bit_stream.align_to_byte_boundary(0xFF));
-
         return {};
     }
 
-    void set_luminance_quantization_table(QuantizationTable const& table, int quality)
+    ErrorOr<void> write_huffman_stream()
     {
-        set_quantization_table(m_luminance_quantization_table, table, quality);
+        TRY(write_symbols_to_stream());
+        TRY(m_bit_stream.align_to_byte_boundary(0xFF));
+        return {};
     }
 
-    void set_chrominance_quantization_table(QuantizationTable const& table, int quality)
+    void set_quantization_tables(int quality)
     {
-        set_quantization_table(m_chrominance_quantization_table, table, quality);
+        set_quantization_table(m_luminance_quantization_table, s_default_luminance_quantization_table, quality);
+        set_quantization_table(m_chrominance_quantization_table, s_default_chrominance_quantization_table, quality);
     }
 
     QuantizationTable const& luminance_quantization_table() const
@@ -633,9 +631,6 @@ ErrorOr<void> add_scan_header(Stream& stream, Mode mode)
 
 ErrorOr<void> add_headers(Stream& stream, JPEGEncodingContext& context, JPEGWriter::Options const& options, IntSize size, Mode mode)
 {
-    context.set_luminance_quantization_table(s_default_luminance_quantization_table, options.quality);
-    context.set_chrominance_quantization_table(s_default_chrominance_quantization_table, options.quality);
-
     context.dc_luminance_huffman_table = s_default_dc_luminance_huffman_table;
     context.dc_chrominance_huffman_table = s_default_dc_chrominance_huffman_table;
 
@@ -663,11 +658,14 @@ ErrorOr<void> add_headers(Stream& stream, JPEGEncodingContext& context, JPEGWrit
     return {};
 }
 
-ErrorOr<void> add_image(Stream& stream, JPEGEncodingContext& context, Mode mode)
+ErrorOr<void> add_image(Stream& stream, JPEGEncodingContext& context, JPEGEncoderOptions const& options, IntSize size, Mode mode)
 {
+    context.set_quantization_tables(options.quality);
     context.convert_to_ycbcr(mode);
     context.fdct_and_quantization(mode);
-    TRY(context.write_huffman_stream(mode));
+    TRY(context.huffman_encode_macroblocks(mode));
+    TRY(add_headers(stream, context, options, size, mode));
+    TRY(context.write_huffman_stream());
     TRY(add_end_of_image(stream));
     return {};
 }
@@ -677,18 +675,16 @@ ErrorOr<void> add_image(Stream& stream, JPEGEncodingContext& context, Mode mode)
 ErrorOr<void> JPEGWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
 {
     JPEGEncodingContext context { JPEGBigEndianOutputBitStream { stream } };
-    TRY(add_headers(stream, context, options, bitmap.size(), Mode::RGB));
     TRY(context.initialize_mcu(bitmap));
-    TRY(add_image(stream, context, Mode::RGB));
+    TRY(add_image(stream, context, options, bitmap.size(), Mode::RGB));
     return {};
 }
 
 ErrorOr<void> JPEGWriter::encode(Stream& stream, CMYKBitmap const& bitmap, Options const& options)
 {
     JPEGEncodingContext context { JPEGBigEndianOutputBitStream { stream } };
-    TRY(add_headers(stream, context, options, bitmap.size(), Mode::CMYK));
     TRY(context.initialize_mcu(bitmap));
-    TRY(add_image(stream, context, Mode::CMYK));
+    TRY(add_image(stream, context, options, bitmap.size(), Mode::CMYK));
     return {};
 }
 
