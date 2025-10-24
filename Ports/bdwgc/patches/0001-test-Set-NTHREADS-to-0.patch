@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Fri, 13 Dec 2024 19:22:08 +0000
+Subject: [PATCH] test: Set NTHREADS to 0
+
+It crashes otherwise:
+
+```
+0x00000015e4c9b017: [/usr/lib/libsystem.so] syscall1 +0x7 (syscall.cpp:20 => syscall.cpp:19)
+0x00000002018903eb: [/home/anon/gctest] GC_suspend_handler +0xab (pthread_stop_world.c:406 => pthread_stop_world.c:263)
+0x0000001eb725200d: ???
+0x000000050209d666: [/usr/lib/libc.so] sem_timedwait +0x86 (serenity.h:43 => semaphore.cpp:372)
+0x000000020188fb26: [/home/anon/gctest] GC_pthread_create +0x106 (pthread_support.c:2356)
+0x0000000201877d2e: [/home/anon/gctest] main +0x12e (test.c:2438)
+0x0000000201878064: [/home/anon/gctest] _entry +0x24 (crt0.cpp:47)
+```
+---
+ tests/test.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tests/test.c b/tests/test.c
+index 6cce7984f1efeab38f6fcce39e12d384069c9de6..5d7163109c7e4b14ab17c169893fbbda3ad83a4a 100644
+--- a/tests/test.c
++++ b/tests/test.c
+@@ -43,7 +43,7 @@
+ #include "gc.h"
+ 
+ #ifndef NTHREADS /* Number of additional threads to fork. */
+-# define NTHREADS 5 /* Excludes main thread, which also runs a test. */
++# define NTHREADS 0 /* Excludes main thread, which also runs a test. */
+         /* In the single-threaded case, the number of times to rerun it. */
+         /* Not respected by PCR test. */
+ #endif
