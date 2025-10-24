@@ -57,11 +57,11 @@
             "type": "extension",
             "page_association": 1,
             "data": {
-                "type": "multi_byte_coded_comment",
+                "type": "single_byte_coded_comment",
                 "entries": [
                     [
                         "key1",
-                        "value1 µèπä"
+                        "value1 µèä"
                     ],
                     [
                         "këÿ2",

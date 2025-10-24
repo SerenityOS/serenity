@@ -20,6 +20,7 @@
 #include <LibGfx/ImageFormats/CCITTEncoder.h>
 #include <LibGfx/ImageFormats/JBIG2Writer.h>
 #include <LibGfx/ImageFormats/MQArithmeticCoder.h>
+#include <LibTextCodec/Encoder.h>
 
 namespace Gfx {
 
@@ -986,10 +987,26 @@ static ErrorOr<void> encode_extension(JBIG2::ExtensionData const& extension, Vec
     case JBIG2::ExtensionType::SingleByteCodedComment:
         // 7.4.15.1 Single-byte coded comment
         // Pairs of zero-terminated ISO/IEC 8859-1 (latin1) pairs, terminated by another \0.
-        // FIXME: We don't have a TextCodec::encoder_for_exact_name("ISO-8859-1"sv) yet.
-        // See also https://encoding.spec.whatwg.org/#note-latin1-ascii -- the writer here
-        // should probably err for the characters that are in windows-1252 but not in ISO-8859-1.
-        return Error::from_string_literal("JBIG2Writer: SingleByteCodedComment encoding not yet implemented");
+        for (auto const& entry : extension.entries) {
+            auto write_iso_8859_1_string = [&](StringView string) -> ErrorOr<void> {
+                auto encoder = TextCodec::encoder_for_exact_name("ISO-8859-1"sv);
+                TRY(encoder->process(
+                    Utf8View(string),
+                    [&](u8 byte) -> ErrorOr<void> {
+                        return output_stream.write_value<u8>(byte);
+                    },
+                    [&](u32) -> ErrorOr<void> {
+                        return Error::from_string_literal("JBIG2Writer: Cannot encode character in ISO-8859-1");
+                    }));
+                TRY(output_stream.write_value<u8>(0));
+                return {};
+            };
+            TRY(write_iso_8859_1_string(entry.key));
+            TRY(write_iso_8859_1_string(entry.value));
+        }
+        TRY(output_stream.write_value<u8>(0));
+        break;
+
     case JBIG2::ExtensionType::MultiByteCodedComment:
         // 7.4.15.2 Multi-byte coded comment
         // Pairs of (two-byte-)zero-terminated UCS-2 pairs, terminated by another \0\0.
