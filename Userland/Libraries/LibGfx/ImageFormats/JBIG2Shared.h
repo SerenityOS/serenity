@@ -176,4 +176,9 @@ struct [[gnu::packed]] EndOfStripeSegment {
 };
 static_assert(AssertSize<EndOfStripeSegment, 4>());
 
+enum class ExtensionType {
+    SingleByteCodedComment = 0x20000000,
+    MultiByteCodedComment = 0x20000002,
+};
+
 }
