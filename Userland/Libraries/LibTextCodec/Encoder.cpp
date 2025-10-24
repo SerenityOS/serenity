@@ -14,6 +14,7 @@
 namespace TextCodec {
 
 namespace {
+Latin1Encoder s_latin1_encoder;
 UTF8Encoder s_utf8_encoder;
 GB18030Encoder s_gb18030_encoder;
 GB18030Encoder s_gbk_encoder(GB18030Encoder::IsGBK::Yes);
@@ -57,6 +58,8 @@ SingleByteEncoder s_mac_cyrillic_encoder { s_x_mac_cyrillic_index };
 
 Optional<Encoder&> encoder_for_exact_name(StringView encoding)
 {
+    if (encoding.equals_ignoring_ascii_case("iso-8859-1"sv))
+        return s_latin1_encoder;
     if (encoding.equals_ignoring_ascii_case("utf-8"sv))
         return s_utf8_encoder;
     if (encoding.equals_ignoring_ascii_case("big5"sv))
@@ -143,6 +146,19 @@ ErrorOr<void> UTF8Encoder::process(Utf8View input, Function<ErrorOr<void>(u8)> o
     ReadonlyBytes bytes { input.bytes(), input.byte_length() };
     for (auto byte : bytes)
         TRY(on_byte(byte));
+    return {};
+}
+
+ErrorOr<void> Latin1Encoder::process(Utf8View input, Function<ErrorOr<void>(u8)> on_byte, Function<ErrorOr<void>(u32)> on_error)
+{
+    for (auto item : input) {
+        // Latin1 is the same as the first 256 Unicode code_points.
+        if (item <= 255)
+            TRY(on_byte(static_cast<u8>(item)));
+        else
+            TRY(on_error(item));
+    }
+
     return {};
 }
 
