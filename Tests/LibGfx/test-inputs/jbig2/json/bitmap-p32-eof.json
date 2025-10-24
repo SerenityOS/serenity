@@ -8,6 +8,7 @@
             "segment_number": 0,
             "type": "page_information",
             "page_association": 1,
+            "retained": true,
             "force_32_bit_page_association": true,
             "data": {
                 "page_width": 399,
@@ -21,6 +22,7 @@
             "segment_number": 1,
             "type": "lossless_generic_region",
             "page_association": 1,
+            "retained": true,
             "force_32_bit_page_association": true,
             "data": {
                 "image_data": {
@@ -30,12 +32,88 @@
         },
         {
             "segment_number": 2,
+            "type": "extension",
+            "page_association": 0,
+            "data": {
+                "type": "multi_byte_coded_comment",
+                "entries": [
+                    [
+                        "key1",
+                        "value1 µèπä"
+                    ],
+                    [
+                        "këÿ2",
+                        "välüe2 niße"
+                    ],
+                    [
+                        "applies to",
+                        "entire file"
+                    ]
+                ]
+            }
+        },
+        {
+            "segment_number": 3,
+            "type": "extension",
+            "page_association": 1,
+            "data": {
+                "type": "multi_byte_coded_comment",
+                "entries": [
+                    [
+                        "key1",
+                        "value1 µèπä"
+                    ],
+                    [
+                        "këÿ2",
+                        "välüe2 niße"
+                    ],
+                    [
+                        "applies to",
+                        "all of page 1"
+                    ]
+                ]
+            }
+        },
+        {
+            "segment_number": 4,
+            "type": "extension",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 0,
+                    "retained": false
+                },
+                {
+                    "segment_number": 1,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "type": "multi_byte_coded_comment",
+                "entries": [
+                    [
+                        "key1",
+                        "value1 µèπä"
+                    ],
+                    [
+                        "këÿ2",
+                        "välüe2 niße"
+                    ],
+                    [
+                        "applies to",
+                        "segments 0 and 1"
+                    ]
+                ]
+            }
+        },
+        {
+            "segment_number": 5,
             "type": "end_of_page",
             "page_association": 1,
             "force_32_bit_page_association": true
         },
         {
-            "segment_number": 3,
+            "segment_number": 6,
             "type": "end_of_file",
             "page_association": 0,
             "force_32_bit_page_association": true
