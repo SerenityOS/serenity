@@ -9,6 +9,7 @@
 #include "JPEGWriterTables.h"
 #include <AK/BitStream.h>
 #include <AK/Endian.h>
+#include <AK/Enumerate.h>
 #include <AK/Function.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CMYKBitmap.h>
@@ -261,20 +262,16 @@ public:
         for (auto& float_macroblock : m_macroblocks) {
             auto macroblock = float_macroblock.as_i16();
 
-            TRY(encode_dc(dc_luminance_huffman_table, macroblock.y, 0));
-            TRY(encode_ac(ac_luminance_huffman_table, macroblock.y));
-
-            TRY(encode_dc(dc_chrominance_huffman_table, macroblock.cb, 1));
-            TRY(encode_ac(ac_chrominance_huffman_table, macroblock.cb));
-
-            TRY(encode_dc(dc_chrominance_huffman_table, macroblock.cr, 2));
-            TRY(encode_ac(ac_chrominance_huffman_table, macroblock.cr));
-
-            if (mode == Mode::CMYK) {
-                TRY(encode_dc(dc_luminance_huffman_table, macroblock.k, 3));
-                TRY(encode_ac(ac_luminance_huffman_table, macroblock.k));
+            for (auto [i, component] : enumerate(to_array({ macroblock.y, macroblock.cb, macroblock.cr, macroblock.k }))) {
+                if (mode == Mode::CMYK || i < 3) {
+                    TRY(encode_dc(component, i));
+                    TRY(encode_ac(component, i));
+                }
             }
         }
+        m_macroblocks.clear();
+
+        TRY(write_symbols_to_stream());
 
         TRY(m_bit_stream.align_to_byte_boundary(0xFF));
 
@@ -308,6 +305,17 @@ public:
     OutputHuffmanTable ac_chrominance_huffman_table;
 
 private:
+    struct RawBits {
+        u16 bits {};
+        u8 length {};
+    };
+    struct Symbol {
+        u8 byte {};
+        u8 component_id {};
+        bool is_dc {};
+    };
+    using SymbolOrRawBits = Variant<Symbol, RawBits>;
+
     static void set_quantization_table(QuantizationTable& destination, QuantizationTable const& source, int quality)
     {
         // In order to be compatible with libjpeg-turbo, we use the same coefficients as them.
@@ -331,23 +339,23 @@ private:
         return m_bit_stream.write_bits(symbol.word, symbol.code_length);
     }
 
-    ErrorOr<void> encode_dc(OutputHuffmanTable const& dc_table, i16 const component[], u8 component_id)
+    ErrorOr<void> encode_dc(i16 const component[], u8 component_id)
     {
         // F.1.2.1.3 - Huffman encoding procedures for DC coefficients
         auto diff = component[0] - m_last_dc_values[component_id];
         m_last_dc_values[component_id] = component[0];
 
         auto const size = csize(diff);
-        TRY(write_symbol(dc_table.from_input_byte(size)));
+        TRY(m_symbols_and_bits.try_append(Symbol { .byte = size, .component_id = component_id, .is_dc = true }));
 
         if (diff < 0)
             diff -= 1;
 
-        TRY(m_bit_stream.write_bits<u16>(diff, size));
+        TRY(m_symbols_and_bits.try_append(RawBits(diff, size)));
         return {};
     }
 
-    ErrorOr<void> encode_ac(OutputHuffmanTable const& ac_table, i16 const component[])
+    ErrorOr<void> encode_ac(i16 const component[], u8 component_id)
     {
         // F.2 - Procedure for sequential encoding of AC coefficients with Huffman coding
         u32 k {};
@@ -359,7 +367,7 @@ private:
             auto coefficient = component[zigzag_map[k]];
             if (coefficient == 0) {
                 if (k == 63) {
-                    TRY(write_symbol(ac_table.from_input_byte(0x00)));
+                    TRY(m_symbols_and_bits.try_append(Symbol { .byte = 0x00, .component_id = component_id, .is_dc = false }));
                     break;
                 }
                 r += 1;
@@ -367,24 +375,44 @@ private:
             }
 
             while (r > 15) {
-                TRY(write_symbol(ac_table.from_input_byte(0xF0)));
+                TRY(m_symbols_and_bits.try_append(Symbol { .byte = 0xF0, .component_id = component_id, .is_dc = false }));
                 r -= 16;
             }
 
             {
                 // F.3 - Sequential encoding of a non-zero AC coefficient
                 auto const ssss = csize(coefficient);
-                auto const rs = (r << 4) + ssss;
-                TRY(write_symbol(ac_table.from_input_byte(rs)));
+                u8 const rs = (r << 4) + ssss;
+                TRY(m_symbols_and_bits.try_append(Symbol { .byte = rs, .component_id = component_id, .is_dc = false }));
 
                 if (coefficient < 0)
                     coefficient -= 1;
 
-                TRY(m_bit_stream.write_bits<u16>(coefficient, ssss));
+                TRY(m_symbols_and_bits.try_append(RawBits(coefficient, ssss)));
             }
 
             r = 0;
         }
+        return {};
+    }
+
+    ErrorOr<void> write_symbols_to_stream()
+    {
+        for (auto const& symbol_or_bits : m_symbols_and_bits) {
+            if (symbol_or_bits.has<Symbol>()) {
+                auto symbol = symbol_or_bits.get<Symbol>();
+                auto const& huffman_table = [&]() {
+                    if (symbol.component_id == 0 || symbol.component_id == 3)
+                        return symbol.is_dc ? dc_luminance_huffman_table : ac_luminance_huffman_table;
+                    return symbol.is_dc ? dc_chrominance_huffman_table : ac_chrominance_huffman_table;
+                }();
+                TRY(write_symbol(huffman_table.from_input_byte(symbol.byte)));
+            } else {
+                auto bits = symbol_or_bits.get<RawBits>();
+                TRY(m_bit_stream.write_bits(bits.bits, bits.length));
+            }
+        }
+
         return {};
     }
 
@@ -403,6 +431,8 @@ private:
 
     Vector<FloatMacroblock> m_macroblocks {};
     Array<i16, 4> m_last_dc_values {};
+
+    Vector<SymbolOrRawBits> m_symbols_and_bits {};
 
     JPEGBigEndianOutputBitStream m_bit_stream;
 };
