@@ -203,8 +203,6 @@ Optional<StringView> get_standardized_encoding(StringView encoding)
         return "KOI8-U"sv;
     if (encoding.is_one_of_ignoring_ascii_case("csmacintosh"sv, "mac"sv, "macintosh"sv, "x-mac-roman"sv))
         return "macintosh"sv;
-    if (encoding.is_one_of_ignoring_ascii_case("pdfdocencoding"sv))
-        return "PDFDocEncoding"sv;
     if (encoding.is_one_of_ignoring_ascii_case("dos-874"sv, "iso-8859-11"sv, "iso8859-11"sv, "iso885911"sv, "tis-620"sv, "windows-874"sv))
         return "windows-874"sv;
     if (encoding.is_one_of_ignoring_ascii_case("cp1250"sv, "windows-1250"sv, "x-cp1250"sv))
