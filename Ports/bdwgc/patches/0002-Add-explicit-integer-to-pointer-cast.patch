@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Fri, 24 Oct 2025 23:34:35 +0100
+Subject: [PATCH] Add explicit integer to pointer cast
+
+```
+[bdwgc/build] In file included from extra/gc.c:63:
+[bdwgc/build] extra/../os_dep.c: In function 'GC_get_stack_base':
+[bdwgc/build] extra/../os_dep.c:878:16: error: assignment to 'void *' from 'long unsigned int' makes pointer from integer without a cast [-Wint-conversion]
+[bdwgc/build]   878 |   sb->mem_base = base + size;
+[bdwgc/build]       |
+```
+---
+ os_dep.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/os_dep.c b/os_dep.c
+index 0650a3dc854e486657eb93c277ea82e3cf845907..6a710aa19de601623669fb91ee1698dcfef9e261 100644
+--- a/os_dep.c
++++ b/os_dep.c
+@@ -875,7 +875,7 @@ GC_get_stack_base(struct GC_stack_base *sb)
+     WARN("get_stack_bounds failed\n", 0);
+     return GC_UNIMPLEMENTED;
+   }
+-  sb->mem_base = base + size;
++  sb->mem_base = (void*)(base + size);
+   return GC_SUCCESS;
+ }
+ # define HAVE_GET_STACK_BASE
