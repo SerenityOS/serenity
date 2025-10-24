@@ -8,6 +8,7 @@
 
 #include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/ImageFormats/BilevelImage.h>
@@ -133,6 +134,16 @@ struct TablesData {
     u8 out_of_band_prefix_length { 0 };
 };
 
+struct ExtensionData {
+    JBIG2::ExtensionType type;
+
+    struct Entry {
+        String key;
+        String value;
+    };
+    Vector<Entry> entries;
+};
+
 struct SegmentData {
     SegmentHeaderData header;
     Variant<
@@ -149,7 +160,8 @@ struct SegmentData {
         EndOfPageSegmentData,
         EndOfStripeSegment,
         EndOfFileSegmentData,
-        TablesData>
+        TablesData,
+        ExtensionData>
         data;
 };
 

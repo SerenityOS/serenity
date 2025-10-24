@@ -14,6 +14,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Stream.h>
+#include <AK/Utf16View.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/BilevelImage.h>
 #include <LibGfx/ImageFormats/CCITTEncoder.h>
@@ -975,6 +976,45 @@ static ErrorOr<void> encode_tables(JBIG2::TablesData const& tables, Vector<u8>& 
     return {};
 }
 
+static ErrorOr<void> encode_extension(JBIG2::ExtensionData const& extension, Vector<u8>& scratch_buffer)
+{
+    // 7.4.14 Extension segment syntax
+    AllocatingMemoryStream output_stream;
+    TRY(output_stream.write_value<BigEndian<u32>>(to_underlying(extension.type)));
+
+    switch (extension.type) {
+    case JBIG2::ExtensionType::SingleByteCodedComment:
+        // 7.4.15.1 Single-byte coded comment
+        // Pairs of zero-terminated ISO/IEC 8859-1 (latin1) pairs, terminated by another \0.
+        // FIXME: We don't have a TextCodec::encoder_for_exact_name("ISO-8859-1"sv) yet.
+        // See also https://encoding.spec.whatwg.org/#note-latin1-ascii -- the writer here
+        // should probably err for the characters that are in windows-1252 but not in ISO-8859-1.
+        return Error::from_string_literal("JBIG2Writer: SingleByteCodedComment encoding not yet implemented");
+    case JBIG2::ExtensionType::MultiByteCodedComment:
+        // 7.4.15.2 Multi-byte coded comment
+        // Pairs of (two-byte-)zero-terminated UCS-2 pairs, terminated by another \0\0.
+        for (auto const& entry : extension.entries) {
+            auto write_ucs2_string = [&](StringView string) -> ErrorOr<void> {
+                auto ucs2_string = TRY(utf8_to_utf16(string));
+                for (size_t i = 0; i < ucs2_string.size(); ++i) {
+                    if (is_unicode_surrogate(ucs2_string[i]))
+                        return Error::from_string_literal("JBIG2Writer: Cannot encode surrogate in UCS-2 string");
+                    TRY(output_stream.write_value<BigEndian<u16>>(ucs2_string[i]));
+                }
+                TRY(output_stream.write_value<BigEndian<u16>>(0));
+                return {};
+            };
+            TRY(write_ucs2_string(entry.key));
+            TRY(write_ucs2_string(entry.value));
+        }
+        TRY(output_stream.write_value<BigEndian<u16>>(0));
+        break;
+    }
+
+    TRY(scratch_buffer.try_extend(TRY(output_stream.read_until_eof())));
+    return {};
+}
+
 static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& segment_data, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id)
 {
     Vector<u8> scratch_buffer;
@@ -1037,6 +1077,10 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
         [&scratch_buffer](JBIG2::TablesData const& tables) -> ErrorOr<ReadonlyBytes> {
             TRY(encode_tables(tables, scratch_buffer));
             return scratch_buffer;
+        },
+        [&scratch_buffer](JBIG2::ExtensionData const& extension) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_extension(extension, scratch_buffer));
+            return scratch_buffer;
         }));
 
     JBIG2::SegmentHeader header;
@@ -1055,7 +1099,8 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
         [](JBIG2::EndOfPageSegmentData const&) { return JBIG2::SegmentType::EndOfPage; },
         [](JBIG2::EndOfStripeSegment const&) { return JBIG2::SegmentType::EndOfStripe; },
         [](JBIG2::EndOfFileSegmentData const&) { return JBIG2::SegmentType::EndOfFile; },
-        [](JBIG2::TablesData const&) { return JBIG2::SegmentType::Tables; });
+        [](JBIG2::TablesData const&) { return JBIG2::SegmentType::Tables; },
+        [](JBIG2::ExtensionData const&) { return JBIG2::SegmentType::Extension; });
     header.retention_flag = segment_data.header.retention_flag;
     for (auto const& reference : segment_data.header.referred_to_segments) {
         header.referred_to_segment_numbers.append(reference.segment_number);
