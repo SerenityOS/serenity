@@ -17,7 +17,7 @@ namespace Gfx {
 
 namespace {
 
-enum Mode {
+enum class Mode {
     RGB,
     CMYK,
 };
