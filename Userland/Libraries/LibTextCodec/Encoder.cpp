@@ -6,6 +6,7 @@
 
 #include <AK/BinarySearch.h>
 #include <AK/Error.h>
+#include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibTextCodec/Encoder.h>
@@ -16,6 +17,8 @@ namespace TextCodec {
 namespace {
 Latin1Encoder s_latin1_encoder;
 UTF8Encoder s_utf8_encoder;
+UTF16BEEncoder s_utf16be_encoder;
+UTF16LEEncoder s_utf16le_encoder;
 GB18030Encoder s_gb18030_encoder;
 GB18030Encoder s_gbk_encoder(GB18030Encoder::IsGBK::Yes);
 Big5Encoder s_big5_encoder;
@@ -62,6 +65,10 @@ Optional<Encoder&> encoder_for_exact_name(StringView encoding)
         return s_latin1_encoder;
     if (encoding.equals_ignoring_ascii_case("utf-8"sv))
         return s_utf8_encoder;
+    if (encoding.equals_ignoring_ascii_case("utf-16be"sv))
+        return s_utf16be_encoder;
+    if (encoding.equals_ignoring_ascii_case("utf-16le"sv))
+        return s_utf16le_encoder;
     if (encoding.equals_ignoring_ascii_case("big5"sv))
         return s_big5_encoder;
     if (encoding.equals_ignoring_ascii_case("euc-jp"sv))
@@ -146,6 +153,30 @@ ErrorOr<void> UTF8Encoder::process(Utf8View input, Function<ErrorOr<void>(u8)> o
     ReadonlyBytes bytes { input.bytes(), input.byte_length() };
     for (auto byte : bytes)
         TRY(on_byte(byte));
+    return {};
+}
+
+ErrorOr<void> UTF16BEEncoder::process(Utf8View input, Function<ErrorOr<void>(u8)> on_byte, Function<ErrorOr<void>(u32)>)
+{
+    auto utf16 = TRY(utf8_to_utf16(input));
+    for (auto utf16_codepoint : utf16) {
+        u8 high_byte = static_cast<u8>((utf16_codepoint >> 8) & 0xFF);
+        u8 low_byte = static_cast<u8>(utf16_codepoint & 0xFF);
+        TRY(on_byte(high_byte));
+        TRY(on_byte(low_byte));
+    }
+    return {};
+}
+
+ErrorOr<void> UTF16LEEncoder::process(Utf8View input, Function<ErrorOr<void>(u8)> on_byte, Function<ErrorOr<void>(u32)>)
+{
+    auto utf16 = TRY(utf8_to_utf16(input));
+    for (auto utf16_codepoint : utf16) {
+        u8 high_byte = static_cast<u8>((utf16_codepoint >> 8) & 0xFF);
+        u8 low_byte = static_cast<u8>(utf16_codepoint & 0xFF);
+        TRY(on_byte(low_byte));
+        TRY(on_byte(high_byte));
+    }
     return {};
 }
 

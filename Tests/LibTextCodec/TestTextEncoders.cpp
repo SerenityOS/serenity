@@ -25,6 +25,42 @@ TEST_CASE(test_utf8_encode)
     EXPECT(processed_bytes[3] == 0x80);
 }
 
+TEST_CASE(test_utf16be_encode)
+{
+    TextCodec::UTF16BEEncoder encoder;
+    // Unicode character U+1F600 GRINNING FACE
+    auto test_string = "\U0001F600"sv;
+
+    Vector<u8> processed_bytes;
+    MUST(encoder.process(
+        Utf8View(test_string),
+        [&](u8 byte) { return processed_bytes.try_append(byte); },
+        [&](u32) -> ErrorOr<void> { EXPECT(false); return {}; }));
+    EXPECT(processed_bytes.size() == 4);
+    EXPECT(processed_bytes[0] == 0xD8);
+    EXPECT(processed_bytes[1] == 0x3D);
+    EXPECT(processed_bytes[2] == 0xDE);
+    EXPECT(processed_bytes[3] == 0x00);
+}
+
+TEST_CASE(test_utf16le_encode)
+{
+    TextCodec::UTF16LEEncoder encoder;
+    // Unicode character U+1F600 GRINNING FACE
+    auto test_string = "\U0001F600"sv;
+
+    Vector<u8> processed_bytes;
+    MUST(encoder.process(
+        Utf8View(test_string),
+        [&](u8 byte) { return processed_bytes.try_append(byte); },
+        [&](u32) -> ErrorOr<void> { EXPECT(false); return {}; }));
+    EXPECT(processed_bytes.size() == 4);
+    EXPECT(processed_bytes[0] == 0x3D);
+    EXPECT(processed_bytes[1] == 0xD8);
+    EXPECT(processed_bytes[2] == 0x00);
+    EXPECT(processed_bytes[3] == 0xDE);
+}
+
 TEST_CASE(test_euc_jp_encoder)
 {
     TextCodec::EUCJPEncoder encoder;
