@@ -83,12 +83,12 @@ PDFErrorOr<Optional<String>> InfoDict::get_text(DeprecatedFlyString const& name)
 ErrorOr<String> Document::text_string_to_utf8(ByteString const& text_string)
 {
     if (text_string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff }))
-        return TRY(TextCodec::decoder_for("utf-16be"sv)->to_utf8(text_string));
+        return TRY(TextCodec::decoder_for_exact_name("utf-16be"sv)->to_utf8(text_string));
 
     if (text_string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 }))
-        return TRY(TextCodec::decoder_for("utf-8"sv)->to_utf8(text_string));
+        return TRY(TextCodec::decoder_for_exact_name("utf-8"sv)->to_utf8(text_string));
 
-    return TRY(TextCodec::decoder_for("PDFDocEncoding"sv)->to_utf8(text_string));
+    return TRY(TextCodec::decoder_for_exact_name("PDFDocEncoding"sv)->to_utf8(text_string));
 }
 
 PDFErrorOr<NonnullRefPtr<Document>> Document::create(ReadonlyBytes bytes)
