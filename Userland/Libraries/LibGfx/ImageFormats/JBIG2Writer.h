@@ -115,8 +115,8 @@ struct IntermediateGenericRefinementRegionSegmentData {
     GenericRefinementRegionSegmentData generic_refinement_region;
 };
 
-struct EndOfFileSegmentData { };
 struct EndOfPageSegmentData { };
+struct EndOfFileSegmentData { };
 
 struct TablesData {
     u8 flags { 0 };
@@ -136,10 +136,6 @@ struct TablesData {
 struct SegmentData {
     SegmentHeaderData header;
     Variant<
-        PageInformationSegment,
-        EndOfFileSegmentData,
-        EndOfPageSegmentData,
-        EndOfStripeSegment,
         ImmediateHalftoneRegionSegmentData,
         ImmediateLosslessHalftoneRegionSegmentData,
         PatternDictionarySegmentData,
@@ -149,6 +145,10 @@ struct SegmentData {
         ImmediateGenericRefinementRegionSegmentData,
         ImmediateLosslessGenericRefinementRegionSegmentData,
         IntermediateGenericRefinementRegionSegmentData,
+        PageInformationSegment,
+        EndOfPageSegmentData,
+        EndOfStripeSegment,
+        EndOfFileSegmentData,
         TablesData>
         data;
 };

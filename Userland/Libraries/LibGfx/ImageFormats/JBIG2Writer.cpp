@@ -1022,9 +1022,6 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
             TRY(encode_page_information_data(stream, page_information));
             return scratch_buffer;
         },
-        [](JBIG2::EndOfFileSegmentData const&) -> ErrorOr<ReadonlyBytes> {
-            return ReadonlyBytes {};
-        },
         [](JBIG2::EndOfPageSegmentData const&) -> ErrorOr<ReadonlyBytes> {
             return ReadonlyBytes {};
         },
@@ -1033,6 +1030,9 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
             FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
             TRY(stream.write_value<BigEndian<u32>>(end_of_stripe.y_coordinate));
             return scratch_buffer;
+        },
+        [](JBIG2::EndOfFileSegmentData const&) -> ErrorOr<ReadonlyBytes> {
+            return ReadonlyBytes {};
         },
         [&scratch_buffer](JBIG2::TablesData const& tables) -> ErrorOr<ReadonlyBytes> {
             TRY(encode_tables(tables, scratch_buffer));
@@ -1052,9 +1052,9 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
         [](JBIG2::ImmediateLosslessGenericRefinementRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessGenericRefinementRegion; },
         [](JBIG2::IntermediateGenericRefinementRegionSegmentData const&) { return JBIG2::SegmentType::IntermediateGenericRefinementRegion; },
         [](JBIG2::PageInformationSegment const&) { return JBIG2::SegmentType::PageInformation; },
-        [](JBIG2::EndOfFileSegmentData const&) { return JBIG2::SegmentType::EndOfFile; },
         [](JBIG2::EndOfPageSegmentData const&) { return JBIG2::SegmentType::EndOfPage; },
         [](JBIG2::EndOfStripeSegment const&) { return JBIG2::SegmentType::EndOfStripe; },
+        [](JBIG2::EndOfFileSegmentData const&) { return JBIG2::SegmentType::EndOfFile; },
         [](JBIG2::TablesData const&) { return JBIG2::SegmentType::Tables; });
     header.retention_flag = segment_data.header.retention_flag;
     for (auto const& reference : segment_data.header.referred_to_segments) {
