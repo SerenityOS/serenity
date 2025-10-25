@@ -636,13 +636,13 @@ never_merge_commits = {
     "9f25dc6b09ce76d1ab2a92d454c1387600515612": "Ladybird-specific",
 
     # We don't want anything except the AO spec number update from PR281.
-    "8331a87f6c2d0bd7ab2f6e8fdf294cf8012c6986"
-    "c379b357981f40908d870edccee54ec8ab9798e0"
-    "d3e809bcd4a661b9d2e7a41ec2f328bf6485cc11"
-    "4fc0fba646caae0bffca37a171cff2f74477d176"
-    "1b2d47e6bbda997e2cf4a9e2685cd1c409cd8c2f"
-    "672a555f981a81944bba8433d08fb627631139db"
-    "bd73dd316de56897bb4ba50d1ae619f82ce31aeb"
+    "8331a87f6c2d0bd7ab2f6e8fdf294cf8012c6986": "Ladybird-specific",
+    "c379b357981f40908d870edccee54ec8ab9798e0": "ICU",
+    "d3e809bcd4a661b9d2e7a41ec2f328bf6485cc11": "ICU",
+    "4fc0fba646caae0bffca37a171cff2f74477d176": "ICU",
+    "1b2d47e6bbda997e2cf4a9e2685cd1c409cd8c2f": "ICU",
+    "672a555f981a81944bba8433d08fb627631139db": "ICU",
+    "bd73dd316de56897bb4ba50d1ae619f82ce31aeb": "Still used in Serenity",
 
     # Commits from the first 14 PRs didn't get Pull-request: footers:
     "6d3a54e4a8d149171105d1e6378cbd2e2d1bb7fc": "Ladybird-specific (PR2)",
