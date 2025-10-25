@@ -683,6 +683,7 @@ private:
                 for (u32 i = 0; i < count; ++i)
                     result.empend(typename TypePromoter<T>::Type(TRY(read_value<T>())));
             }
+            dbgln_if(TIFF_DEBUG, "Read values {}", result);
             return result;
         };
 
@@ -748,6 +749,7 @@ private:
                 return value;
             }
             auto const offset = TRY(read_value<u32>());
+            dbgln_if(TIFF_DEBUG, "Tag data out of line at offset {}", offset);
             return read_tiff_value(type, count, offset);
         }()));
 
