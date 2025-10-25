@@ -733,6 +733,8 @@ private:
         auto const type = TRY(tiff_type_from_u16(raw_type));
         auto const count = TRY(read_value<u32>());
 
+        dbgln_if(TIFF_DEBUG, "Reading tag {} of type {} with count {}", tag, raw_type, count);
+
         Checked<u32> checked_size = size_of_type(type);
         checked_size *= count;
 
