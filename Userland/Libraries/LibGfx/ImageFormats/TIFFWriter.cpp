@@ -66,6 +66,11 @@ static TIFF::Type type_for_ifd_entry(IFDEntry const& entry)
         [](auto const&) -> TIFF::Type { TODO(); });
 }
 
+static u32 ifd_entry_value_count(IFDEntry const& entry)
+{
+    return entry.value.size();
+}
+
 static ErrorOr<void> encode_ifd_entry_value_data(Stream& stream, IFDEntry const& entry)
 {
     switch (type_for_ifd_entry(entry)) {
@@ -146,8 +151,8 @@ static ErrorOr<void> encode_ifd(Stream& stream, u32 image_width, u32 image_heigh
         size_of_ifd += 4; // u32 value or offset
 
         auto type = type_for_ifd_entry(entry);
-        if (entry.value.size() * TIFF::size_of_type(type) > 4)
-            size_of_ifd_entry_data_area += entry.value.size() * TIFF::size_of_type(type);
+        if (ifd_entry_value_count(entry) * TIFF::size_of_type(type) > 4)
+            size_of_ifd_entry_data_area += ifd_entry_value_count(entry) * TIFF::size_of_type(type);
     }
     size_of_ifd += 4; // u32 offset to next IFD
 
@@ -165,9 +170,9 @@ static ErrorOr<void> encode_ifd(Stream& stream, u32 image_width, u32 image_heigh
 
         TRY(stream.write_value<LittleEndian<u16>>(to_underlying(entry.tag)));
         TRY(stream.write_value<LittleEndian<u16>>(to_underlying(type)));
-        TRY(stream.write_value<LittleEndian<u32>>(entry.value.size()));
+        TRY(stream.write_value<LittleEndian<u32>>(ifd_entry_value_count(entry)));
 
-        auto data_size = entry.value.size() * TIFF::size_of_type(type);
+        auto data_size = ifd_entry_value_count(entry) * TIFF::size_of_type(type);
         if (data_size <= 4) {
             TRY(encode_ifd_entry_value_data(stream, entry));
             for (u32 i = data_size; i < 4; ++i)
