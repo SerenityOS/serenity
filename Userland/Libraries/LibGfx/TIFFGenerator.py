@@ -537,8 +537,7 @@ def generate_tag_handler_file(tags: List[Tag]) -> str:
         return Error::from_string_literal("Unable to decode image, missing required tag {tag.name}.");
 """ for tag in filter(lambda tag: tag.is_required, known_tags)])
 
-    tiff_type_from_u16_cases = '\n'.join([fR"""    case to_underlying(Type::{t.name}):
-        return Type::{t.name};""" for t in TIFFType])
+    tiff_type_from_u16_cases = '\n'.join([f"    case to_underlying(Type::{t.name}):" for t in TIFFType])
 
     size_of_tiff_type_cases = '\n'.join([fR"""    case Type::{t.name}:
         return {t.size};""" for t in TIFFType])
@@ -586,6 +585,7 @@ static String value_formatter(u32 tag_id, Value const& v) {{
 {{
     switch (type) {{
 {tiff_type_from_u16_cases}
+        return static_cast<Type>(type);
     default:
         return Error::from_string_literal("TIFFImageDecoderPlugin: Unknown type");
     }}
