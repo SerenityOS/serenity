@@ -32,6 +32,7 @@ set(SOURCES
     Hash/SHA1.cpp
     Hash/SHA2.cpp
     NumberTheory/ModularFunctions.cpp
+    Minisign.cpp
     PK/RSA.cpp
 )
 
