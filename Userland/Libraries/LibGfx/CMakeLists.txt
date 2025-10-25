@@ -78,6 +78,7 @@ set(SOURCES
     ImageFormats/QOIWriter.cpp
     ImageFormats/TGALoader.cpp
     ImageFormats/TIFFLoader.cpp
+    ImageFormats/TIFFWriter.cpp
     ImageFormats/TinyVGLoader.cpp
     ImageFormats/WebPLoader.cpp
     ImageFormats/WebPLoaderLossless.cpp
