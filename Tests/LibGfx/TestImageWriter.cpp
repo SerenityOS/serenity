@@ -382,9 +382,7 @@ TEST_CASE(test_qm_arithmetic_encoder_7FFF_handling)
 TEST_CASE(test_tiff)
 {
     TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
-
-    // FIXME: Implement saving alpha channel in TIFFWriter.
-    // TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
 TEST_CASE(test_tiff_icc)
