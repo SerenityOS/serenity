@@ -106,7 +106,7 @@ static ErrorOr<void> encode_ifd_entry_value_data(Stream& stream, IFDEntry const&
     return {};
 }
 
-static ErrorOr<void> encode_ifd(Stream& stream, u32 image_width, u32 image_height, u32 ifd_offset, u32 image_data_size, Optional<ByteBuffer> icc_data)
+static ErrorOr<void> encode_ifd(Stream& stream, u32 image_width, u32 image_height, u32 ifd_offset, u32 image_data_size, bool include_alpha, Optional<ByteBuffer> icc_data)
 {
     // Section 2: TIFF Structure, Image File Directory
     //  "An Image File Directory (IFD) consists of a 2-byte count of the number of direc-
@@ -132,20 +132,28 @@ static ErrorOr<void> encode_ifd(Stream& stream, u32 image_width, u32 image_heigh
     // YResolution                283  11B  RATIONAL
     // ResolutionUnit             296  128  SHORT           1, 2 or 3"
 
-    // FIXME: Also write alpha.
     Vector<IFDEntry> entries;
     entries.append({ TIFF::Tag::ImageWidth, { image_width } });
     entries.append({ TIFF::Tag::ImageLength, { image_height } });
-    entries.append({ TIFF::Tag::BitsPerSample, { 8u, 8u, 8u } });
+    if (include_alpha)
+        entries.append({ TIFF::Tag::BitsPerSample, { 8u, 8u, 8u, 8u } });
+    else
+        entries.append({ TIFF::Tag::BitsPerSample, { 8u, 8u, 8u } });
     entries.append({ TIFF::Tag::Compression, { static_cast<u32>(TIFF::Compression::NoCompression) } });
     entries.append({ TIFF::Tag::PhotometricInterpretation, { static_cast<u32>(TIFF::PhotometricInterpretation::RGB) } });
     entries.append({ TIFF::Tag::StripOffsets, { 0u } });
-    entries.append({ TIFF::Tag::SamplesPerPixel, { 3u } });
+    if (include_alpha)
+        entries.append({ TIFF::Tag::SamplesPerPixel, { 4u } });
+    else
+        entries.append({ TIFF::Tag::SamplesPerPixel, { 3u } });
     entries.append({ TIFF::Tag::RowsPerStrip, { image_height } });
     entries.append({ TIFF::Tag::StripByteCounts, { image_data_size } });
     entries.append({ TIFF::Tag::XResolution, { TIFF::Rational<u32> { 1, 1 } } });
     entries.append({ TIFF::Tag::YResolution, { TIFF::Rational<u32> { 1, 1 } } });
     entries.append({ TIFF::Tag::ResolutionUnit, { static_cast<u32>(TIFF::ResolutionUnit::NoAbsolute) } });
+
+    if (include_alpha)
+        entries.append({ TIFF::Tag::ExtraSamples, { static_cast<u32>(TIFF::ExtraSample::UnassociatedAlpha) } });
 
     if (icc_data.has_value()) {
         // https://www.color.org/technotes/ICC-Technote-ProfileEmbedding.pdf
@@ -210,6 +218,14 @@ static ErrorOr<void> encode_ifd(Stream& stream, u32 image_width, u32 image_heigh
     return {};
 }
 
+static bool is_bitmap_fully_opaque(Bitmap const& bitmap)
+{
+    for (ARGB32 const& pixel : bitmap)
+        if (Color::from_argb(pixel).alpha() != 255)
+            return false;
+    return true;
+}
+
 ErrorOr<void> TIFFWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
 {
     Optional<ByteBuffer> icc_data;
@@ -221,14 +237,18 @@ ErrorOr<void> TIFFWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
     u32 const ifd_offset = tiff_header_size;
     TRY(encode_tiff_header(stream, ifd_offset));
 
-    u32 const image_data_size = bitmap.width() * bitmap.height() * 3;
-    TRY(encode_ifd(stream, bitmap.width(), bitmap.height(), ifd_offset, image_data_size, move(icc_data)));
+    bool const include_alpha = !is_bitmap_fully_opaque(bitmap);
+
+    u32 const image_data_size = bitmap.width() * bitmap.height() * (include_alpha ? 4 : 3);
+    TRY(encode_ifd(stream, bitmap.width(), bitmap.height(), ifd_offset, image_data_size, include_alpha, move(icc_data)));
 
     for (ARGB32 const& pixel : bitmap) {
         auto color = Color::from_argb(pixel);
         TRY(stream.write_value<u8>(color.red()));
         TRY(stream.write_value<u8>(color.green()));
         TRY(stream.write_value<u8>(color.blue()));
+        if (include_alpha)
+            TRY(stream.write_value<u8>(color.alpha()));
     }
     return {};
 }
