@@ -47,6 +47,8 @@ static TIFF::Type type_for_ifd_entry(IFDEntry const& entry)
     VERIFY(!entry.value.is_empty());
 
     return entry.value[0].visit(
+        [](ByteBuffer const&) { return TIFF::Type::Undefined; },
+
         [&](u32) {
             bool fits_in_short = true;
             for (auto const& v : entry.value) {
@@ -68,6 +70,11 @@ static TIFF::Type type_for_ifd_entry(IFDEntry const& entry)
 
 static u32 ifd_entry_value_count(IFDEntry const& entry)
 {
+    VERIFY(!entry.value.is_empty());
+    if (entry.value[0].has<ByteBuffer>()) {
+        VERIFY(entry.value.size() == 1);
+        return entry.value[0].get<ByteBuffer>().size();
+    }
     return entry.value.size();
 }
 
@@ -89,13 +96,17 @@ static ErrorOr<void> encode_ifd_entry_value_data(Stream& stream, IFDEntry const&
             TRY(stream.write_value<LittleEndian<u32>>(rational.denominator));
         }
         break;
+    case TIFF::Type::Undefined:
+        VERIFY(entry.value.size() == 1);
+        TRY(stream.write_until_depleted(entry.value[0].get<ByteBuffer>()));
+        break;
     default:
         VERIFY_NOT_REACHED();
     }
     return {};
 }
 
-static ErrorOr<void> encode_ifd(Stream& stream, u32 image_width, u32 image_height, u32 ifd_offset, u32 image_data_size)
+static ErrorOr<void> encode_ifd(Stream& stream, u32 image_width, u32 image_height, u32 ifd_offset, u32 image_data_size, Optional<ByteBuffer> icc_data)
 {
     // Section 2: TIFF Structure, Image File Directory
     //  "An Image File Directory (IFD) consists of a 2-byte count of the number of direc-
@@ -135,6 +146,13 @@ static ErrorOr<void> encode_ifd(Stream& stream, u32 image_width, u32 image_heigh
     entries.append({ TIFF::Tag::XResolution, { TIFF::Rational<u32> { 1, 1 } } });
     entries.append({ TIFF::Tag::YResolution, { TIFF::Rational<u32> { 1, 1 } } });
     entries.append({ TIFF::Tag::ResolutionUnit, { static_cast<u32>(TIFF::ResolutionUnit::NoAbsolute) } });
+
+    if (icc_data.has_value()) {
+        // https://www.color.org/technotes/ICC-Technote-ProfileEmbedding.pdf
+        // "An ICC profile is embedded, in its entirety, as a single TIFF field or Image File Directory (IFD) entry in
+        // the IFD containing the corresponding image data."
+        entries.append({ TIFF::Tag::ICCProfile, { move(icc_data.value()) } });
+    }
 
     // "The entries in an IFD must be sorted in ascending order by Tag."
     for (size_t i = 1; i < entries.size(); ++i)
@@ -192,13 +210,19 @@ static ErrorOr<void> encode_ifd(Stream& stream, u32 image_width, u32 image_heigh
     return {};
 }
 
-ErrorOr<void> TIFFWriter::encode(Stream& stream, Bitmap const& bitmap, Options const&)
+ErrorOr<void> TIFFWriter::encode(Stream& stream, Bitmap const& bitmap, Options const& options)
 {
+    Optional<ByteBuffer> icc_data;
+    if (options.icc_data.has_value()) {
+        // FIXME: TIFF::Value currently only supports owning ByteBuffers. Needing to copy here is a bit unfortunate.
+        icc_data = TRY(ByteBuffer::copy(options.icc_data.value()));
+    }
+
     u32 const ifd_offset = tiff_header_size;
     TRY(encode_tiff_header(stream, ifd_offset));
 
     u32 const image_data_size = bitmap.width() * bitmap.height() * 3;
-    TRY(encode_ifd(stream, bitmap.width(), bitmap.height(), ifd_offset, image_data_size));
+    TRY(encode_ifd(stream, bitmap.width(), bitmap.height(), ifd_offset, image_data_size, move(icc_data)));
 
     for (ARGB32 const& pixel : bitmap) {
         auto color = Color::from_argb(pixel);
