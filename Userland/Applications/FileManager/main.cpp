@@ -67,7 +67,7 @@ static void do_create_archive(Vector<ByteString> const& selected_file_paths, GUI
 static void do_set_wallpaper(ByteString const& file_path, GUI::Window* window);
 static void do_unzip_archive(Vector<ByteString> const& selected_file_paths, GUI::Window* window);
 static void show_properties(ByteString const& container_dir_path, ByteString const& path, Vector<ByteString> const& selected, GUI::Window* window);
-static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, ByteString const& full_path, RefPtr<GUI::Action>& default_action, Vector<NonnullRefPtr<LauncherHandler>>& current_file_launch_handlers);
+static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, ByteString const& full_path, RefPtr<GUI::Action>& default_action);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -338,9 +338,9 @@ void show_properties(ByteString const& container_dir_path, ByteString const& pat
     properties->show();
 }
 
-bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, ByteString const& full_path, RefPtr<GUI::Action>& default_action, Vector<NonnullRefPtr<LauncherHandler>>& current_file_launch_handlers)
+bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, ByteString const& full_path, RefPtr<GUI::Action>& default_action)
 {
-    current_file_launch_handlers = directory_view.get_launch_handlers(full_path);
+    auto current_file_launch_handlers = directory_view.get_launch_handlers(full_path);
 
     bool added_open_menu_items = false;
     auto default_file_handler = directory_view.get_default_launch_handler(current_file_launch_handlers);
@@ -533,7 +533,6 @@ ErrorOr<int> run_in_desktop_mode()
     desktop_context_menu->add_action(properties_action);
 
     RefPtr<GUI::Menu> file_context_menu;
-    Vector<NonnullRefPtr<LauncherHandler>> current_file_handlers;
     RefPtr<GUI::Action> file_context_menu_action_default_action;
 
     directory_view->on_context_menu_request = [&](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
@@ -544,7 +543,7 @@ ErrorOr<int> run_in_desktop_mode()
             } else {
                 file_context_menu = GUI::Menu::construct("Directory View File"_string);
 
-                bool added_open_menu_items = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
+                bool added_open_menu_items = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action);
                 if (added_open_menu_items)
                     file_context_menu->add_separator();
 
@@ -1185,7 +1184,6 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     tree_view_directory_context_menu->add_action(properties_action);
 
     RefPtr<GUI::Menu> file_context_menu;
-    Vector<NonnullRefPtr<LauncherHandler>> current_file_handlers;
     RefPtr<GUI::Action> file_context_menu_action_default_action;
 
     directory_view->on_context_menu_request = [&](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
@@ -1199,7 +1197,7 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
             } else {
                 file_context_menu = GUI::Menu::construct("Directory View File"_string);
 
-                bool added_launch_file_handlers = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
+                bool added_launch_file_handlers = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action);
                 if (added_launch_file_handlers)
                     file_context_menu->add_separator();
 
