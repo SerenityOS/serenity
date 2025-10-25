@@ -198,29 +198,22 @@ def export_enum_to_cpp(e: Type[EnumWithExportName]) -> str:
 def export_enum_to_string_converter(enums: List[Type[EnumWithExportName]]) -> str:
     stringifier_internals = []
     for e in enums:
-        single_stringifier = fR"""    if constexpr (IsSame<E, {e.export_name()}>) {{
-        switch (value) {{
-            default:
-                return "Invalid value for {e.export_name()}"sv;"""
+        single_stringifier = fR"""constexpr StringView name_for_enum_tag_value({e.export_name()} value)
+{{
+    switch (value) {{
+    default:
+        return "Invalid value for {e.export_name()}"sv;"""
         for entry in e:
             single_stringifier += fR"""
-            case {e.export_name()}::{entry.name}:
-                return "{entry.name}"sv;"""
+    case {e.export_name()}::{entry.name}:
+        return "{entry.name}"sv;"""
 
         single_stringifier += R"""
-        }
-    }"""
+    }
+}"""
         stringifier_internals.append(single_stringifier)
 
-    stringifier_internals_str = '\n'.join(stringifier_internals)
-
-    out = fR"""template<Enum E>
-StringView name_for_enum_tag_value(E value) {{
-{stringifier_internals_str}
-    VERIFY_NOT_REACHED();
-}}"""
-
-    return out
+    return '\n\n'.join(stringifier_internals)
 
 
 def export_tag_related_enums(tags: List[Tag]) -> str:
