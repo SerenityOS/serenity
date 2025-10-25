@@ -21,7 +21,7 @@ This program passes contents of specified `files` to standard output, in the spe
 ```sh
 # Display a single file
 $ cat README.md
-# SerenityOS
+# SilkOS
 
 Graphical Unix-like operating system for x86 computers.
 ...

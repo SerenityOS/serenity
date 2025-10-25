@@ -16,7 +16,7 @@ kind of file. For non-file URLs, open the URL in the Browser.
 ## Examples
 
 ```sh
-$ open https://serenityos.org https://example.org
+$ open https://silk-project.github.io https://example.org
 $ open /proc
 $ open /etc/fstab
 ```

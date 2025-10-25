@@ -32,7 +32,7 @@ With no `file`, or when `file` is `-`, read standard input.
 # Print the first four lines from README.md and precede it with a filename header
 $ head -v -n 4 README.md
 ==> README.md <==
-# SerenityOS
+# SilkOS
 
 Graphical Unix-like operating system for x86 computers.
 

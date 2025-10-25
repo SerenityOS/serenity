@@ -1,14 +1,14 @@
 ## Name
 
-man - SerenityOS manual system
+man - SilkOS manual system
 
 ## Description
 
-The SerenityOS manual pages, or "man pages", document various parts of the operating system for users and developers. They are one of the two parts of the SerenityOS documentation.
+The SilkOS manual pages, or "man pages", document various parts of the operating system for users and developers. They are one of the two parts of the SilkOS documentation.
 
-The other part of the SerenityOS documentation is the developer documentation, which can be found in the `Documentation` folder in the repository ([online link](https://github.com/SerenityOS/serenity/tree/master/Documentation)). The developer documentation is focused on setting up a SerenityOS installation and workflow, as well as contributing to its development.
+The other part of the SilkOS documentation is the developer documentation, which can be found in the `Documentation` folder in the repository ([online link](https://github.com/CommandCrafterx/SilkOS/tree/master/Documentation)). The developer documentation is focused on setting up a SilkOS installation and workflow, as well as contributing to its development.
 
-Note that documentation might cover standardized topics (such as standard POSIX C library functions) or SerenityOS-specific extensions (such as custom file formats). SerenityOS intends to be spec-complaint with industry standard specifications. Non-compliance with a particular specification should be documented in the relevant sections.
+Note that documentation might cover standardized topics (such as standard POSIX C library functions) or SilkOS-specific extensions (such as custom file formats). SilkOS intends to be spec-complaint with industry standard specifications. Non-compliance with a particular specification should be documented in the relevant sections.
 
 ### Programs
 
@@ -20,18 +20,18 @@ There are three ways of accessing the manual pages:
 
 ### Organization
 
-Each SerenityOS manual page is a Markdown (.md) file under [`/usr/share/man`](/usr/share/man). The [main sections](#sections) live in the subdirectories `man1` through `man8`. Subsections are found within these directories.
+Each SilkOS manual page is a Markdown (.md) file under [`/usr/share/man`](/usr/share/man). The [main sections](#sections) live in the subdirectories `man1` through `man8`. Subsections are found within these directories.
 
 #### Sections
 
-The SerenityOS manual is split into the following _sections_, or _chapters_:
+The SilkOS manual is split into the following _sections_, or _chapters_:
 
 1. User Programs - manuals for regular user applications and utilities
-2. System Calls - SerenityOS system call interface documentation
-3. Library Functions - SerenityOS C library function documentation
-4. Special Files - documentation for pseudo-files of the SerenityOS virtual file system
-5. File Formats - documentation for SerenityOS-specific file formats
-6. Games - manuals for SerenityOS games
+2. System Calls - SilkOS system call interface documentation
+3. Library Functions - SilkOS C library function documentation
+4. Special Files - documentation for pseudo-files of the SilkOS virtual file system
+5. File Formats - documentation for SilkOS-specific file formats
+6. Games - manuals for SilkOS games
 7. Miscellanea - various documentation that fits in no other category
 8. Sysadmin Tools - manuals for services and utilities intended for system administration
 

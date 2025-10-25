@@ -6,7 +6,7 @@ Keyboard Shortcuts
 
 ## Description
 
-This is a collection of common keyboard shortcuts in SerenityOS.
+This is a collection of common keyboard shortcuts in SilkOS.
 
 ### Keywords
 

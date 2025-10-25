@@ -111,11 +111,11 @@ Properties are never ended with `;` or `,`, and the property key is never enclos
 
 ## See also
 
--   The SerenityOS source code is the best source of further information on GML. The GML parser and AST builder can be found in the `GML` subdirectory in the `LibGUI` library. The `AK` JSON parsers and data structures are used for all JSON values.
+-   The SilkOS source code is the best source of further information on GML. The GML parser and AST builder can be found in the `GML` subdirectory in the `LibGUI` library. The `AK` JSON parsers and data structures are used for all JSON values.
 
 ## Examples
 
-GML files can be found in the SerenityOS source tree with the `*.gml` extension.
+GML files can be found in the SilkOS source tree with the `*.gml` extension.
 
 ```gml
 @GUI::Widget {

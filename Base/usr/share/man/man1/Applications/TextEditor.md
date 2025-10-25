@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-text-editor.png) TextEditor - SerenityOS text editor
+![Icon](/res/icons/16x16/app-text-editor.png) TextEditor - SilkOS text editor
 
 [Open](launch:///bin/TextEditor)
 
@@ -12,7 +12,7 @@ $ TextEditor [--preview-mode mode] [file[:line[:column]]]
 
 ## Description
 
-TextEditor is a text document editor for SerenityOS featuring a preview mode
+TextEditor is a text document editor for SilkOS featuring a preview mode
 which allows automatic live rendering of HTML and Markdown documents.
 
 ## Options

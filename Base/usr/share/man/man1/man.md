@@ -12,7 +12,7 @@ $ man section page
 ## Description
 
 `man` finds, loads and displays the so-called manual pages,
-or man pages for short, from the SerenityOS manual. You're reading
+or man pages for short, from the SilkOS manual. You're reading
 the manual page for `man` program itself right now.
 
 ## Options

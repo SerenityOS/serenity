@@ -10,9 +10,9 @@ $ pkg [-l] [-u] [-v] [-q package]
 
 ## Description
 
-This program can list installed packages and query for [available packages](https://github.com/SerenityOS/serenity/blob/master/Ports/AvailablePorts.md). The [Ports for SerenityOS website](https://ports.serenityos.net) has more detailed information about available packages.
+This program can list installed packages and query for [available packages](https://github.com/CommandCrafterx/SilkOS/blob/master/Ports/AvailablePorts.md). The [Ports for SerenityOS website](https://ports.serenityos.net) has more detailed information about available packages.
 
-It does not currently support installing and uninstalling packages. To install third-party software use the [Ports system](https://github.com/SerenityOS/serenity/blob/master/Ports/README.md).
+It does not currently support installing and uninstalling packages. To install third-party software use the [Ports system](https://github.com/CommandCrafterx/SilkOS/blob/master/Ports/README.md).
 
 ## Options
 

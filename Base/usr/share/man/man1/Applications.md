@@ -1,16 +1,16 @@
 ## Name
 
-Applications - SerenityOS GUI applications
+Applications - SilkOS GUI applications
 
 ## Description
 
-SerenityOS comes with a suite of GUI applications. The applications are divided into multiple categories, through which they are available in the System Menu.
+SilkOS comes with a suite of GUI applications. The applications are divided into multiple categories, through which they are available in the System Menu.
 
-Note that many applications can be disabled at SerenityOS build time if desired. Therefore, depending on your SerenityOS build configuration, not all applications will be available.
+Note that many applications can be disabled at SilkOS build time if desired. Therefore, depending on your SilkOS build configuration, not all applications will be available.
 
 ## See also
 
--   Documentation for SerenityOS Games in section 6
+-   Documentation for SilkOS Games in section 6
 
 ### List of Application manpages
 

@@ -12,7 +12,7 @@ $ FontEditor [file]
 
 ## Description
 
-FontEditor is the font editing application for creating and editing bitmap font files in SerenityOS.
+FontEditor is the font editing application for creating and editing bitmap font files in SilkOS.
 
 ![](FontEditor.png)
 
@@ -81,7 +81,7 @@ Congratulations on your successful initial font setup. Now you are ready to begi
 
 ![](FontEditor_Launching_second_instance.png)
 
-The figure above shows where you can find FontEditor from inside the SerenityOS desktop.
+The figure above shows where you can find FontEditor from inside the SilkOS desktop.
 
 ### Side by side
 

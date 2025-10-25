@@ -64,7 +64,7 @@ The following types with their own special properties exist:
     -   `font`: (string) Font of the text, must be system-wide accessible.
     -   `text-alignment`: (string enum, see GML) Alignment of the text within the bounding box.
 -   `image`: An external image. The additional properties are:
-    -   `path`: (string) Path to the image file. This path may be relative, then it is relative to the presenter file. The image format may be any of the image formats supported by SerenityOS.
+    -   `path`: (string) Path to the image file. This path may be relative, then it is relative to the presenter file. The image format may be any of the image formats supported by SilkOS.
     -   `scaling`: (string enum, optional) Controls how the image is scaled:
         -   `fit-smallest`: (default) Fit the image into the bounding box, preserving its aspect ratio.
         -   `stretch`: Match the bounding box in width and height exactly; this will change the image's aspect ratio if the aspect ratio of the bounding box is not exactly the same.

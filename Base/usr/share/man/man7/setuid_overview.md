@@ -14,7 +14,7 @@ The motivation behind SUID binaries is that they allow users to do tasks that wo
 
 For example, `/bin/ping` has the Set User ID bit set and is owned by user root in group root. So if any process executes `/bin/ping`, it will run as root, which means it will be able to send network packets, even if the current process doesn't normally have network access.
 
-For another example, many other Unix systems contain a utility `passwd` that changes the password of the current user. To store the password, it has to write to `/etc/shadow` -- but the current user is not supposed to have write access to `/etc/shadow` so that they cannot change passwords of other users. The solution is to make `passwd` a SUID binary. (SerenityOS currently doesn't have support for user passwords.)
+For another example, many other Unix systems contain a utility `passwd` that changes the password of the current user. To store the password, it has to write to `/etc/shadow` -- but the current user is not supposed to have write access to `/etc/shadow` so that they cannot change passwords of other users. The solution is to make `passwd` a SUID binary. (SilkOS currently doesn't have support for user passwords.)
 
 SUID binaries mean that the effective user ID of a process and the real user ID of a process can be different. When a SUID binary is executed, it assumes the owner of the binary as effective user ID, and the user ID of the parent process that executed it as real user ID. The effective user ID is used for permission checks.
 
@@ -54,7 +54,7 @@ if (setresuid(new_uid, new_uid, new_uid) < 0)
   return OH_NO;
 ```
 
-(On SerenityOS, this is usually the same as calling `setuid(new_uid)`, but easier to reason about.)
+(On SilkOS, this is usually the same as calling `setuid(new_uid)`, but easier to reason about.)
 
 Changing group IDs is analogous. Since changing the user ID changes the permissions of a process, group privileges should be dropped before user privileges are dropped, and if they're dropped temporarily, user privileges should be restored before group privileges are restored.
 

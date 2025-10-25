@@ -4,7 +4,7 @@ IPC - Inter-Process Communication endpoint definition format (.ipc)
 
 ## Synopsis
 
-The IPC format of SerenityOS is a domain-specific language (DSL) used to define communication endpoints for IPC.
+The IPC format of SilkOS is a domain-specific language (DSL) used to define communication endpoints for IPC.
 
 ## Description
 

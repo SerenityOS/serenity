@@ -1,6 +1,6 @@
 ## Name
 
-proc - SerenityOS ProcFS
+proc - SilkOS ProcFS
 
 ## Description
 

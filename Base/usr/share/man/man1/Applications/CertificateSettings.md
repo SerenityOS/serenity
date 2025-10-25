@@ -12,7 +12,7 @@ $ CertificateSettings
 
 ## Description
 
-`Certificate Settings` is an application for managing digital certificates in SerenityOS.
+`Certificate Settings` is an application for managing digital certificates in SilkOS.
 
 Certificates are used for establishing a user's credentials when trying to create secure connection between a client and server by matching a public and private key.
 

@@ -1,8 +1,8 @@
 ![Help Icon](/res/icons/32x32/app-help.png)
 
-## Welcome to the SerenityOS on-line help system!
+## Welcome to the SilkOS on-line help system!
 
-This is **Help**, the built-in documentation viewer for the SerenityOS desktop environment. If you prefer a command-line interface, the [`man`(1)](help://man/1/man) command offers a text-only view of the same library.
+This is **Help**, the built-in documentation viewer for the SilkOS desktop environment. If you prefer a command-line interface, the [`man`(1)](help://man/1/man) command offers a text-only view of the same library.
 
 ---
 

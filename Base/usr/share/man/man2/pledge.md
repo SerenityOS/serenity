@@ -58,7 +58,7 @@ If the process later attempts to use any system functionality it has previously 
 -   `unshare`: Various unshare-specific syscalls (\*)
 -   `no_error`: Ignore requests of pledge elevation going forwards, this is useful for enforcing _execpromises_ while the child process wants to ask for more upfront (Note that the elevation requests are _not_ granted, merely ignored), this is similar to the `error` pledge in OpenBSD.
 
-Promises marked with an asterisk (\*) are SerenityOS specific extensions not supported by the original OpenBSD `pledge()`.
+Promises marked with an asterisk (\*) are SilkOS specific extensions not supported by the original OpenBSD `pledge()`.
 
 ## Errors
 
@@ -69,7 +69,7 @@ Promises marked with an asterisk (\*) are SerenityOS specific extensions not sup
 
 ## History
 
-The `pledge()` system call was first introduced by OpenBSD. The implementation in SerenityOS differs in many ways and is by no means final.
+The `pledge()` system call was first introduced by OpenBSD. The implementation in SilkOS differs in many ways and is by no means final.
 
 ## See also
 

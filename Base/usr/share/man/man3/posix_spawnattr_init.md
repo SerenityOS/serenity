@@ -54,7 +54,7 @@ It is valid to alternatingly call `posix_spawnattr_init()` and `posix_spawnattr_
 
 -   `POSIX_SPAWN_SETSCHEDPARAM`: If set, `posix_spawn()` will set the scheduler parameter of the child process to the process group ID configured with `posix_spawnattr_setschedparam()`, as if `sched_setparam(0, schedparam)` was called in the child process.
 
--   `POSIX_SPAWN_SETSCHEDULER`: This is not yet implemented in SerenityOS.
+-   `POSIX_SPAWN_SETSCHEDULER`: This is not yet implemented in SilkOS.
 
 -   `POSIX_SPAWN_SETSIGDEF`: If set, `posix_spawn()` will reset the signal handlers of the child process configured with `posix_spawnattr_setsigdefault()` to each signal's default handler.
 
@@ -66,7 +66,7 @@ The `posix_spawnattr_get*` functions return what's been set with the correspondi
 
 ## Return value
 
-In SerenityOS, these functions always succeed and return 0.
+In SilkOS, these functions always succeed and return 0.
 
 The one exception is `posix_spawnattr_setflags()`, which can return -1 and set `errno` to `EINVAL` if an unknown bit is set in the passed bitmask.
 

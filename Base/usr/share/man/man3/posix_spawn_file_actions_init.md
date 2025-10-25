@@ -41,7 +41,7 @@ It is valid to alternatingly call `posix_spawn_file_actions_init()` and `posix_s
 
 ## Return value
 
-In SerenityOS, these functions always succeed and return 0.
+In SilkOS, these functions always succeed and return 0.
 
 If the effect of a file action fails, the child will exit with exit code 127 before even executing the child binary.
 

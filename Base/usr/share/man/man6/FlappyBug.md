@@ -12,7 +12,7 @@ $ FlappyBug
 
 ## Description
 
-`Flappy Bug` is a SerenityOS themed version of the 2013 game [Flappy Bird](https://en.wikipedia.org/wiki/Flappy_Bird).
+`Flappy Bug` is a SilkOS themed version of the 2013 game [Flappy Bird](https://en.wikipedia.org/wiki/Flappy_Bird).
 
 The goal is to keep Flappy Bug alive as long as possible by avoiding obstacles. Flappy Bug will automatically descend due to gravity and will ascend when you press any key.
 

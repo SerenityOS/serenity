@@ -1,6 +1,6 @@
 ## Name
 
-sys - SerenityOS SysFS
+sys - SilkOS SysFS
 
 ## Description
 

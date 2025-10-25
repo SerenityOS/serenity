@@ -1,16 +1,16 @@
 ## Name
 
-Overview of the SerenityOS audio subsystem, including a brief description of [`/dev/audio`](help://man/4/audio), the AudioServer and their interfaces.
+Overview of the SilkOS audio subsystem, including a brief description of [`/dev/audio`](help://man/4/audio), the AudioServer and their interfaces.
 
 ## Description
 
 (Note that familiarity with the basics of digitized audio, pulse code modulation (PCM), sample rate and bit depth is assumed.)
 
-SerenityOS structures audio into three groups of responsibilities: The Kernel audio subsystem, including drivers that talk to hardware and expose (among others) the `/dev/audio` devices; the AudioServer that is responsible for talking to userland audio clients, mixing and processing audio, and controlling the hardware via the Kernel interfaces; the audio libraries LibAudio and LibDSP that facilitate easier handling of audio data for userland applications.
+SilkOS structures audio into three groups of responsibilities: The Kernel audio subsystem, including drivers that talk to hardware and expose (among others) the `/dev/audio` devices; the AudioServer that is responsible for talking to userland audio clients, mixing and processing audio, and controlling the hardware via the Kernel interfaces; the audio libraries LibAudio and LibDSP that facilitate easier handling of audio data for userland applications.
 
 ### Sample formats
 
-There are two primary sample formats used in SerenityOS. The `Sample` class in LibAudio provides the userland sample format. It contains 32-bit floating-point samples in multiple channels (currently 2; Stereo), which accurately represent mathematical audio signals between -1 and 1. The kernel audio interfaces use other audio formats described in [audio(4)](help://man/4/audio) which userland need not worry about.
+There are two primary sample formats used in SilkOS. The `Sample` class in LibAudio provides the userland sample format. It contains 32-bit floating-point samples in multiple channels (currently 2; Stereo), which accurately represent mathematical audio signals between -1 and 1. The kernel audio interfaces use other audio formats described in [audio(4)](help://man/4/audio) which userland need not worry about.
 
 ### AudioServer
 
@@ -70,13 +70,13 @@ This is a non-exhaustive list of applications that use audio. Most of these foll
 
 Audio volume is more complicated than just multiplying a (digital or analog) audio signal with a percentage volume value. As the human hearing is logarithmic, volume changes also need to be logarithmic. An excellent article on the topic can be found [here](https://www.dr-lex.be/info-stuff/volumecontrols.html).
 
-For the SerenityOS audio system, the following applies: Userland applications and libraries that do their own volume changes need to be aware of the nature of volume. LibAudio provides utility functions for correctly handling volume, so these are to be used whenever applicable. For AudioServer, main and per-client volume is already handled correctly; to the outside, volume is linear between 0 and 1.
+For the SilkOS audio system, the following applies: Userland applications and libraries that do their own volume changes need to be aware of the nature of volume. LibAudio provides utility functions for correctly handling volume, so these are to be used whenever applicable. For AudioServer, main and per-client volume is already handled correctly; to the outside, volume is linear between 0 and 1.
 
 For example: A program may set its client volume to 0.5 and the audio will be perceived as half as loud by a human. However, if the program wishes to change the volume beforehand, it needs to use logarithmic scaling, for example with LibAudio's built-in functionality.
 
 ### Sample rate
 
-SerenityOS's audio system uses a variety of sample rates in different layers of the audio stack. For a client, one sample rate is relevant: The client's own sample rate. Audio samples passed to AudioServer are interpreted at the client sample rate, which may be changed at any time via a dedicated IPC API. The default sample rate is the current hardware sample rate, but clients are recommended to change the sample rate to whatever's most convenient for them, since this reduces the amount of resampling to be performed and therefore increases the audio quality. AudioServer uses independent hardware sample rates for audio devices, which may be configured via the management interface.
+SilkOS's audio system uses a variety of sample rates in different layers of the audio stack. For a client, one sample rate is relevant: The client's own sample rate. Audio samples passed to AudioServer are interpreted at the client sample rate, which may be changed at any time via a dedicated IPC API. The default sample rate is the current hardware sample rate, but clients are recommended to change the sample rate to whatever's most convenient for them, since this reduces the amount of resampling to be performed and therefore increases the audio quality. AudioServer uses independent hardware sample rates for audio devices, which may be configured via the management interface.
 
 ## Files
 

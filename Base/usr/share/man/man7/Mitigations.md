@@ -1,10 +1,10 @@
 ## Name
 
-Mitigations - Security mitigations implemented by SerenityOS
+Mitigations - Security mitigations implemented by SilkOS
 
 ## Description
 
-The SerenityOS developers have put substantial effort into
+The SilkOS developers have put substantial effort into
 integrating various mitigation technologies into the system
 in order to enhance its security. The goal of this document is
 to collect and describe the mitigations in one centralized place.
@@ -16,7 +16,7 @@ to collect and describe the mitigations in one centralized place.
 [Supervisor Mode Execution Protection](https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/best-practices/related-intel-security-features-technologies.html) is an Intel CPU feature which prevents execution
 of userspace code with kernel privileges.
 
-It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/8602fa5b49aa4e2b039764a14698f0baa3ad0532):
+It was enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/8602fa5b49aa4e2b039764a14698f0baa3ad0532):
 
 ```
 commit 8602fa5b49aa4e2b039764a14698f0baa3ad0532
@@ -32,7 +32,7 @@ Kernel: Enable x86 SMEP (Supervisor Mode Execution Protection)
 complements SMEP by also guarding read/write access to
 userspace memory while executing in kernel mode.
 
-It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/9eef39d68a99c5e29099ae4eb4a56934b35eecde):
+It was enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/9eef39d68a99c5e29099ae4eb4a56934b35eecde):
 
 ```
 commit 9eef39d68a99c5e29099ae4eb4a56934b35eecde
@@ -49,7 +49,7 @@ instructions in user mode (SGDT, SIDT, SLDT, SMSW, STR).
 These instructions let user mode code query the addresses of various kernel structures (the GDT, LDT, IDT, etc),
 meaning that they leak kernel addresses that can be exploited to defeat ASLR.
 
-It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/9c0836ce97ae36165abd8eb5241bb5239af3a756):
+It was enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/9c0836ce97ae36165abd8eb5241bb5239af3a756):
 
 ```
 commit 9c0836ce97ae36165abd8eb5241bb5239af3a756
@@ -65,7 +65,7 @@ Kernel: Enable x86 UMIP (User Mode Instruction Prevention) if supported
 It allows a program to voluntarily restrict its access to system calls
 and kernel facilities.
 
-It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/41c504a33becea8aa9b437cd3c0dc312b2bf1fe9),
+It was first added in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/41c504a33becea8aa9b437cd3c0dc312b2bf1fe9),
 and the majority of programs were enlightened later:
 
 ```
@@ -81,7 +81,7 @@ Kernel: Add pledge() syscall :^)
 [unveil](https://lwn.net/Articles/767137/) is a mitigation originating from OpenBSD.
 It allows a program to voluntarily restrict its access to the filesystem.
 
-It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/0569123ad7cb9c54df724c2bb85933ea3cf97134),
+It was first added in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/0569123ad7cb9c54df724c2bb85933ea3cf97134),
 and the majority of programs were enlightened later:
 
 ```
@@ -111,7 +111,7 @@ Special restrictions on filesystem also apply:
     other TTY/PTY devices (not including Kernel virtual consoles).
 -   Executing SUID binaries is forbidden.
 
-It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/5e062414c11df31ed595c363990005eef00fa263),
+It was first added in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/5e062414c11df31ed595c363990005eef00fa263),
 for kernel support, and the following commits added basic userspace utilities:
 
 ```
@@ -129,8 +129,8 @@ Kernel: Add support for jails
 [Readonly atexit](https://isopenbsdsecu.re/mitigations/atexit_hardening/) is a mitigation originating from OpenBSD.
 Thanks to it, an attacker can no longer use the atexit region to escalate from arbitrary-write to code-execution.
 
-It was first added in the following [commit](https://github.com/SerenityOS/serenity/commit/553361d83f7bc6499dc4821eff9b23a6549bd99c),
-and was later [improved](https://github.com/SerenityOS/serenity/commit/fb003d71c2becf0b3ea148aad08642e5a7ea35bc)
+It was first added in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/553361d83f7bc6499dc4821eff9b23a6549bd99c),
+and was later [improved](https://github.com/CommandCrafterx/SilkOS/commit/fb003d71c2becf0b3ea148aad08642e5a7ea35bc)
 to incur no additional cost during program initialization and finalization:
 
 ```
@@ -158,7 +158,7 @@ on boot, which makes finding syscall stubs in libc difficult
 for attackers. On serenity it is mostly just an inconvenience,
 as there currently is no libc random-relinking.
 
-It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/823186031d9250217f9a51829d34a96b74113334):
+It was first enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/823186031d9250217f9a51829d34a96b74113334):
 
 ```
 commit 823186031d9250217f9a51829d34a96b74113334
@@ -176,7 +176,7 @@ In short the annotation of a particular Kernel Region as immutable implies that
 that these virtual memory mappings are locked to their last state (in regard to protection bits, etc),
 and they cannot be unmapped by a process until that process gets finalized.
 
-It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/8585b2dc23ec206777a4cfbd558766d90fc577e7):
+It was first enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/8585b2dc23ec206777a4cfbd558766d90fc577e7):
 
 ```
 commit 8585b2dc23ec206777a4cfbd558766d90fc577e7
@@ -207,7 +207,7 @@ It tracks data that is initialized during kernel boot and never
 changed again. Post kernel initialization, the memory is marked
 read-only to protect it from potentially being modified by exploits.
 
-It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/d8013c60bb52756788e747183572067d6e3f204a)
+It was first enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/d8013c60bb52756788e747183572067d6e3f204a)
 and other kernel data structures were enlightened later:
 
 ```
@@ -225,7 +225,7 @@ which instruments generated code to flag undefined behavior at runtime.
 It can find various issues, including integer overflows, out-of-bounds array
 accesses, type corruption, and more.
 
-It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/d44be968938ecf95023351a358c43c4957638d87):
+It was first enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/d44be968938ecf95023351a358c43c4957638d87):
 
 ```
 commit d44be968938ecf95023351a358c43c4957638d87
@@ -247,7 +247,7 @@ like write protection, etc.
 With this mitigation it is now more difficult to craft a kernel exploit to do something
 like disabling SMEP / SMAP.
 
-It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/6136faa4ebf6a878606f33bc03c5e62de9d5e662):
+It was first enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/6136faa4ebf6a878606f33bc03c5e62de9d5e662):
 
 ```
 commit 6136faa4ebf6a878606f33bc03c5e62de9d5e662
@@ -268,7 +268,7 @@ to make that memory read-only before passing control to the main executable.
 
 This prevents attackers from overwriting the [Global Offset Table (GOT)](https://en.wikipedia.org/wiki/Global_Offset_Table).
 
-It was first enabled for executables in the following [commit](https://github.com/SerenityOS/serenity/commit/fa4c249425a65076ca04a3cb0c173d49472796fb):
+It was first enabled for executables in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/fa4c249425a65076ca04a3cb0c173d49472796fb):
 
 ```
 commit fa4c249425a65076ca04a3cb0c173d49472796fb
@@ -278,7 +278,7 @@ Date:   Thu Feb 18 18:43:20 2021 +0100
 LibELF+Userland: Enable RELRO for all userland executables :^)
 ```
 
-Shared libraries were enabled in a follow-up [commit](https://github.com/SerenityOS/serenity/commit/713b3b36be4f659e58e253b6c830509898dbd2fa):
+Shared libraries were enabled in a follow-up [commit](https://github.com/CommandCrafterx/SilkOS/commit/713b3b36be4f659e58e253b6c830509898dbd2fa):
 
 ```
 commit 713b3b36be4f659e58e253b6c830509898dbd2fa
@@ -295,7 +295,7 @@ is a mitigation which helps prevent [stack clash](https://blog.qualys.com/vulner
 style attacks by generating code that probes the stack in page-sized increments to ensure a fault is provoked.
 This prevents attackers from using a large stack allocation to "jump over" the stack guard page into adjacent memory.
 
-It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/7142562310e631156d1f64aff22f068ae2c48a5e):
+It was first enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/7142562310e631156d1f64aff22f068ae2c48a5e):
 
 ```
 commit 7142562310e631156d1f64aff22f068ae2c48a5e
@@ -315,7 +315,7 @@ The compiler implements the mitigation by storing a canary value randomized on p
 functions. Code is then generated to validate that stack canary on function return and crash if the value has been changed
 (and hence a stack corruption has been detected.)
 
-`-fstack-protector` was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/842716a0b5eceb8db31416cd643720c1037032b2):
+`-fstack-protector` was first enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/842716a0b5eceb8db31416cd643720c1037032b2):
 
 ```
 commit 842716a0b5eceb8db31416cd643720c1037032b2
@@ -355,7 +355,7 @@ in memory which is always remapped as read-only after it's initialized
 or updated. This means that an attacker needs more than an arbitrary
 kernel write primitive to be able to elevate a process to root for example.
 
-It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/cbcf891040e9921ff628fdda668c9738f358a178):
+It was first enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/cbcf891040e9921ff628fdda668c9738f358a178):
 
 ```
 commit cbcf891040e9921ff628fdda668c9738f358a178
@@ -373,7 +373,7 @@ goal being to reduce the possible attack surface by disarming ROP
 gadgets that might be potentially useful to attackers, and reducing
 the risk of information leaks via stale register data.
 
-It was first enabled when compiling the Kernel in the following [commit](https://github.com/SerenityOS/serenity/commit/204d5ff8f86547a8b100cf26a958aaabf49211f2):
+It was first enabled when compiling the Kernel in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/204d5ff8f86547a8b100cf26a958aaabf49211f2):
 
 ```
 commit 204d5ff8f86547a8b100cf26a958aaabf49211f2
@@ -388,7 +388,7 @@ Kernel: Reduce useful ROP gadgets by zeroing used function registers
 The linker is passed the `separate-code` option, so it won't combine read-only data
 and executable code. This reduces the total amount of executable pages in the system.
 
-It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/fac0bbe739154abb416526bdc983487c05ba0c81):
+It was first enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/fac0bbe739154abb416526bdc983487c05ba0c81):
 
 ```
 commit fac0bbe739154abb416526bdc983487c05ba0c81
@@ -404,7 +404,7 @@ The location of the kernel code is randomized at boot time, this ensures that at
 can not use a hardcoded kernel addresses when attempting ROP, instead they must first find
 an additional information leak to expose the KASLR offset.
 
-It was first enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/1ad0e05ea1d3491e4724669d6f00f5668d8e0aa1):
+It was first enabled in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/1ad0e05ea1d3491e4724669d6f00f5668d8e0aa1):
 
 ```
 commit 1ad0e05ea1d3491e4724669d6f00f5668d8e0aa1
@@ -422,7 +422,7 @@ all variables to a pattern based on it's type. The goal being here is to
 eradicate an entire bug class of issues that can originate from uninitialized
 variables.
 
-It was first enabled for the SerenityOS Kernel in the following [commit](https://github.com/SerenityOS/serenity/commit/458244c0c1c8f077030fa0d8964fad8d75c60d4a):
+It was first enabled for the SilkOS Kernel in the following [commit](https://github.com/CommandCrafterx/SilkOS/commit/458244c0c1c8f077030fa0d8964fad8d75c60d4a):
 
 ```
 From 458244c0c1c8f077030fa0d8964fad8d75c60d4a Mon Sep 17 00:00:00 2001

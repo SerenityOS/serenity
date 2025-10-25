@@ -6,7 +6,7 @@ Tips and Tricks
 
 ## Description
 
-This is a list of useful tips and tricks to help you make the most out of SerenityOS.
+This is a list of useful tips and tricks to help you make the most out of SilkOS.
 
 ## General
 

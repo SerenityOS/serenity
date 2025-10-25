@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/app-image-viewer.png) Image Viewer - SerenityOS image viewer
+![Icon](/res/icons/16x16/app-image-viewer.png) Image Viewer - SilkOS image viewer
 
 [Open](launch:///bin/ImageViewer)
 
@@ -12,7 +12,7 @@ $ ImageViewer [file]
 
 ## Description
 
-ImageViewer is an image viewing application for SerenityOS.
+ImageViewer is an image viewing application for SilkOS.
 
 For user convenience, basic image manipulation facilities exist like image rotation clockwise or counter-clockwise, image flip horizontal or vertical, zoom in, zoom out, zoom reset, fullscreen view and fit image to view.
 

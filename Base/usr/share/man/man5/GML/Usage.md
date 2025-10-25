@@ -4,7 +4,7 @@ GML Usage
 
 ## Description
 
-How to use GML in SerenityOS C++ applications
+How to use GML in SilkOS C++ applications
 
 ## Note
 
