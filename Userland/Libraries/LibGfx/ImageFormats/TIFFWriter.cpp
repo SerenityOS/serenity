@@ -106,7 +106,7 @@ static ErrorOr<void> encode_ifd_entry_value_data(Stream& stream, IFDEntry const&
     return {};
 }
 
-static ErrorOr<void> encode_ifd(Stream& stream, u32 image_width, u32 image_height, u32 ifd_offset, u32 image_data_size, bool include_alpha, Optional<ByteBuffer> icc_data)
+static Vector<IFDEntry> make_rgb_ifd(u32 image_width, u32 image_height, u32 image_data_size, bool include_alpha, Optional<ByteBuffer> icc_data)
 {
     // Section 2: TIFF Structure, Image File Directory
     //  "An Image File Directory (IFD) consists of a 2-byte count of the number of direc-
@@ -161,7 +161,11 @@ static ErrorOr<void> encode_ifd(Stream& stream, u32 image_width, u32 image_heigh
         // the IFD containing the corresponding image data."
         entries.append({ TIFF::Tag::ICCProfile, { move(icc_data.value()) } });
     }
+    return entries;
+}
 
+static ErrorOr<void> encode_ifd(Stream& stream, u32 ifd_offset, Vector<IFDEntry> entries)
+{
     // "The entries in an IFD must be sorted in ascending order by Tag."
     for (size_t i = 1; i < entries.size(); ++i)
         VERIFY(entries[i - 1].tag < entries[i].tag);
@@ -240,7 +244,8 @@ ErrorOr<void> TIFFWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
     bool const include_alpha = !is_bitmap_fully_opaque(bitmap);
 
     u32 const image_data_size = bitmap.width() * bitmap.height() * (include_alpha ? 4 : 3);
-    TRY(encode_ifd(stream, bitmap.width(), bitmap.height(), ifd_offset, image_data_size, include_alpha, move(icc_data)));
+    auto ifd_entries = make_rgb_ifd(bitmap.width(), bitmap.height(), image_data_size, include_alpha, move(icc_data));
+    TRY(encode_ifd(stream, ifd_offset, move(ifd_entries)));
 
     for (ARGB32 const& pixel : bitmap) {
         auto color = Color::from_argb(pixel);
