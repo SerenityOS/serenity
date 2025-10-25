@@ -1,76 +1,7 @@
-# SerenityOS
+# SilkOS
+# 🚧 Under Construction 🚧
 
-Graphical Unix-like operating system for 64-bit x86, Arm, and RISC-V computers.
-
-[![GitHub Actions Status](https://github.com/SerenityOS/serenity/actions/workflows/ci.yml/badge.svg)](https://github.com/SerenityOS/serenity/actions/workflows/ci.yml)
-[![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/serenity.svg)](https://issues.oss-fuzz.com/issues?q=project:serenity)
-[![Discord](https://img.shields.io/discord/830522505605283862.svg?logo=discord&logoColor=white&logoWidth=20&labelColor=7289DA&label=Discord&color=17cf48)](https://serenityos.org/discord)
-
-[FAQ](Documentation/FAQ.md) | [Documentation](#how-do-i-read-the-documentation) | [Build Instructions](#how-do-i-build-and-run-this)
-
-## About
-
-SerenityOS is a love letter to '90s user interfaces with a custom Unix-like core. It flatters with sincerity by stealing beautiful ideas from various other systems.
-
-Roughly speaking, the goal is a marriage between the aesthetic of late-1990s productivity software and the power-user accessibility of late-2000s \*nix. This is a system by us, for us, based on the things we like.
-
-You can watch videos of the system being developed on YouTube:
-
--   [Andreas Kling's channel](https://youtube.com/andreaskling)
--   [Linus Groh's channel](https://youtube.com/linusgroh)
--   [kleines Filmröllchen's channel](https://www.youtube.com/c/kleinesfilmroellchen)
-
-## Screenshot
-
-![Screenshot as of c03b788.png](Meta/Screenshots/screenshot-c03b788.png)
-
-## Features
-
--   Modern 64-bit kernel with pre-emptive multi-threading
--   [Browser](Userland/Applications/Browser/) with JavaScript, WebAssembly, and more (check the spec compliance for [JS](https://serenityos.github.io/libjs-website/test262/), [CSS](https://css.tobyase.de/), and [Wasm](https://serenityos.github.io/libjs-website/wasm/))
--   Security features (hardware protections, limited userland capabilities, W^X memory, `pledge` & `unveil`, (K)ASLR, OOM-resistance, web-content isolation, state-of-the-art TLS algorithms, ...)
--   [System services](Userland/Services/) (WindowServer, LoginServer, AudioServer, WebServer, RequestServer, CrashServer, ...) and modern IPC
--   Good POSIX compatibility ([LibC](Userland/Libraries/LibC/), Shell, syscalls, signals, pseudoterminals, filesystem notifications, standard Unix [utilities](Userland/Utilities/), ...)
--   POSIX-like virtual file systems (/proc, /dev, /sys, /tmp, ...) and ext2 file system
--   Network stack and applications with support for IPv4, TCP, UDP; DNS, HTTP, Gemini, IMAP, NTP
--   Profiling, debugging and other development tools (Kernel-supported profiling, CrashReporter, interactive GUI playground, HexEditor, HackStudio IDE for C++ and more)
--   [Libraries](Userland/Libraries/) for everything from cryptography to OpenGL, audio, JavaScript, GUI, playing chess, ...
--   Support for many common and uncommon file formats (PNG, JPEG, GIF, MP3, WAV, FLAC, ZIP, TAR, PDF, QOI, Gemini, ...)
--   Unified style and design philosophy, flexible theming system, [custom (bitmap and vector) fonts](https://fonts.serenityos.net/font-family)
--   [Games](Userland/Games/) (Solitaire, Minesweeper, 2048, chess, Conway's Game of Life, ...) and [demos](Userland/Demos/) (CatDog, Starfield, Eyes, mandelbrot set, WidgetGallery, ...)
--   Every-day GUI programs and utilities (Spreadsheet with JavaScript, TextEditor, Terminal, PixelPaint, various multimedia viewers and players, Mail, Assistant, Calculator, ...)
-
-... and all of the above are right in this repository, no extra dependencies, built from-scratch by us :^)
-
-Additionally, there are [over three hundred ports of popular open-source software](Ports/AvailablePorts.md), including games, compilers, Unix tools, multimedia apps and more.
-
-## How do I read the documentation?
-
-Man pages are available online at [man.serenityos.org](https://man.serenityos.org). These pages are generated from the Markdown source files in [`Base/usr/share/man`](https://github.com/SerenityOS/serenity/tree/master/Base/usr/share/man) and updated automatically.
-
-When running SerenityOS you can use `man` for the terminal interface, or `help` for the GUI.
-
-Code-related documentation can be found in the [documentation](Documentation/) folder.
-
-## How do I build and run this?
-
-See the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md) or the [Ladybird build instructions](Documentation/BuildInstructionsLadybird.md).
-
-The build system supports a cross-compilation build of SerenityOS from Linux, macOS, Windows (with WSL2) and many other \*Nixes.
-The default build system commands will launch a QEMU instance running the OS with hardware or software virtualization
-enabled as supported.
-
-Ladybird runs on the same platforms that can be the host for a cross build of SerenityOS and on SerenityOS itself.
-
-## Get in touch and participate!
-
-Join our Discord server: [SerenityOS Discord](https://serenityos.org/discord)
-
-Before opening an issue, please see the [issue policy](https://github.com/SerenityOS/serenity/blob/master/CONTRIBUTING.md#issue-policy).
-
-A general guide for contributing can be found in [`CONTRIBUTING.md`](CONTRIBUTING.md).
-
-## Authors
+## SerenityOS Authors
 
 -   **Andreas Kling** - [awesomekling](https://twitter.com/awesomekling) [![GitHub Sponsors](https://img.shields.io/static/v1?label=Sponsor&message=%E2%9D%A4&logo=GitHub)](https://github.com/sponsors/awesomekling)
 -   **Robin Burchell** - [rburchell](https://github.com/rburchell)
@@ -144,4 +75,4 @@ And many more! [See here](https://github.com/SerenityOS/serenity/graphs/contribu
 
 ## License
 
-SerenityOS is licensed under a 2-clause BSD license.
+SilkOS is licensed under a 2-clause BSD license.
