@@ -29,7 +29,7 @@ ErrorOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
     TRY(require_promise(Pledge::stdio));
 
     utsname buf {
-        "SerenityOS",
+        "SilkOS",
         {}, // Hostname, filled in below.
         {}, // "Release" (1.0-dev), filled in below.
         {}, // "Revision" (git commit hash), filled in below.

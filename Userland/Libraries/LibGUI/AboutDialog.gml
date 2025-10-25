@@ -45,10 +45,10 @@
             }
 
             @GUI::Label {
-                name: "serenity_os"
+                name: "silk_os"
                 text_alignment: "CenterLeft"
                 fixed_height: 14
-                text: "SerenityOS"
+                text: "SilkOS"
             }
 
             @GUI::Label {

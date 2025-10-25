@@ -38,7 +38,7 @@ NonnullRefPtr<AboutDialog> AboutDialog::create(String const& name, String versio
 
     widget->find_descendant_of_type_named<GUI::Label>("name")->set_text(name);
     // If we are displaying a dialog for an application, insert 'SerenityOS' below the application name
-    widget->find_descendant_of_type_named<GUI::Label>("serenity_os")->set_visible(name != "SerenityOS");
+    widget->find_descendant_of_type_named<GUI::Label>("silk_os")->set_visible(name != "SilkOS");
     widget->find_descendant_of_type_named<GUI::Label>("version")->set_text(version);
 
     auto ok_button = widget->find_descendant_of_type_named<DialogButton>("ok_button");
