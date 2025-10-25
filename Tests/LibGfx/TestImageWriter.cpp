@@ -23,6 +23,8 @@
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ImageFormats/QOILoader.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
+#include <LibGfx/ImageFormats/TIFFLoader.h>
+#include <LibGfx/ImageFormats/TIFFWriter.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
 #include <LibGfx/ImageFormats/WebPSharedLossless.h>
 #include <LibGfx/ImageFormats/WebPWriter.h>
@@ -375,6 +377,14 @@ TEST_CASE(test_qm_arithmetic_encoder_7FFF_handling)
         auto encoded = TRY_OR_FAIL(encoder.finalize(Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove));
         EXPECT_EQ(encoded.span(), output_remove_7FFF.span());
     }
+}
+
+TEST_CASE(test_tiff)
+{
+    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
+
+    // FIXME: Implement saving alpha channel in TIFFWriter.
+    // TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
 TEST_CASE(test_webp)
