@@ -1060,4 +1060,122 @@ TEST_CASE(update_all_rows)
     }
 }
 
+TEST_CASE(insert_unique_values_success)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = MUST(SQL::Database::create(db_name));
+    MUST(database->open());
+
+    create_schema(database);
+    execute(database, "CREATE TABLE TestSchema.TestTable ( IntColumn integer, TextColumn text UNIQUE, SecondTextColumn text );");
+
+    auto result = execute(database, "INSERT INTO TestSchema.TestTable VALUES (1, 'Test_1', 'Alice');");
+    EXPECT_EQ(result.size(), 1u);
+
+    result = execute(database, "INSERT INTO TestSchema.TestTable VALUES (2, 'Test_2', 'Bob');");
+    EXPECT_EQ(result.size(), 1u);
+
+    result = execute(database, "SELECT * FROM TestSchema.TestTable ORDER BY IntColumn;");
+    EXPECT_EQ(result.size(), 2u);
+    EXPECT_EQ(result[0].row[1].to_byte_string(), "Test_1");
+    EXPECT_EQ(result[1].row[1].to_byte_string(), "Test_2");
+}
+
+TEST_CASE(insert_duplicate_unique_value_fails)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = MUST(SQL::Database::create(db_name));
+    MUST(database->open());
+
+    create_schema(database);
+    execute(database, "CREATE TABLE TestSchema.TestTable ( IntColumn integer, TextColumn text UNIQUE, SecondTextColumn text );");
+
+    execute(database, "INSERT INTO TestSchema.TestTable VALUES (1, 'Test_1', 'Alice');");
+
+    auto result = try_execute(database, "INSERT INTO TestSchema.TestTable VALUES (2, 'Test_1', 'Bob');");
+    EXPECT(result.is_error());
+    EXPECT_EQ(result.release_error().error(), SQL::SQLErrorCode::UniqueConstraintViolated);
+}
+
+TEST_CASE(update_to_duplicate_unique_value_fails)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = MUST(SQL::Database::create(db_name));
+    MUST(database->open());
+
+    create_schema(database);
+    execute(database, "CREATE TABLE TestSchema.TestTable ( IntColumn integer, TextColumn text UNIQUE, SecondTextColumn text );");
+
+    execute(database, "INSERT INTO TestSchema.TestTable VALUES (1, 'Test_1', 'Alice');");
+    execute(database, "INSERT INTO TestSchema.TestTable VALUES (2, 'Test_2', 'Bob');");
+
+    auto result = try_execute(database, "UPDATE TestSchema.TestTable SET TextColumn='Test_1' WHERE IntColumn=2;");
+    EXPECT(result.is_error());
+    EXPECT_EQ(result.release_error().error(), SQL::SQLErrorCode::UniqueConstraintViolated);
+}
+
+TEST_CASE(update_unique_value_to_new_value_succeeds)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = MUST(SQL::Database::create(db_name));
+    MUST(database->open());
+
+    create_schema(database);
+    execute(database, "CREATE TABLE TestSchema.TestTable ( IntColumn integer, TextColumn text UNIQUE, SecondTextColumn text );");
+
+    execute(database, "INSERT INTO TestSchema.TestTable VALUES (1, 'Test_1', 'Alice');");
+    execute(database, "INSERT INTO TestSchema.TestTable VALUES (2, 'Test_2', 'Bob');");
+
+    auto result = execute(database, "UPDATE TestSchema.TestTable SET TextColumn='Test_3' WHERE IntColumn=2;");
+    EXPECT_EQ(result.size(), 1u);
+
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable WHERE IntColumn=2;");
+    EXPECT_EQ(result.size(), 1u);
+    EXPECT_EQ(result[0].row[0].to_byte_string(), "Test_3");
+}
+
+TEST_CASE(unique_constraint_with_mixed_data_types)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = MUST(SQL::Database::create(db_name));
+    MUST(database->open());
+
+    create_schema(database);
+    execute(database, "CREATE TABLE TestSchema.TestTable ( IntColumn integer UNIQUE, FloatColumn float, TextColumn text );");
+
+    execute(database, "INSERT INTO TestSchema.TestTable VALUES (100, 85.5, 'Test_1');");
+    execute(database, "INSERT INTO TestSchema.TestTable VALUES (200, 92.0, 'Test_2');");
+
+    auto result = try_execute(database, "INSERT INTO TestSchema.TestTable VALUES (100, 78.5, 'Test_3');");
+    EXPECT(result.is_error());
+    EXPECT_EQ(result.release_error().error(), SQL::SQLErrorCode::UniqueConstraintViolated);
+}
+
+TEST_CASE(multiple_unique_constraints_on_different_columns)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = MUST(SQL::Database::create(db_name));
+    MUST(database->open());
+
+    create_schema(database);
+    execute(database, "CREATE TABLE TestSchema.TestTable ( IntColumn integer UNIQUE, TextColumn text UNIQUE, SecondTextColumn text UNIQUE );");
+
+    execute(database, "INSERT INTO TestSchema.TestTable VALUES (1, 'Test_1', 'Value_1');");
+
+    auto result = try_execute(database, "INSERT INTO TestSchema.TestTable VALUES (1, 'Test_2', 'Value_2');");
+    EXPECT(result.is_error());
+    EXPECT_EQ(result.release_error().error(), SQL::SQLErrorCode::UniqueConstraintViolated);
+
+    result = try_execute(database, "INSERT INTO TestSchema.TestTable VALUES (2, 'Test_1', 'Value_3');");
+    EXPECT(result.is_error());
+    EXPECT_EQ(result.release_error().error(), SQL::SQLErrorCode::UniqueConstraintViolated);
+
+    result = try_execute(database, "INSERT INTO TestSchema.TestTable VALUES (3, 'Test_3', 'Value_1');");
+    EXPECT(result.is_error());
+    EXPECT_EQ(result.release_error().error(), SQL::SQLErrorCode::UniqueConstraintViolated);
+
+    auto success_result = execute(database, "INSERT INTO TestSchema.TestTable VALUES (2, 'Test_2', 'Value_2');");
+    EXPECT_EQ(success_result.size(), 1u);
+}
+
 }
