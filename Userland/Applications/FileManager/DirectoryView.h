@@ -71,7 +71,6 @@ public:
     Function<void(GUI::ModelIndex const&, GUI::ContextMenuEvent const&)> on_context_menu_request;
     Function<void(StringView)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
-    Function<void()> on_accepted_drop;
 
     enum ViewMode {
         Invalid,

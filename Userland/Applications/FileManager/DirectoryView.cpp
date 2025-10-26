@@ -672,10 +672,7 @@ void DirectoryView::handle_drop(GUI::ModelIndex const& index, GUI::DropEvent con
 {
     auto const& target_node = node(index);
 
-    bool const has_accepted_drop = ::FileManager::handle_drop(event, target_node.full_path(), window()).release_value_but_fixme_should_propagate_errors();
-
-    if (has_accepted_drop && on_accepted_drop)
-        on_accepted_drop();
+    ::FileManager::handle_drop(event, target_node.full_path(), window()).release_value_but_fixme_should_propagate_errors();
 }
 
 }
