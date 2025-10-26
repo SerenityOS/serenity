@@ -205,8 +205,14 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool fo
             TRY(Gfx::JPEGWriter::encode(*TRY(stream()), *cmyk_frame, { .icc_data = image.icc_data, .quality = jpeg_quality }));
             return {};
         }
+        if (out_path.ends_with(".tif"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".tiff"sv, CaseSensitivity::CaseInsensitive)) {
+            Gfx::TIFFWriter::Options options;
+            options.icc_data = image.icc_data;
+            TRY(Gfx::TIFFWriter::encode(*TRY(stream()), *cmyk_frame, options));
+            return {};
+        }
 
-        return Error::from_string_view("Can save CMYK bitmaps only as .jpg, convert to RGB first with --convert-to-color-profile"sv);
+        return Error::from_string_view("Can save CMYK bitmaps only as .jpg or .tiff, convert to RGB first with --convert-to-color-profile"sv);
     }
 
     auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();

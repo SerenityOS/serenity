@@ -164,6 +164,30 @@ static Vector<IFDEntry> make_rgb_ifd(u32 image_width, u32 image_height, u32 imag
     return entries;
 }
 
+static Vector<IFDEntry> make_cmyk_ifd(u32 image_width, u32 image_height, u32 image_data_size, Optional<ByteBuffer> icc_data)
+{
+    Vector<IFDEntry> entries;
+    entries.append({ TIFF::Tag::ImageWidth, { image_width } });
+    entries.append({ TIFF::Tag::ImageLength, { image_height } });
+    entries.append({ TIFF::Tag::BitsPerSample, { 8u, 8u, 8u, 8u } });
+    entries.append({ TIFF::Tag::Compression, { static_cast<u32>(TIFF::Compression::NoCompression) } });
+    entries.append({ TIFF::Tag::PhotometricInterpretation, { static_cast<u32>(TIFF::PhotometricInterpretation::CMYK) } });
+    entries.append({ TIFF::Tag::StripOffsets, { 0u } });
+    entries.append({ TIFF::Tag::SamplesPerPixel, { 4u } });
+    entries.append({ TIFF::Tag::RowsPerStrip, { image_height } });
+    entries.append({ TIFF::Tag::StripByteCounts, { image_data_size } });
+    entries.append({ TIFF::Tag::XResolution, { TIFF::Rational<u32> { 1, 1 } } });
+    entries.append({ TIFF::Tag::YResolution, { TIFF::Rational<u32> { 1, 1 } } });
+    entries.append({ TIFF::Tag::ResolutionUnit, { static_cast<u32>(TIFF::ResolutionUnit::NoAbsolute) } });
+    if (icc_data.has_value()) {
+        // https://www.color.org/technotes/ICC-Technote-ProfileEmbedding.pdf
+        // "An ICC profile is embedded, in its entirety, as a single TIFF field or Image File Directory (IFD) entry in
+        // the IFD containing the corresponding image data."
+        entries.append({ TIFF::Tag::ICCProfile, { move(icc_data.value()) } });
+    }
+    return entries;
+}
+
 static ErrorOr<void> encode_ifd(Stream& stream, u32 ifd_offset, Vector<IFDEntry> entries)
 {
     // "The entries in an IFD must be sorted in ascending order by Tag."
@@ -254,6 +278,33 @@ ErrorOr<void> TIFFWriter::encode(Stream& stream, Bitmap const& bitmap, Options c
         TRY(stream.write_value<u8>(color.blue()));
         if (include_alpha)
             TRY(stream.write_value<u8>(color.alpha()));
+    }
+    return {};
+}
+
+ErrorOr<void> TIFFWriter::encode(Stream& stream, CMYKBitmap const& bitmap, Options const& options)
+{
+    Optional<ByteBuffer> icc_data;
+    if (options.icc_data.has_value()) {
+        // FIXME: TIFF::Value currently only supports owning ByteBuffers. Needing to copy here is a bit unfortunate.
+        icc_data = TRY(ByteBuffer::copy(options.icc_data.value()));
+    }
+
+    u32 const ifd_offset = tiff_header_size;
+    TRY(encode_tiff_header(stream, ifd_offset));
+
+    u32 const image_data_size = bitmap.size().width() * bitmap.size().height() * 4;
+    auto ifd_entries = make_cmyk_ifd(bitmap.size().width(), bitmap.size().height(), image_data_size, move(icc_data));
+    TRY(encode_ifd(stream, ifd_offset, move(ifd_entries)));
+
+    for (int y = 0; y < bitmap.size().height(); ++y) {
+        for (int x = 0; x < bitmap.size().width(); ++x) {
+            CMYK const& pixel = bitmap.scanline(y)[x];
+            TRY(stream.write_value<u8>(pixel.c));
+            TRY(stream.write_value<u8>(pixel.m));
+            TRY(stream.write_value<u8>(pixel.y));
+            TRY(stream.write_value<u8>(pixel.k));
+        }
     }
     return {};
 }
