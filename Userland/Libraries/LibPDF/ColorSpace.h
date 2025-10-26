@@ -60,9 +60,9 @@ private:
 
 class ColorSpace : public RefCounted<ColorSpace> {
 public:
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<Object>, Renderer&);
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(DeprecatedFlyString const&, Renderer&);
-    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<ArrayObject>, Renderer&);
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<Object>, Renderer&, Optional<NonnullRefPtr<DictObject>> = {});
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(DeprecatedFlyString const&, Renderer&, Optional<NonnullRefPtr<DictObject>> = {});
+    static PDFErrorOr<NonnullRefPtr<ColorSpace>> create(Document*, NonnullRefPtr<ArrayObject>, Renderer&, Optional<NonnullRefPtr<DictObject>> = {});
 
     virtual ~ColorSpace() = default;
 
@@ -283,7 +283,7 @@ private:
 
 class PatternColorSpace final : public ColorSpace {
 public:
-    static NonnullRefPtr<PatternColorSpace> create(Renderer& renderer);
+    static NonnullRefPtr<PatternColorSpace> create(Renderer& renderer, Optional<NonnullRefPtr<DictObject>> extra_resources);
     ~PatternColorSpace() override = default;
 
     PDFErrorOr<ColorOrStyle> style(ReadonlySpan<Value> arguments) const override;
@@ -292,12 +292,14 @@ public:
     ColorSpaceFamily const& family() const override { return ColorSpaceFamily::Pattern; }
 
 private:
-    PatternColorSpace(Renderer& renderer)
+    PatternColorSpace(Renderer& renderer, Optional<NonnullRefPtr<DictObject>> extra_resources)
         : m_renderer(renderer)
+        , m_extra_resources(extra_resources)
     {
     }
 
     Renderer& m_renderer;
+    Optional<NonnullRefPtr<DictObject>> m_extra_resources;
 };
 
 }
