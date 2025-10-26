@@ -894,11 +894,16 @@ PDFErrorOr<ColorOrStyle> PatternColorSpace::style(ReadonlySpan<Value> arguments)
     };
     page.crop_box = page.media_box;
 
-    auto pattern_renderer = Renderer(m_renderer.m_document, page, pattern_cell, {}, m_renderer.m_rendering_preferences);
+    // (Required) A resource dictionary containing all of the named resources required by the pattern’s content stream.
+    // FIXME: This is technically required, but `patterns.pdf` omits it (and it is accepted by Chrome and FF/LibPDF.js).
+    Optional<NonnullRefPtr<DictObject>> pattern_resources {};
+    if (pattern_dict->contains(CommonNames::Resources))
+        pattern_resources = TRY(pattern_dict->get_dict(m_renderer.m_document, CommonNames::Resources));
 
+    auto pattern_renderer = Renderer(m_renderer.m_document, page, pattern_cell, {}, m_renderer.m_rendering_preferences);
     auto operators = TRY(Parser::parse_operators(m_renderer.m_document, pattern->cast<StreamObject>()->bytes()));
     for (auto& op : operators)
-        TRY(pattern_renderer.handle_operator(op, resources));
+        TRY(pattern_renderer.handle_operator(op, pattern_resources));
 
     auto x_steps = pattern_dict->get("XStep").value_or(bitmap_width).to_int();
     auto y_steps = pattern_dict->get("YStep").value_or(bitmap_height).to_int();
