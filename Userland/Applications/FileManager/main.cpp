@@ -773,7 +773,6 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
             VERIFY(!paths.is_empty());
 
             do_copy(paths, FileOperation::Move);
-            refresh_tree_view();
         },
         window);
     cut_action->set_enabled(false);
@@ -786,7 +785,6 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
             VERIFY(!paths.is_empty());
 
             do_copy(paths, FileOperation::Copy);
-            refresh_tree_view();
         },
         window);
     copy_action->set_enabled(false);
@@ -870,7 +868,6 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
                     return;
 
                 do_create_archive(paths, directory_view->window());
-                refresh_tree_view();
             },
             window);
 
@@ -883,7 +880,6 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
                     return;
 
                 do_unzip_archive(paths, directory_view->window());
-                refresh_tree_view();
             },
             window);
 
@@ -927,7 +923,6 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
             else
                 target_directory = directory_view->path();
             do_paste(target_directory, directory_view->window());
-            refresh_tree_view();
         },
         window);
 
@@ -939,7 +934,6 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
             else
                 target_directory = directory_view->path();
             do_paste(target_directory, directory_view->window());
-            refresh_tree_view();
         },
         window);
 
@@ -969,7 +963,6 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     auto tree_view_delete_action = GUI::CommonActions::make_delete_action(
         [&](auto&) {
             delete_paths(tree_view_selected_file_paths(), true, window);
-            refresh_tree_view();
         },
         &tree_view);
 
@@ -980,7 +973,6 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
             tree_view_delete_action->activate();
         else
             directory_view->delete_action().activate();
-        refresh_tree_view();
     });
     focus_dependent_delete_action->set_enabled(false);
 
@@ -990,12 +982,10 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
 
     auto mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv)), [&](GUI::Action const&) {
         directory_view->mkdir_action().activate();
-        refresh_tree_view();
     });
 
     auto touch_action = GUI::Action::create("New &File...", { Mod_Ctrl | Mod_Shift, Key_F }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv)), [&](GUI::Action const&) {
         directory_view->touch_action().activate();
-        refresh_tree_view();
     });
 
     auto file_menu = window->add_menu("&File"_string);
@@ -1136,10 +1126,6 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
         directory_view->view_as_table_action().set_enabled(can_read_in_path);
         directory_view->view_as_icons_action().set_enabled(can_read_in_path);
         directory_view->view_as_columns_action().set_enabled(can_read_in_path);
-    };
-
-    directory_view->on_accepted_drop = [&] {
-        refresh_tree_view();
     };
 
     directory_view->on_status_message = [&](StringView message) {
@@ -1289,18 +1275,14 @@ ErrorOr<int> run_in_windowed_mode(ByteString const& initial_location, ByteString
     };
 
     breadcrumbbar.on_paths_drop = [&](auto path, GUI::DropEvent const& event) {
-        bool const has_accepted_drop = handle_drop(event, path, window).release_value_but_fixme_should_propagate_errors();
-        if (has_accepted_drop)
-            refresh_tree_view();
+        handle_drop(event, path, window).release_value_but_fixme_should_propagate_errors();
     };
 
     tree_view.on_drop = [&](GUI::ModelIndex const& index, GUI::DropEvent const& event) {
         auto const& target_node = directories_model->node(index);
         bool const has_accepted_drop = handle_drop(event, target_node.full_path(), window).release_value_but_fixme_should_propagate_errors();
-        if (has_accepted_drop) {
-            refresh_tree_view();
+        if (has_accepted_drop)
             const_cast<GUI::DropEvent&>(event).accept();
-        }
     };
 
     directory_view->open(initial_location);
