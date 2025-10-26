@@ -32,20 +32,20 @@ PDFErrorOr<ColorSpaceFamily> ColorSpaceFamily::get(DeprecatedFlyString const& fa
     return Error(Error::Type::MalformedPDF, "Unknown ColorSpace family"_string);
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, NonnullRefPtr<Object> color_space_object, Renderer& renderer)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, NonnullRefPtr<Object> color_space_object, Renderer& renderer, Optional<NonnullRefPtr<DictObject>> extra_resources)
 {
     // "A color space is defined by an array object whose first element is a name object identifying the color space family.
     //  The remaining array elements, if any, are parameters that further characterize the color space;
     //  their number and types vary according to the particular family.
     //  For families that do not require parameters, the color space can be specified simply by the family name itself instead of an array."
     if (color_space_object->is<NameObject>())
-        return ColorSpace::create(color_space_object->cast<NameObject>()->name(), renderer);
+        return ColorSpace::create(color_space_object->cast<NameObject>()->name(), renderer, extra_resources);
     if (color_space_object->is<ArrayObject>())
-        return ColorSpace::create(document, color_space_object->cast<ArrayObject>(), renderer);
+        return ColorSpace::create(document, color_space_object->cast<ArrayObject>(), renderer, extra_resources);
     return Error { Error::Type::MalformedPDF, "Color space must be name or array" };
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString const& name, Renderer& renderer)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString const& name, Renderer& renderer, Optional<NonnullRefPtr<DictObject>> extra_resources)
 {
     // Simple color spaces with no parameters, which can be specified directly
     if (name == CommonNames::DeviceGray)
@@ -55,11 +55,11 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(DeprecatedFlyString con
     if (name == CommonNames::DeviceCMYK)
         return TRY(DeviceCMYKColorSpace::the());
     if (name == CommonNames::Pattern)
-        return PatternColorSpace::create(renderer);
+        return PatternColorSpace::create(renderer, extra_resources);
     VERIFY_NOT_REACHED();
 }
 
-PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, NonnullRefPtr<ArrayObject> color_space_array, Renderer& renderer)
+PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, NonnullRefPtr<ArrayObject> color_space_array, Renderer& renderer, Optional<NonnullRefPtr<DictObject>> extra_resources)
 {
     auto color_space_name = TRY(color_space_array->get_name_at(document, 0))->name();
 
@@ -90,7 +90,7 @@ PDFErrorOr<NonnullRefPtr<ColorSpace>> ColorSpace::create(Document* document, Non
         return TRY(SeparationColorSpace::create(document, move(parameters), renderer));
 
     if (color_space_name == CommonNames::Pattern)
-        return PatternColorSpace::create(renderer);
+        return PatternColorSpace::create(renderer, extra_resources);
 
     dbgln("Unknown color space: {}", color_space_name);
     return Error::rendering_unsupported_error("unknown color space");
@@ -802,16 +802,16 @@ Vector<float> SeparationColorSpace::default_decode() const
 {
     return { 0.0f, 1.0f };
 }
-NonnullRefPtr<PatternColorSpace> PatternColorSpace::create(Renderer& renderer)
+NonnullRefPtr<PatternColorSpace> PatternColorSpace::create(Renderer& renderer, Optional<NonnullRefPtr<DictObject>> extra_resources)
 {
-    return adopt_ref(*new PatternColorSpace(renderer));
+    return adopt_ref(*new PatternColorSpace(renderer, extra_resources));
 }
 
 PDFErrorOr<ColorOrStyle> PatternColorSpace::style(ReadonlySpan<Value> arguments) const
 {
     VERIFY(arguments.size() >= 1);
 
-    auto resources = m_renderer.m_page.resources;
+    auto resources = m_extra_resources.value_or(m_renderer.m_page.resources);
     if (!resources->contains(CommonNames::Pattern))
         return Error::malformed_error("Pattern resource dictionary missing");
 
