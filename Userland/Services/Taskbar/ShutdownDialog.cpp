@@ -107,7 +107,7 @@ ShutdownDialog::ShutdownDialog()
     resize(413, 235);
     center_on_screen();
     set_resizable(false);
-    set_title("Exit SerenityOS");
+    set_title("Exit SilkOS");
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"sv).release_value_but_fixme_should_propagate_errors());
 
     // Request WindowServer to re-update us on the current theme as we might've not been alive for the last notification.
