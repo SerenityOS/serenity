@@ -167,7 +167,7 @@ jobs:
 
       - name: Upload LibWeb Test Artifacts
         if: ${{ always() && inputs.fuzzer == 'NO_FUZZ' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: libweb-test-artifacts-${{ inputs.os_name }}
           path: ${{ github.workspace }}/Meta/Lagom/Build/Ladybird/test-dumps
