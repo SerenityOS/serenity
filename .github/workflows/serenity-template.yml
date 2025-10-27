@@ -205,7 +205,7 @@ jobs:
       #       all of the instrumented binaries and the profdata file.
       - name: Upload Coverage Results
         if: ${{ inputs.coverage == 'ON' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: serenity-coverage
           path: ${{ steps.build-parameters.outputs.build_directory }}/reports
