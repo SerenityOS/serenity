@@ -14,7 +14,7 @@ namespace LoginServer {
 LoginWindow::LoginWindow(GUI::Window* parent)
     : GUI::Window(parent)
 {
-    set_title("Log in to SerenityOS");
+    set_title("Log in to SilkOS");
     resize(413, 170);
     center_on_screen();
     set_resizable(false);
