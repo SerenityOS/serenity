@@ -20,6 +20,7 @@
 #include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/ImageFormats/PortableFormatWriter.h>
 #include <LibGfx/ImageFormats/QOIWriter.h>
+#include <LibGfx/ImageFormats/TIFFWriter.h>
 #include <LibGfx/ImageFormats/WebPSharedLossless.h>
 #include <LibGfx/ImageFormats/WebPWriter.h>
 
@@ -204,8 +205,14 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool fo
             TRY(Gfx::JPEGWriter::encode(*TRY(stream()), *cmyk_frame, { .icc_data = image.icc_data, .quality = jpeg_quality }));
             return {};
         }
+        if (out_path.ends_with(".tif"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".tiff"sv, CaseSensitivity::CaseInsensitive)) {
+            Gfx::TIFFWriter::Options options;
+            options.icc_data = image.icc_data;
+            TRY(Gfx::TIFFWriter::encode(*TRY(stream()), *cmyk_frame, options));
+            return {};
+        }
 
-        return Error::from_string_view("Can save CMYK bitmaps only as .jpg, convert to RGB first with --convert-to-color-profile"sv);
+        return Error::from_string_view("Can save CMYK bitmaps only as .jpg or .tiff, convert to RGB first with --convert-to-color-profile"sv);
     }
 
     auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
@@ -231,6 +238,12 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool fo
         TRY(Gfx::PortableFormatWriter::encode(*TRY(stream()), *frame, { .format = format }));
         return {};
     }
+    if (out_path.ends_with(".tif"sv, CaseSensitivity::CaseInsensitive) || out_path.ends_with(".tiff"sv, CaseSensitivity::CaseInsensitive)) {
+        Gfx::TIFFWriter::Options options;
+        options.icc_data = image.icc_data;
+        TRY(Gfx::TIFFWriter::encode(*TRY(stream()), *frame, options));
+        return {};
+    }
     if (out_path.ends_with(".webp"sv, CaseSensitivity::CaseInsensitive)) {
         Gfx::WebPWriter::Options options;
         options.icc_data = image.icc_data;
@@ -250,7 +263,7 @@ static ErrorOr<void> save_image(LoadedImage& image, StringView out_path, bool fo
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*frame));
     } else {
-        return Error::from_string_literal("can only write .bmp, .gif, .jpg, .png, .ppm, .qoi, and .webp");
+        return Error::from_string_literal("can only write .bmp, .gif, .jpg, .png, .ppm, .qoi, .tiff, and .webp");
     }
     TRY(TRY(stream())->write_until_depleted(bytes));
 
