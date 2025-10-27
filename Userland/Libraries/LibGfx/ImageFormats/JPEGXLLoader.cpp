@@ -1896,12 +1896,20 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
 
     TRY(modular_data.create_channels(channels_info));
 
+    // "However, the decoder only decodes the first nb_meta_channels channels and any further channels
+    // that have a width and height that are both at most group_dim. At that point, it stops decoding."
+    u32 first_non_decoded_index = NumericLimits<u32>::max();
     auto will_be_decoded = [&](u32 index, Channel const& channel) {
         if (channel.width() == 0 || channel.height() == 0)
             return false;
         if (index < modular_data.nb_meta_channels)
             return true;
-        return channel.width() <= group_dim && channel.height() <= group_dim;
+        if (index >= first_non_decoded_index)
+            return false;
+        if (channel.width() <= group_dim && channel.height() <= group_dim)
+            return true;
+        first_non_decoded_index = index;
+        return false;
     };
 
     if constexpr (JPEGXL_DEBUG) {
@@ -2025,12 +2033,10 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
         }
     }
 
-    // However, the decoder only decodes the first nb_meta_channels channels and any further channels
-    // that have a width and height that are both at most group_dim. At that point, it stops decoding.
-    // No inverse transforms are applied yet.
     auto channels = TRY(FixedArray<ChannelInfo>::create(num_channels));
     channels.fill_with(ChannelInfo::from_size(frame_size));
 
+    // "No inverse transforms are applied yet."
     global_modular.modular_data = TRY(read_modular_bitstream(stream,
         {
             .channels_info = channels,
