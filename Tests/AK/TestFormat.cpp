@@ -397,6 +397,18 @@ TEST_CASE(vector_format)
     }
 }
 
+TEST_CASE(read_only_bytes_format)
+{
+    {
+        Vector<u8> v { 1, 2, 3, 4 };
+        EXPECT_EQ(ByteString::formatted("{}", v), "[ 1, 2, 3, 4 ]");
+    }
+    {
+        Vector<u8> v { 1, 2, 3, 4 };
+        EXPECT_EQ(ByteString::formatted("{:hex-dump}", v), "01020304");
+    }
+}
+
 TEST_CASE(format_wchar)
 {
     EXPECT_EQ(ByteString::formatted("{}", L'a'), "a");

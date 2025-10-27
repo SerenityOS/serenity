@@ -438,19 +438,18 @@ struct Formatter<StringView> : StandardFormatter {
 
 template<typename T>
 requires(HasFormatter<T>)
-struct Formatter<ReadonlySpan<T>> : StandardFormatter {
-    Formatter() = default;
-    explicit Formatter(StandardFormatter formatter)
-        : StandardFormatter(move(formatter))
-    {
-    }
-
+struct Formatter<ReadonlySpan<T>> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, ReadonlySpan<T> value)
     {
         if (m_mode == Mode::Pointer) {
             Formatter<FlatPtr> formatter { *this };
             TRY(formatter.format(builder, reinterpret_cast<FlatPtr>(value.data())));
             return {};
+        }
+
+        if constexpr (IsSame<T, u8>) {
+            if (m_mode == Mode::HexDump)
+                return Formatter<StringView>::format(builder, value);
         }
 
         if (m_sign_mode != FormatBuilder::SignMode::Default)
@@ -499,26 +498,6 @@ struct Formatter<Vector<T, inline_capacity>> : Formatter<ReadonlySpan<T>> {
     {
         return Formatter<ReadonlySpan<T>>::format(builder, value.span());
     }
-};
-
-template<>
-struct Formatter<ReadonlyBytes> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, ReadonlyBytes value)
-    {
-        if (m_mode == Mode::Pointer) {
-            Formatter<FlatPtr> formatter { *this };
-            return formatter.format(builder, reinterpret_cast<FlatPtr>(value.data()));
-        }
-        if (m_mode == Mode::Default || m_mode == Mode::HexDump) {
-            m_mode = Mode::HexDump;
-            return Formatter<StringView>::format(builder, value);
-        }
-        return Formatter<StringView>::format(builder, value);
-    }
-};
-
-template<>
-struct Formatter<Bytes> : Formatter<ReadonlyBytes> {
 };
 
 // FIXME: Printing raw char pointers is inherently dangerous. Remove this and

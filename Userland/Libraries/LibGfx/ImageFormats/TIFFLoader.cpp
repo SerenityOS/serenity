@@ -599,7 +599,7 @@ private:
         return {};
     }
 
-    ErrorOr<void> read_next_idf_offset()
+    ErrorOr<void> read_next_ifd_offset()
     {
         auto const next_block_position = TRY(read_value<u32>());
         TRY(set_next_ifd(next_block_position));
@@ -629,7 +629,7 @@ private:
         if (magic_number != 42)
             return Error::from_string_literal("TIFFImageDecoderPlugin: Invalid magic number");
 
-        TRY(read_next_idf_offset());
+        TRY(read_next_ifd_offset());
 
         return {};
     }
@@ -659,7 +659,7 @@ private:
             TRY(m_stream->seek(next_tag_offset));
         }
 
-        TRY(read_next_idf_offset());
+        TRY(read_next_ifd_offset());
         return {};
     }
 
@@ -683,6 +683,7 @@ private:
                 for (u32 i = 0; i < count; ++i)
                     result.empend(typename TypePromoter<T>::Type(TRY(read_value<T>())));
             }
+            dbgln_if(TIFF_DEBUG, "Read values {}", result);
             return result;
         };
 
@@ -733,6 +734,8 @@ private:
         auto const type = TRY(tiff_type_from_u16(raw_type));
         auto const count = TRY(read_value<u32>());
 
+        dbgln_if(TIFF_DEBUG, "Reading tag {} of type {} with count {}", tag, raw_type, count);
+
         Checked<u32> checked_size = size_of_type(type);
         checked_size *= count;
 
@@ -746,6 +749,7 @@ private:
                 return value;
             }
             auto const offset = TRY(read_value<u32>());
+            dbgln_if(TIFF_DEBUG, "Tag data out of line at offset {}", offset);
             return read_tiff_value(type, count, offset);
         }()));
 
