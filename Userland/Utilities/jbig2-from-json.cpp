@@ -370,6 +370,206 @@ static ErrorOr<RegionSegmentInformatJSON> jbig2_region_segment_information_from_
     return result;
 }
 
+static ErrorOr<u16> jbig2_symbol_dictionary_flags_from_json(JsonObject const& object)
+{
+    u16 flags = 0;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "uses_huffman_encoding"sv) {
+            if (auto uses_huffman_encoding = value.get_bool(); uses_huffman_encoding.has_value()) {
+                if (uses_huffman_encoding.value())
+                    flags |= 1u;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"uses_huffman_encoding\"");
+        }
+
+        if (key == "uses_refinement_or_aggregate_coding"sv) {
+            if (auto uses_refinement_or_aggregate_coding = value.get_bool(); uses_refinement_or_aggregate_coding.has_value()) {
+                if (uses_refinement_or_aggregate_coding.value())
+                    flags |= 1u << 1;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"uses_refinement_or_aggregate_coding\"");
+        }
+
+        if (key == "huffman_table_selection_for_height_differences"sv) {
+            if (auto huffman_table_selection_for_height_differences = value.get_uint(); huffman_table_selection_for_height_differences.has_value()) {
+                if (huffman_table_selection_for_height_differences.value() <= 3) {
+                    flags |= huffman_table_selection_for_height_differences.value() << 2;
+                    return {};
+                }
+            }
+            // FIXME: Also allow names "standard_table_4", "standard_table_5", "custom" for values 0, 1, 3.
+            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_height_differences\"");
+        }
+
+        if (key == "huffman_table_selection_for_width_differences"sv) {
+            if (auto huffman_table_selection_for_width_differences = value.get_uint(); huffman_table_selection_for_width_differences.has_value()) {
+                if (huffman_table_selection_for_width_differences.value() <= 3) {
+                    flags |= huffman_table_selection_for_width_differences.value() << 4;
+                    return {};
+                }
+            }
+            // FIXME: Also allow names "standard_table_2", "standard_table_3", "custom" for values 0, 1, 3.
+            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_width_differences\"");
+        }
+
+        if (key == "huffman_table_selection_for_bitmap_sizes"sv) {
+            if (auto huffman_table_selection_for_bitmap_sizes = value.get_uint(); huffman_table_selection_for_bitmap_sizes.has_value()) {
+                if (huffman_table_selection_for_bitmap_sizes.value() <= 1) {
+                    flags |= huffman_table_selection_for_bitmap_sizes.value() << 6;
+                    return {};
+                }
+            }
+            // FIXME: Also allow names "standard_table_1", "custom" for values 0, 1.
+            return Error::from_string_literal("expected 0 or 1 for \"huffman_table_selection_for_bitmap_sizes\"");
+        }
+
+        if (key == "huffman_table_selection_for_number_of_symbol_instances"sv) {
+            if (auto huffman_table_selection_for_number_of_symbol_instances = value.get_uint(); huffman_table_selection_for_number_of_symbol_instances.has_value()) {
+                if (huffman_table_selection_for_number_of_symbol_instances.value() <= 1) {
+                    flags |= huffman_table_selection_for_number_of_symbol_instances.value() << 7;
+                    return {};
+                }
+            }
+            // FIXME: Also allow names "standard_table_1", "custom" for values 0, 1.
+            return Error::from_string_literal("expected 0 or 1 for \"huffman_table_selection_for_number_of_symbol_instances\"");
+        }
+
+        if (key == "is_bitmap_coding_context_used"sv) {
+            if (auto is_bitmap_coding_context_used = value.get_bool(); is_bitmap_coding_context_used.has_value()) {
+                if (is_bitmap_coding_context_used.value())
+                    flags |= 1u << 8;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"is_bitmap_coding_context_used\"");
+        }
+
+        if (key == "is_bitmap_coding_context_retained"sv) {
+            if (auto is_bitmap_coding_context_retained = value.get_bool(); is_bitmap_coding_context_retained.has_value()) {
+                if (is_bitmap_coding_context_retained.value())
+                    flags |= 1u << 9;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"is_bitmap_coding_context_used\"");
+        }
+
+        if (key == "template"sv) {
+            if (auto template_ = value.get_uint(); template_.has_value()) {
+                if (template_.value() <= 3) {
+                    flags |= template_.value() << 10;
+                    return {};
+                }
+            }
+            return Error::from_string_literal("expected 0, 1, 2, or 3 for \"template\"");
+        }
+
+        if (key == "refinement_template"sv) {
+            if (auto refinement_template = value.get_uint(); refinement_template.has_value()) {
+                if (refinement_template.value() <= 1) {
+                    flags |= refinement_template.value() << 12;
+                    return {};
+                }
+            }
+            return Error::from_string_literal("expected 0 or 1 for \"refinement_template\"");
+        }
+
+        dbgln("symbol_dictionary flag key {}", key);
+        return Error::from_string_literal("unknown symbol_dictionary flag key");
+    }));
+
+    return flags;
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSONOptions const&, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    if (!object.has_value())
+        return Error::from_string_literal("symbol_dictionary segment should have \"data\" object");
+
+    u16 flags = 0;
+    Vector<i8> adaptive_template_pixels;
+    Vector<i8> refinement_adaptive_template_pixels;
+    Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "flags"sv) {
+            if (value.is_object()) {
+                flags = TRY(jbig2_symbol_dictionary_flags_from_json(value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"flags\"");
+        }
+
+        if (key == "adaptive_template_pixels"sv) {
+            if (auto adaptive_template_pixels_json = jbig2_adaptive_template_pixels_from_json(value); adaptive_template_pixels_json.has_value()) {
+                adaptive_template_pixels = adaptive_template_pixels_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected array of i8 for \"adaptive_template_pixels\"");
+        }
+
+        if (key == "refinement_adaptive_template_pixels"sv) {
+            if (auto adaptive_template_pixels_json = jbig2_adaptive_template_pixels_from_json(value); adaptive_template_pixels_json.has_value()) {
+                refinement_adaptive_template_pixels = adaptive_template_pixels_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected array of i8 for \"refinement_adaptive_template_pixels\"");
+        }
+
+        if (key == "strip_trailing_7fffs"sv) {
+            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
+            return {};
+        }
+
+        dbgln("symbol_dictionary key {}", key);
+        return Error::from_string_literal("unknown symbol_dictionary key");
+    }));
+
+    bool uses_huffman_encoding = (flags & 1) != 0;
+    u8 symbol_template = (flags >> 10) & 3;
+    if (adaptive_template_pixels.is_empty() && !uses_huffman_encoding)
+        adaptive_template_pixels = default_adaptive_template_pixels(symbol_template, false);
+
+    size_t number_of_adaptive_template_pixels = 0;
+    if (!uses_huffman_encoding)
+        number_of_adaptive_template_pixels = symbol_template == 0 ? 4 : 1;
+    if (adaptive_template_pixels.size() != number_of_adaptive_template_pixels * 2) {
+        dbgln("expected {} entries, got {}", number_of_adaptive_template_pixels * 2, adaptive_template_pixels.size());
+        return Error::from_string_literal("symbol_dictionary \"data\" object has wrong number of \"adaptive_template_pixels\"");
+    }
+    Array<Gfx::JBIG2::AdaptiveTemplatePixel, 4> template_pixels {};
+    for (size_t i = 0; i < number_of_adaptive_template_pixels; ++i) {
+        template_pixels[i].x = adaptive_template_pixels[2 * i];
+        template_pixels[i].y = adaptive_template_pixels[2 * i + 1];
+    }
+
+    u8 symbol_refinement_template = (flags >> 12) & 1;
+    if (refinement_adaptive_template_pixels.is_empty())
+        adaptive_template_pixels = default_refinement_adaptive_template_pixels(symbol_refinement_template);
+
+    bool uses_refinement_or_aggregate_coding = (flags & 2) != 0;
+    size_t number_of_refinement_adaptive_template_pixels = uses_refinement_or_aggregate_coding && symbol_refinement_template == 0 ? 2 : 0;
+    if (refinement_adaptive_template_pixels.size() != number_of_refinement_adaptive_template_pixels * 2) {
+        dbgln("expected {} entries, got {}", number_of_refinement_adaptive_template_pixels * 2, refinement_adaptive_template_pixels.size());
+        return Error::from_string_literal("symbol_dictionary \"data\" object has wrong number of \"refinement_adaptive_template_pixels\"");
+    }
+    Array<Gfx::JBIG2::AdaptiveTemplatePixel, 2> refinement_template_pixels {};
+    for (size_t i = 0; i < number_of_refinement_adaptive_template_pixels; ++i) {
+        refinement_template_pixels[i].x = refinement_adaptive_template_pixels[2 * i];
+        refinement_template_pixels[i].y = refinement_adaptive_template_pixels[2 * i + 1];
+    }
+
+    return Gfx::JBIG2::SegmentData {
+        header,
+        Gfx::JBIG2::SymbolDictionarySegmentData {
+            flags,
+            template_pixels,
+            refinement_template_pixels,
+            trailing_7fff_handling,
+        }
+    };
+}
+
 static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& object)
 {
     u8 flags = 0;
@@ -1668,6 +1868,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
     if (header.is_immediate_generic_region_of_initially_unknown_size && type_string != "generic_region"sv)
         return Error::from_string_literal("is_immediate_generic_region_of_initially_unknown_size can only be set for type \"generic_region\"");
 
+    if (type_string == "symbol_dictionary")
+        return jbig2_symbol_dictionary_from_json(options, header, segment_data_object);
     if (type_string == "pattern_dictionary")
         return jbig2_pattern_dictionary_from_json(options, header, segment_data_object);
     if (type_string == "halftone_region")
