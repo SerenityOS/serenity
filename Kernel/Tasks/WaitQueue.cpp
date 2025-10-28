@@ -5,6 +5,7 @@
  */
 
 #include <AK/Badge.h>
+#include <Kernel/Library/Panic.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/WaitQueue.h>
 
@@ -79,7 +80,14 @@ void WaitQueue::Waiter::maybe_remove_self_from_queue()
 
 void WaitQueue::Waiter::maybe_block()
 {
+    if (Processor::in_critical() > 0)
+        PANIC("Attempted to block in critical section");
+
+    if (Processor::current_in_irq() > 0)
+        PANIC("Attempted to block while handling an interrupt");
+
     VERIFY(m_association.has_value());
+    VERIFY(m_association->thread == Thread::current());
 
     bool blocked = false;
     {
