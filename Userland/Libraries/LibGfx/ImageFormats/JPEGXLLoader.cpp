@@ -1896,12 +1896,20 @@ static ErrorOr<ModularData> read_modular_bitstream(LittleEndianInputBitStream& s
 
     TRY(modular_data.create_channels(channels_info));
 
+    // "However, the decoder only decodes the first nb_meta_channels channels and any further channels
+    // that have a width and height that are both at most group_dim. At that point, it stops decoding."
+    u32 first_non_decoded_index = NumericLimits<u32>::max();
     auto will_be_decoded = [&](u32 index, Channel const& channel) {
         if (channel.width() == 0 || channel.height() == 0)
             return false;
         if (index < modular_data.nb_meta_channels)
             return true;
-        return channel.width() <= group_dim && channel.height() <= group_dim;
+        if (index >= first_non_decoded_index)
+            return false;
+        if (channel.width() <= group_dim && channel.height() <= group_dim)
+            return true;
+        first_non_decoded_index = index;
+        return false;
     };
 
     if constexpr (JPEGXL_DEBUG) {
@@ -2025,12 +2033,10 @@ static ErrorOr<GlobalModular> read_global_modular(LittleEndianInputBitStream& st
         }
     }
 
-    // However, the decoder only decodes the first nb_meta_channels channels and any further channels
-    // that have a width and height that are both at most group_dim. At that point, it stops decoding.
-    // No inverse transforms are applied yet.
     auto channels = TRY(FixedArray<ChannelInfo>::create(num_channels));
     channels.fill_with(ChannelInfo::from_size(frame_size));
 
+    // "No inverse transforms are applied yet."
     global_modular.modular_data = TRY(read_modular_bitstream(stream,
         {
             .channels_info = channels,
@@ -2207,7 +2213,7 @@ struct GroupOptions {
     u32 group_dim {};
 };
 
-template<CallableAs<bool, u32, Channel&> F1, CallableAs<void, Channel&> F2>
+template<CallableAs<bool, Channel const&> F1, CallableAs<void, Channel&> F2>
 static ErrorOr<void> read_group_data(
     LittleEndianInputBitStream& stream,
     GroupOptions&& options,
@@ -2219,8 +2225,8 @@ static ErrorOr<void> read_group_data(
     Vector<ChannelInfo> channels_info;
     Vector<Channel&> original_channels;
     auto& channels = global_modular.modular_data.channels;
-    for (auto [i, channel] : enumerate(channels)) {
-        if (!match_decode_conditions(i, channel))
+    for (auto& channel : channels) {
+        if (!match_decode_conditions(channel))
             continue;
 
         auto rect_size = rect_for_group(channel, group_dim, group_index).size();
@@ -2281,7 +2287,7 @@ static ErrorOr<void> read_lf_group(LittleEndianInputBitStream& stream,
     // ModularLfGroup
     u32 lf_group_dim = frame_header.group_dim() * 8;
 
-    auto match_decoding_conditions = [](u32, Channel& channel) {
+    auto match_decoding_conditions = [](Channel const& channel) {
         if (channel.decoded())
             return false;
         if (channel.hshift() < 3 || channel.vshift() < 3)
@@ -2593,13 +2599,7 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
     // for every remaining channel in the partially decoded GlobalModular image (i.e. it is not a meta-channel,
     // the channel dimensions exceed group_dim × group_dim, and hshift < 3 or vshift < 3, and the channel has
     // not been already decoded in a previous pass)
-    auto match_decoding_conditions = [&](u32 i, auto const& channel) {
-        if (i < global_modular.modular_data.nb_meta_channels)
-            return false;
-        if (channel.width() <= frame_header.group_dim() && channel.height() <= frame_header.group_dim())
-            return false;
-        if (channel.hshift() >= 3 && channel.vshift() >= 3)
-            return false;
+    auto match_decoding_conditions = [&](auto const& channel) {
         if (channel.decoded())
             return false;
         auto channel_min_shift = min(channel.hshift(), channel.vshift());
@@ -2772,8 +2772,11 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
                                          }));
         }
 
-        if (frame.frame_header.encoding == Encoding::kVarDCT) {
-            TODO();
+        {
+            auto hf_global_stream = get_stream_for_section(stream, frame.toc.entries[1 + frame.num_lf_groups]);
+            if (frame.frame_header.encoding == Encoding::kVarDCT) {
+                return Error::from_string_literal("JPEGXLLoader: Read HFGlobal for VarDCT frames");
+            }
         }
 
         for (u32 pass_index {}; pass_index < frame.frame_header.passes.num_passes; ++pass_index) {
