@@ -1765,13 +1765,7 @@ struct TextRegionDecodingInputParameters {
 
     bool is_transposed { false }; // "TRANSPOSED" in spec.
 
-    enum class Corner {
-        BottomLeft = 0,
-        TopLeft = 1,
-        BottomRight = 2,
-        TopRight = 3,
-    };
-    Corner reference_corner { Corner::TopLeft }; // "REFCORNER" in spec.
+    JBIG2::ReferenceCorner reference_corner { JBIG2::ReferenceCorner::TopLeft }; // "REFCORNER" in spec.
 
     i8 delta_s_offset { 0 }; // "SBDSOFFSET" in spec.
 
@@ -2036,7 +2030,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
             //      • If TRANSPOSED is 1, and REFCORNER is BOTTOMLEFT or BOTTOMRIGHT, set:
             //              CURS = CURS + HI – 1
             //      • Otherwise, do not change CURS in this step."
-            using enum TextRegionDecodingInputParameters::Corner;
+            using enum JBIG2::ReferenceCorner;
             if (!inputs.is_transposed && (inputs.reference_corner == TopRight || inputs.reference_corner == BottomRight))
                 cur_s += symbol.width() - 1;
             if (inputs.is_transposed && (inputs.reference_corner == BottomLeft || inputs.reference_corner == BottomRight))
@@ -2257,7 +2251,7 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
             text_inputs.default_pixel = 0;
             text_inputs.operator_ = JBIG2::CombinationOperator::Or;
             text_inputs.is_transposed = false;
-            text_inputs.reference_corner = TextRegionDecodingInputParameters::Corner::TopLeft;
+            text_inputs.reference_corner = JBIG2::ReferenceCorner::TopLeft;
             text_inputs.delta_s_offset = 0;
             text_inputs.first_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_6));
             text_inputs.subsequent_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_8));
@@ -3357,7 +3351,7 @@ static ErrorOr<RegionResult> decode_text_region(JBIG2LoadingContext& context, Se
     inputs.default_pixel = default_pixel_value;
     inputs.operator_ = static_cast<JBIG2::CombinationOperator>(combination_operator);
     inputs.is_transposed = is_transposed;
-    inputs.reference_corner = static_cast<TextRegionDecodingInputParameters::Corner>(reference_corner);
+    inputs.reference_corner = static_cast<JBIG2::ReferenceCorner>(reference_corner);
     inputs.delta_s_offset = delta_s_offset;
     inputs.region_width = information_field.width;
     inputs.region_height = information_field.height;
