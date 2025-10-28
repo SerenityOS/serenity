@@ -722,6 +722,38 @@ static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData
     return Error::from_string_literal("JBIG2Writer: Symbol dictionary encoding is not yet fully implemented");
 }
 
+static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text_region, JBIG2::SegmentHeaderData const&, HashMap<u32, JBIG2::SegmentData const*>&, Vector<u8>& scratch_buffer)
+{
+    // 7.4.3 Text region segment syntax
+    bool uses_huffman_encoding = (text_region.flags & 1) != 0;
+    bool uses_refinement_coding = (text_region.flags & 2) != 0;
+    u8 refinement_template = (text_region.flags >> 15);
+    u8 number_of_refinement_adaptive_template_pixels = (uses_refinement_coding && refinement_template == 0) ? 2 : 0;
+
+    // FIXME: Get referred-to symbol dictionaries and tables off header.referred_to_segments.
+
+    u32 number_of_symbol_instances = 0;          // FIXME: Actual value.
+    ByteBuffer symbol_id_huffman_decoding_table; // FIXME: Fill.
+    ByteBuffer data;                             // FIXME: Fill.
+
+    TRY(scratch_buffer.try_resize(sizeof(JBIG2::RegionSegmentInformationField) + 2 + (uses_huffman_encoding ? 2 : 0) + number_of_refinement_adaptive_template_pixels * 2 + 4 + symbol_id_huffman_decoding_table.size() + data.size()));
+    FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
+
+    TRY(encode_region_segment_information_field(stream, text_region.region_segment_information));
+    TRY(stream.write_value<BigEndian<u16>>(text_region.flags));
+    if (uses_huffman_encoding)
+        TRY(stream.write_value<BigEndian<u16>>(text_region.huffman_flags));
+    for (int i = 0; i < number_of_refinement_adaptive_template_pixels; ++i) {
+        TRY(stream.write_value<i8>(text_region.refinement_adaptive_template_pixels[i].x));
+        TRY(stream.write_value<i8>(text_region.refinement_adaptive_template_pixels[i].y));
+    }
+    TRY(stream.write_value<BigEndian<u32>>(number_of_symbol_instances));
+    TRY(stream.write_until_depleted(symbol_id_huffman_decoding_table));
+    TRY(stream.write_until_depleted(data));
+
+    return Error::from_string_literal("JBIG2Writer: Text region encoding is not yet fully implemented");
+}
+
 static ErrorOr<void> encode_pattern_dictionary(JBIG2::PatternDictionarySegmentData const& pattern_dictionary, Vector<u8>& scratch_buffer)
 {
     // 7.4.4 Pattern dictionary segment syntax
@@ -1082,6 +1114,14 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
             TRY(encode_symbol_dictionary(symbol_dictionary, scratch_buffer));
             return scratch_buffer;
         },
+        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateTextRegionSegmentData const& text_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_text_region(text_region_wrapper.text_region, segment_data.header, segment_by_id, scratch_buffer));
+            return scratch_buffer;
+        },
+        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateLosslessTextRegionSegmentData const& text_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_text_region(text_region_wrapper.text_region, segment_data.header, segment_by_id, scratch_buffer));
+            return scratch_buffer;
+        },
         [&scratch_buffer](JBIG2::PatternDictionarySegmentData const& pattern_dictionary) -> ErrorOr<ReadonlyBytes> {
             TRY(encode_pattern_dictionary(pattern_dictionary, scratch_buffer));
             return scratch_buffer;
@@ -1149,6 +1189,8 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     header.segment_number = segment_data.header.segment_number;
     header.type = segment_data.data.visit(
         [](JBIG2::SymbolDictionarySegmentData const&) { return JBIG2::SegmentType::SymbolDictionary; },
+        [](JBIG2::ImmediateTextRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateTextRegion; },
+        [](JBIG2::ImmediateLosslessTextRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessTextRegion; },
         [](JBIG2::PatternDictionarySegmentData const&) { return JBIG2::SegmentType::PatternDictionary; },
         [](JBIG2::ImmediateHalftoneRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateHalftoneRegion; },
         [](JBIG2::ImmediateLosslessHalftoneRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessHalftoneRegion; },
