@@ -5,6 +5,7 @@
  */
 
 #include <AK/Enumerate.h>
+#include <AK/IntegralMath.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
@@ -568,6 +569,305 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSON
             trailing_7fff_handling,
         }
     };
+}
+
+static ErrorOr<u16> jbig2_text_region_flags_from_json(JsonObject const& object)
+{
+    u16 flags = 0;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "uses_huffman_encoding"sv) {
+            if (auto uses_huffman_encoding = value.get_bool(); uses_huffman_encoding.has_value()) {
+                if (uses_huffman_encoding.value())
+                    flags |= 1u;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"uses_huffman_encoding\"");
+        }
+
+        if (key == "uses_refinement_coding"sv) {
+            if (auto uses_refinement_coding = value.get_bool(); uses_refinement_coding.has_value()) {
+                if (uses_refinement_coding.value())
+                    flags |= 1u << 1;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"uses_refinement_coding\"");
+        }
+
+        if (key == "strip_size"sv) {
+            if (auto strip_size = value.get_uint(); strip_size.has_value()) {
+                switch (strip_size.value()) {
+                case 1:
+                case 2:
+                case 4:
+                case 8:
+                    flags |= AK::log2(strip_size.value()) << 2;
+                    return {};
+                }
+            }
+            return Error::from_string_literal("expected 1, 2, 4, or 8 for \"strip_size\"");
+        }
+
+        if (key == "reference_corner"sv) {
+            if (value.is_string()) {
+                auto const& s = value.as_string();
+                if (s == "bottom_left"sv)
+                    flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::BottomLeft) << 4;
+                else if (s == "top_left"sv)
+                    flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::TopLeft) << 4;
+                else if (s == "bottom_right"sv)
+                    flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::BottomRight) << 4;
+                else if (s == "top_right"sv)
+                    flags |= to_underlying(Gfx::JBIG2::ReferenceCorner::TopRight) << 4;
+                else
+                    return Error::from_string_literal("expected \"bottom_left\", \"top_left\", \"bottom_right\", or \"top_right\" for \"reference_corner\"");
+                return {};
+            }
+            return Error::from_string_literal("expected \"bottom_left\", \"top_left\", \"bottom_right\", or \"top_right\" for \"reference_corner\"");
+        }
+
+        if (key == "is_transposed"sv) {
+            if (auto is_transposed = value.get_bool(); is_transposed.has_value()) {
+                if (is_transposed.value())
+                    flags |= 1u << 6;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"is_transposed\"");
+        }
+
+        if (key == "combination_operator"sv) {
+            if (value.is_string()) {
+                // "replace" is only valid in a region segment information's external_combination_operator, not here.
+                auto const& s = value.as_string();
+                if (s == "or"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Or) << 7;
+                else if (s == "and"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::And) << 7;
+                else if (s == "xor"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::Xor) << 7;
+                else if (s == "xnor"sv)
+                    flags |= to_underlying(Gfx::JBIG2::CombinationOperator::XNor) << 7;
+                else
+                    return Error::from_string_literal("expected \"or\", \"and\", \"xor\", or \"xnor\" for \"combination_operator\"");
+                return {};
+            }
+            return Error::from_string_literal("expected \"or\", \"and\", \"xor\", or \"xnor\" for \"combination_operator\"");
+        }
+
+        if (key == "default_pixel_value"sv) {
+            if (value.is_string()) {
+                auto const& s = value.as_string();
+                if (s == "white"sv)
+                    flags |= 0;
+                else if (s == "black"sv)
+                    flags |= 1u << 9;
+                else
+                    return Error::from_string_literal("expected \"white\" or \"black\" for \"default_pixel_value\"");
+                return {};
+            }
+            return Error::from_string_literal("expected \"white\" or \"black\" for \"default_pixel_value\"");
+        }
+
+        if (key == "delta_s_offset"sv) {
+            if (auto delta_s_offset = value.get_i32(); delta_s_offset.has_value() && delta_s_offset.value() >= -16 && delta_s_offset.value() <= 15) {
+                flags |= (delta_s_offset.value() & 0x1F) << 10;
+                return {};
+            }
+            return Error::from_string_literal("expected value in [-16, 15] for \"delta_s_offset\"");
+        }
+
+        if (key == "refinement_template"sv) {
+            if (auto refinement_template = value.get_uint(); refinement_template.has_value()) {
+                if (refinement_template.value() <= 1) {
+                    flags |= refinement_template.value() << 15;
+                    return {};
+                }
+            }
+            return Error::from_string_literal("expected 0 or 1 for \"refinement_template\"");
+        }
+
+        dbgln("text_region flag key {}", key);
+        return Error::from_string_literal("unknown text_region flag key");
+    }));
+
+    return flags;
+}
+
+static ErrorOr<u16> jbig2_text_region_huffman_flags_from_json(JsonObject const& object)
+{
+    u16 flags = 0;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "huffman_table_selection_for_first_s"sv) {
+            if (auto huffman_table_selection_for_first_s = value.get_uint(); huffman_table_selection_for_first_s.has_value()) {
+                if (huffman_table_selection_for_first_s.value() <= 3) {
+                    flags |= huffman_table_selection_for_first_s.value();
+                    return {};
+                }
+            }
+            // FIXME: Also allow names "standard_table_6", "standard_table_7", "custom" for values 0, 1, 3.
+            return Error::from_string_literal("expected 0, 1, or 2 for \"huffman_table_selection_for_first_s\"");
+        }
+
+        if (key == "huffman_table_selection_for_subsequent_s"sv) {
+            if (auto huffman_table_selection_for_subsequent_s = value.get_uint(); huffman_table_selection_for_subsequent_s.has_value()) {
+                if (huffman_table_selection_for_subsequent_s.value() <= 3) {
+                    flags |= huffman_table_selection_for_subsequent_s.value() << 2;
+                    return {};
+                }
+            }
+            // FIXME: Also allow names "standard_table_8", "standard_table_9", "standard_table_10", "custom" for values 0, 1, 2, 3.
+            return Error::from_string_literal("expected 0, 1, 2, or 3 for \"huffman_table_selection_for_subsequent_s\"");
+        }
+
+        if (key == "huffman_table_selection_for_t"sv) {
+            if (auto huffman_table_selection_for_t = value.get_uint(); huffman_table_selection_for_t.has_value()) {
+                if (huffman_table_selection_for_t.value() <= 3) {
+                    flags |= huffman_table_selection_for_t.value() << 4;
+                    return {};
+                }
+            }
+            // FIXME: Also allow names "standard_table_11", "standard_table_12", "standard_table_13", "custom" for values 0, 1, 2, 3.
+            return Error::from_string_literal("expected 0, 1, 2, or 3 for \"huffman_table_selection_for_t\"");
+        }
+
+        if (key == "huffman_table_selection_for_refinement_delta_width"sv) {
+            if (auto huffman_table_selection_for_refinement_delta_width = value.get_uint(); huffman_table_selection_for_refinement_delta_width.has_value()) {
+                if (huffman_table_selection_for_refinement_delta_width.value() <= 3) {
+                    flags |= huffman_table_selection_for_refinement_delta_width.value() << 6;
+                    return {};
+                }
+            }
+            // FIXME: Also allow names "standard_table_14", "standard_table_15", "custom" for values 0, 1, 3.
+            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_width\"");
+        }
+
+        if (key == "huffman_table_selection_for_refinement_delta_height"sv) {
+            if (auto huffman_table_selection_for_refinement_delta_height = value.get_uint(); huffman_table_selection_for_refinement_delta_height.has_value()) {
+                if (huffman_table_selection_for_refinement_delta_height.value() <= 3) {
+                    flags |= huffman_table_selection_for_refinement_delta_height.value() << 8;
+                    return {};
+                }
+            }
+            // FIXME: Also allow names "standard_table_14", "standard_table_15", "custom" for values 0, 1, 3.
+            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_height\"");
+        }
+
+        if (key == "huffman_table_selection_for_refinement_delta_x_offset"sv) {
+            if (auto huffman_table_selection_for_refinement_delta_x_offset = value.get_uint(); huffman_table_selection_for_refinement_delta_x_offset.has_value()) {
+                if (huffman_table_selection_for_refinement_delta_x_offset.value() <= 3) {
+                    flags |= huffman_table_selection_for_refinement_delta_x_offset.value() << 10;
+                    return {};
+                }
+            }
+            // FIXME: Also allow names "standard_table_14", "standard_table_15", "custom" for values 0, 1, 3.
+            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_x_offset\"");
+        }
+
+        if (key == "huffman_table_selection_for_refinement_delta_y_offset"sv) {
+            if (auto huffman_table_selection_for_refinement_delta_y_offset = value.get_uint(); huffman_table_selection_for_refinement_delta_y_offset.has_value()) {
+                if (huffman_table_selection_for_refinement_delta_y_offset.value() <= 3) {
+                    flags |= huffman_table_selection_for_refinement_delta_y_offset.value() << 12;
+                    return {};
+                }
+            }
+            // FIXME: Also allow names "standard_table_14", "standard_table_15", "custom" for values 0, 1, 3.
+            return Error::from_string_literal("expected 0, 1, or 3 for \"huffman_table_selection_for_refinement_delta_y_offset\"");
+        }
+
+        if (key == "huffman_table_selection_for_refinement_size_table"sv) {
+            if (auto huffman_table_selection_for_refinement_size_table = value.get_uint(); huffman_table_selection_for_refinement_size_table.has_value()) {
+                if (huffman_table_selection_for_refinement_size_table.value() <= 1) {
+                    flags |= huffman_table_selection_for_refinement_size_table.value() << 14;
+                    return {};
+                }
+            }
+            // FIXME: Also allow names "standard_table_1", "custom" for values 0, 1.
+            return Error::from_string_literal("expected 0 or 1 for \"huffman_table_selection_for_refinement_size_table\"");
+        }
+
+        dbgln("text_region huffman_flags key {}", key);
+        return Error::from_string_literal("unknown text_region huffman_flags key");
+    }));
+
+    return flags;
+}
+
+static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(ToJSONOptions const&, Optional<JsonObject const&> object)
+{
+    if (!object.has_value())
+        return Error::from_string_literal("text_region segment should have \"data\" object");
+
+    Vector<i8> refinement_adaptive_template_pixels;
+    Gfx::JBIG2::TextRegionSegmentData text_region;
+
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "region_segment_information"sv) {
+            if (value.is_object()) {
+                auto region_segment_information = TRY(jbig2_region_segment_information_from_json(value.as_object()));
+                if (region_segment_information.use_width_from_image || region_segment_information.use_height_from_image)
+                    return Error::from_string_literal("can't use \"from_image\" with text_region");
+                text_region.region_segment_information = region_segment_information.region_segment_information;
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"region_segment_information\"");
+        }
+
+        if (key == "flags"sv) {
+            if (value.is_object()) {
+                text_region.flags = TRY(jbig2_text_region_flags_from_json(value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"flags\"");
+        }
+
+        if (key == "huffman_flags"sv) {
+            if (value.is_object()) {
+                text_region.huffman_flags = TRY(jbig2_text_region_huffman_flags_from_json(value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"huffman_flags\"");
+        }
+
+        if (key == "refinement_adaptive_template_pixels"sv) {
+            if (auto adaptive_template_pixels_json = jbig2_adaptive_template_pixels_from_json(value); adaptive_template_pixels_json.has_value()) {
+                refinement_adaptive_template_pixels = adaptive_template_pixels_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected array of i8 for \"refinement_adaptive_template_pixels\"");
+        }
+
+        if (key == "strip_trailing_7fffs"sv)
+            text_region.trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
+
+        dbgln("text_region key {}", key);
+        return Error::from_string_literal("unknown text_region key");
+    }));
+
+    bool uses_refinement_coding = (text_region.flags & 2) != 0;
+    u8 refinement_template = (text_region.flags >> 15);
+    size_t number_of_refinement_adaptive_template_pixels = uses_refinement_coding && refinement_template == 0 ? 2 : 0;
+    if (refinement_adaptive_template_pixels.size() != number_of_refinement_adaptive_template_pixels * 2) {
+        dbgln("expected {} entries, got {}", number_of_refinement_adaptive_template_pixels * 2, refinement_adaptive_template_pixels.size());
+        return Error::from_string_literal("text_region \"data\" object has wrong number of \"refinement_adaptive_template_pixels\"");
+    }
+    for (size_t i = 0; i < number_of_refinement_adaptive_template_pixels; ++i) {
+        text_region.refinement_adaptive_template_pixels[i].x = refinement_adaptive_template_pixels[2 * i];
+        text_region.refinement_adaptive_template_pixels[i].y = refinement_adaptive_template_pixels[2 * i + 1];
+    }
+
+    return text_region;
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_text_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    auto result = TRY(jbig2_text_region_from_json(options, object));
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateTextRegionSegmentData { move(result) } };
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_lossless_text_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateLosslessTextRegionSegmentData { TRY(jbig2_text_region_from_json(options, object)) } };
 }
 
 static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& object)
@@ -1870,6 +2170,10 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
 
     if (type_string == "symbol_dictionary")
         return jbig2_symbol_dictionary_from_json(options, header, segment_data_object);
+    if (type_string == "text_region")
+        return jbig2_immediate_text_region_from_json(options, header, segment_data_object);
+    if (type_string == "lossless_text_region")
+        return jbig2_immediate_lossless_text_region_from_json(options, header, segment_data_object);
     if (type_string == "pattern_dictionary")
         return jbig2_pattern_dictionary_from_json(options, header, segment_data_object);
     if (type_string == "halftone_region")
