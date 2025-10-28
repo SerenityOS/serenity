@@ -628,29 +628,6 @@ static ErrorOr<void> encode_segment_header(Stream& stream, JBIG2::SegmentHeader 
     return {};
 }
 
-static ErrorOr<void> encode_region_segment_information_field(Stream& stream, JBIG2::RegionSegmentInformationField const& region_information)
-{
-    // 7.4.8 Page information segment syntax
-    TRY(stream.write_value<BigEndian<u32>>(region_information.width));
-    TRY(stream.write_value<BigEndian<u32>>(region_information.height));
-    TRY(stream.write_value<BigEndian<u32>>(region_information.x_location));
-    TRY(stream.write_value<BigEndian<u32>>(region_information.y_location));
-    TRY(stream.write_value<u8>(region_information.flags));
-
-    return {};
-}
-
-static ErrorOr<void> encode_page_information_data(Stream& stream, JBIG2::PageInformationSegment const& page_information)
-{
-    TRY(stream.write_value<BigEndian<u32>>(page_information.bitmap_width));
-    TRY(stream.write_value<BigEndian<u32>>(page_information.bitmap_height));
-    TRY(stream.write_value<BigEndian<u32>>(page_information.page_x_resolution));
-    TRY(stream.write_value<BigEndian<u32>>(page_information.page_y_resolution));
-    TRY(stream.write_value<u8>(page_information.flags));
-    TRY(stream.write_value<BigEndian<u16>>(page_information.striping_information));
-    return {};
-}
-
 ErrorOr<void> JBIG2Writer::encode(Stream& stream, Bitmap const& bitmap, Options const&)
 {
     auto bilevel_image = TRY(BilevelImage::create_from_bitmap(bitmap, DitheringAlgorithm::FloydSteinberg));
@@ -698,58 +675,88 @@ ErrorOr<void> JBIG2Writer::encode(Stream& stream, Bitmap const& bitmap, Options 
     return encode_with_explicit_data(stream, jbig2);
 }
 
-static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData const& halftone_region, JBIG2::SegmentHeaderData const& header, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id, Vector<u8>& scratch_buffer)
+static ErrorOr<void> encode_region_segment_information_field(Stream& stream, JBIG2::RegionSegmentInformationField const& region_information)
 {
-    if (header.referred_to_segments.size() != 1)
-        return Error::from_string_literal("JBIG2Writer: Halftone region must refer to exactly one segment");
+    // 7.4.1 Region segment information field
+    TRY(stream.write_value<BigEndian<u32>>(region_information.width));
+    TRY(stream.write_value<BigEndian<u32>>(region_information.height));
+    TRY(stream.write_value<BigEndian<u32>>(region_information.x_location));
+    TRY(stream.write_value<BigEndian<u32>>(region_information.y_location));
+    TRY(stream.write_value<u8>(region_information.flags));
 
-    auto maybe_segment = segment_by_id.get(header.referred_to_segments[0].segment_number);
-    if (!maybe_segment.has_value())
-        return Error::from_string_literal("JBIG2Writer: Could not find referred-to segment for halftone region");
-    auto const& referred_to_segment = *maybe_segment.value();
-    if (!referred_to_segment.data.has<JBIG2::PatternDictionarySegmentData>())
-        return Error::from_string_literal("JBIG2Writer: Halftone region must refer to a pattern dictionary segment");
-    auto const& pattern_dictionary = referred_to_segment.data.get<JBIG2::PatternDictionarySegmentData>();
+    return {};
+}
 
-    // FIXME: Add a halftone_region_encoding_procedure()? For now, it's just inlined here.
-    u32 bits_per_pattern = ceil(log2(pattern_dictionary.gray_max + 1));
+static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData const& symbol_dictionary, Vector<u8>& scratch_buffer)
+{
+    // 7.4.2 Symbol dictionary segment syntax
+    bool uses_huffman_encoding = (symbol_dictionary.flags & 1) != 0;
+    bool uses_refinement_or_aggregate_coding = (symbol_dictionary.flags & 2) != 0;
+    u8 symbol_template = (symbol_dictionary.flags >> 10) & 3;
+    u8 symbol_refinement_template = (symbol_dictionary.flags >> 12) & 1;
 
-    // FIXME: Implement support for enable_skip.
-    Optional<BilevelImage const&> skip_pattern;
-    bool const enable_skip = ((halftone_region.flags >> 3) & 1) != 0;
-    if (enable_skip)
-        return Error::from_string_literal("JBIG2Writer: Halftone region skip pattern not yet implemented");
+    u8 number_of_adaptive_template_pixels = 0;
+    if (!uses_huffman_encoding)
+        number_of_adaptive_template_pixels = symbol_template == 0 ? 4 : 1;
+    u8 number_of_refinement_adaptive_template_pixels = (uses_refinement_or_aggregate_coding && symbol_refinement_template == 0) ? 2 : 0;
 
-    GrayscaleInputParameters inputs { .grayscale_image = halftone_region.grayscale_image, .skip_pattern = skip_pattern };
-    inputs.uses_mmr = halftone_region.flags & 1;
-    inputs.skip_pattern = skip_pattern;
-    inputs.bpp = bits_per_pattern;
-    inputs.width = halftone_region.grayscale_width;
-    inputs.height = halftone_region.grayscale_height;
-    inputs.template_id = (halftone_region.flags >> 1) & 3;
-    inputs.trailing_7fff_handling = halftone_region.trailing_7fff_handling;
-    Optional<JBIG2::GenericContexts> contexts;
-    if (!inputs.uses_mmr)
-        contexts = JBIG2::GenericContexts { inputs.template_id };
-    auto data = TRY(grayscale_image_encoding_procedure(inputs, contexts));
+    ByteBuffer data;                    // FIXME: Fill.
+    u32 number_of_exported_symbols = 0; // FIXME: Actual value.
+    u32 number_of_new_symbols = 0;      // FIXME: Actual value.
 
-    TRY(scratch_buffer.try_resize(sizeof(JBIG2::RegionSegmentInformationField) + 1 + 2 * 4 * 2 * 2 + data.size()));
+    TRY(scratch_buffer.try_resize(2 + number_of_adaptive_template_pixels * 2 + number_of_refinement_adaptive_template_pixels * 2 + 2 * 4 + data.size()));
+    FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
+    TRY(stream.write_value<BigEndian<u16>>(symbol_dictionary.flags));
+    for (int i = 0; i < number_of_adaptive_template_pixels; ++i) {
+        TRY(stream.write_value<i8>(symbol_dictionary.adaptive_template_pixels[i].x));
+        TRY(stream.write_value<i8>(symbol_dictionary.adaptive_template_pixels[i].y));
+    }
+    for (int i = 0; i < number_of_refinement_adaptive_template_pixels; ++i) {
+        TRY(stream.write_value<i8>(symbol_dictionary.refinement_adaptive_template_pixels[i].x));
+        TRY(stream.write_value<i8>(symbol_dictionary.refinement_adaptive_template_pixels[i].y));
+    }
+    TRY(stream.write_value<BigEndian<u32>>(number_of_exported_symbols));
+    TRY(stream.write_value<BigEndian<u32>>(number_of_new_symbols));
+    TRY(stream.write_until_depleted(data));
+
+    return Error::from_string_literal("JBIG2Writer: Symbol dictionary encoding is not yet fully implemented");
+}
+
+static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text_region, JBIG2::SegmentHeaderData const&, HashMap<u32, JBIG2::SegmentData const*>&, Vector<u8>& scratch_buffer)
+{
+    // 7.4.3 Text region segment syntax
+    bool uses_huffman_encoding = (text_region.flags & 1) != 0;
+    bool uses_refinement_coding = (text_region.flags & 2) != 0;
+    u8 refinement_template = (text_region.flags >> 15);
+    u8 number_of_refinement_adaptive_template_pixels = (uses_refinement_coding && refinement_template == 0) ? 2 : 0;
+
+    // FIXME: Get referred-to symbol dictionaries and tables off header.referred_to_segments.
+
+    u32 number_of_symbol_instances = 0;          // FIXME: Actual value.
+    ByteBuffer symbol_id_huffman_decoding_table; // FIXME: Fill.
+    ByteBuffer data;                             // FIXME: Fill.
+
+    TRY(scratch_buffer.try_resize(sizeof(JBIG2::RegionSegmentInformationField) + 2 + (uses_huffman_encoding ? 2 : 0) + number_of_refinement_adaptive_template_pixels * 2 + 4 + symbol_id_huffman_decoding_table.size() + data.size()));
     FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
 
-    TRY(encode_region_segment_information_field(stream, halftone_region.region_segment_information));
-    TRY(stream.write_value<u8>(halftone_region.flags));
-    TRY(stream.write_value<BigEndian<u32>>(halftone_region.grayscale_width));
-    TRY(stream.write_value<BigEndian<u32>>(halftone_region.grayscale_height));
-    TRY(stream.write_value<BigEndian<i32>>(halftone_region.grid_offset_x_times_256));
-    TRY(stream.write_value<BigEndian<i32>>(halftone_region.grid_offset_y_times_256));
-    TRY(stream.write_value<BigEndian<u16>>(halftone_region.grid_vector_x_times_256));
-    TRY(stream.write_value<BigEndian<u16>>(halftone_region.grid_vector_y_times_256));
+    TRY(encode_region_segment_information_field(stream, text_region.region_segment_information));
+    TRY(stream.write_value<BigEndian<u16>>(text_region.flags));
+    if (uses_huffman_encoding)
+        TRY(stream.write_value<BigEndian<u16>>(text_region.huffman_flags));
+    for (int i = 0; i < number_of_refinement_adaptive_template_pixels; ++i) {
+        TRY(stream.write_value<i8>(text_region.refinement_adaptive_template_pixels[i].x));
+        TRY(stream.write_value<i8>(text_region.refinement_adaptive_template_pixels[i].y));
+    }
+    TRY(stream.write_value<BigEndian<u32>>(number_of_symbol_instances));
+    TRY(stream.write_until_depleted(symbol_id_huffman_decoding_table));
     TRY(stream.write_until_depleted(data));
-    return {};
+
+    return Error::from_string_literal("JBIG2Writer: Text region encoding is not yet fully implemented");
 }
 
 static ErrorOr<void> encode_pattern_dictionary(JBIG2::PatternDictionarySegmentData const& pattern_dictionary, Vector<u8>& scratch_buffer)
 {
+    // 7.4.4 Pattern dictionary segment syntax
     if (pattern_dictionary.image->width() != (pattern_dictionary.gray_max + 1) * pattern_dictionary.pattern_width)
         return Error::from_string_literal("JBIG2Writer: Pattern dictionary image has wrong width");
     if (pattern_dictionary.image->height() != pattern_dictionary.pattern_height)
@@ -799,8 +806,60 @@ static ErrorOr<void> encode_pattern_dictionary(JBIG2::PatternDictionarySegmentDa
     return {};
 }
 
+static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData const& halftone_region, JBIG2::SegmentHeaderData const& header, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id, Vector<u8>& scratch_buffer)
+{
+    // 7.4.5 Halftone region segment syntax
+    if (header.referred_to_segments.size() != 1)
+        return Error::from_string_literal("JBIG2Writer: Halftone region must refer to exactly one segment");
+
+    auto maybe_segment = segment_by_id.get(header.referred_to_segments[0].segment_number);
+    if (!maybe_segment.has_value())
+        return Error::from_string_literal("JBIG2Writer: Could not find referred-to segment for halftone region");
+    auto const& referred_to_segment = *maybe_segment.value();
+    if (!referred_to_segment.data.has<JBIG2::PatternDictionarySegmentData>())
+        return Error::from_string_literal("JBIG2Writer: Halftone region must refer to a pattern dictionary segment");
+    auto const& pattern_dictionary = referred_to_segment.data.get<JBIG2::PatternDictionarySegmentData>();
+
+    // FIXME: Add a halftone_region_encoding_procedure()? For now, it's just inlined here.
+    u32 bits_per_pattern = ceil(log2(pattern_dictionary.gray_max + 1));
+
+    // FIXME: Implement support for enable_skip.
+    Optional<BilevelImage const&> skip_pattern;
+    bool const enable_skip = ((halftone_region.flags >> 3) & 1) != 0;
+    if (enable_skip)
+        return Error::from_string_literal("JBIG2Writer: Halftone region skip pattern not yet implemented");
+
+    GrayscaleInputParameters inputs { .grayscale_image = halftone_region.grayscale_image, .skip_pattern = skip_pattern };
+    inputs.uses_mmr = halftone_region.flags & 1;
+    inputs.skip_pattern = skip_pattern;
+    inputs.bpp = bits_per_pattern;
+    inputs.width = halftone_region.grayscale_width;
+    inputs.height = halftone_region.grayscale_height;
+    inputs.template_id = (halftone_region.flags >> 1) & 3;
+    inputs.trailing_7fff_handling = halftone_region.trailing_7fff_handling;
+    Optional<JBIG2::GenericContexts> contexts;
+    if (!inputs.uses_mmr)
+        contexts = JBIG2::GenericContexts { inputs.template_id };
+    auto data = TRY(grayscale_image_encoding_procedure(inputs, contexts));
+
+    TRY(scratch_buffer.try_resize(sizeof(JBIG2::RegionSegmentInformationField) + 1 + 2 * 4 * 2 * 2 + data.size()));
+    FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
+
+    TRY(encode_region_segment_information_field(stream, halftone_region.region_segment_information));
+    TRY(stream.write_value<u8>(halftone_region.flags));
+    TRY(stream.write_value<BigEndian<u32>>(halftone_region.grayscale_width));
+    TRY(stream.write_value<BigEndian<u32>>(halftone_region.grayscale_height));
+    TRY(stream.write_value<BigEndian<i32>>(halftone_region.grid_offset_x_times_256));
+    TRY(stream.write_value<BigEndian<i32>>(halftone_region.grid_offset_y_times_256));
+    TRY(stream.write_value<BigEndian<u16>>(halftone_region.grid_vector_x_times_256));
+    TRY(stream.write_value<BigEndian<u16>>(halftone_region.grid_vector_y_times_256));
+    TRY(stream.write_until_depleted(data));
+    return {};
+}
+
 static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const& generic_region, Vector<u8>& scratch_buffer)
 {
+    // 7.4.6 Generic region segment syntax
     GenericRegionEncodingInputParameters inputs { .image = *generic_region.image };
     inputs.is_modified_modified_read = generic_region.flags & 1;
     inputs.gb_template = (generic_region.flags >> 1) & 3;
@@ -854,6 +913,7 @@ static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const
 
 static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRegionSegmentData const& generic_refinement_region, JBIG2::SegmentHeaderData const& header, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id, Vector<u8>& scratch_buffer)
 {
+    // 7.4.7 Generic refinement region syntax
     if (header.referred_to_segments.size() > 1)
         return Error::from_string_literal("JBIG2Writer: Generic refinement region must refer to at most one segment");
     if (header.referred_to_segments.size() == 0)
@@ -900,9 +960,22 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
     return {};
 }
 
-// B.2 Code table structure, but in reverse
+static ErrorOr<void> encode_page_information_data(Stream& stream, JBIG2::PageInformationSegment const& page_information)
+{
+    // 7.4.8 Page information segment syntax
+    TRY(stream.write_value<BigEndian<u32>>(page_information.bitmap_width));
+    TRY(stream.write_value<BigEndian<u32>>(page_information.bitmap_height));
+    TRY(stream.write_value<BigEndian<u32>>(page_information.page_x_resolution));
+    TRY(stream.write_value<BigEndian<u32>>(page_information.page_y_resolution));
+    TRY(stream.write_value<u8>(page_information.flags));
+    TRY(stream.write_value<BigEndian<u16>>(page_information.striping_information));
+    return {};
+}
+
 static ErrorOr<void> encode_tables(JBIG2::TablesData const& tables, Vector<u8>& scratch_buffer)
 {
+    // 7.4.13 Code table segment syntax
+    // B.2 Code table structure, but in reverse
     bool has_out_of_band = tables.flags & 1;             // "HTOOB" in spec.
     u8 prefix_bit_count = ((tables.flags >> 1) & 7) + 1; // "HTPS" (hash table prefix size) in spec.
     u8 range_bit_count = ((tables.flags >> 4) & 7) + 1;  // "HTRS" (hash table range size) in spec.
@@ -1037,16 +1110,28 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     Vector<u8> scratch_buffer;
 
     auto encoded_data = TRY(segment_data.data.visit(
+        [&scratch_buffer](JBIG2::SymbolDictionarySegmentData const& symbol_dictionary) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_symbol_dictionary(symbol_dictionary, scratch_buffer));
+            return scratch_buffer;
+        },
+        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateTextRegionSegmentData const& text_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_text_region(text_region_wrapper.text_region, segment_data.header, segment_by_id, scratch_buffer));
+            return scratch_buffer;
+        },
+        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateLosslessTextRegionSegmentData const& text_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_text_region(text_region_wrapper.text_region, segment_data.header, segment_by_id, scratch_buffer));
+            return scratch_buffer;
+        },
+        [&scratch_buffer](JBIG2::PatternDictionarySegmentData const& pattern_dictionary) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_pattern_dictionary(pattern_dictionary, scratch_buffer));
+            return scratch_buffer;
+        },
         [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateHalftoneRegionSegmentData const& halftone_region_wrapper) -> ErrorOr<ReadonlyBytes> {
             TRY(encode_halftone_region(halftone_region_wrapper.halftone_region, segment_data.header, segment_by_id, scratch_buffer));
             return scratch_buffer;
         },
         [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateLosslessHalftoneRegionSegmentData const& halftone_region_wrapper) -> ErrorOr<ReadonlyBytes> {
             TRY(encode_halftone_region(halftone_region_wrapper.halftone_region, segment_data.header, segment_by_id, scratch_buffer));
-            return scratch_buffer;
-        },
-        [&scratch_buffer](JBIG2::PatternDictionarySegmentData const& pattern_dictionary) -> ErrorOr<ReadonlyBytes> {
-            TRY(encode_pattern_dictionary(pattern_dictionary, scratch_buffer));
             return scratch_buffer;
         },
         [&scratch_buffer](JBIG2::ImmediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<ReadonlyBytes> {
@@ -1103,9 +1188,12 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     JBIG2::SegmentHeader header;
     header.segment_number = segment_data.header.segment_number;
     header.type = segment_data.data.visit(
+        [](JBIG2::SymbolDictionarySegmentData const&) { return JBIG2::SegmentType::SymbolDictionary; },
+        [](JBIG2::ImmediateTextRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateTextRegion; },
+        [](JBIG2::ImmediateLosslessTextRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessTextRegion; },
+        [](JBIG2::PatternDictionarySegmentData const&) { return JBIG2::SegmentType::PatternDictionary; },
         [](JBIG2::ImmediateHalftoneRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateHalftoneRegion; },
         [](JBIG2::ImmediateLosslessHalftoneRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessHalftoneRegion; },
-        [](JBIG2::PatternDictionarySegmentData const&) { return JBIG2::SegmentType::PatternDictionary; },
         [](JBIG2::ImmediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateGenericRegion; },
         [](JBIG2::ImmediateLosslessGenericRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessGenericRegion; },
         [](JBIG2::IntermediateGenericRegionSegmentData const&) { return JBIG2::SegmentType::IntermediateGenericRegion; },

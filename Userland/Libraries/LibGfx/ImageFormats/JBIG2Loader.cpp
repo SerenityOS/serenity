@@ -1155,7 +1155,7 @@ static ErrorOr<void> complete_decoding_all_segment_headers(JBIG2LoadingContext& 
 
 static ErrorOr<JBIG2::RegionSegmentInformationField> decode_region_segment_information_field(ReadonlyBytes data)
 {
-    // 7.4.8 Page information segment syntax
+    // 7.4.1 Region segment information field
     if (data.size() < sizeof(JBIG2::RegionSegmentInformationField))
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid region segment information field size");
     auto result = *(JBIG2::RegionSegmentInformationField const*)data.data();
@@ -1205,7 +1205,7 @@ static ErrorOr<void> validate_segment_combination_operator_consistency(JBIG2Load
 
 static ErrorOr<JBIG2::EndOfStripeSegment> decode_end_of_stripe_segment(ReadonlyBytes data)
 {
-    // 7.4.8 Page information segment syntax
+    // 7.4.10 End of stripe segment syntax
     if (data.size() != sizeof(JBIG2::EndOfStripeSegment))
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of strip segment has wrong size");
     return *(JBIG2::EndOfStripeSegment const*)data.data();
@@ -1765,13 +1765,7 @@ struct TextRegionDecodingInputParameters {
 
     bool is_transposed { false }; // "TRANSPOSED" in spec.
 
-    enum class Corner {
-        BottomLeft = 0,
-        TopLeft = 1,
-        BottomRight = 2,
-        TopRight = 3,
-    };
-    Corner reference_corner { Corner::TopLeft }; // "REFCORNER" in spec.
+    JBIG2::ReferenceCorner reference_corner { JBIG2::ReferenceCorner::TopLeft }; // "REFCORNER" in spec.
 
     i8 delta_s_offset { 0 }; // "SBDSOFFSET" in spec.
 
@@ -2036,7 +2030,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
             //      • If TRANSPOSED is 1, and REFCORNER is BOTTOMLEFT or BOTTOMRIGHT, set:
             //              CURS = CURS + HI – 1
             //      • Otherwise, do not change CURS in this step."
-            using enum TextRegionDecodingInputParameters::Corner;
+            using enum JBIG2::ReferenceCorner;
             if (!inputs.is_transposed && (inputs.reference_corner == TopRight || inputs.reference_corner == BottomRight))
                 cur_s += symbol.width() - 1;
             if (inputs.is_transposed && (inputs.reference_corner == BottomLeft || inputs.reference_corner == BottomRight))
@@ -2257,7 +2251,7 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
             text_inputs.default_pixel = 0;
             text_inputs.operator_ = JBIG2::CombinationOperator::Or;
             text_inputs.is_transposed = false;
-            text_inputs.reference_corner = TextRegionDecodingInputParameters::Corner::TopLeft;
+            text_inputs.reference_corner = JBIG2::ReferenceCorner::TopLeft;
             text_inputs.delta_s_offset = 0;
             text_inputs.first_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_6));
             text_inputs.subsequent_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_8));
@@ -3331,7 +3325,7 @@ static ErrorOr<RegionResult> decode_text_region(JBIG2LoadingContext& context, Se
     }
 
     dbgln_if(JBIG2_DEBUG, "Text region: uses_huffman_encoding={}, uses_refinement_coding={}, strip_size={}, reference_corner={}, is_transposed={}", uses_huffman_encoding, uses_refinement_coding, strip_size, reference_corner, is_transposed);
-    dbgln_if(JBIG2_DEBUG, "Text region: combination_operator={}, default_pixel_value={}, delta_s_offset={}, refinement_template={}, number_of_symbol_instances={}", combination_operator, default_pixel_value, delta_s_offset, refinement_template, number_of_symbol_instances);
+    dbgln_if(JBIG2_DEBUG, "Text region: combination_operator={}, default_pixel_value={}, delta_s_offset={}, refinement_template={}", combination_operator, default_pixel_value, delta_s_offset, refinement_template);
     dbgln_if(JBIG2_DEBUG, "Text region: number_of_symbol_instances={}", number_of_symbol_instances);
 
     // 7.4.3.2 Decoding a text region segment
@@ -3357,7 +3351,7 @@ static ErrorOr<RegionResult> decode_text_region(JBIG2LoadingContext& context, Se
     inputs.default_pixel = default_pixel_value;
     inputs.operator_ = static_cast<JBIG2::CombinationOperator>(combination_operator);
     inputs.is_transposed = is_transposed;
-    inputs.reference_corner = static_cast<TextRegionDecodingInputParameters::Corner>(reference_corner);
+    inputs.reference_corner = static_cast<JBIG2::ReferenceCorner>(reference_corner);
     inputs.delta_s_offset = delta_s_offset;
     inputs.region_width = information_field.width;
     inputs.region_height = information_field.height;
@@ -3918,6 +3912,7 @@ static ErrorOr<void> decode_profiles(JBIG2LoadingContext&, SegmentData const&)
 
 static ErrorOr<void> decode_tables(JBIG2LoadingContext&, SegmentData& segment)
 {
+    // 7.4.13 Code table segment syntax
     // B.2 Code table structure
     FixedMemoryStream stream { segment.data };
 

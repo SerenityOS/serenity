@@ -2250,6 +2250,28 @@ TEST_CASE(test_jxl_palette_and_groups)
     EXPECT_EQ(frame.image->get_pixel(20, 130), Gfx::Color::from_string("#0b1112"sv));
 }
 
+TEST_CASE(test_jxl_xyb)
+{
+    auto reference_file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("png/buggie.png"sv)));
+    auto reference_decoder = TRY_OR_FAIL(Gfx::PNGImageDecoderPlugin::create(reference_file->bytes()));
+    auto reference_frame = TRY_OR_FAIL(reference_decoder->frame(0));
+
+    auto file = TRY_OR_FAIL(Core::MappedFile::map(TEST_INPUT("jxl/xyb.jxl"sv)));
+    EXPECT(Gfx::JPEGXLImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = TRY_OR_FAIL(Gfx::JPEGXLImageDecoderPlugin::create(file->bytes()));
+
+    TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, reference_frame.image->size()));
+    auto frame = TRY_OR_FAIL(plugin_decoder->frame(0));
+    for (i32 y = 0; y < reference_frame.image->height(); ++y) {
+        for (i32 x = 0; x < reference_frame.image->width(); ++x) {
+            auto color = frame.image->get_pixel(x, y);
+            auto reference_color = frame.image->get_pixel(x, y);
+            u32 diff = abs(reference_color.red() - color.red()) + abs(reference_color.green() - color.green()) + abs(reference_color.blue() - color.blue()) + abs(reference_color.alpha() - color.alpha());
+            EXPECT(diff <= 1);
+        }
+    }
+}
+
 TEST_CASE(test_dds)
 {
     Array file_names = {

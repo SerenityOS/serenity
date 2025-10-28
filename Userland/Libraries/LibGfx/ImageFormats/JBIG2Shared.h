@@ -71,6 +71,14 @@ struct SegmentHeader {
     Optional<u32> data_length;
 };
 
+// 7.4.3.1.1 Text region segment flags
+enum class ReferenceCorner {
+    BottomLeft = 0,
+    TopLeft = 1,
+    BottomRight = 2,
+    TopRight = 3,
+};
+
 // 7.4.8.5 Page segment flags
 enum class CombinationOperator {
     Or = 0,

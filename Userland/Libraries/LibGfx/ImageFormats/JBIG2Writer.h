@@ -41,6 +41,40 @@ struct SegmentHeaderData {
     bool is_immediate_generic_region_of_initially_unknown_size { false };
 };
 
+struct SymbolDictionarySegmentData {
+    u16 flags { 0 };
+    Array<AdaptiveTemplatePixel, 4> adaptive_template_pixels {};
+    Array<AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels {};
+    // FIXME: Add more fields.
+    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+};
+
+struct TextRegionSegmentData {
+    RegionSegmentInformationField region_segment_information {};
+    u16 flags { 0 };
+    u16 huffman_flags { 0 };
+    Array<AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels {};
+    // FIXME: Add more fields.
+    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+};
+
+struct ImmediateTextRegionSegmentData {
+    TextRegionSegmentData text_region;
+};
+
+struct ImmediateLosslessTextRegionSegmentData {
+    TextRegionSegmentData text_region;
+};
+
+struct PatternDictionarySegmentData {
+    u8 flags { 0 };
+    u8 pattern_width { 0 };
+    u8 pattern_height { 0 };
+    u32 gray_max { 0 };
+    NonnullRefPtr<BilevelImage> image;
+    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+};
+
 struct HalftoneRegionSegmentData {
     RegionSegmentInformationField region_segment_information {};
     u8 flags { 0 };
@@ -64,15 +98,6 @@ struct ImmediateHalftoneRegionSegmentData {
 
 struct ImmediateLosslessHalftoneRegionSegmentData {
     HalftoneRegionSegmentData halftone_region;
-};
-
-struct PatternDictionarySegmentData {
-    u8 flags { 0 };
-    u8 pattern_width { 0 };
-    u8 pattern_height { 0 };
-    u32 gray_max { 0 };
-    NonnullRefPtr<BilevelImage> image;
-    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
 };
 
 struct GenericRegionSegmentData {
@@ -147,9 +172,12 @@ struct ExtensionData {
 struct SegmentData {
     SegmentHeaderData header;
     Variant<
+        SymbolDictionarySegmentData,
+        ImmediateTextRegionSegmentData,
+        ImmediateLosslessTextRegionSegmentData,
+        PatternDictionarySegmentData,
         ImmediateHalftoneRegionSegmentData,
         ImmediateLosslessHalftoneRegionSegmentData,
-        PatternDictionarySegmentData,
         ImmediateGenericRegionSegmentData,
         ImmediateLosslessGenericRegionSegmentData,
         IntermediateGenericRegionSegmentData,
