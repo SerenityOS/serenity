@@ -399,6 +399,22 @@ static ErrorOr<ToneMapping> read_tone_mapping(LittleEndianInputBitStream& stream
 }
 
 struct OpsinInverseMatrix {
+    f32 inv_mat00 = 11.031566901960783;
+    f32 inv_mat01 = -9.866943921568629;
+    f32 inv_mat02 = -0.16462299647058826;
+    f32 inv_mat10 = -3.254147380392157;
+    f32 inv_mat11 = 4.418770392156863;
+    f32 inv_mat12 = -0.16462299647058826;
+    f32 inv_mat20 = -3.6588512862745097;
+    f32 inv_mat21 = 2.7129230470588235;
+    f32 inv_mat22 = 1.9459282392156863;
+    f32 opsin_bias0 = -0.0037930732552754493;
+    f32 opsin_bias1 = -0.0037930732552754493;
+    f32 opsin_bias2 = -0.0037930732552754493;
+    f32 quant_bias0 = 1 - 0.05465007330715401;
+    f32 quant_bias1 = 1 - 0.07005449891748593;
+    f32 quant_bias2 = 1 - 0.049935103337343655;
+    f32 quant_bias_numerator = 0.145;
 };
 
 static ErrorOr<OpsinInverseMatrix> read_opsin_inverse_matrix(LittleEndianInputBitStream&)
@@ -936,9 +952,9 @@ static ErrorOr<TOC> read_toc(LittleEndianInputBitStream& stream, FrameHeader con
 
 /// G.1.2 - LF channel dequantization weights
 struct LfChannelDequantization {
-    float m_x_lf_unscaled { 4096 };
-    float m_y_lf_unscaled { 512 };
-    float m_b_lf_unscaled { 256 };
+    f32 m_x_lf_unscaled { 1. / (32 * 128) };
+    f32 m_y_lf_unscaled { 1. / (4 * 128) };
+    f32 m_b_lf_unscaled { 1. / (2 * 128) };
 };
 
 static ErrorOr<LfChannelDequantization> read_lf_channel_dequantization(LittleEndianInputBitStream& stream)
@@ -948,9 +964,9 @@ static ErrorOr<LfChannelDequantization> read_lf_channel_dequantization(LittleEnd
     auto const all_default = TRY(stream.read_bit());
 
     if (!all_default) {
-        lf_channel_dequantization.m_x_lf_unscaled = TRY(F16(stream));
-        lf_channel_dequantization.m_y_lf_unscaled = TRY(F16(stream));
-        lf_channel_dequantization.m_b_lf_unscaled = TRY(F16(stream));
+        lf_channel_dequantization.m_x_lf_unscaled = TRY(F16(stream)) / 128;
+        lf_channel_dequantization.m_y_lf_unscaled = TRY(F16(stream)) / 128;
+        lf_channel_dequantization.m_b_lf_unscaled = TRY(F16(stream)) / 128;
     }
 
     return lf_channel_dequantization;
@@ -3192,7 +3208,8 @@ static ErrorOr<void> apply_image_features(Span<Frame> previous_frames, Frame& fr
 ///
 
 /// L.2 - XYB + L.3 - YCbCr
-static void ycbcr_to_rgb(Image& image, u8 bits_per_sample)
+template<typename F>
+static void for_each_pixel_of_color_channels(Image& image, F color_conversion)
 {
     auto& channels = image.channels();
     VERIFY(channels.size() >= 3);
@@ -3200,18 +3217,78 @@ static void ycbcr_to_rgb(Image& image, u8 bits_per_sample)
     VERIFY(channels[0].width() == channels[1].width() && channels[1].width() == channels[2].width());
     VERIFY(channels[0].height() == channels[1].height() && channels[1].height() == channels[2].height());
 
-    auto const half_range_offset = (1 << bits_per_sample) / 2;
     for (u32 y = 0; y < channels[0].height(); ++y) {
         for (u32 x = 0; x < channels[0].width(); ++x) {
-            auto const cb = channels[0].get(x, y);
-            auto const luma = channels[1].get(x, y);
-            auto const cr = channels[2].get(x, y);
-
-            channels[0].set(x, y, luma + half_range_offset + 1.402 * cr);
-            channels[1].set(x, y, luma + half_range_offset - 0.344136 * cb - 0.714136 * cr);
-            channels[2].set(x, y, luma + half_range_offset + 1.772 * cb);
+            color_conversion(channels[0].get(x, y), channels[1].get(x, y), channels[2].get(x, y));
         }
     }
+}
+
+static void ycbcr_to_rgb(Image& image, u8 bits_per_sample)
+{
+    auto const half_range_offset = (1 << bits_per_sample) / 2;
+    auto color_conversion = [half_range_offset](i32& c1, i32& c2, i32& c3) {
+        auto const cb = c1;
+        auto const luma = c2;
+        auto const cr = c3;
+
+        c1 = luma + half_range_offset + 1.402 * cr;
+        c2 = luma + half_range_offset - 0.344136 * cb - 0.714136 * cr;
+        c3 = luma + half_range_offset + 1.772 * cb;
+    };
+
+    for_each_pixel_of_color_channels(image, move(color_conversion));
+}
+
+// L.2.2  Inverse XYB transform
+static void xyb_to_rgb(Frame& frame, ImageMetadata const& metadata)
+{
+    // "X, Y, B samples are converted to an RGB colour encoding as specified in this subclause,
+    // in which oim denotes metadata.opsin_inverse_matrix."
+    auto const& oim = metadata.opsin_inverse_matrix;
+    f32 to_int = (1 << metadata.bit_depth.bits_per_sample) - 1;
+    auto linear_to_srgb = [](f32 c) {
+        return c >= 0.0031308f ? 1.055f * pow(c, 0.4166666f) - 0.055f : 12.92f * c;
+    };
+    auto color_conversion = [&](i32& c1, i32& c2, i32& c3) {
+        f32 const y_ = c1;
+        f32 const x_ = c2;
+        f32 const b_ = c3;
+
+        f32 y {}, x {}, b {};
+        if (frame.frame_header.encoding == Encoding::kModular) {
+            y = y_ * frame.lf_global.lf_dequant.m_y_lf_unscaled;
+            x = x_ * frame.lf_global.lf_dequant.m_x_lf_unscaled;
+            b = (b_ + y_) * frame.lf_global.lf_dequant.m_b_lf_unscaled;
+        } else {
+            y = y_;
+            x = x_;
+            b = b_;
+        }
+
+        f32 Lgamma = y + x;
+        f32 Mgamma = y - x;
+        f32 Sgamma = b;
+        f32 itscale = 255 / metadata.tone_mapping.intensity_target;
+        f32 Lmix = (powf(Lgamma - cbrt(oim.opsin_bias0), 3) + oim.opsin_bias0) * itscale;
+        f32 Mmix = (powf(Mgamma - cbrt(oim.opsin_bias1), 3) + oim.opsin_bias1) * itscale;
+        f32 Smix = (powf(Sgamma - cbrt(oim.opsin_bias2), 3) + oim.opsin_bias2) * itscale;
+        f32 R = oim.inv_mat00 * Lmix + oim.inv_mat01 * Mmix + oim.inv_mat02 * Smix;
+        f32 G = oim.inv_mat10 * Lmix + oim.inv_mat11 * Mmix + oim.inv_mat12 * Smix;
+        f32 B = oim.inv_mat20 * Lmix + oim.inv_mat21 * Mmix + oim.inv_mat22 * Smix;
+
+        // "The resulting RGB samples correspond to sRGB primaries and a D65 white point, and the transfer function is linear."
+        // We assume sRGB everywhere, so let's apply the transfer function here.
+        R = linear_to_srgb(R);
+        G = linear_to_srgb(G);
+        B = linear_to_srgb(B);
+
+        c1 = round_to<i32>(R * to_int);
+        c2 = round_to<i32>(G * to_int);
+        c3 = round_to<i32>(B * to_int);
+    };
+
+    for_each_pixel_of_color_channels(*frame.image, move(color_conversion));
 }
 
 static void apply_colour_transformation(Frame& frame, ImageMetadata const& metadata)
@@ -3220,7 +3297,7 @@ static void apply_colour_transformation(Frame& frame, ImageMetadata const& metad
         ycbcr_to_rgb(*frame.image, metadata.bit_depth.bits_per_sample);
 
     if (metadata.xyb_encoded) {
-        TODO();
+        xyb_to_rgb(frame, metadata);
     } else {
         // FIXME: Do a proper color transformation with metadata.colour_encoding
     }
