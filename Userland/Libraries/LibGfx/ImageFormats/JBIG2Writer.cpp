@@ -630,7 +630,7 @@ static ErrorOr<void> encode_segment_header(Stream& stream, JBIG2::SegmentHeader 
 
 static ErrorOr<void> encode_region_segment_information_field(Stream& stream, JBIG2::RegionSegmentInformationField const& region_information)
 {
-    // 7.4.8 Page information segment syntax
+    // 7.4.1 Region segment information field
     TRY(stream.write_value<BigEndian<u32>>(region_information.width));
     TRY(stream.write_value<BigEndian<u32>>(region_information.height));
     TRY(stream.write_value<BigEndian<u32>>(region_information.x_location));
@@ -642,6 +642,7 @@ static ErrorOr<void> encode_region_segment_information_field(Stream& stream, JBI
 
 static ErrorOr<void> encode_page_information_data(Stream& stream, JBIG2::PageInformationSegment const& page_information)
 {
+    // 7.4.8 Page information segment syntax
     TRY(stream.write_value<BigEndian<u32>>(page_information.bitmap_width));
     TRY(stream.write_value<BigEndian<u32>>(page_information.bitmap_height));
     TRY(stream.write_value<BigEndian<u32>>(page_information.page_x_resolution));
@@ -700,6 +701,7 @@ ErrorOr<void> JBIG2Writer::encode(Stream& stream, Bitmap const& bitmap, Options 
 
 static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData const& halftone_region, JBIG2::SegmentHeaderData const& header, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id, Vector<u8>& scratch_buffer)
 {
+    // 7.4.5 Halftone region segment syntax
     if (header.referred_to_segments.size() != 1)
         return Error::from_string_literal("JBIG2Writer: Halftone region must refer to exactly one segment");
 
@@ -750,6 +752,7 @@ static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData con
 
 static ErrorOr<void> encode_pattern_dictionary(JBIG2::PatternDictionarySegmentData const& pattern_dictionary, Vector<u8>& scratch_buffer)
 {
+    // 7.4.4 Pattern dictionary segment syntax
     if (pattern_dictionary.image->width() != (pattern_dictionary.gray_max + 1) * pattern_dictionary.pattern_width)
         return Error::from_string_literal("JBIG2Writer: Pattern dictionary image has wrong width");
     if (pattern_dictionary.image->height() != pattern_dictionary.pattern_height)
@@ -801,6 +804,7 @@ static ErrorOr<void> encode_pattern_dictionary(JBIG2::PatternDictionarySegmentDa
 
 static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const& generic_region, Vector<u8>& scratch_buffer)
 {
+    // 7.4.6 Generic region segment syntax
     GenericRegionEncodingInputParameters inputs { .image = *generic_region.image };
     inputs.is_modified_modified_read = generic_region.flags & 1;
     inputs.gb_template = (generic_region.flags >> 1) & 3;
@@ -854,6 +858,7 @@ static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const
 
 static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRegionSegmentData const& generic_refinement_region, JBIG2::SegmentHeaderData const& header, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id, Vector<u8>& scratch_buffer)
 {
+    // 7.4.7 Generic refinement region syntax
     if (header.referred_to_segments.size() > 1)
         return Error::from_string_literal("JBIG2Writer: Generic refinement region must refer to at most one segment");
     if (header.referred_to_segments.size() == 0)
@@ -900,9 +905,10 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
     return {};
 }
 
-// B.2 Code table structure, but in reverse
 static ErrorOr<void> encode_tables(JBIG2::TablesData const& tables, Vector<u8>& scratch_buffer)
 {
+    // 7.4.13 Code table segment syntax
+    // B.2 Code table structure, but in reverse
     bool has_out_of_band = tables.flags & 1;             // "HTOOB" in spec.
     u8 prefix_bit_count = ((tables.flags >> 1) & 7) + 1; // "HTPS" (hash table prefix size) in spec.
     u8 range_bit_count = ((tables.flags >> 4) & 7) + 1;  // "HTRS" (hash table range size) in spec.

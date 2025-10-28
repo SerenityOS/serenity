@@ -1155,7 +1155,7 @@ static ErrorOr<void> complete_decoding_all_segment_headers(JBIG2LoadingContext& 
 
 static ErrorOr<JBIG2::RegionSegmentInformationField> decode_region_segment_information_field(ReadonlyBytes data)
 {
-    // 7.4.8 Page information segment syntax
+    // 7.4.1 Region segment information field
     if (data.size() < sizeof(JBIG2::RegionSegmentInformationField))
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid region segment information field size");
     auto result = *(JBIG2::RegionSegmentInformationField const*)data.data();
@@ -1205,7 +1205,7 @@ static ErrorOr<void> validate_segment_combination_operator_consistency(JBIG2Load
 
 static ErrorOr<JBIG2::EndOfStripeSegment> decode_end_of_stripe_segment(ReadonlyBytes data)
 {
-    // 7.4.8 Page information segment syntax
+    // 7.4.10 End of stripe segment syntax
     if (data.size() != sizeof(JBIG2::EndOfStripeSegment))
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: End of strip segment has wrong size");
     return *(JBIG2::EndOfStripeSegment const*)data.data();
@@ -3918,6 +3918,7 @@ static ErrorOr<void> decode_profiles(JBIG2LoadingContext&, SegmentData const&)
 
 static ErrorOr<void> decode_tables(JBIG2LoadingContext&, SegmentData& segment)
 {
+    // 7.4.13 Code table segment syntax
     // B.2 Code table structure
     FixedMemoryStream stream { segment.data };
 
