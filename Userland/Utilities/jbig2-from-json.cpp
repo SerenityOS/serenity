@@ -66,6 +66,16 @@ static ErrorOr<Gfx::JBIG2::FileHeaderData> jbig2_header_from_json(JsonObject con
     return header;
 }
 
+static ErrorOr<Gfx::MQArithmeticEncoder::Trailing7FFFHandling> jbig2_trailing_7fff_handling_from_json(JsonValue const& value)
+{
+    if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
+        if (strip_trailing_7fffs.value())
+            return Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
+        return Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
+    }
+    return Error::from_string_literal("expected bool for \"strip_trailing_7fffs\"");
+}
+
 struct JSONRect {
     Optional<u32> x;
     Optional<u32> y;
@@ -395,14 +405,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
         }
 
         if (key == "strip_trailing_7fffs"sv) {
-            if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
-                if (strip_trailing_7fffs.value())
-                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
-                else
-                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"strip_trailing_7fffs\"");
+            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
+            return {};
         }
 
         // FIXME: Make this more flexible.
@@ -672,14 +676,8 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
         }
 
         if (key == "strip_trailing_7fffs"sv) {
-            if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
-                if (strip_trailing_7fffs.value())
-                    halftone_region.trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
-                else
-                    halftone_region.trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"strip_trailing_7fffs\"");
+            halftone_region.trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
+            return {};
         }
 
         if (key == "graymap_data"sv) {
@@ -826,14 +824,8 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         }
 
         if (key == "strip_trailing_7fffs"sv) {
-            if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
-                if (strip_trailing_7fffs.value())
-                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
-                else
-                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"strip_trailing_7fffs\"");
+            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
+            return {};
         }
 
         if (key == "image_data"sv) {
@@ -1028,14 +1020,8 @@ static ErrorOr<Gfx::JBIG2::GenericRefinementRegionSegmentData> jbig2_generic_ref
         }
 
         if (key == "strip_trailing_7fffs"sv) {
-            if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
-                if (strip_trailing_7fffs.value())
-                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
-                else
-                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"strip_trailing_7fffs\"");
+            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
+            return {};
         }
 
         if (key == "image_data"sv) {
