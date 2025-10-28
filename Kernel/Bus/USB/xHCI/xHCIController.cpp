@@ -1329,7 +1329,8 @@ void xHCIController::handle_interrupt(u16 interrupter_id)
         return;
     }
     if (usb_status.event_interrupt) {
-        m_event_queue.wake_all();
+        m_events_pending.with([](bool& events_pending) { events_pending = true; });
+        m_event_queue.notify_one();
         return;
     }
 }
@@ -1391,7 +1392,12 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
 void xHCIController::event_handling_thread()
 {
     while (!Process::current().is_dying()) {
-        m_event_queue.wait_forever("xHCI"sv);
+        MUST(m_event_queue.wait_until(m_events_pending, [](bool& events_pending) {
+            if (!events_pending)
+                return false;
+            events_pending = false;
+            return true;
+        }));
 
         bool header_printed = false;
 

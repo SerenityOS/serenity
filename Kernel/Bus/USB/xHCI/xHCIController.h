@@ -219,7 +219,8 @@ private:
     DoorbellRegisters volatile& m_doorbell_registers;
 
     RefPtr<Process> m_process;
-    DeprecatedWaitQueue m_event_queue;
+    SpinlockProtected<bool, LockRank::None> m_events_pending { false };
+    WaitQueue m_event_queue;
 
     bool m_using_message_signalled_interrupts { false };
     bool m_large_contexts { false };
