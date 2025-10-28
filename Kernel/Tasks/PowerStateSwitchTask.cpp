@@ -18,22 +18,19 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Library/Panic.h>
-#include <Kernel/Sections.h>
-#include <Kernel/Tasks/FinalizerTask.h>
 #include <Kernel/Tasks/PowerStateSwitchTask.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 
 namespace Kernel {
 
-Thread* g_power_state_switch_task;
+static Thread* g_power_state_switch_task;
 bool g_in_system_shutdown { false };
 
 void PowerStateSwitchTask::power_state_switch_task(void* raw_entry_data)
 {
     Thread::current()->set_priority(THREAD_PRIORITY_HIGH);
-    auto entry_data = bit_cast<PowerStateCommand>(raw_entry_data);
-    switch (entry_data) {
+    switch (const auto entry_data = bit_cast<PowerStateCommand>(raw_entry_data)) {
     case PowerStateCommand::Shutdown:
         MUST(PowerStateSwitchTask::perform_shutdown(DoReboot::No));
         break;
@@ -49,7 +46,7 @@ void PowerStateSwitchTask::power_state_switch_task(void* raw_entry_data)
     g_power_state_switch_task = nullptr;
 }
 
-void PowerStateSwitchTask::spawn(PowerStateCommand command)
+void PowerStateSwitchTask::spawn(const PowerStateCommand command)
 {
     VERIFY(g_power_state_switch_task == nullptr);
     auto [_, power_state_switch_task_thread] = MUST(Process::create_kernel_process(
@@ -57,7 +54,7 @@ void PowerStateSwitchTask::spawn(PowerStateCommand command)
     g_power_state_switch_task = move(power_state_switch_task_thread);
 }
 
-ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReboot do_reboot)
+ErrorOr<void> PowerStateSwitchTask::perform_shutdown(const PowerStateSwitchTask::DoReboot do_reboot)
 {
     // We assume that by this point userland has tried as much as possible to shut down everything in an orderly fashion.
     // Therefore, we force kill remaining processes, including Kernel processes, except the finalizer and ourselves.
@@ -76,11 +73,11 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReb
     TRY(kill_all_user_processes());
 
     size_t alive_process_count = 0;
-    Process::all_instances().for_each([&](Process& process) {
+    Process::all_instances().for_each([&](const Process& process) {
         if (!process.is_kernel_process() && !process.is_dead())
             alive_process_count++;
     });
-    // Don't panic here (since we may panic in a bit anyways) but report the probable cause of an unclean shutdown.
+    // Don't panic here (since we may panic in a bit anyway) but report the probable cause of an unclean shutdown.
     if (alive_process_count != 0)
         dbgln("We're not the last process alive; proper shutdown may fail!");
 
@@ -95,7 +92,7 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReb
     do {
         Array<RefPtr<VFSRootContext>, 16> contexts;
         VFSRootContext::all_root_contexts_list(Badge<PowerStateSwitchTask> {}).with([&collected_contexts_count, &contexts](auto& list) {
-            size_t iteration_collect_count = min(contexts.size(), list.size_slow());
+            size_t const iteration_collect_count = min(contexts.size(), list.size_slow());
             for (collected_contexts_count = 0; collected_contexts_count < iteration_collect_count; collected_contexts_count++) {
                 contexts[collected_contexts_count] = list.take_first();
             }
@@ -111,7 +108,7 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReb
     // or do some other unexpected behavior.
     // Therefore, we just lock the scheduler big lock to ensure nothing happens
     // beyond this point forward.
-    SpinlockLocker lock(g_scheduler_lock);
+    SpinlockLocker const lock(g_scheduler_lock);
 
     if (do_reboot == DoReboot::Yes) {
         dbgln("Attempting system reboot...");
@@ -136,7 +133,7 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReb
 ErrorOr<void> PowerStateSwitchTask::kill_all_user_processes()
 {
     {
-        SpinlockLocker lock(g_scheduler_lock);
+        SpinlockLocker const lock(g_scheduler_lock);
         Process::all_instances().for_each([&](Process& process) {
             if (!process.is_kernel_process())
                 process.die();
