@@ -73,7 +73,7 @@ ErrorOr<void> PowerStateSwitchTask::perform_shutdown(PowerStateSwitchTask::DoReb
     TRY(kill_all_user_processes());
 
     size_t alive_process_count = 0;
-    Process::all_instances().for_each([&](Process const& process) {
+    Process::all_instances().for_each([&](Process& process) {
         if (!process.is_kernel_process() && !process.is_dead())
             alive_process_count++;
     });
