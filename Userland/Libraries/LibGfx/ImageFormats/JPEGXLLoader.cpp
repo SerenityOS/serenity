@@ -398,6 +398,7 @@ static ErrorOr<ToneMapping> read_tone_mapping(LittleEndianInputBitStream& stream
     return tone_mapping;
 }
 
+// L.2.1 - OpsinInverseMatrix
 struct OpsinInverseMatrix {
     f32 inv_mat00 = 11.031566901960783;
     f32 inv_mat01 = -9.866943921568629;
@@ -417,9 +418,32 @@ struct OpsinInverseMatrix {
     f32 quant_bias_numerator = 0.145;
 };
 
-static ErrorOr<OpsinInverseMatrix> read_opsin_inverse_matrix(LittleEndianInputBitStream&)
+static ErrorOr<OpsinInverseMatrix> read_opsin_inverse_matrix(LittleEndianInputBitStream& stream)
 {
-    TODO();
+    OpsinInverseMatrix matrix;
+
+    bool all_default = TRY(stream.read_bit());
+
+    if (!all_default) {
+        matrix.inv_mat00 = TRY(F16(stream));
+        matrix.inv_mat01 = TRY(F16(stream));
+        matrix.inv_mat02 = TRY(F16(stream));
+        matrix.inv_mat10 = TRY(F16(stream));
+        matrix.inv_mat11 = TRY(F16(stream));
+        matrix.inv_mat12 = TRY(F16(stream));
+        matrix.inv_mat20 = TRY(F16(stream));
+        matrix.inv_mat21 = TRY(F16(stream));
+        matrix.inv_mat22 = TRY(F16(stream));
+        matrix.opsin_bias0 = TRY(F16(stream));
+        matrix.opsin_bias1 = TRY(F16(stream));
+        matrix.opsin_bias2 = TRY(F16(stream));
+        matrix.quant_bias0 = TRY(F16(stream));
+        matrix.quant_bias1 = TRY(F16(stream));
+        matrix.quant_bias2 = TRY(F16(stream));
+        matrix.quant_bias_numerator = TRY(F16(stream));
+    }
+
+    return matrix;
 }
 
 struct ImageMetadata {
