@@ -687,6 +687,41 @@ static ErrorOr<void> encode_region_segment_information_field(Stream& stream, JBI
     return {};
 }
 
+static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData const& symbol_dictionary, Vector<u8>& scratch_buffer)
+{
+    // 7.4.2 Symbol dictionary segment syntax
+    bool uses_huffman_encoding = (symbol_dictionary.flags & 1) != 0;
+    bool uses_refinement_or_aggregate_coding = (symbol_dictionary.flags & 2) != 0;
+    u8 symbol_template = (symbol_dictionary.flags >> 10) & 3;
+    u8 symbol_refinement_template = (symbol_dictionary.flags >> 12) & 1;
+
+    u8 number_of_adaptive_template_pixels = 0;
+    if (!uses_huffman_encoding)
+        number_of_adaptive_template_pixels = symbol_template == 0 ? 4 : 1;
+    u8 number_of_refinement_adaptive_template_pixels = (uses_refinement_or_aggregate_coding && symbol_refinement_template == 0) ? 2 : 0;
+
+    ByteBuffer data;                    // FIXME: Fill.
+    u32 number_of_exported_symbols = 0; // FIXME: Actual value.
+    u32 number_of_new_symbols = 0;      // FIXME: Actual value.
+
+    TRY(scratch_buffer.try_resize(2 + number_of_adaptive_template_pixels * 2 + number_of_refinement_adaptive_template_pixels * 2 + 2 * 4 + data.size()));
+    FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
+    TRY(stream.write_value<BigEndian<u16>>(symbol_dictionary.flags));
+    for (int i = 0; i < number_of_adaptive_template_pixels; ++i) {
+        TRY(stream.write_value<i8>(symbol_dictionary.adaptive_template_pixels[i].x));
+        TRY(stream.write_value<i8>(symbol_dictionary.adaptive_template_pixels[i].y));
+    }
+    for (int i = 0; i < number_of_refinement_adaptive_template_pixels; ++i) {
+        TRY(stream.write_value<i8>(symbol_dictionary.refinement_adaptive_template_pixels[i].x));
+        TRY(stream.write_value<i8>(symbol_dictionary.refinement_adaptive_template_pixels[i].y));
+    }
+    TRY(stream.write_value<BigEndian<u32>>(number_of_exported_symbols));
+    TRY(stream.write_value<BigEndian<u32>>(number_of_new_symbols));
+    TRY(stream.write_until_depleted(data));
+
+    return Error::from_string_literal("JBIG2Writer: Symbol dictionary encoding is not yet fully implemented");
+}
+
 static ErrorOr<void> encode_pattern_dictionary(JBIG2::PatternDictionarySegmentData const& pattern_dictionary, Vector<u8>& scratch_buffer)
 {
     // 7.4.4 Pattern dictionary segment syntax
@@ -1043,6 +1078,10 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     Vector<u8> scratch_buffer;
 
     auto encoded_data = TRY(segment_data.data.visit(
+        [&scratch_buffer](JBIG2::SymbolDictionarySegmentData const& symbol_dictionary) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_symbol_dictionary(symbol_dictionary, scratch_buffer));
+            return scratch_buffer;
+        },
         [&scratch_buffer](JBIG2::PatternDictionarySegmentData const& pattern_dictionary) -> ErrorOr<ReadonlyBytes> {
             TRY(encode_pattern_dictionary(pattern_dictionary, scratch_buffer));
             return scratch_buffer;
@@ -1109,6 +1148,7 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     JBIG2::SegmentHeader header;
     header.segment_number = segment_data.header.segment_number;
     header.type = segment_data.data.visit(
+        [](JBIG2::SymbolDictionarySegmentData const&) { return JBIG2::SegmentType::SymbolDictionary; },
         [](JBIG2::PatternDictionarySegmentData const&) { return JBIG2::SegmentType::PatternDictionary; },
         [](JBIG2::ImmediateHalftoneRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateHalftoneRegion; },
         [](JBIG2::ImmediateLosslessHalftoneRegionSegmentData const&) { return JBIG2::SegmentType::ImmediateLosslessHalftoneRegion; },

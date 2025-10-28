@@ -41,6 +41,14 @@ struct SegmentHeaderData {
     bool is_immediate_generic_region_of_initially_unknown_size { false };
 };
 
+struct SymbolDictionarySegmentData {
+    u16 flags { 0 };
+    Array<AdaptiveTemplatePixel, 4> adaptive_template_pixels {};
+    Array<AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels {};
+    // FIXME: Add more fields.
+    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+};
+
 struct PatternDictionarySegmentData {
     u8 flags { 0 };
     u8 pattern_width { 0 };
@@ -147,6 +155,7 @@ struct ExtensionData {
 struct SegmentData {
     SegmentHeaderData header;
     Variant<
+        SymbolDictionarySegmentData,
         PatternDictionarySegmentData,
         ImmediateHalftoneRegionSegmentData,
         ImmediateLosslessHalftoneRegionSegmentData,
