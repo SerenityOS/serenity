@@ -568,6 +568,8 @@ struct Page {
 };
 
 struct JBIG2LoadingContext {
+    JBIG2DecoderOptions options;
+
     enum class State {
         NotDecoded = 0,
         Error,
@@ -4022,7 +4024,7 @@ static ErrorOr<void> decode_color_palette(JBIG2LoadingContext&, SegmentData cons
     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode color palette yet");
 }
 
-static ErrorOr<void> decode_extension(JBIG2LoadingContext&, SegmentData const& segment)
+static ErrorOr<void> decode_extension(JBIG2LoadingContext& context, SegmentData const& segment)
 {
     // 7.4.14 Extension segment syntax
     FixedMemoryStream stream { segment.data };
@@ -4053,7 +4055,8 @@ static ErrorOr<void> decode_extension(JBIG2LoadingContext&, SegmentData const& s
 
             auto first = TRY(TextCodec::decoder_for_exact_name("ISO-8859-1"sv)->to_utf8(StringView { first_bytes }));
             auto second = TRY(TextCodec::decoder_for_exact_name("ISO-8859-1"sv)->to_utf8(StringView { second_bytes }));
-            dbgln("JBIG2ImageDecoderPlugin: key '{}', value '{}'", first, second);
+            if (context.options.log_comments == JBIG2DecoderOptions::LogComments::Yes)
+                dbgln("JBIG2ImageDecoderPlugin: key '{}', value '{}'", first, second);
         }
         if (!stream.is_eof())
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Trailing data after SingleByteCodedComment");
@@ -4071,7 +4074,8 @@ static ErrorOr<void> decode_extension(JBIG2LoadingContext&, SegmentData const& s
 
             auto first = TRY(Utf16View(first_ucs2).to_utf8());
             auto second = TRY(Utf16View(second_ucs2).to_utf8());
-            dbgln("JBIG2ImageDecoderPlugin: key '{}', value '{}'", first, second);
+            if (context.options.log_comments == JBIG2DecoderOptions::LogComments::Yes)
+                dbgln("JBIG2ImageDecoderPlugin: key '{}', value '{}'", first, second);
         }
         if (!stream.is_eof())
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Trailing data after MultiByteCodedComment");
@@ -4170,9 +4174,10 @@ static ErrorOr<void> decode_data(JBIG2LoadingContext& context)
     return {};
 }
 
-JBIG2ImageDecoderPlugin::JBIG2ImageDecoderPlugin()
+JBIG2ImageDecoderPlugin::JBIG2ImageDecoderPlugin(JBIG2DecoderOptions options)
 {
     m_context = make<JBIG2LoadingContext>();
+    m_context->options = options;
 }
 
 JBIG2ImageDecoderPlugin::~JBIG2ImageDecoderPlugin() = default;
@@ -4189,7 +4194,12 @@ bool JBIG2ImageDecoderPlugin::sniff(ReadonlyBytes data)
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JBIG2ImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin()));
+    return create_with_options(data, {});
+}
+
+ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JBIG2ImageDecoderPlugin::create_with_options(ReadonlyBytes data, JBIG2DecoderOptions options)
+{
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin(options)));
     TRY(decode_jbig2_header(*plugin->m_context, data));
 
     data = data.slice(sizeof(JBIG2::id_string) + sizeof(u8) + (plugin->m_context->number_of_pages.has_value() ? sizeof(u32) : 0));
@@ -4236,7 +4246,7 @@ ErrorOr<ImageFrameDescriptor> JBIG2ImageDecoderPlugin::frame(size_t index, Optio
 
 ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyBytes> data)
 {
-    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin()));
+    auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin({})));
     plugin->m_context->organization = JBIG2::Organization::Embedded;
 
     for (auto const& segment_data : data)
