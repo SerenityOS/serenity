@@ -81,6 +81,50 @@ static Optional<Vector<i8>> jbig2_adaptive_template_pixels_from_json(JsonValue c
     return adaptive_template_pixels;
 }
 
+static Vector<i8> default_adaptive_template_pixels(u8 gb_template, bool use_extended_template)
+{
+    // Default to Table 5 – The nominal values of the AT pixel locations
+    if (gb_template == 0) {
+        if (use_extended_template) {
+            return {
+                // clang-format off
+                -2, 0,
+                0, -2,
+                -2, -1,
+                -1, -2,
+                1, -2,
+                2, -1,
+                -3, 0,
+                -4, 0,
+                2, -2,
+                3, -1,
+                -2, -2,
+                -3, -1,
+                // clang-format on
+            };
+        }
+        return {
+            // clang-format off
+            3, -1,
+            -3, -1,
+            2, -2,
+            -2, -2,
+            // clang-format on
+        };
+    }
+    if (gb_template == 1)
+        return { 3, -1 };
+    return { 2, -1 };
+}
+
+static Vector<i8> default_refinement_adaptive_template_pixels(u8 gr_template)
+{
+    // Default to Figure 12 – 13-pixel refinement template showing the AT pixels at their nominal locations
+    if (gr_template == 0)
+        return { -1, -1, -1, -1 };
+    return {};
+}
+
 static ErrorOr<Gfx::MQArithmeticEncoder::Trailing7FFFHandling> jbig2_trailing_7fff_handling_from_json(JsonValue const& value)
 {
     if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
@@ -866,42 +910,8 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
     bool uses_mmr = flags & 1;
     bool use_extended_template = (flags >> 4) & 1;
     u8 gb_template = (flags >> 1) & 3;
-    if (adaptive_template_pixels.is_empty() && !uses_mmr) {
-        // Default to Table 5 – The nominal values of the AT pixel locations
-        if (gb_template == 0) {
-            if (use_extended_template) {
-                adaptive_template_pixels = {
-                    // clang-format off
-                    -2, 0,
-                    0, -2,
-                    -2, -1,
-                    -1, -2,
-                    1, -2,
-                    2, -1,
-                    -3, 0,
-                    -4, 0,
-                    2, -2,
-                    3, -1,
-                    -2, -2,
-                    -3, -1,
-                    // clang-format on
-                };
-            } else {
-                adaptive_template_pixels = {
-                    // clang-format off
-                    3, -1,
-                    -3, -1,
-                    2, -2,
-                    -2, -2,
-                    // clang-format on
-                };
-            }
-        } else if (gb_template == 1) {
-            adaptive_template_pixels = { 3, -1 };
-        } else {
-            adaptive_template_pixels = { 2, -1 };
-        }
-    }
+    if (adaptive_template_pixels.is_empty() && !uses_mmr)
+        adaptive_template_pixels = default_adaptive_template_pixels(gb_template, use_extended_template);
 
     size_t number_of_adaptive_template_pixels = 0;
     if (!uses_mmr) {
@@ -1050,10 +1060,8 @@ static ErrorOr<Gfx::JBIG2::GenericRefinementRegionSegmentData> jbig2_generic_ref
     }
 
     u8 gr_template = flags & 1;
-    if (adaptive_template_pixels.is_empty() && gr_template == 0) {
-        // Default to Figure 12 – 13-pixel refinement template showing the AT pixels at their nominal locations
-        adaptive_template_pixels = { -1, -1, -1, -1 };
-    }
+    if (adaptive_template_pixels.is_empty())
+        adaptive_template_pixels = default_refinement_adaptive_template_pixels(gr_template);
 
     size_t number_of_adaptive_template_pixels = gr_template == 0 ? 2 : 0;
     if (adaptive_template_pixels.size() != number_of_adaptive_template_pixels * 2) {
