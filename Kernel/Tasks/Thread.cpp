@@ -400,18 +400,10 @@ void Thread::die_if_needed()
         set_state(Thread::State::Dying);
     }
 
-    ScopedCritical critical;
-
-    // Flag a context switch. Because we're in a critical section,
-    // Scheduler::yield will actually only mark a pending context switch
-    // Simply leaving the critical section would not necessarily trigger
-    // a switch.
+    VERIFY(Processor::current_in_irq() == 0);
+    VERIFY(Processor::in_critical() == 0);
     Scheduler::yield();
 
-    // Now leave the critical section so that we can also trigger the
-    // actual context switch
-    Processor::clear_critical();
-    dbgln("die_if_needed returned from clear_critical!!! in irq: {}", Processor::current_in_irq());
     // We should never get here, but the scoped scheduler lock
     // will be released by Scheduler::context_switch again
     VERIFY_NOT_REACHED();
