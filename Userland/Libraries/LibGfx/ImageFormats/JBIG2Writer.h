@@ -41,6 +41,15 @@ struct SegmentHeaderData {
     bool is_immediate_generic_region_of_initially_unknown_size { false };
 };
 
+struct PatternDictionarySegmentData {
+    u8 flags { 0 };
+    u8 pattern_width { 0 };
+    u8 pattern_height { 0 };
+    u32 gray_max { 0 };
+    NonnullRefPtr<BilevelImage> image;
+    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+};
+
 struct HalftoneRegionSegmentData {
     RegionSegmentInformationField region_segment_information {};
     u8 flags { 0 };
@@ -64,15 +73,6 @@ struct ImmediateHalftoneRegionSegmentData {
 
 struct ImmediateLosslessHalftoneRegionSegmentData {
     HalftoneRegionSegmentData halftone_region;
-};
-
-struct PatternDictionarySegmentData {
-    u8 flags { 0 };
-    u8 pattern_width { 0 };
-    u8 pattern_height { 0 };
-    u32 gray_max { 0 };
-    NonnullRefPtr<BilevelImage> image;
-    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
 };
 
 struct GenericRegionSegmentData {
@@ -147,9 +147,9 @@ struct ExtensionData {
 struct SegmentData {
     SegmentHeaderData header;
     Variant<
+        PatternDictionarySegmentData,
         ImmediateHalftoneRegionSegmentData,
         ImmediateLosslessHalftoneRegionSegmentData,
-        PatternDictionarySegmentData,
         ImmediateGenericRegionSegmentData,
         ImmediateLosslessGenericRegionSegmentData,
         IntermediateGenericRegionSegmentData,
