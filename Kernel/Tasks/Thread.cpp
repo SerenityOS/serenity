@@ -404,8 +404,6 @@ void Thread::die_if_needed()
     VERIFY(Processor::in_critical() == 0);
     Scheduler::yield();
 
-    // We should never get here, but the scoped scheduler lock
-    // will be released by Scheduler::context_switch again
     VERIFY_NOT_REACHED();
 }
 
