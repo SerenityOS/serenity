@@ -854,7 +854,7 @@ static ErrorOr<FrameHeader> read_frame_header(LittleEndianInputBitStream& stream
             frame_header.passes = TRY(read_passes(stream));
 
         if (frame_header.frame_type == FrameHeader::FrameType::kLFFrame)
-            TODO();
+            frame_header.lf_level = 1 + TRY(stream.read_bits(2));
 
         if (frame_header.frame_type != FrameHeader::FrameType::kLFFrame)
             frame_header.have_crop = TRY(stream.read_bit());
