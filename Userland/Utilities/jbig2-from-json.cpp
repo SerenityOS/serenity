@@ -66,46 +66,6 @@ static ErrorOr<Gfx::JBIG2::FileHeaderData> jbig2_header_from_json(JsonObject con
     return header;
 }
 
-static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_file_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
-{
-    if (object.has_value())
-        return Error::from_string_literal("end_of_file segment should have no \"data\" object");
-    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::EndOfFileSegmentData {} };
-}
-
-static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_page_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
-{
-    if (object.has_value())
-        return Error::from_string_literal("end_of_page segment should have no \"data\" object");
-    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::EndOfPageSegmentData {} };
-}
-
-static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_stripe_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
-{
-    if (!object.has_value())
-        return Error::from_string_literal("end_of_stripe segment needs a \"data\" object");
-
-    Optional<u32> y_coordinate;
-
-    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "y_coordinate"sv) {
-            if (auto y = value.get_u32(); y.has_value()) {
-                y_coordinate = y.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u32 for \"y_coordinate\"");
-        }
-
-        dbgln("end_of_stripe key {}", key);
-        return Error::from_string_literal("unknown end_of_stripe key");
-    }));
-
-    if (!y_coordinate.has_value())
-        return Error::from_string_literal("end_of_stripe segment missing required \"y_coordinate\" key");
-
-    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::EndOfStripeSegment { y_coordinate.value() } };
-}
-
 struct JSONRect {
     Optional<u32> x;
     Optional<u32> y;
@@ -341,6 +301,187 @@ static ErrorOr<RegionSegmentInformatJSON> jbig2_region_segment_information_from_
     return result;
 }
 
+static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& object)
+{
+    u8 flags = 0;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "is_modified_modified_read"sv) {
+            if (auto is_modified_modified_read = value.get_bool(); is_modified_modified_read.has_value()) {
+                if (is_modified_modified_read.value())
+                    flags |= 1u;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"is_modified_modified_read\"");
+        }
+
+        if (key == "pd_template"sv) {
+            if (auto pd_template = value.get_uint(); pd_template.has_value()) {
+                if (pd_template.value() > 3)
+                    return Error::from_string_literal("expected 0, 1, 2, or 3 for \"pd_template\"");
+                flags |= pd_template.value() << 1;
+                return {};
+            }
+            return Error::from_string_literal("expected uint for \"pd_template\"");
+        }
+
+        dbgln("pattern_dictionary flag key {}", key);
+        return Error::from_string_literal("unknown pattern_dictionary flag key");
+    }));
+
+    return flags;
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    if (!object.has_value())
+        return Error::from_string_literal("pattern_dictionary segment should have \"data\" object");
+
+    u8 flags = 0;
+    u8 pattern_width = 0;
+    u8 pattern_height = 0;
+    u32 gray_max = 0;
+    bool gray_max_from_tiles = false;
+    Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+    RefPtr<Gfx::BilevelImage> image;
+    enum class Method {
+        None,
+        DistinctImageTiles,
+        UniqueImageTiles,
+    };
+    Method method = Method::None;
+
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "flags"sv) {
+            if (value.is_object()) {
+                flags = TRY(jbig2_pattern_dictionary_flags_from_json(value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"flags\"");
+        }
+
+        if (key == "pattern_width"sv) {
+            if (auto pattern_width_json = value.get_u32(); pattern_width_json.has_value()) {
+                if (pattern_width_json.value() == 0 || pattern_width_json.value() > 255)
+                    return Error::from_string_literal("expected non-zero u8 for \"pattern_width\"");
+                pattern_width = pattern_width_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u8 for \"pattern_width\"");
+        }
+
+        if (key == "pattern_height"sv) {
+            if (auto pattern_height_json = value.get_u32(); pattern_height_json.has_value()) {
+                if (pattern_height_json.value() == 0 || pattern_height_json.value() > 255)
+                    return Error::from_string_literal("expected non-zero u8 for \"pattern_height\"");
+                pattern_height = pattern_height_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u8 for \"pattern_height\"");
+        }
+
+        if (key == "gray_max"sv) {
+            if (auto gray_max_json = value.get_u32(); gray_max_json.has_value()) {
+                gray_max = gray_max_json.value();
+                return {};
+            }
+            if (value.is_string()) {
+                if (value.as_string() == "from_tiles"sv) {
+                    gray_max_from_tiles = true;
+                    return {};
+                }
+            }
+            return Error::from_string_literal("expected u32 or \"from_tiles\" for \"gray_max\"");
+        }
+
+        if (key == "strip_trailing_7fffs"sv) {
+            if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
+                if (strip_trailing_7fffs.value())
+                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
+                else
+                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"strip_trailing_7fffs\"");
+        }
+
+        // FIXME: Make this more flexible.
+        if (key == "image_data"sv) {
+            if (value.is_object()) {
+                image = TRY(jbig2_image_from_json(options, value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"image_data\"");
+        }
+
+        if (key == "method"sv) {
+            if (value.is_string()) {
+                auto const& method_json = value.as_string();
+                if (method_json == "distinct_image_tiles"sv) {
+                    method = Method::DistinctImageTiles;
+                    return {};
+                }
+                if (method_json == "unique_image_tiles"sv) {
+                    method = Method::UniqueImageTiles;
+                    return {};
+                }
+            }
+            return Error::from_string_literal("expected \"distinct_image_tiles\" for \"method\"");
+        }
+
+        dbgln("pattern_dictionary key {}", key);
+        return Error::from_string_literal("unknown pattern_dictionary key");
+    }));
+
+    if (gray_max_from_tiles && method == Method::None)
+        return Error::from_string_literal("can't use \"from_tiles\" for gray_max without using a tiling method");
+
+    if (method == Method::DistinctImageTiles || method == Method::UniqueImageTiles) {
+        auto number_of_tiles_in_x = ceil_div(image->width(), static_cast<size_t>(pattern_width));
+        auto number_of_tiles_in_y = ceil_div(image->height(), static_cast<size_t>(pattern_height));
+
+        // FIXME: For UniqueImageTiles at the edge, we could use a custom hasher/comparator to match existing full tiles
+        //        by ignoring pixels outside the clipped tile rect.
+        Vector<Gfx::BilevelSubImage> tiles;
+        HashTable<Gfx::BilevelSubImage> saw_tile;
+        Gfx::IntRect bitmap_rect { 0, 0, static_cast<int>(image->width()), static_cast<int>(image->height()) };
+        for (size_t tile_y = 0, tile_index = 0; tile_y < number_of_tiles_in_y; ++tile_y) {
+            for (size_t tile_x = 0; tile_x < number_of_tiles_in_x; ++tile_x, ++tile_index) {
+                Gfx::IntPoint source_position { static_cast<int>(tile_x * pattern_width), static_cast<int>(tile_y * pattern_height) };
+                Gfx::IntRect source_rect { source_position, { pattern_width, pattern_height } };
+                source_rect = source_rect.intersected(bitmap_rect);
+                auto source = image->subbitmap(source_rect);
+                if (method == Method::DistinctImageTiles || saw_tile.set(source) == HashSetResult::InsertedNewEntry)
+                    TRY(tiles.try_append(source));
+            }
+        }
+
+        auto tiled_image = TRY(Gfx::BilevelImage::create(pattern_width * tiles.size(), pattern_height));
+        tiled_image->fill(false);
+        for (auto const& [i, tile] : enumerate(tiles)) {
+            Gfx::IntPoint destination_position { static_cast<int>(i * pattern_width), 0 };
+            tile.composite_onto(*tiled_image, destination_position, Gfx::BilevelImage::CompositionType::Replace);
+        }
+
+        if (gray_max_from_tiles)
+            gray_max = tiles.size() - 1;
+
+        image = move(tiled_image);
+    }
+
+    return Gfx::JBIG2::SegmentData {
+        header,
+        Gfx::JBIG2::PatternDictionarySegmentData {
+            flags,
+            pattern_width,
+            pattern_height,
+            gray_max,
+            image.release_nonnull(),
+            trailing_7fff_handling,
+        }
+    };
+}
+
 static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& object)
 {
     u8 flags = 0;
@@ -574,187 +715,6 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_halftone_region_from_jso
 static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_immediate_lossless_halftone_region_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
 {
     return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::ImmediateLosslessHalftoneRegionSegmentData { TRY(jbig2_halftone_region_from_json(options, object)) } };
-}
-
-static ErrorOr<u8> jbig2_pattern_dictionary_flags_from_json(JsonObject const& object)
-{
-    u8 flags = 0;
-
-    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "is_modified_modified_read"sv) {
-            if (auto is_modified_modified_read = value.get_bool(); is_modified_modified_read.has_value()) {
-                if (is_modified_modified_read.value())
-                    flags |= 1u;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"is_modified_modified_read\"");
-        }
-
-        if (key == "pd_template"sv) {
-            if (auto pd_template = value.get_uint(); pd_template.has_value()) {
-                if (pd_template.value() > 3)
-                    return Error::from_string_literal("expected 0, 1, 2, or 3 for \"pd_template\"");
-                flags |= pd_template.value() << 1;
-                return {};
-            }
-            return Error::from_string_literal("expected uint for \"pd_template\"");
-        }
-
-        dbgln("pattern_dictionary flag key {}", key);
-        return Error::from_string_literal("unknown pattern_dictionary flag key");
-    }));
-
-    return flags;
-}
-
-static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
-{
-    if (!object.has_value())
-        return Error::from_string_literal("pattern_dictionary segment should have \"data\" object");
-
-    u8 flags = 0;
-    u8 pattern_width = 0;
-    u8 pattern_height = 0;
-    u32 gray_max = 0;
-    bool gray_max_from_tiles = false;
-    Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
-    RefPtr<Gfx::BilevelImage> image;
-    enum class Method {
-        None,
-        DistinctImageTiles,
-        UniqueImageTiles,
-    };
-    Method method = Method::None;
-
-    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
-        if (key == "flags"sv) {
-            if (value.is_object()) {
-                flags = TRY(jbig2_pattern_dictionary_flags_from_json(value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"flags\"");
-        }
-
-        if (key == "pattern_width"sv) {
-            if (auto pattern_width_json = value.get_u32(); pattern_width_json.has_value()) {
-                if (pattern_width_json.value() == 0 || pattern_width_json.value() > 255)
-                    return Error::from_string_literal("expected non-zero u8 for \"pattern_width\"");
-                pattern_width = pattern_width_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u8 for \"pattern_width\"");
-        }
-
-        if (key == "pattern_height"sv) {
-            if (auto pattern_height_json = value.get_u32(); pattern_height_json.has_value()) {
-                if (pattern_height_json.value() == 0 || pattern_height_json.value() > 255)
-                    return Error::from_string_literal("expected non-zero u8 for \"pattern_height\"");
-                pattern_height = pattern_height_json.value();
-                return {};
-            }
-            return Error::from_string_literal("expected u8 for \"pattern_height\"");
-        }
-
-        if (key == "gray_max"sv) {
-            if (auto gray_max_json = value.get_u32(); gray_max_json.has_value()) {
-                gray_max = gray_max_json.value();
-                return {};
-            }
-            if (value.is_string()) {
-                if (value.as_string() == "from_tiles"sv) {
-                    gray_max_from_tiles = true;
-                    return {};
-                }
-            }
-            return Error::from_string_literal("expected u32 or \"from_tiles\" for \"gray_max\"");
-        }
-
-        if (key == "strip_trailing_7fffs"sv) {
-            if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
-                if (strip_trailing_7fffs.value())
-                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Remove;
-                else
-                    trailing_7fff_handling = Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep;
-                return {};
-            }
-            return Error::from_string_literal("expected bool for \"strip_trailing_7fffs\"");
-        }
-
-        // FIXME: Make this more flexible.
-        if (key == "image_data"sv) {
-            if (value.is_object()) {
-                image = TRY(jbig2_image_from_json(options, value.as_object()));
-                return {};
-            }
-            return Error::from_string_literal("expected object for \"image_data\"");
-        }
-
-        if (key == "method"sv) {
-            if (value.is_string()) {
-                auto const& method_json = value.as_string();
-                if (method_json == "distinct_image_tiles"sv) {
-                    method = Method::DistinctImageTiles;
-                    return {};
-                }
-                if (method_json == "unique_image_tiles"sv) {
-                    method = Method::UniqueImageTiles;
-                    return {};
-                }
-            }
-            return Error::from_string_literal("expected \"distinct_image_tiles\" for \"method\"");
-        }
-
-        dbgln("pattern_dictionary key {}", key);
-        return Error::from_string_literal("unknown pattern_dictionary key");
-    }));
-
-    if (gray_max_from_tiles && method == Method::None)
-        return Error::from_string_literal("can't use \"from_tiles\" for gray_max without using a tiling method");
-
-    if (method == Method::DistinctImageTiles || method == Method::UniqueImageTiles) {
-        auto number_of_tiles_in_x = ceil_div(image->width(), static_cast<size_t>(pattern_width));
-        auto number_of_tiles_in_y = ceil_div(image->height(), static_cast<size_t>(pattern_height));
-
-        // FIXME: For UniqueImageTiles at the edge, we could use a custom hasher/comparator to match existing full tiles
-        //        by ignoring pixels outside the clipped tile rect.
-        Vector<Gfx::BilevelSubImage> tiles;
-        HashTable<Gfx::BilevelSubImage> saw_tile;
-        Gfx::IntRect bitmap_rect { 0, 0, static_cast<int>(image->width()), static_cast<int>(image->height()) };
-        for (size_t tile_y = 0, tile_index = 0; tile_y < number_of_tiles_in_y; ++tile_y) {
-            for (size_t tile_x = 0; tile_x < number_of_tiles_in_x; ++tile_x, ++tile_index) {
-                Gfx::IntPoint source_position { static_cast<int>(tile_x * pattern_width), static_cast<int>(tile_y * pattern_height) };
-                Gfx::IntRect source_rect { source_position, { pattern_width, pattern_height } };
-                source_rect = source_rect.intersected(bitmap_rect);
-                auto source = image->subbitmap(source_rect);
-                if (method == Method::DistinctImageTiles || saw_tile.set(source) == HashSetResult::InsertedNewEntry)
-                    TRY(tiles.try_append(source));
-            }
-        }
-
-        auto tiled_image = TRY(Gfx::BilevelImage::create(pattern_width * tiles.size(), pattern_height));
-        tiled_image->fill(false);
-        for (auto const& [i, tile] : enumerate(tiles)) {
-            Gfx::IntPoint destination_position { static_cast<int>(i * pattern_width), 0 };
-            tile.composite_onto(*tiled_image, destination_position, Gfx::BilevelImage::CompositionType::Replace);
-        }
-
-        if (gray_max_from_tiles)
-            gray_max = tiles.size() - 1;
-
-        image = move(tiled_image);
-    }
-
-    return Gfx::JBIG2::SegmentData {
-        header,
-        Gfx::JBIG2::PatternDictionarySegmentData {
-            flags,
-            pattern_width,
-            pattern_height,
-            gray_max,
-            image.release_nonnull(),
-            trailing_7fff_handling,
-        }
-    };
 }
 
 static ErrorOr<u8> jbig2_generic_region_flags_from_json(JsonObject const& object)
@@ -1334,6 +1294,46 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_page_information_from_json(Gfx::JB
     return Gfx::JBIG2::SegmentData { header, data };
 }
 
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_page_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    if (object.has_value())
+        return Error::from_string_literal("end_of_page segment should have no \"data\" object");
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::EndOfPageSegmentData {} };
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_stripe_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    if (!object.has_value())
+        return Error::from_string_literal("end_of_stripe segment needs a \"data\" object");
+
+    Optional<u32> y_coordinate;
+
+    TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "y_coordinate"sv) {
+            if (auto y = value.get_u32(); y.has_value()) {
+                y_coordinate = y.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"y_coordinate\"");
+        }
+
+        dbgln("end_of_stripe key {}", key);
+        return Error::from_string_literal("unknown end_of_stripe key");
+    }));
+
+    if (!y_coordinate.has_value())
+        return Error::from_string_literal("end_of_stripe segment missing required \"y_coordinate\" key");
+
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::EndOfStripeSegment { y_coordinate.value() } };
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_end_of_file_from_json(Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+{
+    if (object.has_value())
+        return Error::from_string_literal("end_of_file segment should have no \"data\" object");
+    return Gfx::JBIG2::SegmentData { header, Gfx::JBIG2::EndOfFileSegmentData {} };
+}
+
 static ErrorOr<u8> jbig2_tables_flags_from_json(JsonObject const& object)
 {
     u8 flags = 0;
@@ -1677,18 +1677,12 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
     if (header.is_immediate_generic_region_of_initially_unknown_size && type_string != "generic_region"sv)
         return Error::from_string_literal("is_immediate_generic_region_of_initially_unknown_size can only be set for type \"generic_region\"");
 
-    if (type_string == "end_of_file")
-        return jbig2_end_of_file_from_json(header, segment_data_object);
-    if (type_string == "end_of_page")
-        return jbig2_end_of_page_from_json(header, segment_data_object);
-    if (type_string == "end_of_stripe")
-        return jbig2_end_of_stripe_from_json(header, segment_data_object);
+    if (type_string == "pattern_dictionary")
+        return jbig2_pattern_dictionary_from_json(options, header, segment_data_object);
     if (type_string == "halftone_region")
         return jbig2_immediate_halftone_region_from_json(options, header, segment_data_object);
     if (type_string == "lossless_halftone_region")
         return jbig2_immediate_lossless_halftone_region_from_json(options, header, segment_data_object);
-    if (type_string == "pattern_dictionary")
-        return jbig2_pattern_dictionary_from_json(options, header, segment_data_object);
     if (type_string == "generic_region")
         return jbig2_immediate_generic_region_from_json(options, header, segment_data_object);
     if (type_string == "lossless_generic_region")
@@ -1703,6 +1697,12 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_segment_from_json(ToJSONOptions co
         return jbig2_intermediate_generic_refinement_region_from_json(options, header, segment_data_object);
     if (type_string == "page_information")
         return jbig2_page_information_from_json(header, segment_data_object);
+    if (type_string == "end_of_page")
+        return jbig2_end_of_page_from_json(header, segment_data_object);
+    if (type_string == "end_of_stripe")
+        return jbig2_end_of_stripe_from_json(header, segment_data_object);
+    if (type_string == "end_of_file")
+        return jbig2_end_of_file_from_json(header, segment_data_object);
     if (type_string == "tables")
         return jbig2_tables_from_json(header, segment_data_object);
     if (type_string == "extension")
