@@ -66,6 +66,21 @@ static ErrorOr<Gfx::JBIG2::FileHeaderData> jbig2_header_from_json(JsonObject con
     return header;
 }
 
+static Optional<Vector<i8>> jbig2_adaptive_template_pixels_from_json(JsonValue const& value)
+{
+    if (!value.is_array())
+        return OptionalNone {};
+
+    Vector<i8> adaptive_template_pixels;
+    for (auto const& value : value.as_array().values()) {
+        auto element = value.get_i32();
+        if (!element.has_value() || (element.value() < -128 || element.value() > 127))
+            return OptionalNone {};
+        adaptive_template_pixels.append(static_cast<i8>(element.value()));
+    }
+    return adaptive_template_pixels;
+}
+
 static ErrorOr<Gfx::MQArithmeticEncoder::Trailing7FFFHandling> jbig2_trailing_7fff_handling_from_json(JsonValue const& value)
 {
     if (auto strip_trailing_7fffs = value.get_bool(); strip_trailing_7fffs.has_value()) {
@@ -807,20 +822,11 @@ static ErrorOr<Gfx::JBIG2::GenericRegionSegmentData> jbig2_generic_region_from_j
         }
 
         if (key == "adaptive_template_pixels"sv) {
-            if (value.is_array()) {
-                auto const& adaptive_template_pixels_json = value.as_array();
-                for (auto const& value : adaptive_template_pixels_json.values()) {
-                    if (auto pixel = value.get_i32(); pixel.has_value()) {
-                        if (pixel.value() < -128 || pixel.value() > 127)
-                            return Error::from_string_literal("expected i8 for \"adaptive_template_pixels\" elements");
-                        adaptive_template_pixels.append(static_cast<i8>(pixel.value()));
-                        continue;
-                    }
-                    return Error::from_string_literal("expected array of i8 for \"adaptive_template_pixels\"");
-                }
+            if (auto adaptive_template_pixels_json = jbig2_adaptive_template_pixels_from_json(value); adaptive_template_pixels_json.has_value()) {
+                adaptive_template_pixels = adaptive_template_pixels_json.value();
                 return {};
             }
-            return Error::from_string_literal("expected array for \"adaptive_template_pixels\"");
+            return Error::from_string_literal("expected array of i8 for \"adaptive_template_pixels\"");
         }
 
         if (key == "strip_trailing_7fffs"sv) {
@@ -1003,20 +1009,11 @@ static ErrorOr<Gfx::JBIG2::GenericRefinementRegionSegmentData> jbig2_generic_ref
         }
 
         if (key == "adaptive_template_pixels"sv) {
-            if (value.is_array()) {
-                auto const& adaptive_template_pixels_json = value.as_array();
-                for (auto const& value : adaptive_template_pixels_json.values()) {
-                    if (auto pixel = value.get_i32(); pixel.has_value()) {
-                        if (pixel.value() < -128 || pixel.value() > 127)
-                            return Error::from_string_literal("expected i8 for \"adaptive_template_pixels\" elements");
-                        adaptive_template_pixels.append(static_cast<i8>(pixel.value()));
-                        continue;
-                    }
-                    return Error::from_string_literal("expected array of i8 for \"adaptive_template_pixels\"");
-                }
+            if (auto adaptive_template_pixels_json = jbig2_adaptive_template_pixels_from_json(value); adaptive_template_pixels_json.has_value()) {
+                adaptive_template_pixels = adaptive_template_pixels_json.value();
                 return {};
             }
-            return Error::from_string_literal("expected array for \"adaptive_template_pixels\"");
+            return Error::from_string_literal("expected array of i8 for \"adaptive_template_pixels\"");
         }
 
         if (key == "strip_trailing_7fffs"sv) {
