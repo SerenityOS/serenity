@@ -454,7 +454,7 @@ static ErrorOr<Vector<u64>> jbig2_halftone_graymap_from_json(ToJSONOptions const
 static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from_json(ToJSONOptions const& options, Optional<JsonObject const&> object)
 {
     if (!object.has_value())
-        return Error::from_string_literal("generic_region segment should have \"data\" object");
+        return Error::from_string_literal("halftone_region segment should have \"data\" object");
 
     Gfx::JBIG2::HalftoneRegionSegmentData halftone_region;
 
