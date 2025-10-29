@@ -2271,7 +2271,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto jbig2_data = TRY(stream.read_until_eof());
 
     // Only write images that decode correctly.
-    TRY(TRY(Gfx::JBIG2ImageDecoderPlugin::create(jbig2_data))->frame(0));
+    Gfx::JBIG2DecoderOptions decoder_options;
+    decoder_options.log_comments = Gfx::JBIG2DecoderOptions::LogComments::No;
+    TRY(TRY(Gfx::JBIG2ImageDecoderPlugin::create_with_options(jbig2_data, decoder_options))->frame(0));
 
     auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
     auto buffered_output = TRY(Core::OutputBufferedFile::create(move(output_stream)));

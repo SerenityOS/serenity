@@ -14,10 +14,19 @@ namespace Gfx {
 
 struct JBIG2LoadingContext;
 
+struct JBIG2DecoderOptions {
+    enum class LogComments {
+        No,
+        Yes,
+    };
+    LogComments log_comments { LogComments::Yes };
+};
+
 class JBIG2ImageDecoderPlugin : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
+    static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create_with_options(ReadonlyBytes, JBIG2DecoderOptions);
 
     virtual ~JBIG2ImageDecoderPlugin() override;
 
@@ -29,7 +38,7 @@ public:
     static ErrorOr<ByteBuffer> decode_embedded(Vector<ReadonlyBytes>);
 
 private:
-    JBIG2ImageDecoderPlugin();
+    JBIG2ImageDecoderPlugin(JBIG2DecoderOptions);
 
     OwnPtr<JBIG2LoadingContext> m_context;
 };
