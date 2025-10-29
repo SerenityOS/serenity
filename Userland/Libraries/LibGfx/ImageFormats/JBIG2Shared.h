@@ -189,4 +189,55 @@ enum class ExtensionType {
     MultiByteCodedComment = 0x20000002,
 };
 
+struct Code {
+    u16 prefix_length {};         // "PREFLEN" in spec. High bit set for lower range table line.
+    u8 range_length {};           // "RANGELEN" in spec.
+    Optional<i32> first_value {}; // First number in "VAL" in spec.
+    u32 code {};                  // "Encoding" in spec.
+
+    constexpr static int LowerRangeBit = 0x8000;
+};
+
+class HuffmanTable {
+public:
+    enum class StandardTable {
+        B_1,  // Standard Huffman table A
+        B_2,  // Standard Huffman table B
+        B_3,  // Standard Huffman table C
+        B_4,  // Standard Huffman table D
+        B_5,  // Standard Huffman table E
+        B_6,  // Standard Huffman table F
+        B_7,  // Standard Huffman table G
+        B_8,  // Standard Huffman table H
+        B_9,  // Standard Huffman table I
+        B_10, // Standard Huffman table J
+        B_11, // Standard Huffman table K
+        B_12, // Standard Huffman table L
+        B_13, // Standard Huffman table M
+        B_14, // Standard Huffman table N
+        B_15, // Standard Huffman table O
+    };
+    static ErrorOr<HuffmanTable*> standard_huffman_table(StandardTable);
+
+    bool has_oob_symbol() const { return m_has_oob_symbol; }
+
+    // Returns OptionalNone for OOB.
+    ErrorOr<Optional<i32>> read_symbol(BigEndianInputBitStream&) const;
+
+    // Will never return OOB.
+    ErrorOr<i32> read_symbol_non_oob(BigEndianInputBitStream&) const;
+
+    HuffmanTable(ReadonlySpan<Code> codes, bool has_oob_symbol = false)
+        : m_codes(codes)
+        , m_has_oob_symbol(has_oob_symbol)
+    {
+    }
+
+private:
+    ErrorOr<Optional<i32>> read_symbol_internal(BigEndianInputBitStream&) const;
+
+    ReadonlySpan<Code> m_codes;
+    bool m_has_oob_symbol { false };
+};
+
 }
