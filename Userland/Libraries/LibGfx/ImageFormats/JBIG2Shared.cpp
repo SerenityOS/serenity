@@ -332,4 +332,49 @@ ErrorOr<i32> HuffmanTable::read_symbol_non_oob(BigEndianInputBitStream& stream) 
     return result.value();
 }
 
+ErrorOr<void> HuffmanTable::write_symbol_internal(BigEndianOutputBitStream& stream, Optional<i32> value_or_oob) const
+{
+    // FIXME: Use an approach that doesn't require a full scan for every value,
+    //        for example by handling OOB, lower range, and upper range first,
+    //        and then binary searching the rest.
+    for (auto const& code : m_codes) {
+        if (value_or_oob.has_value() != code.first_value.has_value())
+            continue;
+
+        if (!value_or_oob.has_value()) {
+            VERIFY(code.range_length == 0);
+            return stream.write_bits(code.code, code.prefix_length);
+        }
+
+        auto first_value = code.first_value.value();
+        auto value = value_or_oob.value();
+
+        if (code.prefix_length & Code::LowerRangeBit) {
+            VERIFY(code.range_length == 32);
+            if (value > first_value)
+                continue;
+            TRY(stream.write_bits(code.code, code.prefix_length & ~Code::LowerRangeBit));
+            return stream.write_bits(static_cast<u32>(first_value - value), code.range_length);
+        }
+
+        if (value < first_value || (code.range_length != 32 && value >= (first_value + (1 << code.range_length))))
+            continue;
+        TRY(stream.write_bits(code.code, code.prefix_length));
+        return stream.write_bits(static_cast<u32>(value - first_value), code.range_length);
+    }
+    return Error::from_string_literal("JBIG2Writer: value not representable in this huffman table");
+}
+
+ErrorOr<void> HuffmanTable::write_symbol(BigEndianOutputBitStream& stream, Optional<i32> value) const
+{
+    VERIFY(m_has_oob_symbol);
+    return write_symbol_internal(stream, value);
+}
+
+ErrorOr<void> HuffmanTable::write_symbol_non_oob(BigEndianOutputBitStream& stream, i32 value) const
+{
+    VERIFY(!m_has_oob_symbol);
+    return write_symbol_internal(stream, value);
+}
+
 }

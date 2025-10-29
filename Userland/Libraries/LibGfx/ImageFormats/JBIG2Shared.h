@@ -227,6 +227,10 @@ public:
     // Will never return OOB.
     ErrorOr<i32> read_symbol_non_oob(BigEndianInputBitStream&) const;
 
+    // Takes OptionalNone for OOB.
+    ErrorOr<void> write_symbol(BigEndianOutputBitStream&, Optional<i32>) const;
+    ErrorOr<void> write_symbol_non_oob(BigEndianOutputBitStream&, i32) const;
+
     HuffmanTable(ReadonlySpan<Code> codes, bool has_oob_symbol = false)
         : m_codes(codes)
         , m_has_oob_symbol(has_oob_symbol)
@@ -235,6 +239,7 @@ public:
 
 private:
     ErrorOr<Optional<i32>> read_symbol_internal(BigEndianInputBitStream&) const;
+    ErrorOr<void> write_symbol_internal(BigEndianOutputBitStream&, Optional<i32>) const;
 
     ReadonlySpan<Code> m_codes;
     bool m_has_oob_symbol { false };
