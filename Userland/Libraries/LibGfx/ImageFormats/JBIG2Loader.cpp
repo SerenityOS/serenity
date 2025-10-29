@@ -1782,10 +1782,10 @@ struct TextRegionDecodingInputParameters {
     Array<JBIG2::AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels; // "SBRATX" / "SBRATY" in spec.
     // FIXME: COLEXTFLAG, SBCOLS
 
-    // If uses_huffman_encoding is true, generic_region_decoding_procedure() reads data off this stream.
+    // If uses_huffman_encoding is true, text_region_encoding_procedure() reads data off this stream.
     Stream* stream { nullptr };
 
-    // If uses_huffman_encoding is false, generic_region_decoding_procedure() reads data off this decoder.
+    // If uses_huffman_encoding is false, text_region_encoding_procedure() reads data off this decoder.
     MQArithmeticDecoder* arithmetic_decoder { nullptr };
 };
 
