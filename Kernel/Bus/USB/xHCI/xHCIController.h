@@ -119,7 +119,7 @@ private:
     static constexpr size_t max_endpoints = 31;
     static constexpr size_t endpoint_ring_size = PAGE_SIZE / sizeof(TransferRequestBlock);
     struct SlotState {
-        Spinlock<LockRank::None> input_context_lock;
+        Mutex input_context_mutex;
         OwnPtr<Memory::Region> input_context_region;
 
         OwnPtr<Memory::Region> device_context_region;
@@ -142,7 +142,7 @@ private:
     u8* input_context(u8 slot, u8 index) const
     {
         auto const& slot_state = m_slots_state[slot - 1];
-        VERIFY(slot_state.input_context_lock.is_locked());
+        VERIFY(slot_state.input_context_mutex.is_locked());
 
         auto* base = slot_state.input_context_region->vaddr().as_ptr();
         return base + (context_entry_size() * index);
@@ -229,7 +229,7 @@ private:
 
     Vector<NonnullOwnPtr<PeriodicPendingTransfer>> m_active_periodic_transfers;
 
-    Spinlock<LockRank::None> m_command_lock;
+    Mutex m_command_mutex;
     DeprecatedWaitQueue m_command_completion_queue;
     TransferRequestBlock m_command_result_transfer_request_block {};
     u32 m_command_ring_enqueue_index { 0 };

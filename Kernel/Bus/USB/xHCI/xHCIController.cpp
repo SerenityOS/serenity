@@ -367,7 +367,7 @@ void xHCIController::enqueue_command(TransferRequestBlock& transfer_request_bloc
 
 void xHCIController::execute_command(TransferRequestBlock& transfer_request_block)
 {
-    SpinlockLocker const locker(m_command_lock);
+    MutexLocker const locker(m_command_mutex);
     enqueue_command(transfer_request_block);
     m_command_completion_queue.wait_forever();
     transfer_request_block = m_command_result_transfer_request_block;
@@ -514,7 +514,7 @@ ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
     device.set_controller_identifier<xHCIController>({}, slot);
 
     auto& slot_state = m_slots_state[slot - 1];
-    SpinlockLocker const input_context_locker(slot_state.input_context_lock);
+    MutexLocker const input_context_locker(slot_state.input_context_mutex);
     VERIFY(!slot_state.input_context_region); // Prevent trying to initialize an already initialized device
 
     // 5. After successfully obtaining a Device Slot, system software shall initialize the data structures associated with the slot as described in section 4.3.3.
@@ -1016,8 +1016,8 @@ ErrorOr<void> xHCIController::initialize_endpoint_if_needed(Pipe const& pipe)
     auto const slot = pipe.device().controller_identifier();
     auto& slot_state = m_slots_state[slot - 1];
 
-    // Locking this spinlock also ensures that this function can't be run on the same device in parallel.
-    SpinlockLocker const input_context_locker(slot_state.input_context_lock);
+    // Locking this mutex also ensures that this function can't be run on the same device in parallel.
+    MutexLocker const input_context_locker(slot_state.input_context_mutex);
 
     VERIFY(slot_state.input_context_region);
     auto endpoint_id = endpoint_index(pipe.endpoint_number(), pipe.direction());
