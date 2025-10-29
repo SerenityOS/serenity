@@ -49,7 +49,6 @@ public:
     ErrorOr<i32> decode_non_oob(MQArithmeticDecoder&);
 
 private:
-    u16 PREV { 0 };
     Vector<MQArithmeticCoderContext> contexts;
 };
 
