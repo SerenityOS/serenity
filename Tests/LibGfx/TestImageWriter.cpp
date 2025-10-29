@@ -210,6 +210,72 @@ TEST_CASE(test_jbig2)
     TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(bilevel_bitmap)));
 }
 
+TEST_CASE(test_jbig2_huffman)
+{
+    // FIXME: Add tables B_3 and B_5 once we implement them, see #26104.
+    struct TestCase {
+        Gfx::JBIG2::HuffmanTable::StandardTable table_id;
+        int start;
+        int end;
+    };
+    auto test_cases = to_array<TestCase>({
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_1, 0, 201 },
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_2, 0, 101 },
+        // { Gfx::JBIG2::HuffmanTable::StandardTable::B_3, -300, 101 },
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_4, 1, 101 },
+        // { Gfx::JBIG2::HuffmanTable::StandardTable::B_5, -300, 101 },
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_6, -3000, 3001 },
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_7, -3000, 3001 },
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_8, -50, 2001 },
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_9, -50, 4001 },
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_10, -50, 5001 },
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_11, 1, 201 },
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_12, 1, 101 },
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_13, 1, 201 },
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_14, -2, 3 },
+        { Gfx::JBIG2::HuffmanTable::StandardTable::B_15, -40, 41 },
+    });
+
+    for (auto test_case : test_cases) {
+        auto* table = TRY_OR_FAIL(Gfx::JBIG2::HuffmanTable::standard_huffman_table(test_case.table_id));
+
+        ByteBuffer encoded;
+
+        {
+            AllocatingMemoryStream out_stream;
+            BigEndianOutputBitStream out_bitstream { MaybeOwned { out_stream } };
+            for (int i = test_case.start; i < test_case.end; ++i) {
+                if (table->has_oob_symbol())
+                    TRY_OR_FAIL(table->write_symbol(out_bitstream, i));
+                else
+                    TRY_OR_FAIL(table->write_symbol_non_oob(out_bitstream, i));
+            }
+
+            if (table->has_oob_symbol())
+                TRY_OR_FAIL(table->write_symbol(out_bitstream, OptionalNone {}));
+
+            TRY_OR_FAIL(out_bitstream.align_to_byte_boundary());
+            encoded = TRY_OR_FAIL(out_stream.read_until_eof());
+        }
+
+        {
+            FixedMemoryStream in_stream { encoded.bytes() };
+            BigEndianInputBitStream in_bitstream { MaybeOwned { in_stream } };
+            for (int i = test_case.start; i < test_case.end; ++i) {
+                if (table->has_oob_symbol())
+                    EXPECT_EQ(TRY_OR_FAIL(table->read_symbol(in_bitstream)).value(), i);
+                else
+                    EXPECT_EQ(TRY_OR_FAIL(table->read_symbol_non_oob(in_bitstream)), i);
+            }
+
+            if (table->has_oob_symbol())
+                EXPECT(!TRY_OR_FAIL(table->read_symbol(in_bitstream)).has_value());
+
+            EXPECT(in_stream.is_eof());
+        }
+    }
+}
+
 TEST_CASE(test_jpeg)
 {
     // JPEG is lossy, so the roundtripped bitmap won't match the original bitmap. But it should still have the same size.
