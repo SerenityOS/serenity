@@ -862,7 +862,12 @@ ErrorOr<size_t> xHCIController::submit_control_transfer(Transfer& transfer)
 
     SyncPendingTransfer pending_transfer;
     TRY(enqueue_transfer(slot, 0, Pipe::Direction::Bidirectional, { transfer_request_blocks, trb_index }, pending_transfer));
-    pending_transfer.wait_queue.wait_forever();
+    MUST(pending_transfer.wait_queue.wait_until(pending_transfer.transfer_done, [](bool& transfer_done) {
+        if (!transfer_done)
+            return false;
+        transfer_done = false;
+        return true;
+    }));
     VERIFY(!pending_transfer.endpoint_list_node.is_in_list());
 
     if (pending_transfer.completion_code == TransferRequestBlock::CompletionCode::Stall_Error) {
@@ -949,7 +954,12 @@ ErrorOr<size_t> xHCIController::submit_bulk_transfer(Transfer& transfer)
 
     SyncPendingTransfer pending_transfer;
     TRY(enqueue_transfer(transfer.pipe().device().controller_identifier(), transfer.pipe().endpoint_number(), transfer.pipe().direction(), transfer_request_blocks, pending_transfer));
-    pending_transfer.wait_queue.wait_forever();
+    MUST(pending_transfer.wait_queue.wait_until(pending_transfer.transfer_done, [](bool& transfer_done) {
+        if (!transfer_done)
+            return false;
+        transfer_done = false;
+        return true;
+    }));
     VERIFY(!pending_transfer.endpoint_list_node.is_in_list());
 
     if (pending_transfer.completion_code == TransferRequestBlock::CompletionCode::Stall_Error)
@@ -1376,7 +1386,8 @@ void xHCIController::handle_transfer_event(TransferRequestBlock const& transfer_
                 sync_pending_transfer.completion_code = transfer_request_block.transfer_event.completion_code;
                 sync_pending_transfer.remainder = transfer_request_block.transfer_event.transfer_request_block_transfer_length;
                 full_memory_fence();
-                sync_pending_transfer.wait_queue.wake_all();
+                sync_pending_transfer.transfer_done.with([](bool& transfer_done) { transfer_done = true; });
+                sync_pending_transfer.wait_queue.notify_one();
             } else {
                 auto& periodic_pending_transfer = static_cast<PeriodicPendingTransfer&>(pending_transfer);
                 periodic_pending_transfer.original_transfer->invoke_async_callback();

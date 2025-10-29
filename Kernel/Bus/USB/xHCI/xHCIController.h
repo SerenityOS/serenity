@@ -14,7 +14,6 @@
 #include <Kernel/Bus/USB/xHCI/xHCIRootHub.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Tasks/DeprecatedWaitQueue.h>
 #include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel::USB::xHCI {
@@ -97,7 +96,8 @@ private:
         u32 end_index { 0 };
     };
     struct SyncPendingTransfer : public PendingTransfer {
-        DeprecatedWaitQueue wait_queue;
+        WaitQueue wait_queue;
+        SpinlockProtected<bool, LockRank::None> transfer_done { false };
         TransferRequestBlock::CompletionCode completion_code { TransferRequestBlock::CompletionCode::Invalid };
         u32 remainder { 0 };
     };
