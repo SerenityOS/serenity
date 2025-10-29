@@ -180,7 +180,7 @@ ErrorOr<void> Client::send_response(Stream& response, HTTP::HttpRequest const& r
 {
     StringBuilder builder;
     TRY(builder.try_append("HTTP/1.0 200 OK\r\n"sv));
-    TRY(builder.try_append("Server: WebServer (SerenityOS)\r\n"sv));
+    TRY(builder.try_append("Server: WebServer (SilkOS)\r\n"sv));
     TRY(builder.try_append("X-Frame-Options: SAMEORIGIN\r\n"sv));
     TRY(builder.try_append("X-Content-Type-Options: nosniff\r\n"sv));
     TRY(builder.try_append("Pragma: no-cache\r\n"sv));
