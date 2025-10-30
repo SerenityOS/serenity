@@ -2739,8 +2739,8 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     }
 
     if (frame.frame_header.upsampling > 1) {
-        frame.width = ceil(static_cast<double>(frame.width) / frame.frame_header.upsampling);
-        frame.height = ceil(static_cast<double>(frame.height) / frame.frame_header.upsampling);
+        frame.width = ceil_div(frame.width, frame.frame_header.upsampling);
+        frame.height = ceil_div(frame.height, frame.frame_header.upsampling);
     }
 
     // "If lf_level > 0 (which is also a field in frame_header), then
