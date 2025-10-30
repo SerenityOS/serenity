@@ -389,6 +389,7 @@ TEST_CASE(test_jpeg)
 {
     // JPEG is lossy, so the roundtripped bitmap won't match the original bitmap. But it should still have the same size.
     (void)TRY_OR_FAIL((get_roundtrip_bitmap<Gfx::JPEGWriter, Gfx::JPEGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    (void)TRY_OR_FAIL((get_roundtrip_bitmap<Gfx::JPEGWriter, Gfx::JPEGImageDecoderPlugin>(TRY_OR_FAIL(create_test_cmyk_bitmap()))));
 }
 
 TEST_CASE(test_png)
