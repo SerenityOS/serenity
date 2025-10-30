@@ -14,6 +14,7 @@
 #include "Window.h"
 #include "WindowManager.h"
 #include <AK/CharacterTypes.h>
+#include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Font/Font.h>

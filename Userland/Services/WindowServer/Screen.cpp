@@ -14,6 +14,7 @@
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <Kernel/API/MousePacket.h>
+#include <LibCore/EventLoop.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/devices/gpu.h>

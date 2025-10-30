@@ -5,9 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibCore/System.h>
+#include <AK/Vector.h>
+#include <LibCore/EventLoop.h>
+#include <LibCore/Socket.h>
+#include <LibCore/Timer.h>
 #include <LibIPC/Connection.h>
-#include <LibIPC/File.h>
+#include <LibIPC/Message.h>
 #include <LibIPC/Stub.h>
 #include <sys/select.h>
 
@@ -29,6 +32,19 @@ ConnectionBase::ConnectionBase(IPC::Stub& local_stub, NonnullOwnPtr<Core::LocalS
     , m_deferred_invoker(make<CoreEventLoopDeferredInvoker>())
 {
     m_responsiveness_timer = Core::Timer::create_single_shot(3000, [this] { may_have_become_unresponsive(); });
+    m_socket->on_ready_to_read = [this] {
+        NonnullRefPtr protect = *this;
+        // FIXME: Do something about errors.
+        (void)drain_messages_from_peer();
+        handle_messages();
+    };
+}
+
+ConnectionBase::~ConnectionBase() = default;
+
+bool ConnectionBase::is_open() const
+{
+    return m_socket->is_open();
 }
 
 void ConnectionBase::set_deferred_invoker(NonnullOwnPtr<DeferredInvoker> deferred_invoker)
@@ -208,6 +224,27 @@ OwnPtr<IPC::Message> ConnectionBase::wait_for_specific_endpoint_message_impl(u32
             break;
     }
     return {};
+}
+
+void ConnectionBase::try_parse_messages(Vector<u8> const& bytes, size_t& index)
+{
+    u32 message_size = 0;
+    for (; index + sizeof(message_size) < bytes.size(); index += message_size) {
+        memcpy(&message_size, bytes.data() + index, sizeof(message_size));
+        if (message_size == 0 || bytes.size() - index - sizeof(uint32_t) < message_size)
+            break;
+        index += sizeof(message_size);
+        auto remaining_bytes = ReadonlyBytes { bytes.data() + index, message_size };
+
+        if (auto message = try_parse_message(remaining_bytes, m_unprocessed_fds)) {
+            m_unprocessed_messages.append(message.release_nonnull());
+            continue;
+        }
+
+        dbgln("Failed to parse IPC message:");
+        dbgln("{:hex-dump}", remaining_bytes);
+        break;
+    }
 }
 
 }

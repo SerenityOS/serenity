@@ -5,6 +5,7 @@
  */
 
 #include "ConnectionFromClient.h"
+#include <LibCore/EventLoop.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibIPC/MultiServer.h>

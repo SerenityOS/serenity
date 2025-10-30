@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/EventLoop.h>
 #include <LibCore/EventReceiver.h>
 #include <LibSQL/AST/Parser.h>
 #include <SQLServer/ConnectionFromClient.h>

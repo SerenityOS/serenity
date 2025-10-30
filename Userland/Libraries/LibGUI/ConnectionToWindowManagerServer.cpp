@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/EventLoop.h>
 #include <LibGUI/ConnectionToWindowManagerServer.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Window.h>

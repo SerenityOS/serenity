@@ -7,6 +7,7 @@
 #include "PlaybackStreamSerenity.h"
 
 #include <LibCore/ThreadedPromise.h>
+#include <LibCore/Timer.h>
 
 namespace Audio {
 

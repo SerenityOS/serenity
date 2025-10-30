@@ -1352,16 +1352,16 @@ JS::GCPtr<DOM::Node> TraversableNavigable::currently_focused_area()
     return candidate;
 }
 
-void TraversableNavigable::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& target, Web::PaintOptions paint_options)
+void TraversableNavigable::paint(DevicePixelRect const& content_rect, Gfx::Bitmap& target, Web::PaintOptions paint_options)
 {
     Painting::DisplayList display_list;
     Painting::DisplayListRecorder display_list_recorder(display_list);
 
     Gfx::IntRect bitmap_rect { {}, content_rect.size().to_type<int>() };
-    display_list_recorder.fill_rect(bitmap_rect, Web::CSS::SystemColor::canvas());
+    display_list_recorder.fill_rect(bitmap_rect, CSS::SystemColor::canvas());
 
-    Web::HTML::Navigable::PaintConfig paint_config;
-    paint_config.paint_overlay = paint_options.paint_overlay == Web::PaintOptions::PaintOverlay::Yes;
+    HTML::Navigable::PaintConfig paint_config;
+    paint_config.paint_overlay = paint_options.paint_overlay == PaintOptions::PaintOverlay::Yes;
     paint_config.should_show_line_box_borders = paint_options.should_show_line_box_borders;
     paint_config.has_focus = paint_options.has_focus;
     record_display_list(display_list_recorder, paint_config);
@@ -1369,7 +1369,7 @@ void TraversableNavigable::paint(Web::DevicePixelRect const& content_rect, Gfx::
     auto display_list_player_type = page().client().display_list_player_type();
     if (display_list_player_type == DisplayListPlayerType::GPU) {
 #ifdef HAS_ACCELERATED_GRAPHICS
-        Web::Painting::DisplayListPlayerGPU player(*paint_options.accelerated_graphics_context, target);
+        Painting::DisplayListPlayerGPU player(*paint_options.accelerated_graphics_context, target);
         display_list.execute(player);
 #else
         static bool has_warned_about_configuration = false;
@@ -1380,7 +1380,7 @@ void TraversableNavigable::paint(Web::DevicePixelRect const& content_rect, Gfx::
         }
 #endif
     } else {
-        Web::Painting::DisplayListPlayerCPU player(target, display_list_player_type == DisplayListPlayerType::CPUWithExperimentalTransformSupport);
+        Painting::DisplayListPlayerCPU player(target, display_list_player_type == DisplayListPlayerType::CPUWithExperimentalTransformSupport);
         display_list.execute(player);
     }
 }
