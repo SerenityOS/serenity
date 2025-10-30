@@ -6,6 +6,7 @@
 
 #include <AK/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/CMYKBitmap.h>
 #include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/WellKnownProfiles.h>
@@ -41,10 +42,28 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame(Gfx::ImageDecoder
     return *frame_descriptor.image;
 }
 
+static ErrorOr<NonnullRefPtr<Gfx::CMYKBitmap>> expect_cmyk_frame(Gfx::ImageDecoderPlugin& plugin_decoder)
+{
+    EXPECT_EQ(plugin_decoder.frame_count(), 1u);
+    EXPECT(!plugin_decoder.is_animated());
+    EXPECT(!plugin_decoder.loop_count());
+    EXPECT(plugin_decoder.natural_frame_format() == Gfx::NaturalFrameFormat::CMYK);
+
+    return plugin_decoder.cmyk_frame();
+}
+
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame_of_size(Gfx::ImageDecoderPlugin& plugin_decoder, Gfx::IntSize size)
 {
     EXPECT_EQ(plugin_decoder.size(), size);
     auto frame = TRY(expect_single_frame(plugin_decoder));
+    EXPECT_EQ(frame->size(), size);
+    return frame;
+}
+
+static ErrorOr<NonnullRefPtr<Gfx::CMYKBitmap>> expect_cmyk_frame_of_size(Gfx::ImageDecoderPlugin& plugin_decoder, Gfx::IntSize size)
+{
+    EXPECT_EQ(plugin_decoder.size(), size);
+    auto frame = TRY(expect_cmyk_frame(plugin_decoder));
     EXPECT_EQ(frame->size(), size);
     return frame;
 }
@@ -61,11 +80,26 @@ static ErrorOr<ByteBuffer> encode_bitmap(Gfx::Bitmap const& bitmap, ExtraArgs...
     }
 }
 
+template<class Writer, class... ExtraArgs>
+static ErrorOr<ByteBuffer> encode_bitmap(Gfx::CMYKBitmap const& bitmap, ExtraArgs... extra_args)
+{
+    AllocatingMemoryStream stream;
+    TRY(Writer::encode(stream, bitmap, extra_args...));
+    return stream.read_until_eof();
+}
+
 template<class Writer, class Loader>
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_roundtrip_bitmap(Gfx::Bitmap const& bitmap)
 {
     auto encoded_data = TRY(encode_bitmap<Writer>(bitmap));
     return expect_single_frame_of_size(*TRY(Loader::create(encoded_data)), bitmap.size());
+}
+
+template<class Writer, class Loader>
+static ErrorOr<NonnullRefPtr<Gfx::CMYKBitmap>> get_roundtrip_bitmap(Gfx::CMYKBitmap const& bitmap)
+{
+    auto encoded_data = TRY(encode_bitmap<Writer>(bitmap));
+    return expect_cmyk_frame_of_size(*TRY(Loader::create(encoded_data)), bitmap.size());
 }
 
 static void expect_bitmaps_equal(Gfx::Bitmap const& a, Gfx::Bitmap const& b)
@@ -76,8 +110,24 @@ static void expect_bitmaps_equal(Gfx::Bitmap const& a, Gfx::Bitmap const& b)
             EXPECT_EQ(a.get_pixel(x, y), b.get_pixel(x, y));
 }
 
+static void expect_bitmaps_equal(Gfx::CMYKBitmap const& a, Gfx::CMYKBitmap const& b)
+{
+    VERIFY(a.size() == b.size());
+    for (int y = 0; y < a.size().height(); ++y)
+        for (int x = 0; x < a.size().width(); ++x)
+            EXPECT_EQ(a.scanline(y)[x], b.scanline(y)[x]);
+}
+
 template<class Writer, class Loader>
 static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap)
+{
+    auto decoded = TRY((get_roundtrip_bitmap<Writer, Loader>(bitmap)));
+    expect_bitmaps_equal(*decoded, bitmap);
+    return {};
+}
+
+template<class Writer, class Loader>
+static ErrorOr<void> test_roundtrip(Gfx::CMYKBitmap const& bitmap)
 {
     auto decoded = TRY((get_roundtrip_bitmap<Writer, Loader>(bitmap)));
     expect_bitmaps_equal(*decoded, bitmap);
@@ -131,6 +181,25 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> create_test_rgba_bitmap()
 {
     auto bitmap = TRY(create_test_rgb_bitmap());
     add_alpha_channel(*bitmap);
+    return bitmap;
+}
+
+static ErrorOr<NonnullRefPtr<Gfx::CMYKBitmap>> create_test_cmyk_bitmap()
+{
+    auto bitmap = TRY(Gfx::CMYKBitmap::create_with_size({ 47, 33 }));
+
+    Gfx::IntPoint center { bitmap->size().width() / 2, bitmap->size().height() / 2 };
+    for (int y = 0; y < bitmap->size().height(); ++y) {
+        for (int x = 0; x < bitmap->size().width(); ++x) {
+            bitmap->scanline(y)[x] = Gfx::CMYK {
+                static_cast<u8>((x * 255) / bitmap->size().width()),
+                static_cast<u8>((y * 255) / bitmap->size().height()),
+                static_cast<u8>((center.distance_from({ x, y }) * 255) / center.distance_from({ 0, 0 })),
+                static_cast<u8>(((x * y) * 255) / (bitmap->size().area())),
+            };
+        }
+    }
+
     return bitmap;
 }
 
@@ -489,6 +558,7 @@ TEST_CASE(test_tiff)
 {
     TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
     TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_cmyk_bitmap()))));
 }
 
 TEST_CASE(test_tiff_icc)
