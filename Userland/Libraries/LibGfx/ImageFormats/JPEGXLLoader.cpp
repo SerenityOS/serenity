@@ -2069,15 +2069,24 @@ struct LFGroupOptions {
     u32 bit_depth {};
 };
 
+// G.2.2 - LF coefficients
+static ErrorOr<void> read_lf_coefficients(LittleEndianInputBitStream&, FrameHeader const& frame_header)
+{
+    // "If the kUseLfFrame flag in frame_header is set, this subclause is skipped"
+    if (frame_header.flags & FrameHeader::Flags::kUseLfFrame)
+        return {};
+
+    return Error::from_string_literal("JPEGXLLoader: Implement reading LF coefficients");
+}
+
 static ErrorOr<void> read_lf_group(LittleEndianInputBitStream& stream,
     LFGroupOptions&& options)
 {
     auto const& [global_modular, frame_header, group_index, stream_index, bit_depth] = options;
 
     // LF coefficients
-    if (frame_header.encoding == Encoding::kVarDCT) {
-        TODO();
-    }
+    if (frame_header.encoding == Encoding::kVarDCT)
+        TRY(read_lf_coefficients(stream, frame_header));
 
     // ModularLfGroup
     u32 lf_group_dim = frame_header.group_dim() * 8;
