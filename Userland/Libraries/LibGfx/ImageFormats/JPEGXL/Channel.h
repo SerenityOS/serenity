@@ -154,6 +154,11 @@ public:
         return m_vshift;
     }
 
+    ChannelInfo info() const
+    {
+        return { m_width, m_height, m_hshift, m_vshift };
+    }
+
     bool decoded() const
     {
         return m_decoded;

@@ -1975,25 +1975,25 @@ static ErrorOr<LfGlobal> read_lf_global(LittleEndianInputBitStream& stream,
 ///
 
 /// Helpers to decode groups for the GlobalModular
-static IntRect rect_for_group(Channel const& channel, u32 group_dim, u32 group_index)
+static IntRect rect_for_group(ChannelInfo const& info, u32 group_dim, u32 group_index)
 {
-    u32 horizontal_group_dim = group_dim >> channel.hshift();
-    u32 vertical_group_dim = group_dim >> channel.vshift();
+    u32 horizontal_group_dim = group_dim >> info.hshift;
+    u32 vertical_group_dim = group_dim >> info.vshift;
 
     IntRect rect(0, 0, horizontal_group_dim, vertical_group_dim);
 
-    auto nb_groups_per_row = (channel.width() + horizontal_group_dim - 1) / horizontal_group_dim;
+    auto nb_groups_per_row = (info.width + horizontal_group_dim - 1) / horizontal_group_dim;
     auto group_x = group_index % nb_groups_per_row;
     rect.set_x(group_x * horizontal_group_dim);
-    if (group_x == nb_groups_per_row - 1 && channel.width() % horizontal_group_dim != 0) {
-        rect.set_width(channel.width() % horizontal_group_dim);
+    if (group_x == nb_groups_per_row - 1 && info.width % horizontal_group_dim != 0) {
+        rect.set_width(info.width % horizontal_group_dim);
     }
 
-    auto nb_groups_per_column = (channel.height() + vertical_group_dim - 1) / vertical_group_dim;
+    auto nb_groups_per_column = (info.height + vertical_group_dim - 1) / vertical_group_dim;
     auto group_y = group_index / nb_groups_per_row;
     rect.set_y(group_y * vertical_group_dim);
-    if (group_y == nb_groups_per_column - 1 && channel.height() % vertical_group_dim != 0) {
-        rect.set_height(channel.height() % vertical_group_dim);
+    if (group_y == nb_groups_per_column - 1 && info.height % vertical_group_dim != 0) {
+        rect.set_height(info.height % vertical_group_dim);
     }
 
     return rect;
@@ -2008,7 +2008,7 @@ struct GroupOptions {
     u32 group_dim {};
 };
 
-template<CallableAs<bool, Channel const&> F1, CallableAs<void, Channel&> F2>
+template<CallableAs<bool, Channel const&> F1, CallableAs<void, ChannelInfo const&> F2>
 static ErrorOr<void> read_group_data(
     LittleEndianInputBitStream& stream,
     GroupOptions&& options,
@@ -2024,7 +2024,7 @@ static ErrorOr<void> read_group_data(
         if (!match_decode_conditions(channel))
             continue;
 
-        auto rect_size = rect_for_group(channel, group_dim, group_index).size();
+        auto rect_size = rect_for_group(channel.info(), group_dim, group_index).size();
         TRY(channels_info.try_append({
             .width = static_cast<u32>(rect_size.width()),
             .height = static_cast<u32>(rect_size.height()),
@@ -2037,7 +2037,7 @@ static ErrorOr<void> read_group_data(
         return {};
 
     if constexpr (JPEGXL_DEBUG)
-        debug_print(original_channels[0]);
+        debug_print(original_channels[0].info());
 
     auto decoded = TRY(read_modular_bitstream(stream,
         {
@@ -2052,7 +2052,7 @@ static ErrorOr<void> read_group_data(
 
     // The decoded modular group data is then copied into the partially decoded GlobalModular image in the corresponding positions.
     for (u32 i = 0; i < original_channels.size(); ++i) {
-        auto destination = rect_for_group(original_channels[i], group_dim, group_index);
+        auto destination = rect_for_group(original_channels[i].info(), group_dim, group_index);
         original_channels[i].copy_from(destination, decoded.channels[i]);
     }
 
@@ -2108,7 +2108,7 @@ static ErrorOr<void> read_lf_group(LittleEndianInputBitStream& stream,
             .bit_depth = bit_depth,
             .group_dim = lf_group_dim },
         move(match_decoding_conditions),
-        [&](auto& first_channel) { dbgln("Decoding LFGroup {} for rectangle {}", group_index, rect_for_group(first_channel, lf_group_dim, group_index)); }));
+        [&](auto const& first_channel) { dbgln("Decoding LFGroup {} for rectangle {}", group_index, rect_for_group(first_channel, lf_group_dim, group_index)); }));
 
     // HF metadata
     if (frame_header.encoding == Encoding::kVarDCT) {
@@ -2166,7 +2166,7 @@ static ErrorOr<void> read_modular_group_data(LittleEndianInputBitStream& stream,
             .group_dim = frame_header.group_dim(),
         },
         move(match_decoding_conditions),
-        [&](auto& first_channel) { dbgln_if(JPEGXL_DEBUG, "Decoding pass {} for rectangle {}", options.pass_index, rect_for_group(first_channel, frame_header.group_dim(), group_index)); }));
+        [&](auto const& first_channel) { dbgln_if(JPEGXL_DEBUG, "Decoding pass {} for rectangle {}", options.pass_index, rect_for_group(first_channel, frame_header.group_dim(), group_index)); }));
 
     return {};
 }
