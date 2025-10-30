@@ -11,8 +11,7 @@ Font files contain bitmap definitions of fonts (`Gfx::BitmapFont`).
 Bitmap fonts can be either varying-width or fixed-width.
 The first four bytes of font files contain the filemagic: `!Fnt` (0x21466e74).
 
-In addition, `Gfx::BitmapFont` supports reading from and writing to font files (as well as reading directly from memory)
-and the question mark '?' used as a fallback for unknown glyphs or emojis.
+In addition, `Gfx::BitmapFont` supports reading from and writing to font files (as well as reading directly from memory).
 
 ## Structure
 
