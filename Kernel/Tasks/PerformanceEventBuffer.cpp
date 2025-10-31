@@ -319,11 +319,12 @@ ErrorOr<void> PerformanceEventBuffer::to_json_impl(Serializer& object) const
                 TRY(event_object.add("filename_index"sv, close.filename_index));
                 break;
             }
-            case FilesystemEventType::Readv: {
-                auto const& readv = event.data.filesystem.data.readv;
-                TRY(event_object.add("fs_event_type"sv, "readv"sv));
-                TRY(event_object.add("fd"sv, readv.fd));
-                TRY(event_object.add("filename_index"sv, readv.filename_index));
+            case FilesystemEventType::Preadv: {
+                auto const& preadv = event.data.filesystem.data.preadv;
+                TRY(event_object.add("fs_event_type"sv, "preadv"sv));
+                TRY(event_object.add("fd"sv, preadv.fd));
+                TRY(event_object.add("filename_index"sv, preadv.filename_index));
+                TRY(event_object.add("offset"sv, preadv.offset));
                 break;
             }
             case FilesystemEventType::Read: {

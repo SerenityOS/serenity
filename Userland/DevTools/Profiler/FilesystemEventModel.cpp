@@ -168,10 +168,10 @@ ErrorOr<String> FileEventModel::column_name(int column) const
         return "Close Count"_string;
     case Column::CloseDuration:
         return "Close Duration [ms]"_string;
-    case Column::ReadvCount:
-        return "Readv Count"_string;
-    case Column::ReadvDuration:
-        return "Readv Duration [ms]"_string;
+    case Column::PreadvCount:
+        return "Preadv Count"_string;
+    case Column::PreadvDuration:
+        return "Preadv Duration [ms]"_string;
     case Column::ReadCount:
         return "Read Count"_string;
     case Column::ReadDuration:
@@ -211,10 +211,10 @@ GUI::Variant FileEventModel::data(GUI::ModelIndex const& index, GUI::ModelRole r
             return node->close().count;
         case Column::CloseDuration:
             return static_cast<f32>(node->close().duration.to_nanoseconds()) / 1'000'000;
-        case Column::ReadvCount:
-            return node->readv().count;
-        case Column::ReadvDuration:
-            return static_cast<f32>(node->readv().duration.to_nanoseconds()) / 1'000'000;
+        case Column::PreadvCount:
+            return node->preadv().count;
+        case Column::PreadvDuration:
+            return static_cast<f32>(node->preadv().duration.to_nanoseconds()) / 1'000'000;
         case Column::ReadCount:
             return node->read().count;
         case Column::ReadDuration:

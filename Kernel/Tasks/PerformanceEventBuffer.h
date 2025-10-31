@@ -80,7 +80,7 @@ struct [[gnu::packed]] ReadPerformanceEvent {
 enum class FilesystemEventType : u8 {
     Open,
     Close,
-    Readv,
+    Preadv,
     Read,
     Pread
 };
@@ -97,11 +97,12 @@ struct [[gnu::packed]] CloseEventData {
     size_t filename_index;
 };
 
-struct [[gnu::packed]] ReadvEventData {
+struct [[gnu::packed]] PreadvEventData {
     int fd;
     size_t filename_index;
     // struct iovec* iov; // TODO: Implement
     // int iov_count; // TODO: Implement
+    off_t offset;
 };
 
 struct [[gnu::packed]] ReadEventData {
@@ -131,7 +132,7 @@ struct [[gnu::packed]] FilesystemEvent {
     union {
         OpenEventData open;
         CloseEventData close;
-        ReadvEventData readv;
+        PreadvEventData preadv;
         ReadEventData read;
         PreadEventData pread;
     } data;

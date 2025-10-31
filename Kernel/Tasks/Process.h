@@ -376,7 +376,7 @@ public:
     ErrorOr<FlatPtr> sys$close(int fd);
     ErrorOr<FlatPtr> sys$read(int fd, Userspace<u8*>, size_t);
     ErrorOr<FlatPtr> sys$pread(int fd, Userspace<u8*>, size_t, off_t);
-    ErrorOr<FlatPtr> sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count);
+    ErrorOr<FlatPtr> sys$preadv(int fd, Userspace<const struct iovec*> iov, int iov_count, off_t);
     ErrorOr<FlatPtr> sys$write(int fd, Userspace<u8 const*>, size_t);
     ErrorOr<FlatPtr> sys$pwritev(int fd, Userspace<const struct iovec*> iov, int iov_count, off_t);
     ErrorOr<FlatPtr> sys$fstat(int fd, Userspace<stat*>);
@@ -747,7 +747,7 @@ private:
     ErrorOr<FlatPtr> close_impl(int fd);
     ErrorOr<FlatPtr> read_impl(int fd, Userspace<u8*> buffer, size_t size);
     ErrorOr<FlatPtr> pread_impl(int fd, Userspace<u8*>, size_t, off_t);
-    ErrorOr<FlatPtr> readv_impl(int fd, Userspace<const struct iovec*> iov, int iov_count);
+    ErrorOr<FlatPtr> preadv_impl(int fd, Userspace<const struct iovec*> iov, int iov_count, off_t);
 
 public:
     ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;

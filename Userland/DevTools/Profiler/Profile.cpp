@@ -216,7 +216,7 @@ void Profile::rebuild_tree()
                 [&](Event::CloseEventData const& data) {
                     return data.path;
                 },
-                [&](Event::ReadvEventData const& data) {
+                [&](Event::PreadvEventData const& data) {
                     return data.path;
                 },
                 [&](Event::ReadEventData const& data) {
@@ -240,9 +240,9 @@ void Profile::rebuild_tree()
                         node.close().duration += duration;
                         node.close().count++;
                     },
-                    [&](Event::ReadvEventData const&) {
-                        node.readv().duration += duration;
-                        node.readv().count++;
+                    [&](Event::PreadvEventData const&) {
+                        node.preadv().duration += duration;
+                        node.preadv().count++;
                     },
                     [&](Event::ReadEventData const&) {
                         node.read().duration += duration;
@@ -440,12 +440,13 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
                     .fd = perf_event.get_integer<int>("fd"sv).value_or(0),
                     .path = filename,
                 };
-            } else if (filesystem_event_type == "readv"sv) {
+            } else if (filesystem_event_type == "preadv"sv) {
                 auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
                 auto const filename = profile_strings.get(string_index).value();
-                fsdata.data = Event::ReadvEventData {
+                fsdata.data = Event::PreadvEventData {
                     .fd = perf_event.get_integer<int>("fd"sv).value_or(0),
                     .path = filename,
+                    .offset = perf_event.get_integer<off_t>("offset"sv).value_or(0),
                 };
             } else if (filesystem_event_type == "read"sv) {
                 auto const string_index = perf_event.get_addr("filename_index"sv).value_or(0);
