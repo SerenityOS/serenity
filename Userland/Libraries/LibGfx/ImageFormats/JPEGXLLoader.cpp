@@ -2739,8 +2739,15 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     }
 
     if (frame.frame_header.upsampling > 1) {
-        frame.width = ceil(static_cast<double>(frame.width) / frame.frame_header.upsampling);
-        frame.height = ceil(static_cast<double>(frame.height) / frame.frame_header.upsampling);
+        frame.width = ceil_div(frame.width, frame.frame_header.upsampling);
+        frame.height = ceil_div(frame.height, frame.frame_header.upsampling);
+    }
+
+    // "If lf_level > 0 (which is also a field in frame_header), then
+    // width = ceil(width / (1 << (3 * lf_level))) and height = ceil(height / (1 << (3 * lf_level)))."
+    if (frame.frame_header.lf_level > 0) {
+        frame.width = ceil_div(frame.width, 1u << (3 * frame.frame_header.lf_level));
+        frame.height = ceil_div(frame.height, 1u << (3 * frame.frame_header.lf_level));
     }
 
     dbgln_if(JPEGXL_DEBUG, "Frame{}: {}x{} {} - {} - flags({}){}"sv,
@@ -2750,9 +2757,6 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
         frame.frame_header.frame_type,
         to_underlying(frame.frame_header.flags),
         frame.frame_header.is_last ? " - is_last"sv : ""sv);
-
-    if (frame.frame_header.lf_level > 0)
-        TODO();
 
     auto const group_dim = frame.frame_header.group_dim();
     auto const frame_width = static_cast<double>(frame.width);
@@ -3388,6 +3392,13 @@ public:
 
         TRY(apply_image_features(m_frames, frame, m_metadata));
 
+        // "If lf_level != 0, the samples of the frame (before any colour transform is applied)
+        // are recorded as LFFrame[lf_level−1] and may be referenced by subsequent frames."
+        if (frame.frame_header.lf_level != 0) {
+            m_lf_frames[frame.frame_header.lf_level - 1] = move(frame);
+            return {};
+        }
+
         if (!frame_header.save_before_ct) {
             apply_colour_transformation(frame, m_metadata);
         }
@@ -3503,6 +3514,7 @@ private:
     RefPtr<Gfx::CMYKBitmap> m_cmyk_bitmap;
 
     Vector<Frame> m_frames;
+    Array<Optional<Frame>, 4> m_lf_frames;
 
     SizeHeader m_header;
     ImageMetadata m_metadata;

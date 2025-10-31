@@ -24,6 +24,93 @@
 
 namespace Gfx {
 
+namespace JBIG2 {
+
+ArithmeticIntegerEncoder::ArithmeticIntegerEncoder()
+{
+    contexts.resize(1 << 9);
+}
+
+ErrorOr<void> ArithmeticIntegerEncoder::encode(MQArithmeticEncoder& encoder, Optional<i32> maybe_value)
+{
+    // A.2 Procedure for decoding values (except IAID), but in reverse.
+    // "1) Set:
+    //    PREV = 1"
+    u16 PREV = 1;
+
+    // "2) Follow the flowchart in Figure A.1. Decode each bit with CX equal to "IAx + PREV" where "IAx" represents the identifier
+    //     of the current arithmetic integer decoding procedure, "+" represents concatenation, and the rightmost 9 bits of PREV are used."
+    auto encode_bit = [&](u8 D) {
+        encoder.encode_bit(D, contexts[PREV & 0x1FF]);
+        // "3) After each bit is decoded:
+        //     If PREV < 256 set:
+        //         PREV = (PREV << 1) OR D
+        //     Otherwise set:
+        //         PREV = (((PREV << 1) OR D) AND 511) OR 256
+        //     where D represents the value of the just-decoded bit.
+        if (PREV < 256)
+            PREV = (PREV << 1) | (u16)D;
+        else
+            PREV = (((PREV << 1) | (u16)D) & 511) | 256;
+        return D;
+    };
+
+    auto encode_bits = [&](int value, int number_of_bits) {
+        for (int i = 0; i < number_of_bits; ++i)
+            encode_bit((value >> (number_of_bits - i - 1)) & 1);
+    };
+
+    // Figure A.1 – Flowchart for the integer arithmetic decoding procedures (except IAID)
+    i32 value;
+    bool is_negative;
+    if (!maybe_value.has_value()) {
+        is_negative = true;
+        value = 0;
+    } else {
+        is_negative = maybe_value.value() < 0;
+        value = abs(maybe_value.value());
+    }
+    encode_bit(is_negative ? 1 : 0);
+
+    for (u32 bits : { 2, 4, 6, 8, 12 }) {
+        if (value < (1 << bits)) {
+            encode_bit(0);
+            encode_bits(value, bits);
+            return {};
+        }
+        value -= (1 << bits);
+        encode_bit(1);
+    }
+
+    encode_bits(value, 32);
+
+    // "4) The sequence of bits decoded, interpreted according to Table A.1, gives the value that is the result of this invocation
+    //     of the integer arithmetic decoding procedure."
+    return {};
+}
+
+ErrorOr<void> ArithmeticIntegerEncoder::encode_non_oob(MQArithmeticEncoder& encoder, i32 value)
+{
+    return encode(encoder, value);
+}
+
+ArithmeticIntegerIDEncoder::ArithmeticIntegerIDEncoder(u32 code_length)
+    : m_code_length(code_length)
+{
+    contexts.resize(1 << (code_length + 1));
+}
+
+ErrorOr<void> ArithmeticIntegerIDEncoder::encode(MQArithmeticEncoder& encoder, u32 value)
+{
+    // A.3 The IAID decoding procedure, but in reverse.
+    value = value + (1u << m_code_length);
+    for (u8 i = 0; i < m_code_length; ++i)
+        encoder.encode_bit((value >> (m_code_length - i - 1)) & 1, contexts[value >> (m_code_length - i)]);
+    return {};
+}
+
+}
+
 namespace {
 
 // Similar to 6.2.2 Input parameters, but with an input image.

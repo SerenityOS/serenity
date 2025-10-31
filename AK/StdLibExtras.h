@@ -102,7 +102,6 @@ constexpr T mod(T const& a, IdentityType<T> const& b)
 template<typename T, typename U>
 constexpr T ceil_div(T a, U b)
 {
-    static_assert(sizeof(T) == sizeof(U));
     T result = a / b;
     if ((a % b) != 0 && (a > 0) == (b > 0))
         ++result;
@@ -112,7 +111,6 @@ constexpr T ceil_div(T a, U b)
 template<typename T, typename U>
 constexpr T floor_div(T a, U b)
 {
-    static_assert(sizeof(T) == sizeof(U));
     T result = a / b;
     if ((a % b) != 0 && (a > 0) != (b > 0))
         --result;

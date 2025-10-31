@@ -57,6 +57,7 @@ set(SOURCES
     ImageFormats/ISOBMFF/JPEGXLBoxes.cpp
     ImageFormats/ISOBMFF/Reader.cpp
     ImageFormats/JBIG2Loader.cpp
+    ImageFormats/JBIG2Shared.cpp
     ImageFormats/JBIG2Writer.cpp
     ImageFormats/JPEG2000Loader.cpp
     ImageFormats/JPEG2000ProgressionIterators.cpp
