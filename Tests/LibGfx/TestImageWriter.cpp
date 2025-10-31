@@ -103,16 +103,8 @@ static void expect_bitmaps_equal(BitmapType const& a, BitmapType const& b)
             EXPECT_EQ(a.scanline(y)[x], b.scanline(y)[x]);
 }
 
-template<class Writer, class Loader>
-static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap)
-{
-    auto decoded = TRY((get_roundtrip_bitmap<Writer, Loader>(bitmap)));
-    expect_bitmaps_equal(*decoded, bitmap);
-    return {};
-}
-
-template<class Writer, class Loader>
-static ErrorOr<void> test_roundtrip(Gfx::CMYKBitmap const& bitmap)
+template<class Writer, class Loader, OneOf<Gfx::Bitmap, Gfx::CMYKBitmap> BitmapType>
+static ErrorOr<void> test_roundtrip(BitmapType const& bitmap)
 {
     auto decoded = TRY((get_roundtrip_bitmap<Writer, Loader>(bitmap)));
     expect_bitmaps_equal(*decoded, bitmap);
@@ -190,8 +182,8 @@ static ErrorOr<NonnullRefPtr<Gfx::CMYKBitmap>> create_test_cmyk_bitmap()
 
 TEST_CASE(test_bmp)
 {
-    TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
 TEST_CASE(test_gif)
@@ -251,17 +243,17 @@ TEST_CASE(test_jbig2)
     auto bilevel_bitmap = TRY_OR_FAIL(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 47, 33 }));
 
     bilevel_bitmap->fill(Gfx::Color::NamedColor::White);
-    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(bilevel_bitmap)));
+    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(*bilevel_bitmap)));
 
     bilevel_bitmap->fill(Gfx::Color::NamedColor::Black);
-    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(bilevel_bitmap)));
+    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(*bilevel_bitmap)));
 
     for (int y = 0; y < bilevel_bitmap->height(); ++y) {
         for (int x = 0; x < bilevel_bitmap->width(); ++x) {
             bilevel_bitmap->set_pixel(x, y, (x + y) % 2 == 0 ? Gfx::Color::NamedColor::Black : Gfx::Color::NamedColor::White);
         }
     }
-    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(bilevel_bitmap)));
+    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(*bilevel_bitmap)));
 }
 
 TEST_CASE(test_jbig2_arithmetic_integer)
@@ -379,10 +371,10 @@ TEST_CASE(test_jpeg)
 
 TEST_CASE(test_png)
 {
-    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_grayscale_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_grayscale_alpha_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(*TRY_OR_FAIL(create_test_grayscale_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(*TRY_OR_FAIL(create_test_grayscale_alpha_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
 TEST_CASE(test_png_paeth_simd)
@@ -473,8 +465,8 @@ TEST_CASE(test_png_incremental_animation)
 
 TEST_CASE(test_qoi)
 {
-    TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
 TEST_CASE(test_qm_arithmetic_encoder)
@@ -542,9 +534,9 @@ TEST_CASE(test_qm_arithmetic_encoder_7FFF_handling)
 
 TEST_CASE(test_tiff)
 {
-    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_cmyk_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(*TRY_OR_FAIL(create_test_cmyk_bitmap()))));
 }
 
 TEST_CASE(test_tiff_icc)
@@ -566,8 +558,8 @@ TEST_CASE(test_tiff_icc)
 
 TEST_CASE(test_webp)
 {
-    TRY_OR_FAIL((test_roundtrip<Gfx::WebPWriter, Gfx::WebPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::WebPWriter, Gfx::WebPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::WebPWriter, Gfx::WebPImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::WebPWriter, Gfx::WebPImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
 TEST_CASE(test_webp_color_indexing_transform)
