@@ -6,8 +6,8 @@
 
 #include <AK/ConstrainedStream.h>
 #include <AK/MemoryStream.h>
-#include <LibGfx/ImageFormats/JPEGXLCommon.h>
-#include <LibGfx/ImageFormats/JPEGXLEntropyDecoder.h>
+#include <LibGfx/ImageFormats/JPEGXL/JPEGXLCommon.h>
+#include <LibGfx/ImageFormats/JPEGXL/JPEGXLEntropyDecoder.h>
 
 namespace Gfx {
 
