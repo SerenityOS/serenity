@@ -10,7 +10,8 @@
 #include <AK/FixedArray.h>
 #include <AK/String.h>
 
-namespace Gfx {
+namespace Gfx::JPEGXL {
+
 /// 4.2 - Functions
 ALWAYS_INLINE i32 unpack_signed(u32 u)
 {
