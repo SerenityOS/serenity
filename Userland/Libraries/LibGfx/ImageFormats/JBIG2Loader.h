@@ -13,6 +13,8 @@
 namespace Gfx {
 
 struct JBIG2LoadingContext;
+struct MQArithmeticCoderContext;
+class MQArithmeticDecoder;
 
 struct JBIG2DecoderOptions {
     enum class LogComments {
@@ -21,6 +23,38 @@ struct JBIG2DecoderOptions {
     };
     LogComments log_comments { LogComments::Yes };
 };
+
+namespace JBIG2 {
+
+// Annex A, Arithmetic integer decoding procedure
+class ArithmeticIntegerDecoder {
+public:
+    ArithmeticIntegerDecoder();
+
+    // A.2 Procedure for decoding values (except IAID)
+    // Returns OptionalNone for OOB.
+    Optional<i32> decode(MQArithmeticDecoder&);
+
+    // Returns Error for OOB.
+    ErrorOr<i32> decode_non_oob(MQArithmeticDecoder&);
+
+private:
+    Vector<MQArithmeticCoderContext> contexts;
+};
+
+class ArithmeticIntegerIDDecoder {
+public:
+    explicit ArithmeticIntegerIDDecoder(u32 code_length);
+
+    // A.3 The IAID decoding procedure
+    u32 decode(MQArithmeticDecoder&);
+
+private:
+    u32 m_code_length { 0 };
+    Vector<MQArithmeticCoderContext> contexts;
+};
+
+}
 
 class JBIG2ImageDecoderPlugin : public ImageDecoderPlugin {
 public:
