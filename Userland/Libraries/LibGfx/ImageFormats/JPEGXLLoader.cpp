@@ -2171,7 +2171,8 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
         if (frame.num_groups == 1 && frame.frame_header.passes.num_passes == 1)
             return MaybeOwned(stream);
         auto section_size = frame.toc.entries[section_index];
-        VERIFY(stream.align_to_byte_boundary() == 0);
+        if (stream.align_to_byte_boundary() != 0)
+            return Error::from_string_literal("JPEGXLLoader: Padding bits between sections must all be zeros");
         auto constrained_stream = make<AutoDepletingConstrainedStream>(MaybeOwned<Stream>(stream), section_size);
         return TRY(try_make<LittleEndianInputBitStream>(move(constrained_stream)));
     };
