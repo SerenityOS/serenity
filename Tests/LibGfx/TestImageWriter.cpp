@@ -210,6 +210,46 @@ TEST_CASE(test_jbig2)
     TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(bilevel_bitmap)));
 }
 
+TEST_CASE(test_jbig2_arithmetic_integer)
+{
+    ByteBuffer data;
+    {
+        auto encoder = TRY_OR_FAIL(Gfx::MQArithmeticEncoder::initialize(0x00));
+        Gfx::JBIG2::ArithmeticIntegerEncoder integer_encoder;
+        for (int i = -2000; i <= 2000; ++i)
+            TRY_OR_FAIL(integer_encoder.encode(encoder, i));
+        TRY_OR_FAIL(integer_encoder.encode(encoder, OptionalNone {}));
+        data = TRY_OR_FAIL(encoder.finalize(Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep));
+    }
+
+    {
+        auto decoder = MUST(Gfx::MQArithmeticDecoder::initialize(data));
+        Gfx::JBIG2::ArithmeticIntegerDecoder integer_decoder;
+        for (int i = -2000; i <= 2000; ++i)
+            EXPECT_EQ(integer_decoder.decode(decoder).value(), i);
+        EXPECT(!integer_decoder.decode(decoder).has_value());
+    }
+}
+
+TEST_CASE(test_jbig2_arithmetic_integer_id)
+{
+    ByteBuffer data;
+    {
+        auto encoder = TRY_OR_FAIL(Gfx::MQArithmeticEncoder::initialize(0x00));
+        Gfx::JBIG2::ArithmeticIntegerIDEncoder integer_id_encoder(8);
+        for (u32 i = 0; i < 256; ++i)
+            TRY_OR_FAIL(integer_id_encoder.encode(encoder, i));
+        data = TRY_OR_FAIL(encoder.finalize(Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep));
+    }
+
+    {
+        auto decoder = MUST(Gfx::MQArithmeticDecoder::initialize(data));
+        Gfx::JBIG2::ArithmeticIntegerIDDecoder integer_id_decoder(8);
+        for (u32 i = 0; i < 256; ++i)
+            EXPECT_EQ(integer_id_decoder.decode(decoder), i);
+    }
+}
+
 TEST_CASE(test_jbig2_huffman)
 {
     // FIXME: Add tables B_3 and B_5 once we implement them, see #26104.
