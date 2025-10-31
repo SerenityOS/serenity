@@ -65,6 +65,7 @@ set(SOURCES
     ImageFormats/JPEGLoader.cpp
     ImageFormats/JPEGXL/EntropyDecoder.cpp
     ImageFormats/JPEGXL/ICC.cpp
+    ImageFormats/JPEGXL/ModularTransforms.cpp
     ImageFormats/JPEGXL/SelfCorrectingPredictor.cpp
     ImageFormats/JPEGXLLoader.cpp
     ImageFormats/JPEGWriter.cpp
