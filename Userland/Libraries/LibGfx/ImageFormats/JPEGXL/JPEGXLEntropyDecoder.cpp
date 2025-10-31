@@ -5,8 +5,8 @@
  */
 
 #include <AK/IntegralMath.h>
-#include <LibGfx/ImageFormats/JPEGXLCommon.h>
-#include <LibGfx/ImageFormats/JPEGXLEntropyDecoder.h>
+#include <LibGfx/ImageFormats/JPEGXL/JPEGXLCommon.h>
+#include <LibGfx/ImageFormats/JPEGXL/JPEGXLEntropyDecoder.h>
 
 namespace Gfx {
 

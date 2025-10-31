@@ -15,9 +15,9 @@
 #include <LibGfx/ImageFormats/ExifOrientedBitmap.h>
 #include <LibGfx/ImageFormats/ISOBMFF/JPEGXLBoxes.h>
 #include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
-#include <LibGfx/ImageFormats/JPEGXLChannel.h>
-#include <LibGfx/ImageFormats/JPEGXLCommon.h>
-#include <LibGfx/ImageFormats/JPEGXLEntropyDecoder.h>
+#include <LibGfx/ImageFormats/JPEGXL/JPEGXLChannel.h>
+#include <LibGfx/ImageFormats/JPEGXL/JPEGXLCommon.h>
+#include <LibGfx/ImageFormats/JPEGXL/JPEGXLEntropyDecoder.h>
 #include <LibGfx/ImageFormats/JPEGXLLoader.h>
 #include <LibGfx/Matrix3x3.h>
 
