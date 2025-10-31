@@ -2061,6 +2061,20 @@ static ErrorOr<void> read_group_data(
 ///
 
 /// G.2 - LfGroup
+static constexpr i32 DCT_UNINITIALIZED = -2;
+static constexpr i32 DCT_COVERED = -1;
+
+struct VarDCTLfGroup {
+    Channel x_from_y;
+    Channel b_from_y;
+    // dct_select hold DCT information in the top-left corner of every varblock.
+    // -1 means occupied by a varblock but non top-left.
+    // -2 is the default value, which shouldn't be found after proper initialization.
+    Channel dct_select;
+    Channel hf_mul;
+    Channel sharpness;
+};
+
 struct LFGroupOptions {
     GlobalModular& global_modular;
     FrameHeader const& frame_header;
@@ -2079,10 +2093,226 @@ static ErrorOr<void> read_lf_coefficients(LittleEndianInputBitStream&, FrameHead
     return Error::from_string_literal("JPEGXLLoader: Implement reading LF coefficients");
 }
 
+// I.1 - Transform types
+enum class TransformType : u8 {
+    DCT8x8 = 0,
+    Hornuss = 1,
+    DCT2x2 = 2,
+    DCT4x4 = 3,
+    DCT16x16 = 4,
+    DCT32x32 = 5,
+    DCT16x8 = 6,
+    DCT8x16 = 7,
+    DCT32x8 = 8,
+    DCT8x32 = 9,
+    DCT32x16 = 10,
+    DCT16x32 = 11,
+    DCT4x8 = 12,
+    DCT8x4 = 13,
+    AFV0 = 14,
+    AFV1 = 15,
+    AFV2 = 16,
+    AFV3 = 17,
+    DCT64x64 = 18,
+    DCT64x32 = 19,
+    DCT32x64 = 20,
+    DCT128x128 = 21,
+    DCT128x64 = 22,
+    DCT64x128 = 23,
+    DCT256x256 = 24,
+    DCT256x128 = 25,
+    DCT128x256 = 26,
+};
+
+// NOTE: In the spec, DCT matrices use "matrices order" so DCT16x8 is actually
+//       16 rows and 8 columns. This function return the size in "image order"
+//       with columns first and rows in second.
+static Size<u32> dct_select_to_dct_size(TransformType t)
+{
+    switch (t) {
+    case TransformType::DCT8x8:
+    case TransformType::Hornuss:
+    case TransformType::DCT2x2:
+    case TransformType::DCT4x4:
+        return { 1, 1 };
+    case TransformType::DCT16x16:
+        return { 2, 2 };
+    case TransformType::DCT32x32:
+        return { 4, 4 };
+    case TransformType::DCT16x8:
+        return { 1, 2 };
+    case TransformType::DCT8x16:
+        return { 2, 1 };
+    case TransformType::DCT32x8:
+        return { 1, 4 };
+    case TransformType::DCT8x32:
+        return { 4, 1 };
+    case TransformType::DCT32x16:
+        return { 2, 4 };
+    case TransformType::DCT16x32:
+        return { 4, 2 };
+    case TransformType::DCT4x8:
+    case TransformType::DCT8x4:
+        return { 1, 1 };
+    case TransformType::AFV0:
+    case TransformType::AFV1:
+    case TransformType::AFV2:
+    case TransformType::AFV3:
+        return { 1, 1 };
+    case TransformType::DCT64x64:
+        return { 8, 8 };
+    case TransformType::DCT64x32:
+        return { 4, 8 };
+    case TransformType::DCT32x64:
+        return { 8, 4 };
+    case TransformType::DCT128x128:
+        return { 16, 16 };
+    case TransformType::DCT128x64:
+        return { 8, 16 };
+    case TransformType::DCT64x128:
+        return { 16, 8 };
+    case TransformType::DCT256x256:
+        return { 32, 32 };
+    case TransformType::DCT256x128:
+        return { 16, 32 };
+    case TransformType::DCT128x256:
+        return { 32, 16 };
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+struct LFGroupVarDCTOptions {
+    Vector<Optional<VarDCTLfGroup>>& group_data;
+    IntSize frame_size;
+    u32 num_lf_group {};
+};
+
+// G.2.4 - HF metadata
+static ErrorOr<void> read_hf_metadata(LittleEndianInputBitStream& stream,
+    LFGroupOptions& options,
+    LFGroupVarDCTOptions const& var_dct_options,
+    u32 lf_group_dim)
+{
+
+    auto group_size = rect_for_group(ChannelInfo::from_size(var_dct_options.frame_size), lf_group_dim, options.group_index).size();
+
+    // "The decoder reads nb_blocks = 1 + u(ceil(log2(ceil(width / 8) * ceil(height / 8))))."
+    u32 nb_blocks = 1 + TRY(stream.read_bits(ceil(log2(ceil_div(group_size.width(), 8) * ceil_div(group_size.height(), 8)))));
+
+    // "Then, the decoder reads a Modular sub-bitstream as described in Annex H, for an image with four channels."
+    Vector<ChannelInfo> channels_info;
+    TRY(channels_info.try_ensure_capacity(4));
+    // "the first two channels have ceil(height / 64) rows and ceil(width / 64) columns"
+    auto color_correlation_channels_size = IntSize { ceil_div(group_size.width(), 64), ceil_div(group_size.height(), 64) };
+    channels_info.unchecked_append(ChannelInfo::from_size(color_correlation_channels_size));
+    channels_info.unchecked_append(ChannelInfo::from_size(color_correlation_channels_size));
+    // "the third channel has two rows and nb_blocks columns"
+    channels_info.unchecked_append(ChannelInfo::from_size(IntSize(nb_blocks, 2)));
+    // "and the fourth channel has ceil(height / 8) rows and ceil(width / 8) columns"
+    channels_info.unchecked_append(ChannelInfo::from_size({ ceil_div(group_size.width(), 8), ceil_div(group_size.height(), 8) }));
+
+    // "The stream index is defined as follows:
+    //  - for ModularLfGroup: 1 + num_lf_groups + LF group index;
+    //  - for HFMetadata: 1 + 2 * num_lf_groups + LF group index;"
+    // We pass ModularLfGroup's stream index in LFGroupOptions, so we
+    // just need to add `num_lf_groups` here.
+    auto stream_index = options.stream_index + var_dct_options.num_lf_group;
+
+    auto decoded_channels = TRY(read_modular_bitstream(stream,
+                                    {
+                                        .channels_info = channels_info,
+                                        .decoder = options.global_modular.decoder,
+                                        .global_tree = options.global_modular.ma_tree,
+                                        .group_dim = lf_group_dim,
+                                        .stream_index = stream_index,
+                                        .apply_transformations = ModularOptions::ApplyTransformations::Yes,
+                                        .bit_depth = options.bit_depth,
+                                    }))
+                                .channels;
+
+    // "The DctSelect and HfMul fields are derived from the first and second rows of BlockInfo.
+    // These two fields have ceil(height / 8) rows and ceil(width / 8) columns."
+    auto derived_size = IntSize(ceil_div(group_size.width(), 8), ceil_div(group_size.height(), 8));
+    auto dct_select = TRY(Channel::create(ChannelInfo::from_size(derived_size)));
+    auto hf_mul = TRY(Channel::create(ChannelInfo::from_size(derived_size)));
+
+    dct_select.fill(DCT_UNINITIALIZED);
+
+    i32 x = 0;
+    i32 y = 0;
+    auto update_next_valid_position = [&]() {
+        // "This position is the earliest block in raster order that is not already covered by
+        // other varblocks. The positioned varblock is completely contained in the current LF
+        // group, does not cross group boundaries, and also does not overlap with
+        // already-positioned varblocks."
+
+        // FIXME: There has to be a smarter way of doing this.
+        while (dct_select.get(x, y) != DCT_UNINITIALIZED) {
+            if (x == derived_size.width() - 1) {
+                x = 0;
+                y += 1;
+                continue;
+            }
+            ++x;
+        }
+    };
+
+    // "They are reconstructed by iterating over the columns of BlockInfo to obtain a varblock
+    // transform type type (the sample at the first row) and a quantization multiplier mul (the
+    // sample at the second row)."
+    auto const& block_info = decoded_channels[2];
+    for (u32 column = 0; column < nb_blocks; ++column) {
+        auto type = block_info.get(column, 0);
+        if (type > 26)
+            return Error::from_string_literal("JPEGXLLoader: Invalid DctSelect value");
+
+        auto mul = block_info.get(column, 1);
+
+        // "The type is a DctSelect sample and is stored at the coordinates of the top-left
+        // 8 × 8 rectangle of the varblock."
+        dct_select.set(x, y, type);
+        // "The HfMul sample is stored at the same position and gets the value 1 + mul."
+        hf_mul.set(x, y, 1 + mul);
+
+        // We fill the whole surface of the varblock as a way to check that
+        // varblocks don't overlap.
+        auto dct_size = dct_select_to_dct_size(static_cast<TransformType>(type));
+        for (u8 y_offset = 0; y_offset < dct_size.height(); ++y_offset) {
+            for (u8 x_offset = 0; x_offset < dct_size.width(); ++x_offset) {
+                if (y_offset == 0 && x_offset == 0)
+                    continue;
+                if (dct_select.get(x + x_offset, y + y_offset) != DCT_UNINITIALIZED)
+                    return Error::from_string_literal("JPEGXLLoader: Invalid varblocks pattern");
+                dct_select.set(x + x_offset, y + y_offset, DCT_COVERED);
+            }
+        }
+        if (column != nb_blocks - 1)
+            update_next_valid_position();
+    }
+
+    // FIXME: Ensure that dct_select contains no DCT_UNINITIALIZED.
+
+    var_dct_options.group_data[options.group_index] = VarDCTLfGroup {
+        .x_from_y = move(decoded_channels[0]),
+        .b_from_y = move(decoded_channels[1]),
+        .dct_select = move(dct_select),
+        .hf_mul = move(hf_mul),
+        .sharpness = move(decoded_channels[2]),
+    };
+    return {};
+}
+
 static ErrorOr<void> read_lf_group(LittleEndianInputBitStream& stream,
-    LFGroupOptions&& options)
+    LFGroupOptions&& options,
+    LFGroupVarDCTOptions&& var_dct_options)
 {
     auto const& [global_modular, frame_header, group_index, stream_index, bit_depth] = options;
+
+    if (options.frame_header.encoding == Encoding::kVarDCT) {
+        if (var_dct_options.group_data.is_empty())
+            TRY(var_dct_options.group_data.try_resize(var_dct_options.num_lf_group));
+    }
 
     // LF coefficients
     if (frame_header.encoding == Encoding::kVarDCT)
@@ -2111,9 +2341,8 @@ static ErrorOr<void> read_lf_group(LittleEndianInputBitStream& stream,
         [&](auto const& first_channel) { dbgln("Decoding LFGroup {} for rectangle {}", group_index, rect_for_group(first_channel, lf_group_dim, group_index)); }));
 
     // HF metadata
-    if (frame_header.encoding == Encoding::kVarDCT) {
-        TODO();
-    }
+    if (options.frame_header.encoding == Encoding::kVarDCT)
+        TRY(read_hf_metadata(stream, options, var_dct_options, lf_group_dim));
 
     return {};
 }
@@ -2191,6 +2420,7 @@ struct Frame {
     FrameHeader frame_header;
     TOC toc;
     LfGlobal lf_global;
+    Vector<Optional<VarDCTLfGroup>> lf_groups;
 
     u64 width {};
     u64 height {};
@@ -2271,6 +2501,7 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     }
 
     auto bits_per_sample = metadata.bit_depth.bits_per_sample;
+    IntSize frame_size { frame.width, frame.height };
 
     auto get_stream_for_section = [&](LittleEndianInputBitStream& stream, u32 section_index) -> ErrorOr<MaybeOwned<LittleEndianInputBitStream>> {
         // "If num_groups == 1 and num_passes == 1, then there is a single TOC entry and a single section
@@ -2286,20 +2517,25 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
 
     {
         auto lf_stream = TRY(get_stream_for_section(stream, 0));
-        frame.lf_global = TRY(read_lf_global(*lf_stream, { frame.width, frame.height }, frame.frame_header, metadata));
+        frame.lf_global = TRY(read_lf_global(*lf_stream, frame_size, frame.frame_header, metadata));
     }
 
     for (u32 i {}; i < frame.num_lf_groups; ++i) {
         auto lf_stream = TRY(get_stream_for_section(stream, 1 + i));
         // From H.4.1, "The stream index is defined as follows: [...] for ModularLfGroup: 1 + num_lf_groups + LF group index;"
-        TRY(read_lf_group(*lf_stream, {
-                                          .global_modular = frame.lf_global.gmodular,
-                                          .frame_header = frame.frame_header,
-                                          .group_index = i,
-                                          .stream_index = 1 + frame.num_lf_groups + i,
-                                          .bit_depth = bits_per_sample,
-
-                                      }));
+        TRY(read_lf_group(*lf_stream,
+            {
+                .global_modular = frame.lf_global.gmodular,
+                .frame_header = frame.frame_header,
+                .group_index = i,
+                .stream_index = 1 + frame.num_lf_groups + i,
+                .bit_depth = bits_per_sample,
+            },
+            {
+                .group_data = frame.lf_groups,
+                .frame_size = frame_size,
+                .num_lf_group = frame.num_lf_groups,
+            }));
     }
 
     {

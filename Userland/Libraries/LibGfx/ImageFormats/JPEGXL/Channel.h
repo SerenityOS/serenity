@@ -134,6 +134,12 @@ public:
         m_pixels[y * m_width + x] = value;
     }
 
+    void fill(T value)
+    {
+        for (auto& v : m_pixels)
+            v = value;
+    }
+
     u32 width() const
     {
         return m_width;
