@@ -68,8 +68,8 @@ static ErrorOr<NonnullRefPtr<Gfx::CMYKBitmap>> expect_cmyk_frame_of_size(Gfx::Im
     return frame;
 }
 
-template<class Writer, class... ExtraArgs>
-static ErrorOr<ByteBuffer> encode_bitmap(Gfx::Bitmap const& bitmap, ExtraArgs... extra_args)
+template<class Writer, OneOf<Gfx::Bitmap, Gfx::CMYKBitmap> BitmapType, class... ExtraArgs>
+static ErrorOr<ByteBuffer> encode_bitmap(BitmapType const& bitmap, ExtraArgs... extra_args)
 {
     if constexpr (requires(AllocatingMemoryStream stream) { Writer::encode(stream, bitmap, extra_args...); }) {
         AllocatingMemoryStream stream;
@@ -78,14 +78,6 @@ static ErrorOr<ByteBuffer> encode_bitmap(Gfx::Bitmap const& bitmap, ExtraArgs...
     } else {
         return Writer::encode(bitmap, extra_args...);
     }
-}
-
-template<class Writer, class... ExtraArgs>
-static ErrorOr<ByteBuffer> encode_bitmap(Gfx::CMYKBitmap const& bitmap, ExtraArgs... extra_args)
-{
-    AllocatingMemoryStream stream;
-    TRY(Writer::encode(stream, bitmap, extra_args...));
-    return stream.read_until_eof();
 }
 
 template<class Writer, class Loader>
@@ -214,7 +206,7 @@ TEST_CASE(test_gif)
     // Let's limit the size of the image so every color can fit in a color table of 256 elements.
     auto bitmap = TRY_OR_FAIL(TRY_OR_FAIL(create_test_rgb_bitmap())->cropped({ 0, 0, 16, 16 }));
 
-    auto encoded_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::GIFWriter>(bitmap)));
+    auto encoded_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::GIFWriter>(*bitmap)));
     auto decoder = TRY_OR_FAIL(Gfx::GIFImageDecoderPlugin::create(encoded_bitmap));
 
     EXPECT_EQ(decoder->size(), bitmap->size());
@@ -530,7 +522,7 @@ TEST_CASE(test_tiff_icc)
     auto rgb_bitmap = TRY_OR_FAIL(create_test_rgb_bitmap());
     Gfx::TIFFEncoderOptions options;
     options.icc_data = sRGB_icc_data;
-    auto encoded_rgb_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::TIFFWriter>(rgb_bitmap, options)));
+    auto encoded_rgb_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::TIFFWriter>(*rgb_bitmap, options)));
 
     auto decoded_rgb_plugin = TRY_OR_FAIL(Gfx::TIFFImageDecoderPlugin::create(encoded_rgb_bitmap));
     expect_bitmaps_equal(*TRY_OR_FAIL(expect_single_frame_of_size(*decoded_rgb_plugin, rgb_bitmap->size())), rgb_bitmap);
@@ -562,13 +554,13 @@ TEST_CASE(test_webp_color_indexing_transform)
             for (int x = 0; x < bitmap->width(); ++x)
                 bitmap->set_pixel(x, y, colors[(x * bitmap->width() + y) % number_of_colors]);
 
-        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap));
+        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*bitmap));
         auto decoded_bitmap = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
         expect_bitmaps_equal(*decoded_bitmap, *bitmap);
 
         Gfx::WebPEncoderOptions options;
         options.vp8l_options.allowed_transforms = 0;
-        auto encoded_data_without_color_indexing = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap, options));
+        auto encoded_data_without_color_indexing = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*bitmap, options));
         EXPECT(encoded_data.size() < encoded_data_without_color_indexing.size());
         auto decoded_bitmap_without_color_indexing = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
         expect_bitmaps_equal(*decoded_bitmap_without_color_indexing, *decoded_bitmap);
@@ -592,13 +584,13 @@ TEST_CASE(test_webp_color_indexing_transform_single_channel)
             for (int x = 0; x < bitmap->width(); ++x)
                 bitmap->set_pixel(x, y, colors[(x * bitmap->width() + y) % number_of_colors]);
 
-        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap));
+        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*bitmap));
         auto decoded_bitmap = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
         expect_bitmaps_equal(*decoded_bitmap, *bitmap);
 
         Gfx::WebPEncoderOptions options;
         options.vp8l_options.allowed_transforms = options.vp8l_options.allowed_transforms & ~((1u << Gfx::COLOR_INDEXING_TRANSFORM) | (1u << Gfx::PREDICTOR_TRANSFORM));
-        auto encoded_data_without_color_indexing = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap, options));
+        auto encoded_data_without_color_indexing = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*bitmap, options));
         if (bits_per_pixel == 8)
             EXPECT(encoded_data.size() <= encoded_data_without_color_indexing.size());
         else
@@ -643,14 +635,14 @@ TEST_CASE(test_webp_grayscale)
     auto grays_bitmap = TRY_OR_FAIL(make_bitmap(grays));
     auto grays_with_alpha_bitmap = TRY_OR_FAIL(make_bitmap(grays_with_alpha));
 
-    auto encoded_grays = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(grays_bitmap));
+    auto encoded_grays = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*grays_bitmap));
     auto decoded_grays = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_grays)), grays_bitmap->size()));
     expect_bitmaps_equal(*decoded_grays, *grays_bitmap);
 
-    auto encoded_colors = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(colors_bitmap));
+    auto encoded_colors = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*colors_bitmap));
     EXPECT(encoded_grays.size() < encoded_colors.size());
 
-    auto encoded_grays_with_alpha = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(grays_with_alpha_bitmap));
+    auto encoded_grays_with_alpha = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*grays_with_alpha_bitmap));
     EXPECT(encoded_grays_with_alpha.size() <= encoded_colors.size());
     EXPECT(encoded_grays.size() < encoded_grays_with_alpha.size());
 }
@@ -665,7 +657,7 @@ TEST_CASE(test_webp_color_cache)
         else
             options.vp8l_options.color_cache_bits = color_cache_bits;
 
-        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap));
+        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*bitmap));
         auto decoded_bitmap = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
         expect_bitmaps_equal(*decoded_bitmap, *bitmap);
     }
@@ -679,7 +671,7 @@ TEST_CASE(test_webp_icc)
     auto rgba_bitmap = TRY_OR_FAIL(create_test_rgba_bitmap());
     Gfx::WebPEncoderOptions options;
     options.icc_data = sRGB_icc_data;
-    auto encoded_rgba_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::WebPWriter>(rgba_bitmap, options)));
+    auto encoded_rgba_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::WebPWriter>(*rgba_bitmap, options)));
 
     auto decoded_rgba_plugin = TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_rgba_bitmap));
     expect_bitmaps_equal(*TRY_OR_FAIL(expect_single_frame_of_size(*decoded_rgba_plugin, rgba_bitmap->size())), rgba_bitmap);
