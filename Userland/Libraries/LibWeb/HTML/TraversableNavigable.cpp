@@ -1370,7 +1370,7 @@ void TraversableNavigable::paint(DevicePixelRect const& content_rect, Gfx::Bitma
     if (display_list_player_type == DisplayListPlayerType::GPU) {
 #ifdef HAS_ACCELERATED_GRAPHICS
         Painting::DisplayListPlayerGPU player(*paint_options.accelerated_graphics_context, target);
-        display_list.execute(player);
+        player.execute(display_list);
 #else
         static bool has_warned_about_configuration = false;
 
@@ -1381,7 +1381,7 @@ void TraversableNavigable::paint(DevicePixelRect const& content_rect, Gfx::Bitma
 #endif
     } else {
         Painting::DisplayListPlayerCPU player(target, display_list_player_type == DisplayListPlayerType::CPUWithExperimentalTransformSupport);
-        display_list.execute(player);
+        player.execute(display_list);
     }
 }
 

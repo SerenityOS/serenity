@@ -15,6 +15,11 @@ namespace Web::Painting {
 
 class DisplayListPlayerCPU : public DisplayListPlayer {
 public:
+    DisplayListPlayerCPU(Gfx::Bitmap& bitmap, bool enable_affine_command_executor = false);
+
+    ~DisplayListPlayerCPU();
+
+private:
     CommandResult draw_glyph_run(DrawGlyphRun const&) override;
     CommandResult fill_rect(FillRect const&) override;
     CommandResult draw_scaled_bitmap(DrawScaledBitmap const&) override;
@@ -53,15 +58,11 @@ public:
     bool needs_update_immutable_bitmap_texture_cache() const override { return false; }
     void update_immutable_bitmap_texture_cache(HashMap<u32, Gfx::ImmutableBitmap const*>&) override { }
 
-    DisplayListPlayerCPU(Gfx::Bitmap& bitmap, bool enable_affine_command_executor = false);
-    ~DisplayListPlayerCPU();
-
     DisplayListPlayer& nested_player() override
     {
         return *m_affine_display_list_player;
     }
 
-private:
     Gfx::Bitmap& m_target_bitmap;
     bool m_enable_affine_command_executor { false };
 

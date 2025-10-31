@@ -102,8 +102,8 @@ RefPtr<Gfx::Bitmap> SVGDecodedImageData::render(Gfx::IntSize size) const
     case DisplayListPlayerType::CPU:
     case DisplayListPlayerType::CPUWithExperimentalTransformSupport:
     case DisplayListPlayerType::GPU: { // GPU painter does not have any path rasterization support so we always fall back to CPU painter
-        Painting::DisplayListPlayerCPU executor { *bitmap };
-        display_list.execute(executor);
+        Painting::DisplayListPlayerCPU display_list_player { *bitmap };
+        display_list_player.execute(display_list);
         break;
     }
     default:
