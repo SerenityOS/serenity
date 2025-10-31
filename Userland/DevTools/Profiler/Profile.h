@@ -237,11 +237,12 @@ public:
             ByteString path;
         };
 
-        struct ReadvEventData {
+        struct PreadvEventData {
             int fd;
             ByteString path;
             // struct iovec* iov; // TODO: Implement
             // int iov_count; // TODO: Implement
+            off_t offset;
         };
 
         struct ReadEventData {
@@ -259,7 +260,7 @@ public:
 
         struct FilesystemEventData {
             Duration duration;
-            Variant<OpenEventData, CloseEventData, ReadvEventData, ReadEventData, PreadEventData> data;
+            Variant<OpenEventData, CloseEventData, PreadvEventData, ReadEventData, PreadEventData> data;
         };
 
         Variant<nullptr_t, SampleData, MallocData, FreeData, SignpostData, MmapData, MunmapData, ProcessCreateData, ProcessExecData, ThreadCreateData, FilesystemEventData> data { nullptr };

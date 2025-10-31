@@ -130,7 +130,7 @@ ErrorOr<FlatPtr> Process::sys$close(int fd)
     return result;
 }
 
-ErrorOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count)
+ErrorOr<FlatPtr> Process::sys$preadv(int fd, Userspace<const struct iovec*> iov, int iov_count, off_t offset)
 {
     Optional<MonotonicTime> start_timestamp = {};
 
@@ -139,7 +139,7 @@ ErrorOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, 
         start_timestamp = TimeManagement::the().monotonic_time(TimePrecision::Precise);
     }
 
-    auto result = readv_impl(fd, iov, iov_count);
+    auto result = preadv_impl(fd, iov, iov_count, offset);
 
     if (!profiling_enabled_at_entry || Thread::current()->is_profiling_suppressed())
         return result;
@@ -155,9 +155,10 @@ ErrorOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, 
     auto const duration = end_timestamp - start_timestamp.value();
 
     FilesystemEvent data;
-    data.type = FilesystemEventType::Readv;
+    data.type = FilesystemEventType::Preadv;
     data.durationNs = static_cast<u64>(duration.to_nanoseconds());
-    data.data.readv.fd = fd;
+    data.data.preadv.fd = fd;
+    data.data.preadv.offset = offset;
 
     if (result.is_error()) {
         data.result.is_error = true;
@@ -171,7 +172,7 @@ ErrorOr<FlatPtr> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, 
     if (maybe_path_index.is_error())
         return result;
 
-    data.data.readv.filename_index = maybe_path_index.value();
+    data.data.preadv.filename_index = maybe_path_index.value();
 
     (void)event_buffer->append(PERF_EVENT_FILESYSTEM, 0, 0, {}, Thread::current(), data);
 

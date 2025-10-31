@@ -38,7 +38,7 @@ static ErrorOr<void> check_blocked_read(OpenFileDescription* description)
     return {};
 }
 
-ErrorOr<FlatPtr> Process::readv_impl(int fd, Userspace<const struct iovec*> iov, int iov_count)
+ErrorOr<FlatPtr> Process::preadv_impl(int fd, Userspace<const struct iovec*> iov, int iov_count, off_t base_offset)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::stdio));
@@ -59,13 +59,20 @@ ErrorOr<FlatPtr> Process::readv_impl(int fd, Userspace<const struct iovec*> iov,
     }
 
     auto description = TRY(open_readable_file_description(fds(), fd));
+    // NOTE: Negative offset means "operate like readv" which seeks the file.
+    if (base_offset >= 0 && !description->file().is_seekable())
+        return EINVAL;
 
     int nread = 0;
+    off_t current_offset = base_offset;
     for (auto& vec : vecs) {
         TRY(check_blocked_read(description));
         auto buffer = TRY(UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len));
-        auto nread_here = TRY(description->read(buffer, vec.iov_len));
+        auto nread_here = base_offset >= 0
+            ? TRY(description->read(buffer, current_offset, vec.iov_len))
+            : TRY(description->read(buffer, vec.iov_len));
         nread += nread_here;
+        current_offset += nread_here;
     }
 
     return nread;

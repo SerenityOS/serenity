@@ -268,7 +268,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     filesystem_events_tree_view.set_model(profile->file_event_model());
     filesystem_events_tree_view.set_column_visible(FileEventModel::Column::OpenDuration, false);
     filesystem_events_tree_view.set_column_visible(FileEventModel::Column::CloseDuration, false);
-    filesystem_events_tree_view.set_column_visible(FileEventModel::Column::ReadvDuration, false);
+    filesystem_events_tree_view.set_column_visible(FileEventModel::Column::PreadvDuration, false);
     filesystem_events_tree_view.set_column_visible(FileEventModel::Column::ReadDuration, false);
     filesystem_events_tree_view.set_column_visible(FileEventModel::Column::PreadDuration, false);
 

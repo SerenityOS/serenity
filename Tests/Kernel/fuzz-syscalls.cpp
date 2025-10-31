@@ -40,7 +40,7 @@ static bool is_bad_idea(int fn, size_t const* direct_sc_args, size_t const* fake
         // This would mess with future tests or crash the fuzzer.
         return direct_sc_args[0] == (size_t)fake_sc_params || direct_sc_args[0] == (size_t)some_string;
     case SC_read:
-    case SC_readv:
+    case SC_preadv:
         // FIXME: Known bug: https://github.com/SerenityOS/serenity/issues/5328
         return direct_sc_args[0] == 1;
     case SC_write:

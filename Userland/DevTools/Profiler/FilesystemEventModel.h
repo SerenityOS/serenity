@@ -46,7 +46,7 @@ public:
 
     FileEventType& open() { return m_open; }
     FileEventType& close() { return m_close; }
-    FileEventType& readv() { return m_readv; }
+    FileEventType& preadv() { return m_readv; }
     FileEventType& read() { return m_read; }
     FileEventType& pread() { return m_pread; }
 
@@ -84,8 +84,8 @@ public:
         OpenDuration,
         CloseCount,
         CloseDuration,
-        ReadvCount,
-        ReadvDuration,
+        PreadvCount,
+        PreadvDuration,
         ReadCount,
         ReadDuration,
         PreadCount,
