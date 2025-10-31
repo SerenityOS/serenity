@@ -36,22 +36,6 @@ namespace Gfx {
 
 namespace JBIG2 {
 
-// Annex A, Arithmetic integer decoding procedure
-class ArithmeticIntegerDecoder {
-public:
-    ArithmeticIntegerDecoder();
-
-    // A.2 Procedure for decoding values (except IAID)
-    // Returns OptionalNone for OOB.
-    Optional<i32> decode(MQArithmeticDecoder&);
-
-    // Returns Error for OOB.
-    ErrorOr<i32> decode_non_oob(MQArithmeticDecoder&);
-
-private:
-    Vector<MQArithmeticCoderContext> contexts;
-};
-
 ArithmeticIntegerDecoder::ArithmeticIntegerDecoder()
 {
     contexts.resize(1 << 9);
@@ -118,18 +102,6 @@ ErrorOr<i32> ArithmeticIntegerDecoder::decode_non_oob(MQArithmeticDecoder& decod
         return Error::from_string_literal("ArithmeticIntegerDecoder: Unexpected OOB");
     return result.value();
 }
-
-class ArithmeticIntegerIDDecoder {
-public:
-    explicit ArithmeticIntegerIDDecoder(u32 code_length);
-
-    // A.3 The IAID decoding procedure
-    u32 decode(MQArithmeticDecoder&);
-
-private:
-    u32 m_code_length { 0 };
-    Vector<MQArithmeticCoderContext> contexts;
-};
 
 ArithmeticIntegerIDDecoder::ArithmeticIntegerIDDecoder(u32 code_length)
     : m_code_length(code_length)
