@@ -5,10 +5,10 @@
  */
 
 #include <AK/IntegralMath.h>
-#include <LibGfx/ImageFormats/JPEGXLCommon.h>
-#include <LibGfx/ImageFormats/JPEGXLEntropyDecoder.h>
+#include <LibGfx/ImageFormats/JPEGXL/Common.h>
+#include <LibGfx/ImageFormats/JPEGXL/EntropyDecoder.h>
 
-namespace Gfx {
+namespace Gfx::JPEGXL {
 
 ErrorOr<ANSHistogram> ANSHistogram::read_histogram(LittleEndianInputBitStream& stream, u8 log_alphabet_size)
 {

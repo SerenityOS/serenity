@@ -9,7 +9,7 @@
 #include <AK/BitStream.h>
 #include <LibCompress/Brotli.h>
 
-namespace Gfx {
+namespace Gfx::JPEGXL {
 
 /// C - Entropy decoding
 class ANSHistogram {

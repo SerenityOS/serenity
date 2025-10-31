@@ -7,12 +7,14 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/Optional.h>
 #include <AK/Vector.h>
+#include <LibGfx/Rect.h>
 
-namespace Gfx {
+namespace Gfx::JPEGXL {
 
 /// 5.2 - Mirroring
-static u32 mirror_1d(i32 coord, u32 size)
+constexpr u32 mirror_1d(i32 coord, u32 size)
 {
     if (coord < 0)
         return mirror_1d(-coord - 1, size);

@@ -11,7 +11,11 @@
 
 namespace Gfx {
 
-class JPEGXLLoadingContext;
+namespace JPEGXL {
+
+class LoadingContext;
+
+}
 
 class JPEGXLImageDecoderPlugin : public ImageDecoderPlugin {
 public:
@@ -34,7 +38,7 @@ public:
 private:
     JPEGXLImageDecoderPlugin(Optional<Vector<u8>>&&, NonnullOwnPtr<FixedMemoryStream>);
 
-    OwnPtr<JPEGXLLoadingContext> m_context;
+    OwnPtr<JPEGXL::LoadingContext> m_context;
     Optional<Vector<u8>> m_jxlc_content;
 };
 

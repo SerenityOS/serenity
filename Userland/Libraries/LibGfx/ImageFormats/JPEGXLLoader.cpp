@@ -15,13 +15,15 @@
 #include <LibGfx/ImageFormats/ExifOrientedBitmap.h>
 #include <LibGfx/ImageFormats/ISOBMFF/JPEGXLBoxes.h>
 #include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
-#include <LibGfx/ImageFormats/JPEGXLChannel.h>
-#include <LibGfx/ImageFormats/JPEGXLCommon.h>
-#include <LibGfx/ImageFormats/JPEGXLEntropyDecoder.h>
+#include <LibGfx/ImageFormats/JPEGXL/Channel.h>
+#include <LibGfx/ImageFormats/JPEGXL/Common.h>
+#include <LibGfx/ImageFormats/JPEGXL/EntropyDecoder.h>
+#include <LibGfx/ImageFormats/JPEGXL/ModularTransforms.h>
+#include <LibGfx/ImageFormats/JPEGXL/SelfCorrectingPredictor.h>
 #include <LibGfx/ImageFormats/JPEGXLLoader.h>
 #include <LibGfx/Matrix3x3.h>
 
-namespace Gfx {
+namespace Gfx::JPEGXL {
 
 // This is not specified
 static ErrorOr<void> read_non_aligned(LittleEndianInputBitStream& stream, Bytes bytes)
@@ -1120,123 +1122,6 @@ private:
 };
 ///
 
-/// H.5 - Self-correcting predictor
-struct WPHeader {
-    u8 wp_p1 { 16 };
-    u8 wp_p2 { 10 };
-    u8 wp_p3a { 7 };
-    u8 wp_p3b { 7 };
-    u8 wp_p3c { 7 };
-    u8 wp_p3d { 0 };
-    u8 wp_p3e { 0 };
-    Array<u8, 4> wp_w { 13, 12, 12, 12 };
-};
-
-static ErrorOr<WPHeader> read_self_correcting_predictor(LittleEndianInputBitStream& stream)
-{
-    WPHeader self_correcting_predictor {};
-
-    bool const default_wp = TRY(stream.read_bit());
-
-    if (!default_wp) {
-        self_correcting_predictor.wp_p1 = TRY(stream.read_bits(5));
-        self_correcting_predictor.wp_p2 = TRY(stream.read_bits(5));
-        self_correcting_predictor.wp_p3a = TRY(stream.read_bits(5));
-        self_correcting_predictor.wp_p3b = TRY(stream.read_bits(5));
-        self_correcting_predictor.wp_p3c = TRY(stream.read_bits(5));
-        self_correcting_predictor.wp_p3d = TRY(stream.read_bits(5));
-        self_correcting_predictor.wp_p3e = TRY(stream.read_bits(5));
-        self_correcting_predictor.wp_w = {
-            TRY(stream.read_bits<u8>(4)),
-            TRY(stream.read_bits<u8>(4)),
-            TRY(stream.read_bits<u8>(4)),
-            TRY(stream.read_bits<u8>(4)),
-        };
-    }
-
-    return self_correcting_predictor;
-}
-///
-
-/// H.6 - Transformations
-struct SqueezeParams {
-    bool horizontal {};
-    bool in_place {};
-    u32 begin_c {};
-    u32 num_c {};
-};
-
-static ErrorOr<SqueezeParams> read_squeeze_params(LittleEndianInputBitStream& stream)
-{
-    SqueezeParams squeeze_params;
-
-    squeeze_params.horizontal = TRY(stream.read_bit());
-    squeeze_params.in_place = TRY(stream.read_bit());
-    squeeze_params.begin_c = U32(TRY(stream.read_bits(3)), 8 + TRY(stream.read_bits(6)), 72 + TRY(stream.read_bits(10)), 1096 + TRY(stream.read_bits(13)));
-    squeeze_params.num_c = U32(1, 2, 3, 4 + TRY(stream.read_bits(4)));
-
-    return squeeze_params;
-}
-
-struct TransformInfo {
-    enum class TransformId {
-        kRCT = 0,
-        kPalette = 1,
-        kSqueeze = 2,
-    };
-
-    TransformId tr {};
-    u32 begin_c {};
-    u32 rct_type {};
-
-    u32 num_c {};
-    u32 nb_colours {};
-    u32 nb_deltas {};
-    u8 d_pred {};
-
-    Vector<SqueezeParams> sp {};
-};
-
-static ErrorOr<TransformInfo> read_transform_info(LittleEndianInputBitStream& stream)
-{
-    TransformInfo transform_info;
-
-    transform_info.tr = static_cast<TransformInfo::TransformId>(TRY(stream.read_bits(2)));
-
-    if (transform_info.tr != TransformInfo::TransformId::kSqueeze) {
-        transform_info.begin_c = U32(
-            TRY(stream.read_bits(3)),
-            8 + TRY(stream.read_bits(3)),
-            72 + TRY(stream.read_bits(10)),
-            1096 + TRY(stream.read_bits(13)));
-    }
-
-    if (transform_info.tr == TransformInfo::TransformId::kRCT) {
-        transform_info.rct_type = U32(
-            6,
-            TRY(stream.read_bits(2)),
-            2 + TRY(stream.read_bits(4)),
-            10 + TRY(stream.read_bits(6)));
-    }
-
-    if (transform_info.tr == TransformInfo::TransformId::kPalette) {
-        transform_info.num_c = U32(1, 3, 4, 1 + TRY(stream.read_bits(13)));
-        transform_info.nb_colours = U32(TRY(stream.read_bits(8)), 256 + TRY(stream.read_bits(10)), 1280 + TRY(stream.read_bits(12)), 5376 + TRY(stream.read_bits(16)));
-        transform_info.nb_deltas = U32(0, 1 + TRY(stream.read_bits(8)), 257 + TRY(stream.read_bits(10)), 1281 + TRY(stream.read_bits(16)));
-        transform_info.d_pred = TRY(stream.read_bits(4));
-    }
-
-    if (transform_info.tr == TransformInfo::TransformId::kSqueeze) {
-        auto const num_sq = U32(0, 1 + TRY(stream.read_bits(4)), 9 + TRY(stream.read_bits(6)), 41 + TRY(stream.read_bits(8)));
-        TRY(transform_info.sp.try_resize(num_sq));
-        for (u32 i = 0; i < num_sq; ++i)
-            transform_info.sp[i] = TRY(read_squeeze_params(stream));
-    }
-
-    return transform_info;
-}
-///
-
 /// Local abstractions to store the decoded image
 class BlendedImage {
 public:
@@ -1478,177 +1363,6 @@ private:
 };
 ///
 
-/// H.5 - Self-correcting predictor
-struct Neighborhood {
-    i32 N {};
-    i32 NW {};
-    i32 NE {};
-    i32 W {};
-    i32 NN {};
-    i32 WW {};
-    i32 NEE {};
-};
-
-class SelfCorrectingData {
-public:
-    struct Predictions {
-        i32 prediction {};
-        Array<i32, 4> subpred {};
-
-        i32 max_error {};
-        i32 true_err {};
-        Array<i32, 4> err {};
-    };
-
-    static ErrorOr<SelfCorrectingData> create(WPHeader const& wp_params, u32 width)
-    {
-        SelfCorrectingData self_correcting_data { wp_params };
-        self_correcting_data.m_width = width;
-
-        self_correcting_data.m_previous = TRY(FixedArray<Predictions>::create(width));
-        self_correcting_data.m_current_row = TRY(FixedArray<Predictions>::create(width));
-        self_correcting_data.m_next_row = TRY(FixedArray<Predictions>::create(width));
-
-        return self_correcting_data;
-    }
-
-    void register_next_row()
-    {
-        auto tmp = move(m_previous);
-        m_previous = move(m_current_row);
-        m_current_row = move(m_next_row);
-        // We reuse m_previous to avoid an allocation, no values are kept
-        // everything will be overridden.
-        m_next_row = move(tmp);
-        m_current_row_index++;
-    }
-
-    Predictions compute_predictions(Neighborhood const& neighborhood, u32 x)
-    {
-        auto& current_predictions = m_next_row[x];
-
-        auto const N3 = neighborhood.N << 3;
-        auto const NW3 = neighborhood.NW << 3;
-        auto const NE3 = neighborhood.NE << 3;
-        auto const W3 = neighborhood.W << 3;
-        auto const NN3 = neighborhood.NN << 3;
-
-        auto const predictions_W = predictions_for(x, Direction::West);
-        auto const predictions_N = predictions_for(x, Direction::North);
-        auto const predictions_NE = predictions_for(x, Direction::NorthEast);
-        auto const predictions_NW = predictions_for(x, Direction::NorthWest);
-        auto const predictions_WW = predictions_for(x, Direction::WestWest);
-
-        current_predictions.subpred[0] = W3 + NE3 - N3;
-        current_predictions.subpred[1] = N3 - (((predictions_W.true_err + predictions_N.true_err + predictions_NE.true_err) * wp_params.wp_p1) >> 5);
-        current_predictions.subpred[2] = W3 - (((predictions_W.true_err + predictions_N.true_err + predictions_NW.true_err) * wp_params.wp_p2) >> 5);
-        current_predictions.subpred[3] = N3 - ((predictions_NW.true_err * wp_params.wp_p3a + predictions_N.true_err * wp_params.wp_p3b + predictions_NE.true_err * wp_params.wp_p3c + (NN3 - N3) * wp_params.wp_p3d + (NW3 - W3) * wp_params.wp_p3e) >> 5);
-
-        auto const error2weight = [](i32 err_sum, u8 maxweight) -> i32 {
-            i32 shift = floor(log2(err_sum + 1)) - 5;
-            if (shift < 0)
-                shift = 0;
-            return 4 + ((static_cast<u64>(maxweight) * ((1 << 24) / ((err_sum >> shift) + 1))) >> shift);
-        };
-
-        Array<i32, 4> weight {};
-        for (u8 i = 0; i < weight.size(); ++i) {
-            auto err_sum = predictions_N.err[i] + predictions_W.err[i] + predictions_NW.err[i] + predictions_WW.err[i] + predictions_NE.err[i];
-            if (x == m_width - 1)
-                err_sum += predictions_W.err[i];
-            weight[i] = error2weight(err_sum, wp_params.wp_w[i]);
-        }
-
-        auto sum_weights = weight[0] + weight[1] + weight[2] + weight[3];
-        i32 const log_weight = floor(log2(sum_weights)) + 1;
-        for (u8 i = 0; i < 4; i++)
-            weight[i] = weight[i] >> (log_weight - 5);
-        sum_weights = weight[0] + weight[1] + weight[2] + weight[3];
-
-        auto s = (sum_weights >> 1) - 1;
-        for (u8 i = 0; i < 4; i++)
-            s += current_predictions.subpred[i] * weight[i];
-
-        current_predictions.prediction = static_cast<u64>(s) * ((1 << 24) / sum_weights) >> 24;
-        // if true_err_N, true_err_W and true_err_NW don't have the same sign
-        if (((predictions_N.true_err ^ predictions_W.true_err) | (predictions_N.true_err ^ predictions_NW.true_err)) <= 0) {
-            current_predictions.prediction = clamp(current_predictions.prediction, min(W3, min(N3, NE3)), max(W3, max(N3, NE3)));
-        }
-
-        auto& max_error = current_predictions.max_error;
-        max_error = predictions_W.true_err;
-        if (abs(predictions_N.true_err) > abs(max_error))
-            max_error = predictions_N.true_err;
-        if (abs(predictions_NW.true_err) > abs(max_error))
-            max_error = predictions_NW.true_err;
-        if (abs(predictions_NE.true_err) > abs(max_error))
-            max_error = predictions_NE.true_err;
-
-        return current_predictions;
-    }
-
-    // H.5.1 - General
-    void compute_errors(u32 x, i32 true_value)
-    {
-        auto& current_predictions = m_next_row[x];
-
-        current_predictions.true_err = current_predictions.prediction - (true_value << 3);
-
-        for (u8 i = 0; i < 4; ++i)
-            current_predictions.err[i] = (abs(current_predictions.subpred[i] - (true_value << 3)) + 3) >> 3;
-    }
-
-private:
-    SelfCorrectingData(WPHeader const& wp)
-        : wp_params(wp)
-    {
-    }
-
-    enum class Direction {
-        North,
-        NorthWest,
-        NorthEast,
-        West,
-        NorthNorth,
-        WestWest
-    };
-
-    Predictions predictions_for(u32 x, Direction direction) const
-    {
-        // H.5.2 - Prediction
-        auto const north = [&]() {
-            return m_current_row_index < 1 ? Predictions {} : m_current_row[x];
-        };
-
-        switch (direction) {
-        case Direction::North:
-            return north();
-        case Direction::NorthWest:
-            return x < 1 ? north() : m_current_row[x - 1];
-        case Direction::NorthEast:
-            return x + 1 >= m_current_row.size() ? north() : m_current_row[x + 1];
-        case Direction::West:
-            return x < 1 ? Predictions {} : m_next_row[x - 1];
-        case Direction::NorthNorth:
-            return m_current_row_index < 2 ? Predictions {} : m_previous[x];
-        case Direction::WestWest:
-            return x < 2 ? Predictions {} : m_next_row[x - 2];
-        }
-        VERIFY_NOT_REACHED();
-    }
-
-    WPHeader const& wp_params {};
-
-    u32 m_width {};
-    u32 m_current_row_index {};
-
-    FixedArray<Predictions> m_previous {};
-    FixedArray<Predictions> m_current_row {};
-
-    FixedArray<Predictions> m_next_row {};
-};
-///
-
 /// H.2 - Image decoding
 
 static ErrorOr<void> add_default_squeeze_params(TransformInfo& tr, Span<ChannelInfo> channels, u32 nb_meta_channels)
@@ -1838,66 +1552,6 @@ static void get_properties(FixedArray<i32>& properties, Span<Channel> channels, 
         properties[nb_base_predictors + (i - 1 - j) * 4 + 3] = rC - rG;
     }
 }
-
-static i32 prediction(Neighborhood const& neighborhood, i32 self_correcting, u32 predictor)
-{
-    switch (predictor) {
-    case 0:
-        return 0;
-    case 1:
-        return neighborhood.W;
-    case 2:
-        return neighborhood.N;
-    case 3:
-        return (neighborhood.W + neighborhood.N) / 2;
-    case 4:
-        return abs(neighborhood.N - neighborhood.NW) < abs(neighborhood.W - neighborhood.NW) ? neighborhood.W : neighborhood.N;
-    case 5:
-        return clamp(neighborhood.W + neighborhood.N - neighborhood.NW, min(neighborhood.W, neighborhood.N), max(neighborhood.W, neighborhood.N));
-    case 6:
-        return (self_correcting + 3) >> 3;
-    case 7:
-        return neighborhood.NE;
-    case 8:
-        return neighborhood.NW;
-    case 9:
-        return neighborhood.WW;
-    case 10:
-        return (neighborhood.W + neighborhood.NW) / 2;
-    case 11:
-        return (neighborhood.N + neighborhood.NW) / 2;
-    case 12:
-        return (neighborhood.N + neighborhood.NE) / 2;
-    case 13:
-        return (6 * neighborhood.N - 2 * neighborhood.NN + 7 * neighborhood.W + neighborhood.WW + neighborhood.NEE + 3 * neighborhood.NE + 8) / 16;
-    }
-    VERIFY_NOT_REACHED();
-}
-
-static Neighborhood retrieve_neighborhood(Channel const& channel, u32 x, u32 y)
-{
-    i32 const W = x > 0 ? channel.get(x - 1, y) : (y > 0 ? channel.get(x, y - 1) : 0);
-    i32 const N = y > 0 ? channel.get(x, y - 1) : W;
-    i32 const NW = x > 0 && y > 0 ? channel.get(x - 1, y - 1) : W;
-    i32 const NE = x + 1 < channel.width() && y > 0 ? channel.get(x + 1, y - 1) : N;
-    i32 const NN = y > 1 ? channel.get(x, y - 2) : N;
-    i32 const WW = x > 1 ? channel.get(x - 2, y) : W;
-    i32 const NEE = x + 2 < channel.width() && y > 0 ? channel.get(x + 2, y - 1) : NE;
-
-    Neighborhood const neighborhood {
-        .N = N,
-        .NW = NW,
-        .NE = NE,
-        .W = W,
-        .NN = NN,
-        .WW = WW,
-        .NEE = NEE,
-    };
-
-    return neighborhood;
-}
-
-static ErrorOr<void> apply_transformation(Vector<Channel>&, TransformInfo const&, u32 bit_depth, WPHeader const&);
 
 struct ModularOptions {
     Span<ChannelInfo> channels_info;
@@ -2354,262 +2008,6 @@ static ErrorOr<void> read_lf_group(LittleEndianInputBitStream& stream,
         TODO();
     }
 
-    return {};
-}
-///
-
-/// H.6 - Transformations
-static void apply_rct(Span<Channel> channels, TransformInfo const& transformation)
-{
-    for (u32 y {}; y < channels[transformation.begin_c].height(); y++) {
-        for (u32 x {}; x < channels[transformation.begin_c].width(); x++) {
-
-            auto a = channels[transformation.begin_c + 0].get(x, y);
-            auto b = channels[transformation.begin_c + 1].get(x, y);
-            auto c = channels[transformation.begin_c + 2].get(x, y);
-
-            i32 d {};
-            i32 e {};
-            i32 f {};
-
-            auto const permutation = transformation.rct_type / 7;
-            auto const type = transformation.rct_type % 7;
-            if (type == 6) { // YCgCo
-                auto const tmp = a - (c >> 1);
-                e = c + tmp;
-                f = tmp - (b >> 1);
-                d = f + b;
-            } else {
-                if (type & 1)
-                    c = c + a;
-                if ((type >> 1) == 1)
-                    b = b + a;
-                if ((type >> 1) == 2)
-                    b = b + ((a + c) >> 1);
-                d = a;
-                e = b;
-                f = c;
-            }
-
-            Array<i32, 3> v {};
-            v[permutation % 3] = d;
-            v[(permutation + 1 + (permutation / 3)) % 3] = e;
-            v[(permutation + 2 - (permutation / 3)) % 3] = f;
-
-            channels[transformation.begin_c + 0].set(x, y, v[0]);
-            channels[transformation.begin_c + 1].set(x, y, v[1]);
-            channels[transformation.begin_c + 2].set(x, y, v[2]);
-        }
-    }
-}
-
-// H.6.4  Palette
-static constexpr i16 kDeltaPalette[72][3] = {
-    { 0, 0, 0 }, { 4, 4, 4 }, { 11, 0, 0 }, { 0, 0, -13 }, { 0, -12, 0 }, { -10, -10, -10 },
-    { -18, -18, -18 }, { -27, -27, -27 }, { -18, -18, 0 }, { 0, 0, -32 }, { -32, 0, 0 }, { -37, -37, -37 },
-    { 0, -32, -32 }, { 24, 24, 45 }, { 50, 50, 50 }, { -45, -24, -24 }, { -24, -45, -45 }, { 0, -24, -24 },
-    { -34, -34, 0 }, { -24, 0, -24 }, { -45, -45, -24 }, { 64, 64, 64 }, { -32, 0, -32 }, { 0, -32, 0 },
-    { -32, 0, 32 }, { -24, -45, -24 }, { 45, 24, 45 }, { 24, -24, -45 }, { -45, -24, 24 }, { 80, 80, 80 },
-    { 64, 0, 0 }, { 0, 0, -64 }, { 0, -64, -64 }, { -24, -24, 45 }, { 96, 96, 96 }, { 64, 64, 0 },
-    { 45, -24, -24 }, { 34, -34, 0 }, { 112, 112, 112 }, { 24, -45, -45 }, { 45, 45, -24 }, { 0, -32, 32 },
-    { 24, -24, 45 }, { 0, 96, 96 }, { 45, -24, 24 }, { 24, -45, -24 }, { -24, -45, 24 }, { 0, -64, 0 },
-    { 96, 0, 0 }, { 128, 128, 128 }, { 64, 0, 64 }, { 144, 144, 144 }, { 96, 96, 0 }, { -36, -36, 36 },
-    { 45, -24, -45 }, { 45, -45, -24 }, { 0, 0, -96 }, { 0, 128, 128 }, { 0, 96, 0 }, { 45, 24, -45 },
-    { -128, 0, 0 }, { 24, -45, 24 }, { -45, 24, -45 }, { 64, 0, -64 }, { 64, -64, -64 }, { 96, 0, 96 },
-    { 45, -45, 24 }, { 24, 45, -45 }, { 64, 64, -64 }, { 128, 128, 0 }, { 0, 0, -128 }, { -24, 45, -45 }
-};
-
-static ErrorOr<void> apply_palette(Vector<Channel>& channel,
-    TransformInfo const& tr,
-    u32 bitdepth,
-    WPHeader const& wp_params)
-{
-    auto first = tr.begin_c + 1;
-    auto last = tr.begin_c + tr.num_c;
-    for (u32 i = first + 1; i <= last; i++)
-        channel.insert(i, TRY(channel[first].copy()));
-    for (u32 c = 0; c < tr.num_c; c++) {
-        auto self_correcting_data = TRY(SelfCorrectingData::create(wp_params, channel[first].width()));
-
-        for (u32 y = 0; y < channel[first].height(); y++) {
-            for (u32 x = 0; x < channel[first].width(); x++) {
-                i32 index = channel[first + c].get(x, y);
-                auto is_delta = index < static_cast<i64>(tr.nb_deltas);
-                i32 value {};
-                if (index >= 0 && index < static_cast<i64>(tr.nb_colours)) {
-                    value = channel[0].get(index, c);
-                } else if (index >= static_cast<i64>(tr.nb_colours)) {
-                    index -= tr.nb_colours;
-                    if (index < 64) {
-                        value = ((index >> (2 * c)) % 4) * ((1 << bitdepth) - 1) / 4
-                            + (1 << max(0, bitdepth - 3));
-                    } else {
-                        index -= 64;
-                        for (u32 i = 0; i < c; i++)
-                            index = index / 5;
-                        value = (index % 5) * ((1 << bitdepth) - 1) / 4;
-                    }
-                } else if (c < 3) {
-                    index = (-index - 1) % 143;
-                    value = kDeltaPalette[(index + 1) >> 1][c];
-                    if ((index & 1) == 0)
-                        value = -value;
-                    if (bitdepth > 8)
-                        value <<= min(bitdepth, 24) - 8;
-                } else {
-                    value = 0;
-                }
-                channel[first + c].set(x, y, value);
-                if (is_delta) {
-                    auto const original = channel[first + c].get(x, y);
-                    auto const neighborhood = retrieve_neighborhood(channel[first + c], x, y);
-                    auto const self_prediction = self_correcting_data.compute_predictions(neighborhood, x);
-                    auto const pred = prediction(neighborhood, self_prediction.prediction, tr.d_pred);
-                    channel[first + c].set(x, y, original + pred);
-                }
-            }
-        }
-    }
-    channel.remove(0);
-    return {};
-}
-
-// H.6.2.2 - Horizontal inverse squeeze step
-static i32 tendency(i32 A, i32 B, i32 C)
-{
-    if (A >= B && B >= C) {
-        auto X = (4 * A - 3 * C - B + 6) / 12;
-        if (X - (X & 1) > 2 * (A - B))
-            X = 2 * (A - B) + 1;
-        if (X + (X & 1) > 2 * (B - C))
-            X = 2 * (B - C);
-        return X;
-    } else if (A <= B && B <= C) {
-        auto X = (4 * A - 3 * C - B - 6) / 12;
-        if (X + (X & 1) < 2 * (A - B))
-            X = 2 * (A - B) - 1;
-        if (X - (X & 1) < 2 * (B - C))
-            X = 2 * (B - C);
-        return X;
-    }
-    return 0;
-}
-
-static ErrorOr<void> horiz_isqueeze(Channel const& input_1, Channel const& input_2, Channel& output)
-{
-    // "This step takes two input channels of sizes W1 × H and W2 × H"
-    if (input_1.height() != input_2.height())
-        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
-    auto h = input_1.height();
-    auto w1 = input_1.width();
-    auto w2 = input_2.width();
-
-    // "Either W1 == W2 or W1 == W2 + 1."
-    if (w1 != w2 && w1 != w2 + 1)
-        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
-
-    // "output channel of size (W1 + W2) × H."
-    if ((w1 + w2) != output.width() || h != output.height())
-        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
-
-    for (u32 y = 0; y < h; y++) {
-        for (u32 x = 0; x < w2; x++) {
-            auto avg = input_1.get(x, y);
-            auto residu = input_2.get(x, y);
-            auto next_avg = (x + 1 < w1 ? input_1.get(x + 1, y) : avg);
-            auto left = (x > 0 ? output.get((x << 1) - 1, y) : avg);
-            auto diff = residu + tendency(left, avg, next_avg);
-            auto first = avg + diff / 2;
-            output.set(2 * x, y, first);
-            output.set(2 * x + 1, y, first - diff);
-        }
-        if (w1 > w2)
-            output.set(2 * w2, y, input_1.get(w2, y));
-    }
-    return {};
-}
-
-// H.6.2.3 -  Vertical inverse squeeze step
-static ErrorOr<void> vert_isqueeze(Channel const& input_1, Channel const& input_2, Channel& output)
-{
-    // "This step takes two input channels of sizes W × H1 and W × H2"
-    if (input_1.width() != input_2.width())
-        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
-    auto w = input_1.width();
-    auto h1 = input_1.height();
-    auto h2 = input_2.height();
-
-    // "Either H1 == H2 or H1 == H2 + 1."
-    if (h1 != h2 && h1 != h2 + 1)
-        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
-
-    // "output channel of size W × (H1 + H2)."
-    if ((h1 + h2) != output.height() || w != output.width())
-        return Error::from_string_literal("JPEGXLLoader: Invalid size when undoing squeeze transform");
-
-    for (u32 y = 0; y < h2; y++) {
-        for (u32 x = 0; x < w; x++) {
-            auto avg = input_1.get(x, y);
-            auto residu = input_2.get(x, y);
-            auto next_avg = (y + 1 < h1 ? input_1.get(x, y + 1) : avg);
-            auto top = (y > 0 ? output.get(x, (y << 1) - 1) : avg);
-            auto diff = residu + tendency(top, avg, next_avg);
-            auto first = avg + diff / 2;
-            output.set(x, 2 * y, first);
-            output.set(x, 2 * y + 1, first - diff);
-        }
-    }
-    if (h1 > h2) {
-        for (u32 x = 0; x < w; x++)
-            output.set(x, 2 * h2, input_1.get(x, h2));
-    }
-    return {};
-}
-
-static ErrorOr<void> apply_squeeze(
-    Vector<Channel>& channel,
-    TransformInfo const& transformation)
-{
-    auto const& sp = transformation.sp;
-    for (i64 i = sp.size() - 1; i >= 0; i--) {
-        auto begin = transformation.sp[i].begin_c;
-        auto end = begin + transformation.sp[i].num_c - 1;
-
-        auto r = sp[i].in_place ? end + 1 : channel.size() + begin - end - 1;
-        for (u32 c = begin; c <= end; c++) {
-            Optional<Channel> output;
-            if (sp[i].horizontal) {
-                output = TRY(channel[c].copy(IntSize(channel[c].width() + channel[r].width(), channel[c].height())));
-                TRY(horiz_isqueeze(channel[c], channel[r], *output));
-            } else {
-                output = TRY(channel[c].copy(IntSize(channel[c].width(), channel[c].height() + channel[r].height())));
-                TRY(vert_isqueeze(channel[c], channel[r], *output));
-            }
-            channel[c] = output.release_value();
-            /* Remove the channel with index r */
-            channel.remove(r);
-        }
-    }
-    return {};
-}
-
-static ErrorOr<void> apply_transformation(
-    Vector<Channel>& channels,
-    TransformInfo const& transformation,
-    u32 bit_depth,
-    WPHeader const& wp_header)
-{
-    switch (transformation.tr) {
-    case TransformInfo::TransformId::kRCT:
-        apply_rct(channels, transformation);
-        break;
-    case TransformInfo::TransformId::kPalette:
-        return apply_palette(channels, transformation, bit_depth, wp_header);
-    case TransformInfo::TransformId::kSqueeze:
-        return apply_squeeze(channels, transformation);
-    default:
-        VERIFY_NOT_REACHED();
-    }
     return {};
 }
 ///
@@ -3348,9 +2746,9 @@ static ErrorOr<void> render_extra_channels(Image&, ImageMetadata const& metadata
 }
 ///
 
-class JPEGXLLoadingContext {
+class LoadingContext {
 public:
-    JPEGXLLoadingContext(NonnullOwnPtr<Stream> stream)
+    LoadingContext(NonnullOwnPtr<Stream> stream)
         : m_stream(move(stream))
     {
     }
@@ -3522,8 +2920,12 @@ private:
     ByteBuffer m_icc_profile;
 };
 
+}
+
+namespace Gfx {
+
 JPEGXLImageDecoderPlugin::JPEGXLImageDecoderPlugin(Optional<Vector<u8>>&& jxlc_content, NonnullOwnPtr<FixedMemoryStream> stream)
-    : m_context(make<JPEGXLLoadingContext>(move(stream)))
+    : m_context(make<JPEGXL::LoadingContext>(move(stream)))
     , m_jxlc_content(move(jxlc_content))
 {
 }
@@ -3607,10 +3009,10 @@ ErrorOr<ImageFrameDescriptor> JPEGXLImageDecoderPlugin::frame(size_t index, Opti
     if (index > 0)
         return Error::from_string_literal("JPEGXLImageDecoderPlugin: Invalid frame index");
 
-    if (m_context->state() == JPEGXLLoadingContext::State::Error)
+    if (m_context->state() == JPEGXL::LoadingContext::State::Error)
         return Error::from_string_literal("JPEGXLImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state() < JPEGXLLoadingContext::State::FrameDecoded)
+    if (m_context->state() < JPEGXL::LoadingContext::State::FrameDecoded)
         TRY(m_context->decode());
 
     if (m_context->cmyk_bitmap() && !m_context->bitmap())
@@ -3621,10 +3023,10 @@ ErrorOr<ImageFrameDescriptor> JPEGXLImageDecoderPlugin::frame(size_t index, Opti
 
 ErrorOr<NonnullRefPtr<CMYKBitmap>> JPEGXLImageDecoderPlugin::cmyk_frame()
 {
-    if (m_context->state() == JPEGXLLoadingContext::State::Error)
+    if (m_context->state() == JPEGXL::LoadingContext::State::Error)
         return Error::from_string_literal("JPEGXLImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state() < JPEGXLLoadingContext::State::FrameDecoded)
+    if (m_context->state() < JPEGXL::LoadingContext::State::FrameDecoded)
         TRY(m_context->decode());
 
     VERIFY(m_context->cmyk_bitmap() && !m_context->bitmap());
@@ -3638,7 +3040,7 @@ NaturalFrameFormat JPEGXLImageDecoderPlugin::natural_frame_format() const
 
 ErrorOr<Optional<ReadonlyBytes>> JPEGXLImageDecoderPlugin::icc_data()
 {
-    if (m_context->state() < JPEGXLLoadingContext::State::ICCProfileDecoded)
+    if (m_context->state() < JPEGXL::LoadingContext::State::ICCProfileDecoded)
         TRY(m_context->decode_icc());
     if (m_context->icc_profile().size() == 0)
         return OptionalNone {};
@@ -3650,15 +3052,15 @@ ErrorOr<Optional<ReadonlyBytes>> JPEGXLImageDecoderPlugin::icc_data()
 namespace AK {
 
 template<>
-struct Formatter<Gfx::Encoding> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, Gfx::Encoding const& header)
+struct Formatter<Gfx::JPEGXL::Encoding> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::JPEGXL::Encoding const& header)
     {
         auto string = "Unknown"sv;
         switch (header) {
-        case Gfx::Encoding::kVarDCT:
+        case Gfx::JPEGXL::Encoding::kVarDCT:
             string = "VarDCT"sv;
             break;
-        case Gfx::Encoding::kModular:
+        case Gfx::JPEGXL::Encoding::kModular:
             string = "Modular"sv;
             break;
         default:
@@ -3670,17 +3072,17 @@ struct Formatter<Gfx::Encoding> : Formatter<StringView> {
 };
 
 template<>
-struct Formatter<Gfx::FrameHeader::FrameType> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, Gfx::FrameHeader::FrameType const& header)
+struct Formatter<Gfx::JPEGXL::FrameHeader::FrameType> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::JPEGXL::FrameHeader::FrameType const& header)
     {
         switch (header) {
-        case Gfx::FrameHeader::FrameType::kRegularFrame:
+        case Gfx::JPEGXL::FrameHeader::FrameType::kRegularFrame:
             return Formatter<StringView>::format(builder, "RegularFrame"sv);
-        case Gfx::FrameHeader::FrameType::kLFFrame:
+        case Gfx::JPEGXL::FrameHeader::FrameType::kLFFrame:
             return Formatter<StringView>::format(builder, "LFFrame"sv);
-        case Gfx::FrameHeader::FrameType::kReferenceOnly:
+        case Gfx::JPEGXL::FrameHeader::FrameType::kReferenceOnly:
             return Formatter<StringView>::format(builder, "ReferenceOnly"sv);
-        case Gfx::FrameHeader::FrameType::kSkipProgressive:
+        case Gfx::JPEGXL::FrameHeader::FrameType::kSkipProgressive:
             return Formatter<StringView>::format(builder, "SkipProgressive"sv);
         }
         VERIFY_NOT_REACHED();

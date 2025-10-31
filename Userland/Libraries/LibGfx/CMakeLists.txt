@@ -63,8 +63,10 @@ set(SOURCES
     ImageFormats/JPEG2000ProgressionIterators.cpp
     ImageFormats/JPEG2000TagTree.cpp
     ImageFormats/JPEGLoader.cpp
-    ImageFormats/JPEGXLEntropyDecoder.cpp
-    ImageFormats/JPEGXLICC.cpp
+    ImageFormats/JPEGXL/EntropyDecoder.cpp
+    ImageFormats/JPEGXL/ICC.cpp
+    ImageFormats/JPEGXL/ModularTransforms.cpp
+    ImageFormats/JPEGXL/SelfCorrectingPredictor.cpp
     ImageFormats/JPEGXLLoader.cpp
     ImageFormats/JPEGWriter.cpp
     ImageFormats/MQArithmeticCoder.cpp
