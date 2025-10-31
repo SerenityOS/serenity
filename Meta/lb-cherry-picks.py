@@ -315,6 +315,9 @@ serenity_cherry_picks.add('1b324f3ae11d4f5750d89183f97bb3b3b2b4f801')
 # PR https://github.com/SerenityOS/serenity/pull/26114
 serenity_cherry_picks.add('62c5f4b822d62d6be8905dafc84341370491cd1e')
 
+# Manually cherry-picked in https://github.com/SerenityOS/serenity/pull/26349
+serenity_cherry_picks.add('e8b7c88881c099ffdd23265719588f97c766ba0c')
+
 # Define a list of pull request IDs that should never be merged
 # and the reasons why they shouldn't be merged.
 # We fairly likely don't want the PRs in here (but it isn't 100% set
@@ -685,6 +688,8 @@ never_merge_commits = {
     "bfc9dc447f42eb9d7d0927721291d1b528b3125d": "NIH violation: simdutf (PR654, commit 2)",
     "4e9d6a543a96a06c4974f2dab5d23f3e68da7a77": "Still used in Serenity (PR1297, commit 5)",
     "a94bf9bd09c217b69968b7ac20d5ed8c54ee08d9": "Flaky test",
+
+    "61da1236e7728a50a8b335f55d52e74d86444743": "NIH violation: skia (PR826, commit 4)",
 
     # Commits from the first 14 PRs didn't get Pull-request: footers:
     "6d3a54e4a8d149171105d1e6378cbd2e2d1bb7fc": "Ladybird-specific (PR2)",
