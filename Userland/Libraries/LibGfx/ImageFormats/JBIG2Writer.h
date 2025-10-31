@@ -23,6 +23,33 @@ struct JBIG2EncoderOptions {
 // This is useful for making test inputs, and not useful else. Usually you want to use the usual encode() API instead.
 namespace JBIG2 {
 
+// Annex A, Arithmetic integer decoding procedure, but in reverse.
+class ArithmeticIntegerEncoder {
+public:
+    ArithmeticIntegerEncoder();
+
+    // A.2 Procedure for decoding values (except IAID)
+    // Takes OptionalNone for OOB.
+    ErrorOr<void> encode(MQArithmeticEncoder&, Optional<i32>);
+
+    ErrorOr<void> encode_non_oob(MQArithmeticEncoder&, i32);
+
+private:
+    Vector<MQArithmeticCoderContext> contexts;
+};
+
+class ArithmeticIntegerIDEncoder {
+public:
+    explicit ArithmeticIntegerIDEncoder(u32 code_length);
+
+    // A.3 The IAID decoding procedure, but in reverse.
+    ErrorOr<void> encode(MQArithmeticEncoder&, u32);
+
+private:
+    u32 m_code_length { 0 };
+    Vector<MQArithmeticCoderContext> contexts;
+};
+
 struct SegmentHeaderData {
     u32 segment_number { 0 };
     bool retention_flag { false };
