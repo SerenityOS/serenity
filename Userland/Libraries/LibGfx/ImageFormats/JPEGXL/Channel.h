@@ -9,7 +9,7 @@
 #include <AK/Error.h>
 #include <AK/Vector.h>
 
-namespace Gfx {
+namespace Gfx::JPEGXL {
 
 /// 5.2 - Mirroring
 static u32 mirror_1d(i32 coord, u32 size)

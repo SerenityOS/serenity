@@ -6,10 +6,10 @@
 
 #include <AK/ConstrainedStream.h>
 #include <AK/MemoryStream.h>
-#include <LibGfx/ImageFormats/JPEGXL/JPEGXLCommon.h>
-#include <LibGfx/ImageFormats/JPEGXL/JPEGXLEntropyDecoder.h>
+#include <LibGfx/ImageFormats/JPEGXL/Common.h>
+#include <LibGfx/ImageFormats/JPEGXL/EntropyDecoder.h>
 
-namespace Gfx {
+namespace Gfx::JPEGXL {
 
 namespace {
 /// E.4.1 - Data stream

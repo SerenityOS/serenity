@@ -15,13 +15,13 @@
 #include <LibGfx/ImageFormats/ExifOrientedBitmap.h>
 #include <LibGfx/ImageFormats/ISOBMFF/JPEGXLBoxes.h>
 #include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
-#include <LibGfx/ImageFormats/JPEGXL/JPEGXLChannel.h>
-#include <LibGfx/ImageFormats/JPEGXL/JPEGXLCommon.h>
-#include <LibGfx/ImageFormats/JPEGXL/JPEGXLEntropyDecoder.h>
+#include <LibGfx/ImageFormats/JPEGXL/Channel.h>
+#include <LibGfx/ImageFormats/JPEGXL/Common.h>
+#include <LibGfx/ImageFormats/JPEGXL/EntropyDecoder.h>
 #include <LibGfx/ImageFormats/JPEGXLLoader.h>
 #include <LibGfx/Matrix3x3.h>
 
-namespace Gfx {
+namespace Gfx::JPEGXL {
 
 // This is not specified
 static ErrorOr<void> read_non_aligned(LittleEndianInputBitStream& stream, Bytes bytes)
@@ -3344,9 +3344,9 @@ static ErrorOr<void> render_extra_channels(Image&, ImageMetadata const& metadata
 }
 ///
 
-class JPEGXLLoadingContext {
+class LoadingContext {
 public:
-    JPEGXLLoadingContext(NonnullOwnPtr<Stream> stream)
+    LoadingContext(NonnullOwnPtr<Stream> stream)
         : m_stream(move(stream))
     {
     }
@@ -3510,8 +3510,12 @@ private:
     ByteBuffer m_icc_profile;
 };
 
+}
+
+namespace Gfx {
+
 JPEGXLImageDecoderPlugin::JPEGXLImageDecoderPlugin(Optional<Vector<u8>>&& jxlc_content, NonnullOwnPtr<FixedMemoryStream> stream)
-    : m_context(make<JPEGXLLoadingContext>(move(stream)))
+    : m_context(make<JPEGXL::LoadingContext>(move(stream)))
     , m_jxlc_content(move(jxlc_content))
 {
 }
@@ -3595,10 +3599,10 @@ ErrorOr<ImageFrameDescriptor> JPEGXLImageDecoderPlugin::frame(size_t index, Opti
     if (index > 0)
         return Error::from_string_literal("JPEGXLImageDecoderPlugin: Invalid frame index");
 
-    if (m_context->state() == JPEGXLLoadingContext::State::Error)
+    if (m_context->state() == JPEGXL::LoadingContext::State::Error)
         return Error::from_string_literal("JPEGXLImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state() < JPEGXLLoadingContext::State::FrameDecoded)
+    if (m_context->state() < JPEGXL::LoadingContext::State::FrameDecoded)
         TRY(m_context->decode());
 
     if (m_context->cmyk_bitmap() && !m_context->bitmap())
@@ -3609,10 +3613,10 @@ ErrorOr<ImageFrameDescriptor> JPEGXLImageDecoderPlugin::frame(size_t index, Opti
 
 ErrorOr<NonnullRefPtr<CMYKBitmap>> JPEGXLImageDecoderPlugin::cmyk_frame()
 {
-    if (m_context->state() == JPEGXLLoadingContext::State::Error)
+    if (m_context->state() == JPEGXL::LoadingContext::State::Error)
         return Error::from_string_literal("JPEGXLImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state() < JPEGXLLoadingContext::State::FrameDecoded)
+    if (m_context->state() < JPEGXL::LoadingContext::State::FrameDecoded)
         TRY(m_context->decode());
 
     VERIFY(m_context->cmyk_bitmap() && !m_context->bitmap());
@@ -3626,7 +3630,7 @@ NaturalFrameFormat JPEGXLImageDecoderPlugin::natural_frame_format() const
 
 ErrorOr<Optional<ReadonlyBytes>> JPEGXLImageDecoderPlugin::icc_data()
 {
-    if (m_context->state() < JPEGXLLoadingContext::State::ICCProfileDecoded)
+    if (m_context->state() < JPEGXL::LoadingContext::State::ICCProfileDecoded)
         TRY(m_context->decode_icc());
     if (m_context->icc_profile().size() == 0)
         return OptionalNone {};
@@ -3638,15 +3642,15 @@ ErrorOr<Optional<ReadonlyBytes>> JPEGXLImageDecoderPlugin::icc_data()
 namespace AK {
 
 template<>
-struct Formatter<Gfx::Encoding> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, Gfx::Encoding const& header)
+struct Formatter<Gfx::JPEGXL::Encoding> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::JPEGXL::Encoding const& header)
     {
         auto string = "Unknown"sv;
         switch (header) {
-        case Gfx::Encoding::kVarDCT:
+        case Gfx::JPEGXL::Encoding::kVarDCT:
             string = "VarDCT"sv;
             break;
-        case Gfx::Encoding::kModular:
+        case Gfx::JPEGXL::Encoding::kModular:
             string = "Modular"sv;
             break;
         default:
@@ -3658,17 +3662,17 @@ struct Formatter<Gfx::Encoding> : Formatter<StringView> {
 };
 
 template<>
-struct Formatter<Gfx::FrameHeader::FrameType> : Formatter<StringView> {
-    ErrorOr<void> format(FormatBuilder& builder, Gfx::FrameHeader::FrameType const& header)
+struct Formatter<Gfx::JPEGXL::FrameHeader::FrameType> : Formatter<StringView> {
+    ErrorOr<void> format(FormatBuilder& builder, Gfx::JPEGXL::FrameHeader::FrameType const& header)
     {
         switch (header) {
-        case Gfx::FrameHeader::FrameType::kRegularFrame:
+        case Gfx::JPEGXL::FrameHeader::FrameType::kRegularFrame:
             return Formatter<StringView>::format(builder, "RegularFrame"sv);
-        case Gfx::FrameHeader::FrameType::kLFFrame:
+        case Gfx::JPEGXL::FrameHeader::FrameType::kLFFrame:
             return Formatter<StringView>::format(builder, "LFFrame"sv);
-        case Gfx::FrameHeader::FrameType::kReferenceOnly:
+        case Gfx::JPEGXL::FrameHeader::FrameType::kReferenceOnly:
             return Formatter<StringView>::format(builder, "ReferenceOnly"sv);
-        case Gfx::FrameHeader::FrameType::kSkipProgressive:
+        case Gfx::JPEGXL::FrameHeader::FrameType::kSkipProgressive:
             return Formatter<StringView>::format(builder, "SkipProgressive"sv);
         }
         VERIFY_NOT_REACHED();
