@@ -483,7 +483,203 @@ static ErrorOr<u16> jbig2_symbol_dictionary_flags_from_json(JsonObject const& ob
     return flags;
 }
 
-static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSONOptions const&, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
+static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymbol> jbig2_symbol_dictionary_refined_symbol_from_json(ToJSONOptions const& options, JsonObject const& object)
+{
+    u32 symbol_id = 0;
+    i32 delta_x_offset = 0;
+    i32 delta_y_offset = 0;
+    RefPtr<Gfx::BilevelImage> image;
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "symbol_id"sv) {
+            if (auto symbol_id_json = value.get_uint(); symbol_id_json.has_value()) {
+                symbol_id = symbol_id_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"symbol_id\"");
+        }
+
+        if (key == "delta_x_offset"sv) {
+            if (auto delta_x_offset_json = value.get_i32(); delta_x_offset_json.has_value()) {
+                delta_x_offset = delta_x_offset_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"delta_x_offset\"");
+        }
+
+        if (key == "delta_y_offset"sv) {
+            if (auto delta_y_offset_json = value.get_i32(); delta_y_offset_json.has_value()) {
+                delta_y_offset = delta_y_offset_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"delta_y_offset\"");
+        }
+
+        if (key == "image_data"sv) {
+            if (value.is_object()) {
+                image = TRY(jbig2_image_from_json(options, value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"image_data\"");
+        }
+
+        dbgln("symbol_dict symbol refines_symbol_to key {}", key);
+        return Error::from_string_literal("unknown symbol_dict symbol refines_symbol_to key");
+    }));
+
+    if (!image)
+        return Error::from_string_literal("\"refines_symbol_to\" missing \"image_data\"");
+
+    return Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymbol {
+        symbol_id,
+        delta_x_offset,
+        delta_y_offset,
+        *image,
+    };
+}
+
+static ErrorOr<Vector<Gfx::JBIG2::TextRegionStrip>> jbig2_text_region_strips_from_json(ToJSONOptions const& options, JsonArray const& array);
+
+static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> jbig2_symbol_dictionary_height_class_symbol_from_json(ToJSONOptions const& options, JsonObject const& object)
+{
+    bool is_exported = true;
+    Optional<i32> width;
+    Optional<i32> height;
+    Optional<Variant<NonnullRefPtr<Gfx::BilevelImage>, Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymbol, Vector<Gfx::JBIG2::TextRegionStrip>>> image;
+    Gfx::IntSize size;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "exported"sv) {
+            if (auto exported = value.get_bool(); exported.has_value()) {
+                is_exported = exported.value();
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"exported\"");
+        }
+
+        if ((key == "image_data"sv || key == "refines_symbol_to"sv) && image.has_value()) {
+            return Error::from_string_literal("only one of \"image_data\" or \"refines_symbol_to\" may be specified");
+        }
+
+        if (key == "image_data"sv) {
+            if (value.is_object()) {
+                auto image_json = TRY(jbig2_image_from_json(options, value.as_object()));
+                size = { image_json->width(), image_json->height() };
+                image = move(image_json);
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"image_data\"");
+        }
+
+        if (key == "refines_symbol_to"sv) {
+            if (value.is_object()) {
+                auto refined_symbol = TRY(jbig2_symbol_dictionary_refined_symbol_from_json(options, value.as_object()));
+                size = { refined_symbol.refines_to->width(), refined_symbol.refines_to->height() };
+                image = move(refined_symbol);
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"instance_refines_symbol_to\"");
+        }
+
+        if (key == "refines_using_strips"sv) {
+            if (value.is_array()) {
+                image = TRY(jbig2_text_region_strips_from_json(options, value.as_array()));
+                return {};
+            }
+            return Error::from_string_literal("expected array for \"refines_using_strips\"");
+        }
+
+        if (key == "width"sv) {
+            if (auto width_json = value.get_i32(); width_json.has_value()) {
+                width = width_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"width\"");
+        }
+
+        if (key == "height"sv) {
+            if (auto height_json = value.get_i32(); height_json.has_value()) {
+                height = height_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"height\"");
+        }
+
+        dbgln("height_class.symbol key {}", key);
+        return Error::from_string_literal("unknown height_class.symbol key");
+    }));
+
+    if (!image.has_value())
+        return Error::from_string_literal("\"symbol\" missing \"image_data\" or \"refines_symbol_to\"");
+
+    if (width.has_value() != image->has<Vector<Gfx::JBIG2::TextRegionStrip>>())
+        return Error::from_string_literal("symbol \"width\" should be present exactly for \"refines_using_strips\" entries");
+    if (height.has_value() != image->has<Vector<Gfx::JBIG2::TextRegionStrip>>())
+        return Error::from_string_literal("symbol \"height\" should be present exactly for \"refines_using_strips\" entries");
+    if (image->has<Vector<Gfx::JBIG2::TextRegionStrip>>())
+        size = { width.value(), height.value() };
+
+    return Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol {
+        .size = size,
+        .is_exported = is_exported,
+        .image = image.release_value(),
+    };
+}
+
+static ErrorOr<Vector<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol>> jbig2_symbol_dictionary_height_class_symbols_from_json(ToJSONOptions const& options, JsonArray const& array)
+{
+    Vector<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> symbols;
+
+    for (auto const& value : array.values()) {
+        if (!value.is_object())
+            return Error::from_string_literal("expected object for height class symbol");
+        symbols.append(TRY(jbig2_symbol_dictionary_height_class_symbol_from_json(options, value.as_object())));
+    }
+
+    return symbols;
+}
+
+static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass> jbig2_symbol_dictionary_height_class_from_json(ToJSONOptions const& options, JsonObject const& object)
+{
+    Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass height_class;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "height_class_collective_bitmap_is_compressed"sv) {
+            if (auto height_class_collective_bitmap_is_compressed = value.get_bool(); height_class_collective_bitmap_is_compressed.has_value()) {
+                height_class.is_collective_bitmap_compressed = height_class_collective_bitmap_is_compressed.value();
+                return {};
+            }
+            return Error::from_string_literal("expected bool for \"height_class_collective_bitmap_is_compressed\"");
+        }
+
+        if (key == "symbols"sv) {
+            if (value.is_array()) {
+                height_class.symbols = TRY(jbig2_symbol_dictionary_height_class_symbols_from_json(options, value.as_array()));
+                return {};
+            }
+            return Error::from_string_literal("expected array for \"height_class.symbols\"");
+        }
+
+        dbgln("height_class key {}", key);
+        return Error::from_string_literal("unknown height_class key");
+    }));
+
+    return height_class;
+}
+
+static ErrorOr<Vector<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass>> jbig2_symbol_dictionary_height_classes_from_json(ToJSONOptions const& options, JsonArray const& array)
+{
+    Vector<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass> height_classes;
+
+    for (auto const& value : array.values()) {
+        if (!value.is_object())
+            return Error::from_string_literal("expected object for height class");
+        height_classes.append(TRY(jbig2_symbol_dictionary_height_class_from_json(options, value.as_object())));
+    }
+
+    return height_classes;
+}
+
+static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSONOptions const& options, Gfx::JBIG2::SegmentHeaderData const& header, Optional<JsonObject const&> object)
 {
     if (!object.has_value())
         return Error::from_string_literal("symbol_dictionary segment should have \"data\" object");
@@ -491,6 +687,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSON
     u16 flags = 0;
     Vector<i8> adaptive_template_pixels;
     Vector<i8> refinement_adaptive_template_pixels;
+    Vector<bool> export_flags_for_referred_to_symbols;
+    Vector<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass> height_classes;
     Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "flags"sv) {
@@ -515,6 +713,28 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSON
                 return {};
             }
             return Error::from_string_literal("expected array of i8 for \"refinement_adaptive_template_pixels\"");
+        }
+
+        if (key == "export_flags_for_referred_to_symbols"sv) {
+            if (value.is_array()) {
+                for (auto const& flag_value : value.as_array().values()) {
+                    if (auto flag = flag_value.get_bool(); flag.has_value()) {
+                        export_flags_for_referred_to_symbols.append(flag.value());
+                    } else {
+                        return Error::from_string_literal("expected bools in array for \"export_flags_for_referred_to_symbols\"");
+                    }
+                }
+                return {};
+            }
+            return Error::from_string_literal("expected array for \"export_flags_for_referred_to_symbols\"");
+        }
+
+        if (key == "height_classes"sv) {
+            if (value.is_array()) {
+                height_classes = TRY(jbig2_symbol_dictionary_height_classes_from_json(options, value.as_array()));
+                return {};
+            }
+            return Error::from_string_literal("expected array for \"height_classes\"");
         }
 
         if (key == "strip_trailing_7fffs"sv) {
@@ -566,6 +786,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSON
             flags,
             template_pixels,
             refinement_template_pixels,
+            move(export_flags_for_referred_to_symbols),
+            move(height_classes),
             trailing_7fff_handling,
         }
     };
@@ -793,7 +1015,169 @@ static ErrorOr<u16> jbig2_text_region_huffman_flags_from_json(JsonObject const& 
     return flags;
 }
 
-static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(ToJSONOptions const&, Optional<JsonObject const&> object)
+static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance::RefinementData> jbig2_text_region_symbol_instance_refinement_data_from_json(ToJSONOptions const& options, JsonObject const& object)
+{
+    i32 delta_width = 0;
+    i32 delta_height = 0;
+    i32 delta_x_offset = 0;
+    i32 delta_y_offset = 0;
+    RefPtr<Gfx::BilevelImage> image;
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "delta_width"sv) {
+            if (auto delta_width_json = value.get_i32(); delta_width_json.has_value()) {
+                delta_width = delta_width_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"delta_width\"");
+        }
+
+        if (key == "delta_height"sv) {
+            if (auto delta_height_json = value.get_i32(); delta_height_json.has_value()) {
+                delta_height = delta_height_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"delta_height\"");
+        }
+
+        if (key == "delta_x_offset"sv) {
+            if (auto delta_x_offset_json = value.get_i32(); delta_x_offset_json.has_value()) {
+                delta_x_offset = delta_x_offset_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"delta_x_offset\"");
+        }
+
+        if (key == "delta_y_offset"sv) {
+            if (auto delta_y_offset_json = value.get_i32(); delta_y_offset_json.has_value()) {
+                delta_y_offset = delta_y_offset_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"delta_y_offset\"");
+        }
+
+        if (key == "image_data"sv) {
+            if (value.is_object()) {
+                image = TRY(jbig2_image_from_json(options, value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"image_data\"");
+        }
+
+        dbgln("text_region symbol_instance refinement_data key {}", key);
+        return Error::from_string_literal("unknown text_region symbol_instance refinement_data key");
+    }));
+
+    if (!image)
+        return Error::from_string_literal("\"instance_refines_symbol_to\" missing \"image_data\"");
+
+    return Gfx::JBIG2::TextRegionStrip::SymbolInstance::RefinementData {
+        delta_width,
+        delta_height,
+        delta_x_offset,
+        delta_y_offset,
+        *image,
+    };
+}
+
+static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance> jbig2_text_region_symbol_instance_from_json(ToJSONOptions const& options, JsonObject const& object)
+{
+    Gfx::JBIG2::TextRegionStrip::SymbolInstance instance;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "symbol_id"sv) {
+            if (auto symbol_id = value.get_u32(); symbol_id.has_value()) {
+                instance.symbol_id = symbol_id.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"symbol_id\"");
+        }
+
+        if (key == "instance_s"sv) {
+            if (auto instance_s = value.get_i32(); instance_s.has_value()) {
+                instance.s = instance_s.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"instance_s\"");
+        }
+
+        if (key == "instance_t"sv) {
+            if (auto instance_t = value.get_i32(); instance_t.has_value()) {
+                instance.t = instance_t.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"instance_t\"");
+        }
+
+        if (key == "instance_refines_symbol_to"sv) {
+            if (value.is_object()) {
+                instance.refinement_data = TRY(jbig2_text_region_symbol_instance_refinement_data_from_json(options, value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"instance_refines_symbol_to\"");
+        }
+
+        dbgln("text_region symbol_instance key {}", key);
+        return Error::from_string_literal("unknown text_region symbol_instance key");
+    }));
+
+    return instance;
+}
+
+static ErrorOr<Vector<Gfx::JBIG2::TextRegionStrip::SymbolInstance>> jbig2_text_region_instances_from_json(ToJSONOptions const& options, JsonArray const& array)
+{
+    Vector<Gfx::JBIG2::TextRegionStrip::SymbolInstance> instances;
+
+    for (auto const& item : array.values()) {
+        if (!item.is_object())
+            return Error::from_string_literal("expected object for text_region symbol_instance");
+        instances.append(TRY(jbig2_text_region_symbol_instance_from_json(options, item.as_object())));
+    }
+
+    return instances;
+}
+
+static ErrorOr<Gfx::JBIG2::TextRegionStrip> jbig2_text_region_strip_from_json(ToJSONOptions const& options, JsonObject const& object)
+{
+    Gfx::JBIG2::TextRegionStrip strip;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "strip_t"sv) {
+            if (auto strip_t = value.get_i32(); strip_t.has_value()) {
+                strip.strip_t = strip_t.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"strip_t\"");
+        }
+
+        if (key == "instances"sv) {
+            if (value.is_array()) {
+                strip.symbol_instances = TRY(jbig2_text_region_instances_from_json(options, value.as_array()));
+                return {};
+            }
+            return Error::from_string_literal("expected array for \"instances\"");
+        }
+
+        dbgln("text_region strip key {}", key);
+        return Error::from_string_literal("unknown text_region strip key");
+    }));
+
+    return strip;
+}
+
+static ErrorOr<Vector<Gfx::JBIG2::TextRegionStrip>> jbig2_text_region_strips_from_json(ToJSONOptions const& options, JsonArray const& array)
+{
+    Vector<Gfx::JBIG2::TextRegionStrip> strips;
+
+    for (auto const& item : array.values()) {
+        if (!item.is_object())
+            return Error::from_string_literal("expected object for text_region strip");
+        strips.append(TRY(jbig2_text_region_strip_from_json(options, item.as_object())));
+    }
+
+    return strips;
+}
+
+static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(ToJSONOptions const& options, Optional<JsonObject const&> object)
 {
     if (!object.has_value())
         return Error::from_string_literal("text_region segment should have \"data\" object");
@@ -835,6 +1219,22 @@ static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(To
                 return {};
             }
             return Error::from_string_literal("expected array of i8 for \"refinement_adaptive_template_pixels\"");
+        }
+
+        if (key == "initial_strip_t"sv) {
+            if (auto initial_strip_t = value.get_i32(); initial_strip_t.has_value()) {
+                text_region.initial_strip_t = initial_strip_t.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"initial_strip_t\"");
+        }
+
+        if (key == "strips"sv) {
+            if (value.is_array()) {
+                text_region.strips = TRY(jbig2_text_region_strips_from_json(options, value.as_array()));
+                return {};
+            }
+            return Error::from_string_literal("expected array for \"strips\"");
         }
 
         if (key == "strip_trailing_7fffs"sv) {

@@ -68,11 +68,52 @@ struct SegmentHeaderData {
     bool is_immediate_generic_region_of_initially_unknown_size { false };
 };
 
+struct TextRegionStrip {
+    int strip_t { 0 };
+    struct SymbolInstance {
+        u32 symbol_id { 0 };
+        i32 s { 0 };
+        i32 t { 0 };
+
+        struct RefinementData {
+            i32 delta_width {};
+            i32 delta_height {};
+            i32 x_offset {};
+            i32 y_offset {};
+            NonnullRefPtr<BilevelImage> refines_to;
+        };
+        Optional<RefinementData> refinement_data {};
+    };
+    Vector<SymbolInstance> symbol_instances;
+};
+
 struct SymbolDictionarySegmentData {
     u16 flags { 0 };
     Array<AdaptiveTemplatePixel, 4> adaptive_template_pixels {};
     Array<AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels {};
-    // FIXME: Add more fields.
+
+    Vector<bool> export_flags_for_referred_to_symbols;
+
+    struct HeightClass {
+        // Only used if bit 1 ("is huffman-coded") is set in flags.
+        bool is_collective_bitmap_compressed { true };
+
+        struct RefinedSymbol {
+            u32 symbol_id { 0 };
+            i32 delta_x_offset { 0 };
+            i32 delta_y_offset { 0 };
+            NonnullRefPtr<BilevelImage> refines_to;
+        };
+        struct Symbol {
+            Gfx::IntSize size;
+            bool is_exported { true };
+            Variant<NonnullRefPtr<BilevelImage>, RefinedSymbol, Vector<TextRegionStrip>> image;
+        };
+
+        Vector<Symbol> symbols;
+    };
+    Vector<HeightClass> height_classes;
+
     MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
 };
 
@@ -81,7 +122,10 @@ struct TextRegionSegmentData {
     u16 flags { 0 };
     u16 huffman_flags { 0 };
     Array<AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels {};
-    // FIXME: Add more fields.
+
+    i32 initial_strip_t { 0 };
+    Vector<TextRegionStrip> strips;
+
     MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
 };
 
