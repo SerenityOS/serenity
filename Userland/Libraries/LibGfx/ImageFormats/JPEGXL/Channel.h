@@ -7,7 +7,9 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/Optional.h>
 #include <AK/Vector.h>
+#include <LibGfx/Rect.h>
 
 namespace Gfx::JPEGXL {
 
