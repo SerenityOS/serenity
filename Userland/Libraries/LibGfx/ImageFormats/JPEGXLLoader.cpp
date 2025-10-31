@@ -2711,13 +2711,6 @@ public:
     }
 };
 
-static LittleEndianInputBitStream get_stream_for_section(LittleEndianInputBitStream& stream, u32 section_size)
-{
-    VERIFY(stream.align_to_byte_boundary() == 0);
-    auto constrained_stream = make<AutoDepletingConstrainedStream>(MaybeOwned<Stream>(stream), section_size);
-    return LittleEndianInputBitStream(move(constrained_stream));
-}
-
 static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     SizeHeader const& size_header,
     ImageMetadata const& metadata)
@@ -2770,75 +2763,58 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
 
     auto bits_per_sample = metadata.bit_depth.bits_per_sample;
 
-    // "If num_groups == 1 and num_passes == 1, then there is a single TOC entry and a single section
-    // containing all frame data structures."
-    if (frame.num_groups == 1 && frame.frame_header.passes.num_passes == 1) {
-        auto section_stream = get_stream_for_section(stream, frame.toc.entries[0]);
-        frame.lf_global = TRY(read_lf_global(section_stream, { frame.width, frame.height }, frame.frame_header, metadata));
+    auto get_stream_for_section = [&](LittleEndianInputBitStream& stream, u32 section_index) -> ErrorOr<MaybeOwned<LittleEndianInputBitStream>> {
+        // "If num_groups == 1 and num_passes == 1, then there is a single TOC entry and a single section
+        // containing all frame data structures."
+        if (frame.num_groups == 1 && frame.frame_header.passes.num_passes == 1)
+            return MaybeOwned(stream);
+        auto section_size = frame.toc.entries[section_index];
+        VERIFY(stream.align_to_byte_boundary() == 0);
+        auto constrained_stream = make<AutoDepletingConstrainedStream>(MaybeOwned<Stream>(stream), section_size);
+        return TRY(try_make<LittleEndianInputBitStream>(move(constrained_stream)));
+    };
+
+    {
+        auto lf_stream = TRY(get_stream_for_section(stream, 0));
+        frame.lf_global = TRY(read_lf_global(*lf_stream, { frame.width, frame.height }, frame.frame_header, metadata));
+    }
+
+    for (u32 i {}; i < frame.num_lf_groups; ++i) {
+        auto lf_stream = TRY(get_stream_for_section(stream, 1 + i));
         // From H.4.1, "The stream index is defined as follows: [...] for ModularLfGroup: 1 + num_lf_groups + LF group index;"
-        TRY(read_lf_group(section_stream, {
-                                              .global_modular = frame.lf_global.gmodular,
-                                              .frame_header = frame.frame_header,
-                                              .group_index = 0,
-                                              .stream_index = 1 + frame.num_lf_groups,
-                                              .bit_depth = bits_per_sample,
+        TRY(read_lf_group(*lf_stream, {
+                                          .global_modular = frame.lf_global.gmodular,
+                                          .frame_header = frame.frame_header,
+                                          .group_index = i,
+                                          .stream_index = 1 + frame.num_lf_groups + i,
+                                          .bit_depth = bits_per_sample,
 
-                                          }));
+                                      }));
+    }
 
-        // From H.4.1, ModularGroup: 1 + 3 * num_lf_groups + 17 + num_groups * pass index + group index
-        u32 stream_index = 1 + 3 * frame.num_lf_groups + 17;
-        TRY(read_pass_group(section_stream,
-            {
-                .global_modular = frame.lf_global.gmodular,
-                .frame_header = frame.frame_header,
-                .group_index = 0,
-                .pass_index = 0,
-                .stream_index = stream_index,
-            },
-            { .bit_depth = bits_per_sample }));
-    } else {
-        {
-            auto lf_stream = get_stream_for_section(stream, frame.toc.entries[0]);
-            frame.lf_global = TRY(read_lf_global(lf_stream, { frame.width, frame.height }, frame.frame_header, metadata));
+    {
+        [[maybe_unused]] auto hf_global_stream = TRY(get_stream_for_section(stream, 1 + frame.num_lf_groups));
+        if (frame.frame_header.encoding == Encoding::kVarDCT) {
+            return Error::from_string_literal("JPEGXLLoader: Read HFGlobal for VarDCT frames");
         }
+    }
 
-        for (u32 i {}; i < frame.num_lf_groups; ++i) {
-            auto lf_stream = get_stream_for_section(stream, frame.toc.entries[1 + i]);
-            // From H.4.1, "The stream index is defined as follows: [...] for ModularLfGroup: 1 + num_lf_groups + LF group index;"
-            TRY(read_lf_group(lf_stream, {
-                                             .global_modular = frame.lf_global.gmodular,
-                                             .frame_header = frame.frame_header,
-                                             .group_index = i,
-                                             .stream_index = 1 + frame.num_lf_groups + i,
-                                             .bit_depth = bits_per_sample,
+    for (u32 pass_index {}; pass_index < frame.frame_header.passes.num_passes; ++pass_index) {
+        for (u32 group_index {}; group_index < frame.num_groups; ++group_index) {
+            auto toc_section_number = 2 + frame.num_lf_groups + pass_index * frame.num_groups + group_index;
+            auto pass_stream = TRY(get_stream_for_section(stream, toc_section_number));
 
-                                         }));
-        }
-
-        {
-            auto hf_global_stream = get_stream_for_section(stream, frame.toc.entries[1 + frame.num_lf_groups]);
-            if (frame.frame_header.encoding == Encoding::kVarDCT) {
-                return Error::from_string_literal("JPEGXLLoader: Read HFGlobal for VarDCT frames");
-            }
-        }
-
-        for (u32 pass_index {}; pass_index < frame.frame_header.passes.num_passes; ++pass_index) {
-            for (u32 group_index {}; group_index < frame.num_groups; ++group_index) {
-                auto toc_section_number = 2 + frame.num_lf_groups + pass_index * frame.num_groups + group_index;
-                auto pass_stream = get_stream_for_section(stream, frame.toc.entries[toc_section_number]);
-
-                // From H.4.1, ModularGroup: 1 + 3 * num_lf_groups + 17 + num_groups * pass index + group index
-                u32 stream_index = 1 + 3 * frame.num_lf_groups + 17 + frame.num_groups * pass_index + group_index;
-                TRY(read_pass_group(pass_stream,
-                    {
-                        .global_modular = frame.lf_global.gmodular,
-                        .frame_header = frame.frame_header,
-                        .group_index = group_index,
-                        .pass_index = pass_index,
-                        .stream_index = stream_index,
-                    },
-                    { .bit_depth = bits_per_sample }));
-            }
+            // From H.4.1, ModularGroup: 1 + 3 * num_lf_groups + 17 + num_groups * pass index + group index
+            u32 stream_index = 1 + 3 * frame.num_lf_groups + 17 + frame.num_groups * pass_index + group_index;
+            TRY(read_pass_group(*pass_stream,
+                {
+                    .global_modular = frame.lf_global.gmodular,
+                    .frame_header = frame.frame_header,
+                    .group_index = group_index,
+                    .pass_index = pass_index,
+                    .stream_index = stream_index,
+                },
+                { .bit_depth = bits_per_sample }));
         }
     }
 
