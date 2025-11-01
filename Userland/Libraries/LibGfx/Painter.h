@@ -114,9 +114,9 @@ public:
     void draw_glyph_or_emoji(IntPoint, Utf8CodePointIterator&, Font const&, Color);
     void draw_glyph(FloatPoint, u32, Color);
     void draw_glyph(FloatPoint, u32, Font const&, Color);
-    void draw_glyph_with_postscript_name(FloatPoint point, StringView name, Font const& font, Color color);
     void draw_glyph_or_emoji(FloatPoint, u32, Font const&, Color);
     void draw_glyph_or_emoji(FloatPoint, Utf8CodePointIterator&, Font const&, Color);
+    void draw_glyph_via_glyph_id(FloatPoint, Gfx::ScaledFont const&, u32, Color);
     void draw_circle_arc_intersecting(IntRect const&, IntPoint, int radius, Color, int thickness);
 
     // Streamlined text drawing routine that does no wrapping/elision/alignment.
