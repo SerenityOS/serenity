@@ -45,7 +45,7 @@ class DisplayListRecorder {
     AK_MAKE_NONMOVABLE(DisplayListRecorder);
 
 public:
-    void fill_rect(Gfx::IntRect const& rect, Color color, Vector<Gfx::Path> const& clip_paths = {});
+    void fill_rect(Gfx::IntRect const& rect, Color color, RefPtr<DisplayList> text_clip = {});
 
     struct FillPathUsingColorParams {
         Gfx::Path path;
@@ -91,14 +91,14 @@ public:
 
     void fill_ellipse(Gfx::IntRect const& a_rect, Color color);
 
-    void fill_rect_with_linear_gradient(Gfx::IntRect const& gradient_rect, LinearGradientData const& data, Vector<Gfx::Path> const& clip_paths = {});
-    void fill_rect_with_conic_gradient(Gfx::IntRect const& rect, ConicGradientData const& data, Gfx::IntPoint const& position, Vector<Gfx::Path> const& clip_paths = {});
-    void fill_rect_with_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const& data, Gfx::IntPoint center, Gfx::IntSize size, Vector<Gfx::Path> const& clip_paths = {});
+    void fill_rect_with_linear_gradient(Gfx::IntRect const& gradient_rect, LinearGradientData const& data, RefPtr<DisplayList> text_clip = {});
+    void fill_rect_with_conic_gradient(Gfx::IntRect const& rect, ConicGradientData const& data, Gfx::IntPoint const& position, RefPtr<DisplayList> text_clip = {});
+    void fill_rect_with_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const& data, Gfx::IntPoint center, Gfx::IntSize size, RefPtr<DisplayList> text_clip = {});
 
     void draw_rect(Gfx::IntRect const& rect, Color color, bool rough = false);
 
     void draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::Bitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::ScalingMode scaling_mode = Gfx::ScalingMode::NearestNeighbor);
-    void draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::ScalingMode scaling_mode = Gfx::ScalingMode::NearestNeighbor, Vector<Gfx::Path> const& clip_paths = {});
+    void draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::ScalingMode scaling_mode = Gfx::ScalingMode::NearestNeighbor, RefPtr<DisplayList> text_clip = {});
 
     void draw_line(Gfx::IntPoint from, Gfx::IntPoint to, Color color, int thickness = 1, Gfx::LineStyle style = Gfx::LineStyle::Solid, Color alternate_color = Color::Transparent);
 
@@ -140,9 +140,9 @@ public:
     void paint_inner_box_shadow_params(PaintBoxShadowParams params);
     void paint_text_shadow(int blur_radius, Gfx::IntRect bounding_rect, Gfx::IntRect text_rect, Gfx::GlyphRun const&, double glyph_run_scale, Color color, Gfx::IntPoint draw_location);
 
-    void fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color color, Gfx::CornerRadius top_left_radius, Gfx::CornerRadius top_right_radius, Gfx::CornerRadius bottom_right_radius, Gfx::CornerRadius bottom_left_radius, Vector<Gfx::Path> const& clip_paths = {});
-    void fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int radius, Vector<Gfx::Path> const& clip_paths = {});
-    void fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius, Vector<Gfx::Path> const& clip_paths = {});
+    void fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color color, Gfx::CornerRadius top_left_radius, Gfx::CornerRadius top_right_radius, Gfx::CornerRadius bottom_right_radius, Gfx::CornerRadius bottom_left_radius, RefPtr<DisplayList> text_clip = {});
+    void fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int radius, RefPtr<DisplayList> text_clip = {});
+    void fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius, RefPtr<DisplayList> text_clip = {});
 
     void draw_triangle_wave(Gfx::IntPoint a_p1, Gfx::IntPoint a_p2, Color color, int amplitude, int thickness);
 

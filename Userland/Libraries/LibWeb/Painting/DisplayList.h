@@ -44,10 +44,15 @@ enum class CommandResult {
     ContinueWithParentExecutor
 };
 
+class DisplayList;
+
 class DisplayListPlayer {
 public:
     virtual ~DisplayListPlayer() = default;
 
+    void execute(DisplayList& display_list);
+
+private:
     virtual CommandResult draw_glyph_run(DrawGlyphRun const&) = 0;
     virtual CommandResult fill_rect(FillRect const&) = 0;
     virtual CommandResult draw_scaled_bitmap(DrawScaledBitmap const&) = 0;
@@ -84,23 +89,31 @@ public:
     virtual DisplayListPlayer& nested_player() { VERIFY_NOT_REACHED(); }
 };
 
-class DisplayList {
+class DisplayList : public RefCounted<DisplayList> {
 public:
+    static NonnullRefPtr<DisplayList> create()
+    {
+        return adopt_ref(*new DisplayList());
+    }
+
     void append(Command&& command, Optional<i32> scroll_frame_id);
 
     void apply_scroll_offsets(Vector<Gfx::IntPoint> const& offsets_by_frame_id);
     void mark_unnecessary_commands();
-    void execute(DisplayListPlayer&);
 
     size_t corner_clip_max_depth() const { return m_corner_clip_max_depth; }
     void set_corner_clip_max_depth(size_t depth) { m_corner_clip_max_depth = depth; }
 
-private:
     struct CommandListItem {
         Optional<i32> scroll_frame_id;
         Command command;
         bool skip { false };
     };
+
+    AK::SegmentedVector<CommandListItem, 512> const& commands() const { return m_commands; }
+
+private:
+    DisplayList() = default;
 
     size_t m_corner_clip_max_depth { 0 };
     AK::SegmentedVector<CommandListItem, 512> m_commands;

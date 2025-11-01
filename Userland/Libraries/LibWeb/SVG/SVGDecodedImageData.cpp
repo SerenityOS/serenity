@@ -92,7 +92,7 @@ RefPtr<Gfx::Bitmap> SVGDecodedImageData::render(Gfx::IntSize size) const
     m_document->navigable()->set_viewport_size(size.to_type<CSSPixels>());
     m_document->update_layout();
 
-    Painting::DisplayList display_list;
+    auto display_list = Painting::DisplayList::create();
     Painting::DisplayListRecorder display_list_recorder(display_list);
 
     m_document->navigable()->record_display_list(display_list_recorder, {});
@@ -102,8 +102,8 @@ RefPtr<Gfx::Bitmap> SVGDecodedImageData::render(Gfx::IntSize size) const
     case DisplayListPlayerType::CPU:
     case DisplayListPlayerType::CPUWithExperimentalTransformSupport:
     case DisplayListPlayerType::GPU: { // GPU painter does not have any path rasterization support so we always fall back to CPU painter
-        Painting::DisplayListPlayerCPU executor { *bitmap };
-        display_list.execute(executor);
+        Painting::DisplayListPlayerCPU display_list_player { *bitmap };
+        display_list_player.execute(display_list);
         break;
     }
     default:

@@ -76,13 +76,14 @@ void DisplayList::mark_unnecessary_commands()
     VERIFY(sample_blit_ranges.is_empty());
 }
 
-void DisplayList::execute(DisplayListPlayer& executor)
+void DisplayListPlayer::execute(DisplayList& display_list)
 {
-    executor.prepare_to_execute(m_corner_clip_max_depth);
+    auto& commands = display_list.commands();
+    prepare_to_execute(display_list.corner_clip_max_depth());
 
-    if (executor.needs_prepare_glyphs_texture()) {
+    if (needs_prepare_glyphs_texture()) {
         HashMap<Gfx::Font const*, HashTable<u32>> unique_glyphs;
-        for (auto& command_with_scroll_id : m_commands) {
+        for (auto& command_with_scroll_id : commands) {
             auto& command = command_with_scroll_id.command;
             if (command.has<DrawGlyphRun>()) {
                 auto scale = command.get<DrawGlyphRun>().scale;
@@ -96,32 +97,32 @@ void DisplayList::execute(DisplayListPlayer& executor)
                 }
             }
         }
-        executor.prepare_glyph_texture(unique_glyphs);
+        prepare_glyph_texture(unique_glyphs);
     }
 
-    if (executor.needs_update_immutable_bitmap_texture_cache()) {
+    if (needs_update_immutable_bitmap_texture_cache()) {
         HashMap<u32, Gfx::ImmutableBitmap const*> immutable_bitmaps;
-        for (auto const& command_with_scroll_id : m_commands) {
+        for (auto const& command_with_scroll_id : commands) {
             auto& command = command_with_scroll_id.command;
             if (command.has<DrawScaledImmutableBitmap>()) {
                 auto const& immutable_bitmap = command.get<DrawScaledImmutableBitmap>().bitmap;
                 immutable_bitmaps.set(immutable_bitmap->id(), immutable_bitmap.ptr());
             }
         }
-        executor.update_immutable_bitmap_texture_cache(immutable_bitmaps);
+        update_immutable_bitmap_texture_cache(immutable_bitmaps);
     }
 
     HashTable<u32> skipped_sample_corner_commands;
     size_t next_command_index = 0;
     Vector<DisplayListPlayer&, 16> executor_stack;
-    DisplayListPlayer* current_executor = &executor;
-    while (next_command_index < m_commands.size()) {
-        if (m_commands[next_command_index].skip) {
+    DisplayListPlayer* current_executor = this;
+    while (next_command_index < commands.size()) {
+        if (commands[next_command_index].skip) {
             next_command_index++;
             continue;
         }
 
-        auto& command = m_commands[next_command_index++].command;
+        auto& command = commands[next_command_index++].command;
         auto bounding_rect = command_bounding_rectangle(command);
         if (bounding_rect.has_value() && (bounding_rect->is_empty() || current_executor->would_be_fully_clipped_by_painter(*bounding_rect))) {
             if (command.has<SampleUnderCorners>()) {
@@ -187,10 +188,10 @@ void DisplayList::execute(DisplayListPlayer& executor)
             current_executor = &executor_stack.take_last();
         } else if (result == CommandResult::SkipStackingContext) {
             auto stacking_context_nesting_level = 1;
-            while (next_command_index < m_commands.size()) {
-                if (m_commands[next_command_index].command.has<PushStackingContext>()) {
+            while (next_command_index < commands.size()) {
+                if (commands[next_command_index].command.has<PushStackingContext>()) {
                     stacking_context_nesting_level++;
-                } else if (m_commands[next_command_index].command.has<PopStackingContext>()) {
+                } else if (commands[next_command_index].command.has<PopStackingContext>()) {
                     stacking_context_nesting_level--;
                 }
 
