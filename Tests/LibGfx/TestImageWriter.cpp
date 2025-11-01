@@ -6,6 +6,7 @@
 
 #include <AK/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/CMYKBitmap.h>
 #include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/WellKnownProfiles.h>
@@ -41,6 +42,16 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame(Gfx::ImageDecoder
     return *frame_descriptor.image;
 }
 
+static ErrorOr<NonnullRefPtr<Gfx::CMYKBitmap>> expect_cmyk_frame(Gfx::ImageDecoderPlugin& plugin_decoder)
+{
+    EXPECT_EQ(plugin_decoder.frame_count(), 1u);
+    EXPECT(!plugin_decoder.is_animated());
+    EXPECT(!plugin_decoder.loop_count());
+    EXPECT(plugin_decoder.natural_frame_format() == Gfx::NaturalFrameFormat::CMYK);
+
+    return plugin_decoder.cmyk_frame();
+}
+
 static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame_of_size(Gfx::ImageDecoderPlugin& plugin_decoder, Gfx::IntSize size)
 {
     EXPECT_EQ(plugin_decoder.size(), size);
@@ -49,8 +60,16 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> expect_single_frame_of_size(Gfx::Imag
     return frame;
 }
 
-template<class Writer, class... ExtraArgs>
-static ErrorOr<ByteBuffer> encode_bitmap(Gfx::Bitmap const& bitmap, ExtraArgs... extra_args)
+static ErrorOr<NonnullRefPtr<Gfx::CMYKBitmap>> expect_cmyk_frame_of_size(Gfx::ImageDecoderPlugin& plugin_decoder, Gfx::IntSize size)
+{
+    EXPECT_EQ(plugin_decoder.size(), size);
+    auto frame = TRY(expect_cmyk_frame(plugin_decoder));
+    EXPECT_EQ(frame->size(), size);
+    return frame;
+}
+
+template<class Writer, OneOf<Gfx::Bitmap, Gfx::CMYKBitmap> BitmapType, class... ExtraArgs>
+static ErrorOr<ByteBuffer> encode_bitmap(BitmapType const& bitmap, ExtraArgs... extra_args)
 {
     if constexpr (requires(AllocatingMemoryStream stream) { Writer::encode(stream, bitmap, extra_args...); }) {
         AllocatingMemoryStream stream;
@@ -68,16 +87,24 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> get_roundtrip_bitmap(Gfx::Bitmap cons
     return expect_single_frame_of_size(*TRY(Loader::create(encoded_data)), bitmap.size());
 }
 
-static void expect_bitmaps_equal(Gfx::Bitmap const& a, Gfx::Bitmap const& b)
+template<class Writer, class Loader>
+static ErrorOr<NonnullRefPtr<Gfx::CMYKBitmap>> get_roundtrip_bitmap(Gfx::CMYKBitmap const& bitmap)
 {
-    VERIFY(a.size() == b.size());
-    for (int y = 0; y < a.height(); ++y)
-        for (int x = 0; x < a.width(); ++x)
-            EXPECT_EQ(a.get_pixel(x, y), b.get_pixel(x, y));
+    auto encoded_data = TRY(encode_bitmap<Writer>(bitmap));
+    return expect_cmyk_frame_of_size(*TRY(Loader::create(encoded_data)), bitmap.size());
 }
 
-template<class Writer, class Loader>
-static ErrorOr<void> test_roundtrip(Gfx::Bitmap const& bitmap)
+template<OneOf<Gfx::Bitmap, Gfx::CMYKBitmap> BitmapType>
+static void expect_bitmaps_equal(BitmapType const& a, BitmapType const& b)
+{
+    VERIFY(a.size() == b.size());
+    for (int y = 0; y < a.size().height(); ++y)
+        for (int x = 0; x < a.size().width(); ++x)
+            EXPECT_EQ(a.scanline(y)[x], b.scanline(y)[x]);
+}
+
+template<class Writer, class Loader, OneOf<Gfx::Bitmap, Gfx::CMYKBitmap> BitmapType>
+static ErrorOr<void> test_roundtrip(BitmapType const& bitmap)
 {
     auto decoded = TRY((get_roundtrip_bitmap<Writer, Loader>(bitmap)));
     expect_bitmaps_equal(*decoded, bitmap);
@@ -134,10 +161,29 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> create_test_rgba_bitmap()
     return bitmap;
 }
 
+static ErrorOr<NonnullRefPtr<Gfx::CMYKBitmap>> create_test_cmyk_bitmap()
+{
+    auto bitmap = TRY(Gfx::CMYKBitmap::create_with_size({ 47, 33 }));
+
+    Gfx::IntPoint center { bitmap->size().width() / 2, bitmap->size().height() / 2 };
+    for (int y = 0; y < bitmap->size().height(); ++y) {
+        for (int x = 0; x < bitmap->size().width(); ++x) {
+            bitmap->scanline(y)[x] = Gfx::CMYK {
+                static_cast<u8>((x * 255) / bitmap->size().width()),
+                static_cast<u8>((y * 255) / bitmap->size().height()),
+                static_cast<u8>((center.distance_from({ x, y }) * 255) / center.distance_from({ 0, 0 })),
+                static_cast<u8>(((x * y) * 255) / (bitmap->size().area())),
+            };
+        }
+    }
+
+    return bitmap;
+}
+
 TEST_CASE(test_bmp)
 {
-    TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::BMPWriter, Gfx::BMPImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
 TEST_CASE(test_gif)
@@ -145,14 +191,14 @@ TEST_CASE(test_gif)
     // Let's limit the size of the image so every color can fit in a color table of 256 elements.
     auto bitmap = TRY_OR_FAIL(TRY_OR_FAIL(create_test_rgb_bitmap())->cropped({ 0, 0, 16, 16 }));
 
-    auto encoded_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::GIFWriter>(bitmap)));
+    auto encoded_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::GIFWriter>(*bitmap)));
     auto decoder = TRY_OR_FAIL(Gfx::GIFImageDecoderPlugin::create(encoded_bitmap));
 
     EXPECT_EQ(decoder->size(), bitmap->size());
     EXPECT_EQ(decoder->frame_count(), 1u);
     EXPECT(!decoder->is_animated());
 
-    expect_bitmaps_equal(*TRY_OR_FAIL(decoder->frame(0)).image, bitmap);
+    expect_bitmaps_equal(*TRY_OR_FAIL(decoder->frame(0)).image, *bitmap);
 }
 
 TEST_CASE(test_gif_animated)
@@ -181,15 +227,15 @@ TEST_CASE(test_gif_animated)
 
     auto const frame_1 = TRY_OR_FAIL(decoder->frame(0));
     EXPECT_EQ(frame_1.duration, 100);
-    expect_bitmaps_equal(*frame_1.image, bitmap_1);
+    expect_bitmaps_equal(*frame_1.image, *bitmap_1);
 
     auto const frame_2 = TRY_OR_FAIL(decoder->frame(1));
     EXPECT_EQ(frame_2.duration, 200);
-    expect_bitmaps_equal(*frame_2.image, bitmap_2);
+    expect_bitmaps_equal(*frame_2.image, *bitmap_2);
 
     auto const frame_3 = TRY_OR_FAIL(decoder->frame(2));
     EXPECT_EQ(frame_3.duration, 200);
-    expect_bitmaps_equal(*frame_3.image, bitmap_3);
+    expect_bitmaps_equal(*frame_3.image, *bitmap_3);
 }
 
 TEST_CASE(test_jbig2)
@@ -197,17 +243,17 @@ TEST_CASE(test_jbig2)
     auto bilevel_bitmap = TRY_OR_FAIL(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 47, 33 }));
 
     bilevel_bitmap->fill(Gfx::Color::NamedColor::White);
-    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(bilevel_bitmap)));
+    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(*bilevel_bitmap)));
 
     bilevel_bitmap->fill(Gfx::Color::NamedColor::Black);
-    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(bilevel_bitmap)));
+    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(*bilevel_bitmap)));
 
     for (int y = 0; y < bilevel_bitmap->height(); ++y) {
         for (int x = 0; x < bilevel_bitmap->width(); ++x) {
             bilevel_bitmap->set_pixel(x, y, (x + y) % 2 == 0 ? Gfx::Color::NamedColor::Black : Gfx::Color::NamedColor::White);
         }
     }
-    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(bilevel_bitmap)));
+    TRY_OR_FAIL((test_roundtrip<Gfx::JBIG2Writer, Gfx::JBIG2ImageDecoderPlugin>(*bilevel_bitmap)));
 }
 
 TEST_CASE(test_jbig2_arithmetic_integer)
@@ -320,14 +366,15 @@ TEST_CASE(test_jpeg)
 {
     // JPEG is lossy, so the roundtripped bitmap won't match the original bitmap. But it should still have the same size.
     (void)TRY_OR_FAIL((get_roundtrip_bitmap<Gfx::JPEGWriter, Gfx::JPEGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    (void)TRY_OR_FAIL((get_roundtrip_bitmap<Gfx::JPEGWriter, Gfx::JPEGImageDecoderPlugin>(TRY_OR_FAIL(create_test_cmyk_bitmap()))));
 }
 
 TEST_CASE(test_png)
 {
-    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_grayscale_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_grayscale_alpha_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(*TRY_OR_FAIL(create_test_grayscale_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(*TRY_OR_FAIL(create_test_grayscale_alpha_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::PNGWriter, Gfx::PNGImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
 TEST_CASE(test_png_paeth_simd)
@@ -418,8 +465,8 @@ TEST_CASE(test_png_incremental_animation)
 
 TEST_CASE(test_qoi)
 {
-    TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::QOIWriter, Gfx::QOIImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
 TEST_CASE(test_qm_arithmetic_encoder)
@@ -487,8 +534,9 @@ TEST_CASE(test_qm_arithmetic_encoder_7FFF_handling)
 
 TEST_CASE(test_tiff)
 {
-    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::TIFFWriter, Gfx::TIFFImageDecoderPlugin>(*TRY_OR_FAIL(create_test_cmyk_bitmap()))));
 }
 
 TEST_CASE(test_tiff_icc)
@@ -499,10 +547,10 @@ TEST_CASE(test_tiff_icc)
     auto rgb_bitmap = TRY_OR_FAIL(create_test_rgb_bitmap());
     Gfx::TIFFEncoderOptions options;
     options.icc_data = sRGB_icc_data;
-    auto encoded_rgb_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::TIFFWriter>(rgb_bitmap, options)));
+    auto encoded_rgb_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::TIFFWriter>(*rgb_bitmap, options)));
 
     auto decoded_rgb_plugin = TRY_OR_FAIL(Gfx::TIFFImageDecoderPlugin::create(encoded_rgb_bitmap));
-    expect_bitmaps_equal(*TRY_OR_FAIL(expect_single_frame_of_size(*decoded_rgb_plugin, rgb_bitmap->size())), rgb_bitmap);
+    expect_bitmaps_equal(*TRY_OR_FAIL(expect_single_frame_of_size(*decoded_rgb_plugin, rgb_bitmap->size())), *rgb_bitmap);
     auto decoded_rgb_profile = TRY_OR_FAIL(Gfx::ICC::Profile::try_load_from_externally_owned_memory(TRY_OR_FAIL(decoded_rgb_plugin->icc_data()).value()));
     auto reencoded_icc_data = TRY_OR_FAIL(Gfx::ICC::encode(decoded_rgb_profile));
     EXPECT_EQ(sRGB_icc_data, reencoded_icc_data);
@@ -510,8 +558,8 @@ TEST_CASE(test_tiff_icc)
 
 TEST_CASE(test_webp)
 {
-    TRY_OR_FAIL((test_roundtrip<Gfx::WebPWriter, Gfx::WebPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgb_bitmap()))));
-    TRY_OR_FAIL((test_roundtrip<Gfx::WebPWriter, Gfx::WebPImageDecoderPlugin>(TRY_OR_FAIL(create_test_rgba_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::WebPWriter, Gfx::WebPImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgb_bitmap()))));
+    TRY_OR_FAIL((test_roundtrip<Gfx::WebPWriter, Gfx::WebPImageDecoderPlugin>(*TRY_OR_FAIL(create_test_rgba_bitmap()))));
 }
 
 TEST_CASE(test_webp_color_indexing_transform)
@@ -531,13 +579,13 @@ TEST_CASE(test_webp_color_indexing_transform)
             for (int x = 0; x < bitmap->width(); ++x)
                 bitmap->set_pixel(x, y, colors[(x * bitmap->width() + y) % number_of_colors]);
 
-        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap));
+        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*bitmap));
         auto decoded_bitmap = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
         expect_bitmaps_equal(*decoded_bitmap, *bitmap);
 
         Gfx::WebPEncoderOptions options;
         options.vp8l_options.allowed_transforms = 0;
-        auto encoded_data_without_color_indexing = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap, options));
+        auto encoded_data_without_color_indexing = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*bitmap, options));
         EXPECT(encoded_data.size() < encoded_data_without_color_indexing.size());
         auto decoded_bitmap_without_color_indexing = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
         expect_bitmaps_equal(*decoded_bitmap_without_color_indexing, *decoded_bitmap);
@@ -561,13 +609,13 @@ TEST_CASE(test_webp_color_indexing_transform_single_channel)
             for (int x = 0; x < bitmap->width(); ++x)
                 bitmap->set_pixel(x, y, colors[(x * bitmap->width() + y) % number_of_colors]);
 
-        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap));
+        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*bitmap));
         auto decoded_bitmap = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
         expect_bitmaps_equal(*decoded_bitmap, *bitmap);
 
         Gfx::WebPEncoderOptions options;
         options.vp8l_options.allowed_transforms = options.vp8l_options.allowed_transforms & ~((1u << Gfx::COLOR_INDEXING_TRANSFORM) | (1u << Gfx::PREDICTOR_TRANSFORM));
-        auto encoded_data_without_color_indexing = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap, options));
+        auto encoded_data_without_color_indexing = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*bitmap, options));
         if (bits_per_pixel == 8)
             EXPECT(encoded_data.size() <= encoded_data_without_color_indexing.size());
         else
@@ -612,14 +660,14 @@ TEST_CASE(test_webp_grayscale)
     auto grays_bitmap = TRY_OR_FAIL(make_bitmap(grays));
     auto grays_with_alpha_bitmap = TRY_OR_FAIL(make_bitmap(grays_with_alpha));
 
-    auto encoded_grays = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(grays_bitmap));
+    auto encoded_grays = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*grays_bitmap));
     auto decoded_grays = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_grays)), grays_bitmap->size()));
     expect_bitmaps_equal(*decoded_grays, *grays_bitmap);
 
-    auto encoded_colors = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(colors_bitmap));
+    auto encoded_colors = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*colors_bitmap));
     EXPECT(encoded_grays.size() < encoded_colors.size());
 
-    auto encoded_grays_with_alpha = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(grays_with_alpha_bitmap));
+    auto encoded_grays_with_alpha = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*grays_with_alpha_bitmap));
     EXPECT(encoded_grays_with_alpha.size() <= encoded_colors.size());
     EXPECT(encoded_grays.size() < encoded_grays_with_alpha.size());
 }
@@ -634,7 +682,7 @@ TEST_CASE(test_webp_color_cache)
         else
             options.vp8l_options.color_cache_bits = color_cache_bits;
 
-        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(bitmap));
+        auto encoded_data = TRY_OR_FAIL(encode_bitmap<Gfx::WebPWriter>(*bitmap));
         auto decoded_bitmap = TRY_OR_FAIL(expect_single_frame_of_size(*TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_data)), bitmap->size()));
         expect_bitmaps_equal(*decoded_bitmap, *bitmap);
     }
@@ -648,10 +696,10 @@ TEST_CASE(test_webp_icc)
     auto rgba_bitmap = TRY_OR_FAIL(create_test_rgba_bitmap());
     Gfx::WebPEncoderOptions options;
     options.icc_data = sRGB_icc_data;
-    auto encoded_rgba_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::WebPWriter>(rgba_bitmap, options)));
+    auto encoded_rgba_bitmap = TRY_OR_FAIL((encode_bitmap<Gfx::WebPWriter>(*rgba_bitmap, options)));
 
     auto decoded_rgba_plugin = TRY_OR_FAIL(Gfx::WebPImageDecoderPlugin::create(encoded_rgba_bitmap));
-    expect_bitmaps_equal(*TRY_OR_FAIL(expect_single_frame_of_size(*decoded_rgba_plugin, rgba_bitmap->size())), rgba_bitmap);
+    expect_bitmaps_equal(*TRY_OR_FAIL(expect_single_frame_of_size(*decoded_rgba_plugin, rgba_bitmap->size())), *rgba_bitmap);
     auto decoded_rgba_profile = TRY_OR_FAIL(Gfx::ICC::Profile::try_load_from_externally_owned_memory(TRY_OR_FAIL(decoded_rgba_plugin->icc_data()).value()));
     auto reencoded_icc_data = TRY_OR_FAIL(Gfx::ICC::encode(decoded_rgba_profile));
     EXPECT_EQ(sRGB_icc_data, reencoded_icc_data);
