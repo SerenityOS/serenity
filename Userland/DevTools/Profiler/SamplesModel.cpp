@@ -99,7 +99,7 @@ GUI::Variant SamplesModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
                     [&](Profile::Event::CloseEventData const& data) {
                         return data.path;
                     },
-                    [&](Profile::Event::ReadvEventData const& data) {
+                    [&](Profile::Event::PreadvEventData const& data) {
                         return data.path;
                     },
                     [&](Profile::Event::ReadEventData const& data) {

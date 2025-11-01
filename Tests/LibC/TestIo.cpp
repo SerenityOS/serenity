@@ -419,6 +419,31 @@ TEST_CASE(rmdir_while_inside_dir)
     VERIFY(rc == 0);
 }
 
+TEST_CASE(readv)
+{
+    int pipefds[2];
+    int rc = pipe(pipefds);
+    EXPECT(rc == 0);
+
+    int nwritten = write(pipefds[1], "HelloFriends", 12);
+    EXPECT_EQ(nwritten, 12);
+
+    char buffer0[6] {};
+    char buffer1[8] {};
+    iovec iov[2];
+    iov[0].iov_base = buffer0;
+    iov[0].iov_len = sizeof(buffer0) - 1;
+    iov[1].iov_base = buffer1;
+    iov[1].iov_len = sizeof(buffer1) - 1;
+    int nread = readv(pipefds[0], iov, 2);
+    EXPECT_EQ(nread, 12);
+    EXPECT_EQ(buffer0, "Hello"sv);
+    EXPECT_EQ(buffer1, "Friends"sv);
+
+    close(pipefds[0]);
+    close(pipefds[1]);
+}
+
 TEST_CASE(writev)
 {
     int pipefds[2];

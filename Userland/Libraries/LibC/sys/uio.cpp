@@ -11,17 +11,22 @@
 
 extern "C" {
 
-ssize_t writev(int fd, const struct iovec* iov, int iov_count)
+ssize_t readv(int fd, const struct iovec* iov, int iov_count)
 {
-    return pwritev(fd, iov, iov_count, -1);
+    return preadv(fd, iov, iov_count, -1);
 }
 
-ssize_t readv(int fd, const struct iovec* iov, int iov_count)
+ssize_t preadv(int fd, const struct iovec* iov, int iov_count, off_t offset)
 {
     __pthread_maybe_cancel();
 
-    int rc = syscall(SC_readv, fd, iov, iov_count);
+    int rc = syscall(SC_preadv, fd, iov, iov_count, offset);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+ssize_t writev(int fd, const struct iovec* iov, int iov_count)
+{
+    return pwritev(fd, iov, iov_count, -1);
 }
 
 ssize_t pwritev(int fd, struct iovec const* iov, int iov_count, off_t offset)

@@ -145,8 +145,8 @@ enum class NeedsBigProcessLock {
     S(purge, NeedsBigProcessLock::Yes)                     \
     S(read, NeedsBigProcessLock::Yes)                      \
     S(pread, NeedsBigProcessLock::Yes)                     \
+    S(preadv, NeedsBigProcessLock::Yes)                    \
     S(readlink, NeedsBigProcessLock::No)                   \
-    S(readv, NeedsBigProcessLock::Yes)                     \
     S(realpath, NeedsBigProcessLock::No)                   \
     S(recvfd, NeedsBigProcessLock::No)                     \
     S(recvmsg, NeedsBigProcessLock::Yes)                   \
