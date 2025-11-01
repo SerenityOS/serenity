@@ -77,6 +77,8 @@ public:
     size_t column_number() const { return m_index; }
     void set_not_null(bool can_not_be_null) { m_not_null = can_not_be_null; }
     bool not_null() const { return m_not_null; }
+    void set_unique(bool is_unique) { m_unique = is_unique; }
+    bool unique() const { return m_unique; }
     void set_default_value(Value const& default_value);
     Value const& default_value() const { return m_default; }
 
@@ -90,6 +92,7 @@ private:
     size_t m_index;
     SQLType m_type { SQLType::Text };
     bool m_not_null { false };
+    bool m_unique { false };
     Value m_default;
 };
 
@@ -133,7 +136,7 @@ public:
     static ErrorOr<NonnullRefPtr<TableDef>> create(SchemaDef*, ByteString);
 
     Key key() const override;
-    void append_column(ByteString, SQLType);
+    void append_column(ByteString name, SQLType sql_type, bool unique = false);
     void append_column(Key const&);
     size_t num_columns() { return m_columns.size(); }
     size_t num_indexes() { return m_indexes.size(); }

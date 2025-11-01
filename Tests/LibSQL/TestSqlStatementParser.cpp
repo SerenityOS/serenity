@@ -58,11 +58,14 @@ TEST_CASE(create_table)
     EXPECT(parse("CREATE TABLE test ( column1 varchar(0xzzz) )"sv).is_error());
     EXPECT(parse("CREATE TABLE test ( column1 int ) AS SELECT * FROM table_name;"sv).is_error());
     EXPECT(parse("CREATE TABLE test AS SELECT * FROM table_name ( column1 int ) ;"sv).is_error());
+    EXPECT(parse("CREATE TABLE test ( column1 UNIQUE )"sv).is_error());
+    EXPECT(parse("CREATE TABLE test ( column1 text UNIQUE )"sv).is_error());
 
     struct Column {
         StringView name;
         StringView type;
         Vector<double> signed_numbers {};
+        bool unique = false;
     };
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, Vector<Column> expected_columns, bool expected_is_temporary = false, bool expected_is_error_if_table_exists = true) {
@@ -89,6 +92,7 @@ TEST_CASE(create_table)
             auto const& column = columns[i];
             auto const& expected_column = expected_columns[i];
             EXPECT_EQ(column->name(), expected_column.name);
+            EXPECT_EQ(column->unique(), expected_column.unique);
 
             auto const& type_name = column->type_name();
             EXPECT_EQ(type_name->name(), expected_column.type);
@@ -124,6 +128,12 @@ TEST_CASE(create_table)
     validate("CREATE TABLE test ( column1 varchar(0xff) );"sv, {}, "TEST"sv, { { "COLUMN1"sv, "VARCHAR"sv, { 255 } } });
     validate("CREATE TABLE test ( column1 varchar(3.14) );"sv, {}, "TEST"sv, { { "COLUMN1"sv, "VARCHAR"sv, { 3.14 } } });
     validate("CREATE TABLE test ( column1 varchar(1e3) );"sv, {}, "TEST"sv, { { "COLUMN1"sv, "VARCHAR"sv, { 1000 } } });
+
+    validate("CREATE TABLE test ( IntColumn integer, TextColumn text UNIQUE, SecondTextColumn text );"sv, {}, "TEST"sv, { { "INTCOLUMN"sv, "INTEGER"sv, {}, false }, { "TEXTCOLUMN"sv, "TEXT"sv, {}, true }, { "SECONDTEXTCOLUMN"sv, "TEXT"sv, {}, false } });
+    validate("CREATE TABLE test ( IntColumn integer UNIQUE, TextColumn text UNIQUE, SecondTextColumn text UNIQUE );"sv, {}, "TEST"sv, { { "INTCOLUMN"sv, "INTEGER"sv, {}, true }, { "TEXTCOLUMN"sv, "TEXT"sv, {}, true }, { "SECONDTEXTCOLUMN"sv, "TEXT"sv, {}, true } });
+    validate("CREATE TABLE test ( IntColumn integer UNIQUE, TextColumn text, SecondTextColumn text );"sv, {}, "TEST"sv, { { "INTCOLUMN"sv, "INTEGER"sv, {}, true }, { "TEXTCOLUMN"sv, "TEXT"sv, {}, false }, { "SECONDTEXTCOLUMN"sv, "TEXT"sv, {}, false } });
+    validate("CREATE TABLE test ( IntColumn integer, TextColumn text CONSTRAINT unique_text UNIQUE, SecondTextColumn text );"sv, {}, "TEST"sv, { { "INTCOLUMN"sv, "INTEGER"sv, {}, false }, { "TEXTCOLUMN"sv, "TEXT"sv, {}, true }, { "SECONDTEXTCOLUMN"sv, "TEXT"sv, {}, false } });
+    validate("CREATE TABLE test ( IntColumn integer CONSTRAINT unique_int UNIQUE, TextColumn text CONSTRAINT unique_text UNIQUE );"sv, {}, "TEST"sv, { { "INTCOLUMN"sv, "INTEGER"sv, {}, true }, { "TEXTCOLUMN"sv, "TEXT"sv, {}, true } });
 }
 
 TEST_CASE(alter_table)

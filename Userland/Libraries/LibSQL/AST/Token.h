@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
- * Copyright (c) 2021, Mahmoud Mandour <ma.mandourr@gmail.com>
+ * Copyright (c) 2025, Mahmoud Abumandour <ma.mandourr@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */

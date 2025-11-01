@@ -72,6 +72,7 @@ Key ColumnDef::key() const
     key["column_number"] = column_number();
     key["column_name"] = name();
     key["column_type"] = to_underlying(type());
+    key["unique"] = unique() ? 1 : 0;
     return key;
 }
 
@@ -96,6 +97,7 @@ NonnullRefPtr<IndexDef> ColumnDef::index_def()
         s_index_def->append_column("column_number", SQLType::Integer, Order::Ascending);
         s_index_def->append_column("column_name", SQLType::Text, Order::Ascending);
         s_index_def->append_column("column_type", SQLType::Integer, Order::Ascending);
+        s_index_def->append_column("unique", SQLType::Integer, Order::Ascending);
     }
     return s_index_def;
 }
@@ -200,9 +202,10 @@ Key TableDef::key() const
     return key;
 }
 
-void TableDef::append_column(ByteString name, SQLType sql_type)
+void TableDef::append_column(ByteString name, SQLType sql_type, bool unique)
 {
     auto column = ColumnDef::create(this, num_columns(), move(name), sql_type).release_value_but_fixme_should_propagate_errors();
+    column->set_unique(unique);
     m_columns.append(column);
 }
 
@@ -211,7 +214,16 @@ void TableDef::append_column(Key const& column)
     auto column_type = column["column_type"].to_int<UnderlyingType<SQLType>>();
     VERIFY(column_type.has_value());
 
-    append_column(column["column_name"].to_byte_string(), static_cast<SQLType>(*column_type));
+    auto column_def = ColumnDef::create(this, num_columns(), column["column_name"].to_byte_string(), static_cast<SQLType>(*column_type)).release_value_but_fixme_should_propagate_errors();
+
+    // Set constraints based on the serialized data
+    if (column.has("unique")) {
+        auto unique = column["unique"].to_int<int>();
+        if (unique.has_value())
+            column_def->set_unique(*unique != 0);
+    }
+
+    m_columns.append(column_def);
 }
 
 Key TableDef::make_key(SchemaDef const& schema_def)
