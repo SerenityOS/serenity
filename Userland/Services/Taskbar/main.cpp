@@ -134,7 +134,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
     Vector<ByteString> const sorted_app_categories = TRY(discover_apps_and_categories());
     auto system_menu = GUI::Menu::construct("\xE2\x9A\xA1"_string); // HIGH VOLTAGE SIGN
 
-    system_menu->add_action(GUI::Action::create("&About SilkOS", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&](auto&) {
+    system_menu->add_action(GUI::Action::create("&About SilkOS", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/silkball.png"sv)), [&](auto&) {
         GUI::Process::spawn_or_show_error(&window, "/bin/About"sv);
     }));
 

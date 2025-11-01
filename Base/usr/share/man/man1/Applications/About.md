@@ -1,6 +1,6 @@
 ## Name
 
-![Icon](/res/icons/16x16/ladyball.png) About - About SilkOS
+![Icon](/res/icons/16x16/silkball.png) About - About SilkOS
 
 [Open](launch:///bin/About)
 
@@ -14,7 +14,7 @@ $ About
 
 `About` is an application that displays information about SilkOS.
 
-On the left is the official Ladyball logo. Designed by Katalin Kult, it combines the Yin-Yang symbol with the distinctive shell pattern of a [ladybird](https://en.wikipedia.org/wiki/Coccinellidae), the projects's insect motif. It symbolizes the SilkOS philosophy, encompassing the _Serenity Prayer's_ acceptance of the uncontrollable, the _Yin and yang_ concept of balancing opposing forces, and _Lagom_, the Swedish concept of moderation or finding "just the right amount."
+On the left is the official Silkball logo. Made by CommandCrafterx and FlipartYT it is a combination of the yin-yang symbol combined with an S
 
 Since there are no official releases of the project, the version number is denoted as `1.0-dev` and the revision number reflects the latest Git commit's hash.
 

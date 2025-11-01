@@ -20,7 +20,7 @@ LoginWindow::LoginWindow(GUI::Window* parent)
     set_resizable(false);
     set_minimizable(false);
     set_closeable(false);
-    set_icon(GUI::Icon::default_icon("ladyball"sv).bitmap_for_size(16));
+    set_icon(GUI::Icon::default_icon("silkball"sv).bitmap_for_size(16));
 
     auto widget = MUST(LoginServer::Widget::try_create());
     set_main_widget(widget);

@@ -185,7 +185,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     show_favorites_panel_action->set_checked(favorites_panel->is_visible());
 
     auto show_users_action = GUI::Action::create_checkable(
-        "Show SerenityOS &users", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"sv)), [&map_widget](auto& action) { map_widget.set_show_users(action.is_checked()); }, window);
+        "Show SerenityOS &users", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/silkball.png"sv)), [&map_widget](auto& action) { map_widget.set_show_users(action.is_checked()); }, window);
     show_users_action->set_checked(map_widget.show_users());
     auto zoom_in_action = GUI::CommonActions::make_zoom_in_action([&map_widget](auto&) { map_widget.set_zoom(map_widget.zoom() + 1); }, window);
     auto zoom_out_action = GUI::CommonActions::make_zoom_out_action([&map_widget](auto&) { map_widget.set_zoom(map_widget.zoom() - 1); }, window);
