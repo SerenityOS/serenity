@@ -44,14 +44,14 @@ void DisplayListRecorder::blit_corner_clipping(u32 id)
     append(BlitCornerClipping { id, state().translation.map(clip_state.rect) });
 }
 
-void DisplayListRecorder::fill_rect(Gfx::IntRect const& rect, Color color, Vector<Gfx::Path> const& clip_paths)
+void DisplayListRecorder::fill_rect(Gfx::IntRect const& rect, Color color, RefPtr<DisplayList> text_clip)
 {
     if (rect.is_empty())
         return;
     append(FillRect {
         .rect = state().translation.map(rect),
         .color = color,
-        .clip_paths = clip_paths,
+        .text_clip = move(text_clip),
     });
 }
 
@@ -148,17 +148,17 @@ void DisplayListRecorder::fill_ellipse(Gfx::IntRect const& a_rect, Color color)
     });
 }
 
-void DisplayListRecorder::fill_rect_with_linear_gradient(Gfx::IntRect const& gradient_rect, LinearGradientData const& data, Vector<Gfx::Path> const& clip_paths)
+void DisplayListRecorder::fill_rect_with_linear_gradient(Gfx::IntRect const& gradient_rect, LinearGradientData const& data, RefPtr<DisplayList> text_clip)
 {
     if (gradient_rect.is_empty())
         return;
     append(PaintLinearGradient {
         .gradient_rect = state().translation.map(gradient_rect),
         .linear_gradient_data = data,
-        .clip_paths = clip_paths });
+        .text_clip = text_clip });
 }
 
-void DisplayListRecorder::fill_rect_with_conic_gradient(Gfx::IntRect const& rect, ConicGradientData const& data, Gfx::IntPoint const& position, Vector<Gfx::Path> const& clip_paths)
+void DisplayListRecorder::fill_rect_with_conic_gradient(Gfx::IntRect const& rect, ConicGradientData const& data, Gfx::IntPoint const& position, RefPtr<DisplayList> text_clip)
 {
     if (rect.is_empty())
         return;
@@ -166,10 +166,10 @@ void DisplayListRecorder::fill_rect_with_conic_gradient(Gfx::IntRect const& rect
         .rect = state().translation.map(rect),
         .conic_gradient_data = data,
         .position = position,
-        .clip_paths = clip_paths });
+        .text_clip = text_clip });
 }
 
-void DisplayListRecorder::fill_rect_with_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const& data, Gfx::IntPoint center, Gfx::IntSize size, Vector<Gfx::Path> const& clip_paths)
+void DisplayListRecorder::fill_rect_with_radial_gradient(Gfx::IntRect const& rect, RadialGradientData const& data, Gfx::IntPoint center, Gfx::IntSize size, RefPtr<DisplayList> text_clip)
 {
     if (rect.is_empty())
         return;
@@ -178,7 +178,7 @@ void DisplayListRecorder::fill_rect_with_radial_gradient(Gfx::IntRect const& rec
         .radial_gradient_data = data,
         .center = center,
         .size = size,
-        .clip_paths = clip_paths });
+        .text_clip = text_clip });
 }
 
 void DisplayListRecorder::draw_rect(Gfx::IntRect const& rect, Color color, bool rough)
@@ -203,7 +203,7 @@ void DisplayListRecorder::draw_scaled_bitmap(Gfx::IntRect const& dst_rect, Gfx::
     });
 }
 
-void DisplayListRecorder::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::ScalingMode scaling_mode, Vector<Gfx::Path> const& clip_paths)
+void DisplayListRecorder::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_rect, Gfx::ImmutableBitmap const& bitmap, Gfx::IntRect const& src_rect, Gfx::ScalingMode scaling_mode, RefPtr<DisplayList> text_clip)
 {
     if (dst_rect.is_empty())
         return;
@@ -212,7 +212,7 @@ void DisplayListRecorder::draw_scaled_immutable_bitmap(Gfx::IntRect const& dst_r
         .bitmap = bitmap,
         .src_rect = src_rect,
         .scaling_mode = scaling_mode,
-        .clip_paths = clip_paths,
+        .text_clip = move(text_clip),
     });
 }
 
@@ -374,7 +374,7 @@ void DisplayListRecorder::paint_text_shadow(int blur_radius, Gfx::IntRect boundi
         .draw_location = state().translation.map(draw_location) });
 }
 
-void DisplayListRecorder::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color color, Gfx::CornerRadius top_left_radius, Gfx::CornerRadius top_right_radius, Gfx::CornerRadius bottom_right_radius, Gfx::CornerRadius bottom_left_radius, Vector<Gfx::Path> const& clip_paths)
+void DisplayListRecorder::fill_rect_with_rounded_corners(Gfx::IntRect const& rect, Color color, Gfx::CornerRadius top_left_radius, Gfx::CornerRadius top_right_radius, Gfx::CornerRadius bottom_right_radius, Gfx::CornerRadius bottom_left_radius, RefPtr<DisplayList> clip_paths)
 {
     if (rect.is_empty())
         return;
@@ -393,18 +393,18 @@ void DisplayListRecorder::fill_rect_with_rounded_corners(Gfx::IntRect const& rec
             .bottom_right = bottom_right_radius,
             .bottom_left = bottom_left_radius,
         },
-        .clip_paths = clip_paths,
+        .text_clip = clip_paths,
     });
 }
 
-void DisplayListRecorder::fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int radius, Vector<Gfx::Path> const& clip_paths)
+void DisplayListRecorder::fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int radius, RefPtr<DisplayList> clip_paths)
 {
     if (a_rect.is_empty())
         return;
-    fill_rect_with_rounded_corners(a_rect, color, radius, radius, radius, radius, clip_paths);
+    fill_rect_with_rounded_corners(a_rect, color, radius, radius, radius, radius, move(clip_paths));
 }
 
-void DisplayListRecorder::fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius, Vector<Gfx::Path> const& clip_paths)
+void DisplayListRecorder::fill_rect_with_rounded_corners(Gfx::IntRect const& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius, RefPtr<DisplayList> clip_paths)
 {
     if (a_rect.is_empty())
         return;

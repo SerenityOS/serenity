@@ -1354,7 +1354,7 @@ JS::GCPtr<DOM::Node> TraversableNavigable::currently_focused_area()
 
 void TraversableNavigable::paint(DevicePixelRect const& content_rect, Gfx::Bitmap& target, Web::PaintOptions paint_options)
 {
-    Painting::DisplayList display_list;
+    auto display_list = Painting::DisplayList::create();
     Painting::DisplayListRecorder display_list_recorder(display_list);
 
     Gfx::IntRect bitmap_rect { {}, content_rect.size().to_type<int>() };
@@ -1370,7 +1370,7 @@ void TraversableNavigable::paint(DevicePixelRect const& content_rect, Gfx::Bitma
     if (display_list_player_type == DisplayListPlayerType::GPU) {
 #ifdef HAS_ACCELERATED_GRAPHICS
         Painting::DisplayListPlayerGPU player(*paint_options.accelerated_graphics_context, target);
-        display_list.execute(player);
+        player.execute(display_list);
 #else
         static bool has_warned_about_configuration = false;
 
@@ -1381,7 +1381,7 @@ void TraversableNavigable::paint(DevicePixelRect const& content_rect, Gfx::Bitma
 #endif
     } else {
         Painting::DisplayListPlayerCPU player(target, display_list_player_type == DisplayListPlayerType::CPUWithExperimentalTransformSupport);
-        display_list.execute(player);
+        player.execute(display_list);
     }
 }
 
