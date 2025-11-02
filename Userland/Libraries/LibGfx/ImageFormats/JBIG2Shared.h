@@ -16,6 +16,18 @@ namespace Gfx::JBIG2 {
 
 class HuffmanTable;
 
+struct TextRegionHuffmanTables {
+    JBIG2::HuffmanTable const* first_s_table { nullptr };                 // "SBHUFFFS" in spec.
+    JBIG2::HuffmanTable const* subsequent_s_table { nullptr };            // "SBHUFFDS" in spec.
+    JBIG2::HuffmanTable const* delta_t_table { nullptr };                 // "SBHUFFDT" in spec.
+    JBIG2::HuffmanTable const* refinement_delta_width_table { nullptr };  // "SBHUFFRDW" in spec.
+    JBIG2::HuffmanTable const* refinement_delta_height_table { nullptr }; // "SBHUFFRDH" in spec.
+    JBIG2::HuffmanTable const* refinement_x_offset_table { nullptr };     // "SBHUFFRDX" in spec.
+    JBIG2::HuffmanTable const* refinement_y_offset_table { nullptr };     // "SBHUFFRDY" in spec.
+    JBIG2::HuffmanTable const* refinement_size_table { nullptr };         // "SBHUFFRSIZE" in spec.
+};
+ErrorOr<TextRegionHuffmanTables> text_region_huffman_tables_from_flags(u16 huffman_flags, Vector<JBIG2::HuffmanTable const*> custom_tables);
+
 struct SymbolDictionaryHuffmanTables {
     JBIG2::HuffmanTable const* delta_height_table { nullptr };               // "SDHUFFDH" in spec.
     JBIG2::HuffmanTable const* delta_width_table { nullptr };                // "SDHUFFDW" in spec.
