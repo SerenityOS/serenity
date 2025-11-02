@@ -1715,10 +1715,10 @@ struct SymbolDictionaryDecodingInputParameters {
     u32 number_of_exported_symbols { 0 }; // "SDNUMEXSYMS" in spec.
 
     // Only set if uses_huffman_encoding is true.
-    JBIG2::HuffmanTable const* delta_height_table;               // "SDHUFFDH" in spec.
-    JBIG2::HuffmanTable const* delta_width_table;                // "SDHUFFDW" in spec.
-    JBIG2::HuffmanTable const* bitmap_size_table;                // "SDHUFFBMSIZE" in spec.
-    JBIG2::HuffmanTable const* number_of_symbol_instances_table; // "SDHUFFAGGINST" in spec.
+    JBIG2::HuffmanTable const* delta_height_table { nullptr };               // "SDHUFFDH" in spec.
+    JBIG2::HuffmanTable const* delta_width_table { nullptr };                // "SDHUFFDW" in spec.
+    JBIG2::HuffmanTable const* bitmap_size_table { nullptr };                // "SDHUFFBMSIZE" in spec.
+    JBIG2::HuffmanTable const* number_of_symbol_instances_table { nullptr }; // "SDHUFFAGGINST" in spec.
 
     u8 symbol_template { 0 };                                        // "SDTEMPLATE" in spec.
     Array<JBIG2::AdaptiveTemplatePixel, 4> adaptive_template_pixels; // "SDATX" / "SDATY" in spec.
