@@ -9,6 +9,115 @@
 
 namespace Gfx::JBIG2 {
 
+ErrorOr<TextRegionHuffmanTables> text_region_huffman_tables_from_flags(u16 huffman_flags, Vector<JBIG2::HuffmanTable const*> custom_tables)
+{
+    TextRegionHuffmanTables tables;
+
+    u8 custom_table_index = 0;
+    auto custom_table = [&custom_tables, &custom_table_index]() -> ErrorOr<JBIG2::HuffmanTable const*> {
+        if (custom_table_index >= custom_tables.size())
+            return Error::from_string_literal("JBIG2: Custom Huffman table index out of range");
+        return custom_tables[custom_table_index++];
+    };
+
+    auto first_s_selection = (huffman_flags >> 0) & 0b11; // "SBHUFFFS" in spec.
+    if (first_s_selection == 0)
+        tables.first_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_6));
+    else if (first_s_selection == 1)
+        tables.first_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_7));
+    else if (first_s_selection == 2)
+        return Error::from_string_literal("JBIG2: Invalid first_s_table");
+    else if (first_s_selection == 3)
+        tables.first_s_table = TRY(custom_table());
+
+    auto subsequent_s_selection = (huffman_flags >> 2) & 0b11; // "SBHUFFDS" in spec.
+    if (subsequent_s_selection == 0)
+        tables.subsequent_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_8));
+    else if (subsequent_s_selection == 1)
+        tables.subsequent_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_9));
+    else if (subsequent_s_selection == 2)
+        tables.subsequent_s_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_10));
+    else if (subsequent_s_selection == 3)
+        tables.subsequent_s_table = TRY(custom_table());
+
+    auto delta_t_selection = (huffman_flags >> 4) & 0b11; // "SBHUFFDT" in spec.
+    if (delta_t_selection == 0)
+        tables.delta_t_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_11));
+    else if (delta_t_selection == 1)
+        tables.delta_t_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_12));
+    else if (delta_t_selection == 2)
+        tables.delta_t_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_13));
+    else if (delta_t_selection == 3)
+        tables.delta_t_table = TRY(custom_table());
+
+    auto refinement_delta_width_selection = (huffman_flags >> 6) & 0b11; // "SBHUFFRDW" in spec.
+    if (refinement_delta_width_selection == 0)
+        tables.refinement_delta_width_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_14));
+    else if (refinement_delta_width_selection == 1)
+        tables.refinement_delta_width_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_15));
+    else if (refinement_delta_width_selection == 2)
+        return Error::from_string_literal("JBIG2: Invalid refinement_delta_width_table");
+    else if (refinement_delta_width_selection == 3)
+        tables.refinement_delta_width_table = TRY(custom_table());
+
+    auto refinement_delta_height_selection = (huffman_flags >> 8) & 0b11; // "SBHUFFRDH" in spec.
+    if (refinement_delta_height_selection == 0)
+        tables.refinement_delta_height_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_14));
+    else if (refinement_delta_height_selection == 1)
+        tables.refinement_delta_height_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_15));
+    else if (refinement_delta_height_selection == 2)
+        return Error::from_string_literal("JBIG2: Invalid refinement_delta_height_table");
+    else if (refinement_delta_height_selection == 3)
+        tables.refinement_delta_height_table = TRY(custom_table());
+
+    auto refinement_x_offset_selection = (huffman_flags >> 10) & 0b11; // "SBHUFFRDX" in spec.
+    if (refinement_x_offset_selection == 0)
+        tables.refinement_x_offset_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_14));
+    else if (refinement_x_offset_selection == 1)
+        tables.refinement_x_offset_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_15));
+    else if (refinement_x_offset_selection == 2)
+        return Error::from_string_literal("JBIG2: Invalid refinement_x_offset_table");
+    else if (refinement_x_offset_selection == 3)
+        tables.refinement_x_offset_table = TRY(custom_table());
+
+    auto refinement_y_offset_selection = (huffman_flags >> 12) & 0b11; // "SBHUFFRDY" in spec.
+    if (refinement_y_offset_selection == 0)
+        tables.refinement_y_offset_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_14));
+    else if (refinement_y_offset_selection == 1)
+        tables.refinement_y_offset_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_15));
+    else if (refinement_y_offset_selection == 2)
+        return Error::from_string_literal("JBIG2: Invalid refinement_y_offset_table");
+    else if (refinement_y_offset_selection == 3)
+        tables.refinement_y_offset_table = TRY(custom_table());
+
+    auto refinement_size_selection = (huffman_flags >> 14) & 0b1; // "SBHUFFRSIZE" in spec.
+    if (refinement_size_selection == 0)
+        tables.refinement_size_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
+    else if (refinement_size_selection == 1)
+        tables.refinement_size_table = TRY(custom_table());
+
+    if (custom_table_index != custom_tables.size())
+        return Error::from_string_literal("JBIG2: Not all referred custom tables used");
+
+    if (!tables.subsequent_s_table->has_oob_symbol())
+        return Error::from_string_literal("JBIG2: Custom SBHUFFDS table must have OOB symbol");
+
+    if (tables.first_s_table->has_oob_symbol()
+        || tables.delta_t_table->has_oob_symbol()
+        || tables.refinement_delta_width_table->has_oob_symbol()
+        || tables.refinement_delta_height_table->has_oob_symbol()
+        || tables.refinement_x_offset_table->has_oob_symbol()
+        || tables.refinement_y_offset_table->has_oob_symbol()
+        || tables.refinement_size_table->has_oob_symbol()) {
+        return Error::from_string_literal("JBIG2: Custom Huffman tables must not have OOB symbol");
+    }
+
+    if (huffman_flags & 0x8000)
+        return Error::from_string_literal("JBIG2: Invalid text region segment Huffman flags");
+
+    return tables;
+}
+
 ErrorOr<SymbolDictionaryHuffmanTables> symbol_dictionary_huffman_tables_from_flags(u16 flags, Vector<JBIG2::HuffmanTable const*> custom_tables)
 {
     // 7.4.2.1.1 Symbol dictionary flags
