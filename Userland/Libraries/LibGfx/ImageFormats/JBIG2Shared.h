@@ -14,6 +14,16 @@
 
 namespace Gfx::JBIG2 {
 
+class HuffmanTable;
+
+struct SymbolDictionaryHuffmanTables {
+    JBIG2::HuffmanTable const* delta_height_table { nullptr };               // "SDHUFFDH" in spec.
+    JBIG2::HuffmanTable const* delta_width_table { nullptr };                // "SDHUFFDW" in spec.
+    JBIG2::HuffmanTable const* bitmap_size_table { nullptr };                // "SDHUFFBMSIZE" in spec.
+    JBIG2::HuffmanTable const* number_of_symbol_instances_table { nullptr }; // "SDHUFFAGGINST" in spec.
+};
+ErrorOr<SymbolDictionaryHuffmanTables> symbol_dictionary_huffman_tables_from_flags(u16 flags, Vector<JBIG2::HuffmanTable const*> custom_tables);
+
 // JBIG2 spec, Annex D, D.4.1 ID string
 inline constexpr u8 id_string[] = { 0x97, 0x4A, 0x42, 0x32, 0x0D, 0x0A, 0x1A, 0x0A };
 
