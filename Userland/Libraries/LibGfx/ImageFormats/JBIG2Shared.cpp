@@ -9,6 +9,89 @@
 
 namespace Gfx::JBIG2 {
 
+ErrorOr<SymbolDictionaryHuffmanTables> symbol_dictionary_huffman_tables_from_flags(u16 flags, Vector<JBIG2::HuffmanTable const*> custom_tables)
+{
+    // 7.4.2.1.1 Symbol dictionary flags
+    SymbolDictionaryHuffmanTables tables;
+
+    bool uses_huffman_encoding = (flags & 1) != 0; // "SDHUFF" in spec.
+
+    u8 custom_table_index = 0;
+    auto custom_table = [&custom_tables, &custom_table_index]() -> ErrorOr<JBIG2::HuffmanTable const*> {
+        if (custom_table_index >= custom_tables.size())
+            return Error::from_string_literal("JBIG2: Custom Huffman table index out of range");
+        return custom_tables[custom_table_index++];
+    };
+
+    u8 huffman_table_selection_for_height_differences = (flags >> 2) & 0b11; // "SDHUFFDH" in spec.
+    if (!uses_huffman_encoding && huffman_table_selection_for_height_differences != 0)
+        return Error::from_string_literal("JBIG2: Invalid huffman_table_selection_for_height_differences");
+
+    if (uses_huffman_encoding) {
+        if (huffman_table_selection_for_height_differences == 0)
+            tables.delta_height_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_4));
+        else if (huffman_table_selection_for_height_differences == 1)
+            tables.delta_height_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_5));
+        else if (huffman_table_selection_for_height_differences == 2)
+            return Error::from_string_literal("JBIG2: Invalid huffman_table_selection_for_height_differences");
+        else if (huffman_table_selection_for_height_differences == 3)
+            tables.delta_height_table = TRY(custom_table());
+    }
+
+    u8 huffman_table_selection_for_width_differences = (flags >> 4) & 0b11; // "SDHUFFDW" in spec.
+    if (!uses_huffman_encoding && huffman_table_selection_for_width_differences != 0)
+        return Error::from_string_literal("JBIG2: Invalid huffman_table_selection_for_width_differences");
+
+    if (uses_huffman_encoding) {
+        if (huffman_table_selection_for_width_differences == 0)
+            tables.delta_width_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_2));
+        else if (huffman_table_selection_for_width_differences == 1)
+            tables.delta_width_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_3));
+        else if (huffman_table_selection_for_width_differences == 2)
+            return Error::from_string_literal("JBIG2: Invalid huffman_table_selection_for_height_differences");
+        else if (huffman_table_selection_for_width_differences == 3)
+            tables.delta_width_table = TRY(custom_table());
+    }
+
+    bool uses_user_supplied_size_table = (flags >> 6) & 1; // "SDHUFFBMSIZE" in spec.
+    if (!uses_huffman_encoding && uses_user_supplied_size_table)
+        return Error::from_string_literal("JBIG2: Invalid uses_user_supplied_size_table");
+
+    if (uses_huffman_encoding) {
+        if (!uses_user_supplied_size_table)
+            tables.bitmap_size_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
+        else
+            tables.bitmap_size_table = TRY(custom_table());
+    }
+
+    bool uses_user_supplied_aggregate_table = (flags >> 7) & 1; // "SDHUFFAGGINST" in spec.
+    if (!uses_huffman_encoding && uses_user_supplied_aggregate_table)
+        return Error::from_string_literal("JBIG2: Invalid uses_user_supplied_aggregate_table");
+
+    if (uses_huffman_encoding) {
+        if (!uses_user_supplied_aggregate_table)
+            tables.number_of_symbol_instances_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
+        else
+            tables.number_of_symbol_instances_table = TRY(custom_table());
+    }
+
+    if (custom_table_index != custom_tables.size())
+        return Error::from_string_literal("JBIG2: Not all referred custom tables used");
+
+    if (uses_huffman_encoding) {
+        if (!tables.delta_width_table->has_oob_symbol())
+            return Error::from_string_literal("JBIG2: Custom SDHUFFDW table must have OOB symbol");
+
+        if (tables.delta_height_table->has_oob_symbol()
+            || tables.bitmap_size_table->has_oob_symbol()
+            || tables.number_of_symbol_instances_table->has_oob_symbol()) {
+            return Error::from_string_literal("JBIG2: Custom Huffman tables must not have OOB symbol");
+        }
+    }
+
+    return tables;
+}
+
 // Table B.1 – Standard Huffman table A
 constexpr Array standard_huffman_table_A = {
     Code { 1, 4, 0, 0b0 },
