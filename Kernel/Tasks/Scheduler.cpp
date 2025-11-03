@@ -480,10 +480,8 @@ void Scheduler::invoke_async()
 
 void Scheduler::notify_finalizer()
 {
-    g_finalizer_has_work.with([](auto& has_work) {
-        has_work = true;
-        g_finalizer_wait_queue->notify_all();
-    });
+    g_finalizer_has_work.with([](auto& has_work) { has_work = true; });
+    g_finalizer_wait_queue->notify_all();
 }
 
 void Scheduler::idle_loop(void*)
