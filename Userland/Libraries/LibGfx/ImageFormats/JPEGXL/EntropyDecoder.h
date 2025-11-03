@@ -55,7 +55,7 @@ class EntropyDecoder {
 
 public:
     EntropyDecoder() = default;
-    ~EntropyDecoder() = default;
+    ~EntropyDecoder() { VERIFY(!m_state.has_value()); }
 
     static ErrorOr<EntropyDecoder> create(LittleEndianInputBitStream& stream, u32 initial_num_distrib);
 
