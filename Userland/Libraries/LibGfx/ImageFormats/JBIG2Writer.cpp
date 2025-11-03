@@ -638,6 +638,14 @@ static ErrorOr<void> encode_jbig2_header(Stream& stream, JBIG2::FileHeaderData c
     return {};
 }
 
+namespace {
+
+struct JBIG2EncodingContext {
+    HashMap<u32, JBIG2::SegmentData const*> segment_by_id;
+};
+
+}
+
 enum class PageAssociationSize {
     Auto,
     Force32Bit,
@@ -808,7 +816,7 @@ static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData
     return Error::from_string_literal("JBIG2Writer: Symbol dictionary encoding is not yet fully implemented");
 }
 
-static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text_region, JBIG2::SegmentHeaderData const&, HashMap<u32, JBIG2::SegmentData const*>&, Vector<u8>& scratch_buffer)
+static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text_region, JBIG2::SegmentHeaderData const&, JBIG2EncodingContext const&, Vector<u8>& scratch_buffer)
 {
     // 7.4.3 Text region segment syntax
     bool uses_huffman_encoding = (text_region.flags & 1) != 0;
@@ -892,13 +900,13 @@ static ErrorOr<void> encode_pattern_dictionary(JBIG2::PatternDictionarySegmentDa
     return {};
 }
 
-static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData const& halftone_region, JBIG2::SegmentHeaderData const& header, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id, Vector<u8>& scratch_buffer)
+static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData const& halftone_region, JBIG2::SegmentHeaderData const& header, JBIG2EncodingContext const& context, Vector<u8>& scratch_buffer)
 {
     // 7.4.5 Halftone region segment syntax
     if (header.referred_to_segments.size() != 1)
         return Error::from_string_literal("JBIG2Writer: Halftone region must refer to exactly one segment");
 
-    auto maybe_segment = segment_by_id.get(header.referred_to_segments[0].segment_number);
+    auto maybe_segment = context.segment_by_id.get(header.referred_to_segments[0].segment_number);
     if (!maybe_segment.has_value())
         return Error::from_string_literal("JBIG2Writer: Could not find referred-to segment for halftone region");
     auto const& referred_to_segment = *maybe_segment.value();
@@ -997,7 +1005,7 @@ static ErrorOr<void> encode_generic_region(JBIG2::GenericRegionSegmentData const
     return {};
 }
 
-static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRegionSegmentData const& generic_refinement_region, JBIG2::SegmentHeaderData const& header, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id, Vector<u8>& scratch_buffer)
+static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRegionSegmentData const& generic_refinement_region, JBIG2::SegmentHeaderData const& header, JBIG2EncodingContext const& context, Vector<u8>& scratch_buffer)
 {
     // 7.4.7 Generic refinement region syntax
     if (header.referred_to_segments.size() > 1)
@@ -1005,7 +1013,7 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
     if (header.referred_to_segments.size() == 0)
         return Error::from_string_literal("JBIG2Writer: Generic refinement region refining page not yet implemented");
 
-    auto maybe_segment = segment_by_id.get(header.referred_to_segments[0].segment_number);
+    auto maybe_segment = context.segment_by_id.get(header.referred_to_segments[0].segment_number);
     if (!maybe_segment.has_value())
         return Error::from_string_literal("JBIG2Writer: Could not find referred-to segment for generic refinement region");
     auto const& referred_to_segment = *maybe_segment.value();
@@ -1191,7 +1199,7 @@ static ErrorOr<void> encode_extension(JBIG2::ExtensionData const& extension, Vec
     return {};
 }
 
-static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& segment_data, HashMap<u32, JBIG2::SegmentData const*>& segment_by_id)
+static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& segment_data, JBIG2EncodingContext& context)
 {
     Vector<u8> scratch_buffer;
 
@@ -1200,24 +1208,24 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
             TRY(encode_symbol_dictionary(symbol_dictionary, scratch_buffer));
             return scratch_buffer;
         },
-        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateTextRegionSegmentData const& text_region_wrapper) -> ErrorOr<ReadonlyBytes> {
-            TRY(encode_text_region(text_region_wrapper.text_region, segment_data.header, segment_by_id, scratch_buffer));
+        [&scratch_buffer, &segment_data, &context](JBIG2::ImmediateTextRegionSegmentData const& text_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_text_region(text_region_wrapper.text_region, segment_data.header, context, scratch_buffer));
             return scratch_buffer;
         },
-        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateLosslessTextRegionSegmentData const& text_region_wrapper) -> ErrorOr<ReadonlyBytes> {
-            TRY(encode_text_region(text_region_wrapper.text_region, segment_data.header, segment_by_id, scratch_buffer));
+        [&scratch_buffer, &segment_data, &context](JBIG2::ImmediateLosslessTextRegionSegmentData const& text_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_text_region(text_region_wrapper.text_region, segment_data.header, context, scratch_buffer));
             return scratch_buffer;
         },
         [&scratch_buffer](JBIG2::PatternDictionarySegmentData const& pattern_dictionary) -> ErrorOr<ReadonlyBytes> {
             TRY(encode_pattern_dictionary(pattern_dictionary, scratch_buffer));
             return scratch_buffer;
         },
-        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateHalftoneRegionSegmentData const& halftone_region_wrapper) -> ErrorOr<ReadonlyBytes> {
-            TRY(encode_halftone_region(halftone_region_wrapper.halftone_region, segment_data.header, segment_by_id, scratch_buffer));
+        [&scratch_buffer, &segment_data, &context](JBIG2::ImmediateHalftoneRegionSegmentData const& halftone_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_halftone_region(halftone_region_wrapper.halftone_region, segment_data.header, context, scratch_buffer));
             return scratch_buffer;
         },
-        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateLosslessHalftoneRegionSegmentData const& halftone_region_wrapper) -> ErrorOr<ReadonlyBytes> {
-            TRY(encode_halftone_region(halftone_region_wrapper.halftone_region, segment_data.header, segment_by_id, scratch_buffer));
+        [&scratch_buffer, &segment_data, &context](JBIG2::ImmediateLosslessHalftoneRegionSegmentData const& halftone_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_halftone_region(halftone_region_wrapper.halftone_region, segment_data.header, context, scratch_buffer));
             return scratch_buffer;
         },
         [&scratch_buffer](JBIG2::ImmediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<ReadonlyBytes> {
@@ -1232,16 +1240,16 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
             TRY(encode_generic_region(generic_region_wrapper.generic_region, scratch_buffer));
             return scratch_buffer;
         },
-        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<ReadonlyBytes> {
-            TRY(encode_generic_refinement_region(generic_refinement_region_wrapper.generic_refinement_region, segment_data.header, segment_by_id, scratch_buffer));
+        [&scratch_buffer, &segment_data, &context](JBIG2::ImmediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_generic_refinement_region(generic_refinement_region_wrapper.generic_refinement_region, segment_data.header, context, scratch_buffer));
             return scratch_buffer;
         },
-        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::ImmediateLosslessGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<ReadonlyBytes> {
-            TRY(encode_generic_refinement_region(generic_refinement_region_wrapper.generic_refinement_region, segment_data.header, segment_by_id, scratch_buffer));
+        [&scratch_buffer, &segment_data, &context](JBIG2::ImmediateLosslessGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_generic_refinement_region(generic_refinement_region_wrapper.generic_refinement_region, segment_data.header, context, scratch_buffer));
             return scratch_buffer;
         },
-        [&scratch_buffer, &segment_data, &segment_by_id](JBIG2::IntermediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<ReadonlyBytes> {
-            TRY(encode_generic_refinement_region(generic_refinement_region_wrapper.generic_refinement_region, segment_data.header, segment_by_id, scratch_buffer));
+        [&scratch_buffer, &segment_data, &context](JBIG2::IntermediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_generic_refinement_region(generic_refinement_region_wrapper.generic_refinement_region, segment_data.header, context, scratch_buffer));
             return scratch_buffer;
         },
         [&scratch_buffer](JBIG2::PageInformationSegment const& page_information) -> ErrorOr<ReadonlyBytes> {
@@ -1314,14 +1322,14 @@ ErrorOr<void> JBIG2Writer::encode_with_explicit_data(Stream& stream, JBIG2::File
 
     TRY(encode_jbig2_header(stream, file_data.header));
 
-    HashMap<u32, JBIG2::SegmentData const*> segment_by_id;
+    JBIG2EncodingContext context;
     for (auto const& segment : file_data.segments) {
-        if (segment_by_id.set(segment.header.segment_number, &segment) != HashSetResult::InsertedNewEntry)
+        if (context.segment_by_id.set(segment.header.segment_number, &segment) != HashSetResult::InsertedNewEntry)
             return Error::from_string_literal("JBIG2Writer: Duplicate segment number");
     }
 
     for (auto const& segment : file_data.segments) {
-        TRY(encode_segment(stream, segment, segment_by_id));
+        TRY(encode_segment(stream, segment, context));
     }
 
     return {};
