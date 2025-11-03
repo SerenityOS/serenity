@@ -59,7 +59,11 @@ private:
     auto lock_exclusive(LockLocation const& location) { return Locked<T, LockMode::Exclusive>(m_value, m_mutex, location); }
 
 public:
-    MutexProtected() = default;
+    template<typename... Args>
+    MutexProtected(Args&&... args)
+        : m_value(forward<Args>(args)...)
+    {
+    }
 
     template<typename Callback>
     decltype(auto) with_shared(Callback callback, LockLocation const& location = LockLocation::current()) const
