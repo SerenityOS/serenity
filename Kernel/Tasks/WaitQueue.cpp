@@ -15,6 +15,7 @@ namespace Kernel {
 
 void WaitQueue::notify_all()
 {
+    SpinlockLocker scheduler_lock(g_scheduler_lock);
     SpinlockLocker queue_lock { m_lock };
     while (!m_waiters.is_empty()) {
         Waiter& waiter = *m_waiters.take_first();
@@ -24,6 +25,7 @@ void WaitQueue::notify_all()
 
 void WaitQueue::notify_one()
 {
+    SpinlockLocker scheduler_lock(g_scheduler_lock);
     SpinlockLocker queue_lock { m_lock };
     if (m_waiters.is_empty())
         return;
@@ -37,7 +39,6 @@ void WaitQueue::Waiter::notify(Badge<WaitQueue>)
     VERIFY(m_association.has_value());
     auto& thread = *m_association->thread;
 
-    SpinlockLocker scheduler_lock(g_scheduler_lock);
     // The thread might already be runnable if it has already
     // been notified, but has not yet been scheduled again.
     if (thread.state() == Thread::State::Runnable)
@@ -61,10 +62,9 @@ void WaitQueue::Waiter::prepare(WaitQueue& wait_queue)
 
     m_association = { wait_queue, *current_thread };
     SpinlockLocker queue_lock { wait_queue.m_lock };
-    {
-        SpinlockLocker scheduler_lock(g_scheduler_lock);
-        current_thread->set_state(Thread::State::Blocked);
-    }
+
+    current_thread->set_state(Thread::State::Blocked);
+
     wait_queue.m_waiters.append(*this);
 }
 
@@ -109,7 +109,7 @@ void WaitQueue::Waiter::clear()
     maybe_remove_self_from_queue();
 
     auto& thread = *m_association->thread;
-    SpinlockLocker scheduler_lock(g_scheduler_lock);
+
     VERIFY(&thread == Thread::current());
     VERIFY(thread.state() == Thread::State::Blocked || thread.state() == Thread::State::Runnable);
     thread.set_state(Thread::State::Running);
