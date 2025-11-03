@@ -59,7 +59,7 @@ ErrorOr<void> VFSRootContext::for_each_mount(Function<ErrorOr<void>(Mount const&
 
 void VFSRootContext::add_to_mounts_list_and_increment_fs_mounted_count(DoBindMount do_bind_mount, IntrusiveList<&Mount::m_vfs_list_node>& mounts_list, NonnullOwnPtr<Mount> new_mount)
 {
-    new_mount->guest_fs().mounted_count().with([&](auto& mounted_count) {
+    new_mount->guest_fs().mounted_count().with_exclusive([&](auto& mounted_count) {
         // NOTE: We increment the mounted counter for the given filesystem regardless of the mount type,
         // as a bind mount also counts as a normal mount from the perspective of unmount(),
         // so we need to keep track of it in order for prepare_to_clear_last_mount() to work properly.
@@ -119,7 +119,7 @@ ErrorOr<NonnullRefPtr<VFSRootContext>> VFSRootContext::create_with_empty_ramfs()
 ErrorOr<void> VFSRootContext::pivot_root(FileBackedFileSystem::List& file_backed_file_systems_list, FileSystem& fs, NonnullOwnPtr<Mount> new_mount, NonnullRefPtr<Custody> root_mount_point, int root_mount_flags)
 {
     return m_details.with([&](auto& details) -> ErrorOr<void> {
-        return fs.mounted_count().with([&](auto& mounted_count) -> ErrorOr<void> {
+        return fs.mounted_count().with_exclusive([&](auto& mounted_count) -> ErrorOr<void> {
             // NOTE: If the mounted count is 0, then this filesystem is about to be
             // deleted, so this must be a kernel bug as we don't include such filesystem
             // in the VirtualFileSystem s_details->file_backed_file_systems_list list anymore.
