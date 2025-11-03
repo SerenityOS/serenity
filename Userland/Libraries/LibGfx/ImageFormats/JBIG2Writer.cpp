@@ -2534,50 +2534,42 @@ static ErrorOr<void> encode_extension(JBIG2::ExtensionData const& extension, Vec
     AllocatingMemoryStream output_stream;
     TRY(output_stream.write_value<BigEndian<u32>>(to_underlying(extension.type)));
 
-    switch (extension.type) {
-    case JBIG2::ExtensionType::SingleByteCodedComment:
-        // 7.4.15.1 Single-byte coded comment
-        // Pairs of zero-terminated ISO/IEC 8859-1 (latin1) pairs, terminated by another \0.
-        for (auto const& entry : extension.entries) {
-            auto write_iso_8859_1_string = [&](StringView string) -> ErrorOr<void> {
-                auto encoder = TextCodec::encoder_for_exact_name("ISO-8859-1"sv);
-                TRY(encoder->process(
-                    Utf8View(string),
-                    [&](u8 byte) -> ErrorOr<void> {
-                        return output_stream.write_value<u8>(byte);
-                    },
-                    [&](u32) -> ErrorOr<void> {
-                        return Error::from_string_literal("JBIG2Writer: Cannot encode character in ISO-8859-1");
-                    }));
-                TRY(output_stream.write_value<u8>(0));
-                return {};
-            };
-            TRY(write_iso_8859_1_string(entry.key));
-            TRY(write_iso_8859_1_string(entry.value));
+    auto write_string = [&extension](Stream& output_stream, StringView string) -> ErrorOr<void> {
+        switch (extension.type) {
+        case JBIG2::ExtensionType::SingleByteCodedComment: {
+            // 7.4.15.1 Single-byte coded comment
+            // Pairs of zero-terminated ISO/IEC 8859-1 (latin1) pairs, terminated by another \0.
+            auto encoder = TextCodec::encoder_for_exact_name("ISO-8859-1"sv);
+            TRY(encoder->process(
+                Utf8View(string),
+                [&](u8 byte) -> ErrorOr<void> {
+                    return output_stream.write_value<u8>(byte);
+                },
+                [&](u32) -> ErrorOr<void> {
+                    return Error::from_string_literal("JBIG2Writer: Cannot encode character in ISO-8859-1");
+                }));
+            return output_stream.write_value<u8>(0);
         }
-        TRY(output_stream.write_value<u8>(0));
-        break;
 
-    case JBIG2::ExtensionType::MultiByteCodedComment:
-        // 7.4.15.2 Multi-byte coded comment
-        // Pairs of (two-byte-)zero-terminated UCS-2 pairs, terminated by another \0\0.
-        for (auto const& entry : extension.entries) {
-            auto write_ucs2_string = [&](StringView string) -> ErrorOr<void> {
-                auto ucs2_string = TRY(utf8_to_utf16(string));
-                for (size_t i = 0; i < ucs2_string.size(); ++i) {
-                    if (is_unicode_surrogate(ucs2_string[i]))
-                        return Error::from_string_literal("JBIG2Writer: Cannot encode surrogate in UCS-2 string");
-                    TRY(output_stream.write_value<BigEndian<u16>>(ucs2_string[i]));
-                }
-                TRY(output_stream.write_value<BigEndian<u16>>(0));
-                return {};
-            };
-            TRY(write_ucs2_string(entry.key));
-            TRY(write_ucs2_string(entry.value));
+        case JBIG2::ExtensionType::MultiByteCodedComment: {
+            // 7.4.15.2 Multi-byte coded comment
+            // Pairs of (two-byte-)zero-terminated UCS-2 pairs, terminated by another \0\0.
+            auto ucs2_string = TRY(utf8_to_utf16(string));
+            for (size_t i = 0; i < ucs2_string.size(); ++i) {
+                if (is_unicode_surrogate(ucs2_string[i]))
+                    return Error::from_string_literal("JBIG2Writer: Cannot encode surrogate in UCS-2 string");
+                TRY(output_stream.write_value<BigEndian<u16>>(ucs2_string[i]));
+            }
+            return output_stream.write_value<BigEndian<u16>>(0);
         }
-        TRY(output_stream.write_value<BigEndian<u16>>(0));
-        break;
+        };
+    };
+
+    for (auto const& entry : extension.entries) {
+        TRY(write_string(output_stream, entry.key));
+        TRY(write_string(output_stream, entry.value));
     }
+    TRY(write_string(output_stream, ""sv));
 
     TRY(scratch_buffer.try_extend(TRY(output_stream.read_until_eof())));
     return {};
