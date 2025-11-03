@@ -23,19 +23,32 @@ class WaitQueue {
         ErrorOr<void> wait_until(WaitQueue& wait_queue, Spinlock<Rank>& lock, F should_wake)
         {
             bool was_interrupted = false;
+
+            SpinlockLocker scheduler_lock(g_scheduler_lock);
             auto interrupt_state = lock.lock();
+
             while (true) {
                 prepare(wait_queue);
+
                 if (should_wake())
                     break;
                 if (was_interrupted = Thread::current()->was_interrupted(); was_interrupted)
                     break;
+
                 lock.unlock(interrupt_state);
+                scheduler_lock.unlock();
+
                 maybe_block();
+
+                scheduler_lock.lock();
                 interrupt_state = lock.lock();
             }
+
             clear();
+
             lock.unlock(interrupt_state);
+            scheduler_lock.unlock();
+
             // This is always cleared since the thread might have been both interrupted and woken up.
             // If both of those occurred during the same cycle, then we won't report the interrupt,
             // but we still need to clear it.
@@ -51,19 +64,32 @@ class WaitQueue {
         ErrorOr<void> wait_until(WaitQueue& wait_queue, SpinlockProtected<T, Rank>& spinlock_protected, F should_wake)
         {
             bool was_interrupted = false;
+
+            SpinlockLocker scheduler_lock(g_scheduler_lock);
             auto interrupt_state = spinlock_protected.m_spinlock.lock();
+
             while (true) {
                 prepare(wait_queue);
+
                 if (should_wake(spinlock_protected.m_value))
                     break;
                 if (was_interrupted = Thread::current()->was_interrupted(); was_interrupted)
                     break;
+
                 spinlock_protected.m_spinlock.unlock(interrupt_state);
+                scheduler_lock.unlock();
+
                 maybe_block();
+
+                scheduler_lock.lock();
                 interrupt_state = spinlock_protected.m_spinlock.lock();
             }
+
             clear();
+
             spinlock_protected.m_spinlock.unlock(interrupt_state);
+            scheduler_lock.unlock();
+
             // See the note in the above function.
             Thread::current()->clear_interrupted();
             if (was_interrupted) {
