@@ -88,7 +88,7 @@ private:
         return {};
     }
 
-    mutable SpinlockProtected<Details, LockRank::None> m_details {};
+    mutable MutexProtected<Details> m_details {};
 
     SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None> m_root_custody;
 
