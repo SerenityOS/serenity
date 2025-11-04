@@ -62,10 +62,10 @@ void composite_onto(InputType const& in, BilevelImage& out, IntPoint position)
     for (int y = clip_rect.top(); y < clip_rect.bottom(); ++y) {
         for (int x = clip_rect.left(); x < clip_rect.right(); ++x) {
             bool const can_use_byte = [&]() {
-                if constexpr (IsSame<InputType, BilevelImage>)
-                    return x % 8 == 0 && position.x() % 8 == 0 && clip_rect.right() - x > 8;
-                else
-                    return x % 8 == 0 && (position.x() + in.m_active_rect.x()) % 8 == 0 && clip_rect.right() - x > 8;
+                bool condition = x % 8 == 0 && position.x() % 8 == 0 && clip_rect.right() - x > 8;
+                if constexpr (IsSame<InputType, BilevelSubImage>)
+                    condition &= in.m_active_rect.x() % 8 == 0;
+                return condition;
             }();
 
             if (can_use_byte) {
