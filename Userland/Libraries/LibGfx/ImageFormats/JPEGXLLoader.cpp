@@ -17,6 +17,7 @@
 #include <LibGfx/ImageFormats/ISOBMFF/Reader.h>
 #include <LibGfx/ImageFormats/JPEGXL/Channel.h>
 #include <LibGfx/ImageFormats/JPEGXL/Common.h>
+#include <LibGfx/ImageFormats/JPEGXL/DCTNaturalOrder.h>
 #include <LibGfx/ImageFormats/JPEGXL/EntropyDecoder.h>
 #include <LibGfx/ImageFormats/JPEGXL/ModularTransforms.h>
 #include <LibGfx/ImageFormats/JPEGXL/SelfCorrectingPredictor.h>
@@ -935,6 +936,57 @@ static u64 num_toc_entries(FrameHeader const& frame_header, u64 num_groups, u64 
         return 1;
 
     return 1 + num_lf_groups + 1 + num_groups * frame_header.passes.num_passes;
+}
+
+// F.3.2 - Decoding permutations
+static ErrorOr<Vector<u32>> decode_permutations(LittleEndianInputBitStream& stream, EntropyDecoder& decoder, u32 size, u32 skip)
+{
+    // "Let GetContext(x) denote min(7, ceil(log2(x + 1)))."
+    auto get_context = [](u32 x) -> u32 {
+        return min(7, ceil(log2(x + 1)));
+    };
+
+    // "The decoder first decodes an integer end, as specified in C.3.3,
+    // using DecodeHybridVarLenUint(GetContext(size))."
+    auto end = TRY(decoder.decode_hybrid_uint(stream, get_context(size)));
+
+    // "The value end is at most size − skip."
+    if (end > size - skip)
+        return Error::from_string_literal("JPEGXLLoader: Invalid value for end when decoding permutations");
+
+    // "Then a sequence lehmer of size elements is produced as follows. It is zero-initialized."
+    auto lehmer = TRY(FixedArray<u32>::create(size));
+
+    // "For each index i in range [skip, skip + end), the value lehmer[i] is set to
+    // DecodeHybridVarLenUint(GetContext(i > skip ? lehmer[i − 1] : 0));"
+    for (u32 i = skip; i < skip + end; ++i) {
+        lehmer[i] = TRY(decoder.decode_hybrid_uint(stream, get_context(i > skip ? lehmer[i - 1] : 0)));
+        // "this value is strictly less than size − i."
+        if (lehmer[i] >= size - i)
+            return Error::from_string_literal("JPEGXLLoader: Decoded permutation is invalid");
+    }
+
+    // "The decoder then maintains a sequence of elements temp, initially containing
+    // the numbers [0, size) in increasing order,"
+    Vector<u32> temp;
+    TRY(temp.try_ensure_capacity(size));
+    for (u32 i = 0; i < size; ++i)
+        temp.append(i);
+
+    // "and a sequence of elements permutation, initially empty."
+    Vector<u32> permutation;
+    TRY(permutation.try_ensure_capacity(size));
+
+    // "Then, for each integer i in the range [0, size), the decoder appends to
+    // permutation element temp[lehmer[i]], then removes it from temp, leaving the
+    // relative order of other elements unchanged."
+    for (u32 i = 0; i < size; ++i) {
+        permutation.append(temp[lehmer[i]]);
+        temp.remove(lehmer[i]);
+    }
+
+    // " Finally, permutation is the decoded permutation."
+    return permutation;
 }
 
 static ErrorOr<TOC> read_toc(LittleEndianInputBitStream& stream, FrameHeader const& frame_header, u64 num_groups, u64 num_lf_groups)
@@ -2348,6 +2400,118 @@ static ErrorOr<void> read_lf_group(LittleEndianInputBitStream& stream,
 }
 ///
 
+/// G.3 - HfGlobal
+struct HfGlobalPassMetadata {
+    // I.3.1 - HF coefficient order
+    // 13 Order ID and 3 color component.
+    // These spans refer to either the static, default values or
+    // a Vector of backing_data.
+    DCTOrderDescription order;
+    Vector<Vector<Point<u32>>> backing_data;
+
+    // I.3.3 - HF coefficient histograms
+    u32 nb_block_ctx {};
+    EntropyDecoder decoder;
+};
+
+struct HfGlobal {
+    // Dequantization matrices.
+    u32 num_hf_presets {};
+    FixedArray<HfGlobalPassMetadata> hf_passes;
+};
+
+// I.2.4 - Dequantization matrices
+static ErrorOr<void> read_quantization_matrices(LittleEndianInputBitStream& stream)
+{
+    // "First, the decoder reads a Bool(). If this is true, all matrices have their default encoding."
+    bool is_default = TRY(stream.read_bit());
+
+    if (!is_default)
+        return Error::from_string_literal("JPEGXLLoader: Implement reading quantization matrices");
+
+    return {};
+}
+
+// I.3 - HfPass
+static ErrorOr<void> read_hf_passes(LittleEndianInputBitStream& stream, LfGlobal const& lf_global, HfGlobal& hf_global)
+{
+    // I.3.1 - HF coefficient order
+
+    // "The decoder first reads used_orders as U32(0x5F, 0x13, 0x00, u(13))."
+    u32 used_orders = U32(0x5F, 0x13, 0x00, TRY(stream.read_bits(13)));
+
+    // "If used_orders != 0, it reads 8 pre-clustered distributions as specified in C.1."
+    Optional<EntropyDecoder> decoder;
+    if (used_orders != 0)
+        decoder = TRY(EntropyDecoder::create(stream, 8));
+
+    // "It then reads HF coefficient orders order[p][b][c] as specified by the code below,
+    // where p is the index of the current pass, b is an Order ID (see Table I.7), c is a
+    // component index, and natural_coeff_order[b] is the natural coefficient order for Order
+    // ID b, as specified in I.3.2."
+    auto const& natural_coeff_order = DCTNaturalOrder::the();
+    for (auto& pass_data : hf_global.hf_passes) {
+        for (u8 b = 0; b < 13; b++) {
+            for (u8 c = 0; c < 3; c++) {
+                if ((used_orders & (1 << b)) != 0) {
+                    // "DecodePermutation(b) is defined as follows. The decoder reads a permutation
+                    // nat_ord_perm from a single stream (shared during the above loop) as specified
+                    // in F.3.2, where size is the number of coefficients covered by transforms with
+                    // Order ID b (so size == natural_coeff_order[b].size()) and skip = size / 64.
+                    auto size = natural_coeff_order[b][c].size();
+                    auto nat_ord_perm = TRY(decode_permutations(stream, *decoder, size, size / 64));
+
+                    Vector<Point<u32>> local_order;
+                    TRY(local_order.try_resize(size));
+                    pass_data.order[b][c] = local_order.span();
+                    TRY(pass_data.backing_data.try_append(move(local_order)));
+
+                    for (u32 i = 0; i < nat_ord_perm.size(); ++i)
+                        pass_data.order[b][c][i] = natural_coeff_order[b][c][nat_ord_perm[i]];
+                } else {
+                    pass_data.order[b][c] = natural_coeff_order[b][c];
+                }
+            }
+        }
+
+        // I.3.3 - HF coefficient histograms
+        // "Let nb_block_ctx be equal to max(block_ctx_map) + 1."
+        auto max = lf_global.hf_block_ctx.block_ctx_map[0];
+        for (auto v : lf_global.hf_block_ctx.block_ctx_map) {
+            if (v > max)
+                max = v;
+        }
+        pass_data.nb_block_ctx = max + 1;
+
+        // "The decoder reads a histogram with 495 * num_hf_presets * nb_block_ctx
+        // pre-clustered distributions D from the codestream as specified in C.1."
+        auto distributions = 495 * hf_global.num_hf_presets * pass_data.nb_block_ctx;
+        pass_data.decoder = TRY(EntropyDecoder::create(stream, distributions));
+    }
+
+    if (decoder.has_value())
+        TRY(decoder->ensure_end_state());
+
+    return {};
+}
+
+static ErrorOr<HfGlobal> read_hf_global(LittleEndianInputBitStream& stream, LfGlobal const& lf_global, u32 num_groups, u32 num_passes)
+{
+    HfGlobal hf_global;
+
+    TRY(read_quantization_matrices(stream));
+
+    // I.2.6 - Number of HF decoding presets
+    // "The decoder reads num_hf_presets as u(ceil(log2(num_groups))) + 1."
+    hf_global.num_hf_presets = TRY(stream.read_bits(ceil(log2(num_groups)))) + 1;
+
+    hf_global.hf_passes = TRY(FixedArray<HfGlobalPassMetadata>::create(num_passes));
+    TRY(read_hf_passes(stream, lf_global, hf_global));
+
+    return hf_global;
+}
+///
+
 /// G.3.2 - PassGroup
 struct PassGroupOptions {
     GlobalModular& global_modular;
@@ -2421,6 +2585,7 @@ struct Frame {
     TOC toc;
     LfGlobal lf_global;
     Vector<Optional<VarDCTLfGroup>> lf_groups;
+    HfGlobal hf_global;
 
     u64 width {};
     u64 height {};
@@ -2503,6 +2668,9 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     auto bits_per_sample = metadata.bit_depth.bits_per_sample;
     IntSize frame_size { frame.width, frame.height };
 
+    if (frame.frame_header.encoding == Encoding::kVarDCT)
+        TRY(DCTNaturalOrder::initialize());
+
     auto get_stream_for_section = [&](LittleEndianInputBitStream& stream, u32 section_index) -> ErrorOr<MaybeOwned<LittleEndianInputBitStream>> {
         // "If num_groups == 1 and num_passes == 1, then there is a single TOC entry and a single section
         // containing all frame data structures."
@@ -2539,10 +2707,9 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     }
 
     {
-        [[maybe_unused]] auto hf_global_stream = TRY(get_stream_for_section(stream, 1 + frame.num_lf_groups));
-        if (frame.frame_header.encoding == Encoding::kVarDCT) {
-            return Error::from_string_literal("JPEGXLLoader: Read HFGlobal for VarDCT frames");
-        }
+        auto hf_global_stream = TRY(get_stream_for_section(stream, 1 + frame.num_lf_groups));
+        if (frame.frame_header.encoding == Encoding::kVarDCT)
+            frame.hf_global = TRY(read_hf_global(stream, frame.lf_global, frame.num_groups, frame.frame_header.passes.num_passes));
     }
 
     for (u32 pass_index {}; pass_index < frame.frame_header.passes.num_passes; ++pass_index) {
