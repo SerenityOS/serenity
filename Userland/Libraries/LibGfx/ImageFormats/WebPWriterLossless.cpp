@@ -443,14 +443,14 @@ static ErrorOr<PrefixCodeGroup> compute_and_write_prefix_code_group(Vector<Symbo
     Vector<u8, 256 + 24 + 64> code_lengths_green_or_length {};
     TRY(code_lengths_green_or_length.try_resize(alphabet_sizes[0]));
 
-    Array<Array<u8, 256>, 3> code_lengths_rba {};
+    Array<Array<u8, 256>, 3> code_lengths_red_blue_alpha {};
     Array<u8, 40> code_lengths_distance {};
 
     Array<Bytes, 5> code_lengths {
         code_lengths_green_or_length,
-        code_lengths_rba[0],
-        code_lengths_rba[1],
-        code_lengths_rba[2],
+        code_lengths_red_blue_alpha[0],
+        code_lengths_red_blue_alpha[1],
+        code_lengths_red_blue_alpha[2],
         code_lengths_distance
     };
     for (int i = 0; i < 5; ++i) {
