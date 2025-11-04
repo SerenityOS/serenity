@@ -220,6 +220,8 @@ struct Code {
     constexpr static int LowerRangeBit = 0x8000;
 };
 
+ErrorOr<Vector<u32>> assign_huffman_codes(ReadonlyBytes code_lengths);
+
 class HuffmanTable {
 public:
     enum class StandardTable {

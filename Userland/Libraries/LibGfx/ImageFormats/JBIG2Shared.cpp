@@ -5,6 +5,7 @@
  */
 
 #include <AK/BitStream.h>
+#include <AK/Enumerate.h>
 #include <LibGfx/ImageFormats/JBIG2Shared.h>
 
 namespace Gfx::JBIG2 {
@@ -199,6 +200,70 @@ ErrorOr<SymbolDictionaryHuffmanTables> symbol_dictionary_huffman_tables_from_fla
     }
 
     return tables;
+}
+
+ErrorOr<Vector<u32>> assign_huffman_codes(ReadonlyBytes code_lengths)
+{
+    // FIXME: Use shared huffman code, instead of using this algorithm from the spec.
+
+    // B.3 Assigning the prefix codes
+    // code_lengths is "PREFLEN" in spec, code_lengths.size is "NTEMP".
+    Vector<u32> codes; // "CODES" in spec.
+    TRY(codes.try_resize(code_lengths.size()));
+
+    // "1) Build a histogram in the array LENCOUNT counting the number of times each prefix length value
+    //     occurs in PREFLEN: LENCOUNT[I] is the number of times that the value I occurs in the array
+    //     PREFLEN."
+    Array<u32, 32> length_counts {}; // "LENCOUNT" in spec.
+    for (auto length : code_lengths) {
+        VERIFY(length < 32);
+        length_counts[length]++;
+    }
+
+    // "2) Let LENMAX be the largest value for which LENCOUNT[LENMAX] > 0. Set:
+    //         CURLEN = 1
+    //         FIRSTCODE[0] = 0
+    //         LENCOUNT[0] = 0"
+    size_t highest_length_index = 0; // "LENMAX" in spec.
+    for (auto const& [i, count] : enumerate(length_counts)) {
+        if (count > 0)
+            highest_length_index = i;
+    }
+    size_t current_length = 1;           // "CURLEN" in spec.
+    Array<u32, 32> first_code_at_length; // "FIRSTCODE" in spec.
+    first_code_at_length[0] = 0;
+    length_counts[0] = 0;
+
+    // "3) While CURLEN ≤ LENMAX, perform the following operations:"
+    while (current_length <= highest_length_index) {
+        // "a) Set:
+        //         FIRSTCODE[CURLEN] = (FIRSTCODE[CURLEN – 1] + LENCOUNT[CURLEN – 1]) × 2
+        //         CURCODE = FIRSTCODE[CURLEN]
+        //         CURTEMP = 0"
+        first_code_at_length[current_length] = (first_code_at_length[current_length - 1] + length_counts[current_length - 1]) * 2;
+        u32 current_code = first_code_at_length[current_length]; // "CURCODE" in spec.
+        size_t i = 0;                                            // "CURTEMP" in spec.
+
+        // "b) While CURTEMP < NTEMP, perform the following operations:"
+        while (i < code_lengths.size()) {
+            // "i) If PREFLEN[CURTEMP] = CURLEN, then set:
+            //         CODES[CURTEMP] = CURCODE
+            //         CURCODE = CURCODE + 1"
+            if (code_lengths[i] == current_length) {
+                codes[i] = current_code;
+                current_code++;
+            }
+
+            // "ii) Set CURTEMP = CURTEMP + 1"
+            i++;
+        }
+
+        // "c) Set:
+        //         CURLEN = CURLEN + 1"
+        current_length++;
+    }
+
+    return codes;
 }
 
 // Table B.1 – Standard Huffman table A

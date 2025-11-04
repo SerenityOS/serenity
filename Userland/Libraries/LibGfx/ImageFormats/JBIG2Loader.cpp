@@ -2530,70 +2530,6 @@ static ErrorOr<void> handle_intermediate_direct_region(JBIG2LoadingContext&, Seg
     return {};
 }
 
-static ErrorOr<Vector<u32>> assign_huffman_codes(ReadonlyBytes code_lengths)
-{
-    // FIXME: Use shared huffman code, instead of using this algorithm from the spec.
-
-    // B.3 Assigning the prefix codes
-    // code_lengths is "PREFLEN" in spec, code_lengths.size is "NTEMP".
-    Vector<u32> codes; // "CODES" in spec.
-    TRY(codes.try_resize(code_lengths.size()));
-
-    // "1) Build a histogram in the array LENCOUNT counting the number of times each prefix length value
-    //     occurs in PREFLEN: LENCOUNT[I] is the number of times that the value I occurs in the array
-    //     PREFLEN."
-    Array<u32, 32> length_counts {}; // "LENCOUNT" in spec.
-    for (auto length : code_lengths) {
-        VERIFY(length < 32);
-        length_counts[length]++;
-    }
-
-    // "2) Let LENMAX be the largest value for which LENCOUNT[LENMAX] > 0. Set:
-    //         CURLEN = 1
-    //         FIRSTCODE[0] = 0
-    //         LENCOUNT[0] = 0"
-    size_t highest_length_index = 0; // "LENMAX" in spec.
-    for (auto const& [i, count] : enumerate(length_counts)) {
-        if (count > 0)
-            highest_length_index = i;
-    }
-    size_t current_length = 1;           // "CURLEN" in spec.
-    Array<u32, 32> first_code_at_length; // "FIRSTCODE" in spec.
-    first_code_at_length[0] = 0;
-    length_counts[0] = 0;
-
-    // "3) While CURLEN ≤ LENMAX, perform the following operations:"
-    while (current_length <= highest_length_index) {
-        // "a) Set:
-        //         FIRSTCODE[CURLEN] = (FIRSTCODE[CURLEN – 1] + LENCOUNT[CURLEN – 1]) × 2
-        //         CURCODE = FIRSTCODE[CURLEN]
-        //         CURTEMP = 0"
-        first_code_at_length[current_length] = (first_code_at_length[current_length - 1] + length_counts[current_length - 1]) * 2;
-        u32 current_code = first_code_at_length[current_length]; // "CURCODE" in spec.
-        size_t i = 0;                                            // "CURTEMP" in spec.
-
-        // "b) While CURTEMP < NTEMP, perform the following operations:"
-        while (i < code_lengths.size()) {
-            // "i) If PREFLEN[CURTEMP] = CURLEN, then set:
-            //         CODES[CURTEMP] = CURCODE
-            //         CURCODE = CURCODE + 1"
-            if (code_lengths[i] == current_length) {
-                codes[i] = current_code;
-                current_code++;
-            }
-
-            // "ii) Set CURTEMP = CURTEMP + 1"
-            i++;
-        }
-
-        // "c) Set:
-        //         CURLEN = CURLEN + 1"
-        current_length++;
-    }
-
-    return codes;
-}
-
 static ErrorOr<RegionResult> decode_text_region(JBIG2LoadingContext& context, SegmentData const& segment)
 {
     // 7.4.3 Text region segment syntax
@@ -2683,7 +2619,7 @@ static ErrorOr<RegionResult> decode_text_region(JBIG2LoadingContext& context, Se
 
         // "2) Given the lengths, assign Huffman codes for RUNCODE0 through RUNCODE34 using the algorithm
         //     in B.3."
-        auto code_length_codes = TRY(assign_huffman_codes(code_length_lengths));
+        auto code_length_codes = TRY(JBIG2::assign_huffman_codes(code_length_lengths));
 
         Vector<JBIG2::Code, 35> code_lengths_entries;
         for (auto const& [i, length] : enumerate(code_length_lengths)) {
@@ -2734,7 +2670,7 @@ static ErrorOr<RegionResult> decode_text_region(JBIG2LoadingContext& context, Se
 
         // "7) Assign a Huffman code to each symbol by applying the algorithm in B.3 to the symbol ID code lengths
         //     just decoded. The result is the symbol ID Huffman table SBSYMCODES."
-        auto codes = TRY(assign_huffman_codes(code_lengths));
+        auto codes = TRY(JBIG2::assign_huffman_codes(code_lengths));
         for (auto const& [i, length] : enumerate(code_lengths)) {
             if (length == 0)
                 continue;
@@ -3419,7 +3355,7 @@ static ErrorOr<void> decode_tables(JBIG2LoadingContext&, SegmentData& segment)
     }
 
     // "11) Create the prefix codes using the algorithm described in B.3."
-    auto codes = TRY(assign_huffman_codes(prefix_lengths));
+    auto codes = TRY(JBIG2::assign_huffman_codes(prefix_lengths));
 
     Vector<JBIG2::Code> table_codes;
     for (auto const& [i, length] : enumerate(prefix_lengths)) {
