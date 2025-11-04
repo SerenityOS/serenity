@@ -544,11 +544,11 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_symbol_dictionary_from_json(ToJSON
         template_pixels[i].y = adaptive_template_pixels[2 * i + 1];
     }
 
-    u8 symbol_refinement_template = (flags >> 12) & 1;
-    if (refinement_adaptive_template_pixels.is_empty())
-        adaptive_template_pixels = default_refinement_adaptive_template_pixels(symbol_refinement_template);
-
     bool uses_refinement_or_aggregate_coding = (flags & 2) != 0;
+    u8 symbol_refinement_template = (flags >> 12) & 1;
+    if (uses_refinement_or_aggregate_coding && refinement_adaptive_template_pixels.is_empty())
+        refinement_adaptive_template_pixels = default_refinement_adaptive_template_pixels(symbol_refinement_template);
+
     size_t number_of_refinement_adaptive_template_pixels = uses_refinement_or_aggregate_coding && symbol_refinement_template == 0 ? 2 : 0;
     if (refinement_adaptive_template_pixels.size() != number_of_refinement_adaptive_template_pixels * 2) {
         dbgln("expected {} entries, got {}", number_of_refinement_adaptive_template_pixels * 2, refinement_adaptive_template_pixels.size());
