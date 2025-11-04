@@ -1788,7 +1788,7 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
     Optional<TextContexts> text_contexts;
     Optional<RefinementContexts> refinement_contexts;
 
-    // This belongs in 6.5.5 1) below, but also needs to be captured by read_bitmap here.
+    // This belongs in 6.5.5 1) below, but also needs to be captured by read_symbol_bitmap here.
     Vector<BilevelSubImage> new_symbols;
 
     auto read_symbol_bitmap = [&](u32 width, u32 height) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
