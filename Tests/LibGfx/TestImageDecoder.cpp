@@ -414,7 +414,9 @@ TEST_CASE(test_jbig2_decode)
     for (auto test_input : test_inputs) {
         auto file = TRY_OR_FAIL(Core::MappedFile::map(test_input));
         EXPECT(Gfx::JBIG2ImageDecoderPlugin::sniff(file->bytes()));
-        auto plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create(file->bytes()));
+        Gfx::JBIG2DecoderOptions options;
+        options.log_comments = Gfx::JBIG2DecoderOptions::LogComments::No;
+        auto plugin_decoder = TRY_OR_FAIL(Gfx::JBIG2ImageDecoderPlugin::create_with_options(file->bytes(), options));
 
         auto frame = TRY_OR_FAIL(expect_single_frame_of_size(*plugin_decoder, { 399, 400 }));
 
