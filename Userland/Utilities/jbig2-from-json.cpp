@@ -848,6 +848,9 @@ static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(To
 
     bool uses_refinement_coding = (text_region.flags & 2) != 0;
     u8 refinement_template = (text_region.flags >> 15);
+    if (uses_refinement_coding && refinement_adaptive_template_pixels.is_empty())
+        refinement_adaptive_template_pixels = default_refinement_adaptive_template_pixels(refinement_template);
+
     size_t number_of_refinement_adaptive_template_pixels = uses_refinement_coding && refinement_template == 0 ? 2 : 0;
     if (refinement_adaptive_template_pixels.size() != number_of_refinement_adaptive_template_pixels * 2) {
         dbgln("expected {} entries, got {}", number_of_refinement_adaptive_template_pixels * 2, refinement_adaptive_template_pixels.size());
