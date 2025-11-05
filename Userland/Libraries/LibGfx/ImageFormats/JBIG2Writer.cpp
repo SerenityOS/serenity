@@ -9,6 +9,7 @@
 // JBIG2Loader.cpp has many spec notes.
 
 #include <AK/BitStream.h>
+#include <AK/Enumerate.h>
 #include <AK/HashMap.h>
 #include <AK/MemoryStream.h>
 #include <AK/NonnullOwnPtr.h>
@@ -642,6 +643,9 @@ namespace {
 
 struct JBIG2EncodingContext {
     HashMap<u32, JBIG2::SegmentData const*> segment_by_id;
+
+    HashMap<u32, Vector<JBIG2::Code>> codes_by_segment_id;
+    HashMap<u32, JBIG2::HuffmanTable> tables_by_segment_id;
 };
 
 }
@@ -1066,7 +1070,7 @@ static ErrorOr<void> encode_page_information_data(Stream& stream, JBIG2::PageInf
     return {};
 }
 
-static ErrorOr<void> encode_tables(JBIG2::TablesData const& tables, Vector<u8>& scratch_buffer)
+static ErrorOr<void> encode_tables(JBIG2::TablesData const& tables, JBIG2::SegmentHeaderData const& header, JBIG2EncodingContext& context, Vector<u8>& scratch_buffer)
 {
     // 7.4.13 Code table segment syntax
     // B.2 Code table structure, but in reverse
@@ -1101,22 +1105,28 @@ static ErrorOr<void> encode_tables(JBIG2::TablesData const& tables, Vector<u8>& 
     size_t i = 0;
 
     // "5) Decode each table line as follows:"
+    Vector<u8> prefix_lengths;
+    Vector<u8> range_lengths;
+    Vector<Optional<i32>> range_lows;
     do {
         if (i >= tables.entries.size())
             return Error::from_string_literal("JBIG2Writer: Not enough table entries");
 
         // "a) Read HTPS bits."
         TRY(write_prefix_length(tables.entries[i].prefix_length));
+        TRY(prefix_lengths.try_append(tables.entries[i].prefix_length));
 
         // "b) Read HTRS bits."
         if (tables.entries[i].range_length >= (1 << range_bit_count))
             return Error::from_string_literal("JBIG2Writer: Table range length too large for bit count");
         TRY(bit_stream.write_bits<u8>(tables.entries[i].range_length, range_bit_count));
+        TRY(range_lengths.try_append(tables.entries[i].range_length));
 
         // "c) Set:
         //         RANGELOW[NTEMP] = CURRANGELOW
         //         CURRANGELOW = CURRANGELOW + 2 ** RANGELEN[NTEMP]
         //         NTEMP = NTEMP + 1"
+        TRY(range_lows.try_append(value));
         value += 1 << tables.entries[i].range_length;
         i++;
 
@@ -1129,20 +1139,49 @@ static ErrorOr<void> encode_tables(JBIG2::TablesData const& tables, Vector<u8>& 
     // "6) Read HTPS bits. Let LOWPREFLEN be the value read."
     // "7) [...] This is the lower range table line for this table."
     TRY(write_prefix_length(tables.lower_range_prefix_length));
+    TRY(prefix_lengths.try_append(tables.lower_range_prefix_length));
+    TRY(range_lengths.try_append(32));
+    TRY(range_lows.try_append(tables.lowest_value - 1));
 
     // "8) Read HTPS bits. Let HIGHPREFLEN be the value read."
     // "9) [...] This is the upper range table line for this table."
     TRY(write_prefix_length(tables.upper_range_prefix_length));
+    TRY(prefix_lengths.try_append(tables.upper_range_prefix_length));
+    TRY(range_lengths.try_append(32));
+    TRY(range_lows.try_append(tables.highest_value));
 
     // "10) If HTOOB is 1, then:"
     if (has_out_of_band) {
         // "a) Read HTPS bits. Let OOBPREFLEN be the value read."
         TRY(write_prefix_length(tables.out_of_band_prefix_length));
+        TRY(prefix_lengths.try_append(tables.out_of_band_prefix_length));
+        TRY(range_lengths.try_append(0));
+        TRY(range_lows.try_append(OptionalNone {}));
     }
 
     TRY(bit_stream.align_to_byte_boundary());
 
     TRY(scratch_buffer.try_extend(TRY(output_stream.read_until_eof())));
+
+    // "11) Create the prefix codes using the algorithm described in B.3."
+    auto codes = TRY(JBIG2::assign_huffman_codes(prefix_lengths));
+
+    Vector<JBIG2::Code> table_codes;
+    for (auto const& [i, length] : enumerate(prefix_lengths)) {
+        if (length == 0)
+            continue;
+
+        JBIG2::Code code { .prefix_length = length, .range_length = range_lengths[i], .first_value = range_lows[i], .code = codes[i] };
+        if (i == prefix_lengths.size() - (has_out_of_band ? 3 : 2))
+            code.prefix_length |= JBIG2::Code::LowerRangeBit;
+        table_codes.append(code);
+    }
+
+    if (context.codes_by_segment_id.set(header.segment_number, move(table_codes)) != HashSetResult::InsertedNewEntry)
+        return Error::from_string_literal("JBIG2Writer: Duplicate table segment ID");
+    JBIG2::HuffmanTable table { context.codes_by_segment_id.get(header.segment_number).value().span(), has_out_of_band };
+    VERIFY(context.tables_by_segment_id.set(header.segment_number, table) == HashSetResult::InsertedNewEntry);
+
     return {};
 }
 
@@ -1272,8 +1311,8 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
         [](JBIG2::EndOfFileSegmentData const&) -> ErrorOr<ReadonlyBytes> {
             return ReadonlyBytes {};
         },
-        [&scratch_buffer](JBIG2::TablesData const& tables) -> ErrorOr<ReadonlyBytes> {
-            TRY(encode_tables(tables, scratch_buffer));
+        [&scratch_buffer, &segment_data, &context](JBIG2::TablesData const& tables) -> ErrorOr<ReadonlyBytes> {
+            TRY(encode_tables(tables, segment_data.header, context, scratch_buffer));
             return scratch_buffer;
         },
         [&scratch_buffer](JBIG2::ExtensionData const& extension) -> ErrorOr<ReadonlyBytes> {
