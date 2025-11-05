@@ -339,7 +339,6 @@ struct GenericRefinementRegionEncodingInputParameters {
     i32 reference_y_offset { 0 };                                       // "GRREFERENCEDY" in spec.
     bool is_typical_prediction_used { false };                          // "TPGRON" in spec.
     Array<JBIG2::AdaptiveTemplatePixel, 2> adaptive_template_pixels {}; // "GRATX" / "GRATY" in spec.
-    MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
 };
 
 struct RefinementContexts {
@@ -354,7 +353,7 @@ struct RefinementContexts {
 }
 
 // 6.3 Generic Refinement Region Decoding Procedure, but in reverse.
-static ErrorOr<ByteBuffer> generic_refinement_region_encoding_procedure(GenericRefinementRegionEncodingInputParameters& inputs, MQArithmeticEncoder& encoder, RefinementContexts& contexts)
+static ErrorOr<void> generic_refinement_region_encoding_procedure(GenericRefinementRegionEncodingInputParameters& inputs, MQArithmeticEncoder& encoder, RefinementContexts& contexts)
 {
     // FIXME: Try to come up with a way to share more code with generic_refinement_region_decoding_procedure().
     auto width = inputs.image.width();
@@ -489,7 +488,7 @@ static ErrorOr<ByteBuffer> generic_refinement_region_encoding_procedure(GenericR
         }
     }
 
-    return encoder.finalize(inputs.trailing_7fff_handling);
+    return {};
 }
 
 namespace {
@@ -1027,10 +1026,10 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
     inputs.reference_bitmap = reference_bitmap;
     inputs.is_typical_prediction_used = (generic_refinement_region.flags >> 1) & 1;
     inputs.adaptive_template_pixels = generic_refinement_region.adaptive_template_pixels;
-    inputs.trailing_7fff_handling = generic_refinement_region.trailing_7fff_handling;
     RefinementContexts contexts { inputs.gr_template };
     MQArithmeticEncoder encoder = TRY(MQArithmeticEncoder::initialize(0));
-    auto data = TRY(generic_refinement_region_encoding_procedure(inputs, encoder, contexts));
+    TRY(generic_refinement_region_encoding_procedure(inputs, encoder, contexts));
+    auto data = TRY(encoder.finalize(generic_refinement_region.trailing_7fff_handling));
 
     int number_of_adaptive_template_pixels = inputs.gr_template == 0 ? 2 : 0;
 
