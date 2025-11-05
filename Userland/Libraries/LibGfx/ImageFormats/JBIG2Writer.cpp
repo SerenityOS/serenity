@@ -249,7 +249,7 @@ static ErrorOr<void> generic_region_encoding_procedure(GenericRegionEncodingInpu
     //  used by the arithmetic coder (see Annex E)."
     // "* Decode the current pixel by invoking the arithmetic entropy decoding procedure, with CX set to the value formed by
     //    concatenating the label "GB" and the 10-16 pixel values gathered in CONTEXT."
-    // Implementor's note: What this is supposed to mean is that we have a bunch of independent contexts, and we pick the
+    // NOTE: What this is supposed to mean is that we have a bunch of independent contexts, and we pick the
     // context for the current pixel based on pixel values in the neighborhood. The "GB" part just means this context is
     // independent from other contexts in the spec. They are passed in to this function.
 

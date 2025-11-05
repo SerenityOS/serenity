@@ -1100,7 +1100,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> generic_region_decoding_procedure(Ge
     //  used by the arithmetic coder (see Annex E)."
     // "* Decode the current pixel by invoking the arithmetic entropy decoding procedure, with CX set to the value formed by
     //    concatenating the label "GB" and the 10-16 pixel values gathered in CONTEXT."
-    // Implementor's note: What this is supposed to mean is that we have a bunch of independent contexts, and we pick the
+    // NOTE: What this is supposed to mean is that we have a bunch of independent contexts, and we pick the
     // context for the current pixel based on pixel values in the neighborhood. The "GB" part just means this context is
     // independent from other contexts in the spec. They are passed in to this function.
 
@@ -1577,7 +1577,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
     // "4) Decode each strip as follows:
     //      a) If NINSTANCES is equal to SBNUMINSTANCES then there are no more strips to decode,
     //         and the process of decoding the text region is complete; proceed to step 4)."
-    // Implementor's note: The spec means "proceed to step 5)" at the end of 4a).
+    // NOTE: The spec means "proceed to step 5)" at the end of 4a).
     while (n_instances < inputs.number_of_instances) {
         // "b) Decode the strip's delta T value as described in 6.4.6. Let DT be the decoded value. Set:
         //         STRIPT = STRIPT + DT"
@@ -1597,7 +1597,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
             //          then the last symbol instance of the strip has been decoded; proceed to step 3 d). Otherwise, let
             //          IDS be the decoded value. Set:
             //              CURS = CURS + IDS + SBDSOFFSET"
-            // Implementor's note: The spec means "proceed to step 4 d)" in 4c ii).
+            // NOTE: The spec means "proceed to step 4 d)" in 4c ii).
             if (is_first_symbol) {
                 i32 delta_first_s = TRY(read_first_s());
                 first_s += delta_first_s;
@@ -1660,7 +1660,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
             //                instance bitmap IBI shall be placed at SBREG[TI, SI].
             //          If any part of IBI, when placed at this location, lies outside the bounds of SBREG, then ignore
             //          this part of IBI in step 3 c) ix)."
-            // Implementor's note: The spec means "ignore this part of IBI in step 3 c) x)" in 3c viii)'s last sentence.
+            // NOTE: The spec means "ignore this part of IBI in step 3 c) x)" in 3c viii)'s last sentence.
             if (inputs.is_transposed)
                 swap(s_instance, t_instance);
             if (inputs.reference_corner == TopRight || inputs.reference_corner == BottomRight)
