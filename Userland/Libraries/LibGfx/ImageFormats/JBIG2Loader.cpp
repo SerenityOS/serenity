@@ -969,7 +969,7 @@ struct GenericRegionDecodingInputParameters {
     bool is_extended_reference_template_used { false }; // "EXTTEMPLATE" in spec.
     Optional<BilevelImage const&> skip_pattern;         // "USESKIP", "SKIP" in spec.
 
-    Array<JBIG2::AdaptiveTemplatePixel, 12> adaptive_template_pixels; // "GBATX" / "GBATY" in spec.
+    Array<JBIG2::AdaptiveTemplatePixel, 12> adaptive_template_pixels {}; // "GBATX" / "GBATY" in spec.
     // FIXME: GBCOLS, GBCOMBOP, COLEXTFLAG
 
     enum RequireEOFBAfterMMR {
@@ -1180,14 +1180,14 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> generic_region_decoding_procedure(Ge
 // 6.3.2 Input parameters
 // Table 6 – Parameters for the generic refinement region decoding procedure
 struct GenericRefinementRegionDecodingInputParameters {
-    u32 region_width { 0 };                                          // "GRW" in spec.
-    u32 region_height { 0 };                                         // "GRH" in spec.
-    u8 gr_template { 0 };                                            // "GRTEMPLATE" in spec.
-    BilevelSubImage const* reference_bitmap { nullptr };             // "GRREFERENCE" in spec.
-    i32 reference_x_offset { 0 };                                    // "GRREFERENCEDX" in spec.
-    i32 reference_y_offset { 0 };                                    // "GRREFERENCEDY" in spec.
-    bool is_typical_prediction_used { false };                       // "TPGRON" in spec.
-    Array<JBIG2::AdaptiveTemplatePixel, 2> adaptive_template_pixels; // "GRATX" / "GRATY" in spec.
+    u32 region_width { 0 };                                             // "GRW" in spec.
+    u32 region_height { 0 };                                            // "GRH" in spec.
+    u8 gr_template { 0 };                                               // "GRTEMPLATE" in spec.
+    BilevelSubImage const* reference_bitmap { nullptr };                // "GRREFERENCE" in spec.
+    i32 reference_x_offset { 0 };                                       // "GRREFERENCEDX" in spec.
+    i32 reference_y_offset { 0 };                                       // "GRREFERENCEDY" in spec.
+    bool is_typical_prediction_used { false };                          // "TPGRON" in spec.
+    Array<JBIG2::AdaptiveTemplatePixel, 2> adaptive_template_pixels {}; // "GRATX" / "GRATY" in spec.
 };
 
 struct RefinementContexts {
@@ -1378,8 +1378,8 @@ struct TextRegionDecodingInputParameters {
     JBIG2::HuffmanTable const* refinement_y_offset_table { nullptr };     // "SBHUFFRDY" in spec.
     JBIG2::HuffmanTable const* refinement_size_table { nullptr };         // "SBHUFFRSIZE" in spec.
 
-    u8 refinement_template { 0 };                                               // "SBRTEMPLATE" in spec.
-    Array<JBIG2::AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels; // "SBRATX" / "SBRATY" in spec.
+    u8 refinement_template { 0 };                                                  // "SBRTEMPLATE" in spec.
+    Array<JBIG2::AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels {}; // "SBRATX" / "SBRATY" in spec.
     // FIXME: COLEXTFLAG, SBCOLS
 
     // If uses_huffman_encoding is true, text_region_encoding_procedure() reads data off this stream.
@@ -1720,11 +1720,11 @@ struct SymbolDictionaryDecodingInputParameters {
     JBIG2::HuffmanTable const* bitmap_size_table { nullptr };                // "SDHUFFBMSIZE" in spec.
     JBIG2::HuffmanTable const* number_of_symbol_instances_table { nullptr }; // "SDHUFFAGGINST" in spec.
 
-    u8 symbol_template { 0 };                                        // "SDTEMPLATE" in spec.
-    Array<JBIG2::AdaptiveTemplatePixel, 4> adaptive_template_pixels; // "SDATX" / "SDATY" in spec.
+    u8 symbol_template { 0 };                                           // "SDTEMPLATE" in spec.
+    Array<JBIG2::AdaptiveTemplatePixel, 4> adaptive_template_pixels {}; // "SDATX" / "SDATY" in spec.
 
-    u8 refinement_template { 0 };                                               // "SDRTEMPLATE" in spec;
-    Array<JBIG2::AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels; // "SDRATX" / "SDRATY" in spec.
+    u8 refinement_template { 0 };                                                  // "SDRTEMPLATE" in spec;
+    Array<JBIG2::AdaptiveTemplatePixel, 2> refinement_adaptive_template_pixels {}; // "SDRATX" / "SDRATY" in spec.
 };
 
 struct SymbolContexts {
