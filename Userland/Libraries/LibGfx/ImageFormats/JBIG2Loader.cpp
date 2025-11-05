@@ -1577,7 +1577,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
     // "4) Decode each strip as follows:
     //      a) If NINSTANCES is equal to SBNUMINSTANCES then there are no more strips to decode,
     //         and the process of decoding the text region is complete; proceed to step 4)."
-    // Implementor's note. The spec means "proceed to step 5)" at the end of 4a).
+    // Implementor's note: The spec means "proceed to step 5)" at the end of 4a).
     while (n_instances < inputs.number_of_instances) {
         // "b) Decode the strip's delta T value as described in 6.4.6. Let DT be the decoded value. Set:
         //         STRIPT = STRIPT + DT"
