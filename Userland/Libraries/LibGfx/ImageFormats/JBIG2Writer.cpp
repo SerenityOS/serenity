@@ -1099,6 +1099,8 @@ static ErrorOr<void> encode_tables(JBIG2::TablesData const& tables, Vector<u8>& 
     //         NTEMP = 0"
     i32 value = tables.lowest_value;
     size_t i = 0;
+
+    // "5) Decode each table line as follows:"
     do {
         if (i >= tables.entries.size())
             return Error::from_string_literal("JBIG2Writer: Not enough table entries");
