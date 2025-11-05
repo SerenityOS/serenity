@@ -837,8 +837,10 @@ static ErrorOr<Gfx::JBIG2::TextRegionSegmentData> jbig2_text_region_from_json(To
             return Error::from_string_literal("expected array of i8 for \"refinement_adaptive_template_pixels\"");
         }
 
-        if (key == "strip_trailing_7fffs"sv)
+        if (key == "strip_trailing_7fffs"sv) {
             text_region.trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
+            return {};
+        }
 
         dbgln("text_region key {}", key);
         return Error::from_string_literal("unknown text_region key");
