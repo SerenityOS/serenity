@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='curl'
-version='8.15.0'
+version='8.17.0'
 useconfigure='true'
 files=(
-    "https://curl.se/download/curl-${version}.tar.bz2#699a6d2192322792c88088576cff5fe188452e6ea71e82ca74409f07ecc62563"
+    "https://curl.se/download/curl-${version}.tar.bz2#230032528ce5f85594d4f3eace63364c4244ccc3c801b7f8db1982722f2761f4"
 )
 depends=(
     'ca-certificates'
