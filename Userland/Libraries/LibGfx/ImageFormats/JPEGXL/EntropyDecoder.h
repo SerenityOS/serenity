@@ -7,6 +7,8 @@
 #pragma once
 
 #include <AK/BitStream.h>
+#include <AK/Optional.h>
+#include <AK/ScopeGuard.h>
 #include <LibCompress/Brotli.h>
 
 namespace Gfx::JPEGXL {
@@ -67,6 +69,17 @@ public:
     static ErrorOr<EntropyDecoder> create(LittleEndianInputBitStream& stream, u32 initial_num_distrib);
 
     ErrorOr<u32> decode_hybrid_uint(LittleEndianInputBitStream& stream, u32 context);
+
+    ErrorOr<void> temporarily_restrict_histogram(Optional<ScopeGuard<Function<void()>>>& guard, u32 start, u32 size)
+    {
+        Vector<u32> restricted_clusters;
+        TRY(restricted_clusters.try_extend(m_clusters.span().slice(start, size)));
+        guard = Function<void()>([this, old_clusters = move(m_clusters)]() {
+            m_clusters = old_clusters;
+        });
+        m_clusters = restricted_clusters;
+        return {};
+    }
 
     void set_dist_multiplier(u32 dist_multiplier)
     {
