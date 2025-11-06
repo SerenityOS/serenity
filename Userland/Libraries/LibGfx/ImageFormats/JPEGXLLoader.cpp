@@ -3567,9 +3567,7 @@ public:
             if (m_metadata.preview.has_value())
                 TODO();
 
-            TRY(decode_frame());
-
-            while (!m_frames.last().frame_header.is_last)
+            while (m_frames.is_empty() || !m_frames.last().frame_header.is_last)
                 TRY(decode_frame());
 
             TRY(render_frame());
