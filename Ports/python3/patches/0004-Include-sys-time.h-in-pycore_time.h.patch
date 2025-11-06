@@ -11,13 +11,13 @@ unknown.
  1 file changed, 1 insertion(+), 4 deletions(-)
 
 diff --git a/Include/internal/pycore_time.h b/Include/internal/pycore_time.h
-index 205ac5d3781ddd6c6b70ae4f86c8901a1b064737..af78e330be58537dab0483c7a0eba8015f6f829d 100644
+index 23312471c6584efee837e0b5c51cf6401391afa5..ac0a58bf5e47510569d9a72b93eb495b965adea9 100644
 --- a/Include/internal/pycore_time.h
 +++ b/Include/internal/pycore_time.h
-@@ -57,10 +57,7 @@ extern "C" {
- #  error "this header requires Py_BUILD_CORE define"
+@@ -58,10 +58,7 @@ extern "C" {
  #endif
  
+ #include "pycore_runtime_structs.h" // _PyTimeFraction
 -
 -#ifdef __clang__
 -struct timeval;

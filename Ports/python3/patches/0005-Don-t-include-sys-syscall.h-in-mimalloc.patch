@@ -8,7 +8,7 @@ Subject: [PATCH] Don't include `sys/syscall.h` in mimalloc
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Objects/mimalloc/prim/unix/prim.c b/Objects/mimalloc/prim/unix/prim.c
-index 4d3fb65e954407d9cafff16e188d919c5f818397..50080aaeb3f6ea84d52897727b6d2527335b5f34 100644
+index 1598ebabf0a4da09b5d4d8b7c179b983e4c777b4..fec40af90e7f42f2e897ec551c466fc0b2b7730f 100644
 --- a/Objects/mimalloc/prim/unix/prim.c
 +++ b/Objects/mimalloc/prim/unix/prim.c
 @@ -51,7 +51,7 @@ terms of the MIT license. A copy of the license can be found in the file
