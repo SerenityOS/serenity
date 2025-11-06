@@ -1383,7 +1383,7 @@ struct TextRegionDecodingInputParameters {
     // FIXME: COLEXTFLAG, SBCOLS
 
     // If uses_huffman_encoding is true, text_region_decoding_procedure() reads data off this stream.
-    Stream* stream { nullptr };
+    BigEndianInputBitStream* bit_stream { nullptr };
 
     // If uses_huffman_encoding is false, text_region_decoding_procedure() reads data off this decoder.
     MQArithmeticDecoder* arithmetic_decoder { nullptr };
@@ -1410,13 +1410,12 @@ struct TextContexts {
 // 6.4 Text Region Decoding Procedure
 static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, Optional<TextContexts>& text_contexts, Optional<RefinementContexts>& refinement_contexts)
 {
-    Optional<BigEndianInputBitStream> bit_stream;
+    BigEndianInputBitStream* bit_stream = nullptr;
     MQArithmeticDecoder* decoder = nullptr;
-    if (inputs.uses_huffman_encoding) {
-        bit_stream = BigEndianInputBitStream { MaybeOwned { *inputs.stream } };
-    } else {
+    if (inputs.uses_huffman_encoding)
+        bit_stream = inputs.bit_stream;
+    else
         decoder = inputs.arithmetic_decoder;
-    }
 
     // 6.4.6 Strip delta T
     // "If SBHUFF is 1, decode a value using the Huffman table specified by SBHUFFDT and multiply the resulting value by SBSTRIPS.
@@ -2747,8 +2746,10 @@ static ErrorOr<RegionResult> decode_text_region(JBIG2LoadingContext& context, Se
     inputs.refinement_adaptive_template_pixels = adaptive_refinement_template;
 
     Optional<MQArithmeticDecoder> decoder;
+    Optional<BigEndianInputBitStream> bit_stream;
     if (uses_huffman_encoding) {
-        inputs.stream = &stream;
+        bit_stream = BigEndianInputBitStream { MaybeOwned { stream } };
+        inputs.bit_stream = &bit_stream.value();
     } else {
         decoder = TRY(MQArithmeticDecoder::initialize(data.slice(TRY(stream.tell()))));
         inputs.arithmetic_decoder = &decoder.value();

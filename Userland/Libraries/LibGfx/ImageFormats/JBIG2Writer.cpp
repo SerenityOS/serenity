@@ -546,7 +546,7 @@ struct TextRegionEncodingInputParameters {
     // FIXME: COLEXTFLAG, SBCOLS
 
     // If uses_huffman_encoding is true, text_region_encoding_procedure() writes data to this stream.
-    Stream* stream { nullptr };
+    BigEndianOutputBitStream* bit_stream { nullptr };
 
     // If uses_huffman_encoding is false, text_region_encoding_procedure() writes data to this encoder.
     MQArithmeticEncoder* arithmetic_encoder { nullptr };
@@ -575,13 +575,12 @@ struct TextContexts {
 // 6.4 Text Region Decoding Procedure, but in reverse.
 static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParameters const& inputs, Optional<TextContexts>& text_contexts, Optional<RefinementContexts>& refinement_contexts)
 {
-    Optional<BigEndianOutputBitStream> bit_stream;
+    BigEndianOutputBitStream* bit_stream = nullptr;
     MQArithmeticEncoder* encoder = nullptr;
-    if (inputs.uses_huffman_encoding) {
-        bit_stream = BigEndianOutputBitStream { MaybeOwned { *inputs.stream } };
-    } else {
+    if (inputs.uses_huffman_encoding)
+        bit_stream = inputs.bit_stream;
+    else
         encoder = inputs.arithmetic_encoder;
-    }
 
     // "In order to improve compression, symbol instances are grouped into strips according to their TI values. This is done
     //  according to the value of SBSTRIPS. Symbol instances having TI values between 0 and SBSTRIPS – 1 are grouped
@@ -897,8 +896,6 @@ static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParam
 
     //  "5) After all the strips have been decoded, the current contents of SBREG are the results that shall be
     //      obtained by every decoder, whether it performs this exact sequence of steps or not."
-    if (inputs.uses_huffman_encoding)
-        TRY(bit_stream->align_to_byte_boundary()); // XXX gah! make dtor do this finally
 
     return {};
 }
@@ -1834,8 +1831,10 @@ static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text
 
     AllocatingMemoryStream output_stream;
     Optional<MQArithmeticEncoder> encoder;
+    Optional<BigEndianOutputBitStream> bit_stream;
     if (uses_huffman_encoding) {
-        inputs.stream = &output_stream;
+        bit_stream = BigEndianOutputBitStream { MaybeOwned { output_stream } };
+        inputs.bit_stream = &bit_stream.value();
     } else {
         encoder = TRY(MQArithmeticEncoder::initialize(0));
         inputs.arithmetic_encoder = &encoder.value();
@@ -1843,10 +1842,12 @@ static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text
 
     TRY(text_region_encoding_procedure(inputs, text_contexts, refinement_contexts));
     ByteBuffer data;
-    if (uses_huffman_encoding)
+    if (uses_huffman_encoding) {
+        TRY(bit_stream->align_to_byte_boundary());
         data = TRY(output_stream.read_until_eof());
-    else
+    } else {
         data = TRY(encoder->finalize(text_region.trailing_7fff_handling));
+    }
 
     u8 number_of_refinement_adaptive_template_pixels = (uses_refinement_coding && refinement_template == 0) ? 2 : 0;
     TRY(scratch_buffer.try_resize(sizeof(JBIG2::RegionSegmentInformationField) + 2 + (uses_huffman_encoding ? 2 : 0) + number_of_refinement_adaptive_template_pixels * 2 + 4 + symbol_id_huffman_decoding_table.size() + data.size()));
