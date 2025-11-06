@@ -32,7 +32,7 @@ On AArch64, we set `COMMONPAGESIZE` to enable RELRO support.
  create mode 100644 ld/emulparams/elf_x86_64_serenity.sh
 
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index 0d7901175036952b076ce6adebdbb84eaa6c3e7b..da83aa4ec2516c092e0317a14facf6f6518d37cb 100644
+index 4e5a838fe4e3598e8d21369697bee5ebb56a832b..5e6bd06d2510a87cbe3ac55c702995466fe8af10 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
 @@ -284,6 +284,11 @@ case "${targ}" in
@@ -60,10 +60,10 @@ index 0d7901175036952b076ce6adebdbb84eaa6c3e7b..da83aa4ec2516c092e0317a14facf6f6
    i[3-7]86-*-lynxos*)
      targ_defvec=i386_elf32_vec
 diff --git a/gas/config/tc-i386.c b/gas/config/tc-i386.c
-index e5988347e0a59679ea429da5aa844ec8b23a75d0..a19e434e998ef2ab3040226d1b057e997858f357 100644
+index 8fb8a7ee372e8eeeca96696f7e13412970b30df8..39e1877f3baeda24513e1a5f67a17521fe7be26a 100644
 --- a/gas/config/tc-i386.c
 +++ b/gas/config/tc-i386.c
-@@ -571,7 +571,8 @@ const char extra_symbol_chars[] = "*%-(["
+@@ -574,7 +574,8 @@ const char extra_symbol_chars[] = "*%-(["
       && !defined (TE_Haiku)				\
       && !defined (TE_FreeBSD)				\
       && !defined (TE_DragonFly)				\
