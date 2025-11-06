@@ -11,10 +11,10 @@ to set PYTHON_BASIC_REPL=1 to work around the issue.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Lib/_pyrepl/main.py b/Lib/_pyrepl/main.py
-index a6f824dcc4ad14043a0fb4b10cd57e6c83c01cdc..fcec734d1216e59e2dd598ac87be58acdde79b54 100644
+index 447eb1e551e7743c42efbfffead65f3d47a59252..36329826f5796676a375ba5a0ee2a520aaf998af 100644
 --- a/Lib/_pyrepl/main.py
 +++ b/Lib/_pyrepl/main.py
-@@ -17,7 +17,7 @@ except Exception as e:
+@@ -18,7 +18,7 @@ except Exception as e:
      CAN_USE_PYREPL = False
      FAIL_REASON = f"warning: can't use pyrepl: {e}"
  else:
