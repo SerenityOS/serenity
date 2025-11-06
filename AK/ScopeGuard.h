@@ -6,12 +6,16 @@
 
 #pragma once
 
+#include <AK/Noncopyable.h>
 #include <AK/StdLibExtras.h>
 
 namespace AK {
 
 template<typename Callback>
 class ScopeGuard {
+    AK_MAKE_NONCOPYABLE(ScopeGuard);
+    AK_MAKE_NONMOVABLE(ScopeGuard);
+
 public:
     constexpr ScopeGuard(Callback callback)
         : m_callback(move(callback))
@@ -29,6 +33,9 @@ private:
 
 template<typename Callback>
 class ArmedScopeGuard {
+    AK_MAKE_NONCOPYABLE(ArmedScopeGuard);
+    AK_MAKE_NONMOVABLE(ArmedScopeGuard);
+
 public:
     ArmedScopeGuard(Callback callback)
         : m_callback(move(callback))
