@@ -1946,7 +1946,7 @@ static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData con
         contexts = JBIG2::GenericContexts { inputs.template_id };
     auto data = TRY(grayscale_image_encoding_procedure(inputs, contexts));
 
-    TRY(scratch_buffer.try_resize(sizeof(JBIG2::RegionSegmentInformationField) + 1 + 2 * 4 * 2 * 2 + data.size()));
+    TRY(scratch_buffer.try_resize(sizeof(JBIG2::RegionSegmentInformationField) + 1 + 4 * 4 + 2 * 2 + data.size()));
     FixedMemoryStream stream { scratch_buffer, FixedMemoryStream::Mode::ReadWrite };
 
     TRY(encode_region_segment_information_field(stream, halftone_region.region_segment_information));
