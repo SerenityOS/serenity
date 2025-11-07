@@ -2996,6 +2996,12 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
     for (auto const& transformation : transform_infos.in_reverse())
         TRY(apply_transformation(channels, transformation, bits_per_sample, frame.lf_global.gmodular.modular_data.wp_params));
 
+    if (frame.frame_header.encoding == Encoding::kVarDCT) {
+        channels.prepend(TRY(Channel::create(ChannelInfo::from_size(frame_size))));
+        channels.prepend(TRY(Channel::create(ChannelInfo::from_size(frame_size))));
+        channels.prepend(TRY(Channel::create(ChannelInfo::from_size(frame_size))));
+    }
+
     frame.image = TRY(Image::adopt_channels(move(channels)));
 
     return frame;
