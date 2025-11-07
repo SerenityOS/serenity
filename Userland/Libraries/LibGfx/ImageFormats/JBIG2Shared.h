@@ -255,11 +255,7 @@ public:
     ErrorOr<void> write_symbol(BigEndianOutputBitStream&, Optional<i32>) const;
     ErrorOr<void> write_symbol_non_oob(BigEndianOutputBitStream&, i32) const;
 
-    HuffmanTable(ReadonlySpan<Code> codes, bool has_oob_symbol = false)
-        : m_codes(codes)
-        , m_has_oob_symbol(has_oob_symbol)
-    {
-    }
+    HuffmanTable(ReadonlySpan<Code> codes, bool has_oob_symbol = false);
 
 private:
     ErrorOr<Optional<i32>> read_symbol_internal(BigEndianInputBitStream&) const;
