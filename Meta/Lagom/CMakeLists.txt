@@ -577,6 +577,7 @@ if (BUILD_LAGOM)
 
         lagom_utility(animation SOURCES ../../Userland/Utilities/animation.cpp LIBS LibGfx LibMain)
         lagom_utility(base64 SOURCES ../../Userland/Utilities/base64.cpp LIBS LibMain)
+        lagom_utility(cat SOURCES ../../Userland/Utilities/cat.cpp LIBS LibMain)
 
         if (NOT EMSCRIPTEN)
             lagom_utility(disasm SOURCES ../../Userland/Utilities/disasm.cpp LIBS LibELF LibDisassembly LibMain)
