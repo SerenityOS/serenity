@@ -375,6 +375,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-halftone-10bpp-mmr.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-negative-sbdsoffset.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol-symhuff-texthuff.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine-customat.jbig2"sv),
         TEST_INPUT("jbig2/symbol-textrefine-negative-delta-width.jbig2"sv),
@@ -391,8 +392,6 @@ TEST_CASE(test_jbig2_decode)
         // - rotated halftone (code support added in #26044)
         // - composition test for halftone regions
         // - intermediate halftone / refinement of halftone regions
-        // - huffman symbol regions (code support added in #26068)
-        // - huffman text regions (code support added in #26075)
         // - huffman regions with custom huffman tables (code support added in #26078, #26081)
         // - symbols with REFAGGNINST > 1 (code support added in #26107)
         // - negative position in composition (code support added in #26046)
