@@ -407,6 +407,14 @@ TEST_CASE(read_only_bytes_format)
         Vector<u8> v { 1, 2, 3, 4 };
         EXPECT_EQ(ByteString::formatted("{:hex-dump}", v), "01020304");
     }
+    {
+        Vector<u8> v { 97, 98, 99, 100 };
+        EXPECT_EQ(ByteString::formatted("{:s}", v), "abcd");
+    }
+    {
+        Vector<u8> v { 97, 98, 99, 100 };
+        EXPECT_EQ(ByteString::formatted("{:c}", v), "abcd");
+    }
 }
 
 TEST_CASE(format_wchar)
