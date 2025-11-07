@@ -376,6 +376,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-negative-sbdsoffset.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symhuff-texthuff.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol-symhuffB5B3-texthuffB7B9B12.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine-customat.jbig2"sv),
         TEST_INPUT("jbig2/symbol-textrefine-negative-delta-width.jbig2"sv),
