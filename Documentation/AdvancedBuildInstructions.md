@@ -59,6 +59,7 @@ There are some optional features that can be enabled during compilation that are
 -   `ENABLE_KERNEL_UNDEFINED_SANITIZER`: builds in runtime checks for detecting undefined behavior in the kernel.
 -   `ENABLE_KERNEL_UNDEFINED_SANITIZER_ALWAYS_DEADLY`: makes the aforementioned runtime checks always deadly, as seen by the compiler.
 -   `ENABLE_KERNEL_COVERAGE_COLLECTION`: enables the KCOV API and kernel coverage collection instrumentation. Only useful for coverage guided kernel fuzzing.
+-   `ENABLE_LAGOM_COVERAGE_COLLECTION`: enables coverage collection instrumentation for lagom builds. Currently only works with a Clang build.
 -   `ENABLE_USERSPACE_COVERAGE_COLLECTION`: enables coverage collection instrumentation for userspace. Currently only works with a Clang build.
 -   `ENABLE_MEMORY_SANITIZER`: enables runtime checks for uninitialized memory accesses in Lagom test cases.
 -   `ENABLE_UNDEFINED_SANITIZER`: builds in runtime checks for [undefined behavior](https://en.wikipedia.org/wiki/Undefined_behavior) (like null pointer dereferences and signed integer overflows) in Lagom and the SerenityOS userland.
@@ -250,3 +251,26 @@ Some OS distributions don't ship bleeding-edge clang-format binaries. Below are 
 1. If you have a Debian-based (apt-based) distribution, use the [LLVM apt repositories](https://apt.llvm.org) to install the latest release of clang-format.
 2. Compile the SerenityOS-patched LLVM from source using `Toolchain/BuildClang.sh` as described above and use the compiled `Toolchain/Local/clang/bin/clang-format` binary in your editor and terminal. The meta-lint-ci pre-commit hook will automatically pick up the Toolchain clang-format binary.
 3. Compile LLVM from source as described in the LLVM documentation [here](https://llvm.org/docs/GettingStarted.html#compiling-the-llvm-suite-source-code).
+
+## Coverage builds
+
+For serenity builds, Meta/analyze-qemu-coverage.sh can help you.
+
+For lagom builds, you currently have to do the same thing manually:
+
+1. Enable `ENABLE_LAGOM_COVERAGE_COLLECTION` in BUild/lagom/CMakeCache.txt
+2. Build: `Meta/serenity.sh build lagom TestImageDecoder`
+3. Run tests: `(cd Tests/LibGfx; ../../Build/lagom/bin/TestImageDecoder)`
+4. Generate report, requires an LLVM checkout and build:
+
+        ~/src/llvm-project/llvm/utils/prepare-code-coverage-artifact.py \
+            --unified-report \
+            -C Build/lagom \
+            ~/src/llvm-project/out/gn/bin/llvm-profdata \
+            ~/src/llvm-project/out/gn/bin/llvm-cov \
+            Tests/LibGfx \
+            report-output \
+            Build/lagom/bin/TestImageDecoder \
+            Build/lagom/lib/liblagom-gfx.dylib
+
+5. `open report-output/TestImageDecoder/index.html`
