@@ -1777,7 +1777,6 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
     // 6.5.8.2.1 Number of symbol instances in aggregation
     // If SDHUFF is 1, decode a value using the Huffman table specified by SDHUFFAGGINST.
     // If SDHUFF is 0, decode a value using the IAAI integer arithmetic decoding procedure (see Annex A).
-    Optional<JBIG2::ArithmeticIntegerDecoder> number_of_symbol_instances_decoder; // "IAAI" in spec.
     auto read_number_of_symbol_instances = [&]() -> ErrorOr<i32> {
         if (inputs.uses_huffman_encoding)
             return inputs.number_of_symbol_instances_table->read_symbol_non_oob(*bit_stream);
