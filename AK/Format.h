@@ -448,7 +448,7 @@ struct Formatter<ReadonlySpan<T>> : Formatter<StringView> {
         }
 
         if constexpr (IsSame<T, u8>) {
-            if (m_mode == Mode::HexDump)
+            if (m_mode == Mode::Character || m_mode == Mode::HexDump || m_mode == Mode::String)
                 return Formatter<StringView>::format(builder, value);
         }
 
