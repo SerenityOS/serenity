@@ -634,4 +634,10 @@ ErrorOr<void> HuffmanTable::write_symbol_non_oob(BigEndianOutputBitStream& strea
     return write_symbol_internal(stream, value);
 }
 
+HuffmanTable::HuffmanTable(ReadonlySpan<Code> codes, bool has_oob_symbol)
+    : m_codes(codes)
+    , m_has_oob_symbol(has_oob_symbol)
+{
+}
+
 }
