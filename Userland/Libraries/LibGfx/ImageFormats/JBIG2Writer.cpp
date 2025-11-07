@@ -1116,7 +1116,7 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
             //
             //     Decode the bitmap by reading this many bytes and treating it as HCHEIGHT rows of TOTWIDTH pixels, each
             //     row padded out to a byte boundary with 0-7 0 bits."
-            TRY(bit_stream->write_until_depleted(image.bytes())); // XXX zero padding
+            TRY(bit_stream->write_until_depleted(image.bytes()));
 
             // "5) Skip over any bits remaining in the last byte read."
             TRY(bit_stream->align_to_byte_boundary());
