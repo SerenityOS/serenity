@@ -12,12 +12,8 @@
 
 namespace Gfx::JPEGXL {
 
-Array<Vector<Point<u32>>, 13> g_backing_data {};
-DCTOrderDescription g_dct_natural_order {};
-bool g_is_initialized { false };
-
 // I.3.2 - Natural ordering of the DCT coefficients
-static ErrorOr<void> compute_natural_ordering()
+static ErrorOr<DCTOrderDescription> compute_natural_ordering()
 {
     static constexpr auto dct_select_list = to_array<Size<u32>>({ { 8, 8 },
         { 8, 8 },
@@ -33,6 +29,9 @@ static ErrorOr<void> compute_natural_ordering()
         { 256, 256 },
         { 128, 256 } });
     static_assert(dct_select_list.size() == 13);
+
+    DCTOrderDescription dct_natural_order {};
+    static Array<Vector<Point<u32>>, 13> s_backing_data;
 
     for (auto [i, dct_select] : enumerate(dct_select_list)) {
         // "The varblock size (bwidth, bheight) for a DctSelect value with name
@@ -101,26 +100,18 @@ static ErrorOr<void> compute_natural_ordering()
 
         TRY(llf.try_extend(hf));
 
-        g_backing_data[i] = move(llf);
-        for (auto& span : g_dct_natural_order[i])
-            span = g_backing_data[i].span();
+        s_backing_data[i] = move(llf);
+        for (auto& span : dct_natural_order[i])
+            span = s_backing_data[i].span();
     }
 
-    g_is_initialized = true;
-    return {};
+    return dct_natural_order;
 }
 
-DCTOrderDescription const& DCTNaturalOrder::the()
+ErrorOr<DCTOrderDescription const*> DCTNaturalOrder::the()
 {
-    VERIFY(g_is_initialized);
-    return g_dct_natural_order;
-}
-
-ErrorOr<void> DCTNaturalOrder::initialize()
-{
-    if (g_is_initialized)
-        return {};
-    return compute_natural_ordering();
+    static auto s_dct_natural_order = TRY(compute_natural_ordering());
+    return &s_dct_natural_order;
 }
 
 }

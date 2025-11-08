@@ -18,8 +18,9 @@ namespace Gfx::JPEGXL {
 using DCTOrderDescription = Array<Array<Span<Point<u32>>, 3>, 13>;
 
 namespace DCTNaturalOrder {
-ErrorOr<void> initialize();
-DCTOrderDescription const& the();
+
+ErrorOr<DCTOrderDescription const*> the();
+
 };
 
 }
