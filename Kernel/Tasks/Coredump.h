@@ -73,7 +73,7 @@ private:
     ErrorOr<void> write_regions();
     ErrorOr<void> write_notes_segment(ReadonlyBytes);
 
-    ErrorOr<void> create_notes_segment_data(auto&) const;
+    ErrorOr<OwnPtr<KBuffer>> create_notes_segment_data() const;
     ErrorOr<void> create_notes_process_data(auto&) const;
     ErrorOr<void> create_notes_threads_data(auto&) const;
     ErrorOr<void> create_notes_regions_data(auto&) const;
