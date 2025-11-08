@@ -2503,7 +2503,7 @@ static ErrorOr<void> read_hf_passes(LittleEndianInputBitStream& stream, LfGlobal
     // where p is the index of the current pass, b is an Order ID (see Table I.7), c is a
     // component index, and natural_coeff_order[b] is the natural coefficient order for Order
     // ID b, as specified in I.3.2."
-    auto const& natural_coeff_order = DCTNaturalOrder::the();
+    auto const& natural_coeff_order = *TRY(DCTNaturalOrder::the());
     for (auto& pass_data : hf_global.hf_passes) {
         for (u8 b = 0; b < 13; b++) {
             for (u8 c = 0; c < 3; c++) {
@@ -2922,9 +2922,6 @@ static ErrorOr<Frame> read_frame(LittleEndianInputBitStream& stream,
 
     auto bits_per_sample = metadata.bit_depth.bits_per_sample;
     IntSize frame_size { frame.width, frame.height };
-
-    if (frame.frame_header.encoding == Encoding::kVarDCT)
-        TRY(DCTNaturalOrder::initialize());
 
     auto get_stream_for_section = [&](LittleEndianInputBitStream& stream, u32 section_index) -> ErrorOr<MaybeOwned<LittleEndianInputBitStream>> {
         // "If num_groups == 1 and num_passes == 1, then there is a single TOC entry and a single section
