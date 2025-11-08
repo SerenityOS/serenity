@@ -1,0 +1,610 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+
+        {
+            "segment_number": 1,
+            "type": "tables",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "prefix_bit_count": 3,
+                    "range_bit_count": 3
+                },
+                "lowest_value": 1,
+                "highest_value": 76,
+                "entries": [
+                    {
+                        "prefix_length": 2,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 1,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 4,
+                        "range_length": 3
+                    },
+                    {
+                        "prefix_length": 3,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 5,
+                        "range_length": 6
+                    }
+                ],
+                "lower_range_prefix_length": 0,
+                "upper_range_prefix_length": 5,
+                "out_of_band_prefix_length": 0
+            }
+        },
+
+        {
+            "segment_number": 2,
+            "type": "tables",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "has_out_of_band_symbol": true,
+                    "prefix_bit_count": 3,
+                    "range_bit_count": 3
+                },
+                "lowest_value": 0,
+                "highest_value": 75,
+                "entries": [
+                    {
+                        "prefix_length": 2,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 1,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 4,
+                        "range_length": 3
+                    },
+                    {
+                        "prefix_length": 3,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 5,
+                        "range_length": 6
+                    }
+                ],
+                "lower_range_prefix_length": 0,
+                "upper_range_prefix_length": 6,
+                "out_of_band_prefix_length": 6
+            }
+        },
+
+        {
+            "segment_number": 3,
+            "type": "tables",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "prefix_bit_count": 2,
+                    "range_bit_count": 5
+                },
+                "lowest_value": 1,
+                "highest_value": 65808,
+                "entries": [
+                    {
+                        "prefix_length": 2,
+                        "range_length": 8
+                    },
+                    {
+                        "prefix_length": 1,
+                        "range_length": 4
+                    },
+                    {
+                        "prefix_length": 3,
+                        "range_length": 16
+                    }
+                ],
+                "lower_range_prefix_length": 0,
+                "upper_range_prefix_length": 3,
+                "out_of_band_prefix_length": 0
+            }
+        },
+
+        {
+            "segment_number": 4,
+            "type": "tables",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "prefix_bit_count": 2,
+                    "range_bit_count": 5
+                },
+                "lowest_value": 1,
+                "highest_value": 65808,
+                "entries": [
+                    {
+                        "prefix_length": 1,
+                        "range_length": 4
+                    },
+                    {
+                        "prefix_length": 3,
+                        "range_length": 16
+                    },
+                    {
+                        "prefix_length": 2,
+                        "range_length": 8
+                    }
+                ],
+                "lower_range_prefix_length": 0,
+                "upper_range_prefix_length": 3,
+                "out_of_band_prefix_length": 0
+            }
+        },
+
+        {
+            "segment_number": 5,
+            "type": "symbol_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": false
+                },
+                {
+                    "segment_number": 2,
+                    "retained": false
+                },
+                {
+                    "segment_number": 3,
+                    "retained": false
+                },
+                {
+                    "segment_number": 4,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "flags": {
+                    "uses_huffman_encoding": true,
+                    "uses_refinement_or_aggregate_coding": false,
+                    "huffman_table_selection_for_height_differences": 3,
+                    "huffman_table_selection_for_width_differences": 3,
+                    "huffman_table_selection_for_bitmap_sizes": 1,
+                    "huffman_table_selection_for_number_of_symbol_instances": 1,
+                    "is_bitmap_coding_context_used": false,
+                    "is_bitmap_coding_context_retained": false,
+                    "template": 0,
+                    "refinement_template": 0
+                },
+
+                "height_classes": [
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 60,
+                                        "y": 265,
+                                        "width": 10,
+                                        "height": 30
+                                    }
+                                }
+                            },
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 70,
+                                        "y": 265,
+                                        "width": 20,
+                                        "height": 30
+                                    }
+                                }
+                            },
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 50,
+                                        "y": 108,
+                                        "width": 30,
+                                        "height": 30
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 135,
+                                        "y": 100,
+                                        "width": 100,
+                                        "height": 100
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 232,
+                                        "y": 70,
+                                        "width": 120,
+                                        "height": 250
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 6,
+            "type": "tables",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "prefix_bit_count": 3,
+                    "range_bit_count": 4
+                },
+                "lowest_value": -2048,
+                "highest_value": 2048,
+                "entries": [
+                    {
+                        "prefix_length": 4,
+                        "range_length": 9
+                    },
+                    {
+                        "prefix_length": 5,
+                        "range_length": 10
+                    },
+                    {
+                        "prefix_length": 4,
+                        "range_length": 7
+                    },
+                    {
+                        "prefix_length": 4,
+                        "range_length": 8
+                    },
+                    {
+                        "prefix_length": 5,
+                        "range_length": 5
+                    },
+                    {
+                        "prefix_length": 5,
+                        "range_length": 6
+                    },
+                    {
+                        "prefix_length": 2,
+                        "range_length": 7
+                    },
+                    {
+                        "prefix_length": 4,
+                        "range_length": 5
+                    },
+                    {
+                        "prefix_length": 3,
+                        "range_length": 8
+                    },
+                    {
+                        "prefix_length": 3,
+                        "range_length": 7
+                    },
+                    {
+                        "prefix_length": 4,
+                        "range_length": 10
+                    },
+                    {
+                        "prefix_length": 4,
+                        "range_length": 9
+                    }
+                ],
+                "lower_range_prefix_length": 6,
+                "upper_range_prefix_length": 6,
+                "out_of_band_prefix_length": 0
+            }
+        },
+
+        {
+            "segment_number": 7,
+            "type": "tables",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "has_out_of_band_symbol": true,
+                    "prefix_bit_count": 4,
+                    "range_bit_count": 4
+                },
+                "lowest_value": -15,
+                "highest_value": 1670,
+                "entries": [
+                    {
+                        "prefix_length": 9,
+                        "range_length": 1
+                    },
+                    {
+                        "prefix_length": 8,
+                        "range_length": 3
+                    },
+                    {
+                        "prefix_length": 9,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 8,
+                        "range_length": 1
+                    },
+                    {
+                        "prefix_length": 4,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 7,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 5,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 2,
+                        "range_length": 1
+                    },
+                    {
+                        "prefix_length": 3,
+                        "range_length": 4
+                    },
+                    {
+                        "prefix_length": 6,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 4,
+                        "range_length": 4
+                    },
+                    {
+                        "prefix_length": 6,
+                        "range_length": 1
+                    },
+                    {
+                        "prefix_length": 5,
+                        "range_length": 6
+                    },
+                    {
+                        "prefix_length": 4,
+                        "range_length": 5
+                    },
+                    {
+                        "prefix_length": 6,
+                        "range_length": 7
+                    },
+                    {
+                        "prefix_length": 5,
+                        "range_length": 7
+                    },
+                    {
+                        "prefix_length": 6,
+                        "range_length": 10
+                    },
+                    {
+                        "prefix_length": 7,
+                        "range_length": 8
+                    }
+                ],
+                "lower_range_prefix_length": 9,
+                "upper_range_prefix_length": 9,
+                "out_of_band_prefix_length": 2
+            }
+        },
+
+
+        {
+            "segment_number": 8,
+            "type": "tables",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "prefix_bit_count": 3,
+                    "range_bit_count": 3
+                },
+                "lowest_value": 1,
+                "highest_value": 141,
+                "entries": [
+                    {
+                        "prefix_length": 2,
+                        "range_length": 1
+                    },
+                    {
+                        "prefix_length": 1,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 4,
+                        "range_length": 1
+                    },
+                    {
+                        "prefix_length": 4,
+                        "range_length": 0
+                    },
+                    {
+                        "prefix_length": 5,
+                        "range_length": 2
+                    },
+                    {
+                        "prefix_length": 5,
+                        "range_length": 1
+                    },
+                    {
+                        "prefix_length": 7,
+                        "range_length": 2
+                    },
+                    {
+                        "prefix_length": 6,
+                        "range_length": 2
+                    },
+                    {
+                        "prefix_length": 7,
+                        "range_length": 4
+                    },
+                    {
+                        "prefix_length": 7,
+                        "range_length": 3
+                    },
+                    {
+                        "prefix_length": 7,
+                        "range_length": 6
+                    },
+                    {
+                        "prefix_length": 7,
+                        "range_length": 5
+                    }
+                ],
+                "lower_range_prefix_length": 0,
+                "upper_range_prefix_length": 7,
+                "out_of_band_prefix_length": 0
+            }
+        },
+
+        {
+            "segment_number": 9,
+            "type": "text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 5,
+                    "retained": false
+                },
+                {
+                    "segment_number": 6,
+                    "retained": false
+                },
+                {
+                    "segment_number": 7,
+                    "retained": false
+                },
+                {
+                    "segment_number": 8,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "width": 399,
+                    "height": 400
+                },
+                "flags": {
+                    "uses_huffman_encoding": true,
+                    "uses_refinement_coding": false,
+                    "strip_size": 2,
+                    "reference_corner": "top_left",
+                    "is_transposed": false,
+                    "combination_operator": "xor",
+                    "default_pixel_value": "white",
+                    "delta_s_offset": 3,
+                    "refinement_template": 0
+                },
+                "huffman_flags": {
+                    "huffman_table_selection_for_first_s": 3,
+                    "huffman_table_selection_for_subsequent_s": 3,
+                    "huffman_table_selection_for_t": 3,
+                    "huffman_table_selection_for_refinement_delta_width": 0,
+                    "huffman_table_selection_for_refinement_delta_height": 0,
+                    "huffman_table_selection_for_refinement_delta_x_offset": 0,
+                    "huffman_table_selection_for_refinement_delta_y_offset": 0,
+                    "huffman_table_selection_for_refinement_size_table": 0
+                },
+
+                "initial_strip_t": -2,
+                "strips": [
+                    {
+                        "strip_t": 70,
+                        "instances": [
+                            {
+                                "instance_s": 232,
+                                "instance_t": 70,
+                                "symbol_id": 4
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 100,
+                        "instances": [
+                            {
+                                "instance_s": 135,
+                                "instance_t": 100,
+                                "symbol_id": 3
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 108,
+                        "instances": [
+                            {
+                                "instance_s": 50,
+                                "instance_t": 108,
+                                "symbol_id": 2
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 264,
+                        "instances": [
+                            {
+                                "instance_s": 60,
+                                "instance_t": 265,
+                                "symbol_id": 0
+                            },
+                            {
+                                "instance_s": 70,
+                                "instance_t": 265,
+                                "symbol_id": 1
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 10,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}
