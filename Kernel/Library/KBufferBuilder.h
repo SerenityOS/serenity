@@ -43,7 +43,7 @@ public:
     bool flush();
     OwnPtr<KBuffer> build();
 
-    ReadonlyBytes bytes() const
+    Bytes bytes()
     {
         if (!m_buffer)
             return {};
