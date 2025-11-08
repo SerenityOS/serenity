@@ -377,8 +377,10 @@ ErrorOr<void> Coredump::create_notes_metadata_data(auto& builder) const
     return {};
 }
 
-ErrorOr<void> Coredump::create_notes_segment_data(auto& builder) const
+ErrorOr<OwnPtr<KBuffer>> Coredump::create_notes_segment_data() const
 {
+    auto builder = TRY(KBufferBuilder::try_create());
+
     TRY(create_notes_process_data(builder));
     TRY(create_notes_threads_data(builder));
     TRY(create_notes_regions_data(builder));
@@ -388,19 +390,18 @@ ErrorOr<void> Coredump::create_notes_segment_data(auto& builder) const
     null_entry.type = ELF::Core::NotesEntryHeader::Type::Null;
     TRY(builder.append(ReadonlyBytes { &null_entry, sizeof(null_entry) }));
 
-    return {};
+    return builder.build();
 }
 
 ErrorOr<void> Coredump::write()
 {
     ScopedAddressSpaceSwitcher switcher(m_process);
 
-    auto builder = TRY(KBufferBuilder::try_create());
-    TRY(create_notes_segment_data(builder));
+    auto buffer = TRY(create_notes_segment_data());
     TRY(write_elf_header());
-    TRY(write_program_headers(builder.bytes().size()));
+    TRY(write_program_headers(buffer->size()));
     TRY(write_regions());
-    TRY(write_notes_segment(builder.bytes()));
+    TRY(write_notes_segment(buffer->bytes()));
 
     return m_description->chmod(Process::current().credentials(), 0600); // Make coredump file read/writable
 }
