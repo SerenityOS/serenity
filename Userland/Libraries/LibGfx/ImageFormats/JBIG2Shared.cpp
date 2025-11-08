@@ -98,7 +98,7 @@ ErrorOr<TextRegionHuffmanTables> text_region_huffman_tables_from_flags(u16 huffm
         tables.refinement_size_table = TRY(custom_table());
 
     if (custom_table_index != custom_tables.size())
-        return Error::from_string_literal("JBIG2: Not all referred custom tables used");
+        return Error::from_string_literal("JBIG2: Not all referred text region custom tables used");
 
     if (!tables.subsequent_s_table->has_oob_symbol())
         return Error::from_string_literal("JBIG2: Custom SBHUFFDS table must have OOB symbol");
@@ -110,7 +110,7 @@ ErrorOr<TextRegionHuffmanTables> text_region_huffman_tables_from_flags(u16 huffm
         || tables.refinement_x_offset_table->has_oob_symbol()
         || tables.refinement_y_offset_table->has_oob_symbol()
         || tables.refinement_size_table->has_oob_symbol()) {
-        return Error::from_string_literal("JBIG2: Custom Huffman tables must not have OOB symbol");
+        return Error::from_string_literal("JBIG2: Custom text region Huffman tables must not have OOB symbol");
     }
 
     if (huffman_flags & 0x8000)
@@ -186,7 +186,7 @@ ErrorOr<SymbolDictionaryHuffmanTables> symbol_dictionary_huffman_tables_from_fla
     }
 
     if (custom_table_index != custom_tables.size())
-        return Error::from_string_literal("JBIG2: Not all referred custom tables used");
+        return Error::from_string_literal("JBIG2: Not all referred symbol dictionary custom tables used");
 
     if (uses_huffman_encoding) {
         if (!tables.delta_width_table->has_oob_symbol())
@@ -195,7 +195,7 @@ ErrorOr<SymbolDictionaryHuffmanTables> symbol_dictionary_huffman_tables_from_fla
         if (tables.delta_height_table->has_oob_symbol()
             || tables.bitmap_size_table->has_oob_symbol()
             || tables.number_of_symbol_instances_table->has_oob_symbol()) {
-            return Error::from_string_literal("JBIG2: Custom Huffman tables must not have OOB symbol");
+            return Error::from_string_literal("JBIG2: Custom symbol dictionary Huffman tables must not have OOB symbol");
         }
     }
 
