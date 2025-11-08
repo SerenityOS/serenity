@@ -1116,10 +1116,15 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
             //
             //     Decode the bitmap by reading this many bytes and treating it as HCHEIGHT rows of TOTWIDTH pixels, each
             //     row padded out to a byte boundary with 0-7 0 bits."
-            TRY(bit_stream->write_until_depleted(image.bytes()));
+            u32 padding_bits = align_up_to(image.width(), 8) - image.width();
+            for (u32 y = 0; y < image.height(); ++y) {
+                for (u32 x = 0; x < image.width(); ++x)
+                    TRY(bit_stream->write_bits(image.get_bit(x, y), 1u));
+                TRY(bit_stream->write_bits(0u, padding_bits));
+            }
 
             // "5) Skip over any bits remaining in the last byte read."
-            TRY(bit_stream->align_to_byte_boundary());
+            // Already byte-aligned here in the uncompressed case.
 
             return {};
         }

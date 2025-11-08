@@ -1910,9 +1910,17 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
             //     Decode the bitmap by reading this many bytes and treating it as HCHEIGHT rows of TOTWIDTH pixels, each
             //     row padded out to a byte boundary with 0-7 0 bits."
             if (bitmap_size == 0) {
-                // FIXME: Validate that the pad bits are 0.
                 auto result = TRY(BilevelImage::create(total_width, height));
-                TRY(bit_stream->read_until_filled(result->bytes()));
+
+                u32 padding_bits = align_up_to(total_width, 8) - total_width;
+                for (u32 y = 0; y < height; ++y) {
+                    for (u32 x = 0; x < total_width; ++x)
+                        result->set_bit(x, y, TRY(bit_stream->read_bit()));
+
+                    if (TRY(bit_stream->read_bits(padding_bits)) != 0)
+                        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Non-zero padding bits in uncompressed height class collective bitmap");
+                }
+
                 return result;
             }
             // "4) Otherwise, decode the bitmap using a generic bitmap decoding procedure as described in 6.2. Set the
