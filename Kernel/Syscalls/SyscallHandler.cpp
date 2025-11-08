@@ -87,7 +87,7 @@ ErrorOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, Fla
     }
 
     ErrorOr<FlatPtr> result { FlatPtr(nullptr) };
-    if (function == SC_fork || function == SC_sigreturn) {
+    if (function == SC_fork || function == SC_rfork || function == SC_sigreturn) {
         // These syscalls want the RegisterState& rather than individual parameters.
         auto handler = bit_cast<HandlerWithRegisterState>(syscall_metadata.handler);
         result = (process.*(handler))(regs);

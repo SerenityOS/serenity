@@ -889,7 +889,14 @@ void Process::finalize()
         if (timer)
             TimerQueue::the().cancel_timer(timer.release_nonnull());
     });
-    m_fds.with_exclusive([](auto& fds) { fds.clear(); });
+    if (m_shared_fds) {
+        auto refcount = m_shared_fds->ref_count();
+        if (refcount == 1) {
+            (void)m_shared_fds->fds.with_exclusive([](auto& fds) { fds.clear(); return ErrorOr<void> {}; });
+        }
+    } else {
+        m_fds.with_exclusive([](auto& fds) { fds.clear(); });
+    }
     with_mutable_protected_data([&](auto& protected_data) { protected_data.tty = nullptr; });
     m_executable.with([](auto& executable) { executable = nullptr; });
     m_arguments.clear();

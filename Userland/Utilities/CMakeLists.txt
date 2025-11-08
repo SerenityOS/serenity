@@ -180,6 +180,7 @@ set(CMD_SOURCES_CPP
     test-imap.cpp
     test-jpeg-roundtrip.cpp
     test-pthread.cpp
+    test-rfork.cpp
     test-unveil.cpp
     test.cpp
     test_env.cpp

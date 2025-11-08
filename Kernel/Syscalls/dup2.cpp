@@ -13,7 +13,7 @@ ErrorOr<FlatPtr> Process::sys$dup2(int old_fd, int new_fd)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
-    return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
+    return fds().with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
         auto description = TRY(fds.open_file_description(old_fd));
         if (old_fd == new_fd)
             return new_fd;

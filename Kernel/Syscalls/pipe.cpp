@@ -32,7 +32,7 @@ ErrorOr<FlatPtr> Process::sys$pipe(Userspace<int*> pipefd, int flags)
         writer_description->set_blocking(false);
     }
 
-    TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
+    TRY(fds().with_exclusive([&](auto& fds) -> ErrorOr<void> {
         auto reader_fd_allocation = TRY(fds.allocate());
         auto writer_fd_allocation = TRY(fds.allocate());
 

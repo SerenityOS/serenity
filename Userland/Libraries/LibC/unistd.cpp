@@ -111,6 +111,23 @@ pid_t vfork()
     return fork();
 }
 
+// Non-POSIX, but present in BSDs
+// https://man.freebsd.org/cgi/man.cgi?query=rfork&sektion=2
+pid_t rfork(int flags)
+{
+    __pthread_fork_prepare();
+
+    int rc = syscall(SC_rfork, flags);
+    if (rc == 0) {
+        s_cached_tid = 0;
+        s_cached_pid = 0;
+        __pthread_fork_child();
+    } else if (rc != -1) {
+        __pthread_fork_parent();
+    }
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 // Non-POSIX, but present in BSDs and Linux
 // https://man.openbsd.org/daemon.3
 int daemon(int nochdir, int noclose)

@@ -120,6 +120,8 @@ static_assert(sizeof(GlobalFutexKey) == (sizeof(FlatPtr) * 2));
 
 struct LoadResult;
 
+class SharedFDs;
+
 class Process final
     : public ListedRefCounted<Process, LockType::Spinlock>
     , public LockWeakable<Process> {
@@ -413,6 +415,7 @@ public:
     ErrorOr<FlatPtr> sys$uname(Userspace<utsname*>);
     ErrorOr<FlatPtr> sys$readlink(Userspace<Syscall::SC_readlink_params const*>);
     ErrorOr<FlatPtr> sys$fork(RegisterState&);
+    ErrorOr<FlatPtr> sys$rfork(RegisterState&);
     ErrorOr<FlatPtr> sys$execve(Userspace<Syscall::SC_execve_params const*>);
     ErrorOr<FlatPtr> sys$dup2(int old_fd, int new_fd);
     ErrorOr<FlatPtr> sys$sigaction(int signum, Userspace<sigaction const*> act, Userspace<sigaction*> old_act);
@@ -839,7 +842,10 @@ public:
         {
             TRY(try_resize(other.m_fds_metadatas.size()));
 
+            size_t allocated_count = 0;
             for (size_t i = 0; i < other.m_fds_metadatas.size(); ++i) {
+                if (other.m_fds_metadatas[i].is_allocated())
+                    ++allocated_count;
                 m_fds_metadatas[i] = other.m_fds_metadatas[i];
             }
             return {};
@@ -917,12 +923,12 @@ public:
         OpenFileDescriptionAndFlags* m_description { nullptr };
     };
 
-    MutexProtected<OpenFileDescriptions>& fds() { return m_fds; }
-    MutexProtected<OpenFileDescriptions> const& fds() const { return m_fds; }
+    MutexProtected<OpenFileDescriptions>& fds();
+    MutexProtected<OpenFileDescriptions> const& fds() const;
 
     ErrorOr<NonnullRefPtr<OpenFileDescription>> open_file_description(int fd)
     {
-        return m_fds.with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
+        return fds().with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
     }
 
     ErrorOr<RefPtr<OpenFileDescription>> open_file_description_ignoring_negative(int fd)
@@ -934,7 +940,7 @@ public:
 
     ErrorOr<NonnullRefPtr<OpenFileDescription>> open_file_description(int fd) const
     {
-        return m_fds.with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
+        return const_cast<Process const*>(this)->fds().with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
     }
 
     ErrorOr<RefPtr<OpenFileDescription>> open_file_description_ignoring_negative(int fd) const
@@ -946,12 +952,19 @@ public:
 
     ErrorOr<ScopedDescriptionAllocation> allocate_fd()
     {
-        return m_fds.with_exclusive([](auto& fds) { return fds.allocate(); });
+        return const_cast<Process*>(this)->fds().with_exclusive([](auto& fds) { return fds.allocate(); });
     }
 
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(Badge<CustodyBase>, int dirfd);
 
 private:
+    // Shared implementation for fork/rfork-like syscalls. `rfork_flags` uses
+    // the same flag encoding as rfork(2). This helper implements the common
+    // flow (create child, clone/assign FD table according to flags, copy
+    // protected data, clone address space, register child, and schedule it).
+    // It returns the child's pid on success.
+    ErrorOr<FlatPtr> do_fork_common(RegisterState& regs, FlatPtr rfork_flags);
+
     ErrorOr<NonnullRefPtr<ScopedProcessList>> scoped_process_list_for_id(int id);
 
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(int dirfd);
@@ -974,6 +987,7 @@ private:
     RecursiveSpinlockProtected<Thread::ListInProcess, LockRank::None> m_thread_list {};
 
     MutexProtected<OpenFileDescriptions> m_fds;
+    RefPtr<SharedFDs> m_shared_fds;
 
     bool const m_is_kernel_process;
     Atomic<State> m_state { State::Running };
@@ -1052,6 +1066,27 @@ public:
 // page is used for all unprotected values (which should be plenty of space for them).
 // The second page is being used exclusively for write-protected values.
 static_assert(AssertSize<Process, (PAGE_SIZE * 2)>());
+
+class SharedFDs : public RefCounted<SharedFDs> {
+public:
+    SharedFDs() = default;
+
+    MutexProtected<Process::OpenFileDescriptions> fds;
+};
+
+inline MutexProtected<Process::OpenFileDescriptions>& Process::fds()
+{
+    if (m_shared_fds)
+        return m_shared_fds->fds;
+    return m_fds;
+}
+
+inline MutexProtected<Process::OpenFileDescriptions> const& Process::fds() const
+{
+    if (m_shared_fds)
+        return m_shared_fds->fds;
+    return m_fds;
+}
 
 extern RecursiveSpinlock<LockRank::None> g_profiling_lock;
 

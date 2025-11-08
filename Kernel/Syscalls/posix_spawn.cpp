@@ -75,7 +75,7 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
     // We don't run them, as they are currently implemented in LibC.
 
     TRY(child->m_fds.with_exclusive([&](auto& child_fds) {
-        return m_fds.with_exclusive([&](auto const& parent_fds) {
+        return fds().with_exclusive([&](auto const& parent_fds) {
             return child_fds.try_clone(parent_fds);
         });
 

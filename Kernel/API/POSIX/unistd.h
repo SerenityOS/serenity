@@ -33,6 +33,11 @@ extern "C" {
 #define MS_SRCHIDDEN (1 << 9)
 #define MS_IMMUTABLE (1 << 10)
 
+#define RFFDG (1u << 2)
+#define RFPROC (1u << 4)
+#define RFNOWAIT (1u << 7)
+#define RFCFDG (1u << 12)
+
 enum {
     _SC_MONOTONIC_CLOCK,
     _SC_NPROCESSORS_CONF,

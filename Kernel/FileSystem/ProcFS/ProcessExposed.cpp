@@ -178,7 +178,7 @@ ErrorOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(ProcFS
     if (!maybe_index.has_value())
         return ENOENT;
 
-    if (!m_fds.with_shared([&](auto& fds) { return fds.get_if_valid(*maybe_index); }))
+    if (!fds().with_shared([&](auto& fds) { return fds.get_if_valid(*maybe_index); }))
         return ENOENT;
 
     // NOTE: All property numbers should start from 1 as 0 is reserved for the directory itself.

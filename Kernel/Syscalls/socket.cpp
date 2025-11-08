@@ -43,7 +43,7 @@ ErrorOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
     if ((type & SOCK_TYPE_MASK) == SOCK_RAW && !credentials->is_superuser())
         return EACCES;
 
-    return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
+    return fds().with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
         auto fd_allocation = TRY(fds.allocate());
         auto socket = TRY(Socket::create(domain, type, protocol));
         auto description = TRY(OpenFileDescription::try_create(socket));
@@ -104,7 +104,7 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
     ScopedDescriptionAllocation fd_allocation;
     RefPtr<OpenFileDescription> accepting_socket_description;
 
-    TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
+    TRY(fds().with_exclusive([&](auto& fds) -> ErrorOr<void> {
         fd_allocation = TRY(fds.allocate());
         accepting_socket_description = TRY(fds.open_file_description(accepting_socket_fd));
         return {};
@@ -143,7 +143,7 @@ ErrorOr<FlatPtr> Process::sys$accept4(Userspace<Syscall::SC_accept4_params const
     if (flags & SOCK_CLOEXEC)
         fd_flags |= FD_CLOEXEC;
 
-    TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
+    TRY(fds().with_exclusive([&](auto& fds) -> ErrorOr<void> {
         fds[fd_allocation.fd].set(move(accepted_socket_description), fd_flags);
         return {};
     }));
@@ -319,8 +319,8 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
         auto& local_socket = static_cast<LocalSocket&>(socket);
         Vector<int, 128> fdnums;
         TRY(local_socket.recvfds(description, space_for_fds, [&](auto const& description) -> ErrorOr<void> {
-            auto fd_allocation = TRY(m_fds.with_exclusive([](auto& fds) { return fds.allocate(); }));
-            m_fds.with_exclusive([&](auto& fds) { fds[fd_allocation.fd].set(description, 0); });
+            auto fd_allocation = TRY(fds().with_exclusive([](auto& fds) { return fds.allocate(); }));
+            fds().with_exclusive([&](auto& fds) { fds[fd_allocation.fd].set(description, 0); });
             return fdnums.try_append(fd_allocation.fd);
         }));
         if (!fdnums.is_empty())
@@ -426,7 +426,7 @@ ErrorOr<FlatPtr> Process::sys$socketpair(Userspace<Syscall::SC_socketpair_params
 
     auto pair = TRY(LocalSocket::try_create_connected_pair(params.type & SOCK_TYPE_MASK));
 
-    return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
+    return fds().with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
         auto fd_allocation0 = TRY(fds.allocate());
         auto fd_allocation1 = TRY(fds.allocate());
 

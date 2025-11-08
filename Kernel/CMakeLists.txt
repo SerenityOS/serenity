@@ -315,6 +315,7 @@ set(KERNEL_SOURCES
     Syscalls/fallocate.cpp
     Syscalls/fcntl.cpp
     Syscalls/fork.cpp
+    Syscalls/rfork.cpp
     Syscalls/fsync.cpp
     Syscalls/ftruncate.cpp
     Syscalls/futex.cpp
@@ -387,6 +388,7 @@ set(KERNEL_SOURCES
     Tasks/PerformanceEventBuffer.cpp
     Tasks/PowerStateSwitchTask.cpp
     Tasks/Process.cpp
+    Tasks/ProcessFork.cpp
     Tasks/ProcessGroup.cpp
     Tasks/ScopedProcessList.cpp
     Tasks/Scheduler.cpp
