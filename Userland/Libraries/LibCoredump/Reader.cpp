@@ -18,6 +18,11 @@
 #include <string.h>
 #include <unistd.h>
 
+template<>
+struct AK::Traits<Elf64_Note> : public AK::DefaultTraits<Elf64_Note> {
+    static constexpr bool is_trivially_serializable() { return true; }
+};
+
 namespace Coredump {
 
 OwnPtr<Reader> Reader::create(StringView path)
@@ -133,6 +138,23 @@ bool Reader::NotesEntryIterator::at_end() const
     return type() == ELF::Core::NotesEntryHeader::Type::Null;
 }
 
+ReadonlyBytes Reader::get_serenity_note_section() const
+{
+    auto const& program_header = m_coredump_image.program_header(m_notes_segment_index);
+    auto note_section_bytes = ReadonlyBytes { program_header.raw_data(), program_header.size_in_memory() };
+    FixedMemoryStream section_stream { note_section_bytes };
+
+    auto note = section_stream.read_value<Elf_Note>().release_value_but_fixme_should_propagate_errors();
+    auto name = section_stream.read_in_place<u8 const>(note.namesz);
+
+    VERIFY(note.type == 0);
+    VERIFY(name.release_value_but_fixme_should_propagate_errors() == "SerenityOS\0"sv.bytes());
+
+    section_stream.discard(mod(-note.namesz, 4)).release_value_but_fixme_should_propagate_errors();
+
+    return section_stream.read_in_place<u8 const>(note.descsz).release_value_but_fixme_should_propagate_errors();
+}
+
 Optional<FlatPtr> Reader::peek_memory(FlatPtr address) const
 {
     auto region = region_containing(address);
@@ -149,7 +171,7 @@ Optional<FlatPtr> Reader::peek_memory(FlatPtr address) const
 JsonObject const Reader::process_info() const
 {
     const ELF::Core::ProcessInfo* process_info_notes_entry = nullptr;
-    NotesEntryIterator it(bit_cast<u8 const*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
+    NotesEntryIterator it(get_serenity_note_section().data());
     for (; !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::ProcessInfo)
             continue;
@@ -248,7 +270,7 @@ Vector<ByteString> Reader::process_environment() const
 HashMap<ByteString, ByteString> Reader::metadata() const
 {
     const ELF::Core::Metadata* metadata_notes_entry = nullptr;
-    NotesEntryIterator it(bit_cast<u8 const*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
+    NotesEntryIterator it(get_serenity_note_section().data());
     for (; !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::Metadata)
             continue;
