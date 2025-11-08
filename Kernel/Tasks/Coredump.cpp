@@ -377,9 +377,32 @@ ErrorOr<void> Coredump::create_notes_metadata_data(auto& builder) const
     return {};
 }
 
+static ErrorOr<void> add_elf_note_header(KBufferBuilder& builder)
+{
+    // https://gabi.xinuos.com/elf/07-pheader.html#note-sections
+
+    static constexpr StringView name = "SerenityOS\0"sv;
+    Elf_Note note;
+    note.namesz = name.length();
+    note.type = 0; // Arbitrary chosen, we already have our own `type` field in NotesEntryHeader.
+
+    static_assert(sizeof(Elf_Note) == 12);
+    TRY(builder.append_bytes(ReadonlyBytes { &note, sizeof(note) }));
+
+    // names and desc are 4-bytes aligned.
+    Array<u8, 3> zero_padding {};
+    TRY(builder.append(name));
+    TRY(builder.append_bytes(zero_padding.span().trim(mod(-name.length(), 4))));
+
+    return {};
+}
+
 ErrorOr<OwnPtr<KBuffer>> Coredump::create_notes_segment_data() const
 {
     auto builder = TRY(KBufferBuilder::try_create());
+
+    TRY(add_elf_note_header(builder));
+    auto header_offset = builder.length();
 
     TRY(create_notes_process_data(builder));
     TRY(create_notes_threads_data(builder));
@@ -389,6 +412,13 @@ ErrorOr<OwnPtr<KBuffer>> Coredump::create_notes_segment_data() const
     ELF::Core::NotesEntryHeader null_entry {};
     null_entry.type = ELF::Core::NotesEntryHeader::Type::Null;
     TRY(builder.append(ReadonlyBytes { &null_entry, sizeof(null_entry) }));
+
+    auto desc_size = builder.length() - header_offset;
+    auto note_header = reinterpret_cast<Elf_Note*>(builder.bytes().data());
+    note_header->descsz = desc_size;
+
+    Array<u8, 3> padding_bytes {};
+    TRY(builder.append_bytes(padding_bytes.span().trim(mod(-desc_size, 4))));
 
     return builder.build();
 }

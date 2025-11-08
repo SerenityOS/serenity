@@ -102,6 +102,8 @@ private:
         u8 const* start { nullptr };
     };
 
+    ReadonlyBytes get_serenity_note_section() const;
+
     // Private as we don't need anyone poking around in this JsonObject
     // manually - we know very well what should be included and expose that
     // as getters with the appropriate (non-JsonValue) types.
@@ -122,7 +124,7 @@ private:
 template<typename Func>
 void Reader::for_each_memory_region_info(Func func) const
 {
-    NotesEntryIterator it(bit_cast<u8 const*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
+    NotesEntryIterator it(get_serenity_note_section().data());
     for (; !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::MemoryRegionInfo)
             continue;
@@ -150,7 +152,7 @@ void Reader::for_each_memory_region_info(Func func) const
 template<typename Func>
 void Reader::for_each_thread_info(Func func) const
 {
-    NotesEntryIterator it(bit_cast<u8 const*>(m_coredump_image.program_header(m_notes_segment_index).raw_data()));
+    NotesEntryIterator it(get_serenity_note_section().data());
     for (; !it.at_end(); it.next()) {
         if (it.type() != ELF::Core::NotesEntryHeader::Type::ThreadInfo)
             continue;
