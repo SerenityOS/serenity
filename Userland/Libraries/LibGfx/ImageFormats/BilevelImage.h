@@ -101,9 +101,6 @@ public:
     size_t width() const { return m_width; }
     size_t height() const { return m_height; }
 
-    Bytes bytes() { return m_bits.bytes(); }
-    ReadonlyBytes bytes() const { return m_bits.bytes(); }
-
 private:
     template<OneOf<BilevelImage, BilevelSubImage> InputType, BilevelImage::CompositionType operator_>
     friend void composite_onto(InputType const& in, BilevelImage& out, IntPoint position);
