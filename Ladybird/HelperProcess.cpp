@@ -33,7 +33,7 @@ static ErrorOr<NonnullRefPtr<ClientType>> launch_server_process_impl(
     }
 
     for (auto [i, path] : enumerate(candidate_server_paths)) {
-        Core::ProcessSpawnOptions options { .name = server_name, .arguments = arguments };
+        Core::ProcessSpawnOptions options { .name = server_name, .arguments = arguments, .keep_as_child = Core::KeepAsChild::Yes };
 
         if (enable_callgrind_profiling == Ladybird::EnableCallgrindProfiling::Yes) {
             options.executable = "valgrind"sv;
@@ -47,12 +47,13 @@ static ErrorOr<NonnullRefPtr<ClientType>> launch_server_process_impl(
 
         if (!result.is_error()) {
             auto process = result.release_value();
+            auto pid = process.process.take_pid();
 
             if constexpr (requires { process.client->set_pid(pid_t {}); })
-                process.client->set_pid(process.process.pid());
+                process.client->set_pid(pid);
 
             if (register_with_process_manager == RegisterWithProcessManager::Yes)
-                WebView::ProcessManager::the().add_process(WebView::process_type_from_name(server_name), process.process.pid());
+                WebView::ProcessManager::the().add_process(WebView::process_type_from_name(server_name), pid);
 
             if (enable_callgrind_profiling == Ladybird::EnableCallgrindProfiling::Yes) {
                 dbgln();

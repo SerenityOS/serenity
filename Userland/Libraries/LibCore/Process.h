@@ -35,6 +35,11 @@ struct CloseFile {
 
 }
 
+enum class KeepAsChild {
+    Yes,
+    No
+};
+
 struct ProcessSpawnOptions {
     StringView name {};
     ByteString executable {};
@@ -44,6 +49,8 @@ struct ProcessSpawnOptions {
 
     using FileActionType = Variant<FileAction::OpenFile, FileAction::CloseFile>;
     Vector<FileActionType> file_actions {};
+
+    KeepAsChild keep_as_child = KeepAsChild::No;
 };
 
 class IPCProcess;
@@ -52,27 +59,18 @@ class Process {
     AK_MAKE_NONCOPYABLE(Process);
 
 public:
-    enum class KeepAsChild {
-        Yes,
-        No
-    };
-
     Process(Process&& other)
         : m_pid(exchange(other.m_pid, 0))
-        , m_should_disown(exchange(other.m_should_disown, false))
+        , m_was_managed(exchange(other.m_was_managed, true))
     {
     }
 
-    Process& operator=(Process&& other)
-    {
-        m_pid = exchange(other.m_pid, 0);
-        m_should_disown = exchange(other.m_should_disown, false);
-        return *this;
-    }
+    Process& operator=(Process&& other) = delete;
 
     ~Process()
     {
-        (void)disown();
+        // We want users to explicitly call `disown()`, `take_pid()` or `wait_for_termination()`.
+        VERIFY(m_was_managed);
     }
 
     static ErrorOr<Process> spawn(ProcessSpawnOptions const& options);
@@ -94,10 +92,15 @@ public:
     static void wait_for_debugger_and_break();
     static ErrorOr<bool> is_being_debugged();
 
-    pid_t pid() const { return m_pid; }
-
     // FIXME: Make it return an exit code.
     ErrorOr<bool> wait_for_termination();
+
+    pid_t take_pid()
+    {
+        VERIFY(!m_was_managed);
+        m_was_managed = true;
+        return exchange(m_pid, 0);
+    }
 
 private:
     friend IPCProcess;
@@ -106,12 +109,11 @@ private:
 
     Process(pid_t pid)
         : m_pid(pid)
-        , m_should_disown(true)
     {
     }
 
-    pid_t m_pid;
-    bool m_should_disown;
+    pid_t m_pid { 0 };
+    bool m_was_managed { false };
 };
 
 class IPCProcess {
@@ -147,8 +149,6 @@ public:
     static ErrorOr<ProcessPaths> paths_for_process(StringView process_name);
     static ErrorOr<Optional<pid_t>> get_process_pid(StringView process_name, StringView pid_path);
     static ErrorOr<int> create_ipc_socket(ByteString const& socket_path);
-
-    pid_t pid() const { return m_process.pid(); }
 
 private:
     struct ProcessAndIPCSocket {

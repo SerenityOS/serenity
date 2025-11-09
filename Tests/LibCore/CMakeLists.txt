@@ -5,6 +5,7 @@ set(TEST_SOURCES
     TestLibCoreFilePermissionsMask.cpp
     TestLibCoreFileWatcher.cpp
     TestLibCoreMappedFile.cpp
+    TestLibCoreProcess.cpp
     TestLibCorePromise.cpp
     TestLibCoreSharedSingleProducerCircularQueue.cpp
     TestLibCoreStream.cpp
