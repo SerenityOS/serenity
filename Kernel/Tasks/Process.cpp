@@ -349,6 +349,10 @@ void Process::commit_creation(NonnullRefPtr<Process>& process)
         // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
         process->ref();
     }
+
+    // PERF_EVENT_PROCESS_CREATE for spawned processes is emitted when calling `exec`.
+    if (process->m_is_kernel_process || process->executable())
+        PerformanceManager::add_process_created_event(*process);
 }
 
 Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
