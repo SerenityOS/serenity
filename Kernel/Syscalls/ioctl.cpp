@@ -20,13 +20,13 @@ ErrorOr<FlatPtr> Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
         return 0;
     }
     if (request == FIOCLEX) {
-        m_fds.with_exclusive([&](auto& fds) {
+        fds().with_exclusive([&](auto& fds) {
             fds[fd].set_flags(fds[fd].flags() | FD_CLOEXEC);
         });
         return 0;
     }
     if (request == FIONCLEX) {
-        m_fds.with_exclusive([&](auto& fds) {
+        fds().with_exclusive([&](auto& fds) {
             fds[fd].set_flags(fds[fd].flags() & ~FD_CLOEXEC);
         });
         return 0;

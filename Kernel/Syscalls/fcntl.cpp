@@ -24,16 +24,16 @@ ErrorOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, uintptr_t arg)
         int arg_fd = (int)arg;
         if (arg_fd < 0)
             return EINVAL;
-        return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
+        return fds().with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
             auto fd_allocation = TRY(fds.allocate(arg_fd));
             fds[fd_allocation.fd].set(*description, (cmd == F_DUPFD_CLOEXEC) ? FD_CLOEXEC : 0);
             return fd_allocation.fd;
         });
     }
     case F_GETFD:
-        return m_fds.with_exclusive([fd](auto& fds) { return fds[fd].flags(); });
+        return fds().with_exclusive([fd](auto& fds) { return fds[fd].flags(); });
     case F_SETFD:
-        m_fds.with_exclusive([fd, arg](auto& fds) { fds[fd].set_flags(arg); });
+        fds().with_exclusive([fd, arg](auto& fds) { fds[fd].set_flags(arg); });
         break;
     case F_GETFL:
         return description->file_flags();

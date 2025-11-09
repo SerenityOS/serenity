@@ -62,7 +62,7 @@ ErrorOr<FlatPtr> Process::sys$fsopen(Userspace<Syscall::SC_fsopen_params const*>
     VERIFY(fs_type_initializer);
     auto mount_file = TRY(MountFile::create(*fs_type_initializer, params.flags));
     auto description = TRY(OpenFileDescription::try_create(move(mount_file)));
-    return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
+    return fds().with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
         auto new_fd = TRY(fds.allocate());
         fds[new_fd.fd].set(move(description), FD_CLOEXEC);
         return new_fd.fd;

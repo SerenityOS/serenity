@@ -78,6 +78,7 @@ enum class NeedsBigProcessLock {
     S(fchown, NeedsBigProcessLock::No)                     \
     S(fcntl, NeedsBigProcessLock::No)                      \
     S(fork, NeedsBigProcessLock::No)                       \
+    S(rfork, NeedsBigProcessLock::No)                      \
     S(fstat, NeedsBigProcessLock::No)                      \
     S(fstatvfs, NeedsBigProcessLock::No)                   \
     S(fsopen, NeedsBigProcessLock::No)                     \
