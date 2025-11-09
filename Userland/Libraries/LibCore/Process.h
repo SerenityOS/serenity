@@ -96,13 +96,13 @@ public:
 
     pid_t pid() const { return m_pid; }
 
-    ErrorOr<void> disown();
-
     // FIXME: Make it return an exit code.
     ErrorOr<bool> wait_for_termination();
 
 private:
     friend IPCProcess;
+
+    ErrorOr<void> disown();
 
     Process(pid_t pid)
         : m_pid(pid)
