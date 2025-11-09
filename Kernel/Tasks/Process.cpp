@@ -211,7 +211,7 @@ void Process::register_new(Process& process)
     });
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create_userland_init_process(StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<TTY> tty)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_userland_init_process(StringView path, Vector<NonnullOwnPtr<KString>> arguments, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<TTY> tty)
 {
     auto parts = path.split_view('/');
     if (arguments.is_empty()) {
@@ -224,7 +224,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_userland_init_process(St
     auto vfs_root_context_root_custody = vfs_root_context->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
         return custody;
     });
-    auto [process, first_thread] = TRY(Process::create(parts.last(), uid, gid, ProcessID(0), false, vfs_root_context, hostname_context, vfs_root_context_root_custody, nullptr, tty));
+    auto [process, first_thread] = TRY(Process::create(parts.last(), UserID(0), GroupID(0), ProcessID(0), false, vfs_root_context, hostname_context, vfs_root_context_root_custody, nullptr, tty));
 
     TRY(process->m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         TRY(fds.try_resize(Process::OpenFileDescriptions::max_open()));
@@ -246,7 +246,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_userland_init_process(St
 
     Thread* new_main_thread = nullptr;
     InterruptsState previous_interrupts_state = InterruptsState::Enabled;
-    TRY(process->exec(move(path_string), move(arguments), move(environment), new_main_thread, previous_interrupts_state));
+    TRY(process->exec(move(path_string), move(arguments), {}, new_main_thread, previous_interrupts_state));
 
     register_new(*process);
 
