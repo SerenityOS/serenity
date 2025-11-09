@@ -1784,19 +1784,10 @@ static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text
         for (auto code_length_length : code_length_lengths)
             TRY(symbol_id_bit_stream.write_bits(code_length_length, 4));
 
-        Vector<u8> code_lengths;
-        for (u32 i = 0; i < symbols.size(); ++i) {
+        for (u32 i = 0; i < symbols.size(); ++i)
             TRY(symbol_id_bit_stream.write_bits(0u, 1));
-            code_lengths.append(max(id_symbol_code_length, 1));
-        }
 
-        auto codes = TRY(JBIG2::assign_huffman_codes(code_lengths));
-        for (auto const& [i, length] : enumerate(code_lengths)) {
-            if (length == 0)
-                continue;
-            JBIG2::Code code { .prefix_length = length, .range_length = 0, .first_value = i, .code = codes[i] };
-            symbol_id_codes.append(code);
-        }
+        symbol_id_codes = TRY(JBIG2::uniform_huffman_codes(symbols.size(), max(id_symbol_code_length, 1)));
         symbol_id_table_storage = JBIG2::HuffmanTable { symbol_id_codes };
         symbol_id_table = &symbol_id_table_storage.value();
 

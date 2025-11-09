@@ -221,6 +221,7 @@ struct Code {
 };
 
 ErrorOr<Vector<u32>> assign_huffman_codes(ReadonlyBytes code_lengths);
+ErrorOr<Vector<JBIG2::Code>> uniform_huffman_codes(u32 number_of_symbols, u32 code_length);
 
 class HuffmanTable {
 public:
