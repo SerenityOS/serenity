@@ -30,10 +30,25 @@
                                 "image_data": {
                                     "from_file": "bitmap.bmp",
                                     "crop": {
-                                        "x": 232,
-                                        "y": 70,
-                                        "width": 120,
-                                        "height": 250
+                                        "x": 50,
+                                        "y": 108,
+                                        "width": 30,
+                                        "height": 30
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap-blemish.bmp",
+                                    "crop": {
+                                        "x": 60,
+                                        "y": 265,
+                                        "width": 40,
+                                        "height": 75
                                     }
                                 }
                             }
@@ -60,10 +75,10 @@
                                 "image_data": {
                                     "from_file": "bitmap.bmp",
                                     "crop": {
-                                        "x": 50,
-                                        "y": 108,
-                                        "width": 30,
-                                        "height": 30
+                                        "x": 232,
+                                        "y": 70,
+                                        "width": 120,
+                                        "height": 250
                                     }
                                 }
                             }
@@ -91,7 +106,7 @@
                 "flags": {
                     "uses_huffman_encoding": false,
                     "uses_refinement_coding": true,
-                    "strip_size": 4,
+                    "strip_size": 2,
                     "reference_corner": "top_left",
                     "refinement_template": 0
                 },
@@ -105,17 +120,42 @@
                 "initial_strip_t": -4,
                 "strips": [
                     {
-                        "strip_t": 4,
+                        "strip_t": 70,
+                        "instances": [
+                            {
+                                "instance_s": 232,
+                                "instance_t": 70,
+                                "symbol_id": 3
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 100,
+                        "instances": [
+                            {
+                                "instance_s": 135,
+                                "instance_t": 100,
+                                "symbol_id": 2
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 108,
                         "instances": [
                             {
                                 "instance_s": 50,
                                 "instance_t": 108,
-                                "symbol_id": 2
-                            },
+                                "symbol_id": 0
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 264,
+                        "instances": [
                             {
                                 "instance_s": 60,
                                 "instance_t": 265,
-                                "symbol_id": 2,
+                                "symbol_id": 1,
                                 "instance_refines_symbol_to": {
                                     "delta_width": 0,
                                     "delta_height": 0,
@@ -126,21 +166,11 @@
                                         "crop": {
                                             "x": 60,
                                             "y": 265,
-                                            "width": 30,
-                                            "height": 30
+                                            "width": 40,
+                                            "height": 75
                                         }
                                     }
                                 }
-                            },
-                            {
-                                "instance_s": 135,
-                                "instance_t": 100,
-                                "symbol_id": 1
-                            },
-                            {
-                                "instance_s": 232,
-                                "instance_t": 70,
-                                "symbol_id": 0
                             }
                         ]
                     }
