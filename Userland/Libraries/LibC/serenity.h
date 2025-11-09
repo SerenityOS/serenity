@@ -61,11 +61,7 @@ int get_stack_bounds(uintptr_t* user_stack_base, size_t* user_stack_size);
 
 int anon_create(size_t size, int options);
 
-int serenity_readlink(char const* path, size_t path_length, char* buffer, size_t buffer_size);
-
 int getkeymap(char* name_buffer, size_t name_buffer_size, uint32_t* map, uint32_t* shift_map, uint32_t* alt_map, uint32_t* altgr_map, uint32_t* shift_altgr_map);
 int setkeymap(char const* name, uint32_t const* map, uint32_t* const shift_map, uint32_t const* alt_map, uint32_t const* altgr_map, uint32_t const* shift_altgr_map);
-
-int serenity_open(char const* path, size_t path_length, int options, ...);
 
 __END_DECLS
