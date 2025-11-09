@@ -386,6 +386,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-symbolrefineone.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symbolrefineone-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symbolrefineone-template1.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol-symbolrefineseveral.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textbottomleft.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textbottomlefttranspose.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textbottomright.jbig2"sv),
@@ -398,7 +399,6 @@ TEST_CASE(test_jbig2_decode)
         // - rotated halftone (code support added in #26044)
         // - composition test for halftone regions
         // - intermediate halftone / refinement of halftone regions
-        // - symbols with REFAGGNINST > 1 (code support added in #26107)
         // - negative position in composition (code support added in #26046)
         // - intermediate text regions (code support added in #26197)
         // - intermediate halftone regions (code support added in #26197)
