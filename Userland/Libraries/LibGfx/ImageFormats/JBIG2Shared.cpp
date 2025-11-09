@@ -266,6 +266,23 @@ ErrorOr<Vector<u32>> assign_huffman_codes(ReadonlyBytes code_lengths)
     return codes;
 }
 
+ErrorOr<Vector<JBIG2::Code>> uniform_huffman_codes(u32 number_of_symbols, u32 code_length)
+{
+    Vector<u8> code_lengths;
+    for (u32 i = 0; i < number_of_symbols; ++i)
+        code_lengths.append(code_length);
+    auto codes = TRY(JBIG2::assign_huffman_codes(code_lengths));
+
+    Vector<JBIG2::Code> uniform_codes;
+    for (auto const& [i, length] : enumerate(code_lengths)) {
+        if (length == 0)
+            continue;
+        JBIG2::Code code { .prefix_length = length, .range_length = 0, .first_value = i, .code = codes[i] };
+        uniform_codes.append(code);
+    }
+    return uniform_codes;
+}
+
 // Table B.1 – Standard Huffman table A
 constexpr Array standard_huffman_table_A = {
     Code { 1, 4, 0, 0b0 },
