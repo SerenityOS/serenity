@@ -71,49 +71,51 @@ add_custom_target(setup-and-run
     USES_TERMINAL
 )
 
+set(SHARED_ENV_VARIABLES "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}")
+
 add_custom_target(qemu-image
-    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-qemu.sh"
+    COMMAND "${CMAKE_COMMAND}" -E env ${SHARED_ENV_VARIABLES} "${SerenityOS_SOURCE_DIR}/Meta/build-image-qemu.sh"
     BYPRODUCTS "${CMAKE_BINARY_DIR}/_disk_image"
     USES_TERMINAL
 )
 
 add_custom_target(uefi-image
-    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-uefi.sh"
+    COMMAND "${CMAKE_COMMAND}" -E env ${SHARED_ENV_VARIABLES} "${SerenityOS_SOURCE_DIR}/Meta/build-image-uefi.sh"
     BYPRODUCTS ${CMAKE_BINARY_DIR}/uefi_disk_image
     USES_TERMINAL
 )
 
 if("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_custom_target(grub-image
-        COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-grub.sh"
+        COMMAND "${CMAKE_COMMAND}" -E env ${SHARED_ENV_VARIABLES} "${SerenityOS_SOURCE_DIR}/Meta/build-image-grub.sh"
         BYPRODUCTS ${CMAKE_BINARY_DIR}/grub_disk_image
         USES_TERMINAL
     )
     add_custom_target(grub-uefi-image
-        COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-grub-uefi.sh"
+        COMMAND "${CMAKE_COMMAND}" -E env ${SHARED_ENV_VARIABLES} "${SerenityOS_SOURCE_DIR}/Meta/build-image-grub-uefi.sh"
         BYPRODUCTS ${CMAKE_BINARY_DIR}/grub_uefi_disk_image
         USES_TERMINAL
     )
     add_custom_target(limine-image
-        COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-limine.sh"
+        COMMAND "${CMAKE_COMMAND}" -E env ${SHARED_ENV_VARIABLES} "${SerenityOS_SOURCE_DIR}/Meta/build-image-limine.sh"
         BYPRODUCTS ${CMAKE_BINARY_DIR}/limine_disk_image
         USES_TERMINAL
     )
     add_custom_target(extlinux-image
-        COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-extlinux.sh"
+        COMMAND "${CMAKE_COMMAND}" -E env ${SHARED_ENV_VARIABLES} "${SerenityOS_SOURCE_DIR}/Meta/build-image-extlinux.sh"
         BYPRODUCTS "${CMAKE_BINARY_DIR}/extlinux_disk_image"
         USES_TERMINAL
     )
 elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
     add_custom_target(raspberry-pi-image
-        COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-image-raspberry-pi.sh"
+        COMMAND "${CMAKE_COMMAND}" -E env ${SHARED_ENV_VARIABLES} "${SerenityOS_SOURCE_DIR}/Meta/build-image-raspberry-pi.sh"
         BYPRODUCTS ${CMAKE_BINARY_DIR}/raspberry_pi_disk_image
         USES_TERMINAL
     )
 endif()
 
 add_custom_target(install-native-partition
-    COMMAND "${CMAKE_COMMAND}" -E env "SERENITY_SOURCE_DIR=${SerenityOS_SOURCE_DIR}" "SERENITY_ARCH=${SERENITY_ARCH}" "SERENITY_TOOLCHAIN=${CMAKE_CXX_COMPILER_ID}" "LLVM_VERSION=${CMAKE_CXX_COMPILER_VERSION}" "${SerenityOS_SOURCE_DIR}/Meta/build-native-partition.sh"
+    COMMAND "${CMAKE_COMMAND}" -E env ${SHARED_ENV_VARIABLES} "${SerenityOS_SOURCE_DIR}/Meta/build-native-partition.sh"
     USES_TERMINAL
 )
 
