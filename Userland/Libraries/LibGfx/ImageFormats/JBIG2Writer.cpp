@@ -705,14 +705,17 @@ static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParam
         if (!has_refinement_image)
             return symbol.size;
 
-        if (inputs.uses_huffman_encoding)
-            return Error::from_string_literal("JBIG2Writer: Cannot decode refinement images with huffman encoding yet");
-
         TRY(write_refinement_delta_width(symbol_instance.refinement_data->delta_width));
         TRY(write_refinement_delta_height(symbol_instance.refinement_data->delta_height));
         TRY(write_refinement_x_offset(symbol_instance.refinement_data->x_offset));
         TRY(write_refinement_y_offset(symbol_instance.refinement_data->y_offset));
-        // FIXME: This is missing some steps needed for the SBHUFF = 1 case.
+
+        MQArithmeticEncoder* refinement_encoder = encoder;
+        Optional<MQArithmeticEncoder> huffman_refinement_encoder;
+        if (inputs.uses_huffman_encoding) {
+            huffman_refinement_encoder = TRY(MQArithmeticEncoder::initialize(0));
+            refinement_encoder = &huffman_refinement_encoder.value();
+        }
 
         // Table 12 – Parameters used to decode a symbol instance's bitmap using refinement
         if (static_cast<i32>(symbol.size.width()) + symbol_instance.refinement_data->delta_width < 0)
@@ -737,7 +740,16 @@ static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParam
         refinement_inputs.reference_y_offset = floor_div(symbol_instance.refinement_data->delta_height, 2) + symbol_instance.refinement_data->y_offset;
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
-        TRY(generic_refinement_region_encoding_procedure(refinement_inputs, *encoder, refinement_contexts.value()));
+        TRY(generic_refinement_region_encoding_procedure(refinement_inputs, *refinement_encoder, refinement_contexts.value()));
+
+        if (inputs.uses_huffman_encoding) {
+            auto data = TRY(huffman_refinement_encoder->finalize(symbol_instance.refinement_data->trailing_7fff_handling));
+            auto const& table = *TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
+            TRY(table.write_symbol_non_oob(*bit_stream, data.size()));
+            TRY(bit_stream->align_to_byte_boundary());
+            TRY(bit_stream->write_until_depleted(data));
+        }
+
         return IntSize { refinement_inputs.image.width(), refinement_inputs.image.height() };
     };
 

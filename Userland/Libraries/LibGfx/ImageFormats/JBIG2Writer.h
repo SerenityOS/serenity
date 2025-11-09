@@ -81,6 +81,9 @@ struct TextRegionStrip {
             i32 x_offset {};
             i32 y_offset {};
             NonnullRefPtr<BilevelImage> refines_to;
+
+            // For refinement data embedded in a huffman coded text region segment.
+            MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
         };
         Optional<RefinementData> refinement_data {};
     };
