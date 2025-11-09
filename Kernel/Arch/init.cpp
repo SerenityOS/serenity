@@ -407,7 +407,7 @@ void init_stage2(void*)
     dmesgln("Running first user process: {}", userspace_init);
     dmesgln("Init (first) process args: {}", init_args);
 
-    auto init_or_error = Process::create_user_process(userspace_init, UserID(0), GroupID(0), move(init_args), {}, move(first_process_vfs_context), move(hostname_context), tty0);
+    auto init_or_error = Process::create_userland_init_process(userspace_init, UserID(0), GroupID(0), move(init_args), {}, move(first_process_vfs_context), move(hostname_context), tty0);
     if (init_or_error.is_error())
         PANIC("init_stage2: Error spawning init process: {}", init_or_error.error());
 
