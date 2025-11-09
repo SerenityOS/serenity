@@ -383,6 +383,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-textrefine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine-negative-delta-width.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol-texthuffrefine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symbolrefineone.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symbolrefineone-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symbolrefineone-template1.jbig2"sv),
@@ -410,7 +411,6 @@ TEST_CASE(test_jbig2_decode)
         //   - REFAGGNINST > 1 case
         // - exttemplate
         // - colors
-        // - huffman text region using refinement (RI = 1)
         // - huffman symbol region using refinement (SDREFAGG = 1)
         // (test_annex_h_jbig2 covers a subset of these, but having standalone files would be nice.)
     };
