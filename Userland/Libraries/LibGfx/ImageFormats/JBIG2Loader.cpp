@@ -1799,15 +1799,19 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
     // This belongs in 6.5.5 1) below, but also needs to be captured by read_symbol_bitmap here.
     Vector<BilevelSubImage> new_symbols;
 
+    // Likewise, this is from 6.5.8.2.3 below.
+    Vector<JBIG2::Code> symbol_id_codes;
+    Optional<JBIG2::HuffmanTable> symbol_id_table_storage;
+
     auto read_symbol_bitmap = [&](u32 width, u32 height) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
         // 6.5.8 Symbol bitmap
-        if (inputs.uses_huffman_encoding)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode generic symbol bitmaps with huffman encoding");
 
         // 6.5.8.1 Direct-coded symbol bitmap
         // "If SDREFAGG is 0, then decode the symbol's bitmap using a generic region decoding procedure as described in 6.2.
         //  Set the parameters to this decoding procedure as shown in Table 16."
         if (!inputs.uses_refinement_or_aggregate_coding) {
+            VERIFY(!inputs.uses_huffman_encoding);
+
             // Table 16 – Parameters used to decode a symbol's bitmap using generic bitmap decoding
             GenericRegionDecodingInputParameters generic_inputs;
             generic_inputs.is_modified_modified_read = false;
@@ -1827,8 +1831,16 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
         dbgln_if(JBIG2_DEBUG, "Number of symbol instances: {}", number_of_symbol_instances);
 
         // 6.5.8.2.3 Setting SBSYMCODES and SBSYMCODELEN
-        // FIXME: Implement support for SDHUFF = 1
-        u32 code_length = ceil(log2(inputs.input_symbols.size() + inputs.number_of_new_symbols));
+        u32 number_of_symbols = inputs.input_symbols.size() + inputs.number_of_new_symbols; // "SBNUMSYMS" in spec.
+        u32 code_length = ceil(log2(number_of_symbols));                                    // "SBSYMCODELEN" in spec.
+        JBIG2::HuffmanTable const* symbol_id_table { nullptr };
+        if (inputs.uses_huffman_encoding) {
+            if (!symbol_id_table_storage.has_value()) {
+                symbol_id_codes = TRY(JBIG2::uniform_huffman_codes(number_of_symbols, max(code_length, 1u)));
+                symbol_id_table_storage = JBIG2::HuffmanTable { symbol_id_codes };
+            }
+            symbol_id_table = &symbol_id_table_storage.value();
+        }
 
         if (!text_contexts.has_value())
             text_contexts = TextContexts { code_length };
@@ -1847,6 +1859,7 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
             text_inputs.region_height = height;
             text_inputs.number_of_instances = number_of_symbol_instances;
             text_inputs.size_of_symbol_instance_strips = 1;
+            text_inputs.symbol_id_table = symbol_id_table;
             text_inputs.id_symbol_code_length = code_length;
 
             // 6.5.8.2.4 Setting SBSYMS
@@ -1871,7 +1884,10 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
             text_inputs.refinement_template = inputs.refinement_template;
             text_inputs.refinement_adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
 
-            text_inputs.arithmetic_decoder = &decoder.value();
+            if (inputs.uses_huffman_encoding)
+                text_inputs.bit_stream = &bit_stream.value();
+            else
+                text_inputs.arithmetic_decoder = &decoder.value();
             return text_region_decoding_procedure(text_inputs, text_contexts, refinement_contexts);
         }
 
@@ -1879,6 +1895,9 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
 
         // 6.5.8.2.2 Decoding a bitmap when REFAGGNINST = 1
         // FIXME: This is missing some steps for the SDHUFF = 1 case.
+        if (inputs.uses_huffman_encoding)
+            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode single-symbol refinements with huffman encoding yet");
+
         if (number_of_symbol_instances != 1)
             return Error::from_string_literal("JBIG2ImageDecoderPlugin: Unexpected number of symbol instances");
 
