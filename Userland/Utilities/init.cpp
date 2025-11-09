@@ -46,7 +46,7 @@ static ErrorOr<void> populate_device_node_with_symlink(DeviceNodeType device_nod
 
 static ErrorOr<void> spawn_device_mapper_process()
 {
-    TRY(Core::Process::spawn("/bin/DeviceMapper"sv, ReadonlySpan<StringView> {}, {}, Core::Process::KeepAsChild::No));
+    TRY(Core::Process::spawn("/bin/DeviceMapper"sv, ReadonlySpan<StringView> {}));
     return {};
 }
 
