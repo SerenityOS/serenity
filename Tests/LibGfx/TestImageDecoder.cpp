@@ -388,6 +388,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-symbolrefineone-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symbolrefineone-template1.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symbolrefineseveral.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol-symhuffrefineseveral.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textbottomleft.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textbottomlefttranspose.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textbottomright.jbig2"sv),
@@ -406,12 +407,9 @@ TEST_CASE(test_jbig2_decode)
         // - intermediate direct regions (code support added in #26197)
         // Missing tests for things that aren't implemented yet:
         // - immediate refinement regions not referring to a direct region (i.e. refining the page)
-        // - huffman-coded symbols with SDREFAGG = 1
-        //   - REFAGGNINST = 1 case
-        //   - REFAGGNINST > 1 case
+        // - huffman-coded symbols with SDREFAGG = 1, REFAGGNINST = 1 case
         // - exttemplate
         // - colors
-        // - huffman symbol region using refinement (SDREFAGG = 1)
         // (test_annex_h_jbig2 covers a subset of these, but having standalone files would be nice.)
     };
 
