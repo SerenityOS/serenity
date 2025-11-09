@@ -1102,19 +1102,36 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
         // "3) If REFAGGNINST is equal to one, then decode the bitmap as described in 6.5.8.2.2."
 
         // 6.5.8.2.2 Decoding a bitmap when REFAGGNINST = 1
-        // FIXME: This is missing some steps for the SDHUFF = 1 case.
-        if (inputs.uses_huffman_encoding)
-            return Error::from_string_literal("JBIG2Writer: Cannot encode single-symbol refinements with huffman encoding yet");
 
         auto const& refinement_image = symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymbol>();
-        TRY(text_contexts->id_encoder.encode(*encoder, refinement_image.symbol_id));
-        TRY(text_contexts->refinement_x_offset_encoder.encode_non_oob(*encoder, refinement_image.delta_x_offset));
-        TRY(text_contexts->refinement_y_offset_encoder.encode_non_oob(*encoder, refinement_image.delta_y_offset));
+        if (inputs.uses_huffman_encoding)
+            TRY(symbol_id_table->write_symbol_non_oob(*bit_stream, refinement_image.symbol_id));
+        else
+            TRY(text_contexts->id_encoder.encode(*encoder, refinement_image.symbol_id));
+
+        if (inputs.uses_huffman_encoding)
+            TRY(TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_15))->write_symbol_non_oob(*bit_stream, refinement_image.delta_x_offset));
+        else
+            TRY(text_contexts->refinement_x_offset_encoder.encode_non_oob(*encoder, refinement_image.delta_x_offset));
+
+        if (inputs.uses_huffman_encoding)
+            TRY(TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_15))->write_symbol_non_oob(*bit_stream, refinement_image.delta_y_offset));
+        else
+            TRY(text_contexts->refinement_y_offset_encoder.encode_non_oob(*encoder, refinement_image.delta_y_offset));
 
         if (refinement_image.symbol_id >= inputs.input_symbols.size() && refinement_image.symbol_id - inputs.input_symbols.size() >= new_symbols.size())
             return Error::from_string_literal("JBIG2Writer: Refinement/aggregate symbol ID out of range");
 
         auto const& IBO = TRY(symbol_image(refinement_image.symbol_id < inputs.input_symbols.size() ? inputs.input_symbols[refinement_image.symbol_id] : new_symbols[refinement_image.symbol_id - inputs.input_symbols.size()]));
+
+        MQArithmeticEncoder* refinement_encoder = nullptr;
+        Optional<MQArithmeticEncoder> huffman_refinement_encoder;
+        if (inputs.uses_huffman_encoding) {
+            huffman_refinement_encoder = TRY(MQArithmeticEncoder::initialize(0));
+            refinement_encoder = &huffman_refinement_encoder.value();
+        } else {
+            refinement_encoder = &encoder.value();
+        }
 
         // Table 18 – Parameters used to decode a symbol's bitmap when REFAGGNINST = 1
         GenericRefinementRegionEncodingInputParameters refinement_inputs {
@@ -1126,7 +1143,16 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
         refinement_inputs.reference_y_offset = refinement_image.delta_y_offset;
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
-        return generic_refinement_region_encoding_procedure(refinement_inputs, encoder.value(), refinement_contexts.value());
+        TRY(generic_refinement_region_encoding_procedure(refinement_inputs, *refinement_encoder, refinement_contexts.value()));
+
+        if (inputs.uses_huffman_encoding) {
+            auto data = TRY(huffman_refinement_encoder->finalize(refinement_image.trailing_7fff_handling));
+            TRY(TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1))->write_symbol_non_oob(*bit_stream, data.size()));
+            TRY(bit_stream->align_to_byte_boundary());
+            TRY(stream->write_until_depleted(data));
+        }
+
+        return {};
     };
 
     auto write_height_class_collective_bitmap = [&](BilevelImage const& image, bool compress) -> ErrorOr<void> {
