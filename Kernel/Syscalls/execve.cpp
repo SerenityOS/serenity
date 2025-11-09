@@ -424,7 +424,7 @@ void Process::clear_signal_handlers_for_exec()
 }
 
 ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment,
-    RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, Elf_Ehdr const& main_program_header, Optional<size_t> minimum_stack_size)
+    RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, Elf_Ehdr const& main_program_header, ProcessEventType event_type, Optional<size_t> minimum_stack_size)
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
@@ -653,7 +653,14 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     {
         TemporaryChange profiling_disabler(m_profiling, was_profiling);
-        PerformanceManager::add_process_exec_event(*this);
+        switch (event_type) {
+        case ProcessEventType::Exec:
+            PerformanceManager::add_process_exec_event(*this);
+            break;
+        case ProcessEventType::Create:
+            PerformanceManager::add_process_created_event(*this);
+            break;
+        }
     }
 
     u32 lock_count_to_restore;
@@ -873,7 +880,7 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
     return interpreter_description;
 }
 
-ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, int recursion_depth)
+ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, ProcessEventType event_type, int recursion_depth)
 {
     if (recursion_depth > 2) {
         dbgln("exec({}): SHENANIGANS! recursed too far trying to find #! interpreter", path);
@@ -917,7 +924,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
         auto shebang_path = TRY(shebang_words.first()->try_clone());
         arguments[0] = move(path);
         TRY(arguments.try_prepend(move(shebang_words)));
-        return exec(move(shebang_path), move(arguments), move(environment), new_main_thread, previous_interrupts_state, ++recursion_depth);
+        return exec(move(shebang_path), move(arguments), move(environment), new_main_thread, previous_interrupts_state, event_type, ++recursion_depth);
     }
 
     // #2) ELF32 for i386
@@ -933,7 +940,7 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
 
     Optional<size_t> minimum_stack_size {};
     auto interpreter_description = TRY(find_elf_interpreter_for_executable(*description, path->view(), *main_program_header, metadata.size, minimum_stack_size));
-    TRY(do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, previous_interrupts_state, *main_program_header, minimum_stack_size));
+    TRY(do_exec(move(description), move(arguments), move(environment), move(interpreter_description), new_main_thread, previous_interrupts_state, *main_program_header, event_type, minimum_stack_size));
 
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(Processor::in_critical() == 1);

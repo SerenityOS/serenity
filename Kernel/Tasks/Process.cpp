@@ -246,7 +246,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_userland_init_process(St
 
     Thread* new_main_thread = nullptr;
     InterruptsState previous_interrupts_state = InterruptsState::Enabled;
-    TRY(process->exec(move(path_string), move(arguments), {}, new_main_thread, previous_interrupts_state));
+    TRY(process->exec(move(path_string), move(arguments), {}, new_main_thread, previous_interrupts_state, ProcessEventType::Create));
 
     commit_creation(process);
 
