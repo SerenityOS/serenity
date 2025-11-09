@@ -11,7 +11,6 @@
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <serenity.h>
 #include <spawn.h>
 #include <sys/stat.h>
 #include <time.h>

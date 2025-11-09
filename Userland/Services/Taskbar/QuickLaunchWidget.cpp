@@ -22,7 +22,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/StylePainter.h>
-#include <serenity.h>
 #include <sys/stat.h>
 
 namespace Taskbar {

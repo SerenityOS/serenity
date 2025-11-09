@@ -22,7 +22,6 @@
 #include <LibURL/URL.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <serenity.h>
 #include <spawn.h>
 #include <sys/stat.h>
 #include <unistd.h>

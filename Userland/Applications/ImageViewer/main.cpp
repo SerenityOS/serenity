@@ -32,7 +32,6 @@
 #include <LibGfx/Rect.h>
 #include <LibMain/Main.h>
 #include <LibURL/URL.h>
-#include <serenity.h>
 #include <string.h>
 
 using namespace ImageViewer;

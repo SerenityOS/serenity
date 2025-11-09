@@ -52,7 +52,6 @@
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
 #include <LibThreading/BackgroundAction.h>
-#include <serenity.h>
 #include <signal.h>
 #include <spawn.h>
 #include <stdio.h>
