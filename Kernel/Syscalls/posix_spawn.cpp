@@ -115,10 +115,7 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
         }
     });
 
-    Process::register_new(*child);
-
-    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
-    child->ref();
+    commit_creation(child);
 
     PerformanceManager::add_process_created_event(*child);
 

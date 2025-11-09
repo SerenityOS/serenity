@@ -248,10 +248,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_userland_init_process(St
     InterruptsState previous_interrupts_state = InterruptsState::Enabled;
     TRY(process->exec(move(path_string), move(arguments), {}, new_main_thread, previous_interrupts_state));
 
-    register_new(*process);
-
-    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
-    process->ref();
+    commit_creation(process);
 
     {
         SpinlockLocker lock(g_scheduler_lock);
@@ -342,6 +339,16 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create_impl(StringView name, Us
     auto first_thread = TRY(process->attach_resources(new_address_space.release_nonnull(), fork_parent));
 
     return ProcessAndFirstThread { move(process), move(first_thread) };
+}
+
+void Process::commit_creation(NonnullRefPtr<Process>& process)
+{
+    if (!process->m_is_kernel_process) {
+        Process::register_new(*process);
+
+        // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
+        process->ref();
+    }
 }
 
 Process::Process(StringView name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext> hostname_context, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time)
