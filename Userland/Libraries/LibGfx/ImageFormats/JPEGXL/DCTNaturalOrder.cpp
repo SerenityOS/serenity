@@ -58,9 +58,9 @@ static ErrorOr<void> compute_natural_ordering()
         for (u32 y = 0; y < bheight; ++y) {
             for (u32 x = 0; x < bwidth; ++x) {
                 if (x < bwidth / 8 && y < bheight / 8)
-                    llf.empend(x, y);
+                    TRY(llf.try_empend(x, y));
                 else
-                    hf.empend(x, y);
+                    TRY(hf.try_empend(x, y));
             }
         }
 
@@ -99,7 +99,7 @@ static ErrorOr<void> compute_natural_ordering()
         };
         quick_sort(hf, less_than);
 
-        llf.extend(hf);
+        TRY(llf.try_extend(hf));
 
         g_backing_data[i] = move(llf);
         for (auto& span : g_dct_natural_order[i])
