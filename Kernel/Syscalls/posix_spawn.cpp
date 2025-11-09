@@ -62,8 +62,9 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
     Vector<NonnullOwnPtr<KString>> environment;
     TRY(copy_user_strings(params.environment, environment));
 
-    auto credentials = this->credentials();
-    auto [child, child_first_thread] = TRY(Process::create({}, credentials->uid(), credentials->gid(), pid(), m_is_kernel_process, vfs_root_context(), hostname_context(), current_directory(), nullptr, tty(), nullptr));
+    auto const& credentials = this->credentials();
+    VERIFY(!m_is_kernel_process);
+    auto [child, child_first_thread] = TRY(Process::create_spawned(credentials->uid(), credentials->gid(), pid(), vfs_root_context(), hostname_context(), current_directory(), tty()));
 
     ArmedScopeGuard thread_finalizer_guard = [&child_first_thread]() {
         SpinlockLocker lock(g_scheduler_lock);
