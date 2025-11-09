@@ -489,6 +489,7 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymb
     i32 delta_x_offset = 0;
     i32 delta_y_offset = 0;
     RefPtr<Gfx::BilevelImage> image;
+    Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "symbol_id"sv) {
             if (auto symbol_id_json = value.get_uint(); symbol_id_json.has_value()) {
@@ -522,6 +523,11 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymb
             return Error::from_string_literal("expected object for \"image_data\"");
         }
 
+        if (key == "strip_trailing_7fffs"sv) {
+            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
+            return {};
+        }
+
         dbgln("symbol_dict symbol refines_symbol_to key {}", key);
         return Error::from_string_literal("unknown symbol_dict symbol refines_symbol_to key");
     }));
@@ -534,6 +540,7 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymb
         delta_x_offset,
         delta_y_offset,
         *image,
+        trailing_7fff_handling,
     };
 }
 
