@@ -103,7 +103,7 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
 
     Thread* new_main_thread = nullptr;
     InterruptsState previous_interrupts_state = InterruptsState::Enabled;
-    TRY(child->exec(move(path), move(arguments), move(environment), new_main_thread, previous_interrupts_state));
+    TRY(child->exec(move(path), move(arguments), move(environment), new_main_thread, previous_interrupts_state, ProcessEventType::Create));
     thread_finalizer_guard.disarm();
 
     m_scoped_process_list.with([&](auto const& list_ptr) {
@@ -116,8 +116,6 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
     });
 
     commit_creation(child);
-
-    PerformanceManager::add_process_created_event(*child);
 
     SpinlockLocker lock(g_scheduler_lock);
     new_main_thread->set_affinity(Thread::current()->affinity());
