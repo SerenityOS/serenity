@@ -17,10 +17,10 @@
 #include <LibDesktop/AppFile.h>
 #include <LibFileSystem/FileSystem.h>
 #include <errno.h>
-#include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 namespace LaunchServer {
 

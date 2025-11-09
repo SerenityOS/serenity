@@ -38,7 +38,6 @@
 #include <LibThreading/BackgroundAction.h>
 #include <LibURL/URL.h>
 #include <mallocdefs.h>
-#include <serenity.h>
 #include <spawn.h>
 #include <string.h>
 #include <unistd.h>

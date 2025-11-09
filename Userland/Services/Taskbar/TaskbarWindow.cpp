@@ -32,7 +32,6 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/WindowTheme.h>
-#include <serenity.h>
 #include <stdio.h>
 
 class TaskbarWidget final : public GUI::Widget {

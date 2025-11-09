@@ -29,7 +29,6 @@
 #include <LibGfx/SystemTheme.h>
 #include <LibMain/Main.h>
 #include <WindowServer/Window.h>
-#include <serenity.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/wait.h>
