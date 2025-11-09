@@ -1334,6 +1334,7 @@ RecursiveSpinlockProtected<Process::Name, LockRank::None> const& Process::name()
 
 void Process::set_name(StringView name)
 {
+    VERIFY(!name.is_empty());
     m_name.with([name](auto& process_name) {
         process_name.store_characters(name);
     });
