@@ -155,8 +155,6 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     commit_creation(child);
 
-    PerformanceManager::add_process_created_event(*child);
-
     SpinlockLocker lock(g_scheduler_lock);
     child_first_thread->set_affinity(Thread::current()->affinity());
     child_first_thread->set_state(Thread::State::Runnable);
