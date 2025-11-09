@@ -1526,14 +1526,24 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
         if (!has_refinement_image)
             return &symbol;
 
-        if (inputs.uses_huffman_encoding)
-            return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot decode refinement images with huffman encoding yet");
-
         auto refinement_delta_width = TRY(read_refinement_delta_width());
         auto refinement_delta_height = TRY(read_refinement_delta_height());
         auto refinement_x_offset = TRY(read_refinement_x_offset());
         auto refinement_y_offset = TRY(read_refinement_y_offset());
-        // FIXME: This is missing some steps needed for the SBHUFF = 1 case.
+
+        MQArithmeticDecoder* refinement_decoder = nullptr;
+        Optional<MQArithmeticDecoder> huffman_refinement_decoder;
+        ByteBuffer huffman_refinement_data;
+        if (inputs.uses_huffman_encoding) {
+            auto data_size = TRY(inputs.refinement_size_table->read_symbol_non_oob(*bit_stream));
+            bit_stream->align_to_byte_boundary();
+            huffman_refinement_data = TRY(ByteBuffer::create_uninitialized(data_size));
+            TRY(bit_stream->read_until_filled(huffman_refinement_data));
+            huffman_refinement_decoder = TRY(MQArithmeticDecoder::initialize(huffman_refinement_data));
+            refinement_decoder = &huffman_refinement_decoder.value();
+        } else {
+            refinement_decoder = decoder;
+        }
 
         dbgln_if(JBIG2_DEBUG, "refinement delta width: {}, refinement delta height: {}, refinement x offset: {}, refinement y offset: {}", refinement_delta_width, refinement_delta_height, refinement_x_offset, refinement_y_offset);
 
@@ -1552,7 +1562,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
         refinement_inputs.reference_y_offset = floor_div(refinement_delta_height, 2) + refinement_y_offset;
         refinement_inputs.is_typical_prediction_used = false;
         refinement_inputs.adaptive_template_pixels = inputs.refinement_adaptive_template_pixels;
-        auto result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, *decoder, refinement_contexts.value()));
+        auto result = TRY(generic_refinement_region_decoding_procedure(refinement_inputs, *refinement_decoder, refinement_contexts.value()));
         refinement_result = result->as_subbitmap();
         return &refinement_result.value();
     };
