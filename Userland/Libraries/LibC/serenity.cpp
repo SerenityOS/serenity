@@ -101,17 +101,6 @@ int anon_create(size_t size, int options)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int serenity_readlink(char const* path, size_t path_length, char* buffer, size_t buffer_size)
-{
-    Syscall::SC_readlink_params small_params {
-        { path, path_length },
-        { buffer, buffer_size },
-        AT_FDCWD
-    };
-    int rc = syscall(SC_readlink, &small_params);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int setkeymap(char const* name, u32 const* map, u32* const shift_map, u32 const* alt_map, u32 const* altgr_map, u32 const* shift_altgr_map)
 {
     Syscall::SC_setkeymap_params params { map, shift_map, alt_map, altgr_map, shift_altgr_map, { name, strlen(name) } };
@@ -129,29 +118,6 @@ int getkeymap(char* name_buffer, size_t name_buffer_size, u32* map, u32* shift_m
         { name_buffer, name_buffer_size }
     };
     int rc = syscall(SC_getkeymap, &params);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int serenity_open(char const* path, size_t path_length, int options, ...)
-{
-    if (!path) {
-        errno = EFAULT;
-        return -1;
-    }
-
-    if (path_length > INT32_MAX) {
-        errno = EINVAL;
-        return -1;
-    }
-
-    va_list ap;
-    va_start(ap, options);
-    auto mode = (mode_t)va_arg(ap, unsigned);
-    va_end(ap);
-
-    Syscall::SC_open_params params { AT_FDCWD, { path, path_length }, options, mode };
-    int rc = syscall(SC_open, &params);
-
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }
