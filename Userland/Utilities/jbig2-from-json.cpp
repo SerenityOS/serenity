@@ -1022,6 +1022,7 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance::RefinementData> jbig
     i32 delta_x_offset = 0;
     i32 delta_y_offset = 0;
     RefPtr<Gfx::BilevelImage> image;
+    Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "delta_width"sv) {
             if (auto delta_width_json = value.get_i32(); delta_width_json.has_value()) {
@@ -1063,6 +1064,11 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance::RefinementData> jbig
             return Error::from_string_literal("expected object for \"image_data\"");
         }
 
+        if (key == "strip_trailing_7fffs"sv) {
+            trailing_7fff_handling = TRY(jbig2_trailing_7fff_handling_from_json(value));
+            return {};
+        }
+
         dbgln("text_region symbol_instance refinement_data key {}", key);
         return Error::from_string_literal("unknown text_region symbol_instance refinement_data key");
     }));
@@ -1076,6 +1082,7 @@ static ErrorOr<Gfx::JBIG2::TextRegionStrip::SymbolInstance::RefinementData> jbig
         delta_x_offset,
         delta_y_offset,
         *image,
+        trailing_7fff_handling,
     };
 }
 
