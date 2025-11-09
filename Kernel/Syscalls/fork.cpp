@@ -153,10 +153,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         }
     });
 
-    Process::register_new(*child);
-
-    // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
-    child->ref();
+    commit_creation(child);
 
     PerformanceManager::add_process_created_event(*child);
 

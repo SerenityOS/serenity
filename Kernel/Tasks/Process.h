@@ -708,6 +708,11 @@ private:
     static ErrorOr<ProcessAndFirstThread> create_from_fork(Process& parent);
     static ErrorOr<ProcessAndFirstThread> create_spawned(UserID, GroupID, ProcessID ppid, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext>, NonnullRefPtr<Custody> current_directory, RefPtr<TTY>);
     static ErrorOr<ProcessAndFirstThread> create_impl(StringView name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext>, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
+    // After calling one of the create_* function, you need to commit the creation of the process.
+    // You have to make sure that nothing will fail after calling this function otherwise the
+    // process will be leaked.
+    static void commit_creation(NonnullRefPtr<Process>&);
+
     ErrorOr<NonnullRefPtr<Thread>> attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, Process* fork_parent);
     static ProcessID allocate_pid();
 
