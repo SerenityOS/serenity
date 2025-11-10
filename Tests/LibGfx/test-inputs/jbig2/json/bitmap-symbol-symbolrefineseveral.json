@@ -139,23 +139,25 @@
                             {
                                 "width": 30,
                                 "height": 30,
-                                "refines_using_strips": [
-                                    {
-                                        "strip_t": 0,
-                                        "instances": [
-                                            {
-                                                "instance_s": 0,
-                                                "instance_t": 0,
-                                                "symbol_id": 0
-                                            },
-                                            {
-                                                "instance_s": 15,
-                                                "instance_t": 0,
-                                                "symbol_id": 1
-                                            }
-                                        ]
-                                    }
-                                ]
+                                "refines_using_strips": {
+                                    "strips": [
+                                        {
+                                            "strip_t": 0,
+                                            "instances": [
+                                                {
+                                                    "instance_s": 0,
+                                                    "instance_t": 0,
+                                                    "symbol_id": 0
+                                                },
+                                                {
+                                                    "instance_s": 15,
+                                                    "instance_t": 0,
+                                                    "symbol_id": 1
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
                             }
                         ]
                     }
