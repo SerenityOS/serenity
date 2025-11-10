@@ -1049,16 +1049,17 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
             refinement_contexts = RefinementContexts(inputs.refinement_template);
 
         if (number_of_symbol_instances > 1) {
-            auto const& strips = symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips>().strips;
+            auto const& refines_using_strips = symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips>();
 
             // "2) If REFAGGNINST is greater than one, then decode the bitmap itself using a text region decoding procedure
             //     as described in 6.4. Set the parameters to this decoding procedure as shown in Table 17."
 
             // Table 17 – Parameters used to decode a symbol's bitmap using refinement/aggregate decoding
-            TextRegionEncodingInputParameters text_inputs { .symbol_instance_strips = strips };
+            TextRegionEncodingInputParameters text_inputs { .symbol_instance_strips = refines_using_strips.strips };
             text_inputs.uses_huffman_encoding = inputs.uses_huffman_encoding;
             text_inputs.uses_refinement_coding = true;
             text_inputs.size_of_symbol_instance_strips = 1;
+            text_inputs.initial_strip_t = refines_using_strips.initial_strip_t;
             text_inputs.id_symbol_code_length = code_length;
 
             // 6.5.8.2.4 Setting SBSYMS
