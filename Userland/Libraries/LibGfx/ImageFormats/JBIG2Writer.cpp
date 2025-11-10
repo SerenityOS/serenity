@@ -500,7 +500,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> symbol_image(JBIG2::SymbolDictionary
     if (symbol.image.has<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymbol>())
         return symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymbol>().refines_to;
 
-    auto const& text_strips = symbol.image.get<Vector<JBIG2::TextRegionStrip>>();
+    auto const& text_strips = symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips>();
     (void)text_strips;
     return Error::from_string_literal("JBIG2Writer: Cannot write refinements of refinements by text strips yet");
 }
@@ -1028,9 +1028,9 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
         // 6.5.8.2 Refinement/aggregate-coded symbol bitmap
         // "1) Decode the number of symbol instances contained in the aggregation, as specified in 6.5.8.2.1. Let REFAGGNINST be the value decoded."
         i32 number_of_symbol_instances = 1;
-        if (symbol.image.has<Vector<JBIG2::TextRegionStrip>>()) {
+        if (symbol.image.has<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips>()) {
             number_of_symbol_instances = 0;
-            auto const& strips = symbol.image.get<Vector<JBIG2::TextRegionStrip>>();
+            auto const& strips = symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips>().strips;
             for (auto const& strip : strips)
                 number_of_symbol_instances += strip.symbol_instances.size();
 
@@ -1049,7 +1049,7 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
             refinement_contexts = RefinementContexts(inputs.refinement_template);
 
         if (number_of_symbol_instances > 1) {
-            auto const& strips = symbol.image.get<Vector<JBIG2::TextRegionStrip>>();
+            auto const& strips = symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips>().strips;
 
             // "2) If REFAGGNINST is greater than one, then decode the bitmap itself using a text region decoding procedure
             //     as described in 6.4. Set the parameters to this decoding procedure as shown in Table 17."

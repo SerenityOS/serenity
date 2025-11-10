@@ -107,10 +107,15 @@ struct SymbolDictionarySegmentData {
             i32 delta_y_offset { 0 };
             NonnullRefPtr<BilevelImage> refines_to;
         };
+
+        struct RefinesUsingStrips {
+            Vector<TextRegionStrip> strips;
+        };
+
         struct Symbol {
             Gfx::IntSize size;
             bool is_exported { true };
-            Variant<NonnullRefPtr<BilevelImage>, RefinedSymbol, Vector<TextRegionStrip>> image;
+            Variant<NonnullRefPtr<BilevelImage>, RefinedSymbol, RefinesUsingStrips> image;
         };
 
         Vector<Symbol> symbols;
