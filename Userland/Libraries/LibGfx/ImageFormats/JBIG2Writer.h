@@ -109,6 +109,7 @@ struct SymbolDictionarySegmentData {
         };
 
         struct RefinesUsingStrips {
+            i32 initial_strip_t { 0 };
             Vector<TextRegionStrip> strips;
         };
 

@@ -543,6 +543,14 @@ static ErrorOr<Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsin
 {
     Gfx::JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips refines_using_strips;
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "initial_strip_t"sv) {
+            if (auto initial_strip_t = value.get_i32(); initial_strip_t.has_value()) {
+                refines_using_strips.initial_strip_t = initial_strip_t.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"initial_strip_t\"");
+        }
+
         if (key == "strips"sv) {
             if (value.is_array()) {
                 refines_using_strips.strips = TRY(jbig2_text_region_strips_from_json(options, value.as_array()));
