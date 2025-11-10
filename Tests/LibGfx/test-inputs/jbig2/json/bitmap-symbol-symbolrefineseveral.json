@@ -140,6 +140,7 @@
                                 "width": 30,
                                 "height": 30,
                                 "refines_using_strips": {
+                                    "initial_strip_t": -1,
                                     "strips": [
                                         {
                                             "strip_t": 0,
