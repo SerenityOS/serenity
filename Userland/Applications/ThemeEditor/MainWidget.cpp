@@ -721,6 +721,12 @@ ErrorOr<void> MainWidget::load_from_file(ByteString const& filename, NonnullOwnP
     ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
 #undef __ENUMERATE_PATH_ROLE
 
+#define __ENUMERATE_WINDOW_THEME_ROLE(role)                                                         \
+    if (auto window_theme_input = m_window_theme_inputs[to_underlying(Gfx::WindowThemeRole::role)]) \
+        window_theme_input->set_selected_index(m_window_theme_model->index_of(m_current_palette.window_theme_provider(Gfx::WindowThemeRole::role)), GUI::AllowCallback::No);
+    ENUMERATE_WINDOW_THEME_ROLES(__ENUMERATE_WINDOW_THEME_ROLE)
+#undef __ENUMERATE_WINDOW_THEME_ROLE
+
     m_last_modified_time = MonotonicTime::now();
     window()->set_modified(false);
     GUI::Application::the()->set_most_recently_open_file(filename);
