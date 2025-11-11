@@ -1,0 +1,198 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+
+        {
+            "segment_number": 1,
+            "type": "symbol_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "uses_huffman_encoding": true,
+                    "huffman_table_selection_for_height_differences": 0,
+                    "huffman_table_selection_for_width_differences": 0,
+                    "huffman_table_selection_for_bitmap_sizes": 0,
+                    "huffman_table_selection_for_number_of_symbol_instances": 0
+                },
+                "height_classes": [
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 50,
+                                        "y": 108,
+                                        "width": 30,
+                                        "height": 30
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap-blemish.bmp",
+                                    "crop": {
+                                        "x": 60,
+                                        "y": 265,
+                                        "width": 40,
+                                        "height": 75
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 135,
+                                        "y": 100,
+                                        "width": 100,
+                                        "height": 100
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 232,
+                                        "y": 70,
+                                        "width": 120,
+                                        "height": 250
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 2,
+            "type": "lossless_text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "width": 399,
+                    "height": 400
+                },
+                "flags": {
+                    "uses_huffman_encoding": true,
+                    "uses_refinement_coding": true,
+                    "strip_size": 2,
+                    "reference_corner": "top_left",
+                    "refinement_template": 0
+                },
+                "huffman_flags": {
+                    "huffman_table_selection_for_first_s": 0,
+                    "huffman_table_selection_for_subsequent_s": 0,
+                    "huffman_table_selection_for_t": 0,
+                    "huffman_table_selection_for_refinement_delta_width": 1,
+                    "huffman_table_selection_for_refinement_delta_height": 1,
+                    "huffman_table_selection_for_refinement_delta_x_offset": 1,
+                    "huffman_table_selection_for_refinement_delta_y_offset": 1,
+                    "huffman_table_selection_for_refinement_size_table": 0
+                },
+
+                "initial_strip_t": -4,
+                "strips": [
+                    {
+                        "strip_t": 70,
+                        "instances": [
+                            {
+                                "instance_s": 232,
+                                "instance_t": 70,
+                                "symbol_id": 3
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 100,
+                        "instances": [
+                            {
+                                "instance_s": 135,
+                                "instance_t": 100,
+                                "symbol_id": 2
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 108,
+                        "instances": [
+                            {
+                                "instance_s": 50,
+                                "instance_t": 108,
+                                "symbol_id": 0
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 264,
+                        "instances": [
+                            {
+                                "instance_s": 60,
+                                "instance_t": 265,
+                                "symbol_id": 1,
+                                "instance_refines_symbol_to": {
+                                    "delta_width": 0,
+                                    "delta_height": 0,
+                                    "delta_x_offset": 0,
+                                    "delta_y_offset": 0,
+                                    "image_data": {
+                                        "from_file": "bitmap.bmp",
+                                        "crop": {
+                                            "x": 60,
+                                            "y": 265,
+                                            "width": 40,
+                                            "height": 75
+                                        }
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 3,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}
