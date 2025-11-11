@@ -279,15 +279,21 @@ static ErrorOr<JBIG2::SegmentHeader> decode_segment_header(SeekableStream& strea
         TRY(stream.seek(-1, SeekMode::FromCurrentPosition));
         count_of_referred_to_segments = TRY(stream.read_value<BigEndian<u32>>()) & 0x1FFF'FFFF;
 
+        auto retention_flags_offset = TRY(stream.tell());
+
         LittleEndianInputBitStream bit_stream { MaybeOwned { stream } };
         u32 bit_count = ceil_div(count_of_referred_to_segments + 1, 8) * 8;
         retention_flag = TRY(bit_stream.read_bit());
-        for (u32 i = 0; i < count_of_referred_to_segments; ++i)
+        for (u32 i = 1; i < count_of_referred_to_segments + 1; ++i)
             referred_to_segment_retention_flags.append(TRY(bit_stream.read_bit()));
-        for (u32 i = count_of_referred_to_segments; i < bit_count; ++i) {
+        for (u32 i = count_of_referred_to_segments + 1; i < bit_count; ++i) {
             if (TRY(bit_stream.read_bit()))
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid referred-to segment retention flag");
         }
+
+        // LittleEndianInputBitStream peeks ahead, which means it over-reads the underlying stream.
+        // Seek back to past the retention flag bits.
+        TRY(stream.seek(retention_flags_offset + bit_count / 8, SeekMode::SetPosition));
     } else {
         retention_flag = referred_to_segment_count_and_retention_flags & 1;
         for (u32 i = 1; i < count_of_referred_to_segments + 1; ++i)
