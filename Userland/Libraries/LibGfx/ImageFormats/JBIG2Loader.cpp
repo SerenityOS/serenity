@@ -640,7 +640,7 @@ static ErrorOr<void> validate_segment_header_page_associations(JBIG2LoadingConte
         if (is_region_segment(segment.type())
             || first_is_one_of(segment.type(), JBIG2::SegmentType::PageInformation, JBIG2::SegmentType::EndOfPage, JBIG2::SegmentType::EndOfStripe)) {
             if (segment.header.page_association == 0)
-                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Region, page information, end of page or end of stripe segment with no page association");
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Region, page information, end of page, or end of stripe segment with no page association");
         }
         // Quirk: `042_*.jb2`, `amb_*.jb2` in the Power JBIG2 test suite incorrectly (cf 7.3.2) associate EndOfFile with a page.
         if (segment.type() == JBIG2::SegmentType::EndOfFile && segment.header.page_association != 0 && !context.is_power_jbig2_file)
