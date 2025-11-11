@@ -831,10 +831,19 @@ ErrorOr<void> Process::dump_core()
         return {};
     }
     auto coredump_path = TRY(name().with([&](auto& process_name) {
-        return KString::formatted("{}/{}_{}_{}", coredump_directory_path->view(), process_name.representable_view(), pid().value(), kgettimeofday().seconds_since_epoch());
+        return KString::formatted("{}/{}_{}_{}.partial", coredump_directory_path->view(), process_name.representable_view(), pid().value(), kgettimeofday().seconds_since_epoch());
     }));
     auto coredump = TRY(Coredump::try_create(*this, coredump_path->view()));
-    return coredump->write();
+    TRY(coredump->write());
+
+    auto root_custody = vfs_root_context()->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
+        return custody;
+    });
+
+    auto new_path = TRY(KString::try_create(coredump_path->view().trim(".partial"sv)));
+    TRY(VirtualFileSystem::rename(vfs_root_context(), credentials(), *root_custody, coredump_path->view(), *root_custody, new_path->view()));
+
+    return {};
 }
 
 ErrorOr<void> Process::dump_perfcore()
