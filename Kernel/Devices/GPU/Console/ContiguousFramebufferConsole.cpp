@@ -17,8 +17,7 @@ NonnullLockRefPtr<ContiguousFramebufferConsole> ContiguousFramebufferConsole::in
 ContiguousFramebufferConsole::ContiguousFramebufferConsole(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
     : GenericFramebufferConsole(width, height, pitch)
     , m_framebuffer_address(framebuffer_address)
-{
-    set_resolution(width, height, pitch);
+{set_resolution(width, height, pitch);
 }
 
 void ContiguousFramebufferConsole::set_resolution(size_t width, size_t height, size_t pitch)
