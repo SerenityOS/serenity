@@ -1585,10 +1585,10 @@ static ErrorOr<void> encode_segment_header(Stream& stream, JBIG2::SegmentHeader 
         }
         TRY(stream.write_value<u8>(count_and_retention_flags));
     } else {
-        if (header.referred_to_segment_numbers.size() >= (1 << 28))
+        if (header.referred_to_segment_numbers.size() >= (1 << 29))
             return Error::from_string_literal("JBIG2Writer: Too many referred-to segments");
         u32 count_of_referred_to_segments = header.referred_to_segment_numbers.size();
-        TRY(stream.write_value<BigEndian<u32>>(count_of_referred_to_segments | 7 << 28));
+        TRY(stream.write_value<BigEndian<u32>>(count_of_referred_to_segments | 7 << 29));
 
         LittleEndianOutputBitStream bit_stream { MaybeOwned { stream } };
         TRY(bit_stream.write_bits(header.retention_flag, 1));
