@@ -1594,6 +1594,7 @@ static ErrorOr<void> encode_segment_header(Stream& stream, JBIG2::SegmentHeader 
         TRY(bit_stream.write_bits(header.retention_flag, 1));
         for (size_t i = 0; i < header.referred_to_segment_numbers.size(); ++i)
             TRY(bit_stream.write_bits(header.referred_to_segment_retention_flags[i], 1));
+        TRY(bit_stream.align_to_byte_boundary());
         TRY(bit_stream.flush_buffer_to_stream());
     }
 
