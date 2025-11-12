@@ -12,6 +12,7 @@ Usage :
 from dataclasses import dataclass
 import argparse
 import collections
+import math
 import struct
 import textwrap
 
@@ -43,8 +44,14 @@ def read_segment_header(data, offset):
     type = (flags & 0b11_1111)
 
     referred_segments_count = data[offset + 5] >> 5
+    referred_to_size = 1
     if referred_segments_count > 4:
-        raise Exception('cannot handle more than 4 referred-to segments')
+        if referred_segments_count in [5, 6]:
+            raise Exception('invalid referred_segments_count', referred_segments_count)
+        referred_segments_count, = struct.unpack_from('>I', data, offset + 5)
+        referred_segments_count &= 0x1fff_ffff
+        byte_count = math.ceil((referred_segments_count + 1) / 8)
+        referred_to_size = 4 + byte_count
 
     if segment_number <= 256:
         ref_size = 1
@@ -52,7 +59,7 @@ def read_segment_header(data, offset):
         ref_size = 2
     else:
         ref_size = 4
-    segment_header_size = 4 + 1 + 1 + ref_size * referred_segments_count
+    segment_header_size = 4 + 1 + referred_to_size + ref_size * referred_segments_count
     pre_page_size = segment_header_size
 
     if segment_page_association_size_is_32_bits:
