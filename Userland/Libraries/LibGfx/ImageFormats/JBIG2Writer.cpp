@@ -743,8 +743,7 @@ static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParam
 
         if (inputs.uses_huffman_encoding) {
             auto data = TRY(huffman_refinement_encoder->finalize(symbol_instance.refinement_data->trailing_7fff_handling));
-            auto const& table = *TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_1));
-            TRY(table.write_symbol_non_oob(*bit_stream, data.size()));
+            TRY(inputs.refinement_size_table->write_symbol_non_oob(*bit_stream, data.size()));
             TRY(bit_stream->align_to_byte_boundary());
             TRY(bit_stream->write_until_depleted(data));
         }
