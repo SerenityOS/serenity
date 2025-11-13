@@ -408,12 +408,11 @@ TEST_CASE(test_jbig2_decode)
         // - intermediate text regions (code support added in #26197)
         // - intermediate halftone regions (code support added in #26197)
         // - intermediate direct regions (code support added in #26197)
+        // - symbol refinement referring to symbol in same segment
         // Missing tests for things that aren't implemented yet:
         // - immediate refinement regions not referring to a direct region (i.e. refining the page)
-        // - huffman-coded symbols with SDREFAGG = 1, REFAGGNINST = 1 case
         // - exttemplate
         // - colors
-        // (test_annex_h_jbig2 covers a subset of these, but having standalone files would be nice.)
     };
 
     for (auto test_input : test_inputs) {
