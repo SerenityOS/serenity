@@ -108,7 +108,7 @@
                     "prefix_bit_count": 2,
                     "range_bit_count": 5
                 },
-                "lowest_value": 1,
+                "lowest_value": 0,
                 "highest_value": 65808,
                 "entries": [
                     {
@@ -140,7 +140,7 @@
                     "prefix_bit_count": 2,
                     "range_bit_count": 5
                 },
-                "lowest_value": 1,
+                "lowest_value": 0,
                 "highest_value": 65808,
                 "entries": [
                     {
