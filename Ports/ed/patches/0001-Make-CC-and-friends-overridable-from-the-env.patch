@@ -9,7 +9,7 @@ Co-Authored-By: roytam1 <roytam@gmail.com>
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/configure b/configure
-index 5692ef9daeb29c0b57a5c756b878e094682a1e14..281ea8040153218b26ca78faa472fa8b9c071c94 100755
+index edd19dd6157e6341e3e2e9bca56f28a902d99fb2..b0efc6b7970cf692a68b51fadbd1e8990145f3a1 100755
 --- a/configure
 +++ b/configure
 @@ -21,10 +21,10 @@ datarootdir='$(prefix)/share'
