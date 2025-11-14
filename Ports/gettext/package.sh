@@ -1,17 +1,12 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='gettext'
-version='0.22.4'
+version='0.26'
 useconfigure='true'
 files=(
-    "https://ftpmirror.gnu.org/gettext/gettext-${version}.tar.gz#c1e0bb2a4427a9024390c662cd532d664c4b36b8ff444ed5e54b115fdb7a1aea"
+    "https://ftpmirror.gnu.org/gettext/gettext-${version}.tar.gz#39acf4b0371e9b110b60005562aace5b3631fed9b1bb9ecccfc7f56e58bb1d7f"
 )
 depends=(
     'libiconv'
-)
-use_fresh_config_sub='true'
-config_sub_paths=(
-    'build-aux/config.sub' 
-    'libtextstyle/build-aux/config.sub'
 )
 configopts=(
     '--disable-curses'
