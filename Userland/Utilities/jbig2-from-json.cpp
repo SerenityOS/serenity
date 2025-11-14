@@ -1650,7 +1650,7 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
                 halftone_region.grid_offset_x_times_256 = grid_offset_x.value();
                 return {};
             }
-            return Error::from_string_literal("expected i32 for \"grid_offset_x\"");
+            return Error::from_string_literal("expected i32 for \"grid_offset_x_times_256\"");
         }
 
         if (key == "grid_offset_y_times_256"sv) {
@@ -1658,27 +1658,27 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
                 halftone_region.grid_offset_y_times_256 = grid_offset_y.value();
                 return {};
             }
-            return Error::from_string_literal("expected i32 for \"grid_offset_y\"");
+            return Error::from_string_literal("expected i32 for \"grid_offset_y_times_256\"");
         }
 
         if (key == "grid_vector_x_times_256"sv) {
             if (auto grid_vector_x = value.get_u32(); grid_vector_x.has_value()) {
                 if (grid_vector_x.value() > 0xffff)
-                    return Error::from_string_literal("expected u16 for \"grid_vector_x\"");
+                    return Error::from_string_literal("expected u16 for \"grid_vector_x_times_256\"");
                 halftone_region.grid_vector_x_times_256 = grid_vector_x.value();
                 return {};
             }
-            return Error::from_string_literal("expected u16 for \"grid_vector_x\"");
+            return Error::from_string_literal("expected u16 for \"grid_vector_x_times_256\"");
         }
 
         if (key == "grid_vector_y_times_256"sv) {
             if (auto grid_vector_y = value.get_u32(); grid_vector_y.has_value()) {
                 if (grid_vector_y.value() > 0xffff)
-                    return Error::from_string_literal("expected u16 for \"grid_vector_y\"");
+                    return Error::from_string_literal("expected u16 for \"grid_vector_y_times_256\"");
                 halftone_region.grid_vector_y_times_256 = grid_vector_y.value();
                 return {};
             }
-            return Error::from_string_literal("expected u16 for \"grid_vector_y\"");
+            return Error::from_string_literal("expected u16 for \"grid_vector_y_times_256\"");
         }
 
         if (key == "strip_trailing_7fffs"sv) {
