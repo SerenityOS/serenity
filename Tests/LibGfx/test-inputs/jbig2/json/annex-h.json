@@ -1,0 +1,585 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 3
+    },
+
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "symbol_dictionary",
+            "page_association": 0,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "uses_huffman_encoding": true
+                },
+                "height_classes": [
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "annex-h-p.png"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 1,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 64,
+                "page_height": 56,
+                "flags": {
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+
+        {
+            "segment_number": 2,
+            "type": "symbol_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "uses_huffman_encoding": true
+                },
+                "height_classes": [
+                    {
+                        "height_class_collective_bitmap_is_compressed": false,
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "annex-h-c.png"
+                                }
+                            },
+                            {
+                                "image_data": {
+                                    "from_file": "annex-h-a.png"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 3,
+            "type": "lossless_text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 0,
+                    "retained": true
+                },
+                {
+                    "segment_number": 2,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "width": 37,
+                    "height": 8,
+                    "x": 4,
+                    "y": 1
+                },
+                "flags": {
+                    "uses_huffman_encoding": true,
+                    "uses_refinement_coding": false,
+                    "strip_size": 4,
+                    "reference_corner": "bottom_left",
+                    "delta_s_offset": 3
+                },
+                "huffman_flags": {
+                    "huffman_table_selection_for_t": 1
+                },
+
+                "initial_strip_t": -4,
+
+                "strips": [
+                    {
+                        "strip_t": 4,
+                        "instances": [
+                            {
+                                "instance_s": 0,
+                                "instance_t": 5,
+                                "symbol_id": 1
+                            },
+                            {
+                                "instance_s": 8,
+                                "instance_t": 5,
+                                "symbol_id": 2
+                            },
+                            {
+                                "instance_s": 16,
+                                "instance_t": 7,
+                                "symbol_id": 0
+                            },
+                            {
+                                "instance_s": 23,
+                                "instance_t": 5,
+                                "symbol_id": 2
+                            },
+                            {
+                                "instance_s": 31,
+                                "instance_t": 5,
+                                "symbol_id": 1
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 4,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "x": 4,
+                    "y": 11
+                },
+                "flags": {
+                    "is_modified_modified_read": true
+                },
+                "image_data": {
+                    "from_file": "annex-h-background.png"
+                }
+            }
+        },
+
+        {
+            "segment_number": 5,
+            "type": "pattern_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "is_modified_modified_read": true
+                },
+                "pattern_width": 4,
+                "pattern_height": 4,
+                "gray_max": 15,
+                "image_data": {
+                    "from_file": "annex-h-pattern.png"
+                }
+            }
+        },
+
+        {
+            "segment_number": 6,
+            "type": "lossless_halftone_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 5,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "width": 32,
+                    "height": 36,
+                    "x": 16,
+                    "y": 15
+                },
+                "flags": {
+                    "is_modified_modified_read": true
+                },
+                "grayscale_width": 8,
+                "grayscale_height": 9,
+                "grid_offset_x_times_256": 0,
+                "grid_offset_y_times_256": 0,
+                "grid_vector_x_times_256": 1024,
+                "grid_vector_y_times_256": 0,
+                "graymap_data": {
+                    "array": [
+                        [ 0, 1, 2, 3, 4, 5, 6, 7 ],
+                        [ 1, 2, 3, 4, 5, 6, 7, 8 ],
+                        [ 2, 3, 4, 5, 6, 7, 8, 9 ],
+                        [ 3, 4, 5, 6, 7, 8, 9, 10 ],
+                        [ 4, 5, 6, 7, 8, 9, 10, 11 ],
+                        [ 5, 6, 7, 8, 9, 10, 11, 12 ],
+                        [ 6, 7, 8, 9, 10, 11, 12, 13 ],
+                        [ 7, 8, 9, 10, 11, 12, 13, 14 ],
+                        [ 8, 9, 10, 11, 12, 13, 14, 15 ]
+                    ]
+                }
+            }
+        },
+
+        {
+            "segment_number": 7,
+            "type": "end_of_page",
+            "page_association": 1
+        },
+
+        {
+            "segment_number": 8,
+            "type": "page_information",
+            "page_association": 2,
+            "data": {
+                "page_width": 64,
+                "page_height": 56,
+                "flags": {
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+
+        {
+            "segment_number": 9,
+            "type": "symbol_dictionary",
+            "page_association": 2,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "template": 2
+                },
+                "height_classes": [
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "annex-h-c.png"
+                                }
+                            },
+                            {
+                                "image_data": {
+                                    "from_file": "annex-h-a.png"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 10,
+            "type": "lossless_text_region",
+            "page_association": 2,
+            "referred_to_segments": [
+                {
+                    "segment_number": 0,
+                    "retained": false
+                },
+                {
+                    "segment_number": 9,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "width": 37,
+                    "height": 8,
+                    "x": 4,
+                    "y": 1
+                },
+                "flags": {
+                    "uses_huffman_encoding": false,
+                    "uses_refinement_coding": false,
+                    "strip_size": 4,
+                    "reference_corner": "bottom_left",
+                    "delta_s_offset": 3
+                },
+
+                "initial_strip_t": -4,
+                "strips": [
+                    {
+                        "strip_t": 4,
+                        "instances": [
+                            {
+                                "instance_s": 0,
+                                "instance_t": 5,
+                                "symbol_id": 1
+                            },
+                            {
+                                "instance_s": 8,
+                                "instance_t": 5,
+                                "symbol_id": 2
+                            },
+                            {
+                                "instance_s": 16,
+                                "instance_t": 7,
+                                "symbol_id": 0
+                            },
+                            {
+                                "instance_s": 23,
+                                "instance_t": 5,
+                                "symbol_id": 2
+                            },
+                            {
+                                "instance_s": 31,
+                                "instance_t": 5,
+                                "symbol_id": 1
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 11,
+            "type": "lossless_generic_region",
+            "page_association": 2,
+            "data": {
+                "region_segment_information": {
+                    "x": 4,
+                    "y": 11
+                },
+                "flags": {
+                    "use_typical_prediction": true
+                },
+                "image_data": {
+                    "from_file": "annex-h-background.png"
+                }
+            }
+        },
+
+        {
+            "segment_number": 12,
+            "type": "pattern_dictionary",
+            "page_association": 2,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "pd_template": 3
+                },
+                "pattern_width": 4,
+                "pattern_height": 4,
+                "gray_max": 15,
+                "image_data": {
+                    "from_file": "annex-h-pattern.png"
+                }
+            }
+        },
+
+        {
+            "segment_number": 13,
+            "type": "lossless_halftone_region",
+            "page_association": 2,
+            "referred_to_segments": [
+                {
+                    "segment_number": 12,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "width": 32,
+                    "height": 36,
+                    "x": 16,
+                    "y": 15
+                },
+                "flags": {
+                    "ht_template": 1
+                },
+                "grayscale_width": 8,
+                "grayscale_height": 9,
+                "grid_offset_x_times_256": 0,
+                "grid_offset_y_times_256": 0,
+                "grid_vector_x_times_256": 1024,
+                "grid_vector_y_times_256": 0,
+                "graymap_data": {
+                    "array": [
+                        [ 0, 1, 2, 3, 4, 5, 6, 7 ],
+                        [ 1, 2, 3, 4, 5, 6, 7, 8 ],
+                        [ 2, 3, 4, 5, 6, 7, 8, 9 ],
+                        [ 3, 4, 5, 6, 7, 8, 9, 10 ],
+                        [ 4, 5, 6, 7, 8, 9, 10, 11 ],
+                        [ 5, 6, 7, 8, 9, 10, 11, 12 ],
+                        [ 6, 7, 8, 9, 10, 11, 12, 13 ],
+                        [ 7, 8, 9, 10, 11, 12, 13, 14 ],
+                        [ 8, 9, 10, 11, 12, 13, 14, 15 ]
+                    ]
+                }
+            }
+        },
+
+        {
+            "segment_number": 14,
+            "type": "end_of_page",
+            "page_association": 2
+        },
+
+        {
+            "segment_number": 15,
+            "type": "page_information",
+            "page_association": 3,
+            "data": {
+                "page_width": 37,
+                "page_height": 8,
+                "flags": {
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+
+        {
+            "segment_number": 16,
+            "type": "symbol_dictionary",
+            "page_association": 0,
+            "retained": true,
+            "data": {
+                "flags": {
+                    "template": 2
+                },
+                "height_classes": [
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "annex-h-a.png"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 17,
+            "type": "symbol_dictionary",
+            "page_association": 3,
+            "referred_to_segments": [
+                {
+                    "segment_number": 16,
+                    "retained": false
+                }
+            ],
+            "retained": true,
+            "data": {
+                "flags": {
+                    "uses_refinement_or_aggregate_coding": true,
+                    "template": 2
+                },
+                "height_classes": [
+                    {
+                        "symbols": [
+                            {
+                                "refines_symbol_to": {
+                                    "symbol_id": 0,
+                                    "delta_x_offset": 0,
+                                    "delta_y_offset": 0,
+                                    "image_data": {
+                                        "from_file": "annex-h-c.png"
+                                    }
+                                }
+                            },
+                            {
+                                "width": 14,
+                                "height": 6,
+                                "refines_using_strips": {
+                                    "strips": [
+                                        {
+                                            "strip_t": 0,
+                                            "instances": [
+                                                {
+                                                    "instance_s": 0,
+                                                    "instance_t": 0,
+                                                    "symbol_id": 0
+                                                },
+                                                {
+                                                    "instance_s": 8,
+                                                    "instance_t": 0,
+                                                    "symbol_id": 1
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 18,
+            "type": "lossless_text_region",
+            "page_association": 3,
+            "referred_to_segments": [
+                {
+                    "segment_number": 17,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "width": 37,
+                    "height": 8
+                },
+                "flags": {
+                    "uses_huffman_encoding": false,
+                    "uses_refinement_coding": true,
+                    "strip_size": 1,
+                    "reference_corner": "top_left",
+                    "delta_s_offset": 3,
+                    "refinement_template": 1
+                },
+
+                "initial_strip_t": 0,
+                "strips": [
+                    {
+                        "strip_t": 0,
+                        "instances": [
+                            {
+                                "instance_s": 0,
+                                "instance_t": 0,
+                                "symbol_id": 1
+                            },
+                            {
+                                "instance_s": 8,
+                                "instance_t": 0,
+                                "symbol_id": 0
+                            },
+                            {
+                                "instance_s": 16,
+                                "instance_t": 0,
+                                "symbol_id": 1,
+                                "instance_refines_symbol_to": {
+                                    "delta_width": -1,
+                                    "delta_height": 2,
+                                    "delta_x_offset": 1,
+                                    "delta_y_offset": -2,
+                                    "image_data": {
+                                        "from_file": "annex-h-p.png"
+                                    }
+                                }
+                            },
+                            {
+                                "instance_s": 23,
+                                "instance_t": 0,
+                                "symbol_id": 2
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 19,
+            "type": "end_of_page",
+            "page_association": 3
+        },
+
+        {
+            "segment_number": 20,
+            "type": "end_of_file"
+        }
+    ]
+}
