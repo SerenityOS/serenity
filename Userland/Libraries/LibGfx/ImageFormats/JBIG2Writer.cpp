@@ -1987,7 +1987,54 @@ static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData con
     if (enable_skip)
         return Error::from_string_literal("JBIG2Writer: Halftone region skip pattern not yet implemented");
 
-    GrayscaleInputParameters inputs { .grayscale_image = halftone_region.grayscale_image, .skip_pattern = skip_pattern };
+    Vector<u64> grayscale_image = TRY(halftone_region.grayscale_image.visit(
+        [](Vector<u64> const& grayscale_image) -> ErrorOr<Vector<u64>> {
+            return grayscale_image;
+        },
+        [&halftone_region, &pattern_dictionary](NonnullRefPtr<Gfx::Bitmap> const& reference) -> ErrorOr<Vector<u64>> {
+            // FIXME: This does not handle rotation or non-trivial grid vectors yet.
+            if (halftone_region.grid_offset_x_times_256 != 0 || halftone_region.grid_offset_y_times_256 != 0)
+                return Error::from_string_literal("JBIG2Writer: Halftone region match_image with non-zero grid offsets not yet implemented");
+            if (pattern_dictionary.pattern_width != pattern_dictionary.pattern_height
+                || halftone_region.grid_vector_x_times_256 / 256 != pattern_dictionary.pattern_width
+                || halftone_region.grid_vector_y_times_256 != 0)
+                return Error::from_string_literal("JBIG2Writer: Halftone region match_image with non-trivial grid vectors not yet implemented");
+
+            Vector<u64> converted_image;
+            TRY(converted_image.try_resize(halftone_region.grayscale_width * halftone_region.grayscale_height));
+            for (u32 y = 0; y < halftone_region.grayscale_height; ++y) {
+                for (u32 x = 0; x < halftone_region.grayscale_width; ++x) {
+                    // Find best tile in pattern dictionary that matches reference best.
+                    // FIXME: This is a naive, inefficient implementation.
+                    u32 best_pattern_index = 0;
+                    u32 best_pattern_difference = UINT32_MAX;
+                    for (u32 pattern_index = 0; pattern_index <= pattern_dictionary.gray_max; ++pattern_index) {
+                        u32 pattern_x = pattern_index * pattern_dictionary.pattern_width;
+                        u32 pattern_difference = 0;
+                        for (u32 py = 0; py < pattern_dictionary.pattern_height; ++py) {
+                            for (u32 px = 0; px < pattern_dictionary.pattern_width; ++px) {
+                                int reference_x = x * pattern_dictionary.pattern_width + px;
+                                int reference_y = y * pattern_dictionary.pattern_height + py;
+                                if (reference_x >= reference->width() || reference_y >= reference->height())
+                                    continue;
+                                auto pattern_pixel = pattern_dictionary.image->get_bit(pattern_x + px, py);
+                                auto reference_pixel = reference->get_pixel(reference_x, reference_y);
+                                pattern_difference += abs(reference_pixel.luminosity() - (pattern_pixel ? 0 : 255));
+                            }
+                        }
+                        if (pattern_difference < best_pattern_difference) {
+                            best_pattern_difference = pattern_difference;
+                            best_pattern_index = pattern_index;
+                        }
+                    }
+                    converted_image[y * halftone_region.grayscale_width + x] = best_pattern_index;
+                }
+            }
+
+            return converted_image;
+        }));
+
+    GrayscaleInputParameters inputs { .grayscale_image = grayscale_image, .skip_pattern = skip_pattern };
     inputs.uses_mmr = halftone_region.flags & 1;
     inputs.skip_pattern = skip_pattern;
     inputs.bpp = bits_per_pattern;

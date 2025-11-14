@@ -1578,35 +1578,48 @@ static ErrorOr<u8> jbig2_halftone_region_flags_from_json(JsonObject const& objec
     return flags;
 }
 
-static ErrorOr<Vector<u64>> jbig2_halftone_graymap_from_json(ToJSONOptions const&, JsonObject const& object)
+static ErrorOr<Variant<Vector<u64>, NonnullRefPtr<Gfx::Bitmap>>> jbig2_halftone_graymap_from_json(ToJSONOptions const& options, JsonObject const& object)
 {
-    Vector<u64> graymap;
+    Optional<Variant<Vector<u64>, NonnullRefPtr<Gfx::Bitmap>>> graymap;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "array") {
             if (value.is_array()) {
+                Vector<u64> graymap_data;
                 for (auto const& row : value.as_array().values()) {
                     if (!row.is_array())
                         return Error::from_string_literal("expected array for \"array\" entries");
 
                     for (auto const& element : row.as_array().values()) {
                         if (auto value = element.get_u64(); value.has_value()) {
-                            TRY(graymap.try_append(value.value()));
+                            TRY(graymap_data.try_append(value.value()));
                             continue;
                         }
                         return Error::from_string_literal("expected u64 for \"graymap_data\" elements");
                     }
                 }
+                graymap = move(graymap_data);
                 return {};
             }
             return Error::from_string_literal("expected array for \"array\"");
+        }
+
+        if (key == "match_image") {
+            if (value.is_string()) {
+                graymap = TRY(jbig2_bitmap_from_json(options, value.as_string()));
+                return {};
+            }
+            return Error::from_string_literal("expected string for \"match_image\"");
         }
 
         dbgln("graymap_data key {}", key);
         return Error::from_string_literal("unknown graymap_data key");
     }));
 
-    return graymap;
+    if (!graymap.has_value())
+        return Error::from_string_literal("graymap_data object must have \"array\" or \"match_image\" member");
+
+    return graymap.release_value();
 }
 
 static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from_json(ToJSONOptions const& options, Optional<JsonObject const&> object)
@@ -1622,8 +1635,9 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
     i32 grid_offset_y_times_256 { 0 };
     u16 grid_vector_x_times_256 { 0 };
     u16 grid_vector_y_times_256 { 0 };
-    Vector<u64> grayscale_image;
+    Optional<Variant<Vector<u64>, NonnullRefPtr<Gfx::Bitmap>>> grayscale_image;
     Gfx::MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { Gfx::MQArithmeticEncoder::Trailing7FFFHandling::Keep };
+
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "region_segment_information"sv) {
             if (value.is_object()) {
@@ -1708,10 +1722,10 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
             }
             if (value.is_string()) {
                 if (value.as_string() == "identity_tile_indices"sv) {
-                    grayscale_image.clear();
-                    u32 num_pixels = grayscale_width * grayscale_height;
-                    for (u32 i = 0; i < num_pixels; ++i)
-                        TRY(grayscale_image.try_append(i));
+                    Vector<u64> graymap;
+                    for (u32 i = 0; i < grayscale_width * grayscale_height; ++i)
+                        TRY(graymap.try_append(i));
+                    grayscale_image = move(graymap);
                     return {};
                 }
             }
@@ -1722,6 +1736,9 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
         return Error::from_string_literal("unknown halftone_region key");
     }));
 
+    if (!grayscale_image.has_value())
+        return Error::from_string_literal("halftone_region \"data\" object missing \"graymap_data\"");
+
     return Gfx::JBIG2::HalftoneRegionSegmentData {
         region_segment_information,
         flags,
@@ -1731,7 +1748,7 @@ static ErrorOr<Gfx::JBIG2::HalftoneRegionSegmentData> jbig2_halftone_region_from
         grid_offset_y_times_256,
         grid_vector_x_times_256,
         grid_vector_y_times_256,
-        move(grayscale_image),
+        grayscale_image.release_value(),
         trailing_7fff_handling,
     };
 }
