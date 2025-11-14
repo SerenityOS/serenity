@@ -31,4 +31,8 @@ ObjCBreakBeforeNestedBlockParam: true
 ObjCSpaceAfterProperty: true
 ObjCSpaceBeforeProtocolList: true
 
+---
+Language: Json
+BreakArrays: false
+
 ...
