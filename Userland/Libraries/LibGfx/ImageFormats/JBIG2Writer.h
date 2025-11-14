@@ -168,9 +168,14 @@ struct HalftoneRegionSegmentData {
     u16 grid_vector_x_times_256 { 0 };
     u16 grid_vector_y_times_256 { 0 };
 
-    // Indices into pattern dictionary. At most 64 bits set per pixel.
-    // grayscale_width * grayscale_height entries.
-    Vector<u64> grayscale_image;
+    Variant<
+        // Indices into pattern dictionary. At most 64 bits set per pixel,
+        // grayscale_width * grayscale_height entries,
+        Vector<u64>,
+
+        // Reference image, compute gray_map by matching pattern dictionary tiles to it.
+        NonnullRefPtr<Gfx::Bitmap>>
+        grayscale_image;
 
     MQArithmeticEncoder::Trailing7FFFHandling trailing_7fff_handling { MQArithmeticEncoder::Trailing7FFFHandling::Keep };
 };
