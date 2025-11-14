@@ -371,6 +371,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-refine-tpgron.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-template1.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-template1-tpgron.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-halftone.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone-10bpp.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone-10bpp-mmr.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol.jbig2"sv),
