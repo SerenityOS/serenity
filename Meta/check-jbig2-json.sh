@@ -24,3 +24,13 @@ for f in Tests/LibGfx/test-inputs/jbig2/json/*.json; do
   f_jb2=Tests/LibGfx/test-inputs/jbig2/$(basename "${f%.json}.jbig2")
   "$JBIG2_FROM_JSON_BINARY" -o "$f_jb2" "$f"
 done
+
+# annex-h.jbig2 is fixed data from Annex H of the JBIG2 spec.
+# It should never change, if it does, that's a bug.
+ANNEX_H_EXPECTED_SHA=5ac786acab9b481d36c3fd1d23cf45d0896d1e27
+ANNEX_H_ACTUAL_SHA=$(shasum "Tests/LibGfx/test-inputs/jbig2/annex-h.jbig2" | awk '{print $1}')
+
+if [ "$ANNEX_H_ACTUAL_SHA" != "$ANNEX_H_EXPECTED_SHA" ]; then
+    echo "annex-h.jbig2 has changed"
+    exit 1
+fi
