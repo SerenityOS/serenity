@@ -9,7 +9,7 @@ Co-Authored-By: EWouters <6179932+EWouters@users.noreply.github.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Makefile.in b/Makefile.in
-index f716df4..c1a7880 100644
+index ce36b4ba70d7eae0e9f4afca8165eaed05016267..8c65de3220984e119076fc568524b8a903e443af 100644
 --- a/Makefile.in
 +++ b/Makefile.in
 @@ -20,7 +20,7 @@ objs = buffer.o carg_parser.o global.o io.o main.o main_loop.o regex.o signal.o
