@@ -158,7 +158,7 @@ ErrorOr<SymbolDictionaryHuffmanTables> symbol_dictionary_huffman_tables_from_fla
         else if (huffman_table_selection_for_width_differences == 1)
             tables.delta_width_table = TRY(JBIG2::HuffmanTable::standard_huffman_table(JBIG2::HuffmanTable::StandardTable::B_3));
         else if (huffman_table_selection_for_width_differences == 2)
-            return Error::from_string_literal("JBIG2: Invalid huffman_table_selection_for_height_differences");
+            return Error::from_string_literal("JBIG2: Invalid huffman_table_selection_for_width_differences");
         else if (huffman_table_selection_for_width_differences == 3)
             tables.delta_width_table = TRY(custom_table());
     }
