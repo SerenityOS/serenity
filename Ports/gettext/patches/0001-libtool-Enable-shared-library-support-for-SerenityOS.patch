@@ -19,25 +19,24 @@ twice, and it also queries the C++ compiler for shared library support.
 
 Co-Authored-By: Daniel Bertalan <dani@danielbertalan.dev>
 ---
- gettext-runtime/configure | 38 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ gettext-runtime/configure | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
 diff --git a/gettext-runtime/configure b/gettext-runtime/configure
-index 56cc8e17be7ed390b4a692dde31434dceff45a94..268c7c572abde069814834be25d08175e51f195e 100755
+index 3fab6ea508ea48679dd2e8fc3a69624b11cd0822..9b376ddee209e2aed26a2a59bdf2d1e16e77c35a 100755
 --- a/gettext-runtime/configure
 +++ b/gettext-runtime/configure
-@@ -10219,6 +10219,10 @@ tpf*)
+@@ -12546,6 +12546,9 @@ tpf*)
  os2*)
    lt_cv_deplibs_check_method=pass_all
    ;;
-+
 +serenity*)
 +  lt_cv_deplibs_check_method=pass_all
 +  ;;
  esac
- 
- fi
-@@ -13707,6 +13711,10 @@ lt_prog_compiler_static=
+  ;;
+ esac
+@@ -16084,6 +16087,10 @@ lt_prog_compiler_static=
        lt_prog_compiler_static='-Bstatic'
        ;;
  
@@ -48,7 +47,7 @@ index 56cc8e17be7ed390b4a692dde31434dceff45a94..268c7c572abde069814834be25d08175
      *)
        lt_prog_compiler_can_build_shared=no
        ;;
-@@ -15239,6 +15247,10 @@ printf "%s\n" "$lt_cv_irix_exported_symbol" >&6; }
+@@ -17637,6 +17644,10 @@ printf '%s\n' "$lt_cv_irix_exported_symbol" >&6; }
        hardcode_shlibpath_var=no
        ;;
  
@@ -59,7 +58,7 @@ index 56cc8e17be7ed390b4a692dde31434dceff45a94..268c7c572abde069814834be25d08175
      *)
        ld_shlibs=no
        ;;
-@@ -16311,6 +16323,17 @@ uts4*)
+@@ -18783,6 +18794,17 @@ uts4*)
    shlibpath_var=LD_LIBRARY_PATH
    ;;
  
@@ -74,10 +73,10 @@ index 56cc8e17be7ed390b4a692dde31434dceff45a94..268c7c572abde069814834be25d08175
 +  dynamic_linker='SerenityOS LibELF'
 +  ;;
 +
- *)
-   dynamic_linker=no
-   ;;
-@@ -18601,6 +18624,10 @@ fi
+ emscripten*)
+   version_type=none
+   need_lib_prefix=no
+@@ -21629,6 +21651,10 @@ fi
          ld_shlibs_CXX=no
          ;;
  
@@ -88,7 +87,7 @@ index 56cc8e17be7ed390b4a692dde31434dceff45a94..268c7c572abde069814834be25d08175
        *)
          # FIXME: insert proper C++ library support
          ld_shlibs_CXX=no
-@@ -20300,6 +20327,17 @@ uts4*)
+@@ -23412,6 +23438,17 @@ uts4*)
    shlibpath_var=LD_LIBRARY_PATH
    ;;
  
@@ -103,6 +102,6 @@ index 56cc8e17be7ed390b4a692dde31434dceff45a94..268c7c572abde069814834be25d08175
 +  dynamic_linker='SerenityOS LibELF'
 +  ;;
 +
- *)
-   dynamic_linker=no
-   ;;
+ emscripten*)
+   version_type=none
+   need_lib_prefix=no
