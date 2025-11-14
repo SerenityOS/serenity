@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='grep'
-version='3.11'
+version='3.12'
 files=(
-    "https://ftpmirror.gnu.org/gnu/grep/grep-${version}.tar.gz#1f31014953e71c3cddcedb97692ad7620cb9d6d04fbdc19e0d8dd836f87622bb"
+    "https://ftpmirror.gnu.org/gnu/grep/grep-${version}.tar.gz#badda546dfc4b9d97e992e2c35f3b5c7f20522ffcbe2f01ba1e9cdcbe7644cdc"
 )
 useconfigure='true'
 configopts=(
