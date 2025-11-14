@@ -187,6 +187,25 @@ static ErrorOr<JSONRect> jbig2_rect_from_json(JsonObject const& object)
     return rect;
 }
 
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> jbig2_bitmap_from_json(ToJSONOptions const& options, ByteString const& base_name)
+{
+    RefPtr<Gfx::Bitmap> bitmap;
+
+    ByteString base_directory = LexicalPath { options.input_path }.dirname();
+    auto path = LexicalPath::absolute_path(base_directory, base_name);
+    auto file_or_error = Core::MappedFile::map(path);
+    if (file_or_error.is_error()) {
+        dbgln("could not open {}", path);
+        return file_or_error.release_error();
+    }
+    auto file = file_or_error.release_value();
+    auto guessed_mime_type = Core::guess_mime_type_based_on_filename(path);
+    auto decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes(), guessed_mime_type));
+    if (!decoder)
+        return Error::from_string_literal("could not find decoder for input file");
+    return TRY(decoder->frame(0)).image.release_nonnull();
+}
+
 static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOptions const& options, JsonObject const& object)
 {
     RefPtr<Gfx::BilevelImage> image;
@@ -196,19 +215,7 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "from_file") {
             if (value.is_string()) {
-                ByteString base_directory = LexicalPath { options.input_path }.dirname();
-                auto path = LexicalPath::absolute_path(base_directory, value.as_string());
-                auto file_or_error = Core::MappedFile::map(path);
-                if (file_or_error.is_error()) {
-                    dbgln("could not open {}", path);
-                    return file_or_error.release_error();
-                }
-                auto file = file_or_error.release_value();
-                auto guessed_mime_type = Core::guess_mime_type_based_on_filename(path);
-                auto decoder = TRY(Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes(), guessed_mime_type));
-                if (!decoder)
-                    return Error::from_string_literal("could not find decoder for input file");
-                auto bitmap = TRY(decoder->frame(0)).image;
+                auto bitmap = TRY(jbig2_bitmap_from_json(options, value.as_string()));
                 image = TRY(Gfx::BilevelImage::create_from_bitmap(*bitmap, Gfx::DitheringAlgorithm::FloydSteinberg));
                 return {};
             }
