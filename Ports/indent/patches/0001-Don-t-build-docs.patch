@@ -8,15 +8,15 @@ Subject: [PATCH] Don't build docs
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/Makefile.in b/Makefile.in
-index cdf7999..ce49203 100644
+index 8bbbce04000a598a139680d558342b685fcc0001..1972118b97e661157b137be8cee3a02d5b2a1519 100644
 --- a/Makefile.in
 +++ b/Makefile.in
-@@ -237,7 +237,7 @@ top_build_prefix = @top_build_prefix@
+@@ -336,7 +336,7 @@ top_build_prefix = @top_build_prefix@
  top_builddir = @top_builddir@
  top_srcdir = @top_srcdir@
  AUTOMAKE_OPTIONS = no-texinfo.tex
--SUBDIRS = intl src doc po man
-+SUBDIRS = intl src po
+-SUBDIRS = src doc po man regression
++SUBDIRS = src po regression
  BUILT_SOURCES = 
- EXTRA_DIST = README \
- 		config/config.rpath config/mkinstalldirs \
+ DISTFILES = $(DIST_COMMON:README=README.md) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+ EXTRA_DIST = README.md \

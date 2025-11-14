@@ -1,11 +1,11 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=indent
-version=2.2.11
+port='indent'
+version='2.2.13'
 files=(
-    "https://ftpmirror.gnu.org/gnu/indent/indent-${version}.tar.gz#aaff60ce4d255efb985f0eb78cca4d1ad766c6e051666073050656b6753a0893"
+    "https://ftpmirror.gnu.org/gnu/indent/indent-${version}.tar.gz#9e64634fc4ce6797b204bcb8897ce14fdd0ab48ca57696f78767c59cae578095"
 )
-useconfigure=true
-use_fresh_config_sub=true
+useconfigure='true'
+use_fresh_config_sub='true'
 config_sub_paths=("config/config.sub")
 
 post_install() {
