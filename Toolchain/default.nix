@@ -33,6 +33,7 @@ mkShell.override { stdenv = gccStdenv; } {
     gperf
     imagemagick
     libtool
+    lzip
     meson
     nasm
     wayland-scanner
