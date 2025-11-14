@@ -17,6 +17,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Stream.h>
 #include <AK/Utf16View.h>
+#include <LibCompress/Huffman.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/BilevelImage.h>
 #include <LibGfx/ImageFormats/CCITTEncoder.h>
@@ -1769,6 +1770,126 @@ static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData
     return {};
 }
 
+struct RunCode {
+    u8 symbol { 0 };
+    u8 count { 0 }; // used for special symbols 32-34.
+};
+
+// This is very similar to DeflateCompressor::encode_huffman_lengths().
+// But:
+// * lengths.size() can be much larger than 288
+// * there are 35 different codes
+// * code 32 has different semantics than deflate's code 16, requires last_non_zero_symbol
+static size_t code_lengths_to_run_codes(ReadonlyBytes lengths, Span<RunCode> encoded_lengths)
+{
+    // 7.4.3.1.7 Symbol ID Huffman table decoding
+    // Table 32 – Meaning of the run codes
+    VERIFY(encoded_lengths.size() >= lengths.size());
+    size_t encoded_count = 0;
+    size_t i = 0;
+    u8 last_non_zero_symbol = 8; // "If code 16 is used before a non-zero value has been emitted, a value of 8 is repeated."
+    while (i < lengths.size()) {
+        if (lengths[i] == 0) {
+            auto zero_count = 0;
+            for (size_t j = i; j < min(lengths.size(), i + 138) && lengths[j] == 0; j++)
+                zero_count++;
+
+            if (zero_count < 3) { // below minimum repeated zero count
+                encoded_lengths[encoded_count++].symbol = 0;
+                i++;
+                continue;
+            }
+
+            if (zero_count <= 10) {
+                // "RUNCODE33: Repeat a symbol ID code length of 0 for 3-10 times."
+                encoded_lengths[encoded_count].symbol = 33;
+                encoded_lengths[encoded_count++].count = zero_count;
+            } else {
+                // "RUNCODE34: Repeat a symbol ID code length of 0 for 11-138 times."
+                encoded_lengths[encoded_count].symbol = 34;
+                encoded_lengths[encoded_count++].count = zero_count;
+            }
+            i += zero_count;
+            continue;
+        }
+
+        VERIFY(lengths[i] != 0);
+        last_non_zero_symbol = lengths[i];
+        encoded_lengths[encoded_count++].symbol = lengths[i++];
+
+        // "RUNCODE32: Copy the previous symbol ID code length 3-6 times."
+        // This is different from deflate (but except for the code, identically to WebP!)
+        auto copy_count = 0;
+        for (size_t j = i; j < min(lengths.size(), i + 6) && lengths[j] == last_non_zero_symbol; j++)
+            copy_count++;
+
+        if (copy_count >= 3) {
+            encoded_lengths[encoded_count].symbol = 32;
+            encoded_lengths[encoded_count++].count = copy_count;
+            i += copy_count;
+            continue;
+        }
+    }
+    return encoded_count;
+}
+
+static ErrorOr<void> store_huffman_code_lengths(Stream& stream, ReadonlyBytes code_lengths)
+{
+    // Similar to Deflate or WebP lossless, the code lengths are represented using a custom bytecode that is itself Huffman-compressed for serialization.
+    // See 7.4.3.1.7 Symbol ID Huffman table decoding.
+
+    // Drop trailing zero lengths.
+    // This is similar to the loops in Deflate::encode_block_lengths().
+    size_t code_count = code_lengths.size();
+    while (code_count > 0 && code_lengths[code_count - 1] == 0)
+        code_count--;
+
+    Vector<RunCode, 256> run_codes;
+    TRY(run_codes.try_resize(code_count));
+    auto run_codes_count = code_lengths_to_run_codes(code_lengths.trim(code_count), run_codes.span());
+
+    // The code to compute code length code lengths is very similar to some of the code in DeflateCompressor::flush().
+    // count code length frequencies
+    Array<u16, 35> run_codes_histogram { 0 };
+    for (size_t i = 0; i < run_codes_count; i++) {
+        VERIFY(run_codes_histogram[run_codes[i].symbol] < UINT16_MAX);
+        run_codes_histogram[run_codes[i].symbol]++;
+    }
+
+    // generate optimal huffman code lengths code lengths
+    Array<u8, 35> run_codes_lengths {};
+    Compress::generate_huffman_lengths(run_codes_lengths, run_codes_histogram, 15);
+
+    auto lengths_codes = TRY(JBIG2::assign_huffman_codes(run_codes_lengths));
+    Vector<JBIG2::Code> symbol_id_lengths_codes;
+    for (auto const& [i, length] : enumerate(run_codes_lengths)) {
+        if (length == 0)
+            continue;
+        JBIG2::Code code { .prefix_length = length, .range_length = 0, .first_value = i, .code = lengths_codes[i] };
+        symbol_id_lengths_codes.append(code);
+    }
+    auto symbol_id_lengths_table = JBIG2::HuffmanTable { symbol_id_lengths_codes };
+
+    // Save huffman-compressed code lengths to stream.
+    BigEndianOutputBitStream symbol_id_bit_stream { MaybeOwned { stream } };
+
+    for (auto run_codes_length : run_codes_lengths)
+        TRY(symbol_id_bit_stream.write_bits(run_codes_length, 4));
+
+    for (auto const& run_code : run_codes.span().trim(run_codes_count)) {
+        TRY(symbol_id_lengths_table.write_symbol_non_oob(symbol_id_bit_stream, run_code.symbol));
+        if (run_code.symbol == 32)
+            TRY(symbol_id_bit_stream.write_bits(run_code.count - 3u, 2));
+        else if (run_code.symbol == 33)
+            TRY(symbol_id_bit_stream.write_bits(run_code.count - 3u, 3));
+        else if (run_code.symbol == 34)
+            TRY(symbol_id_bit_stream.write_bits(run_code.count - 11u, 7));
+    }
+
+    TRY(symbol_id_bit_stream.align_to_byte_boundary());
+    return {};
+}
+
 static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text_region, JBIG2::SegmentHeaderData const& header, JBIG2EncodingContext const& context, Vector<u8>& scratch_buffer)
 {
     // Get referred-to symbol dictionaries and tables off header.referred_to_segments.
@@ -1815,24 +1936,45 @@ static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text
     Vector<JBIG2::Code> symbol_id_codes;
     Optional<JBIG2::HuffmanTable> symbol_id_table_storage;
     JBIG2::HuffmanTable const* symbol_id_table = nullptr;
+
+    u32 number_of_symbol_instances = 0;
+    u32 highest_symbol_id = 0;
+    for (auto const& strip : text_region.strips) {
+        number_of_symbol_instances += strip.symbol_instances.size();
+        for (auto const& instance : strip.symbol_instances)
+            highest_symbol_id = max(highest_symbol_id, instance.symbol_id);
+    }
+
     if (uses_huffman_encoding) {
-        // For now, just use a uniform table that gives each symbol the same code length.
-        AllocatingMemoryStream symbol_id_table_stream;
-        BigEndianOutputBitStream symbol_id_bit_stream { MaybeOwned { symbol_id_table_stream } };
+        // FIXME: Maybe support this one day; the file format supports 32 bits per symbol.
+        if (highest_symbol_id >= (1u << 15))
+            return Error::from_string_literal("JBIG2Writer: Cannot currently encode more than 32767 symbols with Huffman coding");
 
-        Array<u8, 35> code_length_lengths {};
-        code_length_lengths[max(id_symbol_code_length, 1)] = 1;
-        for (auto code_length_length : code_length_lengths)
-            TRY(symbol_id_bit_stream.write_bits(code_length_length, 4));
+        // Compute optimal huffman table for symbol IDs.
+        Vector<u16> histogram;
+        histogram.resize(highest_symbol_id + 1);
+        for (auto const& strip : text_region.strips) {
+            for (auto const& instance : strip.symbol_instances) {
+                if (histogram[instance.symbol_id] < UINT16_MAX)
+                    histogram[instance.symbol_id]++;
+            }
+        }
+        Vector<u8> code_lengths;
+        code_lengths.resize(highest_symbol_id + 1);
+        Compress::generate_huffman_lengths(code_lengths, histogram, 15);
 
-        for (u32 i = 0; i < symbols.size(); ++i)
-            TRY(symbol_id_bit_stream.write_bits(0u, 1));
-
-        symbol_id_codes = TRY(JBIG2::uniform_huffman_codes(symbols.size(), max(id_symbol_code_length, 1)));
+        auto codes = TRY(JBIG2::assign_huffman_codes(code_lengths));
+        for (auto const& [i, length] : enumerate(code_lengths)) {
+            if (length == 0)
+                continue;
+            JBIG2::Code code { .prefix_length = length, .range_length = 0, .first_value = i, .code = codes[i] };
+            symbol_id_codes.append(code);
+        }
         symbol_id_table_storage = JBIG2::HuffmanTable { symbol_id_codes };
         symbol_id_table = &symbol_id_table_storage.value();
 
-        TRY(symbol_id_bit_stream.align_to_byte_boundary());
+        AllocatingMemoryStream symbol_id_table_stream;
+        TRY(store_huffman_code_lengths(symbol_id_table_stream, code_lengths));
         symbol_id_huffman_decoding_table = TRY(symbol_id_table_stream.read_until_eof());
     }
 
@@ -1861,10 +2003,6 @@ static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text
     inputs.refinement_size_table = huffman_tables.refinement_size_table;
     inputs.refinement_template = refinement_template;
     inputs.refinement_adaptive_template_pixels = text_region.refinement_adaptive_template_pixels;
-
-    u32 number_of_symbol_instances = 0;
-    for (auto const& strip : text_region.strips)
-        number_of_symbol_instances += strip.symbol_instances.size();
 
     Optional<TextContexts> text_contexts;
     if (!uses_huffman_encoding)
