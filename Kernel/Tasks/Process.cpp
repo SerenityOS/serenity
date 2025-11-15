@@ -831,10 +831,21 @@ ErrorOr<void> Process::dump_core()
         return {};
     }
     auto coredump_path = TRY(name().with([&](auto& process_name) {
-        return KString::formatted("{}/{}_{}_{}", coredump_directory_path->view(), process_name.representable_view(), pid().value(), kgettimeofday().seconds_since_epoch());
+        return KString::formatted("{}/{}_{}_{}.partial", coredump_directory_path->view(), process_name.representable_view(), pid().value(), kgettimeofday().seconds_since_epoch());
     }));
     auto coredump = TRY(Coredump::try_create(*this, coredump_path->view()));
-    return coredump->write();
+    TRY(coredump->write());
+
+    auto output_directory = KLexicalPath::dirname(coredump_path->view());
+    auto vfs_root_context_root_custody = vfs_root_context()->root_custody().with([](auto& custody) -> NonnullRefPtr<Custody> {
+        return custody;
+    });
+    auto dump_directory = TRY(VirtualFileSystem::open_directory(vfs_root_context(), credentials(), output_directory, *vfs_root_context_root_custody));
+
+    auto new_path = TRY(KString::try_create(coredump_path->view().trim(".partial"sv)));
+    TRY(VirtualFileSystem::rename(vfs_root_context(), credentials(), dump_directory, coredump_path->view(), dump_directory, new_path->view()));
+
+    return {};
 }
 
 ErrorOr<void> Process::dump_perfcore()
