@@ -69,8 +69,7 @@ static ErrorOr<Optional<String>> audio_details(StringView description, StringVie
     auto metadata = loader->metadata();
     Vector<String> metadata_parts;
     if (metadata.title.has_value()) {
-        // FIXME: Use “pretty quotation” once our terminal fonts support these characters.
-        if (auto title_text = String::formatted("\"{}\"", metadata.title.value_or({})); !title_text.is_error()) {
+        if (auto title_text = String::formatted(""{}""sv, metadata.title.value_or({})); !title_text.is_error()) {
             // We intentionally discard the error, because not printing part of the metadata due to OOM is not a problem.
             (void)metadata_parts.try_append(title_text.release_value());
         }
