@@ -4,10 +4,9 @@ Date: Sun, 11 Jun 2023 01:56:50 +0200
 Subject: [PATCH] Add build system support for Serenity
 
 ---
- lib/angelscript/source/as_memory.cpp               | 2 +-
- lib/irrlicht/include/IrrCompileConfig.h            | 9 +++++++--
- lib/shaderc/third_party/spirv-tools/CMakeLists.txt | 2 ++
- 3 files changed, 10 insertions(+), 3 deletions(-)
+ lib/angelscript/source/as_memory.cpp    | 2 +-
+ lib/irrlicht/include/IrrCompileConfig.h | 9 +++++++--
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/lib/angelscript/source/as_memory.cpp b/lib/angelscript/source/as_memory.cpp
 index 5914658ba23736da57506fc58066032b5f99e435..399a3842300ed01adaf0afdbf2ae794fd89c0415 100644
@@ -56,16 +55,3 @@ index 384c6836e2050ad8cfeaa4da3bf3365b5a3cf1a8..3ddcf1951ef9a174ccdf5ac04304d548
  #define _IRR_LINUX_PLATFORM_
  #endif
  #define _IRR_POSIX_API_
-diff --git a/lib/shaderc/third_party/spirv-tools/CMakeLists.txt b/lib/shaderc/third_party/spirv-tools/CMakeLists.txt
-index 2a06a9ca39a61f5f3b618dc3f5655889a9dd38f4..e471b0bacf1bb04dc4c545e8dad4db0f4209f930 100644
---- a/lib/shaderc/third_party/spirv-tools/CMakeLists.txt
-+++ b/lib/shaderc/third_party/spirv-tools/CMakeLists.txt
-@@ -69,6 +69,8 @@ elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Haiku")
-   add_definitions(-DSPIRV_HAIKU)
- elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "SunOS")
-   add_definitions(-DSPIRV_SOLARIS)
-+elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "SerenityOS")
-+  add_definitions(-DSPIRV_LINUX)
- else()
-   message(FATAL_ERROR "Your platform '${CMAKE_SYSTEM_NAME}' is not supported!")
- endif()

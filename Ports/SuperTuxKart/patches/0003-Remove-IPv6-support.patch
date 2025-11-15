@@ -4,32 +4,19 @@ Date: Sun, 2 Jul 2023 06:13:05 +0200
 Subject: [PATCH] Remove IPv6 support
 
 ---
- CMakeLists.txt                              |   2 +-
  lib/enet/unix.c                             |   5 +-
+ src/network/database_connector.cpp          |   6 -
  src/network/network_config.cpp              |  24 +-
  src/network/network_console.cpp             |   1 +
  src/network/protocols/connect_to_server.cpp |  22 +-
- src/network/protocols/server_lobby.cpp      |  17 +-
+ src/network/protocols/server_lobby.cpp      |  17 -
  src/network/servers_manager.cpp             |   8 +-
  src/network/socket_address.cpp              |  57 +--
  src/network/stk_host.cpp                    |   4 +-
  src/network/stk_ipv6.cpp                    | 514 --------------------
- 10 files changed, 27 insertions(+), 627 deletions(-)
+ 10 files changed, 22 insertions(+), 636 deletions(-)
  delete mode 100644 src/network/stk_ipv6.cpp
 
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 98dd5dcaef4547717f92440b269216b8994a29f0..c71db3253748c169eedb855cc0374c051eea95e4 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -30,7 +30,7 @@ option(CHECK_ASSETS "Check if assets are installed in ../stk-assets" ON)
- option(USE_SYSTEM_ANGELSCRIPT "Use system angelscript instead of built-in angelscript. If you enable this option, make sure to use a compatible version." OFF)
- option(USE_SYSTEM_ENET "Use system ENet instead of the built-in version, when available." ON)
- CMAKE_DEPENDENT_OPTION(USE_IPV6 "Allow create or connect to game server with IPv6 address, system enet will not be used." ON
--  "NOT USE_SWITCH" OFF)
-+  "NOT USE_SWITCH;NOT SERENITYOS" OFF)
- option(USE_SYSTEM_WIIUSE "Use system WiiUse instead of the built-in version, when available." OFF)
- option(USE_SQLITE3 "Use sqlite to manage server stats and ban list." ON)
- 
 diff --git a/lib/enet/unix.c b/lib/enet/unix.c
 index c10a3d99d998abac64b2c4dce17c45728cabaf12..1cadc204a9a167e02f9f8d445ec42f524a1fd815 100644
 --- a/lib/enet/unix.c
@@ -46,6 +33,37 @@ index c10a3d99d998abac64b2c4dce17c45728cabaf12..1cadc204a9a167e02f9f8d445ec42f52
  
  int
  enet_initialize (void)
+diff --git a/src/network/database_connector.cpp b/src/network/database_connector.cpp
+index 30155495b058325844445cca1780ddec82ad70ff..48fec8059053402d1a1b9ca6de0c23a0a52e30f0 100644
+--- a/src/network/database_connector.cpp
++++ b/src/network/database_connector.cpp
+@@ -121,10 +121,6 @@ void DatabaseConnector::initDatabase()
+             // Return zero to let caller return SQLITE_BUSY immediately
+             return 0;
+         }, NULL);
+-    sqlite3_create_function(m_db, "insideIPv6CIDR", 2, SQLITE_UTF8, NULL,
+-        &insideIPv6CIDRSQL, NULL, NULL);
+-    sqlite3_create_function(m_db, "upperIPv6", 1, SQLITE_UTF8, NULL,
+-        &upperIPv6SQL, NULL, NULL);
+     checkTableExists(ServerConfig::m_ip_ban_table, m_ip_ban_table_exists);
+     checkTableExists(ServerConfig::m_ipv6_ban_table, m_ipv6_ban_table_exists);
+     checkTableExists(ServerConfig::m_online_id_ban_table,
+@@ -317,7 +313,6 @@ void DatabaseConnector::upperIPv6SQL(sqlite3_context* context, int argc,
+         sqlite3_result_int64(context, 0);
+         return;
+     }
+-    sqlite3_result_int64(context, upperIPv6(ipv6));
+ }
+ 
+ // ----------------------------------------------------------------------------
+@@ -340,7 +335,6 @@ void DatabaseConnector::insideIPv6CIDRSQL(sqlite3_context* context, int argc,
+         sqlite3_result_int(context, 0);
+         return;
+     }
+-    sqlite3_result_int(context, insideIPv6CIDR(ipv6_cidr, ipv6_in));
+ }   // insideIPv6CIDRSQL
+ 
+ // ----------------------------------------------------------------------------
 diff --git a/src/network/network_config.cpp b/src/network/network_config.cpp
 index 6d3f676cfb85de47403b944af43e76fa1f70d769..088bebd0a661170806d0d6cbf4f8a72ced612b4e 100644
 --- a/src/network/network_config.cpp
@@ -148,56 +166,35 @@ index 598273c2a7094b2928828dfa2d10fbee678909b5..d3a4bc2952adc491f7e9393490db866f
              host->receivedAddress.port != m_server_address.port)
          {
 diff --git a/src/network/protocols/server_lobby.cpp b/src/network/protocols/server_lobby.cpp
-index 2f05fbacb4026054e1dd3f9b9ede35faa529c796..535094cf6aba847259501675ec8303e62faa3156 100644
+index 20065126e9880b78af0a334f68ebe147449bdd68..fe84d16b23782787345de758e19759d182c9bf8f 100644
 --- a/src/network/protocols/server_lobby.cpp
 +++ b/src/network/protocols/server_lobby.cpp
-@@ -120,7 +120,7 @@ static void upperIPv6SQL(sqlite3_context* context, int argc,
-         sqlite3_result_int64(context, 0);
-         return;
-     }
--    sqlite3_result_int64(context, upperIPv6(ipv6));
-+    //sqlite3_result_int64(context, upperIPv6(ipv6));
- }
+@@ -671,23 +671,6 @@ void ServerLobby::pollDatabase()
+         std::string reason = "";
+         std::string description = "";
  
- // ----------------------------------------------------------------------------
-@@ -140,7 +140,7 @@ void insideIPv6CIDRSQL(sqlite3_context* context, int argc,
-         sqlite3_result_int(context, 0);
-         return;
-     }
--    sqlite3_result_int(context, insideIPv6CIDR(ipv6_cidr, ipv6_in));
-+    //sqlite3_result_int(context, insideIPv6CIDR(ipv6_cidr, ipv6_in));
- }   // insideIPv6CIDRSQL
- 
- // ----------------------------------------------------------------------------
-@@ -307,10 +307,7 @@ void ServerLobby::initDatabase()
-             // Return zero to let caller return SQLITE_BUSY immediately
-             return 0;
-         }, NULL);
--    sqlite3_create_function(m_db, "insideIPv6CIDR", 2, SQLITE_UTF8, NULL,
--        &insideIPv6CIDRSQL, NULL, NULL);
--    sqlite3_create_function(m_db, "upperIPv6", 1, SQLITE_UTF8, NULL,
--        &upperIPv6SQL, NULL, NULL);
-+    
-     checkTableExists(ServerConfig::m_ip_ban_table, m_ip_ban_table_exists);
-     checkTableExists(ServerConfig::m_ipv6_ban_table, m_ipv6_ban_table_exists);
-     checkTableExists(ServerConfig::m_online_id_ban_table,
-@@ -1035,13 +1032,7 @@ void ServerLobby::pollDatabase()
-                         continue;
- 
-                     char* ipv6_cidr = data[0];
--                    if (insideIPv6CIDR(ipv6_cidr, ipv6.c_str()) == 1)
--                    {
--                        Log::info("ServerLobby",
--                            "Kick %s, reason: %s, description: %s",
--                            ipv6.c_str(), data[1], data[2]);
--                        p->kick();
--                    }
-+                    
-                 }
-                 return 0;
-             }, &peers, NULL);
+-        if (p->getAddress().isIPv6())
+-        {
+-            address = p->getAddress().toString(false);
+-            if (address.empty())
+-                continue;
+-            for (auto& item: ipv6_ban_list)
+-            {
+-                if (insideIPv6CIDR(item.ipv6_cidr.c_str(), address.c_str()) == 1)
+-                {
+-                    is_kicked = true;
+-                    reason = item.reason;
+-                    description = item.description;
+-                    break;
+-                }
+-            }
+-        }
+-        else
+         {
+             uint32_t peer_addr = p->getAddress().getIP();
+             address = p->getAddress().toString();
 diff --git a/src/network/servers_manager.cpp b/src/network/servers_manager.cpp
-index 4187a319f7ae6535ef21b7dc9b1d6f3e546ef13d..8326ade484ad8d4e7cbf862884474ae6d105605f 100644
+index f25f00186687244616e43ddf5f53775319edd917..23482a6aaa99c2bd01b53a07b6b3458ac9051021 100644
 --- a/src/network/servers_manager.cpp
 +++ b/src/network/servers_manager.cpp
 @@ -225,13 +225,11 @@ std::shared_ptr<ServerList> ServersManager::getLANRefreshRequest() const
@@ -226,7 +223,7 @@ index 4187a319f7ae6535ef21b7dc9b1d6f3e546ef13d..8326ade484ad8d4e7cbf862884474ae6
              m_success = true;
              for (auto& i : servers_now)
 diff --git a/src/network/socket_address.cpp b/src/network/socket_address.cpp
-index affd7e81cabf71df4a3df6b9e99d8a3c188fbfd3..1fb7a6bebedc48d042f80481a11b24762088b106 100644
+index 519f2755b9d0dfb842f67eac811a0e5f765b955d..aec3f37fd85100c8e70f4da8ed7e5a5cdda40fb4 100644
 --- a/src/network/socket_address.cpp
 +++ b/src/network/socket_address.cpp
 @@ -104,7 +104,7 @@ SocketAddress::SocketAddress(const ENetAddress& ea)
@@ -303,7 +300,7 @@ index affd7e81cabf71df4a3df6b9e99d8a3c188fbfd3..1fb7a6bebedc48d042f80481a11b2476
              }
          }
      }
-@@ -538,12 +512,7 @@ bool SocketAddress::operator==(const SocketAddress& other) const
+@@ -528,12 +502,7 @@ bool SocketAddress::operator==(const SocketAddress& other) const
          return in_a->sin_addr.s_addr == in_b->sin_addr.s_addr &&
              in_a->sin_port == in_b->sin_port;
      }
@@ -317,7 +314,7 @@ index affd7e81cabf71df4a3df6b9e99d8a3c188fbfd3..1fb7a6bebedc48d042f80481a11b2476
      return false;
  }   // operator==
  
-@@ -558,12 +527,6 @@ bool SocketAddress::operator!=(const SocketAddress& other) const
+@@ -548,12 +517,6 @@ bool SocketAddress::operator!=(const SocketAddress& other) const
          return in_a->sin_addr.s_addr != in_b->sin_addr.s_addr ||
              in_a->sin_port != in_b->sin_port;
      }
@@ -330,7 +327,7 @@ index affd7e81cabf71df4a3df6b9e99d8a3c188fbfd3..1fb7a6bebedc48d042f80481a11b2476
      return true;
  }   // operator!=
  
-@@ -580,16 +543,6 @@ std::string SocketAddress::toString(bool show_port) const
+@@ -570,16 +533,6 @@ std::string SocketAddress::toString(bool show_port) const
          if (show_port)
              result += ":" + StringUtils::toString(getPort());
      }
@@ -347,7 +344,7 @@ index affd7e81cabf71df4a3df6b9e99d8a3c188fbfd3..1fb7a6bebedc48d042f80481a11b2476
      return result;
  }   // toString
  
-@@ -769,7 +722,7 @@ ENetAddress SocketAddress::toENetAddress() const
+@@ -759,7 +712,7 @@ ENetAddress SocketAddress::toENetAddress() const
              ((ip & 0x000000ff) << 24);
      }
  #else

@@ -20,8 +20,3 @@ Remove IPv6 support
 Correct the resource install path
 
 
-## `0005-Remove-reserved-word-from-goto-in-mcpp.patch`
-
-Remove reserved word from goto in mcpp
-
-
