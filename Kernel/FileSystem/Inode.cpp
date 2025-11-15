@@ -35,7 +35,7 @@ void Inode::sync_all()
     Inode::all_instances().with([&](auto& all_inodes) {
         for (auto& inode : all_inodes) {
             if (inode.is_metadata_dirty())
-                inodes.append(inode);
+                inodes.try_append(inode).release_value_but_fixme_should_propagate_errors();
         }
     });
 

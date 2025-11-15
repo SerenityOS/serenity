@@ -556,7 +556,7 @@ ErrorOr<void> IPv4Socket::setsockopt(int level, int option, Userspace<void const
             return ENOTSUP;
         IPv4Address address { (u8 const*)&mreq.imr_multiaddr.s_addr };
         if (!m_multicast_memberships.contains_slow(address))
-            m_multicast_memberships.append(address);
+            TRY(m_multicast_memberships.try_append(address));
         return {};
     }
     case IP_DROP_MEMBERSHIP: {

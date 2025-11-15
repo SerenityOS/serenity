@@ -58,7 +58,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> PTYMultiplexer::open(int options)
 void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)
 {
     m_freelist.with([&](auto& freelist) {
-        freelist.append(index);
+        freelist.try_append(index).release_value_but_fixme_should_propagate_errors();
         dbgln_if(PTMX_DEBUG, "PTYMultiplexer: {} added to freelist", index);
     });
 }

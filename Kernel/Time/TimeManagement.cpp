@@ -60,7 +60,7 @@ void TimeManagement::add_recipe(DeviceTree::DeviceRecipe<NonnullLockRefPtr<Hardw
     // as we do not support dynamic registration of timers.
     VERIFY(!is_initialized());
 
-    s_recipes->append(move(recipe));
+    MUST(s_recipes->try_append(move(recipe)));
 }
 
 // The s_scheduler_specific_current_time function provides a current time for scheduling purposes,
@@ -330,7 +330,7 @@ UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_
     Vector<HardwareTimerBase*> timers;
     for (auto& hardware_timer : m_hardware_timers) {
         if (hardware_timer->is_periodic_capable()) {
-            timers.append(hardware_timer);
+            timers.try_append(hardware_timer).release_value_but_fixme_should_propagate_errors();
             if (should_enable)
                 hardware_timer->set_periodic();
         }
@@ -344,7 +344,7 @@ UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_for_non_periodi
     Vector<HardwareTimerBase*> timers;
     for (auto& hardware_timer : m_hardware_timers) {
         if (!hardware_timer->is_periodic_capable())
-            timers.append(hardware_timer);
+            timers.try_append(hardware_timer).release_value_but_fixme_should_propagate_errors();
     }
     return timers;
 }
@@ -375,7 +375,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_non_legacy_hardware_time
     dbgln("HPET: Setting appropriate functions to timers.");
 
     for (auto& hpet_comparator : HPET::the().comparators())
-        m_hardware_timers.append(hpet_comparator);
+        m_hardware_timers.try_append(hpet_comparator).release_value_but_fixme_should_propagate_errors();
 
     auto periodic_timers = scan_and_initialize_periodic_timers();
     auto non_periodic_timers = scan_for_non_periodic_timers();
@@ -447,8 +447,8 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_legacy_hardware_timers()
         }
     }
 
-    m_hardware_timers.append(PIT::initialize(TimeManagement::update_time));
-    m_hardware_timers.append(RealTimeClock::create(TimeManagement::system_timer_tick));
+    m_hardware_timers.try_append(PIT::initialize(TimeManagement::update_time)).release_value_but_fixme_should_propagate_errors();
+    m_hardware_timers.try_append(RealTimeClock::create(TimeManagement::system_timer_tick)).release_value_but_fixme_should_propagate_errors();
     m_time_keeper_timer = m_hardware_timers[0];
     m_system_timer = m_hardware_timers[1];
 
@@ -497,7 +497,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
             continue;
         }
 
-        m_hardware_timers.append(device_or_error.release_value());
+        MUST(m_hardware_timers.try_append(device_or_error.release_value()));
     }
 
     if (m_hardware_timers.is_empty())
@@ -542,7 +542,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_aarch64_hardware_timers()
 #elif ARCH(RISCV64)
 UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_riscv64_hardware_timers()
 {
-    m_hardware_timers.append(RISCV64::Timer::initialize());
+    MUST(m_hardware_timers.try_append(RISCV64::Timer::initialize()));
     m_system_timer = m_hardware_timers[0];
     m_time_ticks_per_second = m_system_timer->ticks_per_second();
 

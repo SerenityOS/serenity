@@ -181,7 +181,7 @@ public:
         u32 bitfield = m_bitfield & m_bit_mask;
         for (size_t index = 0; index < 32; index++) {
             if (bitfield & 1) {
-                indices.append(index);
+                indices.try_append(index).release_value_but_fixme_should_propagate_errors();
             }
             bitfield >>= 1;
         }

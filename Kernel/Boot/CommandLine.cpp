@@ -315,7 +315,7 @@ Vector<NonnullOwnPtr<KString>> CommandLine::userspace_init_args() const
     if (!init_args.is_empty())
         MUST(args.try_prepend(MUST(KString::try_create(userspace_init()))));
     for (auto& init_arg : init_args)
-        args.append(MUST(KString::try_create(init_arg)));
+        MUST(args.try_append(MUST(KString::try_create(init_arg))));
     return args;
 }
 

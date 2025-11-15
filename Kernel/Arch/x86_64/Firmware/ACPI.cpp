@@ -33,7 +33,7 @@ Optional<PhysicalAddress> find_rsdp_in_ia_pc_specific_memory_locations()
         if (!(memory_range.type == Memory::PhysicalMemoryRangeType::ACPI_NVS || memory_range.type == Memory::PhysicalMemoryRangeType::ACPI_Reclaimable))
             return IterationDecision::Continue;
 
-        potential_ranges.append(memory_range);
+        potential_ranges.try_append(memory_range).release_value_but_fixme_should_propagate_errors();
         return IterationDecision::Continue;
     });
 

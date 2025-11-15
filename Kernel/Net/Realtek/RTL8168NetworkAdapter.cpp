@@ -1257,7 +1257,7 @@ UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_rx_descriptors()
         auto& descriptor = m_rx_descriptors[i];
         auto region = MM.allocate_contiguous_kernel_region(Memory::page_round_up(RX_BUFFER_SIZE).release_value_but_fixme_should_propagate_errors(), "RTL8168 RX buffer"sv, Memory::Region::Access::ReadWrite).release_value();
         memset(region->vaddr().as_ptr(), 0, region->size()); // MM already zeros out newly allocated pages, but we do it again in case that ever changes
-        m_rx_buffers_regions.append(move(region));
+        m_rx_buffers_regions.try_append(move(region)).release_value_but_fixme_should_propagate_errors();
 
         descriptor.buffer_size = RX_BUFFER_SIZE;
         descriptor.flags = RXDescriptor::Ownership; // let the NIC know it can use this descriptor
@@ -1274,7 +1274,7 @@ UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_tx_descriptors()
         auto& descriptor = m_tx_descriptors[i];
         auto region = MM.allocate_contiguous_kernel_region(Memory::page_round_up(TX_BUFFER_SIZE).release_value_but_fixme_should_propagate_errors(), "RTL8168 TX buffer"sv, Memory::Region::Access::ReadWrite).release_value();
         memset(region->vaddr().as_ptr(), 0, region->size()); // MM already zeros out newly allocated pages, but we do it again in case that ever changes
-        m_tx_buffers_regions.append(move(region));
+        m_tx_buffers_regions.try_append(move(region)).release_value_but_fixme_should_propagate_errors();
 
         descriptor.flags = TXDescriptor::FirstSegment | TXDescriptor::LastSegment;
         auto physical_address = m_tx_buffers_regions[i]->physical_page(0)->paddr().get();

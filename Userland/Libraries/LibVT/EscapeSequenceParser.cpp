@@ -26,7 +26,7 @@ Vector<EscapeSequenceParser::OscParameter> EscapeSequenceParser::osc_parameters(
         // This should not be a problem as we won't dereference the 0-length Span that's created.
         // Using &m_osc_raw[prev_idx] to get the start pointer checks whether we're out of bounds,
         // so we would crash.
-        params.append({ m_osc_raw.data() + prev_idx, end_idx - prev_idx });
+        params.try_append({ m_osc_raw.data() + prev_idx, end_idx - prev_idx }).release_value_but_fixme_should_propagate_errors();
         prev_idx = end_idx;
     }
     return params;
@@ -57,7 +57,7 @@ void EscapeSequenceParser::perform_action(EscapeSequenceStateMachine::Action act
         if (m_param_vector.size() == MAX_PARAMETERS)
             m_ignoring = true;
         else
-            m_param_vector.append(m_param);
+            m_param_vector.try_append(m_param).release_value_but_fixme_should_propagate_errors();
         m_executor.dcs_hook(m_param_vector, intermediates(), m_ignoring, byte);
         break;
     case EscapeSequenceStateMachine::Action::Put:
@@ -91,17 +91,17 @@ void EscapeSequenceParser::perform_action(EscapeSequenceStateMachine::Action act
             if (m_osc_parameter_indexes.size() == MAX_OSC_PARAMETERS) {
                 dbgln("EscapeSequenceParser::perform_action: shenanigans! OSC sequence has too many parameters");
             } else {
-                m_osc_parameter_indexes.append(m_osc_raw.size());
+                m_osc_parameter_indexes.try_append(m_osc_raw.size()).release_value_but_fixme_should_propagate_errors();
             }
         } else {
-            m_osc_raw.append(byte);
+            m_osc_raw.try_append(byte).release_value_but_fixme_should_propagate_errors();
         }
         break;
     case EscapeSequenceStateMachine::Action::OscEnd:
         if (m_osc_parameter_indexes.size() == MAX_OSC_PARAMETERS) {
             dbgln("EscapeSequenceParser::perform_action: shenanigans! OSC sequence has too many parameters");
         } else {
-            m_osc_parameter_indexes.append(m_osc_raw.size());
+            m_osc_parameter_indexes.try_append(m_osc_raw.size()).release_value_but_fixme_should_propagate_errors();
         }
         m_executor.execute_osc_sequence(osc_parameters(), byte);
         break;
@@ -113,7 +113,7 @@ void EscapeSequenceParser::perform_action(EscapeSequenceStateMachine::Action act
             dbgln("EscapeSequenceParser::perform_action: shenanigans! CSI sequence has too many parameters");
             m_ignoring = true;
         } else {
-            m_param_vector.append(m_param);
+            m_param_vector.try_append(m_param).release_value_but_fixme_should_propagate_errors();
         }
 
         m_executor.execute_csi_sequence(m_param_vector, intermediates(), m_ignoring, byte);
@@ -136,7 +136,7 @@ void EscapeSequenceParser::perform_action(EscapeSequenceStateMachine::Action act
             m_ignoring = true;
         } else {
             if (byte == ';') {
-                m_param_vector.append(m_param);
+                m_param_vector.try_append(m_param).release_value_but_fixme_should_propagate_errors();
                 m_param = 0;
             } else if (byte == ':') {
                 dbgln("EscapeSequenceParser::perform_action: subparameters are not yet implemented");

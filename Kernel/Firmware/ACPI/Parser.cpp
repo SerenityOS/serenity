@@ -207,7 +207,7 @@ UNMAP_AFTER_INIT void Parser::process_dsdt()
     auto sdt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
 
     // Add DSDT-pointer to expose the full table in /sys/firmware/acpi/
-    m_sdt_pointers.append(PhysicalAddress(sdt->dsdt_ptr));
+    m_sdt_pointers.try_append(PhysicalAddress(sdt->dsdt_ptr)).release_value_but_fixme_should_propagate_errors();
 
     auto dsdt_or_error = Memory::map_typed<Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr));
     if (dsdt_or_error.is_error()) {
@@ -361,7 +361,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
         dbgln_if(ACPI_DEBUG, "ACPI: XSDT pointer @ {}", VirtualAddress { &xsdt });
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u64)); i++) {
             dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &xsdt.table_ptrs[i]);
-            m_sdt_pointers.append(PhysicalAddress(xsdt.table_ptrs[i]));
+            m_sdt_pointers.try_append(PhysicalAddress(xsdt.table_ptrs[i])).release_value_but_fixme_should_propagate_errors();
         }
     } else {
         auto& rsdt = (Structures::RSDT const&)*sdt;
@@ -370,7 +370,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
         dbgln_if(ACPI_DEBUG, "ACPI: RSDT pointer @ V{}", &rsdt);
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
             dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &rsdt.table_ptrs[i]);
-            m_sdt_pointers.append(PhysicalAddress(rsdt.table_ptrs[i]));
+            m_sdt_pointers.try_append(PhysicalAddress(rsdt.table_ptrs[i])).release_value_but_fixme_should_propagate_errors();
         }
     }
 }

@@ -44,7 +44,8 @@ void PhysicalRegion::initialize_zones()
         size_t zone_count = 0;
         auto first_address = base_address;
         while (remaining_pages >= pages_per_zone) {
-            m_zones.append(adopt_nonnull_own_or_enomem(new (nothrow) PhysicalZone(base_address, pages_per_zone)).release_value_but_fixme_should_propagate_errors());
+            auto zone = adopt_nonnull_own_or_enomem(new (nothrow) PhysicalZone(base_address, pages_per_zone)).release_value_but_fixme_should_propagate_errors();
+            m_zones.try_append(move(zone)).release_value_but_fixme_should_propagate_errors();
             base_address = base_address.offset(pages_per_zone * PAGE_SIZE);
             m_usable_zones.append(*m_zones.last());
             remaining_pages -= pages_per_zone;
@@ -98,7 +99,7 @@ Vector<NonnullRefPtr<PhysicalRAMPage>> PhysicalRegion::take_contiguous_free_page
     physical_pages.ensure_capacity(count);
 
     for (size_t i = 0; i < count; ++i)
-        physical_pages.append(PhysicalRAMPage::create(page_base.value().offset(i * PAGE_SIZE)));
+        physical_pages.try_append(PhysicalRAMPage::create(page_base.value().offset(i * PAGE_SIZE))).release_value_but_fixme_should_propagate_errors();
     return physical_pages;
 }
 

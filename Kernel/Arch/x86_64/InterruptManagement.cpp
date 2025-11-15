@@ -137,7 +137,7 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_pic_mode()
     VERIFY(m_interrupt_controllers.is_empty());
     dmesgln("Interrupts: Switch to Legacy PIC mode");
     InterruptDisabler disabler;
-    m_interrupt_controllers.append(adopt_lock_ref(*new PIC()));
+    m_interrupt_controllers.try_append(adopt_lock_ref(*new PIC())).release_value_but_fixme_should_propagate_errors();
     SpuriousInterruptHandler::initialize(7);
     SpuriousInterruptHandler::initialize(15);
     dbgln("Interrupts: Detected {}", m_interrupt_controllers[0]->model());
@@ -186,7 +186,7 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
     auto madt = Memory::map_typed<ACPI::Structures::MADT>(m_madt_physical_address.value()).release_value_but_fixme_should_propagate_errors();
 
     if (madt->flags & PCAT_COMPAT_FLAG)
-        m_interrupt_controllers.append(adopt_lock_ref(*new PIC()));
+        m_interrupt_controllers.try_append(adopt_lock_ref(*new PIC())).release_value_but_fixme_should_propagate_errors();
     size_t entry_index = 0;
     size_t entries_length = madt->h.length - sizeof(ACPI::Structures::MADT);
     auto* madt_entry = madt->entries;
@@ -195,7 +195,7 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::IOAPIC) {
             auto* ioapic_entry = (const ACPI::Structures::MADTEntries::IOAPIC*)madt_entry;
             dbgln("IOAPIC found @ MADT entry {}, MMIO Registers @ {}", entry_index, PhysicalAddress(ioapic_entry->ioapic_address));
-            m_interrupt_controllers.append(adopt_lock_ref(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base)));
+            m_interrupt_controllers.try_append(adopt_lock_ref(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base))).release_value_but_fixme_should_propagate_errors();
         }
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::InterruptSourceOverride) {
             auto* interrupt_override_entry = (const ACPI::Structures::MADTEntries::InterruptSourceOverride*)madt_entry;

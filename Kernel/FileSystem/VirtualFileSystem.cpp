@@ -273,7 +273,7 @@ void VirtualFileSystem::sync_filesystems()
     Vector<NonnullRefPtr<FileSystem>, 32> file_systems;
     s_details->file_systems_list.with([&](auto const& list) {
         for (auto& fs : list)
-            file_systems.append(fs);
+            file_systems.try_append(fs).release_value_but_fixme_should_propagate_errors();
     });
 
     for (auto& fs : file_systems) {

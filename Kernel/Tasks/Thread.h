@@ -326,7 +326,7 @@ public:
             SpinlockLocker lock(m_lock);
             if (!should_add_blocker(blocker, data))
                 return false;
-            m_blockers.append({ &blocker, data });
+            m_blockers.try_append({ &blocker, data }).release_value_but_fixme_should_propagate_errors();
             return true;
         }
 
@@ -396,7 +396,7 @@ public:
             Vector<BlockerInfo, 4> taken_blockers;
             taken_blockers.ensure_capacity(move_count);
             for (size_t i = 0; i < move_count; i++)
-                taken_blockers.append(m_blockers.take(i));
+                taken_blockers.unchecked_append(m_blockers.take(i));
             m_blockers.remove(0, move_count);
             return taken_blockers;
         }
@@ -411,7 +411,7 @@ public:
             }
             m_blockers.ensure_capacity(m_blockers.size() + blockers_to_append.size());
             for (size_t i = 0; i < blockers_to_append.size(); i++)
-                m_blockers.append(blockers_to_append.take(i));
+                m_blockers.unchecked_append(blockers_to_append.take(i));
             blockers_to_append.clear();
         }
 
@@ -1016,7 +1016,7 @@ public:
                 }
             }
             if (!have_existing)
-                m_holding_locks_list.append({ &lock, location, 1 });
+                m_holding_locks_list.try_append({ &lock, location, 1 }).release_value_but_fixme_should_propagate_errors();
         } else {
             VERIFY(refs_delta < 0);
             bool found = false;

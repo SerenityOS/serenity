@@ -367,7 +367,7 @@ ErrorOr<ParsedReportDescriptor> ReportDescriptorParser::parse()
                 break;
 
             case GlobalItemTag::Push:
-                m_item_state_table_stack.append(m_current_item_state_table);
+                TRY(m_item_state_table_stack.try_append(m_current_item_state_table));
                 break;
 
             case GlobalItemTag::Pop:
