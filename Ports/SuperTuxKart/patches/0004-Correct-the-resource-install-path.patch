@@ -8,7 +8,7 @@ Subject: [PATCH] Correct the resource install path
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index a68f38ec32e7d240dae28998caf5511e936533ea..38a93e7bf5bd388e9b08810cd2488ba8fefff711 100644
+index ee4ab783107b5f04847a666711a89a004cc77295..b239cb8e23e45b58104fea245a806d58e7430ba5 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -593,7 +593,7 @@ else()
