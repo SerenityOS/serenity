@@ -211,7 +211,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
 
             dbgln_if(NVME_DEBUG, "NVMe: Block count is {} and Block size is {}", block_counts, block_size);
 
-            m_namespaces.append(TRY(NVMeNameSpace::create(*this, m_queues, nsid, block_counts, block_size)));
+            TRY(m_namespaces.try_append(TRY(NVMeNameSpace::create(*this, m_queues, nsid, block_counts, block_size))));
             m_device_count++;
             dbgln_if(NVME_DEBUG, "NVMe: Initialized namespace with NSID: {}", nsid);
         }
@@ -443,7 +443,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, QueueType
 
     auto irq = TRY(allocate_irq(qid));
 
-    m_queues.append(TRY(NVMeQueue::try_create(*this, qid, irq, IO_QUEUE_SIZE, move(cq_dma_region), move(sq_dma_region), move(doorbell), queue_type)));
+    TRY(m_queues.try_append(TRY(NVMeQueue::try_create(*this, qid, irq, IO_QUEUE_SIZE, move(cq_dma_region), move(sq_dma_region), move(doorbell), queue_type))));
     dbgln_if(NVME_DEBUG, "NVMe: Created IO Queue with QID{}", m_queues.size());
     return {};
 }

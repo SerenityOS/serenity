@@ -63,7 +63,7 @@ Vector<StringView> StringView::split_view(StringView separator, SplitBehavior sp
 {
     Vector<StringView> parts;
     for_each_split_view(separator, split_behavior, [&](StringView view) {
-        parts.append(view);
+        parts.try_append(view).release_value_but_fixme_should_propagate_errors();
     });
     return parts;
 }

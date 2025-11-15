@@ -40,11 +40,11 @@ ErrorOr<void> AHCIPort::allocate_resources_and_initialize_ports()
 
     for (size_t index = 0; index < 1; index++) {
         auto dma_page = TRY(MM.allocate_physical_page());
-        m_dma_buffers.append(move(dma_page));
+        TRY(m_dma_buffers.try_append(move(dma_page)));
     }
     for (size_t index = 0; index < 1; index++) {
         auto command_table_page = TRY(MM.allocate_physical_page());
-        m_command_table_pages.append(move(command_table_page));
+        TRY(m_command_table_pages.try_append(move(command_table_page)));
     }
 
     // FIXME: Synchronize DMA buffer accesses correctly and set the MemoryType to NonCacheable.
@@ -417,7 +417,7 @@ Optional<AsyncDeviceRequest::RequestResult> AHCIPort::prepare_and_set_scatter_li
 
     Vector<NonnullRefPtr<Memory::PhysicalRAMPage>> allocated_dma_regions;
     for (size_t index = 0; index < calculate_descriptors_count(request.block_count()); index++) {
-        allocated_dma_regions.append(m_dma_buffers.at(index));
+        allocated_dma_regions.try_append(m_dma_buffers.at(index)).release_value_but_fixme_should_propagate_errors();
     }
 
     m_current_scatter_list = Memory::ScatterGatherList::try_create(request, allocated_dma_regions.span(), m_connected_device->block_size(), "AHCI Scattered DMA"sv).release_value_but_fixme_should_propagate_errors();

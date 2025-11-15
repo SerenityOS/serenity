@@ -99,7 +99,7 @@ UNMAP_AFTER_INIT Vector<Capability> HostController::get_capabilities_for_functio
         u8 capability_id = capability_header & 0xff;
 
         // FIXME: Don't attach a PCI address to a capability object
-        capabilities.append({ Address(domain_number(), bus.value(), device.value(), function.value()), capability_id, capability_pointer });
+        capabilities.try_append({ Address(domain_number(), bus.value(), device.value(), function.value()), capability_id, capability_pointer }).release_value_but_fixme_should_propagate_errors();
         capability_pointer = capability_header >> 8;
     }
     return capabilities;

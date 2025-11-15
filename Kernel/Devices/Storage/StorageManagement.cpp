@@ -118,7 +118,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool nvme_pol
             if (subclass_code == SubclassID::SATAController
                 && device_identifier.prog_if() == PCI::MassStorage::SATAProgIF::AHCI) {
                 if (auto ahci_controller_or_error = AHCIController::initialize(device_identifier); !ahci_controller_or_error.is_error())
-                    m_controllers.append(ahci_controller_or_error.value());
+                    m_controllers.try_append(ahci_controller_or_error.value()).release_value_but_fixme_should_propagate_errors();
                 else
                     dmesgln("Unable to initialize AHCI controller: {}", ahci_controller_or_error.error());
             }
@@ -127,13 +127,13 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool nvme_pol
                 if (controller.is_error()) {
                     dmesgln("Unable to initialize NVMe controller: {}", controller.error());
                 } else {
-                    m_controllers.append(controller.release_value());
+                    m_controllers.try_append(controller.release_value()).release_value_but_fixme_should_propagate_errors();
                 }
             }
             if (VirtIOBlockController::is_handled(device_identifier)) {
                 if (virtio_controller.is_null()) {
                     auto controller = make_ref_counted<VirtIOBlockController>();
-                    m_controllers.append(controller);
+                    m_controllers.try_append(controller).release_value_but_fixme_should_propagate_errors();
                     virtio_controller = controller;
                 }
                 if (auto res = virtio_controller->add_device(device_identifier); res.is_error()) {
@@ -152,7 +152,7 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool nvme_pol
                 if (sdhc_or_error.is_error()) {
                     dmesgln("PCI: Failed to initialize SD Host Controller ({} - {}): {}", device_identifier.address(), device_identifier.hardware_id(), sdhc_or_error.error());
                 } else {
-                    m_controllers.append(sdhc_or_error.release_value());
+                    m_controllers.try_append(sdhc_or_error.release_value()).release_value_but_fixme_should_propagate_errors();
                 }
             }
         };

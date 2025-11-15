@@ -131,7 +131,7 @@ ErrorOr<void> PCIeTransportLink::locate_configurations_and_resources(Badge<VirtI
             else if (config.cfg_type == ConfigurationType::Notify)
                 m_notify_multiplier = capability.read32(0x10);
 
-            m_configs.append(config);
+            TRY(m_configs.try_append(config));
         }
     }
 

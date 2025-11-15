@@ -38,7 +38,7 @@ void InterruptManagement::initialize()
 
 void InterruptManagement::add_recipe(DeviceTree::DeviceRecipe<NonnullLockRefPtr<IRQController>> recipe)
 {
-    s_recipes->append(move(recipe));
+    MUST(s_recipes->try_append(move(recipe)));
 }
 
 void InterruptManagement::find_controllers()
@@ -50,7 +50,7 @@ void InterruptManagement::find_controllers()
             continue;
         }
 
-        m_interrupt_controllers.append(device_or_error.release_value());
+        MUST(m_interrupt_controllers.try_append(device_or_error.release_value()));
     }
 
     if (m_interrupt_controllers.is_empty())

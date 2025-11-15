@@ -176,7 +176,7 @@ ErrorOr<void> Access::add_host_controller_and_scan_for_devices(NonnullOwnPtr<Hos
             dmesgln("Failed during PCI Access::rescan_hardware due to {}", device_identifier_or_error.error());
             VERIFY_NOT_REACHED();
         }
-        m_device_identifiers.append(device_identifier_or_error.release_value());
+        m_device_identifiers.try_append(device_identifier_or_error.release_value()).release_value_but_fixme_should_propagate_errors();
     });
     return {};
 }
@@ -208,7 +208,7 @@ UNMAP_AFTER_INIT void Access::rescan_hardware()
                 dmesgln("Failed during PCI Access::rescan_hardware due to {}", device_identifier_or_error.error());
                 VERIFY_NOT_REACHED();
             }
-            m_device_identifiers.append(device_identifier_or_error.release_value());
+            m_device_identifiers.try_append(device_identifier_or_error.release_value()).release_value_but_fixme_should_propagate_errors();
         });
     }
 }

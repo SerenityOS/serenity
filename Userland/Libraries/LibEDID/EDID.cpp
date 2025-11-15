@@ -1054,7 +1054,7 @@ auto Parser::supported_resolutions() const -> ErrorOr<Vector<SupportedResolution
             return info.width == width && info.height == height;
         });
         if (it == resolutions.end()) {
-            resolutions.append({ width, height, { { refresh_rate, preferred } } });
+            resolutions.try_append({ width, height, { { refresh_rate, preferred } } }).release_value_but_fixme_should_propagate_errors();
         } else {
             auto& info = *it;
             SupportedResolution::RefreshRate* found_refresh_rate = nullptr;
@@ -1067,7 +1067,7 @@ auto Parser::supported_resolutions() const -> ErrorOr<Vector<SupportedResolution
             if (found_refresh_rate)
                 found_refresh_rate->preferred |= preferred;
             else
-                info.refresh_rates.append({ refresh_rate, preferred });
+                info.refresh_rates.try_append({ refresh_rate, preferred }).release_value_but_fixme_should_propagate_errors();
         }
     };
 

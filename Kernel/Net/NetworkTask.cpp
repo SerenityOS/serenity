@@ -396,7 +396,7 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
         IPv4Socket::all_sockets().with_exclusive([&](auto& sockets) {
             for (auto& socket : sockets) {
                 if (socket.protocol() == (unsigned)TransportProtocol::ICMP)
-                    icmp_sockets.append(socket);
+                    icmp_sockets.try_append(socket).release_value_but_fixme_should_propagate_errors();
             }
         });
         for (auto& socket : icmp_sockets)

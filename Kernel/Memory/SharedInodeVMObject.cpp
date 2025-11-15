@@ -71,7 +71,7 @@ ErrorOr<void> SharedInodeVMObject::sync_impl(off_t offset_in_pages, size_t pages
     for (size_t page_index = offset_in_pages; page_index < highest_page_to_flush; ++page_index) {
         auto& physical_page = m_physical_pages[page_index];
         if (physical_page && is_page_dirty(page_index))
-            pages_to_flush.append(page_index);
+            TRY(pages_to_flush.try_append(page_index));
     }
 
     if (pages_to_flush.size() == 0)

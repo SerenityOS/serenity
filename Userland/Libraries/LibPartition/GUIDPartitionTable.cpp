@@ -108,7 +108,7 @@ bool GUIDPartitionTable::initialize()
         Array<u8, 16> unique_guid {};
         unique_guid.span().overwrite(0, entry.unique_guid, unique_guid.size());
         dbgln("Detected GPT partition (entry={}), offset={}, limit={}", entry_index, entry.first_lba, entry.last_lba);
-        m_partitions.append({ entry.first_lba, entry.last_lba, partition_type, unique_guid, entry.attributes });
+        m_partitions.try_append({ entry.first_lba, entry.last_lba, partition_type, unique_guid, entry.attributes }).release_value_but_fixme_should_propagate_errors();
         raw_byte_index += header().partition_entry_size;
     }
 

@@ -386,7 +386,7 @@ ErrorOr<void> FATInode::allocate_and_add_cluster_to_chain()
         TRY(fs().fat_write(cluster_list->last(), allocated_cluster));
     }
 
-    cluster_list->append(allocated_cluster);
+    cluster_list->try_append(allocated_cluster).release_value_but_fixme_should_propagate_errors();
 
     return {};
 }

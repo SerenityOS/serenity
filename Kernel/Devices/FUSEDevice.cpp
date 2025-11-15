@@ -239,7 +239,7 @@ void FUSEDevice::shutdown_for_description(OpenFileDescription const& description
 {
     m_instances.with([&](auto& instances) {
         VERIFY(instances.active_instances.remove(&description));
-        instances.closing_instances.append(&description);
+        instances.closing_instances.try_append(&description).release_value_but_fixme_should_propagate_errors();
     });
 
     evaluate_block_conditions();

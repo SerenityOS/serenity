@@ -339,7 +339,7 @@ Vector<unsigned> HPET::capable_interrupt_numbers(HPETComparator const& comparato
     u32 interrupt_bitfield = comparator_registers.interrupt_routing;
     for (size_t index = 0; index < 32; index++) {
         if (interrupt_bitfield & 1)
-            capable_interrupts.append(index);
+            capable_interrupts.try_append(index).release_value_but_fixme_should_propagate_errors();
         interrupt_bitfield >>= 1;
     }
     return capable_interrupts;
@@ -353,7 +353,7 @@ Vector<unsigned> HPET::capable_interrupt_numbers(u8 comparator_number)
     u32 interrupt_bitfield = comparator_registers.interrupt_routing;
     for (size_t index = 0; index < 32; index++) {
         if (interrupt_bitfield & 1)
-            capable_interrupts.append(index);
+            capable_interrupts.try_append(index).release_value_but_fixme_should_propagate_errors();
         interrupt_bitfield >>= 1;
     }
     return capable_interrupts;
@@ -454,8 +454,8 @@ UNMAP_AFTER_INIT HPET::HPET(PhysicalAddress acpi_hpet)
     if (regs.capabilities.attributes & (u32)HPETFlags::Attributes::LegacyReplacementRouteCapable)
         regs.configuration.low = regs.configuration.low | (u32)HPETFlags::Configuration::LegacyReplacementRoute;
 
-    m_comparators.append(HPETComparator::create(0, 0, is_periodic_capable(0), is_64bit_capable(0)));
-    m_comparators.append(HPETComparator::create(1, 8, is_periodic_capable(1), is_64bit_capable(1)));
+    m_comparators.try_append(HPETComparator::create(0, 0, is_periodic_capable(0), is_64bit_capable(0))).release_value_but_fixme_should_propagate_errors();
+    m_comparators.try_append(HPETComparator::create(1, 8, is_periodic_capable(1), is_64bit_capable(1))).release_value_but_fixme_should_propagate_errors();
 
     global_enable();
 }
