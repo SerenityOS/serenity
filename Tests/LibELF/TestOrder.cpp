@@ -26,6 +26,7 @@ static ByteBuffer run(ByteString executable)
                 .fd = 1,
             },
         },
+        .keep_as_child = Core::KeepAsChild::Yes,
     }));
     MUST(process.wait_for_termination());
     auto output = MUST(Core::File::open(path_to_captured_output.string(), Core::File::OpenMode::Read));

@@ -82,7 +82,7 @@ void MainWindow::take_screenshot()
         arguments.append("-c"sv);
 
     // FIXME: Place common screenshot code into library and use that
-    MUST(Core::Process::spawn("/bin/shot"sv, arguments, m_destination->text(), Core::Process::KeepAsChild::No));
+    MUST(Core::Process::spawn("/bin/shot"sv, arguments, m_destination->text()));
 }
 
 }
