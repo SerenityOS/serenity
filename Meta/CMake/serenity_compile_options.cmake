@@ -19,8 +19,6 @@ add_link_options(LINKER:-Bsymbolic-non-weak-functions)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-maybe-uninitialized)
-    add_compile_options(-Wcast-align)
-    add_compile_options(-Wdouble-promotion)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     add_compile_options(-Wno-atomic-alignment)
     add_compile_options(-Wno-unused-const-variable)

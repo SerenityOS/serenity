@@ -2151,7 +2151,7 @@ WebIDL::ExceptionOr<void> HTMLInputElement::set_value_as_number(double value)
         return WebIDL::InvalidStateError::create(realm(), "valueAsNumber: Invalid input type used"_string);
 
     // Otherwise, if the new value is a Not-a-Number (NaN) value, then set the value of the element to the empty string.
-    if (value == NAN) {
+    if (value == AK::NaN<double>) {
         TRY(set_value(String {}));
         return {};
     }
