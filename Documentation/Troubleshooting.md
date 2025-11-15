@@ -1,12 +1,12 @@
 # Troubleshooting
 
-In case of an error, you might find an answer of how to deal it here.
+If you encounter an error, you might find a solution here.
 
 ## Building SerenityOS
 
 ### CMake fails to configure the build because it's outdated
 
-Ensure your CMake version is >= 3.16 with `cmake --version`. If your system doesn't provide a suitable
+Ensure your CMake version is >= 3.25 with `cmake --version`. If your system doesn't provide a suitable
 version of CMake, you can download a binary release from the [CMake website](https://cmake.org/download).
 
 ### QEMU is missing or is outdated
