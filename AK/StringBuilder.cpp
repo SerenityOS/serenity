@@ -8,7 +8,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Checked.h>
 #include <AK/PrintfImplementation.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/UnicodeUtils.h>
@@ -17,6 +16,7 @@
 #ifndef KERNEL
 #    include <AK/ByteString.h>
 #    include <AK/FlyString.h>
+#    include <AK/String.h>
 #    include <AK/Utf16View.h>
 #endif
 
