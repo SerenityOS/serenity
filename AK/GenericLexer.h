@@ -9,8 +9,11 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RedBlackTree.h>
 #include <AK/Result.h>
-#include <AK/String.h>
 #include <AK/StringView.h>
+
+#ifndef KERNEL
+#    include <AK/String.h>
+#endif
 
 namespace AK {
 
