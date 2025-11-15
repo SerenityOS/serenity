@@ -15,8 +15,3 @@ Fixup Vulkan/SDL platform quirks
 Remove IPv6 support
 
 
-## `0004-Correct-the-resource-install-path.patch`
-
-Correct the resource install path
-
-
