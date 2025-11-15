@@ -36,7 +36,7 @@ ErrorOr<void> VirtIOBlockController::add_device(PCI::DeviceIdentifier const& dev
     auto device = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VirtIOBlockDevice(move(transport_link), lun, cid)));
     TRY(device->initialize_virtio_resources());
 
-    m_devices.append(device);
+    TRY(m_devices.try_append(device));
     return {};
 }
 

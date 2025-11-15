@@ -238,7 +238,7 @@ UNMAP_AFTER_INIT void VirtualConsole::initialize()
 
     // Add the lines, so we also ensure they will be flushed now
     for (size_t row = 0; row < rows(); row++) {
-        m_lines.append({ true, 0 });
+        m_lines.try_append({ true, 0 }).release_value_but_fixme_should_propagate_errors();
     }
     VERIFY(m_cells);
 }
@@ -259,7 +259,7 @@ void VirtualConsole::refresh_after_resolution_change()
         m_lines.shrink(rows());
     } else {
         for (size_t row = 0; row < (size_t)(rows() - old_rows_count); row++) {
-            m_lines.append({ true, 0 });
+            m_lines.try_append({ true, 0 }).release_value_but_fixme_should_propagate_errors();
         }
     }
 

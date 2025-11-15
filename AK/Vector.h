@@ -271,8 +271,6 @@ public:
         MUST(try_extend(other));
     }
 
-#endif
-
     ALWAYS_INLINE void append(T&& value)
     {
         if constexpr (contains_reference)
@@ -287,7 +285,6 @@ public:
         MUST(try_append(T(value)));
     }
 
-#ifndef KERNEL
     void append(StorageType const* values, size_t count)
     {
         MUST(try_append(values, count));

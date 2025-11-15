@@ -615,7 +615,7 @@ bool Thread::WaitBlockerSet::unblock(Process& process, WaitBlocker::UnblockFlags
         }
         if (!updated_existing) {
             dbgln_if(WAITBLOCK_DEBUG, "WaitBlockerSet[{}] add {} flags: {}", m_process, process, (int)flags);
-            m_processes.append(ProcessBlockInfo(process, flags, signal));
+            m_processes.try_append(ProcessBlockInfo(process, flags, signal)).release_value_but_fixme_should_propagate_errors();
         }
     }
     return did_unblock_any;

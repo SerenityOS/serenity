@@ -216,7 +216,7 @@ UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges(GlobalData& global
         if (current_range.type != PhysicalMemoryRangeType::Reserved) {
             if (range.start.is_null())
                 continue;
-            global_data.reserved_memory_ranges.append(ContiguousReservedMemoryRange { range.start, current_range.start.get() - range.start.get() });
+            global_data.reserved_memory_ranges.try_append(ContiguousReservedMemoryRange { range.start, current_range.start.get() - range.start.get() }).release_value_but_fixme_should_propagate_errors();
             range.start.set((FlatPtr) nullptr);
             continue;
         }
@@ -229,7 +229,7 @@ UNMAP_AFTER_INIT void MemoryManager::register_reserved_ranges(GlobalData& global
         return;
     if (range.start.is_null())
         return;
-    global_data.reserved_memory_ranges.append(ContiguousReservedMemoryRange { range.start, global_data.physical_memory_ranges.last().start.get() + global_data.physical_memory_ranges.last().length - range.start.get() });
+    global_data.reserved_memory_ranges.try_append(ContiguousReservedMemoryRange { range.start, global_data.physical_memory_ranges.last().start.get() + global_data.physical_memory_ranges.last().length - range.start.get() }).release_value_but_fixme_should_propagate_errors();
 }
 
 bool MemoryManager::is_allowed_to_read_physical_memory_for_userspace(PhysicalAddress start_address, size_t read_length) const
@@ -280,9 +280,9 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         // **To be completely on the safe side** and never worry about where the EBDA is located, how BIOS might
         // corrupt the low memory range during power state changing, other bad behavior of some BIOS might change
         // a value in the very first 64k bytes of RAM, etc - we should just ignore this range completely.
-        global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
+        global_data.used_memory_ranges.try_append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) }).release_value_but_fixme_should_propagate_errors();
 #endif
-        global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image)).release_value_but_fixme_should_propagate_errors()) });
+        global_data.used_memory_ranges.try_append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image)).release_value_but_fixme_should_propagate_errors()) }).release_value_but_fixme_should_propagate_errors();
 
         if (g_boot_info.boot_method == BootMethod::EFI)
             parse_memory_map_efi(global_data);
@@ -343,7 +343,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
                     if (last_contiguous_physical_range.has_value()) {
                         auto range = last_contiguous_physical_range.release_value();
                         // FIXME: OOM?
-                        global_data.physical_regions.append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull());
+                        global_data.physical_regions.try_append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull()).release_value_but_fixme_should_propagate_errors();
                     }
                     last_contiguous_physical_range = ContiguousPhysicalRange { .lower = addr, .upper = addr };
                 } else {
@@ -354,7 +354,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
             if (last_contiguous_physical_range.has_value()) {
                 auto range = last_contiguous_physical_range.release_value();
                 // FIXME: OOM?
-                global_data.physical_regions.append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull());
+                global_data.physical_regions.try_append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull()).release_value_but_fixme_should_propagate_errors();
             }
         }
 
@@ -435,7 +435,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_efi(MemoryManager::GlobalD
         case EFI::MemoryType::BootServicesCode:
         case EFI::MemoryType::BootServicesData:
         case EFI::MemoryType::Conventional:
-            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, start_paddr, length });
+            global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, start_paddr, length }).release_value_but_fixme_should_propagate_errors();
             break;
         case EFI::MemoryType::Reserved:
         case EFI::MemoryType::LoaderCode:
@@ -466,29 +466,29 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_efi(MemoryManager::GlobalD
             if ((start_paddr.get() != 0x000000fd00000000 || length != (0x000000ffffffffff - 0x000000fd00000000) + 1)
                 && (start_paddr.get() != 0x000003fff0000000 || length != 0x10000000))
 #endif
-                global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, start_paddr, length });
+                global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, start_paddr, length }).release_value_but_fixme_should_propagate_errors();
             break;
         case EFI::MemoryType::ACPIReclaim:
-            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_Reclaimable, start_paddr, length });
+            global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_Reclaimable, start_paddr, length }).release_value_but_fixme_should_propagate_errors();
             break;
         case EFI::MemoryType::ACPI_NVS:
-            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_NVS, start_paddr, length });
+            global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_NVS, start_paddr, length }).release_value_but_fixme_should_propagate_errors();
             break;
         case EFI::MemoryType::Unusable:
             dmesgln("MM: Warning, detected bad memory range!");
-            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::BadMemory, start_paddr, length });
+            global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::BadMemory, start_paddr, length }).release_value_but_fixme_should_propagate_errors();
             break;
         default:
             dbgln("MM: Unknown EFI memory type: {}", to_underlying(descriptor->type));
-            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Unknown, start_paddr, length });
+            global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::Unknown, start_paddr, length }).release_value_but_fixme_should_propagate_errors();
             break;
         }
     }
 
     // SMBIOS data can be in a BootServicesData memory region (see https://uefi.org/specs/UEFI/2.10/02_Overview.html#x64-platforms, the same requirement is listed for AArch64 and RISC-V as well).
     // BootServices* memory regions are treated as normal main memory after ExitBootServices, so we need to explicitly mark its ranges as used.
-    global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::SMBIOS, g_boot_info.smbios.entry_point_paddr, g_boot_info.smbios.entry_point_paddr.offset(g_boot_info.smbios.entry_point_length) });
-    global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::SMBIOS, g_boot_info.smbios.structure_table_paddr, g_boot_info.smbios.structure_table_paddr.offset(g_boot_info.smbios.maximum_structure_table_length) });
+    global_data.used_memory_ranges.try_append(UsedMemoryRange { UsedMemoryRangeType::SMBIOS, g_boot_info.smbios.entry_point_paddr, g_boot_info.smbios.entry_point_paddr.offset(g_boot_info.smbios.entry_point_length) }).release_value_but_fixme_should_propagate_errors();
+    global_data.used_memory_ranges.try_append(UsedMemoryRange { UsedMemoryRangeType::SMBIOS, g_boot_info.smbios.structure_table_paddr, g_boot_info.smbios.structure_table_paddr.offset(g_boot_info.smbios.maximum_structure_table_length) }).release_value_but_fixme_should_propagate_errors();
 }
 
 UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalData& global_data, u8 const* fdt_addr)
@@ -503,9 +503,9 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
     u64 next_block_offset = fdt_header.off_mem_rsvmap + sizeof(::DeviceTree::FlattenedDeviceTreeReserveEntry);
     while ((next_block_offset < fdt_header.off_dt_struct) && (*mem_reserve_block != ::DeviceTree::FlattenedDeviceTreeReserveEntry {})) {
         dbgln("MM: Reserved Range /memreserve/: address: {} size {:#x}", PhysicalAddress { mem_reserve_block->address }, mem_reserve_block->size);
-        global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, PhysicalAddress { mem_reserve_block->address }, mem_reserve_block->size });
+        global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, PhysicalAddress { mem_reserve_block->address }, mem_reserve_block->size }).release_value_but_fixme_should_propagate_errors();
         // FIXME: Not all of these are "used", only those in "memory" are actually "used"
-        global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress { mem_reserve_block->address }, PhysicalAddress { mem_reserve_block->address + mem_reserve_block->size } });
+        global_data.used_memory_ranges.try_append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress { mem_reserve_block->address }, PhysicalAddress { mem_reserve_block->address + mem_reserve_block->size } }).release_value_but_fixme_should_propagate_errors();
         ++mem_reserve_block;
         next_block_offset += sizeof(::DeviceTree::FlattenedDeviceTreeReserveEntry);
     }
@@ -695,7 +695,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_multiboot(MemoryManager::G
     if (g_boot_info.boot_method_specific.multiboot1.flags & 0x4 && !g_boot_info.boot_method_specific.multiboot1.module_physical_ptr.is_null()) {
         dmesgln("MM: Multiboot module @ {}, length={}", g_boot_info.boot_method_specific.multiboot1.module_physical_ptr, g_boot_info.boot_method_specific.multiboot1.module_length);
         VERIFY(g_boot_info.boot_method_specific.multiboot1.module_length != 0);
-        global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, g_boot_info.boot_method_specific.multiboot1.module_physical_ptr, g_boot_info.boot_method_specific.multiboot1.module_physical_ptr.offset(g_boot_info.boot_method_specific.multiboot1.module_length) });
+        global_data.used_memory_ranges.try_append(UsedMemoryRange { UsedMemoryRangeType::BootModule, g_boot_info.boot_method_specific.multiboot1.module_physical_ptr, g_boot_info.boot_method_specific.multiboot1.module_physical_ptr.offset(g_boot_info.boot_method_specific.multiboot1.module_length) }).release_value_but_fixme_should_propagate_errors();
     }
 
     auto const* mmap_begin = g_boot_info.boot_method_specific.multiboot1.memory_map;
@@ -712,7 +712,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_multiboot(MemoryManager::G
         auto start_address = PhysicalAddress(address);
         switch (mmap->type) {
         case (MULTIBOOT_MEMORY_AVAILABLE):
-            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, start_address, length });
+            global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::Usable, start_address, length }).release_value_but_fixme_should_propagate_errors();
             break;
         case (MULTIBOOT_MEMORY_RESERVED):
 #if ARCH(X86_64)
@@ -734,21 +734,21 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_multiboot(MemoryManager::G
             if ((address != 0x000000fd00000000 || length != (0x000000ffffffffff - 0x000000fd00000000) + 1)
                 && (address != 0x000003fff0000000 || length != 0x10000000))
 #endif
-                global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, start_address, length });
+                global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::Reserved, start_address, length }).release_value_but_fixme_should_propagate_errors();
             break;
         case (MULTIBOOT_MEMORY_ACPI_RECLAIMABLE):
-            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_Reclaimable, start_address, length });
+            global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_Reclaimable, start_address, length }).release_value_but_fixme_should_propagate_errors();
             break;
         case (MULTIBOOT_MEMORY_NVS):
-            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_NVS, start_address, length });
+            global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::ACPI_NVS, start_address, length }).release_value_but_fixme_should_propagate_errors();
             break;
         case (MULTIBOOT_MEMORY_BADRAM):
             dmesgln("MM: Warning, detected bad memory range!");
-            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::BadMemory, start_address, length });
+            global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::BadMemory, start_address, length }).release_value_but_fixme_should_propagate_errors();
             break;
         default:
             dbgln("MM: Unknown range!");
-            global_data.physical_memory_ranges.append(PhysicalMemoryRange { PhysicalMemoryRangeType::Unknown, start_address, length });
+            global_data.physical_memory_ranges.try_append(PhysicalMemoryRange { PhysicalMemoryRangeType::Unknown, start_address, length }).release_value_but_fixme_should_propagate_errors();
             break;
         }
     }
@@ -821,7 +821,7 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages(GlobalData& globa
     } else {
         global_data.physical_pages_region = found_region->try_take_pages_from_beginning(physical_page_array_pages_and_page_tables_count);
     }
-    global_data.used_memory_ranges.append({ UsedMemoryRangeType::PhysicalPages, global_data.physical_pages_region->lower(), global_data.physical_pages_region->upper() });
+    global_data.used_memory_ranges.try_append({ UsedMemoryRangeType::PhysicalPages, global_data.physical_pages_region->lower(), global_data.physical_pages_region->upper() }).release_value_but_fixme_should_propagate_errors();
 
     // Create the bare page directory. This is not a fully constructed page directory and merely contains the allocators!
     m_kernel_page_directory = PageDirectory::must_create_kernel_page_directory();

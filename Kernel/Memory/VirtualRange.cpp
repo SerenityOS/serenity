@@ -19,9 +19,9 @@ Vector<VirtualRange, 2> VirtualRange::carve(VirtualRange const& taken) const
     if (taken == *this)
         return {};
     if (taken.base() > base())
-        parts.append({ base(), taken.base().get() - base().get() });
+        parts.unchecked_append({ base(), taken.base().get() - base().get() });
     if (taken.end() < end())
-        parts.append({ taken.end(), end().get() - taken.end().get() });
+        parts.unchecked_append({ taken.end(), end().get() - taken.end().get() });
     return parts;
 }
 

@@ -57,7 +57,7 @@ UNMAP_AFTER_INIT ErrorOr<void> Console::initialize_virtio_resources()
     } else {
         auto port = TRY(VirtIO::ConsolePort::create(0u, *this));
         port->init_receive_buffer({});
-        m_ports.append(port);
+        TRY(m_ports.try_append(port));
     }
     return {};
 }

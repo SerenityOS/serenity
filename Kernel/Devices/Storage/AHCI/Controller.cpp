@@ -223,7 +223,7 @@ LockRefPtr<StorageDevice> AHCIController::device(u32 index) const
         bit = bit_scan_forward(pi);
         if (checked_device.is_null())
             continue;
-        connected_devices.append(checked_device.release_nonnull());
+        connected_devices.try_append(checked_device.release_nonnull()).release_value_but_fixme_should_propagate_errors();
     }
     dbgln_if(AHCI_DEBUG, "Connected device count: {}, Index: {}", connected_devices.size(), index);
     if (index >= connected_devices.size())

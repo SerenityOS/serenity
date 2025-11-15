@@ -148,11 +148,11 @@ bool NetworkingManagement::initialize()
                 dmesgln("Failed to initialize network adapter ({} {}): {}", device_identifier.address(), device_identifier.hardware_id(), result.error());
                 return;
             }
-            m_adapters.with([&](auto& adapters) { adapters.append(*result.release_value()); });
+            m_adapters.with([&](auto& adapters) { adapters.try_append(*result.release_value()).release_value_but_fixme_should_propagate_errors(); });
         }));
     }
     auto loopback = MUST(LoopbackAdapter::try_create());
-    m_adapters.with([&](auto& adapters) { adapters.append(*loopback); });
+    m_adapters.with([&](auto& adapters) { adapters.try_append(*loopback).release_value_but_fixme_should_propagate_errors(); });
     m_loopback_adapter = *loopback;
     return true;
 }
