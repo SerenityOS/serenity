@@ -100,8 +100,12 @@ public:
     [[nodiscard]] bool ends_with(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool starts_with(char) const;
     [[nodiscard]] bool ends_with(char) const;
+
+#ifndef KERNEL
     [[nodiscard]] bool matches(StringView mask, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
     [[nodiscard]] bool matches(StringView mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+#endif
+
     [[nodiscard]] bool contains(char) const;
     [[nodiscard]] bool contains(u32) const;
     [[nodiscard]] bool contains(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
@@ -125,7 +129,9 @@ public:
     [[nodiscard]] Optional<size_t> find_last(StringView needle) const { return StringUtils::find_last(*this, needle); }
     [[nodiscard]] Optional<size_t> find_last_not(char needle) const { return StringUtils::find_last_not(*this, needle); }
 
+#ifndef KERNEL
     [[nodiscard]] Vector<size_t> find_all(StringView needle) const;
+#endif
 
     using SearchDirection = StringUtils::SearchDirection;
     [[nodiscard]] Optional<size_t> find_any_of(StringView needles, SearchDirection direction = SearchDirection::Forward) const { return StringUtils::find_any_of(*this, needles, direction); }
@@ -147,7 +153,9 @@ public:
     [[nodiscard]] Vector<StringView> split_view(char, SplitBehavior = SplitBehavior::Nothing) const;
     [[nodiscard]] Vector<StringView> split_view(StringView, SplitBehavior = SplitBehavior::Nothing) const;
 
+#ifndef KERNEL
     [[nodiscard]] Vector<StringView> split_view_if(Function<bool(char)> const& predicate, SplitBehavior = SplitBehavior::Nothing) const;
+#endif
 
     [[nodiscard]] StringView find_last_split_view(char separator) const
     {
@@ -239,7 +247,11 @@ public:
         No,
         Yes,
     };
+
+#ifndef KERNEL
     [[nodiscard]] Vector<StringView> lines(ConsiderCarriageReturn = ConsiderCarriageReturn::Yes) const;
+#endif
+
     [[nodiscard]] size_t count_lines(ConsiderCarriageReturn = ConsiderCarriageReturn::Yes) const;
 
     // Create a new substring view of this string view, starting either at the beginning of
