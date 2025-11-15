@@ -73,7 +73,10 @@ struct MaskSpan {
 
 namespace StringUtils {
 
+#ifndef KERNEL
 bool matches(StringView str, StringView mask, CaseSensitivity = CaseSensitivity::CaseInsensitive, Vector<MaskSpan>* match_spans = nullptr);
+#endif
+
 template<typename T = int>
 Optional<T> convert_to_int(StringView, TrimWhitespace = TrimWhitespace::Yes);
 template<typename T = unsigned>
@@ -99,7 +102,11 @@ Optional<size_t> find(StringView haystack, StringView needle, size_t start = 0);
 Optional<size_t> find_last(StringView haystack, char needle);
 Optional<size_t> find_last(StringView haystack, StringView needle);
 Optional<size_t> find_last_not(StringView haystack, char needle);
+
+#ifndef KERNEL
 Vector<size_t> find_all(StringView haystack, StringView needle);
+#endif
+
 enum class SearchDirection {
     Forward,
     Backward
