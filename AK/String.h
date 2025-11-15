@@ -7,6 +7,10 @@
 
 #pragma once
 
+#ifdef KERNEL
+#    error This file should not be included in the kernel. Use KString instead.
+#endif
+
 #include <AK/CharacterTypes.h>
 #include <AK/Concepts.h>
 #include <AK/Format.h>

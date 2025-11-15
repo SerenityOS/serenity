@@ -9,7 +9,6 @@
 #include <AK/FormatParser.h>
 #include <AK/GenericLexer.h>
 #include <AK/IntegralMath.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/kstdio.h>
 
@@ -24,14 +23,12 @@
 #    include <Kernel/Time/TimeManagement.h>
 #else
 #    include <AK/LexicalPath.h>
+#    include <AK/String.h>
+#    include <AK/StringFloatingPointConversions.h>
 #    include <math.h>
 #    include <stdio.h>
 #    include <string.h>
 #    include <time.h>
-#endif
-
-#ifndef KERNEL
-#    include <AK/StringFloatingPointConversions.h>
 #endif
 
 namespace AK {

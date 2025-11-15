@@ -9,7 +9,6 @@
 #include <AK/Hex.h>
 #include <AK/MemMem.h>
 #include <AK/Optional.h>
-#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
@@ -22,6 +21,7 @@
 #else
 #    include <AK/ByteString.h>
 #    include <AK/FloatingPointStringConversions.h>
+#    include <AK/String.h>
 #    include <string.h>
 #endif
 

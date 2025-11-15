@@ -5,7 +5,6 @@
  */
 
 #include <AK/Span.h>
-#include <AK/String.h>
 #include <Kernel/Bus/PCI/Driver.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Bus/VirtIO/Transport/PCIe/TransportLink.h>
