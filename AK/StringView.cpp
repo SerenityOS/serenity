@@ -110,6 +110,7 @@ static void for_each_line(StringView string, Callback&& callback)
         callback(string.substring_view(substart, taillen));
 }
 
+#ifndef KERNEL
 Vector<StringView> StringView::lines(ConsiderCarriageReturn consider_carriage_return) const
 {
     if (is_empty())
@@ -123,6 +124,7 @@ Vector<StringView> StringView::lines(ConsiderCarriageReturn consider_carriage_re
 
     return lines;
 }
+#endif
 
 size_t StringView::count_lines(ConsiderCarriageReturn consider_carriage_return) const
 {
@@ -162,6 +164,7 @@ bool StringView::ends_with(StringView str, CaseSensitivity case_sensitivity) con
     return StringUtils::ends_with(*this, str, case_sensitivity);
 }
 
+#ifndef KERNEL
 bool StringView::matches(StringView mask, Vector<MaskSpan>& mask_spans, CaseSensitivity case_sensitivity) const
 {
     return StringUtils::matches(*this, mask, case_sensitivity, &mask_spans);
@@ -171,6 +174,7 @@ bool StringView::matches(StringView mask, CaseSensitivity case_sensitivity) cons
 {
     return StringUtils::matches(*this, mask, case_sensitivity);
 }
+#endif
 
 bool StringView::contains(char needle) const
 {
@@ -267,7 +271,6 @@ ByteString StringView::replace(StringView needle, StringView replacement, Replac
 {
     return StringUtils::replace(*this, needle, replacement, replace_mode);
 }
-#endif
 
 Vector<size_t> StringView::find_all(StringView needle) const
 {
@@ -297,5 +300,6 @@ Vector<StringView> StringView::split_view_if(Function<bool(char)> const& predica
         v.append(substring_view(substart, taillen));
     return v;
 }
+#endif
 
 }
