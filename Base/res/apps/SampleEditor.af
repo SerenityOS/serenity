@@ -1,0 +1,7 @@
+[App]
+Name=Sample Editor
+Executable=/bin/SampleEditor
+Category=&Media
+
+[Launcher]
+FileTypes=wav,flac
