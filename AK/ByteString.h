@@ -6,6 +6,10 @@
 
 #pragma once
 
+#ifdef KERNEL
+#    error This file should not be included in the kernel. Use KString instead.
+#endif
+
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/RefPtr.h>
