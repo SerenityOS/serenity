@@ -1537,8 +1537,15 @@ static ErrorOr<void> encode_jbig2_header(Stream& stream, JBIG2::FileHeaderData c
 
 namespace {
 
+struct SerializedSegmentData {
+    ByteBuffer data;
+    size_t header_size { 0 };
+};
+
 struct JBIG2EncodingContext {
     HashMap<u32, JBIG2::SegmentData const*> segment_by_id;
+
+    HashMap<u32, SerializedSegmentData> segment_data_by_id;
 
     HashMap<u32, Vector<JBIG2::Code>> codes_by_segment_id;
     HashMap<u32, JBIG2::HuffmanTable> tables_by_segment_id;
@@ -2487,7 +2494,7 @@ static ErrorOr<void> encode_extension(JBIG2::ExtensionData const& extension, Vec
     return {};
 }
 
-static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& segment_data, JBIG2EncodingContext& context)
+static ErrorOr<SerializedSegmentData> encode_segment(JBIG2::SegmentData const& segment_data, JBIG2EncodingContext& context)
 {
     Vector<u8> scratch_buffer;
 
@@ -2597,10 +2604,17 @@ static ErrorOr<void> encode_segment(Stream& stream, JBIG2::SegmentData const& se
     header.data_length = segment_data.header.is_immediate_generic_region_of_initially_unknown_size ? 0xffff'ffff : encoded_data.size();
 
     auto page_association_size = segment_data.header.force_32_bit_page_association ? PageAssociationSize::Force32Bit : PageAssociationSize::Auto;
-    TRY(encode_segment_header(stream, header, page_association_size));
-    TRY(stream.write_until_depleted(encoded_data));
+    AllocatingMemoryStream header_stream;
+    TRY(encode_segment_header(header_stream, header, page_association_size));
+    auto header_data = TRY(header_stream.read_until_eof());
 
-    return {};
+    SerializedSegmentData data;
+    data.header_size = header_data.size();
+    data.data = TRY(ByteBuffer::create_uninitialized(header_data.size() + encoded_data.size()));
+    header_data.span().copy_to(data.data.span());
+    encoded_data.copy_to(data.data.span().slice(header_data.size()));
+
+    return data;
 }
 
 ErrorOr<void> JBIG2Writer::encode_with_explicit_data(Stream& stream, JBIG2::FileData const& file_data)
@@ -2617,7 +2631,13 @@ ErrorOr<void> JBIG2Writer::encode_with_explicit_data(Stream& stream, JBIG2::File
     }
 
     for (auto const& segment : file_data.segments) {
-        TRY(encode_segment(stream, segment, context));
+        auto data = TRY(encode_segment(segment, context));
+        VERIFY(context.segment_data_by_id.set(segment.header.segment_number, data) == HashSetResult::InsertedNewEntry);
+    }
+
+    for (auto const& segment : file_data.segments) {
+        auto const& data = context.segment_data_by_id.get(segment.header.segment_number);
+        TRY(stream.write_until_depleted(data->data));
     }
 
     return {};
