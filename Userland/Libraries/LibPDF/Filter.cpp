@@ -10,6 +10,7 @@
 #include <LibCompress/Deflate.h>
 #include <LibCompress/Lzw.h>
 #include <LibCompress/PackBitsDecoder.h>
+#include <LibGfx/ImageFormats/BilevelImage.h>
 #include <LibGfx/ImageFormats/CCITTDecoder.h>
 #include <LibGfx/ImageFormats/JBIG2Loader.h>
 #include <LibGfx/ImageFormats/JPEG2000Loader.h>
@@ -309,7 +310,7 @@ PDFErrorOr<ByteBuffer> Filter::decode_jbig2(Document* document, ReadonlyBytes by
     }
 
     segments.append(bytes);
-    auto decoded = TRY(Gfx::JBIG2ImageDecoderPlugin::decode_embedded(segments));
+    auto decoded = TRY(TRY(Gfx::JBIG2ImageDecoderPlugin::decode_embedded(segments))->to_byte_buffer());
 
     // JBIG2 treats `1` as "ink present" (black) and `0` as "no ink" (white).
     // PDF treats `1` as "light present" (white) and `1` as "no light" (black).
