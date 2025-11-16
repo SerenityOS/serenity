@@ -2266,24 +2266,36 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
     // 7.4.7 Generic refinement region syntax
     if (header.referred_to_segments.size() > 1)
         return Error::from_string_literal("JBIG2Writer: Generic refinement region must refer to at most one segment");
-    if (header.referred_to_segments.size() == 0)
+
+    // 7.4.7.4 Reference bitmap selection
+    auto const* reference_bitmap = TRY([&]() -> ErrorOr<BilevelImage const*> {
+        // "If this segment refers to another region segment, then set the reference bitmap GRREFERENCE to be the current
+        //  contents of the auxiliary buffer associated with the region segment that this segment refers to."
+        if (header.referred_to_segments.size() == 1) {
+            auto maybe_segment = context.segment_by_id.get(header.referred_to_segments[0].segment_number);
+            if (!maybe_segment.has_value())
+                return Error::from_string_literal("JBIG2Writer: Could not find referred-to segment for generic refinement region");
+            auto const& referred_to_segment = *maybe_segment.value();
+
+            return referred_to_segment.data.visit(
+                [](JBIG2::IntermediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<BilevelImage const*> {
+                    return generic_region_wrapper.generic_region.image;
+                },
+                [](JBIG2::IntermediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<BilevelImage const*> {
+                    return generic_refinement_region_wrapper.generic_refinement_region.image;
+                },
+                [](auto const&) -> ErrorOr<BilevelImage const*> {
+                    return Error::from_string_literal("JBIG2Writer: Generic refinement region can only refer to intermediate region segments");
+                });
+        }
+
+        // "If this segment does not refer to another region segment, set GRREFERENCE to be a bitmap containing the current
+        //  contents of the page buffer (see clause 8), restricted to the area of the page buffer specified by this segment's region
+        //  segment information field."
+        // FIXME
+        VERIFY(header.referred_to_segments.size() == 0);
         return Error::from_string_literal("JBIG2Writer: Generic refinement region refining page not yet implemented");
-
-    auto maybe_segment = context.segment_by_id.get(header.referred_to_segments[0].segment_number);
-    if (!maybe_segment.has_value())
-        return Error::from_string_literal("JBIG2Writer: Could not find referred-to segment for generic refinement region");
-    auto const& referred_to_segment = *maybe_segment.value();
-
-    auto const* reference_bitmap = TRY(referred_to_segment.data.visit(
-        [](JBIG2::IntermediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<BilevelImage const*> {
-            return generic_region_wrapper.generic_region.image;
-        },
-        [](JBIG2::IntermediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<BilevelImage const*> {
-            return generic_refinement_region_wrapper.generic_refinement_region.image;
-        },
-        [](auto const&) -> ErrorOr<BilevelImage const*> {
-            return Error::from_string_literal("JBIG2Writer: Generic refinement region can only refer to intermediate region segments");
-        }));
+    }());
 
     GenericRefinementRegionEncodingInputParameters inputs {
         .image = *generic_refinement_region.image,
