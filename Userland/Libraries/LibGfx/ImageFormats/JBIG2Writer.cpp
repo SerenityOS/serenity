@@ -21,6 +21,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageFormats/BilevelImage.h>
 #include <LibGfx/ImageFormats/CCITTEncoder.h>
+#include <LibGfx/ImageFormats/JBIG2Loader.h>
 #include <LibGfx/ImageFormats/JBIG2Writer.h>
 #include <LibGfx/ImageFormats/MQArithmeticCoder.h>
 #include <LibTextCodec/Encoder.h>
@@ -1543,6 +1544,13 @@ struct SerializedSegmentData {
 };
 
 struct JBIG2EncodingContext {
+    JBIG2EncodingContext(Vector<JBIG2::SegmentData> const& segments)
+        : segments(segments)
+    {
+    }
+
+    Vector<JBIG2::SegmentData> const& segments;
+
     HashMap<u32, JBIG2::SegmentData const*> segment_by_id;
 
     HashMap<u32, SerializedSegmentData> segment_data_by_id;
@@ -2293,9 +2301,18 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
         // "If this segment does not refer to another region segment, set GRREFERENCE to be a bitmap containing the current
         //  contents of the page buffer (see clause 8), restricted to the area of the page buffer specified by this segment's region
         //  segment information field."
-        // FIXME
         VERIFY(header.referred_to_segments.size() == 0);
-        return Error::from_string_literal("JBIG2Writer: Generic refinement region refining page not yet implemented");
+        Vector<ReadonlyBytes> preceding_segments_on_same_page;
+        for (auto const& segment : context.segments) {
+            if (segment.header.page_association == 0 || segment.header.page_association == header.page_association) {
+                if (&segment.header == &header)
+                    break;
+                auto const& data = context.segment_data_by_id.get(segment.header.segment_number);
+                preceding_segments_on_same_page.append(data->data);
+            }
+        }
+        auto bitmap = TRY(JBIG2ImageDecoderPlugin::decode_embedded(preceding_segments_on_same_page));
+        return bitmap->subbitmap(generic_refinement_region.region_segment_information.rect());
     }());
 
     GenericRefinementRegionEncodingInputParameters inputs {
@@ -2637,7 +2654,7 @@ ErrorOr<void> JBIG2Writer::encode_with_explicit_data(Stream& stream, JBIG2::File
 
     TRY(encode_jbig2_header(stream, file_data.header));
 
-    JBIG2EncodingContext context;
+    JBIG2EncodingContext context { file_data.segments };
     for (auto const& segment : file_data.segments) {
         if (context.segment_by_id.set(segment.header.segment_number, &segment) != HashSetResult::InsertedNewEntry)
             return Error::from_string_literal("JBIG2Writer: Duplicate segment number");
