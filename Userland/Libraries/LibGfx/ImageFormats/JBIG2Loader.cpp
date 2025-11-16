@@ -3190,16 +3190,19 @@ static ErrorOr<RegionResult> decode_generic_refinement_region(JBIG2LoadingContex
 
     // "3) Determine the buffer associated with the region segment that this segment refers to."
     // Details described in 7.4.7.4 Reference bitmap selection.
-    BilevelImage const* reference_bitmap = nullptr;
-    if (segment.referred_to_segments.size() == 1) {
-        reference_bitmap = segment.referred_to_segments[0]->aux_buffer.ptr();
-        VERIFY(reference_bitmap->width() == segment.referred_to_segments[0]->aux_buffer_information_field.width);
-        VERIFY(reference_bitmap->height() == segment.referred_to_segments[0]->aux_buffer_information_field.height);
-    } else {
-        // When adding support for this and for intermediate generic refinement regions, make sure to only allow
-        // this case for immediate generic refinement regions.
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Generic refinement region without reference segment not yet implemented");
-    }
+    BilevelSubImage reference_bitmap = [&]() {
+        if (segment.referred_to_segments.size() == 1) {
+            auto reference_bitmap = segment.referred_to_segments[0]->aux_buffer;
+            VERIFY(reference_bitmap->width() == segment.referred_to_segments[0]->aux_buffer_information_field.width);
+            VERIFY(reference_bitmap->height() == segment.referred_to_segments[0]->aux_buffer_information_field.height);
+            return reference_bitmap->as_subbitmap();
+        }
+
+        // Enforced by validate_segment_header_references() earlier.
+        VERIFY(segment.type() != JBIG2::SegmentType::IntermediateGenericRefinementRegion);
+
+        return context.page.bits->subbitmap(information_field.rect());
+    }();
 
     // "4) Invoke the generic refinement region decoding procedure described in 6.3, with the parameters to the
     //     generic refinement region decoding procedure set as shown in Table 38."
@@ -3208,8 +3211,7 @@ static ErrorOr<RegionResult> decode_generic_refinement_region(JBIG2LoadingContex
     inputs.region_width = information_field.width;
     inputs.region_height = information_field.height;
     inputs.gr_template = arithmetic_coding_template;
-    auto subbitmap = reference_bitmap->as_subbitmap();
-    inputs.reference_bitmap = &subbitmap;
+    inputs.reference_bitmap = &reference_bitmap;
     inputs.reference_x_offset = 0;
     inputs.reference_y_offset = 0;
     inputs.is_typical_prediction_used = typical_prediction_generic_refinement_on;
