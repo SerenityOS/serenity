@@ -3668,7 +3668,7 @@ ErrorOr<ImageFrameDescriptor> JBIG2ImageDecoderPlugin::frame(size_t index, Optio
     return ImageFrameDescriptor { move(bitmap), 0 };
 }
 
-ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyBytes> data)
+ErrorOr<NonnullRefPtr<BilevelImage>> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyBytes> data)
 {
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin({})));
     plugin->m_context->organization = JBIG2::Organization::Embedded;
@@ -3685,7 +3685,7 @@ ErrorOr<ByteBuffer> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyByte
 
     TRY(decode_data(*plugin->m_context));
 
-    return plugin->m_context->page.bits->to_byte_buffer();
+    return *plugin->m_context->page.bits;
 }
 
 }
