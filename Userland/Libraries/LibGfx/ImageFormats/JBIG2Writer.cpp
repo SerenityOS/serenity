@@ -2619,8 +2619,8 @@ static ErrorOr<SerializedSegmentData> encode_segment(JBIG2::SegmentData const& s
 
 ErrorOr<void> JBIG2Writer::encode_with_explicit_data(Stream& stream, JBIG2::FileData const& file_data)
 {
-    if (file_data.header.organization != JBIG2::Organization::Sequential)
-        return Error::from_string_literal("JBIG2Writer: Can only encode sequential files yet");
+    if (file_data.header.organization == JBIG2::Organization::Embedded)
+        return Error::from_string_literal("JBIG2Writer: Can only encode sequential or random-access files");
 
     TRY(encode_jbig2_header(stream, file_data.header));
 
@@ -2635,9 +2635,22 @@ ErrorOr<void> JBIG2Writer::encode_with_explicit_data(Stream& stream, JBIG2::File
         VERIFY(context.segment_data_by_id.set(segment.header.segment_number, data) == HashSetResult::InsertedNewEntry);
     }
 
+    if (file_data.header.organization == JBIG2::Organization::Sequential) {
+        for (auto const& segment : file_data.segments) {
+            auto const& data = context.segment_data_by_id.get(segment.header.segment_number);
+            TRY(stream.write_until_depleted(data->data));
+        }
+        return {};
+    }
+
+    VERIFY(file_data.header.organization == JBIG2::Organization::RandomAccess);
     for (auto const& segment : file_data.segments) {
         auto const& data = context.segment_data_by_id.get(segment.header.segment_number);
-        TRY(stream.write_until_depleted(data->data));
+        TRY(stream.write_until_depleted(data->data.span().slice(0, data->header_size)));
+    }
+    for (auto const& segment : file_data.segments) {
+        auto const& data = context.segment_data_by_id.get(segment.header.segment_number);
+        TRY(stream.write_until_depleted(data->data.span().slice(data->header_size)));
     }
 
     return {};
