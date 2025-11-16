@@ -91,7 +91,7 @@ USB_DEVICE_DRIVER(HIDDriver);
 void HIDDriver::init()
 {
     auto driver = MUST(adopt_nonnull_lock_ref_or_enomem(new (nothrow) HIDDriver()));
-    USBManagement::register_driver(driver);
+    MUST(USBManagement::register_driver(driver));
 }
 
 static constexpr u8 DESCRIPTOR_TYPE_HID = 0x21;

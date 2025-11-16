@@ -19,7 +19,7 @@ public:
     USBManagement();
     static USBManagement& the();
 
-    static void register_driver(NonnullLockRefPtr<Driver> driver);
+    static ErrorOr<void> register_driver(NonnullLockRefPtr<Driver> driver);
     static LockRefPtr<Driver> get_driver_by_name(StringView name);
     static void unregister_driver(NonnullLockRefPtr<Driver> driver);
 
