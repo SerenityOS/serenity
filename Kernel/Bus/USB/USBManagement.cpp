@@ -20,10 +20,10 @@ UNMAP_AFTER_INIT USBManagement::USBManagement()
     SysFSUSBBusDirectory::initialize();
 }
 
-void USBManagement::register_driver(NonnullLockRefPtr<Driver> driver)
+ErrorOr<void> USBManagement::register_driver(NonnullLockRefPtr<Driver> driver)
 {
     dbgln_if(USB_DEBUG, "Registering driver {}", driver->name());
-    s_available_drivers->append(driver);
+    return s_available_drivers->try_append(driver);
 }
 
 LockRefPtr<Driver> USBManagement::get_driver_by_name(StringView name)
