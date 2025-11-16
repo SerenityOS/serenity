@@ -1,0 +1,60 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "direct_region_segments_override_default_combination_operator": true
+                }
+            }
+        },
+        {
+            "segment_number": 1,
+            "type": "generic_region",
+            "page_association": 1,
+            "data": {
+                "image_data": {
+                    "from_file": "bitmap-blemish.bmp"
+                }
+            }
+        },
+        {
+            "segment_number": 2,
+            "type": "generic_refinement_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "x": 10,
+                    "y": 20,
+                    "width": 110,
+                    "height": 380,
+                    "flags": {
+                        "external_combination_operator": "replace"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 10,
+                        "y": 20,
+                        "width": 110,
+                        "height": 380
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 3,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}

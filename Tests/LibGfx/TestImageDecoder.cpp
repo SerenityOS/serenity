@@ -366,6 +366,8 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-trailing-7fff-stripped-harder.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-trailing-7fff-stripped-harder-refine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-refine-page.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-refine-page-subrect.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-lossless.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-refine.jbig2"sv),
@@ -420,7 +422,6 @@ TEST_CASE(test_jbig2_decode)
         // - intermediate direct regions (code support added in #26197)
         // - symbol refinement referring to symbol in same segment
         // Missing tests for things that aren't implemented yet:
-        // - immediate refinement regions not referring to a direct region (i.e. refining the page)
         // - exttemplate
         // - colors
     };
