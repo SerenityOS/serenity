@@ -3668,7 +3668,7 @@ ErrorOr<ImageFrameDescriptor> JBIG2ImageDecoderPlugin::frame(size_t index, Optio
     return ImageFrameDescriptor { move(bitmap), 0 };
 }
 
-ErrorOr<NonnullRefPtr<BilevelImage>> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyBytes> data)
+ErrorOr<NonnullOwnPtr<JBIG2ImageDecoderPlugin>> JBIG2ImageDecoderPlugin::create_embedded_jbig2_decoder(Vector<ReadonlyBytes> data)
 {
     auto plugin = TRY(adopt_nonnull_own_or_enomem(new (nothrow) JBIG2ImageDecoderPlugin({})));
     plugin->m_context->organization = JBIG2::Organization::Embedded;
@@ -3684,8 +3684,29 @@ ErrorOr<NonnullRefPtr<BilevelImage>> JBIG2ImageDecoderPlugin::decode_embedded(Ve
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Embedded JBIG2 data must have exactly one page");
 
     TRY(decode_data(*plugin->m_context));
+    return plugin;
+}
 
+ErrorOr<NonnullRefPtr<BilevelImage>> JBIG2ImageDecoderPlugin::decode_embedded(Vector<ReadonlyBytes> data)
+{
+    auto plugin = TRY(create_embedded_jbig2_decoder(data));
     return *plugin->m_context->page.bits;
+}
+
+ErrorOr<NonnullRefPtr<BilevelImage>> JBIG2ImageDecoderPlugin::decode_embedded_intermediate_region_segment(Vector<ReadonlyBytes> data, u32 segment_number)
+{
+    auto plugin = TRY(create_embedded_jbig2_decoder(data));
+
+    auto target_segment = plugin->m_context->segments.find_if([&segment_number](auto const& segment) {
+        return segment.header.segment_number == segment_number;
+    });
+    if (target_segment == plugin->m_context->segments.end())
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment number not found in embedded JBIG2 data");
+
+    if (!is_intermediate_region_segment(target_segment->type()))
+        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Target segment is not an intermediate region segment");
+
+    return *target_segment->aux_buffer;
 }
 
 }
