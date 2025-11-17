@@ -735,6 +735,18 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Crop Image to Content"sv);
         }));
 
+    m_image_menu->add_separator();
+
+    m_levels_dialog_action = GUI::Action::create(
+        "Change &Levels...", { Mod_Ctrl, Key_L }, g_icon_bag.levels, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto dialog = PixelPaint::LevelsDialog::construct(&window, editor);
+            if (dialog->exec() != GUI::Dialog::ExecResult::OK)
+                dialog->revert_possible_changes();
+        });
+    m_image_menu->add_action(*m_levels_dialog_action);
+
     m_layer_menu = window.add_menu("&Layer"_string);
 
     m_layer_menu->on_visibility_change = [this](bool visible) {
@@ -1192,15 +1204,6 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Applications/PixelPaint.md"), "/bin/Help");
     }));
     help_menu->add_action(GUI::CommonActions::make_about_action("Pixel Paint"_string, GUI::Icon::default_icon("app-pixel-paint"sv), &window));
-
-    m_levels_dialog_action = GUI::Action::create(
-        "Change &Levels...", { Mod_Ctrl, Key_L }, g_icon_bag.levels, [&](auto&) {
-            auto* editor = current_image_editor();
-            VERIFY(editor);
-            auto dialog = PixelPaint::LevelsDialog::construct(&window, editor);
-            if (dialog->exec() != GUI::Dialog::ExecResult::OK)
-                dialog->revert_possible_changes();
-        });
 
     auto& toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     toolbar.add_action(*m_new_image_action);
