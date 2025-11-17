@@ -11,6 +11,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibGfx/ImageFormats/MQArithmeticCoder.h>
+#include <LibGfx/Rect.h>
 
 namespace Gfx::JBIG2 {
 
@@ -117,6 +118,11 @@ struct [[gnu::packed]] RegionSegmentInformationField {
     BigEndian<u32> x_location;
     BigEndian<u32> y_location;
     u8 flags { 0 };
+
+    IntRect rect() const
+    {
+        return { x_location, y_location, width, height };
+    }
 
     CombinationOperator external_combination_operator() const
     {
