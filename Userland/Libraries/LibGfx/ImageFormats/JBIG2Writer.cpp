@@ -337,7 +337,7 @@ namespace {
 struct GenericRefinementRegionEncodingInputParameters {
     BilevelImage const& image;                                          // Of dimensions "GRW" x "GRH" in spec terms.
     u8 gr_template { 0 };                                               // "GRTEMPLATE" in spec.
-    BilevelImage const* reference_bitmap { nullptr };                   // "GRREFERENCE" in spec.
+    BilevelSubImage reference_bitmap;                                   // "GRREFERENCE" in spec.
     i32 reference_x_offset { 0 };                                       // "GRREFERENCEDX" in spec.
     i32 reference_y_offset { 0 };                                       // "GRREFERENCEDY" in spec.
     bool is_typical_prediction_used { false };                          // "TPGRON" in spec.
@@ -378,7 +378,7 @@ static ErrorOr<void> generic_refinement_region_encoding_procedure(GenericRefinem
     };
 
     // Figure 12 – 13-pixel refinement template showing the AT pixels at their nominal locations
-    constexpr auto compute_context_0 = [](ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, BilevelImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_0 = [](ReadonlySpan<JBIG2::AdaptiveTemplatePixel> adaptive_pixels, BilevelSubImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
         u16 result = 0;
 
         for (int dy = -1; dy <= 1; ++dy) {
@@ -399,7 +399,7 @@ static ErrorOr<void> generic_refinement_region_encoding_procedure(GenericRefinem
     };
 
     // Figure 13 – 10-pixel refinement template
-    constexpr auto compute_context_1 = [](ReadonlySpan<JBIG2::AdaptiveTemplatePixel>, BilevelImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
+    constexpr auto compute_context_1 = [](ReadonlySpan<JBIG2::AdaptiveTemplatePixel>, BilevelSubImage const& reference, int reference_x, int reference_y, BilevelImage const& buffer, int x, int y) -> u16 {
         u16 result = 0;
 
         for (int dy = -1; dy <= 1; ++dy) {
@@ -440,10 +440,10 @@ static ErrorOr<void> generic_refinement_region_encoding_procedure(GenericRefinem
         auto predict = [&](size_t x, size_t y) -> Optional<bool> {
             // "• a 3 × 3 pixel array in the reference bitmap (Figure 16), centred at the location
             //    corresponding to the current pixel, contains pixels all of the same value."
-            bool prediction = get_pixel(*inputs.reference_bitmap, x - inputs.reference_x_offset - 1, y - inputs.reference_y_offset - 1);
+            bool prediction = get_pixel(inputs.reference_bitmap, x - inputs.reference_x_offset - 1, y - inputs.reference_y_offset - 1);
             for (int dy = -1; dy <= 1; ++dy)
                 for (int dx = -1; dx <= 1; ++dx)
-                    if (get_pixel(*inputs.reference_bitmap, x - inputs.reference_x_offset + dx, y - inputs.reference_y_offset + dy) != prediction)
+                    if (get_pixel(inputs.reference_bitmap, x - inputs.reference_x_offset + dx, y - inputs.reference_y_offset + dy) != prediction)
                         return {};
             return prediction;
         };
@@ -471,7 +471,7 @@ static ErrorOr<void> generic_refinement_region_encoding_procedure(GenericRefinem
             // "c) If LTP = 0 then, from left to right, explicitly decode all pixels of the current row of GRREG. The
             //     procedure for each pixel is as follows:"
             for (size_t x = 0; x < width; ++x) {
-                u16 context = compute_context(inputs.adaptive_template_pixels, *inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, inputs.image, x, y);
+                u16 context = compute_context(inputs.adaptive_template_pixels, inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, inputs.image, x, y);
                 encoder.encode_bit(inputs.image.get_bit(x, y), contexts.contexts[context]);
             }
         } else {
@@ -484,7 +484,7 @@ static ErrorOr<void> generic_refinement_region_encoding_procedure(GenericRefinem
                 // TPGRON must be 1 if LTP is set. (The spec has an explicit "TPGRON is 1 AND" check here, but it is pointless.)
                 VERIFY(inputs.is_typical_prediction_used);
                 if (!prediction.has_value()) {
-                    u16 context = compute_context(inputs.adaptive_template_pixels, *inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, inputs.image, x, y);
+                    u16 context = compute_context(inputs.adaptive_template_pixels, inputs.reference_bitmap, x - inputs.reference_x_offset, y - inputs.reference_y_offset, inputs.image, x, y);
                     encoder.encode_bit(inputs.image.get_bit(x, y), contexts.contexts[context]);
                 }
             }
@@ -726,7 +726,7 @@ static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParam
         auto reference_bitmap = TRY(symbol_image(symbol));
         GenericRefinementRegionEncodingInputParameters refinement_inputs {
             .image = symbol_instance.refinement_data->refines_to,
-            .reference_bitmap = reference_bitmap,
+            .reference_bitmap = reference_bitmap->as_subbitmap(),
         };
 
         // FIXME: Instead, just compute the delta here instead of having it be passed in?
@@ -1136,7 +1136,7 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
         // Table 18 – Parameters used to decode a symbol's bitmap when REFAGGNINST = 1
         GenericRefinementRegionEncodingInputParameters refinement_inputs {
             .image = *refinement_image.refines_to,
-            .reference_bitmap = IBO,
+            .reference_bitmap = IBO->as_subbitmap(),
         };
         refinement_inputs.gr_template = inputs.refinement_template;
         refinement_inputs.reference_x_offset = refinement_image.delta_x_offset;
@@ -2268,7 +2268,7 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
         return Error::from_string_literal("JBIG2Writer: Generic refinement region must refer to at most one segment");
 
     // 7.4.7.4 Reference bitmap selection
-    auto const* reference_bitmap = TRY([&]() -> ErrorOr<BilevelImage const*> {
+    auto const reference_bitmap = TRY([&]() -> ErrorOr<BilevelSubImage> {
         // "If this segment refers to another region segment, then set the reference bitmap GRREFERENCE to be the current
         //  contents of the auxiliary buffer associated with the region segment that this segment refers to."
         if (header.referred_to_segments.size() == 1) {
@@ -2277,16 +2277,17 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
                 return Error::from_string_literal("JBIG2Writer: Could not find referred-to segment for generic refinement region");
             auto const& referred_to_segment = *maybe_segment.value();
 
-            return referred_to_segment.data.visit(
-                [](JBIG2::IntermediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<BilevelImage const*> {
-                    return generic_region_wrapper.generic_region.image;
-                },
-                [](JBIG2::IntermediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<BilevelImage const*> {
-                    return generic_refinement_region_wrapper.generic_refinement_region.image;
-                },
-                [](auto const&) -> ErrorOr<BilevelImage const*> {
-                    return Error::from_string_literal("JBIG2Writer: Generic refinement region can only refer to intermediate region segments");
-                });
+            return TRY(referred_to_segment.data.visit(
+                           [](JBIG2::IntermediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<BilevelImage const*> {
+                               return generic_region_wrapper.generic_region.image;
+                           },
+                           [](JBIG2::IntermediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<BilevelImage const*> {
+                               return generic_refinement_region_wrapper.generic_refinement_region.image;
+                           },
+                           [](auto const&) -> ErrorOr<BilevelImage const*> {
+                               return Error::from_string_literal("JBIG2Writer: Generic refinement region can only refer to intermediate region segments");
+                           }))
+                ->as_subbitmap();
         }
 
         // "If this segment does not refer to another region segment, set GRREFERENCE to be a bitmap containing the current
