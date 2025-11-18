@@ -108,7 +108,7 @@ ErrorOr<Vector<ByteBuffer>> FATInode::collect_sfns()
 
 ErrorOr<void> FATInode::create_unique_sfn_for(FATEntry& entry, NonnullRefPtr<SFNUtils::SFN> sfn, Vector<ByteBuffer> existing_sfns)
 {
-    auto is_sfn_unique = [existing_sfns](SFNUtils::SFN const& sfn) -> ErrorOr<bool> {
+    auto is_sfn_unique = [&existing_sfns](SFNUtils::SFN const& sfn) -> ErrorOr<bool> {
         auto serialized_name = TRY(sfn.serialize_name());
         auto serialized_extension = TRY(sfn.serialize_extension());
         for (auto const& current_sfn : existing_sfns) {

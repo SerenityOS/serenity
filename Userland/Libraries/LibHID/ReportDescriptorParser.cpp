@@ -367,7 +367,7 @@ ErrorOr<ParsedReportDescriptor> ReportDescriptorParser::parse()
                 break;
 
             case GlobalItemTag::Push:
-                TRY(m_item_state_table_stack.try_append(m_current_item_state_table));
+                TRY(m_item_state_table_stack.try_append(TRY(m_current_item_state_table.clone())));
                 break;
 
             case GlobalItemTag::Pop:
@@ -464,7 +464,7 @@ ErrorOr<ParsedReportDescriptor> ReportDescriptorParser::parse()
         }
     }
 
-    return m_parsed;
+    return move(m_parsed);
 }
 
 template<typename ItemData>
@@ -511,15 +511,18 @@ ErrorOr<void> ReportDescriptorParser::add_report_fields(FieldType field_type, It
         VERIFY_NOT_REACHED();
     }();
 
-    // FIXME: Since try_ensure does not return a reference to the contained value, we have to retrieve it separately.
+    // FIXME: Since try_ensure does not return a reference to the contained value, we have to implement it manually here.
     //        This is a try_ensure bug that should be fixed.
-    (void)TRY(report_map.try_ensure(m_current_item_state_table.global.report_id.value_or(0), [this] {
-        return Report {
-            .size_in_bits = static_cast<size_t>(m_parsed.uses_report_ids ? 8 : 0),
-            .fields = {},
-        };
-    }));
-    auto& report = report_map.get(m_current_item_state_table.global.report_id.value_or(0)).release_value();
+    auto report_id = m_current_item_state_table.global.report_id.value_or(0);
+    if (report_map.find(report_id) == report_map.end()) {
+        auto result = TRY(report_map.try_set(report_id,
+            Report {
+                .size_in_bits = static_cast<size_t>(m_parsed.uses_report_ids ? 8 : 0),
+                .fields = {},
+            }));
+        VERIFY(result == HashSetResult::InsertedNewEntry);
+    }
+    auto& report = report_map.get(report_id).release_value();
 
     size_t const field_size_in_bits = m_current_item_state_table.global.report_size.value();
 

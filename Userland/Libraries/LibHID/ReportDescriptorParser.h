@@ -87,6 +87,24 @@ ErrorOr<void> dump_report_descriptor(ReadonlyBytes);
 // 5.4 Item Parser
 
 struct ItemStateTable {
+    ErrorOr<ItemStateTable> clone() const
+    {
+        return ItemStateTable {
+            .global = global,
+            .local = {
+                .usages = TRY(local.usages.clone()),
+                .usage_minimum = local.usage_minimum,
+                .usage_maximum = local.usage_maximum,
+                .designator_index = local.designator_index,
+                .degignator_minimum = local.degignator_minimum,
+                .designator_maximum = local.designator_maximum,
+                .string_index = local.string_index,
+                .string_minimum = local.string_minimum,
+                .string_maximum = local.string_maximum,
+            },
+        };
+    }
+
     // 6.2.2.7 Global Items
     struct {
         Optional<u16> usage_page;

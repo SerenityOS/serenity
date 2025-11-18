@@ -19,7 +19,7 @@ public:
     virtual ~PartitionTable() = default;
     virtual bool is_valid() const = 0;
 
-    Vector<DiskPartitionMetadata> partitions() const { return m_partitions; }
+    Vector<DiskPartitionMetadata> const& partitions() const { return m_partitions; }
     size_t block_size() const { return m_device.block_size(); }
 
 protected:

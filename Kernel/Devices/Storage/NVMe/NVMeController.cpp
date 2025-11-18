@@ -211,7 +211,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::identify_and_init_namespaces()
 
             dbgln_if(NVME_DEBUG, "NVMe: Block count is {} and Block size is {}", block_counts, block_size);
 
-            TRY(m_namespaces.try_append(TRY(NVMeNameSpace::create(*this, m_queues, nsid, block_counts, block_size))));
+            TRY(m_namespaces.try_append(TRY(NVMeNameSpace::create(*this, m_queues.clone().release_value_but_fixme_should_propagate_errors(), nsid, block_counts, block_size))));
             m_device_count++;
             dbgln_if(NVME_DEBUG, "NVMe: Initialized namespace with NSID: {}", nsid);
         }

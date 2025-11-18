@@ -24,6 +24,14 @@ public:
     {
     }
 
+    USBInterface(USBInterface const& other)
+        : m_configuration(other.m_configuration)
+        , m_descriptor(other.m_descriptor)
+        , m_endpoint_descriptors(other.m_endpoint_descriptors.clone().release_value_but_fixme_should_propagate_errors())
+        , m_descriptor_offset(other.m_descriptor_offset)
+    {
+    }
+
     ErrorOr<void> add_endpoint_descriptor(Badge<USBConfiguration>, USBEndpointDescriptor endpoint_descriptor) { return m_endpoint_descriptors.try_empend(endpoint_descriptor); }
 
     Vector<USBEndpointDescriptor> const& endpoints() const { return m_endpoint_descriptors; }

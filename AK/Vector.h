@@ -86,6 +86,12 @@ public:
         other.reset_capacity();
     }
 
+#ifdef KERNEL
+    Vector(Vector const&) = delete;
+
+    template<size_t other_inline_capacity>
+    Vector(Vector<T, other_inline_capacity> const&) = delete;
+#else
     Vector(Vector const& other)
     {
         ensure_capacity(other.size());
@@ -93,7 +99,6 @@ public:
         m_size = other.size();
     }
 
-#ifndef KERNEL
     explicit Vector(ReadonlySpan<T> other)
     requires(!IsLvalueReference<T>)
     {
@@ -101,7 +106,6 @@ public:
         TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
         m_size = other.size();
     }
-#endif
 
     template<size_t other_inline_capacity>
     Vector(Vector<T, other_inline_capacity> const& other)
@@ -109,6 +113,18 @@ public:
         ensure_capacity(other.size());
         TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
         m_size = other.size();
+    }
+#endif
+
+    ErrorOr<Vector> clone() const
+    {
+        Vector new_vector;
+
+        TRY(new_vector.try_ensure_capacity(size()));
+        TypedTransfer<StorageType>::copy(new_vector.data(), data(), size());
+        new_vector.m_size = size();
+
+        return new_vector;
     }
 
     static ErrorOr<Vector> from_span(ReadonlySpan<T> other)
@@ -379,6 +395,12 @@ public:
         return *this;
     }
 
+#ifdef KERNEL
+    Vector& operator=(Vector const&) = delete;
+
+    template<size_t other_inline_capacity>
+    Vector& operator=(Vector<T, other_inline_capacity> const&) = delete;
+#else
     Vector& operator=(Vector const& other)
     {
         if (this != &other) {
@@ -399,6 +421,7 @@ public:
         m_size = other.size();
         return *this;
     }
+#endif
 
     void clear()
     {
