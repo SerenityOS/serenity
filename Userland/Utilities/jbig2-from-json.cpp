@@ -1448,7 +1448,7 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
                     return {};
                 }
             }
-            return Error::from_string_literal("expected \"distinct_image_tiles\" for \"method\"");
+            return Error::from_string_literal("expected \"distinct_image_tiles\" or \"unique_image_tiles\" for \"method\"");
         }
 
         dbgln("pattern_dictionary key {}", key);
