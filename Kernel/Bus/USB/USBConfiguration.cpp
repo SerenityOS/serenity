@@ -18,7 +18,7 @@ USBConfiguration::USBConfiguration(USBConfiguration const& other)
     : m_device(other.m_device)
     , m_descriptor(other.m_descriptor)
     , m_descriptor_index(other.m_descriptor_index)
-    , m_interfaces(other.m_interfaces)
+    , m_interfaces(other.m_interfaces.clone().release_value_but_fixme_should_propagate_errors())
 {
     // FIXME: This can definitely OOM
     for (auto& interface : m_interfaces)

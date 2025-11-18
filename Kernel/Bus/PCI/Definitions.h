@@ -443,7 +443,7 @@ AK_TYPEDEF_DISTINCT_ORDERED_ID(u8, InterruptPin);
 class Access;
 class EnumerableDeviceIdentifier {
 public:
-    EnumerableDeviceIdentifier(Address address, HardwareID hardware_id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, InterruptLine interrupt_line, InterruptPin interrupt_pin, Vector<Capability> const& capabilities)
+    EnumerableDeviceIdentifier(Address address, HardwareID hardware_id, RevisionID revision_id, ClassCode class_code, SubclassCode subclass_code, ProgrammingInterface prog_if, SubsystemID subsystem_id, SubsystemVendorID subsystem_vendor_id, InterruptLine interrupt_line, InterruptPin interrupt_pin, Vector<Capability> capabilities)
         : m_address(address)
         , m_hardware_id(hardware_id)
         , m_revision_id(revision_id)
@@ -454,7 +454,7 @@ public:
         , m_subsystem_vendor_id(subsystem_vendor_id)
         , m_interrupt_line(interrupt_line)
         , m_interrupt_pin(interrupt_pin)
-        , m_capabilities(capabilities)
+        , m_capabilities(move(capabilities))
     {
         if constexpr (PCI_DEBUG) {
             for (auto const& capability : capabilities)
@@ -569,7 +569,7 @@ private:
               other_identifier.subsystem_vendor_id(),
               other_identifier.interrupt_line(),
               other_identifier.interrupt_pin(),
-              other_identifier.capabilities())
+              other_identifier.capabilities().clone().release_value_but_fixme_should_propagate_errors())
     {
     }
 
