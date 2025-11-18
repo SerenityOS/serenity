@@ -2049,13 +2049,13 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
             // FIXME: Doing this eagerly is pretty wasteful. Decode on demand instead?
             if (!inputs.uses_huffman_encoding || inputs.uses_refinement_or_aggregate_coding) {
                 auto bitmap = TRY(read_symbol_bitmap(symbol_width, height_class_height));
-                new_symbols.append(bitmap->as_subbitmap());
+                TRY(new_symbols.try_append(bitmap->as_subbitmap()));
             }
 
             // "iii) If SDHUFF is 1 and SDREFAGG is 0, then set:
             //      SDNEWSYMWIDTHS[NSYMSDECODED] = SYMWIDTH"
             if (inputs.uses_huffman_encoding && !inputs.uses_refinement_or_aggregate_coding)
-                new_symbol_widths.append(symbol_width);
+                TRY(new_symbol_widths.try_append(symbol_width));
 
             // "iv) Set:
             //      NSYMSDECODED = NSYMSDECODED + 1"
@@ -2082,7 +2082,7 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
             for (size_t i = height_class_first_symbol; i < number_of_symbols_decoded; ++i) {
                 auto width = new_symbol_widths[i];
                 IntRect symbol_rect { static_cast<int>(current_column), 0, static_cast<int>(width), static_cast<int>(height_class_height) };
-                new_symbols.append(collective_bitmap->subbitmap(symbol_rect));
+                TRY(new_symbols.try_append(collective_bitmap->subbitmap(symbol_rect)));
                 current_column += width;
             }
         }
@@ -2144,13 +2144,13 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
         //       SDEXSYMS[J] = SDINSYMS[I]
         //       J = J + 1"
         if (i < inputs.input_symbols.size())
-            exported_symbols.append(inputs.input_symbols[i]);
+            TRY(exported_symbols.try_append(inputs.input_symbols[i]));
 
         //  "b) If I >= SDNUMINSYMS then set:
         //       SDEXSYMS[J] = SDNEWSYMS[I – SDNUMINSYMS]
         //       J = J + 1"
         if (i >= inputs.input_symbols.size())
-            exported_symbols.append(move(new_symbols[i - inputs.input_symbols.size()]));
+            TRY(exported_symbols.try_append(move(new_symbols[i - inputs.input_symbols.size()])));
     }
 
     if (exported_symbols.size() != inputs.number_of_exported_symbols)
