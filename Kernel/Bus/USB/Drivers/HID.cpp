@@ -182,7 +182,7 @@ static ErrorOr<NonnullRefPtr<HIDInterface>> initialize_hid_interface(USB::Device
 
     ::HID::ReportDescriptorParser report_descriptor_parser { report_descriptor_buffer.span() };
     auto parsed_descriptor = TRY(report_descriptor_parser.parse());
-    return TRY(HIDInterface::create(device, parsed_descriptor, in_pipe.release_nonnull()));
+    return TRY(HIDInterface::create(device, move(parsed_descriptor), in_pipe.release_nonnull()));
 }
 
 ErrorOr<void> HIDDriver::probe(USB::Device& device)

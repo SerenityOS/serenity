@@ -32,6 +32,11 @@ public:
     {
     }
 
+    ErrorOr<Address> clone() const
+    {
+        return Address { TRY(m_raw.clone()) };
+    }
+
     ReadonlyBytes raw() const { return m_raw; }
 
     template<typename T>
@@ -75,6 +80,11 @@ public:
     Size(ReadonlyBytes data)
         : m_raw(decltype(m_raw)::from_span(data).release_value_but_fixme_should_propagate_errors())
     {
+    }
+
+    ErrorOr<Size> clone() const
+    {
+        return Size { TRY(m_raw.clone()) };
     }
 
     ReadonlyBytes raw() const { return m_raw; }
@@ -178,8 +188,8 @@ struct Property {
 class RegEntry {
 public:
     RegEntry(Address const& address, Size const& size, Node const& node)
-        : m_address(address)
-        , m_length(size)
+        : m_address(address.clone().release_value_but_fixme_should_propagate_errors())
+        , m_length(size.clone().release_value_but_fixme_should_propagate_errors())
         , m_node(node)
     {
     }
@@ -191,8 +201,8 @@ public:
     {
     }
 
-    Address bus_address() const { return m_address; }
-    Size length() const { return m_length; }
+    Address bus_address() const { return m_address.clone().release_value_but_fixme_should_propagate_errors(); }
+    Size length() const { return m_length.clone().release_value_but_fixme_should_propagate_errors(); }
 
     ErrorOr<Address> resolve_root_address() const;
 
@@ -222,9 +232,9 @@ private:
 class RangesEntry {
 public:
     RangesEntry(Address const& child_bus_address, Address const& parent_bus_address, Size const& length, Node const& node)
-        : m_child_bus_address(child_bus_address)
-        , m_parent_bus_address(parent_bus_address)
-        , m_length(length)
+        : m_child_bus_address(child_bus_address.clone().release_value_but_fixme_should_propagate_errors())
+        , m_parent_bus_address(parent_bus_address.clone().release_value_but_fixme_should_propagate_errors())
+        , m_length(length.clone().release_value_but_fixme_should_propagate_errors())
         , m_node(node)
     {
     }
@@ -237,9 +247,9 @@ public:
     {
     }
 
-    Address child_bus_address() const { return m_child_bus_address; }
-    Address parent_bus_address() const { return m_parent_bus_address; }
-    Size length() const { return m_length; }
+    Address child_bus_address() const { return m_child_bus_address.clone().release_value_but_fixme_should_propagate_errors(); }
+    Address parent_bus_address() const { return m_parent_bus_address.clone().release_value_but_fixme_should_propagate_errors(); }
+    Size length() const { return m_length.clone().release_value_but_fixme_should_propagate_errors(); }
 
     ErrorOr<Address> translate_child_bus_address_to_parent_bus_address(Address const&) const;
 

@@ -145,7 +145,7 @@ UNMAP_AFTER_INIT void HostController::enumerate_functions(Function<void(Enumerab
     InterruptLine interrupt_line = read8_field(bus, device, function, PCI::RegisterOffset::INTERRUPT_LINE);
     InterruptPin interrupt_pin = read8_field(bus, device, function, PCI::RegisterOffset::INTERRUPT_PIN);
     auto capabilities = get_capabilities_for_function(bus, device, function);
-    auto device_ientifier = EnumerableDeviceIdentifier { address, id, revision_id, class_code, subclass_code, prog_if, subsystem_id, subsystem_vendor_id, interrupt_line, interrupt_pin, capabilities };
+    auto device_ientifier = EnumerableDeviceIdentifier { address, id, revision_id, class_code, subclass_code, prog_if, subsystem_id, subsystem_vendor_id, interrupt_line, interrupt_pin, move(capabilities) };
     callback(device_ientifier);
 
     if (pci_class == (to_underlying(PCI::ClassID::Bridge) << 8 | to_underlying(PCI::Bridge::SubclassID::PCI_TO_PCI))
