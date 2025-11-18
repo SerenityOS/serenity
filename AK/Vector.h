@@ -60,6 +60,7 @@ public:
 
     constexpr static auto InlineCapacity = inline_capacity;
 
+#ifndef KERNEL
     Vector(std::initializer_list<T> list)
     requires(!IsLvalueReference<T>)
     {
@@ -67,6 +68,7 @@ public:
         for (auto& item : list)
             unchecked_append(item);
     }
+#endif
 
     Vector(Vector&& other)
         : m_size(other.m_size)
