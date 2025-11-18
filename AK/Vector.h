@@ -93,6 +93,7 @@ public:
         m_size = other.size();
     }
 
+#ifndef KERNEL
     explicit Vector(ReadonlySpan<T> other)
     requires(!IsLvalueReference<T>)
     {
@@ -100,6 +101,7 @@ public:
         TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
         m_size = other.size();
     }
+#endif
 
     template<size_t other_inline_capacity>
     Vector(Vector<T, other_inline_capacity> const& other)
@@ -107,6 +109,17 @@ public:
         ensure_capacity(other.size());
         TypedTransfer<StorageType>::copy(data(), other.data(), other.size());
         m_size = other.size();
+    }
+
+    static ErrorOr<Vector> from_span(ReadonlySpan<T> other)
+    {
+        Vector new_vector;
+
+        TRY(new_vector.try_ensure_capacity(other.size()));
+        TypedTransfer<StorageType>::copy(new_vector.data(), other.data(), other.size());
+        new_vector.m_size = other.size();
+
+        return new_vector;
     }
 
     ~Vector()
