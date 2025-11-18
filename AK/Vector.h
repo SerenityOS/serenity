@@ -58,6 +58,8 @@ public:
     {
     }
 
+    constexpr static auto InlineCapacity = inline_capacity;
+
     Vector(std::initializer_list<T> list)
     requires(!IsLvalueReference<T>)
     {
