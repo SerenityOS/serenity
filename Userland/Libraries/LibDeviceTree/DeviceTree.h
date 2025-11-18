@@ -28,7 +28,7 @@ class Address {
 public:
     Address() = default;
     Address(ReadonlyBytes data)
-        : m_raw(static_cast<decltype(m_raw)>(data))
+        : m_raw(decltype(m_raw)::from_span(data).release_value_but_fixme_should_propagate_errors())
     {
     }
 
@@ -73,7 +73,7 @@ class Size {
 public:
     Size() = default;
     Size(ReadonlyBytes data)
-        : m_raw(static_cast<decltype(m_raw)>(data))
+        : m_raw(decltype(m_raw)::from_span(data).release_value_but_fixme_should_propagate_errors())
     {
     }
 
