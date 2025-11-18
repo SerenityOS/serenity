@@ -2286,13 +2286,13 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
             auto const& referred_to_segment = *maybe_segment.value();
 
             return TRY(referred_to_segment.data.visit(
-                           [](JBIG2::IntermediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<BilevelImage const*> {
+                           [](JBIG2::IntermediateGenericRegionSegmentData const& generic_region_wrapper) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
                                return generic_region_wrapper.generic_region.image;
                            },
-                           [](JBIG2::IntermediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<BilevelImage const*> {
+                           [](JBIG2::IntermediateGenericRefinementRegionSegmentData const& generic_refinement_region_wrapper) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
                                return generic_refinement_region_wrapper.generic_refinement_region.image;
                            },
-                           [](auto const&) -> ErrorOr<BilevelImage const*> {
+                           [](auto const&) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
                                return Error::from_string_literal("JBIG2Writer: Generic refinement region can only refer to intermediate region segments");
                            }))
                 ->as_subbitmap();
