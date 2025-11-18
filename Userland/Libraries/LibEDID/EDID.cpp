@@ -1054,7 +1054,11 @@ auto Parser::supported_resolutions() const -> ErrorOr<Vector<SupportedResolution
             return info.width == width && info.height == height;
         });
         if (it == resolutions.end()) {
-            resolutions.try_append({ width, height, { { refresh_rate, preferred } } }).release_value_but_fixme_should_propagate_errors();
+            auto resolution = SupportedResolution { width, height, {} };
+            static_assert(decltype(SupportedResolution::refresh_rates)::InlineCapacity >= 1);
+            resolution.refresh_rates.unchecked_append({ refresh_rate, preferred });
+
+            resolutions.try_append(move(resolution)).release_value_but_fixme_should_propagate_errors();
         } else {
             auto& info = *it;
             SupportedResolution::RefreshRate* found_refresh_rate = nullptr;
