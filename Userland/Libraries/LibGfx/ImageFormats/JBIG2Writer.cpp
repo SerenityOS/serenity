@@ -2275,6 +2275,23 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
     if (header.referred_to_segments.size() > 1)
         return Error::from_string_literal("JBIG2Writer: Generic refinement region must refer to at most one segment");
 
+    auto collect_related_segments = [&context](u32 page, u32 segment_number) {
+        Vector<ReadonlyBytes> preceding_segments_on_same_page;
+        bool found = false;
+        for (auto const& segment : context.segments) {
+            if (segment.header.page_association == 0 || segment.header.page_association == page) {
+                auto const& data = context.segment_data_by_id.get(segment.header.segment_number);
+                if (segment.header.segment_number == segment_number) {
+                    found = true;
+                    break;
+                }
+                preceding_segments_on_same_page.append(data->data);
+            }
+        }
+        VERIFY(found);
+        return preceding_segments_on_same_page;
+    };
+
     // 7.4.7.4 Reference bitmap selection
     auto const reference_bitmap = TRY([&]() -> ErrorOr<BilevelSubImage> {
         // "If this segment refers to another region segment, then set the reference bitmap GRREFERENCE to be the current
@@ -2302,15 +2319,7 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
         //  contents of the page buffer (see clause 8), restricted to the area of the page buffer specified by this segment's region
         //  segment information field."
         VERIFY(header.referred_to_segments.size() == 0);
-        Vector<ReadonlyBytes> preceding_segments_on_same_page;
-        for (auto const& segment : context.segments) {
-            if (segment.header.page_association == 0 || segment.header.page_association == header.page_association) {
-                if (&segment.header == &header)
-                    break;
-                auto const& data = context.segment_data_by_id.get(segment.header.segment_number);
-                preceding_segments_on_same_page.append(data->data);
-            }
-        }
+        auto preceding_segments_on_same_page = collect_related_segments(header.page_association, header.segment_number);
         auto bitmap = TRY(JBIG2ImageDecoderPlugin::decode_embedded(preceding_segments_on_same_page));
         return bitmap->subbitmap(generic_refinement_region.region_segment_information.rect());
     }());
