@@ -788,13 +788,13 @@ public:
     {
         MUST(try_resize(new_size, keep_capacity));
     }
-#endif
 
     void resize_and_keep_capacity(size_t new_size)
     requires(!contains_reference)
     {
         MUST(try_resize_and_keep_capacity(new_size));
     }
+#endif
 
     void shrink_to_fit()
     {
