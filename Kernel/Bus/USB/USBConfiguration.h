@@ -25,7 +25,7 @@ public:
         , m_descriptor(descriptor)
         , m_descriptor_index(descriptor_index)
     {
-        m_interfaces.ensure_capacity(descriptor.number_of_interfaces);
+        m_interfaces.try_ensure_capacity(descriptor.number_of_interfaces).release_value_but_fixme_should_propagate_errors();
     }
 
 private:

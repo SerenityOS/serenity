@@ -256,7 +256,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
 {
     // Register used memory regions that we know of.
     m_global_data.with([this](auto& global_data) {
-        global_data.used_memory_ranges.ensure_capacity(4);
+        global_data.used_memory_ranges.try_ensure_capacity(4).release_value_but_fixme_should_propagate_errors();
 #if ARCH(X86_64)
         // NOTE: We don't touch the first 1 MiB of RAM on x86-64 even if it's usable as indicated
         // by a certain memory map. There are 2 reasons for this:
@@ -640,7 +640,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
                         VERIFY(state.address_cells);
                         VERIFY(state.size_cells);
 
-                        state.reg.ensure_capacity(data.size() / ((state.address_cells + state.size_cells) * sizeof(u32)));
+                        state.reg.try_ensure_capacity(data.size() / ((state.address_cells + state.size_cells) * sizeof(u32))).release_value_but_fixme_should_propagate_errors();
 
                         FixedMemoryStream reg_stream { data };
 

@@ -394,7 +394,7 @@ public:
             VERIFY(move_count > 0);
 
             Vector<BlockerInfo, 4> taken_blockers;
-            taken_blockers.ensure_capacity(move_count);
+            taken_blockers.try_ensure_capacity(move_count).release_value_but_fixme_should_propagate_errors();
             for (size_t i = 0; i < move_count; i++)
                 taken_blockers.unchecked_append(m_blockers.take(i));
             m_blockers.remove(0, move_count);
@@ -409,7 +409,7 @@ public:
                 m_blockers = move(blockers_to_append);
                 return;
             }
-            m_blockers.ensure_capacity(m_blockers.size() + blockers_to_append.size());
+            m_blockers.try_ensure_capacity(m_blockers.size() + blockers_to_append.size()).release_value_but_fixme_should_propagate_errors();
             for (size_t i = 0; i < blockers_to_append.size(); i++)
                 m_blockers.unchecked_append(blockers_to_append.take(i));
             blockers_to_append.clear();

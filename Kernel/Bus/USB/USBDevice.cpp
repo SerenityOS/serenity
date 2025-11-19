@@ -74,8 +74,7 @@ Device::Device(Device const& device)
     , m_controller(device.controller())
     , m_hub(device.hub())
 {
-    // FIXME: This can definitely OOM
-    m_configurations.ensure_capacity(device.configurations().size());
+    m_configurations.try_ensure_capacity(device.configurations().size()).release_value_but_fixme_should_propagate_errors();
     for (auto const& configuration : device.configurations()) {
         m_configurations.unchecked_append(configuration.copy());
         m_configurations.last().set_device({}, *this);
