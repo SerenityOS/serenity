@@ -126,18 +126,18 @@ ErrorOr<void> ARMv8TimerDriver::probe(DeviceTree::Device const& device, StringVi
     // FIXME: Don't depend on a specific interrupt descriptor format and implement proper devicetree interrupt mapping/translation.
     if (!interrupt.domain_root->is_compatible_with("arm,gic-400"sv) && !interrupt.domain_root->is_compatible_with("arm,cortex-a15-gic"sv))
         return ENOTSUP;
-    if (interrupt.interrupt_identifier.size() != 3 * sizeof(BigEndian<u32>))
+    if (interrupt.interrupt_specifier.size() != 3 * sizeof(BigEndian<u32>))
         return ENOTSUP;
 
     // The ARM timer uses a PPI (Private Peripheral Interrupt).
     // GIC interrupts 16-31 are for PPIs, so add 16 to get the GIC interrupt ID.
 
     // The interrupt type is in the first cell. It should be 1 for PPIs.
-    if (reinterpret_cast<BigEndian<u32> const*>(interrupt.interrupt_identifier.data())[0] != 1)
+    if (reinterpret_cast<BigEndian<u32> const*>(interrupt.interrupt_specifier.data())[0] != 1)
         return ENOTSUP;
 
     // The interrupt number is in the second cell.
-    auto interrupt_number = (reinterpret_cast<BigEndian<u32> const*>(interrupt.interrupt_identifier.data())[1]) + 16;
+    auto interrupt_number = (reinterpret_cast<BigEndian<u32> const*>(interrupt.interrupt_specifier.data())[1]) + 16;
 
     DeviceTree::DeviceRecipe<NonnullLockRefPtr<HardwareTimerBase>> recipe {
         name(),
