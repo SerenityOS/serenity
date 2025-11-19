@@ -48,7 +48,7 @@ requires(requires { (*haystack_begin).data(); (*haystack_begin).size(); })
 {
     auto prepare_kmp_partial_table = [&] {
         Vector<int, 64> table;
-        table.resize(needle.size());
+        table.try_resize(needle.size()).release_value_but_fixme_should_propagate_errors();
 
         size_t position = 1;
         int candidate = 0;

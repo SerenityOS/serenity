@@ -155,7 +155,7 @@ void ConsoleImpl::set_size(u16 determined_columns, u16 determined_rows)
     m_normal_saved_state.cursor.clamp(rows() - 1, columns() - 1);
     m_alternate_saved_state.cursor.clamp(rows() - 1, columns() - 1);
     m_saved_cursor_position.clamp(rows() - 1, columns() - 1);
-    m_horizontal_tabs.resize(determined_columns);
+    m_horizontal_tabs.try_resize(determined_columns).release_value_but_fixme_should_propagate_errors();
     for (unsigned i = 0; i < determined_columns; ++i)
         m_horizontal_tabs[i] = (i % 8) == 0;
     // Rightmost column is always last tab on line.
