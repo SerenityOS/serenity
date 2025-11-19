@@ -56,7 +56,7 @@ public:
         BigEndian<FlatPtr> big_endian_flatptr { flatptr };
 
         Address address;
-        address.m_raw.resize(sizeof(FlatPtr));
+        address.m_raw.try_resize(sizeof(FlatPtr)).release_value_but_fixme_should_propagate_errors();
         __builtin_memcpy(address.m_raw.data(), &big_endian_flatptr, sizeof(big_endian_flatptr));
         return address;
     }

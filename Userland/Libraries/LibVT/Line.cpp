@@ -35,7 +35,7 @@ void Line::rewrap(size_t new_length, Line* next_line, CursorPosition* cursor, bo
 
 void Line::set_length(size_t new_length)
 {
-    m_cells.resize(new_length);
+    m_cells.try_resize(new_length).release_value_but_fixme_should_propagate_errors();
     if (m_terminated_at.has_value())
         m_terminated_at = min(*m_terminated_at, new_length);
 }

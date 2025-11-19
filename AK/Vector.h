@@ -782,11 +782,13 @@ public:
         m_size = new_size;
     }
 
+#ifndef KERNEL
     void resize(size_t new_size, bool keep_capacity = false)
     requires(!contains_reference)
     {
         MUST(try_resize(new_size, keep_capacity));
     }
+#endif
 
     void resize_and_keep_capacity(size_t new_size)
     requires(!contains_reference)

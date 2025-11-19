@@ -360,7 +360,7 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     }
 
     // Allocate Processor structures for all APs and store the pointer to the data
-    m_ap_processor_info.resize(aps_to_enable);
+    m_ap_processor_info.try_resize(aps_to_enable).release_value_but_fixme_should_propagate_errors();
     for (size_t i = 0; i < aps_to_enable; i++)
         m_ap_processor_info[i] = adopt_nonnull_own_or_enomem(new (nothrow) Processor()).release_value_but_fixme_should_propagate_errors();
     auto* ap_processor_info_array = &ap_stack_array[aps_to_enable];
@@ -399,7 +399,7 @@ UNMAP_AFTER_INIT void APIC::do_boot_aps()
     // because we won't be able to send FlushTLB messages, so we have to
     // have all memory set up for the threads so that when the APs are
     // starting up, they can access all the memory properly
-    m_ap_idle_threads.resize(aps_to_enable);
+    m_ap_idle_threads.try_resize(aps_to_enable).release_value_but_fixme_should_propagate_errors();
     for (u32 i = 0; i < aps_to_enable; i++)
         m_ap_idle_threads[i] = Scheduler::create_ap_idle_thread(i + 1);
 
