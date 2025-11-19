@@ -206,6 +206,48 @@ static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> jbig2_load_bitmap(ToJSONOptions const
     return TRY(decoder->frame(0)).image.release_nonnull();
 }
 
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> jbig2_bitmap_from_json(ToJSONOptions const& options, JsonObject const& object)
+{
+    RefPtr<Gfx::Bitmap> bitmap;
+    JSONRect crop_rect;
+
+    TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
+        if (key == "from_file") {
+            if (value.is_string()) {
+                bitmap = TRY(jbig2_load_bitmap(options, value.as_string()));
+                return {};
+            }
+            return Error::from_string_literal("expected string for \"from_file\"");
+        }
+
+        if (key == "crop") {
+            if (value.is_object()) {
+                crop_rect = TRY(jbig2_rect_from_json(value.as_object()));
+                return {};
+            }
+            return Error::from_string_literal("expected object for \"crop\"");
+        }
+
+        dbgln("match_image key {}", key);
+        return Error::from_string_literal("unknown match_image key");
+    }));
+
+    if (!bitmap)
+        return Error::from_string_literal("no image data in match_image; add \"from_file\" key");
+
+    if (crop_rect.x.has_value() || crop_rect.y.has_value() || crop_rect.width.has_value() || crop_rect.height.has_value()) {
+        int crop_x = static_cast<int>(crop_rect.x.value_or(0));
+        int crop_y = static_cast<int>(crop_rect.y.value_or(0));
+        int crop_width = static_cast<int>(crop_rect.width.value_or(bitmap->width() - crop_x));
+        int crop_height = static_cast<int>(crop_rect.height.value_or(bitmap->height() - crop_y));
+        if (crop_x + crop_width > bitmap->width() || crop_y + crop_height > bitmap->height())
+            return Error::from_string_literal("crop rectangle out of bounds");
+        bitmap = TRY(bitmap->cropped({ crop_x, crop_y, crop_width, crop_height }));
+    }
+
+    return bitmap.release_nonnull();
+}
+
 static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOptions const& options, JsonObject const& object)
 {
     RefPtr<Gfx::BilevelImage> image;
@@ -1610,11 +1652,15 @@ static ErrorOr<Variant<Vector<u64>, NonnullRefPtr<Gfx::Bitmap>>> jbig2_halftone_
         }
 
         if (key == "match_image") {
+            if (value.is_object()) {
+                graymap = TRY(jbig2_bitmap_from_json(options, value.as_object()));
+                return {};
+            }
             if (value.is_string()) {
                 graymap = TRY(jbig2_load_bitmap(options, value.as_string()));
                 return {};
             }
-            return Error::from_string_literal("expected string for \"match_image\"");
+            return Error::from_string_literal("expected string or object for \"match_image\"");
         }
 
         dbgln("graymap_data key {}", key);
