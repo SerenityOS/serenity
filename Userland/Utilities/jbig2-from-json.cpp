@@ -187,7 +187,7 @@ static ErrorOr<JSONRect> jbig2_rect_from_json(JsonObject const& object)
     return rect;
 }
 
-static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> jbig2_bitmap_from_json(ToJSONOptions const& options, ByteString const& base_name)
+static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> jbig2_load_bitmap(ToJSONOptions const& options, ByteString const& base_name)
 {
     RefPtr<Gfx::Bitmap> bitmap;
 
@@ -215,7 +215,7 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "from_file") {
             if (value.is_string()) {
-                auto bitmap = TRY(jbig2_bitmap_from_json(options, value.as_string()));
+                auto bitmap = TRY(jbig2_load_bitmap(options, value.as_string()));
                 image = TRY(Gfx::BilevelImage::create_from_bitmap(*bitmap, Gfx::DitheringAlgorithm::FloydSteinberg));
                 return {};
             }
@@ -1611,7 +1611,7 @@ static ErrorOr<Variant<Vector<u64>, NonnullRefPtr<Gfx::Bitmap>>> jbig2_halftone_
 
         if (key == "match_image") {
             if (value.is_string()) {
-                graymap = TRY(jbig2_bitmap_from_json(options, value.as_string()));
+                graymap = TRY(jbig2_load_bitmap(options, value.as_string()));
                 return {};
             }
             return Error::from_string_literal("expected string for \"match_image\"");
