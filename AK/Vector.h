@@ -758,12 +758,12 @@ public:
     {
         MUST(try_grow_capacity(needed_capacity));
     }
-#endif
 
     void ensure_capacity(size_t needed_capacity)
     {
         MUST(try_ensure_capacity(needed_capacity));
     }
+#endif
 
     void shrink(size_t new_size, bool keep_capacity = false)
     {

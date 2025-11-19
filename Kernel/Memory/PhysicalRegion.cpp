@@ -96,10 +96,10 @@ Vector<NonnullRefPtr<PhysicalRAMPage>> PhysicalRegion::take_contiguous_free_page
         return {};
 
     Vector<NonnullRefPtr<PhysicalRAMPage>> physical_pages;
-    physical_pages.ensure_capacity(count);
+    physical_pages.try_ensure_capacity(count).release_value_but_fixme_should_propagate_errors();
 
     for (size_t i = 0; i < count; ++i)
-        physical_pages.try_append(PhysicalRAMPage::create(page_base.value().offset(i * PAGE_SIZE))).release_value_but_fixme_should_propagate_errors();
+        physical_pages.unchecked_append(PhysicalRAMPage::create(page_base.value().offset(i * PAGE_SIZE)));
     return physical_pages;
 }
 

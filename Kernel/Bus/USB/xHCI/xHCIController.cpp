@@ -715,7 +715,7 @@ ErrorOr<void> xHCIController::initialize_device(USB::Device& device)
 
     // Fetch the configuration descriptors from the device
     auto& configurations = device.configurations<xHCIController>({});
-    configurations.ensure_capacity(dev_descriptor.num_configurations);
+    TRY(configurations.try_ensure_capacity(dev_descriptor.num_configurations));
     for (u8 configuration = 0u; configuration < dev_descriptor.num_configurations; configuration++) {
         USBConfigurationDescriptor configuration_descriptor;
         transfer_length = TRY(device.control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST, USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_CONFIGURATION << 8u) | configuration, 0, sizeof(USBConfigurationDescriptor), &configuration_descriptor));
