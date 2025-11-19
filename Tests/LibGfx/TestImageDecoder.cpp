@@ -418,7 +418,6 @@ TEST_CASE(test_jbig2_decode)
         // Missing tests, in part because there's no easy way to generate them:
         // - rotated halftone (code support added in #26044)
         // - composition test for halftone regions
-        // - negative position in composition (code support added in #26046)
         // - symbol refinement referring to symbol in same segment
         // Missing tests for things that aren't implemented yet:
         // - exttemplate
