@@ -49,7 +49,7 @@ public:
         if (is_empty())
             return false;
 
-        m_stack.resize_and_keep_capacity(m_stack.size() - 1);
+        m_stack.shrink(m_stack.size() - 1, true);
         return true;
     }
 
