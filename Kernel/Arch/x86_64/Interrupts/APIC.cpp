@@ -339,7 +339,7 @@ UNMAP_AFTER_INIT void APIC::setup_ap_boot_environment()
     memcpy(apic_startup_region_ptr, reinterpret_cast<void const*>(apic_ap_start), apic_ap_start_size);
 
     // Allocate enough stacks for all APs
-    m_ap_temporary_boot_stacks.ensure_capacity(aps_to_enable);
+    m_ap_temporary_boot_stacks.try_ensure_capacity(aps_to_enable).release_value_but_fixme_should_propagate_errors();
     for (u32 i = 0; i < aps_to_enable; i++) {
         auto stack_region_or_error = MM.allocate_kernel_region(Thread::default_kernel_stack_size, {}, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow);
         if (stack_region_or_error.is_error()) {
