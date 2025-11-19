@@ -794,7 +794,6 @@ public:
     {
         MUST(try_resize_and_keep_capacity(new_size));
     }
-#endif
 
     void shrink_to_fit()
     {
@@ -807,6 +806,7 @@ public:
         }
         *this = move(new_vector);
     }
+#endif
 
     using ConstIterator = SimpleIterator<Vector const, VisibleType const>;
     using Iterator = SimpleIterator<Vector, VisibleType>;
