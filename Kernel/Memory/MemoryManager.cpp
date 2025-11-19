@@ -574,7 +574,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
                     state.state = State::Root;
                     break;
                 case State::InMemory:
-                    global_data.physical_memory_ranges.grow_capacity(global_data.physical_memory_ranges.size() + state.reg.size());
+                    global_data.physical_memory_ranges.try_grow_capacity(global_data.physical_memory_ranges.size() + state.reg.size()).release_value_but_fixme_should_propagate_errors();
 
                     for (auto const& reg_entry : state.reg) {
                         dbgln("MM: Memory Range {}: address: {} size {:#x}", node_name, PhysicalAddress { reg_entry.start_addr }, reg_entry.size);
@@ -589,8 +589,8 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
                     if (state.reg.is_empty())
                         dbgln("MM: Skipping dynamically allocated reserved memory region {}", node_name);
 
-                    global_data.physical_memory_ranges.grow_capacity(global_data.physical_memory_ranges.size() + state.reg.size());
-                    global_data.used_memory_ranges.grow_capacity(global_data.used_memory_ranges.size() + state.reg.size());
+                    global_data.physical_memory_ranges.try_grow_capacity(global_data.physical_memory_ranges.size() + state.reg.size()).release_value_but_fixme_should_propagate_errors();
+                    global_data.used_memory_ranges.try_grow_capacity(global_data.used_memory_ranges.size() + state.reg.size()).release_value_but_fixme_should_propagate_errors();
 
                     for (auto const& reg_entry : state.reg) {
                         dbgln("MM: Reserved Range {}: address: {} size {:#x}", node_name, PhysicalAddress { reg_entry.start_addr }, reg_entry.size);

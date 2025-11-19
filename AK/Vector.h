@@ -753,10 +753,12 @@ public:
         return try_resize(new_size, true);
     }
 
+#ifndef KERNEL
     void grow_capacity(size_t needed_capacity)
     {
         MUST(try_grow_capacity(needed_capacity));
     }
+#endif
 
     void ensure_capacity(size_t needed_capacity)
     {
