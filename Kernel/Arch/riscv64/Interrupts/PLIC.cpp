@@ -98,10 +98,10 @@ ErrorOr<void> PLICDriver::probe(DeviceTree::Device const& device, StringView) co
             return EINVAL;
 
         u64 interrupt_specifier = 0;
-        if (interrupt.interrupt_identifier.size() == sizeof(u32))
-            interrupt_specifier = *reinterpret_cast<BigEndian<u32> const*>(interrupt.interrupt_identifier.data());
-        else if (interrupt.interrupt_identifier.size() == sizeof(u64))
-            interrupt_specifier = *reinterpret_cast<BigEndian<u64> const*>(interrupt.interrupt_identifier.data());
+        if (interrupt.interrupt_specifier.size() == sizeof(u32))
+            interrupt_specifier = *reinterpret_cast<BigEndian<u32> const*>(interrupt.interrupt_specifier.data());
+        else if (interrupt.interrupt_specifier.size() == sizeof(u64))
+            interrupt_specifier = *reinterpret_cast<BigEndian<u64> const*>(interrupt.interrupt_specifier.data());
         else
             return EINVAL;
 
