@@ -204,9 +204,9 @@ ErrorOr<void> BCM2835TimerDriver::probe(DeviceTree::Device const& device, String
     // FIXME: Don't depend on a specific interrupt descriptor format and implement proper devicetree interrupt mapping/translation.
     if (!interrupt.domain_root->is_compatible_with("brcm,bcm2836-armctrl-ic"sv))
         return ENOTSUP;
-    if (interrupt.interrupt_identifier.size() != sizeof(BigEndian<u64>))
+    if (interrupt.interrupt_specifier.size() != sizeof(BigEndian<u64>))
         return ENOTSUP;
-    auto const interrupt_number = *reinterpret_cast<BigEndian<u64> const*>(interrupt.interrupt_identifier.data()) & 0xffff'ffff;
+    auto const interrupt_number = *reinterpret_cast<BigEndian<u64> const*>(interrupt.interrupt_specifier.data()) & 0xffff'ffff;
 
     auto physical_address = TRY(device.get_resource(0)).paddr;
 

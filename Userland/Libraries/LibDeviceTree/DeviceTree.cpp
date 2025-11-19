@@ -161,11 +161,11 @@ ErrorOr<Vector<Interrupt>> Node::interrupts(DeviceTree const& device_tree) const
 
             auto interrupt_cells = interrupt_cells_prop->as<u32>();
 
-            auto interrupt_identifier = TRY(stream.read_in_place<u8 const>(interrupt_cells * sizeof(u32)));
+            auto interrupt_specifier = TRY(stream.read_in_place<u8 const>(interrupt_cells * sizeof(u32)));
 
             TRY(interrupts.try_append(Interrupt {
                 .domain_root = &domain_root,
-                .interrupt_identifier = interrupt_identifier,
+                .interrupt_specifier = interrupt_specifier,
             }));
         }
 
@@ -200,7 +200,7 @@ ErrorOr<Vector<Interrupt>> Node::interrupts(DeviceTree const& device_tree) const
     for (size_t i = 0; i < interrupt_count; i++) {
         interrupts[i] = Interrupt {
             .domain_root = &domain_root,
-            .interrupt_identifier = interrupts_raw.slice(i * interrupt_cells * sizeof(u32), interrupt_cells * sizeof(u32)),
+            .interrupt_specifier = interrupts_raw.slice(i * interrupt_cells * sizeof(u32), interrupt_cells * sizeof(u32)),
         };
     }
 

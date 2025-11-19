@@ -104,7 +104,7 @@ private:
 
 struct Interrupt {
     Node const* domain_root;
-    ReadonlyBytes interrupt_identifier;
+    ReadonlyBytes interrupt_specifier;
 };
 
 struct Property {
