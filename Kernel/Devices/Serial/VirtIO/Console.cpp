@@ -44,7 +44,7 @@ UNMAP_AFTER_INIT ErrorOr<void> Console::initialize_virtio_resources()
         }
         if (is_feature_accepted(VIRTIO_CONSOLE_F_MULTIPORT)) {
             max_nr_ports = transport_entity().config_read32(*cfg, 0x4);
-            m_ports.resize(max_nr_ports);
+            m_ports.try_resize(max_nr_ports).release_value_but_fixme_should_propagate_errors();
         }
     });
     dbgln("VirtIO::Console: cols: {}, rows: {}, max nr ports {}", cols, rows, max_nr_ports);
