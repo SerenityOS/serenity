@@ -416,7 +416,6 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-texttoprighttranspose.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-texttranspose.jbig2"sv),
         // Missing tests, in part because there's no easy way to generate them:
-        // - lossless halftone (code support added in #26043)
         // - rotated halftone (code support added in #26044)
         // - composition test for halftone regions
         // - negative position in composition (code support added in #26046)
