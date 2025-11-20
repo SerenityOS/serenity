@@ -77,7 +77,7 @@ UNMAP_AFTER_INIT void ACPISysFSDirectory::find_tables_and_register_them_as_compo
     MUST(m_child_components.with([&](auto& list) -> ErrorOr<void> {
         ACPI::Parser::the()->enumerate_static_tables([&](StringView signature, PhysicalAddress p_table, size_t length) {
             if (signature == "SSDT") {
-                auto component_name = KString::formatted("{:4s}{}", signature.characters_without_null_termination(), ssdt_count).release_value_but_fixme_should_propagate_errors();
+                auto component_name = KString::formatted("{:4s}{}", signature, ssdt_count).release_value_but_fixme_should_propagate_errors();
                 list.append(ACPISysFSComponent::create(component_name->view(), p_table, length));
                 ssdt_count++;
                 return;
