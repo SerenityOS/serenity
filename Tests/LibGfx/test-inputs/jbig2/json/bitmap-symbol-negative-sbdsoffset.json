@@ -45,10 +45,21 @@
                                 "image_data": {
                                     "from_file": "bitmap.bmp",
                                     "crop": {
-                                        "x": 232,
-                                        "y": 70,
-                                        "width": 120,
-                                        "height": 250
+                                        "x": 50,
+                                        "y": 108,
+                                        "width": 30,
+                                        "height": 30
+                                    }
+                                }
+                            },
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 60,
+                                        "y": 265,
+                                        "width": 30,
+                                        "height": 30
                                     }
                                 }
                             }
@@ -75,21 +86,10 @@
                                 "image_data": {
                                     "from_file": "bitmap.bmp",
                                     "crop": {
-                                        "x": 50,
-                                        "y": 108,
-                                        "width": 30,
-                                        "height": 30
-                                    }
-                                }
-                            },
-                            {
-                                "image_data": {
-                                    "from_file": "bitmap.bmp",
-                                    "crop": {
-                                        "x": 60,
-                                        "y": 265,
-                                        "width": 30,
-                                        "height": 30
+                                        "x": 232,
+                                        "y": 70,
+                                        "width": 120,
+                                        "height": 250
                                     }
                                 }
                             }
@@ -143,27 +143,42 @@
                 "initial_strip_t": -4,
                 "strips": [
                     {
-                        "strip_t": 4,
+                        "strip_t": 68,
+                        "instances": [
+                            {
+                                "instance_s": 232,
+                                "instance_t": 70,
+                                "symbol_id": 3
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 100,
+                        "instances": [
+                            {
+                                "instance_s": 135,
+                                "instance_t": 100,
+                                "symbol_id": 2
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 108,
                         "instances": [
                             {
                                 "instance_s": 50,
                                 "instance_t": 108,
-                                "symbol_id": 2
-                            },
+                                "symbol_id": 0
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 264,
+                        "instances": [
                             {
                                 "instance_s": 60,
                                 "instance_t": 265,
-                                "symbol_id": 3
-                            },
-                            {
-                                "instance_s": 135,
-                                "instance_t": 100,
                                 "symbol_id": 1
-                            },
-                            {
-                                "instance_s": 232,
-                                "instance_t": 70,
-                                "symbol_id": 0
                             }
                         ]
                     }
