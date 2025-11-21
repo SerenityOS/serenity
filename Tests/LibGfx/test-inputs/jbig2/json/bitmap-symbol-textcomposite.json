@@ -1,0 +1,357 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "default_color": "white",
+                    "is_eventually_lossless": true,
+                    "default_combination_operator": "xor"
+                }
+            }
+        },
+
+        {
+            "segment_number": 1,
+            "type": "symbol_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "height_classes": [
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 60,
+                                        "y": 265,
+                                        "width": 30,
+                                        "height": 30
+                                    },
+                                    "invert": true
+                                }
+                            },
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 50,
+                                        "y": 108,
+                                        "width": 30,
+                                        "height": 30
+                                    },
+                                    "invert": true
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 135,
+                                        "y": 100,
+                                        "width": 100,
+                                        "height": 100
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 232,
+                                        "y": 70,
+                                        "width": 120,
+                                        "height": 250
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 2,
+            "type": "text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": true
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 232,
+                    "y": 70,
+                    "width": 120,
+                    "height": 250,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "flags": {
+                    "strip_size": 1,
+                    "reference_corner": "top_left",
+                    "combination_operator": "or",
+                    "default_pixel_value": "white",
+                    "delta_s_offset": 0
+                },
+                "initial_strip_t": -2,
+                "strips": [
+                    {
+                        "strip_t": 0,
+                        "instances": [
+                            {
+                                "instance_s": 0,
+                                "instance_t": 0,
+                                "symbol_id": 3
+                            },
+                            {
+                                "instance_s": 0,
+                                "instance_t": 0,
+                                "symbol_id": 3
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 3,
+            "type": "text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": true
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 135,
+                    "y": 100,
+                    "width": 100,
+                    "height": 100,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "flags": {
+                    "strip_size": 1,
+                    "reference_corner": "top_left",
+                    "combination_operator": "xor",
+                    "default_pixel_value": "white",
+                    "delta_s_offset": 0
+                },
+                "initial_strip_t": -2,
+                "strips": [
+                    {
+                        "strip_t": 0,
+                        "instances": [
+                            {
+                                "instance_s": 0,
+                                "instance_t": 0,
+                                "symbol_id": 2
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 20,
+                        "instances": [
+                            {
+                                "instance_s": 10,
+                                "instance_t": 20,
+                                "symbol_id": 2
+                            },
+                            {
+                                "instance_s": 10,
+                                "instance_t": 20,
+                                "symbol_id": 2
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 5,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "x": 50,
+                    "y": 108,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 30,
+                        "height": 30
+                    },
+                    "invert": true
+                }
+            }
+        },
+        {
+            "segment_number": 6,
+            "type": "text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": true
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 50,
+                    "y": 108,
+                    "width": 30,
+                    "height": 30,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "flags": {
+                    "strip_size": 2,
+                    "reference_corner": "top_left",
+                    "combination_operator": "and",
+                    "default_pixel_value": "black",
+                    "delta_s_offset": 3
+                },
+                "initial_strip_t": -2,
+                "strips": [
+                    {
+                        "strip_t": 0,
+                        "instances": [
+                            {
+                                "instance_s": 0,
+                                "instance_t": 0,
+                                "symbol_id": 1
+                            },
+                            {
+                                "instance_s": 0,
+                                "instance_t": 0,
+                                "symbol_id": 1
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 7,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 265,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 30,
+                        "height": 30
+                    },
+                    "invert": true
+                }
+            }
+        },
+        {
+            "segment_number": 8,
+            "type": "text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 265,
+                    "width": 30,
+                    "height": 30,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "flags": {
+                    "strip_size": 1,
+                    "reference_corner": "top_left",
+                    "combination_operator": "xnor",
+                    "default_pixel_value": "black",
+                    "delta_s_offset": 0
+                },
+                "initial_strip_t": -2,
+                "strips": [
+                    {
+                        "strip_t": 0,
+                        "instances": [
+                            {
+                                "instance_s": 0,
+                                "instance_t": 0,
+                                "symbol_id": 0
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 20,
+                        "instances": [
+                            {
+                                "instance_s": 10,
+                                "instance_t": 20,
+                                "symbol_id": 2
+                            },
+                            {
+                                "instance_s": 10,
+                                "instance_t": 20,
+                                "symbol_id": 2
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 9,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}
