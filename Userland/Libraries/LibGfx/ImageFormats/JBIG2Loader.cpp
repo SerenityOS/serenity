@@ -1576,8 +1576,6 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
 
     // "1) Fill a bitmap SBREG, of the size given by SBW and SBH, with the SBDEFPIXEL value."
     auto result = TRY(BilevelImage::create(inputs.region_width, inputs.region_height));
-    if (inputs.default_pixel != 0)
-        return Error::from_string_literal("JBIG2ImageDecoderPlugin: Cannot handle SBDEFPIXEL not equal to 0 yet");
     result->fill(inputs.default_pixel != 0);
 
     // "2) Decode the initial STRIPT value as described in 6.4.6. Negate the decoded value and assign this negated value to the variable STRIPT.
