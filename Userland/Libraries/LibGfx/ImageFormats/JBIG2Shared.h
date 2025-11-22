@@ -173,6 +173,15 @@ private:
     }
 };
 
+struct RefinementContexts {
+    explicit RefinementContexts(u8 refinement_template)
+    {
+        contexts.resize(1 << (refinement_template == 0 ? 13 : 10));
+    }
+
+    Vector<MQArithmeticCoderContext> contexts; // "GR" (+ binary suffix) in spec.
+};
+
 // 7.4.8 Page information segment syntax
 struct [[gnu::packed]] PageInformationSegment {
     BigEndian<u32> bitmap_width;

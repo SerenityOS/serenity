@@ -1196,17 +1196,8 @@ struct GenericRefinementRegionDecodingInputParameters {
     Array<JBIG2::AdaptiveTemplatePixel, 2> adaptive_template_pixels {}; // "GRATX" / "GRATY" in spec.
 };
 
-struct RefinementContexts {
-    explicit RefinementContexts(u8 refinement_template)
-    {
-        contexts.resize(1 << (refinement_template == 0 ? 13 : 10));
-    }
-
-    Vector<MQArithmeticCoderContext> contexts; // "GR" (+ binary suffix) in spec.
-};
-
 // 6.3 Generic Refinement Region Decoding Procedure
-static ErrorOr<NonnullRefPtr<BilevelImage>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, MQArithmeticDecoder& decoder, RefinementContexts& contexts)
+static ErrorOr<NonnullRefPtr<BilevelImage>> generic_refinement_region_decoding_procedure(GenericRefinementRegionDecodingInputParameters& inputs, MQArithmeticDecoder& decoder, JBIG2::RefinementContexts& contexts)
 {
     VERIFY(inputs.gr_template == 0 || inputs.gr_template == 1);
 
@@ -1414,7 +1405,7 @@ struct TextContexts {
 };
 
 // 6.4 Text Region Decoding Procedure
-static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, Optional<TextContexts>& text_contexts, Optional<RefinementContexts>& refinement_contexts)
+static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextRegionDecodingInputParameters const& inputs, Optional<TextContexts>& text_contexts, Optional<JBIG2::RefinementContexts>& refinement_contexts)
 {
     BigEndianInputBitStream* bit_stream = nullptr;
     MQArithmeticDecoder* decoder = nullptr;
@@ -1798,7 +1789,7 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
 
     // 6.5.8.1 Direct-coded symbol bitmap
     Optional<TextContexts> text_contexts;
-    Optional<RefinementContexts> refinement_contexts;
+    Optional<JBIG2::RefinementContexts> refinement_contexts;
 
     // This belongs in 6.5.5 1) below, but also needs to be captured by read_symbol_bitmap here.
     Vector<BilevelSubImage> new_symbols;
@@ -1849,7 +1840,7 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
         if (!text_contexts.has_value())
             text_contexts = TextContexts { code_length };
         if (!refinement_contexts.has_value())
-            refinement_contexts = RefinementContexts(inputs.refinement_template);
+            refinement_contexts = JBIG2::RefinementContexts(inputs.refinement_template);
 
         if (number_of_symbol_instances > 1) {
             // "2) If REFAGGNINST is greater than one, then decode the bitmap itself using a text region decoding procedure
@@ -2762,9 +2753,9 @@ static ErrorOr<RegionResult> decode_text_region(JBIG2LoadingContext& context, Se
     Optional<TextContexts> text_contexts;
     if (!uses_huffman_encoding)
         text_contexts = TextContexts { id_symbol_code_length };
-    Optional<RefinementContexts> refinement_contexts;
+    Optional<JBIG2::RefinementContexts> refinement_contexts;
     if (uses_refinement_coding)
-        refinement_contexts = RefinementContexts { refinement_template };
+        refinement_contexts = JBIG2::RefinementContexts { refinement_template };
 
     // "4) Invoke the text region decoding procedure described in 6.4, with the parameters to the text region decoding procedure set as shown in Table 34."
     TextRegionDecodingInputParameters inputs;
@@ -3186,7 +3177,7 @@ static ErrorOr<RegionResult> decode_generic_refinement_region(JBIG2LoadingContex
     }
 
     // "2) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    RefinementContexts contexts { arithmetic_coding_template };
+    JBIG2::RefinementContexts contexts { arithmetic_coding_template };
 
     // "3) Determine the buffer associated with the region segment that this segment refers to."
     // Details described in 7.4.7.4 Reference bitmap selection.
