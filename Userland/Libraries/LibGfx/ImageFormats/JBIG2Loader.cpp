@@ -1739,19 +1739,17 @@ struct SymbolContexts {
 };
 
 // 6.5 Symbol Dictionary Decoding Procedure
-static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(SymbolDictionaryDecodingInputParameters const& inputs, ReadonlyBytes data)
+static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(SymbolDictionaryDecodingInputParameters const& inputs, Optional<JBIG2::GenericContexts>& generic_contexts, Optional<JBIG2::RefinementContexts>& refinement_contexts, ReadonlyBytes data)
 {
     Optional<FixedMemoryStream> stream;
     Optional<BigEndianInputBitStream> bit_stream;
     Optional<MQArithmeticDecoder> decoder;
-    Optional<JBIG2::GenericContexts> generic_contexts;
     Optional<SymbolContexts> symbol_contexts;
     if (inputs.uses_huffman_encoding) {
         stream = FixedMemoryStream { data };
         bit_stream = BigEndianInputBitStream { MaybeOwned { stream.value() } };
     } else {
         decoder = TRY(MQArithmeticDecoder::initialize(data));
-        generic_contexts = JBIG2::GenericContexts { inputs.symbol_template };
         symbol_contexts = SymbolContexts {};
     }
 
@@ -1789,7 +1787,6 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
 
     // 6.5.8.1 Direct-coded symbol bitmap
     Optional<TextContexts> text_contexts;
-    Optional<JBIG2::RefinementContexts> refinement_contexts;
 
     // This belongs in 6.5.5 1) below, but also needs to be captured by read_symbol_bitmap here.
     Vector<BilevelSubImage> new_symbols;
@@ -1839,8 +1836,6 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
 
         if (!text_contexts.has_value())
             text_contexts = TextContexts { code_length };
-        if (!refinement_contexts.has_value())
-            refinement_contexts = JBIG2::RefinementContexts(inputs.refinement_template);
 
         if (number_of_symbol_instances > 1) {
             // "2) If REFAGGNINST is greater than one, then decode the bitmap itself using a text region decoding procedure
@@ -2530,7 +2525,12 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
 
     // "4) If the "bitmap coding context used" bit in the header was 0, then, as described in E.3.7,
     //     reset all the arithmetic coding statistics for the generic region and generic refinement region decoding procedures to zero."
-    // Nothing to do.
+    Optional<JBIG2::GenericContexts> generic_contexts;
+    Optional<JBIG2::RefinementContexts> refinement_contexts;
+    if (!uses_huffman_encoding)
+        generic_contexts = JBIG2::GenericContexts { template_used };
+    if (uses_refinement_or_aggregate_coding)
+        refinement_contexts = JBIG2::RefinementContexts { refinement_template_used };
 
     // "5) Reset the arithmetic coding statistics for all the contexts of all the arithmetic integer coders to zero."
     // We currently do this by keeping the statistics as locals in symbol_dictionary_decoding_procedure().
@@ -2550,7 +2550,7 @@ static ErrorOr<void> decode_symbol_dictionary(JBIG2LoadingContext& context, Segm
     inputs.adaptive_template_pixels = adaptive_template;
     inputs.refinement_template = refinement_template_used;
     inputs.refinement_adaptive_template_pixels = adaptive_refinement_template;
-    auto result = TRY(symbol_dictionary_decoding_procedure(inputs, segment.data.slice(TRY(stream.tell()))));
+    auto result = TRY(symbol_dictionary_decoding_procedure(inputs, generic_contexts, refinement_contexts, segment.data.slice(TRY(stream.tell()))));
 
     // "7) If the "bitmap coding context retained" bit in the header was 1, then, as described in E.3.8, preserve the current contents
     //     of the arithmetic coding statistics for the generic region and generic refinement region decoding procedures."
