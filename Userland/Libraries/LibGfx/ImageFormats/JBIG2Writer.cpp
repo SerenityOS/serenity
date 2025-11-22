@@ -345,19 +345,10 @@ struct GenericRefinementRegionEncodingInputParameters {
     Array<JBIG2::AdaptiveTemplatePixel, 2> adaptive_template_pixels {}; // "GRATX" / "GRATY" in spec.
 };
 
-struct RefinementContexts {
-    explicit RefinementContexts(u8 refinement_template)
-    {
-        contexts.resize(1 << (refinement_template == 0 ? 13 : 10));
-    }
-
-    Vector<MQArithmeticCoderContext> contexts; // "GR" (+ binary suffix) in spec.
-};
-
 }
 
 // 6.3 Generic Refinement Region Decoding Procedure, but in reverse.
-static ErrorOr<void> generic_refinement_region_encoding_procedure(GenericRefinementRegionEncodingInputParameters& inputs, MQArithmeticEncoder& encoder, RefinementContexts& contexts)
+static ErrorOr<void> generic_refinement_region_encoding_procedure(GenericRefinementRegionEncodingInputParameters& inputs, MQArithmeticEncoder& encoder, JBIG2::RefinementContexts& contexts)
 {
     // FIXME: Try to come up with a way to share more code with generic_refinement_region_decoding_procedure().
     auto width = inputs.image.width();
@@ -575,7 +566,7 @@ struct TextContexts {
 }
 
 // 6.4 Text Region Decoding Procedure, but in reverse.
-static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParameters const& inputs, Optional<TextContexts>& text_contexts, Optional<RefinementContexts>& refinement_contexts)
+static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParameters const& inputs, Optional<TextContexts>& text_contexts, Optional<JBIG2::RefinementContexts>& refinement_contexts)
 {
     BigEndianOutputBitStream* bit_stream = nullptr;
     MQArithmeticEncoder* encoder = nullptr;
@@ -992,7 +983,7 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
 
     // 6.5.8.1 Direct-coded symbol bitmap
     Optional<TextContexts> text_contexts;
-    Optional<RefinementContexts> refinement_contexts;
+    Optional<JBIG2::RefinementContexts> refinement_contexts;
 
     // This belongs in 6.5.5 1) below, but also needs to be captured by write_symbol_bitmap here.
     Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> new_symbols;
@@ -1056,7 +1047,7 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
         if (!text_contexts.has_value())
             text_contexts = TextContexts { code_length };
         if (!refinement_contexts.has_value())
-            refinement_contexts = RefinementContexts(inputs.refinement_template);
+            refinement_contexts = JBIG2::RefinementContexts(inputs.refinement_template);
 
         if (number_of_symbol_instances > 1) {
             auto const& refines_using_strips = symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips>();
@@ -2022,9 +2013,9 @@ static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text
     Optional<TextContexts> text_contexts;
     if (!uses_huffman_encoding)
         text_contexts = TextContexts { id_symbol_code_length };
-    Optional<RefinementContexts> refinement_contexts;
+    Optional<JBIG2::RefinementContexts> refinement_contexts;
     if (uses_refinement_coding)
-        refinement_contexts = RefinementContexts { refinement_template };
+        refinement_contexts = JBIG2::RefinementContexts { refinement_template };
 
     AllocatingMemoryStream output_stream;
     Optional<MQArithmeticEncoder> encoder;
@@ -2346,7 +2337,7 @@ static ErrorOr<void> encode_generic_refinement_region(JBIG2::GenericRefinementRe
     inputs.gr_template = generic_refinement_region.flags & 1;
     inputs.is_typical_prediction_used = (generic_refinement_region.flags >> 1) & 1;
     inputs.adaptive_template_pixels = generic_refinement_region.adaptive_template_pixels;
-    RefinementContexts contexts { inputs.gr_template };
+    JBIG2::RefinementContexts contexts { inputs.gr_template };
     MQArithmeticEncoder encoder = TRY(MQArithmeticEncoder::initialize(0));
     TRY(generic_refinement_region_encoding_procedure(inputs, encoder, contexts));
     auto data = TRY(encoder.finalize(generic_refinement_region.trailing_7fff_handling));
