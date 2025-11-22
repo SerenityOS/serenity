@@ -140,6 +140,8 @@ static_assert(AssertSize<RegionSegmentInformationField, 17>());
 struct AdaptiveTemplatePixel {
     i8 x { 0 };
     i8 y { 0 };
+
+    bool operator<=>(AdaptiveTemplatePixel const&) const = default;
 };
 
 // Figure 7 – Field to which AT pixel locations are restricted
