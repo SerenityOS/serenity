@@ -67,7 +67,7 @@ static constinit Array const compatibles_array = {
     "sifive,plic-1.0.0"sv,
 };
 
-EARLY_DEVICETREE_DRIVER(PLICDriver, compatibles_array);
+INTERRUPT_CONTROLLER_DEVICETREE_DRIVER(PLICDriver, compatibles_array);
 
 // https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/sifive,plic-1.0.0.yaml
 ErrorOr<void> PLICDriver::probe(DeviceTree::Device const& device, StringView) const
