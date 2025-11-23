@@ -14,7 +14,6 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/API/TimePage.h>
-#include <Kernel/Firmware/DeviceTree/DeviceRecipe.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/UnixTypes.h>
@@ -39,7 +38,7 @@ public:
     static bool is_initialized();
     static TimeManagement& the();
 
-    static void add_recipe(DeviceTree::DeviceRecipe<NonnullLockRefPtr<HardwareTimerBase>>);
+    static ErrorOr<void> register_hardware_timer(NonnullLockRefPtr<HardwareTimerBase>);
 
     static u64 scheduler_current_time();
 
@@ -97,7 +96,6 @@ private:
 #endif
     Vector<HardwareTimerBase*> scan_and_initialize_periodic_timers();
     Vector<HardwareTimerBase*> scan_for_non_periodic_timers();
-    Vector<NonnullLockRefPtr<HardwareTimerBase>> m_hardware_timers;
     void set_system_timer(HardwareTimerBase&);
     static void system_timer_tick();
 
