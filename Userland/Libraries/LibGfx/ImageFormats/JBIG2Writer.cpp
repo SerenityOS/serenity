@@ -932,19 +932,17 @@ struct SymbolContexts {
 }
 
 // 6.5 Symbol Dictionary Decoding Procedure, but in reverse.
-static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionaryEncodingInputParameters const& inputs, Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol>& exported_symbols)
+static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionaryEncodingInputParameters const& inputs, Optional<JBIG2::GenericContexts>& generic_contexts, Optional<JBIG2::RefinementContexts>& refinement_contexts, Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol>& exported_symbols)
 {
     Optional<AllocatingMemoryStream> stream;
     Optional<BigEndianOutputBitStream> bit_stream;
     Optional<MQArithmeticEncoder> encoder;
-    Optional<JBIG2::GenericContexts> generic_contexts;
     Optional<SymbolContexts> symbol_contexts;
     if (inputs.uses_huffman_encoding) {
         stream = AllocatingMemoryStream {};
         bit_stream = BigEndianOutputBitStream { MaybeOwned { stream.value() } };
     } else {
         encoder = TRY(MQArithmeticEncoder::initialize(0));
-        generic_contexts = JBIG2::GenericContexts { inputs.symbol_template };
         symbol_contexts = SymbolContexts {};
     }
 
@@ -983,7 +981,6 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
 
     // 6.5.8.1 Direct-coded symbol bitmap
     Optional<TextContexts> text_contexts;
-    Optional<JBIG2::RefinementContexts> refinement_contexts;
 
     // This belongs in 6.5.5 1) below, but also needs to be captured by write_symbol_bitmap here.
     Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> new_symbols;
@@ -1046,8 +1043,6 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
 
         if (!text_contexts.has_value())
             text_contexts = TextContexts { code_length };
-        if (!refinement_contexts.has_value())
-            refinement_contexts = JBIG2::RefinementContexts(inputs.refinement_template);
 
         if (number_of_symbol_instances > 1) {
             auto const& refines_using_strips = symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips>();
@@ -1750,8 +1745,15 @@ static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData
     inputs.refinement_adaptive_template_pixels = symbol_dictionary.refinement_adaptive_template_pixels;
     inputs.trailing_7fff_handling = symbol_dictionary.trailing_7fff_handling;
 
+    Optional<JBIG2::GenericContexts> generic_contexts;
+    Optional<JBIG2::RefinementContexts> refinement_contexts;
+    if (!uses_huffman_encoding)
+        generic_contexts = JBIG2::GenericContexts { inputs.symbol_template };
+    if (inputs.uses_refinement_or_aggregate_coding)
+        refinement_contexts = JBIG2::RefinementContexts(inputs.refinement_template);
+
     Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> exported_symbols;
-    ByteBuffer data = TRY(symbol_dictionary_encoding_procedure(inputs, exported_symbols));
+    ByteBuffer data = TRY(symbol_dictionary_encoding_procedure(inputs, generic_contexts, refinement_contexts, exported_symbols));
 
     u32 number_of_exported_symbols = exported_symbols.size();
 
