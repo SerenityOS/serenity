@@ -139,15 +139,9 @@ ErrorOr<void> ARMv8TimerDriver::probe(DeviceTree::Device const& device, StringVi
     // The interrupt number is in the second cell.
     auto interrupt_number = (reinterpret_cast<BigEndian<u32> const*>(interrupt.interrupt_specifier.data())[1]) + 16;
 
-    DeviceTree::DeviceRecipe<NonnullLockRefPtr<HardwareTimerBase>> recipe {
-        name(),
-        device.node_name(),
-        [interrupt_number] {
-            return ARMv8Timer::initialize(interrupt_number);
-        },
-    };
+    auto timer = TRY(ARMv8Timer::initialize(interrupt_number));
 
-    TimeManagement::add_recipe(move(recipe));
+    MUST(TimeManagement::register_hardware_timer(move(timer)));
 
     return {};
 }

@@ -209,17 +209,11 @@ ErrorOr<void> BCM2835TimerDriver::probe(DeviceTree::Device const& device, String
     auto const interrupt_number = *reinterpret_cast<BigEndian<u64> const*>(interrupt.interrupt_specifier.data()) & 0xffff'ffff;
 
     auto physical_address = TRY(device.get_resource(0)).paddr;
+    auto registers_mapping = TRY(Memory::map_typed_writable<TimerRegisters volatile>(physical_address));
 
-    DeviceTree::DeviceRecipe<NonnullLockRefPtr<HardwareTimerBase>> recipe {
-        name(),
-        device.node_name(),
-        [physical_address, interrupt_number]() -> ErrorOr<NonnullLockRefPtr<HardwareTimerBase>> {
-            auto registers_mapping = TRY(Memory::map_typed_writable<TimerRegisters volatile>(physical_address));
-            return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Timer(move(registers_mapping), interrupt_number));
-        },
-    };
+    auto timer = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Timer(move(registers_mapping), interrupt_number)));
 
-    TimeManagement::add_recipe(move(recipe));
+    MUST(TimeManagement::register_hardware_timer(move(timer)));
 
     return {};
 }
