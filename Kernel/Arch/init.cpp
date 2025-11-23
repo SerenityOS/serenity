@@ -224,14 +224,21 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT NO_SANITIZE_COVERAGE void init(BootInfo
         DeviceTree::dump_fdt();
 
     DeviceTree::Management::initialize();
-#endif
 
-#if ARCH(RISCV64)
+#    if ARCH(RISCV64)
     bsp_processor().find_and_parse_devicetree_node();
     init_delay_loop();
+#    endif
+
+    MUST(DeviceTree::Management::the().probe_drivers(DeviceTree::Driver::ProbeStage::InterruptController));
 #endif
 
     InterruptManagement::initialize();
+
+#if ARCH(AARCH64) || ARCH(RISCV64)
+    MUST(DeviceTree::Management::the().probe_drivers(DeviceTree::Driver::ProbeStage::Early));
+#endif
+
     ACPI::initialize();
 
     // Initialize TimeManagement before using randomness!

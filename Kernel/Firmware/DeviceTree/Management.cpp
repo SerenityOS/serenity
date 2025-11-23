@@ -19,8 +19,6 @@ void Management::initialize()
         dmesgln("DeviceTree: System board model: {}", maybe_model->as_string());
 
     MUST(the().scan_node_for_devices(DeviceTree::get()));
-
-    MUST(the().probe_drivers(Driver::ProbeStage::Early));
 }
 
 Management& Management::the()
