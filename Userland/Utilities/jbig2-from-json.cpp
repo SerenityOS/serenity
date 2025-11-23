@@ -502,7 +502,7 @@ static ErrorOr<u16> jbig2_symbol_dictionary_flags_from_json(JsonObject const& ob
                     flags |= 1u << 9;
                 return {};
             }
-            return Error::from_string_literal("expected bool for \"is_bitmap_coding_context_used\"");
+            return Error::from_string_literal("expected bool for \"is_bitmap_coding_context_retained\"");
         }
 
         if (key == "template"sv) {
