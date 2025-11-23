@@ -14,7 +14,6 @@
 #include <Kernel/Devices/Storage/StorageDevice.h>
 #include <Kernel/Devices/Storage/StorageDevicePartition.h>
 #include <Kernel/FileSystem/FileSystem.h>
-#include <Kernel/Firmware/DeviceTree/DeviceRecipe.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <LibPartition/PartitionTable.h>
 
