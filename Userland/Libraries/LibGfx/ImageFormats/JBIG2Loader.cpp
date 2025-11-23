@@ -2033,7 +2033,9 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
             if (!opt_delta_width.has_value())
                 break;
 
-            VERIFY(number_of_symbols_decoded < inputs.number_of_new_symbols);
+            if (number_of_symbols_decoded >= inputs.number_of_new_symbols)
+                return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid bitstream, too many symbols decoded in symbol dictionary");
+
             // "   Otherwise let DW be the decoded value and set:"
             //         SYMWIDTH = SYMWIDTH + DW
             //         TOTWIDTH = TOTWIDTH + SYMWIDTH"
