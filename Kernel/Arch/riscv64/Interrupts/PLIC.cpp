@@ -114,16 +114,10 @@ ErrorOr<void> PLICDriver::probe(DeviceTree::Device const& device, StringView) co
         }
     }
 
-    DeviceTree::DeviceRecipe<NonnullLockRefPtr<IRQController>> recipe {
-        name(),
-        device.node_name(),
-        [physical_address, max_interrupt_id, boot_hart_supervisor_mode_context_id]() -> ErrorOr<NonnullLockRefPtr<IRQController>> {
-            auto registers_mapping = TRY(Memory::map_typed_writable<PLIC::RegisterMap volatile>(physical_address));
-            return adopt_nonnull_lock_ref_or_enomem(new (nothrow) PLIC(move(registers_mapping), max_interrupt_id + 1, boot_hart_supervisor_mode_context_id));
-        },
-    };
+    auto registers_mapping = TRY(Memory::map_typed_writable<PLIC::RegisterMap volatile>(physical_address));
+    auto interrupt_controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) PLIC(move(registers_mapping), max_interrupt_id + 1, boot_hart_supervisor_mode_context_id)));
 
-    InterruptManagement::add_recipe(move(recipe));
+    MUST(InterruptManagement::register_interrupt_controller(move(interrupt_controller)));
 
     return {};
 }
