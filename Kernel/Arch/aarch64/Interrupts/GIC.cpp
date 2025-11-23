@@ -192,15 +192,9 @@ ErrorOr<void> GICDriver::probe(DeviceTree::Device const& device, StringView) con
     auto distributor_registers_resource = TRY(device.get_resource(0));
     auto cpu_interface_registers_resource = TRY(device.get_resource(1));
 
-    DeviceTree::DeviceRecipe<NonnullLockRefPtr<IRQController>> recipe {
-        name(),
-        device.node_name(),
-        [distributor_registers_resource, cpu_interface_registers_resource] {
-            return GIC::try_to_initialize(distributor_registers_resource, cpu_interface_registers_resource);
-        },
-    };
+    auto gic = TRY(GIC::try_to_initialize(distributor_registers_resource, cpu_interface_registers_resource));
 
-    InterruptManagement::add_recipe(move(recipe));
+    MUST(InterruptManagement::register_interrupt_controller(move(gic)));
 
     return {};
 }
