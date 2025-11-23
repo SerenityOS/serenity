@@ -1545,6 +1545,12 @@ struct JBIG2EncodingContext {
     HashMap<u32, JBIG2::HuffmanTable> tables_by_segment_id;
 
     HashMap<u32, Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol>> symbols_by_segment_id;
+
+    struct BitmapCodingContextState {
+        Optional<JBIG2::GenericContexts> generic_contexts;
+        Optional<JBIG2::RefinementContexts> refinement_contexts;
+    };
+    HashMap<u32, BitmapCodingContextState> retained_bitmap_coding_contexts;
 };
 
 }
@@ -1690,6 +1696,7 @@ static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData
     // Get referred-to symbol and table segments off header.referred_to_segments.
     Vector<JBIG2::HuffmanTable const*> custom_tables;
     Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> input_symbols;
+    Optional<u32> last_referred_to_symbol_dictionary_segment_id;
     for (auto const& referred_to_segment_number : header.referred_to_segments) {
         auto maybe_segment = context.segment_by_id.get(referred_to_segment_number.segment_number);
         if (!maybe_segment.has_value())
@@ -1707,6 +1714,7 @@ static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData
             if (!maybe_symbols.has_value())
                 return Error::from_string_literal("JBIG2Writer: Could not find referred-to symbols for text region");
             input_symbols.extend(maybe_symbols.value());
+            last_referred_to_symbol_dictionary_segment_id = referred_to_segment_number.segment_number;
             continue;
         }
     }
@@ -1714,6 +1722,8 @@ static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData
     // 7.4.2 Symbol dictionary segment syntax
     bool uses_huffman_encoding = (symbol_dictionary.flags & 1) != 0;
     bool uses_refinement_or_aggregate_coding = (symbol_dictionary.flags & 2) != 0;
+    bool bitmap_coding_context_used = (symbol_dictionary.flags >> 8) & 1;
+    bool bitmap_coding_context_retained = (symbol_dictionary.flags >> 9) & 1;
     u8 symbol_template = (symbol_dictionary.flags >> 10) & 3;
     u8 symbol_refinement_template = (symbol_dictionary.flags >> 12) & 1;
 
@@ -1747,10 +1757,23 @@ static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData
 
     Optional<JBIG2::GenericContexts> generic_contexts;
     Optional<JBIG2::RefinementContexts> refinement_contexts;
-    if (!uses_huffman_encoding)
-        generic_contexts = JBIG2::GenericContexts { inputs.symbol_template };
-    if (inputs.uses_refinement_or_aggregate_coding)
-        refinement_contexts = JBIG2::RefinementContexts(inputs.refinement_template);
+    if (bitmap_coding_context_used) {
+        if (!last_referred_to_symbol_dictionary_segment_id.has_value())
+            return Error::from_string_literal("JBIG2Writer: \"bitmap coding context used\" bit set, but no last-referred-to symbol dictionary segment present");
+        auto maybe_state = context.retained_bitmap_coding_contexts.get(last_referred_to_symbol_dictionary_segment_id.value());
+        if (!maybe_state.has_value())
+            return Error::from_string_literal("JBIG2Writer: \"bitmap coding context used\" bit set, but last-referred-to symbol dictionary segment did not set \"bitmap coding context retained\"");
+
+        // Consistency of uses_huffman_encoding, uses_refinement_or_aggregate_coding, symbol_template, refinement_template and adaptive template pixels is checked by the loader.
+        auto const& state = maybe_state.value();
+        generic_contexts = state.generic_contexts;
+        refinement_contexts = state.refinement_contexts;
+    } else {
+        if (!uses_huffman_encoding)
+            generic_contexts = JBIG2::GenericContexts { inputs.symbol_template };
+        if (inputs.uses_refinement_or_aggregate_coding)
+            refinement_contexts = JBIG2::RefinementContexts(inputs.refinement_template);
+    }
 
     Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> exported_symbols;
     ByteBuffer data = TRY(symbol_dictionary_encoding_procedure(inputs, generic_contexts, refinement_contexts, exported_symbols));
@@ -1774,6 +1797,14 @@ static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData
 
     if (context.symbols_by_segment_id.set(header.segment_number, move(exported_symbols)) != HashSetResult::InsertedNewEntry)
         return Error::from_string_literal("JBIG2Writer: Duplicate symbol segment ID");
+
+    if (bitmap_coding_context_retained) {
+        JBIG2EncodingContext::BitmapCodingContextState state {
+            move(generic_contexts),
+            move(refinement_contexts),
+        };
+        VERIFY(context.retained_bitmap_coding_contexts.set(header.segment_number, move(state)) == HashSetResult::InsertedNewEntry);
+    }
 
     return {};
 }
