@@ -386,6 +386,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-halftone-10bpp.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone-10bpp-mmr.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol-context-reuse.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-manyrefs.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-negative-sbdsoffset.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-refine.jbig2"sv),
