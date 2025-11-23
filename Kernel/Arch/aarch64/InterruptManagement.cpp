@@ -7,12 +7,11 @@
 
 #include <AK/NeverDestroyed.h>
 #include <Kernel/Arch/aarch64/InterruptManagement.h>
-#include <Kernel/Arch/aarch64/RPi/InterruptController.h>
 #include <Kernel/Library/Panic.h>
 
 namespace Kernel {
 
-static NeverDestroyed<Vector<DeviceTree::DeviceRecipe<NonnullLockRefPtr<IRQController>>>> s_recipes;
+static NeverDestroyed<Vector<NonnullLockRefPtr<IRQController>>> s_interrupt_controllers;
 static InterruptManagement* s_interrupt_management;
 
 bool InterruptManagement::initialized()
@@ -31,28 +30,17 @@ void InterruptManagement::initialize()
     VERIFY(!InterruptManagement::initialized());
     s_interrupt_management = new InterruptManagement;
 
-    the().find_controllers();
+    if (s_interrupt_controllers->is_empty())
+        PANIC("InterruptManagement: No supported interrupt controller was found");
 }
 
-void InterruptManagement::add_recipe(DeviceTree::DeviceRecipe<NonnullLockRefPtr<IRQController>> recipe)
+ErrorOr<void> InterruptManagement::register_interrupt_controller(NonnullLockRefPtr<IRQController> interrupt_controller)
 {
-    MUST(s_recipes->try_append(move(recipe)));
-}
+    // This function has to be called before InterruptManagement is initialized,
+    // as we do not support dynamic registration of interrupt controllers.
+    VERIFY(!initialized());
 
-void InterruptManagement::find_controllers()
-{
-    for (auto& recipe : *s_recipes) {
-        auto device_or_error = recipe.create_device();
-        if (device_or_error.is_error()) {
-            dmesgln("InterruptManagement: Failed to create interrupt controller for device \"{}\" with driver {}: {}", recipe.node_name, recipe.driver_name, device_or_error.release_error());
-            continue;
-        }
-
-        MUST(m_interrupt_controllers.try_append(device_or_error.release_value()));
-    }
-
-    if (m_interrupt_controllers.is_empty())
-        PANIC("InterruptManagement: No supported interrupt controller found in devicetree");
+    return s_interrupt_controllers->try_append(move(interrupt_controller));
 }
 
 u8 InterruptManagement::acquire_mapped_interrupt_number(u8 interrupt_number)
@@ -62,14 +50,14 @@ u8 InterruptManagement::acquire_mapped_interrupt_number(u8 interrupt_number)
 
 Vector<NonnullLockRefPtr<IRQController>> const& InterruptManagement::controllers()
 {
-    return m_interrupt_controllers;
+    return *s_interrupt_controllers;
 }
 
 NonnullLockRefPtr<IRQController> InterruptManagement::get_responsible_irq_controller(u8)
 {
     // TODO: Support more interrupt controllers
-    VERIFY(m_interrupt_controllers.size() == 1);
-    return m_interrupt_controllers[0];
+    VERIFY(s_interrupt_controllers->size() == 1);
+    return (*s_interrupt_controllers)[0];
 }
 
 void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInterruptHandler&)>)

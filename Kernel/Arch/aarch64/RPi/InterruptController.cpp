@@ -83,16 +83,10 @@ ErrorOr<void> BCM2836InterruptControllerDriver::probe(DeviceTree::Device const& 
 {
     auto physical_address = TRY(device.get_resource(0)).paddr;
 
-    DeviceTree::DeviceRecipe<NonnullLockRefPtr<IRQController>> recipe {
-        name(),
-        device.node_name(),
-        [physical_address]() -> ErrorOr<NonnullLockRefPtr<IRQController>> {
-            auto registers_mapping = TRY(Memory::map_typed_writable<InterruptControllerRegisters volatile>(physical_address));
-            return adopt_nonnull_lock_ref_or_enomem(new (nothrow) InterruptController(move(registers_mapping)));
-        },
-    };
+    auto registers_mapping = TRY(Memory::map_typed_writable<InterruptControllerRegisters volatile>(physical_address));
+    auto interrupt_controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) InterruptController(move(registers_mapping))));
 
-    InterruptManagement::add_recipe(move(recipe));
+    MUST(InterruptManagement::register_interrupt_controller(move(interrupt_controller)));
 
     return {};
 }
