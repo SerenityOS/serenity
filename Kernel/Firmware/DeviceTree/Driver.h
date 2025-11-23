@@ -19,6 +19,7 @@ class Driver {
 
 public:
     enum class ProbeStage {
+        InterruptController,
         Early,
         Regular,
     };
@@ -65,5 +66,6 @@ private:
 
 #define DEVICETREE_DRIVER(driver_name, compatibles_array) __DEVICETREE_DRIVER(driver_name, compatibles_array, Kernel::DeviceTree::Driver::ProbeStage::Regular)
 #define EARLY_DEVICETREE_DRIVER(driver_name, compatibles_array) __DEVICETREE_DRIVER(driver_name, compatibles_array, Kernel::DeviceTree::Driver::ProbeStage::Early)
+#define INTERRUPT_CONTROLLER_DEVICETREE_DRIVER(driver_name, compatibles_array) __DEVICETREE_DRIVER(driver_name, compatibles_array, Kernel::DeviceTree::Driver::ProbeStage::InterruptController)
 
 }
