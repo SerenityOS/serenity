@@ -949,6 +949,8 @@ TEST_CASE(replace)
         { "foo(.+)"sv, "\\2\\1"sv, "foobar"sv, "\\2bar"sv },
         { "foo(.+)"sv, "\\\\\\1"sv, "foobar"sv, "\\bar"sv },
         { "foo(.)"sv, "a\\1"sv, "fooxfooy"sv, "axay"sv, ECMAScriptFlags::Multiline },
+        { "(.)(.*)"sv, "\\&\\0\\1\\2&\\&"sv, "abc"sv, "&abcabcabc&"sv },
+        { ".*"sv, "&\\0"sv, "foo"sv, "foofoo"sv },
     };
 
     for (auto& test : tests) {
