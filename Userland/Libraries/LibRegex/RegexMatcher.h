@@ -130,19 +130,24 @@ public:
             start_offset = match.global_offset + match.view.length();
             GenericLexer lexer(replacement_pattern);
             while (!lexer.is_eof()) {
-                if (lexer.consume_specific('\\')) {
-                    if (lexer.consume_specific('\\')) {
-                        builder.append('\\');
-                        continue;
-                    }
-                    auto number = lexer.consume_while(isdigit);
-                    if (auto index = number.to_number<unsigned>(); index.has_value() && result.n_capture_groups >= index.value()) {
-                        builder.append(result.capture_group_matches[i][index.value() - 1].view.to_byte_string());
-                    } else {
-                        builder.appendff("\\{}", number);
-                    }
+                if (lexer.consume_specific('&')) {
+                    builder.append(result.matches[i].view.to_byte_string());
+                } else if (!lexer.consume_specific('\\')) {
+                    builder.append(lexer.consume_while([](auto ch) { return ch != '\\' && ch != '&'; }));
+                } else if (lexer.consume_specific('&')) {
+                    builder.append('&');
+                } else if (lexer.consume_specific('\\')) {
+                    builder.append('\\');
                 } else {
-                    builder.append(lexer.consume_while([](auto ch) { return ch != '\\'; }));
+                    auto number = lexer.consume_while(isdigit);
+                    auto index = number.to_number<unsigned>();
+                    if (!index.has_value() || result.n_capture_groups < index.value()) {
+                        builder.appendff("\\{}", number);
+                    } else if (index.value() == 0) {
+                        builder.append(result.matches[i].view.to_byte_string());
+                    } else {
+                        builder.append(result.capture_group_matches[i][index.value() - 1].view.to_byte_string());
+                    }
                 }
             }
         }
