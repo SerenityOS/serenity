@@ -616,8 +616,7 @@ static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParam
     //  • If SBHUFF is 1, decode a value by reading ceil(log2(SBSTRIPS)) bits directly from the bitstream.
     //  • If SBHUFF is 0, decode a value using the IAIT integer arithmetic decoding procedure (see Annex A)."
     auto write_instance_t = [&](i32 value) -> ErrorOr<void> {
-        // FIXME: The spec wants this check for all valid strip sizes (1, 2, 4, 8).
-        if (inputs.size_of_symbol_instance_strips == 1 && value >= static_cast<i32>(inputs.size_of_symbol_instance_strips))
+        if (value < 0 || value >= static_cast<i32>(inputs.size_of_symbol_instance_strips))
             return Error::from_string_literal("JBIG2Writer: Symbol instance T coordinate out of range");
         if (inputs.size_of_symbol_instance_strips == 1)
             return {};
