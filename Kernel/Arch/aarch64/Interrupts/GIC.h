@@ -8,6 +8,7 @@
 
 #include <Kernel/Arch/aarch64/IRQController.h>
 #include <Kernel/Firmware/DeviceTree/Device.h>
+#include <Kernel/Firmware/DeviceTree/InterruptController.h>
 #include <Kernel/Memory/TypedMapping.h>
 
 // Only GICv2 is currently supported.
@@ -16,7 +17,9 @@
 
 namespace Kernel {
 
-class GIC final : public IRQController {
+class GIC final
+    : public IRQController
+    , public DeviceTree::InterruptController {
 public:
     static ErrorOr<NonnullLockRefPtr<GIC>> try_to_initialize(DeviceTree::Device::Resource distributor_registers_resource, DeviceTree::Device::Resource cpu_interface_registers_registers_resource);
 
@@ -28,6 +31,9 @@ public:
     virtual Optional<size_t> pending_interrupt() const override;
 
     virtual StringView model() const override { return "GIC"sv; }
+
+    // ^DeviceTree::InterruptController
+    virtual ErrorOr<size_t> translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes) const override;
 
     struct DistributorRegisters;
     struct CPUInterfaceRegisters;
