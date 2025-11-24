@@ -109,10 +109,10 @@
                     "strip_size": 2,
                     "reference_corner": "top_left"
                 },
-                "initial_strip_t": -2,
+                "initial_strip_t": -4,
                 "strips": [
                     {
-                        "strip_t": 4,
+                        "strip_t": -4,
                         "instances": [
                             {
                                 "instance_s": -5,
@@ -148,10 +148,10 @@
                     "strip_size": 2,
                     "reference_corner": "top_left"
                 },
-                "initial_strip_t": -2,
+                "initial_strip_t": -4,
                 "strips": [
                     {
-                        "strip_t": 4,
+                        "strip_t": -4,
                         "instances": [
                             {
                                 "instance_s": -5,
@@ -188,10 +188,10 @@
                     "strip_size": 2,
                     "reference_corner": "top_left"
                 },
-                "initial_strip_t": -2,
+                "initial_strip_t": -4,
                 "strips": [
                     {
-                        "strip_t": 4,
+                        "strip_t": -4,
                         "instances": [
                             {
                                 "instance_s": -4,
