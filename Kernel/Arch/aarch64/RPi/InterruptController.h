@@ -9,6 +9,7 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/aarch64/IRQController.h>
+#include <Kernel/Firmware/DeviceTree/InterruptController.h>
 #include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel::RPi {
@@ -18,7 +19,9 @@ struct InterruptControllerRegisters;
 // This class implements the simple Interrupt Controller found in the BCM2837. (RPi3)
 // A description of this device can be found at chapter 7 (Interrupts) of the manual:
 // https://github.com/raspberrypi/documentation/files/1888662/BCM2837-ARM-Peripherals.-.Revised.-.V2-1.pdf (RPi3)
-class InterruptController : public IRQController {
+class InterruptController
+    : public IRQController
+    , public DeviceTree::InterruptController {
 public:
     InterruptController(Memory::TypedMapping<InterruptControllerRegisters volatile>);
 
@@ -34,6 +37,9 @@ private:
     {
         return "Raspberry Pi Interrupt Controller"sv;
     }
+
+    // ^DeviceTree::InterruptController
+    virtual ErrorOr<size_t> translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes) const override;
 
     Memory::TypedMapping<InterruptControllerRegisters volatile> m_registers;
 };
