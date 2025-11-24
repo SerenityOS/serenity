@@ -190,7 +190,6 @@ def main():
 
     p = 4 if global_segments else 3
 
-    print(f'{len(pages)} pages')
     page_refs = b' '.join([b'%d 0 R' % (p + 3 * i) for i in range(len(pages))])
 
     global_entry = b''
@@ -235,7 +234,6 @@ def main():
     for page in pages:
         segment_headers = pages[page]
         width, height = get_dimensions(segment_headers)
-        print(f'dims {width}x{height}')
 
         segment_headers = [h for h in segment_headers if h.type != EndOfPage]
         image_data = reserialize(segment_headers)
