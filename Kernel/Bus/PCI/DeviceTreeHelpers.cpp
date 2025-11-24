@@ -7,6 +7,7 @@
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/HostController.h>
 #include <Kernel/Bus/PCI/DeviceTreeHelpers.h>
+#include <Kernel/Firmware/DeviceTree/Management.h>
 #include <Kernel/Library/StdLib.h>
 #include <LibDeviceTree/DeviceTree.h>
 
@@ -208,11 +209,6 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
             if (interrupt_controller == nullptr)
                 return EINVAL;
 
-            if (!interrupt_controller->has_property("interrupt-controller"sv)) {
-                dmesgln("PCI: Implement support for nested interrupt nexuses");
-                TODO();
-            }
-
             // The devicetree spec says that we should assume `#address-cells = <2>` if the property isn't present.
             // Linux however defaults to `#address-cells = <0>` for interrupt parent nodes.
             // Some devicetrees seem to expect this Linux behavior, so we have to follow it.
@@ -224,26 +220,16 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
             TRY(map_stream.discard(sizeof(u32) * interrupt_controller_address_cells));
 
             auto interrupt_cells = interrupt_controller->get_property("#interrupt-cells"sv)->as<u32>();
-#if ARCH(RISCV64)
-            if (interrupt_cells != 1 && interrupt_cells != 2)
-                return ENOTSUP;
 
-            u64 interrupt = TRY(map_stream.read_cells(interrupt_cells));
-#elif ARCH(AARCH64)
-            // FIXME: Don't depend on a specific interrupt descriptor format.
-            auto const& domain_root = *TRY(interrupt_controller->interrupt_domain_root(device_tree));
-            if (!domain_root.is_compatible_with("arm,gic-400"sv) && !domain_root.is_compatible_with("arm,cortex-a15-gic"sv))
-                return ENOTSUP;
+            auto interrupt_specifier = TRY(map_stream.read_in_place<u8 const>(interrupt_cells * sizeof(u32)));
+            auto const* domain_root = TRY(interrupt_controller->interrupt_domain_root(device_tree));
 
-            if (interrupt_cells != 3)
+            if (!domain_root->has_property("interrupt-controller"sv)) {
+                dmesgln("PCI: Implement support for nested interrupt nexuses");
                 return ENOTSUP;
+            }
 
-            TRY(map_stream.discard(sizeof(u32))); // This is the IRQ type.
-            u64 interrupt = TRY(map_stream.read_cell()) + 32;
-            TRY(map_stream.discard(sizeof(u32))); // This is the trigger type.
-#else
-#    error Unknown architecture
-#endif
+            auto interrupt_number = TRY(DeviceTree::Management::the().resolve_interrupt_number({ domain_root, interrupt_specifier }));
 
             pin &= pin_mask;
             pci_address &= pci_address_mask;
@@ -254,7 +240,7 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
                     .device = pci_address.device,
                     .bus = pci_address.bus,
                 },
-                interrupt);
+                interrupt_number);
         }
     }
 

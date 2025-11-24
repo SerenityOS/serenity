@@ -44,21 +44,7 @@ DEVICETREE_DRIVER(DeviceTreexHCIControllerDriver, compatibles_array);
 ErrorOr<void> DeviceTreexHCIControllerDriver::probe(DeviceTree::Device const& device, StringView) const
 {
     auto registers_resource = TRY(device.get_resource(0));
-    auto interrupt = TRY(device.node().interrupts(DeviceTree::get()))[0];
-
-    // FIXME: Don't depend on a specific interrupt descriptor format and implement proper devicetree interrupt mapping/translation.
-    if (!interrupt.domain_root->is_compatible_with("arm,gic-400"sv) && !interrupt.domain_root->is_compatible_with("arm,cortex-a15-gic"sv))
-        return ENOTSUP;
-    if (interrupt.interrupt_specifier.size() != 3 * sizeof(BigEndian<u32>))
-        return ENOTSUP;
-
-    // The interrupt type is in the first cell. It should be 0 for SPIs.
-    if (reinterpret_cast<BigEndian<u32> const*>(interrupt.interrupt_specifier.data())[0] != 0)
-        return ENOTSUP;
-
-    // The interrupt number is in the second cell.
-    // GIC interrupts 32-1019 are for SPIs, so add 32 to get the GIC interrupt ID.
-    auto interrupt_number = (reinterpret_cast<BigEndian<u32> const*>(interrupt.interrupt_specifier.data())[1]) + 32;
+    auto interrupt_number = TRY(device.get_interrupt_number(0));
 
     auto controller = TRY(DeviceTreexHCIController::try_to_initialize(registers_resource, device.node_name(), interrupt_number));
     USB::USBManagement::the().add_controller(controller);
