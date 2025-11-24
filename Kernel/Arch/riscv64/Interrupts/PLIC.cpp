@@ -115,13 +115,12 @@ ErrorOr<void> PLICDriver::probe(DeviceTree::Device const& device, StringView) co
         if (!cpu->is_compatible_with("riscv"sv))
             return EINVAL;
 
-        u64 interrupt_specifier = 0;
-        if (interrupt.interrupt_specifier.size() == sizeof(u32))
-            interrupt_specifier = *reinterpret_cast<BigEndian<u32> const*>(interrupt.interrupt_specifier.data());
-        else if (interrupt.interrupt_specifier.size() == sizeof(u64))
-            interrupt_specifier = *reinterpret_cast<BigEndian<u64> const*>(interrupt.interrupt_specifier.data());
-        else
+        // https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/riscv,cpu-intc.yaml
+        // #interrupt-cells: "const: 1"
+        if (interrupt.interrupt_specifier.size() != sizeof(u32))
             return EINVAL;
+
+        auto interrupt_specifier = *reinterpret_cast<BigEndian<u32> const*>(interrupt.interrupt_specifier.data());
 
         // https://www.kernel.org/doc/Documentation/devicetree/bindings/riscv/cpus.yaml
         // reg: "The hart ID of this CPU node."
