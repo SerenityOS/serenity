@@ -1,0 +1,209 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+
+        {
+            "segment_number": 1,
+            "type": "symbol_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "height_classes": [
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 135,
+                                        "y": 100,
+                                        "width": 100,
+                                        "height": 25
+                                    }
+                                }
+                            },
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 134,
+                                        "y": 125,
+                                        "width": 100,
+                                        "height": 25
+                                    }
+                                }
+                            },
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 133,
+                                        "y": 150,
+                                        "width": 100,
+                                        "height": 25
+                                    }
+                                }
+                            },
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 134,
+                                        "y": 175,
+                                        "width": 100,
+                                        "height": 25
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 50,
+                                        "y": 108,
+                                        "width": 30,
+                                        "height": 30
+                                    }
+                                }
+                            },
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 60,
+                                        "y": 265,
+                                        "width": 30,
+                                        "height": 30
+                                    }
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 232,
+                                        "y": 70,
+                                        "width": 120,
+                                        "height": 250
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 2,
+            "type": "lossless_text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "width": 399,
+                    "height": 400
+                },
+                "flags": {
+                    "strip_size": 4,
+                    "reference_corner": "bottom_left",
+                    "is_transposed": true,
+                    "delta_s_offset": 3
+                },
+
+                "initial_strip_t": -4,
+                "strips": [
+                    {
+                        "strip_t": 48,
+                        "instances": [
+                            {
+                                "instance_s": 108,
+                                "instance_t": 50,
+                                "symbol_id": 4
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 60,
+                        "instances": [
+                            {
+                                "instance_s": 265,
+                                "instance_t": 60,
+                                "symbol_id": 5
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 132,
+                        "instances": [
+                            {
+                                "instance_s": 100,
+                                "instance_t": 135,
+                                "symbol_id": 0
+                            },
+                            {
+                                "instance_s": 125,
+                                "instance_t": 134,
+                                "symbol_id": 1
+                            },
+                            {
+                                "instance_s": 150,
+                                "instance_t": 133,
+                                "symbol_id": 2
+                            },
+                            {
+                                "instance_s": 175,
+                                "instance_t": 134,
+                                "symbol_id": 3
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 232,
+                        "instances": [
+                            {
+                                "instance_s": 70,
+                                "instance_t": 232,
+                                "symbol_id": 6
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 3,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}
