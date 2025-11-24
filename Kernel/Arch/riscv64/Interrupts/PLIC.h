@@ -7,11 +7,14 @@
 #pragma once
 
 #include <Kernel/Arch/riscv64/IRQController.h>
+#include <Kernel/Firmware/DeviceTree/InterruptController.h>
 #include <Kernel/Memory/TypedMapping.h>
 
 namespace Kernel {
 
-class PLIC final : public IRQController {
+class PLIC final
+    : public IRQController
+    , public DeviceTree::InterruptController {
 public:
     struct RegisterMap {
         u32 interrupt_priority[1024];
@@ -37,6 +40,9 @@ public:
     virtual u8 pending_interrupt() const override;
 
     virtual StringView model() const override { return "PLIC"sv; }
+
+    // ^DeviceTree::InterruptController
+    virtual ErrorOr<size_t> translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes) const override;
 
 private:
     void initialize();
