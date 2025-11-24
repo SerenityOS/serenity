@@ -43,6 +43,9 @@ public:
     };
     ErrorOr<Resource> get_resource(size_t index) const;
 
+    // FIXME: Add support for the "interrupt-names" property to resolve interrupts by name.
+    ErrorOr<size_t> get_interrupt_number(size_t index) const;
+
 private:
     // This needs to be a pointer for the class to be movable.
     ::DeviceTree::Node const* m_node;
