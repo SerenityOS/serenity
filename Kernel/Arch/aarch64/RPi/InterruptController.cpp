@@ -72,6 +72,48 @@ Optional<size_t> InterruptController::pending_interrupt() const
     return irq_number_plus_one - 1;
 }
 
+ErrorOr<size_t> InterruptController::translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes interrupt_specifier) const
+{
+    // https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm2835-armctrl-ic.txt
+
+    if (interrupt_specifier.size() != 2 * sizeof(u32))
+        return EINVAL;
+
+    FixedMemoryStream stream { interrupt_specifier };
+
+    enum class InterruptBank : u32 {
+        BasicPendingRegister = 0,
+        GPUPendingRegister1 = 1,
+        GPUPendingRegister2 = 2,
+    };
+
+    auto interrupt_bank = MUST(stream.read_value<BigEndian<InterruptBank>>());
+    auto interrupt_number = MUST(stream.read_value<BigEndian<u32>>());
+
+    if (interrupt_bank == InterruptBank::BasicPendingRegister) {
+        dbgln("FIXME: Support interrupts in the BCM2835 basic pending register");
+        return ENOTSUP;
+    }
+
+    if (interrupt_bank == InterruptBank::GPUPendingRegister1) {
+        // We map interrupts in GPU pending register 1 to 0-31.
+        if (interrupt_number > 31)
+            return ERANGE;
+
+        return interrupt_number;
+    }
+
+    if (interrupt_bank == InterruptBank::GPUPendingRegister2) {
+        // We map interrupts in GPU pending register 2 to 31-63.
+        if (interrupt_number > 31)
+            return ERANGE;
+
+        return interrupt_number + 32;
+    }
+
+    return EINVAL;
+}
+
 static constinit Array const compatibles_array = {
     "brcm,bcm2836-armctrl-ic"sv,
 };
@@ -86,6 +128,7 @@ ErrorOr<void> BCM2836InterruptControllerDriver::probe(DeviceTree::Device const& 
     auto registers_mapping = TRY(Memory::map_typed_writable<InterruptControllerRegisters volatile>(physical_address));
     auto interrupt_controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) InterruptController(move(registers_mapping))));
 
+    MUST(DeviceTree::Management::register_interrupt_controller(device, *interrupt_controller));
     MUST(InterruptManagement::register_interrupt_controller(move(interrupt_controller)));
 
     return {};
