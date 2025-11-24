@@ -8,6 +8,7 @@
 
 #include <AK/HashMap.h>
 #include <Kernel/Firmware/DeviceTree/Driver.h>
+#include <Kernel/Firmware/DeviceTree/InterruptController.h>
 #include <Libraries/LibDeviceTree/DeviceTree.h>
 
 namespace Kernel::DeviceTree {
@@ -18,6 +19,9 @@ public:
     static Management& the();
 
     static ErrorOr<void> register_driver(NonnullOwnPtr<DeviceTree::Driver>&&);
+    static ErrorOr<void> register_interrupt_controller(DeviceTree::Device const&, DeviceTree::InterruptController const&);
+
+    ErrorOr<size_t> resolve_interrupt_number(::DeviceTree::Interrupt) const;
 
     ErrorOr<void> scan_node_for_devices(::DeviceTree::Node const& node);
 
@@ -30,6 +34,8 @@ private:
     HashMap<StringView, Driver*> m_driver_by_compatible_string;
 
     HashMap<::DeviceTree::Node const*, Device> m_devices;
+
+    HashMap<::DeviceTree::Node const*, DeviceTree::InterruptController const*> m_interrupt_controllers;
 };
 
 }
