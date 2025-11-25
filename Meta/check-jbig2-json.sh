@@ -2,6 +2,19 @@
 
 set -eo pipefail
 
+jbig_files=(Tests/LibGfx/test-inputs/jbig2/*.jbig2)
+json_files=(Tests/LibGfx/test-inputs/jbig2/json/*.json)
+
+if [ "${#jbig_files[@]}" -gt "${#json_files[@]}" ]; then
+    echo "More jbig2 than json files. Don't add non-json-based jbig2 files."
+    exit 1
+fi
+
+if [ "${#jbig_files[@]}" -lt "${#json_files[@]}" ]; then
+    echo "More json than jbig2 files. Did you forget to 'git add'?"
+    exit 1
+fi
+
 trap 'git diff --exit-code' EXIT
 
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
@@ -20,7 +33,7 @@ if [ -z "${JBIG2_FROM_JSON_BINARY:-}" ] ; then
     JBIG2_FROM_JSON_BINARY="Build/lagom/bin/jbig2-from-json"
 fi
 
-for f in Tests/LibGfx/test-inputs/jbig2/json/*.json; do
+for f in "${json_files[@]}"; do
   f_jb2=Tests/LibGfx/test-inputs/jbig2/$(basename "${f%.json}.jbig2")
   "$JBIG2_FROM_JSON_BINARY" -o "$f_jb2" "$f"
 done
