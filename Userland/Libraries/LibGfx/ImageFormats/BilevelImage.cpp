@@ -246,6 +246,24 @@ static constexpr auto bayer_matrix_8x8 = make_bayer_matrix<3>();
 
 ErrorOr<NonnullRefPtr<BilevelImage>> BilevelImage::create_from_bitmap(Gfx::Bitmap const& bitmap, DitheringAlgorithm dithering_algorithm)
 {
+    bool input_is_bilevel = true;
+    for (auto pixel : bitmap) {
+        if (pixel != 0xFF000000 && pixel != 0xFFFFFFFF) {
+            input_is_bilevel = false;
+            break;
+        }
+    }
+    if (input_is_bilevel) {
+        auto bilevel_image = TRY(BilevelImage::create(bitmap.width(), bitmap.height()));
+        for (int y = 0; y < bitmap.height(); ++y) {
+            for (int x = 0; x < bitmap.width(); ++x) {
+                auto color = bitmap.get_pixel(x, y);
+                bilevel_image->set_bit(x, y, color == Color::Black ? 1 : 0);
+            }
+        }
+        return bilevel_image;
+    }
+
     auto gray_bitmap = TRY(ByteBuffer::create_uninitialized(bitmap.width() * bitmap.height()));
     for (int y = 0, i = 0; y < bitmap.height(); ++y) {
         for (int x = 0; x < bitmap.width(); ++x, ++i) {
