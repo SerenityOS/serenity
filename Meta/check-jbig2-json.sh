@@ -33,10 +33,7 @@ if [ -z "${JBIG2_FROM_JSON_BINARY:-}" ] ; then
     JBIG2_FROM_JSON_BINARY="Build/lagom/bin/jbig2-from-json"
 fi
 
-for f in "${json_files[@]}"; do
-  f_jb2=Tests/LibGfx/test-inputs/jbig2/$(basename "${f%.json}.jbig2")
-  "$JBIG2_FROM_JSON_BINARY" -o "$f_jb2" "$f"
-done
+Tests/LibGfx/test-inputs/jbig2/json/compile.sh "$JBIG2_FROM_JSON_BINARY"
 
 # annex-h.jbig2 is fixed data from Annex H of the JBIG2 spec.
 # It should never change, if it does, that's a bug.
