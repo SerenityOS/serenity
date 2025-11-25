@@ -77,3 +77,10 @@ TEST_CASE(complex)
 {
     run_sed({ "h; x; s/./*/gp; x; h; p; x; s/./*/gp", "-n" }, "hello serenity"sv, "**************\nhello serenity\n**************\n"sv);
 }
+
+TEST_CASE(strict_posix)
+{
+    run_sed({ "--posix", "s/(.)/b/" }, "foo\n"sv, "foo\n"sv);
+    run_sed({ "--posix", "s/\\(.\\)/b/" }, "foo\n"sv, "boo\n"sv);
+    run_sed({ "--posix", "s/\\(.\\)\\(.*\\)/\\1\\2\\1/" }, "foo\n"sv, "foof\n"sv);
+}
