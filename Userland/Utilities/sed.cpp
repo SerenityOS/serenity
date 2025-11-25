@@ -242,13 +242,13 @@ struct RArguments : FilepathArgument<RArguments> {
 };
 
 struct SArguments {
-    Regex<PosixExtended> regex;
+    Variant<Regex<PosixExtended>, Regex<PosixBasic>> regex;
     StringView replacement;
     PosixOptions options;
     bool print;
     Optional<StringView> output_filepath;
 
-    static SedErrorOr<SArguments> parse(GenericLexer& lexer)
+    static SedErrorOr<SArguments> parse(GenericLexer& lexer, bool strict_posix)
     {
         auto generic_error_message = "Incomplete substitution command"sv;
 
@@ -307,7 +307,11 @@ struct SArguments {
             }
         }
 
-        return SArguments { Regex<PosixExtended> { pattern }, replacement, options, print, output_filepath };
+        if (strict_posix) {
+            return SArguments { Regex<PosixBasic> { pattern }, replacement, options, print, output_filepath };
+        } else {
+            return SArguments { Regex<PosixExtended> { pattern }, replacement, options, print, output_filepath };
+        }
     }
 
 private:
@@ -503,7 +507,7 @@ static SedErrorOr<void> verify_number_of_addresses(Command const& command)
     return {};
 }
 
-static SedErrorOr<Command> parse_command(GenericLexer& lexer)
+static SedErrorOr<Command> parse_command(GenericLexer& lexer, bool strict_posix)
 {
     lexer.consume_while(is_ascii_blank);
 
@@ -551,7 +555,7 @@ static SedErrorOr<Command> parse_command(GenericLexer& lexer)
         command.arguments = TRY(RArguments::parse(lexer));
         break;
     case 's':
-        command.arguments = TRY(SArguments::parse(lexer));
+        command.arguments = TRY(SArguments::parse(lexer, strict_posix));
         break;
     case 't':
         command.arguments = TRY(TArguments::parse(lexer));
@@ -586,7 +590,7 @@ static SedErrorOr<Command> parse_command(GenericLexer& lexer)
 
 class Script {
 public:
-    [[nodiscard]] bool add_script_part(StringView data)
+    [[nodiscard]] bool add_script_part(StringView data, bool strict_posix)
     {
         auto last_pos = m_script.length();
         m_script.append(data);
@@ -594,7 +598,7 @@ public:
         while (!lexer.is_eof()) {
             if (lexer.is_eof())
                 break;
-            auto maybe_command = parse_command(lexer);
+            auto maybe_command = parse_command(lexer, strict_posix);
             if (maybe_command.is_error()) {
                 warnln("Problem while parsing script part: {}", maybe_command.release_error().message());
                 return false;
@@ -866,7 +870,7 @@ static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& patte
     case 's': {
         auto pattern_space_sv = pattern_space.string_view();
         auto const& s_args = command.arguments->get<SArguments>();
-        auto result = s_args.regex.replace(pattern_space_sv, s_args.replacement, s_args.options);
+        auto result = s_args.regex.visit([&](auto& re) { return re.replace(pattern_space_sv, s_args.replacement, s_args.options); });
         auto replacement_made = result != pattern_space_sv;
         pattern_space.clear();
         pattern_space.append(result);
@@ -1001,9 +1005,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     bool suppress_default_output = false;
     bool edit_in_place = false;
+    bool strict_posix = false;
     Core::ArgsParser arg_parser;
     Script script;
     Vector<StringView> pos_args;
+    Vector<StringView> script_parts;
     arg_parser.set_general_help("The Stream EDitor");
     arg_parser.add_option(suppress_default_output, "suppress default output", nullptr, 'n');
     arg_parser.add_option(Core::ArgsParser::Option {
@@ -1011,7 +1017,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         .help_string = "A file containing script commands",
         .short_name = 'f',
         .value_name = "script-file",
-        .accept_value = [&script](StringView script_file) {
+        .accept_value = [&script_parts](StringView script_file) {
             auto maybe_file = Core::File::open(script_file, Core::File::OpenMode::Read);
             if (maybe_file.is_error()) {
                 warnln("Failed to open script file: {}", maybe_file.release_error());
@@ -1022,7 +1028,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
                 warnln("Failed to read contents of script file {}: {}", script_file, maybe_file_contents.release_error());
                 return false;
             }
-            return script.add_script_part(StringView { maybe_file_contents.release_value().bytes() });
+            script_parts.append(StringView { maybe_file_contents.release_value().bytes() });
+            return true;
         },
     });
     arg_parser.add_option(Core::ArgsParser::Option {
@@ -1030,13 +1037,23 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         .help_string = "A script of commands",
         .short_name = 'e',
         .value_name = "script",
-        .accept_value = [&script](StringView script_argument) {
-            return script.add_script_part(script_argument);
+        .accept_value = [&script_parts](StringView script_argument) {
+            script_parts.append(script_argument);
+            return true;
         },
     });
+    arg_parser.add_ignored("regexp-extended", 'E');
+    arg_parser.add_option(strict_posix, "Use POSIX regular expressions", "posix", 'p');
     arg_parser.add_option(edit_in_place, "Edit file in place, implies -n", "in-place", 'i');
     arg_parser.add_positional_argument(pos_args, "script and/or file", "...", Core::ArgsParser::Required::No);
     arg_parser.parse(args);
+
+    for (StringView part : script_parts) {
+        if (!script.add_script_part(part, strict_posix)) {
+            // Warning has already been emitted so just exit.
+            return 1;
+        }
+    }
 
     // When editing in-place, there's also no default output.
     suppress_default_output |= edit_in_place;
@@ -1050,7 +1067,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             warnln("No script specified, aborting");
             return 1;
         }
-        if (!script.add_script_part(pos_args[0])) {
+        if (!script.add_script_part(pos_args[0], strict_posix)) {
             return 1;
         }
         pos_args.remove(0);
