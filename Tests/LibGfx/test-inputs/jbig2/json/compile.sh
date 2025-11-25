@@ -5,7 +5,7 @@ set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$DIR/../../../../.."
 LAGOM_BUILD="$ROOT/Build/lagom"
-JBIG2_FROM_JSON="$LAGOM_BUILD/bin/jbig2-from-json"
+JBIG2_FROM_JSON=${1:-"$LAGOM_BUILD/bin/jbig2-from-json"}
 
 export DIR
 export JBIG2_FROM_JSON
