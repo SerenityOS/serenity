@@ -208,20 +208,22 @@ static ErrorOr<void> setup_tty()
 {
     g_old_stdin_status_flags = TRY(Core::System::fcntl(STDIN_FILENO, F_GETFL));
     TRY(Core::System::fcntl(STDIN_FILENO, F_SETFL, g_old_stdin_status_flags | O_NONBLOCK));
-    g_previous_tty_settings = TRY(Core::System::tcgetattr(STDOUT_FILENO));
+    g_previous_tty_settings = TRY(Core::System::tcgetattr(STDIN_FILENO));
 
     struct termios raw = g_previous_tty_settings;
     raw.c_lflag &= ~(ECHO | ICANON);
+    raw.c_cc[VMIN] = 0;
+    raw.c_cc[VTIME] = 0;
 
     // Disable echo and line buffering
-    TRY(Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, raw));
+    TRY(Core::System::tcsetattr(STDIN_FILENO, TCSAFLUSH, raw));
 
     return {};
 }
 
 static void restore_tty()
 {
-    auto maybe_error = Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, g_previous_tty_settings);
+    auto maybe_error = Core::System::tcsetattr(STDIN_FILENO, TCSAFLUSH, g_previous_tty_settings);
     if (maybe_error.is_error())
         warnln("Failed to reset original terminal state: {}", strerror(maybe_error.error().code()));
 
