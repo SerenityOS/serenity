@@ -18,39 +18,30 @@ PREFIX="$DIR/Local/jakt"
 
 VALID_TOOLCHAINS=()
 
-declare -A CXX_GNU=()
-declare -A CXX_CLANG=()
-declare -A RANLIB_GNU=()
-declare -A RANLIB_CLANG=()
-declare -A BUILD_GNU=()
-declare -A BUILD_CLANG=()
-: "${BUILD_GNU[@]}" "${BUILD_CLANG[@]}" # make shellcheck understand that these might be used.
-
 for ARCH in "${ARCHES[@]}"; do
   TARGET="$ARCH-pc-serenity"
 
-  BUILD_GNU["$ARCH"]="$DIR/../Build/$ARCH"
-  BUILD_CLANG["$ARCH"]="$DIR/../Build/${ARCH}clang"
+  eval "BUILD_GNU_${ARCH}=\"$DIR/../Build/$ARCH\""
+  eval "BUILD_CLANG_${ARCH}=\"$DIR/../Build/${ARCH}clang\""
 
-  CXX_GNU["$ARCH"]="$DIR/Local/$ARCH/bin/$TARGET-g++"
-  CXX_CLANG["$ARCH"]="$DIR/Local/clang/bin/$TARGET-clang++"
+  eval "CXX_GNU_${ARCH}=\"$DIR/Local/$ARCH/bin/$TARGET-g++\""
+  eval "CXX_CLANG_${ARCH}=\"$DIR/Local/clang/bin/$TARGET-clang++\""
 
-  # Indirectly accessed below.
-  # shellcheck disable=SC2034
-  RANLIB_GNU["$ARCH"]="$DIR/Local/$ARCH/bin/$TARGET-ranlib"
-  # shellcheck disable=SC2034
-  RANLIB_CLANG["$ARCH"]="$DIR/Local/clang/bin/llvm-ranlib"
+  eval "RANLIB_GNU_${ARCH}=\"$DIR/Local/$ARCH/bin/$TARGET-ranlib\""
+  eval "RANLIB_CLANG_${ARCH}=\"$DIR/Local/clang/bin/llvm-ranlib\""
 
-  if [ -x "${CXX_GNU["$ARCH"]}" ]; then
+  VAR_CXX_GNU="CXX_GNU_${ARCH}"
+  if [ -x "${!VAR_CXX_GNU}" ]; then
       VALID_TOOLCHAINS+=("GNU;${ARCH}")
   fi
 
-  if [ -x "${CXX_CLANG[${ARCH}]}" ]; then
+  VAR_CXX_CLANG="CXX_CLANG_${ARCH}"
+  if [ -x "${!VAR_CXX_CLANG}" ]; then
       VALID_TOOLCHAINS+=("CLANG;${ARCH}")
   fi
 done
 
-if [ "$FINAL_TARGET" = serenity ] && [ "${#VALID_TOOLCHAINS}" -eq 0 ]; then
+if [ "$FINAL_TARGET" = serenity ] && [ "${#VALID_TOOLCHAINS[@]}" -eq 0 ]; then
     die "Need to build at least one C++ toolchain (either GNU or Clang) before BuildJakt.sh can succeed"
 fi
 
@@ -62,6 +53,8 @@ NPROC=$(get_number_of_processing_units)
 if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
     REALPATH="readlink -f"
     export CXX=eg++
+elif [ "$SYSTEM_NAME" = "Darwin" ]; then
+    REALPATH="perl -e 'use Cwd \"abs_path\"; print abs_path(shift)'"
 fi
 
 if command -v ginstall &>/dev/null; then
@@ -198,9 +191,9 @@ build_for() {
     TARGET="$ARCH-pc-serenity"
     JAKT_TARGET="$TARGET-unknown"
 
-    current_build="BUILD_${TOOLCHAIN}[${ARCH}]"
-    current_cxx="CXX_${TOOLCHAIN}[${ARCH}]"
-    current_ranlib="RANLIB_${TOOLCHAIN}[${ARCH}]"
+    current_build="BUILD_${TOOLCHAIN}_${ARCH}"
+    current_cxx="CXX_${TOOLCHAIN}_${ARCH}"
+    current_ranlib="RANLIB_${TOOLCHAIN}_${ARCH}"
 
     BUILD="${!current_build}"
     TARGET_CXX="${!current_cxx}"
@@ -214,7 +207,7 @@ build_for() {
     if [ ! -d "$BUILD" ]; then
         mkdir -p "$BUILD"
     fi
-    BUILD=$($REALPATH "$BUILD")
+    BUILD=$(eval "$REALPATH" "$BUILD")
     echo "XXX building jakt support libs in $BUILD with $TARGET_CXX"
 
     SYSROOT="$BUILD/Root"
@@ -227,7 +220,7 @@ build_for() {
         mkdir -p "$BUILD"
         pushd "$BUILD"
             mkdir -p Root/usr/include/
-            SRC_ROOT=$($REALPATH "$DIR"/..)
+            SRC_ROOT=$(eval "$REALPATH" "$DIR"/..)
             FILES=$(find \
                 "$SRC_ROOT"/AK \
                 "$SRC_ROOT"/Kernel/API \
