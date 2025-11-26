@@ -70,10 +70,37 @@ void* memset(void* dest_ptr, int c, size_t n)
         : "a"(c)
         : "memory");
 #else
-    u8* pd = (u8*)dest_ptr;
-    for (; n--;)
-        *pd++ = c;
+    auto* dest = static_cast<u8*>(dest_ptr);
+
+    auto is_word_aligned = [](auto ptr) {
+        return reinterpret_cast<FlatPtr>(ptr) % sizeof(FlatPtr) == 0;
+    };
+
+    // Set bytes until destination is word-aligned.
+    while (n > 0 && !is_word_aligned(dest)) {
+        *dest++ = static_cast<u8>(c);
+        n--;
+    }
+
+    // Set in word-sized chunks.
+    FlatPtr exploded = explode_byte(c);
+
+    auto* dest_word = reinterpret_cast<FlatPtr*>(dest);
+
+#    pragma GCC unroll 8
+    while (n >= sizeof(FlatPtr)) {
+        *dest_word++ = exploded;
+        n -= sizeof(FlatPtr);
+    }
+    dest = reinterpret_cast<u8*>(dest_word);
+
+    // Set remaining tail bytes.
+    while (n > 0) {
+        *dest++ = static_cast<u8>(c);
+        n--;
+    }
 #endif
+
     return dest_ptr;
 }
 
