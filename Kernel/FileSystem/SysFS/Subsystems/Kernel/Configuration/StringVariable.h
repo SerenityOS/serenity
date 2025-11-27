@@ -31,7 +31,7 @@ protected:
     {
     }
     virtual ErrorOr<NonnullOwnPtr<KString>> value() const = 0;
-    virtual void set_value(NonnullOwnPtr<KString> new_value) = 0;
+    virtual ErrorOr<void> set_value(NonnullOwnPtr<KString> new_value) = 0;
 
 private:
     // ^SysFSGlobalInformation
