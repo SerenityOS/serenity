@@ -18,6 +18,7 @@ struct Options {
     StringView out_path;
     bool write_full_frames { false };
     Gfx::AnimationWriter::AllowInterFrameCompression allow_inter_frame_compression { Gfx::AnimationWriter::AllowInterFrameCompression::Yes };
+    Optional<int> frame_duration_ms;
 };
 
 static ErrorOr<Options> parse_options(Main::Arguments arguments)
@@ -35,6 +36,8 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
 
     bool inter_frame_compression_none = false;
     args_parser.add_option(inter_frame_compression_none, "Do not store incremental frames. Produces larger files.", "inter-frame-compression=none");
+
+    args_parser.add_option(options.frame_duration_ms, "Frame duration in ms (default: from input)", "frame-duration-ms", {}, {});
 
     args_parser.parse(arguments);
 
@@ -95,9 +98,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (auto const& decoder : decoders) {
         for (size_t i = 0; i < decoder->frame_count(); ++i) {
             auto frame = TRY(decoder->frame(i));
-
-            // FIXME: Make overridable, at least for single-frame inputs?
-            auto frame_duration = frame.duration;
+            auto frame_duration = options.frame_duration_ms.value_or(frame.duration);
 
             if (options.write_full_frames) {
                 TRY(animation_writer->add_frame(*frame.image, frame_duration));
