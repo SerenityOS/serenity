@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/ICC/TagTypes.h>
+#include <LibGfx/ICC/WellKnownProfiles.h>
 #include <LibGfx/ImageFormats/BilevelImage.h>
 #include <LibTest/TestCase.h>
 
@@ -59,4 +62,29 @@ TEST_CASE(get_bits_over_8bits)
     EXPECT_EQ(bilevel->get_bits(4, 0, 8), 0xAF);
     EXPECT_EQ(bilevel->get_bits(8, 0, 8), 0xFE);
     EXPECT_EQ(bilevel->get_bits(12, 0, 4), 0xE);
+}
+
+TEST_CASE(bayer_dither)
+{
+    auto bitmap = TRY_OR_FAIL(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { 16, 16 }));
+
+    auto srgb_curve = TRY_OR_FAIL(Gfx::ICC::sRGB_curve());
+    auto half_gray = round_to<u8>(srgb_curve->evaluate_inverse(0.5f) * 255.0f);
+    bitmap->fill(Color(half_gray, half_gray, half_gray));
+    auto bilevel = TRY_OR_FAIL(Gfx::BilevelImage::create_from_bitmap(*bitmap, Gfx::DitheringAlgorithm::Bayer8x8));
+    for (size_t y = 0; y < bilevel->height(); ++y)
+        for (size_t x = 0; x < bilevel->width(); ++x)
+            EXPECT_EQ(bilevel->get_bit(x, y), (x + y) % 2 != 0);
+
+    bitmap->fill(Color::White);
+    bilevel = TRY_OR_FAIL(Gfx::BilevelImage::create_from_bitmap(*bitmap, Gfx::DitheringAlgorithm::Bayer8x8));
+    for (size_t y = 0; y < bilevel->height(); ++y)
+        for (size_t x = 0; x < bilevel->width(); ++x)
+            EXPECT_EQ(bilevel->get_bit(x, y), 0);
+
+    bitmap->fill(Color::Black);
+    bilevel = TRY_OR_FAIL(Gfx::BilevelImage::create_from_bitmap(*bitmap, Gfx::DitheringAlgorithm::Bayer8x8));
+    for (size_t y = 0; y < bilevel->height(); ++y)
+        for (size_t x = 0; x < bilevel->width(); ++x)
+            EXPECT_EQ(bilevel->get_bit(x, y), 1);
 }

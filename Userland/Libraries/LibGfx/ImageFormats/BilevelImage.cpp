@@ -314,7 +314,7 @@ ErrorOr<NonnullRefPtr<BilevelImage>> BilevelImage::create_from_bitmap(Gfx::Bitma
 
         for (int y = 0, i = 0; y < bitmap.height(); ++y) {
             for (int x = 0; x < bitmap.width(); ++x, ++i) {
-                u8 threshold = (bayer_matrix[(y & mask) * n + (x & mask)] * 255) / ((n * n) - 1);
+                u8 threshold = round_to<u8>((bayer_matrix[(y & mask) * n + (x & mask)] * 255.0f) / (n * n));
                 bilevel_image->set_bit(x, y, gray_bitmap[i] > threshold ? 0 : 1);
             }
         }
