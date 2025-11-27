@@ -355,12 +355,16 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
         "Convert to bilevel image, with optionally explicit dithering algorithm",
         "to-bilevel",
         {},
-        "global-threshold, bayer2x2, bayer4x4, bayer8x8, floyd-steinberg",
+        "global-threshold, clustered4x4, clustered8x8, bayer2x2, bayer4x4, bayer8x8, floyd-steinberg",
         [&to_bilevel](StringView s) {
             if (s.is_empty())
                 to_bilevel = Gfx::DitheringAlgorithm::FloydSteinberg;
             else if (s == "global-threshold"sv)
                 to_bilevel = Gfx::DitheringAlgorithm::None;
+            else if (s == "clustered4x4"sv)
+                to_bilevel = Gfx::DitheringAlgorithm::Clustered4x4;
+            else if (s == "clustered8x8"sv)
+                to_bilevel = Gfx::DitheringAlgorithm::Clustered8x8;
             else if (s == "bayer2x2"sv)
                 to_bilevel = Gfx::DitheringAlgorithm::Bayer2x2;
             else if (s == "bayer4x4"sv)

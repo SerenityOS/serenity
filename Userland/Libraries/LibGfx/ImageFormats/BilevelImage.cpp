@@ -292,11 +292,41 @@ ErrorOr<NonnullRefPtr<BilevelImage>> BilevelImage::create_from_bitmap(Gfx::Bitma
             }
         }
         break;
+    case DitheringAlgorithm::Clustered4x4:
+    case DitheringAlgorithm::Clustered8x8:
     case DitheringAlgorithm::Bayer2x2:
     case DitheringAlgorithm::Bayer4x4:
     case DitheringAlgorithm::Bayer8x8: {
-        auto bayer_matrix = [&]() {
+        auto dither_matrix = [&]() {
             switch (dithering_algorithm) {
+            case DitheringAlgorithm::Clustered4x4: {
+                // FIXME: Generate this programmatically like the Bayer matrices?
+                // clang-format off
+                static constexpr auto matrix = to_array<u32>({
+                    12,  5,  6, 13,
+                     4,  0,  1,  7,
+                    11,  3,  2,  8,
+                    15, 10,  9, 14
+                });
+                // clang-format on
+                return matrix.span();
+            }
+            case DitheringAlgorithm::Clustered8x8: {
+                // FIXME: Generate this programmatically like the Bayer matrices?
+                // clang-format off
+                static constexpr auto matrix = to_array<u32>({
+                    60, 53, 45, 34, 35, 46, 54, 61,
+                    52, 33, 25, 17, 18, 26, 36, 55,
+                    44, 24, 12,  5,  6, 13, 27, 47,
+                    32, 16,  4,  0,  1,  7, 19, 37,
+                    43, 23, 11,  3,  2,  8, 20, 38,
+                    51, 31, 15, 10,  9, 14, 28, 48,
+                    59, 42, 30, 22, 21, 29, 39, 56,
+                    63, 58, 50, 41, 40, 49, 57, 62
+                });
+                // clang-format on
+                return matrix.span();
+            }
             case DitheringAlgorithm::Bayer2x2:
                 return bayer_matrix_2x2.span();
             case DitheringAlgorithm::Bayer4x4:
@@ -308,13 +338,13 @@ ErrorOr<NonnullRefPtr<BilevelImage>> BilevelImage::create_from_bitmap(Gfx::Bitma
             }
         }();
 
-        auto n = static_cast<int>(sqrt(bayer_matrix.size()));
+        auto n = static_cast<int>(sqrt(dither_matrix.size()));
         VERIFY(is_power_of_two(n));
         auto mask = n - 1;
 
         for (int y = 0, i = 0; y < bitmap.height(); ++y) {
             for (int x = 0; x < bitmap.width(); ++x, ++i) {
-                u8 threshold = round_to<u8>((bayer_matrix[(y & mask) * n + (x & mask)] * 255.0f) / (n * n));
+                u8 threshold = round_to<u8>((dither_matrix[(y & mask) * n + (x & mask)] * 255.0f) / (n * n));
                 bilevel_image->set_bit(x, y, gray_bitmap[i] > threshold ? 0 : 1);
             }
         }

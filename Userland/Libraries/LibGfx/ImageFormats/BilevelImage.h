@@ -14,12 +14,19 @@
 namespace Gfx {
 
 enum class DitheringAlgorithm {
+    // Global threshold
     None,
 
+    // Ordered dithering with a clustered dot screen
+    Clustered4x4,
+    Clustered8x8,
+
+    // Ordered dithering with a dispersed dot screen
     Bayer2x2,
     Bayer4x4,
     Bayer8x8,
 
+    // Error Diffusion
     FloydSteinberg,
 
     // FIXME: Add Atkinson, BlueNoise, Hilbert / Peano space-filling, ...
