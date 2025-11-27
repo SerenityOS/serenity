@@ -312,9 +312,13 @@ ErrorOr<NonnullRefPtr<BilevelImage>> BilevelImage::create_from_bitmap(Gfx::Bitma
         VERIFY(is_power_of_two(n));
         auto mask = n - 1;
 
+        // A bayer matrix of dimension N has N x N +1 different states. First one
+        // is an all black matrix, and then one more for each element turning white.
+        u32 number_of_states = n * n + 1;
+
         for (int y = 0, i = 0; y < bitmap.height(); ++y) {
             for (int x = 0; x < bitmap.width(); ++x, ++i) {
-                u8 threshold = (bayer_matrix[(y & mask) * n + (x & mask)] * 255) / ((n * n) - 1);
+                u8 threshold = round_to<u8>((1 + bayer_matrix[(y & mask) * n + (x & mask)]) * 255.f / number_of_states);
                 bilevel_image->set_bit(x, y, gray_bitmap[i] > threshold ? 0 : 1);
             }
         }
