@@ -20,7 +20,7 @@ public:
 
 private:
     virtual ErrorOr<NonnullOwnPtr<KString>> value() const override;
-    virtual void set_value(NonnullOwnPtr<KString> new_value) override;
+    virtual ErrorOr<void> set_value(NonnullOwnPtr<KString> new_value) override;
 
     explicit SysFSCoredumpDirectory(SysFSDirectory const&);
 

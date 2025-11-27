@@ -28,7 +28,7 @@ ErrorOr<size_t> SysFSSystemStringVariable::write_bytes(off_t, size_t count, User
     // NOTE: If we are in a jail, don't let the current process to change the variable.
     if (Process::current().is_jailed())
         return Error::from_errno(EPERM);
-    set_value(move(new_value_without_possible_newlines));
+    TRY(set_value(move(new_value_without_possible_newlines)));
     return count;
 }
 

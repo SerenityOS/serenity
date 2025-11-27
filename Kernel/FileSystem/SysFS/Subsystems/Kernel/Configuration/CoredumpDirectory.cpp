@@ -28,11 +28,16 @@ ErrorOr<NonnullOwnPtr<KString>> SysFSCoredumpDirectory::value() const
         return KString::try_create(""sv);
     });
 }
-void SysFSCoredumpDirectory::set_value(NonnullOwnPtr<KString> new_value)
+
+ErrorOr<void> SysFSCoredumpDirectory::set_value(NonnullOwnPtr<KString> new_value)
 {
+    if (new_value->length() > 0 && new_value->bytes()[0] != '/')
+        return Error::from_errno(EINVAL);
+
     Coredump::directory_path().with([&](auto& coredump_directory_path) {
         coredump_directory_path = move(new_value);
     });
+    return {};
 }
 
 mode_t SysFSCoredumpDirectory::permissions() const
