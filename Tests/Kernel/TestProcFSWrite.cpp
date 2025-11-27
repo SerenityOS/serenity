@@ -41,3 +41,16 @@ TEST_CASE(root_writes_to_procfs)
         FAIL("Wrote successfully?!");
     }
 }
+
+TEST_CASE(set_coredump_path)
+{
+    auto fd = open("/sys/kernel/conf/coredump_directory", O_RDWR);
+    if (fd < 0) {
+        perror("open");
+        FAIL("open failed?! See debugout");
+        return;
+    }
+    static constexpr auto path = "relative/path"sv;
+    write(fd, path.characters_without_null_termination(), path.length());
+    EXPECT_EQ(errno, EINVAL);
+}
