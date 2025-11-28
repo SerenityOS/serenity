@@ -257,16 +257,16 @@ static ErrorOr<void> generic_region_encoding_procedure(GenericRegionEncodingInpu
     // independent from other contexts in the spec. They are passed in to this function.
 
     // Figure 8 – Reused context for coding the SLTP value when GBTEMPLATE is 0
-    constexpr u16 sltp_context_for_template_0 = 0b10011'0110010'0101;
+    constexpr u16 sltp_context_for_template_0 = 0b0011'001'11001'0101;
 
     // Figure 9 – Reused context for coding the SLTP value when GBTEMPLATE is 1
-    constexpr u16 sltp_context_for_template_1 = 0b0011'110010'101;
+    constexpr u16 sltp_context_for_template_1 = 0b0'0011'11001'101;
 
     // Figure 10 – Reused context for coding the SLTP value when GBTEMPLATE is 2
-    constexpr u16 sltp_context_for_template_2 = 0b001'11001'01;
+    constexpr u16 sltp_context_for_template_2 = 0b1'001'1100'01;
 
     // Figure 11 – Reused context for coding the SLTP value when GBTEMPLATE is 3
-    constexpr u16 sltp_context_for_template_3 = 0b011001'0101;
+    constexpr u16 sltp_context_for_template_3 = 0b1'01100'0101;
 
     u16 sltp_context = [](u8 gb_template) {
         if (gb_template == 0)
