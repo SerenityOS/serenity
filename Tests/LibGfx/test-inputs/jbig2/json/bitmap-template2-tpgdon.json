@@ -12,7 +12,8 @@
                 "page_width": 399,
                 "page_height": 400,
                 "flags": {
-                    "is_eventually_lossless": true
+                    "is_eventually_lossless": true,
+                    "default_combination_operator": "xor"
                 }
             }
         },
@@ -21,6 +22,11 @@
             "type": "lossless_generic_region",
             "page_association": 1,
             "data": {
+                "region_segment_information": {
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
                 "image_data": {
                     "from_file": "bitmap.bmp"
                 },
@@ -32,6 +38,47 @@
         },
         {
             "segment_number": 2,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "tpgdon2.bmp",
+                    "repeat_x": 30,
+                    "repeat_y": 110
+                },
+                "flags": {
+                    "gb_template": 2,
+                    "use_typical_prediction": true
+                }
+            }
+        },
+        {
+            "segment_number": 3,
+            "type": "lossless_generic_region",
+            "page_association": 1,
+            "data": {
+                "region_segment_information": {
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "tpgdon2.bmp",
+                    "repeat_x": 30,
+                    "repeat_y": 110
+                },
+                "flags": {
+                    "use_typical_prediction": false
+                }
+            }
+        },
+        {
+            "segment_number": 4,
             "type": "end_of_page",
             "page_association": 1
         }
