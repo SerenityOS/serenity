@@ -253,6 +253,8 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
     RefPtr<Gfx::BilevelImage> image;
     JSONRect crop_rect;
     bool invert = false;
+    int repeat_x = 1;
+    int repeat_y = 1;
 
     TRY(object.try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "from_file") {
@@ -280,6 +282,22 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
             return Error::from_string_literal("expected bool for \"invert\"");
         }
 
+        if (key == "repeat_x") {
+            if (auto repeat_x_value = value.get_i32(); repeat_x_value.has_value() && repeat_x_value.value() >= 1) {
+                repeat_x = repeat_x_value.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 >= 1 for \"repeat_x\"");
+        }
+
+        if (key == "repeat_y") {
+            if (auto repeat_y_value = value.get_i32(); repeat_y_value.has_value() && repeat_y_value.value() >= 1) {
+                repeat_y = repeat_y_value.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 >= 1 for \"repeat_y\"");
+        }
+
         dbgln("image_data key {}", key);
         return Error::from_string_literal("unknown image_data key");
     }));
@@ -301,6 +319,16 @@ static ErrorOr<NonnullRefPtr<Gfx::BilevelImage>> jbig2_image_from_json(ToJSONOpt
                 cropped_image->set_bit(x, y, image->get_bit(x + crop_x, y + crop_y));
 
         image = move(cropped_image);
+    }
+
+    if (repeat_x > 1 || repeat_y > 1) {
+        auto repeated_image = TRY(Gfx::BilevelImage::create(image->width() * repeat_x, image->height() * repeat_y));
+        for (u32 y = 0; y < repeated_image->height(); ++y) {
+            for (u32 x = 0; x < repeated_image->width(); ++x) {
+                repeated_image->set_bit(x, y, image->get_bit(x % image->width(), y % image->height()));
+            }
+        }
+        image = move(repeated_image);
     }
 
     if (invert) {
