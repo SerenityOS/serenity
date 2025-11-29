@@ -2018,6 +2018,7 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
         //      SYMWIDTH = 0
         //      TOTWIDTH = 0
         //      HCFIRSTSYM = NSYMSDECODED"
+        // NOTE: The spec means "HCHEIGHT" with "HCEIGHT" presumably.
         i32 delta_height = TRY(read_delta_height());
         height_class_height += delta_height;
         u32 symbol_width = 0;
