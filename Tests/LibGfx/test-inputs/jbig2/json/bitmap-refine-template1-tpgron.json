@@ -46,6 +46,43 @@
         },
         {
             "segment_number": 3,
+            "type": "intermediate_generic_region",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "image_data": {
+                    "from_file": "tpgron-ref.bmp",
+                    "repeat_x": 66,
+                    "repeat_y": 33
+                }
+            }
+        },
+        {
+            "segment_number": 4,
+            "type": "generic_refinement_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 3,
+                    "retained": true
+                }
+            ],
+            "data": {
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "width": 198,
+                        "height": 99
+                    }
+                },
+                "flags": {
+                    "gr_template": 1,
+                    "use_typical_prediction": true
+                }
+            }
+        },
+        {
+            "segment_number": 5,
             "type": "end_of_page",
             "page_association": 1
         }
