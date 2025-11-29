@@ -3193,7 +3193,7 @@ static ErrorOr<RegionResult> decode_generic_refinement_region(JBIG2LoadingContex
     if (flags & 0b1111'1100)
         return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid refinement flags");
 
-    dbgln_if(JBIG2_DEBUG, "GRTEMPLATE={} TPRDON={}", arithmetic_coding_template, typical_prediction_generic_refinement_on);
+    dbgln_if(JBIG2_DEBUG, "GRTEMPLATE={} TPGRON={}", arithmetic_coding_template, typical_prediction_generic_refinement_on);
 
     // 7.4.7.3 Generic refinement region segment AT flags
     Array<JBIG2::AdaptiveTemplatePixel, 2> adaptive_template_pixels {};
