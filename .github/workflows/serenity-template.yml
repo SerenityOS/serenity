@@ -200,7 +200,6 @@ jobs:
           SERENITY_ARCH: ${{ inputs.arch }}
 
       # FIXME: Deploy the static html pages somewhere
-      # FIXME: Alter script to also (instead?) produce a raw coverage.txt file for ingestion into sonar cloud
       # Note: tmp_profile_data/Coverage.profdata has the entire combined profile data, but creating the raw txt requires
       #       all of the instrumented binaries and the profdata file.
       - name: Upload Coverage Results
