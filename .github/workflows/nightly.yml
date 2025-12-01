@@ -22,15 +22,3 @@ jobs:
       os: ubuntu-24.04
       arch: 'x86_64'
       coverage: 'ON'
-
-  LagomGCC:
-    if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
-
-    strategy:
-      fail-fast: false
-
-    uses: ./.github/workflows/lagom-template.yml
-    with:
-      toolchain: 'GNU'
-      os_name: 'Linux'
-      os: ubuntu-24.04
