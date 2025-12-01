@@ -1513,12 +1513,17 @@ ErrorOr<void> Profile::from_pcs_b_to_a(TagData const& tag_data, FloatVector3 con
 
 ErrorOr<void> Profile::from_pcs(Profile const& source_profile, FloatVector3 pcs, Bytes color) const
 {
-    if (source_profile.connection_space() != connection_space()) {
-        if (source_profile.connection_space() == ColorSpace::PCSLAB) {
+    return from_pcs(source_profile.connection_space(), source_profile.pcs_illuminant(), pcs, color);
+}
+
+ErrorOr<void> Profile::from_pcs(ColorSpace source_connection_space, XYZ const& source_illuminant, FloatVector3 pcs, Bytes color) const
+{
+    if (source_connection_space != connection_space()) {
+        if (source_connection_space == ColorSpace::PCSLAB) {
             VERIFY(connection_space() == ColorSpace::PCSXYZ);
-            pcs = xyz_from_lab(pcs, source_profile.pcs_illuminant());
+            pcs = xyz_from_lab(pcs, source_illuminant);
         } else {
-            VERIFY(source_profile.connection_space() == ColorSpace::PCSXYZ);
+            VERIFY(source_connection_space == ColorSpace::PCSXYZ);
             VERIFY(connection_space() == ColorSpace::PCSLAB);
             pcs = lab_from_xyz(pcs, pcs_illuminant());
         }
