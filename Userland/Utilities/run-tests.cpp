@@ -185,6 +185,8 @@ void TestRunner::do_run_single_test(ByteString const& test_path, size_t current_
     out(" {}", test_relative_path);
 
     print_modifiers({ Test::CLEAR, Test::ITALIC, Test::FG_GRAY });
+    if (test_result.child_pid != 0)
+        out(" - PID ({}) -", test_result.child_pid);
     if (test_result.time_taken < 1000) {
         outln(" ({}ms)", static_cast<int>(test_result.time_taken));
     } else {
