@@ -30,6 +30,13 @@ struct TotalTimeScheduled {
     u64 total_kernel { 0 };
 };
 
+enum class ScheduleResult {
+    Success,
+    NoRunnableThreadFound,
+    Delayed,
+    YieldAgain, // Only returned by pick_next().
+};
+
 enum class [[nodiscard]] ShouldYield {
     Yes,
     No,
@@ -42,8 +49,8 @@ public:
     static void set_idle_thread(Thread* idle_thread);
     static void timer_tick();
     [[noreturn]] static void start();
-    static ShouldYield pick_next();
-    static void yield();
+    static ScheduleResult pick_next();
+    static ScheduleResult yield();
     static ShouldYield context_switch(Thread*);
     static void enter_current(Thread& prev_thread);
     static void leave_on_first_switch(InterruptsState);

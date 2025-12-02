@@ -453,9 +453,21 @@ StringView ProcessorBase::platform_string()
     return "aarch64"sv;
 }
 
-void ProcessorBase::wait_for_interrupt() const
+void ProcessorBase::idle() const
 {
-    asm("wfi");
+    VERIFY_INTERRUPTS_DISABLED();
+
+    idle_begin();
+    asm volatile(R"(
+        // Go to sleep. Execution will continue when the processor receives an interrupt, even with interrupts disabled.
+        // The processor may also be woken up by other implementation defined wake events, in that case we return from this function without an interrupt.
+        wfi
+
+        // Shortly unmask interrupts to call the interrupt handler for the received interrupt.
+        msr daifclr, #2 // PSTATE.I = 0
+        msr daifset, #2 // PSTATE.I = 1
+    )" :);
+    idle_end();
 }
 
 Processor& ProcessorBase::by_id(u32 id)
