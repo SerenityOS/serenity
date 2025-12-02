@@ -39,6 +39,10 @@ INODE_COUNT=$((INODE_COUNT + 2000))  # Some additional inodes for toolchain file
 DISK_SIZE_BYTES=$((($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) ) * 1024 * 1024))
 DISK_SIZE_BYTES=$((DISK_SIZE_BYTES + (INODE_COUNT * INODE_SIZE)))
 
+# At the time of writing, in the default path DISK_SIZE_BYTES ~= 1.4 GiB and INODE_COUNT ~= 140k.
+# Let's use this ratio of bytes per inode instead of manually trying to guess the number of inodes.
+BYTES_PER_INODE=11264
+
 if [ -z "$SERENITY_DISK_SIZE_BYTES" ]; then
     # Try to use heuristics to guess a good disk size and inode count.
     # The disk must notably fit:
@@ -47,19 +51,11 @@ if [ -z "$SERENITY_DISK_SIZE_BYTES" ]; then
     #   * Inodes and block bitmaps for each block group,
     #   * Plenty of extra free space and free inodes.
     DISK_SIZE_BYTES=$((DISK_SIZE_BYTES * 2))
-    INODE_COUNT=$((INODE_COUNT * 7))
 else
     if [ "$DISK_SIZE_BYTES" -gt "$SERENITY_DISK_SIZE_BYTES" ]; then
         die "SERENITY_DISK_SIZE_BYTES is set to $SERENITY_DISK_SIZE_BYTES but required disk size is $DISK_SIZE_BYTES bytes"
     fi
     DISK_SIZE_BYTES="$SERENITY_DISK_SIZE_BYTES"
-fi
-
-if [ -n "$SERENITY_INODE_COUNT" ]; then
-    if [ "$INODE_COUNT" -gt "$SERENITY_INODE_COUNT" ]; then
-        die "SERENITY_INODE_COUNT is set to $SERENITY_INODE_COUNT but required inode count is roughly $INODE_COUNT"
-    fi
-    INODE_COUNT="$SERENITY_INODE_COUNT"
 fi
 
 nearest_power_of_2() {
@@ -116,9 +112,9 @@ if [ $USE_EXISTING -ne 1 ]; then
     if [ "$(uname -s)" = "OpenBSD" ]; then
         VND=$(vnconfig _disk_image)
         (echo "e 0"; echo 83; echo n; echo 0; echo "*"; echo "quit") | fdisk -e "$VND"
-        newfs_ext2fs -D "${INODE_SIZE}" -n "${INODE_COUNT}" "/dev/r${VND}i" || die "could not create filesystem"
+        newfs_ext2fs -D "${INODE_SIZE}" -i "${BYTES_PER_INODE}" "/dev/r${VND}i" || die "could not create filesystem"
     else
-        "${MKE2FS_PATH}" -q -I "${INODE_SIZE}" -N "${INODE_COUNT}" _disk_image || die "could not create filesystem"
+        "${MKE2FS_PATH}" -q -I "${INODE_SIZE}" -i "${BYTES_PER_INODE}" _disk_image || die "could not create filesystem"
     fi
     echo "done"
 fi
@@ -176,7 +172,7 @@ script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 "$script_path/build-root-filesystem.sh"
 
 if [ $use_genext2fs = 1 ]; then
-    genext2fs -B 4096 -b $((DISK_SIZE_BYTES / 4096)) -N "${INODE_COUNT}" -d mnt _disk_image || die "try increasing image size (genext2fs -b)"
+    genext2fs -B 4096 -b $((DISK_SIZE_BYTES / 4096)) -i "${BYTES_PER_INODE}" -d mnt _disk_image || die "try increasing image size (genext2fs -b)"
     # if using docker with shared mount, file is created as root, so make it writable for users
     chmod 0666 _disk_image
 fi
