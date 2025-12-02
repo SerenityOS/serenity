@@ -526,6 +526,9 @@ inline constexpr bool IsMoveAssignable = IsAssignable<AddLvalueReference<T>, Add
 template<typename T>
 inline constexpr bool IsTriviallyMoveAssignable = IsTriviallyAssignable<AddLvalueReference<T>, AddRvalueReference<T>>;
 
+template<typename T>
+inline constexpr bool IsPolymorphic = __is_polymorphic(T);
+
 template<typename T, template<typename...> typename U>
 inline constexpr bool IsSpecializationOf = false;
 
@@ -666,6 +669,7 @@ using AK::Detail::IsOneOf;
 using AK::Detail::IsOneOfIgnoringCV;
 using AK::Detail::IsPOD;
 using AK::Detail::IsPointer;
+using AK::Detail::IsPolymorphic;
 using AK::Detail::IsRvalueReference;
 using AK::Detail::IsSame;
 using AK::Detail::IsSameIgnoringCV;
