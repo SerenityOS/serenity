@@ -75,7 +75,7 @@ public:
     ALWAYS_INLINE static bool is_initialized();
 
     [[noreturn]] static void halt();
-    void wait_for_interrupt() const;
+    void idle() const;
     ALWAYS_INLINE static void pause();
     ALWAYS_INLINE static void wait_check();
 

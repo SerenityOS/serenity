@@ -646,9 +646,22 @@ StringView ProcessorBase::platform_string()
     return "riscv64"sv;
 }
 
-void ProcessorBase::wait_for_interrupt() const
+void ProcessorBase::idle() const
 {
-    asm("wfi");
+    VERIFY_INTERRUPTS_DISABLED();
+
+    idle_begin();
+    asm volatile(R"(
+        # Go to sleep. Execution will continue when the processor receives an interrupt, even with interrupts disabled.
+        # WFI is allowed to cause spurious wakeups, so implementing it as a NOP is legal.
+        # In that case the idle loop is constantly busy waiting for interrupts.
+        wfi
+
+        # Shortly enable interrupts to call the interrupt handler for the received interrupt.
+        csrsi sstatus, 1 << 1 # sstatus.SIE = 1
+        csrci sstatus, 1 << 1 # sstatus.SIE = 0
+    )" :);
+    idle_end();
 }
 
 Processor& ProcessorBase::by_id(u32)
