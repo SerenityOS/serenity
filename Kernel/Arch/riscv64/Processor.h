@@ -33,16 +33,13 @@ class Processor;
 struct TrapFrame;
 enum class InterruptsState;
 
-template<typename ProcessorT>
-class ProcessorBase;
-
 // FIXME: Remove this once we support SMP in riscv64
 extern Processor* g_current_processor;
 
 constexpr size_t MAX_CPU_COUNT = 1;
 
-class Processor final : public ProcessorBase<Processor> {
-    friend class ProcessorBase<Processor>;
+class Processor final : public ProcessorBase {
+    friend class ProcessorBase;
 
 public:
     template<IteratorFunction<Processor&> Callback>
@@ -79,130 +76,89 @@ private:
     Array<unsigned long long, EXTENSION_BITMASK_GROUP_COUNT> m_userspace_extension_bitmask {};
 };
 
-template<typename T>
-ALWAYS_INLINE bool ProcessorBase<T>::is_initialized()
+ALWAYS_INLINE bool ProcessorBase::is_initialized()
 {
     return g_current_processor != nullptr;
 }
 
-template<typename T>
-ALWAYS_INLINE Thread* ProcessorBase<T>::idle_thread()
+ALWAYS_INLINE Thread* ProcessorBase::idle_thread()
 {
     return current().m_idle_thread;
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::set_current_thread(Thread& current_thread)
+ALWAYS_INLINE void ProcessorBase::set_current_thread(Thread& current_thread)
 {
     current().m_current_thread = &current_thread;
 }
 
 // FIXME: When riscv64 supports multiple cores, return the correct core id here.
-template<typename T>
-ALWAYS_INLINE u32 ProcessorBase<T>::current_id()
+ALWAYS_INLINE u32 ProcessorBase::current_id()
 {
     return 0;
 }
 
-template<typename T>
-ALWAYS_INLINE u32 ProcessorBase<T>::in_critical()
+ALWAYS_INLINE u32 ProcessorBase::in_critical()
 {
     return current().m_in_critical;
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::enter_critical()
+ALWAYS_INLINE void ProcessorBase::enter_critical()
 {
     auto& current_processor = current();
     current_processor.m_in_critical += 1;
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::restore_critical(u32 prev_critical)
+ALWAYS_INLINE void ProcessorBase::restore_critical(u32 prev_critical)
 {
     current().m_in_critical = prev_critical;
 }
 
-template<typename T>
-ALWAYS_INLINE T& ProcessorBase<T>::current()
+ALWAYS_INLINE Processor& ProcessorBase::current()
 {
     return *g_current_processor;
 }
 
-template<typename T>
-void ProcessorBase<T>::idle_begin() const
-{
-    // FIXME: Implement this when SMP for riscv64 is supported.
-}
-
-template<typename T>
-void ProcessorBase<T>::idle_end() const
-{
-    // FIXME: Implement this when SMP for riscv64 is supported.
-}
-
-template<typename T>
-void ProcessorBase<T>::smp_enable()
-{
-    // FIXME: Implement this when SMP for riscv64 is supported.
-}
-
-template<typename T>
-bool ProcessorBase<T>::is_smp_enabled()
-{
-    return false;
-}
-
-template<typename T>
-ALWAYS_INLINE bool ProcessorBase<T>::are_interrupts_enabled()
+ALWAYS_INLINE bool ProcessorBase::are_interrupts_enabled()
 {
     return RISCV64::CSR::SSTATUS::read().SIE == 1;
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::enable_interrupts()
+ALWAYS_INLINE void ProcessorBase::enable_interrupts()
 {
     RISCV64::CSR::set_bits<RISCV64::CSR::Address::SSTATUS>(RISCV64::CSR::SSTATUS::Bit::SIE);
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::disable_interrupts()
+ALWAYS_INLINE void ProcessorBase::disable_interrupts()
 {
     RISCV64::CSR::clear_bits<RISCV64::CSR::Address::SSTATUS>(RISCV64::CSR::SSTATUS::Bit::SIE);
 }
 
-template<typename T>
-ALWAYS_INLINE bool ProcessorBase<T>::current_in_scheduler()
+ALWAYS_INLINE bool ProcessorBase::current_in_scheduler()
 {
     return current().m_in_scheduler;
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::set_current_in_scheduler(bool value)
+ALWAYS_INLINE void ProcessorBase::set_current_in_scheduler(bool value)
 {
     current().m_in_scheduler = value;
 }
 
-template<typename T>
-ALWAYS_INLINE bool ProcessorBase<T>::has_nx() const
+ALWAYS_INLINE bool ProcessorBase::has_nx() const
 {
     return true;
 }
 
-template<typename T>
-ALWAYS_INLINE FlatPtr ProcessorBase<T>::current_in_irq()
+ALWAYS_INLINE FlatPtr ProcessorBase::current_in_irq()
 {
     return current().m_in_irq;
 }
 
-template<typename T>
-ALWAYS_INLINE Thread* ProcessorBase<T>::current_thread()
+ALWAYS_INLINE Thread* ProcessorBase::current_thread()
 {
     return current().m_current_thread;
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::pause()
+ALWAYS_INLINE void ProcessorBase::pause()
 {
     // PAUSE is a HINT defined by the Zihintpause extension.
     // We don't have to check if that extension is supported, since HINTs effectively behave like NOPs if they are not implemented.
@@ -214,15 +170,13 @@ ALWAYS_INLINE void ProcessorBase<T>::pause()
     )" :);
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::wait_check()
+ALWAYS_INLINE void ProcessorBase::wait_check()
 {
     Processor::pause();
     // FIXME: Process SMP messages once we support SMP on riscv64; cf. x86_64
 }
 
-template<typename T>
-ALWAYS_INLINE Optional<u64> ProcessorBase<T>::read_cycle_count()
+ALWAYS_INLINE Optional<u64> ProcessorBase::read_cycle_count()
 {
     return RISCV64::CSR::read<RISCV64::CSR::Address::CYCLE>();
 }

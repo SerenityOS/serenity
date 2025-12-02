@@ -19,8 +19,7 @@ namespace Kernel {
 READONLY_AFTER_INIT FPUState s_clean_fpu_state;
 READONLY_AFTER_INIT Atomic<u32> g_total_processors;
 
-template<typename T>
-void ProcessorBase<T>::check_invoke_scheduler()
+void ProcessorBase::check_invoke_scheduler()
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(!m_in_irq);
@@ -31,10 +30,8 @@ void ProcessorBase<T>::check_invoke_scheduler()
         Scheduler::invoke_async();
     }
 }
-template void ProcessorBase<Processor>::check_invoke_scheduler();
 
-template<typename T>
-void ProcessorBase<T>::deferred_call_queue(Function<void()> callback)
+void ProcessorBase::deferred_call_queue(Function<void()> callback)
 {
     // NOTE: If we are called outside of a critical section and outside
     // of an irq handler, the function will be executed before we return!
@@ -46,10 +43,8 @@ void ProcessorBase<T>::deferred_call_queue(Function<void()> callback)
 
     cur_proc.m_deferred_call_pool.queue_entry(entry);
 }
-template void ProcessorBase<Processor>::deferred_call_queue(Function<void()>);
 
-template<typename T>
-void ProcessorBase<T>::enter_trap(TrapFrame& trap, bool raise_irq)
+void ProcessorBase::enter_trap(TrapFrame& trap, bool raise_irq)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(&Processor::current() == this);
@@ -72,25 +67,32 @@ void ProcessorBase<T>::enter_trap(TrapFrame& trap, bool raise_irq)
         trap.next_trap = nullptr;
     }
 }
-template void ProcessorBase<Processor>::enter_trap(TrapFrame&, bool);
 
-template<typename T>
-u64 ProcessorBase<T>::time_spent_idle() const
+InterruptsState ProcessorBase::interrupts_state()
+{
+    return ProcessorBase::are_interrupts_enabled() ? InterruptsState::Enabled : InterruptsState::Disabled;
+}
+
+void ProcessorBase::restore_interrupts_state(InterruptsState interrupts_state)
+{
+    if (interrupts_state == InterruptsState::Enabled)
+        ProcessorBase::enable_interrupts();
+    else
+        ProcessorBase::disable_interrupts();
+}
+
+u64 ProcessorBase::time_spent_idle() const
 {
     return m_idle_thread->time_in_user() + m_idle_thread->time_in_kernel();
 }
-template u64 ProcessorBase<Processor>::time_spent_idle() const;
 
-template<typename T>
-void ProcessorBase<T>::leave_critical()
+void ProcessorBase::leave_critical()
 {
     InterruptDisabler disabler;
     current().do_leave_critical();
 }
-template void ProcessorBase<Processor>::leave_critical();
 
-template<typename T>
-void ProcessorBase<T>::do_leave_critical()
+void ProcessorBase::do_leave_critical()
 {
     VERIFY(m_in_critical > 0);
     if (m_in_critical == 1) {
@@ -105,7 +107,6 @@ void ProcessorBase<T>::do_leave_critical()
         m_in_critical = m_in_critical - 1;
     }
 }
-template void ProcessorBase<Processor>::do_leave_critical();
 
 void exit_kernel_thread(void)
 {
@@ -135,8 +136,7 @@ void do_context_first_init(Thread* from_thread, Thread* to_thread)
     Scheduler::leave_on_first_switch(InterruptsState::Disabled);
 }
 
-template<typename T>
-ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<T>::capture_stack_trace(Thread& thread, size_t max_frames)
+ErrorOr<Vector<FlatPtr, 32>> ProcessorBase::capture_stack_trace(Thread& thread, size_t max_frames)
 {
     FlatPtr frame_ptr = 0, pc = 0;
     Vector<FlatPtr, 32> stack_trace;
@@ -264,6 +264,5 @@ ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<T>::capture_stack_trace(Thread& threa
 
     return stack_trace;
 }
-template ErrorOr<Vector<FlatPtr, 32>> ProcessorBase<Processor>::capture_stack_trace(Thread&, size_t);
 
 }

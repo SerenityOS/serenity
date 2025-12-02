@@ -30,20 +30,17 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __a
 
 Processor* g_current_processor;
 
-template<typename T>
-void ProcessorBase<T>::store_fpu_state(FPUState& fpu_state)
+void ProcessorBase::store_fpu_state(FPUState& fpu_state)
 {
     ::store_fpu_state(&fpu_state);
 }
 
-template<typename T>
-void ProcessorBase<T>::load_fpu_state(FPUState const& fpu_state)
+void ProcessorBase::load_fpu_state(FPUState const& fpu_state)
 {
     ::load_fpu_state(&fpu_state);
 }
 
-template<typename T>
-void ProcessorBase<T>::early_initialize(u32 cpu)
+void ProcessorBase::early_initialize(u32 cpu)
 {
     VERIFY(g_current_processor == nullptr);
     m_cpu = cpu;
@@ -54,8 +51,7 @@ void ProcessorBase<T>::early_initialize(u32 cpu)
     g_current_processor = static_cast<Processor*>(this);
 }
 
-template<typename T>
-void ProcessorBase<T>::initialize(u32)
+void ProcessorBase::initialize(u32)
 {
     m_deferred_call_pool.init();
 
@@ -75,16 +71,14 @@ void ProcessorBase<T>::initialize(u32)
     initialize_interrupts();
 }
 
-template<typename T>
-[[noreturn]] void ProcessorBase<T>::halt()
+[[noreturn]] void ProcessorBase::halt()
 {
     disable_interrupts();
     for (;;)
         asm volatile("wfi");
 }
 
-template<typename T>
-void ProcessorBase<T>::flush_tlb_local(VirtualAddress, size_t)
+void ProcessorBase::flush_tlb_local(VirtualAddress, size_t)
 {
     // FIXME: Figure out how to flush a single page
     asm volatile("dsb ishst");
@@ -93,8 +87,7 @@ void ProcessorBase<T>::flush_tlb_local(VirtualAddress, size_t)
     asm volatile("isb");
 }
 
-template<typename T>
-void ProcessorBase<T>::flush_entire_tlb_local()
+void ProcessorBase::flush_entire_tlb_local()
 {
     asm volatile("dsb ishst");
     asm volatile("tlbi vmalle1");
@@ -102,20 +95,17 @@ void ProcessorBase<T>::flush_entire_tlb_local()
     asm volatile("isb");
 }
 
-template<typename T>
-void ProcessorBase<T>::flush_tlb(Memory::PageDirectory const*, VirtualAddress vaddr, size_t page_count)
+void ProcessorBase::flush_tlb(Memory::PageDirectory const*, VirtualAddress vaddr, size_t page_count)
 {
     flush_tlb_local(vaddr, page_count);
 }
 
-template<typename T>
-void ProcessorBase<T>::flush_instruction_cache(VirtualAddress vaddr, size_t byte_count)
+void ProcessorBase::flush_instruction_cache(VirtualAddress vaddr, size_t byte_count)
 {
     __builtin___clear_cache(reinterpret_cast<char*>(vaddr.as_ptr()), reinterpret_cast<char*>(vaddr.offset(byte_count).as_ptr()));
 }
 
-template<typename T>
-u32 ProcessorBase<T>::clear_critical()
+u32 ProcessorBase::clear_critical()
 {
     InterruptDisabler disabler;
     auto prev_critical = in_critical();
@@ -126,16 +116,14 @@ u32 ProcessorBase<T>::clear_critical()
     return prev_critical;
 }
 
-template<typename T>
-u32 ProcessorBase<T>::smp_wake_n_idle_processors(u32 wake_count)
+u32 ProcessorBase::smp_wake_n_idle_processors(u32 wake_count)
 {
     (void)wake_count;
     // FIXME: Actually wake up other cores when SMP is supported for aarch64.
     return 0;
 }
 
-template<typename T>
-void ProcessorBase<T>::initialize_context_switching(Thread& initial_thread)
+void ProcessorBase::initialize_context_switching(Thread& initial_thread)
 {
     VERIFY(initial_thread.process().is_kernel_process());
 
@@ -162,8 +150,7 @@ void ProcessorBase<T>::initialize_context_switching(Thread& initial_thread)
     VERIFY_NOT_REACHED();
 }
 
-template<typename T>
-void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
+void ProcessorBase::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
     VERIFY(!m_in_irq);
     VERIFY(m_in_critical == 1);
@@ -269,8 +256,7 @@ extern "C" FlatPtr do_init_context(Thread* thread, u32 new_interrupts_state)
 }
 
 // FIXME: Share this code with other architectures.
-template<typename T>
-void ProcessorBase<T>::assume_context(Thread& thread, InterruptsState new_interrupts_state)
+void ProcessorBase::assume_context(Thread& thread, InterruptsState new_interrupts_state)
 {
     dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
 
@@ -285,8 +271,7 @@ void ProcessorBase<T>::assume_context(Thread& thread, InterruptsState new_interr
     VERIFY_NOT_REACHED();
 }
 
-template<typename T>
-FlatPtr ProcessorBase<T>::init_context(Thread& thread, bool leave_crit)
+FlatPtr ProcessorBase::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(g_scheduler_lock.is_locked());
     if (leave_crit) {
@@ -347,8 +332,7 @@ FlatPtr ProcessorBase<T>::init_context(Thread& thread, bool leave_crit)
 }
 
 // FIXME: Figure out if we can fully share this code with x86.
-template<typename T>
-void ProcessorBase<T>::exit_trap(TrapFrame& trap)
+void ProcessorBase::exit_trap(TrapFrame& trap)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(&Processor::current() == this);
@@ -464,25 +448,40 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     }
 }
 
-template<typename T>
-StringView ProcessorBase<T>::platform_string()
+StringView ProcessorBase::platform_string()
 {
     return "aarch64"sv;
 }
 
-template<typename T>
-void ProcessorBase<T>::wait_for_interrupt() const
+void ProcessorBase::wait_for_interrupt() const
 {
     asm("wfi");
 }
 
-template<typename T>
-Processor& ProcessorBase<T>::by_id(u32 id)
+Processor& ProcessorBase::by_id(u32 id)
 {
     (void)id;
     TODO_AARCH64();
 }
 
+void ProcessorBase::idle_begin() const
+{
+    // FIXME: Implement this when SMP for aarch64 is supported.
 }
 
-#include <Kernel/Arch/ProcessorFunctions.include>
+void ProcessorBase::idle_end() const
+{
+    // FIXME: Implement this when SMP for aarch64 is supported.
+}
+
+void ProcessorBase::smp_enable()
+{
+    // FIXME: Implement this when SMP for aarch64 is supported.
+}
+
+bool ProcessorBase::is_smp_enabled()
+{
+    return false;
+}
+
+}
