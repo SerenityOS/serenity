@@ -46,8 +46,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __a
 extern "C" FlatPtr do_init_context(Thread* thread, u32 flags) __attribute__((used));
 extern "C" void syscall_entry();
 
-template<typename T>
-bool ProcessorBase<T>::is_smp_enabled()
+bool ProcessorBase::is_smp_enabled()
 {
     return s_smp_enabled;
 }
@@ -58,8 +57,7 @@ UNMAP_AFTER_INIT static void sse_init()
     write_cr4(read_cr4() | 0x600);
 }
 
-template<typename T>
-void ProcessorBase<T>::store_fpu_state(FPUState& fpu_state)
+void ProcessorBase::store_fpu_state(FPUState& fpu_state)
 {
     if (Processor::current().has_feature(CPUFeature::XSAVE) && Processor::current().has_feature(CPUFeature::AVX)) {
         // The specific state components saved correspond to the bits set in the requested-feature bitmap (RFBM), which is the logical-AND of EDX:EAX and XCR0.
@@ -76,8 +74,7 @@ void ProcessorBase<T>::store_fpu_state(FPUState& fpu_state)
     }
 }
 
-template<typename T>
-void ProcessorBase<T>::load_fpu_state(FPUState const& fpu_state)
+void ProcessorBase::load_fpu_state(FPUState const& fpu_state)
 {
     if (Processor::current().has_feature(CPUFeature::XSAVE) && Processor::current().has_feature(CPUFeature::AVX))
         asm volatile("xrstor %0" ::"m"(fpu_state), "a"(static_cast<u32>(SIMD::StateComponent::AVX | SIMD::StateComponent::SSE | SIMD::StateComponent::X87)), "d"(0u));
@@ -619,8 +616,7 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
         m_features |= CPUFeature::OSPKE;
 }
 
-template<typename T>
-UNMAP_AFTER_INIT void ProcessorBase<T>::early_initialize(u32 cpu)
+UNMAP_AFTER_INIT void ProcessorBase::early_initialize(u32 cpu)
 {
     m_self = static_cast<Processor*>(this);
     auto self = static_cast<Processor*>(this);
@@ -654,8 +650,7 @@ UNMAP_AFTER_INIT void ProcessorBase<T>::early_initialize(u32 cpu)
     VERIFY(&current() == this); // sanity check
 }
 
-template<typename T>
-UNMAP_AFTER_INIT void ProcessorBase<T>::initialize(u32 cpu)
+UNMAP_AFTER_INIT void ProcessorBase::initialize(u32 cpu)
 {
     VERIFY(m_self == this);
     VERIFY(&current() == this); // sanity check
@@ -781,14 +776,12 @@ ProcessorContainer& Processor::processors()
     return s_processors;
 }
 
-template<typename T>
-Processor& ProcessorBase<T>::by_id(u32 id)
+Processor& ProcessorBase::by_id(u32 id)
 {
     return *s_processors[id];
 }
 
-template<typename T>
-void ProcessorBase<T>::exit_trap(TrapFrame& trap)
+void ProcessorBase::exit_trap(TrapFrame& trap)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(&Processor::current() == this);
@@ -842,8 +835,7 @@ void ProcessorBase<T>::exit_trap(TrapFrame& trap)
         check_invoke_scheduler();
 }
 
-template<typename T>
-void ProcessorBase<T>::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
+void ProcessorBase::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 {
     auto ptr = vaddr.as_ptr();
     while (page_count > 0) {
@@ -856,14 +848,12 @@ void ProcessorBase<T>::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
     }
 }
 
-template<typename T>
-void ProcessorBase<T>::flush_entire_tlb_local()
+void ProcessorBase::flush_entire_tlb_local()
 {
     write_cr3(read_cr3());
 }
 
-template<typename T>
-void ProcessorBase<T>::flush_tlb(Memory::PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
+void ProcessorBase::flush_tlb(Memory::PageDirectory const* page_directory, VirtualAddress vaddr, size_t page_count)
 {
     if (s_smp_enabled && (!Memory::is_user_address(vaddr) || Process::current().thread_count() > 1))
         Processor::smp_broadcast_flush_tlb(page_directory, vaddr, page_count);
@@ -871,8 +861,7 @@ void ProcessorBase<T>::flush_tlb(Memory::PageDirectory const* page_directory, Vi
         flush_tlb_local(vaddr, page_count);
 }
 
-template<typename T>
-void ProcessorBase<T>::flush_instruction_cache(VirtualAddress, size_t)
+void ProcessorBase::flush_instruction_cache(VirtualAddress, size_t)
 {
     // The instruction and data cache are coherent on x86, so we don't need to do anything here.
 }
@@ -916,8 +905,7 @@ ProcessorMessage& Processor::smp_get_from_pool()
     return *msg;
 }
 
-template<typename T>
-u32 ProcessorBase<T>::smp_wake_n_idle_processors(u32 wake_count)
+u32 ProcessorBase::smp_wake_n_idle_processors(u32 wake_count)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(wake_count > 0);
@@ -966,8 +954,7 @@ u32 ProcessorBase<T>::smp_wake_n_idle_processors(u32 wake_count)
     return did_wake_count;
 }
 
-template<typename T>
-UNMAP_AFTER_INIT void ProcessorBase<T>::smp_enable()
+UNMAP_AFTER_INIT void ProcessorBase::smp_enable()
 {
     size_t msg_pool_size = Processor::count() * 100u;
     size_t msg_entries_cnt = Processor::count();
@@ -1201,8 +1188,7 @@ void Processor::smp_broadcast_halt()
     APIC::the().broadcast_ipi();
 }
 
-template<typename T>
-void ProcessorBase<T>::halt()
+void ProcessorBase::halt()
 {
     if (s_smp_enabled)
         Processor::smp_broadcast_halt();
@@ -1298,8 +1284,7 @@ extern "C" NO_SANITIZE_COVERAGE FlatPtr do_init_context(Thread* thread, u32 flag
 }
 
 // FIXME: Share this code with other architectures.
-template<typename T>
-void ProcessorBase<T>::assume_context(Thread& thread, InterruptsState new_interrupts_state)
+void ProcessorBase::assume_context(Thread& thread, InterruptsState new_interrupts_state)
 {
     dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
 
@@ -1315,8 +1300,7 @@ void ProcessorBase<T>::assume_context(Thread& thread, InterruptsState new_interr
     VERIFY_NOT_REACHED();
 }
 
-template<typename T>
-u32 ProcessorBase<T>::clear_critical()
+u32 ProcessorBase::clear_critical()
 {
     InterruptDisabler disabler;
     auto prev_critical = in_critical();
@@ -1365,14 +1349,12 @@ NAKED NO_SANITIZE_COVERAGE void do_assume_context(Thread*, u32)
     // clang-format on
 }
 
-template<typename T>
-StringView ProcessorBase<T>::platform_string()
+StringView ProcessorBase::platform_string()
 {
     return "x86_64"sv;
 }
 
-template<typename T>
-FlatPtr ProcessorBase<T>::init_context(Thread& thread, bool leave_crit)
+FlatPtr ProcessorBase::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(g_scheduler_lock.is_locked());
     if (leave_crit) {
@@ -1475,8 +1457,7 @@ FlatPtr ProcessorBase<T>::init_context(Thread& thread, bool leave_crit)
     return stack_top;
 }
 
-template<typename T>
-void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
+void ProcessorBase::switch_context(Thread*& from_thread, Thread*& to_thread)
 {
     VERIFY(!m_in_irq);
     VERIFY(m_in_critical == 1);
@@ -1558,8 +1539,7 @@ void ProcessorBase<T>::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }
 
-template<typename T>
-UNMAP_AFTER_INIT void ProcessorBase<T>::initialize_context_switching(Thread& initial_thread)
+UNMAP_AFTER_INIT void ProcessorBase::initialize_context_switching(Thread& initial_thread)
 {
     VERIFY(initial_thread.process().is_kernel_process());
     auto* self = static_cast<Processor*>(this);
@@ -1602,24 +1582,19 @@ void Processor::set_fs_base(FlatPtr fs_base)
     fs_base_msr.set(fs_base);
 }
 
-template<typename T>
-void ProcessorBase<T>::idle_begin() const
+void ProcessorBase::idle_begin() const
 {
     Processor::s_idle_cpu_mask.fetch_or(1u << m_cpu, AK::MemoryOrder::memory_order_relaxed);
 }
 
-template<typename T>
-void ProcessorBase<T>::idle_end() const
+void ProcessorBase::idle_end() const
 {
     Processor::s_idle_cpu_mask.fetch_and(~(1u << m_cpu), AK::MemoryOrder::memory_order_relaxed);
 }
 
-template<typename T>
-void ProcessorBase<T>::wait_for_interrupt() const
+void ProcessorBase::wait_for_interrupt() const
 {
     asm("hlt");
 }
 
 }
-
-#include <Kernel/Arch/ProcessorFunctions.include>

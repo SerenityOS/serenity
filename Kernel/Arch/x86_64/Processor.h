@@ -44,9 +44,6 @@ struct ProcessorMessageEntry;
 enum class InterruptsState;
 class Processor;
 
-template<typename ProcessorT>
-class ProcessorBase;
-
 // Note: We only support 64 processors at most at the moment,
 // so allocate 64 slots of inline capacity in the container.
 
@@ -57,10 +54,10 @@ extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, [[may
 
 // If this fails to compile because ProcessorBase was not found, you are including this header directly.
 // Include Arch/Processor.h instead.
-class Processor final : public ProcessorBase<Processor> {
+class Processor final : public ProcessorBase {
     friend class ProcessorInfo;
     // Allow some implementations to access the idle CPU mask and various x86 implementation details.
-    friend class ProcessorBase<Processor>;
+    friend class ProcessorBase;
 
 private:
     // Saved user stack for the syscall instruction.
@@ -158,8 +155,7 @@ public:
     static void set_fs_base(FlatPtr);
 };
 
-template<typename T>
-ALWAYS_INLINE NO_SANITIZE_COVERAGE Thread* ProcessorBase<T>::current_thread()
+ALWAYS_INLINE NO_SANITIZE_COVERAGE Thread* ProcessorBase::current_thread()
 {
     // If we were to use ProcessorBase::current here, we'd have to
     // disable interrupts to prevent a race where we may get pre-empted
@@ -167,124 +163,106 @@ ALWAYS_INLINE NO_SANITIZE_COVERAGE Thread* ProcessorBase<T>::current_thread()
     // to another processor, which would lead us to get the wrong thread.
     // To avoid having to disable interrupts, we can just read the field
     // directly in an atomic fashion, similar to Processor::current.
-    return (Thread*)read_gs_ptr(__builtin_offsetof(ProcessorBase<T>, m_current_thread));
+    return (Thread*)read_gs_ptr(__builtin_offsetof(ProcessorBase, m_current_thread));
 }
 
-template<typename T>
-ALWAYS_INLINE u32 ProcessorBase<T>::current_id()
+ALWAYS_INLINE u32 ProcessorBase::current_id()
 {
     // See comment in ProcessorBase::current_thread
-    return read_gs_ptr(__builtin_offsetof(ProcessorBase<T>, m_cpu));
+    return read_gs_ptr(__builtin_offsetof(ProcessorBase, m_cpu));
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::restore_critical(u32 prev_critical)
+ALWAYS_INLINE void ProcessorBase::restore_critical(u32 prev_critical)
 {
     // NOTE: This doesn't have to be atomic, and it's also fine if we
     // get preempted in between these steps. If we move to another
     // processors m_in_critical will move along with us. And if we
     // are preempted, we would resume with the same flags.
-    write_gs_ptr(__builtin_offsetof(ProcessorBase<T>, m_in_critical), prev_critical);
+    write_gs_ptr(__builtin_offsetof(ProcessorBase, m_in_critical), prev_critical);
 }
 
-template<typename T>
-ALWAYS_INLINE u32 ProcessorBase<T>::in_critical()
+ALWAYS_INLINE u32 ProcessorBase::in_critical()
 {
     // See comment in ProcessorBase::current_thread
-    return read_gs_ptr(__builtin_offsetof(ProcessorBase<T>, m_in_critical));
+    return read_gs_ptr(__builtin_offsetof(ProcessorBase, m_in_critical));
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::set_current_thread(Thread& current_thread)
+ALWAYS_INLINE void ProcessorBase::set_current_thread(Thread& current_thread)
 {
     // See comment in ProcessorBase::current_thread
-    write_gs_ptr(__builtin_offsetof(ProcessorBase<T>, m_current_thread), FlatPtr(&current_thread));
+    write_gs_ptr(__builtin_offsetof(ProcessorBase, m_current_thread), FlatPtr(&current_thread));
 }
 
-template<typename T>
-ALWAYS_INLINE Thread* ProcessorBase<T>::idle_thread()
+ALWAYS_INLINE Thread* ProcessorBase::idle_thread()
 {
     // See comment in ProcessorBase::current_thread
-    return (Thread*)read_gs_ptr(__builtin_offsetof(ProcessorBase<T>, m_idle_thread));
+    return (Thread*)read_gs_ptr(__builtin_offsetof(ProcessorBase, m_idle_thread));
 }
 
-template<typename T>
-T& ProcessorBase<T>::current()
+Processor& ProcessorBase::current()
 {
-    return *(Processor*)(read_gs_ptr(__builtin_offsetof(ProcessorBase<T>, m_self)));
+    return *(Processor*)(read_gs_ptr(__builtin_offsetof(ProcessorBase, m_self)));
 }
 
-template<typename T>
-ALWAYS_INLINE bool ProcessorBase<T>::is_initialized()
+ALWAYS_INLINE bool ProcessorBase::is_initialized()
 {
-    return read_gs_ptr(__builtin_offsetof(ProcessorBase<T>, m_self)) != 0;
+    return read_gs_ptr(__builtin_offsetof(ProcessorBase, m_self)) != 0;
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::enter_critical()
+ALWAYS_INLINE void ProcessorBase::enter_critical()
 {
-    write_gs_ptr(__builtin_offsetof(ProcessorBase<T>, m_in_critical), in_critical() + 1);
+    write_gs_ptr(__builtin_offsetof(ProcessorBase, m_in_critical), in_critical() + 1);
 }
 
-template<typename T>
-ALWAYS_INLINE NO_SANITIZE_COVERAGE bool ProcessorBase<T>::are_interrupts_enabled()
+ALWAYS_INLINE NO_SANITIZE_COVERAGE bool ProcessorBase::are_interrupts_enabled()
 {
     return Kernel::are_interrupts_enabled();
 }
 
-template<typename T>
-ALWAYS_INLINE bool ProcessorBase<T>::current_in_scheduler()
+ALWAYS_INLINE bool ProcessorBase::current_in_scheduler()
 {
-    auto value = read_gs_ptr(__builtin_offsetof(ProcessorBase<T>, m_in_scheduler));
+    auto value = read_gs_ptr(__builtin_offsetof(ProcessorBase, m_in_scheduler));
     return value;
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::set_current_in_scheduler(bool value)
+ALWAYS_INLINE void ProcessorBase::set_current_in_scheduler(bool value)
 {
-    write_gs_ptr(__builtin_offsetof(ProcessorBase<T>, m_in_scheduler), value);
+    write_gs_ptr(__builtin_offsetof(ProcessorBase, m_in_scheduler), value);
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::enable_interrupts()
+ALWAYS_INLINE void ProcessorBase::enable_interrupts()
 {
     sti();
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::disable_interrupts()
+ALWAYS_INLINE void ProcessorBase::disable_interrupts()
 {
     cli();
 }
 
-template<typename T>
-ALWAYS_INLINE bool ProcessorBase<T>::has_nx() const
+ALWAYS_INLINE bool ProcessorBase::has_nx() const
 {
     return has_feature(CPUFeature::NX);
 }
 
-template<typename T>
-ALWAYS_INLINE Optional<u64> ProcessorBase<T>::read_cycle_count()
+ALWAYS_INLINE Optional<u64> ProcessorBase::read_cycle_count()
 {
     return read_tsc();
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::pause()
+ALWAYS_INLINE void ProcessorBase::pause()
 {
     asm volatile("pause");
 }
 
-template<typename T>
-ALWAYS_INLINE void ProcessorBase<T>::wait_check()
+ALWAYS_INLINE void ProcessorBase::wait_check()
 {
     Processor::pause();
     if (Processor::is_smp_enabled())
         Processor::current().smp_process_pending_messages();
 }
 
-template<typename T>
-ALWAYS_INLINE NO_SANITIZE_COVERAGE FlatPtr ProcessorBase<T>::current_in_irq()
+ALWAYS_INLINE NO_SANITIZE_COVERAGE FlatPtr ProcessorBase::current_in_irq()
 {
     return read_gs_ptr(__builtin_offsetof(Processor, m_in_irq));
 }
