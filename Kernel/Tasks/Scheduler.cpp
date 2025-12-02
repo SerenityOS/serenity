@@ -201,7 +201,7 @@ UNMAP_AFTER_INIT void Scheduler::start()
     VERIFY_NOT_REACHED();
 }
 
-ShouldYield Scheduler::pick_next()
+ScheduleResult Scheduler::pick_next()
 {
     VERIFY_INTERRUPTS_DISABLED();
 
@@ -236,11 +236,24 @@ ShouldYield Scheduler::pick_next()
     // but since we're still holding the scheduler lock we're still in a critical section
     critical.leave();
 
+    auto* previous_thread = Thread::current();
+
     thread_to_schedule.set_ticks_left(time_slice_for(thread_to_schedule));
-    return context_switch(&thread_to_schedule);
+    auto should_yield = context_switch(&thread_to_schedule);
+
+    if (should_yield == ShouldYield::Yes) {
+        return ScheduleResult::YieldAgain;
+    }
+
+    if (previous_thread == &thread_to_schedule) {
+        VERIFY(thread_to_schedule.is_idle_thread());
+        return ScheduleResult::NoRunnableThreadFound;
+    }
+
+    return ScheduleResult::Success;
 }
 
-void Scheduler::yield()
+ScheduleResult Scheduler::yield()
 {
     InterruptDisabler disabler;
 
@@ -252,12 +265,16 @@ void Scheduler::yield()
         // a critical section where we don't want to switch contexts, then
         // delay until exiting the trap or critical section
         Processor::current().invoke_scheduler_async();
-        return;
+        return ScheduleResult::Delayed;
     }
 
-    auto result = pick_next();
-    while (result == ShouldYield::Yes)
+    ScheduleResult result { ScheduleResult::NoRunnableThreadFound };
+
+    do {
         result = pick_next();
+    } while (result == ScheduleResult::YieldAgain);
+
+    return result;
 }
 
 ShouldYield Scheduler::context_switch(Thread* thread)
@@ -472,9 +489,10 @@ void Scheduler::invoke_async()
     // as a Spinlock), we need to check if we're not already doing this
     // to prevent recursion
     if (!Processor::current_in_scheduler()) {
-        auto result = pick_next();
-        while (result == ShouldYield::Yes)
+        ScheduleResult result { ScheduleResult::NoRunnableThreadFound };
+        do {
             result = pick_next();
+        } while (result == ScheduleResult::YieldAgain);
     }
 }
 
@@ -488,14 +506,27 @@ void Scheduler::idle_loop(void*)
 {
     auto& proc = Processor::current();
     dbgln("Scheduler[{}]: idle loop running", proc.id());
-    VERIFY(Processor::are_interrupts_enabled());
+
+    // Interrupts have to be disabled during the idle loop to prevent lost wakeups.
+    // If interrupts were enabled between yield() and proc.idle(), we could get an interrupt between those two function calls,
+    // but still go to sleep, even if the interrupt caused a thread to be runnable or notified us of one.
+    InterruptDisabler disabler;
 
     for (;;) {
-        proc.idle_begin();
-        proc.wait_for_interrupt();
-        proc.idle_end();
-        VERIFY_INTERRUPTS_ENABLED();
-        yield();
+        // First, check if there is a runnable thread we can switch to.
+        auto result = yield();
+
+        if (result == ScheduleResult::NoRunnableThreadFound) {
+            // If there is no runnable thread, go to sleep until we get an interrupt.
+
+            // This function causes the processor to go to sleep while interrupts are still disabled.
+            // After going to sleep, it will listen for interrupts, and if it receives one, it will wake up again.
+            // Subsequently, the interrupt handler for the received interrupt will be called.
+            proc.idle();
+
+            // This interrupt might have caused a new thread to become runnable or notified us of one.
+            // So check for runnable threads in the next loop iteration again.
+        }
     }
 }
 

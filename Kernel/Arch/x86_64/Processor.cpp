@@ -1592,9 +1592,20 @@ void ProcessorBase::idle_end() const
     Processor::s_idle_cpu_mask.fetch_and(~(1u << m_cpu), AK::MemoryOrder::memory_order_relaxed);
 }
 
-void ProcessorBase::wait_for_interrupt() const
+void ProcessorBase::idle() const
 {
-    asm("hlt");
+    VERIFY_INTERRUPTS_DISABLED();
+
+    idle_begin();
+    asm volatile(R"(
+        // Atomically go to sleep and enable interrupts.
+        // These two instructions are atomic, since STI only enables interrupts after the next instruction, so after the processor went to sleep.
+        sti; hlt
+
+        // Disable interrupts again.
+        cli
+    )" :);
+    idle_end();
 }
 
 }
