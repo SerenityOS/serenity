@@ -44,9 +44,9 @@ mapfile -d '\n' all_binaries < <(find "$BUILD_DIR"/Root -type f -exec sh -c "fil
 COVERAGE_PREPARE="$BUILD_DIR/prepare-code-coverage-artifact.py"
 if [ ! -f "$COVERAGE_PREPARE" ]; then
     # Download coverage prep script from github
-    LLVM_14_RELEASE_HASH=329fda39c507e8740978d10458451dcdb21563be
-    SHA256_SUM=2cf1019d1df9a10c87234e0ec9c984dbb97d5543688b7f4a7387cb377ced7f21
-    URL=https://raw.githubusercontent.com/llvm/llvm-project/${LLVM_14_RELEASE_HASH}/llvm/utils/prepare-code-coverage-artifact.py
+    LLVM_GIT_VERSION=9decb102d9a1e7dc55883a633789cb2563de2b25
+    SHA256_SUM=df159c0c9d8129505688ccb42d6066fa36e1bab6e3233417d6c3d26d21d40a5f
+    URL=https://raw.githubusercontent.com/llvm/llvm-project/${LLVM_GIT_VERSION}/llvm/utils/prepare-code-coverage-artifact.py
 
     echo "Downloading prepare-code-coverage-artifact.py from ${URL}"
     wget "$URL" -P "$BUILD_DIR"
