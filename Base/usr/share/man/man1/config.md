@@ -5,7 +5,7 @@ config
 ## Synopsis
 
 ```sh
-$ config [--remove] <domain> <group> [key] [value]
+$ config [--remove] <domain> [group] [key] [value]
 ```
 
 ## Description
