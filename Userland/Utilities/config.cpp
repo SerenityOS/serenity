@@ -35,11 +35,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 0;
     }
 
-    if (key.is_empty() && value_to_write.is_empty()) {
-        Config::add_group(domain, group);
-        return 0;
-    }
-
     if (!key.is_empty() && !value_to_write.is_empty()) {
         Config::write_string(domain, group, key, value_to_write);
         return 0;
