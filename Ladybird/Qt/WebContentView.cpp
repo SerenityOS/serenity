@@ -796,8 +796,8 @@ bool WebContentView::event(QEvent* event)
 
 void WebContentView::enqueue_native_event(Web::MouseEvent::Type type, QSinglePointEvent const& event)
 {
-    Web::DevicePixelPoint position = { event.position().x() * m_device_pixel_ratio, event.position().y() * m_device_pixel_ratio };
-    auto screen_position = Gfx::IntPoint { event.globalPosition().x() * m_device_pixel_ratio, event.globalPosition().y() * m_device_pixel_ratio };
+    Web::DevicePixelPoint position = { event.position().x() * static_cast<double>(m_device_pixel_ratio), event.position().y() * static_cast<double>(m_device_pixel_ratio) };
+    auto screen_position = Gfx::IntPoint { event.globalPosition().x() * static_cast<double>(m_device_pixel_ratio), event.globalPosition().y() * static_cast<double>(m_device_pixel_ratio) };
 
     auto button = get_button_from_qt_mouse_button(event.button());
     auto buttons = get_buttons_from_qt_mouse_buttons(event.buttons());
@@ -846,10 +846,10 @@ struct DragData : Web::ChromeInputData {
 
 void WebContentView::enqueue_native_event(Web::DragEvent::Type type, QDropEvent const& event)
 {
-    Web::DevicePixelPoint position = { event.position().x() * m_device_pixel_ratio, event.position().y() * m_device_pixel_ratio };
+    Web::DevicePixelPoint position = { event.position().x() * static_cast<double>(m_device_pixel_ratio), event.position().y() * static_cast<double>(m_device_pixel_ratio) };
 
     auto global_position = mapToGlobal(event.position());
-    auto screen_position = Gfx::IntPoint { global_position.x() * m_device_pixel_ratio, global_position.y() * m_device_pixel_ratio };
+    auto screen_position = Gfx::IntPoint { global_position.x() * static_cast<double>(m_device_pixel_ratio), global_position.y() * static_cast<double>(m_device_pixel_ratio) };
 
     auto button = get_button_from_qt_mouse_button(Qt::LeftButton);
     auto buttons = get_buttons_from_qt_mouse_buttons(event.buttons());
