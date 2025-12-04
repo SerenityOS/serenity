@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2023-2025, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -116,7 +116,7 @@ TEST_CASE(built_in_sRGB)
     EXPECT(memmem(serialized_bytes.data(), serialized_bytes.size(), sf32, sizeof(sf32)) != nullptr);
 }
 
-TEST_CASE(to_pcs)
+TEST_CASE(sRGB_to_pcs)
 {
     auto sRGB = MUST(Gfx::ICC::sRGB());
     EXPECT(sRGB->data_color_space() == Gfx::ICC::ColorSpace::RGB);
@@ -174,7 +174,7 @@ TEST_CASE(to_pcs)
     EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(64, 128, 192), r_xyz * f64 + g_xyz * f128 + b_xyz * f192);
 }
 
-TEST_CASE(from_pcs)
+TEST_CASE(sRBB_from_pcs)
 {
     auto sRGB = MUST(Gfx::ICC::sRGB());
 
@@ -224,7 +224,7 @@ TEST_CASE(from_pcs)
     EXPECT_EQ(sRGB_from_xyz(r_xyz * f64 + g_xyz * f128 + b_xyz * f192), Color(64, 128, 192));
 }
 
-TEST_CASE(to_lab)
+TEST_CASE(sRGB_to_lab)
 {
     auto sRGB = MUST(Gfx::ICC::sRGB());
     auto lab_from_sRGB = [&sRGB](u8 r, u8 g, u8 b) {
