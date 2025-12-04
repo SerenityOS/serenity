@@ -15,7 +15,6 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGfx/Font/Font.h>
-#include <WindowServer/WindowManager.h>
 
 namespace SpaceAnalyzer {
 
