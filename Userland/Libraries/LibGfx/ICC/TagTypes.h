@@ -63,6 +63,33 @@ inline FloatVector3 lerp_nd(Function<unsigned(size_t)> size, Function<FloatVecto
     return sample_output;
 }
 
+// Same as above, but 3D->ND instead of ND->3D.
+inline void lerp_nd(IntVector3 size, Function<void(IntVector3 const&, Span<float>)> sample, FloatVector3 const& x, Span<float> scratch, Span<float> out)
+{
+    unsigned left_index[3];
+    float factor[3];
+    for (size_t i = 0; i < 3; ++i) {
+        unsigned n = size[i] - 1;
+        float ec = x[i] * n;
+        left_index[i] = min(static_cast<unsigned>(ec), n - 1);
+        factor[i] = ec - left_index[i];
+    }
+
+    out.fill(0.0f);
+    // The i'th bit of mask indicates if the i'th coordinate is rounded up or down.
+    IntVector3 coordinates;
+    for (size_t mask = 0; mask < (1u << 3); ++mask) {
+        float sample_weight = 1.0f;
+        for (size_t i = 0; i < 3; ++i) {
+            coordinates[i] = left_index[i] + ((mask >> i) & 1u);
+            sample_weight *= ((mask >> i) & 1u) ? factor[i] : 1.0f - factor[i];
+        }
+        sample(coordinates, scratch);
+        for (size_t i = 0; i < out.size(); ++i)
+            out[i] += scratch[i] * sample_weight;
+    }
+}
+
 using S15Fixed16 = FixedPoint<16, i32>;
 using U16Fixed16 = FixedPoint<16, u32>;
 
