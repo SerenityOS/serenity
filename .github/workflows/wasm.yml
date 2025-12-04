@@ -13,9 +13,22 @@ jobs:
     if: github.repository == 'SerenityOS/serenity'
     strategy:
       fail-fast: false
+
+    permissions:
+      contents: write
+
     steps:
+      # The BUGGIEBOT_TOKEN is not available on PRs from forks. See:
+      # https://github.com/actions/checkout/issues/298#issuecomment-664976337
       - name: Checkout SerenityOS/serenity
         uses: actions/checkout@v6
+        if: github.repository == github.event.pull_request.head.repo.full_name
+        with:
+          token: ${{ secrets.BUGGIEBOT_TOKEN }}
+
+      - name: Checkout SerenityOS/serenity
+        uses: actions/checkout@v6
+        if: github.repository != github.event.pull_request.head.repo.full_name
 
       - name: Checkout SerenityOS/libjs-data libjs-wasm
         uses: actions/checkout@v6
