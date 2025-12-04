@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2023-2025, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,13 +11,13 @@
 
 namespace Gfx::ICC {
 
-static ProfileHeader rgb_header()
+static ProfileHeader profile_header(ColorSpace data_color_space, ColorSpace connection_space)
 {
     ProfileHeader header;
     header.version = Version(4, 0x40);
     header.device_class = DeviceClass::DisplayDevice;
-    header.data_color_space = ColorSpace::RGB;
-    header.connection_space = ColorSpace::PCSXYZ;
+    header.data_color_space = data_color_space;
+    header.connection_space = connection_space;
     header.creation_timestamp = MUST(DateTime::from_time_t(0));
     header.rendering_intent = RenderingIntent::Perceptual;
     header.pcs_illuminant = XYZ { 0.9642, 1.0, 0.8249 };
@@ -54,7 +54,7 @@ ErrorOr<NonnullRefPtr<Profile>> sRGB()
     //        Explain why, and why this picks the numbers it does.
     //        In the meantime, https://github.com/SerenityOS/serenity/pull/17714 has a few notes.
 
-    auto header = rgb_header();
+    auto header = profile_header(ColorSpace::RGB, ColorSpace::PCSXYZ);
 
     OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table;
 
