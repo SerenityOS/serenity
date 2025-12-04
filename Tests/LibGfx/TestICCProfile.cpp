@@ -274,6 +274,32 @@ TEST_CASE(sRGB_to_lab)
     EXPECT_APPROXIMATE_LAB(lab_from_sRGB(255, 255, 255), expected[7]);
 }
 
+static void test_roundtrip(Gfx::ICC::Profile const& profile)
+{
+    // Ideally this would be 1, but that makes tests take a few minutes on fast machine.
+    // It's supposed to pass with 1, though.
+    int const increment = 7;
+    for (int a = 0; a < 256; a += increment) {
+        for (int b = 0; b < 256; b += increment) {
+            for (int c = 0; c < 256; c += increment) {
+                u8 color_in[3] = { static_cast<u8>(a), static_cast<u8>(b), static_cast<u8>(c) };
+                u8 color_out[3];
+                auto pcs = MUST(profile.to_pcs(color_in));
+                MUST(profile.from_pcs(profile, pcs, color_out));
+                EXPECT_EQ(color_in[0], color_out[0]);
+                EXPECT_EQ(color_in[1], color_out[1]);
+                EXPECT_EQ(color_in[2], color_out[2]);
+            }
+        }
+    }
+}
+
+TEST_CASE(roundtrip_sRGB_matrix_profile)
+{
+    auto profile = TRY_OR_FAIL(Gfx::ICC::sRGB());
+    test_roundtrip(*profile);
+}
+
 TEST_CASE(malformed_profile)
 {
     Array test_inputs = {
