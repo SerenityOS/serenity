@@ -38,6 +38,80 @@ static ErrorOr<NonnullRefPtr<XYZTagData>> XYZ_data(XYZ xyz)
     return try_make_ref_counted<XYZTagData>(0, 0, move(xyzs));
 }
 
+static EMatrix3x3 identity_matrix()
+{
+    return EMatrix3x3 {
+        S15Fixed16(1.0),
+        S15Fixed16(0.0),
+        S15Fixed16(0.0),
+        S15Fixed16(0.0),
+        S15Fixed16(1.0),
+        S15Fixed16(0.0),
+        S15Fixed16(0.0),
+        S15Fixed16(0.0),
+        S15Fixed16(1.0),
+    };
+}
+
+template<Unsigned T>
+Vector<T> make_2x2x2_cube()
+{
+    Vector<T> values;
+    auto add_entry = [&values](T x, T y, T z) {
+        values.append(x);
+        values.append(y);
+        values.append(z);
+    };
+    auto const N = NumericLimits<T>::max();
+    add_entry(0, 0, 0);
+    add_entry(0, 0, N);
+    add_entry(0, N, 0);
+    add_entry(0, N, N);
+    add_entry(N, 0, 0);
+    add_entry(N, 0, N);
+    add_entry(N, N, 0);
+    add_entry(N, N, N);
+    return values;
+}
+
+ErrorOr<NonnullRefPtr<Profile>> IdentityLAB()
+{
+    // Identity mapping between CIELAB and PCSLAB.
+
+    auto header = profile_header(ColorSpace::CIELAB, ColorSpace::PCSLAB);
+    header.device_class = DeviceClass::ColorSpace;
+
+    OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table;
+
+    TRY(tag_table.try_set(profileDescriptionTag, TRY(en_US("SerenityOS Identity LAB"sv))));
+    TRY(tag_table.try_set(copyrightTag, TRY(en_US("Public Domain"sv))));
+
+    // Use an identity 8-bit mft1 lookup table.
+    auto e_matrix = identity_matrix();
+
+    Vector<u8> input_tables;
+    for (int c = 0; c < 3; ++c) {
+        // mft1 requires 256 entries.
+        for (int i = 0; i < 256; ++i)
+            input_tables.append(i);
+    }
+
+    auto clut_values = make_2x2x2_cube<u8>();
+    Vector<u8> output_tables = input_tables;
+
+    auto mft1 = TRY(try_make_ref_counted<Lut8TagData>(0, 0, e_matrix,
+        3, 3, 2,
+        256, 256,
+        move(input_tables), move(clut_values), move(output_tables)));
+    TRY(tag_table.try_set(AToB0Tag, mft1));
+    TRY(tag_table.try_set(BToA0Tag, mft1));
+
+    // White point.
+    TRY(tag_table.try_set(mediaWhitePointTag, TRY(XYZ_data(header.pcs_illuminant))));
+
+    return Profile::create(header, move(tag_table));
+}
+
 ErrorOr<NonnullRefPtr<ParametricCurveTagData>> sRGB_curve()
 {
     // Numbers from https://en.wikipedia.org/wiki/SRGB#From_sRGB_to_CIE_XYZ
