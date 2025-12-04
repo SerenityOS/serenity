@@ -335,7 +335,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "Path to ICC profile or to image containing ICC profile", "FILE", Core::ArgsParser::Required::No);
 
     StringView name;
-    args_parser.add_option(name, "Name of a built-in profile, such as 'sRGB'", "name", 'n', "NAME");
+    args_parser.add_option(name, "Name of a built-in profile, such as 'sRGB', 'LAB'", "name", 'n', "NAME");
 
     StringView dump_out_path;
     args_parser.add_option(dump_out_path, "Dump unmodified ICC profile bytes to this path", "dump-to", 0, "FILE");
@@ -379,6 +379,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     ReadonlyBytes icc_bytes;
     NonnullRefPtr<Gfx::ICC::Profile> profile = TRY([&]() -> ErrorOr<NonnullRefPtr<Gfx::ICC::Profile>> {
         if (!name.is_empty()) {
+            if (name == "LAB")
+                return Gfx::ICC::IdentityLAB();
             if (name == "sRGB")
                 return Gfx::ICC::sRGB();
             return Error::from_string_literal("unknown profile name");
