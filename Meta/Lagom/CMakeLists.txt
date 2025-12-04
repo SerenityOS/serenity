@@ -691,6 +691,7 @@ if (BUILD_LAGOM)
             LibHID
             LibHTTP
             LibIMAP
+            LibLine
             LibLocale
             LibMarkdown
             LibMedia
