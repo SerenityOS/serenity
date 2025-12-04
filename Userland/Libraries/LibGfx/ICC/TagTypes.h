@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2023-2025, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -317,7 +317,9 @@ public:
     Vector<u16> const& clut_values() const { return m_clut_values; }
     Vector<u16> const& output_tables() const { return m_output_tables; }
 
-    ErrorOr<FloatVector3> evaluate(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes) const;
+    // FIXME: If we add DeviceLink support, this can become an arbitrary nD -> nD transform.
+    //        For now, we only have nD -> 3D.
+    ErrorOr<FloatVector3> evaluate_to_pcs(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes) const;
 
 private:
     EMatrix3x3 m_e;
@@ -376,7 +378,9 @@ public:
     Vector<u8> const& clut_values() const { return m_clut_values; }
     Vector<u8> const& output_tables() const { return m_output_tables; }
 
-    ErrorOr<FloatVector3> evaluate(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes) const;
+    // FIXME: If we add DeviceLink support, this can become an arbitrary nD -> nD transform.
+    //        For now, we only have nD -> 3D.
+    ErrorOr<FloatVector3> evaluate_to_pcs(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes) const;
 
 private:
     EMatrix3x3 m_e;
@@ -1035,7 +1039,7 @@ private:
     Vector<XYZ, 1> m_xyzs;
 };
 
-inline ErrorOr<FloatVector3> Lut16TagData::evaluate(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes color_u8) const
+inline ErrorOr<FloatVector3> Lut16TagData::evaluate_to_pcs(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes color_u8) const
 {
     // See comment at start of LutAToBTagData::evaluate() for the clipping flow.
     VERIFY(connection_space == ColorSpace::PCSXYZ || connection_space == ColorSpace::PCSLAB);
@@ -1123,7 +1127,7 @@ inline ErrorOr<FloatVector3> Lut16TagData::evaluate(ColorSpace input_space, Colo
     return output_color;
 }
 
-inline ErrorOr<FloatVector3> Lut8TagData::evaluate(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes color_u8) const
+inline ErrorOr<FloatVector3> Lut8TagData::evaluate_to_pcs(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes color_u8) const
 {
     // See comment at start of LutAToBTagData::evaluate() for the clipping flow.
     VERIFY(connection_space == ColorSpace::PCSXYZ || connection_space == ColorSpace::PCSLAB);
