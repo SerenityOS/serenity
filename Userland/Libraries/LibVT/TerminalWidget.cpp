@@ -479,6 +479,11 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
 void TerminalWidget::set_window_progress(int value, int max)
 {
+    if (max == 0) {
+        window()->set_progress(OptionalNone {});
+        return;
+    }
+
     float float_value = value;
     float float_max = max;
     float progress = (float_value / float_max) * 100.0f;
