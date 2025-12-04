@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2023-2025, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +13,8 @@ namespace Gfx::ICC {
 
 class Profile;
 class ParametricCurveTagData;
+
+ErrorOr<NonnullRefPtr<Profile>> IdentityLAB();
 
 ErrorOr<NonnullRefPtr<Profile>> sRGB();
 
