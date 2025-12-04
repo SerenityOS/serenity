@@ -1494,9 +1494,10 @@ ErrorOr<void> Profile::from_pcs_b_to_a(TagData const& tag_data, FloatVector3 con
     case Lut16TagData::Type:
         // FIXME
         return Error::from_string_literal("ICC::Profile::to_pcs: BToA*Tag handling for mft2 tags not yet implemented");
-    case Lut8TagData::Type:
-        // FIXME
-        return Error::from_string_literal("ICC::Profile::to_pcs: BToA*Tag handling for mft1 tags not yet implemented");
+    case Lut8TagData::Type: {
+        auto const& a_to_b = static_cast<Lut8TagData const&>(tag_data);
+        return a_to_b.evaluate_from_pcs(connection_space(), data_color_space(), pcs, out_bytes);
+    }
     case LutBToATagData::Type: {
         auto const& b_to_a = static_cast<LutBToATagData const&>(tag_data);
         if (b_to_a.number_of_input_channels() != number_of_components_in_color_space(connection_space()))
