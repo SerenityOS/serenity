@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2022-2025, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1282,12 +1282,12 @@ ErrorOr<FloatVector3> Profile::to_pcs_a_to_b(TagData const& tag_data, ReadonlyBy
     switch (tag_data.type()) {
     case Lut16TagData::Type: {
         auto const& a_to_b = static_cast<Lut16TagData const&>(tag_data);
-        result = TRY(a_to_b.evaluate(data_color_space(), connection_space(), color));
+        result = TRY(a_to_b.evaluate_to_pcs(data_color_space(), connection_space(), color));
         break;
     }
     case Lut8TagData::Type: {
         auto const& a_to_b = static_cast<Lut8TagData const&>(tag_data);
-        result = TRY(a_to_b.evaluate(data_color_space(), connection_space(), color));
+        result = TRY(a_to_b.evaluate_to_pcs(data_color_space(), connection_space(), color));
         break;
     }
     case LutAToBTagData::Type: {
