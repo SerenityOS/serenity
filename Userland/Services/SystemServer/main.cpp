@@ -18,7 +18,9 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCore/FileWatcher.h>
 #include <LibCore/System.h>
+#include <LibCore/Timer.h>
 #include <LibMain/Main.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -124,20 +126,30 @@ static ErrorOr<void> activate_services(Core::ConfigFile const& config)
 static ErrorOr<void> activate_base_services_based_on_system_mode()
 {
     if (g_system_mode == graphical_system_mode) {
-        bool found_gpu_device = false;
-        for (int attempt = 0; attempt < 10; attempt++) {
-            struct stat file_state;
-            int rc = lstat("/dev/gpu/connector0", &file_state);
-            if (rc == 0) {
-                found_gpu_device = true;
-                break;
-            }
-            sleep(1);
-        }
-        if (!found_gpu_device) {
+        bool done_searching_for_gpu = false;
+
+        auto timeout = Core::Timer::create_single_shot(10000, [&]() {
             dbgln("WARNING: No device nodes at /dev/gpu/ directory after 10 seconds. This is probably a sign of disabled graphics functionality.");
             dbgln("To cope with this, graphical mode will not be enabled.");
             g_system_mode = text_system_mode;
+
+            done_searching_for_gpu = true;
+        });
+
+        auto watcher = TRY(Core::FileWatcher::create());
+        watcher->on_change = [&](Core::FileWatcherEvent const& event) {
+            if (event.event_path != "/dev/gpu/connector0"sv)
+                return;
+            done_searching_for_gpu = true;
+        };
+
+        TRY(watcher->add_watch("/dev/gpu/", Core::FileWatcherEvent::Type::ChildCreated));
+
+        // The GPU might have appeared while we were setting up the watcher.
+        // Only wait for the file if we can't stat it.
+        if (Core::System::lstat("/dev/gpu/connector0"sv).is_error()) {
+            timeout->start();
+            Core::EventLoop::current().spin_until([&]() { return done_searching_for_gpu; });
         }
     }
 
