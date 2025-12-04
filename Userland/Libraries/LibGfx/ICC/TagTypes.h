@@ -1048,15 +1048,15 @@ inline ErrorOr<FloatVector3> Lut16TagData::evaluate_to_pcs(ColorSpace input_spac
     // FIXME: This will be wrong once Profile::from_pcs_b_to_a() calls this function too.
     VERIFY(number_of_output_channels() == 3);
 
-    // ICC v4, 10.11 lut8Type
+    // ICC v4, 10.10 lut16Type
     // "Data is processed using these elements via the following sequence:
-    //  (matrix) ⇨ (1d input tables) ⇨ (multi-dimensional lookup table, CLUT) ⇨ (1d output tables)"
+    //  (matrix) ⇨ (1D input tables) ⇨ (multi-dimensional lookup table, CLUT) ⇨ (1D output tables)"
 
     Vector<float, 4> color;
     for (u8 c : color_u8)
         color.append(c / 255.0f);
 
-    // "3 x 3 matrix (which shall be the identity matrix unless the input colour space is PCSXYZ)"
+    // "The matrix shall be an identity matrix unless the input is in the PCSXYZ colour space."
     // In practice, it's usually RGB or CMYK.
     if (input_space == ColorSpace::PCSXYZ) {
         EMatrix3x3 const& e = m_e;
@@ -1116,10 +1116,12 @@ inline ErrorOr<FloatVector3> Lut16TagData::evaluate_to_pcs(ColorSpace input_spac
         //  shall be clipped on a per-component basis."
         output_color *= 65535.0f / 65280.0f;
 
-        // Table 42 — Legacy PCSLAB L* encoding
+        // Table 12 — PCSLAB L* encoding
+        // (The multiplication above and using Table 12 is equivalent to using Table 42 — Legacy PCSLAB L* encoding.)
         output_color[0] = clamp(output_color[0] * 100.0f, 0.0f, 100.0f);
 
-        // Table 43 — Legacy PCSLAB a* or PCSLAB b* encoding
+        // Table 13 — PCSLAB a* or PCSLAB b* encoding
+        // (The multiplication above and using Table 12 is equivalent to using Table 43 — Legacy PCSLAB a* or PCSLAB b* encoding.)
         output_color[1] = clamp(output_color[1] * 255.0f - 128.0f, -128.0f, 127.0f);
         output_color[2] = clamp(output_color[2] * 255.0f - 128.0f, -128.0f, 127.0f);
     }
