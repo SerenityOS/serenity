@@ -294,6 +294,12 @@ static void test_roundtrip(Gfx::ICC::Profile const& profile)
     }
 }
 
+TEST_CASE(roundtrip_lab_mft1)
+{
+    auto profile = TRY_OR_FAIL(Gfx::ICC::IdentityLAB());
+    test_roundtrip(*profile);
+}
+
 TEST_CASE(roundtrip_sRGB_matrix_profile)
 {
     auto profile = TRY_OR_FAIL(Gfx::ICC::sRGB());
