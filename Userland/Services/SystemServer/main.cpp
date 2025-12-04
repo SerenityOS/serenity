@@ -136,6 +136,10 @@ static ErrorOr<void> activate_base_services_based_on_system_mode()
             done_searching_for_gpu = true;
         });
 
+        auto log = Core::Timer::create_single_shot(1000, [&]() {
+            dbgln("Waiting on /dev/gpu/connector0 to appear...");
+        });
+
         auto watcher = TRY(Core::FileWatcher::create());
         watcher->on_change = [&](Core::FileWatcherEvent const& event) {
             if (event.event_path != "/dev/gpu/connector0"sv)
@@ -148,6 +152,7 @@ static ErrorOr<void> activate_base_services_based_on_system_mode()
         // The GPU might have appeared while we were setting up the watcher.
         // Only wait for the file if we can't stat it.
         if (Core::System::lstat("/dev/gpu/connector0"sv).is_error()) {
+            log->start();
             timeout->start();
             Core::EventLoop::current().spin_until([&]() { return done_searching_for_gpu; });
         }
