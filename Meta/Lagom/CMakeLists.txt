@@ -683,8 +683,8 @@ if (BUILD_LAGOM)
         # LibTest tests from Tests/
         set(TEST_DIRECTORIES
             AK
-            LibCrypto
             LibCompress
+            LibCrypto
             LibDisassembly
             LibGL
             LibGfx
@@ -693,16 +693,16 @@ if (BUILD_LAGOM)
             LibIMAP
             LibLocale
             LibMarkdown
+            LibMedia
             LibPDF
             LibSQL
-            LibMedia
-        LibTest
-            LibTextCodec
             LibTTF
+            LibTest
+            LibTextCodec
             LibTimeZone
-            LibUnicode
             LibURL
-                LibXML
+            LibUnicode
+            LibXML
         )
         if (ENABLE_LAGOM_LIBWEB)
             list(APPEND TEST_DIRECTORIES LibWeb)
