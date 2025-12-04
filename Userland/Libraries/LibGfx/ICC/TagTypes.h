@@ -406,8 +406,9 @@ public:
     Vector<u8> const& output_tables() const { return m_output_tables; }
 
     // FIXME: If we add DeviceLink support, this can become an arbitrary nD -> nD transform.
-    //        For now, we only have nD -> 3D.
+    //        For now, 3D -> nD and nD -> 3D is sufficient.
     ErrorOr<FloatVector3> evaluate_to_pcs(ColorSpace input_space, ColorSpace connection_space, ReadonlyBytes) const;
+    ErrorOr<void> evaluate_from_pcs(ColorSpace connection_space, ColorSpace output_space, FloatVector3, Bytes) const;
 
 private:
     EMatrix3x3 m_e;
@@ -1161,8 +1162,6 @@ inline ErrorOr<FloatVector3> Lut8TagData::evaluate_to_pcs(ColorSpace input_space
     // See comment at start of LutAToBTagData::evaluate() for the clipping flow.
     VERIFY(connection_space == ColorSpace::PCSXYZ || connection_space == ColorSpace::PCSLAB);
     VERIFY(number_of_input_channels() == color_u8.size());
-
-    // FIXME: This will be wrong once Profile::from_pcs_b_to_a() calls this function too.
     VERIFY(number_of_output_channels() == 3);
 
     // ICC v4, 10.11 lut8Type
@@ -1233,6 +1232,96 @@ inline ErrorOr<FloatVector3> Lut8TagData::evaluate_to_pcs(ColorSpace input_space
     }
 
     return output_color;
+}
+
+inline ErrorOr<void> Lut8TagData::evaluate_from_pcs(ColorSpace connection_space, ColorSpace output_space, FloatVector3 pcs, Bytes color_u8) const
+{
+    // This is very similar to Lut8TagData::evaluate_from_pcs(), but instead of converting from device space to PCS,
+    // it converts from PCS to device space.
+    VERIFY(connection_space == ColorSpace::PCSXYZ || connection_space == ColorSpace::PCSLAB);
+    VERIFY(number_of_input_channels() == 3);
+    VERIFY(number_of_output_channels() == color_u8.size());
+
+    // ICC v4, 10.11 lut8Type
+    // "Data is processed using these elements via the following sequence:
+    //  (matrix) ⇨ (1d input tables) ⇨ (multi-dimensional lookup table, CLUT) ⇨ (1d output tables)"
+
+    if (connection_space == ColorSpace::PCSXYZ) {
+        // "An 8-bit PCSXYZ encoding has not been defined, so the interpretation of a lut8Type in a profile that uses PCSXYZ is implementation specific."
+    } else {
+        VERIFY(connection_space == ColorSpace::PCSLAB);
+
+        // ICC v4, 6.3.4.2 General PCS encoding
+        // Table 12 — PCSLAB L* encoding
+        pcs[0] = clamp(pcs[0] / 100.0f, 0.0f, 1.0f);
+
+        // Table 13 — PCSLAB a* or PCSLAB b* encoding
+        pcs[1] = clamp((pcs[1] + 128.0f) / 255.0f, 0.0f, 1.0f);
+        pcs[2] = clamp((pcs[2] + 128.0f) / 255.0f, 0.0f, 1.0f);
+    }
+
+    // "3 x 3 matrix (which shall be the identity matrix unless the input colour space is PCSXYZ)"
+    // Since "An 8-bit PCSXYZ encoding has not been defined", this should never happen in practice.
+    if (connection_space == ColorSpace::PCSXYZ) {
+        EMatrix3x3 const& e = m_e;
+        pcs = FloatVector3 {
+            (float)e[0] * pcs[0] + (float)e[1] * pcs[1] + (float)e[2] * pcs[2],
+            (float)e[3] * pcs[0] + (float)e[4] * pcs[1] + (float)e[5] * pcs[2],
+            (float)e[6] * pcs[0] + (float)e[7] * pcs[1] + (float)e[8] * pcs[2],
+        };
+    }
+
+    // "The input tables are arrays of uInt8Number values. Each input table consists of 256 uInt8Number integers.
+    //  Each input table entry is appropriately normalized to the range 0 to 255.
+    //  The inputTable is of size (InputChannels x 256) bytes.
+    //  When stored in this tag, the one-dimensional lookup tables are packed one after another"
+    for (size_t c = 0; c < 3; ++c)
+        pcs[c] = lerp_1d(m_input_tables.span().slice(c * 256, 256), pcs[c]) / 255.0f;
+
+    // "The CLUT is organized as an i-dimensional array with a given number of grid points in each dimension,
+    //  where i is the number of input channels (input tables) in the transform.
+    //  The dimension corresponding to the first input channel varies least rapidly and
+    //  the dimension corresponding to the last input channel varies most rapidly.
+    //  Each grid point value is an o-byte array, where o is the number of output channels.
+    //  The first sequential byte of the entry contains the function value for the first output function,
+    //  the second sequential byte of the entry contains the function value for the second output function,
+    //  and so on until all the output functions have been supplied."
+    auto sample = [this](IntVector3 const& coordinates, Span<float> out) {
+        size_t stride = out.size();
+        size_t offset = 0;
+        for (int i = 3 - 1; i >= 0; --i) {
+            offset += coordinates[i] * stride;
+            stride *= m_number_of_clut_grid_points;
+        }
+        for (size_t c = 0; c < out.size(); ++c)
+            out[c] = (float)m_clut_values[offset + c];
+    };
+
+    Vector<float, 4> scratch;
+    Vector<float, 4> color;
+    scratch.resize(number_of_output_channels());
+    color.resize(number_of_output_channels());
+
+    lerp_nd({ m_number_of_clut_grid_points, m_number_of_clut_grid_points, m_number_of_clut_grid_points }, move(sample), pcs, scratch.span(), color.span());
+
+    // "The output tables are arrays of uInt8Number values. Each output table consists of 256 uInt8Number integers.
+    //  Each output table entry is appropriately normalized to the range 0 to 255.
+    //  The outputTable is of size (OutputChannels x 256) bytes.
+    //  When stored in this tag, the one-dimensional lookup tables are packed one after another"
+    for (u8 c = 0; c < color.size(); ++c)
+        color[c] = lerp_1d(m_output_tables.span().slice(c * 256, 256), color[c] / 255.0f) / 255.0f;
+
+    // Since the LUTs assume that everything's in 0..1 and we assume that's mapped linearly to bytes,
+    // we don't need to look at output_space.
+    // 6.5 Device encoding
+    // "The specification of device value encoding is determined by the device. Normally, device values in the range of
+    //  0,0 to 1,0 are encoded using a 0 to 255 (FFh) range when using 8 bits"
+    (void)output_space;
+
+    for (u8 c = 0; c < color_u8.size(); ++c)
+        color_u8[c] = round_to<u8>(clamp(color[c] * 255.0f, 0.0f, 255.0f));
+
+    return {};
 }
 
 inline ErrorOr<FloatVector3> LutAToBTagData::evaluate(ColorSpace connection_space, ReadonlyBytes color_u8) const
