@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023, Nico Weber <thakis@chromium.org>
+ * Copyright (c) 2022-2025, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -314,7 +314,9 @@ static ErrorOr<void> print_stdin_u8_from_pcs(Gfx::ICC::Profile const& profile)
 
         // It's fishy to pass profile.pcs_illuminant() here; we really have to pass the illuminant of the input PCS color,
         // but we don't have that information. But at least the v4 spec dictates that the PCS illuminant always is
-        // D50 (X = 0,9642, Y = 1,0 and Z = 0,8249), so this should work at least most of the time.
+        // D50 (X = 0,9642, Y = 1,0 and Z = 0,8249), and ICC::Profile's parse_pcs_illuminant() rejects any non-D50
+        // (except for v2 with D65, which it emits a warning for and then treats as D50), so for every profile we can
+        // load, pcs_illuminant() is D50 here and this will do the right thing.
         TRY(profile.from_pcs(pcs_space, profile.pcs_illuminant(), pcs, out_colors));
 
         out("{}", out_colors[0]);
