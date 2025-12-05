@@ -1491,9 +1491,10 @@ static TagSignature backward_transform_tag_for_rendering_intent(RenderingIntent 
 ErrorOr<void> Profile::from_pcs_b_to_a(TagData const& tag_data, FloatVector3 const& pcs, Bytes out_bytes) const
 {
     switch (tag_data.type()) {
-    case Lut16TagData::Type:
-        // FIXME
-        return Error::from_string_literal("ICC::Profile::to_pcs: BToA*Tag handling for mft2 tags not yet implemented");
+    case Lut16TagData::Type: {
+        auto const& a_to_b = static_cast<Lut16TagData const&>(tag_data);
+        return a_to_b.evaluate_from_pcs(connection_space(), data_color_space(), pcs, out_bytes);
+    }
     case Lut8TagData::Type: {
         auto const& a_to_b = static_cast<Lut8TagData const&>(tag_data);
         return a_to_b.evaluate_from_pcs(connection_space(), data_color_space(), pcs, out_bytes);
