@@ -383,6 +383,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return Gfx::ICC::IdentityLAB();
             if (name == "sRGB")
                 return Gfx::ICC::sRGB();
+            if (name == "XYZ")
+                return Gfx::ICC::IdentityXYZ_D50();
             return Error::from_string_literal("unknown profile name");
         }
         auto file = TRY(Core::MappedFile::map(path));
