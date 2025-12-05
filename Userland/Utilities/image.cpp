@@ -169,23 +169,37 @@ static ErrorOr<void> convert_image_profile(LoadedImage& image, StringView conver
     auto source_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(source_icc_data));
     auto destination_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(*image.icc_data));
 
-    if (destination_profile->data_color_space() != Gfx::ICC::ColorSpace::RGB)
-        return Error::from_string_literal("Can only convert to RGB at the moment, but destination color space is not RGB");
+    if (destination_profile->data_color_space() != Gfx::ICC::ColorSpace::RGB
+        && destination_profile->data_color_space() != Gfx::ICC::ColorSpace::CMYK)
+        return Error::from_string_literal("Can only convert to RGB and CMYK at the moment, but destination color space is neither");
 
     if (image.bitmap.has<RefPtr<Gfx::CMYKBitmap>>()) {
         if (source_profile->data_color_space() != Gfx::ICC::ColorSpace::CMYK)
             return Error::from_string_literal("Source image data is CMYK but source color space is not CMYK");
 
-        auto& cmyk_frame = image.bitmap.get<RefPtr<Gfx::CMYKBitmap>>();
-        auto rgb_frame = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, cmyk_frame->size()));
-        TRY(destination_profile->convert_cmyk_image(*rgb_frame, *cmyk_frame, *source_profile));
-        image.bitmap = RefPtr(move(rgb_frame));
-        image.internal_format = Gfx::NaturalFrameFormat::RGB;
+        if (destination_profile->data_color_space() == Gfx::ICC::ColorSpace::CMYK) {
+            auto& cmyk_frame = image.bitmap.get<RefPtr<Gfx::CMYKBitmap>>();
+            TRY(destination_profile->convert_cmyk_image_to_cmyk_image(*cmyk_frame, *source_profile));
+        } else {
+            auto& cmyk_frame = image.bitmap.get<RefPtr<Gfx::CMYKBitmap>>();
+            auto rgb_frame = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, cmyk_frame->size()));
+            TRY(destination_profile->convert_cmyk_image(*rgb_frame, *cmyk_frame, *source_profile));
+            image.bitmap = RefPtr(move(rgb_frame));
+            image.internal_format = Gfx::NaturalFrameFormat::RGB;
+        }
     } else {
         // FIXME: This likely wrong for grayscale images because they've been converted to
         //        RGB at this point, but their embedded color profile is still for grayscale.
-        auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
-        TRY(destination_profile->convert_image(*frame, *source_profile));
+        if (destination_profile->data_color_space() == Gfx::ICC::ColorSpace::CMYK) {
+            auto& rgb_frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
+            auto cmyk_frame = TRY(Gfx::CMYKBitmap::create_with_size(rgb_frame->size()));
+            TRY(destination_profile->convert_image_to_cmyk_image(*cmyk_frame, *rgb_frame, *source_profile));
+            image.bitmap = RefPtr(move(cmyk_frame));
+            image.internal_format = Gfx::NaturalFrameFormat::CMYK;
+        } else {
+            auto& frame = image.bitmap.get<RefPtr<Gfx::Bitmap>>();
+            TRY(destination_profile->convert_image(*frame, *source_profile));
+        }
     }
 
     return {};

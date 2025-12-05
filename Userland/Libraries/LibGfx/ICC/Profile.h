@@ -295,6 +295,9 @@ public:
     ErrorOr<void> convert_image(Bitmap&, Profile const& source_profile) const;
     ErrorOr<void> convert_cmyk_image(Bitmap&, CMYKBitmap const&, Profile const& source_profile) const;
 
+    ErrorOr<void> convert_cmyk_image_to_cmyk_image(CMYKBitmap&, Profile const& source_profile) const;
+    ErrorOr<void> convert_image_to_cmyk_image(CMYKBitmap&, Bitmap const&, Profile const& source_profile) const;
+
     // Only call these if you know that this is an RGB matrix-based profile.
     XYZ const& red_matrix_column() const;
     XYZ const& green_matrix_column() const;
