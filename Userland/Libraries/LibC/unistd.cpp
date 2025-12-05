@@ -154,16 +154,16 @@ int execv(char const* path, char* const argv[])
 int execve(char const* filename, char* const argv[], char* const envp[])
 {
     size_t arg_count = 0;
-    for (size_t i = 0; argv[i]; ++i)
+    for (size_t i = 0; argv && argv[i]; ++i)
         ++arg_count;
 
     size_t env_count = 0;
-    for (size_t i = 0; envp[i]; ++i)
+    for (size_t i = 0; envp && envp[i]; ++i)
         ++env_count;
 
     auto copy_strings = [&](auto& vec, size_t count, auto& output) {
         output.length = count;
-        for (size_t i = 0; vec[i]; ++i) {
+        for (size_t i = 0; i < count; ++i) {
             output.strings[i].characters = vec[i];
             output.strings[i].length = strlen(vec[i]);
         }
