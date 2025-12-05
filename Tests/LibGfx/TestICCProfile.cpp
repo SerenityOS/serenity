@@ -312,6 +312,18 @@ TEST_CASE(roundtrip_lab_mABmBA_no_clut)
     test_roundtrip(*profile);
 }
 
+TEST_CASE(roundtrip_lab_mABmBA_u8_clut)
+{
+    auto profile = TRY_OR_FAIL(Gfx::ICC::IdentityLAB_mABmBA_u8_clut());
+    test_roundtrip(*profile);
+}
+
+TEST_CASE(roundtrip_lab_mABmBA_u16_clut)
+{
+    auto profile = TRY_OR_FAIL(Gfx::ICC::IdentityLAB_mABmBA_u16_clut());
+    test_roundtrip(*profile);
+}
+
 TEST_CASE(roundtrip_xyz_mft2)
 {
     auto profile = TRY_OR_FAIL(Gfx::ICC::IdentityXYZ_D50());
@@ -327,6 +339,12 @@ TEST_CASE(roundtrip_sRGB_matrix_profile)
 TEST_CASE(roundtrip_xyz_mABmBA_no_clut)
 {
     auto profile = TRY_OR_FAIL(Gfx::ICC::IdentityXYZ_D50_mABmBA_no_clut());
+    test_roundtrip(*profile);
+}
+
+TEST_CASE(roundtrip_xyz_mABmBA_u16_clut)
+{
+    auto profile = TRY_OR_FAIL(Gfx::ICC::IdentityXYZ_D50_mABmBA_u16_clut());
     test_roundtrip(*profile);
 }
 
