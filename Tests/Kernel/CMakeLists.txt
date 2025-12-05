@@ -38,7 +38,6 @@ target_link_libraries(fuzz-syscalls PRIVATE LibSystem)
 serenity_test("crash.cpp" Kernel MAIN_ALREADY_DEFINED)
 
 set(LIBTEST_BASED_SOURCES
-    TestAnonymousMmap.cpp
     TestEFault.cpp
     TestEmptyPrivateInodeVMObject.cpp
     TestEmptySharedInodeVMObject.cpp
@@ -60,7 +59,6 @@ set(LIBTEST_BASED_SOURCES
     TestProcFSWrite.cpp
     TestSigAltStack.cpp
     TestSigHandler.cpp
-    TestSigWait.cpp
     TestTCPSocket.cpp
     TestWait.cpp
     TestWXProtection.cpp
@@ -68,6 +66,14 @@ set(LIBTEST_BASED_SOURCES
 
 if (ENABLE_KERNEL_COVERAGE_COLLECTION)
     list(APPEND LIBTEST_BASED_SOURCES TestKCOV.cpp)
+endif()
+
+if (NOT ENABLE_USERSPACE_COVERAGE_COLLECTION)
+    # FIXME: Make these tests generate valid coverage files.
+    list(APPEND LIBTEST_BASED_SOURCES
+        TestAnonymousMmap.cpp
+        TestSigWait.cpp
+    )
 endif()
 
 if (CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
