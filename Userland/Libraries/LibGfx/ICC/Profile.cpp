@@ -1763,6 +1763,43 @@ ErrorOr<void> Profile::convert_cmyk_image(Bitmap& out, CMYKBitmap const& in, Pro
     return {};
 }
 
+ErrorOr<void> Profile::convert_cmyk_image_to_cmyk_image(CMYKBitmap& bitmap, Profile const& source_profile) const
+{
+    for (auto& pixel : bitmap) {
+        u8 cmyk[] = { pixel.c, pixel.m, pixel.y, pixel.k };
+        auto pcs = TRY(source_profile.to_pcs(cmyk));
+        TRY(from_pcs(source_profile, pcs, cmyk));
+        pixel = CMYK { cmyk[0], cmyk[1], cmyk[2], cmyk[3] };
+    }
+
+    return {};
+}
+
+ErrorOr<void> Profile::convert_image_to_cmyk_image(CMYKBitmap& out, Bitmap const& in, Profile const& source_profile) const
+{
+    if (out.size() != in.size())
+        return Error::from_string_literal("ICC::Profile::convert_image_to_cmyk_image: out and in must have the same dimensions");
+
+    // Might fail if `out` has a scale_factor() != 1.
+    if (out.data_size() != in.data_size())
+        return Error::from_string_literal("ICC::Profile::convert_image_to_cmyk_image: out and in must have the same buffer size");
+
+    static_assert(sizeof(ARGB32) == sizeof(CMYK));
+    CMYK* out_data = out.begin();
+    ARGB32 const* in_data = in.begin();
+
+    for (size_t i = 0; i < in.data_size() / sizeof(CMYK); ++i) {
+        u8 rgb[] = { Color::from_argb(in_data[i]).red(), Color::from_argb(in_data[i]).green(), Color::from_argb(in_data[i]).blue() };
+        auto pcs = TRY(source_profile.to_pcs(rgb));
+
+        u8 cmyk[4];
+        TRY(from_pcs(source_profile, pcs, cmyk));
+        out_data[i] = CMYK { cmyk[0], cmyk[1], cmyk[2], cmyk[3] };
+    }
+
+    return {};
+}
+
 XYZ const& Profile::red_matrix_column() const { return xyz_data(redMatrixColumnTag); }
 XYZ const& Profile::green_matrix_column() const { return xyz_data(greenMatrixColumnTag); }
 XYZ const& Profile::blue_matrix_column() const { return xyz_data(blueMatrixColumnTag); }
