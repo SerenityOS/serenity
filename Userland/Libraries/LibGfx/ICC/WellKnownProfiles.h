@@ -15,6 +15,7 @@ class Profile;
 class ParametricCurveTagData;
 
 ErrorOr<NonnullRefPtr<Profile>> IdentityLAB();
+ErrorOr<NonnullRefPtr<Profile>> IdentityXYZ_D50();
 
 ErrorOr<NonnullRefPtr<Profile>> sRGB();
 
