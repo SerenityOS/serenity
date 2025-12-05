@@ -381,6 +381,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!name.is_empty()) {
             if (name == "LAB")
                 return Gfx::ICC::IdentityLAB();
+            if (name == "LAB_mft2")
+                return Gfx::ICC::IdentityLAB_mft2();
             if (name == "sRGB")
                 return Gfx::ICC::sRGB();
             if (name == "XYZ")

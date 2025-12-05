@@ -112,6 +112,44 @@ ErrorOr<NonnullRefPtr<Profile>> IdentityLAB()
     return Profile::create(header, move(tag_table));
 }
 
+ErrorOr<NonnullRefPtr<Profile>> IdentityLAB_mft2()
+{
+    // Identity mapping between CIELAB and PCSXYZ, using an unnecessarily large mft2.
+
+    auto header = profile_header(ColorSpace::CIELAB, ColorSpace::PCSLAB);
+    header.device_class = DeviceClass::ColorSpace;
+
+    OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table;
+
+    TRY(tag_table.try_set(profileDescriptionTag, TRY(en_US("SerenityOS Identity LAB, mft2"sv))));
+    TRY(tag_table.try_set(copyrightTag, TRY(en_US("Public Domain"sv))));
+
+    // mft1 is plenty; this is just for testing mft2 LAB codepaths.
+    EMatrix3x3 e_matrix = identity_matrix();
+
+    Vector<u16> input_tables;
+    for (int c = 0; c < 3; ++c) {
+        // mft2 allows between 2 and 4096 entries. If there are just two values, it linearly maps between them.
+        input_tables.append(0);
+        input_tables.append(65535);
+    }
+
+    auto clut_values = make_2x2x2_cube<u16>();
+    Vector<u16> output_tables = input_tables;
+
+    auto mft2 = TRY(try_make_ref_counted<Lut16TagData>(0, 0, e_matrix,
+        3, 3, 2,
+        2, 2,
+        move(input_tables), move(clut_values), move(output_tables)));
+    TRY(tag_table.try_set(AToB0Tag, mft2));
+    TRY(tag_table.try_set(BToA0Tag, mft2));
+
+    // White point.
+    TRY(tag_table.try_set(mediaWhitePointTag, TRY(XYZ_data(header.pcs_illuminant))));
+
+    return Profile::create(header, move(tag_table));
+}
+
 ErrorOr<NonnullRefPtr<Profile>> IdentityXYZ_D50()
 {
     // Identity mapping between nCIEXYZ and PCSXYZ.

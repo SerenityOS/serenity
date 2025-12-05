@@ -300,6 +300,12 @@ TEST_CASE(roundtrip_lab_mft1)
     test_roundtrip(*profile);
 }
 
+TEST_CASE(roundtrip_lab_mft2)
+{
+    auto profile = TRY_OR_FAIL(Gfx::ICC::IdentityLAB_mft2());
+    test_roundtrip(*profile);
+}
+
 TEST_CASE(roundtrip_xyz_mft2)
 {
     auto profile = TRY_OR_FAIL(Gfx::ICC::IdentityXYZ_D50());
