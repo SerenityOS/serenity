@@ -1543,6 +1543,7 @@ inline ErrorOr<void> LutBToATagData::evaluate(ColorSpace connection_space, Float
         color[1] = (in_color[1] + 128.0f) / 255.0f;
         color[2] = (in_color[2] + 128.0f) / 255.0f;
     }
+    color = color.clamped(0.f, 1.f);
 
     color = FloatVector3 {
         evaluate_curve(m_b_curves[0], color[0]),
@@ -1572,8 +1573,50 @@ inline ErrorOr<void> LutBToATagData::evaluate(ColorSpace connection_space, Float
 
     VERIFY(m_clut.has_value() == m_a_curves.has_value());
     if (m_clut.has_value()) {
-        // FIXME
-        return Error::from_string_literal("LutBToATagData::evaluate: Not yet implemented when CLUT present");
+        Vector<float, 4> scratch;
+        Vector<float, 4> out;
+        scratch.resize(number_of_output_channels());
+        out.resize(number_of_output_channels());
+
+        auto const& clut = m_clut.value();
+        auto sample1 = [&clut]<typename T>(Vector<T> const& data, IntVector3 const& coordinates, Span<float> out) {
+            size_t stride = out.size();
+            size_t offset = 0;
+            for (int i = 3 - 1; i >= 0; --i) {
+                offset += coordinates[i] * stride;
+                stride *= clut.number_of_grid_points_in_dimension[i];
+            }
+            for (size_t c = 0; c < out.size(); ++c)
+                out[c] = (float)data[offset + c];
+        };
+        auto sample = [&clut, &sample1](IntVector3 const& coordinates, Span<float> out) {
+            clut.values.visit(
+                [&](Vector<u8> const& v) {
+                    sample1(v, coordinates, out);
+                    for (auto& f : out)
+                        f /= 255.0f;
+                },
+                [&](Vector<u16> const& v) {
+                    sample1(v, coordinates, out);
+                    for (auto& f : out)
+                        f /= 65535.0f;
+                });
+        };
+
+        VERIFY(clut.number_of_grid_points_in_dimension.size() == 3);
+        Gfx::IntVector3 size {
+            clut.number_of_grid_points_in_dimension[0],
+            clut.number_of_grid_points_in_dimension[1],
+            clut.number_of_grid_points_in_dimension[2],
+        };
+        lerp_nd(size, move(sample), color, scratch, out);
+
+        auto const& a_curves = m_a_curves.value();
+        VERIFY(a_curves.size() == out.size());
+        for (unsigned c = 0; c < out.size(); ++c) {
+            out[c] = evaluate_curve(a_curves[c], out[c]);
+            out_bytes[c] = round_to<u8>(clamp(out[c] * 255.0f, 0.0f, 255.0f));
+        }
     } else {
         VERIFY(number_of_output_channels() == 3);
         out_bytes[0] = round_to<u8>(color[0] * 255.0f);
