@@ -11,10 +11,10 @@ in the auxiliary vector.
  2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/liblzma/check/crc32_arm64.h b/src/liblzma/check/crc32_arm64.h
-index 39c1c63ec0eced25ad5042e1611ecd8064831d8d..bea249c9462c7298bce154a1228dba71c4f0e128 100644
+index fb0e8f0105a9e7ddf5abb3a8f8ef3bb2b48ab128..32072922d6b8e3cee8705d0169a1d083c8e08ad6 100644
 --- a/src/liblzma/check/crc32_arm64.h
 +++ b/src/liblzma/check/crc32_arm64.h
-@@ -78,7 +78,7 @@ crc32_arch_optimized(const uint8_t *buf, size_t size, uint32_t crc)
+@@ -103,7 +103,7 @@ crc32_arch_optimized(const uint8_t *buf, size_t size, uint32_t crc)
  static inline bool
  is_arch_extension_supported(void)
  {
@@ -24,15 +24,15 @@ index 39c1c63ec0eced25ad5042e1611ecd8064831d8d..bea249c9462c7298bce154a1228dba71
  
  #elif defined(HAVE_ELF_AUX_INFO)
 diff --git a/src/liblzma/check/crc_common.h b/src/liblzma/check/crc_common.h
-index 63a7b5cefebffc506dc54a6378134008ead3c806..917bf98c9ce611fc946f8acad0c1cf31f2a2fdee 100644
+index 7ea1e60b043bf86dfe421e7594cb01812c51caa0..30a7b5c1a8f4185d76c926c3b41a5488b72ce6ed 100644
 --- a/src/liblzma/check/crc_common.h
 +++ b/src/liblzma/check/crc_common.h
-@@ -48,7 +48,7 @@
- #endif
- 
+@@ -89,7 +89,7 @@ extern const uint64_t lzma_crc64_table[4][256];
+ // ARM64
+ //
  // Keep this in sync with changes to crc32_arm64.h
 -#if defined(_WIN32) || defined(HAVE_GETAUXVAL) \
 +#if defined(_WIN32) || (defined(__linux__) && defined(HAVE_GETAUXVAL)) \
  		|| defined(HAVE_ELF_AUX_INFO) \
  		|| (defined(__APPLE__) && defined(HAVE_SYSCTLBYNAME))
- #	define ARM64_RUNTIME_DETECTION 1
+ #	define CRC_ARM64_RUNTIME_DETECTION 1
