@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sat, 6 Dec 2025 17:16:03 +0000
+Subject: [PATCH] Disable unsupported prctl call
+
+Serenity has prctl but doesn't define PR_SET_PDEATHSIG.
+---
+ sapi/cli/php_cli_server.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sapi/cli/php_cli_server.c b/sapi/cli/php_cli_server.c
+index da6732f06e72a297315615352a8f399107b7e096..21a4e3224bc4cd27045c346fe1334c01adae1019 100644
+--- a/sapi/cli/php_cli_server.c
++++ b/sapi/cli/php_cli_server.c
+@@ -2486,7 +2486,7 @@ static char *php_cli_server_parse_addr(const char *addr, int *pport) {
+ static void php_cli_server_worker_install_pdeathsig(void)
+ {
+ 	// Ignore failure to register PDEATHSIG, it's not available on all platforms anyway
+-#if defined(HAVE_PRCTL)
++#if defined(HAVE_PRCTL) && !defined(__serenity__)
+ 	prctl(PR_SET_PDEATHSIG, SIGTERM);
+ #elif defined(HAVE_PROCCTL)
+ 	int signal = SIGTERM;
