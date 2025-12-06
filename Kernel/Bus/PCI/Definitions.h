@@ -60,6 +60,8 @@ enum class RegisterOffset : u32 {
     SECONDARY_BUS = 0x19,                           // byte
     SUBORDINATE_BUS = 0x1A,                         // byte
     BAR3 = 0x1C,                                    // u32
+    IO_BASE = 0x1c,                                 // byte
+    IO_LIMIT = 0x1d,                                // byte
     BAR4 = 0x20,                                    // u32
     MEMORY_BASE = 0x20,                             // u16
     MEMORY_LIMIT = 0x22,                            // u16
@@ -71,6 +73,8 @@ enum class RegisterOffset : u32 {
     SUBSYSTEM_VENDOR_ID = 0x2C,                     // u16
     SUBSYSTEM_ID = 0x2E,                            // u16
     EXPANSION_ROM_POINTER = 0x30,                   // u32
+    IO_BASE_UPPER_16_BITS = 0x30,                   // u16
+    IO_LIMIT_UPPER_16_BITS = 0x32,                  // u16
     CAPABILITIES_POINTER = 0x34,                    // u8
     INTERRUPT_LINE = 0x3C,                          // byte
     INTERRUPT_PIN = 0x3D,                           // byte
@@ -89,6 +93,7 @@ static constexpr size_t mmio_device_space_size = 4096;
 static constexpr u16 none_value = 0xffff;
 static constexpr size_t memory_range_per_bus = mmio_device_space_size * to_underlying(Limits::MaxFunctionsPerDevice) * to_underlying(Limits::MaxDevicesPerBus);
 static constexpr u64 bar_address_mask = ~0xfull;
+static constexpr u64 bar_io_address_mask = ~0x3ull;
 static constexpr u8 msi_control_offset = 2;
 static constexpr u16 msi_control_enable = 0x0001;
 static constexpr u8 msi_address_low_offset = 4;

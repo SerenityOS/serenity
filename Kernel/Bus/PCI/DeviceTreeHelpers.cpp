@@ -80,6 +80,8 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
     u32 pci_32bit_mmio_size = 0;
     FlatPtr pci_64bit_mmio_base = 0;
     u64 pci_64bit_mmio_size = 0;
+    FlatPtr pci_io_base = 0;
+    u64 pci_io_size = 0;
     HashMap<PCIInterruptSpecifier, u64> masked_interrupt_mapping;
     PCIInterruptSpecifier interrupt_mask;
 
@@ -115,17 +117,13 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
                 !!pci_address.prefetchable,
                 !pci_address.non_relocatable);
 
-            if (pci_address.space_type != OpenFirmwareAddress::SpaceType::Memory32BitSpace
-                && pci_address.space_type != OpenFirmwareAddress::SpaceType::Memory64BitSpace)
-                continue; // We currently only support memory-mapped PCI on RISC-V and AArch64
-
-            TRY(host_controller.add_memory_space_window(HostController::Window {
-                .host_address = PhysicalAddress { cpu_physical_address },
-                .bus_address = pci_address.io_or_memory_space_address,
-                .size = range_size,
-            }));
-
             if (pci_address.space_type == OpenFirmwareAddress::SpaceType::Memory32BitSpace) {
+                TRY(host_controller.add_memory_space_window(HostController::Window {
+                    .host_address = PhysicalAddress { cpu_physical_address },
+                    .bus_address = pci_address.io_or_memory_space_address,
+                    .size = range_size,
+                }));
+
                 if (pci_address.prefetchable)
                     continue; // We currently only use non-prefetchable 32-bit regions, since 64-bit regions are always prefetchable - TODO: Use 32-bit prefetchable regions if only they are available
                 if (pci_32bit_mmio_size >= range_size)
@@ -133,12 +131,26 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
 
                 pci_32bit_mmio_base = pci_address.io_or_memory_space_address;
                 pci_32bit_mmio_size = range_size;
-            } else {
+            } else if (pci_address.space_type == OpenFirmwareAddress::SpaceType::Memory64BitSpace) {
+                TRY(host_controller.add_memory_space_window(HostController::Window {
+                    .host_address = PhysicalAddress { cpu_physical_address },
+                    .bus_address = pci_address.io_or_memory_space_address,
+                    .size = range_size,
+                }));
+
                 if (pci_64bit_mmio_size >= range_size)
                     continue; // We currently only use the single largest region - TODO: Use all available regions if needed
 
                 pci_64bit_mmio_base = pci_address.io_or_memory_space_address;
                 pci_64bit_mmio_size = range_size;
+            } else if (pci_address.space_type == OpenFirmwareAddress::SpaceType::IOSpace) {
+                if (pci_io_size >= range_size)
+                    continue; // We currently only use the single largest region - TODO: Use all available regions if needed
+
+                pci_io_base = pci_address.io_or_memory_space_address;
+                pci_io_size = range_size;
+            } else {
+                dbgln("PCI: Unexpected address space type in 'ranges' property: {}", to_underlying(pci_address.space_type));
             }
         }
     }
@@ -250,6 +262,8 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
             pci_32bit_mmio_base + pci_32bit_mmio_size,
             pci_64bit_mmio_base,
             pci_64bit_mmio_base + pci_64bit_mmio_size,
+            pci_io_base,
+            pci_io_base + pci_io_size,
             move(masked_interrupt_mapping),
             interrupt_mask,
         };

@@ -61,8 +61,13 @@ namespace Kernel::PCI {
 struct PCIConfiguration {
     FlatPtr mmio_32bit_base { 0 };
     FlatPtr mmio_32bit_end { 0 };
+
     FlatPtr mmio_64bit_base { 0 };
     FlatPtr mmio_64bit_end { 0 };
+
+    FlatPtr io_base { 0 };
+    FlatPtr io_end { 0 };
+
     // The keys contains the bus, device & function at the same offsets as OpenFirmware PCI addresses,
     // with the least significant 8 bits being the interrupt pin.
     HashMap<PCIInterruptSpecifier, u64> masked_interrupt_mapping;
