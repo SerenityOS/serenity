@@ -11,6 +11,7 @@
 #include <Kernel/Devices/Serial/16550/PCISerial16550.h>
 #include <Kernel/Library/IOWindow.h>
 #include <Kernel/Sections.h>
+#include <Kernel/kstdio.h>
 
 namespace Kernel {
 
@@ -80,9 +81,13 @@ ErrorOr<void> Serial16550Driver::probe(PCI::DeviceIdentifier const& pci_device_i
             if (board_definition.baud_rate != Serial16550::Baud::Baud38400) // non-default baud
                 serial_device->set_baud(board_definition.baud_rate);
 
-            // If this is the first port of the first pci serial device, store it as the debug PCI serial port (TODO: Make this configurable somehow?)
-            if (s_the == nullptr)
-                s_the = &serial_device.leak_ref(); // NOTE: We intentionally leak the reference to serial_device here.
+            if (is_pci_serial_debug_enabled()) {
+                // If this is the first port of the first pci serial device, store it as the debug PCI serial port (TODO: Make this configurable somehow?)
+                if (s_the == nullptr)
+                    s_the = serial_device;
+            }
+
+            (void)serial_device.leak_ref(); // NOTE: We intentionally leak the reference to serial_device here.
         }
 
         dmesgln("PCISerial16550: Found {} @ {}", board_definition.name, pci_device_identifier.address());
