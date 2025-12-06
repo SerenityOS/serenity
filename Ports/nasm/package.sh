@@ -1,10 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
-port=nasm
-version=2.16.03
+port='nasm'
+version='3.01'
 files=(
-    "https://www.nasm.us/pub/nasm/releasebuilds/${version}/nasm-${version}.tar.gz#5bc940dd8a4245686976a8f7e96ba9340a0915f2d5b88356874890e207bdb581"
+    "https://www.nasm.us/pub/nasm/releasebuilds/${version}/nasm-${version}.tar.gz#aea120d4adb0241f08ae24d6add09e4a993bc1c4d9f754dbfc8020d6916c9be1"
 )
 useconfigure=true
-use_fresh_config_sub=true
-config_sub_paths=("autoconf/helpers/config.sub")
 makeopts=()
