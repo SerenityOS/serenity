@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Linus Groh <mail@linusgroh.de>
+Date: Sat, 6 Dec 2025 17:11:07 +0000
+Subject: [PATCH] Remove include of sys/ipc.h
+
+---
+ ext/opcache/ZendAccelerator.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/ext/opcache/ZendAccelerator.c b/ext/opcache/ZendAccelerator.c
+index 84acae980ce3a5ec1d03e4aebe2f30e3fd601bb3..904a9c2ae08fd9acab89e0f192cde9fc56dc53e9 100644
+--- a/ext/opcache/ZendAccelerator.c
++++ b/ext/opcache/ZendAccelerator.c
+@@ -89,7 +89,6 @@ typedef int gid_t;
+ #ifndef ZEND_WIN32
+ # include <sys/types.h>
+ # include <sys/wait.h>
+-# include <sys/ipc.h>
+ # include <pwd.h>
+ # include <grp.h>
+ #endif
