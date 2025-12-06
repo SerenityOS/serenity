@@ -69,7 +69,7 @@ runs:
 
         sudo apt-get update
         sudo apt-get remove clang-{14..18} clang++-{14..18} libclang-{14..18}-dev llvm-{14..18}
-        sudo apt-get install clang-format-20 ccache e2fsprogs libmpfr-dev libmpc-dev optipng qemu-utils qemu-system-i386 generate-ninja libegl1-mesa-dev
+        sudo apt-get install clang-format-20 ccache e2fsprogs libmpfr-dev libmpc-dev optipng qemu-utils qemu-system-i386 qemu-system-arm qemu-system-riscv64 generate-ninja libegl1-mesa-dev
         sudo apt-get install clang-20 clang++-20 llvm-20 llvm-20-dev
 
     - name: Enable KVM group perms
