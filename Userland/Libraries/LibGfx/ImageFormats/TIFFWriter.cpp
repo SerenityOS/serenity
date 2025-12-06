@@ -297,15 +297,7 @@ ErrorOr<void> TIFFWriter::encode(Stream& stream, CMYKBitmap const& bitmap, Optio
     auto ifd_entries = make_cmyk_ifd(bitmap.size().width(), bitmap.size().height(), image_data_size, move(icc_data));
     TRY(encode_ifd(stream, ifd_offset, move(ifd_entries)));
 
-    for (int y = 0; y < bitmap.size().height(); ++y) {
-        for (int x = 0; x < bitmap.size().width(); ++x) {
-            CMYK const& pixel = bitmap.scanline(y)[x];
-            TRY(stream.write_value<u8>(pixel.c));
-            TRY(stream.write_value<u8>(pixel.m));
-            TRY(stream.write_value<u8>(pixel.y));
-            TRY(stream.write_value<u8>(pixel.k));
-        }
-    }
+    TRY(stream.write_until_depleted(bitmap.data()));
     return {};
 }
 
