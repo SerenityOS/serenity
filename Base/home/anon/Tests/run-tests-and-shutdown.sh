@@ -5,7 +5,7 @@ echo
 echo "==== Running Tests on SerenityOS ===="
 
 echo "architecture is: >>$(uname -m)<<"
-if [ "$(uname -m)" = "AArch64" ] && [ "$1" != "--force" ] {
+if [ "$(uname -m)" = "AArch64" -o "$(uname -m)" = "riscv64" ] && [ "$1" != "--force" ] {
     fail_count=0
 }
 else {
