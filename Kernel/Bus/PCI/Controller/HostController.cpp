@@ -24,17 +24,24 @@ ErrorOr<void> HostController::add_memory_space_window(Window const& window)
     return m_memory_space_windows.try_append(window);
 }
 
+ErrorOr<void> HostController::add_io_space_window(Window const& window)
+{
+    return m_io_space_windows.try_append(window);
+}
+
 ErrorOr<PhysicalAddress> HostController::translate_bus_address_to_host_address(BARSpaceType space_type, u64 bus_address) const
 {
-    // TODO: Support mapping IO space addresses to memory space addresses.
-    if (space_type == BARSpaceType::IOSpace)
-        return ENOTIMPL;
+    Vector<Window> const* windows = &m_memory_space_windows;
+    if (space_type == BARSpaceType::IOSpace) {
+        windows = &m_io_space_windows;
+    } else {
+        // If no memory space windows were defined, assume identity mapping.
+        // For I/O space, this assumption doesn't make sense since we always need to know to which MMIO address they are mapped to.
+        if (m_memory_space_windows.is_empty())
+            return PhysicalAddress { bus_address };
+    }
 
-    // If no memory space windows were defined, assume identity mapping.
-    if (m_memory_space_windows.is_empty())
-        return PhysicalAddress { bus_address };
-
-    for (auto const& window : m_memory_space_windows) {
+    for (auto const& window : *windows) {
         if (bus_address >= window.bus_address && bus_address < (window.bus_address + window.size))
             return PhysicalAddress { bus_address - window.bus_address + window.host_address.get() };
     }
