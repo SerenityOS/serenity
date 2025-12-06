@@ -589,8 +589,8 @@ private:
     ErrorOr<void> set_next_ifd(u32 ifd_offset)
     {
         if (ifd_offset != 0) {
-            if (ifd_offset < TRY(m_stream->tell()))
-                return Error::from_string_literal("TIFFImageDecoderPlugin: Can not accept an IFD pointing to previous data");
+            if (TRY(m_known_ifds.try_set(ifd_offset)) != HashSetResult::InsertedNewEntry)
+                return Error::from_string_literal("TIFFImageDecoderPlugin: Can not accept an IFD pointing to already visited data");
 
             m_next_ifd = Optional<u32> { ifd_offset };
         } else {
@@ -773,6 +773,7 @@ private:
     RefPtr<CMYKBitmap> m_cmyk_bitmap {};
 
     ByteOrder m_byte_order {};
+    HashTable<u32> m_known_ifds {};
     Optional<u32> m_next_ifd {};
 
     ExifMetadata m_metadata {};
