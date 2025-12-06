@@ -826,24 +826,6 @@ int faccessat(int dirfd, char const* pathname, int mode, int flags)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mknod.html
-int mknod(char const* pathname, mode_t mode, dev_t dev)
-{
-    return mknodat(AT_FDCWD, pathname, mode, dev);
-}
-
-// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mknodat.html
-int mknodat(int dirfd, char const* pathname, mode_t mode, dev_t dev)
-{
-    if (!pathname) {
-        errno = EFAULT;
-        return -1;
-    }
-    Syscall::SC_mknod_params params { { pathname, strlen(pathname) }, mode, dev, dirfd };
-    int rc = syscall(SC_mknod, &params);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/fpathconf.html
 long fpathconf([[maybe_unused]] int fd, int name)
 {

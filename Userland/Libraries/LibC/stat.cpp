@@ -87,6 +87,24 @@ int mkfifoat(int dirfd, char const* pathname, mode_t mode)
     return mknodat(dirfd, pathname, mode | S_IFIFO, 0);
 }
 
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mknod.html
+int mknod(char const* pathname, mode_t mode, dev_t dev)
+{
+    return mknodat(AT_FDCWD, pathname, mode, dev);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/mknodat.html
+int mknodat(int dirfd, char const* pathname, mode_t mode, dev_t dev)
+{
+    if (!pathname) {
+        errno = EFAULT;
+        return -1;
+    }
+    Syscall::SC_mknod_params params { { pathname, strlen(pathname) }, mode, dev, dirfd };
+    int rc = syscall(SC_mknod, &params);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 static int do_stat(int dirfd, char const* path, struct stat* statbuf, bool follow_symlinks)
 {
     if (!path) {
@@ -127,5 +145,66 @@ int fstatat(int fd, char const* path, struct stat* statbuf, int flags)
 int futimens(int fd, struct timespec const times[2])
 {
     return __utimens(fd, nullptr, times, 0);
+}
+
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/utimensat.html
+int utimensat(int dirfd, char const* path, struct timespec const times[2], int flag)
+{
+    if (!path) {
+        errno = EFAULT;
+        return -1;
+    }
+    return __utimens(dirfd, path, times, flag);
+}
+
+int __utimens(int fd, char const* path, struct timespec const times[2], int flag)
+{
+    size_t path_length = 0;
+    if (path) {
+        path_length = strlen(path);
+        if (path_length > INT32_MAX) {
+            errno = EINVAL;
+            return -1;
+        }
+    }
+
+    // POSIX allows AT_SYMLINK_NOFOLLOW flag or no flags.
+    if (flag & ~AT_SYMLINK_NOFOLLOW) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    // Return early without error since both changes are to be omitted.
+    if (times && times[0].tv_nsec == UTIME_OMIT && times[1].tv_nsec == UTIME_OMIT)
+        return 0;
+
+    // According to POSIX, when times is a nullptr, it's equivalent to setting
+    // both last access time and last modification time to the current time.
+    // Setting the times argument to nullptr if it matches this case prevents
+    // the need to copy it in the kernel.
+    if (times && times[0].tv_nsec == UTIME_NOW && times[1].tv_nsec == UTIME_NOW)
+        times = nullptr;
+
+    if (times) {
+        for (int i = 0; i < 2; ++i) {
+            if ((times[i].tv_nsec != UTIME_NOW && times[i].tv_nsec != UTIME_OMIT)
+                && (times[i].tv_nsec < 0 || times[i].tv_nsec >= 1'000'000'000L)) {
+                errno = EINVAL;
+                return -1;
+            }
+        }
+    }
+
+    int rc = 0;
+    if (path) {
+        // NOTE: fd is treated as dirfd for this syscall.
+        Syscall::SC_utimensat_params params { fd, { path, path_length }, times, flag };
+        rc = syscall(SC_utimensat, &params);
+    } else {
+        Syscall::SC_futimens_params params { fd, times };
+        rc = syscall(SC_futimens, &params);
+    }
+
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }

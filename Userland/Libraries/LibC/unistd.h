@@ -107,8 +107,6 @@ unsigned int alarm(unsigned int seconds);
 int access(char const* pathname, int mode);
 int faccessat(int dirfd, char const* pathname, int mode, int flags);
 int isatty(int fd);
-int mknod(char const* pathname, mode_t, dev_t);
-int mknodat(int dirfd, char const* pathname, mode_t, dev_t);
 long fpathconf(int fd, int name);
 long pathconf(char const* path, int name);
 char* getlogin(void);

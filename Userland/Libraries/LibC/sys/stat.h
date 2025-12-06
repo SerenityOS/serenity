@@ -21,10 +21,13 @@ int mkdir(char const* pathname, mode_t);
 int mkdirat(int dirfd, char const* pathname, mode_t);
 int mkfifo(char const* pathname, mode_t);
 int mkfifoat(int dirfd, char const* pathname, mode_t);
+int mknod(char const* pathname, mode_t, dev_t);
+int mknodat(int dirfd, char const* pathname, mode_t, dev_t);
 int fstat(int fd, struct stat* statbuf);
 int lstat(char const* path, struct stat* statbuf);
 int stat(char const* path, struct stat* statbuf);
 int fstatat(int fd, char const* path, struct stat* statbuf, int flags);
 int futimens(int fd, struct timespec const times[2]);
+int utimensat(int dirfd, char const* path, struct timespec const times[2], int flag);
 
 __END_DECLS
