@@ -26,6 +26,7 @@ extern Atomic<Graphics::Console*> g_boot_console;
 }
 
 static bool s_serial_debug_enabled;
+static bool s_pci_serial_debug_enabled;
 // A recursive spinlock allows us to keep writing in the case where a
 // page fault happens in the middle of a dbgln(), etc
 static RecursiveSpinlock<LockRank::None> s_log_lock {};
@@ -35,23 +36,39 @@ void set_serial_debug_enabled(bool desired_state)
     s_serial_debug_enabled = desired_state;
 }
 
+void set_pci_serial_debug_enabled(bool desired_state)
+{
+    s_pci_serial_debug_enabled = desired_state;
+}
+
 bool is_serial_debug_enabled()
 {
     return s_serial_debug_enabled;
 }
 
+bool is_pci_serial_debug_enabled()
+{
+    return s_pci_serial_debug_enabled;
+}
+
 static void serial_putch(char ch)
+{
+    debug_output(ch);
+}
+
+static void pci_serial_putch(char ch)
 {
     if (PCISerial16550::is_available())
         PCISerial16550::the().put_char(ch);
-
-    debug_output(ch);
 }
 
 static void critical_console_out(char ch)
 {
     if (s_serial_debug_enabled)
         serial_putch(ch);
+
+    if (s_pci_serial_debug_enabled)
+        pci_serial_putch(ch);
 
 #if ARCH(X86_64)
     // No need to output things to the real ConsoleDevice as no one is likely
@@ -77,6 +94,9 @@ static void console_out(char ch)
         if (s_serial_debug_enabled)
             serial_putch(ch);
 
+        if (s_pci_serial_debug_enabled)
+            pci_serial_putch(ch);
+
 #if ARCH(X86_64)
         bochs_debug_output(ch);
 #endif
@@ -100,6 +120,10 @@ static inline void internal_dbgputch(char ch)
 {
     if (s_serial_debug_enabled)
         serial_putch(ch);
+
+    if (s_pci_serial_debug_enabled)
+        pci_serial_putch(ch);
+
 #if ARCH(X86_64)
     bochs_debug_output(ch);
 #endif

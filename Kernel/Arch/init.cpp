@@ -447,6 +447,10 @@ UNMAP_AFTER_INIT void setup_serial_debug()
     if (s_kernel_cmdline.contains("serial_debug"sv)) {
         set_serial_debug_enabled(true);
     }
+
+    if (s_kernel_cmdline.contains("pci_serial_debug"sv)) {
+        set_pci_serial_debug_enabled(true);
+    }
 }
 
 // Define some Itanium C++ ABI methods to stop the linker from complaining.

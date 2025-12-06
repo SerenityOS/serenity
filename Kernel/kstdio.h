@@ -16,7 +16,9 @@ void kernelcriticalputstr(char const*, size_t);
 void dbgputchar(char);
 void kernelearlyputstr(char const*, size_t);
 void set_serial_debug_enabled(bool desired_state);
+void set_pci_serial_debug_enabled(bool desired_state);
 bool is_serial_debug_enabled();
+bool is_pci_serial_debug_enabled();
 }
 
 void dbgputstr(StringView view);
