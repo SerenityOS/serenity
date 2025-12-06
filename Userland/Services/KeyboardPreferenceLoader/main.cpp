@@ -31,7 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     if (active_keymap.is_empty())
         active_keymap = keymaps_vector.first();
 
-    TRY(Core::Process::spawn("/bin/keymap"sv, Array { "-m", active_keymap.characters() }, {}, Core::Process::KeepAsChild::Yes));
+    TRY(Core::Process::spawn("/bin/keymap"sv, Array { "-m", active_keymap.characters() }, {}));
 
     bool enable_num_lock = keyboard_settings_config->read_bool_entry("StartupEnable", "NumLock", true);
     auto keyboard_device = TRY(Core::File::open("/dev/input/keyboard/0"sv, Core::File::OpenMode::Read));
