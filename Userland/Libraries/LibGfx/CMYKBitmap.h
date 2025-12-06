@@ -35,6 +35,7 @@ public:
 
     [[nodiscard]] CMYK* begin();
     [[nodiscard]] CMYK* end();
+    [[nodiscard]] ReadonlyBytes data() const { return m_data; }
     [[nodiscard]] size_t data_size() const { return m_data.size(); }
 
     ErrorOr<RefPtr<Bitmap>> to_low_quality_rgb() const;
