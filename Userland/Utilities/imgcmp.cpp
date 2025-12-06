@@ -65,8 +65,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView write_diff_image_path;
     args_parser.add_option(write_diff_image_path, "Write image that highlights differing pixels", "write-diff-image", {}, "FILE");
 
-    bool should_count = false;
-    args_parser.add_option(should_count, "Report the number of differing pixels", "count", {});
+    bool quiet = false;
+    args_parser.add_option(quiet, "Only set exit code, print no output", "quiet", {});
 
     StringView first_image_path;
     args_parser.add_positional_argument(first_image_path, "Path to first input image", "FILE1");
@@ -90,21 +90,60 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     u64 number_of_differences = 0;
+    int first_different_x = 0;
+    int first_different_y = 0;
+    u8 max_error_r = 0;
+    u8 max_error_g = 0;
+    u8 max_error_b = 0;
+    u8 max_error = 0;
+    int max_error_x = 0;
+    int max_error_y = 0;
+    u64 total_error_r = 0;
+    u64 total_error_g = 0;
+    u64 total_error_b = 0;
     for (int y = 0; y < first_image->physical_height(); ++y) {
         for (int x = 0; x < first_image->physical_width(); ++x) {
             auto first_pixel = first_image->get_pixel(x, y);
             auto second_pixel = second_image->get_pixel(x, y);
             if (first_pixel != second_pixel) {
-                if (number_of_differences == 0)
-                    warnln("different pixel at ({}, {}), {} vs {}", x, y, first_pixel, second_pixel);
-                if (!should_count)
+                if (quiet)
                     return 1;
+                if (number_of_differences == 0) {
+                    first_different_x = x;
+                    first_different_y = y;
+                }
+                auto error_r = abs((int)first_pixel.red() - (int)second_pixel.red());
+                auto error_g = abs((int)first_pixel.green() - (int)second_pixel.green());
+                auto error_b = abs((int)first_pixel.blue() - (int)second_pixel.blue());
+                max_error_r = max(max_error_r, error_r);
+                max_error_g = max(max_error_g, error_g);
+                max_error_b = max(max_error_b, error_b);
+                auto pixel_max_error = max(max(error_r, error_g), error_b);
+                if (pixel_max_error > max_error) {
+                    max_error = pixel_max_error;
+                    max_error_x = x;
+                    max_error_y = y;
+                }
+                total_error_r += error_r;
+                total_error_g += error_g;
+                total_error_b += error_b;
                 number_of_differences++;
             }
         }
     }
-    if (should_count)
-        warnln("number of differing pixels: {}", number_of_differences);
+    if (!quiet && number_of_differences > 0) {
+        u64 number_of_pixels = first_image->physical_width() * first_image->physical_height();
+        warnln("number of differing pixels: {} ({:.2f}%)", number_of_differences, (100.0 * number_of_differences) / number_of_pixels);
+        warnln("max error R: {:4}, G: {:4}, B: {:4}", max_error_r, max_error_g, max_error_b);
+        warnln("avg error R: {:.2f}, G: {:.2f}, B: {:.2f}",
+            (double)total_error_r / number_of_pixels,
+            (double)total_error_g / number_of_pixels,
+            (double)total_error_b / number_of_pixels);
+        warnln("max error at ({}, {}): {} vs {}", max_error_x, max_error_y,
+            first_image->get_pixel(max_error_x, max_error_y), second_image->get_pixel(max_error_x, max_error_y));
+        warnln("first difference at ({}, {}): {} vs {}", first_different_x, first_different_y,
+            first_image->get_pixel(first_different_x, first_different_y), second_image->get_pixel(first_different_x, first_different_y));
+    }
 
-    return 0;
+    return number_of_differences > 0 ? 1 : 0;
 }
