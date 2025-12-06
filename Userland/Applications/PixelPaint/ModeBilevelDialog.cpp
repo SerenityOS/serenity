@@ -27,6 +27,8 @@ ModeBilevelDialog::ModeBilevelDialog(GUI::Window* parent_window)
 
     enum class DitheringMethodIndex {
         None = 0,
+        Clustered4x4,
+        Clustered8x8,
         Bayer2x2,
         Bayer4x4,
         Bayer8x8,
@@ -35,6 +37,8 @@ ModeBilevelDialog::ModeBilevelDialog(GUI::Window* parent_window)
 
     static constexpr AK::Array dithering_strings = {
         "Global Threshold"sv,
+        "Clustered 4x4"sv,
+        "Clustered 8x8"sv,
         "Bayer 2x2"sv,
         "Bayer 4x4"sv,
         "Bayer 8x8"sv,
@@ -45,6 +49,10 @@ ModeBilevelDialog::ModeBilevelDialog(GUI::Window* parent_window)
         switch (m_dithering_algorithm) {
         case Gfx::DitheringAlgorithm::None:
             return DitheringMethodIndex::None;
+        case Gfx::DitheringAlgorithm::Clustered4x4:
+            return DitheringMethodIndex::Clustered4x4;
+        case Gfx::DitheringAlgorithm::Clustered8x8:
+            return DitheringMethodIndex::Clustered8x8;
         case Gfx::DitheringAlgorithm::Bayer2x2:
             return DitheringMethodIndex::Bayer2x2;
         case Gfx::DitheringAlgorithm::Bayer4x4:
@@ -67,6 +75,10 @@ ModeBilevelDialog::ModeBilevelDialog(GUI::Window* parent_window)
             switch (dithering_method_index) {
             case DitheringMethodIndex::None:
                 return Gfx::DitheringAlgorithm::None;
+            case DitheringMethodIndex::Clustered4x4:
+                return Gfx::DitheringAlgorithm::Clustered4x4;
+            case DitheringMethodIndex::Clustered8x8:
+                return Gfx::DitheringAlgorithm::Clustered8x8;
             case DitheringMethodIndex::Bayer2x2:
                 return Gfx::DitheringAlgorithm::Bayer2x2;
             case DitheringMethodIndex::Bayer4x4:
