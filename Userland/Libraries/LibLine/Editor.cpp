@@ -1940,7 +1940,6 @@ StringMetrics Editor::actual_rendered_string_metrics(Utf32View const& view, RedB
 
     for (size_t break_index = 0; break_index < grapheme_breaks.size(); ++break_index) {
         auto i = grapheme_breaks[break_index];
-        auto c = view[i];
         if (!mask_it.is_end() && mask_it.key() <= i)
             mask = *mask_it;
 
@@ -1950,8 +1949,20 @@ StringMetrics Editor::actual_rendered_string_metrics(Utf32View const& view, RedB
             continue;
         }
 
+        auto next_grapheme_start = break_index + 1 < grapheme_breaks.size() ? grapheme_breaks[break_index + 1] : view.length();
         auto next_c = break_index + 1 < grapheme_breaks.size() ? view.code_points()[grapheme_breaks[break_index + 1]] : 0;
+        auto c = view[i];
         state = actual_rendered_string_length_step(metrics, i, current_line, c, next_c, state, mask, maximum_line_width, last_return);
+
+        for (size_t j = i + 1; j < next_grapheme_start; ++j) {
+            // Consume the rest of the code points in this grapheme cluster without updating the state; this is just to account for their length properly.
+            current_line.length++;
+            current_line.visible_length++;
+            metrics.total_length++;
+            if (current_line.bit_length.has_value())
+                current_line.bit_length.value() += code_point_length_in_utf8(view[j]);
+        }
+
         if (!mask_it.is_end() && mask_it.key() <= i) {
             auto mask_it_peek = mask_it;
             ++mask_it_peek;
