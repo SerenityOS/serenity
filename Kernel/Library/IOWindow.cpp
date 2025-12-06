@@ -85,8 +85,9 @@ ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::Device
         auto io_address_range = TRY(adopt_nonnull_own_or_enomem(new (nothrow) IOAddressData((pci_bar_value & 0xfffffffc), space_length)));
         return TRY(adopt_nonnull_own_or_enomem(new (nothrow) IOWindow(move(io_address_range))));
 #else
-        // Note: For non-x86 platforms, IO PCI BARs are simply not useable.
-        return Error::from_errno(ENOTSUP);
+        // On non-x86 systems, I/O BARs are mapped to MMIO instead of using special I/O access instructions.
+        auto memory_mapped_range = TRY(PCI::adopt_new_nonnull_own_bar_mapping<u8 volatile>(pci_device_identifier, pci_bar, space_length));
+        return TRY(adopt_nonnull_own_or_enomem(new (nothrow) IOWindow(move(memory_mapped_range))));
 #endif
     }
 

@@ -144,6 +144,12 @@ ErrorOr<void> configure_devicetree_host_controller(HostController& host_controll
                 pci_64bit_mmio_base = pci_address.io_or_memory_space_address;
                 pci_64bit_mmio_size = range_size;
             } else if (pci_address.space_type == OpenFirmwareAddress::SpaceType::IOSpace) {
+                TRY(host_controller.add_io_space_window(HostController::Window {
+                    .host_address = PhysicalAddress { cpu_physical_address },
+                    .bus_address = pci_address.io_or_memory_space_address,
+                    .size = range_size,
+                }));
+
                 if (pci_io_size >= range_size)
                     continue; // We currently only use the single largest region - TODO: Use all available regions if needed
 
