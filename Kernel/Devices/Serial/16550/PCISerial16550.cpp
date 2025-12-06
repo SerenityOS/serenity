@@ -66,6 +66,8 @@ ErrorOr<void> Serial16550Driver::probe(PCI::DeviceIdentifier const& pci_device_i
         return ENOTSUP;
 
     auto initialize_serial_device = [&pci_device_identifier](BoardDefinition const& board_definition) -> ErrorOr<void> {
+        PCI::enable_io_space(pci_device_identifier);
+
         auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, static_cast<PCI::HeaderType0BaseRegister>(board_definition.pci_bar)));
         auto first_offset_registers_io_window = TRY(registers_io_window->create_from_io_window_with_offset(board_definition.first_offset));
 
