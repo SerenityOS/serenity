@@ -162,7 +162,7 @@ jobs:
         run: ninja install && ninja qemu-image
 
       - name: Run On-Target Tests
-        if: ${{ inputs.debug_options == 'NORMAL_DEBUG' && inputs.arch != 'aarch64' && inputs.arch != 'riscv64' }}
+        if: ${{ inputs.debug_options == 'NORMAL_DEBUG' }}
         working-directory: ${{ steps.build-parameters.outputs.build_directory }}
         env:
           SERENITY_QEMU_CPU: "max,vmx=off"
