@@ -761,24 +761,24 @@ def set_up_machine_devices(config: Configuration):
         config.vga_type = None
         config.display_device = None
         config.kernel_cmdline.append("serial_debug")
-        if config.machine_type != MachineType.CI:
-            # FIXME: Windows QEMU crashes when we set the same display as usual here.
-            config.display_backend = None
-            config.audio_devices = []
 
-            caches_path = BUILD_DIRECTORY.parent / "caches"
-            dtb_path = str(caches_path / "bcm2710-rpi-3-b.dtb")
-            if config.machine_type == MachineType.RaspberryPi4B:
-                dtb_path = str(caches_path / "bcm2711-rpi-4-b.dtb")
+        # FIXME: Windows QEMU crashes when we set the same display as usual here.
+        config.display_backend = None
+        config.audio_devices = []
 
-            config.extra_arguments.extend(
-                [
-                    "-serial", "stdio",
-                    "-dtb", dtb_path
-                ]
-            )
-            config.qemu_cpu = None
-            return
+        caches_path = BUILD_DIRECTORY.parent / "caches"
+        dtb_path = str(caches_path / "bcm2710-rpi-3-b.dtb")
+        if config.machine_type == MachineType.RaspberryPi4B:
+            dtb_path = str(caches_path / "bcm2711-rpi-4-b.dtb")
+
+        config.extra_arguments.extend(
+            [
+                "-serial", "stdio",
+                "-dtb", dtb_path
+            ]
+        )
+        config.qemu_cpu = None
+        return
 
     elif config.architecture == Arch.Aarch64 or config.architecture == Arch.RISCV64:
         config.qemu_machine = "virt"
