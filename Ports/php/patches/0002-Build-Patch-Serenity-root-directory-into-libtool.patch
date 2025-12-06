@@ -10,7 +10,7 @@ to get PHP to build.
  1 file changed, 4 insertions(+)
 
 diff --git a/build/ltmain.sh b/build/ltmain.sh
-index 2f1c8c9dc80f095832c58aeb30ca65fc27e8a64b..cce4f76267a211775ec97eb2b006df536cd4cc7b 100755
+index 3c00e79157079f42d54032c4096be1de5cb9fffe..e15618374d55082081188e36e3a6b442daf43b48 100755
 --- a/build/ltmain.sh
 +++ b/build/ltmain.sh
 @@ -2353,6 +2353,9 @@ EOF

@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='php'
 useconfigure='true'
-version='8.2.10'
+version='8.5.0'
 files=(
-    "https://www.php.net/distributions/php-${version}.tar.xz#561dc4acd5386e47f25be76f2c8df6ae854756469159248313bcf276e282fbb3"
+    "https://www.php.net/distributions/php-${version}.tar.xz#39cb6e4acd679b574d3d3276f148213e935fc25f90403eb84fb1b836a806ef1e"
 )
 depends=(
     'curl'
@@ -16,7 +16,7 @@ depends=(
 )
 configopts=(
     '--disable-cgi'
-    '--disable-opcache'
+    '--disable-opcache-jit'
     '--enable-fpm'
     "--prefix=${SERENITY_INSTALL_ROOT}/usr/local"
     '--with-curl'
