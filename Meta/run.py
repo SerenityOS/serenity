@@ -784,17 +784,19 @@ def set_up_machine_devices(config: Configuration):
         config.qemu_machine = "virt"
         config.cpu_count = None
         config.audio_devices = []
-        config.extra_arguments.extend(["-serial", "stdio"])
         config.kernel_cmdline.extend(["serial_debug"])
         config.qemu_cpu = "max" if config.architecture == Arch.Aarch64 else None
-        config.add_devices(
-            [
-                "virtio-keyboard",
-                "virtio-tablet",
-                "virtio-serial,max_ports=2",
-            ]
-        )
-        return
+
+        if config.machine_type != MachineType.CI:
+            config.extra_arguments.extend(["-serial", "stdio"])
+            config.add_devices(
+                [
+                    "virtio-keyboard",
+                    "virtio-tablet",
+                    "virtio-serial,max_ports=2",
+                ]
+            )
+            return
 
     # Machine specific base setups
     if config.machine_type in [MachineType.QEMU35Grub, MachineType.QEMU35]:
@@ -835,13 +837,14 @@ def set_up_machine_devices(config: Configuration):
         config.display_backend = "none"
         config.audio_backend = None
         config.audio_devices = []
-        config.extra_arguments.extend(["-serial", "stdio", "-no-reboot", "-monitor", "none"])
+        config.extra_arguments.extend(["-no-reboot", "-monitor", "none"])
         config.spice_arguments = []
-        if config.architecture == Arch.Aarch64:
-            config.extra_arguments.extend(["-serial", "file:debug.log"])
+        if config.architecture == Arch.Aarch64 or config.architecture == Arch.RISCV64:
+            config.character_devices.append("stdio,id=stdout")
+            config.extra_arguments.extend(["-device", "pci-serial,chardev=stdout", "-serial", "file:debug.log"])
         else:
             config.add_device("ich9-ahci")
-            config.extra_arguments.extend(["-debugcon", "file:debug.log"])
+            config.extra_arguments.extend(["-serial", "stdio", "-debugcon", "file:debug.log"])
 
     else:
         # Default machine
