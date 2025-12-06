@@ -65,13 +65,16 @@ ErrorOr<void> Serial16550Driver::probe(PCI::DeviceIdentifier const& pci_device_i
         || pci_device_identifier.subclass_code() != PCI::SimpleCommunication::SubclassID::SerialController)
         return ENOTSUP;
 
-    auto initialize_serial_device = [&pci_device_identifier](BoardDefinition const& board_definition) {
-        auto registers_io_window = IOWindow::create_for_pci_device_bar(pci_device_identifier, static_cast<PCI::HeaderType0BaseRegister>(board_definition.pci_bar)).release_value_but_fixme_should_propagate_errors();
-        auto first_offset_registers_io_window = registers_io_window->create_from_io_window_with_offset(board_definition.first_offset).release_value_but_fixme_should_propagate_errors();
+    auto initialize_serial_device = [&pci_device_identifier](BoardDefinition const& board_definition) -> ErrorOr<void> {
+        auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, static_cast<PCI::HeaderType0BaseRegister>(board_definition.pci_bar)));
+        auto first_offset_registers_io_window = TRY(registers_io_window->create_from_io_window_with_offset(board_definition.first_offset));
 
         for (size_t i = 0; i < board_definition.port_count; i++) {
-            auto port_registers_io_window = first_offset_registers_io_window->create_from_io_window_with_offset(board_definition.port_size * i).release_value_but_fixme_should_propagate_errors();
-            auto serial_device = Device::try_create_device<Serial16550>(move(port_registers_io_window), s_current_device_minor++).release_value_but_fixme_should_propagate_errors();
+            auto port_registers_io_window = TRY(first_offset_registers_io_window->create_from_io_window_with_offset(board_definition.port_size * i));
+
+            auto serial_device = TRY(Device::try_create_device<Serial16550>(move(port_registers_io_window), s_current_device_minor));
+            s_current_device_minor++;
+
             if (board_definition.baud_rate != Serial16550::Baud::Baud38400) // non-default baud
                 serial_device->set_baud(board_definition.baud_rate);
 
@@ -81,14 +84,15 @@ ErrorOr<void> Serial16550Driver::probe(PCI::DeviceIdentifier const& pci_device_i
         }
 
         dmesgln("PCISerial16550: Found {} @ {}", board_definition.name, pci_device_identifier.address());
+
+        return {};
     };
 
     for (auto const& board_definition : board_definitions) {
         if (board_definition.device_id != pci_device_identifier.hardware_id())
             continue;
 
-        initialize_serial_device(board_definition);
-        return {};
+        return initialize_serial_device(board_definition);
     }
 
     // If we don't have a special board definition for this device and it's 16550-compatible, use a generic board definition.
@@ -98,8 +102,7 @@ ErrorOr<void> Serial16550Driver::probe(PCI::DeviceIdentifier const& pci_device_i
             PCI::SimpleCommunication::SerialControllerProgIf::CompatbileWith16750,
             PCI::SimpleCommunication::SerialControllerProgIf::CompatbileWith16850,
             PCI::SimpleCommunication::SerialControllerProgIf::CompatbileWith16950)) {
-        initialize_serial_device(generic_board_definition);
-        return {};
+        return initialize_serial_device(generic_board_definition);
     }
 
     return ENOTSUP;
