@@ -74,6 +74,18 @@ Vector<T> make_2x2x2_cube()
     return values;
 }
 
+template<Unsigned T>
+CLUTData make_2x2x2_cube_clut()
+{
+    Vector<u8, 4> number_of_grid_points_in_dimension;
+    for (int i = 0; i < 3; ++i)
+        number_of_grid_points_in_dimension.append(2);
+    return CLUTData {
+        move(number_of_grid_points_in_dimension),
+        make_2x2x2_cube<u16>()
+    };
+}
+
 ErrorOr<NonnullRefPtr<Profile>> IdentityLAB()
 {
     // Identity mapping between CIELAB and PCSLAB.
@@ -186,6 +198,111 @@ ErrorOr<NonnullRefPtr<Profile>> IdentityXYZ_D50()
     TRY(tag_table.try_set(mediaWhitePointTag, TRY(XYZ_data(header.pcs_illuminant))));
 
     return Profile::create(header, move(tag_table));
+}
+
+static EMatrix3x4 identity_matrix_3x4()
+{
+    return EMatrix3x4 {
+        S15Fixed16(1.0),
+        S15Fixed16(0.0),
+        S15Fixed16(0.0),
+        S15Fixed16(0.0),
+        S15Fixed16(1.0),
+        S15Fixed16(0.0),
+        S15Fixed16(0.0),
+        S15Fixed16(0.0),
+        S15Fixed16(1.0),
+
+        S15Fixed16(0.0),
+        S15Fixed16(0.0),
+        S15Fixed16(0.0),
+    };
+}
+
+static ErrorOr<NonnullRefPtr<ParametricCurveTagData>> identity_curve()
+{
+    Array<S15Fixed16, 7> curve_parameters = { 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+    return try_make_ref_counted<ParametricCurveTagData>(0, 0, ParametricCurveTagData::FunctionType::Type0, curve_parameters);
+}
+
+static ErrorOr<Vector<LutCurveType>> make_identity_curves()
+{
+    Vector<LutCurveType> identity_curves;
+    auto linear = TRY(identity_curve());
+    for (int c = 0; c < 3; ++c)
+        TRY(identity_curves.try_append(linear));
+    return identity_curves;
+}
+
+static ErrorOr<NonnullRefPtr<Profile>> Identity_mABmBA(StringView description, ColorSpace data_color_space, ColorSpace connection_space, Optional<CLUTData> clut)
+{
+    auto header = profile_header(data_color_space, connection_space);
+    header.device_class = DeviceClass::ColorSpace;
+
+    OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table;
+
+    TRY(tag_table.try_set(profileDescriptionTag, TRY(en_US(description))));
+    TRY(tag_table.try_set(copyrightTag, TRY(en_US("Public Domain"sv))));
+
+    Vector<LutCurveType> identity_curves = TRY(make_identity_curves());
+
+    Optional<Vector<LutCurveType>> a_curves;
+    if (clut.has_value())
+        a_curves = identity_curves;
+
+    Optional<Vector<LutCurveType>> m_curves;
+    Optional<EMatrix3x4> e_matrix;
+
+    // FIXME: Could make these two optional too.
+    m_curves = identity_curves;
+    e_matrix = identity_matrix_3x4();
+
+    Vector<LutCurveType> b_curves = identity_curves;
+
+    auto a_to_b = TRY(try_make_ref_counted<LutAToBTagData>(0, 0,
+        3, 3,
+        a_curves, clut, m_curves, e_matrix, b_curves));
+    TRY(tag_table.try_set(AToB0Tag, a_to_b));
+
+    auto b_to_a = TRY(try_make_ref_counted<LutBToATagData>(0, 0,
+        3, 3,
+        move(b_curves), e_matrix, move(m_curves), move(clut), move(a_curves)));
+    TRY(tag_table.try_set(BToA0Tag, b_to_a));
+
+    // White point.
+    TRY(tag_table.try_set(mediaWhitePointTag, TRY(XYZ_data(header.pcs_illuminant))));
+
+    return Profile::create(header, move(tag_table));
+}
+
+ErrorOr<NonnullRefPtr<Profile>> IdentityLAB_mABmBA_no_clut()
+{
+    // Identity mapping between CIELAB and PCSLAB, using mAB / mBA tags.
+    return Identity_mABmBA("SerenityOS Identity LAB, mAB/mBA, no CLUT"sv, ColorSpace::CIELAB, ColorSpace::PCSLAB, {});
+}
+
+ErrorOr<NonnullRefPtr<Profile>> IdentityLAB_mABmBA_u8_clut()
+{
+    // Identity mapping between CIELAB and PCSLAB, using mAB / mBA tags.
+    return Identity_mABmBA("SerenityOS Identity LAB, mAB/mBA, u8 CLUT"sv, ColorSpace::CIELAB, ColorSpace::PCSLAB, make_2x2x2_cube_clut<u8>());
+}
+
+ErrorOr<NonnullRefPtr<Profile>> IdentityLAB_mABmBA_u16_clut()
+{
+    // Identity mapping between CIELAB and PCSLAB, using mAB / mBA tags.
+    return Identity_mABmBA("SerenityOS Identity LAB, mAB/mBA, u16 CLUT"sv, ColorSpace::CIELAB, ColorSpace::PCSLAB, make_2x2x2_cube_clut<u16>());
+}
+
+ErrorOr<NonnullRefPtr<Profile>> IdentityXYZ_D50_mABmBA_no_clut()
+{
+    // Identity mapping between CIELAB and PCSLAB, using mAB / mBA tags.
+    return Identity_mABmBA("SerenityOS Identity XYZ, mAB/mBA, no CLUT"sv, ColorSpace::nCIEXYZ, ColorSpace::PCSXYZ, {});
+}
+
+ErrorOr<NonnullRefPtr<Profile>> IdentityXYZ_D50_mABmBA_u16_clut()
+{
+    // Identity mapping between CIELAB and PCSLAB, using mAB / mBA tags.
+    return Identity_mABmBA("SerenityOS Identity XYZ, mAB/mBA, u16 CLUT"sv, ColorSpace::nCIEXYZ, ColorSpace::PCSXYZ, make_2x2x2_cube_clut<u16>());
 }
 
 ErrorOr<NonnullRefPtr<ParametricCurveTagData>> sRGB_curve()
