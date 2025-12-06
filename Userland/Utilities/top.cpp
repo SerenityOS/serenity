@@ -212,6 +212,8 @@ static ErrorOr<void> setup_tty()
 
     struct termios raw = g_previous_tty_settings;
     raw.c_lflag &= ~(ECHO | ICANON);
+    raw.c_cc[VMIN] = 0;
+    raw.c_cc[VTIME] = 0;
 
     // Disable echo and line buffering
     TRY(Core::System::tcsetattr(STDOUT_FILENO, TCSAFLUSH, raw));
