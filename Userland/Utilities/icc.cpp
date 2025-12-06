@@ -383,6 +383,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 return Gfx::ICC::IdentityLAB();
             if (name == "LAB_mft2")
                 return Gfx::ICC::IdentityLAB_mft2();
+            if (name == "LAB_mABmBA_no_clut")
+                return Gfx::ICC::IdentityLAB_mABmBA_no_clut();
+            if (name == "LAB_mABmBA_u8_clut")
+                return Gfx::ICC::IdentityLAB_mABmBA_u8_clut();
+            if (name == "LAB_mABmBA_u16_clut")
+                return Gfx::ICC::IdentityLAB_mABmBA_u16_clut();
+            if (name == "XYZ_mABmBA_no_clut")
+                return Gfx::ICC::IdentityXYZ_D50_mABmBA_no_clut();
+            if (name == "XYZ_mABmBA_u16_clut")
+                return Gfx::ICC::IdentityXYZ_D50_mABmBA_u16_clut();
             if (name == "sRGB")
                 return Gfx::ICC::sRGB();
             if (name == "XYZ")
