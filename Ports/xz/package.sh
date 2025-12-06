@@ -1,12 +1,12 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='xz'
-version='5.6.2'
+version='5.8.1'
 depends=(
     'libiconv'
     'zlib'
 )
 files=(
-    "https://tukaani.org/xz/xz-${version}.tar.gz#8bfd20c0e1d86f0402f2497cfa71c6ab62d4cd35fd704276e3140bfb71414519"
+    "https://tukaani.org/xz/xz-${version}.tar.gz#507825b599356c10dca1cd720c9d0d0c9d5400b9de300af00e4d1ea150795543"
 )
 useconfigure='true'
 use_fresh_config_sub='true'
