@@ -386,7 +386,8 @@ Service::~Service()
         if (!socket.was_created)
             continue;
 
-        if (auto rc = remove(socket.path.characters()); rc != 0)
-            dbgln("{}", Error::from_errno(errno));
+        auto result = Core::System::unlink(socket.path);
+        if (result.is_error())
+            dbgln("unlink(\"{}\") failed: {}", socket.path, result.error());
     }
 }
