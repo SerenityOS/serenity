@@ -884,13 +884,9 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     dbgln_if(SIGNAL_DEBUG, "Dispatch signal {} to {}, state: {}", signal, *this, state_string());
 
-    if (m_state == Thread::State::Invalid || !is_initialized()) {
-        // Thread has barely been created, we need to wait until it is
-        // at least in Runnable state and is_initialized() returns true,
-        // which indicates that it is fully set up an we actually have
-        // a register state on the stack that we can modify
-        return DispatchSignalResult::Deferred;
-    }
+    // We should only ever dispatch signals to valid and initialized threads.
+    VERIFY(m_state != Thread::State::Invalid);
+    VERIFY(is_initialized());
 
     auto& action = m_process->m_signal_action_data[signal];
     auto sender_pid = m_signal_senders[signal];
