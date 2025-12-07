@@ -47,6 +47,8 @@ private:
         int fd { -1 };
         /// File permissions of the socket.
         mode_t permissions;
+        /// Set to true if the socket file was successfully created.
+        bool was_created;
     };
 
     // Path to the executable. By default this is /bin/{m_name}.
