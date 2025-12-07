@@ -154,22 +154,16 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ inputs.download_cache_path }}/TZDB
-        key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}-${{ steps.date-stamp.outputs.timestamp }}
-        restore-keys: |
-          TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
+        key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
 
     - name: 'UnicodeData cache'
       uses: actions/cache@v4
       with:
           path: ${{ inputs.download_cache_path }}/UCD
-          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}-${{ steps.date-stamp.outputs.timestamp }}
-          restore-keys: |
-            UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
+          key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
 
     - name: 'UnicodeLocale cache'
       uses: actions/cache@v4
       with:
           path: ${{ inputs.download_cache_path }}/CLDR
-          key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}-${{ steps.date-stamp.outputs.timestamp }}
-          restore-keys: |
-              UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
+          key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
