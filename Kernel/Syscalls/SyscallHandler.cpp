@@ -170,7 +170,12 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 
     current_thread->yield_if_should_be_stopped();
 
-    current_thread->check_dispatch_pending_signal();
+#if ARCH(X86_64)
+    // On x86-64, we don't go through ProcessorBase::exit_trap when returning to userspace
+    // (except in the SC_sigreturn case), so we dispatch signals here instead.
+    if (function != SC_sigreturn)
+        current_thread->check_dispatch_pending_signal();
+#endif
 
     // If the previous mode somehow changed something is seriously messed up...
     VERIFY(current_thread->previous_mode() == ExecutionMode::User);
