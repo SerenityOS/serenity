@@ -66,6 +66,8 @@ ErrorOr<void> Service::setup_socket(SocketDescriptor& socket)
     auto un = un_optional.value();
 
     TRY(Core::System::bind(socket_fd, (sockaddr const*)&un, sizeof(un)));
+    socket.was_created = true;
+
     TRY(Core::System::listen(socket_fd, 16));
     return {};
 }
@@ -346,7 +348,7 @@ Service::Service(Core::ConfigFile const& config, StringView name)
             // be applied for every socket.
             mode_t permissions = strtol(socket_perms.at(min(socket_perms.size() - 1, (long unsigned)i)).characters(), nullptr, 8) & 0777;
 
-            m_sockets.empend(path.value(), -1, permissions);
+            m_sockets.empend(path.value(), -1, permissions, false);
         }
     }
 
@@ -381,6 +383,9 @@ ErrorOr<void> Service::determine_account(int fd)
 Service::~Service()
 {
     for (auto& socket : m_sockets) {
+        if (!socket.was_created)
+            continue;
+
         if (auto rc = remove(socket.path.characters()); rc != 0)
             dbgln("{}", Error::from_errno(errno));
     }
