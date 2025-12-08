@@ -136,6 +136,15 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> NetworkingManagement::de
     return Error::from_errno(ENODEV);
 }
 
+ErrorOr<void> NetworkingManagement::register_adapter(NonnullRefPtr<NetworkAdapter> adapter)
+{
+    return m_adapters.with([&](auto& adapters) -> ErrorOr<void> {
+        TRY(adapters.try_append(adapter));
+        TRY(adapter->initialize({}));
+        return {};
+    });
+}
+
 bool NetworkingManagement::initialize()
 {
     if (!kernel_command_line().is_physical_networking_disabled() && !PCI::Access::is_disabled()) {
