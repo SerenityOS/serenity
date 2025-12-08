@@ -594,10 +594,7 @@ void TimeManagement::increment_time_since_boot()
 
 void TimeManagement::system_timer_tick()
 {
-    if (Processor::current_in_irq() <= 1) {
-        // Don't expire timers while handling IRQs
-        TimerQueue::the().fire();
-    }
+    TimerQueue::the().fire();
     Scheduler::timer_tick();
 }
 
