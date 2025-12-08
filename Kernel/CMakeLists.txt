@@ -285,6 +285,7 @@ set(KERNEL_SOURCES
     Net/Intel/E1000ENetworkAdapter.cpp
     Net/Intel/E1000NetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
+    Net/USB/CDCECM.cpp
     Net/VirtIO/VirtIONetworkAdapter.cpp
     Net/IP/Socket.cpp
     Net/LocalSocket.cpp
