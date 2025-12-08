@@ -304,7 +304,7 @@ void Thread::unblock_from_blocker(Blocker& blocker)
         VERIFY(!is_stopped());
         unblock();
     };
-    if (Processor::current_in_irq() != 0) {
+    if (Processor::current_in_irq()) {
         Processor::deferred_call_queue([do_unblock = move(do_unblock), self = try_make_weak_ptr().release_value_but_fixme_should_propagate_errors()]() {
             if (auto this_thread = self.strong_ref())
                 do_unblock();
@@ -400,7 +400,7 @@ void Thread::die_if_needed()
         set_state(Thread::State::Dying);
     }
 
-    VERIFY(Processor::current_in_irq() == 0);
+    VERIFY(!Processor::current_in_irq());
     VERIFY(Processor::in_critical() == 0);
     Scheduler::yield();
 
