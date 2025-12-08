@@ -48,7 +48,7 @@ void WaitQueue::Waiter::notify(Badge<WaitQueue>)
 
     if (&thread == Thread::current()) {
         // This can happen if an interrupt handler wakes up the currently running thread.
-        VERIFY(Processor::current_in_irq() > 0);
+        VERIFY(Processor::current_in_irq());
         thread.set_state(Thread::State::Running);
     } else {
         thread.set_state(Thread::State::Runnable);
@@ -83,7 +83,7 @@ void WaitQueue::Waiter::maybe_block()
     if (Processor::in_critical() > 0)
         PANIC("Attempted to block in critical section");
 
-    if (Processor::current_in_irq() > 0)
+    if (Processor::current_in_irq())
         PANIC("Attempted to block while handling an interrupt");
 
     VERIFY(m_association.has_value());

@@ -48,8 +48,12 @@ void ProcessorBase::enter_trap(TrapFrame& trap, bool raise_irq)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(&Processor::current() == this);
+
+    // m_in_irq is always <= 1 since nested interrupts don't happen
+    // (because we never re-enable interrupts during interrupt handling).
     if (raise_irq)
-        m_in_irq++;
+        m_in_irq = 1;
+
     auto* current_thread = Processor::current_thread();
     if (current_thread) {
         auto& current_trap = current_thread->current_trap();
