@@ -904,6 +904,22 @@ ErrorOr<Vector<TransferRequestBlock>> xHCIController::prepare_normal_transfer(Tr
     auto const& device = transfer.pipe().device();
     auto const slot = device.controller_identifier();
 
+    // Short circuit for empty transfers
+    // Otherwise we'd accidentally not create any TRBs at all...
+    if (transfer.transfer_data_size() == 0) {
+        TransferRequestBlock empty_trb {};
+        empty_trb.normal.data_buffer_pointer_low = 0;
+        empty_trb.normal.data_buffer_pointer_high = 0;
+        empty_trb.normal.transfer_request_block_transfer_length = 0;
+        empty_trb.normal.transfer_descriptor_size = 0;
+        empty_trb.normal.interrupter_target = 0;
+        empty_trb.normal.interrupt_on_completion = 1;
+        empty_trb.normal.transfer_request_block_type = TransferRequestBlock::TRBType::Normal;
+        Vector<TransferRequestBlock> empty_trb_vector;
+        TRY(empty_trb_vector.try_append(empty_trb));
+        return empty_trb_vector;
+    }
+
     u32 max_burst_payload = 0;
     {
         auto endpoint_id = endpoint_index(transfer.pipe().endpoint_number(), transfer.pipe().direction());
