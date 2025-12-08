@@ -15,6 +15,8 @@
 #include <Kernel/Bus/USB/USBInterface.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Library/Assertions.h>
+#include <Kernel/Net/NetworkingManagement.h>
+#include <Kernel/Net/USB/CDCECM.h>
 
 namespace Kernel::USB::CDC {
 
@@ -139,8 +141,34 @@ static ErrorOr<void> dump_interface(USB::USBConfiguration const& configuration, 
 static ErrorOr<bool> dump_configuration(USB::USBConfiguration const& configuration)
 {
     dmesgln("USB CDC:   Configuration {}", configuration.descriptor().configuration_value);
+    Optional<USBInterface const&> control_interface;
+    Optional<USBInterface const&> data_interface;
     for (auto const& interface : configuration.interfaces()) {
         TRY(dump_interface(configuration, interface));
+
+        if (interface.descriptor().interface_class_code == USB_CLASS_COMMUNICATIONS_AND_CDC_CONTROL) {
+            control_interface = interface;
+        } else if (interface.descriptor().interface_class_code == USB_CLASS_CDC_DATA) {
+            // FIXME: Think of a better way to select the data interface if multiple are present
+            //        ECM for example will always have an empty one and one with two endpoints
+            if (data_interface.has_value()) {
+                if (data_interface->endpoints().size() < interface.endpoints().size()) {
+                    data_interface = interface;
+                }
+            } else {
+                data_interface = interface;
+            }
+        }
+    }
+
+    // FIXME: Choose a better detection mechanism if multiple interfaces are present
+    if (control_interface.has_value() && data_interface.has_value()) {
+        if (static_cast<CDC::SubclassCode>(control_interface->descriptor().interface_sub_class_code) == CDC::SubclassCode::EthernetNetworkingControlModel) {
+            dmesgln("USB CDC:   Detected CDC-ECM device");
+            auto adapter = TRY(CDCECMNetworkAdapter::create(const_cast<USB::Device&>(configuration.device()), *control_interface, *data_interface));
+            TRY(NetworkingManagement::the().register_adapter(adapter));
+            return true;
+        }
     }
 
     return false;
