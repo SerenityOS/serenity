@@ -14,6 +14,7 @@
 #include <Kernel/Bus/USB/Drivers/USBDriver.h>
 #include <Kernel/Bus/USB/USBConfiguration.h>
 #include <Kernel/Bus/USB/USBPipe.h>
+#include <Kernel/Library/KString.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
@@ -59,6 +60,8 @@ public:
     u8 address() const { return m_address; }
 
     USBDeviceDescriptor const& device_descriptor() const { return m_device_descriptor; }
+
+    ErrorOr<NonnullOwnPtr<KString>> get_string_descriptor(u8 descriptor_index);
 
     USBController& controller() { return *m_controller; }
     USBController const& controller() const { return *m_controller; }
