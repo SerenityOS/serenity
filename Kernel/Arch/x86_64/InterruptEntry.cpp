@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/x86_64/DescriptorTable.h>
-#include <Kernel/Arch/x86_64/TrapFrame.h>
 
 // clang-format off
 asm(
