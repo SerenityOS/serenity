@@ -59,6 +59,7 @@ set(LIBTEST_BASED_SOURCES
     TestProcFSWrite.cpp
     TestSigAltStack.cpp
     TestSigHandler.cpp
+    TestSignalDispatch.cpp
     TestTCPSocket.cpp
     TestWait.cpp
     TestWXProtection.cpp
