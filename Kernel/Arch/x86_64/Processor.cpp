@@ -781,59 +781,6 @@ Processor& ProcessorBase::by_id(u32 id)
     return *s_processors[id];
 }
 
-void ProcessorBase::exit_trap(TrapFrame& trap)
-{
-    VERIFY_INTERRUPTS_DISABLED();
-    VERIFY(&Processor::current() == this);
-
-    auto* self = static_cast<Processor*>(this);
-
-    // Temporarily enter a critical section. This is to prevent critical
-    // sections entered and left within e.g. smp_process_pending_messages
-    // to trigger a context switch while we're executing this function
-    // See the comment at the end of the function why we don't use
-    // ScopedCritical here.
-    m_in_critical = m_in_critical + 1;
-
-    m_in_irq = 0;
-
-    if (s_smp_enabled)
-        self->smp_process_pending_messages();
-
-    // Process the deferred call queue. Among other things, this ensures
-    // that any pending thread unblocks happen before we enter the scheduler.
-    m_deferred_call_pool.execute_pending();
-
-    auto* current_thread = Processor::current_thread();
-    if (current_thread) {
-        auto& current_trap = current_thread->current_trap();
-        current_trap = trap.next_trap;
-        ExecutionMode new_previous_mode;
-        if (current_trap) {
-            VERIFY(current_trap->regs);
-            // If we have another higher level trap then we probably returned
-            // from an interrupt or irq handler.
-            new_previous_mode = current_trap->regs->previous_mode();
-        } else {
-            // If we don't have a higher level trap then we're back in user mode.
-            // Which means that the previous mode prior to being back in user mode was kernel mode
-            new_previous_mode = ExecutionMode::Kernel;
-        }
-
-        if (current_thread->set_previous_mode(new_previous_mode))
-            current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), true, false);
-    }
-
-    VERIFY_INTERRUPTS_DISABLED();
-
-    // Leave the critical section without actually enabling interrupts.
-    // We don't want context switches to happen until we're explicitly
-    // triggering a switch in check_invoke_scheduler.
-    m_in_critical = m_in_critical - 1;
-    if (!m_in_irq && !m_in_critical)
-        check_invoke_scheduler();
-}
-
 void ProcessorBase::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
 {
     auto ptr = vaddr.as_ptr();
