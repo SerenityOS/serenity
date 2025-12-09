@@ -110,7 +110,6 @@ jobs:
           folder: ${{ github.workspace }}/libjs-data
 
       - name: Upload artifact package
-        if: github.ref == 'refs/heads/master'
         uses: actions/upload-artifact@v5
         with:
           name: serenity-js-wasm
