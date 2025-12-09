@@ -474,6 +474,12 @@ ErrorOr<NonnullRefPtr<VFSRootContext>> StorageManagement::create_first_vfs_root_
         mounted_count++;
     });
 
+    // Adding filesystems to the all_file_systems_list usually happens in add_to_mounts_list_and_increment_fs_mounted_count(),
+    // but that function isn't called for the root filesystem of the first VFSRootContext.
+    FileSystem::all_file_systems_list().with([&fs](auto& fs_list) {
+        fs_list.append(*fs);
+    });
+
     TRY(VirtualFileSystem::pivot_root_by_copying_mounted_fs_instance(*vfs_root_context, *fs, root_mount_flags));
     // NOTE: Return the mounted count to normal now we have it really mounted.
     fs->mounted_count().with_exclusive([](auto& mounted_count) {
