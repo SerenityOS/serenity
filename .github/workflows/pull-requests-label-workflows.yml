@@ -1,0 +1,15 @@
+name: Label Workflows
+
+on:
+  pull_request:
+    types: [ labeled, opened, synchronize, reopened ]
+
+jobs:
+  Coverage:
+    if: github.repository == 'SerenityOS/serenity' && contains(github.event.pull_request.labels.*.name, '📑 pr-run-coverage-build')
+    uses: ./.github/workflows/serenity-template.yml
+    with:
+      toolchain: 'Clang'
+      os: ubuntu-24.04
+      arch: 'x86_64'
+      coverage: 'ON'
