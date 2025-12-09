@@ -14,28 +14,17 @@ jobs:
     strategy:
       fail-fast: false
 
-    permissions:
-      contents: write
-
     steps:
-      # The BUGGIEBOT_TOKEN is not available on PRs from forks. See:
-      # https://github.com/actions/checkout/issues/298#issuecomment-664976337
+      # FIXME: Update these versions once JamesIves/github-pages-deploy-action has a more recent release than v4.7.4.
       - name: Checkout SerenityOS/serenity
-        uses: actions/checkout@v6
-        if: github.repository == github.event.pull_request.head.repo.full_name
-        with:
-          token: ${{ secrets.BUGGIEBOT_TOKEN }}
-
-      - name: Checkout SerenityOS/serenity
-        uses: actions/checkout@v6
-        if: github.repository != github.event.pull_request.head.repo.full_name
+        uses: actions/checkout@v6.0.0
 
       - name: Checkout SerenityOS/libjs-data libjs-wasm
-        uses: actions/checkout@v6
+        uses: actions/checkout@v6.0.0
         with:
-          repository: SerenityOS/libjs-data
           path: libjs-data
           ref: libjs-wasm
+          repository: SerenityOS/libjs-data
 
       - name: "Set up environment"
         uses: ./.github/actions/setup
