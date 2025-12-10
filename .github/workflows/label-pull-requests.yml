@@ -13,9 +13,9 @@ jobs:
   label_pull_request:
     runs-on: ubuntu-24.04
     if: always() && github.repository == 'SerenityOS/serenity'
-    
+
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.1
 
       - name: Label pull request
         uses: actions/github-script@v8
