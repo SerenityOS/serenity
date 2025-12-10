@@ -93,6 +93,7 @@ Ping them right away if it's something urgent! If it's less urgent, advertise yo
 -   [@BertalanD](https://github.com/BertalanD)
 -   [@GMTA](https://github.com/gmta)
 -   [@Lubrsi](https://github.com/Lubrsi)
+-   [@LucasChollet](https://github.com/LucasChollet)
 -   [@nico](https://github.com/nico)
 -   [@spholz](https://github.com/spholz)
 -   [@timschumi](https://github.com/timschumi)
