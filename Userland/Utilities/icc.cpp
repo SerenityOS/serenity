@@ -335,7 +335,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "Path to ICC profile or to image containing ICC profile", "FILE", Core::ArgsParser::Required::No);
 
     StringView name;
-    args_parser.add_option(name, "Name of a built-in profile, such as 'sRGB', 'LAB'", "name", 'n', "NAME");
+    args_parser.add_option(name, "Name of a built-in profile, such as 'sRGB', 'LAB', 'XYZ'", "name", 'n', "NAME");
 
     StringView dump_out_path;
     args_parser.add_option(dump_out_path, "Dump unmodified ICC profile bytes to this path", "dump-to", 0, "FILE");
