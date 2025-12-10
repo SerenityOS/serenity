@@ -611,6 +611,7 @@ set(AK_SOURCES
     ../AK/DOSPackedTime.cpp
     ../AK/GenericLexer.cpp
     ../AK/Hex.cpp
+    ../AK/InternetChecksum.cpp
     ../AK/MemoryStream.cpp
     ../AK/SipHash.cpp
     ../AK/Stream.cpp
