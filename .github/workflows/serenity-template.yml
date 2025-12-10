@@ -140,6 +140,7 @@ jobs:
           CCACHE_DIR: ${{ env.SERENITY_CCACHE_DIR }}
 
       - name: Save Caches
+        if: ${{ inputs.coverage == 'OFF' }}
         uses: ./.github/actions/cache-save
         with:
           arch: ${{ inputs.arch }}
