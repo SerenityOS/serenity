@@ -11,8 +11,9 @@ jobs:
     runs-on: ubuntu-24.04
     if: github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
     steps:
-      # FIXME: Update this version once JamesIves/github-pages-deploy-action has a more recent release than v4.7.4.
-      - uses: actions/checkout@v6.0.0
+      - uses: actions/checkout@v6.0.1
+        with:
+          persist-credentials: false
 
       - uses: r-lib/actions/setup-pandoc@v2
         with:
@@ -22,7 +23,7 @@ jobs:
         run: ./Meta/build-manpages-website.sh
 
       - name: Deploy to GitHub pages
-        uses: JamesIves/github-pages-deploy-action@v4.7.4
+        uses: JamesIves/github-pages-deploy-action@v4.7.6
         with:
           git-config-name: BuggieBot
           git-config-email: buggiebot@serenityos.org
