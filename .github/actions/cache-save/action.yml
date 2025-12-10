@@ -82,7 +82,7 @@ runs:
 
     - name: 'Serenity Compiler Cache'
       uses: actions/cache/save@v4
-      if: ${{ inputs.serenity_ccache_path != '' }}
+      if: ${{ github.event_name != 'pull_request' && inputs.serenity_ccache_path != '' }}
       with:
         path: ${{ inputs.serenity_ccache_path }}
         key: ${{ inputs.serenity_ccache_primary_key }}
