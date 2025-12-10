@@ -48,6 +48,11 @@ enum class [[nodiscard]] DispatchSignalResult {
     Continue
 };
 
+enum class YieldBehavior {
+    DoYield,
+    FlagYield
+};
+
 struct ThreadSpecificData {
     ThreadSpecificData* self;
 };
@@ -878,7 +883,7 @@ public:
 
     DispatchSignalResult dispatch_one_pending_signal();
     DispatchSignalResult dispatch_signal(u8 signal);
-    void check_dispatch_pending_signal();
+    void check_dispatch_pending_signal(YieldBehavior yield_behavior = YieldBehavior::DoYield);
     [[nodiscard]] bool has_unmasked_pending_signals() const { return m_have_any_unmasked_pending_signals.load(AK::memory_order_consume); }
     [[nodiscard]] bool should_ignore_signal(u8 signal) const;
     [[nodiscard]] bool has_signal_handler(u8 signal) const;
