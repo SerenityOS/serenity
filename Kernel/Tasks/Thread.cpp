@@ -623,7 +623,7 @@ bool Thread::tick()
     return m_ticks_left != 0;
 }
 
-void Thread::check_dispatch_pending_signal()
+void Thread::check_dispatch_pending_signal(YieldBehavior yield_behavior)
 {
     auto result = DispatchSignalResult::Continue;
     {
@@ -634,7 +634,16 @@ void Thread::check_dispatch_pending_signal()
     }
 
     if (result == DispatchSignalResult::Yield) {
-        yield_without_releasing_big_lock();
+        switch (yield_behavior) {
+        case YieldBehavior::DoYield:
+            yield_without_releasing_big_lock();
+            break;
+        case YieldBehavior::FlagYield:
+            // This is essentially the same as the above,
+            // but doesn't call Processor::clear_critical().
+            Scheduler::yield();
+            break;
+        }
     }
 }
 
