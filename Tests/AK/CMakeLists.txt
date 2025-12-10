@@ -51,6 +51,7 @@ set(AK_TEST_SOURCES
     TestIndexSequence.cpp
     TestInsertionSort.cpp
     TestIntegerMath.cpp
+    TestInternetChecksum.cpp
     TestIntrusiveList.cpp
     TestIntrusiveRedBlackTree.cpp
     TestJSON.cpp
