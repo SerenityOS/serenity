@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
 #include <Kernel/Firmware/ACPI/Definitions.h>
 #include <Kernel/Firmware/ACPI/StaticParsing.h>
 #include <Kernel/Library/StdLib.h>
@@ -31,16 +32,33 @@ Optional<PhysicalAddress> find_rsdp()
 
 static bool match_table_signature(PhysicalAddress table_header, StringView signature)
 {
-    // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     VERIFY(signature.length() == 4);
 
-    auto table = Memory::map_typed<Structures::RSDT>(table_header).release_value_but_fixme_should_propagate_errors();
-    return !strncmp(table->h.sig, signature.characters_without_null_termination(), 4);
+    auto check_in_region = [&](size_t length, auto&& callback) -> bool {
+        auto region = Memory::map_typed<u8 const>(table_header, length).release_value_but_fixme_should_propagate_errors();
+        return callback(region.ptr());
+    };
+
+    u32 length = 0;
+    auto check_signature_and_get_length = [&](u8 const* base) -> bool {
+        if (memcmp(reinterpret_cast<char const*>(base), signature.characters_without_null_termination(), 4) != 0)
+            return false;
+        length = ByteReader::load32(base + 4);
+        return true;
+    };
+
+    auto validate_checksum = [&](u8 const* base) -> bool {
+        u8 checksum = 0;
+        for (u32 i = 0; i < length; ++i)
+            checksum += base[i];
+        return checksum == 0;
+    };
+
+    return check_in_region(8, check_signature_and_get_length) && check_in_region(length, validate_checksum);
 }
 
 ErrorOr<Optional<PhysicalAddress>> search_table_in_xsdt(PhysicalAddress xsdt_address, StringView signature)
 {
-    // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     VERIFY(signature.length() == 4);
 
     auto xsdt = TRY(Memory::map_typed<Structures::XSDT>(xsdt_address));
@@ -54,7 +72,6 @@ ErrorOr<Optional<PhysicalAddress>> search_table_in_xsdt(PhysicalAddress xsdt_add
 
 ErrorOr<Optional<PhysicalAddress>> find_table(PhysicalAddress rsdp_address, StringView signature)
 {
-    // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     VERIFY(signature.length() == 4);
 
     auto rsdp = TRY(Memory::map_typed<Structures::RSDPDescriptor20>(rsdp_address));
@@ -72,7 +89,6 @@ ErrorOr<Optional<PhysicalAddress>> find_table(PhysicalAddress rsdp_address, Stri
 
 ErrorOr<Optional<PhysicalAddress>> search_table_in_rsdt(PhysicalAddress rsdt_address, StringView signature)
 {
-    // FIXME: There's no validation of ACPI tables here. Use the checksum to validate the tables.
     VERIFY(signature.length() == 4);
 
     auto rsdt = TRY(Memory::map_typed<Structures::RSDT>(rsdt_address));

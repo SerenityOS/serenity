@@ -21,16 +21,24 @@ public:
     size_t offset { 0 };
     PhysicalAddress paddr;
 
-    Optional<PhysicalAddress> find_chunk_starting_with(StringView prefix, size_t chunk_size) const
+    u8 const* pointer_to_chunk_starting_with(StringView prefix, size_t chunk_size) const
     {
         auto prefix_length = prefix.length();
         if (size < prefix_length)
-            return {};
+            return nullptr;
         for (auto* candidate = base(); candidate <= end() - prefix_length; candidate += chunk_size) {
             if (!__builtin_memcmp(prefix.characters_without_null_termination(), candidate, prefix.length()))
-                return paddr_of(candidate);
+                return candidate;
         }
-        return {};
+        return nullptr;
+    }
+
+    Optional<PhysicalAddress> find_chunk_starting_with(StringView prefix, size_t chunk_size) const
+    {
+        auto result = pointer_to_chunk_starting_with(prefix, chunk_size);
+        if (!result)
+            return {};
+        return paddr_of(result);
     }
 
     PhysicalAddress paddr_of(u8 const* ptr) const { return paddr.offset(ptr - this->base()); }

@@ -447,6 +447,7 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_x86_legacy_hardware_timers()
         }
     }
 
+    VERIFY(s_hardware_timers->is_empty());
     s_hardware_timers->try_append(PIT::initialize(TimeManagement::update_time)).release_value_but_fixme_should_propagate_errors();
     s_hardware_timers->try_append(RealTimeClock::create(TimeManagement::system_timer_tick)).release_value_but_fixme_should_propagate_errors();
     m_time_keeper_timer = (*s_hardware_timers)[0];
