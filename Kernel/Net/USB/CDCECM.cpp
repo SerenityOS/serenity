@@ -16,10 +16,53 @@
 
 namespace Kernel::USB::CDC {
 
-ErrorOr<NonnullRefPtr<NetworkAdapter>> CDCECMNetworkAdapter::create(
-    USB::Device& device, USB::USBInterface const& control, USB::USBInterface const& data)
+ErrorOr<void> create_ecm_network_adapter(USB::Device& device, USB::USBInterface const& control, Vector<u8> const& data_interface_ids)
 {
+    Optional<USB::USBInterface const&> inactive_data_interface;
+    Optional<USB::USBInterface const&> active_data_interface;
+    if (data_interface_ids.size() != 2) {
+        dmesgln("CDC-ECM: Interface {} has wrong amount associated data interfaces ({}, expected 2); Rejecting", control.descriptor().interface_id, data_interface_ids.size());
+        return ENOTSUP;
+    }
+    for (auto interface_id : data_interface_ids) {
+        // FIXME: Maybe make this a direct query?
+        auto interface = control.configuration().interfaces().find_if([&](USB::USBInterface const& iface) {
+            return iface.descriptor().interface_id == interface_id;
+        });
+        if (interface == control.configuration().interfaces().end()) {
+            dmesgln("CDC-ECM: Could not find data interface with ID {}", interface_id);
+            return ENODEV;
+        }
 
+        // The active interface is the one that has two endpoints
+        // While the inactive one has no endpoints
+        auto endpoint_count = interface->descriptor().number_of_endpoints;
+        if (endpoint_count == 2) {
+            active_data_interface = *interface;
+        } else if (endpoint_count == 0) {
+            inactive_data_interface = *interface;
+        } else {
+            dmesgln("CDC-ECM: Data interface {} has invalid number of endpoints: {}; Rejecting", interface_id, endpoint_count);
+            return ENOTSUP;
+        }
+    }
+
+    if (!inactive_data_interface.has_value() || !active_data_interface.has_value()) {
+        dmesgln("CDC-ECM: Could not find both active and inactive data interfaces; Rejecting");
+        return ENOTSUP;
+    }
+    auto adapter = TRY(CDCECMNetworkAdapter::create(
+        device,
+        control,
+        inactive_data_interface.value(),
+        active_data_interface.value()));
+    TRY(NetworkingManagement::the().register_adapter(adapter));
+    dmesgln("CDC-ECM: Successfully initialized CDC-ECM network adapter");
+    return {};
+}
+
+ErrorOr<NonnullRefPtr<NetworkAdapter>> CDCECMNetworkAdapter::create(USB::Device& device, USB::USBInterface const& control, USB::USBInterface const& data_inactive, USB::USBInterface const& data_active)
+{
     u16 max_segment_size;
     u8 mac_string_index;
     TRY(control.configuration().for_each_descriptor_in_interface(control, [&](ReadonlyBytes raw_descriptor) -> ErrorOr<IterationDecision> {
@@ -57,19 +100,19 @@ ErrorOr<NonnullRefPtr<NetworkAdapter>> CDCECMNetworkAdapter::create(
     }
     dmesgln("USB CDC-ECM: Using MAC address: {}", TRY(mac_address.to_string()));
 
-    TRY(device.set_configuration_and_interface(data));
+    TRY(device.set_configuration(control.configuration()));
 
     u8 in_pipe_endpoint_number = 0xff;
     u16 in_max_packet_size;
     u8 out_pipe_endpoint_number = 0xff;
     u16 out_max_packet_size;
 
-    if (data.descriptor().number_of_endpoints < 2) {
+    if (data_active.descriptor().number_of_endpoints < 2) {
         dmesgln("CDC-ECM: Data Interface does not provide enough endpoints; Rejecting");
         return ENOTSUP;
     }
 
-    for (auto const& endpoint : data.endpoints()) {
+    for (auto const& endpoint : data_active.endpoints()) {
         if (endpoint.endpoint_attributes_bitmap != USBEndpoint::ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_BULK)
             continue;
         // The upper bit of the Endpoint address is set to 1, iff it is the Bulk-In Endpoint
@@ -88,6 +131,13 @@ ErrorOr<NonnullRefPtr<NetworkAdapter>> CDCECMNetworkAdapter::create(
         return ENOTSUP;
     }
 
+    auto event_endpoint = control.endpoints().first();
+    if (event_endpoint.endpoint_attributes_bitmap != USBEndpoint::ENDPOINT_ATTRIBUTES_TRANSFER_TYPE_INTERRUPT) {
+        dmesgln("CDC-ECM: Control Interface's first endpoint is not an interrupt endpoint; Rejecting");
+        return ENOTSUP;
+    }
+
+    auto event_pipe = TRY(InterruptInPipe::create(device.controller(), device, event_endpoint.endpoint_address & 0b1111, event_endpoint.max_packet_size, event_endpoint.poll_interval_in_frames));
     auto in_pipe = TRY(BulkInPipe::create(device.controller(), device, in_pipe_endpoint_number, in_max_packet_size));
     auto out_pipe = TRY(BulkOutPipe::create(device.controller(), device, out_pipe_endpoint_number, out_max_packet_size));
 
@@ -96,21 +146,30 @@ ErrorOr<NonnullRefPtr<NetworkAdapter>> CDCECMNetworkAdapter::create(
     return adopt_nonnull_ref_or_enomem(new (nothrow) CDCECMNetworkAdapter(
         device,
         mac_address,
+        move(event_pipe),
         move(in_pipe),
         move(out_pipe),
+        data_active,
+        data_inactive,
         max_segment_size));
 }
 
 CDCECMNetworkAdapter::CDCECMNetworkAdapter(USB::Device& device,
     MACAddress const& mac_address,
+    NonnullOwnPtr<InterruptInPipe> event_pipe,
     NonnullOwnPtr<BulkInPipe> in_pipe,
     NonnullOwnPtr<BulkOutPipe> out_pipe,
+    USBInterface const& active_data_interface,
+    USBInterface const& inactive_data_interface,
     u16 max_segment_size)
     : NetworkAdapter("cdc-ecm"sv) // FIXME: Choose the propper name
                                   // FIXME: We may want to make this unique if we have multiple CDC-ECM devices
     , m_device(device)
+    , m_event_pipe(move(event_pipe))
     , m_in_pipe(move(in_pipe))
     , m_out_pipe(move(out_pipe))
+    , m_active_data_interface(active_data_interface)
+    , m_inactive_data_interface(inactive_data_interface)
 {
     set_mtu(max_segment_size);
     set_mac_address(mac_address);
@@ -124,6 +183,8 @@ ErrorOr<void> CDCECMNetworkAdapter::initialize(Badge<NetworkingManagement>)
     auto [process, poll_thread] = TRY(Process::create_kernel_process("CDC-ECM"sv, [this]() { this->poll_thread(); }));
     poll_thread->set_name("CDC-ECM Poll"sv);
     m_process = move(process);
+    // FIXME: Start listening to the event pipe for notifications
+    TRY(m_device.set_configuration_and_interface(m_active_data_interface));
     return {};
 }
 
