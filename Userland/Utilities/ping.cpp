@@ -6,9 +6,9 @@
 
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
+#include <AK/InternetChecksum.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
-#include <LibCrypto/Checksum/IPv4Header.h>
 #include <LibMain/Main.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -212,7 +212,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             ping_packet[i + sizeof(struct icmphdr)] = i & 0xFF;
         }
 
-        ping_hdr->checksum = Crypto::Checksum::IPv4Header({ ping_packet.data(), ping_packet.size() }).digest();
+        ping_hdr->checksum = bit_cast<u16>(InternetChecksum({ ping_packet.data(), ping_packet.size() }).digest());
 
         struct timeval tv_send;
         gettimeofday(&tv_send, nullptr);
