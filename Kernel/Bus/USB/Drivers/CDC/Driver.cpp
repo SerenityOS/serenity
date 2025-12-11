@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Array.h>
 #include <AK/Error.h>
 #include <AK/Format.h>
 #include <AK/MemoryStream.h>
@@ -15,7 +16,6 @@
 #include <Kernel/Bus/USB/USBInterface.h>
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Library/Assertions.h>
-#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/USB/CDCECM.h>
 
 namespace Kernel::USB::CDC {
@@ -138,45 +138,110 @@ static ErrorOr<void> dump_interface(USB::USBConfiguration const& configuration, 
     }
 }
 
-static ErrorOr<bool> dump_configuration(USB::USBConfiguration const& configuration)
+struct Function {
+    USB::USBInterface const& control_interface;
+    Vector<u8> data_interface_ids;
+
+    SubclassCode interface_sub_class() const
+    {
+        return SubclassCode { control_interface.descriptor().interface_sub_class_code };
+    }
+
+    CommunicationProtocolCode interface_protocol() const
+    {
+        return CommunicationProtocolCode { control_interface.descriptor().interface_protocol };
+    }
+};
+
+struct Driver {
+    StringView name;
+    SubclassCode interface_sub_class;
+    CommunicationProtocolCode interface_protocol;
+    ClassSpecificInterfaceDescriptorCodes required_functional_descriptor;
+    ErrorOr<void> (*driver_init)(USB::Device&, USB::USBInterface const&, Vector<u8> const&);
+};
+
+constexpr auto drivers = to_array<Driver>({
+    { .name = "ECM"sv, .interface_sub_class = CDC::SubclassCode::EthernetNetworkingControlModel, .interface_protocol = CDC::CommunicationProtocolCode::NoSpecificProtocol, .required_functional_descriptor = CDC::ClassSpecificInterfaceDescriptorCodes::EthernetNetworking, .driver_init = &create_ecm_network_adapter },
+});
+
+static ErrorOr<bool> select_drivers(USB::Device& device, Vector<Function> functions)
+{
+    bool handled = false;
+    for (auto const& function : functions) {
+        for (auto const& driver : drivers) {
+            if (function.interface_sub_class() != driver.interface_sub_class)
+                continue;
+            if (function.interface_protocol() != driver.interface_protocol)
+                continue;
+
+            // Check for required functional descriptor
+            bool has_required_descriptor = false;
+            TRY(function.control_interface.configuration().for_each_descriptor_in_interface(function.control_interface, [&](ReadonlyBytes raw_descriptor) -> ErrorOr<IterationDecision> {
+                auto const& descriptor_header = *reinterpret_cast<USBDescriptorCommon const*>(raw_descriptor.data());
+                if (descriptor_header.descriptor_type == static_cast<u8>(CDC::ClassSpecificDescriptorCodes::CS_Interface)) {
+                    auto subtype = raw_descriptor[2];
+                    if (subtype == static_cast<u8>(driver.required_functional_descriptor)) {
+                        has_required_descriptor = true;
+                        return IterationDecision::Break;
+                    }
+                }
+                return IterationDecision::Continue;
+            }));
+            if (!has_required_descriptor)
+                continue;
+
+            dmesgln("USB CDC: Trying to initialize driver {}", driver.name);
+            auto result = driver.driver_init(device, function.control_interface, function.data_interface_ids);
+            if (result.is_error()) {
+                dmesgln("USB CDC: Failed to initialize driver {}: {}", driver.name, result.error());
+                continue;
+            }
+            handled = true;
+        }
+    }
+    return handled;
+}
+
+static ErrorOr<bool> dump_configuration(USB::Device& device, USB::USBConfiguration const& configuration)
 {
     dmesgln("USB CDC:   Configuration {}", configuration.descriptor().configuration_value);
-    Optional<USBInterface const&> control_interface;
-    Optional<USBInterface const&> data_interface;
+    Vector<Function> functions;
     for (auto const& interface : configuration.interfaces()) {
         TRY(dump_interface(configuration, interface));
 
-        if (interface.descriptor().interface_class_code == USB_CLASS_COMMUNICATIONS_AND_CDC_CONTROL) {
-            control_interface = interface;
-        } else if (interface.descriptor().interface_class_code == USB_CLASS_CDC_DATA) {
-            // FIXME: Think of a better way to select the data interface if multiple are present
-            //        ECM for example will always have an empty one and one with two endpoints
-            if (data_interface.has_value()) {
-                if (data_interface->endpoints().size() < interface.endpoints().size()) {
-                    data_interface = interface;
+        if (interface.descriptor().interface_class_code != USB_CLASS_COMMUNICATIONS_AND_CDC_CONTROL) {
+            continue;
+        }
+
+        Function function { interface, {} };
+        // Find associated data interfaces
+        // Those are linked via the Union Functional Descriptor
+        TRY(configuration.for_each_descriptor_in_interface(interface, [&](ReadonlyBytes raw_descriptor) -> ErrorOr<IterationDecision> {
+            auto const& descriptor_header = *reinterpret_cast<USBDescriptorCommon const*>(raw_descriptor.data());
+            if (descriptor_header.descriptor_type == static_cast<u8>(CDC::ClassSpecificDescriptorCodes::CS_Interface)) {
+                auto subtype = raw_descriptor[2];
+                if (subtype == static_cast<u8>(CDC::ClassSpecificInterfaceDescriptorCodes::Union)) {
+                    auto b_master_interface = raw_descriptor[3];
+                    if (b_master_interface != interface.descriptor().interface_id) {
+                        // Not sure why we would see this, but the spec seems to allow it
+                        return IterationDecision::Continue;
+                    }
+                    Span data_interfaces = raw_descriptor.slice(sizeof(USBDescriptorCommon) + 2);
+                    TRY(function.data_interface_ids.try_extend(data_interfaces));
                 }
-            } else {
-                data_interface = interface;
+                return IterationDecision::Continue;
             }
-        }
+            return IterationDecision::Continue;
+        }));
+        TRY(functions.try_append(move(function)));
     }
 
-    // FIXME: Choose a better detection mechanism if multiple interfaces are present
-    if (control_interface.has_value() && data_interface.has_value()) {
-        if (static_cast<CDC::SubclassCode>(control_interface->descriptor().interface_sub_class_code) == CDC::SubclassCode::EthernetNetworkingControlModel) {
-            dmesgln("USB CDC:   Detected CDC-ECM device");
-            auto adapter = TRY(CDCECMNetworkAdapter::create(const_cast<USB::Device&>(configuration.device()), *control_interface, *data_interface));
-            TRY(NetworkingManagement::the().register_adapter(adapter));
-            return true;
-        }
-    }
-
-    return false;
+    return select_drivers(device, move(functions));
 }
 
 ErrorOr<void> CDCDriver::probe(USB::Device& device)
 {
-
     if (device.device_descriptor().device_class != USB_CLASS_COMMUNICATIONS_AND_CDC_CONTROL) {
         return ENOTSUP;
     }
@@ -185,7 +250,7 @@ ErrorOr<void> CDCDriver::probe(USB::Device& device)
     bool handled = false;
     dmesgln("USB CDC: Found Device {}:{}", device.device_descriptor().vendor_id, device.device_descriptor().product_id);
     for (auto const& configuration : device.configurations()) {
-        handled |= TRY(dump_configuration(configuration));
+        handled |= TRY(dump_configuration(device, configuration));
     }
 
     if (handled)

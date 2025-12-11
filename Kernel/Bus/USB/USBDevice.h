@@ -80,6 +80,7 @@ public:
         m_driver = nullptr;
     }
 
+    ErrorOr<void> set_configuration(USBConfiguration const& configuration);
     ErrorOr<void> set_configuration_and_interface(USBInterface const& interface);
 
     RecursiveSpinlockProtected<RefPtr<SysFSUSBDeviceInformation>, LockRank::None>& sysfs_device_info_node(Badge<USB::Hub>) { return m_sysfs_device_info_node; }
@@ -111,7 +112,6 @@ public:
 
 protected:
     void set_default_pipe(NonnullOwnPtr<ControlPipe> pipe);
-    ErrorOr<void> set_configuration(USBConfiguration const& configuration);
 
     u8 m_device_port { 0 };     // What port is this device attached to. NOTE: This is 1-based.
     DeviceSpeed m_device_speed; // What speed is this device running at
