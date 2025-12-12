@@ -18,23 +18,22 @@
 
 static Vector<ByteString> certificates;
 
-static ErrorOr<pid_t> launch_process(StringView application, ReadonlySpan<char const*> arguments)
+static ErrorOr<pid_t> launch_process(StringView application, Vector<ByteString> arguments)
 {
     auto paths = TRY(get_paths_for_helper_process(application));
 
-    ErrorOr<pid_t> result = -1;
     for (auto const& path : paths) {
         auto path_view = path.view();
-        result = Core::Process::spawn(path_view, arguments, {}, Core::Process::KeepAsChild::Yes);
-        if (!result.is_error())
-            break;
+        auto maybe_process = Core::Process::spawn(Core::ProcessSpawnOptions { .executable = path_view, .arguments = arguments, .keep_as_child = Core::KeepAsChild::Yes });
+        if (!maybe_process.is_error())
+            return maybe_process.value().take_pid();
     }
-    return result;
+    return -1;
 }
 
 static ErrorOr<pid_t> launch_browser(ByteString const& socket_path)
 {
-    auto arguments = Vector {
+    auto arguments = Vector<ByteString> {
         "--webdriver-content-path",
         socket_path.characters(),
     };
@@ -50,14 +49,14 @@ static ErrorOr<pid_t> launch_browser(ByteString const& socket_path)
 
     arguments.append("about:blank");
 
-    return launch_process("Ladybird"sv, arguments.span());
+    return launch_process("Ladybird"sv, arguments);
 }
 
 static ErrorOr<pid_t> launch_headless_browser(ByteString const& socket_path)
 {
     auto resources = ByteString::formatted("{}/res", s_serenity_resource_root);
     return launch_process("headless-browser"sv,
-        Array {
+        Vector<ByteString> {
             "--resources",
             resources.characters(),
             "--webdriver-ipc-path",

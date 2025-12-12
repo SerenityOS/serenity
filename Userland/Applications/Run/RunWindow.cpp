@@ -108,11 +108,15 @@ void RunWindow::do_run()
 bool RunWindow::run_as_command(ByteString const& run_input)
 {
     // TODO: Query and use the user's preferred shell.
-    auto maybe_child_pid = Core::Process::spawn("/bin/Shell"sv, Array { "-c", run_input.characters() }, {}, Core::Process::KeepAsChild::Yes);
-    if (maybe_child_pid.is_error())
+    auto maybe_child_process = Core::Process::spawn(Core::ProcessSpawnOptions {
+        .executable = "/bin/Shell"sv,
+        .arguments = { "-c", run_input.characters() },
+        .keep_as_child = Core::KeepAsChild::Yes });
+
+    if (maybe_child_process.is_error())
         return false;
 
-    pid_t child_pid = maybe_child_pid.release_value();
+    pid_t child_pid = maybe_child_process.value().take_pid();
 
     // The child shell was able to start. Let's save it to the history immediately so users can see it as the first entry the next time they run this program.
     prepend_history(run_input);

@@ -103,7 +103,7 @@ private:
 static ErrorOr<void> utmp_update(StringView tty, pid_t pid, bool create)
 {
     auto pid_string = String::number(pid);
-    Array utmp_update_command {
+    Vector<ByteString> utmp_update_command {
         "-f"sv,
         "Terminal"sv,
         "-p"sv,
@@ -112,7 +112,11 @@ static ErrorOr<void> utmp_update(StringView tty, pid_t pid, bool create)
         tty,
     };
 
-    auto utmpupdate_pid = TRY(Core::Process::spawn("/bin/utmpupdate"sv, utmp_update_command, {}, Core::Process::KeepAsChild::Yes));
+    auto utmpupdate_pid = TRY(Core::Process::spawn(Core::ProcessSpawnOptions {
+                                  .executable = "/bin/utmpupdate"sv,
+                                  .arguments = utmp_update_command,
+                                  .keep_as_child = Core::KeepAsChild::Yes }))
+                              .take_pid();
 
     Core::System::WaitPidResult status;
     auto wait_successful = false;

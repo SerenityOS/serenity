@@ -114,7 +114,12 @@ ErrorOr<Process> Process::spawn(ProcessSpawnOptions const& options)
     } else {
         pid = TRY(System::posix_spawn(options.executable.view(), &spawn_actions, nullptr, const_cast<char**>(argv_list.get().data()), Core::Environment::raw_environ()));
     }
-    return Process { pid };
+
+    auto process = Process { pid };
+    if (options.keep_as_child == KeepAsChild::No)
+        TRY(process.disown());
+
+    return process;
 }
 
 ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<ByteString> arguments, ByteString working_directory, KeepAsChild keep_as_child)
@@ -123,15 +128,10 @@ ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<ByteString> argument
         .executable = path,
         .arguments = Vector<ByteString> { arguments },
         .working_directory = working_directory.is_empty() ? Optional<ByteString> {} : Optional<ByteString> { working_directory },
+        .keep_as_child = keep_as_child,
     }));
 
-    if (keep_as_child == KeepAsChild::No)
-        TRY(process.disown());
-    else {
-        // FIXME: This won't be needed if return value is changed to Process.
-        process.m_should_disown = false;
-    }
-    return process.pid();
+    return process.m_pid;
 }
 
 ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> arguments, ByteString working_directory, KeepAsChild keep_as_child)
@@ -145,13 +145,10 @@ ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> argument
         .executable = path,
         .arguments = backing_strings,
         .working_directory = working_directory.is_empty() ? Optional<ByteString> {} : Optional<ByteString> { working_directory },
+        .keep_as_child = keep_as_child,
     }));
 
-    if (keep_as_child == KeepAsChild::No)
-        TRY(process.disown());
-    else
-        process.m_should_disown = false;
-    return process.pid();
+    return process.m_pid;
 }
 
 ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<char const*> arguments, ByteString working_directory, KeepAsChild keep_as_child)
@@ -165,13 +162,10 @@ ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<char const*> argumen
         .executable = path,
         .arguments = backing_strings,
         .working_directory = working_directory.is_empty() ? Optional<ByteString> {} : Optional<ByteString> { working_directory },
+        .keep_as_child = keep_as_child,
     }));
 
-    if (keep_as_child == KeepAsChild::No)
-        TRY(process.disown());
-    else
-        process.m_should_disown = false;
-    return process.pid();
+    return process.m_pid;
 }
 
 ErrorOr<String> Process::get_name()
@@ -320,22 +314,20 @@ void Process::wait_for_debugger_and_break()
 
 ErrorOr<void> Process::disown()
 {
-    if (m_pid != 0 && m_should_disown) {
 #ifdef AK_OS_SERENITY
-        TRY(System::disown(m_pid));
+    TRY(System::disown(m_pid));
 #else
-        // FIXME: Support disown outside Serenity.
+    // FIXME: Support disown outside Serenity.
 #endif
-        m_should_disown = false;
-        return {};
-    } else {
-        return Error::from_errno(EINVAL);
-    }
+    m_was_managed = true;
+    return {};
 }
 
 ErrorOr<bool> Process::wait_for_termination()
 {
     VERIFY(m_pid > 0);
+    VERIFY(!m_was_managed);
+    m_was_managed = true;
 
     bool exited_with_code_0 = true;
     int status;
@@ -353,7 +345,6 @@ ErrorOr<bool> Process::wait_for_termination()
         VERIFY_NOT_REACHED();
     }
 
-    m_should_disown = false;
     return exited_with_code_0;
 }
 
@@ -457,7 +448,7 @@ ErrorOr<IPCProcess::ProcessPaths> IPCProcess::paths_for_process(StringView proce
 ErrorOr<IPCProcess::ProcessAndIPCSocket> IPCProcess::spawn_singleton_and_connect_to_process(ProcessSpawnOptions const& options)
 {
     auto [socket_path, pid_path] = TRY(paths_for_process(options.name));
-    Process process { -1 };
+    Optional<Process> process;
 
     if (auto existing_pid = TRY(get_process_pid(options.name, pid_path)); existing_pid.has_value()) {
         process = Process { *existing_pid };
@@ -485,7 +476,7 @@ ErrorOr<IPCProcess::ProcessAndIPCSocket> IPCProcess::spawn_singleton_and_connect
             auto process = TRY(Process::spawn(options));
             {
                 auto pid_file = TRY(File::open(pid_path, File::OpenMode::Write));
-                TRY(pid_file->write_until_depleted(ByteString::number(process.pid())));
+                TRY(pid_file->write_until_depleted(ByteString::number(process.m_pid)));
             }
 
             TRY(System::kill(getpid(), SIGTERM));
@@ -504,7 +495,7 @@ ErrorOr<IPCProcess::ProcessAndIPCSocket> IPCProcess::spawn_singleton_and_connect
     auto ipc_socket = TRY(LocalSocket::connect(socket_path));
     TRY(ipc_socket->set_blocking(true));
 
-    return ProcessAndIPCSocket { move(process), move(ipc_socket) };
+    return ProcessAndIPCSocket { process.release_value(), move(ipc_socket) };
 }
 
 }
