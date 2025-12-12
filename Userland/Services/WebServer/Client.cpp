@@ -226,12 +226,21 @@ ErrorOr<void> Client::send_response(Stream& response, HTTP::HttpRequest const& r
 
 ErrorOr<void> Client::send_redirect(StringView redirect_path, HTTP::HttpRequest const& request)
 {
+    StringBuilder html_builder;
+    TRY(html_builder.try_append("<!DOCTYPE html>\n<html>\n<body>\n<h1>301 Moved Permanently</h1>\n<p>The document has moved <a href=\""sv));
+    TRY(html_builder.try_append(redirect_path));
+    TRY(html_builder.try_append("\">here</a>.</p>\n</body>\n</html>\n"sv));
+
     StringBuilder builder;
     TRY(builder.try_append("HTTP/1.0 301 Moved Permanently\r\n"sv));
     TRY(builder.try_append("Location: "sv));
     TRY(builder.try_append(redirect_path));
     TRY(builder.try_append("\r\n"sv));
+    TRY(builder.try_appendff("Content-Length: {}\r\n", html_builder.length()));
+    TRY(builder.try_append("Content-Type: text/html; charset=UTF-8\r\n"sv));
     TRY(builder.try_append("\r\n"sv));
+
+    TRY(builder.try_append(html_builder.string_view()));
 
     auto builder_contents = TRY(builder.to_byte_buffer());
     TRY(m_socket->write_until_depleted(builder_contents));
