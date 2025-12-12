@@ -208,7 +208,7 @@ jobs:
       # Note: tmp_profile_data/Coverage.profdata has the entire combined profile data, but creating the raw txt requires
       #       all of the instrumented binaries and the profdata file.
       - name: Upload Coverage Results
-        if: ${{ inputs.coverage == 'ON' }}
+        if: ${{ inputs.coverage == 'ON' && github.event_name != 'pull_request' }}
         uses: actions/upload-artifact@v5
         with:
           name: serenity-coverage
