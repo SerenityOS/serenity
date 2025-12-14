@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Oskar Skog <oskar@oskog97.com>
+Date: Sun, 14 Dec 2025 12:20:40 +0200
+Subject: [PATCH] pledge sigaction in scp
+
+---
+ scp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/scp.c b/scp.c
+index c36d66aa59416d72495fdaecf881c902cb281e5b..b13a74a01e0f9bcd5190788a487ca5e586631a62 100644
+--- a/scp.c
++++ b/scp.c
+@@ -606,7 +606,7 @@ main(int argc, char **argv)
+ 	if (pflag) {
+ 		/* Cannot pledge: -p allows setuid/setgid files... */
+ 	} else {
+-		if (pledge("stdio rpath wpath cpath fattr tty proc exec",
++		if (pledge("stdio rpath wpath cpath fattr tty proc exec sigaction",
+ 		    NULL) == -1) {
+ 			perror("pledge");
+ 			exit(1);
