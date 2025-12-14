@@ -35,3 +35,8 @@ Use sendfd/recvfd on serenity
 Use unveil for privsep
 
 
+## `0008-pledge-sigaction-in-scp.patch`
+
+pledge sigaction in scp
+
+
