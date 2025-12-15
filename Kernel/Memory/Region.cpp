@@ -422,14 +422,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
 
         SpinlockLocker vmobject_locker(vmobject().m_lock);
         auto& page_slot = physical_page_slot(page_index_in_region);
-        if (page_slot->is_lazy_committed_page()) {
-            auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
-            VERIFY(m_vmobject->is_anonymous());
-            page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({});
-            if (!remap_vmobject_page(page_index_in_vmobject, *page_slot, ShouldLockVMObject::No))
-                return PageFaultResponse::OutOfMemory;
-            return PageFaultResponse::Continue;
-        }
+
         dbgln("BUG! Unexpected NP fault at {}", fault.vaddr());
         dbgln("     - Physical page slot pointer: {:p}", page_slot.ptr());
         if (page_slot) {
@@ -499,17 +492,6 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
     if (vmobject().is_inode()) {
         dbgln_if(PAGE_FAULT_DEBUG, "Inode page fault in Region({})[{}]", this, page_index_in_region);
         return handle_inode_fault(page_index_in_region);
-    }
-
-    SpinlockLocker vmobject_locker(vmobject().m_lock);
-    auto& page_slot = physical_page_slot(page_index_in_region);
-    if (page_slot->is_lazy_committed_page()) {
-        auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
-        VERIFY(m_vmobject->is_anonymous());
-        page_slot = static_cast<AnonymousVMObject&>(*m_vmobject).allocate_committed_page({});
-        if (!remap_vmobject_page(page_index_in_vmobject, *page_slot, ShouldLockVMObject::No))
-            return PageFaultResponse::OutOfMemory;
-        return PageFaultResponse::Continue;
     }
 
     dbgln("Unexpected page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
