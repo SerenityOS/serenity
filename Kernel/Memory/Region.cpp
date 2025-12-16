@@ -404,58 +404,6 @@ void Region::clear_to_zero()
 
 PageFaultResponse Region::handle_fault(PageFault const& fault)
 {
-#if !ARCH(RISCV64)
-    auto page_index_in_region = page_index_from_address(fault.vaddr());
-    if (fault.type() == PageFault::Type::PageNotPresent) {
-        if (fault.is_read() && !is_readable()) {
-            dbgln("NP(non-readable) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-            return PageFaultResponse::ShouldCrash;
-        }
-        if (fault.is_write() && !is_writable()) {
-            dbgln("NP(non-writable) write fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-            return PageFaultResponse::ShouldCrash;
-        }
-        if (vmobject().is_inode()) {
-            dbgln_if(PAGE_FAULT_DEBUG, "NP(inode) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-            return handle_inode_fault(page_index_in_region);
-        }
-
-        SpinlockLocker vmobject_locker(vmobject().m_lock);
-        auto& page_slot = physical_page_slot(page_index_in_region);
-
-        dbgln("BUG! Unexpected NP fault at {}", fault.vaddr());
-        dbgln("     - Physical page slot pointer: {:p}", page_slot.ptr());
-        if (page_slot) {
-            dbgln("     - Physical page: {}", page_slot->paddr());
-            dbgln("     - Lazy committed: {}", page_slot->is_lazy_committed_page());
-            dbgln("     - Shared zero: {}", page_slot->is_shared_zero_page());
-        }
-        return PageFaultResponse::ShouldCrash;
-    }
-    VERIFY(fault.type() == PageFault::Type::ProtectionViolation);
-    if (fault.access() == PageFault::Access::Write && is_writable()) {
-        if (should_cow(page_index_in_region)) {
-            dbgln_if(PAGE_FAULT_DEBUG, "PV(cow) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-            auto phys_page = physical_page(page_index_in_region);
-            if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
-                dbgln_if(PAGE_FAULT_DEBUG, "NP(zero) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-                return handle_zero_fault(page_index_in_region, *phys_page);
-            }
-            return handle_cow_fault(page_index_in_region);
-        }
-        // Write faults to InodeVMObjects should always be treated as a dirty-on-write fault
-        if (vmobject().is_inode()) {
-            dbgln_if(PAGE_FAULT_DEBUG, "PV(dirty_on_write) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-            return handle_inode_write_fault(page_index_in_region);
-        }
-    }
-    dbgln("PV(error) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-    return PageFaultResponse::ShouldCrash;
-#else
-    // FIXME: Consider to merge the RISC-V page fault handling code with the x86_64/aarch64 implementation.
-    //        RISC-V doesn't tell you *why* a memory access failed, only the original access type (r/w/x).
-    //        We probably should take the page fault reason into account, if the processor provides it.
-
     auto page_index_in_region = page_index_from_address(fault.vaddr());
 
     if (fault.is_user() && !is_user()) {
@@ -507,7 +455,6 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
 
     dbgln("Unexpected page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
     return PageFaultResponse::ShouldCrash;
-#endif
 }
 
 PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, PhysicalRAMPage& page_in_slot_at_time_of_fault)

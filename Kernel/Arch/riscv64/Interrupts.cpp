@@ -132,7 +132,6 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
             }
 
             // RISC-V doesn't tell you the reason why a page fault occurred, so we don't use PageFault::set_type() here.
-            // The RISC-V implementation of Region::handle_fault() works without a correct PageFault::type().
 
             fault.handle(*trap_frame.regs);
             break;
