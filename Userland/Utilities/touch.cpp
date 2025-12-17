@@ -73,7 +73,7 @@ static void parse_time(StringView input_time, timespec& atime, timespec& mtime)
         second = 0;
     }
 
-    auto current_year = seconds_since_epoch_to_year(time(nullptr));
+    auto [current_year, current_month, current_day] = seconds_since_epoch_to_date(time(nullptr));
     auto current_century = current_year / 100;
     if (parameters.size() == 6)
         year = parameters.take_first() * 100 + parameters.take_first();

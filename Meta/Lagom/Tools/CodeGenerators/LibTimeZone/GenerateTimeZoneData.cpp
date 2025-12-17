@@ -549,7 +549,9 @@ struct DaylightSavingsOffset {
     AK::UnixDateTime time_in_effect(AK::UnixDateTime time) const
     {
         auto in_effect = this->in_effect;
-        in_effect.year = seconds_since_epoch_to_year(time.seconds_since_epoch());
+
+        auto [year, month, day] = seconds_since_epoch_to_date(time.seconds_since_epoch());
+        in_effect.year = year;
 
         return in_effect.time_since_epoch();
     }
