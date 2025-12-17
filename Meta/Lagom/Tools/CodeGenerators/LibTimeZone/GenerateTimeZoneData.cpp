@@ -663,11 +663,13 @@ static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset co
         if (!current_offset)
             return &new_offset;
 
-        auto new_time_in_effect = new_offset.time_in_effect(time);
-        return (time >= new_time_in_effect) ? &new_offset : current_offset;
+        if (time >= new_offset.time_in_effect(new_offset.year_from))
+            return &new_offset;
+
+        return current_offset;
     };
 
-    for (size_t index = 0; (index < dst_rules.size()) && (!standard_offset || !daylight_offset); ++index) {
+    for (size_t index = 0; index < dst_rules.size(); ++index) {
         auto const& dst_rule = dst_rules[index];
 
         if (last_offset == nullptr)
@@ -675,22 +677,17 @@ static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset co
         else if (dst_rule.time_in_effect(dst_rule.year_to) > last_offset->time_in_effect(last_offset->year_to))
             last_offset = &dst_rule;
 
-        if ((time < dst_rule.year_from) || (time >= dst_rule.year_to))
-            continue;
-
         if (dst_rule.offset == 0)
             standard_offset = preferred_rule(standard_offset, dst_rule);
         else
             daylight_offset = preferred_rule(daylight_offset, dst_rule);
     }
 
-    // If there isn't a standard or daylight rule in effect, fall back to the last rule given in the TZDB.
-    if (!standard_offset) {
-        VERIFY(last_offset != nullptr);
-        standard_offset = last_offset;
-    }
+    // If the most recent rule is outdated, fall back to the last standard time rule.
+    if (time >= last_offset->year_to)
+        daylight_offset = standard_offset;
 
-    return { standard_offset, daylight_offset ? daylight_offset : standard_offset };
+    return { standard_offset, daylight_offset };
 }
 
 static Offset get_active_dst_offset(TimeZoneOffset const& time_zone_offset, AK::UnixDateTime time)
