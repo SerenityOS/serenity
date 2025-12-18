@@ -408,7 +408,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
     auto page_index_in_region = page_index_from_address(fault.vaddr());
     if (fault.type() == PageFault::Type::PageNotPresent) {
         if (fault.is_read() && !is_readable()) {
-            dbgln("NP(non-readable) fault in Region({})[{}]", this, page_index_in_region);
+            dbgln("NP(non-readable) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
             return PageFaultResponse::ShouldCrash;
         }
         if (fault.is_write() && !is_writable()) {
@@ -416,7 +416,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
             return PageFaultResponse::ShouldCrash;
         }
         if (vmobject().is_inode()) {
-            dbgln_if(PAGE_FAULT_DEBUG, "NP(inode) fault in Region({})[{}]", this, page_index_in_region);
+            dbgln_if(PAGE_FAULT_DEBUG, "NP(inode) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
             return handle_inode_fault(page_index_in_region);
         }
 
@@ -475,7 +475,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
     }
 
     if (fault.is_read() && !is_readable()) {
-        dbgln("Read page fault in non-readable Region({})[{}]", this, page_index_in_region);
+        dbgln("Read page fault in non-readable Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
         return PageFaultResponse::ShouldCrash;
     }
 
@@ -501,7 +501,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
     }
 
     if (fault.is_read() && vmobject().is_inode()) {
-        dbgln_if(PAGE_FAULT_DEBUG, "Inode read page fault in Region({})[{}]", this, page_index_in_region);
+        dbgln_if(PAGE_FAULT_DEBUG, "Inode read page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
         return handle_inode_fault(page_index_in_region);
     }
 
