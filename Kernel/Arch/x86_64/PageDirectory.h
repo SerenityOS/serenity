@@ -21,13 +21,20 @@
 
 namespace Kernel::Memory {
 
+// Bits 51-12 are used for the physical address. If MAXPHYADDR < 52, unused bits have to be 0.
+static constexpr u64 PAGING_STRUCTURE_ENTRY_PADDR_MASK = 0x000f'ffff'ffff'f000;
+
 class PageDirectoryEntry {
 public:
-    PhysicalPtr page_table_base() const { return PhysicalAddress::physical_page_base(m_raw); }
+    PhysicalPtr page_table_base() const
+    {
+        return m_raw & PAGING_STRUCTURE_ENTRY_PADDR_MASK;
+    }
+
     void set_page_table_base(PhysicalPtr value)
     {
-        m_raw &= 0x8000000000000fffULL;
-        m_raw |= PhysicalAddress::physical_page_base(value);
+        m_raw &= ~PAGING_STRUCTURE_ENTRY_PADDR_MASK;
+        m_raw |= value & PAGING_STRUCTURE_ENTRY_PADDR_MASK;
     }
 
     bool is_null() const { return m_raw == 0; }
@@ -81,11 +88,15 @@ private:
 
 class PageTableEntry {
 public:
-    PhysicalPtr physical_page_base() const { return PhysicalAddress::physical_page_base(m_raw); }
+    PhysicalPtr physical_page_base() const
+    {
+        return m_raw & PAGING_STRUCTURE_ENTRY_PADDR_MASK;
+    }
+
     void set_physical_page_base(PhysicalPtr value)
     {
-        m_raw &= 0x8000000000000fffULL;
-        m_raw |= PhysicalAddress::physical_page_base(value);
+        m_raw &= ~PAGING_STRUCTURE_ENTRY_PADDR_MASK;
+        m_raw |= value & PAGING_STRUCTURE_ENTRY_PADDR_MASK;
     }
 
     u64 raw() const { return m_raw; }
