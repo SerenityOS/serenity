@@ -10,6 +10,35 @@
 
 namespace Gfx::JBIG2 {
 
+ErrorOr<NonnullRefPtr<BilevelImage>> halftone_skip_pattern(HalftoneGeometry const& inputs)
+{
+    auto skip_pattern = TRY(BilevelImage::create(inputs.grayscale_width, inputs.grayscale_height));
+
+    // 6.6.5.1 Computing HSKIP
+    // "1) For each value of mg between 0 and HGH – 1, beginning from 0, perform the following steps:"
+    for (int m_g = 0; m_g < (int)inputs.grayscale_height; ++m_g) {
+        // "a) For each value of ng between 0 and HGW – 1, beginning from 0, perform the following steps:"
+        for (int n_g = 0; n_g < (int)inputs.grayscale_width; ++n_g) {
+            // "i) Set:
+            //      x = (HGX + m_g × HRY + n_g × HRX) >> 8
+            //      y = (HGY + m_g × HRX – n_g × HRY) >> 8"
+            auto x = (inputs.grid_origin_x_offset + m_g * inputs.grid_vector_y + n_g * inputs.grid_vector_x) >> 8;
+            auto y = (inputs.grid_origin_y_offset + m_g * inputs.grid_vector_x - n_g * inputs.grid_vector_y) >> 8;
+
+            // "ii) If ((x + HPW <= 0) OR (x >= HBW) OR (y + HPH <= 0) OR (y >= HBH)) then set:
+            //          HSKIP[n_g, m_g] = 1
+            //      Otherwise, set:
+            //          HSKIP[n_g, m_g] = 0"
+            if (x + inputs.pattern_width <= 0 || x >= (int)inputs.region_width || y + inputs.pattern_height <= 0 || y >= (int)inputs.region_height)
+                skip_pattern->set_bit(n_g, m_g, true);
+            else
+                skip_pattern->set_bit(n_g, m_g, false);
+        }
+    }
+
+    return skip_pattern;
+}
+
 ErrorOr<TextRegionHuffmanTables> text_region_huffman_tables_from_flags(u16 huffman_flags, Vector<JBIG2::HuffmanTable const*> custom_tables)
 {
     TextRegionHuffmanTables tables;

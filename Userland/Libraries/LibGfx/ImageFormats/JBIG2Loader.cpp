@@ -2286,30 +2286,19 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> halftone_region_decoding_procedure(H
     Optional<BilevelImage const&> skip_pattern;
     RefPtr<BilevelImage> skip_pattern_storage;
     if (inputs.enable_skip) {
-        skip_pattern_storage = TRY(BilevelImage::create(inputs.grayscale_width, inputs.grayscale_height));
+        skip_pattern_storage = TRY(JBIG2::halftone_skip_pattern({
+            inputs.region_width,
+            inputs.region_height,
+            inputs.grayscale_width,
+            inputs.grayscale_height,
+            inputs.grid_origin_x_offset,
+            inputs.grid_origin_y_offset,
+            inputs.grid_vector_x,
+            inputs.grid_vector_y,
+            inputs.pattern_width,
+            inputs.pattern_height,
+        }));
         skip_pattern = *skip_pattern_storage;
-
-        // 6.6.5.1 Computing HSKIP
-        // "1) For each value of mg between 0 and HGH – 1, beginning from 0, perform the following steps:"
-        for (int m_g = 0; m_g < (int)inputs.grayscale_height; ++m_g) {
-            // "a) For each value of ng between 0 and HGW – 1, beginning from 0, perform the following steps:"
-            for (int n_g = 0; n_g < (int)inputs.grayscale_width; ++n_g) {
-                // "i) Set:
-                //      x = (HGX + m_g × HRY + n_g × HRX) >> 8
-                //      y = (HGY + m_g × HRX – n_g × HRY) >> 8"
-                auto x = (inputs.grid_origin_x_offset + m_g * inputs.grid_vector_y + n_g * inputs.grid_vector_x) >> 8;
-                auto y = (inputs.grid_origin_y_offset + m_g * inputs.grid_vector_x - n_g * inputs.grid_vector_y) >> 8;
-
-                // "ii) If ((x + HPW <= 0) OR (x >= HBW) OR (y + HPH <= 0) OR (y >= HBH)) then set:
-                //          HSKIP[n_g, m_g] = 1
-                //      Otherwise, set:
-                //          HSKIP[n_g, m_g] = 0"
-                if (x + inputs.pattern_width <= 0 || x >= (int)inputs.region_width || y + inputs.pattern_height <= 0 || y >= (int)inputs.region_height)
-                    skip_pattern_storage->set_bit(n_g, m_g, true);
-                else
-                    skip_pattern_storage->set_bit(n_g, m_g, false);
-            }
-        }
     }
 
     // "3) Set HBPP to ⌈log2 (HNUMPATS)⌉."
