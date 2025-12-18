@@ -458,6 +458,12 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
 
     auto page_index_in_region = page_index_from_address(fault.vaddr());
 
+    // This check needs to be before the is_read() check, since both is_instruction_fetch() and is_read() is true for instruction fetch page faults.
+    if (fault.is_instruction_fetch() && !is_executable()) {
+        dbgln("Instruction fetch page fault in non-executable Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+        return PageFaultResponse::ShouldCrash;
+    }
+
     if (fault.is_read() && !is_readable()) {
         dbgln("Read page fault in non-readable Region({})[{}]", this, page_index_in_region);
         return PageFaultResponse::ShouldCrash;
@@ -465,11 +471,6 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
 
     if (fault.is_write() && !is_writable()) {
         dbgln("Write page fault in non-writable Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-        return PageFaultResponse::ShouldCrash;
-    }
-
-    if (fault.is_instruction_fetch() && !is_executable()) {
-        dbgln("Instruction fetch page fault in non-executable Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
         return PageFaultResponse::ShouldCrash;
     }
 
