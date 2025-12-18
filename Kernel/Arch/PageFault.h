@@ -76,6 +76,9 @@ public:
     void set_access(Access access) { m_access = access; }
     Access access() const { return m_access; }
 
+    void set_was_smap_disabled(bool was_disabled) { m_was_smap_disabled = was_disabled; }
+    bool was_smap_disabled() const { return m_was_smap_disabled; }
+
     void set_mode(ExecutionMode execution_mode) { m_execution_mode = execution_mode; }
     ExecutionMode mode() const { return m_execution_mode; }
 
@@ -96,6 +99,7 @@ private:
     ExecutionMode m_execution_mode;
     bool m_is_reserved_bit_violation { false };
     bool m_is_instruction_fetch { false };
+    bool m_was_smap_disabled { false };
 
     VirtualAddress m_vaddr;
 };

@@ -203,6 +203,7 @@ void page_fault_handler(TrapFrame* trap)
     }
 
     PageFault fault { regs.exception_code, VirtualAddress { fault_address } };
+    fault.set_was_smap_disabled(trap->regs->rflags & 0x40000);
     fault.handle(regs);
 }
 

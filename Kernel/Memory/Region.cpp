@@ -458,6 +458,16 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
 
     auto page_index_in_region = page_index_from_address(fault.vaddr());
 
+    if (fault.is_user() && !is_user()) {
+        dbgln("User-mode page fault in non-user Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+        return PageFaultResponse::ShouldCrash;
+    }
+
+    if (fault.is_kernel() && is_user() && !fault.was_smap_disabled()) {
+        dbgln("Kernel-mode page fault in user Region({})[{}] at {} (with SMAP enabled)", this, page_index_in_region, fault.vaddr());
+        return PageFaultResponse::ShouldCrash;
+    }
+
     // This check needs to be before the is_read() check, since both is_instruction_fetch() and is_read() is true for instruction fetch page faults.
     if (fault.is_instruction_fetch() && !is_executable()) {
         dbgln("Instruction fetch page fault in non-executable Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
