@@ -10,10 +10,25 @@
 #include <AK/Optional.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibGfx/ImageFormats/BilevelImage.h>
 #include <LibGfx/ImageFormats/MQArithmeticCoder.h>
 #include <LibGfx/Rect.h>
 
 namespace Gfx::JBIG2 {
+
+struct HalftoneGeometry {
+    u32 region_width { 0 };         // "HBW" in spec.
+    u32 region_height { 0 };        // "HBH" in spec.
+    u32 grayscale_width { 0 };      // "HGW" in spec.
+    u32 grayscale_height { 0 };     // "HGH" in spec.
+    i32 grid_origin_x_offset { 0 }; // "HGX" in spec.
+    i32 grid_origin_y_offset { 0 }; // "HGY" in spec.
+    u16 grid_vector_x { 0 };        // "HRY" in spec.
+    u16 grid_vector_y { 0 };        // "HRX" in spec.
+    u8 pattern_width { 0 };         // "HPW" in spec.
+    u8 pattern_height { 0 };        // "HPH" in spec.
+};
+ErrorOr<NonnullRefPtr<BilevelImage>> halftone_skip_pattern(HalftoneGeometry const&);
 
 class HuffmanTable;
 
