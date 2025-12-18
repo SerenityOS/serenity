@@ -172,9 +172,6 @@ static ErrorOr<void> generic_region_encoding_procedure(GenericRegionEncodingInpu
     if (inputs.skip_pattern.has_value() && (inputs.skip_pattern->width() != width || inputs.skip_pattern->height() != height))
         return Error::from_string_literal("JBIG2Writer: Invalid USESKIP dimensions");
 
-    if (inputs.skip_pattern.has_value())
-        return Error::from_string_literal("JBIG2Writer: Cannot encode USESKIP yet");
-
     static constexpr auto get_pixel = [](BilevelImage const& buffer, int x, int y) -> bool {
         // 6.2.5.2 Coding order and edge conventions
         // "• All pixels lying outside the bounds of the actual bitmap have the value 0."
@@ -2157,11 +2154,24 @@ static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData con
     // FIXME: Add a halftone_region_encoding_procedure()? For now, it's just inlined here.
     u32 bits_per_pattern = ceil(log2(pattern_dictionary.gray_max + 1));
 
-    // FIXME: Implement support for enable_skip.
     Optional<BilevelImage const&> skip_pattern;
+    RefPtr<BilevelImage> skip_pattern_storage;
     bool const enable_skip = ((halftone_region.flags >> 3) & 1) != 0;
-    if (enable_skip)
-        return Error::from_string_literal("JBIG2Writer: Halftone region skip pattern not yet implemented");
+    if (enable_skip) {
+        skip_pattern_storage = TRY(JBIG2::halftone_skip_pattern({
+            halftone_region.region_segment_information.width,
+            halftone_region.region_segment_information.height,
+            halftone_region.grayscale_width,
+            halftone_region.grayscale_height,
+            halftone_region.grid_offset_x_times_256,
+            halftone_region.grid_offset_y_times_256,
+            halftone_region.grid_vector_x_times_256,
+            halftone_region.grid_vector_y_times_256,
+            pattern_dictionary.pattern_width,
+            pattern_dictionary.pattern_height,
+        }));
+        skip_pattern = *skip_pattern_storage;
+    }
 
     Vector<u64> grayscale_image = TRY(halftone_region.grayscale_image.visit(
         [](Vector<u64> const& grayscale_image) -> ErrorOr<Vector<u64>> {
