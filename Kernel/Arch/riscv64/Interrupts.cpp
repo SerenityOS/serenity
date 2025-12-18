@@ -119,12 +119,14 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
             // We simply require that Sstvala (see RISC-V Profiles) is supported, which means stval is always set to the faulting address on a page fault.
             PageFault fault { VirtualAddress(trap_frame.regs->stval) };
 
-            if (scause == InstructionPageFault)
-                fault.set_instruction_fetch(true);
-            else if (scause == LoadPageFault)
+            if (scause == InstructionPageFault) {
                 fault.set_access(PageFault::Access::Read);
-            else if (scause == StoreOrAMOPageFault)
+                fault.set_instruction_fetch(true);
+            } else if (scause == LoadPageFault) {
+                fault.set_access(PageFault::Access::Read);
+            } else if (scause == StoreOrAMOPageFault) {
                 fault.set_access(PageFault::Access::Write);
+            }
 
             // RISC-V doesn't tell you the reason why a page fault occurred, so we don't use PageFault::set_type() here.
             // The RISC-V implementation of Region::handle_fault() works without a correct PageFault::type().
