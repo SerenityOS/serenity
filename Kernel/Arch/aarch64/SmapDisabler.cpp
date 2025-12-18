@@ -11,6 +11,9 @@ namespace Kernel {
 SmapDisabler::SmapDisabler()
     : m_flags(0)
 {
+    // FIXME: Implement this using FEAT_PAN.
+    //        Once implemented, make sure to use PageFault::set_was_smap_disabled()
+    //        appropriately in the page fault handler.
 }
 
 SmapDisabler::~SmapDisabler() = default;

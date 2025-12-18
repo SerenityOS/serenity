@@ -119,6 +119,9 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
             // We simply require that Sstvala (see RISC-V Profiles) is supported, which means stval is always set to the faulting address on a page fault.
             PageFault fault { VirtualAddress(trap_frame.regs->stval) };
 
+            fault.set_mode(trap_frame.regs->previous_mode());
+            fault.set_was_smap_disabled(trap_frame.regs->sstatus.SUM);
+
             if (scause == InstructionPageFault) {
                 fault.set_access(PageFault::Access::Read);
                 fault.set_instruction_fetch(true);
