@@ -433,15 +433,17 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
     }
 
     if (fault.is_write()) {
+        auto phys_page = physical_page(page_index_in_region);
+        if (phys_page && (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page())) {
+            dbgln_if(PAGE_FAULT_DEBUG, "Zero page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+            return handle_zero_fault(page_index_in_region, *phys_page);
+        }
+
         if (should_cow(page_index_in_region)) {
             dbgln_if(PAGE_FAULT_DEBUG, "CoW page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-            auto phys_page = physical_page(page_index_in_region);
-            if (phys_page->is_shared_zero_page() || phys_page->is_lazy_committed_page()) {
-                dbgln_if(PAGE_FAULT_DEBUG, "Zero page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-                return handle_zero_fault(page_index_in_region, *phys_page);
-            }
             return handle_cow_fault(page_index_in_region);
         }
+
         if (vmobject().is_inode()) {
             dbgln_if(PAGE_FAULT_DEBUG, "Inode write page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
             return handle_inode_write_fault(page_index_in_region);
@@ -462,7 +464,21 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, Physica
     VERIFY(vmobject().is_anonymous());
 
     auto& anonymous_vmobject = static_cast<AnonymousVMObject&>(vmobject());
+
+    SpinlockLocker locker(anonymous_vmobject.m_lock);
+
+    auto& page_slot = physical_page_slot(page_index_in_region);
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
+
+    bool already_handled = !page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page();
+
+    if (already_handled) {
+        if (!remap_vmobject_page(page_index_in_vmobject, *page_slot)) {
+            dmesgln("MM: handle_zero_fault was unable to allocate a physical page");
+            return PageFaultResponse::OutOfMemory;
+        }
+        return PageFaultResponse::Continue;
+    }
 
     auto current_thread = Thread::current();
     if (current_thread != nullptr)
@@ -483,18 +499,7 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, Physica
         dbgln_if(PAGE_FAULT_DEBUG, "      >> ALLOCATED {}", new_physical_page->paddr());
     }
 
-    {
-        SpinlockLocker locker(anonymous_vmobject.m_lock);
-        auto& page_slot = physical_page_slot(page_index_in_region);
-        bool already_handled = !page_slot.is_null() && !page_slot->is_shared_zero_page() && !page_slot->is_lazy_committed_page();
-        if (already_handled) {
-            // Someone else already faulted in a new page in this slot. That's fine, we'll just remap with their page.
-            new_physical_page = page_slot;
-        } else {
-            // Install the newly allocated page into the VMObject.
-            page_slot = new_physical_page;
-        }
-    }
+    page_slot = new_physical_page;
 
     if (m_shared) {
         if (!anonymous_vmobject.remap_regions_one_page(page_index_in_vmobject, *new_physical_page)) {
