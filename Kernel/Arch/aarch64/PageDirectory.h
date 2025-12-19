@@ -145,7 +145,7 @@ public:
     bool is_global() const { TODO_AARCH64(); }
     void set_global(bool) { }
 
-    bool is_execute_disabled() const { TODO_AARCH64(); }
+    bool is_execute_disabled() const { return (raw() & EXECUTE_NEVER) == EXECUTE_NEVER; }
     void set_execute_disabled(bool b) { set_bit(EXECUTE_NEVER, b); }
 
     bool is_null() const { return m_raw == 0; }
