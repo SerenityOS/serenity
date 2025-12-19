@@ -78,7 +78,7 @@ public:
         set_bit(PageTableEntryBits::Dirty, b);
     }
 
-    bool is_user_allowed() const { TODO_RISCV64(); }
+    bool is_user_allowed() const { return (m_raw & to_underlying(PageTableEntryBits::UserAllowed)) != 0; }
     void set_user_allowed(bool b) { set_bit(PageTableEntryBits::UserAllowed, b); }
 
     bool is_writable() const { return (m_raw & to_underlying(PageTableEntryBits::Writeable)) != 0; }
@@ -86,10 +86,10 @@ public:
 
     void set_memory_type(MemoryType) { }
 
-    bool is_global() const { TODO_RISCV64(); }
+    bool is_global() const { return (m_raw & to_underlying(PageTableEntryBits::Global)) != 0; }
     void set_global(bool b) { set_bit(PageTableEntryBits::Global, b); }
 
-    bool is_execute_disabled() const { TODO_RISCV64(); }
+    bool is_execute_disabled() const { return (m_raw & to_underlying(PageTableEntryBits::Executable)) == 0; }
     void set_execute_disabled(bool b) { set_bit(PageTableEntryBits::Executable, !b); }
 
     bool is_null() const { return m_raw == 0; }
