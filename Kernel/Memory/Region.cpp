@@ -455,8 +455,52 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
         return handle_inode_fault(page_index_in_region);
     }
 
-    dbgln("Unexpected page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-    return PageFaultResponse::ShouldCrash;
+    // None of the previous checks could find a reason for this page fault, this can mean two things:
+    // a) Another thread already handled a page fault for this page before we could do so.
+    //    In this case, we can simply return and execution should continue normally.
+    // b) A bug (maybe we forgot a check here, the page tables are desynced from our state, or something else).
+
+    // To be completely sure that this isn't a bug, look in the page table entry associated with the fault
+    // address. If an address translation with this PTE would succeed, then this is case a).
+    // Otherwise this is case b) and we should panic :^(.
+
+    {
+        SpinlockLocker locker(m_page_directory->get_lock());
+        auto* page_table_entry = MM.pte(*m_page_directory, fault.vaddr());
+
+        auto error = [&fault, page_table_entry](StringView message) {
+            dbgln("BUG! Unhandled page fault at {}: {}", fault.vaddr(), message);
+
+            if (page_table_entry) {
+                dbgln("Associated page table entry:");
+                dbgln("     - Physical address: {:p}", page_table_entry->physical_page_base());
+                dbgln("     - Points to lazy committed page? {}", page_table_entry->physical_page_base() == MM.lazy_committed_page().paddr().get());
+                dbgln("     - Points to shared zero page? {}", page_table_entry->physical_page_base() == MM.shared_zero_page().paddr().get());
+            }
+
+            PANIC("Unhandled page fault");
+        };
+
+        if (page_table_entry == nullptr)
+            error("Page table not present"sv);
+
+        if (!page_table_entry->is_present())
+            error("Page table entry not present"sv);
+
+        if (!page_table_entry->is_writable() && fault.is_write())
+            error("Page table entry not writable"sv);
+
+        if (page_table_entry->is_execute_disabled() && fault.is_instruction_fetch())
+            error("Page table entry not executable"sv);
+
+        if (!page_table_entry->is_user_allowed() && fault.is_user())
+            error("Page table entry not user-accessible"sv);
+
+        if (page_table_entry->is_user_allowed() && fault.is_kernel() && !fault.was_smap_disabled())
+            error("Page table entry user-accessible and SMAP enabled"sv);
+    }
+
+    return PageFaultResponse::Continue;
 }
 
 PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region, PhysicalRAMPage& page_in_slot_at_time_of_fault)
