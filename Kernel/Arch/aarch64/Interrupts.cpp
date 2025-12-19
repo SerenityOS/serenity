@@ -132,7 +132,7 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
     }
 
     Processor::disable_interrupts();
-    Processor::current().exit_trap(*trap_frame);
+    Processor::current().exit_trap(*trap_frame, TrapType::Exception);
 }
 
 // This spinlock is used to reserve IRQs that can be later used by interrupt mechanism such as MSIx

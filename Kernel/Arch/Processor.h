@@ -27,6 +27,11 @@ enum class InterruptsState {
     Disabled
 };
 
+enum class TrapType {
+    Interrupt,
+    Exception
+};
+
 namespace Memory {
 class PageDirectory;
 }
@@ -113,7 +118,7 @@ public:
     }
 
     void enter_trap(TrapFrame& trap, bool raise_irq);
-    void exit_trap(TrapFrame& trap);
+    void exit_trap(TrapFrame& trap, TrapType trap_type = TrapType::Interrupt);
 
     static void flush_entire_tlb_local();
 

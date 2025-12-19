@@ -29,4 +29,10 @@ extern "C" void exit_trap(TrapFrame* trap)
     return Processor::current().exit_trap(*trap);
 }
 
+extern "C" void exit_trap_exception(TrapFrame* trap)
+{
+    InterruptDisabler disable;
+    return Processor::current().exit_trap(*trap, TrapType::Exception);
+}
+
 }

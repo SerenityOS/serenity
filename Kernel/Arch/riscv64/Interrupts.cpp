@@ -156,7 +156,7 @@ extern "C" void trap_handler(TrapFrame& trap_frame)
         };
 
         Processor::disable_interrupts();
-        Processor::current().exit_trap(trap_frame);
+        Processor::current().exit_trap(trap_frame, TrapType::Exception);
     }
 }
 

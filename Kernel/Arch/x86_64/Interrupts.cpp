@@ -54,6 +54,19 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
 
 // clang-format off
 
+extern "C" void trap_exit_exception();
+extern "C" NAKED __attribute__((used)) void trap_exit_exception()
+{
+    asm(
+        // another thread may have handled this trap at this point, so don't
+        // make assumptions about the stack other than there's a TrapFrame.
+        "    movq %rsp, %rdi \n"
+        "    call exit_trap_exception \n"
+        "    addq $" __STRINGIFY(TRAP_FRAME_SIZE) ", %rsp\n" // pop TrapFrame
+        "    jmp interrupt_common_asm_exit \n"
+    );
+}
+
 #define EH_ENTRY(ec, title)                                                    \
     extern "C" void title##_asm_entry();                                       \
     extern "C" void title##_handler(TrapFrame*) __attribute__((used));         \
@@ -82,7 +95,7 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
             "    call enter_trap_no_irq \n"                                    \
             "    movq %rsp, %rdi \n"                                           \
             "    call " #title "_handler\n"                                    \
-            "    jmp common_trap_exit \n"                                      \
+            "    jmp trap_exit_exception \n"                                   \
         );                                                                     \
     }
 
@@ -115,7 +128,7 @@ static EntropySource s_entropy_source_interrupts { EntropySource::Static::Interr
             "    call enter_trap_no_irq \n"                                    \
             "    movq %rsp, %rdi \n"                                           \
             "    call " #title "_handler\n"                                    \
-            "    jmp common_trap_exit \n"                                      \
+            "    jmp trap_exit_exception \n"                                   \
         );                                                                     \
     }
 

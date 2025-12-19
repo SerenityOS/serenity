@@ -265,7 +265,7 @@ ErrorOr<Vector<FlatPtr, 32>> ProcessorBase::capture_stack_trace(Thread& thread, 
     return stack_trace;
 }
 
-void ProcessorBase::exit_trap(TrapFrame& trap)
+void ProcessorBase::exit_trap(TrapFrame& trap, TrapType trap_type)
 {
     VERIFY_INTERRUPTS_DISABLED();
     VERIFY(&Processor::current() == this);
@@ -277,23 +277,28 @@ void ProcessorBase::exit_trap(TrapFrame& trap)
     // ScopedCritical here.
     m_in_critical = m_in_critical + 1;
 
-    m_in_irq = 0;
+    if (m_in_irq && trap_type == TrapType::Interrupt)
+        m_in_irq = 0;
 
-#if ARCH(X86_64)
-    auto* self = static_cast<Processor*>(this);
-    if (is_smp_enabled())
-        self->smp_process_pending_messages();
-#endif
+    bool only_update_state = trap_type == TrapType::Exception && trap.next_trap;
 
     auto* current_thread = Processor::current_thread();
-    if (current_thread) {
-        SpinlockLocker thread_lock(current_thread->get_lock());
-        current_thread->check_dispatch_pending_signal(YieldBehavior::FlagYield);
-    }
+    if (!only_update_state) {
+#if ARCH(X86_64)
+        auto* self = static_cast<Processor*>(this);
+        if (is_smp_enabled())
+            self->smp_process_pending_messages();
+#endif
 
-    // Process the deferred call queue. Among other things, this ensures
-    // that any pending thread unblocks happen before we enter the scheduler.
-    m_deferred_call_pool.execute_pending();
+        if (current_thread) {
+            SpinlockLocker thread_lock(current_thread->get_lock());
+            current_thread->check_dispatch_pending_signal(YieldBehavior::FlagYield);
+        }
+
+        // Process the deferred call queue. Among other things, this ensures
+        // that any pending thread unblocks happen before we enter the scheduler.
+        m_deferred_call_pool.execute_pending();
+    }
 
     if (current_thread) {
         auto& current_trap = current_thread->current_trap();
@@ -320,7 +325,7 @@ void ProcessorBase::exit_trap(TrapFrame& trap)
     // We don't want context switches to happen until we're explicitly
     // triggering a switch in check_invoke_scheduler.
     m_in_critical = m_in_critical - 1;
-    if (!m_in_irq && !m_in_critical)
+    if (!only_update_state && !m_in_irq && !m_in_critical)
         check_invoke_scheduler();
 }
 
