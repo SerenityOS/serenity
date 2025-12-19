@@ -2157,6 +2157,7 @@ static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData con
     // FIXME: Add a halftone_region_encoding_procedure()? For now, it's just inlined here.
     u32 bits_per_pattern = ceil(log2(pattern_dictionary.gray_max + 1));
 
+    // "2) If HENABLESKIP equals 1, compute a bitmap HSKIP as shown in 6.6.5.1."
     Optional<BilevelImage const&> skip_pattern;
     RefPtr<BilevelImage> skip_pattern_storage;
     bool const enable_skip = ((halftone_region.flags >> 3) & 1) != 0;
