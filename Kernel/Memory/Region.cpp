@@ -446,7 +446,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
         // Write faults to InodeVMObjects should always be treated as a dirty-on-write fault
         if (vmobject().is_inode()) {
             dbgln_if(PAGE_FAULT_DEBUG, "PV(dirty_on_write) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-            return handle_dirty_on_write_fault(page_index_in_region);
+            return handle_inode_write_fault(page_index_in_region);
         }
     }
     dbgln("PV(error) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
@@ -473,7 +473,7 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
         return PageFaultResponse::ShouldCrash;
     }
 
-    if (fault.is_write() && is_writable()) {
+    if (fault.is_write()) {
         if (should_cow(page_index_in_region)) {
             dbgln_if(PAGE_FAULT_DEBUG, "CoW page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
             auto phys_page = physical_page(page_index_in_region);
@@ -483,14 +483,14 @@ PageFaultResponse Region::handle_fault(PageFault const& fault)
             }
             return handle_cow_fault(page_index_in_region);
         }
-        if (should_dirty_on_write(page_index_in_region, ShouldLockVMObject::Yes)) {
-            dbgln_if(PAGE_FAULT_DEBUG, "PV(dirty_on_write) fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
-            return handle_dirty_on_write_fault(page_index_in_region);
+        if (vmobject().is_inode()) {
+            dbgln_if(PAGE_FAULT_DEBUG, "Inode write page fault in Region({})[{}] at {}", this, page_index_in_region, fault.vaddr());
+            return handle_inode_write_fault(page_index_in_region);
         }
     }
 
-    if (vmobject().is_inode()) {
-        dbgln_if(PAGE_FAULT_DEBUG, "Inode page fault in Region({})[{}]", this, page_index_in_region);
+    if (fault.is_read() && vmobject().is_inode()) {
+        dbgln_if(PAGE_FAULT_DEBUG, "Inode read page fault in Region({})[{}]", this, page_index_in_region);
         return handle_inode_fault(page_index_in_region);
     }
 
@@ -663,7 +663,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, bool m
     }
 }
 
-PageFaultResponse Region::handle_dirty_on_write_fault(size_t page_index_in_region)
+PageFaultResponse Region::handle_inode_write_fault(size_t page_index_in_region)
 {
     VERIFY(vmobject().is_inode());
     auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject());
@@ -674,7 +674,7 @@ PageFaultResponse Region::handle_dirty_on_write_fault(size_t page_index_in_regio
         SpinlockLocker locker(inode_vmobject.m_lock);
 
         if (!physical_page_slot.is_null()) {
-            dbgln_if(PAGE_FAULT_DEBUG, "handle_dirty_on_write_fault: Marking page dirty and remapping.");
+            dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_write_fault: Marking page dirty and remapping.");
             inode_vmobject.set_page_dirty(page_index_in_vmobject, true);
             if (!remap_vmobject_page(page_index_in_vmobject, *physical_page_slot, ShouldLockVMObject::No))
                 return PageFaultResponse::OutOfMemory;
@@ -682,9 +682,9 @@ PageFaultResponse Region::handle_dirty_on_write_fault(size_t page_index_in_regio
         }
     }
 
-    // Clean page was purged before we held the lock.
+    // This page was either not mapped yet or it was purged before we held the lock.
     // Handle this like a page-not-present fault, except we mark the page as dirty when we remap it
-    dbgln_if(PAGE_FAULT_DEBUG, "handle_dirty_on_write_fault: Page was purged by someone else, calling handle_inode_fault to load the page and mark it dirty.");
+    dbgln_if(PAGE_FAULT_DEBUG, "handle_inode_write_fault: Page not present, calling handle_inode_fault to load the page and mark it dirty.");
     return handle_inode_fault(page_index_in_region, true);
 }
 
