@@ -382,6 +382,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-halftone-grid.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone-refine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone-skip-dummy.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-halftone-skip-grid.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone-template1.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone-template2.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone-template3.jbig2"sv),
