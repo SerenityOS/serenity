@@ -31,7 +31,7 @@ void Median::apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap)
                     values.unchecked_append(source_bitmap.get_pixel(i, j));
                 }
             }
-            // FIXME: If there was an insertion sort in AK, we should better use that here.
+
             // Sort the values to be able to extract the median. The median is determined by grey value (luminosity).
             quick_sort(values, [](auto& a, auto& b) { return a.luminosity() < b.luminosity(); });
             target->set_pixel(x, y, values[values.size() / 2]);
