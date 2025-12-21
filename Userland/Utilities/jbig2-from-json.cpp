@@ -1448,6 +1448,12 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
         UniqueImageTiles,
     };
     Method method = Method::None;
+    u32 grayscale_width { 0 };
+    u32 grayscale_height { 0 };
+    i32 grid_offset_x_times_256 { 0 };
+    i32 grid_offset_y_times_256 { 0 };
+    u16 grid_vector_x_times_256 { 0 };
+    u16 grid_vector_y_times_256 { 0 };
 
     TRY(object->try_for_each_member([&](StringView key, JsonValue const& value) -> ErrorOr<void> {
         if (key == "flags"sv) {
@@ -1497,6 +1503,58 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
             return {};
         }
 
+        if (key == "grayscale_width"sv) {
+            if (auto grayscale_width_json = value.get_u32(); grayscale_width_json.has_value()) {
+                grayscale_width = grayscale_width_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"grayscale_width\"");
+        }
+
+        if (key == "grayscale_height"sv) {
+            if (auto grayscale_height_json = value.get_u32(); grayscale_height_json.has_value()) {
+                grayscale_height = grayscale_height_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u32 for \"grayscale_height\"");
+        }
+
+        if (key == "grid_offset_x_times_256"sv) {
+            if (auto grid_offset_x_times_256_json = value.get_i32(); grid_offset_x_times_256_json.has_value()) {
+                grid_offset_x_times_256 = grid_offset_x_times_256_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"grid_offset_x_times_256\"");
+        }
+
+        if (key == "grid_offset_y_times_256"sv) {
+            if (auto grid_offset_y_times_256_json = value.get_i32(); grid_offset_y_times_256_json.has_value()) {
+                grid_offset_y_times_256 = grid_offset_y_times_256_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected i32 for \"grid_offset_y_times_256\"");
+        }
+
+        if (key == "grid_vector_x_times_256"sv) {
+            if (auto grid_vector_x_times_256_json = value.get_u32(); grid_vector_x_times_256_json.has_value()) {
+                if (grid_vector_x_times_256_json.value() > 0xffff)
+                    return Error::from_string_literal("expected u16 for \"grid_vector_x_times_256\"");
+                grid_vector_x_times_256 = grid_vector_x_times_256_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u16 for \"grid_vector_x_times_256\"");
+        }
+
+        if (key == "grid_vector_y_times_256"sv) {
+            if (auto grid_vector_y_times_256_json = value.get_u32(); grid_vector_y_times_256_json.has_value()) {
+                if (grid_vector_y_times_256_json.value() > 0xffff)
+                    return Error::from_string_literal("expected u16 for \"grid_vector_y_times_256\"");
+                grid_vector_y_times_256 = grid_vector_y_times_256_json.value();
+                return {};
+            }
+            return Error::from_string_literal("expected u16 for \"grid_vector_y_times_256\"");
+        }
+
         // FIXME: Make this more flexible.
         if (key == "image_data"sv) {
             if (value.is_object()) {
@@ -1529,19 +1587,32 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
         return Error::from_string_literal("can't use \"from_tiles\" for gray_max without using a tiling method");
 
     if (method == Method::DistinctImageTiles || method == Method::UniqueImageTiles) {
-        auto number_of_tiles_in_x = ceil_div(image->width(), static_cast<size_t>(pattern_width));
-        auto number_of_tiles_in_y = ceil_div(image->height(), static_cast<size_t>(pattern_height));
+        if (grid_vector_x_times_256 == 0 && grid_vector_y_times_256 == 0) {
+            if (grayscale_width == 0 && grayscale_height == 0) {
+                grayscale_width = ceil_div(image->width(), static_cast<size_t>(pattern_width));
+                grayscale_height = ceil_div(image->height(), static_cast<size_t>(pattern_height));
+            }
+            grid_vector_x_times_256 = pattern_width * 256;
+        }
+
+        if (grayscale_width == 0 || grayscale_height == 0)
+            return Error::from_string_literal("grayscale_width and grayscale_height must be set when using custom grid");
 
         // FIXME: For UniqueImageTiles at the edge, we could use a custom hasher/comparator to match existing full tiles
         //        by ignoring pixels outside the clipped tile rect.
         Vector<Gfx::BilevelSubImage> tiles;
         HashTable<Gfx::BilevelSubImage> saw_tile;
         Gfx::IntRect bitmap_rect { 0, 0, static_cast<int>(image->width()), static_cast<int>(image->height()) };
-        for (size_t tile_y = 0; tile_y < number_of_tiles_in_y; ++tile_y) {
-            for (size_t tile_x = 0; tile_x < number_of_tiles_in_x; ++tile_x) {
-                Gfx::IntPoint source_position { static_cast<int>(tile_x * pattern_width), static_cast<int>(tile_y * pattern_height) };
+        for (int tile_y = 0; tile_y < (int)grayscale_height; ++tile_y) {
+            for (int tile_x = 0; tile_x < (int)grayscale_width; ++tile_x) {
+                auto x = (grid_offset_x_times_256 + tile_y * grid_vector_y_times_256 + tile_x * grid_vector_x_times_256) >> 8;
+                auto y = (grid_offset_y_times_256 + tile_y * grid_vector_x_times_256 - tile_x * grid_vector_y_times_256) >> 8;
+
+                Gfx::IntPoint source_position { x, y };
                 Gfx::IntRect source_rect { source_position, { pattern_width, pattern_height } };
                 source_rect = source_rect.intersected(bitmap_rect);
+                if (source_rect.is_empty())
+                    continue;
                 auto source = image->subbitmap(source_rect);
                 if (method == Method::DistinctImageTiles || saw_tile.set(source) == HashSetResult::InsertedNewEntry)
                     TRY(tiles.try_append(source));
@@ -1551,6 +1622,9 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
         auto tiled_image = TRY(Gfx::BilevelImage::create(pattern_width * tiles.size(), pattern_height));
         tiled_image->fill(false);
         for (auto const& [i, tile] : enumerate(tiles)) {
+            // FIXME: The destination_position is wrong for tiles clipped at the left or top edge.
+            //        We should remember the original source_position shift after intersection with bitmap_rect,
+            //        and add that offset here.
             Gfx::IntPoint destination_position { static_cast<int>(i * pattern_width), 0 };
             tile.composite_onto(*tiled_image, destination_position, Gfx::BilevelImage::CompositionType::Replace);
         }
@@ -1559,6 +1633,10 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
             gray_max = tiles.size() - 1;
 
         image = move(tiled_image);
+    } else if (grayscale_width != 0 || grayscale_height != 0
+        || grid_offset_x_times_256 != 0 || grid_offset_y_times_256 != 0
+        || grid_vector_x_times_256 != 0 || grid_vector_y_times_256 != 0) {
+        return Error::from_string_literal("grid parameters ignored when \"method\" is not set to a tiling method");
     }
 
     return Gfx::JBIG2::SegmentData {
