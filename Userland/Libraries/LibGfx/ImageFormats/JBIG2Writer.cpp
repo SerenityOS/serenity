@@ -2182,18 +2182,13 @@ static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData con
             return grayscale_image;
         },
         [&halftone_region, &pattern_dictionary](NonnullRefPtr<Gfx::Bitmap> const& reference) -> ErrorOr<Vector<u64>> {
-            // FIXME: This does not handle rotation or non-trivial grid vectors yet.
-            if (halftone_region.grid_offset_x_times_256 != 0 || halftone_region.grid_offset_y_times_256 != 0)
-                return Error::from_string_literal("JBIG2Writer: Halftone region match_image with non-zero grid offsets not yet implemented");
-            if (pattern_dictionary.pattern_width != pattern_dictionary.pattern_height
-                || halftone_region.grid_vector_x_times_256 / 256 != pattern_dictionary.pattern_width
-                || halftone_region.grid_vector_y_times_256 != 0)
-                return Error::from_string_literal("JBIG2Writer: Halftone region match_image with non-trivial grid vectors not yet implemented");
-
             Vector<u64> converted_image;
             TRY(converted_image.try_resize(halftone_region.grayscale_width * halftone_region.grayscale_height));
-            for (u32 y = 0; y < halftone_region.grayscale_height; ++y) {
-                for (u32 x = 0; x < halftone_region.grayscale_width; ++x) {
+            for (int m_g = 0; m_g < (int)halftone_region.grayscale_height; ++m_g) {
+                for (int n_g = 0; n_g < (int)halftone_region.grayscale_width; ++n_g) {
+                    auto const x = (halftone_region.grid_offset_x_times_256 + m_g * halftone_region.grid_vector_y_times_256 + n_g * halftone_region.grid_vector_x_times_256) >> 8;
+                    auto const y = (halftone_region.grid_offset_y_times_256 + m_g * halftone_region.grid_vector_x_times_256 - n_g * halftone_region.grid_vector_y_times_256) >> 8;
+
                     // Find best tile in pattern dictionary that matches reference best.
                     // FIXME: This is a naive, inefficient implementation.
                     u32 best_pattern_index = 0;
@@ -2203,9 +2198,9 @@ static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData con
                         u32 pattern_difference = 0;
                         for (u32 py = 0; py < pattern_dictionary.pattern_height; ++py) {
                             for (u32 px = 0; px < pattern_dictionary.pattern_width; ++px) {
-                                int reference_x = x * pattern_dictionary.pattern_width + px;
-                                int reference_y = y * pattern_dictionary.pattern_height + py;
-                                if (reference_x >= reference->width() || reference_y >= reference->height())
+                                int reference_x = x + px;
+                                int reference_y = y + py;
+                                if (reference_x < 0 || reference_x >= reference->width() || reference_y < 0 || reference_y >= reference->height())
                                     continue;
                                 auto pattern_pixel = pattern_dictionary.image->get_bit(pattern_x + px, py);
                                 auto reference_pixel = reference->get_pixel(reference_x, reference_y);
@@ -2217,7 +2212,7 @@ static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData con
                             best_pattern_index = pattern_index;
                         }
                     }
-                    converted_image[y * halftone_region.grayscale_width + x] = best_pattern_index;
+                    converted_image[m_g * halftone_region.grayscale_width + n_g] = best_pattern_index;
                 }
             }
 
