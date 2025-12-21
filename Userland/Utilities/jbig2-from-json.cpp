@@ -1537,8 +1537,8 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
         Vector<Gfx::BilevelSubImage> tiles;
         HashTable<Gfx::BilevelSubImage> saw_tile;
         Gfx::IntRect bitmap_rect { 0, 0, static_cast<int>(image->width()), static_cast<int>(image->height()) };
-        for (size_t tile_y = 0, tile_index = 0; tile_y < number_of_tiles_in_y; ++tile_y) {
-            for (size_t tile_x = 0; tile_x < number_of_tiles_in_x; ++tile_x, ++tile_index) {
+        for (size_t tile_y = 0; tile_y < number_of_tiles_in_y; ++tile_y) {
+            for (size_t tile_x = 0; tile_x < number_of_tiles_in_x; ++tile_x) {
                 Gfx::IntPoint source_position { static_cast<int>(tile_x * pattern_width), static_cast<int>(tile_y * pattern_height) };
                 Gfx::IntRect source_rect { source_position, { pattern_width, pattern_height } };
                 source_rect = source_rect.intersected(bitmap_rect);
