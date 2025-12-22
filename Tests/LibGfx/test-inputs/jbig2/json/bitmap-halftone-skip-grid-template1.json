@@ -1,0 +1,78 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+        {
+            "segment_number": 1,
+            "type": "pattern_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "pattern_width": 16,
+                "pattern_height": 16,
+                "gray_max": "from_tiles",
+                "method": "unique_image_tiles",
+                "image_data": {
+                    "from_file": "bitmap.bmp"
+                },
+                "grayscale_width": 43,
+                "grayscale_height": 41,
+                "grid_offset_x_times_256": -29160,
+                "grid_offset_y_times_256": 10424,
+                "grid_vector_x_times_256": 3072,
+                "grid_vector_y_times_256": 1024
+            }
+        },
+        {
+            "segment_number": 2,
+            "type": "lossless_halftone_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "width": 399,
+                    "height": 400
+                },
+                "flags": {
+                    "ht_template": 1,
+                    "enable_skip": true,
+                    "combination_operator": "or",
+                    "default_pixel_value": "white"
+                },
+                "grayscale_width": 43,
+                "grayscale_height": 41,
+                "grid_offset_x_times_256": -29160,
+                "grid_offset_y_times_256": 10424,
+                "grid_vector_x_times_256": 3072,
+                "grid_vector_y_times_256": 1024,
+                "graymap_data": {
+                    "match_image": "bitmap.bmp"
+                }
+            }
+        },
+        {
+            "segment_number": 3,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}
