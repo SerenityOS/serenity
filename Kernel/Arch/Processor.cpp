@@ -290,8 +290,12 @@ void ProcessorBase::exit_trap(TrapFrame& trap, TrapType trap_type)
             self->smp_process_pending_messages();
 #endif
 
-        if (current_thread)
-            current_thread->check_dispatch_pending_signal(YieldBehavior::FlagYield);
+        {
+            // Take the scheduler lock to avoid TOCTOU issues with the thread's state.
+            SpinlockLocker lock(g_scheduler_lock);
+            if (current_thread && current_thread->state() == Thread::State::Running)
+                current_thread->check_dispatch_pending_signal(YieldBehavior::FlagYield);
+        }
 
         // Process the deferred call queue. Among other things, this ensures
         // that any pending thread unblocks happen before we enter the scheduler.
