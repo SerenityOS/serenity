@@ -92,7 +92,11 @@ extern "C" void exception_common(Kernel::TrapFrame* trap_frame)
         // stay consistent with the user‑mode debugger’s behavior.
         trap_frame->regs->set_ip(trap_frame->regs->ip() + 4);
     }
-    Processor::enable_interrupts();
+
+    // Only enable interrupts if they were enabled when the exception happened
+    // (spsr_el1.I specifiers an interrupt mask, so it's 0 if interrupts were enabled).
+    if (bit_cast<Aarch64::SPSR_EL1>(trap_frame->regs->spsr_el1).I == 0)
+        Processor::enable_interrupts();
 
     if (Aarch64::exception_class_is_data_abort(esr_el1.EC) || Aarch64::exception_class_is_instruction_abort(esr_el1.EC)) {
         auto page_fault_or_error = page_fault_from_exception_syndrome_register(VirtualAddress(fault_address), esr_el1);
