@@ -75,6 +75,17 @@
                                 "image_data": {
                                     "from_file": "bitmap.bmp",
                                     "crop": {
+                                        "x": 352,
+                                        "y": 70,
+                                        "width": 40,
+                                        "height": 250
+                                    }
+                                }
+                            },
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
                                         "x": 232,
                                         "y": 70,
                                         "width": 120,
@@ -123,10 +134,15 @@
                             {
                                 "instance_s": 0,
                                 "instance_t": 0,
-                                "symbol_id": 3
+                                "symbol_id": 4
                             },
                             {
                                 "instance_s": 0,
+                                "instance_t": 0,
+                                "symbol_id": 4
+                            },
+                            {
+                                "instance_s": 60,
                                 "instance_t": 0,
                                 "symbol_id": 3
                             }

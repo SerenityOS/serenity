@@ -48,8 +48,8 @@
                 "region_segment_information": {
                     "x": 48,
                     "y": 112,
-                    "width": 144,
-                    "height": 400,
+                    "width": 32,
+                    "height": 32,
                     "flags": {
                         "external_combination_operator": "or"
                     }
@@ -87,8 +87,8 @@
                 "region_segment_information": {
                     "x": 48,
                     "y": 112,
-                    "width": 144,
-                    "height": 400,
+                    "width": 32,
+                    "height": 32,
                     "flags": {
                         "external_combination_operator": "or"
                     }
@@ -112,9 +112,34 @@
                 }
             }
         },
-
         {
             "segment_number": 4,
+            "type": "lossless_halftone_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": true
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 48,
+                    "y": 112,
+                    "width": 32,
+                    "height": 32,
+                    "flags": {
+                        "external_combination_operator": "or"
+                    }
+                },
+                "graymap_data": {
+                    "array": []
+                }
+            }
+        },
+
+        {
+            "segment_number": 5,
             "type": "lossless_halftone_region",
             "page_association": 1,
             "referred_to_segments": [
@@ -154,7 +179,7 @@
         },
 
         {
-            "segment_number": 5,
+            "segment_number": 6,
             "type": "lossless_halftone_region",
             "page_association": 1,
             "referred_to_segments": [
@@ -193,7 +218,7 @@
             }
         },
         {
-            "segment_number": 6,
+            "segment_number": 7,
             "type": "lossless_halftone_region",
             "page_association": 1,
             "referred_to_segments": [
@@ -233,7 +258,7 @@
         },
 
         {
-            "segment_number": 7,
+            "segment_number": 8,
             "type": "lossless_generic_region",
             "page_association": 1,
             "data": {
@@ -257,7 +282,7 @@
             }
         },
         {
-            "segment_number": 8,
+            "segment_number": 9,
             "type": "lossless_halftone_region",
             "page_association": 1,
             "referred_to_segments": [
@@ -297,7 +322,7 @@
         },
 
         {
-            "segment_number": 9,
+            "segment_number": 10,
             "type": "end_of_page",
             "page_association": 1
         }
