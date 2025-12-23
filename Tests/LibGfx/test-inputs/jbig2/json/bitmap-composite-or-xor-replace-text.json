@@ -163,9 +163,37 @@
                 ]
             }
         },
-
         {
             "segment_number": 4,
+            "type": "lossless_text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": true
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 55,
+                    "y": 112,
+                    "width": 35,
+                    "height": 35,
+                    "flags": {
+                        "external_combination_operator": "or"
+                    }
+                },
+                "flags": {
+                    "strip_size": 2
+                },
+                "initial_strip_t": -4,
+                "strips": [
+                ]
+            }
+        },
+
+        {
+            "segment_number": 5,
             "type": "lossless_text_region",
             "page_association": 1,
             "referred_to_segments": [
@@ -205,7 +233,7 @@
         },
 
         {
-            "segment_number": 5,
+            "segment_number": 6,
             "type": "lossless_text_region",
             "page_association": 1,
             "referred_to_segments": [
@@ -244,7 +272,7 @@
             }
         },
         {
-            "segment_number": 6,
+            "segment_number": 7,
             "type": "lossless_text_region",
             "page_association": 1,
             "referred_to_segments": [
@@ -284,7 +312,7 @@
         },
 
         {
-            "segment_number": 7,
+            "segment_number": 8,
             "type": "lossless_generic_region",
             "page_association": 1,
             "data": {
@@ -308,7 +336,7 @@
             }
         },
         {
-            "segment_number": 8,
+            "segment_number": 9,
             "type": "lossless_text_region",
             "page_association": 1,
             "referred_to_segments": [
@@ -358,7 +386,7 @@
         },
 
         {
-            "segment_number": 9,
+            "segment_number": 10,
             "type": "end_of_page",
             "page_association": 1
         }
