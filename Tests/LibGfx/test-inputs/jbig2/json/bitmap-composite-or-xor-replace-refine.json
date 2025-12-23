@@ -17,6 +17,7 @@
                 }
             }
         },
+
         {
             "segment_number": 1,
             "type": "intermediate_generic_region",
@@ -190,17 +191,17 @@
             "retained": true,
             "data": {
                 "region_segment_information": {
-                    "x": 64,
-                    "y": 269,
+                    "x": 55,
+                    "y": 112,
                     "flags": {
-                        "external_combination_operator": "xor"
+                        "external_combination_operator": "or"
                     }
                 },
                 "image_data": {
                     "from_file": "bitmap.bmp",
                     "crop": {
-                        "x": 64,
-                        "y": 269,
+                        "x": 78,
+                        "y": 112,
                         "width": 23,
                         "height": 23
                     }
@@ -220,17 +221,17 @@
             ],
             "data": {
                 "region_segment_information": {
-                    "x": 64,
-                    "y": 269,
+                    "x": 55,
+                    "y": 112,
                     "flags": {
-                        "external_combination_operator": "xor"
+                        "external_combination_operator": "or"
                     }
                 },
                 "image_data": {
                     "from_file": "bitmap.bmp",
                     "crop": {
-                        "x": 64,
-                        "y": 269,
+                        "x": 78,
+                        "y": 112,
                         "width": 23,
                         "height": 23
                     }
@@ -239,7 +240,7 @@
         },
         {
             "segment_number": 9,
-            "type": "generic_refinement_region",
+            "type": "lossless_generic_refinement_region",
             "page_association": 1,
             "referred_to_segments": [
                 {
@@ -249,23 +250,24 @@
             ],
             "data": {
                 "region_segment_information": {
-                    "x": 64,
-                    "y": 269,
+                    "x": 55,
+                    "y": 112,
                     "flags": {
-                        "external_combination_operator": "xor"
+                        "external_combination_operator": "or"
                     }
                 },
                 "image_data": {
                     "from_file": "bitmap.bmp",
                     "crop": {
-                        "x": 64,
-                        "y": 269,
+                        "x": 78,
+                        "y": 112,
                         "width": 23,
                         "height": 23
                     }
                 }
             }
         },
+
         {
             "segment_number": 10,
             "type": "intermediate_generic_region",
@@ -273,8 +275,8 @@
             "retained": true,
             "data": {
                 "region_segment_information": {
-                    "x": 60,
-                    "y": 190,
+                    "x": 64,
+                    "y": 269,
                     "flags": {
                         "external_combination_operator": "xor"
                     }
@@ -303,8 +305,8 @@
             ],
             "data": {
                 "region_segment_information": {
-                    "x": 60,
-                    "y": 190,
+                    "x": 64,
+                    "y": 269,
                     "flags": {
                         "external_combination_operator": "xor"
                     }
@@ -332,8 +334,8 @@
             ],
             "data": {
                 "region_segment_information": {
-                    "x": 60,
-                    "y": 190,
+                    "x": 64,
+                    "y": 269,
                     "flags": {
                         "external_combination_operator": "xor"
                     }
@@ -405,7 +407,7 @@
         },
         {
             "segment_number": 15,
-            "type": "lossless_generic_refinement_region",
+            "type": "generic_refinement_region",
             "page_association": 1,
             "referred_to_segments": [
                 {
@@ -434,6 +436,90 @@
         },
         {
             "segment_number": 16,
+            "type": "intermediate_generic_region",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 190,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 17,
+            "type": "intermediate_generic_refinement_region",
+            "page_association": 1,
+            "retained": true,
+            "referred_to_segments": [
+                {
+                    "segment_number": 16,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 190,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+        {
+            "segment_number": 18,
+            "type": "lossless_generic_refinement_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 17,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 60,
+                    "y": 190,
+                    "flags": {
+                        "external_combination_operator": "xor"
+                    }
+                },
+                "image_data": {
+                    "from_file": "bitmap.bmp",
+                    "crop": {
+                        "x": 64,
+                        "y": 269,
+                        "width": 23,
+                        "height": 23
+                    }
+                }
+            }
+        },
+
+        {
+            "segment_number": 19,
             "type": "lossless_generic_region",
             "page_association": 1,
             "data": {
@@ -457,7 +543,7 @@
             }
         },
         {
-            "segment_number": 17,
+            "segment_number": 20,
             "type": "intermediate_generic_region",
             "page_association": 1,
             "retained": true,
@@ -481,13 +567,13 @@
             }
         },
         {
-            "segment_number": 18,
+            "segment_number": 21,
             "type": "intermediate_generic_refinement_region",
             "page_association": 1,
             "retained": true,
             "referred_to_segments": [
                 {
-                    "segment_number": 17,
+                    "segment_number": 20,
                     "retained": false
                 }
             ],
@@ -511,12 +597,12 @@
             }
         },
         {
-            "segment_number": 19,
+            "segment_number": 22,
             "type": "generic_refinement_region",
             "page_association": 1,
             "referred_to_segments": [
                 {
-                    "segment_number": 18,
+                    "segment_number": 21,
                     "retained": false
                 }
             ],
@@ -539,8 +625,9 @@
                 }
             }
         },
+
         {
-            "segment_number": 20,
+            "segment_number": 23,
             "type": "end_of_page",
             "page_association": 1
         }
