@@ -1,0 +1,358 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+
+        {
+            "segment_number": 1,
+            "type": "pattern_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "pattern_width": 23,
+                "pattern_height": 23,
+                "gray_max": 1,
+                "image_data": [
+                    {
+                        "from_file": "bitmap.bmp",
+                        "crop": {
+                            "x": 55,
+                            "y": 112,
+                            "width": 23,
+                            "height": 23
+                        }
+                    },
+                    {
+                        "from_file": "bitmap.bmp",
+                        "crop": {
+                            "x": 78,
+                            "y": 112,
+                            "width": 23,
+                            "height": 23
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "segment_number": 2,
+            "type": "lossless_halftone_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 55,
+                    "y": 112,
+                    "width": 23,
+                    "height": 23
+                },
+                "flags": {
+                    "combination_operator": "or",
+                    "default_pixel_value": "white"
+                },
+                "grayscale_width": 3,
+                "grayscale_height": 1,
+                "grid_offset_x_times_256": 0,
+                "grid_offset_y_times_256": 0,
+                "grid_vector_x_times_256": 0,
+                "grid_vector_y_times_256": 0,
+                "graymap_data": {
+                    "array": [
+                        [ 0, 0, 1 ]
+                    ]
+                }
+            }
+        },
+
+        {
+            "segment_number": 3,
+            "type": "pattern_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "pattern_width": 23,
+                "pattern_height": 23,
+                "gray_max": 1,
+                "image_data": [
+                    {
+                        "from_file": "bitmap.bmp",
+                        "crop": {
+                            "x": 64,
+                            "y": 269,
+                            "width": 23,
+                            "height": 23
+                        }
+                    },
+                    {
+                        "from_file": "bitmap.bmp",
+                        "crop": {
+                            "x": 190,
+                            "y": 105,
+                            "width": 23,
+                            "height": 23
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "segment_number": 4,
+            "type": "lossless_halftone_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 3,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 64,
+                    "y": 269,
+                    "width": 23,
+                    "height": 23
+                },
+                "flags": {
+                    "combination_operator": "xor",
+                    "default_pixel_value": "white"
+                },
+                "grayscale_width": 3,
+                "grayscale_height": 1,
+                "grid_offset_x_times_256": 0,
+                "grid_offset_y_times_256": 0,
+                "grid_vector_x_times_256": 0,
+                "grid_vector_y_times_256": 0,
+                "graymap_data": {
+                    "array": [
+                        [ 1, 0, 1 ]
+                    ]
+                }
+            }
+        },
+
+        {
+            "segment_number": 5,
+            "type": "pattern_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "pattern_width": 100,
+                "pattern_height": 100,
+                "gray_max": 1,
+                "image_data": [
+                    {
+                        "from_file": "bitmap.bmp",
+                        "crop": {
+                            "x": 135,
+                            "y": 100,
+                            "width": 100,
+                            "height": 100
+                        }
+                    },
+                    {
+                        "from_file": "bitmap.bmp",
+                        "crop": {
+                            "x": 135,
+                            "y": 100,
+                            "width": 100,
+                            "height": 100
+                        },
+                        "invert": true
+                    }
+                ]
+            }
+        },
+        {
+            "segment_number": 6,
+            "type": "lossless_halftone_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 5,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 135,
+                    "y": 100,
+                    "width": 100,
+                    "height": 100
+                },
+                "flags": {
+                    "combination_operator": "replace",
+                    "default_pixel_value": "white"
+                },
+                "grayscale_width": 2,
+                "grayscale_height": 1,
+                "grid_offset_x_times_256": 0,
+                "grid_offset_y_times_256": 0,
+                "grid_vector_x_times_256": 0,
+                "grid_vector_y_times_256": 0,
+                "graymap_data": {
+                    "array": [
+                        [ 1, 0 ]
+                    ]
+                }
+            }
+        },
+
+        {
+            "segment_number": 7,
+            "type": "pattern_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "pattern_width": 120,
+                "pattern_height": 130,
+                "gray_max": 1,
+                "image_data": [
+                    {
+                        "from_file": "bitmap.bmp",
+                        "crop": {
+                            "x": 232,
+                            "y": 70,
+                            "width": 120,
+                            "height": 130
+                        }
+                    },
+                    {
+                        "from_file": "bitmap.bmp",
+                        "crop": {
+                            "x": 100,
+                            "y": 200,
+                            "width": 120,
+                            "height": 130
+                        },
+                        "invert": true
+                    }
+                ]
+            }
+        },
+        {
+            "segment_number": 8,
+            "type": "lossless_halftone_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 7,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 232,
+                    "y": 70,
+                    "width": 120,
+                    "height": 130
+                },
+                "flags": {
+                    "combination_operator": "and",
+                    "default_pixel_value": "black"
+                },
+                "grayscale_width": 3,
+                "grayscale_height": 1,
+                "grid_offset_x_times_256": 0,
+                "grid_offset_y_times_256": 0,
+                "grid_vector_x_times_256": 0,
+                "grid_vector_y_times_256": 0,
+                "graymap_data": {
+                    "array": [
+                        [ 0, 0, 1 ]
+                    ]
+                }
+            }
+        },
+
+        {
+            "segment_number": 9,
+            "type": "pattern_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "pattern_width": 120,
+                "pattern_height": 120,
+                "gray_max": 1,
+                "image_data": [
+                    {
+                        "from_file": "bitmap.bmp",
+                        "crop": {
+                            "x": 232,
+                            "y": 200,
+                            "width": 120,
+                            "height": 120
+                        }
+                    },
+                    {
+                        "from_file": "bitmap.bmp",
+                        "crop": {
+                            "x": 232,
+                            "y": 70,
+                            "width": 120,
+                            "height": 120
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "segment_number": 10,
+            "type": "lossless_halftone_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 9,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 232,
+                    "y": 200,
+                    "width": 120,
+                    "height": 120
+                },
+                "flags": {
+                    "combination_operator": "xnor",
+                    "default_pixel_value": "black"
+                },
+                "grayscale_width": 3,
+                "grayscale_height": 1,
+                "grid_offset_x_times_256": 0,
+                "grid_offset_y_times_256": 0,
+                "grid_vector_x_times_256": 0,
+                "grid_vector_y_times_256": 0,
+                "graymap_data": {
+                    "array": [
+                        [ 1, 0, 1 ]
+                    ]
+                }
+            }
+        },
+
+        {
+            "segment_number": 11,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}
