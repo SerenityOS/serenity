@@ -1586,6 +1586,9 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
     if (gray_max_from_tiles && method == Method::None)
         return Error::from_string_literal("can't use \"from_tiles\" for gray_max without using a tiling method");
 
+    if (!image)
+        return Error::from_string_literal("pattern_dictionary \"data\" object missing \"image_data\"");
+
     if (method == Method::DistinctImageTiles || method == Method::UniqueImageTiles) {
         if (grid_vector_x_times_256 == 0 && grid_vector_y_times_256 == 0) {
             if (grayscale_width == 0 && grayscale_height == 0) {
