@@ -1561,7 +1561,24 @@ static ErrorOr<Gfx::JBIG2::SegmentData> jbig2_pattern_dictionary_from_json(ToJSO
                 image = TRY(jbig2_image_from_json(options, value.as_object()));
                 return {};
             }
-            return Error::from_string_literal("expected object for \"image_data\"");
+            if (value.is_array()) {
+                size_t width = 0;
+                for (auto const& [i, image_json] : enumerate(value.as_array().values())) {
+                    if (!image_json.is_object())
+                        return Error::from_string_literal("expected object for \"image_data\" array entries");
+                    auto tile_image = TRY(jbig2_image_from_json(options, image_json.as_object()));
+                    if (i == 0) {
+                        width = tile_image->width();
+                        image = TRY(Gfx::BilevelImage::create(width * value.as_array().size(), tile_image->height()));
+                    }
+                    if (tile_image->width() != width || tile_image->height() != image->height())
+                        return Error::from_string_literal("all images in \"image_data\" array must have the same dimensions");
+                    Gfx::IntPoint destination_position { static_cast<int>(i * width), 0 };
+                    tile_image->composite_onto(*image, destination_position, Gfx::BilevelImage::CompositionType::Replace);
+                }
+                return {};
+            }
+            return Error::from_string_literal("expected object or array for \"image_data\"");
         }
 
         if (key == "method"sv) {
