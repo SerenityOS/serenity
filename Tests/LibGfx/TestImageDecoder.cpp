@@ -379,6 +379,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-refine-template1.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-refine-template1-tpgron.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-halftone-composite.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone-grid.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone-refine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-halftone-skip-dummy.jbig2"sv),
@@ -426,8 +427,6 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-texttoprighttranspose.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-texttranspose.jbig2"sv),
         // Missing tests, in part because there's no easy way to generate them:
-        // - rotated halftone (code support added in #26044)
-        // - composition test for halftone regions
         // - symbol refinement referring to symbol in same segment
         // Missing tests for things that aren't implemented yet:
         // - exttemplate
