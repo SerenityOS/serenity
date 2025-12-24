@@ -6,14 +6,15 @@
 
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/Processor.h>
+#include <Kernel/Arch/aarch64/Time/ARMv8Timer.h>
 
 namespace Kernel {
 
 void microseconds_delay(u32 microseconds)
 {
-    auto frequency = Aarch64::CNTFRQ_EL0::read().ClockFrequency;
+    VERIFY(ARMv8Timer::is_initialized());
 
-    // TODO: Fall back to the devicetree clock-frequency property.
+    auto frequency = ARMv8Timer::the().ticks_per_second();
     VERIFY(frequency != 0);
 
     // Use the EL1 virtual timer, as that timer should should be accessible to us both on device and in a VM.
