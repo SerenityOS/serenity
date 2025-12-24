@@ -51,6 +51,16 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: 'Show cache storage'
+      shell: bash
+      env:
+        GH_TOKEN:
+          ${{ github.token }}
+      run: |
+        echo "::group::gh cache list"
+        gh cache list --limit 100
+        echo "::endgroup::"
+
     - name: 'Toolchain Prebuilt Cache'
       uses: actions/cache/save@v4
       # Do not waste time and storage space by updating the toolchain cache from a PR,
@@ -95,3 +105,12 @@ runs:
 
         echo "Serenity Compiler Cache"
         CCACHE_DIR=${{ inputs.serenity_ccache_path }} ccache -s
+
+    - name: 'Show cache storage'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        echo "::group::gh cache list"
+        gh cache list --limit 100
+        echo "::endgroup::"
