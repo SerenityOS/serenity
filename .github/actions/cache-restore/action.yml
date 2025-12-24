@@ -95,6 +95,15 @@ runs:
           echo "toolchain_version=$(echo ${version} | cut -d'.' -f1)" >> $GITHUB_OUTPUT
         fi
 
+    - name: 'Show cache storage'
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        echo "::group::gh cache list"
+        gh cache list --limit 100
+        echo "::endgroup::"
+
     - name: 'Toolchain Prebuilt Cache'
       uses: actions/cache/restore@v4
       id: 'toolchain-prebuilt'
