@@ -12,22 +12,20 @@
 
 namespace Kernel {
 
-ARMv8Timer::ARMv8Timer(u8 interrupt_number)
+static ARMv8Timer* s_the = nullptr;
+
+ARMv8Timer::ARMv8Timer(u8 interrupt_number, u32 frequency)
     : HardwareTimer(interrupt_number)
+    , m_frequency(frequency)
 {
-    m_frequency = Aarch64::CNTFRQ_EL0::read().ClockFrequency;
-
-    // TODO: Fall back to the devicetree clock-frequency property.
-    VERIFY(m_frequency != 0);
-
     m_interrupt_interval = m_frequency / OPTIMAL_TICKS_PER_SECOND_RATE;
 
     start_timer(m_interrupt_interval);
 }
 
-ErrorOr<NonnullLockRefPtr<ARMv8Timer>> ARMv8Timer::initialize(u8 interrupt_number)
+ErrorOr<NonnullLockRefPtr<ARMv8Timer>> ARMv8Timer::initialize(u8 interrupt_number, u32 frequency)
 {
-    auto timer = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) ARMv8Timer(interrupt_number)));
+    auto timer = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) ARMv8Timer(interrupt_number, frequency)));
 
     // Enable the physical timer.
     auto ctl = Aarch64::CNTV_CTL_EL0::read();
@@ -38,6 +36,16 @@ ErrorOr<NonnullLockRefPtr<ARMv8Timer>> ARMv8Timer::initialize(u8 interrupt_numbe
     timer->enable_irq();
 
     return timer;
+}
+
+bool ARMv8Timer::is_initialized()
+{
+    return s_the != nullptr;
+}
+
+ARMv8Timer& ARMv8Timer::the()
+{
+    return *s_the;
 }
 
 u64 ARMv8Timer::current_ticks()
@@ -118,9 +126,30 @@ ErrorOr<void> ARMv8TimerDriver::probe(DeviceTree::Device const& device, StringVi
     // Use the EL1 virtual timer, as that timer should should be accessible to us both on device and in a VM.
     auto interrupt_number = TRY(device.get_interrupt_number(to_underlying(DeviceTreeTimerInterruptIndex::EL1Virtual)));
 
-    auto timer = TRY(ARMv8Timer::initialize(interrupt_number));
+    u32 frequency = 0;
 
-    MUST(TimeManagement::register_hardware_timer(move(timer)));
+    auto clock_frequency_property = device.node().get_property("clock-frequency"sv);
+    if (clock_frequency_property.has_value()) {
+        if (clock_frequency_property->size() != sizeof(u32)) {
+            dmesgln("ARMv8Timer: \"clock-frequency\" property for \"{}\" has invalid size: {}", device.node_name(), clock_frequency_property->size());
+            return EINVAL;
+        }
+
+        frequency = clock_frequency_property->as<u32>();
+    } else {
+        frequency = Aarch64::CNTFRQ_EL0::read().ClockFrequency;
+    }
+
+    if (frequency == 0) {
+        dmesgln("ARMv8Timer: Unable to determine clock frequency for \"{}\"", device.node_name());
+        return EINVAL;
+    }
+
+    auto timer = TRY(ARMv8Timer::initialize(interrupt_number, frequency));
+
+    MUST(TimeManagement::register_hardware_timer(timer));
+
+    s_the = &timer.leak_ref();
 
     return {};
 }
