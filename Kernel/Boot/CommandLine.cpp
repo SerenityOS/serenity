@@ -36,7 +36,6 @@ UNMAP_AFTER_INIT void CommandLine::initialize()
 {
     VERIFY(!s_the);
     s_the = new CommandLine({ s_cmd_line, strlen(s_cmd_line) });
-    dmesgln("Kernel Commandline: {}", kernel_command_line().string());
     // Validate the modes the user passed in.
     (void)s_the->panic_mode(Validate::Yes);
 }
