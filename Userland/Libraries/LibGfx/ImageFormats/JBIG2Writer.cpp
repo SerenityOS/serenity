@@ -621,7 +621,7 @@ static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParam
         if (inputs.size_of_symbol_instance_strips == 1)
             return {};
         if (inputs.uses_huffman_encoding)
-            return TRY(bit_stream->write_bits((u64)value, ceil(log2(inputs.size_of_symbol_instance_strips))));
+            return TRY(bit_stream->write_bits((u64)value, AK::ceil_log2(inputs.size_of_symbol_instance_strips)));
         return text_contexts->instance_t_integer_encoder.encode_non_oob(*encoder, value);
     };
 
@@ -2155,7 +2155,7 @@ static ErrorOr<void> encode_halftone_region(JBIG2::HalftoneRegionSegmentData con
     auto const& pattern_dictionary = referred_to_segment.data.get<JBIG2::PatternDictionarySegmentData>();
 
     // FIXME: Add a halftone_region_encoding_procedure()? For now, it's just inlined here.
-    u32 bits_per_pattern = ceil(log2(pattern_dictionary.gray_max + 1));
+    u32 bits_per_pattern = AK::ceil_log2(pattern_dictionary.gray_max + 1);
 
     // "2) If HENABLESKIP equals 1, compute a bitmap HSKIP as shown in 6.6.5.1."
     Optional<BilevelImage const&> skip_pattern;
