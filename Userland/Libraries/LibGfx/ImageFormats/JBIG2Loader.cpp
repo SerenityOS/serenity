@@ -1462,7 +1462,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> text_region_decoding_procedure(TextR
         if (inputs.size_of_symbol_instance_strips == 1)
             return 0;
         if (inputs.uses_huffman_encoding)
-            return TRY(bit_stream->read_bits(ceil(log2(inputs.size_of_symbol_instance_strips))));
+            return TRY(bit_stream->read_bits(AK::ceil_log2(inputs.size_of_symbol_instance_strips)));
         return text_contexts->instance_t_integer_decoder.decode_non_oob(*decoder);
     };
 
@@ -2302,7 +2302,7 @@ static ErrorOr<NonnullRefPtr<BilevelImage>> halftone_region_decoding_procedure(H
     }
 
     // "3) Set HBPP to ⌈log2 (HNUMPATS)⌉."
-    u32 bits_per_pattern = ceil(log2(inputs.patterns.size()));
+    u32 bits_per_pattern = AK::ceil_log2(inputs.patterns.size());
 
     // "4) Decode an image GI of size HGW by HGH with HBPP bits per pixel using the gray-scale image decoding
     //     procedure as described in Annex C. Set the parameters to this decoding procedure as shown in Table 23.
