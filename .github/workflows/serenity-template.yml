@@ -209,7 +209,7 @@ jobs:
       #       all of the instrumented binaries and the profdata file.
       - name: Upload Coverage Results
         if: ${{ inputs.coverage == 'ON' && github.event_name != 'pull_request' }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: serenity-coverage
           path: ${{ steps.build-parameters.outputs.build_directory }}/reports
