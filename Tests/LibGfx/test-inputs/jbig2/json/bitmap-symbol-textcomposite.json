@@ -51,6 +51,18 @@
                                     },
                                     "invert": true
                                 }
+                            },
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "width": 30,
+                                        "height": 30
+                                    },
+                                    "invert": true
+                                }
                             }
                         ]
                     },
@@ -134,17 +146,17 @@
                             {
                                 "instance_s": 0,
                                 "instance_t": 0,
-                                "symbol_id": 4
+                                "symbol_id": 5
                             },
                             {
                                 "instance_s": 0,
                                 "instance_t": 0,
-                                "symbol_id": 4
+                                "symbol_id": 5
                             },
                             {
                                 "instance_s": 60,
                                 "instance_t": 0,
-                                "symbol_id": 3
+                                "symbol_id": 4
                             }
                         ]
                     }
@@ -187,7 +199,7 @@
                             {
                                 "instance_s": 0,
                                 "instance_t": 0,
-                                "symbol_id": 2
+                                "symbol_id": 3
                             }
                         ]
                     },
@@ -197,12 +209,12 @@
                             {
                                 "instance_s": 10,
                                 "instance_t": 20,
-                                "symbol_id": 2
+                                "symbol_id": 3
                             },
                             {
                                 "instance_s": 10,
                                 "instance_t": 20,
-                                "symbol_id": 2
+                                "symbol_id": 3
                             }
                         ]
                     }
@@ -275,6 +287,11 @@
                                 "instance_s": 0,
                                 "instance_t": 0,
                                 "symbol_id": 1
+                            },
+                            {
+                                "instance_s": 0,
+                                "instance_t": 0,
+                                "symbol_id": 2
                             }
                         ]
                     }
@@ -351,12 +368,12 @@
                             {
                                 "instance_s": 10,
                                 "instance_t": 20,
-                                "symbol_id": 2
+                                "symbol_id": 3
                             },
                             {
                                 "instance_s": 10,
                                 "instance_t": 20,
-                                "symbol_id": 2
+                                "symbol_id": 3
                             }
                         ]
                     }
