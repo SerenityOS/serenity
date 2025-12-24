@@ -1836,7 +1836,7 @@ static ErrorOr<Vector<BilevelSubImage>> symbol_dictionary_decoding_procedure(Sym
 
         // 6.5.8.2.3 Setting SBSYMCODES and SBSYMCODELEN
         u32 number_of_symbols = inputs.input_symbols.size() + inputs.number_of_new_symbols; // "SBNUMSYMS" in spec.
-        u32 code_length = ceil(log2(number_of_symbols));                                    // "SBSYMCODELEN" in spec.
+        u32 code_length = AK::ceil_log2(number_of_symbols);                                 // "SBSYMCODELEN" in spec.
         JBIG2::HuffmanTable const* symbol_id_table { nullptr };
         if (inputs.uses_huffman_encoding) {
             if (!symbol_id_table_storage.has_value()) {
@@ -2792,7 +2792,7 @@ static ErrorOr<RegionResult> decode_text_region(JBIG2LoadingContext& context, Se
     // Done further up, since it's needed to decode the symbol ID Huffman table already.
 
     // "3) As described in E.3.7, reset all the arithmetic coding statistics to zero."
-    u32 id_symbol_code_length = ceil(log2(symbols.size()));
+    u32 id_symbol_code_length = AK::ceil_log2(symbols.size());
     Optional<TextContexts> text_contexts;
     if (!uses_huffman_encoding)
         text_contexts = TextContexts { id_symbol_code_length };
