@@ -1030,7 +1030,7 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
 
         // 6.5.8.2.3 Setting SBSYMCODES and SBSYMCODELEN
         u32 number_of_symbols = inputs.input_symbols.size() + inputs.number_of_new_symbols; // "SBNUMSYMS" in spec.
-        u32 code_length = ceil(log2(number_of_symbols));                                    // "SBSYMCODELEN" in spec.
+        u32 code_length = AK::ceil_log2(number_of_symbols);                                 // "SBSYMCODELEN" in spec.
         JBIG2::HuffmanTable const* symbol_id_table { nullptr };
         if (inputs.uses_huffman_encoding) {
             if (!symbol_id_table_storage.has_value()) {
@@ -1968,7 +1968,7 @@ static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text
     i8 delta_s_offset = AK::sign_extend(delta_s_offset_value, 5);
     u8 refinement_template = (text_region.flags >> 15) != 0;
 
-    u32 id_symbol_code_length = ceil(log2(symbols.size()));
+    u32 id_symbol_code_length = AK::ceil_log2(symbols.size());
 
     ByteBuffer symbol_id_huffman_decoding_table;
     Vector<JBIG2::Code> symbol_id_codes;
