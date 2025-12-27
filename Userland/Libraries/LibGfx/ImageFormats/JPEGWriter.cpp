@@ -99,6 +99,40 @@ private:
     size_t m_bit_offset { 0 };
 };
 
+void interpolate(f32* component, f32 max_value, i8 start, i8 stop)
+{
+    // We're creating a uniform (ɑ = 1) Catmull–Rom curve for the missing points.
+    // That means that tᵢ₊₁ = tᵢ + 1.
+    // Note that component[start] should be interpolated but component[stop] should not.
+
+    // p1 and p2 are set to the ceil value.
+    // p0 is set to the last non-max value if possible, otherwise the value of p3 for symmetry.
+    // The same logic is applied to p3.
+    f32 const p0 = start == 0 ? component[zigzag_map[stop]] : component[zigzag_map[start - 1]];
+    f32 const p1 = max_value;
+    f32 const p2 = max_value;
+    f32 const p3 = stop > 63 ? p0 : component[zigzag_map[stop]];
+
+    f32 const t0 = 0.0f;
+    f32 const t1 = 1;
+    f32 const t2 = 2;
+    f32 const t3 = 3;
+
+    f32 const step = 1. / (stop - start + 1);
+    f32 t = t1;
+    for (i8 i = start; i < stop; ++i) {
+        t += step;
+        f32 const A1 = p0 * (t1 - t) / (t1 - t0) + p1 * (t - t0) / (t1 - t0);
+        f32 const A2 = p1 * (t2 - t) / (t2 - t1) + p2 * (t - t1) / (t2 - t1);
+        f32 const A3 = p2 * (t3 - t) / (t3 - t2) + p3 * (t - t2) / (t3 - t2);
+        f32 const B1 = A1 * (t2 - t) / (t2 - t0) + A2 * (t - t0) / (t2 - t0);
+        f32 const B2 = A2 * (t3 - t) / (t3 - t1) + A3 * (t - t1) / (t3 - t1);
+        f32 const C = B1 * (t2 - t) / (t2 - t1) + B2 * (t - t1) / (t2 - t1);
+
+        component[zigzag_map[i]] = C;
+    }
+}
+
 class JPEGEncodingContext {
 public:
     JPEGEncodingContext(JPEGBigEndianOutputBitStream output_stream)
@@ -254,6 +288,35 @@ public:
             convert_one_component(macroblock.cr, m_chrominance_quantization_table);
             if (mode == Mode::CMYK)
                 convert_one_component(macroblock.k, m_luminance_quantization_table);
+        }
+    }
+
+    void apply_deringing()
+    {
+        // The method used here is described at: https://kornel.ski/deringing/.
+
+        for (auto& macroblock : m_macroblocks) {
+            for (auto component : { macroblock.r, macroblock.g, macroblock.b }) {
+                static constexpr auto maximum_value = NumericLimits<u8>::max();
+                Optional<u8> start;
+                u8 i = 0;
+                for (; i < 64; ++i) {
+                    if (component[zigzag_map[i]] == maximum_value) {
+                        if (!start.has_value())
+                            start = i;
+                        else
+                            continue;
+                    } else {
+                        if (start.has_value() && i - *start > 2) {
+                            interpolate(component, maximum_value, *start, i);
+                        }
+                        start.clear();
+                    }
+                }
+
+                if (start != 0 && component[zigzag_map[63]] == maximum_value)
+                    interpolate(component, maximum_value, *start, 64);
+            }
         }
     }
 
@@ -851,6 +914,8 @@ ErrorOr<void> add_headers(Stream& stream, JPEGEncodingContext const& context, JP
 
 ErrorOr<void> add_image(Stream& stream, JPEGEncodingContext& context, JPEGEncoderOptions const& options, IntSize size, Mode mode)
 {
+    if (options.use_deringing == JPEGEncoderOptions::UseDeringing::Yes)
+        context.apply_deringing();
     context.set_quantization_tables(options.quality);
     context.convert_to_ycbcr(mode);
     context.fdct_and_quantization(mode);
