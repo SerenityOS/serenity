@@ -9,6 +9,7 @@
 #include <AK/Assertions.h>
 #include <AK/Endian.h>
 #include <AK/IPv4Address.h>
+#include <AK/InternetChecksum.h>
 #include <AK/Types.h>
 #include <Kernel/Net/IP/IP.h>
 
@@ -81,9 +82,7 @@ public:
     NetworkOrdered<u16> compute_checksum() const
     {
         VERIFY(!m_checksum);
-        InternetChecksum checksum;
-        checksum.add({ this, sizeof(IPv4Packet) });
-        return checksum.finish();
+        return InternetChecksum({ this, sizeof(IPv4Packet) }).digest();
     }
 
 private:
