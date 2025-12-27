@@ -2949,6 +2949,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Only write images that decode correctly.
     Gfx::JBIG2DecoderOptions decoder_options;
     decoder_options.log_comments = Gfx::JBIG2DecoderOptions::LogComments::No;
+    decoder_options.strictness = Gfx::JBIG2DecoderOptions::Strictness::SpecCompliant;
     TRY(TRY(Gfx::JBIG2ImageDecoderPlugin::create_with_options(jbig2_data, decoder_options))->frame(0));
 
     auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
