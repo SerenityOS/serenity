@@ -125,25 +125,6 @@ constexpr i64 days_since_epoch(int year, int month, int day)
     return years_to_days_since_epoch(year) + day_of_year(year, month, day);
 }
 
-#ifndef KERNEL
-constexpr i64 seconds_since_epoch_to_year(i64 seconds)
-{
-    constexpr double seconds_per_year = 60.0 * 60.0 * 24.0 * 365.2425;
-
-    // NOTE: We are not using floor() from <math.h> to avoid LibC / DynamicLoader dependency issues.
-    auto round_down = [](double value) -> i64 {
-        auto as_i64 = static_cast<i64>(value);
-
-        if ((value == as_i64) || (as_i64 >= 0))
-            return as_i64;
-        return as_i64 - 1;
-    };
-
-    auto years_since_epoch = static_cast<double>(seconds) / seconds_per_year;
-    return 1970 + round_down(years_since_epoch);
-}
-#endif
-
 template<typename T>
 constexpr Tuple<T, u8, u8> days_since_epoch_to_date(T days)
 {
@@ -173,6 +154,14 @@ constexpr Tuple<T, u8, u8> days_since_epoch_to_date(T days)
     T year = (static_cast<T>(year_of_era) + era * 400) + (month <= era_month_offset);
 
     return { year, month, day };
+}
+
+constexpr i64 seconds_since_epoch_to_year(i64 seconds)
+{
+    constexpr auto seconds_per_day = 60 * 60 * 24;
+    i64 day_offset_to_epoch = seconds >= 0 ? seconds / seconds_per_day : floor_div(seconds, seconds_per_day);
+    auto [year, month, day] = days_since_epoch_to_date(day_offset_to_epoch);
+    return year;
 }
 
 // Represents a duration in a "safe" way.
@@ -707,13 +696,11 @@ using AK::day_of_year;
 using AK::days_in_month;
 using AK::days_in_year;
 using AK::days_since_epoch;
+using AK::days_since_epoch_to_date;
 using AK::Duration;
 using AK::is_leap_year;
 using AK::MonotonicTime;
-#    ifndef KERNEL
 using AK::seconds_since_epoch_to_year;
-#    endif
-using AK::days_since_epoch_to_date;
 using AK::timespec_add;
 using AK::timespec_add_timeval;
 using AK::timespec_sub;
