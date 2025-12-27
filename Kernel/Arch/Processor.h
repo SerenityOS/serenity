@@ -113,7 +113,7 @@ public:
     }
 
     void enter_trap(TrapFrame& trap, bool raise_irq);
-    void exit_trap(TrapFrame& trap);
+    void exit_trap(TrapFrame& trap, bool handling_exception = false);
 
     static void flush_entire_tlb_local();
 
