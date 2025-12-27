@@ -455,7 +455,8 @@ static ErrorOr<void> validate_segment_header_retention_flags(JBIG2LoadingContext
 
         for (auto const& [i, referred_to_segment] : enumerate(segment.referred_to_segments)) {
             bool allow_reference_to_dead_segment_quirk = false;
-            if (context.allow_power_jbig2_quirks) {
+            if (context.allow_power_jbig2_quirks
+                && referred_to_segment->type() == JBIG2::SegmentType::PatternDictionary) {
                 // Quirk: t89-halftone/*-stripe.jb2 have one PatternDictionary and then one ImmediateHalftoneRegion per stripe,
                 // but each ImmediateHalftoneRegion (incorrectly?) sets the retention flag for the PatternDictionary to 0.
                 allow_reference_to_dead_segment_quirk = true;
