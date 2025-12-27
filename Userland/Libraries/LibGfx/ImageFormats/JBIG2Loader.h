@@ -23,6 +23,15 @@ struct JBIG2DecoderOptions {
         Yes,
     };
     LogComments log_comments { LogComments::Yes };
+
+    enum class Strictness {
+        // Accepts images that violate the JBIG2 spec in ways found in the wild.
+        Permissive,
+
+        // Rejects images that do not conform to the JBIG2 spec.
+        SpecCompliant,
+    };
+    Strictness strictness { Strictness::Permissive };
 };
 
 namespace JBIG2 {

@@ -396,6 +396,9 @@ static ErrorOr<size_t> scan_for_immediate_generic_region_size(ReadonlyBytes data
 
 static void identify_power_jbig2_files(JBIG2LoadingContext& context)
 {
+    if (context.options.strictness == JBIG2DecoderOptions::Strictness::SpecCompliant)
+        return;
+
     for (auto const& segment : context.segments) {
         auto signature_data_1 = "\x20\0\0\0"
                                 "Source\0"
