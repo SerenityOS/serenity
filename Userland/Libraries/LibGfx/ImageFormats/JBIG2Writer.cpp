@@ -486,16 +486,26 @@ static ErrorOr<void> generic_refinement_region_encoding_procedure(GenericRefinem
     return {};
 }
 
-static ErrorOr<NonnullRefPtr<BilevelImage>> symbol_image(JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol const& symbol)
+static ErrorOr<NonnullRefPtr<BilevelImage>> symbol_image(JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol const& symbol, Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> const& symbols)
 {
     if (symbol.image.has<NonnullRefPtr<BilevelImage>>())
         return symbol.image.get<NonnullRefPtr<BilevelImage>>();
     if (symbol.image.has<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymbol>())
         return symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymbol>().refines_to;
 
+    auto image = TRY(BilevelImage::create(symbol.size.width(), symbol.size.height()));
+    image->fill(false);
     auto const& text_strips = symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips>();
-    (void)text_strips;
-    return Error::from_string_literal("JBIG2Writer: Cannot write refinements of refinements by text strips yet");
+    for (auto const& strip : text_strips.strips) {
+        for (auto const& instance : strip.symbol_instances) {
+            if (instance.symbol_id >= symbols.size())
+                return Error::from_string_literal("JBIG2Writer: Invalid symbol ID in text strip symbol instance");
+            auto const& instance_symbol = symbols[instance.symbol_id];
+            auto instance_image = TRY(symbol_image(instance_symbol, symbols));
+            instance_image->composite_onto(image, { instance.s, instance.t }, BilevelImage::CompositionType::Or);
+        }
+    }
+    return image;
 }
 
 namespace {
@@ -714,7 +724,7 @@ static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParam
         if (static_cast<i32>(symbol.size.height()) + symbol_instance.refinement_data->delta_height < 0)
             return Error::from_string_literal("JBIG2Writer: Refinement height out of bounds");
 
-        auto reference_bitmap = TRY(symbol_image(symbol));
+        auto reference_bitmap = TRY(symbol_image(symbol, inputs.symbols));
         GenericRefinementRegionEncodingInputParameters refinement_inputs {
             .image = symbol_instance.refinement_data->refines_to,
             .reference_bitmap = reference_bitmap->as_subbitmap(),
@@ -1108,7 +1118,10 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
         if (refinement_image.symbol_id >= inputs.input_symbols.size() && refinement_image.symbol_id - inputs.input_symbols.size() >= new_symbols.size())
             return Error::from_string_literal("JBIG2Writer: Refinement/aggregate symbol ID out of range");
 
-        auto const& IBO = TRY(symbol_image(refinement_image.symbol_id < inputs.input_symbols.size() ? inputs.input_symbols[refinement_image.symbol_id] : new_symbols[refinement_image.symbol_id - inputs.input_symbols.size()]));
+        Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> all_symbols;
+        all_symbols.extend(inputs.input_symbols);
+        all_symbols.extend(new_symbols);
+        auto const& IBO = TRY(symbol_image(all_symbols[refinement_image.symbol_id], all_symbols));
 
         MQArithmeticEncoder* refinement_encoder = nullptr;
         Optional<MQArithmeticEncoder> huffman_refinement_encoder;
