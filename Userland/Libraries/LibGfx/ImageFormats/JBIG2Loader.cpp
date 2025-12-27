@@ -453,18 +453,28 @@ static ErrorOr<void> validate_segment_header_retention_flags(JBIG2LoadingContext
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: Invalid segment retention flags");
         }
 
-        for (auto const& [i, referred_to_segment_number] : enumerate(header.referred_to_segment_numbers)) {
-            // Quirk: t89-halftone/*-stripe.jb2 have one PatternDictionary and then one ImmediateHalftoneRegion per stripe,
-            // but each ImmediateHalftoneRegion (incorrectly?) sets the retention flag for the PatternDictionary to 0.
-            if (dead_segments.contains(referred_to_segment_number) && !context.allow_power_jbig2_quirks)
+        for (auto const& [i, referred_to_segment] : enumerate(segment.referred_to_segments)) {
+            bool allow_reference_to_dead_segment_quirk = false;
+            if (context.allow_power_jbig2_quirks) {
+                // Quirk: t89-halftone/*-stripe.jb2 have one PatternDictionary and then one ImmediateHalftoneRegion per stripe,
+                // but each ImmediateHalftoneRegion (incorrectly?) sets the retention flag for the PatternDictionary to 0.
+                allow_reference_to_dead_segment_quirk = true;
+            }
+            if (context.options.strictness == JBIG2DecoderOptions::Strictness::Permissive
+                && referred_to_segment->type() == JBIG2::SegmentType::SymbolDictionary) {
+                // Quirk: jbig2enc (used e.g. by Google Books) sometimes generates SymbolDictionary segments that do not
+                // have their retention flag set, https://github.com/agl/jbig2enc/issues/121.
+                allow_reference_to_dead_segment_quirk = true;
+            }
+            if (dead_segments.contains(referred_to_segment->header.segment_number) && !allow_reference_to_dead_segment_quirk)
                 return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment refers to dead segment");
 
             auto const referred_to_segment_retention_flag = header.referred_to_segment_retention_flags[i];
             if (referred_to_segment_retention_flag) {
-                if (dead_segments.contains(referred_to_segment_number))
+                if (dead_segments.contains(referred_to_segment->header.segment_number))
                     return Error::from_string_literal("JBIG2ImageDecoderPlugin: Segment retention flags tried to revive dead segment");
             } else {
-                dead_segments.set(referred_to_segment_number);
+                dead_segments.set(referred_to_segment->header.segment_number);
             }
         }
     }
