@@ -420,6 +420,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-symbolrefineseveral.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symhuffrefineone.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symhuffrefineseveral.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol-symbolrefine-textrefine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textbottomleft.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textbottomlefttranspose.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textbottomright.jbig2"sv),
@@ -427,8 +428,6 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-texttopright.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-texttoprighttranspose.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-texttranspose.jbig2"sv),
-        // Missing tests, in part because there's no easy way to generate them:
-        // - symbol refinement referring to symbol in same segment
         // Missing tests for things that aren't implemented yet:
         // - exttemplate
         // - colors
