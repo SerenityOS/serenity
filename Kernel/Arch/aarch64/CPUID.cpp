@@ -150,7 +150,6 @@ CPUFeature::Type detect_cpu_features()
         features |= CPUFeature::AdvSIMD; // TODO/FIXME: not explicit?
     if (processor_feature_register_0.AdvSIMD == 0b0001)
         features |= CPUFeature::FP16;
-    // TODO: GIC
     if (processor_feature_register_0.RAS == 0b0001)
         features |= CPUFeature::RAS;
     if (processor_feature_register_0.RAS == 0b0010)
@@ -611,8 +610,6 @@ StringView cpu_feature_to_name(CPUFeature::Type const& feature)
         return "HPMN0"sv;
     if (feature == CPUFeature::NMI)
         return "NMI"sv;
-    if (feature == CPUFeature::GICv3_NMI)
-        return "GICv3_NMI"sv;
     if (feature == CPUFeature::MOPS)
         return "MOPS"sv;
     if (feature == CPUFeature::PACQARMA3)
@@ -923,18 +920,6 @@ StringView cpu_feature_to_name(CPUFeature::Type const& feature)
         return "ETMv4p5"sv;
     if (feature == CPUFeature::ETMv4p6)
         return "ETMv4p6"sv;
-    if (feature == CPUFeature::GICv3)
-        return "GICv3"sv;
-    if (feature == CPUFeature::GICv3p1)
-        return "GICv3p1"sv;
-    if (feature == CPUFeature::GICv3_LEGACY)
-        return "GICv3_LEGACY"sv;
-    if (feature == CPUFeature::GICv3_TDIR)
-        return "GICv3_TDIR"sv;
-    if (feature == CPUFeature::GICv4)
-        return "GICv4"sv;
-    if (feature == CPUFeature::GICv4p1)
-        return "GICv4p1"sv;
     if (feature == CPUFeature::PMUv3)
         return "PMUv3"sv;
     if (feature == CPUFeature::ETE)
@@ -1108,8 +1093,6 @@ StringView cpu_feature_to_description(CPUFeature::Type const& feature)
     if (feature == CPUFeature::HPMN0)
         return "Setting of MDCR_EL2.HPMN to zero"sv;
     if (feature == CPUFeature::NMI)
-        return "Non-maskable Interrupts"sv;
-    if (feature == CPUFeature::GICv3_NMI)
         return "Non-maskable Interrupts"sv;
     if (feature == CPUFeature::MOPS)
         return "Standardization of memory operations"sv;
@@ -1421,18 +1404,6 @@ StringView cpu_feature_to_description(CPUFeature::Type const& feature)
         return "Embedded Trace Macrocell version 4.4"sv;
     if (feature == CPUFeature::ETMv4p6)
         return "Embedded Trace Macrocell version 4.5"sv;
-    if (feature == CPUFeature::GICv3)
-        return "Generic Interrupt Controller version 3"sv;
-    if (feature == CPUFeature::GICv3p1)
-        return "Generic Interrupt Controller version 3.1"sv;
-    if (feature == CPUFeature::GICv3_LEGACY)
-        return "Support for GICv2 legacy operation"sv; // Note: missing in source
-    if (feature == CPUFeature::GICv3_TDIR)
-        return "Trapping Non-secure EL1 writes to ICV_DIR"sv;
-    if (feature == CPUFeature::GICv4)
-        return "Generic Interrupt Controller version 4"sv;
-    if (feature == CPUFeature::GICv4p1)
-        return "Generic Interrupt Controller version 4.1"sv;
     if (feature == CPUFeature::PMUv3)
         return "PMU extension version 3"sv;
     if (feature == CPUFeature::ETE)
