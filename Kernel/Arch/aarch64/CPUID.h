@@ -250,13 +250,7 @@ AK_MAKE_ARBITRARY_SIZED_ENUM(CPUFeature, u256,
     ETMv4p4 = CPUFeature(1u) << 220u,       // Embedded Trace Macrocell version 4.3
     ETMv4p5 = CPUFeature(1u) << 221u,       // Embedded Trace Macrocell version 4.4
     ETMv4p6 = CPUFeature(1u) << 222u,       // Embedded Trace Macrocell version 4.5
-    GICv3 = CPUFeature(1u) << 223u,         // Generic Interrupt Controller version 3
-    GICv3p1 = CPUFeature(1u) << 224u,       // Generic Interrupt Controller version 3.1
     // Note: cf. https://developer.arm.com/documentation/ihi0069/h/?lang=en
-    GICv3_LEGACY = CPUFeature(1u) << 225u, // Support for GICv2 legacy operation
-    GICv3_TDIR = CPUFeature(1u) << 226u,   // Trapping Non-secure EL1 writes to ICV_DIR
-    GICv4 = CPUFeature(1u) << 227u,        // Generic Interrupt Controller version 4
-    GICv4p1 = CPUFeature(1u) << 228u,      // Generic Interrupt Controller version 4.1
     PMUv3 = CPUFeature(1u) << 229u,        // PMU extension version 3
     ETE = CPUFeature(1u) << 230u,          // Embedded Trace Extension
     ETEv1p1 = CPUFeature(1u) << 231u,      // Embedded Trace Extension, version 1.1
