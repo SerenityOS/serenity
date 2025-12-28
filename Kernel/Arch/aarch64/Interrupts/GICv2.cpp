@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Arch/aarch64/InterruptManagement.h>
-#include <Kernel/Arch/aarch64/Interrupts/GIC.h>
+#include <Kernel/Arch/aarch64/Interrupts/GICv2.h>
 #include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Firmware/DeviceTree/Driver.h>
 #include <Kernel/Firmware/DeviceTree/Management.h>
@@ -14,7 +14,7 @@
 namespace Kernel {
 
 // 4.1.2 Distributor register map
-struct GIC::DistributorRegisters {
+struct GICv2::DistributorRegisters {
     enum class ControlBits : u32 {
         Enable = 1 << 0,
     };
@@ -49,12 +49,12 @@ struct GIC::DistributorRegisters {
     u32 reserved6[40];
     u32 implementation_defined1[12];
 };
-static_assert(AssertSize<GIC::DistributorRegisters, 0x1000>());
+static_assert(AssertSize<GICv2::DistributorRegisters, 0x1000>());
 
-AK_ENUM_BITWISE_OPERATORS(GIC::DistributorRegisters::ControlBits);
+AK_ENUM_BITWISE_OPERATORS(GICv2::DistributorRegisters::ControlBits);
 
 // 4.1.3 CPU interface register map
-struct GIC::CPUInterfaceRegisters {
+struct GICv2::CPUInterfaceRegisters {
     enum class ControlBits : u32 {
         Enable = 1 << 0,
     };
@@ -82,9 +82,9 @@ struct GIC::CPUInterfaceRegisters {
     u32 reserved2[960];
     u32 deactivate_interrupt; // GICC_DIR
 };
-static_assert(AssertSize<GIC::CPUInterfaceRegisters, 0x1004>());
+static_assert(AssertSize<GICv2::CPUInterfaceRegisters, 0x1004>());
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GIC>> GIC::try_to_initialize(DeviceTree::Device::Resource distributor_registers_resource, DeviceTree::Device::Resource cpu_interface_registers_resource)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GICv2>> GICv2::try_to_initialize(DeviceTree::Device::Resource distributor_registers_resource, DeviceTree::Device::Resource cpu_interface_registers_resource)
 {
     if (distributor_registers_resource.size < sizeof(DistributorRegisters))
         return EINVAL;
@@ -95,13 +95,13 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GIC>> GIC::try_to_initialize(DeviceTr
     auto distributor_registers = TRY(Memory::map_typed_writable<DistributorRegisters volatile>(distributor_registers_resource.paddr));
     auto cpu_interface_registers = TRY(Memory::map_typed_writable<CPUInterfaceRegisters volatile>(cpu_interface_registers_resource.paddr));
 
-    auto gic = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) GIC(move(distributor_registers), move(cpu_interface_registers))));
+    auto gic = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) GICv2(move(distributor_registers), move(cpu_interface_registers))));
     TRY(gic->initialize());
 
     return gic;
 }
 
-void GIC::enable(GenericInterruptHandler const& handler)
+void GICv2::enable(GenericInterruptHandler const& handler)
 {
     // FIXME: Set the trigger mode in DistributorRegisters::interrupt_configuration (GICD_ICFGRn) to level-triggered or edge-triggered.
 
@@ -109,19 +109,19 @@ void GIC::enable(GenericInterruptHandler const& handler)
     m_distributor_registers->interrupt_set_enable[interrupt_number / 32] = 1 << (interrupt_number % 32);
 }
 
-void GIC::disable(GenericInterruptHandler const& handler)
+void GICv2::disable(GenericInterruptHandler const& handler)
 {
     auto interrupt_number = handler.interrupt_number();
     m_distributor_registers->interrupt_clear_enable[interrupt_number / 32] = 1 << (interrupt_number % 32);
 }
 
-void GIC::eoi(GenericInterruptHandler const& handler)
+void GICv2::eoi(GenericInterruptHandler const& handler)
 {
     auto interrupt_number = handler.interrupt_number();
     m_cpu_interface_registers->end_of_interrupt = interrupt_number;
 }
 
-Optional<size_t> GIC::pending_interrupt() const
+Optional<size_t> GICv2::pending_interrupt() const
 {
     auto interrupt_number = m_cpu_interface_registers->interrupt_acknowledge;
 
@@ -132,7 +132,7 @@ Optional<size_t> GIC::pending_interrupt() const
     return interrupt_number;
 }
 
-ErrorOr<size_t> GIC::translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes interrupt_specifier) const
+ErrorOr<size_t> GICv2::translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes interrupt_specifier) const
 {
     // https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/arm,gic.yaml
 
@@ -172,17 +172,17 @@ ErrorOr<size_t> GIC::translate_interrupt_specifier_to_interrupt_number(ReadonlyB
     return EINVAL;
 }
 
-UNMAP_AFTER_INIT GIC::GIC(Memory::TypedMapping<DistributorRegisters volatile> distributor_registers, Memory::TypedMapping<CPUInterfaceRegisters volatile> cpu_interface_registers)
+UNMAP_AFTER_INIT GICv2::GICv2(Memory::TypedMapping<DistributorRegisters volatile> distributor_registers, Memory::TypedMapping<CPUInterfaceRegisters volatile> cpu_interface_registers)
     : m_distributor_registers(move(distributor_registers))
     , m_cpu_interface_registers(move(cpu_interface_registers))
 {
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> GIC::initialize()
+UNMAP_AFTER_INIT ErrorOr<void> GICv2::initialize()
 {
     auto gic_architecture_version = (m_cpu_interface_registers->identification >> CPUInterfaceRegisters::IDENTIFICATION_ARCHITECTURE_VERSION_OFFSET) & CPUInterfaceRegisters::IDENTIFICATION_ARCHITECTURE_VERSION_MASK;
     if (gic_architecture_version != 2)
-        return ENOTSUP; // We currently only support GICv2.
+        return ENOTSUP;
 
     // Disable forwarding of interrupts to the CPU interfaces during initialization.
     m_distributor_registers->control &= ~to_underlying(DistributorRegisters::ControlBits::Enable);
@@ -224,15 +224,15 @@ static constinit Array const compatibles_array = {
     "arm,cortex-a15-gic"sv,
 };
 
-INTERRUPT_CONTROLLER_DEVICETREE_DRIVER(GICDriver, compatibles_array);
+INTERRUPT_CONTROLLER_DEVICETREE_DRIVER(GICv2Driver, compatibles_array);
 
 // https://www.kernel.org/doc/Documentation/devicetree/bindings/interrupt-controller/arm,gic.yaml
-ErrorOr<void> GICDriver::probe(DeviceTree::Device const& device, StringView) const
+ErrorOr<void> GICv2Driver::probe(DeviceTree::Device const& device, StringView) const
 {
     auto distributor_registers_resource = TRY(device.get_resource(0));
     auto cpu_interface_registers_resource = TRY(device.get_resource(1));
 
-    auto gic = TRY(GIC::try_to_initialize(distributor_registers_resource, cpu_interface_registers_resource));
+    auto gic = TRY(GICv2::try_to_initialize(distributor_registers_resource, cpu_interface_registers_resource));
 
     MUST(DeviceTree::Management::register_interrupt_controller(device, *gic));
     MUST(InterruptManagement::register_interrupt_controller(move(gic)));

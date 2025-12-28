@@ -11,17 +11,16 @@
 #include <Kernel/Firmware/DeviceTree/InterruptController.h>
 #include <Kernel/Memory/TypedMapping.h>
 
-// Only GICv2 is currently supported.
 // GICv2 Architecture Specification: https://documentation-service.arm.com/static/5f8ff21df86e16515cdbfafe
 // GIC-400 Technical Reference Manual: https://documentation-service.arm.com/static/5e8f15e27100066a414f7424
 
 namespace Kernel {
 
-class GIC final
+class GICv2 final
     : public IRQController
     , public DeviceTree::InterruptController {
 public:
-    static ErrorOr<NonnullLockRefPtr<GIC>> try_to_initialize(DeviceTree::Device::Resource distributor_registers_resource, DeviceTree::Device::Resource cpu_interface_registers_registers_resource);
+    static ErrorOr<NonnullLockRefPtr<GICv2>> try_to_initialize(DeviceTree::Device::Resource distributor_registers_resource, DeviceTree::Device::Resource cpu_interface_registers_registers_resource);
 
     virtual void enable(GenericInterruptHandler const&) override;
     virtual void disable(GenericInterruptHandler const&) override;
@@ -30,7 +29,7 @@ public:
 
     virtual Optional<size_t> pending_interrupt() const override;
 
-    virtual StringView model() const override { return "GIC"sv; }
+    virtual StringView model() const override { return "GICv2"sv; }
 
     // ^DeviceTree::InterruptController
     virtual ErrorOr<size_t> translate_interrupt_specifier_to_interrupt_number(ReadonlyBytes) const override;
@@ -39,7 +38,7 @@ public:
     struct CPUInterfaceRegisters;
 
 private:
-    GIC(Memory::TypedMapping<DistributorRegisters volatile>, Memory::TypedMapping<CPUInterfaceRegisters volatile>);
+    GICv2(Memory::TypedMapping<DistributorRegisters volatile>, Memory::TypedMapping<CPUInterfaceRegisters volatile>);
 
     ErrorOr<void> initialize();
 
