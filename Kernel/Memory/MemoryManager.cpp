@@ -342,19 +342,17 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
                 if (!last_contiguous_physical_range.has_value() || last_contiguous_physical_range->upper.offset(PAGE_SIZE) != addr) {
                     if (last_contiguous_physical_range.has_value()) {
                         auto range = last_contiguous_physical_range.release_value();
-                        // FIXME: OOM?
-                        global_data.physical_regions.try_append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull()).release_value_but_fixme_should_propagate_errors();
+                        MUST(global_data.physical_regions.try_append(MUST(PhysicalRegion::try_create(range.lower, range.upper))));
                     }
                     last_contiguous_physical_range = ContiguousPhysicalRange { .lower = addr, .upper = addr };
                 } else {
                     last_contiguous_physical_range->upper = addr;
                 }
             }
-            // FIXME: If this is ever false, theres a good chance that all physical memory is already spent
+            // FIXME: If this is ever false, there's a good chance that all physical memory is already spent
             if (last_contiguous_physical_range.has_value()) {
                 auto range = last_contiguous_physical_range.release_value();
-                // FIXME: OOM?
-                global_data.physical_regions.try_append(PhysicalRegion::try_create(range.lower, range.upper).release_nonnull()).release_value_but_fixme_should_propagate_errors();
+                MUST(global_data.physical_regions.try_append(MUST(PhysicalRegion::try_create(range.lower, range.upper))));
             }
         }
 
