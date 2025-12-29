@@ -421,6 +421,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-symhuffrefineone.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symhuffrefineseveral.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-symbolrefine-textrefine.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol-symhuffrefine-textrefine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textbottomleft.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textbottomlefttranspose.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textbottomright.jbig2"sv),
