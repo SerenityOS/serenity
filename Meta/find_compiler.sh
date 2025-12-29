@@ -22,7 +22,7 @@ is_supported_compiler() {
         [ "$MAJOR_VERSION" -ge 17 ] && return 0
     else
         # GCC version check
-        [ "$MAJOR_VERSION" -ge 13 ] && return 0
+        [ "$MAJOR_VERSION" -ge 14 ] && return 0
     fi
     return 1
 }
@@ -63,7 +63,7 @@ pick_host_compiler() {
         return
     fi
 
-    find_newest_compiler egcc gcc gcc-13 gcc-14 /usr/local/bin/gcc-{13,14} /opt/homebrew/bin/gcc-{13,14}
+    find_newest_compiler egcc gcc gcc-{14,15} /usr/local/bin/gcc-{14,15} /opt/homebrew/bin/gcc-{14,15}
     if is_supported_compiler "$HOST_COMPILER"; then
         export CC="${HOST_COMPILER}"
         export CXX="${HOST_COMPILER/gcc/g++}"
@@ -73,6 +73,6 @@ pick_host_compiler() {
     if [ "$(uname -s)" = "Darwin" ]; then
         die "Please make sure that Xcode 14.3, Homebrew Clang 17, or higher is installed."
     else
-        die "Please make sure that GCC version 13, Clang version 17, or higher is installed."
+        die "Please make sure that GCC version 14, Clang version 17, or higher is installed."
     fi
 }
