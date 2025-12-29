@@ -62,8 +62,8 @@ private:
     size_t generate_minor_device_number_for_keyboard();
 
     SpinlockProtected<KeymapData, LockRank::None> m_keymap_data {};
-    size_t m_mouse_minor_number { 0 };
-    size_t m_keyboard_minor_number { 0 };
+    Atomic<size_t> m_mouse_minor_number { 0 };
+    Atomic<size_t> m_keyboard_minor_number { 0 };
     KeyboardClient* m_client { nullptr };
 
     SpinlockProtected<IntrusiveList<&SerialIOController::m_list_node>, LockRank::None> m_input_serial_io_controllers;
