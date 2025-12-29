@@ -486,22 +486,15 @@ static ErrorOr<void> generic_refinement_region_encoding_procedure(GenericRefinem
     return {};
 }
 
-static ErrorOr<NonnullRefPtr<BilevelImage>> symbol_image(JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol const& symbol, Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> const& symbols)
+static ErrorOr<NonnullRefPtr<BilevelImage>> get_strip_symbol_image(IntSize size, JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips const& text_strips, Vector<NonnullRefPtr<BilevelImage>> const& symbols)
 {
-    if (symbol.image.has<NonnullRefPtr<BilevelImage>>())
-        return symbol.image.get<NonnullRefPtr<BilevelImage>>();
-    if (symbol.image.has<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymbol>())
-        return symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinedSymbol>().refines_to;
-
-    auto image = TRY(BilevelImage::create(symbol.size.width(), symbol.size.height()));
+    auto image = TRY(BilevelImage::create(size.width(), size.height()));
     image->fill(false);
-    auto const& text_strips = symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips>();
     for (auto const& strip : text_strips.strips) {
         for (auto const& instance : strip.symbol_instances) {
             if (instance.symbol_id >= symbols.size())
                 return Error::from_string_literal("JBIG2Writer: Invalid symbol ID in text strip symbol instance");
-            auto const& instance_symbol = symbols[instance.symbol_id];
-            auto instance_image = TRY(symbol_image(instance_symbol, symbols));
+            auto const& instance_image = symbols[instance.symbol_id];
             instance_image->composite_onto(image, { instance.s, instance.t }, BilevelImage::CompositionType::Or);
         }
     }
@@ -525,8 +518,8 @@ struct TextRegionEncodingInputParameters {
     // Only set if uses_huffman_encoding is true.
     JBIG2::HuffmanTable const* symbol_id_table { nullptr }; // "SBSYMCODES" in spec.
 
-    u32 id_symbol_code_length { 0 };                                            // "SBSYMCODELEN" in spec.
-    Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> symbols {}; // "SBNUMSYMS" / "SBSYMS" in spec.
+    u32 id_symbol_code_length { 0 };                // "SBSYMCODELEN" in spec.
+    Vector<NonnullRefPtr<BilevelImage>> symbols {}; // "SBNUMSYMS" / "SBSYMS" in spec.
 
     bool is_transposed { false }; // "TRANSPOSED" in spec.
 
@@ -704,7 +697,7 @@ static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParam
 
         // "If RI is 0 then set the symbol instance bitmap IBI to SBSYMS[IDI]."
         if (!has_refinement_image)
-            return symbol.size;
+            return IntSize { static_cast<int>(symbol->width()), static_cast<int>(symbol->height()) };
 
         TRY(write_refinement_delta_width(symbol_instance.refinement_data->delta_width));
         TRY(write_refinement_delta_height(symbol_instance.refinement_data->delta_height));
@@ -719,21 +712,20 @@ static ErrorOr<void> text_region_encoding_procedure(TextRegionEncodingInputParam
         }
 
         // Table 12 – Parameters used to decode a symbol instance's bitmap using refinement
-        if (static_cast<i32>(symbol.size.width()) + symbol_instance.refinement_data->delta_width < 0)
+        if (static_cast<i32>(symbol->width()) + symbol_instance.refinement_data->delta_width < 0)
             return Error::from_string_literal("JBIG2Writer: Refinement width out of bounds");
-        if (static_cast<i32>(symbol.size.height()) + symbol_instance.refinement_data->delta_height < 0)
+        if (static_cast<i32>(symbol->height()) + symbol_instance.refinement_data->delta_height < 0)
             return Error::from_string_literal("JBIG2Writer: Refinement height out of bounds");
 
-        auto reference_bitmap = TRY(symbol_image(symbol, inputs.symbols));
         GenericRefinementRegionEncodingInputParameters refinement_inputs {
             .image = symbol_instance.refinement_data->refines_to,
-            .reference_bitmap = reference_bitmap->as_subbitmap(),
+            .reference_bitmap = symbol->as_subbitmap(),
         };
 
         // FIXME: Instead, just compute the delta here instead of having it be passed in?
-        if (static_cast<i32>(reference_bitmap->width()) + symbol_instance.refinement_data->delta_width != static_cast<i32>(refinement_inputs.image.width()))
+        if (static_cast<i32>(symbol->width()) + symbol_instance.refinement_data->delta_width != static_cast<i32>(refinement_inputs.image.width()))
             return Error::from_string_literal("JBIG2Writer: Refinement reference width mismatch");
-        if (static_cast<i32>(reference_bitmap->height()) + symbol_instance.refinement_data->delta_height != static_cast<i32>(refinement_inputs.image.height()))
+        if (static_cast<i32>(symbol->height()) + symbol_instance.refinement_data->delta_height != static_cast<i32>(refinement_inputs.image.height()))
             return Error::from_string_literal("JBIG2Writer: Refinement reference height mismatch");
 
         refinement_inputs.gr_template = inputs.refinement_template;
@@ -909,7 +901,7 @@ struct SymbolDictionaryEncodingInputParameters {
     bool uses_huffman_encoding { false };               // "SDHUFF" in spec.
     bool uses_refinement_or_aggregate_coding { false }; // "SDREFAGG" in spec.
 
-    Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> input_symbols; // "SDNUMINSYMS", "SDINSYMS" in spec.
+    Vector<NonnullRefPtr<BilevelImage>> input_symbols; // "SDNUMINSYMS", "SDINSYMS" in spec.
     Vector<bool> export_flags_for_referred_to_symbols;
 
     Vector<JBIG2::SymbolDictionarySegmentData::HeightClass> height_classes;
@@ -941,7 +933,7 @@ struct SymbolContexts {
 }
 
 // 6.5 Symbol Dictionary Decoding Procedure, but in reverse.
-static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionaryEncodingInputParameters const& inputs, Optional<JBIG2::GenericContexts>& generic_contexts, Optional<JBIG2::RefinementContexts>& refinement_contexts, Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol>& exported_symbols)
+static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionaryEncodingInputParameters const& inputs, Optional<JBIG2::GenericContexts>& generic_contexts, Optional<JBIG2::RefinementContexts>& refinement_contexts, Vector<NonnullRefPtr<BilevelImage>>& exported_symbols)
 {
     Optional<AllocatingMemoryStream> stream;
     Optional<BigEndianOutputBitStream> bit_stream;
@@ -992,13 +984,13 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
     Optional<TextContexts> text_contexts;
 
     // This belongs in 6.5.5 1) below, but also needs to be captured by write_symbol_bitmap here.
-    Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> new_symbols;
+    Vector<NonnullRefPtr<BilevelImage>> new_symbols;
 
     // Likewise, this is from 6.5.8.2.3 below.
     Vector<JBIG2::Code> symbol_id_codes;
     Optional<JBIG2::HuffmanTable> symbol_id_table_storage;
 
-    auto write_symbol_bitmap = [&](JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol const& symbol) -> ErrorOr<void> {
+    auto write_symbol_bitmap = [&](JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol const& symbol) -> ErrorOr<NonnullRefPtr<BilevelImage>> {
         // 6.5.8 Symbol bitmap
 
         // 6.5.8.1 Direct-coded symbol bitmap
@@ -1018,7 +1010,8 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
             for (int i = 0; i < 4; ++i)
                 generic_inputs.adaptive_template_pixels[i] = inputs.adaptive_template_pixels[i];
             generic_inputs.arithmetic_encoder = &encoder.value();
-            return generic_region_encoding_procedure(generic_inputs, generic_contexts);
+            TRY(generic_region_encoding_procedure(generic_inputs, generic_contexts));
+            return generic_inputs.image;
         }
 
         if (symbol.image.has<NonnullRefPtr<BilevelImage>>())
@@ -1053,6 +1046,10 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
         if (!text_contexts.has_value())
             text_contexts = TextContexts { code_length };
 
+        Vector<NonnullRefPtr<BilevelImage>> all_symbols;
+        all_symbols.extend(inputs.input_symbols);
+        all_symbols.extend(new_symbols);
+
         if (number_of_symbol_instances > 1) {
             auto const& refines_using_strips = symbol.image.get<JBIG2::SymbolDictionarySegmentData::HeightClass::RefinesUsingStrips>();
 
@@ -1071,8 +1068,7 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
             // 6.5.8.2.4 Setting SBSYMS
             // "Set SBSYMS to an array of SDNUMINSYMS + NSYMSDECODED symbols, formed by concatenating the array
             //  SDINSYMS and the first NSYMSDECODED entries of the array SDNEWSYMS."
-            text_inputs.symbols.extend(inputs.input_symbols);
-            text_inputs.symbols.extend(new_symbols);
+            text_inputs.symbols = move(all_symbols);
 
             text_inputs.is_transposed = false;
             text_inputs.reference_corner = JBIG2::ReferenceCorner::TopLeft;
@@ -1092,7 +1088,8 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
                 text_inputs.bit_stream = &bit_stream.value();
             else
                 text_inputs.arithmetic_encoder = &encoder.value();
-            return text_region_encoding_procedure(text_inputs, text_contexts, refinement_contexts);
+            TRY(text_region_encoding_procedure(text_inputs, text_contexts, refinement_contexts));
+            return get_strip_symbol_image(symbol.size, refines_using_strips, text_inputs.symbols);
         }
 
         // "3) If REFAGGNINST is equal to one, then decode the bitmap as described in 6.5.8.2.2."
@@ -1118,10 +1115,7 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
         if (refinement_image.symbol_id >= inputs.input_symbols.size() && refinement_image.symbol_id - inputs.input_symbols.size() >= new_symbols.size())
             return Error::from_string_literal("JBIG2Writer: Refinement/aggregate symbol ID out of range");
 
-        Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> all_symbols;
-        all_symbols.extend(inputs.input_symbols);
-        all_symbols.extend(new_symbols);
-        auto const& IBO = TRY(symbol_image(all_symbols[refinement_image.symbol_id], all_symbols));
+        auto const& IBO = all_symbols[refinement_image.symbol_id];
 
         MQArithmeticEncoder* refinement_encoder = nullptr;
         Optional<MQArithmeticEncoder> huffman_refinement_encoder;
@@ -1151,7 +1145,7 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
             TRY(stream->write_until_depleted(data));
         }
 
-        return {};
+        return refinement_image.refines_to;
     };
 
     auto write_height_class_collective_bitmap = [&](BilevelImage const& image, bool compress) -> ErrorOr<void> {
@@ -1254,8 +1248,8 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
             //      Let BS be the decoded bitmap (this bitmap has width SYMWIDTH and height HCHEIGHT). Set:
             //          SDNEWSYMS[NSYMSDECODED] = BS"
             if (!inputs.uses_huffman_encoding || inputs.uses_refinement_or_aggregate_coding) {
-                TRY(write_symbol_bitmap(symbol));
-                new_symbols.append(symbol);
+                auto bitmap = TRY(write_symbol_bitmap(symbol));
+                new_symbols.append(bitmap);
             }
 
             // "iii) If SDHUFF is 1 and SDREFAGG is 0, then set:
@@ -1291,7 +1285,7 @@ static ErrorOr<ByteBuffer> symbol_dictionary_encoding_procedure(SymbolDictionary
                 auto bitmap = symbol.image.get<NonnullRefPtr<BilevelImage>>();
                 bitmap->composite_onto(collective_bitmap, { current_column, 0 }, BilevelImage::CompositionType::Replace);
                 VERIFY(static_cast<int>(bitmap->width()) == symbol.size.width());
-                new_symbols.append(symbol);
+                new_symbols.append(bitmap);
                 current_column += symbol.size.width();
             }
             TRY(write_height_class_collective_bitmap(collective_bitmap, height_class.is_collective_bitmap_compressed));
@@ -1556,7 +1550,7 @@ struct JBIG2EncodingContext {
     HashMap<u32, Vector<JBIG2::Code>> codes_by_segment_id;
     HashMap<u32, JBIG2::HuffmanTable> tables_by_segment_id;
 
-    HashMap<u32, Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol>> symbols_by_segment_id;
+    HashMap<u32, Vector<NonnullRefPtr<BilevelImage>>> symbols_by_segment_id;
 
     struct BitmapCodingContextState {
         Optional<JBIG2::GenericContexts> generic_contexts;
@@ -1707,7 +1701,7 @@ static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData
 {
     // Get referred-to symbol and table segments off header.referred_to_segments.
     Vector<JBIG2::HuffmanTable const*> custom_tables;
-    Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> input_symbols;
+    Vector<NonnullRefPtr<BilevelImage>> input_symbols;
     Optional<u32> last_referred_to_symbol_dictionary_segment_id;
     for (auto const& referred_to_segment_number : header.referred_to_segments) {
         auto maybe_segment = context.segment_by_id.get(referred_to_segment_number.segment_number);
@@ -1787,7 +1781,7 @@ static ErrorOr<void> encode_symbol_dictionary(JBIG2::SymbolDictionarySegmentData
             refinement_contexts = JBIG2::RefinementContexts(inputs.refinement_template);
     }
 
-    Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> exported_symbols;
+    Vector<NonnullRefPtr<BilevelImage>> exported_symbols;
     ByteBuffer data = TRY(symbol_dictionary_encoding_procedure(inputs, generic_contexts, refinement_contexts, exported_symbols));
 
     u32 number_of_exported_symbols = exported_symbols.size();
@@ -1945,7 +1939,7 @@ static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text
 {
     // Get referred-to symbol dictionaries and tables off header.referred_to_segments.
     Vector<JBIG2::HuffmanTable const*> custom_tables;
-    Vector<JBIG2::SymbolDictionarySegmentData::HeightClass::Symbol> symbols;
+    Vector<NonnullRefPtr<BilevelImage>> symbols;
     for (auto const& referred_to_segment_number : header.referred_to_segments) {
         auto maybe_segment = context.segment_by_id.get(referred_to_segment_number.segment_number);
         if (!maybe_segment.has_value())
