@@ -225,7 +225,7 @@ private:
     Metadata m_metadata;
 };
 
-// Sent/recieved to indicate the status of the current file transfer.
+// Sent/received to indicate the status of the current file transfer.
 class FileTransferStatusMessage : public Message {
 public:
     FileTransferStatusMessage(u32 id, FileTransferStatus status)
