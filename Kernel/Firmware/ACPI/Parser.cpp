@@ -40,9 +40,8 @@ void Parser::must_initialize(PhysicalAddress rsdp, PhysicalAddress fadt, u8 irq_
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<ACPISysFSComponent> ACPISysFSComponent::create(StringView name, PhysicalAddress paddr, size_t table_size)
 {
-    // FIXME: Handle allocation failure gracefully
     auto table_name = KString::must_create(name);
-    return adopt_lock_ref(*new (nothrow) ACPISysFSComponent(move(table_name), paddr, table_size));
+    return MUST(adopt_nonnull_lock_ref_or_enomem(new (nothrow) ACPISysFSComponent(move(table_name), paddr, table_size)));
 }
 
 ErrorOr<size_t> ACPISysFSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
