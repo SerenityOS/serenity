@@ -22,7 +22,7 @@ This is a roughly categorized list of pages relating to SerenityOS and its subpr
 -   [Issues Found by OSS-Fuzz Continuous Fuzzing](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=label:Proj-serenity)
 -   [LibJS website](https://serenityos.github.io/libjs-website/)
     -   [Try LibJS Online!](https://serenityos.github.io/libjs-website/repl/)
--   [Compiler Explorer](https://serenity.godbolt.org/): Select "Lagom trunk" under "Libraries" and add the compiler option `-std=c++23`
+-   [Compiler Explorer](https://serenity.godbolt.org/): Select "Lagom trunk" under "Libraries" and add the compiler option `-std=c++26`
 
 ## Related Projects
 

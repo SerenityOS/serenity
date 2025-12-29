@@ -14,7 +14,7 @@ Optional: `fuse2fs` for [building images without root](https://github.com/Sereni
 
 #### GCC 14 or Clang 17+
 
-A host compiler that supports C++23 features is required for building host tools, the newer the better. Tested versions include gcc-14 and Clang 17 through 19.
+A host compiler that supports C++26 features is required for building host tools, the newer the better. Tested versions include gcc-14 and Clang 17 through 19.
 
 On Ubuntu gcc-14 is available in the repositories of 24.04 (Noble) and later.
 If you are running an older version, you will either need to upgrade, or find an alternative installation source

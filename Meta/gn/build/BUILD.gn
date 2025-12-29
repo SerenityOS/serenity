@@ -99,12 +99,7 @@ config("compiler_defaults") {
     ldflags += [ "-Wl,--color-diagnostics" ]
   }
 
-  if (current_os == "mac") {
-    # FIXME: Use -std=c++23 once Xcode's clang supports that.
-    cflags_cc += [ "-std=c++2b" ]
-  } else {
-    cflags_cc += [ "-std=c++23" ]
-  }
+  cflags_cc += [ "-std=c++26" ]
 
   cflags_cc += [ "-fvisibility-inlines-hidden" ]
 

@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: "jake.westrip" <jake.westrip@lonsec.com.au>
 Date: Tue, 27 Apr 2021 18:34:53 +1000
-Subject: [PATCH] Set C++ standard to C++20 and remove some unnecessary
+Subject: [PATCH] Set C++ standard to C++26 and remove some unnecessary
  subdirectories
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH] Set C++ standard to C++20 and remove some unnecessary
  1 file changed, 2 insertions(+), 4 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 4bdecf1..a64b843 100644
+index 4bdecf1b51d6ab14865dd242c98531bbc4d0ebb8..2e7f4339fd056b1bc0f3bd10c1397ce15d77b92b 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -22,8 +22,8 @@
@@ -18,8 +18,8 @@ index 4bdecf1..a64b843 100644
  
 -# Set C++ standard to C++98
 -set(CMAKE_CXX_STANDARD 98)
-+# Set C++ standard to C++20
-+set(CMAKE_CXX_STANDARD 20)
++# Set C++ standard to C++26
++set(CMAKE_CXX_STANDARD 26)
  set(CMAKE_CXX_EXTENSIONS OFF)
  
  # Enable IDE solution folders

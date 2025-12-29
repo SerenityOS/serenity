@@ -43,9 +43,9 @@ Co-Authored-By: sdomi <ja@sdomi.pl>
  src/video/serenity/SDL_serenitymessagebox.h   |  38 +
  src/video/serenity/SDL_serenitymouse.cpp      | 157 +++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
- src/video/serenity/SDL_serenityvideo.cpp      | 659 ++++++++++++++++++
+ src/video/serenity/SDL_serenityvideo.cpp      | 658 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 21 files changed, 1379 insertions(+), 28 deletions(-)
+ 21 files changed, 1378 insertions(+), 28 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -132,7 +132,7 @@ index 4aaae46f6f74428949f32922308f48bd1316e7c1..9491448493b88c7bd54e3fbfcb9e518d
  		os=`echo "$os" | sed -e 's|sunos5|solaris2|'`
  		;;
 diff --git a/cmake/sdlchecks.cmake b/cmake/sdlchecks.cmake
-index ea4c0ff4300ea8dcffad6af9da57ac10d120bc04..172fc896e32902a947788ef11ac3dd67d49c62f4 100644
+index ea4c0ff4300ea8dcffad6af9da57ac10d120bc04..033037b4306efa5e9f463c890e4b25157ccb3208 100644
 --- a/cmake/sdlchecks.cmake
 +++ b/cmake/sdlchecks.cmake
 @@ -809,6 +809,26 @@ macro(CheckDirectFB)
@@ -148,7 +148,7 @@ index ea4c0ff4300ea8dcffad6af9da57ac10d120bc04..172fc896e32902a947788ef11ac3dd67
 +    set(HAVE_SDL_VIDEO TRUE)
 +    set(HAVE_SDL_AUDIO TRUE)
 +
-+    set(CMAKE_CXX_FLAGS "-std=c++23 -fno-exceptions ${CMAKE_CXX_FLAGS}")
++    set(CMAKE_CXX_FLAGS "-std=c++26 -fno-exceptions ${CMAKE_CXX_FLAGS}")
 +    file(GLOB SERENITY_SOURCES ${SDL2_SOURCE_DIR}/src/video/serenity/*.cpp ${SDL2_SOURCE_DIR}/src/audio/serenity/*.cpp)
 +    list(APPEND SOURCE_FILES ${SERENITY_SOURCES})
 +    set(SDL_VIDEO_DRIVER_SERENITY 1)
@@ -910,7 +910,7 @@ index 0000000000000000000000000000000000000000..039f0361b3d1b248e218ea69495f58e5
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..64f956a456730cfd99998566810c04df64a1bfa0
+index 0000000000000000000000000000000000000000..9299649cfa64e256c1cee8d138c49cb5fd68cbd8
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
 @@ -0,0 +1,658 @@

@@ -45,7 +45,7 @@ Use the following settings to ensure that coc-clangd works out of the box.
 
 ```json
 {
-    "clangd.fallbackFlags": ["-std=c++23"],
+    "clangd.fallbackFlags": ["-std=c++26"],
     "clangd.arguments": ["--query-driver=${workspaceFolder}/Toolchain/Local/**/*"],
     "semanticTokens.enable": true,
     "inlayHint.subSeparator": "︴",

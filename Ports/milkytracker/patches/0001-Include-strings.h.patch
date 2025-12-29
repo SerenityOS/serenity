@@ -8,7 +8,7 @@ Subject: [PATCH] Include strings.h
  1 file changed, 1 insertion(+)
 
 diff --git a/src/ppui/BasicTypes.h b/src/ppui/BasicTypes.h
-index 20eba8b..e353345 100644
+index 20eba8bc79b10ca7cb5f9eb02678c5e493eb55f9..e353345fb0bd485bea10f45954f28ba8dfd3683c 100644
 --- a/src/ppui/BasicTypes.h
 +++ b/src/ppui/BasicTypes.h
 @@ -30,6 +30,7 @@ typedef signed short	pp_int16;

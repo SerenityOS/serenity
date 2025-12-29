@@ -8,7 +8,7 @@ Subject: [PATCH] Remove OpenGL
  1 file changed, 2 insertions(+), 40 deletions(-)
 
 diff --git a/src/ppui/sdl/DisplayDevice_SDL.cpp b/src/ppui/sdl/DisplayDevice_SDL.cpp
-index a4b966c..7ecedc7 100644
+index a4b966cff12fb73d73f970ac610e23bf9df604b0..7ecedc7a369cd862a0e6bd1a9221ff12252e1da1 100644
 --- a/src/ppui/sdl/DisplayDevice_SDL.cpp
 +++ b/src/ppui/sdl/DisplayDevice_SDL.cpp
 @@ -26,30 +26,8 @@

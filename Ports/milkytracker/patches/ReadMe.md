@@ -10,9 +10,9 @@ Include strings.h
 Remove OpenGL
 
 
-## `0003-Set-C-standard-to-C-20-and-remove-some-unnecessary-s.patch`
+## `0003-Set-C-standard-to-C-26-and-remove-some-unnecessary-s.patch`
 
-Set C++ standard to C++20 and remove some unnecessary subdirectories
+Set C++ standard to C++26 and remove some unnecessary subdirectories
 
 
 ## `0004-Link-against-the-needed-serenity-libraries.patch`
