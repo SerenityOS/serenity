@@ -87,3 +87,9 @@ runs:
         set -e
         brew update
         brew install coreutils bash ninja wabt ccache unzip qt llvm@18
+
+    - name: 'Select Xcode version'
+      if: ${{ inputs.os == 'macOS' }}
+      shell: bash
+      run: |
+          sudo xcode-select -s /Applications/Xcode_26.1.app/Contents/Developer
