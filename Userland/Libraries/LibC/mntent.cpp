@@ -4,33 +4,31 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
-#include <assert.h>
 #include <mntent.h>
 
 extern "C" {
 
-struct mntent* getmntent(FILE*)
+struct mntent* getmntent([[maybe_unused]] FILE* stream)
 {
-    dbgln("FIXME: Implement getmntent()");
+    // FIXME: Implement getmntent()
     return nullptr;
 }
 
-FILE* setmntent(char const*, char const*)
+FILE* setmntent([[maybe_unused]] char const* filename, [[maybe_unused]] char const* type)
 {
-    dbgln("FIXME: Implement setmntent()");
+    // FIXME: Implement setmntent()
     return nullptr;
 }
 
-int endmntent(FILE*)
+int endmntent([[maybe_unused]] FILE* stream)
 {
-    dbgln("FIXME: Implement endmntent()");
-    return 0;
+    // FIXME: Implement endmntent()
+    return 1;
 }
 
-struct mntent* getmntent_r(FILE*, struct mntent*, char*, int)
+struct mntent* getmntent_r([[maybe_unused]] FILE* stream, [[maybe_unused]] struct mntent* mntbuf, [[maybe_unused]] char* buf, [[maybe_unused]] int buflen)
 {
-    dbgln("FIXME: Implement getmntent_r()");
-    return 0;
+    // FIXME: Implement getmntent_r()
+    return nullptr;
 }
 }

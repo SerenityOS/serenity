@@ -4,20 +4,22 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
+#include <errno.h>
 #include <sys/resource.h>
 
 extern "C" {
 
 int getpriority([[maybe_unused]] int which, [[maybe_unused]] id_t who)
 {
-    dbgln("FIXME: Implement getpriority()");
+    // FIXME: Implement getpriority()
+    errno = ENOSYS;
     return -1;
 }
 
 int setpriority([[maybe_unused]] int which, [[maybe_unused]] id_t who, [[maybe_unused]] int value)
 {
-    dbgln("FIXME: Implement setpriority()");
+    // FIXME: Implement setpriority()
+    errno = ENOSYS;
     return -1;
 }
 }

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
 #include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <stdio.h>
@@ -85,16 +84,16 @@ int posix_madvise(void* address, size_t len, int advice)
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/mlock.html
-int mlock(void const*, size_t)
+int mlock([[maybe_unused]] void const* addr, [[maybe_unused]] size_t len)
 {
-    dbgln("FIXME: Implement mlock()");
+    // FIXME: Implement mlock()
     return 0;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/munlock.html
-int munlock(void const*, size_t)
+int munlock([[maybe_unused]] void const* addr, [[maybe_unused]] size_t len)
 {
-    dbgln("FIXME: Implement munlock()");
+    // FIXME: Implement munlock()
     return 0;
 }
 
