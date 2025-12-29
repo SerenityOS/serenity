@@ -69,9 +69,9 @@
                                 "image_data": {
                                     "from_file": "bitmap.bmp",
                                     "crop": {
-                                        "x": 135,
-                                        "y": 160,
-                                        "width": 60,
+                                        "x": 50,
+                                        "y": 108,
+                                        "width": 40,
                                         "height": 40
                                     }
                                 }
@@ -80,9 +80,9 @@
                                 "image_data": {
                                     "from_file": "bitmap.bmp",
                                     "crop": {
-                                        "x": 50,
-                                        "y": 108,
-                                        "width": 40,
+                                        "x": 135,
+                                        "y": 160,
+                                        "width": 60,
                                         "height": 40
                                     }
                                 }
@@ -95,9 +95,9 @@
                                 "image_data": {
                                     "from_file": "bitmap.bmp",
                                     "crop": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "width": 59,
+                                        "x": 195,
+                                        "y": 100,
+                                        "width": 40,
                                         "height": 60
                                     }
                                 }
@@ -106,9 +106,9 @@
                                 "image_data": {
                                     "from_file": "bitmap.bmp",
                                     "crop": {
-                                        "x": 195,
-                                        "y": 100,
-                                        "width": 40,
+                                        "x": 0,
+                                        "y": 0,
+                                        "width": 59,
                                         "height": 60
                                     }
                                 }
@@ -164,7 +164,7 @@
                         "symbols": [
                             {
                                 "refines_symbol_to": {
-                                    "symbol_id": 4,
+                                    "symbol_id": 5,
                                     "delta_x_offset": 0,
                                     "delta_y_offset": 0,
                                     "image_data": {
@@ -195,7 +195,7 @@
                                                 {
                                                     "instance_s": 60,
                                                     "instance_t": 0,
-                                                    "symbol_id": 5
+                                                    "symbol_id": 4
                                                 }
                                             ]
                                         }
@@ -244,12 +244,12 @@
                                                 {
                                                     "instance_s": 0,
                                                     "instance_t": 60,
-                                                    "symbol_id": 2
+                                                    "symbol_id": 3
                                                 },
                                                 {
                                                     "instance_s": 60,
                                                     "instance_t": 60,
-                                                    "symbol_id": 3
+                                                    "symbol_id": 2
                                                 }
                                             ]
                                         }
