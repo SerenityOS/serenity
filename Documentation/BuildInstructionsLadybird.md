@@ -5,7 +5,7 @@
 
 ## Build Prerequisites
 
-Qt6 development packages and a C++23 capable compiler are required. g++-13 or clang-17 are required at a minimum for c++23 support.
+Qt6 development packages and a C++23 capable compiler are required. g++-14 or clang-17 are required at a minimum for c++23 support.
 
 On Debian/Ubuntu required packages include, but are not limited to:
 
@@ -149,7 +149,7 @@ The install rules in Ladybird/cmake/InstallRules.cmake define which binaries and
 installed into the configured CMAKE_PREFIX_PATH or path passed to `cmake --install`.
 
 Note that when using a custom build directory rather than Meta/serenity.sh, the user may need to provide
-a suitable C++ compiler (g++ >= 13, clang >= 14, Apple Clang >= 14.3) via the CMAKE_CXX_COMPILER and
+a suitable C++ compiler (g++ >= 14, clang >= 14, Apple Clang >= 14.3) via the CMAKE_CXX_COMPILER and
 CMAKE_C_COMPILER cmake options.
 
 ```
