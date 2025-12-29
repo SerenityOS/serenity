@@ -238,7 +238,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             output_stream = TRY(Compress::LzmaCompressor::create_container(move(output_stream), {}));
 
         if (xz)
-            TODO();
+            return Error::from_string_literal("Creating XZ compressed archives is not supported");
 
         Archive::TarOutputStream tar_stream(move(output_stream));
 
