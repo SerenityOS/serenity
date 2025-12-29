@@ -4,11 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
 #include <fnmatch.h>
 
-int fnmatch(char const*, char const*, int)
+// https://pubs.opengroup.org/onlinepubs/9699919799/functions/fnmatch.html
+int fnmatch([[maybe_unused]] char const* pattern, [[maybe_unused]] char const* string, [[maybe_unused]] int flags)
 {
-    dbgln("FIXME: Implement fnmatch()");
-    return 0;
+    // FIXME: Implement fnmatch()
+    // Returning FNM_NOMATCH is safer than returning 0 (match) for unimplemented function
+    return FNM_NOMATCH;
 }
