@@ -35,12 +35,16 @@ Partition::DiskPartitionMetadata const& StorageDevicePartition::metadata() const
 void StorageDevicePartition::start_request(AsyncBlockDeviceRequest& request)
 {
     auto device = m_device.strong_ref();
-    if (!device)
+    if (!device) {
         request.complete(AsyncBlockDeviceRequest::RequestResult::Failure);
+        return;
+    }
     auto sub_request_or_error = device->try_make_request<AsyncBlockDeviceRequest>(request.request_type(),
         request.block_index() + m_metadata.start_block(), request.block_count(), request.buffer(), request.buffer_size());
-    if (sub_request_or_error.is_error())
-        TODO();
+    if (sub_request_or_error.is_error()) {
+        request.complete(AsyncBlockDeviceRequest::RequestResult::Failure);
+        return;
+    }
     request.add_sub_request(sub_request_or_error.release_value());
 }
 
