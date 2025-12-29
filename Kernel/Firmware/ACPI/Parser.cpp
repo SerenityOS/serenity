@@ -77,7 +77,7 @@ UNMAP_AFTER_INIT void ACPISysFSDirectory::find_tables_and_register_them_as_compo
     MUST(m_child_components.with([&](auto& list) -> ErrorOr<void> {
         ACPI::Parser::the()->enumerate_static_tables([&](StringView signature, PhysicalAddress p_table, size_t length) {
             if (signature == "SSDT") {
-                auto component_name = KString::formatted("{:4s}{}", signature, ssdt_count).release_value_but_fixme_should_propagate_errors();
+                auto component_name = MUST(KString::formatted("{:4s}{}", signature, ssdt_count));
                 list.append(ACPISysFSComponent::create(component_name->view(), p_table, length));
                 ssdt_count++;
                 return;
@@ -88,9 +88,9 @@ UNMAP_AFTER_INIT void ACPISysFSDirectory::find_tables_and_register_them_as_compo
     }));
 
     MUST(m_child_components.with([&](auto& list) -> ErrorOr<void> {
-        auto rsdp = Memory::map_typed<Structures::RSDPDescriptor20>(ACPI::Parser::the()->rsdp()).release_value_but_fixme_should_propagate_errors();
+        auto rsdp = MUST(Memory::map_typed<Structures::RSDPDescriptor20>(ACPI::Parser::the()->rsdp()));
         list.append(ACPISysFSComponent::create("RSDP"sv, ACPI::Parser::the()->rsdp(), rsdp->base.revision == 0 ? sizeof(Structures::RSDPDescriptor) : rsdp->length));
-        auto main_system_description_table = Memory::map_typed<Structures::SDTHeader>(ACPI::Parser::the()->main_system_description_table()).release_value_but_fixme_should_propagate_errors();
+        auto main_system_description_table = MUST(Memory::map_typed<Structures::SDTHeader>(ACPI::Parser::the()->main_system_description_table()));
         if (ACPI::Parser::the()->is_xsdt_supported()) {
             list.append(ACPISysFSComponent::create("XSDT"sv, ACPI::Parser::the()->main_system_description_table(), main_system_description_table->length));
         } else {
@@ -115,7 +115,7 @@ UNMAP_AFTER_INIT ACPISysFSDirectory::ACPISysFSDirectory(SysFSFirmwareDirectory& 
 void Parser::enumerate_static_tables(Function<void(StringView, PhysicalAddress, size_t)> callback)
 {
     for (auto& p_table : m_sdt_pointers) {
-        auto table = Memory::map_typed<Structures::SDTHeader>(p_table).release_value_but_fixme_should_propagate_errors();
+        auto table = MUST(Memory::map_typed<Structures::SDTHeader>(p_table));
         callback({ table->sig, 4 }, p_table, table->length);
     }
 }
@@ -166,7 +166,7 @@ UNMAP_AFTER_INIT void Parser::process_fadt_data()
     VERIFY(!m_fadt.is_null());
     dbgln_if(ACPI_DEBUG, "ACPI: FADT @ {}", m_fadt);
 
-    auto sdt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
+    auto sdt = MUST(Memory::map_typed<Structures::FADT>(m_fadt));
     dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", (size_t)sdt->h.revision, (size_t)sdt->h.length);
     m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
 
@@ -204,10 +204,10 @@ UNMAP_AFTER_INIT void Parser::process_fadt_data()
 
 UNMAP_AFTER_INIT void Parser::process_dsdt()
 {
-    auto sdt = Memory::map_typed<Structures::FADT>(m_fadt).release_value_but_fixme_should_propagate_errors();
+    auto sdt = MUST(Memory::map_typed<Structures::FADT>(m_fadt));
 
     // Add DSDT-pointer to expose the full table in /sys/firmware/acpi/
-    m_sdt_pointers.try_append(PhysicalAddress(sdt->dsdt_ptr)).release_value_but_fixme_should_propagate_errors();
+    MUST(m_sdt_pointers.try_append(PhysicalAddress(sdt->dsdt_ptr)));
 
     auto dsdt_or_error = Memory::map_typed<Structures::DSDT>(PhysicalAddress(sdt->dsdt_ptr));
     if (dsdt_or_error.is_error()) {
@@ -259,16 +259,16 @@ void Parser::access_generic_address(Structures::GenericAddressStructure const& s
         dbgln("ACPI: Sending value {:x} to {}", value, PhysicalAddress(structure.address));
         switch ((GenericAddressStructure::AccessSize)structure.access_size) {
         case GenericAddressStructure::AccessSize::Byte:
-            *Memory::map_typed<u8>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *MUST(Memory::map_typed<u8>(PhysicalAddress(structure.address))) = value;
             break;
         case GenericAddressStructure::AccessSize::Word:
-            *Memory::map_typed<u16>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *MUST(Memory::map_typed<u16>(PhysicalAddress(structure.address))) = value;
             break;
         case GenericAddressStructure::AccessSize::DWord:
-            *Memory::map_typed<u32>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *MUST(Memory::map_typed<u32>(PhysicalAddress(structure.address))) = value;
             break;
         case GenericAddressStructure::AccessSize::QWord: {
-            *Memory::map_typed<u64>(PhysicalAddress(structure.address)).release_value_but_fixme_should_propagate_errors() = value;
+            *MUST(Memory::map_typed<u64>(PhysicalAddress(structure.address))) = value;
             break;
         }
         default:
@@ -333,14 +333,14 @@ size_t Parser::get_table_size(PhysicalAddress table_header)
 {
     InterruptDisabler disabler;
     dbgln_if(ACPI_DEBUG, "ACPI: Checking SDT Length");
-    return Memory::map_typed<Structures::SDTHeader>(table_header).release_value_but_fixme_should_propagate_errors()->length;
+    return MUST(Memory::map_typed<Structures::SDTHeader>(table_header))->length;
 }
 
 u8 Parser::get_table_revision(PhysicalAddress table_header)
 {
     InterruptDisabler disabler;
     dbgln_if(ACPI_DEBUG, "ACPI: Checking SDT Revision");
-    return Memory::map_typed<Structures::SDTHeader>(table_header).release_value_but_fixme_should_propagate_errors()->revision;
+    return MUST(Memory::map_typed<Structures::SDTHeader>(table_header))->revision;
 }
 
 UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
@@ -350,7 +350,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
     auto length = get_table_size(m_main_system_description_table);
     auto revision = get_table_revision(m_main_system_description_table);
 
-    auto sdt = Memory::map_typed<Structures::SDTHeader>(m_main_system_description_table, length).release_value_but_fixme_should_propagate_errors();
+    auto sdt = MUST(Memory::map_typed<Structures::SDTHeader>(m_main_system_description_table, length));
 
     dmesgln("ACPI: Main Description Table valid? {}", validate_table(*sdt, length));
 
@@ -361,7 +361,7 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
         dbgln_if(ACPI_DEBUG, "ACPI: XSDT pointer @ {}", VirtualAddress { &xsdt });
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u64)); i++) {
             dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &xsdt.table_ptrs[i]);
-            m_sdt_pointers.try_append(PhysicalAddress(xsdt.table_ptrs[i])).release_value_but_fixme_should_propagate_errors();
+            MUST(m_sdt_pointers.try_append(PhysicalAddress(xsdt.table_ptrs[i])));
         }
     } else {
         auto& rsdt = (Structures::RSDT const&)*sdt;
@@ -370,14 +370,14 @@ UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
         dbgln_if(ACPI_DEBUG, "ACPI: RSDT pointer @ V{}", &rsdt);
         for (u32 i = 0; i < ((length - sizeof(Structures::SDTHeader)) / sizeof(u32)); i++) {
             dbgln_if(ACPI_DEBUG, "ACPI: Found new table [{0}], @ V{1:p} - P{1:p}", i, &rsdt.table_ptrs[i]);
-            m_sdt_pointers.try_append(PhysicalAddress(rsdt.table_ptrs[i])).release_value_but_fixme_should_propagate_errors();
+            MUST(m_sdt_pointers.try_append(PhysicalAddress(rsdt.table_ptrs[i])));
         }
     }
 }
 
 UNMAP_AFTER_INIT void Parser::locate_main_system_description_table()
 {
-    auto rsdp = Memory::map_typed<Structures::RSDPDescriptor20>(m_rsdp).release_value_but_fixme_should_propagate_errors();
+    auto rsdp = MUST(Memory::map_typed<Structures::RSDPDescriptor20>(m_rsdp));
     if (rsdp->base.revision == 0) {
         m_xsdt_supported = false;
     } else if (rsdp->base.revision >= 2) {
