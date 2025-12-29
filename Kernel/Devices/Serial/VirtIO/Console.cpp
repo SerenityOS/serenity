@@ -26,6 +26,16 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<Console>> Console::create_for_pci_instanc
 UNMAP_AFTER_INIT ErrorOr<void> Console::initialize_virtio_resources()
 {
     TRY(Device::initialize_virtio_resources());
+
+    // NOTE: We require the VIRTIO_F_IN_ORDER feature to ensure that buffers are used by the device
+    // in the same order they were made available. Without this guarantee, the RingBuffer's
+    // reclaim_space() would fail its FIFO assertion when buffers are returned out-of-order.
+    // See GitHub issue #26210 for more details.
+    if (!is_feature_accepted(VIRTIO_F_IN_ORDER)) {
+        dmesgln("VirtIO::Console: VIRTIO_F_IN_ORDER feature is required but not supported by device");
+        return ENOTSUP;
+    }
+
     auto const* cfg = TRY(transport_entity().get_config(VirtIO::ConfigurationType::Device));
     TRY(negotiate_features([&](u64 supported_features) {
         u64 negotiated = 0;
