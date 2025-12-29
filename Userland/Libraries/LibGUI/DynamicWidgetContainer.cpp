@@ -241,13 +241,13 @@ ErrorOr<void> DynamicWidgetContainer::detach_widgets()
         root_container->set_fill_with_background_color(true);
         root_container->set_layout<GUI::VerticalBoxLayout>();
         root_container->set_frame_style(Gfx::FrameStyle::Window);
-        auto transfer_children = [this](auto reciever, auto children) {
+        auto transfer_children = [this](auto receiver, auto children) {
             for (NonnullRefPtr<GUI::Widget> widget : children) {
                 if (widget == m_controls_widget)
                     continue;
                 widget->remove_from_parent();
                 widget->set_visible(true);
-                reciever->add_child(widget);
+                receiver->add_child(widget);
             }
         };
 

@@ -36,7 +36,7 @@ public:
     // Fired by SpiceAgent when we have received all of the data needed for this transfer.
     ErrorOr<void> complete_transfer(SpiceAgent& agent);
 
-    // Fired by the SpiceAgent when it recieves data related to this transfer.
+    // Fired by the SpiceAgent when it receives data related to this transfer.
     ErrorOr<void> on_data_received(FileTransferDataMessage& message);
 
 private:
