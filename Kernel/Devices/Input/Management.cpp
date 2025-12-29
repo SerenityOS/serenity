@@ -87,13 +87,12 @@ void InputManagement::set_client(KeyboardClient* client)
 
 size_t InputManagement::generate_minor_device_number_for_mouse()
 {
-    // FIXME: Lock this to prevent race conditions with hot-plugging devices!
-    return m_mouse_minor_number++;
+    return m_mouse_minor_number.fetch_add(1);
 }
+
 size_t InputManagement::generate_minor_device_number_for_keyboard()
 {
-    // FIXME: Lock this to prevent race conditions with hot-plugging devices!
-    return m_keyboard_minor_number++;
+    return m_keyboard_minor_number.fetch_add(1);
 }
 
 UNMAP_AFTER_INIT InputManagement::KeymapData::KeymapData()
