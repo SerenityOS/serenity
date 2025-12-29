@@ -1,7 +1,7 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Andrew Kaster <andrewdkaster@gmail.com>
 Date: Sun, 12 Jun 2022 23:13:56 -0600
-Subject: [PATCH] make: Build with c++23 when targeting serenity
+Subject: [PATCH] make: Build with c++26 when targeting serenity
 
 ---
  make/autoconf/flags-cflags.m4                 | 8 ++++++--
@@ -12,7 +12,7 @@ Subject: [PATCH] make: Build with c++23 when targeting serenity
  5 files changed, 10 insertions(+), 6 deletions(-)
 
 diff --git a/make/autoconf/flags-cflags.m4 b/make/autoconf/flags-cflags.m4
-index 88679489fc09019212286e0cb75885a05103dc85..f1cf955434f65b8cecb00af9f600e93089bd5dd0 100644
+index 88679489fc09019212286e0cb75885a05103dc85..8222672a1dfe23d40225e631777d5b492a7c6d19 100644
 --- a/make/autoconf/flags-cflags.m4
 +++ b/make/autoconf/flags-cflags.m4
 @@ -187,7 +187,8 @@ AC_DEFUN([FLAGS_SETUP_WARNINGS],
@@ -39,7 +39,7 @@ index 88679489fc09019212286e0cb75885a05103dc85..f1cf955434f65b8cecb00af9f600e930
      AC_MSG_ERROR([Don't know how to enable C++14 for this toolchain])
    fi
 +  if test "x$OPENJDK_TARGET_OS" = xserenity; then
-+    LANGSTD_CXXFLAGS="-std=c++23"
++    LANGSTD_CXXFLAGS="-std=c++26"
 +  fi
    TOOLCHAIN_CFLAGS_JDK_CXXONLY="$TOOLCHAIN_CFLAGS_JDK_CXXONLY $LANGSTD_CXXFLAGS"
    TOOLCHAIN_CFLAGS_JVM="$TOOLCHAIN_CFLAGS_JVM $LANGSTD_CXXFLAGS"

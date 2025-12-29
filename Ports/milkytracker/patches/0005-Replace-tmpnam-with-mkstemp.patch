@@ -8,7 +8,7 @@ Subject: [PATCH] Replace tmpnam with mkstemp
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/ppui/osinterface/posix/PPSystem_POSIX.cpp b/src/ppui/osinterface/posix/PPSystem_POSIX.cpp
-index 9b84cfe..03b22b4 100644
+index 9b84cfe6e2b3087df8f1215b9ba348f8d30c9b4b..03b22b4834a06b96de644db0bf4ab6de83e01e03 100644
 --- a/src/ppui/osinterface/posix/PPSystem_POSIX.cpp
 +++ b/src/ppui/osinterface/posix/PPSystem_POSIX.cpp
 @@ -67,7 +67,7 @@ const SYSCHAR* System::getTempFileName()

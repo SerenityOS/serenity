@@ -13,7 +13,7 @@ Signed-off-by: Jan200101 <sentrycraft123@gmail.com>
  create mode 100644 src/api/dirmonitor/inodewatcher.cpp
 
 diff --git a/meson.build b/meson.build
-index 3f88be37..70627782 100644
+index 3f88be37c3353869a7db127ccf44cdfcd181cd94..7782ecf9b8bbd4f5cc73f54e774b4afd48707369 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -4,7 +4,8 @@ project('lite-xl',
@@ -22,13 +22,13 @@ index 3f88be37..70627782 100644
      default_options : [
 -        'c_std=gnu11'
 +        'c_std=gnu11',
-+        'cpp_std=c++20'
++        'cpp_std=c++26'
      ]
  )
  
 diff --git a/src/api/dirmonitor/inodewatcher.cpp b/src/api/dirmonitor/inodewatcher.cpp
 new file mode 100644
-index 00000000..e749f5bd
+index 0000000000000000000000000000000000000000..e749f5bd8c5b16dd348f19bf9f5c450fbe0bf018
 --- /dev/null
 +++ b/src/api/dirmonitor/inodewatcher.cpp
 @@ -0,0 +1,75 @@
@@ -108,7 +108,7 @@ index 00000000..e749f5bd
 +
 +int get_mode_dirmonitor() { return 2; }
 diff --git a/src/main.c b/src/main.c
-index dca3cbd1..e11fb7ae 100644
+index dca3cbd1eb2990b9f1517a826022f07a21ec9ecb..e11fb7aeb428a38fb43e64cd76424c711c2bf9a5 100644
 --- a/src/main.c
 +++ b/src/main.c
 @@ -9,7 +9,7 @@
@@ -140,7 +140,7 @@ index dca3cbd1..e11fb7ae 100644
  
    #if !defined(ARCH_PROCESSOR) || !defined(ARCH_PLATFORM)
 diff --git a/src/meson.build b/src/meson.build
-index a156ae3f..501914c8 100644
+index a156ae3f2582d195b6cce1e29c33002c9855238b..501914c8687c944a16a19fd229a843146ad4af18 100644
 --- a/src/meson.build
 +++ b/src/meson.build
 @@ -11,20 +11,31 @@ lite_sources = [

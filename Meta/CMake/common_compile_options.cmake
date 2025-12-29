@@ -1,5 +1,15 @@
 # Flags shared by Lagom (including Ladybird) and Serenity.
-set(CMAKE_CXX_STANDARD 23)
+
+# FIXME: Remove this once CMake knows that AppleClang understands -std=c++26.
+# see https://gitlab.kitware.com/cmake/cmake/-/issues/27486
+if (CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+    set(CMAKE_CXX_STANDARD 23)
+    set(CMAKE_CXX23_STANDARD_COMPILE_OPTION "")
+    set(CMAKE_CXX_FLAGS "-std=c++26")
+else()
+    set(CMAKE_CXX_STANDARD 26)
+endif()
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 

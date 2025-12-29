@@ -8,7 +8,7 @@ Subject: [PATCH] Link against the needed serenity libraries
  1 file changed, 3 insertions(+)
 
 diff --git a/src/tracker/CMakeLists.txt b/src/tracker/CMakeLists.txt
-index f4243a0..02f67c0 100644
+index f4243a0fff9a462c68add0f6f5e11d956546f93e..02f67c087a4c60a168fdab74f1d9c8f52f340618 100644
 --- a/src/tracker/CMakeLists.txt
 +++ b/src/tracker/CMakeLists.txt
 @@ -374,4 +374,7 @@ else()
