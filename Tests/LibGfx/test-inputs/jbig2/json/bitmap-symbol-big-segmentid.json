@@ -1,0 +1,150 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+
+        {
+            "segment_number": 256,
+            "type": "symbol_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "height_classes": [
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "width": 399,
+                                        "height": 200
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "segment_number": 257,
+            "type": "lossless_text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 256,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 399,
+                    "height": 200
+                },
+                "flags": {
+                    "strip_size": 4,
+                    "reference_corner": "top_left"
+                },
+                "initial_strip_t": -4,
+                "strips": [
+                    {
+                        "strip_t": 0,
+                        "instances": [
+                            {
+                                "instance_s": 0,
+                                "instance_t": 0,
+                                "symbol_id": 0
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 65536,
+            "type": "symbol_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "height_classes": [
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 200,
+                                        "width": 399,
+                                        "height": 200
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "segment_number": 65537,
+            "type": "lossless_text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 65536,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "x": 0,
+                    "y": 200,
+                    "width": 399,
+                    "height": 200
+                },
+                "flags": {
+                    "strip_size": 4,
+                    "reference_corner": "top_left"
+                },
+                "initial_strip_t": -4,
+                "strips": [
+                    {
+                        "strip_t": 0,
+                        "instances": [
+                            {
+                                "instance_s": 0,
+                                "instance_t": 0,
+                                "symbol_id": 0
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 300000,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}
