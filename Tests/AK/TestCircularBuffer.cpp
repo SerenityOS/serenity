@@ -342,15 +342,11 @@ TEST_CASE(find_copy_in_seekback)
     auto written_needle_bytes = buffer.write(needle);
     VERIFY(written_needle_bytes == needle.size());
 
-    // Note: As of now, the preference during a tie is determined by which algorithm found the match.
-    //       Hash-based matching finds the shortest distance first, while memmem finds the greatest distance first.
-    //       A matching TODO can be found in CircularBuffer.cpp.
-
     {
         // Find the largest match with a length between 1 and 1 (all "A").
         auto match = buffer.find_copy_in_seekback(1, 1);
         EXPECT(match.has_value());
-        EXPECT_EQ(match.value().distance, 11ul);
+        EXPECT_EQ(match.value().distance, 2ul);
         EXPECT_EQ(match.value().length, 1ul);
     }
 
@@ -358,7 +354,7 @@ TEST_CASE(find_copy_in_seekback)
         // Find the largest match with a length between 1 and 2 (all "AB", everything smaller gets eliminated).
         auto match = buffer.find_copy_in_seekback(2, 1);
         EXPECT(match.has_value());
-        EXPECT_EQ(match.value().distance, 11ul);
+        EXPECT_EQ(match.value().distance, 2ul);
         EXPECT_EQ(match.value().length, 2ul);
     }
 
