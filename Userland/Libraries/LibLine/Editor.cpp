@@ -32,6 +32,7 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <poll.h>
 
 namespace Line {
 
@@ -2103,46 +2104,73 @@ VTState actual_rendered_string_length_step(StringMetrics& metrics, size_t index,
     return state;
 }
 
+static void drain_pending_stdin()
+{
+    auto flags = fcntl(0, F_GETFL);
+    if (flags < 0)
+        return;
+
+    ScopeGuard restore_flags { [&] {
+        fcntl(0, F_SETFL, flags);
+    } };
+    fcntl(0, F_SETFL, flags | O_NONBLOCK);
+
+    char buffer[256];
+    while (read(0, buffer, sizeof(buffer)) > 0)
+        ;
+}
+
+static bool poll_stdin(int timeout_ms)
+{
+    for (;;) {
+        pollfd poll_fd { .fd = 0, .events = POLLIN, .revents = 0 };
+        auto result = poll(&poll_fd, 1, timeout_ms);
+        if (result < 0 && errno == EINTR)
+            continue;
+        return result > 0;
+    }
+}
+
 Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
 {
-    char buf[16];
+    constexpr int poll_timeout_ms = 200;
+    constexpr int max_timeouts_while_waiting_for_response = 10;
+
+    sigset_t mask;
+    sigset_t old_mask;
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGWINCH);
+    sigprocmask(SIG_BLOCK, &mask, &old_mask);
+    ScopeGuard restore_signal_mask { [&] {
+        sigprocmask(SIG_SETMASK, &old_mask, nullptr);
+    } };
 
     // Read whatever junk there is before talking to the terminal
-    // and insert them later when we're reading user input.
-    bool more_junk_to_read { false };
-    timeval timeout { 0, 0 };
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    FD_SET(0, &readfds);
-
-    do {
-        more_junk_to_read = false;
-        [[maybe_unused]] auto rc = select(1, &readfds, nullptr, nullptr, &timeout);
-        if (FD_ISSET(0, &readfds)) {
-            auto nread = read(0, buf, 16);
-            if (nread < 0) {
-                m_input_error = Error::ReadFailure;
-                finish();
-                break;
-            }
-
-            if (nread == 0)
-                break;
-
-            m_incomplete_data.append(buf, nread);
-            more_junk_to_read = true;
+    // and insert it later when we're reading user input.
+    while (poll_stdin(0)) {
+        char buffer[16];
+        auto nread = read(0, buffer, sizeof(buffer));
+        if (nread < 0) {
+            if (errno == EINTR)
+                continue;
+            return Error::ReadFailure;
         }
-    } while (more_junk_to_read);
+        if (nread == 0)
+            break;
+
+        if (m_incomplete_data.try_append(buffer, nread).is_error())
+            return Error::ReadFailure;
+    }
 
     if (m_input_error.has_value())
         return m_input_error.value();
 
-    fputs("\033[6n\n", stderr);
+    if (fputs("\033[6n\n", stderr) == EOF)
+        return Error::ReadFailure;
     fflush(stderr);
 
-    // Parse the DSR response
-    // it should be of the form .*\e[\d+;\d+R.*
-    // Anything not part of the response is just added to the incomplete data.
+    // Parse the DSR response: .*\e[\d+;\d+R.*
+    // Anything not part of the response is added to m_incomplete_data.
     enum {
         Free,
         SawEsc,
@@ -2154,32 +2182,40 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
     } state { Free };
     auto has_error = false;
     Vector<char, 4> coordinate_buffer;
-    size_t row { 1 }, col { 1 };
-    int retry_count = 0;
-    const int max_retries = 3;
-    
-    do {
         char c;
         auto nread = read(0, &c, 1);
-        if (nread < 0) {
-            if (errno == 0 || errno == EINTR) {
-                // ????
-                continue;
+    size_t row { 1 };
+    size_t col { 1 };
+    int timeouts_while_waiting = 0;
+
+    while (state != SawR) {
+        if (!poll_stdin(poll_timeout_ms)) {
+            if (state != Free) {
+                dbgln("Terminal DSR issue; timed out while reading response");
+                drain_pending_stdin();
+                return Error::ReadFailure;
             }
+
+            if (++timeouts_while_waiting >= max_timeouts_while_waiting_for_response) {
+                dbgln("Terminal DSR issue; received no response");
+                drain_pending_stdin();
+                return Error::Empty;
+            }
+            continue;
+        }
+
+        timeouts_while_waiting = 0;
+
+        if (nread < 0) {
+            if (errno == EINTR)
+                continue;
             dbgln("Error while reading DSR: {}", strerror(errno));
+            drain_pending_stdin();
             return Error::ReadFailure;
         }
         if (nread == 0) {
-            if (++retry_count < max_retries) {
-                usleep(10000);
-                continue;
-            }
-            // Drain any pending input to avoid corrupting the input stream
-            fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
-            char drain_buf[256];
-            while (read(0, drain_buf, sizeof(drain_buf)) > 0);
-            fcntl(0, F_SETFL, fcntl(0, F_GETFL) & ~O_NONBLOCK);
             dbgln("Terminal DSR issue; received no response");
+            drain_pending_stdin();
             return Error::Empty;
         }
 
@@ -2258,10 +2294,14 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
         default:
             VERIFY_NOT_REACHED();
         }
-    } while (state != SawR);
+    }
 
-    if (has_error)
+    if (has_error) {
         dbgln("Terminal DSR issue, couldn't parse DSR response");
+        drain_pending_stdin();
+        return Error::ReadFailure;
+    }
+
     return Vector<size_t, 2> { row, col };
 }
 
