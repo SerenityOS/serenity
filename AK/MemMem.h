@@ -101,6 +101,70 @@ requires(requires { (*haystack_begin).data(); (*haystack_begin).size(); })
     return {};
 }
 
+template<typename HaystackIterT>
+inline Optional<size_t> memmem_reverse(HaystackIterT const& haystack_begin, HaystackIterT const& haystack_end, ReadonlyBytes needle)
+requires(requires { (*haystack_begin).data(); (*haystack_begin).size(); })
+{
+    // Note: This is a simple inversion of our modified KMP algorithm that is used in AK::memmem.
+    //       Be aware that we keep the table values mostly positive and the indices refer to the number
+    //       of matched characters.
+    //       In short: We really only invert the array accesses into the needle and haystack.
+
+    auto prepare_kmp_partial_table = [&] {
+        Vector<int, 64> table;
+        table.try_resize(needle.size()).release_value_but_fixme_should_propagate_errors();
+
+        size_t position = 1;
+        int candidate = 0;
+
+        table[0] = -1;
+        while (position < needle.size()) {
+            if (needle[needle.size() - 1 - position] == needle[needle.size() - 1 - candidate]) {
+                table[position] = table[candidate];
+            } else {
+                table[position] = candidate;
+                do {
+                    candidate = table[candidate];
+                } while (candidate >= 0 && needle[needle.size() - 1 - candidate] != needle[needle.size() - 1 - position]);
+            }
+            ++position;
+            ++candidate;
+        }
+        return table;
+    };
+
+    auto table = prepare_kmp_partial_table();
+    size_t total_haystack_index = 0;
+    size_t current_haystack_index = 0;
+    int needle_index = 0;
+    auto haystack_it = haystack_begin;
+
+    while (haystack_it != haystack_end) {
+        auto&& chunk = *haystack_it;
+        if (current_haystack_index >= chunk.size()) {
+            current_haystack_index = 0;
+            ++haystack_it;
+            continue;
+        }
+        if (needle[needle.size() - 1 - needle_index] == chunk[chunk.size() - 1 - current_haystack_index]) {
+            ++needle_index;
+            ++current_haystack_index;
+            ++total_haystack_index;
+            if ((size_t)needle_index == needle.size())
+                return total_haystack_index;
+            continue;
+        }
+        needle_index = table[needle_index];
+        if (needle_index < 0) {
+            ++needle_index;
+            ++current_haystack_index;
+            ++total_haystack_index;
+        }
+    }
+
+    return {};
+}
+
 inline Optional<size_t> memmem_optional(void const* haystack, size_t haystack_length, void const* needle, size_t needle_length)
 {
     if (needle_length == 0)
