@@ -2155,7 +2155,9 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
     auto has_error = false;
     Vector<char, 4> coordinate_buffer;
     size_t row { 1 }, col { 1 };
-
+    int retry_count = 0;
+    const int max_retries = 3;
+    
     do {
         char c;
         auto nread = read(0, &c, 1);
@@ -2168,6 +2170,15 @@ Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
             return Error::ReadFailure;
         }
         if (nread == 0) {
+            if (++retry_count < max_retries) {
+                usleep(10000);
+                continue;
+            }
+            // Drain any pending input to avoid corrupting the input stream
+            fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
+            char drain_buf[256];
+            while (read(0, drain_buf, sizeof(drain_buf)) > 0);
+            fcntl(0, F_SETFL, fcntl(0, F_GETFL) & ~O_NONBLOCK);
             dbgln("Terminal DSR issue; received no response");
             return Error::Empty;
         }
