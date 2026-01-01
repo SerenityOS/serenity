@@ -138,11 +138,10 @@ UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> NetworkingManagement::de
 
 ErrorOr<void> NetworkingManagement::register_adapter(NonnullRefPtr<NetworkAdapter> adapter)
 {
-    return m_adapters.with([&](auto& adapters) -> ErrorOr<void> {
-        TRY(adapters.try_append(adapter));
-        TRY(adapter->initialize({}));
-        return {};
-    });
+    TRY(m_adapters.with([&](auto& adapters) -> ErrorOr<void> {
+        return adapters.try_append(adapter);
+    }));
+    return adapter->initialize({});
 }
 
 bool NetworkingManagement::initialize()
