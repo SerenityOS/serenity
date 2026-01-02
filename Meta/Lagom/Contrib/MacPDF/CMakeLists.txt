@@ -30,6 +30,10 @@ target_link_libraries(MacPDF PRIVATE
     "-framework UniformTypeIdentifiers"
 )
 
+# FIXME: Remove this once https://openradar.appspot.com/21478051 is fixed.
+add_dependencies(MacPDF patched_mac_headers)
+target_include_directories(MacPDF PRIVATE "${CMAKE_BINARY_DIR}/patched_mac_headers")
+
 set_target_properties(MacPDF PROPERTIES
     MACOSX_BUNDLE TRUE
 

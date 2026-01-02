@@ -19,6 +19,11 @@ add_executable(ladybird MACOSX_BUNDLE
     Utilities/Conversions.mm
 )
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# FIXME: Remove this once https://openradar.appspot.com/21478051 is fixed.
+add_dependencies(ladybird patched_mac_headers)
+target_include_directories(ladybird PRIVATE "${CMAKE_BINARY_DIR}/patched_mac_headers")
+
 target_link_libraries(ladybird PRIVATE "-framework Cocoa -framework UniformTypeIdentifiers" LibUnicode)
 target_compile_options(ladybird PRIVATE
         -fobjc-arc
