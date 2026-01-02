@@ -95,11 +95,12 @@ private:
 
     SearchableCircularBuffer(ByteBuffer);
 
+    size_t m_hash_head {};
     HashMap<unsigned, size_t> m_hash_location_map;
     HashMap<size_t, size_t> m_location_chain_map;
 
     ErrorOr<void> insert_location_hash(ReadonlyBytes value, size_t raw_offset);
-    ErrorOr<void> hash_last_bytes(size_t count);
+    ErrorOr<void> hash_new_bytes();
 };
 
 }
