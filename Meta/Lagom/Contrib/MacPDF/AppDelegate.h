@@ -6,10 +6,7 @@
 
 #pragma once
 
-// Several AK types conflict with MacOS types.
-#define FixedPoint FixedPointMacOS
-#import <Cocoa/Cocoa.h>
-#undef FixedPoint
+#include "CocoaWrapper.h"
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 @end
