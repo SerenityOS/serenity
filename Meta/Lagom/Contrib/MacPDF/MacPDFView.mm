@@ -42,7 +42,7 @@ static PDF::PDFErrorOr<NonnullRefPtr<Gfx::Bitmap>> render(PDF::Document& documen
 static NSBitmapImageRep* ns_from_gfx(NonnullRefPtr<Gfx::Bitmap> bitmap_p)
 {
     auto& bitmap = bitmap_p.leak_ref();
-    CGBitmapInfo info = kCGBitmapByteOrder32Little | (CGBitmapInfo)kCGImageAlphaFirst;
+    CGBitmapInfo info = (CGBitmapInfo)(kCGBitmapByteOrder32Little | (CGBitmapInfo)kCGImageAlphaFirst);
     auto data = CGDataProviderCreateWithData(
         &bitmap, bitmap.begin(), bitmap.size_in_bytes(),
         [](void* p, void const*, size_t) {
