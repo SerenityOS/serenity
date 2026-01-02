@@ -427,6 +427,34 @@ TEST_CASE(find_copy_in_seekback)
     }
 }
 
+TEST_CASE(find_copy_in_seekback_small_haystack)
+{
+    // This covers multiple individual bugs, depending on the broken implementation this may
+    // loop infinitely or run out of memory bounds.
+
+    Array<u8, 3> const haystack {
+        0x41, 0x4b, 0x2f
+    };
+    Array<u8, 4> const needle {
+        0x41, 0x4b, 0x2f, 0x47
+    };
+
+    // Set up the buffer for testing.
+    auto buffer = MUST(SearchableCircularBuffer::create_empty(haystack.size() + needle.size()));
+    auto written_haystack_bytes = buffer.write(haystack);
+    VERIFY(written_haystack_bytes == haystack.size());
+    MUST(buffer.discard(haystack.size()));
+    auto written_needle_bytes = buffer.write(needle);
+    VERIFY(written_needle_bytes == needle.size());
+
+    {
+        auto match = buffer.find_copy_in_seekback(273, 2);
+        EXPECT(match.has_value());
+        EXPECT_EQ(match.value().distance, 3ul);
+        EXPECT_EQ(match.value().length, 3ul);
+    }
+}
+
 BENCHMARK_CASE(looping_copy_from_seekback)
 {
     auto circular_buffer = MUST(CircularBuffer::create_empty(16 * MiB));
