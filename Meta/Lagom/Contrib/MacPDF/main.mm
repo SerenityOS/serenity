@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#import <Cocoa/Cocoa.h>
+#import "CocoaWrapper.h"
 
 int main(int argc, char const* argv[])
 {
