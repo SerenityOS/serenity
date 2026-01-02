@@ -1542,7 +1542,7 @@ static void copy_data_to_clipboard(StringView data, NSPasteboardType pasteboard_
         BITS_PER_PIXEL,
         bitmap.pitch(),
         color_space,
-        kCGBitmapByteOrder32Little | kCGImageAlphaFirst,
+        (CGBitmapInfo)(kCGBitmapByteOrder32Little | (CGBitmapInfo)kCGImageAlphaFirst),
         provider,
         nil,
         NO,
