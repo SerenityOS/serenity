@@ -8,6 +8,9 @@
 
 #include "Detail/Header.h"
 
+// FIXME: Workaround for https://openradar.appspot.com/21478051, remove once that's fixed.
+#define __COLORSYNCDEPRECATED__
+
 #import <Cocoa/Cocoa.h>
 
 #include "Detail/Footer.h"
