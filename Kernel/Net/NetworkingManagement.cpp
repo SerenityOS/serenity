@@ -13,6 +13,7 @@
 #include <Kernel/Net/Intel/E1000ENetworkAdapter.h>
 #include <Kernel/Net/Intel/E1000NetworkAdapter.h>
 #include <Kernel/Net/LoopbackAdapter.h>
+#include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Realtek/RTL8168NetworkAdapter.h>
 #include <Kernel/Net/VirtIO/VirtIONetworkAdapter.h>
@@ -141,7 +142,21 @@ ErrorOr<void> NetworkingManagement::register_adapter(NonnullRefPtr<NetworkAdapte
     TRY(m_adapters.with([&](auto& adapters) -> ErrorOr<void> {
         return adapters.try_append(adapter);
     }));
-    return adapter->initialize({});
+    TRY(adapter->initialize({}));
+
+    // HACK: If we the Network Task is already running,
+    //       we need to do set the on_receive callback to the one used by the Network Task.
+    if (auto* network_task_thread = NetworkTask::the_thread(); network_task_thread && network_task_thread->state() != Thread::State::Dying) {
+        dmesgln("NetworkingManagement: Registering network adapter {} while Network Task is running, hooking up on_receive callback", adapter->name());
+        // Note: We always have another network adapter registered before this one,
+        //       so we can grab the on_receive callback from adapter 0
+        auto& on_wake = m_adapters.with([&](auto& adapters) -> auto& {
+            return adapters.first()->on_receive;
+        });
+        adapter->on_receive = [&on_wake] { on_wake(); };
+    }
+
+    return {};
 }
 
 bool NetworkingManagement::initialize()

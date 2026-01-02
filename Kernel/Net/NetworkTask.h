@@ -6,10 +6,13 @@
 
 #pragma once
 
+#include <Kernel/Tasks/Thread.h>
 namespace Kernel {
+
 class NetworkTask {
 public:
     static void spawn();
     static bool is_current();
+    static Thread* the_thread();
 };
 }
