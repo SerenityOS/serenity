@@ -8,6 +8,7 @@
 
 #include <AK/Array.h>
 #include <AK/BitCast.h>
+#include <AK/StdLibExtraDetails.h>
 #include <AK/StdLibExtras.h>
 #include <AK/TypeList.h>
 
@@ -128,34 +129,6 @@ struct VariantConstructTag {
     explicit VariantConstructTag() = default;
 };
 
-template<typename T, typename Base>
-struct VariantConstructors {
-    // The pointless `typename Base` constraints are a workaround for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109683
-    ALWAYS_INLINE VariantConstructors(T&& t)
-    requires(requires { T(move(t)); typename Base; })
-    {
-        internal_cast().clear_without_destruction();
-        internal_cast().set(move(t), VariantNoClearTag {});
-    }
-
-    ALWAYS_INLINE VariantConstructors(T const& t)
-    requires(requires { T(t); typename Base; })
-    {
-        internal_cast().clear_without_destruction();
-        internal_cast().set(t, VariantNoClearTag {});
-    }
-
-    ALWAYS_INLINE VariantConstructors() = default;
-
-private:
-    [[nodiscard]] ALWAYS_INLINE Base& internal_cast()
-    {
-        // Warning: Internal type shenanigans - VariantsConstrutors<T, Base> <- Base
-        //          Not the other way around, so be _really_ careful not to cause issues.
-        return *static_cast<Base*>(this);
-    }
-};
-
 // Type list deduplication
 // Since this is a big template mess, each template is commented with how and why it works.
 struct ParameterPackTag {
@@ -169,6 +142,7 @@ struct ParameterPack : ParameterPackTag {
 // Blank<T> is a unique replacement for T, if T is a duplicate type.
 template<typename T>
 struct Blank {
+    void operator()() const;
 };
 
 template<typename A, typename P>
@@ -194,6 +168,7 @@ struct InheritFromUniqueEntries<I, ParameterPack<Ts...>, IndexSequence<Js...>, Q
     : public BlankIfDuplicate<Ts, Conditional<Js <= I, ParameterPack<>, Qs>...>... {
 
     using BlankIfDuplicate<Ts, Conditional<Js <= I, ParameterPack<>, Qs>...>::BlankIfDuplicate...;
+    using BlankIfDuplicate<Ts, Conditional<Js <= I, ParameterPack<>, Qs>...>::operator()...;
 };
 
 template<typename...>
@@ -206,12 +181,41 @@ struct InheritFromPacks<IndexSequence<Is...>, Ps...>
     : public InheritFromUniqueEntries<Is, Ps, IndexSequence<Is...>, Ps...>... {
 
     using InheritFromUniqueEntries<Is, Ps, IndexSequence<Is...>, Ps...>::InheritFromUniqueEntries...;
+    using InheritFromUniqueEntries<Is, Ps, IndexSequence<Is...>, Ps...>::operator()...;
 };
 
 // Just a nice wrapper around InheritFromPacks, which will wrap any parameter packs in ParameterPack (unless it already is one).
 template<typename... Ps>
 using MergeAndDeduplicatePacks = InheritFromPacks<MakeIndexSequence<sizeof...(Ps)>, Conditional<IsBaseOf<ParameterPackTag, Ps>, Ps, ParameterPack<Ps>>...>;
 
+// NOTE: This always allows narrowing,
+//       The stl version does not allow narrowing conversions
+//       main points where we need it are instantiations with literal 0s,
+//       which we could feasibly check for with some more template magic and is_constant_p.
+template<typename T>
+struct Overload {
+    template<typename U, typename = T>
+    requires(IsConstructible<T, U>)
+    auto operator()(T, U&&) const -> __IdentityType<T>;
+};
+
+template<typename... Bases>
+struct AllOverloads : MergeAndDeduplicatePacks<ParameterPack<Bases>...> {
+    void operator()() const;
+    using MergeAndDeduplicatePacks<ParameterPack<Bases>...>::operator();
+};
+
+template<typename IndexSequence>
+struct MakeOverloadsImpl;
+
+template<size_t... Indices>
+struct MakeOverloadsImpl<IndexSequence<Indices...>> {
+    template<typename... Types>
+    using Apply = AllOverloads<Overload<Types>...>;
+};
+
+template<typename... Types>
+using MakeOverloads = typename MakeOverloadsImpl<MakeIndexSequence<sizeof...(Types)>>::template Apply<Types...>;
 }
 
 namespace AK {
@@ -219,9 +223,15 @@ namespace AK {
 template<typename T>
 concept NotLvalueReference = !IsLvalueReference<T>;
 
+template<NotLvalueReference...>
+struct Variant;
+
 template<NotLvalueReference... Ts>
-struct Variant
-    : public Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...> {
+struct Variant {
+    using OverloadFinder = Detail::MakeOverloads<Ts...>;
+    template<typename T>
+    using BestMatch = InvokeResult<OverloadFinder, T, T>::Type;
+
 public:
     using IndexType = Conditional<(sizeof...(Ts) < 255), u8, size_t>; // Note: size+1 reserved for internal value checks
 private:
@@ -249,6 +259,21 @@ public:
     requires((can_contain<NewTs>() && ...))
         : Variant(old.template downcast<Ts...>())
     {
+    }
+
+    // FIXME: Not sure why we need the constraint here to avoid recursion,
+    //        The variant should not be able to contain it self, so a constructibility check should
+    //        be enough?
+    template<typename T>
+    requires(!IsSame<RemoveCVReference<T>, Variant>
+        && (IsConstructible<Ts, T> || ...))
+    Variant(T&& t)
+    {
+        using BestOverload = BestMatch<T>;
+        constexpr IndexType BestOverloadIndex = index_of<BestOverload>();
+
+        new (m_data) BestOverload(forward<T>(t));
+        m_index = BestOverloadIndex;
     }
 
     template<NotLvalueReference... NewTs>
@@ -290,8 +315,7 @@ public:
 
     ALWAYS_INLINE Variant(Variant const& old)
     requires(!(IsTriviallyCopyConstructible<Ts> && ...))
-        : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
-        , m_data {}
+        : m_data {}
         , m_index(old.m_index)
     {
         Helper::copy_(old.m_index, old.m_data, m_data);
@@ -303,8 +327,7 @@ public:
     //       but it will still contain the "moved-from" state of the object it previously contained.
     ALWAYS_INLINE Variant(Variant&& old)
     requires(!(IsTriviallyMoveConstructible<Ts> && ...))
-        : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
-        , m_index(old.m_index)
+        : m_index(old.m_index)
     {
         Helper::move_(old.m_index, old.m_data, m_data);
     }
@@ -340,8 +363,6 @@ public:
         }
         return *this;
     }
-
-    using Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>::MergeAndDeduplicatePacks;
 
     template<typename T, typename StrippedT = RemoveCVReference<T>>
     void set(T&& t)
@@ -478,12 +499,8 @@ private:
     using Helper = Detail::Variant<IndexType, 0, Ts...>;
     using VisitHelper = Detail::VisitImpl<IndexType, Ts...>;
 
-    template<typename T_, typename U_>
-    friend struct Detail::VariantConstructors;
-
     explicit Variant(IndexType index, Detail::VariantConstructTag)
-        : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
-        , m_index(index)
+        : m_index(index)
     {
     }
 
