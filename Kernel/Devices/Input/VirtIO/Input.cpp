@@ -17,8 +17,8 @@
 namespace Kernel::VirtIO {
 
 struct VirtIOInputEvent {
-    LittleEndian<u16> type;
-    LittleEndian<u16> code;
+    LittleEndian<EvDevEventType> type;
+    LittleEndian<EvDevEventCode> code;
     LittleEndian<u32> value;
 };
 static_assert(AssertSize<VirtIOInputEvent, 8>());
@@ -171,9 +171,9 @@ void Input::handle_event(VirtIOInputEvent const& event)
     // TODO: Set lock key LEDs
 
     switch (event.type) {
-    case EV_SYN:
+    case EvDevEventType::Syn:
         switch (event.code) {
-        case SYN_REPORT:
+        case EvDevEventCode::SynReport:
             m_mouse_device->handle_mouse_packet_input_event(m_current_mouse_packet);
 
             // Don't reset the x/y values if the last event was an absolute event, as otherwise the mouse would jump to the top left corner on events other than mouse movement.
@@ -188,28 +188,28 @@ void Input::handle_event(VirtIOInputEvent const& event)
             break;
 
         default:
-            dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_SYN event code: {:#x}", event.code);
+            dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_SYN event code: {:#x}", to_underlying(static_cast<EvDevEventCode>(event.code)));
             break;
         }
         break;
 
-    case EV_KEY:
+    case EvDevEventType::Key:
         switch (event.code) {
-        case BTN_LEFT:
+        case EvDevEventCode::ButtonLeft:
             if (event.value == 1)
                 m_current_mouse_packet.buttons |= MousePacket::Button::LeftButton;
             else
                 m_current_mouse_packet.buttons &= ~MousePacket::Button::LeftButton;
             break;
 
-        case BTN_RIGHT:
+        case EvDevEventCode::ButtonRight:
             if (event.value == 1)
                 m_current_mouse_packet.buttons |= MousePacket::Button::RightButton;
             else
                 m_current_mouse_packet.buttons &= ~MousePacket::Button::RightButton;
             break;
 
-        case BTN_MIDDLE:
+        case EvDevEventCode::ButtonMiddle:
             if (event.value == 1)
                 m_current_mouse_packet.buttons |= MousePacket::Button::MiddleButton;
             else
@@ -224,29 +224,29 @@ void Input::handle_event(VirtIOInputEvent const& event)
 
             RawKeyEvent raw_key_event;
             raw_key_event.is_press_down = event.value == 1;
-            raw_key_event.scancode = event.code;
+            raw_key_event.scancode = to_underlying(static_cast<EvDevEventCode>(event.code));
 
             switch (event.code) {
-            case KEY_LEFTALT:
+            case EvDevEventCode::KeyLeftAlt:
                 m_keyboard_device->update_modifier(Mod_Alt, raw_key_event.is_press());
                 break;
 
-            case KEY_LEFTCTRL:
-            case KEY_RIGHTCTRL:
+            case EvDevEventCode::KeyLeftControl:
+            case EvDevEventCode::KeyRightControl:
                 m_keyboard_device->update_modifier(Mod_Ctrl, raw_key_event.is_press());
                 break;
 
-            case KEY_LEFTSHIFT:
-            case KEY_RIGHTSHIFT:
+            case EvDevEventCode::KeyLeftShift:
+            case EvDevEventCode::KeyRightShift:
                 m_keyboard_device->update_modifier(Mod_Shift, raw_key_event.is_press());
                 break;
 
-            case KEY_LEFTMETA:
-            case KEY_RIGHTMETA:
+            case EvDevEventCode::KeyLeftMeta:
+            case EvDevEventCode::KeyRightMeta:
                 m_keyboard_device->update_modifier(Mod_Super, raw_key_event.is_press());
                 break;
 
-            case KEY_RIGHTALT:
+            case EvDevEventCode::KeyRightAlt:
                 m_keyboard_device->update_modifier(Mod_AltGr, raw_key_event.is_press());
                 break;
 
@@ -254,25 +254,25 @@ void Input::handle_event(VirtIOInputEvent const& event)
                 break;
             }
 
-            if ((event.code >= KEY_KP7 && event.code <= KEY_KPDOT)
-                || event.code == KEY_KPASTERISK
-                || event.code == KEY_KPENTER
-                || event.code == KEY_KPEQUAL
-                || event.code == KEY_KPSLASH) {
+            if ((event.code >= EvDevEventCode::KeyKeypad7 && event.code <= EvDevEventCode::KeyKeypadDot)
+                || event.code == EvDevEventCode::KeyKeypadAsterisk
+                || event.code == EvDevEventCode::KeyKeypadEnter
+                || event.code == EvDevEventCode::KeyKeypadEqual
+                || event.code == EvDevEventCode::KeyKeypadSlash) {
                 m_keyboard_device->update_modifier(Mod_Keypad, true);
             }
 
             // The shift key only applies to small key codes, so only use the shifted key map if the event code is small enough.
-            bool use_shifted_key_map = (m_keyboard_device->modifiers() & Mod_Shift) != 0 && event.code < shifted_evdev_key_map.size();
+            bool use_shifted_key_map = (m_keyboard_device->modifiers() & Mod_Shift) != 0 && raw_key_event.scancode < shifted_evdev_key_map.size();
 
             auto key_map = use_shifted_key_map ? Span<KeyCodeEntry const>(shifted_evdev_key_map) : Span<KeyCodeEntry const>(unshifted_evdev_key_map);
 
-            if (event.code >= key_map.size()) {
-                dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_KEY event code: {:#x}", event.code);
+            if (raw_key_event.scancode >= key_map.size()) {
+                dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_KEY event code: {:#x}", to_underlying(static_cast<EvDevEventCode>(event.code)));
                 return;
             }
 
-            raw_key_event.code_entry = key_map[event.code];
+            raw_key_event.code_entry = key_map[raw_key_event.scancode];
 
             KeyEvent key_event {
                 .key = raw_key_event.code_entry.key_code,
@@ -282,8 +282,8 @@ void Input::handle_event(VirtIOInputEvent const& event)
             };
 
             if (m_keyboard_device->num_lock_on() && (m_keyboard_device->modifiers() & Mod_Shift) == 0) {
-                if (key_event.scancode >= KEY_KP7 && raw_key_event.scancode <= KEY_KPDOT) {
-                    auto index = key_event.scancode - KEY_KP7;
+                if (key_event.scancode >= to_underlying(EvDevEventCode::KeyKeypad7) && raw_key_event.scancode <= to_underlying(EvDevEventCode::KeyKeypadDot)) {
+                    auto index = key_event.scancode - to_underlying(EvDevEventCode::KeyKeypad7);
                     static constexpr auto numpad_key_map = to_array<KeyCodeEntry>({
                         { Key_7, 0x08 },
                         { Key_8, 0x09 },
@@ -312,36 +312,36 @@ void Input::handle_event(VirtIOInputEvent const& event)
         }
         break;
 
-    case EV_REL: {
-        if (event.code == REL_X) {
+    case EvDevEventType::Rel: {
+        if (event.code == EvDevEventCode::RelX) {
             m_current_mouse_packet.is_relative = true;
             m_current_mouse_packet.x = static_cast<int>(event.value);
-        } else if (event.code == REL_Y) {
+        } else if (event.code == EvDevEventCode::RelY) {
             m_current_mouse_packet.is_relative = true;
             m_current_mouse_packet.y = -static_cast<int>(event.value);
-        } else if (event.code == REL_WHEEL) {
+        } else if (event.code == EvDevEventCode::RelWheel) {
             m_current_mouse_packet.z = -static_cast<int>(event.value);
         } else {
-            dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_REL event code: {:#x}", event.code);
+            dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_REL event code: {:#x}", to_underlying(static_cast<EvDevEventCode>(event.code)));
         }
         break;
     }
 
-    case EV_ABS: {
-        if (event.code == ABS_X) {
+    case EvDevEventType::Abs: {
+        if (event.code == EvDevEventCode::AbsX) {
             m_current_mouse_packet.is_relative = false;
             m_current_mouse_packet.x = static_cast<int>((event.value - m_abs_min) * 0xffff / (m_abs_max - m_abs_min));
-        } else if (event.code == ABS_Y) {
+        } else if (event.code == EvDevEventCode::AbsY) {
             m_current_mouse_packet.is_relative = false;
             m_current_mouse_packet.y = static_cast<int>((event.value - m_abs_min) * 0xffff / (m_abs_max - m_abs_min));
         } else {
-            dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_ABS event code: {:#x}", event.code);
+            dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_ABS event code: {:#x}", to_underlying(static_cast<EvDevEventCode>(event.code)));
         }
         break;
     }
 
     default:
-        dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown event type: {:#x}", event.type);
+        dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown event type: {:#x}", to_underlying(static_cast<EvDevEventType>(event.type)));
         break;
     }
 }
