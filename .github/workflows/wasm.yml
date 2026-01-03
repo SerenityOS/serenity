@@ -56,8 +56,8 @@ jobs:
             -S ${{ github.workspace }}/Meta/Lagom \
             -DBUILD_LAGOM=OFF \
             -DSERENITY_CACHE_DIR=${{ github.workspace }}/Build/caches \
-            -DCMAKE_C_COMPILER=gcc-13 \
-            -DCMAKE_CXX_COMPILER=g++-13 \
+            -DCMAKE_C_COMPILER=gcc-14 \
+            -DCMAKE_CXX_COMPILER=g++-14 \
             -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/Build/lagom-tools \
             -Dpackage=LagomTools
           ninja -C ${{ github.workspace }}/Build/lagom-tools install
