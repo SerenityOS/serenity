@@ -37,6 +37,36 @@ TEST_CASE(visit)
     EXPECT(correct);
 }
 
+TEST_CASE(visit_narrow_1)
+{
+    bool correct = false;
+    Variant<unsigned int, ByteString> the_value { 0 };
+    the_value.visit(
+        [&](unsigned int const&) { correct = true; },
+        [&](auto const&) { correct = false; });
+    EXPECT(correct);
+}
+
+TEST_CASE(visit_narrow_2)
+{
+    bool correct = false;
+    Variant<int, ByteString> the_value { 0u };
+    the_value.visit(
+        [&](int const&) { correct = true; },
+        [&](auto const&) { correct = false; });
+    EXPECT(correct);
+}
+
+TEST_CASE(visit_narrow_3)
+{
+    bool correct = false;
+    Variant<int, ByteString, unsigned int> the_value { 0u };
+    the_value.visit(
+        [&](unsigned int const&) { correct = true; },
+        [&](auto const&) { correct = false; });
+    EXPECT(correct);
+}
+
 TEST_CASE(visit_const)
 {
     bool correct = false;
