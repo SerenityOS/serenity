@@ -14,66 +14,50 @@
 
 namespace AK::Detail {
 
-template<typename T, typename IndexType, IndexType InitialIndex, typename... InTypes>
-struct VariantIndexOf {
-    static_assert(DependentFalse<T, IndexType, InTypes...>, "Invalid VariantIndex instantiated");
-};
-
-template<typename T, typename IndexType, IndexType InitialIndex, typename InType, typename... RestOfInTypes>
-struct VariantIndexOf<T, IndexType, InitialIndex, InType, RestOfInTypes...> {
-    consteval IndexType operator()()
-    {
-        if constexpr (IsSame<T, InType>)
-            return InitialIndex;
-        else
-            return VariantIndexOf<T, IndexType, InitialIndex + 1, RestOfInTypes...> {}();
-    }
-};
-
-template<typename T, typename IndexType, IndexType InitialIndex>
-struct VariantIndexOf<T, IndexType, InitialIndex> {
-    consteval IndexType operator()() { return InitialIndex; }
-};
-
 template<typename T, typename IndexType, typename... Ts>
 consteval IndexType index_of()
 {
-    return VariantIndexOf<T, IndexType, 0, Ts...> {}();
+    // Note: This ignores ambiguous lookups, and instead returns the first match
+    bool matches[] = { IsSame<T, Ts>... };
+    for (size_t i = 0; i < sizeof...(Ts); ++i) {
+        if (matches[i])
+            return static_cast<IndexType>(i);
+    }
+    return static_cast<IndexType>(sizeof...(Ts));
 }
 
-template<typename IndexType, IndexType InitialIndex, typename... Ts>
+template<typename IndexType, IndexType CurrentIndex, typename... Ts>
 struct Variant;
 
-template<typename IndexType, IndexType InitialIndex, typename F, typename... Ts>
-struct Variant<IndexType, InitialIndex, F, Ts...> {
-    static constexpr auto current_index = VariantIndexOf<F, IndexType, InitialIndex, F, Ts...> {}();
+template<typename IndexType, IndexType CurrentIndex, typename F, typename... Ts>
+struct Variant<IndexType, CurrentIndex, F, Ts...> {
     ALWAYS_INLINE static void delete_(IndexType id, void* data)
     {
-        if (id == current_index)
+        if (id == CurrentIndex)
             bit_cast<F*>(data)->~F();
         else
-            Variant<IndexType, InitialIndex + 1, Ts...>::delete_(id, data);
+            Variant<IndexType, CurrentIndex + 1, Ts...>::delete_(id, data);
     }
 
     ALWAYS_INLINE static void move_(IndexType old_id, void* old_data, void* new_data)
     {
-        if (old_id == current_index)
+        if (old_id == CurrentIndex)
             new (new_data) F(move(*bit_cast<F*>(old_data)));
         else
-            Variant<IndexType, InitialIndex + 1, Ts...>::move_(old_id, old_data, new_data);
+            Variant<IndexType, CurrentIndex + 1, Ts...>::move_(old_id, old_data, new_data);
     }
 
     ALWAYS_INLINE static void copy_(IndexType old_id, void const* old_data, void* new_data)
     {
-        if (old_id == current_index)
+        if (old_id == CurrentIndex)
             new (new_data) F(*bit_cast<F const*>(old_data));
         else
-            Variant<IndexType, InitialIndex + 1, Ts...>::copy_(old_id, old_data, new_data);
+            Variant<IndexType, CurrentIndex + 1, Ts...>::copy_(old_id, old_data, new_data);
     }
 };
 
-template<typename IndexType, IndexType InitialIndex>
-struct Variant<IndexType, InitialIndex> {
+template<typename IndexType, IndexType CurrentIndex>
+struct Variant<IndexType, CurrentIndex> {
     ALWAYS_INLINE static void delete_(IndexType, void*) { }
     ALWAYS_INLINE static void move_(IndexType, void*, void*) { }
     ALWAYS_INLINE static void copy_(IndexType, void const*, void*) { }
@@ -98,25 +82,25 @@ struct VisitImpl {
     }
 
     template<typename Self, typename Visitor, IndexType CurrentIndex = 0>
-    ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, IndexType id, void const* data, Visitor&& visitor)
+    ALWAYS_INLINE static constexpr decltype(auto) visit(Self& self, Visitor&& visitor)
     requires(CurrentIndex < sizeof...(Ts))
     {
         using T = typename TypeList<Ts...>::template Type<CurrentIndex>;
 
-        if (id == CurrentIndex) {
+        if (self.index() == CurrentIndex) {
             // Check if Visitor::operator() is an explicitly typed function (as opposed to a templated function)
             // if so, try to call that with `T const&` first before copying the Variant's const-ness.
             // This emulates normal C++ call semantics where templated functions are considered last, after all non-templated overloads
             // are checked and found to be unusable.
-            using ReturnType = decltype(visitor(*bit_cast<T*>(data)));
+            using ReturnType = decltype(visitor(declval<T&>()));
             if constexpr (should_invoke_const_overload<ReturnType, T, Visitor>(MakeIndexSequence<Visitor::Types::size>()))
-                return visitor(*bit_cast<AddConst<T>*>(data));
+                return visitor(AddConstToReferencedType<Self&>(self).template get<T>());
 
-            return visitor(*bit_cast<CopyConst<Self, T>*>(data));
+            return visitor(self.template get<T>());
         }
 
         if constexpr ((CurrentIndex + 1) < sizeof...(Ts))
-            return visit<Self, Visitor, CurrentIndex + 1>(self, id, data, forward<Visitor>(visitor));
+            return visit<Self, Visitor, CurrentIndex + 1>(self, forward<Visitor>(visitor));
         else
             VERIFY_NOT_REACHED();
     }
@@ -242,10 +226,7 @@ private:
 
 public:
     template<typename T>
-    static constexpr bool can_contain()
-    {
-        return index_of<T>() != invalid_index;
-    }
+    static constexpr bool can_contain() { return IsOneOf<T, Ts...>; }
 
     template<typename... NewTs>
     Variant(Variant<NewTs...>&& old)
@@ -437,14 +418,14 @@ public:
     ALWAYS_INLINE decltype(auto) visit(Fs&&... functions)
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
-        return VisitHelper::visit(*this, m_index, m_data, move(visitor));
+        return VisitHelper::visit(*this, move(visitor));
     }
 
     template<typename... Fs>
     ALWAYS_INLINE decltype(auto) visit(Fs&&... functions) const
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
-        return VisitHelper::visit(*this, m_index, m_data, move(visitor));
+        return VisitHelper::visit(*this, move(visitor));
     }
 
     template<typename... NewTs>
