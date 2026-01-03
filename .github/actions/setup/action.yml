@@ -18,7 +18,7 @@ runs:
       shell: bash
       run: |
         # These packages are already part of the ubuntu-24.04 image:
-        # cmake gcc-13 g++-13 libgmp-dev libssl-dev libstdc++-13-dev ninja-build npm shellcheck unzip
+        # cmake libgmp-dev libssl-dev libstdc++-13-dev ninja-build npm shellcheck unzip
         # Packages below aren't.
 
         set -e
@@ -29,15 +29,15 @@ runs:
         sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 
         sudo apt-get update
-        sudo apt-get install ccache clang-20 clang++-20 clang-format-20 lld-20 qt6-base-dev qt6-tools-dev-tools libqt6svg6-dev qt6-multimedia-dev libgl1-mesa-dev libpulse-dev libegl1-mesa-dev libclang-20-dev
+        sudo apt-get install ccache clang-20 clang++-20 clang-format-20 lld-20 gcc-14 g++-14 qt6-base-dev qt6-tools-dev-tools libqt6svg6-dev qt6-multimedia-dev libgl1-mesa-dev libpulse-dev libegl1-mesa-dev libclang-20-dev
 
         sudo apt-get remove clang-{14..18} clang++-{14..18} libclang-{14..18}-dev llvm-{14..18}
         sudo apt-get install clang-20 clang++-20 llvm-20 llvm-20-dev
 
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-20 100
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-20 100
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100
-        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-13 100
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 100
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 100
 
         wget https://github.com/WebAssembly/wabt/releases/download/1.0.35/wabt-1.0.35-ubuntu-20.04.tar.gz
         tar -xzf ./wabt-1.0.35-ubuntu-20.04.tar.gz
