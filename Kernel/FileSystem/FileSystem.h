@@ -14,6 +14,7 @@
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/UserOrKernelBuffer.h>
 #include <Kernel/Locking/Mutex.h>
+#include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -66,7 +67,7 @@ public:
     // Converts file types that are used internally by the filesystem to DT_* types
     virtual u8 internal_file_type_to_directory_entry_type(DirectoryEntryView const& entry) const { return entry.file_type; }
 
-    SpinlockProtected<size_t, LockRank::FileSystem>& mounted_count() { return m_attach_count; }
+    MutexProtected<size_t>& mounted_count() { return m_attach_count; }
 
 protected:
     FileSystem();
@@ -84,7 +85,7 @@ private:
     size_t m_fragment_size { 0 };
     bool m_readonly { false };
 
-    SpinlockProtected<size_t, LockRank::FileSystem> m_attach_count { 0 };
+    MutexProtected<size_t> m_attach_count { 0 };
     IntrusiveListNode<FileSystem> m_file_system_node;
 
 public:

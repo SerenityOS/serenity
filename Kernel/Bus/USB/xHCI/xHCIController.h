@@ -14,7 +14,7 @@
 #include <Kernel/Bus/USB/xHCI/xHCIRootHub.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Tasks/DeprecatedWaitQueue.h>
+#include <Kernel/Tasks/WaitQueue.h>
 
 namespace Kernel::USB::xHCI {
 
@@ -96,7 +96,8 @@ private:
         u32 end_index { 0 };
     };
     struct SyncPendingTransfer : public PendingTransfer {
-        DeprecatedWaitQueue wait_queue;
+        WaitQueue wait_queue;
+        SpinlockProtected<bool, LockRank::None> transfer_done { false };
         TransferRequestBlock::CompletionCode completion_code { TransferRequestBlock::CompletionCode::Invalid };
         u32 remainder { 0 };
     };
@@ -119,10 +120,12 @@ private:
     static constexpr size_t max_endpoints = 31;
     static constexpr size_t endpoint_ring_size = PAGE_SIZE / sizeof(TransferRequestBlock);
     struct SlotState {
-        RecursiveSpinlock<LockRank::None> lock;
+        Mutex input_context_mutex;
         OwnPtr<Memory::Region> input_context_region;
+
         OwnPtr<Memory::Region> device_context_region;
-        Array<EndpointRing, max_endpoints> endpoint_rings;
+
+        Array<SpinlockProtected<EndpointRing, LockRank::None>, max_endpoints> endpoint_rings;
     };
 
     static u8 endpoint_index(u8 endpoint, Pipe::Direction direction)
@@ -139,7 +142,10 @@ private:
 
     u8* input_context(u8 slot, u8 index) const
     {
-        auto* base = m_slots_state[slot - 1].input_context_region->vaddr().as_ptr();
+        auto const& slot_state = m_slots_state[slot - 1];
+        VERIFY(slot_state.input_context_mutex.is_locked());
+
+        auto* base = slot_state.input_context_region->vaddr().as_ptr();
         return base + (context_entry_size() * index);
     }
 
@@ -160,20 +166,21 @@ private:
 
     size_t device_context_size() const { return context_entry_size() * 32; }
 
-    u8* device_context(u8 slot, u8 index) const
+    u8 const* device_context(u8 slot, u8 index) const
     {
-        auto* base = m_slots_state[slot - 1].device_context_region->vaddr().as_ptr();
+        auto const& slot_state = m_slots_state[slot - 1];
+        auto* base = slot_state.device_context_region->vaddr().as_ptr();
         return base + (context_entry_size() * index);
     }
 
-    SlotContext* device_slot_context(u8 slot) const
+    SlotContext const* device_slot_context(u8 slot) const
     {
-        return reinterpret_cast<SlotContext*>(device_context(slot, 0));
+        return reinterpret_cast<SlotContext const*>(device_context(slot, 0));
     }
 
-    EndpointContext* device_endpoint_context(u8 slot, u8 endpoint, Pipe::Direction direction) const
+    EndpointContext const* device_endpoint_context(u8 slot, u8 endpoint, Pipe::Direction direction) const
     {
-        return reinterpret_cast<EndpointContext*>(device_context(slot, endpoint_index(endpoint, direction)));
+        return reinterpret_cast<EndpointContext const*>(device_context(slot, endpoint_index(endpoint, direction)));
     }
 
     void ring_doorbell(u8 doorbell, u8 doorbell_target);
@@ -200,6 +207,7 @@ private:
     ErrorOr<void> set_tr_dequeue_pointer(u8 slot, u8 endpoint, u8 stream_context_type, u16 stream, u64 new_tr_dequeue_pointer, u8 dequeue_cycle_state);
 
     ErrorOr<void> enqueue_transfer(u8 slot, u8 endpoint, Pipe::Direction direction, Span<TransferRequestBlock>, PendingTransfer&);
+    ErrorOr<void> enqueue_transfer_impl(u8 slot, u8 endpoint, Pipe::Direction direction, Span<TransferRequestBlock>, PendingTransfer&, EndpointRing&);
     void handle_transfer_event(TransferRequestBlock const&);
 
     ErrorOr<Vector<TransferRequestBlock>> prepare_normal_transfer(Transfer& transfer);
@@ -211,7 +219,8 @@ private:
     DoorbellRegisters volatile& m_doorbell_registers;
 
     RefPtr<Process> m_process;
-    DeprecatedWaitQueue m_event_queue;
+    SpinlockProtected<bool, LockRank::None> m_events_pending { false };
+    WaitQueue m_event_queue;
 
     bool m_using_message_signalled_interrupts { false };
     bool m_large_contexts { false };
@@ -222,8 +231,9 @@ private:
 
     Vector<NonnullOwnPtr<PeriodicPendingTransfer>> m_active_periodic_transfers;
 
-    Spinlock<LockRank::None> m_command_lock;
-    DeprecatedWaitQueue m_command_completion_queue;
+    Mutex m_command_mutex;
+    SpinlockProtected<bool, LockRank::None> m_current_command_complete { false };
+    WaitQueue m_command_completion_queue;
     TransferRequestBlock m_command_result_transfer_request_block {};
     u32 m_command_ring_enqueue_index { 0 };
     u8 m_command_ring_producer_cycle_state { 1 };

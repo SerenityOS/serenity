@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -13,6 +14,7 @@
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.h>
+#include <Kernel/Library/KString.h>
 #include <Kernel/Library/StdLib.h>
 
 namespace Kernel::USB {
@@ -89,6 +91,69 @@ void Device::set_default_pipe(NonnullOwnPtr<ControlPipe> pipe)
 {
     VERIFY(!m_default_pipe);
     m_default_pipe = move(pipe);
+}
+
+ErrorOr<NonnullOwnPtr<KString>> Device::get_string_descriptor(u8 descriptor_index)
+{
+    // Index 0 usually means no string descriptor
+    // and would be 0 the list of available languages, which usually isn't a valid string
+    if (descriptor_index == 0)
+        return KString::try_create(""sv);
+
+    Array<u16, 128> buffer;
+    // Get Available languages
+    // FIXME: We should likely cache this
+    auto transfer_length = TRY(control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_RECIPIENT_DEVICE,
+        USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_STRING << 8) | 0, 0, buffer.size(), buffer.data()));
+
+    if (transfer_length < sizeof(USBDescriptorCommon)) {
+        dmesgln("USB Device: Could not query supported languages");
+        return EIO;
+    }
+    // After the header there is list of u16 language IDs,
+    // Check for the preferred language ID, or take the first one
+    auto const* header = reinterpret_cast<USBDescriptorCommon const*>(buffer.data());
+    // FIXME: This should likely be customizable/respect the locale
+    constexpr u16 preferred_language_id = 0x0409; // English (US)
+
+    if (header->length == sizeof(USBDescriptorCommon)) {
+        dmesgln("USB Device: No supported languages found");
+        return ENOTSUP;
+    }
+
+    constexpr size_t header_size_in_u16 = sizeof(USBDescriptorCommon) / sizeof(u16);
+    Span<u16> languages = buffer.span().slice(header_size_in_u16, min((header->length / sizeof(u16)) - header_size_in_u16, transfer_length / sizeof(u16)));
+    u16 lang_id;
+    if (languages.contains_slow(preferred_language_id))
+        lang_id = preferred_language_id;
+    else
+        lang_id = languages[0];
+
+    transfer_length = TRY(control_transfer(USB_REQUEST_TRANSFER_DIRECTION_DEVICE_TO_HOST | USB_REQUEST_TYPE_STANDARD | USB_REQUEST_RECIPIENT_DEVICE,
+        USB_REQUEST_GET_DESCRIPTOR, (DESCRIPTOR_TYPE_STRING << 8) | descriptor_index, lang_id, sizeof(buffer), buffer.data()));
+
+    if (transfer_length < 2)
+        return KString::try_create(""sv);
+
+    header = reinterpret_cast<USBDescriptorCommon const*>(buffer.data());
+    if (header->descriptor_type != DESCRIPTOR_TYPE_STRING) {
+        dmesgln("USB Device: Invalid string descriptor received, expected type {} but got {}", DESCRIPTOR_TYPE_STRING, header->descriptor_type);
+        return KString::try_create(""sv);
+    }
+    auto const descriptor_length = min<size_t>(header->length, transfer_length);
+
+    // Trailing data is a UTF-16LE encoded string
+    // FIXME: Let's just assume ascii with zero high bytes for now
+    Span<u16> string_data = buffer.span().slice(header_size_in_u16, (descriptor_length / sizeof(u16)) - header_size_in_u16);
+    char* ascii_view;
+    auto string = TRY(KString::try_create_uninitialized(string_data.size(), ascii_view));
+    for (auto ch : string_data) {
+        if (ch > 0xFF)
+            *ascii_view++ = '?';
+        else
+            *ascii_view++ = static_cast<char>(ch);
+    }
+    return string;
 }
 
 ErrorOr<size_t> Device::control_transfer(u8 request_type, u8 request, u16 value, u16 index, u16 length, void* data)

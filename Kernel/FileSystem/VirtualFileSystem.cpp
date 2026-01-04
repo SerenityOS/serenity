@@ -295,7 +295,7 @@ ErrorOr<void> VirtualFileSystem::remove_mount(Mount& mount, FileBackedFileSystem
 {
     NonnullRefPtr<FileSystem> fs = mount.guest_fs();
     TRY(fs->prepare_to_unmount(mount.guest()));
-    fs->mounted_count().with([&](auto& mounted_count) {
+    fs->mounted_count().with_exclusive([&](auto& mounted_count) {
         VERIFY(mounted_count > 0);
         if (mounted_count == 1) {
             dbgln("VirtualFileSystem: Unmounting file system {} for the last time...", fs->fsid());

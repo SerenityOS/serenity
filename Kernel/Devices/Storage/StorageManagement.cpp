@@ -470,7 +470,7 @@ ErrorOr<NonnullRefPtr<VFSRootContext>> StorageManagement::create_first_vfs_root_
 
     // NOTE: Fake a mounted count of 1 so the called VirtualFileSystem function in the
     // next pivot_root logic block thinks everything is OK.
-    fs->mounted_count().with([](auto& mounted_count) {
+    fs->mounted_count().with_exclusive([](auto& mounted_count) {
         mounted_count++;
     });
 
@@ -482,7 +482,7 @@ ErrorOr<NonnullRefPtr<VFSRootContext>> StorageManagement::create_first_vfs_root_
 
     TRY(VirtualFileSystem::pivot_root_by_copying_mounted_fs_instance(*vfs_root_context, *fs, root_mount_flags));
     // NOTE: Return the mounted count to normal now we have it really mounted.
-    fs->mounted_count().with([](auto& mounted_count) {
+    fs->mounted_count().with_exclusive([](auto& mounted_count) {
         mounted_count--;
     });
     return vfs_root_context;

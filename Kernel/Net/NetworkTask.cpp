@@ -58,6 +58,11 @@ bool NetworkTask::is_current()
     return Thread::current() == network_task;
 }
 
+Thread* NetworkTask::the_thread()
+{
+    return network_task;
+}
+
 void NetworkTask_main(void*)
 {
     delayed_ack_sockets = new HashTable<NonnullRefPtr<TCPSocket>>;

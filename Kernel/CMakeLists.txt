@@ -37,6 +37,7 @@ set(KERNEL_SOURCES
     Bus/USB/xHCI/xHCIInterrupter.cpp
     Bus/USB/xHCI/xHCIRootHub.cpp
     Bus/USB/Drivers/HID.cpp
+    Bus/USB/Drivers/CDC/Driver.cpp
     Bus/USB/Drivers/MassStorage/MassStorageDriver.cpp
     Bus/USB/USBConfiguration.cpp
     Bus/USB/USBController.cpp
@@ -284,6 +285,7 @@ set(KERNEL_SOURCES
     Net/Intel/E1000ENetworkAdapter.cpp
     Net/Intel/E1000NetworkAdapter.cpp
     Net/Realtek/RTL8168NetworkAdapter.cpp
+    Net/USB/CDCECM.cpp
     Net/VirtIO/VirtIONetworkAdapter.cpp
     Net/IP/Socket.cpp
     Net/LocalSocket.cpp
