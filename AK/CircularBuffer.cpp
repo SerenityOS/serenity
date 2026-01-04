@@ -407,19 +407,19 @@ Optional<SearchableCircularBuffer::Match> SearchableCircularBuffer::find_copy_in
     // Try a plain memory search for smaller values.
     // Note: This overlaps with the hash search for chunks of size HASH_CHUNK_SIZE for the purpose of validation.
     if (minimum_length <= HASH_CHUNK_SIZE) {
-        size_t haystack_offset_from_start = 0;
+        size_t haystack_offset_from_end = 0;
         Vector<ReadonlyBytes, 2> haystack;
+
+        // Note: memmem_reverse expects memory chunks in the order that it should search in,
+        //       so haystack[0] needs to be the memory with the highest match priority.
         haystack.append(next_search_span(search_limit()));
         if (haystack[0].size() < search_limit())
-            haystack.append(next_search_span(search_limit() - haystack[0].size()));
+            haystack.prepend(next_search_span(search_limit() - haystack[0].size()));
 
-        // TODO: `memmem` searches the memory in "natural" order, which means that it finds matches with a greater distance first.
-        //       Hash-based searching finds the shortest distances first, which is most likely better for encoding and memory efficiency.
-        //       Look into creating a `memmem_reverse`, which starts searching from the end.
-        auto memmem_match = AK::memmem(haystack.begin(), haystack.end(), needle);
+        auto memmem_match = AK::memmem_reverse(haystack.begin(), haystack.end(), needle);
         while (memmem_match.has_value()) {
             auto match_offset = memmem_match.release_value();
-            auto corrected_match_distance = search_limit() - haystack_offset_from_start - match_offset;
+            auto corrected_match_distance = haystack_offset_from_end + match_offset;
 
             // Validate the match through the set-distance-based implementation and extend it to the largest size possible.
             auto maybe_new_match = find_copy_in_seekback(Array { corrected_match_distance }, min(maximum_length, HASH_CHUNK_SIZE), minimum_length);
@@ -440,13 +440,13 @@ Optional<SearchableCircularBuffer::Match> SearchableCircularBuffer::find_copy_in
             auto size_to_discard = match_offset + 1;
 
             // Trim away the already processed bytes from the haystack.
-            haystack_offset_from_start += size_to_discard;
+            haystack_offset_from_end += size_to_discard;
             while (size_to_discard > 0) {
                 if (haystack[0].size() < size_to_discard) {
                     size_to_discard -= haystack[0].size();
                     haystack.remove(0);
                 } else {
-                    haystack[0] = haystack[0].slice(size_to_discard);
+                    haystack[0] = haystack[0].slice(0, haystack[0].size() - size_to_discard);
                     break;
                 }
             }
@@ -455,7 +455,7 @@ Optional<SearchableCircularBuffer::Match> SearchableCircularBuffer::find_copy_in
                 break;
 
             // Try and find the next match.
-            memmem_match = AK::memmem(haystack.begin(), haystack.end(), needle);
+            memmem_match = AK::memmem_reverse(haystack.begin(), haystack.end(), needle);
         }
 
         // If we found a match of size HASH_CHUNK_SIZE, we should have already found that using the hash search. Investigate.
