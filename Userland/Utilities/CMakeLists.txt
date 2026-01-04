@@ -78,6 +78,7 @@ set(CMD_SOURCES_CPP
     imgcmp.cpp
     ini.cpp
     init.cpp
+    inputdbg.cpp
     install.cpp
     isobmff.cpp
     jbig2-from-json.cpp
@@ -335,6 +336,7 @@ target_link_libraries(image PRIVATE LibGfx)
 target_link_libraries(image2bin PRIVATE LibGfx)
 target_link_libraries(imgcmp PRIVATE LibGfx)
 target_link_libraries(ini PRIVATE LibFileSystem)
+target_link_libraries(inputdbg PRIVATE LibGUI)
 target_link_libraries(install-bin PRIVATE LibFileSystem)
 target_link_libraries(isobmff PRIVATE LibGfx)
 target_link_libraries(jbig2-from-json PRIVATE LibGfx)

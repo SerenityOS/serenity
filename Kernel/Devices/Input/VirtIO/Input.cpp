@@ -11,13 +11,14 @@
 #include <Kernel/Devices/Input/Management.h>
 #include <Kernel/Devices/Input/VirtIO/EvDevDefinitions.h>
 #include <Kernel/Devices/Input/VirtIO/Input.h>
+#include <Kernel/Devices/Input/VirtIO/KeyboardKeymap.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::VirtIO {
 
 struct VirtIOInputEvent {
-    LittleEndian<u16> type;
-    LittleEndian<u16> code;
+    LittleEndian<EvDevEventType> type;
+    LittleEndian<EvDevEventCode> code;
     LittleEndian<u32> value;
 };
 static_assert(AssertSize<VirtIOInputEvent, 8>());
@@ -62,105 +63,6 @@ struct VirtIOInputConfig {
     } u;
 };
 static_assert(AssertSize<VirtIOInputConfig, 136>());
-
-// clang-format off
-static constexpr auto unshifted_evdev_key_map = to_array<KeyCodeEntry const>({
-    // 0x00-0x0f
-    { Key_Invalid, 0xff },           { Key_Escape, 0x01 },            { Key_1, 0x02 },                 { Key_2, 0x03 },
-    { Key_3, 0x04 },                 { Key_4, 0x05 },                 { Key_5, 0x06 },                 { Key_6, 0x07 },
-    { Key_7, 0x08 },                 { Key_8, 0x09 },                 { Key_9, 0x0a },                 { Key_0, 0x0b },
-    { Key_Minus, 0x0c },             { Key_Equal, 0x0d },             { Key_Backspace, 0x0e },         { Key_Tab, 0x0f },
-
-    // 0x10-0x1f
-    { Key_Q, 0x10 },                 { Key_W, 0x11 },                 { Key_E, 0x12 },                 { Key_R, 0x13 },
-    { Key_T, 0x14 },                 { Key_Y, 0x15 },                 { Key_U, 0x16 },                 { Key_I, 0x17 },
-    { Key_O, 0x18 },                 { Key_P, 0x19 },                 { Key_LeftBracket, 0x1a },       { Key_RightBracket, 0x1b },
-    { Key_Return, 0x1c },            { Key_LeftControl, 0xff },       { Key_A, 0x1e },                 { Key_S, 0x1f },
-
-    // 0x20-0x2f
-    { Key_D, 0x20 },                 { Key_F, 0x21 },                 { Key_G, 0x22 },                 { Key_H, 0x23 },
-    { Key_J, 0x24 },                 { Key_K, 0x25 },                 { Key_L, 0x26 },                 { Key_Semicolon, 0x27 },
-    { Key_Apostrophe, 0x28 },        { Key_Backtick, 0x29 },          { Key_LeftShift, 0xff },         { Key_Backslash, 0x2b },
-    { Key_Z, 0x2c },                 { Key_X, 0x2d },                 { Key_C, 0x2e },                 { Key_V, 0x2f },
-
-    // 0x30-0x3f
-    { Key_B, 0x30 },                 { Key_N, 0x31 },                 { Key_M, 0x32 },                 { Key_Comma, 0x33 },
-    { Key_Period, 0x34 },            { Key_Slash, 0x35 },             { Key_RightShift, 0xff },        { Key_Asterisk, 0x37 },
-    { Key_LeftAlt, 0xff },           { Key_Space, 0x39 },             { Key_CapsLock, 0xff },          { Key_F1, 0xff },
-    { Key_F2, 0xff },                { Key_F3, 0xff },                { Key_F4, 0xff },                { Key_F5, 0xff },
-
-    // 0x40-0x4f
-    { Key_F6, 0xff },                { Key_F7, 0xff },                { Key_F8, 0xff },                { Key_F9, 0xff },
-    { Key_F10, 0xff },               { Key_NumLock, 0xff },           { Key_ScrollLock, 0xff },        { Key_Home, 0xff },
-    { Key_Up, 0xff },                { Key_PageUp, 0xff },            { Key_Minus, 0x4a },             { Key_Left, 0xff },
-    { Key_Invalid, 0xff },           { Key_Right, 0xff },             { Key_Plus, 0x4e },              { Key_End, 0xff },
-
-    // 0x50-0x5f
-    { Key_Down, 0xff },              { Key_PageDown, 0xff },          { Key_Insert, 0xff },            { Key_Delete, 0xff },
-    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Backslash, 0x56 },         { Key_F11, 0xff },
-    { Key_F12, 0xff },               { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
-    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
-
-    // 0x60-0x6f
-    // FIXME: Add Numpad "/" key to character map for key code 0x62
-    { Key_Return, 0x1c },            { Key_RightControl, 0xff },      { Key_Slash, 0xff },             { Key_SysRq, 0xff },
-    { Key_RightAlt, 0xff },          { Key_Invalid, 0xff },           { Key_Home, 0xff },              { Key_Up, 0xff },
-    { Key_PageUp, 0xff },            { Key_Left, 0xff },              { Key_Right, 0xff },             { Key_End, 0xff },
-    { Key_Down, 0xff },              { Key_PageDown, 0xff },          { Key_Insert, 0xff },            { Key_Delete, 0xff },
-
-    // 0x70-0x7f
-    { Key_Invalid, 0xff },           { Key_Mute, 0xff },              { Key_VolumeDown, 0xff },        { Key_VolumeUp, 0xff },
-    { Key_Power, 0xff },             { Key_Equal, 0xff },             { Key_Invalid, 0xff },           { Key_PauseBreak, 0xff },
-    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
-    { Key_Invalid, 0xff },           { Key_LeftSuper, 0xff },         { Key_RightSuper, 0xff },        { Key_Menu, 0xff },
-
-    // 0x80-0x8f
-    { Key_Stop, 0xff },              { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
-    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
-    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
-    { Key_Calculator, 0xff },        { Key_Invalid, 0xff },           { Key_Sleep, 0xff },             { Key_Wake, 0xff },
-});
-// clang-format on
-
-// clang-format off
-static constexpr auto shifted_evdev_key_map = to_array<KeyCodeEntry const>({
-    // 0x00-0x0f
-    { Key_Invalid, 0xff },           { Key_Escape, 0x01 },            { Key_ExclamationPoint, 0x02 },  { Key_AtSign, 0x03 },
-    { Key_Hashtag, 0x04 },           { Key_Dollar, 0x05 },            { Key_Percent, 0x06 },           { Key_Circumflex, 0x07 },
-    { Key_Ampersand, 0x08 },         { Key_Asterisk, 0x09 },          { Key_LeftParen, 0x0a },         { Key_RightParen, 0x0b },
-    { Key_Underscore, 0x0c },        { Key_Plus, 0x0d },              { Key_Backspace, 0x0e },         { Key_Tab, 0x0f },
-
-    // 0x10-0x1f
-    { Key_Q, 0x10 },                 { Key_W, 0x11 },                 { Key_E, 0x12 },                 { Key_R, 0x13 },
-    { Key_T, 0x14 },                 { Key_Y, 0x15 },                 { Key_U, 0x16 },                 { Key_I, 0x17 },
-    { Key_O, 0x18 },                 { Key_P, 0x19 },                 { Key_LeftBrace, 0x1a },         { Key_RightBrace, 0x1b },
-    { Key_Return, 0x1c },            { Key_LeftControl, 0xff },       { Key_A, 0x1e },                 { Key_S, 0x1f },
-
-    // 0x20-0x2f
-    { Key_D, 0x20 },                 { Key_F, 0x21 },                 { Key_G, 0x22 },                 { Key_H, 0x23 },
-    { Key_J, 0x24 },                 { Key_K, 0x25 },                 { Key_L, 0x26 },                 { Key_Colon, 0x27 },
-    { Key_DoubleQuote, 0x28 },       { Key_Tilde, 0x29 },             { Key_LeftShift, 0xff },         { Key_Pipe, 0x2b },
-    { Key_Z, 0x2c },                 { Key_X, 0x2d },                 { Key_C, 0x2e },                 { Key_V, 0x2f },
-
-    // 0x30-0x3f
-    { Key_B, 0x30 },                 { Key_N, 0x31 },                 { Key_M, 0x32 },                 { Key_LessThan, 0x33 },
-    { Key_GreaterThan, 0x34 },       { Key_QuestionMark, 0x35 },      { Key_RightShift, 0xff },        { Key_Asterisk, 0x37 },
-    { Key_LeftAlt, 0xff },           { Key_Space, 0x39 },             { Key_CapsLock, 0xff },          { Key_F1, 0xff },
-    { Key_F2, 0xff },                { Key_F3, 0xff },                { Key_F4, 0xff },                { Key_F5, 0xff },
-
-    // 0x40-0x4f
-    { Key_F6, 0xff },                { Key_F7, 0xff },                { Key_F8, 0xff },                { Key_F9, 0xff },
-    { Key_F10, 0xff },               { Key_NumLock, 0xff },           { Key_ScrollLock, 0xff },        { Key_Home, 0xff },
-    { Key_Up, 0xff },                { Key_PageUp, 0xff },            { Key_Minus, 0x4a },             { Key_Left, 0xff },
-    { Key_Invalid, 0xff },           { Key_Right, 0xff },             { Key_Plus, 0x4e },              { Key_End, 0xff },
-
-    // 0x50-0x5f
-    { Key_Down, 0xff },              { Key_PageDown, 0xff },          { Key_Insert, 0xff },            { Key_Delete, 0xff },
-    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Pipe, 0x56 },              { Key_F11, 0xff },
-    { Key_F12, 0xff },               { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
-    { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },           { Key_Invalid, 0xff },
-});
-// clang-format on
 
 UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<Input>> Input::create_for_pci_instance(PCI::DeviceIdentifier const& device_identifier)
 {
@@ -269,9 +171,9 @@ void Input::handle_event(VirtIOInputEvent const& event)
     // TODO: Set lock key LEDs
 
     switch (event.type) {
-    case EV_SYN:
+    case EvDevEventType::Syn:
         switch (event.code) {
-        case SYN_REPORT:
+        case EvDevEventCode::SynReport:
             m_mouse_device->handle_mouse_packet_input_event(m_current_mouse_packet);
 
             // Don't reset the x/y values if the last event was an absolute event, as otherwise the mouse would jump to the top left corner on events other than mouse movement.
@@ -286,28 +188,28 @@ void Input::handle_event(VirtIOInputEvent const& event)
             break;
 
         default:
-            dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_SYN event code: {:#x}", event.code);
+            dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_SYN event code: {:#x}", to_underlying(static_cast<EvDevEventCode>(event.code)));
             break;
         }
         break;
 
-    case EV_KEY:
+    case EvDevEventType::Key:
         switch (event.code) {
-        case BTN_LEFT:
+        case EvDevEventCode::ButtonLeft:
             if (event.value == 1)
                 m_current_mouse_packet.buttons |= MousePacket::Button::LeftButton;
             else
                 m_current_mouse_packet.buttons &= ~MousePacket::Button::LeftButton;
             break;
 
-        case BTN_RIGHT:
+        case EvDevEventCode::ButtonRight:
             if (event.value == 1)
                 m_current_mouse_packet.buttons |= MousePacket::Button::RightButton;
             else
                 m_current_mouse_packet.buttons &= ~MousePacket::Button::RightButton;
             break;
 
-        case BTN_MIDDLE:
+        case EvDevEventCode::ButtonMiddle:
             if (event.value == 1)
                 m_current_mouse_packet.buttons |= MousePacket::Button::MiddleButton;
             else
@@ -322,29 +224,29 @@ void Input::handle_event(VirtIOInputEvent const& event)
 
             RawKeyEvent raw_key_event;
             raw_key_event.is_press_down = event.value == 1;
-            raw_key_event.scancode = event.code;
+            raw_key_event.scancode = to_underlying(static_cast<EvDevEventCode>(event.code));
 
             switch (event.code) {
-            case KEY_LEFTALT:
+            case EvDevEventCode::KeyLeftAlt:
                 m_keyboard_device->update_modifier(Mod_Alt, raw_key_event.is_press());
                 break;
 
-            case KEY_LEFTCTRL:
-            case KEY_RIGHTCTRL:
+            case EvDevEventCode::KeyLeftControl:
+            case EvDevEventCode::KeyRightControl:
                 m_keyboard_device->update_modifier(Mod_Ctrl, raw_key_event.is_press());
                 break;
 
-            case KEY_LEFTSHIFT:
-            case KEY_RIGHTSHIFT:
+            case EvDevEventCode::KeyLeftShift:
+            case EvDevEventCode::KeyRightShift:
                 m_keyboard_device->update_modifier(Mod_Shift, raw_key_event.is_press());
                 break;
 
-            case KEY_LEFTMETA:
-            case KEY_RIGHTMETA:
+            case EvDevEventCode::KeyLeftMeta:
+            case EvDevEventCode::KeyRightMeta:
                 m_keyboard_device->update_modifier(Mod_Super, raw_key_event.is_press());
                 break;
 
-            case KEY_RIGHTALT:
+            case EvDevEventCode::KeyRightAlt:
                 m_keyboard_device->update_modifier(Mod_AltGr, raw_key_event.is_press());
                 break;
 
@@ -352,25 +254,25 @@ void Input::handle_event(VirtIOInputEvent const& event)
                 break;
             }
 
-            if ((event.code >= KEY_KP7 && event.code <= KEY_KPDOT)
-                || event.code == KEY_KPASTERISK
-                || event.code == KEY_KPENTER
-                || event.code == KEY_KPEQUAL
-                || event.code == KEY_KPSLASH) {
+            if ((event.code >= EvDevEventCode::KeyKeypad7 && event.code <= EvDevEventCode::KeyKeypadDot)
+                || event.code == EvDevEventCode::KeyKeypadAsterisk
+                || event.code == EvDevEventCode::KeyKeypadEnter
+                || event.code == EvDevEventCode::KeyKeypadEqual
+                || event.code == EvDevEventCode::KeyKeypadSlash) {
                 m_keyboard_device->update_modifier(Mod_Keypad, true);
             }
 
             // The shift key only applies to small key codes, so only use the shifted key map if the event code is small enough.
-            bool use_shifted_key_map = (m_keyboard_device->modifiers() & Mod_Shift) != 0 && event.code < shifted_evdev_key_map.size();
+            bool use_shifted_key_map = (m_keyboard_device->modifiers() & Mod_Shift) != 0 && raw_key_event.scancode < shifted_evdev_key_map.size();
 
             auto key_map = use_shifted_key_map ? Span<KeyCodeEntry const>(shifted_evdev_key_map) : Span<KeyCodeEntry const>(unshifted_evdev_key_map);
 
-            if (event.code >= key_map.size()) {
-                dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_KEY event code: {:#x}", event.code);
+            if (raw_key_event.scancode >= key_map.size()) {
+                dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_KEY event code: {:#x}", to_underlying(static_cast<EvDevEventCode>(event.code)));
                 return;
             }
 
-            raw_key_event.code_entry = key_map[event.code];
+            raw_key_event.code_entry = key_map[raw_key_event.scancode];
 
             KeyEvent key_event {
                 .key = raw_key_event.code_entry.key_code,
@@ -380,8 +282,8 @@ void Input::handle_event(VirtIOInputEvent const& event)
             };
 
             if (m_keyboard_device->num_lock_on() && (m_keyboard_device->modifiers() & Mod_Shift) == 0) {
-                if (key_event.scancode >= KEY_KP7 && raw_key_event.scancode <= KEY_KPDOT) {
-                    auto index = key_event.scancode - KEY_KP7;
+                if (key_event.scancode >= to_underlying(EvDevEventCode::KeyKeypad7) && raw_key_event.scancode <= to_underlying(EvDevEventCode::KeyKeypadDot)) {
+                    auto index = key_event.scancode - to_underlying(EvDevEventCode::KeyKeypad7);
                     static constexpr auto numpad_key_map = to_array<KeyCodeEntry>({
                         { Key_7, 0x08 },
                         { Key_8, 0x09 },
@@ -410,36 +312,36 @@ void Input::handle_event(VirtIOInputEvent const& event)
         }
         break;
 
-    case EV_REL: {
-        if (event.code == REL_X) {
+    case EvDevEventType::Rel: {
+        if (event.code == EvDevEventCode::RelX) {
             m_current_mouse_packet.is_relative = true;
             m_current_mouse_packet.x = static_cast<int>(event.value);
-        } else if (event.code == REL_Y) {
+        } else if (event.code == EvDevEventCode::RelY) {
             m_current_mouse_packet.is_relative = true;
             m_current_mouse_packet.y = -static_cast<int>(event.value);
-        } else if (event.code == REL_WHEEL) {
+        } else if (event.code == EvDevEventCode::RelWheel) {
             m_current_mouse_packet.z = -static_cast<int>(event.value);
         } else {
-            dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_REL event code: {:#x}", event.code);
+            dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_REL event code: {:#x}", to_underlying(static_cast<EvDevEventCode>(event.code)));
         }
         break;
     }
 
-    case EV_ABS: {
-        if (event.code == ABS_X) {
+    case EvDevEventType::Abs: {
+        if (event.code == EvDevEventCode::AbsX) {
             m_current_mouse_packet.is_relative = false;
             m_current_mouse_packet.x = static_cast<int>((event.value - m_abs_min) * 0xffff / (m_abs_max - m_abs_min));
-        } else if (event.code == ABS_Y) {
+        } else if (event.code == EvDevEventCode::AbsY) {
             m_current_mouse_packet.is_relative = false;
             m_current_mouse_packet.y = static_cast<int>((event.value - m_abs_min) * 0xffff / (m_abs_max - m_abs_min));
         } else {
-            dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_ABS event code: {:#x}", event.code);
+            dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown EV_ABS event code: {:#x}", to_underlying(static_cast<EvDevEventCode>(event.code)));
         }
         break;
     }
 
     default:
-        dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown event type: {:#x}", event.type);
+        dbgln_if(VIRTIO_DEBUG, "VirtIO::Input: Unknown event type: {:#x}", to_underlying(static_cast<EvDevEventType>(event.type)));
         break;
     }
 }
