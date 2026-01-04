@@ -77,6 +77,14 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 
 ## Pull Request Q&A
 
+### How do I find a good first issue to work on?
+
+Check the GitHub issues page for issues labeled "good first issue". You can also:
+- Look for typos in comments or documentation
+- Add missing documentation to functions
+- Write tests for existing code
+- Fix small bugs in utilities
+
 ### I've submitted a PR and it passes CI. When can I expect to get some review feedback?
 
 While unadvertised PRs may get randomly merged by curious maintainers, you will have a much smoother time if you engage with the community on Discord.
