@@ -13,7 +13,6 @@ void* memcpy(void* dest_ptr, void const* src_ptr, size_t n)
 #if ARCH(X86_64)
     size_t dest = (size_t)dest_ptr;
     size_t src = (size_t)src_ptr;
-    // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && !(src & 0x3) && n >= 12) {
         size_t size_ts = n / sizeof(size_t);
         n -= size_ts * sizeof(size_t);
