@@ -168,4 +168,37 @@ inline void set_mdscr_el1(FlatPtr mdscr_el1)
     asm volatile("msr mdscr_el1, %[value]" ::[value] "r"(mdscr_el1));
 }
 
+// https://developer.arm.com/documentation/ddi0602/2025-12/Base-Instructions/DSB--Data-synchronization-barrier-
+enum class BarrierLimitation {
+    SY = 0b1111,
+    ST = 0b1110,
+    LD = 0b1101,
+    ISH = 0b1011,
+    ISHST = 0b1010,
+    ISHLD = 0b1001,
+    NSH = 0b0111,
+    NSHST = 0b0110,
+    NSHLD = 0b0101,
+    OSH = 0b0011,
+    OSHST = 0b0010,
+    OSHLD = 0b0001,
+};
+
+ALWAYS_INLINE void instruction_synchronization_barrier()
+{
+    asm volatile("isb" ::: "memory");
+}
+
+template<BarrierLimitation limitation>
+ALWAYS_INLINE void data_memory_barrier()
+{
+    asm volatile("dmb %0" ::"i"(limitation) : "memory");
+}
+
+template<BarrierLimitation limitation>
+ALWAYS_INLINE void data_synchronization_barrier()
+{
+    asm volatile("dsb %0" ::"i"(limitation) : "memory");
+}
+
 }
