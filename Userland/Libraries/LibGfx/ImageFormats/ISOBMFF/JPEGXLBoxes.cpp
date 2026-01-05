@@ -46,4 +46,21 @@ void JPEGXLCodestreamBox::dump(String const& prepend) const
     outln("{}- size = {}", prepend, codestream.size());
 }
 
+ErrorOr<void> JPEGXLPartialCodestreamBox::read_from_stream(ConstrainedStream& stream)
+{
+    part_index = TRY(stream.read_value<BigEndian<u32>>());
+
+    // FIXME: Prevent the copy.
+    TRY(codestream.try_resize(stream.remaining()));
+    TRY(stream.read_until_filled(codestream.span()));
+    return {};
+}
+
+void JPEGXLPartialCodestreamBox::dump(String const& prepend) const
+{
+    Box::dump(prepend);
+    outln("{}- index = {}{}", prepend, index(), is_last() ? " (last)" : "");
+    outln("{}- size = {}", prepend, codestream.size());
+}
+
 }

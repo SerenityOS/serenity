@@ -34,4 +34,15 @@ struct JPEGXLCodestreamBox final : public Box {
     Vector<u8> codestream;
 };
 
+// 9.10 - JPEG XL Partial Codestream box (jxlp)
+struct JPEGXLPartialCodestreamBox final : public Box {
+    BOX_SUBTYPE(JPEGXLPartialCodestreamBox);
+
+    u32 index() const { return part_index & 0x7FFF'FFFF; }
+    bool is_last() const { return (part_index & 0x8000'0000) != 0; }
+
+    u32 part_index { 0 };
+    Vector<u8> codestream;
+};
+
 }
