@@ -10,14 +10,14 @@ namespace Gfx::ISOBMFF {
 
 ErrorOr<void> JPEGXLSignatureBox::read_from_stream(ConstrainedStream& stream)
 {
-    // FIXME: Make the decoder check the signature.
-    TRY(stream.discard(4));
+    signature = TRY(stream.read_value<BigEndian<u32>>());
     return {};
 }
 
 void JPEGXLSignatureBox::dump(String const& prepend) const
 {
     Box::dump(prepend);
+    outln("{}- signature = {:#08x}", prepend, signature);
 }
 
 ErrorOr<void> JPEGXLLevelBox::read_from_stream(ConstrainedStream& stream)
