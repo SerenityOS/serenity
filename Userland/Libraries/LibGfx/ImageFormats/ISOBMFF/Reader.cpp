@@ -42,6 +42,8 @@ ErrorOr<BoxList> Reader::read_entire_file()
             return TRY(JPEGXLLevelBox::create_from_stream(stream));
         case BoxType::JPEGXLSignatureBox:
             return TRY(JPEGXLSignatureBox::create_from_stream(stream));
+        case BoxType::JPEGXLPartialCodestreamBox:
+            return TRY(JPEGXLPartialCodestreamBox::create_from_stream(stream));
         case BoxType::UserExtensionBox:
             return TRY(UserExtensionBox::create_from_stream(stream));
         default:

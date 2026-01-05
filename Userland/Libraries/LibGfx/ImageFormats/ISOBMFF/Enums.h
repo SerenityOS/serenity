@@ -22,6 +22,7 @@ namespace Gfx::ISOBMFF {
     ENUMERATE_ONE(JPEG2000ColorSpecificationBox, "colr")       \
     ENUMERATE_ONE(JPEGXLCodestreamBox, "jxlc")                 \
     ENUMERATE_ONE(JPEGXLLevelBox, "jxll")                      \
+    ENUMERATE_ONE(JPEGXLPartialCodestreamBox, "jxlp")          \
     ENUMERATE_ONE(JPEGXLSignatureBox, "JXL ")                  \
     ENUMERATE_ONE(FreeBox, "free")                             \
     ENUMERATE_ONE(FileTypeBox, "ftyp")                         \

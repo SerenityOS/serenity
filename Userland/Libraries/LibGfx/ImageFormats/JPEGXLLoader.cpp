@@ -3709,14 +3709,55 @@ static ErrorOr<Vector<u8>> extract_codestream_from_container(NonnullOwnPtr<Fixed
     auto box_reader = TRY(ISOBMFF::Reader::create(move(input)));
     auto box_list = TRY(box_reader.read_entire_file());
 
+    size_t jxlc_box_count = 0;
+    size_t jxlp_box_count = 0;
     for (auto& box : box_list) {
-        if (box->box_type() == ISOBMFF::BoxType::JPEGXLCodestreamBox) {
-            auto& codestream_box = *reinterpret_cast<ISOBMFF::JPEGXLCodestreamBox*>(box.ptr());
-            return move(codestream_box.codestream);
-        }
+        if (box->box_type() == ISOBMFF::BoxType::JPEGXLCodestreamBox)
+            jxlc_box_count++;
+        else if (box->box_type() == ISOBMFF::BoxType::JPEGXLPartialCodestreamBox)
+            jxlp_box_count++;
     }
 
-    return Error::from_string_literal("JPEGXLLoader: No jxlc box found");
+    // "A JPEG XL file shall contain either exactly one JPEG XL codestream box, or one or more JPEG XL partial
+    //  codestream boxes, but not both."
+    if (jxlc_box_count == 0 && jxlp_box_count == 0)
+        return Error::from_string_literal("JPEGXLLoader: No jxlc box and no jxlp boxes found");
+    if (jxlc_box_count > 1)
+        return Error::from_string_literal("JPEGXLLoader: Multiple jxlc boxes found");
+    if (jxlp_box_count > 0 && jxlc_box_count > 0)
+        return Error::from_string_literal("JPEGXLLoader: Both jxlc box and jxlp boxes found");
+
+    if (jxlc_box_count > 0) {
+        auto& box = *box_list.find_if([](auto& box) { return box->box_type() == ISOBMFF::BoxType::JPEGXLCodestreamBox; });
+        auto& codestream_box = static_cast<ISOBMFF::JPEGXLCodestreamBox&>(*box);
+        return move(codestream_box.codestream);
+    }
+
+    // "The index modulo 2^31 shall be 0 for the first partial
+    //  codestream box, and incremented by 1 for each next partial codestream box. The index shall be lower
+    //  than 2^31, except for the last partial codestream box, which shall have an index of at least 2^31. The boxes
+    //  shall appear in the file in order of increasing index. The full concatenation of all partial codestream
+    //  boxes in this order shall form exactly one complete and valid JPEG XL codestream."
+    // FIXME: Try to prevent the extra copy, maybe with a non-contiguous steam class.
+    VERIFY(jxlp_box_count > 0);
+    size_t next_part_index = 0;
+    Vector<u8> codestream;
+    for (auto& box : box_list) {
+        if (box->box_type() != ISOBMFF::BoxType::JPEGXLPartialCodestreamBox)
+            continue;
+        auto& partial_box = static_cast<ISOBMFF::JPEGXLPartialCodestreamBox&>(*box);
+
+        if (partial_box.index() != next_part_index)
+            return Error::from_string_literal("JPEGXLLoader: Partial box indices not sequential");
+        ++next_part_index;
+
+        bool is_last_box = next_part_index == jxlp_box_count;
+        if (partial_box.is_last() != is_last_box)
+            return Error::from_string_literal("JPEGXLLoader: Invalid is_last bit on partial box");
+
+        TRY(codestream.try_extend(partial_box.codestream));
+    }
+    return codestream;
 }
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGXLImageDecoderPlugin::create(ReadonlyBytes data)
