@@ -132,8 +132,13 @@
                         "external_combination_operator": "or"
                     }
                 },
+                "grayscale_width": 2,
+                "grayscale_height": 2,
                 "graymap_data": {
-                    "array": []
+                    "array": [
+                        [ 0, 0 ],
+                        [ 0, 0 ]
+                    ]
                 }
             }
         },
