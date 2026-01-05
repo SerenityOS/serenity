@@ -16,6 +16,8 @@ namespace Gfx::ISOBMFF {
 // 9.1  JPEG XL Signature box (JXL␣)
 struct JPEGXLSignatureBox final : public Box {
     BOX_SUBTYPE(JPEGXLSignatureBox);
+
+    u32 signature { 0 };
 };
 
 // 9.3  Level box (jxll)
