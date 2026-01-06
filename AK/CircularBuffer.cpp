@@ -404,6 +404,9 @@ Optional<SearchableCircularBuffer::Match> SearchableCircularBuffer::find_copy_in
         }
     }
 
+    // Needle size needs to be limited, otherwise we can only find HASH_CHUNK_SIZE-sized matches using memory search.
+    needle = needle.trim(minimum_length);
+
     // Try a plain memory search for smaller values.
     // Note: This overlaps with the hash search for chunks of size HASH_CHUNK_SIZE for the purpose of validation.
     if (minimum_length <= HASH_CHUNK_SIZE) {
