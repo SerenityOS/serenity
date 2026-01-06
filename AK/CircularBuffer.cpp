@@ -443,9 +443,11 @@ Optional<SearchableCircularBuffer::Match> SearchableCircularBuffer::find_copy_in
             auto size_to_discard = match_offset + 1;
 
             // Trim away the already processed bytes from the haystack.
+            // Running out of haystack to discard is fine, in this case we found a match at the largest
+            // distance and therefore tried to advance past that.
             haystack_offset_from_start += size_to_discard;
-            while (size_to_discard > 0) {
-                if (haystack[0].size() < size_to_discard) {
+            while (size_to_discard > 0 && haystack.size() > 0) {
+                if (haystack[0].size() <= size_to_discard) {
                     size_to_discard -= haystack[0].size();
                     haystack.remove(0);
                 } else {
