@@ -226,6 +226,8 @@ PDFErrorOr<ByteBuffer> Filter::decode_lzw(ReadonlyBytes bytes, RefPtr<DictObject
 
 PDFErrorOr<ByteBuffer> Filter::decode_flate(ReadonlyBytes bytes, RefPtr<DictObject> decode_parms)
 {
+    if (bytes.size() < 2)
+        return Error::malformed_error("FlateDecode input too small to contain zlib header");
     auto buff = TRY(Compress::DeflateDecompressor::decompress_all(bytes.slice(2)));
     return handle_lzw_and_flate_parameters(move(buff), decode_parms);
 }
