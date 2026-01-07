@@ -34,6 +34,12 @@ enum class ScheduleResult {
     Success,
     NoRunnableThreadFound,
     Delayed,
+    YieldAgain, // Only returned by pick_next().
+};
+
+enum class [[nodiscard]] ShouldYield {
+    Yes,
+    No,
 };
 
 class Scheduler {
@@ -45,7 +51,7 @@ public:
     [[noreturn]] static void start();
     static ScheduleResult pick_next();
     static ScheduleResult yield();
-    static void context_switch(Thread*);
+    static ShouldYield context_switch(Thread*);
     static void enter_current(Thread& prev_thread);
     static void leave_on_first_switch(InterruptsState);
     static void prepare_after_exec();
