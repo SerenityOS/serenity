@@ -7,24 +7,14 @@
 
 #include <Kernel/API/VirtualMemoryAnnotations.h>
 #include <Kernel/Arch/CPU.h>
-#include <Kernel/Arch/PageDirectory.h>
-#include <Kernel/Arch/SafeMem.h>
-#include <Kernel/Arch/SmapDisabler.h>
-#include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
-#include <Kernel/Tasks/PerformanceEventBuffer.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
-#include <LibELF/Validation.h>
-
-#if ARCH(X86_64)
-#    include <Kernel/Arch/x86_64/MSR.h>
-#endif
 
 namespace Kernel {
 
