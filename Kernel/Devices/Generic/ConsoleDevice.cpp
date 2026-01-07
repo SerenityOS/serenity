@@ -4,15 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Platform.h>
-#if ARCH(X86_64)
-#    include <Kernel/Arch/x86_64/BochsDebugOutput.h>
-#endif
-#include <Kernel/API/MajorNumberAllocation.h>
-#include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/ConsoleDevice.h>
 #include <Kernel/Locking/Spinlock.h>
-#include <Kernel/Sections.h>
 #include <Kernel/kstdio.h>
 
 namespace Kernel {
