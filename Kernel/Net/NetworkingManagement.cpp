@@ -6,7 +6,6 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Boot/CommandLine.h>
-#include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Library/KString.h>
 #include <Kernel/Memory/AnonymousVMObject.h>

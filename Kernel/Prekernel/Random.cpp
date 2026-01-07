@@ -5,7 +5,6 @@
  */
 
 #include <AK/Platform.h>
-#include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Prekernel/Prekernel.h>
 #include <Kernel/Prekernel/Random.h>
 #if ARCH(X86_64)

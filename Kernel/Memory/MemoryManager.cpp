@@ -14,7 +14,6 @@
 #include <Kernel/Arch/PageFault.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Boot/BootInfo.h>
-#include <Kernel/Boot/Multiboot.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Firmware/DeviceTree/DeviceTree.h>
 #include <Kernel/Heap/kmalloc.h>

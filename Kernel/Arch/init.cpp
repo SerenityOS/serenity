@@ -12,7 +12,6 @@
 #include <Kernel/Arch/Processor.h>
 #include <Kernel/Boot/BootInfo.h>
 #include <Kernel/Boot/CommandLine.h>
-#include <Kernel/Boot/Multiboot.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/Bus/USB/Drivers/USBDriver.h>
