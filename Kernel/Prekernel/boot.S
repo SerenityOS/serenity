@@ -14,11 +14,9 @@ kernel_cmdline:
 
 .section .page_tables, "aw", @nobits
 .align 4096
-#if ARCH(X86_64)
 .global boot_pml4t
 boot_pml4t:
 .skip 4096
-#endif
 .global boot_pdpt
 boot_pdpt:
 .skip 4096

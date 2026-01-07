@@ -224,9 +224,7 @@ extern "C" [[noreturn]] void init()
     info.physical_to_virtual_offset = kernel_load_base - kernel_physical_base;
     info.kernel_mapping_base = kernel_mapping_base;
     info.kernel_load_base = kernel_load_base;
-#if ARCH(X86_64)
     info.boot_pml4t = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pml4t) };
-#endif
     info.boot_pdpt = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pdpt) };
     info.arch_specific.boot_pd0 = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pd0) };
     info.boot_pd_kernel = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pd_kernel) };
