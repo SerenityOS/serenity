@@ -26,11 +26,7 @@ class Heap {
 
     struct AllocationHeader {
         size_t allocation_size_in_chunks;
-#if ARCH(X86_64) || ARCH(AARCH64)
-        // FIXME: Get rid of this somehow
-        size_t alignment_dummy;
-#endif
-        u8 data[0];
+        alignas(16) u8 data[0];
     };
 
     static_assert(CHUNK_SIZE >= sizeof(AllocationHeader));
