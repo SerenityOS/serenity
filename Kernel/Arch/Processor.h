@@ -10,15 +10,10 @@
 #include <AK/Function.h>
 #include <AK/SetOnce.h>
 #include <Kernel/Arch/CPUID.h>
-#include <Kernel/Arch/DeferredCallEntry.h>
 #include <Kernel/Arch/DeferredCallPool.h>
 #include <Kernel/Arch/FPUState.h>
 #include <Kernel/Arch/ProcessorSpecificDataID.h>
 #include <Kernel/Memory/VirtualAddress.h>
-
-#if ARCH(X86_64)
-#    include <Kernel/Arch/x86_64/DescriptorTable.h>
-#endif
 
 namespace Kernel {
 
