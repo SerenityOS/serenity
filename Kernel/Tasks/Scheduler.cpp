@@ -239,7 +239,11 @@ ScheduleResult Scheduler::pick_next()
     auto* previous_thread = Thread::current();
 
     thread_to_schedule.set_ticks_left(time_slice_for(thread_to_schedule));
-    context_switch(&thread_to_schedule);
+    auto should_yield = context_switch(&thread_to_schedule);
+
+    if (should_yield == ShouldYield::Yes) {
+        return ScheduleResult::YieldAgain;
+    }
 
     if (previous_thread == &thread_to_schedule) {
         VERIFY(thread_to_schedule.is_idle_thread());
@@ -264,10 +268,16 @@ ScheduleResult Scheduler::yield()
         return ScheduleResult::Delayed;
     }
 
-    return pick_next();
+    ScheduleResult result { ScheduleResult::NoRunnableThreadFound };
+
+    do {
+        result = pick_next();
+    } while (result == ScheduleResult::YieldAgain);
+
+    return result;
 }
 
-void Scheduler::context_switch(Thread* thread)
+ShouldYield Scheduler::context_switch(Thread* thread)
 {
     thread->did_schedule();
 
@@ -275,7 +285,7 @@ void Scheduler::context_switch(Thread* thread)
     VERIFY(from_thread);
 
     if (from_thread == thread)
-        return;
+        return ShouldYield::No;
 
     // If the last process hasn't blocked (still marked as running),
     // mark it as runnable for the next round, unless it's supposed
@@ -310,6 +320,11 @@ void Scheduler::context_switch(Thread* thread)
     // switched from, and thread reflects Thread::current()
     enter_current(*from_thread);
     VERIFY(thread == Thread::current());
+
+    {
+        SpinlockLocker lock(thread->get_lock());
+        return thread->dispatch_one_pending_signal() == DispatchSignalResult::Yield ? ShouldYield::Yes : ShouldYield::No;
+    }
 }
 
 void Scheduler::enter_current(Thread& prev_thread)
@@ -473,8 +488,12 @@ void Scheduler::invoke_async()
     // Since this function is called when leaving critical sections (such
     // as a Spinlock), we need to check if we're not already doing this
     // to prevent recursion
-    if (!Processor::current_in_scheduler())
-        pick_next();
+    if (!Processor::current_in_scheduler()) {
+        ScheduleResult result { ScheduleResult::NoRunnableThreadFound };
+        do {
+            result = pick_next();
+        } while (result == ScheduleResult::YieldAgain);
+    }
 }
 
 void Scheduler::notify_finalizer()

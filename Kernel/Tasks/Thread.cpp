@@ -623,7 +623,7 @@ bool Thread::tick()
     return m_ticks_left != 0;
 }
 
-void Thread::check_dispatch_pending_signal(YieldBehavior yield_behavior)
+void Thread::check_dispatch_pending_signal()
 {
     auto result = DispatchSignalResult::Continue;
     {
@@ -634,15 +634,7 @@ void Thread::check_dispatch_pending_signal(YieldBehavior yield_behavior)
     }
 
     if (result == DispatchSignalResult::Yield) {
-        switch (yield_behavior) {
-        case YieldBehavior::DoYield:
-            yield_without_releasing_big_lock();
-            break;
-        case YieldBehavior::FlagYield:
-            VERIFY_INTERRUPTS_DISABLED();
-            Processor::current().invoke_scheduler_async();
-            break;
-        }
+        yield_without_releasing_big_lock();
     }
 }
 
@@ -892,9 +884,13 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
     dbgln_if(SIGNAL_DEBUG, "Dispatch signal {} to {}, state: {}", signal, *this, state_string());
 
-    // We should only ever dispatch signals to valid and initialized threads.
-    VERIFY(m_state != Thread::State::Invalid);
-    VERIFY(is_initialized());
+    if (m_state == Thread::State::Invalid || !is_initialized()) {
+        // Thread has barely been created, we need to wait until it is
+        // at least in Runnable state and is_initialized() returns true,
+        // which indicates that it is fully set up an we actually have
+        // a register state on the stack that we can modify
+        return DispatchSignalResult::Deferred;
+    }
 
     auto& action = m_process->m_signal_action_data[signal];
     auto sender_pid = m_signal_senders[signal];

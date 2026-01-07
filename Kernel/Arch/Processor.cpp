@@ -285,25 +285,18 @@ void ProcessorBase::exit_trap(TrapFrame& trap)
         self->smp_process_pending_messages();
 #endif
 
-    auto* current_thread = Processor::current_thread();
-    if (current_thread) {
-        SpinlockLocker thread_lock(current_thread->get_lock());
-        current_thread->check_dispatch_pending_signal(YieldBehavior::FlagYield);
-    }
-
     // Process the deferred call queue. Among other things, this ensures
     // that any pending thread unblocks happen before we enter the scheduler.
     m_deferred_call_pool.execute_pending();
 
+    auto* current_thread = Processor::current_thread();
     if (current_thread) {
-        auto& current_trap = current_thread->current_trap();
-        current_trap = trap.next_trap;
         ExecutionMode new_previous_mode;
-        if (current_trap) {
-            VERIFY(current_trap->regs);
+        if (trap.next_trap) {
+            VERIFY(trap.next_trap->regs);
             // If we have another higher level trap then we probably returned
             // from an interrupt or irq handler.
-            new_previous_mode = current_trap->regs->previous_mode();
+            new_previous_mode = trap.next_trap->regs->previous_mode();
         } else {
             // If we don't have a higher level trap then we're back in user mode.
             // Which means that the previous mode prior to being back in user mode was kernel mode
@@ -322,6 +315,9 @@ void ProcessorBase::exit_trap(TrapFrame& trap)
     m_in_critical = m_in_critical - 1;
     if (!m_in_irq && !m_in_critical)
         check_invoke_scheduler();
+
+    if (current_thread)
+        current_thread->current_trap() = trap.next_trap;
 }
 
 }
