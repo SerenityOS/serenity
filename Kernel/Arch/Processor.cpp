@@ -289,9 +289,9 @@ void ProcessorBase::exit_trap(TrapFrame& trap)
     // that any pending thread unblocks happen before we enter the scheduler.
     m_deferred_call_pool.execute_pending();
 
+    Optional<ExecutionMode> new_previous_mode = {};
     auto* current_thread = Processor::current_thread();
     if (current_thread) {
-        ExecutionMode new_previous_mode;
         if (trap.next_trap) {
             VERIFY(trap.next_trap->regs);
             // If we have another higher level trap then we probably returned
@@ -302,8 +302,7 @@ void ProcessorBase::exit_trap(TrapFrame& trap)
             // Which means that the previous mode prior to being back in user mode was kernel mode
             new_previous_mode = ExecutionMode::Kernel;
         }
-
-        if (current_thread->set_previous_mode(new_previous_mode))
+        if (current_thread->previous_mode() != *new_previous_mode)
             current_thread->update_time_scheduled(TimeManagement::scheduler_current_time(), true, false);
     }
 
@@ -316,8 +315,11 @@ void ProcessorBase::exit_trap(TrapFrame& trap)
     if (!m_in_irq && !m_in_critical)
         check_invoke_scheduler();
 
-    if (current_thread)
+    if (current_thread) {
+        VERIFY(new_previous_mode.has_value());
         current_thread->current_trap() = trap.next_trap;
+        current_thread->set_previous_mode(*new_previous_mode);
+    }
 }
 
 }
