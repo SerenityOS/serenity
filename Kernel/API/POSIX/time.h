@@ -35,7 +35,7 @@ enum {
     CLOCK_ID_COUNT,
 };
 
-#define TIMER_ABSTIME 99
+#define TIMER_ABSTIME 1
 
 #ifdef __cplusplus
 }
