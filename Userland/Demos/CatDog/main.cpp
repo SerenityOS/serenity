@@ -11,6 +11,7 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Desktop.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -34,6 +35,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
+    auto screen = GUI::Desktop::the().rect();
     auto window = GUI::Window::construct();
     window->set_title("CatDog Demo");
     window->resize(32, 32);
@@ -76,7 +78,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->move_to_front();
         advice_window->move_to_front();
         catdog_widget->set_roaming(false);
-        advice_window->move_to(window->x() - advice_window->width() / 2, window->y() - advice_window->height());
+
+        static constexpr auto minimum_required_margin = 5;
+        int advice_window_x = window->x() - advice_window->width() / 2 - minimum_required_margin;
+        int advice_window_y = window->y() - advice_window->height();
+        advice_window_x = clamp(advice_window_x, minimum_required_margin, screen.width() - advice_window->width() - minimum_required_margin);
+        if (advice_window_y < minimum_required_margin)
+            advice_window_y = window->height() + window->y();
+        advice_window->move_to(advice_window_x, advice_window_y);
         advice_window->show();
         advice_window->set_always_on_top();
     });
