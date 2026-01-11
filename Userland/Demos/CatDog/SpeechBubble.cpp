@@ -35,19 +35,33 @@ void SpeechBubble::paint_event(GUI::PaintEvent&)
     painter.clear_rect(rect(), Gfx::Color());
 
     constexpr auto background_color = Gfx::Color::from_rgb(0xeaf688);
+    constexpr int connector_height = 10;
+    constexpr int connector_width = 5;
 
     auto text_area = rect();
-    text_area.set_height(text_area.height() - 10);
+    text_area.set_height(text_area.height() - connector_height);
+
+    int connector_center_x = max(m_cat_dog->screen_relative_rect().x() - screen_relative_rect().x(), connector_width + 2);
+    int connector_joint_y = text_area.height() - 1;
+    int connector_point_y = rect().height();
+
+    // In case SpeechBubble is drawn below CatDog, make space for connector triangle above text_area.
+    if (screen_relative_rect().y() > m_cat_dog->screen_relative_rect().y()) {
+        connector_joint_y = connector_height;
+        connector_point_y = 0;
+        text_area.set_y(connector_height);
+    }
+
     painter.draw_rect(text_area, palette().active_window_border1());
     text_area.shrink(2, 2);
     painter.fill_rect(text_area, background_color);
 
-    auto connector_top_left = Gfx::IntPoint { rect().width() / 2 - 5, text_area.height() + 1 };
-    auto connector_top_right = Gfx::IntPoint { rect().width() / 2 + 5, text_area.height() + 1 };
-    auto connector_bottom = Gfx::IntPoint { rect().width() / 2 + 10, rect().height() };
-    painter.draw_triangle(connector_top_left, connector_top_right, connector_bottom, background_color);
-    painter.draw_line(connector_top_left, Gfx::IntPoint { connector_bottom.x() - 1, connector_bottom.y() }, palette().active_window_border1());
-    painter.draw_line(connector_top_right, connector_bottom, palette().active_window_border1());
+    auto connector_left = Gfx::IntPoint { connector_center_x - connector_width, connector_joint_y };
+    auto connector_right = Gfx::IntPoint { connector_center_x + connector_width, connector_joint_y };
+    auto connector_last_edge = Gfx::IntPoint { connector_center_x + connector_width, connector_point_y };
+    painter.draw_triangle(connector_left, connector_right, connector_last_edge, background_color);
+    painter.draw_line(connector_right, Gfx::IntPoint { connector_last_edge.x(), connector_last_edge.y() }, palette().active_window_border1());
+    painter.draw_line(connector_right, connector_last_edge, palette().active_window_border1());
 
     auto& message_list = m_cat_dog->is_artist() ? artist_messages : (m_cat_dog->is_inspector() ? inspector_messages : default_messages);
     auto message = message_list[get_random<u8>() % message_list.size()];
