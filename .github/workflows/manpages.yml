@@ -23,7 +23,7 @@ jobs:
         run: ./Meta/build-manpages-website.sh
 
       - name: Deploy to GitHub pages
-        uses: JamesIves/github-pages-deploy-action@v4.7.6
+        uses: JamesIves/github-pages-deploy-action@v4.8.0
         with:
           git-config-name: BuggieBot
           git-config-email: buggiebot@serenityos.org
