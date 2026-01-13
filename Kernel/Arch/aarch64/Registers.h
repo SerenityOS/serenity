@@ -1617,4 +1617,165 @@ constexpr u64 SPSR_EL1_SS_FLAG = 1 << 21; // Single-step bit in SPSR_EL1
 
 constexpr u64 MDSCR_EL1_SS_FLAG = 1 << 0; // Single-step bit in MDSCR_EL1
 
+// https://developer.arm.com/documentation/ddi0601/2024-12/AArch64-Registers/ICC-EOIR1-EL1--Interrupt-Controller-End-Of-Interrupt-Register-1
+// ICC_EOIR1_EL1, Interrupt Controller End Of Interrupt Register 1
+struct alignas(u64) ICC_EOIR1_EL1 {
+    u64 INTID : 24;
+    u64 : 40;
+
+    static inline void write(ICC_EOIR1_EL1 icc_eoir1_el1)
+    {
+        asm volatile("msr ICC_EOIR1_EL1, %[value]" ::[value] "r"(icc_eoir1_el1));
+    }
+};
+static_assert(sizeof(ICC_EOIR1_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2024-12/AArch64-Registers/ICC-IAR1-EL1--Interrupt-Controller-Interrupt-Acknowledge-Register-1
+// ICC_IAR1_EL1, Interrupt Controller Interrupt Acknowledge Register 1
+struct alignas(u64) ICC_IAR1_EL1 {
+    u64 INTID : 24;
+    u64 : 40;
+
+    static inline ICC_IAR1_EL1 read()
+    {
+        ICC_IAR1_EL1 icc_iar1_el1;
+        asm volatile("mrs %[value], ICC_IAR1_EL1" :
+            [value] "=r"(icc_iar1_el1));
+        return icc_iar1_el1;
+    }
+};
+static_assert(sizeof(ICC_IAR1_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2024-12/AArch64-Registers/ICC-SRE-EL1--Interrupt-Controller-System-Register-Enable-Register--EL1-
+// ICC_SRE_EL1, Interrupt Controller System Register Enable Register (EL1)
+struct alignas(u64) ICC_SRE_EL1 {
+    u64 SRE : 1;
+    u64 DFB : 1;
+    u64 DIB : 1;
+    u64 : 61;
+
+    static inline void write(ICC_SRE_EL1 icc_sre_el1)
+    {
+        asm volatile("msr ICC_SRE_EL1, %[value]" ::[value] "r"(icc_sre_el1));
+    }
+};
+static_assert(sizeof(ICC_SRE_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2024-12/AArch64-Registers/ICC-PMR-EL1--Interrupt-Controller-Interrupt-Priority-Mask-Register
+// ICC_PMR_EL1, Interrupt Controller Interrupt Priority Mask Register
+struct alignas(u64) ICC_PMR_EL1 {
+    u64 Priority : 8;
+    u64 : 56;
+
+    static inline void write(ICC_PMR_EL1 icc_pmr_el1)
+    {
+        asm volatile("msr ICC_PMR_EL1, %[value]" ::[value] "r"(icc_pmr_el1));
+    }
+};
+static_assert(sizeof(ICC_PMR_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2024-12/AArch64-Registers/ICC-BPR1-EL1--Interrupt-Controller-Binary-Point-Register-1
+// ICC_BPR1_EL1, Interrupt Controller Binary Point Register 1
+struct alignas(u64) ICC_BPR1_EL1 {
+    u64 BinaryPoint : 3;
+    u64 : 61;
+
+    static inline void write(ICC_BPR1_EL1 icc_bpr1_el1)
+    {
+        asm volatile("msr ICC_BPR1_EL1, %[value]" ::[value] "r"(icc_bpr1_el1));
+    }
+};
+static_assert(sizeof(ICC_BPR1_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2024-12/AArch64-Registers/ICC-CTLR-EL1--Interrupt-Controller-Control-Register--EL1-
+// ICC_CTLR_EL1, Interrupt Controller Control Register (EL1)
+struct alignas(u64) ICC_CTLR_EL1 {
+    u64 CBPR : 1;
+    u64 EOImode : 1;
+    u64 : 4;
+    u64 PMHE : 1;
+    u64 : 1;
+    u64 PRIbits : 3;
+    u64 IDbits : 3;
+    u64 SEIS : 1;
+    u64 A3V : 1;
+    u64 : 2;
+    u64 RSS : 1;
+    u64 ExtRange : 1;
+    u64 : 44;
+
+    static inline ICC_CTLR_EL1 read()
+    {
+        ICC_CTLR_EL1 icc_ctlr_el1;
+        asm volatile("mrs %[value], ICC_CTLR_EL1" :
+            [value] "=r"(icc_ctlr_el1));
+        return icc_ctlr_el1;
+    }
+
+    static inline void write(ICC_CTLR_EL1 icc_ctlr_el1)
+    {
+        asm volatile("msr ICC_CTLR_EL1, %[value]" ::[value] "r"(icc_ctlr_el1));
+    }
+};
+static_assert(sizeof(ICC_CTLR_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2024-12/AArch64-Registers/ICC-IGRPEN1-EL1--Interrupt-Controller-Interrupt-Group-1-Enable-Register
+// ICC_IGRPEN1_EL1, Interrupt Controller Interrupt Group 1 Enable Register
+struct alignas(u64) ICC_IGRPEN1_EL1 {
+    u64 Enable : 1;
+    u64 : 63;
+
+    static inline void write(ICC_IGRPEN1_EL1 icc_igrpen1_el1)
+    {
+        asm volatile("msr ICC_IGRPEN1_EL1, %[value]" ::[value] "r"(icc_igrpen1_el1));
+    }
+};
+static_assert(sizeof(ICC_IGRPEN1_EL1) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2024-12/AArch64-Registers/ICC-SRE-EL2--Interrupt-Controller-System-Register-Enable-Register--EL2-
+// ICC_SRE_EL2, Interrupt Controller System Register Enable Register (EL2)
+struct alignas(u64) ICC_SRE_EL2 {
+    u64 SRE : 1;
+    u64 DFB : 1;
+    u64 DIB : 1;
+    u64 Enable : 1;
+    u64 : 60;
+
+    static inline void write(ICC_SRE_EL2 icc_sre_el2)
+    {
+        asm volatile("msr ICC_SRE_EL2, %[value]" ::[value] "r"(icc_sre_el2));
+    }
+};
+static_assert(sizeof(ICC_SRE_EL2) == 8);
+
+// https://developer.arm.com/documentation/ddi0601/2024-12/AArch64-Registers/ICH-HCR-EL2--Interrupt-Controller-Hyp-Control-Register
+// ICH_HCR_EL2, Interrupt Controller Hyp Control Register
+struct alignas(u64) ICH_HCR_EL2 {
+    u64 En : 1;
+    u64 UIE : 1;
+    u64 LRPENPIE : 1;
+    u64 NPIE : 1;
+    u64 VGrp0EIE : 1;
+    u64 VGrp0DIE : 1;
+    u64 VGrp1EIE : 1;
+    u64 VGrp1DIE : 1;
+    u64 vSGIEOICount : 1;
+    u64 : 1;
+    u64 TC : 1;
+    u64 TALL0 : 1;
+    u64 TALL1 : 1;
+    u64 TSEI : 1;
+    u64 TDIR : 1;
+    u64 DVIM : 1;
+    u64 : 11;
+    u64 EOIcount : 5;
+    u64 : 32;
+
+    static inline void write(ICH_HCR_EL2 ich_hcr_el2)
+    {
+        asm volatile("msr ICH_HCR_EL2, %[value]" ::[value] "r"(ich_hcr_el2));
+    }
+};
+static_assert(sizeof(ICH_HCR_EL2) == 8);
+
 }
