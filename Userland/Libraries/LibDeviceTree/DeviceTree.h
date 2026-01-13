@@ -313,6 +313,24 @@ public:
 
     Optional<Property> get_property(StringView prop) const { return m_properties.get(prop).copy(); }
 
+    Optional<u32> get_u32_property(StringView property_name) const
+    {
+        auto maybe_property = m_properties.get(property_name);
+        if (!maybe_property.has_value() || maybe_property->size() != sizeof(u32))
+            return {};
+
+        return maybe_property->as<u32>();
+    }
+
+    Optional<u64> get_u64_property(StringView property_name) const
+    {
+        auto maybe_property = m_properties.get(property_name);
+        if (!maybe_property.has_value() || maybe_property->size() != sizeof(u64))
+            return {};
+
+        return maybe_property->as<u64>();
+    }
+
     // FIXME: The spec says that @address parts of the name should be ignored when looking up nodes
     //        when they do not appear in the queried name, and all nodes with the same name should be returned
     Optional<Node const&> get_child(StringView child) const { return m_children.get(child); }
