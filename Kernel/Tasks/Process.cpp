@@ -1015,18 +1015,25 @@ void Process::die()
         return;
     }
 
-    // Let go of the TTY, otherwise a slave PTY may keep the master PTY from
-    // getting an EOF when the last process using the slave PTY dies.
-    // If the master PTY owner relies on an EOF to know when to wait() on a
-    // slave owner, we have to allow the PTY pair to be torn down.
-    with_mutable_protected_data([&](auto& protected_data) { protected_data.tty = nullptr; });
+    {
+        SpinlockLocker lock(g_scheduler_lock);
+        set_stopped(false);
 
-    VERIFY(m_threads_for_coredump.is_empty());
-    for_each_thread([&](auto& thread) {
-        auto result = m_threads_for_coredump.try_append(thread);
-        if (result.is_error())
-            dbgln("Failed to add thread {} to coredump due to OOM", thread.tid());
-    });
+        // Let go of the TTY, otherwise a slave PTY may keep the master PTY from
+        // getting an EOF when the last process using the slave PTY dies.
+        // If the master PTY owner relies on an EOF to know when to wait() on a
+        // slave owner, we have to allow the PTY pair to be torn down.
+        with_mutable_protected_data([&](auto& protected_data) { protected_data.tty = nullptr; });
+
+        VERIFY(m_threads_for_coredump.is_empty());
+        for_each_thread([&](auto& thread) {
+            auto result = m_threads_for_coredump.try_append(thread);
+            if (result.is_error())
+                dbgln("Failed to add thread {} to coredump due to OOM", thread.tid());
+        });
+
+        kill_all_threads();
+    }
 
     all_instances().with([&](auto const& list) {
         for (auto it = list.begin(); it != list.end();) {
@@ -1050,8 +1057,6 @@ void Process::die()
             }
         }
     });
-
-    kill_all_threads();
 }
 
 void Process::terminate_due_to_signal(u8 signal)
