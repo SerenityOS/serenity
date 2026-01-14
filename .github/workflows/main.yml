@@ -1,0 +1,30 @@
+name: Build SerenityOS UEFI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential clang cmake ninja-build python3 python3-pip qemu qemu-system-x86 gcc-multilib libssl-dev
+
+      - name: Build SerenityOS UEFI
+        run: |
+          mkdir Build
+          cd Build
+          cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_FOR_UEFI=ON
+          ninja
+
+      - name: Upload UEFI image
+        uses: actions/upload-artifact@v3
+        with:
+          name: serenityos-uefi
+          path: Build/Bootloader/UEFI/SerenityOS.efi
