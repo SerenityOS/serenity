@@ -8,6 +8,7 @@
 #include "RunWindow.h"
 #include "MainWidget.h"
 #include <AK/LexicalPath.h>
+#include <LibCore/Account.h>
 #include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
@@ -107,8 +108,25 @@ void RunWindow::do_run()
 
 bool RunWindow::run_as_command(ByteString const& run_input)
 {
-    // TODO: Query and use the user's preferred shell.
-    auto maybe_child_pid = Core::Process::spawn("/bin/Shell"sv, Array { "-c", run_input.characters() }, {}, Core::Process::KeepAsChild::Yes);
+    // Query and use the user's preferred shell.
+    // Fallback to "/bin/Shell" if the preferred shell cannot be determined or fails to spawn.
+    ByteString shell_path = "/bin/Shell"sv;
+    auto current_account = Core::Account::self(Core::Account::Read::PasswdOnly);
+    if (current_account.is_error()) {
+        dbgln("RunWindow: Could not get current user account: {}", current_account.error());
+    } else {
+        auto preferred_shell = current_account.value().shell();
+        if (!preferred_shell.is_empty()) {
+            // Check if the preferred shell actually exists
+            if (!FileSystem::exists(preferred_shell)) {
+                GUI::MessageBox::show(this, ByteString::formatted("Your preferred shell '{}' does not exist. Falling back to /bin/Shell.", preferred_shell), "Preferred Shell Missing"sv, GUI::MessageBox::Type::Warning);
+            } else {
+                shell_path = preferred_shell;
+            }
+        }
+    }
+
+    auto maybe_child_pid = Core::Process::spawn(shell_path, Array { "-c", run_input.characters() }, {}, Core::Process::KeepAsChild::Yes);
     if (maybe_child_pid.is_error())
         return false;
 
