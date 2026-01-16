@@ -21,6 +21,8 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
+#include <LibFileSystem/FileSystem.h>
+#include <LibFileSystem/TempFile.h>
 #include <LibUnicode/Segmentation.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -340,18 +342,30 @@ bool Editor::save_history(ByteString const& path)
             [](HistoryEntry const& left, HistoryEntry const& right) { return left.timestamp < right.timestamp; });
     }
 
-    auto file_or_error = Core::File::open(path, Core::File::OpenMode::Write, 0600);
-    if (file_or_error.is_error())
+    auto temp_or_error = FileSystem::TempFile::create_temp_file();
+    if (temp_or_error.is_error())
         return false;
-    auto file = file_or_error.release_value();
-    // Skip the dummy entry:
-    for (auto iter = final_history.begin() + 1; iter != final_history.end(); ++iter) {
-        auto const& entry = *iter;
-        auto buffer = ByteString::formatted("{}::{}\n\n", entry.timestamp, entry.entry);
-        auto maybe_error = file->write_until_depleted(buffer.bytes());
-        if (maybe_error.is_error())
+
+    auto temp_file = temp_or_error.release_value();
+
+    {
+        auto file_or_error = Core::File::open(temp_file->path(), Core::File::OpenMode::Write, 0600);
+        if (file_or_error.is_error())
             return false;
+        auto file = file_or_error.release_value();
+        // Skip the dummy entry:
+        for (auto iter = final_history.begin() + 1; iter != final_history.end(); ++iter) {
+            auto const& entry = *iter;
+            auto buffer = ByteString::formatted("{}::{}\n\n", entry.timestamp, entry.entry);
+            auto maybe_error = file->write_until_depleted(buffer.bytes());
+            if (maybe_error.is_error())
+                return false;
+        }
     }
+
+    auto result = FileSystem::copy_file_or_directory(path, temp_file->path(), FileSystem::RecursionMode::Disallowed, FileSystem::LinkMode::Disallowed, FileSystem::AddDuplicateFileMarker::No);
+    if (result.is_error())
+        return false;
 
     m_history_dirty = false;
     return true;
