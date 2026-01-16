@@ -26,6 +26,7 @@ class BrowserWindow;
 class InspectorWidget;
 class HistoryWidget;
 class StorageWidget;
+class FindInPageWidget;
 class URLBox;
 
 class Tab final : public GUI::Widget {
@@ -102,6 +103,7 @@ private:
     void view_source(const URL::URL& url, StringView source);
     void update_status(Optional<String> text_override = {}, i32 count_waiting = 0);
     void close_sub_widgets();
+    void show_find_in_page();
 
     RefPtr<WebView::OutOfProcessWebView> m_web_content_view;
 
@@ -110,6 +112,7 @@ private:
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<InspectorWidget> m_dom_inspector_widget;
     RefPtr<StorageWidget> m_storage_widget;
+    RefPtr<FindInPageWidget> m_find_in_page_widget;
     RefPtr<HistoryWidget> m_history_widget;
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;

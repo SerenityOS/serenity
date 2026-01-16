@@ -210,6 +210,14 @@ void BrowserWindow::build_menus(StringView const man_file)
         },
         this));
 
+    view_menu->add_separator();
+    auto find_in_page_action = GUI::Action::create(
+        "&Find in Page", { Mod_Ctrl, Key_F }, g_icon_bag.find, [this](auto&) {
+            active_tab().show_find_in_page();
+        },
+        this);
+    view_menu->add_action(find_in_page_action);
+
     m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) { active_tab().go_back(); }, this);
     m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { active_tab().go_forward(); }, this);
     m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) { active_tab().load(g_home_url); }, this);
