@@ -577,8 +577,13 @@ void Terminal::REP(Parameters params)
     if (params.size() >= 1 && params[0] != 0)
         count = params[0];
 
-    for (unsigned i = 0; i < count; ++i)
-        put_character_at(m_current_state.cursor.row, m_current_state.cursor.column++, m_last_code_point);
+    count = min<unsigned>(count, columns() - cursor_column());
+
+    for (unsigned i = 0; i < count; ++i) {
+        put_character_at(m_current_state.cursor.row, m_current_state.cursor.column, m_last_code_point);
+        if (m_current_state.cursor.column < (size_t)columns() - 1)
+            m_current_state.cursor.column++;
+    }
 }
 
 void Terminal::VPA(Parameters params)
