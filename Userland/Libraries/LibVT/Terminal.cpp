@@ -545,8 +545,8 @@ void Terminal::CNL(Parameters params)
     if (params.size() >= 1 && params[0] != 0)
         num = params[0];
     unsigned new_row = cursor_row() + num;
-    if (new_row >= m_columns)
-        new_row = m_columns - 1;
+    if (new_row >= m_rows)
+        new_row = m_rows - 1;
     set_cursor(new_row, 0);
 }
 
