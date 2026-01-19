@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Event.h>
@@ -24,13 +25,16 @@ public:
     virtual ~FindInPageWidget() override = default;
 
     void initialize(WebView::OutOfProcessWebView& web_view);
-    void set_search_text(String const& text);
+    void show(String const& global_term);
+
+    Function<void(String const&)> on_search_text_change;
 
 private:
     FindInPageWidget();
     virtual void keydown_event(GUI::KeyEvent&) override;
 
     void find_text_changed();
+    void notify_search_text_changed();
     void update_result_label(size_t current_match_index, Optional<size_t> const& total_match_count);
 
     RefPtr<WebView::OutOfProcessWebView> m_web_content_view;

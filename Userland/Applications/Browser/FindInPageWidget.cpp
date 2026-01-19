@@ -38,22 +38,27 @@ void FindInPageWidget::initialize(WebView::OutOfProcessWebView& web_view)
 
     m_search_textbox->on_change = [this] {
         find_text_changed();
+        notify_search_text_changed();
     };
 
     m_search_textbox->on_return_pressed = [this] {
         m_web_content_view->find_in_page_next_match();
+        notify_search_text_changed();
     };
 
     m_search_textbox->on_shift_return_pressed = [this] {
         m_web_content_view->find_in_page_previous_match();
+        notify_search_text_changed();
     };
 
     m_next_button->on_click = [this](auto) {
         m_web_content_view->find_in_page_next_match();
+        notify_search_text_changed();
     };
 
     m_previous_button->on_click = [this](auto) {
         m_web_content_view->find_in_page_previous_match();
+        notify_search_text_changed();
     };
 
     m_close_button->on_click = [this](auto) {
@@ -91,10 +96,30 @@ void FindInPageWidget::update_result_label(size_t current_match_index, Optional<
     }
 }
 
-void FindInPageWidget::set_search_text(String const& text)
+void FindInPageWidget::notify_search_text_changed()
 {
-    m_search_textbox->set_text(text);
+    if (on_search_text_change) {
+        auto text = MUST(String::from_byte_string(m_search_textbox->text()));
+        on_search_text_change(text);
+    }
+}
+
+void FindInPageWidget::show(String const& global_term)
+{
+    // Priority 1: If there's a selection on the page, use that
+    if (auto selection = m_web_content_view->selected_text_with_whitespace_collapsed(); selection.has_value() && !selection->is_empty()) {
+        m_search_textbox->set_text(*selection);
+        notify_search_text_changed();
+    }
+    // Priority 2: If the textbox is empty, use the global term
+    else if (m_search_textbox->text().is_empty() && !global_term.is_empty()) {
+        m_search_textbox->set_text(global_term);
+    }
+    // Priority 3: Keep existing text (do nothing)
+
     m_search_textbox->select_all();
+    set_visible(true);
+    set_focus(true);
 }
 
 void FindInPageWidget::keydown_event(GUI::KeyEvent& event)

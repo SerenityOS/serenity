@@ -126,6 +126,10 @@ Tab::Tab(BrowserWindow& window)
 
     m_find_in_page_widget->initialize(*m_web_content_view);
 
+    m_find_in_page_widget->on_search_text_change = [this](String const& text) {
+        this->window().set_search_term(text);
+    };
+
     auto preferred_color_scheme = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, Browser::default_color_scheme));
     m_web_content_view->set_preferred_color_scheme(preferred_color_scheme);
 
@@ -1067,12 +1071,7 @@ void Tab::enable_webdriver_mode()
 
 void Tab::show_find_in_page()
 {
-    auto selected_text = m_web_content_view->selected_text_with_whitespace_collapsed();
-    if (selected_text.has_value())
-        m_find_in_page_widget->set_search_text(*selected_text);
-
-    m_find_in_page_widget->set_visible(true);
-    m_find_in_page_widget->set_focus(true);
+    m_find_in_page_widget->show(window().search_term());
 }
 
 }
