@@ -527,6 +527,17 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
     VERIFY(!m_shared);
 
     auto page_index_in_vmobject = translate_to_vmobject_page(page_index_in_region);
+
+    // FIXME: Find a better way to ensure proper synchronization during copy-on-write fault handling that doesn't
+    //        require taking a global lock. This lock currently causes us to never handle COW faults concurrently.
+    //        Just taking the VMObject's lock isn't enough since each process that has access to the COW pages
+    //        refers to it using a different VMObject (and Region) after a fork(). A fork() clones all regions
+    //        and VMObjects for the child process, but keeps reusing the same physical pages inside the cloned VMObject.
+    static Spinlock<LockRank::None> s_cow_lock;
+    SpinlockLocker cow_locker(s_cow_lock);
+
+    SpinlockLocker vmobject_locker(vmobject().m_lock);
+
     auto response = reinterpret_cast<AnonymousVMObject&>(vmobject()).handle_cow_fault(page_index_in_vmobject, vaddr().offset(page_index_in_region * PAGE_SIZE));
     if (!remap_vmobject_page(page_index_in_vmobject, *vmobject().physical_pages()[page_index_in_vmobject]))
         return PageFaultResponse::OutOfMemory;
