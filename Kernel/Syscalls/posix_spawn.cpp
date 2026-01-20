@@ -41,14 +41,23 @@ ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
         case SpawnFileActionType::Dup2: {
             if (header->record_length < sizeof(SpawnFileActionDup2))
                 return EINVAL;
+
             auto const* action = reinterpret_cast<SpawnFileActionDup2 const*>(header);
             TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
+                if (action->new_fd < 0 || static_cast<size_t>(action->new_fd) >= fds.max_open())
+                    return EINVAL;
+
                 auto description = TRY(fds.open_file_description(action->old_fd));
                 if (action->old_fd != action->new_fd) {
-                    if (action->new_fd < 0 || static_cast<size_t>(action->new_fd) >= fds.max_open())
-                        return EINVAL;
-                    if (!fds.m_fds_metadatas[action->new_fd].is_allocated())
+
+                    if (fds.m_fds_metadatas[action->new_fd].is_allocated()) {
+                        if (auto* old_description = fds[action->new_fd].description())
+                            (void)old_description->close();
+                        fds[action->new_fd].clear();
+                    } else {
                         fds.m_fds_metadatas[action->new_fd].allocate();
+                    }
+
                     fds[action->new_fd].set(move(description));
                 }
                 return {};
@@ -58,6 +67,7 @@ ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
         case SpawnFileActionType::Close: {
             if (header->record_length < sizeof(SpawnFileActionClose))
                 return EINVAL;
+
             auto const* action = reinterpret_cast<SpawnFileActionClose const*>(header);
             TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
                 auto description = TRY(fds.open_file_description(action->fd));
@@ -70,9 +80,11 @@ ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
         case SpawnFileActionType::Open: {
             if (header->record_length < sizeof(SpawnFileActionOpen))
                 return EINVAL;
+
             auto const* action = reinterpret_cast<SpawnFileActionOpen const*>(header);
             if (header->record_length < sizeof(SpawnFileActionOpen) + action->path_length)
                 return EINVAL;
+
             auto path = TRY(KString::try_create(StringView { action->path, action->path_length }));
             CustodyBase base(AT_FDCWD, path->view());
             auto description = TRY(VirtualFileSystem::open(
@@ -85,20 +97,30 @@ ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
             TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
                 if (action->fd < 0 || static_cast<size_t>(action->fd) >= fds.max_open())
                     return EINVAL;
-                if (!fds.m_fds_metadatas[action->fd].is_allocated())
+
+                if (fds.m_fds_metadatas[action->fd].is_allocated()) {
+                    if (auto* old_description = fds[action->fd].description())
+                        (void)old_description->close();
+                    fds[action->fd].clear();
+                } else {
                     fds.m_fds_metadatas[action->fd].allocate();
+                }
+
                 u32 fd_flags = (action->flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
                 fds[action->fd].set(move(description), fd_flags);
                 return {};
             }));
             break;
         }
+
         case SpawnFileActionType::Chdir: {
             if (header->record_length < sizeof(SpawnFileActionChdir))
                 return EINVAL;
+
             auto const* action = reinterpret_cast<SpawnFileActionChdir const*>(header);
             if (header->record_length < sizeof(SpawnFileActionChdir) + action->path_length)
                 return EINVAL;
+
             auto path = TRY(KString::try_create(StringView { action->path, action->path_length }));
             auto new_directory = TRY(VirtualFileSystem::open_directory(
                 vfs_root_context(), credentials(), path->view(), current_directory()));
@@ -110,12 +132,16 @@ ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
         case SpawnFileActionType::Fchdir: {
             if (header->record_length < sizeof(SpawnFileActionFchdir))
                 return EINVAL;
+
             auto const* action = reinterpret_cast<SpawnFileActionFchdir const*>(header);
             auto description = TRY(open_file_description(action->fd));
             if (!description->is_directory())
                 return ENOTDIR;
+
+            // Check for search (+x) permission on the directory.
             if (!description->metadata().may_execute(credentials()))
                 return EACCES;
+
             m_current_directory.with([&](auto& current_directory) {
                 current_directory = description->custody();
             });
@@ -183,9 +209,9 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
     Vector<NonnullOwnPtr<KString>> environment;
     TRY(copy_user_strings(params.environment, environment));
 
-    auto const& creds = this->credentials();
+    auto const& credentials = this->credentials();
     VERIFY(!m_is_kernel_process);
-    auto [child, child_first_thread] = TRY(Process::create_spawned(creds->uid(), creds->gid(), pid(), vfs_root_context(), hostname_context(), current_directory(), tty()));
+    auto [child, child_first_thread] = TRY(Process::create_spawned(credentials->uid(), credentials->gid(), pid(), vfs_root_context(), hostname_context(), current_directory(), tty()));
 
     ArmedScopeGuard thread_finalizer_guard = [&child_first_thread]() {
         SpinlockLocker lock(g_scheduler_lock);

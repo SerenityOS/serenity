@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <sys/types.h>
 
@@ -19,18 +20,18 @@ enum class SpawnFileActionType : u8 {
     Fchdir = 4,
 };
 
-struct [[gnu::packed]] SpawnFileActionHeader {
+struct SpawnFileActionHeader {
     SpawnFileActionType type;
     u16 record_length;
 };
 
-struct [[gnu::packed]] SpawnFileActionDup2 {
+struct SpawnFileActionDup2 {
     SpawnFileActionHeader header;
     i32 old_fd;
     i32 new_fd;
 };
 
-struct [[gnu::packed]] SpawnFileActionOpen {
+struct SpawnFileActionOpen {
     SpawnFileActionHeader header;
     i32 fd;
     i32 flags;
@@ -39,20 +40,27 @@ struct [[gnu::packed]] SpawnFileActionOpen {
     char path[];
 };
 
-struct [[gnu::packed]] SpawnFileActionClose {
+struct SpawnFileActionClose {
     SpawnFileActionHeader header;
     i32 fd;
 };
 
-struct [[gnu::packed]] SpawnFileActionChdir {
+struct SpawnFileActionChdir {
     SpawnFileActionHeader header;
     u16 path_length;
     char path[];
 };
 
-struct [[gnu::packed]] SpawnFileActionFchdir {
+struct SpawnFileActionFchdir {
     SpawnFileActionHeader header;
     i32 fd;
 };
+
+// Maximum alignment across all SpawnFileAction structs.
+// Used to ensure proper alignment when serializing variable-length records.
+inline constexpr size_t SpawnFileActionAlignment = max(
+    max(alignof(SpawnFileActionHeader), alignof(SpawnFileActionDup2)),
+    max(max(alignof(SpawnFileActionOpen), alignof(SpawnFileActionClose)),
+        max(alignof(SpawnFileActionChdir), alignof(SpawnFileActionFchdir))));
 
 }

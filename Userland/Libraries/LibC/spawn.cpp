@@ -282,6 +282,8 @@ int posix_spawn_file_actions_addchdir(posix_spawn_file_actions_t* actions, char 
     size_t path_len = strlen(path);
     size_t record_size = sizeof(SpawnFileActionChdir) + path_len + 1;
 
+    record_size = align_up_to(record_size, SpawnFileActionAlignment);
+
     auto buffer_or_error = ByteBuffer::create_uninitialized(record_size);
     if (buffer_or_error.is_error())
         return ENOMEM;
@@ -343,6 +345,8 @@ int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t* actions, int wa
     using namespace Kernel::API::POSIX;
     size_t path_len = strlen(path);
     size_t record_size = sizeof(SpawnFileActionOpen) + path_len + 1;
+
+    record_size = align_up_to(record_size, SpawnFileActionAlignment);
 
     auto buffer_or_error = ByteBuffer::create_uninitialized(record_size);
     if (buffer_or_error.is_error())
