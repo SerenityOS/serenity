@@ -25,10 +25,10 @@ Co-Authored-By: Tim Schumacher <timschumi@gmx.de>
  6 files changed, 21 insertions(+), 5 deletions(-)
 
 diff --git a/llvm/cmake/modules/HandleLLVMOptions.cmake b/llvm/cmake/modules/HandleLLVMOptions.cmake
-index c126b0d073322248cf21845bb75fea9362c99892..32cdd83c0b9f008e54667316cbeffb463e4c760f 100644
+index 311123084bf5874ce991dbf000466cb8f1c2bedb..fe46b41d0e3609372404c4e8d2657df6646e78ea 100644
 --- a/llvm/cmake/modules/HandleLLVMOptions.cmake
 +++ b/llvm/cmake/modules/HandleLLVMOptions.cmake
-@@ -560,6 +560,9 @@ elseif(MINGW OR CYGWIN)
+@@ -567,6 +567,9 @@ elseif(MINGW OR CYGWIN)
    if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
      append("-Wa,-mbig-obj" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
    endif()
@@ -39,7 +39,7 @@ index c126b0d073322248cf21845bb75fea9362c99892..32cdd83c0b9f008e54667316cbeffb46
  
  option(LLVM_ENABLE_WARNINGS "Enable compiler warnings." ON)
 diff --git a/llvm/include/llvm/ADT/bit.h b/llvm/include/llvm/ADT/bit.h
-index d6e33c3e6133a0171e6f5b0ec40a76d371043c36..3ecea1c4e44ac7f889fa5d526b50c17b11a818e6 100644
+index 5971b75045b6b5f40b46900b685faf2e475c5a7f..94e85cc1d6e5f1ae7070c3edf8cb55984f156d3d 100644
 --- a/llvm/include/llvm/ADT/bit.h
 +++ b/llvm/include/llvm/ADT/bit.h
 @@ -30,7 +30,8 @@
@@ -53,10 +53,10 @@ index d6e33c3e6133a0171e6f5b0ec40a76d371043c36..3ecea1c4e44ac7f889fa5d526b50c17b
  #elif defined(_AIX)
  #include <sys/machine.h>
 diff --git a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
-index ea3b22a0924372426e698ccdea69eb8395ebb70f..91536d4c1136813d907b840c81c7c370401bf3a8 100644
+index 4e7db822776ccdb3a42b33ab10f914d52602eb09..504ca6547aab0fcb2bd6290c1975524a085e8383 100644
 --- a/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
 +++ b/llvm/lib/ExecutionEngine/Orc/MemoryMapper.cpp
-@@ -228,7 +228,8 @@ SharedMemoryMapper::Create(ExecutorProcessControl &EPC, SymbolAddrs SAs) {
+@@ -219,7 +219,8 @@ SharedMemoryMapper::Create(ExecutorProcessControl &EPC, SymbolAddrs SAs) {
  
  void SharedMemoryMapper::reserve(size_t NumBytes,
                                   OnReservedFunction OnReserved) {
@@ -67,10 +67,10 @@ index ea3b22a0924372426e698ccdea69eb8395ebb70f..91536d4c1136813d907b840c81c7c370
    int SharedMemoryId = -1;
    EPC.callSPSWrapperAsync<
 diff --git a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
-index 8c24b1f3f5265c9263709013502f54cc5d4f3175..207a9272c1ccc3852d91e0adc50f0ada92bf55e0 100644
+index 423a1bd496c96b89d517187ab794f70eb8091bbc..7a2b7bba0fc7c25f41d6413f1ab09610a59b9a7b 100644
 --- a/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
 +++ b/llvm/lib/ExecutionEngine/Orc/TargetProcess/ExecutorSharedMemoryMapperService.cpp
-@@ -52,7 +52,8 @@ static DWORD getWindowsProtectionFlags(MemProt MP) {
+@@ -50,7 +50,8 @@ static DWORD getWindowsProtectionFlags(MemProt MP) {
  
  Expected<std::pair<ExecutorAddr, std::string>>
  ExecutorSharedMemoryMapperService::reserve(uint64_t Size) {
@@ -81,10 +81,10 @@ index 8c24b1f3f5265c9263709013502f54cc5d4f3175..207a9272c1ccc3852d91e0adc50f0ada
  #if defined(LLVM_ON_UNIX)
  
 diff --git a/llvm/lib/Support/Unix/Path.inc b/llvm/lib/Support/Unix/Path.inc
-index 277247e3cc2366cc2e2fdd05d1c454f0adf4b046..0778e4772052153758ff705fec779ce4dd971ddf 100644
+index fc71ca46d823a512925262f786bcdc6a3598d575..2fc55ec7c18bbb38691819f219f3885bf280d509 100644
 --- a/llvm/lib/Support/Unix/Path.inc
 +++ b/llvm/lib/Support/Unix/Path.inc
-@@ -108,7 +108,7 @@ typedef uint_t uint;
+@@ -111,7 +111,7 @@ typedef uint_t uint;
  #endif
  
  #if defined(__NetBSD__) || defined(__DragonFly__) || defined(__GNU__) ||       \
@@ -93,7 +93,7 @@ index 277247e3cc2366cc2e2fdd05d1c454f0adf4b046..0778e4772052153758ff705fec779ce4
  #define STATVFS_F_FLAG(vfs) (vfs).f_flag
  #else
  #define STATVFS_F_FLAG(vfs) (vfs).f_flags
-@@ -511,6 +511,9 @@ static bool is_local_impl(struct STATVFS &Vfs) {
+@@ -520,6 +520,9 @@ static bool is_local_impl(struct STATVFS &Vfs) {
  #elif defined(__HAIKU__)
    // Haiku doesn't expose this information.
    return false;
@@ -104,10 +104,10 @@ index 277247e3cc2366cc2e2fdd05d1c454f0adf4b046..0778e4772052153758ff705fec779ce4
    // statvfs::f_basetype contains a null-terminated FSType name of the mounted
    // target
 diff --git a/llvm/lib/Support/Unix/Program.inc b/llvm/lib/Support/Unix/Program.inc
-index 4f17b2257a756e6fc67ea01a8cad85bd42696118..152305e46dd3fb26b30a845240f3f2744ca7ffa4 100644
+index 489ca03b3067069e527a4416758e1a215aadda9e..b3e76af711c5e3ddaa74ea68b1d48f30c1749310 100644
 --- a/llvm/lib/Support/Unix/Program.inc
 +++ b/llvm/lib/Support/Unix/Program.inc
-@@ -335,7 +335,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
+@@ -334,7 +334,7 @@ static bool Execute(ProcessInfo &PI, StringRef Program,
  namespace llvm {
  namespace sys {
  
@@ -116,7 +116,7 @@ index 4f17b2257a756e6fc67ea01a8cad85bd42696118..152305e46dd3fb26b30a845240f3f274
  static pid_t(wait4)(pid_t pid, int *status, int options, struct rusage *usage);
  #elif !defined(__Fuchsia__)
  using ::wait4;
-@@ -378,6 +378,13 @@ pid_t(llvm::sys::wait4)(pid_t pid, int *status, int options,
+@@ -377,6 +377,13 @@ pid_t(llvm::sys::wait4)(pid_t pid, int *status, int options,
  }
  #endif
  
