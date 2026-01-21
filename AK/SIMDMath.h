@@ -84,7 +84,9 @@ ALWAYS_INLINE static f32x4 exp_approximate(f32x4 v)
 
 ALWAYS_INLINE static f32x4 sqrt(f32x4 v)
 {
-#if ARCH(X86_64)
+#if __has_builtin(__builtin_elementwise_sqrt)
+    return __builtin_elementwise_sqrt(v);
+#elif __has_builtin(__builtin_ia32_sqrtps)
     return __builtin_ia32_sqrtps(v);
 #else
     return f32x4 {
