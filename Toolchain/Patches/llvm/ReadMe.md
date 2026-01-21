@@ -70,3 +70,8 @@ The SerenityOS dynamic linker provides a magic function
 "__get_riscv_feature_bits" that populates __riscv_feature_bits
 and __riscv_cpu_model.
 
+## `0007-libcxxabi-Define-__cxa_thread_atexit-on-serenity.patch`
+
+Define __cxa_thread_atexit on serenity
+
+
