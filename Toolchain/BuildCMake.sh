@@ -46,6 +46,8 @@ pushd "$DIR"/Tarballs
 popd
 
 mkdir -p "${PREFIX_DIR}"
+
+rm -rf "${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 
 pushd "${BUILD_DIR}"
