@@ -625,6 +625,7 @@ if (BUILD_LAGOM)
 
         lagom_utility(lzcat SOURCES ../../Userland/Utilities/lzcat.cpp LIBS LibCompress LibMain)
         lagom_utility(markdown-check SOURCES ../../Userland/Utilities/markdown-check.cpp LIBS LibFileSystem LibMarkdown LibMain LibManual LibURL)
+        lagom_utility(matroska SOURCES ../../Userland/Utilities/matroska.cpp LIBS LibMain LibMedia)
         lagom_utility(mkfs.fat SOURCES  ../../Userland/Utilities/mkfs.fat.cpp LIBS LibFileSystem LibMain)
 
         if (NOT EMSCRIPTEN)
