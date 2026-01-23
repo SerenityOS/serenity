@@ -50,6 +50,7 @@ set(LIBTEST_BASED_SOURCES
     TestPosixFallocate.cpp
     TestPosixSpawn.cpp
     TestPrivateInodeVMObject.cpp
+    TestPtrace.cpp
     TestKernelAlarm.cpp
     TestKernelFilePermissions.cpp
     TestKernelPledge.cpp
