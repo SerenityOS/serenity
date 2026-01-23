@@ -27,16 +27,12 @@ static ErrorOr<FlatPtr> handle_ptrace(Kernel::Syscall::SC_ptrace_params const& p
         return 0;
     }
 
-    // FIXME: PID/TID BUG
-    // This bug allows to request PT_ATTACH (or anything else) the same process, as
-    // long it is not the main thread. Alternatively, if this is desired, then the
-    // bug is that this prevents PT_ATTACH to the main thread from another thread.
-    if (params.tid == caller.pid().value())
-        return EINVAL;
-
     auto peer = Thread::from_tid_in_same_process_list(params.tid);
     if (!peer)
         return ESRCH;
+
+    if (peer->pid() == caller.pid().value())
+        return EPERM;
 
     MutexLocker ptrace_locker(peer->process().ptrace_lock());
     SpinlockLocker scheduler_lock(g_scheduler_lock);
