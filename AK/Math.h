@@ -86,22 +86,30 @@ FloatT copysign(FloatT x, FloatT y)
             return __builtin_##function##f(args); \
     }
 
-#define AARCH64_INSTRUCTION(instruction, arg) \
-    if constexpr (IsSame<T, long double>)     \
-        TODO();                               \
-    if constexpr (IsSame<T, double>) {        \
-        double res;                           \
-        asm(#instruction " %d0, %d1"          \
-            : "=w"(res)                       \
-            : "w"(arg));                      \
-        return res;                           \
-    }                                         \
-    if constexpr (IsSame<T, float>) {         \
-        float res;                            \
-        asm(#instruction " %s0, %s1"          \
-            : "=w"(res)                       \
-            : "w"(arg));                      \
-        return res;                           \
+#define AARCH64_INSTRUCTION(instruction, arg)                      \
+    if constexpr (IsSame<T, long double>) {                        \
+        if constexpr (sizeof(long double) == sizeof(double)) {     \
+            double res;                                            \
+            asm(#instruction " %d0, %d1"                           \
+                : "=w"(res)                                        \
+                : "w"(static_cast<double>(arg)));                  \
+            return static_cast<T>(res);                            \
+        }                                                          \
+        /* we'll need a way to do this for quad precision later */ \
+    }                                                              \
+    if constexpr (IsSame<T, double>) {                             \
+        double res;                                                \
+        asm(#instruction " %d0, %d1"                               \
+            : "=w"(res)                                            \
+            : "w"(arg));                                           \
+        return res;                                                \
+    }                                                              \
+    if constexpr (IsSame<T, float>) {                              \
+        float res;                                                 \
+        asm(#instruction " %s0, %s1"                               \
+            : "=w"(res)                                            \
+            : "w"(arg));                                       \
+        return res;                                                \
     }
 
 template<FloatingPoint T>
@@ -130,14 +138,13 @@ constexpr T ceil(T num)
     }
 #if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintp, num);
-#else
+#endif
     if constexpr (IsSame<T, long double>)
         return __builtin_ceill(num);
     if constexpr (IsSame<T, double>)
         return __builtin_ceil(num);
     if constexpr (IsSame<T, float>)
         return __builtin_ceilf(num);
-#endif
 }
 
 template<FloatingPoint T>
@@ -153,38 +160,45 @@ constexpr T floor(T num)
     }
 #if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintm, num);
-#else
+#endif
     if constexpr (IsSame<T, long double>)
         return __builtin_floorl(num);
     if constexpr (IsSame<T, double>)
         return __builtin_floor(num);
     if constexpr (IsSame<T, float>)
         return __builtin_floorf(num);
-#endif
 }
 
 template<FloatingPoint T>
 constexpr T trunc(T num)
 {
-#if ARCH(AARCH64)
     if (is_constant_evaluated()) {
         if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
             return num;
         return static_cast<T>(static_cast<i64>(num));
     }
+#if ARCH(AARCH64)
     AARCH64_INSTRUCTION(frintz, num);
 #endif
-    // FIXME: Use dedicated instruction in the non constexpr case
-    //        SSE4.1: rounds[sd] %num, %res, 0b111
-    if (num < NumericLimits<i64>::min() || num > NumericLimits<i64>::max())
-        return num;
-    return static_cast<T>(static_cast<i64>(num));
+    if constexpr (IsSame<T, long double>)
+        return __builtin_truncl(num);
+    if constexpr (IsSame<T, double>)
+        return __builtin_trunc(num);
+    if constexpr (IsSame<T, float>)
+        return __builtin_truncf(num);
 }
 
 template<FloatingPoint T>
 constexpr T rint(T x)
 {
-    CONSTEXPR_STATE(rint, x);
+    if (is_constant_evaluated()) {
+        if (IsSame<T, long double>)
+            return __builtin_rintl(x);
+        if (IsSame<T, double>)
+            return __builtin_rint(x);
+        if (IsSame<T, float>)
+            return __builtin_rintf(x);
+    }
     // Note: This does break tie to even
     //       But the behavior of frndint/rounds[ds]/frintx can be configured
     //       through the floating point control registers.
@@ -230,6 +244,34 @@ constexpr T rint(T x)
     if constexpr (IsSame<T, float>) {
         i64 r;
         asm("fcvt.l.s %0, %1, dyn"
+            : "=r"(r)
+            : "f"(x));
+        return copysign(static_cast<float>(r), x);
+    }
+    if constexpr (IsSame<T, double>) {
+        i64 r;
+        asm("fcvt.l.d %0, %1, dyn"
+            : "=r"(r)
+            : "f"(x));
+        return copysign(static_cast<double>(r), x);
+    }
+    if constexpr (IsSame<T, long double>) {
+        if constexpr (sizeof(long double) == sizeof(double)) {
+            i64 r;
+            asm("fcvt.l.d %0, %1, dyn"
+                : "=r"(r)
+                : "f"(static_cast<double>(x)));
+            return copysign(static_cast<T>(r), x);
+        }
+        /* we'll need to add 128-bit support for riscv here */
+    }
+#endif
+    if constexpr (IsSame<T, long double>)
+        return __builtin_rintl(x);
+    if constexpr (IsSame<T, float>)
+        return __builtin_rintf(x);
+    return __builtin_rint(x);
+}
             : "=r"(r)
             : "f"(x));
         return copysign(static_cast<float>(r), x);
