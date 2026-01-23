@@ -108,7 +108,7 @@ FloatT copysign(FloatT x, FloatT y)
         float res;                                                 \
         asm(#instruction " %s0, %s1"                               \
             : "=w"(res)                                            \
-            : "w"(arg));                                       \
+            : "w"(arg));                                           \
         return res;                                                \
     }
 
@@ -271,22 +271,6 @@ constexpr T rint(T x)
     if constexpr (IsSame<T, float>)
         return __builtin_rintf(x);
     return __builtin_rint(x);
-}
-            : "=r"(r)
-            : "f"(x));
-        return copysign(static_cast<float>(r), x);
-    }
-    if constexpr (IsSame<T, double>) {
-        i64 r;
-        asm("fcvt.l.d %0, %1, dyn"
-            : "=r"(r)
-            : "f"(x));
-        return copysign(static_cast<double>(r), x);
-    }
-    if constexpr (IsSame<T, long double>)
-        TODO_RISCV64();
-#endif
-    TODO();
 }
 
 template<FloatingPoint T>
@@ -651,8 +635,16 @@ constexpr T sqrt(T x)
             : "f"(x));
         return res;
     }
-    if constexpr (IsSame<T, long double>)
-        TODO_RISCV64();
+    if constexpr (IsSame<T, long double>) {
+        if constexpr (sizeof(long double) == sizeof(double)) {
+            double res;
+            asm("fsqrt.d %0, %1"
+                : "=f"(res)
+                : "f"(static_cast<double>(x)));
+            return static_cast<T>(res);
+        }
+        /* we'll need to add 128-bit support for riscv here */
+    }
 #else
 #    if defined(AK_OS_SERENITY)
     // TODO: Add implementation for this function.
@@ -735,10 +727,22 @@ constexpr T sin(T angle)
     if (angle > Pi<T> / 2)
         return sin(Pi<T> - angle);
 
-    // https://en.wikipedia.org/wiki/Bh%C4%81skara_I%27s_sine_approximation_formula
-    // FIXME: This is not a good formula! It requires divisions, so it's slow, and it's not very accurate either.
-    return 16 * angle * (Pi<T> - angle) / (5 * Pi<T> * Pi<T> - 4 * angle * (Pi<T> - angle));
+    // this is a higher-precision taylor series expansion (15th degree) for arches without hardware trig.
+    // the old bhaskara formula was faster but way too inaccurate for things like testcomplex and libgfx.
+    // we iterate 8 times to get enough precision for double types so that the tests pass.
+    T result = 0;
+    T x_squared = angle * angle;
+    T term = angle;
+    for (int i = 1; i <= 15; i += 2) {
+        result += term;
+        term *= -x_squared / (static_cast<T>(i + 1) * (i + 2));
+    }
+    return result;
 #    else
+    if constexpr (IsSame<T, long double>)
+        return __builtin_sinl(angle);
+    if constexpr (IsSame<T, float>)
+        return __builtin_sinf(angle);
     return __builtin_sin(angle);
 #    endif
 #endif
@@ -769,10 +773,22 @@ constexpr T cos(T angle)
     if (angle > Pi<T> / 2)
         return -cos(Pi<T> - angle);
 
-    // https://en.wikipedia.org/wiki/Bh%C4%81skara_I%27s_sine_approximation_formula
-    // FIXME: This is not a good formula! It requires divisions, so it's slow, and it's not very accurate either.
-    return (Pi<T> * Pi<T> - 4 * angle * angle) / (Pi<T> * Pi<T> + angle * angle);
+    // this is a higher-precision taylor series expansion (16th degree) for arches without hardware trig.
+    // the old bhaskara formula was faster but way too inaccurate for things like testcomplex and libgfx.
+    // we iterate 8 times to get enough precision for double types so that the tests pass.
+    T result = 0;
+    T x_squared = angle * angle;
+    T term = 1;
+    for (int i = 0; i <= 16; i += 2) {
+        result += term;
+        term *= -x_squared / (static_cast<T>(i + 1) * (i + 2));
+    }
+    return result;
 #    else
+    if constexpr (IsSame<T, long double>)
+        return __builtin_cosl(angle);
+    if constexpr (IsSame<T, float>)
+        return __builtin_cosf(angle);
     return __builtin_cos(angle);
 #    endif
 #endif
@@ -814,6 +830,10 @@ constexpr T tan(T angle)
 #    if defined(AK_OS_SERENITY)
     return sin(angle) / cos(angle);
 #    else
+    if constexpr (IsSame<T, long double>)
+        return __builtin_tanl(angle);
+    if constexpr (IsSame<T, float>)
+        return __builtin_tanf(angle);
     return __builtin_tan(angle);
 #    endif
 #endif
@@ -884,6 +904,10 @@ constexpr T atan(T value)
 #    if defined(AK_OS_SERENITY)
     return asin(value / sqrt(1 + value * value));
 #    endif
+    if constexpr (IsSame<T, long double>)
+        return __builtin_atanl(value);
+    if constexpr (IsSame<T, float>)
+        return __builtin_atanf(value);
     return __builtin_atan(value);
 #endif
 }
@@ -962,6 +986,10 @@ constexpr T atan2(T y, T x)
     // y < 0 && x > 0
     return atan(y / x);
 #    else
+    if constexpr (IsSame<T, long double>)
+        return __builtin_atan2l(y, x);
+    if constexpr (IsSame<T, float>)
+        return __builtin_atan2f(y, x);
     return __builtin_atan2(y, x);
 #    endif
 #endif
@@ -1081,7 +1109,12 @@ constexpr T log(T x)
     // FIXME: Adjust the polynomial and formula in log2 to fit this
     return log2<T>(x) / L2_E<T>;
 #else
-    return __builtin_log(x);
+    if constexpr (IsSame<T, long double>)
+        return __builtin_logl(x);
+    if constexpr (IsSame<T, double>)
+        return __builtin_log(x);
+    if constexpr (IsSame<T, float>)
+        return __builtin_logf(x);
 #endif
 }
 
@@ -1103,7 +1136,12 @@ constexpr T log10(T x)
     // FIXME: Adjust the polynomial and formula in log2 to fit this
     return log2<T>(x) / L2_10<T>;
 #else
-    return __builtin_log10(x);
+    if constexpr (IsSame<T, long double>)
+        return __builtin_log10l(x);
+    if constexpr (IsSame<T, double>)
+        return __builtin_log10(x);
+    if constexpr (IsSame<T, float>)
+        return __builtin_log10f(x);
 #endif
 }
 
