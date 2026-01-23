@@ -279,6 +279,7 @@ ScheduleResult Scheduler::yield()
 
 ShouldYield Scheduler::context_switch(Thread* thread)
 {
+    VERIFY(g_scheduler_lock.is_locked_by_current_processor());
     thread->did_schedule();
 
     auto* from_thread = Thread::current();
@@ -321,10 +322,13 @@ ShouldYield Scheduler::context_switch(Thread* thread)
     enter_current(*from_thread);
     VERIFY(thread == Thread::current());
 
-    {
+    if (!thread->should_die()) {
         SpinlockLocker lock(thread->get_lock());
-        return thread->dispatch_one_pending_signal() == DispatchSignalResult::Yield ? ShouldYield::Yes : ShouldYield::No;
+        if (thread->dispatch_one_pending_signal() == DispatchSignalResult::Yield)
+            return ShouldYield::Yes;
     }
+
+    return ShouldYield::No;
 }
 
 void Scheduler::enter_current(Thread& prev_thread)
