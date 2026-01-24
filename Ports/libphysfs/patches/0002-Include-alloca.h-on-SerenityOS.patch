@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <soenke.holz@serenityos.org>
+Date: Thu, 8 Jan 2026 00:14:14 +0100
+Subject: [PATCH] Include alloca.h on SerenityOS
+
+---
+ src/physfs_internal.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/physfs_internal.h b/src/physfs_internal.h
+index 29126234ad16c09e15af2ed00e9274534e7eb923..bd069f7991ad0bba9c666c41355c244a4258603b 100644
+--- a/src/physfs_internal.h
++++ b/src/physfs_internal.h
+@@ -38,7 +38,7 @@
+ #include <malloc.h>
+ #endif
+ 
+-#ifdef PHYSFS_PLATFORM_SOLARIS
++#if defined(PHYSFS_PLATFORM_SOLARIS) || defined(__serenity__)
+ #include <alloca.h>
+ #endif
+ 
