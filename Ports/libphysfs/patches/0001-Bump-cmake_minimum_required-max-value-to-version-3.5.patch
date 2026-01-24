@@ -9,15 +9,15 @@ CMake 4.0 removed support for versions below 3.5.
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 4a67c2705216f9e9c3c887f90e13fa52d4dd7d50..a96526422fd030dc8836fdf5f166485787c643bb 100644
+index b3291cc8fbdf562f14aa1286bec8afdaffe2a53f..8a9430ba38da577c8a28c20be572c92cceb2130f 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -9,7 +9,7 @@
- #  compile, using preprocessor checks for platform-specific bits instead of
- #  testing in here.
+@@ -11,7 +11,7 @@
  
--cmake_minimum_required(VERSION 2.8.4)
-+cmake_minimum_required(VERSION 2.8.4...3.5)
+ set(PHYSFS_VERSION 3.2.0)
  
- project(PhysicsFS)
- set(PHYSFS_VERSION 3.0.2)
+-cmake_minimum_required(VERSION 3.0)
++cmake_minimum_required(VERSION 3.0...3.5)
+ 
+ project(PhysicsFS VERSION ${PHYSFS_VERSION} LANGUAGES C )
+ 
