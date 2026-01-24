@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <soenke.holz@serenityos.org>
+Date: Sat, 24 Jan 2026 21:29:54 +0100
+Subject: [PATCH] Bump cmake_minimum_required max value to version 3.5
+
+CMake 4.0 removed support for versions below 3.5.
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4a67c2705216f9e9c3c887f90e13fa52d4dd7d50..a96526422fd030dc8836fdf5f166485787c643bb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -9,7 +9,7 @@
+ #  compile, using preprocessor checks for platform-specific bits instead of
+ #  testing in here.
+ 
+-cmake_minimum_required(VERSION 2.8.4)
++cmake_minimum_required(VERSION 2.8.4...3.5)
+ 
+ project(PhysicsFS)
+ set(PHYSFS_VERSION 3.0.2)
