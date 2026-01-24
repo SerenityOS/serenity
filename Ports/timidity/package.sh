@@ -20,6 +20,7 @@ configopts=(
     'lib_cv___va_copy=no'
     'lib_cv_va_copy=no'
     'lib_cv_va_val_copy=no'
+    'CFLAGS=-std=c17'
 )
 
 post_install() {
