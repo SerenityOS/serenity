@@ -20,3 +20,10 @@ check to trip.
 
 Similarly, the wav_length for sound effects is in bytes.
 
+## `0003-Remove-git-commit-info.patch`
+
+Remove git commit info
+
+We build the port from a tarball, so it will incorrectly use
+SerenityOS's git commit hash.
+
