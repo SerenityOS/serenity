@@ -338,6 +338,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`timidity`](timidity/)                       | TiMidity++                                                    | 2.15.0                    | http://timidity.sourceforge.net                                      |
 | [`tinycc`](tinycc/)                           | Tiny C Compiler (TinyCC)                                      | dev                       | https://github.com/TinyCC/tinycc                                     |
 | [`tinyscheme`](tinyscheme/)                   | TinyScheme Interpreter                                        | 1.42                      | https://sourceforge.net/projects/tinyscheme/                         |
+| [`tinyxml2`](tinyxml2/)                       | TinyXML-2                                                     | 11.0.0                    | https://github.com/leethomason/tinyxml2                              |
 | [`tr`](tr/)                                   | tr (OpenBSD)                                                  | 6.7                       | https://github.com/ibara/libpuffy                                    |
 | [`tree`](tree/)                               | tree                                                          | 2.1.3                     | https://github.com/Old-Man-Programmer/tree                           |
 | [`tuxracer`](tuxracer/)                       | Tux Racer                                                     | 0.61                      | http://tuxracer.sourceforge.net/                                     |
