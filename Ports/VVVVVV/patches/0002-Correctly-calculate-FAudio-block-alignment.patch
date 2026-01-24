@@ -1,0 +1,68 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?S=C3=B6nke=20Holz?= <sholz8530@gmail.com>
+Date: Sat, 24 Jan 2026 21:52:44 +0100
+Subject: [PATCH] Correctly calculate FAudio block alignment
+
+This fixes music playback on FAudio 26.01.
+
+FAudio 26.01 added bounds checks to FAudioSourceVoice_SubmitSourceBuffer
+in 033498ab08f5a1349ed5723a47aaa87163654be6.
+
+The calculation of nBlockAlign is currently incorrect. nBlockAlign is
+set to the block size in bits, not in bytes, causing this new bounds
+check to trip.
+
+Similarly, the wav_length for sound effects is in bytes.
+---
+ desktop_version/src/Music.cpp | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/desktop_version/src/Music.cpp b/desktop_version/src/Music.cpp
+index 4da6f69533bde511b4b17b522407996eadb2de18..4d4738f27cf5646368eae746265dabb3807a5b83 100644
+--- a/desktop_version/src/Music.cpp
++++ b/desktop_version/src/Music.cpp
+@@ -134,7 +134,7 @@ public:
+         format.nSamplesPerSec = spec.freq;
+         format.wFormatTag = FAUDIO_FORMAT_PCM;
+         format.wBitsPerSample = SDL_AUDIO_BITSIZE(spec.format);
+-        format.nBlockAlign = format.nChannels * format.wBitsPerSample;
++        format.nBlockAlign = format.nChannels * (format.wBitsPerSample / 8);
+         format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
+         format.cbSize = 0;
+         valid = true;
+@@ -158,7 +158,7 @@ end:
+         format.wBitsPerSample = sizeof(float) * 8;
+         format.nChannels = vorbis_info.channels;
+         format.nSamplesPerSec = vorbis_info.sample_rate;
+-        format.nBlockAlign = format.nChannels * format.wBitsPerSample;
++        format.nBlockAlign = format.nChannels * (format.wBitsPerSample / 8);
+         format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
+         format.cbSize = 0;
+ 
+@@ -210,7 +210,7 @@ end:
+                 }
+                 FAudioBuffer faudio_buffer = {
+                     FAUDIO_END_OF_STREAM, /* Flags */
+-                    wav_length * 8, /* AudioBytes */
++                    wav_length, /* AudioBytes */
+                     wav_buffer, /* AudioData */
+                     0, /* playbegin */
+                     0, /* playlength */
+@@ -262,7 +262,7 @@ end:
+                 format.nSamplesPerSec = audio_rate;
+                 format.wFormatTag = FAUDIO_FORMAT_PCM;
+                 format.wBitsPerSample = 16;
+-                format.nBlockAlign = format.nChannels * format.wBitsPerSample;
++                format.nBlockAlign = format.nChannels * (format.wBitsPerSample / 8);
+                 format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
+                 format.cbSize = 0;
+                 voice_formats[i] = format;
+@@ -392,7 +392,7 @@ public:
+         format.wBitsPerSample = sizeof(float) * 8;
+         format.nChannels = vorbis_info.channels;
+         format.nSamplesPerSec = vorbis_info.sample_rate;
+-        format.nBlockAlign = format.nChannels * format.wBitsPerSample;
++        format.nBlockAlign = format.nChannels * (format.wBitsPerSample / 8);
+         format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
+         format.cbSize = 0;
+ 
