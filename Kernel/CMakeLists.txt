@@ -243,6 +243,8 @@ set(KERNEL_SOURCES
     Firmware/DeviceTree/DeviceTree.cpp
     Firmware/DeviceTree/Management.cpp
     Firmware/DeviceTree/PlatformInit.cpp
+    Firmware/SMBIOS/SysFSComponent.cpp
+    Firmware/SMBIOS/SysFSDirectory.cpp
     Heap/kmalloc.cpp
     Interrupts/GenericInterruptHandler.cpp
     Interrupts/IRQHandler.cpp
@@ -412,8 +414,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 
         Arch/x86_64/Firmware/ACPI.cpp
         Arch/x86_64/Firmware/PCBIOS/Mapper.cpp
-        Arch/x86_64/Firmware/PCBIOS/SysFSComponent.cpp
-        Arch/x86_64/Firmware/PCBIOS/SysFSDirectory.cpp
 
         Arch/x86_64/Hypervisor/BochsDisplayConnector.cpp
         Arch/x86_64/Hypervisor/VMWareBackdoor.cpp
