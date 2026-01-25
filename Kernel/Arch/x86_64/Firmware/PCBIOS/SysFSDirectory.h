@@ -26,18 +26,18 @@ public:
 private:
     explicit SysFSBIOSDirectory(SysFSFirmwareDirectory&);
 
-    void set_dmi_64_bit_entry_initialization_values();
-    void set_dmi_32_bit_entry_initialization_values();
-    void initialize_dmi_exposer();
+    void set_smbios_64_bit_entry_initialization_values();
+    void set_smbios_32_bit_entry_initialization_values();
+    void initialize_smbios_exposer();
 
-    Optional<PhysicalAddress> find_dmi_entry64bit_point();
-    Optional<PhysicalAddress> find_dmi_entry32bit_point();
+    Optional<PhysicalAddress> find_smbios_entry64bit_point();
+    Optional<PhysicalAddress> find_smbios_entry32bit_point();
 
-    PhysicalAddress m_dmi_entry_point;
+    PhysicalAddress m_smbios_entry_point;
     PhysicalAddress m_smbios_structure_table;
-    SetOnce m_using_64bit_dmi_entry_point;
+    SetOnce m_using_64bit_smbios_entry_point;
     size_t m_smbios_structure_table_length { 0 };
-    size_t m_dmi_entry_point_length { 0 };
+    size_t m_smbios_entry_point_length { 0 };
 };
 
 }

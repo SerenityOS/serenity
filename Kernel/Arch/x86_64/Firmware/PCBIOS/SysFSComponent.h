@@ -19,7 +19,7 @@ namespace Kernel {
 class SysFSPCBIOSComponent final : public SysFSComponent {
 public:
     enum class Type {
-        DMIEntryPoint,
+        SMBIOSEntryPoint,
         SMBIOSTable,
     };
 
@@ -36,6 +36,6 @@ private:
 
     PhysicalAddress const m_blob_paddr;
     size_t const m_blob_length { 0 };
-    Type const m_type { Type::DMIEntryPoint };
+    Type const m_type { Type::SMBIOSEntryPoint };
 };
 }
