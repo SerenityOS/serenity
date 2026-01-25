@@ -10,6 +10,9 @@
 
 namespace Kernel::SMBIOS {
 
+// SMBIOS Specification Version 3.9.0
+
+// Table 1 – SMBIOS 2.1 (32-bit) Entry Point structure
 struct [[gnu::packed]] LegacyEntryPoint32bit {
     char legacy_sig[5];
     u8 checksum2;
@@ -19,6 +22,7 @@ struct [[gnu::packed]] LegacyEntryPoint32bit {
     u8 smbios_bcd_revision;
 };
 
+// Table 1 – SMBIOS 2.1 (32-bit) Entry Point structure
 struct [[gnu::packed]] EntryPoint32bit {
     char sig[4];
     u8 checksum;
@@ -31,6 +35,7 @@ struct [[gnu::packed]] EntryPoint32bit {
     LegacyEntryPoint32bit legacy_structure;
 };
 
+// Table 2 – SMBIOS 3.0 (64-bit) Entry Point structure
 struct [[gnu::packed]] EntryPoint64bit {
     char sig[5];
     u8 checksum;
