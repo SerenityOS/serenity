@@ -43,7 +43,7 @@ ErrorOr<size_t> SysFSPCBIOSComponent::read_bytes(off_t offset, size_t count, Use
 StringView SysFSPCBIOSComponent::name() const
 {
     switch (m_type) {
-    case Type::DMIEntryPoint:
+    case Type::SMBIOSEntryPoint:
         return "smbios_entry_point"sv;
     case Type::SMBIOSTable:
         return "DMI"sv;
