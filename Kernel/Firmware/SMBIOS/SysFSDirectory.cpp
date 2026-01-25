@@ -6,10 +6,10 @@
 
 #include <AK/StringView.h>
 #include <Kernel/Arch/x86_64/Firmware/PCBIOS/Mapper.h>
-#include <Kernel/Arch/x86_64/Firmware/PCBIOS/SMBIOS/Definitions.h>
-#include <Kernel/Arch/x86_64/Firmware/PCBIOS/SysFSComponent.h>
-#include <Kernel/Arch/x86_64/Firmware/PCBIOS/SysFSDirectory.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/Firmware/SMBIOS/Definitions.h>
+#include <Kernel/Firmware/SMBIOS/SysFSComponent.h>
+#include <Kernel/Firmware/SMBIOS/SysFSDirectory.h>
 #include <Kernel/Library/KBufferBuilder.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>
@@ -99,6 +99,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSBIOSDirectory::find_smbios_entry
     if (!g_boot_info.smbios.entry_point_paddr.is_null() && g_boot_info.smbios.entry_point_is_64_bit)
         return g_boot_info.smbios.entry_point_paddr;
 
+#if ARCH(X86_64)
     if (g_boot_info.boot_method != BootMethod::Multiboot1)
         return {};
 
@@ -106,6 +107,9 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSBIOSDirectory::find_smbios_entry
     if (bios_or_error.is_error())
         return {};
     return bios_or_error.value().find_chunk_starting_with("_SM3_"sv, 16);
+#else
+    return {};
+#endif
 }
 
 UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSBIOSDirectory::find_smbios_entry32bit_point()
@@ -113,6 +117,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSBIOSDirectory::find_smbios_entry
     if (!g_boot_info.smbios.entry_point_paddr.is_null() && !g_boot_info.smbios.entry_point_is_64_bit)
         return g_boot_info.smbios.entry_point_paddr;
 
+#if ARCH(X86_64)
     if (g_boot_info.boot_method != BootMethod::Multiboot1)
         return {};
 
@@ -120,6 +125,9 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSBIOSDirectory::find_smbios_entry
     if (bios_or_error.is_error())
         return {};
     return bios_or_error.value().find_chunk_starting_with("_SM_"sv, 16);
+#else
+    return {};
+#endif
 }
 
 }

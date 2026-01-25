@@ -5,9 +5,8 @@
  */
 
 #include <AK/StringView.h>
-#include <Kernel/Arch/x86_64/Firmware/PCBIOS/Mapper.h>
-#include <Kernel/Arch/x86_64/Firmware/PCBIOS/SysFSComponent.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/Firmware/SMBIOS/SysFSComponent.h>
 #include <Kernel/Library/KBufferBuilder.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>
