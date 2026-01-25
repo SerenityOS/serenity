@@ -18,7 +18,7 @@ namespace Kernel {
 
 class SysFSBIOSDirectory : public SysFSDirectory {
 public:
-    virtual StringView name() const override { return "bios"sv; }
+    virtual StringView name() const override { return "smbios"sv; }
     static NonnullRefPtr<SysFSBIOSDirectory> must_create(SysFSFirmwareDirectory&);
 
     void create_components();

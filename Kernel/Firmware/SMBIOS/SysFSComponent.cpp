@@ -43,9 +43,9 @@ StringView SysFSPCBIOSComponent::name() const
 {
     switch (m_type) {
     case Type::SMBIOSEntryPoint:
-        return "smbios_entry_point"sv;
+        return "entry_point"sv;
     case Type::SMBIOSTable:
-        return "DMI"sv;
+        return "structure_table"sv;
     default:
         break;
     }

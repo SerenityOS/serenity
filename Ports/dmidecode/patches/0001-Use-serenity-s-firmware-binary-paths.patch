@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Liav A <liavalb@gmail.com>
+Date: Fri, 1 Apr 2022 11:01:13 +0300
+Subject: [PATCH] Use serenity's firmware binary paths
+
+---
+ dmidecode.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/dmidecode.c b/dmidecode.c
+index 463f12b2748c7e37f0e4345d26e6e804b21b0a28..af3a72c7d579ec21c8c0e9541bd984dd6850ed33 100644
+--- a/dmidecode.c
++++ b/dmidecode.c
+@@ -94,9 +94,9 @@ enum cpuid_type cpuid_type = cpuid_none;
+ #define FLAG_NO_FILE_OFFSET     (1 << 0)
+ #define FLAG_STOP_AT_EOT        (1 << 1)
+ 
+-#define SYS_FIRMWARE_DIR "/sys/firmware/dmi/tables"
+-#define SYS_ENTRY_FILE SYS_FIRMWARE_DIR "/smbios_entry_point"
+-#define SYS_TABLE_FILE SYS_FIRMWARE_DIR "/DMI"
++#define SYS_FIRMWARE_DIR "/sys/firmware/smbios"
++#define SYS_ENTRY_FILE SYS_FIRMWARE_DIR "/entry_point"
++#define SYS_TABLE_FILE SYS_FIRMWARE_DIR "/structure_table"
+ 
+ /*
+  * Type-independant Stuff
