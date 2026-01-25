@@ -27,6 +27,7 @@ public:
     static NonnullRefPtr<SysFSPCBIOSComponent> must_create(Type, PhysicalAddress, size_t blob_size);
     virtual StringView name() const override;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
+    virtual mode_t permissions() const override { return S_IRUSR; }
 
 private:
     ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
