@@ -24,9 +24,9 @@ namespace Kernel {
 //  searching for the anchor-string on paragraph (16-byte) boundaries within the physical memory address
 //  range 000F0000h to 000FFFFFh."
 // This same text also appears for the 32-bit entry point.
-#define SMBIOS_BASE_SEARCH_ADDR 0xf0000
-#define SMBIOS_END_SEARCH_ADDR 0xfffff
-#define SMBIOS_SEARCH_AREA_SIZE (SMBIOS_END_SEARCH_ADDR - SMBIOS_BASE_SEARCH_ADDR)
+static constexpr PhysicalPtr SMBIOS_BASE_SEARCH_ADDR = 0xf'0000;
+static constexpr PhysicalPtr SMBIOS_END_SEARCH_ADDR = 0xf'ffff;
+static constexpr size_t SMBIOS_SEARCH_AREA_SIZE = SMBIOS_END_SEARCH_ADDR - SMBIOS_BASE_SEARCH_ADDR;
 
 UNMAP_AFTER_INIT void SysFSBIOSDirectory::set_smbios_64_bit_entry_initialization_values()
 {
