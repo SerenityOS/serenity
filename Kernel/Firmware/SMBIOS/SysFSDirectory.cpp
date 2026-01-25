@@ -15,8 +15,15 @@
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 
+// SMBIOS Specification Version 3.9.0
+
 namespace Kernel {
 
+// 5.2.2 SMBIOS 3.0 (64-bit) Entry Point
+// "On non-UEFI systems, the 64-bit SMBIOS Entry Point structure can be located by application software by
+//  searching for the anchor-string on paragraph (16-byte) boundaries within the physical memory address
+//  range 000F0000h to 000FFFFFh."
+// This same text also appears for the 32-bit entry point.
 #define SMBIOS_BASE_SEARCH_ADDR 0xf0000
 #define SMBIOS_END_SEARCH_ADDR 0xfffff
 #define SMBIOS_SEARCH_AREA_SIZE (SMBIOS_END_SEARCH_ADDR - SMBIOS_BASE_SEARCH_ADDR)
