@@ -16,12 +16,12 @@ jobs:
 
     steps:
       - name: Checkout SerenityOS/serenity
-        uses: actions/checkout@v6.0.1
+        uses: actions/checkout@v6.0.2
         with:
           persist-credentials: false
 
       - name: Checkout SerenityOS/libjs-data libjs-wasm
-        uses: actions/checkout@v6.0.1
+        uses: actions/checkout@v6.0.2
         with:
           path: libjs-data
           ref: libjs-wasm
