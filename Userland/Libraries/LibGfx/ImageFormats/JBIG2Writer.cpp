@@ -1863,7 +1863,7 @@ static size_t code_lengths_to_run_codes(ReadonlyBytes lengths, Span<RunCode> enc
         encoded_lengths[encoded_count++].symbol = lengths[i++];
 
         // "RUNCODE32: Copy the previous symbol ID code length 3-6 times."
-        // This is different from deflate (but except for the code, identically to WebP!)
+        // This is different from deflate (but except for the code, identical to WebP!)
         auto copy_count = 0;
         for (size_t j = i; j < min(lengths.size(), i + 6) && lengths[j] == last_non_zero_symbol; j++)
             copy_count++;
