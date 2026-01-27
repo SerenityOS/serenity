@@ -1883,15 +1883,10 @@ static ErrorOr<void> store_huffman_code_lengths(Stream& stream, ReadonlyBytes co
     // Similar to Deflate or WebP lossless, the code lengths are represented using a custom bytecode that is itself Huffman-compressed for serialization.
     // See 7.4.3.1.7 Symbol ID Huffman table decoding.
 
-    // Drop trailing zero lengths.
-    // This is similar to the loops in Deflate::encode_block_lengths().
-    size_t code_count = code_lengths.size();
-    while (code_count > 0 && code_lengths[code_count - 1] == 0)
-        code_count--;
-
+    // Different from deflate and webp, this does not drop trailing zeroes in code_lengths.
     Vector<RunCode, 256> run_codes;
-    TRY(run_codes.try_resize(code_count));
-    auto run_codes_count = code_lengths_to_run_codes(code_lengths.trim(code_count), run_codes.span());
+    TRY(run_codes.try_resize(code_lengths.size()));
+    auto run_codes_count = code_lengths_to_run_codes(code_lengths, run_codes.span());
 
     // The code to compute code length code lengths is very similar to some of the code in DeflateCompressor::flush().
     // count code length frequencies
@@ -1983,21 +1978,22 @@ static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text
     JBIG2::HuffmanTable const* symbol_id_table = nullptr;
 
     u32 number_of_symbol_instances = 0;
-    u32 highest_symbol_id = 0;
     for (auto const& strip : text_region.strips) {
         number_of_symbol_instances += strip.symbol_instances.size();
-        for (auto const& instance : strip.symbol_instances)
-            highest_symbol_id = max(highest_symbol_id, instance.symbol_id);
+        for (auto const& instance : strip.symbol_instances) {
+            if (instance.symbol_id >= symbols.size())
+                return Error::from_string_literal("JBIG2Writer: Text region symbol instance ID out of bounds");
+        }
     }
 
     if (uses_huffman_encoding) {
         // FIXME: Maybe support this one day; the file format supports 32 bits per symbol.
-        if (highest_symbol_id >= (1u << 15))
+        if (!symbols.is_empty() && symbols.size() - 1 >= (1u << 15))
             return Error::from_string_literal("JBIG2Writer: Cannot currently encode more than 32767 symbols with Huffman coding");
 
         // Compute optimal huffman table for symbol IDs.
         Vector<u16> histogram;
-        histogram.resize(highest_symbol_id + 1);
+        histogram.resize(symbols.size());
         for (auto const& strip : text_region.strips) {
             for (auto const& instance : strip.symbol_instances) {
                 if (histogram[instance.symbol_id] < UINT16_MAX)
@@ -2005,7 +2001,7 @@ static ErrorOr<void> encode_text_region(JBIG2::TextRegionSegmentData const& text
             }
         }
         Vector<u8> code_lengths;
-        code_lengths.resize(highest_symbol_id + 1);
+        code_lengths.resize(symbols.size());
         Compress::generate_huffman_lengths(code_lengths, histogram, 15);
 
         auto codes = TRY(JBIG2::assign_huffman_codes(code_lengths));
