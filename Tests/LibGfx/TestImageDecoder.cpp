@@ -406,6 +406,7 @@ TEST_CASE(test_jbig2_decode)
         TEST_INPUT("jbig2/bitmap-symbol-symhuffuncompressed-texthuff.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textcomposite.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-texthuff-runcodes32-34.jbig2"sv),
+        TEST_INPUT("jbig2/bitmap-symbol-texthuff-trailingsymbols.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine-customat.jbig2"sv),
         TEST_INPUT("jbig2/bitmap-symbol-textrefine-negative-delta-width.jbig2"sv),
