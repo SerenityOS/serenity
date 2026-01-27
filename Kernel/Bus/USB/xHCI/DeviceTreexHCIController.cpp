@@ -15,7 +15,7 @@ namespace Kernel::USB::xHCI {
 
 ErrorOr<NonnullLockRefPtr<DeviceTreexHCIController>> DeviceTreexHCIController::try_to_initialize(DeviceTree::Device::Resource registers_resource, StringView node_name, size_t interrupt_number)
 {
-    auto registers_mapping = TRY(Memory::map_typed_writable<u8>(registers_resource.paddr));
+    auto registers_mapping = TRY(Memory::map_typed<u8>(registers_resource.paddr, registers_resource.size, Memory::Region::Access::ReadWrite));
 
     auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) DeviceTreexHCIController(move(registers_mapping), node_name, interrupt_number)));
     TRY(controller->initialize());
