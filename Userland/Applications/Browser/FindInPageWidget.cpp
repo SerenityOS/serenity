@@ -116,10 +116,9 @@ void FindInPageWidget::show(String const& global_term)
         m_search_textbox->set_text(global_term);
     }
     // Priority 3: Keep existing text (do nothing)
-
     m_search_textbox->select_all();
+    m_search_textbox->set_focus(true);
     set_visible(true);
-    set_focus(true);
 }
 
 void FindInPageWidget::keydown_event(GUI::KeyEvent& event)
