@@ -1110,9 +1110,10 @@ int pause()
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/chroot.html
-int chroot(char const* path)
+int chroot([[maybe_unused]] char const* path)
 {
-    dbgln("FIXME: chroot(\"{}\")", path);
+    // FIXME: Implement chroot()
+    errno = ENOSYS;
     return -1;
 }
 
@@ -1125,10 +1126,11 @@ int getdtablesize()
 }
 
 // https://pubs.opengroup.org/onlinepubs/007904975/functions/nice.html
-int nice(int incr)
+int nice([[maybe_unused]] int incr)
 {
-    dbgln("FIXME: nice was called with: {}, not implemented", incr);
-    return incr;
+    // FIXME: Implement nice()
+    errno = ENOSYS;
+    return -1;
 }
 
 int brk(void* addr)
