@@ -1,0 +1,100 @@
+{
+    "global_header": {
+        "organization": "sequential",
+        "number_of_pages": 1
+    },
+    "segments": [
+        {
+            "segment_number": 0,
+            "type": "page_information",
+            "page_association": 1,
+            "data": {
+                "page_width": 399,
+                "page_height": 400,
+                "flags": {
+                    "is_eventually_lossless": true
+                }
+            }
+        },
+
+        {
+            "segment_number": 1,
+            "type": "symbol_dictionary",
+            "page_association": 1,
+            "retained": true,
+            "data": {
+                "height_classes": [
+                    {
+                        "symbols": [
+                            {
+                                "image_data": {
+                                    "from_file": "bitmap.bmp",
+                                    "crop": {
+                                        "x": 0,
+                                        "y": 28,
+                                        "width": 399,
+                                        "height": 372
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 2,
+            "type": "lossless_text_region",
+            "page_association": 1,
+            "referred_to_segments": [
+                {
+                    "segment_number": 1,
+                    "retained": false
+                }
+            ],
+            "data": {
+                "region_segment_information": {
+                    "width": 399,
+                    "height": 400
+                },
+                "flags": {
+                    "strip_size": 4,
+                    "reference_corner": "top_left",
+                    "is_transposed": false,
+                    "delta_s_offset": 3
+                },
+
+                "initial_strip_t": -4,
+                "strips": [
+                    {
+                        "strip_t": 0,
+                        "instances": [
+                            {
+                                "instance_s": 4436,
+                                "instance_t": 0,
+                                "symbol_id": 0
+                            }
+                        ]
+                    },
+                    {
+                        "strip_t": 28,
+                        "instances": [
+                            {
+                                "instance_s": 0,
+                                "instance_t": 28,
+                                "symbol_id": 0
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+
+        {
+            "segment_number": 3,
+            "type": "end_of_page",
+            "page_association": 1
+        }
+    ]
+}
