@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
 #include <assert.h>
+#include <errno.h>
 #include <sys/resource.h>
 #include <syscall.h>
 #include <ulimit.h>
@@ -15,8 +15,8 @@ extern "C" {
 
 long ulimit([[maybe_unused]] int cmd, [[maybe_unused]] long newlimit)
 {
-    dbgln("FIXME: Implement ulimit()");
-    TODO();
+    // FIXME: Implement ulimit()
+    errno = ENOSYS;
     return -1;
 }
 

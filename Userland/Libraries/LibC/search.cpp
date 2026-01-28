@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Format.h>
 #include <bits/search.h>
 #include <search.h>
 
@@ -93,9 +92,9 @@ void* tfind(void const* key, void* const* rootp, int (*comparator)(void const*, 
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/tdelete.html
-void* tdelete(void const*, void**, int (*)(void const*, void const*))
+void* tdelete([[maybe_unused]] void const* key, [[maybe_unused]] void** rootp, [[maybe_unused]] int (*compar)(void const*, void const*))
 {
-    dbgln("FIXME: Implement tdelete()");
+    // FIXME: Implement tdelete()
     return nullptr;
 }
 
