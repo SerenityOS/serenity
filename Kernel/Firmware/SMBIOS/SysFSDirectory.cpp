@@ -101,6 +101,23 @@ UNMAP_AFTER_INIT SysFSSMBIOSDirectory::SysFSSMBIOSDirectory(SysFSFirmwareDirecto
     initialize_smbios_exposer();
 }
 
+template<typename EntryPoint>
+static bool is_entry_point_valid(ReadonlyBytes entry_point)
+{
+    if (entry_point.size() < sizeof(EntryPoint))
+        return false;
+
+    auto entry_point_length = reinterpret_cast<EntryPoint const*>(entry_point.data())->length;
+    if (entry_point.size() < entry_point_length)
+        return false;
+
+    u8 checksum = 0;
+    for (u8 byte : ReadonlyBytes { entry_point.data(), entry_point_length })
+        checksum += byte;
+
+    return checksum == 0;
+}
+
 UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSSMBIOSDirectory::find_smbios_entry64bit_point()
 {
     if (!g_boot_info.smbios.entry_point_paddr.is_null() && g_boot_info.smbios.entry_point_is_64_bit)
@@ -113,7 +130,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSSMBIOSDirectory::find_smbios_ent
     auto bios_or_error = map_bios();
     if (bios_or_error.is_error())
         return {};
-    return bios_or_error.value().find_chunk_starting_with("_SM3_"sv, 16, [](auto) { return true; });
+    return bios_or_error.value().find_chunk_starting_with("_SM3_"sv, 16, is_entry_point_valid<SMBIOS::EntryPoint64bit>);
 #else
     return {};
 #endif
@@ -131,7 +148,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSSMBIOSDirectory::find_smbios_ent
     auto bios_or_error = map_bios();
     if (bios_or_error.is_error())
         return {};
-    return bios_or_error.value().find_chunk_starting_with("_SM_"sv, 16, [](auto) { return true; });
+    return bios_or_error.value().find_chunk_starting_with("_SM_"sv, 16, is_entry_point_valid<SMBIOS::EntryPoint32bit>);
 #else
     return {};
 #endif
