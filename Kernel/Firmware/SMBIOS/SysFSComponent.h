@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-class SysFSPCBIOSComponent final : public SysFSComponent {
+class SysFSSMBIOSComponent final : public SysFSComponent {
 public:
     enum class Type {
         SMBIOSEntryPoint,
@@ -24,14 +24,14 @@ public:
     };
 
 public:
-    static NonnullRefPtr<SysFSPCBIOSComponent> must_create(Type, PhysicalAddress, size_t blob_size);
+    static NonnullRefPtr<SysFSSMBIOSComponent> must_create(Type, PhysicalAddress, size_t blob_size);
     virtual StringView name() const override;
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
     virtual mode_t permissions() const override { return S_IRUSR; }
 
 private:
     ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
-    SysFSPCBIOSComponent(Type, PhysicalAddress, size_t blob_size);
+    SysFSSMBIOSComponent(Type, PhysicalAddress, size_t blob_size);
 
     virtual size_t size() const override { return m_blob_length; }
 

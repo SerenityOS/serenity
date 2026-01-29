@@ -23,7 +23,7 @@ UNMAP_AFTER_INIT void SysFSFirmwareDirectory::initialize()
 void SysFSFirmwareDirectory::create_components()
 {
     MUST(m_child_components.with([&](auto& list) -> ErrorOr<void> {
-        list.append(SysFSBIOSDirectory::must_create(*this));
+        list.append(SysFSSMBIOSDirectory::must_create(*this));
         if (ACPI::is_enabled())
             list.append(ACPI::ACPISysFSDirectory::must_create(*this));
         return {};
