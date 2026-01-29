@@ -113,7 +113,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSSMBIOSDirectory::find_smbios_ent
     auto bios_or_error = map_bios();
     if (bios_or_error.is_error())
         return {};
-    return bios_or_error.value().find_chunk_starting_with("_SM3_"sv, 16);
+    return bios_or_error.value().find_chunk_starting_with("_SM3_"sv, 16, [](auto) { return true; });
 #else
     return {};
 #endif
@@ -131,7 +131,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSSMBIOSDirectory::find_smbios_ent
     auto bios_or_error = map_bios();
     if (bios_or_error.is_error())
         return {};
-    return bios_or_error.value().find_chunk_starting_with("_SM_"sv, 16);
+    return bios_or_error.value().find_chunk_starting_with("_SM_"sv, 16, [](auto) { return true; });
 #else
     return {};
 #endif
