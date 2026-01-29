@@ -33,9 +33,13 @@ void EraseTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint 
     if (m_draw_mode == DrawMode::Pencil) {
         int radius = size() / 2;
         Gfx::IntRect rect { point.x() - radius, point.y() - radius, size(), size() };
-        GUI::Painter painter(bitmap);
-        // FIXME: Currently this mode does not respect the editing mask if present.
-        painter.clear_rect(rect, color);
+        for (int y = rect.top(); y < rect.bottom(); ++y) {
+            for (int x = rect.left(); x < rect.right(); ++x) {
+                if (x < 0 || x >= bitmap.width() || y < 0 || y >= bitmap.height())
+                    continue;
+                set_pixel_with_possible_mask(x, y, color, bitmap);
+            }
+        }
     } else {
         for (int y = point.y() - size(); y < point.y() + size(); y++) {
             for (int x = point.x() - size(); x < point.x() + size(); x++) {
