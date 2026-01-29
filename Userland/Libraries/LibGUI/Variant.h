@@ -10,6 +10,7 @@
 
 #include <AK/ByteString.h>
 #include <AK/Concepts.h>
+#include <AK/Variant.h>
 #include <LibGUI/Icon.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Font.h>
@@ -42,7 +43,7 @@ public:
     template<typename T>
     Variant(T&& value)
     requires(IsConstructible<ByteString, T>)
-        : Variant(ByteString(forward<T>(value)))
+        : Detail::VariantUnderlyingType(ByteString(forward<T>(value)))
     {
     }
     template<typename T>
