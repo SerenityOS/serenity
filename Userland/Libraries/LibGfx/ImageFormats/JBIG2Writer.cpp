@@ -2566,6 +2566,8 @@ static ErrorOr<void> encode_extension(JBIG2::ExtensionData const& extension, Vec
     };
 
     for (auto const& entry : extension.entries) {
+        if (entry.key.is_empty())
+            return Error::from_string_literal("JBIG2Writer: Extension entry key must not be empty");
         TRY(write_string(output_stream, entry.key));
         TRY(write_string(output_stream, entry.value));
     }
