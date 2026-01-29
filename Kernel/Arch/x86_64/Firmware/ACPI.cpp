@@ -11,12 +11,12 @@
 
 namespace Kernel::ACPI::StaticParsing {
 
-static bool is_rsdp_valid(u8 const* rsdp, size_t region_size)
+static bool is_rsdp_valid(ReadonlyBytes rsdp)
 {
-    if (region_size < sizeof(Structures::RSDPDescriptor))
+    if (rsdp.size() < sizeof(Structures::RSDPDescriptor))
         return false;
 
-    u8 revision = reinterpret_cast<Structures::RSDPDescriptor const*>(rsdp)->revision;
+    u8 revision = reinterpret_cast<Structures::RSDPDescriptor const*>(rsdp.data())->revision;
 
     u8 checksum = 0;
     for (size_t i = 0; i < sizeof(Structures::RSDPDescriptor); ++i)
@@ -29,7 +29,7 @@ static bool is_rsdp_valid(u8 const* rsdp, size_t region_size)
         // Checksum matched and there's nothing more to check.
         return true;
 
-    if (region_size < sizeof(Structures::RSDPDescriptor20))
+    if (rsdp.size() < sizeof(Structures::RSDPDescriptor20))
         return false;
 
     checksum = 0;
@@ -45,10 +45,7 @@ Optional<PhysicalAddress> find_rsdp_in_ia_pc_specific_memory_locations()
     static constexpr size_t rsdp_alignment = 16;
 
     auto locate_rsdp = [](Memory::MappedROM mapping) -> Optional<PhysicalAddress> {
-        return mapping.find_chunk_starting_with(signature, rsdp_alignment,
-            [](ReadonlyBytes rsdp) {
-                return is_rsdp_valid(rsdp.data(), rsdp.size());
-            });
+        return mapping.find_chunk_starting_with(signature, rsdp_alignment, is_rsdp_valid);
     };
 
     auto ebda_or_error = map_ebda();
