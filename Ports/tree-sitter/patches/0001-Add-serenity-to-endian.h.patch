@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Naren Sirigere <sirigere.naren@gmail.com>
+Date: Thu, 29 Jan 2026 13:45:58 +0530
+Subject: [PATCH] Add serenity to endian.h
+
+---
+ lib/src/portable/endian.h | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/lib/src/portable/endian.h b/lib/src/portable/endian.h
+index a6560826..c3bfe029 100644
+--- a/lib/src/portable/endian.h
++++ b/lib/src/portable/endian.h
+@@ -26,12 +26,17 @@
+     defined(__MSYS__) || \
+     defined(__EMSCRIPTEN__) || \
+     defined(__wasi__) || \
+-    defined(__wasm__)
++    defined(__wasm__) || \
++    defined(__serenity__)
+ 
+ #if defined(__NetBSD__)
+ #define _NETBSD_SOURCE 1
+ #endif
+ 
++#if defined(__serenity__)
++#define _GNU_SOURCE
++#endif
++
+ # include <endian.h>
+ 
+ #elif defined(HAVE_SYS_ENDIAN_H) || \
+-- 
+2.51.0
+

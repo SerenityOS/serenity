@@ -342,6 +342,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`tinyxml2`](tinyxml2/)                       | TinyXML-2                                                     | 11.0.0                    | https://github.com/leethomason/tinyxml2                              |
 | [`tr`](tr/)                                   | tr (OpenBSD)                                                  | 6.7                       | https://github.com/ibara/libpuffy                                    |
 | [`tree`](tree/)                               | tree                                                          | 2.1.3                     | https://github.com/Old-Man-Programmer/tree                           |
+| [`tree-sitter`](tree-sitter/)                 | tree-sitter                                                   | 0.26.3                    | https://tree-sitter.github.io/                                       |
 | [`tuxracer`](tuxracer/)                       | Tux Racer                                                     | 0.61                      | http://tuxracer.sourceforge.net/                                     |
 | [`vim`](vim/)                                 | Vim                                                           | 8.2.5056                  | https://www.vim.org/                                                 |
 | [`vitetris`](vitetris/)                       | vitetris                                                      | 0.59.1                    | https://github.com/vicgeralds/vitetris                               |
