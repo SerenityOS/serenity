@@ -14,20 +14,19 @@
 
 namespace Kernel {
 
-NonnullRefPtr<SysFSPCBIOSComponent> SysFSPCBIOSComponent::must_create(Type type, PhysicalAddress blob_paddr, size_t blob_size)
+NonnullRefPtr<SysFSSMBIOSComponent> SysFSSMBIOSComponent::must_create(Type type, PhysicalAddress blob_paddr, size_t blob_size)
 {
-    return adopt_ref_if_nonnull(new (nothrow) SysFSPCBIOSComponent(type, blob_paddr, blob_size)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSSMBIOSComponent(type, blob_paddr, blob_size)).release_nonnull();
 }
 
-UNMAP_AFTER_INIT SysFSPCBIOSComponent::SysFSPCBIOSComponent(Type type, PhysicalAddress blob_paddr, size_t blob_size)
-    : SysFSComponent()
-    , m_blob_paddr(blob_paddr)
+UNMAP_AFTER_INIT SysFSSMBIOSComponent::SysFSSMBIOSComponent(Type type, PhysicalAddress blob_paddr, size_t blob_size)
+    : m_blob_paddr(blob_paddr)
     , m_blob_length(blob_size)
     , m_type(type)
 {
 }
 
-ErrorOr<size_t> SysFSPCBIOSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
+ErrorOr<size_t> SysFSSMBIOSComponent::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, OpenFileDescription*) const
 {
     auto blob = TRY(try_to_generate_buffer());
 
@@ -39,7 +38,7 @@ ErrorOr<size_t> SysFSPCBIOSComponent::read_bytes(off_t offset, size_t count, Use
     return nread;
 }
 
-StringView SysFSPCBIOSComponent::name() const
+StringView SysFSSMBIOSComponent::name() const
 {
     switch (m_type) {
     case Type::SMBIOSEntryPoint:
@@ -52,9 +51,9 @@ StringView SysFSPCBIOSComponent::name() const
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<NonnullOwnPtr<KBuffer>> SysFSPCBIOSComponent::try_to_generate_buffer() const
+ErrorOr<NonnullOwnPtr<KBuffer>> SysFSSMBIOSComponent::try_to_generate_buffer() const
 {
     auto blob = TRY(Memory::map_typed<u8>((m_blob_paddr), m_blob_length));
-    return KBuffer::try_create_with_bytes("SysFSPCBIOSComponent: Blob"sv, Span<u8> { blob.ptr(), m_blob_length });
+    return KBuffer::try_create_with_bytes("SysFSSMBIOSComponent: Blob"sv, Span<u8> { blob.ptr(), m_blob_length });
 }
 }

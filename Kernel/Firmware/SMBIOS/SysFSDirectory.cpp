@@ -28,51 +28,51 @@ static constexpr PhysicalPtr SMBIOS_BASE_SEARCH_ADDR = 0xf'0000;
 static constexpr PhysicalPtr SMBIOS_END_SEARCH_ADDR = 0xf'ffff;
 static constexpr size_t SMBIOS_SEARCH_AREA_SIZE = SMBIOS_END_SEARCH_ADDR - SMBIOS_BASE_SEARCH_ADDR;
 
-UNMAP_AFTER_INIT void SysFSBIOSDirectory::set_smbios_64_bit_entry_initialization_values()
+UNMAP_AFTER_INIT void SysFSSMBIOSDirectory::set_smbios_64_bit_entry_initialization_values()
 {
-    dbgln("SysFSBIOSDirectory: SMBIOS 64bit Entry point @ {}", m_smbios_entry_point);
+    dbgln("SysFSSMBIOSDirectory: SMBIOS 64bit Entry point @ {}", m_smbios_entry_point);
     auto smbios_entry = Memory::map_typed<SMBIOS::EntryPoint64bit>(m_smbios_entry_point, SMBIOS_SEARCH_AREA_SIZE).release_value_but_fixme_should_propagate_errors();
     m_smbios_structure_table = PhysicalAddress(smbios_entry.ptr()->table_ptr);
     m_smbios_entry_point_length = smbios_entry.ptr()->length;
     m_smbios_structure_table_length = smbios_entry.ptr()->table_maximum_size;
 }
 
-UNMAP_AFTER_INIT void SysFSBIOSDirectory::set_smbios_32_bit_entry_initialization_values()
+UNMAP_AFTER_INIT void SysFSSMBIOSDirectory::set_smbios_32_bit_entry_initialization_values()
 {
-    dbgln("SysFSBIOSDirectory: SMBIOS 32bit Entry point @ {}", m_smbios_entry_point);
+    dbgln("SysFSSMBIOSDirectory: SMBIOS 32bit Entry point @ {}", m_smbios_entry_point);
     auto smbios_entry = Memory::map_typed<SMBIOS::EntryPoint32bit>(m_smbios_entry_point, SMBIOS_SEARCH_AREA_SIZE).release_value_but_fixme_should_propagate_errors();
     m_smbios_structure_table = PhysicalAddress(smbios_entry.ptr()->legacy_structure.smbios_table_ptr);
     m_smbios_entry_point_length = smbios_entry.ptr()->length;
     m_smbios_structure_table_length = smbios_entry.ptr()->legacy_structure.smbios_table_length;
 }
 
-UNMAP_AFTER_INIT NonnullRefPtr<SysFSBIOSDirectory> SysFSBIOSDirectory::must_create(SysFSFirmwareDirectory& firmware_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSSMBIOSDirectory> SysFSSMBIOSDirectory::must_create(SysFSFirmwareDirectory& firmware_directory)
 {
-    auto bios_directory = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) SysFSBIOSDirectory(firmware_directory)));
+    auto bios_directory = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) SysFSSMBIOSDirectory(firmware_directory)));
     bios_directory->create_components();
     return bios_directory;
 }
 
-void SysFSBIOSDirectory::create_components()
+void SysFSSMBIOSDirectory::create_components()
 {
     if (m_smbios_entry_point.is_null() || m_smbios_structure_table.is_null())
         return;
     if (m_smbios_entry_point_length == 0) {
-        dbgln("SysFSBIOSDirectory: invalid smbios entry length");
+        dbgln("SysFSSMBIOSDirectory: invalid smbios entry length");
         return;
     }
     if (m_smbios_structure_table_length == 0) {
-        dbgln("SysFSBIOSDirectory: invalid smbios structure table length");
+        dbgln("SysFSSMBIOSDirectory: invalid smbios structure table length");
         return;
     }
     MUST(m_child_components.with([&](auto& list) -> ErrorOr<void> {
-        list.append(SysFSPCBIOSComponent::must_create(SysFSPCBIOSComponent::Type::SMBIOSEntryPoint, m_smbios_entry_point, m_smbios_entry_point_length));
-        list.append(SysFSPCBIOSComponent::must_create(SysFSPCBIOSComponent::Type::SMBIOSTable, m_smbios_structure_table, m_smbios_structure_table_length));
+        list.append(SysFSSMBIOSComponent::must_create(SysFSSMBIOSComponent::Type::SMBIOSEntryPoint, m_smbios_entry_point, m_smbios_entry_point_length));
+        list.append(SysFSSMBIOSComponent::must_create(SysFSSMBIOSComponent::Type::SMBIOSTable, m_smbios_structure_table, m_smbios_structure_table_length));
         return {};
     }));
 }
 
-UNMAP_AFTER_INIT void SysFSBIOSDirectory::initialize_smbios_exposer()
+UNMAP_AFTER_INIT void SysFSSMBIOSDirectory::initialize_smbios_exposer()
 {
     VERIFY(!(m_smbios_entry_point.is_null()));
     if (m_using_64bit_smbios_entry_point.was_set()) {
@@ -80,10 +80,10 @@ UNMAP_AFTER_INIT void SysFSBIOSDirectory::initialize_smbios_exposer()
     } else {
         set_smbios_32_bit_entry_initialization_values();
     }
-    dbgln("SysFSBIOSDirectory: Data table @ {}", m_smbios_structure_table);
+    dbgln("SysFSSMBIOSDirectory: Data table @ {}", m_smbios_structure_table);
 }
 
-UNMAP_AFTER_INIT SysFSBIOSDirectory::SysFSBIOSDirectory(SysFSFirmwareDirectory& firmware_directory)
+UNMAP_AFTER_INIT SysFSSMBIOSDirectory::SysFSSMBIOSDirectory(SysFSFirmwareDirectory& firmware_directory)
     : SysFSDirectory(firmware_directory)
 {
     auto entry_32bit = find_smbios_entry32bit_point();
@@ -101,7 +101,7 @@ UNMAP_AFTER_INIT SysFSBIOSDirectory::SysFSBIOSDirectory(SysFSFirmwareDirectory& 
     initialize_smbios_exposer();
 }
 
-UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSBIOSDirectory::find_smbios_entry64bit_point()
+UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSSMBIOSDirectory::find_smbios_entry64bit_point()
 {
     if (!g_boot_info.smbios.entry_point_paddr.is_null() && g_boot_info.smbios.entry_point_is_64_bit)
         return g_boot_info.smbios.entry_point_paddr;
@@ -119,7 +119,7 @@ UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSBIOSDirectory::find_smbios_entry
 #endif
 }
 
-UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSBIOSDirectory::find_smbios_entry32bit_point()
+UNMAP_AFTER_INIT Optional<PhysicalAddress> SysFSSMBIOSDirectory::find_smbios_entry32bit_point()
 {
     if (!g_boot_info.smbios.entry_point_paddr.is_null() && !g_boot_info.smbios.entry_point_is_64_bit)
         return g_boot_info.smbios.entry_point_paddr;

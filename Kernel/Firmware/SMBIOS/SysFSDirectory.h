@@ -16,15 +16,15 @@
 
 namespace Kernel {
 
-class SysFSBIOSDirectory : public SysFSDirectory {
+class SysFSSMBIOSDirectory : public SysFSDirectory {
 public:
     virtual StringView name() const override { return "smbios"sv; }
-    static NonnullRefPtr<SysFSBIOSDirectory> must_create(SysFSFirmwareDirectory&);
+    static NonnullRefPtr<SysFSSMBIOSDirectory> must_create(SysFSFirmwareDirectory&);
 
     void create_components();
 
 private:
-    explicit SysFSBIOSDirectory(SysFSFirmwareDirectory&);
+    explicit SysFSSMBIOSDirectory(SysFSFirmwareDirectory&);
 
     void set_smbios_64_bit_entry_initialization_values();
     void set_smbios_32_bit_entry_initialization_values();
