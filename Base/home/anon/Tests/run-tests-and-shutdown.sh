@@ -9,11 +9,8 @@ if [ "$(uname -m)" = "AArch64" -o "$(uname -m)" = "riscv64" ] && [ "$1" != "--fo
     fail_count=0
 }
 else {
-    mkdir -p "$HOME/profiles"
-    export LLVM_PROFILE_FILE="$HOME/profiles/%p-profile.profraw"
     run-tests --show-progress=false --unlink-coredumps
     fail_count=$?
-    unset LLVM_PROFILE_FILE
 }
 
 echo "Failed: $fail_count" > ./test-results.log
