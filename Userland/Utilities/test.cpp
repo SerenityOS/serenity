@@ -9,6 +9,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -265,6 +266,31 @@ private:
     Owner m_kind { EffectiveGID };
 };
 
+class FileExists : public Condition {
+public:
+    FileExists(StringView path)
+        : m_path(path)
+    {
+    }
+
+private:
+    virtual bool check() const override
+    {
+        // "True if pathname resolves to an existing directory entry for a file that
+        // has a size greater than zero. False if pathname cannot be resolved, or if
+        // pathname resolves to an existing directory entry for a file that does not
+        // have a size greater than zero."
+
+        if (!FileSystem::exists(m_path))
+            return false;
+
+        auto maybe_size = FileSystem::size_from_stat(m_path);
+        return !maybe_size.is_error() && maybe_size.value() > 0;
+    }
+
+    ByteString m_path;
+};
+
 class StringCompare : public Condition {
 public:
     enum Mode {
@@ -478,8 +504,9 @@ static OwnPtr<Condition> parse_simple_expression(char* argv[])
             return make<FileIsOwnedBy>(value, FileIsOwnedBy::EffectiveGID);
         case 'O':
             return make<FileIsOwnedBy>(value, FileIsOwnedBy::EffectiveUID);
-        case 'N':
         case 's':
+            return make<FileExists>(value);
+        case 'N':
             // 'optind' has been incremented to refer to the argument after the
             // operator, while we want to print the operator itself.
             fatal_error("Unsupported operator \033[1m%s", argv[optind - 1]);
