@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Naren Sirigere <sirigere.naren@gmail.com>
+Date: Sat, 7 Feb 2026 05:03:11 +0530
+Subject: [PATCH] Add zlib dependency for libzip
+
+---
+ meson.build | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/meson.build b/meson.build
+index 9ba3f174d8fd01e43f4f036bc53c962a66199535..69b421d0c17397c1950eb63690a6b40c16520af7 100644
+--- a/meson.build
++++ b/meson.build
+@@ -680,6 +680,13 @@ if not libzip_dep.found()
+   libzip_dep = libzip_proj.get_variable('libzip_dep')
+ endif
+ 
++if host_machine.system() == 'serenity' and libzip_dep.found()
++  zlib_dep = dependency('zlib', required: true, static: is_static_build)
++  libzip_dep = declare_dependency(
++    dependencies: [libzip_dep, zlib_dep]
++  )
++endif
++
+ # handle zstd dependency
+ r = run_command(py3_exe, check_meson_subproject_py, 'zstd', check: false)
+ if r.returncode() == 1 and get_option('subprojects_check')

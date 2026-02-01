@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Naren Sirigere <sirigere.naren@gmail.com>
+Date: Sat, 7 Feb 2026 04:15:41 +0530
+Subject: [PATCH] Define rz_sys_pipe as pipe2 for serenity
+
+---
+ librz/include/rz_util/rz_sys.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/librz/include/rz_util/rz_sys.h b/librz/include/rz_util/rz_sys.h
+index f5a35ce6bc05e2ec5897a9e756743056d610a9e4..bea47ff1e735602f51345031e1b630225e331da0 100644
+--- a/librz/include/rz_util/rz_sys.h
++++ b/librz/include/rz_util/rz_sys.h
+@@ -57,6 +57,9 @@ RZ_API int rz_sys_getpid(void);
+ #if !HAVE_PIPE || (__UNIX__ && HAVE_PIPE)
+ RZ_API int rz_sys_pipe(int pipefd[2], bool close_on_exec);
+ RZ_API int rz_sys_pipe_close(int fd);
++#elif defined(__serenity__)
++#define rz_sys_pipe       pipe2
++#define rz_sys_pipe_close close
+ #else
+ #define rz_sys_pipe       pipe
+ #define rz_sys_pipe_close close

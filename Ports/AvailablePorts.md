@@ -294,6 +294,7 @@ This list is also available at [ports.serenityos.net](https://ports.serenityos.n
 | [`readline`](readline/)                       | GNU Readline Library                                          | 8.2.13                    | https://tiswww.case.edu/php/chet/readline/rltop.html                 |
 | [`RetroArch`](RetroArch/)                     | RetroArch                                                     | 1.19.1                    | https://www.retroarch.com                                            |
 | [`RISCVEmu`](RISCVEmu/)                       | A Basic C++ RISC-V Emulator                                   | ad8ad6a                   | https://github.com/IdanHo/RISCVEmu                                   |
+| [`rizin`](rizin/)                             | Rizin                                                         | 0.9.0-dev.515+20769ea     | https://rizin.re/                                                    |
 | [`rsync`](rsync/)                             | rsync                                                         | 3.4.1                     | https://rsync.samba.org/                                             |
 | [`rubberband`](rubberband/)                   | Rubberband                                                    | 3.3.0                     | https://breakfastquay.com/rubberband/                                |
 | [`ruby`](ruby/)                               | Ruby                                                          | 3.2.2                     | https://www.ruby-lang.org/                                           |

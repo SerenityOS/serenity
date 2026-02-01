@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Naren Sirigere <sirigere.naren@gmail.com>
+Date: Sat, 7 Feb 2026 04:12:26 +0530
+Subject: [PATCH] Remove resolve_heap_tcache implementation
+
+Serenity doesn't implement thread caching in its memory allocator, so tcache resolution is not applicable.
+---
+ librz/core/linux_heap_glibc.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/librz/core/linux_heap_glibc.c b/librz/core/linux_heap_glibc.c
+index 23d3d795d9156b1a4fdd0e4731efda2a8bb2283c..abb1a74f267b1fec5509facd5c19b4f163e9922a 100644
+--- a/librz/core/linux_heap_glibc.c
++++ b/librz/core/linux_heap_glibc.c
+@@ -920,7 +920,7 @@ static void GH(resolve_tcache_perthread)(RZ_NONNULL RzCore *core) {
+ 		}
+ 	}
+ }
+-
++#if !defined(__serenity__)
+ RZ_API RZ_OWN bool GH(resolve_heap_tcache)(RZ_NONNULL RzCore *core, GHT arena_base) {
+ 	RzDebug *dbg = core->dbg;
+ 
+@@ -935,7 +935,7 @@ RZ_API RZ_OWN bool GH(resolve_heap_tcache)(RZ_NONNULL RzCore *core, GHT arena_ba
+ 
+ 	return true;
+ }
+-
++#endif
+ void GH(print_heap_chunk)(RzCore *core, GHT chunk) {
+ 	GH(RzHeapChunk) *cnk = RZ_NEW0(GH(RzHeapChunk));
+ 	RzConsPrintablePalette *pal = &rz_cons_singleton()->context->pal;
+@@ -2626,11 +2626,11 @@ RZ_IPI RzCmdStatus GH(rz_cmd_heap_tcache_print_handler)(RzCore *core, int argc,
+ 		rz_cons_printf("No tcache present in this version of libc\n");
+ 		return RZ_CMD_STATUS_ERROR;
+ 	}
+-
++#if !defined(__serenity__)
+ 	if (!GH(resolve_heap_tcache)(core, m_arena)) {
+ 		return RZ_CMD_STATUS_ERROR;
+ 	}
+-
++#endif
+ 	return RZ_CMD_STATUS_OK;
+ }
+ 

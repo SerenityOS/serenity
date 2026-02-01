@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Naren Sirigere <sirigere.naren@gmail.com>
+Date: Sat, 7 Feb 2026 03:49:15 +0530
+Subject: [PATCH] Add serenity to librt whitelist
+
+This patch adds serenity to the list of operating systems that dont require librt to be explicity linked
+---
+ meson.build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/meson.build b/meson.build
+index 3160fcbba60cc678f56cf9def947bafb9d7467a5..dbae4c42e92b44f846e2c0877f304144f1c2cd93 100644
+--- a/meson.build
++++ b/meson.build
+@@ -399,7 +399,7 @@ foreach it : ccs
+   if not it_cc.has_function('clock_gettime', prefix: '#include <time.h>') and it_cc.has_header_symbol('features.h', '__GLIBC__')
+     it_lrt = it_cc.find_library('rt', required: true, static: is_static_build)
+   endif
+-  have_lrt = not ['windows', 'darwin', 'openbsd', 'android', 'haiku'].contains(it_machine.system())
++  have_lrt = not ['windows', 'darwin', 'openbsd', 'android', 'haiku', 'serenity'].contains(it_machine.system())
+   if have_lrt and not it_lrt.found()
+     it_lrt = it_cc.find_library('rt', required: true, static: is_static_build)
+   endif
