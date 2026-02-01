@@ -36,7 +36,8 @@ float lerp_1d(ReadonlySpan<T> values, float x)
 // Does multi-dimensional linear interpolation over a lookup table.
 // `size(i)` should returns the number of samples in the i'th dimension.
 // `sample()` gets a vector where 0 <= i'th coordinate < size(i) and should return the value of the look-up table at that position.
-inline FloatVector3 lerp_nd(Function<unsigned(size_t)> size, Function<FloatVector3(ReadonlySpan<unsigned> const&)> sample, ReadonlySpan<float> x)
+template<CallableAs<unsigned, size_t> SizeFunc, CallableAs<FloatVector3, ReadonlySpan<unsigned> const&> SampleFunc>
+inline FloatVector3 lerp_nd(SizeFunc const& size, SampleFunc const& sample, ReadonlySpan<float> x)
 {
     unsigned left_index[x.size()];
     float factor[x.size()];
@@ -64,7 +65,8 @@ inline FloatVector3 lerp_nd(Function<unsigned(size_t)> size, Function<FloatVecto
 }
 
 // Same as above, but 3D->ND instead of ND->3D.
-inline void lerp_nd(IntVector3 size, Function<void(IntVector3 const&, Span<float>)> sample, FloatVector3 const& x, Span<float> scratch, Span<float> out)
+template<CallableAs<void, IntVector3 const&, Span<float>> SampleFunc>
+inline void lerp_nd(IntVector3 size, SampleFunc const& sample, FloatVector3 const& x, Span<float> scratch, Span<float> out)
 {
     unsigned left_index[3];
     float factor[3];
