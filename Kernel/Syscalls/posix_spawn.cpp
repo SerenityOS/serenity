@@ -74,6 +74,41 @@ ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
             }));
             break;
         }
+        case SpawnFileActionType::Open: {
+            if (header->record_length < sizeof(SpawnFileActionOpen))
+                return EINVAL;
+
+            auto const* action = reinterpret_cast<SpawnFileActionOpen const*>(header);
+            if (header->record_length < sizeof(SpawnFileActionOpen) + action->path_length)
+                return EINVAL;
+
+            auto path = TRY(KString::try_create(StringView { action->path, action->path_length }));
+            CustodyBase base(AT_FDCWD, path->view());
+            auto description = TRY(VirtualFileSystem::open(
+                vfs_root_context(), credentials(), path->view(),
+                action->flags, action->mode & ~umask(), base));
+
+            if (description->inode() && description->inode()->bound_socket())
+                return ENXIO;
+
+            TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
+                if (action->fd < 0 || static_cast<size_t>(action->fd) >= fds.max_open())
+                    return EINVAL;
+
+                if (fds.m_fds_metadatas[action->fd].is_allocated()) {
+                    if (auto* old_description = fds[action->fd].description())
+                        (void)old_description->close();
+                    fds[action->fd].clear();
+                } else {
+                    fds.m_fds_metadatas[action->fd].allocate();
+                }
+
+                u32 fd_flags = (action->flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
+                fds[action->fd].set(move(description), fd_flags);
+                return {};
+            }));
+            break;
+        }
         default:
             return EINVAL;
         }
@@ -106,7 +141,7 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
     OwnPtr<KBuffer> file_actions_buffer;
     if (params.serialized_file_actions_data.ptr() != 0 && params.serialized_file_actions_data_size != 0) {
         // Check for unsupported file actions
-        constexpr u8 SUPPORTED_SPAWN_ACTIONS = (1 << static_cast<u8>(SpawnFileActionType::Dup2)) | (1 << static_cast<u8>(SpawnFileActionType::Close));
+        constexpr u8 SUPPORTED_SPAWN_ACTIONS = (1 << static_cast<u8>(SpawnFileActionType::Dup2)) | (1 << static_cast<u8>(SpawnFileActionType::Close)) | (1 << static_cast<u8>(SpawnFileActionType::Open));
         if (params.file_action_types_present & ~SUPPORTED_SPAWN_ACTIONS)
             return ENOTSUP;
 
