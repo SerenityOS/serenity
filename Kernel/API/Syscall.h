@@ -495,6 +495,7 @@ struct SC_posix_spawn_params {
     size_t attr_data_size;
     Userspace<void const*> serialized_file_actions_data;
     size_t serialized_file_actions_data_size;
+    u8 file_action_types_present;
 };
 
 struct SC_futimens_params {

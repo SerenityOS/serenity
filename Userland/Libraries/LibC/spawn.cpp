@@ -13,19 +13,22 @@
 
 #include <spawn.h>
 
-#include <AK/Function.h>
+#include <AK/ByteBuffer.h>
 #include <AK/Vector.h>
+#include <Kernel/API/spawn.h>
 #include <LibFileSystem/FileSystem.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <syscall.h>
 #include <unistd.h>
 
 struct posix_spawn_file_actions_state {
-    Vector<Function<int()>, 4> actions;
+    ByteBuffer buffer;
+    u8 action_types_present { 0 };
 };
 
 extern "C" {
@@ -86,12 +89,73 @@ extern "C" {
         // FIXME: POSIX_SPAWN_SETSCHEDULER
     }
 
-    if (file_actions) {
-        for (auto const& action : file_actions->state->actions) {
-            if (action() < 0) {
-                perror("posix_spawn file action");
+    if (file_actions && !file_actions->state->buffer.is_empty()) {
+        using namespace Kernel;
+        auto const& buffer = file_actions->state->buffer;
+        size_t offset = 0;
+
+        while (offset < buffer.size()) {
+            if (offset + sizeof(SpawnFileActionHeader) > buffer.size())
+                _exit(127);
+
+            auto const* header = reinterpret_cast<SpawnFileActionHeader const*>(buffer.data() + offset);
+            if (header->record_length < sizeof(SpawnFileActionHeader) || offset + header->record_length > buffer.size())
+                _exit(127);
+
+            switch (header->type) {
+            case SpawnFileActionType::Dup2: {
+                auto const* action = reinterpret_cast<SpawnFileActionDup2 const*>(header);
+                if (dup2(action->old_fd, action->new_fd) < 0) {
+                    perror("posix_spawn dup2");
+                    _exit(127);
+                }
+                break;
+            }
+            case SpawnFileActionType::Close: {
+                auto const* action = reinterpret_cast<SpawnFileActionClose const*>(header);
+                if (close(action->fd) < 0) {
+                    perror("posix_spawn close");
+                    _exit(127);
+                }
+                break;
+            }
+            case SpawnFileActionType::Open: {
+                auto const* action = reinterpret_cast<SpawnFileActionOpen const*>(header);
+                int opened_fd = open(action->path, action->flags, action->mode);
+                if (opened_fd < 0) {
+                    perror("posix_spawn open");
+                    _exit(127);
+                }
+                if (opened_fd != action->fd) {
+                    if (dup2(opened_fd, action->fd) < 0) {
+                        perror("posix_spawn dup2 after open");
+                        _exit(127);
+                    }
+                    close(opened_fd);
+                }
+                break;
+            }
+            case SpawnFileActionType::Chdir: {
+                auto const* action = reinterpret_cast<SpawnFileActionChdir const*>(header);
+                if (chdir(action->path) < 0) {
+                    perror("posix_spawn chdir");
+                    _exit(127);
+                }
+                break;
+            }
+            case SpawnFileActionType::Fchdir: {
+                auto const* action = reinterpret_cast<SpawnFileActionFchdir const*>(header);
+                if (fchdir(action->fd) < 0) {
+                    perror("posix_spawn fchdir");
+                    _exit(127);
+                }
+                break;
+            }
+            default:
                 _exit(127);
             }
+
+            offset += header->record_length;
         }
     }
 
@@ -100,7 +164,7 @@ extern "C" {
     _exit(127);
 }
 
-static ErrorOr<pid_t> posix_spawn_syscall(char const* path, char* const argv[], char* const envp[])
+static ErrorOr<pid_t> posix_spawn_syscall(char const* path, posix_spawn_file_actions_t const* file_actions, char* const argv[], char* const envp[])
 {
     if (!path || !argv || !argv[0])
         return EINVAL;
@@ -129,8 +193,15 @@ static ErrorOr<pid_t> posix_spawn_syscall(char const* path, char* const argv[], 
     posix_spawn_params.attr_data = nullptr;
     posix_spawn_params.attr_data_size = 0;
 
-    posix_spawn_params.serialized_file_actions_data = nullptr;
-    posix_spawn_params.serialized_file_actions_data_size = 0;
+    if (file_actions && !file_actions->state->buffer.is_empty()) {
+        posix_spawn_params.serialized_file_actions_data = file_actions->state->buffer.data();
+        posix_spawn_params.serialized_file_actions_data_size = file_actions->state->buffer.size();
+        posix_spawn_params.file_action_types_present = file_actions->state->action_types_present;
+    } else {
+        posix_spawn_params.serialized_file_actions_data = nullptr;
+        posix_spawn_params.serialized_file_actions_data_size = 0;
+        posix_spawn_params.file_action_types_present = 0;
+    }
 
     pid_t rc = syscall(SC_posix_spawn, &posix_spawn_params);
 
@@ -143,27 +214,42 @@ static ErrorOr<pid_t> posix_spawn_syscall(char const* path, char* const argv[], 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn.html
 int posix_spawn(pid_t* out_pid, char const* path, posix_spawn_file_actions_t const* file_actions, posix_spawnattr_t const* attr, char* const argv[], char* const envp[])
 {
-    // FIXME: Support file_actions and spawnattr in the posix_spawn syscall.
-    if ((!file_actions || file_actions->state->actions.is_empty()) && !attr) {
-        auto child_pid_or_error = posix_spawn_syscall(path, argv, envp);
-        if (child_pid_or_error.is_error())
-            return child_pid_or_error.error().code();
+    // FIXME: Support spawnattr in the posix_spawn syscall.
+    if (attr) {
+        pid_t child_pid = fork();
+        if (child_pid < 0)
+            return errno;
 
-        if (out_pid)
-            *out_pid = child_pid_or_error.value();
-        return 0;
+        if (child_pid != 0) {
+            *out_pid = child_pid;
+            return 0;
+        }
+
+        posix_spawn_child(path, file_actions, attr, argv, envp, execve);
     }
 
-    pid_t child_pid = fork();
-    if (child_pid < 0)
-        return errno;
+    auto child_pid_or_error = posix_spawn_syscall(path, file_actions, argv, envp);
+    if (child_pid_or_error.is_error()) {
+        // ENOTSUP means kernel doesn't support these file actions yet, fall back to fork()
+        if (child_pid_or_error.error().code() == ENOTSUP) {
+            pid_t child_pid = fork();
+            if (child_pid < 0)
+                return errno;
 
-    if (child_pid != 0) {
-        *out_pid = child_pid;
-        return 0;
+            if (child_pid != 0) {
+                if (out_pid)
+                    *out_pid = child_pid;
+                return 0;
+            }
+
+            posix_spawn_child(path, file_actions, attr, argv, envp, execve);
+        }
+        return child_pid_or_error.error().code();
     }
 
-    posix_spawn_child(path, file_actions, attr, argv, envp, execve);
+    if (out_pid)
+        *out_pid = child_pid_or_error.value();
+    return 0;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawnp.html
@@ -172,77 +258,135 @@ int posix_spawnp(pid_t* out_pid, char const* file, posix_spawn_file_actions_t co
     if (strchr(file, '/') != nullptr)
         return posix_spawn(out_pid, file, file_actions, attr, argv, envp);
 
-    if ((!file_actions || file_actions->state->actions.is_empty()) && !attr) {
-        // FIXME: This is currently not OOM-safe because ByteString does not handle OOMs!
+    // FIXME: Support spawnattr in the posix_spawn syscall.
+    if (attr) {
+        // Fall back to fork() for spawnattr (not yet implemented in kernel)
+        pid_t child_pid = fork();
+        if (child_pid < 0)
+            return errno;
 
-        ByteString path = getenv("PATH");
-        if (path.is_empty())
-            path = DEFAULT_PATH;
+        if (child_pid != 0) {
+            *out_pid = child_pid;
+            return 0;
+        }
 
-        int rc = ENOENT;
-
-        path.view().for_each_split_view(":"sv, SplitBehavior::Nothing, [out_pid, file, file_actions, attr, argv, envp, &rc](auto const directory) -> IterationDecision {
-            auto absolute_path = ByteString::formatted("{}/{}", directory, file);
-
-            rc = posix_spawn(out_pid, absolute_path.characters(), file_actions, attr, argv, envp);
-            if (rc == ENOENT)
-                return IterationDecision::Continue;
-            return IterationDecision::Break;
-        });
-
-        return rc;
+        posix_spawn_child(file, file_actions, attr, argv, envp, execvpe);
     }
 
-    pid_t child_pid = fork();
-    if (child_pid < 0)
-        return errno;
+    // Use posix_spawn which handles the syscall path
+    // FIXME: This is currently not OOM-safe because ByteString does not handle OOMs!
+    ByteString path = getenv("PATH");
+    if (path.is_empty())
+        path = DEFAULT_PATH;
 
-    if (child_pid != 0) {
-        *out_pid = child_pid;
-        return 0;
-    }
+    int rc = ENOENT;
 
-    posix_spawn_child(file, file_actions, attr, argv, envp, execvpe);
+    path.view().for_each_split_view(":"sv, SplitBehavior::Nothing, [out_pid, file, file_actions, attr, argv, envp, &rc](auto const directory) -> IterationDecision {
+        auto absolute_path = ByteString::formatted("{}/{}", directory, file);
+
+        rc = posix_spawn(out_pid, absolute_path.characters(), file_actions, attr, argv, envp);
+        if (rc == ENOENT)
+            return IterationDecision::Continue;
+        return IterationDecision::Break;
+    });
+
+    return rc;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn_file_actions_addchdir.html
 int posix_spawn_file_actions_addchdir(posix_spawn_file_actions_t* actions, char const* path)
 {
-    actions->state->actions.append([path]() { return chdir(path); });
+    using namespace Kernel;
+    size_t path_len = strlen(path);
+    size_t record_size = sizeof(SpawnFileActionChdir) + path_len + 1;
+
+    record_size = align_up_to(record_size, SPAWN_FILE_ACTION_ALIGNMENT);
+
+    auto buffer_or_error = ByteBuffer::create_uninitialized(record_size);
+    if (buffer_or_error.is_error())
+        return ENOMEM;
+    auto record_buffer = buffer_or_error.release_value();
+
+    auto* action = reinterpret_cast<SpawnFileActionChdir*>(record_buffer.data());
+    action->header.type = SpawnFileActionType::Chdir;
+    action->header.record_length = record_size;
+    action->path_length = path_len;
+    memcpy(action->path, path, path_len + 1);
+
+    if (actions->state->buffer.try_append(record_buffer.data(), record_size).is_error())
+        return ENOMEM;
+    actions->state->action_types_present |= (1 << static_cast<u8>(SpawnFileActionType::Chdir));
     return 0;
 }
 
 int posix_spawn_file_actions_addfchdir(posix_spawn_file_actions_t* actions, int fd)
 {
-    actions->state->actions.append([fd]() { return fchdir(fd); });
+    using namespace Kernel;
+    SpawnFileActionFchdir action;
+    action.header.type = SpawnFileActionType::Fchdir;
+    action.header.record_length = sizeof(SpawnFileActionFchdir);
+    action.fd = fd;
+    if (actions->state->buffer.try_append(&action, sizeof(action)).is_error())
+        return ENOMEM;
+    actions->state->action_types_present |= (1 << static_cast<u8>(SpawnFileActionType::Fchdir));
     return 0;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn_file_actions_addclose.html
 int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t* actions, int fd)
 {
-    actions->state->actions.append([fd]() { return close(fd); });
+    using namespace Kernel;
+    SpawnFileActionClose action;
+    action.header.type = SpawnFileActionType::Close;
+    action.header.record_length = sizeof(SpawnFileActionClose);
+    action.fd = fd;
+    if (actions->state->buffer.try_append(&action, sizeof(action)).is_error())
+        return ENOMEM;
+    actions->state->action_types_present |= (1 << static_cast<u8>(SpawnFileActionType::Close));
     return 0;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn_file_actions_adddup2.html
 int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t* actions, int old_fd, int new_fd)
 {
-    actions->state->actions.append([old_fd, new_fd]() { return dup2(old_fd, new_fd); });
+    using namespace Kernel;
+    SpawnFileActionDup2 action;
+    action.header.type = SpawnFileActionType::Dup2;
+    action.header.record_length = sizeof(SpawnFileActionDup2);
+    action.old_fd = old_fd;
+    action.new_fd = new_fd;
+    if (actions->state->buffer.try_append(&action, sizeof(action)).is_error())
+        return ENOMEM;
+    actions->state->action_types_present |= (1 << static_cast<u8>(SpawnFileActionType::Dup2));
     return 0;
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn_file_actions_addopen.html
 int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t* actions, int want_fd, char const* path, int flags, mode_t mode)
 {
-    actions->state->actions.append([want_fd, path, flags, mode]() {
-        int opened_fd = open(path, flags, mode);
-        if (opened_fd < 0 || opened_fd == want_fd)
-            return opened_fd;
-        if (int rc = dup2(opened_fd, want_fd); rc < 0)
-            return rc;
-        return close(opened_fd);
-    });
+    using namespace Kernel;
+    size_t path_len = strlen(path);
+    size_t record_size = sizeof(SpawnFileActionOpen) + path_len + 1;
+
+    record_size = align_up_to(record_size, SPAWN_FILE_ACTION_ALIGNMENT);
+
+    auto buffer_or_error = ByteBuffer::create_uninitialized(record_size);
+    if (buffer_or_error.is_error())
+        return ENOMEM;
+    auto record_buffer = buffer_or_error.release_value();
+
+    auto* action = reinterpret_cast<SpawnFileActionOpen*>(record_buffer.data());
+    action->header.type = SpawnFileActionType::Open;
+    action->header.record_length = record_size;
+    action->fd = want_fd;
+    action->flags = flags;
+    action->mode = mode;
+    action->path_length = path_len;
+    memcpy(action->path, path, path_len + 1);
+
+    if (actions->state->buffer.try_append(record_buffer.data(), record_size).is_error())
+        return ENOMEM;
+    actions->state->action_types_present |= (1 << static_cast<u8>(SpawnFileActionType::Open));
     return 0;
 }
 

@@ -1,22 +1,49 @@
 /*
  * Copyright (c) 2025, Tomás Simões <tomasprsimoes@tecnico.ulisboa.pt>
+ * Copyright (c) 2026, Fırat Kızılboğa <firatkizilboga11@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/spawn.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BaseDevices.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/NullDevice.h>
 #include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Memory/Region.h>
+#include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/ScopedProcessList.h>
 
 namespace Kernel {
+
+ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
+{
+    size_t offset = 0;
+    while (offset < file_actions_data.size()) {
+        if (offset + sizeof(SpawnFileActionHeader) > file_actions_data.size())
+            return EINVAL;
+
+        auto const* header = reinterpret_cast<SpawnFileActionHeader const*>(file_actions_data.data() + offset);
+        if (header->record_length < sizeof(SpawnFileActionHeader))
+            return EINVAL;
+        if (offset + header->record_length > file_actions_data.size())
+            return EINVAL;
+
+        switch (header->type) {
+        default:
+            return EINVAL;
+        }
+
+        offset += header->record_length;
+    }
+    return {};
+}
 
 // https://pubs.opengroup.org/onlinepubs/9799919799/functions/posix_spawn.html
 ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_params const*> user_params)
@@ -32,9 +59,23 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
     if (params.arguments.length == 0)
         return EINVAL;
 
-    if (params.attr_data.ptr() != 0 || params.attr_data_size != 0 || params.serialized_file_actions_data.ptr() != 0 || params.serialized_file_actions_data_size != 0) {
-        // FIXME: Implement spawn attributes and spawn file actions handling.
+    if (params.attr_data.ptr() != 0 || params.attr_data_size != 0) {
+        // FIXME: Implement spawn attributes handling.
         return ENOTSUP;
+    }
+
+    // Copy file actions buffer from userspace
+    OwnPtr<KBuffer> file_actions_buffer;
+    if (params.serialized_file_actions_data.ptr() != 0 && params.serialized_file_actions_data_size != 0) {
+        // Check for unsupported file actions
+        constexpr u8 SUPPORTED_SPAWN_ACTIONS = 0;
+        if (params.file_action_types_present & ~SUPPORTED_SPAWN_ACTIONS)
+            return ENOTSUP;
+
+        if (params.serialized_file_actions_data_size > 1 * MiB)
+            return E2BIG;
+        file_actions_buffer = TRY(KBuffer::try_create_with_size("posix_spawn file actions"sv, params.serialized_file_actions_data_size));
+        TRY(copy_from_user(file_actions_buffer->data(), Userspace<u8 const*> { params.serialized_file_actions_data.ptr() }, params.serialized_file_actions_data_size));
     }
 
     auto path = TRY(get_syscall_path_argument(params.path));
@@ -83,6 +124,11 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
         // FD_CLOEXEC is handled by do_exec().
         // FIXME: Support FD_CLOFORK.
     }));
+
+    // Execute file actions on the child's FD table
+    if (file_actions_buffer) {
+        TRY(child->execute_file_actions(file_actions_buffer->bytes()));
+    }
 
     // FIXME: "If file descriptor 0, 1, or 2 would otherwise be closed in the new process image created by posix_spawn() or posix_spawnp(),
     //         implementations may open an unspecified file for the file descriptor in the new process image."
