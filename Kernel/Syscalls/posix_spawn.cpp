@@ -109,6 +109,22 @@ ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
             }));
             break;
         }
+        case SpawnFileActionType::Chdir: {
+            if (header->record_length < sizeof(SpawnFileActionChdir))
+                return EINVAL;
+
+            auto const* action = reinterpret_cast<SpawnFileActionChdir const*>(header);
+            if (header->record_length < sizeof(SpawnFileActionChdir) + action->path_length)
+                return EINVAL;
+
+            auto path = TRY(KString::try_create(StringView { action->path, action->path_length }));
+            auto new_directory = TRY(VirtualFileSystem::open_directory(
+                vfs_root_context(), credentials(), path->view(), current_directory()));
+            m_current_directory.with([&](auto& current_directory) {
+                current_directory = move(new_directory);
+            });
+            break;
+        }
         default:
             return EINVAL;
         }
@@ -141,7 +157,7 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
     OwnPtr<KBuffer> file_actions_buffer;
     if (params.serialized_file_actions_data.ptr() != 0 && params.serialized_file_actions_data_size != 0) {
         // Check for unsupported file actions
-        constexpr u8 SUPPORTED_SPAWN_ACTIONS = (1 << static_cast<u8>(SpawnFileActionType::Dup2)) | (1 << static_cast<u8>(SpawnFileActionType::Close)) | (1 << static_cast<u8>(SpawnFileActionType::Open));
+        constexpr u8 SUPPORTED_SPAWN_ACTIONS = (1 << static_cast<u8>(SpawnFileActionType::Dup2)) | (1 << static_cast<u8>(SpawnFileActionType::Close)) | (1 << static_cast<u8>(SpawnFileActionType::Open)) | (1 << static_cast<u8>(SpawnFileActionType::Chdir));
         if (params.file_action_types_present & ~SUPPORTED_SPAWN_ACTIONS)
             return ENOTSUP;
 
