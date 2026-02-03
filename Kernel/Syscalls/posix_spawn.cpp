@@ -61,6 +61,19 @@ ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
             }));
             break;
         }
+        case SpawnFileActionType::Close: {
+            if (header->record_length < sizeof(SpawnFileActionClose))
+                return EINVAL;
+
+            auto const* action = reinterpret_cast<SpawnFileActionClose const*>(header);
+            TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
+                auto description = TRY(fds.open_file_description(action->fd));
+                TRY(description->close());
+                fds[action->fd].clear();
+                return {};
+            }));
+            break;
+        }
         default:
             return EINVAL;
         }
@@ -93,7 +106,7 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
     OwnPtr<KBuffer> file_actions_buffer;
     if (params.serialized_file_actions_data.ptr() != 0 && params.serialized_file_actions_data_size != 0) {
         // Check for unsupported file actions
-        constexpr u8 SUPPORTED_SPAWN_ACTIONS = (1 << static_cast<u8>(SpawnFileActionType::Dup2));
+        constexpr u8 SUPPORTED_SPAWN_ACTIONS = (1 << static_cast<u8>(SpawnFileActionType::Dup2)) | (1 << static_cast<u8>(SpawnFileActionType::Close));
         if (params.file_action_types_present & ~SUPPORTED_SPAWN_ACTIONS)
             return ENOTSUP;
 
