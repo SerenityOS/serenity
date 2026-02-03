@@ -28,7 +28,6 @@
 
 struct posix_spawn_file_actions_state {
     ByteBuffer buffer;
-    u8 action_types_present { 0 };
 };
 
 extern "C" {
@@ -196,11 +195,9 @@ static ErrorOr<pid_t> posix_spawn_syscall(char const* path, posix_spawn_file_act
     if (file_actions && !file_actions->state->buffer.is_empty()) {
         posix_spawn_params.serialized_file_actions_data = file_actions->state->buffer.data();
         posix_spawn_params.serialized_file_actions_data_size = file_actions->state->buffer.size();
-        posix_spawn_params.file_action_types_present = file_actions->state->action_types_present;
     } else {
         posix_spawn_params.serialized_file_actions_data = nullptr;
         posix_spawn_params.serialized_file_actions_data_size = 0;
-        posix_spawn_params.file_action_types_present = 0;
     }
 
     pid_t rc = syscall(SC_posix_spawn, &posix_spawn_params);
@@ -229,23 +226,8 @@ int posix_spawn(pid_t* out_pid, char const* path, posix_spawn_file_actions_t con
     }
 
     auto child_pid_or_error = posix_spawn_syscall(path, file_actions, argv, envp);
-    if (child_pid_or_error.is_error()) {
-        // ENOTSUP means kernel doesn't support these file actions yet, fall back to fork()
-        if (child_pid_or_error.error().code() == ENOTSUP) {
-            pid_t child_pid = fork();
-            if (child_pid < 0)
-                return errno;
-
-            if (child_pid != 0) {
-                if (out_pid)
-                    *out_pid = child_pid;
-                return 0;
-            }
-
-            posix_spawn_child(path, file_actions, attr, argv, envp, execve);
-        }
+    if (child_pid_or_error.is_error())
         return child_pid_or_error.error().code();
-    }
 
     if (out_pid)
         *out_pid = child_pid_or_error.value();
@@ -315,7 +297,6 @@ int posix_spawn_file_actions_addchdir(posix_spawn_file_actions_t* actions, char 
 
     if (actions->state->buffer.try_append(record_buffer.data(), record_size).is_error())
         return ENOMEM;
-    actions->state->action_types_present |= (1 << static_cast<u8>(SpawnFileActionType::Chdir));
     return 0;
 }
 
@@ -328,7 +309,6 @@ int posix_spawn_file_actions_addfchdir(posix_spawn_file_actions_t* actions, int 
     action.fd = fd;
     if (actions->state->buffer.try_append(&action, sizeof(action)).is_error())
         return ENOMEM;
-    actions->state->action_types_present |= (1 << static_cast<u8>(SpawnFileActionType::Fchdir));
     return 0;
 }
 
@@ -342,7 +322,6 @@ int posix_spawn_file_actions_addclose(posix_spawn_file_actions_t* actions, int f
     action.fd = fd;
     if (actions->state->buffer.try_append(&action, sizeof(action)).is_error())
         return ENOMEM;
-    actions->state->action_types_present |= (1 << static_cast<u8>(SpawnFileActionType::Close));
     return 0;
 }
 
@@ -357,7 +336,6 @@ int posix_spawn_file_actions_adddup2(posix_spawn_file_actions_t* actions, int ol
     action.new_fd = new_fd;
     if (actions->state->buffer.try_append(&action, sizeof(action)).is_error())
         return ENOMEM;
-    actions->state->action_types_present |= (1 << static_cast<u8>(SpawnFileActionType::Dup2));
     return 0;
 }
 
@@ -386,7 +364,6 @@ int posix_spawn_file_actions_addopen(posix_spawn_file_actions_t* actions, int wa
 
     if (actions->state->buffer.try_append(record_buffer.data(), record_size).is_error())
         return ENOMEM;
-    actions->state->action_types_present |= (1 << static_cast<u8>(SpawnFileActionType::Open));
     return 0;
 }
 

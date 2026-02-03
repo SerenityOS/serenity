@@ -47,6 +47,7 @@ ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
 
                 auto description = TRY(fds.open_file_description(action->old_fd));
                 if (action->old_fd != action->new_fd) {
+
                     if (fds.m_fds_metadatas[action->new_fd].is_allocated()) {
                         if (auto* old_description = fds[action->new_fd].description())
                             (void)old_description->close();
@@ -109,6 +110,7 @@ ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
             }));
             break;
         }
+
         case SpawnFileActionType::Chdir: {
             if (header->record_length < sizeof(SpawnFileActionChdir))
                 return EINVAL;
@@ -134,7 +136,7 @@ ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
             if (!description->is_directory())
                 return ENOTDIR;
 
-            // Check for search (+x) permission on the directory
+            // Check for search (+x) permission on the directory.
             if (!description->metadata().may_execute(credentials()))
                 return EACCES;
 
@@ -174,10 +176,6 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
     // Copy file actions buffer from userspace
     OwnPtr<KBuffer> file_actions_buffer;
     if (params.serialized_file_actions_data.ptr() != 0 && params.serialized_file_actions_data_size != 0) {
-        // Check for unsupported file actions
-        constexpr u8 SUPPORTED_SPAWN_ACTIONS = (1 << static_cast<u8>(SpawnFileActionType::Dup2)) | (1 << static_cast<u8>(SpawnFileActionType::Close)) | (1 << static_cast<u8>(SpawnFileActionType::Open)) | (1 << static_cast<u8>(SpawnFileActionType::Chdir)) | (1 << static_cast<u8>(SpawnFileActionType::Fchdir));
-        if (params.file_action_types_present & ~SUPPORTED_SPAWN_ACTIONS)
-            return ENOTSUP;
 
         if (params.serialized_file_actions_data_size > 1 * MiB)
             return E2BIG;
