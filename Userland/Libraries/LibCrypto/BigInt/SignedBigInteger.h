@@ -18,7 +18,7 @@ struct SignedDivisionResult;
 
 class SignedBigInteger {
 public:
-    template<Signed T>
+    template<SignedIntegral T>
     requires(sizeof(T) <= sizeof(i32))
     SignedBigInteger(T value)
         : m_sign(value < 0)
