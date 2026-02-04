@@ -332,7 +332,7 @@ ALWAYS_INLINE I round_to(double value)
 }
 
 #elif ARCH(AARCH64)
-template<Signed I>
+template<SignedIntegral I>
 ALWAYS_INLINE I round_to(float value)
 {
     if constexpr (sizeof(I) <= sizeof(u32)) {
@@ -349,7 +349,7 @@ ALWAYS_INLINE I round_to(float value)
     return static_cast<I>(res);
 }
 
-template<Signed I>
+template<SignedIntegral I>
 ALWAYS_INLINE I round_to(double value)
 {
     if constexpr (sizeof(I) <= sizeof(u32)) {
