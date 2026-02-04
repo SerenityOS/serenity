@@ -151,7 +151,7 @@ public:
     }
 
     // Fast conversion of 8-bit YUV to full-range RGB.
-    template<MatrixCoefficients MC, VideoFullRangeFlag FR, Unsigned T>
+    template<MatrixCoefficients MC, VideoFullRangeFlag FR, UnsignedIntegral T>
     static ALWAYS_INLINE Gfx::Color convert_simple_yuv_to_rgb(T y_in, T u_in, T v_in)
     {
         static constexpr i32 bit_depth = 8;

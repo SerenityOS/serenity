@@ -43,7 +43,7 @@ public:
         return m_stream.write_some(bytes);
     }
 
-    template<Unsigned T>
+    template<UnsignedIntegral T>
     ErrorOr<void> write_bits(T value, size_t bit_count)
     {
         VERIFY(m_bit_offset <= 7);
