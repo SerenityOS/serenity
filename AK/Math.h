@@ -366,7 +366,7 @@ ALWAYS_INLINE I round_to(double value)
     return static_cast<I>(res);
 }
 
-template<Unsigned U>
+template<UnsignedIntegral U>
 ALWAYS_INLINE U round_to(float value)
 {
     if constexpr (sizeof(U) <= sizeof(u32)) {
@@ -383,7 +383,7 @@ ALWAYS_INLINE U round_to(float value)
     return static_cast<U>(res);
 }
 
-template<Unsigned U>
+template<UnsignedIntegral U>
 ALWAYS_INLINE U round_to(double value)
 {
     if constexpr (sizeof(U) <= sizeof(u32)) {
@@ -1221,7 +1221,7 @@ using Hyperbolic::sinh;
 using Hyperbolic::tanh;
 
 // Calculate x^y with fast exponentiation when the power is a natural number.
-template<FloatingPoint F, Unsigned U>
+template<FloatingPoint F, UnsignedIntegral U>
 constexpr F pow_int(F x, U y)
 {
     auto result = static_cast<F>(1);
