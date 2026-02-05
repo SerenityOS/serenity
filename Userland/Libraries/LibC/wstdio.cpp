@@ -79,12 +79,12 @@ wint_t fputwc(wchar_t wc, FILE* stream)
 {
     VERIFY(stream);
     // Negative wide chars are weird
-    if constexpr (IsSigned<wchar_t>) {
-        if (wc < 0) {
-            errno = EILSEQ;
-            return WEOF;
-        }
+#if !defined(__WCHAR_UNSIGNED__)
+    if (wc < 0) {
+        errno = EILSEQ;
+        return WEOF;
     }
+#endif
     StringBuilder sb;
     sb.append_code_point(static_cast<u32>(wc));
     auto bytes = sb.string_view().bytes();
