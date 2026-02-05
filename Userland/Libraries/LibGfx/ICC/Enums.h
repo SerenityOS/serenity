@@ -62,6 +62,13 @@ enum class PrimaryPlatform : u32 {
     Microsoft = 0x4D534654,       // 'MSFT'
     SiliconGraphics = 0x53474920, // 'SGI '
     Sun = 0x53554E57,             // 'SUNW'
+
+    // v2-only, in ICC v2, 6.1.7 Primary Platform signature, Table 15 — Primary platform signature
+    V2_Only_Taligent = 0x54474E54, // 'TGNT'
+
+    // Argyll writes a non-spec-compliant value,
+    // https://www.freelists.org/post/argyllcms/targen-writes-an-invalid-value-for-primary-platform
+    NotSpecCompliant_Unix = 0x2A6E6978, // '*nix'
 };
 StringView primary_platform_name(PrimaryPlatform);
 
