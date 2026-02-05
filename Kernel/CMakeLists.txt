@@ -682,7 +682,6 @@ set(PARTITION_SOURCES
     ../Userland/Libraries/LibPartition/PartitionTable.cpp
 )
 
-add_compile_options(-fsigned-char)
 add_compile_options(-Wno-unknown-warning-option -Wvla -Wnull-dereference)
 add_compile_options(-fno-rtti -ffreestanding -fbuiltin)
 

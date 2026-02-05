@@ -144,7 +144,6 @@ config("Kernel_config") {
   }
 
   cflags_cc += [
-    "-fsigned-char",
     "-Wno-unknown-warning-option",
     "-fno-rtti",
     "-ffreestanding",
