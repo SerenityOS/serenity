@@ -180,6 +180,8 @@ ErrorOr<Optional<PrimaryPlatform>> parse_primary_platform(ICCHeader const& heade
     case PrimaryPlatform::Microsoft:
     case PrimaryPlatform::SiliconGraphics:
     case PrimaryPlatform::Sun:
+    case PrimaryPlatform::V2_Only_Taligent:
+    case PrimaryPlatform::NotSpecCompliant_Unix:
         return header.primary_platform;
     }
     return Error::from_string_literal("ICC::Profile: Invalid primary platform");
