@@ -262,12 +262,6 @@ template<>
 struct __MakeUnsigned<bool> {
     using Type = bool;
 };
-#if ARCH(AARCH64)
-template<>
-struct __MakeUnsigned<wchar_t> {
-    using Type = wchar_t;
-};
-#endif
 
 template<typename T>
 using MakeUnsigned = typename __MakeUnsigned<T>::Type;
