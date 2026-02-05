@@ -43,8 +43,13 @@
 #define ULONG_LONG_MAX 18446744073709551615ULL
 #define ULLONG_MAX ULONG_LONG_MAX
 
-#define CHAR_MIN SCHAR_MIN
-#define CHAR_MAX SCHAR_MAX
+#ifdef __CHAR_UNSIGNED__
+#    define CHAR_MIN 0
+#    define CHAR_MAX UCHAR_MAX
+#else
+#    define CHAR_MIN SCHAR_MIN
+#    define CHAR_MAX SCHAR_MAX
+#endif
 
 #define CHAR_WIDTH 8
 #define SCHAR_WIDTH 8
