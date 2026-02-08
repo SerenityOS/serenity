@@ -13,23 +13,23 @@ and __riscv_cpu_model.
  3 files changed, 24 insertions(+), 5 deletions(-)
 
 diff --git a/clang/include/clang/Basic/DiagnosticFrontendKinds.td b/clang/include/clang/Basic/DiagnosticFrontendKinds.td
-index 8a8db27490f0677ff6c5d23ce3c4d16cb448c48a..d152a7c519eaba04b41ba9924da61d48499d2f1c 100644
+index e2b257ceae80d9acfc2d33a6975fc4916e73ac81..21b28586b0ed296c5f29553da44d078ca36768b4 100644
 --- a/clang/include/clang/Basic/DiagnosticFrontendKinds.td
 +++ b/clang/include/clang/Basic/DiagnosticFrontendKinds.td
-@@ -386,7 +386,7 @@ def err_ast_action_on_llvm_ir : Error<
+@@ -393,7 +393,7 @@ def err_ast_action_on_llvm_ir : Error<
  def err_invalid_llvm_ir : Error<"invalid LLVM IR input: %0">;
  
  def err_os_unsupport_riscv_fmv : Error<
 -  "function multiversioning is currently only supported on Linux">;
 +  "function multiversioning is currently only supported on Linux and SerenityOS">;
  
- def warn_hlsl_langstd_minimal :
-   Warning<"support for HLSL language version %0 is incomplete, "
+ def warn_unreachable_version
+     : Warning<"function version '%0' is unreachable; ignoring version">,
 diff --git a/clang/lib/CodeGen/CodeGenFunction.cpp b/clang/lib/CodeGen/CodeGenFunction.cpp
-index 776a646ceb32fa7689c80e9837f1955dc4ce93ea..32f80e1b21f5f1683a09126eab24a8ccf25ea8a3 100644
+index 6c0589be329132b1c1b45407c3488cef591f1b7a..797bd49d0228a418b7dc65ecca3d756d5b85d2d9 100644
 --- a/clang/lib/CodeGen/CodeGenFunction.cpp
 +++ b/clang/lib/CodeGen/CodeGenFunction.cpp
-@@ -2987,8 +2987,9 @@ void CodeGenFunction::EmitMultiVersionResolver(
+@@ -3020,8 +3020,9 @@ void CodeGenFunction::EmitMultiVersionResolver(
  void CodeGenFunction::EmitRISCVMultiVersionResolver(
      llvm::Function *Resolver, ArrayRef<FMVResolverOption> Options) {
  

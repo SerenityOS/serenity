@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Lucas Chollet <lucas.chollet@free.fr>
+Date: Thu, 22 Jan 2026 12:30:30 +0100
+Subject: [PATCH] [libcxxabi] Define __cxa_thread_atexit on serenity
+
+---
+ libcxxabi/src/cxa_thread_atexit.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libcxxabi/src/cxa_thread_atexit.cpp b/libcxxabi/src/cxa_thread_atexit.cpp
+index 402a52c741012d168a7ab0d3a839e7a765aee7e7..f3915832b6d529c45bc7f367af9fd319335f2788 100644
+--- a/libcxxabi/src/cxa_thread_atexit.cpp
++++ b/libcxxabi/src/cxa_thread_atexit.cpp
+@@ -106,7 +106,7 @@ namespace {
+ 
+ #endif // HAVE___CXA_THREAD_ATEXIT_IMPL
+ 
+-#if defined(__linux__) || defined(__Fuchsia__)
++#if defined(__linux__) || defined(__Fuchsia__) || defined(__serenity__)
+ extern "C" {
+ 
+   _LIBCXXABI_FUNC_VIS int __cxa_thread_atexit(Dtor dtor, void* obj, void* dso_symbol) throw() {

@@ -28,22 +28,22 @@ LibC, namely:
  create mode 100644 libcxx/include/__locale_dir/locale_base_api/serenity.h
 
 diff --git a/libcxx/include/CMakeLists.txt b/libcxx/include/CMakeLists.txt
-index 85758c671e1e079a7d7b341e89ffe967fdd1ea54..a1f500f31217f0ce0cacb8245e73eab09b49c859 100644
+index f9ae22accd6870bbbf8338659ef7fb80f05f6155..362e826a8f56d7906f1877a52f575476310734ee 100644
 --- a/libcxx/include/CMakeLists.txt
 +++ b/libcxx/include/CMakeLists.txt
-@@ -519,6 +519,7 @@ set(files
+@@ -524,6 +524,7 @@ set(files
+   __locale_dir/locale_base_api/bsd_locale_fallbacks.h
    __locale_dir/locale_base_api/ibm.h
-   __locale_dir/locale_base_api/musl.h
    __locale_dir/locale_base_api/openbsd.h
 +  __locale_dir/locale_base_api/serenity.h
    __locale_dir/messages.h
    __locale_dir/money.h
    __locale_dir/num.h
 diff --git a/libcxx/include/__config b/libcxx/include/__config
-index fd15e07c5ef7b846a1aa07ed62a9ae64beccb683..97467f07be611d153c0f6d04854406a24b04adcd 100644
+index 30bc8c808fce3b7ab577d4cf2f495d5ea8ef4af1..2c66a9f153079c0661e8087a48e34980aabbc240 100644
 --- a/libcxx/include/__config
 +++ b/libcxx/include/__config
-@@ -842,7 +842,8 @@ typedef __char32_t char32_t;
+@@ -631,7 +631,8 @@ typedef __char32_t char32_t;
          defined(__APPLE__) ||                                                                                          \
          defined(__MVS__) ||                                                                                            \
          defined(_AIX) ||                                                                                               \
@@ -53,7 +53,7 @@ index fd15e07c5ef7b846a1aa07ed62a9ae64beccb683..97467f07be611d153c0f6d04854406a2
  // clang-format on
  #      undef _LIBCPP_HAS_THREAD_API_PTHREAD
  #      define _LIBCPP_HAS_THREAD_API_PTHREAD 1
-@@ -925,7 +926,7 @@ typedef __char32_t char32_t;
+@@ -706,7 +707,7 @@ typedef __char32_t char32_t;
  #  endif
  
  #  if defined(__BIONIC__) || defined(__NuttX__) || defined(__Fuchsia__) || defined(__wasi__) ||                        \
@@ -76,18 +76,18 @@ index 9fa8f8c9088e1fc42408dca5b8d046668a0fc101..2a9cbec71ea6e6692152cf787891762c
  #  include <__cxx03/string>
  
 diff --git a/libcxx/include/__locale_dir/locale_base_api.h b/libcxx/include/__locale_dir/locale_base_api.h
-index 8dbc28e839839660a01678f0406d1019f5c534f9..3e9ee9a28fba04b9f5166be6e1e6bd30bd1fce94 100644
+index 0474c1db359dea406b4313e22fe12daaf6c61aad..f9a48197ae60e75818dc000295135806d9e6734b 100644
 --- a/libcxx/include/__locale_dir/locale_base_api.h
 +++ b/libcxx/include/__locale_dir/locale_base_api.h
-@@ -133,6 +133,8 @@
- #      include <__locale_dir/locale_base_api/android.h>
+@@ -132,6 +132,8 @@
+ #      include <__locale_dir/locale_base_api/ibm.h>
  #    elif defined(__OpenBSD__)
  #      include <__locale_dir/locale_base_api/openbsd.h>
 +#    elif defined(__serenity__)
 +#      include <__locale_dir/locale_base_api/serenity.h>
- #    elif defined(__wasi__) || _LIBCPP_HAS_MUSL_LIBC
- #      include <__locale_dir/locale_base_api/musl.h>
  #    endif
+ 
+ #    include <__locale_dir/locale_base_api/bsd_locale_fallbacks.h>
 diff --git a/libcxx/include/__locale_dir/locale_base_api/serenity.h b/libcxx/include/__locale_dir/locale_base_api/serenity.h
 new file mode 100644
 index 0000000000000000000000000000000000000000..13abb601dcb75d1459df0b943ef6ca3e911c8e46
@@ -117,15 +117,15 @@ index 0000000000000000000000000000000000000000..13abb601dcb75d1459df0b943ef6ca3e
 +
 +#endif // _LIBCPP___LOCALE_LOCALE_BASE_API_SERENITY_H
 diff --git a/libcxx/include/__locale_dir/messages.h b/libcxx/include/__locale_dir/messages.h
-index c04bf04025ff0ab99370bc201a5cf14f475aa485..0a9ee60e0e6bd02061ab0ffd04d096e4fab65976 100644
+index 686f472840c222226b2e53fa1e3757c47ded8f13..b2c4a6fc3c60084e2450c7fb210d6eb021c05911 100644
 --- a/libcxx/include/__locale_dir/messages.h
 +++ b/libcxx/include/__locale_dir/messages.h
 @@ -22,7 +22,7 @@
  
  #  if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
  // Most unix variants have catopen.  These are the specific ones that don't.
--#    if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__)
-+#    if !defined(__BIONIC__) && !defined(_NEWLIB_VERSION) && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
+-#    if !defined(__BIONIC__) && !_LIBCPP_LIBC_NEWLIB && !defined(__EMSCRIPTEN__)
++#    if !defined(__BIONIC__) && !_LIBCPP_LIBC_NEWLIB && !defined(__EMSCRIPTEN__) && !defined(__serenity__)
  #      define _LIBCPP_HAS_CATOPEN 1
  #      include <nl_types.h>
  #    else
@@ -143,7 +143,7 @@ index 5fc04b6b4b2990c1a5f5b7fae083108c27e907b5..787cc04d57929537d73d871ffd10d146
  #  include <string>
  
 diff --git a/libcxx/src/CMakeLists.txt b/libcxx/src/CMakeLists.txt
-index f59fe0e08fccb7217882d1c9fff414d6b915ead0..438657fd1cc9b117f8eb4e30d5f2f8c99ce09fe9 100644
+index 2c04cbd1b2729bfa13f6041d833c2962e0a36578..dca7e8fff21eca508388c79fe5593d1206deeb9e 100644
 --- a/libcxx/src/CMakeLists.txt
 +++ b/libcxx/src/CMakeLists.txt
 @@ -113,6 +113,10 @@ elseif(ZOS)
@@ -158,7 +158,7 @@ index f59fe0e08fccb7217882d1c9fff414d6b915ead0..438657fd1cc9b117f8eb4e30d5f2f8c9
  
  if (LIBCXX_ENABLE_FILESYSTEM)
 diff --git a/libcxx/src/include/config_elast.h b/libcxx/src/include/config_elast.h
-index 7edff2d9375d46f465a1d72b916b1ccb1a555724..ba24e85be8d0a2b4502d5986377081c1bcd036ee 100644
+index be665a97bf91b5ade7d97b64f6a6b371514260b3..d0919e270d92e283aa6a1ba0a666c1e75d7f929a 100644
 --- a/libcxx/src/include/config_elast.h
 +++ b/libcxx/src/include/config_elast.h
 @@ -37,6 +37,8 @@
