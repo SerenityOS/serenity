@@ -252,6 +252,22 @@ elseif("${SERENITY_ARCH}" STREQUAL "x86_64")
     add_link_options(LINKER:-z,pack-relative-relocs)
 endif()
 
+# Escape hatch target to prevent runtime startup libraries from having coverage enabled
+# at awkward points in program initialization
+add_library(NoCoverage INTERFACE)
+
+if (ENABLE_USERSPACE_COVERAGE_COLLECTION)
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+        add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+        add_link_options(-fprofile-instr-generate -fcoverage-mapping)
+
+        target_compile_options(NoCoverage INTERFACE -fno-profile-generate -fno-profile-instr-use -fno-profile-instr-generate -fno-coverage-mapping)
+        target_link_options(NoCoverage INTERFACE -fno-profile-generate -fno-profile-instr-use -fno-profile-instr-generate -fno-coverage-mapping)
+    else()
+        message(FATAL_ERROR "ENABLE_USERSPACE_COVERAGE_COLLECTION not supported yet for ${CMAKE_CXX_COMPILER_ID}")
+    endif()
+endif()
+
 add_subdirectory(Userland)
 add_subdirectory(Tests)
 
