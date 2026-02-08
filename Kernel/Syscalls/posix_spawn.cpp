@@ -1,22 +1,158 @@
 /*
  * Copyright (c) 2025, Tomás Simões <tomasprsimoes@tecnico.ulisboa.pt>
+ * Copyright (c) 2026, Fırat Kızılboğa <firatkizilboga11@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/spawn.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BaseDevices.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/Generic/NullDevice.h>
 #include <Kernel/Devices/TTY/TTY.h>
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Memory/Region.h>
+#include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Tasks/PerformanceManager.h>
 #include <Kernel/Tasks/Process.h>
 #include <Kernel/Tasks/Scheduler.h>
 #include <Kernel/Tasks/ScopedProcessList.h>
 
 namespace Kernel {
+
+ErrorOr<void> Process::execute_file_actions(ReadonlyBytes file_actions_data)
+{
+    size_t offset = 0;
+    while (offset < file_actions_data.size()) {
+        if (offset + sizeof(SpawnFileActionHeader) > file_actions_data.size())
+            return EINVAL;
+
+        auto const* header = reinterpret_cast<SpawnFileActionHeader const*>(file_actions_data.data() + offset);
+        if (header->record_length < sizeof(SpawnFileActionHeader))
+            return EINVAL;
+        if (offset + header->record_length > file_actions_data.size())
+            return EINVAL;
+
+        switch (header->type) {
+        case SpawnFileActionType::Dup2: {
+            if (header->record_length < sizeof(SpawnFileActionDup2))
+                return EINVAL;
+
+            auto const* action = reinterpret_cast<SpawnFileActionDup2 const*>(header);
+            TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
+                if (action->new_fd < 0 || static_cast<size_t>(action->new_fd) >= fds.max_open())
+                    return EINVAL;
+
+                auto description = TRY(fds.open_file_description(action->old_fd));
+                if (action->old_fd != action->new_fd) {
+
+                    if (fds.m_fds_metadatas[action->new_fd].is_allocated()) {
+                        if (auto* old_description = fds[action->new_fd].description())
+                            (void)old_description->close();
+                        fds[action->new_fd].clear();
+                    } else {
+                        fds.m_fds_metadatas[action->new_fd].allocate();
+                    }
+
+                    fds[action->new_fd].set(move(description));
+                }
+                return {};
+            }));
+            break;
+        }
+        case SpawnFileActionType::Close: {
+            if (header->record_length < sizeof(SpawnFileActionClose))
+                return EINVAL;
+
+            auto const* action = reinterpret_cast<SpawnFileActionClose const*>(header);
+            TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
+                auto description = TRY(fds.open_file_description(action->fd));
+                TRY(description->close());
+                fds[action->fd].clear();
+                return {};
+            }));
+            break;
+        }
+        case SpawnFileActionType::Open: {
+            if (header->record_length < sizeof(SpawnFileActionOpen))
+                return EINVAL;
+
+            auto const* action = reinterpret_cast<SpawnFileActionOpen const*>(header);
+            if (header->record_length < sizeof(SpawnFileActionOpen) + action->path_length)
+                return EINVAL;
+
+            auto path = TRY(KString::try_create(StringView { action->path, action->path_length }));
+            CustodyBase base(AT_FDCWD, path->view());
+            auto description = TRY(VirtualFileSystem::open(
+                vfs_root_context(), credentials(), path->view(),
+                action->flags, action->mode & ~umask(), base));
+
+            if (description->inode() && description->inode()->bound_socket())
+                return ENXIO;
+
+            TRY(m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
+                if (action->fd < 0 || static_cast<size_t>(action->fd) >= fds.max_open())
+                    return EINVAL;
+
+                if (fds.m_fds_metadatas[action->fd].is_allocated()) {
+                    if (auto* old_description = fds[action->fd].description())
+                        (void)old_description->close();
+                    fds[action->fd].clear();
+                } else {
+                    fds.m_fds_metadatas[action->fd].allocate();
+                }
+
+                u32 fd_flags = (action->flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
+                fds[action->fd].set(move(description), fd_flags);
+                return {};
+            }));
+            break;
+        }
+
+        case SpawnFileActionType::Chdir: {
+            if (header->record_length < sizeof(SpawnFileActionChdir))
+                return EINVAL;
+
+            auto const* action = reinterpret_cast<SpawnFileActionChdir const*>(header);
+            if (header->record_length < sizeof(SpawnFileActionChdir) + action->path_length)
+                return EINVAL;
+
+            auto path = TRY(KString::try_create(StringView { action->path, action->path_length }));
+            auto new_directory = TRY(VirtualFileSystem::open_directory(
+                vfs_root_context(), credentials(), path->view(), current_directory()));
+            m_current_directory.with([&](auto& current_directory) {
+                current_directory = move(new_directory);
+            });
+            break;
+        }
+        case SpawnFileActionType::Fchdir: {
+            if (header->record_length < sizeof(SpawnFileActionFchdir))
+                return EINVAL;
+
+            auto const* action = reinterpret_cast<SpawnFileActionFchdir const*>(header);
+            auto description = TRY(open_file_description(action->fd));
+            if (!description->is_directory())
+                return ENOTDIR;
+
+            // Check for search (+x) permission on the directory.
+            if (!description->metadata().may_execute(credentials()))
+                return EACCES;
+
+            m_current_directory.with([&](auto& current_directory) {
+                current_directory = description->custody();
+            });
+            break;
+        }
+        default:
+            return EINVAL;
+        }
+
+        offset += header->record_length;
+    }
+    return {};
+}
 
 // https://pubs.opengroup.org/onlinepubs/9799919799/functions/posix_spawn.html
 ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_params const*> user_params)
@@ -32,9 +168,19 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
     if (params.arguments.length == 0)
         return EINVAL;
 
-    if (params.attr_data.ptr() != 0 || params.attr_data_size != 0 || params.serialized_file_actions_data.ptr() != 0 || params.serialized_file_actions_data_size != 0) {
-        // FIXME: Implement spawn attributes and spawn file actions handling.
+    if (params.attr_data.ptr() != 0 || params.attr_data_size != 0) {
+        // FIXME: Implement spawn attributes handling.
         return ENOTSUP;
+    }
+
+    // Copy file actions buffer from userspace
+    OwnPtr<KBuffer> file_actions_buffer;
+    if (params.serialized_file_actions_data.ptr() != 0 && params.serialized_file_actions_data_size != 0) {
+
+        if (params.serialized_file_actions_data_size > 1 * MiB)
+            return E2BIG;
+        file_actions_buffer = TRY(KBuffer::try_create_with_size("posix_spawn file actions"sv, params.serialized_file_actions_data_size));
+        TRY(copy_from_user(file_actions_buffer->data(), Userspace<u8 const*> { params.serialized_file_actions_data.ptr() }, params.serialized_file_actions_data_size));
     }
 
     auto path = TRY(get_syscall_path_argument(params.path));
@@ -83,6 +229,11 @@ ErrorOr<FlatPtr> Process::sys$posix_spawn(Userspace<Syscall::SC_posix_spawn_para
         // FD_CLOEXEC is handled by do_exec().
         // FIXME: Support FD_CLOFORK.
     }));
+
+    // Execute file actions on the child's FD table
+    if (file_actions_buffer) {
+        TRY(child->execute_file_actions(file_actions_buffer->bytes()));
+    }
 
     // FIXME: "If file descriptor 0, 1, or 2 would otherwise be closed in the new process image created by posix_spawn() or posix_spawnp(),
     //         implementations may open an unspecified file for the file descriptor in the new process image."
