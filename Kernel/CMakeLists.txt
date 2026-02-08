@@ -705,12 +705,7 @@ add_compile_options(-nostdlib)
 #
 # This is designed to help avoid uninitialized variables bugs and
 # information disclosures coming from the kernel stack.
-#
-# FIXME: It appears to conflict with something during the boot of the
-# aarch64 kernel, we should investigate and remove this special case.
-if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
-    add_compile_options(-ftrivial-auto-var-init=pattern)
-endif()
+add_compile_options(-ftrivial-auto-var-init=pattern)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # Apply any flags that are only available on >= GCC 11.1
