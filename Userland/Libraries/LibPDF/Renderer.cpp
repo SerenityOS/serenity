@@ -455,11 +455,7 @@ void Renderer::fill_current_path(Gfx::WindingRule winding_rule)
 {
     auto path_end = m_current_path.end();
     m_current_path.close_all_subpaths();
-    if (state().paint_style.has<NonnullRefPtr<Gfx::PaintStyle>>()) {
-        anti_aliasing_painter().fill_path(m_current_path, state().paint_style.get<NonnullRefPtr<Gfx::PaintStyle>>(), state().paint_alpha_constant, winding_rule);
-    } else {
-        anti_aliasing_painter().fill_path(m_current_path, state().paint_style.get<Color>(), winding_rule);
-    }
+    fill_path_with_style(anti_aliasing_painter(), m_current_path, state().paint_style, state().paint_alpha_constant, winding_rule);
     // .close_all_subpaths() only adds to the end of the path, so we can .trim() the path to remove any changes.
     m_current_path.trim(path_end);
 }
