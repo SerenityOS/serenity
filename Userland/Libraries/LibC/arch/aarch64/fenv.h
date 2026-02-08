@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <stdint.h>
 #include <sys/cdefs.h>
 
 #ifndef __aarch64__
@@ -14,9 +15,12 @@
 
 __BEGIN_DECLS
 
-// TODO: Implement this.
-typedef struct fenv_t {
-    char __dummy; // NOTE: This silences -Wextern-c-compat.
+// we need to implement this for aarch64
+typedef struct {
+    uint32_t fpcr;
+    uint32_t fpsr;
 } fenv_t;
+
+static_assert(sizeof(fenv_t) == 8);
 
 __END_DECLS
