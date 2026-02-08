@@ -290,6 +290,12 @@ ErrorOr<Bytes> DeflateDecompressor::read_some(Bytes bytes)
                 if ((length ^ 0xffff) != negated_length)
                     return Error::from_string_literal("Calculated negated length does not equal stored negated length");
 
+                // Hack: Some deflate streams, for example in PNGs written by GhostScript 10.05.1's `gs`,
+                // end with an empty uncompressed block (Z_SYNC_FLUSH) but do not set the BFINAL bit on that block.
+                // Treat such a block at end of data as final, so we can decompress that data.
+                if (length == 0 && m_input_stream->is_eof())
+                    m_read_final_block = true;
+
                 m_state = State::ReadingUncompressedBlock;
                 new (&m_uncompressed_block) UncompressedBlock(*this, length);
 
