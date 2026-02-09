@@ -41,6 +41,16 @@ TEST_CASE(fmod)
     EXPECT_EQ(fmod(5.0, -3.0), 2.0);
     EXPECT_EQ(fmod(-5.0, 3.0), -2.0);
     EXPECT_EQ(fmod(-5.0, -3.0), -2.0);
+
+    // Result is 0
+    EXPECT_EQ(fmod(3.0, 3.0), 0.0);
+    EXPECT_EQ(fmod(3.0, -3.0), 0.0);
+    EXPECT_EQ(fmod(-3.0, 3.0), -0.0);
+    EXPECT_EQ(fmod(-3.0, -3.0), -0.0);
+    EXPECT_EQ(fmod(3000.0, 3.0), 0.0);
+    EXPECT_EQ(fmod(3000.0, -3.0), 0.0);
+    EXPECT_EQ(fmod(-3000.0, 3.0), -0.0);
+    EXPECT_EQ(fmod(-3000.0, -3.0), -0.0);
 }
 
 TEST_CASE(atan2)

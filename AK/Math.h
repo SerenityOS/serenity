@@ -506,6 +506,9 @@ constexpr T fmod(T x, T y)
 
     x_mantissa %= y_mantissa;
 
+    if (x_mantissa == 0)
+        return 0;
+
     // We're done and want to return x_mantissa * 2 ** x_exponent.
     // But x_mantissa might not have a leading 1 bit, so we have to realign first.
     // Mantissa is mantissa_bits long, count_leading_zeroes() counts in ComponentType, adjust:
