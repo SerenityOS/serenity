@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='bdwgc'
-version='8.2.10'
+version='8.2.12'
 files=(
-    "https://github.com/bdwgc/bdwgc/releases/download/v${version}/gc-${version}.tar.gz#832cf4f7cf676b59582ed3b1bbd90a8d0e0ddbc3b11cb3b2096c5177ce39cc47"
+    "https://github.com/bdwgc/bdwgc/releases/download/v${version}/gc-${version}.tar.gz#42e5194ad06ab6ffb806c83eb99c03462b495d979cda782f3c72c08af833cd4e"
 )
 workdir="gc-${version}"
 useconfigure='true'
