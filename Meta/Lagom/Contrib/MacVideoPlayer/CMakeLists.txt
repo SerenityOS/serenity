@@ -18,6 +18,7 @@ add_executable(MacVideoPlayer MACOSX_BUNDLE
     main.mm
     AppDelegate.mm
     Document.mm
+    View.mm
 )
 target_compile_options(MacVideoPlayer PRIVATE
     -fobjc-arc

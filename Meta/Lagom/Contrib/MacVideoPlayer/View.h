@@ -8,11 +8,12 @@
 
 #include "CocoaWrapper.h"
 
-#import "View.h"
-
-@interface Document : NSDocument
-{
-    IBOutlet View* _view;
+namespace Media {
+class PlaybackManager;
 }
+
+@interface View : NSView
+
+- (void)setPlaybackManager:(Media::PlaybackManager*)manager;
 
 @end
