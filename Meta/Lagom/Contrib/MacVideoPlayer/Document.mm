@@ -6,8 +6,15 @@
 
 #import "Document.h"
 
-@interface Document ()
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
+#include <LibMedia/PlaybackManager.h>
+
+@interface Document ()
+{
+    NSData* _data; // Strong, _doc refers to it.
+    OwnPtr<Media::PlaybackManager> _playbackManager;
+}
 @end
 
 @implementation Document
@@ -43,11 +50,35 @@
 
 - (BOOL)readFromData:(NSData*)data ofType:(NSString*)typeName error:(NSError**)outError
 {
-    // Insert code here to read your document from the given data of the specified type. If outError != NULL, ensure that you create and set an appropriate error if you return NO.
-    // Alternatively, you could remove this method and override -readFromFileWrapper:ofType:error: or -readFromURL:ofType:error: instead.
-    // If you do, you should also override -isEntireFileLoaded to return NO if the contents are lazily loaded.
-    [NSException raise:@"UnimplementedMethod" format:@"%@ is unimplemented", NSStringFromSelector(_cmd)];
+    if (![[UTType typeWithIdentifier:typeName] conformsToType:UTTypeMovie]) {
+        if (outError) {
+            *outError = [NSError errorWithDomain:NSOSStatusErrorDomain
+                                            code:unimpErr
+                                        userInfo:nil];
+        }
+        return NO;
+    }
+
+    auto manager_or = Media::PlaybackManager::from_data(ReadonlyBytes { [data bytes], [data length] });
+    if (manager_or.is_error()) {
+        auto description = manager_or.error().description();
+        NSLog(@"failed to load: %.*s", (int)description.length(), description.characters_without_null_termination());
+        if (outError) {
+            *outError = [NSError errorWithDomain:NSOSStatusErrorDomain
+                                            code:unimpErr
+                                        userInfo:nil];
+        }
+        return NO;
+    }
+
+    _playbackManager = manager_or.release_value();
+    _data = data;
     return YES;
+}
+
+- (BOOL)isEntireFileLoaded
+{
+    return NO;
 }
 
 @end

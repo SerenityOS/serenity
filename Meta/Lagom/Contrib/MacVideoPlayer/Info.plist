@@ -6,10 +6,10 @@
 	<array>
 		<dict>
 			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
+			<string>Viewer</string>
 			<key>LSItemContentTypes</key>
 			<array>
-				<string>com.example.plain-text</string>
+				<string>org.webmproject.webm</string>
 			</array>
 			<key>NSDocumentClass</key>
 			<string>Document</string>
@@ -20,18 +20,20 @@
 		<dict>
 			<key>UTTypeConformsTo</key>
 			<array>
-				<string>public.plain-text</string>
+				<string>public.movie</string>
 			</array>
 			<key>UTTypeDescription</key>
-			<string>Example Text</string>
+			<string>WebM Video</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.example.plain-text</string>
+			<string>org.webmproject.webm</string>
+			<key>UTTypeReferenceURL</key>
+			<string>https://www.webmproject.org/docs/container/</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
-				<array>
-					<string>exampletext</string>
-				</array>
+				<string>webm</string>
+				<key>public.mime-type</key>
+                                <string>video/webm</string>
 			</dict>
 		</dict>
 	</array>

@@ -22,7 +22,7 @@ add_executable(MacVideoPlayer MACOSX_BUNDLE
 target_compile_options(MacVideoPlayer PRIVATE
     -fobjc-arc
 )
-target_link_libraries(MacVideoPlayer PRIVATE AK LibCore LibGfx)
+target_link_libraries(MacVideoPlayer PRIVATE AK LibCore LibGfx LibMedia)
 target_link_libraries(MacVideoPlayer PRIVATE
     "-framework Cocoa"
     "-framework UniformTypeIdentifiers"

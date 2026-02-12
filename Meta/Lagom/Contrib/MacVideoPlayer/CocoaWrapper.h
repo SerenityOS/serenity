@@ -10,6 +10,8 @@
 #define __COLORSYNCDEPRECATED__
 
 // Several AK types conflict with MacOS types.
+#define Duration DurationMacOS
 #define FixedPoint FixedPointMacOS
 #import <Cocoa/Cocoa.h>
+#undef Duration
 #undef FixedPoint
