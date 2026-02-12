@@ -33,7 +33,7 @@ ErrorOr<FlatPtr> Process::sys$unshare_create(Userspace<Syscall::SC_unshare_creat
         return new_process_list->id().value();
     }
     case UnshareType::VFSRootContext: {
-        auto new_vfs_root_context = TRY(VFSRootContext::create_with_empty_ramfs());
+        auto new_vfs_root_context = TRY(VFSRootContext::create_with_empty_ramfs(VFSRootContext::AddToGlobalContextList::Yes));
         return new_vfs_root_context->id().value();
     }
     case UnshareType::HostnameContext: {

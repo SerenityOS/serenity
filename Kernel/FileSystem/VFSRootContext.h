@@ -30,7 +30,11 @@ public:
     static Custody const& empty_context_custody_for_kernel_processes();
     static void initialize_empty_ramfs_root_context_for_kernel_processes();
 
-    static ErrorOr<NonnullRefPtr<VFSRootContext>> create_with_empty_ramfs();
+    enum class AddToGlobalContextList {
+        Yes,
+        No,
+    };
+    static ErrorOr<NonnullRefPtr<VFSRootContext>> create_with_empty_ramfs(AddToGlobalContextList);
     static ErrorOr<NonnullRefPtr<VFSRootContext>> create_empty();
 
     SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None>& root_custody() { return m_root_custody; }

@@ -453,7 +453,7 @@ u32 StorageManagement::generate_controller_id()
 
 ErrorOr<NonnullRefPtr<VFSRootContext>> StorageManagement::create_first_vfs_root_context() const
 {
-    auto vfs_root_context = TRY(VFSRootContext::create_with_empty_ramfs());
+    auto vfs_root_context = TRY(VFSRootContext::create_with_empty_ramfs(VFSRootContext::AddToGlobalContextList::Yes));
 
     auto const* fs_type_initializer = TRY(VirtualFileSystem::find_filesystem_type_initializer("ext2"sv));
     VERIFY(fs_type_initializer);
