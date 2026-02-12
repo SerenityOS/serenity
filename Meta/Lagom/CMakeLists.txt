@@ -597,6 +597,7 @@ if (BUILD_LAGOM)
 
         if (APPLE)
             add_serenity_subdirectory(Meta/Lagom/Contrib/MacPDF)
+            add_serenity_subdirectory(Meta/Lagom/Contrib/MacVideoPlayer)
         endif()
 
         find_package(SDL2 QUIET)
