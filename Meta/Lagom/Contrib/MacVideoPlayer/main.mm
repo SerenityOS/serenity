@@ -4,9 +4,22 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibCore/EventLoop.h>
+
 #include "CocoaWrapper.h"
 
-int main(int argc, char const* argv[])
+#include "EventLoopImplementation.h"
+
+int main()
 {
-    return NSApplicationMain(argc, argv);
+    Core::EventLoopManager::install(*new Mac::CFEventLoopManager);
+    Core::EventLoop event_loop;
+
+    @autoreleasepool {
+        NSArray* top_level_objects;
+        [[NSBundle mainBundle] loadNibNamed:@"MainMenu" owner:[NSApplication sharedApplication] topLevelObjects:&top_level_objects];
+        [NSApp finishLaunching];
+    }
+
+    return event_loop.exec();
 }

@@ -10,7 +10,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <LibCore/EventLoopImplementation.h>
 
-namespace Ladybird {
+namespace Mac {
 
 class CFEventLoopManager final : public Core::EventLoopManager {
 public:

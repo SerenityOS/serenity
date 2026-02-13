@@ -28,6 +28,21 @@
     return self;
 }
 
+- (void)dealloc
+{
+    if (_playbackManager) {
+        // NSDocument is sometimes destroyed on a background thread:
+        // https://www.mattrajca.com/2016/09/10/psa-nsdocuments-in-sierra-may-be-deallocated-on-background-threads.html
+        // CFEventLoopManager::register_timer() / CFEventLoopManager::unregister_timer() aren't thread safe, so make
+        // sure the PlaybackManager is destroyed on the main thread.
+        // Without this, we'd sometimes crash unregistering timers when closing a window.
+        auto* playback_manager = _playbackManager.leak_ptr();
+        dispatch_async(dispatch_get_main_queue(), ^{
+            delete playback_manager;
+        });
+    }
+}
+
 + (BOOL)autosavesInPlace
 {
     return YES;
