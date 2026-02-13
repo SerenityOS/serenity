@@ -24,8 +24,6 @@
 #include <Kernel/FileSystem/UnveilNode.h>
 #include <Kernel/FileSystem/VFSRootContext.h>
 #include <Kernel/Forward.h>
-#include <Kernel/Locking/MutexProtected.h>
-#include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
 
@@ -55,8 +53,6 @@ static constexpr int symlink_recursion_limit = 8;
 bool check_matching_absolute_path_hierarchy(Custody const& first_custody, Custody const& second_custody);
 
 ErrorOr<FileSystemInitializer const*> find_filesystem_type_initializer(StringView fs_type);
-
-ErrorOr<void> remove_mount(Mount& mount, FileBackedFileSystem::List& file_backed_fs_list);
 
 ErrorOr<void> mount(VFSRootContext&, MountFile&, OpenFileDescription*, Custody& mount_point, int flags);
 

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/RAMFS/FileSystem.h>
 #include <Kernel/FileSystem/VFSRootContext.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -128,6 +129,30 @@ void VFSRootContext::add_to_mounts_list_and_increment_fs_mounted_count(DoBindMou
     mounts_list.append(*new_mount.leak_ptr());
 }
 
+ErrorOr<void> VFSRootContext::remove_mount(Mount& mount, FileBackedFileSystem::List& file_backed_fs_list)
+{
+    NonnullRefPtr<FileSystem> fs = mount.guest_fs();
+    TRY(fs->prepare_to_unmount(mount.guest()));
+    fs->mounted_count().with([&](auto& mounted_count) {
+        VERIFY(mounted_count > 0);
+        if (mounted_count == 1) {
+            dbgln("VirtualFileSystem: Unmounting file system {} for the last time...", fs->fsid());
+            FileSystem::all_file_systems_list().with([&fs](auto& list) {
+                list.remove(*fs);
+            });
+            if (fs->is_file_backed()) {
+                dbgln("VirtualFileSystem: Unmounting file backed file system {} for the last time...", fs->fsid());
+                auto& file_backed_fs = static_cast<FileBackedFileSystem&>(*fs);
+                file_backed_fs_list.remove(file_backed_fs);
+            }
+        } else {
+            mounted_count--;
+        }
+    });
+    Mount::delete_mount_from_list(mount);
+    return {};
+}
+
 ErrorOr<void> VFSRootContext::do_full_teardown(Badge<PowerStateSwitchTask>)
 {
     // NOTE: We are going to tear down the entire VFS root context from its mounts.
@@ -185,7 +210,7 @@ ErrorOr<void> VFSRootContext::unmount(FileBackedFileSystem::List& file_backed_fi
 
             TRY(VFSRootContext::validate_mount_not_immutable_while_being_used(details, mount));
             dbgln("VFSRootContext({}): Unmounting {}...", id(), custody_path);
-            TRY(VirtualFileSystem::remove_mount(mount, file_backed_file_systems_list));
+            TRY(VFSRootContext::remove_mount(mount, file_backed_file_systems_list));
             did_unmount = true;
             break;
         }
