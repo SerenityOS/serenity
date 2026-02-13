@@ -58,8 +58,12 @@
 - (void)windowControllerDidLoadNib:(NSWindowController*)aController
 {
     [super windowControllerDidLoadNib:aController];
-    if (_playbackManager)
+    if (_playbackManager) {
+        auto const& video_data = _playbackManager->selected_video_track().video_data();
+        [[aController window] setContentSize:NSMakeSize(video_data.pixel_width, video_data.pixel_height)];
+
         [_view setPlaybackManager:_playbackManager.ptr()];
+    }
 }
 
 - (NSData*)dataOfType:(NSString*)typeName error:(NSError**)outError
