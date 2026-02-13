@@ -88,11 +88,11 @@
     auto manager_or = Media::PlaybackManager::from_data(ReadonlyBytes { [data bytes], [data length] });
     if (manager_or.is_error()) {
         auto description = manager_or.error().description();
-        NSLog(@"failed to load: %.*s", (int)description.length(), description.characters_without_null_termination());
+        NSString* error_message = [NSString stringWithFormat:@"%.*s", (int)description.length(), description.characters_without_null_termination()];
         if (outError) {
             *outError = [NSError errorWithDomain:NSOSStatusErrorDomain
                                             code:unimpErr
-                                        userInfo:nil];
+                                        userInfo:@{ NSLocalizedRecoverySuggestionErrorKey : error_message }];
         }
         return NO;
     }
