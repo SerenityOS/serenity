@@ -94,6 +94,8 @@ private:
         return {};
     }
 
+    static ErrorOr<void> remove_mount(Mount& mount, FileBackedFileSystem::List& file_backed_fs_list);
+
     mutable SpinlockProtected<Details, LockRank::None> m_details {};
 
     SpinlockProtected<NonnullRefPtr<Custody>, LockRank::None> m_root_custody;

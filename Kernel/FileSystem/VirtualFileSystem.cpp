@@ -23,6 +23,8 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Library/KLexicalPath.h>
+#include <Kernel/Locking/MutexProtected.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Tasks/Process.h>
 
@@ -282,30 +284,6 @@ ErrorOr<void> VirtualFileSystem::unmount(VFSRootContext& context, Custody& mount
     auto& guest_inode = mountpoint_custody.inode();
     auto custody_path = TRY(mountpoint_custody.try_serialize_absolute_path());
     return unmount(context, guest_inode, custody_path->view());
-}
-
-ErrorOr<void> VirtualFileSystem::remove_mount(Mount& mount, FileBackedFileSystem::List& file_backed_fs_list)
-{
-    NonnullRefPtr<FileSystem> fs = mount.guest_fs();
-    TRY(fs->prepare_to_unmount(mount.guest()));
-    fs->mounted_count().with([&](auto& mounted_count) {
-        VERIFY(mounted_count > 0);
-        if (mounted_count == 1) {
-            dbgln("VirtualFileSystem: Unmounting file system {} for the last time...", fs->fsid());
-            s_details->file_systems_list.with([&fs](auto& list) {
-                list.remove(*fs);
-            });
-            if (fs->is_file_backed()) {
-                dbgln("VirtualFileSystem: Unmounting file backed file system {} for the last time...", fs->fsid());
-                auto& file_backed_fs = static_cast<FileBackedFileSystem&>(*fs);
-                file_backed_fs_list.remove(file_backed_fs);
-            }
-        } else {
-            mounted_count--;
-        }
-    });
-    Mount::delete_mount_from_list(mount);
-    return {};
 }
 
 ErrorOr<void> VirtualFileSystem::unmount(VFSRootContext& context, Inode& guest_inode, StringView custody_path)
