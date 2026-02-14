@@ -63,6 +63,72 @@ Vector<StringView> parts(StringView path)
     return path.split_view('/');
 }
 
+void canonicalize_absolute_path(KString& absolute_path)
+{
+    VERIFY(is_absolute(absolute_path.view()));
+    char* path = const_cast<char*>(absolute_path.characters());
+    char* src = path;
+    char* dst = path;
+
+    while (*src) {
+        /* 1. Collapse multiple slashes */
+        if (*src == '/') {
+            *dst++ = *src++;
+            while (*src == '/')
+                src++;
+            continue;
+        }
+
+        /* 2. Handle "." */
+        if (src[0] == '.' && (src[1] == '/' || src[1] == '\0')) {
+            src++; // skip '.'
+            if (*src == '/')
+                src++;
+            continue;
+        }
+
+        /* 3. Handle ".." */
+        if (src[0] == '.' && src[1] == '.' && (src[2] == '/' || src[2] == '\0')) {
+            src += 2;
+            if (*src == '/')
+                src++;
+
+            /* remove previous directory from dst */
+            if (dst > path) {
+                dst--; // move before trailing slash
+                while (dst > path && *(dst - 1) != '/')
+                    dst--;
+            }
+            continue;
+        }
+
+        /* 4. Copy normal character */
+        *dst++ = *src++;
+    }
+
+    /* Remove trailing slash (unless root) */
+    if (dst > path + 1 && *(dst - 1) == '/')
+        dst--;
+
+    *dst = '\0';
+
+    absolute_path.decrease_size((dst - path));
+}
+
+ErrorOr<NonnullOwnPtr<KString>> try_join_non_canonical_second(StringView first, StringView second)
+{
+    VERIFY(is_absolute(first));
+    VERIFY(is_canonical(first));
+    VERIFY(!is_absolute(second));
+    char* buffer;
+    auto string = TRY(KString::try_create_uninitialized(first.length() + 1 + second.length(), buffer));
+    __builtin_memcpy(buffer, first.characters_without_null_termination(), first.length());
+    buffer[first.length()] = '/';
+    __builtin_memcpy(buffer + first.length() + 1, second.characters_without_null_termination(), second.length());
+    buffer[string->length()] = 0;
+    return string;
+}
+
 ErrorOr<NonnullOwnPtr<KString>> try_join(StringView first, StringView second)
 {
     VERIFY(is_canonical(first));
