@@ -17,8 +17,8 @@ ErrorOr<FlatPtr> Process::sys$chmod(Userspace<Syscall::SC_chmod_params const*> u
     TRY(require_promise(Pledge::fattr));
     auto params = TRY(copy_typed_from_user(user_params));
     auto path = TRY(get_syscall_path_argument(params.path));
-    CustodyBase base(params.dirfd, path->view());
-    TRY(VirtualFileSystem::chmod(vfs_root_context(), credentials(), path->view(), params.mode, base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
+    UnresolvedPath unresolved_path(params.dirfd, path->view());
+    TRY(VirtualFileSystem::chmod(vfs_root_context(), credentials(), unresolved_path, params.mode, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
     return 0;
 }
 

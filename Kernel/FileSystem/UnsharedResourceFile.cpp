@@ -89,7 +89,8 @@ ErrorOr<void> UnsharedResourceFile::ioctl(OpenFileDescription&, unsigned request
             if (!description->metadata().may_execute(credentials))
                 return EACCES;
             VERIFY(description->custody());
-            root_filesystem = TRY(current_vfs_root_context->mount_point_to_guest_filesystem(*description->custody()));
+            auto mount_point = TRY(current_vfs_root_context->find_custody_as_mountpoint(*description->custody()));
+            root_filesystem = mount_point->guest_fs();
             return {};
         });
     }

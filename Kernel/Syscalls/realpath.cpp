@@ -17,13 +17,16 @@ ErrorOr<FlatPtr> Process::sys$realpath(Userspace<Syscall::SC_realpath_params con
     TRY(require_promise(Pledge::rpath));
     auto params = TRY(copy_typed_from_user(user_params));
 
-    auto path = TRY(get_syscall_path_argument(params.path));
-    auto custody = TRY(VirtualFileSystem::resolve_path(vfs_root_context(), credentials(), path->view(), current_directory()));
-    auto absolute_path = TRY(custody->try_serialize_absolute_path());
+    auto user_path = TRY(get_syscall_path_argument(params.path));
 
-    size_t ideal_size = absolute_path->length() + 1;
+    UnresolvedPath unresolved_path(current_directory().custody(), user_path->view());
+    auto canonicalized_path = TRY(VirtualFileSystem::optimize_path(unresolved_path));
+    auto real_path = TRY(VirtualFileSystem::resolve_path(vfs_root_context(), credentials(), *canonicalized_path));
+    auto absolute_path = real_path->optimized_path().full_canonicalized_path();
+
+    size_t ideal_size = absolute_path.length() + 1;
     auto size_to_copy = min(ideal_size, params.buffer.size);
-    TRY(copy_to_user(params.buffer.data, absolute_path->characters(), size_to_copy));
+    TRY(copy_to_user(params.buffer.data, absolute_path.characters_without_null_termination(), size_to_copy));
     // Note: we return the whole size here, not the copied size.
     return ideal_size;
 }

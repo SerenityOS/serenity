@@ -462,7 +462,7 @@ ErrorOr<NonnullRefPtr<VFSRootContext>> StorageManagement::create_first_vfs_root_
         dump_storage_devices_and_partitions();
         PANIC("StorageManagement: Couldn't find a suitable device to boot from");
     }
-    auto description = TRY(OpenFileDescription::try_create(boot_device_description.release_nonnull()));
+    auto description = TRY(OpenFileDescription::try_create(*boot_device_description));
 
     auto fs = TRY(FileBackedFileSystem::create_and_append_filesystems_list_from_mount_file_and_description(mount_file, description));
     return TRY(VFSRootContext::create_with_filesystem(VFSRootContext::AddToGlobalContextList::Yes, fs));

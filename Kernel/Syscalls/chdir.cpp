@@ -16,12 +16,12 @@ ErrorOr<FlatPtr> Process::sys$chdir(Userspace<char const*> user_path, size_t pat
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::rpath));
     auto path = TRY(get_syscall_path_argument(user_path, path_length));
-
-    RefPtr<Custody> new_directory = TRY(VirtualFileSystem::open_directory(vfs_root_context(), credentials(), path->view(), current_directory()));
-    m_current_directory.with([&](auto& current_directory) {
-        // NOTE: We use swap() here to avoid manipulating the ref counts while holding the lock.
-        swap(current_directory, new_directory);
-    });
+    UnresolvedPath unresolved_path(current_directory().custody(), path->view());
+    auto new_directory = TRY(VirtualFileSystem::open_directory(vfs_root_context(), credentials(), unresolved_path));
+    TRY(m_current_directory.with([&](auto& current_directory) -> ErrorOr<void> {
+        current_directory = *new_directory;
+        return {};
+    }));
     return 0;
 }
 
@@ -34,9 +34,13 @@ ErrorOr<FlatPtr> Process::sys$fchdir(int fd)
         return ENOTDIR;
     if (!description->metadata().may_execute(credentials()))
         return EACCES;
-    m_current_directory.with([&](auto& current_directory) {
-        current_directory = description->custody();
-    });
+
+    TRY(m_current_directory.with([&](auto& current_directory) -> ErrorOr<void> {
+        return description->m_state.with([&](auto& state) -> ErrorOr<void> {
+            current_directory = *state.path;
+            return {};
+        });
+    }));
     return 0;
 }
 
@@ -48,7 +52,7 @@ ErrorOr<FlatPtr> Process::sys$getcwd(Userspace<char*> buffer, size_t size)
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
 
-    auto path = TRY(current_directory()->try_serialize_absolute_path());
+    auto path = TRY(current_directory().custody().try_serialize_absolute_path());
     size_t ideal_size = path->length() + 1;
     auto size_to_copy = min(ideal_size, size);
     TRY(copy_to_user(buffer, path->characters(), size_to_copy));

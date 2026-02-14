@@ -46,7 +46,7 @@ ErrorOr<FlatPtr> Process::sys$socket(int domain, int type, int protocol)
     return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
         auto fd_allocation = TRY(fds.allocate());
         auto socket = TRY(Socket::create(domain, type, protocol));
-        auto description = TRY(OpenFileDescription::try_create(socket));
+        auto description = TRY(OpenFileDescription::try_create(*socket));
         setup_socket_fd(fds, fd_allocation.fd, move(description), type);
         return fd_allocation.fd;
     });

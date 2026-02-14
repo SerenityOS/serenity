@@ -13,6 +13,7 @@
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
+#include <Kernel/FileSystem/Path.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/KBuffer.h>
 #include <Kernel/Memory/VirtualAddress.h>
@@ -25,8 +26,10 @@ public:
 };
 
 class OpenFileDescription final : public AtomicRefCounted<OpenFileDescription> {
+    friend class Process;
+
 public:
-    static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(Custody&);
+    static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(NonnullOwnPtr<Path>);
     static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(File&);
     ~OpenFileDescription();
 
@@ -122,7 +125,7 @@ public:
 
     // NOTE: These methods are (and should be only) called from Kernel/FileSystem/VirtualFileSystem.cpp
     void set_original_inode(NonnullRefPtr<Inode> inode) { m_inode = move(inode); }
-    void set_original_custody(Custody& custody);
+    void set_original_path(NonnullOwnPtr<Path> path);
 
     ErrorOr<void> truncate(u64);
     ErrorOr<void> sync();
@@ -151,7 +154,7 @@ private:
 
     struct State {
         OwnPtr<OpenFileDescriptionData> data;
-        RefPtr<Custody> custody;
+        OwnPtr<Path> path;
         off_t current_offset { 0 };
         u32 file_flags { 0 };
         bool readable : 1 { false };

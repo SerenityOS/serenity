@@ -139,14 +139,15 @@ ErrorOr<void> LocalSocket::bind(Credentials const& credentials, Userspace<sockad
 
     mode_t mode = S_IFSOCK | (m_prebind_mode & 0777);
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
-    auto result = VirtualFileSystem::open(Process::current().vfs_root_context(), credentials, path->view(), O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, Process::current().current_directory(), owner);
+    UnresolvedPath unresolved_path(Process::current().current_directory().custody(), path->view());
+    auto result = VirtualFileSystem::open(Process::current().vfs_root_context(), credentials, unresolved_path, O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, owner);
     if (result.is_error()) {
         if (result.error().code() == EEXIST)
             return set_so_error(EADDRINUSE);
         return result.release_error();
     }
 
-    auto file = move(result.value());
+    auto file = result.release_value();
     auto inode = file->inode();
 
     VERIFY(inode);
@@ -180,7 +181,8 @@ ErrorOr<void> LocalSocket::connect(Credentials const& credentials, OpenFileDescr
     auto path = SOCKET_TRY(KString::try_create(StringView { address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)) }));
     dbgln_if(LOCAL_SOCKET_DEBUG, "LocalSocket({}) connect({})", this, *path);
 
-    auto file = SOCKET_TRY(VirtualFileSystem::open(Process::current().vfs_root_context(), credentials, path->view(), O_RDWR, 0, Process::current().current_directory()));
+    UnresolvedPath unresolved_path(Process::current().current_directory().custody(), path->view());
+    auto file = SOCKET_TRY(VirtualFileSystem::open(Process::current().vfs_root_context(), credentials, unresolved_path, O_RDWR, 0));
     auto inode = file->inode();
     m_inode = inode;
 

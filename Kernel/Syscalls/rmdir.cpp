@@ -15,7 +15,8 @@ ErrorOr<FlatPtr> Process::sys$rmdir(Userspace<char const*> user_path, size_t pat
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::cpath));
     auto path = TRY(get_syscall_path_argument(user_path, path_length));
-    TRY(VirtualFileSystem::rmdir(vfs_root_context(), credentials(), path->view(), current_directory()));
+    UnresolvedPath target(current_directory().custody(), path->view());
+    TRY(VirtualFileSystem::rmdir(vfs_root_context(), credentials(), target));
     return 0;
 }
 

@@ -26,8 +26,8 @@ ErrorOr<FlatPtr> Process::sys$faccessat(Userspace<Syscall::SC_faccessat_params c
     if (params.flags & AT_EACCESS)
         flags |= AccessFlags::EffectiveAccess;
 
-    CustodyBase base(params.dirfd, pathname->view());
-    TRY(VirtualFileSystem::access(vfs_root_context(), credentials(), pathname->view(), params.mode, base, flags));
+    UnresolvedPath target(params.dirfd, pathname->view());
+    TRY(VirtualFileSystem::access(vfs_root_context(), credentials(), target, params.mode, flags));
     return 0;
 }
 
