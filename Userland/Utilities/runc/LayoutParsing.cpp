@@ -161,7 +161,36 @@ static ErrorOr<void> handle_property(VFSRootContextLayout& layout, JsonObject co
     }
 
     auto type = object.get_byte_string("type"sv).value();
-    dbgln("WARNING: Unknown object type - {}, it might affect layout creation severely", type);
+    if (type != "root_mount"sv)
+        dbgln("WARNING: Unknown object type - {}, it might affect layout creation severely", type);
+    return {};
+}
+
+ErrorOr<void> create_root_mount_point(StringView preparation_environment_path, JsonArray const& layout_creation_sequence)
+{
+    for (size_t index = 0; index < layout_creation_sequence.size(); index++) {
+        auto& maybe_object = layout_creation_sequence[index];
+        if (!maybe_object.is_object())
+            return Error::from_string_view("Invalid layout JSON object"sv);
+        if (!maybe_object.as_object().has_string("type"sv))
+            return Error::from_string_view("Invalid layout JSON object - no type being specified"sv);
+
+        auto& object = maybe_object.as_object();
+
+        auto type = object.get_byte_string("type"sv).value();
+        if (type != "root_mount"sv)
+            continue;
+
+        if (!object.has_null("source"sv) && !object.has_string("source"sv))
+            return Error::from_string_view("Object root_mount source property not found"sv);
+        if (!object.has_string("fs_type"sv))
+            return Error::from_string_view("Object root_mount fs_type property not found"sv);
+
+        auto fs_type = object.get_byte_string("fs_type"sv).value();
+        auto source = object.get_byte_string("source"sv).value_or("none");
+        auto source_fd = TRY(VFSRootContextLayout::get_source_fd(source));
+        TRY(Core::System::mount({}, source_fd, preparation_environment_path, fs_type, 0));
+    }
     return {};
 }
 

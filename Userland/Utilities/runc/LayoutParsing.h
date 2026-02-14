@@ -16,5 +16,6 @@
 namespace LayoutParsing {
 
 ErrorOr<void> handle_creation_sequence(VFSRootContextLayout&, JsonArray const& layout_creation_sequence);
+ErrorOr<void> create_root_mount_point(StringView preparation_environment_path, JsonArray const& layout_creation_sequence);
 
 }
