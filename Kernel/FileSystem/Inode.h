@@ -11,11 +11,11 @@
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/IntrusiveList.h>
-#include <Kernel/FileSystem/CustodyBase.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
+#include <Kernel/FileSystem/UnresolvedPath.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/ListedRefCounted.h>
 #include <Kernel/Library/LockWeakPtr.h>
@@ -57,7 +57,7 @@ public:
     ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const;
 
     using TargetLinkPath = FixedStringBuffer<MAXPATHLEN>;
-    ErrorOr<TargetLinkPath> read_as_link(OpenFileDescription*) const;
+    ErrorOr<TargetLinkPath> read_as_link() const;
 
     ErrorOr<void> truncate(u64);
 
@@ -71,8 +71,6 @@ public:
     virtual ErrorOr<void> remove_child(StringView name) = 0;
     virtual ErrorOr<void> chmod(mode_t) = 0;
     virtual ErrorOr<void> chown(UserID, GroupID) = 0;
-
-    ErrorOr<NonnullRefPtr<Custody>> resolve_as_link(VFSRootContext const&, Credentials const&, CustodyBase const& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const;
 
     virtual ErrorOr<int> get_block_address(int) { return ENOTSUP; }
 

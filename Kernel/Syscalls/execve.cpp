@@ -840,7 +840,8 @@ ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executabl
     }
 
     dbgln_if(EXEC_DEBUG, "exec({}): Using program interpreter {}", path, interpreter_path);
-    auto interpreter_description = TRY(VirtualFileSystem::open(vfs_root_context(), credentials(), interpreter_path, O_EXEC, 0, current_directory()));
+    UnresolvedPath unresolved_interpreter_path(Process::current().current_directory().custody(), interpreter_path);
+    auto interpreter_description = TRY(VirtualFileSystem::open(vfs_root_context(), credentials(), unresolved_interpreter_path, O_EXEC, 0));
     auto interp_metadata = interpreter_description->metadata();
 
     if (!interp_metadata.is_regular_file())
@@ -902,7 +903,8 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KS
     //        * ET_EXEC binary that just gets loaded
     //        * ET_DYN binary that requires a program interpreter
     //
-    auto description = TRY(VirtualFileSystem::open(vfs_root_context(), credentials(), path->view(), O_EXEC, 0, current_directory()));
+    UnresolvedPath unresolved_path(Process::current().current_directory().custody(), path->view());
+    auto description = TRY(VirtualFileSystem::open(vfs_root_context(), credentials(), unresolved_path, O_EXEC, 0));
     auto metadata = description->metadata();
 
     if (!metadata.is_regular_file())

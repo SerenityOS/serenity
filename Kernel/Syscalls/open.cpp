@@ -55,8 +55,8 @@ ErrorOr<FlatPtr> Process::open_impl(Userspace<Syscall::SC_open_params const*> us
     dbgln_if(IO_DEBUG, "sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path->view(), options, mode);
 
     auto fd_allocation = TRY(allocate_fd());
-    CustodyBase base(dirfd, path->view());
-    auto description = TRY(VirtualFileSystem::open(vfs_root_context(), credentials(), path->view(), options, mode & ~umask(), base));
+    UnresolvedPath target_path(dirfd, path->view());
+    auto description = TRY(VirtualFileSystem::open(vfs_root_context(), credentials(), target_path, options, mode & ~umask()));
 
     if (description->inode() && description->inode()->bound_socket())
         return ENXIO;

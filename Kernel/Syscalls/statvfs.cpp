@@ -45,13 +45,14 @@ ErrorOr<FlatPtr> Process::sys$statvfs(Userspace<Syscall::SC_statvfs_params const
     TRY(require_promise(Pledge::rpath));
     auto params = TRY(copy_typed_from_user(user_params));
 
-    auto path = TRY(get_syscall_path_argument(params.path));
+    auto user_path = TRY(get_syscall_path_argument(params.path));
 
-    auto custody = TRY(VirtualFileSystem::resolve_path(vfs_root_context(), credentials(), path->view(), current_directory(), nullptr, 0));
-    auto& inode = custody->inode();
+    UnresolvedPath unresolved_path(current_directory().custody(), user_path->view());
+    auto path = TRY(VirtualFileSystem::resolve_path(vfs_root_context(), credentials(), unresolved_path, nullptr, nullptr, 0));
+    auto& inode = path->custody().inode();
     auto const& fs = inode.fs();
 
-    return do_statvfs(fs, custody, params.buf);
+    return do_statvfs(fs, &path->custody(), params.buf);
 }
 
 ErrorOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)

@@ -24,6 +24,7 @@
 #endif
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
+#include <Kernel/FileSystem/Path.h>
 #include <Kernel/FileSystem/UnveilNode.h>
 #include <Kernel/FileSystem/VFSRootContext.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -531,7 +532,7 @@ public:
     clock_t m_ticks_in_user_for_dead_children { 0 };
     clock_t m_ticks_in_kernel_for_dead_children { 0 };
 
-    NonnullRefPtr<Custody> current_directory();
+    Path current_directory();
     RefPtr<Custody> executable();
     RefPtr<Custody const> executable() const;
 
@@ -706,10 +707,10 @@ private:
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
 
-    Process(StringView name, NonnullRefPtr<Credentials>, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext>, NonnullRefPtr<HostnameContext>, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time);
+    Process(StringView name, NonnullRefPtr<Credentials>, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext>, NonnullRefPtr<HostnameContext>, Path current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree, UnixDateTime creation_time);
     static ErrorOr<ProcessAndFirstThread> create_from_fork(Process& parent);
-    static ErrorOr<ProcessAndFirstThread> create_spawned(UserID, GroupID, ProcessID ppid, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext>, NonnullRefPtr<Custody> current_directory, RefPtr<TTY>);
-    static ErrorOr<ProcessAndFirstThread> create_impl(StringView name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext>, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
+    static ErrorOr<ProcessAndFirstThread> create_spawned(UserID, GroupID, ProcessID ppid, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext>, Path current_directory, RefPtr<TTY>);
+    static ErrorOr<ProcessAndFirstThread> create_impl(StringView name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, NonnullRefPtr<VFSRootContext> vfs_root_context, NonnullRefPtr<HostnameContext>, Path current_directory, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
     // After calling one of the create_* function, you need to commit the creation of the process.
     // You have to make sure that nothing will fail after calling this function otherwise the
     // process will be leaked.
@@ -959,7 +960,7 @@ public:
         return m_fds.with_exclusive([](auto& fds) { return fds.allocate(); });
     }
 
-    ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(Badge<CustodyBase>, int dirfd);
+    ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(Badge<UnresolvedPath>, int dirfd);
 
 private:
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(int dirfd);
@@ -968,7 +969,7 @@ private:
     ErrorOr<NonnullRefPtr<VFSRootContext>> acquire_vfs_root_context_for_id_and_validate_path(bool& different_vfs_root_context, int id, StringView path);
 
     struct MountTargetContext {
-        NonnullRefPtr<Custody> custody;
+        NonnullOwnPtr<Path> path;
         NonnullRefPtr<VFSRootContext> vfs_root_context;
     };
     ErrorOr<MountTargetContext> context_for_mount_operation(int vfs_root_context_id, StringView path);
@@ -995,7 +996,7 @@ private:
 
     RecursiveSpinlockProtected<RefPtr<Custody>, LockRank::None> m_executable;
 
-    RecursiveSpinlockProtected<RefPtr<Custody>, LockRank::None> m_current_directory;
+    RecursiveSpinlockProtected<Path, LockRank::None> m_current_directory;
 
     UnixDateTime const m_creation_time;
 

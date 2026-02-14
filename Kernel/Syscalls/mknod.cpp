@@ -21,8 +21,8 @@ ErrorOr<FlatPtr> Process::sys$mknod(Userspace<Syscall::SC_mknod_params const*> u
         return EPERM;
     auto path = TRY(get_syscall_path_argument(params.path));
 
-    CustodyBase base(params.dirfd, path->view());
-    TRY(VirtualFileSystem::mknod(vfs_root_context(), credentials, path->view(), params.mode & ~umask(), params.dev, base));
+    UnresolvedPath target(params.dirfd, path->view());
+    TRY(VirtualFileSystem::mknod(vfs_root_context(), credentials, target, params.mode & ~umask(), params.dev));
     return 0;
 }
 

@@ -53,7 +53,7 @@ void Inode::sync()
     }
 }
 
-ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(VFSRootContext const& vfs_root_context, Credentials const& credentials, CustodyBase const& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
+ErrorOr<Inode::TargetLinkPath> Inode::read_as_link() const
 {
     // The default implementation simply treats the stored
     // contents as a path and resolves that. That is, it
@@ -62,8 +62,10 @@ ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(VFSRootContext const& vfs
     // Make sure that our assumptions about the path length hold up.
     // Note that this doesn't mean that the reported size can be trusted, some inodes just report zero.
     VERIFY(size() <= TargetLinkPath::max_length());
-    auto link_target_contents = TRY(read_as_link(nullptr));
-    return VirtualFileSystem::resolve_path(vfs_root_context, credentials, link_target_contents.representable_view(), base, out_parent, options, symlink_recursion_level);
+    TargetLinkPath contents;
+    auto read_bytes = TRY(read_until_filled_or_end(0, contents.max_length(), UserOrKernelBuffer::for_kernel_buffer(contents.storage().data()), nullptr));
+    contents.set_stored_length(read_bytes);
+    return contents;
 }
 
 Inode::Inode(FileSystem& fs, InodeIndex index)
@@ -110,14 +112,6 @@ ErrorOr<size_t> Inode::read_bytes(off_t offset, size_t length, UserOrKernelBuffe
 {
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
     return read_bytes_locked(offset, length, buffer, open_description);
-}
-
-ErrorOr<Inode::TargetLinkPath> Inode::read_as_link(OpenFileDescription* description) const
-{
-    TargetLinkPath link_target;
-    auto read_bytes = TRY(read_until_filled_or_end(0, link_target.max_length(), UserOrKernelBuffer::for_kernel_buffer(link_target.storage().data()), description));
-    link_target.set_stored_length(read_bytes);
-    return link_target;
 }
 
 ErrorOr<size_t> Inode::read_until_filled_or_end(off_t offset, size_t length, UserOrKernelBuffer buffer, OpenFileDescription* open_description) const
