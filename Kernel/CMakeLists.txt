@@ -20,6 +20,7 @@ set(KERNEL_SOURCES
     Arch/Processor.cpp
     Arch/TrapFrame.cpp
     Boot/CommandLine.cpp
+    Bus/I2C/Controller/OpenCoresI2CController.cpp
     Bus/PCI/Controller/HostController.cpp
     Bus/PCI/Controller/MemoryBackedHostBridge.cpp
     Bus/PCI/Controller/VolumeManagementDevice.cpp
