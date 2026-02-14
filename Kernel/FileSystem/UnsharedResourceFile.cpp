@@ -39,8 +39,14 @@ ErrorOr<unsigned> UnsharedResourceFile::initialize_resource()
         return scoped_process_list->id().value();
     }
     case UnshareType::VFSRootContext: {
-        auto vfs_root_context = TRY(VFSRootContext::create_with_empty_ramfs(VFSRootContext::AddToGlobalContextList::Yes));
-        return vfs_root_context->id().value();
+        return m_root_filesystem.with_exclusive([&](auto& root_filesystem) -> ErrorOr<unsigned> {
+            if (root_filesystem) {
+                auto vfs_root_context = TRY(VFSRootContext::create_with_filesystem(VFSRootContext::AddToGlobalContextList::Yes, *root_filesystem));
+                return vfs_root_context->id().value();
+            }
+            auto vfs_root_context = TRY(VFSRootContext::create_with_empty_ramfs(VFSRootContext::AddToGlobalContextList::Yes));
+            return vfs_root_context->id().value();
+        });
     }
     case UnshareType::HostnameContext: {
         // NOTE: Technically, we create a new context, based on the
@@ -64,9 +70,33 @@ ErrorOr<unsigned> UnsharedResourceFile::initialize_resource()
 
 UnsharedResourceFile::~UnsharedResourceFile() = default;
 
-ErrorOr<void> UnsharedResourceFile::ioctl(OpenFileDescription&, unsigned, Userspace<void*>)
+ErrorOr<void> UnsharedResourceFile::ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg)
 {
-    return ENOTSUP;
+    switch (request) {
+    case UNSHARE_IOCTL_ATTACH_ROOT_FILESYSTEM_AT_FD: {
+        auto current_vfs_root_context = Process::current().vfs_root_context();
+        auto credentials = Process::current().credentials();
+        auto fd = static_cast<int>(arg.ptr());
+        auto description = TRY(Process::current().open_file_description_ignoring_negative(fd));
+        return m_root_filesystem.with_exclusive([&credentials, &current_vfs_root_context, &description](auto& root_filesystem) -> ErrorOr<void> {
+            if (!description) {
+                root_filesystem = nullptr;
+                return {};
+            }
+
+            if (!description->is_directory())
+                return ENOTDIR;
+            if (!description->metadata().may_execute(credentials))
+                return EACCES;
+            VERIFY(description->custody());
+            root_filesystem = TRY(current_vfs_root_context->mount_point_to_guest_filesystem(*description->custody()));
+            return {};
+        });
+    }
+
+    default:
+        return EINVAL;
+    }
 }
 
 ErrorOr<NonnullOwnPtr<KString>> UnsharedResourceFile::pseudo_path(OpenFileDescription const&) const

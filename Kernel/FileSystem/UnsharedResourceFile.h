@@ -32,6 +32,8 @@ private:
 
     explicit UnsharedResourceFile(UnshareType);
     UnshareType const m_type;
+
+    MutexProtected<RefPtr<FileSystem>> m_root_filesystem;
 };
 
 }

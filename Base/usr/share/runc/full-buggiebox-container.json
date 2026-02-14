@@ -5,9 +5,8 @@
     "hostname": null,
     "layout": [
         {
-            "type": "mount",
+            "type": "root_mount",
             "source": null,
-            "target": "/",
             "fs_type": "RAMFS"
         },
         {
