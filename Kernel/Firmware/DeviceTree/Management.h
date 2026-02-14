@@ -13,6 +13,11 @@
 
 namespace Kernel::DeviceTree {
 
+enum class ShouldProbeImmediately {
+    No,
+    Yes,
+};
+
 class Management {
 public:
     static void initialize();
@@ -23,12 +28,13 @@ public:
 
     ErrorOr<size_t> resolve_interrupt_number(::DeviceTree::Interrupt) const;
 
-    ErrorOr<void> scan_node_for_devices(::DeviceTree::Node const& node);
+    ErrorOr<void> scan_node_for_devices(::DeviceTree::Node const& node, ShouldProbeImmediately);
 
     ErrorOr<void> probe_drivers(Driver::ProbeStage);
 
 private:
     static bool attach_device_to_driver(Device&, Driver const&, StringView compatible_entry);
+    void probe_drivers_for_device(Device&, Optional<Driver::ProbeStage>);
 
     Vector<NonnullOwnPtr<Driver>> m_drivers;
     HashMap<StringView, Driver*> m_driver_by_compatible_string;

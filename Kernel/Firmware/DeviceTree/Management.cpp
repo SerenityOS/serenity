@@ -18,7 +18,7 @@ void Management::initialize()
     if (maybe_model.has_value())
         dmesgln("DeviceTree: System board model: {}", maybe_model->as_string());
 
-    MUST(the().scan_node_for_devices(DeviceTree::get()));
+    MUST(the().scan_node_for_devices(DeviceTree::get(), ShouldProbeImmediately::No));
 }
 
 Management& Management::the()
@@ -56,7 +56,7 @@ ErrorOr<size_t> Management::resolve_interrupt_number(::DeviceTree::Interrupt int
 
 // NOTE: This function has to only be called once for each device!
 //       Otherwise duplicate `DeviceTree::Device`s may be created for each node.
-ErrorOr<void> Management::scan_node_for_devices(::DeviceTree::Node const& node)
+ErrorOr<void> Management::scan_node_for_devices(::DeviceTree::Node const& node, ShouldProbeImmediately should_probe_immediately)
 {
     for (auto const& [child_name, child] : node.children()) {
         // FIXME: The Pi 3 System Timer is disabled in the devicetree, and only the generic ARM timer is enabled. The generic Arm timer on the Pi 3 is connected to the root interrupt controller, which we currently don't support.
@@ -73,8 +73,11 @@ ErrorOr<void> Management::scan_node_for_devices(::DeviceTree::Node const& node)
 
         m_devices.append(*device);
 
+        if (should_probe_immediately == ShouldProbeImmediately::Yes)
+            probe_drivers_for_device(*device, {});
+
         if (child.is_compatible_with("simple-bus"sv)) {
-            TRY(scan_node_for_devices(child));
+            TRY(scan_node_for_devices(child, should_probe_immediately));
             continue;
         }
     }
@@ -95,29 +98,33 @@ bool Management::attach_device_to_driver(Device& device, Driver const& driver, S
     return true;
 }
 
+void Management::probe_drivers_for_device(Device& device, Optional<Driver::ProbeStage> probe_stage)
+{
+    if (device.driver() != nullptr)
+        return;
+
+    auto maybe_compatible = device.node().get_property("compatible"sv);
+    if (!maybe_compatible.has_value())
+        return;
+
+    // Attach this device to a compatible driver, if we have one for it.
+    // The compatible property is ordered from most specific to least specific, so choose the first compatible we have a driver for.
+    maybe_compatible->for_each_string([this, &device, probe_stage](StringView compatible_entry) {
+        auto maybe_driver = m_driver_by_compatible_string.get(compatible_entry);
+        if (!maybe_driver.has_value())
+            return IterationDecision::Continue;
+
+        if (probe_stage.has_value() && (*maybe_driver)->probe_stage() != probe_stage)
+            return IterationDecision::Continue;
+
+        return attach_device_to_driver(device, *maybe_driver.release_value(), compatible_entry) ? IterationDecision::Break : IterationDecision::Continue;
+    });
+}
+
 ErrorOr<void> Management::probe_drivers(Driver::ProbeStage probe_stage)
 {
-    for (auto& device : m_devices) {
-        if (device.driver() != nullptr)
-            continue;
-
-        auto maybe_compatible = device.node().get_property("compatible"sv);
-        if (!maybe_compatible.has_value())
-            continue;
-
-        // Attach this device to a compatible driver, if we have one for it.
-        // The compatible property is ordered from most specific to least specific, so choose the first compatible we have a driver for.
-        TRY(maybe_compatible->for_each_string([this, &device, probe_stage](StringView compatible_entry) -> ErrorOr<IterationDecision> {
-            auto maybe_driver = m_driver_by_compatible_string.get(compatible_entry);
-            if (!maybe_driver.has_value())
-                return IterationDecision::Continue;
-
-            if ((*maybe_driver)->probe_stage() != probe_stage)
-                return IterationDecision::Continue;
-
-            return attach_device_to_driver(device, *maybe_driver.release_value(), compatible_entry) ? IterationDecision::Break : IterationDecision::Continue;
-        }));
-    }
+    for (auto& device : m_devices)
+        probe_drivers_for_device(device, probe_stage);
 
     return {};
 }
