@@ -459,11 +459,6 @@ ErrorOr<void> VirtualFileSystem::mknod(VFSRootContext const& vfs_root_context, C
     return {};
 }
 
-ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::create(Credentials const& credentials, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
-{
-    return create(Process::current(), credentials, path, options, mode, parent_custody, owner);
-}
-
 ErrorOr<NonnullRefPtr<OpenFileDescription>> VirtualFileSystem::create(Process const& process, Credentials const& credentials, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
 {
     auto basename = KLexicalPath::basename(path);
