@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Sönke Holz <soenke.holz@serenityos.org>
+ * Copyright (c) 2024-2026, Sönke Holz <soenke.holz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -54,6 +54,8 @@ ErrorOr<size_t> Management::resolve_interrupt_number(::DeviceTree::Interrupt int
     return maybe_interrupt_controller.value()->translate_interrupt_specifier_to_interrupt_number(interrupt.interrupt_specifier);
 }
 
+// NOTE: This function has to only be called once for each device!
+//       Otherwise duplicate `DeviceTree::Device`s may be created for each node.
 ErrorOr<void> Management::scan_node_for_devices(::DeviceTree::Node const& node)
 {
     for (auto const& [child_name, child] : node.children()) {
@@ -65,8 +67,11 @@ ErrorOr<void> Management::scan_node_for_devices(::DeviceTree::Node const& node)
         if (maybe_status.has_value() && maybe_status->as_string() != "okay" && !ignore_status_disabled)
             continue;
 
-        if (TRY(m_devices.try_set(&child, Device { child, child_name })) != HashSetResult::InsertedNewEntry)
-            continue;
+        auto* device = new (nothrow) Device { child, child_name };
+        if (device == nullptr)
+            return ENOMEM;
+
+        m_devices.append(*device);
 
         if (child.is_compatible_with("simple-bus"sv)) {
             TRY(scan_node_for_devices(child));
@@ -92,13 +97,11 @@ bool Management::attach_device_to_driver(Device& device, Driver const& driver, S
 
 ErrorOr<void> Management::probe_drivers(Driver::ProbeStage probe_stage)
 {
-    for (auto& [device_node, device] : m_devices) {
-        VERIFY(device_node != nullptr);
-
+    for (auto& device : m_devices) {
         if (device.driver() != nullptr)
             continue;
 
-        auto maybe_compatible = device_node->get_property("compatible"sv);
+        auto maybe_compatible = device.node().get_property("compatible"sv);
         if (!maybe_compatible.has_value())
             continue;
 

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
 #include <Kernel/Memory/PhysicalAddress.h>
 #include <LibDeviceTree/DeviceTree.h>
@@ -51,6 +52,11 @@ private:
     ::DeviceTree::Node const* m_node;
     StringView m_node_name;
     Driver const* m_driver { nullptr };
+
+    IntrusiveListNode<Device> m_list_node;
+
+public:
+    using List = IntrusiveList<&Device::m_list_node>;
 };
 
 }

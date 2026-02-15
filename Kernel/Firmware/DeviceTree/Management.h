@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, Sönke Holz <soenke.holz@serenityos.org>
+ * Copyright (c) 2024-2026, Sönke Holz <soenke.holz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,7 +33,7 @@ private:
     Vector<NonnullOwnPtr<Driver>> m_drivers;
     HashMap<StringView, Driver*> m_driver_by_compatible_string;
 
-    HashMap<::DeviceTree::Node const*, Device> m_devices;
+    Device::List m_devices;
 
     HashMap<::DeviceTree::Node const*, DeviceTree::InterruptController const*> m_interrupt_controllers;
 };
