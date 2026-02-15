@@ -104,6 +104,14 @@ public:
 
     size_t stored_length() const { return m_stored_length; }
 
+    void set_stored_length(size_t length)
+    {
+        VERIFY(length <= Size);
+        m_stored_length = length;
+    }
+
+    [[nodiscard]] ALWAYS_INLINE static constexpr size_t max_length() { return Size; }
+
     FixedStringBuffer()
     {
         m_storage.fill(0);
