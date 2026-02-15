@@ -54,6 +54,25 @@ ErrorOr<size_t> Management::resolve_interrupt_number(::DeviceTree::Interrupt int
     return maybe_interrupt_controller.value()->translate_interrupt_specifier_to_interrupt_number(interrupt.interrupt_specifier);
 }
 
+ErrorOr<void> Management::register_i2c_controller(DeviceTree::Device const& device, I2C::Controller& interrupt_controller)
+{
+    TRY(the().m_i2c_controllers.try_set(&device.node(), &interrupt_controller));
+    return {};
+}
+
+ErrorOr<I2C::Controller*> Management::i2c_controller_for(::DeviceTree::Node const& node)
+{
+    auto const* parent = node.parent();
+    if (parent == nullptr)
+        return EINVAL;
+
+    auto maybe_i2c_controller = the().m_i2c_controllers.get(parent);
+    if (!maybe_i2c_controller.has_value())
+        return ENOENT;
+
+    return maybe_i2c_controller.value();
+}
+
 // NOTE: This function has to only be called once for each device!
 //       Otherwise duplicate `DeviceTree::Device`s may be created for each node.
 ErrorOr<void> Management::scan_node_for_devices(::DeviceTree::Node const& node, ShouldProbeImmediately should_probe_immediately)

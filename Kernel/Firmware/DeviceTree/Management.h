@@ -11,6 +11,10 @@
 #include <Kernel/Firmware/DeviceTree/InterruptController.h>
 #include <Libraries/LibDeviceTree/DeviceTree.h>
 
+namespace Kernel::I2C {
+class Controller;
+}
+
 namespace Kernel::DeviceTree {
 
 enum class ShouldProbeImmediately {
@@ -24,7 +28,11 @@ public:
     static Management& the();
 
     static ErrorOr<void> register_driver(NonnullOwnPtr<DeviceTree::Driver>&&);
+
     static ErrorOr<void> register_interrupt_controller(DeviceTree::Device const&, DeviceTree::InterruptController const&);
+    static ErrorOr<void> register_i2c_controller(DeviceTree::Device const&, I2C::Controller&);
+
+    static ErrorOr<I2C::Controller*> i2c_controller_for(::DeviceTree::Node const&);
 
     ErrorOr<size_t> resolve_interrupt_number(::DeviceTree::Interrupt) const;
 
@@ -42,6 +50,7 @@ private:
     Device::List m_devices;
 
     HashMap<::DeviceTree::Node const*, DeviceTree::InterruptController const*> m_interrupt_controllers;
+    HashMap<::DeviceTree::Node const*, I2C::Controller*> m_i2c_controllers;
 };
 
 }
