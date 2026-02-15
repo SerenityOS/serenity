@@ -17,3 +17,10 @@ This problem was also visible in previous v0.5 version of this port,
 but back then I thought it's some kind of a temporary problem.
 Couldn't reproduce this on any other host OS.
 
+## `0002-riscv_csr-Fix-dispatch-restarting.patch`
+
+riscv_csr: Fix dispatch restarting
+
+- Properly check the old value of status CSR to determine if new IRQ bits were set
+- Fix build warn with precise FSTATUS
+

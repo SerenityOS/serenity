@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: LekKit <50500857+LekKit@users.noreply.github.com>
+Date: Sun, 24 Mar 2024 23:17:15 +0200
+Subject: [PATCH] riscv_csr: Fix dispatch restarting
+
+- Properly check the old value of status CSR to determine if new IRQ bits were set
+- Fix build warn with precise FSTATUS
+---
+ src/riscv_csr.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/src/riscv_csr.c b/src/riscv_csr.c
+index 55edc0aaeca6ebcc8ab4cafdea08ea5236abd4bd..284e604658416a7e1611c3c06eb0b1a2426362e3 100644
+--- a/src/riscv_csr.c
++++ b/src/riscv_csr.c
+@@ -77,8 +77,8 @@ static void csr_status_helper(rvvm_hart_t* vm, maxlen_t* dest, maxlen_t mask, ui
+ {
+     maxlen_t new_status = *dest;
+ #ifdef USE_FPU
+-    bool fpu_was_enabled = bit_cut(vm->csr.status, 13, 2) != FS_OFF;
+ #ifndef USE_PRECISE_FS
++    bool fpu_was_enabled = bit_cut(vm->csr.status, 13, 2) != FS_OFF;
+     if (fpu_was_enabled) {
+         vm->csr.status = bit_replace(vm->csr.status, 13, 2, FS_DIRTY);
+     }
+@@ -117,6 +117,7 @@ static void csr_status_helper(rvvm_hart_t* vm, maxlen_t* dest, maxlen_t mask, ui
+     }
+ #endif
+     csr_helper_masked(&vm->csr.status, dest, mask, op);
++    maxlen_t old_status = *dest;
+ #ifdef USE_RV64
+     if (vm->rv64) *dest |= vm->csr.status & 0x3F00000000ULL;
+ #endif
+@@ -127,8 +128,8 @@ static void csr_status_helper(rvvm_hart_t* vm, maxlen_t* dest, maxlen_t mask, ui
+         riscv_decoder_enable_fpu(vm, fpu_enabled);
+     }
+ #endif
+-    if (bit_cut(vm->csr.status, 0, 4) != bit_cut(new_status, 0, 4)) {
+-        // IRQ enable bits changed
++    if (bit_cut(new_status, 0, 4) & ~bit_cut(old_status, 0, 4)) {
++        // IRQ enable bits were set
+         riscv_restart_dispatch(vm);
+     }
+ }
