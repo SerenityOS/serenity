@@ -64,7 +64,6 @@ ErrorOr<void> unmount(VFSRootContext&, Inode& guest_inode, StringView custody_pa
 
 ErrorOr<NonnullRefPtr<OpenFileDescription>> open(VFSRootContext const&, Credentials const&, StringView path, int options, mode_t mode, CustodyBase const& base, Optional<UidAndGid> = {});
 ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Process const&, VFSRootContext const&, Credentials const&, StringView path, int options, mode_t mode, CustodyBase const& base, Optional<UidAndGid> = {});
-ErrorOr<NonnullRefPtr<OpenFileDescription>> create(Credentials const&, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
 ErrorOr<NonnullRefPtr<OpenFileDescription>> create(Process const&, Credentials const&, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
 ErrorOr<void> mkdir(VFSRootContext const&, Credentials const&, StringView path, mode_t mode, CustodyBase const& base);
 ErrorOr<void> link(VFSRootContext const&, Credentials const&, StringView old_path, StringView new_path, CustodyBase const& base);
