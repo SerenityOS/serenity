@@ -55,7 +55,10 @@ public:
 
     ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*);
     ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const;
-    ErrorOr<size_t> read_until_filled_or_end(off_t, size_t, UserOrKernelBuffer buffer, OpenFileDescription*) const;
+
+    using TargetLinkPath = FixedStringBuffer<MAXPATHLEN>;
+    ErrorOr<TargetLinkPath> read_as_link(OpenFileDescription*) const;
+
     ErrorOr<void> truncate(u64);
 
     virtual ErrorOr<void> attach(OpenFileDescription&) { return {}; }
@@ -132,6 +135,8 @@ private:
         pid_t pid;
         short type;
     };
+
+    ErrorOr<size_t> read_until_filled_or_end(off_t, size_t, UserOrKernelBuffer buffer, OpenFileDescription*) const;
 
     bool can_apply_flock_impl(flock const&, Optional<OpenFileDescription const&>, Vector<Flock> const& flocks) const;
     ErrorOr<bool> try_apply_flock(Process const&, OpenFileDescription const&, flock const&);
