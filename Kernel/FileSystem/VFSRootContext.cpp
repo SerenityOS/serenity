@@ -225,6 +225,17 @@ ErrorOr<void> VFSRootContext::unmount(FileBackedFileSystem::List& file_backed_fi
             if (custody_path != mountpoint_path->view())
                 continue;
 
+            auto mount_ref_count = mount.ref_count();
+            // Technically, a reference count should be 2 under normal conditions (when the system is done booting
+            // and userspace started), however, because during a shutdown the init process is dead, then the reference
+            // count could be one.
+            VERIFY(mount_ref_count >= 1);
+            // The Mount object is referenced normally at the mount table
+            // and also now, so if we have more than 2 in the refcounting, then
+            // someone else uses the Mount, and we should refuse unmounting it.
+            if (mount_ref_count > 2)
+                return EBUSY;
+
             TRY(VFSRootContext::validate_mount_not_immutable_while_being_used(details, mount));
             dbgln("VFSRootContext({}): Unmounting {}...", id(), custody_path);
             TRY(VFSRootContext::remove_mount(mount, file_backed_file_systems_list));
