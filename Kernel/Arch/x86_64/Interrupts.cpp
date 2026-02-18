@@ -203,7 +203,12 @@ void page_fault_handler(TrapFrame* trap)
     }
 
     PageFault fault { regs.exception_code, VirtualAddress { fault_address } };
-    fault.set_was_smap_disabled(trap->regs->rflags & 0x40000);
+
+    if (Processor::current().has_feature(CPUFeature::SMAP))
+        fault.set_was_smap_disabled(trap->regs->rflags & 0x40000);
+    else
+        fault.set_was_smap_disabled(true);
+
     fault.handle(regs);
 }
 
