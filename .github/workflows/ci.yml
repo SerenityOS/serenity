@@ -8,7 +8,6 @@ concurrency:
 
 jobs:
   SerenityOS:
-    if: github.repository == 'SerenityOS/serenity'
 
     strategy:
       fail-fast: false
