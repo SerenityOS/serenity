@@ -25,11 +25,8 @@
 
 namespace EDID {
 
-// clang doesn't like passing around pointers to members in packed structures,
-// even though we're only using them for arithmetic purposes
-#if defined(AK_COMPILER_CLANG)
-#    pragma clang diagnostic ignored "-Waddress-of-packed-member"
-#endif
+// We're only passing around pointers to members in packed structures for arithmetic purposes.
+#pragma GCC diagnostic ignored "-Waddress-of-packed-member"
 
 static_assert(sizeof(Definitions::EDID) == Parser::BufferSize);
 

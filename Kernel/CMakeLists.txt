@@ -731,7 +731,6 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         add_link_options(LINKER:-z,pack-relative-relocs)
     endif()
 else() # Assume Clang
-    add_compile_options(-Waddress-of-packed-member)
     add_compile_options(-faligned-allocation)
 
     # We need this in order to pick up the #define __serenity__, otherwise we end up including unistd.h into the linker script

@@ -167,7 +167,6 @@ config("Kernel_config") {
     cflags_cc += [
       "-fzero-call-used-regs=used-gpr",
       "-fstack-clash-protection",
-      "-Wno-address-of-packed-member",
       "-Wno-dangling-reference",
     ]
     lib_dirs = [
@@ -179,7 +178,6 @@ config("Kernel_config") {
   } else {
     assert(serenity_toolchain == "Clang", "")
     cflags_cc += [
-      "-Wno-address-of-packed-member",
       "-faligned-allocation",
       "-Wno-unused-const-variable",
     ]
