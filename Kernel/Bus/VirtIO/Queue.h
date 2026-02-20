@@ -62,29 +62,33 @@ private:
         auto offset = FlatPtr(ptr) - m_queue_region->vaddr().get();
         return m_queue_region->physical_page(0)->paddr().offset(offset);
     }
-    struct [[gnu::packed]] QueueDescriptor {
+    struct QueueDescriptor {
         u64 address;
         u32 length;
         u16 flags;
         u16 next;
     };
+    static_assert(AssertSize<QueueDescriptor, 16>());
 
-    struct [[gnu::packed]] QueueDriver {
+    struct QueueDriver {
         u16 flags;
         u16 index;
         u16 rings[];
     };
+    static_assert(AssertSize<QueueDriver, 4>());
 
-    struct [[gnu::packed]] QueueDeviceItem {
+    struct QueueDeviceItem {
         u32 index;
         u32 length;
     };
+    static_assert(AssertSize<QueueDeviceItem, 8>());
 
-    struct [[gnu::packed]] QueueDevice {
+    struct QueueDevice {
         u16 flags;
         u16 index;
         QueueDeviceItem rings[];
     };
+    static_assert(AssertSize<QueueDevice, 4>());
 
     u16 const m_queue_size;
     u16 const m_notify_offset;
