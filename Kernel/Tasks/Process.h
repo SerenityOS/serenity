@@ -960,8 +960,6 @@ public:
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(Badge<CustodyBase>, int dirfd);
 
 private:
-    ErrorOr<NonnullRefPtr<ScopedProcessList>> scoped_process_list_for_id(int id);
-
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(int dirfd);
 
     ErrorOr<NonnullRefPtr<VFSRootContext>> vfs_root_context_for_id(int id);
