@@ -146,7 +146,7 @@ NEVER_INLINE static void dump_backtrace_impl(FlatPtr frame_pointer, bool use_ksy
 
                 recognized_symbols[recognized_symbol_count++] = { stack_frame.return_address, symbolicate_kernel_address(stack_frame.return_address) };
             } else {
-                auto message_buffer = MUST(FixedStringBuffer<19>::formatted("{:p}"sv, stack_frame.return_address));
+                auto message_buffer = MUST(FixedStringBuffer<28>::formatted("Kernel + {:p}\n"sv, stack_frame.return_address - g_boot_info.kernel_load_base));
                 auto message = message_buffer.representable_view();
                 PRINT_LINE(message.characters_without_null_termination(), message.length());
             }
