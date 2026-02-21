@@ -211,8 +211,9 @@ ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env);
 ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, SearchInPath, Optional<ReadonlySpan<StringView>> environment = {});
 
 #ifdef AK_OS_SERENITY
-ErrorOr<u32> unshare_create(Kernel::UnshareType type, unsigned flags);
-ErrorOr<void> unshare_attach(Kernel::UnshareType type, unsigned index);
+ErrorOr<unsigned> unshare_open(Kernel::UnshareType type);
+ErrorOr<u32> unshare_create(unsigned fd);
+ErrorOr<void> unshare_enter(Kernel::UnshareType type, u32 index, int flags);
 #endif
 
 ErrorOr<int> socket(int domain, int type, int protocol);
