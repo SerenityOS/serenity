@@ -629,6 +629,14 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     previous_interrupts_state = Processor::interrupts_state();
     Processor::disable_interrupts();
 
+    // If the user requested unshares to be entered after exec(), do so now.
+    // It is done by replacing the resources - detaching from the old ones and
+    // entering the new ones, like how one would expect it to happen during the
+    // unshare_enter syscall.
+    m_exec_vfs_root_context.replace_resource(*this);
+    m_exec_hostname_context.replace_resource(*this);
+    m_exec_scoped_process_list.replace_resource(*this);
+
     // NOTE: Be careful to not trigger any page faults below!
 
     with_mutable_protected_data([&](auto& protected_data) {

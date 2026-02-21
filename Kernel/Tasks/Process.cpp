@@ -1335,6 +1335,59 @@ ErrorOr<Process::MountTargetContext> Process::context_for_mount_operation(int vf
     return MountTargetContext { *target_custody.release_nonnull(), *vfs_root_context };
 }
 
+void Process::replace_vfs_root_context(VFSRootContext& new_context)
+{
+    m_attached_vfs_root_context.with([&new_context](auto& context) {
+        if (context.ptr() == &new_context)
+            return;
+        VERIFY(context);
+        context->detach({});
+        context = new_context;
+        new_context.attach({});
+    });
+}
+
+void Process::replace_hostname_context(HostnameContext& new_context)
+{
+    m_attached_hostname_context.with([&new_context](auto& context) {
+        if (context.ptr() == &new_context)
+            return;
+        VERIFY(context);
+        context->detach({});
+        context = new_context;
+        new_context.set_attached({});
+    });
+}
+
+void Process::replace_scoped_process_list(ScopedProcessList& list)
+{
+    m_scoped_process_list.with([this, &list](auto& list_ptr) {
+        if (list_ptr.ptr() == &list)
+            return;
+        if (list_ptr) {
+            list_ptr->attached_processes().with([&](auto& list) {
+                list.remove(*this);
+            });
+            list_ptr->detach({});
+        }
+        list_ptr = list;
+        list_ptr->attach(*this);
+    });
+}
+
+void Process::replace_resource(VFSRootContext& context)
+{
+    replace_vfs_root_context(context);
+}
+void Process::replace_resource(HostnameContext& context)
+{
+    replace_hostname_context(context);
+}
+void Process::replace_resource(ScopedProcessList& list)
+{
+    replace_scoped_process_list(list);
+}
+
 ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(Badge<CustodyBase>, int dirfd)
 {
     return custody_for_dirfd(dirfd);

@@ -1307,24 +1307,33 @@ ErrorOr<void> adjtime(const struct timeval* delta, struct timeval* old_delta)
 #endif
 
 #ifdef AK_OS_SERENITY
-ErrorOr<u32> unshare_create(Kernel::UnshareType type, unsigned flags)
+ErrorOr<unsigned> unshare_open(Kernel::UnshareType type)
+{
+    Syscall::SC_unshare_open_params params {
+        static_cast<int>(type),
+    };
+    int rc = syscall(SC_unshare_open, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("unshare_open", rc, rc);
+}
+
+ErrorOr<u32> unshare_create(unsigned fd)
 {
     Syscall::SC_unshare_create_params params {
-        static_cast<int>(type),
-        static_cast<int>(flags),
+        static_cast<int>(fd),
     };
     int rc = syscall(SC_unshare_create, &params);
     HANDLE_SYSCALL_RETURN_VALUE("unshare_create", rc, rc);
 }
 
-ErrorOr<void> unshare_attach(Kernel::UnshareType type, unsigned index)
+ErrorOr<void> unshare_enter(Kernel::UnshareType type, unsigned index, int flags)
 {
-    Syscall::SC_unshare_attach_params params {
+    Syscall::SC_unshare_enter_params params {
         static_cast<int>(type),
         static_cast<int>(index),
+        flags,
     };
-    int rc = syscall(SC_unshare_attach, &params);
-    HANDLE_SYSCALL_RETURN_VALUE("unshare_attach", rc, {});
+    int rc = syscall(SC_unshare_enter, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("unshare_enter", rc, {});
 }
 
 ErrorOr<void> exec_command(Vector<StringView>& command, bool preserve_env)

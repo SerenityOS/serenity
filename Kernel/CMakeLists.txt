@@ -170,6 +170,7 @@ set(KERNEL_SOURCES
     FileSystem/Mount.cpp
     FileSystem/MountFile.cpp
     FileSystem/OpenFileDescription.cpp
+    FileSystem/UnsharedResourceFile.cpp
     FileSystem/Plan9FS/FileSystem.cpp
     FileSystem/Plan9FS/Inode.cpp
     FileSystem/Plan9FS/Message.cpp
