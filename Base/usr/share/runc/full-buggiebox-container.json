@@ -118,16 +118,6 @@
             "source": null,
             "target": "/proc",
             "fs_type": "ProcFS"
-        },
-        {
-            "type": "directory",
-            "target": "/sys/"
-        },
-        {
-            "type": "mount",
-            "source": null,
-            "target": "/sys",
-            "fs_type": "SysFS"
         }
     ]
 }
