@@ -56,10 +56,8 @@ from it.
 
 There are 2 main syscalls to handle resource isolation:
 
--   `unshare_create` which creates a new isolation mechanism and returns
-    an index number for a specified isolation type.
--   `unshare_attach` which attach the user process based on the index number
-    and isolation type.
+-   `unshare_create` which creates a new isolation mechanism and returns an index number for a specified isolation type.
+-   `unshare_attach` which attach the user process based on the index number and isolation type.
 
 ## Jails as a security mechanism
 
