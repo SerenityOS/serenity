@@ -16,7 +16,7 @@ namespace Kernel::Memory {
 
 inline bool is_user_address(VirtualAddress vaddr)
 {
-    return vaddr.get() < USER_RANGE_CEILING;
+    return (i64)vaddr.get() >= 0;
 }
 
 inline bool is_user_range(VirtualAddress vaddr, size_t size)

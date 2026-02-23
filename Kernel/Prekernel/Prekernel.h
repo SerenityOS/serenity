@@ -20,7 +20,8 @@
 
 // FIXME: This should be using the define from Sections.h, but that currently is not possible
 //        and causes linker errors, because Sections.h includes BootInfo.h.
-#define KERNEL_MAPPING_BASE 0x2000000000
+#define KERNEL_MIN_ADDR_BITS 38
+#define KERNEL_MAPPING_BASE (~0ULL << (KERNEL_MIN_ADDR_BITS - 1))
 
 #ifdef __cplusplus
 

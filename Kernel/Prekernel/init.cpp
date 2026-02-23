@@ -31,10 +31,11 @@ extern "C" u8 end_of_prekernel_image_after_kernel_image[];
 extern "C" u64 boot_pml4t[512];
 extern "C" u64 boot_pdpt[512];
 extern "C" u64 boot_pd0[512];
-extern "C" u64 boot_pd0_pts[512 * (MAX_KERNEL_SIZE >> 21 & 0x1ff)];
+extern "C" u64 boot_pd0_pts[512 * (MAX_KERNEL_SIZE >> 21)];
+extern "C" u64 boot_pdpt_kernel[512];
 extern "C" u64 boot_pd_kernel[512];
 extern "C" u64 boot_pd_kernel_pt0[512];
-extern "C" u64 boot_pd_kernel_image_pts[512 * (MAX_KERNEL_SIZE >> 21 & 0x1ff)];
+extern "C" u64 boot_pd_kernel_image_pts[512 * (MAX_KERNEL_SIZE >> 21)];
 extern "C" u64 boot_pd_kernel_pt1023[512];
 extern "C" char const kernel_cmdline[4096];
 
@@ -134,9 +135,12 @@ extern "C" [[noreturn]] void init()
     VERIFY(kernel_load_base % 0x1000 == 0);
     VERIFY(kernel_load_base >= kernel_mapping_base + kernel_physical_base);
 
+    int pml4t_flags = 0x3;
+    boot_pml4t[(kernel_mapping_base >> 39) & 0x1ffu] = (FlatPtr)boot_pdpt_kernel | pml4t_flags;
+
     int pdpt_flags = 0x3;
 
-    boot_pdpt[(kernel_mapping_base >> 30) & 0x1ffu] = (FlatPtr)boot_pd_kernel | pdpt_flags;
+    boot_pdpt_kernel[(kernel_mapping_base >> 30) & 0x1ffu] = (FlatPtr)boot_pd_kernel | pdpt_flags;
 
     boot_pd_kernel[0] = (FlatPtr)boot_pd_kernel_pt0 | 0x3;
 
@@ -225,7 +229,7 @@ extern "C" [[noreturn]] void init()
     info.kernel_mapping_base = kernel_mapping_base;
     info.kernel_load_base = kernel_load_base;
     info.boot_pml4t = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pml4t) };
-    info.boot_pdpt = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pdpt) };
+    info.boot_pdpt = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pdpt_kernel) };
     info.arch_specific.boot_pd0 = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pd0) };
     info.boot_pd_kernel = PhysicalAddress { bit_cast<PhysicalPtr>(+boot_pd_kernel) };
     info.boot_pd_kernel_pt1023 = bit_cast<Memory::PageTableEntry*>(adjust_by_mapping_base(boot_pd_kernel_pt1023));
