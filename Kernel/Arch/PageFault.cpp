@@ -31,7 +31,7 @@ void PageFault::handle(RegisterState& regs)
             return;
     }
 
-    auto current_thread = Thread::current();
+    auto* current_thread = Thread::current();
 
     if (current_thread) {
         current_thread->set_handling_page_fault(true);

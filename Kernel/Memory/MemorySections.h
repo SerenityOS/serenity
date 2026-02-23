@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Checked.h>
+#include <AK/Types.h>
 #include <Kernel/Memory/VirtualAddress.h>
 #include <Kernel/Memory/VirtualRange.h>
 #include <Kernel/Sections.h>
@@ -19,7 +21,7 @@ inline bool is_user_address(VirtualAddress vaddr)
 
 inline bool is_user_range(VirtualAddress vaddr, size_t size)
 {
-    if (vaddr.offset(size) < vaddr)
+    if (Checked<size_t>::addition_would_overflow(vaddr.get(), size))
         return false;
     if (!is_user_address(vaddr))
         return false;

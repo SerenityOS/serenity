@@ -54,7 +54,7 @@ ErrorOr<FlatPtr> page_round_up(FlatPtr x)
     if (x > (explode_byte(0xFF) & ~0xFFF)) {
         return Error::from_errno(EINVAL);
     }
-    return (((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1));
+    return (x + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1));
 }
 
 // NOTE: We can NOT use Singleton for this class, because
@@ -962,12 +962,12 @@ PageTableEntry* MemoryManager::pte(PageDirectory& page_directory, VirtualAddress
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
 
-    auto* pd = quickmap_pd(const_cast<PageDirectory&>(page_directory), page_directory_table_index);
-    PageDirectoryEntry const& pde = pd[page_directory_index];
+    auto* pd = quickmap_pd(page_directory, page_directory_table_index);
+    PageDirectoryEntry& pde = pd[page_directory_index];
     if (!pde.is_present())
         return nullptr;
 
-    return &quickmap_pt(PhysicalAddress((FlatPtr)pde.page_table_base()))[page_table_index];
+    return &quickmap_pt(PhysicalAddress(pde.page_table_base()))[page_table_index];
 }
 
 PageTableEntry* MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
