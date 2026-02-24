@@ -198,7 +198,7 @@ static ErrorOr<int> acquire_new_stdin_fd(bool emergency)
 {
     if (!emergency)
         return TRY(Core::System::open("/dev/null"sv, O_NONBLOCK));
-    TRY(Core::System::create_char_device("/dev/tty_emergency"sv, 0660, 4, 0));
+    TRY(Core::System::create_char_device("/dev/tty_emergency"sv, 0660, to_underlying(Kernel::MajorAllocation::CharacterDeviceFamily::VirtualConsole), 0));
     return TRY(Core::System::open("/dev/tty_emergency"sv, O_RDWR));
 }
 
