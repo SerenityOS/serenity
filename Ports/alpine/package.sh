@@ -5,7 +5,9 @@ useconfigure='true'
 configopts=(
     '--disable-static'
     '--enable-shared'
+    'CFLAGS=-std=c17 -Wno-error=incompatible-pointer-types'
 )
+makeopts=("-j1") # Building with more than one jobs seems to be broken.
 use_fresh_config_sub='true'
 use_fresh_config_guess='true'
 files=(
