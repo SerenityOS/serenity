@@ -4,14 +4,14 @@ Date: Thu, 29 Jan 2026 13:45:58 +0530
 Subject: [PATCH] Add serenity to endian.h
 
 ---
- lib/src/portable/endian.h | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ lib/src/portable/endian.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/lib/src/portable/endian.h b/lib/src/portable/endian.h
-index a6560826..c3bfe029 100644
+index a6560826a4b5c880d0c4fea6a8922a0eca74ce18..ed8f92ed2e153ed0795afd1214aa8daef5575d85 100644
 --- a/lib/src/portable/endian.h
 +++ b/lib/src/portable/endian.h
-@@ -26,12 +26,17 @@
+@@ -26,7 +26,8 @@
      defined(__MSYS__) || \
      defined(__EMSCRIPTEN__) || \
      defined(__wasi__) || \
@@ -21,15 +21,3 @@ index a6560826..c3bfe029 100644
  
  #if defined(__NetBSD__)
  #define _NETBSD_SOURCE 1
- #endif
- 
-+#if defined(__serenity__)
-+#define _GNU_SOURCE
-+#endif
-+
- # include <endian.h>
- 
- #elif defined(HAVE_SYS_ENDIAN_H) || \
--- 
-2.51.0
-
